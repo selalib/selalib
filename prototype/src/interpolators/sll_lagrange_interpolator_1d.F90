@@ -228,13 +228,20 @@ end subroutine interpolate_pointer_values_li1d
   end function 
 
 #ifdef STDF95
-  subroutine lagrange_interpolation_1d_compute_interpolants( interpolator, data_array )
+  subroutine lagrange_interpolation_1d_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
+       
     type(lagrange_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_li1d( interpolator, data_array )
-    class(lagrange_1d_interpolator), intent(inout) :: interpolator
+    subroutine compute_interpolants_li1d( interpolator, data_array,&
+         eta_coords, &
+         size_eta_coords)
+      class(lagrange_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     print*, 'compute_interpolants_li1d:', &
          ' not implemented for lagrange interpolation'
     stop

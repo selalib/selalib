@@ -1546,8 +1546,8 @@ contains
 !!$                      (inv_j(1,2)*ex + inv_j(2,2)*ey)**2))
                 
                 efield_energy_total_q = efield_energy_total_q + &
-                     delta1*delta2*sqrt(((jac_m(1,1)*ex + jac_m(2,1)*ey)**2 + &
-                     (jac_m(1,2)*ex + jac_m(2,2)*ey)**2))
+                     delta1*delta2*sqrt((((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
+                     (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)))
              end do
           end do
        end do

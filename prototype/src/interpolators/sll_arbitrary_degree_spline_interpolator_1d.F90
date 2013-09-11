@@ -40,18 +40,23 @@ module sll_arbitrary_degree_spline_interpolator_1d_module
 
    contains
     procedure, pass(interpolator) :: initialize=>initialize_ad1d_interpolator
-    procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad1d 
+    procedure, pass :: set_coefficients => set_coefficients_ad1d 
 ! better: pre-compute-interpolation-information or something...
     procedure :: compute_interpolants => compute_interpolants_ad1d
    ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
     !     compute_spline_coefficients_ad2d
     !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
     procedure :: interpolate_value => interpolate_value_ad1d
+    procedure :: interpolate_array_values => interpolate_values_ad1d
+    procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
     procedure :: interpolate_derivative_eta1 => interpolate_derivative_ad1d
+    procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
+    procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_ad1d
     procedure, pass:: interpolate_array => interpolate_array_ad1d
     procedure, pass:: interpolate_array_disp => interpolate_1d_array_disp_ad1d 
     procedure, pass:: get_coefficients => get_coefficients_ad1d 
-  end type arb_deg_1d_interpolator
+    procedure, pass:: reconstruct_array
+ end type arb_deg_1d_interpolator
 
   interface delete
      module procedure delete_arbitrary_degree_1d_interpolator
@@ -171,7 +176,6 @@ contains
    eta_min = interpolator%eta_min
    eta_max = interpolator%eta_max
    delta = (eta_max - eta_min)/num_cells
-   delta2 = (eta2_max - eta2_min)/num_cells2
 
    tmp = (sp_deg + 1)/2
 
@@ -243,53 +247,52 @@ contains
  end subroutine set_coefficients_ad1d
 
  subroutine compute_interpolants_ad1d( &
-      interpolator, &
-      data_array, &
+      interpolator,data_array, &
       eta_coords, &
       size_eta_coords)
    
-    class(arb_deg_1d_interpolator), intent(inout)  :: interpolator
-    sll_real64, dimension(:), intent(in)         :: data_array
-    sll_real64, dimension(:), intent(in),optional  :: eta_coords
-    sll_int32, intent(in),optional                 :: size_eta_coords
-    sll_real64, dimension(:),pointer               :: point_locate_eta
-    sll_real64 :: delta_eta
-    sll_int32  :: sz
-    sll_real64 :: period
-    sll_int32  :: order
-    sll_int32  :: ierr
-    sll_int32  :: i
-    logical    :: user_coords
-
-    if(present(eta_coords) .and. (.not. present(size_eta_coords))) then
-       print *, 'compute_interpolants_ad1d(), ERROR: if eta_coords is ', &
-            'passed, its size must be specified as well through ', &
-            'size_eta_coords.'
-       stop
-    end if
-    
-    if( present(eta_coords) ) then
+   class(arb_deg_1d_interpolator), intent(inout)  :: interpolator
+   sll_real64, dimension(:), intent(in)         :: data_array
+   sll_real64, dimension(:), intent(in),optional  :: eta_coords
+   sll_int32, intent(in),optional                 :: size_eta_coords
+   sll_real64, dimension(:),pointer               :: point_locate_eta
+   sll_real64 :: delta_eta
+   sll_int32  :: sz
+   sll_real64 :: period
+   sll_int32  :: order
+   sll_int32  :: ierr
+   sll_int32  :: i
+   logical    :: user_coords
+   
+   if(present(eta_coords) .and. (.not. present(size_eta_coords))) then
+      print *, 'compute_interpolants_ad1d(), ERROR: if eta_coords is ', &
+           'passed, its size must be specified as well through ', &
+           'size_eta_coords.'
+      stop
+   end if
+   
+   if( present(eta_coords) ) then
        user_coords = .true.
     else
        user_coords = .false.
     end if
     
     if (user_coords .eqv. .true.) then
-       sz = size_eta_coords
+       sz = size(data_array)!size_eta_coords
        
        SLL_ALLOCATE(point_locate_eta(sz),ierr)
-       point_locate_eta1 = eta_coords
+       point_locate_eta = eta_coords
 
     else ! size depends on BC combination
-
+       
        select case (interpolator%bc_selector)
        case (0) ! 1. periodic
           sz = interpolator%num_pts-1
           
        case (9) ! 2. dirichlet-left, dirichlet-right
           sz = interpolator%num_pts
-     
-   
+          
+          
        case default
           print *, 'compute_interpolants_ad1d():BC combination not implemented.'
        end select
@@ -339,8 +342,8 @@ contains
        interpolator, &
        eta1) result(val)
 
-    class(arb_deg_1d_interpolator), intent(in)  :: interpolator
-    sll_real64, intent(in)         :: eta
+    class(arb_deg_1d_interpolator), intent(inout)  :: interpolator
+    sll_real64, intent(in)         :: eta1
     sll_real64                     :: val
     sll_int32 :: size_coeffs
     sll_real64 :: bvalue
@@ -348,7 +351,7 @@ contains
 
     size_coeffs = interpolator%size_coeffs
 
-    res = eta
+    res = eta1
     select case (interpolator%bc_selector)
     case (0) ! periodic
        if ( res .ge. interpolator%eta_max ) then 
@@ -371,21 +374,21 @@ contains
 
   function interpolate_derivative_ad1d( &
     interpolator, &
-    eta ) result(val)
+    eta1 ) result(val)
 
-    class(arb_deg_1d_interpolator), intent(in)  :: interpolator
-    sll_real64, intent(in)         :: eta
+    class(arb_deg_1d_interpolator), intent(inout)  :: interpolator
+    sll_real64, intent(in)         :: eta1
     sll_real64                     :: val
     sll_int32 :: size_coeffs
     sll_real64 :: dvalue1d
-    sll_real64 :: res1,res2
+    sll_real64 :: res
     
-    SLL_ASSERT( eta .ge. interpolator%eta_min )
-    SLL_ASSERT( eta .le. interpolator%eta_max )
+    SLL_ASSERT( eta1 .ge. interpolator%eta_min )
+    SLL_ASSERT( eta1 .le. interpolator%eta_max )
 
     size_coeffs = interpolator%size_coeffs
 
-    res = eta
+    res = eta1
     
     select case (interpolator%bc_selector)
     case (0) ! periodic
@@ -409,31 +412,28 @@ contains
   end function interpolate_derivative_ad1d
   
   function interpolate_array_ad1d( &
-    this, &
-    num_points, &
-    data_in, &
-    eta) result(res)
-
-    class(arb_deg_1d_interpolator), intent(in)  :: this
-    sll_real64,  dimension(:), intent(in)         :: eta
-    sll_real64, dimension(:), intent(in)         :: data_in
-    sll_int32, intent(in)         :: num_points
-
-    sll_real64, dimension(num_points) :: res
- 
+       this, num_points, data, coordinates)&
+    result(data_out)
+    class(arb_deg_1d_interpolator),  intent(in)       :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
+    sll_int32,  intent(in)                 :: num_points
+    sll_real64, dimension(:), intent(in)   :: coordinates
+    sll_real64, dimension(:), intent(in)   :: data
+    sll_real64, dimension(num_points)      :: data_out
+    
     print *, 'interpolate_array_ad1d: not implemented'
   end function interpolate_array_ad1d
   
   function interpolate_1d_array_disp_ad1d( &
        this,        &
        num_points, &
-       data_in,     &
+       data,     &
        alpha) result(res)
       
     class(arb_deg_1d_interpolator), intent(in)    :: this
     sll_int32, intent(in)                          :: num_points 
-    sll_real64, dimension(:), intent(in)         :: data_in
-    sll_real64, dimension(:), intent(in)         :: alpha  
+    sll_real64, dimension(:), intent(in)         :: data
+    sll_real64, intent(in)         :: alpha  
     sll_real64, dimension(num_points) :: res
     
     print *, 'interpolate_1d_array_disp_ad1d: not implemented.'
@@ -446,5 +446,73 @@ contains
     
     get_coefficients_ad1d => interpolator%coeff_splines
   end function get_coefficients_ad1d
+
+  subroutine interpolate_values_ad1d( &
+       interpolator, &
+       num_pts, &
+       vals_to_interpolate, &
+       output_array )
+    
+    class(arb_deg_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
+    sll_real64, dimension(:), intent(out)  :: output_array
+    
+    print*, 'interpolate_values_ad1d NOT iMPLEMENTED YET'
+  end subroutine interpolate_values_ad1d
+
+  subroutine interpolate_pointer_values_ad1d( &
+       interpolator, &
+       num_pts, &
+       vals_to_interpolate, &
+       output )
+    
+    class(arb_deg_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)            :: num_pts
+    sll_real64, dimension(:), pointer :: vals_to_interpolate
+    sll_real64, dimension(:), pointer :: output
+    
+    print*, 'interpolate_pointer_values_ad1d NOT iMPLEMENTED YET'
+  end subroutine interpolate_pointer_values_ad1d
   
+  subroutine interpolate_derivatives_ad1d( &
+       interpolator, &
+       num_pts, &
+       vals_to_interpolate, &
+       output_array )
+    
+    class(arb_deg_1d_interpolator),  intent(in) :: interpolator
+    sll_int32,  intent(in)                 :: num_pts
+    sll_real64, dimension(:), intent(in) :: vals_to_interpolate
+    sll_real64, dimension(:), intent(out) :: output_array
+    
+    print*, 'interpolate_derivatives_ad1d NOT iMPLEMENTED YET'
+  end subroutine interpolate_derivatives_ad1d
+  
+  subroutine interpolate_pointer_derivatives_ad1d( &
+       interpolator, &
+       num_pts, &
+       vals_to_interpolate, &
+       output )
+#ifdef STDF95
+    type(arb_deg_1d_interpolator),  intent(in) :: interpolator
+#else
+    class(arb_deg_1d_interpolator),  intent(in) :: interpolator
+#endif
+    sll_int32,  intent(in)              :: num_pts
+    sll_real64, dimension(:), pointer   :: vals_to_interpolate
+    sll_real64, dimension(:), pointer   :: output
+    
+    print*, 'interpolate_pointer_derivatives_ad1d NOT iMPLEMENTED YET'
+  end subroutine interpolate_pointer_derivatives_ad1d
+  
+  function reconstruct_array(this, num_points, data) result(res)
+    ! dummy procedure
+
+    class(arb_deg_1d_interpolator),  intent(in) :: this
+    sll_int32, intent(in)                :: num_points! size of output array
+    sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
+    sll_real64, dimension(num_points)    :: res
+    res(:) = 0.0_f64
+  end function reconstruct_array
 end module sll_arbitrary_degree_spline_interpolator_1d_module

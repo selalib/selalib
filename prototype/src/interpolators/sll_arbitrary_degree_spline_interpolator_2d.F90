@@ -367,9 +367,11 @@ contains
          do j=1,sp_deg2
             
             interpolator%coeff_splines(num_cells1 +  i ,num_cells2 + j) = &
-                 interpolator%coeff_splines((sp_deg1-(i-1)),(sp_deg2-(j-1)))
+                 interpolator%coeff_splines(i,j)!(sp_deg1-(i-1)),(sp_deg2-(j-1)))
          end do
       end do
+
+    !!  print*, 'coef_spline',interpolator%coeff_splines
 !!$      do i = 1,num_cells1
 !!$         do j = 1,num_cells2
 !!$            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
@@ -784,38 +786,38 @@ contains
 
     res1 = eta1
     res2 = eta2
-    SLL_ASSERT( res1 >= interpolator%eta1_min )
-    SLL_ASSERT( res1 <= interpolator%eta1_max )
-    SLL_ASSERT( res2 >= interpolator%eta2_min )
-    SLL_ASSERT( res2 <= interpolator%eta2_max )
+   ! SLL_ASSERT( res1 >= interpolator%eta1_min )
+   ! SLL_ASSERT( res1 <= interpolator%eta1_max )
+   ! SLL_ASSERT( res2 >= interpolator%eta2_min )
+   ! SLL_ASSERT( res2 <= interpolator%eta2_max )
 
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
-       if ( res1 == interpolator%eta1_max ) then 
+       if ( res1 >= interpolator%eta1_max ) then 
           res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
-       if ( res2 == interpolator%eta2_max ) then 
+       if ( res2 >= interpolator%eta2_max ) then 
           res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       if ( res2 == interpolator%eta2_max ) then 
+       if ( res2 >= interpolator%eta2_max ) then 
           res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
        end if
-       !SLL_ASSERT( res1 >= interpolator%eta1_min )
-       !SLL_ASSERT( res1 <= interpolator%eta1_max )
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       if ( res1 == interpolator%eta1_max ) then 
+       if ( res1 >= interpolator%eta1_max ) then 
           res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
        end if
-       !SLL_ASSERT( res2 >= interpolator%eta2_min )
-       !SLL_ASSERT( res2 <= interpolator%eta2_max )
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
        
-    !case (585) ! dirichlet-dirichlet 
-     !  SLL_ASSERT( res1 >= interpolator%eta1_min )
-      ! SLL_ASSERT( res1 <= interpolator%eta1_max )
-      ! SLL_ASSERT( res2 >= interpolator%eta2_min )
-      ! SLL_ASSERT( res2 <= interpolator%eta2_max )
+    case (585) ! dirichlet-dirichlet 
+       SLL_ASSERT( res1 >= interpolator%eta1_min )
+       SLL_ASSERT( res1 <= interpolator%eta1_max )
+       SLL_ASSERT( res2 >= interpolator%eta2_min )
+       SLL_ASSERT( res2 <= interpolator%eta2_max )
     end select
           
     val = bvalue2d( &

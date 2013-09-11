@@ -11,8 +11,8 @@ program test_general_qns
 #include "sll_working_precision.h"
   implicit none
 
-#define SPLINE_DEG1 3
-#define SPLINE_DEG2 3
+#define SPLINE_DEG1 5
+#define SPLINE_DEG2 5
 #define NUM_CELLS1  64
 #define NUM_CELLS2  64
 #define ETA1MIN  0.0_f64
@@ -37,7 +37,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
   sll_real64 :: t1i, t1e, t2i, t2e, t3i, t3e, t4i, t4e, t5i, t5e, t6i, t6e, &
-       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i
+       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i,t55e,t55i
  ! sll_real64 :: t105e,t105i,t115e,t115i,t125i,t125e
   real(8), external :: func_zero
   real(8), external :: func_one
@@ -50,14 +50,17 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), allocatable :: values
   sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
-  sll_real64 :: acc10,acc11,acc12,acc95
+  sll_real64 :: acc10,acc11,acc12,acc95,acc55
  ! sll_real64 :: acc105,acc115,acc125
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
+  sll_real64, dimension(:,:), allocatable    :: reference
   sll_real64, dimension(:,:), allocatable    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
 !  sll_real64, dimension(:,:), pointer        :: test_coeff
+  sll_real64, dimension(2,2) :: jac_m
+  sll_real64 :: val_jac
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
@@ -69,6 +72,17 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   real(8), external :: sol_exacte_chgt_perdir  
   real(8), external :: sol_exacte_chgt_dirper
   real(8), external :: sol_exacte_chgt_dirdir
+  real(8), external :: adimension_chgt_x
+  real(8), external :: adimension_chgt_y
+  real(8), external :: jac11_adimension_chgt
+  real(8), external :: jac12_adimension_chgt
+  real(8), external :: jac21_adimension_chgt
+  real(8), external :: jac22_adimension_chgt
+  real(8), external :: sol_exacte_chgt_adim
+  real(8), external :: source_term_chgt_adim
+  real(8) :: integrale_solution
+  real(8) :: integrale_solution_exacte
+  real(8) :: integrale__deriv_solution
  ! sll_real64 :: node_val1
   !sll_real64 :: epsi
   !sll_real64 :: epsi1
@@ -78,9 +92,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   
   
-    
+  !************************************************************************************************
+  !        WHITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA
+  !************************************************************************************************
   !--------------------------------------------------------------------
-  !     1 test case without chane of coordinates 
+  !     1 test case without change of coordinates 
   !      periodic-periodic boundary conditions
   !--------------------------------------------------------------------
   
@@ -98,6 +114,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
 
   ! First thing, initialize the logical mesh associated with this problem.        
@@ -247,7 +264,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc1 = 0.0_f64
-  
+  integrale_solution = 0.0_f64
+  integrale_solution_exacte = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -256,33 +274,39 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference( i+1,j+1) = ref
         if(PRINT_COMPARISON) then
-        print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-             'theoretical = ', ref
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref, 'difference=', node_val-ref
         end if
         acc1        = acc1 + abs(node_val-ref)
+        !integrale_solution = integrale_solution + ref*h1*h2!node_val
      end do
   end do
 
+  print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
+       'integrale de la solution exacte=',sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
-
-
+  
+  
   ! delete things...
   call delete(qns)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-
+  
   call a11_field_mat%base%delete()
   call a12_field_mat%base%delete()
   call a21_field_mat%base%delete()
   call a22_field_mat%base%delete()
-
+  
   call T%delete()
   
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+!!$
+  DEALLOCATE(reference)
 
   !--------------------------------------------------------------------
   
@@ -303,10 +327,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   h2 = (ETA2MAX-ETA2MIN)/real(NPTS2-1,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
-    ! Table to represent the node values of phi
+  ! Table to represent the node values of phi
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
   
   ! First thing, initialize the logical mesh associated with this problem.        
@@ -452,7 +477,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc2 = 0.0_f64
-  
+
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -462,16 +487,19 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !        print*,sin(2*sll_pi*eta1)*cos(2*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference( i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc2        = acc2 + abs(node_val-ref)
      end do
   end do
 
+  print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
+       'integrale de la solution exacte=', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
-    
+  
   ! delete things...
   call delete(qns)
   call rho%delete()
@@ -487,10 +515,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
-  
+  DEALLOCATE(reference)
+
   !--------------------------------------------------------------------
   
-  !     3 test case without chane of coordinates 
+  !     3 test case without change of coordinates 
   !      dirichlet-dirichlet boundary conditions
   
   !--------------------------------------------------------------------
@@ -512,8 +541,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-
+  
   ! First thing, initialize the logical mesh associated with this problem.    
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -670,14 +700,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=', ref-node_val
         end if
         acc3        = acc3 + abs(node_val-ref)
      end do
   end do
-  
+  print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
+       ' integrale de la solution exacte =', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -688,14 +720,15 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call a12_field_mat%base%delete()
   call a21_field_mat%base%delete()
   call a22_field_mat%base%delete()
-
+  
   call T%delete()
   
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
-
-
+!!$
+  DEALLOCATE(reference)
+  
   
   !--------------------------------------------------------------------
   
@@ -703,7 +736,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   !     dirichlet-periodic boundary conditions
   
   !--------------------------------------------------------------------
-    
+  
   print*, "-------------------------------------------------------------"
   print*, " 4 test case witout change of coordinates"
   print*, " dirichlet-periodic boundary conditions"
@@ -719,8 +752,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -784,7 +818,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
-
+  
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_dirper, &
        "rho4", &     
@@ -808,7 +842,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SPLINE_DEG1, &
        SPLINE_DEG2 )
-
+  
   phi => new_scalar_field_2d_discrete_alt( &
        values, &
        "phi4", &
@@ -820,9 +854,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC)
   
   print *, 'initialized fields...'
-
+  
   call set_time_mark(t_reference)
-
+  
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -839,12 +873,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-
+  
   t4i = time_elapsed_since(t_reference) 
   print *, 'Initialized QNS object'
   
   call set_time_mark(t_reference)
-
+  
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
        qns, &
@@ -870,14 +904,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc4        = acc4 + abs(node_val-ref)
      end do
   end do
-
+  print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
+       ' integrale de la solution exacte=',sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -888,14 +924,17 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call a12_field_mat%base%delete()
   call a21_field_mat%base%delete()
   call a22_field_mat%base%delete()
-
+  
   call T%delete()
   
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
 
-
+!!$  !************************************************************************************************
+!!$  !        WHITH CHANGE OF COORDINATES AND ANALYTIC DATA
+!!$  !************************************************************************************************
   !--------------------------------------------------------------------
   
   !     5 test case with colella change of coordinates 
@@ -918,8 +957,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-
+  
   ! First thing, initialize the logical mesh associated with this problem.  
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -1022,7 +1062,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print *, 'initialized fields...'
   
   call set_time_mark(t_reference)
-
+  
   call initialize_general_qn_solver( &
        qns, &
        SPLINE_DEG1, &
@@ -1039,10 +1079,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-
+  
   t5i = time_elapsed_since(t_reference) 
   print *, 'Initialized QNS object'
-
+  
   call set_time_mark(t_reference)  
   ! solve the field
   call solve_quasi_neutral_eq_general_coords( &
@@ -1054,15 +1094,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        c_field, &
        rho, &
        phi )
-
+  
   !print *, 'Completed solution',qns%phi_vec
   
   t5e = time_elapsed_since(t_reference)  
   
-!  print *, 'Compare the values of the transformation at the nodes: '
+  !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc5 = 0.0_f64
-  
+  integrale_solution = 0.0
+  integrale_solution_exacte = 0.0
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -1072,14 +1113,24 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        if(PRINT_COMPARISON) then
+        reference(i+1,j+1) = ref
+        ! jac_mat(:,:) = mesh_2d%get_jacobian_matrix(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        if(PRINT_COMPARISON) then! k = 5 0.00000001 k = 3 0.00001, k=4 0.0000001
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref, 'difference = ', ref-node_val
+           
         end if
         acc5        = acc5 + abs(node_val-ref)
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+        end if
      end do
   end do
-
+  
+  print*, ' integrale solution', integrale_solution, &
+       'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -1090,12 +1141,225 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call a12_field_mat%base%delete()
   call a21_field_mat%base%delete()
   call a22_field_mat%base%delete()
-
+  
   call T%delete()
   
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
+
+
+!!$   !--------------------------------------------------------------------
+!!$  
+!!$  !     55 test case with adimensionnement change of coordinates 
+!!$  !     periodic-periodic boundary conditions
+!!$  
+!!$  !--------------------------------------------------------------------
+!!$  
+!!$  print*, "---------------------"
+!!$  print*, " 55 test case with adimensionnement change of coordinates"
+!!$  print*, " periodic-periodic boundary conditions"
+!!$  print*, "---------------------"
+!!$  npts1 =  NUM_CELLS1 + 1
+!!$  npts2 =  NUM_CELLS2 + 1
+!!$  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+!!$  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+!!$  print *, 'h1 = ', h1
+!!$  print *, 'h2 = ', h2
+!!$  
+!!$  ! Table to represent the node values of phi
+!!$  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+!!$  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+!!$  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+!!$  values(:,:) = 0.0_f64
+!!$
+!!$  ! First thing, initialize the logical mesh associated with this problem.  
+!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+!!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+!!$  
+!!$  ! Second, initialize the coordinate transformation associated with this 
+!!$  ! problem.
+!!$  T => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic", &
+!!$       mesh_2d, &
+!!$       adimension_chgt_x, &
+!!$       adimension_chgt_y, &
+!!$       jac11_adimension_chgt, &
+!!$       jac12_adimension_chgt, &
+!!$       jac21_adimension_chgt, &
+!!$       jac22_adimension_chgt)
+!!$  print *, 'initialized coordinate transformation'
+!!$  
+!!$  ! Thirdly, each field object must be initialized using the same logical
+!!$  ! mesh and coordinate transformation.
+!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$       func_one, &
+!!$       "a11", &
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC ) 
+!!$  
+!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$       func_zero, &
+!!$       "a12", &
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC ) 
+!!$  
+!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$       func_zero, &
+!!$       "a21", &
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC ) 
+!!$  
+!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$       func_one, &
+!!$       "a22", &
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC ) 
+!!$  
+!!$  c_field => new_scalar_field_2d_analytic_alt( &
+!!$       func_zero, &
+!!$       "c_field", &
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC )
+!!$  
+!!$  rho => new_scalar_field_2d_analytic_alt( &
+!!$       source_term_chgt_adim, &
+!!$       "rho55", &     
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC )
+!!$  
+!!$  call initialize_ad2d_interpolator( &
+!!$       interp_2d, &
+!!$       NUM_CELLS1+1, &
+!!$       NUM_CELLS2+1, &
+!!$       ETA1MIN, &
+!!$       ETA1MAX, &
+!!$       ETA2MIN, &
+!!$       ETA2MAX, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SPLINE_DEG1, &
+!!$       SPLINE_DEG2 )
+!!$  
+!!$  
+!!$  phi => new_scalar_field_2d_discrete_alt( &
+!!$       values, &
+!!$       "phi55", &
+!!$       interp_2d, &
+!!$       T, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC)
+!!$  
+!!$  print *, 'initialized fields...'
+!!$  
+!!$  call set_time_mark(t_reference)
+!!$
+!!$  call initialize_general_qn_solver( &
+!!$       qns, &
+!!$       SPLINE_DEG1, &
+!!$       SPLINE_DEG2, &
+!!$       NUM_CELLS1, &
+!!$       NUM_CELLS2, &
+!!$       QNS_GAUSS_LEGENDRE, &
+!!$       QNS_GAUSS_LEGENDRE, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       SLL_PERIODIC, &
+!!$       ETA1MIN, &
+!!$       ETA1MAX, &
+!!$       ETA2MIN, &
+!!$       ETA2MAX)
+!!$
+!!$  t55i = time_elapsed_since(t_reference) 
+!!$  print *, 'Initialized QNS object'
+!!$
+!!$  call set_time_mark(t_reference)  
+!!$  ! solve the field
+!!$  call solve_quasi_neutral_eq_general_coords( &
+!!$       qns, &
+!!$       a11_field_mat, &
+!!$       a12_field_mat, &
+!!$       a21_field_mat, &
+!!$       a22_field_mat, &
+!!$       c_field, &
+!!$       rho, &
+!!$       phi )
+!!$
+!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  
+!!$  t55e = time_elapsed_since(t_reference)  
+!!$  
+!!$!  print *, 'Compare the values of the transformation at the nodes: '
+!!$  
+!!$  acc55 = 0.0_f64
+!!$  integrale_solution = 0.0
+!!$
+!!$  do j=0,npts2-1
+!!$     do i=0,npts1-1
+!!$        eta1       = real(i,f64)*h1 + ETA1MIN
+!!$        eta2       = real(j,f64)*h2 + ETA2MIN
+!!$        node_val   = phi%value_at_point(eta1,eta2)
+!!$        !print*, 'rer'
+!!$        ref        = sol_exacte_chgt_adim(eta1,eta2)
+!!$        calculated(i+1,j+1) = node_val
+!!$        difference(i+1,j+1) = ref-node_val
+!!$       ! jac_mat(:,:) = mesh_2d%get_jacobian_matrix(eta1,eta2)
+!!$        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+!!$       ! if(PRINT_COMPARISON) then ! if(abs(ref-node_val) > 0.00001) then !
+!!$           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+!!$                'theoretical = ', ref, 'difference = ', ref-node_val, 'jacobian=',val_jac
+!!$        !end if
+!!$        acc55        = acc55 + abs(node_val-ref)
+!!$        if ( i < npts1-1 .and. j < npts2-1) then
+!!$           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+!!$        end if
+!!$     end do
+!!$  end do
+!!$
+!!$  !do i = 33,npts2-1
+!!$     print*, ' integrale solution', sum(calculated(i-32,1:npts2-1))-sum(calculated(i,1:npts2-1))!, sum(calculated(1:npts1-1,2)),sum(calculated(1:npts1-1,3))
+!!$  !end do
+!!$  print*,  real(i,f64)*h1 + ETA1MIN
+!!$  call phi%write_to_file(0)
+!!$  ! delete things...
+!!$  call delete(qns)
+!!$  call rho%delete()
+!!$  call c_field%delete()
+!!$  call phi%delete()
+!!$  call a11_field_mat%base%delete()
+!!$  call a12_field_mat%base%delete()
+!!$  call a21_field_mat%base%delete()
+!!$  call a22_field_mat%base%delete()
+!!$
+!!$  call T%delete()
+!!$  
+!!$  DEALLOCATE(values)
+!!$  DEALLOCATE(calculated)
+!!$  DEALLOCATE(difference)
 
   !--------------------------------------------------------------------
   
@@ -1120,15 +1384,17 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  values(:,:) = 0.0_f64
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
 
+  values(:,:) = 0.0_f64
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -1222,9 +1488,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET)
   
   print *, 'initialized fields...'
-
-!  print *, 'a = ', qns%csr_mat%opr_a
-
+  
+  !  print *, 'a = ', qns%csr_mat%opr_a
+  
   call set_time_mark(t_reference)
 
   call initialize_general_qn_solver( &
@@ -1245,9 +1511,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        ETA2MAX)
 
   t6i = time_elapsed_since(t_reference) 
-
+  
   print *, 'Initialized QNS object'
-
+  
   call set_time_mark(t_reference)
   
   ! solve the field
@@ -1260,13 +1526,15 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        c_field, &
        rho, &
        phi )
-
-  t6e = time_elapsed_since(t_reference)
-
   
-!  print *, 'Compare the values of the transformation at the nodes: '
+  t6e = time_elapsed_since(t_reference)
+  
+  
+  !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc6 = 0.0_f64
+  integrale_solution = 0.0_f64
+  integrale_solution_exacte = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1278,14 +1546,25 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-
+        reference(i+1,j+1) = ref
+        
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=', ref-node_val
         end if
-         acc6        = acc6 + abs(node_val-ref)
+        acc6        = acc6 + abs(node_val-ref)
+           
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        if ( i < npts1-1 .and. j < npts2-1 ) then
+           integrale_solution = integrale_solution + node_val*val_jac* h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac* h1*h2
+           
+        end if
      end do
   end do
+  
+  print*, 'integrale solution=',integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -1296,15 +1575,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call a12_field_mat%base%delete()
   call a21_field_mat%base%delete()
   call a22_field_mat%base%delete()
-
+  
   call T%delete()
   
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
 
 
-
+  
   !--------------------------------------------------------------------
   
   !     7 test case with colella change of coordinates 
@@ -1327,6 +1607,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
 
   ! First thing, initialize the logical mesh associated with this problem.        
@@ -1335,7 +1616,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -1346,7 +1627,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        sinprod_jac22)
   print *, 'initialized coordinate transformation'
   
-  ! Thirdly, each field object must be initialized using the same logical
+   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
   a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1429,7 +1710,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET)
   
   print *, 'initialized fields...'
-
+  
   call set_time_mark(t_reference)
   call initialize_general_qn_solver( &
        qns, &
@@ -1447,9 +1728,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-
+  
   t7i = time_elapsed_since(t_reference) 
-
+  
   print *, 'Initialized QNS object'
 
   call set_time_mark(t_reference)
@@ -1467,11 +1748,13 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
 
   t7e = time_elapsed_since(t_reference)
-
+  
   
 !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc7 = 0.0_f64
+  integrale_solution = 0.0_f64
+  integrale_solution_exacte = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -1483,13 +1766,22 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc7        = acc7 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
      end do
   end do
+  print*, 'integrale solution=',integrale_solution,&
+       'integrale de la solution excate=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -1506,12 +1798,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
 
-
+  
+!!$
   !--------------------------------------------------------------------
   
   !     8  test case with colella change of coordinates 
-  !     dirichlet-dirichlet boundary conditions
+  !     dirichlet-periodic boundary conditions
   
   !--------------------------------------------------------------------
   
@@ -1531,15 +1825,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-    
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -1634,7 +1929,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC)
   
   print *, 'initialized fields...'
-
+  
   call set_time_mark(t_reference)
   
   call initialize_general_qn_solver( &
@@ -1655,7 +1950,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        ETA2MAX)
   
   t8i = time_elapsed_since(t_reference) 
-
+  
   print *, 'Initialized QNS object'
   call set_time_mark(t_reference)
   
@@ -1671,15 +1966,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        phi )
   
   !print *, 'Completed solution',qns%phi_vec
-    
-  t8e = time_elapsed_since(t_reference)
-
-
   
-!  print *, 'Compare the values of the transformation at the nodes: '
+  t8e = time_elapsed_since(t_reference)
+  
+  
+  
+  !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc8 = 0.0_f64
-  
+  integrale_solution = 0.0_f64
+  integrale_solution_exacte = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -1690,14 +1986,21 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc8        = acc8 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+        end if
      end do
   end do
+  print*, 'integrale solution=',integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -1708,16 +2011,20 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call a12_field_mat%base%delete()
   call a21_field_mat%base%delete()
   call a22_field_mat%base%delete()
-
+  
   call T%delete()
   
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
 
-
-
- !--------------------------------------------------------------------
+  
+  
+  !************************************************************************************************
+  !        WHITH CHANGE OF COORDINATES AND NON-ANALYTIC SOURCE TERM
+  !************************************************************************************************
+  !--------------------------------------------------------------------
   
   !     95  test case without change of coordinates 
   !      periodic-periodic boundary conditions
@@ -1743,15 +2050,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        identity_x1, &
@@ -1809,21 +2117,21 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
-
   
-
-  allocate(point1(2*npts1-1))
-  allocate(point2(2*npts2-1))
-  allocate(tab_rho(2*npts1-1,2*npts2-1))
-  do j=0,2*npts2-2
-     do i=0,2*npts1-2
-        point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(2*npts1-1) + ETA1MIN 
-        point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(2*npts2-1) + ETA2MIN 
+  
+  
+  allocate(point1(npts1-1))
+  allocate(point2(npts2-1))
+  allocate(tab_rho(npts1-1,npts2-1))
+  do j=0,npts2-2
+     do i=0,npts1-2
+        point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(npts1-1) + ETA1MIN 
+        point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(npts2-1) + ETA2MIN 
         tab_rho(i+1,j+1)  = source_term_perper(point1(i+1),point2(j+1))
      end do
   end do
-
-  !print*, point1,point2
+  
+  !print*, tab_rho
   call initialize_ad2d_interpolator( &
        interp_2d_term_source, &
        NUM_CELLS1+1, &
@@ -1839,8 +2147,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SPLINE_DEG1, &
        SPLINE_DEG2)
   
- ! terme_source_interp => interp_2d_term_source
-
+  ! terme_source_interp => interp_2d_term_source
+  
   rho => new_scalar_field_2d_discrete_alt( &
        tab_rho, &
        "rho95", &
@@ -1851,13 +2159,23 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC,&
        point1,&
-       2*npts1-1,&
+       npts1-1,&
        point2,&
-       2*npts2-1)
-
-  call rho%write_to_file(0)
-
-
+       npts2-1)
+  
+  
+!!$  do j=0,npts2-2
+!!$     do i=0,npts1-2
+!!$        eta1 = real(i,f64)*(ETA1MAX-ETA1MIN)/(3*(npts1-1)) + ETA1MIN 
+!!$        eta2 = real(j,f64)*(ETA2MAX-ETA2MIN)/(3*(npts2-1)) + ETA2MIN
+!!$        calculated(i+1,j+1) = rho%value_at_point(eta1,eta2)
+!!$        difference(i+1,j+1) = calculated(i+1,j+1)-source_term_perper( eta1, eta2)
+!!$       print*,'points=', eta1,eta2, 'difference=', difference(i+1,j+1), calculated(i+1,j+1),source_term_perper( eta1, eta2)
+!!$    end do
+!!$ end do
+ call rho%write_to_file(0)
+ 
+ 
 !!$  
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1929,7 +2247,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print *, 'Compare the values of the transformation at the nodes: '
   
   acc95 = 0.0_f64
-  
+  integrale_solution = 0.0_f64
+  integrale_solution_exacte = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -1941,13 +2260,22 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref, 'difference=',ref-node_val
         end if
         acc95        = acc95 + abs(node_val-ref)
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref * h1*h2
+           
+        end if
      end do
   end do
+
+  print*, 'integrale solution=', integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -1964,14 +2292,15 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
   DEALLOCATE(point1)
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
 
+  
+  
 
-
-
-   !--------------------------------------------------------------------
+  !--------------------------------------------------------------------
   
   !     9  test case with colella change of coordinates 
   !      periodic-periodic boundary conditions
@@ -1997,15 +2326,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -2063,7 +2393,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
-
+  
   
 
   allocate(point1(npts1-1))
@@ -2077,7 +2407,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         tab_rho(i+1,j+1)  = source_term_chgt_perper(point1(i+1),point2(j+1))
      end do
   end do
-
+  
   
   call initialize_ad2d_interpolator( &
        interp_2d_term_source, &
@@ -2095,7 +2425,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SPLINE_DEG2 )
   
   terme_source_interp => interp_2d_term_source
-
+  
   tab_rho(:,:) = tab_rho - sum(tab_rho)/((npts1-1)*(npts2-1))
   print*,'moyenne', sum(tab_rho)
   rho => new_scalar_field_2d_discrete_alt( &
@@ -2112,7 +2442,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        point2,&
        npts2-1)
 
-
+  
 !!$  
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -2178,12 +2508,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        phi )
   
   !print *, 'Completed solution',qns%phi_vec
-    
+  
   t9e = time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
   acc9 = 0.0_f64
+  integrale_solution = 0.0_f64
+  integrale_solution_exacte = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -2196,13 +2528,25 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_perper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc9        = acc9 + abs(node_val-ref)
+        
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
      end do
   end do
+  
+  print*, 'integrale solution', integrale_solution,&
+       ' integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   call rho%write_to_file(0)
   ! delete things...
@@ -2220,18 +2564,19 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
   DEALLOCATE(point1)
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
-
-!!$
-!!$
-!!$   !--------------------------------------------------------------------
-!!$  
-!!$  !     10  test case with colella change of coordinates 
-!!$  !      periodic-dirichlet boundary conditions
-!!$  !     and non analytic source term
-!!$  !--------------------------------------------------------------------
+  
+  
+  
+   !--------------------------------------------------------------------
+  
+  !     10  test case with colella change of coordinates 
+  !      periodic-dirichlet boundary conditions
+  !     and non analytic source term
+  !--------------------------------------------------------------------
 !!$  
   
   
@@ -2251,6 +2596,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+   SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
 
   ! First thing, initialize the logical mesh associated with this problem.        
@@ -2434,7 +2780,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print *, 'Compare the values of the transformation at the nodes: '
   
   acc10 = 0.0_f64
-  
+  integrale_solution = 0.0 
+  integrale_solution_exacte = 0.0
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -2445,13 +2792,23 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc10        = acc10 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
      end do
   end do
+  print*, 'integrale de la solution=',integrale_solution,&
+       'integrale de la solution exacte=',integrale_solution_exacte
 
   call phi%write_to_file(0)
   ! delete things...
@@ -2469,6 +2826,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
   DEALLOCATE(point1)
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
@@ -2499,8 +2857,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
-  values(:,:) = 0.0_f64
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
 
+  values(:,:) = 0.0_f64
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
@@ -2680,7 +3040,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print *, 'Compare the values of the transformation at the nodes: '
   
   acc11 = 0.0_f64
-  
+  integrale_solution_exacte = 0.0
+  integrale_solution = 0.0
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -2691,13 +3052,25 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1)  = ref
+
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref, 'difference=', ref-node_val
         end if
         acc11        = acc11 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
      end do
   end do
+  print*, 'integrale de la solution=', integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
+  
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -2714,6 +3087,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
   DEALLOCATE(point1)
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
@@ -2743,15 +3117,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
   SLL_ALLOCATE(calculated(npts1,npts2),ierr)
   SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
-
+  
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -2810,8 +3185,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC )
   
-
-
+  
+  
   allocate(point1(npts1))
   allocate(point2(npts2-1))
   allocate(tab_rho(npts1,npts2-1))
@@ -2822,7 +3197,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         tab_rho(i+1,j+1)  = source_term_chgt_dirper(point1(i+1),point2(j+1))
      end do
   end do
-
+  
   call initialize_ad2d_interpolator( &
        interp_2d_term_source, &
        NUM_CELLS1+1, &
@@ -2924,6 +3299,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print *, 'Compare the values of the transformation at the nodes: '
   
   acc12 = 0.0_f64
+  integrale_solution = 0.0
+  integrale_solution_exacte = 0.0
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -2935,13 +3312,23 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1)  = ref
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-                'theoretical = ', ref
+                'theoretical = ', ref,'difference=', ref-node_val
         end if
         acc12        = acc12 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
      end do
   end do
+  print*, 'integrale de la solution =', integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
   call delete(qns)
@@ -2958,11 +3345,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
+  DEALLOCATE(reference)
   DEALLOCATE(point1)
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
-!!$
-!!$
+
+
   print*, '------------------------------------------------------'
   print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 
   print*, '-----------------------------------------------------'
@@ -2979,7 +3367,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print *,'Average error in nodes (dir-per) without change of coordinates='&
        ,acc4/(npts1*npts2), ',  initialization time (s): ', t4i, &
        ',  solution time (s): ', t4e
-
+!!$
   print*, '-------------------------------------------------------'
   print*, ' COLELLA CHANGE OF COORDINATES AND ANALYTIC DATA' 
   print*, '-------------------------------------------------------'
@@ -2999,16 +3387,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print*, 'with colella change of coordinates='&
        ,acc8/(npts1*npts2), ',  initialization time (s): ', t8i, &
        ',  solution time (s): ', t8e
-  
+!!$  
   print*, '-------------------------------------------------------'
-  print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 
+  print*, ' WITHOUT CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
   print*, '-------------------------------------------------------'
   print *,'Average error in nodes (per-per) '
   print*, 'without change of coordinates='&
        ,acc95/(npts1*npts2), ',  initialization time (s): ', t95i, &
        ',  solution time (s): ', t95e
-
-
+!!$
+!!$
   print*, '-------------------------------------------------------'
   print*, ' COLELLA CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
   print*, '-------------------------------------------------------'
@@ -3028,8 +3416,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   print*, 'with colella change of coordinates and source term non analytic='&
        ,acc12/(npts1*npts2), ',  initialization time (s): ', t12i, &
        ',  solution time (s): ', t12e
-
   
+!!$  
   print *, 'PASSED'
 end program test_general_qns
 
@@ -3068,9 +3456,9 @@ function source_term_perper( eta1, eta2) result(res)
 
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
- ! real(8), dimension(:), intent(in), optional :: params
+  ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
-  res = 2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+  res = -2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function source_term_perper
 
 real(8) function sol_exacte_perper(eta1,eta2)
@@ -3096,10 +3484,10 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
   source_term_perdir = &
-       (16.0*sll_pi**2*eta2**4 &
+       -(16.0*sll_pi**2*eta2**4 &
        - 16.0*sll_pi**2*eta2**2 &
        - 12.0*eta2**2 + 2.0)*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
-
+  
 end function source_term_perdir
 
 
@@ -3127,7 +3515,7 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
   source_term_dirper = &
-      (16.0*sll_pi**2*eta1**4 &
+      -(16.0*sll_pi**2*eta1**4 &
       - 16.0*sll_pi**2*eta1**2 &
       - 12.0*eta1**2 + 2.0)*sin(2*sll_pi*eta2)*cos(2*sll_pi*eta2)
 end function source_term_dirper
@@ -3162,13 +3550,13 @@ real(8) function rho_rtheta(eta1,eta2,params) ! in the path
   real(8),intent(in) :: eta1,eta2
   real(8) :: x, y
   real(8), dimension(:), intent(in), optional :: params
-
+  
   x = eta2*cos(2*sll_pi*eta1)
   y = eta2*sin(2*sll_pi*eta1)
   
   rho_rtheta = x*y*(-32.0*x**2 - 32.0*y**2 + 15.0)  
   
-    
+  
 end function rho_rtheta
 
 
@@ -3203,12 +3591,12 @@ real(8) function source_term_chgt_perper(eta1,eta2) ! in the path
   intrinsic :: sin
   real(8):: eta1,eta2
   real(8) :: x, y
- ! real(8), dimension(:), intent(in), optional :: params
+  ! real(8), dimension(:), intent(in), optional :: params
   
-  x =   eta1 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
-  y =   eta2 + 0.1_8*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+  x =   eta1 + 0.1_f64*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1_f64*sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
   
-  source_term_chgt_perper = 8.0*sll_pi**2*cos(2*sll_pi*x)*cos(2*sll_pi*y) 
+  source_term_chgt_perper = -8.0*sll_pi**2*cos(2*sll_pi*x)*cos(2*sll_pi*y) 
   
 end function source_term_chgt_perper
 
@@ -3255,7 +3643,7 @@ real(8) function source_term_chgt_perdir(eta1,eta2) ! in the path
   x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
-  source_term_chgt_perdir= 2*(2*sll_pi)**2 * sin(2*sll_pi*y)*cos(2*sll_pi*x)
+  source_term_chgt_perdir= -2*(2*sll_pi)**2 * sin(2*sll_pi*y)*cos(2*sll_pi*x)
   
   
 end function source_term_chgt_perdir
@@ -3302,7 +3690,7 @@ real(8) function source_term_chgt_dirdir(eta1,eta2) ! in the path
   
   
   source_term_chgt_dirdir = &
-       2*(2.0*sll_pi)**2*sin(2*sll_pi*x)*sin(2*sll_pi*y)
+       -2*(2.0*sll_pi)**2*sin(2*sll_pi*x)*sin(2*sll_pi*y)
   
 end function source_term_chgt_dirdir
 
@@ -3315,7 +3703,7 @@ real(8) function sol_exacte_chgt_dirdir(eta1,eta2)
   real(8) :: x,y
   intrinsic :: cos
   intrinsic :: sin
-
+  
   x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
@@ -3351,7 +3739,7 @@ real(8) function source_term_chgt_dirper(eta1,eta2) ! in the path
   y =   eta2 + 0.1_8*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   
-  source_term_chgt_dirper = 2*(2*sll_pi)**2*sin(2*sll_pi*x)*cos(2*sll_pi*y)
+  source_term_chgt_dirper = -2*(2*sll_pi)**2*sin(2*sll_pi*x)*cos(2*sll_pi*y)
   
 end function source_term_chgt_dirper
 
@@ -3373,3 +3761,75 @@ real(8) function sol_exacte_chgt_dirper(eta1,eta2)
   
 end function sol_exacte_chgt_dirper
 
+
+!!!!!! test case with F(theta,phi) = (2pi theta , 2pi phi)
+
+real(8) function adimension_chgt_x(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  adimension_chgt_x = 2*sll_pi*eta1 !+ eta2)
+end function adimension_chgt_x
+
+real(8) function adimension_chgt_y(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  adimension_chgt_y = 2*sll_pi*eta2
+end function adimension_chgt_y
+
+
+real(8) function jac11_adimension_chgt(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  jac11_adimension_chgt = 2*sll_pi
+end function jac11_adimension_chgt
+
+real(8) function jac12_adimension_chgt(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  jac12_adimension_chgt = 0.0!sll_pi
+end function jac12_adimension_chgt
+
+real(8) function jac21_adimension_chgt(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  jac21_adimension_chgt = 0.0!2*sll_pi!0.0
+end function jac21_adimension_chgt
+
+real(8) function jac22_adimension_chgt(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  jac22_adimension_chgt = 2*sll_pi
+end function jac22_adimension_chgt
+
+
+
+real(8) function sol_exacte_chgt_adim(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  
+  x =   2*sll_pi*eta1!+eta2)
+  y =   2* sll_pi*eta2
+  
+  
+  sol_exacte_chgt_adim = cos(x)*cos(y)
+  
+end function sol_exacte_chgt_adim
+
+
+real(8) function source_term_chgt_adim(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  
+  x =   2*sll_pi*eta1 !+eta2)
+  y =   2* sll_pi*eta2
+  
+  
+  source_term_chgt_adim = -2*cos(x)*cos(y)
+  
+end function source_term_chgt_adim
