@@ -660,10 +660,10 @@ contains
          sim%rho_full, &
          density_tot )
     
-    ! print*, 'density', density_tot
+     !print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - 1, & !density_tot, &
+         sim%rho_full*0.0 ,&!- density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -829,15 +829,15 @@ contains
        global_indices(1:2) =  &
             local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
        
-       call sll_gnuplot_rect_2d_parallel( &
-          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-          sim%mesh2d_x%delta_eta1, &
-          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-          sim%mesh2d_x%delta_eta2, &
-          sim%rho_split, &
-          "rho_split", &
-          itime, &
-          ierr )
+!!$       call sll_gnuplot_rect_2d_parallel( &
+!!$          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+!!$          sim%mesh2d_x%delta_eta1, &
+!!$          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+!!$          sim%mesh2d_x%delta_eta2, &
+!!$          sim%rho_split, &
+!!$          "rho_split", &
+!!$          itime, &
+!!$          ierr )
        
        call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
        
@@ -882,8 +882,8 @@ contains
             sim%rho_full, &
             density_tot )
        
-       ! print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-1.0)!density_tot)
+       !print*, 'density', density_tot
+       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
        
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
@@ -961,6 +961,10 @@ contains
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+!!$                ex = - ( phi%value_at_point(eta1+ delta1,eta2) &
+!!$                     -phi%value_at_point(eta1, eta2))/delta1
+!!$                ey = - ( phi%value_at_point(eta1, eta2 + delta2) &
+!!$                     -phi%value_at_point(eta1, eta2))/delta2
                 ex     =  - phi%first_deriv_eta1_value_at_indices(&
                      global_indices(1), global_indices(2))
                 ey     =  - phi%first_deriv_eta2_value_at_indices(&
@@ -983,9 +987,11 @@ contains
 !!$                     sqrt(((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
 !!$                      (inv_j(1,2)*ex + inv_j(2,2)*ey)**2))
                 
+                tmp = tmp + ex
+                !print*,'norm electric field', sum(ex)*delta1*delta2
                 efield_energy_total = efield_energy_total + &
-                     delta1*delta2*sqrt(((jac_m(1,1)*ex + jac_m(2,1)*ey)**2 + &
-                     (jac_m(1,2)*ex + jac_m(2,2)*ey)**2))
+                     delta1*delta2*sqrt((((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
+                     (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)))
              end do
           end do
        end do
@@ -1004,6 +1010,10 @@ contains
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+!!$                ex = - ( phi%value_at_point(eta1+ delta1,eta2) &
+!!$                     -phi%value_at_point(eta1, eta2))/delta1
+!!$                ey = - ( phi%value_at_point(eta1, eta2 + delta2) &
+!!$                     -phi%value_at_point(eta1, eta2))/delta2
                 ex     =  - phi%first_deriv_eta1_value_at_indices(&
                      global_indices(1), global_indices(2))
                 ey     =  - phi%first_deriv_eta2_value_at_indices(&
@@ -1315,8 +1325,8 @@ contains
     
     density_tot = 0.0_f64
     
-    do j=1,numpts2
-       do i=1,numpts1
+    do j=1,numpts2-1
+       do i=1,numpts1-1
           density_tot = density_tot + rho(i,j)*delta1*delta2
        end do
     end do

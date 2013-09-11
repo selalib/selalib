@@ -31,13 +31,15 @@ subroutine spli2d_custom ( &
   real(8), dimension ( (ai_ny-ai_ky)*(2*ai_ky+3)+5*ai_ky+3 ) :: scrtch1
   real(8), dimension ( ai_nx + ai_kx ) :: t 
   integer  :: li_i, li_j, li_iflag,iflag,iflag1
+  integer :: o
   
+
   lpr_work1(:,:) = 0.0
 
   ! *** set up knots
   !     interpolate between knots
   ! x
-  !  if (ai_kx <= 2) then 
+  if (ai_kx <= 3) then 
      apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
      apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
      
@@ -47,16 +49,22 @@ subroutine spli2d_custom ( &
              ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
         
      end do
- ! else
-  !   scrtch(:) = 0.0_8
-   !  print*, 'TEST SPLOT', size(apr_taux), ai_nx,ai_kx,size(apr_tx),size(scrtch)
-  !   call splopt ( apr_taux,ai_nx, ai_kx, scrtch, apr_tx, iflag )
+!!$     do li_i = 1,ai_kx
+!!$        apr_tx ( li_i ) = apr_taux (1) + (li_i-ai_kx)*(apr_taux ( 2 )-apr_taux ( 1 ))
+!!$        apr_tx ( ai_nx + li_i ) = apr_taux (ai_nx)+(li_i-1)*(apr_taux (2)-apr_taux(1))
+!!$
+!!$     end do
+  else
+     !   scrtch(:) = 0.0_8
+     !  print*, 'TEST SPLOT', size(apr_taux), ai_nx,ai_kx,size(apr_tx),size(scrtch)
+!!$     print*,apr_taux
+     call splopt ( apr_taux,ai_nx, ai_kx, scrtch, apr_tx, iflag )
     ! print*, 'result', apr_tx
-     
-  !end if
+!!$     
+  end if
   ! print*, 'probleme de merde 2'
 !!$  print*, 'DE BOOR SPSLINE', apr_tx
-  
+  !print*, apr_tx
   apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
      do li_j = 1, ai_ny
@@ -78,7 +86,7 @@ subroutine spli2d_custom ( &
        lpr_work5, &
        li_iflag )
 
- ! if (ai_ky <= 2) then 
+  if (ai_ky <= 3) then 
      apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
      apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
      
@@ -88,10 +96,15 @@ subroutine spli2d_custom ( &
              (li_j-(ai_ky + 1))*&
              ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
      end do
- ! else 
-  !   call splopt ( apr_tauy,ai_ny, ai_ky, scrtch1, apr_ty, iflag1 )
- ! end if
+  else 
+     call splopt ( apr_tauy,ai_ny, ai_ky, scrtch1, apr_ty, iflag1 )
+  end if
 
+!!$     do li_i = 1,ai_ky
+!!$        apr_ty ( li_i ) = apr_tauy (1) + (li_i-ai_ky)*(apr_tauy ( 2 )-apr_tauy ( 1 ))
+!!$        apr_ty ( ai_ny + li_i ) = apr_tauy (ai_ny)+(li_i-1)*(apr_tauy (2)-apr_tauy(1))
+!!$        
+!!$     end do
  
   apr_bcoef(:,:) =0.0_8
   lpr_work4 = 0.0_8

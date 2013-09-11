@@ -172,13 +172,19 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the cs1d at initialization time.  
 #ifdef STDF95
-  subroutine cubic_spline_compute_interpolants( interpolator, data_array )
+  subroutine cubic_spline_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(cubic_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_cs1d( interpolator, data_array )
+  subroutine compute_interpolants_cs1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_spline_1D( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine cubic_spline_compute_interpolants

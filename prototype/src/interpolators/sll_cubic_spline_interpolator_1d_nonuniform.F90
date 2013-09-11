@@ -134,14 +134,23 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the cs1d at initialization time.  
 #ifdef STDF95
-  subroutine cubic_non_uniform_spline_compute_interpolants( interpolator, data_array )
-    type(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
+  subroutine cubic_non_uniform_spline_compute_interpolants(&
+       interpolator, data_array,&
+        eta_coords, &
+        size_eta_coords)
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout):: interpolator
 #else
-  subroutine compute_interpolants_cs1d( interpolator, data_array )
-    class(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
+    subroutine compute_interpolants_cs1d(interpolator, data_array,&
+         eta_coords, &
+         size_eta_coords)
+      class(cubic_non_uniform_spline_1d_interpolator),intent(inout)::interpolator
+      
 #endif
-    sll_real64, dimension(:), intent(in)               :: data_array
-    call compute_spline_1D( data_array, interpolator%spline )
+      sll_real64, dimension(:), intent(in)           :: data_array
+      sll_real64, dimension(:), intent(in),optional  :: eta_coords
+      sll_int32, intent(in),optional                 :: size_eta_coords
+      
+      call compute_spline_1D( data_array, interpolator%spline )
   end subroutine
 
   ! Alternative implementation for the function meant to interpolate a

@@ -114,13 +114,20 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the per1d at initialization time.  
 #ifdef STDF95
-  subroutine periodic_compute_interpolants( interpolator, data_array )
+  subroutine periodic_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(per_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_per1d( interpolator, data_array )
+  subroutine compute_interpolants_per1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
+       
     class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     print*, 'compute_interpolants_per1d:', &
          ' not implemented for periodic interpolation'
     stop
