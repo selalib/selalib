@@ -24,11 +24,11 @@
   deltarn        = 0.2 !0. !0.2 !0.08 !0.2 
   deltarTi       = 0.1 !0.08 !0.1
   deltarTe       = 0.1 !0.08 !0.1
-  epsilon        = 1e-12  !0.
-  modethmin       = 4 !11 !1
-  modethmax       = 4 !11 !2
-  modezmin        = 9 !3 !1
-  modezmax        = 9 !3 !2
+  epsilon        = 1e-6  !0.
+  modethmin       = 9 !11 !1
+  modethmax       = 9 !11 !2
+  modezmin        = 4 !3 !1
+  modezmax        = 4 !3 !2
   zonal_flow     = .true.
 /
 
