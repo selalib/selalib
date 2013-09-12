@@ -640,7 +640,7 @@ subroutine get_mode(this,phi,kmin,kmax,res)
   type(vlasov2d),intent(in) :: this
   sll_real64,dimension(:,:) :: phi
   sll_int32,intent(in)      :: kmin(2),kmax(2)
-  sll_comp64 :: res(kmin(1),kmax())
+  sll_comp64 :: res(kmin(1):kmax(1),kmin(2):kmax(2))
   sll_int32:: N(2),err
   sll_real64,dimension(:),allocatable::buf_real
   sll_real64,dimension(:),allocatable::buf_complex
@@ -811,13 +811,23 @@ if (my_num==MPI_MASTER) then
    
    call get_mode(this,phi(this%geomx%nx/2,:,:),kmin,kmax,mode_tab)
    
-   print *,mode_tab(0,0)
+   !print *,mode_tab(0,0)
    aux(13)=t
    aux(12)=nrj
    !write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrj
    !call time_history("thf","(13(1x,e15.6))",aux(1:13))
    !print "(13(1x,e15.10))",aux(1:13)
-   print *,t,nrj,aux(4)+aux(5),aux(1:5),mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))
+   
+   !b=2 nrj
+   !b=3 nrj tot
+   !b=4 mass
+   !b=5 L1
+   !b=6 L2
+   !b=7 ekin
+   !b=8 epot
+   !b=9..  mode
+   
+   print *,t,nrj,aux(4)+aux(5),aux(1:5),real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
    !stop
    
    SLL_DEALLOCATE_ARRAY(mode_tab,err)
