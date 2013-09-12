@@ -141,7 +141,7 @@ end subroutine plot_df
 
  subroutine write_fyvy(ny,nvy,cplot,jstartv)
 
- use hdf5
+ !use hdf5
  use sll_hdf5_io_parallel
  character(len=4)  :: cplot
  integer(HID_T)    :: pfile_id
@@ -160,7 +160,7 @@ end subroutine plot_df
 
  subroutine write_fvxvy(nvx,nvy,cplot,jstartv)
 
- use hdf5
+ !use hdf5
  use sll_hdf5_io_parallel
 
  character(len=4) :: cplot
