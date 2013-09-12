@@ -58,8 +58,8 @@ num_threads = sll_get_collective_size(sll_world_collective)
 comm   = sll_world_collective%comm
 
 
-kmin=0
-kmax=2
+kmin=(/9,4/)
+kmax=(/9,4/)
 
 
 ! initialisation global
