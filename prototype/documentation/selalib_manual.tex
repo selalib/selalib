@@ -7,15 +7,12 @@
 
 \title{Selalib Notes - DRAFT -}   
 \author{Edwin Chacon-Golcher}        
-\date{August, 2011}    
+\date{\today}    
 \maketitle
 
 \begin{abstract}
  This is a draft for a guide to the facilities offered by Selalib, the Semi-Lagrangian Library. It serves as a record for module descriptions, design decision, pending issues, etc., which are relevant for the development and improvement of the library. The main focus is the exposed API, thus the document also serves as a working document for the architectural specifications. More specific implementation details should be found in the comments within the source code. We may decide later to extract those either with an automatic system or in a developer's manual. At the time of writing this version of the draft, the library contains only a few modules in the lower levels and aims at having a minimalist structure. Of those capabilities that could be deemed interesting enough by the managers of GYSELA, the intent would be to incorporate them that code. In this sense, this library prototype can also be a testbed for ideas and suggestions that could eventually be absorbed into production code.
-
-
 \end{abstract}
-
 
 \tableofcontents
 
@@ -64,7 +61,7 @@ alias & shorthand for... \\
 \hline
 \verb+sll_int32+ & \verb+integer(kind=i32)+ \\
 \verb+sll_int64+ & \verb+integer(kind=i64)+ \\
-\verb+sll_real64+ & \verb+real(kind=f32)+ \\
+\verb+sll_real32+ & \verb+real(kind=f32)+ \\
 \verb+sll_real64+ & \verb+real(kind=f64)+ \\
 \verb+sll_int+  & \verb+integer(kind=user)+ \\
 \verb+sll_real+ & \verb+real(kind=user)+ \\
@@ -229,7 +226,6 @@ which of course doesn't even need to happen at the moment of the first error.
 \subsection{Status}
 Unit tested.
 
-
 \section{Timing Utility}
 \subsection{Description}
 Selalib has its own timing facility, capable of resolving time periods slightly shorter than 2 $\mu s$. 
@@ -302,6 +298,43 @@ Any number of time markers can be declared and set at different points. So this 
 \subsection{Status}
 Unit-tested.
 
+\section{File IO}
+
+    \subsection{Description}
+	Presently, Selalib offers facilities to output data in the XDMF file format, readable by the VisIt program. To use, import the module \verb+sll_file_io+. The interface allows to open a file, write multi-dimensional data in it and then close it. The main purpose of this module is to provide the low-level building blocks that can be used by higher-level functions to conveniently write data to files.
+
+    \subsection{Exposed Interface}
+    The current interface is a collection of generic functions:
+    \begin{verbatim}
+        sll_xdmf_open( file_name,
+                       mesh_name,
+                       nnodes_x1,nnodes_x2,[nnodes_x3,]
+                       file_id,
+                       error )
+        sll_xdmf_write_array( mesh_name,
+                              array,
+                              array_name,
+                              error,
+                              xmffile_id,
+                              center )
+        sll_xdmf_close(file_id,error)
+    \end{verbatim}
+    Where the parameters in brackets are used depending of the dimensionality of the data.
+    \begin{description}
+       \item \verb+sll_xdmf_open( )+ opens a file with a given name and returns a file identifier on \verb+file_id+.
+       \item \verb+sll_xdmf_write_array( )+ writes a given multi-dimensional array on a file identified by \verb+xmffile_id+.
+       \item \verb+sll_xdmf_close( )+ closes the given file.
+    \end{description}
+
+\subsection{Critical Commentary}
+ECG: This interface can be improved. To consider:
+\begin{description}
+\item The job of \verb+sll_xdmf_open( )+ should be to open a file, with a given filename; it should take as parameters some flags to indicate what behavior to exercise in case of error or if the file exists (overwrite? append?) and nothing else. The nnodes parameters are used to write XDMF-related preambles, but this should be sent to the other functions that actually write into the file.
+\item The mesh\_name parameter is not clear. Why mesh?
+{\it Answer Mesh coordinates are written in a separate file, so you can write it only one time at the beginning of the computation. When you plot a field you still need to link your data to a mesh.}
+\item What is the 'center' parameter in the write\_array() function?
+{\it Answer When you plot field you can specify if your values are node centered or cell centered}
+\end{description}
 
 \chapter{Mid-Level Layer: Numerical and Parallel Utilities}
 
@@ -368,7 +401,6 @@ the system would have been solved in-place.
 
 \subsection{Status}
 Unit-tested.
-
 
 \section{Splines}
 \subsection{Description}
@@ -588,21 +620,29 @@ Unit-tested.
 
 \section{FFT}
 \subsection{Description}
-The FFT module provides an unified interface to native or external library FFT functions. This module plays a role analogous to the \emph{Collective} module, explained below, but in this case applied to FFT capabilities instead of a parallelization library like MPI.
+The FFT module intends to provide an unified interface to native or external library FFT functions. This module plays a role analogous to the \emph{Collective} module, explained below, but in this case applied to FFT capabilities instead of a parallelization library like MPI. In this sense, the \verb+sll_fft+ module provides a set of types, functions and subroutines that can in principle be implemented with a choice of external libraries.
 
 \subsection{Exposed Interface}
-The interface to the FFT functions follows a "create plan" followed by "apply plan" model. The "plan" stores all relevant information (twiddle factor arrays, auxiliary arrays, etc.) that may be needed by a given type of FFT operation. The application of the plan executes the operation itself on a given data. Like all other native types in Selalib, the FFT plan is declared through a pointer, which must be allocated and initialized. To declare, call:
+The interface to the FFT functions is inspired by the FFTW interface in which the FFT operation is carried out by the creation of a plan followed by the execution of this plan. The "plan" stores all relevant information (twiddle factor arrays, auxiliary arrays, etc.) that may be needed by a given type of FFT operation. The application of the plan executes the operation itself on a given data. Like all other native types in Selalib, the FFT plan is declared through a pointer, which must be allocated and initialized. To declare, call:
 
 \begin{verbatim}
      type(sll_fft_plan), pointer :: fft_plan
 \end{verbatim}
 Followed by an initialization step:
 \begin{verbatim}
-     fft_plan => sll_new_fft_plan( sample_number,  
-                                   data_type, 
-                                   fft_direction )
+     fft_plan => sll_new_fft( sample_number,  
+                              data_type, 
+                              fft_flags )
 \end{verbatim}
-Where 
+Where the \verb+data_type+ parameter can take either of the values: \verb+FFT_REAL+ or \verb+FFT_COMPLEX+. Presently we only provide double precision transforms (i.e.: 64-bit floating precision numbers).  The \verb+fft_flags+ can take the values: \verb+FFT_NORMALIZE_FORWARD+ and/or \verb+FFT_NORMALIZE_INVERSE+. If no flags are present, an unnormalized FFT will be executed. The user may request that the FFT be normalized in both directions by combining the flags with a \verb+ + + sign.
+
+To execute the FFT plan:
+
+\begin{verbatim}
+
+\end{verbatim}
+
+
 \begin{description}
 \item[sample\_number:] 
 %This is the size of the array on which the number of points will be applied. Note that for an ordinary FFT, periodic boundary conditions are implied, and thus the last point in the array is not taken into account.
@@ -616,8 +656,6 @@ A pointer to the spline object to be filled or updated.
 
 \subsection{Usage}
 \subsection{Status}
-
-
 
 \section{Collective Communications}
 \subsection{Description}
@@ -1053,16 +1091,201 @@ Another means to achieve the illusion of genericity are Fortran's built-in featu
 
 In testing.
 
-
 \chapter{Top-Level Layer: Semi-Lagrangian Toolbox}
+
+
+
+
+\section{Logical Meshes}
+
+   \subsection{Description}
+   The types of mathematical problems which we aim at studying are usually most easily solved on regular cartesian grids. Because of reasons which will become clear when we discuss the coordinate transformations module, in Selalib we follow the convention of calling the simplest cartesian grids by the name \emph{logical meshes}. We use the terms \emph{grid} and \emph{mesh} interchangeably in this text. In the code we use exclusively the term \emph{mesh}. Also by our convention, these grids will represent a uniform meshing of a multidimensional domain on the logical coordinates $\eta_1, \eta_2, ..., \eta_n$. 
+   
+   The logical meshes are thus very simple entities, and they represent an aggregate of information like the extent of the domain in each direction, and the number of cells in which such direction is divided.
+
+
+
+
+
+
+
+\section{Meshes}
+\subsection{Description}
+The mesh types aim at storing array data, but including additional information needed to put this data in context. There are several types of meshes:
+\begin{description}
+\item[cartesian mesh]: an N-D fully regular mesh defined by an N-D data array and additional parameters that define the domain (i.e.: xmin, xmax) and other parameters like the number of cells in each dimension and the spacing of the data (i.e.: delta). The services provided should be like (with corresponding name changes, indicating the dimensionality of the data):
+\begin{itemize}
+\item allocation(new) and initialization functions,
+\item deletion,
+\item a copy constructor,
+\item computation of data interpolants (cubic splines for example),
+\item \verb+get_value(mesh,x1,x2,...)+: where \verb+x1+, \verb+x2+,... belong to the corresponding interval \verb+(x1_min, x1_max)+, \verb+(x2_min, x2_max)+, etc., and which returns the interpolated value at the desired point. This operation launches spline interpolations under the hood.
+\item \verb+get_node_value(mesh,i,j,...)+: analogous to \verb+get_value()+ but does not need to launch any interpolation as the indices are integers and the requested value falls on a mesh node. This is implemented by a macro.
+\item \verb+set_node_value(mesh,i,j,...,val)+: sets the node datum at i,j,... with value. Implemented with a macro.
+\end{itemize}
+\end{description}
+There are some pitfalls with the suggested interface:
+\begin{itemize}
+\item the naming convention could get a little complicated depending on the type of data stored in the array (scalar, multiple-valued, etc.), as we had originally intended with the field/vec naming convention.
+\item The interface may need to directly expose its underlying data, or pointers to sections of it for certain operations, like FFT. The whole data field of a mesh could need to be set to a whole data array in one step, during the initialization, such as after a remap operation. At least in these cases, the access to the data might be safer given the nature of the operations.
+\end{itemize}
+
+\begin{description}
+\item[structured mesh]: a structured mesh is a mapped cartesian mesh in which the coordinates are decoupled. An ND mesh data is stored as an ND array. In addition, however, we need N 1D arrays to store the actual coordinates of the node locations in each dimension. As an alternative, we could use N functions $x_1=f(\eta_1)$, $x_2=f(\eta_2)$, ... , $x_n=f(\eta_n)$, to represent each transformation. We follow the convention that $\eta_1$, $\eta_2$, etc.  are values in the $[0,1]$. The offered services ought to be:
+
+\begin{itemize}
+\item allocation, initialization, deletion and copy.
+\item \verb+get_node_value(mesh, i, j, ... )+: which reads directly from the data array.
+\item \verb+set_node_value(mesh, i, j, ... )+: which writes directly to the data array.
+\item In an analogous way to the \verb+get_value()+ functions described above, we could provide something like \verb+get_value(mesh,+ $\eta_1$\verb+, +$\eta_2$\verb+)+. This would also trigger an interpolation step using uniform splines generated with the ND data. This would require the user to be \emph{thinking} in terms of the logical variables $\eta_i$. 
+\item Similar functions could be provided such that the user could also request values at points $x_i$. For this, we could launch non-uniform splines, with the spacing determined by the $x_i$ arrays and the ND data.
+\item This type may also need to grant direct access to the data array for use in operations like FFT and similar.
+\end{itemize}
+
+\item[tensor product mesh]: This is a mapped cartesian mesh in which the coordinates are coupled. That is, the mappings have the form: $x_1=f(\eta_1, \eta_2, ..., \eta_n)$, $x_2=f(\eta_1,\eta_2, ..., \eta_n)$, ... , $x_n=f(\eta_1,\eta_2, ..., \eta_n)$. The specification of this type of mesh requires an ND data array, N ND arrays that specify the transformations numerically, or N functions of arity N to specify the transformations. The services provided should be:
+\begin{itemize}
+\item allocation, initialization, deletion and copy.
+\item \verb+get_node_value(mesh, i, j, ... )+: which reads directly from the data array.
+\item \verb+set_node_value(mesh, i, j, ... )+: which writes directly to the data array.
+\item \verb+get_value(mesh,+ $\eta_1$\verb+, +$\eta_2$\verb+, ... )+ which would also trigger uniform spline interpolations, and
+\item \verb+get_value(mesh, x1, x2, ... )+, which would trigger nonuniform spline interpolations.
+\end{itemize}
+We may need to include other operations here which would entail inverse mappings (maybe also with splines), or NURBS or something else. Need to fill in the details more here.
+\end{description}
+
+
+\subsection{Exposed Interface}
+
+\subsection{Usage}
+
+\subsection{Status}
+
+
+
+\section{Scalar Fields}
+\subsection{Description}
+The physical quantities of interest are normally defined in a physical space. For instance, the electric potential $\phi(\vec{x})$ is specified by a function on the $\vec{x}$ variables ($x,y,z$). Even in simple problems the borders of the physical domain may have relatively complicated shapes which make the solution of differential equations more difficult. Great flexibility (possibly at the expense of efficiency) can be gained by transferring the data from the physical space to a representation in a logical space in which the underlying grid that we use for the numerical solution is always uniform. In such uniform grid, the borders have a much simpler (straight line) representation that may aid the solution of the equations. This means that it is convenient to permit the alternative representation of the data on variables on a physical space ($\vec{x}$) or on a logical space ($\vec{\eta}$). For these reasons, the scalar field should be thought of data plus a coordinate transformation. 
+
+(place picture of an example coordinate transformation here.)
+
+Consider a scalar field and the services that it should offer to permit us to use it in our logical grid:
+\begin{enumerate}
+  \item The scalar field is a derived type.
+  \item The type contains a simple array to store the data, i.e.: the values of the fields on a collection of points. Both, logical mesh values or physical mesh values can be stored in the same array.
+  \item The type contains an object that fully specifies the associated coordinate transformation (a mapped mesh). The transformation should provide all the needed services to permit moving the representation of the data from the physical space to the logical space and vice-versa:
+  \begin{enumerate}
+     \item something
+     \item something else
+   \end{enumerate}
+\end{enumerate}
+
+
+
+
 
 \section{Quasi-Neutral Equation Solver}
 \subsection{Description}
+Here we present a simplified but hopefully reasonably clear step-by-step derivation of the quasi-neutral equation (the gyrokinetic Poisson equation) which this module solves. The intent is to make clear some of the assumptions that are built into this model. We follow the general argument given by Krommes (cite reference here for "Nonlinear gyrokinetics: a powerful tool for the description of microturbulence in magnetized plasmas").
+
+The model is based on the idea that the fast gyrations of particles around the magnetic field lines can be averaged away while still preserving the most important long-term physics (hence the name of this type of approach: gyrokinetics). The simplest model that we will look into first deals directly in the distribution function of the gyrocenters, instead of the particles'. 
+
+We start with the Poisson equation:
+
+\begin{equation}
+-\nabla ^2 \phi = \frac{1}{\epsilon_0}\rho,
+\end{equation}
+where $\phi$ is the electric potential, $\rho$ is the volumetric charge density and $\epsilon_0$ is the permittivity of free space. The main assumptions built into the model are introduced through the treatment of $\rho$. We decompose the charge density in its two main constituents: the contribution by the ions ($\rho_i$) and the electrons' ($\rho_e$). As mentioned earlier, the main idea behind gyrokinetics is the averaging of the fast particle motions around the field lines, hence some of the effects that occur on longer time-scales are explicitly introduced into the model, for example by particle drifts (e.g.: $\vec{E}\times\vec{B}$, polarization drift, etc.). In doing so, we allow ourselves to further separate the charge density into a polarization charge and a charge at the particles' gyrocenters (gyrocenters do not polarize). Thus, Poisson's equation becomes
+
+\begin{equation} \label{eq:poisson_2}
+-\nabla ^2 \phi = \frac{1}{\epsilon_0}(\rho^G_i + \rho^{pol}_i - \rho^G_e - \rho^{pol}_e),
+\end{equation}
+where the indices $G$, $pol$, $i$ and $e$ indicate \emph{gyrocenters}, \emph{polarization}, \emph{ions} and \emph{electrons} respectively. The polarization drift velocity, whose derivation can be found in introductory plasma physics texts is given by
+
+\begin{equation}
+\vec{v}^{pol} = \pm \frac{1}{\omega_{ci}B}\frac{\partial \vec{E}_{\perp}}{\partial t}.
+\end{equation}
+Here $\omega_{ci}$ is the ion cyclotron frequency, $B$ is the magnitude of the local magnetic field and $\vec{E}_{\perp}$ is the electric field perpendicular to the magnetic field. The plus/minus sign in the equation applies to positive and negative particles respectively. Heuristically, the polarization charge obeys a continuity equation:
+
+\begin{equation} \label{eq:rho_pol_continuity}
+\frac{\partial \rho^{pol} }{\partial t} = - \nabla \cdot \vec{j}^{pol} = - \nabla \cdot (nZe \vec{v}^{pol})=- \nabla \cdot \bigg( n Ze \frac{1}{\omega_{ci}B}\frac{\partial \vec{E}_{\perp}}{\partial t}\bigg) .
+\end{equation}
+
+Here, $Z$ is the charge state of the ions under consideration (obviously 1 for a hydrogen-burning fusion plasma), $e$ is the electron charge and $n$ is the particle density per unit volume. As long as none of the factors of the time derivative depends itself on time, we can integrate immediately and arrive at an expression for $\rho^{pol}$:
+
+\begin{equation} \label{eq:rho_pol}
+\rho^{pol}(\vec{x}) = \nabla \cdot \bigg( \frac{n_i(\vec{x})Ze}{\omega_{ci}(\vec{x}) B(\vec{x}) }\nabla_{\perp}\phi(\vec{x},t) \bigg).
+\end{equation}
+
+Here we have introduced the assumption of $n_i$, the ion particle density,  being independent of time. In equation (\ref{eq:rho_pol}), we can consider that the differential operators act only in the directions perpendicular to the magnetic field, as these are the only terms that will survive the taking of the divergence. Finally, by multiplying by the proper unit factors and using the relation
+
+\begin{equation}
+\omega_p = \bigg( \frac{ne^2} {\epsilon_0 m} \bigg)^{\frac{1}{2}}
+\end{equation}
+we can recast equation (\ref{eq:rho_pol}) into
+
+\begin{equation} \label{eq:rho_pol_epsilon}
+\rho^{pol}(\vec{x}) = \epsilon_0 \nabla_{\perp} \cdot \big( \varepsilon^G(\vec{x})\nabla_{\perp}\phi(\vec{x},t) \big).
+\end{equation}
+where 
+
+\begin{equation}
+\varepsilon^G(\vec{x}) \equiv \frac{\omega^2_{pi}(\vec{x})}{\omega^2_{ci}(\vec{x})}
+\end{equation}
+is called the \emph{dielectric constant of the gyrokinetic vacuum}. With equation (\ref{eq:rho_pol_epsilon}), and neglecting the polarization of the electrons, the modified Poisson equation (\ref{eq:poisson_2}) can be written as:
+
+\begin{equation}
+-\nabla ^2 \phi(\vec{x},t) - \nabla_{\perp} \cdot \big(\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t) \big) = \frac{1}{\epsilon_0}(\rho^G_i - \rho^G_e).
+\end{equation}
+In fusion applications, $\varepsilon^G >> 1$ thus we neglect the ordinary laplacian term on the left-hand side. 
+
+The charge density of the electrons also receives a special treatment. The basic assumption here is that the electrons can move very quickly along a magnetic field line and thus are able to rapidly react to electric potential variations through changes in the electron particle density. Thus, it is assumed that along a field line, the electrons obey the Boltzmann relation:
+
+\begin{equation}  \label{eq:boltzmann}
+n_e(\vec{x},t) = \bar{n}_e(\vec{x},0) \exp \bigg(\frac{e}{k_BT_e}(\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})\bigg).
+\end{equation}
+In equation (\ref{eq:boltzmann}), $n_e(\vec{x},t)$ is the instantaneous electron particle density, $\bar{n}_e(\vec{x})$ is the average electron density along the magnetic field line, $k_B$ is Boltzmann's constant, $T_e$ is the electron temperature and the $< \cdot >_{\ell}$ average is taken along the magnetic field line. By making yet another assumption of very small deviations from the average electric potential, the previous equation can be linearized:
+
+\begin{equation}  \label{eq:boltzmann_linear}
+n_e(\vec{x},t) = \bar{n}_e(\vec{x},0) \bigg(1+\frac{e}{k_BT_e}(\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})\bigg).
+\end{equation}
+At the risk of being too sloppy, we will equate the electron particle density with the electron gyrocenter density. A more careful step would involve gyroaveraging directly the original electron distribution function. With this assumption, our modified poisson becomes:
+
+\begin{equation}
+- \nabla_{\perp} \cdot \big(\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t) \big) = \frac{1}{\epsilon_0}\bigg(\rho^G_i - \bar{\rho}_{e0}^G\Big(1+\frac{e}{k_BT_e}(\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})\Big)\bigg).
+\end{equation}
+Rearranging terms and using the relation:
+\begin{equation} \label{eq:debye_length}
+\lambda_D=\bigg(\frac{\epsilon_0k_BT_e}{ne^2}\bigg)^\frac{1}{2}=\bigg(\frac{\epsilon_0k_BT_e}{\rho e}\bigg)^\frac{1}{2},
+\end{equation}
+we arrive at:
+\begin{equation} \label{eq:gk_poisson}
+- \nabla_{\perp} \cdot \big(\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t) \big)+\frac{1}{\bar{\lambda}_{D0}} (\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})= \frac{1}{\epsilon_0}\Big(\rho^G_i - \bar{\rho}_{e0}^G\Big).
+\end{equation}
+But for a normalization of the variables, equation (\ref{eq:gk_poisson}) is virtually the same as the one stated in the report by Latu (list here reference for "Scalable Quasineutral solver for gyrokinetic simultion"). Equation (\ref{eq:gk_poisson}) is not yet ready to solve due to the presence of the $<\phi(\vec{x},t)>$ term. We need to average the solution we seek, after all. To obtain an additional equation that will help us find this term, we take the average of both sides of the equation in the same sense that we have been averaging before: along a magnetic field line (note that in practice, due to ergodicity, this line may extend and fill a surface or even worse.) The barred quantities have already been averaged so we can get them out of the averaging operator when necessary. Averages of averages remain unchanged and thus we arrive at:
+
+\begin{equation} \label{eq:gk_poisson_aux}
+- \nabla_{\perp} \cdot \big(<\varepsilon ^G(\vec{x},t)\nabla_{\perp} \phi(\vec{x},t)>_{\ell} \big)= \frac{1}{\epsilon_0}(<\rho^G_i>_{\ell} - <\bar{\rho}_{e0}^G>_{\ell}).
+\end{equation}
+By making two final assumptions: that the quantities involved in the calculation of $\varepsilon^G(\vec{x},t)$ are not time-dependent but given by the initial ion distribution, and that this quantity does not vary along the domain of the average procedure (the magnetic field line), we can extract $\varepsilon^G(\vec{x},t)$ from the average operator, yielding the auxiliary equation that we need to compute $<\phi(\vec{x},t)>_{\ell}$:
+
+\begin{equation} \label{eq:gk_poisson_aux}
+- \nabla_{\perp} \cdot \big(\varepsilon ^G\nabla_{\perp} <\phi(\vec{x},t)>_{\ell} \big)= \frac{1}{\epsilon_0}(<\rho^G_i>_{\ell} - <\bar{\rho}_{e0}^G>_{\ell}).
+\end{equation}
+The average ion charge density can be computed from $\rho^G_i(\vec{x},t)$ which is input data for the solver. To compute the average of the electron density we need to explicitly invoke the initial quasineutrality condition, i.e.: $\rho_i = \rho_e$. With this, $<\bar{\rho}^G_{e0}>_{\ell} = <\bar{\rho}^G_{i0}>_{\ell}$ and we are able to compute all the quantities involved based on the initial ion distribution profile.
+
+Once we calculate $<\phi(\vec{x},t)>_{\ell}$ with equation (\ref{eq:gk_poisson_aux}) we can use this to solve the final version of our quasineutral equation, after introducing all the assumptions:
+
+\begin{equation} \label{eq:gk_poisson_final}
+- \nabla_{\perp} \cdot \big(\bar{\varepsilon}^G(\vec{x},0)\nabla_{\perp} \phi(\vec{x},t) \big)+\frac{1}{\bar{\lambda}_D} (\phi(\vec{x},t) - <\phi(\vec{x},t)>_{\ell})= \frac{1}{\epsilon_0}(\rho^G_i - \bar{\rho}_{i0}^G).
+\end{equation}
+
+
+ 
 \subsection{Exposed Interface}
 Fundamental type: None. It is a function that operates on other top-level types. Function:
 \begin{verbatim}
-     sll_solve_quasi_neutral_equation( electron_T_profile_3D,
-                                       electron_n_profile_3D,
+     sll_solve_quasi_neutral_equation( electron_T_profile_2D,
+                                       initial_rho_ion_profile_2D,
                                        charge_density,
                                        phi )
 \end{verbatim}

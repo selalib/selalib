@@ -4,7 +4,8 @@ program unit_test_1d
 ! The next line cause an error with the definition of 
 ! compute_interpolants in sll_cubic_spline_interpolator_1d
 ! use sll_module_mapped_meshes_2d
-  use geometry_functions
+!  use geometry_functions
+  use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_1d
   use sll_module_mapped_meshes_1d
   implicit none
@@ -104,7 +105,7 @@ program unit_test_1d
        NPTS1, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
+       SLL_HERMITE, &
        slope_left=x1_eta1_min, &
        slope_right=x1_eta1_max )
 
@@ -116,7 +117,7 @@ program unit_test_1d
        NPTS1, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
+       SLL_HERMITE, &
        slope_left=linear_map_jac_f(0.0_f64), &
        slope_right=linear_map_jac_f(1.0_f64) )
 

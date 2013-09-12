@@ -20,10 +20,10 @@ module sll_fft
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use fft_utils
+
+  use sll_fft_utils
+
   implicit none 
-
-
 
   type sll_fft_plan
     sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors

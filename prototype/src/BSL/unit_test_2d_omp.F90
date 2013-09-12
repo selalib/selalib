@@ -54,9 +54,14 @@ implicit none
   !$OMP DEFAULT(SHARED)           &
   !$OMP PRIVATE(spline_xy, spline_vxvy, interp_xy, interp_vxvy) 
 
-  print*, 'set domain size'
-  x_min  =  -5.0_f64; x_max  =  5.0_f64
-  y_min  =  -5.0_f64; y_max  =  5.0_f64
+  !$OMP CRITICAL
+#ifdef _OPENMP
+  PRINT *, OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM()
+  !$OMP END CRITICAL
+#endif
+
+  x_min  =  -0.0_f64; x_max  =  10.0_f64
+  y_min  =  -0.0_f64; y_max  =  10.0_f64
   vx_min =  -5.0_f64; vx_max =  5.0_f64 
   vy_min =  -5.0_f64; vy_max =  5.0_f64 
   
@@ -66,11 +71,11 @@ implicit none
   delta_vy = (vy_max-vy_min)/(n_vy-1)
 
   call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
-                            PERIODIC_SPLINE, PERIODIC_SPLINE )
+                            SLL_PERIODIC, SLL_PERIODIC )
   interp_xy   => spline_xy
 
   call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              PERIODIC_SPLINE, PERIODIC_SPLINE )
+                              SLL_PERIODIC, SLL_PERIODIC )
   interp_vxvy => spline_vxvy
 
   do i = 1, n_x
@@ -92,7 +97,7 @@ implicit none
      do k = 1, n_vx
         do j = 1, n_y
            do i = 1, n_x
-              df(i,j,k,l) = exp(-((vx(k)-2)**2+vy(l)**2))
+              df(i,j,k,l) = exp(-((x(i)-5)**2+(y(j)-5)**2+vx(k)**2+vy(l)**2))
            end do
         end do
      end do
@@ -101,19 +106,20 @@ implicit none
   !$OMP END SINGLE
 
   ! run BSL method using 10 time steps and second order splitting
-  n_steps = 1000
-  dt = 0.01
+  n_steps = 200
+  dt = 0.05
 
   do it = 1, n_steps
 
+     print*, it
      !$OMP SINGLE
-     call plot_df(it)
+     call plot_dfvxvy(it)
      !$OMP END SINGLE
 
 
-#ifndef DEBUG
+#ifdef _OPENMP
      !$OMP BARRIER
-     t0=OMP_GET_WTIME()
+  !   t0=OMP_GET_WTIME()
 #endif
 
      !$OMP DO 
@@ -124,12 +130,25 @@ implicit none
 
        do j = 1, n_y
         do i = 1, n_x
-           dx = dt*vx(k)
-           dy = dt*vy(l)
-           eta1 = x_min + (i-1)*delta_x
-           eta2 = y_min + (j-1)*delta_y
-           eta1 = x_min + modulo(eta1-x_min-dx,x_max-x_min)
-           eta2 = y_min + modulo(eta2-y_min-dy,y_max-y_min)
+           dx = dt !*vx(k)
+           dy = dt !dt*vy(l)
+           eta1 = x_min + (i-1)*delta_x - dx
+           eta2 = y_min + (j-1)*delta_y - dy
+           !eta1 = x_min + modulo(eta1-x_min-dx,x_max-x_min)
+           !eta2 = y_min + modulo(eta2-y_min-dy,y_max-y_min)
+
+           if(eta1 < x_min) then
+              eta1 = eta1 + x_max - x_min
+           else if(eta1 > x_max) then
+              eta1 = eta1 - x_max + x_min
+           end if
+           
+           if(eta2  < y_min) then
+              eta2 = eta2 + y_max - y_min
+           else if(eta2 > y_max) then
+              eta2 = eta2 - y_max + y_min
+           end if
+
            df(i,j,k,l) = interp_xy%interpolate_value(eta1,eta2)
         end do
         end do
@@ -137,37 +156,42 @@ implicit none
      end do
      end do
 
-#ifndef DEBUG
+#ifdef _OPENMP
      !$OMP BARRIER
-     t1=OMP_GET_WTIME()
+  !   t1=OMP_GET_WTIME()
 #endif
 
-     do j = 1, n_y
-     do i = 1, n_x
+     !$OMP SINGLE
+     call plot_dfxy(it)
+     !$OMP END SINGLE
 
-        call interp_vxvy%compute_interpolants(df(i,j,:,:))
+!     do j = 1, n_y
+!     do i = 1, n_x
+!
+!        call interp_vxvy%compute_interpolants(df(i,j,:,:))
+!
+!        do l = 1, n_vy
+!        do k = 1, n_vx
+!           dvx = -dt*vy(l)
+!           dvy =  dt*vx(k)
+!           eta1 = vx_min + (k-1)*delta_vx
+!           eta2 = vy_min + (l-1)*delta_vy
+!           eta1 = vx_min + modulo(eta1-vx_min-dvx,vx_max-vx_min)
+!           eta2 = vy_min + modulo(eta2-vy_min-dvy,vy_max-vy_min)
+!           df(i,j,k,l) = interp_vxvy%interpolate_value(eta1,eta2)
+!        end do
+!        end do
+!
+!     end do
+!     end do
 
-        do l = 1, n_vy
-        do k = 1, n_vx
-           dvx = -dt*vy(l)
-           dvy =  dt*vx(k)
-           eta1 = vx_min + (k-1)*delta_vx
-           eta2 = vy_min + (l-1)*delta_vy
-           eta1 = vx_min + modulo(eta1-vx_min-dvx,vx_max-vx_min)
-           eta2 = vy_min + modulo(eta2-vy_min-dvy,vy_max-vy_min)
-           df(i,j,k,l) = interp_vxvy%interpolate_value(eta1,eta2)
-        end do
-        end do
 
-     end do
-     end do
-
-#ifndef DEBUG
+#ifdef _OPENMP
      !$OMP BARRIER
-     t2=OMP_GET_WTIME()
+    ! t2=OMP_GET_WTIME()
 
      !$OMP CRITICAL
-     print *, it,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM(),t1-t0,t2-t1
+     !print *, it,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM(),t1-t0,t2-t1
      !$OMP END CRITICAL
 #endif
 
@@ -175,18 +199,7 @@ implicit none
 
 !$OMP END PARALLEL
 
-  do l=1, n_vy
-     do k=1, n_vx
-        do j=1, n_y
-           do i=1, n_y
-              error = max(error,abs(df(i,j,k,l)-exp(-(vx(k)**2+vy(l)**2))))
-           end do
-        end do
-     end do
-  end do
-
   print*, ' 100 nodes, ', it, ' time steps. Error= ', error
-
 
   print *, 'Successful, exiting program.'
   print *, 'PASSED'
@@ -194,14 +207,14 @@ implicit none
 
 contains
 
-   subroutine plot_df(iplot)
+   subroutine plot_dfvxvy(iplot)
 
    integer :: iplot
    character(len=4) :: cplot
  
    call int2string(iplot,cplot)
 
-   open(11, file="df-"//cplot//".dat")
+   open(11, file="dfvxvy-"//cplot//".dat")
    do l = 1, size(df,4)
       do k = 1, size(df,3)
          write(11,*) sngl(vx(k)),sngl(vy(l)),sngl(sum(df(:,:,k,l)))
@@ -210,7 +223,7 @@ contains
    end do
    close(11)
    
-   open( 90, file = 'df.gnu', position="append" )
+   open( 90, file = 'dfvxvy.gnu', position="append" )
    if ( iplot == 1 ) then
       rewind(90)
       !write(90,*)"set cbrange[-1:1]"
@@ -220,9 +233,40 @@ contains
    end if
 
    write(90,*)"set title 'step = ",iplot,"'"
-   write(90,"(a)")"splot 'df-"//cplot//".dat' u 1:2:3 w lines"
+   write(90,"(a)")"splot 'dfvxvy-"//cplot//".dat' u 1:2:3 w lines"
    close(90)
 
-   end subroutine plot_df
+   end subroutine plot_dfvxvy
+
+   subroutine plot_dfxy(iplot)
+
+   integer :: iplot
+   character(len=4) :: cplot
+ 
+   call int2string(iplot,cplot)
+
+   open(11, file="dfxy-"//cplot//".dat")
+   do i = 1, size(df,1)
+      do j = 1, size(df,2)
+         write(11,*) sngl(x(i)),sngl(y(j)),sngl(sum(df(i,j,:,:)))
+      end do
+      write(11,*)
+   end do
+   close(11)
+   
+   open( 90, file = 'dfxy.gnu', position="append" )
+   if ( iplot == 1 ) then
+      rewind(90)
+      !write(90,*)"set cbrange[-1:1]"
+      !write(90,*)"set pm3d"
+      write(90,*)"set surf"
+      write(90,*)"set term x11"
+   end if
+
+   write(90,*)"set title 'step = ",iplot,"'"
+   write(90,"(a)")"splot 'dfxy-"//cplot//".dat' u 1:2:3 w lines"
+   close(90)
+
+   end subroutine plot_dfxy
 
 end program unit_test_4d

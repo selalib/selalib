@@ -1,24 +1,31 @@
 SET(SLL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
 
 SET(SLL_MACROS
-	 ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
-	 ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
-	 ${SLL_DIR}/memory/sll_memory.h
-	 ${SLL_DIR}/precision/sll_working_precision.h
-	 ${SLL_DIR}/assert/sll_assert.h
-	 ${SLL_DIR}/constants/sll_constants.h
-	 ${SLL_DIR}/utilities/sll_utilities.h
-	 ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
-	 ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
-	 ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
-	 ${SLL_DIR}/interpolators/sll_interpolators.h
-	 ${SLL_DIR}/splines/sll_splines.h
-	 ${SLL_DIR}/file_io/sll_file_io.h
-	 ${SLL_DIR}/fft/sll_fft.h)
+    ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
+    ${SLL_DIR}/memory/sll_memory.h
+    ${SLL_DIR}/precision/sll_working_precision.h
+    ${SLL_DIR}/assert/sll_assert.h
+    ${SLL_DIR}/constants/sll_constants.h
+    ${SLL_DIR}/utilities/sll_utilities.h
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_macros.h
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.h
+    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.h
+    ${SLL_DIR}/interpolators/sll_interpolators.h
+    ${SLL_DIR}/splines/sll_splines.h
+    ${SLL_DIR}/file_io/sll_file_io.h
+    ${SLL_DIR}/fft/sll_fft.h
+    ${SLL_DIR}/fft/sll_fftw.h
+    ${SLL_DIR}/integration/sll_integration.h
+    ${SLL_DIR}/fields/sll_field_1d.h
+    ${SLL_DIR}/fields/sll_field_2d.h
+    ${SLL_DIR}/multigrid/sll_multigrid.h
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
 
+IF(NOT STDF95)
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
@@ -37,7 +44,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_xml_io.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
-    ${SLL_DIR}/electric_field_accumulators/electric_field_2d.F90
+    ${SLL_DIR}/electric_field_accumulators/sll_electric_field_2d.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
@@ -49,20 +56,26 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
-    ${SLL_DIR}/fft/fft_utils.F90 )
+    ${SLL_DIR}/fft/sll_fft_utils.F90
+    ${SLL_DIR}/integration/gauss_legendre.F90
+    ${SLL_DIR}/simulation/sll_polar_operators.F90
+    ${SLL_DIR}/simulation/sll_advection_polar.F90
+    ${SLL_DIR}/integration/sll_gausslobatto.F90
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
+ )
 
-IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
+IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
       ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
 
-ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
+ELSEIF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+      ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+      ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
       ${SLL_DIR}/fft/fftw_module.F90
       ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
 
@@ -73,10 +86,8 @@ ELSE()
 
 ENDIF()
 
-ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
-INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
        ${SLL_DIR}/collective/sll_collective.F90
@@ -84,34 +95,35 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90 )
 
-   ADD_LIBRARY(selalib-mpi STATIC ${SLL_SOURCE_FILES})
-   INSTALL(TARGETS selalib-mpi ARCHIVE DESTINATION lib COMPONENT libraries)
+ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
-IF(SLL_BUILD_PACKAGE)
+SET(DIST_NAME "selalib-1.0.0")
 
-   SET(DIST_NAME "selalib-1.0.0")
+ADD_CUSTOM_TARGET(release 
+COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
+COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
+COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
+WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+COMMENT "Generating Release for macports" VERBATIM)
 
-   FILE(COPY ${SLL_MACROS} 
-        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/include)
-   FILE(COPY ${SLL_SOURCE_FILES} 
-        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-   FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt 
-        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME}/)
-   FILE(COPY ${CMAKE_SOURCE_DIR}/fftpack 
-        DESTINATION ${CMAKE_BINARY_DIR}/${DIST_NAME})
+ADD_CUSTOM_TARGET(make_source_dir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+ADD_DEPENDENCIES(release make_source_dir)
 
-   ADD_CUSTOM_TARGET(release 
-   ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
-   COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
-   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-   COMMENT "Generating Release for macports" VERBATIM)
-
-
-ENDIF(SLL_BUILD_PACKAGE)
+FOREACH(_file ${SLL_SOURCE_FILES})
+   get_filename_component(_target ${_file} NAME_WE)
+   ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+   ADD_DEPENDENCIES(release ${_target}_f90)
+   ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
+ENDFOREACH(_file)
 
 INSTALL( CODE
-   "EXECUTE_PROCESS (COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_Fortran_MODULE_DIRECTORY} ${CMAKE_INSTALL_PREFIX}/include/fortran)")
+   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/fortran\")")
 
 INSTALL(FILES ${SLL_MACROS}  DESTINATION include  )
+ENDIF(NOT STDF95)
