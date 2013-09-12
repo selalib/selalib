@@ -107,13 +107,13 @@ contains
     end do
      
     print *, 'proceed to allocate the spline...'
-    sp1 =>  new_spline_1D( NP, XMIN, XMAX, PERIODIC_SPLINE )
+    sp1 =>  new_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
     call compute_spline_1D( data, sp1 )
     sp2 =>  new_spline_1D( &
          NP, &
          XMIN, &
          XMAX, &
-         HERMITE_SPLINE, &
+         SLL_HERMITE, &
          fprime(XMIN, i_test), &
          fprime(XMAX, i_test) )
     call compute_spline_1D( data, sp2 )
@@ -261,7 +261,7 @@ contains
     sp2d_1 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         PERIODIC_SPLINE, PERIODIC_SPLINE )
+         SLL_PERIODIC, SLL_PERIODIC )
     call compute_spline_2D_prdc_prdc( data_2d, sp2d_1 )
     acc_2D = 0.0
     do j=1, NPX2
@@ -285,7 +285,7 @@ contains
     sp2d_2 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         HERMITE_SPLINE, PERIODIC_SPLINE, &
+         SLL_HERMITE, SLL_PERIODIC, &
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
     call compute_spline_2D_hrmt_prdc( data_2d, sp2d_2 )
@@ -310,7 +310,7 @@ contains
     sp2d_3 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         PERIODIC_SPLINE, HERMITE_SPLINE, &
+         SLL_PERIODIC, SLL_HERMITE, &
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
     call compute_spline_2D_prdc_hrmt( data_2d, sp2d_3 )
@@ -335,7 +335,7 @@ contains
     sp2d_4 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         HERMITE_SPLINE, HERMITE_SPLINE,&
+         SLL_HERMITE, SLL_HERMITE,&
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
     call compute_spline_2D_hrmt_hrmt( data_2d, sp2d_4 )
@@ -368,6 +368,11 @@ contains
 
   end subroutine test_process_2d
 
+  function sincos_prod( x, y ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: x, y
+    val = sin(x)*cos(y)
+  end function sincos_prod
 
   !*********************************************************************
   ! The above routines should be converted into individualized routines
@@ -430,7 +435,7 @@ contains
       npts, &
       xmin, &
       xmax, &
-      PERIODIC_SPLINE )
+      SLL_PERIODIC )
 
     call compute_spline_1D(data_in, spline)
     do i=0,npts-1
@@ -514,7 +519,7 @@ contains
             npts, &
             xmin, &
             xmax, &
-            HERMITE_SPLINE )
+            SLL_HERMITE )
 
        call compute_spline_1D(data_in, spline)
        do i=0,npts-2
@@ -589,7 +594,7 @@ contains
             npts, &
             X1MIN, &
             X1MAX, &
-            HERMITE_SPLINE )
+            SLL_HERMITE )
        
        call compute_spline_1D( data_in, spline )
        !        print *, '1D coefficients: '
@@ -669,8 +674,8 @@ contains
       X1MAX, &
       X2MIN, &
       X2MAX, &
-      PERIODIC_SPLINE, &
-      PERIODIC_SPLINE )
+      SLL_PERIODIC, &
+      SLL_PERIODIC )
 
     call compute_spline_2D(data_in,spline)
 
@@ -758,8 +763,8 @@ contains
       1.0_f64, &
       0.0_f64, &
       1.0_f64, &
-      HERMITE_SPLINE, &
-      PERIODIC_SPLINE, &
+      SLL_HERMITE, &
+      SLL_PERIODIC, &
       x1_min_slopes=slopes_min, &
       x1_max_slopes=slopes_max )
 
@@ -848,8 +853,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         PERIODIC_SPLINE, &
+         SLL_HERMITE, &
+         SLL_PERIODIC, &
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes )
 
@@ -937,8 +942,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         PERIODIC_SPLINE ) !, &
+         SLL_HERMITE, &
+         SLL_PERIODIC ) !, &
 !         x1_min_slopes=eta1_min_slopes, &
 !         x1_max_slopes=eta1_max_slopes )
 
@@ -1027,8 +1032,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         PERIODIC_SPLINE, &
-         HERMITE_SPLINE, & 
+         SLL_PERIODIC, &
+         SLL_HERMITE, & 
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
@@ -1116,8 +1121,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         PERIODIC_SPLINE, &
-         HERMITE_SPLINE ) !, & 
+         SLL_PERIODIC, &
+         SLL_HERMITE ) !, & 
 !         x2_min_slopes=eta2_min_slopes, &
 !         x2_max_slopes=eta2_max_slopes )
 
@@ -1223,8 +1228,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         HERMITE_SPLINE, & 
+         SLL_HERMITE, &
+         SLL_HERMITE, & 
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes, &
          x2_min_slopes=eta2_min_slopes, &
@@ -1292,8 +1297,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         HERMITE_SPLINE )
+         SLL_HERMITE, &
+         SLL_HERMITE )
 
     call compute_spline_2D_hrmt_hrmt( data, spline )
 

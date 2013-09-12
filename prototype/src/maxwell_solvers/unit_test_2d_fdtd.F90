@@ -19,8 +19,8 @@ program test_maxwell_2d_fdtd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_maxwell_solvers.h"
-use sll_constants
+#include "sll_constants.h"
+#include "sll_maxwell_solvers_macros.h"
 
 use sll_maxwell_2d_fdtd
 
@@ -33,8 +33,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_fdtd)                      :: maxwell_TE
-type(maxwell_fdtd)                      :: maxwell_TM
+type(maxwell_2d_fdtd)                      :: maxwell_TE
+type(maxwell_2d_fdtd)                      :: maxwell_TM
 
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey

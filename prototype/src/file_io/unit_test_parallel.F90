@@ -1,11 +1,12 @@
 !> Unit test for parallel output
 program test_io_parallel
 
-use hdf5
+use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
 use sll_xdmf_parallel
+use sll_gnuplot_parallel
 use sll_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -120,10 +121,18 @@ contains
   
   offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
   offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
+
+  !Gnuplot output
+  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
+                                    dble(offset(2)), dble(1), &
+                                    zdata, "rect_mesh", 1, error)  
+
+  call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
+  
   
   !Begin high level version
 
-  call sll_xdmf_open("zdata.xmf",prefix,nx,ny,xml_id,error)
+  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
   call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
   call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
   call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
@@ -152,7 +161,7 @@ contains
      call sll_xml_file_create("layout2d.xmf",xml_id,error)
      call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
      call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-     call sll_xml_file_close(file_id,error)
+     call sll_xml_file_close(xml_id,error)
      print *, 'Printing 2D layout: '
      call sll_view_lims_2D( layout )
      print *, '--------------------'
@@ -160,7 +169,7 @@ contains
   end if
 
   !End low level version
-  
+
   call delete_layout_2D( layout )
   
  end subroutine plot_layout2d
