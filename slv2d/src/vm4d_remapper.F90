@@ -12,7 +12,7 @@ program vm4d
   type(geometry)            :: geomx 
   type(geometry)            :: geomv 
   type(vlasov4d_maxwell)    :: vlasov4d 
-  type(maxwell_pstd)        :: maxwell
+  type(maxwell_2d_pstd)     :: maxwell
   type(poisson_2d_periodic) :: poisson 
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
@@ -61,7 +61,7 @@ program vm4d
   call transposexv(vlasov4d)
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
-  call faraday_te(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
+  !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
   call transposevx(vlasov4d)
   call advection_x1(vlasov4d,0.5*dt)
   call advection_x2(vlasov4d,0.5*dt)
@@ -74,11 +74,10 @@ program vm4d
 
      call transposexv(vlasov4d)
      call compute_current(vlasov4d)
-     call ampere_te(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
-     call faraday_te(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
-
-     !call advection_x3x4(vlasov4d,dt)
+     call ampere(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz,dt,vlasov4d%jx,vlasov4d%jy) 
+     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
      call advection_x3x4(vlasov4d,dt)
+     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
      call transposevx(vlasov4d)
      call advection_x1(vlasov4d,dt)
      call advection_x2(vlasov4d,dt)
@@ -124,12 +123,12 @@ contains
     psize = sll_get_collective_size(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, PERIODIC_SPLINE)
-    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, PERIODIC_SPLINE)
+    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, SLL_PERIODIC)
+    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, SLL_PERIODIC)
 
     call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
-    &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
+    &                        SLL_PERIODIC, SLL_PERIODIC)
 
     call new(vlasov4d,geomx,geomv,spl_x1,spl_x2,spl_x3x4,error)
 
@@ -168,7 +167,7 @@ contains
                              geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                             geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+                             geomx%y0, geomx%y1, geomx%ny, error)
 
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
     jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )

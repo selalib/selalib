@@ -1,0 +1,191 @@
+Install Dependencies
+====================
+
+RHEL with Intel compilers
+***************************
+
+yum update
+yum install -y git
+yum install -y wget
+yum install -y openmpi-devel
+yum install -y doxygen
+wget http://www.cmake.org/files/v2.8/cmake-2.8.10.1.tar.gz
+tar zxvf cmake-2.8.10.1.tar.gz
+cd cmake-2.8.10.1; {
+    ./bootstrap
+    make
+    make install
+}; cd -
+rm -rf  cmake-2.8.10.1
+
+export OMPI_FC=ifort
+export OMPI_CC=icc
+export CC=icc 
+export CXX=icpc 
+export F77=ifort 
+export F9X=ifort 
+export CFLAGS='-O3 -xHost -ip' 
+export CXXFLAGS='-O3 -xHost -ip' 
+export FFLAGS='-O3 -xHost -ip' 
+wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz
+tar jxvf szip-2.1.tar.gz
+cd szip-2.1; {
+   ./configure --prefix=/usr/local 
+   make
+   make install
+}; cd -
+rm -rf szip-2.1
+wget http://zlib.net/zlib-1.2.7.tar.gz
+tar jxvf zlib-1.2.7.tar.gz
+cd zlib-1.2.7; {
+   ./configure --prefix=/usr/local 
+   make
+   make install
+}; cd -
+rm -rf zlib-1.2.7
+wget http://www.hdfgroup.org/ftp/HDF5/releases/hdf5-1.8.10/src-1.8.10/hdf5-1.8.10.tar.bz2
+tar jxvf hdf5-1.8.10.tar.bz2
+cd hdf5-1.8.10/; {
+   ./configure --prefix=/usr/local --enable-fortran --enable-parallel CC=mpicc FC=mpif90
+   make
+   make install
+}; cd -
+rm -rf hdf5-1.8.10
+wget http://www.fftw.org/fftw-3.3.2.tar.gz
+tar zxvf fftw-3.3.2.tar.gz
+cd fftw-3.3.2; {
+   ./configure --prefix=/usr/local --enable-threads --enable-mpi FC=mpif90 CC=mpicc
+   make
+   make install
+}; cd -
+rm -rf fftw-3.3.2
+
+* Debian testing with GNU compilers
+***********************************
+
+apt-get -y update
+apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev doxygen  liblapack-dev
+
+wget http://www.fftw.org/fftw-3.3.2.tar.gz
+tar zxvf fftw-3.3.2.tar.gz
+cd fftw-3.3.2; {
+   ./configure --prefix=/usr/local --enable-threads --enable-mpi FC=mpif90 CC=mpicc
+   make
+   make install
+}; cd -
+rm -rf fftw-3.3.2
+
+* Fedora
+*********
+
+yum -y update
+yum install -y  gcc-gfortran gcc-c++ hdf5-openmpi-devel openmpi-devel git-all doxygen texlive-latex lapack-devel
+
+wget http://www.fftw.org/fftw-3.3.2.tar.gz
+tar zxvf fftw-3.3.2.tar.gz
+cd fftw-3.3.2; {
+   ./configure --prefix=/usr/local --enable-threads --enable-mpi FC=mpif90 CC=mpicc
+   make
+   make install
+}; cd -
+
+* Macosx Snow Leopard with macports
+
+port selfupdate
+port -f install git-core
+port -f install doxygen
+tar jxvf ${PIPOL_HOMEDIR}/gcc-snwleo-intel-bin.tar.bz2 -C /
+export PATH=/usr/local/bin:${PATH}
+export CC=/usr/local/bin/gcc
+export CXX=/usr/local/bin/g++
+export FC=/usr/local/bin/gfortran
+curl -L -O http://www.open-mpi.org/software/ompi/v1.6/downloads/openmpi-1.6.3.tar.bz2
+tar jxvf openmpi-1.6.3.tar.bz2
+cd  openmpi-1.6.3; {
+   ./configure --prefix=/usr/local 
+   make
+   make install
+}; cd -
+export OMPI_FC=/usr/local/bin/gfortran
+export OMPI_CC=/usr/local/bin/gcc
+curl -L -O http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz
+tar jxvf szip-2.1.tar.gz
+cd szip-2.1; {
+   ./configure --prefix=/usr/local 
+   make
+   make install
+}; cd -
+curl -L -O http://zlib.net/zlib-1.2.7.tar.gz
+tar jxvf zlib-1.2.7.tar.gz
+cd zlib-1.2.7; {
+   ./configure --prefix=/usr/local 
+   make
+   make install
+}; cd -
+curl -L -O http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.10.tar.bz2
+tar jxvf hdf5-1.8.10.tar.bz2
+cd hdf5-1.8.10/; {
+   ./configure --prefix=/usr/local --enable-fortran --enable-parallel CC=/usr/local/bin/mpicc FC=/usr/local/bin/mpif90
+   make
+   make install
+}; cd -
+curl -L -O http://www.fftw.org/fftw-3.3.2.tar.gz
+tar zxvf fftw-3.3.2.tar.gz
+cd fftw-3.3.2; {
+   ./configure --prefix=/usr/local --enable-threads --enable-mpi FC=/usr/local/bin/mpif90 CC=/usr/local/bin/mpicc
+   make
+   make install
+}; cd -
+
+* Macosx Lion with Intel compilers
+***********************************
+
+source /opt/intel/composerxe/bin/compilervars.sh intel64
+
+export OMPI_FC=ifort
+export OMPI_CC=icc
+export CC=icc 
+export CXX=icpc 
+export F77=ifort 
+export F9X=ifort 
+export CFLAGS='-O3 -xHost -ip' 
+export CXXFLAGS='-O3 -xHost -ip' 
+export FFLAGS='-O3 -xHost -ip' 
+wget http://www.hdfgroup.org/ftp/lib-external/szip/2.1/src/szip-2.1.tar.gz
+tar jxvf szip-2.1.tar.gz
+cd szip-2.1; {
+   ./configure --prefix=/opt/intel
+   make
+   sudo make install
+}; cd -
+rm -rf szip-2.1
+wget http://zlib.net/zlib-1.2.7.tar.gz
+tar jxvf zlib-1.2.7.tar.gz
+cd zlib-1.2.7; {
+   ./configure --prefix=/opt/intel
+   make
+   sudo make install
+}; cd -
+rm -rf zlib-1.2.7
+wget http://www.hdfgroup.org/ftp/HDF5/current/src/hdf5-1.8.10.tar.bz2
+tar jxvf hdf5-1.8.10.tar.bz2
+cd hdf5-1.8.10/; {
+   ./configure --prefix=/opt/intel --enable-fortran --enable-parallel CC=mpicc FC=mpif90
+   make
+   make install
+}; cd -
+rm -rf hdf5-1.8.10
+wget http://www.fftw.org/fftw-3.3.2.tar.gz
+tar zxvf fftw-3.3.2.tar.gz
+cd fftw-3.3.2; {
+   ./configure --prefix=/opt/intel --enable-threads --enable-mpi FC=mpif90 CC=mpicc
+   make
+   sudo make install
+}; cd -
+rm -rf fftw-3.3.2
+
+* Ubuntu
+********
+
+apt-get -y update
+apt-get -y -qq install git gfortran openmpi-bin libhdf5-openmpi-dev libopenmpi-dev libfftw3-mpi-dev doxygen liblapack-dev <&-

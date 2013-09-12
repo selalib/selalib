@@ -12,7 +12,7 @@ program vm4d_spectral
 
   type(geometry)            :: geomx 
   type(geometry)            :: geomv 
-  type(maxwell_pstd)        :: maxwell
+  type(maxwell_2d_pstd)     :: maxwell
   type(poisson_2d_periodic) :: poisson 
   type(vlasov4d_spectral)   :: vlasov4d 
 
@@ -61,6 +61,8 @@ program vm4d_spectral
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
 
+  !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
+
   call transposevx(vlasov4d)
 
   do iter=1,nbiter
@@ -92,19 +94,16 @@ program vm4d_spectral
      vlasov4d%exn=vlasov4d%ex
      vlasov4d%eyn=vlasov4d%ey;
 
-     call ampere_te(maxwell,vlasov4d%ex, &
-                            vlasov4d%ey, &
-                            vlasov4d%bz, &
-                            dt,          &
-                            vlasov4d%jx, &
-                            vlasov4d%jy) 
+     call solve_ampere(vlasov4d, maxwell, dt) 
 
+     !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
      call advection_x3x4(vlasov4d,dt)
 
 !modif NC
      call compute_current(vlasov4d)
      vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
 !fin
+     !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
 
      call transposevx(vlasov4d)
 
@@ -120,12 +119,7 @@ program vm4d_spectral
      call advection_x1(vlasov4d,0.5*dt)
 
 !modif NC
-     call ampere_te(maxwell, vlasov4d%exn,  &
-                             vlasov4d%eyn,  &
-                             vlasov4d%bz,   &
-                             dt,            &
-                             vlasov4d%jx,   &
-                             vlasov4d%jy) 
+     call solve_ampere(vlasov4d, maxwell, dt) 
 
      vlasov4d%ex=vlasov4d%exn;
      vlasov4d%ey=vlasov4d%eyn
@@ -171,7 +165,7 @@ contains
 
     call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
     &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
-    &                        PERIODIC_SPLINE, PERIODIC_SPLINE)
+    &                        SLL_PERIODIC, SLL_PERIODIC)
 
     call new(vlasov4d,geomx,geomv,spl_x3x4,error)
 
@@ -210,8 +204,26 @@ contains
                     geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                    geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+                    geomx%y0, geomx%y1, geomx%ny, error)
 
   end subroutine initlocal
+
+  subroutine solve_ampere(vlasov4d, maxwell2d, dt)
+  type(vlasov4d_spectral)   :: vlasov4d 
+  type(maxwell_2d_pstd)     :: maxwell2d
+  sll_real64, intent(in)    :: dt
+   
+  call ampere(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt, vlasov4d%jx)
+
+  end subroutine solve_ampere
+  
+  subroutine solve_faraday(vlasov4d, maxwell2d, dt)
+  type(vlasov4d_spectral)   :: vlasov4d 
+  type(maxwell_2d_pstd)     :: maxwell2d
+  sll_real64, intent(in)    :: dt
+   
+  call faraday(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
+
+  end subroutine solve_faraday
 
 end program vm4d_spectral
