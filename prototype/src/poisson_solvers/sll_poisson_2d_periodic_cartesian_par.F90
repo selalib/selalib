@@ -134,7 +134,7 @@ contains
 
     ! Layout and local sizes for FFTs in y-direction (x2)
     plan%layout_seq_x2 => new_layout_2D( collective )
-    nprocx1 = colsz
+    nprocx1 = int(colsz,kind=2)
     nprocx2 = 1
 
     call initialize_layout_with_distributed_2D_array( &
@@ -301,11 +301,12 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
-    ! Also ensure the periodicity
+
+    ! Also ensure the periodicity in x
     do j=1,npy_loc
        plan%fft_x_array(npx_loc,j) = plan%fft_x_array(1,j)
     end do
-    phi = real(plan%fft_x_array, f64)
+    phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
   end subroutine solve_poisson_2d_periodic_cartesian_par
 
 

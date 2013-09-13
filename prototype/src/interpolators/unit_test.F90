@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-use geometry_functions
+use sll_common_coordinate_transformations
 
 implicit none
 

@@ -45,17 +45,23 @@ module sll_module_scalar_field_2d_alternative
 
   type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_analytic_alt
      procedure(two_var_parametrizable_function), pointer, nopass :: func
+     procedure(two_var_parametrizable_function), pointer, nopass :: first_deriv_eta1
+     procedure(two_var_parametrizable_function), pointer, nopass :: first_deriv_eta2
      sll_real64, dimension(:), pointer        :: params
      character(len=64)                        :: name
-!     sll_int32                                :: plot_counter
+     !     sll_int32                                :: plot_counter
      class(sll_coordinate_transformation_2d_base), pointer :: T
      sll_int32 :: bc_left
      sll_int32 :: bc_right
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
+     ! allows to decide if the user put the derivative of the analiytic function: func
+     logical :: present_deriv_eta1_int
+     logical :: present_deriv_eta2_int
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_analytic_alt
+     
      procedure, pass(field) :: get_transformation => &
           get_transformation_analytic_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -64,6 +70,14 @@ module sll_module_scalar_field_2d_alternative
           get_jacobian_matrix_analytic_alt
      procedure, pass(field) :: value_at_point => value_at_pt_analytic
      procedure, pass(field) :: value_at_indices => value_at_index_analytic
+     procedure, pass(field) :: first_deriv_eta1_value_at_point => &
+          first_deriv_eta1_value_at_pt_analytic
+     procedure, pass(field) :: first_deriv_eta2_value_at_point => &
+          first_deriv_eta2_value_at_pt_analytic
+     procedure, pass(field) :: first_deriv_eta1_value_at_indices => &
+          first_deriv_eta1_value_at_index_analytic
+     procedure, pass(field) :: first_deriv_eta2_value_at_indices => &
+          first_deriv_eta2_value_at_index_analytic
      procedure, pass(field) :: write_to_file => write_to_file_analytic_2d
      procedure, pass(field) :: delete => delete_field_2d_analytic_alt
   end type sll_scalar_field_2d_analytic_alt
@@ -87,6 +101,8 @@ module sll_module_scalar_field_2d_alternative
    contains
    procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_discrete_alt
+     procedure, pass(field) :: update_interpolation_coefficients => &
+          update_coeffs_scalar_field_2d
      procedure, pass(field) :: get_transformation => &
           get_transformation_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -95,6 +111,14 @@ module sll_module_scalar_field_2d_alternative
           get_jacobian_matrix_discrete_alt
      procedure, pass(field) :: value_at_point => value_at_pt_discrete
      procedure, pass(field) :: value_at_indices => value_at_index_discrete
+     procedure, pass(field) :: first_deriv_eta1_value_at_point => &
+          first_deriv_eta1_value_at_pt_discrete
+     procedure, pass(field) :: first_deriv_eta2_value_at_point => &
+          first_deriv_eta2_value_at_pt_discrete
+     procedure, pass(field) :: first_deriv_eta1_value_at_indices => &
+          first_deriv_eta1_value_at_index_discrete
+     procedure, pass(field) :: first_deriv_eta2_value_at_indices => &
+          first_deriv_eta2_value_at_index_discrete
      procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
      procedure, pass(field) :: delete => delete_field_2d_discrete_alt
   end type sll_scalar_field_2d_discrete_alt
@@ -166,6 +190,75 @@ contains   ! *****************************************************************
     value_at_index_analytic = field%func(eta1,eta2,field%params)
   end function value_at_index_analytic
 
+  function first_deriv_eta1_value_at_pt_analytic( field, eta1, eta2)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: first_deriv_eta1_value_at_pt_analytic
+    
+    if ( field%present_deriv_eta1_int ) then 
+       first_deriv_eta1_value_at_pt_analytic = &
+            field%first_deriv_eta1(eta1,eta2,field%params)
+    else 
+       print*,' first derivative in eta1 is not given in the initialization'
+    end if
+
+  end function first_deriv_eta1_value_at_pt_analytic
+
+  function first_deriv_eta2_value_at_pt_analytic( field, eta1, eta2)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64            :: first_deriv_eta2_value_at_pt_analytic
+    
+    if ( field%present_deriv_eta2_int ) then 
+       first_deriv_eta2_value_at_pt_analytic = &
+            field%first_deriv_eta2(eta1,eta2,field%params)
+    else 
+       print*,' first derivative in eta2 is not given in the initialization'
+    end if
+    
+  end function first_deriv_eta2_value_at_pt_analytic
+  
+  function first_deriv_eta1_value_at_index_analytic( field, i, j)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: first_deriv_eta1_value_at_index_analytic
+    
+    eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
+    eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
+    
+    if ( field%present_deriv_eta1_int ) then 
+       first_deriv_eta1_value_at_index_analytic = &
+            field%first_deriv_eta1(eta1,eta2,field%params)
+    else 
+       print*,' first derivative in eta1 is not given in the initialization'
+    end if
+    
+  end function first_deriv_eta1_value_at_index_analytic
+  
+  function first_deriv_eta2_value_at_index_analytic( field, i, j)
+    class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: first_deriv_eta2_value_at_index_analytic
+    
+    eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
+    eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
+    
+    if ( field%present_deriv_eta2_int ) then 
+       first_deriv_eta2_value_at_index_analytic = &
+            field%first_deriv_eta2(eta1,eta2,field%params)
+    else 
+       print*,' first derivative in eta2 is not given in the initialization'
+    end if
+    
+  end function first_deriv_eta2_value_at_index_analytic
 !!$  subroutine initialize_scalar_field_2d_analytic_alt( &
 !!$    obj, &
 !!$    func, &
@@ -207,10 +300,14 @@ contains   ! *****************************************************************
     bc_right, &
     bc_bottom, &
     bc_top, &
-    func_params ) result(obj)
-
+    func_params,&
+    first_deriv_eta1,&
+    first_deriv_eta2) result(obj)
+    
     type(sll_scalar_field_2d_analytic_alt), pointer :: obj
     procedure(two_var_parametrizable_function)      :: func
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
     character(len=*), intent(in)                    :: field_name
     sll_real64, dimension(:), intent(in), optional, target :: func_params
     class(sll_coordinate_transformation_2d_base), target :: transformation
@@ -229,7 +326,9 @@ contains   ! *****************************************************************
     bc_right, &
     bc_bottom, &
     bc_top, &
-    func_params )
+    func_params,&
+    first_deriv_eta1,&
+    first_deriv_eta2)
   end function new_scalar_field_2d_analytic_alt
 
   subroutine delete_field_2d_analytic_alt( field )
@@ -252,10 +351,14 @@ contains   ! *****************************************************************
     bc_right, &
     bc_bottom, &
     bc_top, &
-    func_params )
+    func_params, &
+    first_deriv_eta1,&
+    first_deriv_eta2)
 
     class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
     procedure(two_var_parametrizable_function)      :: func
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
     character(len=*), intent(in)                    :: field_name
     sll_real64, dimension(:), intent(in), optional, target :: func_params
     class(sll_coordinate_transformation_2d_base), target :: transformation
@@ -273,6 +376,15 @@ contains   ! *****************************************************************
     field%bc_right  = bc_right
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
+    
+    if (present(first_deriv_eta1)) then
+       field%first_deriv_eta1 => first_deriv_eta1
+       field%present_deriv_eta1_int = .TRUE.
+    end if
+    if (present(first_deriv_eta2)) then
+       field%first_deriv_eta2 => first_deriv_eta2
+       field%present_deriv_eta2_int = .TRUE.
+    end if
   end subroutine initialize_scalar_field_2d_analytic_alt
 
   
@@ -394,15 +506,15 @@ contains   ! *****************************************************************
     class(sll_coordinate_transformation_2d_base), target :: transformation
     sll_int32 :: SPLINE_DEG1
     sll_int32 :: SPLINE_DEG2
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
     sll_real64, dimension(:), optional :: point1_1d
     sll_real64, dimension(:), optional :: point2_1d
     sll_int32, optional :: sz_point1
     sll_int32, optional :: sz_point2
     ! sll_real64, dimension(:,:), optional :: point2d
-    sll_int32, intent(in) :: bc_left
-    sll_int32, intent(in) :: bc_right
-    sll_int32, intent(in) :: bc_bottom
-    sll_int32, intent(in) :: bc_top
     sll_int32  :: ierr
     
     SLL_ALLOCATE(obj,ierr)
@@ -442,19 +554,17 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
-
-    sll_real64, dimension(:), optional :: point1_1d
-    sll_real64, dimension(:), optional :: point2_1d
-    sll_int32,optional :: sz_point1
-    sll_int32,optional :: sz_point2
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
+    sll_real64, dimension(:), optional :: point1_1d
+    sll_real64, dimension(:), optional :: point2_1d
+    sll_int32,optional :: sz_point1
+    sll_int32,optional :: sz_point2
     sll_int32 :: i
-   
-    
-    
+    sll_int32 :: ierr   
+        
     field%values => array_2d
     field%T => transformation
     field%interp_2d => interpolator_2d
@@ -464,31 +574,16 @@ contains   ! *****************************************************************
     field%bc_right  = bc_right
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
+
+    !print*,'first line',  field%values(1,:)
+    !print*, 'second line', field%values(2,:)
+    call field%interp_2d%compute_interpolants( &
+         field%values, & !array_2d, &
+         point1_1d, &
+         sz_point1, &
+         point2_1d, &
+         sz_point2 )
     
-   
-    if (present(point1_1d) .and. present(point2_1d) &
-         .and. present(sz_point1) .and. present(sz_point2)) then 
-       
-       allocate(field%point1_1d(sz_point1))
-       allocate(field%point2_1d(sz_point2))
-       
-       field%point1_1d(:) = point1_1d(:)
-       field%point2_1d(:) = point2_1d(:)
- 
-    end if
-    
-    if (present(point1_1d) .and. present(point2_1d) &
-         .and. present(sz_point1) .and. present(sz_point2) ) then  
-       
-       call  field%interp_2d%compute_interpolants( &
-            array_2d, &
-            point1_1d, &
-            sz_point1, &
-            point2_1d, &
-            sz_point2 )
-    end if
-    
-    print*, 'hello'
   end subroutine initialize_scalar_field_2d_discrete_alt
   
   ! need to do something about deallocating the field proper, when allocated
@@ -503,6 +598,11 @@ contains   ! *****************************************************************
     nullify(field%point2_1d)
   end subroutine delete_field_2d_discrete_alt
 
+  subroutine update_coeffs_scalar_field_2d( field, data )
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
+    sll_real64, dimension(:,:), intent(in) :: data
+    call field%interp_2d%compute_interpolants( data )
+  end subroutine update_coeffs_scalar_field_2d
 
   function get_transformation_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
@@ -544,6 +644,52 @@ contains   ! *****************************************************************
     eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
     value_at_index_discrete = field%interp_2d%interpolate_value(eta1,eta2)
   end function value_at_index_discrete
+
+  function first_deriv_eta1_value_at_pt_discrete( field, eta1, eta2 )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: first_deriv_eta1_value_at_pt_discrete
+    
+    first_deriv_eta1_value_at_pt_discrete = &
+         field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+  end function first_deriv_eta1_value_at_pt_discrete
+
+  function first_deriv_eta2_value_at_pt_discrete( field, eta1, eta2 )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_real64, intent(in) :: eta1
+    sll_real64, intent(in) :: eta2
+    sll_real64             :: first_deriv_eta2_value_at_pt_discrete
+    
+    first_deriv_eta2_value_at_pt_discrete = &
+         field%interp_2d%interpolate_derivative_eta2(eta1,eta2)
+  end function first_deriv_eta2_value_at_pt_discrete
+  
+  function first_deriv_eta1_value_at_index_discrete( field, i, j )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: first_deriv_eta1_value_at_index_discrete
+    eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
+    eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
+    first_deriv_eta1_value_at_index_discrete = &
+         field%interp_2d%interpolate_derivative_eta1(eta1,eta2)
+  end function first_deriv_eta1_value_at_index_discrete
+
+  function first_deriv_eta2_value_at_index_discrete( field, i, j )
+    class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: eta1
+    sll_real64            :: eta2
+    sll_real64            :: first_deriv_eta2_value_at_index_discrete
+    eta1 = field%T%mesh%eta1_min + real(i-1,f64)*field%T%mesh%delta_eta1
+    eta2 = field%T%mesh%eta2_min + real(j-1,f64)*field%T%mesh%delta_eta2
+    first_deriv_eta2_value_at_index_discrete = &
+         field%interp_2d%interpolate_derivative_eta2(eta1,eta2)
+  end function first_deriv_eta2_value_at_index_discrete
 
   subroutine write_to_file_discrete_2d( field, tag )
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
