@@ -6,6 +6,7 @@ module module_cg_curvi_function
 #include "selalib.h"
 
    use module_cg_curvi_structure
+   use sll_boundary_condition_descriptors
     !--*Poisson*----
   
 contains
@@ -456,10 +457,10 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
     end if
 
     
-    if (bc1_type==HERMITE_SPLINE) then 
+    if (bc1_type==sll_DIRICHLET) then 
         plan_sl%spl_phi => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
                                  & bc1_type,bc2_type,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-    elseif (bc2_type==HERMITE_SPLINE) then 
+    elseif (bc2_type==sll_DIRICHLET) then 
         plan_sl%spl_phi => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
                                  & bc1_type,bc2_type,const_slope_x2_min = 0._f64,const_slope_x2_max = 0._f64)
     else
@@ -574,11 +575,11 @@ subroutine carac_analytique(phi_case,N_eta1,N_eta2,x1n_array,x2n_array,a1,a2,x1c
      
 
     if (present(bc1_type)) then
-        if(bc1_type==PERIODIC_SPLINE) grad_phi(:,N_eta1+1,:)=grad_phi(:,1,:)
+        if(bc1_type==sll_PERIODIC) grad_phi(:,N_eta1+1,:)=grad_phi(:,1,:)
     endif
  
     if (present(bc2_type)) then
-       if(bc2_type==PERIODIC_SPLINE) grad_phi(:,:,N_eta2+1)=grad_phi(:,:,1)
+       if(bc2_type==sll_PERIODIC) grad_phi(:,:,N_eta2+1)=grad_phi(:,:,1)
     endif
   end subroutine compute_grad_field
 
@@ -594,13 +595,13 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
      
   
 ! --- Corrections on the BC ---
-        if (bc1_type.eq.HERMITE_SPLINE) then
+        if (bc1_type.eq.sll_DIRICHLET) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.HERMITE_SPLINE) then
+        if (bc2_type.eq.sll_DIRICHLET) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==PERIODIC_SPLINE) then
+        if (bc1_type==sll_PERIODIC) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -608,7 +609,7 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==PERIODIC_SPLINE) then
+        if (bc2_type==sll_PERIODIC) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo

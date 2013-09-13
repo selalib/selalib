@@ -49,6 +49,8 @@ use sll_odd_degree_splines
      procedure, pass:: interpolate_array => spline_interpolate1d
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
+     procedure, pass :: set_coefficients => set_coefficients_qs1d
+     procedure, pass :: get_coefficients => get_coefficients_qs1d
      !generic :: initialize => initialize_qs1d_interpolato
 #endif
   end type odd_degree_spline_1d_interpolator
@@ -149,13 +151,19 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the qs1d at initialization time.  
 #ifdef STDF95
-  subroutine odd_degree_spline_compute_interpolants( interpolator, data_array )
+  subroutine odd_degree_spline_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(odd_degree_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_qs1d( interpolator, data_array )
-    class(odd_degree_spline_1d_interpolator), intent(inout) :: interpolator
+    subroutine compute_interpolants_qs1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
+      class(odd_degree_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_odd_degree_coeffs_uniform( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine odd_degree_spline_compute_interpolants
@@ -289,4 +297,20 @@ contains  ! ****************************************************************
     call delete_odd_degree_splines_uniform(obj%spline)
   end subroutine delete_qs1d
 
+  subroutine set_coefficients_qs1d( interpolator, coeffs )
+    class(odd_degree_spline_1d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_qs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_qs1d
+
+
+  function get_coefficients_qs1d(interpolator)
+    class(odd_degree_spline_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_qs1d     
+    
+    print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_qs1d
 end module sll_odd_degree_spline_interpolator_1d

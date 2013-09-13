@@ -47,7 +47,7 @@ implicit none
 
 contains
 
-subroutine initialize(my_block,my_mg,nerror)
+subroutine initialize_mgd3(my_block,my_mg,nerror)
 
 implicit none
 
@@ -634,7 +634,7 @@ return
     &      ' -> change the parameters (ixp,jyq,kzr) and',     &
     &      ' (iex,jyq,kez) in main',/)
 
-end subroutine initialize
+end subroutine initialize_mgd3
 
 
 subroutine grid1_type(gtype,sx,ex,sy,ey,sz,ez)
