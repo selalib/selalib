@@ -57,10 +57,10 @@ contains
     plan_sl%bc1_type=bc1_type
     plan_sl%bc2_type=bc2_type
 
- if (bc1_type==HERMITE_SPLINE) then 
+ if (bc1_type==sll_DIRICHLET) then 
   plan_sl%spl_f => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
          & bc1_type,bc2_type,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
- elseif (bc2_type==HERMITE_SPLINE) then 
+ elseif (bc2_type==sll_DIRICHLET) then 
   plan_sl%spl_f => new_spline_2D(N_eta1+1,N_eta2+1,eta1_min,eta1_max,eta2_min,eta2_max, &
          & bc1_type,bc2_type,const_slope_x2_min = 0._f64,const_slope_x2_max = 0._f64)
  else
@@ -376,8 +376,8 @@ contains
 
 
 
-    if(bc2_type==PERIODIC_SPLINE) fnp1(:,N_eta2+1)=fnp1(:,1) 
-    if(bc1_type==PERIODIC_SPLINE) fnp1(N_eta1+1,:)=fnp1(1,:)
+    if(bc2_type==sll_PERIODIC) fnp1(:,N_eta2+1)=fnp1(:,1) 
+    if(bc1_type==sll_PERIODIC) fnp1(N_eta1+1,:)=fnp1(1,:)
  
 
   end subroutine advect_CG_curvilinear
