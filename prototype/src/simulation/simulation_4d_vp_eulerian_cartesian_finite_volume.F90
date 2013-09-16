@@ -1222,13 +1222,17 @@ write(*,*) 'Bv1_sup', sim%Bv1_sup
 do i=1,sim%nsky
 if(abs(sim%Bv1_low(i)+sim%Bv1_sup(i)).gt.0.1e-7) then
     write(*,*) 'i = ', i, sim%Bv1_low(i)+sim%Bv1_sup(i)
-!!$          do ii=1,(sim%degree+1)**2
-!!$             j=sim%connec(ii,jc*sim%nc_v1+ic+1)
-!!$             sim%p(i)=sim%p(i)+ploc(ii)
-!!$          end do
+    sim%Bv1_low(i)=(sim%Bv1_low(i)-sim%Bv1_sup(i))/2
+    sim%Bv1_sup(i)=-sim%Bv1_low(i)
 endif
 end do
-    stop
+write(*,*) 'fin'
+do i=1,sim%nsky
+if(abs(sim%Bv1_low(i)+sim%Bv1_sup(i)).gt.0.1e-10) then
+    write(*,*) 'i = ', i, sim%Bv1_low(i)+sim%Bv1_sup(i)
+endif
+end do
+
 !!$    write(*,*) 'max of M low', maxval(abs(sim%M_low))
 !!$    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
     ! LU decomposition of M
@@ -1768,7 +1772,7 @@ end do
     sim%test=sim%params(8)
     !write(*,*) 'test =', sim%test
     if(sim%test==2) then
-       Ex=1.0_f64
+       Ex=-1.0_f64
        Ey=0.0_f64
     endif
     if(sim%test==3) then
@@ -1798,8 +1802,8 @@ end do
           end if
        endif
     enddo
-    Bv1_diag_corr=0.0_f64
-    Bv2_diag_corr=0.0_f64
+!!$    Bv1_diag_corr=0.0_f64
+!!$    Bv2_diag_corr=0.0_f64
     source1=0
     source2=0
     
