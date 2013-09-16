@@ -231,9 +231,8 @@ IF (FFTW_FOUND)
 
    ADD_DEPENDENCIES(sll_vlasov4d slv2d)
                               
-
-   ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
-   TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
+   #ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
+   #TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
 
    ADD_EXECUTABLE(vp4d          vp4d_remapper.F90)
    ADD_EXECUTABLE(vm4d          vm4d_remapper.F90)
