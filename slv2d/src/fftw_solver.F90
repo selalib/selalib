@@ -5,6 +5,7 @@ program fftw_solver
 #include "sll_constants.h"
 use, intrinsic :: iso_c_binding
 implicit none
+
 include 'fftw3.f03'
 
 type(C_PTR) :: fw, bw
