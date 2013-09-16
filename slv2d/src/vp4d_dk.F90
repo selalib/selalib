@@ -28,7 +28,7 @@ type (splinepx)    :: splx
 type (splinepy)    :: sply
 type(sll_plan_poisson_polar), pointer :: plan_poisson
 type(sll_SL_polar), pointer :: plan_sl
-sll_real64, dimension(:,:,:,:), pointer :: f4d,f4d_old
+sll_real64, dimension(:,:,:,:), pointer :: f4d,f4d_old,f_equil
 sll_real64, dimension(:,:),     pointer :: rho
 sll_real64, dimension(:,:,:),     pointer :: rho_dk
 sll_real64, dimension(:,:,:),     pointer :: phi
@@ -37,7 +37,7 @@ sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
 sll_real64, dimension(:,:),     pointer :: profile 
 
-sll_int32  :: i,j,k,nbiter  
+sll_int32  :: i,j,k,nbiter,scheme_case=2
 sll_real64 :: dt
 sll_real64 :: R0     
 sll_int32  :: fdiag, fthdiag  
@@ -48,9 +48,12 @@ sll_real64 :: tcpu1, tcpu2
 
 sll_int32 :: my_num, num_threads, comm
 sll_int32 :: nr,ntheta,err!,bc(2)
-sll_real64 :: rmin,dr
+sll_real64 :: rmin,dr,r,y,z
 
 sll_int32 :: kmin(2),kmax(2)
+
+sll_real64 ::rpeak,deltarn,kappan,deltarTi,eps!,R0
+
 call sll_boot_collective()
 
 my_num = sll_get_collective_rank(sll_world_collective)
@@ -60,6 +63,9 @@ comm   = sll_world_collective%comm
 
 kmin=(/9,4/)
 kmax=(/9,4/)
+
+kmin=(/9,1/)
+kmax=(/9,1/)
 
 
 ! initialisation global
@@ -73,7 +79,18 @@ end if
 
 
 call init_dk(geomx,geomv,nbiter,fdiag,fthdiag,jstartv,jendv,jstartx,jendx, &
-               f4d,f4d_old,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
+               f4d,f4d_old,f_equil,rho_dk,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
+
+   iter=0
+   if (mod(iter,fdiag) == 0) then
+     !print *,'#param are',iter/fdiag,geomx%x0,geomv%x0,jstartx,jendx,jstartv,jendv,VXVY_VIEW
+     if(iter/fdiag==0)then
+       call plot_mesh4d(geomx, geomv, jstartx,jendx,jstartv,jendv)
+     endif
+     call plot_df(f4d-f_equil,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,XY_VIEW)
+   endif
+
+
 
 
 dt=plan_sl%adv%dt
@@ -107,12 +124,75 @@ iter=0
 !   enddo  
    do i=1,geomx%nx
      do j=1,geomx%ny+1
-       tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
-       rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+       !tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
+       !rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+       
+       rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
+       
+       !rho_dk(i,j,:) = (rho_dk(i,j,:))-1._f64
      enddo
+     !print *,i,rho_dk(i,1,1),profile(1,i)
    enddo  
-
+   
+   !print *,maxval(abs(rho_dk))
+   
+   !stop
+   
+   
+   !check first the poisson solver
+   
+   rpeak=7.2500725_f64!6.525_f64
+   deltarn=2.899971_f64!2.03_f64
+   kappan=5.51729655227586810E-002_f64!133.98_f64
+   R0=1._f64!239.25_f64
+   deltarTi=1.4499855_f64!1.015_f64
+   eps=1.e-2_f64
+   !deltarn=deltarn/deltarTi
+   
+!   do i=1,geomx%nx
+!     r = geomx%x0+real(i-1,f64)*geomx%dx
+!     tmp = -kappan/R0*cosh((r-rpeak)/deltarn)**(-2)
+!     do j=1,geomx%ny+1
+!       y=geomx%y0+real(j-1,f64)*geomx%dy
+!       
+!       phi(i,j,:)=cos(kmin(1)*y)*exp(-(r-rpeak)**2/(deltarn/deltarTi))*&
+!       &(1._f64/profile(3,i)+2._f64/(deltarn/deltarTi)-4._f64*(r-rpeak)**2/(deltarn/deltarTi)**2&
+!       &+2._f64*(r-rpeak)/(deltarn/deltarTi)*(1._f64/r+tmp)+kmin(1)**2/r**2)
+!       !&-rho_dk(i,j,:)
+!       
+!       !phi(i,j,:)=exp(-(r-rpeak)**2/(deltarn/deltarTi))
+!     enddo
+!     print *,r,maxval((phi(i,:,:))),minval((phi(i,:,:))),&
+!     &maxval((rho_dk(i,:,:))), minval((rho_dk(i,:,:)))
+!   enddo  
+!   
+!   !stop
+!   
+   
    call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+   
+   print *,'#delta=',deltarn/deltarTi
+   !stop
+   !compute error
+   do i=1,geomx%nx
+     r = geomx%x0+real(i-1,f64)*geomx%dx
+     phi(i,1:geomx%ny,geomv%nx+1)=phi(i,1:geomx%ny,1)
+     phi(i,geomx%ny+1,:)=phi(i,1,:)     
+     do j=1,geomx%ny+1
+       y=geomx%y0+real(j-1,f64)*geomx%dy
+       do k=1,geomv%nx+1
+         z=geomv%x0+real(k-1,f64)*geomv%dx
+         rho_dk(i,j,k)=phi(i,j,k)-eps*exp(-(r-rpeak)**2/(deltarn/deltarTi))*&
+         &cos(kmin(1)*y+kmin(2)*2._f64*sll_pi/(geomv%x1-geomv%x0)*z)
+       enddo  
+     enddo
+     !print *,r,maxval((phi(i,:,:))),minval((phi(i,:,:)))!,minval((phi(i,1:geomx%ny,1:geomv%nx))),exp(-(r-rpeak)**2/deltarn)
+   enddo
+   
+   print *,"#error for phi initial",maxval(abs(rho_dk))
+   
+   !stop
+   
    call transposevx(vlas2d,f4d)
    call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv,kmin,kmax)
 
@@ -132,6 +212,7 @@ do iter=1,nbiter
    call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
    call transposexv(vlas2d,f4d)
    
+   
    !compute field at time t_{n+1/2}
    call densite_charge_dk(vlas2d,rho_dk)
    !do i=1,geomx%nx
@@ -140,11 +221,17 @@ do iter=1,nbiter
    !enddo  
    do i=1,geomx%nx
      do j=1,geomx%ny+1
-       tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
-       rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+       !tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
+       !rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+       rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
      enddo
    enddo  
    call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+   phi(i,1:geomx%ny,geomv%nx+1)=phi(i,1:geomx%ny,1)
+   phi(i,geomx%ny+1,:)=phi(i,1,:)     
+
+   if(scheme_case==2)then
+
    call compute_field_dk(vlas2d,plan_sl%grad,phi,adv_field)
    
    !advection from tn to t_{n+1}
@@ -166,14 +253,17 @@ do iter=1,nbiter
 !   enddo  
    do i=1,geomx%nx
      do j=1,geomx%ny+1
-       tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
-       rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+       !tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
+       !rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
+       rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
      enddo
    enddo  
    call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+   phi(i,1:geomx%ny,geomv%nx+1)=phi(i,1:geomx%ny,1)
+   phi(i,geomx%ny+1,:)=phi(i,1,:)     
 
 
-   
+   endif
    
    call transposevx(vlas2d,f4d)
 
@@ -182,7 +272,13 @@ do iter=1,nbiter
 !   print *,my_num,iter,dt,real(iter,f64)*dt
 !end if
 
-
+   if (mod(iter,fdiag) == 0) then
+     !print *,'#param are',iter/fdiag,geomx%x0,geomv%x0,jstartx,jendx,jstartv,jendv,VXVY_VIEW
+     if(iter/fdiag==1)then
+       call plot_mesh4d(geomx, geomv, jstartx,jendx,jstartv,jendv)
+     endif
+     call plot_df(f4d-f_equil,iter/fdiag,geomx,geomv,jstartx,jendx,jstartv,jendv,XY_VIEW)
+   endif
 
 enddo   
 
@@ -343,7 +439,7 @@ contains
 
 
  subroutine init_dk(geomx,geomv,nbiter,fdiag,fthdiag,jstartv,jendv,jstartx,jendx, &
-                      f,f_old,rho,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
+                      f,f_old,f_equil,rho,phi,adv_field,e_x,e_y,profile,vlas2d,plan_poisson,plan_sl,splx,sply)
 
   type(geometry) :: geomx
   type(geometry) :: geomv
@@ -356,7 +452,7 @@ contains
   sll_real64, dimension(:,:)    ,pointer :: e_x
   sll_real64, dimension(:,:)    ,pointer :: e_y
   sll_real64, dimension(:,:)    ,pointer :: profile
-  sll_real64, dimension(:,:,:,:),pointer :: f,f_old
+  sll_real64, dimension(:,:,:,:),pointer :: f,f_old,f_equil
   type(vlasov2d)    :: vlas2d
   type(splinepx)    :: splx
   type(splinepy)    :: sply
@@ -468,8 +564,8 @@ contains
   call new(geomx,a*rhomin,0._f64,a*rhomax,2._f64*sll_pi,Nr+1,Ntheta,iflag,"pery")  
   !call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perxy")
   call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perx")
+  
   R0 = a*aspect_ratio
-
 
 
   !print *,'eh ben alors ?',my_num,geomx%nx
@@ -478,8 +574,8 @@ contains
 
 
   bc = (/SLL_DIRICHLET,SLL_DIRICHLET/)
-  grad = 2
-  carac = 5
+  grad = 1 !2
+  carac = 1 !5
    
 
 
@@ -487,16 +583,23 @@ contains
   !num_threads = sll_get_collective_size(sll_world_collective)
   !comm        = sll_world_collective%comm
 
+  print *,'#xmin, xmax=',geomx%x0,geomx%x1
+  
+  !print *,'xmax=',geomx%x0+(real(geomx%nx,f64)-1)*geomx%dx
+  
+  
+  !stop
+
   if (my_num == MPI_MASTER) then
    
     call fichinit()
     read(idata,NML=EQUIL)
     
     rpeak = geomx%x0+rpeak*(geomx%x1-geomx%x0)
-    kappan = kappan*(geomx%x1-geomx%x0)
-    kappaTi = kappaTi*(geomx%x1-geomx%x0)
-    kappaTe = kappaTe*(geomx%x1-geomx%x0)
-    deltarn = deltarn*(geomx%x1-geomx%x0)
+    kappan = kappan/(geomx%x1-geomx%x0)   !new before *
+    kappaTi = kappaTi/(geomx%x1-geomx%x0) !new before *
+    kappaTe = kappaTe/(geomx%x1-geomx%x0) !new before *
+    deltarn = deltarn*(geomx%x1-geomx%x0) 
     deltarTi = deltarTi*(geomx%x1-geomx%x0)
     deltarTe = deltarTe*(geomx%x1-geomx%x0)
 
@@ -541,6 +644,7 @@ contains
   
   SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
   SLL_ALLOCATE(f_old(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
+  SLL_ALLOCATE(f_equil(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
 
   SLL_ALLOCATE(rho(geomx%nx,geomx%ny+1,geomv%nx+1),iflag)
   SLL_ALLOCATE(phi(geomx%nx,geomx%ny+1,geomv%nx+1),iflag)
@@ -550,9 +654,20 @@ contains
   
   SLL_ALLOCATE(profile(3,geomx%nx),iflag)
   
-  call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
-  call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
-  call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
+  !call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
+  !call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
+  !call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
+
+  print *,'#rpeak=',rpeak
+  print *,'#deltarn=',deltarn
+  print *,'#kappan=',kappan
+  print *,'#R0=',R0
+  print *,'#deltarTi=',deltarTi
+  print *,'#epsilon=',epsilon
+  
+  !epsilon=._f64
+  
+  R0=1._f64
 
   !redefinition of profile
   
@@ -578,16 +693,39 @@ contains
     !stop
    ky  = 2._f64*pi/(real(geomx%ny,f64)*geomx%dy)
    
+   !kappaTi=4._f64/(geomx%x1-geomx%x0)
+   !deltarTi=0.1_f64*(geomx%x1-geomx%x0)
+   !kappan=0.8_f64/(geomx%x1-geomx%x0)
+   !deltarn=0.2_f64*(geomx%x1-geomx%x0)
+   
+   tmp=0._f64
+   do i=1,geomx%nx
+      x = geomx%x0+(i-1)*geomx%dx
+      tmp=tmp+profile(1,i)*x*geomx%dx
+   enddo
+   print *,'#int no=',tmp
+   tmp=0._f64
+   do i=1,geomx%nx
+      x = geomx%x0+(i-1)*geomx%dx
+      tmp=tmp+x*geomx%dx
+   enddo
+   print *,'#int r=',tmp
+   
+   !profile(1,:)=profile(1,:)/108._f64*15._f64
+   !stop
     do i=1,geomx%nx
       x = geomx%x0+(i-1)*geomx%dx
       !print *,'x=',x,i
               tmp_tab(1)=2._f64/(deltarn/deltarTi)
               tmp_tab(2)=tmp_tab(1)-tmp_tab(1)**2*(x-rpeak)**2
-              tmp_tab(2)=tmp_tab(2)+(1._f64/x+0*dlog_density(i))*tmp_tab(1)*(x-rpeak)
+              tmp_tab(2)=tmp_tab(2)+(1._f64/x+dlog_density(i))*tmp_tab(1)*(x-rpeak)
               tmp_tab(2)=tmp_tab(2)+(real(modethmin,f64)*ky/x)**2+inv_Te(i)
               tmp_tab(2)=tmp_tab(2)*exp(-(x-rpeak)**2/(deltarn/deltarTi))
       !print *,'tmp_tab(2)=',tmp_tab(2)
       write(20,*),x,profile(1,i),profile(2,i),profile(3,i),&
+       exp(-kappaTi*deltarTi*tanh((x-rpeak)/deltarTi)),&
+      exp(-kappan*deltarn*tanh((x-rpeak)/deltarn)),&
+      exp(-0.4*tanh((x-rpeak)/(deltarTi*(geomx%x1-geomx%x0)))),&
       exp(-kappaTi/R0*deltarTi*tanh((x-rpeak)/deltarTi)),&
       exp(-kappaTe/R0*deltarTe*tanh((x-rpeak)/deltarTe)),&
       exp(-kappan/R0*deltarn*tanh((x-rpeak)/deltarn)),&
@@ -597,6 +735,13 @@ contains
       !dlog_density(i),-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2),&
       !&-kappaTi/R0*cosh((x-rpeak)/deltarTe)**(-2)/dlog_density(i)
     enddo
+    print *,'#kappaTi/R0=',kappaTi/R0
+    print *,'#kappaTe/R0=',kappaTe/R0
+    print *,'#kappan/R0=',kappan/R0
+    print *,'#deltarTi=',deltarTi
+    print *,'#deltarTe=',deltarTe
+    print *,'#deltarn=',deltarn
+    
     !stop
 
   endif
@@ -610,11 +755,17 @@ contains
   profile(1,:)=profile(1,:)/sqrt(2._f64*sll_pi*profile(2,:))
   profile(2,:)=-0.5_f64/profile(2,:)
   
+  !print *,'#m=',modethmin,modethmax
+  
+  !stop
   
   
   
   ky  = 2._f64*pi/(real(geomx%ny,f64)*geomx%dy)
   kvx  = 2._f64*pi/(real(geomv%nx,f64)*geomv%dx)
+  
+  !ky=1._f64
+  
   do jv=jstartv,jendv
      vy = geomv%y0+real(jv-1,f64)*geomv%dy
      v2 = vy*vy
@@ -642,14 +793,28 @@ contains
               tmp_tab(2)=tmp_tab(1)-tmp_tab(1)**2*(x-rpeak)**2
               tmp_tab(2)=tmp_tab(2)+(1._f64/x+dlog_density(i))*tmp_tab(1)*(x-rpeak)
               tmp_tab(2)=tmp_tab(2)+(real(modethmin,f64)*ky/x)**2+inv_Te(i)
+              !tmp_tab(2)=1._f64
               tmp_tab(2)=tmp_tab(2)*exp(-(x-rpeak)**2/(deltarn/deltarTi))
-              !tmp_tab(2)=exp(-(x-rpeak)**2/(deltarn/deltarTi))
+              tmp_tab(2)=1._f64*exp(-(x-rpeak)**2/(deltarn/deltarTi))
               f(i,j,iv,jv)=(1._f64+tmp_mode*epsilon*tmp_tab(2))*&
                 &profile(1,i)*exp(v2*profile(2,i))
+              f_equil(i,j,iv,jv)=profile(1,i)*exp(v2*profile(2,i))
+                
            end do
         end do
      end do
   end do
+  
+  print *,'#diff=',maxval(abs(f-f_equil)),epsilon
+  
+  !stop
+  
+  
+
+  
+  
+  
+  
   
   !,geomx%nx*geomx%ny*geomv%nx*geomv%ny,&
   !geomx%nx*geomx%ny*geomv%nx*geomv%ny-mass*num_threads!*geomx%dx*geomx%dy*geomv%dx*geomv%dy,2*pi*2*pi*12*0.6*32
@@ -663,6 +828,7 @@ contains
   call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
   call normalize_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak)
 
+   !profile(1,:)=profile(1,:)/108._f64*15._f64
   
   
   
