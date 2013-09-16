@@ -74,6 +74,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_real64,dimension(:,:),allocatable :: surfx1,surfx2
      sll_real64, dimension(:),pointer  :: p
      sll_real64, dimension(:),pointer  :: M_diag,M_low,M_sup
+     sll_real64, dimension(:),pointer  :: M1_diag,M1_low,M1_sup
      sll_real64, dimension(:),pointer  :: Av1_diag,Av1_low,Av1_sup
      sll_real64, dimension(:),pointer  :: Av2_diag,Av2_low,Av2_sup
      sll_real64, dimension(:),pointer  :: Bv1_diag,Bv1_low,Bv1_sup
@@ -260,6 +261,8 @@ contains
     sll_real64,dimension(:,:),allocatable :: plotphi2d
     sll_real64,dimension(:,:),allocatable :: f_x_exact,f_vx_exact
     sll_real64,dimension(:,:),allocatable :: f_y_exact,f_vy_exact
+    sll_real64,dimension(:),pointer :: ww,w1
+    sll_real64,dimension(:,:),pointer :: energ
     sll_real64,dimension(:),pointer :: vx_mil
     sll_real64,dimension(:),pointer :: vy_mil
     sll_real64,dimension(:),pointer :: x_mil
@@ -358,8 +361,9 @@ contains
     SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     SLL_ALLOCATE(sim%dtfn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
     
-    
-    
+        SLL_ALLOCATE(ww(sim%np_v1*sim%np_v2),ierr)
+        SLL_ALLOCATE(w1(sim%np_v1*sim%np_v2),ierr)
+        SLL_ALLOCATE(energ(loc_sz_x1,loc_sz_x2+1),ierr)
     
 
     ! initialize here the distribution function
@@ -592,7 +596,28 @@ contains
 
        t=t+sim%dt
        call RK2(sim)
-       write(*,*) 'iter = ',itime, ' t = ', t 
+       !try to compute the energy in the transport test case here
+!!$       write(*,*) 'loc_sz_v1',loc_sz_v1
+!!$       write(*,*) 'sim%np_v2',sim%np_v2
+!!$       stop
+       energ=0.0_f64
+       do ic=1,loc_sz_x1
+          do jc=1,loc_sz_x2
+             !energ(ic,jc)=0.0_f64
+             do iy=1,loc_sz_v2
+                do ix=1,loc_sz_v1
+                   w1((iy-1)*loc_sz_v1+ix)=sim%fn_v1v2x1(ix,iy,ic,jc)
+                end do
+             end do
+             call MULKU(sim%M1_sup,sim%M1_diag,sim%M1_low, &
+                  sim%mkld,w1,sim%np_v1*sim%np_v2,1,ww, &
+                  sim%nsky)
+             do iy=1,sim%np_v1*sim%np_v2
+                energ(ic,jc)=energ(ic,jc)+w1(iy)*ww(iy)
+             end do
+          end do
+       end do
+       write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(2,1)
        !write(*,*) 'here3'
        !call euler(sim)
 !!$       !n Try to plot the log of energy
@@ -845,7 +870,7 @@ contains
 !!$         "plotphi2d", &
 !!$         0, &
 !!$         ierr)
-!!$    write(*,*) 'coucou3'
+
     if (sim%test .eq. 1) then
        write(*,*) 'we r using the Landau damping 1d test case'
     else if (sim%test .eq. 0) then
@@ -966,6 +991,10 @@ contains
     SLL_ALLOCATE(sim%M_low(sim%nsky),ierr)
     SLL_ALLOCATE(sim%M_sup(sim%nsky),ierr)
     SLL_ALLOCATE(sim%M_diag(sim%np_v1*sim%np_v2),ierr)
+
+    SLL_ALLOCATE(sim%M1_low(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%M1_sup(sim%nsky),ierr)
+    SLL_ALLOCATE(sim%M1_diag(sim%np_v1*sim%np_v2),ierr)
 
     SLL_ALLOCATE(sim%Av1_low(sim%nsky),ierr)
     SLL_ALLOCATE(sim%Av1_sup(sim%nsky),ierr)
@@ -1137,9 +1166,6 @@ contains
              do jj=1,(sim%degree+1)**2
                 i=sim%connec(ii,jc*sim%nc_v1+ic+1)
                 j=sim%connec(jj,jc*sim%nc_v1+ic+1)
-!!$                if (ii == 2) then
-!!$                write(*,*) 'ii,jj,j,i', ii,jj,i,j
-!!$                end if
                 !if (cal.eq.1) then
                 if (i.eq.j) then
                    sim%M_diag(i)=sim%M_diag(i)+mloc(ii,jj)
@@ -1162,6 +1188,18 @@ contains
                    sim%Bv1_low(ll)=sim%Bv1_low(ll)+bv1loc(ii,jj)
                    sim%Bv2_low(ll)=sim%Bv2_low(ll)+bv2loc(ii,jj)
                 end if
+!!$                if (ll == 5) then
+!!$                write(*,*) 'll=5: i, j', i, j
+!!$                end if
+!!$                if (ll == 29) then
+!!$                write(*,*) 'll=29: i,j', i,j
+!!$                end if
+!!$                if (ll == 34) then
+!!$                write(*,*) 'll=34: i, j', i, j
+!!$                end if
+!!$                if (ll == 58) then
+!!$                write(*,*) 'll=58: i,j', i,j
+!!$                end if
              end do
           end do
 
@@ -1176,13 +1214,21 @@ contains
 
 !!$    !write(*,*) 'M diag', sim%Av2_diag
 !!$    write(*,*) 'M low', sim%M_low
-!!$    sim%Bv1_low=sim%Bv1_low/10
-!!$    sim%Bv1_diag=sim%Bv1_diag/10
-!!$    sim%Bv1_sup=sim%Bv1_sup/10
-!!$    write(*,*) 'Bv1_diag', sim%Bv1_diag
-!!$    write(*,*) 'Bv1_sup', sim%Bv1_sup
-!!$    write(*,*) 'Bv1_low', sim%Bv1_low
-    !stop
+write(*,*) 'Bv1_diag', sim%Bv1_diag
+write(*,*) 'Bv1_low', sim%Bv1_low
+write(*,*) 'Bv1_sup', sim%Bv1_sup
+
+!    write(*,*) 'Bv1_sup+Bv1_low = ', sim%Bv1_low+sim%Bv1_sup
+do i=1,sim%nsky
+if(abs(sim%Bv1_low(i)+sim%Bv1_sup(i)).gt.0.1e-7) then
+    write(*,*) 'i = ', i, sim%Bv1_low(i)+sim%Bv1_sup(i)
+!!$          do ii=1,(sim%degree+1)**2
+!!$             j=sim%connec(ii,jc*sim%nc_v1+ic+1)
+!!$             sim%p(i)=sim%p(i)+ploc(ii)
+!!$          end do
+endif
+end do
+    stop
 !!$    write(*,*) 'max of M low', maxval(abs(sim%M_low))
 !!$    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
     ! LU decomposition of M
@@ -1190,6 +1236,10 @@ contains
     isol=0  ! we do not solve the linear system
     nsym=1  ! we do not take into account the symetry of M
     mp=6    ! write the log on screen
+    !copy the matrix M to matrix M1 to compute the energy 
+    sim%M1_sup = sim%M_sup
+    sim%M1_diag = sim%M_diag
+    sim%M1_low = sim%M_low
 
     !stop
     call sol(sim%M_sup,sim%M_diag,sim%M_low,void,&
@@ -1748,8 +1798,9 @@ contains
           end if
        endif
     enddo
-    Bv1_diag_corr=0
-    Bv2_diag_corr=0
+
+    Bv1_diag_corr=0.0_f64
+    Bv2_diag_corr=0.0_f64
 
     source1=0
     source2=0
