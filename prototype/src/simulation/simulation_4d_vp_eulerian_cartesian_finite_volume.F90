@@ -36,6 +36,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      ! Mesh parameters
      sll_int32  :: nc_v1  ! velocity cells
      sll_int32  :: nc_v2
+     sll_int32  :: nel_boundary
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
 
@@ -60,7 +61,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
      sll_real64, dimension(:),pointer  :: interp_pts_1D 
      ! finite element approximation in the velocity space
      ! connectivity array
-     sll_int32,dimension(:,:),pointer  :: connec
+     sll_int32,dimension(:,:),pointer  :: connec,connecline
      ! velocity interpolation points
      sll_real64, dimension(:,:),pointer  :: vcoords
      
@@ -870,7 +871,7 @@ contains
 !!$         "plotphi2d", &
 !!$         0, &
 !!$         ierr)
-    write(*,*) 'coucou3'
+
     if (sim%test .eq. 1) then
        write(*,*) 'we r using the Landau damping 1d test case'
     else if (sim%test .eq. 0) then
@@ -894,19 +895,20 @@ contains
 
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
     sll_int32 :: ierr
-    sll_int32 :: i,j,k,ii,jj
+    sll_int32 :: i,j,k,ii,jj,ib,iel,iglob
     sll_int32 :: ic,jc,iploc,jploc,ino
     sll_real64  :: x,y,xref,yref
     sll_real64 :: det
     sll_real64 :: phi1,phi2,dphi1(2),dphi2(2),dphi1ref(2),dphi2ref(2)
+    sll_real64 :: dtau(2),vnorm(2)
     sll_real64,dimension(2,2) :: jacob,invjacob
-    sll_real64,dimension(:,:),allocatable :: lag,dlag
+    sll_real64,dimension(:,:),allocatable :: lag,dlag,xynoe
     sll_real64,dimension(:),allocatable :: ploc
     sll_real64,dimension(:,:),allocatable :: mloc,av1loc,av2loc,bv1loc,bv2loc
     sll_real64,dimension(:),allocatable :: gauss,weight
     sll_real64 :: void  ! only for a valid address
     sll_int32 :: ifac,isol,nsym,mp
-    sll_int32 :: ll,ib1,ib2,jb1,jb2
+    sll_int32 :: ll,ib1,ib2,jb1,jb2,counter
 
     SLL_ALLOCATE(sim%interp_pts_1D(sim%degree+1),ierr)
 
@@ -921,8 +923,12 @@ contains
     
     ! connectivity
     sim%np_loc=(sim%degree+1)**2
+    ! connectivity for surface elements
     SLL_ALLOCATE(sim%connec(sim%np_loc,sim%nc_v1*sim%nc_v2),ierr)
-    
+    ! connectivity for (bounadry) line elements
+    SLL_ALLOCATE(sim%connecline(sim%degree+1,2*sim%nc_v1+2*sim%nc_v2),ierr)
+ 
+    ! surface connectivity
     do ic=0,sim%nc_v1-1
        do jc=0,sim%nc_v2-1
           do iploc=0,sim%degree
@@ -936,10 +942,65 @@ contains
           end do
        end do
     end do
-    
-!!$    do ic=1,sim%nc_v1*sim%nc_v2
-!!$       write(*,*) sim%connec(:,ic) 
-!!$    end do
+
+    ! boundary connectivity
+    counter=0
+
+    !south boundary
+    jc=0
+    jploc=0
+    do ic=0,sim%nc_v1-1
+       counter=counter+1
+       do iploc=0,sim%degree
+          sim%connecline(iploc+1,counter)= &
+                     (sim%nc_v1 * sim%degree+1)* &
+                     (jploc+jc*sim%degree)+ &
+                     iploc+1+ic*sim%degree
+       end do
+    end do
+
+    !east boundary
+    ic=sim%nc_v1-1
+    iploc=sim%degree
+    do jc=0,sim%nc_v2-1
+       counter=counter+1
+       do jploc=0,sim%degree
+          sim%connecline(jploc+1,counter)= &
+                     (sim%nc_v1 * sim%degree+1)* &
+                     (jploc+jc*sim%degree)+ &
+                     iploc+1+ic*sim%degree
+       end do
+    end do
+
+    !north boundary
+    jc=sim%nc_v2-1
+    jploc=sim%degree
+    do ic=sim%nc_v1-1,0,-1
+       counter=counter+1
+       do iploc=sim%degree,0,-1
+          sim%connecline(sim%degree-iploc+1,counter)= &
+                     (sim%nc_v1 * sim%degree+1)* &
+                     (jploc+jc*sim%degree)+ &
+                     iploc+1+ic*sim%degree
+       end do
+    end do
+
+    !west boundary
+    ic=0
+    iploc=0
+    do jc=sim%nc_v2-1,0,-1
+       counter=counter+1
+       do jploc=sim%degree,0,-1
+          sim%connecline(sim%degree-jploc+1,counter)= &
+                     (sim%nc_v1 * sim%degree+1)* &
+                     (jploc+jc*sim%degree)+ &
+                     iploc+1+ic*sim%degree
+       end do
+    end do
+
+    sim%nel_boundary = counter
+   
+    ! geometry
     do ic=0,sim%nc_v1-1
        do jc=0,sim%nc_v2-1
           do iploc=0,sim%degree
@@ -1040,6 +1101,7 @@ contains
 
     ! init of Gauss points
     SLL_ALLOCATE(gauss(sim%degree+1),ierr)
+    SLL_ALLOCATE(xynoe(2,sim%degree+1),ierr)
     SLL_ALLOCATE(weight(sim%degree+1),ierr)
     SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
     SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
@@ -1052,7 +1114,7 @@ contains
     call lag_gauss(sim%degree,gauss,weight,lag,dlag)
 
     ! matrix assembly
-
+    ! surface assembly
     ! loop on the cells
     do ic=0,sim%nc_v1-1
        do jc=0,sim%nc_v2-1
@@ -1066,41 +1128,20 @@ contains
           ! loop on the Gauss points
           do iploc=0,sim%degree
              do jploc=0,sim%degree
-
                 xref=sim%mesh2dv%eta1_min+ &
                      (ic+gauss(iploc+1))*sim%mesh2dv%delta_eta1
                 yref=sim%mesh2dv%eta2_min+ &
                      (jc+gauss(jploc+1))*sim%mesh2dv%delta_eta2
-!!$                !transformation 
-!!$                do ii=1,d+1
-!!$                   i=connec(ii,k)
-!!$                   tau=tau+node(i)*lag(ii,l)
-!!$                   !write(*,*) 'tau', tau
-!!$                   dtau=dtau+node(i)*dlag(ii,l)
-!!$                enddo
-
-               !write(*,*) 'xref,yref=',iploc,jploc,xref,yref,'sim',sim%tv%x1(xref,yref)
                 jacob=sim%tv%jacobian_matrix(xref,yref)
                 invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
-                !write(*,*) 'determinal of matrix = ', sim%tv%jacobian(xref,yref)
-                !stop
                 det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
-                !write(*,*) 'delta_eta1',sim%mesh2dv%delta_eta1
-                !write(*,*) 'det = ',det
-                !stop
                 do ib1=1,sim%degree+1
                    do jb1=1,sim%degree+1
                       do ib2=1,sim%degree+1
                          do jb2=1,sim%degree+1
                             phi1=lag(ib1,iploc+1)*lag(jb1,jploc+1)
-!!$                            write(*,*) 'phi1 = ', phi1
-!!$                            stop
                             phi2=lag(ib2,iploc+1)*lag(jb2,jploc+1)
-!!$                            write(*,*) 'phi=',xref,yref,'i,j',(jb1-1)*(sim%degree+1)+ib1, &
-!!$                                 (jb2-1)*(sim%degree+1)+ib2,phi1,phi2
                             dphi1ref(1)=dlag(ib1,iploc+1)*lag(jb1,jploc+1)
-                           ! write(*,*) 'dphi1ref(1)', dphi1ref(1)
-                            !write(*,*) 'phi1(1) = ', phi1
                             dphi1ref(2)=lag(ib1,iploc+1)*dlag(jb1,jploc+1)
                             dphi2ref(1)=dlag(ib2,iploc+1)*lag(jb2,jploc+1)
                             dphi2ref(2)=lag(ib2,iploc+1)*dlag(jb2,jploc+1)
@@ -1111,52 +1152,30 @@ contains
                             dphi2(1)=dphi2ref(1)*invjacob(1,1)+dphi2ref(2)*invjacob(2,1)
                             dphi2(2)=dphi2ref(1)*invjacob(1,2)/sim%mesh2dv%delta_eta1+ &
                                  dphi2ref(2)*invjacob(2,2)/sim%mesh2dv%delta_eta2
-!!$                            ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
-!!$                                phi1*det*weight(iploc+1)*weight(jploc+1)
                             mloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  mloc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                 phi1*phi2*det*weight(iploc+1)*weight(jploc+1)
                             av1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  av1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                  sim%tv%x1(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
-                                 !1.0_f64*phi1*phi2*det*weight(iploc+1)*weight(jploc+1) 
                             av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  av2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                  sim%tv%x2(xref,yref)*phi1*phi2*det*weight(iploc+1)*weight(jploc+1)
-!!$                            bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
-!!$                                 bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-!!$                                 dphi1ref(1)*phi2*det*weight(iploc+1)*weight(jploc+1)  
                             bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                 dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1) 
                             bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                                  bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                                 dphi1(2)*phi2*det*weight(iploc+1)*weight(jploc+1)  
-                            !write(*,*) 'ib1,jb1,ib2,jb2',ib1,jb1,ib2,jb2,(jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2            
                          end do
                       end do
-                      !write(*,*) 'det =', det
                       ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
                            phi1*det*weight(iploc+1)*weight(jploc+1)
-!!$ ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
-!!$                           phi1*weight(iploc+1)*weight(jploc+1)
                    end do
                 end do
-!!$          do ii=1,(sim%degree+1)**2
-!!$             write(*,*) 'ploc=',ploc(ii)
-!!$          end do
-!!$          do ii=1,(sim%degree+1)**2
-!!$             write(*,*) 'bv1loc=',bv1loc(ii,:)
-!!$          end do
              end do
           end do
 
-          !write(*,*)
-
-!!$          !av2loc = 0
-!!$          do ii=1,(sim%degree+1)**2
-!!$             write(*,*) 'ploc=',ploc(ii)
-!!$          end do
           do ii=1,(sim%degree+1)**2
              i=sim%connec(ii,jc*sim%nc_v1+ic+1)
              sim%p(i)=sim%p(i)+ploc(ii)
@@ -1166,7 +1185,6 @@ contains
              do jj=1,(sim%degree+1)**2
                 i=sim%connec(ii,jc*sim%nc_v1+ic+1)
                 j=sim%connec(jj,jc*sim%nc_v1+ic+1)
-                !if (cal.eq.1) then
                 if (i.eq.j) then
                    sim%M_diag(i)=sim%M_diag(i)+mloc(ii,jj)
                    sim%Av1_diag(i)=sim%Av1_diag(i)+av1loc(ii,jj)
@@ -1188,24 +1206,81 @@ contains
                    sim%Bv1_low(ll)=sim%Bv1_low(ll)+bv1loc(ii,jj)
                    sim%Bv2_low(ll)=sim%Bv2_low(ll)+bv2loc(ii,jj)
                 end if
-!!$                if (ll == 5) then
-!!$                write(*,*) 'll=5: i, j', i, j
-!!$                end if
-!!$                if (ll == 29) then
-!!$                write(*,*) 'll=29: i,j', i,j
-!!$                end if
-!!$                if (ll == 34) then
-!!$                write(*,*) 'll=34: i, j', i, j
-!!$                end if
-!!$                if (ll == 58) then
-!!$                write(*,*) 'll=58: i,j', i,j
-!!$                end if
              end do
           end do
 
           ! end loop on the cells
        end do
     end do
+
+! -------------------------------------
+    ! matrix assembly
+    ! line assembly
+    ! loop on the boundary element
+    do iel=1,sim%nel_boundary
+       bv1loc=0
+       bv2loc=0
+
+       ! first we get the coordinates of the nodes
+       ! of element iel
+       do iploc=0,sim%degree
+          iglob=sim%connecline(iploc+1,iel)
+          xynoe(1,iploc+1)=sim%vcoords(1,iglob)
+          xynoe(2,iploc+1)=sim%vcoords(2,iglob)
+!          write(*,*) 'coords=',xynoe(1:2,iploc+1)
+       end do
+
+
+       ! loop on the Gauss points
+       do iploc=0,sim%degree
+          dtau=0
+          do ib=0,sim%degree
+             dtau(1)=dtau(1)+xynoe(1,ib+1)*dlag(ib+1,iploc+1)
+             dtau(2)=dtau(2)+xynoe(2,ib+1)*dlag(ib+1,iploc+1)
+             !write(*,*) 'dlag=',dlag(ib+1,iploc+1)
+          end do
+          vnorm(1)= dtau(2)
+          vnorm(2)=-dtau(1)
+
+          do ib1=1,sim%degree+1
+             do ib2=1,sim%degree+1
+                phi1=lag(ib1,iploc+1)
+                phi2=lag(ib2,iploc+1)
+                bv1loc(ib1,ib2)= bv1loc(ib1,ib2)-0.5d0*&
+                     phi1*phi2*weight(iploc+1)*vnorm(1)
+                bv2loc(ib1,ib2)= bv2loc(ib1,ib2)-0.5d0*&
+                     phi1*phi2*weight(iploc+1)*vnorm(2)
+             end do
+          end do
+       end do
+
+       
+            
+       do ii=1,sim%degree+1
+          do jj=1,sim%degree+1
+             i=sim%connecline(ii,iel)
+             j=sim%connecline(jj,iel)
+             if (i.eq.j) then
+                sim%Bv1_diag(i)=sim%Bv1_diag(i)+bv1loc(ii,jj)
+                sim%Bv2_diag(i)=sim%Bv2_diag(i)+bv2loc(ii,jj)
+             else if (j.gt.i) then
+                ll=sim%mkld(j+1)-j+i
+                sim%Bv1_sup(ll)=sim%Bv1_sup(ll)+bv1loc(ii,jj)
+                sim%Bv2_sup(ll)=sim%Bv2_sup(ll)+bv2loc(ii,jj)
+             else
+                ll=sim%mkld(i+1)-i+j
+                sim%Bv1_low(ll)=sim%Bv1_low(ll)+bv1loc(ii,jj)
+                sim%Bv2_low(ll)=sim%Bv2_low(ll)+bv2loc(ii,jj)
+             end if
+          end do
+       end do
+
+          ! end loop on the cells
+    end do
+
+!---------------------------------------
+
+
     !stop
     write(*,*) 'dimension of matrix : ', sim%np_v1*sim%np_v2
     write(*,*) 'nsky = ', sim%nsky
@@ -1214,9 +1289,11 @@ contains
 
 !!$    !write(*,*) 'M diag', sim%Av2_diag
 !!$    write(*,*) 'M low', sim%M_low
-write(*,*) 'Bv1_diag', sim%Bv1_diag
-write(*,*) 'Bv1_low', sim%Bv1_low
-write(*,*) 'Bv1_sup', sim%Bv1_sup
+!!$write(*,*) 'Bv1_diag', sim%Bv1_diag
+!!$write(*,*) 'Bv1_low+Bv1_sup', sim%Bv1_low+sim%Bv1_sup
+!!$stop
+!!$write(*,*) 'Bv1_sup', sim%Bv1_sup
+
 
 !    write(*,*) 'Bv1_sup+Bv1_low = ', sim%Bv1_low+sim%Bv1_sup
 do i=1,sim%nsky
@@ -1782,28 +1859,32 @@ end do
     !correction the matrices B
     Bv1_diag_corr=sim%Bv1_diag
     Bv2_diag_corr=sim%Bv2_diag
-    do i=1,sim%np_v1*sim%np_v2
-       if (Ex.gt.0) then
-          if(sim%Bv1_diag(i).lt.0) then
-             Bv1_diag_corr(i)=0
-          end if
-       else
-          if(sim%Bv1_diag(i).gt.0) then
-             Bv1_diag_corr(i)=0
-          end if
-       endif
-       if (Ey.gt.0) then
-          if(sim%Bv2_diag(i).lt.0) then
-             Bv2_diag_corr(i)=0
-          end if
-       else
-          if(sim%Bv2_diag(i).gt.0) then
-             Bv2_diag_corr(i)=0
-          end if
-       endif
-    enddo
+!!$    do i=1,sim%np_v1*sim%np_v2
+!!$       if (Ex.lt.0) then
+!!$          if(sim%Bv1_diag(i).lt.0) then
+!!$             Bv1_diag_corr(i)=0
+!!$          end if
+!!$       else
+!!$          if(sim%Bv1_diag(i).gt.0) then
+!!$             Bv1_diag_corr(i)=0
+!!$          end if
+!!$       endif
+!!$       if (Ey.lt.0) then
+!!$          if(sim%Bv2_diag(i).lt.0) then
+!!$             Bv2_diag_corr(i)=0
+!!$          end if
+!!$       else
+!!$          if(sim%Bv2_diag(i).gt.0) then
+!!$             Bv2_diag_corr(i)=0
+!!$          end if
+!!$       endif
+!!$    enddo
+!!$
+!!$
+!!$
 !!$    Bv1_diag_corr=0.0_f64
 !!$    Bv2_diag_corr=0.0_f64
+
     source1=0
     source2=0
     
