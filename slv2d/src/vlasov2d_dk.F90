@@ -157,6 +157,7 @@ contains
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
   sll_int32 :: iv, jv ! indices de boucle
   sll_int32 :: ierr
+  sll_real64::err_diff,max_adv
   sll_real64, dimension(:,:),allocatable :: fn
   sll_real64, dimension(:,:),allocatable :: fnp1
   
@@ -164,18 +165,24 @@ contains
   SLL_ALLOCATE(fnp1(this%geomx%nx,this%geomx%ny+1),ierr)
   ! verifier que la transposition est a jour
   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
+  err_diff=0._f64
   do jv=this%jstartv,this%jendv
      do iv=1,this%geomv%nx
         plan_adv%field = adv_field(1:2,:,:,iv)
         fn(:,1:this%geomx%ny) = f(:,:,iv,jv)
         fn(:,this%geomx%ny+1) = fn(:,1)
         call advect_CG_polar(plan_adv,fn,fnp1)
+        err_diff=max(err_diff,maxval(abs(fn-fnp1)))
+        
         f(1:this%geomx%nx,1:this%geomx%ny,iv,jv)=fnp1(1:this%geomx%nx,1:this%geomx%ny)
         !f(:,1:this%geomx%ny,iv,jv)=fnp1
         !call interpole(this%splinex,f(:,:,iv,jv),depx,depy,jv==0)
      end do
   end do
   
+  print *,'#err_diff=',err_diff,maxval(abs(adv_field(1,:,:,:))),&
+  &maxval(abs(adv_field(2,:,:,:))),maxval(abs(adv_field(3,:,:,:)))
+  !print *,''
   SLL_DEALLOCATE_ARRAY(fn,ierr)
   SLL_DEALLOCATE_ARRAY(fnp1,ierr)
   
@@ -367,12 +374,19 @@ subroutine compute_field_dk(this,grad,phi,adv_field)
   sll_int32 :: i,ierr
   
   do i=1,this%geomv%nx
-    call compute_grad_field(grad,phi(:,:,i),adv_field(1:2,:,:,i))
+    call compute_grad_field(grad,phi(:,:,i),adv_field(1:2,:,:,i))        
+    
   enddo
+  
+  !do i=1,this%geomv%nx
+  !  x=this%geomx%x0+real(i-1,f64)*this%geomx%dx
+  !  adv_field(1,i,:,:)
+  !enddo
+  
   
   !for the moment finite differences
   do i=1,this%geomv%nx
-    adv_field(3,:,:,i)=(phi(:,:,modulo(i+1-1+this%geomv%nx,this%geomv%nx)+1)&
+    adv_field(3,:,:,i)=-(phi(:,:,modulo(i+1-1+this%geomv%nx,this%geomv%nx)+1)&
       &-phi(:,:,modulo(i-1-1+this%geomv%nx,this%geomv%nx)+1))/(2._f64*this%geomv%dx)
   enddo
   
@@ -585,6 +599,7 @@ subroutine compute_profile(this,prof,geom,rpeak,deltar,kappa,R0)!,n0_case)
     
     
    !*** normalisation of the density at int(prof(r)rdr)/int(rdr) ***
+   !*** normalisation of the density at int(prof(r)rdr)/(rmax-rmin) ***
    ! -> computation of int(prof(r)rdr)
     profnorm_tmp = 0._f64
     do ir = 2,Nr_loc-1
@@ -592,9 +607,15 @@ subroutine compute_profile(this,prof,geom,rpeak,deltar,kappa,R0)!,n0_case)
     enddo
     profnorm_tmp = profnorm_tmp + 0.5_f64* &
       (prof(1)*geom%xgrid(1) + prof(Nr_loc)*geom%xgrid(Nr_loc))
-    ! -> division by int(rdr)
-    profnorm_tmp = profnorm_tmp*2._f64*dr_loc/ & 
-      (geom%xgrid(Nr_loc)**2-geom%xgrid(1)**2)
+    !! -> division by int(rdr)
+    !profnorm_tmp = profnorm_tmp*2._f64*dr_loc/ & 
+    !  (geom%xgrid(Nr_loc)**2-geom%xgrid(1)**2)
+
+    ! -> division by rmax-rmin
+    profnorm_tmp = profnorm_tmp*dr_loc/ & 
+      (geom%xgrid(Nr_loc)-geom%xgrid(1))
+
+
       
     profnorm       = profnorm_tmp
     prof(1:Nr_loc) = prof(1:Nr_loc)/profnorm
@@ -827,7 +848,7 @@ if (my_num==MPI_MASTER) then
    !b=8 epot
    !b=9..  mode
    
-   print *,t,nrj,aux(4)+aux(5),aux(1:5),real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
+   print *,t,nrj,aux(4)+aux(5),aux(1:5),real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))),aimag(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
    !stop
    
    SLL_DEALLOCATE_ARRAY(mode_tab,err)
