@@ -836,16 +836,16 @@ contains
 
 
 
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
-         sim%mesh2dx%delta_eta1, &
-         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
-         sim%mesh2dx%delta_eta2, &
-         plotphi2d, &
-         "plotphi2d", &
-         0, &
-         ierr)
-    write(*,*) 'coucou3'
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+!!$         sim%mesh2dx%delta_eta1, &
+!!$         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+!!$         sim%mesh2dx%delta_eta2, &
+!!$         plotphi2d, &
+!!$         "plotphi2d", &
+!!$         0, &
+!!$         ierr)
+!!$    write(*,*) 'coucou3'
     if (sim%test .eq. 1) then
        write(*,*) 'we r using the Landau damping 1d test case'
     else if (sim%test .eq. 0) then
@@ -1729,7 +1729,7 @@ contains
     Bv1_diag_corr=sim%Bv1_diag
     Bv2_diag_corr=sim%Bv2_diag
     do i=1,sim%np_v1*sim%np_v2
-       if (Ex.gt.0) then
+       if (Ex.lt.0) then
           if(sim%Bv1_diag(i).lt.0) then
              Bv1_diag_corr(i)=0
           end if
@@ -1738,7 +1738,7 @@ contains
              Bv1_diag_corr(i)=0
           end if
        endif
-       if (Ey.gt.0) then
+       if (Ey.lt.0) then
           if(sim%Bv2_diag(i).lt.0) then
              Bv2_diag_corr(i)=0
           end if
@@ -1748,6 +1748,8 @@ contains
           end if
        endif
     enddo
+    Bv1_diag_corr=0
+    Bv2_diag_corr=0
 
     source1=0
     source2=0
