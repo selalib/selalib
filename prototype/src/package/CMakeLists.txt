@@ -42,6 +42,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_xdmf.F90
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
+    ${SLL_DIR}/file_io/sll_plotmtv.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/electric_field_accumulators/sll_electric_field_2d.F90

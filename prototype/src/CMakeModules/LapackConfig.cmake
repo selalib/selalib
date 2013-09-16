@@ -11,6 +11,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
       INCLUDE_DIRECTORIES($ENV{MKLROOT}/include)
       SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib -mkl=sequential)
       SET(LAPACK_FOUND TRUE)
+      SET(USE_MKL TRUE)
       SET(BLAS_FOUND TRUE)
       SET(BLAS_LIBRARIES  " ")
 
@@ -21,6 +22,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
       SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
+      SET(USE_MKL TRUE)
 
    ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
 
@@ -29,6 +31,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
       SET(LAPACK_FOUND TRUE)
       SET(BLAS_FOUND TRUE)
       SET(BLAS_LIBRARIES  " ")
+      SET(USE_MKL TRUE)
 
    ENDIF()
 
