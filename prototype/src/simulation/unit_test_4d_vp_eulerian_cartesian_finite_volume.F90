@@ -45,7 +45,7 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 2
+#define NCELL1 32
 #define NCELL2 2
 #define NCELL3 2
 #define NCELL4 4
@@ -64,7 +64,7 @@ program vp_cartesian_4d
 !!$#define ETA4MIN -1.0_f64
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
-#define TMAX 5.e-2_f64
+#define TMAX 5.e-1_f64
 !#define TMAX 0.0_f64
 #define CFL 0.4_f64
 #define EPSILON 0.05
