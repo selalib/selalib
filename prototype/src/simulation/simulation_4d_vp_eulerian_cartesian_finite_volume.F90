@@ -1305,7 +1305,6 @@ if(abs(sim%Bv1_low(i)+sim%Bv1_sup(i)).gt.0.1e-7) then
 !!$          end do
 endif
 end do
-    stop
 !!$    write(*,*) 'max of M low', maxval(abs(sim%M_low))
 !!$    write(*,*) 'max of M diag', maxval(abs(sim%M_diag))
     ! LU decomposition of M
