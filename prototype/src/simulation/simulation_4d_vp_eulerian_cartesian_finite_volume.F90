@@ -279,6 +279,7 @@ subroutine run_vp_cart(sim)
  sll_int32,dimension(4)  :: global_indices
  sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
  sll_real64 :: det
+ sll_real64 :: deltav,emax
  sll_real64 :: x1, x2,Ex,Ey
  sll_int32 :: icL,icR,jcL,jcR
 #define BUFFER_SIZE 2
@@ -562,9 +563,15 @@ subroutine run_vp_cart(sim)
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
 !!$    stop
  write(*,*) 'coucou'
+ ! space cfl condition
  sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
       max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max,abs(sim%mesh2dv%eta1_min), &
       abs(sim%mesh2dv%eta2_min))
+ ! velocity cfl condition
+ deltav=min(sim%mesh2dv%delta_eta1,sim%mesh2dv%delta_eta2)
+ emax=sim%params(9)
+ sim%dt=min(sim%dt,sim%cfl*deltav/emax/(sim%degree+1)) 
+      
 !!$    sim%dt=0.1
  write(*,*) 'dt = ', sim%dt
  !stop
@@ -1966,7 +1973,7 @@ subroutine fluxnum(sim,wL,wR,vn,flux)
  sll_real64,dimension(sim%np_v1*sim%np_v2) :: wm
  sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
 
- sll_real64   :: eps=0.01
+ sll_real64   :: eps=0.0
  sim%test=sim%params(8)
  wm=(wL+wR)/2
 
