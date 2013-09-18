@@ -19,7 +19,7 @@ program vp_cartesian_4d
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx,mv
   class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv
-  sll_real64, dimension(1:8) :: landau_params
+  sll_real64, dimension(1:9) :: landau_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -47,7 +47,7 @@ program vp_cartesian_4d
 
 #define NCELL1 32
 #define NCELL2 2
-#define NCELL3 2
+#define NCELL3 4
 #define NCELL4 4
 #define ETA1MIN -1.0_f64
 #define ETA1MAX 1.0_f64
@@ -67,12 +67,13 @@ program vp_cartesian_4d
 #define TMAX 5.e-1_f64
 !#define TMAX 0.0_f64
 #define CFL 0.4_f64
+#define ELECMAX 1._f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
 #define TEST 2
 ! 0: x transport 1: landau damping 1d  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
 
-#define DEG  2 ! polynomial degree
+#define DEG  3 ! polynomial degree
 
 
   ! logical mesh for space coordinates
@@ -81,7 +82,7 @@ program vp_cartesian_4d
        eta2_min=ETA4MIN,eta2_max=ETA4MAX )
 
 
-  ! logical mesh for space coordinates
+  ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NCELL1, NCELL2, &
        eta1_min=ETA1MIN, eta1_max=ETA1MAX, &
        eta2_min=ETA2MIN,eta2_max=ETA2MAX )
@@ -117,6 +118,7 @@ program vp_cartesian_4d
     landau_params(6)= DEG  ! polynomial interpolation degree
     landau_params(7)=CFL
     landau_params(8)=TEST
+    landau_params(9)=ELECMAX
   ! initialize simulation object with the above parameters
     if(TEST==0) then
        call initialize_vp4d( &
