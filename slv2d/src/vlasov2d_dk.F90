@@ -670,6 +670,7 @@ subroutine get_mode(this,phi,kmin,kmax,res)
   sll_int32 :: i,j
   sll_real64,dimension(:,:),allocatable::buf2d_real
   sll_real64,dimension(:,:),allocatable::buf2d_complex
+  sll_real64 ::x,y
   !type(sll_fft_plan), pointer :: p => null()
   !sll_comp64, dimension(:,:),allocatable :: data_comp2d
   
@@ -690,6 +691,16 @@ subroutine get_mode(this,phi,kmin,kmax,res)
   
   !buf2d_real=phi(1:N(1),1:N(2))
   
+!  phi(1:N(1),1:N(2)) = 0._f64
+!  do i=1,N(1)
+!    x = real(i-1,f64)/real(N(1),f64)*2._f64*sll_pi
+!    do j=1,N(2)
+!      y = real(j-1,f64)/real(N(2),f64)*2._f64*sll_pi
+!      phi(i,j) = cos(kmin(1)*x)*cos(kmin(2)*y)
+!    enddo
+!  enddo
+  
+  
   do i=1,N(1)
     call fft_apply_plan(pfwd_2,phi(i,1:N(2)),buf_real(1:N(2)))
     do j=kmin(2),kmax(2)
@@ -708,6 +719,12 @@ subroutine get_mode(this,phi,kmin,kmax,res)
   
   SLL_DEALLOCATE_ARRAY(buf2d_complex,err)
   
+  
+  !print *,res
+  
+  !print *,kmin,kmax
+  
+  !stop
   
   !SLL_ALLOCATE(data_comp2d(N(1)/2+1,N(2)),err)
   !p => fft_new_plan(N(1),N(2),phi(1:N(1),1:N(2)),data_comp2d(1:N(1)/2+1,1:N(2)))
@@ -737,6 +754,7 @@ subroutine thdiag(this,f,phi,t,jstartv,kmin,kmax)
    sll_int32,intent(in) :: kmin(2),kmax(2)
    sll_int32 :: my_num, num_threads
    sll_int32 :: comm
+   sll_real64,dimension(:,:),allocatable :: mode_tmp
 
    comm   = sll_world_collective%comm
    my_num = sll_get_collective_rank(sll_world_collective)
@@ -827,11 +845,27 @@ subroutine thdiag(this,f,phi,t,jstartv,kmin,kmax)
 if (my_num==MPI_MASTER) then
    
    SLL_ALLOCATE(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)),err)
+   SLL_ALLOCATE(mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2)),err)
    
    !print *,mode_tab(0,0)
    
+   !print *,'kmin=',kmin
+   !print *,'kmax=',kmax
+   
+   !stop
    call get_mode(this,phi(this%geomx%nx/2,:,:),kmin,kmax,mode_tab)
    
+   do i=kmin(1),kmax(1)
+     do j=kmin(2),kmax(2)
+       mode_tmp(i,j)=sqrt((real(mode_tab(i,j)))**2+(aimag(mode_tab(i,j)))**2)
+       !print *,real(mode_tab(i,j)),aimag(mode_tab(i,j))
+     enddo
+   enddo
+   
+   !print *,'kmin=',kmin
+   !print *,'kmax=',kmax
+   
+   !stop
    !print *,mode_tab(0,0)
    aux(13)=t
    aux(12)=nrj
@@ -848,10 +882,12 @@ if (my_num==MPI_MASTER) then
    !b=8 epot
    !b=9..  mode
    
-   print *,t,nrj,aux(4)+aux(5),aux(1:5),real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))),aimag(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
+   print *,t,nrj,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
+   !real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))),aimag(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
    !stop
    
    SLL_DEALLOCATE_ARRAY(mode_tab,err)
+   SLL_DEALLOCATE_ARRAY(mode_tmp,err)
    
 end if
 

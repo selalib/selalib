@@ -61,11 +61,12 @@ num_threads = sll_get_collective_size(sll_world_collective)
 comm   = sll_world_collective%comm
 
 
-kmin=(/9,4/)
-kmax=(/9,4/)
+!kmin=(/9,4/)
+!kmax=(/9,4/)
 
-kmin=(/9,1/)
-kmax=(/9,1/)
+kmin=(/10,1/)
+kmax=(/10,6/)
+
 
 
 ! initialisation global
@@ -574,8 +575,8 @@ contains
 
 
   bc = (/SLL_DIRICHLET,SLL_DIRICHLET/)
-  grad = 1 !2
-  carac = 1 !5
+  grad = 2
+  carac = 5
    
 
 
@@ -596,12 +597,13 @@ contains
     read(idata,NML=EQUIL)
     
     rpeak = geomx%x0+rpeak*(geomx%x1-geomx%x0)
-    kappan = kappan/(geomx%x1-geomx%x0)   !new before *
-    kappaTi = kappaTi/(geomx%x1-geomx%x0) !new before *
-    kappaTe = kappaTe/(geomx%x1-geomx%x0) !new before *
-    deltarn = deltarn*(geomx%x1-geomx%x0) 
-    deltarTi = deltarTi*(geomx%x1-geomx%x0)
-    deltarTe = deltarTe*(geomx%x1-geomx%x0)
+    
+    !kappan = kappan/(geomx%x1-geomx%x0)   !new before *
+    !kappaTi = kappaTi/(geomx%x1-geomx%x0) !new before *
+    !kappaTe = kappaTe/(geomx%x1-geomx%x0) !new before *
+    !deltarn = deltarn*(geomx%x1-geomx%x0) 
+    !deltarTi = deltarTi*(geomx%x1-geomx%x0)
+    !deltarTe = deltarTe*(geomx%x1-geomx%x0)
 
   end if
 
