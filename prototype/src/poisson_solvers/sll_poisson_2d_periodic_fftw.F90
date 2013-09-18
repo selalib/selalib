@@ -15,19 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author
-!> Pierre Navaro
-!> @brief
-!> Implements the Poisson solver in 2D with periodic boundary conditions
-!> @details
-!> This module depends on:
-!> - sll_memory
-!> - sll_precision
-!> - sll_assert 
-!> - sll_constants
-!> - sll_utilities
-!>
-
+!> @author Pierre Navaro
+!> @brief  Implements the Poisson solver in 2D with periodic boundary conditions
 module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
@@ -65,7 +54,7 @@ type, public :: poisson_2d_periodic
 
    sll_real64, dimension(:,:), pointer :: kx    !< wave number in x
    sll_real64, dimension(:,:), pointer :: ky    !< wave number in y
-   sll_real64, dimension(:,:), pointer :: k2    !< \{ k_x^2 + k_y^2 \}
+   sll_real64, dimension(:,:), pointer :: k2    !< \f[ k_x^2 + k_y^2 \f]
    sll_int32                           :: nc_x  !< cells number in x
    sll_int32                           :: nc_y  !< cells number in y
    sll_real64                          :: dx    !< x step size
