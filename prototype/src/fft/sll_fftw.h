@@ -20,8 +20,6 @@
 
 #ifdef FFTW_F2003
 
-use, intrinsic :: iso_c_binding
-
 #define fftw_plan type(C_PTR) 
 #define fftw_comp complex(C_DOUBLE_COMPLEX)
 #define fftw_int  integer(C_SIZE_T)
