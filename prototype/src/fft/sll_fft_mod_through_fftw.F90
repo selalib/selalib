@@ -324,16 +324,15 @@ contains
 
     if(direction .eq. FFT_FORWARD) then
 #ifdef FFTW_F2003
-      plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE + FFTW_UNALIGNED)
+      plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE)
 #else
       call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE)
 #endif
     else if(direction .eq. FFT_INVERSE) then
 #ifdef FFTW_F2003
-      plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE + FFTW_UNALIGNED)
+      plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE)
 #else
       call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE)
-
 #endif
     endif
   end function
