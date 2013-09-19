@@ -36,7 +36,7 @@ plan = fftw_plan_dft_1d(n,in,out,direction,FFTW_PATIENT)
 plan = fftw_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT)
 
 #define NEW_FFTW_PLAN_C2R_1D(plan,n,in,out)                  \
-plan = fftw_plan_dft_c2r_1d(n,out,in,FFTW_PATIENT)
+plan = fftw_plan_dft_c2r_1d(n,in,out,FFTW_PATIENT)
 
 #define NEW_FFTW_PLAN_R2HC_1D(plan,n,in,out)                 \
 plan = fftw_plan_r2r_1d(n,in,out,FFTW_R2HC,FFTW_PATIENT)
