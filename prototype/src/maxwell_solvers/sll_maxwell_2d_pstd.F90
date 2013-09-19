@@ -54,7 +54,7 @@ self%d_dy = self%d_dy / ny
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 
 
-module sll_maxwell_2d_Pstd
+module sll_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
