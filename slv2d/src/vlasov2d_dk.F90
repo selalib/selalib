@@ -165,14 +165,16 @@ contains
   SLL_ALLOCATE(fnp1(this%geomx%nx,this%geomx%ny+1),ierr)
   ! verifier que la transposition est a jour
   if (this%transposed) stop 'advection_x: on travaille sur f et pas ft'
-  err_diff=0._f64
+  !err_diff=0._f64
   do jv=this%jstartv,this%jendv
      do iv=1,this%geomv%nx
         plan_adv%field = adv_field(1:2,:,:,iv)
         fn(:,1:this%geomx%ny) = f(:,:,iv,jv)
         fn(:,this%geomx%ny+1) = fn(:,1)
         call advect_CG_polar(plan_adv,fn,fnp1)
-        err_diff=max(err_diff,maxval(abs(fn-fnp1)))
+        !err_diff=max(err_diff,maxval(abs(fn-fnp1)))
+
+        !f(1:this%geomx%nx,1:this%geomx%ny,iv,jv)=fn(1:this%geomx%nx,1:this%geomx%ny)
         
         f(1:this%geomx%nx,1:this%geomx%ny,iv,jv)=fnp1(1:this%geomx%nx,1:this%geomx%ny)
         !f(:,1:this%geomx%ny,iv,jv)=fnp1
@@ -180,8 +182,8 @@ contains
      end do
   end do
   
-  print *,'#err_diff=',err_diff,maxval(abs(adv_field(1,:,:,:))),&
-  &maxval(abs(adv_field(2,:,:,:))),maxval(abs(adv_field(3,:,:,:)))
+  !print *,'#err_diff=',err_diff,maxval(abs(adv_field(1,:,:,:))),&
+  !&maxval(abs(adv_field(2,:,:,:))),maxval(abs(adv_field(3,:,:,:)))
   !print *,''
   SLL_DEALLOCATE_ARRAY(fn,ierr)
   SLL_DEALLOCATE_ARRAY(fnp1,ierr)
@@ -345,22 +347,73 @@ subroutine normalize_rho(this,profile,rho)
 
 end subroutine normalize_rho
 
-subroutine solve_quasi_neutral(this,plan_poisson,rho,phi)
+subroutine solve_quasi_neutral(this,plan_poisson,rho,phi,profile,qns_case)
   type(vlasov2d),intent(inout) :: this
   type(sll_plan_poisson_polar), pointer :: plan_poisson
-  sll_real64, dimension(:,:,:), intent(in)  :: rho
+  sll_real64, dimension(:,:,:),intent(inout)  :: rho
   sll_real64, dimension(:,:,:), intent(out)  :: phi
-  sll_int32 :: i,ierr
+  sll_real,dimension(:,:),intent(in) :: profile
+  sll_int32,intent(in) :: qns_case
+  sll_int32 :: i,j,ierr
 
   !do i=1,this%geomx%ny+1
   !  print *,i,rho(2,i,1)
   !enddo
   !stop
-  do i = 1,this%geomv%nx
-    !print *,'#i=',i
-    call solve_poisson_polar(plan_poisson,rho(:,:,i),phi(:,:,i))
-  enddo
-!stop
+  
+  select case (qns_case)
+    ! no quasi neutral solver as in CRPP-CONF-2001-069
+    case (0)
+      do i=1,this%geomx%nx  
+        do j=1,this%geomx%ny+1
+          rho(i,j,this%geomv%nx+1)=sum(rho(i,j,1:this%geomv%nx))/real(this%geomv%nx,f64)
+          rho(i,j,1:this%geomv%nx)=rho(i,j,1:this%geomv%nx)-rho(i,j,this%geomv%nx+1)
+        enddo
+      enddo  
+      phi=rho  
+      do i=1,this%geomx%nx
+        phi(i,:,:)=profile(3,i)/profile(1,i)*phi(i,:,:)
+      enddo    
+    !quasi neutral solver without zonal flow    
+    case (1)  
+      do i=1,this%geomx%nx  
+        do j=1,this%geomx%ny+1
+          rho(i,j,:) = (rho(i,j,:))/profile(1,i)-1._f64
+        enddo
+      enddo  
+      do i = 1,this%geomv%nx
+        call solve_poisson_polar(plan_poisson,rho(:,:,i),phi(:,:,i))        
+      enddo    
+    !quasi neutral solver with zonal flow
+    case (2)
+      do i=1,this%geomx%nx  
+        do j=1,this%geomx%ny+1
+          rho(i,j,:) = (rho(i,j,:))/profile(1,i)-1._f64
+          rho(i,j,this%geomv%nx+1)=sum(rho(i,j,1:this%geomv%nx))/real(this%geomv%nx,f64)
+          rho(i,j,1:this%geomv%nx)=rho(i,j,1:this%geomv%nx)-rho(i,j,this%geomv%nx+1)
+        enddo
+      enddo  
+      call poisson_solve_polar(plan_poisson,rho(:,:,this%geomv%nx+1),phi(:,:,this%geomv%nx+1))  
+      do i = 1,this%geomv%nx
+        call solve_poisson_polar(plan_poisson,rho(:,:,i),phi(:,:,i))        
+      enddo    
+      do i=1,this%geomx%nx  
+        do j=1,this%geomx%ny+1
+          phi(i,j,1:this%geomv%nx)=phi(i,j,1:this%geomv%nx)+phi(i,j,this%geomv%nx+1)
+        enddo
+      enddo
+    !quasi neutral solver with zonal flow
+    case default
+      print *,'#bad value for qns solver'
+      stop
+  end select
+
+  do i=1,this%geomx%nx
+    phi(i,1:this%geomx%ny,this%geomv%nx+1)=phi(i,1:this%geomx%ny,1)
+    phi(i,this%geomx%ny+1,:)=phi(i,1,:)
+  enddo    
+
+
 
 end subroutine solve_quasi_neutral
 
@@ -847,13 +900,15 @@ if (my_num==MPI_MASTER) then
    SLL_ALLOCATE(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)),err)
    SLL_ALLOCATE(mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2)),err)
    
+   mode_tab=0._f64
+   mode_tmp=0._f64
    !print *,mode_tab(0,0)
    
    !print *,'kmin=',kmin
    !print *,'kmax=',kmax
    
    !stop
-   call get_mode(this,phi(this%geomx%nx/2,:,:),kmin,kmax,mode_tab)
+   !call get_mode(this,phi(this%geomx%nx/2,:,:),kmin,kmax,mode_tab)
    
    do i=kmin(1),kmax(1)
      do j=kmin(2),kmax(2)
@@ -882,7 +937,7 @@ if (my_num==MPI_MASTER) then
    !b=8 epot
    !b=9..  mode
    
-   print *,t,nrj,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
+   print *,t,nrj!,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
    !real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))),aimag(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
    !stop
    

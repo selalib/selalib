@@ -205,7 +205,7 @@ contains
   end function new_plan_poisson_polar
 
   !> Initialize the Poisson solver in polar coordinates
-  subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
+  subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax,dlog_density,inv_Te)
 
     implicit none
     type(sll_plan_poisson_polar) :: this
@@ -218,6 +218,7 @@ contains
     sll_int32, optional      :: bc_rmax !< radial boundary conditions
     sll_int32                :: error
     sll_real64, dimension(:), allocatable :: buf
+    sll_real64,dimension(:),optional ::dlog_density,inv_Te
 
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),error)
     SLL_ALLOCATE(this%fk(nr+1),error)
@@ -231,6 +232,21 @@ contains
     this%dr=(rmax-rmin)/nr
     this%nr=nr
     this%ntheta=ntheta
+
+    SLL_ALLOCATE(this%dlog_density(nr+1),error)
+    SLL_ALLOCATE(this%inv_Te(nr+1),error)
+    
+    this%dlog_density = 0._f64
+    this%inv_Te = 0._f64
+    
+    if(present(dlog_density))then
+      this%dlog_density = dlog_density
+    endif
+    if(present(inv_Te))then
+      this%inv_Te = inv_Te
+    endif
+
+
 
     if (present(bc_rmin) .and. present(bc_rmax)) then
       this%bc(1)=bc_rmin
@@ -321,6 +337,8 @@ contains
     bc         = plan%bc
     plan%f_fft = f
 
+   
+
     do i=1,nr+1
       call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
@@ -329,7 +347,7 @@ contains
     !  print *,k,fft_get_mode(plan%pfwd,plan%f_fft(2,1:ntheta),k)
     !enddo
     
-    !stop
+    
     
     
 
@@ -346,9 +364,15 @@ contains
         !plan%a(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2*dr*r)
         plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2+plan%inv_Te(i)
         plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r)+plan%dlog_density(i)/(2._f64*dr)
-
+        
+        !print *,'before1'
+        
         plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)
+
+        !print *,'after1'
+
       enddo
+      
       
       
       !print *,k,maxval(abs(plan%fk))
