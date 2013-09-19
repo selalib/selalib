@@ -37,7 +37,7 @@ sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
 sll_real64, dimension(:,:),     pointer :: profile 
 
-sll_int32  :: i,j,k,nbiter,scheme_case=2
+sll_int32  :: i,j,k,nbiter,scheme_case=2,qns_case=2
 sll_real64 :: dt
 sll_real64 :: R0     
 sll_int32  :: fdiag, fthdiag  
@@ -64,8 +64,8 @@ comm   = sll_world_collective%comm
 !kmin=(/9,4/)
 !kmax=(/9,4/)
 
-kmin=(/10,1/)
-kmax=(/10,6/)
+kmin=(/5,1/)
+kmax=(/5,6/)
 
 
 
@@ -96,7 +96,7 @@ call init_dk(geomx,geomv,nbiter,fdiag,fthdiag,jstartv,jendv,jstartx,jendx, &
 
 dt=plan_sl%adv%dt
 if (my_num == MPI_MASTER) then
-  
+  print *,'#solution with rsync'
   print *,'#Nr=',geomx%nx-1
   print *,'#Ntheta=',geomx%ny
   print *,'#Nphi=',geomv%nx
@@ -118,6 +118,7 @@ endif
 
 iter=0
    call transposexv(vlas2d,f4d)
+   
    call densite_charge_dk(vlas2d,rho_dk)
 !   do i=1,geomx%nx
 !     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
@@ -128,7 +129,7 @@ iter=0
        !tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
        !rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
        
-       rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
+       !rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
        
        !rho_dk(i,j,:) = (rho_dk(i,j,:))-1._f64
      enddo
@@ -169,8 +170,8 @@ iter=0
 !   
 !   !stop
 !   
-   
-   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
+     
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi,profile,qns_case)
    
    print *,'#delta=',deltarn/deltarTi
    !stop
@@ -216,20 +217,7 @@ do iter=1,nbiter
    
    !compute field at time t_{n+1/2}
    call densite_charge_dk(vlas2d,rho_dk)
-   !do i=1,geomx%nx
-   !  tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
-   !  rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
-   !enddo  
-   do i=1,geomx%nx
-     do j=1,geomx%ny+1
-       !tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
-       !rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
-       rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
-     enddo
-   enddo  
-   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
-   phi(i,1:geomx%ny,geomv%nx+1)=phi(i,1:geomx%ny,1)
-   phi(i,geomx%ny+1,:)=phi(i,1,:)     
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi,profile,qns_case)
 
    if(scheme_case==2)then
 
@@ -248,20 +236,8 @@ do iter=1,nbiter
    
 
    call densite_charge_dk(vlas2d,rho_dk)
-!   do i=1,geomx%nx
-!     tmp = sum(rho_dk(i,1:geomx%ny,1:geomv%nx))/real(geomx%ny*geomv%nx,f64)
-!     rho_dk(i,:,:) = (rho_dk(i,:,:)-tmp)/profile(1,i)
-!   enddo  
-   do i=1,geomx%nx
-     do j=1,geomx%ny+1
-       !tmp = sum(rho_dk(i,j,1:geomv%nx))/real(geomv%nx,f64)
-       !rho_dk(i,j,:) = (rho_dk(i,j,:)-tmp)/profile(1,i)
-       rho_dk(i,j,:) = (rho_dk(i,j,:))/profile(1,i)-1._f64
-     enddo
-   enddo  
-   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi)
-   phi(i,1:geomx%ny,geomv%nx+1)=phi(i,1:geomx%ny,1)
-   phi(i,geomx%ny+1,:)=phi(i,1,:)     
+   call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi,profile,qns_case)
+
 
 
    endif
@@ -282,11 +258,6 @@ do iter=1,nbiter
    endif
 
 enddo   
-
-!if (my_num==MPI_MASTER) then
-!   stop
-!end if
-
 
 
    
@@ -575,8 +546,8 @@ contains
 
 
   bc = (/SLL_DIRICHLET,SLL_DIRICHLET/)
-  grad = 2
-  carac = 5
+  grad = 3
+  carac = 4
    
 
 
@@ -639,8 +610,8 @@ contains
     
   SLL_ASSERT(jstartx<jendx)
   SLL_ASSERT(jstartv<jendv)
-  print*,'#init zone ',my_num,jstartx,jendx,ipiece_size_x, &
-                             jstartv,jendv,ipiece_size_v
+  !print*,'#init zone ',my_num,jstartx,jendx,ipiece_size_x, &
+  !                           jstartv,jendv,ipiece_size_v
   
   
   
@@ -691,7 +662,7 @@ contains
   
   
   if (my_num == MPI_MASTER) then
-    print *,'#the param are:',kappaTi,deltarTi,rpeak,geomx%x0,geomx%x1,geomx%x0+(geomx%nx*geomx%dx)
+    !print *,'#the param are:',kappaTi,deltarTi,rpeak,geomx%x0,geomx%x1,geomx%x0+(geomx%nx*geomx%dx)
     !stop
    ky  = 2._f64*pi/(real(geomx%ny,f64)*geomx%dy)
    
@@ -797,7 +768,7 @@ contains
               tmp_tab(2)=tmp_tab(2)+(real(modethmin,f64)*ky/x)**2+inv_Te(i)
               !tmp_tab(2)=1._f64
               tmp_tab(2)=tmp_tab(2)*exp(-(x-rpeak)**2/(deltarn/deltarTi))
-              tmp_tab(2)=1._f64*exp(-(x-rpeak)**2/(deltarn/deltarTi))
+              tmp_tab(2)=exp(-(x-rpeak)**2/(4._f64*deltarn/deltarTi))
               f(i,j,iv,jv)=(1._f64+tmp_mode*epsilon*tmp_tab(2))*&
                 &profile(1,i)*exp(v2*profile(2,i))
               f_equil(i,j,iv,jv)=profile(1,i)*exp(v2*profile(2,i))

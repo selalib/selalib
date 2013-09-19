@@ -163,6 +163,8 @@ program cg_polar
 
   fp1 = 0.0_f64
 
+  !call solve_poisson_polar(plan_sl%poisson,f,plan_sl%phi)!,ierr_poiss)
+
   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi,ierr_poiss)
   if (ierr_poiss.ne.0) then
     print*, 'WARNING: poisson error is larger than 1.e-12 for ', &
