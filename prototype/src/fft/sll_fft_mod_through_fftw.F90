@@ -338,14 +338,17 @@ contains
   end function
 
   subroutine fftw_apply_plan_r2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)     :: plan
-    sll_real64, dimension(:), intent(inout)     :: array_in, array_out
-    sll_real64                                  :: factor
+
+    type(sll_fft_plan), pointer, intent(in) :: plan
+    sll_real64, dimension(:), intent(inout) :: array_in
+    sll_real64, dimension(:), intent(inout) :: array_out
+    sll_real64                              :: factor
 
 #ifdef FFTW_F2003
     call fftw_execute_r2r(plan%fftw, array_in, array_out)
 #else
-    call errout( 6, 'W', __FILE__,__LINE__, "sorry r2r fft do not work" )
+    !call fftw_execute_r2r(plan%fftw, array_in, array_out)
+    call errout( 6, 'W', __FILE__,__LINE__, "R2HC not supported by MKL-FFTW" )
 #endif
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
