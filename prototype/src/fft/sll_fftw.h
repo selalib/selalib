@@ -20,42 +20,86 @@
 
 #ifdef FFTW_F2003
 
-#define fftw_plan  type(C_PTR) 
-#define fftw_comp  complex(C_DOUBLE_COMPLEX)
-#define fftw_int   integer(C_SIZE_T)
+use, intrinsic :: iso_c_binding
 
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
-sz_array = int((array_size/2+1),C_SIZE_T);                \
-p_array = fftw_alloc_complex(sz_array);                   \
-call c_f_pointer(p_array, array, [array_size/2+1])        \
+#define fftw_plan type(C_PTR) 
+#define fftw_comp complex(C_DOUBLE_COMPLEX)
+#define fftw_int  integer(C_SIZE_T)
 
-#define NEW_FFTW_PLAN_R2C_1D(plan,n,x,fft_x)              \
-plan = fftw_plan_dft_r2c_1d(n,x,fft_x,FFTW_PATIENT)
+#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)     \
+sz_array = int((array_size/2+1),C_SIZE_T);                   \
+p_array = fftw_alloc_complex(sz_array);                      \
+call c_f_pointer(p_array, array, [array_size/2+1])           \
 
-#define NEW_FFTW_PLAN_C2R_1D(plan,n,fft_x,x)              \
-plan = fftw_plan_dft_c2r_1d(n,fft_x,x,FFTW_PATIENT)
+#define NEW_FFTW_PLAN_1D(plan,n,in,out,direction)            \
+plan = fftw_plan_dft_1d(n,in,out,direction,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_R2C_1D(plan,n,in,out)                  \
+plan = fftw_plan_dft_r2c_1d(n,in,out,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_C2R_1D(plan,n,in,out)                  \
+plan = fftw_plan_dft_c2r_1d(n,out,in,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_R2HC_1D(plan,n,in,out)                 \
+plan = fftw_plan_r2r_1d(n,in,out,FFTW_R2HC,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_HC2R_1D(plan,n,in,out)                 \
+plan = fftw_plan_r2r_1d(n,in,out,FFTW_HC2R,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_2D(plan,n1,n2,in,out,direction)        \
+plan = fftw_plan_dft_2d(n2,n1,in,out,direction,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_R2C_2D(plan,n1,n2,in,out)              \
+plan = fftw_plan_dft_r2c_2d(n2,n1,in,out,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_C2R_2D(plan,n1,n2,in,out)              \
+plan = fftw_plan_dft_c2r_2d(n2,n1,in,out,FFTW_PATIENT)
 
 #else
 
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
+#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)     \
 SLL_ALLOCATE(array(array_size/2+1), error)
 
-#define NEW_FFTW_PLAN_R2C_1D(plan,n,x,fft_x)              \
-call dfftw_plan_dft_r2c_1d(plan,n,x,fft_x,FFTW_PATIENT)
+#define NEW_FFTW_PLAN_1D(plan,n,in,out,direction)            \
+call dfftw_plan_dft_1d(plan,n,in,out,direction,FFTW_PATIENT)
 
-#define NEW_FFTW_PLAN_C2R_1D(plan,n,fft_x,x)              \
-call dfftw_plan_dft_c2r_1d(plan,n,fft_x,x,FFTW_PATIENT)
+#define NEW_FFTW_PLAN_R2C_1D(plan,n,in,out)                  \
+call dfftw_plan_dft_r2c_1d(plan,n,in,out,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_C2R_1D(plan,n,in,out)                  \
+call dfftw_plan_dft_c2r_1d(plan,n,in,out,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_R2HC_1D(plan,n,in,out)                 \
+call dfftw_plan_r2r_1d(plan,n,in,out,FFTW_R2HC,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_HC2R_1D(plan,n,in,out)                 \
+call dfftw_plan_r2r_1d(plan,n,in,out,FFTW_HC2R,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_2D(plan,n1,n2,in,out,direction)        \
+call dfftw_plan_dft_2d(plan,n1,n2,in,out,direction,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_R2C_2D(plan,n1,n2,in,out)              \
+call dfftw_plan_dft_r2c_2d(plan,n1,n2,in,out,FFTW_PATIENT)
+
+#define NEW_FFTW_PLAN_C2R_2D(plan,n1,n2,in,out)              \
+call dfftw_plan_dft_c2r_2d(plan,n1,n2,in,out,FFTW_PATIENT)
 
 #define fftw_plan  sll_int64
 #define fftw_comp  sll_comp64
 #define fftw_int   sll_int32
 
+#define fftw_plan_dft_1d dfftw_plan_dft_1d
 #define fftw_plan_dft_c2r_1d dfftw_plan_dft_c2r_1d
 #define fftw_plan_dft_r2c_1d dfftw_plan_dft_r2c_1d
+#define fftw_plan_dft_2d dfftw_plan_dft_2d
 #define fftw_plan_dft_c2r_2d dfftw_plan_dft_c2r_2d
 #define fftw_plan_dft_r2c_2d dfftw_plan_dft_r2c_2d
+
+#define fftw_execute_dft dfftw_execute_dft
 #define fftw_execute_dft_r2c dfftw_execute_dft_r2c
 #define fftw_execute_dft_c2r dfftw_execute_dft_c2r
+#define fftw_execute_r2r dfftw_execute_r2r
+
 #define fftw_destroy_plan    dfftw_destroy_plan
 
 #endif
