@@ -123,8 +123,8 @@ contains
     plan%ncx = ncx
     plan%ncy = ncy
 
-    FFTW_ALLOCATE(plan%fft_x_array,ncx,sz_x_array,plan%p_x_array)
-    FFTW_ALLOCATE(plan%fft_y_array,ncy,sz_y_array,plan%p_y_array)
+    FFTW_ALLOCATE(plan%fft_x_array,ncx/2+1,sz_x_array,plan%p_x_array)
+    FFTW_ALLOCATE(plan%fft_y_array,ncy/2+1,sz_y_array,plan%p_y_array)
 
     NEW_FFTW_PLAN_R2C_1D(plan%fwx,ncx,plan%d_dx,plan%fft_x_array)
     NEW_FFTW_PLAN_C2R_1D(plan%bwx,ncx,plan%fft_x_array,plan%d_dx)

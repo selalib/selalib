@@ -1,14 +1,3 @@
-#ifdef FFTW_F2003
-
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
-sz_array = int((array_size/2+1),C_SIZE_T);                \
-p_array = fftw_alloc_complex(sz_array);                   \
-call c_f_pointer(p_array, array, [array_size/2+1])        \
-
-#else
-
-#endif
-
 module sll_vlasov4d_spectral
 
 #define MPI_MASTER 0
