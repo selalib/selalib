@@ -64,16 +64,7 @@ IF(NOT STDF95)
    ADD_EXECUTABLE(test_arb_deg_spline_interpolators_1d 
                   unit_test_arbitrary_degree_1d.F90 )
    TARGET_LINK_LIBRARIES( test_arb_deg_spline_interpolators_1d
-#                          sll_interpolators
-#                          sll_splines
-#			    sll_file_io
-#                          sll_utilities
-#                          sll_constants
-#                          sll_assertion
-#                          sll_memory
-#                          sll_working_precision 
-#			  deboor_splines
- sll_interpolators sll_file_io)
+                          sll_interpolators sll_file_io)
 
    ADD_EXECUTABLE(test_interpolators_2d unit_test.F90)
    
