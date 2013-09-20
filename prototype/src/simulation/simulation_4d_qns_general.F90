@@ -369,7 +369,7 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+   
 
     SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2+1),ierr)
     
@@ -385,6 +385,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
 
+    
     buffer_counter = 1
 
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -660,10 +661,10 @@ contains
          sim%rho_full, &
          density_tot )
     
-     !print*, 'density', density_tot
+     print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full*0.0 ,&!- density_tot, &
+         sim%rho_full ,&!- density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -882,7 +883,7 @@ contains
             sim%rho_full, &
             density_tot )
        
-       !print*, 'density', density_tot
+       print*, 'density', density_tot
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
        
 !!$       if(sim%my_rank == 0) then
