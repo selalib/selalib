@@ -15,15 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module fftw3
-#ifdef FFTW_F2003
-  use, intrinsic :: iso_c_binding
-  include 'fftw3.f03'
-#else
-  include "fftw3.f"
-#endif
-end module fftw3
-
 module sll_fft
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
