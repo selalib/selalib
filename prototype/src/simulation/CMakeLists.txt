@@ -138,8 +138,9 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    SET(SIMULATION_DEPS sll_poisson_parallel
                        sll_multigrid
                        sll_fft
-		       sll_general_coordinate_quasi_neutral_solvers
-		       sll_scalar_field_2d_alternative
+		        sll_general_coordinate_quasi_neutral_solvers
+		       deboor_splines
+		        sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
@@ -147,7 +148,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_parallel_array_initializers	
                        sll_remap
                        sll_collective
-		       sll_integration
+		        sll_integration
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
@@ -155,8 +156,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
                        sll_utilities
                        sll_memory
                        sll_assertion 	
-                       sll_working_precision
-		       deboor_splines)
+                       sll_working_precision)
 
    TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
 

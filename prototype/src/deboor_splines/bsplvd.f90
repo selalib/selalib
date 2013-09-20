@@ -76,12 +76,14 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
   real ( kind = 8 ) t(left+k)
   real ( kind = 8 ) x
 
+ ! print*, ' AU SECOURS'
+ ! print*, 'test dede',t(:),k,x,a(:,:),dbiatx
   mhigh = max ( min ( nderiv, k ), 1 )
 !
 !  MHIGH is usually equal to NDERIV.
 !
   call bsplvb ( t, k+1-mhigh, 1, x, left, dbiatx )
-
+ ! print*, 'test in bsplvb=',dbiatx
   if ( mhigh == 1 ) then
     return
   end if
@@ -97,9 +99,12 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
     do j = ideriv, k
       dbiatx(j,ideriv) = dbiatx(jp1mid,1)
       jp1mid = jp1mid + 1
+  !    print*, 'jenaimarre',dbiatx(j,ideriv)
     end do
     ideriv = ideriv - 1
+   ! print*, 'plus que marre', x,ideriv,t(:), k+1-ideriv, left
     call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
+   ! print*, 'RETEST',dbiatx
   end do
 !
 !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for
@@ -160,6 +165,7 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
 
       dbiatx(i,m) = dot_product ( a(jlow:k,i), dbiatx(jlow:k,m) )
 
+    !  print*, 'hello',dbiatx(i,m)
     end do
 
   end do

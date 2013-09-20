@@ -24,7 +24,7 @@ program qns_4d_general
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
-  sll_real64, external :: func_zero, func_one, func_minus_one
+  sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -49,10 +49,10 @@ program qns_4d_general
 
 ! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
-#define NPTS2 28
+#define NPTS2 32
 #define NPTS3 32
 #define NPTS4 32
-#define SPL_DEG1 3
+#define SPL_DEG1 3 
 #define SPL_DEG2 3
 
   ! logical mesh for space coordinates
@@ -116,11 +116,11 @@ program qns_4d_general
        transformation_x, &
        sll_landau_initializer_4d, &
        landau_params, &
-       func_minus_one, &
+       func_one, &
        func_zero, &
        func_zero, &
-       func_minus_one, &
-       func_zero, &
+       func_one, &
+       func_epsi, &
        SPL_DEG1, & 
        SPL_DEG2, & 
        SLL_PERIODIC, &
@@ -183,4 +183,10 @@ function func_zero( eta1, eta2, params ) result(res)
 end function func_zero
 
 
-
+function func_epsi( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in), optional :: params
+  real(8) :: res
+  res = 0.00001_8
+end function func_epsi

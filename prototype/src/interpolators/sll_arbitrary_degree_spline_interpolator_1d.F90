@@ -324,15 +324,17 @@ contains
             interpolator%t(1:order + sz + 1))
        
        
-       !print*, 'moyenne', sum( interpolator%coeff_splines(1:sz1+1,1:sz2+1))
+     !  print*, 'moyenne', sum( interpolator%coeff_splines(1:sz+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right
        interpolator%size_coeffs = sz
        interpolator%size_t = order + sz ! a implementer
+       !print*, 'data',data_array
+       !print*, 'de',point_locate_eta
        call spli1d_dir( sz, order, point_locate_eta, &
             data_array, interpolator%coeff_splines(1:sz),&
             interpolator%t(1:sz+order) )
-  
+       !print*, 'hello', interpolator%coeff_splines(1:sz)
   
     end select
   end subroutine compute_interpolants_ad1d
@@ -362,13 +364,14 @@ contains
        SLL_ASSERT( res <= interpolator%eta_max )
   
     end select
-          
+       
+    !print*, 'coucou'
     val = bvalue( &
-         res, &
+         interpolator%t(1:interpolator%size_t),&
+         interpolator%coeff_splines(1:size_coeffs),&
          size_coeffs, &
          interpolator%spline_degree+1, &
-         interpolator%coeff_splines(1:size_coeffs), &
-         interpolator%t(1:interpolator%size_t))
+         res,0)
   end function interpolate_value_ad1d
 
 

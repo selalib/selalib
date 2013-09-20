@@ -24,7 +24,7 @@ program qns_4d_mixed
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
-  sll_real64, external :: func_zero, func_one, func_minus_one
+  sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -48,16 +48,16 @@ program qns_4d_mixed
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
-#define NPTS2 32
+#define NPTS1 64
+#define NPTS2 64
 #define NPTS3 32
 #define NPTS4 32
-#define SPL_DEG1 1
-#define SPL_DEG2 1
+#define SPL_DEG1 2
+#define SPL_DEG2 2
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=0.0_f64, eta1_max=4.0_f64*sll_pi, &
+       eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
        eta2_min=0.0_f64, eta2_max=1.0_f64 )
 
   ! logical mesh for velocity coordinates
@@ -107,7 +107,7 @@ program qns_4d_mixed
   landau_params(2) = mx%eta1_max
   landau_params(3) = mx%eta2_min      !eta2_min
   landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.01     !eps
+  landau_params(5) = 0.05     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_4d_qns_mixed( &
@@ -117,11 +117,11 @@ program qns_4d_mixed
        transformation_x, &
        sll_landau_initializer_4d, &
        landau_params, &
-       func_minus_one, &
+       func_one, &
        func_zero, &
        func_zero, &
-       func_minus_one, &
-       func_zero, &
+       func_one, &
+       func_epsi, &
        SPL_DEG1, & 
        SPL_DEG2, & 
        SLL_PERIODIC, &
@@ -183,5 +183,11 @@ function func_zero( eta1, eta2, params ) result(res)
   res = 0.0_8
 end function func_zero
 
-
+function func_epsi( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in), optional :: params
+  real(8) :: res
+  res = 0.00000_8
+end function func_epsi
 

@@ -21,6 +21,7 @@ module sll_arbitrary_degree_spline_interpolator_2d_module
 #include "sll_assert.h" 
 #ifdef STDF95
 use sll_boundary_condition_descriptors
+!use sll_constants
 #else
 use sll_module_interpolators_2d_base
 #endif
@@ -695,13 +696,14 @@ contains
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
+       !print*, 'hello'
        call spli2d_perper( &
             period1, sz1+1, order1, point_location_eta1, &
             period2, sz2+1, order2, point_location_eta2, &
             data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
-
+       !print*, 'PASS'
        !print*, '****************'
        !print*, interpolator%coeff_splines(1,1:sz2+1)
        !print*, interpolator%coeff_splines(2,1:sz2+1)
@@ -780,6 +782,9 @@ contains
     sll_int32 :: size_coeffs2
     sll_real64 :: bvalue2d
     sll_real64 :: res1,res2
+    sll_real64 :: tr 
+
+    tr = 3.141592653589793_8
 
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
@@ -819,7 +824,7 @@ contains
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
     end select
-          
+    !print*, 'hello'
     val = bvalue2d( &
          res1, &
          res2, &
@@ -830,7 +835,8 @@ contains
          interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
          interpolator%t1(1:interpolator%size_t1), &
          interpolator%t2(1:interpolator%size_t2))
-  end function !interpolate_value_ad2d
+    !print*, 'MERDE',val,2*(2.0*tr)**2*cos(2.0*tr*res1)*cos(2.0*tr*res2)
+  end function interpolate_value_ad2d
 
 
 #ifdef STDF95
