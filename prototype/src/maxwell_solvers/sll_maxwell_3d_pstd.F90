@@ -155,9 +155,10 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nx, &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx,sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny,sz_tmp_y,self%p_tmp_y)
-   FFTW_ALLOCATE(self%tmp_z,ny,sz_tmp_z,self%p_tmp_z)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_z,nz/2+1,sz_tmp_z,self%p_tmp_z)
+
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
    SLL_ALLOCATE(self%d_dz(nz), error)

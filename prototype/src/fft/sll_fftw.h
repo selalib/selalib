@@ -25,9 +25,9 @@
 #define fftw_int  integer(C_SIZE_T)
 
 #define FFTW_ALLOCATE(array,array_size,sz_array,p_array)     \
-sz_array = int((array_size/2+1),C_SIZE_T);                   \
+sz_array = int(array_size,C_SIZE_T);                         \
 p_array = fftw_alloc_complex(sz_array);                      \
-call c_f_pointer(p_array, array, [array_size/2+1])           \
+call c_f_pointer(p_array, array, [array_size])               \
 
 #define NEW_FFTW_PLAN_1D(plan,n,in,out,direction)            \
 plan = fftw_plan_dft_1d(n,in,out,direction,FFTW_PATIENT)
@@ -56,7 +56,7 @@ plan = fftw_plan_dft_c2r_2d(n2,n1,in,out,FFTW_PATIENT)
 #else
 
 #define FFTW_ALLOCATE(array,array_size,sz_array,p_array)     \
-SLL_ALLOCATE(array(array_size/2+1), error)
+SLL_ALLOCATE(array(array_size), error)
 
 #define NEW_FFTW_PLAN_1D(plan,n,in,out,direction)            \
 call dfftw_plan_dft_1d(plan,n,in,out,direction,FFTW_PATIENT)
