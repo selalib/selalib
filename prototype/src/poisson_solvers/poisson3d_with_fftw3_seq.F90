@@ -1,5 +1,6 @@
 program poisson3d_with__fftw3_seq
   
+  use fftw3
   implicit none
   
   integer :: i, j, k, mx, my, mz, ierr
@@ -69,7 +70,7 @@ program poisson3d_with__fftw3_seq
 contains
   
   subroutine init_poisson_fftw(nx,ny,nz)
-#include "fftw3.f"
+
     integer, intent(in) :: nx,ny,nz
     
     mx = nx-2; my = ny-2; mz = nz-2
@@ -108,7 +109,7 @@ contains
   end subroutine init_poisson_fftw
   
   subroutine solve_poisson_fftw(psi, rhs, nx, ny, nz)
-#include "fftw3.f"
+
     integer, intent(in)  :: nx, ny, nz
     real(8), intent(out) :: psi(nx,ny,nz)
     real(8), intent(in)  :: rhs(nx,ny,nz)
@@ -148,7 +149,6 @@ contains
   end subroutine solve_poisson_fftw
   
   subroutine finalize_poisson_fftw()
-#include "fftw3.f"
     
     call dfftw_destroy_plan(forward)
     call dfftw_destroy_plan(backward)

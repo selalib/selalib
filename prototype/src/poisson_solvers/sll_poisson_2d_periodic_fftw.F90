@@ -25,15 +25,9 @@ module sll_poisson_2d_periodic
 #include "sll_constants.h"
 #include "sll_fftw.h"
 
-use, intrinsic :: iso_c_binding
+use fftw3
 
 implicit none
-
-#ifdef FFTW_F2003
-include 'fftw3.f03'
-#else
-include 'fftw3.f'
-#endif
 
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
@@ -178,6 +172,7 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
    phi = phi / (nc_x*nc_y)     ! normalize
 
+   !Node centered case
    if(size(phi,1) == nc_x+1) phi(nc_x+1,:) = phi(1,:)
    if(size(phi,2) == nc_y+1) phi(:,nc_y+1) = phi(:,1)
 
@@ -211,6 +206,7 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
 
+   !Node centered case
    if (size(e_x,1) == nc_x+1) e_x(nc_x+1,:) = e_x(1,:)
    if (size(e_x,2) == nc_y+1) e_x(:,nc_y+1) = e_x(:,1)
    if (size(e_y,1) == nc_x+1) e_y(nc_x+1,:) = e_y(1,:)
