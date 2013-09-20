@@ -147,8 +147,8 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
 
-   FFTW_ALLOCATE(self%tmp_x,nx,self%sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny,self%sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,self%sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,self%sz_tmp_y,self%p_tmp_y)
 
    NEW_FFTW_PLAN_R2C_1D(self%fwx, nx, self%d_dx,  self%tmp_x)
    NEW_FFTW_PLAN_C2R_1D(self%bwx, nx, self%tmp_x, self%d_dx)
