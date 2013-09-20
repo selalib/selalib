@@ -1,7 +1,10 @@
+IF(FFTW_FOUND)
+  SET(FFT_SRC fftw3.F90)
+ENDIF()
 
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
 
-  SET(FFT_SRC sll_fft_mod_through_fftpack.F90)
+  SET(FFT_SRC ${FFT_SRC} sll_fft_mod_through_fftpack.F90)
   SET(DEPENDENCIES dfftpack)
   ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTPACK_MOD)
 
@@ -9,14 +12,14 @@ ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
 
   IF(FFTW_FOUND AND FFTW_ENABLED)
      INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
-     SET(FFT_SRC sll_fft_mod_through_fftw.F90)
+     SET(FFT_SRC ${FFT_SRC} sll_fft_mod_through_fftw.F90)
      SET(DEPENDENCIES ${FFTW_LIBRARIES})
      ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTW_MOD)
   ENDIF()
 
 ELSE()
 
-  SET(FFT_SRC sll_fft_selalib_implementation.F90)
+  SET(FFT_SRC ${FFT_SRC} sll_fft_selalib_implementation.F90)
   ADD_DEFINITIONS(-D_DEFAULTFFTLIB=SLLFFT_MOD)
 
 ENDIF()

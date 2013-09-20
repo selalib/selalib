@@ -63,9 +63,8 @@ module sll_maxwell_3d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
-
-use, intrinsic :: iso_c_binding
-use sll_constants
+#include "sll_constants.h"
+use fftw3
 
 implicit none
 private
@@ -119,12 +118,6 @@ type, public :: maxwell_pstd_3d
 end type maxwell_pstd_3d
 
 sll_int32, private :: i, j, k
-
-#ifdef FFTW_F2003
-include 'fftw3.f03'
-#else
-include 'fftw3.f'
-#endif
 
 contains
 
