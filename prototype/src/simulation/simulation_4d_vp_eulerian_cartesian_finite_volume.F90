@@ -286,7 +286,7 @@ subroutine run_vp_cart(sim)
  sll_int32 :: ivx
  sll_int32 :: ivy
  sll_int32 :: ii,jj,mm
- sll_real64 :: t
+ sll_real64 :: t,v1,v2
  sll_real64 :: xref, yref,vxref,phi1
  sll_real64,dimension(2,2) :: jacob,invjacob
  sll_int32 :: iploc,ib1
@@ -734,6 +734,13 @@ subroutine run_vp_cart(sim)
  end do
 
  write(*,*) 'number of iteration', itime
+ write(*,*) 'final time ',t
+
+
+ sim%params(11)=t
+ call fn_L2_norm(sim,erreurL2)
+ write(*,*) 'erreurL2=',erreurL2
+ stop
 
 
  call compute_local_sizes_4d( sim%sequential_v1v2x1, &
@@ -815,14 +822,32 @@ subroutine run_vp_cart(sim)
       ierr)
  if(sim%test==0)then
     allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
+    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+         (/1,1,1,1/) )
+!!$    x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+!!$         sim%mesh2dx%delta_eta1
+!!$    x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+!!$         sim%mesh2dx%delta_eta2
+!!$    jac_m=sim%tx%jacobian_matrix(x1,x2)
+!!$    inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
 
 !!$          f_x_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
 !!$               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min)**2)
-          f_x_exact(i,j)=sin(2.0_f64*sll_pi/(sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min) &
-               *(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
-               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min))
+          xref=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+               sim%mesh2dx%delta_eta1
+          yref=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+               sim%mesh2dx%delta_eta2
+          x1=sim%tx%x1(xref,yref)
+          !x=(i-1)*sim%mesh2dx%delta_eta1 -(sim%mesh2dv%eta1_min
+!!$          f_x_exact(i,j)=sin(2.0_f64*sll_pi/(sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min) &
+!!$               *(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
+!!$               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min))
+          sim%params(11)=t
+          f_x_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
+          
        end do
     end do
     call sll_gnuplot_rect_2d_parallel( &
@@ -835,14 +860,14 @@ subroutine run_vp_cart(sim)
          0, &
          ierr)
 
-
+ 
     call lag_gauss(sim%degree,gauss,weight,lag,dlag)
-    allocate (f_x_num(loc_sz_x1,sim%degree+1))
+    !allocate (f_x_num(loc_sz_x1,sim%degree+1))
     !exact solution of the test case x_transport but at point Gauss
-    allocate (f_x_exact2(loc_sz_x1,sim%degree+1))
-    allocate (err(loc_sz_x1,sim%degree+1))
-    allocate (errG(loc_sz_x1))
-    SLL_ALLOCATE(sloc((loc_sz_x1)),ierr)
+    !allocate (f_x_exact2(loc_sz_x1,sim%degree+1))
+    !allocate (err(loc_sz_x1,sim%degree+1))
+    !allocate (errG(loc_sz_x1))
+    !SLL_ALLOCATE(sloc((loc_sz_x1)),ierr)
     do ic=0,sim%nc_v1-1
        !do jc=0,sim%nc_v2-1
        sloc=0
@@ -967,8 +992,6 @@ subroutine run_vp_cart(sim)
 !!$         ierr)
 
 
-call normL2(sim,f_x_exact, plotf2d_c1,erreurL2)
-
   inquire(file='log(err)', exist=exist)
   if (exist) then
      open(168,file='log(err)',status='old',position='append', action='write')
@@ -976,7 +999,7 @@ call normL2(sim,f_x_exact, plotf2d_c1,erreurL2)
      open(168, file='log(err)', status="new", action="write")
   end if
 
-  write(168,*) -log(sim%mesh2dx%delta_eta1), erreurL2
+  write(168,*) -log(sim%mesh2dx%delta_eta1), log(erreurL2)
 
   close(168)
 
@@ -2286,7 +2309,7 @@ end subroutine mpi_comm
 subroutine normL2(sim,w1,w2,res)
   !for instance, but after i want to code this sub with any dimension of vector
   !n in fact here i compute the norm L2 with the center points
- class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
   sll_real64,dimension(sim%nc_x1,sim%np_v1), intent(in) :: w1,w2
   sll_real64, intent(out) :: res
   sll_int32 :: i,j
@@ -2304,6 +2327,86 @@ end subroutine normL2
 subroutine exact_x_transport()
 
 end subroutine exact_x_transport
+
+
+subroutine fn_L2_norm(sim,norml2_glob)
+
+  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim
+
+  sll_real64,dimension(:,:),allocatable :: lag,dlag
+  sll_real64,dimension(:),allocatable :: gauss,weight
+  sll_int32  :: ierr,loc_sz_x1,loc_sz_x2,loc_sz_v1,loc_sz_v2
+  sll_int32,dimension(4)  :: global_indices
+  sll_real64 :: x1,x2,v1,v2,f,norml2,det,vol_loc,vol_glob
+  sll_int32  :: ib1,ib2,icv1,icv2,igv1,igv2,icx1,icx2,iv1,iv2
+  sll_real64,intent(out) :: norml2_glob
+
+  SLL_ALLOCATE(weight(sim%degree+1),ierr)
+  SLL_ALLOCATE(gauss(sim%degree+1),ierr)
+  SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
+  SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
+  call lag_gauss(sim%degree,gauss,weight,lag,dlag)
+
+  call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+       loc_sz_v1, &
+       loc_sz_v2, &
+       loc_sz_x1, &
+       loc_sz_x2 )
+
+
+
+  global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+
+  ! loop on cells and elems
+  normL2=0
+  vol_loc=0
+  do icx1=1,loc_sz_x1
+     do icx2=1,loc_sz_x2
+        do icv1=1,sim%nc_v1
+           do icv2=1,sim%nc_v2
+              ! loop on velocity gauss points
+              do igv1=1,sim%degree+1
+                 do igv2=1,sim%degree+1
+                    f=0
+                    x1=sim%mesh2dx%eta1_min+ &
+                         (icx1-1)*sim%mesh2dx%delta_eta1
+                    x2=sim%mesh2dx%eta2_min+ &
+                         (icx2-1)*sim%mesh2dx%delta_eta2
+                    ! we suppose a uniform mesh in x1,x2
+                    v1=sim%mesh2dv%eta1_min+ &
+                         (icv1-1+gauss(igv1))*sim%mesh2dv%delta_eta1
+                    v2=sim%mesh2dv%eta2_min+ &
+                         (icv2-1+gauss(igv2))*sim%mesh2dv%delta_eta2
+!!$                    jacob=sim%tv%jacobian_matrix(v1,v2)
+!!$                    invjacob=sim%tv%inverse_jacobian_matrix(v1,v2)
+                    det=sim%tv%jacobian(v1,v2)* &
+                         sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2 &
+                         *sim%mesh2dx%delta_eta1*sim%mesh2dx%delta_eta2
+                    do ib1=1,sim%degree+1
+                       do ib2=1,sim%degree+1
+                          iv1=(icv1-1)*sim%degree+ib1
+                          iv2=(icv2-1)*sim%degree+ib2
+                          f=f+sim%fn_v1v2x1(iv1,iv2,icx1,icx2)*lag(ib1,igv1)*lag(ib2,igv2)
+                       end do
+                    end do
+                    f=f-sim%init_func(v1,v2,x1,x2,sim%params)
+                    vol_loc=vol_loc+weight(igv1)*weight(igv2)*det
+                    normL2=normL2+f*f*weight(igv1)*weight(igv2)*det
+                 end do
+              end do
+           end do
+        end do
+     end do
+  end do
+
+  Call MPI_ALLREDUCE(normL2,normL2_glob,1,MPI_DOUBLE_PRECISION,MPI_SUM,&
+       MPI_COMM_WORLD,ierr)
+  Call MPI_ALLREDUCE(vol_loc,vol_glob,1,MPI_DOUBLE_PRECISION,MPI_SUM,&
+       MPI_COMM_WORLD,ierr)
+  normL2_glob=sqrt(normL2_glob/vol_glob)
+
+
+end subroutine fn_L2_norm
 
 
 
