@@ -2296,7 +2296,7 @@ subroutine normL2(sim,w1,w2,res)
         res=res+(w1(i,j)-w2(i,j))*(w1(i,j)-w2(i,j))
      end do
   end do
-  res=log(res*sim%mesh2dx%delta_eta1*sim%mesh2dv%delta_eta1/sim%degree)
+  res=log(sqrt(res*sim%mesh2dx%delta_eta1*sim%mesh2dv%delta_eta1/sim%degree))
 !!$
   !check dv/degree
 end subroutine normL2

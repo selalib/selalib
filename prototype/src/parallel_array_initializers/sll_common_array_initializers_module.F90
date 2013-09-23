@@ -164,6 +164,7 @@ contains
     kx  =  2.0_f64 * sll_pi / (eta1_max - eta1_min)
 
     sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*x)
+    !sll_test_x_transport_initializer_v1v2x1x2 =sin(2*kx*x)+0.5*cos(kx*x)
     !sll_test_x_transport_initializer_v1v2x1x2 = exp(-4*x**2)
 
   end function sll_test_x_transport_initializer_v1v2x1x2
