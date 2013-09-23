@@ -161,10 +161,10 @@ contains
     eta2_max = params(4)
 
     eps = params(5)
-    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx  =  2.0_f64 * sll_pi / (eta1_max - eta1_min)
 
-    sll_test_x_transport_initializer_v1v2x1x2 =exp(-4*x**2)
-    !sll_test_x_transport_initializer_v1v2x1x2 = 2_f64
+    sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*x)
+    !sll_test_x_transport_initializer_v1v2x1x2 = exp(-4*x**2)
 
   end function sll_test_x_transport_initializer_v1v2x1x2
 

@@ -42,12 +42,15 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   sll_int32 :: degree ! polynomial degree
   sll_int32 :: test
+  sll_int32 :: nsch
 
   sll_int32  :: np_v1  ! velocity nodes
   sll_int32  :: np_v2
+  sll_int32 :: np_x1
 
   ! number of local nodes in each element
   sll_int32 :: np_loc
+  sll_real64 :: eps=0.00_f64
 
   ! for initializers
   type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
@@ -241,6 +244,8 @@ end subroutine initialize_vp4d
 ! directly, but this should be cleaned up.
 subroutine run_vp_cart(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+ logical :: exist
+ sll_real64,dimension(:),allocatable :: sloc
  sll_int32  :: loc_sz_v1
  sll_int32  :: loc_sz_v2
  sll_int32  :: loc_sz_x1
@@ -258,24 +263,33 @@ subroutine run_vp_cart(sim)
  sll_int32  :: ic
  sll_int32  :: jc
  sll_real64 :: df
+ sll_real64 ::erreurL2
+ sll_real64,dimension(:,:),allocatable :: lag,dlag
+ sll_real64,dimension(:),allocatable :: gauss,weight
  sll_real64,dimension(:),pointer :: node,xmil 
  sll_real64,dimension(:,:),allocatable :: plotf2d_c1
  sll_real64,dimension(:,:),allocatable :: plotf2d_c2
  sll_real64,dimension(:,:),allocatable :: plotphi2d
  sll_real64,dimension(:,:),allocatable :: f_x_exact,f_vx_exact
  sll_real64,dimension(:,:),allocatable :: f_y_exact,f_vy_exact
+ sll_real64,dimension(:,:),allocatable :: f_x_exact2,f_x_num
  sll_real64,dimension(:),pointer :: ww,w1
  sll_real64,dimension(:,:),pointer :: energ
  sll_real64,dimension(:),pointer :: vx_mil
  sll_real64,dimension(:),pointer :: vy_mil
  sll_real64,dimension(:),pointer :: x_mil
  sll_real64,dimension(:),pointer :: y_mil
+ sll_real64,dimension(:,:),allocatable :: err
+ sll_real64,dimension(:),allocatable :: errG
  sll_int32 :: ix
  sll_int32 :: iy
  sll_int32 :: ivx
  sll_int32 :: ivy
  sll_int32 :: ii,jj,mm
  sll_real64 :: t
+ sll_real64 :: xref, yref,vxref,phi1
+ sll_real64,dimension(2,2) :: jacob,invjacob
+ sll_int32 :: iploc,ib1
  sll_int32,dimension(4)  :: global_indices
  sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
  sll_real64 :: det
@@ -296,7 +310,7 @@ subroutine run_vp_cart(sim)
  sim%phi_seq_x1       => new_layout_2D( sll_world_collective )
 
  sim%degree=sim%params(6)
-
+ sim%nsch=sim%params(10)
 
 
  sim%nc_v1 = sim%mesh2dv%num_cells1
@@ -369,6 +383,11 @@ subroutine run_vp_cart(sim)
  SLL_ALLOCATE(w1(sim%np_v1*sim%np_v2),ierr)
  SLL_ALLOCATE(energ(loc_sz_x1,loc_sz_x2+1),ierr)
 
+
+ SLL_ALLOCATE(gauss(sim%degree+1),ierr)
+ SLL_ALLOCATE(weight(sim%degree+1),ierr)
+ SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
+ SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
 
  ! initialize here the distribution function
 
@@ -605,7 +624,11 @@ subroutine run_vp_cart(sim)
     !stop
 
     t=t+sim%dt
-    call RK2(sim)
+    if (sim%nsch == 0) then
+       call euler(sim)
+    elseif (sim%nsch == 1) then
+       call RK2(sim)
+    end if
     !try to compute the energy in the transport test case here
 !!$       write(*,*) 'loc_sz_v1',loc_sz_v1
 !!$       write(*,*) 'sim%np_v2',sim%np_v2
@@ -794,8 +817,12 @@ subroutine run_vp_cart(sim)
     allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-          f_x_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
-               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min)**2)
+
+!!$          f_x_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
+!!$               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min)**2)
+          f_x_exact(i,j)=sin(2.0_f64*sll_pi/(sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min) &
+               *(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
+               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min))
        end do
     end do
     call sll_gnuplot_rect_2d_parallel( &
@@ -807,8 +834,66 @@ subroutine run_vp_cart(sim)
          "plotfxtransport", &
          0, &
          ierr)
+
+
+    call lag_gauss(sim%degree,gauss,weight,lag,dlag)
+    allocate (f_x_num(loc_sz_x1,sim%degree+1))
+    !exact solution of the test case x_transport but at point Gauss
+    allocate (f_x_exact2(loc_sz_x1,sim%degree+1))
+    allocate (err(loc_sz_x1,sim%degree+1))
+    allocate (errG(loc_sz_x1))
+    SLL_ALLOCATE(sloc((loc_sz_x1)),ierr)
+    do ic=0,sim%nc_v1-1
+       !do jc=0,sim%nc_v2-1
+       sloc=0
+       do i = 1, loc_sz_x1
+          do j = 1,sim%degree+1
+             vxref=sim%mesh2dv%eta1_min+ &
+                  (ic+gauss(j))*sim%mesh2dv%delta_eta1
+             f_x_exact2(i,j)=sin(2.0_f64*sll_pi/(sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min) &
+                  *(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
+                  -vxref*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min))
+          end do
+       end do
+       ! loop on the Gauss points
+       f_x_num=0._f64
+       do i = 1, loc_sz_x1
+          do iploc=0,sim%degree
+             !do jploc=0,sim%degree
+             xref=sim%mesh2dv%eta1_min+ &
+                  (ic+gauss(iploc+1))*sim%mesh2dv%delta_eta1
+             yref=sim%mesh2dv%eta2_min+ &
+                  (jc+gauss(1))*sim%mesh2dv%delta_eta2
+             jacob=sim%tv%jacobian_matrix(xref,yref)
+             invjacob=sim%tv%inverse_jacobian_matrix(xref,yref)
+             det=sim%tv%jacobian(xref,yref)*sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2
+             do ib1=1,sim%degree+1
+                phi1=lag(ib1,iploc+1)*lag(1,1)
+                f_x_num(i,ib1)=f_x_num(i,ib1)+phi1*sim%fn_v1v2x1(sim%connec(ib1,ic+1),1,i,1)
+             end do
+             !end do
+          end do
+       end do
+       !verify the compute
+       do i=1,loc_sz_x1
+          do j=1,sim%degree+1
+             write(*,*) 'err', abs( f_x_num(i,j)-f_x_exact2(i,j))
+          end do
+       end do
+       do i=1,loc_sz_x1
+          do j=1,sim%degree+1
+             err(i,j)=f_x_num(i,j)**2+f_x_exact2(i,j)**2-2*f_x_exact2(i,j)*f_x_num(i,j)
+             sloc(i)=sloc(i)+sim%mesh2dv%delta_eta1*err(i,j)*weight(j)
+          end do
+          errG(i)=errG(i)+sloc(i)
+       end do
+
+
+    end do
+
  end if
 
+!write (*,*) 'loc_sz_x1, nc_x1',loc_sz_x1, sim%nc_x1
 
  if(sim%test==4)then
     allocate (f_y_exact(loc_sz_x2,loc_sz_v2))
@@ -881,6 +966,20 @@ subroutine run_vp_cart(sim)
 !!$         0, &
 !!$         ierr)
 
+
+call normL2(sim,f_x_exact, plotf2d_c1,erreurL2)
+
+  inquire(file='log(err)', exist=exist)
+  if (exist) then
+     open(168,file='log(err)',status='old',position='append', action='write')
+  else
+     open(168, file='log(err)', status="new", action="write")
+  end if
+
+  write(168,*) -log(sim%mesh2dx%delta_eta1), erreurL2
+
+  close(168)
+
  if (sim%test .eq. 1) then
     write(*,*) 'we r using the Landau damping 1d test case'
  else if (sim%test .eq. 0) then
@@ -895,6 +994,18 @@ subroutine run_vp_cart(sim)
     write(*,*) 'landau damping 2d test case'
  endif
 
+ if (abs(sim%eps).gt.1.e-10_f64 ) then
+    write(*,*) 'the decentered flux'
+ else 
+    write (*,*) 'the centered flux'
+ endif
+    
+ if (sim%nsch == 0) then
+    write(*,*) 'Euler scheme'
+ else if(sim%nsch == 1) then
+    write (*,*) 'R-K second order'
+ endif
+ 
 
 
 
@@ -1641,18 +1752,7 @@ subroutine lag_gauss(degree,gauss,weight,lag,dlag)
     lag(1,1) = 1_f64
     dlag(1,1) = 0_f64
  case(1)
-!!$       gauss(1) = -0.5773502691896257645091487805019574556476D0
-!!$       gauss(2) = 0.5773502691896257645091487805019574556476D0
-!!$       weight(1) = 0.1000000000000000000000000000000000000000D1
-!!$       weight(2) = 0.1000000000000000000000000000000000000000D1
-!!$       lag(1,1) = 0.7886751345948128822545743902509787278238D0
-!!$       lag(1,2) = 0.2113248654051871177454256097490212721762D0
-!!$       lag(2,1) = 0.2113248654051871177454256097490212721762D0
-!!$       lag(2,2) = 0.7886751345948128822545743902509787278238D0
-!!$       dlag(1,1) = -0.5000000000000000000000000000000000000000D0
-!!$       dlag(1,2) = -0.5000000000000000000000000000000000000000D0
-!!$       dlag(2,1) = 0.5000000000000000000000000000000000000000D0
-!!$       dlag(2,2) = 0.5000000000000000000000000000000000000000D0
+
     gauss(1) = -0.5773502691896257645091487805019574556476D0
     gauss(2) = 0.5773502691896257645091487805019574556476D0
     weight(1) = 0.1000000000000000000000000000000000000000D1
@@ -1668,27 +1768,7 @@ subroutine lag_gauss(degree,gauss,weight,lag,dlag)
 
 
  case(2)
-!!$       gauss(1) = -0.7745966692414833770358530799564799221666D0
-!!$       gauss(2) = 0.0D0
-!!$       gauss(3) = 0.7745966692414833770358530799564799221666D0
-!!$       weight(1) = 0.5555555555555555555555555555555555555560D0
-!!$       weight(2) = 0.8888888888888888888888888888888888888888D0
-!!$       weight(3) = 0.5555555555555555555555555555555555555560D0
-!!$       lag(1,1) = 0.6872983346207416885179265399782399610833D0
-!!$       lag(1,3) = -0.8729833462074168851792653997823996108329D-1
-!!$       lag(2,1) = 0.4000000000000000000000000000000000000001D0
-!!$       lag(2,2) = 0.1D1
-!!$       lag(2,3) = 0.4000000000000000000000000000000000000001D0
-!!$       lag(3,1) = -0.8729833462074168851792653997823996108329D-1
-!!$       lag(3,3) = 0.6872983346207416885179265399782399610833D0
-!!$       dlag(1,1) = -0.1274596669241483377035853079956479922167D1
-!!$       dlag(1,2) = -0.5000000000000000000000000000000000000000D0
-!!$       dlag(1,3) = 0.2745966692414833770358530799564799221666D0
-!!$       dlag(2,1) = 0.1549193338482966754071706159912959844333D1
-!!$       dlag(2,3) = -0.1549193338482966754071706159912959844333D1
-!!$       dlag(3,1) = -0.2745966692414833770358530799564799221666D0
-!!$       dlag(3,2) = 0.5000000000000000000000000000000000000000D0
-!!$       dlag(3,3) = 0.1274596669241483377035853079956479922167D1
+
     gauss(1) = -0.7745966692414833770358530799564799221666D0
     gauss(2) = 0.0D0
     gauss(3) = 0.7745966692414833770358530799564799221666D0
@@ -1712,46 +1792,6 @@ subroutine lag_gauss(degree,gauss,weight,lag,dlag)
     dlag(3,3) = 0.2549193338482966754071706159912959844333D1
 
  case(3)
-!!$       gauss(1) = -0.8611363115940525752239464888928095050957D0
-!!$       gauss(2) = -0.3399810435848562648026657591032446872006D0
-!!$       gauss(3) = 0.3399810435848562648026657591032446872006D0
-!!$       gauss(4) = 0.8611363115940525752239464888928095050957D0
-!!$       weight(1) = 0.3478548451374538573730639492219994072349D0
-!!$       weight(2) = 0.6521451548625461426269360507780005927648D0
-!!$       weight(3) = 0.6521451548625461426269360507780005927648D0
-!!$       weight(4) = 0.3478548451374538573730639492219994072349D0
-!!$       lag(1,1) = 0.6600056650728035304586090241410712591072D0
-!!$       lag(1,2) = 0.3373736432772532230452701535743525193130D-2
-!!$       lag(1,3) = 0.1661762313906394832923866663740817265855D-2
-!!$       lag(1,4) = 0.4924455046623182819230012194515868414856D-1
-!!$       lag(2,1) = 0.5209376877117036301110018070022304235776D0
-!!$       lag(2,2) = 0.1004885854825645727576017102247120797681D1
-!!$       lag(2,3) = -0.9921353572324654639393670446605140139452D-2
-!!$       lag(2,4) = -0.2301879032507389887619109530884603668341D0
-!!$       lag(3,1) = -0.2301879032507389887619109530884603668341D0
-!!$       lag(3,2) = -0.9921353572324654639393670446605140139450D-2
-!!$       lag(3,3) = 0.1004885854825645727576017102247120797682D1
-!!$       lag(3,4) = 0.5209376877117036301110018070022304235776D0
-!!$       lag(4,1) = 0.4924455046623182819230012194515868414856D-1
-!!$       lag(4,2) = 0.1661762313906394832923866663740817265855D-2
-!!$       lag(4,3) = 0.3373736432772532230452701535743525193130D-2
-!!$       lag(4,4) = 0.6600056650728035304586090241410712591073D0
-!!$       dlag(1,1) = -0.2157653673851862185103303519133755608117D1
-!!$       dlag(1,2) = -0.5150319221529816884980638312903767867892D0
-!!$       dlag(1,3) = 0.2499254259129449073079341266919237594124D0
-!!$       dlag(1,4) = -0.2200969727652438908494239191249342216503D0
-!!$       dlag(2,1) = 0.3035404320468968261056030957392445437885D1
-!!$       dlag(2,2) = -0.7198615816069815303118064641111701858325D0
-!!$       dlag(2,3) = -0.1484818929672908126117804422093470732036D1
-!!$       dlag(2,4) = 0.1097847619382349966802151357383624051417D1
-!!$       dlag(3,1) = -0.1097847619382349966802151357383624051417D1
-!!$       dlag(3,2) = 0.1484818929672908126117804422093470732036D1
-!!$       dlag(3,3) = 0.719861581606981530311806464111170185832D0
-!!$       dlag(3,4) = -0.3035404320468968261056030957392445437884D1
-!!$       dlag(4,1) = 0.2200969727652438908494239191249342216502D0
-!!$       dlag(4,2) = -0.2499254259129449073079341266919237594124D0
-!!$       dlag(4,3) = 0.5150319221529816884980638312903767867892D0
-!!$       dlag(4,4) = 0.2157653673851862185103303519133755608117D1
 
     gauss(1) = -0.8611363115940525752239464888928095050957D0
     gauss(2) = -0.3399810435848562648026657591032446872006D0
@@ -1973,7 +2013,6 @@ subroutine fluxnum(sim,wL,wR,vn,flux)
  sll_real64,dimension(sim%np_v1*sim%np_v2) :: wm
  sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
 
- sll_real64   :: eps=0.0
  sim%test=sim%params(8)
  wm=(wL+wR)/2
 
@@ -1990,7 +2029,7 @@ subroutine fluxnum(sim,wL,wR,vn,flux)
       sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
  ! write(*,*) 'nnoe = ', sim%np_v1*sim%np_v2
  !print *, 'bonjour2'
- flux=vn(1)*flux1+vn(2)*flux2-eps/2*(wR-wL)
+ flux=vn(1)*flux1+vn(2)*flux2-sim%eps/2*(wR-wL)
 !!$    flux=vn(1)*wL*4
 !!$    flux=wm*vn(1)
 !!$    write(*,*) 'vn(1)',vn(1)
@@ -2242,4 +2281,63 @@ subroutine mpi_comm(sim)
 
 
 end subroutine mpi_comm
+
+!compute the L2 norm for the test cases in one dimension
+subroutine normL2(sim,w1,w2,res)
+  !for instance, but after i want to code this sub with any dimension of vector
+  !n in fact here i compute the norm L2 with the center points
+ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+  sll_real64,dimension(sim%nc_x1,sim%np_v1), intent(in) :: w1,w2
+  sll_real64, intent(out) :: res
+  sll_int32 :: i,j
+  res=0.0_f64
+  do i=1,sim%nc_x1
+     do j=1,sim%np_v1
+        res=res+(w1(i,j)-w2(i,j))*(w1(i,j)-w2(i,j))
+     end do
+  end do
+  res=log(res*sim%mesh2dx%delta_eta1*sim%mesh2dv%delta_eta1/sim%degree)
+!!$
+  !check dv/degree
+end subroutine normL2
+
+subroutine exact_x_transport()
+
+end subroutine exact_x_transport
+
+
+
+!!$!compute the L2 norm for the test cases in one dimension
+!!$subroutine normL2(sim,w1,w2,res)
+!!$  !for instance, but after i want to code this sub with any dimension of vector
+!!$  !with Gauss-Legendre in velocity n the center point in position
+!!$ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+!!$  sll_real64,dimension(sim%np_v1,sim%np_x1),intent(inout) :: w1,w2
+!!$  sll_real64, intent(out) :: res
+!!$  sll_int32 :: i,j
+!!$  res=0.0_f64
+!!$  do i=1,sim%np_v1
+!!$     do j=1,sim%np_x1
+!!$        res=res+(w1(i,j)-w2(i,j))*(w1(i,j)-w2(i,j))
+!!$     end do
+!!$  end do
+!!$  res=log(res*sim%mesh2dx%delta_eta1*sim%mesh2dv%delta_eta1/sim%degree)
+!!$  !check dv/degree
+!!$end subroutine normL2
+!!$
+!!$subroutine solnum(sim)
+!!$ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+!!$  sll_real64,dimension(sim%np_v1,sim%np_x1),intent(inout) :: w1
+!!$sll_int32 :: i,j
+!!$
+!!$do iploc=0,sim%degree
+!!$   do jploc=0,sim%degree
+!!$      do ib1=1,sim%degree+1
+!!$         do jb1=1,sim%degree+1
+!!$            phi=lag(ib1,iploc+1)*lag(jb1,jploc+1)
+!!$         end do
+!!$      end do
+!!$   end do
+!!$end do
+
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
