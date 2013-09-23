@@ -15,19 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author
-!> Pierre Navaro
-!> @brief
-!> Implements the Poisson solver in 2D with periodic boundary conditions
-!> @details
-!> This module depends on:
-!> - sll_memory
-!> - sll_precision
-!> - sll_assert 
-!> - sll_constants
-!> - sll_utilities
-!>
-
+!> @author Pierre Navaro
+!> @brief  Implements the Poisson solver in 2D with periodic boundary conditions
 module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
@@ -36,15 +25,9 @@ module sll_poisson_2d_periodic
 #include "sll_constants.h"
 #include "sll_fftw.h"
 
-use, intrinsic :: iso_c_binding
+use fftw3
 
 implicit none
-
-#ifdef FFTW_F2003
-include 'fftw3.f03'
-#else
-include 'fftw3.f'
-#endif
 
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
@@ -65,7 +48,7 @@ type, public :: poisson_2d_periodic
 
    sll_real64, dimension(:,:), pointer :: kx    !< wave number in x
    sll_real64, dimension(:,:), pointer :: ky    !< wave number in y
-   sll_real64, dimension(:,:), pointer :: k2    !< \{ k_x^2 + k_y^2 \}
+   sll_real64, dimension(:,:), pointer :: k2    !< \f[ k_x^2 + k_y^2 \f]
    sll_int32                           :: nc_x  !< cells number in x
    sll_int32                           :: nc_y  !< cells number in y
    sll_real64                          :: dx    !< x step size
@@ -140,9 +123,10 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
 
    deallocate(tmp)
 
-   SLL_ALLOCATE(self%kx (nc_x/2+1,nc_y), error)
-   SLL_ALLOCATE(self%ky (nc_x/2+1,nc_y), error)
-   SLL_ALLOCATE(self%k2 (nc_x/2+1,nc_y), error)
+   SLL_ALLOCATE(self%kx(nc_x/2+1,nc_y), error)
+   SLL_ALLOCATE(self%ky(nc_x/2+1,nc_y), error)
+   SLL_ALLOCATE(self%k2(nc_x/2+1,nc_y), error)
+
    kx0 = 2._f64*sll_pi/(x_max-x_min)
    ky0 = 2._f64*sll_pi/(y_max-y_min)
    
@@ -157,8 +141,8 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
          self%ky(ik,jk) = (jk-1-nc_y)*ky0
       end do
    end do
+
    self%kx(1,1) = 1.0_f64
-   
    self%k2 = self%kx*self%kx+self%ky*self%ky
    self%kx = self%kx/self%k2
    self%ky = self%ky/self%k2
@@ -169,7 +153,7 @@ end subroutine initialize_poisson_2d_periodic_fftw
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
-   type(poisson_2d_periodic),intent(inout)  :: self
+   type(poisson_2d_periodic),intent(inout)   :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: phi
    sll_int32                                 :: nc_x, nc_y
@@ -188,8 +172,9 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
    phi = phi / (nc_x*nc_y)     ! normalize
 
-   phi(nc_x+1,:) = phi(1,:)
-   phi(:,nc_y+1) = phi(:,1)
+   !Node centered case
+   if(size(phi,1) == nc_x+1) phi(nc_x+1,:) = phi(1,:)
+   if(size(phi,2) == nc_y+1) phi(:,nc_y+1) = phi(:,1)
 
 end subroutine solve_potential_poisson_2d_periodic_fftw
 
@@ -197,7 +182,7 @@ end subroutine solve_potential_poisson_2d_periodic_fftw
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
-   type(poisson_2d_periodic),intent(inout)  :: self
+   type(poisson_2d_periodic),intent(inout)   :: self
    sll_real64, dimension(:,:), intent(inout) :: rho
    sll_real64, dimension(:,:), intent(out)   :: e_x
    sll_real64, dimension(:,:), intent(out)   :: e_y
@@ -221,10 +206,11 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
 
-   e_x(nc_x+1,:) = e_x(1,:)
-   e_x(:,nc_y+1) = e_x(:,1)
-   e_y(nc_x+1,:) = e_y(1,:)
-   e_y(:,nc_y+1) = e_y(:,1)
+   !Node centered case
+   if (size(e_x,1) == nc_x+1) e_x(nc_x+1,:) = e_x(1,:)
+   if (size(e_x,2) == nc_y+1) e_x(:,nc_y+1) = e_x(:,1)
+   if (size(e_y,1) == nc_x+1) e_y(nc_x+1,:) = e_y(1,:)
+   if (size(e_y,2) == nc_y+1) e_y(:,nc_y+1) = e_y(:,1)
 
    if (present(nrj)) then 
       dx = self%dx

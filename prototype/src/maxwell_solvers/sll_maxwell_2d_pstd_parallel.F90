@@ -42,11 +42,11 @@ module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
+#include "sll_constants.h"
 
-use, intrinsic :: iso_c_binding
 use sll_remapper
-use sll_constants
 use sll_collective
+use fftw3
 
 implicit none
 
@@ -60,8 +60,8 @@ type maxwell_2d_periodic_plan_cartesian_par
    fftw_plan                           :: bwy         !< fftw plan backward y
    sll_real64, dimension(:), pointer   :: d_dx        !< x derivative
    sll_real64, dimension(:), pointer   :: d_dy        !< y derivative
-   sll_comp64, dimension(:), pointer   :: fft_x_array !< fft x transform
-   sll_comp64, dimension(:), pointer   :: fft_y_array !< fft y transform
+   fftw_comp,  dimension(:), pointer   :: fft_x_array !< fft x transform
+   fftw_comp,  dimension(:), pointer   :: fft_y_array !< fft y transform
    sll_real64                          :: e_0         !< electric conductibility
    sll_real64                          :: mu_0        !< magnetic permeability
    fftw_plan                           :: p_x_array   !< x pointer to memory
@@ -75,8 +75,6 @@ type maxwell_2d_periodic_plan_cartesian_par
    sll_real64, dimension(:), pointer   :: kx          !< x wave number
    sll_real64, dimension(:), pointer   :: ky          !< y wave number
 end type maxwell_2d_periodic_plan_cartesian_par
-
-include 'fftw3.f03'
 
 sll_int32, private :: i
 sll_int32, private :: j
@@ -125,10 +123,9 @@ contains
     plan%ncx = ncx
     plan%ncy = ncy
 
-    FFTW_ALLOCATE(plan%fft_x_array,ncx,sz_x_array,plan%p_x_array)
-    FFTW_ALLOCATE(plan%fft_y_array,ncy,sz_y_array,plan%p_y_array)
+    FFTW_ALLOCATE(plan%fft_x_array,ncx/2+1,sz_x_array,plan%p_x_array)
+    FFTW_ALLOCATE(plan%fft_y_array,ncy/2+1,sz_y_array,plan%p_y_array)
 
-   
     NEW_FFTW_PLAN_R2C_1D(plan%fwx,ncx,plan%d_dx,plan%fft_x_array)
     NEW_FFTW_PLAN_C2R_1D(plan%bwx,ncx,plan%fft_x_array,plan%d_dx)
     NEW_FFTW_PLAN_R2C_1D(plan%fwy,ncy,plan%d_dy,plan%fft_y_array)
@@ -169,7 +166,6 @@ contains
   end function new_maxwell_2d_periodic_plan_cartesian_par
 
 !********************************************************************************
-
 
   !> Solve faraday equation (TE mode)
   subroutine faraday_te(plan,dt,ex,ey)
