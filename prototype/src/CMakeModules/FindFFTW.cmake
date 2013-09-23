@@ -33,7 +33,7 @@ ENDIF()
 #IF(FFTW_MPI_INCLUDE_DIR)
 #   SET(FFTW_INCLUDE_DIRS ${FFTW_INCLUDE_DIRS} ${FFTW_MPI_INCLUDE_DIR})
 #ENDIF(FFTW_MPI_INCLUDE_DIR)
-#
+
 FIND_LIBRARY(FFTW_LIBRARY NAMES fftw3 
                           HINTS ${TRIAL_PATHS} $ENV{FFTW_LIB}
                           PATH_SUFFIXES lib lib64)
@@ -58,7 +58,7 @@ ENDIF()
 #   MESSAGE(STATUS "No mpi fftw3 installation")
 #ENDIF()
 
-IF($ENV{HOSTNAME} MATCHES "hydra")
+IF(USE_MKL)
 
    FIND_PATH(FFTW_INCLUDE_DIRS NAMES fftw3.f 
                               HINTS $ENV{MKLROOT}/include
