@@ -35,16 +35,8 @@ IF(NOT MPI_FOUND)
 ENDIF(NOT MPI_FOUND)
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
-
 IF(NOT HDF5_FOUND)
    INCLUDE(HDF5Config)
-   IF(HDF5_ENABLE_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE()
-      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
-      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
-   ENDIF()
 ENDIF(NOT HDF5_FOUND)
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)

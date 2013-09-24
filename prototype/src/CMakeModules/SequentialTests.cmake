@@ -9,6 +9,7 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
 
 ADD_TEST(NAME constants                 COMMAND test_constants)
 ADD_TEST(NAME timer                     COMMAND test_timer)
+SET_TESTS_PROPERTIES(timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_TEST(NAME logical_meshes            COMMAND test_logical_meshes)
 ADD_TEST(NAME tridiagonal               COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange                  COMMAND test_lagrange)
@@ -21,16 +22,15 @@ ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
-ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
 
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
@@ -45,14 +45,8 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   ADD_TEST(NAME qns2d_with_finite_diff_seq 
-            COMMAND test_qns2d_with_finite_diff_seq)
-   SET_TESTS_PROPERTIES(qns2d_with_finite_diff_seq 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ADD_TEST(NAME qns2d_angular_spectral_method_seq 
-            COMMAND test_qns2d_angular_spectral_method_seq)
-   SET_TESTS_PROPERTIES(qns2d_angular_spectral_method_seq 
-                        PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ADD_TEST(NAME qns2d COMMAND test_qn_solver_2d)
+   SET_TESTS_PROPERTIES(qns2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #consider merging the following 2 tests
    ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
@@ -60,6 +54,13 @@ IF(NOT STDF95)
    ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
    ADD_TEST(NAME advection_field COMMAND test_advection_field)
+   ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
+   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_fields_alternative)
+   #ADD_TEST(NAME general_coordinate_qns COMMAND test_qns_general_coordinates)
+
+   SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   #SET_TESTS_PROPERTIES(general_coordinate_qns PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    IF(FFTW_ENABLED)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
@@ -81,9 +82,10 @@ SET_TESTS_PROPERTIES(odd_degree_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION
 
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
+IF(NOT STDF95)
 ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
 				    test_mapped_meshes_2d)
-IF(NOT STDF95)
+
 ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 
 ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
@@ -96,8 +98,6 @@ ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
 
-ADD_TEST(NAME file_io COMMAND test_io)
-SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 IF(NOT STDF95)
 ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
@@ -108,11 +108,3 @@ IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)
    SET_TESTS_PROPERTIES(opencl PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF(FORTRANCL_FOUND)
-
-IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
-   IF(HDF5_PARALLEL_ENABLED)
-   ELSE()
-      ADD_TEST(NAME mudpack COMMAND tmud34sp tmud24sp )
-      SET(mudpack PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ENDIF()
-ENDIF()

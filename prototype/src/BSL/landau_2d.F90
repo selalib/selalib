@@ -2,14 +2,12 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_maxwell_solvers.h"
+!#include "sll_maxwell_solvers.h"
+#include "sll_poisson_solvers.h"
 
 use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
-use sll_poisson_2d_periodic
-!use sll_maxwell
-!use sll_maxwell_2d_fdtd
 
 use sll_utilities, only: int2string
 
@@ -93,12 +91,12 @@ SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
 
 call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
-                         eta2_min, eta2_max, nc_eta2, rho, error)
+                         eta2_min, eta2_max, nc_eta2, error)
 
-call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, PERIODIC_SPLINE )
-call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, PERIODIC_SPLINE )
-call spl_eta3%initialize(nc_eta3+1, eta3_min, eta3_max, PERIODIC_SPLINE )
-call spl_eta4%initialize(nc_eta4+1, eta4_min, eta4_max, PERIODIC_SPLINE )
+call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC )
+call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC )
+call spl_eta3%initialize(nc_eta3+1, eta3_min, eta3_max, SLL_PERIODIC )
+call spl_eta4%initialize(nc_eta4+1, eta4_min, eta4_max, SLL_PERIODIC )
 
 interp_1 => spl_eta1
 interp_2 => spl_eta2
@@ -308,8 +306,8 @@ subroutine plot_field(f, fname, iplot)
    call int2string(iplot,cplot)
 
    open(11, file=fname//cplot//".dat")
-   do i = 1, size(ex,1)
-      do j = 1, size(ex,2)
+   do i = 1, size(f,1)
+      do j = 1, size(f,2)
          x = eta1_min + (i-1)*delta_eta1
          y = eta2_min + (j-1)*delta_eta2
          write(11,*) x,y,f(i,j)
