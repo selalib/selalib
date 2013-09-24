@@ -12,10 +12,6 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
-<<<<<<< HEAD
-=======
-
->>>>>>> origin/prototype-devel
   use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
