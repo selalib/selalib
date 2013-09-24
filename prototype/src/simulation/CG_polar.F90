@@ -418,6 +418,7 @@ program cg_polar
     do i = 2,nr
       r   = rmin+real(i-1,f64)*dr
       w0  = w0+r*f(i,j)
+      !w0  = w0+f(i,j)
       l10 = l10+r*abs(f(i,j))
       l20 = l20+r*f(i,j)**2
       e0  = e0+r*(plan_sl%adv%field(1,i,j)**2 + &
@@ -561,6 +562,7 @@ program cg_polar
       do i = 2,nr
         r  = rmin+real(i-1,f64)*dr
         w  = w+r*f(i,j)
+        !w  = w+f(i,j)
         l1 = l1+r*abs(f(i,j))
         l2 = l2+r*f(i,j)**2
         e  = e+r*(plan_sl%adv%field(1,i,j)**2 + &

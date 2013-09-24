@@ -17,7 +17,7 @@ module polar_advection
      sll_int32 :: nr,ntheta
      type(sll_cubic_spline_2D), pointer :: spl_f
      sll_int32 :: time_scheme
-     sll_real64, dimension(:,:,:), pointer :: field
+     sll_real64, dimension(:,:,:), pointer :: field,carac
   end type sll_plan_adv_polar
 
   !>type sll_SL_polar
@@ -60,6 +60,7 @@ contains
 
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%field(2,nr+1,ntheta+1),err)
+    SLL_ALLOCATE(this%carac(2,nr+1,ntheta+1),err)
 
     this%field=0.0_f64
     this%rmin=rmin
@@ -858,6 +859,8 @@ end subroutine advect_CG_polar2
     sll_real64,dimension(:,:,:),allocatable::carac
     sll_real64,dimension(:,:),allocatable::buf2d
 
+    
+
     nr=plan%nr
     ntheta=plan%ntheta
     dt=plan%dt
@@ -872,16 +875,24 @@ end subroutine advect_CG_polar2
     !interp_case=3
     !ppm_order=1
 
-    allocate(carac(2,-1:nr,-1:ntheta))
-    allocate(buf2d(0:nr-1,0:ntheta-1))
+    allocate(carac(2,-1:nr+1,-1:ntheta))
+    allocate(buf2d(0:nr,0:ntheta-1))
     call compute_carac(plan,nr,ntheta,dt,dr,dtheta,rmin,rmax,carac)
 !do i=-1,nr
 !do j=-1,ntheta
 !print*,i,j,carac(1,i,j), carac(2,i,j)
 !enddo
 !enddo
-    call advect2d_CSL_CG(geom_x,fn(1:nr,1:ntheta),nr,ntheta,buf2d,interp_case,carac,PPM_order)
-    fnp1=fn
+    do i=1,nr+1
+      fnp1(i,1:ntheta) = (rmin+real(i-1,f64)*(rmax-rmin)/real(nr,f64))*fn(i,1:ntheta)
+    enddo
+    call advect2d_CSL_CG(geom_x,fnp1(1:nr+1,1:ntheta),nr,ntheta,buf2d,interp_case,carac,PPM_order)
+    !fnp1=fn
+
+    do i=1,nr+1
+      fnp1(i,1:ntheta) = fnp1(i,1:ntheta)/(rmin+real(i-1,f64)*(rmax-rmin)/real(nr,f64))
+    enddo
+
 
 !print*,fn
 !stop
@@ -899,7 +910,7 @@ end subroutine advect_CG_polar2
     sll_real64,intent(in) :: dt, dr, dtheta, rmin, rmax
     sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
     sll_int32 :: i,j,maxiter,iter,kr,k
-    sll_real64,dimension(2,-1:nr,-1:ntheta),intent(inout)::carac  
+    sll_real64,dimension(2,-1:nr+1,-1:ntheta),intent(inout)::carac  
 
 
     !nr=plan%nr
@@ -1057,8 +1068,8 @@ end subroutine advect_CG_polar2
           !carac(1,-1,j) = carac(1,nr-1,j)-nr*dr
           !carac(2,-1,j) = carac(2,nr-1,j)      
           
-          !carac(1,nr,j) = carac(1,nr-1,j)+dr
-          !carac(2,nr,j) = carac(2,nr-1,j)          
+          carac(1,nr+1,j) = carac(1,nr,j)+dr
+          carac(2,nr+1,j) = carac(2,nr,j)          
           carac(1,-1,j) = carac(1,0,j)-dr
           carac(2,-1,j) = carac(2,0,j)      
        enddo
@@ -1066,6 +1077,164 @@ end subroutine advect_CG_polar2
 !stop
 
   end subroutine compute_carac
+
+  subroutine compute_plan_carac(plan,nr,ntheta,dt,dr,dtheta,rmin,rmax)
+
+    implicit none
+
+    type(sll_plan_adv_polar),pointer :: plan
+    sll_int32,intent(in) :: nr, ntheta
+    sll_real64,intent(in) :: dt, dr, dtheta, rmin, rmax
+    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
+    sll_int32 :: i,j,maxiter,iter,kr,k
+    !sll_real64,dimension(2,-1:nr,-1:ntheta),intent(inout)::carac  
+
+
+    !nr=plan%nr
+    !ntheta=plan%ntheta
+    !dt=plan%dt
+    !dr=plan%dr
+    !dtheta=plan%dtheta
+    !rmin=plan%rmin
+
+    if (plan%time_scheme==1) then
+       !explicit Euler
+       do i=1,nr+1
+          do j=1,ntheta+1
+             theta=real(j-1,f64)*dtheta
+             r=rmin+real(i-1,f64)*dr
+             theta=theta-dt*plan%field(1,i,j)/r
+             r=r+dt*plan%field(2,i,j)/r
+             plan%carac(1,i,j)=r
+             plan%carac(2,i,j)=theta
+!print*,plan%field(1,i,j)/r
+!print*,plan%field(2,i,j)/r
+          enddo
+       enddo
+
+    else if (plan%time_scheme==4) then
+       !symplectic Verlet with linear interpolation
+
+       !we fix the tolerance and the maximum of iteration
+       tolr=1e-12
+       tolth=1e-12
+       !tolr=1e-4
+       !tolth=1e-4
+       maxiter=10!00
+
+       do j=1,ntheta+1
+          do i=1,nr+1
+             !initialization for r interpolation
+             rr=rmin+real(i-1,f64)*dr+dt/2.0_f64*plan%field(2,i,j)/(rmin+real(i-1,f64)*dr)
+             rrn=0.0_f64
+             r=0.0_f64
+             kr=1
+             iter=0
+
+             !call correction_r(rr,rmin,rmax)
+             do while (iter<maxiter .and. abs(rrn-rr)>tolr)
+                r=(rr-rmin)/(rmax-rmin)
+                r=r*real(nr,f64)
+                kr=floor(r)+1
+                r=r-real(kr-1,f64)
+                rrn=rr
+                if (kr>nr) then
+                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*plan%field(2,nr+1,j)/rr
+                else if (kr>=1 .and. kr<=nr) then
+                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*((1.0_f64-r)*plan%field(2,kr,j)/rr+r*plan%field(2,kr+1,j)/rr)
+                else
+                   rr=rmin+real(i-1,f64)*dr+0.5_f64*dt*plan%field(2,1,j)/rr
+                   !print*,kr
+                   !print*,'error : kr is not in range'
+                   !print*,'exiting'
+                   !stop
+                end if
+                !call correction_r(rr,rmin,rmax)
+
+                iter=iter+1
+             end do
+             !if (iter==maxiter .and. abs(rrn-rr)>tolr) then
+             !   print*,'not enought iterations for r in symplectic Verlet',i,j,kr,rr,rrn
+             !   stop
+             !end if
+             r=(rr-rmin)/(rmax-rmin)
+             r=r*real(nr,f64)
+             kr=floor(r)+1
+             r=r-real(kr-1,f64)
+
+             !initialization for theta interpolation
+             ttheta=real(j-1,f64)*dtheta-dt*plan%field(1,i,j)/(rmin+real(i-1,f64)*dr)
+             tthetan=3.0_f64*sll_pi
+             theta=0.0_f64
+             k=1
+             iter=0
+
+             !call correction_theta(theta)
+             do while (iter<maxiter .and. abs(tthetan-ttheta)>tolth .and. &
+                  & abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth .and.  abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth)
+                theta=ttheta/(2.0_f64*sll_pi)
+                theta=theta-real(floor(theta),f64)
+                theta=theta*real(ntheta,f64)
+                k=floor(theta)+1
+                theta=theta-real(k-1,f64)
+                if (k>ntheta) then
+                   k=modulo(k-1,ntheta)+1
+                !   theta=0.0_f64
+                end if
+                tthetan=ttheta
+                if (kr>nr) then
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,nr+1,k)/rr+theta*plan%field(1,nr+1,k+1)/rr)
+                   ttheta=ttheta-0.5_f64*dt*plan%field(1,nr+1,j)/rr
+                else if (kr>=1 .and. kr<=nr) then
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(1,kr,k)/rr+r*plan%field(1,kr+1,k)/rr) &
+                        & +theta*((1.0_f64-r)*plan%field(1,kr,k+1)/rr+r*plan%field(1,kr+1,k+1)/rr))
+                   ttheta=ttheta-0.5_f64*dt*((1.0_f64-r)*plan%field(1,kr,j)/rr+r*plan%field(1,kr+1,j)/rr)
+                else
+                   ttheta=real(j-1,f64)*dtheta-0.5_f64*dt*((1.0_f64-theta)*plan%field(1,1,k)/rr+theta*plan%field(1,1,k+1)/rr)
+                   ttheta=ttheta-0.5_f64*dt*plan%field(1,1,j)/rr
+                end if
+                !call correction_theta(ttheta)
+
+                iter=iter+1
+             end do
+             !if (iter==maxiter .and. abs(tthetan-ttheta)>tolth .and. abs(tthetan+2.0_f64*sll_pi-ttheta)>tolth &
+             !     & .and.abs(tthetan-ttheta-2.0_f64*sll_pi)>tolth) then
+             !   print*,'not enought iterations for theta in symplectic Verlet',i,j,k,ttheta,tthetan
+             !   stop
+             !end if
+             theta=ttheta/(2.0_f64*sll_pi)
+             theta=theta-real(floor(theta),f64)
+             theta=theta*real(ntheta,f64)
+             k=floor(theta)+1
+             theta=theta-real(k-1,f64)
+             if (k>ntheta) then
+                k=modulo(k-1,ntheta)+1
+             !   theta=0.0_f64
+             end if
+             if (kr>nr) then
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(2,nr+1,k)/rr+theta*plan%field(2,nr+1,k+1)/rr)
+             else if (kr>=1 .and. kr<=nr) then
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*((1.0_f64-r)*plan%field(2,kr,k)/rr+r*plan%field(2,kr+1,k)/rr) &
+                     & +theta*((1.0_f64-r)*plan%field(2,kr,k+1)/rr+r*plan%field(2,kr+1,k+1)/rr))
+             else
+                rr=rr+0.5_f64*dt*((1.0_f64-theta)*plan%field(2,1,k)/rr+theta*plan%field(2,1,k+1)/rr)
+             end if
+             !call correction_r(rr,rmin,rmax)
+!if ((i==1) .and. (j==1)) then
+!print*,rr,ttheta
+!endif
+             plan%carac(1,i,j)=rr
+             plan%carac(2,i,j)=ttheta
+
+          end do
+       end do
+
+    endif
+
+
+
+  end subroutine compute_plan_carac
+
 
 
 
@@ -1463,9 +1632,9 @@ end subroutine advect_CG_polar2
   subroutine advect2d_CSL_CG(dom,f,N0,N1,buf2d,interp_case,carac,ppm_order) !conservative 2d remapping algorithm
     sll_real64,dimension(0:1,0:1),intent(in)::dom
     sll_int32,intent(in)::N0,N1,interp_case,ppm_order
-    sll_real64,dimension(0:N0-1,0:N1-1)::buf2d
-    sll_real64,dimension(1:N0,1:N1)::f
-    sll_real64,dimension(2,-1:N0,-1:N1)::carac
+    sll_real64,dimension(0:N0,0:N1-1)::buf2d
+    sll_real64,dimension(1:N0+1,1:N1)::f
+    sll_real64,dimension(2,-1:N0+1,-1:N1)::carac
     sll_real64::xx(4),yy(4),xA,yA,xB,yB,res,xx0,yy0,x,xxn,y,yyn,dx,dy
     sll_real64::xA_loc,yA_loc,xB_loc,yB_loc
     sll_int32::i,j,ii(4),jj(4),im1,jm1,i0,j0,i1,j1,s,k,sx,sy,minfl,maxfl,ix,iii,iy,iiii,jjjj
@@ -1481,31 +1650,34 @@ end subroutine advect_CG_polar2
 		fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1,xxx,yyy
     sll_int32::im2,ib,ip1,ip2,jm2,jb,jp1,jp2   
 
-
     nbmax=30
     !print*,f(1,33)
     !return
     allocate(tt(nbmax,2),cell(2,nbmax,4),tcell(nbmax,4),intx(0:nbmax),inty(0:nbmax),dir(nbmax,2))
     do j=0,N1-1
-      do i=0,N0-1
+      do i=0,N0
         buf2d(i,j)=f(i+1,j+1)
       enddo
     enddo
     dx=dom(1,0)/real(N0,f64)
     dy=dom(1,1)/real(N1,f64)
 
+
     if ((interp_case==3) .or. (interp_case==6) .or. (interp_case==7)) then
-      allocate(aretesh(0:N0-1,0:N1-1),aretesv(0:N0-1,0:N1-1),sommets(0:N0-1,0:N1-1))
-      call aux(N0,N1,buf2d,aretesh,aretesv,sommets,ppm_order,carac,dom)
+      allocate(aretesh(0:N0,0:N1-1),aretesv(0:N0,0:N1-1),sommets(0:N0,0:N1-1))
+      allocate(aretesvg(0:N0,0:N1-1),aretesvd(0:N0,0:N1-1),areteshb(0:N0,0:N1-1),areteshh(0:N0,0:N1-1),&
+      sommetsbg(0:N0,0:N1-1),sommetsbd(0:N0,0:N1-1),sommetshg(0:N0,0:N1-1),sommetshd(0:N0,0:N1-1))
+      call aux(N0,N1,buf2d,aretesh,aretesv,sommets,ppm_order,dom)
     endif
+    
     if (interp_case==4) then
-      allocate(aretesvg(0:N0-1,0:N1-1),aretesvd(0:N0-1,0:N1-1),areteshb(0:N0-1,0:N1-1),areteshh(0:N0-1,0:N1-1),&
-      sommetsbg(0:N0-1,0:N1-1),sommetsbd(0:N0-1,0:N1-1),sommetshg(0:N0-1,0:N1-1),sommetshd(0:N0-1,0:N1-1))
+      allocate(aretesvg(0:N0,0:N1-1),aretesvd(0:N0,0:N1-1),areteshb(0:N0,0:N1-1),areteshh(0:N0,0:N1-1),&
+      sommetsbg(0:N0,0:N1-1),sommetsbd(0:N0,0:N1-1),sommetshg(0:N0,0:N1-1),sommetshd(0:N0,0:N1-1))
       call aux2(N0,N1,buf2d,areteshb,areteshh,aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,ppm_order,carac,dom)
     endif
 
     do j=0,N1-1
-      do i=0,N0-1
+      do i=0,N0
 
 	f(i+1,j+1)=0._f64
 
@@ -1549,7 +1721,7 @@ end subroutine advect_CG_polar2
 !print*,i,j,xx(1),yy(1),xx(2),yy(2),xx(3),yy(3),xx(4),yy(4)
 !endif
 
-	!stop
+	
         
         ii(1)=floor(xx(1))
         ii(2)=floor(xx(2))
@@ -1666,7 +1838,7 @@ end subroutine advect_CG_polar2
 
 !#ifdef COMPUTE
 
-if ((ell==1) .or. (ell==4) .or. ((ell==2) .and. (i==N0-1)) .or. ((ell==3) .and. (j==N1-1))) then
+if ((ell==1) .or. (ell==4) .or. ((ell==2) .and. (i==N0)) .or. ((ell==3) .and. (j==N1-1))) then
         xB_loc=xx(ell)
         yB_loc=yy(ell)
         do k=2,nbx(ell)+nby(ell)+2
@@ -1775,32 +1947,47 @@ endif
 
     if ((interp_case==3) .or. (interp_case==6) .or. (interp_case==7)) then
       deallocate(aretesh,aretesv,sommets)
+      deallocate(areteshb,areteshh,aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd)
     endif
     if (interp_case==4) then
       deallocate(areteshb,areteshh,aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd)
     endif
 
+   
+
   end subroutine advect2d_CSL_CG
 
-	subroutine aux(N0,N1,f,aretesh,aretesv,sommets,ordre,carac,dom) !used in PPM case
+	subroutine aux(N0,N1,f,aretesh,aretesv,sommets,ordre,dom) !used in PPM case
 
 		sll_int32,intent(in)::N0,N1,ordre
                 sll_real64,dimension(0:1,0:1),intent(in)::dom
-		real(f64),dimension(0:N0-1,0:N1-1),intent(in)::f
-                sll_real64,dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
+		real(f64),dimension(0:N0,0:N1-1),intent(in)::f
+            !    sll_real64,dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
 		sll_int32::i,j,im3,im2,im1,ib,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2
-		real(f64),dimension(0:N0-1,0:N1-1),intent(inout)::aretesh,aretesv,sommets
+		real(f64),dimension(0:N0,0:N1-1),intent(inout)::aretesh,aretesv,sommets
 !		print*,N0,N1,ordre
 !stop
 
-		do i=0,N0-1
+		do i=0,N0
 			do j=0,N1-1
-				im3=modulo(i-3,N0)
-				im2=modulo(i-2,N0)
-				im1=modulo(i-1,N0)
-				ib=modulo(i,N0)
-				ip1=modulo(i+1,N0)
-				ip2=modulo(i+2,N0)
+				im3=i-3
+				im2=i-2
+				im1=i-1
+				ip1=i+1
+				ip2=i+2
+				if(i-3<=0)im3=0;
+				if(i-2<=0)im2=0;
+				if(i-1<=0)im1=0;
+				ib=i;
+				if(i+1>=N0)ip1=N0;
+				if(i+2>=N0)ip2=N0;
+				
+				!im3=modulo(i-3,N0)
+				!im2=modulo(i-2,N0)
+				!im1=modulo(i-1,N0)
+				!ib=modulo(i,N0)
+				!ip1=modulo(i+1,N0)
+				!ip2=modulo(i+2,N0)
 				jm3=modulo(j-3,N1)
 				jm2=modulo(j-2,N1)
 				jm1=modulo(j-1,N1)
@@ -1827,14 +2014,28 @@ endif
 			end do
 		end do	
 
-		do i=0,N0-1
+		do i=0,N0
 			do j=0,N1-1
-				im3=modulo(i-3,N0)
-				im2=modulo(i-2,N0)
-				im1=modulo(i-1,N0)
-				ib=modulo(i,N0)
-				ip1=modulo(i+1,N0)
-				ip2=modulo(i+2,N0)
+				!im3=modulo(i-3,N0)
+				!im2=modulo(i-2,N0)
+				!im1=modulo(i-1,N0)
+				!ib=modulo(i,N0)
+				!ip1=modulo(i+1,N0)
+				!ip2=modulo(i+2,N0)
+				im3=i-3
+				im2=i-2
+				im1=i-1
+				ip1=i+1
+				ip2=i+2
+				if(i-3<=0)im3=0;
+				if(i-2<=0)im2=0;
+				if(i-1<=0)im1=0;
+				ib=i;
+				if(i+1>=N0)ip1=N0;
+				if(i+2>=N0)ip2=N0;
+				
+				
+				
 				jm3=modulo(j-3,N1)
 				jm2=modulo(j-2,N1)
 				jm1=modulo(j-1,N1)
@@ -1862,10 +2063,10 @@ endif
 
 		integer,intent(in)::N0,N1,ordre
                 real(f64),dimension(0:1,0:1),intent(in)::dom
-		real(f64),dimension(0:N0-1,0:N1-1),intent(in)::f
+		real(f64),dimension(0:N0,0:N1-1),intent(in)::f
                 real(f64),dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
-		integer::i,j,im3,im2,im1,ib,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2
-		real(f64),dimension(0:N0-1,0:N1-1),intent(inout)::areteshb,areteshh,aretesvg,aretesvd,&
+		integer::i,j,im3,im2,im1,ib,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2,i3
+		real(f64),dimension(0:N0,0:N1-1),intent(inout)::areteshb,areteshh,aretesvg,aretesvd,&
                 sommetsbg,sommetsbd,sommetshg,sommetshd
     real(f64) ::w(-ordre:ordre+1),tmp,ww(-ordre:ordre)
     
@@ -2004,15 +2205,17 @@ endif
     !enddo
     !stop
     do j=0,N1-1
-      do i=0,N0-1
+      do i=0,N0
         tmp=0._f64
         do ii=r,s-1
-          tmp=tmp+ww(r+s-1-ii)*f(modulo(i+ii-1,N0),j)
+          i3=i+ii-1;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+          tmp=tmp+ww(r+s-1-ii)*f(i3,j)
         enddo
         aretesvg(i,j)=tmp
         tmp=0._f64
         do ii=r,s-1
-          tmp=tmp+ww(ii)*f(modulo(i+ii,N0),j)
+          i3=i+ii;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+          tmp=tmp+ww(ii)*f(i3,j)
         enddo
         aretesvd(i,j)=tmp
         tmp=0._f64
@@ -2029,117 +2232,34 @@ endif
     enddo
 
     do j=0,N1-1
-      do i=0,N0-1
+      do i=0,N0
         tmp=0._f64
         do ii=r,s-1
-          tmp=tmp+ww(ii)*areteshh(modulo(i+ii,N0),j)
+          i3=i+ii;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+          tmp=tmp+ww(ii)*areteshh(i3,j)
         enddo
         sommetshd(i,j)=tmp
         tmp=0._f64
         do ii=r,s-1
-          tmp=tmp+ww(r+s-1-ii)*areteshh(modulo(i+ii-1,N0),j)
+          i3=i+ii-1;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+          tmp=tmp+ww(r+s-1-ii)*areteshh(i3,j)
         enddo
         sommetshg(i,j)=tmp
         tmp=0._f64
         do ii=r,s-1
-          tmp=tmp+ww(ii)*areteshb(modulo(i+ii,N0),j)
+          i3=i+ii;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+          tmp=tmp+ww(ii)*areteshb(i3,j)
         enddo
         sommetsbd(i,j)=tmp
         tmp=0._f64
         do ii=r,s-1
-          tmp=tmp+ww(r+s-1-ii)*areteshb(modulo(i+ii-1,N0),j)
+          i3=i+ii-1;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+          tmp=tmp+ww(r+s-1-ii)*areteshb(i3,j)
         enddo
         sommetsbg(i,j)=tmp
       enddo
     enddo
 
-
-
-    if(0==1)then
-
-
-		do i=0,N0-1
-		  do j=0,N1-1
-	  	    im3=modulo(i-3,N0)
-		    im2=modulo(i-2,N0)
-		    im1=modulo(i-1,N0)
-		    ib=modulo(i,N0)
-		    ip1=modulo(i+1,N0)
-		    ip2=modulo(i+2,N0)
-		    jm3=modulo(j-3,N1)
-		    jm2=modulo(j-2,N1)
-		    jm1=modulo(j-1,N1)
-		    jb=modulo(j,N1)
-		    jp1=modulo(j+1,N1)
-		    jp2=modulo(j+2,N1)
-
-		    if (ordre==1) then
-                      aretesvg(i,j)=-1._f64/6._f64*f(im2,jb)+5._f64/6._f64*f(im1,jb) &
-		      +1._f64/3._f64*f(ib,jb)
-		      aretesvd(i,j)=1._f64/3._f64*f(im1,jb)+5._f64/6._f64*f(ib,jb) &
-		      -1._f64/6._f64*f(ip1,jb)
-		      areteshb(i,j)=-1._f64/6._f64*f(ib,jm2)+5._f64/6._f64*f(ib,jm1) &
-		      +1._f64/3._f64*f(ib,jb)
-		      areteshh(i,j)=1._f64/3._f64*f(ib,jm1)+5._f64/6._f64*f(ib,jb) &
-		      -1._f64/6._f64*f(ib,jp1)
-		    else if (ordre==2) then
-                      aretesvg(i,j)=1._f64/30._f64*f(im3,jb)-13._f64/60._f64*f(im2,jb) &
-		      +47._f64/60._f64*f(im1,jb)+9._f64/20._f64*f(ib,jb) &
-		      -1._f64/20._f64*f(ip1,jb)
-		      aretesvd(i,j)=-1._f64/20._f64*f(im2,jb)+9._f64/20._f64*f(im1,jb) &
-		      +47._f64/60._f64*f(ib,jb)-13._f64/60._f64*f(ip1,jb) &
-		      +1._f64/30._f64*f(ip2,jb)
-		      areteshb(i,j)=1._f64/30._f64*f(ib,jm3)-13._f64/60._f64*f(ib,jm2) &
-		      +47._f64/60._f64*f(ib,jm1)+9._f64/20._f64*f(ib,jb) &
-		      -1._f64/20._f64*f(ib,jp1)
-		      areteshh(i,j)=-1._f64/20._f64*f(ib,jm2)+9._f64/20._f64*f(ib,jm1) &
-		      +47._f64/60._f64*f(ib,jb)-13._f64/60._f64*f(ib,jp1) &
-		      +1._f64/30._f64*f(ib,jp2)
-		    end if
-		  end do
-		end do	
-
-		do i=0,N0-1
-		  do j=0,N1-1
-		    im3=modulo(i-3,N0)
-		    im2=modulo(i-2,N0)
-		    im1=modulo(i-1,N0)
-		    ib=modulo(i,N0)
-		    ip1=modulo(i+1,N0)
-		    ip2=modulo(i+2,N0)
-		    jm3=modulo(j-3,N1)
-		    jm2=modulo(j-2,N1)
-		    jm1=modulo(j-1,N1)
-		    jb=modulo(j,N1)
-		    jp1=modulo(j+1,N1)
-		    jp2=modulo(j+2,N1)
-
-		    if (ordre==1) then
-		      sommetsbg(i,j)=-1._f64/6._f64*aretesvg(ib,jm2)+5._f64/6._f64*aretesvg(ib,jm1) &
-		      +1._f64/3._f64*aretesvg(ib,jb)
-		      sommetshg(i,j)=1._f64/3._f64*aretesvg(ib,jm1)+5._f64/6._f64*aretesvg(ib,jb) &
-		      -1._f64/6._f64*aretesvg(ib,jp1)
-		      sommetsbd(i,j)=-1._f64/6._f64*aretesvd(ib,jm2)+5._f64/6._f64*aretesvd(ib,jm1) &
-		      +1._f64/3._f64*aretesvd(ib,jb)
-		      sommetshd(i,j)=1._f64/3._f64*aretesvd(ib,jm1)+5._f64/6._f64*aretesvd(ib,jb) &
-		      -1._f64/6._f64*aretesvd(ib,jp1)
-		    else if (ordre==2) then
-		      sommetsbg(i,j)=1._f64/30._f64*aretesvg(ib,jm3)-13._f64/60._f64*aretesvg(ib,jm2) &
-		      +47._f64/60._f64*aretesvg(ib,jm1)+9._f64/20._f64*aretesvg(ib,jb) &
-		      -1._f64/20._f64*aretesvg(ib,jp1)
-		      sommetshg(i,j)=-1._f64/20._f64*aretesvg(ib,jm2)+9._f64/20._f64*aretesvg(ib,jm1) &
-		      +47._f64/60._f64*aretesvg(ib,jb)-13._f64/60._f64*aretesvg(ib,jp1) &
-		      +1._f64/30._f64*aretesvg(ib,jp2)
-		      sommetsbd(i,j)=1._f64/30._f64*aretesvd(ib,jm3)-13._f64/60._f64*aretesvd(ib,jm2) &
-		      +47._f64/60._f64*aretesvd(ib,jm1)+9._f64/20._f64*aretesvd(ib,jb) &
-		      -1._f64/20._f64*aretesvd(ib,jp1)
-		      sommetshd(i,j)=-1._f64/20._f64*aretesvd(ib,jm2)+9._f64/20._f64*aretesvd(ib,jm1) &
-		      +47._f64/60._f64*aretesvd(ib,jb)-13._f64/60._f64*aretesvd(ib,jp1) &
-		      +1._f64/30._f64*aretesvd(ib,jp2)
-		     end if
-	          end do
-		end do
-      endif
 	end subroutine aux2
 	
 	
@@ -2148,7 +2268,7 @@ endif
 
 	        sll_int32,intent(in)::N0,N1,i,j,cas
 		real(f64),intent(in)::x1,y1,x2,y2
-		real(f64),dimension(0:N0-1,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+		real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
                 sommetsbg,sommetsbd,sommetshg,sommetshd
 		real(f64)::xx1,xx2,yy1,yy2,aux,dax,day,bx,by,c,w00,w10,w01,w20,w02,w11,w21,w12,w22,&
                 c00,c10,c01,c20,c02,c11,c12,c21,c22,sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
@@ -2160,11 +2280,31 @@ endif
 		  return
 		endif
 
-		im2=modulo(i-2,N0)
-		im1=modulo(i-1,N0)
-		ib=modulo(i,N0)
-		ip1=modulo(i+1,N0)
-		ip2=modulo(i+2,N0)
+
+		!im2=modulo(i-2,N0)
+		!im1=modulo(i-1,N0)
+		!ib=modulo(i,N0)
+		!ip1=modulo(i+1,N0)
+		!ip2=modulo(i+2,N0)
+		im2=i-2
+		im1=i-1
+		ib=i
+		ip1=i+1
+		ip2=i+2
+		
+		if(i-2<=0)im2=0;
+		if(i-1<=0)im1=0;
+		if(i<=0)ib=0;
+		if(i+1<=0)ip1=0;
+		if(i+2<=0)ip2=0;
+
+		if(i-2>=N0)im2=N0;
+		if(i-1>=N0)im1=N0;		
+		if(i>=N0)ib=N0;
+		if(i+1>=N0)ip1=N0;
+		if(i+2>=N0)ip2=N0;
+
+		
 		jm2=modulo(j-2,N1)
 		jm1=modulo(j-1,N1)
 		jb=modulo(j,N1)
@@ -2318,7 +2458,7 @@ endif
 
 	        sll_int32,intent(in)::N0,N1,i,j,cas
 		real(f64),intent(in)::x1,x2
-		real(f64),dimension(0:N0-1,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+		real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
                 sommetsbg,sommetsbd,sommetshg,sommetshd
 		real(f64)::xx1,xx2,yy,aux,day,by,w01,w02,w21,w22,w00,w10,w20,w11,w12,c01,c02,c21,c22,c00,c10,c20,c11,c12,&
 		sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
@@ -2330,11 +2470,31 @@ endif
 		  return
 		endif
 
-		im2=modulo(i-2,N0)
-		im1=modulo(i-1,N0)
-		ib=modulo(i,N0)
-		ip1=modulo(i+1,N0)
-		ip2=modulo(i+2,N0)
+		!im2=modulo(i-2,N0)
+		!im1=modulo(i-1,N0)
+		!ib=modulo(i,N0)
+		!ip1=modulo(i+1,N0)
+		!ip2=modulo(i+2,N0)
+		im2=i-2
+		im1=i-1
+		ib=i
+		ip1=i+1
+		ip2=i+2
+		
+		if(i-2<=0)im2=0;
+		if(i-1<=0)im1=0;
+		if(i<=0)ib=0;
+		if(i+1<=0)ip1=0;
+		if(i+2<=0)ip2=0;
+
+		if(i-2>=N0)im2=N0;
+		if(i-1>=N0)im1=N0;		
+		if(i>=N0)ib=N0;
+		if(i+1>=N0)ip1=N0;
+		if(i+2>=N0)ip2=N0;
+
+		
+		
 		jm2=modulo(j-2,N1)
 		jm1=modulo(j-1,N1)
 		jb=modulo(j,N1)
@@ -2453,7 +2613,7 @@ endif
 
 	        sll_int32,intent(in)::N0,N1,i,j,cas
 		real(f64),intent(in)::y1,y2
-		real(f64),dimension(0:N0-1,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,&
+		real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,&
                 aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd
 		real(f64)::xx,yy1,yy2,aux,dax,bx,by,c,w00,w10,w20,w11,w12,w01,w02,w21,w22,&
 		c00,c10,c20,c11,c12,c01,c02,c21,c22,sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
@@ -2465,11 +2625,32 @@ endif
 		  return
 		endif
 
-		im2=modulo(i-2,N0)
-		im1=modulo(i-1,N0)
-		ib=modulo(i,N0)
-		ip1=modulo(i+1,N0)
-		ip2=modulo(i+2,N0)
+		!im2=modulo(i-2,N0)
+		!im1=modulo(i-1,N0)
+		!ib=modulo(i,N0)
+		!ip1=modulo(i+1,N0)
+		!ip2=modulo(i+2,N0)
+		im2=i-2
+		im1=i-1
+		ib=i
+		ip1=i+1
+		ip2=i+2
+		
+		if(i-2<=0)im2=0;
+		if(i-1<=0)im1=0;
+		if(i<=0)ib=0;
+		if(i+1<=0)ip1=0;
+		if(i+2<=0)ip2=0;
+
+		if(i-2>=N0)im2=N0;
+		if(i-1>=N0)im1=N0;		
+		if(i>=N0)ib=N0;
+		if(i+1>=N0)ip1=N0;
+		if(i+2>=N0)ip2=N0;
+
+		
+		
+		
 		jm2=modulo(j-2,N1)
 		jm1=modulo(j-1,N1)
 		jb=modulo(j,N1)
