@@ -109,7 +109,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                           sll_poisson_solvers
 	                           dfftpack)
 
-#ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
+ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 #End of commands to be put in the class simulation standard
 ###################################################
