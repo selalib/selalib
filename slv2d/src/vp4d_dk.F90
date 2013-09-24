@@ -40,7 +40,7 @@ sll_real64, dimension(:,:),     pointer :: profile
 sll_int32  :: i,j,k,nbiter,scheme_case=2,qns_case=2
 sll_real64 :: dt
 sll_real64 :: R0     
-sll_int32  :: fdiag, fthdiag  
+sll_int32  :: fdiag, fthdiag,adv_case(4) 
 sll_int32  :: iter 
 sll_int32  :: jstartx, jendx, jstartv, jendv
 sll_real64 :: nrj,tmp,tmp_tab(2)
@@ -53,6 +53,12 @@ sll_real64 :: rmin,dr,r,y,z
 sll_int32 :: kmin(2),kmax(2)
 
 sll_real64 ::rpeak,deltarn,kappan,deltarTi,eps!,R0
+
+adv_case(1) = 2   !1: normal 2: delta-f
+adv_case(2) = 2   !1: BSL2D, 2: CSL2D
+adv_case(3:4) = (/4,8/)   ! for CSL2D (3,0): for ppm0; (3,1) for ppm1; (3,2) for ppm2 (4,d): for FD(2d+1)
+
+
 
 call sll_boot_collective()
 
@@ -211,7 +217,7 @@ do iter=1,nbiter
    call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
    call transposevx(vlas2d,f4d)
    plan_sl%adv%dt = 0.5_f64*dt   
-   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
+   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field,adv_case)
    call transposexv(vlas2d,f4d)
    
    
@@ -229,7 +235,7 @@ do iter=1,nbiter
    call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
    call transposevx(vlas2d,f4d)
    plan_sl%adv%dt = dt   
-   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field)
+   call advection_x_dk(vlas2d,plan_sl%adv,f4d,adv_field,adv_case)
    call transposexv(vlas2d,f4d)
    call advection_x4_dk(vlas2d,adv_field(3,:,:,:),0.5_f64*dt)
    call advection_x3_dk(vlas2d,0.5_f64*dt)
@@ -544,10 +550,12 @@ contains
 
 
 
-
+  !here we choice the boundary conditions, the <ay to derive phi and the way to compute
+  !the characteristics
+  
   bc = (/SLL_DIRICHLET,SLL_DIRICHLET/)
-  grad = 3
-  carac = 4
+  grad = 3  !3: splines 1: finite diff order 2 
+  carac = 4 !4: Verlet, 1: explicit Euler
    
 
 
@@ -649,6 +657,20 @@ contains
   call compute_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak,deltarTe,kappaTe,R0)
   call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
   call normalize_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak)
+
+  !initialization of physical constants in vlas2d
+  vlas2d%rpeak=rpeak
+  vlas2d%kappan=kappan
+  vlas2d%kappaTi=kappaTi
+  vlas2d%kappaTe=kappaTe
+  vlas2d%deltarn=deltarn
+  vlas2d%deltarTi=deltarTi
+  vlas2d%deltarTe=deltarTe
+  vlas2d%n0rp=n0rp_compute(vlas2d,profile(1,1:geomx%nx),geomx,rpeak)
+  
+  
+  print *,'#n0rp=',vlas2d%n0rp,profile(1,geomx%nx/2),profile(1,geomx%nx/2+1)
+
 
 
   SLL_ALLOCATE(dlog_density(geomx%nx),iflag)
@@ -769,9 +791,13 @@ contains
               !tmp_tab(2)=1._f64
               tmp_tab(2)=tmp_tab(2)*exp(-(x-rpeak)**2/(deltarn/deltarTi))
               tmp_tab(2)=exp(-(x-rpeak)**2/(4._f64*deltarn/deltarTi))
+              !tmp_tab(2)=exp(-(x-rpeak)**2/(2._f64*deltarn/deltarTi))
+              
+              !if(i==1) print *,'tmp_tab=',tmp_tab(2),4._f64*deltarn/deltarTi
+              f_equil(i,j,iv,jv)=compute_equil(vlas2d,x,vy)
+              !profile(1,i)*exp(v2*profile(2,i))
               f(i,j,iv,jv)=(1._f64+tmp_mode*epsilon*tmp_tab(2))*&
-                &profile(1,i)*exp(v2*profile(2,i))
-              f_equil(i,j,iv,jv)=profile(1,i)*exp(v2*profile(2,i))
+                &f_equil(i,j,iv,jv)
                 
            end do
         end do
@@ -795,11 +821,13 @@ contains
 
   !redefinition of profile
   
-  call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
-  call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
-  call compute_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak,deltarTe,kappaTe,R0)
-  call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
-  call normalize_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak)
+  call compute_profile_analytic(vlas2d,geomx,profile)
+  
+  !call compute_profile(vlas2d,profile(1,1:geomx%nx),geomx,rpeak,deltarn,kappan,R0)
+  !call compute_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak,deltarTi,kappaTi,R0)
+  !call compute_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak,deltarTe,kappaTe,R0)
+  !call normalize_profile(vlas2d,profile(2,1:geomx%nx),geomx,rpeak)
+  !call normalize_profile(vlas2d,profile(3,1:geomx%nx),geomx,rpeak)
 
    !profile(1,:)=profile(1,:)/108._f64*15._f64
   

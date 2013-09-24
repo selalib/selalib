@@ -23,7 +23,7 @@ module vlasov2d_dk_module
  public :: new, dealloc,advection_x, advection_v,&
            densite_charge,densite_charge_dk,transposexv,transposevx,thdiag,densite_courant,&
            compute_profile,normalize_profile,solve_quasi_neutral,compute_field_dk,advection_x_dk,&
-           advection_x3_dk,advection_x4_dk
+           advection_x3_dk,advection_x4_dk,n0rp_compute,compute_equil,compute_profile_analytic
 
  type, public :: vlasov2d
    sll_real64, dimension(:,:,:,:), pointer :: ft
@@ -36,6 +36,8 @@ module vlasov2d_dk_module
    sll_int32 :: jstartv, jendv  ! definition de la bande de calcul
    class(sll_interpolator_1d_base), pointer :: interp_x3
    class(sll_interpolator_1d_base), pointer :: interp_x4
+   sll_real64 :: rpeak,kappan,kappaTi,kappaTe,deltarn,deltarTi,deltarTe,n0rp
+   
  end type vlasov2d
 
  ! variables globales 
@@ -150,16 +152,17 @@ contains
  !>
  !> fait une advection en x sur un pas de temps dt
  !>
- subroutine advection_x_dk(this,plan_adv,f,adv_field)
+ subroutine advection_x_dk(this,plan_adv,f,adv_field,adv_case)
   type(vlasov2d),intent(inout) :: this
   type(sll_plan_adv_polar),pointer        :: plan_adv
   sll_real64, dimension(:,:,:,:) :: adv_field
   sll_real64, dimension(:,:,:,this%jstartv:) :: f
-  sll_int32 :: iv, jv ! indices de boucle
+  sll_int32 :: i,j,iv, jv ! indices de boucle
   sll_int32 :: ierr
-  sll_real64::err_diff,max_adv
+  sll_real64::err_diff,max_adv,v,r
   sll_real64, dimension(:,:),allocatable :: fn
   sll_real64, dimension(:,:),allocatable :: fnp1
+  sll_int32,intent(in)::adv_case(4)
   
   SLL_ALLOCATE(fn(this%geomx%nx,this%geomx%ny+1),ierr)
   SLL_ALLOCATE(fnp1(this%geomx%nx,this%geomx%ny+1),ierr)
@@ -171,10 +174,48 @@ contains
         plan_adv%field = adv_field(1:2,:,:,iv)
         fn(:,1:this%geomx%ny) = f(:,:,iv,jv)
         fn(:,this%geomx%ny+1) = fn(:,1)
-        call advect_CG_polar(plan_adv,fn,fnp1)
+        
+        if(adv_case(1)==2)then
+          v = this%geomv%y0+real(jv-1,f64)*this%geomv%dy
+          do i=1,this%geomx%nx
+            r = this%geomx%x0+real(i-1,f64)*this%geomx%dx
+            fn(i,:) = fn(i,:) -compute_equil(this,r,v)
+          enddo
+        endif
+        
+        if(adv_case(2)==1)then
+          call advect_CG_polar(plan_adv,fn,fnp1)
+        else if(adv_case(2)==2)then
+          call compute_remap(plan_adv,fn(1:this%geomx%nx,1:this%geomx%ny),&
+          &fnp1(1:this%geomx%nx,1:this%geomx%ny),adv_case(3),adv_case(4))
+          !choice for adv_case(3:4):
+          ! 3,2 : for ppm2; 3,1 : for ppm1; 3,0 : for ppm0
+          ! 4,d : for FD(2d+1)
+          
+          !print *,'#fnp1=',iv,jv,maxval(abs(fn(1,:))),&
+          !&compute_equil(this,this%geomx%x0,this%geomv%y0+real(jv-1,f64)*this%geomv%dy)
+          fnp1(1,:)=0._f64!fn(1,:)
+          fnp1(this%geomx%nx,:)=0._f64!fn(this%geomx%nx,:)
+        endif
         !err_diff=max(err_diff,maxval(abs(fn-fnp1)))
 
         !f(1:this%geomx%nx,1:this%geomx%ny,iv,jv)=fn(1:this%geomx%nx,1:this%geomx%ny)
+        
+        
+        
+        if(adv_case(1)==2)then
+          v = this%geomv%y0+real(jv-1,f64)*this%geomv%dy
+          
+          call compute_plan_carac(plan_adv,this%geomx%nx-1,this%geomx%ny,plan_adv%dt,&
+               &this%geomx%dx,this%geomx%dy,this%geomx%x0,this%geomx%x1)
+          
+          do i=1,this%geomx%nx
+            do j=1,this%geomx%ny
+              fnp1(i,j) = fnp1(i,j)+compute_equil(this,plan_adv%carac(1,i,j),v)
+            enddo  
+          enddo
+        
+        endif
         
         f(1:this%geomx%nx,1:this%geomx%ny,iv,jv)=fnp1(1:this%geomx%nx,1:this%geomx%ny)
         !f(:,1:this%geomx%ny,iv,jv)=fnp1
@@ -182,6 +223,7 @@ contains
      end do
   end do
   
+  !stop
   !print *,'#err_diff=',err_diff,maxval(abs(adv_field(1,:,:,:))),&
   !&maxval(abs(adv_field(2,:,:,:))),maxval(abs(adv_field(3,:,:,:)))
   !print *,''
@@ -710,6 +752,66 @@ subroutine normalize_profile(this,prof,geom,x)
 end subroutine normalize_profile
 
 
+function n0rp_compute(this,prof,geom,x)
+  type(vlasov2d),intent(in) :: this
+  type(geometry),intent(in) :: geom
+  sll_real64,dimension(:),intent(inout)   :: prof
+  sll_real64,intent(in) :: x
+  sll_real64::xx
+  sll_real64 ::n0rp_compute
+  sll_int32::ii
+  
+  xx=(x-geom%x0)/(geom%x1-geom%x0)
+  if((xx>=1).or.(xx<=0))then
+    print *,'#bad normalization in subroutine normalize_profile'
+    stop
+  endif  
+  
+  xx=xx*real(geom%Nx-1,f64)
+  ii=floor(xx)
+  xx=xx-ii
+  if((ii<0).or.(ii>geom%Nx-1))then
+    print *,'#bad index for subroutine normalize_profile'
+    stop
+  endif
+  n0rp_compute=(1._f64-xx)*prof(ii+1)+xx*prof(ii+2)   
+  !prof=prof/xx
+  
+  !print *,'#check',prof(ii+1),prof(ii+2)
+end function n0rp_compute
+
+function compute_equil(this,r,v)
+  type(vlasov2d),intent(in) :: this
+  sll_real64,intent(in)::r,v
+  sll_real64::compute_equil
+  sll_real64:: tmp(2)
+  
+  tmp(1) = this%n0rp*exp(-this%kappan*this%deltarn*tanh((r-this%rpeak)/this%deltarn))
+  tmp(2) = exp(-this%kappaTi*this%deltarTi*tanh((r-this%rpeak)/this%deltarTi))
+  
+  compute_equil = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*v**2/tmp(2))
+  
+end function compute_equil
+
+subroutine compute_profile_analytic(this,geom,profile)
+  type(vlasov2d),intent(in) :: this
+  sll_real64,dimension(:,:),intent(out)::profile
+  type(geometry),intent(in) :: geom
+  sll_real64::r
+  sll_int32:: i
+  
+  do i=1,geom%nx
+    r = geom%x0+real(i-1,f64)*geom%dx
+    profile(1,i)=this%n0rp*exp(-this%kappan*this%deltarn*tanh((r-this%rpeak)/this%deltarn))
+    profile(2,i)=exp(-this%kappaTi*this%deltarTi*tanh((r-this%rpeak)/this%deltarTi))    
+    profile(3,i)=exp(-this%kappaTe*this%deltarTe*tanh((r-this%rpeak)/this%deltarTe))    
+  enddo
+  
+end subroutine compute_profile_analytic
+
+
+
+
 subroutine get_mode(this,phi,kmin,kmax,res)
   type(vlasov2d),intent(in) :: this
   sll_real64,dimension(:,:) :: phi
@@ -937,7 +1039,7 @@ if (my_num==MPI_MASTER) then
    !b=8 epot
    !b=9..  mode
    
-   print *,t,nrj!,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
+   print *,t,nrj,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
    !real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))),aimag(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
    !stop
    
