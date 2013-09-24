@@ -30,5 +30,6 @@
 #include "sll_splines.h"
 #include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
+#include "sll_boundary_condition_descriptors.h"
 
 #endif
