@@ -12,6 +12,10 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/prototype-devel
   use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
@@ -73,7 +77,7 @@ program VP1d_deltaf
   sll_int32  :: istartx, iendx, jstartv, jendv
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
-  type(time_mark), pointer :: time0 => NULL()
+  type(sll_time_mark) :: time0 
   sll_real64 :: time1
   sll_int32  :: error, file_id
   character(len=4) :: cstep
@@ -271,8 +275,8 @@ program VP1d_deltaf
   ! initialize interpolators
   select case (interpol_x)
   case (1) ! periodic cubic spline
-     interp_spline_x => new_spline_1d( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
+     interp_spline_x => new_spline_1d( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+!     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
 !     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
      call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
@@ -285,8 +289,8 @@ program VP1d_deltaf
   end select
      select case (interpol_v)
   case (1) ! hermite cubic spline
-      interp_spline_v => new_spline_1d( Ncv + 1,vmin, vmax, HERMITE_SPLINE )
-      interp_spline_vh => new_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), HERMITE_SPLINE )
+      interp_spline_v => new_spline_1d( Ncv + 1,vmin, vmax, SLL_HERMITE )
+      interp_spline_vh => new_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), SLL_HERMITE )
   case (2) ! arbitrary order periodic splines
      call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
      interp_v => interp_per_v
@@ -626,6 +630,12 @@ program VP1d_deltaf
 
      print *,'ITERATION',istep
 
+  call int2string(istep,cstep)
+  call sll_hdf5_file_create("ff"//cstep//".h5",file_id,error)
+  call sll_hdf5_write_array(file_id,ff,"ff",error)
+  call sll_hdf5_write_array(file_id,ff1,"ff1",error)
+  call sll_hdf5_write_array(file_id,fg,"fg",error)
+  call sll_hdf5_file_close(file_id, error)
   end do
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)

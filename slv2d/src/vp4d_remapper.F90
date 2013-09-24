@@ -129,10 +129,10 @@ contains
     prank = sll_get_collective_rank(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, PERIODIC_SPLINE)
-    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, PERIODIC_SPLINE)
-    call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, PERIODIC_SPLINE)
-    call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, PERIODIC_SPLINE)
+    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, SLL_PERIODIC)
+    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, SLL_PERIODIC)
+    call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, SLL_PERIODIC)
+    call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, SLL_PERIODIC)
 
     call new(vlasov4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,error)
 
@@ -174,7 +174,7 @@ contains
     end do
 
     call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-             geomx%y0, geomx%y1, geomx%ny, vlasov4d%rho, error)
+             geomx%y0, geomx%y1, geomx%ny, error)
 
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
     jendv   = get_layout_4D_l_max( vlasov4d%layout_x, prank )

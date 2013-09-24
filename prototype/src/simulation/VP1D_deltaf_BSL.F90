@@ -12,7 +12,10 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 
   use sll_constants
-  use sll_module_mapped_meshes_2d_cartesian
+  !use sll_module_mapped_meshes_2d_cartesian
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
+  use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
   use sll_odd_degree_spline_interpolator_1d
@@ -20,7 +23,6 @@ program VP1d_deltaf
   use sll_tsi_2d_initializer
   use distribution_function
   use sll_poisson_1d_periodic
-  use sll_timer
   use omp_lib
   implicit none
 
@@ -28,8 +30,10 @@ program VP1d_deltaf
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
   type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
-  type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
-  class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
+  !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
+  !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
+  type(sll_logical_mesh_2d), pointer :: mesh2d_cart
+  class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
   type(init_tsi_2d), target :: init_tsi
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
@@ -50,8 +54,7 @@ program VP1d_deltaf
   logical    :: driven
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
-  sll_int32  :: interpol_x, interpol_v  ! type of interpolator
-  sll_int32  :: order_x, order_v   ! order of interpolator
+  sll_int32  :: interpol_x, order_x, interpol_v, order_v
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
@@ -72,17 +75,15 @@ program VP1d_deltaf
   sll_int32  :: istartx, iendx, jstartv, jendv
   sll_int32  :: num_threads, my_num
   sll_int32  :: ipiece_size_x, ipiece_size_v
-  type(time_mark), pointer :: time0 => NULL()
-  ! type(time_mark), pointer :: t1 => NULL()
-  sll_real64 :: time1, som
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
   namelist / interpolator / interpol_x, order_x, interpol_v, order_v
   namelist / time_iterations / dt, nbiter, freqdiag
   namelist / landau / kmode, eps, is_delta_f, driven 
-  namelist / tsi / kmode, eps, v0, is_delta_f
+  namelist / tsi / kmode, eps, v0 
   namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
+
 
   ! determine what case is being run
   call GET_COMMAND_ARGUMENT(1,case)
@@ -90,7 +91,6 @@ program VP1d_deltaf
   if (case == "landau") then
      open(unit = input_file, file = 'landau_input.txt')
      read(input_file, geom) 
-     read(input_file, interpolator) 
      read(input_file, time_iterations)
      read(input_file, landau)
      if (driven) then
@@ -101,7 +101,6 @@ program VP1d_deltaf
   else if (case == "tsi") then
      open(unit = input_file, file = 'tsi_input.txt')
      read(input_file, geom) 
-     read(input_file, interpolator)
      read(input_file, time_iterations)
      read(input_file,tsi)
      close(input_file)
@@ -164,8 +163,6 @@ program VP1d_deltaf
   print*, '   dt=', dt
   print*, '   number of iterations=', nbiter
   print*, ' '
-  print*, 'interpolator in x', interpol_x, order_x
-  print*, 'interpolator in v', interpol_v, order_v
   open(unit = param_out, file = 'param_out.dat') 
   write(param_out,'(A6,2f10.3,I5,2f10.3,I5,f10.3,I8,I5,I2,f10.3)') &
        trim(case), xmin, xmax, ncx, vmin, vmax, ncv, &
@@ -173,24 +170,44 @@ program VP1d_deltaf
   close(param_out)
 
   if (driven) then
-     tstart = t0  ! is this parameter actually necessary ? 
      open(unit = param_out_drive, file = 'param_out_drive.dat') 
-     write(param_out_drive,'(9g15.5)') t0, twL, twR, tstart, tflat, tL, tR, &
+     write(param_out_drive,*) t0, twL, twR, tstart, tflat, tL, tR, &
           Edrmax, omegadr
      close(param_out_drive)
   end if
 
-  call initialize_mesh_2d_cartesian( &
-       mesh2d,           &
-       "mesh2d_cart",       &
-       xmin,         &
-       xmax,         &
-       Ncx+1,          &
-       vmin,         &
-       vmax,         &
-       Ncv+1           &
-       )
-  mesh2d_base => mesh2d
+  ! Initialise logical cartesian mesh
+  mesh2d_cart => new_logical_mesh_2d( &
+       Ncx,  &
+       Ncv,  &
+       xmin, &  
+       xmax, &
+       vmin, &
+       vmax &
+   )
+  
+  ! Define transformation object with identity transformation
+  mesh2d_base => new_coordinate_transformation_2d_analytic( &
+       "mesh2d_cart",  &
+       mesh2d_cart,    &
+       identity_x1,    &
+       identity_x2,    &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22 ) 
+
+!!$  call initialize_mesh_2d_cartesian( &
+!!$       mesh2d,           &
+!!$       "mesh2d_cart",       &
+!!$       xmin,         &
+!!$       xmax,         &
+!!$       Ncx+1,          &
+!!$       vmin,         &
+!!$       vmax,         &
+!!$       Ncv+1           &
+!!$       )
+!!$  mesh2d_base => mesh2d
 
   ! allocate rho and phi
   SLL_ALLOCATE(rho(Ncx+1),ierr)
@@ -218,7 +235,7 @@ program VP1d_deltaf
   !$omp parallel default(shared) &
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
-  !$omp& interp_per_x, interp_per_v, time1, time0)
+  !$omp& interp_per_x, interp_per_v)
   my_num = omp_get_thread_num()
   num_threads =  omp_get_num_threads()
   print*, 'running with openmp using ', num_threads, ' threads'
@@ -239,35 +256,27 @@ program VP1d_deltaf
   end if
 
   ! initialize interpolators
-  select case (interpol_x)
-  case (1) ! periodic cubic spline
-     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-     interp_x => interp_spline_x
-  case (2) ! arbitrary order periodic splines
-     call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
-     interp_x => interp_per_x
-  case(3) ! arbitrary order Lagrange periodic interpolation
-     call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
-     interp_x => interp_per_x
-  case default
-     print*,'interpolation in x number ', interpol_x, ' not implemented' 
-  end select
-  select case (interpol_v)
-  case (1) ! hermite cubic spline
-     call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
-     interp_v => interp_spline_v
-  case (2) ! arbitrary order periodic splines
-     call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
-     interp_v => interp_per_v
-  case(3) ! arbitrary order Lagrange periodic interpolation
-     call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
-     interp_v => interp_per_v
-  case(4) ! arbitrary order open spline interpolation   
-     call interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
-  case default
-     print*,'interpolation in x number ', interpol_v, ' not implemented' 
-  end select
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, 8)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, 8)
 
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO, 8)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO, 8)
+
+  call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_FFT_SELALIB, 8)
+  call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_FFT_SELALIB, 8)
+
+  !call interp_per_x%initialize( Ncx + 1, xmin, xmax, TRIGO_REAL, 8)
+  !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
+
+
+  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
+  !interp_x => interp_spline_x
+  !interp_v => interp_spline_v
+
+  interp_x => interp_per_x
+  interp_v => interp_per_v
   !$omp barrier
   !$omp single
   fname = 'dist_func'
@@ -303,57 +312,18 @@ program VP1d_deltaf
      enddo
   endif
 
-!!$  do i= 1, Ncx
-!!$     som = 0.
-!!$     do j = 1, Ncv/2
-!!$        som = som + FIELD_DATA(f)(i,j)*v_array(j) + FIELD_DATA(f)(i,Ncv+2-j)*v_array(Ncv+2-j)
-!!$     end do
-!!$     write(*,'(I5,2g24.17)'), i, sum(FIELD_DATA(f)(i,:)*v_array), som
-!!$  end do
-!!$ 
-!!$  write(*,*), 'rho * e', sum (rho(1:Ncx)*efield(1:Ncx))
-  ! write diagnostics at time 0
-  time = 0.
-  mass = 0.
-  momentum = 0.
-  l1norm = 0.
-  l2norm = 0.
-  kinetic_energy = 0.
-  potential_energy = 0.
-  do i = 1, Ncx 
-     mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
-     l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
-     l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-     momentum = momentum + sum((FIELD_DATA(f)(i,1:Ncv/2) &
-                -(FIELD_DATA(f)(i,Ncv+1:Ncv/2:-1)))*v_array(1:Ncv/2))
-     kinetic_energy = kinetic_energy + 0.5_f64 * &
-          sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
-  end do
-  mass = mass * delta_x * delta_v 
-  l1norm = l1norm  * delta_x * delta_v
-  l2norm = l2norm  * delta_x * delta_v
-  momentum = momentum * delta_x * delta_v
-  kinetic_energy = kinetic_energy * delta_x * delta_v
-  potential_energy =  0.5_f64 * sum(efield(1:Ncx)**2) * delta_x
-  write(th_diag,'(f12.5,7g20.12)') time, mass, l1norm, momentum, l2norm, &
-       kinetic_energy, potential_energy, kinetic_energy + potential_energy
-  do i = 1, Ncx+1
-     write(ex_diag,"(g15.5)",advance="no") efield(i)
-     write(rho_diag,"(g15.5)",advance="no") rho(i)
-     write(eapp_diag,"(g15.5)",advance="no") e_app(i)
-  end do
-  write(ex_diag,*)
-  write(rho_diag,*)
-  write(eapp_diag,*)
-  write(adr_diag,'(2g15.5)') istep*dt, adr
+  ! write initial fields
+  write(ex_diag,*) efield
+  write(rho_diag,*) rho
+  write(eapp_diag,*) e_app
+  write(adr_diag,*) istep*dt, adr
   !$omp end single
 
-  ! initialize timer
+
   ! time loop
   !----------
   ! half time step advection in v
   do istep = 1, nbiter
-     !     time0 => reset_time_mark(time0)
      do i = istartx, iendx
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         f1d => FIELD_DATA(f) (i,:) 
@@ -368,6 +338,7 @@ program VP1d_deltaf
         endif
      end do
      !$omp barrier
+
      do j =  jstartv, jendv
         alpha = (vmin + (j-1) * delta_v) * dt
         f1d => FIELD_DATA(f) (:,j) 
@@ -420,8 +391,7 @@ program VP1d_deltaf
            mass = mass + sum(FIELD_DATA(f)(i,:) + f_maxwellian)   
            l1norm = l1norm + sum(abs(FIELD_DATA(f)(i,:) + f_maxwellian))
            l2norm = l2norm + sum((FIELD_DATA(f)(i,:) + f_maxwellian)**2)
-           momentum = momentum + sum((FIELD_DATA(f)(i,1:Ncv/2) &
-                -(FIELD_DATA(f)(i,Ncv+1:Ncv/2:-1)))*v_array(1:Ncv/2))
+           momentum = momentum + sum(FIELD_DATA(f)(i,:)*v_array)
            kinetic_energy = kinetic_energy + 0.5_f64 * &
                 sum((FIELD_DATA(f)(i,:) + f_maxwellian)*(v_array**2))
         end do
@@ -431,24 +401,22 @@ program VP1d_deltaf
         momentum = momentum * delta_x * delta_v
         kinetic_energy = kinetic_energy * delta_x * delta_v
         potential_energy =   0.5_f64 * sum(efield**2) * delta_x
-        write(th_diag,'(f12.5,7g20.12)') time, mass, l1norm, momentum, l2norm, &
+        write(th_diag,'(f12.5,7g20.14)') time, mass, l1norm, momentum, l2norm, &
              kinetic_energy, potential_energy, kinetic_energy + potential_energy
-        do i = 1, Ncx+1
-           write(ex_diag,"(g15.5)",advance="no") efield(i)
-           write(rho_diag,"(g15.5)",advance="no") rho(i)
-           write(eapp_diag,"(g15.5)",advance="no") e_app(i)
-        end do
-        write(ex_diag,*)
-        write(rho_diag,*)
-        write(eapp_diag,*)
-
-        write(adr_diag,'(2g15.5)') istep*dt, adr
+        write(ex_diag,*) efield
+        write(rho_diag,*) rho
+        write(eapp_diag,*) e_app
+        write(adr_diag,*) istep*dt, adr
         print*, 'iteration: ', istep
         call write_scalar_field_2d(f) 
      end if
      !$omp end single
   end do
 
+  call delete(interp_spline_x)
+  call delete(interp_spline_v)
+  call delete(interp_per_x)
+  call delete(interp_per_v)
   !$omp end parallel
   close(th_diag)
   close(ex_diag)
