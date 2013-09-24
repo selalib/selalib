@@ -11,8 +11,9 @@ program vlasov_poisson_2d
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_2d_vlasov_poisson_cart) :: simulation
-
-  print *, '#Booting parallel environment...'
+  !if(sll_get_collective_rank(sll_world_collective)==0)then
+    print *, '#Booting parallel environment...'
+  !endif
   call sll_boot_collective() ! Wrap this up somewhere else
 
   ! In this test, the name of the file to open is provided as a command line
@@ -22,9 +23,10 @@ program vlasov_poisson_2d
   call simulation%init_from_file(filename_local)
   call simulation%run( )
   call delete_vp2d_par_cart(simulation)
-  print *, '#reached end of vp2d test'
-  print *, '#PASSED'
-
+  if(sll_get_collective_rank(sll_world_collective)==0)then
+    print *, '#reached end of vp2d test'
+    print *, '#PASSED'
+  endif
   call sll_halt_collective()
 
 
