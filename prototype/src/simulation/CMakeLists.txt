@@ -126,6 +126,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    ADD_LIBRARY( sll_simulations STATIC 
                 simulation_base_class.F90
+                simulation_2d_vlasov_poisson_cartesian.F90
                 simulation_4d_vlasov_poisson_cartesian.F90
                 simulation_4d_vlasov_poisson_general.F90
                 simulation_4d_vlasov_poisson_polar.F90
@@ -161,6 +162,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    #ADD_SIMULATION(MYMETHOD)
    ###############################################################
 
+   ADD_SIMULATION(2d)
    ADD_SIMULATION(4d)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_vp_polar)
