@@ -85,7 +85,8 @@ subroutine plot_df(f4d,iplot,geomx,geomv,jstartx,jendx,jstartv,jendv,choice)
      do j=1,ny
         do i=1,nx
            !fxy(i,j)=f4d(i,j,1,1+geomv%ny/2)
-           sumloc= sum(f4d(i,j,:,jstartv:jendv))
+           !sumloc= sum(f4d(i,j,:,jstartv:jendv))
+           sumloc= sum(f4d(i,j,1,jstartv:jendv))
            call mpi_reduce(sumloc,fxy(i,j),1,MPI_REAL8,MPI_SUM,0,comm,error)
         end do
      end do
