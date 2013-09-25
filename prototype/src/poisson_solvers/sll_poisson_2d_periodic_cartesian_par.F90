@@ -201,6 +201,8 @@ contains
     ncy  = plan%ncy
     r_Lx = 1.0_f64/plan%Lx
     r_Ly = 1.0_f64/plan%Ly
+
+    !print*, 1.0_f64/plan%Lx, 1.0_f64/plan%Ly
     ! Get layouts to compute FFTs (in each direction)
     layout_x => plan%layout_seq_x1
     layout_y => plan%layout_seq_x2

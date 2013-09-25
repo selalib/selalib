@@ -56,8 +56,8 @@ program unit_test
         eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
-        x(i+1,j+1)         = cos(2.0_f64*sll_pi*eta2) *cos(2.0_f64*sll_pi*eta1)
-        reference(i+1,j+1) = cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        x(i+1,j+1)         = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2) *cos(2.0_f64*sll_pi*eta1)
+        reference(i+1,j+1) = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
      end do
   end do
   
@@ -106,24 +106,24 @@ program unit_test
   
   do j=0,NPTS2-2
      do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1
-        eta2       = X2MIN + real(j,f64)*h2
+        eta1       = X1MIN + real(i,f64)*h1/4.
+        eta2       = X2MIN + real(j,f64)*h2/4.
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref        = cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        ref        = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print*, eta1,eta2,node_val,ref,ref-node_val
+        !print*, eta1,eta2,node_val,ref,ref-node_val
         
         acc        = acc + abs(node_val-ref)
 
         deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)
-        ref = -2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+        ref = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
         acc_der1 = acc_der1 + abs(deriv1_val-ref)
         !
-        !print*,'derive=', ref,deriv1_val
+        !print*,'derive=', ref,deriv1_val,ref-deriv1_val
 
         deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        ref  = 0.0_f64!-2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
         acc_der2 = acc_der2 + abs(deriv2_val-ref)
         !print*, ref,deriv2_val
 

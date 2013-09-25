@@ -48,12 +48,12 @@ program qns_4d_mixed
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 64
-#define NPTS2 64
+#define NPTS1 32
+#define NPTS2 32
 #define NPTS3 32
 #define NPTS4 32
-#define SPL_DEG1 2
-#define SPL_DEG2 2
+#define SPL_DEG1 3
+#define SPL_DEG2 3
 
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
@@ -121,7 +121,7 @@ program qns_4d_mixed
        func_zero, &
        func_zero, &
        func_one, &
-       func_epsi, &
+       func_zero, &
        SPL_DEG1, & 
        SPL_DEG2, & 
        SLL_PERIODIC, &
@@ -188,6 +188,6 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
-  res = 0.00000_8
+  res = 0.0001_8
 end function func_epsi
 
