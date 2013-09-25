@@ -169,8 +169,8 @@ contains
     ! that represents the local process's port together with the value of the
     ! bit field, pushed to the 15th bit position.
     ! In decimal notation, z'3fff' = 16,384
-    lower  = ior( ishft(    bit, 14), ior(my_port,   z'3fff'))  
-    higher = ior( ishft(not(bit),14), ior(other_port,z'3fff'))
+    lower  = ior( ishft(    bit, 14), ior(my_port,   int(z'3fff',i32)))  
+    higher = ior( ishft(not(bit),14), ior(other_port,int(z'3fff',i32)))
 
     ! shift the higher part of the tag to the upper bits, starting at bit 16 
     ! and leaving the lower 15 bits available for the lower part of the tag.
@@ -187,8 +187,8 @@ contains
     sll_int32 :: higher
     sll_int32 :: lower
 
-    lower  = ior( ishft(not(bit),14), ior(other_port, z'3fff'))  
-    higher = ior( ishft(    bit, 14), ior(my_port,    z'3fff'))
+    lower  = ior( ishft(not(bit),14), ior(other_port, int(z'3fff',i32)))  
+    higher = ior( ishft(    bit, 14), ior(my_port,    int(z'3fff',i32)))
     send_tag = ior(ishft(higher,15),lower)
   end function send_tag
 
@@ -247,7 +247,8 @@ contains
   subroutine check_other_rank( comm, other_rank )
     type(sll_comm_real64), pointer :: comm
     sll_int32, intent(in) :: other_rank
-    if( (other_rank < 0) .or. (other_rank >= comm%num_ports) ) then
+
+    if( (other_rank < 0) .or. (other_rank >= comm%comm_size) ) then
        print *, 'comm module error, check_other_rank(): invalid remote rank'
        stop
     end if
@@ -255,8 +256,9 @@ contains
 
   function get_num_ports( comm )
     sll_int32 :: get_num_ports
-    SLL_ASSERT( associated(comm) )
     type(sll_comm_real64), pointer :: comm
+
+    SLL_ASSERT( associated(comm) )
     get_num_ports = comm%num_ports
   end function get_num_ports
 
@@ -289,6 +291,7 @@ contains
     SLL_ALLOCATE(comm, ierr)
     comm%collective => collective
     comm%num_ports  = num_ports
+    comm%comm_size = sll_get_collective_size(collective)
 
     ! The maximum number of ports is determined by the tagging system that 
     ! we use. It is important to verify that we don't have any problems due
@@ -312,7 +315,7 @@ contains
     sll_int32, intent(in)          :: remote
     sll_int32, intent(in)          :: remote_port
     sll_int32 :: bit
-    sll_int64 :: tag
+    sll_int32 :: tag
     sll_int32 :: ierr
 
     call check_port(comm,port)
@@ -333,7 +336,7 @@ contains
     comm%ports(port)%other_port = remote_port
     bit = comm%ports(port)%bit
     tag = receive_tag( bit, port, comm%ports(port)%other_port)
-
+    write (*,'(a,i8,a,z20)') 'rank: ', sll_get_collective_rank(comm%collective), 'tag = ', tag
     ! post a 'receive' on first buffer and then flip it. For now, we allow
     ! the mpi functions to be called directly, but it is desirable to send
     ! this back to the collective module, so a wrapper routine is necessary.
