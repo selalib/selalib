@@ -278,8 +278,6 @@ contains !************************** Operations **************************
     sll_int32, intent(in)        :: ierr
     character(len=*), intent(in) :: descriptor
 
-    SLL_ASSERT( ierr .eq. MPI_SUCCESS ) ! redundant, make a choice between
-                                        ! asserting and this function.
     if( ierr .ne. MPI_SUCCESS ) then
        write (*, '(a, a)') 'MPI error code failure: ', descriptor
     end if
