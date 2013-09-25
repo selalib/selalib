@@ -51,6 +51,7 @@ SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
 ADD_DEFINITIONS(-D_FFTW)
 SET(FFT_DEFAULT_LIBRARY "FFTW" CACHE STRING "fftw library used" FORCE)
+FIND_PACKAGE(FFTW)
 
 SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build package only")
 
@@ -64,7 +65,6 @@ IF(SLL_BUILD_PACKAGE)
    IF(NOT ${HDF5_IS_PARALLEL})
       MESSAGE(SEND_ERROR "HDF5 must be parallel")
    ENDIF()
-   FIND_PACKAGE(FFTW)
    ADD_SUBDIRECTORY (prototype/src/fftpack)
    ADD_SUBDIRECTORY (prototype/src/package)
    # Packages generation
