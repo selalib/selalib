@@ -63,6 +63,13 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
       ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+      SET(PROCS 8)
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim2d_cartesian_input.nml)
+      ADD_MPI_TEST(vp2d_sim test_2d_vp_cartesian ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(vp2d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
    
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
       ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})

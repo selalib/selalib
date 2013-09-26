@@ -162,7 +162,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    #ADD_SIMULATION(MYMETHOD)
    ###############################################################
 
-   ADD_SIMULATION(2d)
+   ADD_SIMULATION(2d_vp_cartesian)
    ADD_SIMULATION(4d)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_vp_polar)
