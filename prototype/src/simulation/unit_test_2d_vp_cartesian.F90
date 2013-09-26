@@ -11,10 +11,10 @@ program vlasov_poisson_2d
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_2d_vlasov_poisson_cart) :: simulation
-  !if(sll_get_collective_rank(sll_world_collective)==0)then
+  call sll_boot_collective()
+  if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Booting parallel environment...'
-  !endif
-  call sll_boot_collective() ! Wrap this up somewhere else
+  endif
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
