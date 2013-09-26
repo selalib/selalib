@@ -22,14 +22,9 @@ module load git
 export FC=ifort
 export CC=icc
 export CXX=icpc
-cd /ptmp/pin
-mkdir selalib-intel
-cd selalib-intel; {
-cmake ${HOME}/selalib -DCMAKE_BUILD_TYPE=Release -DCMAKE_Fortran_COMPILER=ifort
+cd /ptmp/pin/all
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
 make NightlyTest
 make NightlySubmit
-}; cd -
-rm -rf /ptmp/pin/selalib-intel
