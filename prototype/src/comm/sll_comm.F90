@@ -168,9 +168,9 @@ contains
     ! for the lower part of the tag, pick the lowest 14 bits of the integer
     ! that represents the local process's port together with the value of the
     ! bit field, pushed to the 15th bit position.
-    ! In decimal notation, z'3fff' = 16,384
-    lower  = ior( ishft(    bit, 14), ior(my_port,   int(z'3fff',i32)))  
-    higher = ior( ishft(not(bit),14), ior(other_port,int(z'3fff',i32)))
+    ! In decimal notation, z'3fff' = 16,384, just in case it is needed.
+    lower  = ior( ishft(         bit, 14), iand(my_port,   int(z'3fff',i32)))  
+    higher = ior( ishft(flip_bit(bit),14), iand(other_port,int(z'3fff',i32)))
 
     ! shift the higher part of the tag to the upper bits, starting at bit 16 
     ! and leaving the lower 15 bits available for the lower part of the tag.
@@ -187,8 +187,8 @@ contains
     sll_int32 :: higher
     sll_int32 :: lower
 
-    lower  = ior( ishft(not(bit),14), ior(other_port, int(z'3fff',i32)))  
-    higher = ior( ishft(    bit, 14), ior(my_port,    int(z'3fff',i32)))
+    lower  = ior( ishft(flip_bit(bit),14), iand(other_port, int(z'3fff',i32)))  
+    higher = ior( ishft(         bit, 14), iand(my_port,    int(z'3fff',i32)))
     send_tag = ior(ishft(higher,15),lower)
   end function send_tag
 
@@ -336,7 +336,13 @@ contains
     comm%ports(port)%other_port = remote_port
     bit = comm%ports(port)%bit
     tag = receive_tag( bit, port, comm%ports(port)%other_port)
-    write (*,'(a,i8,a,z20)') 'rank: ', sll_get_collective_rank(comm%collective), 'tag = ', tag
+
+!!$    write (*,'(a,i8,a, z8,a,z8,a,z8,a,z20)') 'rank: ', &
+!!$         sll_get_collective_rank(comm%collective), ' bit = ', bit, &
+!!$         ' port = ', port, ' other port = ', remote_port,&
+!!$         ' tag = ', tag
+
+
     ! post a 'receive' on first buffer and then flip it. For now, we allow
     ! the mpi functions to be called directly, but it is desirable to send
     ! this back to the collective module, so a wrapper routine is necessary.
@@ -351,10 +357,10 @@ contains
          ierr )
   end subroutine connect_ports
 
-  subroutine comm_send_real64( comm, port, count )
+  subroutine comm_send_real64( comm, port, size )
     type(sll_comm_real64), pointer :: comm
-    sll_int32, intent(in)  :: port
-    sll_int64, intent(out) :: count
+    sll_int32, intent(in)          :: port
+    sll_int32, intent(in)          :: size
     sll_int32 :: bit
     sll_int64 :: tag
     sll_int32 :: ierr
@@ -370,7 +376,7 @@ contains
 
     call MPI_Isend( &
          comm%ports(port)%buffer(bit+1)%data, &
-         comm%buffer_size+BUFFER_PADDING, &
+         size+BUFFER_PADDING, &
          MPI_DOUBLE_PRECISION, &
          comm%ports(port)%other_rank, &
          tag, &
@@ -461,7 +467,6 @@ contains
     num_ports = comm%num_ports
 
     do i=1,num_ports
-       print *, 'port is busy: ', port_is_busy(comm,i)
        if( port_is_busy(comm,i) ) then
           ! block until the send's are completed.
           request = get_mpi_request(comm, i)
@@ -507,7 +512,7 @@ contains
     sll_int32 :: size
     rank = sll_get_collective_rank(comm%collective)
     size = sll_get_collective_size(comm%collective)
-    print *, rank, 'lower: ', mod(rank+size-1,size), 'higher: ', mod(rank+size+1,size)
+
     ! do some checking here whether the comm has the right number of ports...
     call connect_ports( comm, 1, mod(rank+size-1,size), 2 )
     call connect_ports( comm, 2, mod(rank+size+1,size), 1 )
