@@ -11,20 +11,5 @@
 # @ notification = complete
 # @ notify_user = $(user)@rzg.mpg.de
 # @ queue
-module purge
-module load intel
-module load mkl
-module load mpi.ibm
-module load cmake
-module load hdf5-mpi
-module load fftw
-module load git
-export FC=ifort
-export CC=icc
-export CXX=icpc
 cd /ptmp/pin/all
-make NightlyUpdate
-make NightlyConfigure
-make NightlyBuild
-make NightlyTest
-make NightlySubmit
+make Experimental
