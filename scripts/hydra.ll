@@ -2,12 +2,12 @@
 # @ error   = selalib.err.$(jobid)
 # @ output  = selalib.out.$(jobid)
 # @ job_type = parallel
-# @ node_usage= not_shared
+# @ node_usage = shared
 # @ node = 8
-# @ tasks_per_node = 16
+# @ tasks_per_node = 8
 # @ resources = ConsumableCpus(1)
 # @ network.MPI = sn_all,not_shared,us
-# @ wall_clock_limit = 1:00:00
+# @ wall_clock_limit = 0:10:00
 # @ notification = complete
 # @ notify_user = $(user)@rzg.mpg.de
 # @ queue
