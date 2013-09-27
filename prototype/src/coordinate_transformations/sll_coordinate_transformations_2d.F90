@@ -48,6 +48,7 @@ module sll_module_coordinate_transformations_2d
   !                   [      partial eta1              partial eta2          ]
   !
 
+!> Analytic transformation
 #ifdef STDF95
   type  :: sll_coordinate_transformation_2d_analytic
      ! for pre-computing values. Not clear how advantageous this is.
@@ -55,8 +56,9 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_cell
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_n
 !!$     sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !ES the two following need to be in the base class
+     !character(len=64) :: label
+     !logical           :: written! = .false.
      type(sll_logical_mesh_2d), pointer :: mesh
 #else
   type, extends(sll_coordinate_transformation_2d_base):: &
@@ -66,8 +68,8 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
 #ifdef STDF95
 #else
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !character(len=64) :: label
+     !logical           :: written! = .false.
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
      procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
@@ -114,8 +116,9 @@ module sll_module_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: x2_cell
      sll_real64, dimension(:,:), pointer :: jacobians_n
      sll_real64, dimension(:,:), pointer :: jacobians_c
-     character(len=64) :: label
-     logical           :: written! = .false.
+     !ES those need to be in the base class
+     !character(len=64) :: label
+     !logical           :: written! = .false.
 
 #ifdef STDF95
      ! this is not good, since a choice is being made about a specific 
@@ -575,8 +578,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     var      = transf%x1_func(eta1,eta2)
   end function x1_cell_analytic
 
@@ -600,8 +603,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     var      = transf%x2_func(eta1,eta2)
   end function x2_cell_analytic
 
@@ -629,8 +632,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + (real(i,f64)+0.5_f64)*delta1 
-    eta2     = eta2_min + (real(j,f64)+0.5_f64)*delta2
+    eta1     = eta1_min + (real(i-1,f64)+0.5_f64)*delta1 
+    eta2     = eta2_min + (real(j-1,f64)+0.5_f64)*delta2
     j11 = (transf%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (transf%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (transf%j_matrix(2,1)%f( eta1, eta2 ))
@@ -673,8 +676,8 @@ contains
     eta2_min = transf%mesh%eta2_min
     delta1   = transf%mesh%delta_eta1
     delta2   = transf%mesh%delta_eta2
-    eta1     = eta1_min + real(i,f64)*delta1 
-    eta2     = eta2_min + real(j,f64)*delta2
+    eta1     = eta1_min + real(i-1,f64)*delta1 
+    eta2     = eta2_min + real(j-1,f64)*delta2
     j11 = (transf%j_matrix(1,1)%f( eta1, eta2 ))
     j12 = (transf%j_matrix(1,2)%f( eta1, eta2 ))
     j21 = (transf%j_matrix(2,1)%f( eta1, eta2 ))
@@ -731,6 +734,22 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_MTV) then
+
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+
+          do i1=1, nc_eta1+1
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_plotmtv_write( nc_eta1+1,nc_eta2+1, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
+
        else
           print*, 'Not recognized format to write this mesh'
           stop
@@ -1243,6 +1262,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_MTV) then
+
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_plotmtv_write( npts_eta1,npts_eta2, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
 
        else
           print*, 'Not recognized format to write this mesh'

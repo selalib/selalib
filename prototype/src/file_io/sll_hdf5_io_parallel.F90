@@ -25,6 +25,7 @@ module sll_hdf5_io_parallel
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
+
   use hdf5
   use sll_collective
 
@@ -43,6 +44,7 @@ contains
   !>    - Initialize fortran interface
   !>    - Create a new file using default properties
   subroutine sll_hdf5_file_create(filename, file_id, error)
+
     character(len=*), intent(in)  :: filename   !< file name
     integer,          intent(out) :: error      !< error code
     integer(hid_t),   intent(out) :: file_id    !< file unit number
@@ -68,6 +70,7 @@ contains
   !>    - Initialize fortran interface
   !>    - Open a HDF5 file
   subroutine sll_hdf5_file_open(file_id,filename,error)
+
     character(len=*) , intent(in)  :: filename    !< file name
     integer(hid_t)                 :: file_id     !< file unit number
     integer,           intent(out) :: error       !< error code
