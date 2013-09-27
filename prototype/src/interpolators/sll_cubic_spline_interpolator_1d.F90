@@ -304,6 +304,12 @@ contains  ! ****************************************************************
 #endif
 
 
+  function new_cubic_spline_1d_interpolator( ) result(res)
+    type(cubic_spline_1d_interpolator),  pointer :: res
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+  end function new_cubic_spline_1d_interpolator
+
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 
