@@ -9,9 +9,25 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_base_class.F90 
                                      simulation_VP1D_cartesian_non_unif.F90
                                      simulation_VP1D_curvilinear_analytic.F90
-                                     simulation_vp1d_fourier_fem.F90)
+                                     simulation_vp1d_fourier_fem.F90
+                                     simulation_guiding_center_2D_generalized_coords.F90)
 
-TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines)
+TARGET_LINK_LIBRARIES( sll_simulation_1d    
+                       sll_general_coordinate_quasi_neutral_solvers                   
+		               sll_scalar_field_2d_alternative
+                       sll_scalar_field
+                       sll_interpolators
+                       sll_splines
+                       sll_integration
+                       sll_constants
+                       sll_coordinate_transformations
+                       sll_logical_meshes
+                       sll_utilities
+                       sll_memory
+                       sll_assertion 	
+                       sll_working_precision
+		               deboor_splines)
+
 
 # Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
@@ -26,6 +42,7 @@ ENDMACRO(ADD_SIMULATION_1D)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem)
+ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 
 #Commands to be updated in the above simulation class standard
 #############################################################
