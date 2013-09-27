@@ -1623,8 +1623,8 @@ contains
                 efield_energy_total_c = efield_energy_total_c + &
                      delta1*delta2*(((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
                      (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
-                efield_energy_total_t = efield_energy_total_t + &
-                     delta1*delta2*efield_energy_total_t(i,j)
+!VG!                efield_energy_total_t = efield_energy_total_t + &
+!VG!                     delta1*delta2*efield_energy_total_t(i,j)
              end do
           end do
        end do
