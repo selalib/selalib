@@ -51,8 +51,14 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    type(sll_logical_mesh_2d), pointer :: mesh2d
       
    !interpolator
-   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
-   type(cubic_spline_1d_interpolator)  :: interp_spline_x, interp_spline_v
+   class(sll_interpolator_1d_base), pointer    :: interp_x
+   class(sll_interpolator_1d_base), pointer    :: interp_v
+   !type(cubic_spline_1d_interpolator):: interp_spline_x, interp_spline_v
+    type(cubic_spline_1d_interpolator)         :: interp_spline_x
+    type(cubic_spline_1d_interpolator)         :: interp_spline_v
+    type(per_1d_interpolator)                  :: interp_per_x
+    type(per_1d_interpolator)                  :: interp_per_v
+    type(odd_degree_spline_1d_interpolator)    :: interp_comp_v
    
    !time_iterations
    sll_real64 :: dt
@@ -105,10 +111,7 @@ contains
     sll_int32, parameter  :: param_out = 37, param_out_drive = 40
     
     sll_real64            :: xmax
-    type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
-    type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
-    type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
-    class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
+    !class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
 
     !type(init_landau_2d), target :: init_landau
     !class(scalar_field_2d_initializer_base), pointer    :: p_init_f
@@ -156,38 +159,36 @@ contains
     
     select case (interpol_x)
       case (1) ! periodic cubic spline
-        call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC)
-        interp_x => interp_spline_x
+        call sim%interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC)
+        sim%interp_x => sim%interp_spline_x
        case (2) ! arbitrary order periodic splines
-         call interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
-         interp_x => interp_per_x
+         call sim%interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
+         sim%interp_x => sim%interp_per_x
        case(3) ! arbitrary order Lagrange periodic interpolation
-         call interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
-         interp_x => interp_per_x
+         call sim%interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
+         sim%interp_x => sim%interp_per_x
        case default
          print*,'#interpolation in x number ', interpol_x, ' not implemented'
          stop 
     end select
     select case (interpol_v)
       case (1) ! hermite cubic spline
-       call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
-       interp_v => interp_spline_v
+       call sim%interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
+       sim%interp_v => sim%interp_spline_v
       case (2) ! arbitrary order periodic splines
-        call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
-        interp_v => interp_per_v
+        call sim%interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
+        sim%interp_v => sim%interp_per_v
       case (3) ! arbitrary order Lagrange periodic interpolation
-        call interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
-        interp_v => interp_per_v
+        call sim%interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
+        sim%interp_v => sim%interp_per_v
       case(4) ! arbitrary order open spline interpolation   
-        call interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
+        call sim%interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
       case default
         print*,'#interpolation in x number ', interpol_v, ' not implemented'
         stop 
     end select
     
-    sim%interp_x => interp_x
-    sim%interp_v => interp_v
-    
+     
     sim%dt=dt
     sim%num_iterations=nbiter
     sim%freq_diag=freqdiag
@@ -294,14 +295,19 @@ contains
     sll_real64::alpha
     sll_real64 ::tmp
     sll_int32  ::i,istep,ig
+
+    !interp_x=sim%interp_x
+    !spline_x=sim%interp_spline_x
+    
+    !interp_x=>spline_x
     
     np_x1 = sim%mesh2d%num_cells1+1
     np_x2 = sim%mesh2d%num_cells2+1
 
-    call sim%interp_spline_x%initialize( np_x1, sim%mesh2d%eta1_min, &
-      sim%mesh2d%eta1_max, SLL_PERIODIC)
-    call sim%interp_spline_v%initialize( np_x2, sim%mesh2d%eta2_min, &
-      sim%mesh2d%eta2_max, SLL_PERIODIC)
+    !call spline_x%initialize( np_x1, sim%mesh2d%eta1_min, &
+    !  sim%mesh2d%eta1_max, SLL_PERIODIC)
+    !call spline_v%initialize( np_x2, sim%mesh2d%eta2_min, &
+    !  sim%mesh2d%eta2_max, SLL_PERIODIC)
 
 
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -426,7 +432,7 @@ contains
         f1d(1:np_x2) = f_x2(i,1:np_x2)
         !print *,'#np_x2=',np_x2
         f1d(1:np_x2) = (1-alpha)* f_x2(i,1:np_x2)
-        f1d = sim%interp_spline_v%interpolate_array_disp(np_x2, f1d, alpha)
+        f1d = sim%interp_v%interpolate_array_disp(np_x2, f1d, alpha)
         !f1d = sim%interp_v%interpolate_array_disp(np_x2, f1d, alpha)
         !f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
         f_x2(i,1:np_x2) = f1d(1:np_x2)
@@ -444,7 +450,7 @@ contains
         ig=global_indices(2)
         alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) * sim%dt
         f1d(1:np_x1) = f_x1(1:np_x1,i)
-        f1d = sim%interp_x%interpolate_array_disp(np_x1, f1d, alpha)
+        !f1d = sim%interp_x%interpolate_array_disp(np_x1, f1d, alpha)
         f_x1(1:np_x1,i)=f1d(1:np_x1)
       end do
 
