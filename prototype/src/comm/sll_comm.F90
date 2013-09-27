@@ -289,10 +289,11 @@ contains
     end if
 
     SLL_ALLOCATE(comm, ierr)
-    comm%collective => collective
-    comm%num_ports  = num_ports
-    comm%comm_size = sll_get_collective_size(collective)
-
+    comm%collective  => collective
+    comm%num_ports   = num_ports
+    comm%comm_size   = sll_get_collective_size(collective)
+    comm%rank        = sll_get_collective_rank(collective)
+    comm%buffer_size = buffer_size
     ! The maximum number of ports is determined by the tagging system that 
     ! we use. It is important to verify that we don't have any problems due
     ! to the use of signed integers...
@@ -322,6 +323,8 @@ contains
     call check_port(comm,remote_port)
     call check_other_rank( comm, remote )
 
+    print *, sll_get_collective_rank(comm%collective), ' rank = ', comm%rank,&
+         'args port = ', port, 'args remote = ', remote, 'args remote port = ',  remote_port
     if( port_is_busy(comm, port) ) then
        print *, 'comm module error: connect_ports(), port to connect is busy'
        stop
@@ -367,7 +370,9 @@ contains
 
     ! arguments tests here
     if(comm%ports(port)%other_rank < 0) then
-       print *, 'comm_send_real64(), error, port not connected.'
+       print *, 'comm_send_real64(), error, port not connected, rank = ', &
+            comm%rank, ' other_rank = ', comm%ports(port)%other_rank, &
+            ' port = ', port, 'size = ', size
        stop
     end if
 

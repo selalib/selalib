@@ -25,6 +25,9 @@ program comm_unit_test
   comm => new_comm_real64( sll_world_collective, 2, PROBLEM_SIZE )
   print *, 'created new comm...'
 
+  call sll_create_comm_real64_ring( comm )
+  print *, 'configured the comm as a ring'
+  
   SLL_ALLOCATE(array1(PROBLEM_SIZE),ierr)
   SLL_ALLOCATE(array2(PROBLEM_SIZE),ierr)
 
@@ -44,8 +47,7 @@ program comm_unit_test
   buf2 => get_buffer(comm,2)
   print *, 'rank: ', rank, ' received buffer 2, count = ', count
 
-  call sll_create_comm_real64_ring( comm )
-  print *, 'configured the comm as a ring'
+ 
 
   print *, 'proceeding to delete comm...'
   call delete_comm_real64( comm )
