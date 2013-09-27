@@ -135,6 +135,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
+                       sll_poisson_solvers
                        sll_multigrid
                        sll_fft
                        sll_electric_field_accumulators
