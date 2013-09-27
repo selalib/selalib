@@ -129,6 +129,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
      simulation_4d_vlasov_poisson_general.F90
      simulation_4d_qns_general.F90
      simulation_4d_mixed_qns_cartesian.F90
+     simulation_4d_DK_hybrid.F90
      simulation_4d_vlasov_poisson_polar.F90
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
      simulation_6d_vlasov_poisson_cartesian.F90 )
@@ -174,6 +175,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_qns_general)
    ADD_SIMULATION(4d_mixed_qns_cartesian)
+   ADD_SIMULATION(4d_DK_hybrid)
    ADD_SIMULATION(4d_vp_polar)
    ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)

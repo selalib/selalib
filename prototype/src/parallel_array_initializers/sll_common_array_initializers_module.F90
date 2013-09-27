@@ -133,6 +133,7 @@ contains
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_initializer_4d
 
+
   ! this function is a 1D landau initializer used for debugging
   ! 4D drift kinetic simulations in variables x1,x2,x3 ,v1
   ! the function is constant with respect to x2 and x3
@@ -165,6 +166,7 @@ contains
          (1.0_f64+epsilon*cos(kx*x1))*exp(-0.5_f64*(v1**2))
   end function sll_landau_initializer_dk_test_4d
 
+
   !---------------------------------------------------------------------------
   !
   !                         Periodic Maxwellian
@@ -190,7 +192,6 @@ contains
   ! params(5) = epsilon
   !
   !---------------------------------------------------------------------------
-
   function sll_periodic_gaussian_initializer_4d( x, y, vx, vy, params ) &
     result(val)
 
@@ -225,8 +226,6 @@ contains
 
     val = alpha*exp(-0.5_f64*((x-xc)**2+(y-yc)**2)) + &
           beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
-
   end function sll_periodic_gaussian_initializer_4d
-
 
 end module sll_common_array_initializers_module
