@@ -408,7 +408,8 @@ contains
 
     ! error checking...
     if(.not. port_is_busy(comm, port) ) then
-       print *, 'comm_receive_real64() error: imbalanced send and receive calls'
+       print *, 'comm_receive_real64() error: port', port, ' is busy; there ', &
+            'are imbalanced send and receive calls'
        stop
     end if
 
