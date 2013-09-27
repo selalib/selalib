@@ -42,7 +42,9 @@ program comm_unit_test
 
   call comm_send_real64( comm, 1, PROBLEM_SIZE)
   print *, 'rank: ', rank, ' sent buffer 1'
-
+buf2  !por aqui
+  print *, 'rank: ', rank, ' reading from buffer in port 2: ', 
+  buf2 => get_buffer(comm,2)
   call comm_receive_real64( comm, 2, count )
   buf2 => get_buffer(comm,2)
   print *, 'rank: ', rank, ' received buffer 2, count = ', count
