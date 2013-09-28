@@ -54,11 +54,11 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    class(sll_interpolator_1d_base), pointer    :: interp_x
    class(sll_interpolator_1d_base), pointer    :: interp_v
    !type(cubic_spline_1d_interpolator):: interp_spline_x, interp_spline_v
-    type(cubic_spline_1d_interpolator)         :: interp_spline_x
-    type(cubic_spline_1d_interpolator)         :: interp_spline_v
-    type(per_1d_interpolator)                  :: interp_per_x
-    type(per_1d_interpolator)                  :: interp_per_v
-    type(odd_degree_spline_1d_interpolator)    :: interp_comp_v
+    !type(cubic_spline_1d_interpolator)         :: interp_spline_x
+    !type(cubic_spline_1d_interpolator)         :: interp_spline_v
+    !type(per_1d_interpolator)                  :: interp_per_x
+    !type(per_1d_interpolator)                  :: interp_per_v
+    !type(odd_degree_spline_1d_interpolator)    :: interp_comp_v
    
    !time_iterations
    sll_real64 :: dt
@@ -159,30 +159,32 @@ contains
     
     select case (interpol_x)
       case (1) ! periodic cubic spline
-        call sim%interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC)
-        sim%interp_x => sim%interp_spline_x
+        sim%interp_x => new_cubic_spline_1d_interpolator( Ncx + 1, xmin, xmax, SLL_PERIODIC)
+        !call sim%interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC)
+        !sim%interp_x => sim%interp_spline_x
        case (2) ! arbitrary order periodic splines
-         call sim%interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
-         sim%interp_x => sim%interp_per_x
+         !call sim%interp_per_x%initialize( Ncx + 1, xmin, xmax, SPLINE, order_x)
+         !sim%interp_x => sim%interp_per_x
        case(3) ! arbitrary order Lagrange periodic interpolation
-         call sim%interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
-         sim%interp_x => sim%interp_per_x
+         !call sim%interp_per_x%initialize( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
+         !sim%interp_x => sim%interp_per_x
        case default
          print*,'#interpolation in x number ', interpol_x, ' not implemented'
          stop 
     end select
     select case (interpol_v)
       case (1) ! hermite cubic spline
-       call sim%interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
-       sim%interp_v => sim%interp_spline_v
+       sim%interp_v => new_cubic_spline_1d_interpolator( Ncv + 1, vmin, vmax, SLL_HERMITE)
+       !call sim%interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
+       !sim%interp_v => sim%interp_spline_v
       case (2) ! arbitrary order periodic splines
-        call sim%interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
-        sim%interp_v => sim%interp_per_v
+        !call sim%interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
+        !sim%interp_v => sim%interp_per_v
       case (3) ! arbitrary order Lagrange periodic interpolation
-        call sim%interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
-        sim%interp_v => sim%interp_per_v
+        !call sim%interp_per_v%initialize( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
+        !sim%interp_v => sim%interp_per_v
       case(4) ! arbitrary order open spline interpolation   
-        call sim%interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
+        !call sim%interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
       case default
         print*,'#interpolation in x number ', interpol_v, ' not implemented'
         stop 
@@ -429,9 +431,10 @@ contains
       do i = 1,local_size_x1
         ig=i+global_indices(1)-1
         alpha = -(efield(ig)+e_app(ig)) * 0.5_f64 * sim%dt
+        alpha = 0._f64
         f1d(1:np_x2) = f_x2(i,1:np_x2)
         !print *,'#np_x2=',np_x2
-        f1d(1:np_x2) = (1-alpha)* f_x2(i,1:np_x2)
+        f1d(1:np_x2) = f_x2(i,1:np_x2)
         f1d = sim%interp_v%interpolate_array_disp(np_x2, f1d, alpha)
         !f1d = sim%interp_v%interpolate_array_disp(np_x2, f1d, alpha)
         !f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)

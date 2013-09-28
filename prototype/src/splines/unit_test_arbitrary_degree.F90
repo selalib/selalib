@@ -42,7 +42,7 @@ contains
     sll_int32                   :: max_degree
     sll_int32                   :: ierr
 
-    criterion          = 1.0e-15
+    criterion          = 1.0e-14
     argument           = 0.0_f64
     num_tests          = 10000
     argument_copy      = argument
