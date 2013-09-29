@@ -22,7 +22,7 @@ program qns_4d_mixed
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
-  sll_real64, dimension(1:5) :: landau_params
+  sll_real64, dimension(1:8) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
   sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
 
@@ -60,6 +60,10 @@ program qns_4d_mixed
        eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
        eta2_min=0.0_f64, eta2_max=1.0_f64 )
 
+!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
+!!$       eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
+!!$       eta2_min=0.0_f64, eta2_max= 4.0_f64*sll_pi )
+
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
@@ -74,26 +78,54 @@ program qns_4d_mixed
 !       eta2_min=-6.0_f64, eta2_max=6.0_f64)
 !
   ! coordinate transformation associated with space coordinates
+
+!!$  ! collela coordinate transformation for (0,4pi)x (0,1)
   transformation_x => new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
        mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22 )
+       sinprod_x1_rect, &
+       sinprod_x1_rect, &
+       sinprod_jac11_rect, &
+       sinprod_jac12_rect, &
+       sinprod_jac21_rect, &
+       sinprod_jac22_rect )
 
+  ! collela coordinate transformation for (0,4pi)x (0,4 pi)
+!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic_identity_transformation", &
+!!$       mx, &
+!!$       sinprod_x1_square, &
+!!$       sinprod_x1_square, &
+!!$       sinprod_jac11_square, &
+!!$       sinprod_jac12_square, &
+!!$       sinprod_jac21_square, &
+!!$       sinprod_jac22_square )
+
+
+
+! Identity transformation
+!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic_identity_transformation", &
+!!$       mx, &
+!!$       identity_x1, &
+!!$       identity_x2, &
+!!$       identity_jac11, &
+!!$       identity_jac12, &
+!!$       identity_jac21, &
+!!$       identity_jac22 )
+  
+
+! collela transformation on (0,1) x(0,1)
 !  transformation_x => new_coordinate_transformation_2d_analytic( &
-!       "analytic_sinprod_transformation", &
-!       mx, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22 )
-
+  !       "analytic_sinprod_transformation", &
+  !       mx, &
+  !       sinprod_x1, &
+  !       sinprod_x2, &
+  !       sinprod_jac11, &
+  !       sinprod_jac12, &
+  !       sinprod_jac21, &
+  !       sinprod_jac22 )
+  
   ! define the values of the parameters for the landau initializer
 
 !!$  gaussian_params(1) = 2.0*sll_pi !xc
@@ -102,12 +134,25 @@ program qns_4d_mixed
 !!$  gaussian_params(4) = 0.0        !vyc
 !!$  gaussian_params(5) = 1.0        !vxc
 !!$  gaussian_params(6) = 0.0        !vyc
+  
 
+!!!!! sll_landau_initializer_4d
   landau_params(1) = mx%eta1_min      !eta1_min
   landau_params(2) = mx%eta1_max
   landau_params(3) = mx%eta2_min      !eta2_min
   landau_params(4) = mx%eta2_max
   landau_params(5) = 0.05     !eps
+
+
+!!$!sll_periodic_periodic_gaussian2002_initializer_4d
+!!$  landau_params(1) = mx%eta1_min      !eta1_min
+!!$  landau_params(2) = mx%eta1_max
+!!$  landau_params(3) = mx%eta2_min      !eta2_min
+!!$  landau_params(4) = mx%eta2_max
+!!$  landau_params(5) = 0.0_f64     !eps
+!!$  landau_params(6) = 0.0_f64     !eps
+!!$  landau_params(7) = 0.05     !eps
+!!$  landau_params(8) = 1._f64     !eps
 
   ! initialize simulation object with the above parameters
   call initialize_4d_qns_mixed( &
@@ -115,7 +160,7 @@ program qns_4d_mixed
        mx, &
        mv, &
        transformation_x, &
-       sll_landau_initializer_4d, &
+       sll_landau_initializer_4d,&!sll_periodic_periodic_gaussian2002_initializer_4d,&!sll_periodic_periodic_gaussian2009_initializer_4d,&!sll_landau_initializer_4d, &
        landau_params, &
        func_one, &
        func_zero, &
@@ -191,3 +236,7 @@ function func_epsi( eta1, eta2, params ) result(res)
   res = 0.0001_8
 end function func_epsi
 
+
+ 
+
+!
