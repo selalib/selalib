@@ -140,9 +140,9 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_poisson_solvers
                        sll_multigrid
                        sll_fft
-		        sll_general_coordinate_elliptic_solvers
+		       sll_general_coordinate_elliptic_solvers
 		       deboor_splines
-		        sll_scalar_field_2d_alternative
+		       sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
