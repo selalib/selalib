@@ -1577,10 +1577,10 @@ contains ! *******************************************************************
     qns%tmp_rho_vec(:) = 0.0_f64
     qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)=&
          qns%rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2) 
-    print*, 'INTEGRALE RHO', sum(qns%tmp_rho_vec)
+    !print*, 'INTEGRALE RHO', sum(qns%tmp_rho_vec)
     call solve_general_qn_perper(qns,qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec,Masse_tot)
     
-    print*, 'INTEGRALE DE PHI= ', dot_product(Masse_tot,qns%phi_vec)
+    !print*, 'INTEGRALE DE PHI= ', dot_product(Masse_tot,qns%phi_vec)
   end subroutine solve_linear_system_perper
 
 

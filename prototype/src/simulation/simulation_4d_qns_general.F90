@@ -669,7 +669,7 @@ contains
          sim%rho_full, &
          density_tot )
     
-     print*, 'density', density_tot
+    ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
          sim%rho_full - density_tot, &
@@ -895,7 +895,7 @@ contains
             sim%rho_full, &
             density_tot )
        
-       print*, 'density', density_tot
+      ! print*, 'density', density_tot
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
        
 !!$       if(sim%my_rank == 0) then
@@ -991,12 +991,9 @@ contains
        
 
                 efield_energy_total = efield_energy_total + &
-                     delta1*delta2*(((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
-                     (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
-!!$                efield_energy_total = efield_energy_total + &
-!!$                     delta1*delta2*sqrt((((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
-!!$                     (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)))
-             end do
+                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))&
+                     *( (inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
+
           end do
        end do
 
@@ -1493,7 +1490,7 @@ contains
                delta1*delta2*(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
        end do
     end do
-    print*, length_total
+    !print*, length_total
     density_tot = density_tot/ (length_total)
   end subroutine compute_average_f
 

@@ -59,5 +59,5 @@ subroutine spli1d_per (&
        lpr_work,&
        apr_Bcoef,&
        iflag)
-  !print*, 'hello'
+
 end subroutine spli1d_per
