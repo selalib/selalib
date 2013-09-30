@@ -17,7 +17,7 @@ module sll_simulation_4d_qns_general_module
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
-  use sll_general_coordinate_qn_solver_module
+  use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
   implicit none
@@ -54,7 +54,7 @@ module sll_simulation_4d_qns_general_module
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
-     type(general_coordinate_qn_solver), pointer           :: qns
+     type(general_coordinate_elliptic_solver), pointer      :: qns
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -752,13 +752,13 @@ contains
          SLL_PERIODIC)
     
     ! Initialize the poisson plan before going into the main loop.
-    sim%qns => new_general_qn_solver( &
+    sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
          sim%mesh2d_x%num_cells1, &
          sim%mesh2d_x%num_cells2, &
-         QNS_GAUSS_LEGENDRE, &  ! put in arguments
-         QNS_GAUSS_LEGENDRE, &  ! put in arguments
+         ES_GAUSS_LEGENDRE, &  ! put in arguments
+         ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -926,7 +926,7 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call solve_quasi_neutral_eq_general_coords( &
+       call solve_general_coordinates_elliptic_eq( &
             sim%qns, & 
             a11_field_mat, &
             a12_field_mat, &
