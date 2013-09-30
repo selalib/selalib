@@ -334,7 +334,7 @@ contains
        call spli1d_dir( sz, order, point_locate_eta, &
             data_array, interpolator%coeff_splines(1:sz),&
             interpolator%t(1:sz+order) )
-       !print*, 'hello', interpolator%coeff_splines(1:sz)
+ 
   
     end select
   end subroutine compute_interpolants_ad1d
