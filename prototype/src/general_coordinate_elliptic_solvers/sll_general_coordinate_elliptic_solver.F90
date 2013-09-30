@@ -1476,7 +1476,7 @@ contains ! *******************************************************************
 
     
     !print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
-    call solve_general_elliptic_eq(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec)
+    call solve_gen_elliptic_eq(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec)
   
 !!$    allocate(resul(es%total_num_splines_eta1*es%total_num_splines_eta2))
 !!$    resul = 0.0
@@ -1509,7 +1509,7 @@ contains ! *******************************************************************
     
   end subroutine solve_linear_system
 
-  subroutine solve_general_elliptic_eq(es,csr_mat,apr_B,apr_U)
+  subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
     type(general_coordinate_elliptic_solver) :: es
     type(csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
@@ -1560,7 +1560,7 @@ contains ! *******************************************************************
             ar_eps )
     end if
     !print*,'u', apr_U
-  end subroutine solve_general_elliptic_eq
+  end subroutine solve_gen_elliptic_eq
 
 
 
