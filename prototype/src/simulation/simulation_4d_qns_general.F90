@@ -771,7 +771,7 @@ contains
          sim%mesh2d_x%eta2_min, & 
          sim%mesh2d_x%eta2_max ) 
     
-    call factorize_mat_qns(&
+    call factorize_mat_es(&
          sim%qns, & 
          a11_field_mat, &
          a12_field_mat, &
@@ -895,7 +895,7 @@ contains
             sim%rho_full, &
             density_tot )
        
-      ! print*, 'density', density_tot
+       ! print*, 'density', density_tot
        call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
        
 !!$       if(sim%my_rank == 0) then
@@ -938,7 +938,7 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call solve_general_elliptic_eq( &
+       call solve_es( &
             sim%qns, &
             rho, &
             phi )
@@ -957,7 +957,7 @@ contains
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
-
+       
        ! Start with dt in vx...(x3)
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
@@ -969,28 +969,29 @@ contains
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-
+                
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
-
+                
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha3 )
-       
-
+                
+                
                 efield_energy_total = efield_energy_total + &
-                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))&
-                     *( (inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
-
+                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)- &
+                                        jac_m(1,2)*jac_m(2,1)) &
+                                        *((inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ &
+                                          (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
+             end do
           end do
        end do
 
        !print*, 'energy total', efield_energy_total
        efield_energy_total = sqrt(efield_energy_total)
-
-!   Pourquoi faire cela !!!! 
+       
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
