@@ -1574,13 +1574,14 @@ contains ! *******************************************************************
     
     es%tmp_rho_vec = 0.0_f64
     
+
     es%tmp_rho_vec(:) = 0.0_f64
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
          es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
-    print*, 'INTEGRALE RHO', sum(es%tmp_rho_vec)
-    call solve_general_es_perper(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec,Masse_tot)
-    
-    print*, 'INTEGRALE DE PHI= ', dot_product(Masse_tot,es%phi_vec)
+ !   print*, 'INTEGRALE RHO', sum(es%tmp_rho_vec)
+    call solve_general_es_perper(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec, &
+         Masse_tot) 
+ !  print*, 'INTEGRALE DE PHI= ', dot_product(Masse_tot,es%phi_vec)
   end subroutine solve_linear_system_perper
 
 
