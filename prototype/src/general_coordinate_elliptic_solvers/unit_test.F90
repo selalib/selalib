@@ -2259,7 +2259,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call set_time_mark(t_reference)
   
   ! solve the field
-  call solve_general_coordinates_elliptic_eq( &
+  call solve_gen_coords_elliptic_eq( &
        es, &
        a11_field_mat, &
        a12_field_mat, &
@@ -2554,7 +2554,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)

@@ -468,7 +468,7 @@ contains ! *******************************************************************
   end subroutine factorize_mat_es
   
   
-  subroutine solve_es(&
+  subroutine solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -529,9 +529,11 @@ contains ! *******************************************************************
     end if
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
-  end subroutine solve_es
+  end subroutine solve_general_coordinates_elliptic_eq
   
-  subroutine solve_general_coordinates_elliptic_eq( &
+  ! This routine is considered deprecated in favor of a new interface which
+  ! separates the factorization step.
+  subroutine solve_gen_coords_elliptic_eq( &
        es, &
        a11_field_mat, &
        a12_field_mat,&
@@ -702,7 +704,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(Stiff_tot,ierr) 
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-  end subroutine solve_general_coordinates_elliptic_eq
+  end subroutine solve_gen_coords_elliptic_eq
   
   ! This is based on the assumption that all the input fields have the same
   ! boundary conditions. TO DO: put all the boundary condition parameters in
