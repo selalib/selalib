@@ -938,7 +938,7 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call solve_es( &
+       call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
