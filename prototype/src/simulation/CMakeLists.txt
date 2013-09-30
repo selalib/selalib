@@ -76,6 +76,7 @@ TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
 
 ###
 
+#IF(CMAKE_BUILD_TYPE MATCHES "Release")
 #OPENMP directives are activated only for release build
 
 IF(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -117,7 +118,7 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 ###      Parallel simulations
 #############################################################################
 # ATTENTION: From here below, the simulations/tests are parallel
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    #Here is defined the library containing the parallel simulations. 
    #Please add there your new simulation_MYMETHOD.F90 
@@ -125,6 +126,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    ADD_LIBRARY( sll_simulations STATIC 
      simulation_base_class.F90
+     simulation_2d_vlasov_poisson_cartesian.F90
      simulation_4d_vlasov_poisson_cartesian.F90
      simulation_4d_vlasov_poisson_general.F90
      simulation_4d_qns_general.F90
@@ -133,9 +135,9 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
      simulation_6d_vlasov_poisson_cartesian.F90 )
 
-
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
+                       sll_poisson_solvers
                        sll_multigrid
                        sll_fft
 		        sll_general_coordinate_elliptic_solvers
@@ -170,6 +172,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    #ADD_SIMULATION(MYMETHOD)
    ###############################################################
 
+   ADD_SIMULATION(2d_vp_cartesian)
    ADD_SIMULATION(4d)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_qns_general)

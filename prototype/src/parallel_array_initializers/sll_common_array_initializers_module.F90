@@ -2,6 +2,7 @@ module sll_common_array_initializers_module
 #include "sll_assert.h" 
 #include "sll_working_precision.h"
 #include "sll_constants.h"
+#include "sll_assert.h"
 
   implicit none
 
@@ -10,6 +11,60 @@ module sll_common_array_initializers_module
   ! not be used with this module.
 
 contains
+
+
+  ! -------------------------------------------------------------------------
+  !
+  !             Landau damping 4d initialization function
+  !
+  ! -------------------------------------------------------------------------
+  !
+  ! The params array is declared optional to conform with the expected 
+  ! function signature of the initializer subroutines, but in the particular
+  ! case of the landau initializer, the params array must be passed.
+
+
+
+  function sll_landau_initializer_2d( x, vx, params ) 
+    sll_real64 :: sll_landau_initializer_2d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=2)
+    kx = params(1)
+    eps = params(2)
+
+    !Normalization
+    !sagemath command
+    !sage : var('u v epsilon a b c d x y')
+    !sage : f(a,b,c,d,epsilon) =integral(integral(integral(integral((1+epsilon*cos(2*pi/(b-a)*x))*exp(-(u*u+v*v)/2),u,-oo,oo),v,-oo,oo),x,a,b),y,c,d)
+    
+!!$    factor1 =  1./( (eta2_min - eta2_max) &
+!!$               *(((eta1_min - eta1_max)* &
+!!$               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
+!!$                - (eta1_min - eta1_max)* &
+!!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
+!!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
+    factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
+!!$    sll_landau_initializer_4d = factor1 * &
+!!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
+    sll_landau_initializer_2d = factor1 * &
+         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*vx**2)
+  end function sll_landau_initializer_2d
+
+
+
+
 
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution

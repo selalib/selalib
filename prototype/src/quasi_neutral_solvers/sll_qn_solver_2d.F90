@@ -23,7 +23,6 @@ module sll_qn_solver_2d
   use sll_constants
   use sll_fft
   use sll_tridiagonal
-  use sll_collective
   use sll_boundary_condition_descriptors
 
   implicit none
