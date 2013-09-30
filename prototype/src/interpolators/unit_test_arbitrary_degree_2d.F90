@@ -90,7 +90,7 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
   
-  !print*, 'hello'
+
   call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&

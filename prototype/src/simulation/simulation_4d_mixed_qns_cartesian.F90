@@ -1565,9 +1565,7 @@ contains
                 efield_energy_total_q = efield_energy_total_q + &
                      delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))&
                      *( (inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
-                     !delta1*delta2*(((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
-                     !(jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
-             end do
+                                  end do
           end do
        end do
        
@@ -1829,8 +1827,7 @@ contains
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
     sll_real64 :: res
-    res = eps/k*exp(-0.1533*t)*sin(k*x)*sin(k*x-1.323*t)
-    !4.0_f64*eps*0.3677_f64*exp(-0.1533*t)*sin(k*x)*cos(-1.4156*t+0.536245)
+    res =4.0_f64*eps*0.3677_f64*exp(-0.1533*t)*sin(k*x)*cos(-1.4156*t+0.536245)
   end function efield_exact
 
   subroutine advection_x1x2_c(sim,deltat)

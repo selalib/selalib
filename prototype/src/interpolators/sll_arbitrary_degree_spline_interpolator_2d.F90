@@ -683,7 +683,7 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 + 1 
-       !print*, 'hello'
+
        !print*, period1,period2, sz1+1, sz2+1,order1,order2
        !print*, point_location_eta1,point_location_eta2
        !print*, size(data_array,1), size(data_array,2)
@@ -696,7 +696,7 @@ contains
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
-       !print*, 'hello'
+
        call spli2d_perper( &
             period1, sz1+1, order1, point_location_eta1, &
             period2, sz2+1, order2, point_location_eta2, &
@@ -824,7 +824,7 @@ contains
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
     end select
-    !print*, 'hello'
+
     val = bvalue2d( &
          res1, &
          res2, &
@@ -835,7 +835,7 @@ contains
          interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
          interpolator%t1(1:interpolator%size_t1), &
          interpolator%t2(1:interpolator%size_t2))
-    !print*, 'MERDE',val,2*(2.0*tr)**2*cos(2.0*tr*res1)*cos(2.0*tr*res2)
+
   end function interpolate_value_ad2d
 
 
