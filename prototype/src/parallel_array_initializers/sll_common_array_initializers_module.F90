@@ -138,6 +138,7 @@ contains
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
+    sll_real64 :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
@@ -159,12 +160,13 @@ contains
     eta1_max = params(2)
     eta2_min = params(3)
     eta2_max = params(4)
-
+    t=params(11)
     eps = params(5)
     kx  =  2.0_f64 * sll_pi / (eta1_max - eta1_min)
 
-    sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*x)
-    !sll_test_x_transport_initializer_v1v2x1x2 =sin(2*kx*x)+0.5*cos(kx*x)
+
+    !sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*(x-t))
+    sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*(x-vx*t))
     !sll_test_x_transport_initializer_v1v2x1x2 = exp(-4*x**2)
 
   end function sll_test_x_transport_initializer_v1v2x1x2
@@ -175,6 +177,7 @@ contains
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
+    sll_real64 :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
 
@@ -197,6 +200,7 @@ contains
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
+    sll_real64 :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
@@ -218,11 +222,11 @@ contains
     eta1_max = params(2)
     eta2_min = params(3)
     eta2_max = params(4)
-
+    t=params(11)
     eps = params(5)
     kx  =  2. * sll_pi / (eta1_max - eta1_min)
 
-    sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*vx**2)
+    sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
 !!$    sll_landau_initializer_v1v2x1x2 = 1
 !!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
 
@@ -233,6 +237,7 @@ contains
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
+    sll_real64 :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
@@ -264,6 +269,7 @@ contains
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
+    sll_real64  :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
