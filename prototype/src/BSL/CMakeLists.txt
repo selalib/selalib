@@ -16,7 +16,6 @@ TARGET_LINK_LIBRARIES(bsl_1d_quintic_uniform_compact sll_interpolators)
 ADD_EXECUTABLE(bsl_1d_quintic_nonuniform_compact test_1d_quintic_nonuniform_compact.F90)
 TARGET_LINK_LIBRARIES(bsl_1d_quintic_nonuniform_compact sll_interpolators)
 
-
 ADD_EXECUTABLE(bsl_2d_omp unit_test_2d_omp.F90)
 ADD_DEPENDENCIES(bsl_2d_omp sll_interpolators)
 TARGET_LINK_LIBRARIES(bsl_2d_omp sll_interpolators)
