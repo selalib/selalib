@@ -1,22 +1,9 @@
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_poisson_2d_periodic
-!
 !> @author
 !> Pierre Navaro
-!>
-!
-! DESCRIPTION: 
-!
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
-!>
 !> @details
 !> This module uses FFTPACK library
-!>------------------------------------------------------------------------------
-
 module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
@@ -33,29 +20,42 @@ sll_int32, private :: i, j
 
 !> fft type use to do fft with fftpack library
 type, public :: fftclass
-   sll_real64, dimension(:), pointer ::  coefc, work, workc
-   sll_real64, dimension(:), pointer :: coefd, workd, coefcd
-   sll_int32  :: n  ! number of samples in each sequence
+   sll_real64, dimension(:), pointer :: coefc !< data for complex fft
+   sll_real64, dimension(:), pointer :: work  !< work data for fft
+   sll_real64, dimension(:), pointer :: workc !< workc complex
+   sll_real64, dimension(:), pointer :: coefd !< data for double fft
+   sll_real64, dimension(:), pointer :: workd !< work data
+   sll_real64, dimension(:), pointer :: coefcd!< data for complex fft
+   sll_int32  :: n  !< number of samples in each sequence
 end type fftclass
 
 !> Object with data to solve Poisson equation on 2d domain with
 !> periodic boundary conditions
 type, public :: poisson_2d_periodic
-  sll_int32   :: nc_x, nc_y
-  sll_real64  :: dx, dy
-  sll_real64  :: x_min
-  sll_real64  :: x_max
-  sll_real64  :: y_min
-  sll_real64  :: y_max
-  sll_comp64, dimension(:,:), pointer :: rhst, ext, eyt
-  sll_real64, dimension(:,:), pointer :: kx, ky, k2
-  type(fftclass)                      :: fftx, ffty
+  sll_int32   :: nc_x  !< number of cells direction x
+  sll_int32   :: nc_y  !< number of cells direction y
+  sll_real64  :: dx    !< step size direction x
+  sll_real64  :: dy    !< step size direction y
+  sll_real64  :: x_min !< left corner direction x
+  sll_real64  :: x_max !< right corner direction x
+  sll_real64  :: y_min !< left corner direction y
+  sll_real64  :: y_max !< right corner direction y
+  sll_comp64, dimension(:,:), pointer :: rhst !< rhs fft
+  sll_comp64, dimension(:,:), pointer :: ext  !< x electric field fft
+  sll_comp64, dimension(:,:), pointer :: eyt  !< y electric field fft
+  sll_real64, dimension(:,:), pointer :: kx   !< wave number x
+  sll_real64, dimension(:,:), pointer :: ky   !< wave number y
+  sll_real64, dimension(:,:), pointer :: k2   !< \f$ k_x^2+k_y^2 \f$
+  type(fftclass)                      :: fftx !< fft plan in direction x
+  type(fftclass)                      :: ffty !< fft plan in direction y
 end type poisson_2d_periodic
 
+!> Initialize
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftpack
 end interface
 
+!> Solve
 interface solve
    module procedure solve_potential_poisson_2d_periodic_fftpack
    module procedure solve_e_fields_poisson_2d_periodic_fftpack
@@ -82,12 +82,14 @@ contains
 subroutine initialize_poisson_2d_periodic_fftpack( &
            this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
 
-   type(poisson_2d_periodic)        :: this
-   sll_int32,  intent(in)            :: nc_x
-   sll_int32,  intent(in)            :: nc_y
-   sll_real64, intent(in)            :: x_min, x_max
-   sll_real64, intent(in)            :: y_min, y_max
-   sll_int32,  intent(out)           :: error
+   type(poisson_2d_periodic) :: this   !< self object
+   sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
+   sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
+   sll_real64, intent(in)    :: x_min  !< left corner direction x
+   sll_real64, intent(in)    :: x_max  !< right corner direction x
+   sll_real64, intent(in)    :: y_min  !< left corner direction y
+   sll_real64, intent(in)    :: y_max  !< right corner direction y
+   sll_int32,  intent(out)   :: error  !< error code
    
    this%nc_x = nc_x
    this%nc_y = nc_y
@@ -115,11 +117,12 @@ end subroutine initialize_poisson_2d_periodic_fftpack
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
 
-   type(poisson_2d_periodic)                :: this
-   sll_real64, dimension(:,:), intent(in)    :: rhs
-   sll_real64, dimension(:,:), intent(out)   :: sol
-   sll_int32                                 :: nc_x, nc_y
-   sll_int32                                 :: i, j
+   type(poisson_2d_periodic)               :: this !< self object
+   sll_real64, dimension(:,:), intent(in)  :: rhs  !< charge density
+   sll_real64, dimension(:,:), intent(out) :: sol  !< electric potential
+   sll_int32                               :: nc_x !< number of cells direction x
+   sll_int32                               :: nc_y !< number of cells direction y
+   sll_int32                               :: i, j
 
    nc_x = this%nc_x
    nc_y = this%nc_y
@@ -158,13 +161,14 @@ end subroutine solve_potential_poisson_2d_periodic_fftpack
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,nrj)
 
-   type(poisson_2d_periodic)               :: this
-   sll_real64, dimension(:,:), intent(in)   :: rhs
-   sll_real64, dimension(:,:), intent(out)  :: field_x
-   sll_real64, dimension(:,:), intent(out)  :: field_y
-   sll_int32                                :: nc_x, nc_y
-   sll_int32                                :: i, j
-   sll_real64, optional                     :: nrj
+   type(poisson_2d_periodic)               :: this    !< self object
+   sll_real64, dimension(:,:), intent(in)  :: rhs     !< charge density
+   sll_real64, dimension(:,:), intent(out) :: field_x !< electric field direction x
+   sll_real64, dimension(:,:), intent(out) :: field_y !< electric field direction y
+   sll_int32                               :: nc_x    !< number of cells direction x
+   sll_int32                               :: nc_y    !< number of cells direction y
+   sll_int32                               :: i, j
+   sll_real64, optional                    :: nrj     !< \f$ \sqrt{e_x^2+e_y^2} \f$
 
    nc_x = this%nc_x
    nc_y = this%nc_y
