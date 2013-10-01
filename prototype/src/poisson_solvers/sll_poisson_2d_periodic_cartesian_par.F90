@@ -204,6 +204,8 @@ contains
     ncy  = plan%ncy
     r_Lx = 1.0_f64/plan%Lx
     r_Ly = 1.0_f64/plan%Ly
+
+    !print*, 1.0_f64/plan%Lx, 1.0_f64/plan%Ly
     ! Get layouts to compute FFTs (in each direction)
     layout_x => plan%layout_seq_x1
     layout_y => plan%layout_seq_x2
@@ -304,11 +306,12 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
-    ! Also ensure the periodicity
+
+    ! Also ensure the periodicity in x
     do j=1,npy_loc
        plan%fft_x_array(npx_loc,j) = plan%fft_x_array(1,j)
     end do
-    phi = real(plan%fft_x_array, f64)
+    phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
   end subroutine solve_poisson_2d_periodic_cartesian_par
 
 
