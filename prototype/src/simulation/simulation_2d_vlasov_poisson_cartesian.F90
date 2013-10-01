@@ -4,6 +4,8 @@ module sll_simulation_2d_vlasov_poisson_cartesian
 ! intend to use MPI instead of openmp
 ! main application is for KEEN waves
 
+!time mpirun -np 8 ./bin/test_2d_vp_cartesian keen
+
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -32,6 +34,8 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   use sll_odd_degree_spline_interpolator_1d
 
   use sll_poisson_1d_periodic
+  
+  use sll_fft
 
   use sll_simulation_base
   implicit none
@@ -147,7 +151,8 @@ contains
     end select
     select case (interpol_v)
       case (1) ! hermite cubic spline
-       sim%interp_v => new_cubic_spline_1d_interpolator( Ncv + 1, vmin, vmax, SLL_HERMITE)
+       !sim%interp_v => new_cubic_spline_1d_interpolator( Ncv + 1, vmin, vmax, SLL_HERMITE)
+       sim%interp_v => new_cubic_spline_1d_interpolator( Ncv + 1, vmin, vmax, SLL_PERIODIC)
        !call sim%interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
        !sim%interp_v => sim%interp_spline_v
       !case (2) ! arbitrary order periodic splines
@@ -313,7 +318,7 @@ contains
     sll_real64 :: adr
     sll_real64::alpha
     sll_real64 ::tmp_loc(5),tmp(5)
-    sll_int32  ::i,istep,ig
+    sll_int32  ::i,istep,ig,k
     
     sll_real64  ::   time, mass, momentum, l1norm, l2norm
     sll_real64  ::   kinetic_energy,potential_energy
@@ -322,11 +327,22 @@ contains
     sll_real64, dimension(:), allocatable :: x_array
     character(len=4)           :: fin   
     sll_int32                  :: file_id
-
-
+    
+    type(sll_fft_plan), pointer         :: pfwd
+    sll_real64, dimension(:), allocatable :: buf_fft
+    sll_comp64,dimension(:),allocatable :: rho_mode
+    
+    sll_int32 :: nb_mode = 5
+    
+    
     
     np_x1 = sim%mesh2d%num_cells1+1
     np_x2 = sim%mesh2d%num_cells2+1
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
+      pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
+      SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
+    endif
 
     ! allocate and initialize the layouts...
     layout_x1       => new_layout_2D( sll_world_collective )
@@ -402,12 +418,14 @@ contains
        f_x1, &
        sll_landau_initializer_2d, &
        (/ sim%kx,sim%eps /))
+       sim%first_step = 0
+       istep = 0
     else
       print *,'#restart strategy not implemented yet'
       stop
     endif
     
-    
+     
 
 
 
@@ -476,24 +494,26 @@ contains
     ! Ponderomotive force at initial time. We use a sine wave
     ! with parameters k_dr and omega_dr.
     istep = sim%first_step
+    e_app = 0._f64
     if (sim%driven) then
       call PFenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
           sim%t0, sim%turn_drive_off)
       do i = 1, np_x1
         e_app(i) = sim%Edrmax*adr*sim%kx&
-          *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1)
+          *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
+          -sim%omegadr*real(istep,f64)*sim%dt)
       enddo
     endif
 
     ! write initial fields
     if(sll_get_collective_rank(sll_world_collective)==0)then
       call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+      call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
       if(sim%driven)then
         call sll_binary_file_create('rhotot.bdat', rhotot_id, ierr)
         call sll_binary_file_create('efield.bdat', efield_id, ierr)
         call sll_binary_file_create('adr.bdat', adr_id, ierr)
         call sll_binary_file_create('Edr.bdat', Edr_id, ierr)
-        call sll_binary_file_create('deltaf.bdat', deltaf_id, ierr)
         call sll_binary_file_create('t.bdat', t_id, ierr)
         call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
         call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
@@ -502,6 +522,28 @@ contains
         call sll_binary_write_array_0d(t_id,real(istep,f64)*sim%dt,ierr)
       endif                    
     endif
+    
+    
+    !write also initial deltaf function
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      !print*, '#iteration: ', istep
+      SLL_ALLOCATE(f_visu(np_x1,np_x2),ierr)
+    else
+      SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
+    endif
+    call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2)&
+      -f_x1_init(1:local_size_x1,1:local_size_x2), &
+      local_size_x1*local_size_x2, MPI_REAL, f_visu, local_size_x1*local_size_x2,&
+      MPI_REAL, 0, sll_world_collective%comm,ierr);
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      !call sll_binary_file_create('f0.bdat', file_id, ierr)
+      call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
+    endif
+    SLL_DEALLOCATE(f_visu,ierr)
+
+
+
+
     
     !transposition
     call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
@@ -555,7 +597,8 @@ contains
           sim%t0, sim%turn_drive_off)
         do i = 1, np_x1
           e_app(i) = sim%Edrmax*adr*sim%kx&
-          *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1)
+          *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
+          -sim%omegadr*real(istep,f64)*sim%dt)
         enddo
       endif
 
@@ -611,11 +654,23 @@ contains
         l2norm = tmp(3)  * sim%mesh2d%delta_eta1 * sim%mesh2d%delta_eta2
         momentum = tmp(4) * sim%mesh2d%delta_eta1 * sim%mesh2d%delta_eta2
         kinetic_energy = 0.5_f64 *tmp(5) * sim%mesh2d%delta_eta1 * sim%mesh2d%delta_eta2
-        potential_energy =   0.5_f64 * sum(efield**2) * sim%mesh2d%delta_eta1
-        
+        potential_energy = 0._f64
+        do i=1, np_x1-1
+          potential_energy = potential_energy+(efield(i)+e_app(i))**2
+          !  0.5_f64 * sum((efield(1:np_x1-1)+e_app(1:np_x1-1))**2) * sim%mesh2d%delta_eta1
+        enddo
+        potential_energy = 0.5_f64*potential_energy* sim%mesh2d%delta_eta1
         if(sll_get_collective_rank(sll_world_collective)==0)then        
-          write(th_diag_id,'(f12.5,7g20.12)') time, mass, l1norm, momentum, l2norm, &
-             kinetic_energy, potential_energy, kinetic_energy + potential_energy
+          
+          buf_fft = rho(1:np_x1-1)
+          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          do k=0,nb_mode
+            rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
+          enddo  
+          write(th_diag_id,'(f12.5,13g20.12)') time, mass, l1norm, momentum, l2norm, &
+             kinetic_energy, potential_energy, kinetic_energy + potential_energy, &
+             abs(rho_mode(0)),abs(rho_mode(1)),abs(rho_mode(2)),abs(rho_mode(3)), &
+             abs(rho_mode(4)),abs(rho_mode(5))
           if(sim%driven)then
             call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
             call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
