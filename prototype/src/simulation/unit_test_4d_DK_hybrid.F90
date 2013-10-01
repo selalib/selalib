@@ -14,17 +14,22 @@ program DK_hybrid_4d
 !VG!  use sll_common_array_initializers_module
   implicit none
 
+  sll_int32 :: world_size
+  sll_int32 :: my_rank
+
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_DK_hybrid)  :: simulation
   type(sll_logical_mesh_4d), pointer :: logical_mesh4d
   
 
+  ! Parallelization initialization
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
+  world_size = sll_get_collective_size(sll_world_collective)
+  my_rank    = sll_get_collective_rank(sll_world_collective)
 
-  ! In this test, the name of the file to open is provided as a command line
-  ! argument.
+  ! Reading of the input file 'sim4d_DK_hybrid_input.txt'
   call getarg(1,filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
@@ -36,17 +41,14 @@ program DK_hybrid_4d
     eta1_max=14.5_f64,eta2_min=0.0_f64,eta2_max=2.0*sll_pi, &
     eta3_min=0._f64,eta3_max=1508._f64,eta4_min=-6._f64,eta4_max=6._f64)
 
-  ! initialize the equilibrium distribution function
-
-
   ! initialize 4D drift-kinetic Vlasov
-  call initialize_4d_DK_hybrid(simulation,logical_mesh4D)
+  call initialize(simulation, &
+    world_size, &
+    my_rank, &
+    logical_mesh4D)
 
-!VG!  ! initialize generalized QN solver
-!VG!  call initialize_QN_general(simulation)
-
-  call simulation%run( )
-  call delete(simulation)
+!VG!  call simulation%run( )
+!VG!  call delete(simulation)
 
   print *, 'reached end of 4d DK hybrid test'
   print *, 'PASSED'
