@@ -15,24 +15,46 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @file sll_constants.F90
+!> @namespace sll_constants
+!> @brief Set some physical and mathematical constants
+!> @details Set in this file all mathematical ans physical constants
+!> 
+!> <b> How to use it </b>
+!>
+!> @code #include "sll_constants.h" @endcode
+!>
+!> More details by following this link sll_constants
 module sll_constants
 #include "sll_working_precision.h"
 
-  implicit none
+implicit none
 
+!> @param PI number
+sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64 
 
-  sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64
-  ! sll_kx is the fundamental mode in the x-direction. 
-  ! It should be set at mesh initialization
-  sll_real64            :: sll_kx = 2*sll_pi 
+!> @param sll_kx is the fundamental mode in the x-direction. 
+sll_real64            :: sll_kx = 2*sll_pi 
 
+!> @param speed of light in vacuum (def) m/s  
+sll_real64, parameter :: sll_c = 2.99792458D8  
 
-  sll_real64, parameter :: sll_c = 2.99792458D8            ! speed of light in vacuum (def) m/s  
-  sll_real64, parameter :: sll_epsilon_0 = 8.854187817D-12 ! permittivity of free space F/m      
-  sll_real64, parameter :: sll_mu_0 = 12.566370614D-7      ! permeability of free space N/A^2      
-  sll_real64, parameter :: sll_e_charge = 1.60217733D-19   ! electron charge magnitude (49) C      
-  sll_real64, parameter :: sll_e_mass = 9.1093897D-31      ! electron mass (54) kg                  
-  sll_real64, parameter :: sll_proton_mass = 1.6726231D-27 ! proton mass (10) kg                    
-  sll_real64, parameter :: sll_g = 9.80665D0               ! standard grav. accel., sea level m/s^2 
+!> @param permittivity of free space F/m      
+sll_real64, parameter :: sll_epsilon_0 = 8.854187817D-12 
+
+!> @param permeability of free space N/A^2      
+sll_real64, parameter :: sll_mu_0 = 12.566370614D-7 
+
+!> @param electron charge magnitude (49) C      
+sll_real64, parameter :: sll_e_charge = 1.60217733D-19 
+
+!> @param electron mass (54) kg                  
+sll_real64, parameter :: sll_e_mass = 9.1093897D-31    
+
+!> @param proton mass (10) kg                    
+sll_real64, parameter :: sll_proton_mass = 1.6726231D-27
+
+!> @param standard grav. accel., sea level m/s^2 
+sll_real64, parameter :: sll_g = 9.80665D0             
 
 end module sll_constants
