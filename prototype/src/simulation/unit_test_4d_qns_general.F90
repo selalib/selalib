@@ -57,7 +57,7 @@ program qns_4d_general
   ! logical mesh for space coordinates
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
        eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
-       eta2_min=0.0_f64, eta2_max=4.0_f64*sll_pi )
+       eta2_min=0.0_f64, eta2_max=1.0_f64)!4.0_f64*sll_pi )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -76,22 +76,27 @@ program qns_4d_general
        identity_jac22 )
 
   ! define the values of the parameters for the landau initializer
-
+!!!!! sll_landau_initializer_4d
+  landau_params(1) = mx%eta1_min      !eta1_min
+  landau_params(2) = mx%eta1_max
+  landau_params(3) = mx%eta2_min      !eta2_min
+  landau_params(4) = mx%eta2_max
+  landau_params(5) = 0.05     !eps
 !!$  gaussian_params(1) = 2.0*sll_pi !xc
 !!$  gaussian_params(2) = 2.0*sll_pi !yc
 !!$  gaussian_params(3) = 0.0        !vxc
 !!$  gaussian_params(4) = 0.0        !vyc
 !!$  gaussian_params(5) = 1.0        !vxc
 !!$  gaussian_params(6) = 0.0        !vyc
-
-  landau_params(1) = mx%eta1_min      !eta1_min
-  landau_params(2) = mx%eta1_max
-  landau_params(3) = mx%eta2_min      !eta2_min
-  landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.0_f64     !eps
-  landau_params(6) = 0.0_f64     !eps
-  landau_params(7) = 0.05     !eps
-  landau_params(8) = 1._f64     !eps
+!!$
+!!$  landau_params(1) = mx%eta1_min      !eta1_min
+!!$  landau_params(2) = mx%eta1_max
+!!$  landau_params(3) = mx%eta2_min      !eta2_min
+!!$  landau_params(4) = mx%eta2_max
+!!$  landau_params(5) = 0.0_f64     !eps
+!!$  landau_params(6) = 0.0_f64     !eps
+!!$  landau_params(7) = 0.05     !eps
+!!$  landau_params(8) = 1._f64     !eps
   
   ! initialize simulation object with the above parameters
   call initialize_4d_qns_general( &
@@ -99,7 +104,7 @@ program qns_4d_general
        mx, &
        mv, &
        transformation_x, &
-       sll_periodic_periodic_gaussian2002_initializer_4d, &
+       sll_landau_initializer_4d,&! sll_periodic_periodic_gaussian2002_initializer_4d, &
        landau_params, &
        func_one, &
        func_zero, &
