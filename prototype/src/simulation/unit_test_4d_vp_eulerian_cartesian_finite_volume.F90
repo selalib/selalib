@@ -19,7 +19,7 @@ program vp_cartesian_4d
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx,mv
   class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv
-  sll_real64, dimension(1:10) :: landau_params
+  sll_real64, dimension(1:11) :: landau_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -45,31 +45,32 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 4
-#define NCELL2 2
-#define NCELL3 4
+#define NCELL1 128
+#define NCELL2 1
+#define NCELL3 8
 #define NCELL4 4
 #define ETA1MIN -1.0_f64
 #define ETA1MAX 1.0_f64
 !!$#define ETA1MIN -6.0_f64
 !!$#define ETA1MAX 6.0_f64
-#define ETA2MIN -6.0_f64
-#define ETA2MAX 6.0_f64
-!!$#define ETA2MIN -1.0_f64
-!!$#define ETA2MAX 1.0_f64
-#define ETA3MIN 0.0_f64
-#define ETA3MAX 4.0_f64*sll_pi
-!!$#define ETA3MIN -1.0_f64
-!!$#define ETA3MAX 1.0_f64
+!!$#define ETA2MIN -6.0_f64
+!!$#define ETA2MAX 6.0_f64
+#define ETA2MIN -1.0_f64
+#define ETA2MAX 1.0_f64
+!!$#define ETA3MIN 0.0_f64
+!!$#define ETA3MAX 4.0_f64*sll_pi
+#define ETA3MIN -1.0_f64
+#define ETA3MAX 1.0_f64
 !!$#define ETA4MIN -1.0_f64
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
-#define TMAX 2.e0_f64
+#define TINI 0.0_f64
+#define TMAX 3.e-1_f64
 !#define TMAX 0.0001_f64
-#define CFL 0.4_f64
+#define CFL 0.08_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
-#define TEST 0
+#define TEST 2
 ! 0: x transport 1: landau damping 1d  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
 
@@ -122,6 +123,7 @@ program vp_cartesian_4d
     landau_params(8)=TEST
     landau_params(9)=ELECMAX
     landau_params(10)=SCHEME
+    landau_params(11)=TINI
   ! initialize simulation object with the above parameters
     if(TEST==0) then
        call initialize_vp4d( &
