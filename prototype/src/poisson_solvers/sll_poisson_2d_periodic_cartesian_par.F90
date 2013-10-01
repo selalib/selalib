@@ -182,7 +182,7 @@ contains
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   subroutine solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
-    type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
+    type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan !< self object
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
@@ -315,6 +315,7 @@ contains
   end subroutine solve_poisson_2d_periodic_cartesian_par
 
 
+!> Delete the Poisson solver object
   subroutine delete_poisson_2d_periodic_plan_cartesian_par(plan)
     type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
     sll_int32                                              :: ierr
@@ -340,11 +341,12 @@ contains
     SLL_DEALLOCATE(plan, ierr)
   end subroutine delete_poisson_2d_periodic_plan_cartesian_par
 
+!> Check that arrays match layout properties
   subroutine verify_argument_sizes_par(layout, rho, phi)
-    type(layout_2D), pointer       :: layout
-    sll_real64, dimension(:,:)     :: rho
-    sll_real64, dimension(:,:)     :: phi
-    sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
+    type(layout_2D), pointer       :: layout !< layout for remap
+    sll_real64, dimension(:,:)     :: rho    !< charge density
+    sll_real64, dimension(:,:)     :: phi    !< electric potential
+    sll_int32,  dimension(2)       :: n      ! nx_loc, ny_loc
     sll_int32                      :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
