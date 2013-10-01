@@ -1,19 +1,31 @@
 !> @namespace sll_file_io
-!> @author Pierre Navaro
 !> @brief 
 !> Library to create files readable by visualization softwares.
 !> @details
 !> External links:
-!> - gnuplot http://www.gnuplot.info
-!> - VisIt   https://wci.llnl.gov/codes/visit/
-!> - Xdmf    http://www.xdmf.org/index.php/Main_Page
-!> - HDF5    http://www.hdfgroup.org/HDF5/
+!> <table>
+!> <tr><td> gnuplot </td><td>http://www.gnuplot.info                 </td></tr>
+!> <tr><td> VisIt   </td><td>https://wci.llnl.gov/codes/visit/       </td></tr>
+!> <tr><td> Xdmf    </td><td>http://www.xdmf.org/index.php/Main_Page </td></tr>
+!> <tr><td> HDF5    </td><td>http://www.hdfgroup.org/HDF5/           </td></tr>
+!> <tr><td> Plotmtv </td><td>http://www.phy.ornl.gov/csep/CSEP/CORNELL/TUTORIAL/PLOTMTV/OVERVIEW.html           </td></tr>
+!> </table>
 !>
-!> Use this module with
-!> \code
-!> #include "sll_file_io.h"
-!> \endcode
-!> link with <code>sll_file_io</code> library
+!> <b> Modules available </b>
+!>
+!> - sll_xdmf
+!> - sll_ascii_io
+!> - sll_gnuplot
+!> - sll_binary_io
+!> - sll_xml_io
+!> - sll_hdf5_io
+!> - sll_plotmtv
+!>
+!> <b> How to use it </b>
+!> - Header file : \code #include "sll_file_io.h" \endcode
+!> - Link with   <code>sll_file_io</code> library
+!>
+!> <b> Examples </b>
 !> - Plot a 2D field described on a cartesian mesh, axis are perpendicular and spacing is constant.
 !> \code
 !> call sll_xdmf_corect2d_nodes("file_name",df,"field_name",x_min,dx,y_min,dy,"HDF5")
