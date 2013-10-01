@@ -139,6 +139,7 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
     j = j + 1
 
     if ( jhigh <= j ) then
+
       exit
     end if
 
