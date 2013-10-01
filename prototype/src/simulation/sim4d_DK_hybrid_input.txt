@@ -1,19 +1,21 @@
-&grid_dims
-  num_cells_x1 = 32
-  num_cells_x2 = 32
-  num_cells_x3 = 32
-  num_cells_x4 = 32
-/
-
-&sim_params
-  dt = 0.1
-  number_iterations = 10
-  spline_degree     = 3
+&mesh
+  num_cells_x1 = 127
+  num_cells_x2 = 63
+  num_cells_x3 = 31
+  num_cells_x4 = 15
+  eta1_min     = 0.1
+  eta2_min     = 0.
+  eta3_min     = 0.
+  vpar_min     = -6.
+  Leta1        = 14.5  
+  Leta2        = 6.283185307179586476925286766559005768394
+  Leta3        = 1508.
+  Lvpar        = 12.
 /
 
 &equilibrium
   tau0     = 1.
-  rpeak    = 0.5
+  rho_peak = 0.5
   kappan   = 0.8
   deltarn  = 0.2
   kappaTi  = 4.
@@ -27,4 +29,10 @@
   mmode          = 11
   nmode          = 3
   eps_perturb    = 0.001
+/
+
+&sim_params
+  dt                = 0.1
+  number_iterations = 10
+  spline_degree     = 3
 /
