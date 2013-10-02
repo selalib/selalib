@@ -1,8 +1,8 @@
-program test_general_qns
+program test_general_elliptic_solver
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-  use sll_general_coordinate_qn_solver_module
+  use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_alternative
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
@@ -23,7 +23,7 @@ program test_general_qns
 
   type(sll_logical_mesh_2d), pointer                    :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
-  type(general_coordinate_qn_solver)                    :: qns
+  type(general_coordinate_elliptic_solver)              :: es
   type(arb_deg_2d_interpolator), target                 :: interp_2d
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
@@ -101,9 +101,9 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   
   
-!!$  !************************************************************************************************
+!!$  !*******************************************************************
 !!$  !        WHITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA
-!!$  !************************************************************************************************
+!!$  !*******************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  !     1 test case without change of coordinates 
 !!$  !      periodic-periodic boundary conditions
@@ -231,14 +231,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
@@ -250,13 +250,13 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$ 
 !!$  t1i = time_elapsed_since(t_reference)
 !!$ 
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$
 !!$  call set_time_mark(t_reference)
 !!$
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -267,7 +267,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t1e = time_elapsed_since(t_reference)
 !!$
-!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  !print *, 'Completed solution',es%phi_vec
 !!$  print*, 'reorganizaton of splines coefficients of solution'
 !!$  
 !!$  !  print *, 'Compare the values of the transformation at the nodes: '
@@ -309,7 +309,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -454,18 +454,18 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET)
 !!$  
 !!$  print *, 'initialized fields...'
-!!$!  print *, 'a = ', qns%csr_mat%opr_a
+!!$!  print *, 'a = ', es%csr_mat%opr_a
 !!$
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_DIRICHLET, &
@@ -475,12 +475,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       ETA2MIN, &
 !!$       ETA2MAX)
 !!$  t2i = time_elapsed_since(t_reference) 
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -489,7 +489,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho, &
 !!$       phi )
 !!$
-!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  !print *, 'Completed solution',es%phi_vec
 !!$
 !!$  t2e = time_elapsed_since(t_reference)
 !!$  
@@ -520,7 +520,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call phi%write_to_file(0)
 !!$  
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -667,14 +667,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET, &
@@ -686,13 +686,13 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t3i = time_elapsed_since(t_reference) 
 !!$
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$
 !!$  call set_time_mark(t_reference)
 !!$
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -701,7 +701,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho, &
 !!$       phi )
 !!$
-!!$  call interp_2d%set_coefficients( qns%phi_vec)
+!!$  call interp_2d%set_coefficients( es%phi_vec)
 !!$ 
 !!$  
 !!$  t3e = time_elapsed_since(t_reference)
@@ -731,7 +731,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       ' integrale de la solution exacte =', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -876,14 +876,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_PERIODIC, &
@@ -894,13 +894,13 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       ETA2MAX)
 !!$  
 !!$  t4i = time_elapsed_since(t_reference) 
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -935,7 +935,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       ' integrale de la solution exacte=',sum(reference(1:npts1-1,1:npts2-1))*h1*h2
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -1082,14 +1082,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
@@ -1100,12 +1100,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       ETA2MAX)
 !!$  
 !!$  t5i = time_elapsed_since(t_reference) 
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  
 !!$  call set_time_mark(t_reference)  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -1114,7 +1114,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho, &
 !!$       phi )
 !!$  
-!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  !print *, 'Completed solution',es%phi_vec
 !!$  
 !!$  t5e = time_elapsed_since(t_reference)  
 !!$  
@@ -1160,7 +1160,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       'integrale de la solution exacte=', integrale_solution_exacte
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -1304,14 +1304,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
@@ -1322,12 +1322,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       ETA2MAX)
 !!$
 !!$  t55i = time_elapsed_since(t_reference) 
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$
 !!$  call set_time_mark(t_reference)  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -1336,7 +1336,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho, &
 !!$       phi )
 !!$
-!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  !print *, 'Completed solution',es%phi_vec
 !!$  
 !!$  t55e = time_elapsed_since(t_reference)  
 !!$  
@@ -1373,7 +1373,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  print*,  real(i,f64)*h1 + ETA1MIN
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -1516,18 +1516,18 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  print *, 'initialized fields...'
 !!$  
-!!$  !  print *, 'a = ', qns%csr_mat%opr_a
+!!$  !  print *, 'a = ', es%csr_mat%opr_a
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_DIRICHLET, &
@@ -1539,13 +1539,13 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$
 !!$  t6i = time_elapsed_since(t_reference) 
 !!$  
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -1594,7 +1594,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       'integrale de la solution exacte=', integrale_solution_exacte
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -1739,14 +1739,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  print *, 'initialized fields...'
 !!$  
 !!$  call set_time_mark(t_reference)
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET, &
@@ -1758,13 +1758,13 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t7i = time_elapsed_since(t_reference) 
 !!$  
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -1811,7 +1811,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       'integrale de la solution excate=', integrale_solution_exacte
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -1959,14 +1959,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET,&
 !!$       SLL_PERIODIC,&
@@ -1978,12 +1978,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t8i = time_elapsed_since(t_reference) 
 !!$  
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -1992,7 +1992,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho, &
 !!$       phi )
 !!$  
-!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  !print *, 'Completed solution',es%phi_vec
 !!$  
 !!$  t8e = time_elapsed_since(t_reference)
 !!$  
@@ -2030,7 +2030,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       'integrale de la solution exacte=', integrale_solution_exacte
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -2236,14 +2236,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   call set_time_mark(t_reference)
   
-  call initialize_general_qn_solver( &
-       qns, &
+  call initialize_general_elliptic_solver( &
+       es, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
        NUM_CELLS1, &
        NUM_CELLS2, &
-       QNS_GAUSS_LEGENDRE, &
-       QNS_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
@@ -2255,12 +2255,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   t95i = time_elapsed_since(t_reference) 
   
-  print *, 'Initialized QNS object'
+  print *, 'Initialized ES object'
   call set_time_mark(t_reference)
   
   ! solve the field
-  call solve_quasi_neutral_eq_general_coords( &
-       qns, &
+  call solve_gen_coords_elliptic_eq( &
+       es, &
        a11_field_mat, &
        a12_field_mat, &
        a21_field_mat, &
@@ -2269,7 +2269,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho, &
        phi )
   
-  !print *, 'Completed solution',qns%phi_vec
+  !print *, 'Completed solution',es%phi_vec
     
   t95e = time_elapsed_since(t_reference)
   
@@ -2321,7 +2321,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(qns)
+  call delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -2522,14 +2522,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   call set_time_mark(t_reference)
   
-  call initialize_general_qn_solver( &
-       qns, &
+  call initialize_general_elliptic_solver( &
+       es, &
        SPLINE_DEG1, &
        SPLINE_DEG2, &
        NUM_CELLS1, &
        NUM_CELLS2, &
-       QNS_GAUSS_LEGENDRE, &
-       QNS_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
@@ -2541,11 +2541,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   t95i = time_elapsed_since(t_reference) 
   
-  print *, 'Initialized QNS object'
+  print *, 'Initialized ES object'
   call set_time_mark(t_reference)
   
-  call factorize_mat_qns(&
-       qns, &
+  call factorize_mat_es(&
+       es, &
        a11_field_mat, &
        a12_field_mat,&
        a21_field_mat,&
@@ -2554,12 +2554,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
 
   ! solve the field
-  call solve_qns(&
-       qns,&
+  call solve_general_coordinates_elliptic_eq(&
+       es,&
        rho,&
        phi)
   
-  !print *, 'Completed solution',qns%phi_vec
+  !print *, 'Completed solution',es%phi_vec
   
   t95e = time_elapsed_since(t_reference)
   
@@ -2611,7 +2611,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(qns)
+  call delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -2809,14 +2809,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC,&
@@ -2828,12 +2828,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t9i = time_elapsed_since(t_reference) 
 !!$  
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -2842,7 +2842,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho, &
 !!$       phi )
 !!$  
-!!$  !print *, 'Completed solution',qns%phi_vec
+!!$  !print *, 'Completed solution',es%phi_vec
 !!$  
 !!$  t9e = time_elapsed_since(t_reference)
 !!$  
@@ -2892,7 +2892,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call phi%write_to_file(0)
 !!$  call rho%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -3083,14 +3083,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$  
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC,&
 !!$       SLL_DIRICHLET,&
@@ -3102,12 +3102,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$
 !!$  t10i = time_elapsed_since(t_reference) 
 !!$  
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -3154,7 +3154,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -3343,14 +3343,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  print *, 'initialized fields...'
 !!$  call set_time_mark(t_reference)
 !!$  
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET,&
@@ -3362,12 +3362,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t11i = time_elapsed_since(t_reference) 
 !!$
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -3415,7 +3415,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -3602,14 +3602,14 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  call set_time_mark(t_reference)
 !!$
-!!$  call initialize_general_qn_solver( &
-!!$       qns, &
+!!$  call initialize_general_elliptic_solver( &
+!!$       es, &
 !!$       SPLINE_DEG1, &
 !!$       SPLINE_DEG2, &
 !!$       NUM_CELLS1, &
 !!$       NUM_CELLS2, &
-!!$       QNS_GAUSS_LEGENDRE, &
-!!$       QNS_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
+!!$       ES_GAUSS_LEGENDRE, &
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET,&
 !!$       SLL_PERIODIC, &
@@ -3621,12 +3621,12 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t12i = time_elapsed_since(t_reference) 
 !!$
-!!$  print *, 'Initialized QNS object'
+!!$  print *, 'Initialized ES object'
 !!$  call set_time_mark(t_reference)
 !!$  
 !!$  ! solve the field
-!!$  call solve_quasi_neutral_eq_general_coords( &
-!!$       qns, &
+!!$  call solve_general_coordinates_elliptic_eq( &
+!!$       es, &
 !!$       a11_field_mat, &
 !!$       a12_field_mat, &
 !!$       a21_field_mat, &
@@ -3673,7 +3673,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       'integrale de la solution exacte=', integrale_solution_exacte
 !!$  call phi%write_to_file(0)
 !!$  ! delete things...
-!!$  call delete(qns)
+!!$  call delete(es)
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
@@ -3762,7 +3762,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
 !!$  
   print *, 'PASSED'
-end program test_general_qns
+end program test_general_elliptic_solver
 
 
 
