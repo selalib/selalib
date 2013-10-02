@@ -226,7 +226,7 @@ subroutine Gradient_conj_perper ( this, apr_B,apr_U, ai_maxIter, ar_eps )
             ! approximations ponctuelles au rang k+1 !
             !----------------------------------------!
             lpr_Ux = lpr_Ux + lr_alpha * lpr_d
-            !print*, 'HELLO'
+
             !print *, 'a = ', mat_moyenne % opr_a(1:mat_moyenne%opi_ia(2)-1)
             !call Mult_CSR_Matrix_Vector(mat_moyenne, lpr_Ux, masse_fois_U)
             !print*, 'retereter',  sum(lpr_Ux)/nb_spline_tot
@@ -494,7 +494,7 @@ subroutine Gradient_conj_perper_variante ( this, apr_B,apr_U, ai_maxIter, ar_eps
             ! approximations ponctuelles au rang k+1 !
             !----------------------------------------!
             lpr_Ux = lpr_Ux + lr_alpha * lpr_d
-            !print*, 'HELLO'
+
             !print *, 'a = ', mat_moyenne % opr_a(1:mat_moyenne%opi_ia(2)-1)
             !call Mult_CSR_Matrix_Vector(mat_moyenne, lpr_Ux, masse_fois_U)
             !print*, 'retereter',  sum(lpr_Ux)/nb_spline_tot

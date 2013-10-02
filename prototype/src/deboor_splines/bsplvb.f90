@@ -104,8 +104,6 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
   real ( kind = 8 ) term
   real ( kind = 8 ) x
 
-  !print*, 'IN SPLINE',t
-!  print*, 'MERDEEEEEEEEEEEE', t
   if ( index == 1 ) then
     j = 1
     biatx(1) = 1.0D+00
@@ -113,7 +111,7 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
       return
     end if
   end if
- ! print*, 'MERDEEEEEEEEEEEE  2222222222'
+
   if ( t(left+1) <= t(left) ) then
     print*,'x=',x
     write ( *, '(a)' ) ' '
@@ -141,7 +139,7 @@ subroutine bsplvb ( t, jhigh, index, x, left, biatx )
     j = j + 1
 
     if ( jhigh <= j ) then
-  !     print*, 'MERDEEEEEEEEEEEE'
+
       exit
     end if
 

@@ -1,12 +1,18 @@
 !> @brief 
 !> Selalib periodic 2D poisson solver for cartesian coordinates.
-!> Start date: Sep. 4, 2012
-!> Last modification: Sep. 4, 2012
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr), 
 !> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
 !                                  
+!> @details
+!> While the solution region is 2D, the following solver is meant to be used 
+!> with 4D arrays with size 1 in the last two dimensions. The reason for this
+!> is that the input data, the rho array, is the result of a reduction
+!> process in the last 2 dimensions. The computation of the potential
+!> which may be an in-place operation, needs to be treated as a 4D array
+!> in order to remap it appropriately with the 4D distribution function.
+!> There might be ways around this, like using 'reshape'...
 !**************************************************************************
 
 module sll_poisson_2d_periodic_cartesian_par
@@ -15,6 +21,7 @@ module sll_poisson_2d_periodic_cartesian_par
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
+
   use sll_remapper
   use sll_fft
   use sll_constants
@@ -22,65 +29,60 @@ module sll_poisson_2d_periodic_cartesian_par
 
   implicit none
 
-  ! While the solution region is 2D, the following solver is meant to be used 
-  ! with 4D arrays with size 1 in the last two dimensions. The reason for this
-  ! is that the input data, the rho array, is the result of a reduction
-  ! process in the last 2 dimensions. The computation of the potential
-  ! which may be an in-place operation, needs to be treated as a 4D array
-  ! in order to remap it appropriately with the 4D distribution function.
-  ! There might be ways around this, like using 'reshape'...
-
+  !> Structure to store data from Poisson solver. This
+  !> solver is parallel on structured cartesian mesh. Numerical method
+  !> uses FFT transforms.
   type poisson_2d_periodic_plan_cartesian_par
-     sll_int32                                 :: ncx   ! number of cells  
-     sll_int32                                 :: ncy   ! number of cells
-     sll_real64                                :: Lx    ! domain length 
-     sll_real64                                :: Ly    ! domain length
-     type(sll_fft_plan), pointer               :: px
-     type(sll_fft_plan), pointer               :: py
-     type(sll_fft_plan), pointer               :: px_inv
-     type(sll_fft_plan), pointer               :: py_inv
-     type(layout_2D),  pointer                 :: layout_seq_x1
-     type(layout_2D),  pointer                 :: layout_seq_x2
-     sll_int32                                 :: seq_x1_local_sz_x1
-     sll_int32                                 :: seq_x1_local_sz_x2
-     sll_int32                                 :: seq_x2_local_sz_x1
-     sll_int32                                 :: seq_x2_local_sz_x2
-     sll_comp64, dimension(:,:), pointer       :: fft_x_array
-     sll_comp64, dimension(:,:), pointer       :: fft_y_array
-     type(remap_plan_2D_comp64), pointer       :: rmp_xy
-     type(remap_plan_2D_comp64), pointer       :: rmp_yx
+     sll_int32                           :: ncx    !< number of cells  
+     sll_int32                           :: ncy    !< number of cells
+     sll_real64                          :: Lx     !< domain length 
+     sll_real64                          :: Ly     !< domain length
+     type(sll_fft_plan), pointer         :: px     !< fft plan in x
+     type(sll_fft_plan), pointer         :: py     !< fft plan in y
+     type(sll_fft_plan), pointer         :: px_inv !< inverse fft plan in x
+     type(sll_fft_plan), pointer         :: py_inv !< inverse fft plan in y
+     type(layout_2D),  pointer           :: layout_seq_x1 !< layout sequential in x
+     type(layout_2D),  pointer           :: layout_seq_x2 !< layout sequential in y
+     sll_int32                           :: seq_x1_local_sz_x1 !< local size 
+     sll_int32                           :: seq_x1_local_sz_x2 !< local size 
+     sll_int32                           :: seq_x2_local_sz_x1 !< local size 
+     sll_int32                           :: seq_x2_local_sz_x2 !< local size 
+     sll_comp64, dimension(:,:), pointer :: fft_x_array !< array for fft in x
+     sll_comp64, dimension(:,:), pointer :: fft_y_array !< array for fft in y
+     type(remap_plan_2D_comp64), pointer :: rmp_xy !< remap to transpose from x to y
+     type(remap_plan_2D_comp64), pointer :: rmp_yx !< remap to transpose from y to x
   end type poisson_2d_periodic_plan_cartesian_par
 
 contains
 
-  ! Presently, this function receives the geometric information as 
-  ! individual arguments. We should consider passing the 'simple geometry'
-  ! object that we have for the cartesian cases.
+  !> Presently, this function receives the geometric information as 
+  !> individual arguments. We should consider passing the 'simple geometry'
+  !> object that we have for the cartesian cases.
   function new_poisson_2d_periodic_plan_cartesian_par( &
-    start_layout, &
-    ncx, &
-    ncy, &
-    Lx, &
+    start_layout, &   
+    ncx, &            
+    ncy, &            
+    Lx, &    
     Ly ) result(plan)
 
     type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
-    type(layout_2D), pointer                     :: start_layout
-    sll_int32                                    :: ncx
-    sll_int32                                    :: ncy
-    sll_real64                                   :: Lx
-    sll_real64                                   :: Ly
-    sll_int64                                    :: colsz ! collective size
-    type(sll_collective_t), pointer              :: collective
+    type(layout_2D), pointer         :: start_layout !< First layout
+    sll_int32                        :: ncx          !< number of cells in x
+    sll_int32                        :: ncy          !< number of cells in y
+    sll_real64                       :: Lx           !< length x
+    sll_real64                       :: Ly           !< length y
+    sll_int64                        :: colsz ! collective size
+    type(sll_collective_t), pointer  :: collective
     ! number of processors
-    sll_int32                                    :: nprocx1
-    sll_int32                                    :: nprocx2
-    sll_int32                                    :: ierr 
-    sll_int32                                    :: loc_sz_x1
-    sll_int32                                    :: loc_sz_x2
-    !sll_int32                                    :: seq_x1_local_sz_x1
-    !sll_int32                                    :: seq_x1_local_sz_x2
-    !sll_int32                                    :: seq_x2_local_sz_x1
-    !sll_int32                                    :: seq_x2_local_sz_x2
+    sll_int32                        :: nprocx1
+    sll_int32                        :: nprocx2
+    sll_int32                        :: ierr 
+    sll_int32                        :: loc_sz_x1
+    sll_int32                        :: loc_sz_x2
+    !sll_int32                        :: seq_x1_local_sz_x1
+    !sll_int32                        :: seq_x1_local_sz_x2
+    !sll_int32                        :: seq_x2_local_sz_x1
+    !sll_int32                        :: seq_x2_local_sz_x2
 
     ! The collective to be used is the one that comes with the given layout.
     collective => get_layout_collective( start_layout )
@@ -177,25 +179,26 @@ contains
      new_remap_plan(plan%layout_seq_x2, plan%layout_seq_x1, plan%fft_y_array)
   end function new_poisson_2d_periodic_plan_cartesian_par
 
-  ! Note that the equation that is solved is:  laplacian(phi) = rho Thus the 
-  ! user is responsible for giving the proper sign to the source term.
+  !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
+  !> Thus the user is responsible for giving the proper sign to the source term.
   subroutine solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
-    type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
-    sll_real64, dimension(:,:)                     :: rho
-    sll_real64, dimension(:,:)                     :: phi
-    ! global sizes
-    sll_int32                                      :: ncx, ncy
-    sll_int32                                      :: npx_loc, npy_loc
-    sll_int32                                      :: i, j
+    type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan !< self object
+    sll_real64, dimension(:,:)        :: rho      !< charge density
+    sll_real64, dimension(:,:)        :: phi      !< electric potential
+    sll_int32                         :: ncx      !< global size
+    sll_int32                         :: ncy      !< global size
+    sll_int32                         :: npx_loc
+    sll_int32                         :: npy_loc
+    sll_int32                         :: i, j
     ! Reciprocals of domain lengths.
-    sll_real64                                     :: r_Lx, r_Ly
-    sll_real64                                     :: kx, ky
-    sll_comp64                                     :: val
-    sll_real64                                     :: normalization
-    type(layout_2D), pointer                       :: layout_x
-    type(layout_2D), pointer                       :: layout_y
-    sll_int32, dimension(1:2)                      :: global
-    sll_int32                                      :: gi, gj
+    sll_real64                        :: r_Lx, r_Ly
+    sll_real64                        :: kx, ky
+    sll_comp64                        :: val
+    sll_real64                        :: normalization
+    type(layout_2D), pointer          :: layout_x
+    type(layout_2D), pointer          :: layout_y
+    sll_int32, dimension(1:2)         :: global
+    sll_int32                         :: gi, gj
 
     ncx  = plan%ncx
     ncy  = plan%ncy
@@ -312,6 +315,7 @@ contains
   end subroutine solve_poisson_2d_periodic_cartesian_par
 
 
+!> Delete the Poisson solver object
   subroutine delete_poisson_2d_periodic_plan_cartesian_par(plan)
     type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
     sll_int32                                              :: ierr
@@ -337,11 +341,12 @@ contains
     SLL_DEALLOCATE(plan, ierr)
   end subroutine delete_poisson_2d_periodic_plan_cartesian_par
 
+!> Check that arrays match layout properties
   subroutine verify_argument_sizes_par(layout, rho, phi)
-    type(layout_2D), pointer       :: layout
-    sll_real64, dimension(:,:)     :: rho
-    sll_real64, dimension(:,:)     :: phi
-    sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
+    type(layout_2D), pointer       :: layout !< layout for remap
+    sll_real64, dimension(:,:)     :: rho    !< charge density
+    sll_real64, dimension(:,:)     :: phi    !< electric potential
+    sll_int32,  dimension(2)       :: n      ! nx_loc, ny_loc
     sll_int32                      :: i
 
     ! Note that this checks for strict sizes, not an array being bigger

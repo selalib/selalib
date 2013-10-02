@@ -1,4 +1,4 @@
-!>Solve Poisson equation on cartesian domain with finit elements.
+!>Solve Poisson equation on cartesian domain with finite elements.
 !> * Compact boundary conditions.
 !> * Linear system solve with lapack (Choleski)
 module sll_poisson_2d_fem
@@ -8,17 +8,21 @@ module sll_poisson_2d_fem
 use sll_constants
 implicit none
 
+!> Structure to solve Poisson equation on 2d domain. Mesh is cartesian and
+!> could be irregular. Numerical method is using finite elements.
 type :: poisson_fem
-   sll_real64, dimension(:,:), pointer :: A
-   sll_real64, dimension(:,:), pointer :: M
-   sll_real64, dimension(:,:), pointer :: mat
-   sll_real64, dimension(:)  , pointer :: hx    !< step size x
-   sll_real64, dimension(:)  , pointer :: hy    !< step size y
+   sll_real64, dimension(:,:), pointer :: A   !< Mass matrix
+   sll_real64, dimension(:,:), pointer :: M   !< Stiffness matrix
+   sll_real64, dimension(:,:), pointer :: mat !< Matrix solve by Lapack
+   sll_real64, dimension(:)  , pointer :: hx  !< step size x
+   sll_real64, dimension(:)  , pointer :: hy  !< step size y
 end type poisson_fem
 
+!> Initialize the solver 
 interface initialize
    module procedure initialize_poisson_2d_fem
 end interface initialize
+!> Compute the potential
 interface solve
    module procedure solve_poisson_2d_fem
 end interface solve
@@ -205,6 +209,7 @@ call dpbtrf('U',(nx-1)*(ny-1),nx,this%mat,nx+1,error)
 
 end subroutine initialize_poisson_2d_fem
 
+!> Get the node index
 integer function som(i, j, k)
 
    integer :: i, j, k
@@ -265,6 +270,7 @@ end do
 
 end subroutine solve_poisson_2d_fem
 
+!> Write the Plotmtv file to plot the irregular mesh with node number and cell number
 subroutine write_mtv_file( x, y )
 real(8), dimension(:) :: x
 real(8), dimension(:) :: y

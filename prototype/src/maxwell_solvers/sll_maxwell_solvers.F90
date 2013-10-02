@@ -22,7 +22,9 @@
 !> @details
 !> Solvers available:
 !> - sll_maxwell_2d_fdtd
+!> - sll_maxwell_3d_fdtd
 !> - sll_maxwell_2d_pstd
+!> - sll_maxwell_3d_pstd
 !> - sll_maxwell_2d_periodic_cartesian_par
 module sll_maxwell_solvers
 
