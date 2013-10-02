@@ -18,7 +18,7 @@
 !> \file sll_cubic_splines.F90
 !> \namespace sll_cubic_splines
 !> \brief  
-!> The splines module provides capabilities for data interpolation with 
+!> provides capabilities for data interpolation with 
 !> cubic B-splines and different boundary conditions
 !> \details
 !> (at the time of this writing: periodic, hermite). The data to be 

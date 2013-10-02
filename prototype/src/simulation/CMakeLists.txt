@@ -76,6 +76,7 @@ TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
 
 ###
 
+#IF(CMAKE_BUILD_TYPE MATCHES "Release")
 #OPENMP directives are activated only for release build
 
 IF(CMAKE_BUILD_TYPE MATCHES "Release")
@@ -125,22 +126,23 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    ADD_LIBRARY( sll_simulations STATIC 
      simulation_base_class.F90
+     simulation_2d_vlasov_poisson_cartesian.F90
      simulation_4d_vlasov_poisson_cartesian.F90
      simulation_4d_vlasov_poisson_general.F90
      simulation_4d_qns_general.F90
-     simulation_4d_mixed_qns_cartesian.F90
+     #simulation_4d_mixed_qns_cartesian.F90
      simulation_4d_DK_hybrid.F90
      simulation_4d_vlasov_poisson_polar.F90
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
      simulation_6d_vlasov_poisson_cartesian.F90 )
 
-
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
+                       sll_poisson_solvers
                        sll_multigrid
                        sll_fft
 		       sll_distribution_function
-		       sll_general_coordinate_quasi_neutral_solvers
+		       sll_general_coordinate_elliptic_solvers
 		       deboor_splines
 		       sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
@@ -172,10 +174,11 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    #ADD_SIMULATION(MYMETHOD)
    ###############################################################
 
+   ADD_SIMULATION(2d_vp_cartesian)
    ADD_SIMULATION(4d)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_qns_general)
-   ADD_SIMULATION(4d_mixed_qns_cartesian)
+#   ADD_SIMULATION(4d_mixed_qns_cartesian)
    ADD_SIMULATION(4d_DK_hybrid)
    ADD_SIMULATION(4d_vp_polar)
    ADD_SIMULATION(4d_dk_cartesian)
