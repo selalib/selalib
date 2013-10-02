@@ -38,10 +38,10 @@ program test_periodic_interp
      error = maxval(abs(u_out(1:N)-u_exact(1:N)))
      
      
-!!$     if (p>1) then
-!!$        print*, 'N=',N, 'error=', error, 'numerical order=', &
-!!$             log(old_error/error)/log(2.0_8) 
-!!$     endif
+     if (p>1) then
+        print*, 'N=',N, 'error=', error, 'numerical order=', &
+             log(old_error/error)/log(2.0_8) 
+     endif
   end do
  
 

@@ -12,8 +12,15 @@ ADD_LIBRARY(sll_vp_dg mesh.F90
 
 ADD_EXECUTABLE(test_vp_dg main.F90)
 
-TARGET_LINK_LIBRARIES(test_vp_dg sll_constants
-	                         sll_utilities
-	                         sll_vp_dg
-                                 ${SUITESPARSE_LIBRARIES}
-                                 ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_vp_dg sll_working_precision
+                            sll_vp_dg
+	                          sll_constants
+	                          sll_utilities
+	                          sll_boundary_condition_descriptors
+                                ${SUITESPARSE_LIBRARIES}
+                                ${LAPACK_LIBRARIES}
+				${BLAS_LIBRARIES})
+
+if(UNIX AND NOT APPLE)
+        target_link_libraries(test_vp_dg rt)
+endif()

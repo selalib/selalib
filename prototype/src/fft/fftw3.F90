@@ -15,10 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module fftw_module
-#ifndef STDF95
+module fftw3
+#ifdef FFTW_F2003
   use, intrinsic :: iso_c_binding
   include 'fftw3.f03'
+#else
+  include "fftw3.f"
 #endif
-end module
+end module fftw3
 
