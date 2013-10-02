@@ -15,11 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)      \
-sz_array = int((array_size/2+1),C_SIZE_T);                    \
-p_array = fftw_alloc_complex(sz_array);                       \
-call c_f_pointer(p_array, array, [array_size/2+1])            \
+#include "sll_fftw.h"
 
 #define D_DX(field)                                           \
 call fftw_execute_dft_r2c(self%fwx, field, self%tmp_x);       \
@@ -38,7 +34,6 @@ call fftw_execute_dft_r2c(self%fwz, field, self%tmp_z);       \
 self%tmp_z = -cmplx(0.0_f64,self%kz,kind=f64)*self%tmp_z;     \
 call fftw_execute_dft_c2r(self%bwz, self%tmp_z, self%d_dz);   \
 self%d_dz = self%d_dz / nz
-
 
 !> @author
 !> Pierre Navaro
@@ -68,9 +63,8 @@ module sll_maxwell_3d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
-
-use, intrinsic :: iso_c_binding
-use sll_constants
+#include "sll_constants.h"
+use fftw3
 
 implicit none
 private
@@ -103,29 +97,27 @@ type, public :: maxwell_pstd_3d
    sll_real64, dimension(:), pointer  :: kx           !< x wave number
    sll_real64, dimension(:), pointer  :: ky           !< y wave number
    sll_real64, dimension(:), pointer  :: kz           !< y wave number
-   type(C_PTR)                        :: fwx          !< forward fft plan along x
-   type(C_PTR)                        :: fwy          !< forward fft plan along y
-   type(C_PTR)                        :: fwz          !< forward fft plan along y
-   type(C_PTR)                        :: bwx          !< backward fft plan along x
-   type(C_PTR)                        :: bwy          !< backward fft plan along y
-   type(C_PTR)                        :: bwz          !< backward fft plan along y
-   type(C_PTR)                        :: p_tmp_x      !< pointer for memory allocation
-   type(C_PTR)                        :: p_tmp_y      !< pointer for memory allocation
-   type(C_PTR)                        :: p_tmp_z      !< pointer for memory allocation
-   complex(C_DOUBLE_COMPLEX), pointer :: tmp_x(:)     !< x fft transform
-   complex(C_DOUBLE_COMPLEX), pointer :: tmp_y(:)     !< y fft transform
-   complex(C_DOUBLE_COMPLEX), pointer :: tmp_z(:)     !< y fft transform
-   integer(C_SIZE_T)                  :: sz_tmp_x     !< size for memory allocation
-   integer(C_SIZE_T)                  :: sz_tmp_y     !< size for memory allocation
-   integer(C_SIZE_T)                  :: sz_tmp_z     !< size for memory allocation
+   fftw_plan                          :: fwx          !< forward fft plan along x
+   fftw_plan                          :: fwy          !< forward fft plan along y
+   fftw_plan                          :: fwz          !< forward fft plan along y
+   fftw_plan                          :: bwx          !< backward fft plan along x
+   fftw_plan                          :: bwy          !< backward fft plan along y
+   fftw_plan                          :: bwz          !< backward fft plan along y
+   fftw_plan                          :: p_tmp_x      !< pointer for memory allocation
+   fftw_plan                          :: p_tmp_y      !< pointer for memory allocation
+   fftw_plan                          :: p_tmp_z      !< pointer for memory allocation
+   fftw_comp                , pointer :: tmp_x(:)     !< x fft transform
+   fftw_comp                , pointer :: tmp_y(:)     !< y fft transform
+   fftw_comp                , pointer :: tmp_z(:)     !< y fft transform
+   fftw_int                           :: sz_tmp_x     !< size for memory allocation
+   fftw_int                           :: sz_tmp_y     !< size for memory allocation
+   fftw_int                           :: sz_tmp_z     !< size for memory allocation
    sll_int32                          :: polarization !< TE or TM
    sll_real64                         :: e_0          !< electric conductivity
    sll_real64                         :: mu_0         !< magnetic permeability
 end type maxwell_pstd_3d
 
 sll_int32, private :: i, j, k
-
-include 'fftw3.f03'
 
 contains
 
@@ -135,25 +127,26 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nx, &
                                     zmin,zmax,nz )
 
    type(maxwell_pstd_3d) :: self         !< maxwell object
-   sll_real64         :: xmin         !< xmin
-   sll_real64         :: xmax         !< xmax
-   sll_real64         :: ymin         !< ymin
-   sll_real64         :: ymax         !< ymax
-   sll_real64         :: zmin         !< zmin
-   sll_real64         :: zmax         !< zmax
-   sll_int32          :: nx           !< x nodes number
-   sll_int32          :: ny           !< y nodes number
-   sll_int32          :: nz           !< z nodes number
-   sll_int32          :: error        !< error code
-   sll_real64         :: dx           !< x space step
-   sll_real64         :: dy           !< y space step
-   sll_real64         :: dz           !< z space step
-   sll_real64         :: kx0
-   sll_real64         :: ky0
-   sll_real64         :: kz0
-   integer(C_SIZE_T)  :: sz_tmp_x
-   integer(C_SIZE_T)  :: sz_tmp_y
-   integer(C_SIZE_T)  :: sz_tmp_z
+   sll_real64            :: xmin         !< xmin
+   sll_real64            :: xmax         !< xmax
+   sll_real64            :: ymin         !< ymin
+   sll_real64            :: ymax         !< ymax
+   sll_real64            :: zmin         !< zmin
+   sll_real64            :: zmax         !< zmax
+   sll_int32             :: nx           !< x nodes number
+   sll_int32             :: ny           !< y nodes number
+   sll_int32             :: nz           !< z nodes number
+   sll_int32             :: error        !< error code
+   sll_real64            :: dx           !< x space step
+   sll_real64            :: dy           !< y space step
+   sll_real64            :: dz           !< z space step
+   sll_real64            :: kx0
+   sll_real64            :: ky0
+   sll_real64            :: kz0
+
+   fftw_int              :: sz_tmp_x
+   fftw_int              :: sz_tmp_y
+   fftw_int              :: sz_tmp_z
 
    self%nx = nx
    self%ny = ny
@@ -162,9 +155,10 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nx, &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx,sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny,sz_tmp_y,self%p_tmp_y)
-   FFTW_ALLOCATE(self%tmp_z,ny,sz_tmp_z,self%p_tmp_z)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_z,nz/2+1,sz_tmp_z,self%p_tmp_z)
+
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
    SLL_ALLOCATE(self%d_dz(nz), error)
@@ -173,12 +167,12 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nx, &
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
-   self%fwx = fftw_plan_dft_r2c_1d(nx, self%d_dx,  self%tmp_x, FFTW_ESTIMATE)
-   self%bwx = fftw_plan_dft_c2r_1d(nx, self%tmp_x, self%d_dx,  FFTW_ESTIMATE)
-   self%fwy = fftw_plan_dft_r2c_1d(ny, self%d_dy,  self%tmp_y, FFTW_ESTIMATE)
-   self%bwy = fftw_plan_dft_c2r_1d(ny, self%tmp_y, self%d_dy,  FFTW_ESTIMATE)
-   self%fwz = fftw_plan_dft_r2c_1d(nz, self%d_dz,  self%tmp_z, FFTW_ESTIMATE)
-   self%bwz = fftw_plan_dft_c2r_1d(nz, self%tmp_z, self%d_dz,  FFTW_ESTIMATE)
+   NEW_FFTW_PLAN_R2C_1D(self%fwx, nx, self%d_dx,  self%tmp_x)
+   NEW_FFTW_PLAN_C2R_1D(self%bwx, nx, self%tmp_x, self%d_dx)
+   NEW_FFTW_PLAN_R2C_1D(self%fwy, ny, self%d_dy,  self%tmp_y)
+   NEW_FFTW_PLAN_C2R_1D(self%bwy, ny, self%tmp_y, self%d_dy)
+   NEW_FFTW_PLAN_R2C_1D(self%fwz, nz, self%d_dz,  self%tmp_z)
+   NEW_FFTW_PLAN_C2R_1D(self%bwz, nz, self%tmp_z, self%d_dz)
 
    SLL_ALLOCATE(self%kx(nx/2+1), error)
    SLL_ALLOCATE(self%ky(ny/2+1), error)
@@ -367,16 +361,18 @@ end subroutine ampere
 subroutine free_maxwell_3d_pstd(self)
 type(maxwell_pstd_3d) :: self
 
+#ifdef FFTW_F2003
 if (c_associated(self%p_tmp_x)) call fftw_free(self%p_tmp_x)
 if (c_associated(self%p_tmp_y)) call fftw_free(self%p_tmp_y)
 if (c_associated(self%p_tmp_z)) call fftw_free(self%p_tmp_z)
+#endif
 
-call dfftw_destroy_plan(self%fwx)
-call dfftw_destroy_plan(self%fwy)
-call dfftw_destroy_plan(self%fwz)
-call dfftw_destroy_plan(self%bwx)
-call dfftw_destroy_plan(self%bwy)
-call dfftw_destroy_plan(self%bwz)
+call fftw_destroy_plan(self%fwx)
+call fftw_destroy_plan(self%fwy)
+call fftw_destroy_plan(self%fwz)
+call fftw_destroy_plan(self%bwx)
+call fftw_destroy_plan(self%bwy)
+call fftw_destroy_plan(self%bwz)
 
 !if (nthreads > 1) then
 !   call dfftw_cleanup_threads(error)

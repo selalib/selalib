@@ -161,7 +161,7 @@ contains
      call sll_xml_file_create("layout2d.xmf",xml_id,error)
      call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
      call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-     call sll_xml_file_close(file_id,error)
+     call sll_xml_file_close(xml_id,error)
      print *, 'Printing 2D layout: '
      call sll_view_lims_2D( layout )
      print *, '--------------------'
