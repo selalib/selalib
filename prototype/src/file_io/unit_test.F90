@@ -13,9 +13,12 @@ use sll_utilities, only: int2string
 sll_int32, private :: i, j, k !< indices
 sll_int32 :: error            !< error code
 sll_int32 :: file_id          !< file unit number
-integer(hid_t) :: hfile_id    !< file unit number
 sll_int32 :: iplot            !< plot counter
 character(len=4) :: cplot     !< plot counter
+
+#ifndef NOHDF5
+integer(hid_t) :: hfile_id    !< file unit number
+#endif
 
 contains
 

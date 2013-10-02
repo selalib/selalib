@@ -1,4 +1,4 @@
-module sll_general_coordinate_qn_solver_module
+module sll_general_coordinate_elliptic_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -15,7 +15,7 @@ module sll_general_coordinate_qn_solver_module
   implicit none
 
 
-  type :: general_coordinate_qn_solver
+  type :: general_coordinate_elliptic_solver
      sll_int32 :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
@@ -50,24 +50,24 @@ module sll_general_coordinate_qn_solver_module
      sll_real64, dimension(:), pointer :: tmp_rho_vec
      sll_real64, dimension(:), pointer :: masse
      sll_real64, dimension(:), pointer :: stiff
-  end type general_coordinate_qn_solver
-  
+  end type general_coordinate_elliptic_solver
+
   ! For the integration mode.  
-  integer, parameter :: QNS_GAUSS_LEGENDRE = 0, QNS_GAUSS_LOBATTO = 1
+  integer, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
   
   interface delete
-     module procedure delete_qns
+     module procedure delete_elliptic
   end interface delete
 
   interface initialize
-     module procedure initialize_general_qn_solver
+     module procedure initialize_general_elliptic_solver
   end interface initialize
   
   
 contains ! *******************************************************************
   
-  subroutine initialize_general_qn_solver( &
-       qns, &
+  subroutine initialize_general_elliptic_solver( &
+       es, &
        spline_degree_eta1, &
        spline_degree_eta2, &
        num_cells_eta1, &
@@ -83,7 +83,7 @@ contains ! *******************************************************************
        eta2_min, &
        eta2_max)
     
-   type(general_coordinate_qn_solver), intent(out) :: qns
+   type(general_coordinate_elliptic_solver), intent(out) :: es
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
    sll_int32, intent(in) :: num_cells_eta1
@@ -106,44 +106,44 @@ contains ! *******************************************************************
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
 
-   qns%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
+   es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
    ! num_cells + spline_degree
    num_splines1 = num_cells_eta1 + spline_degree_eta1
    num_splines2 = num_cells_eta2 + spline_degree_eta2
-   SLL_ALLOCATE(qns%global_spline_indices(num_splines1*num_splines2),ierr)
-   qns%global_spline_indices(:) = 0
-   SLL_ALLOCATE(qns%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-   qns%local_spline_indices(:,:) = 0
-   SLL_ALLOCATE(qns%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-   qns%local_to_global_spline_indices = 0
+   SLL_ALLOCATE(es%global_spline_indices(num_splines1*num_splines2),ierr)
+   es%global_spline_indices(:) = 0
+   SLL_ALLOCATE(es%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+   es%local_spline_indices(:,:) = 0
+   SLL_ALLOCATE(es%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+   es%local_to_global_spline_indices = 0
    ! This should be changed to verify that the passed BC's are part of the
    ! recognized list described in sll_boundary_condition_descriptors...
-   qns%bc_left   = bc_left
-   qns%bc_right  = bc_right
-   qns%bc_bottom = bc_bottom
-   qns%bc_top    = bc_top
-   qns%spline_degree1 = spline_degree_eta1
-   qns%spline_degree2 = spline_degree_eta2
-   qns%num_cells1 = num_cells_eta1
-   qns%num_cells2 = num_cells_eta2
+   es%bc_left   = bc_left
+   es%bc_right  = bc_right
+   es%bc_bottom = bc_bottom
+   es%bc_top    = bc_top
+   es%spline_degree1 = spline_degree_eta1
+   es%spline_degree2 = spline_degree_eta2
+   es%num_cells1 = num_cells_eta1
+   es%num_cells2 = num_cells_eta2
 
    ! Allocate and fill the gauss points/weights information.
    ! First direction
    select case(quadrature_type1)
-      case (QNS_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(qns%gauss_pts1(2,spline_degree_eta1+2),ierr)
-         qns%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
-      case (QNS_GAUSS_LOBATTO)
+      case (ES_GAUSS_LEGENDRE)
+         SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+         es%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
+      case (ES_GAUSS_LOBATTO)
          print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
               'because the interface of that function is not good.'
    end select
 
    select case(quadrature_type2)
-      case (QNS_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(qns%gauss_pts2(2,spline_degree_eta2+2),ierr)
-         qns%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
-      case (QNS_GAUSS_LOBATTO)
+      case (ES_GAUSS_LEGENDRE)
+         SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+         es%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
+      case (ES_GAUSS_LOBATTO)
          print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
               'because the interface of that function is not good.'
 
@@ -153,8 +153,8 @@ contains ! *******************************************************************
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
-      qns%total_num_splines_eta1 = num_cells_eta1 
-      qns%total_num_splines_eta2 = num_cells_eta2
+      es%total_num_splines_eta1 = num_cells_eta1 
+      es%total_num_splines_eta2 = num_cells_eta2
    !   print*, 'ACHTUNG=',2*spline_degree_eta1+2,2*spline_degree_eta2+2
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+2
@@ -162,8 +162,8 @@ contains ! *******************************************************************
    else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
        (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
 
-      qns%total_num_splines_eta1 = num_cells_eta1 
-      qns%total_num_splines_eta2 = num_cells_eta2 + &
+      es%total_num_splines_eta1 = num_cells_eta1 
+      es%total_num_splines_eta2 = num_cells_eta2 + &
                                    spline_degree_eta2 - 2
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+num_cells_eta2+1
@@ -171,16 +171,16 @@ contains ! *******************************************************************
    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
             (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
-      qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
-      qns%total_num_splines_eta2 = num_cells_eta2 
+      es%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
+      es%total_num_splines_eta2 = num_cells_eta2 
       knots1_size = 2*spline_degree_eta1+num_cells_eta1+1
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*num_cells_eta2
    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
        (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
 
-      qns%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
-      qns%total_num_splines_eta2 = num_cells_eta2 + spline_degree_eta2 - 2
+      es%total_num_splines_eta1 = num_cells_eta1 + spline_degree_eta1 - 2
+      es%total_num_splines_eta2 = num_cells_eta2 + spline_degree_eta2 - 2
       knots1_size = 2*spline_degree_eta1 + num_cells_eta1+1
       knots2_size = 2*spline_degree_eta2 + num_cells_eta2+1
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*&
@@ -188,21 +188,21 @@ contains ! *******************************************************************
    end if
 
   ! print*, 'ACHTUNG=',knots1_size,knots2_size
-   solution_size = qns%total_num_splines_eta1*qns%total_num_splines_eta2
-   SLL_ALLOCATE(qns%knots1(knots1_size),ierr1)
-   SLL_ALLOCATE(qns%knots2(knots2_size),ierr)
-   SLL_ALLOCATE(qns%rho_vec(vec_sz),ierr)
-   SLL_ALLOCATE(qns%phi_vec(solution_size),ierr)
-   SLL_ALLOCATE(qns%tmp_rho_vec(solution_size),ierr)
-   SLL_ALLOCATE(qns%masse(solution_size),ierr)
-   SLL_ALLOCATE(qns%stiff(solution_size),ierr)
-   qns%rho_vec(:) = 0.0
-   qns%phi_vec(:) = 0.0
-   qns%masse(:) = 0.0
-   qns%stiff(:) = 0.0
+   solution_size = es%total_num_splines_eta1*es%total_num_splines_eta2
+   SLL_ALLOCATE(es%knots1(knots1_size),ierr1)
+   SLL_ALLOCATE(es%knots2(knots2_size),ierr)
+   SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
+   SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
+   SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
+   SLL_ALLOCATE(es%masse(solution_size),ierr)
+   SLL_ALLOCATE(es%stiff(solution_size),ierr)
+   es%rho_vec(:) = 0.0
+   es%phi_vec(:) = 0.0
+   es%masse(:) = 0.0
+   es%stiff(:) = 0.0
    do i = 1, knots1_size
-      qns%knots1(i) = 0.0
-   !   print*, i,  qns%knots1(i)
+      es%knots1(i) = 0.0
+   !   print*, i,  es%knots1(i)
    end do
 
    call initialize_knots( &
@@ -212,7 +212,7 @@ contains ! *******************************************************************
         eta1_max, &
         bc_left, &
         bc_right, &
-        qns%knots1 )
+        es%knots1 )
 
    call initialize_knots( &
         spline_degree_eta2, &
@@ -221,7 +221,7 @@ contains ! *******************************************************************
         eta2_max, &
         bc_bottom, &
         bc_top, &
-        qns%knots2 )
+        es%knots2 )
  
    call initconnectivity( &
         num_cells_eta1, &
@@ -232,22 +232,22 @@ contains ! *******************************************************************
         bc_right, &
         bc_bottom, &
         bc_top, &
-        qns%local_spline_indices, &
-        qns%global_spline_indices, &
-        qns%local_to_global_spline_indices )
+        es%local_spline_indices, &
+        es%global_spline_indices, &
+        es%local_to_global_spline_indices )
 
     call create_CSR( &
-        qns%csr_mat, &
+        es%csr_mat, &
         solution_size, &
         solution_size, &
         num_cells_eta1*num_cells_eta2, &
-        qns%local_to_global_spline_indices, &
-        qns%total_num_splines_loc, &
-        qns%local_to_global_spline_indices, &
-        qns%total_num_splines_loc )
-  end subroutine initialize_general_qn_solver
+        es%local_to_global_spline_indices, &
+        es%total_num_splines_loc, &
+        es%local_to_global_spline_indices, &
+        es%total_num_splines_loc )
+  end subroutine initialize_general_elliptic_solver
 
-  function new_general_qn_solver( &
+  function new_general_elliptic_solver( &
    spline_degree_eta1, &
    spline_degree_eta2, &
    num_cells_eta1, &
@@ -261,9 +261,9 @@ contains ! *******************************************************************
    eta1_min, &
    eta1_max, &
    eta2_min, &
-   eta2_max ) result(qns)
+   eta2_max ) result(es)
 
-   type(general_coordinate_qn_solver), pointer :: qns
+   type(general_coordinate_elliptic_solver), pointer :: es
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
    sll_int32, intent(in) :: num_cells_eta1
@@ -286,9 +286,9 @@ contains ! *******************************************************************
    sll_int32 :: ierr
    sll_int32 :: solution_size
 
-   SLL_ALLOCATE(qns,ierr)
+   SLL_ALLOCATE(es,ierr)
    call initialize( &
-        qns, &
+        es, &
         spline_degree_eta1, &
         spline_degree_eta2, &
         num_cells_eta1, &
@@ -303,40 +303,40 @@ contains ! *******************************************************************
         eta1_max, &
         eta2_min, &
         eta2_max )
- end function new_general_qn_solver
+ end function new_general_elliptic_solver
  
- subroutine delete_qns( qns )
-   type(general_coordinate_qn_solver) :: qns
+ subroutine delete_elliptic( es )
+   type(general_coordinate_elliptic_solver) :: es
    sll_int32 :: ierr
     ! it is not good to check some cases and not others, fix...
-   if(associated(qns%knots1)) then
-      SLL_DEALLOCATE(qns%knots1,ierr)
+   if(associated(es%knots1)) then
+      SLL_DEALLOCATE(es%knots1,ierr)
    else
-       print *, 'delete qns, WARNING: knots1 array was not allocated.'
+       print *, 'delete es, WARNING: knots1 array was not allocated.'
     end if
-    if(associated(qns%knots2)) then
-       SLL_DEALLOCATE(qns%knots2,ierr)
+    if(associated(es%knots2)) then
+       SLL_DEALLOCATE(es%knots2,ierr)
     else
-       print *, 'delete qns general coords, ', &
+       print *, 'delete es general coords, ', &
             'WARNING: knots2 array was not allocated.'
     end if
-    SLL_DEALLOCATE(qns%gauss_pts1,ierr)
-    SLL_DEALLOCATE(qns%gauss_pts2,ierr)
-    SLL_DEALLOCATE(qns%global_spline_indices,ierr)
-    SLL_DEALLOCATE(qns%local_spline_indices,ierr)
-    SLL_DEALLOCATE(qns%local_to_global_spline_indices,ierr)
-    call free_csr(qns%csr_mat)
-    SLL_DEALLOCATE(qns%rho_vec,ierr)
-    SLL_DEALLOCATE(qns%phi_vec,ierr)
-    SLL_DEALLOCATE(qns%tmp_rho_vec,ierr)
-    SLL_DEALLOCATE(qns%masse,ierr)
-    SLL_DEALLOCATE(qns%stiff,ierr)
-  end subroutine delete_qns
+    SLL_DEALLOCATE(es%gauss_pts1,ierr)
+    SLL_DEALLOCATE(es%gauss_pts2,ierr)
+    SLL_DEALLOCATE(es%global_spline_indices,ierr)
+    SLL_DEALLOCATE(es%local_spline_indices,ierr)
+    SLL_DEALLOCATE(es%local_to_global_spline_indices,ierr)
+    call free_csr(es%csr_mat)
+    SLL_DEALLOCATE(es%rho_vec,ierr)
+    SLL_DEALLOCATE(es%phi_vec,ierr)
+    SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
+    SLL_DEALLOCATE(es%masse,ierr)
+    SLL_DEALLOCATE(es%stiff,ierr)
+  end subroutine delete_elliptic
 
 
 
-  subroutine factorize_mat_qns(&
-       qns, &
+  subroutine factorize_mat_es(&
+       es, &
        a11_field_mat, &
        a12_field_mat,&
        a21_field_mat,&
@@ -344,7 +344,7 @@ contains ! *******************************************************************
        c_field, &
        rho)
     
-    type(general_coordinate_qn_solver),intent(inout) :: qns
+    type(general_coordinate_elliptic_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a11_field_mat
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a12_field_mat
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a21_field_mat
@@ -383,7 +383,7 @@ contains ! *******************************************************************
     character(len=*),parameter :: as_file1='mat'
     integer :: li_ios,li_ios1
 
-    total_num_splines_loc = qns%total_num_splines_loc
+    total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -395,9 +395,9 @@ contains ! *******************************************************************
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
 
       !   Allocation full_Matrix 
-    SLL_ALLOCATE(full_Matrix(qns%total_num_splines_eta1*qns%total_num_splines_eta2,qns%total_num_splines_eta2*qns%total_num_splines_eta1),ierr1)
-    SLL_ALLOCATE( Masse_tot(qns%total_num_splines_eta1*qns%total_num_splines_eta2),ierr)
-    SLL_ALLOCATE( Stiff_tot(qns%total_num_splines_eta1*qns%total_num_splines_eta2),ierr)
+    SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
+    SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
+    SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     full_Matrix(:,:) = 0.0_f64
     Masse_tot(:) = 0.0_f64
     Stiff_tot(:) = 0.0_f64
@@ -409,14 +409,14 @@ contains ! *******************************************************************
     full_Matrix(:,:) = 0.0_f64
     mesh => c_field%get_logical_mesh( )
 
-    do j=1,qns%num_cells2
-       do i=1,qns%num_cells1
+    do j=1,es%num_cells2
+       do i=1,es%num_cells1
 
           
-          cell_index = i+qns%num_cells1*(j-1)
+          cell_index = i+es%num_cells1*(j-1)
           
           call build_local_matrices( &
-               qns, &
+               es, &
                i, &
                j, &
                mesh, &
@@ -436,7 +436,7 @@ contains ! *******************************************************************
                K_a22_loc )
           
           call local_to_global_matrices( &
-               qns, &
+               es, &
                cell_index, &
                i, &
                j, &
@@ -449,8 +449,8 @@ contains ! *******************************************************************
                K_a21_loc, &
                K_a22_loc,&
                full_Matrix,&
-               qns%masse,&
-               qns%stiff)
+               es%masse,&
+               es%stiff)
           
        end do
     end do
@@ -465,15 +465,15 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-  end subroutine factorize_mat_qns
+  end subroutine factorize_mat_es
   
   
-  subroutine solve_qns(&
-       qns,&
+  subroutine solve_general_coordinates_elliptic_eq(&
+       es,&
        rho,&
        phi)
     
-    type(general_coordinate_qn_solver) :: qns
+    type(general_coordinate_elliptic_solver) :: es
     type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     class(sll_scalar_field_2d_base), intent(in)     :: rho
     type(sll_logical_mesh_2d), pointer :: mesh
@@ -483,24 +483,24 @@ contains ! *******************************************************************
     sll_int32 :: total_num_splines_loc
     sll_real64, dimension(:), allocatable   :: M_rho_loc
     
-    total_num_splines_loc = qns%total_num_splines_loc
+    total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
 
     
     M_rho_loc = 0.0
-    qns%rho_vec(:) = 0.0
+    es%rho_vec(:) = 0.0
     mesh => phi%get_logical_mesh( )
     !    call set_time_mark(timer) ! comment this
     ! loop over domain cells build local matrices M_c_loc 
-    do j=1,qns%num_cells2
-       do i=1,qns%num_cells1
+    do j=1,es%num_cells2
+       do i=1,es%num_cells1
           ! cells are numbered in a linear fashion, convert from (i,j) indexing
           ! to the linear array index.
           
-          cell_index = i+qns%num_cells1*(j-1)
+          cell_index = i+es%num_cells1*(j-1)
           
           call build_local_matrices_rho( &
-               qns, &
+               es, &
                i, &
                j, &
                mesh, &
@@ -508,7 +508,7 @@ contains ! *******************************************************************
                M_rho_loc)
           
           call local_to_global_matrices_rho( &
-               qns, &
+               es, &
                cell_index, &
                i, &
                j, &
@@ -518,21 +518,23 @@ contains ! *******************************************************************
     end do
     
     
-    if ((qns%bc_bottom==SLL_PERIODIC).and.(qns%bc_top==SLL_PERIODIC) &
-         .and. (qns%bc_bottom==SLL_PERIODIC).and.(qns%bc_top==SLL_PERIODIC)) then
+    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
+         .and. (es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) then
        
        
-       call solve_linear_system_perper(qns,mesh,qns%masse)
+       call solve_linear_system_perper(es,mesh,es%masse)
     else 
        
-       call solve_linear_system(qns,mesh)
+       call solve_linear_system(es,mesh)
     end if
     
-    call  phi%interp_2d%set_coefficients( qns%phi_vec)
-  end subroutine solve_qns
+    call  phi%interp_2d%set_coefficients( es%phi_vec)
+  end subroutine solve_general_coordinates_elliptic_eq
   
-  subroutine solve_quasi_neutral_eq_general_coords( &
-       qns, &
+  ! This routine is considered deprecated in favor of a new interface which
+  ! separates the factorization step.
+  subroutine solve_gen_coords_elliptic_eq( &
+       es, &
        a11_field_mat, &
        a12_field_mat,&
        a21_field_mat,&
@@ -541,7 +543,7 @@ contains ! *******************************************************************
        rho, &
        phi )
     
-    type(general_coordinate_qn_solver) :: qns
+    type(general_coordinate_elliptic_solver) :: es
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a11_field_mat
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a12_field_mat
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a21_field_mat
@@ -597,7 +599,7 @@ contains ! *******************************************************************
     
     ! The quadrature degree is the number of splines that intersect a cell.
  !   call set_time_mark(timer)
-    total_num_splines_loc = qns%total_num_splines_loc
+    total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -609,9 +611,9 @@ contains ! *******************************************************************
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
 
       !   Allocation full_Matrix 
-    SLL_ALLOCATE(full_Matrix(qns%total_num_splines_eta1*qns%total_num_splines_eta2,qns%total_num_splines_eta2*qns%total_num_splines_eta1),ierr1)
-    SLL_ALLOCATE( Masse_tot(qns%total_num_splines_eta1*qns%total_num_splines_eta2),ierr)
-    SLL_ALLOCATE( Stiff_tot(qns%total_num_splines_eta1*qns%total_num_splines_eta2),ierr)
+    SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
+    SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
+    SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     full_Matrix(:,:) = 0.0_f64
     Masse_tot(:) = 0.0_f64
     Stiff_tot(:) = 0.0_f64
@@ -619,22 +621,22 @@ contains ! *******************************************************************
     Stiff_loc(:) = 0.0_f64
 
     !!!!!!!!!!!! atttention rajout !!!!!!!
-    qns%rho_vec(:) = 0.0
-    !print*, qns%rho_vec(:)
+    es%rho_vec(:) = 0.0
+    !print*, es%rho_vec(:)
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     full_Matrix(:,:) = 0.0_f64
     mesh => c_field%get_logical_mesh( )
     !    call set_time_mark(timer) ! comment this
     ! loop over domain cells build local matrices M_c_loc 
-    do j=1,qns%num_cells2
-       do i=1,qns%num_cells1
+    do j=1,es%num_cells2
+       do i=1,es%num_cells1
           ! cells are numbered in a linear fashion, convert from (i,j) indexing
           ! to the linear array index.
           
-          cell_index = i+qns%num_cells1*(j-1)
+          cell_index = i+es%num_cells1*(j-1)
           
           call build_local_matrices( &
-               qns, &
+               es, &
                i, &
                j, &
                mesh, &
@@ -654,7 +656,7 @@ contains ! *******************************************************************
                K_a22_loc )
           
           call local_to_global_matrices( &
-               qns, &
+               es, &
                cell_index, &
                i, &
                j, &
@@ -674,20 +676,20 @@ contains ! *******************************************************************
     end do
 
 
-    if ((qns%bc_bottom==SLL_PERIODIC).and.(qns%bc_top==SLL_PERIODIC) &
-         .and. (qns%bc_bottom==SLL_PERIODIC).and.(qns%bc_top==SLL_PERIODIC)) then
+    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
+         .and. (es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) then
        
        
-       call solve_linear_system_perper(qns,mesh,Masse_tot)
+       call solve_linear_system_perper(es,mesh,Masse_tot)
     else 
 
-       call solve_linear_system(qns,mesh)
+       call solve_linear_system(es,mesh)
     end if
 
 
     
 
-    call  phi%interp_2d%set_coefficients( qns%phi_vec)
+    call  phi%interp_2d%set_coefficients( es%phi_vec)
     
     !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
     ! apr_B is the source, apr_U is the solution
@@ -702,7 +704,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(Stiff_tot,ierr) 
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-  end subroutine solve_quasi_neutral_eq_general_coords
+  end subroutine solve_gen_coords_elliptic_eq
   
   ! This is based on the assumption that all the input fields have the same
   ! boundary conditions. TO DO: put all the boundary condition parameters in
@@ -730,7 +732,7 @@ contains ! *******************************************************************
        K_a22_loc )
     !    use sll_constants
 
-    type(general_coordinate_qn_solver) :: obj
+    type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
@@ -1023,7 +1025,7 @@ contains ! *******************************************************************
        M_rho_loc)
     !    use sll_constants
 
-    type(general_coordinate_qn_solver) :: obj
+    type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
@@ -1179,7 +1181,7 @@ contains ! *******************************************************************
   end subroutine build_local_matrices_rho
 
   subroutine local_to_global_matrices( &
-       qns,&
+       es,&
        cell_index, &
        cell_i, &
        cell_j, &
@@ -1195,7 +1197,7 @@ contains ! *******************************************************************
        Masse_tot,&
        Stiff_tot)
     
-    type(general_coordinate_qn_solver)  :: qns
+    type(general_coordinate_elliptic_solver)  :: es
     sll_int32 :: cell_index
     sll_int32 :: cell_i
     sll_int32 :: cell_j
@@ -1224,77 +1226,77 @@ contains ! *******************************************************************
     sll_int32 :: bc_top
     sll_int32 :: ierr 
     
-    bc_left   = qns%bc_left
-    bc_right  = qns%bc_right
-    bc_bottom = qns%bc_bottom
-    bc_top    = qns%bc_top
+    bc_left   = es%bc_left
+    bc_right  = es%bc_right
+    bc_bottom = es%bc_bottom
+    bc_top    = es%bc_top
 
   
 
-    do mm = 0,qns%spline_degree2
+    do mm = 0,es%spline_degree2
        index3 = cell_j + mm
        
        if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
           
-          if ( index3 > qns%total_num_splines_eta2) then
-             index3 = index3 - qns%total_num_splines_eta2
+          if ( index3 > es%total_num_splines_eta2) then
+             index3 = index3 - es%total_num_splines_eta2
           end if
           
        end if
        
-       do i = 0,qns%spline_degree1
+       do i = 0,es%spline_degree1
           
           index1 = cell_i + i
           if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
-             if ( index1 > qns%total_num_splines_eta1) then
+             if ( index1 > es%total_num_splines_eta1) then
                 
-                index1 = index1 - qns%total_num_splines_eta1
+                index1 = index1 - es%total_num_splines_eta1
                 
              end if
-             nbsp = qns%total_num_splines_eta1
+             nbsp = es%total_num_splines_eta1
              
           else if ( (bc_left  == SLL_DIRICHLET).and.&
                (bc_right == SLL_DIRICHLET) ) then
-             nbsp = qns%num_cells1 + qns%spline_degree1
+             nbsp = es%num_cells1 + es%spline_degree1
           end if
           x          =  index1 + (index3-1)*nbsp
-          b          =  mm * ( qns%spline_degree1 + 1 ) + i + 1
-          li_A       =  qns%local_to_global_spline_indices(b, cell_index)
-          qns%rho_vec(x)  =  qns%rho_vec(x)  + M_rho_loc(b)
+          b          =  mm * ( es%spline_degree1 + 1 ) + i + 1
+          li_A       =  es%local_to_global_spline_indices(b, cell_index)
+          es%rho_vec(x)  =  es%rho_vec(x)  + M_rho_loc(b)
           !print*, x,b
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
-          do nn = 0,qns%spline_degree2
+          do nn = 0,es%spline_degree2
              
              index4 = cell_j + nn
              
              if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
-                if ( index4 > qns%total_num_splines_eta2) then
+                if ( index4 > es%total_num_splines_eta2) then
                    
-                   index4 = index4 - qns%total_num_splines_eta2
+                   index4 = index4 - es%total_num_splines_eta2
                 end if
              end if
              
-             do j = 0,qns%spline_degree1
+             do j = 0,es%spline_degree1
                 
                 index2 = cell_i + j
                 if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
                    
-                   if ( index2 > qns%total_num_splines_eta1) then
+                   if ( index2 > es%total_num_splines_eta1) then
                       
-                      index2 = index2 - qns%total_num_splines_eta1
+                      index2 = index2 - es%total_num_splines_eta1
                    end if
-                   nbsp1 = qns%total_num_splines_eta1
+                   nbsp1 = es%total_num_splines_eta1
                    
                 else if ( (bc_left  == SLL_DIRICHLET) .and.&
                      (bc_right == SLL_DIRICHLET) ) then
                    
-                   nbsp1 = qns%num_cells1 + qns%spline_degree1
+                   nbsp1 = es%num_cells1 + es%spline_degree1
                 end if
                    
                 y         = index2 + (index4-1)*nbsp1
-                bprime    =  nn * ( qns%spline_degree1 + 1 ) + j + 1
-                li_Aprime = qns%local_to_global_spline_indices(bprime, &
+                bprime    =  nn * ( es%spline_degree1 + 1 ) + j + 1
+                li_Aprime = es%local_to_global_spline_indices(bprime, &
                                                                cell_index)
                 elt_mat_global = &
                      M_c_loc(b, bprime) - &
@@ -1303,8 +1305,8 @@ contains ! *******************************************************************
                      K_a21_loc(b, bprime) - &
                      K_a22_loc(b, bprime)
 
-!!$                if  ((qns%bc_bottom==SLL_PERIODIC).and.(qns%bc_top==SLL_PERIODIC) &
-!!$                     .and. (qns%bc_bottom==SLL_PERIODIC).and.(qns%bc_top==SLL_PERIODIC)) then
+!!$                if  ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
+!!$                     .and. (es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) then
 !!$                   
 !!$                   elt_mat_global= elt_mat_global - Masse_loc(bprime)
 !!$                  ! print*,  Masse_loc(bprime)
@@ -1323,7 +1325,7 @@ contains ! *******************************************************************
                 ! elt_masse = Masse_loc(b,bprime)
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
-                   call add_MVal(qns%csr_mat,elt_mat_global,li_A,li_Aprime)
+                   call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
                    ! call add_MVal(csr_masse,elt_masse,li_A,li_Aprime)
                 end if
                 
@@ -1338,13 +1340,13 @@ contains ! *******************************************************************
 
 
    subroutine local_to_global_matrices_rho( &
-       qns,&
+       es,&
        cell_index, &
        cell_i, &
        cell_j, &
        M_rho_loc)
      
-     type(general_coordinate_qn_solver)  :: qns
+     type(general_coordinate_elliptic_solver)  :: es
      sll_int32 :: cell_index
      sll_int32 :: cell_i
      sll_int32 :: cell_j
@@ -1360,52 +1362,52 @@ contains ! *******************************************************************
     sll_int32 :: bc_top
     sll_int32 :: ierr 
     
-    bc_left   = qns%bc_left
-    bc_right  = qns%bc_right
-    bc_bottom = qns%bc_bottom
-    bc_top    = qns%bc_top
+    bc_left   = es%bc_left
+    bc_right  = es%bc_right
+    bc_bottom = es%bc_bottom
+    bc_top    = es%bc_top
 
     
     
-    do mm = 0,qns%spline_degree2
+    do mm = 0,es%spline_degree2
        index3 = cell_j + mm
        
        if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
           
-          if ( index3 > qns%total_num_splines_eta2) then
-             index3 = index3 - qns%total_num_splines_eta2
+          if ( index3 > es%total_num_splines_eta2) then
+             index3 = index3 - es%total_num_splines_eta2
           end if
           
        end if
        
-       do i = 0,qns%spline_degree1
+       do i = 0,es%spline_degree1
           
           index1 = cell_i + i
           if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
-             if ( index1 > qns%total_num_splines_eta1) then
+             if ( index1 > es%total_num_splines_eta1) then
                 
-                index1 = index1 - qns%total_num_splines_eta1
+                index1 = index1 - es%total_num_splines_eta1
                 
              end if
-             nbsp = qns%total_num_splines_eta1
+             nbsp = es%total_num_splines_eta1
              
           else if ( (bc_left  == SLL_DIRICHLET).and.&
                (bc_right == SLL_DIRICHLET) ) then
-             nbsp = qns%num_cells1 + qns%spline_degree1
+             nbsp = es%num_cells1 + es%spline_degree1
           end if
           x          =  index1 + (index3-1)*nbsp
-          b          =  mm * ( qns%spline_degree1 + 1 ) + i + 1
-          qns%rho_vec(x)  =  qns%rho_vec(x)  + M_rho_loc(b)
+          b          =  mm * ( es%spline_degree1 + 1 ) + i + 1
+          es%rho_vec(x)  =  es%rho_vec(x)  + M_rho_loc(b)
           
        end do
     end do
     
   end subroutine local_to_global_matrices_rho
 
-  subroutine solve_linear_system( qns,mesh2d )
+  subroutine solve_linear_system( es,mesh2d )
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    type(general_coordinate_qn_solver) :: qns
+    type(general_coordinate_elliptic_solver) :: es
     type(sll_logical_mesh_2d), pointer :: mesh2d
     !type(csr_matrix)  :: csr_masse
     integer :: elt, elt1
@@ -1417,55 +1419,55 @@ contains ! *******************************************************************
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
-    qns%tmp_rho_vec = 0.0_f64
-    bc_left   = qns%bc_left
-    bc_right  = qns%bc_right
-    bc_bottom = qns%bc_bottom
-    bc_top    = qns%bc_top
+    es%tmp_rho_vec = 0.0_f64
+    bc_left   = es%bc_left
+    bc_right  = es%bc_right
+    bc_bottom = es%bc_bottom
+    bc_top    = es%bc_top
 
-    qns%tmp_rho_vec(:) = 0.0_f64
-    !print*, 'source coeff=', qns%rho_vec
+    es%tmp_rho_vec(:) = 0.0_f64
+    !print*, 'source coeff=', es%rho_vec
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
         (bc_bottom == SLL_DIRICHLET).and. (bc_top   == SLL_DIRICHLET) ) then
        
-       do i = 1, qns%total_num_splines_eta1
-          do j = 1, qns%total_num_splines_eta2
+       do i = 1, es%total_num_splines_eta1
+          do j = 1, es%total_num_splines_eta2
              
-             elt  = i + qns%total_num_splines_eta1 * (  j - 1)
-             elt1 = i + ( qns%total_num_splines_eta1 ) * j
-             qns%tmp_rho_vec(elt) = qns%rho_vec(elt1)
+             elt  = i + es%total_num_splines_eta1 * (  j - 1)
+             elt1 = i + ( es%total_num_splines_eta1 ) * j
+             es%tmp_rho_vec(elt) = es%rho_vec(elt1)
           end do
        end do
        
     else if ( (bc_left   == SLL_DIRICHLET).and.(bc_right==SLL_DIRICHLET) .and.&
               (bc_bottom == SLL_DIRICHLET).and.(bc_top==SLL_DIRICHLET) ) then 
        
-       do i = 1, qns%total_num_splines_eta1
-          do j = 1, qns%total_num_splines_eta2
+       do i = 1, es%total_num_splines_eta1
+          do j = 1, es%total_num_splines_eta2
 
-             elt  = i + qns%total_num_splines_eta1 * (  j - 1)
-             elt1 = i + 1 + ( qns%total_num_splines_eta1 + 2 ) * j 
-             qns%tmp_rho_vec( elt ) = qns%rho_vec( elt1 )
+             elt  = i + es%total_num_splines_eta1 * (  j - 1)
+             elt1 = i + 1 + ( es%total_num_splines_eta1 + 2 ) * j 
+             es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
           end do
        end do
        
     else if((bc_left   == SLL_PERIODIC) .and. (bc_right==SLL_PERIODIC) .and.&
          (bc_bottom == SLL_PERIODIC) .and. (bc_top  ==SLL_PERIODIC)) then
        
-       qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)=&
-            qns%rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2) 
+       es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
+            es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
        
    
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
        
-       do i = 1, qns%total_num_splines_eta1
-          do j = 1, qns%total_num_splines_eta2
+       do i = 1, es%total_num_splines_eta1
+          do j = 1, es%total_num_splines_eta2
 
-             elt1 = i + 1 + ( qns%total_num_splines_eta1 + 2 ) * (  j - 1)
-             elt  = i + qns%total_num_splines_eta1 * (  j - 1)
-             qns%tmp_rho_vec( elt ) = qns%rho_vec( elt1 )
+             elt1 = i + 1 + ( es%total_num_splines_eta1 + 2 ) * (  j - 1)
+             elt  = i + es%total_num_splines_eta1 * (  j - 1)
+             es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
           end do
        end do
 
@@ -1475,42 +1477,42 @@ contains ! *******************************************************************
    
 
     
-    !print *, 'a = ', qns%csr_mat%opr_a(1:qns%csr_mat%opi_ia(2)-1)
-    call solve_general_qn(qns,qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec)
+    !print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
+    call solve_gen_elliptic_eq(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec)
   
-!!$    allocate(resul(qns%total_num_splines_eta1*qns%total_num_splines_eta2))
+!!$    allocate(resul(es%total_num_splines_eta1*es%total_num_splines_eta2))
 !!$    resul = 0.0
-!!$    call  Mult_CSR_Matrix_Vector(qns%csr_mat, qns%phi_vec, resul)
+!!$    call  Mult_CSR_Matrix_Vector(es%csr_mat, es%phi_vec, resul)
 !!$   
-!!$    print*, 'difference A phi - rho=', sum(resul-qns%tmp_rho_vec)
-!!$    print*, dot_product(resul,qns%phi_vec)
+!!$    print*, 'difference A phi - rho=', sum(resul-es%tmp_rho_vec)
+!!$    print*, dot_product(resul,es%phi_vec)
 !!$    deallocate(resul) 
 !!$
-!!$    !call print_csrMatrix_mmFormat(qns%csr_mat,as_file2)
+!!$    !call print_csrMatrix_mmFormat(es%csr_mat,as_file2)
 !!$    
 !!$    open(unit=1, file=as_file//'.txt', iostat=li_ios)
 !!$    
-!!$    do i =1,qns%total_num_splines_eta2*qns%total_num_splines_eta1
-!!$       write(1, *)qns%tmp_rho_vec(i)
+!!$    do i =1,es%total_num_splines_eta2*es%total_num_splines_eta1
+!!$       write(1, *)es%tmp_rho_vec(i)
 !!$    end do
 !!$    close(1)
 
 !!$    open(unit=1, file=as_file1//'.txt', iostat=li_ios)
 !!$    
-!!$    do i =1,qns%total_num_splines_eta2*qns%total_num_splines_eta1
-!!$       write(1, *)qns%phi_vec(i)
-!!$       !print*, qns%phi_vec(i)
+!!$    do i =1,es%total_num_splines_eta2*es%total_num_splines_eta1
+!!$       write(1, *)es%phi_vec(i)
+!!$       !print*, es%phi_vec(i)
 !!$    end do
 !!$    close(1)
-!!$    do i = 1,qns%total_num_splines_eta2
-!!$       print*, '---------------',qns%phi_vec(qns%total_num_splines_eta1*(i-1)+1:qns%total_num_splines_eta1*i)
-!!$       print*, ' source term :', qns%tmp_rho_vec(qns%total_num_splines_eta1*(i-1)+1:qns%total_num_splines_eta1*i)
+!!$    do i = 1,es%total_num_splines_eta2
+!!$       print*, '---------------',es%phi_vec(es%total_num_splines_eta1*(i-1)+1:es%total_num_splines_eta1*i)
+!!$       print*, ' source term :', es%tmp_rho_vec(es%total_num_splines_eta1*(i-1)+1:es%total_num_splines_eta1*i)
 !!$    end do
     
   end subroutine solve_linear_system
 
-  subroutine solve_general_qn(qns,csr_mat,apr_B,apr_U)
-    type(general_coordinate_qn_solver) :: qns
+  subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
+    type(general_coordinate_elliptic_solver) :: es
     type(csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 
@@ -1523,8 +1525,8 @@ contains ! *******************************************************************
     !print *, 'a = ', csr_mat % opr_a(1:csr_mat%opi_ia(2)-1)
     !print*, 'tttttttttttttt'
     !print *, 'a = ', csr_masse % opr_a(1:csr_masse%opi_ia(2)-1)
-    if ( (qns%bc_left == SLL_PERIODIC) .and. (qns%bc_right == SLL_PERIODIC) .and. &
-         (qns%bc_bottom == SLL_PERIODIC) .and. (qns%bc_top == SLL_PERIODIC) ) then
+    if ( (es%bc_left == SLL_PERIODIC) .and. (es%bc_right == SLL_PERIODIC) .and. &
+         (es%bc_bottom == SLL_PERIODIC) .and. (es%bc_top == SLL_PERIODIC) ) then
 
 !!$       call Gradient_conj_projet(&
 !!$             csr_mat,&
@@ -1560,32 +1562,33 @@ contains ! *******************************************************************
             ar_eps )
     end if
     !print*,'u', apr_U
-  end subroutine solve_general_qn
+  end subroutine solve_gen_elliptic_eq
 
 
 
-  subroutine solve_linear_system_perper( qns,mesh2d,Masse_tot )
+  subroutine solve_linear_system_perper( es,mesh2d,Masse_tot )
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    type(general_coordinate_qn_solver) :: qns
+    type(general_coordinate_elliptic_solver) :: es
     type(sll_logical_mesh_2d), pointer :: mesh2d
     sll_real64, dimension(:),pointer :: Masse_tot
 
     
-    qns%tmp_rho_vec = 0.0_f64
+    es%tmp_rho_vec = 0.0_f64
     
-    qns%tmp_rho_vec(:) = 0.0_f64
-    qns%tmp_rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2)=&
-         qns%rho_vec(1:qns%total_num_splines_eta1*qns%total_num_splines_eta2) 
-    print*, 'INTEGRALE RHO', sum(qns%tmp_rho_vec)
-    call solve_general_qn_perper(qns,qns%csr_mat,qns%tmp_rho_vec,qns%phi_vec,Masse_tot)
-    
-    print*, 'INTEGRALE DE PHI= ', dot_product(Masse_tot,qns%phi_vec)
+
+    es%tmp_rho_vec(:) = 0.0_f64
+    es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
+         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
+ !   print*, 'INTEGRALE RHO', sum(es%tmp_rho_vec)
+    call solve_general_es_perper(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec, &
+         Masse_tot) 
+ !  print*, 'INTEGRALE DE PHI= ', dot_product(Masse_tot,es%phi_vec)
   end subroutine solve_linear_system_perper
 
 
-  subroutine solve_general_qn_perper(qns,csr_mat,apr_B,apr_U,Masse_tot)
-    type(general_coordinate_qn_solver) :: qns
+  subroutine solve_general_es_perper(es,csr_mat,apr_B,apr_U,Masse_tot)
+    type(general_coordinate_elliptic_solver) :: es
     type(csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 
@@ -1603,9 +1606,9 @@ contains ! *******************************************************************
          ai_maxIter,&
          ar_eps )
     
-  end subroutine solve_general_qn_perper
+  end subroutine solve_general_es_perper
 
-end module sll_general_coordinate_qn_solver_module
+end module sll_general_coordinate_elliptic_solver_module
 
 
  

@@ -15,69 +15,80 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author
-!> Pierre Navaro
-!> @brief
-!> Implements the Poisson solver in 2D with periodic boundary conditions
-!> @details
-!> This module depends on:
-!> - sll_memory
-!> - sll_precision
-!> - sll_assert 
-!> - sll_constants
-!> - sll_utilities
-!>
-
+!> @author Pierre Navaro
+!> @brief  Implements the Poisson solver in 2D with periodic boundary conditions
+!> This module uses fftw library
 module sll_poisson_2d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_constants.h"
+#include "sll_fftw.h"
 
-use, intrinsic :: iso_c_binding
+use fftw3
+
 implicit none
-include 'fftw3.f03'
 
+!> Initialize
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
 end interface
 
+!> get the potential or electric fields
 interface solve
    module procedure solve_potential_poisson_2d_periodic_fftw
    module procedure solve_e_fields_poisson_2d_periodic_fftw
 end interface
 
+!> Delete the Poisson solver object
 interface delete
    module procedure free_poisson_2d_periodic_fftw
 end interface
 
+!> derived type to solve the Poisson equation on 2d regular cartesian mesh 
+!> with periodic boundary conditions on both sides
 type, public :: poisson_2d_periodic
-   sll_real64, dimension(:,:), pointer  :: kx, ky, k2
-   type(C_PTR)                          :: fw, bw
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: ext
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: eyt
-   integer(C_SIZE_T) :: sz_rhot, sz_ext, sz_eyt
-   type(C_PTR) :: p_rhot, p_ext, p_eyt
-   sll_int32 :: nc_x, nc_y
-   sll_real64  :: dx, dy
+
+   sll_real64, dimension(:,:), pointer :: kx       !< wave number in x
+   sll_real64, dimension(:,:), pointer :: ky       !< wave number in y
+   sll_real64, dimension(:,:), pointer :: k2       !< \f[ k_x^2 + k_y^2 \f]
+   sll_int32                           :: nc_x     !< cells number in x
+   sll_int32                           :: nc_y     !< cells number in y
+   sll_real64                          :: dx       !< x step size
+   sll_real64                          :: dy       !< y step size
+   fftw_plan                           :: fw       !< forward fftw plan
+   fftw_plan                           :: bw       !< backward fftw plan
+   fftw_comp                , pointer  :: rht(:,:) !< fft(rho)
+   fftw_comp                , pointer  :: ext(:,:) !< fft(ex)
+   fftw_comp                , pointer  :: eyt(:,:) !< fft(ey)
+   fftw_int                            :: sz_fft   !< fft size
+   fftw_plan                           :: p_rht    !< C array pointer
+   fftw_plan                           :: p_ext    !< C array pointer
+   fftw_plan                           :: p_eyt    !< C array pointer
+
 end type poisson_2d_periodic
 
 public initialize, solve, delete
 
 contains
 
+!> Initialize the Poisson solver
 subroutine initialize_poisson_2d_periodic_fftw(self, &
                       x_min, x_max, nc_x, &
                       y_min, y_max, nc_y, error )
 
-   type(poisson_2d_periodic) :: self
-   sll_real64, intent(in) :: x_min, x_max, y_min, y_max
-   sll_int32  :: error
-   sll_int32  :: nc_x, nc_y
-   sll_int32  :: ik, jk
-   sll_real64 :: kx1, kx0, ky0
+   type(poisson_2d_periodic) :: self   !< Self data object
+   sll_real64, intent(in)    :: x_min  !< left corner direction x
+   sll_real64, intent(in)    :: x_max  !< right corner direction x
+   sll_real64, intent(in)    :: y_min  !< left corner direction y
+   sll_real64, intent(in)    :: y_max  !< right corner direction y
+   sll_int32                 :: error  !< error code
+   sll_int32                 :: nc_x   !< number of cells direction x
+   sll_int32                 :: nc_y   !< number of cells direction y
+   sll_int32                 :: ik, jk
+   sll_real64                :: kx1, kx0, ky0
+
    sll_real64, dimension(:,:), allocatable :: tmp
 
    self%nc_x = nc_x
@@ -86,30 +97,44 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
    self%dx   = (x_max-x_min) / nc_x
    self%dy   = (y_max-y_min) / nc_y
 
-   self%sz_rhot = int((nc_x/2+1)*nc_y,C_SIZE_T)
-   self%p_rhot = fftw_alloc_complex(self%sz_rhot)
-   call c_f_pointer(self%p_rhot, self%rhot, [nc_x/2+1,nc_y])
 
-   self%sz_ext = int((nc_x/2+1)*nc_y,C_SIZE_T)
-   self%p_ext = fftw_alloc_complex(self%sz_ext)
+   SLL_ALLOCATE(tmp(1:nc_x,1:nc_y),error)
+
+#ifdef FFTW_F2003
+
+   self%sz_fft = int((nc_x/2+1)*nc_y,C_SIZE_T)
+
+   self%p_rht = fftw_alloc_complex(self%sz_fft)
+   call c_f_pointer(self%p_rht, self%rht, [nc_x/2+1,nc_y])
+
+   self%p_ext = fftw_alloc_complex(self%sz_fft)
    call c_f_pointer(self%p_ext, self%ext, [nc_x/2+1,nc_y])
 
-   self%sz_eyt = int((nc_x/2+1)*nc_y,C_SIZE_T)
-   self%p_eyt = fftw_alloc_complex(self%sz_eyt)
+   self%p_eyt = fftw_alloc_complex(self%sz_fft)
    call c_f_pointer(self%p_eyt, self%eyt, [nc_x/2+1,nc_y])
 
-   SLL_ALLOCATE(self%kx (nc_x/2+1,nc_y), error)
-   SLL_ALLOCATE(self%ky (nc_x/2+1,nc_y), error)
-   SLL_ALLOCATE(self%k2 (nc_x/2+1,nc_y), error)
+   self%fw = fftw_plan_dft_r2c_2d(nc_y,nc_x,tmp,self%ext,FFTW_PATIENT)
+   self%bw = fftw_plan_dft_c2r_2d(nc_y,nc_x,self%eyt,tmp,FFTW_PATIENT)
+
+#else
 
    !call dfftw_init_threads(error)
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
 
-   SLL_ALLOCATE(tmp(1:nc_x,1:nc_y),error)
-   self%fw = fftw_plan_dft_r2c_2d(nc_y,nc_x,tmp,self%ext,FFTW_MEASURE)
-   self%bw = fftw_plan_dft_c2r_2d(nc_y,nc_x,self%eyt,tmp,FFTW_MEASURE)
+   SLL_ALLOCATE(self%rht(1:nc_x/2+1,1:nc_y),error)
+   SLL_ALLOCATE(self%ext(1:nc_x/2+1,1:nc_y),error)
+   SLL_ALLOCATE(self%eyt(1:nc_x/2+1,1:nc_y),error)
+   call dfftw_plan_dft_r2c_2d(self%fw,nc_x,nc_y,tmp,self%rht,FFTW_PATIENT)
+   call dfftw_plan_dft_c2r_2d(self%bw,nc_x,nc_y,self%rht,tmp,FFTW_PATIENT)
+   
+#endif
+
    deallocate(tmp)
+
+   SLL_ALLOCATE(self%kx(nc_x/2+1,nc_y), error)
+   SLL_ALLOCATE(self%ky(nc_x/2+1,nc_y), error)
+   SLL_ALLOCATE(self%k2(nc_x/2+1,nc_y), error)
 
    kx0 = 2._f64*sll_pi/(x_max-x_min)
    ky0 = 2._f64*sll_pi/(y_max-y_min)
@@ -125,8 +150,8 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
          self%ky(ik,jk) = (jk-1-nc_y)*ky0
       end do
    end do
+
    self%kx(1,1) = 1.0_f64
-   
    self%k2 = self%kx*self%kx+self%ky*self%ky
    self%kx = self%kx/self%k2
    self%ky = self%ky/self%k2
@@ -137,27 +162,29 @@ end subroutine initialize_poisson_2d_periodic_fftw
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
-   type(poisson_2d_periodic),intent(inout)  :: self
-   sll_real64, dimension(:,:), intent(inout) :: rho
-   sll_real64, dimension(:,:), intent(out)   :: phi
-   sll_int32                                 :: nc_x, nc_y
+   type(poisson_2d_periodic),intent(inout)   :: self !< self data object
+   sll_real64, dimension(:,:), intent(inout) :: rho  !< charge density
+   sll_real64, dimension(:,:), intent(out)   :: phi  !< electric potential
+   sll_int32                                 :: nc_x !< number of cells direction x
+   sll_int32                                 :: nc_y !< number of cells direction y
 
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rhot)
+   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
 
-   self%rhot = self%rhot / self%k2
+   self%rht = self%rht / self%k2
 
-   call fftw_execute_dft_c2r(self%bw, self%rhot, phi(1:nc_x,1:nc_y))
+   call fftw_execute_dft_c2r(self%bw, self%rht, phi(1:nc_x,1:nc_y))
 
    nc_x = self%nc_x
    nc_y = self%nc_y
 
    phi = phi / (nc_x*nc_y)     ! normalize
 
-   phi(nc_x+1,:) = phi(1,:)
-   phi(:,nc_y+1) = phi(:,1)
+   !Node centered case
+   if(size(phi,1) == nc_x+1) phi(nc_x+1,:) = phi(1,:)
+   if(size(phi,2) == nc_y+1) phi(:,nc_y+1) = phi(:,1)
 
 end subroutine solve_potential_poisson_2d_periodic_fftw
 
@@ -165,23 +192,23 @@ end subroutine solve_potential_poisson_2d_periodic_fftw
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
-   type(poisson_2d_periodic),intent(inout)  :: self
-   sll_real64, dimension(:,:), intent(inout) :: rho
-   sll_real64, dimension(:,:), intent(out)   :: e_x
-   sll_real64, dimension(:,:), intent(out)   :: e_y
-   sll_real64, optional                      :: nrj
+   type(poisson_2d_periodic),intent(inout)   :: self !< Self data object
+   sll_real64, dimension(:,:), intent(inout) :: rho  !< Charge density
+   sll_real64, dimension(:,:), intent(out)   :: e_x  !< Electric field x
+   sll_real64, dimension(:,:), intent(out)   :: e_y  !< Electric field y
+   sll_real64, optional                      :: nrj  !< Energy 
    sll_int32  :: nc_x, nc_y
    sll_real64 :: dx, dy
 
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rhot)
+   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
 
    self%ext(1,1) = 0.0_f64
    self%eyt(1,1) = 0.0_f64
-   self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%rhot
-   self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%rhot
+   self%ext = -cmplx(0.0_f64,self%kx,kind=f64)*self%rht
+   self%eyt = -cmplx(0.0_f64,self%ky,kind=f64)*self%rht
 
    call fftw_execute_dft_c2r(self%bw, self%ext, e_x(1:nc_x,1:nc_y))
    call fftw_execute_dft_c2r(self%bw, self%eyt, e_y(1:nc_x,1:nc_y))
@@ -189,10 +216,11 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    e_x = e_x / (nc_x*nc_y)
    e_y = e_y / (nc_x*nc_y)
 
-   e_x(nc_x+1,:) = e_x(1,:)
-   e_x(:,nc_y+1) = e_x(:,1)
-   e_y(nc_x+1,:) = e_y(1,:)
-   e_y(:,nc_y+1) = e_y(:,1)
+   !Node centered case
+   if (size(e_x,1) == nc_x+1) e_x(nc_x+1,:) = e_x(1,:)
+   if (size(e_x,2) == nc_y+1) e_x(:,nc_y+1) = e_x(:,1)
+   if (size(e_y,1) == nc_x+1) e_y(nc_x+1,:) = e_y(1,:)
+   if (size(e_y,2) == nc_y+1) e_y(:,nc_y+1) = e_y(:,1)
 
    if (present(nrj)) then 
       dx = self%dx
@@ -207,13 +235,19 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftw
 
+!> Delete the Poisson object
 subroutine free_poisson_2d_periodic_fftw(self)
 type(poisson_2d_periodic) :: self
-call fftw_free(self%p_rhot)
+
+#ifdef FFTW_F2003
+call fftw_free(self%p_rht)
 if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
+#endif
+
 call fftw_destroy_plan(self%fw)
 call fftw_destroy_plan(self%bw)
+
 !if (nthreads > 1) then
    !call dfftw_cleanup_threads(error)
 !end if
