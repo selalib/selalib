@@ -31,8 +31,8 @@ use sll_cubic_splines
 type ::  cubic_spline_1d_interpolator
    sll_real64, dimension(:), pointer :: interpolation_points !< points positions
    sll_int32                         :: num_points           !< size
-   sll_int32                         :: bc_type              !< boundary condition
-   type(sll_cubic_spline_1D), pointer      :: spline               !< spline object
+   sll_int32                         :: bc_type            !< boundary condition
+   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
 end type cubic_spline_1d_interpolator
 
 #else
@@ -41,8 +41,8 @@ type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
 
    sll_real64, dimension(:), pointer :: interpolation_points !< points position
    sll_int32                         :: num_points           !< size
-   sll_int32                         :: bc_type              !< boundary condition
-   type(sll_cubic_spline_1D), pointer      :: spline               !< spline object
+   sll_int32                         :: bc_type            !< boundary condition
+   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
 
 contains
 
@@ -57,6 +57,8 @@ procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_
 procedure, pass:: interpolate_array => spline_interpolate1d
 procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
 procedure, pass:: reconstruct_array
+procedure, pass :: set_coefficients => set_coefficients_cs1d
+procedure, pass :: get_coefficients => get_coefficients_cs1d
 !generic :: initialize => initialize_cs1d_interpolator
 
 end type cubic_spline_1d_interpolator
@@ -170,13 +172,19 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the cs1d at initialization time.  
 #ifdef STDF95
-  subroutine cubic_spline_compute_interpolants( interpolator, data_array )
+  subroutine cubic_spline_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(cubic_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_cs1d( interpolator, data_array )
+  subroutine compute_interpolants_cs1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_spline_1D( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine cubic_spline_compute_interpolants
@@ -304,6 +312,33 @@ contains  ! ****************************************************************
 #endif
 
 
+  function new_cubic_spline_1d_interpolator( &
+    num_points, &
+    xmin, &
+    xmax, &
+    bc_type, &
+    slope_left, &
+    slope_right ) result(res)
+
+    type(cubic_spline_1d_interpolator),  pointer :: res
+    sll_int32,  intent(in)               :: num_points
+    sll_real64, intent(in)               :: xmin
+    sll_real64, intent(in)               :: xmax
+    sll_int32,  intent(in)               :: bc_type
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call initialize_cs1d_interpolator( &
+         res, &
+         num_points, &
+         xmin, &
+         xmax, &
+         bc_type, &
+         slope_left, &
+         slope_right )
+  end function new_cubic_spline_1d_interpolator
+
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 
@@ -344,6 +379,7 @@ contains  ! ****************************************************************
        interpolator%interpolation_points(i) = &
             interpolator%interpolation_points(i-1) + delta
     end do
+    interpolator%interpolation_points(num_points) = xmax
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
        interpolator%spline => new_spline_1D( &
@@ -378,5 +414,22 @@ contains  ! ****************************************************************
 #endif
     call delete(obj%spline)
   end subroutine delete_cs1d
+
+  subroutine set_coefficients_cs1d( interpolator, coeffs )
+    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_cs1d
+
+
+  function get_coefficients_cs1d(interpolator)
+    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
+    
+    print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_cs1d
 
 end module sll_cubic_spline_interpolator_1d
