@@ -20,17 +20,16 @@ module sll_fft
 #include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+#include "sll_fftw.h"
 
-  use fftw_module
+  use fftw3
   use sll_fft_utils
+  use, intrinsic :: iso_c_binding
 
   implicit none 
-
-
-
+  
   type sll_fft_plan
-    type(C_PTR)                     :: fftw_plan
-
+    fftw_plan                        :: fftw
     sll_int32                        :: style
     sll_int32                        :: library
     sll_int32                        :: direction
@@ -39,53 +38,63 @@ module sll_fft
   end type sll_fft_plan
 
   interface fft_new_plan
-    module procedure fftw_new_plan_c2c_1d, fftw_new_plan_c2c_2d, &
+    module procedure &
+       fftw_new_plan_c2c_1d, &
+       fftw_new_plan_c2c_2d, &
        fftw_new_plan_r2r_1d, &
-       fftw_new_plan_r2c_1d, fftw_new_plan_c2r_1d, &
-       fftw_new_plan_r2c_2d, fftw_new_plan_c2r_2d 
+       fftw_new_plan_r2c_1d, &
+       fftw_new_plan_c2r_1d, &
+       fftw_new_plan_r2c_2d, &
+       fftw_new_plan_c2r_2d 
   end interface
   interface fft_apply_plan
-    module procedure fftw_apply_plan_c2c_1d, fftw_apply_plan_c2c_2d, &
+    module procedure &
+       fftw_apply_plan_c2c_1d, &
+       fftw_apply_plan_c2c_2d, &
        fftw_apply_plan_r2r_1d, &
-       fftw_apply_plan_r2c_1d, fftw_apply_plan_c2r_1d, &
-       fftw_apply_plan_r2c_2d, fftw_apply_plan_c2r_2d
+       fftw_apply_plan_r2c_1d, &
+       fftw_apply_plan_c2r_1d, &
+       fftw_apply_plan_r2c_2d, &
+       fftw_apply_plan_c2r_2d
   end interface 
  
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
 
-
 ! Flags to pass when we create a new plan
 ! We can define 31 different flags.
 ! The value assigned to the flag can only be a power of two.
 ! See section "How-to manipulate flags ?" for more information.
-  integer, parameter :: FFT_NORMALIZE_FORWARD = 2**0
-  integer, parameter :: FFT_NORMALIZE_INVERSE = 2**0
-  integer, parameter :: FFT_NORMALIZE         = 2**0
+
+  integer, parameter :: FFT_NORMALIZE_FORWARD     = 2**0
+  integer, parameter :: FFT_NORMALIZE_INVERSE     = 2**0
+  integer, parameter :: FFT_NORMALIZE             = 2**0
   integer, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
   integer, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
   integer, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
-
   integer, parameter :: FFTW_MOD = 1000000000
 
   interface fft_get_mode
-     module procedure fft_get_mode_complx_1d, fft_get_mode_complx_2d, &
-                      fft_get_mode_complx_3d, fft_get_mode_real_1d
+     module procedure &
+        fft_get_mode_complx_1d, &
+        fft_get_mode_complx_2d, &
+        fft_get_mode_complx_3d, &
+        fft_get_mode_real_1d
   end interface
 
   interface fft_set_mode
-     module procedure fft_set_mode_complx_1d, fft_set_mode_complx_2d, &
-                      fft_set_mode_complx_3d, fft_set_mode_real_1d
+     module procedure &
+        fft_set_mode_complx_1d, &
+        fft_set_mode_complx_2d, &
+        fft_set_mode_complx_3d, &
+        fft_set_mode_real_1d
   end interface
 
 contains
 
-
-
   subroutine print_defaultfftlib()
     print *, 'The library used is FFTW'
   end subroutine
-
 
   function fft_get_mode_complx_1d(plan,array,k) result(mode)
     type(sll_fft_plan), pointer :: plan
@@ -215,7 +224,12 @@ contains
     SLL_ALLOCATE(plan%problem_shape(1),ierr)
     plan%problem_shape = (/ nx  /)
 
-    plan%fftw_plan = fftw_plan_dft_1d(nx,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_1d(nx,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_1d(plan%fftw,nx,array_in,array_out,direction,FFTW_ESTIMATE)
+#endif
+
   end function
 
   subroutine fftw_apply_plan_c2c_1d(plan,array_in,array_out)
@@ -223,7 +237,7 @@ contains
     sll_comp64, dimension(:), intent(inout)         :: array_in, array_out
     sll_real64 :: factor
 
-    call fftw_execute_dft(plan%fftw_plan, array_in, array_out)
+    call fftw_execute_dft(plan%fftw, array_in, array_out)
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
@@ -254,7 +268,13 @@ contains
     plan%problem_shape = (/ NX , NY /)
   
     !We must switch the dimension. It's a fftw convention. 
-    plan%fftw_plan = fftw_plan_dft_2d(NY,NX,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_2d(NY,NX,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_2d(plan%fftw,NY,NX,array_in,array_out,direction,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#endif
+
   end function
 
   subroutine fftw_apply_plan_c2c_2d(plan,array_in,array_out)
@@ -262,7 +282,7 @@ contains
     sll_comp64, dimension(0:,0:), intent(inout)  :: array_in, array_out
     sll_real64                                   :: factor
 
-    call fftw_execute_dft(plan%fftw_plan, array_in, array_out)
+    call fftw_execute_dft(plan%fftw, array_in, array_out)
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(plan%problem_shape(1)*plan%problem_shape(2),kind=f64)
@@ -294,18 +314,33 @@ contains
     plan%problem_shape = (/ nx /)
 
     if(direction .eq. FFT_FORWARD) then
-      plan%fftw_plan = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#ifdef FFTW_F2003
+      plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE)
+#else
+      call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_R2HC,FFTW_ESTIMATE)
+#endif
     else if(direction .eq. FFT_INVERSE) then
-      plan%fftw_plan = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#ifdef FFTW_F2003
+      plan%fftw = fftw_plan_r2r_1d(nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE)
+#else
+      call dfftw_plan_r2r_1d(plan%fftw,nx,array_in,array_out,FFTW_HC2R,FFTW_ESTIMATE)
+#endif
     endif
   end function
 
   subroutine fftw_apply_plan_r2r_1d(plan,array_in,array_out)
-    type(sll_fft_plan), pointer, intent(in)     :: plan
-    sll_real64, dimension(:), intent(inout)     :: array_in, array_out
-    sll_real64                                  :: factor
 
-    call fftw_execute_r2r(plan%fftw_plan, array_in, array_out)
+    type(sll_fft_plan), pointer, intent(in) :: plan
+    sll_real64, dimension(:), intent(inout) :: array_in
+    sll_real64, dimension(:), intent(inout) :: array_out
+    sll_real64                              :: factor
+
+#ifdef FFTW_F2003
+    call fftw_execute_r2r(plan%fftw, array_in, array_out)
+#else
+    !call fftw_execute_r2r(plan%fftw, array_in, array_out)
+    call errout( 6, 'W', __FILE__,__LINE__, "R2HC not supported by MKL-FFTW" )
+#endif
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
@@ -335,7 +370,11 @@ contains
     SLL_ALLOCATE(plan%problem_shape(1),ierr)
     plan%problem_shape = (/ nx /)
 
-    plan%fftw_plan = fftw_plan_dft_r2c_1d(nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_r2c_1d(nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_r2c_1d(plan%fftw,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#endif
   end function
 
   subroutine fftw_apply_plan_r2c_1d(plan,array_in,array_out)
@@ -344,7 +383,7 @@ contains
     sll_comp64, dimension(:), intent(out)           :: array_out
     sll_real64                                      :: factor
 
-    call fftw_execute_dft_r2c(plan%fftw_plan, array_in, array_out)
+    call fftw_execute_dft_r2c(plan%fftw, array_in, array_out)
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
@@ -372,7 +411,13 @@ contains
     plan%problem_rank = 2
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
     plan%problem_shape = (/ nx , ny /)
-    plan%fftw_plan = fftw_plan_dft_r2c_2d(ny,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_r2c_2d(ny,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_r2c_2d(plan%fftw,nx,ny,array_in,array_out,FFTW_ESTIMATE)
+#endif
+
   end function
 
   subroutine fftw_apply_plan_r2c_2d(plan,array_in,array_out)
@@ -403,7 +448,7 @@ contains
       stop ''
     endif
 
-    call fftw_execute_dft_r2c(plan%fftw_plan, array_in, array_out)
+    call fftw_execute_dft_r2c(plan%fftw, array_in, array_out)
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(nx*ny,kind=f64)
@@ -434,7 +479,12 @@ contains
     SLL_ALLOCATE(plan%problem_shape(1),ierr)
     plan%problem_shape = (/ nx /)
 
-    plan%fftw_plan = fftw_plan_dft_c2r_1d(nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_c2r_1d(nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_c2r_1d(plan%fftw,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#endif
+
   end function
 
   subroutine fftw_apply_plan_c2r_1d(plan,array_in,array_out)
@@ -443,7 +493,7 @@ contains
     sll_real64, dimension(:)    :: array_out
     sll_real64                  :: factor
 
-    call fftw_execute_dft_c2r(plan%fftw_plan, array_in, array_out)
+    call fftw_execute_dft_c2r(plan%fftw, array_in, array_out)
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(plan%problem_shape(1),kind=f64)
@@ -471,7 +521,11 @@ contains
     plan%problem_rank = 2
     SLL_ALLOCATE(plan%problem_shape(2),ierr)
     plan%problem_shape = (/ nx , ny /)
-    plan%fftw_plan = fftw_plan_dft_c2r_2d(ny,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#ifdef FFTW_F2003
+    plan%fftw = fftw_plan_dft_c2r_2d(ny,nx,array_in,array_out,FFTW_ESTIMATE + FFTW_UNALIGNED)
+#else
+    call dfftw_plan_dft_c2r_2d(plan%fftw,nx,ny,array_in,array_out,FFTW_ESTIMATE)
+#endif
   end function
 
   subroutine fftw_apply_plan_c2r_2d(plan,array_in,array_out)
@@ -489,7 +543,7 @@ contains
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
-    call fftw_execute_dft_c2r(plan%fftw_plan, array_in(1:nx/2+1,1:ny), array_out(1:nx,1:ny) )
+    call fftw_execute_dft_c2r(plan%fftw, array_in(1:nx/2+1,1:ny), array_out(1:nx,1:ny) )
 
     if( fft_is_present_flag(plan%style,FFT_NORMALIZE) ) then
       factor = 1.0_f64/real(nx*ny,kind=f64)
@@ -512,7 +566,7 @@ contains
       stop 
     endif
 
-    call fftw_destroy_plan(plan%fftw_plan)
+    call fftw_destroy_plan(plan%fftw)
     if(associated(plan%problem_shape)) then
       SLL_DEALLOCATE(plan%problem_shape,ierr)
     endif

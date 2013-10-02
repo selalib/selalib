@@ -65,10 +65,8 @@ end interface
 
 public :: initialize, solve
 
-!> Object with data to solve Maxwell equation 
-!! Maxwell in TE mode: (Ex,Ey,Bz)
-!! Only 2D  for now
-!! 
+!> @brief Object with data to solve Maxwell equation 
+!> Maxwell in TE mode: (Ex,Ey,Bz)
 type, public :: maxwell_2d_fdtd
   sll_real64 :: c            !< light speed
   sll_real64 :: e_0          !< electric conductivity

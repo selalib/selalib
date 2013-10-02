@@ -288,6 +288,7 @@ contains
     general_flag = general_flag .and. individual_flag
     if( individual_flag .eqv. .false. ) then
        print *, 'FAILURE IN FUNCTION: ', message
+       stop
     end if
   end subroutine test_error_flag
 
