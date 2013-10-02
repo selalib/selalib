@@ -3,11 +3,13 @@ program unit_test
 #include "sll_field_2d.h"
 #include "sll_memory.h"
   use sll_constants
-  use geometry_functions
+  use sll_common_coordinate_transformations
   use distribution_function
   use sll_scalar_field_2d
 !  use sll_module_mapped_meshes_2d_base
-  use sll_module_mapped_meshes_2d
+!  use sll_module_mapped_meshes_2d
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
   use sll_scalar_field_initializers_base
   use sll_gaussian_2d_initializer
   use sll_linrood
@@ -16,12 +18,21 @@ program unit_test
  
   sll_int32 :: nc_eta1, nc_eta2
 
-  type(sll_mapped_mesh_2d_analytic), target :: mesh2d, mesh2d_cart
+!!$  type(sll_mapped_mesh_2d_analytic), target :: mesh2d_col, mesh2d_cart
+!!$#ifdef STDF95
+!!$  type(sll_mapped_mesh_2d_analytic), pointer   :: m
+!!$#else
+!!$  class(sll_mapped_mesh_2d_base), pointer   :: m
+!!$#endif
+  type(sll_logical_mesh_2d), pointer :: ml
+  type(sll_coordinate_transformation_2d_analytic), pointer :: mesh2d_col, mesh2d_cart
 #ifdef STDF95
-  type(sll_mapped_mesh_2d_analytic), pointer   :: m
+  type(sll_coordinate_transformation_2d_analytic), pointer   :: m
 #else
-  class(sll_mapped_mesh_2d_base), pointer   :: m
+  class(sll_coordinate_transformation_2d_base), pointer   :: m
 #endif
+
+
   type(sll_distribution_function_2d)   :: df 
   character(32)  :: name = 'dist_func'
   character(len=4) :: cstep
@@ -72,11 +83,13 @@ program unit_test
   ! Define mapped mesh
   nc_eta1 = 100
   nc_eta2 = 100
+  
+  ml => new_logical_mesh_2d( nc_eta1, nc_eta1)
 
-  call mesh2d%initialize( &
-       "mesh2d",      &
-       nc_eta1+1,     &
-       nc_eta2+1,     &
+
+  mesh2d_col => new_coordinate_transformation_2d_analytic( &
+       "mesh2d_col",      &
+       ml,            &
        sinprod_x1,    &
        sinprod_x2,    &
        sinprod_jac11, &
@@ -84,10 +97,9 @@ program unit_test
        sinprod_jac21, &
        sinprod_jac22 )
 
- call mesh2d_cart%initialize( &
+  mesh2d_cart => new_coordinate_transformation_2d_analytic( &
        "mesh2d_cart",      &
-       nc_eta1+1,     &
-       nc_eta2+1,     &
+       ml,             &
        identity_x1,    &
        identity_x2,    &
        identity_jac11, &
@@ -95,29 +107,29 @@ program unit_test
        identity_jac21, &
        identity_jac22 )
 
- ! m => mesh2d
+ ! m => mesh2d_col
   m => mesh2d_cart
 
   print*, 'initialization of distribution_function'
 
-  call init_gaussian%initialize( m, CELL_CENTERED_FIELD, 0.4_f64, 0.4_f64, 0.1_f64, 0.1_f64 )
+  call init_gaussian%initialize( m, CELL_CENTERED_FIELD, 0.8_f64, 0.4_f64, 0.1_f64, 0.1_f64 )
   p_init_f => init_gaussian
 
  ! Set up the interpolators for the distribution function
-  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 
  ! Set up the interpolators for the scalar field
-  call interp_eta1_sf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2_sf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1_sf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2_sf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr_sf => interp_eta1_sf
   interp_eta2_ptr_sf => interp_eta2_sf
 
  ! Set up the interpolators for the rotating field
-  call interp_eta1_rf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2_rf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1_rf%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2_rf%initialize( nc_eta2+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr_rf => interp_eta1_rf
   interp_eta2_ptr_rf => interp_eta2_rf
 
@@ -132,19 +144,10 @@ program unit_test
        interp_eta2_ptr, &
        p_init_f )
 
-!!$   ! jacobian times distribution function is stored
-!!$       do j=1,num_pts2
-!!$          do i=1, num_pts1
-!!$             y = m%x2_cell(i,j)
-!!$             x = m%x1_cell(i,j)
-!!$             jac = m%jacobians_c(i,j)
-!!$             data_out(i,j) = &
-!!$                  jac / (2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
-!!$                  (x-init_obj%xc)**2/init_obj%sigma_x**2 + &
-!!$                  (y-init_obj%yc)**2/init_obj%sigma_y**2))
-!!$          end do
-!!$       end do
-
+  !istep = 0
+  !call int2string(istep,cstep)
+  !df%name = trim(name)//cstep
+  
   print*, 'write mesh and distribution function'
  
   call write_scalar_field_2d(df)!,multiply_by_jacobian=.true.) 
@@ -168,8 +171,8 @@ program unit_test
   alpha2 = 1.0_f64
   do i1 = 1, nc_eta1 
      do i2 = 1, nc_eta2
-        FIELD_2D_AT_I( uniform_field, i1, i2 ) = alpha1 * m%x2_cell(i1,i2) &
-             - alpha2 * m%x1_cell(i1,i2)
+        FIELD_2D_AT_I( uniform_field, i1, i2 ) = alpha1 * m%x2_at_cell(i1,i2) &
+             - alpha2 * m%x1_at_cell(i1,i2)
      end do
   end do
  
@@ -185,10 +188,13 @@ program unit_test
 
   do i1 = 1, nc_eta1
      do i2 = 1, nc_eta2
-        FIELD_2D_AT_I( rotating_field, i1, i2 ) = 0.5_f64*(m%x1_cell(i1,i2)**2 &
-             + m%x2_cell(i1,i2)**2)
+        FIELD_2D_AT_I( rotating_field, i1, i2 ) = 0.5_f64*(m%x1_at_cell(i1,i2)**2 &
+             + m%x2_at_cell(i1,i2)**2)
      end do
   end do
+
+!  call write_scalar_field_2d(df)
+
 
  print*, 'checking advection in incompressible swirling deformation field' 
   ! define incompressible field
@@ -197,17 +203,17 @@ program unit_test
   do i1 = 1, nc_eta1
      do i2 = 1, nc_eta2
         FIELD_2D_AT_I( incompressible_field, i1, i2 ) = &
-            (cos(sll_pi*2.0_f64*m%x1_cell(i1,i2)) &
-             *cos(sll_pi*2.0_f64*m%x2_cell(i1,i2)) &
-             -cos(sll_pi*2.0_f64*m%x1_cell(i1,i2)) & 
-             -cos(sll_pi*2.0_f64*m%x2_cell(i1,i2))) & 
+            (cos(sll_pi*2.0_f64*m%x1_at_cell(i1,i2)) &
+             *cos(sll_pi*2.0_f64*m%x2_at_cell(i1,i2)) &
+             -cos(sll_pi*2.0_f64*m%x1_at_cell(i1,i2)) & 
+             -cos(sll_pi*2.0_f64*m%x2_at_cell(i1,i2))) & 
              /sll_pi/4.0_f64
      end do
   end do
 
-  deltat = m%delta_eta1*.1_f64
+  deltat = ml%delta_eta1*.1_f64
 
-  nbiter = 600
+  nbiter = 0
   do istep = 1, nbiter
      call linrood_step(linrood, df, incompressible_field, 0._8, deltat)
  
