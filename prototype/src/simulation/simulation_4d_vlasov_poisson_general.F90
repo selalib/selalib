@@ -126,6 +126,7 @@ contains
    sim%params    => params
   end subroutine initialize_vp4d_general
 
+
   subroutine init_vp4d_par_gen( sim, filename )
     intrinsic :: trim
     class(sll_simulation_4d_vp_general), intent(inout) :: sim
@@ -161,7 +162,6 @@ contains
     sim%nc_x3 = num_cells_x3
     sim%nc_x4 = num_cells_x4
   end subroutine init_vp4d_par_gen
-
 
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here
@@ -433,8 +433,6 @@ contains
     delta3 = sim%mesh2d_v%delta_eta1
     delta4 = sim%mesh2d_v%delta_eta2
 
-
-
     call compute_charge_density( sim%mesh2d_x,           &
                                  sim%mesh2d_v,           &
                                  size(sim%f_x3x4,1),     &
@@ -524,8 +522,8 @@ contains
          sim%mesh2d_x%eta1_max, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%eta2_max, &
-         PERIODIC_SPLINE, &
-         PERIODIC_SPLINE )
+         SLL_PERIODIC, &
+         SLL_PERIODIC )
 
     call advection_x1x2(sim,0.5*sim%dt)
 
@@ -534,13 +532,13 @@ contains
          nc_x3+1, &
          vmin3, &
          vmax3, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call sim%interp_x4%initialize( &
          nc_x4+1, &
          vmin4, &
          vmax4, &
-         PERIODIC_SPLINE)
+         SLL_PERIODIC)
 
     call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
 
