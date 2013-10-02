@@ -1,7 +1,7 @@
 !> Unit test for parallel output
 program test_io_parallel
 
-use hdf5
+use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 use sll_collective
 use sll_hdf5_io_parallel
 use sll_xml_io
@@ -127,7 +127,7 @@ contains
                                     dble(offset(2)), dble(1), &
                                     zdata, "rect_mesh", 1, error)  
 
-  call sll_gnuplot_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
+  call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
   !Begin high level version
@@ -161,7 +161,7 @@ contains
      call sll_xml_file_create("layout2d.xmf",xml_id,error)
      call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
      call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
-     call sll_xml_file_close(file_id,error)
+     call sll_xml_file_close(xml_id,error)
      print *, 'Printing 2D layout: '
      call sll_view_lims_2D( layout )
      print *, '--------------------'

@@ -103,7 +103,7 @@ contains  ! ****************************************************************
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
-    if (this%bc_type == PERIODIC_SPLINE) then
+    if (this%bc_type == SLL_PERIODIC) then
        do i = 1, num_points      
           coordinates(i) = xmin + modulo(this%interpolation_points(i) - xmin - alpha, length)
           SLL_ASSERT(coordinates(i) >= xmin)

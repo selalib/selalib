@@ -71,11 +71,11 @@ implicit none
   delta_vy = (vy_max-vy_min)/(n_vy-1)
 
   call spline_xy%initialize(n_x, n_y, x_min, x_max, y_min, y_max, &
-                            PERIODIC_SPLINE, PERIODIC_SPLINE )
+                            SLL_PERIODIC, SLL_PERIODIC )
   interp_xy   => spline_xy
 
   call spline_vxvy%initialize(n_vx, n_vy, vx_min, vx_max, vy_min, vy_max, &
-                              PERIODIC_SPLINE, PERIODIC_SPLINE )
+                              SLL_PERIODIC, SLL_PERIODIC )
   interp_vxvy => spline_vxvy
 
   do i = 1, n_x
@@ -119,7 +119,7 @@ implicit none
 
 #ifdef _OPENMP
      !$OMP BARRIER
-     t0=OMP_GET_WTIME()
+  !   t0=OMP_GET_WTIME()
 #endif
 
      !$OMP DO 
@@ -158,7 +158,7 @@ implicit none
 
 #ifdef _OPENMP
      !$OMP BARRIER
-     t1=OMP_GET_WTIME()
+  !   t1=OMP_GET_WTIME()
 #endif
 
      !$OMP SINGLE
@@ -188,10 +188,10 @@ implicit none
 
 #ifdef _OPENMP
      !$OMP BARRIER
-     t2=OMP_GET_WTIME()
+    ! t2=OMP_GET_WTIME()
 
      !$OMP CRITICAL
-     print *, it,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM(),t1-t0,t2-t1
+     !print *, it,OMP_GET_NUM_THREADS(),OMP_GET_THREAD_NUM(),t1-t0,t2-t1
      !$OMP END CRITICAL
 #endif
 
