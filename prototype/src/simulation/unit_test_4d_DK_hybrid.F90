@@ -47,13 +47,16 @@ program DK_hybrid_4d
     my_rank, &
     logical_mesh4D)
 
+  !** Fisrt step ***
+  call first_step_4d_DK_hybrid(simulation)
+
 !VG!  call simulation%run( )
 !VG!  call delete(simulation)
 
   print *, 'reached end of 4d DK hybrid test'
   print *, 'PASSED'
-!VG!
-!VG!  call sll_halt_collective()
+
+  call sll_halt_collective()
 end program DK_hybrid_4d
 
 
