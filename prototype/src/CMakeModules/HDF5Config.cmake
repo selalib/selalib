@@ -1,10 +1,11 @@
 SET(HDF5_ENABLED ON CACHE BOOL "Use HDF5 format for data output ")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 
-IF(NOT HDF5_FOUND)
+IF(NOT HDF5_FOUND AND HDF5_ENABLED)
 
    SET(HDF5_PATHS $ENV{HDF5_HOME}
                   $ENV{HDF5_ROOT} 
+                  $ENV{HDF5ROOT} 
                   /usr 
                   /usr/lib64/mpich2 
                   /usr/lib64/openmpi 
@@ -12,17 +13,17 @@ IF(NOT HDF5_FOUND)
                   /opt/local)
 
    FIND_PATH(HDF5_INCLUDE_DIR NAMES hdf5.mod
-   HINTS ${HDF5_PATHS} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64
+   HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64 
    PATH_SUFFIXES / include hdf5/include include/fortran
    DOC "PATH to hdf5.mod")
 
-   FIND_LIBRARY(HDF5_C_LIBRARY NAMES hdf5
-   HINTS ${HDF5_PATHS} 
+   FIND_LIBRARY(HDF5_C_LIBRARY NAMES libhdf5.a hdf5
+   HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5")
 
-   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES hdf5_fortran
-   HINTS ${HDF5_PATHS} 
+   FIND_LIBRARY(HDF5_FORTRAN_LIBRARY NAMES libhdf5_fortran.a hdf5_fortran
+   HINTS ${HDF5_PATHS} $ENV{HDF5_LIBRARYDIR}
    PATH_SUFFIXES lib hdf5/lib lib/x86_64-linux-gnu
    DOC "PATH TO libhdf5_fortran")
 
@@ -66,6 +67,11 @@ IF(HDF5_FOUND)
       MESSAGE(STATUS "HDF5 parallel supported")
    ELSE(HDF5_IS_PARALLEL)
       MESSAGE(STATUS "HDF5 parallel not supported")
+   ENDIF()
+
+   FIND_LIBRARY(GPFS_LIBRARY NAMES gpfs)
+   IF(GPFS_LIBRARY)
+      SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
    ENDIF()
 
    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
