@@ -207,6 +207,7 @@ contains
     sim%Leta3    = Leta3
     sim%Lvpar    = Lvpar
     !--> Equilibrium
+    sim%tau0     = tau0
     sim%rho_peak = rho_peak 
     sim%kappan   = kappan
     sim%deltarn  = deltarn
@@ -445,10 +446,7 @@ contains
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )
-!VG!print*,sim%my_rank,'N===>',Neta1,Neta3,Nvpar
-print*,sim%my_rank,'1= ',loc4d_sz_x1,'2= ',loc4d_sz_x2,'3= ',loc4d_sz_x3,'4= ',loc4d_sz_x4
 
-if (sim%my_rank.eq.0) then
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
@@ -459,17 +457,15 @@ if (sim%my_rank.eq.0) then
             i2 = glob_ind(2)
             i3 = glob_ind(3)
             i4 = glob_ind(4)
-            print*,'i1 = ',i1,' i2 = ',i2,' i3 = ',i3,' i4 = ',i4
-!VG!!VG!            eta2_j = sim%eta2_grid(i2)
-!VG!!VG!            eta3_k = sim%eta3_grid(i3)
-!VG!!VG!            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = sim%feq_2d(i1,i4) * &
-!VG!!VG!              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*eta2_j + &
-!VG!!VG!              2._f64*sll_pi*real(sim%nmode)/sim%logical_mesh4d%eta3_max*eta3_k))
+            eta2_j = sim%eta2_grid(i2)
+            eta3_k = sim%eta3_grid(i3)
+            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = sim%feq_2d(i1,i4) * &
+              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*eta2_j + &
+              2._f64*sll_pi*real(sim%nmode)/sim%logical_mesh4d%eta3_max*eta3_k))
           end do
         end do
       end do
     end do    
-end if
   end subroutine initialize_fdistribu4d_DK
 
 
@@ -477,7 +473,7 @@ end if
   ! Allocation for QN solver
   !----------------------------------------------------
   subroutine allocate_QN_DK( sim )
-    type(sll_simulation_4d_DK_hybrid), pointer :: sim
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32 :: ierr, itemp
     sll_int32 :: i1, i2, i3, i4
@@ -566,17 +562,10 @@ end if
     world_size, &
     my_rank, &
     logical_mesh4d)
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
-      sll_hdf5_write_array_1d, sll_hdf5_file_close
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_int32                        , intent(in)    :: world_size
     sll_int32                        , intent(in)    :: my_rank
     type(sll_logical_mesh_4d)        , pointer       :: logical_mesh4d
-
-    !--> For initial profile HDF5 saving
-    integer                      :: file_err
-    sll_int32                    :: file_id
-    character(len=12), parameter :: filename_prof = "init_prof.h5"
 
     !--> Parallelization initialization
     sim%world_size = world_size
@@ -600,24 +589,46 @@ end if
 
     !*** Allocation of the distribution function ***
     call allocate_fdistribu4d_DK(sim)
-
-!VG!    !*** Allocation of the QN solver ***
-!VG!    call allocate_QN_DK(sim,sim%logical_mesh4d)
     
+    !*** Allocation of the QN solver ***
+    call allocate_QN_DK(sim)
+  end subroutine initialize_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! First step of the drift-kinetic 4D simulation :
+  !  1) Initialization of the distribution function 
+  !  2) Computation of the charge density 
+  !      (r.h.s of the quasi-neutrality solver)
+  !  3) Solving of the quasi-neutrality equation
+  !----------------------------------------------------
+  subroutine first_step_4d_DK_hybrid( sim )
+    use sll_hdf5_io, only: sll_hdf5_file_create, &
+      sll_hdf5_write_array_1d, sll_hdf5_file_close
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    !--> For initial profile HDF5 saving
+    integer                      :: file_err
+    sll_int32                    :: file_id
+    character(len=12), parameter :: filename_prof = "init_prof.h5"
+
     !*** Initialization of the distribution function ***
     call initialize_fdistribu4d_DK(sim)
 
-print*,sim%my_rank,'==> OK'
     !*** Saving of the radial profiles in HDF5 file ***
     if (sim%my_rank.eq.0) then
       call sll_hdf5_file_create(filename_prof,file_id,file_err)
       call sll_hdf5_write_array_1d(file_id,sim%n0,'n0',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Ti,'Ti',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Te,'Te',file_err)
-!VG!      call sll_hdf5_write_array_2d(file_id,sim%feq_2d,'feq_2d',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%feq_2d,'feq_2d',file_err)
       call sll_hdf5_file_close(file_id,file_err)
     end if
-  end subroutine initialize_4d_DK_hybrid
+
+    !*** Computation of the rhs of QN ***
+    call compute_charge_density(sim%logical_mesh4d, &
+      sim%f4d_x3x4,sim%rho3d_x3)
+  end subroutine first_step_4d_DK_hybrid
 
 
   !----------------------------------------------------
@@ -626,12 +637,12 @@ print*,sim%my_rank,'==> OK'
   subroutine run_4d_DK_hybrid( sim )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    !-->
-    sll_real64, dimension(:), pointer :: send_buf
-    sll_real64, dimension(:), pointer :: recv_buf
-    sll_int32 , dimension(:), pointer :: recv_sz
-    sll_int32 , dimension(:), pointer :: disps ! for allgatherv operation
-
+!VG!    !-->
+!VG!    sll_real64, dimension(:), pointer :: send_buf
+!VG!    sll_real64, dimension(:), pointer :: recv_buf
+!VG!    sll_int32 , dimension(:), pointer :: recv_sz
+!VG!    sll_int32 , dimension(:), pointer :: disps ! for allgatherv operation
+!VG!
 !VG!    !--> Initialization of the 4D parallel layout
 !VG!    SLL_ALLOCATE(recv_sz(sim%world_size),ierr)
 !VG!    SLL_ALLOCATE(disps(sim%world_size),ierr)
