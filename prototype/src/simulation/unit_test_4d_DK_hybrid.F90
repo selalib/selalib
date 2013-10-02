@@ -11,7 +11,6 @@ program DK_hybrid_4d
   use sll_logical_meshes
   use sll_common_coordinate_transformations
   use sll_module_coordinate_transformations_2d
-!VG!  use sll_common_array_initializers_module
   implicit none
 
   sll_int32 :: world_size
@@ -21,7 +20,8 @@ program DK_hybrid_4d
   character(len=256) :: filename_local
   type(sll_simulation_4d_DK_hybrid)  :: simulation
   type(sll_logical_mesh_4d), pointer :: logical_mesh4d
-  
+  type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+  class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
   ! Parallelization initialization
   print *, 'Booting parallel environment...'
@@ -34,21 +34,39 @@ program DK_hybrid_4d
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
 
-  ! logical mesh for space coordinates
+  !*** logical mesh for space coordinates ***
   logical_mesh4D => new_logical_mesh_4d( &
-    simulation%nc_x1,simulation%nc_x2, &
-    simulation%nc_x3,simulation%nc_x4,eta1_min=0.1_f64, &
-    eta1_max=14.5_f64,eta2_min=0.0_f64,eta2_max=2.0*sll_pi, &
-    eta3_min=0._f64,eta3_max=1508._f64,eta4_min=-6._f64,eta4_max=6._f64)
+    simulation%nc_x1+1,simulation%nc_x2+1, &
+    simulation%nc_x3+1,simulation%nc_x4+1,eta1_min=0.0_f64, &
+    eta1_max=1._f64,eta2_min=0.0_f64,eta2_max=1._f64, &
+    eta3_min=simulation%phi_min,eta3_max=simulation%phi_max, &
+    eta4_min=simulation%vpar_min,eta4_max=simulation%vpar_max)
+  
+  logical_mesh2d => new_logical_mesh_2d( &
+    simulation%nc_x1+1,simulation%nc_x2+1)
 
-  ! initialize 4D drift-kinetic Vlasov
+  !*** coordinate transformation associated with space coordinates ***
+  transf_xy => new_coordinate_transformation_2d_analytic( &
+       "polar_transformation", &
+       logical_mesh2d, &
+       x1_polar_f, &
+       x2_polar_f, &
+       deriv_x1_polar_f_eta1, &
+       deriv_x1_polar_f_eta2, &
+       deriv_x2_polar_f_eta1, &
+       deriv_x2_polar_f_eta2)
+
+  !*** initialize 4D drift-kinetic Vlasov ***
   call initialize(simulation, &
     world_size, &
     my_rank, &
-    logical_mesh4D)
+    logical_mesh4D, &
+    transf_xy)
 
-  !** Fisrt step ***
-  call first_step_4d_DK_hybrid(simulation)
+  if (my_rank.eq.0) &
+    call transf_xy%write_to_file()
+!VG!  !** Fisrt step ***
+!VG!  call first_step_4d_DK_hybrid(simulation)
 
 !VG!  call simulation%run( )
 !VG!  call delete(simulation)
