@@ -176,7 +176,7 @@ module read_write_module
     use clock_module
     use fdistribu5d_class
       
-#ifdef INTEL
+#ifdef __INTEL_COMPILER
     implicit none
     include "mpif.h"
 #else

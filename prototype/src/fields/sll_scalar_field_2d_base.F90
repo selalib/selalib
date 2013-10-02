@@ -16,6 +16,14 @@ module sll_module_scalar_field_2d_base
           get_jacobian_matrix
      procedure(function_evaluation_real), deferred, pass :: value_at_point
      procedure(function_evaluation_integer), deferred, pass :: value_at_indices
+     procedure(first_derivative_eta1_evaluation_real), deferred, pass :: &
+          first_deriv_eta1_value_at_point
+     procedure(first_derivative_eta2_evaluation_real), deferred, pass :: &
+          first_deriv_eta2_value_at_point
+     procedure(first_derivative_eta1_evaluation_integer), deferred, pass :: &
+          first_deriv_eta1_value_at_indices
+     procedure(first_derivative_eta2_evaluation_integer), deferred, pass :: &
+          first_deriv_eta2_value_at_indices
      procedure(field_2d_file_output), deferred, pass :: write_to_file
      procedure(field_2d_subroutine), deferred, pass :: delete
      ! here we can continue with derivatives or whatever else that might
@@ -78,6 +86,50 @@ module sll_module_scalar_field_2d_base
        sll_int32, intent(in)  :: j
        sll_real64             :: res
      end function function_evaluation_integer
+  end interface
+
+  abstract interface 
+     function first_derivative_eta1_evaluation_real( field, eta1, eta2 ) result(res)
+       use sll_working_precision
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(in) :: field
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
+       sll_real64             :: res
+     end function first_derivative_eta1_evaluation_real
+  end interface
+
+  abstract interface 
+     function first_derivative_eta2_evaluation_real( field, eta1, eta2 ) result(res)
+       use sll_working_precision
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(in) :: field
+       sll_real64, intent(in) :: eta1
+       sll_real64, intent(in) :: eta2
+       sll_real64             :: res
+     end function first_derivative_eta2_evaluation_real
+  end interface
+
+  abstract interface 
+     function first_derivative_eta1_evaluation_integer( field, i, j ) result(res)
+       use sll_working_precision
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(in) :: field
+       sll_int32, intent(in)  :: i
+       sll_int32, intent(in)  :: j
+       sll_real64             :: res
+     end function first_derivative_eta1_evaluation_integer
+  end interface
+
+  abstract interface 
+     function first_derivative_eta2_evaluation_integer( field, i, j ) result(res)
+       use sll_working_precision
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(in) :: field
+       sll_int32, intent(in)  :: i
+       sll_int32, intent(in)  :: j
+       sll_real64             :: res
+     end function first_derivative_eta2_evaluation_integer
   end interface
 
   abstract interface

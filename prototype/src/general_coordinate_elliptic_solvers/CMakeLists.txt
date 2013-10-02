@@ -1,5 +1,5 @@
-ADD_LIBRARY( sll_general_coordinate_quasi_neutral_solvers STATIC
-  sll_general_coordinate_qn_solver.F90
+ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
+  sll_general_coordinate_elliptic_solver.F90
   profilmat.f90
   connectivity_qn.f90
   GC.f90
@@ -19,7 +19,7 @@ ADD_LIBRARY( sll_general_coordinate_quasi_neutral_solvers STATIC
   coocsr.f90 
   linpack.f90)
 
-ADD_DEPENDENCIES( sll_general_coordinate_quasi_neutral_solvers
+ADD_DEPENDENCIES( sll_general_coordinate_elliptic_solvers
   sll_scalar_field_2d_alternative
   sll_integration
   sll_memory
@@ -31,9 +31,9 @@ ADD_DEPENDENCIES( sll_general_coordinate_quasi_neutral_solvers
   deboor_splines
   )
 
-ADD_EXECUTABLE(test_qns_general_coordinates unit_test.F90)
-target_link_libraries( test_qns_general_coordinates
-  sll_general_coordinate_quasi_neutral_solvers
+ADD_EXECUTABLE(test_general_coordinates_elliptic_solver unit_test.F90)
+target_link_libraries( test_general_coordinates_elliptic_solver
+  sll_general_coordinate_elliptic_solvers
   sll_scalar_field_2d_alternative
   sll_interpolators
   sll_coordinate_transformations

@@ -1,32 +1,40 @@
+!> @brief This is an example of selalib 
+!> @details We use selalib to solve the Vlasov-Poisson system
+!> for the Landau test case
+!>
+!> \f[ f(x,v,t=0) = (\epsilon + \sin(t)) \exp^{k_x} \f]
+!>
 program landau_1d
 #include "selalib.h"
 
 implicit none
   
-integer  :: i_step, n_step, i, j, j_step
-integer  :: nc_eta1, nc_eta2
+integer :: i_step, n_step, i, j, j_step
+integer :: nc_eta1, nc_eta2
 
 real(8) :: eta1_min, eta1_max, delta_eta1
 real(8) :: eta2_min, eta2_max, delta_eta2
 real(8) :: delta_t, time
 
-real(8), dimension(:), allocatable :: nrj
+real(8), dimension(:),   allocatable :: nrj
 real(8), dimension(:,:), allocatable :: df
 
 integer  :: error
 
-real(8), dimension(:), allocatable :: eta1, eta2
+real(8), dimension(:), allocatable :: eta1
+real(8), dimension(:), allocatable :: eta2
 
-class(sll_interpolator_1d_base), pointer    :: interp_x
-class(sll_interpolator_1d_base), pointer    :: interp_v
+class(sll_interpolator_1d_base), pointer :: interp_x
+class(sll_interpolator_1d_base), pointer :: interp_v
 
-type(cubic_spline_1d_interpolator), target  :: spline_x
-type(cubic_spline_1d_interpolator), target  :: spline_v
+type(cubic_spline_1d_interpolator), target :: spline_x
+type(cubic_spline_1d_interpolator), target :: spline_v
 
 real(8), dimension(:), allocatable :: ex
 real(8), dimension(:), allocatable :: rho
+real(8)                            :: eps
+real(8)                            :: kx
 type (poisson_1d_periodic)         :: poisson
-real(8) :: eps, kx
 
 interp_x => spline_x
 interp_v => spline_v
