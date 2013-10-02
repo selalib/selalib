@@ -312,6 +312,33 @@ contains  ! ****************************************************************
 #endif
 
 
+  function new_cubic_spline_1d_interpolator( &
+    num_points, &
+    xmin, &
+    xmax, &
+    bc_type, &
+    slope_left, &
+    slope_right ) result(res)
+
+    type(cubic_spline_1d_interpolator),  pointer :: res
+    sll_int32,  intent(in)               :: num_points
+    sll_real64, intent(in)               :: xmin
+    sll_real64, intent(in)               :: xmax
+    sll_int32,  intent(in)               :: bc_type
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call initialize_cs1d_interpolator( &
+         res, &
+         num_points, &
+         xmin, &
+         xmax, &
+         bc_type, &
+         slope_left, &
+         slope_right )
+  end function new_cubic_spline_1d_interpolator
+
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 

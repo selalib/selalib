@@ -6,8 +6,8 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
-IF(SLL_CONFIGURE_OPTIONS_FILE)
-INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
+IF(OPTIONS_FILE)
+INCLUDE(${OPTIONS_FILE})
 ENDIF()
 
 PROJECT(SLL)
@@ -117,7 +117,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
-      ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
+      ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
       ADD_SUBDIRECTORY(multigrid)
@@ -127,6 +127,7 @@ IF(NOT SLL_BUILD_PACKAGE)
 
       FIND_PACKAGE(SUITESPARSE)
       IF(SUITESPARSE_FOUND)
+         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ENDIF(SUITESPARSE_FOUND)
    
@@ -260,8 +261,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
-IF(NOT STDF95)
-   ADD_SUBDIRECTORY(package)
-ENDIF()
+ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
