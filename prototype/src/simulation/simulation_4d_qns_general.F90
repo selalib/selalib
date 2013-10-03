@@ -63,7 +63,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:,:,:,:), pointer     :: f_x1x2 
      sll_real64, dimension(:,:,:,:), pointer     :: f_x3x4
      sll_real64, dimension(:,:,:), allocatable   :: partial_reduction
-     sll_real64, dimension(:,:), allocatable     :: rho_full 
+     sll_real64, dimension(:,:), pointer     :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
      sll_real64, dimension(:,:), allocatable     :: rho_split
 
@@ -314,7 +314,7 @@ contains
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
-    sll_real64, dimension(:,:), allocatable :: phi_values
+    sll_real64, dimension(:,:), pointer :: phi_values
     sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
@@ -672,7 +672,7 @@ contains
     ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - density_tot, &
+         sim%rho_full,&! - density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
