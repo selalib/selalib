@@ -574,94 +574,94 @@ contains
       sim%spline_degree_eta2)
 !    time = time_elapsed_since(tm)
 
-!VG!    call sim%interp_rho2d%initialize( &
-!VG!      logical_mesh2d%num_cells1 +1, &
-!VG!      logical_mesh2d%num_cells2 +1, &
-!VG!      logical_mesh2d%eta1_min, &
-!VG!      logical_mesh2d%eta1_max, &
-!VG!      logical_mesh2d%eta2_min, &
-!VG!      logical_mesh2d%eta2_max, &
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1, &
-!VG!      sim%bc_left_eta2, &
-!VG!      sim%bc_right_eta2, &
-!VG!      sim%spline_degree_eta1, &
-!VG!      sim%spline_degree_eta2)    
+    call sim%interp_rho2d%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)    
 !VG!print*,sim%my_rank,"===> OK1"
-!VG!
-!VG!    call sim%interp_QN_A11%initialize( &
-!VG!      logical_mesh2d%num_cells1 +1, &
-!VG!      logical_mesh2d%num_cells2 +1, &
-!VG!      logical_mesh2d%eta1_min, &
-!VG!      logical_mesh2d%eta1_max, &
-!VG!      logical_mesh2d%eta2_min, &
-!VG!      logical_mesh2d%eta2_max, &
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1, &
-!VG!      sim%bc_left_eta2, &
-!VG!      sim%bc_right_eta2, &
-!VG!      sim%spline_degree_eta1, &
-!VG!      sim%spline_degree_eta2)    
+
+    call sim%interp_QN_A11%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)    
 !VG!print*,sim%my_rank,"===> OK2"
-!VG!
-!VG!    call sim%interp_QN_A12%initialize( &
-!VG!      logical_mesh2d%num_cells1 +1, &
-!VG!      logical_mesh2d%num_cells2 +1, &
-!VG!      logical_mesh2d%eta1_min, &
-!VG!      logical_mesh2d%eta1_max, &
-!VG!      logical_mesh2d%eta2_min, &
-!VG!      logical_mesh2d%eta2_max, &
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1, &
-!VG!      sim%bc_left_eta2, &
-!VG!      sim%bc_right_eta2, &
-!VG!      sim%spline_degree_eta1, &
-!VG!      sim%spline_degree_eta2)    
+
+    call sim%interp_QN_A12%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)    
 !VG!print*,sim%my_rank,"===> OK3"
-!VG!
-!VG!    call sim%interp_QN_A21%initialize( &
-!VG!      logical_mesh2d%num_cells1 +1, &
-!VG!      logical_mesh2d%num_cells2 +1, &
-!VG!      logical_mesh2d%eta1_min, &
-!VG!      logical_mesh2d%eta1_max, &
-!VG!      logical_mesh2d%eta2_min, &
-!VG!      logical_mesh2d%eta2_max, &
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1, &
-!VG!      sim%bc_left_eta2, &
-!VG!      sim%bc_right_eta2, &
-!VG!      sim%spline_degree_eta1, &
-!VG!      sim%spline_degree_eta2)    
+
+    call sim%interp_QN_A21%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)    
 !VG!print*,sim%my_rank,"===> OK4"
-!VG!
-!VG!    call sim%interp_QN_A22%initialize( &
-!VG!      logical_mesh2d%num_cells1 +1, &
-!VG!      logical_mesh2d%num_cells2 +1, &
-!VG!      logical_mesh2d%eta1_min, &
-!VG!      logical_mesh2d%eta1_max, &
-!VG!      logical_mesh2d%eta2_min, &
-!VG!      logical_mesh2d%eta2_max, &
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1, &
-!VG!      sim%bc_left_eta2, &
-!VG!      sim%bc_right_eta2, &
-!VG!      sim%spline_degree_eta1, &
-!VG!      sim%spline_degree_eta2)    
+
+    call sim%interp_QN_A22%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)    
 !VG!print*,sim%my_rank,"===> OK5"
-!VG!
-!VG!    call sim%interp_QN_C%initialize( &
-!VG!      logical_mesh2d%num_cells1 +1, &
-!VG!      logical_mesh2d%num_cells2 +1, &
-!VG!      logical_mesh2d%eta1_min, &
-!VG!      logical_mesh2d%eta1_max, &
-!VG!      logical_mesh2d%eta2_min, &
-!VG!      logical_mesh2d%eta2_max, &
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1, &
-!VG!      sim%bc_left_eta2, &
-!VG!      sim%bc_right_eta2, &
-!VG!      sim%spline_degree_eta1, &
-!VG!      sim%spline_degree_eta2)    
+
+    call sim%interp_QN_C%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)    
 !VG!print*,sim%my_rank,"===> OK6"
     !----->
 !!$    sim%rho2d => new_scalar_field_2d_discrete_alt( &
