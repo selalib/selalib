@@ -158,6 +158,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_logical_meshes
                        sll_file_io_parallel
                        sll_utilities
+		       sll_timer
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)

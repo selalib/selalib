@@ -36,14 +36,14 @@ program DK_hybrid_4d
 
   !*** logical mesh for space coordinates ***
   logical_mesh4D => new_logical_mesh_4d( &
-    simulation%nc_x1+1,simulation%nc_x2+1, &
-    simulation%nc_x3+1,simulation%nc_x4+1,eta1_min=0.0_f64, &
+    simulation%nc_x1,simulation%nc_x2, &
+    simulation%nc_x3,simulation%nc_x4,eta1_min=0.0_f64, &
     eta1_max=1._f64,eta2_min=0.0_f64,eta2_max=1._f64, &
     eta3_min=simulation%phi_min,eta3_max=simulation%phi_max, &
     eta4_min=simulation%vpar_min,eta4_max=simulation%vpar_max)
   
   logical_mesh2d => new_logical_mesh_2d( &
-    simulation%nc_x1+1,simulation%nc_x2+1)
+    simulation%nc_x1,simulation%nc_x2)
 
   !*** coordinate transformation associated with space coordinates ***
   transf_xy => new_coordinate_transformation_2d_analytic( &

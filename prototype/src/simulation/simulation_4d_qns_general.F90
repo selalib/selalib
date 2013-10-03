@@ -304,10 +304,10 @@ contains
     sll_int32 :: global_indices(4)
     sll_int32 :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
@@ -348,7 +348,7 @@ contains
     vmax4  = sim%mesh2d_v%eta2_max
     ! Start with the fields
     
-    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
@@ -357,7 +357,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
@@ -366,7 +366,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
@@ -375,7 +375,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
-    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
