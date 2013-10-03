@@ -341,8 +341,8 @@ contains ! *******************************************************************
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)!, &
+      ! rho)
     
     type(general_coordinate_elliptic_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a11_field_mat
@@ -350,17 +350,17 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a21_field_mat
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a22_field_mat
     class(sll_scalar_field_2d_base), intent(in)     :: c_field
-    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    !class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local
-     sll_real64, dimension(:), allocatable   :: M_rho_loc
+   !  sll_real64, dimension(:), allocatable   :: M_rho_loc
     sll_real64, dimension(:,:), allocatable :: M_c_loc
     sll_real64, dimension(:,:), allocatable :: K_a11_loc
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
     sll_real64, dimension(:,:), allocatable :: K_a21_loc
     sll_real64, dimension(:,:), allocatable :: K_a22_loc
     sll_real64, dimension(:,:), allocatable :: full_Matrix
-    sll_real64, dimension(:), pointer  :: Masse_tot
-    sll_real64, dimension(:), pointer  :: Stiff_tot
+   ! sll_real64, dimension(:), pointer  :: Masse_tot
+   ! sll_real64, dimension(:), pointer  :: Stiff_tot
     !sll_real64, dimension(:,:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Stiff_loc
@@ -384,7 +384,7 @@ contains ! *******************************************************************
     integer :: li_ios,li_ios1
 
     total_num_splines_loc = es%total_num_splines_loc
-    SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
+   ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -396,11 +396,11 @@ contains ! *******************************************************************
 
       !   Allocation full_Matrix 
     SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
-    SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-    SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
+   ! SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
+   ! SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     full_Matrix(:,:) = 0.0_f64
-    Masse_tot(:) = 0.0_f64
-    Stiff_tot(:) = 0.0_f64
+   ! Masse_tot(:) = 0.0_f64
+   ! Stiff_tot(:) = 0.0_f64
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
 
@@ -425,8 +425,8 @@ contains ! *******************************************************************
                a21_field_mat, &
                a22_field_mat, &
                c_field, &
-               rho, &
-               M_rho_loc, &
+             !  rho, &
+             !  M_rho_loc, &
                Masse_loc,&
                Stiff_loc,&
                M_c_loc, &
@@ -440,7 +440,7 @@ contains ! *******************************************************************
                cell_index, &
                i, &
                j, &
-               M_rho_loc, &
+             !  M_rho_loc, &
                Masse_loc,&
                Stiff_loc,&
                M_c_loc, &
@@ -457,13 +457,14 @@ contains ! *******************************************************************
 
 
    
-    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+   ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
+    SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
   end subroutine factorize_mat_es
   
@@ -612,7 +613,7 @@ contains ! *******************************************************************
     ! The quadrature degree is the number of splines that intersect a cell.
  !   call set_time_mark(timer)
     total_num_splines_loc = es%total_num_splines_loc
-    SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
+    !SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -657,8 +658,8 @@ contains ! *******************************************************************
                a21_field_mat, &
                a22_field_mat, &
                c_field, &
-               rho, &
-               M_rho_loc, &
+              ! rho, &
+              ! M_rho_loc, &
                Masse_loc,&
                Stiff_loc,&
                M_c_loc, &
@@ -672,7 +673,7 @@ contains ! *******************************************************************
                cell_index, &
                i, &
                j, &
-               M_rho_loc, &
+               !M_rho_loc, &
                Masse_loc,&
                Stiff_loc,&
                M_c_loc, &
@@ -705,7 +706,7 @@ contains ! *******************************************************************
     
     !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
     ! apr_B is the source, apr_U is the solution
-    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+    !SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
@@ -733,8 +734,8 @@ contains ! *******************************************************************
        a21_field_mat, &
        a22_field_mat, &
        c_field, &
-       rho, &
-       M_rho_loc, &
+      ! rho, &
+      ! M_rho_loc, &
        Masse_loc,&
        Stiff_loc,&
        M_c_loc, &
@@ -753,9 +754,9 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a21_field_mat
     class(sll_scalar_field_2d_base_ptr), intent(in) :: a22_field_mat
     class(sll_scalar_field_2d_base), intent(in)     :: c_field
-    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    !class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64 :: epsi
-    sll_real64, dimension(:), intent(out)   :: M_rho_loc
+    !sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
     sll_real64, dimension(:,:), intent(out) :: K_a11_loc
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
@@ -809,7 +810,7 @@ contains ! *******************************************************************
 
     Masse_loc(:) = 0.0
     Stiff_loc(:) = 0.0
-    M_rho_loc(:) = 0.0
+!    M_rho_loc(:) = 0.0
     M_c_loc(:,:) = 0.0
     K_a11_loc(:,:) = 0.0
     K_a12_loc(:,:) = 0.0
@@ -903,7 +904,7 @@ contains ! *******************************************************************
           !print*, 'splin1=',dbiatx1
           !print*, 'knot1',obj%knots1
          ! print*, 'rho'
-          val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
+     !     val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
          ! print*, 'valeur rho=',val_f,2*(2.0*sll_pi)**2*cos(2.0*sll_pi*gpt1)*cos(2.0*sll_pi*gpt2)
          ! print*, 'val',gpt1,gpt2,val_f, 0.05*cos(0.5*gpt1), val_f-0.05*cos(0.5*gpt1)
        
@@ -954,9 +955,9 @@ contains ! *******************************************************************
              do jj = 0,obj%spline_degree2
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
-                M_rho_loc(index1)= M_rho_loc(index1) + &
-                     val_f*val_jac*wgpt1*wgpt2* &
-                     dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
+         !       M_rho_loc(index1)= M_rho_loc(index1) + &
+          !           val_f*val_jac*wgpt1*wgpt2* &
+           !          dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
 
                 
 
@@ -1201,7 +1202,7 @@ contains ! *******************************************************************
        cell_index, &
        cell_i, &
        cell_j, &
-       M_rho_loc, &
+      ! M_rho_loc, &
        Masse_loc,&
        Stiff_loc,&
        M_c_loc, &
@@ -1217,7 +1218,7 @@ contains ! *******************************************************************
     sll_int32 :: cell_index
     sll_int32 :: cell_i
     sll_int32 :: cell_j
-    sll_real64, dimension(:), intent(in)   :: M_rho_loc
+    !sll_real64, dimension(:), intent(in)   :: M_rho_loc
     sll_real64, dimension(:,:), intent(in) :: M_c_loc
     sll_real64, dimension(:,:), intent(in) :: K_a11_loc
     sll_real64, dimension(:,:), intent(in) :: K_a12_loc
@@ -1278,7 +1279,7 @@ contains ! *******************************************************************
           x          =  index1 + (index3-1)*nbsp
           b          =  mm * ( es%spline_degree1 + 1 ) + i + 1
           li_A       =  es%local_to_global_spline_indices(b, cell_index)
-          es%rho_vec(x)  =  es%rho_vec(x)  + M_rho_loc(b)
+!          es%rho_vec(x)  =  es%rho_vec(x)  + M_rho_loc(b)
           !print*, x,b
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
