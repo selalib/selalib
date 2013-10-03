@@ -662,9 +662,11 @@ contains
       sim%spline_degree_eta2)    
 
     !----->
+    ! THE FOLLOWING WOULD NOT WORK, THE SAME POINTER IS USED IN BOTH CASES...
+    ! NEVERTHELESS, THE INTERFACE HAS CHANGED, SO AN INTERMEDIARY POINTER
+    ! SHOULD NOT BE NEEDED NOW...
     ptr_array2d_x1x2 => sim%rho3d_x1x2(:,:,1)
     sim%rho2d => new_scalar_field_2d_discrete_alt( &
-      ptr_array2d_x1x2, &
       "rho2d_x1x2", &
       sim%interp_rho2d, &     
       sim%transf_xy, &
@@ -673,9 +675,11 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+    call sim%rho2d%set_field_data( ptr_array2d_x1x2 )
+    call sim%rho2d%update_interpolation_coefficients( )
+
     ptr_array2d_x1x2 => sim%phi3d_x1x2(:,:,1)
     sim%phi2d => new_scalar_field_2d_discrete_alt( &
-      ptr_array2d_x1x2, &
       "phi2d_x1x2", &
       sim%interp_phi2d, &     
       sim%transf_xy, &
@@ -683,6 +687,10 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
+
+    call sim%phi2d%set_field_data( ptr_array2d_x1x2 )
+    call sim%phi2d%update_interpolation_coefficients( )
+
   end subroutine allocate_QN_DK
 
 
@@ -719,7 +727,6 @@ contains
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22 and C
     sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
-      A11, &
       "QN_A11", &
       sim%interp_QN_A11, &     
       sim%transf_xy, &
@@ -728,8 +735,10 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+    call sim%QN_A11%set_field_data( A11 )
+    call sim%QN_A11%update_interpolation_coefficients( )
+
     sim%QN_A12 => new_scalar_field_2d_discrete_alt( &
-      A12, &
       "QN_A12", &
       sim%interp_QN_A12, &     
       sim%transf_xy, &
@@ -738,8 +747,10 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+    call sim%QN_A12%set_field_data( A12 )
+    call sim%QN_A12%update_interpolation_coefficients( )
+
     sim%QN_A21 => new_scalar_field_2d_discrete_alt( &
-      A21, &
       "QN_A21", &
       sim%interp_QN_A21, &     
       sim%transf_xy, &
@@ -748,8 +759,10 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+    call sim%QN_A21%set_field_data( A21 )
+    call sim%QN_A21%update_interpolation_coefficients( )
+
     sim%QN_A22 => new_scalar_field_2d_discrete_alt( &
-      A22, &
       "QN_A22", &
       sim%interp_QN_A22, &     
       sim%transf_xy, &
@@ -758,8 +771,10 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+    call sim%QN_A22%set_field_data( A22 )
+    call sim%QN_A22%update_interpolation_coefficients( )
+
     sim%QN_C => new_scalar_field_2d_discrete_alt( &
-      C, &
       "QN_C", &
       sim%interp_QN_C, &     
       sim%transf_xy, &
@@ -767,6 +782,9 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
+
+    call sim%QN_C%set_field_data( C )
+    call sim%QN_C%update_interpolation_coefficients( )
 
     !---> Initialization of the QNS type
     logical_mesh2d => sim%transf_xy%mesh
