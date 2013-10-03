@@ -215,10 +215,13 @@ contains
     interpolator%num_pts1 = num_pts1
     interpolator%num_pts2 = num_pts2
 
+
+    
     select case (bc_selector)
     case (0) ! 1. periodic-periodic
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
+       !  tmp1 et tmp2 sont des limites suffisantes mais pas absolu 
        tmp1 = num_pts1 + 4*spline_degree1!*num_pts1 !+ 2*spline_degree1
        tmp2 = num_pts2 + 4*spline_degree2!*num_pts2 !+ 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
