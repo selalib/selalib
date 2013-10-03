@@ -118,6 +118,7 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64, dimension(:,:,:), pointer :: phi3d_x3
 
      !--> For general QN solver
+     type(general_coordinate_elliptic_solver), pointer :: QNS
      ! interpolation any arbitrary spline
      type(arb_deg_2d_interpolator) :: interp_rho2d
      type(arb_deg_2d_interpolator) :: interp_phi2d
@@ -126,13 +127,13 @@ module sll_simulation_4d_DK_hybrid_module
      type(arb_deg_2d_interpolator) :: interp_QN_A21
      type(arb_deg_2d_interpolator) :: interp_QN_A22
      type(arb_deg_2d_interpolator) :: interp_QN_C
-     type(sll_scalar_field_2d_discrete_alt), pointer :: rho2d
+     class(sll_scalar_field_2d_base) , pointer :: rho2d
      type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
-     type(sll_scalar_field_2d_discrete_alt), pointer :: QN_A11 
-     type(sll_scalar_field_2d_discrete_alt), pointer :: QN_A12
-     type(sll_scalar_field_2d_discrete_alt), pointer :: QN_A21
-     type(sll_scalar_field_2d_discrete_alt), pointer :: QN_A22
-     type(sll_scalar_field_2d_discrete_alt), pointer :: QN_C
+     class(sll_scalar_field_2d_base), pointer :: QN_A11 
+     class(sll_scalar_field_2d_base), pointer :: QN_A12
+     class(sll_scalar_field_2d_base), pointer :: QN_A21
+     class(sll_scalar_field_2d_base), pointer :: QN_A22
+     class(sll_scalar_field_2d_base), pointer :: QN_C
 
    contains
      procedure, pass(sim) :: run => run_4d_DK_hybrid
@@ -262,7 +263,7 @@ contains
     Nr = sim%nc_x1+1
     SLL_ALLOCATE(r_grid_tmp(Nr),ierr)
     Lr = abs(sim%r_max-sim%r_min)
-    dr = Lr/float(Nr)
+    dr = Lr/float(Nr-1)
     do ir = 1,Nr
       r_grid_tmp(ir) = sim%r_min + float(ir-1)*dr
     end do
@@ -367,7 +368,7 @@ contains
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )
-    SLL_ALLOCATE(sim%f4d_x1x2(loc4d_sz_x1,loc4d_sz_x2, loc4d_sz_x3,loc4d_sz_x4),ierr)
+    SLL_ALLOCATE(sim%f4d_x1x2(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
 
     !--> Initialization of parallel layout of f4d in (x1,x2) directions
     !-->  (x1,x2) : parallelized layout
@@ -398,7 +399,7 @@ contains
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )    
-    SLL_ALLOCATE(sim%f4d_x3x4(loc4d_sz_x1,loc4d_sz_x2, loc4d_sz_x3,loc4d_sz_x4),ierr)
+    SLL_ALLOCATE(sim%f4d_x3x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
   end subroutine allocate_fdistribu4d_DK
 
 
@@ -477,14 +478,16 @@ contains
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     type(sll_logical_mesh_2d), pointer :: logical_mesh2d
-
     sll_int32 :: ierr, itemp
     sll_int32 :: i1, i2, i3, i4
     sll_int32 :: iloc1, iloc2, iloc3, iloc4
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc3d_x3
+    sll_real64, dimension(:,:), pointer :: ptr_array2d_x1x2
+
     type(sll_time_mark) :: tm ! delete this eventually
     sll_real64 :: time   ! delete this eventually
+
     ! layout for sequential operations in x3 
     sim%power2 = int(log(real(sim%world_size))/log(2.0))
     !--> special case N = 1, so power2 = 0
@@ -524,8 +527,8 @@ contains
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
-    SLL_ALLOCATE(sim%rho3d_x1x2(loc3d_sz_x1,loc3d_sz_x2, loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%phi3d_x1x2(loc3d_sz_x1,loc3d_sz_x2, loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%rho3d_x1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%phi3d_x1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
 
     !--> Initialization of rho3d_x3 and phi3d_x3
     !-->  (x1,x2) : parallelized layout
@@ -587,7 +590,6 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
-!VG!print*,sim%my_rank,"===> OK1"
 
     call sim%interp_QN_A11%initialize( &
       logical_mesh2d%num_cells1 +1, &
@@ -602,7 +604,6 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
-!VG!print*,sim%my_rank,"===> OK2"
 
     call sim%interp_QN_A12%initialize( &
       logical_mesh2d%num_cells1 +1, &
@@ -617,7 +618,6 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
-!VG!print*,sim%my_rank,"===> OK3"
 
     call sim%interp_QN_A21%initialize( &
       logical_mesh2d%num_cells1 +1, &
@@ -632,7 +632,6 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
-!VG!print*,sim%my_rank,"===> OK4"
 
     call sim%interp_QN_A22%initialize( &
       logical_mesh2d%num_cells1 +1, &
@@ -647,7 +646,6 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
-!VG!print*,sim%my_rank,"===> OK5"
 
     call sim%interp_QN_C%initialize( &
       logical_mesh2d%num_cells1 +1, &
@@ -662,18 +660,139 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
-!VG!print*,sim%my_rank,"===> OK6"
+
     !----->
-!!$    sim%rho2d => new_scalar_field_2d_discrete_alt( &
-!!$      sim%rho_full - density_tot, &
-!!$      "rho_field_check", &
-!!$      sim%interp_rho, &     
-!!$      sim%transf_xy, &
-!!$      sim%bc_left_eta1, &
-!!$      sim%bc_right_eta1, &
-!!$      sim%bc_left_eta2, &
-!!$      sim%bc_right_eta2)
+    ptr_array2d_x1x2 => sim%rho3d_x1x2(:,:,1)
+    sim%rho2d => new_scalar_field_2d_discrete_alt( &
+      ptr_array2d_x1x2, &
+      "rho2d_x1x2", &
+      sim%interp_rho2d, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
+
+    ptr_array2d_x1x2 => sim%phi3d_x1x2(:,:,1)
+    sim%phi2d => new_scalar_field_2d_discrete_alt( &
+      ptr_array2d_x1x2, &
+      "phi2d_x1x2", &
+      sim%interp_phi2d, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
   end subroutine allocate_QN_DK
+
+
+  !----------------------------------------------------
+  ! Initialization of the QN coefficients
+  !----------------------------------------------------
+  subroutine initialize_QN_DK ( sim )
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32 :: ierr
+    sll_int32 :: Neta1, Neta2
+    sll_real64, dimension(:,:), pointer :: A11
+    sll_real64, dimension(:,:), pointer :: A12
+    sll_real64, dimension(:,:), pointer :: A21
+    sll_real64, dimension(:,:), pointer :: A22
+    sll_real64, dimension(:,:), pointer :: C
+    type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+
+    Neta1 = sim%Neta1
+    Neta2 = sim%Neta2
+    SLL_ALLOCATE(A11(Neta1,Neta2),ierr)
+    SLL_ALLOCATE(A12(Neta1,Neta2),ierr)
+    SLL_ALLOCATE(A21(Neta1,Neta2),ierr)
+    SLL_ALLOCATE(A22(Neta1,Neta2),ierr)
+    SLL_ALLOCATE(C(Neta1,Neta2),ierr)
+
+    !---> Initialization of the matrices A11, A12, A21, A22 and C
+    A11(:,:) = 1._f64
+    A12(:,:) = 1._f64
+    A21(:,:) = 1._f64
+    A22(:,:) = 1._f64
+    C(:,:)   = 1._f64
+
+    !---> Initialization of the 2D fields associated to
+    !--->  A11, A12, A21, A22 and C
+    sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
+      A11, &
+      "QN_A11", &
+      sim%interp_QN_A11, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
+
+    sim%QN_A12 => new_scalar_field_2d_discrete_alt( &
+      A12, &
+      "QN_A12", &
+      sim%interp_QN_A12, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
+
+    sim%QN_A21 => new_scalar_field_2d_discrete_alt( &
+      A21, &
+      "QN_A21", &
+      sim%interp_QN_A21, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
+
+    sim%QN_A22 => new_scalar_field_2d_discrete_alt( &
+      A22, &
+      "QN_A22", &
+      sim%interp_QN_A22, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
+
+    sim%QN_C => new_scalar_field_2d_discrete_alt( &
+      C, &
+      "QN_C", &
+      sim%interp_QN_C, &     
+      sim%transf_xy, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2)
+
+    !---> Initialization of the QNS type
+    logical_mesh2d => sim%transf_xy%mesh
+
+    sim%QNS => new_general_elliptic_solver( &
+      sim%spline_degree_eta1, & 
+      sim%spline_degree_eta2, & 
+      logical_mesh2d%num_cells1, &
+      logical_mesh2d%num_cells2, &
+      ES_GAUSS_LEGENDRE, &  ! put in arguments
+      ES_GAUSS_LEGENDRE, &  ! put in arguments
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      logical_mesh2d%eta1_min, &  
+      logical_mesh2d%eta1_max, & 
+      logical_mesh2d%eta2_min, & 
+      logical_mesh2d%eta2_max ) 
+
+    SLL_DEALLOCATE(A11,ierr)
+    SLL_DEALLOCATE(A12,ierr)
+    SLL_DEALLOCATE(A21,ierr)
+    SLL_DEALLOCATE(A22,ierr)
+    SLL_DEALLOCATE(C,ierr)
+  end subroutine initialize_QN_DK
 
 
   !----------------------------------------------------
@@ -734,15 +853,29 @@ contains
       end do
     end do
       
-!VG!    !--> Radial profile initialisation
-!VG!    call init_profiles_DK(sim)
+
+    !--> Radial profile initialisation
+    call init_profiles_DK(sim)
 
     !*** Allocation of the distribution function ***
     call allocate_fdistribu4d_DK(sim)
     
     !*** Allocation of the QN solver ***
     call allocate_QN_DK(sim)
+
+    !*** Initialization of the QN solver ***
+    call initialize_QN_DK (sim)
   end subroutine initialize_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! Compute Phi(eta1,eta1,phi) by solving
+  !  the quasi-neutrality equation by using
+  !  a general elliptic equation solver
+  !----------------------------------------------------
+  subroutine solve_QN( sim )
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+  end subroutine solve_QN
 
 
   !----------------------------------------------------
@@ -763,6 +896,7 @@ contains
     character(len=12), parameter :: filename_prof = "init_prof.h5"
 
     !*** Initialization of the distribution function ***
+    !***  i.e f4d(t=t0)                              ***
     call initialize_fdistribu4d_DK(sim)
 
     !*** Saving of the radial profiles in HDF5 file ***
@@ -778,6 +912,18 @@ contains
     !*** Computation of the rhs of QN ***
     call compute_charge_density(sim%logical_mesh4d, &
       sim%f4d_x3x4,sim%rho3d_x3)
+
+    !*** Matrix factorization for QN solver ***
+    call factorize_mat_es( &
+         sim%QNS, & 
+         sim%QN_A11, &
+         sim%QN_A12, &
+         sim%QN_A21, &
+         sim%QN_A22, &
+         sim%QN_C)
+
+    !*** Compute Phi(t=t0) by solving the QN equation ***
+    call solve_QN(sim)
   end subroutine first_step_4d_DK_hybrid
 
 
