@@ -265,7 +265,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -497,7 +497,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$ print*, 'test'
 !!$ !print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
 !!$ ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -713,7 +713,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -925,7 +925,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1133,7 +1133,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1367,7 +1367,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1589,7 +1589,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1812,7 +1812,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -2087,7 +2087,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -2375,7 +2375,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -2654,7 +2654,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -2917,7 +2917,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho)
 !!$
 !!$  ! solve the field
-!!$  call solve_es(&
+!!$  call solve_general_coordinates_elliptic_eq(&
 !!$       es,&
 !!$       rho,&
 !!$       phi)
@@ -3180,7 +3180,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho)
 !!$  
 !!$  ! solve the field
-!!$  call solve_es(&
+!!$  call solve_general_coordinates_elliptic_eq(&
 !!$       es,&
 !!$       rho,&
 !!$       phi)
