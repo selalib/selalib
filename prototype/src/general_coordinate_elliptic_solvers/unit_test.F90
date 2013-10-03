@@ -218,7 +218,6 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
  ! interp_2d_ptr => interp_2d
 
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi1", &
        interp_2d, &
        T, &
@@ -226,6 +225,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
+  call phi%set_field_data( values )
+  call phi%update_interpolation_coefficients( )
 
   print *, 'initialized fields...'
 
@@ -450,7 +451,6 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi2", &
        interp_2d, &
        T, &
@@ -458,6 +458,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data( values )
+  call phi%update_interpolation_coefficients( )
   
   print *, 'initialized fields...'
 !  print *, 'a = ', es%csr_mat%opr_a

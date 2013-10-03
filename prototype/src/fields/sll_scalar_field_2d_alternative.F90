@@ -78,12 +78,15 @@ module sll_module_scalar_field_2d_alternative
           first_deriv_eta1_value_at_index_analytic
      procedure, pass(field) :: first_deriv_eta2_value_at_indices => &
           first_deriv_eta2_value_at_index_analytic
+     procedure, pass(field) :: set_field_data => set_field_data_analytic_2d
+     procedure, pass(field) :: update_interpolation_coefficients => &
+          update_interpolation_coefficients_2d_analytic
      procedure, pass(field) :: write_to_file => write_to_file_analytic_2d
      procedure, pass(field) :: delete => delete_field_2d_analytic_alt
   end type sll_scalar_field_2d_analytic_alt
 
   type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete_alt
-     sll_real64, dimension(:,:), pointer  :: values
+     sll_real64, dimension(:,:), pointer  :: values => null()
      !sll_real64, dimension(:,:), pointer  :: coeff_spline
      !sll_int32                            :: sz_coeff1
      !sll_int32                            :: sz_coeff2
@@ -102,7 +105,7 @@ module sll_module_scalar_field_2d_alternative
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_discrete_alt
      procedure, pass(field) :: update_interpolation_coefficients => &
-          update_coeffs_scalar_field_2d
+          update_interp_coeffs_2d_discrete
      procedure, pass(field) :: get_transformation => &
           get_transformation_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
@@ -119,6 +122,7 @@ module sll_module_scalar_field_2d_alternative
           first_deriv_eta1_value_at_index_discrete
      procedure, pass(field) :: first_deriv_eta2_value_at_indices => &
           first_deriv_eta2_value_at_index_discrete
+     procedure, pass(field) :: set_field_data => set_field_data_discrete_2d
      procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
      procedure, pass(field) :: delete => delete_field_2d_discrete_alt
   end type sll_scalar_field_2d_discrete_alt
@@ -331,6 +335,19 @@ contains   ! *****************************************************************
     first_deriv_eta2)
   end function new_scalar_field_2d_analytic_alt
 
+  subroutine set_field_data_analytic_2d( field, values )
+    class(sll_scalar_field_2d_analytic_alt), intent(inout) :: field
+    sll_real64, dimension(:,:), intent(in) :: values
+    print *, 'WARNING: set_field_data_analytic_2d(): it is useless to ', &
+         'call this function on an analytic scalar field.'
+  end subroutine set_field_data_analytic_2d
+
+  subroutine update_interpolation_coefficients_2d_analytic( field )
+    class(sll_scalar_field_2d_analytic_alt), intent(inout) :: field
+    print *, 'WARNING: update_interpolation_coefficients_2d_analytic(): ', &
+         ' it is useless to call this function on an analytic scalar field.'
+  end subroutine update_interpolation_coefficients_2d_analytic
+
   subroutine delete_field_2d_analytic_alt( field )
     class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
     ! nothing internal do deallocate, just nullify pointers. Can't call
@@ -484,7 +501,6 @@ contains   ! *****************************************************************
   ! **************************************************************************
 
   function new_scalar_field_2d_discrete_alt( &
-    array_2d, &
     field_name, &
     interpolator_2d, &
     transformation, &
@@ -500,7 +516,6 @@ contains   ! *****************************************************************
    ! result(obj)!
 
     type(sll_scalar_field_2d_discrete_alt), pointer :: obj
-    sll_real64, dimension(:,:), pointer  :: array_2d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
@@ -519,7 +534,6 @@ contains   ! *****************************************************************
     
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
-         array_2d, &
          field_name, &
          interpolator_2d, &
          transformation, &
@@ -535,7 +549,6 @@ contains   ! *****************************************************************
   
   subroutine initialize_scalar_field_2d_discrete_alt( &
     field, &
-    array_2d, &
     field_name, &
     interpolator_2d, &
     transformation, &
@@ -548,12 +561,11 @@ contains   ! *****************************************************************
     point2_1d,&
     sz_point2)
     
-    
-    class(sll_scalar_field_2d_discrete_alt)         :: field
-    sll_real64, dimension(:,:), pointer  :: array_2d
-    character(len=*), intent(in)                    :: field_name
-    class(sll_interpolator_2d_base), target        :: interpolator_2d
+    class(sll_scalar_field_2d_discrete_alt)              :: field
+    character(len=*), intent(in)                         :: field_name
+    class(sll_interpolator_2d_base), target              :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
+    type(sll_logical_mesh_2d), pointer  :: m2d    
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
@@ -564,8 +576,8 @@ contains   ! *****************************************************************
     sll_int32,optional :: sz_point2
     sll_int32 :: i
     sll_int32 :: ierr   
-        
-    field%values => array_2d
+
+    m2d => transformation%mesh
     field%T => transformation
     field%interp_2d => interpolator_2d
     !    field%mesh%written = .false.
@@ -575,15 +587,17 @@ contains   ! *****************************************************************
     field%bc_bottom = bc_bottom
     field%bc_top    = bc_top
 
+    ! Allocate internal array to store locally a copy of the data.
+    SLL_ALLOCATE(field%values(m2d%num_cells1+1,m2d%num_cells2+1),ierr)    
     !print*,'first line',  field%values(1,:)
     !print*, 'second line', field%values(2,:)
-    call field%interp_2d%compute_interpolants( &
-         field%values, & !array_2d, &
-         point1_1d, &
-         sz_point1, &
-         point2_1d, &
-         sz_point2 )
-    
+!!$    call field%interp_2d%compute_interpolants( &
+!!$         field%values, & !array_2d, &
+!!$         point1_1d, &
+!!$         sz_point1, &
+!!$         point2_1d, &
+!!$         sz_point2 )
+
   end subroutine initialize_scalar_field_2d_discrete_alt
   
   ! need to do something about deallocating the field proper, when allocated
@@ -598,11 +612,18 @@ contains   ! *****************************************************************
     nullify(field%point2_1d)
   end subroutine delete_field_2d_discrete_alt
 
-  subroutine update_coeffs_scalar_field_2d( field, data )
+  subroutine set_field_data_discrete_2d( field, values )
     class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
-    sll_real64, dimension(:,:), intent(in) :: data
-    call field%interp_2d%compute_interpolants( data )
-  end subroutine update_coeffs_scalar_field_2d
+    sll_real64, dimension(:,:), intent(in) :: values
+!!$    print *, 'size(field%values) = ', size(field%values,1), &
+!!$         size(field%values,2), 'size(values) = ', size(values,1), size(values,2)
+    field%values(:,:) = values(:,:)
+  end subroutine set_field_data_discrete_2d
+
+  subroutine update_interp_coeffs_2d_discrete( field )
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
+    call field%interp_2d%compute_interpolants( field%values )
+  end subroutine update_interp_coeffs_2d_discrete
 
   function get_transformation_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
