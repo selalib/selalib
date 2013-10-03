@@ -500,7 +500,7 @@ contains   ! *****************************************************************
    ! result(obj)!
 
     type(sll_scalar_field_2d_discrete_alt), pointer :: obj
-    sll_real64, dimension(:,:), intent(in), target  :: array_2d
+    sll_real64, dimension(:,:), pointer  :: array_2d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
@@ -550,7 +550,7 @@ contains   ! *****************************************************************
     
     
     class(sll_scalar_field_2d_discrete_alt)         :: field
-    sll_real64, dimension(:,:), intent(in), target  :: array_2d
+    sll_real64, dimension(:,:), pointer  :: array_2d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
