@@ -211,7 +211,8 @@ module sll_fdistribu4d_DK
       do ix = 1,Npt1
         x = xgrid_2d(ix,iy)
         y = ygrid_2d(ix,iy)
-        r = sqrt(x*x+y*y)
+        r = min(max(sqrt(x*x+y*y),r_grid(1)),r_grid(Nr))
+        if ( (r.lt.r_grid(1)) .or. (r.gt.r_grid(Nr)) ) &
         func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
     end do
