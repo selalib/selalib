@@ -1796,7 +1796,6 @@ program test_general_elliptic_solver
   print *, 'Initialized ES object'
   call set_time_mark(t_reference)
   
-
   call factorize_mat_es(&
        es, &
        a11_field_mat, &
