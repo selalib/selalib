@@ -481,16 +481,27 @@ contains ! *******************************************************************
     sll_int32 :: j,ierr
     sll_int32 :: cell_index
     sll_int32 :: total_num_splines_loc
+    sll_real64 :: int_rho
     sll_real64, dimension(:), allocatable   :: M_rho_loc
     
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
 
+
+    
     
     M_rho_loc = 0.0
     es%rho_vec(:) = 0.0
     mesh => phi%get_logical_mesh( )
     !    call set_time_mark(timer) ! comment this
+    ! compute the intergale of the term source inn the case periodique periodique
+    if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
+         .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+       
+       call compute_integral_source_term(es,mesh,rho, int_rho)
+    else 
+       int_rho = 0.0_f64
+    end if
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -505,6 +516,7 @@ contains ! *******************************************************************
                j, &
                mesh, &
                rho, &
+               int_rho,&
                M_rho_loc)
           
           call local_to_global_matrices_rho( &
@@ -1016,12 +1028,15 @@ contains ! *******************************************************************
   end subroutine build_local_matrices
   
 
+
+
   subroutine build_local_matrices_rho( &
        obj, &
        cell_i, &
        cell_j, &
        mesh2d, &
        rho, &
+       int_rho,&
        M_rho_loc)
     !    use sll_constants
 
@@ -1042,6 +1057,7 @@ contains ! *******************************************************************
     sll_real64 :: eta2_min
     sll_real64 :: eta1
     sll_real64 :: eta2
+    sll_real64 :: int_rho
     sll_int32  :: tmp1
     sll_int32  :: tmp2
     sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
@@ -1155,7 +1171,7 @@ contains ! *******************************************************************
                work1,&
                dbiatx1,&
                2 )
-          val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
+          val_f   =rho%value_at_point(gpt1,gpt2) - int_rho! 0.05*cos(0.5*gpt1)
           ! print*, 'valeur rho=',val_f,2*(2.0*sll_pi)**2*cos(2.0*sll_pi*gpt1)*cos(2.0*sll_pi*gpt2)
           ! print*, 'val',gpt1,gpt2,val_f, 0.05*cos(0.5*gpt1), val_f-0.05*cos(0.5*gpt1)
           
@@ -1607,6 +1623,66 @@ contains ! *******************************************************************
          ar_eps )
     
   end subroutine solve_general_es_perper
+
+  subroutine compute_integral_source_term(es,mesh2d,rho, int_rho)
+    ! input variables
+    type(general_coordinate_elliptic_solver) :: es
+    type(sll_logical_mesh_2d), pointer :: mesh2d
+    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    ! local variables
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
+    sll_int32  :: num_pts_g2 ! number of gauss points in second direction
+    sll_int32  :: cell_i, cell_j,i,j
+    sll_real64 :: gpt1
+    sll_real64 :: gpt2
+    sll_real64 :: wgpt1
+    sll_real64 :: wgpt2
+    sll_real64 :: val_f
+    ! global variables
+    sll_real64 :: int_rho
+    
+    
+    ! The supposition is that all fields use the same logical mesh
+    delta1    = mesh2d%delta_eta1
+    delta2    = mesh2d%delta_eta2
+    eta1_min  = mesh2d%eta1_min
+    eta2_min  = mesh2d%eta2_min
+    num_pts_g1 = size(es%gauss_pts1,2) !obj%spline_degree1+2
+    num_pts_g2 = size(es%gauss_pts2,2)
+    
+    
+    int_rho = 0.0_f64
+    do cell_j=1,es%num_cells2
+       eta2  = eta2_min + (cell_j-1)*delta2
+       do cell_i=1,es%num_cells1
+          eta1  = eta1_min + (cell_i-1)*delta1
+          !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
+          do j=1,num_pts_g2
+             ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
+             ! the bottom edge of the cell.
+             gpt2  = eta2  + 0.5_f64*delta2 * ( es%gauss_pts2(1,j) + 1.0_f64 )
+             wgpt2 = 0.5_f64*delta2*es%gauss_pts2(2,j) !ATTENTION 0.5
+             
+             do i=1,num_pts_g1
+                ! rescale Gauss points to be in interval [eta1,eta1+delta1]
+                gpt1  = eta1  + 0.5_f64*delta1 * ( es%gauss_pts1(1,i) + 1.0_f64 )
+                wgpt1 = 0.5_f64*delta1*es%gauss_pts1(2,i)
+                
+                val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
+                
+                int_rho = int_rho +  val_f *wgpt1*wgpt2
+             end do
+          end do
+       end do
+    end do
+    !print*,' integrale de rho', int_rho
+  end subroutine compute_integral_source_term
 
 end module sll_general_coordinate_elliptic_solver_module
 
