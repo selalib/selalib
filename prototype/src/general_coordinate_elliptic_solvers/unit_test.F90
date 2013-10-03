@@ -28,11 +28,11 @@ program test_general_elliptic_solver
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
-  type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-  type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-  type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-  type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
-class(sll_scalar_field_2d_base), pointer              :: c_field
+  class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
@@ -145,7 +145,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -154,7 +154,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -163,7 +163,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -172,7 +172,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -320,10 +320,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call c_field%delete()
   call phi%delete()
   
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -378,7 +378,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -387,7 +387,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
 
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -396,7 +396,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
 
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -405,7 +405,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -535,10 +535,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
 
   call T%delete()
   
@@ -593,7 +593,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -602,7 +602,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -611,7 +611,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -620,7 +620,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -750,10 +750,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$  
 !!$  call T%delete()
 !!$  
@@ -808,7 +808,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -817,7 +817,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -826,7 +826,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -835,7 +835,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -956,10 +956,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$  
 !!$  call T%delete()
 !!$  
@@ -1015,7 +1015,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1024,7 +1024,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1033,7 +1033,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1042,7 +1042,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1185,10 +1185,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$  
 !!$  call T%delete()
 !!$  
@@ -1246,7 +1246,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1255,7 +1255,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1264,7 +1264,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1273,7 +1273,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1413,10 +1413,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$  
 !!$  call T%delete()
 !!$  
@@ -1471,7 +1471,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$   ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1480,7 +1480,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1489,7 +1489,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1498,7 +1498,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET ) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1633,10 +1633,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -1692,7 +1692,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1701,7 +1701,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1710,7 +1710,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1719,7 +1719,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -1857,10 +1857,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$  
 !!$  call T%delete()
 !!$  
@@ -1925,7 +1925,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -1934,7 +1934,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -1943,7 +1943,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -1952,7 +1952,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2146,10 +2146,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -2214,7 +2214,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2223,7 +2223,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC ) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2232,7 +2232,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2241,7 +2241,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC,&
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2431,10 +2431,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -2495,7 +2495,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2504,7 +2504,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2513,7 +2513,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2522,7 +2522,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2698,10 +2698,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -2762,7 +2762,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2771,7 +2771,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2780,7 +2780,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2789,7 +2789,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2962,10 +2962,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -3024,7 +3024,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -3033,7 +3033,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -3042,7 +3042,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -3051,7 +3051,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -3224,10 +3224,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
