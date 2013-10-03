@@ -21,6 +21,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+  use sll_timer
 
   implicit none
 
@@ -482,7 +483,8 @@ contains
     sll_int32 :: iloc1, iloc2, iloc3, iloc4
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc3d_x3
-
+    type(sll_time_mark) :: tm ! delete this eventually
+    sll_real64 :: time   ! delete this eventually
     ! layout for sequential operations in x3 
     sim%power2 = int(log(real(sim%world_size))/log(2.0))
     !--> special case N = 1, so power2 = 0
@@ -555,7 +557,8 @@ contains
     
     !---->
     logical_mesh2d => sim%transf_xy%mesh
-    
+!    call set_time_mark(tm)
+ 
     call sim%interp_phi2d%initialize( &
       logical_mesh2d%num_cells1+1, &
       logical_mesh2d%num_cells2+1, &
@@ -568,8 +571,8 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-print*,sim%my_rank,"===> OK"
+      sim%spline_degree_eta2)
+!    time = time_elapsed_since(tm)
 
 !VG!    call sim%interp_rho2d%initialize( &
 !VG!      logical_mesh2d%num_cells1 +1, &
