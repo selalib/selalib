@@ -36,7 +36,7 @@ program unit_test_alternative
   class(sll_scalar_field_2d_base), pointer              :: rho
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
-  sll_real64, dimension(:,:), allocatable    :: tab_rho
+  sll_real64, dimension(:,:), pointer    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
   sll_real64 :: eta1,eta2
