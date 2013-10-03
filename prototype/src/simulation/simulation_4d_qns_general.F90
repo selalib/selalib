@@ -400,7 +400,6 @@ contains
    
 
     phi => new_scalar_field_2d_discrete_alt( &
-         phi_values, &
          "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
@@ -408,7 +407,8 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    call phi%set_field_data( phi_values )
+    call phi%update_interpolation_coefficients( )
     
     buffer_counter = 1
 
@@ -672,7 +672,6 @@ contains
     ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full,&! - density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -681,6 +680,9 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
+    call rho%set_field_data( sim%rho_full )
+    call rho%update_interpolation_coefficients( )
+
 !!$    if(sim%my_rank == 0) then
 !!$       call rho%write_to_file(0)
 !!$    end if
@@ -896,8 +898,12 @@ contains
             density_tot )
        
        ! print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-       
+       ! The subtraction of density_tot is supposed to be made inside the 
+       ! elliptic solver.
+       !
+!       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+       call rho%set_field_data(sim%rho_full)
+       call rho%update_interpolation_coefficients( )
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
 !!$       end if
