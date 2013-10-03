@@ -569,6 +569,8 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
+
+    
 print*,sim%my_rank,"===> OK"
 
 !VG!    call sim%interp_rho2d%initialize( &
@@ -731,8 +733,8 @@ print*,sim%my_rank,"===> OK"
       end do
     end do
       
-!VG!    !--> Radial profile initialisation
-!VG!    call init_profiles_DK(sim)
+!!$    !--> Radial profile initialisation
+!!$    call init_profiles_DK(sim)
 
     !*** Allocation of the distribution function ***
     call allocate_fdistribu4d_DK(sim)
