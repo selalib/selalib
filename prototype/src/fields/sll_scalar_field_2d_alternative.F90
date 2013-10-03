@@ -99,7 +99,7 @@ module sll_module_scalar_field_2d_alternative
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
    contains
-   procedure, pass(field) :: initialize => &
+     procedure, pass(field) :: initialize => &
           initialize_scalar_field_2d_discrete_alt
      procedure, pass(field) :: update_interpolation_coefficients => &
           update_coeffs_scalar_field_2d
