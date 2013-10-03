@@ -187,7 +187,7 @@ module sll_fdistribu4d_DK
   ! Compute func(x,y) from func(r)
   !----------------------------------------------------
   subroutine function_xy_from_r(r_grid,func_r,xgrid_2d,ygrid_2d,func_xy)
-    use sll_cubic_spline_interpolator_1d
+    use sll_cubic_splines
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
     sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
@@ -198,28 +198,24 @@ module sll_fdistribu4d_DK
     sll_int32  :: ix, iy
     sll_real64 :: r, x, y
  
-    type(cubic_spline_1d_interpolator) :: interp_r
+    type(sll_cubic_spline_1d), pointer :: sp1d_r
 
     Nr   = size(r_grid,1)
     Npt1 = size(xgrid_2d,1)
     Npt2 = size(xgrid_2d,2)
 
-    call interp_r%initialize( &
-      Nr, &
-      r_grid(1), &
-      r_grid(Nr), &
-      SLL_NEUMANN)
-    call interp_r%compute_interpolants( &
-      func_r,r_grid,Nr)
+    sp1d_r => new_spline_1d(Npt1,r_grid(1),r_grid(Nr),SLL_HERMITE)
+    call compute_spline_1D(func_r,sp1d_r)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
         x = xgrid_2d(ix,iy)
         y = ygrid_2d(ix,iy)
         r = sqrt(x*x+y*y)
-        func_xy(ix,iy) = interp_r%interpolate_value(r)
+        func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
     end do
+    call delete(sp1d_r)
   end subroutine function_xy_from_r
 
 

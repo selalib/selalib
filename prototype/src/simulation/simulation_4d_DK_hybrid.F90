@@ -569,91 +569,97 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
+print*,sim%my_rank,"===> OK"
 
-    call sim%interp_rho2d%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-
-    call sim%interp_QN_A11%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-
-    call sim%interp_QN_A12%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-
-    call sim%interp_QN_A21%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-
-    call sim%interp_QN_A22%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-
-    call sim%interp_QN_C%initialize( &
-      logical_mesh2d%num_cells1 +1, &
-      logical_mesh2d%num_cells2 +1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
-
+!VG!    call sim%interp_rho2d%initialize( &
+!VG!      logical_mesh2d%num_cells1 +1, &
+!VG!      logical_mesh2d%num_cells2 +1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
+!VG!print*,sim%my_rank,"===> OK1"
+!VG!
+!VG!    call sim%interp_QN_A11%initialize( &
+!VG!      logical_mesh2d%num_cells1 +1, &
+!VG!      logical_mesh2d%num_cells2 +1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
+!VG!print*,sim%my_rank,"===> OK2"
+!VG!
+!VG!    call sim%interp_QN_A12%initialize( &
+!VG!      logical_mesh2d%num_cells1 +1, &
+!VG!      logical_mesh2d%num_cells2 +1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
+!VG!print*,sim%my_rank,"===> OK3"
+!VG!
+!VG!    call sim%interp_QN_A21%initialize( &
+!VG!      logical_mesh2d%num_cells1 +1, &
+!VG!      logical_mesh2d%num_cells2 +1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
+!VG!print*,sim%my_rank,"===> OK4"
+!VG!
+!VG!    call sim%interp_QN_A22%initialize( &
+!VG!      logical_mesh2d%num_cells1 +1, &
+!VG!      logical_mesh2d%num_cells2 +1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
+!VG!print*,sim%my_rank,"===> OK5"
+!VG!
+!VG!    call sim%interp_QN_C%initialize( &
+!VG!      logical_mesh2d%num_cells1 +1, &
+!VG!      logical_mesh2d%num_cells2 +1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
+!VG!print*,sim%my_rank,"===> OK6"
     !----->
 !!$    sim%rho2d => new_scalar_field_2d_discrete_alt( &
 !!$      sim%rho_full - density_tot, &
@@ -682,7 +688,7 @@ contains
     class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
     sll_int32 :: ierr
-    sll_int32 :: ieta1, ieta2, Neta1, Neta2
+    sll_int32 :: ieta1, ieta2
     sll_int32 :: Nx, Ny
 
     !--> Parallelization initialization
@@ -716,8 +722,8 @@ contains
     Ny = sim%Neta2
     SLL_ALLOCATE(sim%xgrid_2d(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%ygrid_2d(Nx,Ny),ierr)
-    do ieta2 = 1,Neta2
-      do ieta1 = 1,Neta1
+    do ieta2 = 1,sim%Neta2
+      do ieta1 = 1,sim%Neta1
         sim%xgrid_2d(ieta1,ieta2) = &
           sim%transf_xy%x1_at_node(ieta1,ieta2)
         sim%ygrid_2d(ieta1,ieta2) = &
@@ -725,7 +731,6 @@ contains
       end do
     end do
       
-
 !VG!    !--> Radial profile initialisation
 !VG!    call init_profiles_DK(sim)
 
