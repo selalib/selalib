@@ -777,8 +777,8 @@ contains
          a12_field_mat, &
          a21_field_mat, &
          a22_field_mat, &
-         c_field, &
-         rho)
+         c_field)!, &
+        ! rho)
 
     print*, ' ... finished initialization, entering main loop.'
     ! ------------------------------------------------------------------------
