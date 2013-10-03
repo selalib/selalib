@@ -16,6 +16,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_simulation_base
   use sll_logical_meshes
   use sll_coordinate_transformation_2d_base_module
+  use sll_module_coordinate_transformations_2d
   use sll_fdistribu4D_DK
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
@@ -65,16 +66,17 @@ module sll_simulation_4d_DK_hybrid_module
      sll_int32  :: nmode
      sll_real64 :: eps_perturb   
 
-     !--> 4D logical mesh (eta1,eta2,eta3,v)
+     !--> 4D logical mesh (eta1,eta2,eta3,vpar)
+     sll_int32 :: Neta1, Neta2, Neta3, Neta4
      type(sll_logical_mesh_4d), pointer :: logical_mesh4d
-     sll_real64, dimension(:), pointer  :: eta1_grid
-     sll_real64, dimension(:), pointer  :: eta2_grid
-     sll_real64, dimension(:), pointer  :: eta3_grid
-     sll_real64, dimension(:), pointer  :: vpar_grid
-!VG!     !--> 2D logical mesh (used for QN solver)
-!VG!     type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+
      !--> Coordinate transformation
      class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
+
+     !--> 2D physic mesh
+     sll_real64, dimension(:,:), pointer :: xgrid_2d
+     sll_real64, dimension(:,:), pointer :: ygrid_2d
+
      !--> For boundary conditions
      sll_int32 :: bc_left_eta1
      sll_int32 :: bc_right_eta1
@@ -86,12 +88,15 @@ module sll_simulation_4d_DK_hybrid_module
      sll_int32 :: bc_right_vpar
 
      !--> Density and temperature profiles
-     sll_real64, dimension(:), pointer :: n0
-     sll_real64, dimension(:), pointer :: Ti
-     sll_real64, dimension(:), pointer :: Te
+     sll_real64, dimension(:)  , pointer :: n0_r
+     sll_real64, dimension(:)  , pointer :: Ti_r
+     sll_real64, dimension(:)  , pointer :: Te_r
+     sll_real64, dimension(:,:), pointer :: n0_xy
+     sll_real64, dimension(:,:), pointer :: Ti_xy
+     sll_real64, dimension(:,:), pointer :: Te_xy
 
      !--> Equilibrium distribution function
-     sll_real64, dimension(:,:), pointer :: feq_2d
+     sll_real64, dimension(:,:,:), pointer :: feq_xyvpar
 
      !--> 4D distribution function 
      !----> sequential in (x1,x2) and parallel in (x3,x4)
@@ -113,13 +118,13 @@ module sll_simulation_4d_DK_hybrid_module
 
      !--> For general QN solver
      ! interpolation any arbitrary spline
-     type(arb_deg_2d_interpolator)     :: interp_rho2d
-     type(arb_deg_2d_interpolator)     :: interp_phi2d
-     type(arb_deg_2d_interpolator)     :: interp_QN_A11
-     type(arb_deg_2d_interpolator)     :: interp_QN_A12
-     type(arb_deg_2d_interpolator)     :: interp_QN_A21
-     type(arb_deg_2d_interpolator)     :: interp_QN_A22
-     type(arb_deg_2d_interpolator)     :: interp_QN_C
+     type(arb_deg_2d_interpolator) :: interp_rho2d
+     type(arb_deg_2d_interpolator) :: interp_phi2d
+     type(arb_deg_2d_interpolator) :: interp_QN_A11
+     type(arb_deg_2d_interpolator) :: interp_QN_A12
+     type(arb_deg_2d_interpolator) :: interp_QN_A21
+     type(arb_deg_2d_interpolator) :: interp_QN_A22
+     type(arb_deg_2d_interpolator) :: interp_QN_C
      type(sll_scalar_field_2d_discrete_alt), pointer :: rho2d
      type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
      type(sll_scalar_field_2d_discrete_alt), pointer :: QN_A11 
@@ -152,6 +157,7 @@ contains
 
     sll_int32            :: IO_stat
     sll_int32, parameter :: input_file = 99
+
     !--> Mesh
     sll_int32  :: num_cells_x1
     sll_int32  :: num_cells_x2
@@ -241,93 +247,61 @@ contains
   ! Initialization of the logical mesh associated
   !  to the 4D DK simulation
   !----------------------------------------------------
-  subroutine init_logicalmesh_DK( sim, logical_mesh4d)
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
-    type(sll_logical_mesh_4d)        , pointer :: logical_mesh4d
-
-    sll_int32  :: ierr
-    sll_int32  :: ieta1, ieta2, ieta3, ivpar
-    sll_int32  :: Neta1, Neta2, Neta3, Nvpar
-    sll_real64 :: eta1_min, eta2_min, eta3_min, vpar_min
-    sll_real64 :: delta_eta1, delta_eta2, delta_eta3 , delta_vpar
-
-    sim%logical_mesh4d => logical_mesh4d
-
-!VG!    !----> Init eta1 grid
-!VG!    Neta1      = sim%logical_mesh4d%num_cells1+1
-!VG!    SLL_ALLOCATE(sim%eta1_grid(Neta1),ierr)
-!VG!    delta_eta1 = sim%logical_mesh4d%delta_eta1
-!VG!    eta1_min   = sim%logical_mesh4d%eta1_min
-!VG!    do ieta1 = 1,Neta1
-!VG!      sim%eta1_grid(ieta1) = eta1_min + (ieta1-1)*delta_eta1
-!VG!    end do
-!VG!
-!VG!    !----> Init eta2 grid
-!VG!    Neta2      = sim%logical_mesh4d%num_cells2+1
-!VG!    SLL_ALLOCATE(sim%eta2_grid(Neta2),ierr)
-!VG!    delta_eta2 = sim%logical_mesh4d%delta_eta2
-!VG!    eta2_min   = sim%logical_mesh4d%eta2_min
-!VG!    do ieta2 = 1,Neta2
-!VG!      sim%eta2_grid(ieta2) = eta2_min + (ieta2-1)*delta_eta2
-!VG!    end do
-!VG!
-!VG!    !----> Init eta3 grid
-!VG!    Neta3      = sim%logical_mesh4d%num_cells3+1
-!VG!    SLL_ALLOCATE(sim%eta3_grid(Neta3),ierr)
-!VG!    delta_eta3 = sim%logical_mesh4d%delta_eta3
-!VG!    eta3_min   = sim%logical_mesh4d%eta3_min
-!VG!    do ieta3 = 1,Neta3
-!VG!      sim%eta3_grid(ieta3) = eta3_min + (ieta3-1)*delta_eta3
-!VG!    end do
-!VG!
-!VG!    !----> Init vpar grid
-!VG!    Nvpar      = sim%logical_mesh4d%num_cells4+1
-!VG!    SLL_ALLOCATE(sim%vpar_grid(Nvpar),ierr)
-!VG!    delta_vpar = sim%logical_mesh4d%delta_eta4
-!VG!    vpar_min   = sim%logical_mesh4d%eta4_min
-!VG!    do ivpar = 1,Nvpar
-!VG!      sim%vpar_grid(ivpar) = vpar_min + (ivpar-1)*delta_vpar
-!VG!    end do
-
-!VG!    !---> Initialisation of logical_mesh2d
-!VG!    Neta1 = sim%logical_mesh4d%nc_x1+1
-!VG!    Neta2 = sim%logical_mesh4d%nc_x2+1
-!VG!    sim%logical_mesh2d => new_logical_mesh_2d(Neta1,Neta2)
-  end subroutine init_logicalmesh_DK
-
-
-  !----------------------------------------------------
-  ! Initialization of the logical mesh associated
-  !  to the 4D DK simulation
-  !----------------------------------------------------
   subroutine init_profiles_DK( sim )
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32  :: ierr
-    sll_real64 :: eta1_peak
-    sll_real64 :: n0_eta1min, Ti_eta1min, Te_eta1min, Ti_scal, Te_scal
+    sll_int32  :: ir, Nr, Nx, Ny
+    sll_real64 :: Lr, dr
+    sll_real64 :: r_peak, n0_rmin
+    sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
+    sll_real64, dimension(:), pointer :: r_grid_tmp
 
-    SLL_ALLOCATE(sim%n0(sim%nc_x1+1),ierr)
-    SLL_ALLOCATE(sim%Ti(sim%nc_x1+1),ierr)
-    SLL_ALLOCATE(sim%Te(sim%nc_x1+1),ierr)
+    !--> Initialization of r_grid
+    Nr = sim%nc_x1+1
+    SLL_ALLOCATE(r_grid_tmp(Nr),ierr)
+    Lr = abs(sim%r_max-sim%r_min)
+    dr = Lr/float(Nr)
+    do ir = 1,Nr
+      r_grid_tmp(ir) = sim%r_min + float(ir-1)*dr
+    end do
 
-    sim%n0(:) = 0.0_f64
-    sim%Ti(:) = 0.0_f64
-    sim%Te(:) = 0.0_f64
+    !--> Initialization of n0(r), Ti(r) and Te(r)
+    SLL_ALLOCATE(sim%n0_r(Nr),ierr)
+    SLL_ALLOCATE(sim%Ti_r(Nr),ierr)
+    SLL_ALLOCATE(sim%Te_r(Nr),ierr)
+    sim%n0_r(:) = 0.0_f64
+    sim%Ti_r(:) = 0.0_f64
+    sim%Te_r(:) = 0.0_f64
 
-    n0_eta1min = 10._f64**19
-    Ti_eta1min = 1.3_f64
-    Ti_scal    = 1._f64
-    eta1_peak  = sim%logical_mesh4d%eta1_min + sim%rho_peak * &
-      abs(sim%logical_mesh4d%eta1_max-sim%logical_mesh4d%eta1_min)
-    call init_n0_eta1(eta1_peak,sim%kappan, &
-      sim%deltarn,n0_eta1min,sim%eta1_grid,sim%n0)
-    call init_T_eta1(eta1_peak,sim%kappaTi, &
-      sim%deltarTi,Ti_eta1min,Ti_scal,sim%eta1_grid,sim%Ti)
-    Te_eta1min = sim%Ti(1)
-    Te_scal    = sim%tau0
-    call init_T_eta1(eta1_peak,sim%kappaTe, &
-      sim%deltarTe,Te_eta1min,Te_scal,sim%eta1_grid,sim%Te)
+    n0_rmin = 10._f64**19
+    Ti_rmin = 1.3_f64
+    Ti_scal = 1._f64
+    
+    r_peak  = sim%r_min + sim%rho_peak * Lr
+    call init_n0_r(r_peak,sim%kappan, &
+      sim%deltarn,n0_rmin,r_grid_tmp,sim%n0_r)
+    call init_T_r(r_peak,sim%kappaTi, &
+      sim%deltarTi,Ti_rmin,Ti_scal,r_grid_tmp,sim%Ti_r)
+    Te_rmin = sim%Ti_r(1)
+    Te_scal = sim%tau0
+    call init_T_r(r_peak,sim%kappaTe, &
+      sim%deltarTe,Te_rmin,Te_scal,r_grid_tmp,sim%Te_r)
+
+    !--> Initialization of n0(x,y), Ti(x,y) and Te(x,y)
+    Nx = sim%Neta1
+    Ny = sim%Neta2
+    SLL_ALLOCATE(sim%n0_xy(Nx,Ny),ierr)
+    SLL_ALLOCATE(sim%Ti_xy(Nx,Ny),ierr)
+    SLL_ALLOCATE(sim%Te_xy(Nx,Ny),ierr)
+    call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
+      sim%ygrid_2d,sim%n0_xy)
+    call function_xy_from_r(r_grid_tmp,sim%Ti_r,sim%xgrid_2d, &
+      sim%ygrid_2d,sim%Ti_xy)
+    call function_xy_from_r(r_grid_tmp,sim%Te_r,sim%xgrid_2d, &
+      sim%ygrid_2d,sim%Te_xy)
+
+    SLL_DEALLOCATE(r_grid_tmp,ierr)
   end subroutine init_profiles_DK
 
 
@@ -437,20 +411,33 @@ contains
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32  :: ierr
-    sll_int32  :: Neta1, Neta3, Nvpar
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
-    sll_real64 :: eta2_j, eta3_k
+    sll_int32  :: Nx, Ny, Nvpar
+    sll_real64 :: theta_j, phi_k
     sll_int32, dimension(1:4) :: glob_ind
 
+    sll_real64 :: Lphi, dvpar, Lvpar
+    sll_real64, dimension(:), pointer :: vpar_grid_tmp
+
+    Nx    = sim%Neta1
+    Ny    = sim%Neta2
+    Nvpar = sim%Neta4
+    
+    !--> Initialization of the grid in vpar direction
+    SLL_ALLOCATE(vpar_grid_tmp(Nvpar),ierr)
+    Lvpar = abs(sim%vpar_max-sim%vpar_min)
+    dvpar = Lvpar/float(Nvpar)
+    do i4 = 1,Nvpar
+      vpar_grid_tmp(i4) = sim%vpar_min + &
+        float(i4-1)*dvpar
+    end do
+
     !--> Initialization of the equilibrium distribution function
-    Neta1 = sim%nc_x1+1
-    Neta3 = sim%nc_x3+1
-    Nvpar = sim%nc_x4+1
-    SLL_ALLOCATE(sim%feq_2d(Neta1,Nvpar),ierr)
-    call init_fequilibrium(Neta1,Nvpar,sim%eta1_grid,sim%vpar_grid, &
-      sim%n0,sim%Ti,sim%feq_2d)
+    SLL_ALLOCATE(sim%feq_xyvpar(Nx,Ny,Nvpar),ierr)
+    call init_fequilibrium_xy(sim%xgrid_2d,sim%ygrid_2d, &
+      vpar_grid_tmp,sim%n0_xy,sim%Ti_xy,sim%feq_xyvpar)
 
     !--> Initialization of the distribution function f4d_x3x4
     call compute_local_sizes_4d( sim%layout4d_x3x4, &
@@ -459,6 +446,7 @@ contains
       loc4d_sz_x3, &
       loc4d_sz_x4 )
 
+    Lphi = abs(sim%phi_max-sim%phi_min)
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
@@ -469,15 +457,17 @@ contains
             i2 = glob_ind(2)
             i3 = glob_ind(3)
             i4 = glob_ind(4)
-            eta2_j = sim%eta2_grid(i2)
-            eta3_k = sim%eta3_grid(i3)
-            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = sim%feq_2d(i1,i4) * &
-              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*eta2_j + &
-              2._f64*sll_pi*real(sim%nmode)/sim%logical_mesh4d%eta3_max*eta3_k))
+!VG!            theta_j = sim%eta2_grid(i2)
+!VG!            phi_k = sim%eta3_grid(i3)
+            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
+              sim%feq_xyvpar(i1,i2,i4) * &
+              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
+              2._f64*sll_pi*real(sim%nmode) / Lphi*phi_k))
           end do
         end do
       end do
-    end do    
+    end do
+    SLL_DEALLOCATE(vpar_grid_tmp,ierr)
   end subroutine initialize_fdistribu4d_DK
 
 
@@ -570,19 +560,19 @@ contains
     !---->
     logical_mesh2d => sim%transf_xy%mesh
     
-    call sim%interp_phi2d%initialize( &
-      logical_mesh2d%num_cells1+1, &
-      logical_mesh2d%num_cells2+1, &
-      logical_mesh2d%eta1_min, &
-      logical_mesh2d%eta1_max, &
-      logical_mesh2d%eta2_min, &
-      logical_mesh2d%eta2_max, &
-      sim%bc_left_eta1, &
-      sim%bc_right_eta1, &
-      sim%bc_left_eta2, &
-      sim%bc_right_eta2, &
-      sim%spline_degree_eta1, &
-      sim%spline_degree_eta2)    
+!VG!    call sim%interp_phi2d%initialize( &
+!VG!      logical_mesh2d%num_cells1+1, &
+!VG!      logical_mesh2d%num_cells2+1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      logical_mesh2d%eta2_min, &
+!VG!      logical_mesh2d%eta2_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%bc_left_eta2, &
+!VG!      sim%bc_right_eta2, &
+!VG!      sim%spline_degree_eta1, &
+!VG!      sim%spline_degree_eta2)    
 !VG!
 !VG!    call sim%interp_rho2d%initialize( &
 !VG!      logical_mesh2d%num_cells1 +1, &
@@ -695,9 +685,19 @@ contains
     type(sll_logical_mesh_4d)        , pointer       :: logical_mesh4d
     class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
+    sll_int32 :: ierr
+    sll_int32 :: ieta1, ieta2, Neta1, Neta2
+    sll_int32 :: Nx, Ny
+
     !--> Parallelization initialization
     sim%world_size = world_size
     sim%my_rank    = my_rank
+
+    !--> Initialization of the number of points
+    sim%Neta1 = sim%nc_x1+1
+    sim%Neta2 = sim%nc_x2+1
+    sim%Neta3 = sim%nc_x3+1
+    sim%Neta4 = sim%nc_x4+1
 
     !--> Initialization of the boundary conditions
     sim%bc_left_eta1  = SLL_DIRICHLET
@@ -710,10 +710,25 @@ contains
     sim%bc_right_vpar = SLL_DIRICHLET
 
     !--> Logical mesh initialization
-    call init_logicalmesh_DK(sim,logical_mesh4D)
+    sim%logical_mesh4d => logical_mesh4d
     
-    !--> Transformation
+    !--> Transformation initialization
     sim%transf_xy => transf_xy
+
+    !--> Initialization of the (x,y) 2D mesh
+    Nx = sim%Neta1
+    Ny = sim%Neta2
+    SLL_ALLOCATE(sim%xgrid_2d(Nx,Ny),ierr)
+    SLL_ALLOCATE(sim%ygrid_2d(Nx,Ny),ierr)
+    do ieta2 = 1,Neta2
+      do ieta1 = 1,Neta1
+        sim%xgrid_2d(ieta1,ieta2) = &
+          sim%transf_xy%x1_at_node(ieta1,ieta2)
+        sim%ygrid_2d(ieta1,ieta2) = &
+          sim%transf_xy%x2_at_node(ieta1,ieta2)
+      end do
+    end do
+      
 
 !VG!    !--> Radial profile initialisation
 !VG!    call init_profiles_DK(sim)
@@ -749,10 +764,10 @@ contains
     !*** Saving of the radial profiles in HDF5 file ***
     if (sim%my_rank.eq.0) then
       call sll_hdf5_file_create(filename_prof,file_id,file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%n0,'n0',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%Ti,'Ti',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%Te,'Te',file_err)
-      call sll_hdf5_write_array_2d(file_id,sim%feq_2d,'feq_2d',file_err)
+      call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
+      call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
+      call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
+!VG!      call sll_hdf5_write_array_2d(file_id,sim%feq_2d,'feq_2d',file_err)
       call sll_hdf5_file_close(file_id,file_err)
     end if
 
@@ -811,7 +826,8 @@ contains
         do iloc1 = 1,Neta1_loc
           intf_dvpar = 0._f64
           do i4 = 1,Nvpar
-            intf_dvpar = intf_dvpar + f4d_x3x4(iloc1,iloc2,i3,i4)*delta_vpar
+            intf_dvpar = intf_dvpar + &
+              f4d_x3x4(iloc1,iloc2,i3,i4)*delta_vpar
           end do
           rho3d_x3(iloc1,iloc2,i3) = intf_dvpar
         end do
@@ -828,84 +844,14 @@ contains
 
     sll_int32 :: ierr
 
-    SLL_DEALLOCATE(sim%eta1_grid,ierr)
-    SLL_DEALLOCATE(sim%vpar_grid,ierr) 
-    SLL_DEALLOCATE(sim%n0,ierr)
-    SLL_DEALLOCATE(sim%Ti,ierr)
-    SLL_DEALLOCATE(sim%Te,ierr)
-    SLL_DEALLOCATE(sim%feq_2d,ierr)
+    SLL_DEALLOCATE(sim%n0_r,ierr)
+    SLL_DEALLOCATE(sim%Ti_r,ierr)
+    SLL_DEALLOCATE(sim%Te_r,ierr)
+    SLL_DEALLOCATE(sim%feq_xyvpar,ierr)
     SLL_DEALLOCATE(sim%f4d_x1x2,ierr)
     SLL_DEALLOCATE(sim%f4d_x3x4,ierr)
     call delete(sim%layout4d_x1x2)
     call delete(sim%layout4d_x3x4)
   end subroutine delete_4d_DK_hybrid
-
-
-!VG!  !----------------------------------------------------
-!VG!  ! Initialization of the generalized QN solver
-!VG!  !----------------------------------------------------
-!VG!  subroutine initialize_QN_general( &
-!VG!    sim, &
-!VG!    transformation_x, &
-!VG!    a11_f, &
-!VG!    a12_f, &
-!VG!    a21_f, &
-!VG!    a22_f, &
-!VG!    c_f)
-!VG!
-!VG!   type(sll_simulation_4d_DK_hybrid), intent(inout)      :: sim
-!VG!   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
-!VG!   procedure(two_var_parametrizable_function) :: a11_f
-!VG!   procedure(two_var_parametrizable_function) :: a12_f
-!VG!   procedure(two_var_parametrizable_function) :: a21_f
-!VG!   procedure(two_var_parametrizable_function) :: a22_f
-!VG!   procedure(two_var_parametrizable_function) :: c_f
-!VG!
-!VG!   sim%mesh2d_x  => mesh2d_x
-!VG!   sim%mesh2d_v  => mesh2d_v
-!VG!   sim%transfx   => transformation_x
-!VG!   sim%init_func => init_func
-!VG!   sim%params    => params
-!VG!   sim%a11_f     => a11_f
-!VG!   sim%a12_f     => a12_f
-!VG!   sim%a21_f     => a21_f
-!VG!   sim%a22_f     => a22_f
-!VG!   sim%c_f       => c_f
-!VG!   sim%spline_degree_eta1 = spline_degre1
-!VG!   sim%spline_degree_eta2 = spline_degre2
-!VG!
-!VG!   sim%bc_left   = bc_left
-!VG!   sim%bc_right  = bc_right
-!VG!   sim%bc_bottom = bc_bottom
-!VG!   sim%bc_top    = bc_top
-!VG!
-!VG!   call sim%interp_phi%initialize( &
-!VG!        sim%mesh2d_x%num_cells1 +1, &
-!VG!        sim%mesh2d_x%num_cells2 +1, &
-!VG!        sim%mesh2d_x%eta1_min, &
-!VG!        sim%mesh2d_x%eta1_max, &
-!VG!        sim%mesh2d_x%eta2_min, &
-!VG!        sim%mesh2d_x%eta2_max, &
-!VG!        sim%bc_left, &
-!VG!        sim%bc_right, &
-!VG!        sim%bc_bottom, &
-!VG!        sim%bc_top, &
-!VG!        sim%spline_degree_eta1, &
-!VG!        sim%spline_degree_eta2)
-!VG!
-!VG!   call sim%interp_rho%initialize( &
-!VG!        sim%mesh2d_x%num_cells1 +1, &
-!VG!        sim%mesh2d_x%num_cells2 +1, &
-!VG!        sim%mesh2d_x%eta1_min, &
-!VG!        sim%mesh2d_x%eta1_max, &
-!VG!        sim%mesh2d_x%eta2_min, &
-!VG!        sim%mesh2d_x%eta2_max, &
-!VG!        sim%bc_left, &
-!VG!        sim%bc_right, &
-!VG!        sim%bc_bottom, &
-!VG!        sim%bc_top, &
-!VG!        sim%spline_degree_eta1, &
-!VG!        sim%spline_degree_eta2)
-!VG!  end subroutine initialize_QN_general
 
 end module sll_simulation_4d_DK_hybrid_module
