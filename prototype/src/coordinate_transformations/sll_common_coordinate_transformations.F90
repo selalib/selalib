@@ -18,69 +18,78 @@ contains
   ! **************************************************************************
 
   ! direct mapping
-  function identity_x1 ( eta1, eta2 )
+  function identity_x1 ( eta1, eta2, params )
     sll_real64  :: identity_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_x1 = eta1
   end function identity_x1
 
-  function identity_x2 ( eta1, eta2 )
+  function identity_x2 ( eta1, eta2, params )
     sll_real64  :: identity_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_x2 = eta2
   end function identity_x2
 
   ! inverse mapping
-  function identity_eta1 ( x1, x2 )
+  function identity_eta1 ( x1, x2, params )
     sll_real64  :: identity_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_eta1 = x1
   end function identity_eta1
 
-  function identity_eta2 ( x1, x2 )
+  function identity_eta2 ( x1, x2, params )
     sll_real64  :: identity_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_eta2 = x2
   end function identity_eta2
 
   ! jacobian maxtrix
-  function identity_jac11 ( eta1, eta2 )
+  function identity_jac11 ( eta1, eta2, params )
     sll_real64  :: identity_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
-    function identity_jac12 ( eta1, eta2 )
+    function identity_jac12 ( eta1, eta2, params )
     sll_real64  :: identity_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_jac12 = 0.0_f64
   end function identity_jac12
 
-  function identity_jac21 ( eta1, eta2 )
+  function identity_jac21 ( eta1, eta2, params )
     sll_real64  :: identity_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_jac21 = 0.0_f64
   end function identity_jac21
 
-  function identity_jac22 ( eta1, eta2 )
+  function identity_jac22 ( eta1, eta2, params )
     sll_real64  :: identity_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_jac22 = 1.0_f64
   end function identity_jac22
 
   ! jacobian ie determinant of jacobian matrix
-  function identity_jac ( eta1, eta2 )
+  function identity_jac ( eta1, eta2, params )
     sll_real64  :: identity_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     identity_jac = 1.0_f64
   end function identity_jac
 
@@ -97,55 +106,113 @@ contains
 #define B1  1.0_f64
 #define A2 (-1.0_f64)
 #define B2  1.0_f64
+
+  ! developer's note: made the choice of the params array as the full 
+  ! sequence [A1 B1 A2 B2] as the same params array may thus be passed as
+  ! argument to both calls. The affine mapping has default values:
+  ! A1 = -1.0
+  ! B1 =  1.0
+  ! A2 = -1.0
+  ! B2 =  1.0
+  ! While convenient, there is a risk associated with this: 
+
+
   ! direct mapping
-  function affine_x1 ( eta1, eta2 )
+  function affine_x1 ( eta1, eta2, params )
     sll_real64  :: affine_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64 :: A1
+    sll_real64 :: B1
+
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       A1 = params(1)
+       B1 = params(2)
+    else
+       A1 = -1.0_f64
+       B1 =  1.0_f64
+    end if
     affine_x1 = (B1-A1)*eta1 + A1
   end function affine_x1
 
-  function affine_x2 ( eta1, eta2 )
+  function affine_x2 ( eta1, eta2, params )
     sll_real64  :: affine_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64 :: A2
+    sll_real64 :: B2
+
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       A2 = params(3)
+       B2 = params(4)
+    else
+       A2 = -1.0_f64
+       B2 =  1.0_f64
+    end if
     affine_x2 = (B2-A2)*eta2 + A2
   end function affine_x2
 
   ! jacobian maxtrix
-  function affine_jac11 ( eta1, eta2 )
+  function affine_jac11 ( eta1, eta2, params )
     sll_real64  :: affine_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64 :: A1
+    sll_real64 :: B1
+! por aqui
+    SLL_ASSERT(size(params) >= 4)
+    A1 = params(1)
+    B1 = params(2)
     affine_jac11 = B1-A1
   end function affine_jac11
 
-    function affine_jac12 ( eta1, eta2 )
+  function affine_jac12 ( eta1, eta2, params )
     sll_real64  :: affine_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    SLL_ASSERT(size(params)) >= 4)
     affine_jac12 = 0.0_f64
   end function affine_jac12
 
-  function affine_jac21 ( eta1, eta2 )
+  function affine_jac21 ( eta1, eta2, params )
     sll_real64  :: affine_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    SLL_ASSERT(size(params)) >= 4)
     affine_jac21 = 0.0_f64
   end function affine_jac21
 
-  function affine_jac22 ( eta1, eta2 )
+  function affine_jac22 ( eta1, eta2, params )
     sll_real64  :: affine_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64 :: A2
+    sll_real64 :: B2
+    SLL_ASSERT(size(params)) >= 4)
+    A2 = params(3)
+    B2 = params(4)
     affine_jac22 = B2-A2
   end function affine_jac22
 
   ! jacobian ie determinant of jacobian matrix
-  function affine_jac ( eta1, eta2 )
+  function affine_jac ( eta1, eta2, params )
     sll_real64  :: affine_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    SLL_ASSERT(size(params)) >= 4)
+    A1 = params(1)
+    B1 = params(2)
+    A2 = params(3)
+    B2 = params(4)
     affine_jac = (B1-A1) * (B2-A2)
   end function affine_jac
 
@@ -164,14 +231,14 @@ contains
   ! **************************************************************************
 
   ! direct mapping
-  function polar_x1 ( eta1, eta2 )
+  function polar_x1 ( eta1, eta2, params )
     sll_real64  :: polar_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     polar_x1 = eta1 * cos( eta2 )
   end function polar_x1
 
-  function polar_x2 ( eta1, eta2 )
+  function polar_x2 ( eta1, eta2, params )
     sll_real64  :: polar_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -179,14 +246,14 @@ contains
   end function polar_x2
 
   ! inverse mapping
-  function polar_eta1 ( x1, x2 )
+  function polar_eta1 ( x1, x2, params )
     sll_real64  :: polar_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     polar_eta1 = sqrt( x1*x1 + x2*x2 )
   end function polar_eta1
 
-  function polar_eta2 ( x1, x2 )
+  function polar_eta2 ( x1, x2, params )
     sll_real64  :: polar_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
@@ -194,28 +261,28 @@ contains
   end function polar_eta2
 
   ! jacobian matrix
-  function polar_jac11 ( eta1, eta2 )
+  function polar_jac11 ( eta1, eta2, params )
     sll_real64  :: polar_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     polar_jac11 = cos ( eta2) 
   end function polar_jac11
 
-    function polar_jac12 ( eta1, eta2 )
+    function polar_jac12 ( eta1, eta2, params )
     sll_real64  :: polar_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     polar_jac12 = - eta1 * sin( eta2)
   end function polar_jac12
 
-  function polar_jac21 ( eta1, eta2 )
+  function polar_jac21 ( eta1, eta2, params )
     sll_real64  :: polar_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
 
-  function polar_jac22 ( eta1, eta2 )
+  function polar_jac22 ( eta1, eta2, params )
     sll_real64  :: polar_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -223,7 +290,7 @@ contains
   end function polar_jac22
 
  ! jacobian ie determinant of jacobian matrix
-  function polar_jac ( eta1, eta2 )
+  function polar_jac ( eta1, eta2, params )
     sll_real64  :: polar_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -242,14 +309,14 @@ contains
   ! **************************************************************************
 
   ! direct mapping
-  function sinprod_x1 ( eta1, eta2 )
+  function sinprod_x1 ( eta1, eta2, params )
     sll_real64  :: sinprod_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sinprod_x1 = eta1 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
   end function sinprod_x1
 
-  function sinprod_x2 ( eta1, eta2 )
+  function sinprod_x2 ( eta1, eta2, params )
     sll_real64  :: sinprod_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -258,7 +325,7 @@ contains
 
   ! inverse mapping 
   ! cannot be computed analytically in this case. Use fixed point iterations.
-  function sinprod_eta1 ( x1, x2 )
+  function sinprod_eta1 ( x1, x2, params )
     sll_real64  :: sinprod_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
@@ -267,7 +334,7 @@ contains
     sinprod_eta1 = x1
   end function sinprod_eta1
 
-  function sinprod_eta2 ( x1, x2 )
+  function sinprod_eta2 ( x1, x2, params )
     sll_real64  :: sinprod_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
@@ -277,28 +344,28 @@ contains
   end function sinprod_eta2
 
   ! jacobian matrix
-  function sinprod_jac11 ( eta1, eta2 )
+  function sinprod_jac11 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac11
 
-    function sinprod_jac12 ( eta1, eta2 )
+    function sinprod_jac12 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sinprod_jac12 = 0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
   end function sinprod_jac12
 
-  function sinprod_jac21 ( eta1, eta2 )
+  function sinprod_jac21 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sinprod_jac21 = 0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac21
 
-  function sinprod_jac22 ( eta1, eta2 )
+  function sinprod_jac22 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -307,7 +374,7 @@ contains
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
-  function sinprod_jac ( eta1, eta2 )
+  function sinprod_jac ( eta1, eta2, params )
     sll_real64  :: sinprod_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -324,14 +391,14 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! direct mapping collela on (0,4*pi)x (0,1)
-  function sinprod_x1_rect ( eta1, eta2 )
+  function sinprod_x1_rect ( eta1, eta2, params )
     real(8)  :: sinprod_x1_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_x1_rect = eta1 + 0.1_8 * sin(0.5*eta1) * sin(2*sll_pi*eta2)
   end function sinprod_x1_rect
   
-  function sinprod_x2_rect ( eta1, eta2 )
+  function sinprod_x2_rect ( eta1, eta2, params )
     real(8)  :: sinprod_x2_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -340,28 +407,28 @@ contains
   
   
   ! jacobian matrix
-  function sinprod_jac11_rect ( eta1, eta2 )
+  function sinprod_jac11_rect ( eta1, eta2, params )
     real(8)  :: sinprod_jac11_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_jac11_rect = 1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac11_rect
   
-  function sinprod_jac12_rect ( eta1, eta2 )
+  function sinprod_jac12_rect ( eta1, eta2, params )
     real(8)  :: sinprod_jac12_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_jac12_rect = 0.2_8 *sll_pi * sin (0.5*eta1) * cos (2*sll_pi*eta2)
   end function sinprod_jac12_rect
   
-  function sinprod_jac21_rect ( eta1, eta2 )
+  function sinprod_jac21_rect ( eta1, eta2, params )
     real(8)  :: sinprod_jac21_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_jac21_rect = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac21_rect
 
-  function sinprod_jac22_rect ( eta1, eta2 )
+  function sinprod_jac22_rect ( eta1, eta2, params )
     real(8)  :: sinprod_jac22_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -370,7 +437,7 @@ contains
   end function sinprod_jac22_rect
   
   ! jacobian ie determinant of jacobian matrix
-  function sinprod_jac_rect ( eta1, eta2 )
+  function sinprod_jac_rect ( eta1, eta2, params )
     real(8)  :: sinprod_jac_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -387,14 +454,14 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! direct mapping collela on (0,4*pi)x (0,4*pi)
-  function sinprod_x1_square ( eta1, eta2 )
+  function sinprod_x1_square ( eta1, eta2, params )
     real(8)  :: sinprod_x1_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_x1_square = eta1 + 0.1_8 * sin(0.5*eta1) * sin(0.5*eta2)
   end function sinprod_x1_square
   
-  function sinprod_x2_square ( eta1, eta2 )
+  function sinprod_x2_square ( eta1, eta2, params )
     real(8)  :: sinprod_x2_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -403,7 +470,7 @@ contains
   
   
   ! jacobian matrix
-  function sinprod_jac11_square ( eta1, eta2 )
+  function sinprod_jac11_square ( eta1, eta2, params )
     real(8)  :: sinprod_jac11_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -411,21 +478,21 @@ contains
          0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
   end function sinprod_jac11_square
   
-  function sinprod_jac12_square ( eta1, eta2 )
+  function sinprod_jac12_square ( eta1, eta2, params )
     real(8)  :: sinprod_jac12_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_jac12_square = 0.5_8*0.1_8 * sin (0.5*eta1) * cos (0.5*eta2)
   end function sinprod_jac12_square
   
-  function sinprod_jac21_square ( eta1, eta2 )
+  function sinprod_jac21_square ( eta1, eta2, params )
     real(8)  :: sinprod_jac21_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sinprod_jac21_square = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
   end function sinprod_jac21_square
   
-  function sinprod_jac22_square ( eta1, eta2 )
+  function sinprod_jac22_square ( eta1, eta2, params )
     real(8)  :: sinprod_jac22_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -434,7 +501,7 @@ contains
   end function sinprod_jac22_square
   
   ! jacobian ie determinant of jacobian matrix
-  function sinprod_jac_square ( eta1, eta2 )
+  function sinprod_jac_square ( eta1, eta2, params )
     real(8)  :: sinprod_jac_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
@@ -449,7 +516,7 @@ contains
   ! test function
   !-------------------
   ! direct mapping
-  function test_x1 ( eta1, eta2 )
+  function test_x1 ( eta1, eta2, params )
     sll_real64  :: test_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -457,7 +524,7 @@ contains
     !test_x1 = eta1**2
   end function test_x1
 
-  function test_x2 ( eta1, eta2 )
+  function test_x2 ( eta1, eta2, params )
     sll_real64  :: test_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -465,14 +532,14 @@ contains
   end function test_x2
 
   ! inverse mapping
-  function test_eta1 ( x1, x2 )
+  function test_eta1 ( x1, x2, params )
     sll_real64  :: test_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     test_eta1 = x1 / 0.1_f64
   end function test_eta1
 
-  function test_eta2 ( x1, x2 )
+  function test_eta2 ( x1, x2, params )
     sll_real64  :: test_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
@@ -480,28 +547,28 @@ contains
   end function test_eta2
 
   ! inverse jacobian matrix
-  function test_jac11 ( eta1, eta2 )
+  function test_jac11 ( eta1, eta2, params )
     sll_real64  :: test_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1))
   end function test_jac11
 
-    function test_jac12 ( eta1, eta2 )
+    function test_jac12 ( eta1, eta2, params )
     sll_real64  :: test_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     test_jac12 = 0.0_f64
   end function test_jac12
 
-  function test_jac21 ( eta1, eta2 )
+  function test_jac21 ( eta1, eta2, params )
     sll_real64  :: test_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     test_jac21 = 0.0_f64
   end function test_jac21
 
-  function test_jac22 ( eta1, eta2 )
+  function test_jac22 ( eta1, eta2, params )
     sll_real64  :: test_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -509,7 +576,7 @@ contains
   end function test_jac22
 
   ! jacobian ie determinant of jacobian matrix
-  function test_jac ( eta1, eta2 )
+  function test_jac ( eta1, eta2, params )
     sll_real64  :: test_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -533,25 +600,25 @@ contains
   ! ***************************************************************************
 #define R1 0.1_f64
 #define R2 1.0_f64
-  function x1_polar_f( eta1, eta2 )
+  function x1_polar_f( eta1, eta2, params )
     sll_real64 :: x1_polar_f
     sll_real64, intent(in) :: eta1, eta2
     x1_polar_f = (R1 + (R2-R1)*eta1)*cos(2.0_f64*sll_pi*eta2)
   end function x1_polar_f
 
-  function x2_polar_f( eta1, eta2 )
+  function x2_polar_f( eta1, eta2, params )
     sll_real64 :: x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
     x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_pi*eta2)
   end function x2_polar_f
 
-  function deriv_x1_polar_f_eta1( eta1, eta2 )
+  function deriv_x1_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
     deriv_x1_polar_f_eta1 = (R2-R1)*cos(2.0_f64*sll_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
-  function deriv_x1_polar_f_eta2( eta1, eta2 )
+  function deriv_x1_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
     sll_real64 :: k
@@ -559,13 +626,13 @@ contains
     deriv_x1_polar_f_eta2 = -(R1+(R2-R1)*eta1)*sin(k*eta2)*k
   end function deriv_x1_polar_f_eta2
 
-  function deriv_x2_polar_f_eta1( eta1, eta2 )
+  function deriv_x2_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
     deriv_x2_polar_f_eta1 = (R2-R1)*sin(2.0_f64*sll_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
-  function deriv_x2_polar_f_eta2( eta1, eta2 )
+  function deriv_x2_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
     sll_real64 :: k
@@ -573,7 +640,7 @@ contains
     deriv_x2_polar_f_eta2 = (R1+(R2-R1)*eta1)*cos(k*eta2)*k
   end function deriv_x2_polar_f_eta2
 
-  function jacobian_polar_f( eta1, eta2 ) result(jac)
+  function jacobian_polar_f( eta1, eta2, params ) result(jac)
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1, eta2
     jac = 2.0_f64*sll_pi*(R1+(R2-R1)*eta1)*(R2-R1)
@@ -602,13 +669,13 @@ contains
 #define A (-1.0_f64)
 #define B  1.0_f64
 
-  function linear_map_f( eta ) result(val)
+  function linear_map_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
     val = (B-A)*eta + A
   end function linear_map_f
 
-  function linear_map_jac_f( eta ) result(val)
+  function linear_map_jac_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
     val = (B-A)
@@ -620,13 +687,13 @@ contains
 #define A 0.0_f64
 #define B 6.2831853071795862_f64
 
-  function linear_map_poisson_f( eta ) result(val)
+  function linear_map_poisson_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
     val = (B-A)*eta + A
   end function linear_map_poisson_f
 
-  function linear_map_poisson_jac_f( eta ) result(val)
+  function linear_map_poisson_jac_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
     val = (B-A)

@@ -122,12 +122,17 @@ module sll_coordinate_transformation_2d_base_module
    
    ! WE SHOULD PROBABLY HAVE A SINGLE FILE WITH ALL THE SIGNATURES THAT WE
    ! GENERALLY USE AND DO NOT DEPEND ON A BASE OR DERIVED TYPE.
+
+   ! The following interface is meant to specify the signature of the 
+   ! (possibly user-defined) functions that should be passed as arguments
+   ! to initialize the analytic transformations.
    abstract interface
-      function two_arg_scalar_function( eta1, eta2 )
+      function two_arg_scalar_function( eta1, eta2, params )
         use sll_working_precision
         sll_real64             :: two_arg_scalar_function
         sll_real64, intent(in) :: eta1
         sll_real64, intent(in) :: eta2
+        sll_real64, dimension(:), optional, intent(in) :: params
       end function two_arg_scalar_function
    end interface
    
