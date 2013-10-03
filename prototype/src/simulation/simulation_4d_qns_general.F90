@@ -943,6 +943,7 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
        call set_time_mark(t0)
+
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
