@@ -13,8 +13,8 @@ program test_general_elliptic_solver
 
 #define SPLINE_DEG1 3
 #define SPLINE_DEG2 3
-#define NUM_CELLS1  32
-#define NUM_CELLS2  32
+#define NUM_CELLS1  64
+#define NUM_CELLS2  64
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
@@ -28,11 +28,11 @@ program test_general_elliptic_solver
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
-  type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-  type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-  type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-  type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
-class(sll_scalar_field_2d_base), pointer              :: c_field
+  class(sll_scalar_field_2d_base), pointer                     :: a11_field_mat
+  class(sll_scalar_field_2d_base), pointer                    :: a12_field_mat
+  class(sll_scalar_field_2d_base), pointer                    :: a21_field_mat
+  class(sll_scalar_field_2d_base), pointer                    :: a22_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
@@ -53,7 +53,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   real(8), external :: sol_exacte_perper_der2
   real(8), external :: sol_exacte_chgt_perper_der1
   real(8), external :: sol_exacte_chgt_perper_der2
-  sll_real64, dimension(:,:), allocatable :: values
+  sll_real64, dimension(:,:), pointer :: values
   sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
   sll_real64 :: acc10,acc11,acc12,acc95,acc55
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4,normL2_5,normL2_6
@@ -145,7 +145,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -154,7 +154,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -163,7 +163,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -172,7 +172,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
 
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -261,11 +261,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)!, &
+      ! rho)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -320,10 +320,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call c_field%delete()
   call phi%delete()
   
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -378,7 +378,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -387,7 +387,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
 
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -396,7 +396,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
 
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -405,7 +405,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat  => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -491,13 +491,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
-!!$  
-!!$ print*, 'test'
-!!$ !print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
-!!$ ! solve the field
-  call solve_es(&
+       c_field)!, &
+       !rho)
+  
+!!$
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -537,10 +535,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
 
   call T%delete()
   
@@ -556,8 +554,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  !--------------------------------------------------------------------
 !!$  
-!!$  
-!!$  
+  
+  
   print*, "-------------------------------------------------------------"
   print*, " 3 test case witout change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
@@ -595,7 +593,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -604,7 +602,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -613,7 +611,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -622,7 +620,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -709,11 +707,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)!, &
+      ! rho)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -752,10 +750,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -810,7 +808,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -819,7 +817,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -828,7 +826,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -837,7 +835,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -921,11 +919,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -958,10 +955,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -1017,7 +1014,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1026,7 +1023,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1035,7 +1032,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1044,7 +1041,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1129,11 +1126,11 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)!, &
+       !rho)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1187,10 +1184,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -1248,7 +1245,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1257,7 +1254,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1266,7 +1263,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET) 
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1275,7 +1272,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1363,11 +1360,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1415,10 +1411,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -1427,15 +1423,15 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(difference)
   DEALLOCATE(reference)
 
-!!$
-!!$  
-!!$  !--------------------------------------------------------------------
-!!$  
-!!$  !     7 test case with colella change of coordinates 
-!!$  !     dirichlet-dirichlet boundary conditions
-!!$  
-!!$  !--------------------------------------------------------------------
-!!$  
+
+  
+  !--------------------------------------------------------------------
+  
+  !     7 test case with colella change of coordinates 
+  !     dirichlet-dirichlet boundary conditions
+  
+  !--------------------------------------------------------------------
+  
   print*, "-------------------------------------------------------------"
   print*, " 7 test case with colella change of coordinates"
   print*, " dirichlet-dirichlet boundary conditions"
@@ -1473,7 +1469,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
    ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1482,7 +1478,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1491,7 +1487,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET) 
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1500,7 +1496,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_DIRICHLET, &
        SLL_DIRICHLET ) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1585,11 +1581,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1635,10 +1630,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
 
   call T%delete()
   
@@ -1694,7 +1689,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1703,7 +1698,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1712,7 +1707,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC)
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1721,7 +1716,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -1808,11 +1803,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -1859,10 +1853,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
   
   call T%delete()
   
@@ -1878,17 +1872,17 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
  !************************************************************************************************
   !        WHITH CHANGE OF COORDINATES AND NON-ANALYTIC SOURCE TERM
   !************************************************************************************************
-  !--------------------------------------------------------------------
-  
-  !     95  test case without change of coordinates 
-  !      periodic-periodic boundary conditions
-  !      and with a non analytic source term
-  !      with separate factorization of solve 
-  
-  !--------------------------------------------------------------------
-  
-  
-  
+!!$  !--------------------------------------------------------------------
+!!$  
+!!$  !     95  test case without change of coordinates 
+!!$  !      periodic-periodic boundary conditions
+!!$  !      and with a non analytic source term
+!!$  !      with separate factorization of solve 
+!!$  
+!!$  !--------------------------------------------------------------------
+!!$  
+!!$  
+!!$  
   print*, "---------------------"
   print*, " 95 test case without change of coordinates"
   print*, " periodic-periodic boundary conditions"
@@ -1927,7 +1921,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -1936,7 +1930,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -1945,7 +1939,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC)
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -1954,7 +1948,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -2083,11 +2077,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)
 
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -2148,10 +2141,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
 
   call T%delete()
   
@@ -2216,7 +2209,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   
   ! Thirdly, each field object must be initialized using the same logical
   ! mesh and coordinate transformation.
-  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a11", &
        T, &
@@ -2225,7 +2218,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC, &
        SLL_PERIODIC ) 
   
-  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
        T, &
@@ -2234,7 +2227,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC)
   
-  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a21", &
        T, &
@@ -2243,7 +2236,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        SLL_PERIODIC,&
        SLL_PERIODIC) 
   
-  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
        "a22", &
        T, &
@@ -2371,11 +2364,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field, &
-       rho)
+       c_field)
   
   ! solve the field
-  call solve_es(&
+  call solve_general_coordinates_elliptic_eq(&
        es,&
        rho,&
        phi)
@@ -2433,10 +2425,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  call a11_field_mat%base%delete()
-  call a12_field_mat%base%delete()
-  call a21_field_mat%base%delete()
-  call a22_field_mat%base%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
 
   call T%delete()
   
@@ -2448,16 +2440,16 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   DEALLOCATE(point2)
   DEALLOCATE(tab_rho)
   
-!!$  
-!!$  
-!!$   !--------------------------------------------------------------------
-!!$  
-!!$  !     10  test case with colella change of coordinates 
-!!$  !      periodic-dirichlet boundary conditions
-!!$  !     and non analytic source term
-!!$  !--------------------------------------------------------------------
   
+  
+   !--------------------------------------------------------------------
+  
+  !     10  test case with colella change of coordinates 
+  !      periodic-dirichlet boundary conditions
+  !     and non analytic source term
+  !--------------------------------------------------------------------
 !!$  
+  
 !!$  
 !!$  print*, "---------------------"
 !!$  print*, " 10 test case with colella change of coordinates"
@@ -2497,7 +2489,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2506,7 +2498,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2515,7 +2507,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2524,7 +2516,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2650,11 +2642,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       a12_field_mat,&
 !!$       a21_field_mat,&
 !!$       a22_field_mat,&
-!!$       c_field, &
-!!$       rho)
+!!$       c_field)
 !!$  
 !!$  ! solve the field
-!!$  call solve_es(&
+!!$  call solve_general_coordinates_elliptic_eq(&
 !!$       es,&
 !!$       rho,&
 !!$       phi)
@@ -2700,10 +2691,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -2724,7 +2715,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  
-!!$  
+  
 !!$  print*, "---------------------"
 !!$  print*, " 11 test case with colella change of coordinates"
 !!$  print*, " dirichlet-dirichlet boundary conditions"
@@ -2764,7 +2755,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -2773,7 +2764,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET, &
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -2782,7 +2773,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -2791,7 +2782,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_DIRICHLET,&
 !!$       SLL_DIRICHLET) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -2904,7 +2895,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  t11i = time_elapsed_since(t_reference) 
 !!$
-!!$  print *, 'Initialized ES object'
+!!$  !print *, 'Initialized ES object'
 !!$  call set_time_mark(t_reference)
 !!$
 !!$  call factorize_mat_es(&
@@ -2913,14 +2904,15 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       a12_field_mat,&
 !!$       a21_field_mat,&
 !!$       a22_field_mat,&
-!!$       c_field, &
-!!$       rho)
+!!$       c_field)
 !!$
+!!$  !print*, 'solve'
 !!$  ! solve the field
-!!$  call solve_es(&
+!!$  call solve_general_coordinates_elliptic_eq(&
 !!$       es,&
 !!$       rho,&
 !!$       phi)
+!!$ ! print*, 'aye'
   
 !!$  t11e = time_elapsed_since(t_reference)
 !!$  
@@ -2964,10 +2956,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -3026,7 +3018,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  
 !!$  ! Thirdly, each field object must be initialized using the same logical
 !!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a11", &
 !!$       T, &
@@ -3035,7 +3027,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a12", &
 !!$       T, &
@@ -3044,7 +3036,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC)
 !!$  
-!!$  a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_zero, &
 !!$       "a21", &
 !!$       T, &
@@ -3053,7 +3045,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       SLL_PERIODIC, &
 !!$       SLL_PERIODIC) 
 !!$  
-!!$  a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
 !!$       func_one, &
 !!$       "a22", &
 !!$       T, &
@@ -3180,7 +3172,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$       rho)
 !!$  
 !!$  ! solve the field
-!!$  call solve_es(&
+!!$  call solve_general_coordinates_elliptic_eq(&
 !!$       es,&
 !!$       rho,&
 !!$       phi)
@@ -3226,10 +3218,10 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
 !!$  call rho%delete()
 !!$  call c_field%delete()
 !!$  call phi%delete()
-!!$  call a11_field_mat%base%delete()
-!!$  call a12_field_mat%base%delete()
-!!$  call a21_field_mat%base%delete()
-!!$  call a22_field_mat%base%delete()
+!!$  call a11_field_mat%delete()
+!!$  call a12_field_mat%delete()
+!!$  call a21_field_mat%delete()
+!!$  call a22_field_mat%delete()
 !!$
 !!$  call T%delete()
 !!$  
@@ -3395,10 +3387,10 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   intrinsic :: sin 
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
-  source_term_perdir = &
-       -(16.0*sll_pi**2*eta2**4 &
-       - 16.0*sll_pi**2*eta2**2 &
-       - 12.0*eta2**2 + 2.0)*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
+  source_term_perdir = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+      ! -(16.0*sll_pi**2*eta2**4 &
+      ! - 16.0*sll_pi**2*eta2**2 &
+      ! - 12.0*eta2**2 + 2.0)*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
   
 end function source_term_perdir
 
@@ -3409,8 +3401,8 @@ real(8) function sol_exacte_perdir(eta1,eta2)
   intrinsic :: cos
   intrinsic :: sin
   !real(8), dimension(:), intent(in), optional :: params
-  sol_exacte_perdir = eta2 ** 2 * (eta2**2-1)&
-       * cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta1)
+  sol_exacte_perdir = sin(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)!eta2 ** 2 * (eta2**2-1)&
+      ! * cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta1)
   
   !print*, 'heho'
 end function sol_exacte_perdir
@@ -3426,10 +3418,10 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   use sll_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
-  source_term_dirper = &
-      -(16.0*sll_pi**2*eta1**4 &
-      - 16.0*sll_pi**2*eta1**2 &
-      - 12.0*eta1**2 + 2.0)*sin(2*sll_pi*eta2)*cos(2*sll_pi*eta2)
+  source_term_dirper = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
+     ! -(16.0*sll_pi**2*eta1**4 &
+     ! - 16.0*sll_pi**2*eta1**2 &
+     ! - 12.0*eta1**2 + 2.0)*sin(2*sll_pi*eta2)*cos(2*sll_pi*eta2)
 end function source_term_dirper
 
 
@@ -3437,8 +3429,8 @@ real(8) function sol_exacte_dirper(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
   !real(8), dimension(:), intent(in), optional :: params
-  sol_exacte_dirper = &
-       eta1 ** 2 * (eta1**2-1)* cos(2*sll_pi*eta2)*sin(2*sll_pi*eta2)
+  sol_exacte_dirper = sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+       !eta1 ** 2 * (eta1**2-1)* cos(2*sll_pi*eta2)*sin(2*sll_pi*eta2)
   
   
 end function sol_exacte_dirper
