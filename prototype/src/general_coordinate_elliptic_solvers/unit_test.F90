@@ -53,7 +53,7 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
   real(8), external :: sol_exacte_perper_der2
   real(8), external :: sol_exacte_chgt_perper_der1
   real(8), external :: sol_exacte_chgt_perper_der2
-  sll_real64, dimension(:,:), allocatable :: values
+  sll_real64, dimension(:,:), pointer :: values
   sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
   sll_real64 :: acc10,acc11,acc12,acc95,acc55
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4,normL2_5,normL2_6
