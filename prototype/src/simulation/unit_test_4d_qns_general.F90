@@ -55,6 +55,7 @@ program qns_4d_general
 #define SPL_DEG2 3
 
   ! logical mesh for space coordinates
+  ! NPTS1 and NPTS2 is the number of cells
   mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
        eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
        eta2_min=0.0_f64, eta2_max=1.0_f64)!4.0_f64*sll_pi )
