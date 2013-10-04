@@ -310,7 +310,7 @@ contains
     class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
-    class(sll_scalar_field_2d_base), pointer      :: rho
+    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
