@@ -483,7 +483,6 @@ contains
     sll_int32 :: iloc1, iloc2, iloc3, iloc4
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc3d_x3
-    sll_real64, dimension(:,:), pointer :: ptr_array2d_x1x2
 
     type(sll_time_mark) :: tm ! delete this eventually
     sll_real64 :: time   ! delete this eventually
@@ -662,10 +661,6 @@ contains
       sim%spline_degree_eta2)    
 
     !----->
-    ! THE FOLLOWING WOULD NOT WORK, THE SAME POINTER IS USED IN BOTH CASES...
-    ! NEVERTHELESS, THE INTERFACE HAS CHANGED, SO AN INTERMEDIARY POINTER
-    ! SHOULD NOT BE NEEDED NOW...
-    ptr_array2d_x1x2 => sim%rho3d_x1x2(:,:,1)
     sim%rho2d => new_scalar_field_2d_discrete_alt( &
       "rho2d_x1x2", &
       sim%interp_rho2d, &     
@@ -675,10 +670,6 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
-    call sim%rho2d%set_field_data( ptr_array2d_x1x2 )
-    call sim%rho2d%update_interpolation_coefficients( )
-
-    ptr_array2d_x1x2 => sim%phi3d_x1x2(:,:,1)
     sim%phi2d => new_scalar_field_2d_discrete_alt( &
       "phi2d_x1x2", &
       sim%interp_phi2d, &     
@@ -687,10 +678,6 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
-
-    call sim%phi2d%set_field_data( ptr_array2d_x1x2 )
-    call sim%phi2d%update_interpolation_coefficients( )
-
   end subroutine allocate_QN_DK
 
 
@@ -893,6 +880,10 @@ contains
   !----------------------------------------------------
   subroutine solve_QN( sim )
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    call sim%rho2d%set_field_data( sim%rho3d_x1x2(:,:,1) )
+    call sim%rho2d%update_interpolation_coefficients( )
+
   end subroutine solve_QN
 
 
