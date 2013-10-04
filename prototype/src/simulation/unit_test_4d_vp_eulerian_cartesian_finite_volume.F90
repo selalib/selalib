@@ -47,7 +47,7 @@ program vp_cartesian_4d
 
 #define NCELL1 128
 #define NCELL2 1
-#define NCELL3 8
+#define NCELL3 4
 #define NCELL4 4
 #define ETA1MIN -1.0_f64
 #define ETA1MAX 1.0_f64
@@ -66,7 +66,7 @@ program vp_cartesian_4d
 #define ETA4MAX 1.0_f64
 #define TINI 0.0_f64
 #define TMAX 3.e-1_f64
-!#define TMAX 0.0001_f64
+!#define TMAX 0._f64
 #define CFL 0.08_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
@@ -75,7 +75,7 @@ program vp_cartesian_4d
 ! 3: vy transport 4: y transport 5: landau 2d
 
 #define DEG  2 ! polynomial degree
-#define SCHEME 0
+#define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order
 
 
