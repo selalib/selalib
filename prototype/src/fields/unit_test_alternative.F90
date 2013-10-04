@@ -36,7 +36,7 @@ program unit_test_alternative
   class(sll_scalar_field_2d_base), pointer              :: rho
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
-  sll_real64, dimension(:,:), allocatable    :: tab_rho
+  sll_real64, dimension(:,:), pointer    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
   sll_real64 :: eta1,eta2
@@ -45,8 +45,8 @@ program unit_test_alternative
   sll_int32 :: i,j
   sll_int32 :: ierr
   ! logical mesh
-  nc1 = 32
-  nc2 = 32
+  nc1 = NUM_CELLS1
+  nc2 = NUM_CELLS1
   
   mesh_2d => new_logical_mesh_2d( nc1, nc2, &
        0.0_f64, 2.0*sll_pi, 0.0_f64,2.0*sll_pi )
@@ -103,12 +103,13 @@ program unit_test_alternative
 
   allocate(point1(npts1-1))
   allocate(point2(npts2-1))
-  allocate(tab_rho(npts1-1,npts2-1))
+  allocate(tab_rho(npts1,npts2))
   do j=0,npts2-2
      do i=0,npts1-2
         point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(npts1-1) + ETA1MIN 
         point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(npts2-1) + ETA2MIN 
-        tab_rho(i+1,j+1)  = cos(2.0_f64*sll_pi*point2(j+1))*cos(2.0_f64*sll_pi*point1(i+1))
+        tab_rho(i+1,j+1)  = &
+             cos(2.0_f64*sll_pi*point2(j+1))*cos(2.0_f64*sll_pi*point1(i+1))
      end do
   end do
 
@@ -131,7 +132,6 @@ program unit_test_alternative
  ! terme_source_interp => interp_2d_term_source
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho", &
        interp_2d_term_source, &
        T, &
@@ -144,13 +144,19 @@ program unit_test_alternative
        point2,&
        npts2-1)
 
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients( )
+
    do j=0,npts2-2
      do i=0,npts1-2
         eta1 = real(i,f64)*(ETA1MAX-ETA1MIN)/(2*(npts1-1)) + ETA1MIN 
         eta2 = real(j,f64)*(ETA2MAX-ETA2MIN)/(2*(npts2-1)) + ETA2MIN
        calculated(i+1,j+1) = rho%value_at_point(eta1,eta2)
-       difference(i+1,j+1) = calculated(i+1,j+1)-cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
-       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), calculated(i+1,j+1),cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+       difference(i+1,j+1) = calculated(i+1,j+1) - &
+            cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), &
+            calculated(i+1,j+1), &
+            cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
      end do
   end do
 

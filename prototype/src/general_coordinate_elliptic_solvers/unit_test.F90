@@ -28,10 +28,10 @@ program test_general_elliptic_solver
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
-  class(sll_scalar_field_2d_base), pointer                     :: a11_field_mat
-  class(sll_scalar_field_2d_base), pointer                    :: a12_field_mat
-  class(sll_scalar_field_2d_base), pointer                    :: a21_field_mat
-  class(sll_scalar_field_2d_base), pointer                    :: a22_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
   class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
@@ -218,7 +218,6 @@ program test_general_elliptic_solver
  ! interp_2d_ptr => interp_2d
 
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi1", &
        interp_2d, &
        T, &
@@ -226,6 +225,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
+  call phi%set_field_data( values )
+  call phi%update_interpolation_coefficients( )
 
   print *, 'initialized fields...'
 
@@ -450,7 +451,6 @@ program test_general_elliptic_solver
 
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi2", &
        interp_2d, &
        T, &
@@ -458,6 +458,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
 !  print *, 'a = ', es%csr_mat%opr_a
@@ -665,7 +667,6 @@ program test_general_elliptic_solver
  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi3", &
        interp_2d, &
        T, &
@@ -673,6 +674,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -760,10 +763,8 @@ program test_general_elliptic_solver
   DEALLOCATE(values)
   DEALLOCATE(calculated)
   DEALLOCATE(difference)
-!!$
   DEALLOCATE(reference)
-!!$  
-!!$  
+
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     4 test case without change of coordinates 
@@ -878,7 +879,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi4", &
        interp_2d, &
        T, &
@@ -886,6 +886,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1085,7 +1087,6 @@ program test_general_elliptic_solver
   
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi5", &
        interp_2d, &
        T, &
@@ -1093,6 +1094,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1316,7 +1319,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi6", &
        interp_2d, &
        T, &
@@ -1324,6 +1326,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1540,7 +1544,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi7", &
        interp_2d, &
        T, &
@@ -1548,6 +1551,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1761,7 +1766,6 @@ program test_general_elliptic_solver
   
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi8", &
        interp_2d, &
        T, &
@@ -1769,6 +1773,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2000,7 +2006,6 @@ program test_general_elliptic_solver
   ! terme_source_interp => interp_2d_term_source
   
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho95", &
        interp_2d_term_source, &
        T, &
@@ -2011,8 +2016,9 @@ program test_general_elliptic_solver
        point1,&
        npts1-1,&
        point2,&
-       npts2-1)
-  
+       npts2-1)  
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
  call rho%write_to_file(0)
  
@@ -2035,7 +2041,6 @@ program test_general_elliptic_solver
 !!$  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi95", &
        interp_2d, &
        T, &
@@ -2043,6 +2048,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2289,7 +2296,6 @@ program test_general_elliptic_solver
   tab_rho(:,:) = tab_rho - sum(tab_rho)/((npts1-1)*(npts2-1))
   print*,'moyenne', sum(tab_rho)
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho9", &
        terme_source_interp, &
        T, &
@@ -2301,7 +2307,8 @@ program test_general_elliptic_solver
        npts1-1,&
        point2,&
        npts2-1)
-
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
   
 !!$  
   call initialize_ad2d_interpolator( &
@@ -2321,7 +2328,6 @@ program test_general_elliptic_solver
 !!$  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi9", &
        interp_2d, &
        T, &
@@ -2329,6 +2335,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2567,7 +2575,6 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho10", &
        terme_source_interp, &
        T, &
@@ -2579,6 +2586,8 @@ program test_general_elliptic_solver
        npts1-1,&
        point2,&
        npts2)
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
 !!$  
   call initialize_ad2d_interpolator( &
@@ -2598,7 +2607,6 @@ program test_general_elliptic_solver
 !!$  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi10", &
        interp_2d, &
        T, &
@@ -2606,6 +2614,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2833,7 +2843,6 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho11", &
        terme_source_interp, &
        T, &
@@ -2845,6 +2854,8 @@ program test_general_elliptic_solver
        npts1,&
        point2,&
        npts2)
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
 !!$  
   call initialize_ad2d_interpolator( &
@@ -2863,7 +2874,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
 !!$    
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi11", &
        interp_2d, &
        T, &
@@ -2871,6 +2881,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   call set_time_mark(t_reference)
@@ -2960,15 +2972,7 @@ program test_general_elliptic_solver
   call a21_field_mat%delete()
   call a22_field_mat%delete()
 
-  call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -3095,7 +3099,6 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho12", &
        terme_source_interp, &
        T, &
@@ -3107,6 +3110,8 @@ program test_general_elliptic_solver
        npts1,&
        point2,&
        npts2-1)
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
 !!$  
   call initialize_ad2d_interpolator( &
@@ -3125,7 +3130,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
 !!$  
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi12", &
        interp_2d, &
        T, &
@@ -3133,6 +3137,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
    
   print *, 'initialized fields...'
   
