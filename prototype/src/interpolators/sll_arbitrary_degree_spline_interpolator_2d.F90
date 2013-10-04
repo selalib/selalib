@@ -267,8 +267,7 @@ contains
     interpolator%num_pts1 = num_pts1
     interpolator%num_pts2 = num_pts2
 
-
-    
+    ! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
     select case (bc_selector)
     case (0) ! 1. periodic-periodic
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
@@ -813,6 +812,9 @@ contains
             interpolator%t2(1:sz2+order2) )
 
     end select
+
+    SLL_DEALLOCATE(point_location_eta2,ierr)
+    SLL_DEALLOCATE(point_location_eta1,ierr)
   end subroutine !compute_interpolants_ad2d
 
 #ifdef STDF95
