@@ -109,9 +109,9 @@ program test_general_elliptic_solver
 !!$  !      periodic-periodic boundary conditions
 !!$  !--------------------------------------------------------------------
 !!$  
-!!$  print*, "-------------------------------------------------------------"
-!!$  print*, "1 test case witout change of coordinates"
-!!$  print*, "-------------------------------------------------------------"
+  print*, "-------------------------------------------------------------"
+  print*, "1 test case witout change of coordinates"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX-ETA1MIN)/real(NPTS1-1,f64)
@@ -320,12 +320,10 @@ program test_general_elliptic_solver
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  
   call a11_field_mat%delete()
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
-  
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -968,9 +966,9 @@ program test_general_elliptic_solver
   SLL_DEALLOCATE_ARRAY(difference,ierr)
   SLL_DEALLOCATE_ARRAY(reference,ierr)
 
-  !************************************************************************************************
+  !****************************************************************************
   !        WHITH CHANGE OF COORDINATES AND ANALYTIC DATA
-  !************************************************************************************************
+  !*****************************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     5 test case with colella change of coordinates 
@@ -1873,9 +1871,9 @@ program test_general_elliptic_solver
 
 
 
- !************************************************************************************************
+ !******************************************************************************
   !        WHITH CHANGE OF COORDINATES AND NON-ANALYTIC SOURCE TERM
-  !************************************************************************************************
+  !****************************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     95  test case without change of coordinates 
