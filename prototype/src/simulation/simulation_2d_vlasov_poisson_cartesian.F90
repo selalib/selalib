@@ -317,6 +317,29 @@ contains
     sll_comp64,dimension(:),allocatable :: rho_mode
     
     sll_int32 :: nb_mode = 5
+    sll_real64, dimension(:), allocatable :: split_step_x1 
+    sll_real64, dimension(:), allocatable :: split_step_x2
+    sll_int32 :: nb_split_step
+    sll_int32 :: split_case 
+    sll_int32 :: split_istep
+    
+    
+    split_case = 1
+     
+    
+    select case (split_case)    
+      case (1) !Strang splitting VTV
+        nb_split_step = 1
+        SLL_ALLOCATE(split_step_x1(nb_split_step),ierr)
+        SLL_ALLOCATE(split_step_x2(nb_split_step+1),ierr)
+        split_step_x1(1) = 1._f64
+        split_step_x2(1) = 0.5_f64
+        split_step_x2(2) = 0.5_f64
+      case default
+        print *,'#split_case=', split_case,&
+          ' not defined'
+        stop       
+    end select
     
     
     
@@ -538,65 +561,69 @@ contains
 
       !print *,'#istep=',istep
       
+      do split_istep=1,nb_split_step
+        
+        !advection in v
+        do i = 1,local_size_x1
+          ig=i+global_indices(1)-1
+          alpha = -(efield(ig)+e_app(ig)) * split_step_x2(split_istep) * sim%dt
+          !print *,'alpha=',alpha,i
+          f1d(1:np_x2) = f_x2(i,1:np_x2)
+          f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
+          f_x2(i,1:np_x2) = f1d(1:np_x2)
+        end do
+      
+      
+        !transposition
+        call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
+        call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+        global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
+
+        !advection in x
+        do i = 1, local_size_x2
+          ig=global_indices(2)
+          alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) &
+            * split_step_x1(split_istep) *sim%dt
+          !print *,'alpha=',alpha,i
+          f1d(1:np_x1) = f_x1(1:np_x1,i)
+          f1d(1:np_x1) = sim%interp_x%interpolate_array_disp(np_x1, f1d(1:np_x1), alpha)
+          f_x1(1:np_x1,i)=f1d(1:np_x1)
+          !print *,'ok'
+        end do
+
+        !computation of electric field
+        rho_loc = 0._f64
+        do i=1,np_x1
+          rho_loc(i)=rho_loc(i)+sum(f_x1(i,1:local_size_x2))
+          !call mpi_reduce(tmp(1),rho(i),1,MPI_REAL8,MPI_SUM,0,sll_world_collective%comm,ierr)
+        end do    
+        call mpi_barrier(sll_world_collective%comm,ierr)
+        call mpi_allreduce(rho_loc,rho,np_x1,MPI_REAL8,MPI_SUM,sll_world_collective%comm,ierr)
+        rho = 1._f64-sim%mesh2d%delta_eta2*rho
+        call solve(poisson_1d, efield, rho)
+        if (sim%driven) then
+          call PFenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
+            sim%t0, sim%turn_drive_off)
+          do i = 1, np_x1
+            e_app(i) = sim%Edrmax*adr*sim%kx&
+            *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
+            -sim%omegadr*real(istep,f64)*sim%dt)
+          enddo
+        endif
+
+
+
+        !transposition
+        call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
+        call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
+        global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
+      
+      enddo
       
       !advection in v
       do i = 1,local_size_x1
         ig=i+global_indices(1)-1
-        alpha = -(efield(ig)+e_app(ig)) * 0.5_f64 * sim%dt
-        !print *,'alpha=',alpha,i
-        f1d(1:np_x2) = f_x2(i,1:np_x2)
-        f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
-        f_x2(i,1:np_x2) = f1d(1:np_x2)
-      end do
-      
-      
-      !transposition
-      call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-      call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
-      global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
-
-      !advection in x
-      do i = 1, local_size_x2
-        ig=global_indices(2)
-        alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) * sim%dt
-        !print *,'alpha=',alpha,i
-        f1d(1:np_x1) = f_x1(1:np_x1,i)
-        f1d(1:np_x1) = sim%interp_x%interpolate_array_disp(np_x1, f1d(1:np_x1), alpha)
-        f_x1(1:np_x1,i)=f1d(1:np_x1)
-        !print *,'ok'
-      end do
-
-      !computation of electric field
-      rho_loc = 0._f64
-      do i=1,np_x1
-        rho_loc(i)=rho_loc(i)+sum(f_x1(i,1:local_size_x2))
-        !call mpi_reduce(tmp(1),rho(i),1,MPI_REAL8,MPI_SUM,0,sll_world_collective%comm,ierr)
-      end do    
-      call mpi_barrier(sll_world_collective%comm,ierr)
-      call mpi_allreduce(rho_loc,rho,np_x1,MPI_REAL8,MPI_SUM,sll_world_collective%comm,ierr)
-      rho = 1._f64-sim%mesh2d%delta_eta2*rho
-      call solve(poisson_1d, efield, rho)
-      if (sim%driven) then
-        call PFenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
-          sim%t0, sim%turn_drive_off)
-        do i = 1, np_x1
-          e_app(i) = sim%Edrmax*adr*sim%kx&
-          *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
-          -sim%omegadr*real(istep,f64)*sim%dt)
-        enddo
-      endif
-
-
-
-      !transposition
-      call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
-      call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
-      global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
-
-      !advection in v
-      do i = 1,local_size_x1
-        ig=i+global_indices(1)-1
-        alpha = -(efield(ig)+e_app(ig)) * 0.5_f64 * sim%dt
+        alpha = -(efield(ig)+e_app(ig)) * split_step_x2(nb_split_step+1) * sim%dt
         !print *,'alpha=',alpha,i
         f1d(1:np_x2) = f_x2(i,1:np_x2)
         f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
@@ -686,6 +713,10 @@ contains
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)                    
           endif
           SLL_DEALLOCATE(f_visu,ierr)
+          
+                    !we substract f0
+          f_x1 = f_x1+f_x1_init          
+
 !            call write_scalar_field_2d(f) 
 !          call sll_gnuplot_rect_2d_parallel( &
 !            sim%mesh2d%eta1_min+(global_indices(1)-1)*sim%mesh2d%delta_eta1, &
