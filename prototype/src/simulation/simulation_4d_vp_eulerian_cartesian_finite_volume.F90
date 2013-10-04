@@ -2374,38 +2374,4 @@ subroutine fn_L2_norm(sim,norml2_glob)
 end subroutine fn_L2_norm
 
 
-
-!!$!compute the L2 norm for the test cases in one dimension
-!!$subroutine normL2(sim,w1,w2,res)
-!!$  !for instance, but after i want to code this sub with any dimension of vector
-!!$  !with Gauss-Legendre in velocity n the center point in position
-!!$ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
-!!$  sll_real64,dimension(sim%np_v1,sim%np_x1),intent(inout) :: w1,w2
-!!$  sll_real64, intent(out) :: res
-!!$  sll_int32 :: i,j
-!!$  res=0.0_f64
-!!$  do i=1,sim%np_v1
-!!$     do j=1,sim%np_x1
-!!$        res=res+(w1(i,j)-w2(i,j))*(w1(i,j)-w2(i,j))
-!!$     end do
-!!$  end do
-!!$  res=log(res*sim%mesh2dx%delta_eta1*sim%mesh2dv%delta_eta1/sim%degree)
-!!$  !check dv/degree
-!!$end subroutine normL2
-!!$
-!!$subroutine solnum(sim)
-!!$ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
-!!$  sll_real64,dimension(sim%np_v1,sim%np_x1),intent(inout) :: w1
-!!$sll_int32 :: i,j
-!!$
-!!$do iploc=0,sim%degree
-!!$   do jploc=0,sim%degree
-!!$      do ib1=1,sim%degree+1
-!!$         do jb1=1,sim%degree+1
-!!$            phi=lag(ib1,iploc+1)*lag(jb1,jploc+1)
-!!$         end do
-!!$      end do
-!!$   end do
-!!$end do
-
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
