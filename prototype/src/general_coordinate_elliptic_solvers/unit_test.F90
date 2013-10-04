@@ -2449,261 +2449,261 @@ program test_general_elliptic_solver
   !--------------------------------------------------------------------
 !!$  
   
-!!$  
-!!$  print*, "---------------------"
-!!$  print*, " 10 test case with colella change of coordinates"
-!!$  print*, " periodic-dirichlet boundary conditions"
-!!$  print*, " with non analytic source term " 
-!!$  print*, "---------------------"
-!!$  npts1 =  NUM_CELLS1 + 1
-!!$  npts2 =  NUM_CELLS2 + 1
-!!$  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
-!!$  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
-!!$  print *, 'h1 = ', h1
-!!$  print *, 'h2 = ', h2
-!!$  
-!!$  ! Table to represent the node values of phi
-!!$  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
-!!$  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
-!!$  SLL_ALLOCATE(difference(npts1,npts2),ierr)
-!!$   SLL_ALLOCATE(reference(npts1,npts2),ierr)
-!!$  values(:,:) = 0.0_f64
-!!$
-!!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
-!!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
-!!$  
-!!$  ! Second, initialize the coordinate transformation associated with this 
-!!$  ! problem.
-!!$   T => new_coordinate_transformation_2d_analytic( &
-!!$       "analytic", &
-!!$       mesh_2d, &
-!!$       sinprod_x1, &
-!!$       sinprod_x2, &
-!!$       sinprod_jac11, &
-!!$       sinprod_jac12, &
-!!$       sinprod_jac21, &
-!!$       sinprod_jac22)
-!!$  print *, 'initialized coordinate transformation'
-!!$  
-!!$  ! Thirdly, each field object must be initialized using the same logical
-!!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_one, &
-!!$       "a11", &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET) 
-!!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "a12", &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET)
-!!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "a21", &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET) 
-!!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_one, &
-!!$       "a22", &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET) 
-!!$  
-!!$ 
-!!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "c_field", &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET )
-!!$
-!!$  
-!!$
-!!$  allocate(point1(npts1-1))
-!!$  allocate(point2(npts2))
-!!$  allocate(tab_rho(npts1-1,npts2))
-!!$  do j=0,npts2-1
-!!$     do i=0,npts1-2
-!!$        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
-!!$        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
-!!$        tab_rho(i+1,j+1)  = source_term_chgt_perdir(point1(i+1),point2(j+1))
-!!$     end do
-!!$  end do
-!!$
-!!$  call initialize_ad2d_interpolator( &
-!!$       interp_2d_term_source, &
-!!$       NUM_CELLS1+1, &
-!!$       NUM_CELLS2+1, &
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2 )
-!!$  
-!!$  terme_source_interp => interp_2d_term_source
-!!$
-!!$
-!!$  rho => new_scalar_field_2d_discrete_alt( &
-!!$       tab_rho, &
-!!$       "rho10", &
-!!$       terme_source_interp, &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       point1,&
-!!$       npts1-1,&
-!!$       point2,&
-!!$       npts2)
-!!$
   
-!!$  call initialize_ad2d_interpolator( &
-!!$       interp_2d, &
-!!$       NUM_CELLS1+1, &
-!!$       NUM_CELLS2+1, &
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2 )
+  print*, "---------------------"
+  print*, " 10 test case with colella change of coordinates"
+  print*, " periodic-dirichlet boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
   
-!!$  
-!!$  phi => new_scalar_field_2d_discrete_alt( &
-!!$       values, &
-!!$       "phi10", &
-!!$       interp_2d, &
-!!$       T, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET)
-!!$  
-!!$  print *, 'initialized fields...'
-!!$  
-!!$  call set_time_mark(t_reference)
-!!$  
-!!$  call initialize_general_elliptic_solver( &
-!!$       es, &
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2, &
-!!$       NUM_CELLS1, &
-!!$       NUM_CELLS2, &
-!!$       ES_GAUSS_LEGENDRE, &
-!!$       ES_GAUSS_LEGENDRE, &
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX)
-!!$
-!!$  t10i = time_elapsed_since(t_reference) 
-!!$  
-!!$  print *, 'Initialized ES object'
-!!$  call set_time_mark(t_reference)
-!!$  
-!!$
-!!$
-!!$  call factorize_mat_es(&
-!!$       es, &
-!!$       a11_field_mat, &
-!!$       a12_field_mat,&
-!!$       a21_field_mat,&
-!!$       a22_field_mat,&
-!!$       c_field)
-!!$  
-!!$  ! solve the field
-!!$  call solve_general_coordinates_elliptic_eq(&
-!!$       es,&
-!!$       rho,&
-!!$       phi)
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+   SLL_ALLOCATE(reference(npts1,npts2),ierr)
+  values(:,:) = 0.0_f64
+
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
-!!$  t10e = time_elapsed_since(t_reference)
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+   T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET) 
+  
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET)
+  
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+ 
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET )
+
+  
+
+  allocate(point1(npts1-1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1-1,npts2))
+  do j=0,npts2-1
+     do i=0,npts1-2
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_perdir(point1(i+1),point2(j+1))
+     end do
+  end do
+
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
+
+
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho10", &
+       terme_source_interp, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       point1,&
+       npts1-1,&
+       point2,&
+       npts2)
+
 !!$  
-!!$  print *, 'Compare the values of the transformation at the nodes: '
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
 !!$  
-!!$  acc10 = 0.0_f64
-!!$  integrale_solution = 0.0 
-!!$  integrale_solution_exacte = 0.0
-!!$  do j=0,npts2-1
-!!$     do i=0,npts1-1
-!!$        eta1       = real(i,f64)*h1 + ETA1MIN
-!!$        eta2       = real(j,f64)*h2 + ETA2MIN
-!!$        
-!!$        node_val   =phi%value_at_point(eta1,eta2)
-!!$        !print*, 'rer'
-!!$        ref        = sol_exacte_chgt_perdir(eta1,eta2)
-!!$        calculated(i+1,j+1) = node_val
-!!$        difference(i+1,j+1) = ref-node_val
-!!$        reference(i+1,j+1) = ref
-!!$        if(PRINT_COMPARISON) then
-!!$           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-!!$                'theoretical = ', ref,'difference=',ref-node_val
-!!$        end if
-!!$        acc10        = acc10 + abs(node_val-ref)
-!!$        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
-!!$        
-!!$        if ( i < npts1-1 .and. j < npts2-1) then
-!!$           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-!!$           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
-!!$           
-!!$        end if
-!!$     end do
-!!$  end do
-!!$  print*, 'integrale de la solution=',integrale_solution,&
-!!$       'integrale de la solution exacte=',integrale_solution_exacte
-!!$
-!!$  call phi%write_to_file(0)
-!!$  ! delete things...
-!!$  call delete(es)
-!!$  call rho%delete()
-!!$  call c_field%delete()
-!!$  call phi%delete()
-!!$  call a11_field_mat%delete()
-!!$  call a12_field_mat%delete()
-!!$  call a21_field_mat%delete()
-!!$  call a22_field_mat%delete()
-!!$
-!!$  call T%delete()
+  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi10", &
+       interp_2d, &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET)
+  
+  print *, 'initialized fields...'
+  
+  call set_time_mark(t_reference)
+  
+  call initialize_general_elliptic_solver( &
+       es, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       ES_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+
+  t10i = time_elapsed_since(t_reference) 
+  
+  print *, 'Initialized ES object'
+  call set_time_mark(t_reference)
+  
+
+
+  call factorize_mat_es(&
+       es, &
+       a11_field_mat, &
+       a12_field_mat,&
+       a21_field_mat,&
+       a22_field_mat,&
+       c_field)
+  
+  ! solve the field
+  call solve_general_coordinates_elliptic_eq(&
+       es,&
+       rho,&
+       phi)
 !!$  
-!!$  DEALLOCATE(values)
-!!$  DEALLOCATE(calculated)
-!!$  DEALLOCATE(difference)
-!!$  DEALLOCATE(reference)
-!!$  DEALLOCATE(point1)
-!!$  DEALLOCATE(point2)
-!!$  DEALLOCATE(tab_rho)
+  t10e = time_elapsed_since(t_reference)
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc10 = 0.0_f64
+  integrale_solution = 0.0 
+  integrale_solution_exacte = 0.0
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   =phi%value_at_point(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_perdir(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1) = ref
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref,'difference=',ref-node_val
+        end if
+        acc10        = acc10 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
+     end do
+  end do
+  print*, 'integrale de la solution=',integrale_solution,&
+       'integrale de la solution exacte=',integrale_solution_exacte
+
+  call phi%write_to_file(0)
+  ! delete things...
+  call delete(es)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(reference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
 
 !!$
 !!$  !--------------------------------------------------------------------
@@ -2714,261 +2714,261 @@ program test_general_elliptic_solver
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  
+!!$  
+  print*, "---------------------"
+  print*, " 11 test case with colella change of coordinates"
+  print*, " dirichlet-dirichlet boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
   
-!!$  print*, "---------------------"
-!!$  print*, " 11 test case with colella change of coordinates"
-!!$  print*, " dirichlet-dirichlet boundary conditions"
-!!$  print*, " with non analytic source term " 
-!!$  print*, "---------------------"
-!!$  npts1 =  NUM_CELLS1 + 1
-!!$  npts2 =  NUM_CELLS2 + 1
-!!$  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
-!!$  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
-!!$  print *, 'h1 = ', h1
-!!$  print *, 'h2 = ', h2
-!!$  
-!!$  ! Table to represent the node values of phi
-!!$  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
-!!$  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
-!!$  SLL_ALLOCATE(difference(npts1,npts2),ierr)
-!!$  SLL_ALLOCATE(reference(npts1,npts2),ierr)
-!!$
-!!$  values(:,:) = 0.0_f64
-!!$  
-!!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
-!!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
-!!$  
-!!$  ! Second, initialize the coordinate transformation associated with this 
-!!$  ! problem.
-!!$   T => new_coordinate_transformation_2d_analytic( &
-!!$       "analytic", &
-!!$       mesh_2d, &
-!!$       sinprod_x1, &
-!!$       sinprod_x2, &
-!!$       sinprod_jac11, &
-!!$       sinprod_jac12, &
-!!$       sinprod_jac21, &
-!!$       sinprod_jac22)
-!!$  print *, 'initialized coordinate transformation'
-!!$  
-!!$  ! Thirdly, each field object must be initialized using the same logical
-!!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_one, &
-!!$       "a11", &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET) 
-!!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "a12", &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET)
-!!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "a21", &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET) 
-!!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_one, &
-!!$       "a22", &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET) 
-!!$  
-!!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "c_field", &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET )
-!!$
-!!$
-!!$
-!!$  allocate(point1(npts1))
-!!$  allocate(point2(npts2))
-!!$  allocate(tab_rho(npts1,npts2))
-!!$  do j=0,npts2-1
-!!$     do i=0,npts1-1
-!!$        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
-!!$        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
-!!$        tab_rho(i+1,j+1)  = source_term_chgt_dirdir(point1(i+1),point2(j+1))
-!!$     end do
-!!$  end do
-!!$
-!!$  call initialize_ad2d_interpolator( &
-!!$       interp_2d_term_source, &
-!!$       NUM_CELLS1+1, &
-!!$       NUM_CELLS2+1, &
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2 )
-!!$  
-!!$  terme_source_interp => interp_2d_term_source
-!!$
-!!$
-!!$
-!!$  rho => new_scalar_field_2d_discrete_alt( &
-!!$       tab_rho, &
-!!$       "rho11", &
-!!$       terme_source_interp, &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       point1,&
-!!$       npts1,&
-!!$       point2,&
-!!$       npts2)
-!!$
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
+
+  values(:,:) = 0.0_f64
   
-!!$  call initialize_ad2d_interpolator( &
-!!$       interp_2d, &
-!!$       NUM_CELLS1+1, &
-!!$       NUM_CELLS2+1, &
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2 )
-    
-!!$  phi => new_scalar_field_2d_discrete_alt( &
-!!$       values, &
-!!$       "phi11", &
-!!$       interp_2d, &
-!!$       T, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET)
-!!$  
-!!$  print *, 'initialized fields...'
-!!$  call set_time_mark(t_reference)
-!!$  
-!!$  call initialize_general_elliptic_solver( &
-!!$       es, &
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2, &
-!!$       NUM_CELLS1, &
-!!$       NUM_CELLS2, &
-!!$       ES_GAUSS_LEGENDRE, &
-!!$       ES_GAUSS_LEGENDRE, &
-!!$       SLL_DIRICHLET, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX)
-!!$  
-!!$  t11i = time_elapsed_since(t_reference) 
-!!$
-!!$  !print *, 'Initialized ES object'
-!!$  call set_time_mark(t_reference)
-!!$
-!!$  call factorize_mat_es(&
-!!$       es, &
-!!$       a11_field_mat, &
-!!$       a12_field_mat,&
-!!$       a21_field_mat,&
-!!$       a22_field_mat,&
-!!$       c_field)
-!!$
-!!$  !print*, 'solve'
-!!$  ! solve the field
-!!$  call solve_general_coordinates_elliptic_eq(&
-!!$       es,&
-!!$       rho,&
-!!$       phi)
-!!$ ! print*, 'aye'
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
   
-!!$  t11e = time_elapsed_since(t_reference)
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+   T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET) 
+  
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET)
+  
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET) 
+  
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET )
+
+
+
+  allocate(point1(npts1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1,npts2))
+  do j=0,npts2-1
+     do i=0,npts1-1
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_dirdir(point1(i+1),point2(j+1))
+     end do
+  end do
+
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
+
+
+
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho11", &
+       terme_source_interp, &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       point1,&
+       npts1,&
+       point2,&
+       npts2)
+
 !!$  
-!!$  print *, 'Compare the values of the transformation at the nodes: '
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+!!$    
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi11", &
+       interp_2d, &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET)
+  
+  print *, 'initialized fields...'
+  call set_time_mark(t_reference)
+  
+  call initialize_general_elliptic_solver( &
+       es, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       ES_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+  
+  t11i = time_elapsed_since(t_reference) 
+
+  !print *, 'Initialized ES object'
+  call set_time_mark(t_reference)
+
+  call factorize_mat_es(&
+       es, &
+       a11_field_mat, &
+       a12_field_mat,&
+       a21_field_mat,&
+       a22_field_mat,&
+       c_field)
+
+  !print*, 'solve'
+  ! solve the field
+  call solve_general_coordinates_elliptic_eq(&
+       es,&
+       rho,&
+       phi)
+ ! print*, 'aye'
 !!$  
-!!$  acc11 = 0.0_f64
-!!$  integrale_solution_exacte = 0.0
-!!$  integrale_solution = 0.0
-!!$  do j=0,npts2-1
-!!$     do i=0,npts1-1
-!!$        eta1       = real(i,f64)*h1 + ETA1MIN
-!!$        eta2       = real(j,f64)*h2 + ETA2MIN
-!!$        
-!!$        node_val   =phi%value_at_point(eta1,eta2)
-!!$        !print*, 'rer'
-!!$        ref        = sol_exacte_chgt_dirdir(eta1,eta2)
-!!$        calculated(i+1,j+1) = node_val
-!!$        difference(i+1,j+1) = ref-node_val
-!!$        reference(i+1,j+1)  = ref
-!!$
-!!$        if(PRINT_COMPARISON) then
-!!$           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-!!$                'theoretical = ', ref, 'difference=', ref-node_val
-!!$        end if
-!!$        acc11        = acc11 + abs(node_val-ref)
-!!$        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
-!!$        
-!!$        if ( i < npts1-1 .and. j < npts2-1) then
-!!$           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-!!$           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
-!!$           
-!!$        end if
-!!$     end do
-!!$  end do
-!!$  print*, 'integrale de la solution=', integrale_solution,&
-!!$       'integrale de la solution exacte=', integrale_solution_exacte
-!!$  
-!!$  call phi%write_to_file(0)
-!!$  ! delete things...
-!!$  call delete(es)
-!!$  call rho%delete()
-!!$  call c_field%delete()
-!!$  call phi%delete()
-!!$  call a11_field_mat%delete()
-!!$  call a12_field_mat%delete()
-!!$  call a21_field_mat%delete()
-!!$  call a22_field_mat%delete()
-!!$
-!!$  call T%delete()
-!!$  
-!!$  DEALLOCATE(values)
-!!$  DEALLOCATE(calculated)
-!!$  DEALLOCATE(difference)
-!!$  DEALLOCATE(reference)
-!!$  DEALLOCATE(point1)
-!!$  DEALLOCATE(point2)
-!!$  DEALLOCATE(tab_rho)
+  t11e = time_elapsed_since(t_reference)
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc11 = 0.0_f64
+  integrale_solution_exacte = 0.0
+  integrale_solution = 0.0
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   =phi%value_at_point(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_dirdir(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1)  = ref
+
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref, 'difference=', ref-node_val
+        end if
+        acc11        = acc11 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
+     end do
+  end do
+  print*, 'integrale de la solution=', integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
+  
+  call phi%write_to_file(0)
+  ! delete things...
+  call delete(es)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(reference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -2978,260 +2978,259 @@ program test_general_elliptic_solver
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  
-!!$  
-!!$  print*, "---------------------"
-!!$  print*, " 12 test case with colella change of coordinates"
-!!$  print*, " dirichlet-periodic  boundary conditions"
-!!$  print*, " with non analytic source term " 
-!!$  print*, "---------------------"
-!!$  npts1 =  NUM_CELLS1 + 1
-!!$  npts2 =  NUM_CELLS2 + 1
-!!$  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
-!!$  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
-!!$  print *, 'h1 = ', h1
-!!$  print *, 'h2 = ', h2
-!!$  
-!!$  ! Table to represent the node values of phi
-!!$  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
-!!$  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
-!!$  SLL_ALLOCATE(difference(npts1,npts2),ierr)
-!!$  SLL_ALLOCATE(reference(npts1,npts2),ierr)
-!!$  values(:,:) = 0.0_f64
-!!$  
-!!$  ! First thing, initialize the logical mesh associated with this problem.        
-!!$  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
-!!$       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
-!!$  
-!!$  ! Second, initialize the coordinate transformation associated with this 
-!!$  ! problem.
-!!$  T => new_coordinate_transformation_2d_analytic( &
-!!$       "analytic", &
-!!$       mesh_2d, &
-!!$       sinprod_x1, &
-!!$       sinprod_x2, &
-!!$       sinprod_jac11, &
-!!$       sinprod_jac12, &
-!!$       sinprod_jac21, &
-!!$       sinprod_jac22)
-!!$  print *, 'initialized coordinate transformation'
-!!$  
-!!$  ! Thirdly, each field object must be initialized using the same logical
-!!$  ! mesh and coordinate transformation.
-!!$  a11_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_one, &
-!!$       "a11", &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC) 
-!!$  
-!!$  a12_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "a12", &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC)
-!!$  
-!!$  a21_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "a21", &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC) 
-!!$  
-!!$  a22_field_mat => new_scalar_field_2d_analytic_alt( &
-!!$       func_one, &
-!!$       "a22", &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC) 
-!!$  
-!!$  
-!!$  c_field => new_scalar_field_2d_analytic_alt( &
-!!$       func_zero, &
-!!$       "c_field", &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC )
-!!$  
-!!$  
-!!$  
-!!$  allocate(point1(npts1))
-!!$  allocate(point2(npts2-1))
-!!$  allocate(tab_rho(npts1,npts2-1))
-!!$  do j=0,npts2-2
-!!$     do i=0,npts1-1
-!!$        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
-!!$        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
-!!$        tab_rho(i+1,j+1)  = source_term_chgt_dirper(point1(i+1),point2(j+1))
-!!$     end do
-!!$  end do
-!!$  
-!!$  call initialize_ad2d_interpolator( &
-!!$       interp_2d_term_source, &
-!!$       NUM_CELLS1+1, &
-!!$       NUM_CELLS2+1, &
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2 )
-!!$  
-!!$  terme_source_interp => interp_2d_term_source
-!!$
-!!$
-!!$  rho => new_scalar_field_2d_discrete_alt( &
-!!$       tab_rho, &
-!!$       "rho12", &
-!!$       terme_source_interp, &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       point1,&
-!!$       npts1,&
-!!$       point2,&
-!!$       npts2-1)
-!!$
   
-!!$  call initialize_ad2d_interpolator( &
-!!$       interp_2d, &
-!!$       NUM_CELLS1+1, &
-!!$       NUM_CELLS2+1, &
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2 )
+  print*, "---------------------"
+  print*, " 12 test case with colella change of coordinates"
+  print*, " dirichlet-periodic  boundary conditions"
+  print*, " with non analytic source term " 
+  print*, "---------------------"
+  npts1 =  NUM_CELLS1 + 1
+  npts2 =  NUM_CELLS2 + 1
+  h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
+  h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
+  print *, 'h1 = ', h1
+  print *, 'h2 = ', h2
   
-!!$  phi => new_scalar_field_2d_discrete_alt( &
-!!$       values, &
-!!$       "phi12", &
-!!$       interp_2d, &
-!!$       T, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC)
-!!$   
-!!$  print *, 'initialized fields...'
-!!$  
-!!$  call set_time_mark(t_reference)
-!!$
-!!$  call initialize_general_elliptic_solver( &
-!!$       es, &
-!!$       SPLINE_DEG1, &
-!!$       SPLINE_DEG2, &
-!!$       NUM_CELLS1, &
-!!$       NUM_CELLS2, &
-!!$       ES_GAUSS_LEGENDRE, &
-!!$       ES_GAUSS_LEGENDRE, &
-!!$       SLL_DIRICHLET,&
-!!$       SLL_DIRICHLET,&
-!!$       SLL_PERIODIC, &
-!!$       SLL_PERIODIC,&
-!!$       ETA1MIN, &
-!!$       ETA1MAX, &
-!!$       ETA2MIN, &
-!!$       ETA2MAX)
-!!$  
-!!$  t12i = time_elapsed_since(t_reference) 
-!!$
-!!$  print *, 'Initialized ES object'
-!!$  call set_time_mark(t_reference)
-!!$
-!!$  
-!!$  call factorize_mat_es(&
-!!$       es, &
-!!$       a11_field_mat, &
-!!$       a12_field_mat,&
-!!$       a21_field_mat,&
-!!$       a22_field_mat,&
-!!$       c_field, &
-!!$       rho)
-!!$  
-!!$  ! solve the field
-!!$  call solve_general_coordinates_elliptic_eq(&
-!!$       es,&
-!!$       rho,&
-!!$       phi)
-!!$  
-!!$  t12e = time_elapsed_since(t_reference)
-!!$  
-!!$  print *, 'Compare the values of the transformation at the nodes: '
-!!$  
-!!$  acc12 = 0.0_f64
-!!$  integrale_solution = 0.0
-!!$  integrale_solution_exacte = 0.0
-!!$  
-!!$  do j=0,npts2-1
-!!$     do i=0,npts1-1
-!!$        eta1       = real(i,f64)*h1 + ETA1MIN
-!!$        eta2       = real(j,f64)*h2 + ETA2MIN
-!!$        
-!!$        node_val   = phi%value_at_point(eta1,eta2)
-!!$        !print*, 'rer'
-!!$        ref        = sol_exacte_chgt_dirper(eta1,eta2)
-!!$        calculated(i+1,j+1) = node_val
-!!$        difference(i+1,j+1) = ref-node_val
-!!$        reference(i+1,j+1)  = ref
-!!$        if(PRINT_COMPARISON) then
-!!$           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-!!$                'theoretical = ', ref,'difference=', ref-node_val
-!!$        end if
-!!$        acc12        = acc12 + abs(node_val-ref)
-!!$        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
-!!$        
-!!$        if ( i < npts1-1 .and. j < npts2-1) then
-!!$           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-!!$           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
-!!$           
-!!$        end if
-!!$     end do
-!!$  end do
-!!$  print*, 'integrale de la solution =', integrale_solution,&
-!!$       'integrale de la solution exacte=', integrale_solution_exacte
-!!$  call phi%write_to_file(0)
-!!$  ! delete things...
-!!$  call delete(es)
-!!$  call rho%delete()
-!!$  call c_field%delete()
-!!$  call phi%delete()
-!!$  call a11_field_mat%delete()
-!!$  call a12_field_mat%delete()
-!!$  call a21_field_mat%delete()
-!!$  call a22_field_mat%delete()
-!!$
-!!$  call T%delete()
-!!$  
-!!$  DEALLOCATE(values)
-!!$  DEALLOCATE(calculated)
-!!$  DEALLOCATE(difference)
-!!$  DEALLOCATE(reference)
-!!$  DEALLOCATE(point1)
-!!$  DEALLOCATE(point2)
-!!$  DEALLOCATE(tab_rho)
+  ! Table to represent the node values of phi
+  SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
+  SLL_ALLOCATE(calculated(npts1,npts2),ierr)
+  SLL_ALLOCATE(difference(npts1,npts2),ierr)
+  SLL_ALLOCATE(reference(npts1,npts2),ierr)
+  values(:,:) = 0.0_f64
+  
+  ! First thing, initialize the logical mesh associated with this problem.        
+  mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
+       ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
+  
+  ! Second, initialize the coordinate transformation associated with this 
+  ! problem.
+  T => new_coordinate_transformation_2d_analytic( &
+       "analytic", &
+       mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22)
+  print *, 'initialized coordinate transformation'
+  
+  ! Thirdly, each field object must be initialized using the same logical
+  ! mesh and coordinate transformation.
+  a11_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a11", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC) 
+  
+  a12_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a12", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+  
+  a21_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "a21", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC) 
+  
+  a22_field_mat => new_scalar_field_2d_analytic_alt( &
+       func_one, &
+       "a22", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC) 
+  
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC )
+  
+  
+  
+  allocate(point1(npts1))
+  allocate(point2(npts2-1))
+  allocate(tab_rho(npts1,npts2-1))
+  do j=0,npts2-2
+     do i=0,npts1-1
+        point1(i+1)       = real(i,f64)*h1 + ETA1MIN
+        point2(j+1)       = real(j,f64)*h2 + ETA2MIN
+        tab_rho(i+1,j+1)  = source_term_chgt_dirper(point1(i+1),point2(j+1))
+     end do
+  end do
+  
+  call initialize_ad2d_interpolator( &
+       interp_2d_term_source, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+  
+  terme_source_interp => interp_2d_term_source
 
+
+  rho => new_scalar_field_2d_discrete_alt( &
+       tab_rho, &
+       "rho12", &
+       terme_source_interp, &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       point1,&
+       npts1,&
+       point2,&
+       npts2-1)
+
+!!$  
+  call initialize_ad2d_interpolator( &
+       interp_2d, &
+       NUM_CELLS1+1, &
+       NUM_CELLS2+1, &
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       SPLINE_DEG1, &
+       SPLINE_DEG2 )
+!!$  
+  phi => new_scalar_field_2d_discrete_alt( &
+       values, &
+       "phi12", &
+       interp_2d, &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC)
+   
+  print *, 'initialized fields...'
+  
+  call set_time_mark(t_reference)
+
+  call initialize_general_elliptic_solver( &
+       es, &
+       SPLINE_DEG1, &
+       SPLINE_DEG2, &
+       NUM_CELLS1, &
+       NUM_CELLS2, &
+       ES_GAUSS_LEGENDRE, &
+       ES_GAUSS_LEGENDRE, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC,&
+       ETA1MIN, &
+       ETA1MAX, &
+       ETA2MIN, &
+       ETA2MAX)
+  
+  t12i = time_elapsed_since(t_reference) 
+
+  print *, 'Initialized ES object'
+  call set_time_mark(t_reference)
+
+  
+  call factorize_mat_es(&
+       es, &
+       a11_field_mat, &
+       a12_field_mat,&
+       a21_field_mat,&
+       a22_field_mat,&
+       c_field)
+  
+  ! solve the field
+  call solve_general_coordinates_elliptic_eq(&
+       es,&
+       rho,&
+       phi)
+  
+  t12e = time_elapsed_since(t_reference)
+  
+  print *, 'Compare the values of the transformation at the nodes: '
+  
+  acc12 = 0.0_f64
+  integrale_solution = 0.0
+  integrale_solution_exacte = 0.0
+  
+  do j=0,npts2-1
+     do i=0,npts1-1
+        eta1       = real(i,f64)*h1 + ETA1MIN
+        eta2       = real(j,f64)*h2 + ETA2MIN
+        
+        node_val   = phi%value_at_point(eta1,eta2)
+        !print*, 'rer'
+        ref        = sol_exacte_chgt_dirper(eta1,eta2)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        reference(i+1,j+1)  = ref
+        if(PRINT_COMPARISON) then
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+                'theoretical = ', ref,'difference=', ref-node_val
+        end if
+        acc12        = acc12 + abs(node_val-ref)
+        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        
+        if ( i < npts1-1 .and. j < npts2-1) then
+           integrale_solution = integrale_solution + node_val*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           
+        end if
+     end do
+  end do
+  print*, 'integrale de la solution =', integrale_solution,&
+       'integrale de la solution exacte=', integrale_solution_exacte
+  call phi%write_to_file(0)
+  ! delete things...
+  call delete(es)
+  call rho%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
+
+  call T%delete()
+  
+  DEALLOCATE(values)
+  DEALLOCATE(calculated)
+  DEALLOCATE(difference)
+  DEALLOCATE(reference)
+  DEALLOCATE(point1)
+  DEALLOCATE(point2)
+  DEALLOCATE(tab_rho)
+!!$
 
   print*, '------------------------------------------------------'
   print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 

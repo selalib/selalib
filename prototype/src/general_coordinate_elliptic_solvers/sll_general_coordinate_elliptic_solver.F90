@@ -194,8 +194,8 @@ contains ! *******************************************************************
    SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
    SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
-   SLL_ALLOCATE(es%masse(solution_size),ierr)
-   SLL_ALLOCATE(es%stiff(solution_size),ierr)
+   SLL_ALLOCATE(es%masse(vec_sz),ierr)!solution_size),ierr)
+   SLL_ALLOCATE(es%stiff(vec_sz),ierr)!solution_size),ierr)
    es%rho_vec(:) = 0.0
    es%phi_vec(:) = 0.0
    es%masse(:) = 0.0
@@ -404,8 +404,6 @@ contains ! *******************************************************************
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
 
-    
-
     full_Matrix(:,:) = 0.0_f64
     mesh => c_field%get_logical_mesh( )
 
@@ -451,11 +449,11 @@ contains ! *******************************************************************
                full_Matrix,&
                es%masse,&
                es%stiff)
+
           
        end do
     end do
 
-    !print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
    
    ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
@@ -1417,7 +1415,7 @@ contains ! *******************************************************************
     bc_bottom = es%bc_bottom
     bc_top    = es%bc_top
 
-  
+ 
 
     do mm = 0,es%spline_degree2
        index3 = cell_j + mm
@@ -1452,6 +1450,7 @@ contains ! *******************************************************************
           !print*, x,b
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
+
           do nn = 0,es%spline_degree2
              
              index4 = cell_j + nn
@@ -1483,7 +1482,7 @@ contains ! *******************************************************************
                 y         = index2 + (index4-1)*nbsp1
                 bprime    =  nn * ( es%spline_degree1 + 1 ) + j + 1
                 li_Aprime = es%local_to_global_spline_indices(bprime, &
-                                                               cell_index)
+                                                              cell_index)
                 elt_mat_global = &
                      M_c_loc(b, bprime) - &
                      K_a11_loc(b, bprime) - &
@@ -1500,19 +1499,19 @@ contains ! *******************************************************************
 !!$                     K_a22_loc(b, bprime)
                 !print*, 'elt', full_Matrix(x,y)
                 ! elt_masse = Masse_loc(b,bprime)
-                
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
                    ! call add_MVal(csr_masse,elt_masse,li_A,li_Aprime)
                 end if
                 
              end do
+             
           end do
        end do
     end do
     !print*, '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
     !print *, 'a = ', csr_masse%opr_a(1:csr_masse%opi_ia(2)-1)
-    
+    !print*, cell_j,cell_i
   end subroutine local_to_global_matrices
 
 
