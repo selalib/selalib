@@ -457,12 +457,16 @@ contains
             i2 = glob_ind(2)
             i3 = glob_ind(3)
             i4 = glob_ind(4)
+!baoter
 !VG!            theta_j = sim%eta2_grid(i2)
 !VG!            phi_k = sim%eta3_grid(i3)
+!VG!            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
+!VG!              sim%feq_xyvpar(i1,i2,i4) * &
+!VG!              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
+!VG!              2._f64*sll_pi*real(sim%nmode) / Lphi*phi_k))
             sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
-              sim%feq_xyvpar(i1,i2,i4) * &
-              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
-              2._f64*sll_pi*real(sim%nmode) / Lphi*phi_k))
+              sim%feq_xyvpar(i1,i2,i4)
+!eaoter
           end do
         end do
       end do
@@ -483,7 +487,6 @@ contains
     sll_int32 :: iloc1, iloc2, iloc3, iloc4
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc3d_x3
-    sll_real64, dimension(:,:), pointer :: ptr_array2d_x1x2
 
     type(sll_time_mark) :: tm ! delete this eventually
     sll_real64 :: time   ! delete this eventually
@@ -662,10 +665,6 @@ contains
       sim%spline_degree_eta2)    
 
     !----->
-    ! THE FOLLOWING WOULD NOT WORK, THE SAME POINTER IS USED IN BOTH CASES...
-    ! NEVERTHELESS, THE INTERFACE HAS CHANGED, SO AN INTERMEDIARY POINTER
-    ! SHOULD NOT BE NEEDED NOW...
-    ptr_array2d_x1x2 => sim%rho3d_x1x2(:,:,1)
     sim%rho2d => new_scalar_field_2d_discrete_alt( &
       "rho2d_x1x2", &
       sim%interp_rho2d, &     
@@ -675,10 +674,6 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
-    call sim%rho2d%set_field_data( ptr_array2d_x1x2 )
-    call sim%rho2d%update_interpolation_coefficients( )
-
-    ptr_array2d_x1x2 => sim%phi3d_x1x2(:,:,1)
     sim%phi2d => new_scalar_field_2d_discrete_alt( &
       "phi2d_x1x2", &
       sim%interp_phi2d, &     
@@ -687,10 +682,6 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
-
-    call sim%phi2d%set_field_data( ptr_array2d_x1x2 )
-    call sim%phi2d%update_interpolation_coefficients( )
-
   end subroutine allocate_QN_DK
 
 
@@ -871,7 +862,6 @@ contains
       end do
     end do
       
-
     !--> Radial profile initialisation
     call init_profiles_DK(sim)
 
@@ -893,6 +883,30 @@ contains
   !----------------------------------------------------
   subroutine solve_QN( sim )
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32 :: ieta1, ieta2, iloc3
+    sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
+
+    call compute_local_sizes_3d( sim%layout3d_x1x2, &
+      loc3d_sz_x1, &
+      loc3d_sz_x2, &
+      loc3d_sz_x3)
+
+    do iloc3 = 1,loc3d_sz_x3
+      call sim%rho2d%set_field_data( sim%rho3d_x1x2(:,:,iloc3) )
+      call sim%rho2d%update_interpolation_coefficients( )
+      call solve_general_coordinates_elliptic_eq( &
+        sim%QNS, &
+        sim%rho2d, &
+        sim%phi2d)
+      do ieta2 = 1,sim%Neta2
+        do ieta1 = 1,sim%Neta1
+          sim%phi3d_x1x2(ieta1,ieta2,iloc3) = sim%phi2d%value_at_indices(ieta1,ieta2)
+        end do
+      end do
+    end do
+    if (sim%my_rank.eq.0) &
+      call sim%phi2d%write_to_file(iloc3)
   end subroutine solve_QN
 
 
