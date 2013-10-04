@@ -65,8 +65,9 @@ program DK_hybrid_4d
 
   if (my_rank.eq.0) &
     call transf_xy%write_to_file()
-!VG!  !** Fisrt step ***
-!VG!  call first_step_4d_DK_hybrid(simulation)
+
+  !** Fisrt step ***
+  call first_step_4d_DK_hybrid(simulation)
 
 !VG!  call simulation%run( )
 !VG!  call delete(simulation)
