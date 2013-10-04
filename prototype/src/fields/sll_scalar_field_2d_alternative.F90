@@ -604,8 +604,10 @@ contains   ! *****************************************************************
   ! in the heap...
   subroutine delete_field_2d_discrete_alt( field )
     class(sll_scalar_field_2d_discrete_alt), intent(out) :: field
-    ! just nullify pointers, nothing to deallocate that this object owns.
-    SLL_DEALLOCATE(field%values,ierr)
+    sll_int32 :: ierr
+    if( associated(field%values) ) then
+       SLL_DEALLOCATE(field%values,ierr)
+    end if
     nullify(field%T)
     nullify(field%interp_2d)
     nullify(field%point1_1d)
