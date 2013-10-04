@@ -476,7 +476,7 @@ contains ! *******************************************************************
     
     type(general_coordinate_elliptic_solver) :: es
     type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
-    class(sll_scalar_field_2d_base), pointer     :: rho
+    class(sll_scalar_field_2d_base), intent(in)     :: rho
     type(sll_logical_mesh_2d), pointer :: mesh
     sll_int32 :: i
     sll_int32 :: j,ierr
@@ -860,7 +860,7 @@ contains ! *******************************************************************
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
-    class(sll_scalar_field_2d_base), pointer     :: rho
+    class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64 :: epsi
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_int32 :: bc_left    
