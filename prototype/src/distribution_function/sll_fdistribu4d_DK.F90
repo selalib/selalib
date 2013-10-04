@@ -238,8 +238,9 @@ module sll_fdistribu4d_DK
     sll_int32 :: Npt1, Npt2, Nvpar
     sll_int32 :: ix, iy, ivpar
 
-    Npt1 = size(xgrid_2d,1)
-    Npt2 = size(xgrid_2d,2)
+    Npt1  = size(xgrid_2d,1)
+    Npt2  = size(xgrid_2d,2)
+    Nvpar = size(vpar_grid,1)
 
     do ivpar = 1,Nvpar
       do iy = 1,Npt2

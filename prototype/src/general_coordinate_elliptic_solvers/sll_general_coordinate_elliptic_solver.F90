@@ -611,7 +611,7 @@ contains ! *******************************************************************
 !!$    ! The quadrature degree is the number of splines that intersect a cell.
 !!$ !   call set_time_mark(timer)
 !!$    total_num_splines_loc = es%total_num_splines_loc
-!!$    SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
+!!$    !SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
 
 !!$    SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
 !!$    SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -657,7 +657,7 @@ contains ! *******************************************************************
 !!$               a21_field_mat, &
 !!$               a22_field_mat, &
 !!$               c_field, &
-!!$              ! rho, &
+!!$               !rho, &
 
 !!$              ! M_rho_loc, &
 !!$               Masse_loc,&
@@ -707,7 +707,7 @@ contains ! *******************************************************************
 !!$    
 !!$    !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
 !!$    ! apr_B is the source, apr_U is the solution
-!!$    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+!!$    !SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
 
 !!$    SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
 !!$    SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
@@ -1078,13 +1078,6 @@ contains ! *******************************************************************
                dbiatx1,&
                2 )
 
-      !    print*, 'point=',gtmp1,gtmp2,local_spline_index1
-          !print*, 'splin1=',dbiatx1
-          !print*, 'knot1',obj%knots1
-         ! print*, 'rho'
-     !     val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
-         ! print*, 'valeur rho=',val_f,2*(2.0*sll_pi)**2*cos(2.0*sll_pi*gpt1)*cos(2.0*sll_pi*gpt2)
-         ! print*, 'val',gpt1,gpt2,val_f, 0.05*cos(0.5*gpt1), val_f-0.05*cos(0.5*gpt1)
           val_c   = c_field%value_at_point(gpt1,gpt2)
           !print*, 'val,',val_c
           val_a11 = a11_field_mat%value_at_point(gpt1,gpt2)
@@ -1660,7 +1653,7 @@ contains ! *******************************************************************
     
    ! print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
     call solve_gen_elliptic_eq(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec)
-  
+
   end subroutine solve_linear_system
 
   subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
@@ -1674,12 +1667,8 @@ contains ! *******************************************************************
     ar_eps = 1.d-13
     ai_maxIter = 100000
     !print*, ai_maxIter 
-   ! print *, 'a = ', csr_mat % opr_a(1:csr_mat%opi_ia(2)-1)
-    !print*, 'tttttttttttttt'
-    !print *, 'a = ', csr_masse % opr_a(1:csr_masse%opi_ia(2)-1)
-    if ( (es%bc_left == SLL_PERIODIC) .and. (es%bc_right == SLL_PERIODIC) .and. &
+    if ( (es%bc_left == SLL_PERIODIC).and.(es%bc_right == SLL_PERIODIC) .and. &
          (es%bc_bottom == SLL_PERIODIC) .and. (es%bc_top == SLL_PERIODIC) ) then
-
        call Gradient_conj(&
             csr_mat,&
             apr_B,&
