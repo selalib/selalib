@@ -345,11 +345,11 @@ contains ! *******************************************************************
       ! rho)
     
     type(general_coordinate_elliptic_solver),intent(inout) :: es
-    class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a22_field_mat
-    class(sll_scalar_field_2d_base), intent(in)     :: c_field
+    class(sll_scalar_field_2d_base), pointer :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer     :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local
    !  sll_real64, dimension(:), allocatable   :: M_rho_loc
