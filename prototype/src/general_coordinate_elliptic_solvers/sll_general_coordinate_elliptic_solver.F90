@@ -345,11 +345,11 @@ contains ! *******************************************************************
       ! rho)
     
     type(general_coordinate_elliptic_solver),intent(inout) :: es
-    class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a22_field_mat
-    class(sll_scalar_field_2d_base), intent(in)     :: c_field
+    class(sll_scalar_field_2d_base), pointer :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer     :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local
    !  sll_real64, dimension(:), allocatable   :: M_rho_loc
@@ -474,7 +474,7 @@ contains ! *******************************************************************
     
     type(general_coordinate_elliptic_solver) :: es
     type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
-    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    class(sll_scalar_field_2d_base), pointer     :: rho
     type(sll_logical_mesh_2d), pointer :: mesh
     sll_int32 :: i
     sll_int32 :: j,ierr
@@ -544,358 +544,6 @@ contains ! *******************************************************************
    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
 
-  
-!!$  ! This routine is considered deprecated in favor of a new interface which
-!!$  ! separates the factorization step.
-!!$  subroutine solve_gen_coords_elliptic_eq( &
-!!$       es, &
-!!$       a11_field_mat, &
-!!$       a12_field_mat,&
-!!$       a21_field_mat,&
-!!$       a22_field_mat,&
-!!$       c_field, &
-!!$       rho, &
-!!$       phi )
-!!$    
-!!$    type(general_coordinate_elliptic_solver) :: es
-!!$    class(sll_scalar_field_2d_base), pointer :: a11_field_mat
-!!$    class(sll_scalar_field_2d_base), pointer :: a12_field_mat
-!!$    class(sll_scalar_field_2d_base), pointer :: a21_field_mat
-!!$    class(sll_scalar_field_2d_base), pointer :: a22_field_mat
-!!$    class(sll_scalar_field_2d_base), pointer    :: c_field
-!!$    class(sll_scalar_field_2d_base), pointer     :: rho
-!!$    type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
-!!$    type(csr_matrix)  :: csr_masse
-!!$    sll_real64 :: epsi
-!!$    sll_real64, dimension(:), allocatable   :: M_rho_loc
-!!$    sll_real64, dimension(:,:), allocatable :: M_c_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a11_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a12_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a21_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a22_loc
-!!$    sll_real64, dimension(:,:), allocatable :: full_Matrix
-!!$    sll_real64, dimension(:), pointer  :: Masse_tot
-!!$    sll_real64, dimension(:), pointer  :: Stiff_tot
-!!$    !sll_real64, dimension(:,:), allocatable :: Masse_loc
-!!$    sll_real64, dimension(:), allocatable :: Masse_loc
-!!$    sll_real64, dimension(:), allocatable :: Stiff_loc
-!!$    !sll_int32, dimension(:), allocatable :: ipvt
-!!$    !sll_real64, dimension(:), allocatable :: z
-!!$    sll_int32 :: total_num_splines_eta1
-!!$    sll_int32 :: total_num_splines_eta2
-!!$    sll_int32 :: spline_degree_eta1
-!!$    sll_int32 :: spline_degree_eta2
-!!$    sll_int32 :: num_cells_eta1
-!!$    sll_int32 :: num_cells_eta2
-!!$    sll_int32 :: total_num_splines_loc
-!!$    sll_int32 :: ierr,ierr1
-!!$    sll_int32 :: i
-!!$    sll_int32 :: j
-!!$    sll_int32 :: cell_index
-!!$    type(sll_logical_mesh_2d), pointer :: mesh
-!!$    !    type(sll_time_mark) :: timer
-!!$    sll_real64 :: time,res,eta1,eta2
-!!$    character(len=*),parameter :: as_file1='mat'
-!!$    integer :: li_ios,li_ios1
-!!$   ! sll_real64 :: cond
-!!$   ! sll_int32  :: D, code
-!!$    ! This function buils adnd solves a system:
-!!$    !
-!!$    !      A*phi_vec = rho_vec
-!!$    !
-!!$    ! Where A is a matrix in the CSR (compressed sparse row) format.
-!!$    
-!!$    ! Check arguments for consistency, errors, etc.
-!!$    
-!!$    ! First step: Build the stiffness matrix and the mass matrix, which are
-!!$    ! computed at the same time.
-!!$    ! total number of splines should come in the field...
-!!$    
-!!$    ! The quadrature degree is the number of splines that intersect a cell.
-!!$ !   call set_time_mark(timer)
-!!$    total_num_splines_loc = es%total_num_splines_loc
-!!$    SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a21_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    !SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
-!!$
-!!$      !   Allocation full_Matrix 
-!!$    SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
-!!$    SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-!!$    SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-!!$    full_Matrix(:,:) = 0.0_f64
-!!$    Masse_tot(:) = 0.0_f64
-!!$    Stiff_tot(:) = 0.0_f64
-!!$    Masse_loc(:) = 0.0_f64
-!!$    Stiff_loc(:) = 0.0_f64
-!!$
-!!$    !!!!!!!!!!!! atttention rajout !!!!!!!
-!!$    es%rho_vec(:) = 0.0
-!!$    !print*, es%rho_vec(:)
-!!$    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$    full_Matrix(:,:) = 0.0_f64
-!!$    mesh => c_field%get_logical_mesh( )
-!!$    !    call set_time_mark(timer) ! comment this
-!!$    ! loop over domain cells build local matrices M_c_loc 
-!!$    do j=1,es%num_cells2
-!!$       do i=1,es%num_cells1
-!!$          ! cells are numbered in a linear fashion, convert from (i,j) indexing
-!!$          ! to the linear array index.
-!!$          
-!!$          cell_index = i+es%num_cells1*(j-1)
-!!$          
-!!$          call build_local_matrices( &
-!!$               es, &
-!!$               i, &
-!!$               j, &
-!!$               mesh, &
-!!$               a11_field_mat, &
-!!$               a12_field_mat, &
-!!$               a21_field_mat, &
-!!$               a22_field_mat, &
-!!$               c_field, &
-!!$               !rho, &
-!!$              ! M_rho_loc, &
-!!$               Masse_loc,&
-!!$               Stiff_loc,&
-!!$               M_c_loc, &
-!!$               K_a11_loc, &
-!!$               K_a12_loc, &
-!!$               K_a21_loc, &
-!!$               K_a22_loc )
-!!$          
-!!$          call local_to_global_matrices( &
-!!$               es, &
-!!$               cell_index, &
-!!$               i, &
-!!$               j, &
-!!$               M_rho_loc, &
-!!$               Masse_loc,&
-!!$               Stiff_loc,&
-!!$               M_c_loc, &
-!!$               K_a11_loc, &
-!!$               K_a12_loc, &
-!!$               K_a21_loc, &
-!!$               K_a22_loc,&
-!!$               full_Matrix,&
-!!$               Masse_tot,&
-!!$               Stiff_tot)
-!!$          
-!!$       end do
-!!$    end do
-!!$
-!!$
-!!$    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
-!!$         .and. (es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) then
-!!$       
-!!$       
-!!$       call solve_linear_system_perper(es,mesh,Masse_tot)
-!!$    else 
-!!$
-!!$       call solve_linear_system(es,mesh)
-!!$    end if
-!!$
-!!$
-!!$    
-!!$
-!!$    call  phi%interp_2d%set_coefficients( es%phi_vec)
-!!$    
-!!$    !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-!!$    ! apr_B is the source, apr_U is the solution
-!!$    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(Masse_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(Masse_tot,ierr) 
-!!$    SLL_DEALLOCATE_ARRAY(Stiff_tot,ierr) 
-!!$    SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
-!!$    SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-!!$  end subroutine solve_gen_coords_elliptic_eq
-
-  
-!!$  ! This routine is considered deprecated in favor of a new interface which
-!!$  ! separates the factorization step.
-!!$  subroutine solve_gen_coords_elliptic_eq( &
-!!$       es, &
-!!$       a11_field_mat, &
-!!$       a12_field_mat,&
-!!$       a21_field_mat,&
-!!$       a22_field_mat,&
-!!$       c_field, &
-!!$       rho, &
-!!$       phi )
-!!$    
-!!$    type(general_coordinate_elliptic_solver) :: es
-!!$    class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
-!!$    class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
-!!$    class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
-!!$    class(sll_scalar_field_2d_base), intent(in) :: a22_field_mat
-!!$    class(sll_scalar_field_2d_base), intent(in)     :: c_field
-!!$    class(sll_scalar_field_2d_base), intent(in)     :: rho
-!!$    type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
-!!$    type(csr_matrix)  :: csr_masse
-!!$    sll_real64 :: epsi
-!!$    sll_real64, dimension(:), allocatable   :: M_rho_loc
-!!$    sll_real64, dimension(:,:), allocatable :: M_c_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a11_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a12_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a21_loc
-!!$    sll_real64, dimension(:,:), allocatable :: K_a22_loc
-!!$    sll_real64, dimension(:,:), allocatable :: full_Matrix
-!!$    sll_real64, dimension(:), pointer  :: Masse_tot
-!!$    sll_real64, dimension(:), pointer  :: Stiff_tot
-!!$    !sll_real64, dimension(:,:), allocatable :: Masse_loc
-!!$    sll_real64, dimension(:), allocatable :: Masse_loc
-!!$    sll_real64, dimension(:), allocatable :: Stiff_loc
-!!$    !sll_int32, dimension(:), allocatable :: ipvt
-!!$    !sll_real64, dimension(:), allocatable :: z
-!!$    sll_int32 :: total_num_splines_eta1
-!!$    sll_int32 :: total_num_splines_eta2
-!!$    sll_int32 :: spline_degree_eta1
-!!$    sll_int32 :: spline_degree_eta2
-!!$    sll_int32 :: num_cells_eta1
-!!$    sll_int32 :: num_cells_eta2
-!!$    sll_int32 :: total_num_splines_loc
-!!$    sll_int32 :: ierr,ierr1
-!!$    sll_int32 :: i
-!!$    sll_int32 :: j
-!!$    sll_int32 :: cell_index
-!!$    type(sll_logical_mesh_2d), pointer :: mesh
-!!$    !    type(sll_time_mark) :: timer
-!!$    sll_real64 :: time,res,eta1,eta2
-!!$    character(len=*),parameter :: as_file1='mat'
-!!$    integer :: li_ios,li_ios1
-!!$   ! sll_real64 :: cond
-!!$   ! sll_int32  :: D, code
-!!$    ! This function buils adnd solves a system:
-!!$    !
-!!$    !      A*phi_vec = rho_vec
-!!$    !
-!!$    ! Where A is a matrix in the CSR (compressed sparse row) format.
-!!$    
-!!$    ! Check arguments for consistency, errors, etc.
-!!$    
-!!$    ! First step: Build the stiffness matrix and the mass matrix, which are
-!!$    ! computed at the same time.
-!!$    ! total number of splines should come in the field...
-!!$    
-!!$    ! The quadrature degree is the number of splines that intersect a cell.
-!!$ !   call set_time_mark(timer)
-!!$    total_num_splines_loc = es%total_num_splines_loc
-!!$    !SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a21_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    !SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
-!!$    SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
-!!$
-!!$      !   Allocation full_Matrix 
-!!$    SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
-!!$    SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-!!$    SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-!!$    full_Matrix(:,:) = 0.0_f64
-!!$    Masse_tot(:) = 0.0_f64
-!!$    Stiff_tot(:) = 0.0_f64
-!!$    Masse_loc(:) = 0.0_f64
-!!$    Stiff_loc(:) = 0.0_f64
-!!$
-!!$    !!!!!!!!!!!! atttention rajout !!!!!!!
-!!$    es%rho_vec(:) = 0.0
-!!$    !print*, es%rho_vec(:)
-!!$    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!$    full_Matrix(:,:) = 0.0_f64
-!!$    mesh => c_field%get_logical_mesh( )
-!!$    !    call set_time_mark(timer) ! comment this
-!!$    ! loop over domain cells build local matrices M_c_loc 
-!!$    do j=1,es%num_cells2
-!!$       do i=1,es%num_cells1
-!!$          ! cells are numbered in a linear fashion, convert from (i,j) indexing
-!!$          ! to the linear array index.
-!!$          
-!!$          cell_index = i+es%num_cells1*(j-1)
-!!$          
-!!$          call build_local_matrices( &
-!!$               es, &
-!!$               i, &
-!!$               j, &
-!!$               mesh, &
-!!$               a11_field_mat, &
-!!$               a12_field_mat, &
-!!$               a21_field_mat, &
-!!$               a22_field_mat, &
-!!$               c_field, &
-!!$              ! rho, &
-!!$              ! M_rho_loc, &
-!!$               Masse_loc,&
-!!$               Stiff_loc,&
-!!$               M_c_loc, &
-!!$               K_a11_loc, &
-!!$               K_a12_loc, &
-!!$               K_a21_loc, &
-!!$               K_a22_loc )
-!!$          
-!!$          call local_to_global_matrices( &
-!!$               es, &
-!!$               cell_index, &
-!!$               i, &
-!!$               j, &
-!!$               !M_rho_loc, &
-!!$               Masse_loc,&
-!!$               Stiff_loc,&
-!!$               M_c_loc, &
-!!$               K_a11_loc, &
-!!$               K_a12_loc, &
-!!$               K_a21_loc, &
-!!$               K_a22_loc,&
-!!$               full_Matrix,&
-!!$               Masse_tot,&
-!!$               Stiff_tot)
-!!$          
-!!$       end do
-!!$    end do
-!!$
-!!$
-!!$    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
-!!$         .and. (es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) then
-!!$       
-!!$       
-!!$       call solve_linear_system_perper(es,mesh,Masse_tot)
-!!$    else 
-!!$
-!!$       call solve_linear_system(es,mesh)
-!!$    end if
-!!$
-!!$
-!!$    
-!!$
-!!$    call  phi%interp_2d%set_coefficients( es%phi_vec)
-!!$    
-!!$    !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-!!$    ! apr_B is the source, apr_U is the solution
-!!$    !SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(Masse_loc,ierr)
-!!$    SLL_DEALLOCATE_ARRAY(Masse_tot,ierr) 
-!!$    SLL_DEALLOCATE_ARRAY(Stiff_tot,ierr) 
-!!$    SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
-!!$    SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
-!!$  end subroutine solve_gen_coords_elliptic_eq
-!!$  
   ! This is based on the assumption that all the input fields have the same
   ! boundary conditions. TO DO: put all the boundary condition parameters in
   ! a single module called 'boundary_condition_convention' or something, which
@@ -926,11 +574,11 @@ contains ! *******************************************************************
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
-    class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a22_field_mat
-    class(sll_scalar_field_2d_base), intent(in)     :: c_field
+    class(sll_scalar_field_2d_base), pointer :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer     :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64 :: epsi
     !sll_real64, dimension(:), intent(out)   :: M_rho_loc
@@ -1212,7 +860,7 @@ contains ! *******************************************************************
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     type(sll_logical_mesh_2d), pointer :: mesh2d
-    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    class(sll_scalar_field_2d_base), pointer     :: rho
     sll_real64 :: epsi
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_int32 :: bc_left    
