@@ -944,6 +944,7 @@ contains
     !*** Computation of the rhs of QN ***
     call compute_charge_density(sim%logical_mesh4d, &
       sim%f4d_x3x4,sim%rho3d_x3)
+    print*, 'test'
 
     !*** Matrix factorization for QN solver ***
     call factorize_mat_es( &

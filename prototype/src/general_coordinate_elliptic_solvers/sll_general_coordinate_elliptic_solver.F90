@@ -406,7 +406,6 @@ contains ! *******************************************************************
 
     full_Matrix(:,:) = 0.0_f64
     mesh => c_field%get_logical_mesh( )
-
     do j=1,es%num_cells2
        do i=1,es%num_cells1
 
@@ -432,6 +431,8 @@ contains ! *******************************************************************
                K_a12_loc, &
                K_a21_loc, &
                K_a22_loc )
+
+         
           
           call local_to_global_matrices( &
                es, &
@@ -449,11 +450,12 @@ contains ! *******************************************************************
                full_Matrix,&
                es%masse,&
                es%stiff)
-
+           !print*, i,j
           
        end do
     end do
 
+    !print*, 'loop ok'
    
    ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
