@@ -587,6 +587,9 @@ subroutine run_vp_cart(sim)
  write(*,*) 'dt = ', sim%dt
  !stop
  itime=0
+  sim%params(11)=t
+  call fn_L2_norm(sim,erreurL2_G)
+  write(*,*) 't=',t,' erreurL2=',erreurL2_G
  do while(t.lt.sim%tmax)
     itime=itime+1
     sim%Enorm = 0.0_f64
@@ -880,11 +883,11 @@ subroutine run_vp_cart(sim)
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
           v1=sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree
+          v2=0
+          x1=0
+          x2=0
           sim%params(11)=t
           f_vx_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
-!!$          f_vx_exact(i,j) = exp(-4*(-t &
-!!$               +(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree))**2)
-
        end do
     end do
     call sll_gnuplot_rect_2d_parallel( &
@@ -932,9 +935,9 @@ subroutine run_vp_cart(sim)
     call normL2(sim,f_x_exact,plotf2d_c1,erreurL2)
  end if
  if(sim%test==2)then
-    call normL2(sim,f_vx_exact,plotf2d_c1,erreurL2)
+    call normL2(sim,f_vx_exact,plotf2d_c1,erreurL2) 
  end if
-
+  write(*,*) 'erreurL2 Nhung=',erreurL2
   inquire(file='log(err)', exist=exist)
   if (exist) then
      open(168,file='log(err)',status='old',position='append', action='write')
