@@ -209,7 +209,7 @@ contains
     sll_real64 :: eta2_max
 
     sll_real64 :: eps
-    sll_real64 :: kx
+    sll_real64 :: kx,v,hh
     sll_real64 :: factor1
 
     if( .not. present(params) ) then
@@ -226,7 +226,13 @@ contains
     eps = params(5)
     kx  =  2. * sll_pi / (eta1_max - eta1_min)
 
-    sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
+    !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
+    v=vx-t
+    hh=1
+    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    sll_test_vx_transport_initializer_v1v2x1x2 =  (1 + (-3 + (3 - v ** 2) * v ** 2) * v ** 2)*hh
+    !write(*,*) 'tini=',t
+
 !!$    sll_landau_initializer_v1v2x1x2 = 1
 !!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
 
