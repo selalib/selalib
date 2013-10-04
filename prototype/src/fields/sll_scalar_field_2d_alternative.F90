@@ -605,7 +605,7 @@ contains   ! *****************************************************************
   subroutine delete_field_2d_discrete_alt( field )
     class(sll_scalar_field_2d_discrete_alt), intent(out) :: field
     ! just nullify pointers, nothing to deallocate that this object owns.
-    nullify(field%values)
+    SLL_DEALLOCATE(field%values,ierr)
     nullify(field%T)
     nullify(field%interp_2d)
     nullify(field%point1_1d)
@@ -615,6 +615,11 @@ contains   ! *****************************************************************
   subroutine set_field_data_discrete_2d( field, values )
     class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
     sll_real64, dimension(:,:), intent(in) :: values
+    if( (size(field%values,1) .ne. size(values,1) ) .or. &
+        (size(field%values,2) .ne. size(values,2) ) ) then
+        print *, 'WARNING, set_field_data_discrete_2d(), passed array ', &
+             'is not of the size originally declared for this field.'
+     end if
 !!$    print *, 'size(field%values) = ', size(field%values,1), &
 !!$         size(field%values,2), 'size(values) = ', size(values,1), size(values,2)
     field%values(:,:) = values(:,:)
