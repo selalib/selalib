@@ -20,6 +20,7 @@ module sll_simulation_4d_qns_general_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+  use sll_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general
@@ -304,10 +305,10 @@ contains
     sll_int32 :: global_indices(4)
     sll_int32 :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
@@ -321,9 +322,12 @@ contains
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
+    ! time variables
+    type(sll_time_mark)  :: t0 
+    type(sll_time_mark)  :: t1
+    sll_real64 :: time 
     
     
-
     nc_x1 = sim%mesh2d_x%num_cells1
     nc_x2 = sim%mesh2d_x%num_cells2
     nc_x3 = sim%mesh2d_v%num_cells1
@@ -348,7 +352,7 @@ contains
     vmax4  = sim%mesh2d_v%eta2_max
     ! Start with the fields
     
-    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
@@ -357,7 +361,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
@@ -366,7 +370,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
@@ -375,7 +379,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
-    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
@@ -777,8 +781,8 @@ contains
          a12_field_mat, &
          a21_field_mat, &
          a22_field_mat, &
-         c_field, &
-         rho)
+         c_field)!, &
+         !rho)
 
     print*, ' ... finished initialization, entering main loop.'
     ! ------------------------------------------------------------------------
@@ -938,11 +942,15 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
+       call set_time_mark(t0)
+
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
+       time = time_elapsed_since(t0)
        
+       print*, 'timer=', time
 !!$       if(sim%my_rank == 0) then
 !!$          call phi%write_to_file(itime)
 !!$       end if
@@ -990,7 +998,7 @@ contains
        end do
 
        !print*, 'energy total', efield_energy_total
-       efield_energy_total = sqrt(efield_energy_total)
+       !efield_energy_total = sqrt(efield_energy_total)
        
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
@@ -1105,7 +1113,7 @@ contains
              if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)
              end if
-             buffer_result(:) = log(buffer_result(:))
+             buffer_result(:) = log(sqrt(buffer_result(:)))
              do i=1,BUFFER_SIZE
                 write(efield_energy_file_id,*) buffer_result(i)
              end do
