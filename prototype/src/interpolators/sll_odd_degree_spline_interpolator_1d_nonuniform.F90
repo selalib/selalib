@@ -271,7 +271,11 @@ contains  ! ****************************************************************
   end subroutine delete_qs1d_nonuniform
 
    subroutine set_coefficients_qs1d_nonuniform( interpolator, coeffs )
-    class(odd_degree_spline_1d_interpolator_nonuniform),  intent(inout) :: interpolator
+#ifdef STDF95
+    type(odd_degree_spline_1d_interpolator_nonuniform), intent(inout)      :: interpolator
+#else
+    class(odd_degree_spline_1d_interpolator_nonuniform), intent(inout)     :: interpolator
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -280,7 +284,11 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_qs1d_nonuniform(interpolator)
-    class(odd_degree_spline_1d_interpolator_nonuniform), intent(in) :: interpolator
+#ifdef STDF95
+    type(odd_degree_spline_1d_interpolator_nonuniform), intent(in)      :: interpolator
+#else
+    class(odd_degree_spline_1d_interpolator_nonuniform), intent(in)     :: interpolator
+#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_qs1d_nonuniform     
     
     print *, 'get_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &

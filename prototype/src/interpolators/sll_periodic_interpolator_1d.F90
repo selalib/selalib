@@ -368,7 +368,11 @@ contains  ! ****************************************************************
   end subroutine delete_per1d
 
   subroutine set_coefficients_per1d( interpolator, coeffs )
-    class(per_1d_interpolator),  intent(inout) :: interpolator
+#ifdef STDF95
+    type(per_1d_interpolator), intent(inout)  :: interpolator
+#else  
+    class(per_1d_interpolator), intent(inout) :: interpolator
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_per1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -377,7 +381,11 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_per1d(interpolator)
+#ifdef STDF95
+    type(per_1d_interpolator), intent(in)  :: interpolator
+#else  
     class(per_1d_interpolator), intent(in) :: interpolator
+#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_per1d     
     
     print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &
