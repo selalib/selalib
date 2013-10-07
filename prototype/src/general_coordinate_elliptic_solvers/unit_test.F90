@@ -119,9 +119,9 @@ program test_general_elliptic_solver
 !!$  !      periodic-periodic boundary conditions
 !!$  !--------------------------------------------------------------------
 !!$  
-!!$  print*, "-------------------------------------------------------------"
-!!$  print*, "1 test case witout change of coordinates"
-!!$  print*, "-------------------------------------------------------------"
+  print*, "-------------------------------------------------------------"
+  print*, "1 test case witout change of coordinates"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX-ETA1MIN)/real(NPTS1-1,f64)
@@ -330,19 +330,16 @@ program test_general_elliptic_solver
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  
   call a11_field_mat%delete()
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
-  
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-!!$
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -561,11 +558,11 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     3 test case without change of coordinates 
@@ -784,10 +781,10 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -995,14 +992,14 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
-  !************************************************************************************************
+  !****************************************************************************
   !        WHITH CHANGE OF COORDINATES AND ANALYTIC DATA
-  !************************************************************************************************
+  !*****************************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     5 test case with colella change of coordinates 
@@ -1225,10 +1222,10 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 
 
@@ -1460,10 +1457,10 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 
   
@@ -1686,12 +1683,12 @@ program test_general_elliptic_solver
   call a22_field_mat%delete()
 
   call T%delete()
-  
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  
+
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+
   
 
 !!$  !--------------------------------------------------------------------
@@ -1918,18 +1915,18 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
   
 
 
 
- !************************************************************************************************
+ !******************************************************************************
   !        WHITH CHANGE OF COORDINATES AND NON-ANALYTIC SOURCE TERM
-  !************************************************************************************************
+  !****************************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     95  test case without change of coordinates 
@@ -2027,11 +2024,11 @@ program test_general_elliptic_solver
   
   
   
-  allocate(point1(npts1-1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1-1,npts2-1))
-  do j=0,npts2-2
-     do i=0,npts1-2
+  allocate(point1(npts1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1,npts2))
+  do j=0,npts2-1
+     do i=0,npts1-1
         point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(npts1-1) + ETA1MIN 
         point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(npts2-1) + ETA2MIN 
         tab_rho(i+1,j+1)  = source_term_perper(point1(i+1),point2(j+1))
@@ -2207,13 +2204,13 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 
 
@@ -2316,12 +2313,12 @@ program test_general_elliptic_solver
   
   
 
-  allocate(point1(npts1-1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1-1,npts2-1))
+  allocate(point1(npts1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1,npts2))
   
-  do j=0,npts2-2
-     do i=0,npts1-2
+  do j=0,npts2-1
+     do i=0,npts1-1
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
         point2(j+1)       = real(j,f64)*h2 + ETA2MIN
         tab_rho(i+1,j+1)  = source_term_chgt_perper(point1(i+1),point2(j+1))
@@ -2492,13 +2489,13 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
   
   
   
@@ -2598,11 +2595,11 @@ program test_general_elliptic_solver
 
   
 
-  allocate(point1(npts1-1))
+  allocate(point1(npts1))
   allocate(point2(npts2))
-  allocate(tab_rho(npts1-1,npts2))
+  allocate(tab_rho(npts1,npts2))
   do j=0,npts2-1
-     do i=0,npts1-2
+     do i=0,npts1-1
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
         point2(j+1)       = real(j,f64)*h2 + ETA2MIN
         tab_rho(i+1,j+1)  = source_term_chgt_perdir(point1(i+1),point2(j+1))
@@ -2768,13 +2765,13 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 !!$
 !!$  !--------------------------------------------------------------------
@@ -3040,15 +3037,13 @@ program test_general_elliptic_solver
 
   call T%delete()
 
-
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
-  
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -3145,10 +3140,10 @@ program test_general_elliptic_solver
   
   
   
-  allocate(point1(npts1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1,npts2-1))
-  do j=0,npts2-2
+  SLL_ALLOCATE(point1(npts1),ierr)
+  SLL_ALLOCATE(point2(npts2),ierr)
+  SLL_ALLOCATE(tab_rho(npts1,npts2),ierr)
+  do j=0,npts2-1
      do i=0,npts1-1
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
         point2(j+1)       = real(j,f64)*h2 + ETA2MIN
@@ -3312,14 +3307,14 @@ program test_general_elliptic_solver
   call a22_field_mat%delete()
 
   call T%delete()
-  
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 
   print*, '------------------------------------------------------'

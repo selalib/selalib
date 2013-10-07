@@ -536,7 +536,6 @@ contains ! *******************************************************************
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
        call solve_linear_system_perper(es,mesh,es%masse)
     else 
-       
        call solve_linear_system(es,mesh)
     end if
     
@@ -1298,11 +1297,9 @@ contains ! *******************************************************************
 
     end if
     
-   
-
-    
    ! print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
     call solve_gen_elliptic_eq(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec)
+
   end subroutine solve_linear_system
 
   subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
