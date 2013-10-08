@@ -280,22 +280,22 @@ contains
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-       tmp1 = num_pts1 + 4*spline_degree1! + spline_degree1 !- 1
-       tmp2 = num_pts2 + 4*spline_degree2! + 2*spline_degree2
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1 + 4*spline_degree1! + 2*spline_degree1
-       tmp2 = num_pts2 + 4*spline_degree2 !- 1
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + 2*spline_degree1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (585) ! 4. dirichlet in all sides
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1 + 4*spline_degree1! + spline_degree1 !- 1
-       tmp2 = num_pts2 + 4*spline_degree2! + spline_degree2 !- 1
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case default
