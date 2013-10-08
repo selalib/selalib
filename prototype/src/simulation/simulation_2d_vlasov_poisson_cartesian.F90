@@ -56,7 +56,8 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    sll_int32 :: first_step
    sll_int32  :: num_iterations
    sll_int32  :: freq_diag,freq_diag_time
-   
+   sll_int32  :: split_case
+  
    !parameters for initial function
    sll_real64  :: kx
    sll_real64  :: eps
@@ -87,7 +88,7 @@ contains
     sll_int32             :: Ncx, nbox, Ncv
     sll_int32             :: interpol_x, order_x, interpol_v, order_v
     sll_real64            :: dt
-    sll_int32             :: nbiter, freqdiag,freqdiag_time,first_step
+    sll_int32             :: nbiter, freqdiag,freqdiag_time,first_step, split_case
     sll_real64            :: kmode, eps
     sll_int32             :: is_delta_f
     logical               :: driven
@@ -100,10 +101,12 @@ contains
     ! namelists for data input
     namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv
     namelist / interpolator / interpol_x, order_x, interpol_v, order_v
-    namelist / time_iterations / dt, first_step, nbiter, freqdiag,freqdiag_time
+    namelist / time_iterations / dt, first_step, nbiter, freqdiag,freqdiag_time,split_case
     namelist / landau / kmode, eps, is_delta_f, driven 
     namelist / drive / t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr
 
+
+    split_case = 1
     open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
     if( IO_stat /= 0 ) then
        print *, '#init_vp2d_par_cart() failed to open file ', trim(filename)//'.nml'
@@ -160,7 +163,7 @@ contains
     sim%num_iterations=nbiter
     sim%freq_diag=freqdiag
     sim%freq_diag_time=freqdiag_time
-
+    sim%split_case = split_case
     sim%kx = kmode
     sim%eps = eps
 
@@ -205,6 +208,7 @@ contains
       print *,'#nbiter=',nbiter
       print *,'#freqdiag=',freqdiag
       print *,'#freqdiag_time=',freqdiag_time
+      print *,'#split_case=',split_case
 
       print *,'##landau'
       print *,'#kmode=',kmode
@@ -308,6 +312,7 @@ contains
     sll_real64  ::   kinetic_energy,potential_energy
 
     sll_real64, dimension(:), allocatable :: v_array
+    sll_real64, dimension(:), allocatable :: v_array_middle
     sll_real64, dimension(:), allocatable :: x_array
     character(len=4)           :: fin   
     sll_int32                  :: file_id
@@ -317,27 +322,220 @@ contains
     sll_comp64,dimension(:),allocatable :: rho_mode
     
     sll_int32 :: nb_mode = 5
-    sll_real64, dimension(:), allocatable :: split_step_x1 
-    sll_real64, dimension(:), allocatable :: split_step_x2
+    sll_real64, dimension(:), allocatable :: split_step
+    sll_real64 :: t_step
     sll_int32 :: nb_split_step
     sll_int32 :: split_case 
     sll_int32 :: split_istep
+    sll_int32 :: split_x
+    sll_int32 :: split_x_init
+    sll_int32, parameter :: SLL_STRANG_TVT           = 0 
+    sll_int32, parameter :: SLL_STRANG_VTV           = 1 
+    sll_int32, parameter :: SLL_TRIPLE_JUMP_TVT      = 2 
+    sll_int32, parameter :: SLL_TRIPLE_JUMP_VTV      = 3 
+    !sll_int32, parameter :: SLL_ORDER6_TVT           = 4 
+    sll_int32, parameter :: SLL_ORDER6_VTV           = 5 
+    sll_int32, parameter :: SLL_ORDER6VP_TVT         = 6 
+    sll_int32, parameter :: SLL_ORDER6VP_VTV         = 7 
+    sll_int32, parameter :: SLL_ORDER6VPnew_TVT      = 8 
+    sll_int32, parameter :: SLL_ORDER6VPnew1_VTV     = 9 
+    sll_int32, parameter :: SLL_ORDER6VPnew2_VTV     = 10 
+
+    sll_int32 ::conservative_case
+
+
     
     
-    split_case = 1
-     
+
+    !read from namelist file
+    select case (sim%split_case)    
+      case (0)
+        split_case = SLL_STRANG_TVT
+      case (1)
+        split_case = SLL_STRANG_VTV
+      case (2) 
+        split_case = SLL_TRIPLE_JUMP_TVT
+      case (3) 
+        split_case = SLL_TRIPLE_JUMP_VTV
+      case (4)
+        split_case = SLL_ORDER6_VTV
+      case (5)
+        split_case = SLL_ORDER6VP_TVT
+      case (6)
+        split_case = SLL_ORDER6VP_VTV
+      case (7)
+        split_case = SLL_ORDER6VPnew_TVT
+      case (8)
+        split_case = SLL_ORDER6VPnew1_VTV
+      case (9)
+        split_case = SLL_ORDER6VPnew2_VTV      
+    end select 
+
+    !print *,'##split_case=',sim%split_case,split_case
     
     select case (split_case)    
-      case (1) !Strang splitting VTV
-        nb_split_step = 1
-        SLL_ALLOCATE(split_step_x1(nb_split_step),ierr)
-        SLL_ALLOCATE(split_step_x2(nb_split_step+1),ierr)
-        split_step_x1(1) = 1._f64
-        split_step_x2(1) = 0.5_f64
-        split_step_x2(2) = 0.5_f64
+      case (SLL_STRANG_TVT) ! Strang splitting TVT
+        nb_split_step = 3
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 1
+        split_step(1) = 0.5_f64
+        split_step(2) = 1._f64
+        split_step(3) = split_step(1)
+      case (SLL_STRANG_VTV) ! Strang splitting VTV
+        nb_split_step = 3
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 0
+        split_step(1) = 0.5_f64
+        split_step(2) = 1._f64
+        split_step(3) = split_step(1)
+      case (SLL_TRIPLE_JUMP_TVT) ! triple jump TVT
+        nb_split_step = 7
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 1
+        split_step(1) = 0.675603595979829_f64
+        split_step(2) = 1.351207191959658_f64
+        split_step(3) = -0.17560359597982855_f64
+        split_step(4) = -1.702414383919315_f64
+        split_step(5) = split_step(3)
+        split_step(6) = split_step(2)
+        split_step(7) = split_step(1)
+      case (SLL_TRIPLE_JUMP_VTV) ! triple jump VTV
+        nb_split_step = 7
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 0
+        split_step(1) = 0.675603595979829_f64
+        split_step(2) = 1.351207191959658_f64
+        split_step(3) = -0.17560359597982855_f64
+        split_step(4) = -1.702414383919315_f64
+        split_step(5) = split_step(3)
+        split_step(6) = split_step(2)
+        split_step(7) = split_step(1)
+      case (SLL_ORDER6_VTV) ! Order 6 VTV
+        nb_split_step = 23
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 0
+        split_step(1) = 0.0414649985182624_f64
+        split_step(2) = 0.123229775946271_f64
+        split_step(3) = 0.198128671918067_f64
+        split_step(4) = 0.290553797799558_f64
+        split_step(5) = -0.0400061921041533_f64
+        split_step(6) = -0.127049212625417_f64
+        split_step(7) = 0.0752539843015807_f64          
+        split_step(8) = -0.246331761062075_f64
+        split_step(9) = -0.0115113874206879_f64
+        split_step(10) = 0.357208872795928_f64
+        split_step(11) = 0.23666992478693111_f64
+        split_step(12) = 0.20477705429147008_f64
+        split_step(13) = split_step(11)
+        split_step(14) = split_step(10)
+        split_step(15) = split_step(9)          
+        split_step(16) = split_step(8)
+        split_step(17) = split_step(7)
+        split_step(18) = split_step(6)
+        split_step(19) = split_step(5)
+        split_step(20) = split_step(4)
+        split_step(21) = split_step(3)
+        split_step(22) = split_step(2)
+        split_step(23) = split_step(1)          
+      case (SLL_ORDER6VP_TVT) ! Order 6 for Vlasov-Poisson TVT 
+        nb_split_step = 9
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 1
+        split_step(1) = 0.1095115577513980413559540_f64
+        split_step(2) = 0.268722208204814693684441_f64&
+          -2._f64*sim%dt**2*0.000805681667096178271312_f64&
+          +4._f64*sim%dt**4*0.000017695766224036466792_f64
+        split_step(3) = 0.4451715080955340951457244_f64
+        split_step(4) = 0.2312777917951853063155588_f64&
+          -2._f64*sim%dt**2*0.003955911930042478239763_f64&
+          +4._f64*sim%dt**4*0.000052384078562246674986_f64
+        split_step(5) = -0.1093661316938642730033570_f64
+        split_step(6) = split_step(4)
+        split_step(7) = split_step(3)
+        split_step(8) = split_step(2)
+        split_step(9) = split_step(1)
+      case (SLL_ORDER6VP_VTV) ! Order 6 for Vlasov-Poisson VTV 
+        nb_split_step = 9
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 0
+        split_step(1) = 0.359950808794143627485664_f64&
+          -2._f64*sim%dt**2*(-0.01359558332625151635_f64)&
+          +4._f64*sim%dt**4*(-8.562814848565929e-6_f64)
+        split_step(2) = 1.079852426382430882456991_f64
+        split_step(3) = -0.1437147273026540434771131_f64&
+          -2._f64*sim%dt**2*(-0.00385637757897273261_f64)&
+          +4._f64*sim%dt**4*(0.0004883788785819335822_f64)
+        split_step(4) = -0.579852426382430882456991_f64
+        split_step(5) = 0.567527837017020831982899_f64&
+          -2._f64*sim%dt**2*(-0.03227361602037480885_f64)&
+          +4._f64*sim%dt**4*0.002005141087312622342_f64
+        split_step(6) = split_step(4)
+        split_step(7) = split_step(3)
+        split_step(8) = split_step(2)
+        split_step(9) = split_step(1)
+      case (SLL_ORDER6VPnew_TVT) ! Order 6 for Vlasov-Poisson TVT (new)
+        nb_split_step = 9
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 1
+        split_step(1) = 0.1095115577513980413559540_f64
+        split_step(2) = 0.268722208204814693684441_f64&
+          -2._f64*sim%dt**2*0.000805681667096178271312_f64&
+          +4._f64*sim%dt**4*(8.643923349886021963e-6_f64)&
+          -8._f64*sim%dt**6*(1.4231479258353431522e-6_f64)
+        split_step(3) = 0.4451715080955340951457244_f64
+        split_step(4) = 0.2312777917951853063155588_f64&
+          -2._f64*sim%dt**2*0.003955911930042478239763_f64&
+          +4._f64*sim%dt**4*(0.000061435921436397119815_f64)
+        split_step(5) = -0.1093661316938642730033570_f64
+        split_step(6) = split_step(4)
+        split_step(7) = split_step(3)
+        split_step(8) = split_step(2)
+        split_step(9) = split_step(1)
+      case (SLL_ORDER6VPnew1_VTV) ! Order 6 for Vlasov-Poisson VTV (new1)
+        nb_split_step = 11
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 0
+        split_step(1) = 0.0490864609761162454914412_f64&
+          -2._f64*sim%dt**2*(0.0000697287150553050840999_f64)
+        split_step(2) = 0.1687359505634374224481957_f64
+        split_step(3) = 0.2641776098889767002001462_f64&
+          -2._f64*sim%dt**2*(0.000625704827430047189169_f64)&
+          +4._f64*sim%dt**4*(-2.91660045768984781644e-6_f64)
+        split_step(4) = 0.377851589220928303880766_f64
+        split_step(5) = 0.1867359291349070543084126_f64&
+          -2._f64*sim%dt**2*(0.00221308512404532556163_f64)&
+          +4._f64*sim%dt**4*(0.0000304848026170003878868_f64)&
+          -8._f64*sim%dt**6*(4.98554938787506812159e-7_f64)
+        split_step(6) = -0.0931750795687314526579244_f64
+        split_step(7) = split_step(5)
+        split_step(8) = split_step(4)
+        split_step(9) = split_step(3)
+        split_step(10) = split_step(2)
+        split_step(11) = split_step(1)
+      case (SLL_ORDER6VPnew2_VTV) ! Order 6 for Vlasov-Poisson VTV (new2)
+        nb_split_step = 11
+        SLL_ALLOCATE(split_step(nb_split_step),ierr)
+        split_x_init = 0
+        split_step(1) = 0.083335463273305120964507_f64&
+          -2._f64*sim%dt**2*(-0.00015280483587048489661_f64)&
+          +4._f64*sim%dt**4*( -0.0017675734111895638156_f64)&
+          -8._f64*sim%dt**6*( 0.00021214072262165668039_f64)
+        split_step(2) = 0.72431592569108212422250_f64
+        split_step(3) = 0.827694857845135145869413_f64&
+          -2._f64*sim%dt**2*(-0.010726848627286273332_f64)&
+          +4._f64*sim%dt**4*(0.012324362982853212700_f64)
+        split_step(4) = -0.4493507217041624582458844_f64
+        split_step(5) = -0.4110303211184402668339201_f64&
+          -2._f64*sim%dt**2*(0.014962337009932798678_f64)
+        !  +4._f64*sim%dt**4*(-0.20213028317750837901_f64)
+        split_step(6) = 0.4500695920261606680467717_f64
+        split_step(7) = split_step(5)
+        split_step(8) = split_step(4)
+        split_step(9) = split_step(3)
+        split_step(10) = split_step(2)
+        split_step(11) = split_step(1)
       case default
-        print *,'#split_case=', split_case,&
-          ' not defined'
+        print *,'#split_case not defined'
         stop       
     end select
     
@@ -365,10 +563,10 @@ contains
     
     !allocation of distribution functions f_x1 and f_x2
     call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
-    global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
     SLL_ALLOCATE(f_x2(local_size_x1,local_size_x2),ierr)
 
     call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+    global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_init(local_size_x1,local_size_x2),ierr)    
 
@@ -386,6 +584,7 @@ contains
     SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
     SLL_ALLOCATE(v_array(np_x2),ierr)
     SLL_ALLOCATE(x_array(np_x1),ierr)
+    SLL_ALLOCATE(v_array_middle(np_x2),ierr)
 
 
     do i = 1, np_x2
@@ -394,6 +593,12 @@ contains
     do i = 1, np_x1
        x_array(i) = sim%mesh2d%eta1_min + real(i-1,f64)*sim%mesh2d%delta_eta1
     end do
+
+    do i = 1, np_x2-1
+       v_array_middle(i) = 0.5_f64*(v_array(i)+v_array(i+1))
+    end do
+    v_array_middle(np_x2) = v_array_middle(1)+v_array(np_x2)-v_array(1)
+
 
     if(sim%driven)then
     if(sll_get_collective_rank(sll_world_collective)==0)then
@@ -452,40 +657,6 @@ contains
       call sll_binary_file_close(file_id,ierr)                    
     endif
     SLL_DEALLOCATE(f_visu,ierr)
-
-
-
-
-    
-    
-    
-       
-!    
-!    
-!    call sll_gnuplot_rect_2d_parallel( &
-!      sim%mesh2d%eta1_min+(global_indices(1)-1)*sim%mesh2d%delta_eta1, &
-!      sim%mesh2d%delta_eta1, &
-!      sim%mesh2d%eta2_min+(global_indices(2)-1)*sim%mesh2d%delta_eta2, &
-!      sim%mesh2d%delta_eta2, &
-!      f_x2, &
-!      "f_x2", &
-!      0, &
-!      ierr )
-    ! check the transposition
-!    call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-!    call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
-!    global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
-
-!    call sll_gnuplot_rect_2d_parallel( &
-!      sim%mesh2d%eta1_min+(global_indices(1)-1)*sim%mesh2d%delta_eta1, &
-!      sim%mesh2d%delta_eta1, &
-!      sim%mesh2d%eta2_min+(global_indices(2)-1)*sim%mesh2d%delta_eta2, &
-!      sim%mesh2d%delta_eta2, &
-!      f_x1, &
-!      "f_x1", &
-!      sim%first_step/sim%freq_diag, &
-!      ierr )
-
     
     call new(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)    
     
@@ -552,96 +723,76 @@ contains
 
 
     
-    !transposition
-    call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
-    call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
-    global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
 
     do istep = sim%first_step+1, sim%num_iterations
 
-      !print *,'#istep=',istep
-      
+
+      split_x = split_x_init
+      t_step = real(istep-1,f64)
       do split_istep=1,nb_split_step
         
-        !advection in v
-        do i = 1,local_size_x1
-          ig=i+global_indices(1)-1
-          alpha = -(efield(ig)+e_app(ig)) * split_step_x2(split_istep) * sim%dt
-          !print *,'alpha=',alpha,i
-          f1d(1:np_x2) = f_x2(i,1:np_x2)
-          f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
-          f_x2(i,1:np_x2) = f1d(1:np_x2)
-        end do
-      
-      
-        !transposition
-        call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-        call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
-        global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
+        if(split_x==1)then
+          !! T ADVECTION 
+          !advection in x
+          do i = 1, local_size_x2
+            ig=global_indices(2)
+            alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) &
+              * split_step(split_istep) *sim%dt
+            !print *,'alpha=',alpha,i
+            f1d(1:np_x1) = f_x1(1:np_x1,i)
+            f1d(1:np_x1) = sim%interp_x%interpolate_array_disp(np_x1, f1d(1:np_x1), alpha)
+            f_x1(1:np_x1,i)=f1d(1:np_x1)
+            !print *,'ok'
+          end do
+          t_step = t_step+split_step(split_istep)
+          !computation of electric field
+          rho_loc = 0._f64
+          do i=1,np_x1
+            rho_loc(i)=rho_loc(i)+sum(f_x1(i,1:local_size_x2))
+            !call mpi_reduce(tmp(1),rho(i),1,MPI_REAL8,MPI_SUM,0,sll_world_collective%comm,ierr)
+          end do    
+          call mpi_barrier(sll_world_collective%comm,ierr)
+          call mpi_allreduce(rho_loc,rho,np_x1,MPI_REAL8,MPI_SUM,sll_world_collective%comm,ierr)
+          rho = 1._f64-sim%mesh2d%delta_eta2*rho
+          call solve(poisson_1d, efield, rho)
+          if (sim%driven) then
+            call PFenvelope(adr, t_step*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
+              sim%t0, sim%turn_drive_off)
+            do i = 1, np_x1
+              e_app(i) = sim%Edrmax*adr*sim%kx&
+              *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
+              -sim%omegadr*t_step*sim%dt)
+            enddo
+          endif
+        
+        else
+          !! V ADVECTION 
+          !transposition
+          call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
+          call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
+          global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
+          !advection in v
+          do i = 1,local_size_x1
+            ig=i+global_indices(1)-1
+            alpha = -(efield(ig)+e_app(ig)) * split_step(split_istep) * sim%dt
+            !print *,'alpha=',alpha,i
+            f1d(1:np_x2) = f_x2(i,1:np_x2)
+            f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
+            f_x2(i,1:np_x2) = f1d(1:np_x2)
+          end do
+          !transposition
+          call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
+          call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+          global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
 
-        !advection in x
-        do i = 1, local_size_x2
-          ig=global_indices(2)
-          alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) &
-            * split_step_x1(split_istep) *sim%dt
-          !print *,'alpha=',alpha,i
-          f1d(1:np_x1) = f_x1(1:np_x1,i)
-          f1d(1:np_x1) = sim%interp_x%interpolate_array_disp(np_x1, f1d(1:np_x1), alpha)
-          f_x1(1:np_x1,i)=f1d(1:np_x1)
-          !print *,'ok'
-        end do
-
-        !computation of electric field
-        rho_loc = 0._f64
-        do i=1,np_x1
-          rho_loc(i)=rho_loc(i)+sum(f_x1(i,1:local_size_x2))
-          !call mpi_reduce(tmp(1),rho(i),1,MPI_REAL8,MPI_SUM,0,sll_world_collective%comm,ierr)
-        end do    
-        call mpi_barrier(sll_world_collective%comm,ierr)
-        call mpi_allreduce(rho_loc,rho,np_x1,MPI_REAL8,MPI_SUM,sll_world_collective%comm,ierr)
-        rho = 1._f64-sim%mesh2d%delta_eta2*rho
-        call solve(poisson_1d, efield, rho)
-        if (sim%driven) then
-          call PFenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
-            sim%t0, sim%turn_drive_off)
-          do i = 1, np_x1
-            e_app(i) = sim%Edrmax*adr*sim%kx&
-            *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
-            -sim%omegadr*real(istep,f64)*sim%dt)
-          enddo
         endif
-
-
-
-        !transposition
-        call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
-        call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
-        global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
+        split_x= 1-split_x
       
       enddo
       
-      !advection in v
-      do i = 1,local_size_x1
-        ig=i+global_indices(1)-1
-        alpha = -(efield(ig)+e_app(ig)) * split_step_x2(nb_split_step+1) * sim%dt
-        !print *,'alpha=',alpha,i
-        f1d(1:np_x2) = f_x2(i,1:np_x2)
-        f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
-        f_x2(i,1:np_x2) = f1d(1:np_x2)
-      end do
 
-
-
+     !!DIAGNOSTICS
      if (mod(istep,sim%freq_diag_time)==0) then
-
-
-        !transposition
-        call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
-        call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
-        global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
-
-        
-        
         time = real(istep,f64)*sim%dt
         mass = 0._f64
         momentum = 0._f64
@@ -657,7 +808,6 @@ contains
           tmp_loc(4)= tmp_loc(4)+sum(f_x1(i,1:local_size_x2)*v_array(1:local_size_x2))
           tmp_loc(5)= tmp_loc(5)+sum(f_x1(i,1:local_size_x2)*v_array(1:local_size_x2)**2)          
         end do
-
         call mpi_barrier(sll_world_collective%comm,ierr)
         call mpi_allreduce(tmp_loc,tmp,5,MPI_REAL8,MPI_SUM,sll_world_collective%comm,ierr)
         mass = tmp(1) * sim%mesh2d%delta_eta1 * sim%mesh2d%delta_eta2
@@ -671,8 +821,7 @@ contains
           !  0.5_f64 * sum((efield(1:np_x1-1)+e_app(1:np_x1-1))**2) * sim%mesh2d%delta_eta1
         enddo
         potential_energy = 0.5_f64*potential_energy* sim%mesh2d%delta_eta1
-        if(sll_get_collective_rank(sll_world_collective)==0)then        
-          
+        if(sll_get_collective_rank(sll_world_collective)==0)then                  
           buf_fft = rho(1:np_x1-1)
           call fft_apply_plan(pfwd,buf_fft,buf_fft)
           do k=0,nb_mode
@@ -691,11 +840,9 @@ contains
           endif   
         endif
           
-        if (mod(istep,sim%freq_diag)==0) then
-          
+        if (mod(istep,sim%freq_diag)==0) then          
           !we substract f0
-          f_x1 = f_x1-f_x1_init          
-          
+          f_x1 = f_x1-f_x1_init                    
           !we gather in one file
           if(sll_get_collective_rank(sll_world_collective)==0)then
             print*, '#iteration: ', istep
@@ -707,37 +854,13 @@ contains
             local_size_x1*local_size_x2, MPI_REAL, f_visu, local_size_x1*local_size_x2,&
             MPI_REAL, 0, sll_world_collective%comm,ierr);
           if(sll_get_collective_rank(sll_world_collective)==0)then
-            !call int2string(istep/sim%freq_diag, fin)  
-            !call sll_ascii_file_create("f_x1_"//fin//".dat", file_id, ierr)
-            !call sll_ascii_write_array_2d(file_id,f_visu,ierr)
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)                    
           endif
-          SLL_DEALLOCATE(f_visu,ierr)
-          
-                    !we substract f0
+          SLL_DEALLOCATE(f_visu,ierr)          
+          !we add f0
           f_x1 = f_x1+f_x1_init          
-
-!            call write_scalar_field_2d(f) 
-!          call sll_gnuplot_rect_2d_parallel( &
-!            sim%mesh2d%eta1_min+(global_indices(1)-1)*sim%mesh2d%delta_eta1, &
-!            sim%mesh2d%delta_eta1, &
-!            sim%mesh2d%eta2_min+(global_indices(2)-1)*sim%mesh2d%delta_eta2, &
-!            sim%mesh2d%delta_eta2, &
-!            f_x1, &
-!            "f_x1", &
-!            istep/sim%freq_diag, &
-!            ierr )
         endif
           
-
-
-      !transposition
-      !call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 ) ! not to use
-      !                                                    ! since f_x2 is already ok
-      call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
-      global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
-
-
 
      end if
 
