@@ -1,14 +1,3 @@
-#ifdef FFTW_F2003
-
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
-sz_array = int((array_size/2+1),C_SIZE_T);                \
-p_array = fftw_alloc_complex(sz_array);                   \
-call c_f_pointer(p_array, array, [array_size/2+1])        \
-
-#else
-
-#endif
-
 module sll_vlasov4d_spectral
 
 #define MPI_MASTER 0
@@ -28,6 +17,7 @@ use sll_constants
  use geometry_module
  use diagnostiques_module
  use sll_vlasov4d_base
+ use fftw3
 
  implicit none
  private
@@ -64,12 +54,6 @@ use sll_constants
  sll_int32, private :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
-
-#ifdef FFTW_F2003
-include 'fftw3.f03'
-#else
-include 'fftw3.f'
-#endif
 
  interface new
     module procedure new_vlasov4d_spectral

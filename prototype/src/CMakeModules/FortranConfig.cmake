@@ -63,7 +63,6 @@ IF(Fortran_COMPILER STREQUAL "GFORTRAN")
 
 ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 
-   ADD_DEFINITIONS(-DINTEL)
    SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -openmp")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
 
