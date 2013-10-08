@@ -69,4 +69,3 @@ To use selalib, add the following flags to your build command line
 To link with selalib
    -L/opt/local/lib -lselalib
 "
-
