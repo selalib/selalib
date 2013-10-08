@@ -4,13 +4,13 @@
 ! - parallel
 
 program drift_kinetic_polar
-  use sll_simulation_4d_drift_kinetic_polar
+  use sll_simulation_4d_drift_kinetic_polar_module
   use sll_collective
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_dk_polar) :: simulation
+  type(sll_simulation_4d_drift_kinetic_polar) :: simulation
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Booting parallel environment...'
