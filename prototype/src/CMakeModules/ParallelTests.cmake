@@ -91,6 +91,10 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 #      SET_TESTS_PROPERTIES(vp4d_sim_mixed_qns_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
+      SET(PROCS 4)
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/sim4d_DK_hybrid_input.txt)
+      ADD_MPI_TEST(sim4d_DK_hybrid test_4d_DK_hybrid ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(sim4d_DK_hybrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
       SET(PROCS 4)
