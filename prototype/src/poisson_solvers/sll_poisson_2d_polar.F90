@@ -137,7 +137,7 @@ contains
 
 !> Creation of sll_plan_poisson_polar object for the 
 !> Poisson solver in polar coordinate
-  function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc) result(this)
+  function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc,dlog_density,inv_Te) result(this)
 
     implicit none
 

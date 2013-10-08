@@ -1,0 +1,8 @@
+&geom
+  Ncx = 64 
+  Ncv = 512
+  nbox = 1
+  xmin = 0.0
+  vmin = -6.0
+  vmax = 6.0
+/
