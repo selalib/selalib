@@ -377,14 +377,15 @@ contains ! *******************************************************************
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: cell_index
-    type(sll_logical_mesh_2d), pointer :: mesh
+    type(sll_logical_mesh_2d) :: mesh
     !    type(sll_time_mark) :: timer
     sll_real64 :: time,res,eta1,eta2
     character(len=*),parameter :: as_file1='mat'
     integer :: li_ios,li_ios1
-
+    sll_int32 :: number_cells1,number_cells2
+    
     total_num_splines_loc = es%total_num_splines_loc
-   ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
+    ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -393,25 +394,28 @@ contains ! *******************************************************************
     !SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
-
-      !   Allocation full_Matrix 
+    
+    !   Allocation full_Matrix 
     SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
-   ! SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-   ! SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
+    ! SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
+    ! SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     full_Matrix(:,:) = 0.0_f64
-   ! Masse_tot(:) = 0.0_f64
-   ! Stiff_tot(:) = 0.0_f64
+    ! Masse_tot(:) = 0.0_f64
+    ! Stiff_tot(:) = 0.0_f64
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
 
     full_Matrix(:,:) = 0.0_f64
-    mesh => c_field%get_logical_mesh( )
+    mesh = c_field%get_logical_mesh( )
+    number_cells1 = es%num_cells1
+    number_cells2 = es%num_cells2
+    
 
-    do j=1,es%num_cells2
-       do i=1,es%num_cells1
-
+    do j=1,number_cells2
+       do i=1,number_cells1
           
-          cell_index = i+es%num_cells1*(j-1)
+          
+          cell_index = i + number_cells1*(j-1)
           
           call build_local_matrices( &
                es, &
@@ -423,8 +427,6 @@ contains ! *******************************************************************
                a21_field_mat, &
                a22_field_mat, &
                c_field, &
-             !  rho, &
-             !  M_rho_loc, &
                Masse_loc,&
                Stiff_loc,&
                M_c_loc, &
@@ -438,7 +440,6 @@ contains ! *******************************************************************
                cell_index, &
                i, &
                j, &
-             !  M_rho_loc, &
                Masse_loc,&
                Stiff_loc,&
                M_c_loc, &
@@ -925,7 +926,7 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
-    type(sll_logical_mesh_2d), pointer :: mesh2d
+    type(sll_logical_mesh_2d) :: mesh2d
     class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
     class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
     class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat

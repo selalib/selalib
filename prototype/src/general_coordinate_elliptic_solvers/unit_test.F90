@@ -28,10 +28,10 @@ program test_general_elliptic_solver
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
-  class(sll_scalar_field_2d_base), pointer                     :: a11_field_mat
-  class(sll_scalar_field_2d_base), pointer                    :: a12_field_mat
-  class(sll_scalar_field_2d_base), pointer                    :: a21_field_mat
-  class(sll_scalar_field_2d_base), pointer                    :: a22_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+  class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
   class(sll_scalar_field_2d_base), pointer              :: c_field
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
