@@ -64,7 +64,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:,:,:,:), pointer     :: f_x1x2 
      sll_real64, dimension(:,:,:,:), pointer     :: f_x3x4
      sll_real64, dimension(:,:,:), allocatable   :: partial_reduction
-     sll_real64, dimension(:,:), allocatable     :: rho_full 
+     sll_real64, dimension(:,:), pointer     :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
      sll_real64, dimension(:,:), allocatable     :: rho_split
 
@@ -315,7 +315,7 @@ contains
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
-    sll_real64, dimension(:,:), allocatable :: phi_values
+    sll_real64, dimension(:,:), pointer :: phi_values
     sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
@@ -404,7 +404,6 @@ contains
    
 
     phi => new_scalar_field_2d_discrete_alt( &
-         phi_values, &
          "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
@@ -412,7 +411,8 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    call phi%set_field_data( phi_values )
+    call phi%update_interpolation_coefficients( )
     
     buffer_counter = 1
 
@@ -676,7 +676,6 @@ contains
     ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -685,6 +684,9 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
+    call rho%set_field_data( sim%rho_full )
+    call rho%update_interpolation_coefficients( )
+
 !!$    if(sim%my_rank == 0) then
 !!$       call rho%write_to_file(0)
 !!$    end if
@@ -782,7 +784,6 @@ contains
          a21_field_mat, &
          a22_field_mat, &
          c_field)!, &
-         !rho)
 
     print*, ' ... finished initialization, entering main loop.'
     ! ------------------------------------------------------------------------
@@ -900,8 +901,12 @@ contains
             density_tot )
        
        ! print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-       
+       ! The subtraction of density_tot is supposed to be made inside the 
+       ! elliptic solver.
+       !
+!       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+       call rho%set_field_data(sim%rho_full)
+       call rho%update_interpolation_coefficients( )
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
 !!$       end if

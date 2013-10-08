@@ -49,10 +49,6 @@ program test_general_elliptic_solver
   real(8), external :: source_term_chgt_perdir
   real(8), external :: source_term_chgt_dirper
   real(8), external :: source_term_chgt_dirdir
-  real(8), external :: sol_exacte_perper_der1
-  real(8), external :: sol_exacte_perper_der2
-  real(8), external :: sol_exacte_chgt_perper_der1
-  real(8), external :: sol_exacte_chgt_perper_der2
   sll_real64, dimension(:,:), pointer :: values
   sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
   sll_real64 :: acc10,acc11,acc12,acc95,acc55
@@ -75,12 +71,26 @@ program test_general_elliptic_solver
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
   sll_int32 :: npts1,npts2
   real(8), external :: sol_exacte_perper
+  real(8), external :: sol_exacte_perper_der1
+  real(8), external :: sol_exacte_perper_der2
   real(8), external :: sol_exacte_perdir  
+  real(8), external :: sol_exacte_perdir_der1
+  real(8), external :: sol_exacte_perdir_der2
   real(8), external :: sol_exacte_dirper
+  real(8), external :: sol_exacte_dirper_der1
+  real(8), external :: sol_exacte_dirper_der2
   real(8), external :: sol_exacte_chgt_perper
+  real(8), external :: sol_exacte_chgt_perper_der1
+  real(8), external :: sol_exacte_chgt_perper_der2
   real(8), external :: sol_exacte_chgt_perdir  
+  real(8), external :: sol_exacte_chgt_perdir_der1
+  real(8), external :: sol_exacte_chgt_perdir_der2
   real(8), external :: sol_exacte_chgt_dirper
+  real(8), external :: sol_exacte_chgt_dirper_der1
+  real(8), external :: sol_exacte_chgt_dirper_der2
   real(8), external :: sol_exacte_chgt_dirdir
+  real(8), external :: sol_exacte_chgt_dirdir_der1
+  real(8), external :: sol_exacte_chgt_dirdir_der2
   real(8), external :: adimension_chgt_x
   real(8), external :: adimension_chgt_y
   real(8), external :: jac11_adimension_chgt
@@ -109,9 +119,9 @@ program test_general_elliptic_solver
 !!$  !      periodic-periodic boundary conditions
 !!$  !--------------------------------------------------------------------
 !!$  
-!!$  print*, "-------------------------------------------------------------"
-!!$  print*, "1 test case witout change of coordinates"
-!!$  print*, "-------------------------------------------------------------"
+  print*, "-------------------------------------------------------------"
+  print*, "1 test case witout change of coordinates"
+  print*, "-------------------------------------------------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX-ETA1MIN)/real(NPTS1-1,f64)
@@ -218,7 +228,6 @@ program test_general_elliptic_solver
  ! interp_2d_ptr => interp_2d
 
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi1", &
        interp_2d, &
        T, &
@@ -226,6 +235,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
+  call phi%set_field_data( values )
+  call phi%update_interpolation_coefficients( )
 
   print *, 'initialized fields...'
 
@@ -319,19 +330,16 @@ program test_general_elliptic_solver
   call rho%delete()
   call c_field%delete()
   call phi%delete()
-  
   call a11_field_mat%delete()
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
-  
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-!!$
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -450,7 +458,6 @@ program test_general_elliptic_solver
 
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi2", &
        interp_2d, &
        T, &
@@ -458,6 +465,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
 !  print *, 'a = ', es%csr_mat%opr_a
@@ -507,14 +516,19 @@ program test_general_elliptic_solver
 !  print *, 'Compare the values of the transformation at the nodes: '
   
   acc2 = 0.0_f64
-  
+  normL2_2 = 0.0_f64
+  normH1_2 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         node_val   = phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         ref        = sol_exacte_perdir(eta1,eta2)
-!        print*,sin(2*sll_pi*eta1)*cos(2*sll_pi*eta1)
+        grad1ref   = sol_exacte_perdir_der1(eta1,eta2)
+        grad2ref   = sol_exacte_perdir_der2(eta1,eta2)
+        !        print*,sin(2*sll_pi*eta1)*cos(2*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference( i+1,j+1) = ref
@@ -523,9 +537,11 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc2        = acc2 + abs(node_val-ref)
+        normL2_2    = normL2_2 + (node_val-ref)**2*h1*h2
+        normH1_2    = normH1_2 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
      end do
   end do
-
+  
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
        'integrale de la solution exacte=', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
@@ -542,10 +558,10 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -665,7 +681,6 @@ program test_general_elliptic_solver
  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi3", &
        interp_2d, &
        T, &
@@ -673,6 +688,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -723,15 +740,20 @@ program test_general_elliptic_solver
 
 
   acc3 = 0.0_f64
-  
+  normL2_3 = 0.0_f64
+  normH1_3 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
 
         node_val   =phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
 
         ref        = sol_exacte_perdir(eta1,eta2)
+        grad1ref   = sol_exacte_perdir_der1(eta1,eta2)
+        grad2ref   = sol_exacte_perdir_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
@@ -740,6 +762,8 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=', ref-node_val
         end if
         acc3        = acc3 + abs(node_val-ref)
+        normL2_3    = normL2_3 + (node_val-ref)**2*h1*h2
+        normH1_3    = normH1_3 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
      end do
   end do
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
@@ -757,13 +781,11 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-!!$
-  DEALLOCATE(reference)
-!!$  
-!!$  
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     4 test case without change of coordinates 
@@ -878,7 +900,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi4", &
        interp_2d, &
        T, &
@@ -886,6 +907,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -930,13 +953,18 @@ program test_general_elliptic_solver
   
   
   acc4 = 0.0_f64
-  
+  normL2_4 = 0.0_f64
+  normH1_4 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         node_val   = phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         ref        = sol_exacte_dirper(eta1,eta2)
+        grad1ref   = sol_exacte_dirper_der1(eta1,eta2)
+        grad2ref   = sol_exacte_dirper_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
@@ -945,6 +973,8 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc4        = acc4 + abs(node_val-ref)
+        normL2_4    = normL2_4 + (node_val-ref)**2*h1*h2
+        normH1_4    = normH1_4 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
      end do
   end do
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
@@ -962,14 +992,14 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
-  !************************************************************************************************
+  !****************************************************************************
   !        WHITH CHANGE OF COORDINATES AND ANALYTIC DATA
-  !************************************************************************************************
+  !*****************************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     5 test case with colella change of coordinates 
@@ -1085,7 +1115,6 @@ program test_general_elliptic_solver
   
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi5", &
        interp_2d, &
        T, &
@@ -1093,6 +1122,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1191,10 +1222,10 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 
 
@@ -1316,7 +1347,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi6", &
        interp_2d, &
        T, &
@@ -1324,6 +1354,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1375,15 +1407,20 @@ program test_general_elliptic_solver
   acc6 = 0.0_f64
   integrale_solution = 0.0_f64
   integrale_solution_exacte = 0.0_f64
-  
+  normL2_6 = 0.0_f64
+  normH1_6 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
         node_val   = phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
+        grad1ref   = sol_exacte_chgt_perdir_der1(eta1,eta2)
+        grad2ref   = sol_exacte_chgt_perdir_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
@@ -1393,11 +1430,13 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=', ref-node_val
         end if
         acc6        = acc6 + abs(node_val-ref)
-           
+        
         val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
         if ( i < npts1-1 .and. j < npts2-1 ) then
            integrale_solution = integrale_solution + node_val*val_jac* h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac* h1*h2
+           normL2_6    = normL2_6 + (node_val-ref)**2*h1*h2
+           normH1_6    = normH1_6 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -1418,10 +1457,10 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
 
   
@@ -1540,7 +1579,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi7", &
        interp_2d, &
        T, &
@@ -1548,6 +1586,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1597,15 +1637,20 @@ program test_general_elliptic_solver
   acc7 = 0.0_f64
   integrale_solution = 0.0_f64
   integrale_solution_exacte = 0.0_f64
-  
+  normL2_7 = 0.0_f64
+  normH1_7 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
         node_val   = phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
+        grad1ref   = sol_exacte_chgt_dirdir_der1(eta1,eta2)
+        grad2ref   = sol_exacte_chgt_dirdir_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
@@ -1618,6 +1663,8 @@ program test_general_elliptic_solver
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           normL2_7    = normL2_7 + (node_val-ref)**2*h1*h2*val_jac
+           normH1_7    = normH1_7 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -1636,11 +1683,11 @@ program test_general_elliptic_solver
   call a22_field_mat%delete()
 
   call T%delete()
-  
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
   
 
@@ -1761,7 +1808,6 @@ program test_general_elliptic_solver
   
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi8", &
        interp_2d, &
        T, &
@@ -1769,6 +1815,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -1821,14 +1869,20 @@ program test_general_elliptic_solver
   acc8 = 0.0_f64
   integrale_solution = 0.0_f64
   integrale_solution_exacte = 0.0_f64
+  normH1_8 =  0.0
+  normL2_8 =  0.0
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
         node_val   =phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
+        grad1ref   = sol_exacte_chgt_dirper_der1(eta1,eta2)
+        grad2ref   = sol_exacte_chgt_dirper_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
@@ -1841,6 +1895,8 @@ program test_general_elliptic_solver
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           normL2_8    = normL2_8 + (node_val-ref)**2*h1*h2*val_jac
+           normH1_8    = normH1_8 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -1859,18 +1915,18 @@ program test_general_elliptic_solver
   
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
 
   
 
 
 
- !************************************************************************************************
+ !******************************************************************************
   !        WHITH CHANGE OF COORDINATES AND NON-ANALYTIC SOURCE TERM
-  !************************************************************************************************
+  !****************************************************************************
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     95  test case without change of coordinates 
@@ -1968,11 +2024,11 @@ program test_general_elliptic_solver
   
   
   
-  allocate(point1(npts1-1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1-1,npts2-1))
-  do j=0,npts2-2
-     do i=0,npts1-2
+  allocate(point1(npts1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1,npts2))
+  do j=0,npts2-1
+     do i=0,npts1-1
         point1(i+1)       = real(i,f64)*(ETA1MAX-ETA1MIN)/(npts1-1) + ETA1MIN 
         point2(j+1)       = real(j,f64)*(ETA2MAX-ETA2MIN)/(npts2-1) + ETA2MIN 
         tab_rho(i+1,j+1)  = source_term_perper(point1(i+1),point2(j+1))
@@ -2000,7 +2056,6 @@ program test_general_elliptic_solver
   ! terme_source_interp => interp_2d_term_source
   
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho95", &
        interp_2d_term_source, &
        T, &
@@ -2011,8 +2066,9 @@ program test_general_elliptic_solver
        point1,&
        npts1-1,&
        point2,&
-       npts2-1)
-  
+       npts2-1)  
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
  call rho%write_to_file(0)
  
@@ -2035,7 +2091,6 @@ program test_general_elliptic_solver
 !!$  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi95", &
        interp_2d, &
        T, &
@@ -2043,6 +2098,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2147,13 +2204,13 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 
 
@@ -2256,12 +2313,12 @@ program test_general_elliptic_solver
   
   
 
-  allocate(point1(npts1-1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1-1,npts2-1))
+  allocate(point1(npts1))
+  allocate(point2(npts2))
+  allocate(tab_rho(npts1,npts2))
   
-  do j=0,npts2-2
-     do i=0,npts1-2
+  do j=0,npts2-1
+     do i=0,npts1-1
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
         point2(j+1)       = real(j,f64)*h2 + ETA2MIN
         tab_rho(i+1,j+1)  = source_term_chgt_perper(point1(i+1),point2(j+1))
@@ -2289,7 +2346,6 @@ program test_general_elliptic_solver
   tab_rho(:,:) = tab_rho - sum(tab_rho)/((npts1-1)*(npts2-1))
   print*,'moyenne', sum(tab_rho)
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho9", &
        terme_source_interp, &
        T, &
@@ -2301,7 +2357,8 @@ program test_general_elliptic_solver
        npts1-1,&
        point2,&
        npts2-1)
-
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
   
 !!$  
   call initialize_ad2d_interpolator( &
@@ -2321,7 +2378,6 @@ program test_general_elliptic_solver
 !!$  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi9", &
        interp_2d, &
        T, &
@@ -2329,6 +2385,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2431,13 +2489,13 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
   
   
   
@@ -2537,11 +2595,11 @@ program test_general_elliptic_solver
 
   
 
-  allocate(point1(npts1-1))
+  allocate(point1(npts1))
   allocate(point2(npts2))
-  allocate(tab_rho(npts1-1,npts2))
+  allocate(tab_rho(npts1,npts2))
   do j=0,npts2-1
-     do i=0,npts1-2
+     do i=0,npts1-1
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
         point2(j+1)       = real(j,f64)*h2 + ETA2MIN
         tab_rho(i+1,j+1)  = source_term_chgt_perdir(point1(i+1),point2(j+1))
@@ -2567,7 +2625,6 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho10", &
        terme_source_interp, &
        T, &
@@ -2579,6 +2636,8 @@ program test_general_elliptic_solver
        npts1-1,&
        point2,&
        npts2)
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
 !!$  
   call initialize_ad2d_interpolator( &
@@ -2598,7 +2657,6 @@ program test_general_elliptic_solver
 !!$  
   
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi10", &
        interp_2d, &
        T, &
@@ -2606,6 +2664,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   
@@ -2656,14 +2716,20 @@ program test_general_elliptic_solver
   acc10 = 0.0_f64
   integrale_solution = 0.0 
   integrale_solution_exacte = 0.0
+  normH1_10 =  0.0
+  normL2_10 =  0.0
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
         
         node_val   =phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_perdir(eta1,eta2)
+        grad1ref   = sol_exacte_chgt_perdir_der1(eta1,eta2)
+        grad2ref   = sol_exacte_chgt_perdir_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
@@ -2677,6 +2743,8 @@ program test_general_elliptic_solver
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           normL2_10    = normL2_10 + (node_val-ref)**2*h1*h2*val_jac
+           normH1_10   = normH1_10 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -2697,13 +2765,13 @@ program test_general_elliptic_solver
 
   call T%delete()
   
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 !!$
 !!$  !--------------------------------------------------------------------
@@ -2833,7 +2901,6 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho11", &
        terme_source_interp, &
        T, &
@@ -2845,6 +2912,8 @@ program test_general_elliptic_solver
        npts1,&
        point2,&
        npts2)
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
 !!$  
   call initialize_ad2d_interpolator( &
@@ -2863,7 +2932,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
 !!$    
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi11", &
        interp_2d, &
        T, &
@@ -2871,6 +2939,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
   call set_time_mark(t_reference)
@@ -2926,8 +2996,12 @@ program test_general_elliptic_solver
         eta2       = real(j,f64)*h2 + ETA2MIN
         
         node_val   =phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirdir(eta1,eta2)
+        grad1ref   = sol_exacte_chgt_dirdir_der1(eta1,eta2)
+        grad2ref   = sol_exacte_chgt_dirdir_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1)  = ref
@@ -2942,7 +3016,8 @@ program test_general_elliptic_solver
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
-           
+           normL2_11    = normL2_11 + (node_val-ref)**2*h1*h2*val_jac
+           normH1_11    = normH1_11 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -2961,14 +3036,14 @@ program test_general_elliptic_solver
   call a22_field_mat%delete()
 
   call T%delete()
-  
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
+
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
 
 !!$  !--------------------------------------------------------------------
 !!$  
@@ -3065,10 +3140,10 @@ program test_general_elliptic_solver
   
   
   
-  allocate(point1(npts1))
-  allocate(point2(npts2-1))
-  allocate(tab_rho(npts1,npts2-1))
-  do j=0,npts2-2
+  SLL_ALLOCATE(point1(npts1),ierr)
+  SLL_ALLOCATE(point2(npts2),ierr)
+  SLL_ALLOCATE(tab_rho(npts1,npts2),ierr)
+  do j=0,npts2-1
      do i=0,npts1-1
         point1(i+1)       = real(i,f64)*h1 + ETA1MIN
         point2(j+1)       = real(j,f64)*h2 + ETA2MIN
@@ -3095,7 +3170,6 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       tab_rho, &
        "rho12", &
        terme_source_interp, &
        T, &
@@ -3107,6 +3181,8 @@ program test_general_elliptic_solver
        npts1,&
        point2,&
        npts2-1)
+  call rho%set_field_data(tab_rho)
+  call rho%update_interpolation_coefficients()
 
 !!$  
   call initialize_ad2d_interpolator( &
@@ -3125,7 +3201,6 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
 !!$  
   phi => new_scalar_field_2d_discrete_alt( &
-       values, &
        "phi12", &
        interp_2d, &
        T, &
@@ -3133,6 +3208,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
        SLL_PERIODIC)
+  call phi%set_field_data(values)
+  call phi%update_interpolation_coefficients()
    
   print *, 'initialized fields...'
   
@@ -3182,6 +3259,8 @@ program test_general_elliptic_solver
   acc12 = 0.0_f64
   integrale_solution = 0.0
   integrale_solution_exacte = 0.0
+  normL2_12 = 0.0_f64
+  normH1_12 = 0.0_f64
   
   do j=0,npts2-1
      do i=0,npts1-1
@@ -3189,8 +3268,12 @@ program test_general_elliptic_solver
         eta2       = real(j,f64)*h2 + ETA2MIN
         
         node_val   = phi%value_at_point(eta1,eta2)
+        grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
+        grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         !print*, 'rer'
         ref        = sol_exacte_chgt_dirper(eta1,eta2)
+        grad1ref   = sol_exacte_chgt_dirper_der1(eta1,eta2)
+        grad2ref   = sol_exacte_chgt_dirper_der2(eta1,eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1)  = ref
@@ -3204,6 +3287,8 @@ program test_general_elliptic_solver
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           normL2_12    = normL2_12 + (node_val-ref)**2*h1*h2*val_jac
+           normH1_12    = normH1_12 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -3222,15 +3307,15 @@ program test_general_elliptic_solver
   call a22_field_mat%delete()
 
   call T%delete()
-  
-  DEALLOCATE(values)
-  DEALLOCATE(calculated)
-  DEALLOCATE(difference)
-  DEALLOCATE(reference)
-  DEALLOCATE(point1)
-  DEALLOCATE(point2)
-  DEALLOCATE(tab_rho)
-!!$
+
+  SLL_DEALLOCATE(values, ierr)
+  SLL_DEALLOCATE_ARRAY(calculated,ierr)
+  SLL_DEALLOCATE_ARRAY(difference,ierr)
+  SLL_DEALLOCATE_ARRAY(reference,ierr)
+  SLL_DEALLOCATE_ARRAY(point1,ierr)
+  SLL_DEALLOCATE_ARRAY(point2,ierr)
+  SLL_DEALLOCATE_ARRAY(tab_rho,ierr)
+
 
   print*, '------------------------------------------------------'
   print*, ' WITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA' 
@@ -3241,13 +3326,13 @@ program test_general_elliptic_solver
        ',  solution time (s): ', t1e,'Norm L2',sqrt(normL2_1),'Norm H1',sqrt(normH1_1)
   print *,'Average error in nodes (per-dir) without change of coordinates='&
        ,acc2/(npts1*npts2), ',  initialization time (s): ', t2i, &
-       ',  solution time (s): ', t2e
+       ',  solution time (s): ', t2e,'Norm L2',sqrt(normL2_2),'Norm H1',sqrt(normH1_2)
   print *,'Average error in nodes (dir-dir) without change of coordinates='&
        ,acc3/(npts1*npts2), ',  initialization time (s): ', t3i, &
-       ',  solution time (s): ', t3e
+       ',  solution time (s): ', t3e,'Norm L2',sqrt(normL2_3),'Norm H1',sqrt(normH1_3)
   print *,'Average error in nodes (dir-per) without change of coordinates='&
        ,acc4/(npts1*npts2), ',  initialization time (s): ', t4i, &
-       ',  solution time (s): ', t4e
+       ',  solution time (s): ', t4e,'Norm L2',sqrt(normL2_4),'Norm H1',sqrt(normH1_4)
 !!$
   print*, '-------------------------------------------------------'
   print*, ' COLELLA CHANGE OF COORDINATES AND ANALYTIC DATA' 
@@ -3259,15 +3344,15 @@ program test_general_elliptic_solver
   print *,'Average error in nodes (per-dir) '
   print*, 'with colella change of coordinates='&
        ,acc6/(npts1*npts2), ',  initialization time (s): ', t6i, &
-       ',  solution time (s): ', t6e
+       ',  solution time (s): ', t6e,'Norm L2',sqrt(normL2_6),'Norm H1',sqrt(normH1_6)
   print *,'Average error in nodes (dir-dir) '
   print*, 'with colella change of coordinates='&
        ,acc7/(npts1*npts2), ',  initialization time (s): ', t7i, &
-       ',  solution time (s): ', t7e
+       ',  solution time (s): ', t7e,'Norm L2',sqrt(normL2_7),'Norm H1',sqrt(normH1_7)
   print *,'Average error in nodes (dir-per) '
   print*, 'with colella change of coordinates='&
        ,acc8/(npts1*npts2), ',  initialization time (s): ', t8i, &
-       ',  solution time (s): ', t8e
+       ',  solution time (s): ', t8e,'Norm L2',sqrt(normL2_8),'Norm H1',sqrt(normH1_8)
 !!$  
   print*, '-------------------------------------------------------'
   print*, ' WITHOUT CHANGE OF COORDINATES AND WITH A SOURCE TERM NON-ANALYTIC' 
@@ -3276,7 +3361,7 @@ program test_general_elliptic_solver
   print*, 'without change of coordinates='&
        ,acc95/(npts1*npts2), ',  initialization time (s): ', t95i, &
        ',  solution time (s): ', t95e,'Norm L2',sqrt(normL2_95),'Norm H1',sqrt(normH1_95),&
-       h1**(SPLINE_DEG1+1)*h2**(SPLINE_DEG2+1),  h1**(SPLINE_DEG1)*h2**(SPLINE_DEG2)
+       h1**(SPLINE_DEG1),  h1**(SPLINE_DEG1-1)
 !!$
 !!$
   print*, '-------------------------------------------------------'
@@ -3289,18 +3374,49 @@ program test_general_elliptic_solver
   print *,'Average error in nodes (per-dir) '
   print*, 'with colella change of coordinates and source term non analytic='&
        ,acc10/(npts1*npts2), ',  initialization time (s): ', t10i, &
-       ',  solution time (s): ', t10e
+       ',  solution time (s): ', t10e,'Norm L2',sqrt(normL2_10),'Norm H1',sqrt(normH1_10)
   print *,'Average error in nodes (dir-dir)'
   print*, 'with colella change of coordinates and source term non analytic='&
        ,acc11/(npts1*npts2), ',  initialization time (s): ', t11i, &
-       ',  solution time (s): ', t11e
+       ',  solution time (s): ', t11e,'Norm L2',sqrt(normL2_11),'Norm H1',sqrt(normH1_11)
   print *,'Average error in nodes (dir-per) '
   print*, 'with colella change of coordinates and source term non analytic='&
        ,acc12/(npts1*npts2), ',  initialization time (s): ', t12i, &
-       ',  solution time (s): ', t12e
+       ',  solution time (s): ', t12e,'Norm L2',sqrt(normL2_12),'Norm H1',sqrt(normH1_12)
   
 !!$  
-  print *, 'PASSED'
+
+
+  if ( ( sqrt(normL2_1) <= h1**(SPLINE_DEG1-1))   .AND. &
+       ( sqrt(normL2_2) <= h1**(SPLINE_DEG1-1))   .AND. &
+       ( sqrt(normL2_3) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_4) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_5) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_6) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_7) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_8) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_95)<= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_9) <= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_10)<= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_11)<= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normL2_12)<= h1**(SPLINE_DEG1 -1))   .AND. &
+       ( sqrt(normH1_1) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_2) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_3) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_4) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_5) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_6) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_7) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_8) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_95)<= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_9) <= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_10)<= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_11)<= h1**(SPLINE_DEG1 -1-1))   .AND. &
+       ( sqrt(normH1_12)<= h1**(SPLINE_DEG1 -1-1)) ) then
+     
+       
+     print *, 'PASSED'
+  end if
 end program test_general_elliptic_solver
 
 
@@ -3406,6 +3522,23 @@ real(8) function sol_exacte_perdir(eta1,eta2)
 end function sol_exacte_perdir
 
 
+real(8) function sol_exacte_perdir_der1(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  intrinsic :: cos
+  intrinsic :: sin
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perdir_der1 = 2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
+end function sol_exacte_perdir_der1
+real(8) function sol_exacte_perdir_der2(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  intrinsic :: cos
+  intrinsic :: sin
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perdir_der2 = 2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+end function sol_exacte_perdir_der2
+
 !  Solution for a identity change of coordinates 
 !   and also dirichlet-periodicconditons
 !   the matrix A is equal to identity 
@@ -3433,8 +3566,25 @@ real(8) function sol_exacte_dirper(eta1,eta2)
   
 end function sol_exacte_dirper
 
+real(8) function sol_exacte_dirper_der1(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_dirper_der1 = 2*sll_pi*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+       !eta1 ** 2 * (eta1**2-1)* cos(2*sll_pi*eta2)*sin(2*sll_pi*eta2)
+  
+  
+end function sol_exacte_dirper_der1
 
-
+real(8) function sol_exacte_dirper_der2(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_dirper_der2 = -2.0*sll_pi*sin(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
+       !eta1 ** 2 * (eta1**2-1)* cos(2*sll_pi*eta2)*sin(2*sll_pi*eta2)
+  
+  
+end function sol_exacte_dirper_der2
 
 !----------------------------------------------------------
 !  Solution for a r theta change of coordinates 
@@ -3530,7 +3680,10 @@ real(8) function sol_exacte_chgt_perper_der1(eta1,eta2)
   x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
-  sol_exacte_chgt_perper_der1 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)
+  sol_exacte_chgt_perper_der1 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)&
+       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)&
+       * ( 0.1*2*sll_pi*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
   
   
 end function sol_exacte_chgt_perper_der1
@@ -3545,9 +3698,12 @@ real(8) function sol_exacte_chgt_perper_der2(eta1,eta2)
   x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
-  sol_exacte_chgt_perper_der2 = -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)
+  !sol_exacte_chgt_perper_der2 = -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)
   
-  
+  sol_exacte_chgt_perper_der2 = -2*sll_pi*sin(2*sll_pi*x)*cos(2*sll_pi*y)&
+       * ( 0.1*2*sll_pi*sin(2* sll_pi*eta1) * cos(2*sll_pi*eta2) )&
+       -2*sll_pi*cos(2*sll_pi*x)*sin(2*sll_pi*y)&
+       * ( 1.0_f64 + 0.1*2*sll_pi*sin(2* sll_pi*eta1)*cos(2*sll_pi*eta2) )
 end function sol_exacte_chgt_perper_der2
 
 
@@ -3595,7 +3751,41 @@ real(8) function sol_exacte_chgt_perdir(eta1,eta2)
   
 end function sol_exacte_chgt_perdir
 
+real(8) function sol_exacte_chgt_perdir_der1(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+ ! real(8), dimension(:), intent(in), optional :: params
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  sol_exacte_chgt_perdir_der1 = -2*sll_pi*sin(2*sll_pi*x)*sin(2*sll_pi*y)&
+       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
+       * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
+  
+  
+end function sol_exacte_chgt_perdir_der1
 
+real(8) function sol_exacte_chgt_perdir_der2(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+ ! real(8), dimensi@on(:), intent(in), optional :: params
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  sol_exacte_chgt_perdir_der2 = -2*sll_pi*sin(2*sll_pi*x)*sin(2*sll_pi*y)&
+       * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2) ) &
+       + 2*sll_pi*cos(2*sll_pi*x)*cos(2*sll_pi*y)&
+       * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
+  
+  
+end function sol_exacte_chgt_perdir_der2
 
 !----------------------------------------------------------
 !  Solution for a colella change of coordinates 
@@ -3643,6 +3833,43 @@ real(8) function sol_exacte_chgt_dirdir(eta1,eta2)
 end function sol_exacte_chgt_dirdir
 
 
+real(8) function sol_exacte_chgt_dirdir_der1(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  
+  sol_exacte_chgt_dirdir_der1 = 2*sll_pi*cos(2* sll_pi*x)*sin(2* sll_pi*y)&
+       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
+       * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) )
+end function sol_exacte_chgt_dirdir_der1
+
+
+real(8) function sol_exacte_chgt_dirdir_der2(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  
+  sol_exacte_chgt_dirdir_der2 =  2*sll_pi*cos(2* sll_pi*x)*sin(2* sll_pi*y)&
+       * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2)  )&
+       + 2*sll_pi*sin(2* sll_pi*x)*cos(2* sll_pi*y) &
+       * ( 1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) )
+  
+end function sol_exacte_chgt_dirdir_der2
+
+
 
 
 
@@ -3687,9 +3914,46 @@ real(8) function sol_exacte_chgt_dirper(eta1,eta2)
   y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
   
   
-  sol_exacte_chgt_dirper = cos(2* sll_pi*y)*sin(2* sll_pi*x)
+  sol_exacte_chgt_dirper = sin(2* sll_pi*x)*cos(2* sll_pi*y)
   
 end function sol_exacte_chgt_dirper
+
+
+real(8) function sol_exacte_chgt_dirper_der1(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  
+  sol_exacte_chgt_dirper_der1 = 2*sll_pi*cos(2* sll_pi*x)*cos(2* sll_pi*y) &
+       * ( 1.0_f64 + 0.1*2*sll_pi*cos(2*sll_pi*eta1) * sin(2*sll_pi*eta2) )&
+       - 2*sll_pi*sin(2* sll_pi*x)*sin(2* sll_pi*y)&
+       * ( 2*sll_pi*0.1*cos(2* sll_pi*eta1) * sin(2*sll_pi*eta2) ) 
+end function sol_exacte_chgt_dirper_der1
+
+
+real(8) function sol_exacte_chgt_dirper_der2(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  real(8) :: x,y
+  intrinsic :: cos
+  intrinsic :: sin
+  
+  x =   eta1 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  y =   eta2 + 0.1*sin(2* sll_pi*eta1) * sin(2*sll_pi*eta2)
+  
+  
+  sol_exacte_chgt_dirper_der2 = 2*sll_pi*cos(2* sll_pi*x)*cos(2* sll_pi*y) &
+       * ( 0.1*2*sll_pi*sin(2*sll_pi*eta1) * cos(2*sll_pi*eta2)  )&
+       - 2*sll_pi*sin(2* sll_pi*x)*sin(2* sll_pi*y)&
+       * (1.0_f64 + 2*sll_pi*0.1*sin(2* sll_pi*eta1) *cos(2*sll_pi*eta2) ) 
+  
+end function sol_exacte_chgt_dirper_der2
 
 
 !!!!!! test case with F(theta,phi) = (2pi theta , 2pi phi)
