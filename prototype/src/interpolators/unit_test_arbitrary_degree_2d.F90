@@ -6,9 +6,9 @@ program unit_test
   use sll_gnuplot
   implicit none
 
-#define NPTS1 30
-#define NPTS2 30 
-#define SPL_DEG 2
+#define NPTS1 64
+#define NPTS2 64 
+#define SPL_DEG 3
 #define X1MIN 0.0_f64
 #define X1MAX 1.0_f64
 #define X2MIN 0.0_f64
@@ -25,16 +25,19 @@ program unit_test
 !!$  sll_real64, dimension(:), allocatable      :: x1_eta1_max
   sll_int32 :: ierr
   sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, acc3, node_val, ref, deriv1_val 
+  sll_real64 :: eta1, eta2, h1, h2
+  sll_real64 :: acc, acc1, acc2, acc3, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
+  sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1
+  sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2
 
-  
   
   print *,  'filling out discrete arrays for x1 '
   h1 = (X1MAX-X1MIN)/real(NPTS1-1,f64)
   h2 = (X2MAX-X2MIN)/real(NPTS2-1,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
+  
   allocate(x(NPTS1,NPTS2))
   allocate(reference(NPTS1,NPTS2))
   allocate(calculated(NPTS1,NPTS2))
@@ -46,18 +49,18 @@ program unit_test
   print *, '***********************************************************'
   print *, '              periodic-periodic case'
   print *, '***********************************************************'
-
+  
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
-        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) *sin(2.0_f64*sll_pi*eta1)
-        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+        x(i+1,j+1)         = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2) *cos(2.0_f64*sll_pi*eta1)
+        reference(i+1,j+1) = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
      end do
   end do
-
+  
   call sll_gnuplot_field_2d( &
        X1MIN, &
        X1MAX, &
@@ -70,17 +73,6 @@ program unit_test
        0, &
        ierr)
   
-  !print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
-  !  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
-  
-!!$  ! Fill out the transformation's slopes at the borders
-!!$  do j=0,NPTS2-1
-!!$     eta1           = 0.0_f64
-!!$     eta2           = real(j,f64)*h2
-!!$     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
-!!$     eta1           = 1.0_f64
-!!$     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
-!!$  end do
   
   ! Test the 2D transformation:
   
@@ -98,7 +90,7 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
   
-  
+
   call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&
@@ -109,27 +101,33 @@ program unit_test
   
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
-  acc1 = 0.0_f64
-  acc2 = 0.0_f64
+  acc_der1  = 0.0_f64
+  acc_der2 = 0.0_f64
+  
   do j=0,NPTS2-2
      do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1/2
-        eta2       = X2MIN + real(j,f64)*h2/2
+        eta1       = X1MIN + real(i,f64)*h1/4.
+        eta2       = X2MIN + real(j,f64)*h2/4.
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref                 =sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)! reference(i+1,j+1)
+        ref        = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print*, node_val,ref,ref-node_val
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-        !    'theoretical = ', ref
-        acc        = acc + abs(node_val-ref)
-        !       deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
+        !print*, eta1,eta2,node_val,ref,ref-node_val
         
-        !       ref        = deriv_x1_polar_f_eta1(eta1,eta2)
-        !       acc1       = acc1 + abs(deriv1_val-ref)
-        !      deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
-        !     ref        = deriv_x1_polar_f_eta2(eta1,eta2)
-        !    acc2       = acc2 + abs(deriv2_val-ref)
+        acc        = acc + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)
+        ref = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+        acc_der1 = acc_der1 + abs(deriv1_val-ref)
+        !
+        !print*,'derive=', ref,deriv1_val,ref-deriv1_val
+
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 0.0_f64!-2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        acc_der2 = acc_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+
+        !print*, deriv1_val,deriv2_val
      end do
   end do
 
@@ -148,6 +146,18 @@ program unit_test
   print *, '***********************************************************'
 
   call delete(ad2d)
+
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta1_pos(i+1)      = eta1
+        eta2_pos(j+1)      = eta2
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) *sin(2.0_f64*sll_pi*eta1)
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+     end do
+  end do
+  
   
   call ad2d%initialize( &
        NPTS1, &
@@ -174,20 +184,31 @@ program unit_test
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc1 = 0.0_f64
-  acc2 = 0.0_f64
+  acc1_der1 = 0.0_f64
+  acc1_der2 = 0.0_f64
   do j=0,NPTS2-1
      do i=0,NPTS1-2
-        eta1       = X1MIN + real(i,f64)*h1/2
-        eta2       = X2MIN + real(j,f64)*h2/2
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref                 = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1) !reference(i+1,j+1)
+        ref        = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print*, ref,node_val,node_val-ref
+        !print*, ref,node_val,node_val-ref
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-         !    'theoretical = ', ref
+         !    'theoretical = ', ref,'difference=',ref-node_val
         acc1        = acc1 + abs(node_val-ref)
         
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)   
+        ref = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        acc1_der1 = acc1_der1 + abs(deriv1_val-ref)
+        !print*, ref,deriv1_val
+        
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+        acc1_der2 = acc1_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+     
      end do
   end do
   
@@ -207,7 +228,7 @@ program unit_test
         eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
-        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1) 
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)
      end do
   end do
@@ -235,7 +256,9 @@ program unit_test
   
   
   print *, 'Compare the values of the transformation at the nodes: '
-
+  acc2 = 0.0_f64
+  acc2_der1 = 0.0_f64
+  acc2_der2 = 0.0_f64
   do j=0,NPTS2-2
      do i=0,NPTS1-1
         eta1       = X1MIN + real(i,f64)*h1
@@ -243,12 +266,21 @@ program unit_test
         !print*, "hehe"
         node_val   = ad2d%interpolate_value(eta1,eta2)
         !print*, "hehe"
-        ref                 = reference(i+1,j+1)
+        ref                 = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
          !    'theoretical = ', ref
         acc2        = acc2 + abs(node_val-ref)
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)
+        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc2_der1 = acc2_der1 + abs(deriv1_val-ref)
+        !print*, ref,deriv1_val
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc2_der2 = acc2_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
      end do
   end do
   
@@ -298,7 +330,9 @@ program unit_test
   print *, 'Compare the values of the transformation at the nodes: '
 
   acc3 = 0.0_f64
-  
+  acc3_der1 = 0.0_f64
+  acc3_der2 = 0.0_f64
+
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1       = X1MIN + real(i,f64)*h1
@@ -312,10 +346,24 @@ program unit_test
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
          !    'theoretical = ', ref
         acc3        = acc3 + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc3_der1 = acc3_der1 + abs(deriv1_val-ref)
+        !print*, ref,deriv1_val,abs(deriv1_val-ref)
+
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc3_der2 = acc3_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
      end do
   end do
+
+
   
-  
+  print*, '--------------------------------------------'
+  print*, ' Average error in nodes'
+  print*, '--------------------------------------------'
   print *, 'Average error in nodes (dirichlet-dirichlet) = ', acc3/(NPTS1*NPTS2)
   !
   print *, 'Average error in nodes (dirichlet-periodic) = ', acc2/(NPTS1*NPTS2)
@@ -323,7 +371,33 @@ program unit_test
   print *, 'Average error in nodes (periodic-dirichlet) = ', acc1/(NPTS1*NPTS2)
 !
   print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
-!!$
+
+  print*, '--------------------------------------------'
+  print*, ' Average error in nodes first derivative eta1'
+  print*, '--------------------------------------------'
+  print *,'Average error in nodes first derivative eta1(dirichlet-dirichlet)=',&
+       acc3_der1/(NPTS1*NPTS2)
+  print *,'Average error in nodes first derivative eta1(dirichlet-periodic)=',&
+       acc2_der1/(NPTS1*NPTS2)
+  print *,'Average error in nodes first derivative eta1(periodic-dirichlet)=',&
+       acc1_der1/(NPTS1*NPTS2)
+ 
+  print *,'Average error in nodes first derivative eta1(periodic-periodic)=',&
+       acc_der1/(NPTS1*NPTS2)
+
+  print*, '--------------------------------------------'
+  print*, ' Average error in nodes first derivative eta2'
+  print*, '--------------------------------------------'
+  print *,'Average error in nodes first derivative eta2(dirichlet-dirichlet)=',&
+       acc3_der2/(NPTS1*NPTS2)
+  print *,'Average error in nodes first derivative eta2(dirichlet-periodic)=',&
+       acc2_der2/(NPTS1*NPTS2)
+  print *,'Average error in nodes first derivative eta2(periodic-dirichlet)=',&
+       acc1_der2/(NPTS1*NPTS2)
+  
+  print *,'Average error in nodes first derivative eta2(periodic-periodic)=',&
+       acc_der2/(NPTS1*NPTS2)
+
 !!$
 !!$  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
 !!$      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &

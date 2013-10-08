@@ -17,7 +17,7 @@
 !!          diag(weigh), so there is no need to store it more than just the weigh.\\
 !!
 !!          We also need the derivative matrix D.
-!!          \f[ D_{i,j}=\int \pih_i \phi^'_j \f]
+!!          \f[ D_{i,j}=\int \phi_i \phi_j' \f]
 !!
 !!          This module will first be limited to 1D and should extend as people will
 !!          have the need for higher dimension (and so have time to write it).
