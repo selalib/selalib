@@ -13,7 +13,7 @@
  order_v = 4
 /
 &time_iterations
-  dt = 1.
+  dt = 0.1
   nbiter = 60
   freqdiag = 100
   freqdiag_time = 1
