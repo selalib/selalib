@@ -14,7 +14,7 @@
 /
 &time_iterations
   dt = 0.1
-  nbiter = 60
+  nbiter = 600
   freqdiag = 100
   freqdiag_time = 1
   split_case = 1
