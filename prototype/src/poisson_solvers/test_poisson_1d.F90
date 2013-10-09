@@ -12,10 +12,13 @@ sll_real64, dimension(:), allocatable :: ex
 sll_real64, dimension(:), allocatable :: ex_exact
 sll_real64, dimension(:), allocatable :: rho
 
-type (poisson_1d_periodic)         :: poisson
+type (poisson_1d_periodic)            :: poisson
 
 sll_int32   :: nc_eta1
-sll_real64  :: eta1_min, eta1_max, delta_eta1, x
+sll_real64  :: eta1_min
+sll_real64  :: eta1_max
+sll_real64  :: delta_eta1
+sll_real64  :: x
 sll_int32   :: error
 sll_int32   :: mode
 sll_int32   :: i
@@ -36,7 +39,7 @@ do i=1,nc_eta1+1
    ex_exact(i) = -mode*cos(x)
 end do
 
-call new(poisson, eta1_min, eta1_max, nc_eta1, error) 
+call initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
 
 call solve(poisson, ex, rho)
     

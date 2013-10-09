@@ -27,7 +27,7 @@ module sll_poisson_1d_periodic
 
   implicit none
   private
-  public :: new, solve
+  public :: initialize, new, solve
 
   !> Solver data structure
   type, public :: poisson_1d_periodic
@@ -43,6 +43,11 @@ module sll_poisson_1d_periodic
      module procedure new_poisson_1d_periodic
   end interface
 
+  !> Initialize a new poisson solver on 1d mesh
+  interface initialize
+     module procedure initialize_poisson_1d_periodic
+  end interface
+
   !> Solve the Poisson equation on 1d mesh and compute the potential
   interface solve
      module procedure solve_poisson_1d_periodic 
@@ -50,14 +55,28 @@ module sll_poisson_1d_periodic
 
 contains
 
-  !> Initialize the solver
-  subroutine new_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+  !> Create a new solver
+  function new_poisson_1d_periodic(eta1_min,eta1_max,nc_eta1,error) &
+     result(this)
+     type(poisson_1d_periodic),pointer :: this     !< Solver data structure
+     sll_int32,intent(in)              :: nc_eta1  !< number of cells
+     sll_int32, intent(out)            :: error    !< error code
+     sll_real64, intent(in)            :: eta1_min !< left corner
+     sll_real64, intent(in)            :: eta1_max !< right corner
 
-    type(poisson_1d_periodic),intent(out) :: this  !< Solver data structure
-    sll_int32,intent(in)                   :: nc_eta1 !< number of cells
-    sll_int32, intent(out)                 :: error !< error code
-    sll_real64, intent(in)                 :: eta1_min !< left corner
-    sll_real64, intent(in)                 :: eta1_max !< right corner
+     SLL_ALLOCATE(this, error)
+     call initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+
+  end function new_poisson_1d_periodic 
+  
+  !> Initialize the solver
+  subroutine initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+
+    type(poisson_1d_periodic),intent(out) :: this     !< Solver data structure
+    sll_int32,intent(in)                  :: nc_eta1  !< number of cells
+    sll_int32, intent(out)                :: error    !< error code
+    sll_real64, intent(in)                :: eta1_min !< left corner
+    sll_real64, intent(in)                :: eta1_max !< right corner
 
     error = 0
     ! geometry
@@ -72,7 +91,7 @@ contains
     ! Allocate auxiliary arrays for fft in order to keep rhs unchanged
     SLL_ALLOCATE(this%work(nc_eta1+1),error)
 
-  end subroutine new_poisson_1d_periodic
+  end subroutine initialize_poisson_1d_periodic
 
   subroutine solve_poisson_1d_periodic(this, field, rhs)
 
