@@ -45,7 +45,7 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 64
+#define NCELL1 4
 #define NCELL2 1
 #define NCELL3 4
 #define NCELL4 4
@@ -65,8 +65,8 @@ program vp_cartesian_4d
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 1.0_f64
 #define TINI 0.0_f64
-#define TMAX 3.e-1_f64
-!#define TMAX 0.0001_f64
+!#define TMAX 3.e-1_f64
+#define TMAX 0.0001_f64
 #define CFL 0.005_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
