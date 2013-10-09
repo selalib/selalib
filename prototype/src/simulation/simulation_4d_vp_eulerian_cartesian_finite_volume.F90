@@ -308,6 +308,8 @@ subroutine run_vp_cart(sim)
 
  sim%degree=sim%params(6)
  sim%nsch=sim%params(10)
+ sim%test=sim%params(8)
+
 
 
  sim%nc_v1 = sim%mesh2dv%num_cells1
@@ -395,7 +397,7 @@ subroutine run_vp_cart(sim)
 !!$         sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
 !!$         sim%init_func, &
 !!$         sim%params)
- call sll_4d_parallel_array_initializer( &
+ call sll_4d_parallel_array_initializer_finite_volume( &
       sim%sequential_v1v2x1, &
       sim%mesh2dv, &
       sim%mesh2dx, &
@@ -776,8 +778,6 @@ subroutine run_vp_cart(sim)
  close(299)
  deallocate(xmil)
  deallocate(node)
- sim%test=sim%params(8)
-
  !stop
 
 !!$    write(*,*) 'plotf2d',plotf2d
