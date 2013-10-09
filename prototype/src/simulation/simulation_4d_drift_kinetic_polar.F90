@@ -52,6 +52,12 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_logical_meshes
   implicit none
 
+!! choice of QNS solver
+!! should be else where
+  sll_int32, parameter :: SLL_NO_QUASI_NEUTRAL = 0 
+  sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW = 1 
+  sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW = 2 
+
   
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_4d_drift_kinetic_polar
@@ -94,6 +100,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
      sll_real64 :: deltarTi 
      sll_real64 :: kappaTe  
      sll_real64 :: deltarTe
+     sll_int32  :: QN_case     
      sll_real64 :: n0_at_rpeak     
      !--> Pertubation
      sll_int32  :: perturb_choice
@@ -121,6 +128,10 @@ module sll_simulation_4d_drift_kinetic_polar_module
      !----> parallel in (x1,x2) and sequential in (x3,x4) 
      type(layout_4D), pointer :: layout4d_x3x4
      sll_real64, dimension(:,:,:,:), pointer :: f4d_x3x4
+     !----> definition of remap
+     type(remap_plan_4D_real64), pointer ::remap_plan_x1x2_x3x4
+     type(remap_plan_4D_real64), pointer ::remap_plan_x3x4_x1x2
+     
 
      !--> 3D charge density and 3D electric potential
      !----> sequential in (x1,x2)
@@ -131,6 +142,9 @@ module sll_simulation_4d_drift_kinetic_polar_module
      type(layout_3D), pointer :: layout3d_x3
      sll_real64, dimension(:,:,:), pointer :: rho3d_x3
      sll_real64, dimension(:,:,:), pointer :: phi3d_x3
+     !----> definition of remap
+     type(remap_plan_3D_real64), pointer ::remap_plan_x1x2_x3
+     type(remap_plan_3D_real64), pointer ::remap_plan_x3_x1x2
 
 
 
@@ -171,7 +185,8 @@ contains
     sll_real64 :: kappaTi  
     sll_real64 :: deltarTi 
     sll_real64 :: kappaTe  
-    sll_real64 :: deltarTe     
+    sll_real64 :: deltarTe
+    sll_int32  :: QN_case
     !--> Pertubation
     sll_int32  :: perturb_choice
     sll_int32  :: mmode
@@ -187,7 +202,7 @@ contains
       r_min, r_max, phi_min, phi_max, &
       vpar_min, vpar_max
     namelist /equilibrium/ tau0, rho_peak, kappan, deltarn, &
-      kappaTi, deltarTi, kappaTe, deltarTe
+      kappaTi, deltarTi, kappaTe, deltarTe, QN_case
     namelist /perturbation/ perturb_choice, mmode, nmode, eps_perturb
     namelist /sim_params/ dt, number_iterations!, spline_degree
 
@@ -229,6 +244,19 @@ contains
     sim%deltarTi = deltarTi
     sim%kappaTe  = kappaTe
     sim%deltarTe = deltarTe
+    
+    select case (QN_case)
+      case (0)
+        sim%QN_case = SLL_NO_QUASI_NEUTRAL
+      case (1)
+        sim%QN_case = SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW 
+      case (2)
+        sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW 
+      case default
+        print *,'#bad choice for QN_case', QN_case
+        stop
+    end select
+    
     !--> Pertubation
     sim%perturb_choice = perturb_choice
     sim%mmode          = mmode
@@ -302,10 +330,10 @@ contains
 
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
-    call initialize_fdistribu4d_DK(sim)
+    call initialize_fdistribu4d_DK(sim,sim%layout4d_x3x4,sim%f4d_x3x4)
     
-    call compute_charge_density(sim)
-
+    call compute_charge_density_from_x3x4(sim)
+    call solve_quasi_neutral(sim)
 
   end subroutine run_dk4d_polar
 
@@ -446,6 +474,15 @@ contains
       loc4d_sz_x3, &
       loc4d_sz_x4 )    
     SLL_ALLOCATE(sim%f4d_x3x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
+    
+    
+    sim%remap_plan_x1x2_x3x4 => NEW_REMAP_PLAN(sim%layout4d_x1x2, &
+      sim%layout4d_x3x4, sim%f4d_x1x2)
+    sim%remap_plan_x3x4_x1x2 => NEW_REMAP_PLAN(sim%layout4d_x3x4, &
+      sim%layout4d_x1x2, sim%f4d_x3x4)
+
+    
+    
   end subroutine allocate_fdistribu4d_DK
 
 
@@ -453,9 +490,10 @@ contains
   ! Initialization of the distribution function for
   !   drift-kinetic 4D simulation
   !----------------------------------------------------
-  subroutine initialize_fdistribu4d_DK(sim)
+  subroutine initialize_fdistribu4d_DK(sim,layout,f4d)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
-
+    type(layout_4D), pointer :: layout
+    sll_real64, dimension(:,:,:,:), pointer :: f4d
     sll_int32  :: ierr
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
@@ -487,21 +525,22 @@ contains
       sim%feq_x1x4 )
 
     !--> Initialization of the distribution function f4d_x3x4
-    call compute_local_sizes_4d( sim%layout4d_x3x4, &
+    call compute_local_sizes_4d( layout, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )
    
-   k_x2  = 2._f64*sll_pi/(sim%theta_grid%eta_max -sim%theta_grid%eta_min)
-   k_x3  = 2._f64*sll_pi/(sim%phi_grid%eta_max-sim%phi_grid%eta_min)
+    k_x2  = 2._f64*sll_pi/(sim%theta_grid%eta_max -sim%theta_grid%eta_min)
+    k_x3  = 2._f64*sll_pi/(sim%phi_grid%eta_max-sim%phi_grid%eta_min)
       
-   rp = r_min+sim%rho_peak*(r_max-r_min) 
+    rp = r_min+sim%rho_peak*(r_max-r_min) 
+    
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind(:) = local_to_global_4D(sim%layout4d_x3x4, &
+            glob_ind(:) = local_to_global_4D(layout, &
               (/iloc1,iloc2,iloc3,iloc4/))
             i1 = glob_ind(1)
             i2 = glob_ind(2)
@@ -510,7 +549,7 @@ contains
             tmp_mode = cos(real(sim%nmode,f64)*k_x3*x3_node(i3)&
                +real(sim%mmode,f64)*k_x2*x2_node(i2))
             tmp = exp(-(x1_node(i1)-rp)**2/(4._f64*sim%deltarn/sim%deltarTi))   
-            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
+            f4d(iloc1,iloc2,iloc3,iloc4) = &
               (1._f64+tmp_mode*sim%eps_perturb*tmp)*sim%feq_x1x4(i1,i4)            
           end do
         end do
@@ -625,6 +664,16 @@ contains
     SLL_ALLOCATE(sim%rho3d_x3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     SLL_ALLOCATE(sim%phi3d_x3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
+    
+    sim%remap_plan_x1x2_x3 => NEW_REMAP_PLAN(sim%layout3d_x1x2, &
+      sim%layout3d_x3, sim%rho3d_x1x2)
+    sim%remap_plan_x3_x1x2 => NEW_REMAP_PLAN(sim%layout3d_x3, &
+      sim%layout3d_x1x2, sim%rho3d_x3)
+
+    
+    
+    
+    
 !
 !    !----->
 !    sim%rho2d => new_scalar_field_2d_discrete_alt( &
@@ -650,15 +699,16 @@ contains
   !-----------------------------------------------------------
   ! Computation of the charge density, i.e
   !  rho(eta1,eta2,eta3) = \int f(eta1,eta2,eta3,vpar) dvpar
-  !  In : f4d_x3x4(x1 part,x2 part,x3=*,x4=*)
-  !  Out: rho3d_x3(x1 part,x2 part,x3=*)
+  !  from sim%f4d_x3x4
+  !  Out: sim%rho3d_x3 and sim%rho3d_x1x2
   !-----------------------------------------------------------
-  subroutine compute_charge_density(sim)
+  subroutine compute_charge_density_from_x3x4(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     
     call compute_reduction_x3x4_to_x3(sim%vpar_grid,sim%f4d_x3x4,sim%rho3d_x3)
-  
-  end subroutine compute_charge_density
+    call apply_remap_3D( sim%remap_plan_x3_x1x2, sim%rho3d_x3, sim%rho3d_x1x2 )
+    
+  end subroutine compute_charge_density_from_x3x4
   
   
   !--------------------------------------------------
@@ -701,6 +751,56 @@ contains
   
   subroutine solve_quasi_neutral(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
+    sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
+    sll_int32 :: iloc1, iloc2, iloc3
+    sll_int32 :: i1, i2, i3
+    sll_real64 :: tmp
+    sll_int32 :: glob_ind(3)    
+    call compute_local_sizes_3d( sim%layout3d_x3, &
+      loc3d_sz_x1, &
+      loc3d_sz_x2, &
+      loc3d_sz_x3 )
+
+
+
+    
+    select case (sim%QN_case)
+      case (SLL_NO_QUASI_NEUTRAL)
+      ! no quasi neutral solver as in CRPP-CONF-2001-069
+        
+        if((loc3d_sz_x3).ne.(sim%nc_x3+1))then
+          print *,'#Problem of parallelization dimension in solve_quasi_neutral'
+          print *,'#sll_simulation_4d_drift_kinetic_polar type simulation'
+          stop
+        endif
+        
+        do iloc2 = 1, loc3d_sz_x2
+          do iloc1 = 1, loc3d_sz_x1          
+            tmp = sum(sim%rho3d_x3(iloc1,iloc2,1:sim%nc_x3))/real(sim%nc_x3,f64)
+            SLL_ASSERT(loc3d_sz_x3==sim%nc_x3+1)
+            do i3 = 1,sim%nc_x3+1
+              glob_ind(:) = local_to_global_3D(sim%layout3d_x3, &
+                (/iloc1,iloc2,i3/))                        
+              sim%phi3d_x3(iloc1,iloc2,i3) = (sim%rho3d_x3(iloc1,iloc2,i3)-tmp)&
+                *sim%Te_r(glob_ind(1))/sim%n0_r(glob_ind(1))
+            enddo    
+          enddo
+        enddo  
+        call apply_remap_3D( sim%remap_plan_x3_x1x2, sim%phi3d_x3, sim%phi3d_x1x2 )  
+      case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
+        print *,'#SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW'
+        print *,'not implemented yet '
+        stop
+      case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
+        print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
+        print *,'not implemented yet '
+        stop      
+      case default
+        print *,'#bad value for sim%QN_case'
+        stop  
+    end select
+    
+    
   
   end subroutine solve_quasi_neutral
 
