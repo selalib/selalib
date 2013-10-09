@@ -17,7 +17,7 @@
 !> @author We will see
 !> @brief 
 !> Simulation class to solve slab drift kinetic equation in polar coordinates
-!> (3d space (r,\theta,z) 1d velocity (v))
+!> (3d space (x1=r,x2=theta,x3=z) 1d velocity (x4=v))
 !> translation of slv2d/src/vp4d_dk.F90 program in simulation class
 !> intended to be close to sll_simulation_4d_DK_hybrid_module
 !> but specific use of polar coordinates
@@ -72,10 +72,10 @@ module sll_simulation_4d_drift_kinetic_polar_module
      sll_int32  :: nproc_x3
      sll_int32  :: nproc_x4 
      ! Mesh parameters
-     type(sll_logical_mesh_1d), pointer :: r_grid
-     type(sll_logical_mesh_1d), pointer :: theta_grid
-     type(sll_logical_mesh_1d), pointer :: phi_grid
-     type(sll_logical_mesh_1d), pointer :: vpar_grid
+     type(sll_logical_mesh_1d), pointer :: logical_mesh_x1
+     type(sll_logical_mesh_1d), pointer :: logical_mesh_x2
+     type(sll_logical_mesh_1d), pointer :: logical_mesh_x3
+     type(sll_logical_mesh_1d), pointer :: logical_mesh_x4
      sll_int32  :: nc_x1
      sll_int32  :: nc_x2
      sll_int32  :: nc_x3
@@ -113,9 +113,9 @@ module sll_simulation_4d_drift_kinetic_polar_module
 
 
      !--> Density and temperature profiles
-     sll_real64, dimension(:)  , pointer :: n0_r
-     sll_real64, dimension(:)  , pointer :: Ti_r
-     sll_real64, dimension(:)  , pointer :: Te_r
+     sll_real64, dimension(:)  , pointer :: n0_x1
+     sll_real64, dimension(:)  , pointer :: Ti_x1
+     sll_real64, dimension(:)  , pointer :: Te_x1
 
      !--> Equilibrium distribution function
      sll_real64, dimension(:,:), pointer :: feq_x1x4
@@ -173,10 +173,10 @@ contains
     sll_int32  :: num_cells_x4
     sll_real64 :: r_min
     sll_real64 :: r_max
-    sll_real64 :: phi_min
-    sll_real64 :: phi_max
-    sll_real64 :: vpar_min
-    sll_real64 :: vpar_max
+    sll_real64 :: z_min
+    sll_real64 :: z_max
+    sll_real64 :: v_min
+    sll_real64 :: v_max
     !--> Equilibrium
     sll_real64 :: tau0
     sll_real64 :: rho_peak    
@@ -199,8 +199,8 @@ contains
 
     namelist /mesh/ num_cells_x1, num_cells_x2, &
       num_cells_x3, num_cells_x4, &
-      r_min, r_max, phi_min, phi_max, &
-      vpar_min, vpar_max
+      r_min, r_max, z_min, z_max, &
+      v_min, v_max
     namelist /equilibrium/ tau0, rho_peak, kappan, deltarn, &
       kappaTi, deltarTi, kappaTe, deltarTe, QN_case
     namelist /perturbation/ perturb_choice, mmode, nmode, eps_perturb
@@ -229,11 +229,11 @@ contains
     !sim%vpar_min = vpar_min
     !sim%vpar_min = vpar_max
     
-    sim%r_grid => new_logical_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
-    sim%theta_grid => new_logical_mesh_1d(num_cells_x2,&
+    sim%logical_mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
+    sim%logical_mesh_x2 => new_logical_mesh_1d(num_cells_x2,&
       eta_min=0._f64,eta_max=2._f64*sll_pi)
-    sim%phi_grid => new_logical_mesh_1d(num_cells_x3,eta_min=phi_min,eta_max=phi_max)
-    sim%vpar_grid => new_logical_mesh_1d(num_cells_x4,eta_min=vpar_min,eta_max=vpar_max)
+    sim%logical_mesh_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
+    sim%logical_mesh_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
     
     !--> Equilibrium
     sim%tau0     = tau0
@@ -279,10 +279,10 @@ contains
       print *,'#num_cells_x4=',num_cells_x4
       print *,'#r_min=',r_min
       print *,'#r_max=',r_max
-      print *,'#phi_min=',phi_min
-      print *,'#phi_max=',phi_max
-      print *,'#vpar_min=',vpar_min
-      print *,'#vpar_max=',r_max
+      print *,'#z_min=',z_min
+      print *,'#z_max=',z_max
+      print *,'#v_min=',v_min
+      print *,'#v_max=',v_max
       print *,'##equilibrium'
       print *,'#tau0=',tau0
       print *,'#rho_peak=',rho_peak
@@ -346,34 +346,34 @@ contains
   
   subroutine initialize_profiles_analytic(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
-    sll_int32 :: i,ierr,Nr
-    sll_real64 :: r,dr,rp,tmp,r_min,r_max
+    sll_int32 :: i,ierr,nc_x1
+    sll_real64 :: x1,delta_x1,rp,tmp,x1_min,x1_max
     
-    Nr = sim%r_grid%num_cells
-    dr = sim%r_grid%delta_eta
-    r_min = sim%r_grid%eta_min
-    r_max = sim%r_grid%eta_max
+    nc_x1 = sim%logical_mesh_x1%num_cells
+    delta_x1 = sim%x1_grid%delta_eta
+    x1_min = sim%logical_mesh_x1%eta_min
+    x1_max = sim%logical_mesh_x1%eta_max
     
-    SLL_ALLOCATE(sim%n0_r(Nr+1),ierr)
-    SLL_ALLOCATE(sim%Ti_r(Nr+1),ierr)
-    SLL_ALLOCATE(sim%Te_r(Nr+1),ierr)
+    SLL_ALLOCATE(sim%n0_x1(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%Ti_x1(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%Te_x1(nc_x1+1),ierr)
     
-    rp = r_min+sim%rho_peak*(r_max-r_min)
+    rpeak = x1_min+sim%rho_peak*(x1_max-x1_min)
     do i=1,Nr+1
-      r = r_min+real(i-1,f64)*dr
-      sim%n0_r(i) = exp(-sim%kappan*sim%deltarn*tanh((r-rp)/sim%deltarn))
-      sim%Ti_r(i)=exp(-sim%kappaTi*sim%deltarTi*tanh((r-rp)/sim%deltarTi))    
-      sim%Te_r(i)=exp(-sim%kappaTe*sim%deltarTe*tanh((r-rp)/sim%deltarTe))    
+      x1 = x1_min+real(i-1,f64)*delta_x1
+      sim%n0_x1(i) = exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
+      sim%Ti_x1(i)=exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))    
+      sim%Te_x1(i)=exp(-sim%kappaTe*sim%deltarTe*tanh((x1-rpeak)/sim%deltarTe))    
     enddo
     
     !we then change the normalization for n0_r
-    tmp = 0.5_f64*(sim%n0_r(1)*r_min+sim%n0_r(Nr+1)*r_max)
-    do i = 2,Nr
-      r = r_min+real(i-1,f64)*dr
-      tmp = tmp + sim%n0_r(i)*r
+    tmp = 0.5_f64*(sim%n0_x1(1)*x1_min+sim%n0_x1(nc_x1+1)*x1_max)
+    do i = 2,nc_x1
+      x1 = x1_min+real(i-1,f64)*delta_x1
+      tmp = tmp + sim%n0_x1(i)*x1
     enddo
-    tmp = tmp/real(Nr,f64)
-    sim%n0_r = sim%n0_r/tmp
+    tmp = tmp/real(nc_x1,f64)
+    sim%n0_x1 = sim%n0_x1/tmp
     sim%n0_at_rpeak = 1._f64/tmp      
   
   end subroutine initialize_profiles_analytic
@@ -500,28 +500,28 @@ contains
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
     sll_int32, dimension(1:4) :: glob_ind
     sll_real64, dimension(:), pointer :: x1_node,x2_node,x3_node,x4_node
-    sll_real64 :: rp,k_x2,k_x3
+    sll_real64 :: rpeak,k_x2,k_x3
     sll_real64 :: tmp_mode,tmp
-    sll_real64 :: r_min,r_max      
+    sll_real64 :: x1_min,x1_max      
 
     !--> Initialization of the equilibrium distribution function
     SLL_ALLOCATE(sim%feq_x1x4(sim%nc_x1+1,sim%nc_x4+1),ierr)
     
     
-    r_min = sim%r_grid%eta_min
-    r_max = sim%r_grid%eta_max
+    x1_min = sim%logical_mesh_x1%eta_min
+    x1_max = sim%logical_mesh_x1%eta_max
         
-    call initialize_x1_node_1d(sim%r_grid,x1_node)
-    call initialize_x1_node_1d(sim%theta_grid,x2_node)
-    call initialize_x1_node_1d(sim%phi_grid,x3_node)
-    call initialize_x1_node_1d(sim%vpar_grid,x4_node)
+    call initialize_eta1_node_1d(sim%logical_mesh_x1,eta1_node)
+    call initialize_eta1_node_1d(sim%logical_mesh_x2,eta2_node)
+    call initialize_eta1_node_1d(sim%logical_mesh_x3,eta3_node)
+    call initialize_eta1_node_1d(sim%logical_mesh_x4,eta4_node)
     
     call init_fequilibrium( sim%nc_x1+1, &
       sim%nc_x4+1, &
       x1_node, &
       x4_node, &
-      sim%n0_r, &
-      sim%Ti_r, &
+      sim%n0_x1, &
+      sim%Ti_x1, &
       sim%feq_x1x4 )
 
     !--> Initialization of the distribution function f4d_x3x4
@@ -531,10 +531,10 @@ contains
       loc4d_sz_x3, &
       loc4d_sz_x4 )
    
-    k_x2  = 2._f64*sll_pi/(sim%theta_grid%eta_max -sim%theta_grid%eta_min)
-    k_x3  = 2._f64*sll_pi/(sim%phi_grid%eta_max-sim%phi_grid%eta_min)
+    k_x2  = 2._f64*sll_pi/(sim%x2_grid%eta_max -sim%x2_grid%eta_min)
+    k_x3  = 2._f64*sll_pi/(sim%x3_grid%eta_max-sim%x3_grid%eta_min)
       
-    rp = r_min+sim%rho_peak*(r_max-r_min) 
+    rpeak = x1_min+sim%rho_peak*(x1_max-x1_min) 
     
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
@@ -548,7 +548,7 @@ contains
             i4 = glob_ind(4)
             tmp_mode = cos(real(sim%nmode,f64)*k_x3*x3_node(i3)&
                +real(sim%mmode,f64)*k_x2*x2_node(i2))
-            tmp = exp(-(x1_node(i1)-rp)**2/(4._f64*sim%deltarn/sim%deltarTi))   
+            tmp = exp(-(x1_node(i1)-rpeak)**2/(4._f64*sim%deltarn/sim%deltarTi))   
             f4d(iloc1,iloc2,iloc3,iloc4) = &
               (1._f64+tmp_mode*sim%eps_perturb*tmp)*sim%feq_x1x4(i1,i4)            
           end do
@@ -563,18 +563,18 @@ contains
 
 
   
-  function compute_equil_analytic(sim,r,v)
+  function compute_equil_analytic(sim,x1,x4)
     type(sll_simulation_4d_drift_kinetic_polar), intent(in) :: sim
-    sll_real64,intent(in)::r,v
+    sll_real64,intent(in)::x1,x4
     sll_real64::compute_equil_analytic
-    sll_real64:: tmp(2),rp,r_min,r_max
-    r_min = sim%r_grid%eta_min
-    r_max = sim%r_grid%eta_max
+    sll_real64:: tmp(2),rpeak,r_min,r_max
+    x1_min = sim%logical_mesh_x1%eta_min
+    x1_max = sim%logical_mesh_x1%eta_max
     
-    rp = r_min+sim%rho_peak*(r_max-r_min)
-    tmp(1) = sim%n0_at_rpeak*exp(-sim%kappan*sim%deltarn*tanh((r-rp)/sim%deltarn))
-    tmp(2) = exp(-sim%kappaTi*sim%deltarTi*tanh((r-rp)/sim%deltarTi))  
-    compute_equil_analytic = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*v**2/tmp(2))
+    rpeak = x1_min+sim%rho_peak*(x1_max-x1_min)
+    tmp(1) = sim%n0_at_rpeak*exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
+    tmp(2) = exp(-sim%kappaTi*sim%deltarTi*tanh((x1-r_peak)/sim%deltarTi))  
+    compute_equil_analytic = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*x4**2/tmp(2))
   
   end function compute_equil_analytic
 
@@ -705,7 +705,7 @@ contains
   subroutine compute_charge_density_from_x3x4(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     
-    call compute_reduction_x3x4_to_x3(sim%vpar_grid,sim%f4d_x3x4,sim%rho3d_x3)
+    call compute_reduction_x3x4_to_x3(sim%x4_grid,sim%f4d_x3x4,sim%rho3d_x3)
     call apply_remap_3D( sim%remap_plan_x3_x1x2, sim%rho3d_x3, sim%rho3d_x1x2 )
     
   end subroutine compute_charge_density_from_x3x4
