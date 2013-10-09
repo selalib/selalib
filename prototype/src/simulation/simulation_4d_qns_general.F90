@@ -811,8 +811,6 @@ contains
          a12_field_mat, &
          a21_field_mat, &
          a22_field_mat, &
-         b1_field_vect, &
-         b2_field_vect, &
          c_field)!, &
 
     print*, ' ... finished initialization, entering main loop.'

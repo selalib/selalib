@@ -1169,8 +1169,8 @@ contains
          sim%QN_A12, &
          sim%QN_A21, &
          sim%QN_A22, &
-         sim%QN_B1,  &
-         sim%QN_B2,  &
+         !sim%QN_B1,  &
+         !sim%QN_B2,  &
          sim%QN_C)
 
     !*** Compute Phi(t=t0) by solving the QN equation ***

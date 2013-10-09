@@ -93,9 +93,9 @@ end if
   end function new_logical_mesh_1d
 
 
-  subroutine initialize_x1_node_1d( m, x1_node )
+  subroutine initialize_eta1_node_1d( m, eta1_node )
     type(sll_logical_mesh_1d), pointer :: m
-    sll_real64, dimension(:), pointer :: x1_node
+    sll_real64, dimension(:), pointer :: eta1_node
     sll_int32  :: num_cells
     sll_real64 :: eta_min
     sll_real64 :: eta_max
@@ -106,13 +106,13 @@ end if
     num_cells = m%num_cells
     eta_min = m%eta_min
     delta_eta = m%delta_eta
-    SLL_ALLOCATE(x1_node(num_cells+1), ierr)
+    SLL_ALLOCATE(eta1_node(num_cells+1), ierr)
     do i=1,num_cells+1
-      x1_node(i) = eta_min+real(i-1,f64)*delta_eta
+      eta1_node(i) = eta_min+real(i-1,f64)*delta_eta
     enddo    
     
     
-  end subroutine initialize_x1_node_1d
+  end subroutine initialize_eta1_node_1d
 
 
 
