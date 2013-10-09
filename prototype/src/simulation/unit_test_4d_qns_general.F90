@@ -107,10 +107,12 @@ program qns_4d_general
        transformation_x, &
        sll_landau_initializer_4d,&! sll_periodic_periodic_gaussian2002_initializer_4d, &
        landau_params, &
-       func_one, &
+       func_one,  &
        func_zero, &
        func_zero, &
-       func_one, &
+       func_one,  &
+       func_zero, &
+       func_zero, &
        func_zero, &
        SPL_DEG1, & 
        SPL_DEG2, & 
