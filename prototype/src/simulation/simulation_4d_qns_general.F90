@@ -99,6 +99,8 @@ module sll_simulation_4d_qns_general_module
      procedure(two_var_parametrizable_function),nopass,pointer :: a12_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: b1_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: b2_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
    contains
      procedure, pass(sim) :: run => run_4d_qns_general
@@ -127,6 +129,8 @@ contains
    a12_f,&
    a21_f,&
    a22_f,&
+   b1_f, &
+   b2_f, &
    c_f,&
    spline_degre1,&
    spline_degre2,&
@@ -145,6 +149,8 @@ contains
    procedure(two_var_parametrizable_function) :: a12_f
    procedure(two_var_parametrizable_function) :: a21_f
    procedure(two_var_parametrizable_function) :: a22_f
+   procedure(two_var_parametrizable_function) :: b1_f
+   procedure(two_var_parametrizable_function) :: b2_f
    procedure(two_var_parametrizable_function) :: c_f
    sll_int32  :: spline_degre1
    sll_int32  :: spline_degre2
@@ -162,6 +168,8 @@ contains
    sim%a12_f     => a12_f
    sim%a21_f     => a21_f
    sim%a22_f     => a22_f
+   sim%b1_f      => b1_f
+   sim%b2_f      => b2_f
    sim%c_f       => c_f
    sim%spline_degree_eta1 = spline_degre1
    sim%spline_degree_eta2 = spline_degre2
@@ -309,6 +317,8 @@ contains
     class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: b1_field_vect
+    class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
@@ -388,7 +398,25 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-
+    b1_field_vect => new_scalar_field_2d_analytic_alt( &
+         sim%b1_f, &
+         "b1", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
+    
+    b2_field_vect => new_scalar_field_2d_analytic_alt( &
+         sim%b2_f, &
+         "b2", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top) 
+    
+    
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
@@ -783,6 +811,8 @@ contains
          a12_field_mat, &
          a21_field_mat, &
          a22_field_mat, &
+         b1_field_vect, &
+         b2_field_vect, &
          c_field)!, &
 
     print*, ' ... finished initialization, entering main loop.'
