@@ -186,8 +186,11 @@ module sll_fdistribu4d_DK
   !----------------------------------------------------
   ! Compute func(x,y) from func(r)
   !----------------------------------------------------
-  subroutine function_xy_from_r(r_grid,func_r,xgrid_2d,ygrid_2d,func_xy)
+  subroutine function_xy_from_r(r_grid,func_r, &
+    xgrid_2d,ygrid_2d,func_xy)
     use sll_cubic_splines
+    use sll_common_coordinate_transformations, only : &
+      polar_eta1
     sll_real64, dimension(:)  , intent(in)  :: r_grid
     sll_real64, dimension(:)  , intent(in)  :: func_r
     sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
@@ -204,15 +207,16 @@ module sll_fdistribu4d_DK
     Npt1 = size(xgrid_2d,1)
     Npt2 = size(xgrid_2d,2)
 
-    sp1d_r => new_spline_1d(Npt1,r_grid(1),r_grid(Nr),SLL_HERMITE)
+    sp1d_r => new_spline_1d(Npt1, &
+      r_grid(1),r_grid(Nr),SLL_HERMITE)
     call compute_spline_1D(func_r,sp1d_r)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
         x = xgrid_2d(ix,iy)
         y = ygrid_2d(ix,iy)
-        r = min(max(sqrt(x*x+y*y),r_grid(1)),r_grid(Nr))
-        if ( (r.lt.r_grid(1)) .or. (r.gt.r_grid(Nr)) ) &
+        r = polar_eta1(x,y)
+        r = min(max(r,r_grid(1)),r_grid(Nr))
         func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
     end do
