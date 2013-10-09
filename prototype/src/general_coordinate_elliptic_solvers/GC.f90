@@ -127,9 +127,9 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
             print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
     end if
 
-    call printlog("Gradient_conj : duree du calcul =",ai_dtllevel=1)
-    
-    call printcputime ( )
+!VG!    call printlog("Gradient_conj : duree du calcul =",ai_dtllevel=1)
+!VG!    
+!VG!    call printcputime ( )
     
     deallocate(lpr_Ad)
     deallocate(lpr_d)
