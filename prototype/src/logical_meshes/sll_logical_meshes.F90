@@ -73,6 +73,48 @@ contains
 end if
 
 
+  function new_logical_mesh_1d( &
+    num_cells, &
+    eta_min, &
+    eta_max ) result(m)
+
+    type(sll_logical_mesh_1d), pointer :: m
+    sll_int32, intent(in)  :: num_cells
+    sll_real64, optional, intent(in) :: eta_min
+    sll_real64, optional, intent(in) :: eta_max
+    sll_real64 :: delta
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(m, ierr)
+    m%num_cells = num_cells
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, eta_min, eta_min, 0.0_f64 )
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, eta_max, eta_max, 1.0_f64 )
+    m%delta_eta   = (m%eta_max - m%eta_min)/real(num_cells,f64)
+  end function new_logical_mesh_1d
+
+
+  subroutine initialize_x1_node_1d( m, x1_node )
+    type(sll_logical_mesh_1d), pointer :: m
+    sll_real64, dimension(:), pointer :: x1_node
+    sll_int32  :: num_cells
+    sll_real64 :: eta_min
+    sll_real64 :: eta_max
+    sll_real64 :: delta_eta
+    sll_int32 :: i
+    sll_int32 :: ierr
+    
+    num_cells = m%num_cells
+    eta_min = m%eta_min
+    delta_eta = m%delta_eta
+    SLL_ALLOCATE(x1_node(num_cells+1), ierr)
+    do i=1,num_cells+1
+      x1_node(i) = eta_min+real(i-1,f64)*delta_eta
+    enddo    
+    
+    
+  end subroutine initialize_x1_node_1d
+
+
 
   function new_logical_mesh_2d( &
     num_cells1, &
