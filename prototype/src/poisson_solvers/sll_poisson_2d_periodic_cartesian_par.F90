@@ -216,7 +216,7 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     ! The input is handled internally as a complex array
-    plan%fft_x_array = cmplx(rho, 0_f64, kind=f64)
+    plan%fft_x_array = cmplx(rho, 0.0_f64, kind=f64)
 
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
     ! FFTs in y-direction
