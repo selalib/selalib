@@ -415,9 +415,10 @@ contains ! *******************************************************************
     Stiff_loc(:) = 0.0_f64
 
     full_Matrix(:,:) = 0.0_f64
-    mesh => c_field%get_logical_mesh( )
-    do j=1,es%num_cells2
-       do i=1,es%num_cells1
+   ! mesh = c_field%get_logical_mesh( )
+    number_cells1 = es%num_cells1
+    number_cells2 = es%num_cells2
+    
 
     do j=1,number_cells2
        do i=1,number_cells1
@@ -544,9 +545,11 @@ contains ! *******************************************************************
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
-       call solve_linear_system_perper(es,mesh,es%masse)
+     
+       call solve_linear_system_perper(es,es%masse)
     else 
-       call solve_linear_system(es,mesh)
+       
+       call solve_linear_system(es)
     end if
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
@@ -582,12 +585,12 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
-    type(sll_logical_mesh_2d), pointer :: mesh2d
-    class(sll_scalar_field_2d_base), pointer :: a11_field_mat
-    class(sll_scalar_field_2d_base), pointer :: a12_field_mat
-    class(sll_scalar_field_2d_base), pointer :: a21_field_mat
-    class(sll_scalar_field_2d_base), pointer :: a22_field_mat
-    class(sll_scalar_field_2d_base), pointer :: c_field
+ !   type(sll_logical_mesh_2d) :: mesh2d
+    class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
+    class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
+    class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
+    class(sll_scalar_field_2d_base), intent(in) :: a22_field_mat
+    class(sll_scalar_field_2d_base), intent(in)     :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64 :: epsi
     !sll_real64, dimension(:), intent(out)   :: M_rho_loc
