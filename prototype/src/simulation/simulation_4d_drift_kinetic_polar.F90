@@ -72,14 +72,10 @@ module sll_simulation_4d_drift_kinetic_polar_module
      sll_int32  :: nproc_x3
      sll_int32  :: nproc_x4 
      ! Mesh parameters
-     type(sll_logical_mesh_1d), pointer :: logical_mesh_x1
-     type(sll_logical_mesh_1d), pointer :: logical_mesh_x2
-     type(sll_logical_mesh_1d), pointer :: logical_mesh_x3
-     type(sll_logical_mesh_1d), pointer :: logical_mesh_x4
-     sll_int32  :: nc_x1
-     sll_int32  :: nc_x2
-     sll_int32  :: nc_x3
-     sll_int32  :: nc_x4
+     type(sll_logical_mesh_1d), pointer :: m_x1
+     type(sll_logical_mesh_1d), pointer :: m_x2
+     type(sll_logical_mesh_1d), pointer :: m_x3
+     type(sll_logical_mesh_1d), pointer :: m_x4
      !sll_real64 :: r_min
      !sll_real64 :: r_max
      !sll_real64 :: phi_min
@@ -109,13 +105,13 @@ module sll_simulation_4d_drift_kinetic_polar_module
      sll_real64 :: eps_perturb   
 
      !--> 4D logical mesh (r,theta,phi,vpar)
-     type(sll_logical_mesh_4d), pointer :: logical_mesh4d
+     !type(sll_logical_mesh_4d), pointer :: logical_mesh4d
 
 
      !--> Density and temperature profiles
-     sll_real64, dimension(:)  , pointer :: n0_x1
-     sll_real64, dimension(:)  , pointer :: Ti_x1
-     sll_real64, dimension(:)  , pointer :: Te_x1
+     sll_real64, dimension(:)  , pointer :: n0_r
+     sll_real64, dimension(:)  , pointer :: Ti_r
+     sll_real64, dimension(:)  , pointer :: Te_r
 
      !--> Equilibrium distribution function
      sll_real64, dimension(:,:), pointer :: feq_x1x4
@@ -218,22 +214,11 @@ contains
     close(input_file)
 
     !--> Mesh
-    sim%nc_x1    = num_cells_x1
-    sim%nc_x2    = num_cells_x2
-    sim%nc_x3    = num_cells_x3
-    sim%nc_x4    = num_cells_x4
-    !sim%r_min    = r_min
-    !sim%r_max    = r_max
-    !sim%phi_min  = phi_min  
-    !sim%phi_max  = phi_max
-    !sim%vpar_min = vpar_min
-    !sim%vpar_min = vpar_max
-    
-    sim%logical_mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
-    sim%logical_mesh_x2 => new_logical_mesh_1d(num_cells_x2,&
+    sim%m_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=r_min,eta_max=r_max)
+    sim%m_x2 => new_logical_mesh_1d(num_cells_x2,&
       eta_min=0._f64,eta_max=2._f64*sll_pi)
-    sim%logical_mesh_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
-    sim%logical_mesh_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
+    sim%m_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=z_min,eta_max=z_max)
+    sim%m_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=v_min,eta_max=v_max)
     
     !--> Equilibrium
     sim%tau0     = tau0
@@ -347,33 +332,33 @@ contains
   subroutine initialize_profiles_analytic(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     sll_int32 :: i,ierr,nc_x1
-    sll_real64 :: x1,delta_x1,rp,tmp,x1_min,x1_max
+    sll_real64 :: x1,delta_x1,rpeak,tmp,x1_min,x1_max
     
-    nc_x1 = sim%logical_mesh_x1%num_cells
-    delta_x1 = sim%x1_grid%delta_eta
-    x1_min = sim%logical_mesh_x1%eta_min
-    x1_max = sim%logical_mesh_x1%eta_max
+    nc_x1 = sim%m_x1%num_cells
+    delta_x1 = sim%m_x1%delta_eta
+    x1_min = sim%m_x1%eta_min
+    x1_max = sim%m_x1%eta_max
     
-    SLL_ALLOCATE(sim%n0_x1(nc_x1+1),ierr)
-    SLL_ALLOCATE(sim%Ti_x1(nc_x1+1),ierr)
-    SLL_ALLOCATE(sim%Te_x1(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%n0_r(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%Ti_r(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%Te_r(nc_x1+1),ierr)
     
     rpeak = x1_min+sim%rho_peak*(x1_max-x1_min)
-    do i=1,Nr+1
+    do i=1,nc_x1+1
       x1 = x1_min+real(i-1,f64)*delta_x1
-      sim%n0_x1(i) = exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
-      sim%Ti_x1(i)=exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))    
-      sim%Te_x1(i)=exp(-sim%kappaTe*sim%deltarTe*tanh((x1-rpeak)/sim%deltarTe))    
+      sim%n0_r(i) = exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
+      sim%Ti_r(i)=exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))    
+      sim%Te_r(i)=exp(-sim%kappaTe*sim%deltarTe*tanh((x1-rpeak)/sim%deltarTe))    
     enddo
     
     !we then change the normalization for n0_r
-    tmp = 0.5_f64*(sim%n0_x1(1)*x1_min+sim%n0_x1(nc_x1+1)*x1_max)
+    tmp = 0.5_f64*(sim%n0_r(1)*x1_min+sim%n0_r(nc_x1+1)*x1_max)
     do i = 2,nc_x1
       x1 = x1_min+real(i-1,f64)*delta_x1
-      tmp = tmp + sim%n0_x1(i)*x1
+      tmp = tmp + sim%n0_r(i)*x1
     enddo
     tmp = tmp/real(nc_x1,f64)
-    sim%n0_x1 = sim%n0_x1/tmp
+    sim%n0_r = sim%n0_r/tmp
     sim%n0_at_rpeak = 1._f64/tmp      
   
   end subroutine initialize_profiles_analytic
@@ -422,10 +407,10 @@ contains
     !-->  (x3,x4) : parallelized layout
     sim%layout4d_x1x2  => new_layout_4D( sll_world_collective )
     call initialize_layout_with_distributed_4D_array( &
-      sim%nc_x1+1, & 
-      sim%nc_x2+1, & 
-      sim%nc_x3+1, &
-      sim%nc_x4+1, &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
+      sim%m_x4%num_cells+1, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%nproc_x3, &
@@ -458,10 +443,10 @@ contains
 
     sim%layout4d_x3x4  => new_layout_4D( sll_world_collective )
     call initialize_layout_with_distributed_4D_array( &
-      sim%nc_x1+1, &
-      sim%nc_x2+1, &
-      sim%nc_x3+1, &
-      sim%nc_x4+1, &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
+      sim%m_x4%num_cells+1, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%nproc_x3, &
@@ -502,26 +487,27 @@ contains
     sll_real64, dimension(:), pointer :: x1_node,x2_node,x3_node,x4_node
     sll_real64 :: rpeak,k_x2,k_x3
     sll_real64 :: tmp_mode,tmp
-    sll_real64 :: x1_min,x1_max      
+    sll_real64 :: x1_min,x1_max
+          
 
     !--> Initialization of the equilibrium distribution function
-    SLL_ALLOCATE(sim%feq_x1x4(sim%nc_x1+1,sim%nc_x4+1),ierr)
+    SLL_ALLOCATE(sim%feq_x1x4(sim%m_x1%num_cells+1,sim%m_x4%num_cells+1),ierr)
     
     
-    x1_min = sim%logical_mesh_x1%eta_min
-    x1_max = sim%logical_mesh_x1%eta_max
+    x1_min = sim%m_x1%eta_min
+    x1_max = sim%m_x1%eta_max
         
-    call initialize_eta1_node_1d(sim%logical_mesh_x1,eta1_node)
-    call initialize_eta1_node_1d(sim%logical_mesh_x2,eta2_node)
-    call initialize_eta1_node_1d(sim%logical_mesh_x3,eta3_node)
-    call initialize_eta1_node_1d(sim%logical_mesh_x4,eta4_node)
+    call initialize_eta1_node_1d(sim%m_x1,x1_node)
+    call initialize_eta1_node_1d(sim%m_x2,x2_node)
+    call initialize_eta1_node_1d(sim%m_x3,x3_node)
+    call initialize_eta1_node_1d(sim%m_x4,x4_node)
     
-    call init_fequilibrium( sim%nc_x1+1, &
-      sim%nc_x4+1, &
+    call init_fequilibrium( sim%m_x1%num_cells+1, &
+      sim%m_x4%num_cells+1, &
       x1_node, &
       x4_node, &
-      sim%n0_x1, &
-      sim%Ti_x1, &
+      sim%n0_r, &
+      sim%Ti_r, &
       sim%feq_x1x4 )
 
     !--> Initialization of the distribution function f4d_x3x4
@@ -531,8 +517,8 @@ contains
       loc4d_sz_x3, &
       loc4d_sz_x4 )
    
-    k_x2  = 2._f64*sll_pi/(sim%x2_grid%eta_max -sim%x2_grid%eta_min)
-    k_x3  = 2._f64*sll_pi/(sim%x3_grid%eta_max-sim%x3_grid%eta_min)
+    k_x2  = 2._f64*sll_pi/(sim%m_x2%eta_max - sim%m_x2%eta_min)
+    k_x3  = 2._f64*sll_pi/(sim%m_x3%eta_max - sim%m_x3%eta_min)
       
     rpeak = x1_min+sim%rho_peak*(x1_max-x1_min) 
     
@@ -567,13 +553,13 @@ contains
     type(sll_simulation_4d_drift_kinetic_polar), intent(in) :: sim
     sll_real64,intent(in)::x1,x4
     sll_real64::compute_equil_analytic
-    sll_real64:: tmp(2),rpeak,r_min,r_max
-    x1_min = sim%logical_mesh_x1%eta_min
-    x1_max = sim%logical_mesh_x1%eta_max
+    sll_real64:: tmp(2),rpeak,x1_min,x1_max
+    x1_min = sim%m_x1%eta_min
+    x1_max = sim%m_x1%eta_max
     
     rpeak = x1_min+sim%rho_peak*(x1_max-x1_min)
     tmp(1) = sim%n0_at_rpeak*exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
-    tmp(2) = exp(-sim%kappaTi*sim%deltarTi*tanh((x1-r_peak)/sim%deltarTi))  
+    tmp(2) = exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))  
     compute_equil_analytic = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*x4**2/tmp(2))
   
   end function compute_equil_analytic
@@ -622,9 +608,9 @@ contains
     sim%layout3d_x1x2  => new_layout_3D( sll_world_collective )
     nproc3d_x3 = sim%nproc_x3*sim%nproc_x4
     call initialize_layout_with_distributed_3D_array( &
-      sim%nc_x1+1, & 
-      sim%nc_x2+1, & 
-      sim%nc_x3+1, &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       nproc3d_x3, &
@@ -650,9 +636,9 @@ contains
         
     sim%layout3d_x3  => new_layout_3D( sll_world_collective )
     call initialize_layout_with_distributed_3D_array( &
-      sim%nc_x1+1, &
-      sim%nc_x2+1, &
-      sim%nc_x3+1, &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%nproc_x3, &
@@ -705,7 +691,7 @@ contains
   subroutine compute_charge_density_from_x3x4(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     
-    call compute_reduction_x3x4_to_x3(sim%x4_grid,sim%f4d_x3x4,sim%rho3d_x3)
+    call compute_reduction_x3x4_to_x3(sim%m_x4,sim%f4d_x3x4,sim%rho3d_x3)
     call apply_remap_3D( sim%remap_plan_x3_x1x2, sim%rho3d_x3, sim%rho3d_x1x2 )
     
   end subroutine compute_charge_density_from_x3x4
@@ -717,8 +703,8 @@ contains
   ! we should also add a choice for the integration  
   !---------------------------------------------------  
   
-  subroutine compute_reduction_x3x4_to_x3(logical_mesh_x4,data_4d_x3x4,data_3d_x3)
-    type(sll_logical_mesh_1d)     , intent(in)    :: logical_mesh_x4
+  subroutine compute_reduction_x3x4_to_x3(m_x4,data_4d_x3x4,data_3d_x3)
+    type(sll_logical_mesh_1d)     , intent(in)    :: m_x4
     sll_real64, dimension(:,:,:,:), intent(in)    :: data_4d_x3x4
     sll_real64, dimension(:,:,:)  , intent(out) :: data_3d_x3
     sll_int32  :: np_x1_loc
@@ -732,7 +718,7 @@ contains
     np_x2_loc  = size(data_4d_x3x4,2)
     np_x3      = size(data_4d_x3x4,3)
     np_x4      = size(data_4d_x3x4,4)
-    delta_x4 = logical_mesh_x4%delta_eta 
+    delta_x4 = m_x4%delta_eta 
 
     !-> Computation of the charge density locally in (x1,x2) directions
     do i3 = 1,np_x3
@@ -768,7 +754,7 @@ contains
       case (SLL_NO_QUASI_NEUTRAL)
       ! no quasi neutral solver as in CRPP-CONF-2001-069
         
-        if((loc3d_sz_x3).ne.(sim%nc_x3+1))then
+        if((loc3d_sz_x3).ne.(sim%m_x3%num_cells+1))then
           print *,'#Problem of parallelization dimension in solve_quasi_neutral'
           print *,'#sll_simulation_4d_drift_kinetic_polar type simulation'
           stop
@@ -776,9 +762,10 @@ contains
         
         do iloc2 = 1, loc3d_sz_x2
           do iloc1 = 1, loc3d_sz_x1          
-            tmp = sum(sim%rho3d_x3(iloc1,iloc2,1:sim%nc_x3))/real(sim%nc_x3,f64)
-            SLL_ASSERT(loc3d_sz_x3==sim%nc_x3+1)
-            do i3 = 1,sim%nc_x3+1
+            tmp = sum(sim%rho3d_x3(iloc1,iloc2,1:sim%m_x3%num_cells))&
+              /real(sim%m_x3%num_cells,f64)
+            SLL_ASSERT(loc3d_sz_x3==sim%m_x3%num_cells+1)
+            do i3 = 1,sim%m_x3%num_cells+1
               glob_ind(:) = local_to_global_3D(sim%layout3d_x3, &
                 (/iloc1,iloc2,i3/))                        
               sim%phi3d_x3(iloc1,iloc2,i3) = (sim%rho3d_x3(iloc1,iloc2,i3)-tmp)&
