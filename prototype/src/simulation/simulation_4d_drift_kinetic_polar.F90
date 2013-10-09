@@ -48,6 +48,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
   use sll_simulation_base
+  use sll_fdistribu4D_DK
   implicit none
 
   
@@ -432,29 +433,44 @@ contains
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
-    !sll_int32  :: Nx, Ny, Nvpar
-    !sll_real64 :: theta_j, phi_k
     sll_int32, dimension(1:4) :: glob_ind
-
-    !sll_real64 :: Lphi, dvpar, Lvpar
-    !sll_real64, dimension(:), pointer :: vpar_grid_tmp
-
-    !Nx    = sim%Neta1
-    !Ny    = sim%Neta2
-    !Nvpar = sim%Neta4
+    sll_real64, dimension(:), pointer :: x1_grid,x2_grid,x3_grid,x4_grid
+    sll_real64 :: delta_x1,delta_x2,delta_x3,delta_x4
+    sll_real64 :: rp,k_x2,k_x3
+    sll_real64 :: tmp_mode,tmp
     
-    !--> Initialization of the grid in vpar direction
-    !SLL_ALLOCATE(vpar_grid_tmp(Nvpar),ierr)
-    !Lvpar = abs(sim%vpar_max-sim%vpar_min)
-    !dvpar = Lvpar/float(Nvpar)
-    !do i4 = 1,Nvpar
-    !  vpar_grid_tmp(i4) = sim%vpar_min + &
-    !    float(i4-1)*dvpar
-    !end do
 
     !--> Initialization of the equilibrium distribution function
-    !SLL_ALLOCATE(sim%feq_x1x4(Nr+1,Nvpar+1),ierr)
-    !call init_fequilibrium(Nr,Nvpar,r_grid,vpar_grid,dim%n0_1d,dim%Ti_1d,dim%feq_x1x4)
+    SLL_ALLOCATE(sim%feq_x1x4(sim%nc_x1+1,sim%nc_x4+1),ierr)
+    SLL_ALLOCATE(x1_grid(sim%nc_x1+1),ierr)
+    SLL_ALLOCATE(x2_grid(sim%nc_x2+1),ierr)
+    SLL_ALLOCATE(x3_grid(sim%nc_x3+1),ierr)
+    SLL_ALLOCATE(x4_grid(sim%nc_x4+1),ierr)
+    
+    delta_x1=(sim%r_max-sim%r_min)/real(sim%nc_x1,f64) 
+    do  i1=1,sim%nc_x1+1
+      x1_grid(i1) = sim%r_min+real(i1-1,f64)*delta_x1
+    enddo
+    delta_x2=2._f64*sll_pi/real(sim%nc_x2,f64) 
+    do  i1=1,sim%nc_x2+1
+      x2_grid(i1) = real(i1-1,f64)*delta_x2
+    enddo
+    delta_x3=(sim%phi_max-sim%phi_min)/real(sim%nc_x3,f64) 
+    do  i1=1,sim%nc_x3+1
+      x3_grid(i1) = sim%phi_min+real(i1-1,f64)*delta_x3
+    enddo
+    delta_x4=(sim%vpar_max-sim%vpar_min)/real(sim%nc_x4,f64) 
+    do  i1=1,sim%nc_x4+1
+      x4_grid(i1) = sim%vpar_min+real(i1-1,f64)*delta_x4
+    enddo
+    
+    call init_fequilibrium( sim%nc_x1+1, &
+      sim%nc_x1+1, &
+      x1_grid, &
+      x4_grid, &
+      sim%n0_r, &
+      sim%Ti_r, &
+      sim%feq_x1x4 )
 
     !--> Initialization of the distribution function f4d_x3x4
     call compute_local_sizes_4d( sim%layout4d_x3x4, &
@@ -462,8 +478,11 @@ contains
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )
-
-    !Lphi = abs(sim%phi_max-sim%phi_min)
+   
+   k_x2  = 2._f64*sll_pi/(x2_grid(sim%nc_x2+1)-x2_grid(1))
+   k_x3  = 2._f64*sll_pi/(x3_grid(sim%nc_x3+1)-x3_grid(1))
+      
+   rp = sim%r_min+sim%rho_peak*(sim%r_max-sim%r_min) 
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
@@ -474,26 +493,34 @@ contains
             i2 = glob_ind(2)
             i3 = glob_ind(3)
             i4 = glob_ind(4)
+            tmp_mode = cos(real(sim%nmode,f64)*k_x3*x3_grid(i3)&
+               +real(sim%mmode,f64)*k_x2*x2_grid(i2))
+            tmp = exp(-(x1_grid(i1)-rp)**2/(4._f64*sim%deltarn/sim%deltarTi))   
             sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
-              1._f64
+              (1._f64+tmp_mode*sim%eps_perturb*tmp)*sim%feq_x1x4(i1,i4)            
           end do
         end do
       end do
     end do
-    !SLL_DEALLOCATE(vpar_grid_tmp,ierr)
+    SLL_DEALLOCATE(x1_grid,ierr)
+    SLL_DEALLOCATE(x2_grid,ierr)
+    SLL_DEALLOCATE(x3_grid,ierr)
+    SLL_DEALLOCATE(x4_grid,ierr)
   end subroutine initialize_fdistribu4d_DK
 
-  function compute_equil(sim,r,v)
+
+  
+  function compute_equil_analytic(sim,r,v)
     type(sll_simulation_4d_drift_kinetic_polar), intent(in) :: sim
     sll_real64,intent(in)::r,v
-    sll_real64::compute_equil
+    sll_real64::compute_equil_analytic
     sll_real64:: tmp(2),rp
     rp = sim%r_min+sim%rho_peak*(sim%r_max-sim%r_min)
     tmp(1) = sim%n0_at_rpeak*exp(-sim%kappan*sim%deltarn*tanh((r-rp)/sim%deltarn))
     tmp(2) = exp(-sim%kappaTi*sim%deltarTi*tanh((r-rp)/sim%deltarTi))  
-    compute_equil = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*v**2/tmp(2))
+    compute_equil_analytic = tmp(1)/sqrt(2._f64*sll_pi*tmp(2))*exp(-0.5_f64*v**2/tmp(2))
   
-  end function compute_equil
+  end function compute_equil_analytic
   
   
 
