@@ -766,7 +766,7 @@ contains
   subroutine Solve_Runge_K4(mu,xi,X,Phi,dx,Neq,Diff_Eq,Y,C)
     use sll_constants
     implicit none
-#ifdef INTEL
+#ifdef __INTEL_COMPILER
     External Diff_Eq 
 #endif
     sll_int   :: Neq

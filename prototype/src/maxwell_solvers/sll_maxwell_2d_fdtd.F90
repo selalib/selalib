@@ -56,19 +56,19 @@ end interface
 interface solve
  module procedure solve_maxwell_2d_fdtd
 end interface
+!> Solve Ampere-Maxwell equation
 interface ampere
  module procedure ampere_2d_fdtd
 end interface
+!> Solve Faraday equation
 interface faraday
  module procedure ampere_2d_fdtd
 end interface
 
 public :: initialize, solve
 
-!> Object with data to solve Maxwell equation 
-!! Maxwell in TE mode: (Ex,Ey,Bz)
-!! Only 2D  for now
-!! 
+!> @brief Object with data to solve Maxwell equation 
+!> Maxwell in TE mode: (Ex,Ey,Bz)
 type, public :: maxwell_2d_fdtd
   sll_real64 :: c            !< light speed
   sll_real64 :: e_0          !< electric conductivity

@@ -1,7 +1,8 @@
 module sll_common_array_initializers_module
-
+#include "sll_assert.h" 
 #include "sll_working_precision.h"
 #include "sll_constants.h"
+#include "sll_assert.h"
 
   implicit none
 
@@ -10,6 +11,60 @@ module sll_common_array_initializers_module
   ! not be used with this module.
 
 contains
+
+
+  ! -------------------------------------------------------------------------
+  !
+  !             Landau damping 4d initialization function
+  !
+  ! -------------------------------------------------------------------------
+  !
+  ! The params array is declared optional to conform with the expected 
+  ! function signature of the initializer subroutines, but in the particular
+  ! case of the landau initializer, the params array must be passed.
+
+
+
+  function sll_landau_initializer_2d( x, vx, params ) 
+    sll_real64 :: sll_landau_initializer_2d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=2)
+    kx = params(1)
+    eps = params(2)
+
+    !Normalization
+    !sagemath command
+    !sage : var('u v epsilon a b c d x y')
+    !sage : f(a,b,c,d,epsilon) =integral(integral(integral(integral((1+epsilon*cos(2*pi/(b-a)*x))*exp(-(u*u+v*v)/2),u,-oo,oo),v,-oo,oo),x,a,b),y,c,d)
+    
+!!$    factor1 =  1./( (eta2_min - eta2_max) &
+!!$               *(((eta1_min - eta1_max)* &
+!!$               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
+!!$                - (eta1_min - eta1_max)* &
+!!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
+!!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
+    factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
+!!$    sll_landau_initializer_4d = factor1 * &
+!!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
+    sll_landau_initializer_2d = factor1 * &
+         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*vx**2)
+  end function sll_landau_initializer_2d
+
+
+
+
 
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution
@@ -101,16 +156,18 @@ contains
 
     if( .not. present(params) ) then
        print *, 'sll_landau_initializer_4d, error: the params array must ', &
-            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
+            'be passed. params(1) = eta1_min, params(2) = eta1_max, ', &
+            'params(3) = eta2_min, params(4) = eta2_max, params(5) = epsilon.'
        stop
     end if
+
+    SLL_ASSERT( size(params) >= 5 )
 
     eta1_min = params(1)
     eta1_max = params(2)
     eta2_min = params(3)
     eta2_max = params(4)
-
-    eps = params(5)
+    eps      = params(5)
     kx  =  2. * sll_pi / (eta1_max - eta1_min)
 
     !Normalization
@@ -129,7 +186,6 @@ contains
 !!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     sll_landau_initializer_4d = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-
   end function sll_landau_initializer_4d
 
   function sll_test_x_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
@@ -456,6 +512,160 @@ contains
           beta *exp(-0.5_f64*((vx-vxc)**2+(vy-vyc)**2))
 
   end function sll_periodic_gaussian_initializer_4d
+
+
+
+
+ !---------------------------------------------------------------------------
+  !
+  !                         Periodic-Periodic initializer
+  !
+  ! 4D distribution in [0,2*pi/kx]X[0,2*pi/ky][-6,6]X[-6,6]  with the property of being 
+  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  !
+  ! f(x,y,vx,vy) = (1 + alpha * cos(kx*x)*cos(ky*y) )
+  !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))/ 2*pi
+  !                          
+  !  This function is described in the article of Crouseilles and al. 2009
+  ! ' A parallel Vlasov solver based on local cubic spline interpolation on patches'
+  !
+  ! It is meant to be used in the intervals:
+  ! x:  [ 0,2*pi/kx]
+  ! y:  [ 0,2*pi/ky]
+  ! vx: [-6,6]
+  ! vy: [-6,6]
+  
+  ! convention for the params array:
+  ! params(1) = eta1_min
+  ! params(2) = eta1_max
+  ! params(3) = eta2_min
+  ! params(4) = eta2_max
+  ! params(5) = vxc
+  ! params(6) = vyc
+  ! params(7) = alpha
+  ! params(8) = beta
+  !---------------------------------------------------------------------------
+
+  function sll_periodic_periodic_gaussian2009_initializer_4d( x, y, vx, vy, params ) &
+    result(val)
+    
+    sll_real64 :: val !sll_gaussian_initializer_4d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min,eta1_max
+    sll_real64 :: eta2_min,eta2_max
+    sll_real64 :: vxc
+    sll_real64 :: vyc
+    sll_real64 :: alpha
+    sll_real64 :: beta
+    sll_real64 :: kx,ky
+    
+    if( .not. present(params) ) then
+       print *, 'sll_periodic_periodic_gaussian2009_initializer_4d, error: the params array must ', &
+            'be passed: ', &
+            'params(1) = eta1_min, params(2) = eta1_max, params(3) = eta2_min, params(4) = eta2_max',&
+            'params(5) = vxc, params(6) = vyx, params(7) = alpha, params(8) = beta'
+       stop
+    end if
+    
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+    vxc   = params(5)
+    vyc   = params(6)
+    alpha      = params(7)
+    beta      = params(8)
+    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    ky  =  2. * sll_pi / (eta2_max - eta2_min)
+    
+
+
+    val = beta*(1 + alpha * cos(kx*x)*cos(ky*y) )&
+         * exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)) &
+         / (2*sll_pi)
+    
+  end function sll_periodic_periodic_gaussian2009_initializer_4d
+  
+
+   !---------------------------------------------------------------------------
+  !
+  !                         Periodic-Periodic initializer another
+  !
+  ! 4D distribution in [0,2*pi/kx]X[0,2*pi/ky][-6,6]X[-6,6]  with the property of being 
+  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  !
+  ! f(x,y,vx,vy) = (1 + alpha * (cos(kx*x) + cos(ky*y)) )
+  !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2))/ (2*sll_pi)
+  !                          
+  !  This function is described in the article of Filbet and Sonnendrucker 2002
+  ! 'Comparison of Eulerian Vlasov solvers'
+  !
+  ! It is meant to be used in the intervals:
+  ! x:  [ 0,2*pi/kx]
+  ! y:  [ 0,2*pi/ky]
+  ! vx: [-6,6]
+  ! vy: [-6,6]
+  
+  ! convention for the params array:
+  ! params(1) = eta1_min
+  ! params(2) = eta1_max
+  ! params(3) = eta2_min
+  ! params(4) = eta2_max
+  ! params(5) = vxc
+  ! params(6) = vyc
+  ! params(7) = alpha
+  ! params(8) = beta
+  !---------------------------------------------------------------------------
+
+  function sll_periodic_periodic_gaussian2002_initializer_4d( x, y, vx, vy, params ) &
+    result(val)
+    
+    sll_real64 :: val !sll_gaussian_initializer_4d
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min,eta1_max
+    sll_real64 :: eta2_min,eta2_max
+    sll_real64 :: vxc
+    sll_real64 :: vyc
+    sll_real64 :: alpha
+    sll_real64 :: beta
+    sll_real64 :: kx,ky
+    
+    if( .not. present(params) ) then
+       print *, 'sll_periodic_periodic_gaussian2002_initializer_4d, error: the params array must ', &
+            'be passed: ', &
+            'params(1) = eta1_min, params(2) = eta1_max, params(3) = eta2_min, params(4) = eta2_max',&
+            'params(5) = vxc, params(6) = vyx, params(7) = alpha, params(8) = beta'
+       stop
+    end if
+    
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+    vxc   = params(5)
+    vyc   = params(6)
+    alpha      = params(7)
+    beta      = params(8)
+    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    ky  =  2. * sll_pi / (eta2_max - eta2_min)
+    
+
+
+    val = beta*(1 + alpha * (cos(kx*x)+cos(ky*y)) )&
+         * exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)) &
+         / (2*sll_pi)
+    
+  end function sll_periodic_periodic_gaussian2002_initializer_4d
 
 
 end module sll_common_array_initializers_module
