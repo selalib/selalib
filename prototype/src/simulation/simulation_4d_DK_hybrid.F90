@@ -126,6 +126,8 @@ module sll_simulation_4d_DK_hybrid_module
      type(arb_deg_2d_interpolator) :: interp_QN_A12
      type(arb_deg_2d_interpolator) :: interp_QN_A21
      type(arb_deg_2d_interpolator) :: interp_QN_A22
+     type(arb_deg_2d_interpolator) :: interp_QN_B1
+     type(arb_deg_2d_interpolator) :: interp_QN_B2
      type(arb_deg_2d_interpolator) :: interp_QN_C
      class(sll_scalar_field_2d_base) , pointer :: rho2d
      type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
@@ -133,8 +135,10 @@ module sll_simulation_4d_DK_hybrid_module
      class(sll_scalar_field_2d_base), pointer :: QN_A12
      class(sll_scalar_field_2d_base), pointer :: QN_A21
      class(sll_scalar_field_2d_base), pointer :: QN_A22
+     class(sll_scalar_field_2d_base), pointer :: QN_B1
+     class(sll_scalar_field_2d_base), pointer :: QN_B2
      class(sll_scalar_field_2d_base), pointer :: QN_C
-
+     
    contains
      procedure, pass(sim) :: run => run_4d_DK_hybrid
      procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
@@ -650,6 +654,36 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
+
+    call sim%interp_QN_B1%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)
+    
+    
+    call sim%interp_QN_B2%initialize( &
+      logical_mesh2d%num_cells1 +1, &
+      logical_mesh2d%num_cells2 +1, &
+      logical_mesh2d%eta1_min, &
+      logical_mesh2d%eta1_max, &
+      logical_mesh2d%eta2_min, &
+      logical_mesh2d%eta2_max, &
+      sim%bc_left_eta1, &
+      sim%bc_right_eta1, &
+      sim%bc_left_eta2, &
+      sim%bc_right_eta2, &
+      sim%spline_degree_eta1, &
+      sim%spline_degree_eta2)
+    
     call sim%interp_QN_C%initialize( &
       logical_mesh2d%num_cells1 +1, &
       logical_mesh2d%num_cells2 +1, &
@@ -697,6 +731,8 @@ contains
     sll_real64, dimension(:,:), pointer :: A12
     sll_real64, dimension(:,:), pointer :: A21
     sll_real64, dimension(:,:), pointer :: A22
+    sll_real64, dimension(:,:), pointer :: B1
+    sll_real64, dimension(:,:), pointer :: B2
     sll_real64, dimension(:,:), pointer :: C
     type(sll_logical_mesh_2d), pointer :: logical_mesh2d
 
@@ -706,17 +742,21 @@ contains
     SLL_ALLOCATE(A12(Neta1,Neta2),ierr)
     SLL_ALLOCATE(A21(Neta1,Neta2),ierr)
     SLL_ALLOCATE(A22(Neta1,Neta2),ierr)
+    SLL_ALLOCATE(B1(Neta1,Neta2),ierr)
+    SLL_ALLOCATE(B2(Neta1,Neta2),ierr)
     SLL_ALLOCATE(C(Neta1,Neta2),ierr)
-
-    !---> Initialization of the matrices A11, A12, A21, A22 and C
+    
+    !---> Initialization of the matrices A11, A12, A21, A22, B1, B2 and C
     A11(:,:) = 1._f64
     A12(:,:) = 1._f64
     A21(:,:) = 1._f64
     A22(:,:) = 1._f64
+    B1(:,:)  = 0._f64
+    B2(:,:)  = 0._f64
     C(:,:)   = 1._f64
-
+    
     !---> Initialization of the 2D fields associated to
-    !--->  A11, A12, A21, A22 and C
+    !--->  A11, A12, A21, A22, B1, B2 and C
     sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
       "QN_A11", &
       sim%interp_QN_A11, &     
@@ -765,6 +805,32 @@ contains
     call sim%QN_A22%set_field_data( A22 )
     call sim%QN_A22%update_interpolation_coefficients( )
 
+
+    sim%QN_B1 => new_scalar_field_2d_discrete_alt( &
+         "QN_B1", &
+         sim%interp_QN_B1, &     
+         sim%transf_xy, &
+         sim%bc_left_eta1, &
+         sim%bc_right_eta1, &
+         sim%bc_left_eta2, &
+         sim%bc_right_eta2)
+    
+    call sim%QN_B1%set_field_data( B1 )
+    call sim%QN_B1%update_interpolation_coefficients( )
+    
+    
+    sim%QN_B2 => new_scalar_field_2d_discrete_alt( &
+         "QN_B2", &
+         sim%interp_QN_B1, &     
+         sim%transf_xy, &
+         sim%bc_left_eta1, &
+         sim%bc_right_eta1, &
+         sim%bc_left_eta2, &
+         sim%bc_right_eta2)
+    
+    call sim%QN_B2%set_field_data( B1 )
+    call sim%QN_B2%update_interpolation_coefficients( )
+    
     sim%QN_C => new_scalar_field_2d_discrete_alt( &
       "QN_C", &
       sim%interp_QN_C, &     
@@ -953,6 +1019,8 @@ contains
          sim%QN_A12, &
          sim%QN_A21, &
          sim%QN_A22, &
+         sim%QN_B1,  &
+         sim%QN_B2,  &
          sim%QN_C)
 
     !*** Compute Phi(t=t0) by solving the QN equation ***
