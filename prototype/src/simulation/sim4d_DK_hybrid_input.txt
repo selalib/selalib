@@ -1,7 +1,7 @@
 &mesh
-  num_cells_x1 = 127
-  num_cells_x2 = 63
-  num_cells_x3 = 31
+  num_cells_x1 = 63
+  num_cells_x2 = 31
+  num_cells_x3 = 7
   num_cells_x4 = 15
   r_min        = 0.1
   r_max        = 1.   !14.5
@@ -24,7 +24,7 @@
 
 &perturbation
   perturb_choice = 1
-  mmode          = 11
+  mmode          = 4
   nmode          = 3
   eps_perturb    = 0.001
 /
