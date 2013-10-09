@@ -27,6 +27,7 @@ use sll_utilities, only: sll_new_file_id, int2string
 
 implicit none
 
+!> Create the mtv file to plot a structured mesh (cartesian or curvilinear)
 interface sll_plotmtv_write
 module procedure  sll_plotmtv_curv_2d
 end interface sll_plotmtv_write

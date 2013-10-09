@@ -21,37 +21,40 @@ module sll_poisson_3d_periodic_par
   use sll_remapper
   implicit none
 
+  !> Structure to solve Poisson equation on 3d mesh with periodic boundary
+  !> conditions. Solver is parallel and numerical method is based on fft 
+  !> transform.  Number of cells, which in this periodic case is equal to 
+  !> the number of points.
   type poisson_3d_periodic_plan_par
-     ! number of cells, which in this periodic case is equal to the number
-     ! of points.
-     sll_int32                                 :: ncx
-     sll_int32                                 :: ncy
-     sll_int32                                 :: ncz
-     sll_real64                                :: Lx
-     sll_real64                                :: Ly
-     sll_real64                                :: Lz
-     type(sll_fft_plan), pointer               :: px
-     type(sll_fft_plan), pointer               :: py
-     type(sll_fft_plan), pointer               :: pz
-     type(sll_fft_plan), pointer               :: px_inv
-     type(sll_fft_plan), pointer               :: py_inv
-     type(sll_fft_plan), pointer               :: pz_inv
-     type(layout_3D),  pointer                 :: layout_x
-     type(layout_3D),  pointer                 :: layout_y
-     type(layout_3D),  pointer                 :: layout_z
-     sll_int32, dimension(3,3)                 :: loc_sizes
-     sll_comp64, dimension(:,:,:), pointer :: array_x
-     sll_comp64, dimension(:,:,:), pointer :: array_y
-     sll_comp64, dimension(:,:,:), pointer :: array_z
-     type(remap_plan_3D_comp64), pointer            :: rmp3_xy
-     type(remap_plan_3D_comp64), pointer            :: rmp3_yz
-     type(remap_plan_3D_comp64), pointer            :: rmp3_zy
-     type(remap_plan_3D_comp64), pointer            :: rmp3_yx
+     sll_int32                             :: ncx       !< number of cells in x
+     sll_int32                             :: ncy       !< number of cells in y
+     sll_int32                             :: ncz       !< number of cells in z
+     sll_real64                            :: Lx        !< x domain length
+     sll_real64                            :: Ly        !< y domain length
+     sll_real64                            :: Lz        !< z domain length
+     type(sll_fft_plan), pointer           :: px        !< fft plan in x
+     type(sll_fft_plan), pointer           :: py        !< fft plan in y
+     type(sll_fft_plan), pointer           :: pz        !< fft plan in z
+     type(sll_fft_plan), pointer           :: px_inv    !< inverse fft in x
+     type(sll_fft_plan), pointer           :: py_inv    !< inverse fft in y
+     type(sll_fft_plan), pointer           :: pz_inv    !< inverse fft in z
+     type(layout_3D),  pointer             :: layout_x  !< x layout for remap
+     type(layout_3D),  pointer             :: layout_y  !< y layout for remap
+     type(layout_3D),  pointer             :: layout_z  !< z layout for remap
+     sll_int32, dimension(3,3)             :: loc_sizes !< local sizes
+     sll_comp64, dimension(:,:,:), pointer :: array_x   !< x array component
+     sll_comp64, dimension(:,:,:), pointer :: array_y   !< y array component
+     sll_comp64, dimension(:,:,:), pointer :: array_z   !< z array component
+     type(remap_plan_3D_comp64), pointer   :: rmp3_xy   !< transpose from x to y
+     type(remap_plan_3D_comp64), pointer   :: rmp3_yz   !< transpose from y to z
+     type(remap_plan_3D_comp64), pointer   :: rmp3_zy   !< transpose from z to y
+     type(remap_plan_3D_comp64), pointer   :: rmp3_yx   !< transpose from y to x
   end type poisson_3d_periodic_plan_par
 
 contains
 
 
+  !> Allocate the structure for the 3d parallel Poisson solver
   function new_poisson_3d_periodic_plan_par( &
     start_layout, &
     ncx, &
@@ -61,14 +64,16 @@ contains
     Ly, &
     Lz) result(plan)
 
-    type(layout_3D),  pointer                    :: start_layout
-    ! number of cells in each direction
-    sll_int32                                    :: ncx, ncy, ncz
-    ! what the heck is this???
-    sll_comp64,                   dimension(ncx) :: x
-    sll_comp64,                   dimension(ncy) :: y
-    sll_comp64,                   dimension(ncz) :: z
-    sll_real64                                   :: Lx, Ly, Lz
+    type(layout_3D),  pointer                    :: start_layout !< intiial layout
+    sll_int32                                    :: ncx !< number of cells in x
+    sll_int32                                    :: ncy !< number of cells in y
+    sll_int32                                    :: ncz !< number of cells in z
+    sll_real64                                   :: Lx  !< x length
+    sll_real64                                   :: Ly  !< y length
+    sll_real64                                   :: Lz  !< z length
+    sll_comp64,                   dimension(ncx) :: x   !< 1d array in x
+    sll_comp64,                   dimension(ncy) :: y   !< 1d array in y
+    sll_comp64,                   dimension(ncz) :: z   !< 1d array in z
     sll_int64                                    :: colsz ! collective size
     type(sll_collective_t), pointer              :: collective
     ! npx, npy, npz are the numbers of processors in directions x, y, z
@@ -176,10 +181,12 @@ contains
     plan%rmp3_yx => NEW_REMAP_PLAN(plan%layout_y, plan%layout_x, plan%array_y)
   end function new_poisson_3d_periodic_plan_par
 
+  !> Compute the 3d potential from the Poisson equation with periodic
+  !> boundary conditions.
   subroutine solve_poisson_3d_periodic_par(plan, rho, phi)
-    type (poisson_3d_periodic_plan_par), pointer :: plan
-    sll_real64, dimension(:,:,:)                 :: rho
-    sll_real64, dimension(:,:,:)                 :: phi
+    type (poisson_3d_periodic_plan_par), pointer :: plan !< Solver structure
+    sll_real64, dimension(:,:,:)                 :: rho  !< Charge density
+    sll_real64, dimension(:,:,:)                 :: phi  !< Electric potential
     sll_int32                                    :: nx, ny, nz
     ! nx, ny, nz are the numbers of points - 1 in directions x, y ,z
     sll_int32                                    :: nx_loc, ny_loc, nz_loc
@@ -332,6 +339,7 @@ contains
   end subroutine solve_poisson_3d_periodic_par
 
 
+  !> Delete the solver structure
   subroutine delete_poisson_3d_periodic_plan_par(plan)
     type (poisson_3d_periodic_plan_par), pointer :: plan
     sll_int32                                    :: ierr
@@ -358,6 +366,7 @@ contains
     SLL_DEALLOCATE(plan, ierr)
   end subroutine delete_poisson_3d_periodic_plan_par
 
+  !> Check sizes of arrays in input
   subroutine verify_argument_sizes_par(layout, rho, phi)
     type(layout_3D), pointer   :: layout
     sll_real64, dimension(:,:,:) :: rho

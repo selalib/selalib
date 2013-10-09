@@ -52,7 +52,7 @@ subroutine spli2d_perdir (&
        apr_Bcoef,&
        apr_tx,&
        apr_ty )
-  ! print*, 'hello'
+  
 end subroutine spli2d_perdir
 
 subroutine spli2d_dirper (&

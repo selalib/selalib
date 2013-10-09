@@ -14,9 +14,9 @@ Module used_precision
   logical ,Parameter :: nat = .false. 
 contains
 	! IT SEEMS THAT gfortran DOES NOT LIKE TO EXPORT A MODULE WITHOUT A SUBROUTINE
-	subroutine print_one ()
-	implicit none
-		print*,'1'
-	end subroutine print_one	
+  subroutine print_one ()
+    implicit none
+    print*,'1'
+  end subroutine print_one
 End Module used_precision
 

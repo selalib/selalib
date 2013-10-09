@@ -50,7 +50,7 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
   if (li_err.ne.0) li_flag=30
   allocate(lpr_Ux(this%oi_nR),stat=li_err)
   if (li_err.ne.0) li_flag=40
-  print *,'%%'
+!  print *,'%%'
   !================!
   ! initialisation !
   !================!
@@ -59,7 +59,7 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
   lpr_Ux(:) = apr_U(:)
   li_iter = 0
   call Mult_CSR_Matrix_Vector( this , lpr_Ux , lpr_Ad )
-  print *,'%%%'
+!  print *,'%%%'
   !-------------------!
   ! calcul des normes !
   !-------------------!
@@ -69,7 +69,7 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
   
   lpr_d = lpr_r
   !================!
-  print *,'%%%%'
+!  print *,'%%%%'
   ll_continue=.true.
   do while(ll_continue)
      li_iter = li_iter + 1
