@@ -21,6 +21,8 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+!VG!  use sll_module_scalar_field_1d_base
+!VG!  use sll_module_scalar_field_1d_alternative
   use sll_timer
 
   implicit none
@@ -70,6 +72,9 @@ module sll_simulation_4d_DK_hybrid_module
      !--> 4D logical mesh (eta1,eta2,eta3,vpar)
      sll_int32 :: Neta1, Neta2, Neta3, Nvpar
      type(sll_logical_mesh_4d), pointer :: logical_mesh4d
+     sll_real64, dimension(:), pointer :: eta1_grid
+     sll_real64, dimension(:), pointer :: eta2_grid
+     sll_real64, dimension(:), pointer :: eta3_grid
 
      !--> Coordinate transformation
      class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
@@ -106,6 +111,9 @@ module sll_simulation_4d_DK_hybrid_module
      !----> parallel in (x1,x2) and sequential in (x3,x4) 
      type(layout_4D), pointer :: layout4d_x3x4
      sll_real64, dimension(:,:,:,:), pointer :: f4d_x3x4
+     !----> for remapping
+     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
+     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
 
      !--> 3D charge density and 3D electric potential
      !----> sequential in (x1,x2)
@@ -116,11 +124,20 @@ module sll_simulation_4d_DK_hybrid_module
      type(layout_3D), pointer :: layout3d_x3
      sll_real64, dimension(:,:,:), pointer :: rho3d_x3
      sll_real64, dimension(:,:,:), pointer :: phi3d_x3
+     !----> for remapping
+     type(remap_plan_3D_real64), pointer :: seqx1x2_to_seqx3
+     type(remap_plan_3D_real64), pointer :: seqx3_to_seqx1x2
+
+     !--> 3D electric field
+     sll_real64, dimension(:,:,:), pointer :: E3d_eta1_x1x2
+     sll_real64, dimension(:,:,:), pointer :: E3d_eta2_x1x2
+     sll_real64, dimension(:,:,:), pointer :: E3d_eta3_x3
 
      !--> For general QN solver
      type(general_coordinate_elliptic_solver), pointer :: QNS
      ! interpolation any arbitrary spline
      type(arb_deg_2d_interpolator) :: interp_rho2d
+!VG!     type(arb_deg_1d_interpolator) :: interp_phi1d   ! for derivative in eta3
      type(arb_deg_2d_interpolator) :: interp_phi2d
      type(arb_deg_2d_interpolator) :: interp_QN_A11
      type(arb_deg_2d_interpolator) :: interp_QN_A12
@@ -130,6 +147,7 @@ module sll_simulation_4d_DK_hybrid_module
      type(arb_deg_2d_interpolator) :: interp_QN_B2
      type(arb_deg_2d_interpolator) :: interp_QN_C
      class(sll_scalar_field_2d_base) , pointer :: rho2d
+!VG!     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d ! for derivative in eta3
      type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
      class(sll_scalar_field_2d_base), pointer :: QN_A11 
      class(sll_scalar_field_2d_base), pointer :: QN_A12
@@ -404,6 +422,13 @@ contains
       loc4d_sz_x3, &
       loc4d_sz_x4 )    
     SLL_ALLOCATE(sim%f4d_x3x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
+
+    !---> initialization for the remappings
+    sim%seqx3x4_to_seqx1x2 => &
+      NEW_REMAP_PLAN(sim%layout4d_x3x4,sim%layout4d_x1x2,sim%f4d_x3x4)
+    
+    sim%seqx1x2_to_seqx3x4 => &
+      NEW_REMAP_PLAN(sim%layout4d_x1x2,sim%layout4d_x3x4,sim%f4d_x1x2)
   end subroutine allocate_fdistribu4d_DK
 
 
@@ -422,7 +447,7 @@ contains
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
     sll_int32  :: Nx, Ny, Nphi, Nvpar
     sll_real64 :: theta_j, phi_k
-    sll_int32, dimension(1:4) :: glob_ind
+    sll_int32, dimension(1:4) :: glob_ind4d
 
     sll_real64 :: dphi, Lphi, dvpar, Lvpar
     sll_real64, dimension(:), pointer :: phi_grid_tmp
@@ -467,12 +492,12 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind(:) = local_to_global_4D(sim%layout4d_x3x4, &
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_x3x4, &
               (/iloc1,iloc2,iloc3,iloc4/))
-            i1 = glob_ind(1)
-            i2 = glob_ind(2)
-            i3 = glob_ind(3)
-            i4 = glob_ind(4)
+            i1 = glob_ind4d(1)
+            i2 = glob_ind4d(2)
+            i3 = glob_ind4d(3)
+            i4 = glob_ind4d(4)
             theta_j = polar_eta2( &
               sim%xgrid_2d(i1,i2), &
               sim%ygrid_2d(i1,i2))
@@ -547,6 +572,8 @@ contains
       loc3d_sz_x3)
     SLL_ALLOCATE(sim%rho3d_x1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     SLL_ALLOCATE(sim%phi3d_x1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%E3d_eta1_x1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%E3d_eta2_x1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
 
     !--> Initialization of rho3d_x3 and phi3d_x3
     !-->  (x1,x2) : parallelized layout
@@ -575,11 +602,20 @@ contains
       loc3d_sz_x3)
     SLL_ALLOCATE(sim%rho3d_x3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     SLL_ALLOCATE(sim%phi3d_x3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%E3d_eta3_x3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
     logical_mesh2d => sim%transf_xy%mesh
 !    call set_time_mark(tm)
  
+!VG!    call sim%interp_phi1d%initialize( &
+!VG!      logical_mesh2d%num_cells1+1, &
+!VG!      logical_mesh2d%eta1_min, &
+!VG!      logical_mesh2d%eta1_max, &
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1, &
+!VG!      sim%spline_degree_eta1)
+
     call sim%interp_phi2d%initialize( &
       logical_mesh2d%num_cells1+1, &
       logical_mesh2d%num_cells2+1, &
@@ -719,6 +755,12 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+!VG!    sim%phi1d => new_scalar_field_1d_discrete_alt( &
+!VG!      "phi1d_x3", &
+!VG!      sim%interp_phi1d, &     
+!VG!      sim%bc_left_eta1, &
+!VG!      sim%bc_right_eta1)
+
     sim%phi2d => new_scalar_field_2d_discrete_alt( &
       "phi2d_x1x2", &
       sim%interp_phi2d, &     
@@ -727,6 +769,13 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
+
+    !---> initialization for the remappings
+    sim%seqx3_to_seqx1x2 => &
+      NEW_REMAP_PLAN(sim%layout3d_x3,sim%layout3d_x1x2,sim%rho3d_x3)
+    
+    sim%seqx1x2_to_seqx3 => &
+      NEW_REMAP_PLAN(sim%layout3d_x1x2,sim%layout3d_x3,sim%rho3d_x1x2)
   end subroutine allocate_QN_DK
 
 
@@ -759,12 +808,12 @@ contains
     
     !---> Initialization of the matrices A11, A12, A21, A22, B1, B2 and C
     A11(:,:) = 1._f64
-    A12(:,:) = 1._f64
-    A21(:,:) = 1._f64
+    A12(:,:) = 0._f64
+    A21(:,:) = 0._f64
     A22(:,:) = 1._f64
     B1(:,:)  = 0._f64
     B2(:,:)  = 0._f64
-    C(:,:)   = 1._f64
+    C(:,:)   = 0._f64
     
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22, B1, B2 and C
@@ -896,7 +945,7 @@ contains
     class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
 
     sll_int32 :: ierr
-    sll_int32 :: ieta1, ieta2
+    sll_int32 :: ieta1, ieta2, ieta3
     sll_int32 :: Nx, Ny
 
     !--> Parallelization initialization
@@ -921,7 +970,22 @@ contains
 
     !--> Logical mesh initialization
     sim%logical_mesh4d => logical_mesh4d
-    
+    SLL_ALLOCATE(sim%eta1_grid(sim%Neta1),ierr)    
+    SLL_ALLOCATE(sim%eta2_grid(sim%Neta2),ierr)
+    SLL_ALLOCATE(sim%eta3_grid(sim%Neta3),ierr)
+    do ieta1 = 1,sim%Neta1
+      sim%eta1_grid(ieta1) = sim%logical_mesh4d%eta1_min + &
+        (ieta1-1)*sim%logical_mesh4d%delta_eta1
+    end do
+    do ieta2 = 1,sim%Neta2
+      sim%eta2_grid(ieta2) = sim%logical_mesh4d%eta2_min + &
+        (ieta2-1)*sim%logical_mesh4d%delta_eta2
+    end do
+    do ieta3 = 1,sim%Neta3
+      sim%eta3_grid(ieta3) = sim%logical_mesh4d%eta3_min + &
+        (ieta3-1)*sim%logical_mesh4d%delta_eta3
+    end do
+
     !--> Transformation initialization
     sim%transf_xy => transf_xy
 
@@ -945,7 +1009,7 @@ contains
     !*** Allocation of the distribution function ***
     call allocate_fdistribu4d_DK(sim)
     
-    !*** Allocation of the QN solver ***
+    !*** Allocation of the QN solveR ***
     call allocate_QN_DK(sim)
 
     !*** Initialization of the QN solver ***
@@ -969,6 +1033,7 @@ contains
       loc3d_sz_x2, &
       loc3d_sz_x3)
 
+    !---> Compute phi3d_x1x2
     do iloc3 = 1,loc3d_sz_x3
       call sim%rho2d%set_field_data( sim%rho3d_x1x2(:,:,iloc3) )
       call sim%rho2d%update_interpolation_coefficients( )
@@ -984,7 +1049,63 @@ contains
     end do
     if (sim%my_rank.eq.0) &
       call sim%phi2d%write_to_file(iloc3)
+    
+    !---> Fill phi3d_x3
+    call apply_remap_3D(sim%seqx1x2_to_seqx3, sim%phi3d_x1x2, sim%phi3d_x3)    
   end subroutine solve_QN
+
+
+  !----------------------------------------------------
+  ! Compute the electric field
+  !----------------------------------------------------
+  subroutine compute_Efield( sim )
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32  :: ieta1, ieta2, ieta3
+    sll_int32  :: iloc1, iloc2, iloc3
+    sll_int32  :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
+    sll_real64 :: eta1, eta2, eta3
+
+    !--> Compute E3d_eta1_x1x2 = -dPhi3d_x1x2/deta1 and 
+    !-->  E3d_eta2_x1x2 = -dPhi3d_x1x2/deta2
+    call compute_local_sizes_3d( sim%layout3d_x1x2, &
+      loc3d_sz_x1, &
+      loc3d_sz_x2, &
+      loc3d_sz_x3)
+    do iloc3 = 1,loc3d_sz_x3
+      call sim%phi2d%set_field_data( sim%phi3d_x1x2(:,:,iloc3) )
+      call sim%phi2d%update_interpolation_coefficients( )
+      do ieta2 = 1,sim%Neta2
+        eta2 = sim%eta2_grid(ieta2)
+        do ieta1 = 1,sim%Neta1
+          eta1 = sim%eta1_grid(ieta1)
+          sim%E3d_eta1_x1x2(ieta1,ieta2,iloc3) = &
+            - sim%phi2d%first_deriv_eta1_value_at_point(eta1,eta2)
+          sim%E3d_eta2_x1x2(ieta1,ieta2,iloc3) = &
+            - sim%phi2d%first_deriv_eta2_value_at_point(eta1,eta2)
+        end do
+      end do
+    end do
+    !--> Compute E3d_eta3_x3 = -dPhi3d_x3/deta3
+    call compute_local_sizes_3d( sim%layout3d_x3, &
+      loc3d_sz_x1, &
+      loc3d_sz_x2, &
+      loc3d_sz_x3)
+    do ieta3 = 1,sim%Neta3
+      eta3 = sim%eta3_grid(ieta3)
+      do iloc2 = 1,loc3d_sz_x2
+        do iloc1 = 1,loc3d_sz_x1
+!baoter
+!VG!          call sim%phi1d%set_field_data( sim%phi3d_x3(iloc1,iloc2,:) )
+!VG!          call sim%phi1d%update_interpolation_coefficients( ) 
+!VG!          sim%E3d_eta3_x3(iloc1,iloc2,ieta3) = &
+!VG!            -sim%phi1d%derivative_value_at_point(eta3)
+          sim%E3d_eta3_x3(iloc1,iloc2,ieta3) = 1._f64
+!eatoer
+        end do
+      end do
+    end do
+  end subroutine compute_Efield
 
 
   !----------------------------------------------------
@@ -1031,6 +1152,15 @@ contains
     !*** Computation of the rhs of QN ***
     call compute_charge_density(sim%logical_mesh4d, &
       sim%f4d_x3x4,sim%rho3d_x3)
+    !--> compute rho3d_x1x2
+    call apply_remap_3D(sim%seqx3_to_seqx1x2, sim%rho3d_x3, sim%rho3d_x1x2 )
+
+    if (sim%my_rank.eq.0) then
+      call sll_hdf5_file_create('rho_resu.h5',file_id,file_err)
+      call sll_hdf5_write_array_3d(file_id,sim%rho3d_x3,'rho3d_x3',file_err)
+      call sll_hdf5_write_array_3d(file_id,sim%rho3d_x1x2,'rho3d_x1x2',file_err)
+      call sll_hdf5_file_close(file_id,file_err)
+    end if
 
     !*** Matrix factorization for QN solver ***
     call factorize_mat_es( &
@@ -1042,10 +1172,74 @@ contains
          sim%QN_B1,  &
          sim%QN_B2,  &
          sim%QN_C)
-!VG!
-!VG!    !*** Compute Phi(t=t0) by solving the QN equation ***
-!VG!    call solve_QN(sim)
+
+    !*** Compute Phi(t=t0) by solving the QN equation ***
+    call solve_QN(sim)
+
+    !*** Compute E = -grad Phi ***
+    call compute_Efield( sim )
   end subroutine first_step_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! 1D advection in vpar direction
+  !----------------------------------------------------
+  subroutine advec1D_vpar( sim )
+    use sll_arbitrary_degree_spline_interpolator_1d_module
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32 :: ierr
+    sll_int32 :: iloc1, iloc2
+    sll_int32 :: ieta1, ieta2
+    sll_int32 :: ieta3, ivpar
+    sll_int32 :: loc4d_sz_x1, loc4d_sz_x2
+    sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
+    sll_int32, dimension(1:4) :: glob_ind4d
+    sll_real64, dimension(:), pointer :: phi1d_x3_tmp
+    sll_real64 :: dPhi_deta3
+
+    type(arb_deg_1d_interpolator) :: interp1d_E3d_eta3
+
+    SLL_ALLOCATE(phi1d_x3_tmp(sim%Neta3),ierr)
+    call interp1d_E3d_eta3%initialize( &
+       sim%Neta3, &
+       sim%logical_mesh4d%eta3_min, &
+       sim%logical_mesh4d%eta3_max, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       sim%spline_degree_eta3)
+
+    call compute_local_sizes_4d( sim%layout4d_x3x4, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )    
+
+    do ivpar = 1,sim%Nvpar
+      do iloc2 = 1,loc4d_sz_x2
+        do iloc1 = 1,loc4d_sz_x1
+! ATTENTION problem because iloc1,iloc2 are computed with sim%layout4d_x3x4
+!  so it is not compatible with iloc1,iloc2 for the 3D which are computed with 
+!  sim%layout3d_x3          
+          do ieta3 = 1,sim%Neta3
+            phi1d_x3_tmp(ieta3) = sim%phi3d_x3(iloc1,iloc2,ieta3)
+          end do
+          call interp1d_E3d_eta3%compute_interpolants( &
+            phi1d_x3_tmp)
+          do ieta3 = 1,sim%Neta3
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_x3x4, &
+              (/iloc1,iloc2,ieta3,ivpar/))
+            ieta1 = glob_ind4d(1)
+            ieta2 = glob_ind4d(2)
+!baoter (ATTENTION a calculer en utilisant les derivees des splines)
+            dPhi_deta3 = 1._f64
+!eaoter
+          end do
+        end do
+      end do
+    end do
+    SLL_DEALLOCATE(phi1d_x3_tmp,ierr)
+  end subroutine advec1D_vpar
 
 
   !----------------------------------------------------
@@ -1054,19 +1248,6 @@ contains
   subroutine run_4d_DK_hybrid( sim )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-!VG!    !-->
-!VG!    sll_real64, dimension(:), pointer :: send_buf
-!VG!    sll_real64, dimension(:), pointer :: recv_buf
-!VG!    sll_int32 , dimension(:), pointer :: recv_sz
-!VG!    sll_int32 , dimension(:), pointer :: disps ! for allgatherv operation
-!VG!
-!VG!    !--> Initialization of the 4D parallel layout
-!VG!    SLL_ALLOCATE(recv_sz(sim%world_size),ierr)
-!VG!    SLL_ALLOCATE(disps(sim%world_size),ierr)
-!VG!
-!VG!    !--> Deallocation of temparory array
-!VG!    SLL_DEALLOCATE(recv_sz,ierr)
-!VG!    SLL_DEALLOCATE(disps,ierr)
   end subroutine run_4d_DK_hybrid
 
 
@@ -1115,6 +1296,9 @@ contains
 
     sll_int32 :: ierr
 
+    SLL_DEALLOCATE(sim%eta1_grid,ierr)    
+    SLL_DEALLOCATE(sim%eta2_grid,ierr)
+    SLL_DEALLOCATE(sim%eta3_grid,ierr)
     SLL_DEALLOCATE(sim%n0_r,ierr)
     SLL_DEALLOCATE(sim%Ti_r,ierr)
     SLL_DEALLOCATE(sim%Te_r,ierr)
@@ -1123,6 +1307,15 @@ contains
     SLL_DEALLOCATE(sim%f4d_x3x4,ierr)
     call delete(sim%layout4d_x1x2)
     call delete(sim%layout4d_x3x4)
+    SLL_DEALLOCATE(sim%rho3d_x1x2,ierr)
+    SLL_DEALLOCATE(sim%rho3d_x3,ierr)
+    SLL_DEALLOCATE(sim%phi3d_x1x2,ierr)
+    SLL_DEALLOCATE(sim%phi3d_x3,ierr)
+    SLL_DEALLOCATE(sim%E3d_eta1_x1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_eta2_x1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_eta3_x3,ierr)
+    call delete(sim%layout3d_x1x2)
+    call delete(sim%layout3d_x3)
   end subroutine delete_4d_DK_hybrid
 
 end module sll_simulation_4d_DK_hybrid_module
