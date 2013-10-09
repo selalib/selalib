@@ -20,6 +20,7 @@
   deltarTi = 1.45
   kappaTe  = 0.27586
   deltarTe = 1.45
+  QN_case  = 0
 /
 
 &perturbation
