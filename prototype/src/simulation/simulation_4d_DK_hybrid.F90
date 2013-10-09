@@ -452,39 +452,35 @@ contains
     call init_fequilibrium_xy(sim%xgrid_2d,sim%ygrid_2d, &
       vpar_grid_tmp,sim%n0_xy,sim%Ti_xy,sim%feq_xyvpar)
 
-!VG!    !--> Initialization of the distribution function f4d_x3x4
-!VG!    call compute_local_sizes_4d( sim%layout4d_x3x4, &
-!VG!      loc4d_sz_x1, &
-!VG!      loc4d_sz_x2, &
-!VG!      loc4d_sz_x3, &
-!VG!      loc4d_sz_x4 )
-!VG!
-!VG!    do iloc4 = 1,loc4d_sz_x4
-!VG!      do iloc3 = 1,loc4d_sz_x3
-!VG!        do iloc2 = 1,loc4d_sz_x2
-!VG!          do iloc1 = 1,loc4d_sz_x1
-!VG!            glob_ind(:) = local_to_global_4D(sim%layout4d_x3x4, &
-!VG!              (/iloc1,iloc2,iloc3,iloc4/))
-!VG!            i1 = glob_ind(1)
-!VG!            i2 = glob_ind(2)
-!VG!            i3 = glob_ind(3)
-!VG!            i4 = glob_ind(4)
-!VG!            theta_j = polar_eta2( &
-!VG!              sim%xgrid_2d(i1,i2), &
-!VG!              sim%ygrid_2d(i1,i2))
-!VG!            phi_k   = phi_grid_tmp(i3) 
-!VG!            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
-!VG!              sim%feq_xyvpar(i1,i2,i4) * &
-!VG!              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
-!VG!              2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi))
-!VG!!baoter
-!VG!!VG!            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
-!VG!!VG!              sim%feq_xyvpar(i1,i2,i4)
-!VG!!eaoter
-!VG!          end do
-!VG!        end do
-!VG!      end do
-!VG!    end do
+    !--> Initialization of the distribution function f4d_x3x4
+    call compute_local_sizes_4d( sim%layout4d_x3x4, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )
+
+    do iloc4 = 1,loc4d_sz_x4
+      do iloc3 = 1,loc4d_sz_x3
+        do iloc2 = 1,loc4d_sz_x2
+          do iloc1 = 1,loc4d_sz_x1
+            glob_ind(:) = local_to_global_4D(sim%layout4d_x3x4, &
+              (/iloc1,iloc2,iloc3,iloc4/))
+            i1 = glob_ind(1)
+            i2 = glob_ind(2)
+            i3 = glob_ind(3)
+            i4 = glob_ind(4)
+            theta_j = polar_eta2( &
+              sim%xgrid_2d(i1,i2), &
+              sim%ygrid_2d(i1,i2))
+            phi_k   = phi_grid_tmp(i3) 
+            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
+              sim%feq_xyvpar(i1,i2,i4) * &
+              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
+              2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi))
+          end do
+        end do
+      end do
+    end do
     SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
   end subroutine initialize_fdistribu4d_DK
@@ -969,7 +965,6 @@ contains
     !*** Computation of the rhs of QN ***
     call compute_charge_density(sim%logical_mesh4d, &
       sim%f4d_x3x4,sim%rho3d_x3)
-    print*, 'test'
 
     !*** Matrix factorization for QN solver ***
     call factorize_mat_es( &
