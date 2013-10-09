@@ -151,10 +151,10 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_parallel_array_initializers	
                        sll_remap
                        sll_collective
-		        sll_integration
+		       sll_mesh_calculus
+		       sll_integration
 		       sll_timer
                        sll_constants
-		       sll_mesh_calculus
                        sll_coordinate_transformations
                        sll_logical_meshes
                        sll_file_io_parallel
