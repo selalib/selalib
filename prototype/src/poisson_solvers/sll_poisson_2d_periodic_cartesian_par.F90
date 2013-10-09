@@ -209,7 +209,7 @@ contains
     ! Get layouts to compute FFTs (in each direction)
     layout_x => plan%layout_seq_x1
     layout_y => plan%layout_seq_x2
-    call verify_argument_sizes_par(layout_x, rho, phi)
+    !call verify_argument_sizes_par(layout_x, rho, phi)
 
     ! FFTs in x-direction
     npx_loc = plan%seq_x1_local_sz_x1 
@@ -219,15 +219,14 @@ contains
     plan%fft_x_array = cmplx(rho, 0_f64, kind=f64)
 
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
-
     ! FFTs in y-direction
     npx_loc = plan%seq_x2_local_sz_x1
     npy_loc = plan%seq_x2_local_sz_x2
 
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
-
+write(*,*) 'ici3'
     call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
-
+write(*,*) 'ici4'
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
 
@@ -287,10 +286,10 @@ contains
           end if
        enddo
     enddo
-
+write(*,*) 'ici5'
     ! Inverse FFTs in y-direction
     call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
-
+write(*,*) 'ici6'
     ! Force the periodicity condition in the y-direction. CAN'T USE THE FFT
     ! INTERFACE SINCE THIS POINT FALLS OUTSIDE OF THE POINTS IN THE ARRAY
     ! TOUCHED BY THE FFT. This is another reason to permit not including the
@@ -298,10 +297,10 @@ contains
     do i=1,npx_loc
        plan%fft_y_array(i,npy_loc) = plan%fft_y_array(i,1)
     end do
-
+write(*,*) 'ici7'
     ! Prepare to take inverse FFTs in x-direction
     call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
-
+write(*,*) 'ici8'
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
 
