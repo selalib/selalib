@@ -4,15 +4,19 @@ program unit_test
 #include "sll_field_2d.h"
   use sll_constants
   use sll_advection_field
-  use sll_module_mapped_meshes_2d
+!  use sll_module_mapped_meshes_2d
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
   use sll_module_mapped_meshes_1d
   use sll_cubic_spline_interpolator_1d
-  use geometry_functions
+  use sll_common_coordinate_transformations
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
-  type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
-  class(sll_mapped_mesh_2d_base), pointer      :: pm2d
+  !type(sll_mapped_mesh_2d_analytic),target     :: mesh2d
+  !class(sll_mapped_mesh_2d_base), pointer      :: pm2d
+  type(sll_logical_mesh_2d), pointer :: mesh2d
+  class(sll_coordinate_transformation_2d_base), pointer   :: pm2d
   class(sll_mapped_mesh_1d_base), pointer      :: pm1d
   !class(scalar_field_2d_initializer_base), pointer    :: pfinit
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
@@ -33,18 +37,20 @@ program unit_test
   nc_eta2 = 100
 
   print*, 'initialization of mesh'
-
-  call mesh2d%initialize( &
-       "mesh2d",  &
-       nc_eta1+1, &
-       nc_eta2+1, &
+  mesh2d => new_logical_mesh_2d( &
+       nc_eta1, &
+       nc_eta2  &
+   )
+  pm2d => new_coordinate_transformation_2d_analytic( &
+       "mesh2d_cart",      &
+       mesh2d,             &
        affine_x1, &
        affine_x2, &
        affine_jac11, &
        affine_jac12, &
        affine_jac21, &
        affine_jac22 )
-  pm2d => mesh2d
+
 
   ! Set up the interpolators for the field
   call interp_eta1%initialize( nc_eta1+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
@@ -86,6 +92,7 @@ program unit_test
   end do
 
   call compute_hamiltonian(adv_field, phi_self)
+
   call write_scalar_field_2d(adv_field) 
 
     

@@ -347,11 +347,6 @@ module sll_remapper
           compute_local_sizes_4d, compute_local_sizes_6d
   end interface compute_local_sizes
 
-  interface local_to_global
-     module procedure local_to_global_2D,local_to_global_3D, &
-          local_to_global_4D, local_to_global_6D
-  end interface local_to_global
-
 
 contains  !******************************************************************
 

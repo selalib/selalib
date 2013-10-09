@@ -138,8 +138,6 @@
 !> </tr>
 !> </table>
 !>
-!>
-!>
 !> \section example Examples:
 !>
 !> In-place transform
@@ -184,9 +182,6 @@
 !> call fft_apply_plan(p,in,out)
 !> call fft_delete_plan(p)
 !> \endcode
-!>
-!>
-!>
 !>
 !> \section acc Access the mode
 !> 
@@ -240,9 +235,6 @@
 !> call fft_delete_plan(p)
 !> \endcode
 !>
-!>
-!>
-!>
 !> To set a mode call the subroutine fft_set_mode(plan,data,new_value,num_mode)
 !>
 !> \code
@@ -295,8 +287,6 @@
 !> call fft_set_mode(plan,out,new_value,k)
 !> call fft_delete_plan(p)
 !> \endcode
-!>
-!>
 !>
 !> \section what What sll_fft really computes
 !>

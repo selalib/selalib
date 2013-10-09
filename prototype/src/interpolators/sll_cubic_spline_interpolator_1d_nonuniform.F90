@@ -35,6 +35,8 @@ use sll_cubic_splines
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
      !generic :: initialize => initialize_cs1d_interpolator
+     procedure, pass :: set_coefficients => set_coefficients_cs1d
+     procedure, pass :: get_coefficients => get_coefficients_cs1d
 #endif
   end type cubic_non_uniform_spline_1d_interpolator
 
@@ -132,14 +134,23 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the cs1d at initialization time.  
 #ifdef STDF95
-  subroutine cubic_non_uniform_spline_compute_interpolants( interpolator, data_array )
-    type(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
+  subroutine cubic_non_uniform_spline_compute_interpolants(&
+       interpolator, data_array,&
+        eta_coords, &
+        size_eta_coords)
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout):: interpolator
 #else
-  subroutine compute_interpolants_cs1d( interpolator, data_array )
-    class(cubic_non_uniform_spline_1d_interpolator), intent(inout) :: interpolator
+    subroutine compute_interpolants_cs1d(interpolator, data_array,&
+         eta_coords, &
+         size_eta_coords)
+      class(cubic_non_uniform_spline_1d_interpolator),intent(inout)::interpolator
+      
 #endif
-    sll_real64, dimension(:), intent(in)               :: data_array
-    call compute_spline_1D( data_array, interpolator%spline )
+      sll_real64, dimension(:), intent(in)           :: data_array
+      sll_real64, dimension(:), intent(in),optional  :: eta_coords
+      sll_int32, intent(in),optional                 :: size_eta_coords
+      
+      call compute_spline_1D( data_array, interpolator%spline )
   end subroutine
 
   ! Alternative implementation for the function meant to interpolate a
@@ -329,7 +340,30 @@ contains  ! ****************************************************************
   end subroutine delete_cs1d
 
   
+  subroutine set_coefficients_cs1d( interpolator, coeffs )
+#ifdef STDF95
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout)   :: interpolator
+#else
+    class(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
+#endif
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_cs1d
+
   
+  function get_coefficients_cs1d(interpolator)
+#ifdef STDF95
+    type(cubic_non_uniform_spline_1d_interpolator), intent(in)   :: interpolator
+#else
+    class(cubic_non_uniform_spline_1d_interpolator), intent(in)  :: interpolator
+#endif
+    sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
+    
+    print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_cs1d
   
   
 end module cubic_non_uniform_spline_interpolator_1d  

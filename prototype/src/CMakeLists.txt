@@ -6,8 +6,8 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
-IF(SLL_CONFIGURE_OPTIONS_FILE)
-INCLUDE(${SLL_CONFIGURE_OPTIONS_FILE})
+IF(OPTIONS_FILE)
+INCLUDE(${OPTIONS_FILE})
 ENDIF()
 
 PROJECT(SLL)
@@ -56,25 +56,21 @@ SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
 
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
-INCLUDE(HDF5Config)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
+INCLUDE(HDF5Config)
+
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
 
-
-
 IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
 
    IF(MUDPACK_ENABLED)
-      IF(HDF5_PARALLEL_ENABLED)
-         ADD_SUBDIRECTORY(multigrid)
-      ENDIF()
       ADD_SUBDIRECTORY(mudpack)
    ENDIF()
    IF(FISHPACK_ENABLED)
@@ -92,14 +88,17 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(non_linear_solvers)
    ADD_SUBDIRECTORY(splines)
    ADD_SUBDIRECTORY(logical_meshes)
-#   ADD_SUBDIRECTORY(coordinate_transformations)
-   ADD_SUBDIRECTORY(mesh_calculus)
    ADD_SUBDIRECTORY(lagrange_interpolation)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
-   
+   ADD_SUBDIRECTORY(deboor_splines)
+   IF(NOT STDF95)
+      ADD_SUBDIRECTORY(coordinate_transformations)
+   ENDIF(NOT STDF95)
+   ADD_SUBDIRECTORY(interpolators)
+
    IF(MPI_MODULE_ENABLED)
    
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
@@ -114,36 +113,34 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
-   ADD_SUBDIRECTORY(deboor_splines)
-   ADD_SUBDIRECTORY(interpolators)
 
    IF(NOT STDF95)
-      ADD_SUBDIRECTORY(coordinate_transformations)
-      ADD_SUBDIRECTORY(mapped_meshes)
-   ENDIF(NOT STDF95)
 
-   ADD_SUBDIRECTORY(fields)
-   
-   IF(NOT STDF95)
-
-      #ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
-      ADD_SUBDIRECTORY(time_solvers)
-      ADD_SUBDIRECTORY(ode_solvers)
-      ADD_SUBDIRECTORY(distribution_function)
-      ADD_SUBDIRECTORY(advection_field)
-      ADD_SUBDIRECTORY(LinRood)
+      ADD_SUBDIRECTORY(fields)
+      ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
+      ADD_SUBDIRECTORY(multigrid)
       ADD_SUBDIRECTORY(BSL)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
-      ADD_SUBDIRECTORY(simulation)
 
       FIND_PACKAGE(SUITESPARSE)
       IF(SUITESPARSE_FOUND)
+         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ENDIF(SUITESPARSE_FOUND)
    
+      ADD_SUBDIRECTORY(mapped_meshes)
+      ADD_SUBDIRECTORY(time_solvers)
+      ADD_SUBDIRECTORY(distribution_function)
+      ADD_SUBDIRECTORY(ode_solvers)
+      ADD_SUBDIRECTORY(advection_field)
+      ADD_SUBDIRECTORY(LinRood)
+
+      ADD_SUBDIRECTORY(mesh_calculus)
+      ADD_SUBDIRECTORY(simulation)
+
    ENDIF(NOT STDF95)
 
    IF(FORTRANCL_ENABLED)
@@ -265,8 +262,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
-IF(NOT STDF95)
-   ADD_SUBDIRECTORY(package)
-ENDIF()
+ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

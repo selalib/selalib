@@ -12,7 +12,6 @@ program VP1d_deltaf
 #include "sll_field_2d.h"
 #include "sll_constants.h"
 #include "sll_utilities.h"
-
   use sll_cubic_splines
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
@@ -78,6 +77,7 @@ program VP1d_deltaf
   sll_real64 :: time1
   sll_int32  :: error, file_id
   character(len=4) :: cstep
+  character(len=32) :: dsetname
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
@@ -612,7 +612,11 @@ program VP1d_deltaf
        
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
-!        call write_scalar_field_2d(f) 
+        !call write_scalar_field_2d(f) 
+        call int2string(istep,cstep)
+        call sll_hdf5_file_create("f"//cstep//".h5",file_id,error)
+        call sll_hdf5_write_array(file_id,f,"f",error)
+        call sll_hdf5_file_close(file_id, error)
      end if
 
 #ifdef tomp

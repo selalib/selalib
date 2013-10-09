@@ -35,7 +35,10 @@ use periodic_interp_module
      procedure, pass:: interpolate_array => per_interpolate1d
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
      procedure, pass:: reconstruct_array
+     procedure, pass :: set_coefficients => set_coefficients_per1d
+     procedure, pass :: get_coefficients => get_coefficients_per1d
 #endif
+     
   end type per_1d_interpolator
 
   interface delete
@@ -111,13 +114,20 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the per1d at initialization time.  
 #ifdef STDF95
-  subroutine periodic_compute_interpolants( interpolator, data_array )
+  subroutine periodic_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(per_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_per1d( interpolator, data_array )
+  subroutine compute_interpolants_per1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
+       
     class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     print*, 'compute_interpolants_per1d:', &
          ' not implemented for periodic interpolation'
     stop
@@ -327,5 +337,30 @@ contains  ! ****************************************************************
 #endif
     call delete(obj%per_interp)
   end subroutine delete_per1d
+
+  subroutine set_coefficients_per1d( interpolator, coeffs )
+#ifdef STDF95
+    type(per_1d_interpolator), intent(inout)  :: interpolator
+#else  
+    class(per_1d_interpolator), intent(inout) :: interpolator
+#endif
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_per1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_per1d
+
+
+  function get_coefficients_per1d(interpolator)
+#ifdef STDF95
+    type(per_1d_interpolator), intent(in)  :: interpolator
+#else  
+    class(per_1d_interpolator), intent(in) :: interpolator
+#endif
+    sll_real64, dimension(:), pointer            :: get_coefficients_per1d     
+    
+    print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_per1d
 
 end module sll_periodic_interpolator_1d
