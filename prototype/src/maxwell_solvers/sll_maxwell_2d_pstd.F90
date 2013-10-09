@@ -54,15 +54,14 @@ self%d_dy = self%d_dy / ny
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
 
 
-module sll_maxwell_2d_Pstd
+module sll_maxwell_2d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
 
-
-use, intrinsic :: iso_c_binding
-use sll_constants
+use fftw3
 
 implicit none
 private
@@ -119,12 +118,6 @@ end type maxwell_2d_pstd
 
 sll_int32, private :: i, j
 
-#ifdef FFTW_F2003
-include 'fftw3.f03'
-#else
-include 'fftw3.f'
-#endif
-
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
@@ -154,8 +147,8 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
 
-   FFTW_ALLOCATE(self%tmp_x,nx,self%sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny,self%sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,self%sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,self%sz_tmp_y,self%p_tmp_y)
 
    NEW_FFTW_PLAN_R2C_1D(self%fwx, nx, self%d_dx,  self%tmp_x)
    NEW_FFTW_PLAN_C2R_1D(self%bwx, nx, self%tmp_x, self%d_dx)

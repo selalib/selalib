@@ -63,9 +63,8 @@ module sll_maxwell_3d_pstd
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
-
-use, intrinsic :: iso_c_binding
-use sll_constants
+#include "sll_constants.h"
+use fftw3
 
 implicit none
 private
@@ -120,12 +119,6 @@ end type maxwell_pstd_3d
 
 sll_int32, private :: i, j, k
 
-#ifdef FFTW_F2003
-include 'fftw3.f03'
-#else
-include 'fftw3.f'
-#endif
-
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
@@ -162,9 +155,10 @@ subroutine new_maxwell_3d_pstd(self,xmin,xmax,nx, &
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   FFTW_ALLOCATE(self%tmp_x,nx,sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny,sz_tmp_y,self%p_tmp_y)
-   FFTW_ALLOCATE(self%tmp_z,ny,sz_tmp_z,self%p_tmp_z)
+   FFTW_ALLOCATE(self%tmp_x,nx/2+1,sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,ny/2+1,sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_z,nz/2+1,sz_tmp_z,self%p_tmp_z)
+
    SLL_ALLOCATE(self%d_dx(nx), error)
    SLL_ALLOCATE(self%d_dy(ny), error)
    SLL_ALLOCATE(self%d_dz(nz), error)
