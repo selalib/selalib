@@ -15,6 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Module to solve Poisson equation on one dimensional mesh using FFT
+!> transform.
 module sll_poisson_1d_periodic
 
 #include "sll_working_precision.h"
@@ -36,10 +38,12 @@ module sll_poisson_1d_periodic
      sll_real64, dimension(:), pointer :: work  !< array used by fftpack
   end type poisson_1d_periodic
 
+  !> Create a new poisson solver on 1d mesh
   interface new
      module procedure new_poisson_1d_periodic
   end interface
 
+  !> Solve the Poisson equation on 1d mesh and compute the potential
   interface solve
      module procedure solve_poisson_1d_periodic 
   end interface
