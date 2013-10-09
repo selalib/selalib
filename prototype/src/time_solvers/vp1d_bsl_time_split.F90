@@ -224,7 +224,7 @@ program VP1d_BSL_time_split
   call write_scalar_field_2d(f) 
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   call solve(poisson_1d, efield, rho)
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
