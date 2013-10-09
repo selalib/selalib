@@ -350,8 +350,6 @@ contains ! *******************************************************************
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       b1_field_vect,&
-       b2_field_vect,&
        c_field)!, &
       ! rho)
     
@@ -360,8 +358,6 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer :: a22_field_mat
-    class(sll_scalar_field_2d_base), pointer :: b1_field_vect
-    class(sll_scalar_field_2d_base), pointer :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer     :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local
@@ -371,9 +367,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
     sll_real64, dimension(:,:), allocatable :: K_a21_loc
     sll_real64, dimension(:,:), allocatable :: K_a22_loc
-    sll_real64, dimension(:,:), allocatable :: M_b_vect_loc
-    sll_real64, dimension(:,:), allocatable :: S_b1_loc
-    sll_real64, dimension(:,:), allocatable :: S_b2_loc
     sll_real64, dimension(:,:), allocatable :: full_Matrix
     ! sll_real64, dimension(:), pointer  :: Masse_tot
     ! sll_real64, dimension(:), pointer  :: Stiff_tot
@@ -407,9 +400,6 @@ contains ! *******************************************************************
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a21_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a22_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-    SLL_ALLOCATE(S_b1_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-    SLL_ALLOCATE(S_b2_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-    SLL_ALLOCATE(M_b_vect_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     !SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
@@ -445,8 +435,6 @@ contains ! *******************************************************************
                a12_field_mat, &
                a21_field_mat, &
                a22_field_mat, &
-               b1_field_vect,&
-               b2_field_vect,&
                c_field, &
                Masse_loc,&
                Stiff_loc,&
@@ -454,11 +442,7 @@ contains ! *******************************************************************
                K_a11_loc, &
                K_a12_loc, &
                K_a21_loc, &
-               K_a22_loc, &
-               M_b_vect_loc, &
-               S_b1_loc,  &
-               S_b2_loc )
-          
+               K_a22_loc)          
           
           
           call local_to_global_matrices( &
@@ -473,9 +457,6 @@ contains ! *******************************************************************
                K_a12_loc, &
                K_a21_loc, &
                K_a22_loc,&
-               M_b_vect_loc, &
-               S_b1_loc, &
-               S_b2_loc, &
                full_Matrix,&
                es%masse,&
                es%stiff)
@@ -492,9 +473,6 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
-    SLL_DEALLOCATE_ARRAY(M_b_vect_loc,ierr)
-    SLL_DEALLOCATE_ARRAY(S_b1_loc,ierr)
-    SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
@@ -591,8 +569,6 @@ contains ! *******************************************************************
        a12_field_mat, &
        a21_field_mat, &
        a22_field_mat, &
-       b1_field_vect, &
-       b2_field_vect, &
        c_field, &
        Masse_loc,&
        Stiff_loc,&
@@ -600,10 +576,7 @@ contains ! *******************************************************************
        K_a11_loc, &
        K_a12_loc, &
        K_a21_loc, &
-       K_a22_loc, &
-       M_b_vect_loc, &
-       S_b1_loc,  &
-       S_b2_loc )
+       K_a22_loc)
     !    use sll_constants
     
     type(general_coordinate_elliptic_solver) :: obj
@@ -623,9 +596,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
     sll_real64, dimension(:,:), intent(out) :: K_a21_loc
     sll_real64, dimension(:,:), intent(out) :: K_a22_loc
-    sll_real64, dimension(:,:), intent(out) :: M_b_vect_loc
-    sll_real64, dimension(:,:), intent(out) :: S_b1_loc
-    sll_real64, dimension(:,:), intent(out) :: S_b2_loc
     sll_real64, dimension(:), intent(out) :: Masse_loc
     sll_real64, dimension(:), intent(out) :: Stiff_loc
     !sll_real64, dimension(:), intent(out) :: Masse_loc
@@ -689,9 +659,6 @@ contains ! *******************************************************************
     K_a12_loc(:,:)    = 0.0
     K_a21_loc(:,:)    = 0.0
     K_a22_loc(:,:)    = 0.0
-    M_b_vect_loc(:,:) = 0.0
-    S_b1_loc(:,:)     = 0.0
-    S_b2_loc(:,:)     = 0.0
     dbiatx1(:,:)      = 0.0_f64
     dbiatx2(:,:)      = 0.0_f64
     work1(:,:)        = 0.0_f64
@@ -781,12 +748,6 @@ contains ! *******************************************************************
           val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
           val_a21      = a21_field_mat%value_at_point(gpt1,gpt2)
           val_a22      = a22_field_mat%value_at_point(gpt1,gpt2)
-          val_b1       = b1_field_vect%value_at_point(gpt1,gpt2)
-          val_b1_der1  = b1_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
-          val_b1_der2  = b1_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
-          val_b2       = b2_field_vect%value_at_point(gpt1,gpt2)
-          val_b2_der1  = b1_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
-          val_b2_der2  = b1_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
@@ -895,26 +856,6 @@ contains ! *******************************************************************
                            dbiatx2(jj+1,2)*dbiatx2(jjj+1,1)
 
 
-                      M_b_vect_loc(index1, index2) =      &
-                           M_b_vect_loc(index1, index2) + &
-                           MC*wgpt1*wgpt2 *  &
-                           dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
-                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                      
-                      
-                      ! A revoir 
-                      S_b1_loc(index1, index2) =      &
-                           S_b1_loc(index1, index2) + &
-                           C1*wgpt1*wgpt2 *  &
-                           dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
-                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-
-                      ! A revoir 
-                      S_b2_loc(index1, index2) = &
-                           S_b2_loc(index1, index2) + &
-                           C2*wgpt1*wgpt2 *  &
-                           dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
-                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,2)
                    end do
                 end do
              end do
@@ -1110,9 +1051,6 @@ contains ! *******************************************************************
        K_a12_loc, &
        K_a21_loc, &
        K_a22_loc,&
-       M_b_vect_loc, &
-       S_b1_loc, &
-       S_b2_loc, &
        full_Matrix,&
        Masse_tot,&
        Stiff_tot)
@@ -1127,9 +1065,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: K_a12_loc
     sll_real64, dimension(:,:), intent(in) :: K_a21_loc
     sll_real64, dimension(:,:), intent(in) :: K_a22_loc
-    sll_real64, dimension(:,:), intent(in) :: M_b_vect_loc
-    sll_real64, dimension(:,:), intent(in) :: S_b1_loc
-    sll_real64, dimension(:,:), intent(in) :: S_b2_loc
     
     !  Correspond to the full Matrix of linear system 
     !  It is not necessary to keep it  
@@ -1227,10 +1162,7 @@ contains ! *******************************************************************
                      K_a11_loc(b, bprime)   - &
                      K_a12_loc(b, bprime)   - &
                      K_a21_loc(b, bprime)   - &
-                     K_a22_loc(b, bprime)   - &
-                     M_b_vect_loc(b,bprime) - &
-                     S_b1_loc( b, bprime)   - &
-                     S_b2_loc( b, bprime)
+                     K_a22_loc(b, bprime)   
                 
 !!$                full_Matrix(x,y) = &
 !!$                     full_Matrix(x,y) + &
