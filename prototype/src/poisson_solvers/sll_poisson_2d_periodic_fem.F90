@@ -8,17 +8,21 @@ module sll_poisson_2d_periodic_fem
 use sll_constants
 implicit none
 
+!> Structure to solve Poisson equation on 2d irregular cartesian mesh
+!> with finite element numerical method
 type :: poisson_2d_periodic_fem
-   sll_real64, dimension(:,:), pointer :: A
-   sll_real64, dimension(:,:), pointer :: M
+   sll_real64, dimension(:,:), pointer :: A     !< Mass matrix
+   sll_real64, dimension(:,:), pointer :: M     !< Stiffness matrix
    sll_real64, dimension(:)  , pointer :: hx    !< step size x
    sll_real64, dimension(:)  , pointer :: hy    !< step size y
-   sll_int32,  dimension(:)  , pointer :: ipiv
+   sll_int32,  dimension(:)  , pointer :: ipiv  !< Lapack array for pivoting
 end type poisson_2d_periodic_fem
 
+!> Initialize the solver
 interface initialize
    module procedure initialize_poisson_2d_periodic_fem
 end interface initialize
+!> Compute the electric potential
 interface solve
    module procedure solve_poisson_2d_periodic_fem
 end interface solve
@@ -32,14 +36,14 @@ private :: som, build_matrices
 contains
 
 !> Initialize Poisson solver object using finite elements method.
-!> Indices are shifted from [1:n+1] to [0:n] only inside this 
-!> subroutine
+!> Indices are shifted from \f$ [1:n+1] \f$ to \f$ [0:n] \f$ only 
+!> inside this subroutine.
 subroutine initialize_poisson_2d_periodic_fem( this, x, y ,nn_x, nn_y)
-type( poisson_2d_periodic_fem ) :: this
-sll_int32,  intent(in)      :: nn_x !< number of cells along x
-sll_int32,  intent(in)      :: nn_y !< number of cells along y
-sll_real64, dimension(nn_x) :: x    !< x nodes coordinates
-sll_real64, dimension(nn_y) :: y    !< y nodes coordinates
+type( poisson_2d_periodic_fem ) :: this !< Solver data structure
+sll_int32,  intent(in)          :: nn_x !< number of cells along x
+sll_int32,  intent(in)          :: nn_y !< number of cells along y
+sll_real64, dimension(nn_x)     :: x    !< x nodes coordinates
+sll_real64, dimension(nn_y)     :: y    !< y nodes coordinates
 
 sll_real64, dimension(4,4) :: Axelem
 sll_real64, dimension(4,4) :: Ayelem
@@ -138,6 +142,7 @@ call DGETRF(nxy,nxy,this%A,nxy,this%ipiv,error)
 
 end subroutine initialize_poisson_2d_periodic_fem
 
+!> Get the node number
 integer function som(i, j, k)
 integer :: i, j, k
 
@@ -153,14 +158,15 @@ end if
 
 end function som
 
+!> Build matrices and factorize
 subroutine build_matrices( this, Axelem, Ayelem, Melem, isom, i, j )
 type( poisson_2d_periodic_fem ) :: this     !< Poisson solver object
 sll_real64, dimension(:,:)      :: Axelem   !< x electric field
 sll_real64, dimension(:,:)      :: Ayelem   !< y electric field
 sll_real64, dimension(:,:)      :: Melem    !< charge density
-sll_int32,  dimension(:)        :: isom
-sll_int32, intent(in)           :: i
-sll_int32, intent(in)           :: j
+sll_int32,  dimension(:)        :: isom     !< node indices
+sll_int32, intent(in)           :: i        !< int(x) position on mesh
+sll_int32, intent(in)           :: j        !< int(y) position on mesh
 
    do ii=1,4
       do jj=1,4
@@ -221,10 +227,11 @@ end do
 
 end subroutine solve_poisson_2d_periodic_fem
 
+!> Write the Plotmtv file to plot mesh indices and cell numbers.
 subroutine write_mtv_periodic( x, y )
 integer               :: iel
-real(8), dimension(:) :: x
-real(8), dimension(:) :: y
+real(8), dimension(:) :: x !< x node position
+real(8), dimension(:) :: y !< y node position
 real(8)               :: x1
 real(8)               :: y1
 

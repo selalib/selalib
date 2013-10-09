@@ -15,14 +15,17 @@ SET(SLL_MACROS
     ${SLL_DIR}/splines/sll_splines.h
     ${SLL_DIR}/file_io/sll_file_io.h
     ${SLL_DIR}/fft/sll_fft.h
+    ${SLL_DIR}/fft/sll_fftw.h
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
+    ${SLL_DIR}/multigrid/sll_multigrid.h
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
 
+IF(NOT STDF95)
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
@@ -39,6 +42,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_xdmf.F90
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
+    ${SLL_DIR}/file_io/sll_plotmtv.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/electric_field_accumulators/sll_electric_field_2d.F90
@@ -71,8 +75,8 @@ ELSEIF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTW")
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
       ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
       ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-      ${SLL_DIR}/fft/fftw_module.F90
-      ${SLL_DIR}/fft/sll_fft_mod_through_legacy_fftw.F90)
+      ${SLL_DIR}/fft/fftw3.F90
+      ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90)
 
 ELSE()
 
@@ -82,7 +86,7 @@ ELSE()
 ENDIF()
 
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
        ${SLL_DIR}/collective/sll_collective.F90
@@ -90,7 +94,7 @@ IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90 )
 
-ENDIF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
@@ -121,3 +125,4 @@ INSTALL( CODE
    "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/fortran\")")
 
 INSTALL(FILES ${SLL_MACROS}  DESTINATION include  )
+ENDIF(NOT STDF95)

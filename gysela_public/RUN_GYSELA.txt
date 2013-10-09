@@ -1,0 +1,16 @@
+Build:
+-----
+$ mkdir build
+$ cd build
+$ cmake ../src
+$ make
+$ cp ../wk/a32_slab4.nml .
+
+Run 15 times:
+-------------
+$ nohup sh -c ' for i in $(seq 0 15); do mpirun -np 4 ./bin/gysela a32.nml ; done > output.txt ' &
+
+Stop: 
+-----
+$ touch gysela.stop
+

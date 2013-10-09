@@ -4,21 +4,27 @@ program unit_test
 #include "sll_field_2d.h"
   use sll_constants
   use distribution_function
-  use geometry_functions
-  use sll_module_mapped_meshes_2d
+  use sll_common_coordinate_transformations
+  !use sll_module_mapped_meshes_2d
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
   use sll_landau_2d_initializer
   use sll_cubic_spline_interpolator_1d
   implicit none
  
   sll_int32 :: nc_eta1, nc_eta2
-  type(sll_mapped_mesh_2d_analytic), target :: mesh2d
+!  type(sll_mapped_mesh_2d_analytic), target :: mesh2d
 #ifdef STDF95
-  type(sll_mapped_mesh_2d_analytic), pointer   :: m
+  !type(sll_mapped_mesh_2d_analytic), pointer   :: m
+  type(sll_coordinate_transformation_2d_base), pointer   :: m
+  type(sll_logical_mesh_2d), pointer :: m_log
   type(init_landau_2d), pointer    :: p_init_f
   type(cubic_spline_1d_interpolator), pointer :: interp_eta1_ptr
   type(cubic_spline_1d_interpolator), pointer :: interp_eta2_ptr
 #else
-  class(sll_mapped_mesh_2d_base), pointer   :: m
+  !class(sll_mapped_mesh_2d_base), pointer   :: m
+  class(sll_coordinate_transformation_2d_base), pointer   :: m
+  type(sll_logical_mesh_2d), pointer :: m_log
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
@@ -37,25 +43,19 @@ program unit_test
 
   print*, 'initialization of mesh'
   
-!  px1 => sinprod_x1
-!  px2 => sinprod_x2
-!  pjac => sinprod_jac
-#ifdef STDF95
-  call initialize_mesh_2d_analytic( &
-       mesh2d, &
-#else
-  call mesh2d%initialize( &
-#endif
-       "mesh2d",  &
-       nc_eta1+1, &
-       nc_eta2+1, &
+ m_log => new_logical_mesh_2d( &
+       nc_eta1, &
+       nc_eta2  &
+   )
+  m => new_coordinate_transformation_2d_analytic( &
+       "mesh2d_coll",      &
+       m_log,             &
        sinprod_x1, &
        sinprod_x2, &
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
        sinprod_jac22 )
-  m => mesh2d
 
   print *, 'initialization of the interpolators'
  ! Set up the interpolators for the field

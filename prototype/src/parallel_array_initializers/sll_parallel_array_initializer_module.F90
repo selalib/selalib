@@ -18,6 +18,18 @@ module sll_parallel_array_initializer_module
   ! the following abstract type.
 
   abstract interface
+     function sll_scalar_initializer_2d( x1, x2, params )
+       use sll_working_precision
+       sll_real64                                  :: sll_scalar_initializer_2d
+       sll_real64, intent(in)                         :: x1
+       sll_real64, intent(in)                         :: x2
+       sll_real64, dimension(:), intent(in), optional :: params
+     end function sll_scalar_initializer_2d
+  end interface
+
+
+
+  abstract interface
      function sll_scalar_initializer_4d( x1, x2, x3, x4, params )
        use sll_working_precision
        sll_real64                                  :: sll_scalar_initializer_4d
@@ -31,11 +43,95 @@ module sll_parallel_array_initializer_module
 
 contains
 
+
+  subroutine sll_2d_parallel_array_initializer_cartesian( &
+       layout, &
+       mesh2d, &
+       array, &
+       func, &
+       func_params)
+
+    type(layout_2D), pointer                    :: layout
+    type(sll_logical_mesh_2d), pointer          :: mesh2d
+    sll_real64, dimension(:,:), intent(out) :: array
+    procedure(sll_scalar_initializer_2d)        :: func
+    sll_real64, dimension(:), optional          :: func_params
+
+
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: loc_size_x1
+    sll_int32  :: loc_size_x2
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 :: x1
+    sll_real64 :: x2
+    sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
+
+    if( .not. associated(layout) ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#passed layout is uninitialized.'
+    end if
+
+    if( .not. associated(mesh2d) ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#passed mesh2d_eta1_eta2 argument is uninitialized.'
+    end if
+
+
+    call compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
+
+    if( size(array,1) .lt. loc_size_x1 ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#first dimension of passed array is inconsistent with ', &
+            '#the size contained in the passed layout.'
+    end if
+
+    if( size(array,2) .lt. loc_size_x2 ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#second dimension of passed array is inconsistent with ', &
+            '#the size contained in the passed layout.'
+    end if
+
+
+
+
+    eta1_min = mesh2d%eta1_min
+    eta2_min = mesh2d%eta2_min
+    delta1   = mesh2d%delta_eta1
+    delta2   = mesh2d%delta_eta2
+
+    ! This initializes a node-centered array. The loop should be repeated
+    ! below if cell-centered or if arbitrary positions are specified.
+
+    do j=1,loc_size_x2
+      do i=1,loc_size_x1
+        gi(:) = local_to_global_2D( layout, (/i,j/) )
+        eta1 = eta1_min + real(gi(1)-1,f64)*delta1
+        eta2 = eta2_min + real(gi(2)-1,f64)*delta2
+        array(i,j) = func(eta1,eta2,func_params)
+      end do
+    end do
+
+  end subroutine sll_2d_parallel_array_initializer_cartesian
+
+
+
+
+
+
+
   ! This could be put behind a generic interface if we want more flexibility
   ! when passing the logical meshes, for instance multiple logical meshes
   ! instead of only one. This will be necessary whenever it is convenient
   ! to, for example, separate a 4D mesh into two parts, one can remain 
   ! cartesian while the other may be transformed.
+
+
   subroutine sll_4d_parallel_array_initializer( &
        layout, &
        mesh2d_eta1_eta2, &
@@ -44,12 +140,7 @@ contains
        func, &
        func_params, &
        transf_x1_x2, &
-       transf_x3_x4, &
-! in case of a mesh with cell subdivisions
-       subcells1, &
-       subcells2, &
-       subcells3, &
-       subcells4)
+       transf_x3_x4 )
 
     type(layout_4D), pointer                    :: layout
     type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
@@ -57,11 +148,6 @@ contains
     sll_real64, dimension(:,:,:,:), intent(out) :: array
     procedure(sll_scalar_initializer_4d)        :: func
     sll_real64, dimension(:), optional          :: func_params
-    sll_int32,optional   :: subcells1
-    sll_int32,optional   :: subcells2
-    sll_int32,optional   :: subcells3
-    sll_int32,optional   :: subcells4
-
 
     class(sll_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x1_x2
@@ -94,7 +180,6 @@ contains
     sll_real64 :: x3
     sll_real64 :: x4
     sll_int32  :: case_selector
-    sll_int32    :: sub1,sub2,sub3,sub4
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
@@ -159,32 +244,6 @@ contains
        end if
     end if
 
-
-   if(.not.present(subcells1  ) ) then
-     sub1=1
-  else
-     sub1=subcells1
-  end if
-
-   if(.not.present(subcells2  ) ) then
-     sub2=1
-  else
-     sub2=subcells2
-  end if
-
-   if(.not.present(subcells3  ) ) then
-     sub3=1
-  else
-     sub3=subcells3
-  end if
-    
-   if(.not.present(subcells3  ) ) then
-     sub4=1
-  else
-     sub4=subcells4
-  end if
-
-
     case_selector = 0
 
     if( present(transf_x1_x2) ) then
@@ -198,10 +257,10 @@ contains
     eta2_min = mesh2d_eta1_eta2%eta2_min
     eta3_min = mesh2d_eta3_eta4%eta1_min
     eta4_min = mesh2d_eta3_eta4%eta2_min
-    delta1   = mesh2d_eta1_eta2%delta_eta1/sub1
-    delta2   = mesh2d_eta1_eta2%delta_eta2/sub2
-    delta3   = mesh2d_eta3_eta4%delta_eta1/sub3
-    delta4   = mesh2d_eta3_eta4%delta_eta2/sub4
+    delta1   = mesh2d_eta1_eta2%delta_eta1
+    delta2   = mesh2d_eta1_eta2%delta_eta2
+    delta3   = mesh2d_eta3_eta4%delta_eta1
+    delta4   = mesh2d_eta3_eta4%delta_eta2
 
     ! This initializes a node-centered array. The loop should be repeated
     ! below if cell-centered or if arbitrary positions are specified.
