@@ -138,6 +138,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(advection_field)
       ADD_SUBDIRECTORY(LinRood)
 
+      ADD_SUBDIRECTORY(mesh_calculus)
       ADD_SUBDIRECTORY(simulation)
 
    ENDIF(NOT STDF95)
