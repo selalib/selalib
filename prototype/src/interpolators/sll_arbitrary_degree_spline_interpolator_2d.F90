@@ -25,6 +25,7 @@ use sll_boundary_condition_descriptors
 #else
 use sll_module_interpolators_2d_base
 #endif
+use sll_utilities
   implicit none
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
@@ -72,6 +73,7 @@ use sll_module_interpolators_2d_base
     procedure, pass:: interpolate_array => interpolate_array_ad2d
     procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
     procedure, pass:: get_coefficients => get_coefficients_ad2d
+    procedure, pass:: read_coefficients_from_file => read_coeffs_ad2d
 #endif
   end type arb_deg_2d_interpolator
 
@@ -1067,4 +1069,45 @@ contains
   end function get_coefficients_ad2d
 #endif
   
+  subroutine read_coeffs_ad2d( interpolator, filename )
+    intrinsic :: trim
+    class(arb_deg_2d_interpolator), intent(in)    :: interpolator
+    character(len=*), intent(in) :: filename
+    character(len=64) :: filename_local
+    sll_int32 :: IO_stat
+    sll_int32 :: input_file_id
+    sll_int32 :: ierr
+    character(len=80) :: line_buffer
+
+    if(len(filename) >= 64) then
+       print *, 'ERROR, read_coefficients_from_file=>read_read_coeffs_ad2d():',&
+            'filenames longer than 64 characters are not allowed.'
+       STOP
+    end if
+    filename_local = trim(filename)
+
+    ! get a new identifier for the file.
+    call sll_new_file_id( input_file_id, ierr )
+    if( ierr .ne. 0 ) then
+       print *, 'ERROR while trying to obtain an unique identifier for file ',&
+            filename, '. Called from read_coeffs_ad2d().'
+       stop
+    end if
+    open(unit=input_file_id, file=filename_local, STATUS="OLD", &
+!        ACCESS="STREAM", FORM="UNFORMATTED", &
+IOStat=IO_stat)
+    if( IO_Stat .ne. 0 ) then
+       print *, 'ERROR while opening file ',filename, &
+            '. Called from read_coeffs_ad2d().'
+       stop
+    end if
+    read( UNIT=input_file_id,FMT='(A)', IOSTAT=IO_stat) line_buffer
+    print *, 'length of buffer = ', len(line_buffer)
+    line_buffer = trim(line_buffer)
+    print *, 'contents of buffer: ', line_buffer
+    close( input_file_id )
+
+    print *, 'passed filename: ', filename_local
+  end subroutine read_coeffs_ad2d
+
 end module sll_arbitrary_degree_spline_interpolator_2d_module
