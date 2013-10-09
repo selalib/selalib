@@ -390,7 +390,7 @@ contains
 
     
     !computation of rho
-    call new(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
+    call initialize(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
     do i=1,np_x1-1
       tmp= sum(f_x1(i,1:local_size_x2))
       call mpi_reduce(tmp,rho(i),1,MPI_REAL8,MPI_SUM,0,sll_world_collective%comm,ierr)
