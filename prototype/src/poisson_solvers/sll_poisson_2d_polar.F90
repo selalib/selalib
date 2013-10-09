@@ -17,9 +17,12 @@
 
 !> @author Eric MADAULE
 !> @brief Poisson equation solver in polar coordinate
-!> @details Solver for the Poisson equation -\Delta \phi = f in polar coordinate
-!!using a fft in direction \theta and final differencies in direction r.
-!!This way we solve a tridiagonal system with the solver from SELALIB.
+!> @details Solver for the Poisson equation 
+!> \f[ \Delta \phi = f \f]
+!> in polar coordinate
+!> using a fft in direction \f$ \theta \f$ and final differencies 
+!> in direction \f$ r \f$.
+!> This way we solve a tridiagonal system with the solver from SELALIB.
 !>
 !>\section how How to use the Poisson polar solver?
 !>
@@ -48,10 +51,10 @@
 !>Summary :
 !>
 !>The different boundary conditions are :
-!>BOT_DIRICHLET
-!>BOT_NEUMANN
-!>TOP_DIRICHLET
-!>TOP_NEUMANN
+!> - BOT_DIRICHLET
+!> - BOT_NEUMANN
+!> - TOP_DIRICHLET
+!> - TOP_NEUMANN
 !>
 !>You must combine BOT_ and TOP_ conditions with '+'.
 !>
@@ -101,50 +104,47 @@ module sll_poisson_2d_polar
   !>type sll_plan_poisson_polar
   !>type for the Poisson solver in polar coordinate
   type sll_plan_poisson_polar
-     sll_real64                          :: rmin
-     sll_real64                          :: rmax
-     sll_real64                          :: dr
-     sll_int32                           :: nr
-     sll_int32                           :: ntheta
-     sll_int32                           :: bc(2)
-     type(sll_fft_plan), pointer         :: pfwd
-     type(sll_fft_plan), pointer         :: pinv
-     sll_real64, dimension(:,:), pointer :: f_fft
-     sll_comp64, dimension(:),   pointer :: fk
-     sll_comp64, dimension(:),   pointer :: phik
+     sll_real64                          :: rmin   !< r min
+     sll_real64                          :: rmax   !< r max
+     sll_real64                          :: dr     !< step size
+     sll_int32                           :: nr     !< number of points in r
+     sll_int32                           :: ntheta !< number of points in theta
+     sll_int32                           :: bc(2)  !< boundary conditon type
+     type(sll_fft_plan), pointer         :: pfwd   !< fft plan in theta
+     type(sll_fft_plan), pointer         :: pinv   !< inverse fft plan in theta
+     sll_real64, dimension(:,:), pointer :: f_fft  !< ptential fft in theta
+     sll_comp64, dimension(:),   pointer :: fk     !< \f$ f_k \f$
+     sll_comp64, dimension(:),   pointer :: phik   !< \f$ phi_k \f$
      sll_real64, dimension(:), pointer   :: a      !< data for the tridiagonal solver
-     sll_real64, dimension(:), pointer   :: cts
-     sll_int32, dimension(:),  pointer   :: ipiv
+     sll_real64, dimension(:), pointer   :: cts    !< lapack array
+     sll_int32, dimension(:),  pointer   :: ipiv   !< lapack pivot data
   end type sll_plan_poisson_polar
 
+  !> Initialize the polar poisson solver
   interface initialize
      module procedure initialize_poisson_polar
   end interface initialize
+
+  !> Get potential from the polar poisson solver
   interface solve
      module procedure solve_poisson_polar
   end interface solve
 
 contains
 
-!========================================
-!  creation of sll_plan_poisson_polar
-!========================================
-
-  !>new_plan_poisson_polar(dr,rmin,nr,ntheta)
-  !>build a sll_plan_poisson_polar object for the Poisson solver in polar coordinate
-  !>dr : size of space in direction r
-  !>rmin : interior radius
-  !>nr and ntheta : number of space in direction r and theta
-  !>bc : boundary conditions, can be combined with +
-  !>bc is optionnal and default is Dirichlet condition in rmin and rmax
+!> Creation of sll_plan_poisson_polar object for the 
+!> Poisson solver in polar coordinate
   function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc) result(this)
 
     implicit none
 
-    sll_real64 :: dr, rmin
-    sll_int32 :: nr, ntheta
-    sll_int32, optional :: bc(2)
-    type(sll_plan_poisson_polar), pointer :: this
+    sll_real64 :: dr             !< size of space in direction r
+    sll_real64 :: rmin           !< interior radius
+    sll_int32  :: nr             !< number of space in direction r
+    sll_int32  :: ntheta         !< number of space in direction theta
+    sll_int32, optional :: bc(2) !< Boundary conditions, can be combined with +
+                                 !< bc is optionnal and default is Dirichlet condition in rmin and rmax
+    type(sll_plan_poisson_polar), pointer :: this !< Poisson solver structure
 
     sll_int32 :: err
     sll_real64, dimension(:), allocatable :: buf
@@ -182,14 +182,14 @@ contains
   subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
 
     implicit none
-    type(sll_plan_poisson_polar) :: this
+    type(sll_plan_poisson_polar) :: this !< Poisson solver structure
 
-    sll_real64               :: rmin    !< rmin
-    sll_real64               :: rmax    !< rmax
-    sll_int32                :: nr      !< number of cells radial
-    sll_int32                :: ntheta  !< number of cells angular
-    sll_int32, optional      :: bc_rmin !< radial boundary conditions
-    sll_int32, optional      :: bc_rmax !< radial boundary conditions
+    sll_real64               :: rmin     !< rmin
+    sll_real64               :: rmax     !< rmax
+    sll_int32                :: nr       !< number of cells radial
+    sll_int32                :: ntheta   !< number of cells angular
+    sll_int32, optional      :: bc_rmin  !< radial boundary conditions
+    sll_int32, optional      :: bc_rmax  !< radial boundary conditions
     sll_int32                :: error
     sll_real64, dimension(:), allocatable :: buf
 

@@ -11,7 +11,7 @@ SET(POISSON_SRCS sll_poisson_solvers.F90
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
-   SET(POISSON_SRCS "${POISSON_SRCS};sll_poisson_2d_periodic_fftw.F90")
+   SET(POISSON_SRCS "${POISSON_SRCS};../fft/fftw3.F90;sll_poisson_2d_periodic_fftw.F90")
 
 
 ELSE()
@@ -24,8 +24,7 @@ IF(MUDPACK_ENABLED)
 
    SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
                                     sll_mudpack_cartesian.F90
-                                    sll_mudpack_polar.F90
-                                    sll_mudpack_colella.F90)
+                                    sll_mudpack_polar.F90)
 
 ENDIF(MUDPACK_ENABLED)
    
@@ -99,7 +98,6 @@ IF(MUDPACK_ENABLED)
 
    ADD_MUDPACK_PROGRAM(cartesian)
    ADD_MUDPACK_PROGRAM(polar)
-   ADD_MUDPACK_PROGRAM(colella)
 
 
 ENDIF()

@@ -22,8 +22,12 @@
 !> @details
 !> Solvers available:
 !> - sll_maxwell_2d_fdtd
+!> - sll_maxwell_3d_fdtd
 !> - sll_maxwell_2d_pstd
+!> - sll_maxwell_3d_pstd
 !> - sll_maxwell_2d_periodic_cartesian_par
+!>
+!> This module contains all Maxwell solvers
 module sll_maxwell_solvers
 
 #include "sll_working_precision.h"

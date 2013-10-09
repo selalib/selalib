@@ -261,15 +261,45 @@ contains
              print *, 'cell = ', cell
              print *, 'knot(current) = ', spline_obj%k(current)
              print *, 'knot(current+1) = ', spline_obj%k(current+1)
+             print *, 'knot(current+j) = ', spline_obj%k(current+j),j
           end if
+
+          if( tipjp1 == tip1 ) then
+             print *, 'calculation is shot... NaNs will be found'
+             print *, 'x = ', x
+             print *, 'current = ', current
+             print *, 'deg = ', deg
+             print *, 'cell = ', cell
+             print *, 'knot(current) = ', spline_obj%k(current)
+             print *, 'knot(current+1) = ', spline_obj%k(current+1)
+             print *, 'knot(current+j) = ', spline_obj%k(current+j),j
+             print *, 'knot(current+j+1) = ', spline_obj%k(current+j+1)
+          end if
+
+
+
 #endif
   !
   !               x-t(i)                       t(i+j+1)-x
   ! B[j,i](x) = ----------- * B[j-1,i](x) + ----------------* B[j-1,i+1](x)
   !             t(i+j)-t(i)                  t(i+j+1)-t(i+1)
 
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          if(tipj==ti)then
+            fac1=0._f64
+          elseif (abs(tipj-ti)<1.e-15) then
+            print *,tipj-ti
+          else     
+            fac1       = (x - ti)/(tipj - ti)            
+          endif  
+          if(tipjp1==tip1)then
+            fac2=0._f64
+          elseif (abs(tipjp1-tip1)<1.e-15) then
+            print *,tipjp1-tip1
+          else
+            fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          endif
+          
+          
           ! Super-ugly step to eliminate those cases where the denominator is
           ! zero but the spline value is also zero, thus avoiding the 
           ! indeterminate result ( NaN's ). 
@@ -371,8 +401,20 @@ contains
           ! protection: What guarantees are there that these denominators
           ! will not be zero?? This should probably be error-checked, else
           ! one can just end up with an array of NaN's.
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          if(tipj==ti)then
+            !print *,(x-ti)*splines(i)
+            fac1  = 0._f64
+          else
+            !print *,(tipjp1 - x)*splines(i+1)
+            fac1       = (x - ti)/(tipj - ti)
+          endif
+          !fac1       = (x - ti)/(tipj - ti)
+          if(tipjp1==tip1)then
+            !print *,(tipjp1 - x)*splines(i+1)
+            fac2  = 0._f64
+          else          
+            fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          endif  
           ! AGAIN: Super-ugly step to eliminate those cases where the 
           ! denominator is zero but the spline value is also zero, thus 
           ! avoiding the indeterminate result ( NaN's ). 
@@ -394,7 +436,8 @@ contains
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
-    do i=1,last
+    if(deg>0)then
+      do i=1,last
        current = cell - deg + i - 1
        delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
        delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1)
@@ -410,7 +453,8 @@ contains
        !   end if
        !end if
        !derivs(i) = (splines(i) - splines(i+1))/delta_x
-    end do
+      end do
+    endif
     b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
 
   end function b_spline_derivatives_at_x
@@ -511,8 +555,15 @@ contains
           ! protection: What guarantees are there that these denominators
           ! will not be zero?? This should probably be error-checked, else
           ! one can just end up with an array of NaN's.
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          if(tipj==ti)then
+          else
+            fac1       = (x - ti)/(tipj - ti)
+          endif
+          if(tipjp1==tip1)then
+            fac2 = 0._f64
+          else
+            fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          endif  
           ! AGAIN: Super-ugly step to eliminate those cases where the 
           ! denominator is zero but the spline value is also zero, thus 
           ! avoiding the indeterminate result ( NaN's ). 
@@ -535,7 +586,8 @@ contains
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
-    do i=1,last
+    if(deg>0)then
+      do i=1,last
        current = cell - deg + i - 1
        delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
        delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1) 
@@ -551,11 +603,13 @@ contains
        !   end if
        !end if
        !derivs(i) = (splines(i) - splines(i+1))/delta_x
-    end do
+      end do
+    endif
     b_splines_and_derivs_at_x(2,1:deg+1) = derivs(1:deg+1)
     ! Finish computing the splines for the desired degree
-    j = deg
-    do i=1,last
+    if(deg>0)then
+      j = deg
+      do i=1,last
        current    = cell - deg + i - 1
        ti         = spline_obj%k(current)
        tip1       = spline_obj%k(current+1)
@@ -565,8 +619,17 @@ contains
        ! protection: What guarantees are there that these denominators
        ! will not be zero?? This should probably be error-checked, else
        ! one can just end up with an array of NaN's.
-       fac1       = (x - ti)/(tipj - ti)
-       fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+       if(tipj==ti)then
+         fac1 = 0._f64
+       else
+         fac1       = (x - ti)/(tipj - ti)
+       endif
+       !fac1       = (x - ti)/(tipj - ti)
+       if(tipjp1==tip1)then
+         fac2 = 0._f64
+       else
+         fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+       endif  
           ! AGAIN: Super-ugly step to eliminate those cases where the 
           ! denominator is zero but the spline value is also zero, thus 
           ! avoiding the indeterminate result ( NaN's ). 
@@ -582,7 +645,8 @@ contains
           end if
           splines(i) = term1 + term2
 !       splines(i) = fac1*splines(i) + fac2*splines(i+1)
-    end do
+      end do
+    endif  
     b_splines_and_derivs_at_x(1,1:deg+1) = splines(1:deg+1)
   end function b_splines_and_derivs_at_x
 
@@ -765,6 +829,7 @@ contains
     ! the degree 'spline_degree -1'. We proceed to compute the derivatives
     ! of degree 'spline_degree'.
     ! print *, 'splines for derivatives:', splines(:)
+    derivs(:) = 0._f64
     do i=1,last
        derivs(i) = splines(i) - splines(i+1)
     end do
@@ -829,15 +894,18 @@ contains
     uniform_b_splines_and_derivs_at_x(2,1:degree+1) = derivs(1:degree+1)
 
     ! Do the last pass to complete the splines of the desired degree
-    j = degree
-    jreal      = real(j,f64)
-    r_jreal    = 1.0_f64/jreal
-    do i=1,last
+    if(degree>0)then
+      j = degree
+      jreal      = real(j,f64)
+      r_jreal    = 1.0_f64/jreal
+      do i=1,last
        temp       = real(degree - i, f64)
        fac1       = (temp + normalized_offset + 1.0_f64)*r_jreal
        fac2       = (-temp + jreal - normalized_offset)*r_jreal
        splines(i) = fac1*splines(i) + fac2*splines(i+1)
-    end do
+      end do
+    endif
+    
     uniform_b_splines_and_derivs_at_x(1,1:degree+1) = splines(1:degree+1)
   end function uniform_b_splines_and_derivs_at_x
 

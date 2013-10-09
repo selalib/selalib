@@ -319,6 +319,133 @@ contains
          0.2_f64*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
   end function sinprod_jac
 
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! direct mapping collela on (0,4*pi)x (0,1)
+  function sinprod_x1_rect ( eta1, eta2 )
+    real(8)  :: sinprod_x1_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_x1_rect = eta1 + 0.1_8 * sin(0.5*eta1) * sin(2*sll_pi*eta2)
+  end function sinprod_x1_rect
+  
+  function sinprod_x2_rect ( eta1, eta2 )
+    real(8)  :: sinprod_x2_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_x2_rect = eta2 + 0.1_8 * sin(0.5*eta1) * sin(2*sll_pi*eta2)
+  end function sinprod_x2_rect
+  
+  
+  ! jacobian matrix
+  function sinprod_jac11_rect ( eta1, eta2 )
+    real(8)  :: sinprod_jac11_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac11_rect = 1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+  end function sinprod_jac11_rect
+  
+  function sinprod_jac12_rect ( eta1, eta2 )
+    real(8)  :: sinprod_jac12_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac12_rect = 0.2_8 *sll_pi * sin (0.5*eta1) * cos (2*sll_pi*eta2)
+  end function sinprod_jac12_rect
+  
+  function sinprod_jac21_rect ( eta1, eta2 )
+    real(8)  :: sinprod_jac21_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac21_rect = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+  end function sinprod_jac21_rect
+
+  function sinprod_jac22_rect ( eta1, eta2 )
+    real(8)  :: sinprod_jac22_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac22_rect = 1.0_8 + &
+         0.2_8*sll_pi*sin(0.5*eta1)*cos(2*sll_pi*eta2)
+  end function sinprod_jac22_rect
+  
+  ! jacobian ie determinant of jacobian matrix
+  function sinprod_jac_rect ( eta1, eta2 )
+    real(8)  :: sinprod_jac_rect
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    sinprod_jac_rect = &
+         (1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2))* &
+         (1.0_8 + 0.2_8* sll_pi * sin(0.5*eta1) * cos(2*sll_pi*eta2) ) - &
+         0.2_8 *sll_pi * sin (0.5*eta1) * cos (2*sll_pi*eta2) * &
+         0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+  end function sinprod_jac_rect
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+  ! direct mapping collela on (0,4*pi)x (0,4*pi)
+  function sinprod_x1_square ( eta1, eta2 )
+    real(8)  :: sinprod_x1_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_x1_square = eta1 + 0.1_8 * sin(0.5*eta1) * sin(0.5*eta2)
+  end function sinprod_x1_square
+  
+  function sinprod_x2_square ( eta1, eta2 )
+    real(8)  :: sinprod_x2_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_x2_square = eta2 + 0.1_8 * sin(0.5*eta1) * sin(0.5*eta2)
+  end function sinprod_x2_square
+  
+  
+  ! jacobian matrix
+  function sinprod_jac11_square ( eta1, eta2 )
+    real(8)  :: sinprod_jac11_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac11_square = 1.0_8 + &
+         0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
+  end function sinprod_jac11_square
+  
+  function sinprod_jac12_square ( eta1, eta2 )
+    real(8)  :: sinprod_jac12_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac12_square = 0.5_8*0.1_8 * sin (0.5*eta1) * cos (0.5*eta2)
+  end function sinprod_jac12_square
+  
+  function sinprod_jac21_square ( eta1, eta2 )
+    real(8)  :: sinprod_jac21_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac21_square = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
+  end function sinprod_jac21_square
+  
+  function sinprod_jac22_square ( eta1, eta2 )
+    real(8)  :: sinprod_jac22_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    sinprod_jac22_square = 1.0_8 + &
+         0.5_8*0.1_8*sin(0.5*eta1)*cos(0.5*eta2)
+  end function sinprod_jac22_square
+  
+  ! jacobian ie determinant of jacobian matrix
+  function sinprod_jac_square ( eta1, eta2 )
+    real(8)  :: sinprod_jac_square
+    real(8), intent(in)   :: eta1
+    real(8), intent(in)   :: eta2
+    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    sinprod_jac_square = &
+         (1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2))* &
+         (1.0_8 + 0.5_8*0.1_8 * sin(0.5*eta1) * cos(0.5*eta2) ) - &
+         0.5_8*0.1_8 * sin (0.5*eta1) * cos (0.5*eta2) * &
+         0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
+  end function sinprod_jac_square
+
   ! test function
   !-------------------
   ! direct mapping

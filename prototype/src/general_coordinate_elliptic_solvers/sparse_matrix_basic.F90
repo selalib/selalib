@@ -167,15 +167,15 @@ contains
         open(unit = li_file, file = as_file // '.mm', iostat = li_ios)
         if (li_ios /= 0) STOP "print_csrMatrix_mmFormat : erreur d'ouverture du fichier "
 
-        write(li_file, *) '%%MatrixMarket matrix coordinate real general'
-        write(li_file, *) self % oi_nR, ',', self % oi_nC, ',', self % oi_nel
+        !write(li_file, *) '%%MatrixMarket matrix coordinate real general'
+        !write(li_file, *) self % oi_nR, ',', self % oi_nC, ',', self % oi_nel
         do li_i = 1, self % oi_nR
 
             do li_k = self % opi_ia(li_i), self % opi_ia(li_i + 1) - 1
 
                 li_j = self % opi_ja(li_k)
 
-                write(li_file, *) li_i, ',', li_j, ',', self % opr_a(li_k)
+                write(li_file, *) self % opr_a(li_k)!li_i, ',', li_j, ',', self % opr_a(li_k)
 
             end do
 
