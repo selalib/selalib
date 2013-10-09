@@ -342,8 +342,8 @@ subroutine run_vp_cart(sim)
 
  ! potential layout
  call initialize_layout_with_distributed_2D_array( &
-      sim%nc_x1, &
-      sim%nc_x2, &
+      sim%nc_x1+1, &
+      sim%nc_x2+1, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%phi_seq_x1)
@@ -357,7 +357,9 @@ subroutine run_vp_cart(sim)
 
 
  call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
- ! iz=0 corresponds to the mean values of rho and phi 
+ ! iz=0 corresponds to the mean values of rho and phi
+write(*,*) 'verified loc_sz_x1',loc_sz_x1
+write(*,*) 'loc_sz_x2',loc_sz_x2 
  SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
  SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,0:loc_sz_x2+1),ierr)
  !SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
@@ -590,14 +592,14 @@ subroutine run_vp_cart(sim)
  !stop
  itime=0
   sim%params(11)=t
-  call fn_L2_norm(sim,erreurL2_G)
-  write(*,*) 't=',t,' erreurL2=',erreurL2_G
+write(*,*) 'stop here 1'
  do while(t.lt.sim%tmax)
     itime=itime+1
     sim%Enorm = 0.0_f64
     !compute the charge density
     !recalculer dans maillage logical
     sim%rho_x1=0.0_f64
+write(*,*) 'stop here 2'
     do i=1,loc_sz_x1
        do j=1,loc_sz_x2
           do ii=1,loc_sz_v1
@@ -612,20 +614,24 @@ subroutine run_vp_cart(sim)
 !!$            write(*,*) 'rho_exact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
        enddo
     enddo
-
+write(*,*) 'stop here 3'
     ! solve the poisson equation
     !maillage logical
+write(*,*) 'loc_sz_x1',loc_sz_x1
+ write(*,*) 'loc_sz_x2',loc_sz_x2
     call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
-         sim%rho_x1,sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+         sim%rho_x1(1:loc_sz_x1,1:loc_sz_x2), &
+         sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
     !write (*,*) 'phi = ', sim%phi_x1
     !stop
-
+write(*,*) 'stop here 4'
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
     elseif (sim%nsch == 1) then
        call RK2(sim)
     end if
+write(*,*) 'stop here 5'
     !try to compute the energy in the transport test case here
 !!$       write(*,*) 'loc_sz_v1',loc_sz_v1
 !!$       write(*,*) 'sim%np_v2',sim%np_v2
