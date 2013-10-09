@@ -68,7 +68,7 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64 :: eps_perturb   
 
      !--> 4D logical mesh (eta1,eta2,eta3,vpar)
-     sll_int32 :: Neta1, Neta2, Neta3, Neta4
+     sll_int32 :: Neta1, Neta2, Neta3, Nvpar
      type(sll_logical_mesh_4d), pointer :: logical_mesh4d
 
      !--> Coordinate transformation
@@ -300,7 +300,7 @@ contains
     SLL_ALLOCATE(sim%n0_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Ti_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Te_xy(Nx,Ny),ierr)
-    call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
+    Call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
       sim%ygrid_2d,sim%n0_xy)
     call function_xy_from_r(r_grid_tmp,sim%Ti_r,sim%xgrid_2d, &
       sim%ygrid_2d,sim%Ti_xy)
@@ -412,23 +412,36 @@ contains
   !   drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine initialize_fdistribu4d_DK(sim)
+    use sll_common_coordinate_transformations, only : &
+      polar_eta2
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32  :: ierr
     sll_int32  :: i1, i2, i3, i4
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
-    sll_int32  :: Nx, Ny, Nvpar
+    sll_int32  :: Nx, Ny, Nphi, Nvpar
     sll_real64 :: theta_j, phi_k
     sll_int32, dimension(1:4) :: glob_ind
 
-    sll_real64 :: Lphi, dvpar, Lvpar
+    sll_real64 :: dphi, Lphi, dvpar, Lvpar
+    sll_real64, dimension(:), pointer :: phi_grid_tmp
     sll_real64, dimension(:), pointer :: vpar_grid_tmp
 
     Nx    = sim%Neta1
     Ny    = sim%Neta2
-    Nvpar = sim%Neta4
+    Nphi  = sim%Neta3
+    Nvpar = sim%Nvpar
     
+    !--> Initialization of the grid in phi direction
+    SLL_ALLOCATE(phi_grid_tmp(Nphi),ierr)
+    Lphi = abs(sim%phi_max-sim%phi_min)
+    dphi = Lphi/float(Nphi)
+    do i3 = 1,Nphi
+      phi_grid_tmp(i3) = sim%phi_min + &
+        float(i3-1)*dphi
+    end do
+
     !--> Initialization of the grid in vpar direction
     SLL_ALLOCATE(vpar_grid_tmp(Nvpar),ierr)
     Lvpar = abs(sim%vpar_max-sim%vpar_min)
@@ -443,38 +456,40 @@ contains
     call init_fequilibrium_xy(sim%xgrid_2d,sim%ygrid_2d, &
       vpar_grid_tmp,sim%n0_xy,sim%Ti_xy,sim%feq_xyvpar)
 
-    !--> Initialization of the distribution function f4d_x3x4
-    call compute_local_sizes_4d( sim%layout4d_x3x4, &
-      loc4d_sz_x1, &
-      loc4d_sz_x2, &
-      loc4d_sz_x3, &
-      loc4d_sz_x4 )
-
-    Lphi = abs(sim%phi_max-sim%phi_min)
-    do iloc4 = 1,loc4d_sz_x4
-      do iloc3 = 1,loc4d_sz_x3
-        do iloc2 = 1,loc4d_sz_x2
-          do iloc1 = 1,loc4d_sz_x1
-            glob_ind(:) = local_to_global_4D(sim%layout4d_x3x4, &
-              (/iloc1,iloc2,iloc3,iloc4/))
-            i1 = glob_ind(1)
-            i2 = glob_ind(2)
-            i3 = glob_ind(3)
-            i4 = glob_ind(4)
-!baoter
-!VG!            theta_j = sim%eta2_grid(i2)
-!VG!            phi_k = sim%eta3_grid(i3)
+!VG!    !--> Initialization of the distribution function f4d_x3x4
+!VG!    call compute_local_sizes_4d( sim%layout4d_x3x4, &
+!VG!      loc4d_sz_x1, &
+!VG!      loc4d_sz_x2, &
+!VG!      loc4d_sz_x3, &
+!VG!      loc4d_sz_x4 )
+!VG!
+!VG!    do iloc4 = 1,loc4d_sz_x4
+!VG!      do iloc3 = 1,loc4d_sz_x3
+!VG!        do iloc2 = 1,loc4d_sz_x2
+!VG!          do iloc1 = 1,loc4d_sz_x1
+!VG!            glob_ind(:) = local_to_global_4D(sim%layout4d_x3x4, &
+!VG!              (/iloc1,iloc2,iloc3,iloc4/))
+!VG!            i1 = glob_ind(1)
+!VG!            i2 = glob_ind(2)
+!VG!            i3 = glob_ind(3)
+!VG!            i4 = glob_ind(4)
+!VG!            theta_j = polar_eta2( &
+!VG!              sim%xgrid_2d(i1,i2), &
+!VG!              sim%ygrid_2d(i1,i2))
+!VG!            phi_k   = phi_grid_tmp(i3) 
 !VG!            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
 !VG!              sim%feq_xyvpar(i1,i2,i4) * &
 !VG!              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
-!VG!              2._f64*sll_pi*real(sim%nmode) / Lphi*phi_k))
-            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
-              sim%feq_xyvpar(i1,i2,i4)
-!eaoter
-          end do
-        end do
-      end do
-    end do
+!VG!              2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi))
+!VG!!baoter
+!VG!!VG!            sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
+!VG!!VG!              sim%feq_xyvpar(i1,i2,i4)
+!VG!!eaoter
+!VG!          end do
+!VG!        end do
+!VG!      end do
+!VG!    end do
+    SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
   end subroutine initialize_fdistribu4d_DK
 
@@ -896,7 +911,7 @@ contains
     sim%Neta1 = sim%nc_x1+1
     sim%Neta2 = sim%nc_x2+1
     sim%Neta3 = sim%nc_x3+1
-    sim%Neta4 = sim%nc_x4+1
+    sim%Nvpar = sim%nc_x4+1
 
     !--> Initialization of the boundary conditions
     sim%bc_left_eta1  = SLL_DIRICHLET
@@ -1000,10 +1015,20 @@ contains
     !*** Saving of the radial profiles in HDF5 file ***
     if (sim%my_rank.eq.0) then
       call sll_hdf5_file_create(filename_prof,file_id,file_err)
+      !--> Saving of the 1D radial profiles of 
+      !-->  temperatures and density
       call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
-!VG!      call sll_hdf5_write_array_2d(file_id,sim%feq_2d,'feq_2d',file_err)
+      !--> Saving of the 2D (x,y) profiles of 
+      !-->  temperatures and density
+      call sll_hdf5_write_array_2d(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%ygrid_2d,'ygrid_2d',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%n0_xy,'n0_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%Ti_xy,'Ti_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%Te_xy,'Te_xy',file_err)
+      !---> Saving of the 3D equilibrium function feq(x,y,vpar)
+      call sll_hdf5_write_array_3d(file_id,sim%feq_xyvpar,'feq_xyvpar',file_err)
       call sll_hdf5_file_close(file_id,file_err)
     end if
 
@@ -1022,9 +1047,9 @@ contains
          sim%QN_B1,  &
          sim%QN_B2,  &
          sim%QN_C)
-
-    !*** Compute Phi(t=t0) by solving the QN equation ***
-    call solve_QN(sim)
+!VG!
+!VG!    !*** Compute Phi(t=t0) by solving the QN equation ***
+!VG!    call solve_QN(sim)
   end subroutine first_step_4d_DK_hybrid
 
 
