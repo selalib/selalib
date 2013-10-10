@@ -305,7 +305,6 @@ contains
           point_locate_eta(i) = interpolator%eta_min + delta_eta*(i-1)
        end do
     end if
-    
     SLL_ASSERT(sz .le. interpolator%num_pts* interpolator%num_pts)
     SLL_ASSERT(size(data_array) .ge. sz)
     SLL_ASSERT(size(point_locate_eta)  .ge. sz)
