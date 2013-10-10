@@ -32,6 +32,7 @@ module sll_module_scalar_field_1d_alternative
 #include "sll_file_io.h"
   use sll_module_scalar_field_1d_base
   use sll_constants
+  use sll_logical_meshes
   use sll_module_interpolators_1d_base
   use sll_arbitrary_degree_spline_interpolator_1d_module
   use sll_utilities
@@ -48,7 +49,7 @@ module sll_module_scalar_field_1d_alternative
      !     sll_int32                                :: plot_counter
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( mesh_1d)   :: mesh    ! a implementer
+     type( sll_logical_mesh_1d)   :: mesh    ! a implementer
      ! allows to decide if the user put the derivative of the analiytic function: func
      logical :: present_derivative
    contains
@@ -69,7 +70,7 @@ module sll_module_scalar_field_1d_alternative
      procedure, pass(field) :: delete => delete_field_1d_analytic_alt
   end type sll_scalar_field_1d_analytic_alt
   
-  type, extends(sll_scalar_field_1d_base_alternative) :: sll_scalar_field_1d_discrete_alt
+  type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_discrete_alt
      sll_real64, dimension(:), pointer  :: values
      !sll_real64, dimension(:,:), pointer  :: coeff_spline
      !sll_int32                            :: sz_coeff1
@@ -81,7 +82,7 @@ module sll_module_scalar_field_1d_alternative
      !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( mesh_1d)   :: mesh    ! a implementer
+     type( sll_logical_mesh_1d)   :: mesh    ! a implementer
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_1d_discrete_alt
@@ -98,7 +99,7 @@ module sll_module_scalar_field_1d_alternative
           update_interp_coeffs_1d_discrete
      procedure, pass(field) :: write_to_file => write_to_file_discrete_1d
      procedure, pass(field) :: delete => delete_field_1d_discrete_alt
-  end type sll_scalar_field_2d_discrete_alt
+  end type sll_scalar_field_1d_discrete_alt
 
 
 
@@ -149,7 +150,7 @@ contains   ! *****************************************************************
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_analytic
     
-    if ( field%present_derivative_int ) then 
+    if ( field%present_derivative ) then 
        derivative_value_at_pt_analytic = &
             field%first_derivative(eta,field%params)
     else 
@@ -167,7 +168,7 @@ contains   ! *****************************************************************
     
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     
-    if ( field%present_derivative_int ) then 
+    if ( field%present_derivative ) then 
        derivative_value_at_index_analytic = &
             field%first_derivative(eta,field%params)
     else 
@@ -251,7 +252,7 @@ contains   ! *****************************************************************
     
     if (present(first_derivative)) then
        field%first_derivative => first_derivative
-       field%present_derivative_int = .TRUE.
+       field%present_derivative = .TRUE.
     end if
   end subroutine initialize_scalar_field_1d_analytic_alt
 
@@ -413,7 +414,7 @@ contains   ! *****************************************************************
     ! just nullify pointers, nothing to deallocate that this object owns.
     nullify(field%values)
     nullify(field%interp_1d)
-    nullify(field%point_1d)
+    nullify(field%point)
   end subroutine delete_field_1d_discrete_alt
   
 
@@ -452,7 +453,7 @@ contains   ! *****************************************************************
     sll_real64             :: first_derivative_value_at_pt_discrete
     
     first_derivative_value_at_pt_discrete = &
-         field%interp_1d%interpolate_derivative(eta) !a implementer
+         field%interp_1d%interpolate_array_derivatives(eta) !a implementer
   end function first_derivative_value_at_pt_discrete
   
   function first_derivative_value_at_index_discrete( field, i )
@@ -462,7 +463,7 @@ contains   ! *****************************************************************
     sll_real64            :: first_derivative_value_at_index_discrete
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     first_derivative_value_at_index_discrete = &
-         field%interp_1d%interpolate_derivative(eta)
+         field%interp_1d%interpolate_array_derivatives(eta)
   end function first_derivative_value_at_index_discrete
 
   subroutine write_to_file_discrete_1d( field, tag )
@@ -480,15 +481,14 @@ contains   ! *****************************************************************
     ! domain and allocate the arrays for the plotter.
     mesh   => field%get_logical_mesh()
     nptsx = mesh%num_cells + 1
-    SLL_ALLOCATE(x1coords(nptsx),ierr)
+    SLL_ALLOCATE(xcoords(nptsx),ierr)
     SLL_ALLOCATE(values(nptsx),ierr)
     
     ! Fill the arrays with the needed information.
     do i=1, nptsx
-          eta = mesh%eta_min + (i-1)*mesh%delta_eta
-          xcoords(i) = fiel%x(eta)
-          values(i)   = field%value_at_point(eta)
-       end do
+       eta = mesh%eta_min + (i-1)*mesh%delta_eta
+       xcoords(i) = eta
+       values(i)   = field%value_at_point(eta)
     end do
 
     call sll_gnuplot_curv_1d( &
