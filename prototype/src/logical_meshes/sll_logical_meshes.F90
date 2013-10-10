@@ -4,10 +4,10 @@ module sll_logical_meshes
   implicit none
 
    type sll_logical_mesh_1d
-     sll_int32  :: num_cells
-     sll_real64 :: eta_min
-     sll_real64 :: eta_max
-     sll_real64 :: delta_eta
+     sll_int32  :: num_cells1
+     sll_real64 :: eta1_min
+     sll_real64 :: eta1_max
+     sll_real64 :: delta_eta1
   end type sll_logical_mesh_1d
 
 
@@ -60,7 +60,7 @@ module sll_logical_meshes
 
   ! this should be sll_delete library-wide...
   interface delete
-     module procedure delete_logical_mesh_4d, delete_logical_mesh_2d,delete_logical_mesh_3d
+     module procedure delete_logical_mesh_4d, delete_logical_mesh_2d,delete_logical_mesh_3d,delete_logical_mesh_1d
   end interface delete
 
 contains
@@ -73,6 +73,24 @@ contains
 end if
 
 
+function new_logical_mesh_1d( &
+    num_cells1, &
+    eta1_min, &
+    eta1_max) result(m)
+
+    type(sll_logical_mesh_1d), pointer :: m
+    sll_int32, intent(in)  :: num_cells1
+    sll_real64, optional, intent(in) :: eta1_min
+    sll_real64, optional, intent(in) :: eta1_max
+    sll_real64 :: delta1
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(m, ierr)
+    m%num_cells1 = num_cells1
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, eta1_min, eta1_min, 0.0_f64 )
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, eta1_max, eta1_max, 1.0_f64 )
+    m%delta_eta1   = (m%eta1_max - m%eta1_min)/real(num_cells1,f64)
+  end function new_logical_mesh_1d
 
   function new_logical_mesh_2d( &
     num_cells1, &
@@ -194,6 +212,12 @@ end if
     m%delta_eta4   = (m%eta4_max - m%eta4_min)/real(num_cells4,f64)
   end function new_logical_mesh_4d
 
+
+   subroutine delete_logical_mesh_1d( mesh )
+    type(sll_logical_mesh_1d), pointer :: mesh
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(mesh, ierr)
+  end subroutine delete_logical_mesh_1d
 
   subroutine delete_logical_mesh_4d( mesh )
     type(sll_logical_mesh_4d), pointer :: mesh
