@@ -245,7 +245,7 @@ contains
     sim%phi_min  = phi_min
     sim%phi_max  = phi_max
     sim%vpar_min = vpar_min
-    sim%vpar_min = vpar_max
+    sim%vpar_max = vpar_max
     !--> Equilibrium
     sim%tau0     = tau0
     sim%rho_peak = rho_peak 
@@ -476,6 +476,7 @@ contains
        sim%bc_left_vpar, &
        sim%bc_right_vpar, &
        sim%spline_degree_vpar)
+
   end subroutine allocate_fdistribu4d_DK
 
 
@@ -1275,9 +1276,10 @@ contains
           E_z    = sim%E3d_eta3_x3(iloc1,iloc2,ieta3)
           do ivpar = 1,sim%Nvpar
             f1d_vpar_tmp(ivpar) = sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar)
+           
           end do
           call sim%interp1d_f_vpar%compute_interpolants( &
-            f1d_vpar_tmp)          
+            f1d_vpar_tmp)   
           do ivpar = 1,sim%Nvpar
             alpha4 = sim%dt*E_z
             vpar   = sim%vpar_grid(ivpar) - alpha4
