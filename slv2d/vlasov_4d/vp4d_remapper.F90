@@ -2,16 +2,13 @@ program vp4d
 
 #include "selalib-mpi.h"
 
-  use used_precision  
-  use geometry_module
-  use diagnostiques_module
   use sll_vlasov4d_base
   use sll_vlasov4d_poisson
 
   implicit none
 
-  type(geometry)            :: geomx 
-  type(geometry)            :: geomv 
+  type(sll_logical_mesh_2d), pointer :: geomx 
+  type(sll_logical_mesh_2d), pointer :: geomv 
   type(vlasov4d_poisson)    :: vlasov4d 
   type(poisson_2d_periodic) :: poisson 
 
@@ -26,7 +23,6 @@ program vp4d
   sll_int32  :: jstartx, jendx, jstartv, jendv   
   sll_int64  :: psize
   sll_real64 :: dt, nrj, tcpu1, tcpu2
-  sll_int32  :: i,j
 
   call sll_boot_collective()
 
@@ -46,24 +42,7 @@ program vp4d
 
   call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
-  if (prank == MPI_MASTER) then
-     ! write some run data
-     write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-     write(*,"(2(i3,1x),6(g13.3,1x))") geomx%nx, geomx%ny, geomx%x0, &
-          geomx%x0+(geomx%nx)*geomx%dx, &
-          geomx%y0, geomx%y0+(geomx%ny)*geomx%dy, &
-          geomx%dx, geomx%dy   
-     write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-     write(*,"(2(i3,1x),6(g13.3,1x))") geomv%nx, geomv%ny, geomv%x0, &
-          geomv%x0+(geomv%nx-1)*geomv%dx, &
-          geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy, &
-          geomv%dx, geomv%dy
-     write(*,*) 'dt,nbiter,fdiag,fthdiag'
-     write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
-  endif
-
   call initlocal(jstartx,jendx,jstartv,jendv)
-
 
   call advection_x1(vlasov4d,0.5*dt)
   call advection_x2(vlasov4d,0.5*dt)
@@ -88,7 +67,7 @@ program vp4d
      call advection_x2(vlasov4d,dt)
 
      if (mod(iter,fthdiag).eq.0) then 
-        call thdiag(vlasov4d,nrj,iter*dt)
+        call write_energy(vlasov4d,iter*dt)
      end if
 
   end do
@@ -129,14 +108,16 @@ contains
     prank = sll_get_collective_rank(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x1%initialize(geomx%nx, geomx%x0, geomx%x1, SLL_PERIODIC)
-    call spl_x2%initialize(geomx%ny, geomx%y0, geomx%y1, SLL_PERIODIC)
-    call spl_x3%initialize(geomv%nx, geomv%x0, geomv%x1, SLL_PERIODIC)
-    call spl_x4%initialize(geomv%ny, geomv%y0, geomv%y1, SLL_PERIODIC)
 
-    call new(vlasov4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,error)
+    call spl_x1%initialize(nc_eta1, eta1_min, eta1_max, SLL_PERIODIC)
+    call spl_x2%initialize(nc_eta2, eta2_min, eta2_max, SLL_PERIODIC)
+    call spl_x3%initialize(nc_eta3, eta3_min, eta3_max, SLL_PERIODIC)
+    call spl_x4%initialize(nc_eta4, eta4_min, eta4_max, SLL_PERIODIC)
 
-    call compute_local_sizes_4d(vlasov4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+    call initialize(vlasov4d,geomx,geomv,spl_x1,spl_x2,spl_x3,spl_x4,error)
+
+    call compute_local_sizes_4d(vlasov4d%layout_x, &
+         loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
     eps = 0.05_f64
@@ -145,7 +126,7 @@ contains
     kx  = 2_f64*sll_pi/dimx
     ky  = 2_f64*sll_pi/dimy
 
-    factor = dimx*dimy*(2*sll_pi+eps*(sin(kx*geomx%x1)-sin(kx*geomx%x0)))
+    factor = dimx*dimy*(2*sll_pi+eps*(sin(kx*eta1_max)-sin(kx*eta1_min)))
     factor = 2.*sll_pi
     
     do l=1,loc_sz_l 
@@ -159,10 +140,10 @@ contains
        gk = global_indices(3)
        gl = global_indices(4)
 
-       x  = geomx%x0+(gi-1)*geomx%dx
-       y  = geomx%y0+(gj-1)*geomx%dy
-       vx = geomv%x0+(gk-1)*geomv%dx
-       vy = geomv%y0+(gl-1)*geomv%dy
+       x  = eta1_min+(gi-1)*delta_eta1
+       y  = eta2_min+(gj-1)*delta_eta2
+       vx = eta3_min+(gk-1)*delta_eta3
+       vy = eta4_min+(gl-1)*delta_eta4
 
        v2 = vx*vx+vy*vy
 
@@ -173,31 +154,33 @@ contains
     end do
     end do
 
-    call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-             geomx%y0, geomx%y1, geomx%ny, error)
+    call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
+                             eta2_min, eta2_max, nc_eta2, error)
 
     jstartx = get_layout_4D_j_min( vlasov4d%layout_v, prank )
+    jendx   = get_layout_4D_j_max( vlasov4d%layout_v, prank )
+    jstartv = get_layout_4D_l_min( vlasov4d%layout_x, prank )
     jendv   = get_layout_4D_l_max( vlasov4d%layout_x, prank )
 
     call compute_charge(vlasov4d)
     call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
 
 
-    SLL_ALLOCATE(x1(geomx%nx,geomx%ny),error)
-    SLL_ALLOCATE(x2(geomx%nx,geomx%ny),error)
+    SLL_ALLOCATE(x1(nc_eta1,nc_eta2),error)
+    SLL_ALLOCATE(x2(nc_eta1,nc_eta2),error)
    
-    do j=1,geomx%ny
-    do i=1,geomx%nx
-      x1(i,j) = geomx%xgrid(i)
-      x2(i,j) = geomx%ygrid(j)
+    do j=1,nc_eta2
+    do i=1,nc_eta1
+      x1(i,j) = eta1_min + (i-1) * delta_eta1
+      x2(i,j) = eta2_min + (j-1) * delta_eta2
     end do
     end do
 
-    global_dims(1) = geomx%nx
-    global_dims(2) = geomx%ny
+    global_dims(1) = nc_eta1
+    global_dims(2) = nc_eta2
     offset = 0
 
-    call sll_xdmf_open(prank,"fields.xmf",prefix,geomx%nx,geomx%ny,file_id,error)
+    call sll_xdmf_open(prank,"fields.xmf",prefix,nc_eta1,nc_eta2,file_id,error)
     call sll_xdmf_write_array(prefix,global_dims,offset,x1,'x1',error)
     call sll_xdmf_write_array(prefix,global_dims,offset,x2,'x2',error)
     call sll_xdmf_write_array(prefix,global_dims,offset, &

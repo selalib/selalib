@@ -3,15 +3,13 @@ program vm4d_spectral
 #define MPI_MASTER 0
 #include "selalib-mpi.h"
 
-  use geometry_module
-  use diagnostiques_module
   use sll_vlasov4d_base
   use sll_vlasov4d_spectral
 
   implicit none
 
-  type(geometry)            :: geomx 
-  type(geometry)            :: geomv 
+  type(sll_logical_mesh_2d), pointer :: geomx 
+  type(sll_logical_mesh_2d), pointer :: geomv 
   type(maxwell_2d_pstd)     :: maxwell
   type(poisson_2d_periodic) :: poisson 
   type(vlasov4d_spectral)   :: vlasov4d 
@@ -37,22 +35,6 @@ program vm4d_spectral
   end if
 
   call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
-
-  if (prank == MPI_MASTER) then
-     ! write some run data
-     write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-     write(*,"(2(i3,1x),6(g13.3,1x))") geomx%nx, geomx%ny, geomx%x0, &
-          geomx%x0+(geomx%nx)*geomx%dx, &
-          geomx%y0, geomx%y0+(geomx%ny)*geomx%dy, &
-          geomx%dx, geomx%dy   
-     write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-     write(*,"(2(i3,1x),6(g13.3,1x))") geomv%nx, geomv%ny, geomv%x0, &
-          geomv%x0+(geomv%nx-1)*geomv%dx, &
-          geomv%y0, geomv%y0+(geomv%ny-1)*geomv%dy, &
-          geomv%dx, geomv%dy
-     write(*,*) 'dt,nbiter,fdiag,fthdiag'
-     write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
-  endif
 
   call initlocal()
 
@@ -125,12 +107,6 @@ program vm4d_spectral
      vlasov4d%ey=vlasov4d%eyn
 !fin
 
-     if (mod(iter,fthdiag).eq.0) then 
-        nrj=sum(vlasov4d%ex*vlasov4d%ex+vlasov4d%ey*vlasov4d%ey) &
-           *(vlasov4d%geomx%dx)*(vlasov4d%geomx%dy)
-        nrj=0.5_wp*log(nrj)
-        call thdiag(vlasov4d,nrj,iter*dt)
-     endif
 
   end do
 
@@ -163,18 +139,18 @@ contains
     psize = sll_get_collective_size(sll_world_collective)
     comm  = sll_world_collective%comm
 
-    call spl_x3x4%initialize(geomv%nx, geomv%ny,                        &
-    &                        geomv%x0, geomv%x1, geomv%y0, geomv%y1,    &
+    call spl_x3x4%initialize(nc_eta1, nc_eta1,                        &
+    &                        eta1_min, eta1_max, eta2_min, eta2_max,  &
     &                        SLL_PERIODIC, SLL_PERIODIC)
 
-    call new(vlasov4d,geomx,geomv,spl_x3x4,error)
+    call initialize(vlasov4d,geomx,geomv,spl_x3x4,error)
 
     call compute_local_sizes_4d(vlasov4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
     eps = 0.05_f64
-    kx  = 2_f64*sll_pi/(geomx%nx*geomx%dx)
-    ky  = 2_f64*sll_pi/(geomx%ny*geomx%dy)
+    kx  = 2_f64*sll_pi/(nc_eta1*delta_eta1)
+    ky  = 2_f64*sll_pi/(nc_eta2*delta_eta2)
 
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
@@ -187,10 +163,10 @@ contains
         gk = global_indices(3)
         gl = global_indices(4)
 
-        x  = geomx%x0+(gi-1)*geomx%dx
-        y  = geomx%y0+(gj-1)*geomx%dy
-        vx = geomv%x0+(gk-1)*geomv%dx
-        vy = geomv%y0+(gl-1)*geomv%dy
+        x  = eta1_min+(gi-1)*delta_eta1
+        y  = eta2_min+(gj-1)*delta_eta2
+        vx = eta3_min+(gk-1)*delta_eta3
+        vy = eta4_min+(gl-1)*delta_eta4
 
         v2 = vx*vx+vy*vy
         vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
@@ -200,11 +176,12 @@ contains
     end do
     end do
 
-    call initialize(maxwell, geomx%x0, geomx%x1, geomx%nx, &
-                    geomx%y0, geomx%y1, geomx%ny, TE_POLARIZATION)
+    call initialize(maxwell, eta1_min, eta1_max, nc_eta1, &
+                             eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
-    call initialize(poisson, geomx%x0, geomx%x1, geomx%nx, &
-                    geomx%y0, geomx%y1, geomx%ny, error)
+    call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
+                             eta2_min, eta2_max, nc_eta2, error)
+
 
   end subroutine initlocal
 
