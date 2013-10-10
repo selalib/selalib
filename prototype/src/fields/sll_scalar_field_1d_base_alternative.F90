@@ -35,41 +35,6 @@ module sll_module_scalar_field_1d_base
      end subroutine set_field_data_subroutine
   end interface
 
-  abstract interface
-     subroutine field_1d_message_pass( field )
-       import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(inout) :: field
-     end subroutine field_1d_message_pass
-  end interface
-  ! Function signatures
-!!$  abstract! interface
-!!$     function function_get_mesh(field) result(res)
-!!$       use sll_logical_meshes
-!!$       import sll_scalar_field_1d_base
-!!$       class(sll_scalar_field_1d_base), intent(in) :: field
-!!$       type(sll_logical_mesh_1d), pointer :: res
-!!$     end function function_get_mesh
-!!$  end interface
-  
-!!$  abstract !interface
-!!$     function function_get_transformation(field) result(res)
-!!$       use sll_coordinate_transformation_1d_base_module
-!!$       import sll_scalar_field_1d_base
-!!$       class(sll_scalar_field_1d_base), intent(in) :: field
-!!$       class(sll_coordinate_transformation_1d_base), pointer :: res
-!!$     end function function_get_transformation
-!!$  end interface
-  
-!!$  abstract! interface
-!!$     function function_get_jacobian_matrix(field,eta1,eta2 ) result(res)
-!!$       use sll_working_precision
-!!$       import sll_scalar_field_1d_base
-!!$       class(sll_scalar_field_1d_base), intent(in) :: field
-!!$       sll_real64, intent(in) :: eta1
-!!$       sll_real64, intent(in) :: eta2
-!!$       sll_real64, dimension(2,2) :: res
-!!$     end function function_get_jacobian_matrix
-!!$  end interface
 
   abstract interface
      function function_get_mesh(field) result(res)
@@ -80,14 +45,6 @@ module sll_module_scalar_field_1d_base
      end function function_get_mesh
   end interface
 
-  abstract interface
-     subroutine set_field_data_subroutine( field, values )
-       use sll_working_precision
-       import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(inout) :: field
-       sll_real64, dimension(:), intent(in) :: values
-     end subroutine set_field_data_subroutine
-  end interface
 
   abstract interface
      subroutine field_1d_message_pass( field )
