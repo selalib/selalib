@@ -411,8 +411,8 @@ program unit_test
 !!$  print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
 
   print *, 'testing the read from file function...'
-  ! This assumes that the 
-  call ad2d%read_coefficients_from_file("../src/interpolators/arbitrary_degree_2d_sample_input_file.txt")
+
+  call ad2d%read_data_from_file("../src/interpolators/arbitrary_degree_2d_sample_input_file.nml")
 
 end program unit_test
 
