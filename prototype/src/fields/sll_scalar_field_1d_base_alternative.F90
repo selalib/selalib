@@ -80,6 +80,21 @@ module sll_module_scalar_field_1d_base
      end function function_get_mesh
   end interface
 
+  abstract interface
+     subroutine set_field_data_subroutine( field, values )
+       use sll_working_precision
+       import sll_scalar_field_1d_base
+       class(sll_scalar_field_1d_base), intent(inout) :: field
+       sll_real64, dimension(:), intent(in) :: values
+     end subroutine set_field_data_subroutine
+  end interface
+
+  abstract interface
+     subroutine field_1d_message_pass( field )
+       import sll_scalar_field_1d_base
+       class(sll_scalar_field_1d_base), intent(inout) :: field
+     end subroutine field_1d_message_pass
+  end interface
 
   abstract interface
      function function_evaluation_real( field, eta ) result(res)
