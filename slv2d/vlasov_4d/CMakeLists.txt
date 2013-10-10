@@ -4,11 +4,11 @@ PROJECT(vlasov4d)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET (SLL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src )
+SET(SLL_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src)
 
-SET (CMAKE_MODULE_PATH ${SLL_SOURCE_DIR}/CMakeModules 
+SET(CMAKE_MODULE_PATH ${SLL_SOURCE_DIR}/CMakeModules 
                        ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake
-                       ${CMAKE_MODULE_PATH} )
+                       ${CMAKE_MODULE_PATH})
 
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
@@ -18,12 +18,17 @@ INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/package)
 MESSAGE(STATUS "Fortran COMPILER:${CMAKE_Fortran_COMPILER}")
 INCLUDE(F90FLAGS)
 MESSAGE(STATUS "Fortran FLAGS:${CMAKE_Fortran_FLAGS_DEBUG}")
+
 FIND_PACKAGE(Lapack)
 FIND_PACKAGE(FFTW)
 FIND_PACKAGE(MPI)
+
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
 INCLUDE(HDF5Config)
+
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel" FORCE)
+
 IF(HDF5_IS_PARALLEL) 
    MESSAGE(STATUS "HDF5 parallel supported")
 ELSE()
@@ -42,6 +47,7 @@ SET(LIBS selalib ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
 ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
                                     sll_vlasov4d_maxwell.F90
                                     sll_vlasov4d_poisson.F90
+                                    sll_vlasov4d_polar.F90
                                     sll_vlasov4d_base.F90)
 
 ADD_DEPENDENCIES(selalib_vlasov4d selalib)
@@ -49,7 +55,9 @@ ADD_DEPENDENCIES(selalib_vlasov4d selalib)
 ADD_EXECUTABLE(vp4d          vp4d_remapper.F90)
 ADD_EXECUTABLE(vm4d          vm4d_remapper.F90)
 ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90)
+ADD_EXECUTABLE(vp4d_polar    vp4d_polar.F90)
 
 TARGET_LINK_LIBRARIES(vp4d          selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d          selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral selalib_vlasov4d ${LIBS})
+TARGET_LINK_LIBRARIES(vp4d_polar    selalib_vlasov4d ${LIBS})
