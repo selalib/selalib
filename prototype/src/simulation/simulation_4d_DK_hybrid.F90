@@ -1284,11 +1284,10 @@ contains
             alpha4 = sim%dt*E_z
             vpar   = sim%vpar_grid(ivpar) - alpha4
             vpar   = max(min(vpar,sim%vpar_max),sim%vpar_min)
-!baoter
-            sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = 1._f64
-!VG!            sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = &
-!VG!              sim%interp1d_f_vpar%interpolate_value(vpar)
-!eaoter
+
+            sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = &
+                 sim%interp1d_f_vpar%interpolate_value(vpar)
+
           end do
         end do
       end do
