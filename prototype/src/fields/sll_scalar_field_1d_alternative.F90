@@ -65,7 +65,7 @@ module sll_module_scalar_field_1d_alternative
           derivative_value_at_index_analytic
      procedure, pass(field) :: set_field_data => set_field_data_analytic_1d
      procedure, pass(field) :: update_interpolation_coefficients => &
-          update_interpolation_coefficients_1d_analytic
+          update_interp_coeffs_1d_analytic
      procedure, pass(field) :: write_to_file => write_to_file_analytic_1d
      procedure, pass(field) :: delete => delete_field_1d_analytic_alt
   end type sll_scalar_field_1d_analytic_alt
@@ -369,20 +369,6 @@ contains   ! *****************************************************************
          sz_point)
   end function new_scalar_field_1d_discrete_alt
 
-  subroutine set_field_data_discrete_1d( field, values )
-    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
-    sll_real64, dimension(:), intent(in) :: values
-    if( (size(field%values,1) .ne. size(values,1) ) ) then
-        print *, 'WARNING, set_field_data_discrete_1d(), passed array ', &
-             'is not of the size originally declared for this field.'
-     end if
-    field%values(:) = values(:)
-  end subroutine set_field_data_discrete_1d
-
-  subroutine update_interp_coeffs_1d_discrete( field )
-    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
-    call field%interp_1d%compute_interpolants( field%values )
-  end subroutine update_interp_coeffs_1d_discrete
   
   subroutine initialize_scalar_field_1d_discrete_alt( &
     field, &
@@ -419,7 +405,7 @@ contains   ! *****************************************************************
 
     
     !SLL_ALLOCATE(point(sz_point),ierr)
-    SLL_ALLOCATE(field%values(field%mesh%num_cells1),ierr)
+    SLL_ALLOCATE(field%values(field%mesh%num_cells1+1),ierr)
     
 !!$    
 !!$   
