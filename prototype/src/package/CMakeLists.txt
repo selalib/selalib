@@ -20,7 +20,9 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
     ${SLL_DIR}/multigrid/sll_multigrid.h
-    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h)
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h
+    ${SLL_DIR}/logical_meshes/sll_logical_meshes.h
+)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -63,6 +65,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/sll_gausslobatto.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
+    ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
  )
 
 IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
@@ -97,6 +100,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
 SET(DIST_NAME "selalib-1.0.0")

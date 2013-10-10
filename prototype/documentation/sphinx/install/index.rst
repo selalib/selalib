@@ -78,7 +78,7 @@ Be careful, you could have to link with HDF5, FFTW, LAPACK, etc ...
 Il you want to use some macros like SLL_ALLOCATE or SLL_ASSERT with gfortran, just add
 the compilation flag *-ffree-line-length-none*.
 
-Find this example in directory : prototype/src/examples
+Find this example in directory : examples
 
 
 CMakeLists.txt
