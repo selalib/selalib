@@ -99,6 +99,8 @@ contains
              nc_eta1, nc_eta2, nc_eta3, nc_eta4,    &
              1,1,1,int(psize,4),this%layout_x)
 
+  if ( prank == MPI_MASTER ) call sll_view_lims_4D( this%layout_x )
+  call flush(6)
 
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -108,6 +110,9 @@ contains
   call initialize_layout_with_distributed_4D_array( &
               nc_eta1, nc_eta2, nc_eta3, nc_eta4,    &
               1,int(psize,4),1,1,this%layout_v)
+
+  if ( prank == MPI_MASTER ) call sll_view_lims_4D( this%layout_v )
+  call flush(6)
 
   call compute_local_sizes_4d(this%layout_v, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
