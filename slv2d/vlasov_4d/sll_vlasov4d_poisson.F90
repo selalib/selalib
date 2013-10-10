@@ -2,12 +2,11 @@ module sll_vlasov4d_poisson
 
 #include "selalib-mpi.h"
 
- use geometry_module
  use sll_vlasov4d_base
 
  implicit none
  private
- public :: new, free
+ public :: initialize, free
  public :: advection_x1, advection_x2, advection_x3, advection_x4
 
  type, public, extends(vlasov4d_base)       :: vlasov4d_poisson
@@ -24,9 +23,9 @@ module sll_vlasov4d_poisson
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
 
- interface new
-   module procedure new_vlasov4d_poisson
- end interface new
+ interface initialize
+   module procedure initialize_vlasov4d_poisson
+ end interface initialize
 
  interface free
    module procedure free_vlasov4d_poisson
@@ -34,30 +33,36 @@ module sll_vlasov4d_poisson
 
 contains
 
- subroutine new_vlasov4d_poisson(this,geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,error)
+ subroutine initialize_vlasov4d_poisson(this, &
+  geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,error)
 
   use sll_hdf5_io
   class(vlasov4d_poisson),intent(inout)   :: this
-  type(geometry),intent(in)               :: geomx
-  type(geometry),intent(in)               :: geomv
+  type(sll_logical_mesh_2d),intent(in)    :: geomx
+  type(sll_logical_mesh_2d),intent(in)    :: geomv
   class(sll_interpolator_1d_base), target :: interp_x1
   class(sll_interpolator_1d_base), target :: interp_x2
   class(sll_interpolator_1d_base), target :: interp_x3
   class(sll_interpolator_1d_base), target :: interp_x4
   sll_int32                               :: error
+  sll_int32                               :: nc_eta1
+  sll_int32                               :: nc_eta2
 
   this%interp_x1 => interp_x1
   this%interp_x2 => interp_x2
   this%interp_x3 => interp_x3
   this%interp_x4 => interp_x4
 
-  call new_vlasov4d_base(this,geomx,geomv,error)
+  nc_eta1 = geomx%num_cells1
+  nc_eta2 = geomx%num_cells2
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:geomx%nx,1:geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:geomx%nx,1:geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%rho(1:geomx%nx,1:geomx%ny),error)
+  call initialize_vlasov4d_base(this,geomx,geomv,error)
 
- end subroutine new_vlasov4d_poisson
+  SLL_CLEAR_ALLOCATE(this%ex(1:nc_eta1,1:nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:nc_eta1,1:nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:nc_eta1,1:nc_eta2),error)
+
+ end subroutine initialize_vlasov4d_poisson
 
  subroutine free_vlasov4d_poisson(this)
 
@@ -74,23 +79,19 @@ contains
 
   class(vlasov4d_poisson), intent(inout) :: this
   sll_real64, intent(in) :: dt
-  sll_real64 :: alpha, x3_min, delta_x3
+  sll_real64 :: alpha
 
-  ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
-  x3_min   = this%geomv%x0
-  delta_x3 = this%geomv%dx
-
   call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-
   do l=1,loc_sz_l
   do k=1,loc_sz_k
      global_indices = local_to_global_4D(this%layout_x,(/1,1,k,l/)) 
      gk = global_indices(3)
-     alpha = (x3_min +(gk-1)*delta_x3)*dt
+     alpha = (eta3_min +(gk-1)*delta_eta3)*dt
      do j=1,loc_sz_j
-        this%f(:,j,k,l) = this%interp_x1%interpolate_array_disp(loc_sz_i,this%f(:,j,k,l),alpha)
+        this%f(:,j,k,l) = &
+           this%interp_x1%interpolate_array_disp(loc_sz_i,this%f(:,j,k,l),alpha)
      end do
   end do
   end do
@@ -106,8 +107,8 @@ contains
 
   SLL_ASSERT( .not. this%transposed)
 
-  x4_min   = this%geomv%y0
-  delta_x4 = this%geomv%dy
+  x4_min   = this%geomv%eta2_min
+  delta_x4 = this%geomv%delta_eta2
   call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
