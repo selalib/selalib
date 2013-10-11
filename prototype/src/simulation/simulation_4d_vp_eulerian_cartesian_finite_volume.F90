@@ -377,7 +377,7 @@ write(*,*) 'loc_sz_x2',loc_sz_x2
       loc_sz_x2 )
 
  write(*,*) 'sim%np_v1',sim%np_v1,loc_sz_v1
-
+print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
  ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
  SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
  SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
@@ -620,8 +620,8 @@ write(*,*) 'loc_sz_x2',loc_sz_x2
 write(*,*) 'loc_sz_x1',loc_sz_x1
  write(*,*) 'loc_sz_x2',loc_sz_x2
     call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
-         sim%rho_x1, & !(1:loc_sz_x1,1:loc_sz_x2), &
-         sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
+         sim%rho_x1, &
+         sim%phi_x1(:,1:))
     !write (*,*) 'phi = ', sim%phi_x1
     !stop
     t=t+sim%dt
@@ -2062,7 +2062,8 @@ end subroutine fluxnum
 ! time derivative of f
 subroutine dtf(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
-
+ sll_int32  :: loc_sz_v1
+ sll_int32  :: loc_sz_v2
  sll_int32  :: loc_sz_x1
  sll_int32  :: loc_sz_x2
  sll_int32  :: ierr,ifac,isol,nsym,mp
@@ -2092,6 +2093,11 @@ subroutine dtf(sim)
  !compute the fluxes in the x1 direction
  vn(1)=1*sim%surfx1(1,1) ! temporaire !!!!
  vn(2)=0
+ ! Added the following because this is the proper layout that should be used
+ ! to compute the local sizes for the following loop. ECG
+ call compute_local_sizes_4d( sim%sequential_v1v2x1, loc_sz_v1, loc_sz_v2, &
+      loc_sz_x1, loc_sz_x2 )
+
  do jc=1,loc_sz_x2
     do ic=0,loc_sz_x1-1
        icL=ic
