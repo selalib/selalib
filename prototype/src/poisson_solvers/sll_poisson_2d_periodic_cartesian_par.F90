@@ -112,7 +112,7 @@ contains
          loc_sz_x1, &
          loc_sz_x2 )
 
-    plan%seq_x1_local_sz_x1 = loc_sz_x1 
+    plan%seq_x1_local_sz_x1 = ncx + 1 !loc_sz_x1 
     plan%seq_x1_local_sz_x2 = loc_sz_x2
 
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
@@ -216,7 +216,7 @@ contains
     npy_loc = plan%seq_x1_local_sz_x2 
 
     ! The input is handled internally as a complex array
-    plan%fft_x_array = cmplx(rho, 0_f64, kind=f64)
+    plan%fft_x_array = cmplx(rho, 0.0_f64, kind=f64)
 
     call fft_apply_plan(plan%px, plan%fft_x_array, plan%fft_x_array)
     ! FFTs in y-direction
@@ -224,7 +224,9 @@ contains
     npy_loc = plan%seq_x2_local_sz_x2
 
     call apply_remap_2D( plan%rmp_xy, plan%fft_x_array, plan%fft_y_array )
+
     call fft_apply_plan(plan%py, plan%fft_y_array, plan%fft_y_array) 
+
     ! This should be inside the FFT plan...
     normalization = 1.0_f64/(ncx*ncy)
 
@@ -284,8 +286,10 @@ contains
           end if
        enddo
     enddo
+
     ! Inverse FFTs in y-direction
     call fft_apply_plan(plan%py_inv, plan%fft_y_array, plan%fft_y_array) 
+
     ! Force the periodicity condition in the y-direction. CAN'T USE THE FFT
     ! INTERFACE SINCE THIS POINT FALLS OUTSIDE OF THE POINTS IN THE ARRAY
     ! TOUCHED BY THE FFT. This is another reason to permit not including the
@@ -293,10 +297,10 @@ contains
     do i=1,npx_loc
        plan%fft_y_array(i,npy_loc) = plan%fft_y_array(i,1)
     end do
-write(*,*) 'ici7'
+
     ! Prepare to take inverse FFTs in x-direction
-    call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array)
-write(*,*) 'ici8'
+    call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
+
     npx_loc = plan%seq_x1_local_sz_x1 
     npy_loc = plan%seq_x1_local_sz_x2 
 
@@ -341,29 +345,48 @@ write(*,*) 'ici8'
     type(layout_2D), pointer       :: layout !< layout for remap
     sll_real64, dimension(:,:)     :: rho    !< charge density
     sll_real64, dimension(:,:)     :: phi    !< electric potential
-    sll_int32,  dimension(2)       :: n      ! nx_loc, ny_loc
+    sll_int32                      :: nx
+    sll_int32                      :: ny
     sll_int32                      :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
     ! too stringent.
-    call compute_local_sizes_2d( layout, n(1), n(2) )
-
-    do i=1,2
-       if ( (n(i)/=size(rho,i)) .or. (n(i)/=size(phi,i))  ) then
-          print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
-               'size of either rho or phi does not match expected size. '
-          if (i==1) then
-             print*, 'solve_poisson_3d_periodic_cartesian_par(): ', &
-                  'mismatch in direction x'
-          elseif (i==2) then
-             print*, 'solve_poisson_3d_periodic_cartesian_par(): ', &
-                  'mismatch in direction y'
-          endif
-          print *, 'Exiting...'
-          stop
-       endif
-    enddo
+    call compute_local_sizes_2d( layout, nx, ny )
+    ! Verify the first direction
+    if ( nx /= size(rho,1) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of rho does not match expected size. ', &
+            'Expected size according to layout = ', nx, 'Received size = ',&
+            size(rho,1)
+       print *, 'Exiting...'
+       stop
+    end if
+    if ( nx /= size(phi,1) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of phi does not match expected size. ', &
+            'Expected size according to layout = ', nx, 'Received size = ',&
+            size(phi,1)
+       print *, 'Exiting...'
+       stop
+    end if
+    ! Verify the second direction
+    if ( ny /= size(rho,2) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of rho does not match expected size. ', &
+            'Expected size according to layout = ', ny, 'Received size = ',&
+            size(rho,2)
+       print *, 'Exiting...'
+       stop
+    end if
+    if ( ny /= size(phi,2) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of phi does not match expected size. ', &
+            'Expected size according to layout = ', ny, 'Received size = ',&
+            size(phi,2)
+       print *, 'Exiting...'
+       stop
+    end if
   end subroutine verify_argument_sizes_par
 
 
