@@ -93,6 +93,7 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_analytic
      procedure, pass(transf) :: write_to_file => write_to_file_2d_analytic
+     procedure, pass(transf) :: read_from_file => read_from_file_2d_analytic
      procedure, pass(transf) :: delete => delete_transformation_2d_analytic
 #endif
   end type sll_coordinate_transformation_2d_analytic
@@ -110,21 +111,16 @@ module sll_module_coordinate_transformations_2d
   type, extends(sll_coordinate_transformation_2d_base) :: &
        sll_coordinate_transformation_2d_discrete
 #endif
-     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
-     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j) 
-     sll_real64, dimension(:,:), pointer :: x1_cell
-     sll_real64, dimension(:,:), pointer :: x2_cell
-     sll_real64, dimension(:,:), pointer :: jacobians_n
-     sll_real64, dimension(:,:), pointer :: jacobians_c
-     !ES those need to be in the base class
-     !character(len=64) :: label
-     !logical           :: written! = .false.
+     sll_real64, dimension(:,:), pointer :: x1_node =>null()   ! x1(i,j) 
+     sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
+     sll_real64, dimension(:,:), pointer :: x1_cell =>null()
+     sll_real64, dimension(:,:), pointer :: x2_cell =>null()
+     sll_real64, dimension(:,:), pointer :: jacobians_n =>null()
+     sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
 
 #ifdef STDF95
-     ! this is not good, since a choice is being made about a specific 
-     ! interpolator, the f95 version does not behave in the same way and
-     ! thus should not be compilable. This module should not be made available
-     ! in f95.
+     ! so the choice is to have only cubic splines in f95 mode... 
+     ! more generality would be obtained with arbitrary degree splines...
      type(cubic_spline_2d_interpolator), pointer            :: x1_interp
      type(cubic_spline_2d_interpolator), pointer            :: x2_interp
 #else
@@ -147,6 +143,7 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: inverse_jacobian_matrix => &
           inverse_jacobian_matrix_2d_discrete
      procedure, pass(transf) :: write_to_file => write_to_file_2d_discrete
+     procedure, pass(transf) :: read_from_file => read_from_file_2d_discrete
      procedure, pass(transf) :: delete => delete_transformation_2d_discrete
 #endif
   end type sll_coordinate_transformation_2d_discrete
@@ -760,6 +757,14 @@ contains
     transf%written = .true.
   end subroutine
 
+  subroutine read_from_file_2d_analytic( transf, filename )
+    class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
+    character(len=*), intent(in) :: filename
+    print *, 'read_from_file_2d_analytic: not yet implemented'
+    ! here we could put a case select to choose which analytic transformation
+    ! we would like to use.
+  end subroutine read_from_file_2d_analytic
+
 
   !**************************************************************************
   !
@@ -1306,6 +1311,114 @@ contains
 !!$    nullify( transf%x1_interp )
 !!$    nullify( transf%x2_interp )
   end subroutine delete_transformation_2d_discrete
+
+  ! What do we need to initialize fully a discrete coordinate transformation?
+  ! - logical mesh
+  ! - label
+  ! - array with x1 node positions
+  ! - array with x2 node positions
+  ! - array with x1 at cell-center positions
+  ! - array with x2 at cell-center positions
+  ! - array with jacobians at nodes
+  ! - array with jacobians at cell-centers
+  ! - interpolator 2d for x1
+  ! - interpolator 2d for x2
+  ! - the file used to initialize the transformation should allow us to 
+  !   initialize all this data. This routine has special rights in that it
+  !   is allowed to allocate and initialize a logical mesh and the two
+  !   interpolators.
+
+  ! - Issues to decide:
+  ! - Will there be a single file format? Or multiple file formats? 
+  !   The transformation can be specified by two 2D arrays of points, or by
+  !   the spline coefficients...
+  ! - The BC information is not inside the files we are currently considering,
+  !   so this should be included.
+ 
+  subroutine read_from_file_2d_discrete( transf, filename )
+    class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
+    character(len=*), intent(in) :: filename
+    intrinsic :: trim
+    sll_int32 :: interpolator_type
+    character(len=64) :: filename_local
+    sll_int32 :: IO_stat
+    sll_int32 :: input_file_id
+    sll_int32 :: ierr
+    sll_int32 :: spline_deg1
+    sll_int32 :: spline_deg2
+    sll_int32 :: num_pts1
+    sll_int32 :: num_pts2
+    sll_int32 :: is_rational
+    sll_real64, dimension(:), allocatable :: knots1
+    sll_real64, dimension(:), allocatable :: knots2
+    sll_real64, dimension(:), allocatable :: x1_coords
+    sll_real64, dimension(:), allocatable :: x2_coords
+    sll_real64, dimension(:), allocatable :: weights
+
+    namelist /degree/   spline_deg1, spline_deg2
+    namelist /shape/    num_pts1, num_pts2
+    namelist /rational/ is_rational
+    namelist /knots_1/   knots1
+    namelist /knots_2/   knots2
+    namelist /points/   x1_coords, x2_coords
+    namelist /pt_weights/  weights
+    character(len=80) :: line_buffer
+
+    if(len(filename) >= 64) then
+       print *, 'ERROR, read_coefficients_from_file=>read_read_coeffs_ad2d():',&
+            'filenames longer than 64 characters are not allowed.'
+       STOP
+    end if
+    filename_local = trim(filename)
+
+    ! get a new identifier for the file.
+    call sll_new_file_id( input_file_id, ierr )
+    if( ierr .ne. 0 ) then
+       print *, 'ERROR while trying to obtain an unique identifier for file ',&
+            filename, '. Called from read_coeffs_ad2d().'
+       stop
+    end if
+    open(unit=input_file_id, file=filename_local, STATUS="OLD", IOStat=IO_stat)
+    if( IO_Stat .ne. 0 ) then
+       print *, 'ERROR while opening file ',filename, &
+            '. Called from read_coeffs_ad2d().'
+       stop
+    end if
+    read( input_file_id, degree )
+    read( input_file_id, shape )
+    read( input_file_id, rational )
+    SLL_ALLOCATE(knots1(num_pts1+spline_deg1+1),ierr)
+    SLL_ALLOCATE(knots2(num_pts2+spline_deg2+1),ierr)
+    read( input_file_id, knots_1 )
+    read( input_file_id, knots_2 )
+    SLL_ALLOCATE(x1_coords(num_pts1*num_pts2),ierr)
+    SLL_ALLOCATE(x2_coords(num_pts1*num_pts2),ierr)
+    SLL_ALLOCATE(weights(num_pts1*num_pts2),ierr)
+    read( input_file_id, points )
+    read( input_file_id, pt_weights )
+    close( input_file_id )
+
+    ! All the information from the file is now in local variables. We should
+    ! now be able to initialize all the necessary objects
+
+    ! leave the default [0,1]X[0,1] domain for the logical mesh
+    !    transf%mesh => new_logical_mesh_2d(num_cells1, num_cells2)
+
+!!$    select case (interpolator_type)
+!!$       case (SLL_ARBITRARY_DEGREE_INTERPOLATOR) ! where is this specified???
+!!$          transf%x1_interp => new_arbitrary_degree_spline_interpolator_2d( &
+!!$)
+!!$          transf%x2_interp => new_arbitrary_degree_spline_interpolator_2d( &
+!!$)
+!!$       case default
+!!$          print *, 'ERROR, coordinate transformations 2d, ', &
+!!$               'read_from_file_2d_discrete() this type of interpolator ', &
+!!$               'can not be initialized from a file at present.'
+!!$       end select
+
+
+  end subroutine read_from_file_2d_discrete
+
 
 #if 0
   subroutine delete_coordinate_transformation_2D_general( transf )

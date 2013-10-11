@@ -412,8 +412,6 @@ program unit_test
 
   print *, 'testing the read from file function...'
 
-  call ad2d%read_data_from_file("../src/interpolators/arbitrary_degree_2d_sample_input_file.nml")
-
 end program unit_test
 
  
