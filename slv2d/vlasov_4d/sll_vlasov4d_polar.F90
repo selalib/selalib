@@ -73,30 +73,59 @@ sll_int32,  private :: error
 
 sll_int32,  public  :: itime, prank, psize
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-  subroutine initialize_vp4d_polar( &
-   this,                            &
-   interp_x1x2,                     &
-   interp_x3,                       &
-   interp_x4)
+subroutine initialize_vp4d_polar( this,        &
+                                  interp_x1x2, &
+                                  interp_x3,   &
+                                  interp_x4)
 
-   type(vlasov4d_polar), intent(inout)     :: this
+  type(vlasov4d_polar), intent(inout)     :: this
 
-   class(sll_interpolator_2d_base), target :: interp_x1x2
-   class(sll_interpolator_1d_base), target :: interp_x3
-   class(sll_interpolator_1d_base), target :: interp_x4
+  class(sll_interpolator_2d_base), target :: interp_x1x2
+  class(sll_interpolator_1d_base), target :: interp_x3
+  class(sll_interpolator_1d_base), target :: interp_x4
 
-   psize  = sll_get_collective_size(sll_world_collective)
-   prank  = sll_get_collective_rank(sll_world_collective)
+  psize = sll_get_collective_size(sll_world_collective)
+  prank = sll_get_collective_rank(sll_world_collective)
 
-   this%interp_x1x2 => interp_x1x2
-   this%interp_x3   => interp_x3
-   this%interp_x4   => interp_x4
+  this%interp_x1x2 => interp_x1x2
+  this%interp_x3   => interp_x3
+  this%interp_x4   => interp_x4
 
-   call initialize_vlasov4d_base(this)
+  this%transposed = .false.
 
-   this%transfx => new_coordinate_transformation_2d_analytic( &
+  this%layout_x => new_layout_4D( sll_world_collective )        
+
+  call initialize_layout_with_distributed_4D_array( &
+            this%nc_eta1+1, this%nc_eta2+1, this%nc_eta3+1, this%nc_eta4+1,    &
+            1,1,int(psize,4),1,this%layout_x)
+
+  if ( prank == MPI_MASTER ) call sll_view_lims_4D( this%layout_x )
+  call flush(6)
+
+  call compute_local_sizes_4d(this%layout_x, &
+                              loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4)        
+  SLL_CLEAR_ALLOCATE(this%f(1:loc_sz_x1,1:loc_sz_x2,1:loc_sz_x3,1:loc_sz_x4),error)
+
+  this%layout_v => new_layout_4D( sll_world_collective )
+  call initialize_layout_with_distributed_4D_array( &
+              this%nc_eta1+1, this%nc_eta2+1, this%nc_eta3+1, this%nc_eta4+1,    &
+              int(psize,4),1,1,1,this%layout_v)
+
+  if ( prank == MPI_MASTER ) call sll_view_lims_4D( this%layout_v )
+  call flush(6)
+
+  call compute_local_sizes_4d(this%layout_v, &
+                              loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4)        
+  SLL_CLEAR_ALLOCATE(this%ft(1:loc_sz_x1,1:loc_sz_x2,1:loc_sz_x3,1:loc_sz_x4),error)
+
+  this%x_to_v => new_remap_plan( this%layout_x, this%layout_v, this%f)     
+  this%v_to_x => new_remap_plan( this%layout_v, this%layout_x, this%ft)     
+  
+  this%transfx => new_coordinate_transformation_2d_analytic( &
        "analytic_polar_transformation", &
        this%geomx, &
        polar_x1, &
@@ -106,67 +135,73 @@ contains
        polar_jac21, &
        polar_jac22 )
 
-   this%nc_x1 = this%geomx%num_cells1
-   this%nc_x2 = this%geomx%num_cells2
-   this%nc_x3 = this%geomv%num_cells1
-   this%nc_x4 = this%geomv%num_cells2
+  this%nc_x1 = this%geomx%num_cells1
+  this%nc_x2 = this%geomx%num_cells2
+  this%nc_x3 = this%geomv%num_cells1
+  this%nc_x4 = this%geomv%num_cells2
 
-   call compute_local_sizes_4d( this%layout_x, &
+  call compute_local_sizes_4d( this%layout_x, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-   SLL_ALLOCATE(this%proj_f_x3x4(loc_sz_x3,loc_sz_x4),error)
+  SLL_ALLOCATE(this%proj_f_x3x4(loc_sz_x3,loc_sz_x4),error)
 
-   call compute_local_sizes_4d( this%layout_v, &
+  call compute_local_sizes_4d( this%layout_v, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-   SLL_ALLOCATE(this%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
+  SLL_ALLOCATE(this%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
     
-   this%layout_x1 => new_layout_2D( sll_world_collective )
+  this%layout_x1 => new_layout_2D( sll_world_collective )
 
-   call initialize_layout_with_distributed_2D_array( this%nc_x1+1, &
-                                                     this%nc_x2+1, &
-                                                     1,            &
-                                                     psize,        &
-                                                     this%layout_x1 )
+  call initialize_layout_with_distributed_2D_array( this%nc_x1+1, &
+                                                    this%nc_x2+1, &
+                                                    1,            &
+                                                    psize,        &
+                                                    this%layout_x1 )
 
-   call compute_local_sizes_2d(this%layout_x1, loc_sz_x1, loc_sz_x2)
+  call compute_local_sizes_2d(this%layout_x1, loc_sz_x1, loc_sz_x2)
 
-   SLL_CLEAR_ALLOCATE(this%phi_x1(1:loc_sz_x1,1:loc_sz_x2),error)
-   SLL_CLEAR_ALLOCATE(this%efields_x1(1:loc_sz_x1,1:loc_sz_x2,2),error)
+  SLL_CLEAR_ALLOCATE(this%phi_x1(1:loc_sz_x1,1:loc_sz_x2),error)
+  SLL_CLEAR_ALLOCATE(this%efields_x1(1:loc_sz_x1,1:loc_sz_x2,2),error)
 
-   this%layout_x2 => new_layout_2D( sll_world_collective )
+  this%layout_x2 => new_layout_2D( sll_world_collective )
 
-   call initialize_layout_with_distributed_2D_array( this%nc_x1+1, &
-                                                     this%nc_x2+1, &
-                                                     psize,       &
-                                                     1,           &
-                                                     this%layout_x2 )
+  call initialize_layout_with_distributed_2D_array( this%nc_x1+1, &
+                                                    this%nc_x2+1, &
+                                                    psize,       &
+                                                    1,           &
+                                                    this%layout_x2 )
 
-   call compute_local_sizes_2d(this%layout_x2, loc_sz_x1, loc_sz_x2)
+  call compute_local_sizes_2d(this%layout_x2, loc_sz_x1, loc_sz_x2)
 
-   SLL_CLEAR_ALLOCATE(this%rho(1:loc_sz_x1,1:loc_sz_x2),error)
-   SLL_CLEAR_ALLOCATE(this%phi_x2(1:loc_sz_x1,1:loc_sz_x2),error)
-   SLL_CLEAR_ALLOCATE(this%efields_x2(1:loc_sz_x1,1:loc_sz_x2,2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:loc_sz_x1,1:loc_sz_x2),error)
+  SLL_CLEAR_ALLOCATE(this%phi_x2(1:loc_sz_x1,1:loc_sz_x2),error)
+  SLL_CLEAR_ALLOCATE(this%efields_x2(1:loc_sz_x1,1:loc_sz_x2,2),error)
 
-   this%rmp_x1x2 => new_remap_plan(this%layout_x1, this%layout_x2, this%phi_x1)
-   this%rmp_x2x1 => new_remap_plan(this%layout_x2, this%layout_x1, this%phi_x2)
+  this%rmp_x1x2 => new_remap_plan(this%layout_x1, this%layout_x2, this%phi_x1)
+  this%rmp_x2x1 => new_remap_plan(this%layout_x2, this%layout_x1, this%phi_x2)
 
-   SLL_CLEAR_ALLOCATE(this%x1(loc_sz_x1,loc_sz_x2),error)
-   SLL_CLEAR_ALLOCATE(this%x2(loc_sz_x1,loc_sz_x2),error)
+  SLL_CLEAR_ALLOCATE(this%x1(1:loc_sz_x1,1:loc_sz_x2),error)
+  SLL_CLEAR_ALLOCATE(this%x2(1:loc_sz_x1,1:loc_sz_x2),error)
 
-   do j=1,loc_sz_x2
-      do i=1,loc_sz_x1
+  call sll_view_lims_2D( this%layout_x2 )
 
-         global_indices(1:2) = local_to_global_2D(this%layout_x2,(/i,j/))
-         this%x1(i,j) = this%transfx%x1_at_node(global_indices(1),global_indices(2))
-         this%x2(i,j) = this%transfx%x2_at_node(global_indices(1),global_indices(2))
+  do j=1,loc_sz_x2
+     do i=1,loc_sz_x1
 
-      end do
-   end do
+        global_indices(1:2) = local_to_global_2D(this%layout_x2,(/i,j/))
+        this%x1(i,j) = this%transfx%x1_at_node(global_indices(1),global_indices(2))
+        this%x2(i,j) = this%transfx%x2_at_node(global_indices(1),global_indices(2))
+
+     end do
+  end do
+
 
   end subroutine initialize_vp4d_polar
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine advection_x1x2(this,deltat)
+
     class(vlasov4d_polar) :: this
     sll_real64, intent(in) :: deltat
 
@@ -215,6 +250,8 @@ contains
 
   end subroutine advection_x1x2
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine advection_x3(this,deltat)
 
     class(vlasov4d_polar) :: this
@@ -243,6 +280,8 @@ contains
 
   end subroutine advection_x3
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine advection_x4(this,deltat)
 
     class(vlasov4d_polar) :: this
@@ -270,6 +309,8 @@ contains
 
   end subroutine advection_x4
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine plot_f(this)
     class(vlasov4d_polar) :: this
 
@@ -287,6 +328,8 @@ contains
                                   "fxy", itime, error )
 
   end subroutine plot_f
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine plot_ft(this)
     class(vlasov4d_polar) :: this
@@ -307,6 +350,8 @@ contains
 
   end subroutine plot_ft
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine delete_vp4d_par_polar( this )
 
     type(vlasov4d_polar) :: this
@@ -321,6 +366,8 @@ contains
     call delete( this%v_to_x )
 
   end subroutine delete_vp4d_par_polar
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine compute_charge_density( this )
 
@@ -341,6 +388,7 @@ contains
 
   end subroutine compute_charge_density
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   
   subroutine plot_rho(this)
 
@@ -353,6 +401,8 @@ contains
 
   end subroutine plot_rho
  
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine plot_phi(this)
 
     class(vlasov4d_polar) :: this
@@ -363,6 +413,8 @@ contains
                                  'phi', itime, error)
 
   end subroutine plot_phi
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   subroutine compute_electric_fields_eta1( this )
 
@@ -391,6 +443,8 @@ contains
 
   end subroutine compute_electric_fields_eta1
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
   subroutine compute_electric_fields_eta2( this )
 
     class(vlasov4d_polar) :: this
@@ -418,5 +472,6 @@ contains
 
   end subroutine compute_electric_fields_eta2
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 end module sll_vlasov4d_polar
