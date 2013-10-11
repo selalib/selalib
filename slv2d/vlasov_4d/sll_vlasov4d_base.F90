@@ -5,6 +5,7 @@ module sll_vlasov4d_base
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_logical_meshes.h"
+#include "sll_constants.h"
 
  use sll_module_interpolators_1d_base
  use sll_module_interpolators_2d_base
@@ -116,7 +117,12 @@ contains
   this%fdiag      = fdiag
   this%fthdiag    = fthdiag
 
-  this%geomx      => new_logical_mesh_2d(nx,ny,x0,x1,y0,y1)
+  this%geomx      => new_logical_mesh_2d(nx,ny,       &
+                                         eta1_min=x0, &
+                                         eta1_max=x1, & 
+                                         eta2_min=y0, &
+                                         eta2_max=y1)
+
   this%geomv      => new_logical_mesh_2d(nvx,nvy,vx0,vx1,vy0,vy1)
 
   this%nc_eta1    = this%geomx%num_cells1
@@ -273,17 +279,19 @@ contains
 
  subroutine compute_charge(this)
 
-   class(vlasov4d_base),intent(inout)                 :: this
-   sll_int32                                          :: error
-   sll_int32                                          :: c
-   sll_int32                                          :: comm
-   sll_real64                                         :: dvxvy
+   class(vlasov4d_base),intent(inout) :: this
+   sll_int32                          :: error
+   sll_int32                          :: c
+   sll_int32                          :: comm
+   sll_real64                         :: dvxvy
+
    sll_real64, dimension(this%geomx%num_cells1,this%geomx%num_cells2) :: locrho
 
    dvxvy = this%geomv%delta_eta1*this%geomv%delta_eta2
 
    SLL_ASSERT(this%transposed)
-   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+   call compute_local_sizes_4d(this%layout_v, &
+        loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
    
    locrho(:,:) = 0.
    do j=1,loc_sz_j

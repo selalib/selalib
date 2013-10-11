@@ -23,34 +23,38 @@ type(cubic_spline_1d_interpolator), target :: spl_x4
 
 sll_int32 :: i, j, k, l
 sll_int32 :: loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4
+sll_int32 :: error
 
 call sll_boot_collective() 
 
 call read_input_file(sim)
 
-call spl_x1x2%initialize( sim%nc_eta1,  sim%nc_eta2,    &
+call spl_x1x2%initialize( sim%nc_eta1+1, sim%nc_eta2+1, &
                           sim%eta1_min, sim%eta1_max,   &
                           sim%eta2_min, sim%eta2_max,   &
                           SLL_PERIODIC, SLL_PERIODIC )
 
-call spl_x3%initialize(sim%nc_eta3, sim%eta3_min, sim%eta3_max, SLL_PERIODIC)
+call spl_x3%initialize(sim%nc_eta3+1,sim%eta3_min,sim%eta3_max,SLL_PERIODIC)
 
-call spl_x4%initialize(sim%nc_eta4, sim%eta4_min, sim%eta4_max, SLL_PERIODIC)
+call spl_x4%initialize(sim%nc_eta4+1,sim%eta4_min,sim%eta4_max,SLL_PERIODIC)
 
 call initialize_vp4d_polar( sim, spl_x1x2, spl_x3, spl_x4)
 
-call initialize( poisson,       &
-                 sim%layout_x1, &
-                 sim%layout_x2, &
-                 sim%eta1_min,  &
-                 sim%eta1_max,  &
-                 sim%nc_eta1,   &
-                 sim%nc_eta2,   &
-                 SLL_DIRICHLET, &
-                 SLL_DIRICHLET)
+!call initialize( poisson,       &
+!                 sim%layout_x1, &
+!                 sim%layout_x2, &
+!                 sim%eta1_min,  &
+!                 sim%eta1_max,  &
+!                 sim%nc_eta1,   &
+!                 sim%nc_eta2,   &
+!                 SLL_DIRICHLET, &
+!                 SLL_DIRICHLET)
 
 call compute_local_sizes_4d(sim%layout_v, &
-                            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4)
+                            loc_sz_x1,    &
+                            loc_sz_x2,    &
+                            loc_sz_x3,    &
+                            loc_sz_x4)
 
 do l=1,loc_sz_x4 
 do k=1,loc_sz_x3
@@ -64,14 +68,16 @@ end do
 end do
 end do
 
-call apply_remap_4D( sim%v_to_x, sim%ft, sim%f )
+
 
 do itime = 1, sim%nbiter
 
    if(prank == MPI_MASTER) &
-      print *, 'Starting iteration ', itime, ' of ', sim%nbiter
+      print *, itime, ' of ', sim%nbiter, sim%dt
 
    call plot_f(sim)
+
+   call apply_remap_4D( sim%v_to_x, sim%ft, sim%f )
 
    call advection_x1x2(sim, sim%dt)
 
@@ -80,7 +86,9 @@ do itime = 1, sim%nbiter
    !call solve(sim%poisson,sim%rho,sim%phi_x2)
    !call plot_phi(sim)
    !call plot_ft(sim)
-   !call apply_remap_4D(sim%x_to_v,sim%f,sim%ft)
+
+   call apply_remap_4D(sim%x_to_v,sim%f,sim%ft)
+
    !call apply_remap_2D(sim%rmp_x2x1,sim%phi_x2,sim%phi_x1)
    !call compute_electric_fields_eta1(sim)
    !call apply_remap_2D(sim%rmp_x1x2,sim%phi_x1,sim%phi_x2)
