@@ -323,7 +323,7 @@ contains
                      sim%layout_x1, &
                      sim%layout_x2, &
                      eta1_min,      &
-                     eta2_max,      &
+                     eta1_max,      &
                      sim%nc_x1,     &
                      sim%nc_x2,     &
                      SLL_DIRICHLET, &
