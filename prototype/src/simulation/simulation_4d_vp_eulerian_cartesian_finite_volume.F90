@@ -245,6 +245,9 @@ end subroutine initialize_vp4d
 subroutine run_vp_cart(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
  logical :: exist
+ sll_int32  :: file_id_1
+ sll_int32  :: file_id_2
+ sll_int32  :: file_id_3
  sll_int32  :: loc_sz_v1
  sll_int32  :: loc_sz_v2
  sll_int32  :: loc_sz_x1
@@ -342,8 +345,8 @@ subroutine run_vp_cart(sim)
 
  ! potential layout
  call initialize_layout_with_distributed_2D_array( &
-      sim%nc_x1+1, &
-      sim%nc_x2+1, &
+      sim%nc_x1, &
+      sim%nc_x2, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%phi_seq_x1)
@@ -592,14 +595,12 @@ write(*,*) 'loc_sz_x2',loc_sz_x2
  !stop
  itime=0
   sim%params(11)=t
-write(*,*) 'stop here 1'
  do while(t.lt.sim%tmax)
     itime=itime+1
     sim%Enorm = 0.0_f64
     !compute the charge density
     !recalculer dans maillage logical
     sim%rho_x1=0.0_f64
-write(*,*) 'stop here 2'
     do i=1,loc_sz_x1
        do j=1,loc_sz_x2
           do ii=1,loc_sz_v1
@@ -614,24 +615,21 @@ write(*,*) 'stop here 2'
 !!$            write(*,*) 'rho_exact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
        enddo
     enddo
-write(*,*) 'stop here 3'
     ! solve the poisson equation
     !maillage logical
 write(*,*) 'loc_sz_x1',loc_sz_x1
  write(*,*) 'loc_sz_x2',loc_sz_x2
     call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
-         sim%rho_x1(1:loc_sz_x1,1:loc_sz_x2), &
+         sim%rho_x1, & !(1:loc_sz_x1,1:loc_sz_x2), &
          sim%phi_x1(1:loc_sz_x1,1:loc_sz_x2))
     !write (*,*) 'phi = ', sim%phi_x1
     !stop
-write(*,*) 'stop here 4'
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
     elseif (sim%nsch == 1) then
        call RK2(sim)
     end if
-write(*,*) 'stop here 5'
     !try to compute the energy in the transport test case here
 !!$       write(*,*) 'loc_sz_v1',loc_sz_v1
 !!$       write(*,*) 'sim%np_v2',sim%np_v2
@@ -768,7 +766,8 @@ write(*,*) 'stop here 5'
 
  allocate (xmil(loc_sz_x1))
  allocate (node(loc_sz_v1))
- open(299,file='distribution')
+  call sll_new_file_id(file_id_3,ierr)
+ open(file_id_3,file='distribution')
  do i=1,loc_sz_x1
     xmil(i)=sim%mesh2dx%eta1_min+sim%mesh2dx%delta_eta1*i-sim%mesh2dx%delta_eta1/2
  end do
@@ -778,10 +777,10 @@ write(*,*) 'stop here 5'
  do i = 1, loc_sz_x1
     do j = 1, loc_sz_v1
        df = sim%fn_v1v2x1(j,1,i,1)
-       write(299,*) xmil(i), node(j), df 
+       write(file_id_3,*) xmil(i), node(j), df 
     end do
  end do
- close(299)
+ close(file_id_3)
  deallocate(xmil)
  deallocate(node)
  !stop
@@ -818,6 +817,26 @@ write(*,*) 'stop here 5'
       "plotf2d_c2", &
       0, &
       ierr)
+
+!!!!!!!!!!!!!!!!!!!simplify
+!!$    allocate (f_exact(loc_sz_x1,loc_sz_v1))
+!!$ do ix = 1, loc_sz_x1
+!!$    do jvx = 1, loc_sz_v1
+!!$       do iy = 1, loc_sz_x2
+!!$          do jvy = 1, loc_sz_v2
+!!$             x1=(ix-1)*sim%mesh2dx%delta_eta1+sim%mesh2dx%eta1_min
+!!$             v1=sim%mesh2dv%eta1_min+(jvx-1)*sim%mesh2dv%delta_eta1/sim%degree
+!!$             x2=(iy-1)*sim%mesh2dx%delta_eta2+sim%mesh2dx%eta2_min
+!!$             v2=sim%mesh2dv%eta2_min+(jvy-1)*sim%mesh2dv%delta_eta2/sim%degree
+!!$
+!!$             sim%params(11)=t
+!!$             f_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
+!!$          end do
+!!$       end do
+!!$    end do
+!!$ end do
+!!!!!!!!!!!!!!!!!!!!!!!!!!
+
  if(sim%test==0)then
     allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
 !!$    x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
@@ -838,12 +857,6 @@ write(*,*) 'stop here 5'
 !!$          x1=sim%tx%x1(xref,yref)
           x1=(i-1)*sim%mesh2dx%delta_eta1+sim%mesh2dx%eta1_min
           v1=sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree
-!!$
-!!$          f_x_exact(i,j)=sin(2.0_f64*sll_pi/(sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min) &
-!!$               *(modulo((x1-v1*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min))
-
-!!$          f_x_exact(i,j)=sin(2.0_f64*sll_pi/(sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min) &
-!!$               *(modulo((x-t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min))
 
           sim%params(11)=t
           f_x_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
@@ -861,14 +874,16 @@ write(*,*) 'stop here 5'
          ierr)
  end if
 
-!write (*,*) 'loc_sz_x1, nc_x1',loc_sz_x1, sim%nc_x1
 
  if(sim%test==4)then
     allocate (f_y_exact(loc_sz_x2,loc_sz_v2))
     do i = 1, loc_sz_x2
        do j = 1, loc_sz_v2
-          f_y_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta2 &
-               -(sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree)*t),sim%mesh2dx%eta2_max-sim%mesh2dx%eta2_min)+sim%mesh2dx%eta2_min)**2)
+          x2=(i-1)*sim%mesh2dx%delta_eta2+sim%mesh2dx%eta2_min
+          v2=sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree
+
+          sim%params(11)=t
+          f_y_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
        end do
     end do
     call sll_gnuplot_rect_2d_parallel( &
@@ -911,8 +926,12 @@ write(*,*) 'stop here 5'
     allocate (f_vy_exact(loc_sz_x2,loc_sz_v2))
     do i = 1, loc_sz_x2
        do j = 1, loc_sz_v2
-          f_vy_exact(i,j) = exp(-4*(-t &
-               +(sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree))**2)
+          v2=sim%mesh2dv%eta2_min+(j-1)*sim%mesh2dv%delta_eta2/sim%degree
+          v1=0
+          x1=0
+          x2=0
+          sim%params(11)=t
+          f_vy_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
        end do
     end do
     call sll_gnuplot_rect_2d_parallel( &
@@ -944,37 +963,39 @@ write(*,*) 'stop here 5'
     call normL2(sim,f_vx_exact,plotf2d_c1,erreurL2) 
  end if
   write(*,*) 'erreurL2 Nhung=',erreurL2
+  call sll_new_file_id(file_id_1,ierr)
   inquire(file='log(err)', exist=exist)
   if (exist) then
-     open(168,file='log(err)',status='old',position='append', action='write')
+     open(file_id_1,file='log(err)',status='old',position='append', action='write')
   else
-     open(168, file='log(err)', status="new", action="write")
+     open(file_id_1, file='log(err)', status="new", action="write")
   end if
  if(sim%test==0)then
-    write(168,*) -log(sim%mesh2dx%delta_eta1),log(erreurL2)
+    write(file_id_1,*) -log(sim%mesh2dx%delta_eta1),log(erreurL2)
  elseif(sim%test==2)then
-    write(168,*) -log(sim%mesh2dv%delta_eta1/sim%degree),log(erreurL2)
+    write(file_id_1,*) -log(sim%mesh2dv%delta_eta1/sim%degree),log(erreurL2)
  end if
-  close(168)
+  close(file_id_1)
   sim%params(11)=t
   call fn_L2_norm(sim,erreurL2_G)
   write(*,*) 'erreurL2=',erreurL2_G
+  call sll_new_file_id(file_id_2,ierr)
   inquire(file='log(err_G)', exist=exist)
   if (exist) then
-     open(548,file='log(err_G)',status='old',position='append', action='write')
+     open(file_id_2,file='log(err_G)',status='old',position='append', action='write')
   else
-     open(548, file='log(err_G)', status="new", action="write")
+     open(file_id_2, file='log(err_G)', status="new", action="write")
   end if
 
  if(sim%test==0)then
-    write(548,*) -log(sim%mesh2dx%delta_eta1), log(erreurL2_G)
+    write(file_id_2,*) -log(sim%mesh2dx%delta_eta1), log(erreurL2_G)
  elseif(sim%test==2)then
-    write(548,*) -log(sim%mesh2dv%delta_eta1/sim%degree), log(erreurL2_G)
+    write(file_id_2,*) -log(sim%mesh2dv%delta_eta1/sim%degree), log(erreurL2_G)
  end if
 
 
 
-  close(548)
+  close(file_id_2)
 
 
  if (sim%test .eq. 1) then
