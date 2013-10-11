@@ -284,7 +284,19 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   call delete(t_a)
   call delete(t_d)
 
-  print *, 'deleted maps'
+  print *, 'deleted transformations'
+
+  ! *************************************************************************
+  !
+  ! Test of the initialization from a file of the discrete transformation.
+  !
+  ! *************************************************************************
+
+  print *, 'Test of initialization from file for a discrete transformation:'
+  call t_d%read_from_file("../src/interpolators/arbitrary_degree_2d_sample_input_file.nml")
+
+
+
   print *, 'reached end of unit test'
 
   ! apply some more relaxed criterion for the jacobian
