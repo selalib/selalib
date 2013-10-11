@@ -24,27 +24,30 @@ use sll_constants
 
  type, public, extends(vlasov4d_base) :: vlasov4d_spectral
 
-   sll_real64, dimension(:,:), pointer               :: exn
-   sll_real64, dimension(:,:), pointer               :: eyn
-   sll_real64, dimension(:,:), pointer               :: jx1,jx2
-   sll_real64, dimension(:,:), pointer               :: jy1,jy2
-   sll_real64, dimension(:),   allocatable           :: d_dx
-   sll_real64, dimension(:),   allocatable           :: d_dy
-   sll_real64, dimension(:),   allocatable           :: kx
-   sll_real64, dimension(:),   allocatable           :: ky
-   fftw_plan                                         :: fwx, fwy
-   fftw_plan                                         :: bwx, bwy
-   fftw_plan                                         :: p_tmp_x, p_tmp_y
-   fftw_comp, dimension(:),  pointer                 :: tmp_x, tmp_y
-   class(sll_interpolator_2d_base), pointer          :: interp_x3x4
-   type(layout_2D), pointer                          :: layout_x1
-   type(layout_2D), pointer                          :: layout_x2
-   type(remap_plan_2D_real64), pointer               :: x1_to_x2 
-   type(remap_plan_2D_real64), pointer               :: x2_to_x1
+   sll_real64, dimension(:,:), pointer      :: exn
+   sll_real64, dimension(:,:), pointer      :: eyn
+   sll_real64, dimension(:,:), pointer      :: jx1,jx2
+   sll_real64, dimension(:,:), pointer      :: jy1,jy2
+   sll_real64, dimension(:),   allocatable  :: d_dx
+   sll_real64, dimension(:),   allocatable  :: d_dy
+   sll_real64, dimension(:),   allocatable  :: kx
+   sll_real64, dimension(:),   allocatable  :: ky
+   fftw_plan                                :: fwx
+   fftw_plan                                :: fwy
+   fftw_plan                                :: bwx
+   fftw_plan                                :: bwy
+   fftw_plan                                :: p_tmp_x
+   fftw_plan                                :: p_tmp_y
+   fftw_comp, dimension(:),  pointer        :: tmp_x
+   fftw_comp, dimension(:),  pointer        :: tmp_y
+   class(sll_interpolator_2d_base), pointer :: interp_x3x4
+   type(layout_2D), pointer                 :: layout_x1
+   type(layout_2D), pointer                 :: layout_x2
+   type(remap_plan_2D_real64), pointer      :: x1_to_x2 
+   type(remap_plan_2D_real64), pointer      :: x2_to_x1
 
    sll_real64, dimension(:,:,:,:),  pointer :: f_star
    sll_real64, dimension(:,:,:,:),  pointer :: ft_star
-
 
  end type vlasov4d_spectral
 
@@ -62,29 +65,21 @@ use sll_constants
 
 contains
 
- subroutine initialize_vlasov4d_spectral(this,geomx,geomv,interp_x3x4,error)
+ subroutine initialize_vlasov4d_spectral(this,interp_x3x4,error)
 
   use sll_hdf5_io
 
-  class(vlasov4d_spectral),intent(inout)   :: this
-  type(sll_logical_mesh_2d),intent(in)               :: geomx
-  type(sll_logical_mesh_2d),intent(in)               :: geomv
+  class(vlasov4d_spectral),intent(inout)  :: this
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
-  sll_int32         :: nc_x1, nc_x2, nc_x3, nc_x4
-  sll_real64        :: dx, dy, kx0, ky0
+  sll_real64        :: kx0, ky0
   fftw_int          :: sz_tmp_x, sz_tmp_y
   sll_int32         :: psize, prank, comm
 
   this%interp_x3x4 => interp_x3x4
 
-  call initialize_vlasov4d_base(this,geomx,geomv,error)
-
-  nc_x1 = this%geomx%num_cells1
-  nc_x2 = this%geomx%num_cells2
-  nc_x3 = this%geomv%num_cells1
-  nc_x4 = this%geomv%num_cells2
+  call initialize_vlasov4d_base(this)
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -92,14 +87,14 @@ contains
 
   this%layout_x1 => new_layout_2D( sll_world_collective )        
   call initialize_layout_with_distributed_2D_array( &
-             nc_x1,nc_x2,1,int(psize,4),this%layout_x1)
+             this%nc_eta1,this%nc_eta2,1,int(psize,4),this%layout_x1)
 
 !  call compute_local_sizes_2d(this%layout_x1,loc_sz_i,loc_sz_j)        
 !  SLL_CLEAR_ALLOCATE(this%jx1(1:loc_sz_i,1:loc_sz_j),error)
 
   this%layout_x2 => new_layout_2D( sll_world_collective )
   call initialize_layout_with_distributed_2D_array( &
-              nc_x1,nc_x2,int(psize,4),1,this%layout_x2)
+              this%nc_eta1,this%nc_eta2,int(psize,4),1,this%layout_x2)
 
 !  call compute_local_sizes_2d(this%layout_x2,loc_sz_i,loc_sz_j)        
 !  SLL_CLEAR_ALLOCATE(this%jx2(1:loc_sz_i,1:loc_sz_j),ierr)
@@ -116,46 +111,43 @@ contains
 
   end if
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%exn(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%eyn(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%exn(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%eyn(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%bz(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%rho(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx1(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jx2(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy1(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy2(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx1(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx2(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy1(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy2(1:this%nc_eta1,1:this%nc_eta2),error)
   
-  FFTW_ALLOCATE(this%tmp_x,nc_x1/2+1,sz_tmp_x,this%p_tmp_x)
-  FFTW_ALLOCATE(this%tmp_y,nc_x2/2+1,sz_tmp_y,this%p_tmp_y)
-  SLL_CLEAR_ALLOCATE(this%d_dx(1:nc_x1),error)
-  SLL_CLEAR_ALLOCATE(this%d_dy(1:nc_x2),error)
+  FFTW_ALLOCATE(this%tmp_x,this%nc_eta1/2+1,sz_tmp_x,this%p_tmp_x)
+  FFTW_ALLOCATE(this%tmp_y,this%nc_eta2/2+1,sz_tmp_y,this%p_tmp_y)
+  SLL_CLEAR_ALLOCATE(this%d_dx(1:this%nc_eta1),error)
+  SLL_CLEAR_ALLOCATE(this%d_dy(1:this%nc_eta2),error)
 
-  NEW_FFTW_PLAN_R2C_1D(this%fwx,nc_x1,this%d_dx,this%tmp_x) 
-  NEW_FFTW_PLAN_C2R_1D(this%bwx,nc_x1,this%tmp_x,this%d_dx) 
-  NEW_FFTW_PLAN_R2C_1D(this%fwy,nc_x2,this%d_dy,this%tmp_y) 
-  NEW_FFTW_PLAN_C2R_1D(this%bwy,nc_x2,this%tmp_y,this%d_dy) 
+  NEW_FFTW_PLAN_R2C_1D(this%fwx,this%nc_eta1,this%d_dx,this%tmp_x) 
+  NEW_FFTW_PLAN_C2R_1D(this%bwx,this%nc_eta1,this%tmp_x,this%d_dx) 
+  NEW_FFTW_PLAN_R2C_1D(this%fwy,this%nc_eta2,this%d_dy,this%tmp_y) 
+  NEW_FFTW_PLAN_C2R_1D(this%bwy,this%nc_eta2,this%tmp_y,this%d_dy) 
 
-  SLL_CLEAR_ALLOCATE(this%kx(1:nc_x1/2+1), error)
-  SLL_CLEAR_ALLOCATE(this%ky(1:nc_x2/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
    
-  dx = geomx%delta_eta1
-  dy = geomx%delta_eta2
+  kx0 = 2._f64*sll_pi/(this%nc_eta1*this%delta_eta1)
+  ky0 = 2._f64*sll_pi/(this%nc_eta2*this%delta_eta2)
 
-  kx0 = 2._f64*sll_pi/(nc_x1*dx)
-  ky0 = 2._f64*sll_pi/(nc_x2*dy)
-
-  do i=1,nc_x1/2+1
+  do i=1,this%nc_eta1/2+1
      this%kx(i) = (i-1)*kx0
   end do
   this%kx(1) = 1.0_f64
-  do j=1,nc_x2/2+1
+  do j=1,this%nc_eta2/2+1
      this%ky(j) = (j-1)*ky0
   end do
   this%ky(1) = 1.0_f64

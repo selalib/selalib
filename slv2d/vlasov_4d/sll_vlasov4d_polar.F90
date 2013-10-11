@@ -22,11 +22,11 @@ module sll_vlasov4d_polar
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_logical_meshes.h"
+#include "sll_coordinate_transformations.h"
 
 use sll_module_interpolators_1d_base
 use sll_module_interpolators_2d_base
 use sll_remapper
-use sll_coordinate_transformation_2d_base_module
 use sll_vlasov4d_base
 use sll_gnuplot_parallel
 
@@ -71,26 +71,17 @@ sll_real64, private :: eta1, eta2, eta3, eta4
 sll_real64, private :: jac_m(2,2), inv_j(2,2)
 sll_int32,  private :: error
 
-sll_real64, public  :: delta_x1, delta_x2, delta_x3, delta_x4
-
 sll_int32,  public  :: itime, prank, psize
 
 contains
 
-  !> Function to initialize the simulation object 'manually'.
   subroutine initialize_vp4d_polar( &
    this,                            &
-   mesh2d_x,                        &
-   mesh2d_v,                        &
-   transformation_x,                &
    interp_x1x2,                     &
    interp_x3,                       &
    interp_x4)
 
-   type(vlasov4d_polar), intent(inout)                   :: this
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
-   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
+   type(vlasov4d_polar), intent(inout)     :: this
 
    class(sll_interpolator_2d_base), target :: interp_x1x2
    class(sll_interpolator_1d_base), target :: interp_x3
@@ -103,48 +94,33 @@ contains
    this%interp_x3   => interp_x3
    this%interp_x4   => interp_x4
 
-   call initialize_vlasov4d_base(this,mesh2d_x,mesh2d_v,error)
+   call initialize_vlasov4d_base(this)
 
-   this%geomx  = mesh2d_x
-   this%geomv  = mesh2d_v
-   this%transfx   => transformation_x
+   this%transfx => new_coordinate_transformation_2d_analytic( &
+       "analytic_polar_transformation", &
+       this%geomx, &
+       polar_x1, &
+       polar_x2, &
+       polar_jac11, &
+       polar_jac12, &
+       polar_jac21, &
+       polar_jac22 )
 
-   this%nc_x1 = mesh2d_x%num_cells1
-   this%nc_x2 = mesh2d_x%num_cells2
-   this%nc_x3 = mesh2d_v%num_cells1
-   this%nc_x4 = mesh2d_v%num_cells2
-
-   delta_x1 = mesh2d_x%delta_eta1
-   delta_x2 = mesh2d_x%delta_eta2
-   delta_x3 = mesh2d_v%delta_eta1
-   delta_x4 = mesh2d_v%delta_eta2
-   
-   eta1_min = mesh2d_x%eta1_min; eta1_max = mesh2d_x%eta1_max
-   eta2_min = mesh2d_x%eta2_min; eta2_max = mesh2d_x%eta2_max
-   eta3_min = mesh2d_v%eta1_min; eta3_max = mesh2d_v%eta1_max
-   eta4_min = mesh2d_v%eta2_min; eta4_max = mesh2d_v%eta2_max
-
+   this%nc_x1 = this%geomx%num_cells1
+   this%nc_x2 = this%geomx%num_cells2
+   this%nc_x3 = this%geomv%num_cells1
+   this%nc_x4 = this%geomv%num_cells2
 
    call compute_local_sizes_4d( this%layout_x, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-   SLL_ALLOCATE(this%f(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),error)
    SLL_ALLOCATE(this%proj_f_x3x4(loc_sz_x3,loc_sz_x4),error)
 
    call compute_local_sizes_4d( this%layout_v, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
 
-   SLL_ALLOCATE(this%ft(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),error)
    SLL_ALLOCATE(this%proj_f_x1x2(loc_sz_x1,loc_sz_x2),error)
     
-   this%v_to_x => &
-         NEW_REMAP_PLAN(this%layout_v,this%layout_x,this%ft)
-
-   this%x_to_v => &
-         NEW_REMAP_PLAN(this%layout_x,this%layout_v,this%f)
-
-
-
    this%layout_x1 => new_layout_2D( sll_world_collective )
 
    call initialize_layout_with_distributed_2D_array( this%nc_x1+1, &
@@ -207,27 +183,27 @@ contains
                 gj = global_indices(2)
                 gk = global_indices(3)
                 gl = global_indices(4)
-                eta1 = eta1_min + (gi-1)*delta_x1
-                eta2 = eta2_min + (gj-1)*delta_x2
-                eta3 =  eta1*sin(eta2) !this%mesh2d_v%eta1_min + (gk-1)*delta_x3
-                eta4 = -eta1*cos(eta2) !this%mesh2d_v%eta2_min + (gl-1)*delta_x4
+                eta1 = this%eta1_min + (gi-1)*this%delta_eta1
+                eta2 = this%eta2_min + (gj-1)*this%delta_eta2
+                eta3 =  eta1*sin(eta2) !this%mesh2d_v%eta1_min + (gk-1)*delta_eta3
+                eta4 = -eta1*cos(eta2) !this%mesh2d_v%eta2_min + (gl-1)*delta_eta4
                 inv_j  = this%transfx%inverse_jacobian_matrix(eta1,eta2)
                 alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
                 alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
 
                 eta1 = eta1+alpha1
                 ! This is hardwiring the periodic BC, please improve this...
-                if( eta1 < eta1_min ) then
-                   eta1 = eta1+eta1_max-eta1_min
-                else if( eta1 > eta1_max ) then
-                   eta1 = eta1+eta1_min-eta1_max
+                if( eta1 < this%eta1_min ) then
+                   eta1 = eta1+this%eta1_max-this%eta1_min
+                else if( eta1 > this%eta1_max ) then
+                   eta1 = eta1+this%eta1_min-this%eta1_max
                 end if
 
                 eta2 = eta2+alpha2
-                if( eta2 < eta2_min ) then
-                   eta2 = eta2+eta2_max-eta2_min
-                else if( eta2 > eta2_max ) then
-                   eta2 = eta2+eta2_min-eta2_max
+                if( eta2 < this%eta2_min ) then
+                   eta2 = eta2+this%eta2_max-this%eta2_min
+                else if( eta2 > this%eta2_max ) then
+                   eta2 = eta2+this%eta2_min-this%eta2_max
                 end if
                 
                 this%f(i,j,k,l) = this%interp_x1x2%interpolate_value(eta1,eta2)
@@ -252,15 +228,15 @@ contains
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
              global_indices = local_to_global_4D( this%layout_v, (/i,j,1,1/))
-             eta1   =  eta1_min + (global_indices(1)-1)*delta_x1
-             eta2   =  eta2_min + (global_indices(2)-1)*delta_x2
+             eta1   =  this%eta1_min + (global_indices(1)-1)*this%delta_eta1
+             eta2   =  this%eta2_min + (global_indices(2)-1)*this%delta_eta2
              inv_j  =  this%transfx%inverse_jacobian_matrix(eta1,eta2)
              jac_m  =  this%transfx%jacobian_matrix(eta1,eta2)
              ex     =  this%efields_x2(i,j,1)
              ey     =  this%efields_x2(i,j,2)
              alpha3 = -deltat*(inv_j(1,1)*ex + inv_j(2,1)*ey)
              this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp( &
-                                   this%nc_x3+1, this%ft(i,j,:,l), alpha3 )
+                                   loc_sz_x3, this%ft(i,j,:,l), alpha3 )
           end do
        end do
     end do
@@ -280,14 +256,14 @@ contains
        do i=1,loc_sz_x1
           do k=1,loc_sz_x3
              global_indices = local_to_global_4D( this%layout_v, (/i,j,1,1/))
-             eta1   =  eta1_min+(global_indices(1)-1)*delta_x1
-             eta2   =  eta2_min+(global_indices(2)-1)*delta_x2
+             eta1   =  this%eta1_min+(global_indices(1)-1)*this%delta_eta1
+             eta2   =  this%eta2_min+(global_indices(2)-1)*this%delta_eta2
              inv_j  =  this%transfx%inverse_jacobian_matrix(eta1,eta2)
              ex     =  this%efields_x2(i,j,1)
              ey     =  this%efields_x2(i,j,2)
              alpha4 = -deltat*(inv_j(1,2)*ex + inv_j(2,2)*ey)
              this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp( &
-                                   this%nc_x4+1, this%ft(i,j,k,:), alpha4 )
+                                   loc_sz_x4, this%ft(i,j,k,:), alpha4 )
           end do
        end do
     end do
@@ -325,8 +301,8 @@ contains
     end do
 
     call sll_gnuplot_2d_parallel( &
-        eta3_min+(global_indices(1)-1)*delta_x3, delta_x3, &
-        eta4_min+(global_indices(2)-1)*delta_x4, delta_x4, &
+        this%eta3_min+(global_indices(1)-1)*this%delta_eta3, this%delta_eta3, &
+        this%eta4_min+(global_indices(2)-1)*this%delta_eta4, this%delta_eta4, &
         this%proj_f_x3x4, "fvxvy", itime, error )
 
   end subroutine plot_ft
@@ -361,7 +337,7 @@ contains
           this%rho(i,j) = sum(this%ft(i,j,:,:))
        end do
     end do
-    this%rho = this%rho *delta_x3*delta_x4
+    this%rho = this%rho *this%delta_eta3*this%delta_eta4
 
   end subroutine compute_charge_density
 
@@ -394,7 +370,7 @@ contains
 
     sll_real64                        :: r_delta
     
-    r_delta = 1.0_f64/delta_x1
+    r_delta = 1.0_f64/this%delta_eta1
     
     i = 1
     this%efields_x1(i,:,1) = -r_delta*(- 1.5_f64*this%phi_x1(i  ,:) &
@@ -420,7 +396,7 @@ contains
     class(vlasov4d_polar) :: this
     sll_real64                        :: r_delta
   
-    r_delta = 1.0_f64/delta_x2
+    r_delta = 1.0_f64/this%delta_eta2
     
     j=1 
     this%efields_x2(:,j,2) = -r_delta*(- 1.5_f64*this%phi_x2(:,j)   &
