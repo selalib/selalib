@@ -73,7 +73,6 @@ use sll_utilities
     procedure, pass:: interpolate_array => interpolate_array_ad2d
     procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
     procedure, pass:: get_coefficients => get_coefficients_ad2d
-    procedure, pass:: read_data_from_file => read_data_ad2d
 #endif
   end type arb_deg_2d_interpolator
 
@@ -1069,67 +1068,4 @@ contains
   end function get_coefficients_ad2d
 #endif
   
-  subroutine read_data_ad2d( interpolator, filename )
-    intrinsic :: trim
-    class(arb_deg_2d_interpolator), intent(in)    :: interpolator
-    character(len=*), intent(in) :: filename
-    character(len=64) :: filename_local
-    sll_int32 :: IO_stat
-    sll_int32 :: input_file_id
-    sll_int32 :: ierr
-    sll_int32 :: spline_deg1
-    sll_int32 :: spline_deg2
-    sll_int32 :: num_pts1
-    sll_int32 :: num_pts2
-    sll_int32 :: is_rational
-    sll_real64, dimension(:), allocatable :: knots1
-    sll_real64, dimension(:), allocatable :: knots2
-    sll_real64, dimension(:), allocatable :: x1_coords
-    sll_real64, dimension(:), allocatable :: x2_coords
-    sll_real64, dimension(:), allocatable :: weights
-
-    namelist /degree/   spline_deg1, spline_deg2
-    namelist /shape/    num_pts1, num_pts2
-    namelist /rational/ is_rational
-    namelist /knots_1/   knots1
-    namelist /knots_2/   knots2
-    namelist /points/   x1_coords, x2_coords
-    namelist /pt_weights/  weights
-    character(len=80) :: line_buffer
-
-    if(len(filename) >= 64) then
-       print *, 'ERROR, read_coefficients_from_file=>read_read_coeffs_ad2d():',&
-            'filenames longer than 64 characters are not allowed.'
-       STOP
-    end if
-    filename_local = trim(filename)
-
-    ! get a new identifier for the file.
-    call sll_new_file_id( input_file_id, ierr )
-    if( ierr .ne. 0 ) then
-       print *, 'ERROR while trying to obtain an unique identifier for file ',&
-            filename, '. Called from read_coeffs_ad2d().'
-       stop
-    end if
-    open(unit=input_file_id, file=filename_local, STATUS="OLD", IOStat=IO_stat)
-    if( IO_Stat .ne. 0 ) then
-       print *, 'ERROR while opening file ',filename, &
-            '. Called from read_coeffs_ad2d().'
-       stop
-    end if
-    read( input_file_id, degree )
-    read( input_file_id, shape )
-    read( input_file_id, rational )
-    SLL_ALLOCATE(knots1(num_pts1+spline_deg1+1),ierr)
-    SLL_ALLOCATE(knots2(num_pts2+spline_deg2+1),ierr)
-    read( input_file_id, knots_1 )
-    read( input_file_id, knots_2 )
-    SLL_ALLOCATE(x1_coords(num_pts1*num_pts2),ierr)
-    SLL_ALLOCATE(x2_coords(num_pts1*num_pts2),ierr)
-    SLL_ALLOCATE(weights(num_pts1*num_pts2),ierr)
-    read( input_file_id, points )
-    read( input_file_id, pt_weights )
-    close( input_file_id )
-  end subroutine read_data_ad2d
-
 end module sll_arbitrary_degree_spline_interpolator_2d_module
