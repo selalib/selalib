@@ -50,6 +50,9 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_simulation_base
   use sll_fdistribu4D_DK
   use sll_logical_meshes
+  use polar_operators
+  use polar_advection
+
   implicit none
 
 !! choice of QNS solver
@@ -57,6 +60,18 @@ module sll_simulation_4d_drift_kinetic_polar_module
   sll_int32, parameter :: SLL_NO_QUASI_NEUTRAL = 0 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW = 1 
   sll_int32, parameter :: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW = 2 
+
+!! choice of time scheme solver
+!! should be else where
+  sll_int32, parameter :: SLL_TIME_LOOP_EULER = 0 
+  sll_int32, parameter :: SLL_TIME_LOOP_PREDICTOR_CORRECTOR = 1 
+
+!! choice of characteristics scheme
+!! should be else where
+  sll_int32, parameter :: SLL_CARAC_EULER = 0 
+  sll_int32, parameter :: SLL_CARAC_VERLET = 1 
+
+
 
   
   type, extends(sll_simulation_base_class) :: &
@@ -85,6 +100,8 @@ module sll_simulation_4d_drift_kinetic_polar_module
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_int32  :: num_iterations
+     sll_int32  :: time_case
+     sll_int32  :: carac_case
      !sll_int32  :: spline_degree_eta1, spline_degree_eta2
      !sll_int32  :: spline_degree_eta3, spline_degree_eta4
      !--> Equilibrium
@@ -134,14 +151,19 @@ module sll_simulation_4d_drift_kinetic_polar_module
      type(layout_3D), pointer :: layout3d_x1x2
      sll_real64, dimension(:,:,:), pointer :: rho3d_x1x2 
      sll_real64, dimension(:,:,:), pointer :: phi3d_x1x2 
+     sll_real64, dimension(:,:,:), pointer :: dx1_phi3d_x1x2 
+     sll_real64, dimension(:,:,:), pointer :: dx2_phi3d_x1x2 
      !----> sequential in x3
      type(layout_3D), pointer :: layout3d_x3
      sll_real64, dimension(:,:,:), pointer :: rho3d_x3
      sll_real64, dimension(:,:,:), pointer :: phi3d_x3
+     sll_real64, dimension(:,:,:), pointer :: dx3_phi3d_x3
      !----> definition of remap
      type(remap_plan_3D_real64), pointer ::remap_plan_x1x2_x3
      type(remap_plan_3D_real64), pointer ::remap_plan_x3_x1x2
 
+     !--> temporary structures that are used in CG_polar
+     !type(sll_SL_polar), pointer :: plan_sl_polar
 
 
    contains
@@ -191,7 +213,15 @@ contains
     !--> Algorithm
     sll_real64 :: dt
     sll_int32  :: number_iterations
+    sll_int32  :: carac_case
+    sll_int32  :: time_case    
     !sll_int32  :: spline_degree
+    
+    !--> temporary variables for using cg_polar structures
+    sll_int32  :: bc_cg(2)
+    sll_int32  :: grad_cg
+    sll_int32  :: carac_cg
+    
 
     namelist /mesh/ num_cells_x1, num_cells_x2, &
       num_cells_x3, num_cells_x4, &
@@ -200,7 +230,8 @@ contains
     namelist /equilibrium/ tau0, rho_peak, kappan, deltarn, &
       kappaTi, deltarTi, kappaTe, deltarTe, QN_case
     namelist /perturbation/ perturb_choice, mmode, nmode, eps_perturb
-    namelist /sim_params/ dt, number_iterations!, spline_degree
+    namelist /sim_params/ dt, number_iterations, carac_case, time_case
+      !, spline_degree
 
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -239,8 +270,33 @@ contains
         sim%QN_case = SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW 
       case default
         print *,'#bad choice for QN_case', QN_case
+        print *,'#in init_dk4d_polar'
         stop
     end select
+
+    select case (time_case)
+      case (0)
+        sim%time_case = SLL_TIME_LOOP_EULER
+      case (1)
+        sim%time_case = SLL_TIME_LOOP_PREDICTOR_CORRECTOR
+      case default
+        print *,'#bad choice for time_case', time_case
+        print *,'#in init_dk4d_polar'
+         stop
+    end select
+    select case (carac_case)
+      case (0)
+        sim%time_case = SLL_CARAC_EULER
+      case (1)
+        sim%time_case = SLL_CARAC_VERLET 
+      case default
+        print *,'#bad choice for carac_case', carac_case
+        print *,'#in init_dk4d_polar'
+         stop
+    end select
+
+
+
     
     !--> Pertubation
     sim%perturb_choice = perturb_choice
@@ -277,6 +333,7 @@ contains
       print *,'#deltarTi=',deltarTi
       print *,'#kappaTe=',kappaTe
       print *,'#deltarTe=',deltarTe
+      print *,'#QN_case=',QN_case
       print *,'##perturbation'
       print *,'#perturb_choice=',perturb_choice
       print *,'#mmode=',mmode
@@ -284,6 +341,8 @@ contains
       print *,'#eps_perturb=',eps_perturb
       print *,'#dt=',dt
       print *,'#number_iterations=',number_iterations
+      print *,'#time_case=',time_case
+      print *,'#carac_case=',carac_case
     endif
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -293,6 +352,39 @@ contains
     call allocate_fdistribu4d_DK(sim)
     call allocate_QN_DK( sim )
 
+    grad_cg = 3  !3: splines 1: finite diff order 2 
+    
+    select case (sim%carac_case)
+    
+      case (SLL_CARAC_EULER)
+        carac_cg = 1
+      case (SLL_CARAC_VERLET)
+        carac_cg = 4
+      case default
+        print *,'#bad value of sim%carac_case', sim%carac_case
+        print *,'#in init_dk4d_polar'  
+    end select
+    
+    bc_cg = (/SLL_DIRICHLET,SLL_DIRICHLET/)
+
+    
+!    sim%plan_sl_polar => &
+!      new_SL(sim%m_x1%eta_min,&
+!        sim%m_x1%eta_max,&
+!        sim%m_x1%delta_eta,&
+!        sim%m_x1%delta_eta,&
+!        sim%dt,&
+!        sim%m_x1%num_cells,&
+!        sim%m_x2%num_cells,&
+!        grad_cg,&
+!        carac_cg,&
+!        bc_cg)
+!  
+    !plan_poisson => new_plan_poisson_polar(geomx%dx,geomx%x0,geomx%nx-1,geomx%ny,bc,&
+    !  &dlog_density,inv_Te)
+
+    
+    
 
   end subroutine init_dk4d_polar
 
