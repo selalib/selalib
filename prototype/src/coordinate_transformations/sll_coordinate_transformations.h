@@ -1,5 +1,5 @@
-#ifndef _SELALIB_H_
-#define _SELALIB_H_
+#ifndef _SLL_COORDINATE_TRANSFORMATIONS
+#define _SLL_COORDINATE_TRANSFORMATIONS
 
 !**************************************************************
 !  Copyright INRIA
@@ -18,21 +18,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
-#include "sll_assert.h"
-#include "sll_memory.h"
-#include "sll_working_precision.h"
-#include "sll_utilities.h"
-#include "sll_constants.h"
-#include "sll_file_io.h"
-#include "sll_fft.h"
-#include "sll_interpolators.h"
-#include "sll_splines.h"
-#include "sll_maxwell_solvers.h"
-#include "sll_poisson_solvers.h"
-#include "sll_boundary_condition_descriptors.h"
-#include "sll_logical_meshes.h"
-#include "sll_coordinate_transformations.h"
-
+use sll_common_coordinate_transformations
+use sll_module_coordinate_transformations_2d
+use sll_coordinate_transformation_2d_base_module
 
 #endif
+

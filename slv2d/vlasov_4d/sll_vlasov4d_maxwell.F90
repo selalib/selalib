@@ -2,13 +2,12 @@ module sll_vlasov4d_maxwell
 
 #include "selalib-mpi.h"
 
- use geometry_module
  use sll_vlasov4d_base
 
  implicit none
  private
 
- public :: new, free
+ public :: initialize, free
  public :: advection_x1, advection_x2
  public :: advection_x3x4
 
@@ -25,9 +24,9 @@ module sll_vlasov4d_maxwell
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
  
- interface new
-   module procedure new_vlasov4d_maxwell
- end interface new
+ interface initialize
+   module procedure initialize_vlasov4d_maxwell
+ end interface initialize
 
  interface free
    module procedure free_vlasov4d_maxwell
@@ -35,31 +34,33 @@ module sll_vlasov4d_maxwell
 
 contains
 
- subroutine new_vlasov4d_maxwell(this,geomx,geomv,interp_x1,interp_x2,interp_x3x4,error)
+ subroutine initialize_vlasov4d_maxwell(this,        &
+                                        interp_x1,   &
+                                        interp_x2,   &
+                                        interp_x3x4, &
+                                        error )
 
   class(vlasov4d_maxwell),intent(inout)   :: this
-  type(geometry),intent(in)               :: geomx
-  type(geometry),intent(in)               :: geomv
   class(sll_interpolator_1d_base), target :: interp_x1
   class(sll_interpolator_1d_base), target :: interp_x2
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
-  call new_vlasov4d_base(this,geomx,geomv,error)
+  call initialize_vlasov4d_base(this)
 
   this%interp_x1   => interp_x1
   this%interp_x2   => interp_x2
   this%interp_x3x4 => interp_x3x4
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:geomx%nx,1:geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:geomx%nx,1:geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%jx(1:geomx%nx,1:geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%jy(1:geomx%nx,1:geomx%ny),error)
-  SLL_CLEAR_ALLOCATE(this%bz(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%rho(1:geomx%nx,1:geomx%ny),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
 
- end subroutine new_vlasov4d_maxwell
+ end subroutine initialize_vlasov4d_maxwell
 
  subroutine free_vlasov4d_maxwell(this)
 
@@ -80,8 +81,8 @@ contains
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
-  x3_min   = this%geomv%x0
-  delta_x3 = this%geomv%dx
+  x3_min   = this%geomv%eta1_min
+  delta_x3 = this%geomv%delta_eta1
 
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -109,8 +110,8 @@ contains
 
   SLL_ASSERT( .not. this%transposed)
 
-  x4_min   = this%geomv%y0
-  delta_x4 = this%geomv%dy
+  x4_min   = this%geomv%eta2_min
+  delta_x4 = this%geomv%delta_eta2
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
@@ -137,18 +138,18 @@ contains
 
   class(vlasov4d_maxwell),intent(inout) :: this
   sll_real64, intent(in) :: dt
-  sll_real64, dimension(this%geomv%nx,this%geomv%ny) :: alpha_x
-  sll_real64, dimension(this%geomv%nx,this%geomv%ny) :: alpha_y
+  sll_real64, dimension(this%geomv%num_cells1,this%geomv%num_cells2) :: alpha_x
+  sll_real64, dimension(this%geomv%num_cells1,this%geomv%num_cells2) :: alpha_y
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
 
-  x3_min   = this%geomv%x0
-  x3_max   = this%geomv%x1
-  delta_x3 = this%geomv%dx
-  x4_min   = this%geomv%y0 
-  x4_max   = this%geomv%y1
-  delta_x4 = this%geomv%dy
+  x3_min   = this%geomv%eta1_min
+  x3_max   = this%geomv%eta1_max
+  delta_x3 = this%geomv%delta_eta1
+  x4_min   = this%geomv%eta2_min 
+  x4_max   = this%geomv%eta2_max
+  delta_x4 = this%geomv%delta_eta2
 
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v, &
