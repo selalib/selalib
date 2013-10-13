@@ -70,6 +70,13 @@ if (.not. dir_e) then
    call system("mkdir -p "//cproc)
 end if
 
+SLL_ASSERT(size(array_x,1) == size(array_y,1))
+SLL_ASSERT(size(array_x,2) == size(array_y,2))
+SLL_ASSERT(size(array,  1) == size(array_x,1))
+SLL_ASSERT(size(array,  2) == size(array_x,2))
+SLL_ASSERT(size(array,  1) == size(array_y,1))
+SLL_ASSERT(size(array,  2) == size(array_y,2))
+
 call sll_new_file_id(file_id, error)
 call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
 do i = 1, size(array,1)
