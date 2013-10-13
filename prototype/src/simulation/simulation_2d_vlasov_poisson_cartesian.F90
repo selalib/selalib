@@ -658,8 +658,9 @@ contains
     endif
     SLL_DEALLOCATE(f_visu,ierr)
     
-    call new(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)    
-    
+    !call new(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)    
+    call initialize(poisson_1d,sim%mesh2d%eta1_min,sim%mesh2d%eta1_max,np_x1-1,ierr)
+
     !computation of electric field
     rho_loc = 0._f64
     do i=1,np_x1

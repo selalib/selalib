@@ -57,7 +57,7 @@ program VP1d_deltaf
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
-  sll_int32  :: freqdiag
+  sll_int32  :: freqdiag = 1
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
   sll_real64 :: l1norm, l2norm
   sll_real64 :: equilibrium_contrib
@@ -353,7 +353,7 @@ program VP1d_deltaf
   close(12)
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(f, DIM = 2)
   else
