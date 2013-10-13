@@ -79,6 +79,7 @@ TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
 #IF(CMAKE_BUILD_TYPE MATCHES "Release")
 #OPENMP directives are activated only for release build
 
+#OPENMP directives are activated only for release build
 IF(CMAKE_BUILD_TYPE MATCHES "Release")
 
    ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)

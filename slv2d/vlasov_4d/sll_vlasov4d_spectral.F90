@@ -5,6 +5,7 @@ module sll_vlasov4d_spectral
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_fftw.h"
+#include "sll_logical_meshes.h"
 
 use sll_module_interpolators_1d_base
 use sll_module_interpolators_2d_base
@@ -13,40 +14,40 @@ use sll_remapper
 use sll_constants
 
  use, intrinsic :: iso_c_binding
- use used_precision
- use geometry_module
- use diagnostiques_module
  use sll_vlasov4d_base
  use fftw3
 
  implicit none
  private
- public :: new, free, densite_courantx, densite_couranty
+ public :: initialize, free, densite_courantx, densite_couranty
  public :: advection_x1, advection_x2, advection_x3x4
 
  type, public, extends(vlasov4d_base) :: vlasov4d_spectral
 
-   sll_real64, dimension(:,:), pointer               :: exn
-   sll_real64, dimension(:,:), pointer               :: eyn
-   sll_real64, dimension(:,:), pointer               :: jx1,jx2
-   sll_real64, dimension(:,:), pointer               :: jy1,jy2
-   sll_real64, dimension(:),   allocatable           :: d_dx
-   sll_real64, dimension(:),   allocatable           :: d_dy
-   sll_real64, dimension(:),   allocatable           :: kx
-   sll_real64, dimension(:),   allocatable           :: ky
-   fftw_plan                                         :: fwx, fwy
-   fftw_plan                                         :: bwx, bwy
-   fftw_plan                                         :: p_tmp_x, p_tmp_y
-   fftw_comp, dimension(:),  pointer                 :: tmp_x, tmp_y
-   class(sll_interpolator_2d_base), pointer          :: interp_x3x4
-   type(layout_2D), pointer                          :: layout_x1
-   type(layout_2D), pointer                          :: layout_x2
-   type(remap_plan_2D_real64), pointer               :: x1_to_x2 
-   type(remap_plan_2D_real64), pointer               :: x2_to_x1
+   sll_real64, dimension(:,:), pointer      :: exn
+   sll_real64, dimension(:,:), pointer      :: eyn
+   sll_real64, dimension(:,:), pointer      :: jx1,jx2
+   sll_real64, dimension(:,:), pointer      :: jy1,jy2
+   sll_real64, dimension(:),   allocatable  :: d_dx
+   sll_real64, dimension(:),   allocatable  :: d_dy
+   sll_real64, dimension(:),   allocatable  :: kx
+   sll_real64, dimension(:),   allocatable  :: ky
+   fftw_plan                                :: fwx
+   fftw_plan                                :: fwy
+   fftw_plan                                :: bwx
+   fftw_plan                                :: bwy
+   fftw_plan                                :: p_tmp_x
+   fftw_plan                                :: p_tmp_y
+   fftw_comp, dimension(:),  pointer        :: tmp_x
+   fftw_comp, dimension(:),  pointer        :: tmp_y
+   class(sll_interpolator_2d_base), pointer :: interp_x3x4
+   type(layout_2D), pointer                 :: layout_x1
+   type(layout_2D), pointer                 :: layout_x2
+   type(remap_plan_2D_real64), pointer      :: x1_to_x2 
+   type(remap_plan_2D_real64), pointer      :: x2_to_x1
 
    sll_real64, dimension(:,:,:,:),  pointer :: f_star
    sll_real64, dimension(:,:,:,:),  pointer :: ft_star
-
 
  end type vlasov4d_spectral
 
@@ -55,38 +56,30 @@ use sll_constants
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
 
- interface new
-    module procedure new_vlasov4d_spectral
- end interface new
+ interface initialize
+    module procedure initialize_vlasov4d_spectral
+ end interface initialize
  interface free
     module procedure free_vlasov4d_spectral
  end interface free
 
 contains
 
- subroutine new_vlasov4d_spectral(this,geomx,geomv,interp_x3x4,error)
+ subroutine initialize_vlasov4d_spectral(this,interp_x3x4,error)
 
   use sll_hdf5_io
 
-  class(vlasov4d_spectral),intent(inout)   :: this
-  type(geometry),intent(in)               :: geomx
-  type(geometry),intent(in)               :: geomv
+  class(vlasov4d_spectral),intent(inout)  :: this
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
-  sll_int32         :: nc_x1, nc_x2, nc_x3, nc_x4
-  sll_real64        :: dx, dy, kx0, ky0
+  sll_real64        :: kx0, ky0
   fftw_int          :: sz_tmp_x, sz_tmp_y
   sll_int32         :: psize, prank, comm
 
   this%interp_x3x4 => interp_x3x4
 
-  call new_vlasov4d_base(this,geomx,geomv,error)
-
-  nc_x1 = this%geomx%nx
-  nc_x2 = this%geomx%ny
-  nc_x3 = this%geomv%nx
-  nc_x4 = this%geomv%ny
+  call initialize_vlasov4d_base(this)
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -94,19 +87,19 @@ contains
 
   this%layout_x1 => new_layout_2D( sll_world_collective )        
   call initialize_layout_with_distributed_2D_array( &
-             geomx%nx,geomx%ny,1,int(psize,4),this%layout_x1)
+             this%nc_eta1,this%nc_eta2,1,int(psize,4),this%layout_x1)
 
 !  call compute_local_sizes_2d(this%layout_x1,loc_sz_i,loc_sz_j)        
 !  SLL_CLEAR_ALLOCATE(this%jx1(1:loc_sz_i,1:loc_sz_j),error)
 
   this%layout_x2 => new_layout_2D( sll_world_collective )
   call initialize_layout_with_distributed_2D_array( &
-              geomx%nx,geomx%ny,int(psize,4),1,this%layout_x2)
+              this%nc_eta1,this%nc_eta2,int(psize,4),1,this%layout_x2)
 
 !  call compute_local_sizes_2d(this%layout_x2,loc_sz_i,loc_sz_j)        
 !  SLL_CLEAR_ALLOCATE(this%jx2(1:loc_sz_i,1:loc_sz_j),ierr)
 
-!  this%x1_to_x2 => new_remap_plan( this%layout_x1, this%layout_x2, this%jx1)     
+!  this%eta1_max_to_x2 => new_remap_plan( this%layout_x1, this%layout_x2, this%jx1)     
 !  this%x2_to_x1 => new_remap_plan( this%layout_x2, this%layout_x1, this%jx2)     
   
   if(prank == MPI_MASTER) then
@@ -118,46 +111,43 @@ contains
 
   end if
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%exn(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%eyn(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%exn(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%eyn(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%bz(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%rho(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx1(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jx2(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy1(1:nc_x1,1:nc_x2),error)
-  SLL_CLEAR_ALLOCATE(this%jy2(1:nc_x1,1:nc_x2),error)
+  SLL_CLEAR_ALLOCATE(this%jx1(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx2(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy1(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy2(1:this%nc_eta1,1:this%nc_eta2),error)
   
-  FFTW_ALLOCATE(this%tmp_x,nc_x1/2+1,sz_tmp_x,this%p_tmp_x)
-  FFTW_ALLOCATE(this%tmp_y,nc_x2/2+1,sz_tmp_y,this%p_tmp_y)
-  SLL_CLEAR_ALLOCATE(this%d_dx(1:nc_x1),error)
-  SLL_CLEAR_ALLOCATE(this%d_dy(1:nc_x2),error)
+  FFTW_ALLOCATE(this%tmp_x,this%nc_eta1/2+1,sz_tmp_x,this%p_tmp_x)
+  FFTW_ALLOCATE(this%tmp_y,this%nc_eta2/2+1,sz_tmp_y,this%p_tmp_y)
+  SLL_CLEAR_ALLOCATE(this%d_dx(1:this%nc_eta1),error)
+  SLL_CLEAR_ALLOCATE(this%d_dy(1:this%nc_eta2),error)
 
-  NEW_FFTW_PLAN_R2C_1D(this%fwx,nc_x1,this%d_dx,this%tmp_x) 
-  NEW_FFTW_PLAN_C2R_1D(this%bwx,nc_x1,this%tmp_x,this%d_dx) 
-  NEW_FFTW_PLAN_R2C_1D(this%fwy,nc_x2,this%d_dy,this%tmp_y) 
-  NEW_FFTW_PLAN_C2R_1D(this%bwy,nc_x2,this%tmp_y,this%d_dy) 
+  NEW_FFTW_PLAN_R2C_1D(this%fwx,this%nc_eta1,this%d_dx,this%tmp_x) 
+  NEW_FFTW_PLAN_C2R_1D(this%bwx,this%nc_eta1,this%tmp_x,this%d_dx) 
+  NEW_FFTW_PLAN_R2C_1D(this%fwy,this%nc_eta2,this%d_dy,this%tmp_y) 
+  NEW_FFTW_PLAN_C2R_1D(this%bwy,this%nc_eta2,this%tmp_y,this%d_dy) 
 
-  SLL_CLEAR_ALLOCATE(this%kx(1:nc_x1/2+1), error)
-  SLL_CLEAR_ALLOCATE(this%ky(1:nc_x2/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
    
-  dx = geomx%dx
-  dy = geomx%dy
+  kx0 = 2._f64*sll_pi/(this%nc_eta1*this%delta_eta1)
+  ky0 = 2._f64*sll_pi/(this%nc_eta2*this%delta_eta2)
 
-  kx0 = 2._f64*sll_pi/(nc_x1*dx)
-  ky0 = 2._f64*sll_pi/(nc_x2*dy)
-
-  do i=1,nc_x1/2+1
+  do i=1,this%nc_eta1/2+1
      this%kx(i) = (i-1)*kx0
   end do
   this%kx(1) = 1.0_f64
-  do j=1,nc_x2/2+1
+  do j=1,this%nc_eta2/2+1
      this%ky(j) = (j-1)*ky0
   end do
   this%ky(1) = 1.0_f64
@@ -170,7 +160,7 @@ contains
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(this%ft_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
- end subroutine new_vlasov4d_spectral
+ end subroutine initialize_vlasov4d_spectral
 
  subroutine free_vlasov4d_spectral(this)
 
@@ -203,8 +193,8 @@ contains
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
-  x3_min   = this%geomv%x0
-  delta_x3 = this%geomv%dx
+  x3_min   = this%geomv%eta1_min
+  delta_x3 = this%geomv%delta_eta1
 
   call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
@@ -259,8 +249,8 @@ contains
 
   SLL_ASSERT( .not. this%transposed)
 
-  x4_min   = this%geomv%y0
-  delta_x4 = this%geomv%dy
+  x4_min   = this%geomv%eta2_min
+  delta_x4 = this%geomv%delta_eta2
   call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
   do l=1,loc_sz_l
@@ -323,18 +313,18 @@ contains
 
   class(vlasov4d_spectral),intent(inout) :: this
   sll_real64, intent(in) :: dt
-  sll_real64, dimension(this%geomv%nx,this%geomv%ny) :: alpha_x
-  sll_real64, dimension(this%geomv%nx,this%geomv%ny) :: alpha_y
+  sll_real64, dimension(this%geomv%num_cells1,this%geomv%num_cells2) :: alpha_x
+  sll_real64, dimension(this%geomv%num_cells1,this%geomv%num_cells2) :: alpha_y
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
 
-  x3_min   = this%geomv%x0
-  x3_max   = this%geomv%x1
-  delta_x3 = this%geomv%dx
-  x4_min   = this%geomv%y0 
-  x4_max   = this%geomv%y1
-  delta_x4 = this%geomv%dy
+  x3_min   = this%geomv%eta1_min
+  x3_max   = this%geomv%eta1_max
+  delta_x3 = this%geomv%delta_eta1
+  x4_min   = this%geomv%eta2_min 
+  x4_max   = this%geomv%eta2_max
+  delta_x4 = this%geomv%delta_eta2
 
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -381,7 +371,7 @@ contains
    sll_int32  :: comm
    sll_real64 :: dxy
    sll_real64 :: vx 
-   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjx
+   sll_real64, dimension(this%geomx%num_cells1,this%geomx%num_cells2) :: locjx
 
    if( present(star)) then
       df => this%ft_star
@@ -389,7 +379,7 @@ contains
       df => this%ft
    end if
 
-   dxy = this%geomv%dx*this%geomv%dy
+   dxy = this%geomv%delta_eta1*this%geomv%delta_eta2
    SLL_ASSERT(this%transposed)
    call compute_local_sizes_4d(this%layout_v, &
                                loc_sz_i,      &
@@ -407,7 +397,7 @@ contains
       gj = global_indices(2)
       gk = global_indices(3)
       gl = global_indices(4)
-      vx = this%geomv%x0+(gk-1)*this%geomv%dx
+      vx = this%geomv%eta1_min+(gk-1)*this%geomv%delta_eta1
       locjx(gi,gj) = locjx(gi,gj) + dxy*df(i,j,k,l) * vx
    end do
    end do
@@ -416,7 +406,7 @@ contains
 
    this%jx1 = 0.
    comm = sll_world_collective%comm
-   c    = this%geomx%nx*this%geomx%ny
+   c    = this%geomx%num_cells1*this%geomx%num_cells2
 
    call mpi_barrier(comm,error)
    call mpi_allreduce(locjx,this%jx1,c,MPI_REAL8,MPI_SUM,comm,error)
@@ -433,7 +423,7 @@ contains
    sll_int32  :: c
    sll_int32  :: comm
    sll_real64 :: dxy
-   sll_real64, dimension(this%geomx%nx,this%geomx%ny) :: locjy
+   sll_real64, dimension(this%geomx%num_cells1,this%geomx%num_cells2) :: locjy
    sll_real64, dimension(:,:,:,:), pointer :: df
 
    if( present(star)) then
@@ -443,7 +433,7 @@ contains
    end if
 
 
-   dxy = this%geomv%dx*this%geomv%dy
+   dxy = this%geomv%delta_eta1*this%geomv%delta_eta2
    SLL_ASSERT(this%transposed)
    call compute_local_sizes_4d(this%layout_v, &
                                loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -458,7 +448,7 @@ contains
       gj = global_indices(2)
       gk = global_indices(3)
       gl = global_indices(4)
-      vy = this%geomv%y0+(gl-1)*this%geomv%dy
+      vy = this%geomv%eta2_min+(gl-1)*this%geomv%delta_eta2
       locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) * vy
    end do
    end do
@@ -468,7 +458,7 @@ contains
    this%jy1(:,:) = 0.
    comm   = sll_world_collective%comm
    call mpi_barrier(comm,error)
-   c=this%geomx%nx*this%geomx%ny
+   c=this%geomx%num_cells1*this%geomx%num_cells2
    call mpi_allreduce(locjy,this%jy1,c, MPI_REAL8,MPI_SUM,comm,error)
 
  end subroutine densite_couranty

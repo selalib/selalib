@@ -379,6 +379,7 @@ contains  ! ****************************************************************
        interpolator%interpolation_points(i) = &
             interpolator%interpolation_points(i-1) + delta
     end do
+    interpolator%interpolation_points(num_points) = xmax
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
        interpolator%spline => new_spline_1D( &
