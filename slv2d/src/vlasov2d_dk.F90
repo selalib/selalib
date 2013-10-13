@@ -4,7 +4,7 @@ module vlasov2d_dk_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-#include "sll_poisson_solvers.h"
+!#include "sll_poisson_solvers.h"
  use used_precision
  use splinenn_class
  use splinepp_class
