@@ -33,4 +33,5 @@
 &sim_params
   dt                = 8.
   number_iterations = 100
+  time_case = 1
 /
