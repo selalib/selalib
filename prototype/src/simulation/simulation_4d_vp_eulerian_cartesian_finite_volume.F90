@@ -345,8 +345,8 @@ subroutine run_vp_cart(sim)
 
  ! potential layout
  call initialize_layout_with_distributed_2D_array( &
-      sim%nc_x1, &
-      sim%nc_x2, &
+      sim%nc_x1+1, &
+      sim%nc_x2+1, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%phi_seq_x1)
@@ -617,8 +617,6 @@ print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
     enddo
     ! solve the poisson equation
     !maillage logical
-write(*,*) 'loc_sz_x1',loc_sz_x1
- write(*,*) 'loc_sz_x2',loc_sz_x2
     call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1(:,1:))
