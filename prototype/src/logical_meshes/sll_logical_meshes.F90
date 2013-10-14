@@ -90,6 +90,11 @@ function new_logical_mesh_1d( &
     TEST_PRESENCE_AND_ASSIGN_VAL( m, eta1_min, eta1_min, 0.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, eta1_max, eta1_max, 1.0_f64 )
     m%delta_eta1   = (m%eta1_max - m%eta1_min)/real(num_cells1,f64)
+
+    if ( m%eta1_max <= m%eta1_min) then
+       print*,'Problem to construct the mesh 1d '
+       print*,'because eta1_max <= eta1_min'
+    end if
   end function new_logical_mesh_1d
 
   function new_logical_mesh_2d( &
@@ -120,6 +125,15 @@ function new_logical_mesh_1d( &
     TEST_PRESENCE_AND_ASSIGN_VAL( m, eta2_max, eta2_max, 1.0_f64 )
     m%delta_eta1   = (m%eta1_max - m%eta1_min)/real(num_cells1,f64)
     m%delta_eta2   = (m%eta2_max - m%eta2_min)/real(num_cells2,f64)
+
+    if ( m%eta1_max <= m%eta1_min) then
+       print*,'Problem to construct the mesh 2d '
+       print*,'because eta1_max <= eta1_min'
+    end if
+    if ( m%eta2_max <= m%eta2_min) then
+       print*,'Problem to construct the mesh 2d '
+       print*,'because eta2_max <= eta2_min'
+    end if
   end function new_logical_mesh_2d
 
 
@@ -162,6 +176,20 @@ function new_logical_mesh_1d( &
     m%delta_eta1   = (m%eta1_max - m%eta1_min)/real(num_cells1,f64)
     m%delta_eta2   = (m%eta2_max - m%eta2_min)/real(num_cells2,f64)
     m%delta_eta3   = (m%eta3_max - m%eta3_min)/real(num_cells3,f64)
+
+    if ( m%eta1_max <= m%eta1_min) then
+       print*,'Problem to construct the mesh 3d '
+       print*,'because eta1_max <= eta1_min'
+    end if
+    if ( m%eta2_max <= m%eta2_min) then
+       print*,'Problem to construct the mesh 3d '
+       print*,'because eta2_max <= eta2_min'
+    end if
+    if ( m%eta3_max <= m%eta3_min) then
+       print*,'Problem to construct the mesh 3d '
+       print*,'because eta3_max <= eta3_min'
+    end if
+
   end function new_logical_mesh_3d
   
   function new_logical_mesh_4d( &
@@ -210,8 +238,26 @@ function new_logical_mesh_1d( &
     m%delta_eta2   = (m%eta2_max - m%eta2_min)/real(num_cells2,f64)
     m%delta_eta3   = (m%eta3_max - m%eta3_min)/real(num_cells3,f64)
     m%delta_eta4   = (m%eta4_max - m%eta4_min)/real(num_cells4,f64)
-  end function new_logical_mesh_4d
 
+
+    if ( m%eta1_max <= m%eta1_min) then
+       print*,'Problem to construct the mesh 4d '
+       print*,'because eta1_max <= eta1_min'
+    end if
+    if ( m%eta2_max <= m%eta2_min) then
+       print*,'Problem to construct the mesh 4d '
+       print*,'because eta2_max <= eta2_min'
+    end if
+    if ( m%eta3_max <= m%eta3_min) then
+       print*,'Problem to construct the mesh 4d '
+       print*,'because eta3_max <= eta3_min'
+    end if
+    if ( m%eta4_max <= m%eta4_min) then
+       print*,'Problem to construct the mesh 4d '
+       print*,'because eta4_max <= eta4_min'
+    end if
+  end function new_logical_mesh_4d
+  
 
    subroutine delete_logical_mesh_1d( mesh )
     type(sll_logical_mesh_1d), pointer :: mesh
