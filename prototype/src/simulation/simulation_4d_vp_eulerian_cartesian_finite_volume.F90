@@ -50,7 +50,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   ! number of local nodes in each element
   sll_int32 :: np_loc
-  sll_real64 :: eps=0.0_f64 !0 center flux, if not decentered flux
+  sll_real64 :: eps=0._f64 !0 center flux, if not decentered flux
 
   ! for initializers
   type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
@@ -835,7 +835,7 @@ print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
 !!$ end do
 !!!!!!!!!!!!!!!!!!!!!!!!!!
 
- if(sim%test==0)then
+ if((sim%test==0) .or. (sim%test==6))then
     allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
 !!$    x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
 !!$         sim%mesh2dx%delta_eta1
@@ -954,26 +954,38 @@ print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
 !!$         "plotphi2d", &
 !!$         0, &
 !!$         ierr)
- if(sim%test==0)then
-    call normL2(sim,f_x_exact,plotf2d_c1,erreurL2)
- end if
- if(sim%test==2)then
-    call normL2(sim,f_vx_exact,plotf2d_c1,erreurL2) 
- end if
-  write(*,*) 'erreurL2 Nhung=',erreurL2
-  call sll_new_file_id(file_id_1,ierr)
-  inquire(file='log(err)', exist=exist)
-  if (exist) then
-     open(file_id_1,file='log(err)',status='old',position='append', action='write')
-  else
-     open(file_id_1, file='log(err)', status="new", action="write")
-  end if
- if(sim%test==0)then
-    write(file_id_1,*) -log(sim%mesh2dx%delta_eta1),log(erreurL2)
- elseif(sim%test==2)then
-    write(file_id_1,*) -log(sim%mesh2dv%delta_eta1/sim%degree),log(erreurL2)
- end if
-  close(file_id_1)
+
+!!$!when compute the normL2 of err with point center
+!!$ if(sim%test==0)then
+!!$    call normL2(sim,f_x_exact,plotf2d_c1,erreurL2)
+!!$ end if
+!!$ if(sim%test==2)then
+!!$    call normL2(sim,f_vx_exact,plotf2d_c1,erreurL2) 
+!!$ end if
+!!$ if(sim%test==3)then
+!!$    call normL2(sim,f_vy_exact,plotf2d_c2,erreurL2) 
+!!$ end if
+!!$ if(sim%test==4)then
+!!$    call normL2(sim,f_y_exact,plotf2d_c2,erreurL2) 
+!!$ end if
+!!$  write(*,*) 'erreurL2 Nhung=',erreurL2
+!!$  call sll_new_file_id(file_id_1,ierr)
+!!$  inquire(file='log(err)', exist=exist)
+!!$  if (exist) then
+!!$     open(file_id_1,file='log(err)',status='old',position='append', action='write')
+!!$  else
+!!$     open(file_id_1, file='log(err)', status="new", action="write")
+!!$  end if
+!!$ if(sim%test==0)then
+!!$    write(file_id_1,*) -log(sim%mesh2dx%delta_eta1),log(erreurL2)
+!!$ elseif(sim%test==2)then
+!!$    write(file_id_1,*) -log(sim%mesh2dv%delta_eta1/sim%degree),log(erreurL2)
+!!$ elseif(sim%test==3)then
+!!$    write(file_id_2,*) -log(sim%mesh2dv%delta_eta2/sim%degree), log(erreurL2)
+!!$ elseif(sim%test==4)then
+!!$    write(file_id_2,*) -log(sim%mesh2dx%delta_eta2), log(erreurL2)
+!!$ end if
+!!$  close(file_id_1)
   sim%params(11)=t
   call fn_L2_norm(sim,erreurL2_G)
   write(*,*) 'erreurL2=',erreurL2_G
@@ -989,6 +1001,13 @@ print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
     write(file_id_2,*) -log(sim%mesh2dx%delta_eta1), log(erreurL2_G)
  elseif(sim%test==2)then
     write(file_id_2,*) -log(sim%mesh2dv%delta_eta1/sim%degree), log(erreurL2_G)
+ elseif(sim%test==3)then
+    write(file_id_2,*) -log(sim%mesh2dv%delta_eta2/sim%degree), log(erreurL2_G)
+ elseif(sim%test==4)then
+    write(file_id_2,*) -log(sim%mesh2dx%delta_eta2), log(erreurL2_G)
+ elseif(sim%test==6)then
+    write(file_id_2,*) -log(sim%mesh2dx%delta_eta1*sim%mesh2dv%delta_eta1/ &
+         sim%degree), log(erreurL2_G)
  end if
 
 
@@ -1008,10 +1027,12 @@ print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
     write(*,*) 'the y-transport test case'
  else if (sim%test .eq. 4) then
     write(*,*) 'landau damping 2d test case'
+ else if (sim%test .eq. 6) then
+    write(*,*) 'the xvx-transport test case'
  endif
 
  if (abs(sim%eps).gt.1.e-10_f64 ) then
-    write(*,*) 'the decentered flux'
+    write(*,*) 'the decentered flux with esp = ', sim%eps
  else 
     write (*,*) 'the centered flux'
  endif
@@ -1321,15 +1342,9 @@ subroutine velocity_mesh_connectivity(sim)
                          bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                               bv1loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
                               dphi2(1)*phi1*det*weight(iploc+1)*weight(jploc+1) 
-!!$                         bv1loc((jb2-1)*(sim%degree+1)+ib2,(jb1-1)*(sim%degree+1)+ib1)=&
-!!$                               bv1loc((jb2-1)*(sim%degree+1)+ib2,(jb1-1)*(sim%degree+1)+ib1)+&
-!!$                              dphi1(1)*phi2*det*weight(iploc+1)*weight(jploc+1)
                          bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                               bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                              dphi2(2)*phi1*det*weight(iploc+1)*weight(jploc+1)  
-!!$                         bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
-!!$                              bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-!!$                              dphi1(2)*phi2*det*weight(iploc+1)*weight(jploc+1)  
+                              dphi2(2)*phi1*det*weight(iploc+1)*weight(jploc+1)    
                       end do
                    end do
                    ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
@@ -1938,7 +1953,7 @@ subroutine sourcenum(sim,Ex,Ey,w,source)
 !!$    SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
  sim%test=sim%params(8)
  !write(*,*) 'test =', sim%test
- if(sim%test==2) then
+ if((sim%test==2) .or. (sim%test==6)) then
     Ex=1.0_f64
     Ey=0.0_f64
  endif
