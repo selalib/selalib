@@ -156,7 +156,7 @@ do i = 1, size(array,1)
    x = x_min+(i-1)*delta_x
    do j = 1, size(array,2)
       y = y_min + (j-1)*delta_y
-      write(file_id,*) x, y, sngl(array(i,j))
+      write(file_id,*) x, y, array(i,j)
    end do
    write(file_id,*)
 enddo
@@ -187,6 +187,10 @@ if (iproc == MPI_MASTER) then
 end if
 
 end subroutine sll_gnuplot_rect_2d_parallel
+
+
+
+
 
 ! it would be nice to have a function like the one commented below, 
 ! (unfinished) which would work with layouts. But this means that the level

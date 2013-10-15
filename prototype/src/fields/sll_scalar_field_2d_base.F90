@@ -24,6 +24,9 @@ module sll_module_scalar_field_2d_base
           first_deriv_eta1_value_at_indices
      procedure(first_derivative_eta2_evaluation_integer), deferred, pass :: &
           first_deriv_eta2_value_at_indices
+     procedure(set_field_data_subroutine), deferred, pass :: set_field_data
+     procedure(field_2d_message_pass), deferred, pass :: &
+          update_interpolation_coefficients
      procedure(field_2d_file_output), deferred, pass :: write_to_file
      procedure(field_2d_subroutine), deferred, pass :: delete
      ! here we can continue with derivatives or whatever else that might
@@ -44,6 +47,23 @@ module sll_module_scalar_field_2d_base
        type(sll_logical_mesh_2d), pointer :: res
      end function function_get_mesh
   end interface
+
+  abstract interface
+     subroutine set_field_data_subroutine( field, values )
+       use sll_working_precision
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(inout) :: field
+       sll_real64, dimension(:,:), intent(in) :: values
+     end subroutine set_field_data_subroutine
+  end interface
+
+  abstract interface
+     subroutine field_2d_message_pass( field )
+       import sll_scalar_field_2d_base
+       class(sll_scalar_field_2d_base), intent(inout) :: field
+     end subroutine field_2d_message_pass
+  end interface
+
 
   abstract interface
      function function_get_transformation(field) result(res)
