@@ -45,10 +45,10 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 4
-#define NCELL2 8
-#define NCELL3 4
-#define NCELL4 8
+#define NCELL1 16
+#define NCELL2 4
+#define NCELL3 16
+#define NCELL4 4
 #define ETA1MIN -1.0_f64
 #define ETA1MAX 1.0_f64
 !!$#define ETA1MIN -6.0_f64
@@ -62,17 +62,18 @@ program vp_cartesian_4d
 #define ETA3MIN -1.0_f64
 #define ETA3MAX 1.0_f64
 !!$#define ETA4MIN -1.0_f64
-#define ETA4MIN 0.0_f64
+#define ETA4MIN -1.0_f64
 #define ETA4MAX 1.0_f64
 #define TINI 0.0_f64
-#define TMAX 3.e-1_f64
-!#define TMAX 0.0001_f64
-#define CFL 0.05_f64
+#define TMAX 2.e-1_f64
+!#define TMAX 0._f64
+#define CFL 0.005_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
-#define TEST 3
+#define TEST 6
 ! 0: x transport 1: landau damping 1d  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
+!6: transport x-vx 7: transport y-vy 8: transport 2d
 
 
 #define DEG  2 ! polynomial degree
@@ -168,6 +169,21 @@ program vp_cartesian_4d
             sll_landau_2d_initializer_v1v2x1x2, &
             landau_params, &
             TMAX )
+    else if (TEST==6) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_test_xvx_transport_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
+    else if (TEST==7) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_test_yvy_transport_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
+
 
     end if
 
