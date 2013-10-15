@@ -116,6 +116,85 @@ MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
 MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
 
+SET(SLV2D_CSL2D_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              csl2dpp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_csl2d.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_csl2d STATIC ${SLV2D_CSL2D_SRC})
+
+ADD_DEPENDENCIES(slv2d_csl2d selalib-mpi dfftpack)
+
+
+SET(SLV2D_NON_UNIF_V_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              interp_non_unif_pp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_non_unif_v.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_non_unif_v STATIC ${SLV2D_NON_UNIF_V_SRC})
+
+ADD_DEPENDENCIES(slv2d_non_unif_v selalib-mpi dfftpack)
+
+
+SET(SLV2D_DK_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_dk.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_dk STATIC ${SLV2D_DK_SRC})
+
+ADD_DEPENDENCIES(slv2d_dk selalib-mpi dfftpack)
+
+
+
+
+
+MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
+MESSAGE(STATUS "SLV2D:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
+MESSAGE(STATUS "SLV2D:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
+MESSAGE(STATUS "SLV2D:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
+
 SET(LIBS selalib 
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
@@ -124,6 +203,18 @@ SET(LIBS selalib
 
 ADD_EXECUTABLE(vp4d_transpose vp4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vp4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
+
+ADD_EXECUTABLE(vp4d_csl2d vp4d_csl2d.F90)
+TARGET_LINK_LIBRARIES(vp4d_csl2d slv2d_csl2d ${LIBS} ${LAPACK_LIBRARIES})
+
+
+ADD_EXECUTABLE(vp4d_dk vp4d_dk.F90)
+TARGET_LINK_LIBRARIES(vp4d_dk slv2d_dk ${LIBS} ${LAPACK_LIBRARIES})
+
+
+ADD_EXECUTABLE(vp2d_keen_non_unif_v vp2d_keen_non_unif_v.F90)
+TARGET_LINK_LIBRARIES(vp2d_keen_non_unif_v slv2d_non_unif_v ${LIBS} ${LAPACK_LIBRARIES})
+
 
 ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vm4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
