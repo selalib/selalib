@@ -10,7 +10,6 @@ module sll_logical_meshes
      sll_real64 :: delta_eta
   end type sll_logical_mesh_1d
 
-
   type sll_logical_mesh_2d
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
@@ -37,8 +36,6 @@ module sll_logical_meshes
      sll_real64 :: delta_eta3
   end type sll_logical_mesh_3d
 
-
-
   type sll_logical_mesh_4d
      sll_int32  :: num_cells1
      sll_int32  :: num_cells2
@@ -63,6 +60,13 @@ module sll_logical_meshes
      module procedure delete_logical_mesh_4d, delete_logical_mesh_2d,delete_logical_mesh_3d
   end interface delete
 
+  interface operator(*)
+     module procedure tensor_product
+  end interface operator(*)
+
+  interface display
+     module procedure display_logical_mesh_1d, display_logical_mesh_2d
+  end interface
 contains
 
 #define TEST_PRESENCE_AND_ASSIGN_VAL( obj, arg, slot, default_val ) \
@@ -92,6 +96,20 @@ end if
     m%delta_eta   = (m%eta_max - m%eta_min)/real(num_cells,f64)
   end function new_logical_mesh_1d
 
+  function tensor_product( m_a, m_b) result(m_c)
+    type(sll_logical_mesh_1d), intent(in),  pointer :: m_a
+    type(sll_logical_mesh_1d), intent(in),  pointer :: m_b
+    type(sll_logical_mesh_2d),              pointer :: m_c
+
+    m_c => new_logical_mesh_2d( &
+    m_a%num_cells, &
+    m_b%num_cells, &
+    m_a%eta_min, &
+    m_a%eta_max, &
+    m_b%eta_min, &
+    m_b%eta_max ) 
+
+  end function tensor_product
 
   subroutine initialize_eta1_node_1d( m, eta1_node )
     type(sll_logical_mesh_1d), pointer :: m
@@ -237,6 +255,34 @@ end if
     m%delta_eta4   = (m%eta4_max - m%eta4_min)/real(num_cells4,f64)
   end function new_logical_mesh_4d
 
+  !> display information about a 1d logical mesh
+  subroutine display_logical_mesh_1d(mesh)
+    type(sll_logical_mesh_1d), pointer :: mesh
+
+    write(*,"(/,(a))") '1D mesh : num_cell eta_min      eta_max       delta_eta'
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells, &
+                                     mesh%eta_min,  &
+                                     mesh%eta_max,  &
+                                     mesh%delta_eta
+
+  end subroutine display_logical_mesh_1d
+
+  !> display information about a 1d logical mesh
+  subroutine display_logical_mesh_2d(mesh)
+    type(sll_logical_mesh_2d), pointer :: mesh
+
+    write(*,"(/,(a))") '2D mesh : num_cell eta_min      eta_max       delta_eta'
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
+                                         mesh%eta1_min,  &
+                                         mesh%eta1_max,  &
+                                         mesh%delta_eta1
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells2, &
+                                         mesh%eta2_min,  &
+                                         mesh%eta2_max,  &
+                                         mesh%delta_eta2
+
+  end subroutine display_logical_mesh_2d
+  
 
   subroutine delete_logical_mesh_4d( mesh )
     type(sll_logical_mesh_4d), pointer :: mesh
