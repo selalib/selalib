@@ -89,7 +89,7 @@ module sll_module_scalar_field_1d_alternative
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_1d_discrete_alt
      procedure, pass(field) :: value_at_point => value_at_pt_discrete
-     procedure, pass(field) :: value_at_indices => value_at_index_discrete
+     procedure, pass(field) :: value_at_indices => value_at_index_discrete_1d
      procedure, pass(field) :: derivative_value_at_point => &
           derivative_value_at_pt_discrete
      procedure, pass(field) :: derivative_value_at_indices => &
@@ -212,12 +212,14 @@ contains   ! *****************************************************************
     sll_real64, dimension(:), intent(in) :: values
     print *, 'WARNING: set_field_data_analytic_1d(): it is useless to ', &
          'call this function on an analytic scalar field.'
+     print*, field%bc_left*values(1)
   end subroutine set_field_data_analytic_1d
 
   subroutine update_interp_coeffs_1d_analytic( field )
     class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     print *, 'WARNING: update_interpolation_coefficients_1d_analytic(): ', &
          ' it is useless to call this function on an analytic scalar field.'
+    print*, field%bc_left
   end subroutine update_interp_coeffs_1d_analytic
 
 
@@ -293,7 +295,6 @@ contains   ! *****************************************************************
     sll_real64, dimension(:), allocatable :: xcoords
     sll_real64, dimension(:), allocatable :: values
     sll_real64                              :: eta
-    type(sll_logical_mesh_1d), pointer     :: mesh
     sll_int32 :: i
     sll_int32 :: ierr
     ! print*, 'passed'
@@ -311,7 +312,7 @@ contains   ! *****************************************************************
     do i=1, nptsx
        eta = field%mesh%eta1_min + (i-1)*field%mesh%delta_eta1
        xcoords(i) =  eta
-       values(i)   = field%value_at_point(eta)
+       values(i)   = field%value_at_point(eta)*tag
     end do
     
     print*, 'not implemented  sll_gnuplot_curv_1d'
@@ -349,7 +350,6 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_1d_base), target        :: interpolator_1d ! a implementer
      type(sll_logical_mesh_1d),pointer   :: mesh
-    sll_int32 :: SPLINE_DEG1
     sll_real64, dimension(:), optional :: point_1d
     sll_int32, optional :: sz_point
     ! sll_real64, dimension(:,:), optional :: point2d
@@ -391,9 +391,7 @@ contains   ! *****************************************************************
     sll_int32,optional :: sz_point
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
-    sll_int32 :: i
     sll_int32 :: ierr   
-    
     
    ! field%values => array_1d
     field%interp_1d => interpolator_1d
@@ -403,9 +401,18 @@ contains   ! *****************************************************************
     field%bc_right  = bc_right
     field%mesh      => mesh
 
-    
     !SLL_ALLOCATE(point(sz_point),ierr)
     SLL_ALLOCATE(field%values(field%mesh%num_cells1+1),ierr)
+    
+    if ( present( point_1d) .and. present(sz_point)) then
+       print*, ' not implemented yet in initialize_scalar_field_1d_discrete_alt'
+       stop
+    end if
+    if ( present( point_1d) .and. .not. present(sz_point)) then
+       print*, ' problem presence of point_1d and not the size in '
+       print*, 'initialize_scalar_field_1d_discrete_alt'
+       stop
+    end if
     
 !!$    
 !!$   
@@ -459,14 +466,14 @@ contains   ! *****************************************************************
     value_at_pt_discrete = field%interp_1d%interpolate_value(eta)
   end function value_at_pt_discrete
   
-  function value_at_index_discrete( field, i )
+  function value_at_index_discrete_1d( field, i )
     class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: value_at_index_discrete
+    sll_real64            :: value_at_index_discrete_1d
     eta = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
-    value_at_index_discrete = field%interp_1d%interpolate_value(eta) ! a implementer
-  end function value_at_index_discrete
+    value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
+  end function value_at_index_discrete_1d
   
   function derivative_value_at_pt_discrete( field, eta )
     class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
@@ -474,7 +481,7 @@ contains   ! *****************************************************************
     sll_real64             :: derivative_value_at_pt_discrete
     
     derivative_value_at_pt_discrete = &
-         field%interp_1d%interpolate_derivative_eta1(eta) !a implementer
+         field%interp_1d%interpolate_derivative_eta1(eta)
   end function derivative_value_at_pt_discrete
   
   function derivative_value_at_index_discrete( field, i )
@@ -510,7 +517,7 @@ contains   ! *****************************************************************
     do i=1, nptsx
        eta = mesh%eta1_min + (i-1)*mesh%delta_eta1
        xcoords(i)  = eta!field%x(eta)
-       values(i)   = field%value_at_point(eta)
+       values(i)   = field%value_at_point(eta)*tag
     end do
 
     print*, 'not implement the sll_gnuplot_curv_1d '

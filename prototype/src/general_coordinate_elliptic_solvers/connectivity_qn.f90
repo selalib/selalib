@@ -297,4 +297,4 @@ contains
     end do
   end subroutine initLM
       
-end Module connectivity_module
+end module connectivity_module

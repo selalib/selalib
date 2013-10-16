@@ -13,7 +13,7 @@ module sll_module_scalar_field_1d_base
           derivative_value_at_point
      procedure(derivative_evaluation_integer), deferred, pass :: &
           derivative_value_at_indices
-     procedure(set_field_data_subroutine), deferred, pass :: set_field_data
+     procedure(set_field_data_subroutine_1d), deferred, pass :: set_field_data
      procedure(field_1d_message_pass), deferred, pass :: &
           update_interpolation_coefficients
      procedure(field_1d_file_output), deferred, pass :: write_to_file
@@ -27,12 +27,12 @@ module sll_module_scalar_field_1d_base
   end type sll_scalar_field_1d_base_ptr
   
   abstract interface
-     subroutine set_field_data_subroutine( field, values )
+     subroutine set_field_data_subroutine_1d( field, values )
        use sll_working_precision
        import sll_scalar_field_1d_base
        class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_real64, dimension(:), intent(in) :: values
-     end subroutine set_field_data_subroutine
+     end subroutine set_field_data_subroutine_1d
   end interface
 
 
