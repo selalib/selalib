@@ -34,3 +34,7 @@
   number_iterations = 2
   spline_degree     = 3
 /
+
+&diagnostics
+   diag2D_step = 0.1
+/
