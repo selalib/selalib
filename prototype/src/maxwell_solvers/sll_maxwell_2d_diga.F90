@@ -22,22 +22,30 @@ type :: cell_type
    sll_real64 :: eta2_min, eta2_max
    sll_int32  :: i            !             ^
    sll_int32  :: j            !             | n2+
-   sll_real64 :: n1_plus(2)   !         ---------
+   sll_real64 :: n1_plus(2)   !         _________
    sll_real64 :: n1_minus(2)  !         |       |
    sll_real64 :: n2_plus(2)   !  n1- <--|       |--> n1+
    sll_real64 :: n2_minus(2)  !         |_______|
    sll_real64 :: l_edge(4)    !             |
 end type cell_type            !             V n2-
 
-type :: w_vector
-   sll_real64, dimension(:), pointer :: ex
-   sll_real64, dimension(:), pointer :: ey
-   sll_real64, dimension(:), pointer :: hz
-end type w_vector
+type :: W_vector
+   sll_real64, dimension(:,:), pointer :: ex
+   sll_real64, dimension(:,:), pointer :: ey
+   sll_real64, dimension(:,:), pointer :: hz
+end type W_vector
 
 type :: A_matrix
    sll_real64, dimension(3,3) :: v
 end type A_matrix
+
+interface operator(/)
+  function W_divide_by_MassMatrix( W1, MassMat) result(W2)
+     type(W_vector), intent(in) :: W1
+     sll_real64, dimension(:)   :: MassMat
+     type(W_vector)             :: W2
+  end function W_divide_by_MassMatrix( W, MassMat)
+end interface operator(/)
 
 !> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
@@ -64,6 +72,7 @@ end interface solve
 
 sll_int32, private :: nx, ny
 sll_int32, private :: error
+sll_int32, private :: i, j, k, l, ii, jj, kk, ll
 
 contains
 
@@ -84,7 +93,6 @@ sll_int32  :: ncells
 sll_real64 :: xgalo(d+1)
 sll_real64 :: wgalo(d+1)
 sll_real64 :: dlag(d+1,d+1)
-sll_int32  :: i, j, k, l, ii, jj, kk, ll
 sll_real64 :: det
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: inv_jac_mat(2,2)
@@ -154,11 +162,12 @@ do i = 1, this%mesh%num_cells1
 
 end do
 end do
-stop
+
 
 call display_matrix(this%MassMatrix(:,:),"f7.2")
 call display_matrix(this%DxMatrix(:,:,1),"f7.2")
 call display_matrix(this%DyMatrix(:,:,1),"f7.2")
+stop
 
 this%A(1)%v = reshape((/ 0., 0., 0., 0., 0., 1., 0., 1., 0./), (/3,3/))
 this%A(2)%v = reshape((/ 0., 0.,-1., 0., 0., 0.,-1., 0., 0./), (/3,3/))
@@ -168,9 +177,9 @@ call display_matrix(this%A(2)%v,"f7.2")
 
 SLL_ALLOCATE(this%W(ncells),error)
 do k = 1, ncells
-   SLL_ALLOCATE(this%W(k)%ex(nddl),error)
-   SLL_ALLOCATE(this%W(k)%ey(nddl),error)
-   SLL_ALLOCATE(this%W(k)%hz(nddl),error)
+   SLL_ALLOCATE(this%W(k)%ex(d+1,d+1),error)
+   SLL_ALLOCATE(this%W(k)%ey(d+1,d+1),error)
+   SLL_ALLOCATE(this%W(k)%hz(d+1,d+1),error)
 end do
 
 end subroutine initialize_maxwell_2d_diga
@@ -189,6 +198,11 @@ sll_real64, dimension(:,:), optional :: jx   !< x current field
 sll_real64, dimension(:,:), optional :: jy   !< y current field
 sll_real64, dimension(:,:), optional :: rho  !< charge density
 
+
+!this%W = this%W + this%A(1) * this%Dx * this%W + this%A(2) * this%Dy * this%W
+
+!this%W = this%W / this%MassMat
+
 end  subroutine solve_maxwell_2d_diga
 
 subroutine compute_normals(tau, i, j, n, x, w, cell )
@@ -204,17 +218,18 @@ type(cell_type) :: cell
 
 cell%i = i
 cell%j = j
-!cell corners
-cell%eta1_min   = tau%mesh%eta1_min + (i-1)*tau%mesh%delta_eta1
-cell%eta1_max   = tau%mesh%eta1_min +  i   *tau%mesh%delta_eta1
-cell%eta2_min   = tau%mesh%eta2_min + (j-1)*tau%mesh%delta_eta2
-cell%eta2_max   = tau%mesh%eta2_min +  j   *tau%mesh%delta_eta2
 
-cell%l_edge     = 0._f64
-cell%n1_minus   = 0._f64
-cell%n1_plus    = 0._f64
-cell%n2_minus   = 0._f64
-cell%n2_plus    = 0._f64
+cell%eta1_min = tau%mesh%eta1_min + (i-1)*tau%mesh%delta_eta1
+cell%eta2_min = tau%mesh%eta2_min + (j-1)*tau%mesh%delta_eta2
+
+cell%eta1_max = cell%eta1_min + tau%mesh%delta_eta1
+cell%eta2_max = cell%eta2_min + tau%mesh%delta_eta2
+
+cell%l_edge   = 0._f64
+cell%n1_minus = 0._f64
+cell%n1_plus  = 0._f64
+cell%n2_minus = 0._f64
+cell%n2_plus  = 0._f64
 
 !South
 a  = cell%eta1_min
@@ -229,6 +244,7 @@ do k = 1, n
    cell%n2_minus    = det*matmul(inv_jac_mat,(/0._f64,-1._f64/))
    cell%l_edge(1)   = cell%l_edge(1) + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
 end do
+cell%l_edge(1) = cell%l_edge(1) * c1
 
 !East
 a  = cell%eta2_min 
@@ -243,6 +259,7 @@ do k = 1, n
    cell%n1_plus     = det*matmul(inv_jac_mat,(/1._f64,0._f64/))
    cell%l_edge(2)   = cell%l_edge(2) + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
 end do
+cell%l_edge(2) = cell%l_edge(2) * c1
 
 !North
 a  = cell%eta1_min 
@@ -257,6 +274,7 @@ do k = 1, n
    cell%n2_plus     = det*matmul(inv_jac_mat,(/0._f64,1._f64/))
    cell%l_edge(3)   = cell%l_edge(3) + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
 end do
+cell%l_edge(3) = cell%l_edge(3) * c1
 
 !West
 a  = cell%eta2_min 
@@ -271,12 +289,14 @@ do k = 1, n
    cell%n1_minus    = det*matmul(inv_jac_mat,(/-1._f64,0._f64/))
    cell%l_edge(4)   = cell%l_edge(4) + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
 end do
+cell%l_edge(4) = cell%l_edge(4) * c1
 
-print*, cell%l_edge
-print"(2f8.3,8X,a)", cell%n2_minus, " 0 -1"
-print"(2f8.3,8X,a)", cell%n1_plus,  " 1  0"
-print"(2f8.3,8X,a)", cell%n2_plus,  " 0  1"
-print"(2f8.3,8X,a)", cell%n1_minus, "-1  0"
+print"(/,4f8.3)",      cell%eta1_min, cell%eta1_max, cell%eta2_min, cell%eta2_max
+print"(4f8.3)",        cell%l_edge
+print"(2f8.3,8X,a)",   cell%n2_minus, " 0 -1"
+print"(2f8.3,8X,a)",   cell%n1_plus,  " 1  0"
+print"(2f8.3,8X,a)",   cell%n2_plus,  " 0  1"
+print"(2f8.3,8X,a,/)", cell%n1_minus, "-1  0"
 
 
 end subroutine compute_normals

@@ -63,7 +63,7 @@ sll_real64                              :: cfl = 0.5
 sll_int32                               :: degree = 3
 sll_int32,  parameter                   :: mode = 2
 
-nc_eta1 = 1; nc_eta2 = 1
+nc_eta1 = 2; nc_eta2 = 1
 
 !mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
