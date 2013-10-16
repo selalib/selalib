@@ -866,6 +866,14 @@ contains
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
+       if ( res1 > interpolator%eta1_max) then 
+          print*, 'problem  x > eta1_max'
+          stop
+       end if
+       if ( res1 < interpolator%eta1_min) then 
+          print*, 'problem  x < eta1_min'
+          stop
+       end if
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        if ( res1 >= interpolator%eta1_max ) then 
@@ -873,12 +881,37 @@ contains
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
+       if ( res2 > interpolator%eta2_max) then 
+          print*, 'problem  y > eta2_max'
+          stop
+       end if
+       if ( res2 < interpolator%eta2_min) then 
+          print*, 'problem  y < eta2_min'
+          stop
+       end if
        
     case (585) ! dirichlet-dirichlet 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
+       if ( res1 > interpolator%eta1_max) then 
+          print*, 'problem  x > eta1_max'
+          stop
+       end if
+       if ( res1 < interpolator%eta1_min) then 
+          print*, 'problem  x < eta1_min'
+          stop
+       end if
+       if ( res2 > interpolator%eta2_max) then 
+          print*, 'problem  y > eta2_max'
+          stop
+       end if
+       if ( res2 < interpolator%eta2_min) then 
+          print*, 'problem  y < eta2_min'
+          stop
+       end if
+
     end select
 
     val = bvalue2d( &
@@ -942,6 +975,14 @@ contains
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
+       if ( res1 > interpolator%eta1_max) then 
+          print*, 'problem  x > eta1_max'
+          stop
+       end if
+       if ( res1 < interpolator%eta1_min) then 
+          print*, 'problem  x < eta1_min'
+          stop
+       end if
        
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        if ( res1 .ge. interpolator%eta1_max ) then 
@@ -949,13 +990,37 @@ contains
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
+       if ( res2 > interpolator%eta2_max) then 
+          print*, 'problem  y > eta2_max'
+          stop
+       end if
+       if ( res2 < interpolator%eta2_min) then 
+          print*, 'problem  y < eta2_min'
+          stop
+       end if
        
     case (585) ! dirichlet-dirichlet 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
-    end select
+       if ( res1 > interpolator%eta1_max) then 
+          print*, 'problem  x > eta1_max'
+          stop
+       end if
+       if ( res1 < interpolator%eta1_min) then 
+          print*, 'problem  x < eta1_min'
+          stop
+       end if
+       if ( res2 > interpolator%eta2_max) then 
+          print*, 'problem  y > eta2_max'
+          stop
+       end if
+       if ( res2 < interpolator%eta2_min) then 
+          print*, 'problem  y < eta2_min'
+          stop
+       end if
+       end select
     
     val = dvalue2d( &
          res1, &
@@ -1018,6 +1083,14 @@ contains
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
+       if ( res1 > interpolator%eta1_max) then 
+          print*, 'problem  x > eta1_max'
+          stop
+       end if
+       if ( res1 < interpolator%eta1_min) then 
+          print*, 'problem  x < eta1_min'
+          stop
+       end if
        
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        if ( res1 .ge. interpolator%eta1_max ) then 
@@ -1025,12 +1098,36 @@ contains
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
+       if ( res2 > interpolator%eta2_max) then 
+          print*, 'problem  y > eta2_max'
+          stop
+       end if
+       if ( res2 < interpolator%eta2_min) then 
+          print*, 'problem  y < eta2_min'
+          stop
+       end if
        
     case (585) ! dirichlet-dirichlet 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
+       if ( res1 > interpolator%eta1_max) then 
+          print*, 'problem  x > eta1_max'
+          stop
+       end if
+       if ( res1 < interpolator%eta1_min) then 
+          print*, 'problem  x < eta1_min'
+          stop
+       end if
+       if ( res2 > interpolator%eta2_max) then 
+          print*, 'problem  y > eta2_max'
+          stop
+       end if
+       if ( res2 < interpolator%eta2_min) then 
+          print*, 'problem  y < eta2_min'
+          stop
+       end if
     end select
     
     val = dvalue2d( &

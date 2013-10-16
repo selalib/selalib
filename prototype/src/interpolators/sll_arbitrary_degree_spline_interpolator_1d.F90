@@ -361,6 +361,14 @@ contains
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ASSERT( res >= interpolator%eta_min )
        SLL_ASSERT( res <= interpolator%eta_max )
+       if ( res > interpolator%eta_max) then 
+          print*, 'problem  x > eta_max'
+          stop
+       end if
+       if ( res < interpolator%eta_min) then 
+          print*, 'problem  x < eta_min'
+          stop
+       end if
   
     end select
        
@@ -400,6 +408,14 @@ contains
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ASSERT( res >= interpolator%eta_min )
        SLL_ASSERT( res <= interpolator%eta_max )
+       if ( res > interpolator%eta_max) then 
+          print*, 'problem  x > eta_max'
+          stop
+       end if
+       if ( res < interpolator%eta_min) then 
+          print*, 'problem  x < eta_min'
+          stop
+       end if
        
     end select
     
@@ -424,7 +440,7 @@ contains
     sll_real64, dimension(num_points)      :: data_out
     
     print *, 'interpolate_array_ad1d: not implemented'
-    data_out = -1000000._f64
+    data_out = -1000000._f64*data*coordinates*this%spline_degree
   end function interpolate_array_ad1d
   
   function interpolate_1d_array_disp_ad1d( &
@@ -440,7 +456,7 @@ contains
     sll_real64, dimension(num_points) :: res
     
     print *, 'interpolate_1d_array_disp_ad1d: not implemented.'
-    res = -1000000._f64
+    res = -1000000._f64*alpha*data*this%spline_degree
   end function interpolate_1d_array_disp_ad1d
     
     
@@ -463,7 +479,8 @@ contains
     sll_real64, dimension(:), intent(out)  :: output_array
     
     print*, 'interpolate_values_ad1d NOT iMPLEMENTED YET'
-    output_array = -1000000._f64
+    output_array = -1000000._f64*num_pts&
+         *vals_to_interpolate*interpolator%spline_degree
   end subroutine interpolate_values_ad1d
 
   subroutine interpolate_pointer_values_ad1d( &
@@ -478,7 +495,8 @@ contains
     sll_real64, dimension(:), pointer :: output
     
     print*, 'interpolate_pointer_values_ad1d NOT iMPLEMENTED YET'
-    output = -1000000._f64
+    output = -1000000._f64*num_pts&
+         *vals_to_interpolate*interpolator%spline_degree
   end subroutine interpolate_pointer_values_ad1d
   
   subroutine interpolate_derivatives_ad1d( &
@@ -493,7 +511,8 @@ contains
     sll_real64, dimension(:), intent(out) :: output_array
     
     print*, 'interpolate_derivatives_ad1d NOT iMPLEMENTED YET'
-    output_array = -1000000._f64
+    output_array = -1000000._f64*num_pts &
+         *vals_to_interpolate*interpolator%spline_degree
   end subroutine interpolate_derivatives_ad1d
   
   subroutine interpolate_pointer_derivatives_ad1d( &
@@ -509,7 +528,8 @@ contains
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
-    
+    output = -1000000.0_f64*num_pts&
+         *vals_to_interpolate*interpolator%spline_degree
     print*, 'interpolate_pointer_derivatives_ad1d NOT iMPLEMENTED YET'
   end subroutine interpolate_pointer_derivatives_ad1d
   
@@ -520,6 +540,7 @@ contains
     sll_int32, intent(in)                :: num_points! size of output array
     sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
     sll_real64, dimension(num_points)    :: res
-    res(:) = 0.0_f64
+    res(:) = -1000000.0_f64*data*this%spline_degree
+    print*, 'reconstruct_array 1d not implemented yet' 
   end function reconstruct_array
 end module sll_arbitrary_degree_spline_interpolator_1d_module
