@@ -22,8 +22,8 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
   use sll_arbitrary_degree_spline_interpolator_1d_module
-!VG!  use sll_module_scalar_field_1d_base
-!VG!  use sll_module_scalar_field_1d_alternative
+  use sll_module_scalar_field_1d_base
+  use sll_module_scalar_field_1d_alternative
   use sll_timer
 
   implicit none
@@ -45,13 +45,6 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64 :: phi_max
      sll_real64 :: vpar_min
      sll_real64 :: vpar_max
-     ! Physics/numerical parameters
-     sll_real64 :: dt
-     sll_int32  :: nb_iter
-     sll_int32  :: spline_degree_eta1
-     sll_int32  :: spline_degree_eta2
-     sll_int32  :: spline_degree_eta3
-     sll_int32  :: spline_degree_vpar
      !--> Equilibrium
      sll_real64 :: tau0      !-> tau0 = Ti(rpeak)/Te(rpeak)
      sll_real64 :: rho_peak    
@@ -66,6 +59,15 @@ module sll_simulation_4d_DK_hybrid_module
      sll_int32  :: mmode
      sll_int32  :: nmode
      sll_real64 :: eps_perturb   
+     ! Physics/numerical parameters
+     sll_real64 :: dt
+     sll_int32  :: nb_iter
+     sll_int32  :: spline_degree_eta1
+     sll_int32  :: spline_degree_eta2
+     sll_int32  :: spline_degree_eta3
+     sll_int32  :: spline_degree_vpar
+     ! diagnostics
+     sll_real64 :: diag2D_step
 
      !--> 4D logical mesh (eta1,eta2,eta3,vpar)
      sll_int32 :: Neta1, Neta2, Neta3, Nvpar
@@ -150,7 +152,7 @@ module sll_simulation_4d_DK_hybrid_module
      type(arb_deg_2d_interpolator) :: interp2d_QN_B2
      type(arb_deg_2d_interpolator) :: interp2d_QN_C
      class(sll_scalar_field_2d_base) , pointer :: rho2d
-!VG!     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d ! for derivative in eta3
+     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d ! for derivative in eta3
      type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
      class(sll_scalar_field_2d_base), pointer :: QN_A11 
      class(sll_scalar_field_2d_base), pointer :: QN_A12
@@ -159,7 +161,10 @@ module sll_simulation_4d_DK_hybrid_module
      class(sll_scalar_field_2d_base), pointer :: QN_B1
      class(sll_scalar_field_2d_base), pointer :: QN_B2
      class(sll_scalar_field_2d_base), pointer :: QN_C
-     
+
+     !---> For diagnostic saving
+     sll_int32 :: count_save_diag
+
    contains
      procedure, pass(sim) :: run => run_4d_DK_hybrid
      procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
@@ -214,6 +219,8 @@ contains
     sll_real64 :: dt
     sll_int32  :: number_iterations
     sll_int32  :: spline_degree
+    !--> Diagnostics
+    sll_real64 :: diag2D_step
 
     namelist /mesh/ num_cells_x1, num_cells_x2, &
       num_cells_x3, num_cells_x4, &
@@ -223,6 +230,7 @@ contains
       kappaTi, deltarTi, kappaTe, deltarTe
     namelist /perturbation/ perturb_choice, mmode, nmode, eps_perturb
     namelist /sim_params/ dt, number_iterations, spline_degree
+    namelist /diagnostics/ diag2D_step
 
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -233,6 +241,7 @@ contains
     read(input_file,equilibrium)
     read(input_file,perturbation)
     read(input_file,sim_params)
+    read(input_file,diagnostics)
     close(input_file)
 
     !--> Mesh
@@ -267,6 +276,10 @@ contains
     sim%spline_degree_eta2 = spline_degree
     sim%spline_degree_eta3 = spline_degree
     sim%spline_degree_vpar = spline_degree
+    !--> Diagnostics
+    sim%diag2D_step   = diag2D_step
+
+    sim%count_save_diag = 0
   end subroutine init_4d_DK_hybrid
 
 
@@ -321,7 +334,7 @@ contains
     SLL_ALLOCATE(sim%n0_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Ti_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Te_xy(Nx,Ny),ierr)
-    Call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
+    call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
       sim%ygrid_2d,sim%n0_xy)
     call function_xy_from_r(r_grid_tmp,sim%Ti_r,sim%xgrid_2d, &
       sim%ygrid_2d,sim%Ti_xy)
@@ -346,6 +359,7 @@ contains
     sll_int32 :: nproc_x2
     sll_int32 :: nproc_x3
     sll_int32 :: nproc_x4 
+   
 
     ! layout for sequential operations in x3 and x4. 
     ! Make an even split for x1 and x2, or as close as 
@@ -558,6 +572,11 @@ contains
         end do
       end do
     end do
+
+!baoter
+    call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
+!eaoter
+
     SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
   end subroutine initialize_fdistribu4d_DK
@@ -570,13 +589,12 @@ contains
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     type(sll_logical_mesh_2d), pointer :: logical_mesh2d
-    sll_int32 :: ierr, itemp
-    sll_int32 :: i1, i2, i3, i4
-    sll_int32 :: iloc1, iloc2, iloc3, iloc4
+    sll_int32 :: ierr
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc_x1
     sll_int32 :: nproc_x2
     sll_int32 :: nproc_x3
+    type(sll_logical_mesh_1d), pointer :: logical_mesh1d
 
     ! layout for sequential operations in (x1,x2) 
     sim%power2 = int(log(real(sim%world_size))/log(2.0))
@@ -785,7 +803,7 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
-    !----->
+    !-----> rho2D field
     sim%rho2d => new_scalar_field_2d_discrete_alt( &
       "rho2d_x1x2", &
       sim%interp2d_rho_eta1eta2, &     
@@ -794,13 +812,16 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
-
-!VG!    sim%phi1d => new_scalar_field_1d_discrete_alt( &
-!VG!      "phi1d_x3", &
-!VG!      sim%interp_phi1d, &     
-!VG!      sim%bc_left_eta1, &
-!VG!      sim%bc_right_eta1)
-
+    !-----> phi1D in the direction eta3
+    logical_mesh1d => new_logical_mesh_1d( &
+    sim%nc_x3,eta1_min=sim%phi_min,eta1_max=sim%phi_max)
+    sim%phi1d => new_scalar_field_1d_discrete_alt( &
+         "phi1d_x3", &
+         sim%interp1d_Phi_eta3, &     
+         sim%bc_left_eta1, &
+         sim%bc_right_eta1,&
+         logical_mesh1d)
+    !-----> phi2D in the direction eta1 eta2
     sim%phi2d => new_scalar_field_2d_discrete_alt( &
       "phi2d_x1x2", &
       sim%interp2d_Phi_eta1eta2, &     
@@ -847,12 +868,26 @@ contains
     SLL_ALLOCATE(C(Neta1,Neta2),ierr)
     
     !---> Initialization of the matrices A11, A12, A21, A22, B1, B2 and C
-    A11(:,:) = 1._f64
+    ! In the case of drift-Kinetic and with F the change of variables such that 
+    !  F( eta1,eta2) =( F_1(eta1, eta2),F_2(eta1, eta2) ) = ( x, y )
+    !    ( 1   0 )
+    ! A =(       )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
+    !    ( 0   1 ) 
+    A11(:,:) = 1._f64 ! 
     A12(:,:) = 0._f64
     A21(:,:) = 0._f64
     A22(:,:) = 1._f64
+
+    !       (  F_1(eta1, eta2) / norm**2 )
+    ! B = - (                            )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
+    !       (  F_2(eta1, eta2) / norm**2 ) 
+    ! with 
+    ! norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
+
     B1(:,:)  = 0._f64
     B2(:,:)  = 0._f64
+
+    ! C = e n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/( T_e (F_1(eta1, eta2),F_2(eta1, eta2)) )
     C(:,:)   = 0._f64
     
     !---> Initialization of the 2D fields associated to
@@ -1144,20 +1179,21 @@ contains
       do iloc1 = 1,loc3d_sz_x1
 !baoter
         do ieta3 = 1,sim%Neta3
-          phi1d_x3_tmp(ieta3) = sim%phi3d_x3(iloc1,iloc2,ieta3)
+           phi1d_x3_tmp(ieta3) = sim%phi3d_x3(iloc1,iloc2,ieta3)
         end do
-        call sim%interp1d_Phi_eta3%compute_interpolants( &
-          phi1d_x3_tmp)
-!VG!          call sim%phi1d%set_field_data( sim%phi3d_x3(iloc1,iloc2,:) )
-!VG!          call sim%phi1d%update_interpolation_coefficients( ) 
+        call sim%phi1d%set_field_data(phi1d_x3_tmp)
+        !call sim%interp1d_Phi_eta3%compute_interpolants( &
+        !  phi1d_x3_tmp)
+        !call sim%phi1d%set_field_data( sim%phi3d_x3(iloc1,iloc2,:) )
+        call sim%phi1d%update_interpolation_coefficients( ) 
 !eaoter
         do ieta3 = 1,sim%Neta3 
           eta3 = sim%eta3_grid(ieta3)
 !baoter
+         ! sim%E3d_eta3_x3(iloc1,iloc2,ieta3) = &
+          !  -sim%interp1d_Phi_eta3%interpolate_derivative_eta1(eta3)
           sim%E3d_eta3_x3(iloc1,iloc2,ieta3) = &
-            -sim%interp1d_Phi_eta3%interpolate_derivative_eta1(eta3)
-!VG!          sim%E3d_eta3_x3(iloc1,iloc2,ieta3) = &
-!VG!            -sim%phi1d%derivative_value_at_point(eta3)
+               -sim%phi1d%derivative_value_at_point(eta3)
 !eatoer
         end do
       end do
@@ -1266,6 +1302,9 @@ contains
     elaps_time = time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_Efield = ', elaps_time
+
+    !*** Save initial step in HDF5 file ***
+    call writeHDF5_diag( sim )
   end subroutine first_step_4d_DK_hybrid
 
 
@@ -1278,7 +1317,6 @@ contains
 
     sll_int32 :: ierr
     sll_int32 :: iloc1, iloc2
-    sll_int32 :: ieta1, ieta2
     sll_int32 :: ieta3, ivpar
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2
     sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
@@ -1336,7 +1374,6 @@ contains
     
     sll_int32 :: ierr
     sll_int32 :: iloc1, iloc2
-    sll_int32 :: ieta1, ieta2
     sll_int32 :: ieta3, ivpar
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2
     sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
@@ -1384,7 +1421,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: iloc3, iloc4
     sll_int32 :: ieta1, ieta2
-    sll_int32 :: ieta3, ivpar
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2
     sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
     sll_real64 :: eta1,eta2, alpha1,alpha2, E_eta1, E_eta2
@@ -1420,6 +1456,7 @@ contains
             E_eta1  = sim%E3d_eta1_x1x2(ieta1,ieta2,iloc3)
             E_eta2  = sim%E3d_eta2_x1x2(ieta1,ieta2,iloc3)
             val_jac = sim%transf_xy%jacobian(eta1,eta2)
+            print*, 'valeur jacob',val_jac
             alpha1  = - deltat_advec*E_eta2/ val_jac
             alpha2  =   deltat_advec*E_eta1/ val_jac
             eta1    = sim%eta1_grid(ieta1) - alpha1
@@ -1464,7 +1501,7 @@ contains
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
 
       !--> Advection in eta1,eta2 direction'
-      call advec2D_eta1eta2(sim,sim%dt)
+      !call advec2D_eta1eta2(sim,sim%dt)
     
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
@@ -1494,6 +1531,10 @@ contains
 
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
+
+      !--> Save results in HDF5 files
+      if (mod(iter*sim%dt,sim%diag2D_step)==0._f64) &
+        call writeHDF5_diag( sim )
     end do
 
     if (sim%my_rank.eq.0) then
@@ -1501,6 +1542,47 @@ contains
       print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
     end if
   end subroutine run_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! 
+  !----------------------------------------------------
+  subroutine writeHDF5_diag( sim )
+    use sll_hdf5_io, only: sll_hdf5_file_create, &
+      sll_hdf5_write_array_1d, sll_hdf5_file_close
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32 :: ix1_diag, ix2_diag
+    sll_int32 :: ix3_diag, ivpar_diag
+
+    !--> For initial profile HDF5 saving
+    integer             :: file_err
+    sll_int32           :: file_id
+    character(len=80)   :: filename_HDF5
+    character(20), save :: numfmt = "'_d',i5.5"
+    
+    ix1_diag = int(sim%Neta1/2)
+    ix2_diag = int(sim%Neta2/3)
+    ix3_diag = int(sim%Neta3/3)
+    ivpar_diag = int(sim%Nvpar/3)
+    write(filename_HDF5,'(A,'//numfmt//',A)') &
+          "DK4d_diag", sim%count_save_diag, ".h5"
+
+    if (sim%my_rank.eq.0) then
+      print*,'--> Save HDF5 file: ',filename_HDF5
+      call sll_hdf5_file_create(filename_HDF5,file_id,file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%rho3d_x1x2(:,:,ix3_diag),'rho2d_x1x2',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%Phi3d_x1x2(:,:,ix3_diag),'phi2d_x1x2',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%f4d_x1x2(:,:,ix3_diag,ivpar_diag),'f2d_x1x2',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%f4d_x3x4(ix1_diag,ix2_diag,:,:),'f2d_x3x4',file_err)
+      call sll_hdf5_file_close(file_id,file_err)
+    end if
+    sim%count_save_diag = sim%count_save_diag + 1
+  end subroutine writeHDF5_diag
 
 
   !-----------------------------------------------------------
