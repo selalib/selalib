@@ -45,13 +45,6 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64 :: phi_max
      sll_real64 :: vpar_min
      sll_real64 :: vpar_max
-     ! Physics/numerical parameters
-     sll_real64 :: dt
-     sll_int32  :: nb_iter
-     sll_int32  :: spline_degree_eta1
-     sll_int32  :: spline_degree_eta2
-     sll_int32  :: spline_degree_eta3
-     sll_int32  :: spline_degree_vpar
      !--> Equilibrium
      sll_real64 :: tau0      !-> tau0 = Ti(rpeak)/Te(rpeak)
      sll_real64 :: rho_peak    
@@ -66,6 +59,15 @@ module sll_simulation_4d_DK_hybrid_module
      sll_int32  :: mmode
      sll_int32  :: nmode
      sll_real64 :: eps_perturb   
+     ! Physics/numerical parameters
+     sll_real64 :: dt
+     sll_int32  :: nb_iter
+     sll_int32  :: spline_degree_eta1
+     sll_int32  :: spline_degree_eta2
+     sll_int32  :: spline_degree_eta3
+     sll_int32  :: spline_degree_vpar
+     ! diagnostics
+     sll_real64 :: diag2D_step
 
      !--> 4D logical mesh (eta1,eta2,eta3,vpar)
      sll_int32 :: Neta1, Neta2, Neta3, Nvpar
@@ -159,7 +161,10 @@ module sll_simulation_4d_DK_hybrid_module
      class(sll_scalar_field_2d_base), pointer :: QN_B1
      class(sll_scalar_field_2d_base), pointer :: QN_B2
      class(sll_scalar_field_2d_base), pointer :: QN_C
-     
+
+     !---> For diagnostic saving
+     sll_int32 :: count_save_diag
+
    contains
      procedure, pass(sim) :: run => run_4d_DK_hybrid
      procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
@@ -214,6 +219,8 @@ contains
     sll_real64 :: dt
     sll_int32  :: number_iterations
     sll_int32  :: spline_degree
+    !--> Diagnostics
+    sll_real64 :: diag2D_step
 
     namelist /mesh/ num_cells_x1, num_cells_x2, &
       num_cells_x3, num_cells_x4, &
@@ -223,6 +230,7 @@ contains
       kappaTi, deltarTi, kappaTe, deltarTe
     namelist /perturbation/ perturb_choice, mmode, nmode, eps_perturb
     namelist /sim_params/ dt, number_iterations, spline_degree
+    namelist /diagnostics/ diag2D_step
 
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -233,6 +241,7 @@ contains
     read(input_file,equilibrium)
     read(input_file,perturbation)
     read(input_file,sim_params)
+    read(input_file,diagnostics)
     close(input_file)
 
     !--> Mesh
@@ -267,6 +276,10 @@ contains
     sim%spline_degree_eta2 = spline_degree
     sim%spline_degree_eta3 = spline_degree
     sim%spline_degree_vpar = spline_degree
+    !--> Diagnostics
+    sim%diag2D_step   = diag2D_step
+
+    sim%count_save_diag = 0
   end subroutine init_4d_DK_hybrid
 
 
@@ -558,6 +571,11 @@ contains
         end do
       end do
     end do
+
+!baoter
+    call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
+!eaoter
+
     SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
   end subroutine initialize_fdistribu4d_DK
@@ -1266,6 +1284,9 @@ contains
     elaps_time = time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_Efield = ', elaps_time
+
+    !*** Save initial step in HDF5 file ***
+    call writeHDF5_diag( sim )
   end subroutine first_step_4d_DK_hybrid
 
 
@@ -1494,6 +1515,10 @@ contains
 
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
+
+      !--> Save results in HDF5 files
+      if (mod(iter*sim%dt,sim%diag2D_step)==0._f64) &
+        call writeHDF5_diag( sim )
     end do
 
     if (sim%my_rank.eq.0) then
@@ -1501,6 +1526,47 @@ contains
       print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
     end if
   end subroutine run_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! 
+  !----------------------------------------------------
+  subroutine writeHDF5_diag( sim )
+    use sll_hdf5_io, only: sll_hdf5_file_create, &
+      sll_hdf5_write_array_1d, sll_hdf5_file_close
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32 :: ix1_diag, ix2_diag
+    sll_int32 :: ix3_diag, ivpar_diag
+
+    !--> For initial profile HDF5 saving
+    integer             :: file_err
+    sll_int32           :: file_id
+    character(len=80)   :: filename_HDF5
+    character(20), save :: numfmt = "'_d',i5.5"
+    
+    ix1_diag = int(sim%Neta1/2)
+    ix2_diag = int(sim%Neta2/3)
+    ix3_diag = int(sim%Neta3/3)
+    ivpar_diag = int(sim%Nvpar/3)
+    write(filename_HDF5,'(A,'//numfmt//',A)') &
+          "DK4d_diag", sim%count_save_diag, ".h5"
+
+    if (sim%my_rank.eq.0) then
+      print*,'--> Save HDF5 file: ',filename_HDF5
+      call sll_hdf5_file_create(filename_HDF5,file_id,file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%rho3d_x1x2(:,:,ix3_diag),'rho2d_x1x2',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%Phi3d_x1x2(:,:,ix3_diag),'phi2d_x1x2',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%f4d_x1x2(:,:,ix3_diag,ivpar_diag),'f2d_x1x2',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%f4d_x3x4(ix1_diag,ix2_diag,:,:),'f2d_x3x4',file_err)
+      call sll_hdf5_file_close(file_id,file_err)
+    end if
+    sim%count_save_diag = sim%count_save_diag + 1
+  end subroutine writeHDF5_diag
 
 
   !-----------------------------------------------------------
