@@ -345,7 +345,9 @@ contains ! *******************************************************************
        b2_field_vect,&
        c_field)!, &
       ! rho)
-    
+    use sll_timer
+
+
     type(general_coordinate_elliptic_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base), pointer :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
@@ -386,9 +388,12 @@ contains ! *******************************************************************
     sll_int32 :: cell_index
     type(sll_logical_mesh_2d), pointer :: mesh
     !    type(sll_time_mark) :: timer
-    sll_real64 :: time,res,eta1,eta2
+    sll_real64 :: res,eta1,eta2
     character(len=*),parameter :: as_file1='mat'
     integer :: li_ios,li_ios1
+    type(sll_time_mark)  :: t0 
+    type(sll_time_mark)  :: t1 
+    sll_real64           :: time
     
     total_num_splines_loc = es%total_num_splines_loc
     ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
@@ -416,12 +421,13 @@ contains ! *******************************************************************
     
     full_Matrix(:,:) = 0.0_f64
     mesh => c_field%get_logical_mesh( )
+    !call set_time_mark(t0)
     do j=1,es%num_cells2
        do i=1,es%num_cells1
           
           
           cell_index = i+es%num_cells1*(j-1)
-          
+          !call set_time_mark(t1)
           call build_local_matrices( &
                es, &
                i, &
@@ -444,7 +450,12 @@ contains ! *******************************************************************
                M_b_vect_loc, &
                S_b1_loc,  &
                S_b2_loc )
-          
+
+         ! time = time_elapsed_since(t1)
+         ! print *, 'time elapsed build_local_matrice : ',time
+
+
+          !call set_time_mark(t1)
           
           
           call local_to_global_matrices( &
@@ -466,10 +477,13 @@ contains ! *******************************************************************
                es%masse,&
                es%stiff)
           !print*, i,j
-          
+         ! time = time_elapsed_since(t1)
+          !print *, 'time elapsed since local_to_global : ',time
        end do
     end do
     
+   ! time = time_elapsed_since(t0)
+    !print *, 'time elapsed for the loop for the factorize : ',time
     !print*, 'loop ok'
     
     ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
