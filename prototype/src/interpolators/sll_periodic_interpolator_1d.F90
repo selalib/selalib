@@ -78,6 +78,7 @@ contains  ! ****************************************************************
     ! periodic interpolation only implemented for constant displacement
     print*, 'periodic_interpolate1d: periodic interpolation not implemented', &
          ' for array of displacements'
+    data_out = -1000000._f64
     stop
   end function 
 
@@ -156,7 +157,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
-    output_array = 0.0
+    output_array = -1000000._f64
     print*, 'interpolate_values_per1d:', &
          ' not implemented for periodic interpolation'
     stop
@@ -178,6 +179,7 @@ contains  ! ****************************************************************
     sll_int32 :: ierr
     print*, 'interpolate_pointer_values_per1d: ', &
          'not implemented for periodic interpolation'
+    output = -1000000._f64
     stop
   end subroutine interpolate_pointer_values_per1d
 
@@ -198,9 +200,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
     sll_int32 :: ierr
-    output_array = 0.0
-     print*, 'interpolate_array_derivatives: ', &
+
+    print*, 'interpolate_array_derivatives: ', &
          'not implemented for periodic interpolation'
+    output_array = -1000000._f64
     stop
   end subroutine interpolate_derivatives_per1d
 
@@ -218,8 +221,9 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
     sll_int32 :: ierr
-     print*, 'interpolate_pointer_derivatives_per1d:  ', &
-         'not implemented for periodic interpolation'
+    print*, 'interpolate_pointer_derivatives_per1d:  ', &
+      'not implemented for periodic interpolation'
+    output = -1000000._f64
     stop
   end subroutine interpolate_pointer_derivatives_per1d
 
@@ -234,6 +238,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_per1d: ', &
          'not implemented for periodic interpolation'
+    val = -1000000._f64
     stop
   end function
   
@@ -249,6 +254,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_deriv1_per1d: ', &
          'not implemented for periodic interpolation'
+    val = -1000000._f64
     stop
 #ifdef STDF95
   end function periodic_interpolate_derivative_eta1
@@ -267,6 +273,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_f95: ', &
          'not implemented for periodic interpolation'
+    val = -1000000._f64
     stop
 #ifdef STDF95
   end function periodic_interpolate_derivative_f95

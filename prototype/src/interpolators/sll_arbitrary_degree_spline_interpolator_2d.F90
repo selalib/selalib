@@ -1073,6 +1073,7 @@ contains
     sll_real64, dimension(num_points1,num_points2) :: res
  
     print *, 'interpolate_array_ad2d: not implemented'
+    res = -1000000._f64
   end function !interpolate_array_ad2d
   
 #ifdef STDF95
@@ -1100,6 +1101,7 @@ contains
     sll_real64, dimension(num_points1,num_points2) :: res
     
     print *, 'interpolate_2d_array_disp_ad2d: not implemented.'
+    res = -1000000._f64
   end function !interpolate_2d_array_disp_ad2d
     
    
