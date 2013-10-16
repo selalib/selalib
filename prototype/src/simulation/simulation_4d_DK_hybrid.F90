@@ -47,7 +47,7 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64 :: vpar_max
      ! Physics/numerical parameters
      sll_real64 :: dt
-     sll_int32  :: num_iterations
+     sll_int32  :: nb_iter
      sll_int32  :: spline_degree_eta1
      sll_int32  :: spline_degree_eta2
      sll_int32  :: spline_degree_eta3
@@ -262,7 +262,7 @@ contains
     sim%eps_perturb    = eps_perturb
     !--> Algorithm
     sim%dt                 = dt
-    sim%num_iterations     = number_iterations
+    sim%nb_iter            = number_iterations
     sim%spline_degree_eta1 = spline_degree
     sim%spline_degree_eta2 = spline_degree
     sim%spline_degree_eta3 = spline_degree
@@ -1174,6 +1174,7 @@ contains
   !  3) Solving of the quasi-neutrality equation
   !----------------------------------------------------
   subroutine first_step_4d_DK_hybrid( sim )
+    use sll_timer
     use sll_hdf5_io, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
@@ -1183,10 +1184,19 @@ contains
     sll_int32                    :: file_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
 
+    !--> For timers
+    type(sll_time_mark) :: t0, t1 
+    double precision    :: elaps_time
+
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
+    call set_time_mark(t0)
     call initialize_fdistribu4d_DK(sim)
-
+    call set_time_mark(t1)
+    elaps_time = time_elapsed_between(t0,t1)
+    if (sim%my_rank.eq.0) &
+      print*, ' Time for initialize_fdistribu4d_DK = ', elaps_time
+        
     !*** Saving of the radial profiles in HDF5 file ***
     if (sim%my_rank.eq.0) then
       call sll_hdf5_file_create(filename_prof,file_id,file_err)
@@ -1208,10 +1218,15 @@ contains
     end if
 
     !*** Computation of the rhs of QN ***
+    call set_time_mark(t0)
     call compute_charge_density(sim%logical_mesh4d, &
       sim%f4d_x3x4,sim%rho3d_x3)
     !--> compute rho3d_x1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2, sim%rho3d_x3, sim%rho3d_x1x2 )
+    call set_time_mark(t1)
+    elaps_time = time_elapsed_between(t0,t1)
+    if (sim%my_rank.eq.0) &
+      print*, ' Time for compute_charge_density = ', elaps_time
 
     if (sim%my_rank.eq.0) then
       call sll_hdf5_file_create('rho_resu.h5',file_id,file_err)
@@ -1221,6 +1236,7 @@ contains
     end if
 
     !*** Matrix factorization for QN solver ***
+    call set_time_mark(t0)
     call factorize_mat_es( &
          sim%QNS, & 
          sim%QN_A11, &
@@ -1230,23 +1246,35 @@ contains
          sim%QN_B1,  &
          sim%QN_B2,  &
          sim%QN_C)
+    call set_time_mark(t1)
+    elaps_time = time_elapsed_between(t0,t1)
+    if (sim%my_rank.eq.0) &
+      print*, ' Time for factorize_mat_es = ', elaps_time
 
     !*** Compute Phi(t=t0) by solving the QN equation ***
-
+    call set_time_mark(t0)
     call solve_QN(sim)
+    call set_time_mark(t1)
+    elaps_time = time_elapsed_between(t0,t1)
+    if (sim%my_rank.eq.0) &
+      print*, ' Time for solve_QN = ', elaps_time
 
     !*** Compute E = -grad Phi ***
- 
+    call set_time_mark(t0)
     call compute_Efield( sim )
-
+    call set_time_mark(t1)
+    elaps_time = time_elapsed_between(t0,t1)
+    if (sim%my_rank.eq.0) &
+      print*, ' Time for compute_Efield = ', elaps_time
   end subroutine first_step_4d_DK_hybrid
 
 
   !----------------------------------------------------
   ! 1D advection in vpar direction
   !----------------------------------------------------
-  subroutine advec1D_vpar( sim )
+  subroutine advec1D_vpar( sim , deltat_advec )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_real64                        , intent(in)    :: deltat_advec
 
     sll_int32 :: ierr
     sll_int32 :: iloc1, iloc2
@@ -1276,20 +1304,19 @@ contains
           E_z    = sim%E3d_eta3_x3(iloc1,iloc2,ieta3)
           do ivpar = 1,sim%Nvpar
             f1d_vpar_tmp(ivpar) = sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar)
-           
+
           end do
           call sim%interp1d_f_vpar%compute_interpolants( &
             f1d_vpar_tmp)   
           do ivpar = 1,sim%Nvpar
-             ! si change of coordinates in 3D
-             ! val_jac  = sim%transf_xy%jacobian(eta1,eta2,eta3) 
-             alpha4 = sim%dt*E_z ! /val_jac
-             vpar   = sim%vpar_grid(ivpar) - alpha4
-             vpar   = max(min(vpar,sim%vpar_max),sim%vpar_min)
+            ! si change of coordinates in 3D
+            ! val_jac  = sim%transf_xy%jacobian(eta1,eta2,eta3) 
+            alpha4 = deltat_advec*E_z ! /val_jac
+            vpar   = sim%vpar_grid(ivpar) - alpha4
+            vpar   = max(min(vpar,sim%vpar_max),sim%vpar_min)
 
-             sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = &
-                  sim%interp1d_f_vpar%interpolate_value(vpar)
-             
+            sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = &
+              sim%interp1d_f_vpar%interpolate_value(vpar)             
           end do
         end do
       end do
@@ -1303,8 +1330,9 @@ contains
   !----------------------------------------------------
   ! 1D advection in eta3 direction
   !----------------------------------------------------
-  subroutine advec1D_eta3( sim )
+  subroutine advec1D_eta3( sim, deltat_advec )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_real64                        , intent(in)    :: deltat_advec
     
     sll_int32 :: ierr
     sll_int32 :: iloc1, iloc2
@@ -1315,35 +1343,32 @@ contains
     sll_real64 :: eta, eta3, alpha3
     sll_real64, dimension(:), pointer :: f1d_eta3_tmp
     
-
     call compute_local_sizes_4d( sim%layout4d_x3x4, &
-         loc4d_sz_x1, &
-         loc4d_sz_x2, &
-         loc4d_sz_x3, &
-         loc4d_sz_x4 )    
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )    
     
     !---> deta3/dt = vpar
     SLL_ALLOCATE(f1d_eta3_tmp(sim%Neta3),ierr)
     do iloc2 = 1,loc4d_sz_x2
-       do iloc1 = 1,loc4d_sz_x1
-          do ivpar = 1,sim%Nvpar
-             do ieta3 = 1,sim%Neta3
-                f1d_eta3_tmp(ieta3) = sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar)
-                
-             end do
-             call sim%interp1d_f_eta3%compute_interpolants( &
-                  f1d_eta3_tmp)   
-             do ieta3 = 1,sim%Neta3
-                eta3   = sim%eta3_grid(ieta3)
-                alpha3 = sim%dt*eta3
-                eta    = eta3 - alpha3
-                
-                sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = &
-                     sim%interp1d_f_eta3%interpolate_value(eta)
-
-             end do
+      do iloc1 = 1,loc4d_sz_x1
+        do ivpar = 1,sim%Nvpar
+          do ieta3 = 1,sim%Neta3
+            f1d_eta3_tmp(ieta3) = sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar)               
           end do
-       end do
+          call sim%interp1d_f_eta3%compute_interpolants( &
+            f1d_eta3_tmp)   
+          do ieta3 = 1,sim%Neta3
+            eta3   = sim%eta3_grid(ieta3)
+            alpha3 = deltat_advec*eta3
+            eta    = eta3 - alpha3
+
+            sim%f4d_x3x4(iloc1,iloc2,ieta3,ivpar) = &
+              sim%interp1d_f_eta3%interpolate_value(eta)
+          end do
+        end do
+      end do
     end do
     SLL_DEALLOCATE(f1d_eta3_tmp,ierr)
   end subroutine advec1D_eta3
@@ -1352,8 +1377,9 @@ contains
  !----------------------------------------------------
   ! 2D advection in eta1eta2 direction
   !----------------------------------------------------
-  subroutine advec2D_eta1eta2( sim )
+  subroutine advec2D_eta1eta2( sim, deltat_advec )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_real64                        , intent(in)    :: deltat_advec
     
     sll_int32 :: ierr
     sll_int32 :: iloc3, iloc4
@@ -1364,8 +1390,7 @@ contains
     sll_real64 :: eta1,eta2, alpha1,alpha2, E_eta1, E_eta2
     sll_real64 :: val_jac
     sll_real64, dimension(:,:), pointer :: f2d_eta1eta2_tmp
-    
-    
+        
     call compute_local_sizes_4d( sim%layout4d_x1x2, &
          loc4d_sz_x1, &
          loc4d_sz_x2, &
@@ -1378,37 +1403,36 @@ contains
     SLL_ALLOCATE(f2d_eta1eta2_tmp(sim%Neta1,sim%Neta2),ierr)
     
     do iloc4 = 1,loc4d_sz_x4
-       do iloc3 = 1,loc4d_sz_x3
-          do ieta2 = 1,sim%Neta2
-             do ieta1 = 1,sim%Neta1
-                f2d_eta1eta2_tmp(ieta1,ieta2) = sim%f4d_x1x2(ieta1,ieta2,iloc3,iloc4)
-                
-             end do
+      do iloc3 = 1,loc4d_sz_x3
+        do ieta2 = 1,sim%Neta2
+          do ieta1 = 1,sim%Neta1
+            f2d_eta1eta2_tmp(ieta1,ieta2) = sim%f4d_x1x2(ieta1,ieta2,iloc3,iloc4)            
           end do
-         
-          call sim%interp2d_f_eta1eta2%compute_interpolants( &
-               f2d_eta1eta2_tmp)   
-          
-          do ieta2 = 1,sim%Neta2
-             eta2      = sim%eta2_grid(ieta2)
-             do ieta1 = 1,sim%Neta1
-                eta1      = sim%eta1_grid(ieta1)
-                E_eta1    = sim%E3d_eta1_x1x2(ieta1,ieta2,iloc3)
-                E_eta2    = sim%E3d_eta2_x1x2(ieta1,ieta2,iloc3)
-                val_jac  = sim%transf_xy%jacobian(eta1,eta2)
-                alpha1 = - sim%dt*E_eta2/ val_jac
-                alpha2 =   sim%dt*E_eta1/ val_jac
-                eta1   = sim%eta1_grid(ieta1) - alpha1
-                eta2   = sim%eta2_grid(ieta2) - alpha2
-                sim%f4d_x1x2(ieta1,ieta2,iloc3,iloc4) = &
-                     sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
-                
-             end do
+        end do
+
+        call sim%interp2d_f_eta1eta2%compute_interpolants( &
+          f2d_eta1eta2_tmp)   
+
+        do ieta2 = 1,sim%Neta2
+          eta2 = sim%eta2_grid(ieta2)
+          do ieta1 = 1,sim%Neta1
+            eta1    = sim%eta1_grid(ieta1)
+            E_eta1  = sim%E3d_eta1_x1x2(ieta1,ieta2,iloc3)
+            E_eta2  = sim%E3d_eta2_x1x2(ieta1,ieta2,iloc3)
+            val_jac = sim%transf_xy%jacobian(eta1,eta2)
+            alpha1  = - deltat_advec*E_eta2/ val_jac
+            alpha2  =   deltat_advec*E_eta1/ val_jac
+            eta1    = sim%eta1_grid(ieta1) - alpha1
+            eta2    = sim%eta2_grid(ieta2) - alpha2
+            sim%f4d_x1x2(ieta1,ieta2,iloc3,iloc4) = &
+              sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
           end do
-       end do
+        end do
+      end do
     end do
     SLL_DEALLOCATE(f2d_eta1eta2_tmp,ierr)
   end subroutine advec2D_eta1eta2
+
 
   !----------------------------------------------------
   ! Run drift-kinetic 4D simulation
@@ -1416,47 +1440,66 @@ contains
   subroutine run_4d_DK_hybrid( sim )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    print*,sim%my_rank,': --> Advection in vpar direction'
+    integer :: iter
 
-    !--> Advection in vpar direction'
-    call advec1D_vpar(sim)
+    !--> For timers
+    type(sll_time_mark) :: t0, t1 
+    double precision    :: elaps_time_advec, elaps_time_QN
 
-    print*,sim%my_rank,': --> Advection in eta3 direction'
-    ! --> Advection in eta3 direction'
-    call advec1D_eta3(sim)
+    elaps_time_advec = 0.0
+    elaps_time_QN    = 0.0
+
+    do iter = 1,sim%nb_iter
+      if (sim%my_rank.eq.0) &
+        print*,' ===> ITERATION = ',iter
+
+      call set_time_mark(t0)
+      !--> Advection in vpar direction'
+      call advec1D_vpar(sim,0.5_f64*sim%dt)
+
+      ! --> Advection in eta3 direction'
+      call advec1D_eta3(sim,0.5_f64*sim%dt)
    
-    !--> Sequential for the advection in eta1eta2
-    call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
+      !--> Sequential for the advection in eta1eta2
+      call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
 
-    print*,sim%my_rank,': --> Advection in eta1, eta2 direction'
-    !--> Advection in eta1,eta2 direction'
-    call advec2D_eta1eta2(sim)
+      !--> Advection in eta1,eta2 direction'
+      call advec2D_eta1eta2(sim,sim%dt)
     
-    !--> Sequential for the advection in eta3 and in vpar
-     call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
+      !--> Sequential for the advection in eta3 and in vpar
+      call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
     
-     print*,sim%my_rank,': --> Advection in eta3 direction'
-    !--> Advection in eta3 direction'
-    call advec1D_eta3(sim)
+      !--> Advection in eta3 direction'
+      call advec1D_eta3(sim,0.5_f64*sim%dt)
 
-    print*,sim%my_rank,': --> Advection in vpar direction'
-    !--> Advection in vpar direction'
-    call advec1D_vpar(sim)
+      !--> Advection in vpar direction'
+      call advec1D_vpar(sim,0.5_f64*sim%dt)
 
-    !--> Sequential to solve the quasi-neutral equation
-    call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
+      !--> Sequential to solve the quasi-neutral equation
+      call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
 
-     print*,sim%my_rank,': --> Solve quasi-neutre'
-    !--> Solve the quasi-neutral equation
-    call solve_QN( sim )
+      call set_time_mark(t1)
+      elaps_time_advec = elaps_time_advec + &
+        time_elapsed_between(t0,t1)
+        
+      !--> Solve the quasi-neutral equation
+      call set_time_mark(t0)
+      call solve_QN( sim )
+      call set_time_mark(t1)
+      elaps_time_QN = elaps_time_QN + &
+        time_elapsed_between(t0,t1)
 
-     print*,sim%my_rank,': --> Compute electric field'
-    !--> Compute the new electric field
-    call compute_Efield( sim )
+      !--> Compute the new electric field
+      call compute_Efield( sim )
 
-    !--> Sequential for the advection in eta3 and in vpar
-     call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
+      !--> Sequential for the advection in eta3 and in vpar
+      call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
+    end do
 
+    if (sim%my_rank.eq.0) then
+      print*, ' Time for advec in run_4d_DK_hybrid  = ', elaps_time_advec
+      print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
+    end if
   end subroutine run_4d_DK_hybrid
 
 

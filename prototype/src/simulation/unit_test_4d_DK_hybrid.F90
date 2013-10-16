@@ -67,15 +67,18 @@ program DK_hybrid_4d
     call transf_xy%write_to_file()
 
   !*** Fisrt step ***
-  print*,simulation%my_rank,': ---> First step'
+  if (simulation%my_rank.eq.0) &
+    print*,': ---> First step'
   call first_step_4d_DK_hybrid(simulation)
 
   !*** Global loop ***
-  print*,simulation%my_rank,': ---> Run'
+  if (simulation%my_rank.eq.0) &
+    print*,': ---> Run'
   call simulation%run( )
 
   !*** Erase the memory used for the simulation ***
-  print*,simulation%my_rank,': ---> Delete'
+  if (simulation%my_rank.eq.0) &
+    print*,': ---> Delete'
   call delete(simulation)
 
   print *, 'reached end of 4d DK hybrid test'

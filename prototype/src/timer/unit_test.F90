@@ -34,7 +34,6 @@ program unit_test
   time = time_elapsed_between(t0,t1)
   print *, 'Shortest measured time span (seconds): ',time
 
-
   if(a .eq. 2) then
     print *, 'PASSED'
   else
