@@ -193,13 +193,13 @@ end  subroutine solve_maxwell_2d_diga
 
 subroutine compute_normals(tau, i, j, n, x, w, cell )
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
-sll_int32  :: i, j, k, n
-sll_real64 :: x(n), w(n)
-sll_real64 :: edge_length
-sll_real64 :: a, b, c1, c2
-sll_real64 :: xk, det
-sll_real64 :: eta1, eta2
-sll_real64 :: jac_mat(2,2), inv_jac_mat(2,2)
+sll_int32       :: i, j, k, n
+sll_real64      :: x(n), w(n)
+sll_real64      :: edge_length
+sll_real64      :: a, b, c1, c2
+sll_real64      :: xk, det
+sll_real64      :: eta1, eta2
+sll_real64      :: jac_mat(2,2), inv_jac_mat(2,2)
 type(cell_type) :: cell
 
 cell%i = i
@@ -273,10 +273,10 @@ do k = 1, n
 end do
 
 print*, cell%l_edge
-print"(2f8.3,a)", cell%n2_minus, " 0 -1"
-print"(2f8.3,a)", cell%n1_plus,  " 1  0"
-print"(2f8.3,a)", cell%n2_plus,  " 0  1"
-print"(2f8.3,a)", cell%n1_minus, "-1  0"
+print"(2f8.3,8X,a)", cell%n2_minus, " 0 -1"
+print"(2f8.3,8X,a)", cell%n1_plus,  " 1  0"
+print"(2f8.3,8X,a)", cell%n2_plus,  " 0  1"
+print"(2f8.3,8X,a)", cell%n1_minus, "-1  0"
 
 
 end subroutine compute_normals
