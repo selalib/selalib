@@ -60,7 +60,7 @@ sll_real64                              :: err_te
 sll_real64                              :: err_tm
 sll_real64                              :: dt
 sll_real64                              :: cfl = 0.5
-sll_int32                               :: degree = 4
+sll_int32                               :: degree = 2
 sll_int32,  parameter                   :: mode = 2
 
 nc_eta1 = 2; nc_eta2 = 1
@@ -109,6 +109,7 @@ tau => new_coordinate_transformation_2d_analytic( &
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
+stop
 call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
