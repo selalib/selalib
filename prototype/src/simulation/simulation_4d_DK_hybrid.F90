@@ -878,9 +878,6 @@ contains
     call initialize_vector_B_QN_DK (sim,B1,B2) 
     
     call initialize_scalar_C_QN_DK ( sim, C )
-    
-    B1 = 0.0
-    B2 = 0.0
    
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22, B1, B2 and C
@@ -1054,7 +1051,7 @@ contains
   ! In the case of drift-Kinetic and with F the change of variables such that 
   !
   !       (  F_1(eta1, eta2) / norm**2 )
-  ! B = - (                            )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
+  ! B =   (                            )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
   !       (  F_2(eta1, eta2) / norm**2 ) 
   ! with 
   ! norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
@@ -1079,8 +1076,8 @@ contains
          (size(values_B2,2) .ne. Ny) ) then
        print*, ' Problem with the dimension of B2'
     end if
-    values_B1 = -sim%n0_xy/sim%norm_square_xy ! / something 
-    values_B2 = -sim%n0_xy/sim%norm_square_xy ! / something
+    values_B1 = -sim%n0_xy* sim%xgrid_2d/sim%norm_square_xy ! / something 
+    values_B2 = -sim%n0_xy* sim%ygrid_2d/sim%norm_square_xy ! / something
   end subroutine initialize_vector_B_QN_DK
 
 
