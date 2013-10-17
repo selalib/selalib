@@ -76,9 +76,12 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64, dimension(:), pointer :: eta2_grid
      sll_real64, dimension(:), pointer :: eta3_grid
      sll_real64, dimension(:), pointer :: vpar_grid
+     
 
-     !--> Coordinate transformation
+     !--> Coordinate transformation F
      class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
+     !--> Norm of norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
+     sll_real64, dimension(:,:), pointer :: norm_square_xy
 
      !--> 2D physic mesh
      sll_real64, dimension(:,:), pointer :: xgrid_2d
@@ -305,6 +308,7 @@ contains
     do ir = 1,Nr
       r_grid_tmp(ir) = sim%r_min + float(ir-1)*dr
     end do
+
 
     !--> Initialization of n0(r), Ti(r) and Te(r)
     SLL_ALLOCATE(sim%n0_r(Nr),ierr)
@@ -554,8 +558,8 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-            glob_ind4d(:) = local_to_global_4D(sim%layout4d_x3x4, &
-              (/iloc1,iloc2,iloc3,iloc4/))
+             glob_ind4d(:) = local_to_global_4D(sim%layout4d_x3x4, &
+                  (/iloc1,iloc2,iloc3,iloc4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
             i3 = glob_ind4d(3)
@@ -868,28 +872,16 @@ contains
     SLL_ALLOCATE(C(Neta1,Neta2),ierr)
     
     !---> Initialization of the matrices A11, A12, A21, A22, B1, B2 and C
-    ! In the case of drift-Kinetic and with F the change of variables such that 
-    !  F( eta1,eta2) =( F_1(eta1, eta2),F_2(eta1, eta2) ) = ( x, y )
-    !    ( 1   0 )
-    ! A =(       )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
-    !    ( 0   1 ) 
-    A11(:,:) = 1._f64 ! 
-    A12(:,:) = 0._f64
-    A21(:,:) = 0._f64
-    A22(:,:) = 1._f64
-
-    !       (  F_1(eta1, eta2) / norm**2 )
-    ! B = - (                            )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
-    !       (  F_2(eta1, eta2) / norm**2 ) 
-    ! with 
-    ! norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
-
-    B1(:,:)  = 0._f64
-    B2(:,:)  = 0._f64
-
-    ! C = e n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/( T_e (F_1(eta1, eta2),F_2(eta1, eta2)) )
-    C(:,:)   = 0._f64
     
+    call initialize_matrix_A_QN_DK ( sim,A11,A12,A21,A22) 
+    
+    call initialize_vector_B_QN_DK (sim,B1,B2) 
+    
+    call initialize_scalar_C_QN_DK ( sim, C )
+    
+    B1 = 0.0
+    B2 = 0.0
+   
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22, B1, B2 and C
     sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
@@ -1006,6 +998,118 @@ contains
 
 
   !----------------------------------------------------
+  ! Initialization of the QN coefficients of matrix A
+  !----------------------------------------------------
+  ! In the case of drift-Kinetic and with F the change of variables such that 
+  !
+  !  F( eta1,eta2) =( F_1(eta1, eta2),F_2(eta1, eta2) ) = ( x, y )
+  !
+  !    ( -1   0 )
+  ! A =(        )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
+  !    ( 0   -1 ) 
+  !----------------------------------------------------
+  subroutine initialize_matrix_A_QN_DK (&
+       sim,&
+       values_A11,&
+       values_A12,&
+       values_A21,&
+       values_A22 )
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_real64, dimension(:,:), pointer :: values_A11
+    sll_real64, dimension(:,:), pointer :: values_A12
+    sll_real64, dimension(:,:), pointer :: values_A21
+    sll_real64, dimension(:,:), pointer :: values_A22
+    sll_int32  :: Nx, Ny
+    
+    Nx = sim%Neta1
+    Ny = sim%Neta2
+
+    if ( (size(values_A11,1) .ne. Nx) .OR. &
+         (size(values_A11,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of A11'
+    end if
+    if ( (size(values_A12,1) .ne. Nx) .OR. &
+         (size(values_A12,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of A12'
+    end if
+    if ( (size(values_A21,1) .ne. Nx) .OR. &
+         (size(values_A21,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of A21'
+    end if
+    if ( (size(values_A22,1) .ne. Nx) .OR. &
+         (size(values_A22,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of A22'
+    end if
+
+    values_A11 = -sim%n0_xy ! / something 
+    values_A12 = 0.0 
+    values_A21 = 0.0
+    values_A22 = -sim%n0_xy ! / something
+  end subroutine initialize_matrix_A_QN_DK
+
+
+  !----------------------------------------------------
+  ! Initialization of the QN coefficients of vector B
+  !----------------------------------------------------
+  ! In the case of drift-Kinetic and with F the change of variables such that 
+  !
+  !       (  F_1(eta1, eta2) / norm**2 )
+  ! B = - (                            )*  n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/(B(F_1(eta1, eta2),F_2(eta1, eta2))* omega_0 )
+  !       (  F_2(eta1, eta2) / norm**2 ) 
+  ! with 
+  ! norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
+  !----------------------------------------------------
+   subroutine initialize_vector_B_QN_DK (&
+        sim,&
+        values_B1,&
+        values_B2 )
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_real64, dimension(:,:), pointer :: values_B1
+    sll_real64, dimension(:,:), pointer :: values_B2
+    sll_int32  :: Nx, Ny
+    
+    Nx = sim%Neta1
+    Ny = sim%Neta2
+    
+    if ( (size(values_B1,1) .ne. Nx) .OR. &
+         (size(values_B1,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of B1'
+    end if
+    if ( (size(values_B2,1) .ne. Nx) .OR. &
+         (size(values_B2,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of B2'
+    end if
+    values_B1 = -sim%n0_xy/sim%norm_square_xy ! / something 
+    values_B2 = -sim%n0_xy/sim%norm_square_xy ! / something
+  end subroutine initialize_vector_B_QN_DK
+
+
+  !----------------------------------------------------
+  ! Initialization of the QN coefficients of scalar C
+  !----------------------------------------------------
+  ! In the case of drift-Kinetic and with F the change of variables such that 
+  !
+  ! C = e n_0 ( F_1(eta1, eta2),F_2(eta1, eta2))/( T_e (F_1(eta1, eta2),F_2(eta1, eta2)) )
+  !---------------------------------------------------- 
+  subroutine initialize_scalar_C_QN_DK (&
+       sim,&
+       values_C )
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_real64, dimension(:,:), pointer :: values_C
+    sll_int32  :: Nx, Ny
+    
+    Nx = sim%Neta1
+    Ny = sim%Neta2
+
+    if ( (size(values_C,1) .ne. Nx) .OR. &
+         (size(values_C,2) .ne. Ny) ) then
+       print*, ' Problem with the dimension of C'
+    end if
+    values_C = sim%n0_xy /sim%Te_xy
+  end subroutine initialize_scalar_C_QN_DK
+
+
+  !----------------------------------------------------
   ! Initialization of the drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine initialize_4d_DK_hybrid( sim, &
@@ -1069,19 +1173,26 @@ contains
     !--> Transformation initialization
     sim%transf_xy => transf_xy
 
-    !--> Initialization of the (x,y) 2D mesh
+
+    !--> Initialization of the (x,y) 2D mesh and
+    !--> Initialization of the square of the norm 
     Nx = sim%Neta1
     Ny = sim%Neta2
     SLL_ALLOCATE(sim%xgrid_2d(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%ygrid_2d(Nx,Ny),ierr)
+    SLL_ALLOCATE(sim%norm_square_xy(Nx,Ny),ierr)
     do ieta2 = 1,sim%Neta2
       do ieta1 = 1,sim%Neta1
         sim%xgrid_2d(ieta1,ieta2) = &
           sim%transf_xy%x1_at_node(ieta1,ieta2)
         sim%ygrid_2d(ieta1,ieta2) = &
           sim%transf_xy%x2_at_node(ieta1,ieta2)
+        sim%norm_square_xy(ieta1,ieta2) = sim%xgrid_2d(ieta1,ieta2)**2 &
+                                        + sim%ygrid_2d(ieta1,ieta2)**2
       end do
     end do
+
+    
       
     !--> Radial profile initialisation
     call init_profiles_DK(sim)
@@ -1456,7 +1567,6 @@ contains
             E_eta1  = sim%E3d_eta1_x1x2(ieta1,ieta2,iloc3)
             E_eta2  = sim%E3d_eta2_x1x2(ieta1,ieta2,iloc3)
             val_jac = sim%transf_xy%jacobian(eta1,eta2)
-            print*, 'valeur jacob',val_jac
             alpha1  = - deltat_advec*E_eta2/ val_jac
             alpha2  =   deltat_advec*E_eta1/ val_jac
             eta1    = sim%eta1_grid(ieta1) - alpha1
@@ -1501,7 +1611,7 @@ contains
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_x3x4, sim%f4d_x1x2 )
 
       !--> Advection in eta1,eta2 direction'
-      !call advec2D_eta1eta2(sim,sim%dt)
+      call advec2D_eta1eta2(sim,sim%dt)
     
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_x1x2, sim%f4d_x3x4 )
@@ -1634,6 +1744,7 @@ contains
     SLL_DEALLOCATE(sim%eta2_grid,ierr)
     SLL_DEALLOCATE(sim%eta3_grid,ierr)
     SLL_DEALLOCATE(sim%vpar_grid,ierr)
+    SLL_DEALLOCATE(sim%norm_square_xy,ierr)
     SLL_DEALLOCATE(sim%n0_r,ierr)
     SLL_DEALLOCATE(sim%Ti_r,ierr)
     SLL_DEALLOCATE(sim%Te_r,ierr)
