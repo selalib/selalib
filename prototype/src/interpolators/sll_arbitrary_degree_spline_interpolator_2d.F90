@@ -502,7 +502,6 @@ contains
       interpolator%coeff_splines(1,:) = 0.0_8
       interpolator%coeff_splines(nb_spline_eta1+2,:) = 0.0_8
       
-      
    case(576)!3. periodic, dirichlet-bottom, dirichlet-top
       interpolator%size_coeffs1=  num_cells1 + sp_deg1 
       interpolator%size_coeffs2=  num_cells2 + sp_deg2
