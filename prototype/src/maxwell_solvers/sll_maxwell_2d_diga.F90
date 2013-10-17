@@ -20,32 +20,31 @@ implicit none
 type :: cell_type
    sll_real64 :: eta1_min, eta1_max
    sll_real64 :: eta2_min, eta2_max
-   sll_int32  :: i            !             ^
-   sll_int32  :: j            !             | n2+
-   sll_real64 :: n1_plus(2)   !         _________
-   sll_real64 :: n1_minus(2)  !         |       |
-   sll_real64 :: n2_plus(2)   !  n1- <--|       |--> n1+
-   sll_real64 :: n2_minus(2)  !         |_______|
-   sll_real64 :: l_edge(4)    !             |
-end type cell_type            !             V n2-
+   sll_int32  :: i           
+   sll_int32  :: j          
+   sll_real64 :: n(4,2)     
+   sll_real64 :: l_edge(4)   
+end type cell_type
 
-type :: W_vector
+type :: W_matrix
    sll_real64, dimension(:,:), pointer :: ex
    sll_real64, dimension(:,:), pointer :: ey
    sll_real64, dimension(:,:), pointer :: hz
+end type W_matrix
+
+type :: W_vector
+   sll_real64, dimension(:), pointer :: ex
+   sll_real64, dimension(:), pointer :: ey
+   sll_real64, dimension(:), pointer :: hz
 end type W_vector
 
-type :: A_matrix
-   sll_real64, dimension(3,3) :: v
-end type A_matrix
-
 interface operator(/)
-  function W_divide_by_MassMatrix( W1, MassMat) result(W2)
-     type(W_vector), intent(in) :: W1
-     sll_real64, dimension(:)   :: MassMat
-     type(W_vector)             :: W2
-  end function W_divide_by_MassMatrix( W, MassMat)
+  module procedure W_divide_by_MassMatrix
 end interface operator(/)
+
+interface operator(*)
+  module procedure W_multiply_by_StiffnessMatrix
+end interface operator(*)
 
 !> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
@@ -54,12 +53,14 @@ type :: maxwell_2d_diga
  class(sll_coordinate_transformation_2d_analytic), pointer :: tau  !< Geometric transformation
  sll_int32                                :: polarization !< TE or TM
  sll_int32                                :: d       !< d of gauss integration
- type(w_vector), dimension(:), pointer    :: W
- type(A_matrix), dimension(2)             :: A
+ type(w_matrix), dimension(:), pointer    :: W
+ sll_real64, dimension(3,3)               :: A1
+ sll_real64, dimension(3,3)               :: A2
  sll_real64, dimension(:,:),   pointer    :: MassMatrix !< Mass Matrix
  sll_real64, dimension(:,:,:), pointer    :: DxMatrix   !< X Stiffness Matrix
  sll_real64, dimension(:,:,:), pointer    :: DyMatrix   !< Y Stiffness Matrix
  type(cell_type), dimension(:,:), pointer :: cell
+ sll_real64, dimension(:,:,:), pointer    :: BndMatrix
 end type maxwell_2d_diga
 
 interface initialize
@@ -70,9 +71,10 @@ interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
 
-sll_int32, private :: nx, ny
-sll_int32, private :: error
-sll_int32, private :: i, j, k, l, ii, jj, kk, ll
+sll_int32, private      :: nx, ny
+sll_int32, private      :: error
+sll_int32, private      :: i, j, k, l, ii, jj, kk, ll
+type(w_vector), private :: V
 
 contains
 
@@ -96,7 +98,6 @@ sll_real64 :: dlag(d+1,d+1)
 sll_real64 :: det
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: inv_jac_mat(2,2)
-sll_real64 :: east(2), west(2), north(2), south(2)
 sll_real64 :: eta1_p, eta2_p
 sll_real64 :: mdiag
 
@@ -129,6 +130,7 @@ end do
 SLL_CLEAR_ALLOCATE(this%MassMatrix(1:(d+1)*(d+1),1:ncells), error)
 SLL_CLEAR_ALLOCATE(this%DxMatrix(1:(d+1)*(d+1),1:(d+1)*(d+1),1:ncells), error)
 SLL_CLEAR_ALLOCATE(this%DyMatrix(1:(d+1)*(d+1),1:(d+1)*(d+1),1:ncells), error)
+SLL_CLEAR_ALLOCATE(this%BndMatrix(1:(d+1),1:(d+1),1:ncells), error)
 SLL_ALLOCATE(this%cell(this%mesh%num_cells1,this%mesh%num_cells2), error)
 
 k = 0
@@ -160,27 +162,32 @@ do i = 1, this%mesh%num_cells1
 
    call compute_normals(tau, i, j, d+1, xgalo, wgalo, this%cell(i,j) )
 
-end do
-end do
+   !this%A1 = reshape((/ 0., 0., 0., 0., 0., this%cell%n1_plus, 0., this%cell%n1_plus, 0./), (/3,3/))
+   !this%A2 = reshape((/ 0., 0.,-this%n2_plus, 0., 0., 0.,-this%n2_plus, 0., 0./), (/3,3/))
 
+
+end do
+end do
 
 call display_matrix(this%MassMatrix(:,:),"f7.2")
 call display_matrix(this%DxMatrix(:,:,1),"f7.2")
 call display_matrix(this%DyMatrix(:,:,1),"f7.2")
-stop
 
-this%A(1)%v = reshape((/ 0., 0., 0., 0., 0., 1., 0., 1., 0./), (/3,3/))
-this%A(2)%v = reshape((/ 0., 0.,-1., 0., 0., 0.,-1., 0., 0./), (/3,3/))
-
-call display_matrix(this%A(1)%v,"f7.2")
-call display_matrix(this%A(2)%v,"f7.2")
+call display_matrix(this%A1,"f7.2")
+call display_matrix(this%A2,"f7.2")
 
 SLL_ALLOCATE(this%W(ncells),error)
+
+
 do k = 1, ncells
-   SLL_ALLOCATE(this%W(k)%ex(d+1,d+1),error)
-   SLL_ALLOCATE(this%W(k)%ey(d+1,d+1),error)
-   SLL_ALLOCATE(this%W(k)%hz(d+1,d+1),error)
+   SLL_CLEAR_ALLOCATE(this%W(k)%ex(1:(d+1),1:(d+1)),error)
+   SLL_CLEAR_ALLOCATE(this%W(k)%ey(1:(d+1),1:(d+1)),error)
+   SLL_CLEAR_ALLOCATE(this%W(k)%hz(1:(d+1),1:(d+1)),error)
 end do
+
+SLL_CLEAR_ALLOCATE(V%ex(1:d+1),error)
+SLL_CLEAR_ALLOCATE(V%ey(1:d+1),error)
+SLL_CLEAR_ALLOCATE(V%hz(1:d+1),error)
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -197,11 +204,31 @@ sll_real64, intent(in)     :: dt             !< time step
 sll_real64, dimension(:,:), optional :: jx   !< x current field
 sll_real64, dimension(:,:), optional :: jy   !< y current field
 sll_real64, dimension(:,:), optional :: rho  !< charge density
+sll_int32 :: edge
 
+k = 0
+do i = 1, this%mesh%num_cells1
+do j = 1, this%mesh%num_cells2
 
-!this%W = this%W + this%A(1) * this%Dx * this%W + this%A(2) * this%Dy * this%W
+   k = k+1
+   
+   !this%W = this%W + dt * (  matmul(this%A1,this%DxMatrix(:,:,k))*this%W &
+   !                        + matmul(this%A2*this%DyMatrix(:,:,k))*this%W )
 
-!this%W = this%W / this%MassMat
+   print*, "cell :", k, i, j
+   do edge = 1, 4 ! Loop over edges
+ 
+      l = dof_local(edge, ii,this%d)
+      !print*, (dof_neighbor(edge, ii,this%d), ii=1,this%d+1)
+
+   end do
+
+   this%W(k) = this%W(k) / this%MassMatrix(:,k)
+
+end do
+end do
+stop
+
 
 end  subroutine solve_maxwell_2d_diga
 
@@ -226,82 +253,158 @@ cell%eta1_max = cell%eta1_min + tau%mesh%delta_eta1
 cell%eta2_max = cell%eta2_min + tau%mesh%delta_eta2
 
 cell%l_edge   = 0._f64
-cell%n1_minus = 0._f64
-cell%n1_plus  = 0._f64
-cell%n2_minus = 0._f64
-cell%n2_plus  = 0._f64
+cell%n        = 0._f64
 
-!South
 a  = cell%eta1_min
 b  = cell%eta1_max 
 c1 = 0.5_f64 * (b-a)
 c2 = 0.5_f64 * (b+a)
 do k = 1, n
    xk = c1*x(k) + c2
-   jac_mat          = tau%jacobian_matrix(xk, cell%eta2_min)
-   inv_jac_mat      = tau%inverse_jacobian_matrix(xk, cell%eta2_min)
-   det              = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-   cell%n2_minus    = det*matmul(inv_jac_mat,(/0._f64,-1._f64/))
-   cell%l_edge(1)   = cell%l_edge(1) + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
+   jac_mat            = tau%jacobian_matrix(xk, cell%eta2_min)
+   inv_jac_mat        = tau%inverse_jacobian_matrix(xk, cell%eta2_min)
+   det                = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
+   cell%n(SOUTH,:)    = det*matmul(inv_jac_mat,(/0._f64,-1._f64/))
+   cell%l_edge(SOUTH) = cell%l_edge(SOUTH) + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
 end do
-cell%l_edge(1) = cell%l_edge(1) * c1
+cell%l_edge(SOUTH) = cell%l_edge(SOUTH) * c1
 
-!East
 a  = cell%eta2_min 
 b  = cell%eta2_max 
 c1 = 0.5_f64 * (b-a)
 c2 = 0.5_f64 * (b+a)
 do k = 1, n
    xk = c1*x(k) + c2
-   jac_mat          = tau%jacobian_matrix(cell%eta1_max, xk)
-   det              = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-   inv_jac_mat      = tau%inverse_jacobian_matrix(cell%eta1_max, xk)
-   cell%n1_plus     = det*matmul(inv_jac_mat,(/1._f64,0._f64/))
-   cell%l_edge(2)   = cell%l_edge(2) + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
+   jac_mat           = tau%jacobian_matrix(cell%eta1_max, xk)
+   det               = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
+   inv_jac_mat       = tau%inverse_jacobian_matrix(cell%eta1_max, xk)
+   cell%n(EAST,:)    = det*matmul(inv_jac_mat,(/1._f64, 0._f64/))
+   cell%l_edge(EAST) = cell%l_edge(EAST) + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
 end do
-cell%l_edge(2) = cell%l_edge(2) * c1
+cell%l_edge(EAST) = cell%l_edge(EAST) * c1
 
-!North
 a  = cell%eta1_min 
 b  = cell%eta1_max 
 c1 = 0.5_f64 * (b-a)
 c2 = 0.5_f64 * (b+a)
 do k = 1, n
    xk = c1*x(k) + c2
-   jac_mat          = tau%jacobian_matrix(xk, cell%eta2_max)
-   det              = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-   inv_jac_mat      = tau%inverse_jacobian_matrix(xk, cell%eta2_max)
-   cell%n2_plus     = det*matmul(inv_jac_mat,(/0._f64,1._f64/))
-   cell%l_edge(3)   = cell%l_edge(3) + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
+   jac_mat            = tau%jacobian_matrix(xk, cell%eta2_max)
+   det                = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
+   inv_jac_mat        = tau%inverse_jacobian_matrix(xk, cell%eta2_max)
+   cell%n(NORTH,:)    = det*matmul(inv_jac_mat,(/0._f64, 1._f64/))
+   cell%l_edge(NORTH) = cell%l_edge(NORTH) + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
 end do
-cell%l_edge(3) = cell%l_edge(3) * c1
+cell%l_edge(NORTH) = cell%l_edge(NORTH) * c1
 
-!West
 a  = cell%eta2_min 
 b  = cell%eta2_max 
 c1 = 0.5_f64 * (b-a)
 c2 = 0.5_f64 * (b+a)
 do k = 1, n
    xk = c1*x(k) + c2
-   jac_mat          = tau%jacobian_matrix(cell%eta1_min, xk)
-   det              = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-   inv_jac_mat      = tau%inverse_jacobian_matrix(cell%eta2_min, xk)
-   cell%n1_minus    = det*matmul(inv_jac_mat,(/-1._f64,0._f64/))
-   cell%l_edge(4)   = cell%l_edge(4) + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
+   jac_mat           = tau%jacobian_matrix(cell%eta1_min, xk)
+   det               = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
+   inv_jac_mat       = tau%inverse_jacobian_matrix(cell%eta2_min, xk)
+   cell%n(WEST,:)    = det*matmul(inv_jac_mat,(/-1._f64, 0._f64/))
+   cell%l_edge(WEST) = cell%l_edge(WEST) + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
 end do
-cell%l_edge(4) = cell%l_edge(4) * c1
+cell%l_edge(WEST) = cell%l_edge(WEST) * c1
 
 print"(/,4f8.3)",      cell%eta1_min, cell%eta1_max, cell%eta2_min, cell%eta2_max
 print"(4f8.3)",        cell%l_edge
-print"(2f8.3,8X,a)",   cell%n2_minus, " 0 -1"
-print"(2f8.3,8X,a)",   cell%n1_plus,  " 1  0"
-print"(2f8.3,8X,a)",   cell%n2_plus,  " 0  1"
-print"(2f8.3,8X,a,/)", cell%n1_minus, "-1  0"
+print"(2f8.3,8X,a)",   cell%n(:,SOUTH),  " 0 -1"
+print"(2f8.3,8X,a)",   cell%n(:,EAST) ,  " 1  0"
+print"(2f8.3,8X,a)",   cell%n(:,NORTH),  " 0  1"
+print"(2f8.3,8X,a,/)", cell%n(:,WEST) ,  "-1  0"
 
 
 end subroutine compute_normals
 
+function W_divide_by_MassMatrix( W1, MassMat) result(W2)
+  type(W_matrix), intent(in)           :: W1
+  sll_real64, dimension(:), intent(in) :: MassMat
+  type(W_matrix)                       :: W2
+  
+  k = 0
+  do ii = 1, size(W1%Ex,1)
+  do jj = 1, size(W1%Ex,2)
+
+     k = k+1
+     W2%Ex(ii,jj) = W1%Ex(ii,jj) / MassMat(k)
+     W2%Ey(ii,jj) = W1%Ey(ii,jj) / MassMat(k)
+     W2%Hz(ii,jj) = W1%Hz(ii,jj) / MassMat(k)
+
+  end do   
+  end do   
+
+
+end function W_divide_by_MassMatrix
+
+function W_multiply_by_StiffnessMatrix( SMat, W1) result(W2)
+  type(W_matrix), intent(in)             :: W1
+  sll_real64, dimension(:,:), intent(in) :: SMat
+  type(W_matrix)                         :: W2
+  sll_int32                              :: dof
+  sll_int32                              :: nddl
+  
+  W2%Ex = 0.0_f64
+  W2%Ey = 0.0_f64
+  W2%Hz = 0.0_f64
+  nddl  = size(W1%Ex,1)
+
+  do ii = 1, nddl
+  do jj = 1, nddl
+
+     dof = 0
+     do kk = 1, nddl
+     do ll = 1, nddl
+        dof = dof+1
+        !W2%Ex(ii,jj) = W2%Ex(ii,jj) + W1%Ex(ii,jj) * SMat(dof)
+        !W2%Ey(ii,jj) = W2%Ex(ii,jj) + W1%Ey(ii,jj) * SMat(dof)
+        !W2%Hz(ii,jj) = W2%Ex(ii,jj) + W1%Hz(ii,jj) * SMat(dof)
+     end do
+     end do
+
+  end do   
+  end do   
+
+
+end function W_multiply_by_StiffnessMatrix
+
+function dof_local(edge,dof,degree)
+sll_int32 :: dof_local
+sll_int32 :: edge, dof, degree
+
+select case(edge)
+case(SOUTH)
+   dof_local = dof
+case(EAST)
+   dof_local = dof*(degree+1)
+case(NORTH)
+   dof_local = (degree+1)*(degree+1)-dof+1 
+case(WEST)
+   dof_local = degree*(degree+1)+1-(dof-1)*(degree+1)
+end select
+
+end function dof_local
+
+function dof_neighbor(edge,dof,degree)
+sll_int32 :: dof_neighbor
+sll_int32 :: edge, dof, degree
+
+select case(edge)
+case(SOUTH)
+   dof_neighbor = degree*(degree+1)+dof
+case(EAST)
+   dof_neighbor = (dof-1)*(degree+1)+1
+case(NORTH)
+   dof_neighbor = degree+1-dof+1
+case(WEST)
+   dof_neighbor = (degree+1)*(degree+1)-(dof-1)*(degree+1)
+end select
+
+end function dof_neighbor
 
 end module sll_maxwell_2d_diga
-
 
