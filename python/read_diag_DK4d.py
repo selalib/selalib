@@ -2,9 +2,9 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-f_diag = ut.loadHDF5('DK4d_diag_d00001.h5')
+f_diag = ut.loadHDF5('/Users/back/selalib/prototype/build/DK4d_diag_d00000.h5')
 
-fig = mpp.figure(figsize=(12,12))
+fig = mpp.figure(figsize=(10,8))
 
 ax1 = fig.add_subplot(2,2,1)
 p1  = ax1.pcolormesh(f_diag.phi2d_x1x2)
