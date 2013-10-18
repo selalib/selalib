@@ -131,6 +131,28 @@ module sll_fdistribu4d_DK
 
 
   !---------------------------------------------------------------
+  ! Initialisation of the magnetic field B(r,theta)
+  !---------------------------------------------------------------
+  subroutine init_Brtheta(r_grid,theta_grid,B_rtheta)
+    sll_real64, dimension(:)  , intent(in)    :: r_grid
+    sll_real64, dimension(:)  , intent(in)    :: theta_grid
+    sll_real64, dimension(:,:), intent(inout) :: B_rtheta
+
+    sll_int32 :: ir, itheta
+    sll_int32 :: Nr, Ntheta
+
+    Nr     = size(r_grid,1)
+    Ntheta = size(theta_grid,1)
+
+    do itheta = 1,Ntheta
+      do ir = 1,Nr
+        B_rtheta(ir,itheta) = 1._f64
+      end do
+    end do
+  end subroutine init_Brtheta
+
+
+  !---------------------------------------------------------------
   ! Computation of the equilibrium distribution function for
   !  drift-kinetic 4D simulation
   !   feq(r,vpar) = n0(r)/(2*pi*Ti(r))**(1/2) * 
@@ -201,7 +223,7 @@ module sll_fdistribu4d_DK
     sll_int32  :: ix, iy
     sll_real64 :: r, x, y
  
-    type(sll_cubic_spline_1d), pointer :: sp1d_r
+    type(sll_cubic_spline_1D), pointer :: sp1d_r
 
     Nr   = size(r_grid,1)
     Npt1 = size(xgrid_2d,1)
@@ -222,6 +244,55 @@ module sll_fdistribu4d_DK
     end do
     call delete(sp1d_r)
   end subroutine function_xy_from_r
+
+
+  !----------------------------------------------------
+  ! Compute func(x,y) from func(r,theta)
+  !----------------------------------------------------
+  subroutine function_xy_from_rtheta(r_grid,theta_grid, &
+    func_rtheta,xgrid_2d,ygrid_2d,func_xy)
+    use sll_constants
+    use sll_cubic_splines
+    use sll_common_coordinate_transformations, only : &
+      polar_eta1, polar_eta2
+    sll_real64, dimension(:)  , intent(in)  :: r_grid
+    sll_real64, dimension(:)  , intent(in)  :: theta_grid
+    sll_real64, dimension(:,:), intent(in)  :: func_rtheta
+    sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
+    sll_real64, dimension(:,:), intent(in)  :: ygrid_2d
+    sll_real64, dimension(:,:), intent(out) :: func_xy
+
+    sll_int32  :: Nr, Ntheta
+    sll_int32  :: Npt1, Npt2
+    sll_int32  :: ix, iy
+    sll_real64 :: r, theta, x, y
+ 
+    type(sll_cubic_spline_2D), pointer :: sp2d_rtheta
+
+    Nr     = size(r_grid,1)
+    Ntheta = size(theta_grid,1)
+    Npt1   = size(xgrid_2d,1)
+    Npt2   = size(xgrid_2d,2)
+
+    sp2d_rtheta => new_spline_2d(Npt1,Npt2, &
+      r_grid(1),r_grid(Nr), &
+      theta_grid(1),theta_grid(Ntheta), &
+      SLL_HERMITE,SLL_PERIODIC)
+    call compute_spline_2D(func_rtheta,sp2d_rtheta)
+
+    do iy = 1,Npt2
+      do ix = 1,Npt1
+        x     = xgrid_2d(ix,iy)
+        y     = ygrid_2d(ix,iy)
+        r     = polar_eta1(x,y)
+        r     = min(max(r,r_grid(1)),r_grid(Nr))
+        theta = polar_eta2(x,y)
+        theta = modulo(theta,2._f64*sll_pi)
+        func_xy(ix,iy) = interpolate_value_2D(r,theta,sp2d_rtheta)
+      end do
+    end do
+    call delete(sp2d_rtheta)
+  end subroutine function_xy_from_rtheta
 
 
   !----------------------------------------------------
