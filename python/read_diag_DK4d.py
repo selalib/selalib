@@ -2,7 +2,7 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-f_diag = ut.loadHDF5('/Users/back/selalib/prototype/build/DK4d_diag_d00000.h5')
+f_diag = ut.loadHDF5('/Users/back/selalib/prototype/build/DK4d_diag_d00001.h5')
 
 fig = mpp.figure(figsize=(10,8))
 
@@ -33,6 +33,7 @@ mpp.xlabel('vpar')
 mpp.ylabel('z')
 mpp.title('f2D_zvpar')
 fig.colorbar(p4)
+
 
 fig.show()
 

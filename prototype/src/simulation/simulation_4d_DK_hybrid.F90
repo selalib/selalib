@@ -1127,8 +1127,8 @@ contains
         B_xy_tmp     = sim%B_xy(ieta1,ieta2) 
         norm2_xy_tmp = sim%norm_square_xy(ieta1,ieta2) 
         val_tmp      = n0_xy_tmp/(B_xy_tmp*norm2_xy_tmp)
-        values_B1(ieta1,ieta2) = -val_tmp*x_tmp
-        values_B2(ieta1,ieta2) = -val_tmp*y_tmp
+        values_B1(ieta1,ieta2) = 0.0!-val_tmp*x_tmp
+        values_B2(ieta1,ieta2) = 0.0!-val_tmp*y_tmp
       end do
     end do
   end subroutine initialize_vector_B_QN_DK
@@ -1418,7 +1418,8 @@ contains
     !*** Computation of the rhs of QN ***
     call set_time_mark(t0)
     call compute_charge_density(sim%logical_mesh4d, &
-      sim%f4d_seqx3x4,sim%rho3d_seqx3)
+      sim%f4d_seqx3x4,sim%layout4d_seqx3x4,sim%feq_xyvpar, &
+      sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
     !--> compute rho3d_seqx1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2, sim%rho3d_seqx3, sim%rho3d_seqx1x2 )
     call set_time_mark(t1)
@@ -1659,8 +1660,10 @@ contains
       !--> Sequential for the advection in eta1eta2
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
 
-      !--> Advection in eta1,eta2 direction'
-      call advec2D_eta1eta2(sim,sim%dt)
+!baremettre
+!VG!      !--> Advection in eta1,eta2 direction'
+!VG!      call advec2D_eta1eta2(sim,sim%dt)
+!earemettre
     
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_seqx1x2, sim%f4d_seqx3x4 )
@@ -1680,6 +1683,11 @@ contains
         
       !--> Solve the quasi-neutral equation
       call set_time_mark(t0)
+      !-----> Computation of the rhs of QN 
+      call compute_charge_density(sim%logical_mesh4d, &
+        sim%f4d_seqx3x4,sim%layout4d_seqx3x4,sim%feq_xyvpar, &
+        sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
+      !-----> Solve QN
       call solve_QN( sim )
       call set_time_mark(t1)
       elaps_time_QN = elaps_time_QN + &
@@ -1753,19 +1761,34 @@ contains
 
 
   !-----------------------------------------------------------
-  ! Computation of the charge density, i.e
-  !  rho(eta1,eta2,eta3) = \int f(eta1,eta2,eta3,vpar) dvpar
-  !  In : f4d_seqx3x4(x1 part,x2 part,x3=*,x4=*)
-  !  Out: rho3d(x1=*,x2=*,x3=*)
+  ! Computation of the charge density, i.e   
+  !   rho(x,y,z) = \int delta f dvpar
+  !   delta f = f(x,y,z,vpar) - feq(x,y,vpar) 
+  !  In : f4d_seqx3x4(x1=distrib,x2=distrib,x3=*,x4=*)
+  !       feq3d_seqx1x2x4(x1=*,x2=*,x4=*)
+  !  Out: rho3d_seqx3(x1=distrib,x2=distrib,x3=*)
   !-----------------------------------------------------------
-  subroutine compute_charge_density(logical_mesh4d,f4d_seqx3x4,rho3d_seqx3)
+  subroutine compute_charge_density(logical_mesh4d, &
+    f4d_seqx3x4, &
+    layout4d_seqx3x4, &
+    feq3d_seqx1x2x4, &
+    seqx3_to_seqx1x2, &
+    rho3d_seqx3, &
+    rho3d_seqx1x2)
     type(sll_logical_mesh_4d)     , intent(in)    :: logical_mesh4d
     sll_real64, dimension(:,:,:,:), intent(in)    :: f4d_seqx3x4
+    type(layout_4D)               , pointer       :: layout4d_seqx3x4
+    sll_real64, dimension(:,:,:)  , intent(in)    :: feq3d_seqx1x2x4
+    type(remap_plan_3D_real64)    , pointer       :: seqx3_to_seqx1x2
     sll_real64, dimension(:,:,:)  , intent(inout) :: rho3d_seqx3
+    sll_real64, dimension(:,:,:)  , intent(inout) :: rho3d_seqx1x2
 
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3, Nvpar
-    sll_int32  :: iloc1, iloc2, i3, i4
+    sll_int32  :: iloc1, iloc2
+    sll_int32  :: i1, i2, i3, i4
+    sll_real64 :: delta_f
     sll_real64 :: delta_vpar, intf_dvpar
+    sll_int32, dimension(1:4) :: glob_ind4d
     
     Neta1_loc  = size(f4d_seqx3x4,1)
     Neta2_loc  = size(f4d_seqx3x4,2)
@@ -1779,13 +1802,21 @@ contains
         do iloc1 = 1,Neta1_loc
           intf_dvpar = 0._f64
           do i4 = 1,Nvpar
+            glob_ind4d(:) = local_to_global_4D(layout4d_seqx3x4, &
+                  (/iloc1,iloc2,i3,i4/))
+            i1 = glob_ind4d(1)
+            i2 = glob_ind4d(2)
+            delta_f = f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+              feq3d_seqx1x2x4(i1,i2,i4)
             intf_dvpar = intf_dvpar + &
-              f4d_seqx3x4(iloc1,iloc2,i3,i4)*delta_vpar
+              delta_f*delta_vpar
           end do
           rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar
         end do
       end do
     end do
+    !--> compute rho3d_seqx1x2
+    call apply_remap_3D(seqx3_to_seqx1x2,rho3d_seqx3,rho3d_seqx1x2)
   end subroutine compute_charge_density
   
 
