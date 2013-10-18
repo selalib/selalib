@@ -345,7 +345,7 @@ contains
     xx=x-t*vx+t*t/2
     hh=1
     if ((v.gt.1).or.(v.lt.-1)) hh=0
-    sll_test_xvx_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(kx*(xx-v*t))
+    sll_test_xvx_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(kx*xx)
 
   end function sll_test_xvx_transport_initializer_v1v2x1x2
 
