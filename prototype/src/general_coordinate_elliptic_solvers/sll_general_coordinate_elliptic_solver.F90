@@ -785,8 +785,8 @@ contains ! *******************************************************************
           val_b1_der1  = b1_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
           val_b1_der2  = b1_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
           val_b2       = b2_field_vect%value_at_point(gpt1,gpt2)
-          val_b2_der1  = b1_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
-          val_b2_der2  = b1_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
+          val_b2_der1  = b2_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
+          val_b2_der2  = b2_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
