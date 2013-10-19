@@ -56,12 +56,14 @@ IF(NOT STDF95)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
    ADD_TEST(NAME advection_field COMMAND test_advection_field)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
-   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_fields_alternative)
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
    ADD_TEST(NAME charac COMMAND test_characteristics)
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(charac PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
