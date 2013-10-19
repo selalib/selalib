@@ -14,13 +14,16 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-!> @author We will see
+!> @author
+!> Michel Mehrenberger (mehrenbe@math.unistra.fr)
+!> Edwin Chacon Golcher
 !> @brief 
 !> Simulation class to solve slab drift kinetic equation in polar coordinates
 !> (3d space (x1=r,x2=theta,x3=z) 1d velocity (x4=v))
 !> translation of slv2d/src/vp4d_dk.F90 program in simulation class
 !> intended to be close to sll_simulation_4d_DK_hybrid_module
 !> but specific use of polar coordinates
+!> should merge with sll_simulation_4d_DK_hybrid_module in future
 !> @details
 !> Example of use in test program: see unit_test_4d_dk_polar.F90 file
 !> 
@@ -135,15 +138,15 @@ module sll_simulation_4d_drift_kinetic_polar_module
 
 
      !--> 4D distribution function 
-     !----> sequential in (x1,x2) and parallel in (x3,x4)
-     type(layout_4D), pointer :: layout4d_x1x2
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_x1x2 
-     !----> parallel in (x1,x2) and sequential in (x3,x4) 
-     type(layout_4D), pointer :: layout4d_x3x4
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_x3x4
+     !----> sequential in (x1,x2,x4) and parallel in (x3)
+     type(layout_4D), pointer :: layout4d_x1x2x4
+     sll_real64, dimension(:,:,:,:), pointer :: f4d_x1x2x4 
+     !----> parallel in (x3) and sequential in (x1,x2,x4) 
+     type(layout_4D), pointer :: layout4d_x3
+     sll_real64, dimension(:,:,:,:), pointer :: f4d_x3
      !----> definition of remap
-     type(remap_plan_4D_real64), pointer ::remap_plan_x1x2_x3x4
-     type(remap_plan_4D_real64), pointer ::remap_plan_x3x4_x1x2
+     type(remap_plan_4D_real64), pointer ::remap_plan_x1x2x4_x3
+     type(remap_plan_4D_real64), pointer ::remap_plan_x3_x1x2x4
      
 
      !--> 3D charge density and 3D electric potential
@@ -161,6 +164,13 @@ module sll_simulation_4d_drift_kinetic_polar_module
      !----> definition of remap
      type(remap_plan_3D_real64), pointer ::remap_plan_x1x2_x3
      type(remap_plan_3D_real64), pointer ::remap_plan_x3_x1x2
+
+     !--> cubic splines interpolation
+    type(sll_cubic_spline_2d), pointer :: interp_x1x2
+    type(sll_cubic_spline_1d), pointer :: interp_x3
+    type(sll_cubic_spline_1d), pointer :: interp_x4
+
+
 
      !--> temporary structures that are used in CG_polar
      !type(sll_SL_polar), pointer :: plan_sl_polar
@@ -351,6 +361,29 @@ contains
     call initialize_profiles_analytic(sim)    
     call allocate_fdistribu4d_DK(sim)
     call allocate_QN_DK( sim )
+    
+    sim%interp_x1x2 => new_spline_2d( sim%m_x1%num_cells+1,&
+     sim%m_x2%num_cells+1,&
+     sim%m_x1%eta_min,&
+     sim%m_x1%eta_max,&
+     sim%m_x2%eta_min,&
+     sim%m_x2%eta_max,&
+     SLL_HERMITE,&
+     SLL_PERIODIC )
+
+    sim%interp_x3 => new_spline_1d( sim%m_x3%num_cells+1,&
+     sim%m_x3%eta_min,&
+     sim%m_x3%eta_max,&
+     SLL_PERIODIC )
+
+    sim%interp_x4 => new_spline_1d( sim%m_x4%num_cells+1,&
+     sim%m_x4%eta_min,&
+     sim%m_x4%eta_max,&
+     SLL_PERIODIC )
+
+
+    
+    
 
     grad_cg = 3  !3: splines 1: finite diff order 2 
     
@@ -407,9 +440,13 @@ contains
 
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
-    call initialize_fdistribu4d_DK(sim,sim%layout4d_x3x4,sim%f4d_x3x4)
-    
-    call compute_charge_density_from_x3x4(sim)
+    call initialize_fdistribu4d_DK(sim,sim%layout4d_x1x2x4,sim%f4d_x1x2x4)
+    call compute_reduction_4d_to_3d(sim%m_x4,&
+      sim%layout4d_x1x2x4,&
+      sim%f4d_x1x2x4,&
+      sim%rho3d_x1x2)
+    call apply_remap_3D( sim%remap_plan_x1x2_x3, sim%rho3d_x1x2, sim%rho3d_x3 )
+
     call solve_quasi_neutral(sim)
 
   end subroutine run_dk4d_polar
@@ -473,31 +510,19 @@ contains
     ! even if the power of 2 is odd. This should 
     ! be packaged in some sort of routine and set up 
     ! at initialization time.
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
+    sim%nproc_x1 = 1
+    sim%nproc_x2 = 1
+    sim%nproc_x3 = sim%world_size
+    sim%nproc_x4 = 1
+   
     
-    if(is_even(sim%power2)) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 2**(sim%power2/2)
-       sim%nproc_x4 = 2**(sim%power2/2)
-    else 
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 2**((sim%power2-1)/2)
-       sim%nproc_x4 = 2**((sim%power2+1)/2)
-    end if
+    
+    sim%power2 = int(log(real(sim%world_size))/log(2.0))
 
     !--> Initialization of parallel layout of f4d in (x3,x4) directions
     !-->  (x1,x2) : sequential
     !-->  (x3,x4) : parallelized layout
-    sim%layout4d_x1x2  => new_layout_4D( sll_world_collective )
+    sim%layout4d_x1x2x4  => new_layout_4D( sll_world_collective )
     call initialize_layout_with_distributed_4D_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
@@ -507,33 +532,31 @@ contains
       sim%nproc_x2, &
       sim%nproc_x3, &
       sim%nproc_x4, &
-      sim%layout4d_x1x2 )
+      sim%layout4d_x1x2x4 )
     
     ! Allocate the array needed to store the local chunk 
     ! of the distribution function data. First compute the 
     ! local sizes. Since the remap operations
     ! are out-of-place, we will allocate two different arrays, 
     ! one for each layout.
-    call compute_local_sizes_4d( sim%layout4d_x1x2, &
+    call compute_local_sizes_4d( sim%layout4d_x1x2x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )
-    SLL_ALLOCATE(sim%f4d_x1x2(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
+    SLL_ALLOCATE(sim%f4d_x1x2x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
 
-    !--> Initialization of parallel layout of f4d in (x1,x2) directions
-    !-->  (x1,x2) : parallelized layout
-    !-->  (x3,x4) : sequential
-    ! switch x3 and x1:
-    itemp        = sim%nproc_x1
-    sim%nproc_x1 = sim%nproc_x3
-    sim%nproc_x3 = itemp
-    ! switch x4 and x2
-    itemp        = sim%nproc_x2
-    sim%nproc_x2 = sim%nproc_x4 
-    sim%nproc_x4 = itemp
+    !--> Initialization of parallel layout of f4d in (x1,x2,x4) directions
+    !-->  (x1,x2,x4) : parallelized layout
+    !-->  (x3) : sequential
+    
+    sim%nproc_x1 = 2**(sim%power2/3)
+    sim%nproc_x2 = 2**(sim%power2/3)
+    sim%nproc_x3 = 1
+    sim%nproc_x4 = 2**(sim%power2-2*(sim%power2/3))
+     
 
-    sim%layout4d_x3x4  => new_layout_4D( sll_world_collective )
+    sim%layout4d_x3  => new_layout_4D( sll_world_collective )
     call initialize_layout_with_distributed_4D_array( &
       sim%m_x1%num_cells+1, & 
       sim%m_x2%num_cells+1, & 
@@ -543,20 +566,20 @@ contains
       sim%nproc_x2, &
       sim%nproc_x3, &
       sim%nproc_x4, &
-      sim%layout4d_x3x4 )
+      sim%layout4d_x3 )
         
-    call compute_local_sizes_4d( sim%layout4d_x3x4, &
+    call compute_local_sizes_4d( sim%layout4d_x3, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )    
-    SLL_ALLOCATE(sim%f4d_x3x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
+    SLL_ALLOCATE(sim%f4d_x3(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
     
     
-    sim%remap_plan_x1x2_x3x4 => NEW_REMAP_PLAN(sim%layout4d_x1x2, &
-      sim%layout4d_x3x4, sim%f4d_x1x2)
-    sim%remap_plan_x3x4_x1x2 => NEW_REMAP_PLAN(sim%layout4d_x3x4, &
-      sim%layout4d_x1x2, sim%f4d_x3x4)
+    sim%remap_plan_x1x2x4_x3 => NEW_REMAP_PLAN(sim%layout4d_x1x2x4, &
+      sim%layout4d_x3, sim%f4d_x1x2x4)
+    sim%remap_plan_x3_x1x2x4 => NEW_REMAP_PLAN(sim%layout4d_x3, &
+      sim%layout4d_x1x2x4, sim%f4d_x3)
 
     
     
@@ -773,59 +796,82 @@ contains
 !      sim%bc_right_eta2)
   end subroutine allocate_QN_DK
 
-
-  !-----------------------------------------------------------
-  ! Computation of the charge density, i.e
-  !  rho(eta1,eta2,eta3) = \int f(eta1,eta2,eta3,vpar) dvpar
-  !  from sim%f4d_x3x4
-  !  Out: sim%rho3d_x3 and sim%rho3d_x1x2
-  !-----------------------------------------------------------
-  subroutine compute_charge_density_from_x3x4(sim)
-    type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
-    
-    call compute_reduction_x3x4_to_x3(sim%m_x4,sim%f4d_x3x4,sim%rho3d_x3)
-    call apply_remap_3D( sim%remap_plan_x3_x1x2, sim%rho3d_x3, sim%rho3d_x1x2 )
-    
-  end subroutine compute_charge_density_from_x3x4
-  
   
   !--------------------------------------------------
   ! Generic function for computing charge density
   ! should be elsewhere
-  ! we should also add a choice for the integration  
+  ! we should also add a choice for the integration 
+  ! also should be generalized for more complicated data
+  ! as here array of values f_0,\dots,f_N 
   !---------------------------------------------------  
   
-  subroutine compute_reduction_x3x4_to_x3(m_x4,data_4d_x3x4,data_3d_x3)
-    type(sll_logical_mesh_1d)     , intent(in)    :: m_x4
-    sll_real64, dimension(:,:,:,:), intent(in)    :: data_4d_x3x4
-    sll_real64, dimension(:,:,:)  , intent(out) :: data_3d_x3
+  subroutine compute_reduction_4d_to_3d(m_x4,&
+    layout4d,&
+    data_4d,&
+    data_3d)
+    type(sll_logical_mesh_1d), pointer    :: m_x4
+    type(layout_4D), pointer    :: layout4d
+    sll_real64, dimension(:,:,:,:), intent(in)    :: data_4d
+    sll_real64, dimension(:,:,:)  , intent(out) :: data_3d
     sll_int32  :: np_x1_loc
     sll_int32  :: np_x2_loc
     sll_int32  :: np_x3
     sll_int32  :: np_x4
-    sll_int32  :: iloc1, iloc2, i3, i4
+    sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_real64 :: delta_x4, tmp
+    sll_int32  :: loc4d_sz_x1
+    sll_int32  :: loc4d_sz_x2
+    sll_int32  :: loc4d_sz_x3
+    sll_int32  :: loc4d_sz_x4
+
+    call compute_local_sizes_4d( layout4d, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )
     
-    np_x1_loc  = size(data_4d_x3x4,1)
-    np_x2_loc  = size(data_4d_x3x4,2)
-    np_x3      = size(data_4d_x3x4,3)
-    np_x4      = size(data_4d_x3x4,4)
-    delta_x4 = m_x4%delta_eta 
+    if(loc4d_sz_x1>size(data_4d,1))then
+      print *,'#Problem for size1 in compute_reduction_4d_to_3d'
+      stop
+    endif
+    if(loc4d_sz_x2>size(data_4d,2))then
+      print *,'#Problem for size2 in compute_reduction_4d_to_3d'
+      stop
+    endif
+    if(loc4d_sz_x3>size(data_4d,3))then
+      print *,'#Problem for size2 in compute_reduction_4d_to_3d'
+      stop
+    endif
+    if(loc4d_sz_x4>size(data_4d,4))then
+      print *,'#Problem for size2 in compute_reduction_4d_to_3d'
+      stop
+    endif
+
+    if((loc4d_sz_x4).ne.(m_x4%num_cells+1))then
+      print *,'#Problem for size in compute_reduction_4d_to_3d'
+    endif
+        
 
     !-> Computation of the charge density locally in (x1,x2) directions
-    do i3 = 1,np_x3
-      do iloc2 = 1,np_x2_loc
-        do iloc1 = 1,np_x1_loc
-          tmp = 0._f64
-          do i4 = 1,np_x4
-            tmp = tmp + data_4d_x3x4(iloc1,iloc2,i3,i4)*delta_x4
+    do iloc3 = 1,loc4d_sz_x3
+      do iloc2 = 1,loc4d_sz_x2
+        do iloc1 = 1,loc4d_sz_x1
+          tmp = 0.5_f64*(data_4d(iloc1,iloc2,iloc3,1)&
+            +data_4d(iloc1,iloc2,iloc3,loc4d_sz_x1))
+          do iloc4 = 2,loc4d_sz_x4-1
+            tmp = tmp + data_4d(iloc1,iloc2,iloc3,iloc4)
           end do
-          data_3d_x3(iloc1,iloc2,i3) = tmp
+          data_3d(iloc1,iloc2,iloc3) = tmp*delta_x4
         end do
       end do
     end do
-  end subroutine compute_reduction_x3x4_to_x3
+  end subroutine compute_reduction_4d_to_3d
+
   
+ 
+ 
+ 
+ 
   
   subroutine solve_quasi_neutral(sim)
     type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
@@ -877,11 +923,122 @@ contains
       case default
         print *,'#bad value for sim%QN_case'
         stop  
-    end select
-    
-    
+    end select        
   
   end subroutine solve_quasi_neutral
+  
+  
+
+!  subroutine compute_characteristics2D( A1, A2, dt, &
+!    output1, output2)
+
+!
+!  subroutine compute_characteristics2D_verlet( A1,&
+!    A2,&
+!    dt, &
+!    input1,&
+!    intput2,&
+!    output1,&
+!    output2,&
+!    Npts1,&
+!    Npts2,&
+!    interp1,&
+!    interp2,&
+!    maxiter,&
+!    tol_input_x1,&
+!    tol_input_x2)
+!    
+!    sll_real64, dimension(:,:), intent(in) :: A1
+!    sll_real64, dimension(:,:), intent(in) :: A2
+!    sll_real64, intent(in) :: dt
+!    sll_real64, dimension(:), intent(in) ::  input1
+!    sll_real64, dimension(:), intent(in) ::  input2
+!    sll_int32, intent(in) :: Npts1    
+!    sll_int32, intent(in) :: Npts2    
+!    sll_real64, dimension(:,:), intent(out) :: output1
+!    sll_real64, dimension(:,:), intent(out) :: output2
+!    class(sll_interpolator_2d_base), pointer :: interp1
+!    class(sll_interpolator_2d_base), pointer :: interp2
+!    sll_int32,intent(in), optional :: maxiter_input
+!    sll_real64,intent(in), optional :: tol_input_x1     
+!    sll_real64,intent(in), optional :: tol_input_x2     
+!    sll_int32 :: i
+!    sll_int32 :: j
+!    sll_int32 :: maxiter
+!    sll_real64 :: tol_x1
+!    sll_real64 :: tol_x2
+!    sll_real64 :: x1
+!    sll_real64 :: x2
+!    sll_int32 :: iter
+!    sll_real64 :: x1_old
+!    
+!    maxiter = 1000
+!    tol_input = 1.e-12_f64
+!    
+!    
+!    if(present(maxiter_input))then
+!      maxiter = maxiter_input
+!    endif
+!    if(present(tol_input_x1))then
+!      tol_x1 = tol_input_x1
+!    endif
+!    if(present(tol_input_x2))then
+!      tol_x2 = tol_input_x2
+!    endif
+!    
+!    
+!    SLL_ASSERT(size(A1,1)>=Npts1)
+!    SLL_ASSERT(size(A1,2)>=Npts2)
+!    SLL_ASSERT(size(A2,1)>=Npts1)
+!    SLL_ASSERT(size(A2,2)>=Npts2)
+!    SLL_ASSERT(size(input1)>=Npts1)
+!    SLL_ASSERT(size(input2)>=Npts2)
+!    SLL_ASSERT(size(output1,1)>=Npts1)
+!    SLL_ASSERT(size(output1,2)>=Npts2)
+!    SLL_ASSERT(size(output2,1)>=Npts1)
+!    SLL_ASSERT(size(output2,2)>=Npts2)
+!    
+!    interp1%compute_interpolants(A1)
+!    interp2%compute_interpolants(A2)
+!    
+!    
+!    do j=1,Npts2
+!      do i=1,Npts1
+!        !initialization for x1 interpolation
+!        x1 = input1(i)-0.5_f64*dt*A1(i,j)
+!        x1_old = 0._f64
+!        do while (iter<maxiter .and. abs(x1_old-x1)>tol_x1)
+!          x1_old = x1
+!          x1 = input1(i)-0.5_f64*dt*interpolate_value(interp1, x1, input2(j))
+!        end do
+!        if (iter==maxiter .and. abs(x1_old-x1)>tol_x1) then
+!          print*,'#not enough iterations for compute_characteristics2D_verlet',iter,abs(x1_old-x1)
+!          stop
+!        end if
+!        !initialization for x2 interpolation
+!        x2 = input2(j)-dt*A2(i,j)
+!        x2_old = 0._f64
+!        do while (iter<maxiter .and. abs(x2_old-x2)>tol_x2)
+!          x2_old = x2
+!          x2 = input2(j)-0.5_f64*dt*(interpolate_value(interp2, x1, x2)+interpolate_value(interp2, x1, input2(j)))
+!        end do
+!        if (iter==maxiter .and. abs(x2_old-x2)>tol_x2) then
+!          print*,'#not enough iterations for compute_characteristics2D_verlet',iter,abs(x2_old-x2)
+!          stop
+!        end if
+!        !initialization for x1 interpolation
+!        x1 = x1-0.5_f64*dt*interpolate_value(interp1, x1, x2)
+!        output1(i,j) = x1 
+!        output2(i,j) = x2  
+!      enddo
+!    enddo        
+!       
+!  end subroutine compute_characteristics2D_verlet
+!
+
+
+
+  
 
 end module sll_simulation_4d_drift_kinetic_polar_module
 
