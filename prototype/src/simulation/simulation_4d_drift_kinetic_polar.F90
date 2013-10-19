@@ -459,7 +459,7 @@ contains
   
   
   subroutine initialize_profiles_analytic(sim)
-    type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
+    class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     sll_int32 :: i,ierr,nc_x1
     sll_real64 :: x1,delta_x1,rpeak,tmp,x1_min,x1_max
     
@@ -500,7 +500,7 @@ contains
   !   drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine allocate_fdistribu4d_DK( sim )
-    type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
+    class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
 
     sll_int32 :: ierr, itemp
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
@@ -591,7 +591,7 @@ contains
   !   drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine initialize_fdistribu4d_DK(sim,layout,f4d)
-    type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
+    class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     type(layout_4D), pointer :: layout
     sll_real64, dimension(:,:,:,:), pointer :: f4d
     sll_int32  :: ierr
@@ -665,7 +665,7 @@ contains
 
   
   function compute_equil_analytic(sim,x1,x4)
-    type(sll_simulation_4d_drift_kinetic_polar), intent(in) :: sim
+    class(sll_simulation_4d_drift_kinetic_polar), intent(in) :: sim
     sll_real64,intent(in)::x1,x4
     sll_real64::compute_equil_analytic
     sll_real64:: tmp(2),rpeak,x1_min,x1_max
@@ -685,7 +685,7 @@ contains
   ! Allocation for QN solver
   !----------------------------------------------------
   subroutine allocate_QN_DK( sim )
-    type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
+    class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
 
     type(sll_logical_mesh_2d), pointer :: logical_mesh2d
     sll_int32 :: ierr, itemp
@@ -874,7 +874,7 @@ contains
  
   
   subroutine solve_quasi_neutral(sim)
-    type(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
+    class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: iloc1, iloc2, iloc3
     sll_int32 :: i1, i2, i3
