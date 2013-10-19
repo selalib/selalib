@@ -290,9 +290,9 @@ contains
     sll_real64, dimension(:), intent(in)  :: fin
     sll_real64, dimension(:), intent(out) :: fout
     sll_int32, intent(in) :: N
-    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64,intent(in) :: w(r:s)
     sll_int32 :: i
     sll_int32 :: i1
     sll_int32 :: j
@@ -323,9 +323,9 @@ contains
     sll_real64, dimension(:), intent(in)  :: fin
     sll_real64, dimension(:), intent(out) :: fout
     sll_int32, intent(in) :: N
-    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64,intent(in) :: w(r:s)
     sll_int32 :: i
     sll_int32 :: i1
     sll_int32 :: j
@@ -353,9 +353,9 @@ contains
     sll_real64, dimension(:), intent(in)  :: fin
     sll_real64, dimension(:), intent(out) :: fout
     sll_int32, intent(in) :: N
-    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: bc_type
     
     select case (bc_type)
@@ -376,9 +376,9 @@ contains
     sll_real64, dimension(:,:), intent(in)  :: fin
     sll_real64, dimension(:,:), intent(out) :: fout
     sll_int32, intent(in) :: N(2)
-    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: bc_type
     sll_int32 :: i
     do i=1,N(2)+1
@@ -391,9 +391,9 @@ contains
     sll_real64, dimension(:,:), intent(in)  :: fin
     sll_real64, dimension(:,:), intent(out) :: fout
     sll_int32, intent(in) :: N(2)
-    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64,intent(in) :: w(r:s)
     sll_int32, intent(in) :: bc_type
     sll_int32 :: i
     sll_real64,dimension(:),allocatable :: bufin
@@ -590,7 +590,7 @@ contains
     sll_real64, intent(in) :: x(2)
     sll_real64, intent(out) :: fval 
     
-    
+    fval = 0
     
 
   end subroutine interpolate_hermite2d_c0_c1
