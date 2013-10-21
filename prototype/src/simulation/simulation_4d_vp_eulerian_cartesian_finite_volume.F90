@@ -346,13 +346,13 @@ subroutine run_vp_cart(sim)
 
  ! potential layout
  call initialize_layout_with_distributed_2D_array( &
-      sim%nc_x1+1, &
-      sim%nc_x2+1, &
+      sim%nc_x1, &
+      sim%nc_x2, &
       sim%nproc_x1, &
       sim%nproc_x2, &
       sim%phi_seq_x1)
 
- sim%poisson_plan=>new_poisson_2d_periodic_plan_cartesian_par( &
+ sim%poisson_plan=>new_poisson_2d_periodic_plan_cartesian_par_alt( &
       sim%phi_seq_x1, &
       sim%nc_x1, &
       sim%nc_x2, &
@@ -493,14 +493,25 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
 !!$         sim%mesh2dx%delta_eta2 
 
  global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
- ! cell volumes
+ ! cell volumes, check this...
+print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
  do j=1,loc_sz_x2
-    do i=1,loc_sz_x1
+    do i=1,loc_sz_x1 ! loc_sz_x1 is number of points, we're processing cells
        ic=i+global_indices(3)-1
        jc=j+global_indices(4)-1
        sim%volume(i,j)=cell_volume( sim%tx, ic, jc,3)          
     end do
  end do
+
+ ! cell volumes, check this...
+!!$ do j=1,loc_sz_x2
+!!$    do i=1,loc_sz_x1-1 ! loc_sz_x1 is number of points, we're processing cells
+!!$       global_indices(1:4) =  &
+!!$            local_to_global_4D(sim%sequential_v1v2x1, (/1,1,i,j/) )
+!!$       sim%volume(i,j) = &
+!!$            cell_volume( sim%tx, global_indices(3),global_indices(4),3)
+!!$    end do
+!!$ end do
 
 !!$    surface(1:loc_sz_x1*loc_sz_x2)= &
 !!$         sim%mesh2dx%delta_eta1
@@ -603,12 +614,12 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
     call mpi_comm(sim)
     rho_x1_temp=0.0_f64
     do i=1,loc_sz_x1
-       do j=0,loc_sz_x2+1
+       do j=1,loc_sz_x2
           do ii=1,loc_sz_v1
              do jj=1,loc_sz_v2
                 mm=loc_sz_v1*(jj-1)+ii
-                rho_x1_temp(i,j)=rho_x1_temp(i,j)+sim%fn_v1v2x1(ii,jj,i,j)* & 
-                     sim%p(mm)
+                sim%rho_x1(i,j) = &
+                     sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)*sim%p(mm)
              enddo
           end do
        enddo
@@ -617,30 +628,30 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
 !!$    write(*,*) 'rho_x1_temp (',i,',:) = ', rho_x1_temp(i,:)
 !!$   end do
 !write()
-    do i=2,loc_sz_x1
-       do j=1,loc_sz_x2+1
-          sim%rho_x1(i,j) = (rho_x1_temp(i-1,j)+rho_x1_temp(i-1,j-1)+rho_x1_temp(i,j)+rho_x1_temp(i,j-1))/4
-       enddo
-    enddo
-    do j=1,loc_sz_x2+1
-       sim%rho_x1(1,j) = (rho_x1_temp(loc_sz_x1,j)+rho_x1_temp(loc_sz_x1,j-1)+rho_x1_temp(1,j)+rho_x1_temp(1,j-1))/4
-       sim%rho_x1(loc_sz_x1+1,j) =  sim%rho_x1(1,j)
-    enddo
+!!$    do i=2,loc_sz_x1
+!!$       do j=1,loc_sz_x2
+!!$          sim%rho_x1(i,j) = (rho_x1_temp(i-1,j)+rho_x1_temp(i-1,j-1)+rho_x1_temp(i,j)+rho_x1_temp(i,j-1))/4
+!!$       enddo
+!!$    enddo
+!!$    do j=1,loc_sz_x2+1
+!!$       sim%rho_x1(1,j) = (rho_x1_temp(loc_sz_x1,j)+rho_x1_temp(loc_sz_x1,j-1)+rho_x1_temp(1,j)+rho_x1_temp(1,j-1))/4
+!!$       sim%rho_x1(loc_sz_x1+1,j) =  sim%rho_x1(1,j)
+!!$    enddo
 !!$   do i=1,loc_sz_x1+1
 !!$    write(*,*) 'rho (',i,',:) = ', sim%rho_x1(i,:)
 !!$   end do
 
     ! solve the poisson equation
     !maillage logical
-    call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
+    call solve_poisson_2d_periodic_cartesian_par_alt(sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1(:,1:))
-    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
-    sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
-!!$    do i=1,loc_sz_x1+1
-!!$       write (*,*) 'phi = ', sim%phi_x1(i,:)
-!!$    enddo
-!!$    stop
+!    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
+ !   sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
+    do i=1,loc_sz_x1
+       write (*,*) 'phi = ', sim%phi_x1(i,:)
+    enddo
+
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
@@ -731,7 +742,7 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
           !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
           !write(*,*) 'Enorm = ',sim%Enorm
        end do
-          stop
+       
        !write(*,*) 'here4'
        !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
        write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
