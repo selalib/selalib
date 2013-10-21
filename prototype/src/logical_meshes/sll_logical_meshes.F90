@@ -68,12 +68,12 @@ module sll_logical_meshes
      module procedure tensor_product_2d_2d
   end interface operator(*)
 
-  interface display
+  interface sll_display
      module procedure display_logical_mesh_1d
      module procedure display_logical_mesh_2d
      module procedure display_logical_mesh_3d
      module procedure display_logical_mesh_4d
-  end interface
+  end interface sll_display
 contains
 
 #define TEST_PRESENCE_AND_ASSIGN_VAL( obj, arg, slot, default_val ) \
