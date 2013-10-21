@@ -19,9 +19,9 @@ program unit_test_logical_meshes
   m1d_y => new_logical_mesh_1d(32,eta_min=-1.0_f64,eta_max=+1.0_f64)
   m2d_xy => m1d_x * m1d_y
 
-  call display(m1d_x)
-  call display(m1d_y)
-  call display(m2d_xy)
+  call sll_display(m1d_x)
+  call sll_display(m1d_y)
+  call sll_display(m2d_xy)
 
   call delete(m1d_x)
   call delete(m1d_y)
@@ -31,9 +31,9 @@ program unit_test_logical_meshes
   m3d => new_logical_mesh_3d(100,100,100)
   m4d => new_logical_mesh_4d(32,32,32,32, eta1_min=-1.0_f64, eta1_max = 2.0_f64)
 
-  call display(m2d)
-  call display(m3d)
-  call display(m4d)
+  call sll_display(m2d)
+  call sll_display(m3d)
+  call sll_display(m4d)
 
   call delete(m2d)
   call delete(m3d)
@@ -43,7 +43,7 @@ program unit_test_logical_meshes
   mv => new_logical_mesh_2d(64,64,-6.0_f64,6.0_f64,-6.0_f64,6.0_f64)
   mxv => mx * mv
 
-  call display(mxv)
+  call sll_display(mxv)
 
   call delete(mx)
   call delete(mv)
