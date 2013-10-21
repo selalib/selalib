@@ -95,9 +95,9 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                                    sll_timer
 	                                    sll_poisson_solvers
 	                                    dfftpack)
-
-   ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
-   TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
+   IF(HDF5_ENABLED)
+     ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
+     TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
 	                           sll_interpolators
 	                           sll_periodic_interp
 	                           sll_fft
@@ -109,6 +109,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                           sll_timer
 	                           sll_poisson_solvers
 	                           dfftpack)
+	ENDIF(HDF5_ENABLED)                           
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 

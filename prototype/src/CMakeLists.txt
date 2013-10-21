@@ -105,6 +105,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
+      ADD_SUBDIRECTORY(reduction)
 
       IF(NOT STDF95)
          ADD_SUBDIRECTORY(parallel_array_initializers)
@@ -114,7 +115,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
-
+   
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
