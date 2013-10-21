@@ -252,8 +252,6 @@ subroutine run_vp_cart(sim)
  sll_int32  :: loc_sz_v2
  sll_int32  :: loc_sz_x1
  sll_int32  :: loc_sz_x2
- sll_int32  :: loc_sz_phi_x1
- sll_int32  :: loc_sz_phi_x2
  sll_int32  :: i
  sll_int32  :: j
  sll_int32  :: k
@@ -336,8 +334,8 @@ subroutine run_vp_cart(sim)
  call initialize_layout_with_distributed_4D_array( &
       sim%np_v1, &
       sim%np_v2, &
-      sim%nc_x1, &
-      sim%nc_x2, &
+      sim%nc_x1, & !avance il n'y a pas +1
+      sim%nc_x2, & !avance il n'y a pas +1
       sim%nproc_v1, &
       sim%nproc_v2, &
       sim%nproc_x1, &
@@ -362,13 +360,13 @@ subroutine run_vp_cart(sim)
       sim%mesh2dx%eta2_max-sim%mesh2dx%eta2_min )
 
 
- call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_phi_x1, loc_sz_phi_x2)
+ call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
  ! iz=0 corresponds to the mean values of rho and phi
-write(*,*) 'verified loc_sz_x1',loc_sz_phi_x1
-write(*,*) 'verify loc_sz_x2',loc_sz_phi_x2 
- SLL_ALLOCATE(sim%rho_x1(loc_sz_phi_x1,loc_sz_phi_x2),ierr)
+write(*,*) 'verified loc_sz_x1',loc_sz_x1
+write(*,*) 'verify loc_sz_x2',loc_sz_x2 
+ SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
  write(*,*) 'size rho_x1',size(sim%rho_x1(1,:))
- SLL_ALLOCATE(sim%phi_x1(loc_sz_phi_x1,0:loc_sz_phi_x2+1),ierr)
+ SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,0:loc_sz_x2+1),ierr)
  !SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
  !print *, 'rank = ', sim%my_rank, 'local sizes of phi: ', loc_sz_x1, loc_sz_x2
 
@@ -381,6 +379,7 @@ write(*,*) 'verify loc_sz_x2',loc_sz_phi_x2
       loc_sz_x2 )
 write(*,*) 'verify 2 loc_sz_x1',loc_sz_x1
 write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
+!stop
  !write(*,*) 'sim%np_v1',sim%np_v1,loc_sz_v1
 !print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
  ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
@@ -636,10 +635,12 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
     call solve_poisson_2d_periodic_cartesian_par(sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1(:,1:))
-    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_phi_x2) !attention false for several processors
-    sim%phi_x1(:,loc_sz_phi_x2+1)=sim%phi_x1(:,1)
-    !write (*,*) 'phi = ', sim%phi_x1
-    !stop
+    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
+    sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
+!!$    do i=1,loc_sz_x1+1
+!!$       write (*,*) 'phi = ', sim%phi_x1(i,:)
+!!$    enddo
+!!$    stop
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
