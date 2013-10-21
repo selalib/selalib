@@ -102,11 +102,6 @@ contains
   !
   ! **************************************************************************
 
-#define A1 (-1.0_f64)
-#define B1  1.0_f64
-#define A2 (-1.0_f64)
-#define B2  1.0_f64
-
   ! developer's note: made the choice of the params array as the full 
   ! sequence [A1 B1 A2 B2] as the same params array may thus be passed as
   ! argument to both calls. The affine mapping has default values:
@@ -164,10 +159,15 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
-! por aqui
-    SLL_ASSERT(size(params) >= 4)
-    A1 = params(1)
-    B1 = params(2)
+
+    if( present(params) ) then
+       SLL_ASSERT(size(params) >= 4)
+       A1 = params(1)
+       B1 = params(2)
+    else
+       A1 = -1.0_f64
+       B1 =  1.0_f64
+    end if
     affine_jac11 = B1-A1
   end function affine_jac11
 
@@ -176,7 +176,9 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    SLL_ASSERT(size(params)) >= 4)
+    if( present(params) ) then
+       SLL_ASSERT(size(params)) >= 4)
+    end if
     affine_jac12 = 0.0_f64
   end function affine_jac12
 
@@ -185,7 +187,9 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    SLL_ASSERT(size(params)) >= 4)
+    if(present(params)) then
+       SLL_ASSERT(size(params)) >= 4)
+    end if
     affine_jac21 = 0.0_f64
   end function affine_jac21
 
@@ -196,9 +200,14 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
-    SLL_ASSERT(size(params)) >= 4)
-    A2 = params(3)
-    B2 = params(4)
+    if( present(params) ) then
+       SLL_ASSERT(size(params)) >= 4)
+       A2 = params(3)
+       B2 = params(4)
+    else
+       A2 = -1.0_f64 
+       B2 =  1.0_f64
+    end if
     affine_jac22 = B2-A2
   end function affine_jac22
 
@@ -208,18 +217,21 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    SLL_ASSERT(size(params)) >= 4)
-    A1 = params(1)
-    B1 = params(2)
-    A2 = params(3)
-    B2 = params(4)
+    if( present(params) ) then
+       SLL_ASSERT(size(params)) >= 4)
+       A1 = params(1)
+       B1 = params(2)
+       A2 = params(3)
+       B2 = params(4)
+    else
+       A1 = -1.0_f64
+       B1 =  1.0_f64
+       A2 = -1.0_f64
+       B2 =  1.0_f64
+    end if
     affine_jac = (B1-A1) * (B2-A2)
   end function affine_jac
 
-#undef A1
-#undef B1
-#undef A2
-#undef B2
 
   ! **************************************************************************
   !
@@ -235,6 +247,7 @@ contains
     sll_real64  :: polar_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_x1 = eta1 * cos( eta2 )
   end function polar_x1
 
@@ -242,6 +255,7 @@ contains
     sll_real64  :: polar_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_x2 = eta1 * sin( eta2 )
   end function polar_x2
 
@@ -250,6 +264,7 @@ contains
     sll_real64  :: polar_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_eta1 = sqrt( x1*x1 + x2*x2 )
   end function polar_eta1
 
@@ -257,6 +272,7 @@ contains
     sll_real64  :: polar_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_eta2 = atan( x2 / x1 ) 
   end function polar_eta2
 
@@ -265,6 +281,7 @@ contains
     sll_real64  :: polar_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_jac11 = cos ( eta2) 
   end function polar_jac11
 
@@ -272,6 +289,7 @@ contains
     sll_real64  :: polar_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_jac12 = - eta1 * sin( eta2)
   end function polar_jac12
 
@@ -279,6 +297,7 @@ contains
     sll_real64  :: polar_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
 
@@ -286,6 +305,7 @@ contains
     sll_real64  :: polar_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_jac22 = eta1 * cos ( eta2 )
   end function polar_jac22
 
@@ -294,6 +314,7 @@ contains
     sll_real64  :: polar_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     polar_jac = eta1
   end function polar_jac
 
@@ -303,8 +324,18 @@ contains
   ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
   ! (102) p 2968):
   !
-  !        x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
-  !        x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
+  !        x1 = eta1 + alpha1 * sin(2*pi*eta1) * sin(2*pi*eta2)
+  !        x2 = eta2 + alpha2 * sin(2*pi*eta1) * sin(2*pi*eta2)
+  !
+  ! Domain: [0,L1] X [0,L2]
+  ! By default the values of the alpha parameters are:
+  !      alpha1 = 0.1
+  !      alpha2 = 0.1
+  !      L1     = 1.0
+  !      L2     = 1.0
+  !
+  ! These parameters are stored in the params array as: 
+  !     ( alpha1, alpha2, L1, L2 )
   !
   ! **************************************************************************
 
@@ -313,14 +344,47 @@ contains
     sll_real64  :: sinprod_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_x1 = eta1 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha1 = params(1)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha1 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_x1 = eta1 + alpha1 * sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x1
 
   function sinprod_x2 ( eta1, eta2, params )
     sll_real64  :: sinprod_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_x2 = eta2 + 0.1_f64 * sin(2*sll_pi*eta1) * sin(2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha2 = params(2)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha2 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x2
 
   ! inverse mapping 
@@ -329,6 +393,7 @@ contains
     sll_real64  :: sinprod_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
     sinprod_eta1 = x1
@@ -338,6 +403,7 @@ contains
     sll_real64  :: sinprod_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
     sinprod_eta2 = x2
@@ -348,29 +414,89 @@ contains
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac11 = 1.0_f64 + 0.2_f64 *sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+ 
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha1 = params(1)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha1 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_jac11 = 1.0_f64 + alpha1*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac11
 
-    function sinprod_jac12 ( eta1, eta2, params )
+  function sinprod_jac12 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac12 = 0.2_f64 *sll_pi * sin (2*sll_pi*eta1) * cos (2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha1 = params(1)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha1 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_jac12 = alpha1*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac12
 
   function sinprod_jac21 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac21 = 0.2_f64 * sll_pi * cos (2*sll_pi*eta1) * sin (2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha2 = params(2)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha2 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_jac21 = alpha2*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac21
 
   function sinprod_jac22 ( eta1, eta2, params )
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sinprod_jac22 = 1.0_f64 + &
-         0.2_f64*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha2
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha2 = params(2)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha2 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_jac22 = 1.0_f64 + alpha2*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -378,31 +504,70 @@ contains
     sll_real64  :: sinprod_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 4)
+       alpha1 = params(1)
+       alpha2 = params(2)
+       rl1    = 1.0_f64/params(3)
+       rl2    = 1.0_f64/params(4)
+    else
+       alpha1 = 0.1_f64
+       alpha2 = 0.1_f64
+       rl1    = 1.0_f64
+       rl2    = 1.0_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
-    sinprod_jac = &
-         (1.0_f64 + 0.2_f64*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2))* &
-         (1.0_f64 + 0.2_f64*sll_pi*sin(2*sll_pi*eta1)*cos (2*sll_pi*eta2)) - &
-         0.2_f64*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2) * &
-         0.2_f64*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+    sinprod_jac = 1.0_f64 + alpha2*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
+                            alpha1*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac
 
-
-
+#if 0
+! Only one Colella transformation should survive, the parametrized one above...
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! direct mapping collela on (0,4*pi)x (0,1)
+  ! Same story as above, we separate the alpha coefficients in each direction
+  ! and give default values of 0.1. These and the previous transformation
+  ! should be merged and parametrized with params.
   function sinprod_x1_rect ( eta1, eta2, params )
     real(8)  :: sinprod_x1_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
-    sinprod_x1_rect = eta1 + 0.1_8 * sin(0.5*eta1) * sin(2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha1 = params(1)
+    else
+       alpha1 = 0.1_f64
+    end if 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_x1_rect = eta1 + alpha1*sin(0.5*eta1)*sin(pi2*eta2)
   end function sinprod_x1_rect
   
   function sinprod_x2_rect ( eta1, eta2, params )
     real(8)  :: sinprod_x2_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
-    sinprod_x2_rect = eta2 + 0.1_8 * sin(0.5*eta1) * sin(2*sll_pi*eta2)
+    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64  :: alpha2
+    sll_real64  :: pi2
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha2 = params(2)
+    else
+       alpha2 = 0.1_f64
+    end if
+    pi2 = 2.0_f64*sll_pi
+    sinprod_x2_rect = eta2 + alpha2*sin(0.5*eta1)*sin(pi2*eta2)
   end function sinprod_x2_rect
   
   
@@ -411,6 +576,7 @@ contains
     real(8)  :: sinprod_jac11_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac11_rect = 1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac11_rect
   
@@ -418,6 +584,7 @@ contains
     real(8)  :: sinprod_jac12_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac12_rect = 0.2_8 *sll_pi * sin (0.5*eta1) * cos (2*sll_pi*eta2)
   end function sinprod_jac12_rect
   
@@ -425,6 +592,7 @@ contains
     real(8)  :: sinprod_jac21_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac21_rect = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac21_rect
 
@@ -432,6 +600,7 @@ contains
     real(8)  :: sinprod_jac22_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac22_rect = 1.0_8 + &
          0.2_8*sll_pi*sin(0.5*eta1)*cos(2*sll_pi*eta2)
   end function sinprod_jac22_rect
@@ -441,6 +610,7 @@ contains
     real(8)  :: sinprod_jac_rect
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
     sinprod_jac_rect = &
          (1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2))* &
@@ -458,6 +628,7 @@ contains
     real(8)  :: sinprod_x1_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_x1_square = eta1 + 0.1_8 * sin(0.5*eta1) * sin(0.5*eta2)
   end function sinprod_x1_square
   
@@ -465,6 +636,7 @@ contains
     real(8)  :: sinprod_x2_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_x2_square = eta2 + 0.1_8 * sin(0.5*eta1) * sin(0.5*eta2)
   end function sinprod_x2_square
   
@@ -474,6 +646,7 @@ contains
     real(8)  :: sinprod_jac11_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac11_square = 1.0_8 + &
          0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
   end function sinprod_jac11_square
@@ -482,6 +655,7 @@ contains
     real(8)  :: sinprod_jac12_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac12_square = 0.5_8*0.1_8 * sin (0.5*eta1) * cos (0.5*eta2)
   end function sinprod_jac12_square
   
@@ -489,6 +663,7 @@ contains
     real(8)  :: sinprod_jac21_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac21_square = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
   end function sinprod_jac21_square
   
@@ -496,6 +671,7 @@ contains
     real(8)  :: sinprod_jac22_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sinprod_jac22_square = 1.0_8 + &
          0.5_8*0.1_8*sin(0.5*eta1)*cos(0.5*eta2)
   end function sinprod_jac22_square
@@ -505,6 +681,7 @@ contains
     real(8)  :: sinprod_jac_square
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
     sinprod_jac_square = &
          (1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2))* &
@@ -513,6 +690,8 @@ contains
          0.5_8*0.1_8 * cos (0.5*eta1) * sin (0.5*eta2)
   end function sinprod_jac_square
 
+#endif
+!por aqui
   ! test function
   !-------------------
   ! direct mapping
@@ -520,6 +699,7 @@ contains
     sll_real64  :: test_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_x1 = eta1 + 0.1_f64 * sin( 2.0_f64* sll_pi * eta1 )
     !test_x1 = eta1**2
   end function test_x1
@@ -528,6 +708,7 @@ contains
     sll_real64  :: test_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_x2 = eta2 + 0.1_f64 * sin( 2.0_f64* sll_pi * eta2 )
   end function test_x2
 
@@ -536,6 +717,7 @@ contains
     sll_real64  :: test_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_eta1 = x1 / 0.1_f64
   end function test_eta1
 
@@ -543,6 +725,7 @@ contains
     sll_real64  :: test_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_eta2 = x2 / 0.1_f64
   end function test_eta2
 
@@ -551,6 +734,7 @@ contains
     sll_real64  :: test_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_jac11 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1))
   end function test_jac11
 
@@ -558,6 +742,7 @@ contains
     sll_real64  :: test_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_jac12 = 0.0_f64
   end function test_jac12
 
@@ -565,6 +750,7 @@ contains
     sll_real64  :: test_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_jac21 = 0.0_f64
   end function test_jac21
 
@@ -572,6 +758,7 @@ contains
     sll_real64  :: test_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_jac22 = 1.0_f64 / (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
   end function test_jac22
 
@@ -580,6 +767,7 @@ contains
     sll_real64  :: test_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     test_jac =  (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta1)) * &
          (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
     !test_jac =  2 * eta1!
@@ -603,24 +791,28 @@ contains
   function x1_polar_f( eta1, eta2, params )
     sll_real64 :: x1_polar_f
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     x1_polar_f = (R1 + (R2-R1)*eta1)*cos(2.0_f64*sll_pi*eta2)
   end function x1_polar_f
 
   function x2_polar_f( eta1, eta2, params )
     sll_real64 :: x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_pi*eta2)
   end function x2_polar_f
 
   function deriv_x1_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     deriv_x1_polar_f_eta1 = (R2-R1)*cos(2.0_f64*sll_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
   function deriv_x1_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sll_real64 :: k
     k = 2.0_f64*sll_pi
     deriv_x1_polar_f_eta2 = -(R1+(R2-R1)*eta1)*sin(k*eta2)*k
@@ -629,12 +821,14 @@ contains
   function deriv_x2_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     deriv_x2_polar_f_eta1 = (R2-R1)*sin(2.0_f64*sll_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
   function deriv_x2_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     sll_real64 :: k
     k = 2.0_f64*sll_pi
     deriv_x2_polar_f_eta2 = (R1+(R2-R1)*eta1)*cos(k*eta2)*k
@@ -643,6 +837,7 @@ contains
   function jacobian_polar_f( eta1, eta2, params ) result(jac)
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), optional, intent(in) :: params
     jac = 2.0_f64*sll_pi*(R1+(R2-R1)*eta1)*(R2-R1)
   end function jacobian_polar_f
 
