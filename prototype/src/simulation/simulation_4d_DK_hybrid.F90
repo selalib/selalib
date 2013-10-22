@@ -1538,7 +1538,7 @@ contains
     sll_int32 :: ieta3, ivpar
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2
     sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
-    sll_real64 :: eta, eta3, alpha3
+    sll_real64 :: eta, eta3, alpha3, vpar
     sll_real64, dimension(:), pointer :: f1d_eta3_tmp
     
     call compute_local_sizes_4d( sim%layout4d_seqx3x4, &
@@ -1550,26 +1550,30 @@ contains
     !---> deta3/dt = vpar
     SLL_ALLOCATE(f1d_eta3_tmp(sim%Neta3),ierr)
     do iloc2 = 1,loc4d_sz_x2
-      do iloc1 = 1,loc4d_sz_x1
-        do ivpar = 1,sim%Nvpar
-          do ieta3 = 1,sim%Neta3
-            f1d_eta3_tmp(ieta3) = sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar)               
+       do iloc1 = 1,loc4d_sz_x1
+          do ivpar = 1,sim%Nvpar
+             vpar   = sim%vpar_grid(ivpar)
+             do ieta3 = 1,sim%Neta3
+                f1d_eta3_tmp(ieta3) = sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar)               
+             end do
+             call sim%interp1d_f_eta3%compute_interpolants(f1d_eta3_tmp)  
+             
+             
+             do ieta3 = 1,sim%Neta3
+                
+                ! if (sim%my_rank.eq.0) &
+                !      print*, eta3,abs(sim%interp1d_f_eta3%interpolate_value(eta3)-f1d_eta3_tmp(ieta3))
+                alpha3 = deltat_advec*vpar
+                eta3    = sim%eta3_grid(ieta3) - alpha3
+                
+                sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
+                     sim%interp1d_f_eta3%interpolate_value(eta3)
+             end do
           end do
-          call sim%interp1d_f_eta3%compute_interpolants(f1d_eta3_tmp)  
- 
-          do ieta3 = 1,sim%Neta3
-            eta3   = sim%eta3_grid(ieta3)
-            alpha3 = deltat_advec*eta3
-            eta    = eta3 - alpha3
-
-            sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
-              sim%interp1d_f_eta3%interpolate_value(eta)
-          end do
-        end do
       end do
-    end do
-    SLL_DEALLOCATE(f1d_eta3_tmp,ierr)
-  end subroutine advec1D_eta3
+   end do
+   SLL_DEALLOCATE(f1d_eta3_tmp,ierr)
+ end subroutine advec1D_eta3
 
 
  !----------------------------------------------------
@@ -1695,7 +1699,8 @@ contains
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_seqx1x2, sim%f4d_seqx3x4 )
 
       !--> Save results in HDF5 files
-      if (mod(iter*sim%dt,sim%diag2D_step)==0._f64) &
+      print*, 'modulo', mod(iter,int(sim%diag2D_step/sim%dt)),int(sim%diag2D_step/sim%dt)
+      if ( mod(iter,int(sim%diag2D_step/sim%dt)) == 0) &
         call writeHDF5_diag( sim )
     end do
 
