@@ -597,6 +597,7 @@ contains
             theta_j = polar_eta2( &
               sim%xgrid_2d(i1,i2), &
               sim%ygrid_2d(i1,i2))
+           ! print*,i2, theta_j,  sim%eta2_grid(i2)
             phi_k   = phi_grid_tmp(i3) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
               sim%feq_xyvpar(i1,i2,i4) * &
@@ -1072,11 +1073,11 @@ contains
         n0_xy_tmp = sim%n0_xy(ieta1,ieta2)
         B_xy_tmp  = sim%B_xy(ieta1,ieta2) 
         values_A11(ieta1,ieta2) = &
-          - n0_xy_tmp/B_xy_tmp
+             - n0_xy_tmp/B_xy_tmp
         values_A12(ieta1,ieta2) = 0.0_f64 
         values_A21(ieta1,ieta2) = 0.0_f64
         values_A22(ieta1,ieta2) = &
-          - n0_xy_tmp/B_xy_tmp
+             - n0_xy_tmp/B_xy_tmp
       end do
     end do
   end subroutine initialize_matrix_A_QN_DK
@@ -1160,9 +1161,9 @@ contains
 
     do ieta2 = 1,Neta2
       do ieta1 = 1,Neta1
-        values_C(ieta1,ieta2) = &
-          sim%n0_xy(ieta1,ieta2) / &
-          sim%Te_xy(ieta1,ieta2)
+         values_C(ieta1,ieta2) = &
+              sim%n0_xy(ieta1,ieta2) / &
+              sim%Te_xy(ieta1,ieta2)
       end do
     end do
   end subroutine initialize_scalar_C_QN_DK
@@ -1273,6 +1274,8 @@ contains
   !  a general elliptic equation solver
   !----------------------------------------------------
   subroutine solve_QN( sim )
+    use sll_common_coordinate_transformations, only : &
+      polar_eta2
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32 :: ieta1, ieta2, iloc3
@@ -1292,8 +1295,8 @@ contains
         sim%rho2d, &
         sim%phi2d)
       do ieta2 = 1,sim%Neta2
-        do ieta1 = 1,sim%Neta1
-          sim%phi3d_seqx1x2(ieta1,ieta2,iloc3) = sim%phi2d%value_at_indices(ieta1,ieta2)
+        do ieta1 = 1,sim%Neta1 
+           sim%phi3d_seqx1x2(ieta1,ieta2,iloc3) = sim%phi2d%value_at_indices(ieta1,ieta2)
         end do
       end do
     end do
@@ -1417,9 +1420,7 @@ contains
 
     !*** Computation of the rhs of QN ***
     call set_time_mark(t0)
-    call compute_charge_density(sim%logical_mesh4d, &
-      sim%f4d_seqx3x4,sim%layout4d_seqx3x4,sim%feq_xyvpar, &
-      sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
+    call compute_charge_density(sim)
     !--> compute rho3d_seqx1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2, sim%rho3d_seqx3, sim%rho3d_seqx1x2 )
     call set_time_mark(t1)
@@ -1507,12 +1508,11 @@ contains
             f1d_vpar_tmp(ivpar) = sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar)
 
           end do
-          call sim%interp1d_f_vpar%compute_interpolants( &
-            f1d_vpar_tmp)   
+          call sim%interp1d_f_vpar%compute_interpolants(f1d_vpar_tmp)   
           do ivpar = 1,sim%Nvpar
             ! si change of coordinates in 3D
             ! val_jac  = sim%transf_xy%jacobian(eta1,eta2,eta3) 
-            alpha4 = deltat_advec*E_z ! /val_jac
+            alpha4 = deltat_advec*E_z 
             vpar   = sim%vpar_grid(ivpar) - alpha4
             vpar   = max(min(vpar,sim%vpar_max),sim%vpar_min)
 
@@ -1555,8 +1555,8 @@ contains
           do ieta3 = 1,sim%Neta3
             f1d_eta3_tmp(ieta3) = sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar)               
           end do
-          call sim%interp1d_f_eta3%compute_interpolants( &
-            f1d_eta3_tmp)   
+          call sim%interp1d_f_eta3%compute_interpolants(f1d_eta3_tmp)  
+ 
           do ieta3 = 1,sim%Neta3
             eta3   = sim%eta3_grid(ieta3)
             alpha3 = deltat_advec*eta3
@@ -1607,8 +1607,7 @@ contains
           end do
         end do
 
-        call sim%interp2d_f_eta1eta2%compute_interpolants( &
-          f2d_eta1eta2_tmp)   
+        call sim%interp2d_f_eta1eta2%compute_interpolants(f2d_eta1eta2_tmp)   
 
         do ieta2 = 1,sim%Neta2
           eta2 = sim%eta2_grid(ieta2)
@@ -1645,7 +1644,7 @@ contains
 
     elaps_time_advec = 0.0
     elaps_time_QN    = 0.0
-
+!!$
     do iter = 1,sim%nb_iter
       if (sim%my_rank.eq.0) &
         print*,' ===> ITERATION = ',iter
@@ -1660,10 +1659,8 @@ contains
       !--> Sequential for the advection in eta1eta2
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
 
-!baremettre
-!VG!      !--> Advection in eta1,eta2 direction'
-!VG!      call advec2D_eta1eta2(sim,sim%dt)
-!earemettre
+      !--> Advection in eta1,eta2 direction'
+      call advec2D_eta1eta2(sim,sim%dt)
     
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_seqx1x2, sim%f4d_seqx3x4 )
@@ -1673,10 +1670,10 @@ contains
 
       !--> Advection in vpar direction'
       call advec1D_vpar(sim,0.5_f64*sim%dt)
-
+      
       !--> Sequential to solve the quasi-neutral equation
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
-
+      
       call set_time_mark(t1)
       elaps_time_advec = elaps_time_advec + &
         time_elapsed_between(t0,t1)
@@ -1684,9 +1681,7 @@ contains
       !--> Solve the quasi-neutral equation
       call set_time_mark(t0)
       !-----> Computation of the rhs of QN 
-      call compute_charge_density(sim%logical_mesh4d, &
-        sim%f4d_seqx3x4,sim%layout4d_seqx3x4,sim%feq_xyvpar, &
-        sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
+      call compute_charge_density(sim)
       !-----> Solve QN
       call solve_QN( sim )
       call set_time_mark(t1)
@@ -1730,7 +1725,7 @@ contains
     
     ix1_diag = int(sim%Neta1/2)
     ix2_diag = int(sim%Neta2/3)
-    ix3_diag = int(sim%Neta3/3)
+    ix3_diag = int(sim%Neta3/4)
     ivpar_diag = int(sim%Nvpar/3)
     write(filename_HDF5,'(A,'//numfmt//',A)') &
       "DK4d_diag", sim%count_save_diag, ".h5"
@@ -1768,20 +1763,9 @@ contains
   !       feq3d_seqx1x2x4(x1=*,x2=*,x4=*)
   !  Out: rho3d_seqx3(x1=distrib,x2=distrib,x3=*)
   !-----------------------------------------------------------
-  subroutine compute_charge_density(logical_mesh4d, &
-    f4d_seqx3x4, &
-    layout4d_seqx3x4, &
-    feq3d_seqx1x2x4, &
-    seqx3_to_seqx1x2, &
-    rho3d_seqx3, &
-    rho3d_seqx1x2)
-    type(sll_logical_mesh_4d)     , intent(in)    :: logical_mesh4d
-    sll_real64, dimension(:,:,:,:), intent(in)    :: f4d_seqx3x4
-    type(layout_4D)               , pointer       :: layout4d_seqx3x4
-    sll_real64, dimension(:,:,:)  , intent(in)    :: feq3d_seqx1x2x4
-    type(remap_plan_3D_real64)    , pointer       :: seqx3_to_seqx1x2
-    sll_real64, dimension(:,:,:)  , intent(inout) :: rho3d_seqx3
-    sll_real64, dimension(:,:,:)  , intent(inout) :: rho3d_seqx1x2
+  subroutine compute_charge_density(sim)
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
 
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3, Nvpar
     sll_int32  :: iloc1, iloc2
@@ -1789,34 +1773,37 @@ contains
     sll_real64 :: delta_f
     sll_real64 :: delta_vpar, intf_dvpar
     sll_int32, dimension(1:4) :: glob_ind4d
-    
-    Neta1_loc  = size(f4d_seqx3x4,1)
-    Neta2_loc  = size(f4d_seqx3x4,2)
-    Neta3      = size(f4d_seqx3x4,3)
-    Nvpar      = size(f4d_seqx3x4,4)
-    delta_vpar = logical_mesh4d%delta_eta4 
+
+    Neta1_loc  = size(sim%f4d_seqx3x4,1)
+    Neta2_loc  = size(sim%f4d_seqx3x4,2)
+    Neta3      = size(sim%f4d_seqx3x4,3)
+    Nvpar      = size(sim%f4d_seqx3x4,4)
+    delta_vpar = sim%logical_mesh4d%delta_eta4 
 
     !-> Computation of the charge density locally in (x1,x2) directions
     do i3 = 1,Neta3
       do iloc2 = 1,Neta2_loc
         do iloc1 = 1,Neta1_loc
           intf_dvpar = 0._f64
-          do i4 = 1,Nvpar
-            glob_ind4d(:) = local_to_global_4D(layout4d_seqx3x4, &
+          do i4 = 1,Nvpar-1
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
                   (/iloc1,iloc2,i3,i4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
-            delta_f = f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-              feq3d_seqx1x2x4(i1,i2,i4)
+            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                 sim%feq_xyvpar(i1,i2,i4)
             intf_dvpar = intf_dvpar + &
-              delta_f*delta_vpar
+                 delta_f*delta_vpar
+           
           end do
-          rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar
+
+          sim%rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar
+
         end do
       end do
     end do
     !--> compute rho3d_seqx1x2
-    call apply_remap_3D(seqx3_to_seqx1x2,rho3d_seqx3,rho3d_seqx1x2)
+    call apply_remap_3D(sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
   end subroutine compute_charge_density
   
 
