@@ -8,7 +8,7 @@ module sll_module_scalar_field_1d_base
    contains
      procedure(function_get_mesh), deferred, pass :: get_logical_mesh
      procedure(function_evaluation_real), deferred, pass :: value_at_point
-     procedure(function_evaluation_integer), deferred, pass :: value_at_indices
+     procedure(function_evaluation_integer_1d), deferred, pass :: value_at_indices
      procedure(derivative_evaluation_real), deferred, pass :: &
           derivative_value_at_point
      procedure(derivative_evaluation_integer), deferred, pass :: &
@@ -64,13 +64,13 @@ module sll_module_scalar_field_1d_base
   end interface
 
   abstract interface
-     function function_evaluation_integer( field, i ) result(res)
+     function function_evaluation_integer_1d( field, i ) result(res)
        use sll_working_precision
        import sll_scalar_field_1d_base
        class(sll_scalar_field_1d_base), intent(in) :: field
        sll_int32, intent(in)  :: i
        sll_real64             :: res
-     end function function_evaluation_integer
+     end function function_evaluation_integer_1d
   end interface
   
   abstract interface 

@@ -853,15 +853,31 @@ contains
 
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
-       if ( res1 >= interpolator%eta1_max ) then 
-          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       if ( res1 > interpolator%eta1_max ) then 
+!!$          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       end if
+!!$       if ( res2 > interpolator%eta2_max ) then 
+!!$          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+!!$       end if
+
+       if( res1 < interpolator%eta1_min ) then
+          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+       else if( res1 >  interpolator%eta1_max ) then
+          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
        end if
-       if ( res2 >= interpolator%eta2_max ) then 
-          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+        if( res2 < interpolator%eta2_min ) then
+          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       else if( res2 >  interpolator%eta2_max ) then
+          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       if ( res2 >= interpolator%eta2_max ) then 
-          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+!!$       if ( res2 > interpolator%eta2_max ) then 
+!!$          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+!!$       end if
+       if( res2 < interpolator%eta2_min ) then
+          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       else if( res2 >  interpolator%eta2_max ) then
+          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
@@ -875,8 +891,14 @@ contains
        end if
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       if ( res1 >= interpolator%eta1_max ) then 
-          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       if ( res1 > interpolator%eta1_max ) then 
+!!$          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       end if
+
+       if( res1 < interpolator%eta1_min ) then
+          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+       else if( res1 >  interpolator%eta1_max ) then
+          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
@@ -962,15 +984,30 @@ contains
     
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
-       if ( res1 .ge. interpolator%eta1_max ) then 
-          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       if ( res1 .ge. interpolator%eta1_max ) then 
+!!$          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       end if
+!!$       if ( res2 .ge. interpolator%eta2_max ) then 
+!!$          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+!!$       end if
+       if( res1 < interpolator%eta1_min ) then
+          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+       else if( res1 >  interpolator%eta1_max ) then
+          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
        end if
-       if ( res2 .ge. interpolator%eta2_max ) then 
-          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+        if( res2 < interpolator%eta2_min ) then
+          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       else if( res2 >  interpolator%eta2_max ) then
+          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       if ( res2 .ge. interpolator%eta2_max ) then 
-          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+!!$       if ( res2 .ge. interpolator%eta2_max ) then 
+!!$          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+!!$       end if
+       if( res2 < interpolator%eta2_min ) then
+          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       else if( res2 >  interpolator%eta2_max ) then
+          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
@@ -984,9 +1021,15 @@ contains
        end if
        
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       if ( res1 .ge. interpolator%eta1_max ) then 
-          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       if ( res1 .ge. interpolator%eta1_max ) then 
+!!$          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       end if
+       if( res1 < interpolator%eta1_min ) then
+          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+       else if( res1 >  interpolator%eta1_max ) then
+          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
        end if
+
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
        if ( res2 > interpolator%eta2_max) then 
@@ -1070,15 +1113,31 @@ contains
     res2 = eta2
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
-       if ( res1 .ge. interpolator%eta1_max ) then 
-          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       if ( res1 .ge. interpolator%eta1_max ) then 
+!!$          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       end if
+!!$       if ( res2 .ge. interpolator%eta2_max ) then 
+!!$          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+!!$       end if
+       if( res1 < interpolator%eta1_min ) then
+          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+       else if( res1 >  interpolator%eta1_max ) then
+          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
        end if
-       if ( res2 .ge. interpolator%eta2_max ) then 
-          res2 = res2 -(interpolator%eta2_max-interpolator%eta2_min)
+        if( res2 < interpolator%eta2_min ) then
+          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       else if( res2 >  interpolator%eta2_max ) then
+          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
-       if ( res2 .ge. interpolator%eta2_max ) then 
-          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+!!$       if ( res2 .ge. interpolator%eta2_max ) then 
+!!$          res2 = res2 - (interpolator%eta2_max-interpolator%eta2_min)
+!!$       end if
+
+        if( res2 < interpolator%eta2_min ) then
+          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       else if( res2 >  interpolator%eta2_max ) then
+          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
@@ -1092,9 +1151,15 @@ contains
        end if
        
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       if ( res1 .ge. interpolator%eta1_max ) then 
-          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       if ( res1 .ge. interpolator%eta1_max ) then 
+!!$          res1 = res1 -(interpolator%eta1_max-interpolator%eta1_min)
+!!$       end if
+       if( res1 < interpolator%eta1_min ) then
+          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+       else if( res1 >  interpolator%eta1_max ) then
+          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
        end if
+
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
        if ( res2 > interpolator%eta2_max) then 

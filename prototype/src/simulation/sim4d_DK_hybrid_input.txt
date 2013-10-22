@@ -2,7 +2,7 @@
   num_cells_x1 = 63
   num_cells_x2 = 63
   num_cells_x3 = 15
-  num_cells_x4 = 15
+  num_cells_x4 = 63
   r_min        = 0.1
   r_max        = 1.   !14.5
   phi_min      = 0.
