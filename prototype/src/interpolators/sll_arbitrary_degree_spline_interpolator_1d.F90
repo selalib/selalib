@@ -355,8 +355,13 @@ contains
     res = eta1
     select case (interpolator%bc_selector)
     case (0) ! periodic
-       if ( res .ge. interpolator%eta_max ) then 
-          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       if ( res .ge. interpolator%eta_max ) then 
+!!$          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       end if
+       if( res < interpolator%eta_min ) then
+          res = res+interpolator%eta_max-interpolator%eta_min
+       else if( res >  interpolator%eta_max ) then
+          res = res+interpolator%eta_min-interpolator%eta_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ASSERT( res >= interpolator%eta_min )
@@ -402,8 +407,13 @@ contains
     
     select case (interpolator%bc_selector)
     case (0) ! periodic
-       if ( res .ge. interpolator%eta_max ) then 
-          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       if ( res > interpolator%eta_max ) then 
+!!$          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       end if
+       if( res < interpolator%eta_min ) then
+          res = res+interpolator%eta_max-interpolator%eta_min
+       else if( res >  interpolator%eta_max ) then
+          res = res+interpolator%eta_min-interpolator%eta_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ASSERT( res >= interpolator%eta_min )
