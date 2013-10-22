@@ -11,8 +11,8 @@ subroutine spli1d_per (&
   ! INPUT
   real(8) :: ar_L 
   integer  :: ai_nx, ai_kx
-  real(8), dimension ( ai_nx- 1) :: apr_taux		
-  real(8), dimension ( ai_nx- 1) :: apr_g	
+  real(8), dimension ( ai_nx) :: apr_taux		
+  real(8), dimension ( ai_nx) :: apr_g	
   ! OUTPUT
   real(8), dimension ( ai_nx ) :: apr_Bcoef
   real(8), dimension ( ai_nx + ai_kx) :: apr_tx
@@ -30,10 +30,10 @@ subroutine spli1d_per (&
   
   !print*, 'rer'
   lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )
-  lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_L
+  lpr_taux ( ai_nx ) = apr_taux ( ai_nx )! apr_taux ( 1 ) + ar_L
   
   lpr_g ( 1 : ai_nx - 1  ) = apr_g ( 1 : ai_nx - 1 )
-  lpr_g ( ai_nx) = apr_g ( 1 )		
+  lpr_g ( ai_nx) = apr_g ( ai_nx )	!apr_g ( 1 )		
   
 
 

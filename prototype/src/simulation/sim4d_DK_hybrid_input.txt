@@ -31,10 +31,10 @@
 
 &sim_params
   dt                = 0.1
-  number_iterations = 2
+  number_iterations = 20
   spline_degree     = 3
 /
 
 &diagnostics
-   diag2D_step = 0.1
+   diag2D_step = 0.2
 /

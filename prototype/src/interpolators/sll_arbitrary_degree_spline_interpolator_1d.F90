@@ -287,7 +287,7 @@ contains
        
        select case (interpolator%bc_selector)
        case (0) ! 1. periodic
-          sz = interpolator%num_pts-1
+          sz = interpolator%num_pts!-1
           
        case (9) ! 2. dirichlet-left, dirichlet-right
           sz = interpolator%num_pts
@@ -315,21 +315,20 @@ contains
    ! print*, 'pointlocate',point_locate_eta1
     select case (interpolator%bc_selector)
     case (0) ! periodic
-       interpolator%size_coeffs = sz+1
-       interpolator%size_t = order + sz + 1 
-       call spli1d_per( & ! a implementer
-            period, sz+1, order, point_locate_eta, &
-            data_array, interpolator%coeff_splines(1:sz+1),&
-            interpolator%t(1:order + sz + 1))
+       interpolator%size_coeffs = sz !+ 1
+       interpolator%size_t = order + sz !+ 1 
+       call spli1d_per( & 
+            period, sz, order, point_locate_eta, &
+            data_array, interpolator%coeff_splines(1:sz),&!+1),&
+            interpolator%t(1:order + sz ))!+ 1))
        
        
      !  print*, 'moyenne', sum( interpolator%coeff_splines(1:sz+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right
        interpolator%size_coeffs = sz
-       interpolator%size_t = order + sz ! a implementer
-       !print*, 'data',data_array
-       !print*, 'de',point_locate_eta
+       interpolator%size_t = order + sz 
+
        call spli1d_dir( sz, order, point_locate_eta, &
             data_array, interpolator%coeff_splines(1:sz),&
             interpolator%t(1:sz+order) )
