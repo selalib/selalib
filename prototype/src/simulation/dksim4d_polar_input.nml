@@ -1,0 +1,37 @@
+&mesh
+  num_cells_x1 = 32
+  num_cells_x2 = 32
+  num_cells_x3 = 32
+  num_cells_x4 = 64
+  r_min        = 0.1
+  r_max        = 14.5
+  z_min      = 0.
+  z_max      = 1506.759067
+  v_min     = -6.
+  v_max     = 6.
+/
+
+&equilibrium
+  tau0     = 1.
+  rho_peak = 0.5
+  kappan   = 0.055
+  deltarn  = 2.9
+  kappaTi  = 0.27586
+  deltarTi = 1.45
+  kappaTe  = 0.27586
+  deltarTe = 1.45
+  QN_case  = 0
+/
+
+&perturbation
+  perturb_choice = 1
+  mmode          = 5
+  nmode          = 1
+  eps_perturb    = 1.0e-6
+/
+
+&sim_params
+  dt                = 8.
+  number_iterations = 100
+  time_case = 1
+/
