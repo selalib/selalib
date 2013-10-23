@@ -649,8 +649,8 @@ contains
       SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
     endif
     call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2), &
-      local_size_x1*local_size_x2, MPI_REAL, f_visu, local_size_x1*local_size_x2,&
-      MPI_REAL, 0, sll_world_collective%comm,ierr);
+      local_size_x1*local_size_x2, MPI_REAL8, f_visu, local_size_x1*local_size_x2,&
+      MPI_REAL8, 0, sll_world_collective%comm,ierr);
     if(sll_get_collective_rank(sll_world_collective)==0)then
       call sll_binary_file_create('f0.bdat', file_id, ierr)
       call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
@@ -712,8 +712,8 @@ contains
     endif
     call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2)&
       -f_x1_init(1:local_size_x1,1:local_size_x2), &
-      local_size_x1*local_size_x2, MPI_REAL, f_visu, local_size_x1*local_size_x2,&
-      MPI_REAL, 0, sll_world_collective%comm,ierr);
+      local_size_x1*local_size_x2, MPI_REAL8, f_visu, local_size_x1*local_size_x2,&
+      MPI_REAL8, 0, sll_world_collective%comm,ierr);
     if(sll_get_collective_rank(sll_world_collective)==0)then
       !call sll_binary_file_create('f0.bdat', file_id, ierr)
       call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
@@ -852,10 +852,12 @@ contains
             SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
           endif
           call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2), &
-            local_size_x1*local_size_x2, MPI_REAL, f_visu, local_size_x1*local_size_x2,&
-            MPI_REAL, 0, sll_world_collective%comm,ierr);
-          if(sll_get_collective_rank(sll_world_collective)==0)then
-            call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)                    
+            local_size_x1*local_size_x2, MPI_REAL8, f_visu, local_size_x1*local_size_x2,&
+            MPI_REAL8, 0, sll_world_collective%comm,ierr);
+          !print*, 'loc ', maxval(f_x1(1:local_size_x1,1:local_size_x2) )
+          if(sll_get_collective_rank(sll_world_collective)==0) then
+            call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)  
+            !print*, 'glob ',maxval(f_visu(1:np_x1-1,1:np_x2-1))                 
           endif
           SLL_DEALLOCATE(f_visu,ierr)          
           !we add f0
