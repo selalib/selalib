@@ -69,7 +69,7 @@ contains
       print *,'#Problem for size3 in compute_reduction_4d_to_3d_direction4'
       stop
     endif
-    if(.not.(present(func)))then
+    if(.not.(present(integration_func)))then
       do i3 = 1,Npts3
         do i2 = 1,Npts2
           do i1 = 1,Npts1
@@ -86,7 +86,11 @@ contains
       do i3 = 1,Npts3
         do i2 = 1,Npts2
           do i1 = 1,Npts1
-            data_3d(i1,i2,i3) = integration_func( data_4d(i1,i2,i3,:), Npts4, delta, func_params )
+            data_3d(i1,i2,i3) = integration_func( &
+              data_4d(i1,i2,i3,:), &
+              Npts4, &
+              delta4, &
+              integration_func_params )
           end do
         end do
       end do      
