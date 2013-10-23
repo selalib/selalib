@@ -1351,8 +1351,8 @@ contains
     sll_int32 :: is_rational
     sll_real64, dimension(:), allocatable :: knots1
     sll_real64, dimension(:), allocatable :: knots2
-    sll_real64, dimension(:), allocatable :: x1_coords
-    sll_real64, dimension(:), allocatable :: x2_coords
+    sll_real64, dimension(:), allocatable :: control_points1
+    sll_real64, dimension(:), allocatable :: control_points2
     sll_real64, dimension(:), allocatable :: weights
 
     namelist /degree/   spline_deg1, spline_deg2
@@ -1360,7 +1360,7 @@ contains
     namelist /rational/ is_rational
     namelist /knots_1/   knots1
     namelist /knots_2/   knots2
-    namelist /points/   x1_coords, x2_coords
+    namelist /control_points/ control_points1, control_points2
     namelist /pt_weights/  weights
     character(len=80) :: line_buffer
 
@@ -1391,8 +1391,8 @@ contains
     SLL_ALLOCATE(knots2(num_pts2+spline_deg2+1),ierr)
     read( input_file_id, knots_1 )
     read( input_file_id, knots_2 )
-    SLL_ALLOCATE(x1_coords(num_pts1*num_pts2),ierr)
-    SLL_ALLOCATE(x2_coords(num_pts1*num_pts2),ierr)
+    SLL_ALLOCATE(control_points1(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(control_points2(num_pts1,num_pts2),ierr)
     SLL_ALLOCATE(weights(num_pts1*num_pts2),ierr)
     read( input_file_id, points )
     read( input_file_id, pt_weights )
