@@ -1,4 +1,5 @@
 ADD_LIBRARY(sll_distribution_function STATIC sll_distribution_function.F90
+                                               sll_fdistribu4d_DK.F90
 	                                       initial_functions.F90)
 
 TARGET_LINK_LIBRARIES(sll_distribution_function sll_scalar_field

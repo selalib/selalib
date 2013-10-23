@@ -25,7 +25,7 @@ sll_int32  :: error
 
 sll_int32, parameter  :: n = 4
 
-print*,'Testing the Poisson solver in 2D, polar coordinate'
+print*,'#Testing the Poisson solver in 2D, polar coordinate'
 
 r_min       = 1.0_f64
 r_max       = 2.0_f64
@@ -74,6 +74,7 @@ do i =1,nr
 end do
 
 call solve_poisson_polar(poisson_fft, rhs, phi)
+
 
 do i =1,nr
    do j=1,ntheta
