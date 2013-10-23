@@ -93,9 +93,11 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
+   ADD_SUBDIRECTORY(reduction)
    ADD_SUBDIRECTORY(deboor_splines)
    IF(NOT STDF95)
-      ADD_SUBDIRECTORY(coordinate_transformations)
+     ADD_SUBDIRECTORY(coordinate_transformations)
+     ADD_SUBDIRECTORY(characteristics)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
@@ -113,11 +115,11 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
-
+   
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
-      #ADD_SUBDIRECTORY(general_coordinate_quasi_neutral_solvers)
+      ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
       ADD_SUBDIRECTORY(multigrid)
@@ -138,6 +140,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(advection_field)
       ADD_SUBDIRECTORY(LinRood)
 
+      ADD_SUBDIRECTORY(mesh_calculus)
       ADD_SUBDIRECTORY(simulation)
 
    ENDIF(NOT STDF95)

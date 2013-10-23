@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Module to solve Poisson equation on polar mesh using FFT transform
 module sll_poisson_polar_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -28,22 +29,21 @@ module sll_poisson_polar_parallel
   use sll_boundary_condition_descriptors
 
   implicit none
-  !>type sll_poisson_polar
-  !>type for the Poisson solver in polar coordinate
+  !>Class for the Poisson solver in polar coordinate
   type sll_poisson_polar
-   sll_real64                          :: rmin
-   sll_real64                          :: rmax
-   sll_real64                          :: dr
-   sll_int32                           :: nr
-   sll_int32                           :: nt
-   sll_int32                           :: bc(2)
-   type(sll_fft_plan), pointer         :: fw
-   type(sll_fft_plan), pointer         :: bw
-   sll_comp64, dimension(:),   pointer :: fk
-   sll_comp64, dimension(:),   pointer :: phik
-   sll_real64, dimension(:),   pointer :: mat
-   sll_real64, dimension(:),   pointer :: cts
-   sll_int32,  dimension(:),   pointer :: ipiv
+   sll_real64                          :: rmin     !< left corner of r dimension
+   sll_real64                          :: rmax     !< right corner of r dimension
+   sll_real64                          :: dr       !< step size along r
+   sll_int32                           :: nr       !< number of nodes along r
+   sll_int32                           :: nt       !< number of nodes along theta
+   sll_int32                           :: bc(2)    !< boundary conditions options
+   type(sll_fft_plan), pointer         :: fw       !< Forward FFT plan
+   type(sll_fft_plan), pointer         :: bw       !< Inverse FFT plan
+   sll_comp64, dimension(:),   pointer :: fk       !< RHSf fft
+   sll_comp64, dimension(:),   pointer :: phik     !< Potential fft
+   sll_real64, dimension(:),   pointer :: mat      !< Matrix
+   sll_real64, dimension(:),   pointer :: cts      !< Lapack coefficient
+   sll_int32,  dimension(:),   pointer :: ipiv     !< Lapack pivot indices
    type(layout_2D),  pointer           :: layout_r !< layout sequential in r
    type(layout_2D),  pointer           :: layout_a !< layout sequential in theta
    type(remap_plan_2D_real64), pointer :: rmp_ra   !< remap r->theta 
@@ -52,10 +52,12 @@ module sll_poisson_polar_parallel
    sll_real64, dimension(:,:), pointer :: f_a      !< array sequential in theta
   end type sll_poisson_polar
 
+  !> Initialize the Poisson solver on polar mesh
   interface initialize
      module procedure initialize_poisson_polar
   end interface initialize
 
+  !> Compute the potential solving the Poisson equation on polar mesh
   interface solve
      module procedure solve_poisson_polar
   end interface solve
@@ -68,7 +70,7 @@ contains
              rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
 
     implicit none
-    type(sll_poisson_polar) :: this
+    type(sll_poisson_polar)  :: this     !< Poisson solver class
     type(layout_2D), pointer :: layout_r !< sequential in r direction
     type(layout_2D), pointer :: layout_a !< sequential in theta direction
 
@@ -134,7 +136,7 @@ contains
 
     implicit none
 
-    type(sll_poisson_polar), pointer :: this
+    type(sll_poisson_polar), pointer :: this !< Poisson solver object
     sll_int32 :: err
     if (associated(this)) then
        call fft_delete_plan(this%fw)
@@ -150,13 +152,14 @@ contains
   end subroutine delete_poisson_polar
 
 
+  !> Solve the Poisson equation and get the potential
   subroutine solve_poisson_polar(this,rhs,phi)
 
     implicit none
 
-    type(sll_poisson_polar) :: this
-    sll_real64, dimension(:,:), intent(in)  :: rhs
-    sll_real64, dimension(:,:), intent(out) :: phi
+    type(sll_poisson_polar) :: this !< Poisson solver object
+    sll_real64, dimension(:,:), intent(in)  :: rhs !< Charge density
+    sll_real64, dimension(:,:), intent(out) :: phi !< Potential
 
     sll_real64 :: rmin,dr
     sll_int32  :: nr, ntheta,bc(2)
@@ -298,6 +301,7 @@ contains
   end subroutine solve_poisson_polar
 
 
+  !> Check if array sizes are compatble with the layout 
   subroutine verify_argument_sizes_par(layout, array)
 
     type(layout_2D), pointer       :: layout

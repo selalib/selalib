@@ -1,3 +1,6 @@
+!> Module to use MUDPACK library to solve Poisson equation on cartesian mesh
+!> MUDPACK library is available on this website
+!> http://www2.cisl.ucar.edu/resources/legacy/mudpack
 module sll_mudpack_cartesian
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
@@ -9,6 +12,7 @@ implicit none
 
 contains
 
+!> Initialize the Poisson solver using mudpack library
 subroutine initialize_mudpack_cartesian(this, phi, rhs,              &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
@@ -17,19 +21,22 @@ subroutine initialize_mudpack_cartesian(this, phi, rhs,              &
 implicit none
 
 ! set grid size params
-type(mudpack_2d)        :: this
-sll_real64, intent(in)  :: eta1_min, eta1_max
-sll_real64, intent(in)  :: eta2_min, eta2_max
-sll_int32,  intent(in)  :: nc_eta1, nc_eta2
-sll_int32,  intent(in)  :: bc_eta1_left
-sll_int32,  intent(in)  :: bc_eta1_right
-sll_int32,  intent(in)  :: bc_eta2_left
-sll_int32,  intent(in)  :: bc_eta2_right
+type(mudpack_2d)        :: this          !< Data structure for solver
+sll_real64, intent(in)  :: eta1_min      !< left corner x direction
+sll_real64, intent(in)  :: eta1_max      !< right corner x direction
+sll_real64, intent(in)  :: eta2_min      !< left corner x direction
+sll_real64, intent(in)  :: eta2_max      !< right corner x direction
+sll_int32,  intent(in)  :: nc_eta1       !< number of cells x direction
+sll_int32,  intent(in)  :: nc_eta2       !< number of cells y direction
+sll_int32,  intent(in)  :: bc_eta1_left  !< boundary condtion
+sll_int32,  intent(in)  :: bc_eta1_right !< boundary condtion
+sll_int32,  intent(in)  :: bc_eta2_left  !< boundary condtion
+sll_int32,  intent(in)  :: bc_eta2_right !< boundary condtion
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
-sll_int32 :: icall, iiex, jjey, llwork
+sll_int32               :: icall, iiex, jjey, llwork
 
-sll_real64, intent(inout) :: phi(nc_eta1+1,nc_eta2+1)
-sll_real64, intent(inout) :: rhs(nc_eta1+1,nc_eta2+1)
+sll_real64, intent(inout) :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
+sll_real64, intent(inout) :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
@@ -143,10 +150,12 @@ if (error > 0) call exit(0)
 end subroutine initialize_mudpack_cartesian
 
 
+!> Compute the potential using mudpack library on cartesian mesh
 subroutine solve_mudpack_cartesian(this, phi, rhs)
 
-type(mudpack_2d)  :: this
-sll_real64        :: phi(:,:),rhs(:,:)
+type(mudpack_2d)  :: this      !< Data structure for Poisson solver
+sll_real64        :: phi(:,:)  !< Electric potential
+sll_real64        :: rhs(:,:)  !< Charge density
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
