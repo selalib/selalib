@@ -55,6 +55,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_logical_meshes
   use polar_operators
   use polar_advection
+  use sll_reduction_module
 
   implicit none
 
@@ -427,6 +428,10 @@ contains
     integer                      :: file_err
     sll_int32                    :: file_id
     character(len=12), parameter :: filename_prof = "init_prof.h5"
+    sll_int32 :: loc4d_sz_x1
+    sll_int32 :: loc4d_sz_x2
+    sll_int32 :: loc4d_sz_x3
+    sll_int32 :: loc4d_sz_x4
 
     !*** Saving of the radial profiles in HDF5 file ***
     if (sll_get_collective_rank(sll_world_collective)==0) then
@@ -441,10 +446,29 @@ contains
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
     call initialize_fdistribu4d_DK(sim,sim%layout4d_x1x2x4,sim%f4d_x1x2x4)
-    call compute_reduction_4d_to_3d(sim%m_x4,&
-      sim%layout4d_x1x2x4,&
-      sim%f4d_x1x2x4,&
-      sim%rho3d_x1x2)
+!    call compute_reduction_4d_to_3d(&
+!      sim%m_x4, &
+!      sim%f4d_x1x2x4, &
+!      sim%rho3d_x1x2, &
+!      sim%layout4d_x1x2x4)
+    call compute_local_sizes_4d( sim%layout4d_x1x2x4, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )
+
+
+    call compute_reduction_4d_to_3d_direction4(&
+      sim%f4d_x1x2x4, &
+      sim%rho3d_x1x2, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4, &
+      sim%m_x4%delta_eta)
+
+ 
+ 
     call apply_remap_3D( sim%remap_plan_x1x2_x3, sim%rho3d_x1x2, sim%rho3d_x3 )
 
     call solve_quasi_neutral(sim)
@@ -796,80 +820,6 @@ contains
 !      sim%bc_right_eta2)
   end subroutine allocate_QN_DK
 
-  
-  !--------------------------------------------------
-  ! Generic function for computing charge density
-  ! should be elsewhere
-  ! we should also add a choice for the integration 
-  ! also should be generalized for more complicated data
-  ! as here array of values f_0,\dots,f_N 
-  !---------------------------------------------------  
-  
-  subroutine compute_reduction_4d_to_3d(m_x4,&
-    layout4d,&
-    data_4d,&
-    data_3d)
-    type(sll_logical_mesh_1d), pointer    :: m_x4
-    type(layout_4D), pointer    :: layout4d
-    sll_real64, dimension(:,:,:,:), intent(in)    :: data_4d
-    sll_real64, dimension(:,:,:)  , intent(out) :: data_3d
-    sll_int32  :: np_x1_loc
-    sll_int32  :: np_x2_loc
-    sll_int32  :: np_x3
-    sll_int32  :: np_x4
-    sll_int32  :: iloc1, iloc2, iloc3, iloc4
-    sll_real64 :: delta_x4, tmp
-    sll_int32  :: loc4d_sz_x1
-    sll_int32  :: loc4d_sz_x2
-    sll_int32  :: loc4d_sz_x3
-    sll_int32  :: loc4d_sz_x4
-
-    call compute_local_sizes_4d( layout4d, &
-      loc4d_sz_x1, &
-      loc4d_sz_x2, &
-      loc4d_sz_x3, &
-      loc4d_sz_x4 )
-    
-    if(loc4d_sz_x1>size(data_4d,1))then
-      print *,'#Problem for size1 in compute_reduction_4d_to_3d'
-      stop
-    endif
-    if(loc4d_sz_x2>size(data_4d,2))then
-      print *,'#Problem for size2 in compute_reduction_4d_to_3d'
-      stop
-    endif
-    if(loc4d_sz_x3>size(data_4d,3))then
-      print *,'#Problem for size2 in compute_reduction_4d_to_3d'
-      stop
-    endif
-    if(loc4d_sz_x4>size(data_4d,4))then
-      print *,'#Problem for size2 in compute_reduction_4d_to_3d'
-      stop
-    endif
-
-    if((loc4d_sz_x4).ne.(m_x4%num_cells+1))then
-      print *,'#Problem for size in compute_reduction_4d_to_3d'
-    endif
-        
-
-    !-> Computation of the charge density locally in (x1,x2) directions
-    do iloc3 = 1,loc4d_sz_x3
-      do iloc2 = 1,loc4d_sz_x2
-        do iloc1 = 1,loc4d_sz_x1
-          tmp = 0.5_f64*(data_4d(iloc1,iloc2,iloc3,1)&
-            +data_4d(iloc1,iloc2,iloc3,loc4d_sz_x1))
-          do iloc4 = 2,loc4d_sz_x4-1
-            tmp = tmp + data_4d(iloc1,iloc2,iloc3,iloc4)
-          end do
-          data_3d(iloc1,iloc2,iloc3) = tmp*delta_x4
-        end do
-      end do
-    end do
-  end subroutine compute_reduction_4d_to_3d
-
-  
- 
- 
  
  
   
@@ -929,8 +879,6 @@ contains
   
   
 
-!  subroutine compute_characteristics2D( A1, A2, dt, &
-!    output1, output2)
 
 !
 !  subroutine compute_characteristics2D_verlet( A1,&

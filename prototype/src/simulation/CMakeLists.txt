@@ -157,6 +157,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_remap
                        sll_collective
 		       sll_integration
+		       sll_reduction
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
