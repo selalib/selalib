@@ -127,7 +127,7 @@ contains
     sll_int32 :: nr, ntheta
     sll_real64 :: dr, dtheta, rmin, rmax
     sll_int32 :: i,j
-    sll_real64 :: r,theta
+    sll_real64 :: r,theta,tmp
     sll_comp64 :: temp
 
     nr=plan%nr
@@ -136,7 +136,25 @@ contains
     dtheta=plan%dtheta
     rmin=plan%rmin
     rmax=plan%rmax
+    
+    !experimental
+    tmp=0._f64
+    do j=1,ntheta
+      tmp=tmp+phi(1,j)
+    enddo
+    tmp=tmp/real(ntheta,f64)
+    phi(1,:)=tmp
 
+    tmp=0._f64
+    do j=1,ntheta
+      tmp=tmp+phi(nr+1,j)
+    enddo
+    tmp=tmp/real(ntheta,f64)
+    phi(nr+1,:)=tmp
+
+    
+    
+    
     if (plan%grad_case==1) then
        ! center formula for r end theta
        ! decenter for r on boundaries

@@ -64,7 +64,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:,:,:,:), pointer     :: f_x1x2 
      sll_real64, dimension(:,:,:,:), pointer     :: f_x3x4
      sll_real64, dimension(:,:,:), allocatable   :: partial_reduction
-     sll_real64, dimension(:,:), allocatable     :: rho_full 
+     sll_real64, dimension(:,:), pointer     :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
      sll_real64, dimension(:,:), allocatable     :: rho_split
 
@@ -99,6 +99,8 @@ module sll_simulation_4d_qns_general_module
      procedure(two_var_parametrizable_function),nopass,pointer :: a12_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: b1_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: b2_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
    contains
      procedure, pass(sim) :: run => run_4d_qns_general
@@ -127,6 +129,8 @@ contains
    a12_f,&
    a21_f,&
    a22_f,&
+   b1_f, &
+   b2_f, &
    c_f,&
    spline_degre1,&
    spline_degre2,&
@@ -145,6 +149,8 @@ contains
    procedure(two_var_parametrizable_function) :: a12_f
    procedure(two_var_parametrizable_function) :: a21_f
    procedure(two_var_parametrizable_function) :: a22_f
+   procedure(two_var_parametrizable_function) :: b1_f
+   procedure(two_var_parametrizable_function) :: b2_f
    procedure(two_var_parametrizable_function) :: c_f
    sll_int32  :: spline_degre1
    sll_int32  :: spline_degre2
@@ -162,6 +168,8 @@ contains
    sim%a12_f     => a12_f
    sim%a21_f     => a21_f
    sim%a22_f     => a22_f
+   sim%b1_f      => b1_f
+   sim%b2_f      => b2_f
    sim%c_f       => c_f
    sim%spline_degree_eta1 = spline_degre1
    sim%spline_degree_eta2 = spline_degre2
@@ -309,13 +317,15 @@ contains
     class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: b1_field_vect
+    class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
-    sll_real64, dimension(:,:), allocatable :: phi_values
+    sll_real64, dimension(:,:), pointer :: phi_values
     sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
@@ -388,7 +398,25 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-
+    b1_field_vect => new_scalar_field_2d_analytic_alt( &
+         sim%b1_f, &
+         "b1", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
+    
+    b2_field_vect => new_scalar_field_2d_analytic_alt( &
+         sim%b2_f, &
+         "b2", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top) 
+    
+    
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
@@ -404,7 +432,6 @@ contains
    
 
     phi => new_scalar_field_2d_discrete_alt( &
-         phi_values, &
          "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
@@ -412,7 +439,8 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    call phi%set_field_data( phi_values )
+    call phi%update_interpolation_coefficients( )
     
     buffer_counter = 1
 
@@ -676,7 +704,6 @@ contains
     ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -685,6 +712,9 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
+    call rho%set_field_data( sim%rho_full )
+    call rho%update_interpolation_coefficients( )
+
 !!$    if(sim%my_rank == 0) then
 !!$       call rho%write_to_file(0)
 !!$    end if
@@ -782,7 +812,6 @@ contains
          a21_field_mat, &
          a22_field_mat, &
          c_field)!, &
-         !rho)
 
     print*, ' ... finished initialization, entering main loop.'
     ! ------------------------------------------------------------------------
@@ -900,8 +929,12 @@ contains
             density_tot )
        
        ! print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-       
+       ! The subtraction of density_tot is supposed to be made inside the 
+       ! elliptic solver.
+       !
+!       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+       call rho%set_field_data(sim%rho_full)
+       call rho%update_interpolation_coefficients( )
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
 !!$       end if
