@@ -13,6 +13,11 @@ program test_lagrange
   sll_real64                  :: res
   sll_real64                  :: tmp
 !  sll_real64 :: p012, p123
+  !-----> for test of derivatives
+  sll_real64 :: w(-20:20)
+  sll_int32 :: ierr
+  sll_int32 :: p
+  sll_int32 :: r,s
 
   do i=1,NP
      xi(i) = XMIN + real(i-1,f64)*DELTA
@@ -24,8 +29,22 @@ program test_lagrange
   do i=1, NP
      tmp = xi(i)
      res = lagrange_interpolate( tmp, 3, xi, yi )
-     print *, 'interpolated value = ', res, '. Correct value = ', yi(i)
+     print *, '#interpolated value = ', res, '. Correct value = ', yi(i)
   end do
+
+  !----------->
+  ! test of derivatives
+  do p=0,5
+    call compute_stencil_plus(p,r,s)
+    call compact_derivative_weight(w(r:s),r,s)
+    print *,r,s
+    print *, w(r:s)
+    call weight_product_x1(yi,xi,NP-1,w(r:s),r,s,SLL_PERIODIC)
+       do i=1, NP
+       print *, '#derivative(i) = ',xi(i),2._f64*(XMIN + real(i-1,f64)*DELTA)
+    end do    
+  enddo
+
 
  
 contains
