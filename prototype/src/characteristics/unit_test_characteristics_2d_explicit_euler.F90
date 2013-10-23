@@ -15,7 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test
+program unit_test_characteristics_2d_explicit_euler
 #include "sll_working_precision.h"
 use sll_module_characteristics_2d_base
 use sll_module_characteristics_2d_explicit_euler
@@ -23,7 +23,7 @@ use sll_boundary_condition_descriptors
 
 implicit none
   
-  type(explicit_euler_2d_charac_computer), pointer :: charac 
+  class(sll_characteristics_2d_base), pointer :: euler 
   
   sll_int32 :: Npts1
   sll_int32 :: Npts2
@@ -39,16 +39,33 @@ implicit none
   sll_real64 :: dt
   sll_real64 :: err
   sll_real64 :: tmp
+
   
-  Npts1 = 16
+  
+  
+  Npts1 = 28
   Npts2 = 32
   dt = 0.1_f64
-  charac => &
+  
+  
+  !initialization for explicit_euler_2d
+  
+  euler => &
     new_explicit_euler_2d_charac(&
       Npts1, &
       Npts2, &
       SLL_SET_TO_LIMIT, &
       SLL_PERIODIC)
+
+  
+
+
+
+
+  
+      
+      
+      
 
   allocate(input1(Npts1))
   allocate(input2(Npts2))
@@ -71,8 +88,8 @@ implicit none
       A2(i,j) = input1(i)-0.5_f64
     enddo
   enddo
-  call compute_explicit_euler_2d_charac( &
-      charac, &
+  !call compute_explicit_euler_2d_charac( &
+  call euler%compute_characteristics( &
       A1, &
       A2, &
       dt, &
@@ -80,6 +97,8 @@ implicit none
       input2, &
       output1, &
       output2)
+      
+      
   err = 0._f64
   
   do j=1,Npts2
@@ -106,6 +125,10 @@ implicit none
   enddo
   
   print *,'#err=',err
+  
+  
+  
+  
 
   if(err==0)then    
     print *, '#PASSED'

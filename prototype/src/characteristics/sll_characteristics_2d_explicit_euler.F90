@@ -40,7 +40,7 @@ implicit none
     !  new_explicit_euler_2d_charac
     procedure, pass(charac) :: initialize => &
       initialize_explicit_euler_2d_charac
-    procedure, pass(charac) :: compute_characteristics_2d => &
+    procedure, pass(charac) :: compute_characteristics => &
       compute_explicit_euler_2d_charac
   end type explicit_euler_2d_charac_computer
 
@@ -89,6 +89,8 @@ contains
 
     
   end function new_explicit_euler_2d_charac
+  
+  
   subroutine initialize_explicit_euler_2d_charac(&
       charac, &
       Npts1, &
@@ -153,6 +155,7 @@ contains
     else if(.not.(present(bc_type_1))) then
       print *,'#provide boundary condition'
       print *,'#bc_type_1 or process_outside_point1 function'
+      print *,'#in initialize_explicit_euler_2d_charac'
       stop
     else
       select case (bc_type_1)
@@ -166,6 +169,15 @@ contains
           stop
         end select
     endif
+    
+    if((present(process_outside_point1)).and.(present(bc_type_1)))then
+      print *,'#provide either process_outside_point1 or bc_type_1'
+      print *,'#and not both'
+      print *,'#in initialize_explicit_euler_2d_charac_computer'
+      stop
+    endif
+    
+
 
     if(present(process_outside_point2)) then
       charac%process_outside_point2 => process_outside_point2
@@ -184,6 +196,13 @@ contains
           print *,'#in initialize_explicit_euler_2d_charac_computer'
           stop
         end select
+    endif
+
+    if((present(process_outside_point2)).and.(present(bc_type_2)))then
+      print *,'#provide either process_outside_point2 or bc_type_2'
+      print *,'#and not both'
+      print *,'#in initialize_explicit_euler_2d_charac_computer'
+      stop
     endif
     
     
@@ -210,6 +229,19 @@ contains
     sll_real64, dimension(:,:), intent(out) :: output2    
     sll_int32 :: i
     sll_int32 :: j
+    sll_int32 :: Npts1
+    sll_int32 :: Npts2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    
+    Npts1 = charac%Npts1
+    Npts2 = charac%Npts2
+    eta1_min = charac%eta1_min
+    eta1_max = charac%eta1_max
+    eta2_min = charac%eta2_min
+    eta2_max = charac%eta2_max
     
     SLL_ASSERT(size(A1,1)>=charac%Npts1)
     SLL_ASSERT(size(A1,2)>=charac%Npts2)
@@ -222,15 +254,15 @@ contains
     SLL_ASSERT(size(output2,1)>=charac%Npts1)
     SLL_ASSERT(size(output2,2)>=charac%Npts2)
     
-    do j=1,charac%Npts2
-      do i=1,charac%Npts1
+    do j=1,Npts2
+      do i=1,Npts1
         output1(i,j) = input1(i)-dt*A1(i,j)
-        if((output1(i,j)<=charac%eta1_min).or.(output1(i,j)>=charac%eta1_max))then
-          call charac%process_outside_point1(output1(i,j),charac%eta1_min,charac%eta1_max)
+        if((output1(i,j)<=eta1_min).or.(output1(i,j)>=eta1_max))then
+          output1(i,j)=charac%process_outside_point1(output1(i,j),eta1_min,eta1_max)
         endif  
         output2(i,j) = input2(j)-dt*A2(i,j)  
-        if((output2(i,j)<=charac%eta2_min).or.(output2(i,j)>=charac%eta2_max))then
-          call charac%process_outside_point2(output2(i,j),charac%eta2_min,charac%eta2_max)          
+        if((output2(i,j)<=eta2_min).or.(output2(i,j)>=eta2_max))then
+          output2(i,j)=charac%process_outside_point2(output2(i,j),eta2_min,eta2_max)          
         endif
       enddo
     enddo   

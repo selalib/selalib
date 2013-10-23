@@ -24,7 +24,7 @@ module sll_module_characteristics_2d_base
   type, abstract :: sll_characteristics_2d_base 
   contains
     procedure(signature_compute_characteristics_2d), deferred, pass(charac) :: &
-      compute_characteristics_2d
+      compute_characteristics
 !    procedure(signature_process_outside_point), deferred, pass    :: &
 !      process_outside_point1
 !    procedure(signature_process_outside_point), deferred, pass    :: &
@@ -67,53 +67,56 @@ module sll_module_characteristics_2d_base
   abstract interface
     ! change the value of eta when eta<=eta_min or eta>=eta_max
     ! depending on boundary conditions
-    subroutine signature_process_outside_point( eta, eta_min, eta_max )
+    function signature_process_outside_point( eta, eta_min, eta_max ) result(eta_out)
       use sll_working_precision
-      sll_real64, intent(inout)  :: eta
+      sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
-    end subroutine signature_process_outside_point
+      sll_real64 :: eta_out      
+    end function signature_process_outside_point
   end interface
   
 contains
 
   ! periodic case
   ! called when bc_type = SLL_PERIODIC
-  subroutine process_outside_point_periodic( eta, eta_min, eta_max )
+  function process_outside_point_periodic( eta, eta_min, eta_max ) result(eta_out)
       use sll_working_precision
-      sll_real64, intent(inout)  :: eta
+      sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
+      sll_real64 :: eta_out
+
+      eta_out = (eta-eta_min)/(eta_max-eta_min)      
+      eta_out = eta_out-floor(eta_out)      
+      SLL_ASSERT((eta_out>=0).and.(eta_out<1))      
+      eta_out = eta_min+eta_out*(eta_max-eta_min) 
+      SLL_ASSERT((eta_out>=eta_min).and.(eta_out<eta_max))      
       
-      eta = (eta-eta_min)/(eta_max-eta_min)      
-      eta = eta-floor(eta)      
-      SLL_ASSERT((eta>=0).and.(eta<1))      
-      eta = eta_min+eta*(eta_max-eta_min) 
-      SLL_ASSERT((eta>=eta_min).and.(eta<eta_max))      
-      
-  end subroutine process_outside_point_periodic
+  end function process_outside_point_periodic
 
   ! set to limit case
   ! called when bc_type = SLL_SET_TO_LIMIT
   
-  subroutine process_outside_point_set_to_limit( eta, eta_min, eta_max )
+  function process_outside_point_set_to_limit( eta, eta_min, eta_max ) result(eta_out)
       use sll_working_precision
-      sll_real64, intent(inout)  :: eta
+      sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
+      sll_real64 :: eta_out
       
-      eta = (eta-eta_min)/(eta_max-eta_min)      
-      if(eta>1)then
-        eta = 1._f64
+      eta_out = (eta-eta_min)/(eta_max-eta_min)      
+      if(eta_out>1)then
+        eta_out = 1._f64
       endif
-      if(eta<0)then
-        eta = 0._f64
+      if(eta_out<0)then
+        eta_out = 0._f64
       endif
-      SLL_ASSERT((eta>=0).and.(eta<1))      
-      eta = eta_min+eta*(eta_max-eta_min) 
-      SLL_ASSERT((eta>=eta_min).and.(eta<=eta_max))      
+      SLL_ASSERT((eta_out>=0).and.(eta_out<=1))      
+      eta_out = eta_min+eta_out*(eta_max-eta_min) 
+      SLL_ASSERT((eta_out>=eta_min).and.(eta_out<=eta_max))      
       
-  end subroutine process_outside_point_set_to_limit
+  end function process_outside_point_set_to_limit
   
   
   
