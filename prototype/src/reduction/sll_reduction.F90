@@ -3,7 +3,6 @@ module sll_reduction_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_remapper
   use sll_logical_meshes
 
   abstract interface
@@ -22,15 +21,13 @@ module sll_reduction_module
 contains
 
   !--------------------------------------------------
-  ! Generic function for computing charge density
-  ! we should also add a choice for the integration 
-  ! also should be generalized for more complicated data
-  ! as here array of values f_0,\dots,f_N 
+  ! Generic function which can be used for computing charge density
+  ! by default we suppose a uniform mesh node based
+  ! and trapezoid quadrature formula is used
+  ! as an option we can use a way to integrate
+  ! by providing a function whose signature is sll_integration_discrete_1d
   !---------------------------------------------------  
-  
-   
-  
-  
+    
 
   subroutine compute_reduction_4d_to_3d_direction4(&
     data_4d, &
@@ -39,9 +36,9 @@ contains
     Npts2, &
     Npts3, &
     Npts4, &
-    delta, &    
-    func, &
-    func_params)
+    delta4, &    
+    integration_func, &
+    integration_func_params)
     
     sll_real64, dimension(:,:,:,:), intent(in)    :: data_4d
     sll_real64, dimension(:,:,:)  , intent(out) :: data_3d
@@ -49,9 +46,9 @@ contains
     sll_int32, intent(in)  :: Npts2
     sll_int32, intent(in)  :: Npts3
     sll_int32, intent(in)  :: Npts4
-    sll_real64, intent(in) :: delta
-    procedure(sll_integration_discrete_1d), optional :: func
-    sll_real64, dimension(:), optional :: func_params
+    sll_real64, intent(in) :: delta4
+    procedure(sll_integration_discrete_1d), optional :: integration_func
+    sll_real64, dimension(:), optional :: integration_func_params
     sll_int32  :: i1, i2, i3, i4
 
     
@@ -89,7 +86,7 @@ contains
       do i3 = 1,Npts3
         do i2 = 1,Npts2
           do i1 = 1,Npts1
-            data_3d(i1,i2,i3) = func( data_4d(i1,i2,i3,:), Npts4, delta, func_params )
+            data_3d(i1,i2,i3) = integration_func( data_4d(i1,i2,i3,:), Npts4, delta, func_params )
           end do
         end do
       end do      
