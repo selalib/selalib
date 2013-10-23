@@ -22,7 +22,7 @@ contains
     sll_real64  :: identity_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_x1 = eta1
   end function identity_x1
 
@@ -30,7 +30,7 @@ contains
     sll_real64  :: identity_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_x2 = eta2
   end function identity_x2
 
@@ -39,7 +39,7 @@ contains
     sll_real64  :: identity_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_eta1 = x1
   end function identity_eta1
 
@@ -47,7 +47,7 @@ contains
     sll_real64  :: identity_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_eta2 = x2
   end function identity_eta2
 
@@ -56,7 +56,7 @@ contains
     sll_real64  :: identity_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
@@ -64,7 +64,7 @@ contains
     sll_real64  :: identity_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_jac12 = 0.0_f64
   end function identity_jac12
 
@@ -72,7 +72,7 @@ contains
     sll_real64  :: identity_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_jac21 = 0.0_f64
   end function identity_jac21
 
@@ -80,7 +80,7 @@ contains
     sll_real64  :: identity_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_jac22 = 1.0_f64
   end function identity_jac22
 
@@ -89,7 +89,7 @@ contains
     sll_real64  :: identity_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     identity_jac = 1.0_f64
   end function identity_jac
 
@@ -103,8 +103,9 @@ contains
   ! **************************************************************************
 
   ! developer's note: made the choice of the params array as the full 
-  ! sequence [A1 B1 A2 B2] as the same params array may thus be passed as
-  ! argument to both calls. The affine mapping has default values:
+  ! sequence (A1 B1 A2 B2) as the same params array may thus be passed as
+  ! argument any call related with this transformation. 
+  ! Delete these formerly default values:
   ! A1 = -1.0
   ! B1 =  1.0
   ! A2 = -1.0
@@ -117,37 +118,27 @@ contains
     sll_real64  :: affine_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
 
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       A1 = params(1)
-       B1 = params(2)
-    else
-       A1 = -1.0_f64
-       B1 =  1.0_f64
-    end if
-    affine_x1 = (B1-A1)*eta1 + A1
+    SLL_ASSERT(size(params) >= 4)
+    A1 = params(1)
+    B1 = params(2)
+        affine_x1 = (B1-A1)*eta1 + A1
   end function affine_x1
 
   function affine_x2 ( eta1, eta2, params )
     sll_real64  :: affine_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
 
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       A2 = params(3)
-       B2 = params(4)
-    else
-       A2 = -1.0_f64
-       B2 =  1.0_f64
-    end if
+    SLL_ASSERT(size(params) >= 4)
+    A2 = params(3)
+    B2 = params(4)
     affine_x2 = (B2-A2)*eta2 + A2
   end function affine_x2
 
@@ -156,18 +147,13 @@ contains
     sll_real64  :: affine_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
 
-    if( present(params) ) then
-       SLL_ASSERT(size(params) >= 4)
-       A1 = params(1)
-       B1 = params(2)
-    else
-       A1 = -1.0_f64
-       B1 =  1.0_f64
-    end if
+    SLL_ASSERT(size(params) >= 4)
+    A1 = params(1)
+    B1 = params(2)
     affine_jac11 = B1-A1
   end function affine_jac11
 
@@ -175,21 +161,18 @@ contains
     sll_real64  :: affine_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    if( present(params) ) then
-       SLL_ASSERT(size(params)) >= 4)
-    end if
-    affine_jac12 = 0.0_f64
+    sll_real64, dimension(:), intent(in) :: params
+    SLL_ASSERT(size(params) >= 4)
+        affine_jac12 = 0.0_f64
   end function affine_jac12
 
   function affine_jac21 ( eta1, eta2, params )
     sll_real64  :: affine_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    if(present(params)) then
-       SLL_ASSERT(size(params)) >= 4)
-    end if
+    sll_real64, dimension(:), intent(in) :: params
+
+    SLL_ASSERT(size(params) >= 4)
     affine_jac21 = 0.0_f64
   end function affine_jac21
 
@@ -197,17 +180,13 @@ contains
     sll_real64  :: affine_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
-    if( present(params) ) then
-       SLL_ASSERT(size(params)) >= 4)
-       A2 = params(3)
-       B2 = params(4)
-    else
-       A2 = -1.0_f64 
-       B2 =  1.0_f64
-    end if
+
+    SLL_ASSERT(size(params) >= 4)
+    A2 = params(3)
+    B2 = params(4)
     affine_jac22 = B2-A2
   end function affine_jac22
 
@@ -216,19 +195,17 @@ contains
     sll_real64  :: affine_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    if( present(params) ) then
-       SLL_ASSERT(size(params)) >= 4)
-       A1 = params(1)
-       B1 = params(2)
-       A2 = params(3)
-       B2 = params(4)
-    else
-       A1 = -1.0_f64
-       B1 =  1.0_f64
-       A2 = -1.0_f64
-       B2 =  1.0_f64
-    end if
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: A1
+    sll_real64 :: B1
+    sll_real64 :: A2
+    sll_real64 :: B2
+
+    SLL_ASSERT(size(params) >= 4)
+    A1 = params(1)
+    B1 = params(2)
+    A2 = params(3)
+    B2 = params(4)
     affine_jac = (B1-A1) * (B2-A2)
   end function affine_jac
 
@@ -247,7 +224,7 @@ contains
     sll_real64  :: polar_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_x1 = eta1 * cos( eta2 )
   end function polar_x1
 
@@ -255,7 +232,7 @@ contains
     sll_real64  :: polar_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_x2 = eta1 * sin( eta2 )
   end function polar_x2
 
@@ -264,7 +241,7 @@ contains
     sll_real64  :: polar_eta1
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_eta1 = sqrt( x1*x1 + x2*x2 )
   end function polar_eta1
 
@@ -272,7 +249,7 @@ contains
     sll_real64  :: polar_eta2
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_eta2 = atan( x2 / x1 ) 
   end function polar_eta2
 
@@ -281,23 +258,23 @@ contains
     sll_real64  :: polar_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    polar_jac11 = cos ( eta2) 
+    sll_real64, dimension(:), intent(in) :: params
+    polar_jac11 = cos ( eta2 ) 
   end function polar_jac11
 
     function polar_jac12 ( eta1, eta2, params )
     sll_real64  :: polar_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    polar_jac12 = - eta1 * sin( eta2)
+    sll_real64, dimension(:), intent(in) :: params
+    polar_jac12 = - eta1 * sin( eta2 )
   end function polar_jac12
 
   function polar_jac21 ( eta1, eta2, params )
     sll_real64  :: polar_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
 
@@ -305,7 +282,7 @@ contains
     sll_real64  :: polar_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_jac22 = eta1 * cos ( eta2 )
   end function polar_jac22
 
@@ -314,7 +291,7 @@ contains
     sll_real64  :: polar_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     polar_jac = eta1
   end function polar_jac
 
@@ -344,21 +321,16 @@ contains
     sll_real64  :: sinprod_x1
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64  :: alpha1
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha1 = params(1)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha1 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
+
+    SLL_ASSERT(size(params) >= 4)
+    alpha1 = params(1)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     sinprod_x1 = eta1 + alpha1 * sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x1
@@ -367,23 +339,17 @@ contains
     sll_real64  :: sinprod_x2
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    sll_real64  :: alpha1
+    sll_real64, dimension(:),intent(in) :: params
+    sll_real64  :: alpha2
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
 
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha2 = params(2)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha2 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
-    pi2 = 2.0_f64*sll_pi
+    SLL_ASSERT(size(params) >= 4)
+    alpha2 = params(2)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
+     pi2 = 2.0_f64*sll_pi
     sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x2
 
@@ -414,22 +380,16 @@ contains
     sll_real64  :: sinprod_jac11
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64  :: alpha1
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
  
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha1 = params(1)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha1 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
+    SLL_ASSERT(size(params) >= 4)
+    alpha1 = params(1)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     sinprod_jac11 = 1.0_f64 + alpha1*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac11
@@ -438,19 +398,16 @@ contains
     sll_real64  :: sinprod_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64  :: alpha1
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
     sll_real64  :: pi2
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha1 = params(1)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha1 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
+
+    SLL_ASSERT(size(params) >= 4)
+    alpha1 = params(1)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     sinprod_jac12 = alpha1*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac12
@@ -459,21 +416,16 @@ contains
     sll_real64  :: sinprod_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64  :: alpha2
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha2 = params(2)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha2 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
+
+    SLL_ASSERT(size(params) >= 4)
+    alpha2 = params(2)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     sinprod_jac21 = alpha2*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac21
@@ -482,19 +434,16 @@ contains
     sll_real64  :: sinprod_jac22
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64  :: alpha2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
     sll_real64  :: pi2
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha2 = params(2)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha2 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
+
+    SLL_ASSERT(size(params) >= 4)
+    alpha2 = params(2)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     sinprod_jac22 = 1.0_f64 + alpha2*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac22
@@ -504,24 +453,18 @@ contains
     sll_real64  :: sinprod_jac
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64  :: alpha1
     sll_real64  :: alpha2
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
-    if(present(params)) then
-       SLL_ASSERT(size(params) >= 4)
-       alpha1 = params(1)
-       alpha2 = params(2)
-       rl1    = 1.0_f64/params(3)
-       rl2    = 1.0_f64/params(4)
-    else
-       alpha1 = 0.1_f64
-       alpha2 = 0.1_f64
-       rl1    = 1.0_f64
-       rl2    = 1.0_f64
-    end if
+
+    SLL_ASSERT(size(params) >= 4)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    rl1    = 1.0_f64/params(3)
+    rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
     sinprod_jac = 1.0_f64 + alpha2*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
@@ -691,7 +634,9 @@ contains
   end function sinprod_jac_square
 
 #endif
-!por aqui
+
+#if 0
+  ! What is this???
   ! test function
   !-------------------
   ! direct mapping
@@ -772,6 +717,7 @@ contains
          (1.0_f64 + 2.0_f64 * sll_pi* 0.1_f64 * cos( 2.0_f64* sll_pi * eta2))
     !test_jac =  2 * eta1!
   end function test_jac
+#endif
 
   ! ***************************************************************************
   !
@@ -781,121 +727,193 @@ contains
   ! X2 = (Rmin + (Rmax-Rmin)*eta1)*sin(2*pi*eta2)
   !
   ! Where eta1 and eta2 are defined in the interval [0,1]. Following are
-  ! the functions that embody this transformation. This is used for testing
-  ! purposes, hence the parameters R1 and R2 do not form part of the functions'
-  ! interfaces. This may become a limitation and should be discussed further.
+  ! the functions that embody this transformation. The 'params' array
+  ! contains the information (R1, R2) with default values:
+  !
+  ! R1 = 0.1
+  ! R2 = 1.0
   !
   ! ***************************************************************************
-#define R1 0.1_f64
-#define R2 1.0_f64
+
+
   function x1_polar_f( eta1, eta2, params )
     sll_real64 :: x1_polar_f
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    x1_polar_f = (R1 + (R2-R1)*eta1)*cos(2.0_f64*sll_pi*eta2)
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_pi*eta2)
   end function x1_polar_f
 
   function x2_polar_f( eta1, eta2, params )
     sll_real64 :: x2_polar_f
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    x2_polar_f = (R1 + (R2-R1)*eta1)*sin(2.0_f64*sll_pi*eta2)
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    x2_polar_f = (r1 + (r2-r1)*eta1)*sin(2.0_f64*sll_pi*eta2)
   end function x2_polar_f
 
   function deriv_x1_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    deriv_x1_polar_f_eta1 = (R2-R1)*cos(2.0_f64*sll_pi*eta2)
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
   function deriv_x1_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x1_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: k
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
     k = 2.0_f64*sll_pi
-    deriv_x1_polar_f_eta2 = -(R1+(R2-R1)*eta1)*sin(k*eta2)*k
+    deriv_x1_polar_f_eta2 = -(r1+(r2-r1)*eta1)*sin(k*eta2)*k
   end function deriv_x1_polar_f_eta2
 
   function deriv_x2_polar_f_eta1( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta1
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    deriv_x2_polar_f_eta1 = (R2-R1)*sin(2.0_f64*sll_pi*eta2)
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    deriv_x2_polar_f_eta1 = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
   function deriv_x2_polar_f_eta2( eta1, eta2, params )
     sll_real64 :: deriv_x2_polar_f_eta2
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: k
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
     k = 2.0_f64*sll_pi
-    deriv_x2_polar_f_eta2 = (R1+(R2-R1)*eta1)*cos(k*eta2)*k
+    deriv_x2_polar_f_eta2 = (r1+(r2-r1)*eta1)*cos(k*eta2)*k
   end function deriv_x2_polar_f_eta2
 
   function jacobian_polar_f( eta1, eta2, params ) result(jac)
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1, eta2
-    sll_real64, dimension(:), optional, intent(in) :: params
-    jac = 2.0_f64*sll_pi*(R1+(R2-R1)*eta1)*(R2-R1)
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    jac = 2.0_f64*sll_pi*(r1+(r2-r1)*eta1)*(r2-r1)
   end function jacobian_polar_f
 
-  function deriv1_jacobian_polar_f( ) result(deriv)
+  ! what is the following used for? It is not meant or used for the 
+  ! coordinate transformation class... this one is used in the unit_test_2d.F90
+  ! file but, what else?
+  function deriv1_jacobian_polar_f(eta1, eta2, params ) result(deriv)
     sll_real64             :: deriv
-    deriv = 2.0_f64*sll_pi*(R2-R1)**2
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    SLL_ASSERT(size(params) >= 2)
+    r1 = params(1)
+    r2 = params(2)
+    deriv = 2.0_f64*sll_pi*(r2-r1)**2
   end function deriv1_jacobian_polar_f
 
-
-#undef R1
-#undef R2
-
-  function zero_function(eta1, eta2)
-    sll_real64, intent(in) :: eta1, eta2
-    sll_real64             :: zero_function
-    zero_function = 0.0_f64
-  end function zero_function
+! why is this here?
+!!$  function zero_function(eta1, eta2)
+!!$    sll_real64, intent(in) :: eta1, eta2
+!!$    sll_real64             :: zero_function
+!!$    zero_function = 0.0_f64
+!!$  end function zero_function
     
 
   !************************************************************************
+  !
   ! 1D maps
+  !
   !************************************************************************
 
-#define A (-1.0_f64)
-#define B  1.0_f64
+  ! Linear map
+  !
+  ! x1 = A + (B-A)*eta1
+  !
+  ! The params array is organized as (A,B) with default values:
+  !
+  ! A = -1.0
+  ! B =  1.0
 
   function linear_map_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
-    val = (B-A)*eta + A
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a
+    sll_real64 :: b
+
+    SLL_ASSERT(size(params) >= 2)
+    a = params(1)
+    b = params(2)
+    val = (b-a)*eta + a
   end function linear_map_f
 
   function linear_map_jac_f( eta, params ) result(val)
     sll_real64 :: val
     sll_real64, intent(in) :: eta
-    val = (B-A)
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a
+    sll_real64 :: b
+
+    SLL_ASSERT(size(params) >= 2)
+    a = params(1)
+    b = params(2)
+        val = (b-a)
   end function linear_map_jac_f
 
-#undef A
-#undef B
 
-#define A 0.0_f64
-#define B 6.2831853071795862_f64
-
-  function linear_map_poisson_f( eta, params ) result(val)
-    sll_real64 :: val
-    sll_real64, intent(in) :: eta
-    val = (B-A)*eta + A
-  end function linear_map_poisson_f
-
-  function linear_map_poisson_jac_f( eta, params ) result(val)
-    sll_real64 :: val
-    sll_real64, intent(in) :: eta
-    val = (B-A)
-  end function linear_map_poisson_jac_f
-
-#undef A
-#undef B
+!!$#define A 0.0_f64
+!!$#define B 6.2831853071795862_f64
+!!$
+!!$  function linear_map_poisson_f( eta, params ) result(val)
+!!$    sll_real64 :: val
+!!$    sll_real64, intent(in) :: eta
+!!$    val = (B-A)*eta + A
+!!$  end function linear_map_poisson_f
+!!$
+!!$  function linear_map_poisson_jac_f( eta, params ) result(val)
+!!$    sll_real64 :: val
+!!$    sll_real64, intent(in) :: eta
+!!$    val = (B-A)
+!!$  end function linear_map_poisson_jac_f
+!!$
+!!$#undef A
+!!$#undef B
   
 
 end module sll_common_coordinate_transformations

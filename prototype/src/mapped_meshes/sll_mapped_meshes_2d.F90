@@ -70,8 +70,8 @@ module sll_module_mapped_meshes_2d
 #ifdef STDF95
 #else
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
-     procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
-     procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
+     procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
+     procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
      procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
           jacobian_func
      procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
@@ -206,7 +206,7 @@ module sll_module_mapped_meshes_2d
   ! functions. But since fortran does not allow arrays of pointers, here
   ! we define a special type that can be used as an array element.
   type jacobian_matrix_element
-     procedure(two_arg_scalar_function), pointer, nopass :: f
+     procedure(transformation_func_nopass), pointer, nopass :: f
   end type jacobian_matrix_element
 #endif
   
@@ -249,12 +249,12 @@ contains
     sll_real64            :: j21_func
     sll_real64            :: j22_func
 #else
-    procedure(two_arg_scalar_function)            :: x1_func
-    procedure(two_arg_scalar_function)            :: x2_func
-    procedure(two_arg_scalar_function)            :: j11_func
-    procedure(two_arg_scalar_function)            :: j12_func
-    procedure(two_arg_scalar_function)            :: j21_func
-    procedure(two_arg_scalar_function)            :: j22_func
+    procedure(transformation_func_nopass)            :: x1_func
+    procedure(transformation_func_nopass)            :: x2_func
+    procedure(transformation_func_nopass)            :: j11_func
+    procedure(transformation_func_nopass)            :: j12_func
+    procedure(transformation_func_nopass)            :: j21_func
+    procedure(transformation_func_nopass)            :: j22_func
 #endif
     sll_int32 :: ierr
 
@@ -300,12 +300,12 @@ contains
     sll_real64            :: j21_func
     sll_real64            :: j22_func
 #else
-    procedure(two_arg_scalar_function)            :: x1_func
-    procedure(two_arg_scalar_function)            :: x2_func
-    procedure(two_arg_scalar_function)            :: j11_func
-    procedure(two_arg_scalar_function)            :: j12_func
-    procedure(two_arg_scalar_function)            :: j21_func
-    procedure(two_arg_scalar_function)            :: j22_func
+    procedure(transformation_func_nopass)            :: x1_func
+    procedure(transformation_func_nopass)            :: x2_func
+    procedure(transformation_func_nopass)            :: j11_func
+    procedure(transformation_func_nopass)            :: j12_func
+    procedure(transformation_func_nopass)            :: j21_func
+    procedure(transformation_func_nopass)            :: j22_func
 #endif
 
     sll_real64 :: delta_1  ! cell spacing in eta1 
