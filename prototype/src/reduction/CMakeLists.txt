@@ -1,6 +1,6 @@
 ADD_LIBRARY(sll_reduction STATIC sll_reduction.F90)
 
-TARGET_LINK_LIBRARIES(sll_reduction sll_remap sll_logical_meshes) 
+TARGET_LINK_LIBRARIES(sll_reduction sll_logical_meshes) 
 
 
 ADD_EXECUTABLE(test_reduction unit_test.F90)
