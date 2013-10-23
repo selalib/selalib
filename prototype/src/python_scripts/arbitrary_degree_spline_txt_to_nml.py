@@ -192,7 +192,7 @@ def main ():
                         elif linetemp[1] == "points":
                             num_slots += 1           # add 1 to slot count
                             currently_reading = "points"
-                            writefile.write("&points\n")             
+                            writefile.write("&control_points\n")             
                             continue
                         elif linetemp[1] == "weights":
                             num_slots += 1           # add 1 to slot count
