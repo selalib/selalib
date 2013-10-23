@@ -49,6 +49,8 @@ use sll_quintic_splines
      procedure, pass:: interpolate_array => spline_interpolate1d
      procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
      procedure, pass:: reconstruct_array
+     procedure, pass :: set_coefficients => set_coefficients_qs1d
+     procedure, pass :: get_coefficients => get_coefficients_qs1d
      !generic :: initialize => initialize_qs1d_interpolato
 #endif
   end type quintic_spline_1d_interpolator
@@ -147,13 +149,19 @@ contains  ! ****************************************************************
   ! interface is the compute_quintic_interpolants routine which gets assigned to
   ! the qs1d at initialization time.  
 #ifdef STDF95
-  subroutine quintic_spline_compute_interpolants( interpolator, data_array )
+  subroutine quintic_spline_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(quintic_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_qs1d( interpolator, data_array )
+  subroutine compute_interpolants_qs1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     class(quintic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_quintic_coeffs_uniform( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine quintic_spline_compute_interpolants
@@ -277,5 +285,30 @@ contains  ! ****************************************************************
 #endif
     call delete_quintic_splines_uniform(obj%spline)
   end subroutine delete_qs1d
+
+  subroutine set_coefficients_qs1d( interpolator, coeffs )
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator), intent(inout)   :: interpolator
+#else
+    class(quintic_spline_1d_interpolator), intent(inout)  :: interpolator
+#endif
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_qs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_qs1d
+
+
+  function get_coefficients_qs1d(interpolator)
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator), intent(in)   :: interpolator
+#else
+    class(quintic_spline_1d_interpolator), intent(in)  :: interpolator
+#endif
+    sll_real64, dimension(:), pointer            :: get_coefficients_qs1d     
+    
+    print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_qs1d
 
 end module sll_quintic_spline_interpolator_1d

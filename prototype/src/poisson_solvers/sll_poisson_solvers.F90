@@ -16,15 +16,29 @@
 !**************************************************************
 
 !> @namespace sll_poisson_solvers
-!> @author Pierre Navaro
-!> @brief 
+!> @brief
 !> Library to solve Poisson equation in 2D and 3D
+!> 
+!> - Modules available
+!>   + sll_fishpack
+!>   + sll_mudpack_cartesian
+!>   + sll_mudpack_colella
+!>   + sll_mudpack_polar
+!>   + sll_poisson_1d_periodic
+!>   + sll_poisson_2d_fem
+!>   + sll_poisson_2d_periodic_fem
+!>   + sll_poisson_2d_periodic
+!>   + sll_poisson_2d_polar
+!>   + sll_poisson_3d_periodic_seq
 !>
-!> - Add  :
+!> - Parallel solvers
+!>   + sll_poisson_2d_periodic_cartesian_par
+!>   + sll_poisson_polar_parallel
+!>
+!> - Import module with  :
 !> \code
 !> #include "sll_poisson_solvers.h"
 !> \endcode
-
 module sll_poisson_solvers
 
 #include "sll_working_precision.h"
@@ -34,24 +48,36 @@ module sll_poisson_solvers
 
 implicit none
 
+!> Poisson solver base class on 2d cartesian mesh
+!> with periodic boundary conditions
+!> We use FFT to solve Potential or Electric fields
 type, public  :: poisson_2d
-  sll_int32   :: nc_x, nc_y
-  sll_real64  :: dx, dy
-  sll_real64  :: x_min
-  sll_real64  :: x_max
-  sll_real64  :: y_min
-  sll_real64  :: y_max
+  sll_int32   :: nc_x       !< number of cells along x
+  sll_int32   :: nc_y       !< number of cells along y
+  sll_real64  :: dx         !< step size along x
+  sll_real64  :: dy         !< step size along y
+  sll_real64  :: x_min      !< left corner of x dimension
+  sll_real64  :: x_max      !< right corner of y dimension
+  sll_real64  :: y_min      !< left corner of y dimension
+  sll_real64  :: y_max      !< right corner of y dimension
 end type poisson_2d
 
+!> Poisson solver base class on 3d cartesian mesh
+!> with periodic boundary conditions
+!> We use FFT to solve Potential or Electric fields
 type, public  :: poisson_3d
-  sll_int32   :: nc_x, nc_y, nc_z
-  sll_real64  :: dx, dy, dz
-  sll_real64  :: x_min
-  sll_real64  :: x_max
-  sll_real64  :: y_min
-  sll_real64  :: y_max
-  sll_real64  :: z_min
-  sll_real64  :: z_max
+  sll_int32   :: nc_x       !< number of cells along x
+  sll_int32   :: nc_y       !< number of cells along y
+  sll_int32   :: nc_z       !< number of cells along z
+  sll_real64  :: dx         !< step size along x
+  sll_real64  :: dy         !< step size along y
+  sll_real64  :: dz         !< step size along z
+  sll_real64  :: x_min      !< left corner of x dimension
+  sll_real64  :: x_max      !< right corner of y dimension
+  sll_real64  :: y_min      !< left corner of y dimension
+  sll_real64  :: y_max      !< right corner of y dimension
+  sll_real64  :: z_min      !< left corner of z dimension
+  sll_real64  :: z_max      !< right corner of z dimension
 end type poisson_3d
 
 end module sll_poisson_solvers

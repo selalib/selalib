@@ -76,6 +76,7 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
   real ( kind = 8 ) t(left+k)
   real ( kind = 8 ) x
 
+
   mhigh = max ( min ( nderiv, k ), 1 )
 !
 !  MHIGH is usually equal to NDERIV.
@@ -97,9 +98,12 @@ subroutine bsplvd ( t, k, x, left, a, dbiatx, nderiv )
     do j = ideriv, k
       dbiatx(j,ideriv) = dbiatx(jp1mid,1)
       jp1mid = jp1mid + 1
+
     end do
     ideriv = ideriv - 1
+
     call bsplvb ( t, k+1-ideriv, 2, x, left, dbiatx )
+   ! print*, 'RETEST',dbiatx
   end do
 !
 !  At this point, B(LEFT-K+I, K+1-J)(X) is in DBIATX(I,J) for

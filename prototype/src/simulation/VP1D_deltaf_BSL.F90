@@ -294,7 +294,7 @@ program VP1d_deltaf
   call write_scalar_field_2d(f) 
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
   else
@@ -467,4 +467,5 @@ contains
     endif
     return
   end subroutine PFenvelope
+
 end program VP1d_deltaf

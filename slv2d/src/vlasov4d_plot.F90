@@ -84,7 +84,9 @@ subroutine plot_df(f4d,iplot,geomx,geomv,jstartx,jendx,jstartv,jendv,choice)
      SLL_ASSERT(size(f4d,2) == size(fxy,2))
      do j=1,ny
         do i=1,nx
-           sumloc= sum(f4d(i,j,:,jstartv:jendv))
+           !fxy(i,j)=f4d(i,j,1,1+geomv%ny/2)
+           !sumloc= sum(f4d(i,j,:,jstartv:jendv))
+           sumloc= sum(f4d(i,j,1,jstartv:jendv))
            call mpi_reduce(sumloc,fxy(i,j),1,MPI_REAL8,MPI_SUM,0,comm,error)
         end do
      end do
@@ -141,7 +143,7 @@ end subroutine plot_df
 
  subroutine write_fyvy(ny,nvy,cplot,jstartv)
 
- use hdf5
+ !use hdf5
  use sll_hdf5_io_parallel
  character(len=4)  :: cplot
  integer(HID_T)    :: pfile_id
@@ -160,7 +162,7 @@ end subroutine plot_df
 
  subroutine write_fvxvy(nvx,nvy,cplot,jstartv)
 
- use hdf5
+ !use hdf5
  use sll_hdf5_io_parallel
 
  character(len=4) :: cplot
