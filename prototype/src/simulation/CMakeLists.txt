@@ -191,4 +191,8 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)
 
+   # Add postprocessing code for KEEN
+   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
+   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
+
 ENDIF()
