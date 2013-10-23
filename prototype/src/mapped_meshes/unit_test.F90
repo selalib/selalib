@@ -190,8 +190,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        SLL_HERMITE, &
        SLL_PERIODIC, &
-       const_eta1_min_slope=deriv1_jacobian_polar_f(), &
-       const_eta1_max_slope=deriv1_jacobian_polar_f() )
+       const_eta1_min_slope=deriv1_jacobian_polar_f(0.0_f64,0.0_f64), &
+       const_eta1_max_slope=deriv1_jacobian_polar_f(0.0_f64,0.0_f64) )
 
 #ifdef STDF95
   call initialize( map_d,&

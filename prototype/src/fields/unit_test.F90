@@ -19,7 +19,8 @@ program unit_test
   type(scalar_field_2d)                     :: field
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   sll_int32 :: nc1, nc2, iplot
-  procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
+  procedure(transformation_func_nopass), pointer :: px1, px2, pjac11, pjac12, &
+       pjac21, pjac22
   type(init_landau_2d), target :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: pfinit
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
@@ -30,7 +31,7 @@ program unit_test
 
   nc1 = 10
   nc2 = 10
-  ml => new_logical_mesh_2d( nc1, nc1)
+  ml => new_logical_mesh_2d( nc1, nc2)
   px1 => sinprod_x1
   px2 => sinprod_x2
   pjac11 => sinprod_jac11
