@@ -970,7 +970,61 @@ contains
     inverse_jacobian_matrix_2d_discrete(2,2) =  inv_j11*r_jac
   end function inverse_jacobian_matrix_2d_discrete
 
+  function new_coordinate_transformation_2d_discrete( &
+       mesh_2d,        &
+       label,          &
+       x1_node,        &
+       x2_node,        &
+       x1_interpolator,&
+       x2_interpolator,&
+       jacobians_n_interpolator, &
+       jacobians_node, &
+       x1_cell, &
+       x2_cell, &
+       jacobians_cell )
 
+    ! INPUT VARIABLES
+    type(sll_logical_mesh_2d), pointer    :: mesh_2d
+    character(len=*)         , intent(in) :: label
+    sll_real64, dimension(:,:)            :: x1_node
+    sll_real64, dimension(:,:)            :: x2_node
+#ifdef STDF95
+    ! no this should not be compiled under f95, the object would not have
+    ! the same functionality
+    type(cubic_spline_2d_interpolator), target  :: x1_interpolator
+    type(cubic_spline_2d_interpolator), target  :: x2_interpolator
+    type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
+#else
+    class(sll_interpolator_2d_base), target  :: x1_interpolator
+    class(sll_interpolator_2d_base), target  :: x2_interpolator
+    class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
+#endif 
+
+    sll_real64, dimension(:,:), optional :: jacobians_node
+    sll_real64, dimension(:,:), optional :: x1_cell
+    sll_real64, dimension(:,:), optional :: x2_cell
+    sll_real64, dimension(:,:), optional :: jacobians_cell
+
+    ! LOCAL VARIABLES
+    type(sll_coordinate_transformation_2d_discrete), pointer :: &
+         new_coordinate_transformation_2d_discrete
+    sll_int32 :: ierr
+    
+    SLL_ALLOCATE(new_coordinate_transformation_2d_discrete, ierr)
+    call initialize_coord_transf_2d_discrete( &
+         new_coordinate_transformation_2d_discrete, &
+         mesh_2d,           &
+         label,            &
+         x1_node,        &
+         x2_node,        &
+         x1_interpolator, &
+         x2_interpolator, &
+         jacobians_n_interpolator, &
+         jacobians_node, &
+         x1_cell, &
+         x2_cell, &
+         jacobians_cell )
+  end function new_coordinate_transformation_2d_discrete
 
   subroutine initialize_coord_transf_2d_discrete( &
     transf,            &
@@ -1340,7 +1394,7 @@ contains
     character(len=*), intent(in) :: filename
     intrinsic :: trim
     sll_int32 :: interpolator_type
-    character(len=64) :: filename_local
+    character(len=256) :: filename_local
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id
     sll_int32 :: ierr
@@ -1351,21 +1405,24 @@ contains
     sll_int32 :: is_rational
     sll_real64, dimension(:), allocatable :: knots1
     sll_real64, dimension(:), allocatable :: knots2
-    sll_real64, dimension(:), allocatable :: control_points1
-    sll_real64, dimension(:), allocatable :: control_points2
+    sll_real64, dimension(:), allocatable :: control_pts1
+    sll_real64, dimension(:), allocatable :: control_pts2
     sll_real64, dimension(:), allocatable :: weights
+    sll_real64, dimension(:,:), allocatable :: control_pts1_2d
+    sll_real64, dimension(:,:), allocatable :: control_pts2_2d
+    sll_real64, dimension(:,:), allocatable :: weights_2d
 
     namelist /degree/   spline_deg1, spline_deg2
     namelist /shape/    num_pts1, num_pts2
     namelist /rational/ is_rational
     namelist /knots_1/   knots1
     namelist /knots_2/   knots2
-    namelist /control_points/ control_points1, control_points2
+    namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
     character(len=80) :: line_buffer
 
-    if(len(filename) >= 64) then
-       print *, 'ERROR, read_coefficients_from_file=>read_read_coeffs_ad2d():',&
+    if(len(filename) >= 256) then
+       print *, 'ERROR, read_coefficients_from_file=>read_from_file_discrete():',&
             'filenames longer than 64 characters are not allowed.'
        STOP
     end if
@@ -1391,12 +1448,31 @@ contains
     SLL_ALLOCATE(knots2(num_pts2+spline_deg2+1),ierr)
     read( input_file_id, knots_1 )
     read( input_file_id, knots_2 )
-    SLL_ALLOCATE(control_points1(num_pts1,num_pts2),ierr)
-    SLL_ALLOCATE(control_points2(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(control_pts1(num_pts1*num_pts2),ierr)
+    SLL_ALLOCATE(control_pts2(num_pts1*num_pts2),ierr)
     SLL_ALLOCATE(weights(num_pts1*num_pts2),ierr)
-    read( input_file_id, points )
+    SLL_ALLOCATE(control_pts1_2d(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(control_pts2_2d(num_pts1,num_pts2),ierr)
+    SLL_ALLOCATE(weights_2d(num_pts1,num_pts2),ierr)
+
+    read( input_file_id, control_points )
+    control_pts1_2d = reshape(control_pts1,(/num_pts1,num_pts2/))
+    control_pts2_2d = reshape(control_pts2,(/num_pts1,num_pts2/))
     read( input_file_id, pt_weights )
+    weights_2d = reshape(weights,(/num_pts1,num_pts2/))
     close( input_file_id )
+
+    print*, '------------------------------'
+    print*, ' control_pts1 ',  control_pts1_2d
+    print*, '------------------------------'
+
+    print*, '------------------------------'
+    print*, ' control_pts2 ',  control_pts2_2d
+    print*, '------------------------------'
+
+    print*, '------------------------------'
+    print*, ' weights ',  weights_2d
+    print*, '------------------------------'
 
     ! All the information from the file is now in local variables. We should
     ! now be able to initialize all the necessary objects
@@ -1417,6 +1493,7 @@ contains
 !!$       end select
 
 
+    !sll_DEALLOCATE
   end subroutine read_from_file_2d_discrete
 
 

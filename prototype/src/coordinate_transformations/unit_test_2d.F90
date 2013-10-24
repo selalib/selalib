@@ -293,7 +293,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   ! *************************************************************************
 
   print *, 'Test of initialization from file for a discrete transformation:'
-  call t_d%read_from_file("../src/interpolators/arbitrary_degree_2d_sample_input_file.nml")
+  call t_d%read_from_file("../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
 
 
 
