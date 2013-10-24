@@ -2094,7 +2094,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22)
+       identity_jac22, &
+       (/0.0_f64/)) ! just a filler for the identity
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2389,7 +2390,8 @@ class(sll_scalar_field_2d_base), pointer              :: c_field
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22)
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical

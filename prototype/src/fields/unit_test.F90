@@ -28,6 +28,7 @@ program unit_test
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   sll_int32 :: i,j
+  sll_real64, dimension(4) :: sinprod_params 
 
   nc1 = 10
   nc2 = 10
@@ -38,6 +39,7 @@ program unit_test
   pjac12 => sinprod_jac12
   pjac21 => sinprod_jac21
   pjac22 => sinprod_jac22
+  sinprod_params(:) = (/0.1_f64, 0.1_f64,1.0_f64,1.0_f64/)
 
   transf => new_coordinate_transformation_2d_analytic(&
        'sinprod',&
@@ -47,7 +49,8 @@ program unit_test
        pjac11, &
        pjac12, &
        pjac21, &
-       pjac22)
+       pjac22, &
+       sinprod_params )
   m => transf
 
   call init_landau%initialize(m,NODE_CENTERED_FIELD,0.001_f64)

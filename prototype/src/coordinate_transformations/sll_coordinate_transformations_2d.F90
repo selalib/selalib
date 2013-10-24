@@ -268,7 +268,7 @@ contains
     procedure(transformation_func_nopass)            :: j21_func
     procedure(transformation_func_nopass)            :: j22_func
 #endif
-    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64, dimension(:), intent(in) :: params
     sll_int32 :: ierr
 
     SLL_ALLOCATE(new_coordinate_transformation_2d_analytic, ierr)

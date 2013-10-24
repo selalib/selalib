@@ -44,6 +44,10 @@ program unit_test_alternative
   sll_int32 :: npts1,npts2
   sll_int32 :: i,j
   sll_int32 :: ierr
+  sll_real64, dimension(1) :: params_identity
+
+  params_identity(:) = (/ 0.0_f64 /)
+
   ! logical mesh
   nc1 = 32
   nc2 = 32
@@ -62,7 +66,8 @@ program unit_test_alternative
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       params_identity )
   print *, 'initialized transformation'
   call field_2d_a%initialize( &
        test_function, &
