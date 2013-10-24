@@ -2523,7 +2523,9 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22), &
+       (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)) 
+
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2787,7 +2789,9 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
+
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
