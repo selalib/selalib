@@ -104,7 +104,7 @@ use sll_xdmf
         use sll_working_precision
         sll_real64, intent(in) :: eta1
         sll_real64, intent(in) :: eta2
-        sll_real64, dimension(:), intent(in), optional :: params
+        sll_real64, dimension(:), intent(in) :: params
         sll_real64             :: res
       end function transformation_func_nopass
    end interface

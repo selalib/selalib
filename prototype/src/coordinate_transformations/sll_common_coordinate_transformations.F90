@@ -726,9 +726,8 @@ contains
   ! X1 = (Rmin + (Rmax-Rmin)*eta1)*cos(2*pi*eta2)
   ! X2 = (Rmin + (Rmax-Rmin)*eta1)*sin(2*pi*eta2)
   !
-  ! Where eta1 and eta2 are defined in the interval [0,1]. Following are
-  ! the functions that embody this transformation. The 'params' array
-  ! contains the information (R1, R2) with default values:
+  ! Where eta1 and eta2 are defined in the interval [0,1]. The 'params' array
+  ! contains the information (R1, R2). Typically:
   !
   ! R1 = 0.1
   ! R2 = 1.0
