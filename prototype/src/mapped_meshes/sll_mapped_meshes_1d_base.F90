@@ -56,12 +56,12 @@ module sll_module_mapped_meshes_1d_base
    end interface
 
    abstract interface
-      function one_arg_scalar_function( eta1, params )
+      function one_arg_scalar_function_nopass( eta1, params )
         use sll_working_precision
-        sll_real64             :: one_arg_scalar_function
+        sll_real64             :: one_arg_scalar_function_nopass
         sll_real64, intent(in) :: eta1
-        sll_real64, dimension(:), intent(in), optional :: params
-      end function one_arg_scalar_function
+        sll_real64, dimension(:), intent(in) :: params
+      end function one_arg_scalar_function_nopass
    end interface
    
    abstract interface

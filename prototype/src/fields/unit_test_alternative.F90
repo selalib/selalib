@@ -150,7 +150,7 @@ program unit_test_alternative
         eta2 = real(j,f64)*(ETA2MAX-ETA2MIN)/(2*(npts2-1)) + ETA2MIN
        calculated(i+1,j+1) = rho%value_at_point(eta1,eta2)
        difference(i+1,j+1) = calculated(i+1,j+1)-cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
-       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), calculated(i+1,j+1),cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+!       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), calculated(i+1,j+1),cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
      end do
   end do
 
