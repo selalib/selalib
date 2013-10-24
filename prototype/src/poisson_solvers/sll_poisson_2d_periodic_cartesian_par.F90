@@ -346,29 +346,48 @@ contains
     type(layout_2D), pointer       :: layout !< layout for remap
     sll_real64, dimension(:,:)     :: rho    !< charge density
     sll_real64, dimension(:,:)     :: phi    !< electric potential
-    sll_int32,  dimension(2)       :: n      ! nx_loc, ny_loc
+    sll_int32                      :: nx
+    sll_int32                      :: ny
     sll_int32                      :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
     ! too stringent.
-    call compute_local_sizes_2d( layout, n(1), n(2) )
-
-    do i=1,2
-       if ( (n(i)/=size(rho,i)) .or. (n(i)/=size(phi,i))  ) then
-          print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
-               'size of either rho or phi does not match expected size. '
-          if (i==1) then
-             print*, 'solve_poisson_3d_periodic_cartesian_par(): ', &
-                  'mismatch in direction x'
-          elseif (i==2) then
-             print*, 'solve_poisson_3d_periodic_cartesian_par(): ', &
-                  'mismatch in direction y'
-          endif
-          print *, 'Exiting...'
-          stop
-       endif
-    enddo
+    call compute_local_sizes_2d( layout, nx, ny )
+    ! Verify the first direction
+    if ( nx /= size(rho,1) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of rho does not match expected size. ', &
+            'Expected size according to layout = ', nx, 'Received size = ',&
+            size(rho,1)
+       print *, 'Exiting...'
+       stop
+    end if
+    if ( nx /= size(phi,1) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of phi does not match expected size. ', &
+            'Expected size according to layout = ', nx, 'Received size = ',&
+            size(phi,1)
+       print *, 'Exiting...'
+       stop
+    end if
+    ! Verify the second direction
+    if ( ny /= size(rho,2) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of rho does not match expected size. ', &
+            'Expected size according to layout = ', ny, 'Received size = ',&
+            size(rho,2)
+       print *, 'Exiting...'
+       stop
+    end if
+    if ( ny /= size(phi,2) ) then
+       print*, 'ERROR: solve_poisson_2d_periodic_cartesian_par()', &
+            'size of phi does not match expected size. ', &
+            'Expected size according to layout = ', ny, 'Received size = ',&
+            size(phi,2)
+       print *, 'Exiting...'
+       stop
+    end if
   end subroutine verify_argument_sizes_par
 
 

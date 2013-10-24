@@ -161,8 +161,14 @@ program sum
       cl_vec2 = clCreateBuffer(context, CL_MEM_READ_WRITE, size_in_bytes, ierr)
 
       ! copy data to device memory
-      call clEnqueueWriteBuffer(command_queue, cl_vec1, cl_bool(.true.), 0_8, size_in_bytes, vec1(1), ierr)
-      call clEnqueueWriteBuffer(command_queue, cl_vec2, cl_bool(.true.), 0_8, size_in_bytes, vec2(1), ierr)
+      call clEnqueueWriteBuffer(command_queue, cl_vec1, 1, 0_8, size_in_bytes, vec1(1), ierr)
+
+!294     integer,                intent(in)    :: blocking_write
+!295     integer(8),             intent(in)    :: offset
+!296     integer(8),             intent(in)    :: cb
+!297     real(8),                intent(in)    :: ptr
+!298     integer,                intent(out)   :: errcode_ret
+      call clEnqueueWriteBuffer(command_queue, cl_vec2, 1, 0_8, size_in_bytes, vec2(1), ierr)
 
       ! set the kernel arguments
       call clSetKernelArg(kernel, 0, size, ierr)
@@ -179,7 +185,7 @@ program sum
       call clFinish(command_queue, ierr)
 
       ! read the resulting vector from device memory
-      call clEnqueueReadBuffer(command_queue, cl_vec2, cl_bool(.true.), 0_8, size_in_bytes, vec2(1), ierr)
+      call clEnqueueReadBuffer(command_queue, cl_vec2, CL_TRUE, 0_8, size_in_bytes, vec2(:), ierr)
 
       !=====================
       ! RELEASE EVERYTHING
