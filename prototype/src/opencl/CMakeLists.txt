@@ -6,7 +6,6 @@ IF(FORTRANCL_ENABLED)
 
       MESSAGE(STATUS "FORTRANCL FOUND")
       INCLUDE_DIRECTORIES(${FORTRANCL_INCLUDE_DIRS})
-      ADD_SUBDIRECTORY(opencl)
 
       add_executable(test_opencl sum.F90)
       target_link_libraries(test_opencl ${FORTRANCL_LIBRARIES} ${OPENCL_LIBRARIES})
