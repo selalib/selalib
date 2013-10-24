@@ -145,8 +145,8 @@ contains
    sim%bc_top    = bc_top
 
    call sim%interp_phi%initialize( &
-        sim%mesh2d%num_cells1 , &
-        sim%mesh2d%num_cells2 , &
+        sim%mesh2d%num_cells1 +1 , &
+        sim%mesh2d%num_cells2 +1, &
         sim%mesh2d%eta1_min, &
         sim%mesh2d%eta1_max, &
         sim%mesh2d%eta2_min, &
@@ -159,8 +159,8 @@ contains
         sim%spline_degree_eta2)
 
    call sim%interp_rho%initialize( &
-        sim%mesh2d%num_cells1 , &
-        sim%mesh2d%num_cells2 , &
+        sim%mesh2d%num_cells1 +1, &
+        sim%mesh2d%num_cells2 +1, &
         sim%mesh2d%eta1_min, &
         sim%mesh2d%eta1_max, &
         sim%mesh2d%eta2_min, &
@@ -326,7 +326,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     call phi%set_field_data(phi_values)
-   
+    call phi%update_interpolation_coefficients( )
     print*,'pass 3'
     
     nc_x1 = sim%mesh2d%num_cells1
@@ -373,6 +373,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)     
    call rho_n_ptr%set_field_data(sim%rho_n)
+   call rho_n_ptr%update_interpolation_coefficients( )
     
     rho_np1_ptr => new_scalar_field_2d_discrete_alt( &
          "rho_np1", &
@@ -383,7 +384,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)                
     call rho_np1_ptr%set_field_data(sim%rho_n)
-  
+    call rho_np1_ptr%update_interpolation_coefficients( )
    rho_nm1_ptr => new_scalar_field_2d_discrete_alt( &
          "rho_nm1", &
          sim%interp_rho, &     
@@ -393,9 +394,9 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     call rho_nm1_ptr%set_field_data(sim%rho_n)     
-         
+     call rho_nm1_ptr%update_interpolation_coefficients( )    
     ! Initialize the poisson plan before going into the main loop.
-    print *, 'Start 1...'
+
     sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
@@ -411,7 +412,7 @@ contains
          sim%mesh2d%eta1_max, & 
          sim%mesh2d%eta2_min, & 
          sim%mesh2d%eta2_max ) 
-    
+ 
     
      ! compute matrix the field
     call factorize_mat_es(&
@@ -421,11 +422,14 @@ contains
        a21_field_mat,&
        a22_field_mat,&
        c_field)
+       
+  
     !print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
     call solve_general_coordinates_elliptic_eq( &
             sim%qns, & 
             rho_n_ptr, &
             phi )
+        
   !          call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
 !            sim%dt,&
 !            sim%carac_case,&
@@ -462,7 +466,7 @@ contains
        val_mass,&
        val_energy)
                         
-     write(30,*),0.*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
+     write(30,*) 0.*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
     
     print*, ' ... finished initialization, entering main loop.'
     
@@ -474,9 +478,9 @@ contains
     ! ------------------------------------------------------------------------
     
     do itime=1,sim%num_iterations
-       if(itime == 1) then
+
           print *, 'Starting iteration ', itime, ' of ', sim%num_iterations
-       end if
+   
          
        
       select case (sim%time_scheme)
@@ -485,13 +489,13 @@ contains
             
             !Classical semi-Lagrangian scheme (order 1)
              ! compute matrix the field
-            call factorize_mat_es(&
-            sim%qns, &
-            a11_field_mat, &
-            a12_field_mat,&
-            a21_field_mat,&
-            a22_field_mat,&
-            c_field)
+            !call factorize_mat_es(&
+            !sim%qns, &
+            !a11_field_mat, &
+            !a12_field_mat,&
+            !a21_field_mat,&
+            !a22_field_mat,&
+            !c_field)
             
             call solve_general_coordinates_elliptic_eq( &
             sim%qns, & 
@@ -503,18 +507,10 @@ contains
             sim%carac_case,&
             sim%bc_left, &
             sim%bc_bottom)
+        
             
-            rho_n_ptr => NULL()
-            
-            rho_n_ptr => new_scalar_field_2d_discrete_alt( &
-            "rho_np1", &
-            sim%interp_rho, &     
-            sim%transf, &
-            sim%bc_left, &
-            sim%bc_right, &
-            sim%bc_bottom, &
-            sim%bc_top)  
             call rho_n_ptr%set_field_data(sim%rho_np1)
+            call rho_n_ptr%update_interpolation_coefficients( )
             !print *, 'advection finished ...'
            ! rho_tmp_ptr => rho_n_ptr
            ! rho_n_ptr => rho_np1_ptr
@@ -617,7 +613,7 @@ contains
        val_mass,&
        val_energy)
                         
-     write(30,*),itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
+     write(30,*) itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
     
      if (itime==1 .or. ((itime/sim%visu_step)*sim%visu_step==itime)) then
      call plot_f1(rho_n_ptr,sim,itime)
