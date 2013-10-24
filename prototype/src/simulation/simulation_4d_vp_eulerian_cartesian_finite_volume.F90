@@ -88,6 +88,8 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   ! distribution functions at time steps n, star and n+1 
   ! communications are needed only in the x3 direction
   sll_real64, dimension(:,:,:,:), pointer     :: fn_v1v2x1
+  !attention, it's a local variable
+  sll_real64, dimension(:,:,:,:), pointer     :: fn_star_v1v2x1
   sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2x1
   sll_real64, dimension(:,:,:,:), pointer     :: dtfn_v1v2x1
   ! charge density
@@ -384,6 +386,8 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
 !print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
  ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
  SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
+!just essayer car c'est une variable local de RK4
+ SLL_ALLOCATE(sim%fn_star_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
  SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
  SLL_ALLOCATE(sim%dtfn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
 
@@ -648,15 +652,17 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
          sim%phi_x1(:,1:))
 !    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
  !   sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
-    do i=1,loc_sz_x1
-       write (*,*) 'phi = ', sim%phi_x1(i,:)
-    enddo
+!!$    do i=1,loc_sz_x1
+!!$       write (*,*) 'phi = ', sim%phi_x1(i,:)
+!!$    enddo
 
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
     elseif (sim%nsch == 1) then
        call RK2(sim)
+    elseif (sim%nsch == 2) then
+       call RK4(sim)
     end if
     !try to compute the energy in the transport test case here
 !!$       write(*,*) 'loc_sz_v1',loc_sz_v1
@@ -690,6 +696,8 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$         write(*,*) 'phi', sim%phi_x1(i,0:loc_sz_phi_x2+1)
 !!$       end do
 
+
+if(sim%test==1) then
        write(*,*) 'loc_sz_x1 =', loc_sz_x1
        do ic=1,loc_sz_x1
           do jc=1,loc_sz_x2
@@ -737,7 +745,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
              sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                   sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
           end do
-           write(*,*) 'Ex', Ex
+          ! write(*,*) 'Ex', Ex
 
           !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
           !write(*,*) 'Enorm = ',sim%Enorm
@@ -775,7 +783,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
           buffer_counter=buffer_counter+1
              !print*, 'coucou 3!!'
        end if
-
+    end if
 !!$write(*,*) 'il pass ici????????'
  end do
 
@@ -812,26 +820,26 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
     end do
  end do
 
-
- allocate (xmil(loc_sz_x1))
- allocate (node(loc_sz_v1))
-  call sll_new_file_id(file_id_3,ierr)
- open(file_id_3,file='distribution')
- do i=1,loc_sz_x1
-    xmil(i)=sim%mesh2dx%eta1_min+sim%mesh2dx%delta_eta1*i-sim%mesh2dx%delta_eta1/2
- end do
- do j=1,loc_sz_v1
-    node(j)=sim%mesh2dv%eta1_min+sim%mesh2dv%delta_eta1/sim%degree*(j-1)
- end do
- do i = 1, loc_sz_x1
-    do j = 1, loc_sz_v1
-       df = sim%fn_v1v2x1(j,1,i,1)
-       write(file_id_3,*) xmil(i), node(j), df 
-    end do
- end do
- close(file_id_3)
- deallocate(xmil)
- deallocate(node)
+!!$
+!!$ allocate (xmil(loc_sz_x1))
+!!$ allocate (node(loc_sz_v1))
+!!$  call sll_new_file_id(file_id_3,ierr)
+!!$ open(file_id_3,file='distribution')
+!!$ do i=1,loc_sz_x1
+!!$    xmil(i)=sim%mesh2dx%eta1_min+sim%mesh2dx%delta_eta1*i-sim%mesh2dx%delta_eta1/2
+!!$ end do
+!!$ do j=1,loc_sz_v1
+!!$    node(j)=sim%mesh2dv%eta1_min+sim%mesh2dv%delta_eta1/sim%degree*(j-1)
+!!$ end do
+!!$ do i = 1, loc_sz_x1
+!!$    do j = 1, loc_sz_v1
+!!$       df = sim%fn_v1v2x1(j,1,i,1)
+!!$       write(file_id_3,*) xmil(i), node(j), df 
+!!$    end do
+!!$ end do
+!!$ close(file_id_3)
+!!$ deallocate(xmil)
+!!$ deallocate(node)
  !stop
 
 !!$    write(*,*) 'plotf2d',plotf2d
@@ -1584,6 +1592,7 @@ subroutine delete_vp_cart( sim )
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
  sll_int32 :: ierr
  SLL_DEALLOCATE( sim%fn_v1v2x1, ierr )
+ SLL_DEALLOCATE( sim%fn_star_v1v2x1, ierr )
  SLL_DEALLOCATE( sim%fnp1_v1v2x1, ierr )
  SLL_DEALLOCATE_ARRAY( sim%dtfn_v1v2x1, ierr )
  SLL_DEALLOCATE_ARRAY( sim%rho_x1, ierr )
@@ -2324,6 +2333,34 @@ subroutine RK2(sim)
  sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
       + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2x1
 end subroutine RK2
+
+subroutine RK4(sim)
+ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+ ! mpi communications
+ call mpi_comm(sim)
+ call dtf(sim)
+ sim%fn_star_v1v2x1 = sim%fn_v1v2x1
+ sim%fn_v1v2x1 = sim%fn_star_v1v2x1 &
+      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
+ sim%fnp1_v1v2x1 = sim%fn_star_v1v2x1+sim%dt/6/sim%volume(1,1) &
+      *sim%dtfn_v1v2x1
+ call mpi_comm(sim)
+ call dtf(sim)
+ sim%fn_v1v2x1 = sim%fn_star_v1v2x1 &
+      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
+ sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%dt/3/sim%volume(1,1) &
+      *sim%dtfn_v1v2x1
+ call mpi_comm(sim)
+ call dtf(sim)
+ sim%fn_v1v2x1 = sim%fn_star_v1v2x1 &
+      + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2x1
+ sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%dt/3/sim%volume(1,1) &
+      *sim%dtfn_v1v2x1
+ call mpi_comm(sim)
+ call dtf(sim)
+ sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
+      + sim%dt/6/sim%volume(1,1)*sim%dtfn_v1v2x1
+end subroutine RK4
 
 subroutine mpi_comm(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
