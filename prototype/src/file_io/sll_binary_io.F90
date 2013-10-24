@@ -86,6 +86,14 @@ close(file_id, IOSTAT=error)
      
 end subroutine sll_binary_file_close
 
+!> Write a 0D array in the binary file file_id
+subroutine sll_binary_write_array_0d(file_id,array,error)
+sll_int32 , intent(in)       :: file_id  !< file unit number
+sll_int32 , intent(out)      :: error    !< error code
+sll_real64, intent(in)       :: array !< data array
+write(file_id,IOSTAT=error) array
+end subroutine
+
 
 !> Write a 1D array in the binary file file_id
 subroutine sll_binary_write_array_1d(file_id,array,error)
