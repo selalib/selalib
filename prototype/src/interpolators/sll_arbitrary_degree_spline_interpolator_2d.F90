@@ -96,29 +96,86 @@ contains
     SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
   end subroutine delete_arbitrary_degree_2d_interpolator
 
+
+
+  subroutine new_arbitrary_degree_spline_interp2d(&
+       num_pts1, &
+       num_pts2, &
+       eta1_min, &
+       eta1_max, &
+       eta2_min, &
+       eta2_max, &
+       bc_left, &
+       bc_right, &
+       bc_bottom, &
+       bc_top, &
+       spline_degree1, &
+       spline_degree2 )
+       
+    ! INPUT VARIABLES
+
+    sll_int32 , intent(in) :: num_pts1
+    sll_int32 , intent(in) :: num_pts2
+    sll_real64, intent(in) :: eta1_min
+    sll_real64, intent(in) :: eta1_max
+    sll_real64, intent(in) :: eta2_min
+    sll_real64, intent(in) :: eta2_max
+    sll_int32 , intent(in) :: bc_left
+    sll_int32 , intent(in) :: bc_right
+    sll_int32 , intent(in) :: bc_bottom
+    sll_int32 , intent(in) :: bc_top
+    sll_int32 , intent(in) :: spline_degree1
+    sll_int32 , intent(in) :: spline_degree2
+
+    ! LOCAL VARIABLES
+#ifdef STDF95
+    type (arb_deg_2d_interpolator), pointer :: arbitrary_degree_spline_interp2d
+#else
+    class(arb_deg_2d_interpolator), pointer :: arbitrary_degree_spline_interp2d
+#endif
+    sll_int32 :: ierr
+    
+    SLL_ALLOCATE(arbitrary_degree_spline_interp2d, ierr)
+
+    call initialize_ad2d_interpolator( &
+         arbitrary_degree_spline_interp2d, &
+         num_pts1, &
+         num_pts2, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         bc_left, &
+         bc_right, &
+         bc_bottom, &
+         bc_top, &
+         spline_degree1, &
+         spline_degree2 )
+  end subroutine new_arbitrary_degree_spline_interp2d
 #ifdef STDF95
   subroutine arbitrary_degree_spline_interp2d_initialize( &
 #else
-  subroutine initialize_ad2d_interpolator( &
+       subroutine initialize_ad2d_interpolator( &
 #endif
-    interpolator, &
-    num_pts1, &
-    num_pts2, &
-    eta1_min, &
-    eta1_max, &
-    eta2_min, &
-    eta2_max, &
-    bc_left, &
-    bc_right, &
-    bc_bottom, &
-    bc_top, &
-    spline_degree1, &
-    spline_degree2 )
+       interpolator, &
+       num_pts1, &
+       num_pts2, &
+       eta1_min, &
+       eta1_max, &
+       eta2_min, &
+       eta2_max, &
+       bc_left, &
+       bc_right, &
+       bc_bottom, &
+       bc_top, &
+       spline_degree1, &
+       spline_degree2 )
+    
 
 #ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(inout) :: interpolator
+    type (arb_deg_2d_interpolator):: interpolator
 #else
-    class(arb_deg_2d_interpolator), intent(inout) :: interpolator
+    class(arb_deg_2d_interpolator):: interpolator
 #endif
     sll_int32, intent(in) :: num_pts1
     sll_int32, intent(in) :: num_pts2
