@@ -242,8 +242,8 @@ def main ():
                         continue
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
-                        writefile.write("    x1_coords = "+" ".join(x1)+"\n")
-                        writefile.write("    x2_coords = "+" ".join(x2)+"\n")
+                        writefile.write("    control_pts1 = "+" ".join(x1)+"\n")
+                        writefile.write("    control_pts2 = "+" ".join(x2)+"\n")
                         writefile.write("/" + "\n\n")
                         # and prepare for entering data in weights, since
                         # that's where we are at this point in the file...
