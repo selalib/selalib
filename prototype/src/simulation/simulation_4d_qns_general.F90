@@ -17,9 +17,10 @@ module sll_simulation_4d_qns_general_module
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
-  use sll_general_coordinate_qn_solver_module
+  use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+  use sll_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general
@@ -54,7 +55,7 @@ module sll_simulation_4d_qns_general_module
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
-     type(general_coordinate_qn_solver), pointer           :: qns
+     type(general_coordinate_elliptic_solver), pointer      :: qns
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -63,7 +64,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:,:,:,:), pointer     :: f_x1x2 
      sll_real64, dimension(:,:,:,:), pointer     :: f_x3x4
      sll_real64, dimension(:,:,:), allocatable   :: partial_reduction
-     sll_real64, dimension(:,:), allocatable     :: rho_full 
+     sll_real64, dimension(:,:), pointer     :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
      sll_real64, dimension(:,:), allocatable     :: rho_split
 
@@ -98,6 +99,8 @@ module sll_simulation_4d_qns_general_module
      procedure(two_var_parametrizable_function),nopass,pointer :: a12_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: b1_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: b2_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
    contains
      procedure, pass(sim) :: run => run_4d_qns_general
@@ -126,6 +129,8 @@ contains
    a12_f,&
    a21_f,&
    a22_f,&
+   b1_f, &
+   b2_f, &
    c_f,&
    spline_degre1,&
    spline_degre2,&
@@ -144,6 +149,8 @@ contains
    procedure(two_var_parametrizable_function) :: a12_f
    procedure(two_var_parametrizable_function) :: a21_f
    procedure(two_var_parametrizable_function) :: a22_f
+   procedure(two_var_parametrizable_function) :: b1_f
+   procedure(two_var_parametrizable_function) :: b2_f
    procedure(two_var_parametrizable_function) :: c_f
    sll_int32  :: spline_degre1
    sll_int32  :: spline_degre2
@@ -161,6 +168,8 @@ contains
    sim%a12_f     => a12_f
    sim%a21_f     => a21_f
    sim%a22_f     => a22_f
+   sim%b1_f      => b1_f
+   sim%b2_f      => b2_f
    sim%c_f       => c_f
    sim%spline_degree_eta1 = spline_degre1
    sim%spline_degree_eta2 = spline_degre2
@@ -304,27 +313,56 @@ contains
     sll_int32 :: global_indices(4)
     sll_int32 :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: b1_field_vect
+    class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
-    sll_real64, dimension(:,:), allocatable :: phi_values
+    sll_real64, dimension(:,:), pointer :: phi_values
     sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
+    ! time variables
+    type(sll_time_mark)  :: t0 
+    type(sll_time_mark)  :: t1
+    sll_real64 :: time 
     
+    
+    nc_x1 = sim%mesh2d_x%num_cells1
+    nc_x2 = sim%mesh2d_x%num_cells2
+    nc_x3 = sim%mesh2d_v%num_cells1
+    nc_x4 = sim%mesh2d_v%num_cells2
+    delta1 = sim%mesh2d_x%delta_eta1
+    delta2 = sim%mesh2d_x%delta_eta2
+    delta3 = sim%mesh2d_v%delta_eta1
+    delta4 = sim%mesh2d_v%delta_eta2
+    eta1_min = sim%mesh2d_x%eta1_min
+    eta2_min = sim%mesh2d_x%eta2_min
+    eta3_min = sim%mesh2d_v%eta1_min
+    eta4_min = sim%mesh2d_v%eta2_min
+    eta1_max = sim%mesh2d_x%eta1_max
+    eta2_max = sim%mesh2d_x%eta2_max
+    eta3_max = sim%mesh2d_v%eta1_max
+    eta4_max = sim%mesh2d_v%eta2_max
+    ! Carry out the 2D advection in the eta1-eta2 plane.
+    ! dt in eta1 and eta2
+    vmin3  = sim%mesh2d_v%eta1_min
+    vmax3  = sim%mesh2d_v%eta1_max
+    vmin4  = sim%mesh2d_v%eta2_min
+    vmax4  = sim%mesh2d_v%eta2_max
     ! Start with the fields
     
-    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
@@ -333,7 +371,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
@@ -342,7 +380,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
@@ -351,7 +389,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
-    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
@@ -360,7 +398,25 @@ contains
          sim%bc_bottom, &
          sim%bc_top) 
 
-
+    b1_field_vect => new_scalar_field_2d_analytic_alt( &
+         sim%b1_f, &
+         "b1", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top)
+    
+    b2_field_vect => new_scalar_field_2d_analytic_alt( &
+         sim%b2_f, &
+         "b2", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top) 
+    
+    
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
@@ -369,14 +425,13 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
+   
 
-
-    SLL_ALLOCATE(phi_values(sim%mesh2d_x%num_cells1+1,sim%mesh2d_x%num_cells2+1),ierr)
-    
+    SLL_ALLOCATE(phi_values(nc_x1+1,nc_x2+1),ierr)
     phi_values(:,:) = 0.0_f64
+   
 
     phi => new_scalar_field_2d_discrete_alt( &
-         phi_values, &
          "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
@@ -384,7 +439,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    call phi%set_field_data( phi_values )
+    call phi%update_interpolation_coefficients( )
+    
     buffer_counter = 1
 
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -443,22 +500,8 @@ contains
        sim%nproc_x4 = 1
     end if
 
-    nc_x1 = sim%mesh2d_x%num_cells1
-    nc_x2 = sim%mesh2d_x%num_cells2
-    nc_x3 = sim%mesh2d_v%num_cells1
-    nc_x4 = sim%mesh2d_v%num_cells2
-    delta1 = sim%mesh2d_x%delta_eta1
-    delta2 = sim%mesh2d_x%delta_eta2
-    delta3 = sim%mesh2d_v%delta_eta1
-    delta4 = sim%mesh2d_v%delta_eta2
-    eta1_min = sim%mesh2d_x%eta1_min
-    eta2_min = sim%mesh2d_x%eta2_min
-    eta3_min = sim%mesh2d_v%eta1_min
-    eta4_min = sim%mesh2d_v%eta2_min
-    eta1_max = sim%mesh2d_x%eta1_max
-    eta2_max = sim%mesh2d_x%eta2_max
-    eta3_max = sim%mesh2d_v%eta1_max
-    eta4_max = sim%mesh2d_v%eta2_max
+
+    ! pad de initialize_layout_with_distributed_4D_array different du cartesian L182
 
     print *, 'sequential_x3x4 mode...'
     ! Use this information to initialize the layout that describes the result
@@ -588,10 +631,7 @@ contains
          sim%params, &
          transf_x1_x2=sim%transfx )
 
-    delta1 = sim%mesh2d_x%delta_eta1
-    delta2 = sim%mesh2d_x%delta_eta2
-    delta3 = sim%mesh2d_v%delta_eta1
-    delta4 = sim%mesh2d_v%delta_eta2
+
 
     sim%rho_split(:,:) = 0.0_f64
     ! this only works because there is no transformation applied in the
@@ -609,9 +649,9 @@ contains
          local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
     
     call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
          sim%rho_split, &
          "rho_split", &
@@ -646,9 +686,9 @@ contains
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
     
     call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min+1*sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min+1*sim%mesh2d_x%delta_eta2, &
+         sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
          sim%rho_full, &
          "rho_full", &
@@ -656,14 +696,14 @@ contains
          ierr )
     
     call compute_average_f( &
+         sim,&
          sim%mesh2d_x,&
          sim%rho_full, &
          density_tot )
     
-     !print*, 'density', density_tot
+    ! print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full*0.0 ,&!- density_tot, &
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -672,6 +712,9 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
     
+    call rho%set_field_data( sim%rho_full )
+    call rho%update_interpolation_coefficients( )
+
 !!$    if(sim%my_rank == 0) then
 !!$       call rho%write_to_file(0)
 !!$    end if
@@ -683,15 +726,15 @@ contains
 !!$    global_indices(1:2) =  &
 !!$         local_to_global_2D( sim%rho_full_layout, (/1, 1/) )
     
-!!$    call sll_gnuplot_rect_2d_parallel( &
-!!$         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%delta_eta1, &
-!!$         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$         sim%mesh2d_x%delta_eta2, &
-!!$         sim%rho_full, &
-!!$         "rho_full", &
-!!$         0, &
-!!$         ierr )
+    call sll_gnuplot_rect_2d_parallel( &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%delta_eta1, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%delta_eta2, &
+         sim%rho_full, &
+         "rho_full", &
+         0, &
+         ierr )
 
     sim%seqx3x4_to_seqx1x2 => &
          NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
@@ -706,12 +749,7 @@ contains
          loc_sz_x3, &
          loc_sz_x4 )
     
-    ! Carry out the 2D advection in the eta1-eta2 plane.
-    ! dt in eta1 and eta2
-    vmin3  = sim%mesh2d_v%eta1_min
-    vmax3  = sim%mesh2d_v%eta1_max
-    vmin4  = sim%mesh2d_v%eta2_min
-    vmax4  = sim%mesh2d_v%eta2_max
+
     
     ! First dt/2 advection for eta1-eta2:
     
@@ -751,13 +789,13 @@ contains
          SLL_PERIODIC)
     
     ! Initialize the poisson plan before going into the main loop.
-    sim%qns => new_general_qn_solver( &
+    sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
          sim%mesh2d_x%num_cells1, &
          sim%mesh2d_x%num_cells2, &
-         QNS_GAUSS_LEGENDRE, &  ! put in arguments
-         QNS_GAUSS_LEGENDRE, &  ! put in arguments
+         ES_GAUSS_LEGENDRE, &  ! put in arguments
+         ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -767,6 +805,13 @@ contains
          sim%mesh2d_x%eta2_min, & 
          sim%mesh2d_x%eta2_max ) 
     
+    call factorize_mat_es(&
+         sim%qns, & 
+         a11_field_mat, &
+         a12_field_mat, &
+         a21_field_mat, &
+         a22_field_mat, &
+         c_field)!, &
 
     print*, ' ... finished initialization, entering main loop.'
     ! ------------------------------------------------------------------------
@@ -878,13 +923,18 @@ contains
        !   data parameter as optional...
        
        call compute_average_f( &
+            sim,&
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
        
-       !print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
-       
+       ! print*, 'density', density_tot
+       ! The subtraction of density_tot is supposed to be made inside the 
+       ! elliptic solver.
+       !
+!       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+       call rho%set_field_data(sim%rho_full)
+       call rho%update_interpolation_coefficients( )
 !!$       if(sim%my_rank == 0) then
 !!$          call rho%write_to_file(itime)
 !!$       end if
@@ -925,16 +975,15 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call solve_quasi_neutral_eq_general_coords( &
-            sim%qns, & 
-            a11_field_mat, &
-            a12_field_mat, &
-            a21_field_mat, &
-            a22_field_mat, &
-            c_field, &
+       call set_time_mark(t0)
+
+       call solve_general_coordinates_elliptic_eq( &
+            sim%qns, &
             rho, &
             phi )
+       time = time_elapsed_since(t0)
        
+       print*, 'timer=', time
 !!$       if(sim%my_rank == 0) then
 !!$          call phi%write_to_file(itime)
 !!$       end if
@@ -949,7 +998,7 @@ contains
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
-
+       
        ! Start with dt in vx...(x3)
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
@@ -961,42 +1010,28 @@ contains
                 !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-!!$                ex = - ( phi%value_at_point(eta1+ delta1,eta2) &
-!!$                     -phi%value_at_point(eta1, eta2))/delta1
-!!$                ey = - ( phi%value_at_point(eta1, eta2 + delta2) &
-!!$                     -phi%value_at_point(eta1, eta2))/delta2
-                ex     =  - phi%first_deriv_eta1_value_at_indices(&
-                     global_indices(1), global_indices(2))
-                ey     =  - phi%first_deriv_eta2_value_at_indices(&
-                     global_indices(1), global_indices(2))
-                !print*, 'values ex', -0.05/(0.5)*sin(0.5*eta1), phi%first_deriv_eta1_value_at_indices(i,j), phi%first_deriv_eta1_value_at_point(eta1,eta2)
-                !print*, 'values ey', 0.0, ey
+                
+                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha3 )
-                ! Extra work to calculate the electric field energy. We should 
-                ! consider placing this somewhere else, probably at greater
-                ! expense.
-                !print *, 'while calculating E energy: ', sim%transfx%jacobian_at_node(global_indices(1),global_indices(2)), delta1, delta2, inv_j(1,1), inv_j(2,1), inv_j(1,2), inv_j(2,2), ex, ey
-!!$                efield_energy_total = efield_energy_total + &
-!!$                     sim%transfx%jacobian_at_node(global_indices(1),&
-!!$                                                  global_indices(2))*&
-!!$                                                  delta1*delta2*&
-!!$                     sqrt(((inv_j(1,1)*ex + inv_j(2,1)*ey)**2 + &
-!!$                      (inv_j(1,2)*ex + inv_j(2,2)*ey)**2))
                 
-                tmp = tmp + ex
-                !print*,'norm electric field', sum(ex)*delta1*delta2
+                
                 efield_energy_total = efield_energy_total + &
-                     delta1*delta2*sqrt((((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
-                     (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)))
+                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)- &
+                                        jac_m(1,2)*jac_m(2,1)) &
+                                        *((inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ &
+                                          (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
              end do
           end do
        end do
 
        !print*, 'energy total', efield_energy_total
+       !efield_energy_total = sqrt(efield_energy_total)
        
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
@@ -1014,10 +1049,12 @@ contains
 !!$                     -phi%value_at_point(eta1, eta2))/delta1
 !!$                ey = - ( phi%value_at_point(eta1, eta2 + delta2) &
 !!$                     -phi%value_at_point(eta1, eta2))/delta2
-                ex     =  - phi%first_deriv_eta1_value_at_indices(&
-                     global_indices(1), global_indices(2))
-                ey     =  - phi%first_deriv_eta2_value_at_indices(&
-                     global_indices(1), global_indices(2))
+!!$                ex     =  - phi%first_deriv_eta1_value_at_indices(&
+!!$                     global_indices(1), global_indices(2))
+!!$                ey     =  - phi%first_deriv_eta2_value_at_indices(&
+!!$                     global_indices(1), global_indices(2))
+                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
@@ -1078,6 +1115,29 @@ contains
           
           ! Use next line only if no communications are needed!
           !       buffer_result(:) = buffer(:)
+
+          num_particles_local(buffer_counter) = &
+               sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
+          if( buffer_counter == BUFFER_SIZE ) then
+             call sll_collective_reduce_real64( &
+                  sll_world_collective, &
+                  num_particles_local, &
+                  BUFFER_SIZE, &
+                  MPI_SUM, &
+                  0, &
+                  num_particles_global )
+             if(sim%my_rank == 0) then
+                open(num_particles_file_id,file="number_particles",&
+                     position="append")
+                if(itime == BUFFER_SIZE) then
+                   rewind(num_particles_file_id)
+                end if
+                do i=1,BUFFER_SIZE
+                   write(num_particles_file_id,*) num_particles_global(i)
+                end do
+                close(num_particles_file_id)
+             end if
+          end if
           
           buffer_counter = 1
           if(sim%my_rank == 0) then
@@ -1086,7 +1146,7 @@ contains
              if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)
              end if
-             buffer_result(:) = log(buffer_result(:))
+             buffer_result(:) = log(sqrt(buffer_result(:)))
              do i=1,BUFFER_SIZE
                 write(efield_energy_file_id,*) buffer_result(i)
              end do
@@ -1191,6 +1251,128 @@ contains
     end do
 
   end subroutine advection_x1x2
+
+  subroutine advection_x3(sim,phi,deltat,efield_energy_total)
+    class(sll_simulation_4d_qns_general) :: sim
+    sll_real64, intent(in) :: deltat
+    sll_int32 :: gi, gj, gk, gl
+    sll_real64, dimension(1:2,1:2) :: inv_j
+    sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
+    sll_int32, dimension(4) :: global_indices
+    sll_real64 :: alpha3
+    sll_real64 :: eta1, eta2, eta3, eta4
+    sll_int32  :: i, j, k, l
+    sll_real64, intent(out) :: efield_energy_total
+    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    sll_real64, dimension(1:2,1:2) :: jac_m
+    sll_real64 :: ex
+    sll_real64 :: ey
+    sll_int32  :: nc_x3
+    
+    nc_x3 = sim%mesh2d_v%num_cells1
+    call compute_local_sizes_4d( sim%sequential_x3x4, &
+         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+    
+    efield_energy_total = 0.0_f64
+    
+    ! Start with dt in vx...(x3)
+    do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
+       do j=1,loc_sz_x2
+          do i=1,loc_sz_x1
+             global_indices(1:2) = &
+                  local_to_global_2D( sim%split_rho_layout, (/i,j/))
+             eta1   =  sim%mesh2d_v%eta1_min + &
+                  real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
+             eta2   =  sim%mesh2d_v%eta2_min + &
+                  real(global_indices(2)-1,f64)*sim%mesh2d_v%delta_eta2
+             
+             inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+             jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+             
+             ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
+             ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+             
+             alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+             sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
+                  nc_x3+1, &
+                  sim%f_x3x4(i,j,:,l), &
+                  alpha3 )
+             ! Extra work to calculate the electric field energy. We should 
+             ! consider placing this somewhere else, probably at greater
+             ! expense.
+             
+             efield_energy_total = efield_energy_total + &
+                  sim%mesh2d_v%delta_eta1*sim%mesh2d_v%delta_eta2*&
+                  (((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
+                  (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/&
+                  (jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+             
+          end do
+       end do
+    end do
+    
+    efield_energy_total = sqrt(efield_energy_total)
+    
+    
+    
+  end subroutine advection_x3
+
+
+  subroutine advection_x4(sim,phi,deltat,efield_energy_total)
+    class(sll_simulation_4d_qns_general) :: sim
+    sll_real64, intent(in) :: deltat
+    sll_int32 :: gi, gj, gk, gl
+    sll_real64, dimension(1:2,1:2) :: inv_j
+    sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
+    sll_int32, dimension(4) :: global_indices
+    sll_real64 :: alpha4
+    sll_real64 :: eta1, eta2, eta3, eta4
+    sll_int32  :: i, j, k, l
+    sll_real64, intent(out) :: efield_energy_total
+    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
+    sll_real64, dimension(1:2,1:2) :: jac_m
+    sll_real64 :: ex
+    sll_real64 :: ey
+    sll_int32  :: nc_x4
+    
+    nc_x4 = sim%mesh2d_v%num_cells2
+    call compute_local_sizes_4d( sim%sequential_x3x4, &
+         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
+    
+    efield_energy_total = 0.0_f64
+    ! dt in vy...(x4)
+    do j=1,loc_sz_x2
+       do i=1,loc_sz_x1
+          do k=1,sim%mesh2d_v%num_cells1+1
+             global_indices(1:2) = &
+                  local_to_global_2D( sim%split_rho_layout, (/i,j/))
+             eta1   =  sim%mesh2d_v%eta1_min + &
+                  real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
+             eta2   =  sim%mesh2d_v%eta2_min + &
+                  real(global_indices(2)-1,f64)*sim%mesh2d_v%delta_eta2
+             inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+             
+             ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
+             ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+             alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+             sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
+                  nc_x4+1, &
+                  sim%f_x3x4(i,j,k,:), &
+                  alpha4 )
+             efield_energy_total = efield_energy_total + &
+                  sim%mesh2d_v%delta_eta1*sim%mesh2d_v%delta_eta2*&
+                  (((jac_m(2,2)*ex - jac_m(2,1)*ey)**2 + &
+                  (jac_m(1,1)*ex - jac_m(1,2)*ey)**2))/&
+                  (jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+          end do
+       end do
+    end do
+    
+    efield_energy_total = sqrt(efield_energy_total)
+    
+    
+  end subroutine advection_x4
+
 
   subroutine delete_4d_qns_gen( sim )
     type(sll_simulation_4d_qns_general) :: sim
@@ -1298,24 +1480,27 @@ contains
   end subroutine compute_charge_density
 
 
-  subroutine compute_average_f( &
+   subroutine compute_average_f( &
+       sim,&
        mx,&
        rho, &
        density_tot )
-    
+    class(sll_simulation_4d_qns_general)     :: sim
     type(sll_logical_mesh_2d), pointer     :: mx
     sll_real64, intent(inout), dimension(:,:)     :: rho     ! local rho
     sll_real64, intent(out)              :: density_tot
     
     ! local sizes in the split directions have to be given by caller.
-    sll_int32                       :: numpts1
-    sll_int32                       :: numpts2
-    sll_real64                      :: delta1
-    sll_real64                      :: delta2
-    sll_real64                      :: lenght1
-    sll_real64                      :: lenght2
+    sll_int32   :: numpts1
+    sll_int32   :: numpts2
+    sll_real64  :: delta1
+    sll_real64  :: delta2
+    sll_real64  :: lenght1
+    sll_real64  :: lenght2
+    sll_real64  :: length_total
     sll_int32 :: i, j
-     
+    sll_real64, dimension(1:2,1:2) :: jac_m
+    sll_real64   :: eta1, eta2
     numpts1 = mx%num_cells1+1
     numpts2 = mx%num_cells2+1
     delta1  = mx%delta_eta1
@@ -1323,14 +1508,22 @@ contains
     lenght1 = mx%eta1_max- mx%eta1_min
     lenght2 = mx%eta2_max- mx%eta2_min
     
-    density_tot = 0.0_f64
-    
+    density_tot  = 0.0_f64
+    length_total = 0.0_f64
     do j=1,numpts2-1
        do i=1,numpts1-1
-          density_tot = density_tot + rho(i,j)*delta1*delta2
+          eta1 = sim%mesh2d_x%eta1_min + (i-1)*sim%mesh2d_x%delta_eta1
+          eta2 = sim%mesh2d_x%eta2_min + (j-1)*sim%mesh2d_x%delta_eta2
+          jac_m  = sim%transfx%jacobian_matrix(eta1,eta2)
+          density_tot = density_tot + rho(i,j)*delta1*delta2*&
+               (jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+          !print*, jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)
+          length_total = length_total + &
+               delta1*delta2*(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
        end do
     end do
-    density_tot = density_tot/ (lenght1*lenght2)
+    !print*, length_total
+    density_tot = density_tot/ (length_total)
   end subroutine compute_average_f
 
   ! Some ad-hoc functions to prepare data for allgather operations. Should

@@ -20,7 +20,12 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
     ${SLL_DIR}/multigrid/sll_multigrid.h
-    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h)
+    ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h
+    ${SLL_DIR}/logical_meshes/sll_logical_meshes.h
+    ${SLL_DIR}/fields/sll_fields.h
+    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
+)
 
 FILE(COPY        ${SLL_MACROS}
      DESTINATION ${CMAKE_BINARY_DIR}/include)
@@ -61,8 +66,19 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
+    ${SLL_DIR}/simulation/sll_polar_operators.F90
+    ${SLL_DIR}/simulation/sll_advection_polar.F90
     ${SLL_DIR}/integration/sll_gausslobatto.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
+    ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
+    ${SLL_DIR}/fields/scalar_field_initializer_base.F90
+    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
+    ${SLL_DIR}/fields/sll_scalar_field_2d.F90
+    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
+    ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
+    ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
  )
 
 IF(${FFT_DEFAULT_LIBRARY} MATCHES "FFTPACK")
@@ -92,11 +108,15 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/collective/sll_collective.F90
        ${SLL_DIR}/remap/sll_remap.F90
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
-       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90 )
+       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
+       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
+       ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
+ )
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
 SET(DIST_NAME "selalib-1.0.0")

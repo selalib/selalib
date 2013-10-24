@@ -63,11 +63,13 @@ subroutine spli2d_perper(&
   lpr_g ( 1 : ai_nx -1 , ai_ny ) = apr_g ( 1 : ai_nx -1, 1 )
   lpr_g ( ai_nx , ai_ny ) = apr_g ( 1 , 1 )
 
-!!$  print*, '&&&&&&&&&&&&&'
+!!  print*, '&&&&&&&&&&&&&'
 !!$  print*, apr_g(1,1 : ai_ny -1)
 !!$  print*, apr_g(2,1 : ai_ny -1)
 !!$  print*, '&&&&&&&&&&&&&'
   !print*, 'in peper',lpr_taux
+
+
   call spli2d_custom ( &
        ai_nx,&
        ai_kx,&

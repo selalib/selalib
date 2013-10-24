@@ -55,7 +55,7 @@ module sll_vlasov4d
  sll_int32, private :: i, j, k, l
 
  interface new
-   module procedure new_vlasov2d
+   module procedure initialize_vlasov2d
  end interface
 
  interface dealloc
@@ -64,7 +64,7 @@ module sll_vlasov4d
 
 contains
 
- subroutine new_vlasov2d(this,geomx,geomv,error, jstartx, jendx, &
+ subroutine initialize_vlasov2d(this,geomx,geomv,error, jstartx, jendx, &
                         jstartv, jendv)
 
   type(vlasov2d),intent(out)      :: this
@@ -131,7 +131,7 @@ contains
 
 #endif
 
- end subroutine new_vlasov2d
+ end subroutine initialize_vlasov2d
 
  subroutine dealloc_vlasov2d(this)
   type(vlasov2d),intent(out) :: this

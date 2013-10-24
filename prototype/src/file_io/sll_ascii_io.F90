@@ -66,6 +66,27 @@ subroutine sll_ascii_file_create(file_name, file_id, error)
 
 end subroutine sll_ascii_file_create
 
+!> Close ASCII file
+subroutine sll_ascii_file_close(file_id,error)
+sll_int32, intent(in)  :: file_id !<file unit number
+sll_int32, intent(out) :: error   !<error code
+
+close(file_id, IOSTAT=error)
+     
+end subroutine sll_ascii_file_close
+
+
+
+
+!> Write a 1d array ASCII format
+subroutine sll_ascii_write_array_0d(file_id,array,error)
+sll_int32 , intent(in)  :: file_id
+sll_int32 , intent(out) :: error
+sll_real64, intent(in)  :: array
+write(file_id,*,IOSTAT=error) array
+end subroutine
+
+
 
 !> Write a 1d array ASCII format
 subroutine sll_ascii_write_array_1d(file_id,array,error)

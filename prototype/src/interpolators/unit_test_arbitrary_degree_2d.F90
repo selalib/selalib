@@ -30,6 +30,8 @@ program unit_test
   sll_real64 :: deriv2_val
   sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1
   sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2
+  sll_real64 :: normL2_0, normL2_1, normL2_2, normL2_3
+  sll_real64 :: normH1_0, normH1_1, normH1_2, normH1_3
 
   
   print *,  'filling out discrete arrays for x1 '
@@ -56,8 +58,8 @@ program unit_test
         eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
         eta2_pos(j+1)      = eta2
-        x(i+1,j+1)         = cos(2.0_f64*sll_pi*eta2) *cos(2.0_f64*sll_pi*eta1)
-        reference(i+1,j+1) = cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        x(i+1,j+1)         = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2) *cos(2.0_f64*sll_pi*eta1)
+        reference(i+1,j+1) = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
      end do
   end do
   
@@ -90,7 +92,7 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
   
-  !print*, 'hello'
+
   call ad2d%compute_interpolants( &
        x(1:NPTS1-1,1:NPTS2-1),&
        eta1_pos(1:NPTS1-1),&
@@ -100,33 +102,36 @@ program unit_test
   
   
   print *, 'Compare the values of the transformation at the nodes: '
-  acc  = 0.0_f64
-  acc_der1  = 0.0_f64
+  acc      = 0.0_f64
+  acc_der1 = 0.0_f64
   acc_der2 = 0.0_f64
-  
+  normL2_0 = 0.0_f64
+  normH1_0 = 0.0_f64
+
   do j=0,NPTS2-2
      do i=0,NPTS1-2
         eta1       = X1MIN + real(i,f64)*h1
         eta2       = X2MIN + real(j,f64)*h2
         node_val   = ad2d%interpolate_value(eta1,eta2)
-        ref        = cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        ref        = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
-        print*, eta1,eta2,node_val,ref,ref-node_val
+        !print*, eta1,eta2,node_val,ref,ref-node_val
         
         acc        = acc + abs(node_val-ref)
 
+        normL2_0 = normL2_0 + (node_val-ref)**2 *h1*h2
         deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)
-        ref = -2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+        ref = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
         acc_der1 = acc_der1 + abs(deriv1_val-ref)
         !
-        !print*,'derive=', ref,deriv1_val
-
+        !print*,'derive=', ref,deriv1_val,ref-deriv1_val
+        normH1_0 = normH1_0 + (deriv1_val-ref)**2 *h1*h2
         deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
-        ref  = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+        ref  = 0.0_f64!-2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
         acc_der2 = acc_der2 + abs(deriv2_val-ref)
         !print*, ref,deriv2_val
-
+        normH1_0 = normH1_0 + (deriv2_val-ref)**2 *h1*h2
         !print*, deriv1_val,deriv2_val
      end do
   end do
@@ -186,12 +191,15 @@ program unit_test
   acc1 = 0.0_f64
   acc1_der1 = 0.0_f64
   acc1_der2 = 0.0_f64
+  normL2_1  = 0.0_F64
+  normH1_1  = 0.0_f64
   do j=0,NPTS2-1
      do i=0,NPTS1-2
         eta1       = X1MIN + real(i,f64)*h1
         eta2       = X2MIN + real(j,f64)*h2
         node_val   = ad2d%interpolate_value(eta1,eta2)
         ref        = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
+        normL2_1 = normL2_1 + (node_val-ref)**2 *h1*h2
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         !print*, ref,node_val,node_val-ref
@@ -203,11 +211,12 @@ program unit_test
         ref = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
         acc1_der1 = acc1_der1 + abs(deriv1_val-ref)
         !print*, ref,deriv1_val
-        
+        normH1_1 = normH1_1 + (deriv1_val-ref)**2 *h1*h2
         deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
         ref  = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
         acc1_der2 = acc1_der2 + abs(deriv2_val-ref)
         !print*, ref,deriv2_val
+        normH1_1 = normH1_1 + (deriv2_val-ref)**2 *h1*h2
      
      end do
   end do
@@ -259,6 +268,8 @@ program unit_test
   acc2 = 0.0_f64
   acc2_der1 = 0.0_f64
   acc2_der2 = 0.0_f64
+  normL2_2  = 0.0_F64
+  normH1_2  = 0.0_f64
   do j=0,NPTS2-2
      do i=0,NPTS1-1
         eta1       = X1MIN + real(i,f64)*h1
@@ -267,6 +278,7 @@ program unit_test
         node_val   = ad2d%interpolate_value(eta1,eta2)
         !print*, "hehe"
         ref                 = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        normL2_2 = normL2_2 + (node_val-ref)**2 *h1*h2
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
@@ -277,10 +289,12 @@ program unit_test
         ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
         acc2_der1 = acc2_der1 + abs(deriv1_val-ref)
         !print*, ref,deriv1_val
+        normH1_2 = normH1_2 + (deriv1_val-ref)**2 *h1*h2
         deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
         ref  = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         acc2_der2 = acc2_der2 + abs(deriv2_val-ref)
         !print*, ref,deriv2_val
+        normH1_2 = normH1_2 + (deriv2_val-ref)**2 *h1*h2
      end do
   end do
   
@@ -332,7 +346,8 @@ program unit_test
   acc3 = 0.0_f64
   acc3_der1 = 0.0_f64
   acc3_der2 = 0.0_f64
-
+  normL2_3  = 0.0_F64
+  normH1_3  = 0.0_f64
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1       = X1MIN + real(i,f64)*h1
@@ -343,6 +358,7 @@ program unit_test
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
         difference(i+1,j+1) = ref-node_val
+        normL2_3 = normL2_3 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
          !    'theoretical = ', ref
         acc3        = acc3 + abs(node_val-ref)
@@ -351,11 +367,12 @@ program unit_test
         ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         acc3_der1 = acc3_der1 + abs(deriv1_val-ref)
         !print*, ref,deriv1_val,abs(deriv1_val-ref)
-
+        normH1_3 = normH1_3 + (deriv1_val-ref)**2 *h1*h2
         deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
         ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
         acc3_der2 = acc3_der2 + abs(deriv2_val-ref)
         !print*, ref,deriv2_val
+        normH1_3 = normH1_3 + (deriv2_val-ref)**2 *h1*h2
      end do
   end do
 
@@ -398,6 +415,34 @@ program unit_test
   print *,'Average error in nodes first derivative eta2(periodic-periodic)=',&
        acc_der2/(NPTS1*NPTS2)
 
+  print*, '--------------------------------------------'
+  print*, ' Error norm L2'
+  print*, '--------------------------------------------'
+  print *,'Error norm L2 (dirichlet-dirichlet)=',sqrt(normL2_3), h1**(SPL_DEG)
+  print *,'Error norm L2 (dirichlet-periodic)=', sqrt(normL2_2), h1**(SPL_DEG)
+  print *,'Error norm L2 (periodic-dirichlet)=', sqrt(normL2_1), h1**(SPL_DEG)
+  print *,'Error norm L2 (periodic-periodic)=',  sqrt(normL2_0), h1**(SPL_DEG)
+
+  print*, '--------------------------------------------'
+  print*, ' Error norm H1'
+  print*, '--------------------------------------------'
+  print *,'Error norm H1 (dirichlet-dirichlet)=',sqrt(normH1_3), h1**(SPL_DEG-1)
+  print *,'Error norm H1 (dirichlet-periodic)=', sqrt(normH1_2), h1**(SPL_DEG-1)
+  print *,'Error norm H1 (periodic-dirichlet)=', sqrt(normH1_1), h1**(SPL_DEG-1)
+  print *,'Error norm H1 (periodic-periodic)=',  sqrt(normH1_0), h1**(SPL_DEG-1)
+
+  if (  ( sqrt(normL2_0) <= h1**(SPL_DEG))   .AND. &
+        ( sqrt(normL2_1) <= h1**(SPL_DEG))   .AND. &
+        ( sqrt(normL2_2) <= h1**(SPL_DEG))   .AND. &
+        ( sqrt(normL2_3) <= h1**(SPL_DEG))   .AND. &
+        ( sqrt(normH1_0) <= h1**(SPL_DEG-1)) .AND. &
+        ( sqrt(normH1_1) <= h1**(SPL_DEG-1)) .AND. &
+        ( sqrt(normH1_2) <= h1**(SPL_DEG-1)) .AND. &
+        ( sqrt(normH1_3) <= h1**(SPL_DEG-1))) then
+     
+       
+     print *, 'PASSED'
+  end if
 !!$
 !!$  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
 !!$      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
