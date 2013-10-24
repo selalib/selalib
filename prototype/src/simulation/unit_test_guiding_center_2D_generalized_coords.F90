@@ -15,6 +15,8 @@ program gc_2d_general
   use sll_common_array_initializers_module
   use sll_module_scalar_field_2d_alternative
   use sll_module_scalar_field_2d_base
+  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_interpolators_2d_base
   implicit none
 
   character(len=256) :: filename
@@ -30,18 +32,45 @@ program gc_2d_general
   sll_real64, external ::     sinprod2_jac11, sinprod2_jac12
   sll_real64, external ::     sinprod2_jac21, sinprod2_jac22 
   
-  print *, 'Booting parallel environment...'
-  !call sll_boot_collective() ! Wrap this up somewhere else
+  print *, 'Start...'
+  
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.
-  call getarg(1, filename)
-  filename_local = trim(filename)
+  
+  !call getarg(1, filename)
+  !filename_local = trim(filename)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
   
-  call simulation%init_from_file(filename_local)
+  
+  
+  ! hardwired, this should be consistent with whatever is read from a file
+#define NPTS1 64
+#define NPTS2 64
+#define SPL_DEG1 2
+#define SPL_DEG2 2
+
+landau_params(1)=0.5_f64 ! mode
+landau_params(2)=0.015_f64
+
+#define eta1_min 0.0_f64
+#define eta1_max 2.0_f64*sll_pi/landau_params(1)
+#define eta2_min 0.0_f64
+#define eta2_max 2.0_f64*sll_pi
+
+
+  
+  !call simulation%init_from_file(filename_local)
+    simulation%dt = 0.1_f64
+    simulation%num_iterations = 600
+    simulation%carac_case = 3
+    simulation%time_scheme = 1
+    simulation%visu_step = 100
+    simulation%nc_x1 = NPTS1
+    simulation%nc_x2 = NPTS2
+    
   
   ! The second is to initialize 'manually' with a routine whose parameters
   ! allow to configure the different types of objects in the simulation. For
@@ -51,19 +80,10 @@ program gc_2d_general
   ! way to initialize the simulation object, in development we are using them
   ! both...
 
-! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
-#define NPTS2 28
-#define SPL_DEG1 3
-#define SPL_DEG2 3
-
-landau_params(1)=0.5_f64
-landau_params(2)=0.015_f64
-
 
   ! logical mesh for space coordinates
   M => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=0.0_f64, eta1_max=4.0_f64*sll_pi)
+       eta1_min, eta1_max,eta2_min, eta2_max)
 
  
 
@@ -82,7 +102,7 @@ landau_params(2)=0.015_f64
        identity_jac22 )
 
 ! transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_identity_transformation", &
+!       "analytic_collela_transformation", &
 !       M, &
 !       sinprod2_x1, &
 !       sinprod2_x2, &
@@ -116,7 +136,7 @@ landau_params(2)=0.015_f64
 
   call simulation%run( )
   call delete(simulation)
-  print *, 'reached end of vp4d test'
+  print *, 'reached end of gc test'
   print *, 'PASSED'
 
 
