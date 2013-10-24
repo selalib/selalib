@@ -47,8 +47,8 @@ program gc_2d_general
   
   
   ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 64
-#define NPTS2 64
+#define NCELL1 64
+#define NCELL2 64
 #define SPL_DEG1 2
 #define SPL_DEG2 2
 
@@ -68,8 +68,8 @@ landau_params(2)=0.015_f64
     simulation%carac_case = 3
     simulation%time_scheme = 1
     simulation%visu_step = 100
-    simulation%nc_x1 = NPTS1
-    simulation%nc_x2 = NPTS2
+    simulation%nc_x1 = NCELL1
+    simulation%nc_x2 = NCELL2
     
   
   ! The second is to initialize 'manually' with a routine whose parameters
@@ -82,7 +82,7 @@ landau_params(2)=0.015_f64
 
 
   ! logical mesh for space coordinates
-  M => new_logical_mesh_2d( NPTS1, NPTS2,       & 
+  M => new_logical_mesh_2d( NCELL1, NCELL2,       & 
        eta1_min, eta1_max,eta2_min, eta2_max)
 
  
