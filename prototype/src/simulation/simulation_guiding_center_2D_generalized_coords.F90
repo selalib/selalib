@@ -14,7 +14,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_simulation_base
   use sll_logical_meshes
   use sll_coordinate_transformation_2d_base_module
-  use sll_general_coordinate_qn_solver_module
+  use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
   implicit none
@@ -57,7 +57,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transf
-     type(general_coordinate_qn_solver), pointer           :: qns
+     type(general_coordinate_elliptic_solver), pointer           :: qns
      
      sll_real64, dimension(:,:), pointer     :: rho_n
      sll_real64, dimension(:,:), pointer     :: rho_np1
@@ -244,11 +244,11 @@ contains
     ! The following could probably be abstracted for convenience
     sll_int32 :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
-    class(sll_scalar_field_2d_base), pointer              :: c_field
+    class(sll_scalar_field_2d_base), pointer                :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer                :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer                :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer                :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer                :: c_field
    ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_n
    ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_np1
    ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_nm1
@@ -261,7 +261,7 @@ contains
 
     
     ! Start with the fields  
-    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
          sim%transf, &
@@ -269,8 +269,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top) 
+       
 
-    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transf, &
@@ -278,8 +279,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top) 
-
-    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    
+    
+    a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transf, &
@@ -287,8 +289,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
+       
     
-    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transf, &
@@ -296,16 +299,17 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top) 
-
+     
 
     c_field => new_scalar_field_2d_analytic_alt( &
-         sim%c_f, &
+          sim%c_f, &
          "c_field", &
          sim%transf, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
+       
     print*,'pass 1'
 
     SLL_ALLOCATE(phi_values(sim%mesh2d%num_cells1+1,sim%mesh2d%num_cells2+1),ierr)
@@ -314,7 +318,6 @@ contains
  
     print*,'phi => new_scalar_field_2d_discrete_alt ' 
     phi => new_scalar_field_2d_discrete_alt( &
-         phi_values, &
          "phi_check", &
          sim%interp_phi, &
          sim%transf, &
@@ -322,7 +325,7 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    call phi%set_field_data(phi_values)
    
     print*,'pass 3'
     
@@ -362,7 +365,6 @@ contains
      end do
      
    rho_n_ptr => new_scalar_field_2d_discrete_alt( &
-         sim%rho_n, &
          "rho_n", &
          sim%interp_rho, &     
          sim%transf, &
@@ -370,10 +372,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)     
-   
+   call rho_n_ptr%set_field_data(sim%rho_n)
     
     rho_np1_ptr => new_scalar_field_2d_discrete_alt( &
-         sim%rho_n, &
          "rho_np1", &
          sim%interp_rho, &     
          sim%transf, &
@@ -381,10 +382,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)                
-  
+    call rho_np1_ptr%set_field_data(sim%rho_n)
   
    rho_nm1_ptr => new_scalar_field_2d_discrete_alt( &
-         sim%rho_n, &
          "rho_nm1", &
          sim%interp_rho, &     
          sim%transf, &
@@ -392,17 +392,17 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-         
+    call rho_nm1_ptr%set_field_data(sim%rho_n)     
          
     ! Initialize the poisson plan before going into the main loop.
     print *, 'Start 1...'
-    sim%qns => new_general_qn_solver( &
+    sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
          sim%mesh2d%num_cells1, &
          sim%mesh2d%num_cells2, &
-         QNS_GAUSS_LEGENDRE, &  ! put in arguments
-         QNS_GAUSS_LEGENDRE, &  ! put in arguments
+         ES_GAUSS_LEGENDRE, &  ! put in arguments
+         ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -412,14 +412,18 @@ contains
          sim%mesh2d%eta2_min, & 
          sim%mesh2d%eta2_max ) 
     
+    
+     ! compute matrix the field
+    call factorize_mat_es(&
+       sim%qns, &
+       a11_field_mat, &
+       a12_field_mat,&
+       a21_field_mat,&
+       a22_field_mat,&
+       c_field)
     !print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
-    call solve_quasi_neutral_eq_general_coords( &
+    call solve_general_coordinates_elliptic_eq( &
             sim%qns, & 
-            a11_field_mat, &
-            a12_field_mat, &
-            a21_field_mat, &
-            a22_field_mat, &
-            c_field, &
             rho_n_ptr, &
             phi )
   !          call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
@@ -480,13 +484,17 @@ contains
       case(1) 
             
             !Classical semi-Lagrangian scheme (order 1)
-            call solve_quasi_neutral_eq_general_coords( &
-            sim%qns, & 
+             ! compute matrix the field
+            call factorize_mat_es(&
+            sim%qns, &
             a11_field_mat, &
-            a12_field_mat, &
-            a21_field_mat, &
-            a22_field_mat, &
-            c_field, &
+            a12_field_mat,&
+            a21_field_mat,&
+            a22_field_mat,&
+            c_field)
+            
+            call solve_general_coordinates_elliptic_eq( &
+            sim%qns, & 
             rho_n_ptr, &
             phi )
             !print *, 'advection started ...'
@@ -497,8 +505,8 @@ contains
             sim%bc_bottom)
             
             rho_n_ptr => NULL()
+            
             rho_n_ptr => new_scalar_field_2d_discrete_alt( &
-            sim%rho_np1, &
             "rho_np1", &
             sim%interp_rho, &     
             sim%transf, &
@@ -506,7 +514,7 @@ contains
             sim%bc_right, &
             sim%bc_bottom, &
             sim%bc_top)  
-             
+            call rho_n_ptr%set_field_data(sim%rho_np1)
             !print *, 'advection finished ...'
            ! rho_tmp_ptr => rho_n_ptr
            ! rho_n_ptr => rho_np1_ptr
@@ -515,13 +523,8 @@ contains
 
      ! case(2) 
 !            !!'Semi-Lagrangian predictor-corrector scheme'  
-!            call solve_quasi_neutral_eq_general_coords( &
+!            call solve_general_coordinates_elliptic_eq( &
 !            sim%qns, & 
-!            a11_field_mat, &
-!            a12_field_mat, &
-!            a21_field_mat, &
-!            a22_field_mat, &
-!            c_field, &
 !            rho_n_ptr, &
 !            phi )
 !       
@@ -533,13 +536,8 @@ contains
 !         
 !            !!we just obtained f^(n+1/2)    
 !            
-!            call solve_quasi_neutral_eq_general_coords( &
+!            call solve_general_coordinates_elliptic_eq( &
 !            sim%qns, & 
-!            a11_field_mat, &
-!            a12_field_mat, &
-!            a21_field_mat, &
-!            a22_field_mat, &
-!            c_field, &
 !            rho_np1_ptr, &
 !            phi )
 !       
@@ -557,13 +555,8 @@ contains
 !           !Leap-frog scheme
 !             if (itime==1) then
 !           
-!                call solve_quasi_neutral_eq_general_coords( &
+!                call solve_general_coordinates_elliptic_eq( &
 !                sim%qns, & 
-!                a11_field_mat, &
-!                a12_field_mat, &
-!                a21_field_mat, &
-!                a22_field_mat, &
-!                c_field, &
 !                rho_n_ptr, &
 !                phi )
 !       
@@ -575,12 +568,8 @@ contains
 !         
 !               !!we just obtained f^(n+1/2)    
 !            
-!               call solve_quasi_neutral_eq_general_coords( &
+!               call solve_general_coordinates_elliptic_eq( &
 !               sim%qns, & 
-!               a11_field_mat, &
-!               a12_field_mat, &
-!               a21_field_mat, &
-!               a22_field_mat, &
 !               c_field, &
 !               rho_np1_ptr, &
 !               phi )
@@ -597,13 +586,8 @@ contains
 !              
 !             else 
 !             
-!               call solve_quasi_neutral_eq_general_coords( &
+!               call solve_general_coordinates_elliptic_eq( &
 !                sim%qns, & 
-!                a11_field_mat, &
-!                a12_field_mat, &
-!                a21_field_mat, &
-!                a22_field_mat, &
-!                c_field, &
 !                rho_n_ptr, &
 !                phi )
 !       

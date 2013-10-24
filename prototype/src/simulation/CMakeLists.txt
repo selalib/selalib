@@ -13,7 +13,7 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_guiding_center_2D_generalized_coords.F90)
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d    
-                       sll_general_coordinate_quasi_neutral_solvers                   
+                       sll_general_coordinate_elliptic_solvers                   
 		               sll_scalar_field_2d_alternative
                        sll_scalar_field
                        sll_interpolators
