@@ -224,7 +224,7 @@
                rhoft(i) = rhotot(i)
             enddo
             call ZFFTF(N, rhoft, table)
-            call normfft_sqrtN(rhoft, N)
+            call normfft_sqrtN(cmplx(rhoft,kind=16), N)
             ! Get amplitude of fundamental mode
             rhofundamental = 2.*abs(rhoft(modeorder+1))     
             ! Write out amplitude of fundamental mode
@@ -314,7 +314,7 @@
                efieldft(i) = efield(i)
             enddo
             call ZFFTF(N, efieldft, table)
-            call normfft_sqrtN(efieldft, N)
+            call normfft_sqrtN(cmplx(efieldft,kind=16), N)
             ! Get amplitude of fundamental mode
             efieldfundamental = 2.*abs(efieldft(modeorder+1))     
             ! Write out amplitude of fundamental mode
@@ -348,9 +348,9 @@
                   phift(i) = efieldft(i) / ii / k
                enddo
                call ZFFTB(N, rhoft, table)
-               call normfft_sqrtN(rhoft, N)
+               call normfft_sqrtN(cmplx(rhoft,kind=16), N)
                call ZFFTB(N, phift, table)
-               call normfft_sqrtN(phift, N)
+               call normfft_sqrtN(cmplx(phift,kind=16), N)
                do i=1, N
                   rho_from_E(i) = real(rhoft(i))
                   phi(i) = real(phift(i))
@@ -575,7 +575,7 @@
                      frowft(i) = deltaf(i,j) + f0(i,j)
                   enddo
                   call ZFFTF(N, frowft, table)
-                  call normfft_sqrtN(frowft, N)
+                  call normfft_sqrtN(cmplx(frowft,kind=16), N)
                   do i=1, N/2
                      f_kx_v(i,j) = frowft(i+N/2)
                   enddo
@@ -732,7 +732,7 @@
       
       implicit none
       integer N, i
-      complex*16 efield(N)
+      complex(16) efield(N)
       
       do i=1, N
          efield(i) = efield(i) / N
@@ -744,7 +744,7 @@
       
       implicit none
       integer N, i
-      complex*16 efield(N)
+      complex(16) efield(N)
       
       do i=1, N
          efield(i) = efield(i) / sqrt(float(N))
