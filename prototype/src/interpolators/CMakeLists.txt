@@ -29,6 +29,7 @@ IF (NOT STDF95)
                                             sll_utilities 
    		                             deboor_splines 
                                             sll_coordinate_transformations
+					    sll_timer
                                             ${LAPACK_LIBRARIES} )
 ELSE()
    TARGET_LINK_LIBRARIES( sll_interpolators sll_splines

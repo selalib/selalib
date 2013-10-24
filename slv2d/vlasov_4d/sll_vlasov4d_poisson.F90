@@ -33,34 +33,32 @@ module sll_vlasov4d_poisson
 
 contains
 
- subroutine initialize_vlasov4d_poisson(this, &
-  geomx,geomv,interp_x1,interp_x2,interp_x3,interp_x4,error)
+ subroutine initialize_vlasov4d_poisson(this,       &
+                                        interp_x1,  &
+                                        interp_x2,  &
+                                        interp_x3,  &
+                                        interp_x4,  &
+                                        error)
 
   use sll_hdf5_io
+
   class(vlasov4d_poisson),intent(inout)   :: this
-  type(sll_logical_mesh_2d),intent(in)    :: geomx
-  type(sll_logical_mesh_2d),intent(in)    :: geomv
   class(sll_interpolator_1d_base), target :: interp_x1
   class(sll_interpolator_1d_base), target :: interp_x2
   class(sll_interpolator_1d_base), target :: interp_x3
   class(sll_interpolator_1d_base), target :: interp_x4
-  sll_int32                               :: error
-  sll_int32                               :: nc_eta1
-  sll_int32                               :: nc_eta2
+  sll_int32                               :: error 
 
   this%interp_x1 => interp_x1
   this%interp_x2 => interp_x2
   this%interp_x3 => interp_x3
   this%interp_x4 => interp_x4
 
-  nc_eta1 = geomx%num_cells1
-  nc_eta2 = geomx%num_cells2
+  call initialize_vlasov4d_base(this)
 
-  call initialize_vlasov4d_base(this,geomx,geomv,error)
-
-  SLL_CLEAR_ALLOCATE(this%ex(1:nc_eta1,1:nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:nc_eta1,1:nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%rho(1:nc_eta1,1:nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
 
  end subroutine initialize_vlasov4d_poisson
 
@@ -88,7 +86,7 @@ contains
   do k=1,loc_sz_k
      global_indices = local_to_global_4D(this%layout_x,(/1,1,k,l/)) 
      gk = global_indices(3)
-     alpha = (eta3_min +(gk-1)*delta_eta3)*dt
+     alpha = (this%eta3_min +(gk-1)*this%delta_eta3)*dt
      do j=1,loc_sz_j
         this%f(:,j,k,l) = &
            this%interp_x1%interpolate_array_disp(loc_sz_i,this%f(:,j,k,l),alpha)
