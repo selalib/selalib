@@ -1,9 +1,9 @@
 SLL_ROOT = /Users/navaro/Codes/selalib/usr
-F90 = ifort
-OPT = -O3 -xHost -ip -openmp
-LD  = ifort
+F90 = gfortran
+OPT = -O3 #-xHost -ip -openmp
+LD  = gfortran
    
-F90FLAGS = -I${SLL_ROOT}/include 
+F90FLAGS = -I${SLL_ROOT}/include -I${SLL_ROOT}/include/fortran
 LDFLAGS = -L${SLL_ROOT}/lib 
 LIBS = -lselalib -ldfftpack
 
