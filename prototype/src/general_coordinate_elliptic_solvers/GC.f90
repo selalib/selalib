@@ -593,7 +593,7 @@ subroutine Gradient_conj_adjusted ( this, apr_B,apr_U,Masse_tot, ai_maxIter, ar_
     call Mult_CSR_Matrix_Vector( this , lpr_Ux , lpr_Ad )
 
     lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-    print*, dot_product(Masse_tot, lpr_Ux)
+    !print*, dot_product(Masse_tot, lpr_Ux)
     !-----------------
     !-------------------!
     ! calcul des normes !
