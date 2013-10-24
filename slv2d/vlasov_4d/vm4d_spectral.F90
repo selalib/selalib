@@ -8,105 +8,105 @@ program vm4d_spectral
 
   implicit none
 
-  type(sll_logical_mesh_2d), pointer :: geomx 
-  type(sll_logical_mesh_2d), pointer :: geomv 
   type(maxwell_2d_pstd)     :: maxwell
   type(poisson_2d_periodic) :: poisson 
   type(vlasov4d_spectral)   :: vlasov4d 
 
   type(cubic_spline_2d_interpolator), target :: spl_x3x4
 
-  sll_int32  :: nbiter, iter , fdiag, fthdiag  
-  sll_real64 :: dt, nrj, tcpu1, tcpu2
-
-  sll_int32  :: prank, comm
-  sll_int64  :: psize
-
+  sll_real64 :: tcpu1, tcpu2
+  sll_int32  :: iter
+  sll_int32  :: prank, comm, psize
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
 
   call sll_boot_collective()
+
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
   tcpu1 = MPI_WTIME()
-  if (prank == MPI_MASTER) then
+  if (prank == MPI_MASTER) &
      print*,'MPI Version of slv2d running on ',psize, ' processors'
-  end if
-
-  call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
   call initlocal()
 
   call transposexv(vlasov4d)
 
   call compute_charge(vlasov4d)
-  call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
+  call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
 
   !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
 
   call transposevx(vlasov4d)
 
-  do iter=1,nbiter
+  do iter=1, vlasov4d%nbiter
 
-     if (iter ==1 .or. mod(iter,fdiag) == 0) then 
-        call write_xmf_file(vlasov4d,iter/fdiag)
+     if (iter == 1 .or. mod(iter,vlasov4d%fdiag) == 0) then 
+        call write_xmf_file(vlasov4d,iter/vlasov4d%fdiag)
      end if
 
 !modif NC
-     call transposexv(vlasov4d)
-     call densite_courantx(vlasov4d)
-     call transposevx(vlasov4d)
+!     call transposexv(vlasov4d)
+!     call densite_courantx(vlasov4d)
+!     call transposevx(vlasov4d)
 !fin
 
-     call advection_x1(vlasov4d,0.5*dt)
+     call advection_x1(vlasov4d,vlasov4d%dt)
 
 !modif NC
-     call transposexv(vlasov4d)
-     call densite_couranty(vlasov4d)
-     call transposevx(vlasov4d)
+!     call transposexv(vlasov4d)
+!     call densite_couranty(vlasov4d)
+!     call transposevx(vlasov4d)
 !fin
 
-     call advection_x2(vlasov4d,0.5*dt)
+     call advection_x2(vlasov4d,vlasov4d%dt)
 
-     !call compute_charge(vlasov4d,rho)
      call transposexv(vlasov4d)
+
      call compute_current(vlasov4d)
 
-     vlasov4d%exn=vlasov4d%ex
-     vlasov4d%eyn=vlasov4d%ey;
+     call ampere(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, &
+                          vlasov4d%dt, vlasov4d%jx)
 
-     call solve_ampere(vlasov4d, maxwell, dt) 
+!     vlasov4d%exn=vlasov4d%ex
+!     vlasov4d%eyn=vlasov4d%ey;
+!
+!     call solve_ampere(vlasov4d, maxwell, vlasov4d%dt) 
 
-     !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
-     call advection_x3x4(vlasov4d,dt)
+     !call solve_faraday(vlasov4d, maxwell, 0.5*vlasov4d%dt)   
 
-!modif NC
-     call compute_current(vlasov4d)
-     vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
-!fin
-     !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
-
-     call transposevx(vlasov4d)
-
-     call advection_x2(vlasov4d,0.5*dt)
+     call advection_x3x4(vlasov4d,vlasov4d%dt)
 
 !modif NC
-     call transposexv(vlasov4d)
-     call compute_current(vlasov4d)
-     vlasov4d%jx=0.5_f64*(vlasov4d%jx+vlasov4d%jx1)
-     call transposevx(vlasov4d)
+!     call compute_current(vlasov4d)
+!     vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
 !fin
-
-     call advection_x1(vlasov4d,0.5*dt)
-
+!     !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
+!
+!     call transposevx(vlasov4d)
+!
+!!     call advection_x2(vlasov4d,0.5*vlasov4d%dt)
+!
 !modif NC
-     call solve_ampere(vlasov4d, maxwell, dt) 
+!     call transposexv(vlasov4d)
+!     call compute_current(vlasov4d)
+!     vlasov4d%jx=0.5_f64*(vlasov4d%jx+vlasov4d%jx1)
+!     call transposevx(vlasov4d)
+!!fin
+!
+!     call advection_x1(vlasov4d,0.5*vlasov4d%dt)
+!
+!!modif NC
+!     call solve_ampere(vlasov4d, maxwell, vlasov4d%dt) 
+!
+!     vlasov4d%ex=vlasov4d%exn
+!     vlasov4d%ey=vlasov4d%eyn
+!!fin
 
-     vlasov4d%ex=vlasov4d%exn;
-     vlasov4d%ey=vlasov4d%eyn
-!fin
-
+     if (mod(iter,vlasov4d%fthdiag).eq.0) then 
+        call write_energy(vlasov4d, iter*vlasov4d%dt)
+     endif
 
   end do
 
@@ -133,24 +133,27 @@ contains
     sll_real64 :: xi, eps, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
-    sll_int32 :: psize
 
-    prank = sll_get_collective_rank(sll_world_collective)
-    psize = sll_get_collective_size(sll_world_collective)
-    comm  = sll_world_collective%comm
+    call read_input_file(vlasov4d)
 
-    call spl_x3x4%initialize(nc_eta1, nc_eta1,                        &
-    &                        eta1_min, eta1_max, eta2_min, eta2_max,  &
-    &                        SLL_PERIODIC, SLL_PERIODIC)
+    call spl_x3x4%initialize(vlasov4d%nc_eta1,   &
+    &                        vlasov4d%nc_eta1,   &
+    &                        vlasov4d%eta1_min,  &
+    &                        vlasov4d%eta1_max,  &
+    &                        vlasov4d%eta2_min,  &
+    &                        vlasov4d%eta2_max,  &
+    &                        SLL_PERIODIC,       &
+    &                        SLL_PERIODIC)
 
-    call initialize(vlasov4d,geomx,geomv,spl_x3x4,error)
+    call initialize(vlasov4d,spl_x3x4,error)
 
-    call compute_local_sizes_4d(vlasov4d%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+    call compute_local_sizes_4d(vlasov4d%layout_x, &
+         loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
     eps = 0.05_f64
-    kx  = 2_f64*sll_pi/(nc_eta1*delta_eta1)
-    ky  = 2_f64*sll_pi/(nc_eta2*delta_eta2)
+    kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
+    ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
@@ -163,10 +166,10 @@ contains
         gk = global_indices(3)
         gl = global_indices(4)
 
-        x  = eta1_min+(gi-1)*delta_eta1
-        y  = eta2_min+(gj-1)*delta_eta2
-        vx = eta3_min+(gk-1)*delta_eta3
-        vy = eta4_min+(gl-1)*delta_eta4
+        x  = vlasov4d%eta1_min+(gi-1)*vlasov4d%delta_eta1
+        y  = vlasov4d%eta2_min+(gj-1)*vlasov4d%delta_eta2
+        vx = vlasov4d%eta3_min+(gk-1)*vlasov4d%delta_eta3
+        vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
         v2 = vx*vx+vy*vy
         vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
@@ -176,11 +179,21 @@ contains
     end do
     end do
 
-    call initialize(maxwell, eta1_min, eta1_max, nc_eta1, &
-                             eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
+    call initialize(maxwell, vlasov4d%eta1_min, &
+                             vlasov4d%eta1_max, &
+                             vlasov4d%nc_eta1,  &
+                             vlasov4d%eta2_min, &
+                             vlasov4d%eta2_max, &
+                             vlasov4d%nc_eta2,  &
+                             TE_POLARIZATION)
 
-    call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
-                             eta2_min, eta2_max, nc_eta2, error)
+    call initialize(poisson, vlasov4d%eta1_min, &
+                             vlasov4d%eta1_max, &
+                             vlasov4d%nc_eta1,  &
+                             vlasov4d%eta2_min, &
+                             vlasov4d%eta2_max, &
+                             vlasov4d%nc_eta2,  &
+                             error)
 
 
   end subroutine initlocal

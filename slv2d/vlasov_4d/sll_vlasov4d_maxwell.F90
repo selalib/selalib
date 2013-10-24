@@ -34,35 +34,31 @@ module sll_vlasov4d_maxwell
 
 contains
 
- subroutine initialize_vlasov4d_maxwell(this, &
-            geomx,geomv,interp_x1,interp_x2,interp_x3x4,error)
+ subroutine initialize_vlasov4d_maxwell(this,        &
+                                        interp_x1,   &
+                                        interp_x2,   &
+                                        interp_x3x4, &
+                                        error )
 
   class(vlasov4d_maxwell),intent(inout)   :: this
-  type(sll_logical_mesh_2d),intent(in)    :: geomx
-  type(sll_logical_mesh_2d),intent(in)    :: geomv
   class(sll_interpolator_1d_base), target :: interp_x1
   class(sll_interpolator_1d_base), target :: interp_x2
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
-  sll_int32                               :: nc_eta1
-  sll_int32                               :: nc_eta2
 
-  nc_eta1 = geomx%num_cells1
-  nc_eta2 = geomx%num_cells2
-
-  call initialize_vlasov4d_base(this,geomx,geomv,error)
+  call initialize_vlasov4d_base(this)
 
   this%interp_x1   => interp_x1
   this%interp_x2   => interp_x2
   this%interp_x3x4 => interp_x3x4
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:nc_eta1,1:nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:nc_eta1,1:nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jx(1:nc_eta1,1:nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jy(1:nc_eta1,1:nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%bz(1:nc_eta1,1:nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1,1:this%nc_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%rho(1:nc_eta1,1:nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
 
  end subroutine initialize_vlasov4d_maxwell
 
