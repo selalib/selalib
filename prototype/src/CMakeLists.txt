@@ -133,7 +133,7 @@ IF(NOT SLL_BUILD_PACKAGE)
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ENDIF(SUITESPARSE_FOUND)
    
-      ADD_SUBDIRECTORY(mapped_meshes)
+      ADD_SUBDIRECTORY(mapped_meshes) # deprecated
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(distribution_function)
       ADD_SUBDIRECTORY(ode_solvers)

@@ -100,10 +100,11 @@ use sll_xdmf
    end interface
    
    abstract interface
-      function transformation_func_nopass( eta1, eta2 ) result(res)
+      function transformation_func_nopass( eta1, eta2, params ) result(res)
         use sll_working_precision
         sll_real64, intent(in) :: eta1
         sll_real64, intent(in) :: eta2
+        sll_real64, dimension(:), intent(in) :: params
         sll_real64             :: res
       end function transformation_func_nopass
    end interface
