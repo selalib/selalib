@@ -187,7 +187,8 @@ program VP1d_BSL_time_split
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 ) 
+       identity_jac22, &
+       (/0.0_f64/) ) 
 
   ! initialize interpolators
   call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
