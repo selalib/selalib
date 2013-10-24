@@ -73,6 +73,10 @@ program unit_test_alternative
   sll_real64 :: normL2_5,normL2_6,normL2_7,normL2_8
   sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
   sll_real64 :: normH1_5,normH1_6,normH1_7,normH1_8
+  sll_real64, dimension(1) :: params_identity
+
+  params_identity(:) = (/ 0.0_f64 /)
+
   ! logical mesh
   nc1 = NUM_CELLS1
   nc2 = NUM_CELLS1
@@ -98,7 +102,8 @@ program unit_test_alternative
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       params_identity )
   print *, 'initialized transformation'
 
 
@@ -756,6 +761,15 @@ program unit_test_alternative
         normH1_8    = normH1_8 + ((grad1_node_val-grad1ref)**2+&
              (grad2_node_val-grad2ref)**2)*h1*h2
         
+
+!!$   do j=0,npts2-2
+!!$     do i=0,npts1-2
+!!$        eta1 = real(i,f64)*(ETA1MAX-ETA1MIN)/(2*(npts1-1)) + ETA1MIN 
+!!$        eta2 = real(j,f64)*(ETA2MAX-ETA2MIN)/(2*(npts2-1)) + ETA2MIN
+!!$       calculated(i+1,j+1) = rho%value_at_point(eta1,eta2)
+!!$       difference(i+1,j+1) = calculated(i+1,j+1)-cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+!       print*, 'point=',eta1,eta2,'difference=', difference(i+1,j+1), calculated(i+1,j+1),cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
+
      end do
   end do
   
