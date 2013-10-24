@@ -9,6 +9,8 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_constants
   use sll_cubic_spline_interpolator_2d
   use sll_cubic_spline_interpolator_1d
+  use sll_module_interpolators_2d_base
+  use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_simulation_base
   use sll_logical_meshes
   use sll_coordinate_transformation_2d_base_module
@@ -143,8 +145,8 @@ contains
    sim%bc_top    = bc_top
 
    call sim%interp_phi%initialize( &
-        sim%mesh2d%num_cells1 +1, &
-        sim%mesh2d%num_cells2 +1, &
+        sim%mesh2d%num_cells1 , &
+        sim%mesh2d%num_cells2 , &
         sim%mesh2d%eta1_min, &
         sim%mesh2d%eta1_max, &
         sim%mesh2d%eta2_min, &
@@ -157,8 +159,8 @@ contains
         sim%spline_degree_eta2)
 
    call sim%interp_rho%initialize( &
-        sim%mesh2d%num_cells1 +1, &
-        sim%mesh2d%num_cells2 +1, &
+        sim%mesh2d%num_cells1 , &
+        sim%mesh2d%num_cells2 , &
         sim%mesh2d%eta1_min, &
         sim%mesh2d%eta1_max, &
         sim%mesh2d%eta2_min, &
@@ -247,9 +249,9 @@ contains
     type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
     type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer              :: c_field
-    type(sll_scalar_field_2d_discrete_alt),target               :: rho_n
-    type(sll_scalar_field_2d_discrete_alt),target               :: rho_np1
-    type(sll_scalar_field_2d_discrete_alt),target               :: rho_nm1
+   ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_n
+   ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_np1
+   ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_nm1
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n_ptr
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1_ptr
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_nm1_ptr
@@ -258,8 +260,7 @@ contains
     sll_real64, dimension(:,:), allocatable :: phi_values
 
     
-    ! Start with the fields
-    
+    ! Start with the fields  
     a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
@@ -305,12 +306,13 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    print*,'pass 1'
 
     SLL_ALLOCATE(phi_values(sim%mesh2d%num_cells1+1,sim%mesh2d%num_cells2+1),ierr)
     
     phi_values(:,:) = 0.0_f64
-
+ 
+    print*,'phi => new_scalar_field_2d_discrete_alt ' 
     phi => new_scalar_field_2d_discrete_alt( &
          phi_values, &
          "phi_check", &
@@ -322,7 +324,8 @@ contains
          sim%bc_top)
 
    
-
+    print*,'pass 3'
+    
     nc_x1 = sim%mesh2d%num_cells1
     nc_x2 = sim%mesh2d%num_cells2
   
@@ -348,7 +351,6 @@ contains
     ! velocity space...
     
     
-    
      do j=1,nc_x2+1
         eta2=eta2_min+real(j-1,f64)*delta2
         do i=1,nc_x1+1
@@ -359,8 +361,7 @@ contains
         end do
      end do
      
-    call initialize_scalar_field_2d_discrete_alt( &
-         rho_n,&
+   rho_n_ptr => new_scalar_field_2d_discrete_alt( &
          sim%rho_n, &
          "rho_n", &
          sim%interp_rho, &     
@@ -368,28 +369,22 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
-         
-         
-             
-    rho_n_ptr => rho_n
+         sim%bc_top)     
+   
     
-    call initialize_scalar_field_2d_discrete_alt( &
-         rho_np1,&
-         sim%rho_np1, &
+    rho_np1_ptr => new_scalar_field_2d_discrete_alt( &
+         sim%rho_n, &
          "rho_np1", &
          sim%interp_rho, &     
          sim%transf, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)       
-           
-    rho_np1_ptr => rho_np1
+         sim%bc_top)                
   
-    call initialize_scalar_field_2d_discrete_alt( &
-         rho_nm1,&
-         sim%rho_nm1, &
+  
+   rho_nm1_ptr => new_scalar_field_2d_discrete_alt( &
+         sim%rho_n, &
          "rho_nm1", &
          sim%interp_rho, &     
          sim%transf, &
@@ -398,9 +393,9 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
          
-    rho_nm1_ptr => rho_nm1
          
     ! Initialize the poisson plan before going into the main loop.
+    print *, 'Start 1...'
     sim%qns => new_general_qn_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
@@ -417,7 +412,7 @@ contains
          sim%mesh2d%eta2_min, & 
          sim%mesh2d%eta2_max ) 
     
-    
+    !print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
     call solve_quasi_neutral_eq_general_coords( &
             sim%qns, & 
             a11_field_mat, &
@@ -425,9 +420,36 @@ contains
             a21_field_mat, &
             a22_field_mat, &
             c_field, &
-            rho_n, &
+            rho_n_ptr, &
             phi )
-        
+  !          call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
+!            sim%dt,&
+!            sim%carac_case,&
+!            sim%bc_left, &
+!            sim%bc_bottom)
+!    !print *, 'finished solve_quasi_neutral_eq_general_coords before loop ...' 
+!    
+!        do j=1,nc_x2+1
+!        eta2=eta2_min+real(j-1,f64)*delta2
+!        do i=1,nc_x1+1
+!          eta1=eta1_min+real(i-1,f64)*delta1
+!          write(40,*) eta1,eta2,phi%value_at_point(eta1,eta2),rho_np1_ptr%values(i,j),rho_n_ptr%values(i,j)
+!        end do
+!     end do
+!     
+!     
+!     rho_tmp_ptr => rho_n_ptr
+!     rho_n_ptr => rho_np1_ptr
+!     rho_np1_ptr => rho_tmp_ptr
+!     
+!      do j=1,nc_x2+1
+!        eta2=eta2_min+real(j-1,f64)*delta2
+!        do i=1,nc_x1+1
+!          eta1=eta1_min+real(i-1,f64)*delta1
+!          write(60,*) eta1,eta2,rho_n_ptr%values(i,j)
+!        end do
+!     end do
+       
     call calcul_integral(rho_n_ptr,phi,&
        sim%spline_degree_eta1, &
        val_intg_L1,&
@@ -436,11 +458,11 @@ contains
        val_mass,&
        val_energy)
                         
-     write(30,*),itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
+     write(30,*),0.*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
     
     print*, ' ... finished initialization, entering main loop.'
     
-    
+   
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
@@ -467,116 +489,141 @@ contains
             c_field, &
             rho_n_ptr, &
             phi )
-       
-            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
+            !print *, 'advection started ...'
+            call advect_CG_curvilinear(rho_n_ptr,sim%rho_np1,phi,&
             sim%dt,&
             sim%carac_case,&
             sim%bc_left, &
             sim%bc_bottom)
-                  
-
-      case(2) 
-            !!'Semi-Lagrangian predictor-corrector scheme'  
-            call solve_quasi_neutral_eq_general_coords( &
-            sim%qns, & 
-            a11_field_mat, &
-            a12_field_mat, &
-            a21_field_mat, &
-            a22_field_mat, &
-            c_field, &
-            rho_n_ptr, &
-            phi )
-       
-            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-            sim%dt/2_f64,&
-            sim%carac_case,&
-            sim%bc_left, &
-            sim%bc_bottom)
-         
-            !!we just obtained f^(n+1/2)    
             
-            call solve_quasi_neutral_eq_general_coords( &
-            sim%qns, & 
-            a11_field_mat, &
-            a12_field_mat, &
-            a21_field_mat, &
-            a22_field_mat, &
-            c_field, &
-            rho_np1_ptr, &
-            phi )
-       
-            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-            sim%dt,&
-            sim%carac_case,&
+            rho_n_ptr => NULL()
+            rho_n_ptr => new_scalar_field_2d_discrete_alt( &
+            sim%rho_np1, &
+            "rho_np1", &
+            sim%interp_rho, &     
+            sim%transf, &
             sim%bc_left, &
-            sim%bc_bottom)           
-
-      case(3)
-           !Leap-frog scheme
-             if (itime==1) then
-           
-                call solve_quasi_neutral_eq_general_coords( &
-                sim%qns, & 
-                a11_field_mat, &
-                a12_field_mat, &
-                a21_field_mat, &
-                a22_field_mat, &
-                c_field, &
-                rho_n_ptr, &
-                phi )
-       
-               call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-               sim%dt/2_f64,&
-               sim%carac_case,&
-               sim%bc_left, &
-               sim%bc_bottom)
-         
-               !!we just obtained f^(n+1/2)    
-            
-               call solve_quasi_neutral_eq_general_coords( &
-               sim%qns, & 
-               a11_field_mat, &
-               a12_field_mat, &
-               a21_field_mat, &
-               a22_field_mat, &
-               c_field, &
-               rho_np1_ptr, &
-               phi )
-       
-               call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-               sim%dt,&
-               sim%carac_case,&
-               sim%bc_left, &
-               sim%bc_bottom)
-              
-             else 
+            sim%bc_right, &
+            sim%bc_bottom, &
+            sim%bc_top)  
              
-               call solve_quasi_neutral_eq_general_coords( &
-                sim%qns, & 
-                a11_field_mat, &
-                a12_field_mat, &
-                a21_field_mat, &
-                a22_field_mat, &
-                c_field, &
-                rho_n_ptr, &
-                phi )
-       
-               call advect_CG_curvilinear(rho_nm1_ptr,rho_np1_ptr,phi,&
-               sim%dt*2_f64,&
-               sim%carac_case,&
-               sim%bc_left, &
-               sim%bc_bottom)
-               
-             end if
-              rho_tmp_ptr => rho_nm1
-              rho_nm1_ptr => rho_n
-       case default
-       
-           print*,'#no scheme defined'
+            !print *, 'advection finished ...'
+           ! rho_tmp_ptr => rho_n_ptr
+           ! rho_n_ptr => rho_np1_ptr
+           ! rho_np1_ptr => rho_tmp_ptr
+            !rho_n_ptr%values = rho_np1_ptr%values    
+
+     ! case(2) 
+!            !!'Semi-Lagrangian predictor-corrector scheme'  
+!            call solve_quasi_neutral_eq_general_coords( &
+!            sim%qns, & 
+!            a11_field_mat, &
+!            a12_field_mat, &
+!            a21_field_mat, &
+!            a22_field_mat, &
+!            c_field, &
+!            rho_n_ptr, &
+!            phi )
+!       
+!            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
+!            sim%dt/2_f64,&
+!            sim%carac_case,&
+!            sim%bc_left, &
+!            sim%bc_bottom)
+!         
+!            !!we just obtained f^(n+1/2)    
+!            
+!            call solve_quasi_neutral_eq_general_coords( &
+!            sim%qns, & 
+!            a11_field_mat, &
+!            a12_field_mat, &
+!            a21_field_mat, &
+!            a22_field_mat, &
+!            c_field, &
+!            rho_np1_ptr, &
+!            phi )
+!       
+!            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
+!            sim%dt,&
+!            sim%carac_case,&
+!            sim%bc_left, &
+!            sim%bc_bottom)      
+!            
+!            !rho_tmp_ptr => rho_n
+!            !rho_n_ptr => rho_np1
+!            !rho_np1_ptr => rho_tmp_ptr     
+!
+!      case(3)
+!           !Leap-frog scheme
+!             if (itime==1) then
+!           
+!                call solve_quasi_neutral_eq_general_coords( &
+!                sim%qns, & 
+!                a11_field_mat, &
+!                a12_field_mat, &
+!                a21_field_mat, &
+!                a22_field_mat, &
+!                c_field, &
+!                rho_n_ptr, &
+!                phi )
+!       
+!               call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
+!               sim%dt/2_f64,&
+!               sim%carac_case,&
+!               sim%bc_left, &
+!               sim%bc_bottom)
+!         
+!               !!we just obtained f^(n+1/2)    
+!            
+!               call solve_quasi_neutral_eq_general_coords( &
+!               sim%qns, & 
+!               a11_field_mat, &
+!               a12_field_mat, &
+!               a21_field_mat, &
+!               a22_field_mat, &
+!               c_field, &
+!               rho_np1_ptr, &
+!               phi )
+!       
+!               call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
+!               sim%dt,&
+!               sim%carac_case,&
+!               sim%bc_left, &
+!               sim%bc_bottom)
+!               
+!               !rho_tmp_ptr => rho_n
+!               !rho_n_ptr => rho_np1
+!               !rho_np1_ptr => rho_tmp_ptr
+!              
+!             else 
+!             
+!               call solve_quasi_neutral_eq_general_coords( &
+!                sim%qns, & 
+!                a11_field_mat, &
+!                a12_field_mat, &
+!                a21_field_mat, &
+!                a22_field_mat, &
+!                c_field, &
+!                rho_n_ptr, &
+!                phi )
+!       
+!               call advect_CG_curvilinear(rho_nm1_ptr,rho_np1_ptr,phi,&
+!               sim%dt*2_f64,&
+!               sim%carac_case,&
+!               sim%bc_left, &
+!               sim%bc_bottom)
+!               
+!             end if
+!             ! rho_tmp_ptr => rho_nm1
+!             ! rho_nm1_ptr => rho_n
+!             ! rho_n_ptr => rho_np1
+!             ! rho_np1_ptr => rho_tmp_ptr
+!       case default
+!       
+!           print*,'#no scheme defined'
     end select
  
-    rho_n_ptr => rho_np1
-    rho_np1_ptr => rho_tmp_ptr
+    
   
     call calcul_integral(rho_n_ptr,phi,&
        sim%spline_degree_eta1, &
@@ -589,7 +636,7 @@ contains
      write(30,*),itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
     
      if (itime==1 .or. ((itime/sim%visu_step)*sim%visu_step==itime)) then
-     call plot_f1(rho_n%values,sim,itime)
+     call plot_f1(rho_n_ptr,sim,itime)
      endif
      
     end do ! main loop
@@ -612,12 +659,11 @@ contains
 
     implicit none
     
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n
-    class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1
+    sll_real64, dimension(:,:), pointer ::  rho_np1
+    class(sll_scalar_field_2d_discrete_alt), pointer     :: rho_n
     type(sll_scalar_field_2d_discrete_alt) , pointer      :: phi
     class(sll_coordinate_transformation_2d_base), pointer :: T
     type(sll_logical_mesh_2D), pointer :: M
-    sll_real64, dimension(:,:), pointer :: jac_array
     sll_real64 :: eta1_loc,eta2_loc,eta1,eta1n,eta2,eta20,eta2n,tolr
     sll_real64 :: a_eta1,a_eta2,eta10,eta2_min,eta2_max 
     sll_real64 :: dt, delta_eta1, delta_eta2, eta1_min, eta1_max
@@ -638,13 +684,12 @@ contains
     eta2_max = M%eta2_max
     delta_eta1 = M%delta_eta1
     delta_eta2 = M%delta_eta2
+    !print*,N_eta1 ,N_eta2,eta1_min,eta1_max,eta2_min,eta2_max
     
-    rho_np1%values=0._f64
+    rho_np1=0._f64
     
     if (carac_case==1) then
        !explicit Euler with linear interpolation  
-      
-       rho_np1%values = rho_n%values 
        do j=1,N_eta2+1
           do i=1,N_eta1+1
              eta1=eta1_min+real(i-1,f64)*delta_eta1
@@ -682,7 +727,7 @@ contains
                 endif
 
              
-             rho_np1%values(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*rho_n%values(k_eta1,k_eta2) &
+             rho_np1(i,j)=(1.0_f64-eta2_loc)*((1.0_f64-eta1_loc)*rho_n%values(k_eta1,k_eta2) &
              &+eta1_loc*rho_n%values(k_eta1+1,k_eta2)) +eta2_loc*((1.0_f64-eta1_loc)* &
              & rho_n%values(k_eta1,k_eta2+1)+eta1_loc*rho_n%values(k_eta1+1,k_eta2+1))
             
@@ -693,19 +738,18 @@ contains
 
   if (carac_case==2) then
       !explicit Euler with "Spline interpolation"
-       do i=1,N_eta1+1
-          do j=1,N_eta2+1
-
+       do j=1,N_eta2+1
+          do i=1,N_eta1+1
+            
              eta10=eta1_min+real(i-1,f64)*delta_eta1
              eta20=eta2_min+real(j-1,f64)*delta_eta2
-        
-             eta2=eta20+(dt*phi%first_deriv_eta1_value_at_point(eta10,eta20)/T%jacobian(eta10,eta20))
-             eta1=eta10-(dt*phi%first_deriv_eta2_value_at_point(eta10,eta20)/T%jacobian(eta10,eta20))
+             eta2=eta20+(dt*phi%first_deriv_eta1_value_at_point(eta10,eta20)) !/T%jacobian(eta10,eta20))
+             eta1=eta10-(dt*phi%first_deriv_eta2_value_at_point(eta10,eta20)) !/T%jacobian(eta10,eta20))
 
              call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,&
                 &eta1,eta2)
                 
-             rho_np1%values(i,j)=rho_n%value_at_point(eta1,eta2)
+             rho_np1(i,j)=rho_n%value_at_point(eta1,eta2)
 
           end do
        end do
@@ -713,7 +757,7 @@ contains
   end if
 
     
-    if (carac_case==5) then
+    if (carac_case==3) then
        !using fixed point method
     
        !initialization
@@ -802,7 +846,7 @@ contains
              eta2=eta20-2.0_f64*a_eta2
             call correction_BC(bc1_type,bc2_type,eta1_min,eta1_max, & 
                              & eta2_min,eta2_max,eta1,eta2)   
-            rho_np1%values(i,j)=rho_n%value_at_point(eta1,eta2)
+            rho_np1(i,j)=rho_n%value_at_point(eta1,eta2)
 
           end do
 
@@ -813,8 +857,8 @@ contains
 
 
 
-    if(bc2_type==sll_PERIODIC) rho_np1%values(:,N_eta2+1)=rho_np1%values(:,1) 
-    if(bc1_type==sll_PERIODIC) rho_np1%values(N_eta1+1,:)=rho_np1%values(1,:)
+    if(bc2_type==sll_PERIODIC) rho_np1(:,N_eta2+1)=rho_np1(:,1) 
+    if(bc1_type==sll_PERIODIC) rho_np1(N_eta1+1,:)=rho_np1(1,:)
  
 
   end subroutine advect_CG_curvilinear
@@ -913,7 +957,7 @@ subroutine calcul_integral(rho_n,phi,&
     !call pointgauss(spline_degree)    
     gauss_x = 0.0
     gauss_w = 0.0
-
+   
       ! set Gauss points and weights            
       select case(spline_degree+1)
       
@@ -955,6 +999,7 @@ subroutine calcul_integral(rho_n,phi,&
       end select
       
     size_ptgauss = size(gauss_x)
+
     do my=1,N_eta2
 
        et2i  = eta2_min + (my-1)*delta_eta2
@@ -972,15 +1017,16 @@ subroutine calcul_integral(rho_n,phi,&
                 ptgaussx=  0.5_8*delta_eta1*(gauss_x(jg)+1)+ et1i
                 wgaussptx= 0.5_8*delta_eta1*gauss_w(jg)
                 
-                valjac = T%jacobian(ptgaussx,ptgaussy)
                 jac_m =  T%jacobian_matrix(ptgaussx,ptgaussy)
                 valdx_1 = jac_m(1,1)    !dx/deta1
                 valdx_2 = jac_m(1,2)    !dx/deta2
                 valdy_1 = jac_m(2,1)    !dy/deta1
                 valdy_2 = jac_m(2,2)    !dy/deta2
                 
+                valjac = 1. !T%jacobian(ptgaussx,ptgaussy)
+        
                 valf = rho_n%value_at_point(ptgaussx,ptgaussy)
-                
+               
                 valEx = phi%first_deriv_eta1_value_at_point(ptgaussx,ptgaussy)
                 valEy = phi%first_deriv_eta2_value_at_point(ptgaussx,ptgaussy)
                         
@@ -1015,7 +1061,9 @@ subroutine plot_f1(rho,sim,itime)!
   sll_int32 :: file_id, hfile_id
   sll_int32 :: error
   type(sll_simulation_2d_guiding_center_generalized) :: sim
-  sll_real64, dimension (:,:), intent(in):: rho
+  !sll_real64, dimension (:,:), intent(in):: rho
+  class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
+  sll_real64, dimension(:,:),allocatable :: f
   sll_real64, dimension(:,:),allocatable :: x1
   sll_real64, dimension(:,:),allocatable :: x2
   sll_int32 :: i, j
@@ -1048,12 +1096,20 @@ subroutine plot_f1(rho,sim,itime)!
      deallocate(x1)
      deallocate(x2)
   end if
-
+  
+  SLL_ALLOCATE(f(nnodes_x1,nnodes_x2),error)
+  do j=1,nnodes_x2
+    do i=1,nnodes_x1
+      f(i,j) = rho%value_at_indices(i,j)
+    enddo
+  enddo  
+   
   call int2string(itime,cplot)
   call sll_xdmf_open("rho"//cplot//".xmf","curvilinear_mesh",nnodes_x1,nnodes_x2,file_id,error)
-  call sll_xdmf_write_array("rho"//cplot,rho,"values",error,file_id,"Node")
+  call sll_xdmf_write_array("rho"//cplot,f,"values",error,file_id,"Node")
   call sll_xdmf_close(file_id,error)!
-!
+
+  deallocate(f)
  end subroutine plot_f1
 
 end module sll_simulation_2d_guiding_center_generalized_coords_module
