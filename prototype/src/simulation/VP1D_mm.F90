@@ -57,7 +57,7 @@ program VP1d_deltaf
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
-  sll_int32  :: freqdiag
+  sll_int32  :: freqdiag = 1
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
   sll_real64 :: l1norm, l2norm
   sll_real64 :: equilibrium_contrib
@@ -78,6 +78,7 @@ program VP1d_deltaf
   sll_real64 :: time1
   sll_int32  :: error, file_id
   character(len=4) :: cstep
+  character(len=32) :: dsetname
 
   ! namelists for data input
   namelist / geom / xmin, Ncx, nbox, vmin, vmax, Ncv, iHmin, iHmax, iraf
@@ -352,7 +353,7 @@ program VP1d_deltaf
   close(12)
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(f, DIM = 2)
   else
@@ -612,7 +613,11 @@ program VP1d_deltaf
        
         write(adr_diag,'(2g15.5)') istep*dt, adr
         print*, 'iteration: ', istep
-!        call write_scalar_field_2d(f) 
+        !call write_scalar_field_2d(f) 
+        call int2string(istep,cstep)
+        call sll_hdf5_file_create("f"//cstep//".h5",file_id,error)
+        call sll_hdf5_write_array(file_id,f,"f",error)
+        call sll_hdf5_file_close(file_id, error)
      end if
 
 #ifdef tomp

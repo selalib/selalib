@@ -19,8 +19,10 @@ module sll_arbitrary_degree_spline_interpolator_2d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h" 
+  use sll_timer
 #ifdef STDF95
 use sll_boundary_condition_descriptors
+!use sll_constants
 #else
 use sll_module_interpolators_2d_base
 #endif
@@ -94,6 +96,52 @@ contains
     SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
   end subroutine delete_arbitrary_degree_2d_interpolator
 
+  function new_arbitrary_degree_spline_interpolator_2d( &
+    num_pts1, &
+    num_pts2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top, &
+    spline_degree1, &
+    spline_degree2 ) result( res )
+
+    type(arb_deg_2d_interpolator), pointer :: res
+    sll_int32, intent(in) :: num_pts1
+    sll_int32, intent(in) :: num_pts2
+    sll_real64, intent(in) :: eta1_min
+    sll_real64, intent(in) :: eta1_max
+    sll_real64, intent(in) :: eta2_min
+    sll_real64, intent(in) :: eta2_max
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: bc_bottom
+    sll_int32, intent(in) :: bc_top
+    sll_int32, intent(in) :: spline_degree1
+    sll_int32, intent(in) :: spline_degree2
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(res,ierr)
+    call initialize_ad2d_interpolator( &
+         res, &
+         num_pts1, &
+         num_pts2, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         bc_left, &
+         bc_right, &
+         bc_bottom, &
+         bc_top, &
+         spline_degree1, &
+         spline_degree2 )
+  end function new_arbitrary_degree_spline_interpolator_2d
+
 #ifdef STDF95
   subroutine arbitrary_degree_spline_interp2d_initialize( &
 #else
@@ -134,6 +182,9 @@ contains
     sll_int32 :: tmp1
     sll_int32 :: tmp2
     sll_int64 :: bc_selector
+    ! only for troubleshooting
+!!$    type(sll_time_mark) :: tm
+!!$    sll_real64 :: time
 
 
     ! do some argument checking...
@@ -201,6 +252,7 @@ contains
        bc_selector = bc_selector + 2048
     end if
 
+   
     interpolator%spline_degree1 = spline_degree1
     interpolator%spline_degree2 = spline_degree2
     interpolator%eta1_min = eta1_min
@@ -215,33 +267,35 @@ contains
     interpolator%num_pts1 = num_pts1
     interpolator%num_pts2 = num_pts2
 
+    ! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
     select case (bc_selector)
     case (0) ! 1. periodic-periodic
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-       tmp1 = num_pts1*num_pts1 !+ 2*spline_degree1
-       tmp2 = num_pts2*num_pts2 !+ 2*spline_degree2
+       !  tmp1 et tmp2 sont des limites suffisantes mais pas absolu 
+       tmp1 = num_pts1 + 4*spline_degree1!*num_pts1 !+ 2*spline_degree1
+       tmp2 = num_pts2 + 4*spline_degree2!*num_pts2 !+ 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(2*spline_degree2+2),ierr )
-       tmp1 = num_pts1*num_pts1! + spline_degree1 !- 1
-       tmp2 = num_pts2*num_pts2! + 2*spline_degree2
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
        SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1*num_pts1! + 2*spline_degree1
-       tmp2 = num_pts2*num_pts2 + spline_degree2 !- 1
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + 2*spline_degree1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case (585) ! 4. dirichlet in all sides
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-       tmp1 = num_pts1*num_pts1! + spline_degree1 !- 1
-       tmp2 = num_pts2*num_pts2! + spline_degree2 !- 1
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
     case default
@@ -249,9 +303,9 @@ contains
     end select
 
     interpolator%coeff_splines(:,:) = 0.0_f64
-    SLL_ALLOCATE( interpolator%t1(num_pts1*num_pts1),ierr)
+    SLL_ALLOCATE( interpolator%t1(tmp1),ierr)!num_pts1*num_pts1),ierr)
     !+ 2*(spline_degree1 + 1)), ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2*num_pts2),ierr) 
+    SLL_ALLOCATE( interpolator%t2(tmp2),ierr)!num_pts2*num_pts2),ierr) 
     !+ 2*(spline_degree2 + 1)), ierr)
 
     interpolator%t1(:) = 0.0_f64
@@ -682,7 +736,7 @@ contains
        interpolator%size_coeffs2 = sz2+1
        interpolator%size_t1 = order1 + sz1 + 1
        interpolator%size_t2 = order2 + sz2 + 1 
-       !print*, 'hello'
+
        !print*, period1,period2, sz1+1, sz2+1,order1,order2
        !print*, point_location_eta1,point_location_eta2
        !print*, size(data_array,1), size(data_array,2)
@@ -695,13 +749,14 @@ contains
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
+
        call spli2d_perper( &
             period1, sz1+1, order1, point_location_eta1, &
             period2, sz2+1, order2, point_location_eta2, &
             data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
             interpolator%t1(1:order1 + sz1 + 1), &
             interpolator%t2(1:order2 + sz2 + 1) )
-
+       !print*, 'PASS'
        !print*, '****************'
        !print*, interpolator%coeff_splines(1,1:sz2+1)
        !print*, interpolator%coeff_splines(2,1:sz2+1)
@@ -757,6 +812,9 @@ contains
             interpolator%t2(1:sz2+order2) )
 
     end select
+
+    SLL_DEALLOCATE(point_location_eta2,ierr)
+    SLL_DEALLOCATE(point_location_eta1,ierr)
   end subroutine !compute_interpolants_ad2d
 
 #ifdef STDF95
@@ -780,6 +838,9 @@ contains
     sll_int32 :: size_coeffs2
     sll_real64 :: bvalue2d
     sll_real64 :: res1,res2
+    sll_real64 :: tr 
+
+    tr = 3.141592653589793_8
 
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
@@ -819,7 +880,7 @@ contains
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
     end select
-          
+
     val = bvalue2d( &
          res1, &
          res2, &
@@ -830,7 +891,8 @@ contains
          interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2), &
          interpolator%t1(1:interpolator%size_t1), &
          interpolator%t2(1:interpolator%size_t2))
-  end function !interpolate_value_ad2d
+
+  end function interpolate_value_ad2d
 
 
 #ifdef STDF95

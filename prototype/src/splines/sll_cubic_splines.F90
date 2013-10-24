@@ -18,7 +18,7 @@
 !> \file sll_cubic_splines.F90
 !> \namespace sll_cubic_splines
 !> \brief  
-!> The splines module provides capabilities for data interpolation with 
+!> provides capabilities for data interpolation with 
 !> cubic B-splines and different boundary conditions
 !> \details
 !> (at the time of this writing: periodic, hermite). The data to be 
@@ -879,6 +879,9 @@ contains  ! ****************************************************************
     ! find the cell and offset for x
     do i=1,n
        x        = a_in(i)
+       if(.not.( (x .ge. spline%xmin) .and. (x .le. spline%xmax) ))then
+         print*, 'splines', x,  spline%xmin, spline%xmax
+      endif
        !print*, 'splines', x,  spline%xmin, spline%xmax
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh

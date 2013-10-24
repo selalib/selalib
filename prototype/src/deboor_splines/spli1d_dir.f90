@@ -43,8 +43,8 @@ subroutine spli1d_dir ( &
     ! print*, 'result', apr_tx
   
   !end if
-  ! print*, 'probleme de merde 2'
-!!$  print*, 'DE BOOR SPSLINE', apr_tx
+ 
+ ! print*, 'knot',apr_tx
   
   apr_Bcoef = 0.0_8
   do li_i = 1, ai_nx
@@ -55,12 +55,12 @@ subroutine spli1d_dir ( &
   !
   call splint ( &
        apr_taux,&
-       apr_Bcoef,&
+       apr_g,&
        apr_tx, &
        ai_nx,&
        ai_kx, &
        lpr_work31,&
-       apr_bcoef, &
+       apr_Bcoef, &
        li_iflag )
   
 !!$  print*, 'ok'

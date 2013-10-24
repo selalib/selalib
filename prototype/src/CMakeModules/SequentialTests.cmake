@@ -39,6 +39,10 @@ ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 
 ADD_TEST(NAME fft COMMAND test_fft)
 
+ADD_TEST(NAME reduction COMMAND test_reduction)
+SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
 IF(NOT STDF95)
    ADD_TEST(NAME utilities COMMAND test_utilities)
    ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
@@ -52,17 +56,29 @@ IF(NOT STDF95)
 #consider merging the following 2 tests
    ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
+   ADD_TEST(NAME arb_deg_spline_interpolator_1d COMMAND test_arb_deg_spline_interpolators_1d)
    ADD_TEST(NAME fields COMMAND test_scalar_field)
    ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
    ADD_TEST(NAME advection_field COMMAND test_advection_field)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
-   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_fields_alternative)
-   ADD_TEST(NAME general_coordinate_qns COMMAND test_qns_general_coordinates)
+   ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
+   ADD_TEST(NAME characteristics_2d_explicit_euler COMMAND test_characteristics_2d_explicit_euler)
+   ADD_TEST(NAME characteristics_2d_verlet COMMAND test_characteristics_2d_verlet)
+
+
 
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   SET_TESTS_PROPERTIES(general_coordinate_qns PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_verlet PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    IF(FFTW_ENABLED)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)

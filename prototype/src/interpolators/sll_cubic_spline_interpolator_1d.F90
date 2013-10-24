@@ -312,6 +312,33 @@ contains  ! ****************************************************************
 #endif
 
 
+  function new_cubic_spline_1d_interpolator( &
+    num_points, &
+    xmin, &
+    xmax, &
+    bc_type, &
+    slope_left, &
+    slope_right ) result(res)
+
+    type(cubic_spline_1d_interpolator),  pointer :: res
+    sll_int32,  intent(in)               :: num_points
+    sll_real64, intent(in)               :: xmin
+    sll_real64, intent(in)               :: xmax
+    sll_int32,  intent(in)               :: bc_type
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call initialize_cs1d_interpolator( &
+         res, &
+         num_points, &
+         xmin, &
+         xmax, &
+         bc_type, &
+         slope_left, &
+         slope_right )
+  end function new_cubic_spline_1d_interpolator
+
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 
@@ -352,6 +379,7 @@ contains  ! ****************************************************************
        interpolator%interpolation_points(i) = &
             interpolator%interpolation_points(i-1) + delta
     end do
+    interpolator%interpolation_points(num_points) = xmax
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
        interpolator%spline => new_spline_1D( &
@@ -388,7 +416,11 @@ contains  ! ****************************************************************
   end subroutine delete_cs1d
 
   subroutine set_coefficients_cs1d( interpolator, coeffs )
-    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(inout)  :: interpolator 
+#else
+    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator 
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -397,7 +429,11 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_cs1d(interpolator)
-    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(in)  :: interpolator 
+#else
+    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator 
+#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
     
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
