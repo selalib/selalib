@@ -215,7 +215,7 @@ module sll_fdistribu4d_DK
       do ix = 1,Npt1
         x = xgrid_2d(ix,iy)
         y = ygrid_2d(ix,iy)
-        r = polar_eta1(x,y)
+        r = polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
         func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
