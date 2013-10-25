@@ -5,7 +5,7 @@ module sll_simulation_2d_vlasov_poisson_cartesian
 ! main application is for KEEN waves
 
 !time mpirun -np 8 ./bin/test_2d_vp_cartesian keen
-!#define SLL_USE_MPI_GATHER2
+#define SLL_USE_MPI_GATHER2
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -15,6 +15,7 @@ module sll_simulation_2d_vlasov_poisson_cartesian
 #include "sll_poisson_solvers.h"
   use sll_collective
   use sll_remapper
+  use sll_buffer_loader_utilities_module
   use sll_constants
   !for mesh
   use sll_logical_meshes
@@ -283,8 +284,7 @@ contains
 
   subroutine run_vp2d_cartesian(sim)
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
-    sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init,buf_x1
-    sll_real64,dimension(:,:),pointer :: f_visu 
+    sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init!,buf_x1
     sll_real64,dimension(:),pointer :: rho,efield,e_app,rho_loc
     sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
     sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
@@ -342,9 +342,31 @@ contains
     sll_int32, parameter :: SLL_ORDER6VPnew2_VTV     = 10 
 
     sll_int32 ::conservative_case
-
-
     
+    
+    ! for parallelization (output of distribution function in one single file)
+    sll_int32, dimension(:), allocatable :: collective_displs
+    sll_int32, dimension(:), allocatable :: collective_recvcnts
+    sll_int32 :: collective_size
+    sll_real64,dimension(:,:),pointer :: f_visu 
+    sll_real64,dimension(:),pointer :: f_visu_buf1d
+    sll_real64,dimension(:),pointer :: f_x1_buf1d
+
+    np_x1 = sim%mesh2d%num_cells1+1
+    np_x2 = sim%mesh2d%num_cells2+1
+
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      SLL_ALLOCATE(f_visu(np_x1,np_x2),ierr)
+      SLL_ALLOCATE(f_visu_buf1d(np_x1*np_x2),ierr)
+    else
+      SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
+      SLL_ALLOCATE(f_visu_buf1d(1:0),ierr)          
+    endif
+
+    collective_size = sll_get_collective_size(sll_world_collective)
+    SLL_ALLOCATE(collective_displs(collective_size),ierr)
+    SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
+
     
 
     !read from namelist file
@@ -541,8 +563,6 @@ contains
     
     
     
-    np_x1 = sim%mesh2d%num_cells1+1
-    np_x2 = sim%mesh2d%num_cells2+1
     if(sll_get_collective_rank(sll_world_collective)==0)then
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
       pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
@@ -569,7 +589,7 @@ contains
     global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_init(local_size_x1,local_size_x2),ierr)    
-    SLL_ALLOCATE(buf_x1(local_size_x1,local_size_x2),ierr)    
+    SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
 
 
     !definition of remap
@@ -638,56 +658,31 @@ contains
       stop
     endif
     
-     
+    call compute_displacements_array_2d( &
+      layout_x1, &
+      collective_size, &
+      collective_displs )
+    collective_recvcnts = receive_counts_array_2d( &
+      layout_x1, &
+      collective_size )
 
-
-
-    !write initial function
-    if(sll_get_collective_rank(sll_world_collective)==0)then
-      print*, '#iteration: ', istep
-      SLL_ALLOCATE(f_visu(np_x1,np_x2),ierr)
-    else
-      SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
-    endif
-#ifdef SLL_USE_MPI_GATHER    
-    call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2), &
-      local_size_x1*local_size_x2, MPI_REAL8, f_visu, local_size_x1*local_size_x2,&
-      MPI_REAL8, 0, sll_world_collective%comm,ierr);
-#endif
-#ifdef SLL_USE_MPI_GATHER2
-    print *,'buf',sll_get_collective_rank(sll_world_collective), &
-      local_size_x1, &
-      local_size_x2, &
-      local_size_x1-size(buf_x1,1), &
-      local_size_x2-size(buf_x1,2)
-    print *,'f_visu',sll_get_collective_rank(sll_world_collective), &
-      size(f_visu,1), &
-      size(f_visu,2)
-    buf_x1(1:local_size_x1,1:local_size_x2)=f_x1(1:local_size_x1,1:local_size_x2)
-    call MPI_Gatherv( 
-      buf_x1, &
+    call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
+    call sll_collective_gatherv_real64( &
+      sll_world_collective, &
+      f_x1_buf1d, &
       sll_get_collective_rank(sll_world_collective), &
-      MPI_REAL8, &
-      f_visu, &
-      counts, & 
-      offsets, &
-      MPI_REAL8, &
+      collective_recvcnts, &
+      collective_displs, &
       0, &
-      sll_world_collective%comm, &
-      ierr)    
-    call MPI_Gather( buf_x1, &
-      local_size_x1*local_size_x2, MPI_DOUBLE_PRECISION, f_visu, local_size_x1*local_size_x2,&
-      MPI_DOUBLE_PRECISION, 0, sll_world_collective%comm,ierr)
-    print *,'end of gather'  
-#endif
+      f_visu_buf1d )
+    f_visu = reshape(f_visu_buf1d, shape(f_visu))
     if(sll_get_collective_rank(sll_world_collective)==0)then
-      print *,'#begin f0.bdat'                    
+      !print *,'#begin f0.bdat'                    
       call sll_binary_file_create('f0.bdat', file_id, ierr)
       call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
       call sll_binary_file_close(file_id,ierr)
-      SLL_DEALLOCATE(f_visu,ierr)
-      print *,'#finish f0.bdat'
-      stop                    
+      !print *,'#finish f0.bdat'
+      !stop                    
     endif
     
     
@@ -738,25 +733,22 @@ contains
     
     
     !write also initial deltaf function
-    if(sll_get_collective_rank(sll_world_collective)==0)then
-      !print*, '#iteration: ', istep
-      SLL_ALLOCATE(f_visu(np_x1,np_x2),ierr)
-    else
-      SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
-    endif
-#ifdef SLL_USE_MPI_GATHER    
-    call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2)&
-      -f_x1_init(1:local_size_x1,1:local_size_x2), &
-      local_size_x1*local_size_x2, MPI_REAL8, f_visu, local_size_x1*local_size_x2,&
-      MPI_REAL8, 0, sll_world_collective%comm,ierr);
-#endif
+    call load_buffer_2d( layout_x1, f_x1-f_x1_init, f_x1_buf1d )
+    call sll_collective_gatherv_real64( &
+      sll_world_collective, &
+      f_x1_buf1d, &
+      sll_get_collective_rank(sll_world_collective), &
+      collective_recvcnts, &
+      collective_displs, &
+      0, &
+      f_visu_buf1d )
+    f_visu = reshape(f_visu_buf1d, shape(f_visu))
 
 
     if(sll_get_collective_rank(sll_world_collective)==0)then
       !call sll_binary_file_create('f0.bdat', file_id, ierr)
       call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
     endif
-    SLL_DEALLOCATE(f_visu,ierr)
 
 
 
@@ -881,28 +873,21 @@ contains
           
         if (mod(istep,sim%freq_diag)==0) then          
           !we substract f0
-          f_x1 = f_x1-f_x1_init                    
+          !f_x1 = f_x1-f_x1_init                    
           !we gather in one file
-          if(sll_get_collective_rank(sll_world_collective)==0)then
-            print*, '#iteration: ', istep
-            SLL_ALLOCATE(f_visu(np_x1,np_x2),ierr)
-          else
-            SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
-          endif
-#ifdef SLL_USE_MPI_GATHER    
-          call MPI_Gather( f_x1(1:local_size_x1,1:local_size_x2), &
-            local_size_x1*local_size_x2, MPI_REAL8, f_visu, local_size_x1*local_size_x2,&
-            MPI_REAL8, 0, sll_world_collective%comm,ierr);
-#endif    
-          !print*, 'loc ', maxval(f_x1(1:local_size_x1,1:local_size_x2) )
-          call mpi_barrier(sll_world_collective%comm,ierr)
+          call load_buffer_2d( layout_x1, f_x1-f_x1_init, f_x1_buf1d )
+          call sll_collective_gatherv_real64( &
+            sll_world_collective, &
+            f_x1_buf1d, &
+            sll_get_collective_rank(sll_world_collective), &
+            collective_recvcnts, &
+            collective_displs, &
+            0, &
+            f_visu_buf1d )
+          f_visu = reshape(f_visu_buf1d, shape(f_visu))
           if(sll_get_collective_rank(sll_world_collective)==0) then
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)  
-            !print*, 'glob ',maxval(f_visu(1:np_x1-1,1:np_x2-1))                 
           endif
-          SLL_DEALLOCATE(f_visu,ierr)          
-          !we add f0
-          f_x1 = f_x1+f_x1_init          
         endif
           
 
