@@ -715,7 +715,15 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        whatever  ) 
   
-
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
@@ -934,7 +942,15 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever ) 
   
-
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_dirper, &
@@ -1146,6 +1162,16 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever ) 
   
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
+
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perper, &
        "rho5", &     
@@ -1375,6 +1401,16 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        whatever ) 
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perdir, &
@@ -1841,6 +1877,16 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_PERIODIC, &
        whatever ) 
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirper, &
@@ -2108,7 +2154,17 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
-  
+
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )  
   ! terme_source_interp => interp_2d_term_source
   
   rho => new_scalar_field_2d_discrete_alt( &
@@ -2424,6 +2480,16 @@ program test_general_elliptic_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   phi => new_scalar_field_2d_discrete_alt( &
        "phi9", &
@@ -2698,6 +2764,16 @@ program test_general_elliptic_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   phi => new_scalar_field_2d_discrete_alt( &
        "phi10", &
@@ -2938,7 +3014,15 @@ program test_general_elliptic_solver
   
   terme_source_interp => interp_2d_term_source
 
-
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_discrete_alt( &
        "rho11", &
@@ -3207,6 +3291,15 @@ program test_general_elliptic_solver
   
   terme_source_interp => interp_2d_term_source
 
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_discrete_alt( &
        "rho12", &
