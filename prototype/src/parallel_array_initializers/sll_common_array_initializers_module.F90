@@ -374,10 +374,10 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
 
     !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
     v=vy-t
-    yy=x-t*vy+t*t/2
+    yy=y-t*vy+t*t/2
     hh=1
     if ((v.gt.1).or.(v.lt.-1)) hh=0
-    sll_test_yvy_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(ky*(yy-v*t))
+    sll_test_yvy_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(ky*yy)
 
   end function sll_test_yvy_transport_initializer_v1v2x1x2
 
