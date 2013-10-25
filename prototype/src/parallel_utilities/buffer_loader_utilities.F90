@@ -1,12 +1,16 @@
 module sll_buffer_loader_utilities_module
-use collective
-use remap
+#include "sll_working_precision.h"
+#include "sll_assert.h"
+#include "sll_memory.h"
+
+use sll_collective
+use sll_remapper
 
 implicit none
 
 contains
 
-  ! the objective of this subroutine is to helpt to prepare data
+  ! the objective of this subroutine is to help to prepare data
   ! for gatherv operations for example
 
   subroutine compute_displacements_array_2d( layout, collective_size, disps )
