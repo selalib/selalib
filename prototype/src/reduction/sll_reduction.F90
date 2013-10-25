@@ -3,7 +3,9 @@ module sll_reduction_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_logical_meshes
+
+use sll_logical_meshes
+implicit none
 
   abstract interface
      function sll_integration_discrete_1d( data, Npts, delta, params ) result(res)
@@ -50,7 +52,7 @@ contains
     procedure(sll_integration_discrete_1d), optional :: integration_func
     sll_real64, dimension(:), optional :: integration_func_params
     sll_int32  :: i1, i2, i3, i4
-
+    sll_real64 :: tmp 
     
     
     if(Npts1>size(data_4d,1))then
@@ -78,7 +80,7 @@ contains
             do i4 = 2,Npts4-1
               tmp = tmp + data_4d(i1,i2,i3,i4)
             end do
-            data_3d(i1,i2,i3) = tmp*delta
+            data_3d(i1,i2,i3) = tmp*delta4
           end do
         end do
       end do
