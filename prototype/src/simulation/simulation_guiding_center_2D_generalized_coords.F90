@@ -249,9 +249,6 @@ contains
     class(sll_scalar_field_2d_base), pointer                :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer                :: a22_field_mat
     class(sll_scalar_field_2d_base), pointer                :: c_field
-   ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_n
-   ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_np1
-   ! type(sll_scalar_field_2d_discrete_alt),target               :: rho_nm1
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n_ptr
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1_ptr
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_nm1_ptr
@@ -310,7 +307,7 @@ contains
          sim%bc_bottom, &
          sim%bc_top)
        
-    print*,'pass 1'
+    !print*,'pass 1'
 
     SLL_ALLOCATE(phi_values(sim%mesh2d%num_cells1+1,sim%mesh2d%num_cells2+1),ierr)
     
@@ -327,7 +324,7 @@ contains
          sim%bc_top)
     call phi%set_field_data(phi_values)
     call phi%update_interpolation_coefficients( )
-    print*,'pass 3'
+    !print*,'pass 3'
     
     nc_x1 = sim%mesh2d%num_cells1
     nc_x2 = sim%mesh2d%num_cells2
@@ -396,7 +393,7 @@ contains
     call rho_nm1_ptr%set_field_data(sim%rho_n)     
      call rho_nm1_ptr%update_interpolation_coefficients( )    
     ! Initialize the poisson plan before going into the main loop.
-
+    print *,'Initialize the poisson plan before going into the main loop.'
     sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
@@ -415,6 +412,7 @@ contains
  
     
      ! compute matrix the field
+    print *,'Compute matrix the field'
     call factorize_mat_es(&
        sim%qns, &
        a11_field_mat, &
@@ -424,39 +422,12 @@ contains
        c_field)
        
   
-    !print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
+    print *, 'started solve_quasi_neutral_eq_general_coords before loop ...'
     call solve_general_coordinates_elliptic_eq( &
             sim%qns, & 
             rho_n_ptr, &
             phi )
         
-  !          call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-!            sim%dt,&
-!            sim%carac_case,&
-!            sim%bc_left, &
-!            sim%bc_bottom)
-!    !print *, 'finished solve_quasi_neutral_eq_general_coords before loop ...' 
-!    
-!        do j=1,nc_x2+1
-!        eta2=eta2_min+real(j-1,f64)*delta2
-!        do i=1,nc_x1+1
-!          eta1=eta1_min+real(i-1,f64)*delta1
-!          write(40,*) eta1,eta2,phi%value_at_point(eta1,eta2),rho_np1_ptr%values(i,j),rho_n_ptr%values(i,j)
-!        end do
-!     end do
-!     
-!     
-!     rho_tmp_ptr => rho_n_ptr
-!     rho_n_ptr => rho_np1_ptr
-!     rho_np1_ptr => rho_tmp_ptr
-!     
-!      do j=1,nc_x2+1
-!        eta2=eta2_min+real(j-1,f64)*delta2
-!        do i=1,nc_x1+1
-!          eta1=eta1_min+real(i-1,f64)*delta1
-!          write(60,*) eta1,eta2,rho_n_ptr%values(i,j)
-!        end do
-!     end do
        
     call calcul_integral(rho_n_ptr,phi,&
        sim%spline_degree_eta1, &
@@ -489,13 +460,6 @@ contains
             
             !Classical semi-Lagrangian scheme (order 1)
              ! compute matrix the field
-            !call factorize_mat_es(&
-            !sim%qns, &
-            !a11_field_mat, &
-            !a12_field_mat,&
-            !a21_field_mat,&
-            !a22_field_mat,&
-            !c_field)
             
             call solve_general_coordinates_elliptic_eq( &
             sim%qns, & 
@@ -507,100 +471,96 @@ contains
             sim%carac_case,&
             sim%bc_left, &
             sim%bc_bottom)
-        
             
             call rho_n_ptr%set_field_data(sim%rho_np1)
             call rho_n_ptr%update_interpolation_coefficients( )
-            !print *, 'advection finished ...'
-           ! rho_tmp_ptr => rho_n_ptr
-           ! rho_n_ptr => rho_np1_ptr
-           ! rho_np1_ptr => rho_tmp_ptr
-            !rho_n_ptr%values = rho_np1_ptr%values    
+            
 
-     ! case(2) 
-!            !!'Semi-Lagrangian predictor-corrector scheme'  
-!            call solve_general_coordinates_elliptic_eq( &
-!            sim%qns, & 
-!            rho_n_ptr, &
-!            phi )
-!       
-!            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-!            sim%dt/2_f64,&
-!            sim%carac_case,&
-!            sim%bc_left, &
-!            sim%bc_bottom)
-!         
-!            !!we just obtained f^(n+1/2)    
-!            
-!            call solve_general_coordinates_elliptic_eq( &
-!            sim%qns, & 
-!            rho_np1_ptr, &
-!            phi )
-!       
-!            call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-!            sim%dt,&
-!            sim%carac_case,&
-!            sim%bc_left, &
-!            sim%bc_bottom)      
-!            
-!            !rho_tmp_ptr => rho_n
-!            !rho_n_ptr => rho_np1
-!            !rho_np1_ptr => rho_tmp_ptr     
-!
-!      case(3)
-!           !Leap-frog scheme
-!             if (itime==1) then
-!           
-!                call solve_general_coordinates_elliptic_eq( &
-!                sim%qns, & 
-!                rho_n_ptr, &
-!                phi )
-!       
-!               call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-!               sim%dt/2_f64,&
-!               sim%carac_case,&
-!               sim%bc_left, &
-!               sim%bc_bottom)
-!         
-!               !!we just obtained f^(n+1/2)    
-!            
-!               call solve_general_coordinates_elliptic_eq( &
-!               sim%qns, & 
-!               c_field, &
-!               rho_np1_ptr, &
-!               phi )
-!       
-!               call advect_CG_curvilinear(rho_n_ptr,rho_np1_ptr,phi,&
-!               sim%dt,&
-!               sim%carac_case,&
-!               sim%bc_left, &
-!               sim%bc_bottom)
-!               
-!               !rho_tmp_ptr => rho_n
-!               !rho_n_ptr => rho_np1
-!               !rho_np1_ptr => rho_tmp_ptr
-!              
-!             else 
-!             
-!               call solve_general_coordinates_elliptic_eq( &
-!                sim%qns, & 
-!                rho_n_ptr, &
-!                phi )
-!       
-!               call advect_CG_curvilinear(rho_nm1_ptr,rho_np1_ptr,phi,&
-!               sim%dt*2_f64,&
-!               sim%carac_case,&
-!               sim%bc_left, &
-!               sim%bc_bottom)
-!               
-!             end if
-!             ! rho_tmp_ptr => rho_nm1
-!             ! rho_nm1_ptr => rho_n
-!             ! rho_n_ptr => rho_np1
-!             ! rho_np1_ptr => rho_tmp_ptr
-!       case default
-!       
-!           print*,'#no scheme defined'
+   case(2) 
+            !!'Semi-Lagrangian predictor-corrector scheme'  
+            call solve_general_coordinates_elliptic_eq( &
+            sim%qns, & 
+            rho_n_ptr, &
+            phi )
+       
+            call advect_CG_curvilinear(rho_n_ptr,sim%rho_np1,phi,&
+            sim%dt/2_f64,&
+            sim%carac_case,&
+            sim%bc_left, &
+            sim%bc_bottom)
+            
+            call rho_np1_ptr%set_field_data(sim%rho_np1)
+            call rho_np1_ptr%update_interpolation_coefficients( )
+            !!we just obtained f^(n+1/2)    
+            
+            call solve_general_coordinates_elliptic_eq( &
+            sim%qns, & 
+            rho_np1_ptr, &
+            phi )
+       
+            call advect_CG_curvilinear(rho_n_ptr,sim%rho_np1,phi,&
+            sim%dt,&
+            sim%carac_case,&
+            sim%bc_left, &
+            sim%bc_bottom)      
+            
+            call rho_n_ptr%set_field_data(sim%rho_np1)
+            call rho_n_ptr%update_interpolation_coefficients( )    
+
+      case(3)
+           !Leap-frog scheme
+             if (itime==1) then
+                call solve_general_coordinates_elliptic_eq( &
+                sim%qns, & 
+                rho_n_ptr, &
+                phi )
+       
+                call advect_CG_curvilinear(rho_n_ptr,sim%rho_np1,phi,&
+                sim%dt/2_f64,&
+                sim%carac_case,&
+                sim%bc_left, &
+                sim%bc_bottom)
+            
+                call rho_np1_ptr%set_field_data(sim%rho_np1)
+                call rho_np1_ptr%update_interpolation_coefficients( )
+             !!we just obtained f^(n+1/2)    
+            
+                call solve_general_coordinates_elliptic_eq( &
+                sim%qns, & 
+                rho_np1_ptr, &
+                phi )
+       
+                call advect_CG_curvilinear(rho_n_ptr,sim%rho_np1,phi,&
+                sim%dt,&
+                sim%carac_case,&
+                sim%bc_left, &
+                sim%bc_bottom)      
+            
+                call rho_n_ptr%set_field_data(sim%rho_np1)
+                call rho_n_ptr%update_interpolation_coefficients( ) 
+                
+             else 
+             
+               call solve_general_coordinates_elliptic_eq( &
+                sim%qns, & 
+                rho_n_ptr, &
+                phi )
+       
+               call advect_CG_curvilinear(rho_nm1_ptr,sim%rho_np1,phi,&
+               sim%dt*2_f64,&
+               sim%carac_case,&
+               sim%bc_left, &
+               sim%bc_bottom)
+               
+                call rho_n_ptr%set_field_data(sim%rho_np1)
+                call rho_n_ptr%update_interpolation_coefficients( ) 
+               
+             end if
+               call rho_nm1_ptr%set_field_data(sim%rho_np1)
+               call rho_nm1_ptr%update_interpolation_coefficients( )
+       case default
+       
+           print*,'#no scheme defined'
     end select
  
     
