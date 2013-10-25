@@ -110,7 +110,7 @@ program test_general_elliptic_solver
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
  ! epsi  =  0.000_f64
  ! epsi1 =  0.000_f64 ! penalization method
-  
+  sll_real64, dimension(1) :: whatever  ! dummy params array
   
   
 !!$  !*******************************************************************
@@ -165,7 +165,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
 
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -174,7 +175,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
 
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -183,7 +185,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever  ) 
 
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -192,7 +195,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever  ) 
 
 
   b1_field_vect => new_scalar_field_2d_analytic_alt( &
@@ -203,6 +207,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
+       whatever, & 
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero) 
 
@@ -214,6 +219,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
+       whatever, &
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
 
@@ -225,7 +231,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever  )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perper, &
@@ -234,7 +241,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever  )
 
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -422,7 +430,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
 
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -431,7 +440,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
 
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -440,7 +450,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
   
   a22_field_mat  => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -449,7 +460,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
   
 
   b1_field_vect => new_scalar_field_2d_analytic_alt( &
@@ -460,6 +472,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
+       whatever, &
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)  
 
@@ -471,6 +484,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
+       whatever, &
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
   
@@ -481,7 +495,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
@@ -490,7 +505,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
 
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -666,7 +682,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -675,7 +692,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -684,7 +702,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -693,7 +712,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
   
 
 
@@ -704,7 +724,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -767,6 +788,7 @@ program test_general_elliptic_solver
        a21_field_mat,&
        a22_field_mat,&
        c_field)
+  print *, 'factorized mass matrices'
 
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
@@ -779,6 +801,7 @@ program test_general_elliptic_solver
   
   t3e = time_elapsed_since(t_reference)
 
+  print *, 'solved for phi, proceeding to assess results...'
 
   acc3 = 0.0_f64
   normL2_3 = 0.0_f64
@@ -878,7 +901,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -887,7 +911,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -896,7 +921,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -905,7 +931,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
 
   
@@ -916,7 +943,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1085,7 +1113,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1094,7 +1123,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1103,7 +1133,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1112,9 +1143,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
-  
-
+       SLL_PERIODIC, &
+       whatever ) 
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perper, &
@@ -1123,7 +1153,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1312,7 +1343,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1321,7 +1353,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1330,7 +1363,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1339,9 +1373,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
-  
-
+       SLL_DIRICHLET, &
+       whatever ) 
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perdir, &
@@ -1350,7 +1383,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1539,7 +1573,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1548,7 +1583,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1557,7 +1593,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1566,9 +1603,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
-  
-
+       SLL_DIRICHLET, &
+       whatever ) 
 
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1577,7 +1613,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirdir, &
@@ -1586,7 +1623,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1771,7 +1809,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1780,7 +1819,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1789,7 +1829,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1798,9 +1839,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
-  
-
+       SLL_PERIODIC, &
+       whatever ) 
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirper, &
@@ -1809,7 +1849,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -2006,7 +2047,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2015,7 +2057,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2024,7 +2067,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2033,12 +2077,9 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
-  
-  
-  
-  
-  
+       SLL_PERIODIC, &
+       whatever ) 
+   
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2287,7 +2328,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever  ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2296,7 +2338,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2305,7 +2348,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2314,10 +2358,9 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
-  
-
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2562,7 +2605,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2571,7 +2615,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET)
+       SLL_DIRICHLET, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2580,7 +2625,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2589,11 +2635,9 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
-
-  
-
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2833,7 +2877,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2842,7 +2887,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET)
+       SLL_DIRICHLET, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2851,7 +2897,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2860,7 +2907,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
 
   allocate(point1(npts1))
   allocate(point2(npts2))
@@ -3098,7 +3146,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -3107,7 +3156,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -3116,7 +3166,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -3125,11 +3176,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC) 
-  
-
-  
-  
+       SLL_PERIODIC, &
+       whatever ) 
   
   SLL_ALLOCATE(point1(npts1),ierr)
   SLL_ALLOCATE(point2(npts2),ierr)
@@ -3424,7 +3472,7 @@ end program test_general_elliptic_solver
 function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 1.0_8
 end function func_one
@@ -3432,7 +3480,7 @@ end function func_one
 function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 0.0_8
 end function func_zero
@@ -3440,7 +3488,7 @@ end function func_zero
 function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 0.0_8
 end function func_epsi
