@@ -50,7 +50,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   ! number of local nodes in each element
   sll_int32 :: np_loc
-  sll_real64 :: eps=0._f64 !0 center flux, if not decentered flux
+  sll_real64 :: eps=0.0_f64 !0 center flux, if not decentered flux
 
   ! for initializers
   type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
@@ -596,7 +596,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
     !compute the charge density
     !recalculer dans maillage logical
     !call mpi_comm(sim)
-    sim%rho_x1=0.0_f64
+    !sim%rho_x1=0.0_f64
 
     !compute rho
 !!$    do i=1,loc_sz_x1
@@ -626,6 +626,9 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
                      sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)*sim%p(mm)
              enddo
           end do
+           !write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+           !write(*,*) 'rho_exact (',i,',',j,') = ', x_mil(i), (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
+
        enddo
     enddo
 !!$   do i=1,loc_sz_x1
@@ -647,15 +650,20 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 
     ! solve the poisson equation
     !maillage logical
+!!$    do i=1,loc_sz_x1
+!!$       write (*,*) 'rho = ', sim%rho_x1(i,:)
+!!$    enddo
+    !stop
     call solve_poisson_2d_periodic_cartesian_par_alt(sim%poisson_plan, &
          sim%rho_x1, &
-         sim%phi_x1(:,1:))
-!    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
- !   sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
+         sim%phi_x1(:,1:loc_sz_x2))
+    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
+    sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
 !!$    do i=1,loc_sz_x1
 !!$       write (*,*) 'phi = ', sim%phi_x1(i,:)
 !!$    enddo
-
+!!$    stop
+!!$
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
@@ -726,10 +734,10 @@ if(sim%test==1) then
              Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
                   sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-             if (Ey > 0) then
-               write(*,*) 'Ey', Ey
-             end if
-              
+!!$             if (Ey > 0) then
+!!$               write(*,*) 'Ey', Ey
+!!$             end if
+          !    write(*,*) 'Ex', Ex
 
               !write(*,*) 'entrer ici ou pas???????'
              det=sim%tx%jacobian(x1,x2)
@@ -745,12 +753,13 @@ if(sim%test==1) then
              sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                   sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
           end do
-          ! write(*,*) 'Ex', Ex
+          write(*,*) 'Ex', Ex
+          !stop
 
           !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
           !write(*,*) 'Enorm = ',sim%Enorm
        end do
-       
+       !stop
        !write(*,*) 'here4'
        !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
        write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
@@ -932,7 +941,7 @@ if(sim%test==1) then
  end if
 
 
- if(sim%test==4)then
+ if((sim%test==4).or.(sim%test==7))then
     allocate (f_y_exact(loc_sz_x2,loc_sz_v2))
     do i = 1, loc_sz_x2
        do j = 1, loc_sz_v2
@@ -1065,7 +1074,10 @@ if(sim%test==1) then
  elseif(sim%test==4)then
     write(file_id_2,*) -log(sim%mesh2dx%delta_eta2), log(erreurL2_G)
  elseif(sim%test==6)then
-    write(file_id_2,*) -log(sim%mesh2dx%delta_eta1), log(erreurL2_G)
+    write(file_id_2,*) -log(sim%mesh2dv%delta_eta1), log(erreurL2_G)
+    !write(file_id_2,*) -log(sim%dt), log(erreurL2_G)
+ elseif(sim%test==7)then
+    write(file_id_2,*) -log(sim%mesh2dx%delta_eta2), log(erreurL2_G)
  end if
 
 
@@ -1099,6 +1111,8 @@ if(sim%test==1) then
     write(*,*) 'Euler scheme'
  else if(sim%nsch == 1) then
     write (*,*) 'R-K second order'
+ else if(sim%nsch == 2) then
+    write (*,*) 'R-K  order 4'
  endif
  
 
@@ -1299,6 +1313,7 @@ subroutine velocity_mesh_connectivity(sim)
 
  SLL_ALLOCATE(sim%p(sim%np_v1*sim%np_v2),ierr)
  sim%p=0
+
  sim%M_low=0
  sim%M_sup=0
  sim%M_diag=0
@@ -1402,9 +1417,11 @@ subroutine velocity_mesh_connectivity(sim)
                               dphi2(1)*phi1*det*weight(iploc+1)*weight(jploc+1) 
                          bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)=&
                               bv2loc((jb1-1)*(sim%degree+1)+ib1,(jb2-1)*(sim%degree+1)+ib2)+&
-                              dphi2(2)*phi1*det*weight(iploc+1)*weight(jploc+1)    
+                              dphi2(2)*phi1*det*weight(iploc+1)*weight(jploc+1)  
+                         !write(*,*) 'phi1 =', phi1  
                       end do
                    end do
+                   !write(*,*), 'phi1 =', phi1
                    ploc((jb1-1)*(sim%degree+1)+ib1)=ploc((jb1-1)*(sim%degree+1)+ib1)+ &
                         phi1*det*weight(iploc+1)*weight(jploc+1)
                 end do
@@ -1415,6 +1432,7 @@ subroutine velocity_mesh_connectivity(sim)
        do ii=1,(sim%degree+1)**2
           i=sim%connec(ii,jc*sim%nc_v1+ic+1)
           sim%p(i)=sim%p(i)+ploc(ii)
+          !write(*,*) ii, i
        end do
 
        do ii=1,(sim%degree+1)**2
@@ -1538,7 +1556,11 @@ subroutine velocity_mesh_connectivity(sim)
 !!$ stop
  !write(*,*) 'dimension of matrix : ', sim%np_v1*sim%np_v2
  !write(*,*) 'nsky = ', sim%nsky
-!!$    write(*,*) 'matrix p : ', sim%p
+!!$  write(*,*) 'matrix p : '
+!!$   do i=1,sim%np_v2-1
+!!$     write(*,*)  sim%p((i-1)*sim%np_v1+1:i*sim%np_v1)
+!!$     write(*,*)
+!!$   end do
 !!$    stop
 
 !!$    !write(*,*) 'M diag', sim%Av2_diag
@@ -2235,18 +2257,18 @@ subroutine dtf(sim)
 !!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
 !!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
 !!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
-!!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-!!$            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-!!$            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(ic,jc))/ &
+       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
             sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc))/ &
+            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
             sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+!!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(ic,jc))/ &
+!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+!!$            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+!!$       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc))/ &
+!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+!!$            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta1*inv_jac(1,2)
        call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
             source)
 
