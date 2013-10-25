@@ -534,10 +534,7 @@ contains
                 sim%dt,&
                 sim%carac_case,&
                 sim%bc_left, &
-                sim%bc_bottom)      
-            
-                call rho_n_ptr%set_field_data(sim%rho_np1)
-                call rho_n_ptr%update_interpolation_coefficients( ) 
+                sim%bc_bottom)       
                 
              else 
              
@@ -552,17 +549,17 @@ contains
                sim%bc_left, &
                sim%bc_bottom)
                
-                call rho_n_ptr%set_field_data(sim%rho_np1)
-                call rho_n_ptr%update_interpolation_coefficients( ) 
-               
              end if
-               call rho_nm1_ptr%set_field_data(sim%rho_np1)
+                
+               call rho_nm1_ptr%set_field_data(sim%rho_n)
                call rho_nm1_ptr%update_interpolation_coefficients( )
+               sim%rho_n=sim%rho_np1
+               call rho_n_ptr%set_field_data(sim%rho_np1)
+               call rho_n_ptr%update_interpolation_coefficients( )
        case default
-       
            print*,'#no scheme defined'
     end select
- 
+    
     
   
     call calcul_integral(rho_n_ptr,phi,&
