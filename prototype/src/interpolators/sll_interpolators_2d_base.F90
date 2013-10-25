@@ -137,7 +137,14 @@ module sll_module_interpolators_2d_base
   end interface
 
   abstract interface
-     subroutine interpolator_2d_set_coeffs( interpolator, coeffs_1d, coeffs_2d )
+     subroutine interpolator_2d_set_coeffs( &
+          interpolator,&
+          coeffs_1d,&
+          coeffs_2d,&
+          coeff2d_size1,&
+          coeff2d_size2,&
+          knots1,&
+          knots2)
        use sll_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(inout) :: interpolator
@@ -145,6 +152,11 @@ module sll_module_interpolators_2d_base
        ! for more flexibility for the children classes.
        sll_real64, dimension(:), intent(in), optional   :: coeffs_1d
        sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
+       ! size coeffs 2D 
+       sll_int32, intent(in), optional :: coeff2d_size1
+       sll_int32, intent(in), optional :: coeff2d_size2
+       sll_real64, dimension(:), intent(in), optional   :: knots1
+       sll_real64, dimension(:), intent(in), optional   :: knots2
      end subroutine interpolator_2d_set_coeffs
   end interface
 
