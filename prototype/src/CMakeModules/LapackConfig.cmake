@@ -16,7 +16,7 @@ IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
       SET(BLAS_FOUND TRUE)
       SET(BLAS_LIBRARIES  " ")
 
-   ELSEIF($ENV{HOSTNAME} MATCHES "hydra") 
+   ELSEIF($ENV{HOSTNAME} MATCHES "hydra*") 
                                       
       INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
       SET(BLAS_LIBRARIES "")
