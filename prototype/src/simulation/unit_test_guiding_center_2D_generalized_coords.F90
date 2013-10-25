@@ -47,8 +47,8 @@ program gc_2d_general
   
   
   ! hardwired, this should be consistent with whatever is read from a file
-#define NCELL1 64
-#define NCELL2 64
+#define NCELL1 128
+#define NCELL2 128
 #define SPL_DEG1 2
 #define SPL_DEG2 2
 
@@ -66,7 +66,7 @@ landau_params(2)=0.015_f64
     simulation%dt = 0.1_f64
     simulation%num_iterations = 600
     simulation%carac_case = 3
-    simulation%time_scheme = 1
+    simulation%time_scheme = 2
     simulation%visu_step = 100
     simulation%nc_x1 = NCELL1
     simulation%nc_x2 = NCELL2
@@ -91,7 +91,7 @@ landau_params(2)=0.015_f64
 !  mx => new_logical_mesh_2d( NPTS1, NPTS2)
 
   ! coordinate transformation associated with space coordinates
-  transformation => new_coordinate_transformation_2d_analytic( &
+transformation => new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
        M, &
        identity_x1, &
@@ -100,6 +100,15 @@ landau_params(2)=0.015_f64
        identity_jac12, &
        identity_jac21, &
        identity_jac22 )
+! transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_polar_transformation", &
+!       M, &
+!       polar_x1, &
+!       polar_x2, &
+!       polar_jac11, &
+!       polar_jac12, &
+!       polar_jac21, &
+!       polar_jac22 )     
 
 ! transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_collela_transformation", &
