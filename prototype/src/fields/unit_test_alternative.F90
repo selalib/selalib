@@ -6,6 +6,7 @@ program unit_test_alternative
   use sll_module_scalar_field_2d_alternative
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
+  use helper_functions
   implicit none
 
 #define SPLINE_DEG1 3
@@ -22,16 +23,16 @@ program unit_test_alternative
   class(sll_coordinate_transformation_2d_base), pointer :: T
   ! either of these type declarations can be used to work. Initialization is
   ! different.
-  class(sll_scalar_field_2d_base), pointer              :: field_2d
+  class(sll_scalar_field_2d_base), pointer         :: field_2d
 
-  class(sll_scalar_field_2d_base), pointer              :: doubly_periodic_anal
-  class(sll_scalar_field_2d_base), pointer              :: periodique_dirichlet_anal
-  class(sll_scalar_field_2d_base), pointer              :: dirichlet_dirichlet_anal
-  class(sll_scalar_field_2d_base), pointer              :: dirichlet_periodique_anal
-  class(sll_scalar_field_2d_base), pointer              :: doubly_periodic_discrete
-  class(sll_scalar_field_2d_base), pointer              :: periodique_dirichlet_discrete
-  class(sll_scalar_field_2d_base), pointer              :: dirichlet_dirichlet_discrete
-  class(sll_scalar_field_2d_base), pointer              :: dirichlet_periodique_discrete
+  class(sll_scalar_field_2d_base), pointer         :: doubly_periodic_anal
+  class(sll_scalar_field_2d_base), pointer         :: periodique_dirichlet_anal
+  class(sll_scalar_field_2d_base), pointer         :: dirichlet_dirichlet_anal
+  class(sll_scalar_field_2d_base), pointer      :: dirichlet_periodique_anal
+  class(sll_scalar_field_2d_base), pointer      :: doubly_periodic_discrete
+  class(sll_scalar_field_2d_base), pointer      :: periodique_dirichlet_discrete
+  class(sll_scalar_field_2d_base), pointer      :: dirichlet_dirichlet_discrete
+  class(sll_scalar_field_2d_base), pointer      :: dirichlet_periodique_discrete
   sll_int32 :: nc1, nc2, iplot
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(:,:), pointer :: tab_values
@@ -56,18 +57,18 @@ program unit_test_alternative
   sll_int32 :: npts1,npts2
   sll_int32 :: i,j
   sll_int32 :: ierr
-  real(8), external :: test_function_perper
-  real(8), external :: test_function_perper_der1
-  real(8), external :: test_function_perper_der2
-  real(8), external :: test_function_perdir
-  real(8), external :: test_function_perdir_der1
-  real(8), external :: test_function_perdir_der2
-  real(8), external :: test_function_dirper
-  real(8), external :: test_function_dirper_der1
-  real(8), external :: test_function_dirper_der2
-  real(8), external :: test_function_dirdir
-  real(8), external :: test_function_dirdir_der1
-  real(8), external :: test_function_dirdir_der2
+!!$  real(8), external :: test_function_perper
+!!$  real(8), external :: test_function_perper_der1
+!!$  real(8), external :: test_function_perper_der2
+!!$  real(8), external :: test_function_perdir
+!!$  real(8), external :: test_function_perdir_der1
+!!$  real(8), external :: test_function_perdir_der2
+!!$  real(8), external :: test_function_dirper
+!!$  real(8), external :: test_function_dirper_der1
+!!$  real(8), external :: test_function_dirper_der2
+!!$  real(8), external :: test_function_dirdir
+!!$  real(8), external :: test_function_dirdir_der1
+!!$  real(8), external :: test_function_dirdir_der2
   
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
   sll_real64 :: normL2_5,normL2_6,normL2_7,normL2_8
@@ -136,6 +137,7 @@ program unit_test_alternative
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC,&
+       (/0.0_f64/), & ! could be anything in this case
        first_deriv_eta1=test_function_perper_der1,&
        first_deriv_eta2=test_function_perper_der2)
   print *, 'initialized field 2d'
@@ -150,9 +152,9 @@ program unit_test_alternative
         node_val   = doubly_periodic_anal%value_at_point(eta1,eta2)
         grad1_node_val = doubly_periodic_anal%first_deriv_eta1_value_at_point(eta1, eta2)
         grad2_node_val = doubly_periodic_anal%first_deriv_eta2_value_at_point(eta1, eta2)
-        ref        = test_function_perper(eta1,eta2)
-        grad1ref   = test_function_perper_der1(eta1,eta2)
-        grad2ref   = test_function_perper_der2(eta1,eta2)
+        ref        = test_function_perper(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_perper_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_perper_der2(eta1,eta2,(/0.0_f64/))
         
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
@@ -195,6 +197,7 @@ program unit_test_alternative
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
+       (/0.0_f64/), & ! could be anything
        first_deriv_eta1=test_function_perdir_der1,&
        first_deriv_eta2=test_function_perdir_der2) 
   print *, 'initialized field 2d'
@@ -209,11 +212,12 @@ program unit_test_alternative
         node_val   = periodique_dirichlet_anal%value_at_point(eta1,eta2)
         grad1_node_val = periodique_dirichlet_anal%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
-        grad2_node_val = periodique_dirichlet_anal%first_deriv_eta2_value_at_point(&
-                                                                              eta1, eta2)
-        ref        = test_function_perdir(eta1,eta2)
-        grad1ref   = test_function_perdir_der1(eta1,eta2)
-        grad2ref   = test_function_perdir_der2(eta1,eta2)
+        grad2_node_val = &
+             periodique_dirichlet_anal%first_deriv_eta2_value_at_point(&
+             eta1, eta2)
+        ref        = test_function_perdir(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_perdir_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_perdir_der2(eta1,eta2,(/0.0_f64/))
         
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
@@ -257,6 +261,7 @@ program unit_test_alternative
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
        SLL_PERIODIC,&
+       (/0.0_f64/), &
        first_deriv_eta1=test_function_dirper_der1,&
        first_deriv_eta2=test_function_dirper_der2)
 
@@ -272,11 +277,12 @@ program unit_test_alternative
         node_val   = dirichlet_periodique_anal%value_at_point(eta1,eta2)
         grad1_node_val = dirichlet_periodique_anal%first_deriv_eta1_value_at_point(&
                                                                               eta1, eta2)
-        grad2_node_val = dirichlet_periodique_anal%first_deriv_eta2_value_at_point(&
-                                                                              eta1, eta2)
-        ref        = test_function_dirper(eta1,eta2)
-        grad1ref   = test_function_dirper_der1(eta1,eta2)
-        grad2ref   = test_function_dirper_der2(eta1,eta2)
+        grad2_node_val = &
+             dirichlet_periodique_anal%first_deriv_eta2_value_at_point(&
+             eta1, eta2)
+        ref        = test_function_dirper(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_dirper_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_dirper_der2(eta1,eta2,(/0.0_f64/))
         
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
@@ -319,6 +325,7 @@ program unit_test_alternative
        SLL_DIRICHLET,&
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
+       (/0.0_f64/), &
        first_deriv_eta1= test_function_dirdir_der1,&
        first_deriv_eta2=test_function_dirdir_der2)
   
@@ -336,9 +343,9 @@ program unit_test_alternative
                                                                               eta1, eta2)
         grad2_node_val = dirichlet_dirichlet_anal%first_deriv_eta2_value_at_point(&
                                                                               eta1, eta2)
-        ref        = test_function_dirdir(eta1,eta2)
-        grad1ref   = test_function_dirdir_der1(eta1,eta2)
-        grad2ref   = test_function_dirdir_der2(eta1,eta2)
+        ref        = test_function_dirdir(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_dirdir_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_dirdir_der2(eta1,eta2,(/0.0_f64/))
         
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
@@ -386,7 +393,7 @@ program unit_test_alternative
      do i=1,nc1 + 1
         point1(i)       = real(i-1,f64)*h1 + ETA1MIN 
         point2(j)       = real(j-1,f64)*h2 + ETA2MIN 
-        tab_values(i,j)  = test_function_perper(point1(i),point2(j) )
+        tab_values(i,j)  = test_function_perper(point1(i),point2(j),(/0.0_f64/))
      end do
   end do
   
@@ -441,9 +448,9 @@ program unit_test_alternative
                                                                               eta1, eta2)
         grad2_node_val = doubly_periodic_discrete%first_deriv_eta2_value_at_point(&
                                                                               eta1, eta2)
-        ref        = test_function_perper(eta1,eta2)
-        grad1ref   = test_function_perper_der1(eta1,eta2)
-        grad2ref   = test_function_perper_der2(eta1,eta2)
+        ref        = test_function_perper(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_perper_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_perper_der2(eta1,eta2,(/0.0_f64/))
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
                 'theoretical = ', ref, 'difference=', node_val-ref
@@ -485,7 +492,7 @@ program unit_test_alternative
      do i=1,nc1 + 1
         point1(i)       = real(i-1,f64)*h1 + ETA1MIN 
         point2(j)       = real(j-1,f64)*h2 + ETA2MIN 
-        tab_values(i,j)  = test_function_perdir(point1(i),point2(j) )
+        tab_values(i,j)  = test_function_perdir(point1(i),point2(j),(/0.0_f64/))
      end do
   end do
   
@@ -536,13 +543,15 @@ program unit_test_alternative
         eta1 = real(i-1,f64)*h1 + ETA1MIN 
         eta2 = real(j-1,f64)*h2 + ETA2MIN
         node_val   = periodique_dirichlet_discrete%value_at_point(eta1,eta2)
-        grad1_node_val = periodique_dirichlet_discrete%first_deriv_eta1_value_at_point(&
-                                                                              eta1, eta2)
-        grad2_node_val = periodique_dirichlet_discrete%first_deriv_eta2_value_at_point(&
-                                                                              eta1, eta2)
-        ref        = test_function_perdir(eta1,eta2)
-        grad1ref   = test_function_perdir_der1(eta1,eta2)
-        grad2ref   = test_function_perdir_der2(eta1,eta2)
+        grad1_node_val = &
+             periodique_dirichlet_discrete%first_deriv_eta1_value_at_point(&
+             eta1, eta2)
+        grad2_node_val = &
+             periodique_dirichlet_discrete%first_deriv_eta2_value_at_point(&
+             eta1, eta2)
+        ref        = test_function_perdir(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_perdir_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_perdir_der2(eta1,eta2,(/0.0_f64/))
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
                 'theoretical = ', ref, 'difference=', node_val-ref
@@ -589,7 +598,7 @@ program unit_test_alternative
      do i=1,nc1 + 1
         point1(i)       = real(i-1,f64)*h1 + ETA1MIN 
         point2(j)       = real(j-1,f64)*h2 + ETA2MIN 
-        tab_values(i,j)  = test_function_dirper(point1(i),point2(j) )
+        tab_values(i,j)  = test_function_dirper(point1(i),point2(j),(/0.0_f64/))
      end do
   end do
   
@@ -644,9 +653,9 @@ program unit_test_alternative
                                                                               eta1, eta2)
         grad2_node_val = dirichlet_periodique_discrete%first_deriv_eta2_value_at_point(&
                                                                               eta1, eta2)
-        ref        = test_function_dirper(eta1,eta2)
-        grad1ref   = test_function_dirper_der1(eta1,eta2)
-        grad2ref   = test_function_dirper_der2(eta1,eta2)
+        ref        = test_function_dirper(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_dirper_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_dirper_der2(eta1,eta2,(/0.0_f64/))
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
                 'theoretical = ', ref, 'difference=', node_val-ref
@@ -691,7 +700,7 @@ program unit_test_alternative
      do i=1,nc1 + 1
         point1(i)       = real(i-1,f64)*h1 + ETA1MIN 
         point2(j)       = real(j-1,f64)*h2 + ETA2MIN 
-        tab_values(i,j)  = test_function_dirdir(point1(i),point2(j) )
+        tab_values(i,j)  = test_function_dirdir(point1(i),point2(j),(/0.0_f64/))
      end do
   end do
   
@@ -742,13 +751,15 @@ program unit_test_alternative
         eta1 = real(i-1,f64)*h1 + ETA1MIN 
         eta2 = real(j-1,f64)*h2 + ETA2MIN
         node_val   = dirichlet_dirichlet_discrete%value_at_point(eta1,eta2)
-        grad1_node_val = dirichlet_dirichlet_discrete%first_deriv_eta1_value_at_point(&
-                                                                              eta1, eta2)
-        grad2_node_val = dirichlet_dirichlet_discrete%first_deriv_eta2_value_at_point(&
-                                                                              eta1, eta2)
-        ref        = test_function_dirdir(eta1,eta2)
-        grad1ref   = test_function_dirdir_der1(eta1,eta2)
-        grad2ref   = test_function_dirdir_der2(eta1,eta2)
+        grad1_node_val = &
+             dirichlet_dirichlet_discrete%first_deriv_eta1_value_at_point(&
+             eta1, eta2)
+        grad2_node_val = &
+             dirichlet_dirichlet_discrete%first_deriv_eta2_value_at_point(&
+             eta1, eta2)
+        ref        = test_function_dirdir(eta1,eta2,(/0.0_f64/))
+        grad1ref   = test_function_dirdir_der1(eta1,eta2,(/0.0_f64/))
+        grad2ref   = test_function_dirdir_der2(eta1,eta2,(/0.0_f64/))
         if(PRINT_COMPARISON) then
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
                 'theoretical = ', ref, 'difference=', node_val-ref
@@ -854,130 +865,3 @@ program unit_test_alternative
   end if
 end program unit_test_alternative
 
- ! ------------->FUNCTION PERIODIC- PERIODIC
-function test_function_perper( eta1, eta2) result(res)
-   use sll_constants
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  intrinsic :: cos
-  !real(8), dimension(:), intent(in), optional :: params
-  res = cos(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-end function test_function_perper
-
-function test_function_perper_der1( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = -2*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-end function test_function_perper_der1
-
-function test_function_perper_der2( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = -2*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-end function test_function_perper_der2
-
-
- ! ------------->FUNCTION PERIODIC- DIRICHLET
-function test_function_perdir( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-end function test_function_perdir
-
-function test_function_perdir_der1( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = -2.0*sll_pi*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-end function test_function_perdir_der1
-
-function test_function_perdir_der2( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = 2.0*sll_pi*cos(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-end function test_function_perdir_der2
-
-! ------------->FUNCTION DIRICHLET- PERIODIC
-function test_function_dirper( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-end function test_function_dirper
-
-function test_function_dirper_der1( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = 2.0*sll_pi*cos(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-end function test_function_dirper_der1
-
-function test_function_dirper_der2( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = -2.0*sll_pi*sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-end function test_function_dirper_der2
-
-
-! ------------->FUNCTION DIRICHLET-DIRICHLET 
-
-
-function test_function_dirdir( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-end function test_function_dirdir
-
-function test_function_dirdir_der1( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = 2.0*sll_pi*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
-end function test_function_dirdir_der1
-
-function test_function_dirdir_der2( eta1, eta2) result(res)
-  use sll_constants
-  intrinsic :: cos,sin
-  real(8) :: res
-  real(8), intent(in) :: eta1
-  real(8), intent(in) :: eta2
-  !real(8), dimension(:), intent(in), optional :: params
-  res = 2.0*sll_pi*sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
-end function test_function_dirdir_der2
