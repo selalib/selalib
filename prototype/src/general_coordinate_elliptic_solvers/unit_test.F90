@@ -152,7 +152,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/ 0.0_f64 /) )
   print *, 'initialized coordinate transformation'
 
   ! Thirdly, each field object must be initialized using the same logical
@@ -408,7 +409,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
 
   ! Thirdly, each field object must be initialized using the same logical
@@ -651,7 +653,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -862,7 +865,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1068,7 +1072,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1212,7 +1217,10 @@ program test_general_elliptic_solver
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
         ! jac_mat(:,:) = mesh_2d%get_jacobian_matrix(eta1,eta2)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if(PRINT_COMPARISON) then! k = 5 0.00000001 k = 3 0.00001, k=4 0.0000001
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
                 'theoretical = ', ref, 'difference = ', ref-node_val
@@ -1291,7 +1299,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1443,7 +1452,10 @@ program test_general_elliptic_solver
         end if
         acc6        = acc6 + abs(node_val-ref)
         
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < npts1-1 .and. j < npts2-1 ) then
            integrale_solution = integrale_solution + node_val*val_jac* h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac* h1*h2
@@ -1514,7 +1526,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
    ! Thirdly, each field object must be initialized using the same logical
@@ -1671,7 +1684,10 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc7        = acc7 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
@@ -1742,7 +1758,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1894,7 +1911,10 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc8        = acc8 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
@@ -1973,7 +1993,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22)
+       identity_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2253,7 +2274,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2444,7 +2466,10 @@ program test_general_elliptic_solver
         end if
         acc9        = acc9 + abs(node_val-ref)
         
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
@@ -2515,7 +2540,7 @@ program test_general_elliptic_solver
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -2523,7 +2548,7 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22), &
+       sinprod_jac22, &
        (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)) 
 
   print *, 'initialized coordinate transformation'
@@ -2711,13 +2736,18 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc10        = acc10 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + &
+                ref*val_jac * h1*h2
            normL2_10    = normL2_10 + (node_val-ref)**2*h1*h2*val_jac
-           normH1_10   = normH1_10 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1_10   = normH1_10 + ((grad1_node_val-grad1ref)**2+&
+                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -2973,13 +3003,18 @@ program test_general_elliptic_solver
                 'theoretical = ', ref, 'difference=', ref-node_val
         end if
         acc11        = acc11 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + &
+                ref*val_jac * h1*h2
            normL2_11    = normL2_11 + (node_val-ref)**2*h1*h2*val_jac
-           normH1_11    = normH1_11 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1_11    = normH1_11 + ((grad1_node_val-grad1ref)**2+&
+                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -3050,7 +3085,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -3237,13 +3273,18 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=', ref-node_val
         end if
         acc12        = acc12 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + &
+                ref*val_jac * h1*h2
            normL2_12    = normL2_12 + (node_val-ref)**2*h1*h2*val_jac
-           normH1_12    = normH1_12 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1_12    = normH1_12 + ((grad1_node_val-grad1ref)**2+&
+                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
