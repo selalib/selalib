@@ -14,6 +14,7 @@
 /
 &time_iterations
   dt = 0.1
+  first_step = 0
   nbiter = 600
   freqdiag = 100
   freqdiag_time = 1
