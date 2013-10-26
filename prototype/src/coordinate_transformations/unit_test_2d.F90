@@ -291,11 +291,13 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   ! Test of the initialization from a file of the discrete transformation.
   !
   ! *************************************************************************
+  
 
   print *, 'Test of initialization from file for a discrete transformation:'
-  call t_d%read_from_file("../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
+  call t_d%read_from_file('chgt_test',"../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
 
 
+  print*, t_d%jacobian_matrix(1._8,1._8)
 
   print *, 'reached end of unit test'
 

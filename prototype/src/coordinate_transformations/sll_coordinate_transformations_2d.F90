@@ -117,7 +117,6 @@ module sll_module_coordinate_transformations_2d
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
      sll_real64, dimension(:,:), pointer :: jacobians_n =>null()
      sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
-
 #ifdef STDF95
      ! so the choice is to have only cubic splines in f95 mode... 
      ! more generality would be obtained with arbitrary degree splines...
@@ -757,8 +756,9 @@ contains
     transf%written = .true.
   end subroutine
 
-  subroutine read_from_file_2d_analytic( transf, filename )
+  subroutine read_from_file_2d_analytic( transf,label, filename )
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
+     character(len=*), intent(in) :: label
     character(len=*), intent(in) :: filename
     print *, 'read_from_file_2d_analytic: not yet implemented'
     ! here we could put a case select to choose which analytic transformation
@@ -1358,6 +1358,10 @@ contains
     nullify( transf%x2_cell )
     nullify( transf%jacobians_n )
     nullify( transf%jacobians_c )
+    
+    !call delete( transf%x1_interp)
+    !call delete( transf%x2_interp)
+    call delete( transf%mesh)
     ! Fix: there is a dependency problem where these pointers are not recognized
     ! during the linking step. A similar nullification of an abstract class
     ! pointer is carried out in the fields_2d_alternative type without problems.
@@ -1389,8 +1393,10 @@ contains
   ! - The BC information is not inside the files we are currently considering,
   !   so this should be included.
  
-  subroutine read_from_file_2d_discrete( transf, filename )
+  subroutine read_from_file_2d_discrete( transf,label, filename )
+    use sll_arbitrary_degree_spline_interpolator_2d_module
     class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
+    character(len=*), intent(in) :: label
     character(len=*), intent(in) :: filename
     intrinsic :: trim
     sll_int32 :: interpolator_type
@@ -1411,9 +1417,21 @@ contains
     sll_real64, dimension(:,:), allocatable :: control_pts1_2d
     sll_real64, dimension(:,:), allocatable :: control_pts2_2d
     sll_real64, dimension(:,:), allocatable :: weights_2d
-
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_int32  :: bc_left
+    sll_int32  :: bc_right
+    sll_int32  :: bc_bottom
+    sll_int32  :: bc_top
+    sll_int32  :: sz_nodes1, sz_nodes2
+    sll_real64, dimension(:), allocatable :: nodes1,nodes2
+    sll_int32 :: sz_knots1,sz_knots2
+    class(arb_deg_2d_interpolator), pointer :: interp2d_transf_1,interp2d_transf_2
+    
     namelist /degree/   spline_deg1, spline_deg2
-    namelist /shape/    num_pts1, num_pts2
+    namelist /shape/    num_pts1, num_pts2 ! it is not the number of points but the number of coeff sdpline in each direction !!
     namelist /rational/ is_rational
     namelist /knots_1/   knots1
     namelist /knots_2/   knots2
@@ -1462,18 +1480,98 @@ contains
     weights_2d = reshape(weights,(/num_pts1,num_pts2/))
     close( input_file_id )
 
-    print*, '------------------------------'
-    print*, ' control_pts1 ',  control_pts1_2d
-    print*, '------------------------------'
 
-    print*, '------------------------------'
-    print*, ' control_pts2 ',  control_pts2_2d
-    print*, '------------------------------'
+    eta1_min = knots1(1)
+    eta2_min = knots2(1)
+    eta1_max = knots1(num_pts1+spline_deg1+1)
+    eta2_max = knots2(num_pts2+spline_deg2+1)
 
-    print*, '------------------------------'
-    print*, ' weights ',  weights_2d
-    print*, '------------------------------'
+    ! for the moment we put the boundary condition like a dirichlet 
+    ! boundary condition
+    ! but we must modified this part 
 
+    bc_left   = SLL_DIRICHLET
+    bc_right  = SLL_DIRICHLET 
+    bc_bottom = SLL_DIRICHLET 
+    bc_top    = SLL_DIRICHLET
+
+    ! the number of points is the knots witout the multiplicity
+    
+    sz_knots1 = size(knots1)
+    SLL_ALLOCATE(nodes1(sz_knots1),ierr)
+    sz_knots2 = size(knots2)
+    SLL_ALLOCATE(nodes2(sz_knots2),ierr)
+    call delete_multiplicity_in_knots(knots1,nodes1,sz_nodes1)
+    call delete_multiplicity_in_knots(knots2,nodes2,sz_nodes2)
+
+    ! Initialization of the interpolator spline 2D in x
+    ! ACHTUNG we have not delete it
+    
+    interp2d_transf_1 => new_arbitrary_degree_spline_interp2d(sz_nodes1,  &  
+         sz_nodes2,  &  
+         eta1_min,  &  
+         eta1_max,  & 
+         eta2_min,  & 
+         eta2_max,  & 
+         bc_left,   & 
+         bc_right,  & 
+         bc_bottom, & 
+         bc_top,    & 
+         spline_deg1, & 
+         spline_deg2 )  
+
+    
+    call  set_coefficients_ad2d( &
+         interp2d_transf_1, &
+         coeffs_2d = control_pts1_2d,&
+         coeff2d_size1 = num_pts1,&
+         coeff2d_size2 = num_pts2,&
+         knots1 = knots1,&
+         size_knots1 = sz_knots1,&
+         knots2 = knots2,&
+         size_knots2 = sz_knots2)
+    
+    transf%x1_interp =>interp2d_transf_1
+    ! Initialization of the interpolator spline 2D in y
+    ! ACHTUNG we have not delete it
+    interp2d_transf_2 => new_arbitrary_degree_spline_interp2d(&
+         sz_nodes1,  & 
+         sz_nodes2,  & 
+         eta1_min,  & 
+         eta1_max,  & 
+         eta2_min,  & 
+         eta2_max,  & 
+         bc_left,   & 
+         bc_right,  & 
+         bc_bottom, & 
+         bc_top,    & 
+         spline_deg1, & 
+         spline_deg2 )
+    
+    call  set_coefficients_ad2d( &
+         interp2d_transf_2, &
+         coeffs_2d = control_pts2_2d,&
+         coeff2d_size1 = num_pts1,&
+         coeff2d_size2 = num_pts2,&
+         knots1 = knots1,&
+         size_knots1 = sz_knots1,&
+         knots2 = knots2,&
+         size_knots2 = sz_knots2)
+
+    transf%x2_interp =>interp2d_transf_2
+
+
+    ! initialization of mesh
+    transf%mesh => new_logical_mesh_2d(&
+                                   sz_nodes1-1,&
+                                   sz_nodes2-1,&
+                                   eta1_min = eta1_min,&
+                                   eta1_max = eta1_max,&
+                                   eta2_min = eta2_min,&
+                                   eta2_max = eta2_max)
+
+    ! initialization of name 
+    transf%label = trim(label)
     ! All the information from the file is now in local variables. We should
     ! now be able to initialize all the necessary objects
 
@@ -1493,9 +1591,31 @@ contains
 !!$       end select
 
 
-    !sll_DEALLOCATE
+    SLL_DEALLOCATE_ARRAY(nodes1,ierr)
+    SLL_DEALLOCATE_ARRAY(nodes2,ierr)
+
   end subroutine read_from_file_2d_discrete
 
+  subroutine delete_multiplicity_in_knots(knots,nodes,sz_nodes)
+    sll_real64, dimension(:), intent(in) :: knots
+    sll_real64, dimension(:), intent(out) :: nodes
+    sll_int32, intent(out) ::  sz_nodes
+
+    sll_int32 :: i,j
+    sll_int32 :: sz_knots 
+
+    nodes(1) = knots(1)
+    sz_knots = size(knots)
+    j = 1
+    do i = 2, sz_knots
+       if (knots(i) .ne. nodes(j)) then
+          j = j + 1
+          nodes(j) = knots(i)
+       end if
+    end do
+       
+    sz_nodes = j
+  end subroutine delete_multiplicity_in_knots
 
 #if 0
   subroutine delete_coordinate_transformation_2D_general( transf )
@@ -1526,6 +1646,7 @@ contains
        call delete(transf%x1_spline)
        call delete(transf%x2_spline)
     end if
+    
     SLL_DEALLOCATE( transf, ierr )
   end subroutine delete_coordinate_transformation_2D_general
 
