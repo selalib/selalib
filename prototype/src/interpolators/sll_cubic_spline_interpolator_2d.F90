@@ -355,7 +355,9 @@ contains
        coeff2d_size1,&
        coeff2d_size2,&
        knots1,&
-       knots2)
+       size_knots1,&
+       knots2,&
+       size_knots2)
     type (cubic_spline_2d_interpolator),  intent(inout) :: interpolator
 #else
   subroutine set_coefficients_cs2d( &
@@ -365,7 +367,9 @@ contains
        coeff2d_size1,&
        coeff2d_size2,&
        knots1,&
-       knots2)
+       size_knots1,&
+       knots2,&
+       size_knots2)
     class(cubic_spline_2d_interpolator),  intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in), optional :: coeffs_1d
@@ -375,6 +379,8 @@ contains
     sll_int32, intent(in), optional :: coeff2d_size2
     sll_real64, dimension(:), intent(in), optional   :: knots1
     sll_real64, dimension(:), intent(in), optional   :: knots2
+    sll_int32, intent(in), optional :: size_knots1
+    sll_int32, intent(in), optional :: size_knots2
     print *, 'set_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.'
     stop
