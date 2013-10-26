@@ -5,7 +5,6 @@ module sll_simulation_2d_vlasov_poisson_cartesian
 ! main application is for KEEN waves
 
 !time mpirun -np 8 ./bin/test_2d_vp_cartesian keen
-#define SLL_USE_MPI_GATHER2
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
