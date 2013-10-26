@@ -425,7 +425,7 @@ contains ! *******************************************************************
           
           
           cell_index = i + number_cells1*(j-1)
-          
+
           call build_local_matrices( &
                es, &
                i, &
@@ -444,7 +444,7 @@ contains ! *******************************************************************
                K_a21_loc, &
                K_a22_loc)          
           
-          
+
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -682,7 +682,7 @@ contains ! *******************************************************************
     
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
-    
+ 
     !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
@@ -700,7 +700,7 @@ contains ! *******************************************************************
           gtmp2 = gpt2
           local_spline_index2 = obj%spline_degree2 + cell_j
        end if
-       
+ 
        !
 !!$
        call bsplvd( &
@@ -711,7 +711,7 @@ contains ! *******************************************************************
             work2,&
             dbiatx2,&
             2)
-       
+ 
        !print*, 'splin2=',dbiatx2
        !print*, 'knot2',obj%knots2
        do i=1,num_pts_g1
@@ -733,7 +733,7 @@ contains ! *******************************************************************
           end if
      !     print*,  'gauss',obj%gauss_pts1(1,i)
           
-          
+ 
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -742,7 +742,7 @@ contains ! *******************************************************************
                work1,&
                dbiatx1,&
                2 )
-          
+
           val_c        = c_field%value_at_point(gpt1,gpt2)
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
           val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
@@ -750,6 +750,7 @@ contains ! *******************************************************************
           val_a22      = a22_field_mat%value_at_point(gpt1,gpt2)
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
+ 
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
           !print*, 'determinant', val_jac
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
@@ -757,7 +758,7 @@ contains ! *******************************************************************
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
                jac_mat(1,2)*jac_mat(1,2)*val_a22
           
-          
+ 
           B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
@@ -773,7 +774,7 @@ contains ! *******************************************************************
           B22 = jac_mat(1,1)*jac_mat(1,1)*val_a22 - &
                jac_mat(1,1)*jac_mat(2,1)*(val_a21+val_a12) + &
                jac_mat(2,1)*jac_mat(2,1)*val_a11
-          
+
           MC =   jac_mat(2,2) * val_b1_der1 &
                - jac_mat(2,1) * val_b1_der2 &
                - jac_mat(1,2) * val_b2_der1 &
