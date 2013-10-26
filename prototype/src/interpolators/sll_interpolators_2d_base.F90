@@ -144,7 +144,9 @@ module sll_module_interpolators_2d_base
           coeff2d_size1,&
           coeff2d_size2,&
           knots1,&
-          knots2)
+          size_knots1,&
+          knots2,&
+          size_knots2)
        use sll_working_precision
        import sll_interpolator_2d_base
        class(sll_interpolator_2d_base), intent(inout) :: interpolator
@@ -157,6 +159,8 @@ module sll_module_interpolators_2d_base
        sll_int32, intent(in), optional :: coeff2d_size2
        sll_real64, dimension(:), intent(in), optional   :: knots1
        sll_real64, dimension(:), intent(in), optional   :: knots2
+       sll_int32, intent(in), optional :: size_knots1
+       sll_int32, intent(in), optional :: size_knots2
      end subroutine interpolator_2d_set_coeffs
   end interface
 
