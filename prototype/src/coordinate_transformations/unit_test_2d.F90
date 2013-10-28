@@ -299,6 +299,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
 
   print*, t_d%jacobian_matrix(1._8,1._8)
 
+  !call write_to_file(t_d)
   print *, 'reached end of unit test'
 
   ! apply some more relaxed criterion for the jacobian
