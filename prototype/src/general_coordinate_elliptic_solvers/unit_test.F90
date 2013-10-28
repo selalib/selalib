@@ -110,7 +110,7 @@ program test_general_elliptic_solver
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
  ! epsi  =  0.000_f64
  ! epsi1 =  0.000_f64 ! penalization method
-  
+  sll_real64, dimension(1) :: whatever  ! dummy params array
   
   
 !!$  !*******************************************************************
@@ -152,7 +152,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/ 0.0_f64 /) )
   print *, 'initialized coordinate transformation'
 
   ! Thirdly, each field object must be initialized using the same logical
@@ -164,7 +165,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
 
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -173,7 +175,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
 
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -182,7 +185,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever  ) 
 
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -191,7 +195,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever  ) 
 
 
   b1_field_vect => new_scalar_field_2d_analytic_alt( &
@@ -202,6 +207,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
+       whatever, & 
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero) 
 
@@ -213,6 +219,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
+       whatever, &
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
 
@@ -224,7 +231,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever  )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perper, &
@@ -233,7 +241,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever  )
 
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -408,7 +417,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
 
   ! Thirdly, each field object must be initialized using the same logical
@@ -420,7 +430,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
 
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -429,7 +440,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
 
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -438,7 +450,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
   
   a22_field_mat  => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -447,7 +460,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
   
 
   b1_field_vect => new_scalar_field_2d_analytic_alt( &
@@ -458,6 +472,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
+       whatever, &
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)  
 
@@ -469,6 +484,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
+       whatever, &
        first_deriv_eta1 = func_zero, &
        first_deriv_eta2 = func_zero)
   
@@ -479,7 +495,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
@@ -488,7 +505,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
 
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -651,7 +669,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -663,7 +682,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -672,7 +692,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -681,7 +702,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -690,9 +712,18 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever  ) 
   
-
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
@@ -701,7 +732,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -764,6 +796,7 @@ program test_general_elliptic_solver
        a21_field_mat,&
        a22_field_mat,&
        c_field)
+  print *, 'factorized mass matrices'
 
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
@@ -776,6 +809,7 @@ program test_general_elliptic_solver
   
   t3e = time_elapsed_since(t_reference)
 
+  print *, 'solved for phi, proceeding to assess results...'
 
   acc3 = 0.0_f64
   normL2_3 = 0.0_f64
@@ -862,7 +896,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -874,7 +909,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -883,7 +919,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -892,7 +929,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -901,9 +939,18 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
-
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_dirper, &
@@ -912,7 +959,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1068,7 +1116,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1080,7 +1129,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1089,7 +1139,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1098,7 +1149,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1107,10 +1159,19 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
-  
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perper, &
        "rho5", &     
@@ -1118,7 +1179,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1212,7 +1274,10 @@ program test_general_elliptic_solver
         difference(i+1,j+1) = ref-node_val
         reference(i+1,j+1) = ref
         ! jac_mat(:,:) = mesh_2d%get_jacobian_matrix(eta1,eta2)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if(PRINT_COMPARISON) then! k = 5 0.00000001 k = 3 0.00001, k=4 0.0000001
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
                 'theoretical = ', ref, 'difference = ', ref-node_val
@@ -1291,7 +1356,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1303,7 +1369,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1312,7 +1379,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1321,7 +1389,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1330,9 +1399,18 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
-  
+       SLL_DIRICHLET, &
+       whatever ) 
 
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perdir, &
@@ -1341,7 +1419,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1443,7 +1522,10 @@ program test_general_elliptic_solver
         end if
         acc6        = acc6 + abs(node_val-ref)
         
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < npts1-1 .and. j < npts2-1 ) then
            integrale_solution = integrale_solution + node_val*val_jac* h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac* h1*h2
@@ -1514,7 +1596,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
    ! Thirdly, each field object must be initialized using the same logical
@@ -1526,7 +1609,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1535,7 +1619,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever) 
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1544,7 +1629,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1553,9 +1639,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET ) 
-  
-
+       SLL_DIRICHLET, &
+       whatever ) 
 
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1564,7 +1649,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirdir, &
@@ -1573,7 +1659,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET )
+       SLL_DIRICHLET, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1671,7 +1758,10 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc7        = acc7 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
@@ -1742,7 +1832,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1754,7 +1845,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1763,7 +1855,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1772,7 +1865,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -1781,9 +1875,18 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
-  
+       SLL_PERIODIC, &
+       whatever ) 
 
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirper, &
@@ -1792,7 +1895,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1894,7 +1998,10 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc8        = acc8 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
            integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
@@ -1973,7 +2080,8 @@ program test_general_elliptic_solver
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22)
+       identity_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -1985,7 +2093,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1994,7 +2103,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2003,7 +2113,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2012,12 +2123,9 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
-  
-  
-  
-  
-  
+       SLL_PERIODIC, &
+       whatever ) 
+   
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2046,7 +2154,17 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
-  
+
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )  
   ! terme_source_interp => interp_2d_term_source
   
   rho => new_scalar_field_2d_discrete_alt( &
@@ -2253,7 +2371,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2265,7 +2384,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC ) 
+       SLL_PERIODIC, &
+       whatever  ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2274,7 +2394,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2283,7 +2404,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2292,10 +2414,9 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
-  
-
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2359,6 +2480,16 @@ program test_general_elliptic_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   phi => new_scalar_field_2d_discrete_alt( &
        "phi9", &
@@ -2444,7 +2575,10 @@ program test_general_elliptic_solver
         end if
         acc9        = acc9 + abs(node_val-ref)
         
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
@@ -2515,7 +2649,7 @@ program test_general_elliptic_solver
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-   T => new_coordinate_transformation_2d_analytic( &
+  T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -2523,7 +2657,9 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)) 
+
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2535,7 +2671,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2544,7 +2681,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET)
+       SLL_DIRICHLET, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2553,7 +2691,8 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2562,11 +2701,9 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
-
-  
-
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2627,6 +2764,16 @@ program test_general_elliptic_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
+
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
   
   phi => new_scalar_field_2d_discrete_alt( &
        "phi10", &
@@ -2709,13 +2856,18 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=',ref-node_val
         end if
         acc10        = acc10 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + &
+                ref*val_jac * h1*h2
            normL2_10    = normL2_10 + (node_val-ref)**2*h1*h2*val_jac
-           normH1_10   = normH1_10 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1_10   = normH1_10 + ((grad1_node_val-grad1ref)**2+&
+                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -2787,7 +2939,9 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
+
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -2799,7 +2953,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2808,7 +2963,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET)
+       SLL_DIRICHLET, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -2817,7 +2973,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -2826,7 +2983,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
-       SLL_DIRICHLET) 
+       SLL_DIRICHLET, &
+       whatever ) 
 
   allocate(point1(npts1))
   allocate(point2(npts2))
@@ -2856,7 +3014,15 @@ program test_general_elliptic_solver
   
   terme_source_interp => interp_2d_term_source
 
-
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_discrete_alt( &
        "rho11", &
@@ -2969,13 +3135,18 @@ program test_general_elliptic_solver
                 'theoretical = ', ref, 'difference=', ref-node_val
         end if
         acc11        = acc11 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + &
+                ref*val_jac * h1*h2
            normL2_11    = normL2_11 + (node_val-ref)**2*h1*h2*val_jac
-           normH1_11    = normH1_11 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1_11    = normH1_11 + ((grad1_node_val-grad1ref)**2+&
+                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
         end if
      end do
   end do
@@ -3046,7 +3217,8 @@ program test_general_elliptic_solver
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22)
+       sinprod_jac22, &
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
   print *, 'initialized coordinate transformation'
   
   ! Thirdly, each field object must be initialized using the same logical
@@ -3058,7 +3230,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -3067,7 +3240,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC)
+       SLL_PERIODIC, &
+       whatever )
   
   a21_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -3076,7 +3250,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC) 
+       SLL_PERIODIC, &
+       whatever ) 
   
   a22_field_mat => new_scalar_field_2d_analytic_alt( &
        func_one, &
@@ -3085,11 +3260,8 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
-       SLL_PERIODIC) 
-  
-
-  
-  
+       SLL_PERIODIC, &
+       whatever ) 
   
   SLL_ALLOCATE(point1(npts1),ierr)
   SLL_ALLOCATE(point2(npts2),ierr)
@@ -3119,6 +3291,15 @@ program test_general_elliptic_solver
   
   terme_source_interp => interp_2d_term_source
 
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever )
 
   rho => new_scalar_field_2d_discrete_alt( &
        "rho12", &
@@ -3233,13 +3414,18 @@ program test_general_elliptic_solver
                 'theoretical = ', ref,'difference=', ref-node_val
         end if
         acc12        = acc12 + abs(node_val-ref)
-        val_jac = sinprod_jac11(eta1,eta2)*sinprod_jac22(eta1,eta2) - sinprod_jac12(eta1,eta2)*sinprod_jac21(eta1,eta2)
+        val_jac = sinprod_jac11(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac22(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))-&
+                  sinprod_jac12(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))*&
+                  sinprod_jac21(eta1,eta2,(/0.1_f64,0.1_f64,1.0_f64,1.0_f64/))
         
         if ( i < npts1-1 .and. j < npts2-1) then
            integrale_solution = integrale_solution + node_val*val_jac * h1*h2
-           integrale_solution_exacte = integrale_solution_exacte + ref*val_jac * h1*h2
+           integrale_solution_exacte = integrale_solution_exacte + &
+                ref*val_jac * h1*h2
            normL2_12    = normL2_12 + (node_val-ref)**2*h1*h2*val_jac
-           normH1_12    = normH1_12 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2*val_jac
+           normH1_12    = normH1_12 + ((grad1_node_val-grad1ref)**2+&
+                (grad2_node_val-grad2ref)**2)*h1*h2*val_jac
            
         end if
      end do
@@ -3379,7 +3565,7 @@ end program test_general_elliptic_solver
 function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 1.0_8
 end function func_one
@@ -3387,7 +3573,7 @@ end function func_one
 function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 0.0_8
 end function func_zero
@@ -3395,7 +3581,7 @@ end function func_zero
 function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 0.0_8
 end function func_epsi
