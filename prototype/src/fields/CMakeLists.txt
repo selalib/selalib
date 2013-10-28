@@ -9,7 +9,9 @@ TARGET_LINK_LIBRARIES(sll_scalar_field_2d_alternative
                       sll_file_io
                       sll_utilities)
 
-ADD_EXECUTABLE(test_scalar_field_alternative unit_test_alternative.F90)
+ADD_EXECUTABLE(test_scalar_field_alternative 
+  unit_test_alternative.F90 
+  helper_functions_unit_test_alternative.F90)
 
 TARGET_LINK_LIBRARIES(test_scalar_field_alternative sll_scalar_field_2d_alternative)
 

@@ -1,0 +1,3 @@
+ADD_LIBRARY(sll_parallel_utilities STATIC buffer_loader_utilities.F90)
+
+TARGET_LINK_LIBRARIES(sll_parallel_utilities sll_remap sll_collective) 

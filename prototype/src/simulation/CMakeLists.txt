@@ -95,9 +95,9 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                                    sll_timer
 	                                    sll_poisson_solvers
 	                                    dfftpack)
-
-   ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
-   TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
+   IF(HDF5_ENABLED)
+     ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
+     TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
 	                           sll_interpolators
 	                           sll_periodic_interp
 	                           sll_fft
@@ -109,6 +109,7 @@ IF(CMAKE_BUILD_TYPE MATCHES "Release")
 	                           sll_timer
 	                           sll_poisson_solvers
 	                           dfftpack)
+	ENDIF(HDF5_ENABLED)                           
 
 ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
@@ -155,7 +156,9 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_parallel_array_initializers	
                        sll_remap
                        sll_collective
+                       sll_parallel_utilities
 		       sll_integration
+		       sll_reduction
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
@@ -188,5 +191,9 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    ADD_SIMULATION(4d_dk_polar)
    ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)
+
+   # Add postprocessing code for KEEN
+   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
+   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
 
 ENDIF()
