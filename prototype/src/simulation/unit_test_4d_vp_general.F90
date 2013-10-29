@@ -35,8 +35,10 @@ program vlasov_poisson_4d_general
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
+  print *, 'executing unit_test_4d_vp_general'
   
   call simulation%init_from_file(filename_local)
+  print *, 'finished initialization'
   
   ! The second is to initialize 'manually' with a routine whose parameters
   ! allow to configure the different types of objects in the simulation. For
@@ -60,7 +62,7 @@ program vlasov_poisson_4d_general
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
        eta1_min=-6.0_f64, eta1_max=6.0_f64, &
        eta2_min=-6.0_f64, eta2_max=6.0_f64)
-
+  print *, 'allocated logical meshes'
 !  ! logical mesh for space coordinates
 !  mx => new_logical_mesh_2d( NPTS1, NPTS2)
 !
@@ -78,7 +80,9 @@ program vlasov_poisson_4d_general
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/ 0.0_f64 /) )
+ print *, 'allocated coordinate transformation'
 
 !  transformation_x => new_coordinate_transformation_2d_analytic( &
 !       "analytic_sinprod_transformation", &
@@ -113,7 +117,7 @@ program vlasov_poisson_4d_general
        transformation_x, &
        sll_landau_initializer_4d, &
        landau_params )
-
+  print *, 'initialized simulation object'
 !  ! define the values of the parameters for the landau initializer
 !  gaussian_params(1) = 3.0*sll_pi !xc
 !  gaussian_params(2) = 2.0*sll_pi !yc

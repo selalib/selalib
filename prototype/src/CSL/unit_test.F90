@@ -67,7 +67,8 @@ program unit_test
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 ) 
+       identity_jac22, &
+       (/0.0_f64/) ) 
 
   call pgaussian%initialize( m, CELL_CENTERED_FIELD)
 
