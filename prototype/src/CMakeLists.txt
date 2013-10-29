@@ -92,6 +92,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
+     ADD_SUBDIRECTORY(advection)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
