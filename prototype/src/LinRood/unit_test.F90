@@ -95,7 +95,8 @@ program unit_test
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22 )
+       sinprod_jac22, &
+       (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64 /) )
 
   mesh2d_cart => new_coordinate_transformation_2d_analytic( &
        "mesh2d_cart",      &
@@ -105,7 +106,8 @@ program unit_test
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/ 0.0_f64 /)  )
 
  ! m => mesh2d_col
   m => mesh2d_cart

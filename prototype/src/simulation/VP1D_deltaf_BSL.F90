@@ -195,7 +195,9 @@ program VP1d_deltaf
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 ) 
+       identity_jac22, &
+       (/ 0.0_f64 /) )
+ 
 
 !!$  call initialize_mesh_2d_cartesian( &
 !!$       mesh2d,           &
@@ -294,7 +296,7 @@ program VP1d_deltaf
   call write_scalar_field_2d(f) 
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   if (is_delta_f==0) then
      rho = - delta_v * sum(FIELD_DATA(f), DIM = 2)
   else
@@ -467,4 +469,5 @@ contains
     endif
     return
   end subroutine PFenvelope
+
 end program VP1d_deltaf

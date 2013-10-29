@@ -54,9 +54,9 @@ allocate(df(nc_eta1+1,nc_eta2+1))
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
 
-call new(poisson, eta1_min, eta2_max, nc_eta1, error) 
-call spline_x%initialize(nc_eta1+1, eta1_min, eta1_max, PERIODIC_SPLINE )
-call spline_v%initialize(nc_eta2+1, eta2_min, eta2_max, HERMITE_SPLINE )
+call initialize(poisson, eta1_min, eta2_max, nc_eta1, error) 
+call spline_x%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC )
+call spline_v%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_HERMITE )
 
 allocate(eta1(nc_eta1+1))
 allocate(eta2(nc_eta2+1))
