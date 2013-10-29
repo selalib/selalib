@@ -306,12 +306,15 @@ program unit_test_2d
   ! Test of the initialization from a file of the discrete transformation.
   !
   ! *************************************************************************
+  
 
   print *, 'Test of initialization from file for a discrete transformation:'
-  call t_d%read_from_file("../src/interpolators/arbitrary_degree_2d_sample_input_file.nml")
+  call t_d%read_from_file('chgt_test',"../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
 
 
+  print*, t_d%jacobian_matrix(1._8,1._8)
 
+  !call write_to_file(t_d)
   print *, 'reached end of unit test'
 
   ! apply some more relaxed criterion for the jacobian
