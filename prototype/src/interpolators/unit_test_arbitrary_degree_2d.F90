@@ -479,7 +479,6 @@ contains
     end if
   end subroutine test_value_for_acceptable_error
 
-  print *, 'testing the read from file function...'
 
 end program unit_test
 
