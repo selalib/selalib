@@ -56,9 +56,11 @@ end interface
 interface solve
  module procedure solve_maxwell_2d_fdtd
 end interface
+!> Solve Ampere-Maxwell equation
 interface ampere
  module procedure ampere_2d_fdtd
 end interface
+!> Solve Faraday equation
 interface faraday
  module procedure ampere_2d_fdtd
 end interface
