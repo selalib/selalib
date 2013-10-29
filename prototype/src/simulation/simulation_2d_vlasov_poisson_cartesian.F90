@@ -29,9 +29,10 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   use sll_parallel_array_initializer_module
   
   ! for interpolators
-  use sll_cubic_spline_interpolator_1d
-  use sll_periodic_interpolator_1d
-  use sll_odd_degree_spline_interpolator_1d
+  !use sll_cubic_spline_interpolator_1d
+  !use sll_periodic_interpolator_1d
+  !use sll_odd_degree_spline_interpolator_1d
+  use sll_module_advection_1d_periodic
 
   use sll_poisson_1d_periodic
   
@@ -48,8 +49,14 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    type(sll_logical_mesh_2d), pointer :: mesh2d
       
    !interpolator
-   class(sll_interpolator_1d_base), pointer    :: interp_x
-   class(sll_interpolator_1d_base), pointer    :: interp_v
+   !class(sll_interpolator_1d_base), pointer    :: interp_x
+   !class(sll_interpolator_1d_base), pointer    :: interp_v
+
+   !advector (should replace interpolator)
+   class(sll_advection_1d_base), pointer    :: advect_x
+   class(sll_advection_1d_base), pointer    :: advect_v
+
+
    
    !time_iterations
    sll_real64 :: dt
@@ -130,30 +137,74 @@ contains
       eta2_min=vmin, eta2_max=vmax)
         
     
+!    select case (interpol_x)
+!      case (1) ! periodic cubic spline
+!        sim%interp_x => new_cubic_spline_1d_interpolator( Ncx + 1, xmin, xmax, SLL_PERIODIC)
+!      case (2) ! arbitrary order periodic splines         
+!         sim%interp_x => new_periodic_1d_interpolator( Ncx + 1, xmin, xmax, SPLINE, order_x)
+!      case(3) ! arbitrary order Lagrange periodic interpolation
+!         sim%interp_x => new_periodic_1d_interpolator( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
+!       case default
+!         print*,'#interpolation in x number ', interpol_x, ' not implemented'
+!         stop 
+!    end select
+!    select case (interpol_v)
+!      case (1) ! hermite cubic spline
+!       sim%interp_v => new_cubic_spline_1d_interpolator( Ncv + 1, vmin, vmax, SLL_HERMITE)
+!      case (2) ! arbitrary order periodic splines
+!        sim%interp_v => new_periodic_1d_interpolator( Ncv + 1, vmin, vmax, SPLINE, order_v)
+!      case (3) ! arbitrary order Lagrange periodic interpolation
+!        sim%interp_v => new_periodic_1d_interpolator( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
+!      !case(4) ! arbitrary order open spline interpolation   
+!        !call sim%interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
+!      case default
+!        print*,'#interpolation in x number ', interpol_v, ' not implemented'
+!        stop 
+!    end select
+
+
     select case (interpol_x)
-      case (1) ! periodic cubic spline
-        sim%interp_x => new_cubic_spline_1d_interpolator( Ncx + 1, xmin, xmax, SLL_PERIODIC)
-      case (2) ! arbitrary order periodic splines         
-         sim%interp_x => new_periodic_1d_interpolator( Ncx + 1, xmin, xmax, SPLINE, order_x)
+      case (2) ! arbitrary order periodic splines
+        sim%advect_x => new_periodic_1d_advector( &
+          Ncx, &
+          xmin, &
+          xmax, &
+          SPLINE, & 
+          order_x) 
       case(3) ! arbitrary order Lagrange periodic interpolation
-         sim%interp_x => new_periodic_1d_interpolator( Ncx + 1, xmin, xmax, LAGRANGE, order_x)
+        sim%advect_x => new_periodic_1d_advector( &
+          Ncx, &
+          xmin, &
+          xmax, &
+          LAGRANGE, & 
+          order_x) 
        case default
          print*,'#interpolation in x number ', interpol_x, ' not implemented'
          stop 
     end select
+
     select case (interpol_v)
-      case (1) ! hermite cubic spline
-       sim%interp_v => new_cubic_spline_1d_interpolator( Ncv + 1, vmin, vmax, SLL_HERMITE)
       case (2) ! arbitrary order periodic splines
-        sim%interp_v => new_periodic_1d_interpolator( Ncv + 1, vmin, vmax, SPLINE, order_v)
-      case (3) ! arbitrary order Lagrange periodic interpolation
-        sim%interp_v => new_periodic_1d_interpolator( Ncv + 1, vmin, vmax, LAGRANGE, order_v)
-      !case(4) ! arbitrary order open spline interpolation   
-        !call sim%interp_comp_v%initialize( Ncv + 1, vmin, vmax, order_v)
-      case default
-        print*,'#interpolation in x number ', interpol_v, ' not implemented'
-        stop 
+        sim%advect_v => new_periodic_1d_advector( &
+          Ncv, &
+          vmin, &
+          vmax, &
+          SPLINE, & 
+          order_v) 
+      case(3) ! arbitrary order Lagrange periodic interpolation
+        sim%advect_v => new_periodic_1d_advector( &
+          Ncv, &
+          vmin, &
+          vmax, &
+          LAGRANGE, & 
+          order_v) 
+       case default
+         print*,'#interpolation in v number ', interpol_v, ' not implemented'
+         stop 
     end select
+
+
+
     
      
     sim%dt=dt
@@ -767,10 +818,18 @@ contains
           do i = 1, local_size_x2
             ig=global_indices(2)
             alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) &
-              * split_step(split_istep) *sim%dt
+              * split_step(split_istep) ! *sim%dt
             !print *,'alpha=',alpha,i
             f1d(1:np_x1) = f_x1(1:np_x1,i)
-            f1d(1:np_x1) = sim%interp_x%interpolate_array_disp(np_x1, f1d(1:np_x1), alpha)
+            
+            !f1d(1:np_x1) = sim%interp_x%interpolate_array_disp(np_x1, f1d(1:np_x1), alpha)
+            
+            call sim%advect_x%advect_1d_constant(&
+              alpha, &
+              sim%dt, &
+              f1d(1:np_x1), &
+              f1d(1:np_x1))
+            
             f_x1(1:np_x1,i)=f1d(1:np_x1)
             !print *,'ok'
           end do
@@ -804,10 +863,19 @@ contains
           !advection in v
           do i = 1,local_size_x1
             ig=i+global_indices(1)-1
-            alpha = -(efield(ig)+e_app(ig)) * split_step(split_istep) * sim%dt
+            alpha = -(efield(ig)+e_app(ig)) * split_step(split_istep) !* sim%dt
             !print *,'alpha=',alpha,i
             f1d(1:np_x2) = f_x2(i,1:np_x2)
-            f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
+                        
+            !f1d(1:np_x2) = sim%interp_v%interpolate_array_disp(np_x2, f1d(1:np_x2), alpha)
+            
+            call sim%advect_v%advect_1d_constant(&
+              alpha, &
+              sim%dt, &
+              f1d(1:np_x2), &
+              f1d(1:np_x2))
+
+            
             f_x2(i,1:np_x2) = f1d(1:np_x2)
           end do
           !transposition
