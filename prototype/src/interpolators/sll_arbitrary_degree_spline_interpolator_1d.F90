@@ -72,6 +72,38 @@ contains
     SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
   end subroutine delete_arbitrary_degree_1d_interpolator
 
+
+  function new_arbitrary_degree_1d_interpolator(&
+       num_pts, &
+       eta_min, &
+       eta_max, &
+       bc_left, &
+       bc_right, &
+       spline_degree ) result(interpolator)
+
+    class(arb_deg_1d_interpolator),pointer :: interpolator
+    sll_int32, intent(in) :: num_pts
+    sll_real64, intent(in) :: eta_min
+    sll_real64, intent(in) :: eta_max
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: spline_degree
+    sll_int32 :: ierr
+    sll_int32 :: tmp
+    sll_int64 :: bc_selector
+
+    SLL_ALLOCATE(interpolator,ierr)
+    
+    call initialize_ad1d_interpolator( &
+         interpolator, &
+         num_pts, &
+         eta_min, &
+         eta_max, &
+         bc_left, &
+         bc_right, &
+         spline_degree )
+  end function new_arbitrary_degree_1d_interpolator
+
   subroutine initialize_ad1d_interpolator( &
     interpolator, &
     num_pts, &

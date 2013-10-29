@@ -1047,14 +1047,7 @@ contains
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-!!$                ex = - ( phi%value_at_point(eta1+ delta1,eta2) &
-!!$                     -phi%value_at_point(eta1, eta2))/delta1
-!!$                ey = - ( phi%value_at_point(eta1, eta2 + delta2) &
-!!$                     -phi%value_at_point(eta1, eta2))/delta2
-!!$                ex     =  - phi%first_deriv_eta1_value_at_indices(&
-!!$                     global_indices(1), global_indices(2))
-!!$                ey     =  - phi%first_deriv_eta2_value_at_indices(&
-!!$                     global_indices(1), global_indices(2))
+
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
