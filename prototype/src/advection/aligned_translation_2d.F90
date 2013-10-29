@@ -71,8 +71,8 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: buf
   sll_real64, dimension(:,:), allocatable :: f_new
   sll_int32 :: d
-  sll_real64 :: r
-  sll_real64 :: s
+  sll_int32 :: r
+  sll_int32 :: s
   sll_real64, dimension(:), allocatable :: xx
   sll_int32 :: ell
   sll_int32 :: i2_loc
