@@ -20,7 +20,6 @@ program unit_test_advection_2d_BSL
 #include "sll_memory.h"
 use sll_module_advection_2d_BSL
 use sll_module_characteristics_2d_explicit_euler
-use sll_module_advection_2d_BSL
 use sll_cubic_spline_interpolator_2d
 
 implicit none
