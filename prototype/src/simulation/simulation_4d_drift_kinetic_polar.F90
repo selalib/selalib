@@ -46,7 +46,6 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_cubic_spline_interpolator_1d
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
@@ -58,7 +57,9 @@ module sll_simulation_4d_drift_kinetic_polar_module
   use sll_reduction_module
   use sll_module_advection_2d_BSL
   use sll_module_characteristics_2d_explicit_euler
+  use sll_module_characteristics_2d_verlet
   use sll_cubic_spline_interpolator_2d
+  use sll_module_advection_1d_periodic
 
 
 
@@ -77,8 +78,8 @@ module sll_simulation_4d_drift_kinetic_polar_module
 
 !! choice of characteristics scheme
 !! should be else where
-  sll_int32, parameter :: SLL_CARAC_EULER = 0 
-  sll_int32, parameter :: SLL_CARAC_VERLET = 1 
+  sll_int32, parameter :: SLL_CHARAC_EULER = 0 
+  sll_int32, parameter :: SLL_CHARAC_VERLET = 1 
 
 
 
@@ -110,7 +111,7 @@ module sll_simulation_4d_drift_kinetic_polar_module
      sll_real64 :: dt
      sll_int32  :: num_iterations
      sll_int32  :: time_case
-     sll_int32  :: carac_case
+     sll_int32  :: charac_case
      !sll_int32  :: spline_degree_eta1, spline_degree_eta2
      !sll_int32  :: spline_degree_eta3, spline_degree_eta4
      !--> Equilibrium
@@ -176,10 +177,25 @@ module sll_simulation_4d_drift_kinetic_polar_module
     !type(sll_cubic_spline_1d), pointer :: interp_x3
     !type(sll_cubic_spline_1d), pointer :: interp_x4
 
-    class(sll_advection_2d_base), pointer :: adv
-    class(sll_interpolator_2d_base), pointer :: interp
-    class(sll_characteristics_2d_base), pointer :: charac
+    sll_real64, dimension(:), pointer :: x1_node
+    sll_real64, dimension(:), pointer :: x2_node
+    sll_real64, dimension(:), pointer :: x3_node
+    sll_real64, dimension(:), pointer :: x4_node
 
+    !for Verlet 
+    class(sll_interpolator_2d_base), pointer   :: A1_interp_x1x2
+    class(sll_interpolator_2d_base), pointer   :: A2_interp_x1x2
+    class(sll_interpolator_1d_base), pointer   :: A1_interp_x1
+    class(sll_interpolator_1d_base), pointer   :: A2_interp_x1
+
+
+
+
+    class(sll_advection_2d_base), pointer :: adv_x1x2
+    class(sll_interpolator_2d_base), pointer :: interp_x1x2
+    class(sll_characteristics_2d_base), pointer :: charac_x1x2
+    class(sll_advection_1d_base), pointer :: adv_x3
+    class(sll_advection_1d_base), pointer :: adv_x4
 
 
      !--> temporary structures that are used in CG_polar
@@ -233,7 +249,7 @@ contains
     !--> Algorithm
     sll_real64 :: dt
     sll_int32  :: number_iterations
-    sll_int32  :: carac_case
+    sll_int32  :: charac_case
     sll_int32  :: time_case    
     !sll_int32  :: spline_degree
     
@@ -250,7 +266,7 @@ contains
     namelist /equilibrium/ tau0, rho_peak, kappan, deltarn, &
       kappaTi, deltarTi, kappaTe, deltarTe, QN_case
     namelist /perturbation/ perturb_choice, mmode, nmode, eps_perturb
-    namelist /sim_params/ dt, number_iterations, carac_case, time_case
+    namelist /sim_params/ dt, number_iterations, charac_case, time_case
       !, spline_degree
 
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
@@ -304,13 +320,13 @@ contains
         print *,'#in init_dk4d_polar'
          stop
     end select
-    select case (carac_case)
+    select case (charac_case)
       case (0)
-        sim%time_case = SLL_CARAC_EULER
+        sim%time_case = SLL_CHARAC_EULER
       case (1)
-        sim%time_case = SLL_CARAC_VERLET 
+        sim%time_case = SLL_CHARAC_VERLET 
       case default
-        print *,'#bad choice for carac_case', carac_case
+        print *,'#bad choice for charac_case', charac_case
         print *,'#in init_dk4d_polar'
          stop
     end select
@@ -353,7 +369,18 @@ contains
       print *,'#deltarTi=',deltarTi
       print *,'#kappaTe=',kappaTe
       print *,'#deltarTe=',deltarTe
-      print *,'#QN_case=',QN_case
+      select case(sim%QN_case)
+        case (SLL_NO_QUASI_NEUTRAL)
+          print *,'#QN_case=SLL_NO_QUASI_NEUTRAL', QN_case, sim%QN_case
+        case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
+          print *,'#QN_case=SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOWL', QN_case, sim%QN_case
+        case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
+          print *,'#QN_case=SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW', QN_case, sim%QN_case
+        case default
+        print *,'#bad choice for QN_case', QN_case
+        print *,'#in init_dk4d_polar'
+        stop
+      end select 
       print *,'##perturbation'
       print *,'#perturb_choice=',perturb_choice
       print *,'#mmode=',mmode
@@ -362,7 +389,7 @@ contains
       print *,'#dt=',dt
       print *,'#number_iterations=',number_iterations
       print *,'#time_case=',time_case
-      print *,'#carac_case=',carac_case
+      print *,'#charac_case=',charac_case
     endif
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -371,6 +398,103 @@ contains
     call initialize_profiles_analytic(sim)    
     call allocate_fdistribu4d_DK(sim)
     call allocate_QN_DK( sim )
+    
+    
+    call initialize_eta1_node_1d(sim%m_x1,sim%x1_node)
+    call initialize_eta1_node_1d(sim%m_x2,sim%x2_node)
+    call initialize_eta1_node_1d(sim%m_x3,sim%x3_node)
+    call initialize_eta1_node_1d(sim%m_x4,sim%x4_node)
+
+
+    sim%interp_x1x2 => new_cubic_spline_2d_interpolator( &
+      sim%m_x1%num_cells+1, &
+      sim%m_x2%num_cells+1, &
+      sim%m_x1%eta_min, &
+      sim%m_x1%eta_max, &
+      sim%m_x2%eta_min, &
+      sim%m_x2%eta_max, &
+      SLL_HERMITE, &
+      SLL_PERIODIC)
+    
+    select case (sim%time_case)   
+      case(SLL_CHARAC_EULER)
+        sim%charac_x1x2 => new_explicit_euler_2d_charac(&
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          SLL_SET_TO_LIMIT, &
+          SLL_PERIODIC)
+      case(SLL_CHARAC_VERLET)
+        sim%A1_interp_x1 => new_cubic_spline_1d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          SLL_HERMITE)
+        sim%A2_interp_x1 => new_cubic_spline_1d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          SLL_HERMITE)
+        sim%A1_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          SLL_HERMITE, &
+          SLL_PERIODIC)
+        sim%A2_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          SLL_HERMITE, &
+          SLL_PERIODIC)
+        sim%charac_x1x2 => new_verlet_2d_charac(&
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          sim%A1_interp_x1x2, &
+          sim%A2_interp_x1x2, &
+          sim%A1_interp_x1, &
+          sim%A2_interp_x1, &
+          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_2=SLL_PERIODIC)
+      case default
+        print *,'#bad choice for charac_case', charac_case
+        print *,'#in init_dk4d_polar'
+        print *,'#should be: SLL_CHARAC_EULER=', SLL_CHARAC_EULER
+        print *,'#or: SLL_CHARAC_VERLET=', SLL_CHARAC_VERLET
+        stop
+    end select
+      
+        
+    sim%adv_x1x2 => new_BSL_2d_advector(&
+      sim%interp_x1x2, &
+      sim%charac_x1x2, &
+      sim%x1_node, &
+      sim%x2_node, &
+      sim%m_x1%num_cells+1, &
+      sim%m_x2%num_cells+1)
+
+
+
+    sim%adv_x3 => new_periodic_1d_advector( &
+      sim%m_x3%num_cells+1, &
+      sim%m_x3%eta_min, &
+      sim%m_x3%eta_max, &
+      SPLINE, & 
+      4) 
+
+    sim%adv_x4 => new_periodic_1d_advector( &
+      sim%m_x4%num_cells+1, &
+      sim%m_x4%eta_min, &
+      sim%m_x4%eta_max, &
+      SPLINE, & 
+      4) 
+
+
     
 !    sim%interp_x1x2 => new_spline_2d( sim%m_x1%num_cells+1,&
 !     sim%m_x2%num_cells+1,&
@@ -397,14 +521,14 @@ contains
 
     grad_cg = 3  !3: splines 1: finite diff order 2 
     
-    select case (sim%carac_case)
+    select case (sim%charac_case)
     
-      case (SLL_CARAC_EULER)
+      case (SLL_CHARAC_EULER)
         carac_cg = 1
-      case (SLL_CARAC_VERLET)
+      case (SLL_CHARAC_VERLET)
         carac_cg = 4
       case default
-        print *,'#bad value of sim%carac_case', sim%carac_case
+        print *,'#bad value of sim%charac_case', sim%charac_case
         print *,'#in init_dk4d_polar'  
     end select
     
