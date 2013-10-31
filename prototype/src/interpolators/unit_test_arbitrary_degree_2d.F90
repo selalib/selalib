@@ -13,6 +13,8 @@ program unit_test
 #define X1MAX 1.0_f64
 #define X2MIN 0.0_f64
 #define X2MAX 1.0_f64
+#define TOLERANCE_NODE 1.0E-7_f64
+#define TOLERANCE_DER  3.0e-5_f64
 
   type(arb_deg_2d_interpolator) :: ad2d
   sll_real64, dimension(:,:), allocatable    :: x
@@ -32,8 +34,10 @@ program unit_test
   sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2
   sll_real64 :: normL2_0, normL2_1, normL2_2, normL2_3
   sll_real64 :: normH1_0, normH1_1, normH1_2, normH1_3
+  logical :: result
 
   
+  result = .true.
   print *,  'filling out discrete arrays for x1 '
   h1 = (X1MAX-X1MIN)/real(NPTS1-1,f64)
   h2 = (X2MAX-X2MIN)/real(NPTS2-1,f64)
@@ -382,36 +386,53 @@ program unit_test
   print*, ' Average error in nodes'
   print*, '--------------------------------------------'
   print *, 'Average error in nodes (dirichlet-dirichlet) = ', acc3/(NPTS1*NPTS2)
-  !
+  call test_value_for_acceptable_error( acc3/(NPTS1*NPTS2), TOLERANCE_NODE,&
+       result)
   print *, 'Average error in nodes (dirichlet-periodic) = ', acc2/(NPTS1*NPTS2)
-  !
+  call test_value_for_acceptable_error( acc2/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
   print *, 'Average error in nodes (periodic-dirichlet) = ', acc1/(NPTS1*NPTS2)
-!
+  call test_value_for_acceptable_error( acc1/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
   print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
 
   print*, '--------------------------------------------'
   print*, ' Average error in nodes first derivative eta1'
   print*, '--------------------------------------------'
   print *,'Average error in nodes first derivative eta1(dirichlet-dirichlet)=',&
        acc3_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc3_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
   print *,'Average error in nodes first derivative eta1(dirichlet-periodic)=',&
        acc2_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc2_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
   print *,'Average error in nodes first derivative eta1(periodic-dirichlet)=',&
        acc1_der1/(NPTS1*NPTS2)
- 
+  call test_value_for_acceptable_error( acc1_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
   print *,'Average error in nodes first derivative eta1(periodic-periodic)=',&
        acc_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
 
   print*, '--------------------------------------------'
   print*, ' Average error in nodes first derivative eta2'
   print*, '--------------------------------------------'
   print *,'Average error in nodes first derivative eta2(dirichlet-dirichlet)=',&
        acc3_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc3_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
   print *,'Average error in nodes first derivative eta2(dirichlet-periodic)=',&
        acc2_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc2_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
   print *,'Average error in nodes first derivative eta2(periodic-dirichlet)=',&
        acc1_der2/(NPTS1*NPTS2)
-  
+  call test_value_for_acceptable_error( acc1_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
   print *,'Average error in nodes first derivative eta2(periodic-periodic)=',&
        acc_der2/(NPTS1*NPTS2)
 
@@ -440,20 +461,23 @@ program unit_test
         ( sqrt(normH1_2) <= h1**(SPL_DEG-1)) .AND. &
         ( sqrt(normH1_3) <= h1**(SPL_DEG-1))) then
      
-       
      print *, 'PASSED'
   end if
-!!$
-!!$  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
-!!$      (acc1/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
-!!$      (acc2/(NPTS1*NPTS2) .lt. 2.0e-16) .and. &
-!!$      (acc3/(NPTS1*NPTS2) .lt. 2.0e-16)) then
-!!$     print *, 'PASSED'
-!!$  else
-!!$     print *, 'FAILED'
-!!$  end if
-!!$  print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1*NPTS2)
-!!$  print *, 'Average error, x1 deriv eta2 = ', acc2/(NPTS1*NPTS2)
+
+contains
+
+  ! obsolete apparently
+  subroutine test_value_for_acceptable_error( value, max_error, boolean )
+    sll_real64, intent(in) :: value
+    sll_real64, intent(in) :: max_error
+    logical, intent(inout) :: boolean
+
+    if( value <= max_error ) then
+       boolean = boolean .and. .true.
+    else
+       boolean = boolean .and. .false.
+    end if
+  end subroutine test_value_for_acceptable_error
 
 end program unit_test
 
