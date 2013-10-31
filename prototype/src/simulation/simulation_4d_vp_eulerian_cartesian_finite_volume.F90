@@ -610,27 +610,33 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$             enddo
 !!$          end do
 !!$! !!$            write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
-!!$! !!$            write(*,*) 'rho_exact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
+!!$! !!$            write(*,*) 'rhoexact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
 !!$       enddo
 !!$    enddo
 
    !au bord
     call mpi_comm(sim)
-    rho_x1_temp=0.0_f64
+    !rho_x1_temp=0.0_f64
+    sim%rho_x1 = 0.0_f64
     do i=1,loc_sz_x1
        do j=1,loc_sz_x2
+          !write(*,*) i,j
           do ii=1,loc_sz_v1
              do jj=1,loc_sz_v2
                 mm=loc_sz_v1*(jj-1)+ii
                 sim%rho_x1(i,j) = &
                      sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)*sim%p(mm)
+                !write(*,*) 'fn',ii,jj,sim%fn_v1v2x1(ii,jj,i,j)
              enddo
           end do
-           !write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
-           !write(*,*) 'rho_exact (',i,',',j,') = ', x_mil(i), (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
-
+           !write(*,*) 'x',x_mil(i),'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+           !write(*,*) 'rho_exact (',i,',',j,') = ', x_mil(i), sin(0.5*(x_mil(i)-sim%mesh2dx%delta_eta1/2))
+           !write(*,*) 'rho_exact (',i,',',j,') = ', x_mil(i)-sim%mesh2dx%delta_eta1/2, (1+sim%params(5)*cos(0.5_f64*(x_mil(i)-sim%mesh2dx%delta_eta1/2)))*0.99999998
+          !stop
        enddo
     enddo
+    !stop
+
 !!$   do i=1,loc_sz_x1
 !!$    write(*,*) 'rho_x1_temp (',i,',:) = ', rho_x1_temp(i,:)
 !!$   end do
@@ -654,16 +660,17 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$       write (*,*) 'rho = ', sim%rho_x1(i,:)
 !!$    enddo
     !stop
+    sim%phi_x1=0.0_f64
     call solve_poisson_2d_periodic_cartesian_par_alt(sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1(:,1:loc_sz_x2))
     sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
     sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
 !!$    do i=1,loc_sz_x1
-!!$       write (*,*) 'phi = ', sim%phi_x1(i,:)
+!!$       write (*,*)  'x',x_mil(i)-sim%mesh2dx%delta_eta1/2,'phi = ', sim%phi_x1(i,:)
 !!$    enddo
-!!$    stop
-!!$
+    !stop
+
     t=t+sim%dt
     if (sim%nsch == 0) then
        call euler(sim)
@@ -728,6 +735,7 @@ if(sim%test==1) then
 !!$    !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
 !!$    !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
 !!$    !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
+             !write(*,*) '2*dx',2*sim%mesh2dx%delta_eta1*inv_jac(1,1)
              Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
                   sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
                   sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
@@ -753,7 +761,7 @@ if(sim%test==1) then
              sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                   sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
           end do
-          write(*,*) 'Ex', Ex
+          !write(*,*) 'Ex', Ex
           !stop
 
           !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
@@ -1557,11 +1565,11 @@ subroutine velocity_mesh_connectivity(sim)
  !write(*,*) 'dimension of matrix : ', sim%np_v1*sim%np_v2
  !write(*,*) 'nsky = ', sim%nsky
 !!$  write(*,*) 'matrix p : '
-!!$   do i=1,sim%np_v2-1
+!!$   do i=1,sim%np_v2
 !!$     write(*,*)  sim%p((i-1)*sim%np_v1+1:i*sim%np_v1)
 !!$     write(*,*)
 !!$   end do
-!!$    stop
+    !stop
 
 !!$    !write(*,*) 'M diag', sim%Av2_diag
 !!$    write(*,*) 'M low', sim%M_low
@@ -2089,7 +2097,7 @@ subroutine sourcenum(sim,Ex,Ey,w,source)
  endif
 
  source=Ex*source1+Ey*source2
-
+ source=-source
  !    write(*,*) 'source = ',  source
  !    stop
 !!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
@@ -2271,7 +2279,7 @@ subroutine dtf(sim)
 !!$            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta1*inv_jac(1,2)
        call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
             source)
-
+       !write(*,*) 'Ex',Ex,'Ey',Ey, 'source',source
        !write(*,*) 'Ey avance = ', Ey
 !!$          write(*,*) 'source = ', source
 !!$          write(*,*) 'coucou'
@@ -2295,6 +2303,7 @@ subroutine dtf(sim)
        !one time and we have juste modify the temp=>vector,no?
     end do
  end do
+!stop
  !write(*,*) 'sim%dtfn_v1v2x1'
 !!$          do jc=0,loc_sz_x2+1
 !!$             write(*,*) jc, sim%dtfn_v1v2x1(1,1,:,jc)
