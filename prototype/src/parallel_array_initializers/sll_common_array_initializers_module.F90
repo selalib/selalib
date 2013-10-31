@@ -474,6 +474,8 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     !write(*,*) 'vx=',vx,kx,x,factor1
 !!         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_1d_initializer_v1v2x1x2
+
+
   function sll_landau_2d_initializer_v1v2x1x2( vx, vy, x, y, params ) 
     sll_real64 :: sll_landau_2d_initializer_v1v2x1x2
     sll_real64, intent(in) :: x
