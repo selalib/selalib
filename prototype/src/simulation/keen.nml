@@ -1,6 +1,6 @@
 &geom
   Ncx = 64 
-  Ncv = 512
+  Ncv = 128
   nbox = 1
   xmin = 0.0
   vmin = -6.0
@@ -15,7 +15,7 @@
 &time_iterations
   dt = 0.5
   first_step = 0
-  nbiter = 1000
+  nbiter = 400
   freqdiag_time = 1
   freqdiag = 20
 /
