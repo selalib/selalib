@@ -92,6 +92,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
+     ADD_SUBDIRECTORY(advection)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
@@ -128,7 +129,7 @@ IF(NOT SLL_BUILD_PACKAGE)
          ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ENDIF(SUITESPARSE_FOUND)
    
-      ADD_SUBDIRECTORY(mapped_meshes)
+      ADD_SUBDIRECTORY(mapped_meshes) # deprecated
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(distribution_function)
       ADD_SUBDIRECTORY(ode_solvers)

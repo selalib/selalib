@@ -500,7 +500,8 @@ contains
             i4 = glob_ind4d(4)
             theta_j = polar_eta2( &
               sim%xgrid_2d(i1,i2), &
-              sim%ygrid_2d(i1,i2))
+              sim%ygrid_2d(i1,i2), &
+              (/0.0_f64/)) ! irrelevant for polar_eta2
             phi_k   = phi_grid_tmp(i3) 
             sim%f4d_x3x4(iloc1,iloc2,i3,i4) = &
               sim%feq_xyvpar(i1,i2,i4) * &
