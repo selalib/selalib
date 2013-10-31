@@ -241,6 +241,7 @@ contains
     sll_real64 :: val_intg_Linf
     sll_real64 :: val_mass
     sll_real64 :: val_energy
+    sll_real64 :: node_val,ref_val
     ! The following could probably be abstracted for convenience
     sll_int32 :: iplot
     character(len=4) :: cplot
@@ -357,7 +358,7 @@ contains
           eta1=eta1_min+real(i-1,f64)*delta1
           x = sim%transf%x1(eta1,eta2)
           y = sim%transf%x2(eta1,eta2)
-          sim%rho_n(i,j) = sim%init_func(x,y,sim%params)
+          sim%rho_n(i,j) =sim%init_func(x,y,sim%params)
         end do
      end do
      
@@ -427,8 +428,20 @@ contains
             sim%qns, & 
             rho_n_ptr, &
             phi )
-        
-       
+          
+    do i=1,sim%mesh2d%num_cells1+1
+     do j=1,sim%mesh2d%num_cells2+1
+     
+        eta1       = real(i-1,f64)*delta1 + eta1_min
+        eta2       = real(j-1,f64)*delta2 + eta2_min
+        node_val   = phi%value_at_point(eta1,eta2)
+        ref_val    = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
+      write(32,*) eta1,eta2,node_val,ref_val,abs(ref_val-node_val)
+     enddo
+    enddo
+    
+   
+             
     call calcul_integral(rho_n_ptr,phi,&
        sim%spline_degree_eta1, &
        val_intg_L1,&
@@ -577,6 +590,18 @@ contains
      endif
      
     end do ! main loop
+    
+  call rho_n_ptr%delete()
+  call rho_np1_ptr%delete()
+  call rho_nm1_ptr%delete()
+  call c_field%delete()
+  call phi%delete()
+  call a11_field_mat%delete()
+  call a12_field_mat%delete()
+  call a21_field_mat%delete()
+  call a22_field_mat%delete()
+  SLL_DEALLOCATE_ARRAY(phi_values, ierr)
+  
   end subroutine run_2d_gc_general
   
 
