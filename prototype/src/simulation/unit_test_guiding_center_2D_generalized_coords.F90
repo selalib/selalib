@@ -32,6 +32,10 @@ program gc_2d_general
   sll_real64, external ::     sinprod2_jac11, sinprod2_jac12
   sll_real64, external ::     sinprod2_jac21, sinprod2_jac22 
   
+  sll_real64 :: eta1_min
+  sll_real64 :: eta2_min  
+  sll_real64 :: eta1_max
+  sll_real64 :: eta2_max
   print *, 'Start...'
   
 
@@ -47,19 +51,18 @@ program gc_2d_general
   
   
   ! hardwired, this should be consistent with whatever is read from a file
-#define NCELL1 128
-#define NCELL2 128
-#define SPL_DEG1 2
-#define SPL_DEG2 2
+#define NCELL1 64
+#define NCELL2 64
+#define SPL_DEG1 3
+#define SPL_DEG2 3
 
-landau_params(1)=0.5_f64 ! mode
-landau_params(2)=0.015_f64
+    landau_params(1)=0.5_f64 ! mode
+    landau_params(2)=0.015_f64
 
-#define eta1_min 0.0_f64
-#define eta1_max 2.0_f64*sll_pi/landau_params(1)
-#define eta2_min 0.0_f64
-#define eta2_max 2.0_f64*sll_pi
-
+    eta1_min = 0._f64
+    eta1_max = 2._f64 * sll_pi/landau_params(1)
+    eta2_min = 0._f64 
+    eta2_max = 2._f64 * sll_pi
 
   
   !call simulation%init_from_file(filename_local)
@@ -144,7 +147,10 @@ transformation => new_coordinate_transformation_2d_analytic( &
   print *, ' f initialized '
 
   call simulation%run( )
-  call delete(simulation)
+  !call delete(simulation)
+  call delete_2d_gc_general(simulation)
+  call transformation%delete()
+  
   print *, 'reached end of gc test'
   print *, 'PASSED'
 
@@ -182,6 +188,7 @@ end function func_zero
 
 
 function func_khp1( x, y, params ) result(res)
+  use sll_constants
   real(8), intent(in) :: x
   real(8), intent(in) :: y
   real(8) :: landau_mode,landau_alpha
@@ -190,6 +197,7 @@ function func_khp1( x, y, params ) result(res)
   landau_mode = params(1)
   landau_alpha = params(2)
   res = sin(y)+ landau_alpha*cos(landau_mode*x)   
+  !res = 0.001*cos(2*sll_pi*x)
  end function func_khp1
  
  function func_khp2( x, y, params ) result(res)   
