@@ -2,7 +2,7 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-f_diag = ut.loadHDF5('/Users/back/selalib/prototype/build/DK4d_diag_d00010.h5')
+f_diag = ut.loadHDF5('/Users/back/selalib/prototype/build/DK4d_diag_d00001.h5')
 
 fig = mpp.figure(figsize=(18,9))
 
@@ -70,8 +70,8 @@ mpp.plot(f_diag.nrj_tot)
 ax10 = fig.add_subplot(2,6,9)
 mpp.xlabel('x')
 mpp.ylabel('y')
-mpp.title('masse')
-mpp.plot(f_diag.masse)
+mpp.title('relative_error_masse')
+mpp.plot(f_diag.relative_error_masse)
 
 ax11 = fig.add_subplot(2,6,10)
 mpp.xlabel('x')
