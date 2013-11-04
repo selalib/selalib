@@ -186,7 +186,6 @@ contains
 !!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     sll_landau_initializer_4d = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
-
   end function sll_landau_initializer_4d
 
 
