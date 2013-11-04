@@ -712,7 +712,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$       end do
 
 
-if(sim%test==1) then
+if((sim%test==1).or.(sim%test==9)) then
        write(*,*) 'loc_sz_x1 =', loc_sz_x1
        do ic=1,loc_sz_x1
           do jc=1,loc_sz_x2
@@ -736,10 +736,16 @@ if(sim%test==1) then
 !!$    !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
 !!$    !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
              !write(*,*) '2*dx',2*sim%mesh2dx%delta_eta1*inv_jac(1,1)
-             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+!!$                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+!!$             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+!!$                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+!!$                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+             Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
                   sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
                   sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+             Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
                   sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
 !!$             if (Ey > 0) then
@@ -1094,7 +1100,9 @@ if(sim%test==1) then
 
 
  if (sim%test .eq. 1) then
-    write(*,*) 'we r using the Landau damping 1d test case'
+    write(*,*) 'we r using the Landau damping 1d xvx test case'
+else if (sim%test .eq. 9) then
+    write(*,*) 'we r using the Landau damping 1d yvy test case'
  else if (sim%test .eq. 0) then
     write(*,*) 'the x-transport test case'
  else if (sim%test .eq. 2) then
@@ -2046,7 +2054,7 @@ subroutine sourcenum(sim,Ex,Ey,w,source)
     Ex=1.0_f64
     Ey=0.0_f64
  endif
- if(sim%test==3) then
+ if((sim%test==3).or. (sim%test==7)) then
     Ex=0.0_f64
     Ey=1.0_f64
  endif
@@ -2087,7 +2095,21 @@ subroutine sourcenum(sim,Ex,Ey,w,source)
     call MULKU(sim%Bv1p_sup,sim%Bv1p_diag,sim%Bv1p_low, &
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
  endif
-
+!!$ if (Ex.lt.0) then
+!!$    call MULKU(sim%Bv1m_low,sim%Bv1m_diag,sim%Bv1m_sup, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+!!$ else
+!!$    call MULKU(sim%Bv1p_low,sim%Bv1p_diag,sim%Bv1p_sup, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source1,sim%nsky)
+!!$ endif
+!!$
+!!$ if (Ey.lt.0) then
+!!$    call MULKU(sim%Bv2m_low,sim%Bv2m_diag,sim%Bv2m_sup, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+!!$ else
+!!$    call MULKU(sim%Bv2p_low,sim%Bv2p_diag,sim%Bv2p_sup, &
+!!$         sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
+!!$ endif
  if (Ey.lt.0) then
     call MULKU(sim%Bv2m_sup,sim%Bv2m_diag,sim%Bv2m_low, &
          sim%mkld,w,sim%np_v1*sim%np_v2,1,source2,sim%nsky)
@@ -2097,7 +2119,7 @@ subroutine sourcenum(sim,Ex,Ey,w,source)
  endif
 
  source=Ex*source1+Ey*source2
- source=-source
+ !source=-source
  !    write(*,*) 'source = ',  source
  !    stop
 !!$    write(*,*) 'HELLO!!!!!!!!!!!!!!!!! COUCOU'
@@ -2152,8 +2174,9 @@ subroutine fluxnum(sim,wL,wR,vn,flux)
  flux=vn(1)*flux1+vn(2)*flux2-sim%eps/2*(wR-wL)
 !!$    flux=vn(1)*wL*4
 !!$    flux=wm*vn(1)
-!!$    write(*,*) 'vn(1)',vn(1)
-!!$    stop
+!!$  write(*,*) 'vn(1)',vn(1)
+!!$  write(*,*) 'vn(2)',vn(2)
+!!$  stop
 !!$     write(*,*) '0=', (wm-flux)*vn(1)
  if((sim%test==2).or.(sim%test==3)) then
     flux=0.0_f64
@@ -2232,7 +2255,8 @@ subroutine dtf(sim)
        !flux=0
        sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
        sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
-
+!!$       sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)+flux
+!!$       sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)-flux
     end do
  end do
 
@@ -2265,10 +2289,16 @@ subroutine dtf(sim)
 !!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
 !!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
 !!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
-       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+!!$            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+!!$       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+!!$            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+       Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
             sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
             sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+       Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
             sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
             sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
 !!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(ic,jc))/ &
@@ -2287,8 +2317,8 @@ subroutine dtf(sim)
 
        temp=sim%dtfn_v1v2x1(:,:,ic,jc)-sim%volume(1,1)*source
 !!$          sim%dtfn_v1v2x1(:,:,ic,jc)=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
-!!$          write(*,*) temp
-!!$          stop
+          !write(*,*) 'volume1 = ',sim%volume(1,1)
+          !stop
        call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
             sim%mkld, &
             sim%dtfn_v1v2x1(:,:,ic,jc),&
@@ -2343,6 +2373,8 @@ subroutine euler(sim)
 !!$         + sim%dt*sim%dtfn_v1v2x1/sim%volume(1,1)
  sim%fn_v1v2x1 = sim%fn_v1v2x1 &
       +sim%dtfn_v1v2x1/sim%volume(1,1)*sim%dt
+ !write(*,*) 'volume = ',sim%volume(1,1)
+ !stop
 !!$    do jc=0,loc_sz_x2+1
 !!$       write(*,*) 'apres',jc, sim%fn_v1v2x1(1,1,:,jc)
 !!$    end do
