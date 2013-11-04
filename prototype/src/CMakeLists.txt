@@ -122,13 +122,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(BSL)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
-
-      FIND_PACKAGE(SUITESPARSE)
-      IF(SUITESPARSE_FOUND)
-         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
-         ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ENDIF(SUITESPARSE_FOUND)
-   
+      ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ADD_SUBDIRECTORY(mapped_meshes) # deprecated
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(distribution_function)
