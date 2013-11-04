@@ -615,9 +615,9 @@ contains
            ! print*,i2, theta_j,  sim%eta2_grid(i2)
             phi_k   = phi_grid_tmp(i3) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
-              sim%feq_xyvpar(i1,i2,i4) * &
-              (1._f64+sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
-              2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi))
+                 sim%feq_xyvpar(i1,i2,i4) * &
+                 (1._f64 + sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
+                 2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi))
           end do
         end do
       end do
@@ -1775,6 +1775,7 @@ contains
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_pot_result
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_tot_result
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_heat_flux_result
+    sll_real64, dimension(sim%count_save_diag + 1) :: diag_relative_error_nrj_tot_result
     
     !--> For initial profile HDF5 saving
     integer             :: file_err
@@ -1787,20 +1788,28 @@ contains
     ix3_diag   = int(sim%Neta3/4)
     ivpar_diag = int(sim%Nvpar/3)
 
-    diag_masse_result = 0.0
-    print*, 'test',sim%diag_masse(1:sim%count_save_diag + 1)
-    call sll_collective_reduce_real64( &
+    diag_masse_result       = 0.0_f64
+    diag_norm_L1_result     = 0.0_f64
+    diag_norm_L2_result     = 0.0_f64
+    diag_norm_Linf_result   = 0.0_f64
+    diag_entropy_kin_result = 0.0_f64
+    diag_nrj_kin_result     = 0.0_f64
+    diag_nrj_pot_result     = 0.0_f64
+    diag_nrj_tot_result     = 0.0_f64
+    diag_heat_flux_result   = 0.0_f64
+    diag_relative_error_nrj_tot_result = 0.0_f64
+ 
+   call sll_collective_reduce_real64( &
                sll_world_collective, &
                sim%diag_masse(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_masse_result )
-    
-    print*, 'masse=',diag_masse_result
+
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_norm_L1, &
+               sim%diag_norm_L1(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1808,7 +1817,7 @@ contains
 
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_norm_L2, &
+               sim%diag_norm_L2(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1816,7 +1825,7 @@ contains
 
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_norm_Linf, &
+               sim%diag_norm_Linf(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1824,7 +1833,7 @@ contains
 
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_entropy_kin, &
+               sim%diag_entropy_kin(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1832,7 +1841,7 @@ contains
 
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_nrj_kin, &
+               sim%diag_nrj_kin(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1840,7 +1849,7 @@ contains
 
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_heat_flux, &
+               sim%diag_heat_flux(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1848,7 +1857,7 @@ contains
     
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_nrj_pot, &
+               sim%diag_nrj_pot(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
@@ -1856,11 +1865,16 @@ contains
 
     call sll_collective_reduce_real64( &
                sll_world_collective, &
-               sim%diag_nrj_tot, &
+               sim%diag_nrj_tot(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
                MPI_SUM, &
                0, &
                diag_nrj_tot_result )
+
+    diag_relative_error_nrj_tot_result(:) = &
+         (diag_nrj_tot_result(:)-diag_nrj_tot_result(1))/&
+         sqrt(0.5*( (diag_nrj_kin_result(:)-diag_nrj_kin_result(1) )**2 + &
+                    (diag_nrj_pot_result(:)-diag_nrj_pot_result(1) )**2 ) ) 
 
     write(filename_HDF5,'(A,'//numfmt//',A)') &
       "DK4d_diag", sim%count_save_diag, ".h5"
@@ -1891,9 +1905,13 @@ contains
       call sll_hdf5_write_array_1d(file_id,&
                           diag_nrj_tot_result(:),'nrj_tot',file_err)
       call sll_hdf5_write_array_1d(file_id,&
+                          diag_relative_error_nrj_tot_result(:),&
+                          'relative_error_nrj_tot',file_err)
+      call sll_hdf5_write_array_1d(file_id,&
                           diag_heat_flux_result(:),'heat_flux',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_masse_result(:),'masse',file_err)
+                          diag_masse_result(:),&
+                          'masse',file_err)
       call sll_hdf5_write_array_1d(file_id,&
                           diag_norm_L1_result(:),'L1_norm',file_err)
       call sll_hdf5_write_array_1d(file_id,&
@@ -2000,7 +2018,7 @@ contains
     
 
     ! local variables
-    sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar
+    sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar,Neta1,Neta2
     sll_real64 :: delta_eta1,delta_eta2,delta_eta3,delta_vpar
     sll_real64 :: val_jac
     sll_real64 :: vpar
@@ -2013,6 +2031,8 @@ contains
     
     Neta1_loc  = size(sim%f4d_seqx3x4,1)
     Neta2_loc  = size(sim%f4d_seqx3x4,2)
+    Neta1      = sim%nc_x1 + 1
+    Neta2      = sim%nc_x2 + 1
     Neta3      = size(sim%f4d_seqx3x4,3)
     Nvpar      = size(sim%f4d_seqx3x4,4)
     delta_eta1 = sim%logical_mesh4d%delta_eta1
@@ -2029,7 +2049,6 @@ contains
     !-> Computation of the energy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc
        do iloc1 = 1,Neta1_loc
-          val_jac = abs(sim%transf_xy%jacobian_at_cell(i1,i2))
           do i4 = 1,Nvpar-1
              vpar = sim%vpar_grid(i4)
              do i3 = 1,Neta3-1
@@ -2041,22 +2060,29 @@ contains
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
                 
-                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                     sim%feq_xyvpar(i1,i2,i4)
-                
-                
-                nrj_kin = nrj_kin + &
-                     delta_f * vpar**2 * 0.5 * val_jac * &
-                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                
-                nrj_pot = nrj_pot + &
-                     delta_f * val_elec_pot * 0.5 * val_jac * &
-                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
-
-                ! definition FALSE 
-                heat_flux = heat_flux + &
-                    delta_f * vpar**2* 0.5* val_jac * &
-                    delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                if (i1 .ne. Neta1) then
+                   if (i2 .ne. Neta2) then 
+                      
+                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+                      
+                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                           sim%feq_xyvpar(i1,i2,i4)
+                      
+                      
+                      nrj_kin = nrj_kin + &
+                           delta_f * vpar**2 * 0.5 * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      nrj_pot = nrj_pot + &
+                           delta_f * val_elec_pot * 0.5 * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      ! definition FALSE 
+                      ! heat_flux = heat_flux + &
+                      !     delta_f * vpar**2* 0.5* val_jac * &
+                      !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                   end if
+                end if
              end do
           end do
        end do
@@ -2096,6 +2122,7 @@ contains
     
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar
+    sll_int32  :: Neta1, Neta2
     sll_real64 :: delta_eta1,delta_eta2,delta_eta3,delta_vpar
     sll_real64 :: val_jac
     sll_real64 :: delta_f
@@ -2106,13 +2133,15 @@ contains
 
     Neta1_loc  = size(sim%f4d_seqx3x4,1)
     Neta2_loc  = size(sim%f4d_seqx3x4,2)
+    Neta1      = sim%nc_x1 + 1
+    Neta2      = sim%nc_x2 + 1
     Neta3      = size(sim%f4d_seqx3x4,3)
     Nvpar      = size(sim%f4d_seqx3x4,4)
     delta_eta1 = sim%logical_mesh4d%delta_eta1
     delta_eta2 = sim%logical_mesh4d%delta_eta2
     delta_eta3 = sim%logical_mesh4d%delta_eta3
     delta_vpar = sim%logical_mesh4d%delta_eta4
-    
+
     
     norm_L1    = 0.0
     norm_L2    = 0.0
@@ -2123,9 +2152,6 @@ contains
     !-> Computation of the enrgy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc
        do iloc1 = 1,Neta1_loc
-          
-          val_jac = abs(sim%transf_xy%jacobian_at_cell(i1,i2))
-
           do i3 = 1,Neta3-1
              do i4 = 1,Nvpar-1
                 
@@ -2134,26 +2160,32 @@ contains
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
                 
-                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4)
-                
-                masse   = masse + &
-                     delta_f * val_jac * &
-                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                
-                norm_L1 = norm_L1 + &
-                     abs(delta_f) * val_jac * &
-                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                
-                norm_L2 = norm_L2 + &
-                          abs(delta_f)**2 * val_jac * &
-                          delta_eta1*delta_eta2*delta_eta3*delta_vpar
-
-                entropy_kin = entropy_kin - &
-                          delta_f* log(abs(delta_f)) * val_jac * &
-                          delta_eta1*delta_eta2*delta_eta3*delta_vpar
-
-                norm_Linf = max(abs(delta_f),norm_Linf)
-                
+                if (i1 .ne. Neta1) then
+                   if (i2 .ne. Neta2) then 
+                      
+                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+                      
+                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4)
+                      
+                      masse   = masse + &
+                           delta_f * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      norm_L1 = norm_L1 + &
+                           abs(delta_f) * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                   
+                      norm_L2 = norm_L2 + &
+                           abs(delta_f)**2 * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      entropy_kin = entropy_kin - &
+                        delta_f* log(abs(delta_f)) * val_jac * &
+                        delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      norm_Linf = max(abs(delta_f),norm_Linf)
+                   end if
+                end if
              end do
           end do
        end do
