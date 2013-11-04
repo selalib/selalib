@@ -39,8 +39,8 @@ program unit_test_logical_meshes
   call delete(m3d)
   call delete(m4d)
 
-  mx  => new_logical_mesh_2d(100,100, 0.0_f64, 12.56_f64, 0.0_f64, 12.56_f64)
-  mv  => new_logical_mesh_2d(64,64,-6.0_f64,6.0_f64,-6.0_f64,6.0_f64)
+  mx => new_logical_mesh_2d(100,100, 0.0_f64, 12.56_f64, 0.0_f64, 12.56_f64)
+  mv => new_logical_mesh_2d(64,64,-6.0_f64,6.0_f64,-6.0_f64,6.0_f64)
   mxv => mx * mv
 
   call sll_display(mxv)
