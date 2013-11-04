@@ -81,8 +81,10 @@ contains
        eta_max, &
        bc_left, &
        bc_right, &
-       spline_degree ) result(interpolator)
-
+       spline_degree,&
+       slope_left,&
+       slope_right) result(interpolator)
+    
     class(arb_deg_1d_interpolator),pointer :: interpolator
     sll_int32, intent(in) :: num_pts
     sll_real64, intent(in) :: eta_min
@@ -90,9 +92,9 @@ contains
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: spline_degree
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
     sll_int32 :: ierr
-    sll_int32 :: tmp
-    sll_int64 :: bc_selector
 
     SLL_ALLOCATE(interpolator,ierr)
     
@@ -103,7 +105,9 @@ contains
          eta_max, &
          bc_left, &
          bc_right, &
-         spline_degree )
+         spline_degree,&
+         slope_left,&
+         slope_right)
   end function new_arbitrary_degree_1d_interpolator
 
   subroutine initialize_ad1d_interpolator( &
