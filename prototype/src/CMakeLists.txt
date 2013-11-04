@@ -89,13 +89,11 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
-
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
      ADD_SUBDIRECTORY(advection)
    ENDIF(NOT STDF95)
-
    ADD_SUBDIRECTORY(interpolators)
 
    IF(MPI_MODULE_ENABLED)
