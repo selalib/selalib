@@ -22,13 +22,14 @@ MESSAGE(STATUS "CHOLMOD_INCLUDE_DIR:${CHOLMOD_INCLUDE_DIR}")
 
 MACRO(FIND_SUITESPARSE_LIBRARY LIB )
 
-   SET(_LIB ${LIB}-NOTFOUND)
-   FIND_LIBRARY( _LIB
-                 NAMES ${LIB}
-                 PATHS /usr/lib /usr/lib64 /usr/local/lib /opt/local/lib )
-   IF(_LIB)
-      LIST ( APPEND SUITESPARSE_LIBRARIES ${_LIB})
-   ENDIF()
+SET(_LIB ${LIB}-NOTFOUND)
+FIND_LIBRARY( _LIB
+              NAMES ${LIB}
+              PATHS /usr/lib /usr/lib64 /usr/local/lib /opt/local/lib )
+
+IF(_LIB)
+   LIST ( APPEND SUITESPARSE_LIBRARIES ${_LIB})
+ENDIF()
 
 ENDMACRO(FIND_SUITESPARSE_LIBRARY)
 
