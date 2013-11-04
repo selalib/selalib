@@ -909,15 +909,15 @@ contains
 
        select case (interpolator%bc_selector)
        case (0) ! 1. periodic-periodic
-          sz1 = interpolator%num_pts1-1
-          sz2 = interpolator%num_pts2-1
+          sz1 = interpolator%num_pts1!-1
+          sz2 = interpolator%num_pts2!-1
           
        case (9) ! 2. dirichlet-left, dirichlet-right, periodic
           sz1 = interpolator%num_pts1
-          sz2 = interpolator%num_pts2-1
+          sz2 = interpolator%num_pts2!-1
           
        case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
-          sz1 = interpolator%num_pts1-1
+          sz1 = interpolator%num_pts1!-1
           sz2 = interpolator%num_pts2
        
        case (585) ! 4. dirichlet in all sides
@@ -960,58 +960,58 @@ contains
    ! print*, 'pointlocation',point_location_eta2
     select case (interpolator%bc_selector)
     case (0) ! periodic-periodic
-       interpolator%size_coeffs1 = sz1+1
-       interpolator%size_coeffs2 = sz2+1
-       interpolator%size_t1 = order1 + sz1 + 1
-       interpolator%size_t2 = order2 + sz2 + 1 
+       interpolator%size_coeffs1 = sz1!+1
+       interpolator%size_coeffs2 = sz2!+1
+       interpolator%size_t1 = order1 + sz1 !+ 1
+       interpolator%size_t2 = order2 + sz2 !+ 1 
 
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
 
        call spli2d_perper( &
-            period1, sz1+1, order1, point_location_eta1, &
-            period2, sz2+1, order2, point_location_eta2, &
-            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1+1,1:sz2+1),&
-            interpolator%t1(1:order1 + sz1 + 1), &
-            interpolator%t2(1:order2 + sz2 + 1) )
+            period1, sz1, order1, point_location_eta1(1:sz1-1), & !+1
+            period2, sz2, order2, point_location_eta2(1:sz2-1), & !+1
+            data_array(1:sz1-1,1:sz2-1), interpolator%coeff_splines(1:sz1,1:sz2),&!(1:sz1+1,1:sz2+1),&
+            interpolator%t1(1:order1 + sz1 ), &!+ 1), &
+            interpolator%t2(1:order2 + sz2 ))!+ 1) )
    
        
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_coeffs1 = sz1
-       interpolator%size_coeffs2 = sz2+1
+       interpolator%size_coeffs2 = sz2!+1
        interpolator%size_t1 = order1 + sz1
-       interpolator%size_t2 = order2 + sz2 + 1
+       interpolator%size_t2 = order2 + sz2 !+ 1
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        call spli2d_dirper( sz1, order1, point_location_eta1, &
-            period2, sz2+1, order2, point_location_eta2, &
-            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1,1:sz2+1),&
+            period2, sz2, order2, point_location_eta2(1:sz2-1), & !+1
+            data_array(1:sz1,1:sz2-1), interpolator%coeff_splines(1:sz1,1:sz2),&!+1
             interpolator%t1(1:sz1+order1), &
-            interpolator%t2(1:sz2+order2+1) )
+            interpolator%t2(1:sz2+order2) ) !+1
 
        ! boundary condition non homogene
-       interpolator%coeff_splines(1,1:sz2+1)   = interpolator%slope_left(1:sz2+1)
-       interpolator%coeff_splines(sz1,1:sz2+1) = interpolator%slope_right(1:sz2+1)
+       interpolator%coeff_splines(1,1:sz2)   = interpolator%slope_left(1:sz2)
+       interpolator%coeff_splines(sz1,1:sz2) = interpolator%slope_right(1:sz2)
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
-       interpolator%size_coeffs1 = sz1+1
+       interpolator%size_coeffs1 = sz1!+1
        interpolator%size_coeffs2 = sz2
-       interpolator%size_t1 = order1 + sz1 + 1
+       interpolator%size_t1 = order1 + sz1 !+ 1
        interpolator%size_t2 = order2 + sz2 
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
-       call spli2d_perdir( period1, sz1+1, order1, point_location_eta1, &
+       call spli2d_perdir( period1, sz1, order1, point_location_eta1(1:sz1-1), & !+ 1
             sz2, order2, point_location_eta2, &
-            data_array(1:sz1,1:sz2), interpolator%coeff_splines(1:sz1+1,1:sz2),&
-            interpolator%t1(1:sz1+order1+1), &
+            data_array(1:sz1-1,1:sz2), interpolator%coeff_splines(1:sz1,1:sz2),& !+ 1
+            interpolator%t1(1:sz1+order1), & ! + 1
             interpolator%t2(1:sz2+order2) )
 
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1+1,1)   = interpolator%slope_bottom(1:sz1+1)
-       interpolator%coeff_splines(1:sz1+1,sz2) = interpolator%slope_top(1:sz1+1)
+       interpolator%coeff_splines(1:sz1,1)   = interpolator%slope_bottom(1:sz1)
+       interpolator%coeff_splines(1:sz1,sz2) = interpolator%slope_top(1:sz1)
        
     case (585) ! 4. dirichlet in all sides
        !print*, 'her'
