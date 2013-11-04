@@ -30,12 +30,26 @@ subroutine spli1d_dir ( &
   apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
   apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
   
-  do li_i = ai_kx + 1, ai_nx
-     apr_tx ( li_i ) = apr_taux ( 2 ) + &
-          (li_i-(ai_kx + 1))*&
-          ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+!!$  do li_i = ai_kx + 1, ai_nx
+!!$     apr_tx ( li_i ) = apr_taux ( 2 ) + &
+!!$          (li_i-(ai_kx + 1))*&
+!!$          ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+!!$     
+!!$  end do
+
+  if ( mod(ai_kx,2) == 0 ) then
+     do li_i = ai_kx + 1, ai_nx
+        apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
+        
+     end do
+  else
      
-  end do
+     do li_i = ai_kx + 1, ai_nx
+        apr_tx ( li_i ) = 0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
+        
+     end do
+     
+  end if
   ! else
   !   scrtch(:) = 0.0_8
   !  print*, 'TEST SPLOT', size(apr_taux), ai_nx,ai_kx,size(apr_tx),size(scrtch)
