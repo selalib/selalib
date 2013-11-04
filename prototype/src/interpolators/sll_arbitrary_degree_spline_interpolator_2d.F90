@@ -57,6 +57,10 @@ use sll_module_interpolators_2d_base
      sll_real64, dimension(:,:), pointer :: coeff_splines
      sll_int32                  :: size_coeffs1
      sll_int32                  :: size_coeffs2
+     sll_real64, dimension(:),pointer :: slope_left
+     sll_real64, dimension(:),pointer :: slope_right
+     sll_real64, dimension(:),pointer :: slope_bottom
+     sll_real64, dimension(:),pointer :: slope_top
 
 #ifndef STDF95
    contains
@@ -94,6 +98,10 @@ contains
     SLL_DEALLOCATE(interpolator%t1,ierr)
     SLL_DEALLOCATE(interpolator%t2,ierr)
     SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
+    SLL_DEALLOCATE( slope_left,ierr)
+    SLL_DEALLOCATE( slope_right,ierr)
+    SLL_DEALLOCATE( slope_bottom,ierr)
+    SLL_DEALLOCATE( slope_top,ierr)
   end subroutine delete_arbitrary_degree_2d_interpolator
 
   function new_arbitrary_degree_spline_interpolator_2d( &
@@ -108,7 +116,11 @@ contains
     bc_bottom, &
     bc_top, &
     spline_degree1, &
-    spline_degree2 ) result( res )
+    spline_degree2,&
+    slope_left,&
+    slope_right,&
+    slope_bottom,&
+    slope_top) result( res )
 
     type(arb_deg_2d_interpolator), pointer :: res
     sll_int32, intent(in) :: num_pts1
@@ -123,6 +135,10 @@ contains
     sll_int32, intent(in) :: bc_top
     sll_int32, intent(in) :: spline_degree1
     sll_int32, intent(in) :: spline_degree2
+    sll_real64, dimension(:),optional :: slope_left
+    sll_real64, dimension(:),optional :: slope_right
+    sll_real64, dimension(:),optional :: slope_bottom
+    sll_real64, dimension(:),optional :: slope_top
     sll_int32 :: ierr
 
     SLL_ALLOCATE(res,ierr)
@@ -139,7 +155,11 @@ contains
          bc_bottom, &
          bc_top, &
          spline_degree1, &
-         spline_degree2 )
+         spline_degree2,&
+         slope_left,&
+         slope_right,&
+         slope_bottom,&
+         slope_top)
   end function new_arbitrary_degree_spline_interpolator_2d
 
 #ifdef STDF95
@@ -159,7 +179,11 @@ contains
     bc_bottom, &
     bc_top, &
     spline_degree1, &
-    spline_degree2 )
+    spline_degree2,&
+    slope_left,&
+    slope_right,&
+    slope_bottom,&
+    slope_top)
 
 #ifdef STDF95
     type (arb_deg_2d_interpolator), intent(inout) :: interpolator
@@ -178,6 +202,14 @@ contains
     sll_int32, intent(in) :: bc_top
     sll_int32, intent(in) :: spline_degree1
     sll_int32, intent(in) :: spline_degree2
+    ! In the case of Dirichlet boundary conditions we can have 
+    ! non homogene and homogene case
+    ! slope_  represente the value of a function in the nodes of boundary
+    ! if the user put anything we consider that is equal to 0 
+    sll_real64, dimension(:),optional :: slope_left
+    sll_real64, dimension(:),optional :: slope_right
+    sll_real64, dimension(:),optional :: slope_bottom
+    sll_real64, dimension(:),optional :: slope_top
     sll_int32 :: ierr
     sll_int32 :: tmp1
     sll_int32 :: tmp2
@@ -266,6 +298,60 @@ contains
     interpolator%bc_selector = bc_selector
     interpolator%num_pts1 = num_pts1
     interpolator%num_pts2 = num_pts2
+
+    SLL_ALLOCATE(interpolator%slope_left  (num_pts2 + 4*spline_degree2),ierr)
+    SLL_ALLOCATE(interpolator%slope_right (num_pts2 + 4*spline_degree2),ierr)
+    SLL_ALLOCATE(interpolator%slope_bottom(num_pts1 + 4*spline_degree1),ierr)
+    SLL_ALLOCATE(interpolator%slope_top   (num_pts1 + 4*spline_degree1),ierr)
+
+    if (present(slope_left)) then 
+       sz_slope_left = size(slope_left)
+       if ( sz_slope_left > num_pts2 + 4*spline_degree2 ) then 
+          print*, ' problem in the initialization of arb_deg_spline 2d'
+          print*, ' slope_left has too big size '
+          stop
+       end if
+       interpolator%slope_left(1:sz_slope_left) = slope_left(1:sz_slope_left)
+    else
+       interpolator%slope_left(:) = 0.0_f64
+    end if
+    
+    if (present(slope_right)) then 
+       sz_slope_right = size(slope_right)
+       if ( sz_slope_right > num_pts2 + 4*spline_degree2 ) then 
+          print*, ' problem in the initialization of arb_deg_spline 2d'
+          print*, ' slope_right has too big size '
+          stop
+       end if
+       interpolator%slope_right(1:sz_slope_right) = slope_right(1:sz_slope_right)
+    else
+       interpolator%slope_right(:) = 0.0_f64
+    end if
+
+    if (present(slope_bottom)) then 
+       sz_slope_bottom = size(slope_bottom)
+       if ( sz_slope_bottom > num_pts1 + 4*spline_degree1 ) then 
+          print*, ' problem in the initialization of arb_deg_spline 2d'
+          print*, ' slope_bottom has too big size '
+          stop
+       end if
+       interpolator%slope_bottom(1:sz_slope_bottom) = slope_bottom(1:sz_slope_bottom)
+    else
+       interpolator%slope_bottom(:) = 0.0_f64
+    end if 
+    
+    
+    if (present(slope_top)) then 
+       sz_slope_top = size(slope_top)
+       if ( sz_slope_top > num_pts1 + 4*spline_degree1 ) then 
+          print*, ' problem in the initialization of arb_deg_spline 2d'
+          print*, ' slope_top has too big size '
+          stop
+       end if
+       interpolator%slope_top(1:sz_slope_top) = slope_top(1:sz_slope_top)
+    else
+       interpolator%slope_top(:) = 0.0_f64
+    end if 
 
     ! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
     select case (bc_selector)
@@ -425,39 +511,6 @@ contains
          end do
       end do
 
-    !!  print*, 'coef_spline',interpolator%coeff_splines
-!!$      do i = 1,num_cells1
-!!$         do j = 1,num_cells2
-!!$            interpolator%coeff_splines(i+tmp1,j+tmp2) = &
-!!$                 coeffs_1d( i + num_cells1 *(j-1) )
-!!$         end do
-!!$      end do
-!!$      
-!!$      print*, 't1',interpolator%t1(1:interpolator%size_t1)
-!!$      print*, 't2',interpolator%t2(1:interpolator%size_t2)
-!!$      do j=1, tmp2
-!!$         interpolator%coeff_splines(:,j) = &
-!!$              interpolator%coeff_splines(:,num_cells2 + j)
-!!$      end do
-!!$      
-!!$      if(num_cells2 + tmp2 < num_cells2 + sp_deg2 ) then
-!!$         do j = tmp2 + 1, sp_deg2
-!!$            interpolator%coeff_splines(:, num_cells2 + j) = &
-!!$                 interpolator%coeff_splines(:, j)
-!!$         end do
-!!$      end if
-!!$
-!!$      do i=1, tmp1
-!!$         interpolator%coeff_splines(i,:) = &
-!!$              interpolator%coeff_splines(num_cells1 + i,:)
-!!$      end do
-!!$      
-!!$      if (num_cells1 + tmp1 < num_cells1 + sp_deg1 ) then
-!!$         do i = tmp1 + 1, sp_deg1
-!!$            interpolator%coeff_splines(num_cells1 + i,:) = &
-!!$                 interpolator%coeff_splines(i,:)
-!!$         end do
-!!$      end if
    case (9) ! 2. dirichlet-left, dirichlet-right, periodic
       interpolator%size_coeffs1=  num_cells1 + sp_deg1
       interpolator%size_coeffs2=  num_cells2 + sp_deg2
