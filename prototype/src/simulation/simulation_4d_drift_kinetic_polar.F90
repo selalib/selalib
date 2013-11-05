@@ -213,6 +213,10 @@ module sll_simulation_4d_drift_kinetic_polar_module
 
 contains
 
+!we should not give directly the file here
+!but a long list of parameters that would be initialized with
+!a read_from_file routine
+
   subroutine init_dk4d_polar( sim, filename )
     intrinsic :: trim
     class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
@@ -473,10 +477,10 @@ contains
     sim%adv_x1x2 => new_BSL_2d_advector(&
       sim%interp_x1x2, &
       sim%charac_x1x2, &
-      sim%x1_node, &
-      sim%x2_node, &
       sim%m_x1%num_cells+1, &
-      sim%m_x2%num_cells+1)
+      sim%m_x2%num_cells+1, &
+      eta1_coords = sim%x1_node, &
+      eta2_coords = sim%x2_node)
 
 
 
