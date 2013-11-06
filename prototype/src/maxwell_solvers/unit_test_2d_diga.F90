@@ -98,15 +98,15 @@ delta_eta2 = mesh%delta_eta2
 !       sinprod_jac22 )
 
 tau => new_coordinate_transformation_2d_analytic( &
-       "identity_transformation", &
-       mesh,           &
-       identity_x1,    &
-       identity_x2,    &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-      (/ 0.0_f64 /)  )
+       "identity_transformation",                 &
+       mesh,                                      &
+       identity_x1,                               &
+       identity_x2,                               &
+       identity_jac11,                            &
+       identity_jac12,                            &
+       identity_jac21,                            &
+       identity_jac22,                            &
+       SLL_NULL_REAL64 )
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
