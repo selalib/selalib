@@ -44,29 +44,35 @@ PROGRAM main
   INTEGER       :: Me, NTasks, required, provided
   ! MURGE Data
 
-
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: id, m, job, mode
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: id, m, job, mode
   ! CSC Data
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: n, dof
-  INTEGER(KIND=MURGE_INTL_KIND)                         :: nnzeros, edgenbr
-  ! REAL(KIND=MURGE_COEF_KIND) will be replaced during compilation by replaceCOEF.sh
-  REAL(KIND=MURGE_COEF_KIND)                                                  :: val
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: n, dof
+  INTEGER(KIND=MURGE_INTL_KIND)                        :: nnzeros, edgenbr
+  REAL(KIND=MURGE_COEF_KIND)                           :: val
   ! Local Data
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: localnodenbr,interior,taille
-  INTEGER(KIND=MURGE_INTS_KIND), DIMENSION(:) , POINTER :: nodelist
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: root
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: base
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: lrhs
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globrhs
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globrhs_recv
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globx
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globprod
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: localnodenbr
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: interior
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: taille
+  INTEGER(KIND=MURGE_INTS_KIND), DIMENSION(:), POINTER :: nodelist
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: root
+  INTEGER(KIND=MURGE_INTS_KIND)                        :: base
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:), POINTER    :: lrhs
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:), POINTER    :: globrhs
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:), POINTER    :: globrhs_recv
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:), POINTER    :: globx
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:), POINTER    :: globprod
   ! Other data
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: expand
-  REAL(KIND=MURGE_COEF_KIND)                                                  :: val2
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: expand
+  REAL(KIND=MURGE_COEF_KIND)                            :: val2
   REAL(KIND=MURGE_REAL_KIND)                            :: prec
   REAL(KIND=8)                                          :: xmin, xmax
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: NArgs, i, j, k, myfirstrow, mylastrow, l
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: NArgs
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: i
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: j
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: k
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: l
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: myfirstrow
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: mylastrow
   CHARACTER(LEN=100)                                    :: args
   CHARACTER(LEN=20)                                     :: atester
   INTEGER(KIND=MURGE_INTS_KIND)                         :: paramidx

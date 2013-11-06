@@ -106,9 +106,10 @@ sll_real64 :: eta1_p, eta2_p
 sll_real64 :: mdiag
 sll_int32  :: i, j, k, l, ii, jj, kk, ll
 
-this%tau  => tau
-this%d = d
-this%mesh => tau%mesh
+this%tau          => tau
+this%mesh         => tau%mesh
+
+this%d            =  d
 this%polarization = polarization
 
 call tau%write_to_file(SLL_IO_MTV)
@@ -116,11 +117,8 @@ call tau%write_to_file(SLL_IO_MTV)
 nddl   = (d+1)*(d+1)
 ncells = this%mesh%num_cells1*this%mesh%num_cells2
 xgalo  = gauss_lobatto_points(d+1,-1._f64,1._f64)
-write(*,*) " GL points ", xgalo
 wgalo  = gauss_lobatto_weights(d+1)
-write(*,*) " GL weights ", wgalo
 dlag   = gauss_lobatto_derivative_matrix(d+1, -1._f64, 1._f64) 
-write(*,*) "Derivative matrix"
 
 call sll_display(dlag, "f8.3")
 
@@ -154,9 +152,11 @@ do j = 1, this%mesh%num_cells2
       do ll = 1, d+1
       do kk = 1, d+1
          if ( jj == ll) &
-            this%cell(i,j)%DxMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll) = mdiag*dlag(ii,kk)
+            this%cell(i,j)%DxMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll) &
+               = mdiag*dlag(ii,kk)
          if ( ii == kk) &
-            this%cell(i,j)%DyMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll) = mdiag*dlag(jj,ll)
+            this%cell(i,j)%DyMatrix((ii-1)*(d+1)+jj,(kk-1)*(d+1)+ll) &
+               = mdiag*dlag(jj,ll)
       end do
       end do
    end do
@@ -186,7 +186,9 @@ A2 = reshape((/ 0._f64, 0._f64, -1._f64, &
 
 end subroutine initialize_maxwell_2d_diga
 
+!> Compute cell normals
 subroutine compute_normals(tau, i, j, d, x, w, cell )
+
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 sll_int32       :: i, j, k, d
 sll_real64      :: x(d+1), w(d+1)
@@ -291,6 +293,7 @@ sll_real64, dimension(:,:), optional :: rho  !< charge density
 sll_int32 :: edge, left, right, node, side
 sll_int32 :: i, j, k, l
 
+!Loop over cells
 do i = 1, this%mesh%num_cells1
 do j = 1, this%mesh%num_cells2
 
@@ -303,6 +306,7 @@ do j = 1, this%mesh%num_cells2
 
    do side = 1, 4 ! Loop over edges
  
+      !boundary conditions are periodic
       select case(side)
       case(SOUTH)
          k = i
@@ -318,7 +322,7 @@ do j = 1, this%mesh%num_cells2
          l = j
       end select
 
-      !Compute the fluxes on edge degrees of freedom
+      !Compute the fluxes on edge points
       do node = 1, this%d+1
 
          left  = dof_local(side, node, this%d)
@@ -326,11 +330,10 @@ do j = 1, this%mesh%num_cells2
 
          V%f(k,:) = 0.5*(this%cell(i,j)%W%f(left,:)+this%cell(k,l)%W%f(right,:))
 
-         V%f(node,:) = this%cell(i,j)%edge(side)%n(node,1)*matmul(A1, V%f(node,:)) &
-                     + this%cell(i,j)%edge(side)%n(node,2)*matmul(A2, V%f(node,:))
+         V%f(node,:) = this%cell(i,j)%edge(side)%n(node,1)*matmul(A1,V%f(node,:)) &
+                     + this%cell(i,j)%edge(side)%n(node,2)*matmul(A2,V%f(node,:))
 
       end do
-
 
    end do
 
@@ -411,7 +414,6 @@ case(WEST)
 end select
 
 end function dof_neighbor
-
 
 end module sll_maxwell_2d_diga
 

@@ -12,10 +12,10 @@ IF(NOT HDF5_FOUND AND HDF5_ENABLED)
                   /usr/local 
                   /opt/local)
 
-   FIND_PATH(HDF5_INCLUDE_DIR NAMES hdf5.h
+   FIND_PATH(HDF5_INCLUDE_DIR NAMES H5pubconf.h
    HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64 
-   PATH_SUFFIXES / include hdf5/include include/fortran
-   DOC "PATH to hdf5.h")
+   PATH_SUFFIXES / include hdf5/include 
+   DOC "PATH to H5pubconf.h")
 
    FIND_PATH(HDF5_INCLUDE_DIR_FORTRAN NAMES hdf5.mod
    HINTS ${HDF5_PATHS} $ENV{HDF5_INCLUDEDIR} /usr/include/openmpi-x86_64 /usr/include/mpich2-x86_64 
