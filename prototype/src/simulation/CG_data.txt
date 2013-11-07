@@ -1,19 +1,21 @@
 1.0000000000000		# rmin
 10.000000000000		# rmax
-512	#  nr
-256			# ntheta
-4.0000000000000		# r1 for distribution 2
+128	#   nr
+128			# ntheta
+5.0000000000000		# r1 for distribution 2
 6.0000000000000		# r2 for distribution 2
 1e-6		# alpha, amplitude of the perturbation
 3			# mode
-20000			# nb_step
--0.0500000000		# dt
+2000			# nb_step
+-0.100000000		# dt
 20			# visualization step
 
 4			# computation of caracteristics
 3			# computation of gradient
 2			# distribution function
 2			# scheme
+2			# interpolation case
+1			# PPM order
 1			# visualization
 CGrestart.dat		# file if f is read in a file
 
@@ -30,11 +32,6 @@ scheme to compute caracteristics
 7 : using modified symplectic Verlet
 8 : using modified mid point
 
-scheme to compute gradient
-1 : finit differences in r and theta
-2 : fft in theta, finit differences in r
-3 : splines in r and theta
-
 distribution function
 1 : gaussian in r, constant in theta
 2 : f(r,theta)=1_[r1,r2](r)*(1+cos(theta))
@@ -42,10 +39,31 @@ distribution function
 4 : (gaussian in r)*(1+cos(theta))
 5 : read f in a file with syntax
 
+scheme to compute gradient
+1 : finit differences in r and theta
+2 : fft in theta, finit differences in r
+3 : splines in r and theta
+
 choose the way to compute
 1 : Semi-Lagrangian scheme order 1
 2 : Semi-Lagrangian scheme order 2
 3 : leap-frog scheme
+10 : Semi-Lagrangian scheme order 1 with remapping
+20 : Semi-Lagrangian scheme order 2 with remapping
+
+interpolation case
+1 : Lauritzen
+2 : LAG3
+3 : PPM
+4 : LAG(2d+1)
+
+choose PPM order
+*if interpolation case=3
+0 : PPM0
+1 : PPM1
+2 : PPM2
+*if interpolation case=4
+d : LAG(2d+1)
 
 choose the visualization
 0 : gnuplot

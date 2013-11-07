@@ -54,7 +54,8 @@ program DK_hybrid_4d
        deriv_x1_polar_f_eta1, &
        deriv_x1_polar_f_eta2, &
        deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2)
+       deriv_x2_polar_f_eta2, &
+       (/0.1_f64,1.0_f64/)) ! these were the default values for this map
 
   !*** initialize 4D drift-kinetic Vlasov ***
   call initialize(simulation, &

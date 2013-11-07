@@ -18,6 +18,8 @@
 module sll_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
+#include "sll_memory.h"
+
 #ifndef STDF95
   use sll_module_interpolators_2d_base
 #endif
@@ -36,7 +38,7 @@ module sll_cubic_spline_interpolator_2d
 #endif
      sll_int32                           :: npts1
      sll_int32                           :: npts2
-     type(sll_cubic_spline_2D), pointer        :: spline
+     type(sll_cubic_spline_2D), pointer  :: spline
      sll_int32                           :: bc_type1
      sll_int32                           :: bc_type2
      sll_real64, dimension(:,:), pointer :: interpolation_points 
@@ -66,6 +68,68 @@ contains
     type(cubic_spline_2d_interpolator) :: interp
     call delete(interp%spline)
   end subroutine delete_cubic_spline_2d_interpolator
+  
+  function new_cubic_spline_2d_interpolator( &
+    npts1, &
+    npts2, &
+    eta1_min, &
+    eta1_max, &
+    eta2_min, &
+    eta2_max, &
+    eta1_bc_type,   &
+    eta2_bc_type,   &
+    const_eta1_min_slope, &
+    const_eta1_max_slope, &
+    const_eta2_min_slope, &
+    const_eta2_max_slope, &
+    eta1_min_slopes, &
+    eta1_max_slopes, &
+    eta2_min_slopes, &
+    eta2_max_slopes ) &
+    result(interpolator)
+
+    type(cubic_spline_2d_interpolator), pointer :: interpolator
+    sll_int32, intent(in)                         :: npts1
+    sll_int32, intent(in)                         :: npts2
+    sll_real64, intent(in)                        :: eta1_min
+    sll_real64, intent(in)                        :: eta1_max
+    sll_real64, intent(in)                        :: eta2_min
+    sll_real64, intent(in)                        :: eta2_max
+    sll_int32, intent(in), optional               :: eta1_bc_type
+    sll_int32, intent(in), optional               :: eta2_bc_type
+    sll_real64, intent(in), optional              :: const_eta1_min_slope
+    sll_real64, intent(in), optional              :: const_eta1_max_slope
+    sll_real64, intent(in), optional              :: const_eta2_min_slope
+    sll_real64, intent(in), optional              :: const_eta2_max_slope
+    sll_real64, dimension(:),intent(in), optional :: eta1_min_slopes
+    sll_real64, dimension(:),intent(in), optional :: eta1_max_slopes
+    sll_real64, dimension(:),intent(in), optional :: eta2_min_slopes
+    sll_real64, dimension(:),intent(in), optional :: eta2_max_slopes
+    sll_int32 :: ierr
+    
+    SLL_ALLOCATE(interpolator,ierr)
+    
+    call interpolator%initialize( &
+      npts1, &
+      npts2, &
+      eta1_min, &
+      eta1_max, &
+      eta2_min, &
+      eta2_max, &
+      eta1_bc_type,   &
+      eta2_bc_type,   &
+      const_eta1_min_slope, &
+      const_eta1_max_slope, &
+      const_eta2_min_slope, &
+      const_eta2_max_slope, &
+      eta1_min_slopes, &
+      eta1_max_slopes, &
+      eta2_min_slopes, &
+      eta2_max_slopes )
+
+     
+  end function  new_cubic_spline_2d_interpolator
+
 
   ! We allow to use the enumerators of the splines module in this interpolator
   ! because:
