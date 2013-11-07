@@ -37,7 +37,7 @@ contains
 !> Indices are shifted from [1:n+1] to [0:n] only inside this 
 !> subroutine
 subroutine initialize_poisson_2d_fem( this, x, y ,nn_x, nn_y)
-type( poisson_fem ) :: this
+type( poisson_fem ) :: this         !< solver data structure
 sll_int32,  intent(in)      :: nn_x !< number of cells along x
 sll_int32,  intent(in)      :: nn_y !< number of cells along y
 sll_real64, dimension(nn_x) :: x    !< x nodes coordinates

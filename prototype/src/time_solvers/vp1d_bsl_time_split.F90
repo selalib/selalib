@@ -187,7 +187,8 @@ program VP1d_BSL_time_split
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 ) 
+       identity_jac22, &
+       (/0.0_f64/) ) 
 
   ! initialize interpolators
   call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
@@ -224,7 +225,7 @@ program VP1d_BSL_time_split
   call write_scalar_field_2d(f) 
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   call solve(poisson_1d, efield, rho)
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.
