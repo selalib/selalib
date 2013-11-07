@@ -5,7 +5,7 @@ module sll_module_scalar_field_2d_base
   implicit none
 
 
-  ! Fundamental field type
+  !> Fundamental field type
   type, abstract :: sll_scalar_field_2d_base
      class(sll_coordinate_transformation_2d_base), pointer :: coord_trans 
    contains
@@ -38,7 +38,7 @@ module sll_module_scalar_field_2d_base
   end type sll_scalar_field_2d_base_ptr
 
 
-  ! Function signatures
+  !> Function signatures
   abstract interface
      function function_get_mesh(field) result(res)
        use sll_logical_meshes

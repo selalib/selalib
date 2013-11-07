@@ -246,8 +246,13 @@ end subroutine interpolate_pointer_values_li1d
          ' not implemented for lagrange interpolation'
     stop
   end subroutine
+
   subroutine set_coefficients_li1d( interpolator, coeffs )
+#ifdef STDF95
+    type(lagrange_1d_interpolator),  intent(inout)  :: interpolator
+#else
     class(lagrange_1d_interpolator),  intent(inout) :: interpolator
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_li1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -256,7 +261,11 @@ end subroutine interpolate_pointer_values_li1d
   
   
   function get_coefficients_li1d(interpolator)
-    class(lagrange_1d_interpolator), intent(in) :: interpolator
+#ifdef STDF95
+    type(lagrange_1d_interpolator),  intent(in) :: interpolator
+#else
+    class(lagrange_1d_interpolator),  intent(in) :: interpolator
+#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_li1d     
     
     print *, 'get_coefficients_li1d(): ERROR: This function has not been ', &

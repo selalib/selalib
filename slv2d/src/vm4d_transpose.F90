@@ -5,7 +5,10 @@ program vm4d_transpose
 !-------------------------------------------------------------------
 
 #define MPI_MASTER 0
-#include "selalib.h"
+
+#include "sll_assert.h"
+#include "sll_memory.h"
+#include "sll_working_precision.h"
 
 use geometry_module
 use maxwell2dfdtd_module

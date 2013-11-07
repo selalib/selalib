@@ -611,8 +611,8 @@ contains
             i4 = glob_ind4d(4)
             theta_j = polar_eta2( &
               sim%xgrid_2d(i1,i2), &
-              sim%ygrid_2d(i1,i2))
-           ! print*,i2, theta_j,  sim%eta2_grid(i2)
+              sim%ygrid_2d(i1,i2), &
+              (/0.0_f64/)) ! irrelevant for polar_eta2
             phi_k   = phi_grid_tmp(i3) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
               sim%feq_xyvpar(i1,i2,i4) * &
@@ -862,7 +862,7 @@ contains
       sim%bc_right_eta2)
     !-----> phi1D in the direction eta3
     logical_mesh1d => new_logical_mesh_1d( &
-    sim%nc_x3,eta1_min=sim%phi_min,eta1_max=sim%phi_max)
+      sim%nc_x3,eta_min=sim%phi_min,eta_max=sim%phi_max)
     sim%phi1d => new_scalar_field_1d_discrete_alt( &
          "phi1d_seqx3", &
          sim%interp1d_Phi_eta3, &     

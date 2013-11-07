@@ -1,0 +1,71 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+# $Id$
+
+PortSystem          1.0
+PortGroup           cmake 1.0
+
+name                selalib
+version             1.0.0
+categories          science math
+platforms           darwin
+supported_archs     x86_64
+license             GPL
+maintainers         inria.com:pierre.navaro
+description         Semi-lagrangian library
+long_description    Modular library for the gyrokinetic simulation \
+                    model by a semi-Lagrangian method.
+homepage            http://selalib.gforge.inria.fr
+master_sites        http://selalib.gforge.inria.fr/releases
+
+checksums           md5 cf57e48d7f9f8a54656dc09ad8772b34
+
+depends_build       port:cmake \
+                    port:gmake \
+                    port:gnutar
+
+depends_lib         port:openmpi \
+                    port:hdf5-18 \
+                    port:fftw-3
+
+if {![file exists ${prefix}/include/hdf5.mod]} {
+    depends_lib-delete port:hdf5-18
+    pre-configure {
+        ui_error "
+****
+**** ${name} requires port hdf5-18 installed with variant +fortran.
+**** Please do the following then try installing ${name} again:
+****
+****     sudo port install hdf5-18 +fortran+openmpi
+****
+**** Note: +fortran variant requires openmpi
+"
+        return -code error "incompatible hdf5-18 installation"
+    }
+}
+
+
+build.type          gnu
+use_parallel_build  no
+
+configure.pre_args
+configure.args      -DCMAKE_BUILD_TYPE:STRING=Release \
+                    -DCMAKE_Fortran_COMPILER:FILEPATH=${prefix}/bin/gfortran-mp-4.7 \
+                    -DCMAKE_INSTALL_PREFIX:PATH=${prefix} \
+                    -DHDF5_PARALLEL_ENABLED:BOOL=ON \
+                    -DMPI_Fortran_COMPILER:FILEPATH=${prefix}/bin/openmpif90 \
+                    -DMPI_Fortran_INCLUDE_PATH:FILEPATH=${prefix}/lib \
+                    -DMPI_Fortran_LIBRARIES:FILEPATH=${prefix}/lib/libmpi_f90.dylib \
+                    -DCMAKE_VERBOSE_MAKEFILE:BOOL=TRUE \
+                    -DSLL_BUILD_PACKAGE:BOOL=TRUE \
+                    -DFFTW_INCLUDE_DIRS:PATH=${prefix}/include \
+                    -DFFTW_LIBRARY:FILEPATH=${prefix}/lib/libfftw3.dylib \
+                    -DHDF5_C_LIBRARY:FILEPATH=${prefix}/lib/libhdf5.a \
+                    -DHDF5_FORTRAN_LIBRARY:FILEPATH=${prefix}/lib/libhdf5_fortran.a \
+                    -DHDF5_INCLUDE_DIRS:PATH=${prefix}/include 
+
+notes "
+To use selalib, add the following flags to your build command line
+   -I/opt/local/include -J/opt/local/include/fortran
+To link with selalib
+   -L/opt/local/lib -lselalib
+"

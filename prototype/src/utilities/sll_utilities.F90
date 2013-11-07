@@ -54,11 +54,12 @@ module sll_utilities
 
   integer, parameter :: byte_size = selected_int_kind(0)
 
-  interface display_matrix
+  interface sll_display
      module procedure display_matrix_2d_integer
      module procedure display_matrix_2d_real
-  end interface display_matrix
-  
+     module procedure display_vector_integer
+     module procedure display_vector_real
+  end interface sll_display
 
 contains
 
@@ -131,6 +132,46 @@ contains
    
   end subroutine sll_new_file_id
 
+  subroutine display_vector_real(array, real_format)
+
+   sll_real64, dimension(:) :: array
+   character(len=*)         :: real_format
+   character(len=20)        :: display_format
+   sll_int32                :: n
+   sll_int32                :: i
+
+   n = size(array,1)
+
+   write(display_format, "('(''|''',i4,a,''' |'')')") n, real_format
+
+   write(*,*)
+   write(*,display_format) (array(i), i = 1, n)
+   write(*,*)
+
+  end subroutine display_vector_real
+
+  subroutine display_vector_integer(array, integer_format)
+
+   sll_int32, dimension(:) :: array
+   character(len=*)        :: integer_format
+   character(len=20)       :: display_format
+   sll_int32               :: n
+   sll_int32               :: i
+
+   n = size(array)
+
+   write(display_format, "('(''|''',i4,a,''' |'')')") n, integer_format
+
+   write(*,*)
+   write(*,display_format) (array(i), i = 1, n)
+   write(*,*)
+
+  end subroutine display_vector_integer
+
+
+!> Outputs an error message:
+!>   - PRTFIL : unit number for print-out
+!>   - SEVRTY : 'W' - Warning 'F' - Fatal
   subroutine display_matrix_2d_real(array, real_format)
 
    sll_real64, dimension(:,:) :: array
@@ -218,5 +259,42 @@ else
 end if
     
 end subroutine errout
+
+!> Subroutine to open data file for slv2d and
+!> create the thf.dat file to write results
+subroutine initialize_file(data_file_id, thf_file_id)
+  sll_int32 :: data_file_id !< namelist file for slv2d
+  sll_int32 :: thf_file_id  !< thf file for energy plot
+  sll_int32 :: error
+  character(len=72) :: filename
+  integer :: IO_stat 
+    
+  call getarg( 1, filename)
+
+  call sll_new_file_id(data_file_id, error)
+  open(data_file_id,file=trim(filename),IOStat=IO_stat)
+  if (IO_stat/=0) STOP "Miss argument file.nml"
+
+  call sll_new_file_id(thf_file_id, error)
+  open(thf_file_id,file="thf.dat",IOStat=IO_stat)
+  if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
+
+end subroutine initialize_file
+  
+!> Routine from slv2d to write diagnostics
+subroutine time_history(file_id, desc, fformat, array)
+   sll_int32 :: file_id !< file unit number
+   character(3) :: desc !< name of the diagnostics
+   character(14) :: fformat !< fortran output format
+   sll_real64, dimension(:) :: array !< data array
+    
+   if (desc(1:3)=="thf") then
+      !print *,'array', array
+      write(file_id,fformat) array
+   else
+      write(*,*) desc," not recognized"
+   endif
+    
+end subroutine time_history
 
 end module sll_utilities
