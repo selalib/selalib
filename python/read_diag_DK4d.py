@@ -2,7 +2,9 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-f_diag = ut.loadHDF5('DK4d_diag_d00000.h5')
+filename = 'DK4d_diag_d00000.h5'
+f_diag = ut.loadHDF5(filename)
+print "HDF5 file read = " + filename
 
 fig = mpp.figure(figsize=(12,12))
 
