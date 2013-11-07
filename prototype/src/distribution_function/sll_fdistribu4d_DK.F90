@@ -320,9 +320,9 @@ module sll_fdistribu4d_DK
     do ivpar = 1,Nvpar
       do iy = 1,Npt2
         do ix = 1,Npt1
-          feq_xyvpar(ix,iy,ivpar) = n0_xy(ix,iy) * &
-            sqrt(2._f64*sll_pi*Ti_xy(ix,iy)) * &
-            exp(-0.5_f64*vpar_grid(ivpar)**2/Ti_xy(ix,iy))
+           feq_xyvpar(ix,iy,ivpar) = n0_xy(ix,iy) * &
+                exp(-0.5_f64*vpar_grid(ivpar)**2/Ti_xy(ix,iy))&
+                /sqrt(2._f64*sll_pi*Ti_xy(ix,iy))
         end do
       end do
     end do
