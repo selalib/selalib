@@ -93,7 +93,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2x1
   sll_real64, dimension(:,:,:,:), pointer     :: dtfn_v1v2x1
   ! charge density
-  sll_real64, dimension(:,:), allocatable     :: rho_x1,Ex_x1,Ey_x1
+  sll_real64, dimension(:,:), allocatable     :: rho_x1
   ! potential 
   sll_real64, dimension(:,:), allocatable     :: phi_x1
 
@@ -666,6 +666,10 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
          sim%phi_x1(:,1:loc_sz_x2))
     sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
     sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
+!!$write(*,*) 'phi avance = ', sim%phi_x1(:,1)
+!!$      sim%phi_x1=-sim%phi_x1
+!!$write(*,*) 'phi apres = ', sim%phi_x1(:,1)
+   sim%phi_x1=-sim%phi_x1
 !!$    do i=1,loc_sz_x1
 !!$       write (*,*)  'x',x_mil(i)-sim%mesh2dx%delta_eta1/2,'phi = ', sim%phi_x1(i,:)
 !!$    enddo
@@ -736,18 +740,18 @@ if((sim%test==1).or.(sim%test==9)) then
 !!$    !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
 !!$    !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
              !write(*,*) '2*dx',2*sim%mesh2dx%delta_eta1*inv_jac(1,1)
-!!$             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-!!$                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-!!$                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-!!$                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-!!$                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-             Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
                   sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
                   sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-             Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
                   sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+!!$             Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+!!$                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+!!$             Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+!!$                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+!!$                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
 !!$             if (Ey > 0) then
 !!$               write(*,*) 'Ey', Ey
 !!$             end if
@@ -2268,6 +2272,13 @@ subroutine dtf(sim)
 
  !write(*,*) 'ici3'
  ! source terms
+! write(*,*) 'size1 phi_x1',size(sim%phi_x1(1,:)),loc_sz_x2+2
+!!$ write(*,*) 'size2 phi_x1',size(sim%phi_x1(:,1)),loc_sz_x1
+!!$ stop
+!!$write(*,*) 'phi avance = ', sim%phi_x1(:,1)
+!!$      sim%phi_x1=-sim%phi_x1
+!!$write(*,*) 'phi apres = ', sim%phi_x1(:,1)
+!!$stop
  do ic=1,loc_sz_x1
     do jc=1,loc_sz_x2
        icL=ic-1
@@ -2289,18 +2300,27 @@ subroutine dtf(sim)
 !!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
 !!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
 !!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
-!!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-!!$            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-!!$            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-       Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+   
+
+       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
             sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
             sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-       Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
             sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
             sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+
+
+!!$       Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
+!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
+!!$            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+!!$       Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
+!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
+!!$            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+!!$       write(*,*) 'inv_jac(1,1)',inv_jac(1,1)
+!!$       write(*,*) 'inv_jac(2,1)',inv_jac(2,1)
+!!$       write(*,*) 'inv_jac(2,1)',inv_jac(1,2)
+!!$       stop
 !!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(ic,jc))/ &
 !!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
 !!$            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta2*inv_jac(2,1)
