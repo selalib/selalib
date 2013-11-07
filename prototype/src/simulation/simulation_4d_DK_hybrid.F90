@@ -1664,8 +1664,8 @@ contains
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
 
 !baremettre
-!VG!      !--> Advection in eta1,eta2 direction'
-!VG!      call advec2D_eta1eta2(sim,sim%dt)
+      !--> Advection in eta1,eta2 direction'
+      call advec2D_eta1eta2(sim,sim%dt)
 !earemettre
     
       !--> Sequential for the advection in eta3 and in vpar
