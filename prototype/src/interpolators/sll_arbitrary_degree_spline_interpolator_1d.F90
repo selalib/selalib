@@ -36,7 +36,9 @@ module sll_arbitrary_degree_spline_interpolator_1d_module
      sll_int32  :: size_t 
      sll_int64  :: bc_selector ! this is set in initialization
      sll_real64, dimension(:), pointer :: coeff_splines
-     sll_int32                  :: size_coeffs
+     sll_int32  :: size_coeffs
+     sll_real64 :: slope_left
+     sll_real64 :: slope_right
 
    contains
     procedure, pass(interpolator) :: initialize=>initialize_ad1d_interpolator
@@ -72,6 +74,44 @@ contains
     SLL_DEALLOCATE(interpolator%coeff_splines,ierr)
   end subroutine delete_arbitrary_degree_1d_interpolator
 
+
+  function new_arbitrary_degree_1d_interpolator(&
+       num_pts, &
+       eta_min, &
+       eta_max, &
+       bc_left, &
+       bc_right, &
+       spline_degree,&
+       slope_left,&
+       slope_right) result(interpolator)
+    
+    class(arb_deg_1d_interpolator),pointer :: interpolator
+    sll_int32, intent(in) :: num_pts
+    sll_real64, intent(in) :: eta_min
+    sll_real64, intent(in) :: eta_max
+    sll_int32, intent(in) :: bc_left
+    sll_int32, intent(in) :: bc_right
+    sll_int32, intent(in) :: spline_degree
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
+    sll_int32 :: ierr
+
+
+    SLL_ALLOCATE(interpolator,ierr)
+    
+    call initialize_ad1d_interpolator( &
+         interpolator, &
+         num_pts, &
+         eta_min, &
+         eta_max, &
+         bc_left, &
+         bc_right, &
+         spline_degree,&
+         slope_left,&
+         slope_right)
+
+  end function new_arbitrary_degree_1d_interpolator
+
   subroutine initialize_ad1d_interpolator( &
     interpolator, &
     num_pts, &
@@ -79,7 +119,9 @@ contains
     eta_max, &
     bc_left, &
     bc_right, &
-    spline_degree )
+    spline_degree,&
+    slope_left,&
+    slope_right)
 
     class(arb_deg_1d_interpolator), intent(inout) :: interpolator
     sll_int32, intent(in) :: num_pts
@@ -91,8 +133,9 @@ contains
     sll_int32 :: ierr
     sll_int32 :: tmp
     sll_int64 :: bc_selector
-
-
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
+    
     ! do some argument checking...
     if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC))) then
        print *, 'initialize_arbitrary_degree_1d_interpolator, ERROR: ', &
@@ -127,13 +170,26 @@ contains
     end if
     
     interpolator%spline_degree = spline_degree
-    interpolator%eta_min = eta_min
-    interpolator%eta_max = eta_max
-    interpolator%bc_left  = bc_left
-    interpolator%bc_right = bc_right
-    interpolator%bc_selector = bc_selector
-    interpolator%num_pts = num_pts
+    interpolator%eta_min       = eta_min
+    interpolator%eta_max       = eta_max
+    interpolator%bc_left       = bc_left
+    interpolator%bc_right      = bc_right
+    interpolator%bc_selector   = bc_selector
+    interpolator%num_pts       = num_pts
 
+    if (present(slope_left)) then 
+       interpolator%slope_left = slope_left
+    else
+       interpolator%slope_left = 0.0_f64
+    end if
+
+    
+    if (present(slope_right)) then 
+       interpolator%slope_right = slope_right
+    else
+       interpolator%slope_right = 0.0_f64
+    end if
+    
     select case (bc_selector)
     case (0) ! 1. periodic
        SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
@@ -186,6 +242,12 @@ contains
       
       interpolator%size_coeffs =  num_cells + sp_deg
       interpolator%size_t = 2*sp_deg + num_cells +1
+      if ( size(coeffs) .ne.  num_cells + 1 ) then
+         print*, 'problem in set_coeff_1d_arb_deg_spline '
+         print*, 'size coeffs must be equal to ',num_cells + 1
+         print*, 'and not =', size(coeffs)
+         stop
+      endif
       ! allocation and definition of knots
       do i = -sp_deg, num_cells + sp_deg
          interpolator%t( i + sp_deg + 1 ) = eta_min + i*delta
@@ -211,6 +273,12 @@ contains
       interpolator%size_coeffs=  num_cells + sp_deg
       interpolator%size_t = 2*sp_deg + num_cells + 1
       nb_spline_eta = num_cells + sp_deg - 2
+      if ( size(coeffs) .ne.  nb_spline_eta ) then
+         print*, 'problem in set_coeff_1d_arb_deg_spline '
+         print*, 'size coeffs must be equal to ',nb_spline_eta
+         print*, 'and not =', size(coeffs)
+         stop
+      endif
       ! allocation and definition of knots
       
       do i = 1, sp_deg + 1
@@ -235,8 +303,8 @@ contains
          interpolator%coeff_splines(i + 1 ) =  coeffs(i)
       end do
       
-      interpolator%coeff_splines(1) = 0.0_8
-      interpolator%coeff_splines(nb_spline_eta+2) = 0.0_8
+      interpolator%coeff_splines(1) = interpolator%slope_left
+      interpolator%coeff_splines(nb_spline_eta+2) = interpolator%slope_right
       
       
    case default
@@ -287,7 +355,7 @@ contains
        
        select case (interpolator%bc_selector)
        case (0) ! 1. periodic
-          sz = interpolator%num_pts-1
+          sz = interpolator%num_pts!-1
           
        case (9) ! 2. dirichlet-left, dirichlet-right
           sz = interpolator%num_pts
@@ -315,26 +383,27 @@ contains
    ! print*, 'pointlocate',point_locate_eta1
     select case (interpolator%bc_selector)
     case (0) ! periodic
-       interpolator%size_coeffs = sz+1
-       interpolator%size_t = order + sz + 1 
-       call spli1d_per( & ! a implementer
-            period, sz+1, order, point_locate_eta, &
-            data_array, interpolator%coeff_splines(1:sz+1),&
-            interpolator%t(1:order + sz + 1))
+       interpolator%size_coeffs = sz !+ 1
+       interpolator%size_t = order + sz !+ 1 
+       call spli1d_per( & 
+            period, sz, order, point_locate_eta, &
+            data_array, interpolator%coeff_splines(1:sz),&!+1),&
+            interpolator%t(1:order + sz ))!+ 1))
        
        
      !  print*, 'moyenne', sum( interpolator%coeff_splines(1:sz+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right
        interpolator%size_coeffs = sz
-       interpolator%size_t = order + sz ! a implementer
-       !print*, 'data',data_array
-       !print*, 'de',point_locate_eta
+       interpolator%size_t = order + sz 
+
        call spli1d_dir( sz, order, point_locate_eta, &
             data_array, interpolator%coeff_splines(1:sz),&
             interpolator%t(1:sz+order) )
  
-  
+       ! test dirichlet non homogene
+       interpolator%coeff_splines(1)  = interpolator%slope_left
+       interpolator%coeff_splines(sz) = interpolator%slope_right
     end select
   end subroutine compute_interpolants_ad1d
 
@@ -355,8 +424,13 @@ contains
     res = eta1
     select case (interpolator%bc_selector)
     case (0) ! periodic
-       if ( res .ge. interpolator%eta_max ) then 
-          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       if ( res .ge. interpolator%eta_max ) then 
+!!$          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       end if
+       if( res < interpolator%eta_min ) then
+          res = res+interpolator%eta_max-interpolator%eta_min
+       else if( res >  interpolator%eta_max ) then
+          res = res+interpolator%eta_min-interpolator%eta_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ASSERT( res >= interpolator%eta_min )
@@ -402,8 +476,13 @@ contains
     
     select case (interpolator%bc_selector)
     case (0) ! periodic
-       if ( res .ge. interpolator%eta_max ) then 
-          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       if ( res > interpolator%eta_max ) then 
+!!$          res = res -(interpolator%eta_max-interpolator%eta_min)
+!!$       end if
+       if( res < interpolator%eta_min ) then
+          res = res+interpolator%eta_max-interpolator%eta_min
+       else if( res >  interpolator%eta_max ) then
+          res = res+interpolator%eta_min-interpolator%eta_max
        end if
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ASSERT( res >= interpolator%eta_min )
