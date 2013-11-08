@@ -130,6 +130,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
      simulation_base_class.F90
      simulation_2d_vlasov_poisson_cartesian.F90
      simulation_4d_vlasov_poisson_cartesian.F90
+     simulation_4d_vlasov_parallel_poisson_sequential_cartesian.F90
      simulation_4d_vlasov_poisson_general.F90
      simulation_4d_qns_general.F90
      #simulation_4d_mixed_qns_cartesian.F90
@@ -184,6 +185,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    ADD_SIMULATION(2d_vp_cartesian)
    ADD_SIMULATION(4d)
+   ADD_SIMULATION(4d_vp_cartesian)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_qns_general)
 #   ADD_SIMULATION(4d_mixed_qns_cartesian)
