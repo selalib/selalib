@@ -24,7 +24,7 @@ program gc_2d_general
   type(sll_simulation_2d_guiding_center_generalized)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: M
   class(sll_coordinate_transformation_2d_base), pointer :: transformation
-  sll_real64, dimension(1:5) :: landau_params
+  
   sll_real64, external ::     func_zero, func_one, func_minus_one
   
   sll_real64, external ::     func_khp1,func_khp2
@@ -36,6 +36,11 @@ program gc_2d_general
   sll_real64 :: eta2_min  
   sll_real64 :: eta1_max
   sll_real64 :: eta2_max
+  sll_real64, dimension(1:2) :: landau_params
+  sll_real64, dimension(1)   :: params_field 
+  sll_real64, dimension(4)   :: params_mesh
+  
+  
   print *, 'Start...'
   
 
@@ -53,17 +58,22 @@ program gc_2d_general
   ! hardwired, this should be consistent with whatever is read from a file
 #define NCELL1 64
 #define NCELL2 64
-#define SPL_DEG1 3
-#define SPL_DEG2 3
+#define SPL_DEG1 2
+#define SPL_DEG2 2
 
     landau_params(1)=0.5_f64 ! mode
     landau_params(2)=0.015_f64
-
+    params_field = (/1.0_f64/)
+     
     eta1_min = 0._f64
-    eta1_max = 2._f64 * sll_pi/landau_params(1)
+    eta1_max = 2._f64  * sll_pi/landau_params(1)
     eta2_min = 0._f64 
-    eta2_max = 2._f64 * sll_pi
+    eta2_max = 2._f64  * sll_pi
 
+    !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
+    !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
+    params_mesh = (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)
+ 
   
   !call simulation%init_from_file(filename_local)
     simulation%dt = 0.1_f64
@@ -83,7 +93,7 @@ program gc_2d_general
   ! way to initialize the simulation object, in development we are using them
   ! both...
 
-
+print*,'pass -1'
   ! logical mesh for space coordinates
   M => new_logical_mesh_2d( NCELL1, NCELL2,       & 
        eta1_min, eta1_max,eta2_min, eta2_max)
@@ -92,7 +102,7 @@ program gc_2d_general
 
 !  ! logical mesh for space coordinates
 !  mx => new_logical_mesh_2d( NPTS1, NPTS2)
-
+print*,'pass 0'
   ! coordinate transformation associated with space coordinates
 transformation => new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
@@ -102,7 +112,8 @@ transformation => new_coordinate_transformation_2d_analytic( &
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       params_mesh   )
 ! transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_polar_transformation", &
 !       M, &
@@ -111,18 +122,21 @@ transformation => new_coordinate_transformation_2d_analytic( &
 !       polar_jac11, &
 !       polar_jac12, &
 !       polar_jac21, &
-!       polar_jac22 )     
+!       polar_jac22, &
+!       params_mesh  )     
 
 ! transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_collela_transformation", &
 !       M, &
-!       sinprod2_x1, &
-!       sinprod2_x2, &
-!       sinprod2_jac11, &
-!       sinprod2_jac12, &
-!       sinprod2_jac21, &
-!       sinprod2_jac22 )
+!       sinprod_x1, &
+!       sinprod_x2, &
+!       sinprod_jac11, &
+!       sinprod_jac12, &
+!       sinprod_jac21, &
+!       sinprod_jac22, &
+!       params_mesh  )
 
+ print*,'pass 1'
   ! initialize simulation object with the above parameters
   call initialize_2d_gc_general( &
        simulation, &
@@ -130,6 +144,7 @@ transformation => new_coordinate_transformation_2d_analytic( &
        transformation, &
        func_khp1, &
        landau_params, &
+       params_field, &
        func_one, &
        func_zero, &
        func_zero, &

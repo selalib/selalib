@@ -63,12 +63,13 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
      sll_real64, dimension(:,:), pointer     :: rho_np1
      sll_real64, dimension(:,:), pointer     :: rho_nm1
      
-      type(arb_deg_2d_interpolator)     :: interp_rho
-      type(arb_deg_2d_interpolator)     :: interp_phi
+     type(arb_deg_2d_interpolator)     :: interp_rho
+     type(arb_deg_2d_interpolator)     :: interp_phi
       
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
+     
      
      ! for general coordinate QNS, analytical fields
      procedure(two_var_parametrizable_function),nopass,pointer :: a11_f
@@ -76,6 +77,7 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
      procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
+     sll_real64, dimension(:), pointer :: params_field
    contains
      procedure, pass(sim) :: run => run_2d_gc_general
      procedure, pass(sim) :: init_from_file => init_2d_gc_general
@@ -98,6 +100,7 @@ contains
    transformation, &
    init_func, &
    params,&
+   params_field,&
    a11_f,&
    a12_f,&
    a21_f,&
@@ -114,7 +117,8 @@ contains
    type(sll_logical_mesh_2d), pointer                    :: mesh2d
    class(sll_coordinate_transformation_2d_base), pointer :: transformation
    procedure(sll_scalar_initializer_2d)                  :: init_func !! see it 
-   sll_real64, dimension(:), target                      :: params
+   sll_real64, dimension(:),target                      :: params
+   sll_real64, dimension(:),target                      :: params_field
    procedure(two_var_parametrizable_function) :: a11_f
    procedure(two_var_parametrizable_function) :: a12_f
    procedure(two_var_parametrizable_function) :: a21_f
@@ -126,11 +130,20 @@ contains
    sll_int32  :: bc_right
    sll_int32  :: bc_bottom
    sll_int32  :: bc_top
+   sll_int32  :: err
 
+
+   !SLL_ALLOCATE(sim%params(size(params)),err)
+   !SLL_ALLOCATE(sim%params_field(size(params_field)),err)
+   
+   sim%params    => params
+   sim%params_field  => params_field
+   
    sim%mesh2d  => mesh2d
    sim%transf  => transformation
    sim%init_func => init_func
-   sim%params    => params
+   
+   
    sim%a11_f     => a11_f
    sim%a12_f     => a12_f
    sim%a21_f     => a21_f
@@ -266,7 +279,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%params_field) 
        
 
     a12_field_mat => new_scalar_field_2d_analytic_alt( &
@@ -276,7 +290,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%params_field) 
     
     
     a21_field_mat => new_scalar_field_2d_analytic_alt( &
@@ -286,7 +301,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         sim%params_field)
        
     
     a22_field_mat => new_scalar_field_2d_analytic_alt( &
@@ -296,7 +312,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%params_field) 
      
 
     c_field => new_scalar_field_2d_analytic_alt( &
@@ -306,7 +323,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         sim%params_field)
        
     !print*,'pass 1'
 
@@ -358,7 +376,7 @@ contains
           eta1=eta1_min+real(i-1,f64)*delta1
           x = sim%transf%x1(eta1,eta2)
           y = sim%transf%x2(eta1,eta2)
-          sim%rho_n(i,j) =sim%init_func(x,y,sim%params)
+          sim%rho_n(i,j) =  sim%init_func(x,y,sim%params) !0.001*cos(2*sll_pi*eta1)
         end do
      end do
      
@@ -440,7 +458,7 @@ contains
      enddo
     enddo
     
-   
+
              
     call calcul_integral(rho_n_ptr,phi,&
        sim%spline_degree_eta1, &
@@ -583,7 +601,8 @@ contains
        val_mass,&
        val_energy)
                         
-     write(30,*) itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy  
+     write(30,*) itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy
+     
     
      if (itime==1 .or. ((itime/sim%visu_step)*sim%visu_step==itime)) then
      call plot_f1(rho_n_ptr,sim,itime)
