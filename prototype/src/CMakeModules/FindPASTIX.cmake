@@ -8,11 +8,13 @@ find_path(PASTIX_INCLUDE_DIRS
 		HINTS ${PASTIX_ROOT}
 		PATH_SUFFIXES include Include INCLUDE
 		DOC "PATH TO pastix.h and pastix_fortran.h")
+
 find_library(PASTIX_LIBRARIES
-		NAMES pastix
+		NAMES pastix matrix_driver
 		HINTS ${PASTIX_ROOT}
 		PATH_SUFFIXES lib Lib LIB
 		DOC "PATH TO libpastix.a")
+
 if (PASTIX_INCLUDE_DIRS AND PASTIX_LIBRARIES)
   set(PASTIX_FOUND YES)
 endif(PASTIX_INCLUDE_DIRS AND PASTIX_LIBRARIES)
