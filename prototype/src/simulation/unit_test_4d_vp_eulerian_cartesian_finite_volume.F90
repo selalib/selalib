@@ -45,10 +45,10 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 1
-#define NCELL2 64
-#define NCELL3 16
-#define NCELL4 64
+#define NCELL1 32
+#define NCELL2 32
+#define NCELL3 32
+#define NCELL4 32
 !transport
 !!$#define ETA1MIN -1.0_f64
 !!$#define ETA1MAX 1.0_f64
@@ -58,7 +58,7 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 1.0_f64
 !!$#define ETA4MIN -1.0_f64
 !!$#define ETA4MAX 1.0_f64
-!landau 1d sur xvx
+!!$!landau 1d sur xvx
 !!$#define ETA1MIN -6.0_f64
 !!$#define ETA1MAX 6.0_f64
 !!$#define ETA2MIN -0.5_f64
@@ -67,25 +67,34 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 4.0_f64*sll_pi
 !!$#define ETA4MIN 0.0_f64
 !!$#define ETA4MAX 1.0_f64
-!landau 1d sur yvy
-#define ETA1MIN -0.5_f64
-#define ETA1MAX 0.5_f64
+!!$!landau 1d sur yvy
+!!$#define ETA1MIN -0.5_f64
+!!$#define ETA1MAX 0.5_f64
+!!$#define ETA2MIN -6.0_f64
+!!$#define ETA2MAX 6.0_f64
+!!$#define ETA3MIN 0.0_f64
+!!$#define ETA3MAX 1.0_f64
+!!$#define ETA4MIN 0.0_f64
+!!$#define ETA4MAX 4.0_f64*sll_pi
+!landau 2D
+#define ETA1MIN -6.0_f64
+#define ETA1MAX 6.0_f64
 #define ETA2MIN -6.0_f64
 #define ETA2MAX 6.0_f64
 #define ETA3MIN 0.0_f64
-#define ETA3MAX 1.0_f64
+#define ETA3MAX 4.0_f64*sll_pi
 #define ETA4MIN 0.0_f64
 #define ETA4MAX 4.0_f64*sll_pi
 
 
 #define TINI 0.0_f64
-#define TMAX 20.e0_f64
+#define TMAX 10.e0_f64
 !#define TMAX 0._f64
-#define CFL 0.6_f64
+#define CFL 0.5_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
-#define TEST 9
-! 0: x transport 1: landau damping 1d  2: vx-transport
+#define TEST 5
+! 0: x transport 1: landau damping 1d xvx  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
 !6: transport x-vx 7: transport y-vy 8: transport 2d
 !9: landau damping 1d sur y-vy
