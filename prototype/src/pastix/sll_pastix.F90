@@ -37,13 +37,15 @@ Integer                                   :: NbrOfSolv   ! Number of rhs for sol
 Integer                                   :: rank        ! MPI rank
 Integer                                   :: i,j
 sll_int32                                 :: psize
+pastix_int_t                              :: nnzero
+pastix_int_t                              :: mpid
 
 
 
 contains
 
 
-subroutine pastix_initialize()
+subroutine initialize_pastix()
 
 NbrOfFact = 2
 NbrOfSolv = 2
@@ -51,19 +53,87 @@ NbrOfSolv = 2
 !
 ! initiate MPI communication
 !
-call sll_boot_collective()
 call MPI_Comm_rank  (pastix_comm, rank, StatInfo);
-!
+
 ! Get options ftom command line
-!
-Call get_option(driver_num, filename, nbthread, verbose, n)
+
+n = 1000
+nbthread = 1
+verbose  = API_VERBOSE_YES
+driver_num = 2 ! LAPLACIAN
 
 !
 ! reads the matrix
 !
-call read_matrix(driver_num, filename, &
-         n, ia, ja, avals, rhs,            &
-         Type, rhstype, pastix_comm, ierr)
+!call read_matrix(driver_num, filename, &
+!         n, ia, ja, avals, rhs,            &
+!         Type, rhstype, pastix_comm, ierr)
+
+
+
+ierr = 0
+call MPI_Comm_rank(pastix_comm,mpid, ierr)
+
+If (mpid == 0) Then
+
+!   Call genlaplacian(n, nnzero,  ia, ja, avals, rhs, type, rhstype, ierr)
+
+      nnzero = 3*n - 2
+      ! Allocating
+      allocate( ia     (n+1)   )
+      allocate( ja     (nnzero))
+      allocate( avals  (nnzero))
+      allocate( rhs    (n)     )
+
+      ! Building ia, ja and avals and rhs
+      j=1
+      do i = 1, n
+         ia(i) = j
+         ! /* ONLY triangular inferior matrix */
+         ! /*       if (i != 0) */
+         ! /* 	{ */
+         ! /* 	  (*ja)[j]    = i; */
+         ! /* 	  (*avals)[j] = -1; */
+         ! /* 	  j++; */
+         ! /* 	} */
+         ja(j)    = i
+         avals(j) = 2
+         j=j+1
+         if (i /= n) then
+            ja(j)    = i+1
+            avals(j) = -1.
+            j=j + 1
+         end if
+
+         rhs(i) = 0
+      end do
+      ia(n+1) = j
+      rhs(1)  = 1
+      rhs(n)  = 1
+
+      ! type and rhstype
+      type         = "RSA"
+      type(4:4)    = '\0'
+      rhstype(1:1) = '\0'
+
+End if
+
+call MPI_Bcast(n,1,MPI_PASTIX_INT,0,pastix_comm,ierr)
+call MPI_Bcast(nnzero,1,MPI_PASTIX_INT,0,pastix_comm,ierr)
+
+If (mpid /= 0) Then
+   allocate(ia(n+1))
+   allocate(ja(nnzero))
+   allocate(avals(nnzero))
+   allocate(rhs(n))
+End If
+
+call MPI_Bcast(ia, n+1,    MPI_PASTIX_INT,   0, pastix_comm, ierr)
+call MPI_Bcast(ja, nnzero, MPI_PASTIX_INT,   0, pastix_comm, ierr)
+call MPI_Bcast(avals,nnzero, MPI_PASTIX_FLOAT, 0, pastix_comm, ierr)
+call MPI_Bcast(rhs,n     , MPI_PASTIX_FLOAT, 0, pastix_comm, ierr)
+call MPI_Bcast(type,    3, MPI_CHARACTER,    0, pastix_comm, ierr)
+
 
 !
 ! First PaStiX call to initiate parameters
@@ -134,9 +204,12 @@ Do i = 1, NbrOfFact
                n,ia,ja,avals,perm,invp,rhs,nrhs,iparm,dparm)
        End Do
     End Do
-    !
+
+end subroutine initialize_pastix
+
+subroutine delete_pastix()
+
     ! Call PaStiX clean
-    !
     iparm(IPARM_START_TASK)       = API_TASK_CLEAN
     iparm(IPARM_END_TASK)         = API_TASK_CLEAN
     
@@ -151,9 +224,7 @@ Do i = 1, NbrOfFact
     deallocate(rhssaved)
     deallocate(rhs)
     
-    ! Clean up MPI
-    call MPI_FINALIZE(IERR)   
 
-end subroutine pastix_initialize
+end subroutine delete_pastix
 
 end module sll_pastix
