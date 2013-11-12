@@ -669,6 +669,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$write(*,*) 'phi avance = ', sim%phi_x1(:,1)
 !!$      sim%phi_x1=-sim%phi_x1
 !!$write(*,*) 'phi apres = ', sim%phi_x1(:,1)
+!attention the sign of phi after the solver Poisson
    sim%phi_x1=-sim%phi_x1
 !!$    do i=1,loc_sz_x1
 !!$       write (*,*)  'x',x_mil(i)-sim%mesh2dx%delta_eta1/2,'phi = ', sim%phi_x1(i,:)
@@ -716,7 +717,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$       end do
 
 
-if((sim%test==1).or.(sim%test==9)) then
+if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
        write(*,*) 'loc_sz_x1 =', loc_sz_x1
        do ic=1,loc_sz_x1
           do jc=1,loc_sz_x2
@@ -1107,6 +1108,8 @@ if((sim%test==1).or.(sim%test==9)) then
     write(*,*) 'we r using the Landau damping 1d xvx test case'
 else if (sim%test .eq. 9) then
     write(*,*) 'we r using the Landau damping 1d yvy test case'
+else if (sim%test .eq. 5) then
+    write(*,*) 'we r using the Landau damping 2D  test case'
  else if (sim%test .eq. 0) then
     write(*,*) 'the x-transport test case'
  else if (sim%test .eq. 2) then
