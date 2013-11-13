@@ -22,7 +22,6 @@ IF(PASTIX_ENABLED)
 
   IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
 
-     MESSAGE(STATUS "PASTIX FOUND")
      INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
      SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
      ADD_DEFINITIONS(-DDISTRIBUTED)
@@ -33,31 +32,24 @@ IF(PASTIX_ENABLED)
      ADD_EXECUTABLE(fsimple fsimple.F90 utils.F90)
      ADD_EXECUTABLE(fstep-by-step fstep-by-step.F90 utils.F90)
 
-     TARGET_LINK_LIBRARIES(fmurge  -lpastix_murge 
-                                   -lpastix 
-                                   -lgfortran 
-                                   -lm 
-                                   -lptscotch 
-                                   -lscotch 
-                                   -lptscotcherrexit 
-                                   -lpthread 
-                                   -lblas
+     TARGET_LINK_LIBRARIES(fmurge  ${MURGE_LIBRARIES}
+                                   ${PASTIX_LIBRARIES}
+                                   ${SCOTCH_LIBRARIES}
+                                   ${PTSCOTCH_LIBRARIES}
+                                   ${BLAS_LIBRARIES}
      )
 
-     TARGET_LINK_LIBRARIES(fsimple -lmatrix_driver 
-                                   ${PASTIX_LIBRARIES} 
+     TARGET_LINK_LIBRARIES(fsimple ${PASTIX_LIBRARIES} 
                                    ${PTSCOTCH_LIBRARIES}
                                    ${BLAS_LIBRARIES})
 
-     TARGET_LINK_LIBRARIES(fstep-by-step -lmatrix_driver 
-                                         ${PASTIX_LIBRARIES} 
+     TARGET_LINK_LIBRARIES(fstep-by-step ${PASTIX_LIBRARIES} 
                                          ${PTSCOTCH_LIBRARIES}
                                          ${BLAS_LIBRARIES})
 
-     ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 utils.F90)
+     ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 )
 
      TARGET_LINK_LIBRARIES(sll_pastix  sll_collective
-                                       -lmatrix_driver 
                                        ${MURGE_LIBRARIES} 
                                        ${PASTIX_LIBRARIES} 
                                        ${PTSCOTCH_LIBRARIES}
