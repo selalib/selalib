@@ -1,5 +1,6 @@
+#define NPTS 100
 program test_pastix
-
+#include "sll_working_precision.h"
 use sll_collective
 use sll_pastix 
 use sll_murge
@@ -17,9 +18,11 @@ call sll_halt_collective()
 contains
 
 subroutine test_pastix_fortran()
+type(pastix_solver) :: solver
 
-   call initialize_pastix()
-   call delete_pastix()
+   call initialize_pastix(solver, NPTS)
+   call solve_pastix(solver)
+   call delete_pastix(solver)
 
 end subroutine test_pastix_fortran
 
