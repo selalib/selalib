@@ -1362,6 +1362,8 @@ contains
     class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
 !!$    sll_int32 :: ierr
 !!$    SLL_DEALLOCATE( transf%j_matrix, ierr )
+    transf%label = ""
+    transf%written = .false.
     nullify( transf%x1_node )
     nullify( transf%x2_node )
     nullify( transf%x1_cell )
