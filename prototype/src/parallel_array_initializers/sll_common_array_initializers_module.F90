@@ -62,6 +62,36 @@ contains
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*vx**2)
   end function sll_landau_initializer_2d
 
+  function sll_diocotron_initializer_2d( r, theta, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: r
+    sll_real64, intent(in) :: theta
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: k_mode
+    sll_real64 :: r_minus
+    sll_real64 :: r_plus
+
+    if( .not. present(params) ) then
+       print *, '#sll_diocotron_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = r_minus'
+       print *,'#params(2)= r_plus params(3)=epsilon param(4)=k_mode'     
+       stop
+    end if
+    SLL_ASSERT(size(params)>=4)
+    r_minus = params(1) 
+    r_plus =  params(2)
+    eps = params(3) 
+    k_mode = params(4) 
+    
+    if(r>=r_minus.and.r<=r_plus)then
+      res = (1.0_f64+eps*cos(k_mode*theta))
+    else
+      res = 0._f64  
+    endif     
+  end function sll_diocotron_initializer_2d
+
 
 
 
