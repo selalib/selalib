@@ -13,7 +13,30 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_2d_guiding_center_cartesian.F90
                                      simulation_2d_guiding_center_polar.F90)
 
-TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines)
+TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
+                       sll_poisson_solvers
+                       sll_fft
+		       sll_distribution_function
+		       sll_general_coordinate_elliptic_solvers
+		       deboor_splines
+		       #sll_scalar_field_1d_alternative
+		       sll_scalar_field_2d_alternative
+                       sll_electric_field_accumulators
+                       sll_scalar_field
+                       sll_interpolators
+                       sll_advection
+                       sll_splines
+		       sll_integration
+		       sll_reduction
+                       sll_constants
+                       sll_coordinate_transformations
+                       sll_logical_meshes
+                       sll_utilities
+               sll_common_array_initializers
+		       sll_timer
+                       sll_memory
+                       sll_assertion 	
+                       sll_working_precision)
 
 # Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
