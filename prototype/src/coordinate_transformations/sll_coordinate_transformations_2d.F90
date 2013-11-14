@@ -1439,8 +1439,9 @@ contains
     sll_int32  :: bc_top
     sll_int32  :: sz_nodes1, sz_nodes2
     sll_real64, dimension(:), allocatable :: nodes1,nodes2
+    sll_int32  :: number_cells1,number_cells2
     sll_int32 :: sz_knots1,sz_knots2
-    class(arb_deg_2d_interpolator), pointer :: interp2d_transf_1,interp2d_transf_2
+    class(arb_deg_2d_interpolator),pointer::interp2d_transf_1,interp2d_transf_2
     
     namelist /degree/   spline_deg1, spline_deg2
     namelist /shape/    num_pts1, num_pts2 ! it is not the number of points but the number of coeff sdpline in each direction !!
@@ -1449,6 +1450,7 @@ contains
     namelist /knots_2/   knots2
     namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
+    namelist /logical_mesh_2d/ number_cells1,number_cells2
     character(len=80) :: line_buffer
 
     if(len(filename) >= 256) then
@@ -1507,20 +1509,21 @@ contains
     bc_bottom = SLL_DIRICHLET 
     bc_top    = SLL_DIRICHLET
 
-    ! the number of points is the knots witout the multiplicity
-    
+!!$    ! the number of points is the knots witout the multiplicity
+!!$    
     sz_knots1 = size(knots1)
-    SLL_ALLOCATE(nodes1(sz_knots1),ierr)
+!!$    SLL_ALLOCATE(nodes1(sz_knots1),ierr)
     sz_knots2 = size(knots2)
-    SLL_ALLOCATE(nodes2(sz_knots2),ierr)
-    call delete_multiplicity_in_knots(knots1,nodes1,sz_nodes1)
-    call delete_multiplicity_in_knots(knots2,nodes2,sz_nodes2)
+!!$    SLL_ALLOCATE(nodes2(sz_knots2),ierr)
+!!$    call delete_multiplicity_in_knots(knots1,nodes1,sz_nodes1)
+!!$    call delete_multiplicity_in_knots(knots2,nodes2,sz_nodes2)
 
     ! Initialization of the interpolator spline 2D in x
     ! ACHTUNG we have not delete it
     
-    interp2d_transf_1 => new_arbitrary_degree_spline_interp2d(sz_nodes1,  &  
-         sz_nodes2,  &  
+    interp2d_transf_1 => new_arbitrary_degree_spline_interp2d(&
+         number_cells1 + 1,  &  
+         number_cells2 + 1,  &  
          eta1_min,  &  
          eta1_max,  & 
          eta2_min,  & 
@@ -1547,8 +1550,8 @@ contains
     ! Initialization of the interpolator spline 2D in y
     ! ACHTUNG we have not delete it
     interp2d_transf_2 => new_arbitrary_degree_spline_interp2d(&
-         sz_nodes1,  & 
-         sz_nodes2,  & 
+         number_cells1 + 1,  & 
+         number_cells2 + 2,  & 
          eta1_min,  & 
          eta1_max,  & 
          eta2_min,  & 
@@ -1575,8 +1578,8 @@ contains
 
     ! initialization of mesh
     transf%mesh => new_logical_mesh_2d(&
-                                   sz_nodes1-1,&
-                                   sz_nodes2-1,&
+                                   number_cells1,&
+                                   number_cells2,&
                                    eta1_min = eta1_min,&
                                    eta1_max = eta1_max,&
                                    eta2_min = eta2_min,&
