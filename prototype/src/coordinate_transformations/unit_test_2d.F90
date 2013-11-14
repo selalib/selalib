@@ -309,8 +309,12 @@ program unit_test_2d
   
 
   print *, 'Test of initialization from file for a discrete transformation:'
-  call t_d%read_from_file('chgt_test',"../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
-
+  ! what is this chgt_test thing? I don't like it. If we need a name, then we
+  ! should include it in the initialization file. ECG
+  call t_d%read_from_file('chgt_test',"../src/coordinate_transformations/circle_5mp_patch0.nml")
+print *, 'label of discrete transformation: ', t_d%label
+print *, 'printed label'
+  call t_d%write_to_file( )
 
   print*, t_d%jacobian_matrix(1._8,1._8)
 
