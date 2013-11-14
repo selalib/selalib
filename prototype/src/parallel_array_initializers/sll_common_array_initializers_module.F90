@@ -189,6 +189,38 @@ contains
   end function sll_landau_initializer_4d
 
 
+  function sll_landau_mode_initializer_4d( x, y, vx, vy, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: ky
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = kx, params(2) = ky, ', &
+            'params(3) = eps.'
+       stop
+    end if
+
+    SLL_ASSERT( size(params) >= 3 )
+
+    kx = params(1)
+    ky = params(2)
+    eps      = params(3)
+
+    factor1 = 1.0_f64/(2.0*sll_pi)
+    res = factor1 * &
+         (1.0_f64+eps*cos(kx*x)*cos(ky*y))*exp(-0.5_f64*(vx**2+vy**2))
+  end function sll_landau_mode_initializer_4d
+
+
+
   ! this function is a 1D landau initializer used for debugging
   ! 4D drift kinetic simulations in variables x1,x2,x3 ,v1
   ! the function is constant with respect to x2 and x3
