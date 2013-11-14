@@ -50,6 +50,12 @@ type, public :: poisson_2d_periodic
   type(fftclass)                      :: ffty !< fft plan in direction y
 end type poisson_2d_periodic
 
+!> Create a new poisson solver on 1d mesh
+interface new
+  module procedure new_poisson_2d_periodic_fftpack
+end interface
+
+
 !> Initialize
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftpack
@@ -73,9 +79,39 @@ interface fftinv
    module procedure doubfftinv,  doubcfftinv
 end interface
 
-public :: initialize, solve
+public :: initialize, new, solve
 
 contains
+
+
+
+
+  !> Create a new solver
+  function new_poisson_2d_periodic_fftpack(&
+    x_min, &
+    x_max, &
+    nc_x, &
+    y_min, &
+    y_max, &
+    nc_y, &
+    error) &
+    result(this)
+   type(poisson_2d_periodic),pointer :: this   !< self object
+   sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
+   sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
+   sll_real64, intent(in)    :: x_min  !< left corner direction x
+   sll_real64, intent(in)    :: x_max  !< right corner direction x
+   sll_real64, intent(in)    :: y_min  !< left corner direction y
+   sll_real64, intent(in)    :: y_max  !< right corner direction y
+   sll_int32,  intent(out)   :: error  !< error code
+
+   SLL_ALLOCATE(this, error)
+   call initialize_poisson_2d_periodic_fftpack( &
+           this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
+
+  end function new_poisson_2d_periodic_fftpack 
+
+
 
 !> Create an object to solve Poisson equation on 2D mesh with periodic
 !> boundary conditions:
