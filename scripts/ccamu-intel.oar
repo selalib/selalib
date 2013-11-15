@@ -11,10 +11,12 @@ module load intel/13.1.2
 module load cmake/2.8.7
 export HDF5_ROOT=/softs/hdf5/intel/1.8.8
 export FFTW_ROOT=/softs/fftw/intel/3.3
+export PASTIX_ROOT=/softs/cemracs/selalib
+export SCOTCH_ROOT=/softs/cemracs/selalib
 cd /scratch/pnavaro
 mkdir selalib-intel
 cd selalib-intel; {
-cmake ${HOME}/selalib -DCMAKE_BUILD_TYPE=Release -DCMAKE_Fortran_COMPILER=ifort
+cmake ${HOME}/selalib -DOPTIONS_FILE=${HOME}/selalib/cmake/ccamu-intel.cmake
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
