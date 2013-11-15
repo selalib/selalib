@@ -766,9 +766,8 @@ contains
     transf%written = .true.
   end subroutine
 
-  subroutine read_from_file_2d_analytic( transf,label, filename )
+  subroutine read_from_file_2d_analytic( transf, filename )
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
-     character(len=*), intent(in) :: label
     character(len=*), intent(in) :: filename
     print *, 'read_from_file_2d_analytic: not yet implemented'
     ! here we could put a case select to choose which analytic transformation
@@ -983,11 +982,11 @@ contains
   function new_coordinate_transformation_2d_discrete( &
        mesh_2d,        &
        label,          &
-       x1_node,        &
-       x2_node,        &
        x1_interpolator,&
        x2_interpolator,&
        jacobians_n_interpolator, &
+       x1_node,        &
+       x2_node,        &
        jacobians_node, &
        x1_cell, &
        x2_cell, &
@@ -996,24 +995,25 @@ contains
     ! INPUT VARIABLES
     type(sll_logical_mesh_2d), pointer    :: mesh_2d
     character(len=*)         , intent(in) :: label
-    sll_real64, dimension(:,:)            :: x1_node
-    sll_real64, dimension(:,:)            :: x2_node
+
 #ifdef STDF95
     ! no this should not be compiled under f95, the object would not have
     ! the same functionality
     type(cubic_spline_2d_interpolator), target  :: x1_interpolator
     type(cubic_spline_2d_interpolator), target  :: x2_interpolator
     type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
+
 #else
     class(sll_interpolator_2d_base), target  :: x1_interpolator
     class(sll_interpolator_2d_base), target  :: x2_interpolator
     class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
 #endif 
-
-    sll_real64, dimension(:,:), optional :: jacobians_node
-    sll_real64, dimension(:,:), optional :: x1_cell
-    sll_real64, dimension(:,:), optional :: x2_cell
-    sll_real64, dimension(:,:), optional :: jacobians_cell
+    sll_real64, dimension(:,:), intent(in), optional :: x1_node
+    sll_real64, dimension(:,:), intent(in), optional :: x2_node
+    sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
+    sll_real64, dimension(:,:), intent(in), optional :: x1_cell
+    sll_real64, dimension(:,:), intent(in), optional :: x2_cell
+    sll_real64, dimension(:,:), intent(in), optional :: jacobians_cell
 
     ! LOCAL VARIABLES
     type(sll_coordinate_transformation_2d_discrete), pointer :: &
@@ -1025,11 +1025,11 @@ contains
          new_coordinate_transformation_2d_discrete, &
          mesh_2d,           &
          label,            &
-         x1_node,        &
-         x2_node,        &
          x1_interpolator, &
          x2_interpolator, &
          jacobians_n_interpolator, &
+         x1_node,        &
+         x2_node,        &
          jacobians_node, &
          x1_cell, &
          x2_cell, &
@@ -1040,11 +1040,11 @@ contains
     transf,            &
     mesh_2d,           &
     label,            &
-    x1_node,        &
-    x2_node,        &
     x1_interpolator, &
     x2_interpolator, &
     jacobians_n_interpolator, &
+    x1_node,        &
+    x2_node,        &
     jacobians_node, &
     x1_cell, &
     x2_cell, &
@@ -1057,8 +1057,7 @@ contains
 #endif
     type(sll_logical_mesh_2d), pointer   :: mesh_2d
     character(len=*), intent(in)         :: label
-    sll_real64, dimension(:,:)           :: x1_node
-    sll_real64, dimension(:,:)           :: x2_node
+
 #ifdef STDF95
     ! no this should not be compiled under f95, the object would not have
     ! the same functionality
@@ -1068,12 +1067,14 @@ contains
 #else
     class(sll_interpolator_2d_base), target  :: x1_interpolator
     class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
+    class(sll_interpolator_2d_base), target :: jacobians_n_interpolator
 #endif 
-    sll_real64, dimension(:,:), optional :: jacobians_node
-    sll_real64, dimension(:,:), optional :: jacobians_cell
-    sll_real64, dimension(:,:), optional :: x1_cell
-    sll_real64, dimension(:,:), optional :: x2_cell
+    sll_real64, dimension(:,:), intent(in), optional :: x1_node
+    sll_real64, dimension(:,:), intent(in), optional :: x2_node
+    sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
+    sll_real64, dimension(:,:), intent(in), optional :: jacobians_cell
+    sll_real64, dimension(:,:), intent(in), optional :: x1_cell
+    sll_real64, dimension(:,:), intent(in), optional :: x2_cell
 
     sll_real64 :: eta_1
     sll_real64 :: eta_2
@@ -1087,6 +1088,8 @@ contains
     sll_int32  :: ierr
     sll_int32  :: npts1
     sll_int32  :: npts2
+    logical    :: x1n
+    logical    :: x2n
     logical    :: x1c
     logical    :: x2c
     logical    :: jc
@@ -1094,6 +1097,8 @@ contains
 
     transf%mesh => mesh_2d
     transf%label = trim(label)
+    x1n = present(x1_node)
+    x2n = present(x2_node)
     x1c = present(x1_cell)
     x2c = present(x2_cell)
     jc  = present(jacobians_cell)
@@ -1104,44 +1109,71 @@ contains
     ! Check argument consistency
     ! DISCRETE_MAPs require only some of the parameters. If the mapping is
     ! defined from the nodes of the logical (eta1, eta2) mesh to the nodes
-    ! of the physical mesh (x1,x2), then the node arrays are required:
-    ! jacobians_node, x1_node and x2_node.
+    ! of the physical mesh (x1,x2), then either:
+    ! - the node arrays are required: jacobians_node, x1_node and x2_node. Or
+    ! - the x1_interpolator and x2_interpolator must contain already the
+    !   coefficient information that would permit the calculation of the
+    !   x1 and x2 points.
     !
     ! If the transformation is done on the points at the center of the cells
     ! then these parameters are also required: 
     ! jacobians_cell, x1_cell, x2_cell.
     ! node and cell values are not mutually exclusive, thus all 6 parameters 
-    ! can be provided in the NUMERIC case. It is up to the caller to make
+    ! can be provided in the discrete case. It is up to the caller to make
     ! sure that the data set is consistent.
 
     ! 1. Check that the discrete representation of the transformation is
     !    consistent with the size of the 2D array.
-    if( &
-       (size(x1_node,1) .lt. npts1) .or. &
-       (size(x1_node,2) .lt. npts2) ) then
-       print *, 'ERROR, initialize_coordinate_transformation_2d_discrete(), ', &
-            'the size of the x1_node or x2_node arrays is ', &
-            'inconsistent with the number of points declared, ', &
-            'in the logical mesh.'
+
+    if( (      x1n  .and. (.not.x2n) ) .or. &
+        ((.not.x1n) .and.       x2n) ) then
+       print *,'ERROR, initialize_coordinate_transformation_2d_discrete():', &
+            'for the moment, this function does not support specifying ', &
+            'transformation only with one of the node arrays x1_node or ', &
+            'x2_node. Either pass both, or none, but with the ', &
+            'corresponding interpolators having their coefficients ', &
+            'already set.'
        STOP
     end if
+
+    if( x1n ) then
+       if( size(x1_node,1) .lt. npts1 ) then
+          print *,'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+               ' the size of the x1_node arrays is ', &
+               'inconsistent with the number of points declared, ', &
+               'in the logical mesh.'
+          STOP 
+       end if
+    end if
+
+    if( x2n ) then
+       if( size(x1_node,2) .lt. npts2 ) then
+          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+               ' the size of the x2_node arrays is ', &
+               'inconsistent with the number of points declared, ', &
+               'in the logical mesh.'
+          STOP
+       end if
+    end if
+
     if( jn .eqv. .true. ) then
        if( &
           (size(jacobians_node,1) .lt. npts1 - 1 ) .or. &
           (size(jacobians_node,2) .lt. npts2 - 1 ) ) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete(): ', &
-               'the size of the jacobians_node array is ', &
+          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+               ': the size of the jacobians_node array is ', &
                'inconsistent with the number of points declared, ', &
                'npts1 or npts2.'
           STOP
        end if
     end if
+
     if( jc .eqv. .true. ) then
        if( &
           (size(jacobians_cell,1) .lt. npts1 - 1 ) .or. &
           (size(jacobians_cell,2) .lt. npts2 - 1 ) ) then
-          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete(): ', &
-               'the size of the jacobians_cell arrays is ', &
+          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+               ': the size of the jacobians_cell arrays is ', &
                'inconsistent with the number of points declared, ', &
                'npts1 or npts2.'
           STOP
@@ -1168,26 +1200,59 @@ contains
     ! this information when the object is deleted. The caller is
     ! thus responsible for deallocating the arrays that were passed as
     ! arguments.
-    do j=1, npts2
-       do i=1, npts1
-          transf%x1_node(i,j) = x1_node(i,j)
-          transf%x2_node(i,j) = x2_node(i,j)
-       end do
-    end do
-
-    ! Compute the spline coefficients
-#ifdef STDF95
-    call cubic_spline_compute_interpolants( x1_interpolator, transf%x1_node )
-    call cubic_spline_compute_interpolants( x2_interpolator, transf%x2_node )
-#else
-    call x1_interpolator%compute_interpolants( transf%x1_node )
-    call x2_interpolator%compute_interpolants( transf%x2_node )
-#endif
 
     eta_1_min   = mesh_2d%eta1_min
     eta_2_min   = mesh_2d%eta2_min
     delta_eta_1 = mesh_2d%delta_eta1
     delta_eta_2 = mesh_2d%delta_eta2
+
+    if( x1n .and. x2n ) then
+       do j=1, npts2
+          do i=1, npts1
+             transf%x1_node(i,j) = x1_node(i,j)
+             transf%x2_node(i,j) = x2_node(i,j)
+          end do
+       end do
+    else
+       if(x1_interpolator%coefficients_are_set() .eqv. .false.) then
+          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+               ': the x1_node array was not passed and the corresponding ', &
+               'interpolator has no initialized coefficients. Exiting...'
+          STOP
+       endif
+       if(x2_interpolator%coefficients_are_set() .eqv. .false.) then
+          print *, 'ERROR, initialize_coordinate_transformation_2d_discrete()',&
+               ': the x2_node array was not passed and the corresponding ', &
+               'interpolator has no initialized coefficients. Exiting...'
+          STOP
+       endif
+       ! now initialize the arrays starting from the interpolator information
+       ! and the logical mesh information.
+       do j=0, npts2 - 1
+          eta_2 = eta_2_min + real(j,f64)*delta_eta_2          
+          do i=0, npts1 - 1
+             eta_1 = eta_1_min + real(i,f64)*delta_eta_1
+             transf%x1_node(i+1,j+1) = &
+                  x1_interpolator%interpolate_value(eta_1,eta_2)
+             transf%x2_node(i+1,j+1) = &
+                  x2_interpolator%interpolate_value(eta_1,eta_2)
+          end do
+       end do
+    end if
+
+    ! Compute the spline coefficients
+!!$#ifdef STDF95
+!!$    call cubic_spline_compute_interpolants( x1_interpolator, transf%x1_node )
+!!$    call cubic_spline_compute_interpolants( x2_interpolator, transf%x2_node )
+!!$#else
+    if( x1n .and. (x1_interpolator%coefficients_are_set() .eqv. .false.) ) then
+       call x1_interpolator%compute_interpolants( transf%x1_node )
+    end if
+    if( x2n .and. (x2_interpolator%coefficients_are_set() .eqv. .false.) ) then
+       call x2_interpolator%compute_interpolants( transf%x2_node )
+    end if
+!!$#endif
+
 
     ! The splines contain all the information to compute the
     ! jacobians everywhere; however, here we explore assigning
@@ -1214,7 +1279,7 @@ contains
 #else
              jacobian_val = transf%jacobian(eta_1,eta_2)
 #endif
-             transf%jacobians_c(i+1,j+1) = jacobian_val
+             transf%jacobians_n(i+1,j+1) = jacobian_val
           end do
        end do
     end if
@@ -1405,10 +1470,9 @@ contains
   ! - The BC information is not inside the files we are currently considering,
   !   so this should be included.
  
-  subroutine read_from_file_2d_discrete( transf,label, filename )
+  subroutine read_from_file_2d_discrete( transf, filename )
     use sll_arbitrary_degree_spline_interpolator_2d_module
     class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
-    character(len=*), intent(in) :: label
     character(len=*), intent(in) :: filename
     intrinsic :: trim
     sll_int32 :: interpolator_type
@@ -1421,6 +1485,7 @@ contains
     sll_int32 :: num_pts1
     sll_int32 :: num_pts2
     sll_int32 :: is_rational
+    character(len=256) :: label
     sll_real64, dimension(:), allocatable :: knots1
     sll_real64, dimension(:), allocatable :: knots2
     sll_real64, dimension(:), allocatable :: control_pts1
@@ -1438,11 +1503,16 @@ contains
     sll_int32  :: bc_bottom
     sll_int32  :: bc_top
     sll_int32  :: sz_nodes1, sz_nodes2
-    sll_real64, dimension(:), allocatable :: nodes1,nodes2
+!    sll_real64, dimension(:,:), allocatable :: nodes1
+!    sll_real64, dimension(:,:), allocatable :: nodes2
     sll_int32  :: number_cells1,number_cells2
     sll_int32 :: sz_knots1,sz_knots2
-    class(arb_deg_2d_interpolator),pointer::interp2d_transf_1,interp2d_transf_2
-    
+    class(arb_deg_2d_interpolator), pointer :: interp2d_1
+    class(arb_deg_2d_interpolator), pointer :: interp2d_2
+    class(arb_deg_2d_interpolator), pointer :: interp2d_jac
+    type(sll_logical_mesh_2d), pointer      :: mesh_2d
+   
+    namelist /transf_label/  label
     namelist /degree/   spline_deg1, spline_deg2
     namelist /shape/    num_pts1, num_pts2 ! it is not the number of points but the number of coeff sdpline in each direction !!
     namelist /rational/ is_rational
@@ -1454,8 +1524,9 @@ contains
     character(len=80) :: line_buffer
 
     if(len(filename) >= 256) then
-       print *, 'ERROR, read_coefficients_from_file=>read_from_file_discrete():',&
-            'filenames longer than 64 characters are not allowed.'
+       print *, 'ERROR, read_coefficients_from_file => ',&
+            'read_from_file_discrete():',&
+            'filenames longer than 256 characters are not allowed.'
        STOP
     end if
     filename_local = trim(filename)
@@ -1473,6 +1544,8 @@ contains
             '. Called from read_coeffs_ad2d().'
        stop
     end if
+
+    read( input_file_id, transf_label )
     read( input_file_id, degree )
     read( input_file_id, shape )
     read( input_file_id, rational )
@@ -1492,6 +1565,7 @@ contains
     control_pts2_2d = reshape(control_pts2,(/num_pts1,num_pts2/))
     read( input_file_id, pt_weights )
     weights_2d = reshape(weights,(/num_pts1,num_pts2/))
+    read( input_file_id, logical_mesh_2d )
     close( input_file_id )
 
 
@@ -1502,7 +1576,8 @@ contains
 
     ! for the moment we put the boundary condition like a dirichlet 
     ! boundary condition
-    ! but we must modified this part 
+    ! but we must modified this part <-- this means that this info must
+    ! come within the input file: ECG
 
     bc_left   = SLL_DIRICHLET
     bc_right  = SLL_DIRICHLET 
@@ -1519,9 +1594,9 @@ contains
 !!$    call delete_multiplicity_in_knots(knots2,nodes2,sz_nodes2)
 
     ! Initialization of the interpolator spline 2D in x
-    ! ACHTUNG we have not delete it
-    
-    interp2d_transf_1 => new_arbitrary_degree_spline_interp2d(&
+    ! ACHTUNG we have not delete it   <--- What???:ECG
+    print *, 'number cells = ', number_cells1, number_cells2
+    interp2d_1 => new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  &  
          number_cells2 + 1,  &  
          eta1_min,  &  
@@ -1535,21 +1610,20 @@ contains
          spline_deg1, & 
          spline_deg2 )  
 
-    
-    call  set_coefficients_ad2d( &
-         interp2d_transf_1, &
-         coeffs_2d = control_pts1_2d,&
+    call interp2d_1%set_coefficients( &
+         coeffs_2d     = control_pts1_2d,&
          coeff2d_size1 = num_pts1,&
          coeff2d_size2 = num_pts2,&
-         knots1 = knots1,&
-         size_knots1 = sz_knots1,&
-         knots2 = knots2,&
-         size_knots2 = sz_knots2)
+         knots1        = knots1,&
+         size_knots1   = sz_knots1,&
+         knots2        = knots2,&
+         size_knots2   = sz_knots2 )
     
-    transf%x1_interp =>interp2d_transf_1
+!    transf%x1_interp =>interp2d_transf_1
     ! Initialization of the interpolator spline 2D in y
     ! ACHTUNG we have not delete it
-    interp2d_transf_2 => new_arbitrary_degree_spline_interp2d(&
+    ! don't understand; write in French!! : ECG
+    interp2d_2 => new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  & 
          number_cells2 + 2,  & 
          eta1_min,  & 
@@ -1563,36 +1637,54 @@ contains
          spline_deg1, & 
          spline_deg2 )
     
-    call  set_coefficients_ad2d( &
-         interp2d_transf_2, &
-         coeffs_2d = control_pts2_2d,&
+    call interp2d_2%set_coefficients( &
+         coeffs_2d     = control_pts2_2d,&
          coeff2d_size1 = num_pts1,&
          coeff2d_size2 = num_pts2,&
-         knots1 = knots1,&
-         size_knots1 = sz_knots1,&
-         knots2 = knots2,&
-         size_knots2 = sz_knots2)
+         knots1        = knots1,&
+         size_knots1   = sz_knots1,&
+         knots2        = knots2,&
+         size_knots2   = sz_knots2)
 
-    transf%x2_interp =>interp2d_transf_2
+    interp2d_jac => new_arbitrary_degree_spline_interp2d(&
+         number_cells1 + 1,  & 
+         number_cells2 + 2,  & 
+         eta1_min,  & 
+         eta1_max,  & 
+         eta2_min,  & 
+         eta2_max,  & 
+         bc_left,   & 
+         bc_right,  & 
+         bc_bottom, & 
+         bc_top,    & 
+         spline_deg1, & 
+         spline_deg2 )
+
+!    transf%x2_interp =>interp2d_transf_2
 
 
     ! initialization of mesh
-    transf%mesh => new_logical_mesh_2d(&
-                                   number_cells1,&
-                                   number_cells2,&
-                                   eta1_min = eta1_min,&
-                                   eta1_max = eta1_max,&
-                                   eta2_min = eta2_min,&
-                                   eta2_max = eta2_max)
+    mesh_2d => new_logical_mesh_2d(&
+         number_cells1,&
+         number_cells2,&
+         eta1_min = eta1_min,&
+         eta1_max = eta1_max,&
+         eta2_min = eta2_min,&
+         eta2_max = eta2_max)
 
     ! initialization of name 
-    transf%label = trim(label)
+   ! transf%label = trim(label)
     ! All the information from the file is now in local variables. We should
     ! now be able to initialize all the necessary objects
 
     ! leave the default [0,1]X[0,1] domain for the logical mesh
     !    transf%mesh => new_logical_mesh_2d(num_cells1, num_cells2)
-
+    call transf%initialize( &
+         mesh_2d, &
+         label, &
+         interp2d_1, &
+         interp2d_2, &
+         interp2d_jac )
 !!$    select case (interpolator_type)
 !!$       case (SLL_ARBITRARY_DEGREE_INTERPOLATOR) ! where is this specified???
 !!$          transf%x1_interp => new_arbitrary_degree_spline_interpolator_2d( &
@@ -1604,11 +1696,8 @@ contains
 !!$               'read_from_file_2d_discrete() this type of interpolator ', &
 !!$               'can not be initialized from a file at present.'
 !!$       end select
-
-
-    SLL_DEALLOCATE_ARRAY(nodes1,ierr)
-    SLL_DEALLOCATE_ARRAY(nodes2,ierr)
-
+!    SLL_DEALLOCATE_ARRAY(nodes1,ierr)
+!    SLL_DEALLOCATE_ARRAY(nodes2,ierr)
   end subroutine read_from_file_2d_discrete
 
   subroutine delete_multiplicity_in_knots(knots,nodes,sz_nodes)

@@ -54,6 +54,9 @@ module sll_module_interpolators_2d_base
      
      procedure(interpolator_2d_set_coeffs), &
           pass, deferred :: set_coefficients
+
+     procedure(interpolator_2d_logical_query), &
+          pass, deferred :: coefficients_are_set
      
      procedure(compute_coeffs_2d),&
           pass, deferred ::  compute_interpolants
@@ -162,6 +165,14 @@ module sll_module_interpolators_2d_base
        sll_int32, intent(in), optional :: size_knots1
        sll_int32, intent(in), optional :: size_knots2
      end subroutine interpolator_2d_set_coeffs
+  end interface
+
+  abstract interface
+     function interpolator_2d_logical_query( interpolator ) result(res)
+       import sll_interpolator_2d_base
+       class(sll_interpolator_2d_base), intent(in) :: interpolator
+       logical :: res
+     end function interpolator_2d_logical_query
   end interface
 
   abstract interface

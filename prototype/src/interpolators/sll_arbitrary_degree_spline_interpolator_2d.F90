@@ -57,11 +57,13 @@ use sll_utilities
      sll_real64, dimension(:,:), pointer :: coeff_splines
      sll_int32                  :: size_coeffs1
      sll_int32                  :: size_coeffs2
-
+     logical    :: coefficients_set = .false.
 #ifndef STDF95
    contains
     procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
     procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
+    procedure, pass(interpolator) :: coefficients_are_set => &
+         coefficients_are_set_ad2d
 ! better: pre-compute-interpolation-information or something...
     procedure :: compute_interpolants => compute_interpolants_ad2d
    ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
@@ -660,8 +662,6 @@ contains
          end do
          ! ------------------------------------------------------------
          
-         
-         
       case default
          print *, 'arbitrary_degree_spline_2d() error: set_spline_coefficients ',&
               'not recognized.'
@@ -766,6 +766,7 @@ contains
       print*, 'Problem in set_coefficients: must be have coefficients'
       stop
    end if
+   interpolator%coefficients_set = .true.
  end subroutine !set_coefficients_ad2d
 
 
@@ -974,10 +975,16 @@ contains
             interpolator%t2(1:sz2+order2) )
 
     end select
-
+    interpolator%coefficients_set = .true.
     SLL_DEALLOCATE(point_location_eta2,ierr)
     SLL_DEALLOCATE(point_location_eta1,ierr)
   end subroutine !compute_interpolants_ad2d
+
+  function coefficients_are_set_ad2d( interpolator ) result(res)
+    class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+    logical :: res
+    res = interpolator%coefficients_set
+  end function coefficients_are_set_ad2d
 
 
   !  ----------------------------------------------------------
