@@ -30,6 +30,13 @@ use fftw3
 
 implicit none
 
+
+!> Create a new poisson solver on 1d mesh
+interface new
+  module procedure new_poisson_2d_periodic_fftw
+end interface
+
+
 !> Initialize the Poisson solver using fftw library
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
@@ -69,9 +76,39 @@ type, public :: poisson_2d_periodic
 
 end type poisson_2d_periodic
 
-public initialize, solve, delete
+public initialize, new, solve, delete
 
 contains
+
+
+  !> Create a new solver
+  function new_poisson_2d_periodic_fftw(&
+    x_min, &
+    x_max, &
+    nc_x, &
+    y_min, &
+    y_max, &
+    nc_y, &
+    error) &
+    result(this)
+   type(poisson_2d_periodic),pointer :: this   !< self object
+   sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
+   sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
+   sll_real64, intent(in)    :: x_min  !< left corner direction x
+   sll_real64, intent(in)    :: x_max  !< right corner direction x
+   sll_real64, intent(in)    :: y_min  !< left corner direction y
+   sll_real64, intent(in)    :: y_max  !< right corner direction y
+   sll_int32,  intent(out)   :: error  !< error code
+
+   SLL_ALLOCATE(this, error)
+   call initialize_poisson_2d_periodic_fftw( &
+           this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
+
+  end function new_poisson_2d_periodic_fftw 
+
+
+
+
 
 !> Initialize the Poisson solver
 subroutine initialize_poisson_2d_periodic_fftw(self, &
