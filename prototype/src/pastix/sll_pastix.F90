@@ -57,7 +57,6 @@ SLL_ALLOCATE( this%ia   (n+1)   , error)
 SLL_ALLOCATE( this%ja   (nnzero), error)
 SLL_ALLOCATE( this%avals(nnzero), error)
 SLL_ALLOCATE( this%rhs  (n)     , error)
-stop
 
 ! Building ia, ja and avals and rhs
 j=1
@@ -123,8 +122,11 @@ call pastix_fortran(this%pastix_data ,comm, &
 
 end subroutine initialize_pastix
 
-subroutine solve_pastix(this)
+subroutine solve_pastix(this, sol, rhs)
 type(pastix_solver)      :: this
+sll_int32 :: i
+sll_real64, dimension(:) :: sol
+sll_real64, dimension(:) :: rhs
 
 comm = sll_world_collective%comm
 
@@ -136,6 +138,10 @@ call pastix_fortran(this%pastix_data ,comm, &
                     this%n,this%ia,this%ja, &
                     this%avals,this%perm,this%invp,  &
                     this%rhs,this%nrhs,this%iparm,this%dparm)
+
+do i = 1, this%n
+   write(10,*) i, this%rhs(i)
+end do
 
 end subroutine solve_pastix
 
