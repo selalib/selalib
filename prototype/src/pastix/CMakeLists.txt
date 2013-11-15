@@ -34,10 +34,8 @@ IF(PASTIX_ENABLED)
 
      TARGET_LINK_LIBRARIES(fmurge  ${MURGE_LIBRARIES}
                                    ${PASTIX_LIBRARIES}
-                                   ${SCOTCH_LIBRARIES}
                                    ${PTSCOTCH_LIBRARIES}
-                                   ${BLAS_LIBRARIES}
-     )
+                                   ${BLAS_LIBRARIES})
 
      TARGET_LINK_LIBRARIES(fsimple ${PASTIX_LIBRARIES} 
                                    ${PTSCOTCH_LIBRARIES}
