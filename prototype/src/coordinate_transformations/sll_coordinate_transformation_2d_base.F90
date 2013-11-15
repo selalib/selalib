@@ -176,10 +176,9 @@ module sll_coordinate_transformation_2d_base_module
    end interface
 
    abstract interface
-      subroutine read_transformation( transf,label, filename )
+      subroutine read_transformation( transf, filename )
         import :: sll_coordinate_transformation_2d_base
         class(sll_coordinate_transformation_2d_base), intent(inout) :: transf
-         character(len=*), intent(in) :: label
         character(len=*), intent(in) :: filename
       end subroutine read_transformation
    end interface

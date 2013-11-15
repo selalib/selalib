@@ -54,6 +54,7 @@ module sll_cubic_spline_interpolator_2d
      procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
      procedure, pass :: set_coefficients => set_coefficients_cs2d
      procedure, pass :: get_coefficients => get_coefficients_cs2d
+     procedure, pass :: coefficients_are_set => coefficients_are_set_cs2d
     ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
 #endif
   end type cubic_spline_2d_interpolator
@@ -486,5 +487,11 @@ contains
          'implemented yet.' 
   end function get_coefficients_cs2d
 #endif
+
+  function coefficients_are_set_cs2d( interpolator ) result(res)
+    class(cubic_spline_2d_interpolator), intent(in) :: interpolator
+    logical :: res
+    print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
+  end function coefficients_are_set_cs2d
 
 end module sll_cubic_spline_interpolator_2d

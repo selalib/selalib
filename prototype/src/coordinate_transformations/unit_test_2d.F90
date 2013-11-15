@@ -5,6 +5,7 @@ program unit_test_2d
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_2d
+#include "sll_file_io.h"
   implicit none
 
 #define NPTS1 33
@@ -215,11 +216,11 @@ program unit_test_2d
 #endif
        mesh, &
        "transf_d", &
-       x1_tab, &
-       x2_tab, &
        x1_interp, &
        x2_interp, &
        j_interp, &
+       x1_tab, &
+       x2_tab, &
        jacobians_node=jacs )
 
  ! print *, 'x1: '
@@ -311,10 +312,8 @@ program unit_test_2d
   print *, 'Test of initialization from file for a discrete transformation:'
   ! what is this chgt_test thing? I don't like it. If we need a name, then we
   ! should include it in the initialization file. ECG
-  call t_d%read_from_file('chgt_test',"../src/coordinate_transformations/circle_5mp_patch0.nml")
-print *, 'label of discrete transformation: ', t_d%label
-print *, 'printed label'
-  call t_d%write_to_file( )
+  call t_d%read_from_file("../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
+  call t_d%write_to_file(SLL_IO_MTV)
 
   print*, t_d%jacobian_matrix(1._8,1._8)
 
