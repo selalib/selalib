@@ -31,6 +31,8 @@ sll_int32, private :: nx, ny
 sll_int32, private :: i, j, k
 sll_int32, private :: error
 
+private :: write_mtv_file
+
 contains
 
 !> Initialize Poisson solver object using finite elements method.
