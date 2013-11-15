@@ -7,9 +7,9 @@
   vmax = 6.0
 /
 &interpolator
- interpol_x = 1
+ interpol_x = 2
  order_x = 4
- interpol_v = 1
+ interpol_v = 2
  order_v = 4
 /
 &time_iterations
