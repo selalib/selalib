@@ -9,7 +9,8 @@ implicit none
 #define NPTS1 65 
 #define NPTS2 65 
 
-  type(cubic_spline_2d_interpolator) :: cs2d
+  !type(cubic_spline_2d_interpolator) :: cs2d
+  class(sll_interpolator_2d_base), pointer :: cs2d
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
   sll_real64, dimension(:), allocatable      :: x1_eta1_max
@@ -53,12 +54,8 @@ implicit none
   ! Test the 2D transformation:
   !
   ! X1 = (r1 + (r2-r1)*eta1)*cos(2*pi*eta2)
-
-#ifdef STDF95
-  call cubic_spline_2d_initialize( cs2d, &
-#else
-  call cs2d%initialize( &
-#endif
+  
+  cs2d =>new_cubic_spline_2d_interpolator(&
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -69,6 +66,23 @@ implicit none
        SLL_PERIODIC, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
+  
+  
+!#ifdef STDF95
+!  call cubic_spline_2d_initialize( cs2d, &
+!#else
+!  call cs2d%initialize( &
+!#endif
+!       NPTS1, &
+!       NPTS2, &
+!       0.0_f64, &
+!       1.0_f64, &
+!       0.0_f64, &
+!       1.0_f64, &
+!       SLL_HERMITE, &
+!       SLL_PERIODIC, &
+!       eta1_min_slopes=x1_eta1_min, &
+!       eta1_max_slopes=x1_eta1_max )
 
 #ifdef STDF95
   call cubic_spline_2d_compute_interpolants(cs2d,x1)
