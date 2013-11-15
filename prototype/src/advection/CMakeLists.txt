@@ -47,6 +47,15 @@ IF( NOT STDF95)
     sll_utilities
     sll_advection)
 
+  ADD_EXECUTABLE(
+    test_rotation_2d
+    rotation_2d.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_rotation_2d
+    sll_advection)
+
+
 
 
 ENDIF(NOT STDF95)
