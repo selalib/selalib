@@ -2,39 +2,15 @@
 MESSAGE(STATUS "LAPACK:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 SET(USE_MKL OFF CACHE BOOL "Using Intel Math Kernel Library")
 
-IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+IF(USE_MKL)
 
    SET(BLA_VENDOR "Intel")
 
-   IF($ENV{MKLROOT} MATCHES "composer")
-
-      MESSAGE(STATUS "MKLROOT:$ENV{MKLROOT}")
-      INCLUDE_DIRECTORIES($ENV{MKLROOT}/include)
-      SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib -mkl=sequential)
-      SET(LAPACK_FOUND TRUE)
-      SET(USE_MKL ON)
-      SET(BLAS_FOUND TRUE)
-      SET(BLAS_LIBRARIES  " ")
-
-   ELSEIF($ENV{HOSTNAME} MATCHES "hydra*") 
-                                      
       INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
-      SET(BLAS_LIBRARIES "")
+      SET(BLAS_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
+      SET(BLAS_FOUND TRUE)
       SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
-      SET(BLAS_FOUND TRUE)
-      SET(USE_MKL ON)
-
-   ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
-
-      SET(MKLPATH  "/opt/intel/Compiler/11.1/072/mkl/lib/em64t")
-      SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp )
-      SET(LAPACK_FOUND TRUE)
-      SET(BLAS_FOUND TRUE)
-      SET(BLAS_LIBRARIES  " ")
-      SET(USE_MKL ON)
-
-   ENDIF()
 
 ELSE()
 
