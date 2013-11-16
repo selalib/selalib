@@ -5,22 +5,22 @@
 
 find_path(PTSCOTCH_INCLUDE_DIRS
 		NAMES ptscotch.h ptscotchf.h 
-		HINTS ${PTSCOTCH_ROOT}
+		HINTS ${SCOTCH_ROOT}
 		PATH_SUFFIXES include Include INCLUDE
 		DOC "PATH TO ptscotch.h and ptscotchf.h")
 find_library(PTSCOTCH_LIBRARY
 		NAMES ptscotch
-		HINTS ${PTSCOTCH_ROOT}
+		HINTS ${SCOTCH_ROOT}
 		PATH_SUFFIXES lib Lib LIB
 		DOC "PATH TO libptscotch.a")
 find_library(PTSCOTCHERR_LIBRARY
 		NAMES ptscotcherr
-		HINTS ${PTSCOTCH_ROOT}
+		HINTS ${SCOTCH_ROOT}
 		PATH_SUFFIXES lib Lib LIB
 		DOC "PATH TO libptscotcherr.a")
 find_library(PTSCOTCHERREXIT_LIBRARY
 		NAMES ptscotcherrexit
-		HINTS ${PTSCOTCH_ROOT}
+		HINTS ${SCOTCH_ROOT}
 		PATH_SUFFIXES lib Lib LIB
 		DOC "PATH TO libptscotcherrexit.a")
 
