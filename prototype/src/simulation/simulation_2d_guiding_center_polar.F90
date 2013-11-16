@@ -29,6 +29,10 @@ module sll_simulation_2d_guiding_center_polar_module
   !use sll_parallel_array_initializer_module
 
   implicit none
+  
+  
+  sll_int32, parameter :: SLL_EULER = 0 
+  sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
 
 
   type, extends(sll_simulation_base_class) :: &
@@ -60,7 +64,9 @@ module sll_simulation_2d_guiding_center_polar_module
    sll_int32  :: freq_diag
    sll_int32  :: freq_diag_time
 
-
+   !time_loop
+   sll_int32 :: time_loop_case
+   
        
   contains
     procedure, pass(sim) :: run => run_gc2d_polar
@@ -123,6 +129,7 @@ contains
     character(len=256)      :: phi_interp2d_case 
     character(len=256)      :: A_interp_case 
     character(len=256)      :: initial_function_case 
+    character(len=256)      :: time_loop_case 
     sll_int32 :: ierr
     !character(len=256)      :: interp1d_x2_case 
     
@@ -133,15 +140,16 @@ contains
     x1_max = 10._f64
     x2_min = 0._f64
     x2_max = 2._f64*sll_pi
-    Nc_x1 = 128
-    Nc_x2 = 128
-    r_minus = 5._f64
-    r_plus = 6._f64
+    Nc_x1 = 32
+    Nc_x2 = 64
+    r_minus = 4._f64
+    r_plus = 5._f64
     k_mode = 3
     eps = 1.e-6_f64
-    nb_step = 500
-    !dt = 0.1_f64
-    dt = 0.05_f64
+    nb_step = 600
+    
+    dt = 0.2_f64
+    !dt = 0.05_f64
     visu_step = 20
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
@@ -150,7 +158,8 @@ contains
     !charac2d_case = "SLL_EULER"
     advect2d_case = "SLL_BSL"
     initial_function_case = "SLL_DIOCOTRON" 
-    
+    !time_loop_case = "SLL_EULER"
+    time_loop_case = "SLL_PREDICTOR_CORRECTOR"    
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -249,8 +258,12 @@ contains
         charac2d => new_explicit_euler_2d_charac(&
           Nc_x1+1, &
           Nc_x2+1, &
-          SLL_SET_TO_LIMIT, &
-          SLL_PERIODIC)    
+          eta1_min=x1_min, &
+          eta1_max=x1_max, &
+          eta2_min=x2_min, &
+          eta2_max=x2_max, &
+          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_2=SLL_PERIODIC)    
       case ("SLL_VERLET")      
         charac2d => new_verlet_2d_charac(&
           Nc_x1+1, &
@@ -260,7 +273,11 @@ contains
           A1_interp1d_x1, &
           A2_interp1d_x1, &
           bc_type_1=SLL_SET_TO_LIMIT, &
-          bc_type_2=SLL_PERIODIC)
+          bc_type_2=SLL_PERIODIC, &
+          eta1_min=x1_min, &
+          eta1_max=x1_max, &
+          eta2_min=x2_min, &
+          eta2_max=x2_max )
       case default
         print *,'#bad charac2d_case',charac2d_case
         print *,'#not implemented'
@@ -304,6 +321,24 @@ contains
         print *,'#in initialize_guiding_center_2d_polar'
         stop
     end select
+    
+    
+    !time_loop
+    select case(time_loop_case)
+      case ("SLL_EULER")
+        sim%time_loop_case = SLL_EULER
+      case ("SLL_PREDICTOR_CORRECTOR")
+        sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
+      case default
+        print *,'#bad time_loop_case',time_loop_case
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_polar'
+        stop
+    end select
+    
+    
+    
+    
     !poisson solver
     ! for the moment no choice
     
@@ -355,11 +390,14 @@ contains
     sll_real64 :: dt
     sll_int32 :: thdiag_id = 99 
     sll_int32             :: IO_stat
+    sll_int32 :: iplot
     
     Nc_x1 = sim%mesh_2d%num_cells1
     Nc_x2 = sim%mesh_2d%num_cells2
     delta_x1 = sim%mesh_2d%delta_eta1
     delta_x2 = sim%mesh_2d%delta_eta2
+    x1_min = sim%mesh_2d%eta1_min
+    x2_min = sim%mesh_2d%eta2_min
     nb_step = sim%num_iterations
     dt = sim%dt
     
@@ -382,10 +420,7 @@ contains
         f(i1,i2) =  sim%init_func(x1,x2,sim%params)
       end do
     end do
-    
-    
-    
-    
+        
     !solve poisson
     call poisson_solve_polar(sim%poisson,f,phi)
     call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
@@ -400,13 +435,16 @@ contains
        STOP
     end if
     
-    
+    iplot = 0
+
     do step=1,nb_step+1
       f_old = f
+      
       call poisson_solve_polar(sim%poisson,f_old,phi)
+      
       call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
-      if(modulo(step,sim%freq_diag_time)==0)then
+      if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_gc_polar( &
           thdiag_id, &    
           step-1, &
@@ -417,11 +455,31 @@ contains
           A1, &
           A2)
       endif            
-
-      call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
-
-
-
+      
+      if(modulo(step-1,sim%freq_diag)==0)then
+        call plot_f_polar(iplot,f,sim%mesh_2d)
+        iplot = iplot+1  
+      endif            
+      
+      select case (sim%time_loop_case)
+        case (SLL_EULER)
+          call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
+        case (SLL_PREDICTOR_CORRECTOR)
+          call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
+          call poisson_solve_polar(sim%poisson,f,phi)
+          call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+          f_old = f
+          call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
+        case default  
+          print *,'#bad time_loop_case',sim%time_loop_case
+          print *,'#not implemented'
+          print *,'#in run_gc2d_polar'
+          print *,'#available options are:'
+          print *,'#SLL_EULER=',SLL_EULER
+          print *,'#SLL_PREDICTOR_CORRECTOR=',SLL_PREDICTOR_CORRECTOR
+          
+      end select
+         
     enddo
     
     close(thdiag_id)
@@ -569,7 +627,8 @@ contains
     do i1=1,8
       mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
-      mode_slope(i1) = (log(time_mode(i1))-log(mode_slope(i1)))/dt
+      mode_slope(i1) = &
+        (log(time_mode(i1)+1.e-40_f64)-log(mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
     
     write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode,mode_slope
@@ -585,6 +644,80 @@ contains
     
     
   end subroutine time_history_diagnostic_gc_polar
+
+
+#ifndef NOHDF5
+!*********************
+!*********************
+
+  !---------------------------------------------------
+  ! Save the mesh structure
+  !---------------------------------------------------
+  subroutine plot_f_polar(iplot,f,mesh_2d)
+    use sll_xdmf
+    use sll_hdf5_io
+    sll_int32 :: file_id
+    sll_int32 :: error
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32 :: i, j
+    sll_int32, intent(in) :: iplot
+    character(len=4)      :: cplot
+    sll_int32             :: nnodes_x1, nnodes_x2
+    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: r
+    sll_real64 :: theta
+    sll_real64 :: rmin
+    sll_real64 :: rmax
+    sll_real64 :: dr
+    sll_real64 :: dtheta
+    
+    
+    nnodes_x1 = mesh_2d%num_cells1+1
+    nnodes_x2 = mesh_2d%num_cells2+1
+    rmin = mesh_2d%eta1_min
+    rmax = mesh_2d%eta1_max
+    dr = mesh_2d%delta_eta1
+    dtheta = mesh_2d%delta_eta2
+    
+    !print *,'#maxf=',iplot,maxval(f),minval(f)
+    
+
+    
+    if (iplot == 1) then
+
+      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+      do j = 1,nnodes_x2
+        do i = 1,nnodes_x1
+          r       = rmin+real(i-1,f32)*dr
+          theta   = real(j-1,f32)*dtheta
+          x1(i,j) = r*cos(theta)
+          x2(i,j) = r*sin(theta)
+        end do
+      end do
+      call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_hdf5_file_close(file_id, error)
+      deallocate(x1)
+      deallocate(x2)
+
+    end if
+
+    call int2string(iplot,cplot)
+    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
+      nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f"//cplot,f,"values", &
+      error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+  end subroutine plot_f_polar
+
+#endif
+
 
 
 end module sll_simulation_2d_guiding_center_polar_module
