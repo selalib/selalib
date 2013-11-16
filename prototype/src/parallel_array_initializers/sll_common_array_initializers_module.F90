@@ -85,7 +85,8 @@ contains
     eps = params(3) 
     k_mode = params(4) 
     
-    if(r>=r_minus.and.r<=r_plus)then
+    
+    if((r>=r_minus).and.(r<=r_plus))then
       res = (1.0_f64+eps*cos(k_mode*theta))
     else
       res = 0._f64  
