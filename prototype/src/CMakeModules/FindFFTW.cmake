@@ -2,9 +2,11 @@
 # FFTW_LIBRARIES = libfftw3.a
 # FFTW_FOUND = true if FFTW3 is found
 
+SET(FFTW_ROOT $ENV{FFTW_ROOT} CACHE PATH "FFTW location")
+
 SET(TRIAL_PATHS 
                 $ENV{FFTW_HOME}
-                $ENV{FFTW_ROOT}
+                ${FFTW_ROOT}
                 $ENV{FFTW_DIR}
                 /usr
                 /usr/local
