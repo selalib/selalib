@@ -4,7 +4,7 @@ PortSystem          1.0
 
 name                pastix
 version             5.2.1
-revision            4492
+revision            4694
 
 set v_version_wo_char {}
 set v_char            {}
@@ -12,7 +12,7 @@ set v_regexp          {(5\.\d+\.\d+)([a-zA-Z]+)}
 regexp $v_regexp ${version} -> v_version_wo_char v_char
 
 # this is specific to this port and *version* for downloading it:
-set release         32956
+set release         33110
 
 categories          math
 maintainers         nomaintener
