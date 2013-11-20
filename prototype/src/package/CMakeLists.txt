@@ -50,7 +50,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_plotmtv.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
-    ${SLL_DIR}/electric_field_accumulators/sll_electric_field_2d.F90
+    ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90

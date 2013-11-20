@@ -89,6 +89,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
+   ADD_SUBDIRECTORY(pic_particle_types)
+
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
@@ -110,7 +112,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(electric_field_accumulators)
+   ADD_SUBDIRECTORY(field_accumulators)
    
    IF(NOT STDF95)
 
