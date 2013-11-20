@@ -37,7 +37,7 @@ module sll_electric_field_2d_accumulator
   !                  |                    |
   !                  |                    |
   !                  |                    |
-  !                  |      cell(i,j)     |
+  !                  |      cell(i)       |
   !                  |                    |
   !                  |                    |
   !                  |                    |
@@ -58,6 +58,13 @@ module sll_electric_field_2d_accumulator
      sll_real64 :: ex_ne
      sll_real64 :: ey_ne
   end type electric_field_2d_accumulator
+
+  type :: charge_2d_accumulator
+     sll_real64 :: q_sw
+     sll_real64 :: q_se
+     sll_real64 :: q_nw
+     sll_real64 :: q_ne
+  end type charge_2d_accumulator
 
   ! The following is a pseudo-accumulator. It is written for use while some
   ! problems with the parallel loading of the previous accumulator are resolved.

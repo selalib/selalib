@@ -21,7 +21,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
 		       deboor_splines
 		       #sll_scalar_field_1d_alternative
 		       sll_scalar_field_2d_alternative
-                       sll_electric_field_accumulators
+                       sll_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
@@ -178,7 +178,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 		       deboor_splines
 		       #sll_scalar_field_1d_alternative
 		       sll_scalar_field_2d_alternative
-                       sll_electric_field_accumulators
+                       sll_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
