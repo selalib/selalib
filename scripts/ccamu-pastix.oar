@@ -6,13 +6,9 @@
 #OAR -E selalib.err
 module purge
 module load cmake/2.8.7
-module load openmpi/gcc47/1.6.3-multiplethread
 module load hdf5/gcc47/1.8.8 
 module load fftw/gcc47/3.3  
-export HDF5_ROOT=/softs/hdf5/gcc47/1.8.8
-export FFTW_ROOT=/softs/fftw/gcc47/3.3
-export PASTIX_ROOT=/softs/cemracs/scotch/gcc47
-export SCOTCH_ROOT=/softs/cemracs/pastix/gcc47
+module load openmpi/gcc47/1.6.3-multiplethread
 cmake ${HOME}/selalib/prototype/src \
       -DOPTIONS_FILE=${HOME}/selalib/cmake/ccamu.cmake \
       -DHDF5_PARALLEL_ENABLED=ON \
