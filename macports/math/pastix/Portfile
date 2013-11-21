@@ -35,7 +35,7 @@ use_bzip2           yes
 
 worksrcdir          ${name}_release_${revision}/src
 
-checksums           md5     4c2bb4cf6fbaaf749ddb5137f8adfe95
+checksums           md5     15866b929792ae15bc309e05f167db51
 
 # openmpi is not universal
 universal_variant   no
@@ -106,6 +106,7 @@ pre-build {
     reinplace "s| mpic++|${prefix}/bin/openmpic++|" ${worksrcpath}/config.in
     reinplace "s| mpif90|${prefix}/bin/openmpif90|" ${worksrcpath}/config.in
     reinplace "s|\${HOME}/scotch_5.1/|${prefix}|" ${worksrcpath}/config.in
+    reinplace "s| /opt/hwloc|${prefix}|" ${worksrcpath}/config.in
 }
 
 build.target all install

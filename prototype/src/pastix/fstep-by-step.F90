@@ -19,10 +19,10 @@
   !
   program step_by_step_f
 
+    use mpi
     use utils
     implicit none
 
-    include 'mpif.h'
 
     pastix_data_ptr_t                         :: pastix_data ! Structure to keep information in PaStiX (0 for first call)
     integer                                   :: pastix_comm ! MPI communicator used by pastix
