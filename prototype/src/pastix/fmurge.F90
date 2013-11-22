@@ -56,17 +56,19 @@ PROGRAM main
   INTEGER(KIND=MURGE_INTS_KIND), DIMENSION(:) , POINTER :: nodelist
   INTEGER(KIND=MURGE_INTS_KIND)                         :: root
   INTEGER(KIND=MURGE_INTS_KIND)                         :: base
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: lrhs
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globrhs
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globrhs_recv
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globx
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globprod
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: lrhs
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globrhs
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globrhs_recv
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globx
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globprod
   ! Other data
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: expand
-  REAL(KIND=MURGE_COEF_KIND)                                                  :: val2
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: expand
+  REAL(KIND=MURGE_COEF_KIND)                            :: val2
   REAL(KIND=MURGE_REAL_KIND)                            :: prec
   REAL(KIND=8)                                          :: xmin, xmax
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: NArgs, i, j, k, myfirstrow, mylastrow, l
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: NArgs
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: i, j, k, l
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: myfirstrow, mylastrow
   CHARACTER(LEN=100)                                    :: args
   CHARACTER(LEN=20)                                     :: atester
   INTEGER(KIND=MURGE_INTS_KIND)                         :: solver
