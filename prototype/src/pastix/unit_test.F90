@@ -93,6 +93,10 @@ write(*,100) X
 
 call initialize_pastix(NPTS)
 call factorize_pastix()
+X = B
+call solve_pastix(X)
+write(*,100) X
+call delete_pastix()
 
 !call test_pastix_murge()
 

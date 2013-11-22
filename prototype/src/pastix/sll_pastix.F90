@@ -29,12 +29,12 @@ sll_int32, private                    :: comm
 sll_int32, private                    :: prank    
 sll_int32, private                    :: psize
 
-public :: initialize_pastix, factorize_pastix
+public :: initialize_pastix, factorize_pastix, solve_pastix, delete_pastix
 
 contains
 
 subroutine initialize_pastix(npts)
-sll_int32 :: npts
+sll_int32, intent(in) :: npts
 pastix_int_t          :: nnzero
 sll_int32 :: i
 sll_int32 :: j
@@ -48,9 +48,9 @@ comm  = sll_world_collective%comm
 ! Get options ftom command line
 
 nbthread = 1
-verbose  = API_VERBOSE_YES
+verbose  = API_VERBOSE_NO
 
-nnzero =  3*n - 2
+nnzero   =  3*n - 2
 
 ! Allocating
 SLL_ALLOCATE( ia   (n+1)   , error)
@@ -58,24 +58,27 @@ SLL_ALLOCATE( ja   (nnzero), error)
 SLL_ALLOCATE( avals(nnzero), error)
 SLL_ALLOCATE( rhs  (n)     , error)
 
+ia = 0
+ja = 0
 ! Building ia, ja and avals and rhs
 j=1
 do i = 1, n
    ia(i) = j
-   ! /* ONLY triangular inferior matrix */
-   ja(j)    = i
+   ja(j) = i
    avals(j) = 2
    j=j+1
    if (i /= n) then
       ja(j)    = i+1
       avals(j) = -1.
-      j=j + 1
+      j=j+1
    end if
-   rhs(i) = 0
+   rhs(i) = i
 end do
 ia(n+1) = j
-rhs(1)  = 1
-rhs(n)  = 1
+
+write(*,"(a,5i3)") "ia : ", ia
+write(*,"(a,13i3)") "ja : ", ja
+write(*,"(a,13f6.1)") "avals : ", avals
 
 ! First PaStiX call to initiate parameters
 
@@ -124,16 +127,31 @@ call pastix_fortran(pastix_data ,comm, &
                     avals,perm,invp,  &
                     rhs,nrhs,iparm,dparm)
 
+end subroutine factorize_pastix
+
+subroutine solve_pastix(sol)
+sll_real64, dimension(:) :: sol
+
 comm = sll_world_collective%comm
 
+rhs = sol
+write(*,"(a,5f7.2)") " RHS : " , rhs
+
 ! Call PaStiX updown and refinement
-iparm(IPARM_START_TASK)       = API_TASK_SOLVE
-iparm(IPARM_END_TASK)         = API_TASK_REFINE
+iparm(IPARM_START_TASK) = API_TASK_SOLVE
+iparm(IPARM_END_TASK)   = API_TASK_REFINE
 ! rhs will be changed to solution 
 call pastix_fortran(pastix_data ,comm, &
                     n,ia,ja, &
                     avals,perm,invp,  &
                     rhs,nrhs,iparm,dparm)
+
+write(*,"(a,5f7.2)") " SOL : " , rhs
+sol = rhs
+
+end subroutine solve_pastix
+
+subroutine delete_pastix()
 
 comm = sll_world_collective%comm
 
@@ -153,5 +171,6 @@ deallocate(perm)
 deallocate(invp)
 deallocate(rhs)
 
-end subroutine factorize_pastix
+end subroutine delete_pastix
+
 end module sll_pastix
