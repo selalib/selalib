@@ -130,14 +130,14 @@ contains   ! *****************************************************************
   
 
   function value_at_pt_analytic( field, eta )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             ::  value_at_pt_analytic
     value_at_pt_analytic = field%func(eta, field%params)
   end function value_at_pt_analytic
 
   function value_at_index_analytic( field, i )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: value_at_index_analytic
@@ -146,7 +146,7 @@ contains   ! *****************************************************************
   end function value_at_index_analytic
 
   function derivative_value_at_pt_analytic( field, eta)
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_analytic
     
@@ -161,7 +161,7 @@ contains   ! *****************************************************************
 
   
   function derivative_value_at_index_analytic( field, i)
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: derivative_value_at_index_analytic
@@ -289,7 +289,7 @@ contains   ! *****************************************************************
 
 
   subroutine write_to_file_analytic_1d( field, tag )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
@@ -459,7 +459,7 @@ contains   ! *****************************************************************
   end function get_logical_mesh_1d_discrete_alt
 
   function value_at_pt_discrete( field, eta)
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: value_at_pt_discrete
     
@@ -467,7 +467,7 @@ contains   ! *****************************************************************
   end function value_at_pt_discrete
   
   function value_at_index_discrete_1d( field, i )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: value_at_index_discrete_1d
@@ -476,7 +476,7 @@ contains   ! *****************************************************************
   end function value_at_index_discrete_1d
   
   function derivative_value_at_pt_discrete( field, eta )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_discrete
     
@@ -485,7 +485,7 @@ contains   ! *****************************************************************
   end function derivative_value_at_pt_discrete
   
   function derivative_value_at_index_discrete( field, i )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: derivative_value_at_index_discrete
@@ -495,7 +495,7 @@ contains   ! *****************************************************************
   end function derivative_value_at_index_discrete
 
   subroutine write_to_file_discrete_1d( field, tag )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
