@@ -16,6 +16,7 @@ sll_int32, allocatable :: ipiv(:)
 sll_int32 :: kd, kl, ku, ldab, info
 sll_int32 :: istep, nstep = 1
 sll_int32 :: nrhs
+type(pastix_solver) :: linear_solver
 
 call sll_boot_collective()
 
@@ -91,12 +92,11 @@ write(*,100) X
 100 format(6(1x,f7.4))
 !200 format(5(1x,f7.4))
 
-call initialize_pastix(NPTS)
-call factorize_pastix()
-X = B
-call solve_pastix(X)
+call initialize(linear_solver,NPTS)
+call factorize(linear_solver)
+call solve(linear_solver,B,X)
 write(*,100) X
-call delete_pastix()
+call delete(linear_solver)
 
 !call test_pastix_murge()
 
