@@ -2,7 +2,11 @@
 # It is up to the user of this module to find a BLAS and link to it.
 # Pastix requires SCOTCH or METIS (partitioning and reordering tools) as well
 
-SET(PASTIX_ROOT $ENV{PASTIX_ROOT} CACHE PATH "pastix library location")
+IF(DEFINED ENV{PASTIX_ROOT})
+   SET(PASTIX_ROOT $ENV{PASTIX_ROOT} CACHE PATH "pastix location")
+ELSE()
+   SET(PASTIX_ROOT /usr/local CACHE PATH "pastix location")
+ENDIF()
 
 FIND_PATH(PASTIX_INCLUDE_DIRS
 	    NAMES pastix_fortran.h
@@ -21,7 +25,7 @@ FIND_LIBRARY(PASTIX_MATRIX_DRIVER_LIBRARY NAMES matrix_driver
 		 DOC "PATH TO libmatrix_driver.a")
 
 FIND_LIBRARY(HWLOC_LIBRARY NAMES hwloc
-		 HINTS ${PASTIX_ROOT} /usr/local
+		 HINTS ${PASTIX_ROOT} /usr/local /opt/local
 		 PATH_SUFFIXES lib Lib LIB lib64
 		 DOC "PATH TO hwloc library")
 
@@ -52,3 +56,12 @@ IF (MURGE_INCLUDE_DIRS AND MURGE_LIBRARIES)
   SET(MURGE_FOUND YES)
 
 ENDIF(MURGE_INCLUDE_DIRS AND MURGE_LIBRARIES)
+
+MARK_AS_ADVANCED(PASTIX_INCLUDE_DIRS
+                 PASTIX_LIBRARY
+                 PASTIX_MATRIX_DRIVER_LIBRARY
+                 PASTIX_LIBRARIES
+                 HWLOC_LIBRARY
+                 MURGE_INCLUDE_DIRS
+                 MURGE_LIBRARIES)
+                 

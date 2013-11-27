@@ -92,9 +92,19 @@ write(*,100) X
 100 format(6(1x,f7.4))
 !200 format(5(1x,f7.4))
 
-call initialize(linear_solver,NPTS)
+call initialize(linear_solver,NPTS,3*NPTS-2)
+
+linear_solver%colptr(1:6)    = (/1,3,5,7,9,10/)
+linear_solver%row(1:9)    = (/1,2,2,3,3,4,4,5,5/)
+linear_solver%avals(1:9) = (/2,-1,2,-1,2,-1,2,-1,2/)
+
+write(*,"(a10,6i4)")   "ia    : ", linear_solver%colptr(1:6)
+write(*,"(a10,9i3)")   "ja    : ", linear_solver%row(1:9)
+write(*,"(a10,9f6.1)") "avals : ", linear_solver%avals(1:9)
+
 call factorize(linear_solver)
-call solve(linear_solver,B,X)
+X = B
+call solve(linear_solver,X)
 write(*,100) X
 call delete(linear_solver)
 

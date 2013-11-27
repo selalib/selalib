@@ -51,82 +51,68 @@ public :: initialize, factorize, solve, delete
 
 contains
 
-subroutine initialize_pastix(this,npts)
-type(pastix_solver) :: this
-sll_int32, intent(in) :: npts
-pastix_int_t          :: nnzero
-sll_int32 :: i
-sll_int32 :: j
-sll_int32 :: error
+subroutine initialize_pastix(this,npts,nnzero)
 
-this%ncols = npts
-prank = sll_get_collective_rank( sll_world_collective )
-psize = sll_get_collective_size( sll_world_collective )
-comm  = sll_world_collective%comm
+   type(pastix_solver)   :: this
+   sll_int32, intent(in) :: npts
+   pastix_int_t          :: nnzero
+   sll_int32             :: error
 
-! Get options ftom command line
-this%nbthread = 1
-this%verbose  = API_VERBOSE_NO
-nnzero   =  3*npts - 2
+   this%ncols = npts
+   prank = sll_get_collective_rank( sll_world_collective )
+   psize = sll_get_collective_size( sll_world_collective )
+   comm  = sll_world_collective%comm
 
-! Allocating
-SLL_ALLOCATE( this%colptr   (npts+1), error)
-SLL_ALLOCATE( this%row   (nnzero), error)
-SLL_ALLOCATE( this%avals(nnzero), error)
-SLL_ALLOCATE( this%rhs  (npts)  , error)
+   ! Get options ftom command line
+   this%nbthread = 1
+   this%verbose  = API_VERBOSE_NO
 
-this%colptr(1:6)    = (/1,3,5,7,9,10/)
-this%row(1:9)    = (/1,2,2,3,3,4,4,5,5/)
-this%avals(1:9) = (/2,-1,2,-1,2,-1,2,-1,2/)
+   ! Allocating
+   SLL_ALLOCATE( this%colptr(1:npts+1), error)
+   SLL_ALLOCATE( this%row(1:nnzero)   , error)
+   SLL_ALLOCATE( this%avals(1:nnzero) , error)
+   SLL_ALLOCATE( this%rhs(1:npts)     , error)
 
-write(*,"(a10,6i4)")   "ia    : ", this%colptr(1:6)
-write(*,"(a10,9i3)")   "ja    : ", this%row(1:9)
-write(*,"(a10,9f6.1)") "avals : ", this%avals(1:9)
+   ! First PaStiX call to initiate parameters
 
-! First PaStiX call to initiate parameters
+   this%pastix_data                   = 0
+   this%nrhs                          = 1
+   this%iparm(IPARM_MODIFY_PARAMETER) = API_NO
+   this%iparm(IPARM_START_TASK)       = API_TASK_INIT
+   this%iparm(IPARM_END_TASK)         = API_TASK_INIT
 
-this%pastix_data                   = 0
-this%nrhs                          = 1
-this%iparm(IPARM_MODIFY_PARAMETER) = API_NO
-this%iparm(IPARM_START_TASK)       = API_TASK_INIT
-this%iparm(IPARM_END_TASK)         = API_TASK_INIT
+   call pastix_fortran(this%pastix_data,comm,npts,this%colptr,this%row, &
+                       this%avals,this%perm,this%invp,this%rhs,    &
+                       this%nrhs,this%iparm,this%dparm)
 
-call pastix_fortran(this%pastix_data,comm,npts,this%colptr,this%row, &
-                    this%avals,this%perm,this%invp,this%rhs,    &
-                    this%nrhs,this%iparm,this%dparm)
+   ! Customize some parameters
 
-! Customize some parameters
+   this%iparm(IPARM_THREAD_NBR) = this%nbthread  
+   this%iparm(IPARM_VERBOSE)    = this%verbose
 
-this%iparm(IPARM_THREAD_NBR) = this%nbthread  
-this%iparm(IPARM_VERBOSE)    = this%verbose
+   this%iparm(IPARM_SYM)           = API_SYM_YES   ! API_SYM_NO
+   this%iparm(IPARM_FACTORIZATION) = API_FACT_LDLT ! API_FACT_LU
 
-this%iparm(IPARM_SYM)           = API_SYM_YES   ! API_SYM_NO
-this%iparm(IPARM_FACTORIZATION) = API_FACT_LDLT ! API_FACT_LU
+   this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
 
-this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
+   SLL_ALLOCATE(this%perm(npts), error)
+   SLL_ALLOCATE(this%invp(npts), error)
 
-SLL_ALLOCATE(this%perm(npts), error)
-SLL_ALLOCATE(this%invp(npts), error)
-
-! Call PaStiX first steps (Scotch - Fax - Blend)
-this%iparm(IPARM_START_TASK) = API_TASK_ORDERING
-this%iparm(IPARM_END_TASK)   = API_TASK_ANALYSE
-
-this%rhs = 1
-call pastix_fortran(this%pastix_data,comm,npts,this%colptr,     &
-                    this%row,this%avals,this%perm,this%invp,    &
-                    this%rhs,this%nrhs,this%iparm,this%dparm)
 
 end subroutine initialize_pastix
 
 subroutine factorize_pastix(this)
 
    type(pastix_solver) :: this
-   sll_int32 :: i
     
-   do i = 1, this%ncols
-      this%rhs(i) = i-1
-   end do
+   ! Call PaStiX first steps (Scotch - Fax - Blend)
+   this%iparm(IPARM_START_TASK) = API_TASK_ORDERING
+   this%iparm(IPARM_END_TASK)   = API_TASK_ANALYSE
+
+   call pastix_fortran(this%pastix_data,comm,this%ncols,this%colptr,     &
+                       this%row,this%avals,this%perm,this%invp,    &
+                       this%rhs,this%nrhs,this%iparm,this%dparm)
+
    ! Call PaStiX factorization
    this%iparm(IPARM_START_TASK) = API_TASK_NUMFACT
    this%iparm(IPARM_END_TASK)   = API_TASK_NUMFACT
@@ -136,15 +122,14 @@ subroutine factorize_pastix(this)
 
 end subroutine factorize_pastix
 
-subroutine solve_pastix(this, rhs, sol)
+subroutine solve_pastix(this, sol)
 
    type(pastix_solver)      :: this
-   sll_real64, dimension(:) :: rhs
    sll_real64, dimension(:) :: sol
 
    comm = sll_world_collective%comm
 
-   this%rhs = rhs
+   this%rhs = sol
 
    ! Call PaStiX updown and refinement
    this%iparm(IPARM_START_TASK) = API_TASK_SOLVE
