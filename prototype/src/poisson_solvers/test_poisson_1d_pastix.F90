@@ -21,32 +21,35 @@ sll_real64  :: eta1_max
 sll_real64  :: delta_eta1
 sll_real64  :: x
 sll_int32   :: error
-sll_int32   :: mode
 sll_int32   :: i
 
 call sll_boot_collective()
 
-nc_eta1 = 128
+nc_eta1 = 50
 
 SLL_ALLOCATE(rho(nc_eta1+1),error)
 SLL_ALLOCATE(ex(nc_eta1+1),error)
 SLL_ALLOCATE(ex_exact(nc_eta1+1),error)
 
 eta1_min = 0.0
-eta1_max = 2*sll_pi
+eta1_max = 1.0
 delta_eta1 = (eta1_max-eta1_min) / nc_eta1
-mode = 4
 do i=1,nc_eta1+1
    x = (i-1)*delta_eta1
-   rho(i)      =  mode**2*sin(mode*x)
-   ex_exact(i) = -mode*cos(x)
+   rho(i)      = 4*sll_pi**2*sin(2*sll_pi*x) * delta_eta1**2
+   ex_exact(i) = sin(2*sll_pi*x)
+   write(17,*) x, ex_exact(i)
 end do
 
 call initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
 
 call solve(poisson, ex, rho)
+
+do i = 1, nc_eta1+1
+   write(18,*) (i-1)*delta_eta1, ex(i) 
+end do
     
-print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
+print*,'   error=',maxval(abs(ex-ex_exact))
 
 call sll_halt_collective()
 
