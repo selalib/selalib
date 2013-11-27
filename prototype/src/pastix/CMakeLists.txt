@@ -14,6 +14,7 @@ IF(PASTIX_ENABLED)
 
      ADD_EXECUTABLE(fmurge fmurge.F90)
      ADD_EXECUTABLE(fsimple fsimple.F90 utils.F90)
+     ADD_EXECUTABLE(pastix pastix.F90)
      ADD_EXECUTABLE(fstep-by-step fstep-by-step.F90 utils.F90)
 
      TARGET_LINK_LIBRARIES(fmurge  ${MURGE_LIBRARIES}
@@ -24,6 +25,10 @@ IF(PASTIX_ENABLED)
      TARGET_LINK_LIBRARIES(fsimple ${PASTIX_LIBRARIES} 
                                    ${PTSCOTCH_LIBRARIES}
                                    ${BLAS_LIBRARIES})
+
+     TARGET_LINK_LIBRARIES(pastix ${PASTIX_LIBRARIES} 
+                                  ${PTSCOTCH_LIBRARIES}
+                                  ${BLAS_LIBRARIES})
 
      TARGET_LINK_LIBRARIES(fstep-by-step ${PASTIX_LIBRARIES} 
                                          ${PTSCOTCH_LIBRARIES}
