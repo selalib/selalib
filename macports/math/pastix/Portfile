@@ -88,7 +88,7 @@ foreach ver ${gcc_versions} {
 
 set archflags       [get_canonical_archflags]
 
-depends_lib-append  port:scotch
+depends_lib-append  port:scotch port:hwloc port:ctags port:git-core
 
 build.env-append    CC=${configure.cc} \
                     CXX=${configure.cxx} \
@@ -109,7 +109,7 @@ pre-build {
     reinplace "s| /opt/hwloc|${prefix}|" ${worksrcpath}/config.in
 }
 
-build.target all install
+build.target all
 
 destroot {
  eval xinstall -m 755 [glob ${worksrcpath}/../install/bin/*] ${destroot}${prefix}/bin

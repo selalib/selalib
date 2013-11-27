@@ -71,17 +71,38 @@ contains
   subroutine initialize_poisson_1d_pastix(this,eta1_min,eta1_max,nc_eta1,error)
 
     type(poisson_1d_pastix),intent(out) :: this     !< Solver data structure
-    sll_int32,intent(in)                  :: nc_eta1  !< number of cells
-    sll_int32, intent(out)                :: error    !< error code
-    sll_real64, intent(in)                :: eta1_min !< left corner
-    sll_real64, intent(in)                :: eta1_max !< right corner
+    sll_int32,intent(in)                :: nc_eta1  !< number of cells
+    sll_int32, intent(out)              :: error    !< error code
+    sll_real64, intent(in)              :: eta1_min !< left corner
+    sll_real64, intent(in)              :: eta1_max !< right corner
+    sll_int32                           :: i
+    sll_int32                           :: j
+    sll_int32                           :: nnzero
 
     error = 0
     ! geometry
     this%nc_eta1  = nc_eta1
     this%eta1_min = eta1_min
     this%eta1_max = eta1_max
-    call initialize_pastix(this%pastix, nc_eta1+1)
+
+    nnzero = 3*(nc_eta1-1) + 2
+    call initialize(this%pastix, nc_eta1-1, nnzero)
+
+    j=1
+    do i = 1, nc_eta1-1
+       this%pastix%colptr(i) = j
+       this%pastix%row(j)    = i
+       this%pastix%avals(j) = 2
+       j=j+1
+       if (i /= nc_eta1-1) then
+          this%pastix%row(j)   = i+1
+          this%pastix%avals(j) = -1.
+          j=j+1
+       end if
+    end do
+    this%pastix%colptr(nc_eta1) = j
+
+    call factorize(this%pastix)
 
   end subroutine initialize_poisson_1d_pastix
 
@@ -96,7 +117,8 @@ contains
     ! that has been initialized in new_poisson_1d_pastix
     SLL_ASSERT(size(field)==this%nc_eta1+1)
     SLL_ASSERT(size(rhs)==this%nc_eta1+1)
-    !call solve_pastix(this%pastix, field, rhs )
+    field = rhs
+    call solve(this%pastix, field(2:this%nc_eta1))
 
   end subroutine solve_poisson_1d_pastix
 
