@@ -389,8 +389,8 @@
 
       ! type and rhstype
       type         = "RSA"
-      type(4:4)    = '\0'
-      rhstype(1:1) = '\0'
+      type(4:4)    = char(0)
+      rhstype(1:1) = char(0)
 
       success = 0
     end subroutine genlaplacian

@@ -1,0 +1,16 @@
+#!/bin/bash
+#OAR -n selalib 
+#OAR -p cluster
+#OAR -l nodes=4,walltime=00:40:00
+#OAR -O selalib.out
+#OAR -E selalib.err
+module purge
+module load cmake/2.8.7
+module load hdf5/intel/1.8.8
+module load fftw/intel/3.3
+module load openmpi/intel/1.6.3-multiplethread
+export PASTIX_ROOT=/softs/cemracs/pastix/intel
+export SCOTCH_ROOT=/softs/cemracs/scotch/intel
+cmake ${HOME}/selalib/prototype/src \
+      -DOPTIONS_FILE=${HOME}/selalib/cmake/ccamu-intel.cmake \
+      -DPASTIX_ENABLED=ON
