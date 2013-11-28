@@ -18,10 +18,10 @@ contains
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine initialize_poisson_polar_mudpack(this, phi, rhs, &
-                                            r_min, r_max, nr, &
+subroutine initialize_poisson_polar_mudpack(this,                      &
+                                            r_min, r_max, nr,          &
                                             theta_min, theta_max, nth, &
-                                            bc_r_min, bc_r_max, &
+                                            bc_r_min, bc_r_max,        &
                                             bc_theta_min, bc_theta_max )
 implicit none
 
@@ -39,8 +39,8 @@ sll_int32 :: bc_r_max                     !< right boundary condition r
 sll_int32 :: bc_theta_min                 !< left boundary condition theta
 sll_int32 :: bc_theta_max                 !< right boundary condition theta
 
-sll_real64, intent(inout) ::  phi(:,:)    !< electric potential
-sll_real64, intent(inout) ::  rhs(:,:)    !< charge density
+sll_real64, pointer ::  phi(:)    !< electric potential
+sll_real64, pointer ::  rhs(:)    !< charge density
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
