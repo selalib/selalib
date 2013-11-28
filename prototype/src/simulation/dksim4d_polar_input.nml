@@ -20,10 +20,9 @@
   deltarTi = 1.45
   kappaTe  = 0.27586
   deltarTe = 1.45
-  QN_case  = 0
-    !0: SLL_NO_QUASI_NEUTRAL
-    !1: SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW
-    !2: SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW
+  QN_case  = "SLL_NO_QUASI_NEUTRAL"
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW"
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
 /
 
 &perturbation
@@ -36,10 +35,8 @@
 &sim_params
   dt                = 8.
   number_iterations = 100
-  time_case = 1
-    !0: SLL_TIME_LOOP_EULER 
-    !1: SLL_TIME_LOOP_PREDICTOR_CORRECTOR 
-  charac_case = 1 
-    !0: SLL_CHARAC_EULER 
-    !1: SLL_CHARAC_VERLET
+  time_case = "SLL_TIME_LOOP_EULER" 
+  !time_case = "SLL_TIME_PREDICTOR_CORRECTOR"
+  charac_case =  "SLL_CHARAC_EULER"
+  !charac_case =  "SLL_CHARAC_VERLET"
 /
