@@ -423,7 +423,7 @@ contains
     !call poisson_solve_cartesian(sim%poisson,f,phi)
      call initialize_mudpack_cartesian(sim%poisson, & 
          phi, &
-         -f, &
+         f, &
          eta1_min= x1_min,&
          eta1_max= x1_max,&
          nc_eta1 = Nc_x1,&
@@ -434,7 +434,7 @@ contains
          bc_eta1_right= SLL_PERIODIC,& 
          bc_eta2_left = SLL_PERIODIC,& 
          bc_eta2_right= SLL_PERIODIC)
-    call solve_mudpack_cartesian(sim%poisson,phi,-f)
+    call solve_mudpack_cartesian(sim%poisson,phi,f)
     call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
     print*,"PASSED"
     
@@ -455,13 +455,13 @@ contains
       f_old = f
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
-      call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
+      call solve_mudpack_cartesian(sim%poisson, phi, f_old)
       
       call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_gc_cartesian( &
-          thdiag_id, &    
+          diag_id, &    
           step-1, &
           dt, &
           sim%mesh_2d, &
@@ -482,7 +482,7 @@ contains
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
-          call solve_mudpack_cartesian(sim%poisson, phi, -f)
+          call solve_mudpack_cartesian(sim%poisson, phi, f)
           call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
@@ -534,8 +534,8 @@ contains
       x2=x2_min+real(i2-1,f64)*delta_x2
       do i1=1,Nc_x1+1
         x1=x1_min+real(i1-1,f64)*delta_x1
-        A1(i1,i2)=-interp2d%interpolate_derivative_eta2(x1,x2)
-        A2(i1,i2)=interp2d%interpolate_derivative_eta1(x1,x2)
+        A1(i1,i2)=interp2d%interpolate_derivative_eta2(x1,x2)
+        A2(i1,i2)=-interp2d%interpolate_derivative_eta1(x1,x2)
       end do
     end do
     
@@ -618,7 +618,7 @@ contains
       e = e + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
-       linf = max(linf,abs(f(i,j)))
+       linf = max(linf,abs(f(i1,i2)))
       enddo
          
     enddo     
