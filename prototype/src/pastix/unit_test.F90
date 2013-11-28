@@ -108,17 +108,10 @@ call solve(linear_solver,X)
 write(*,100) X
 call delete(linear_solver)
 
-!call test_pastix_murge()
+
+call initialize_murge()
+call delete_murge()
 
 call sll_halt_collective()
-
-contains
-
-subroutine test_pastix_murge()
-
-   call initialize_murge()
-   call delete_murge()
-
-end subroutine test_pastix_murge
 
 end program test_pastix
