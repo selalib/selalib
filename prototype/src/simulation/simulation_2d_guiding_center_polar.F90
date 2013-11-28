@@ -5,6 +5,7 @@ module sll_simulation_2d_guiding_center_polar_module
 !simulation_guiding_center_2D_generalized_coords.F90
 !but here geometry and test is specifically polar
 
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -26,10 +27,14 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
+  use sll_module_poisson_2d_polar_solver
+  
   !use sll_parallel_array_initializer_module
 
   implicit none
-  
+
+!#define OLD_POISSON  
+!#define NEW_POISSON  
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
@@ -54,10 +59,15 @@ module sll_simulation_2d_guiding_center_polar_module
 
    
    !poisson solver
-   !class(sll_poisson_2d_base), pointer   :: poisson
-   !type(poisson_2d_periodic), pointer   :: poisson
-   type(sll_plan_poisson_polar), pointer :: poisson 
-   
+
+!#ifdef NEW_POISSON
+   class(sll_poisson_2d_base), pointer   :: poisson
+!#endif
+
+!#ifdef OLD_POISSON
+!   !type(poisson_2d_periodic), pointer   :: poisson
+!   type(sll_plan_poisson_polar), pointer :: poisson 
+!#endif   
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -130,6 +140,7 @@ contains
     character(len=256)      :: A_interp_case 
     character(len=256)      :: initial_function_case 
     character(len=256)      :: time_loop_case 
+    character(len=256)      :: poisson_case 
     sll_int32 :: ierr
     !character(len=256)      :: interp1d_x2_case 
     
@@ -160,6 +171,8 @@ contains
     initial_function_case = "SLL_DIOCOTRON" 
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR"    
+    poisson_case = "POLAR_FFT"
+    
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -337,20 +350,32 @@ contains
     end select
     
     
+!#ifdef OLD_POISSON
+!        sim%poisson => new_plan_poisson_polar( &
+!      sim%mesh_2d%delta_eta1, &
+!      x1_min, &
+!      Nc_x1, &
+!      Nc_x2, &
+!      (/ SLL_NEUMANN_MODE_0,SLL_DIRICHLET/))
+!#endif
     
-    
+!#ifdef NEW_POISSON    
     !poisson solver
-    ! for the moment no choice
-    
-    
-    
-    sim%poisson => new_plan_poisson_polar( &
-      sim%mesh_2d%delta_eta1,& 
-      x1_min, &
-      Nc_x1, &
-      Nc_x2, &
-      (/ SLL_NEUMANN_MODE_0,SLL_DIRICHLET/))
-
+    select case(poisson_case)    
+      case ("POLAR_FFT")     
+        sim%poisson =>new_poisson_2d_polar_solver( &
+          x1_min, &
+          x1_max, &
+          Nc_x1, &
+          Nc_x2, &
+          (/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
+      case default
+        print *,'#bad poisson_case',poisson_case
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_polar'
+        stop
+    end select
+!#endif
     
   
   end subroutine initialize_guiding_center_2d_polar
@@ -422,7 +447,12 @@ contains
     end do
         
     !solve poisson
-    call poisson_solve_polar(sim%poisson,f,phi)
+!#ifdef OLD_POISSON
+!    call poisson_solve_polar(sim%poisson,f,phi)
+!#endif
+!#ifdef NEW_POISSON
+    call sim%poisson%compute_phi_from_rho( phi, f )
+!#endif
     call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
     
     
@@ -439,9 +469,12 @@ contains
 
     do step=1,nb_step+1
       f_old = f
-      
-      call poisson_solve_polar(sim%poisson,f_old,phi)
-      
+!#ifdef OLD_POISSON      
+!      call poisson_solve_polar(sim%poisson,f_old,phi)
+!#endif
+!#ifdef NEW_POISSON
+      call sim%poisson%compute_phi_from_rho( phi, f_old )
+!#endif      
       call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
@@ -466,7 +499,12 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
-          call poisson_solve_polar(sim%poisson,f,phi)
+!#ifdef NEW_POISSON
+          call sim%poisson%compute_phi_from_rho( phi, f )
+!#endif
+!#ifdef OLD_POISSON
+!          call poisson_solve_polar(sim%poisson,f,phi)
+!#endif
           call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
@@ -545,7 +583,7 @@ contains
     sll_real64, dimension(:,:), intent(in) :: A1
     sll_real64, dimension(:,:), intent(in) :: A2
     sll_real64 :: time_mode(8) 
-    sll_real64 :: mode_slope(8) 
+    !sll_real64 :: mode_slope(8) 
     sll_real64 :: w
     sll_real64 :: l1
     sll_real64 :: l2
@@ -622,16 +660,15 @@ contains
     l1 = l1*delta_x2
     l2 = sqrt(l2*delta_x2)
     e  = 0.5_f64*e*delta_x2
-
     call fft_apply_plan(pfwd,int_r,int_r)
     do i1=1,8
-      mode_slope(i1) = time_mode(i1)
+      !mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
-      mode_slope(i1) = &
-        (log(time_mode(i1)+1.e-40_f64)-log(mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
+      !mode_slope(i1) = &
+      !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
     
-    write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode,mode_slope
+    write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode(1:8)!,mode_slope
 
 
 
