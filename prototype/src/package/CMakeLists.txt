@@ -25,6 +25,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_fields.h
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
+    ${SLL_DIR}/pastix/sll_pastix.h
 )
 
 FILE(COPY        ${SLL_MACROS}

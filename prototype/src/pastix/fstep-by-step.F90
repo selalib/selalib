@@ -19,10 +19,10 @@
   !
   program step_by_step_f
 
+    use mpi
     use utils
     implicit none
 
-    include 'mpif.h'
 
     pastix_data_ptr_t                         :: pastix_data ! Structure to keep information in PaStiX (0 for first call)
     integer                                   :: pastix_comm ! MPI communicator used by pastix
@@ -75,6 +75,9 @@
          n, ia, ja, avals, rhs,            &
          Type, rhstype, pastix_comm, ierr)
 
+    write(*,"(a10,6i4)") "ia : ", ia(1:6)
+    write(*,"(a10,9i3)") "ja : ", ja(1:9)
+    write(*,"(a10,9f6.1)") "avals : ", avals(1:9)
     !
     ! First PaStiX call to initiate parameters
     !
@@ -86,7 +89,6 @@
 
     call pastix_fortran(pastix_data ,pastix_comm, &
          n,ia,ja,avals,perm,invp,rhs,nrhs,iparm,dparm)
-
 
     !
     ! Customize some parameters
@@ -143,6 +145,7 @@
           If (rank == 0) print *, "      >> Solve step number",i," <<"
           call pastix_fortran(pastix_data ,pastix_comm, &
                n,ia,ja,avals,perm,invp,rhs,nrhs,iparm,dparm)
+          write(*,*) rhs
        End Do
     End Do
     !

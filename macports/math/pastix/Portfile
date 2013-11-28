@@ -4,7 +4,7 @@ PortSystem          1.0
 
 name                pastix
 version             5.2.1
-revision            4492
+revision            4694
 
 set v_version_wo_char {}
 set v_char            {}
@@ -12,7 +12,7 @@ set v_regexp          {(5\.\d+\.\d+)([a-zA-Z]+)}
 regexp $v_regexp ${version} -> v_version_wo_char v_char
 
 # this is specific to this port and *version* for downloading it:
-set release         32956
+set release         33110
 
 categories          math
 maintainers         nomaintener
@@ -35,7 +35,7 @@ use_bzip2           yes
 
 worksrcdir          ${name}_release_${revision}/src
 
-checksums           md5     4c2bb4cf6fbaaf749ddb5137f8adfe95
+checksums           md5     15866b929792ae15bc309e05f167db51
 
 # openmpi is not universal
 universal_variant   no
@@ -88,7 +88,7 @@ foreach ver ${gcc_versions} {
 
 set archflags       [get_canonical_archflags]
 
-depends_lib-append  port:scotch
+depends_lib-append  port:scotch port:hwloc port:ctags port:git-core
 
 build.env-append    CC=${configure.cc} \
                     CXX=${configure.cxx} \
@@ -106,6 +106,7 @@ pre-build {
     reinplace "s| mpic++|${prefix}/bin/openmpic++|" ${worksrcpath}/config.in
     reinplace "s| mpif90|${prefix}/bin/openmpif90|" ${worksrcpath}/config.in
     reinplace "s|\${HOME}/scotch_5.1/|${prefix}|" ${worksrcpath}/config.in
+    reinplace "s| /opt/hwloc|${prefix}|" ${worksrcpath}/config.in
 }
 
 build.target all install

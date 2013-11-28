@@ -2,9 +2,15 @@
 # FFTW_LIBRARIES = libfftw3.a
 # FFTW_FOUND = true if FFTW3 is found
 
+IF(DEFINED ENV{FFTW_ROOT})
+   SET(FFTW_ROOT $ENV{FFTW_ROOT} CACHE PATH "FFTW location")
+ELSE()
+   SET(FFTW_ROOT "/usr/local" CACHE PATH "FFTW location")
+ENDIF()
+
 SET(TRIAL_PATHS 
                 $ENV{FFTW_HOME}
-                $ENV{FFTW_ROOT}
+                ${FFTW_ROOT}
                 $ENV{FFTW_DIR}
                 /usr
                 /usr/local
@@ -75,4 +81,4 @@ IF(FFTW_FOUND)
    INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
 ENDIF(FFTW_FOUND)
 
-MARK_AS_ADVANCED( FFTW_INCLUDE_DIRS FFTW_LIBRARIES)
+MARK_AS_ADVANCED( FFTW_INCLUDE_DIRS FFTW_LIBRARY FFTW_LIBRARIES)
