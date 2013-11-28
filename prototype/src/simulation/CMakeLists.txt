@@ -33,6 +33,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
                        sll_poisson_solvers
+                       mudpack
                        sll_fft
 		       sll_distribution_function
 		       sll_general_coordinate_elliptic_solvers

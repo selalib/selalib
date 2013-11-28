@@ -26,6 +26,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
+  use sll_mudpack_cartesian
   !use sll_parallel_array_initializer_module
 
   implicit none
@@ -36,7 +37,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
 
 
   type, extends(sll_simulation_base_class) :: &
-    sll_simulation_2d_guiding_center_cartisian
+    sll_simulation_2d_guiding_center_cartesian
 
    !geometry
    type(sll_logical_mesh_2d), pointer :: mesh_2d
@@ -56,8 +57,8 @@ module sll_simulation_2d_guiding_center_cartesian_module
    !poisson solver
    !class(sll_poisson_2d_base), pointer   :: poisson
    !type(poisson_2d_periodic), pointer   :: poisson
-   type(sll_plan_poisson_polar), pointer :: poisson 
-   
+   !type(sll_plan_poisson_polar), pointer :: poisson 
+    type(mudpack_2d) :: poisson 
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -69,7 +70,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
    
        
   contains
-    procedure, pass(sim) :: run => run_gc2d_polar
+    procedure, pass(sim) :: run => run_gc2d_cartesian
     procedure, pass(sim) :: init_from_file => init_fake
      
   end type sll_simulation_2d_guiding_center_cartesian
@@ -136,28 +137,26 @@ contains
     !here we do all the initialization
     !in future, we will use namelist file
 
-    x1_min = 1._f64
-    x1_max = 10._f64
-    x2_min = 0._f64
-    x2_max = 2._f64*sll_pi
+    
     Nc_x1 = 128
     Nc_x2 = 128
-    r_minus = 4._f64
-    r_plus = 5._f64
-    k_mode = 3
-    eps = 1.e-6_f64
+    k_mode = 0.5_f64
+    eps = 0.015_f64
+    x1_min = 0._f64
+    x1_max = 2._f64*sll_pi/k_mode
+    x2_min = 0._f64
+    x2_max = 2._f64*sll_pi
     nb_step = 600
     
     dt = 0.1_f64
-    !dt = 0.05_f64
-    visu_step = 20
+    visu_step = 100
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
     A_interp_case = "SLL_CUBIC_SPLINES"
     charac2d_case = "SLL_VERLET"
     !charac2d_case = "SLL_EULER"
     advect2d_case = "SLL_BSL"
-    initial_function_case = "SLL_DIOCOTRON" 
+    initial_function_case = "SLL_KHP1" 
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR"    
     
@@ -185,7 +184,7 @@ contains
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
@@ -206,7 +205,7 @@ contains
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_x1+1, &
@@ -215,18 +214,18 @@ contains
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)  
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
-          SLL_HERMITE)
+          SLL_PERIODIC)
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_x1+1, &
           x1_min, &
           x1_max, &
-          SLL_HERMITE)
+          SLL_PERIODIC)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -243,7 +242,7 @@ contains
           x1_max, &
           x2_min, &
           x2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
@@ -262,7 +261,7 @@ contains
           eta1_max=x1_max, &
           eta2_min=x2_min, &
           eta2_max=x2_max, &
-          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_1=SLL_PERIODIC, &!&SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC)    
       case ("SLL_VERLET")      
         charac2d => new_verlet_2d_charac(&
@@ -272,7 +271,7 @@ contains
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_1=SLL_PERIODIC, &!&SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC, &
           eta1_min=x1_min, &
           eta1_max=x1_max, &
@@ -308,13 +307,11 @@ contains
     
     
     select case(initial_function_case)
-      case ("SLL_DIOCOTRON")
-        sim%init_func => sll_diocotron_initializer_2d
-        SLL_ALLOCATE(sim%params(4),ierr)
-        sim%params(1) = r_minus
-        sim%params(2) = r_plus
-        sim%params(3) = eps
-        sim%params(4) = k_mode
+      case ("SLL_KHP1")
+        sim%init_func => sll_KHP1_2d
+        SLL_ALLOCATE(sim%params(2),ierr)
+        sim%params(1) = eps
+        sim%params(2) = k_mode
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
@@ -344,15 +341,14 @@ contains
     
     
     
-    sim%poisson => new_plan_poisson_cartesian( &
-      sim%mesh_2d%delta_eta1,& 
-      x1_min, &
-      Nc_x1, &
-      Nc_x2, &
-      (/ SLL_NEUMANN_MODE_0,SLL_DIRICHLET/))
+    !sim%poisson => new_plan_poisson_cartesian( &
+    !  sim%mesh_2d%delta_eta1,& 
+    !  x1_min, &
+    !  Nc_x1, &
+    !  Nc_x2, &
+    !  (/ SLL_NEUMANN_MODE_0,SLL_DIRICHLET/))
 
-    
-  
+   
   end subroutine initialize_guiding_center_2d_cartesian
   
 
@@ -373,8 +369,8 @@ contains
     sll_int32 :: Nc_x2
     sll_real64 :: delta_x1
     sll_real64 :: delta_x2
-    sll_real64 :: x1_min
-    sll_real64 :: x2_min    
+    sll_real64 :: x1_min,x1_max
+    sll_real64 :: x2_min,x2_max   
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32 :: i1 
@@ -398,6 +394,8 @@ contains
     delta_x2 = sim%mesh_2d%delta_eta2
     x1_min = sim%mesh_2d%eta1_min
     x2_min = sim%mesh_2d%eta2_min
+    x1_max = sim%mesh_2d%eta1_max
+    x2_max = sim%mesh_2d%eta2_max
     nb_step = sim%num_iterations
     dt = sim%dt
     
@@ -422,8 +420,23 @@ contains
     end do
         
     !solve poisson
-    call poisson_solve_cartesian(sim%poisson,f,phi)
-    call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
+    !call poisson_solve_cartesian(sim%poisson,f,phi)
+     call initialize_mudpack_cartesian(sim%poisson, & 
+         phi, &
+         -f, &
+         eta1_min= x1_min,&
+         eta1_max= x1_max,&
+         nc_eta1 = Nc_x1,&
+         eta2_min= x2_min,&
+         eta2_max= x2_max,&
+         nc_eta2 = Nc_x2,&
+         bc_eta1_left = SLL_PERIODIC,& 
+         bc_eta1_right= SLL_PERIODIC,& 
+         bc_eta2_left = SLL_PERIODIC,& 
+         bc_eta2_right= SLL_PERIODIC)
+    call solve_mudpack_cartesian(sim%poisson,phi,-f)
+    call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
+    print*,"PASSED"
     
     
     !print *,A1
@@ -438,11 +451,13 @@ contains
     iplot = 0
 
     do step=1,nb_step+1
+      print*,"step= ", step
       f_old = f
       
-      call poisson_solve_cartesian(sim%poisson,f_old,phi)
+      !call poisson_solve_cartesian(sim%poisson,f_old,phi)
+      call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
       
-      call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+      call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_gc_cartesian( &
@@ -455,7 +470,7 @@ contains
           A1, &
           A2)
       endif            
-      
+     
       if(modulo(step-1,sim%freq_diag)==0)then
         call plot_f_cartesian(iplot,f,sim%mesh_2d)
         iplot = iplot+1  
@@ -466,14 +481,15 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
-          call poisson_solve_cartesian(sim%poisson,f,phi)
+          !call poisson_solve_cartesian(sim%poisson,f,phi)
+          call solve_mudpack_cartesian(sim%poisson, phi, -f)
           call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
-          print *,'#in run_gc2d_polar'
+          print *,'#in run_gc2d_cartesian'
           print *,'#available options are:'
           print *,'#SLL_EULER=',SLL_EULER
           print *,'#SLL_PREDICTOR_CORRECTOR=',SLL_PREDICTOR_CORRECTOR
@@ -543,14 +559,12 @@ contains
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
-    sll_real64, dimension(:,:), intent(in) :: A2
-    sll_real64 :: time_mode(8) 
-    sll_real64 :: mode_slope(8) 
-    sll_real64 :: w
+    sll_real64, dimension(:,:), intent(in) :: A2 
+    sll_real64 :: mass
+    sll_real64 :: linf
     sll_real64 :: l1
     sll_real64 :: l2
     sll_real64 :: e
-    sll_real64, dimension(:),allocatable :: int_r
     sll_real64, dimension(:),allocatable :: data
     sll_int32 :: i1
     sll_int32 :: i2
@@ -562,7 +576,7 @@ contains
     sll_real64 :: delta_x2
     sll_real64 :: x1
     sll_int32 :: ierr 
-    type(sll_fft_plan), pointer         :: pfwd
+
     
     Nc_x1 = mesh_2d%num_cells1
     Nc_x2 = mesh_2d%num_cells2
@@ -574,73 +588,49 @@ contains
     delta_x1 = mesh_2d%delta_eta1
     delta_x2 = mesh_2d%delta_eta2
 
-    
-    SLL_ALLOCATE(int_r(Nc_x2),ierr)
     SLL_ALLOCATE(data(Nc_x1+1),ierr)
-    pfwd => fft_new_plan(Nc_x2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
  
-    w     = 0.0_f64
+    linf  = 0.0_f64
     l1    = 0.0_f64
     l2    = 0.0_f64
-    e     = 0.0_f64
-    int_r = 0.0_f64
+    mass  = 0.0_f64
+     e     = 0.0_f64
     
-    
-    do i2 = 1, Nc_x2
+    do i2 = 1, Nc_x2+1
       do i1=1,Nc_x1+1
-        x1 = x1_min+real(i1-1,f64)*delta_x1
-        data(i1) = x1*f(i1,i2)
+        data(i1) = f(i1,i2)
       enddo
-      w = w + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
+      mass = mass + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
-        x1 = x1_min+real(i1-1,f64)*delta_x1
-        data(i1) = x1*abs(f(i1,i2))
+        data(i1) = abs(f(i1,i2))
       enddo
       l1 = l1 + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
-        x1 = x1_min+real(i1-1,f64)*delta_x1
-        data(i1) = x1*(f(i1,i2))**2
+        data(i1) = (f(i1,i2))**2
       enddo
       l2 = l2 + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
-        x1 = x1_min+real(i1-1,f64)*delta_x1
-        data(i1) = x1*((x1*A2(i1,i2))**2+A1(i1,i2)**2)
+        data(i1) = A2(i1,i2)**2+A1(i1,i2)**2
       enddo
       e = e + compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)
 
       do i1=1,Nc_x1+1
-        x1 = x1_min+real(i1-1,f64)*delta_x1
-        data(i1) = x1*phi(i1,i2)
+       linf = max(linf,abs(f(i,j)))
       enddo
-      int_r(i2) = compute_integral_trapezoid_1d(data, Nc_x1+1, delta_x1)      
+         
     enddo     
 
-    w = w*delta_x2
+    mass = mass*delta_x2
     l1 = l1*delta_x2
     l2 = sqrt(l2*delta_x2)
-    e  = 0.5_f64*e*delta_x2
-
-    call fft_apply_plan(pfwd,int_r,int_r)
-    do i1=1,8
-      mode_slope(i1) = time_mode(i1)
-      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
-      mode_slope(i1) = &
-        (log(time_mode(i1)+1.e-40_f64)-log(mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
-    enddo
+    e  = e*delta_x2
     
-    write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode,mode_slope
+    write(file_id,*) dt*real(step,f64),linf,l1,l2,mass,e
 
 
-
-    call fft_delete_plan(pfwd)
-    
-!    call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
-!
-!
-    
     
     
   end subroutine time_history_diagnostic_gc_cartesian
@@ -668,10 +658,10 @@ contains
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
-    sll_real64 :: rmin
-    sll_real64 :: rmax
-    sll_real64 :: dr
-    sll_real64 :: dtheta
+    sll_real64 ::  x1_min, x2_min
+    sll_real64 ::  x1_max, x2_max  
+    sll_real64 :: dx1
+    sll_real64 :: dx2
     
     
     nnodes_x1 = mesh_2d%num_cells1+1
@@ -697,10 +687,10 @@ contains
           x2(i,j) = x2_min+real(j-1,f32)*dx2
         end do
       end do
-      call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
+      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
       call sll_hdf5_write_array(file_id,x1,"/x1",error)
       call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
       call sll_hdf5_write_array(file_id,x2,"/x2",error)
       call sll_hdf5_file_close(file_id, error)
       deallocate(x1)
@@ -709,7 +699,7 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
+    call sll_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
     call sll_xdmf_write_array("f"//cplot,f,"values", &
       error,file_id,"Node")
