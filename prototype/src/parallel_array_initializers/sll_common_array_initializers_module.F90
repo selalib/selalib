@@ -120,7 +120,6 @@ contains
 
 
 
-
   ! This is a simplistic initializer aimed at a 4d cartesian distribution
   ! function, periodic in x and y, and compact-ish in vx and vy.
   !
