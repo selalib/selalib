@@ -1,0 +1,474 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language french
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry false
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Section
+Interpolation Gauss-Lobatto ordre 
+\begin_inset Formula $d$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+On considère une grille 2D
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $i=1\cdots nc1,j=1\cdots nc2$
+\end_inset
+
+.
+ Chaque cellule 
+\begin_inset Formula $(i,j)$
+\end_inset
+
+ est donnée par une transformation 
+\begin_inset Formula $\tau$
+\end_inset
+
+ qui envoie la cellule
+\begin_inset Formula 
+\[
+\hat{C}_{ij}=](i-1)\Delta\eta_{1}+\eta_{1,\min},i\Delta\eta_{1}+\eta_{1,\min}[\times](j-1)\Delta\eta_{2}+\eta_{2,\min},j\Delta\eta_{2}+\eta_{2,\min}[
+\]
+
+\end_inset
+
+sur la cellule 
+\begin_inset Formula $C_{ij}$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Standard
+Dans chaque cellule, les points d'interpolation sont donnés par les points
+ de Gauss-Lobatto.
+ On note 
+\begin_inset Formula $\omega_{k},\eta_{k},k=1\cdots d+1$
+\end_inset
+
+ les poids et points de Gauss-Lobatto 1D pour des polynôme de degré 
+\begin_inset Formula $d$
+\end_inset
+
+.
+ On définit ensuite les points d'interpolation dans la cellule de référence:
+\begin_inset Formula 
+\[
+\hat{\eta}_{ii,jj}=((i-1/2+\eta_{ii}/2)\Delta\eta_{1}+\eta_{1,\min},(j-1/2+\eta_{jj}/2)\Delta\eta_{2}+\eta_{2,\min}).
+\]
+
+\end_inset
+
+Les points d'interpolation 
+\begin_inset Formula $\eta_{ii,jj}$
+\end_inset
+
+ dans la cellule 
+\begin_inset Formula $(i,j)$
+\end_inset
+
+ sont donnés par
+\begin_inset Formula 
+\[
+\eta_{ii,jj}=\tau(\hat{\eta}_{ii,jj}).
+\]
+
+\end_inset
+
+Le champ électromagnétique est noté
+\begin_inset Formula 
+\[
+W=\left[E_{x},E_{y},H_{z}\right]^{T}.
+\]
+
+\end_inset
+
+Dans la cellule 
+\begin_inset Formula $L=(i,j)$
+\end_inset
+
+, il est interpolé en chaque point 
+\begin_inset Formula $\eta_{ii,jj}$
+\end_inset
+
+ par
+\begin_inset Formula 
+\[
+W_{ii,jj}^{L}\simeq W(\eta_{ii,jj}).
+\]
+
+\end_inset
+
+On peut ensuite reconstruire par interpolation le champ dans toute la cellule
+ 
+\begin_inset Formula $L$
+\end_inset
+
+ par
+\begin_inset Formula 
+\[
+W(x)=\sum_{ii,jj}W_{ii,jj}^{L}\phi_{ii,jj}^{L}(x).
+\]
+
+\end_inset
+
+Il faut définir les fonctions d'interpolation.
+ On commence par définir les polynômes de Lagrange associés aux points de
+ Gauss-Lobatto 1D
+\begin_inset Formula 
+\[
+L_{k}(\eta)=\prod_{l=1\cdots d+1,l\neq k}\frac{\eta-\eta_{l}}{\eta_{k}-\eta_{l}}.
+\]
+
+\end_inset
+
+On a 
+\begin_inset Formula 
+\[
+L_{k}(\eta_{l})=\delta_{lk}.
+\]
+
+\end_inset
+
+En résumé, on a:
+\end_layout
+
+\begin_layout Itemize
+un tableau qui donne les points et poids de Gauss-Lobatto (GL) sur ]-1,1[:
+ xgalo(1:d+1), wgalo(1:d+1)
+\end_layout
+
+\begin_layout Itemize
+un tableau qui donne les dérivées des polynômes de Lagrange aux points de
+ GL: dlag(1:d+1,1:d+1)
+\end_layout
+
+\begin_layout Standard
+On construit ensuite les fonctions d'interpolation de référence dans la
+ cellule 
+\begin_inset Formula $L=(i,j)$
+\end_inset
+
+
+\begin_inset Formula 
+\[
+\hat{\phi}_{ii,jj}^{L}(\eta_{1},\eta_{2})=L_{ii}(2\frac{\eta_{1}-\eta_{1,\text{\min}}-(i-1)\Delta\eta_{1}}{\Delta\eta_{1}}-1)L_{jj}(2\frac{\eta_{2}-\eta_{2,\text{\min}}-(j-1)\Delta\eta_{2}}{\Delta\eta_{2}}-1).
+\]
+
+\end_inset
+
+On définit la fonction d'interpolation physique par la formule
+\begin_inset Formula 
+\[
+\phi_{ii,jj}^{L}(x_{1},x_{2})=\hat{\phi}_{ii,jj}^{L}(\eta_{1},\eta_{2}),\quad(x_{1},x_{2})=\tau(\eta_{1},\eta_{2}).
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+La formulation Galerkin-Discontinu (GD) s'écrit: pour toute cellule 
+\begin_inset Formula $L$
+\end_inset
+
+ et toute fonction test 
+\begin_inset Formula $\phi_{ii,jj}^{L}$
+\end_inset
+
+ (somme sur les indices répétés)
+\begin_inset Formula 
+\[
+\left(\int_{L}\phi_{ii,jj}^{L}\phi_{kk,ll}^{L}\right)\partial_{t}W_{kk,ll}^{L}
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+-\int_{L}F(W_{kk,ll}^{L}\phi_{kk,ll}^{L},\nabla\phi_{ii,jj}^{L})
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
++\int_{\partial L}F(W_{kk,ll}^{L}\phi_{kk,ll}^{L},W_{kk,ll}^{R}\phi_{kk,ll}^{R},n_{LR}dl)\phi_{ii,jj}^{L}=0.
+\]
+
+\end_inset
+
+Il faut donc écrire des formules d'intégration pour 
+\begin_inset Formula $\int_{L}$
+\end_inset
+
+ et 
+\begin_inset Formula $\int_{\partial L}$
+\end_inset
+
+.
+ Par exemple
+\begin_inset Formula 
+\[
+\int_{L}f(x)\simeq\sum_{ii,jj=1}^{d+1}\omega_{ii}\omega_{jj}f(\tau(\hat{\eta}_{ii,jj}))\det\tau'(\hat{\eta}_{ii,jj}).
+\]
+
+\end_inset
+
+Ainsi
+\begin_inset Formula 
+\[
+\int_{L}\phi_{ii,jj}^{L}\phi_{kk,ll}^{L}=\omega_{ii}\omega_{jj}\det\tau'(\hat{\eta}_{ii,jj})\delta_{ii,kk}\delta_{jj,ll}
+\]
+
+\end_inset
+
+et la matrice masse est diagonale.
+\end_layout
+
+\begin_layout Standard
+Pour le calcul du second terme, il suffit de connaître 
+\begin_inset Formula $W$
+\end_inset
+
+ aux points de GL et le gradient des fonctions test en ces points, or
+\begin_inset Formula 
+\[
+\nabla_{x_{1},x_{2}}\phi_{ii,jj}^{L}=\left(\tau'^{-1}\right)^{T}\nabla_{\eta_{1},\eta_{2}}\phi_{ii,jj}^{L}.
+\]
+
+\end_inset
+
+Le dernier terme nécessite le calcul de la normale 
+\begin_inset Formula $n_{LR}dl$
+\end_inset
+
+ aux points de Gauss-Lobatto sur le bord de la cellule 
+\begin_inset Formula $L$
+\end_inset
+
+.
+ Commençons par le calcul d'une normale orientée de la cellule 
+\begin_inset Formula $L$
+\end_inset
+
+ vers la cellule 
+\begin_inset Formula $R$
+\end_inset
+
+ 
+\begin_inset Quotes eld
+\end_inset
+
+à l'est
+\begin_inset Quotes erd
+\end_inset
+
+ de 
+\begin_inset Formula $L.$
+\end_inset
+
+ Soit 
+\begin_inset Formula $\eta_{1},\eta_{2}$
+\end_inset
+
+ un point de GL sur le bord correspondant de la cellule du maillage logique.
+ La normale en ce point sur le maillage logique est 
+\begin_inset Formula $\hat{n}=(1,0)^{T}$
+\end_inset
+
+.
+ Le point est transformé par 
+\begin_inset Formula $\tau$
+\end_inset
+
+ en un point de GL sur le maillage physique
+\begin_inset Formula 
+\[
+(x_{1},x_{2})=\tau(\eta_{1},\eta_{2}).
+\]
+
+\end_inset
+
+La jacobienne inverse de 
+\begin_inset Formula $\tau$
+\end_inset
+
+ et le jacobien de 
+\begin_inset Formula $\tau$
+\end_inset
+
+ en ce point donnent la quantité cherchée.
+ En effet
+\begin_inset Formula 
+\[
+co(\tau')^{T}=\det\tau'\tau'^{-1},
+\]
+
+\end_inset
+
+
+\begin_inset Formula 
+\[
+co(\tau')^{T}=\left(\begin{array}{cc}
+\frac{\partial\tau_{2}}{\partial\eta_{1}} & -\frac{\partial\tau_{2}}{\partial\eta_{1}}\\
+-\frac{\partial\tau_{1}}{\partial\eta_{2}} & \frac{\partial\tau_{1}}{\partial\eta_{1}}
+\end{array}\right)
+\]
+
+\end_inset
+
+et 
+\begin_inset Formula $n_{LR}dl$
+\end_inset
+
+ est simplement la première colonne de 
+\begin_inset Formula $co(\tau')^{T}$
+\end_inset
+
+.
+ On peut aussi écrire
+\begin_inset Formula 
+\[
+n_{LR}dl=co(\tau')^{T}\hat{n}.
+\]
+
+\end_inset
+
+Cette formule est encore valable pour les normales 
+\begin_inset Quotes eld
+\end_inset
+
+nord
+\begin_inset Quotes erd
+\end_inset
+
+, 
+\begin_inset Quotes eld
+\end_inset
+
+ouest
+\begin_inset Quotes erd
+\end_inset
+
+ et 
+\begin_inset Quotes eld
+\end_inset
+
+sud
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Section
+Flux et flux numérique
+\end_layout
+
+\begin_layout Standard
+On peut écrire les équations de Maxwell sous la forme
+\begin_inset Formula 
+\[
+\partial_{t}W+A^{1}\partial_{x_{1}}W+A^{2}\partial_{x_{2}}W=0,
+\]
+
+\end_inset
+
+avec
+\begin_inset Formula 
+\[
+\sum_{i=1}^{2}A^{i}n_{i}=\left(\begin{array}{ccc}
+0 & 0 & -n_{2}\\
+0 & 0 & n_{1}\\
+-n_{2} & n_{1} & 0
+\end{array}\right).
+\]
+
+\end_inset
+
+Avec ces notations le flux est donné par
+\begin_inset Formula 
+\[
+F(W,n)=A^{i}n_{i}W.
+\]
+
+\end_inset
+
+Le flux numérique centré est
+\begin_inset Formula 
+\[
+F(W_{L},W_{R},n)=\frac{1}{2}A^{i}n_{i}(W_{L}+W_{R}).
+\]
+
+\end_inset
+
+Le flux décentré est donné dans la thèse d'Anaïs.
+\end_layout
+
+\end_body
+\end_document

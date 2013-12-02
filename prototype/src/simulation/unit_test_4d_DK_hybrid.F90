@@ -26,14 +26,15 @@ program DK_hybrid_4d
   ! Parallelization initialization
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
+  print*, 'init from file'
   world_size = sll_get_collective_size(sll_world_collective)
   my_rank    = sll_get_collective_rank(sll_world_collective)
-
   ! Reading of the input file 'sim4d_DK_hybrid_input.txt'
   call getarg(1,filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
 
+  print*, 'get logical mesh 4d'
   !*** logical mesh for space coordinates ***
   logical_mesh4D => new_logical_mesh_4d( &
     simulation%nc_x1,simulation%nc_x2, &
