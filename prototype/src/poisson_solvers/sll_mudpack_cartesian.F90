@@ -35,8 +35,8 @@ sll_int32,  intent(in)  :: bc_eta2_right !< boundary condtion
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
 sll_int32               :: icall, iiex, jjey, llwork
 
-sll_real64 :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
-sll_real64 :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
+sll_real64, pointer :: phi(:) !< electric potential
+sll_real64, pointer :: rhs(:) !< charge density
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
