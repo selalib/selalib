@@ -70,7 +70,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
 
-
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
    ADD_SUBDIRECTORY(assert)
@@ -112,6 +111,12 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
    
+   ADD_SUBDIRECTORY(mudpack)
+   ADD_SUBDIRECTORY(fishpack)
+   ADD_SUBDIRECTORY(opencl)
+   ADD_SUBDIRECTORY(pastix)
+   ADD_SUBDIRECTORY(wsmp)
+
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
@@ -135,10 +140,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF(NOT STDF95)
 
-   ADD_SUBDIRECTORY(mudpack)
-   ADD_SUBDIRECTORY(fishpack)
-   ADD_SUBDIRECTORY(opencl)
-   ADD_SUBDIRECTORY(pastix)
 
    MESSAGE(STATUS "############################################################")
    MESSAGE(STATUS "####")

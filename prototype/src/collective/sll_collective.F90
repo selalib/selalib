@@ -159,6 +159,8 @@ module sll_collective
      sll_int32                       :: key !< Control of rank assigment
      sll_int32                       :: rank !< Rank of the process
      sll_int32                       :: size !< Communicator size
+     sll_int32                       :: thread_level_required
+     sll_int32                       :: thread_level_provided
   end type sll_collective_t
 
   ! **********************************************************************
@@ -304,8 +306,18 @@ contains !************************** Operations **************************
   !> @brief Starts the paralell environment 
   subroutine sll_boot_collective( )
     sll_int32 :: ierr
-    call MPI_Init(ierr)
+
     SLL_ALLOCATE( sll_world_collective, ierr )
+
+#ifdef MPI_THREAD_MULTIPLE
+    call MPI_Init(ierr)
+#else
+
+    sll_world_collective%thread_level_required = MPI_THREAD_MULTIPLE
+    call MPI_Init_Thread(sll_world_collective%thread_level_required, &
+                         sll_world_collective%thread_level_provided, &
+                         ierr)
+#endif
     sll_world_collective%comm     = MPI_COMM_WORLD
     sll_world_collective%color    = 0
     sll_world_collective%key      = 0
