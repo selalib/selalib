@@ -49,7 +49,7 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
@@ -122,7 +122,8 @@ IF(MUDPACK_ENABLED)
 
       ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
       
-      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_poisson_solvers 
+      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} ${POISSON_LIBS}
+                                                      sll_poisson_solvers 
                                                       sll_file_io
                                                       mudpack)
 
