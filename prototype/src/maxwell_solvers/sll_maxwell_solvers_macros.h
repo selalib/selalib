@@ -18,13 +18,11 @@
 !**************************************************************
 
 
-#define  NORTH  0      
-#define  EAST   1       
-#define  SOUTH  2        
-#define  WEST   3         
-#define  TE_POLARIZATION  0
-#define  TM_POLARIZATION  1 
-
-
+#define SOUTH  1        
+#define EAST   2       
+#define NORTH  3      
+#define WEST   4         
+#define TE_POLARIZATION  0
+#define TM_POLARIZATION  1 
 
 #endif

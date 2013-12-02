@@ -38,8 +38,6 @@ integer :: mode = 2
 nc_eta1 = 64
 nc_eta2 = 64
 
-SLL_CLEAR_ALLOCATE(phi( 1:nc_eta1+1,1:nc_eta2+1),error)
-SLL_CLEAR_ALLOCATE(rhs( 1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(eta1(1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(eta2(1:nc_eta1+1,1:nc_eta2+1),error)
 
@@ -61,16 +59,20 @@ do i=1,nc_eta1+1
    end do
 end do
 
+call initialize_mudpack_cartesian(poisson,                     &
+                                  eta1_min, eta1_max, nc_eta1, &
+                                  eta2_min, eta2_max, nc_eta2, &
+                                  PERIODIC, PERIODIC, PERIODIC, PERIODIC)
+
+SLL_CLEAR_ALLOCATE(phi( 1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(rhs( 1:nc_eta1+1,1:nc_eta2+1),error)
+
 rhs  = -2*mode**3 * sin(mode*eta1)*cos(mode*eta2)
 
 call sll_gnuplot_corect_2d(eta1_min, eta1_max, nc_eta1+1, &
                            eta2_min, eta2_max, nc_eta2+1, &
                            rhs, "rhs", 1, error)
 
-call initialize_mudpack_cartesian(poisson, phi, rhs, &
-                                  eta1_min, eta1_max, nc_eta1, &
-                                  eta2_min, eta2_max, nc_eta2, &
-                                  PERIODIC, PERIODIC, PERIODIC, PERIODIC)
 
 call solve_mudpack_cartesian(poisson, phi, rhs)
 
