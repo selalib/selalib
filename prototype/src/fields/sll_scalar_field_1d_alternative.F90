@@ -404,18 +404,18 @@ contains   ! *****************************************************************
     !SLL_ALLOCATE(point(sz_point),ierr)
     SLL_ALLOCATE(field%values(field%mesh%num_cells+1),ierr)
     
-    if ( present( point_1d) .and. present(sz_point)) then
-       print*, ' not implemented yet in initialize_scalar_field_1d_discrete_alt'
-       stop
-    end if
-    if ( present( point_1d) .and. .not. present(sz_point)) then
-       print*, ' problem presence of point_1d and not the size in '
-       print*, 'initialize_scalar_field_1d_discrete_alt'
-       stop
-    end if
+!!$    if ( present( point_1d) .and. present(sz_point)) then
+!!$       print*, ' not implemented yet in initialize_scalar_field_1d_discrete_alt'
+!!$       stop
+!!$    end if
+!!$    if ( present( point_1d) .and. .not. present(sz_point)) then
+!!$       print*, ' problem presence of point_1d and not the size in '
+!!$       print*, 'initialize_scalar_field_1d_discrete_alt'
+!!$       stop
+!!$    end if
     
-!!$    
-!!$   
+    
+   
 !!$    call field%interp_1d%compute_interpolants( &  !  a implementer
 !!$         array_1d, &
 !!$         point_1d, &

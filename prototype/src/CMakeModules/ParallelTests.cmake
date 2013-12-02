@@ -67,14 +67,21 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 8)
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_cartesian_input)
+      ADD_MPI_TEST(sim4d_vp_cart test_4d_vp_cartesian ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(sim4d_vp_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
+
+      SET(PROCS 8)
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim2d_cartesian_input)
-      ADD_MPI_TEST(vp2d_sim test_2d_vp_cartesian ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(vp2d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      ADD_MPI_TEST(sim2d_vp_cart test_2d_vp_cartesian ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(sim2d_vp_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(PROCS 8)
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_polar_input.nml)
       ADD_MPI_TEST(sim4d_DK_polar test_4d_dk_polar ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(vp2d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      SET_TESTS_PROPERTIES(sim4d_DK_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
    

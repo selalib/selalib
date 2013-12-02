@@ -1,8 +1,8 @@
 &mesh
   num_cells_x1 = 63
   num_cells_x2 = 63
-  num_cells_x3 = 63
-  num_cells_x4 = 63
+  num_cells_x3 = 10
+  num_cells_x4 = 10
   r_min        = 0.1
   r_max        = 1.   !14.5
   phi_min      = 0.

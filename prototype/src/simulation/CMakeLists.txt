@@ -9,9 +9,34 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_base_class.F90 
                                      simulation_VP1D_cartesian_non_unif.F90
                                      simulation_VP1D_curvilinear_analytic.F90
-                                     simulation_vp1d_fourier_fem.F90)
+                                     simulation_vp1d_fourier_fem.F90
+                                     simulation_2d_guiding_center_cartesian.F90
+                                     simulation_2d_guiding_center_polar.F90)
 
-TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines)
+TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
+                       sll_poisson_solvers
+                       sll_fft
+		       sll_distribution_function
+		       sll_general_coordinate_elliptic_solvers
+		       deboor_splines
+		       #sll_scalar_field_1d_alternative
+		       sll_scalar_field_2d_alternative
+                       sll_electric_field_accumulators
+                       sll_scalar_field
+                       sll_interpolators
+                       sll_advection
+                       sll_splines
+		       sll_integration
+		       sll_reduction
+                       sll_constants
+                       sll_coordinate_transformations
+                       sll_logical_meshes
+                       sll_utilities
+               sll_common_array_initializers
+		       sll_timer
+                       sll_memory
+                       sll_assertion 	
+                       sll_working_precision)
 
 # Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
@@ -26,6 +51,9 @@ ENDMACRO(ADD_SIMULATION_1D)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem)
+ADD_SIMULATION_1D(2d_gc_cartesian)
+ADD_SIMULATION_1D(2d_gc_polar)
+
 
 #Commands to be updated in the above simulation class standard
 #############################################################
@@ -130,6 +158,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
      simulation_base_class.F90
      simulation_2d_vlasov_poisson_cartesian.F90
      simulation_4d_vlasov_poisson_cartesian.F90
+     simulation_4d_vlasov_parallel_poisson_sequential_cartesian.F90
      simulation_4d_vlasov_poisson_general.F90
      simulation_4d_qns_general.F90
 #     simulation_4d_mixed_qns_cartesian.F90
@@ -184,6 +213,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    ADD_SIMULATION(2d_vp_cartesian)
    ADD_SIMULATION(4d)
+   ADD_SIMULATION(4d_vp_cartesian)
    ADD_SIMULATION(4d_vp_general)
    ADD_SIMULATION(4d_qns_general)
 #   ADD_SIMULATION(4d_mixed_qns_cartesian)

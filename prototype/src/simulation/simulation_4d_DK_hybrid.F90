@@ -2066,50 +2066,30 @@ contains
                      (/iloc1,iloc2,i3,i4/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
-!!$<<<<<<< HEAD
-!!$                
-!!$                if (i1 .ne. Neta1) then
-!!$                   if (i2 .ne. Neta2) then 
-!!$                      
-!!$                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
-!!$                      
-!!$                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-!!$                           sim%feq_xyvpar(i1,i2,i4)
-!!$                      
-!!$                      
-!!$                      nrj_kin = nrj_kin + &
-!!$                           delta_f * vpar**2 * 0.5 * val_jac * &
-!!$                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-!!$                      
-!!$                      nrj_pot = nrj_pot + &
-!!$                           delta_f * val_elec_pot * 0.5 * val_jac * &
-!!$                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-!!$                      
-!!$                      ! definition FALSE 
-!!$                      ! heat_flux = heat_flux + &
-!!$                      !     delta_f * vpar**2* 0.5* val_jac * &
-!!$                      !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
-!!$                   end if
-!!$                end if
-!!$=======
-                val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
-                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                     sim%feq_xyvpar(i1,i2,i4)
                 
-                
-                nrj_kin = nrj_kin + &
-                     delta_f * vpar**2 * 0.5 * val_jac * &
-                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                
-                nrj_pot = nrj_pot + &
-                     delta_f * val_elec_pot * 0.5 * val_jac * &
-                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
-
-                ! definition FALSE 
-                !heat_flux = heat_flux + &
-                 !   delta_f * vpar**2* 0.5* val_jac * &
-                 !   delta_eta1*delta_eta2*delta_eta3*delta_vpar
-!!*>>>>>>> origin/4d-drift-kinetic-hybrid
+                if (i1 .ne. Neta1) then
+                   if (i2 .ne. Neta2) then 
+                      
+                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+                      
+                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                           sim%feq_xyvpar(i1,i2,i4)
+                      
+                      
+                      nrj_kin = nrj_kin + &
+                           delta_f * vpar**2 * 0.5 * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      nrj_pot = nrj_pot + &
+                           delta_f * val_elec_pot * 0.5 * val_jac * &
+                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                      
+                      ! definition FALSE 
+                      ! heat_flux = heat_flux + &
+                      !     delta_f * vpar**2* 0.5* val_jac * &
+                      !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                   end if
+                end if
              end do
           end do
        end do

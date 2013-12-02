@@ -100,7 +100,7 @@ program unit_test_1d_alternative
    !print*, normL2_1
     print*, 'passed'
    ! -------> field visualization 
-   call periodic_anal%write_to_file(0)
+   !call periodic_anal%write_to_file(0)
    
   ! -------> delete field
   call periodic_anal%delete()
@@ -141,7 +141,7 @@ program unit_test_1d_alternative
   end do
 
   ! -------> field visualization
-  call dirichlet_anal%write_to_file(0)
+  !call dirichlet_anal%write_to_file(0)
   
   ! -------> delete field
   call dirichlet_anal%delete()
@@ -187,6 +187,7 @@ program unit_test_1d_alternative
        mesh_1d,&
        point1,&
        nc1+1)
+
   print*, 'pasesd'
   ! ------- > allocation values of field
   call periodic_discrete%set_field_data(tab_values)
@@ -217,7 +218,7 @@ program unit_test_1d_alternative
   end do
   !print*, normH1_5
   ! -------> field visualization 
-  call periodic_discrete%write_to_file(0)
+!!$  call periodic_discrete%write_to_file(0)
 
 
   ! -------> delete field
@@ -293,7 +294,7 @@ program unit_test_1d_alternative
         
   end do
   ! -------> field visualization 
-  call dirichlet_discrete%write_to_file(0)
+!!$  call dirichlet_discrete%write_to_file(0)
 
 
   ! -------> delete field
