@@ -39,7 +39,7 @@ program VP_1d
   sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
-  sll_int32  :: freqdiag
+  sll_int32  :: freqdiag = 1
   sll_real64 :: time, mass, momentum, kinetic_energy, potential_energy
   sll_real64 :: l1norm, l2norm
   character(len=32) :: fname, case
@@ -132,7 +132,8 @@ program VP_1d
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 ) 
+       identity_jac22, &
+       (/ 0.0_f64 /)) 
 
   ! initialize interpolators
   call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
@@ -169,7 +170,7 @@ program VP_1d
   call write_scalar_field_2d(f) 
 
   ! initialise Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   call solve(poisson_1d, efield, rho)
 
   ! open files for time history diagnostics

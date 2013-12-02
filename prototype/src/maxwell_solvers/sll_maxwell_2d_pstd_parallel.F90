@@ -172,8 +172,8 @@ contains
 
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
 
-    sll_real64, dimension(:,:) :: ex
-    sll_real64, dimension(:,:) :: ey
+    sll_real64, dimension(:,:) :: ex       !< x electric field
+    sll_real64, dimension(:,:) :: ey       !< y electric field
     sll_int32                  :: ncx      !< global x cell number
     sll_int32                  :: ncy      !< global y cell number
     sll_int32                  :: nx_loc   !< local  x cell number
@@ -269,21 +269,21 @@ contains
 
   end subroutine ampere_te
 
-  !> Solve faraday equation (TE mode)
+  !> Solve Ampere-Maxwell equation (TE mode)
   subroutine ampere_tm(plan,dt,bx,by,jz)
 
     type (maxwell_2d_periodic_plan_cartesian_par), pointer :: plan !< maxwell object
 
-    sll_real64, dimension(:,:) :: bx !> electric field sequential in y
-    sll_real64, dimension(:,:) :: by !> electric field sequential in x
-    sll_real64, dimension(:,:), optional :: jz !> current density sequential in 	
-    sll_int32                  :: ncx      !< global x cell number
-    sll_int32                  :: ncy      !< global y cell number
-    sll_int32                  :: nx_loc   !< local  x cell number
-    sll_int32                  :: ny_loc   !< local  y cell number
+    sll_real64, dimension(:,:) :: bx           !< electric field sequential in y
+    sll_real64, dimension(:,:) :: by           !< electric field sequential in x
+    sll_real64, dimension(:,:), optional :: jz !< current density sequential in 	
+    sll_int32                  :: ncx          !< global x cell number
+    sll_int32                  :: ncy          !< global y cell number
+    sll_int32                  :: nx_loc       !< local  x cell number
+    sll_int32                  :: ny_loc       !< local  y cell number
     sll_int32                  :: prank
     sll_int64                  :: psize
-    sll_real64, intent(in)     :: dt       !< time step
+    sll_real64, intent(in)     :: dt           !< time step
     sll_real64                 :: dt_e
 
     prank = sll_get_collective_rank( sll_world_collective )

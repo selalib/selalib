@@ -1,0 +1,34 @@
+&MESH
+  Nr           = 63 !63 !511
+  Ntheta       = 64 !128 !32
+  Nphi         = 32 !32
+  Nvpar        = 16 !48 !47
+  a            = 14.5 !24.16  !32.
+  rhomin       = 0.1 !0.2  !rmin=a*rhomin
+  rhomax       = 0.8 !0.8  !rmax=a*rhomax
+  Lz           = 1503.2520847427160646 !1508 !6.283185307179586476925286766559005768394  !rmax=a*rhomax
+  aspect_ratio = 16.5 !3.
+  vmax      = 7.32 !12.
+  nbiter      = 100
+  dt      =  0.5 !16.
+  fdiag      = 30
+  fthdiag      = 30
+/
+
+
+&EQUIL
+  rpeak          = 0.5     
+  kappan         = 13.2 !0.8  !4   !0.8
+  kappaTi        = 66 !4. !27. !4.
+  kappaTe        = 66 !4. !27. !4.
+  deltarn        = 0.2 !0. !0.2 !0.08 !0.2 
+  deltarTi       = 0.1 !0.08 !0.1
+  deltarTe       = 0.1 !0.08 !0.1
+  epsilon        = 1e-6  !0.
+  modethmin       = 9 !11 !1
+  modethmax       = 9 !11 !2
+  modezmin        = 4 !3 !1
+  modezmax        = 4 !3 !2
+  zonal_flow     = .true.
+/
+

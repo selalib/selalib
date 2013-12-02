@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Module to solve Poisson equation on polar mesh using FFT transform
 module sll_poisson_polar_parallel
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -51,10 +52,12 @@ module sll_poisson_polar_parallel
    sll_real64, dimension(:,:), pointer :: f_a      !< array sequential in theta
   end type sll_poisson_polar
 
+  !> Initialize the Poisson solver on polar mesh
   interface initialize
      module procedure initialize_poisson_polar
   end interface initialize
 
+  !> Compute the potential solving the Poisson equation on polar mesh
   interface solve
      module procedure solve_poisson_polar
   end interface solve

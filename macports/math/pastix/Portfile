@@ -1,0 +1,128 @@
+# -*- coding: utf-8; mode: tcl; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- vim:fenc=utf-8:ft=tcl:et:sw=4:ts=4:sts=4
+
+PortSystem          1.0
+
+name                pastix
+version             5.2.1
+revision            4492
+
+set v_version_wo_char {}
+set v_char            {}
+set v_regexp          {(5\.\d+\.\d+)([a-zA-Z]+)}
+regexp $v_regexp ${version} -> v_version_wo_char v_char
+
+# this is specific to this port and *version* for downloading it:
+set release         32956
+
+categories          math
+maintainers         nomaintener
+platforms           darwin
+license             CeCILL-C
+
+description         PaStiX is a high performance parallel solver for very large sparse linear systems based on direct methods. It provides also an adaptive blockwise iLU(k) factorization that can be used as a parallel preconditioner.
+
+long_description    ${description}
+
+homepage            http://gforge.inria.fr/projects/pastix
+master_sites        https://gforge.inria.fr/frs/download.php/${release}
+distname            pastix_release_${revision}
+
+livecheck.type      regex
+livecheck.url       https://gforge.inria.fr/frs/?group_id=186
+livecheck.regex     "pastix_release_(5\\.\\d+\\.\\d+\[a-zA-Z\]+)\\.tar\\.bz2"
+
+use_bzip2           yes
+
+worksrcdir          ${name}_release_${revision}/src
+
+checksums           md5     4c2bb4cf6fbaaf749ddb5137f8adfe95
+
+# openmpi is not universal
+universal_variant   no
+
+use_configure       no
+
+set gcc_versions {4.3 4.4 4.5 4.6 4.7 4.8 4.9}
+set default_fortran_variant +gcc48
+
+foreach ver ${gcc_versions} {
+    set ver_no_dot [join [split ${ver} "."] ""]
+
+    set variant_line {variant gcc${ver_no_dot} description "build with gfortran from gcc${ver_no_dot}"}
+
+    foreach over ${gcc_versions} {
+        if {${ver} == ${over}} {
+            continue
+        }
+
+        set over_no_dot [join [split ${over} "."] ""]
+        append variant_line " conflicts gcc${over_no_dot}"
+    }
+    append variant_line { {}}
+
+    eval $variant_line
+
+    if {[variant_isset gcc${ver_no_dot}]} {
+        if {${default_fortran_variant} != "+gcc${ver_no_dot}"} {
+            set default_fortran_variant ""
+        }
+    }
+}
+
+if {${default_fortran_variant} != ""} {
+    default_variants-append "${default_fortran_variant}"
+}
+
+foreach ver ${gcc_versions} {
+    set ver_no_dot [join [split ${ver} "."] ""]
+
+    if {[variant_isset gcc${ver_no_dot}]} {
+        depends_lib-append path:lib/libgcc/libgcc_s.1.dylib:libgcc
+        depends_build-append port:gcc${ver_no_dot}
+
+        configure.fc  ${prefix}/bin/gfortran-mp-${ver}
+        configure.f77 ${prefix}/bin/gfortran-mp-${ver}
+        configure.f90 ${prefix}/bin/gfortran-mp-${ver}
+    }
+}
+
+set archflags       [get_canonical_archflags]
+
+depends_lib-append  port:scotch
+
+build.env-append    CC=${configure.cc} \
+                    CXX=${configure.cxx} \
+                    F90=${configure.f90} \
+                    CFLAGS="${configure.cflags} ${archflags}" \
+                    CXXFLAGS="${configure.cxxflags} ${archflags}" \
+                    LDFLAGS="[join ${configure.ldflags}] ${archflags}"
+
+pre-build {
+    copy ${worksrcpath}/config/MAC.in ${worksrcpath}/config.in
+    reinplace "s|-O3|-O3 -fPIC|" ${worksrcpath}/config.in
+    reinplace "s| gcc|\$(CC)|" ${worksrcpath}/config.in
+    reinplace "s| gfortran|\$(F90)|" ${worksrcpath}/config.in
+    reinplace "s| mpicc|${prefix}/bin/openmpicc|" ${worksrcpath}/config.in
+    reinplace "s| mpic++|${prefix}/bin/openmpic++|" ${worksrcpath}/config.in
+    reinplace "s| mpif90|${prefix}/bin/openmpif90|" ${worksrcpath}/config.in
+    reinplace "s|\${HOME}/scotch_5.1/|${prefix}|" ${worksrcpath}/config.in
+}
+
+build.target all install
+
+destroot {
+ eval xinstall -m 755 [glob ${worksrcpath}/../install/bin/*] ${destroot}${prefix}/bin
+ eval xinstall -m 755 [glob ${worksrcpath}/../install/include/*] ${destroot}${prefix}/include
+ eval xinstall -m 755 [glob ${worksrcpath}/../install/lib/*] ${destroot}${prefix}/lib
+}
+
+use_parallel_build no
+
+notes "
+****
+**** ${name} requires port openmpi installed with variant +threads.
+**** Please do the following after installing ${name} :
+****
+****     sudo port install openmpi +threads
+****
+"

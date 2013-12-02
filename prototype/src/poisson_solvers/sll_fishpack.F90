@@ -9,49 +9,58 @@ integer, private :: i, j, k
 
 !> Fishpack solver cartesian 2d
 type, public :: fishpack_2d
-   sll_int32                               :: nc_eta1
-   sll_int32                               :: nc_eta2
-   sll_real64                              :: eta1_min, eta1_max
-   sll_real64                              :: eta2_min, eta2_max
-   sll_real64, allocatable, dimension(:)   :: bda
-   sll_real64, allocatable, dimension(:)   :: bdb
-   sll_real64, allocatable, dimension(:)   :: bdc
-   sll_real64, allocatable, dimension(:)   :: bdd
-   sll_int32                               :: bc_eta1
-   sll_int32                               :: bc_eta2
-   sll_real64                              :: elmbda
-   sll_real64                              :: pertrb
-   sll_int32                               :: error
-   sll_int32                               :: geometry
+   sll_int32                               :: nc_eta1  !< number of cells
+   sll_int32                               :: nc_eta2  !< number of cells
+   sll_real64                              :: eta1_min !< geometry parameter
+   sll_real64                              :: eta1_max !< geometry parameter
+   sll_real64                              :: eta2_min !< geometry parameter
+   sll_real64                              :: eta2_max !< geometry parameter
+   sll_real64, allocatable, dimension(:)   :: bda      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:)   :: bdb      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:)   :: bdc      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:)   :: bdd      !< boundary condition parameter
+   sll_int32                               :: bc_eta1  !< boundary condition parameter
+   sll_int32                               :: bc_eta2  !< boundary condition parameter
+   sll_real64                              :: elmbda   !< fishpack parameter
+   sll_real64                              :: pertrb   !< fishpack parameter
+   sll_int32                               :: error    !< error code
+   sll_int32                               :: geometry !< cartesian or polar
 contains
-   procedure :: initialize => new_2d
-   procedure :: solve => solve_2d
+   !> create the solver
+   procedure :: initialize => new_2d   
+   !> compute the potential
+   procedure :: solve => solve_2d      
 end type fishpack_2d
 
 !> Fishpack solver cartesian 3d
 type, public :: fishpack_3d
-   sll_int32                               :: nc_eta1
-   sll_int32                               :: nc_eta2
-   sll_int32                               :: nc_eta3
-   sll_real64                              :: eta1_min, eta1_max
-   sll_real64                              :: eta2_min, eta2_max
-   sll_real64                              :: eta3_min, eta3_max
-   sll_real64, allocatable, dimension(:,:) :: bda
-   sll_real64, allocatable, dimension(:,:) :: bdb
-   sll_real64, allocatable, dimension(:,:) :: bdc
-   sll_real64, allocatable, dimension(:,:) :: bdd
-   sll_real64, allocatable, dimension(:,:) :: bde
-   sll_real64, allocatable, dimension(:,:) :: bdf
-   sll_int32                               :: bc_eta1
-   sll_int32                               :: bc_eta2
-   sll_int32                               :: bc_eta3
-   sll_real64                              :: elmbda
-   sll_real64                              :: pertrb
-   sll_int32                               :: error
-   sll_int32                               :: geometry
+   sll_int32                               :: nc_eta1  !< number of cells
+   sll_int32                               :: nc_eta2  !< number of cells
+   sll_int32                               :: nc_eta3  !< number of cells
+   sll_real64                              :: eta1_min !< geometry parameter
+   sll_real64                              :: eta1_max !< geometry parameter
+   sll_real64                              :: eta2_min !< geometry parameter
+   sll_real64                              :: eta2_max !< geometry parameter
+   sll_real64                              :: eta3_min !< geometry parameter
+   sll_real64                              :: eta3_max !< geometry parameter
+   sll_real64, allocatable, dimension(:,:) :: bda      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:,:) :: bdb      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:,:) :: bdc      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:,:) :: bdd      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:,:) :: bde      !< boundary condition parameter
+   sll_real64, allocatable, dimension(:,:) :: bdf      !< boundary condition parameter
+   sll_int32                               :: bc_eta1  !< boundary condition parameter
+   sll_int32                               :: bc_eta2  !< boundary condition parameter
+   sll_int32                               :: bc_eta3  !< boundary condition parameter
+   sll_real64                              :: elmbda   !< fishpack parameter
+   sll_real64                              :: pertrb   !< fishpack parameter
+   sll_int32                               :: error    !< fishpack parameter
+   sll_int32                               :: geometry !< cartesian or cylindrical
 contains
-   procedure :: initialize => new_3d
-   procedure :: solve => solve_3d
+   !> create the solver
+   procedure :: initialize => new_3d    
+   !> compute the potential
+   procedure :: solve => solve_3d 
 end type fishpack_3d
 
 enum, bind(C)

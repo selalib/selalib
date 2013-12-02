@@ -22,7 +22,7 @@ module sll_simulation_4d_qns_mixed_module
   use sll_parallel_array_initializer_module
   use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
-  use sll_general_coordinate_qn_solver_module
+  use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
   implicit none
@@ -61,7 +61,7 @@ module sll_simulation_4d_qns_mixed_module
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
      type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
-     type(general_coordinate_qn_solver), pointer           :: qns
+     type(general_coordinate_elliptic_solver), pointer           :: qns
 
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
@@ -276,6 +276,35 @@ contains
     sim%nc_x4 = num_cells_x4
   end subroutine init_4d_qns_mixed
 
+! External functions used as parameters in the above unit test:
+
+
+function func_one( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in) :: params
+  real(8) :: res
+  res = 1.0_8
+end function func_one
+
+function func_minus_one( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in) :: params
+  real(8) :: res
+  res = -1.0_8
+end function func_minus_one
+
+function func_zero( eta1, eta2, params ) result(res)
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  real(8), dimension(:), intent(in) :: params
+  real(8) :: res
+  res = 0.0_8
+end function func_zero
+
+
+
   ! Note that the following function has no local variables, which is silly...
   ! This just happened since the guts of the unit test were transplanted here
   ! directly, but this should be cleaned up.
@@ -356,10 +385,12 @@ contains
     sll_int32 :: global_indices(4)
     sll_int32 :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_2d_base_ptr)                    :: a11_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a21_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a12_field_mat
-    type(sll_scalar_field_2d_base_ptr)                    :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: b1_field_vect
+    class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
@@ -392,43 +423,72 @@ contains
     eta4_max = sim%mesh2d_v%eta2_max
 
     ! continue with the fields
-    a11_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a11_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a11_f, &
          "a11", &
          sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         (/1.0_f64/) ) 
 
-    a12_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         (/0.0_f64/)) 
 
-    a21_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         (/0.0_f64/) )
     
-    a22_field_mat%base => new_scalar_field_2d_analytic_alt( &
+    a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         (/1.0_f64/) ) 
 
     print*, 'finished fields a'
+
+    b1_field_vect => new_scalar_field_2d_analytic_alt( &
+         func_zero, &
+         "b1", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         (/0.0_f64/), &
+         func_zero, &
+         func_zero)
+    
+    b2_field_vect => new_scalar_field_2d_analytic_alt( &
+         func_zero, &
+         "b2", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         (/0.0_f64/), &
+         func_zero, &
+         func_zero) 
+
     c_field => new_scalar_field_2d_analytic_alt( &
          sim%c_f, &
          "c_field", &
@@ -436,14 +496,14 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         (/0.0_f64/) )
 
     print*, 'finished fields c'
     SLL_ALLOCATE(phi_values(nc_x1+1,nc_x2+1),ierr)
     phi_values(:,:) = 0.0_f64
 
     phi => new_scalar_field_2d_discrete_alt( &
-         phi_values, &
          "phi_potential", &
          sim%interp_phi, &
          sim%transfx, &
@@ -451,6 +511,8 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
+    call phi%set_field_data( phi_values )
+    call phi%update_interpolation_coefficients( )
 
     print*, 'finished fields phi'
     buffer_counter = 1
@@ -836,7 +898,6 @@ contains
 
     
     rho => new_scalar_field_2d_discrete_alt( &
-         sim%rho_full - density_tot, &
          "rho_field_qns", &
          sim%interp_rho, &     
          sim%transfx, &
@@ -844,7 +905,8 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top)
-
+    call rho%set_field_data( sim%rho_full )
+    call rho%update_interpolation_coefficients( )
 
     
     if(sim%my_rank == 0) then
@@ -967,13 +1029,13 @@ contains
          NEW_REMAP_PLAN( sim%rho_seq_x2, sim%split_rho_layout,sim%efield_x2 )
 
     ! qns stuff
-    sim%qns => new_general_qn_solver( &
+    sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
          sim%spline_degree_eta2, & 
          sim%mesh2d_x%num_cells1, &
          sim%mesh2d_x%num_cells2, &
-         QNS_GAUSS_LEGENDRE, &  
-         QNS_GAUSS_LEGENDRE, &  
+         ES_GAUSS_LEGENDRE, &  
+         ES_GAUSS_LEGENDRE, &  
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
@@ -983,15 +1045,18 @@ contains
          sim%mesh2d_x%eta2_min, & 
          sim%mesh2d_x%eta2_max ) 
 
-    call factorize_mat_qns(&
+    call factorize_mat_es(&
          sim%qns, & 
          a11_field_mat, &
          a12_field_mat, &
          a21_field_mat, &
          a22_field_mat, &
-         c_field, &
-         rho)
+         b1_field_vect, &
+         b2_field_vect, &
+         c_field )
 
+    !what is this?? is this consistent with the coordinate transformation
+    ! that we have hardcoded here?
     do j=1,nc_x2+1
        do i=1,nc_x1+1
           eta1 = eta1_min + (i-1)*delta1
@@ -1181,7 +1246,8 @@ contains
        
        !ATTENTION TO CHANGES HERE
        print*, 'density', density_tot
-       call rho%update_interpolation_coefficients(sim%rho_full-density_tot)
+       call rho%set_field_data(sim%rho_full)
+       call rho%update_interpolation_coefficients()
        
        do j=1,nc_x2+1 ! pay attention to the +1 ...
           do i=1,nc_x1+1
@@ -1244,7 +1310,7 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
 
-       call solve_qns( &
+       call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )

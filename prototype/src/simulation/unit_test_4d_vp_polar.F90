@@ -63,7 +63,8 @@ program vlasov_poisson_4d_polar
        polar_jac11, &
        polar_jac12, &
        polar_jac21, &
-       polar_jac22 )
+       polar_jac22, &
+       (/ 0.0_f64 /) ) ! this particular transformation is not parametrizable
 
   ! initialize simulation object with the above parameters
   call initialize_vp4d_polar( &

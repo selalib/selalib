@@ -24,7 +24,8 @@ program qns_4d_mixed
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
-  sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
+!  sll_real64, external :: func_zero, func_one, func_minus_one,
+  sll_real64, external ::func_epsi
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -83,12 +84,13 @@ program qns_4d_mixed
   transformation_x => new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
        mx, &
-       sinprod_x1_rect, &
-       sinprod_x1_rect, &
-       sinprod_jac11_rect, &
-       sinprod_jac12_rect, &
-       sinprod_jac21_rect, &
-       sinprod_jac22_rect )
+       sinprod_x1, &
+       sinprod_x1, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22, &
+       (/ 0.1_f64, 0.1_f64, 4*sll_pi, 1.0_f64 /) )
 
   ! collela coordinate transformation for (0,4pi)x (0,4 pi)
 !!$  transformation_x => new_coordinate_transformation_2d_analytic( &
@@ -203,7 +205,7 @@ end program qns_4d_mixed
 
 ! External functions used as parameters in the above unit test:
 
-
+#if 0
 function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
@@ -235,7 +237,7 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8) :: res
   res = 0.0001_8
 end function func_epsi
-
+#endif
 
  
 
