@@ -287,7 +287,11 @@ contains  ! ****************************************************************
   end subroutine delete_qs1d
 
   subroutine set_coefficients_qs1d( interpolator, coeffs )
-    class(quintic_spline_1d_interpolator),  intent(inout) :: interpolator
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator), intent(inout)   :: interpolator
+#else
+    class(quintic_spline_1d_interpolator), intent(inout)  :: interpolator
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_qs1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -296,7 +300,11 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_qs1d(interpolator)
-    class(quintic_spline_1d_interpolator), intent(in) :: interpolator
+#ifdef STDF95
+    type(quintic_spline_1d_interpolator), intent(in)   :: interpolator
+#else
+    class(quintic_spline_1d_interpolator), intent(in)  :: interpolator
+#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_qs1d     
     
     print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &

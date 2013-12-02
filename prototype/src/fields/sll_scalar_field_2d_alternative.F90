@@ -144,7 +144,7 @@ module sll_module_scalar_field_2d_alternative
        sll_real64 :: two_var_parametrizable_function
        sll_real64, intent(in) :: eta1
        sll_real64, intent(in) :: eta2
-       sll_real64, dimension(:), intent(in), optional :: params
+       sll_real64, dimension(:), intent(in) :: params
      end function two_var_parametrizable_function
   end interface
 
@@ -204,7 +204,9 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_pt_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
-       print*,' first derivative in eta1 is not given in the initialization'
+       print*,field%name, &
+            'first_deriv_eta1_value_at_pt_analytic(), ERROR: ', &
+            ': first derivative in eta1 is not given in the initialization'
     end if
 
   end function first_deriv_eta1_value_at_pt_analytic
@@ -219,7 +221,9 @@ contains   ! *****************************************************************
        first_deriv_eta2_value_at_pt_analytic = &
             field%first_deriv_eta2(eta1,eta2,field%params)
     else 
-       print*,' first derivative in eta2 is not given in the initialization'
+       print*, field%name, &
+            'first_deriv_eta2_value_at_pt_analytic(), ERROR: ', &
+            ': first derivative in eta2 is not given in the initialization'
     end if
     
   end function first_deriv_eta2_value_at_pt_analytic
@@ -239,7 +243,9 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_index_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
-       print*,' first derivative in eta1 is not given in the initialization'
+       print*,field%name, &
+            'first_deriv_eta1_value_at_index_analytic(): ERROR, ', &
+            'first derivative in eta1 is not given in the initialization'
     end if
     
   end function first_deriv_eta1_value_at_index_analytic
@@ -310,15 +316,15 @@ contains   ! *****************************************************************
     
     type(sll_scalar_field_2d_analytic_alt), pointer :: obj
     procedure(two_var_parametrizable_function)      :: func
-    procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
-    procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
     character(len=*), intent(in)                    :: field_name
-    sll_real64, dimension(:), intent(in), optional, target :: func_params
     class(sll_coordinate_transformation_2d_base), target :: transformation
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
+    sll_real64, dimension(:), intent(in) :: func_params
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
     sll_int32  :: ierr
  
     SLL_ALLOCATE(obj,ierr)
@@ -373,21 +379,23 @@ contains   ! *****************************************************************
     first_deriv_eta2)
 
     class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
-    procedure(two_var_parametrizable_function)      :: func
-    procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
-    procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
-    character(len=*), intent(in)                    :: field_name
-    sll_real64, dimension(:), intent(in), optional, target :: func_params
+    procedure(two_var_parametrizable_function)           :: func
+    character(len=*), intent(in)                         :: field_name
     class(sll_coordinate_transformation_2d_base), target :: transformation
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
     sll_int32, intent(in) :: bc_top
+    sll_real64, dimension(:), intent(in)  :: func_params
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta1
+    procedure(two_var_parametrizable_function), optional :: first_deriv_eta2
+    sll_int32 :: ierr
  
     field%T => transformation
     !    field%mesh%written = .false.
     field%func      => func
-    if (present(func_params)) field%params    => func_params   
+    SLL_ALLOCATE(field%params(size(func_params)),ierr)
+    field%params(:) = func_params
     field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right

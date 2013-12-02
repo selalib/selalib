@@ -93,7 +93,7 @@ PROGRAM main
      READ(args,*) dof
   ELSE
      IF (me == 0) THEN
-	PRINT *, "Usage: ./Murge-Fortran <size> <DofNumber>"
+   PRINT *, "Usage: ./Murge-Fortran <size> <DofNumber>"
      END IF
      CALL Abort()
   END IF
@@ -148,12 +148,12 @@ PROGRAM main
 
      ! Interior
      DO i = 2, n-1
-	DO j = -1,1
-	   CALL MURGE_GRAPHEDGE(id, i, i+j, ierr)
-	   !IF (j /= 0) THEN
-	   !CALL MURGE_GRAPHEDGE(id, j+i, i, ierr)
-	   !END IF
-	END DO
+   DO j = -1,1
+      CALL MURGE_GRAPHEDGE(id, i, i+j, ierr)
+      !IF (j /= 0) THEN
+      !CALL MURGE_GRAPHEDGE(id, j+i, i, ierr)
+      !END IF
+   END DO
      END DO
   ELSE
      edgenbr = 0
@@ -178,13 +178,13 @@ PROGRAM main
   DO m = 1, localnodenbr
      i = nodelist(m)
      IF (i == 1 .OR. i == n) THEN
-	! Boundaries
-	nnzeros = nnzeros + 1
+   ! Boundaries
+   nnzeros = nnzeros + 1
      ELSE
-	! Interior
-	DO k = -1, 1
-	   nnzeros = nnzeros + 1
-	END DO
+   ! Interior
+   DO k = -1, 1
+      nnzeros = nnzeros + 1
+   END DO
      END IF
   END DO
 
@@ -203,9 +203,9 @@ PROGRAM main
   expand = 0.
   DO i = 1,dof
      DO j = 1,dof
-	IF (i == j) expand(k) = 1.
+   IF (i == j) expand(k) = 1.
 !        expand(k)= k
-	k = k + 1
+   k = k + 1
      END DO
   END DO
 
@@ -218,16 +218,16 @@ PROGRAM main
   DO m = 1, localnodenbr
      i = nodelist(m)
      IF (i == 1 .OR. i == n) THEN
-	! Boundaries
-	CALL GetCoef(val,i,i,xmin,xmax,n)
-	CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i, val*expand, ierr)
-	!print *, i, i, val*expand
+   ! Boundaries
+   CALL GetCoef(val,i,i,xmin,xmax,n)
+   CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i, val*expand, ierr)
+   !print *, i, i, val*expand
      ELSE
-	DO k = -1,1
-	   CALL GetCoef(val,i+k,i,xmin,xmax,n)
-	   CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i+k, val*expand, ierr)
-	   !print *, i, i+k, val*expand
-	END DO
+   DO k = -1,1
+      CALL GetCoef(val,i+k,i,xmin,xmax,n)
+      CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i+k, val*expand, ierr)
+      !print *, i, i+k, val*expand
+   END DO
      END IF
   END DO
   !$OMP END DO
@@ -245,22 +245,22 @@ PROGRAM main
      globrhs((nodelist(m)-1)*dof+1:(nodelist(m)-1)*dof+dof) = val
      lrhs(k:k+dof-1) = val
      DO l = 1, dof
-	!print *, "rhs", (nodelist(m)-1)*dof+l, lrhs((m-1)*dof+l)
+   !print *, "rhs", (nodelist(m)-1)*dof+l, lrhs((m-1)*dof+l)
      END DO
      k = k + dof
   END DO
   ALLOCATE(globrhs_recv(n*dof))
   if (.false.) then ! .false.will be replaced during compilation by replaceCOEF.sh
      if (MURGE_COEF_KIND==4) then
-	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
+   CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
      else
-	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
+   CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
      end if
   else
      if (MURGE_COEF_KIND==4) then
-	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_REAL, MPI_SUM, MPI_COMM_WORLD, ierr)
+   CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_REAL, MPI_SUM, MPI_COMM_WORLD, ierr)
      else
-	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+   CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
      end if
   end if
   DEALLOCATE(globrhs)
@@ -318,11 +318,11 @@ CONTAINS
 
     IF (i==j) THEN
        IF (i==1 .OR. i == n) THEN
-	  ! Boundary Condition (Dirichlet)
-	  val = 1
+     ! Boundary Condition (Dirichlet)
+     val = 1
        ELSE
-	  ! Interior diagonnal part
-	  val = -2 * dx_1
+     ! Interior diagonnal part
+     val = -2 * dx_1
        END IF
     ELSE
        val = dx_1

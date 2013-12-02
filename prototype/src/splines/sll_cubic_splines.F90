@@ -879,6 +879,9 @@ contains  ! ****************************************************************
     ! find the cell and offset for x
     do i=1,n
        x        = a_in(i)
+       if(.not.( (x .ge. spline%xmin) .and. (x .le. spline%xmax) ))then
+         print*, 'splines', x,  spline%xmin, spline%xmax
+      endif
        !print*, 'splines', x,  spline%xmin, spline%xmax
        SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
        t0       = (x-spline%xmin)*rh

@@ -57,7 +57,7 @@ module sll_module_scalar_field_1d_base
      function function_evaluation_real( field, eta ) result(res)
        use sll_working_precision
        import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(in) :: field
+       class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_real64, intent(in) :: eta
        sll_real64             :: res
      end function function_evaluation_real
@@ -67,7 +67,7 @@ module sll_module_scalar_field_1d_base
      function function_evaluation_integer_1d( field, i ) result(res)
        use sll_working_precision
        import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(in) :: field
+       class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_int32, intent(in)  :: i
        sll_real64             :: res
      end function function_evaluation_integer_1d
@@ -77,7 +77,7 @@ module sll_module_scalar_field_1d_base
      function derivative_evaluation_real( field, eta ) result(res)
        use sll_working_precision
        import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(in) :: field
+       class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_real64, intent(in) :: eta
        sll_real64             :: res
      end function derivative_evaluation_real
@@ -88,7 +88,7 @@ module sll_module_scalar_field_1d_base
      function derivative_evaluation_integer( field, i) result(res)
        use sll_working_precision
        import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(in) :: field
+       class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_int32, intent(in)  :: i
        sll_real64             :: res
      end function derivative_evaluation_integer
@@ -109,7 +109,7 @@ module sll_module_scalar_field_1d_base
      subroutine field_1d_file_output( field, tag )
        use sll_working_precision
        import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(in) :: field
+       class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_int32, intent(in)                       :: tag
      end subroutine field_1d_file_output
   end interface

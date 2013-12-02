@@ -130,23 +130,23 @@ contains   ! *****************************************************************
   
 
   function value_at_pt_analytic( field, eta )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             ::  value_at_pt_analytic
     value_at_pt_analytic = field%func(eta, field%params)
   end function value_at_pt_analytic
 
   function value_at_index_analytic( field, i )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: value_at_index_analytic
-    eta = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
+    eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     value_at_index_analytic = field%func(eta, field%params)
   end function value_at_index_analytic
 
   function derivative_value_at_pt_analytic( field, eta)
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_analytic
     
@@ -161,12 +161,12 @@ contains   ! *****************************************************************
 
   
   function derivative_value_at_index_analytic( field, i)
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: derivative_value_at_index_analytic
     
-    eta = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
+    eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     
     if ( field%present_derivative ) then 
        derivative_value_at_index_analytic = &
@@ -289,7 +289,7 @@ contains   ! *****************************************************************
 
 
   subroutine write_to_file_analytic_1d( field, tag )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
@@ -302,7 +302,7 @@ contains   ! *****************************************************************
     ! domain and allocate the arrays for the plotter.
     !mesh   => field%get_logical_mesh()
     !print*, 'passed'
-    nptsx = field%mesh%num_cells1 + 1
+    nptsx = field%mesh%num_cells + 1
 
     !print*, 'passed',nptsx
     SLL_ALLOCATE(xcoords(nptsx),ierr)
@@ -310,7 +310,7 @@ contains   ! *****************************************************************
     ! print*, 'passed'
     ! Fill the arrays with the needed information.
     do i=1, nptsx
-       eta = field%mesh%eta1_min + (i-1)*field%mesh%delta_eta1
+       eta = field%mesh%eta_min + (i-1)*field%mesh%delta_eta
        xcoords(i) =  eta
        values(i)   = field%value_at_point(eta)*tag
     end do
@@ -402,7 +402,7 @@ contains   ! *****************************************************************
     field%mesh      => mesh
 
     !SLL_ALLOCATE(point(sz_point),ierr)
-    SLL_ALLOCATE(field%values(field%mesh%num_cells1+1),ierr)
+    SLL_ALLOCATE(field%values(field%mesh%num_cells+1),ierr)
     
     if ( present( point_1d) .and. present(sz_point)) then
        print*, ' not implemented yet in initialize_scalar_field_1d_discrete_alt'
@@ -459,7 +459,7 @@ contains   ! *****************************************************************
   end function get_logical_mesh_1d_discrete_alt
 
   function value_at_pt_discrete( field, eta)
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: value_at_pt_discrete
     
@@ -467,16 +467,16 @@ contains   ! *****************************************************************
   end function value_at_pt_discrete
   
   function value_at_index_discrete_1d( field, i )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: value_at_index_discrete_1d
-    eta = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
+    eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
   end function value_at_index_discrete_1d
   
   function derivative_value_at_pt_discrete( field, eta )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
     sll_real64             :: derivative_value_at_pt_discrete
     
@@ -485,17 +485,17 @@ contains   ! *****************************************************************
   end function derivative_value_at_pt_discrete
   
   function derivative_value_at_index_discrete( field, i )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
     sll_real64            :: derivative_value_at_index_discrete
-    eta = field%mesh%eta1_min + real(i-1,f64)*field%mesh%delta_eta1
+    eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     derivative_value_at_index_discrete = &
          field%interp_1d%interpolate_derivative_eta1(eta)
   end function derivative_value_at_index_discrete
 
   subroutine write_to_file_discrete_1d( field, tag )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
@@ -508,14 +508,14 @@ contains   ! *****************************************************************
     ! use the logical mesh information to find out the extent of the
     ! domain and allocate the arrays for the plotter.
     mesh   => field%get_logical_mesh()
-    nptsx = mesh%num_cells1 + 1
+    nptsx = mesh%num_cells + 1
 
     SLL_ALLOCATE(xcoords(nptsx),ierr)
     SLL_ALLOCATE(values(nptsx),ierr)
     
     ! Fill the arrays with the needed information.
     do i=1, nptsx
-       eta = mesh%eta1_min + (i-1)*mesh%delta_eta1
+       eta = mesh%eta_min + (i-1)*mesh%delta_eta
        xcoords(i)  = eta!field%x(eta)
        values(i)   = field%value_at_point(eta)*tag
     end do

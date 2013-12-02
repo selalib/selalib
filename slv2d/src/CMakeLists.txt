@@ -1,4 +1,4 @@
-SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build, options are: Debug Release." )
 
 IF(OPTIONS_FILE)
 INCLUDE(${OPTIONS_FILE})
@@ -32,9 +32,9 @@ IF(ENABLE_PERF)
   LINK_LIBRARIES("${PERF_LIBRARIES} -lstdc++")
 ENDIF(ENABLE_PERF)
 
-MESSAGE(STATUS "SLV2D:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 INCLUDE(F90FLAGS)
-MESSAGE(STATUS "SLV2D:CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:CMAKE_Fortran_FLAGS:${CMAKE_Fortran_FLAGS}")
 
 IF(NOT LAPACK_FOUND)
    INCLUDE(${SLL_SOURCE_DIR}/CMakeModules/LapackConfig.cmake)
@@ -82,11 +82,12 @@ SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
+
 IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
-   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
-                    ${CMAKE_BINARY_DIR}/package)
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
                     ${CMAKE_BINARY_DIR}/dfftpack)
+   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
+                    ${CMAKE_BINARY_DIR}/package)
 ENDIF()
 
 SET(SLV2D_SRC silo_module.F90
@@ -108,13 +109,92 @@ SET(SLV2D_SRC silo_module.F90
               vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
+ADD_DEPENDENCIES(slv2d fftpack selalib)
 
-ADD_DEPENDENCIES(slv2d selalib dfftpack)
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:SILO_LIBRARIES:${SILO_LIBRARIES}")
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
+
+SET(SLV2D_CSL2D_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              csl2dpp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_csl2d.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_csl2d STATIC ${SLV2D_CSL2D_SRC})
+
+ADD_DEPENDENCIES(slv2d_csl2d selalib-mpi dfftpack)
+
+
+SET(SLV2D_NON_UNIF_V_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              interp_non_unif_pp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_non_unif_v.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_non_unif_v STATIC ${SLV2D_NON_UNIF_V_SRC})
+
+ADD_DEPENDENCIES(slv2d_non_unif_v selalib-mpi dfftpack)
+
+
+SET(SLV2D_DK_SRC silo_module.F90
+              diagnostiques.F90
+              geometry.F90
+              maxwell2dfdtd.F90
+              poisson2dpp_seq.F90
+              fft_module.F90
+              poisson2d_periodic.F90
+              precision.F90
+              splinenn.F90
+              splinepp.F90
+              splinepx.F90
+              splinepy.F90
+              transpose.F90
+              vlasov1d.F90
+              vlasov2d_dk.F90 
+              sll_vlasov4d.F90
+              vlasov4d_plot.F90)
+
+ADD_LIBRARY(slv2d_dk STATIC ${SLV2D_DK_SRC})
+
+ADD_DEPENDENCIES(slv2d_dk selalib-mpi dfftpack)
+
+
+
+
 
 MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 MESSAGE(STATUS "SLV2D:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
+
 SET(LIBS selalib 
          ${SILO_LIBRARIES} 
          ${FFTPACK_LIBRARIES} 
@@ -124,6 +204,18 @@ SET(LIBS selalib
 ADD_EXECUTABLE(vp4d_transpose vp4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vp4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
 
+ADD_EXECUTABLE(vp4d_csl2d vp4d_csl2d.F90)
+TARGET_LINK_LIBRARIES(vp4d_csl2d slv2d_csl2d ${LIBS} ${LAPACK_LIBRARIES})
+
+
+ADD_EXECUTABLE(vp4d_dk vp4d_dk.F90)
+TARGET_LINK_LIBRARIES(vp4d_dk slv2d_dk ${LIBS} ${LAPACK_LIBRARIES})
+
+
+ADD_EXECUTABLE(vp2d_keen_non_unif_v vp2d_keen_non_unif_v.F90)
+TARGET_LINK_LIBRARIES(vp2d_keen_non_unif_v slv2d_non_unif_v ${LIBS} ${LAPACK_LIBRARIES})
+
+
 ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vm4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
 
@@ -132,38 +224,6 @@ TARGET_LINK_LIBRARIES(vp4d_transpose_cubic slv2d ${LIBS})
 
 ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90)
 TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS} ${LAPACK_LIBRARIES})
-
-IF (FFTW_FOUND) 
-
-   ADD_LIBRARY(sll_vlasov4d STATIC sll_vlasov4d_spectral.F90
-                                   sll_vlasov4d_maxwell.F90
-                                   sll_vlasov4d_poisson.F90
-                                   sll_vlasov4d_base.F90)
-
-   ADD_DEPENDENCIES(sll_vlasov4d slv2d)
-                              
-   #ADD_EXECUTABLE(fftw_solver fftw_solver.F90)
-   #TARGET_LINK_LIBRARIES(fftw_solver ${LIBS})
-
-   ADD_EXECUTABLE(vp4d          vp4d_remapper.F90)
-   ADD_EXECUTABLE(vm4d          vm4d_remapper.F90)
-   ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90)
-
-   TARGET_LINK_LIBRARIES(vp4d          sll_vlasov4d slv2d ${LIBS})
-   TARGET_LINK_LIBRARIES(vm4d          sll_vlasov4d slv2d ${LIBS})
-   TARGET_LINK_LIBRARIES(vm4d_spectral sll_vlasov4d slv2d ${LIBS})
-
-   #IF(FFTW_MPI_LIBRARY)
-   #
-   #   ADD_EXECUTABLE(test_fftw_mpi test_fftw_mpi.F90 fftw3.F90)
-   #   TARGET_LINK_LIBRARIES(test_fftw_mpi ${FFTW_LIBRARIES})
-   #   ADD_EXECUTABLE(fftw_solver_mpi fftw_solver_mpi.F90 fftw3.F90)
-   #   TARGET_LINK_LIBRARIES(fftw_solver_mpi selalib ${FFTW_LIBRARIES})
-   #
-   #ENDIF()
-
-
-ENDIF()
 
 ENABLE_TESTING()
 

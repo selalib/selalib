@@ -23,6 +23,8 @@ module sll_fdistribu4d_DK
 
   implicit none
 
+  sll_real64, dimension(1) :: whatever  ! dummy params array
+
   contains
 
   !---------------------------------------- 
@@ -237,7 +239,7 @@ module sll_fdistribu4d_DK
       do ix = 1,Npt1
         x = xgrid_2d(ix,iy)
         y = ygrid_2d(ix,iy)
-        r = polar_eta1(x,y)
+        r = polar_eta1(x,y,(/0.0_f64/)) ! params doesn't matter for polar_eta1 
         r = min(max(r,r_grid(1)),r_grid(Nr))
         func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
@@ -284,9 +286,9 @@ module sll_fdistribu4d_DK
       do ix = 1,Npt1
         x     = xgrid_2d(ix,iy)
         y     = ygrid_2d(ix,iy)
-        r     = polar_eta1(x,y)
+        r     = polar_eta1(x,y,whatever)
         r     = min(max(r,r_grid(1)),r_grid(Nr))
-        theta = polar_eta2(x,y)
+        theta = polar_eta2(x,y,whatever)
         theta = modulo(theta,2._f64*sll_pi)
         func_xy(ix,iy) = interpolate_value_2D(r,theta,sp2d_rtheta)
       end do

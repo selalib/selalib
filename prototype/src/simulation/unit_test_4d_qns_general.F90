@@ -25,6 +25,12 @@ program qns_4d_general
   sll_real64, dimension(1:8) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
   sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
+  sll_real64, dimension(1) :: f_zero_params
+  sll_real64, dimension(1) :: f_one_params
+  sll_real64, dimension(1) :: f_minus_one_params
+  sll_real64, dimension(1) :: f_epsi_params
+
+
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
 
@@ -32,9 +38,16 @@ program qns_4d_general
   ! argument.
   call getarg(1, filename)
   filename_local = trim(filename)
+  
+  f_zero_params(:) = (/0.0_f64/)
+  f_one_params(:) = (/0.0_f64/)
+  f_minus_one_params(:) = (/0.0_f64/)
+  f_epsi_params(:) = (/0.0_f64/)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
+
+
   
   call simulation%init_from_file(filename_local)
   
@@ -74,7 +87,8 @@ program qns_4d_general
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/ 0.0_f64 /) )
 
   ! define the values of the parameters for the landau initializer
 !!!!! sll_landau_initializer_4d
@@ -108,12 +122,19 @@ program qns_4d_general
        sll_landau_initializer_4d,&! sll_periodic_periodic_gaussian2002_initializer_4d, &
        landau_params, &
        func_one,  &
+       f_one_params, &
        func_zero, &
+       f_zero_params, &
        func_zero, &
+       f_zero_params, &
        func_one,  &
+       f_one_params, &
        func_zero, &
+       f_zero_params, &
        func_zero, &
+       f_zero_params, &
        func_zero, &
+       f_zero_params, &
        SPL_DEG1, & 
        SPL_DEG2, & 
        SLL_PERIODIC, &
@@ -154,7 +175,7 @@ end program qns_4d_general
 function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 1.0_8
 end function func_one
@@ -162,7 +183,7 @@ end function func_one
 function func_minus_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = -1.0_8
 end function func_minus_one
@@ -170,7 +191,7 @@ end function func_minus_one
 function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 0.0_8
 end function func_zero
@@ -179,7 +200,7 @@ end function func_zero
 function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta1
   real(8), intent(in) :: eta2
-  real(8), dimension(:), intent(in), optional :: params
+  real(8), dimension(:), intent(in) :: params
   real(8) :: res
   res = 0.00001_8
 end function func_epsi

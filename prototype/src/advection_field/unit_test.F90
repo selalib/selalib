@@ -26,15 +26,17 @@ program unit_test
   type(scalar_field_1d)                        :: phi_self
   character(len=32)                            :: name = 'adv_field'
 
-  type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  type(cubic_spline_1d_interpolator), target  :: interp_eta2
-
-
+  type(cubic_spline_1d_interpolator), target   :: interp_eta1
+  type(cubic_spline_1d_interpolator), target   :: interp_eta2
+  sll_real64, dimension(4)                     :: affine_map_params
+  sll_real64, dimension(2)                     :: linear_map_params
   sll_int32                                    :: ix
   sll_int32, parameter                         :: NODE_CENTERED_FIELD_COPY = 0
 
   nc_eta1 = 100
   nc_eta2 = 100
+
+  affine_map_params(:) = (/-1.0_f64, 1.0_f64, -1.0_f64, 1.0_f64/)
 
   print*, 'initialization of mesh'
   mesh2d => new_logical_mesh_2d( &
@@ -49,7 +51,8 @@ program unit_test
        affine_jac11, &
        affine_jac12, &
        affine_jac21, &
-       affine_jac22 )
+       affine_jac22, &
+       affine_map_params )
 
 
   ! Set up the interpolators for the field
@@ -72,12 +75,15 @@ program unit_test
        eta1_interpolator=interp_eta1_ptr, &
        eta2_interpolator=interp_eta2_ptr )
   
+  linear_map_params(:) = (/-1.0_f64,1.0_f64/)
+
   print*, 'define 1d mesh in x for potential'
   call mesh1d%initialize( &
        "mesh1d",  &
        nc_eta1+1, &
-       linear_map_f,        &
-       linear_map_jac_f )
+       linear_map_f,      &
+       linear_map_jac_f,  &
+       linear_map_params )
   pm1d => mesh1d
 
   print*, 'initialization of 1D potential'

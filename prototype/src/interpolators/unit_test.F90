@@ -13,11 +13,15 @@ implicit none
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
   sll_real64, dimension(:), allocatable      :: x1_eta1_max
-
+  sll_real64, dimension(2) :: params ! for the transformation
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
 
+#define RMIN 0.1_f64
+#define RMAX 1.0_f64
+
+  params(:) = (/RMIN,RMAX/)
 
   print *,  'filling out discrete arrays for x1 '
   h1 = 1.0_f64/real(NPTS1-1,f64)
@@ -32,18 +36,18 @@ implicit none
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
-        x1(i+1,j+1)   = x1_polar_f(eta1,eta2) 
+        x1(i+1,j+1)   = x1_polar_f(eta1,eta2,params) 
      end do
   end do
   print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
-  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
+  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64,params)
   ! Fill out the transformation's slopes at the borders
   do j=0,NPTS2-1
      eta1           = 0.0_f64
      eta2           = real(j,f64)*h2
-     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
+     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
      eta1           = 1.0_f64
-     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
+     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
   end do
 
   ! Test the 2D transformation:
@@ -85,21 +89,21 @@ implicit none
 #else
         node_val   = cs2d%interpolate_value(eta1,eta2)
 #endif
-        ref        = x1_polar_f(eta1,eta2)
+        ref        = x1_polar_f(eta1,eta2,params)
         acc        = acc + abs(node_val-ref)
 #ifdef STDF95
         deriv1_val = cubic_spline_2d_interpolate_derivative_eta1(cs2d,eta1,eta2)
 #else
         deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
 #endif
-        ref        = deriv_x1_polar_f_eta1(eta1,eta2)
+        ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
         acc1       = acc1 + abs(deriv1_val-ref)
 #ifdef STDF95
         deriv2_val = cubic_spline_2d_interpolate_derivative_eta2(cs2d,eta1,eta2)
 #else
         deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
 #endif
-        ref        = deriv_x1_polar_f_eta2(eta1,eta2)
+        ref        = deriv_x1_polar_f_eta2(eta1,eta2,params)
         acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do

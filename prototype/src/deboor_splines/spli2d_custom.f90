@@ -43,15 +43,28 @@ subroutine spli2d_custom ( &
      apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
      apr_tx ( ai_nx + 1 : ai_nx + ai_kx ) = apr_taux ( ai_nx )
      
-     do li_i = ai_kx + 1, ai_nx
-        apr_tx ( li_i ) = apr_taux ( 2 ) + &
-             (li_i-(ai_kx + 1))*&
-             ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+!!$     do li_i = ai_kx + 1, ai_nx
+!!$        apr_tx ( li_i ) = apr_taux ( 2 ) + &
+!!$             (li_i-(ai_kx + 1))*&
+!!$             ( apr_taux ( ai_nx-1 ) - apr_taux ( 2 ) ) / (ai_nx-(ai_kx + 1))
+!!$        
+!!$     end do
+     if ( mod(ai_kx,2) == 0 ) then
+        do li_i = ai_kx + 1, ai_nx
+           apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
+           
+        end do
+     else
         
-     end do
-
-  apr_Bcoef = 0.0_8
-  do li_i = 1, ai_nx
+        do li_i = ai_kx + 1, ai_nx
+           apr_tx ( li_i ) = &
+                0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
+        
+        end do
+     
+     end if
+     apr_Bcoef = 0.0_8
+     do li_i = 1, ai_nx
      do li_j = 1, ai_ny
         apr_Bcoef ( li_i, li_j ) = apr_g ( li_i, li_j )
      end do
@@ -76,11 +89,26 @@ subroutine spli2d_custom ( &
      apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )		
      
 
-     do li_j = ai_ky + 1, ai_ny
-        apr_ty ( li_j ) = apr_tauy ( 2 ) +&
-             (li_j-(ai_ky + 1))*&
-             ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
-     end do
+!!$     do li_j = ai_ky + 1, ai_ny
+!!$        apr_ty ( li_j ) = apr_tauy ( 2 ) +&
+!!$             (li_j-(ai_ky + 1))*&
+!!$             ( apr_tauy ( ai_ny -1) - apr_tauy ( 2 ) ) / (ai_ny-(ai_ky + 1))
+!!$     end do
+
+     if ( mod(ai_ky,2) == 0 ) then
+        do li_i = ai_ky + 1, ai_ny
+           apr_ty ( li_i ) = apr_tauy ( li_i - ai_ky/2 ) 
+           
+        end do
+     else
+        
+        do li_i = ai_ky + 1, ai_ny
+           apr_ty ( li_i ) = &
+                0.5*( apr_tauy ( li_i - (ai_ky-1)/2 ) + apr_tauy ( li_i -1 - (ai_ky-1)/2 ) )
+        
+        end do
+     
+     end if
  ! else 
   !   call splopt ( apr_tauy,ai_ny, ai_ky, scrtch1, apr_ty, iflag1 )
  ! end if

@@ -70,11 +70,12 @@ module sll_module_mapped_meshes_2d
 #ifdef STDF95
 #else
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
-     procedure(two_arg_scalar_function), pointer, nopass    :: x1_func  ! user
-     procedure(two_arg_scalar_function), pointer, nopass    :: x2_func  ! user
+     procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
+     procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
      procedure(two_arg_message_passing_func_analyt), pointer, pass :: &
           jacobian_func
      procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
+     sll_real64, dimension(:), pointer :: params
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_2d_analytic
      ! Functions with integer arguments
@@ -206,7 +207,7 @@ module sll_module_mapped_meshes_2d
   ! functions. But since fortran does not allow arrays of pointers, here
   ! we define a special type that can be used as an array element.
   type jacobian_matrix_element
-     procedure(two_arg_scalar_function), pointer, nopass :: f
+     procedure(transformation_func_nopass), pointer, nopass :: f
   end type jacobian_matrix_element
 #endif
   
@@ -236,7 +237,9 @@ contains
     j11_func,       &
     j12_func,       &
     j21_func,       &
-    j22_func )
+    j22_func,       &
+    params )
+
     type(sll_mapped_mesh_2d_analytic), pointer :: new_mesh_2d_analytic
     character(len=*), intent(in)                  :: label
     sll_int32, intent(in)                         :: npts1
@@ -249,13 +252,14 @@ contains
     sll_real64            :: j21_func
     sll_real64            :: j22_func
 #else
-    procedure(two_arg_scalar_function)            :: x1_func
-    procedure(two_arg_scalar_function)            :: x2_func
-    procedure(two_arg_scalar_function)            :: j11_func
-    procedure(two_arg_scalar_function)            :: j12_func
-    procedure(two_arg_scalar_function)            :: j21_func
-    procedure(two_arg_scalar_function)            :: j22_func
+    procedure(transformation_func_nopass)            :: x1_func
+    procedure(transformation_func_nopass)            :: x2_func
+    procedure(transformation_func_nopass)            :: j11_func
+    procedure(transformation_func_nopass)            :: j12_func
+    procedure(transformation_func_nopass)            :: j21_func
+    procedure(transformation_func_nopass)            :: j22_func
 #endif
+    sll_real64, dimension(:), intent(in) :: params
     sll_int32 :: ierr
 
     SLL_ALLOCATE(new_mesh_2d_analytic, ierr)
@@ -269,7 +273,8 @@ contains
          j11_func,       &
          j12_func,       &
          j21_func,       &
-         j22_func )
+         j22_func,       &
+         params )
   end function new_mesh_2d_analytic
 
   subroutine initialize_mesh_2d_analytic( &
@@ -282,7 +287,8 @@ contains
     j11_func,       &
     j12_func,       &
     j21_func,       &
-    j22_func )
+    j22_func,       &
+    params )
 
 #ifdef STDF95
     type(sll_mapped_mesh_2d_analytic), intent(inout) :: mesh
@@ -299,15 +305,16 @@ contains
     sll_real64            :: j12_func
     sll_real64            :: j21_func
     sll_real64            :: j22_func
-#else
-    procedure(two_arg_scalar_function)            :: x1_func
-    procedure(two_arg_scalar_function)            :: x2_func
-    procedure(two_arg_scalar_function)            :: j11_func
-    procedure(two_arg_scalar_function)            :: j12_func
-    procedure(two_arg_scalar_function)            :: j21_func
-    procedure(two_arg_scalar_function)            :: j22_func
-#endif
 
+#else
+    procedure(transformation_func_nopass)            :: x1_func
+    procedure(transformation_func_nopass)            :: x2_func
+    procedure(transformation_func_nopass)            :: j11_func
+    procedure(transformation_func_nopass)            :: j12_func
+    procedure(transformation_func_nopass)            :: j21_func
+    procedure(transformation_func_nopass)            :: j22_func
+#endif
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: delta_2  ! cell spacing in eta2 
     sll_real64 :: eta_1
@@ -324,6 +331,9 @@ contains
     delta_2       = 1.0_f64/(npts2 - 1)
     mesh%delta_eta1   = delta_1
     mesh%delta_eta2   = delta_2
+
+    SLL_ALLOCATE(mesh%params(size(params)),ierr)
+    mesh%params(:) = params(:)
 
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1,npts2), ierr)
@@ -361,8 +371,8 @@ contains
        eta_2 = real(j,f64)*delta_2
        do i=0, npts1 - 1
           eta_1 = real(i,f64)*delta_1
-          mesh%x1_node(i+1,j+1) = x1_func(eta_1, eta_2)
-          mesh%x2_node(i+1,j+1) = x2_func(eta_1, eta_2)
+          mesh%x1_node(i+1,j+1) = x1_func(eta_1, eta_2, params)
+          mesh%x2_node(i+1,j+1) = x2_func(eta_1, eta_2, params)
           ! for some compiler reason, the following intermediate 
           ! variable is required, else the jacobians_n array will not
           ! be filled out properly.
@@ -383,11 +393,13 @@ contains
        eta_2 = delta_2*(real(j,f64) + 0.5_f64)
        do i=0, npts1 - 2
           eta_1 = delta_1*(real(i,f64) + 0.5_f64)
-          mesh%x1_cell(i+1,j+1)     = x1_func(eta_1, eta_2)
-          mesh%x2_cell(i+1,j+1)     = x2_func(eta_1, eta_2)
+          mesh%x1_cell(i+1,j+1)     = x1_func(eta_1, eta_2, params)
+          mesh%x2_cell(i+1,j+1)     = x2_func(eta_1, eta_2, params)
 #ifdef STDF95
-          mesh%jacobians_c(i+1,j+1) = j11_func(eta_1,eta_2)*j22_func(eta_1,eta_2) &
-                                  - j12_func(eta_1,eta_2)*j21_func(eta_1,eta_2)
+          mesh%jacobians_c(i+1,j+1) = j11_func(eta_1, eta_2, params)*&
+                                      j22_func(eta_1, eta_2, params)-&
+                                      j12_func(eta_1, eta_2, params)*&
+                                      j21_func(eta_1, eta_2, params)
 #else
           mesh%jacobians_c(i+1,j+1) = mesh%jacobian_func(eta_1,eta_2)
 #endif
@@ -406,10 +418,10 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-    j11 = (mesh%j_matrix(1,1)%f( eta1, eta2 ))
-    j12 = (mesh%j_matrix(1,2)%f( eta1, eta2 ))
-    j21 = (mesh%j_matrix(2,1)%f( eta1, eta2 ))
-    j22 = (mesh%j_matrix(2,2)%f( eta1, eta2 ))
+    j11 = (mesh%j_matrix(1,1)%f( eta1, eta2, mesh%params ))
+    j12 = (mesh%j_matrix(1,2)%f( eta1, eta2, mesh%params ))
+    j21 = (mesh%j_matrix(2,1)%f( eta1, eta2, mesh%params ))
+    j22 = (mesh%j_matrix(2,2)%f( eta1, eta2, mesh%params ))
     ! For debugging:
     !    print *, 'jacobian_2d_analytic: '
     !    print *, j11, j12
@@ -429,10 +441,10 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-    j11 = (mesh%j_matrix(1,1)%f( eta1, eta2 ))
-    j12 = (mesh%j_matrix(1,2)%f( eta1, eta2 ))
-    j21 = (mesh%j_matrix(2,1)%f( eta1, eta2 ))
-    j22 = (mesh%j_matrix(2,2)%f( eta1, eta2 ))
+    j11 = (mesh%j_matrix(1,1)%f( eta1, eta2, mesh%params ))
+    j12 = (mesh%j_matrix(1,2)%f( eta1, eta2, mesh%params ))
+    j21 = (mesh%j_matrix(2,1)%f( eta1, eta2, mesh%params ))
+    j22 = (mesh%j_matrix(2,2)%f( eta1, eta2, mesh%params ))
     ! For debugging:
     !    print *, 'jacobian_2d_analytic: '
     !    print *, j11, j12
@@ -455,10 +467,10 @@ contains
     sll_real64             :: r_jacobian ! reciprocal of the jacobian
 
     r_jacobian = 1.0_f64/mesh%jacobian( eta1, eta2 )
-    inv_j11 =  (mesh%j_matrix(2,2)%f( eta1, eta2 ))*r_jacobian
-    inv_j12 = -(mesh%j_matrix(1,2)%f( eta1, eta2 ))*r_jacobian
-    inv_j21 = -(mesh%j_matrix(2,1)%f( eta1, eta2 ))*r_jacobian
-    inv_j22 =  (mesh%j_matrix(1,1)%f( eta1, eta2 ))*r_jacobian
+    inv_j11 =  (mesh%j_matrix(2,2)%f( eta1, eta2, mesh%params ))*r_jacobian
+    inv_j12 = -(mesh%j_matrix(1,2)%f( eta1, eta2, mesh%params ))*r_jacobian
+    inv_j21 = -(mesh%j_matrix(2,1)%f( eta1, eta2, mesh%params ))*r_jacobian
+    inv_j22 =  (mesh%j_matrix(1,1)%f( eta1, eta2, mesh%params ))*r_jacobian
     ! For debugging:
     !    print *, 'jacobian_2d_analytic: '
     !    print *, j11, j12
@@ -474,7 +486,7 @@ contains
     class(sll_mapped_mesh_2d_analytic) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = mesh%x1_func(eta1, eta2)
+    val = mesh%x1_func(eta1, eta2,mesh%params)
   end function x1_analytic
 
   function x2_analytic( mesh, eta1, eta2 ) result(val)
@@ -482,7 +494,7 @@ contains
     class(sll_mapped_mesh_2d_analytic) :: mesh
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    val = mesh%x2_func(eta1, eta2)
+    val = mesh%x2_func(eta1, eta2, mesh%params)
   end function x2_analytic
 #endif
 

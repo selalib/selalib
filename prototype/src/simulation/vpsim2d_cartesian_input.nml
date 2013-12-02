@@ -1,6 +1,6 @@
 &geom
-  Ncx = 64 
-  Ncv = 512
+  Ncx = 32 
+  Ncv = 64
   nbox = 1
   xmin = 0.0
   vmin = -6.0
@@ -13,35 +13,16 @@
  order_v = 4
 /
 &time_iterations
-  dt = 0.05
-  nbiter = 20000
-  freqdiag = 50
+  dt = 0.1
+  first_step = 0
+  nbiter = 600
+  freqdiag = 100
+  freqdiag_time = 1
+  split_case = 1
 /
 &landau
-  kmode = 0.26
-  eps = 0.0
+  kmode = 0.5
+  eps = 1e-3
   is_delta_f = 0
-  driven = .true.
+  driven = .false.
 /
-&drive
-t0 = 0.
-tL = 69.   ! Canonical: 69
-tR = 307.  ! Canonical: 307
-twL = 20.  ! Canonical: 20
-twR = 20.  ! Canonical: 20
-tflat = 100. ! Canonical: 100. ! This is the duration of the flat region
-turn_drive_off = .true.  ! .true. or .false. depending if we want to turn the 
-                                     ! drive off after a time 'tflat'.
-Edrmax = 0.2  ! drive amplitude
-! Canonical case is 0.2 for KEEN and 0.005 for EPW
-omegadr = 0.37  ! Canonical: 0.37 for kmode = 0.26 (KEEN)	
- ! This is the EPW frequency obtained from non-driven simulations
- ! k=0.1 ->     omegadr = 1.0158
- ! k=0.2 ->     omegadr0 = 1.064
- ! k=0.22 ->   omegadr0 = 1.079
- ! k=0.26 ->   omegadr0 = 1.1157
- ! k=0.3 ->     omegadr0 = 1.1598
- ! k=0.4 ->     omegadr0 = 1.2851
- ! k=0.5 ->     omegadr0 = 1.4156
- /
-

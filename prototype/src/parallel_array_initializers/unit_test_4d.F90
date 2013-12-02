@@ -13,7 +13,9 @@ program unit_test_initializers_4d
   type(sll_logical_mesh_2d), pointer :: mv
   ! coordinate transformations (test transforming spatial coordinates only)
   class(sll_coordinate_transformation_2d_base), pointer :: tx
+  sll_real64, dimension(2) :: params_identity
 
+  params_identity(:) = (/0.0_f64, 0.0_f64/) ! for identity this can be whatever
   ! initialize the logical meshes
   mx => new_logical_mesh_2d(64,64)
   mv => new_logical_mesh_2d(64,64)
@@ -27,7 +29,8 @@ program unit_test_initializers_4d
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       params_identity )
 
   ! initialize the array
 

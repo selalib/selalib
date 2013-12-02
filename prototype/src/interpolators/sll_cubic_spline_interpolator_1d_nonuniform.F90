@@ -341,7 +341,11 @@ contains  ! ****************************************************************
 
   
   subroutine set_coefficients_cs1d( interpolator, coeffs )
-    class(cubic_non_uniform_spline_1d_interpolator),intent(inout):: interpolator
+#ifdef STDF95
+    type(cubic_non_uniform_spline_1d_interpolator), intent(inout)   :: interpolator
+#else
+    class(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
+#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -350,7 +354,11 @@ contains  ! ****************************************************************
 
   
   function get_coefficients_cs1d(interpolator)
-    class(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
+#ifdef STDF95
+    type(cubic_non_uniform_spline_1d_interpolator), intent(in)   :: interpolator
+#else
+    class(cubic_non_uniform_spline_1d_interpolator), intent(in)  :: interpolator
+#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
     
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
