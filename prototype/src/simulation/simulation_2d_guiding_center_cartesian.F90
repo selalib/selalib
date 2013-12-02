@@ -131,6 +131,7 @@ contains
     character(len=256)      :: A_interp_case 
     character(len=256)      :: initial_function_case 
     character(len=256)      :: time_loop_case 
+    character(len=256)      :: poisson_case
     sll_int32 :: ierr
     !character(len=256)      :: interp1d_x2_case 
     
@@ -158,7 +159,8 @@ contains
     advect2d_case = "SLL_BSL"
     initial_function_case = "SLL_KHP1" 
     !time_loop_case = "SLL_EULER"
-    time_loop_case = "SLL_PREDICTOR_CORRECTOR"    
+    time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+    poisson_case = "MUDPACK"   
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -337,16 +339,26 @@ contains
     
     
     !poisson solver
-    ! for the moment no choice
-    
-    
-    
-    !sim%poisson => new_plan_poisson_cartesian( &
-    !  sim%mesh_2d%delta_eta1,& 
-    !  x1_min, &
-    !  Nc_x1, &
-    !  Nc_x2, &
-    !  (/ SLL_NEUMANN_MODE_0,SLL_DIRICHLET/))
+     !poisson solver
+    select case(poisson_case)    
+      case ("MUDPACK")     
+        call initialize_mudpack_cartesian(sim%poisson, & 
+         eta1_min= x1_min,&
+         eta1_max= x1_max,&
+         nc_eta1 = Nc_x1,&
+         eta2_min= x2_min,&
+         eta2_max= x2_max,&
+         nc_eta2 = Nc_x2,&
+         bc_eta1_left = SLL_PERIODIC,& 
+         bc_eta1_right= SLL_PERIODIC,& 
+         bc_eta2_left = SLL_PERIODIC,& 
+         bc_eta2_right= SLL_PERIODIC)
+      case default
+        print *,'#bad poisson_case',poisson_case
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_cartesian'
+        stop
+    end select
 
    
   end subroutine initialize_guiding_center_2d_cartesian
@@ -421,20 +433,7 @@ contains
         
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
-     call initialize_mudpack_cartesian(sim%poisson, & 
-         phi, &
-         f, &
-         eta1_min= x1_min,&
-         eta1_max= x1_max,&
-         nc_eta1 = Nc_x1,&
-         eta2_min= x2_min,&
-         eta2_max= x2_max,&
-         nc_eta2 = Nc_x2,&
-         bc_eta1_left = SLL_PERIODIC,& 
-         bc_eta1_right= SLL_PERIODIC,& 
-         bc_eta2_left = SLL_PERIODIC,& 
-         bc_eta2_right= SLL_PERIODIC)
-    call solve_mudpack_cartesian(sim%poisson,phi,f)
+    call solve_mudpack_cartesian(sim%poisson,phi,-f)
     call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
     print*,"PASSED"
     
@@ -455,7 +454,7 @@ contains
       f_old = f
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
-      call solve_mudpack_cartesian(sim%poisson, phi, f_old)
+      call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
       
       call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
@@ -482,7 +481,7 @@ contains
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
-          call solve_mudpack_cartesian(sim%poisson, phi, f)
+          call solve_mudpack_cartesian(sim%poisson, phi, -f)
           call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
