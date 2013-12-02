@@ -611,8 +611,8 @@ contains
             i4 = glob_ind4d(4)
             theta_j = polar_eta2( &
               sim%xgrid_2d(i1,i2), &
-              sim%ygrid_2d(i1,i2))
-           ! print*,i2, theta_j,  sim%eta2_grid(i2)
+              sim%ygrid_2d(i1,i2), &
+              (/0.0_f64/)) ! irrelevant for polar_eta2
             phi_k   = phi_grid_tmp(i3) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
                  sim%feq_xyvpar(i1,i2,i4) * &
@@ -862,7 +862,7 @@ contains
       sim%bc_right_eta2)
     !-----> phi1D in the direction eta3
     logical_mesh1d => new_logical_mesh_1d( &
-    sim%nc_x3,eta1_min=sim%phi_min,eta1_max=sim%phi_max)
+      sim%nc_x3,eta_min=sim%phi_min,eta_max=sim%phi_max)
     sim%phi1d => new_scalar_field_1d_discrete_alt( &
          "phi1d_seqx3", &
          sim%interp1d_Phi_eta3, &     
@@ -1788,18 +1788,25 @@ contains
     ix3_diag   = int(sim%Neta3/4)
     ivpar_diag = int(sim%Nvpar/3)
 
-    diag_masse_result       = 0.0_f64
-    diag_norm_L1_result     = 0.0_f64
-    diag_norm_L2_result     = 0.0_f64
-    diag_norm_Linf_result   = 0.0_f64
-    diag_entropy_kin_result = 0.0_f64
-    diag_nrj_kin_result     = 0.0_f64
-    diag_nrj_pot_result     = 0.0_f64
-    diag_nrj_tot_result     = 0.0_f64
-    diag_heat_flux_result   = 0.0_f64
-    diag_relative_error_nrj_tot_result = 0.0_f64
- 
-   call sll_collective_reduce_real64( &
+!!$<<<<<<< HEAD
+!!$    diag_masse_result       = 0.0_f64
+!!$    diag_norm_L1_result     = 0.0_f64
+!!$    diag_norm_L2_result     = 0.0_f64
+!!$    diag_norm_Linf_result   = 0.0_f64
+!!$    diag_entropy_kin_result = 0.0_f64
+!!$    diag_nrj_kin_result     = 0.0_f64
+!!$    diag_nrj_pot_result     = 0.0_f64
+!!$    diag_nrj_tot_result     = 0.0_f64
+!!$    diag_heat_flux_result   = 0.0_f64
+!!$    diag_relative_error_nrj_tot_result = 0.0_f64
+!!$ 
+!!$   call sll_collective_reduce_real64( &
+!!$=======
+    diag_masse_result = 0.0
+    
+    print*, 'myrank',sim%my_rank,'test',sim%diag_masse(1:sim%count_save_diag + 1)
+    call sll_collective_reduce_real64( &
+!!$>>>>>>> origin/4d-drift-kinetic-hybrid
                sll_world_collective, &
                sim%diag_masse(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
@@ -2059,30 +2066,50 @@ contains
                      (/iloc1,iloc2,i3,i4/))
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
+!!$<<<<<<< HEAD
+!!$                
+!!$                if (i1 .ne. Neta1) then
+!!$                   if (i2 .ne. Neta2) then 
+!!$                      
+!!$                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+!!$                      
+!!$                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+!!$                           sim%feq_xyvpar(i1,i2,i4)
+!!$                      
+!!$                      
+!!$                      nrj_kin = nrj_kin + &
+!!$                           delta_f * vpar**2 * 0.5 * val_jac * &
+!!$                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+!!$                      
+!!$                      nrj_pot = nrj_pot + &
+!!$                           delta_f * val_elec_pot * 0.5 * val_jac * &
+!!$                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
+!!$                      
+!!$                      ! definition FALSE 
+!!$                      ! heat_flux = heat_flux + &
+!!$                      !     delta_f * vpar**2* 0.5* val_jac * &
+!!$                      !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
+!!$                   end if
+!!$                end if
+!!$=======
+                val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                     sim%feq_xyvpar(i1,i2,i4)
                 
-                if (i1 .ne. Neta1) then
-                   if (i2 .ne. Neta2) then 
-                      
-                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
-                      
-                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                           sim%feq_xyvpar(i1,i2,i4)
-                      
-                      
-                      nrj_kin = nrj_kin + &
-                           delta_f * vpar**2 * 0.5 * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      nrj_pot = nrj_pot + &
-                           delta_f * val_elec_pot * 0.5 * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      ! definition FALSE 
-                      ! heat_flux = heat_flux + &
-                      !     delta_f * vpar**2* 0.5* val_jac * &
-                      !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                   end if
-                end if
+                
+                nrj_kin = nrj_kin + &
+                     delta_f * vpar**2 * 0.5 * val_jac * &
+                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                
+                nrj_pot = nrj_pot + &
+                     delta_f * val_elec_pot * 0.5 * val_jac * &
+                     delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                ! definition FALSE 
+                !heat_flux = heat_flux + &
+                 !   delta_f * vpar**2* 0.5* val_jac * &
+                 !   delta_eta1*delta_eta2*delta_eta3*delta_vpar
+!!*>>>>>>> origin/4d-drift-kinetic-hybrid
              end do
           end do
        end do
@@ -2233,6 +2260,15 @@ contains
     SLL_DEALLOCATE(sim%E3d_eta1_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_eta2_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
+    SLL_DEALLOCATE(sim%diag_masse,ierr)
+    SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
+    SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
+    SLL_DEALLOCATE(sim%diag_norm_Linf,ierr)
+    SLL_DEALLOCATE(sim%diag_entropy_kin,ierr)
+    SLL_DEALLOCATE(sim%diag_nrj_kin,ierr)
+    SLL_DEALLOCATE(sim%diag_nrj_pot,ierr)
+    SLL_DEALLOCATE(sim%diag_nrj_tot,ierr)
+    SLL_DEALLOCATE(sim%diag_heat_flux,ierr)
     call delete(sim%layout3d_seqx1x2)
     call delete(sim%layout3d_seqx3)
   end subroutine delete_4d_DK_hybrid

@@ -118,6 +118,13 @@ module sll_simulation_4d_qns_general_module
      procedure(two_var_parametrizable_function),nopass,pointer :: b1_f
      procedure(two_var_parametrizable_function),nopass,pointer :: b2_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
+     sll_real64, dimension(:), pointer :: a11_f_params
+     sll_real64, dimension(:), pointer :: a12_f_params
+     sll_real64, dimension(:), pointer :: a21_f_params
+     sll_real64, dimension(:), pointer :: a22_f_params
+     sll_real64, dimension(:), pointer :: b1_f_params
+     sll_real64, dimension(:), pointer :: b2_f_params
+     sll_real64, dimension(:), pointer :: c_f_params
    contains
      procedure, pass(sim) :: run => run_4d_qns_general
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen
@@ -142,12 +149,19 @@ contains
    init_func, &
    params,&
    a11_f,&
+   a11_f_params, &
    a12_f,&
+   a12_f_params, &
    a21_f,&
+   a21_f_params, &
    a22_f,&
+   a22_f_params, &
    b1_f, &
+   b1_f_params, &
    b2_f, &
+   b2_f_params, &
    c_f,&
+   c_f_params, &
    spline_degre1,&
    spline_degre2,&
    bc_left,&
@@ -168,12 +182,20 @@ contains
    procedure(two_var_parametrizable_function) :: b1_f
    procedure(two_var_parametrizable_function) :: b2_f
    procedure(two_var_parametrizable_function) :: c_f
+   sll_real64, dimension(:), intent(in) :: a11_f_params
+   sll_real64, dimension(:), intent(in) :: a12_f_params
+   sll_real64, dimension(:), intent(in) :: a21_f_params
+   sll_real64, dimension(:), intent(in) :: a22_f_params
+   sll_real64, dimension(:), intent(in) :: b1_f_params
+   sll_real64, dimension(:), intent(in) :: b2_f_params
+   sll_real64, dimension(:), intent(in) :: c_f_params
    sll_int32  :: spline_degre1
    sll_int32  :: spline_degre2
    sll_int32  :: bc_left
    sll_int32  :: bc_right
    sll_int32  :: bc_bottom
    sll_int32  :: bc_top
+   sll_int32 :: ierr
 
    sim%mesh2d_x  => mesh2d_x
    sim%mesh2d_v  => mesh2d_v
@@ -194,6 +216,22 @@ contains
    sim%bc_right  = bc_right
    sim%bc_bottom = bc_bottom
    sim%bc_top    = bc_top
+
+   SLL_ALLOCATE(sim%a11_f_params(size(a11_f_params)),ierr)
+   SLL_ALLOCATE(sim%a12_f_params(size(a12_f_params)),ierr)
+   SLL_ALLOCATE(sim%a21_f_params(size(a21_f_params)),ierr)
+   SLL_ALLOCATE(sim%a22_f_params(size(a22_f_params)),ierr)
+   SLL_ALLOCATE(sim%b1_f_params(size(b1_f_params)),ierr)
+   SLL_ALLOCATE(sim%b2_f_params(size(b2_f_params)),ierr)
+   SLL_ALLOCATE(sim%c_f_params(size(c_f_params)),ierr)
+
+   sim%a11_f_params(:) = a11_f_params
+   sim%a12_f_params(:) = a12_f_params
+   sim%a21_f_params(:) = a21_f_params
+   sim%a22_f_params(:) = a22_f_params
+   sim%b1_f_params(:) = b1_f_params
+   sim%b2_f_params(:) = b2_f_params
+   sim%c_f_params(:) = c_f_params
 
    call sim%interp_phi%initialize( &
         sim%mesh2d_x%num_cells1 +1, &
@@ -386,7 +424,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%a11_f_params ) 
 
     a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
@@ -395,7 +434,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%a12_f_params ) 
 
     a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
@@ -404,7 +444,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         sim%a21_f_params )
     
     a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
@@ -413,7 +454,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%a22_f_params) 
 
     b1_field_vect => new_scalar_field_2d_analytic_alt( &
          sim%b1_f, &
@@ -422,7 +464,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         sim%b1_f_params)
     
     b2_field_vect => new_scalar_field_2d_analytic_alt( &
          sim%b2_f, &
@@ -431,7 +474,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top) 
+         sim%bc_top, &
+         sim%b2_f_params) 
     
     
     c_field => new_scalar_field_2d_analytic_alt( &
@@ -441,7 +485,8 @@ contains
          sim%bc_left, &
          sim%bc_right, &
          sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_top, &
+         sim%c_f_params)
    
 
     SLL_ALLOCATE(phi_values(nc_x1+1,nc_x2+1),ierr)

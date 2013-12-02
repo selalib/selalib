@@ -28,3 +28,5 @@ ADD_EXECUTABLE(vp_non_unif_mesh vp_non_unif_mesh.F90
 
 TARGET_LINK_LIBRARIES(vp_non_unif_mesh sll_bgk_mesh)
 
+#ADD_EXECUTABLE(sa_csl sa_csl.F90)
+#TARGET_LINK_LIBRARIES(sa_csl sll_csl )

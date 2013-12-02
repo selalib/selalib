@@ -30,7 +30,7 @@ use fftw3
 
 implicit none
 
-!> Initialize
+!> Initialize the Poisson solver using fftw library
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
 end interface

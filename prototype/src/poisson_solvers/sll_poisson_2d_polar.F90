@@ -112,12 +112,15 @@ module sll_poisson_2d_polar
      sll_int32                           :: bc(2)  !< boundary conditon type
      type(sll_fft_plan), pointer         :: pfwd   !< fft plan in theta
      type(sll_fft_plan), pointer         :: pinv   !< inverse fft plan in theta
-     sll_real64, dimension(:,:), pointer :: f_fft  !< ptential fft in theta
+     sll_real64, dimension(:,:), pointer :: f_fft  !< potential fft in theta
      sll_comp64, dimension(:),   pointer :: fk     !< \f$ f_k \f$
      sll_comp64, dimension(:),   pointer :: phik   !< \f$ phi_k \f$
      sll_real64, dimension(:), pointer   :: a      !< data for the tridiagonal solver
      sll_real64, dimension(:), pointer   :: cts    !< lapack array
      sll_int32, dimension(:),  pointer   :: ipiv   !< lapack pivot data
+     sll_real64, dimension(:), pointer ::dlog_density,inv_Te !<for quasi neutral solver
+
+
   end type sll_plan_poisson_polar
 
   !> Initialize the polar poisson solver
@@ -134,7 +137,7 @@ contains
 
 !> Creation of sll_plan_poisson_polar object for the 
 !> Poisson solver in polar coordinate
-  function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc) result(this)
+  function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc,dlog_density,inv_Te) result(this)
 
     implicit none
 
@@ -145,6 +148,7 @@ contains
     sll_int32, optional :: bc(2) !< Boundary conditions, can be combined with +
                                  !< bc is optionnal and default is Dirichlet condition in rmin and rmax
     type(sll_plan_poisson_polar), pointer :: this !< Poisson solver structure
+    sll_real64,dimension(:),optional ::dlog_density,inv_Te !< for quasi neutral solver
 
     sll_int32 :: err
     sll_real64, dimension(:), allocatable :: buf
@@ -160,7 +164,22 @@ contains
     SLL_ALLOCATE(this%a(3*(nr-1)),err)
     SLL_ALLOCATE(this%cts(7*(nr-1)),err)
     SLL_ALLOCATE(this%ipiv(nr-1),err)
-
+    
+    SLL_ALLOCATE(this%dlog_density(nr+1),err)
+    SLL_ALLOCATE(this%inv_Te(nr+1),err)
+    
+    this%dlog_density = 0._f64
+    this%inv_Te = 0._f64
+    
+    if(present(dlog_density))then
+      this%dlog_density = dlog_density
+    endif
+    if(present(inv_Te))then
+      this%inv_Te = inv_Te
+    endif
+    
+    
+    
     this%dr=dr
     this%rmin=rmin
     this%nr=nr
@@ -172,14 +191,21 @@ contains
       this%bc(2)=-1
     end if
 
+ 
+
     this%pfwd => fft_new_plan(ntheta,buf,buf,FFT_FORWARD,FFT_NORMALIZE)
     this%pinv => fft_new_plan(ntheta,buf,buf,FFT_INVERSE)
+    
+    
+    
     SLL_DEALLOCATE_ARRAY(buf,err)
+    
+    
 
   end function new_plan_poisson_polar
 
   !> Initialize the Poisson solver in polar coordinates
-  subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
+  subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax,dlog_density,inv_Te)
 
     implicit none
     type(sll_plan_poisson_polar) :: this !< Poisson solver structure
@@ -192,6 +218,7 @@ contains
     sll_int32, optional      :: bc_rmax  !< radial boundary conditions
     sll_int32                :: error
     sll_real64, dimension(:), allocatable :: buf
+    sll_real64,dimension(:),optional ::dlog_density,inv_Te
 
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),error)
     SLL_ALLOCATE(this%fk(nr+1),error)
@@ -205,6 +232,21 @@ contains
     this%dr=(rmax-rmin)/nr
     this%nr=nr
     this%ntheta=ntheta
+
+    SLL_ALLOCATE(this%dlog_density(nr+1),error)
+    SLL_ALLOCATE(this%inv_Te(nr+1),error)
+    
+    this%dlog_density = 0._f64
+    this%inv_Te = 0._f64
+    
+    if(present(dlog_density))then
+      this%dlog_density = dlog_density
+    endif
+    if(present(inv_Te))then
+      this%inv_Te = inv_Te
+    endif
+
+
 
     if (present(bc_rmin) .and. present(bc_rmax)) then
       this%bc(1)=bc_rmin
@@ -262,8 +304,8 @@ contains
     implicit none
 
     type(sll_plan_poisson_polar) :: plan
-    sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(in)  :: f
-    sll_real64, dimension(plan%nr+1,plan%ntheta+1), intent(out) :: phi
+    sll_real64, dimension(:,:), intent(in)  :: f
+    sll_real64, dimension(:,:), intent(out) :: phi
 
     sll_real64 :: rmin,dr
     sll_int32  :: nr, ntheta,bc(2)
@@ -272,17 +314,42 @@ contains
     sll_int32  :: i, k, ind_k
     sll_real64 :: kval
 
+    sll_comp64 :: err_loc
+    sll_int32  :: ierr_sup_1em12
+    sll_real64 :: err
+
     nr     = plan%nr
     ntheta = plan%ntheta
     rmin   = plan%rmin
     dr     = plan%dr
+    
+    !print *,'#nr=',nr,ntheta
+    !stop
+
+    !do k=1,ntheta+1!/2
+    !  print *,k,f(2,k)!,plan%f_fft(2,k)!fft_get_mode(plan%pfwd,plan%f_fft(2,1:ntheta),k)
+    !enddo
+    
+    !stop
+
+
 
     bc         = plan%bc
     plan%f_fft = f
 
+   
+
     do i=1,nr+1
       call fft_apply_plan(plan%pfwd,plan%f_fft(i,1:ntheta),plan%f_fft(i,1:ntheta))
     end do
+
+    !do k=0,ntheta/2
+    !  print *,k,fft_get_mode(plan%pfwd,plan%f_fft(2,1:ntheta),k)
+    !enddo
+    
+    
+    
+    
 
     ! poisson solver
     do k = 0,ntheta/2
@@ -293,13 +360,23 @@ contains
 
       do i=2,nr
         r = rmin + (i-1)*dr
-        plan%a(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2*dr*r)
-        plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2
-        plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r)
-
+        plan%a(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2._f64*dr*r)-plan%dlog_density(i)/(2._f64*dr)
+        !plan%a(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2*dr*r)
+        plan%a(3*(i-1)-1) =  2.0_f64/dr**2+(kval/r)**2+plan%inv_Te(i)
+        plan%a(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2._f64*dr*r)+plan%dlog_density(i)/(2._f64*dr)
+        
+        !print *,'before1'
+        
         plan%fk(i)=fft_get_mode(plan%pfwd,plan%f_fft(i,1:ntheta),k)
-      enddo
 
+        !print *,'after1'
+
+      enddo
+      
+      
+      
+      !print *,k,maxval(abs(plan%fk))
+      
       plan%phik=0.0_f64
 
       !boundary condition at rmin
@@ -374,12 +451,34 @@ contains
       end do
     end do
 
+
+      err = 0._f64
+      do i=4,nr-4
+        r=rmin+real(i-1,f64)*dr
+        err_loc=(plan%phik(i+1)-2*plan%phik(i)+plan%phik(i-1))/dr**2
+        err_loc=err_loc-plan%phik(i)*plan%inv_Te(i)
+        err_loc=err_loc+(plan%phik(i+1)-plan%phik(i-1))/(2._f64*r*dr)
+        err_loc=err_loc+(plan%phik(i+1)-plan%phik(i-1))/(2._f64*dr)*plan%dlog_density(i)
+        err_loc=-err_loc+kval**2/r**2*plan%phik(i)
+        err_loc=(err_loc-plan%fk(i))
+        if(abs(err_loc)>err)then
+          err=abs(err_loc)
+        endif
+      enddo
+      
+      if(err>1.e-12)then 
+        print *,'#err for QNS=',err 
+      endif
     ! FFT INVERSE
     do i=1,nr+1
       call fft_apply_plan(plan%pinv,phi(i,1:ntheta),phi(i,1:ntheta))
     end do
 
     phi(:,ntheta+1)=phi(:,1)
+    
+    
+    
+    
 
   end subroutine solve_poisson_polar
 
@@ -547,5 +646,7 @@ contains
         ierr = ierr_sup_1em12 
     end if
   end subroutine poisson_solve_polar
+
+
 
 end module sll_poisson_2d_polar

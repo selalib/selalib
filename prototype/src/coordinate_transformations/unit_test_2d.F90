@@ -25,6 +25,12 @@ program unit_test_2d
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, delta, acc, acc1
   sll_real64 :: node, node_a, node_d, interp, val_a
+  sll_real64, dimension(2) :: params   ! for the polar transformation
+
+#define RMIN 0.1_f64
+#define RMAX 1.0_f64
+
+  params(:) = (/RMIN, RMAX/)
 
   print *,  'filling out discrete arrays for x1 and x2 ', &
        'needed in the discrete case'
@@ -44,9 +50,9 @@ program unit_test_2d
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
-        x1_tab(i+1,j+1)   = x1_polar_f(eta1,eta2) 
-        x2_tab(i+1,j+1)   = x2_polar_f(eta1,eta2) 
-        jacs(i+1,j+1) = jacobian_polar_f(eta1,eta2)
+        x1_tab(i+1,j+1)   = x1_polar_f(eta1,eta2,params) 
+        x2_tab(i+1,j+1)   = x2_polar_f(eta1,eta2,params) 
+        jacs(i+1,j+1) = jacobian_polar_f(eta1,eta2,params)
      end do
   end do
 
@@ -54,11 +60,11 @@ program unit_test_2d
   do j=0,NPTS2-1
      eta1           = 0.0_f64
      eta2           = real(j,f64)*h2
-     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
-     x2_eta1_min(j+1) = deriv_x2_polar_f_eta1(eta1,eta2)
+     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
+     x2_eta1_min(j+1) = deriv_x2_polar_f_eta1(eta1,eta2,params)
      eta1           = 1.0_f64
-     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
-     x2_eta1_max(j+1) = deriv_x2_polar_f_eta1(eta1,eta2)
+     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
+     x2_eta1_max(j+1) = deriv_x2_polar_f_eta1(eta1,eta2,params)
   end do
 
   print *, '**********************************************************'
@@ -66,10 +72,10 @@ program unit_test_2d
   print *, '**********************************************************'
 
 
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1)
+  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
   ! Need to do something about these variables being always on the stack...
 
-print *, x1_polar_f(1.0_f64,1.0_f64)
+  print *, x1_polar_f(1.0_f64,1.0_f64,params)
 #ifdef STDF95
   call initialize( t_a,&
 #else
@@ -82,7 +88,8 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        deriv_x1_polar_f_eta1, &
        deriv_x1_polar_f_eta2, &
        deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2 )
+       deriv_x2_polar_f_eta2, &
+       params)
   print *, 'initialized analytic map'
 
   ! The following pointer is not used but wanted to test the 'new' function
@@ -95,14 +102,17 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        deriv_x1_polar_f_eta1, &
        deriv_x1_polar_f_eta2, &
        deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2 )
+       deriv_x2_polar_f_eta2, &
+       params )
 
 #ifdef STDF95
   ! The following std95 test does not make snse because it is not really using
   ! the information in the transformation to generate the value of the jacobian.
   print *, 'jacobian_2d(t_a, 0.5, 0.5) = ', &
-      deriv_x1_polar_f_eta1(0.5_f64,0.5_f64)*deriv_x2_polar_f_eta2(0.5_f64,0.5_f64) &
-     - deriv_x1_polar_f_eta2(0.5_f64,0.5_f64)*deriv_x2_polar_f_eta1(0.5_f64,0.5_f64)
+      deriv_x1_polar_f_eta1(0.5_f64,0.5_f64,params)*&
+      deriv_x2_polar_f_eta2(0.5_f64,0.5_f64,params) &
+    - deriv_x1_polar_f_eta2(0.5_f64,0.5_f64,params)*&
+      deriv_x2_polar_f_eta1(0.5_f64,0.5_f64,params)
 #else
   print *, 'jacobian_2d(t_a, 0.5, 0.5) = ', t_a%jacobian(0.5_f64,0.5_f64)
 #endif
@@ -146,7 +156,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   print *, '              TESTING THE DISCRETE TRANSFORMATION         '
   print *, '**********************************************************'
 
-  print *, 'initializing the interpolator: '
+  print *, 'initializing the interpolators: '
 
 #ifdef STDF95
   call cubic_spline_initialize( x1_interp,&
@@ -156,7 +166,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        NPTS1, &
        NPTS2, &
        0.0_f64, &
-       1.0_f64, &
+       1.0_f64, &      
        0.0_f64, &
        1.0_f64, &
        SLL_HERMITE, &
@@ -193,8 +203,10 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
        1.0_f64, &
        SLL_HERMITE, &
        SLL_PERIODIC, &
-       const_eta1_min_slope=deriv1_jacobian_polar_f(), &
-       const_eta1_max_slope=deriv1_jacobian_polar_f() )
+       const_eta1_min_slope=deriv1_jacobian_polar_f(0.0_f64,0.0_f64,params), &
+       const_eta1_max_slope=deriv1_jacobian_polar_f(1.0_f64,0.0_f64,params) )
+
+  print *, 'Initialized interpolators...'
 
 #ifdef STDF95
   call initialize( t_d,&
@@ -250,8 +262,11 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
 #ifdef STDF95
-        node=deriv_x1_polar_f_eta1(eta1,eta2)*deriv_x2_polar_f_eta2(eta1,eta2) &
-           - deriv_x1_polar_f_eta2(eta1,eta2)*deriv_x2_polar_f_eta1(eta1,eta2)
+        node = &
+             deriv_x1_polar_f_eta1(eta1,eta2,params)*&
+             deriv_x2_polar_f_eta2(eta1,eta2,params)-&
+             deriv_x1_polar_f_eta2(eta1,eta2,params)*&
+             deriv_x2_polar_f_eta1(eta1,eta2,params)
         interp = jacobian(map_d,eta1,eta2) 
 #else
 !        print *, 'values: ', i, j, eta1, eta2
@@ -280,7 +295,7 @@ print *, x1_polar_f(1.0_f64,1.0_f64)
   call t_d%write_to_file()
 #endif
 
-  print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
+  print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
   call delete(t_a)
   call delete(t_d)
 
