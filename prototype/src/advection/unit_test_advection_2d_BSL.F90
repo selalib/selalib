@@ -20,7 +20,6 @@ program unit_test_advection_2d_BSL
 #include "sll_memory.h"
 use sll_module_advection_2d_BSL
 use sll_module_characteristics_2d_explicit_euler
-use sll_module_advection_2d_BSL
 use sll_cubic_spline_interpolator_2d
 
 implicit none
@@ -101,10 +100,10 @@ implicit none
   adv => new_BSL_2d_advector(&
     interp, &
     charac, &
-    x1_mesh, &
-    x2_mesh, &
     num_cells_x1+1, &
-    num_cells_x2+1)
+    num_cells_x2+1, &
+    eta1_coords = x1_mesh, &
+    eta2_coords = x2_mesh)
   
   call adv%advect_2d(A1, A2, dt, input, output)
   

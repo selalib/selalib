@@ -34,7 +34,19 @@ IF(FISHPACK_ENABLED)
 
 ENDIF(FISHPACK_ENABLED)
 
+
+IF (NOT STDF95)
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_base.F90
+                                    sll_poisson_2d_fft.F90
+                                    sll_poisson_2d_polar_solver.F90
+                                    sll_poisson_3d_base.F90)
+ENDIF(NOT STDF95)
+
+
+
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
+
+
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
@@ -44,6 +56,29 @@ ELSE()
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion
                                              dfftpack )
 ENDIF()
+
+IF (NOT STDF95)
+  ADD_EXECUTABLE(
+    test_poisson_2d_fft
+    unit_test_poisson_2d_fft.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_poisson_2d_fft
+    sll_poisson_solvers)
+
+
+  ADD_EXECUTABLE(
+    test_poisson_2d_polar_solver
+    unit_test_poisson_2d_polar_solver.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_poisson_2d_polar_solver
+    sll_poisson_solvers
+    sll_poisson_2d_polar)
+
+
+ENDIF(NOT STDF95)
+
 
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
 TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
@@ -109,18 +144,20 @@ ENDIF()
 
 # This test has parallel diagnostics. Maybe these should only be turned on
 # when debugging this specific module.
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND (NOT STDF95) )
 
    ADD_LIBRARY(sll_poisson_parallel STATIC 
                sll_poisson_polar_parallel.F90 
                sll_poisson_3d_periodic_par.F90 
-               sll_poisson_2d_periodic_cartesian_par.F90 )
+               sll_poisson_2d_periodic_cartesian_par.F90
+               sll_quasi_neutral_3d_solver.F90)
 
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
    TARGET_LINK_LIBRARIES(sll_poisson_parallel sll_remap 
                                               sll_fft
                                               sll_file_io_parallel
-                                              sll_utilities)
+                                              sll_utilities
+                                              sll_poisson_solvers)
   
    ADD_EXECUTABLE(test_poisson_3d_periodic_par test_poisson_3d_periodic_par.F90)
    TARGET_LINK_LIBRARIES(test_poisson_3d_periodic_par sll_poisson_parallel )
@@ -132,5 +169,15 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ADD_EXECUTABLE(test_poisson_polar_parallel 
                   test_poisson_polar_parallel.F90 )
    TARGET_LINK_LIBRARIES(test_poisson_polar_parallel sll_poisson_parallel)
+
+   MESSAGE(STATUS "PASTIX_ENABLED:${PASTIX_ENABLED}")
+   IF (PASTIX_ENABLED)
+      ADD_EXECUTABLE(test_poisson_1d_pastix 
+                     sll_poisson_1d_pastix.F90
+                     test_poisson_1d_pastix.F90 )
+
+      TARGET_LINK_LIBRARIES(test_poisson_1d_pastix sll_pastix)
+   ENDIF (PASTIX_ENABLED)
+
 
 ENDIF()
