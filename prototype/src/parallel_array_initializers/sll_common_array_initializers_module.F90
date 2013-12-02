@@ -93,6 +93,29 @@ contains
     endif     
   end function sll_diocotron_initializer_2d
 
+  function sll_KHP1_2d( x, y, params ) result(res)
+   sll_real64 :: res
+   sll_real64, intent(in) :: x
+   sll_real64, intent(in) :: y
+
+   sll_real64, dimension(:), intent(in), optional :: params
+   sll_real64 :: eps
+   sll_real64 :: k_mode
+
+   if( .not. present(params) ) then
+      print *, '#sll_KHP1_2d, error: the params array must ', &
+           'be passed.'
+      print *,'#params(1)= eps  param(2)=k_mode'
+      stop
+   end if
+   SLL_ASSERT(size(params)>=2)
+   eps = params(1)
+   k_mode = params(2)
+
+   res = sin(y)+eps*cos(k_mode*x)
+
+  end function sll_KHP1_2d
+
 
 
 
