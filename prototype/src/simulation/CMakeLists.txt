@@ -15,6 +15,7 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
                        sll_poisson_solvers
+                       mudpack
                        sll_fft
 		       sll_distribution_function
 		       sll_general_coordinate_elliptic_solvers
@@ -37,6 +38,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
+
 
 # Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
