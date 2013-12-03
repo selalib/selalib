@@ -151,15 +151,15 @@ contains
     x1_max = 10._f64
     x2_min = 0._f64
     x2_max = 2._f64*sll_pi
-    Nc_x1 = 32
-    Nc_x2 = 64
+    Nc_x1 = 128
+    Nc_x2 = 128
     r_minus = 4._f64
     r_plus = 5._f64
     k_mode = 3
     eps = 1.e-6_f64
     nb_step = 600
     
-    dt = 0.2_f64
+    dt = 0.1_f64
     !dt = 0.05_f64
     visu_step = 20
     f_interp2d_case = "SLL_CUBIC_SPLINES"
