@@ -72,6 +72,7 @@ IF(NOT STDF95)
    ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
    SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+
    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/gcsim2d_polar_input)
    ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
    SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
