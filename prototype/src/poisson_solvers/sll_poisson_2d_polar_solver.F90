@@ -21,7 +21,7 @@
 !       +C \phi = rho
 !in polar coordinates
 !this leads when A_{1,2}=A_{2,1}=0 and B_2 = 0
-! A_11\partial_{1,1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
+! A_11\partial_{1,e1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
 
 
 module sll_module_poisson_2d_polar_solver
