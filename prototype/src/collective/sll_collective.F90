@@ -309,11 +309,14 @@ contains !************************** Operations **************************
 
     SLL_ALLOCATE( sll_world_collective, ierr )
 
-#ifdef MPI_THREAD_MULTIPLE
+
+#ifndef MPI_THREAD_MULTIPLE
+
     call MPI_Init(ierr)
 #else
-
+    
     sll_world_collective%thread_level_required = MPI_THREAD_MULTIPLE
+    
     call MPI_Init_Thread(sll_world_collective%thread_level_required, &
                          sll_world_collective%thread_level_provided, &
                          ierr)
