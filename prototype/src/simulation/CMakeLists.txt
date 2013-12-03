@@ -10,8 +10,11 @@ ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_VP1D_cartesian_non_unif.F90
                                      simulation_VP1D_curvilinear_analytic.F90
                                      simulation_vp1d_fourier_fem.F90
+                                     simulation_guiding_center_2D_generalized_coords.F90
                                      simulation_2d_guiding_center_cartesian.F90
                                      simulation_2d_guiding_center_polar.F90)
+
+
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
                        sll_poisson_solvers
@@ -53,9 +56,9 @@ ENDMACRO(ADD_SIMULATION_1D)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem)
+ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
-
 
 #Commands to be updated in the above simulation class standard
 #############################################################
