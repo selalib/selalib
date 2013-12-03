@@ -13,10 +13,10 @@ IF (SUITESPARSE_INCLUDE_DIRS)
 ENDIF (SUITESPARSE_INCLUDE_DIRS)
 
 FIND_PATH( CHOLMOD_INCLUDE_DIR cholmod.h
-           PATHS /usr/local/include 
+           PATHS /opt/local/include 
                  /usr/include 
         	 /usr/include/suitesparse/ 
-                 /opt/local/include)
+                 /usr/local/include)
 
 MESSAGE(STATUS "CHOLMOD_INCLUDE_DIR:${CHOLMOD_INCLUDE_DIR}")
 
@@ -25,7 +25,7 @@ MACRO(FIND_SUITESPARSE_LIBRARY LIB )
 SET(_LIB ${LIB}-NOTFOUND)
 FIND_LIBRARY( _LIB
               NAMES ${LIB}
-              PATHS /usr/lib /usr/lib64 /usr/local/lib /opt/local/lib )
+              PATHS /usr/lib /usr/lib64 /opt/local/lib /usr/local/lib )
 
 IF(_LIB)
    LIST ( APPEND SUITESPARSE_LIBRARIES ${_LIB})
