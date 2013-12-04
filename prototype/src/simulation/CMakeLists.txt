@@ -5,6 +5,8 @@
 #Please add your new simulation_MYMETHOD.F90 
 ############################################################
 
+IF(MUDPACK_ENABLED)
+
 ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
                                      simulation_base_class.F90 
                                      simulation_VP1D_cartesian_non_unif.F90
@@ -59,6 +61,9 @@ ADD_SIMULATION_1D(vp1d_fourier_fem)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
+
+
+ENDIF(MUDPACK_ENABLED)
 
 #Commands to be updated in the above simulation class standard
 #############################################################
