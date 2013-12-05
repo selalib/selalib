@@ -31,12 +31,17 @@ module sll_module_poisson_2d_mudpack_solver
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
 use sll_module_poisson_2d_base
+use sll_mudpack_base
+use sll_cubic_spline_interpolator_1d
+use sll_cubic_spline_interpolator_2d
+
 !use sll_poisson_2d_polar
 implicit none
 
   integer, parameter :: SLL_SEPARABLE  = 1    !< type of equation
   integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2    !< type of equation
   integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
+
   
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_mudpack_solver     
@@ -60,6 +65,27 @@ implicit none
   sll_real64 :: cy
   sll_real64 :: ce
   sll_int32  :: mudpack_case
+  class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
+  class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
+  class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
+  class(sll_interpolator_2d_base), pointer   :: cx_2d_interp
+  class(sll_interpolator_2d_base), pointer   :: cy_2d_interp
+  class(sll_interpolator_2d_base), pointer   :: ce_2d_interp
+  class(sll_interpolator_1d_base), pointer   :: cxx_1d_interp
+  class(sll_interpolator_1d_base), pointer   :: cyy_1d_interp
+  class(sll_interpolator_1d_base), pointer   :: cx_1d_interp
+  class(sll_interpolator_1d_base), pointer   :: cy_1d_interp
+  class(sll_interpolator_1d_base), pointer   :: cex_1d_interp
+  class(sll_interpolator_1d_base), pointer   :: cey_1d_interp
+
+
+  sll_real64, dimension(:), pointer :: work !< array for tmp data
+  sll_int32  :: mgopt(4) !< Option to control multigrid
+  sll_int32  :: iprm(16) !< Indices to control grid sizes
+  sll_real64 :: fprm(6)  !< Real to set boundary conditions
+  sll_int32  :: iguess   !< Initial solution or loop over time
+
+
   
   
   contains
@@ -73,6 +99,9 @@ implicit none
 !      compute_E_from_phi_2d_polar
       
   end type poisson_2d_mudpack_solver
+
+  class(poisson_2d_mudpack_solver), pointer   :: mudpack_wrapper => null()
+
 
 contains
   function new_poisson_2d_mudpack_solver( &
@@ -199,12 +228,11 @@ contains
     cex_1d, &
     cey_1d, &
     cxx, &
-    cxy, &
     cyy, &
     cx, &
     cy, &
     ce)
-    class(poisson_2d_mudpack_solver) :: poisson
+    class(poisson_2d_mudpack_solver), target :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
@@ -229,14 +257,128 @@ contains
     sll_real64, dimension(:), intent(in), optional :: cex_1d
     sll_real64, dimension(:), intent(in), optional :: cey_1d
     sll_real64, intent(in), optional  :: cxx
-    sll_real64, intent(in), optional  :: cxy
     sll_real64, intent(in), optional  :: cyy
     sll_real64, intent(in), optional  :: cx
     sll_real64, intent(in), optional  :: cy
     sll_real64, intent(in), optional  :: ce
     sll_int32 :: ierr
+    !!!! begin variables for mudpack 
+    sll_int32,  parameter   :: iixp = 2 , jjyq = 2
+    sll_int32               :: icall, iiex, jjey, llwork
+    sll_real64, pointer :: phi(:) !< electric potential
+    sll_real64, pointer :: rhs(:) !< charge density
+    !put integer and floating point argument names in contiguous
+    !storeage for labelling in vectors iprm,fprm
+    sll_int32  :: iprm(16)
+    sll_real64 :: fprm(6)
+    sll_int32  :: i,error
+    sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+    sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
+    common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+              iguess,maxcy,method,nwork,lwrkqd,itero
+    sll_real64 :: xa,xb,yc,yd,tolmax,relmax
+    common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+    equivalence(intl,iprm)
+    equivalence(xa,fprm)
+    !declare coefficient and boundary condition input subroutines external
+    external mudpack_cofx,mudpack_cofy,mudpack_bndsp
+    !!!! end variables for mudpack 
+
+
+
+    nx = nc_eta1+1
+    ny = nc_eta2+1
+    ! set minimum required work space
+    llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
+
+    allocate(poisson%work(llwork))
+    icall = 0
+    iiex = ceiling(log((nx-1.)/iixp)/log(2.))+1
+    jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
+
+    !set input integer arguments
+    intl = 0
+
+    !set boundary condition flags
+    nxa  = bc_eta1_left
+    nxb  = bc_eta1_right
+    nyc  = bc_eta2_left
+    nyd  = bc_eta2_right
+
+    !set grid sizes from parameter statements
+    ixp  = iixp
+    jyq  = jjyq
+    iex  = iiex
+    jey  = jjey
+
+    nx = ixp*(2**(iex-1))+1
+    ny = jyq*(2**(jey-1))+1
+
+    if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
+      print*, "nx,nc_eta1+1=", nx, nc_eta1+1
+      print*, "ny,nc_eta2+1=", ny, nc_eta2+1
+      stop ' nx or ny different in sll_mudpack_cartesian '
+    end if
+
+    !set multigrid arguments (w(2,1) cycling with fully weighted
+    !residual restriction and cubic prolongation)
+    poisson%mgopt(1) = 2
+    poisson%mgopt(2) = 2
+    poisson%mgopt(3) = 1
+    poisson%mgopt(4) = 3
+
+    !set for three cycles to ensure second-order approximation is computed
+    maxcy = 3
+
+    !set no initial guess forcing full multigrid cycling
+    poisson%iguess = 0
+    iguess = poisson%iguess
+
+    !set work space length approximation from parameter statement
+    nwork = llwork
+
+    !set point relaxation
+    method = 0
+
+    !set end points of solution rectangle in (x,y) space
+    xa = eta1_min
+    xb = eta1_max
+    yc = eta2_min
+    yd = eta2_max
+
+    !set for no error control flag
+    tolmax = 0.0
+
+!    write(*,101) (iprm(i),i=1,15)
+!    write(*,102) (poisson%mgopt(i),i=1,4)
+!    write(*,103) xa,xb,yc,yd,tolmax
+!    write(*,104) intl
+
+!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+
+
+
+
+
+
+
         
     poisson%mudpack_case = mudpack_case 
+
+    poisson%cxx_2d_interp => null()
+    poisson%cxy_2d_interp => null()
+    poisson%cyy_2d_interp => null()
+    poisson%cx_2d_interp => null()
+    poisson%cy_2d_interp => null()
+    poisson%ce_2d_interp => null()
+
+    poisson%cxx_1d_interp => null()
+    poisson%cyy_1d_interp => null()
+    poisson%cx_1d_interp => null()
+    poisson%cy_1d_interp => null()
+    poisson%cex_1d_interp => null()
+    poisson%cey_1d_interp => null()
+
 
     select case (mudpack_case)
       case (SLL_SEPARABLE)
@@ -271,7 +413,7 @@ contains
         endif
 
         if((.not.(present(cyy_1d))).and.(.not.(present(cyy)))) then
-          print *,'#1d/0d array should be here for cyy'
+          print *,'#1d/0d array should be here for cyy !'
           print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
           stop        
         endif
@@ -382,19 +524,79 @@ contains
           poisson%cey_1d(1:nc_eta2+1)=0.5_f64*ce
         endif
 
+        poisson%cxx_1d_interp => new_cubic_spline_1d_interpolator( &
+          nx, &
+          eta1_min, &
+          eta1_max, &
+          SLL_PERIODIC)          
+        call poisson%cxx_1d_interp%compute_interpolants( poisson%cxx_1d )          
+
+        poisson%cyy_1d_interp => new_cubic_spline_1d_interpolator( &
+          ny, &
+          eta2_min, &
+          eta2_max, &
+          SLL_PERIODIC)          
+        call poisson%cyy_1d_interp%compute_interpolants( poisson%cyy_1d )          
+
+        poisson%cx_1d_interp => new_cubic_spline_1d_interpolator( &
+          nx, &
+          eta1_min, &
+          eta1_max, &
+          SLL_PERIODIC)          
+        call poisson%cx_1d_interp%compute_interpolants( poisson%cx_1d )          
+
+        poisson%cy_1d_interp => new_cubic_spline_1d_interpolator( &
+          ny, &
+          eta2_min, &
+          eta2_max, &
+          SLL_PERIODIC)          
+        call poisson%cy_1d_interp%compute_interpolants( poisson%cy_1d )          
+
+        poisson%cex_1d_interp => new_cubic_spline_1d_interpolator( &
+          nx, &
+          eta1_min, &
+          eta1_max, &
+          SLL_PERIODIC)          
+        call poisson%cex_1d_interp%compute_interpolants( poisson%cex_1d )          
+
+        poisson%cey_1d_interp => new_cubic_spline_1d_interpolator( &
+          ny, &
+          eta2_min, &
+          eta2_max, &
+          SLL_PERIODIC)          
+        call poisson%cey_1d_interp%compute_interpolants( poisson%cey_1d )          
 
 
 
+        
+        if(associated(mudpack_wrapper))then
+          print *,'#Problem mudpack_wrapper is not null()'
+          stop
+        endif
+        mudpack_wrapper => poisson
+        call mud2sp(iprm,fprm,poisson%work, &
+          mudpack_cofx, &
+          mudpack_cofy, &
+          mudpack_bndsp, &
+          rhs, &
+          phi, &
+          poisson%mgopt, &
+          error)
+        mudpack_wrapper => null() 
 
 
-
-
-
+      
       
       
         
       case (SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS)
+        print *,'#not implemented for the moment'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        stop 
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
+        print *,'#not implemented for the moment'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        stop 
       case default
         print *,'#bad mudpack_case',mudpack_case
         print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
@@ -406,9 +608,82 @@ contains
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack( poisson, phi, rho )
-    class(poisson_2d_mudpack_solver) :: poisson
+    class(poisson_2d_mudpack_solver), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
+    !sll_real64        :: phi(:,:)  !< Electric potential
+    !sll_real64        :: rhs(:,:)  !< Charge density
+    !put integer and floating point argument names in contiguous
+    !storeage for labelling in vectors iprm,fprm
+    sll_int32  :: iprm(16)
+    sll_real64 :: fprm(6)
+    sll_int32  :: error
+    sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
+    sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
+    common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
+              iguess,maxcy,method,nwork,lwrkqd,itero
+    sll_real64 :: xa,xb,yc,yd,tolmax,relmax
+    common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+
+    equivalence(intl,iprm)
+    equivalence(xa,fprm)
+
+    !declare coefficient and boundary condition input subroutines external
+    external mudpack_cofx,mudpack_cofy,mudpack_bndsp
+
+    !set initial guess because solve should be called every time step in a
+    !time dependent problem and the elliptic operator does not depend on time.
+    iguess = poisson%iguess
+
+    !attempt solution
+    intl = 1
+    !write(*,106) intl,method,iguess
+
+
+    select case (poisson%mudpack_case)
+      case (SLL_SEPARABLE)
+        if(associated(mudpack_wrapper))then
+          print *,'#Problem mudpack_wrapper is not null()'
+          stop
+        endif
+        mudpack_wrapper => poisson
+
+
+        call mud2sp(iprm, &
+          fprm, &
+          poisson%work, &
+          mudpack_cofx, &
+          mudpack_cofy, &
+          mudpack_bndsp, &
+          rho, &
+          phi, &
+          poisson%mgopt, &
+          error)
+        !write(*,107) error
+        if (error > 0) call exit(0)
+        ! attempt to improve approximation to fourth order
+        call mud24sp(poisson%work,phi,error)
+        !write (*,108) error
+        if (error > 0) call exit(0)
+        
+         mudpack_wrapper => null()
+        
+      case (SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS)
+        print *,'#not implemented for the moment'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        stop 
+      case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
+        print *,'#not implemented for the moment'
+        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        stop 
+      case default
+        print *,'#bad mudpack_case',poisson%mudpack_case
+        print *,'#in subroutine initialize_poisson_2d_mudpack_solver'
+        stop 
+    end select
+
+
+
     
     !call solve( poisson%poiss, rho, phi)
     
@@ -441,3 +716,67 @@ contains
   
   
 end module sll_module_poisson_2d_mudpack_solver
+
+!> input x dependent coefficients
+subroutine mudpack_cofx(x,cxx,cx,cex)
+use sll_module_poisson_2d_mudpack_solver
+implicit none
+real(8)  :: x,cxx,cx,cex
+cxx = mudpack_wrapper%cxx_1d_interp%interpolate_value(x)
+cx  = mudpack_wrapper%cx_1d_interp%interpolate_value(x)
+cex = mudpack_wrapper%cex_1d_interp%interpolate_value(x)
+return
+end
+
+!> input y dependent coefficients
+subroutine mudpack_cofy(y,cyy,cy,cey)
+use sll_module_poisson_2d_mudpack_solver
+implicit none
+real(8)  :: y,cyy,cy,cey
+cyy = mudpack_wrapper%cyy_1d_interp%interpolate_value(y)
+cy  = mudpack_wrapper%cy_1d_interp%interpolate_value(y)
+cey = mudpack_wrapper%cey_1d_interp%interpolate_value(y)
+return
+end
+
+!> input mixed derivative b.c. to mud2sp
+subroutine mudpack_bndsp(kbdy,xory,alfa,gbdy)
+use sll_module_poisson_2d_mudpack_solver
+implicit none
+integer  :: kbdy
+real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
+real(8)  :: xa,xb,yc,yd,tolmax,relmax
+common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+
+!subroutine not used in periodic case
+if (kbdy == 1) then  ! x=xa boundary
+   y = xory
+   x = xa
+   alfa = -1.0
+   gbdy = px + alfa*pe
+   return
+end if
+
+if (kbdy == 4) then  ! y=yd boundary
+   y = yd
+   x = xory
+   alfa = 1.0
+   gbdy = py + alfa*pe
+   return
+end if
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
