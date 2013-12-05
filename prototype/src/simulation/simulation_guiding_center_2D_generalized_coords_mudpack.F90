@@ -2,7 +2,7 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
 
 !the aim is to create guiding center cartesian in simulation class
 !related to
-!simulation_guiding_center_2D_generalized_coords.F90
+!simulation_guiding_center_2D_generalized_coords_mudpack.F90
 !but here geometry and test is specifically cartesian
 
 
@@ -26,7 +26,7 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_mudpack_cartesian
+  use sll_mudpack_curvilinear
   !use sll_parallel_array_initializer_module
 
   implicit none
@@ -57,7 +57,7 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
    !coef
    sll_real64, dimension(:,:), pointer :: b11
    sll_real64, dimension(:,:), pointer :: b12
-   sll_real64, dimension(:,:), pointer :: b12
+   sll_real64, dimension(:,:), pointer :: b21
    sll_real64, dimension(:,:), pointer :: b22
    sll_real64, dimension(:,:), pointer :: c
    !poisson solver
@@ -97,7 +97,7 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
 contains
 
   function new_guiding_center_2d_curvilinear_mudpack() result(sim)
-    type(sll_simulation_2d_guiding_center_cartesian), pointer :: sim    
+    type(sll_simulation_2d_guiding_center_curvilinear_mudpack), pointer :: sim    
     sll_int32 :: ierr
     
     SLL_ALLOCATE(sim,ierr)
@@ -106,7 +106,7 @@ contains
     
   
   
-  end function new_guiding_center_2d_cartesian
+  end function new_guiding_center_2d_curvilinear_mudpack
   
   subroutine initialize_guiding_center_2d_curvilinear_mudpack(sim)
     class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
@@ -175,10 +175,11 @@ contains
     sim%freq_diag_time = 1
     
     
-    SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
-    SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
-    SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
-    SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(sim%b11(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(sim%b12(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(sim%b21(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(sim%b22(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(sim%c(Nc_x1+1,Nc_x2+1),ierr)
     do j=1,Nc_x2+1
      do i=1,Nc_x1+1
         sim%b11(i,j)= 1._f64
@@ -399,21 +400,27 @@ contains
      !poisson solver
     select case(poisson_case)    
       case ("MUDPACK")     
-        call initialize_mudpack_cartesian(sim%poisson,sim%b11, sim%b12,sim%b21,sim%b22& 
-         eta1_min= x1_min,&
-         eta1_max= x1_max,&
-         nc_eta1 = Nc_x1,&
-         eta2_min= x2_min,&
-         eta2_max= x2_max,&
-         nc_eta2 = Nc_x2,&
-         bc_eta1_left = SLL_PERIODIC,& 
-         bc_eta1_right= SLL_PERIODIC,& 
-         bc_eta2_left = SLL_PERIODIC,& 
-         bc_eta2_right= SLL_PERIODIC)
+        call initialize_mudpack_curvilinear(sim%poisson,&
+         sim%transformation, &
+         sim%b11,&
+         sim%b12,&
+         sim%b21,&
+         sim%b22,&
+         sim%c,& 
+         x1_min,&
+         x1_max,&
+         Nc_x1,&
+         x2_min,&
+         x2_max,&
+         Nc_x2,&
+         SLL_PERIODIC,& 
+         SLL_PERIODIC,& 
+         SLL_PERIODIC,& 
+         SLL_PERIODIC)
       case default
         print *,'#bad poisson_case',poisson_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_cartesian'
+        print *,'#in initialize_mudpack_curvilinear'
         stop
     end select
 
@@ -436,10 +443,12 @@ contains
     class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
-    sll_real64 :: delta_x1
-    sll_real64 :: delta_x2
-    sll_real64 :: x1_min,x1_max
-    sll_real64 :: x2_min,x2_max   
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1_min,eta1_max
+    sll_real64 :: eta2_min,eta2_max 
+    sll_real64 :: eta1
+    sll_real64 :: eta2  
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32 :: i1 
@@ -459,12 +468,12 @@ contains
     
     Nc_x1 = sim%mesh_2d%num_cells1
     Nc_x2 = sim%mesh_2d%num_cells2
-    delta_x1 = sim%mesh_2d%delta_eta1
-    delta_x2 = sim%mesh_2d%delta_eta2
-    x1_min = sim%mesh_2d%eta1_min
-    x2_min = sim%mesh_2d%eta2_min
-    x1_max = sim%mesh_2d%eta1_max
-    x2_max = sim%mesh_2d%eta2_max
+    delta_eta1 = sim%mesh_2d%delta_eta1
+    delta_eta2 = sim%mesh_2d%delta_eta2
+    eta1_min = sim%mesh_2d%eta1_min
+    eta2_min = sim%mesh_2d%eta2_min
+    eta1_max = sim%mesh_2d%eta1_max
+    eta2_max = sim%mesh_2d%eta2_max
     nb_step = sim%num_iterations
     dt = sim%dt
     
@@ -479,14 +488,16 @@ contains
     
 
     
-    !initialisation of distribution function
-    do i2=1,Nc_x2+1
-      x2=x2_min+real(i2-1,f64)*delta_x2
-      do i1=1,Nc_x1+1
-        x1=x1_min+real(i1-1,f64)*delta_x1
-        f(i1,i2) =  sim%init_func(x1,x2,sim%params)
-      end do
-    end do
+    !initialisation of distribution function    
+     do i2=1,Nc_x2+1
+        eta2=eta2_min+real(i2-1,f64)*delta_eta2
+        do i1=1,Nc_x1+1
+          eta1=eta1_min+real(i1-1,f64)*delta_eta1
+          x1 = sim%transformation%x1(eta1,eta2)
+          x2 = sim%transformation%x2(eta1,eta2)
+          f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
+        end do
+     end do
         
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
@@ -528,7 +539,7 @@ contains
       endif            
      
       if(modulo(step-1,sim%freq_diag)==0)then
-        call plot_f_curvilinear(iplot,f,sim%mesh_2d)
+        call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
       
@@ -560,7 +571,7 @@ contains
   end subroutine run_gc2d_curvilinear_mudpack 
   
   
-  subroutine compute_field_from_phi_2d_curvilinear_mudpack(phi,mesh_2d,trasformation,A1,A2,interp2d)
+  subroutine compute_field_from_phi_2d_curvilinear_mudpack(phi,mesh_2d,transformation,A1,A2,interp2d)
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
@@ -700,7 +711,7 @@ contains
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
-  subroutine plot_f_curvilinear(iplot,f,mesh_2d)
+  subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
     use sll_xdmf
     use sll_hdf5_io
     sll_int32 :: file_id
@@ -712,23 +723,24 @@ contains
     character(len=4)      :: cplot
     sll_int32             :: nnodes_x1, nnodes_x2
     type(sll_logical_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: r
-    sll_real64 :: theta
-    sll_real64 ::  x1_min, x2_min
-    sll_real64 ::  x1_max, x2_max  
-    sll_real64 :: dx1
-    sll_real64 :: dx2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 ::  eta1_min, eta2_min
+    sll_real64 ::  eta1_max, eta2_max  
+    sll_real64 :: deta1
+    sll_real64 :: deta2
     
     
     nnodes_x1 = mesh_2d%num_cells1+1
     nnodes_x2 = mesh_2d%num_cells2+1
-    x1_min = mesh_2d%eta1_min
-    x1_max = mesh_2d%eta1_max
-    x2_min = mesh_2d%eta2_min
-    x2_max = mesh_2d%eta2_max
-    dx1 = mesh_2d%delta_eta1
-    dx2 = mesh_2d%delta_eta2
+    eta1_min = mesh_2d%eta1_min
+    eta1_max = mesh_2d%eta1_max
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
+    deta1 = mesh_2d%delta_eta1
+    deta2 = mesh_2d%delta_eta2
     
     !print *,'#maxf=',iplot,maxval(f),minval(f)
     
@@ -740,14 +752,16 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          eta1 = eta1_min+real(i-1,f32)*deta1
+          eta2 = eta2_min+real(j-1,f32)*deta2
+          x1(i,j) = transf%x1(eta1,eta2)
+          x2(i,j) = transf%x2(eta1,eta2)
         end do
       end do
-      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
+      call sll_hdf5_file_create("curvilinear_mesh-x1.h5",file_id,error)
       call sll_hdf5_write_array(file_id,x1,"/x1",error)
       call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
+      call sll_hdf5_file_create("curvilinear_mesh-x2.h5",file_id,error)
       call sll_hdf5_write_array(file_id,x2,"/x2",error)
       call sll_hdf5_file_close(file_id, error)
       deallocate(x1)
@@ -756,7 +770,7 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
+    call sll_xdmf_open("f"//cplot//".xmf","curvilinear_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
     call sll_xdmf_write_array("f"//cplot,f,"values", &
       error,file_id,"Node")
