@@ -5,7 +5,6 @@ module sll_simulation_2d_guiding_center_cartesian_module
 !simulation_guiding_center_2D_generalized_coords.F90
 !but here geometry and test is specifically cartesian
 
-
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -27,9 +26,12 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_mudpack_cartesian
+  use sll_module_poisson_2d_mudpack_solver
   !use sll_parallel_array_initializer_module
 
   implicit none
+
+#define POISSON_ABSTRACT
   
   
   sll_int32, parameter :: SLL_EULER = 0 
@@ -55,10 +57,14 @@ module sll_simulation_2d_guiding_center_cartesian_module
 
    
    !poisson solver
-   !class(sll_poisson_2d_base), pointer   :: poisson
+#ifdef POISSON_ABSTRACT   
+   class(sll_poisson_2d_base), pointer   :: poisson
+#endif
    !type(poisson_2d_periodic), pointer   :: poisson
    !type(sll_plan_poisson_polar), pointer :: poisson 
-    type(mudpack_2d) :: poisson 
+#ifndef POISSON_ABSTRACT 
+   type(mudpack_2d) :: poisson 
+#endif
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -342,17 +348,37 @@ contains
      !poisson solver
     select case(poisson_case)    
       case ("MUDPACK")     
+#ifndef POISSON_ABSTRACT
         call initialize_mudpack_cartesian(sim%poisson, & 
-         eta1_min= x1_min,&
-         eta1_max= x1_max,&
-         nc_eta1 = Nc_x1,&
-         eta2_min= x2_min,&
-         eta2_max= x2_max,&
-         nc_eta2 = Nc_x2,&
-         bc_eta1_left = SLL_PERIODIC,& 
-         bc_eta1_right= SLL_PERIODIC,& 
-         bc_eta2_left = SLL_PERIODIC,& 
-         bc_eta2_right= SLL_PERIODIC)
+          eta1_min= x1_min,&
+          eta1_max= x1_max,&
+          nc_eta1 = Nc_x1,&
+          eta2_min= x2_min,&
+          eta2_max= x2_max,&
+          nc_eta2 = Nc_x2,&
+          bc_eta1_left = SLL_PERIODIC,& 
+          bc_eta1_right= SLL_PERIODIC,& 
+          bc_eta2_left = SLL_PERIODIC,& 
+          bc_eta2_right= SLL_PERIODIC)
+#endif        
+        !stop  
+#ifdef  POISSON_ABSTRACT         
+        sim%poisson => new_poisson_2d_mudpack_solver( &
+          eta1_min = x1_min,&
+          eta1_max = x1_max,&
+          nc_eta1 = Nc_x1,&
+          eta2_min = x2_min,&
+          eta2_max = x2_max,&
+          nc_eta2 = Nc_x2,&
+          bc_eta1_left = SLL_PERIODIC,& 
+          bc_eta1_right = SLL_PERIODIC,& 
+          bc_eta2_left = SLL_PERIODIC,& 
+          bc_eta2_right = SLL_PERIODIC,&
+          mudpack_case = SLL_SEPARABLE, &
+          cxx = 1._f64, &
+          cyy = 1._f64)
+#endif       
+         
       case default
         print *,'#bad poisson_case',poisson_case
         print *,'#not implemented'
@@ -433,7 +459,11 @@ contains
         
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
+#ifndef POISSON_ABSTRACT    
     call solve_mudpack_cartesian(sim%poisson,phi,-f)
+#else
+    call sim%poisson%compute_phi_from_rho( phi, -f )    
+#endif    
     call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
     print*,"PASSED"
     
@@ -452,9 +482,15 @@ contains
     do step=1,nb_step+1
       print*,"step= ", step
       f_old = f
+
+#ifndef POISSON_ABSTRACT    
+      call solve_mudpack_cartesian(sim%poisson,phi,-f_old)
+#else
+      call sim%poisson%compute_phi_from_rho( phi, -f_old )    
+#endif    
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
-      call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
+      !call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
       
       call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
@@ -481,7 +517,16 @@ contains
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
-          call solve_mudpack_cartesian(sim%poisson, phi, -f)
+#ifndef POISSON_ABSTRACT    
+          call solve_mudpack_cartesian(sim%poisson,phi,-f)
+#else
+          call sim%poisson%compute_phi_from_rho( phi, -f )    
+#endif    
+          
+          !call solve_mudpack_cartesian(sim%poisson, phi, -f)
+          
+          
+          
           call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
