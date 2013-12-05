@@ -238,7 +238,7 @@ subroutine cofx(x,cxx,cx,cex)
 use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = cxx_interp%interpolate_value(x)
+cxx = 1.0 !cxx_interp%interpolate_value(x)
 cx  = 0.0
 cex = 0.0
 return

@@ -107,7 +107,7 @@ contains
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_2d_fft( poisson, phi, rho )
-    class(poisson_2d_fft_solver) :: poisson
+    class(poisson_2d_fft_solver), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
