@@ -3,10 +3,6 @@ program guiding_center_2d_cartesian
  implicit none
 class(sll_simulation_base_class), pointer :: sim
 
-sim => new_guiding_center_2d_cartesian()
-call sim%run( )
-
-
 
 sim => new_guiding_center_2d_cartesian()
 call sim%run( )
