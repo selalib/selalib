@@ -541,6 +541,18 @@ contains
 
 
     select case (split_case)    
+      case ("SLL_LIE_TV") 
+        sim%nb_split_step = 2
+        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
+        sim%split_begin_T = .true.
+        sim%split_step(1) = 1._f64
+        sim%split_step(2) = 1._f64
+      case ("SLL_LIE_VT") 
+        sim%nb_split_step = 2
+        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
+        sim%split_begin_T = .false.
+        sim%split_step(1) = 1._f64
+        sim%split_step(2) = 1._f64
       case ("SLL_STRANG_TVT") 
         sim%nb_split_step = 3
         SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
@@ -1002,7 +1014,7 @@ contains
       call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
-      write(th_diag_id,'(f12.5,2g20.12)') time, nrj,nrj+ekin
+      write(th_diag_id,'(f12.5,2g20.12)') time, nrj,0.5*nrj+ekin
     endif
 
     
@@ -1062,6 +1074,40 @@ contains
            loc_sz_x2, &
            loc_sz_x3, &
            loc_sz_x4 )
+          
+          !begin compute poisson
+          call compute_reduction_4d_to_2d_direction34(&
+            f_seq_x3x4, &
+            rho_split, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            nc_x3+1, &
+            nc_x4+1, &
+            delta3, &    
+            delta4) 
+          call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
+          recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
+          send_size = size(send_buf_x1x2)
+          call compute_displacements_array_2d( &
+            layout2d_par_x1x2, &
+            world_size, &
+            disps )
+          call sll_collective_allgatherv_real64( &
+            sll_world_collective, &
+            send_buf_x1x2, &
+            send_size, &
+            recv_sz, &
+            disps, &
+            recv_buf_x1x2 )
+          call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
+          call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+          !end compute poisson 
+          
+          
+          
+          
+          
+          
           global_indices(1:4) = local_to_global_4D( sequential_x3x4, (/1, 1, 1, 1/) ) 
           do i2=1,loc_sz_x2
             do i1=1,loc_sz_x1
@@ -1099,36 +1145,7 @@ contains
               
             enddo 
           enddo
-          call compute_reduction_4d_to_2d_direction34(&
-            f_seq_x3x4, &
-            rho_split, &
-            loc_sz_x1, &
-            loc_sz_x2, &
-            nc_x3+1, &
-            nc_x4+1, &
-            delta3, &    
-            delta4) 
-          call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
-          recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
-          send_size = size(send_buf_x1x2)
-          call compute_displacements_array_2d( &
-            layout2d_par_x1x2, &
-            world_size, &
-            disps )
-          call sll_collective_allgatherv_real64( &
-            sll_world_collective, &
-            send_buf_x1x2, &
-            send_size, &
-            recv_sz, &
-            disps, &
-            recv_buf_x1x2 )
-          call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
-          call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
 
-
-
-          
-          
           call apply_remap_4D( seqx3x4_to_seqx1x2, f_seq_x3x4, f_seq_x1x2 )
           call compute_local_sizes_4d( sequential_x1x2, &
            loc_sz_x1, &
@@ -1195,7 +1212,7 @@ contains
         
         
         if(sll_get_collective_rank(sll_world_collective)==0) then
-          write(th_diag_id,'(f12.5,2g20.12)') time, nrj,ekin+nrj
+          write(th_diag_id,'(f12.5,2g20.12)') time, nrj,ekin+0.5_f64*nrj
         endif
       endif
       if (mod(istep,sim%freq_diag)==0) then
