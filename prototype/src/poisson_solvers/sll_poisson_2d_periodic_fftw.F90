@@ -264,12 +264,13 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    if (present(nrj)) then 
       dx = self%dx
       dy = self%dy
-      nrj=sum(e_x*e_x+e_y*e_y)*dx*dy
-      if (nrj>1.e-30) then 
-         nrj=0.5_f64*log(nrj)
-      else
-         nrj=-10**9
-      endif
+      nrj=sum(e_x(1:nc_x,1:nc_y)*e_x(1:nc_x,1:nc_y) &
+        +e_y(1:nc_x,1:nc_y)*e_y(1:nc_x,1:nc_y))*dx*dy
+      !if (nrj>1.e-30) then 
+      !   nrj=0.5_f64*log(nrj)
+      !else
+      !   nrj=-10**9
+      !endif
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftw
