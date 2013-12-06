@@ -27,14 +27,15 @@
  order_x4 = 4
 /
 &time_iterations
-  dt = 2.
+  dt = 2
   nbiter = 5
   freqdiag = 100
   freqdiag_time = 1
+!  split_case = "SLL_STRANG_VTV" 
 !  split_case = "SLL_STRANG_TVT" 
-!  split_case = "SLL_ORDER6VPnew1_VTV" 
+  split_case = "SLL_ORDER6VPnew1_VTV" 
 !  split_case = "SLL_ORDER6VPnew2_VTV" 
-  split_case = "SLL_ORDER6_VTV"
+!  split_case = "SLL_ORDER6_VTV"
 !  split_case = "SLL_LIE_TV"
 /
 &initial_function

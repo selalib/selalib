@@ -74,7 +74,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    !initial function
    procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
-      
+   sll_real64 :: nrj0   
    !advector
    class(sll_advection_1d_base), pointer    :: advect_x1
    class(sll_advection_1d_base), pointer    :: advect_x2
@@ -735,6 +735,8 @@ contains
         sim%params(1) = kmode_x1
         sim%params(2) = kmode_x2
         sim%params(3) = eps
+        sim%nrj0 = (0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+        *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
       case default
         print *,'#init_func_case not implemented'
         print *,'#in initialize_vlasov_par_poisson_seq_cart'  
@@ -819,6 +821,8 @@ contains
     sll_int32 :: global_indices(4)
     sll_int32 :: ig
     sll_real64 :: tmp
+    sll_real64 :: ekin0
+    sll_real64 :: nrj0
     
     world_size = sll_get_collective_size(sll_world_collective)
     my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -1001,8 +1005,13 @@ contains
          NEW_REMAP_PLAN(sequential_x1x2,sequential_x3x4,f_seq_x1x2)
 
 
-    ekin = 1._f64 ! to compute correctly
+    ekin = (sim%mesh_x1%eta_max-sim%mesh_x1%eta_min) &
+      *(sim%mesh_x2%eta_max-sim%mesh_x2%eta_min) ! analytic expression
     intfdx_full = 0._f64 ! to compute correctly
+    
+    nrj0=sim%nrj0
+    ekin0=ekin
+    
      
     if(sll_get_collective_rank(sll_world_collective)==0) then
       call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
@@ -1014,7 +1023,7 @@ contains
       call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
       call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
-      write(th_diag_id,'(f12.5,2g20.12)') time, nrj,0.5*nrj+ekin
+      write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0!0.5*nrj+ekin
     endif
 
     
@@ -1202,8 +1211,8 @@ contains
         call compute_reduction_2d_to_0d(&
             intfdx_full, &
             ekin, &
-            loc_sz_x3, &
-            loc_sz_x4, &
+            nc_x3+1, &
+            nc_x4+1, &
             delta3, &    
             delta4) 
         
@@ -1212,7 +1221,7 @@ contains
         
         
         if(sll_get_collective_rank(sll_world_collective)==0) then
-          write(th_diag_id,'(f12.5,2g20.12)') time, nrj,ekin+0.5_f64*nrj
+          write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0!,ekin+0.5_f64*nrj
         endif
       endif
       if (mod(istep,sim%freq_diag)==0) then
