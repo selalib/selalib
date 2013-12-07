@@ -635,12 +635,12 @@ contains ! *******************************************************************
     sll_real64 :: val_a12
     sll_real64 :: val_a21
     sll_real64 :: val_a22
-    sll_real64 :: val_b1
-    sll_real64 :: val_b1_der1
-    sll_real64 :: val_b1_der2
-    sll_real64 :: val_b2
-    sll_real64 :: val_b2_der1
-    sll_real64 :: val_b2_der2
+    sll_real64 :: val_b1=0
+    sll_real64 :: val_b1_der1=0
+    sll_real64 :: val_b1_der2=0
+    sll_real64 :: val_b2=0
+    sll_real64 :: val_b2_der1=0
+    sll_real64 :: val_b2_der2=0
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
     sll_real64 :: B11
