@@ -14,10 +14,9 @@ IF(USE_MKL)
    SET(BLA_VENDOR "Intel")
 
       INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
-      SET(BLAS_LIBRARIES "-mkl")
+      SET(BLAS_LIBRARIES " ")
       SET(BLAS_FOUND TRUE)
-      SET(LAPACK_LIBRARIES "-mkl")
-      #SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
+      SET(LAPACK_LIBRARIES "-Wl,--start-group $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
 
 ELSE()
