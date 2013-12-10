@@ -1,7 +1,24 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 ! This module attempts to replace the functionalities of the arbitrary
 ! degree spline functions by deBoor. 
 
-module arbitrary_degree_splines
+module sll_arbitrary_degree_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -244,15 +261,45 @@ contains
              print *, 'cell = ', cell
              print *, 'knot(current) = ', spline_obj%k(current)
              print *, 'knot(current+1) = ', spline_obj%k(current+1)
+             print *, 'knot(current+j) = ', spline_obj%k(current+j),j
           end if
+
+          if( tipjp1 == tip1 ) then
+             print *, 'calculation is shot... NaNs will be found'
+             print *, 'x = ', x
+             print *, 'current = ', current
+             print *, 'deg = ', deg
+             print *, 'cell = ', cell
+             print *, 'knot(current) = ', spline_obj%k(current)
+             print *, 'knot(current+1) = ', spline_obj%k(current+1)
+             print *, 'knot(current+j) = ', spline_obj%k(current+j),j
+             print *, 'knot(current+j+1) = ', spline_obj%k(current+j+1)
+          end if
+
+
+
 #endif
   !
   !               x-t(i)                       t(i+j+1)-x
   ! B[j,i](x) = ----------- * B[j-1,i](x) + ----------------* B[j-1,i+1](x)
   !             t(i+j)-t(i)                  t(i+j+1)-t(i+1)
 
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          if(tipj==ti)then
+            fac1=0._f64
+          elseif (abs(tipj-ti)<1.e-15) then
+            print *,tipj-ti
+          else     
+            fac1       = (x - ti)/(tipj - ti)            
+          endif  
+          if(tipjp1==tip1)then
+            fac2=0._f64
+          elseif (abs(tipjp1-tip1)<1.e-15) then
+            print *,tipjp1-tip1
+          else
+            fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          endif
+          
+          
           ! Super-ugly step to eliminate those cases where the denominator is
           ! zero but the spline value is also zero, thus avoiding the 
           ! indeterminate result ( NaN's ). 
@@ -354,8 +401,20 @@ contains
           ! protection: What guarantees are there that these denominators
           ! will not be zero?? This should probably be error-checked, else
           ! one can just end up with an array of NaN's.
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          if(tipj==ti)then
+            !print *,(x-ti)*splines(i)
+            fac1  = 0._f64
+          else
+            !print *,(tipjp1 - x)*splines(i+1)
+            fac1       = (x - ti)/(tipj - ti)
+          endif
+          !fac1       = (x - ti)/(tipj - ti)
+          if(tipjp1==tip1)then
+            !print *,(tipjp1 - x)*splines(i+1)
+            fac2  = 0._f64
+          else          
+            fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          endif  
           ! AGAIN: Super-ugly step to eliminate those cases where the 
           ! denominator is zero but the spline value is also zero, thus 
           ! avoiding the indeterminate result ( NaN's ). 
@@ -377,7 +436,8 @@ contains
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
-    do i=1,last
+    if(deg>0)then
+      do i=1,last
        current = cell - deg + i - 1
        delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
        delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1)
@@ -393,7 +453,8 @@ contains
        !   end if
        !end if
        !derivs(i) = (splines(i) - splines(i+1))/delta_x
-    end do
+      end do
+    endif
     b_spline_derivatives_at_x(1:deg+1) = derivs(1:deg+1)
 
   end function b_spline_derivatives_at_x
@@ -494,8 +555,15 @@ contains
           ! protection: What guarantees are there that these denominators
           ! will not be zero?? This should probably be error-checked, else
           ! one can just end up with an array of NaN's.
-          fac1       = (x - ti)/(tipj - ti)
-          fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          if(tipj==ti)then
+          else
+            fac1       = (x - ti)/(tipj - ti)
+          endif
+          if(tipjp1==tip1)then
+            fac2 = 0._f64
+          else
+            fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+          endif  
           ! AGAIN: Super-ugly step to eliminate those cases where the 
           ! denominator is zero but the spline value is also zero, thus 
           ! avoiding the indeterminate result ( NaN's ). 
@@ -518,7 +586,8 @@ contains
     ! At this moment we have an array with values of the splines up to the
     ! order spline_degree - 1. Proceed to compute the derivatives of order
     ! spline_degree.
-    do i=1,last
+    if(deg>0)then
+      do i=1,last
        current = cell - deg + i - 1
        delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
        delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1) 
@@ -534,11 +603,13 @@ contains
        !   end if
        !end if
        !derivs(i) = (splines(i) - splines(i+1))/delta_x
-    end do
+      end do
+    endif
     b_splines_and_derivs_at_x(2,1:deg+1) = derivs(1:deg+1)
     ! Finish computing the splines for the desired degree
-    j = deg
-    do i=1,last
+    if(deg>0)then
+      j = deg
+      do i=1,last
        current    = cell - deg + i - 1
        ti         = spline_obj%k(current)
        tip1       = spline_obj%k(current+1)
@@ -548,8 +619,17 @@ contains
        ! protection: What guarantees are there that these denominators
        ! will not be zero?? This should probably be error-checked, else
        ! one can just end up with an array of NaN's.
-       fac1       = (x - ti)/(tipj - ti)
-       fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+       if(tipj==ti)then
+         fac1 = 0._f64
+       else
+         fac1       = (x - ti)/(tipj - ti)
+       endif
+       !fac1       = (x - ti)/(tipj - ti)
+       if(tipjp1==tip1)then
+         fac2 = 0._f64
+       else
+         fac2       = (tipjp1 - x)/(tipjp1 - tip1)
+       endif  
           ! AGAIN: Super-ugly step to eliminate those cases where the 
           ! denominator is zero but the spline value is also zero, thus 
           ! avoiding the indeterminate result ( NaN's ). 
@@ -565,7 +645,8 @@ contains
           end if
           splines(i) = term1 + term2
 !       splines(i) = fac1*splines(i) + fac2*splines(i+1)
-    end do
+      end do
+    endif  
     b_splines_and_derivs_at_x(1,1:deg+1) = splines(1:deg+1)
   end function b_splines_and_derivs_at_x
 
@@ -584,6 +665,7 @@ contains
 
 
 
+
   ! *************************************************************************
   !
   !                    UNIFORM B-SPLINE FUNCTIONS
@@ -594,9 +676,62 @@ contains
   !> requested degree, evaluated at a given cell offset. The cell size is
   !> normalized between 0 and 1, thus the offset given must be a number
   !> between 0 and 1.
-  function uniform_b_splines_at_x( spline_degree, normalized_offset )
+
+  function uniform_b_splines_at_x( spline_degree, normalized_offset ) result(out)
+    !new uniform_b_splines_at_x
+    !out(1:d+1)= B_d(-(d+1)/2+d+x),...,B_d(-(d+1)/2+x) with d=spline_degree and x=normalized_offset
+    !where B_d=B_{d-1}*B_0 and B_0=1_[-1/2,1/2] and * is convolution
+    !complexity is lower than deboor splines in this uniform setting (translation of a unique B-spline)
+    !the following code can be used for comparison with deboor
+    !do i=-d,d+1
+    !t(i+d+1)=real(i,8)
+    !enddo
+    !call bsplvb(t,d+1,1,normalized_offset,d+1,out)
+    !we also have the property (from the symmetry of the B-spline)
+    !out(1:d+1)= B_d(-(d+1)/2+xx),...,B_d(-(d+1)/2+d+xx),..., where xx=1-normalized_offset
+    
+    implicit none
     sll_int32, intent(in)                      :: spline_degree
-    sll_real64, dimension(1:spline_degree+1)   :: uniform_b_splines_at_x
+    sll_real64, intent(in)                     :: normalized_offset
+    sll_real64, dimension(1:spline_degree+1)   :: out
+    sll_int32                                  :: degree,i
+    sll_real64                                 :: degree_real,i_real
+    sll_real64                                 :: r_degree
+    sll_real64                                 :: fac1,fac2
+    sll_real64                                 :: x,xx,tmp1,tmp2
+    !SLL_ASSERT( spline_degree >= 0 )
+    !SLL_ASSERT( normalized_offset >= 0.0_f64 )
+    !SLL_ASSERT( normalized_offset <= 1.0_f64 )
+    out(1) = 1._f64
+    xx=normalized_offset
+    x=1._f64-normalized_offset
+    !exchange x and xx for reverse
+    do degree=1,spline_degree
+      degree_real = real(degree,f64)
+      r_degree    = 1._f64/degree_real
+      fac1        = x*r_degree
+      tmp1        = out(1)
+      out(1)      = fac1*out(1)
+      do i=1,degree-1
+        i_real = real(i,f64)
+        fac1   = (x+i_real)*r_degree
+        fac2   = (xx+degree_real-i_real)*r_degree        
+        tmp2   = fac1*out(i+1)+fac2*tmp1
+        tmp1   = out(i+1)
+        out(i+1) = tmp2
+      enddo
+      fac2            = xx*r_degree 
+      out(degree+1)     = fac2*tmp1
+    enddo
+  end function uniform_b_splines_at_x
+
+
+
+
+
+  function uniform_b_splines_at_x_old( spline_degree, normalized_offset )
+    sll_int32, intent(in)                      :: spline_degree
+    sll_real64, dimension(1:spline_degree+1)   :: uniform_b_splines_at_x_old
     sll_real64, intent(in)                     :: normalized_offset
     sll_real64, dimension(1:2*spline_degree+1) :: splines
     sll_int32                                  :: i
@@ -635,8 +770,12 @@ contains
        end do
        last = last - 1
     end do
-    uniform_b_splines_at_x(1:spline_degree+1) = splines(1:spline_degree+1)
-  end function uniform_b_splines_at_x
+    uniform_b_splines_at_x_old(1:spline_degree+1) = splines(1:spline_degree+1)
+  end function uniform_b_splines_at_x_old
+
+
+
+
 
   !> returns an array with the values of the b-spline derivatives of the 
   !> requested degree, evaluated at a given cell offset. The cell size is
@@ -690,6 +829,7 @@ contains
     ! the degree 'spline_degree -1'. We proceed to compute the derivatives
     ! of degree 'spline_degree'.
     ! print *, 'splines for derivatives:', splines(:)
+    derivs(:) = 0._f64
     do i=1,last
        derivs(i) = splines(i) - splines(i+1)
     end do
@@ -754,15 +894,18 @@ contains
     uniform_b_splines_and_derivs_at_x(2,1:degree+1) = derivs(1:degree+1)
 
     ! Do the last pass to complete the splines of the desired degree
-    j = degree
-    jreal      = real(j,f64)
-    r_jreal    = 1.0_f64/jreal
-    do i=1,last
+    if(degree>0)then
+      j = degree
+      jreal      = real(j,f64)
+      r_jreal    = 1.0_f64/jreal
+      do i=1,last
        temp       = real(degree - i, f64)
        fac1       = (temp + normalized_offset + 1.0_f64)*r_jreal
        fac2       = (-temp + jreal - normalized_offset)*r_jreal
        splines(i) = fac1*splines(i) + fac2*splines(i+1)
-    end do
+      end do
+    endif
+    
     uniform_b_splines_and_derivs_at_x(1,1:degree+1) = splines(1:degree+1)
   end function uniform_b_splines_and_derivs_at_x
 
@@ -771,4 +914,4 @@ contains
 
 
 
-end module arbitrary_degree_splines
+end module sll_arbitrary_degree_splines

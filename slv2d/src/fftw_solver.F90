@@ -1,7 +1,11 @@
 program fftw_solver
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_utilities.h"
+#include "sll_constants.h"
 use, intrinsic :: iso_c_binding
 implicit none
+
 include 'fftw3.f03'
 
 type(C_PTR) :: fw, bw
@@ -66,9 +70,11 @@ nxh1 = int((nx/2+1)*ny,C_SIZE_T)
 p_rhot = fftw_alloc_complex(nxh1)
 call c_f_pointer(p_rhot, rhot, [nx/2+1,ny])
 
+#ifdef FFTW_THREADS
 call dfftw_init_threads(error)
 if (error == 0) stop 'FFTW CAN''T USE THREADS'
 call dfftw_plan_with_nthreads(nthreads)
+#endif 
 
 fw = fftw_plan_dft_r2c_2d(ny, nx, rho(1:nx,1:ny), rhot, FFTW_PATIENT)
 bw = fftw_plan_dft_c2r_2d(ny, nx, rhot, phi(1:nx,1:ny), FFTW_PATIENT)
@@ -117,7 +123,9 @@ call cpu_time(tend)
 write(*,"(' cpu time ', g15.5, ' s')") tend-tbegin
 
 
+#ifdef FFTW_THREADS
 call dfftw_cleanup_threads(error)
+#endif
 call fftw_free(p_rhot)
 call fftw_destroy_plan(fw)
 call fftw_destroy_plan(bw)

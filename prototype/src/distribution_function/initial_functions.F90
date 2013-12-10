@@ -1,6 +1,6 @@
 module initial_distribution_functions
 #include "sll_working_precision.h"
-use numeric_constants
+use sll_constants
   implicit none
   
 contains 
@@ -9,7 +9,7 @@ contains
     sll_real64 :: landau
     sll_real64, parameter :: eps = 0.01_f64
     
-    ! sll_kx is defined in the numeric_constants module. 
+    ! sll_kx is defined in the sll_constants module. 
     ! It is set at the mesh initialization 
     landau = ( 1 + eps * cos(sll_kx*x) ) / sqrt(2*sll_pi) * exp(-0.5_f64*v*v)
   end function landau
@@ -22,7 +22,7 @@ contains
     sll_real64, parameter :: xi = 0.90_f64
     sll_real64, parameter :: v0 = 2.4_f64
     sll_real64 :: vv
-    ! sll_kx is defined in the numeric_constants module. 
+    ! sll_kx is defined in the sll_constants module. 
     ! It is set at the mesh initialization 
     vv = v*v
     fval=(1+eps*((cos(2*sll_kx*x)+cos(3*sll_kx*x))/1.2_f64+cos(sll_kx*x)))* &

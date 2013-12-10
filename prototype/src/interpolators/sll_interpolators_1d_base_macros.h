@@ -1,7 +1,7 @@
 #ifndef _sll_interpolators_1d_base_macros_h_
 #define _sll_interpolators_1d_base_macros_h_
 
-#include "misc_utils.h"
+#include "sll_utilities.h"
 
   ! NOTE: THIS IS EXPERIMENTAL...
   ! In case that a developer wants to write an interpolator using this

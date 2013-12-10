@@ -9,8 +9,9 @@ module cubic_non_uniform_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_tridiagonal
-  use sll_splines
+#include "sll_splines.h"
+#include "sll_utilities.h"
+
   implicit none
 
   type cubic_nonunif_spline_1D
@@ -100,9 +101,9 @@ contains  ! ****************************************************************
       node_pos(0) = 0.0_f64
       node_pos(n_cells) = 1.0_f64        
       select case (bc_type)
-      case (PERIODIC_SPLINE)
+      case (SLL_PERIODIC)
         call setup_spline_nonunif_1D_periodic_aux(node_pos,n_cells,spline%buf,spline%ibuf)
-      case (HERMITE_SPLINE)
+      case (SLL_HERMITE)
         call setup_spline_nonunif_1D_hermite_aux(node_pos,n_cells,spline%buf,spline%ibuf)
       case default
         print *, 'ERROR: compute_spline_nonunif_1D(): not recognized boundary condition'
@@ -120,9 +121,9 @@ contains  ! ****************************************************************
     end if
 
     select case (bc_type)
-    case (PERIODIC_SPLINE)
+    case (SLL_PERIODIC)
       call compute_spline_nonunif_1D_periodic( f, spline )
-    case (HERMITE_SPLINE)
+    case (SLL_HERMITE)
       if( present(sl) ) then
         spline%slope_L = sl
       end if
@@ -321,7 +322,6 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: cts!, a
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
     !sll_real64 :: linf_err,tmp
-    sll_int32 :: i
     !a    => buf(1:3*N) 
     cts  => buf(3*N+1:10*N)
     ipiv => ibuf(1:N)
@@ -348,7 +348,7 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: lift(4,2)
     sll_real64, dimension(:), pointer :: cts
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
-    sll_int32 :: i,Np
+    sll_int32 :: Np
     Np=N+1
     cts  => buf(3*Np+1:10*Np)
     ipiv => ibuf(1:Np)

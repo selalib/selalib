@@ -1,5 +1,16 @@
 {% extends "!layout.html" %}
 
+{% block rootrellink %}
+          <li><a href="{{ pathto('index') }}">Home</a>|&nbsp;</li>
+          <li><a href="{{ pathto('prototype/getting_started') }}">Prototype</a>|&nbsp;</li>
+          <li><a href="{{ pathto('install/index') }}">Installation</a>|&nbsp;</li>
+          <li><a href="{{ pathto('doxygen/html/index') }}">Doxygen</a>|&nbsp;</li>
+          <li><a href="https://gforge.inria.fr/plugins/mediawiki/wiki/selalib/index.php/Main_Page") }}">Wiki</a>|&nbsp;</li>
+          <li><a href="http://cdash.inria.fr/CDash/index.php?project=Selalib") }}">CDash</a>|&nbsp;</li>
+          <li><a href="https://plus.google.com/communities/112911237943658482306") }}">Google+</a></li>
+{% endblock %}
+
+
 {% block relbar1 %}
 <link rel="shortcut icon" href="_static/favicon.ico">
 <div style="background-color: white; text-align: left; padding: 10px 10px 15px 15px">

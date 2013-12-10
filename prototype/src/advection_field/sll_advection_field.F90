@@ -37,9 +37,10 @@ module sll_advection_field
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-#include "sll_field_1d.h"
-  use numeric_constants
-  use sll_misc_utils   ! for int2string
+!#include "sll_field_1d.h"
+  use sll_constants
+  use sll_utilities   ! for int2string
+  use sll_scalar_field_1d
   implicit none
   
 !#ifdef STDF95
@@ -73,8 +74,8 @@ contains
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
-    class(sll_mapped_mesh_2d_base), pointer             :: mesh
-
+    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer   :: mesh
 
     this%pmass = mass
     this%pcharge = charge
@@ -120,8 +121,8 @@ contains
 !#else 
              this%data(i1,i2) = 0.5_f64*mass * this%mesh%x2_at_node(i1,i2)**2 &
 !#endif
-                  + this%pcharge*(FIELD_1D_AT_I(phi_self,i1)  &
-                  + FIELD_1D_AT_I(phi_external,i1))
+                  + this%pcharge*phi_self%data(i1)  &
+                  + phi_external%data(i1)
           end do
        end do
     else 
@@ -132,7 +133,7 @@ contains
 !#else
              this%data(i1,i2) = 0.5_f64*mass * this%mesh%x2_at_node(i1,i2)**2 &
 !#endif
-                  + this%pcharge*FIELD_1D_AT_I(phi_self,i1)
+                  + this%pcharge*phi_self%data(i1)
           end do
        end do
     end if

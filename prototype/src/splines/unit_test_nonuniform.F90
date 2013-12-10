@@ -19,7 +19,7 @@ program nonuniform_spline_tester
 #include "sll_memory.h"
 
   use cubic_non_uniform_splines
-  use numeric_constants
+  use sll_constants
   !use sort_module
   implicit none
   
@@ -27,13 +27,13 @@ program nonuniform_spline_tester
   
   logical                                :: test_passed
   sll_int32 :: err
-  sll_int32 :: N,i,N_new,j1,j
+  sll_int32 :: N,i,N_new,j
   sll_real64,dimension(:), pointer :: node_positions,f_per,f_hrmt,f
   sll_real64,dimension(:), pointer :: new_node_positions,f_new
   sll_real64,dimension(:), pointer :: fine_node_positions,f_fine
   sll_real64,dimension(:,:,:), pointer :: f_deriv
   type(cubic_nonunif_spline_1D), pointer :: spl_per, spl_hrmt, spl 
-  sll_real64 :: x,val,sl,sr,xmin,xmax,dx,shift,dt,velocity,M,tmp,linf_err(4),linf(4),nb_period
+  sll_real64 :: x,xmin,xmax,tmp,linf_err(4),linf(4)
   sll_real64 :: xmin_val,xmax_val,slope_left,slope_right,fmin_val,fmax_val,local_xval(4)
   sll_real64 :: p(4),pp(4),w(4),fp(4)
   sll_real64 :: node_uniformity_min,node_uniformity_max,unif_val_min,unif_val_max
@@ -86,9 +86,9 @@ program nonuniform_spline_tester
   SLL_ALLOCATE(new_node_positions(N_new), err)
   SLL_ALLOCATE(f_new(N_new), err)
   
-  spl_per =>  new_cubic_nonunif_spline_1D( N, PERIODIC_SPLINE)
+  spl_per =>  new_cubic_nonunif_spline_1D( N, SLL_PERIODIC)
 
-  spl_hrmt =>  new_cubic_nonunif_spline_1D( N, HERMITE_SPLINE)
+  spl_hrmt =>  new_cubic_nonunif_spline_1D( N, SLL_HERMITE)
   
   
   do bdr_case=1,2
@@ -435,7 +435,6 @@ program nonuniform_spline_tester
       !endif  
     enddo
     
-    
     !print *,test,min(linf_err(1)/linf(1),linf(1)),min(linf_err(2)/linf(2),linf(2)),min(linf_err(3)/linf(3),linf(3)),min(linf_err(4)/linf(4),linf(4)),1._f64/node_uniformity_min,node_uniformity_max
     
     do j=1,4
@@ -456,10 +455,7 @@ program nonuniform_spline_tester
         index_max_err(6)=test
       endif
     
-        
-    
     call interpolate_array_value_nonunif( new_node_positions, f_new,N_new, spl)
-    
     
   enddo
   

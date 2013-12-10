@@ -27,7 +27,6 @@ program WENO_recon_tester
     sll_int32 :: i_weno ! indicator for weno or linear reconstruction
   sll_int32 :: order
   type(WENO_recon_1D), pointer :: sp1
-  sll_real64                   :: phase
   sll_real64, allocatable, dimension(:) :: data       ! data at cell centers with size NP
   sll_real64, allocatable, dimension(:) :: out        ! data at coordinates_i with size NP
   sll_real64, allocatable, dimension(:) :: data_deri  ! exact function value at interpolated locations
@@ -53,7 +52,7 @@ program WENO_recon_tester
  
   do i=1,NP      
      data(i)  = sin((i-0.5_f64)*dx)+cos((i-0.5_f64)*dx) 
-     data_deri(i) =cos((i-0.5_f64)*dx)-sin((i-0.5_f64)*dx)  	 
+     data_deri(i) =cos((i-0.5_f64)*dx)-sin((i-0.5_f64)*dx)
   enddo
   print *, 'proceed to allocate the data for WENO reconstruction...'
   sp1 =>  new_WENO_recon_1D(NP, 0.0_f64, sll_pi*2.0_f64, order, i_weno)  
@@ -73,9 +72,9 @@ program WENO_recon_tester
   print *, 'derivatives of function values'
   do i=1, NP
      accumulator1 = accumulator1 + abs(data_deri(i) - out(i))
-	 if(i.eq.1)then
-	 print *, abs(data_deri(i) - out(i)), data_deri(i) , out(i)
-	 endif
+     if(i.eq.1)then
+        print *, abs(data_deri(i) - out(i)), data_deri(i) , out(i)
+     endif
   end do
 
 

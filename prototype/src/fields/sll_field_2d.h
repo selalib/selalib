@@ -8,17 +8,17 @@
 
 ! get macros
 #define GET_FIELD_MESH( f )                f%mesh
-#define GET_FIELD_ETA1_MIN( f )            f%mesh%eta1_min
-#define GET_FIELD_ETA1_MAX( f )            f%mesh%eta1_max
-#define GET_FIELD_NC_ETA1( f )             f%mesh%nc_eta1
-#define GET_FIELD_DELTA_ETA1( f )          f%mesh%delta_eta1
-#define GET_FIELD_ETA2_MIN( f )            f%mesh%eta2_min
-#define GET_FIELD_ETA2_MAX( f )            f%mesh%eta2_max
-#define GET_FIELD_NC_ETA2( f )             f%mesh%nc_eta2
-#define GET_FIELD_DELTA_ETA2( f )          f%mesh%delta_eta2
-#define GET_FIELD_DELTA_ETA2( f )          f%mesh%delta_eta2
-#define GET_FIELD_BOUNDARY1( f )           f%mesh%boundary1_type
-#define GET_FIELD_BOUNDARY2( f )           f%mesh%boundary2_type
+#define GET_FIELD_ETA1_MIN( f )            f%mesh%mesh%eta1_min
+#define GET_FIELD_ETA1_MAX( f )            f%mesh%mesh%eta1_max
+#define GET_FIELD_NC_ETA1( f )             f%mesh%mesh%num_cells1
+#define GET_FIELD_DELTA_ETA1( f )          f%mesh%mesh%delta_eta1
+#define GET_FIELD_ETA2_MIN( f )            f%mesh%mesh%eta2_min
+#define GET_FIELD_ETA2_MAX( f )            f%mesh%mesh%eta2_max
+#define GET_FIELD_NC_ETA2( f )             f%mesh%mesh%num_cells2
+#define GET_FIELD_DELTA_ETA2( f )          f%mesh%mesh%delta_eta2
+#define GET_FIELD_DELTA_ETA2( f )          f%mesh%mesh%delta_eta2
+#define GET_FIELD_BOUNDARY1( f )           f%mesh%mesh%boundary1_type
+#define GET_FIELD_BOUNDARY2( f )           f%mesh%mesh%boundary2_type
 
 ! There are no SET_FIELD() macros since one is not supposed to set those 
 ! values outside of the initialization.
@@ -35,8 +35,8 @@
 ! It works for all types of fields
 #define FIELD_DATA(f)   f%data
 #define FIELD_JACOBIAN_CELL_DATA(f)   f%mesh%jacobians_c
-#define FIELD_X1_CELL(f)   f%mesh%x1_cell
-#define FIELD_X2_CELL(f)   f%mesh%x2_cell
+#define FIELD_X1_CELL(f)   f%mesh%x1_at_cell
+#define FIELD_X2_CELL(f)   f%mesh%x2_at_cell
 
 
 ! The following macro should call some interpolation with splines or something

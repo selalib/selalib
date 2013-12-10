@@ -3,35 +3,32 @@ program cg_polar
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_timer
+  use sll_timer 
   use polar_operators
   use polar_advection
   use sll_fft
   !use poisson_polar
-  use numeric_constants
+  use sll_constants
   implicit none
 
   type(sll_SL_polar), pointer :: plan_sl
-  type(time_mark)   , pointer :: t1,t2,t3
+  type(sll_time_mark)  :: t1,t2,t3
   sll_real64, dimension (:,:), allocatable :: div,f,fp1,g,phi_ref
   sll_real64, dimension (:)  , allocatable :: int_r
-  sll_int32  :: i, j, step, visustep, hh, min, ss
+  sll_int32  :: i, j, step, visustep, hh, min, ss,ii
   sll_int32  :: nr, ntheta, nb_step
-  sll_int32  :: fcase, scheme, carac, grad, visu
+  sll_int32  :: fcase, scheme, carac, grad, visu, interp_case, PPM_order
   sll_int32  :: ierr_poiss
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
-  sll_real64 :: w0, w, l10, l1, l20, l2, e, e0, re, im
+  sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
   sll_int32  :: mod, bc(2)
   sll_real64 :: mode, temps, temps_mode, alpha, tmp, err_loc
   sll_real64, dimension(2,2) :: dom
-  character (len=16) :: f_file,bctop,bcbot
+  character (len=16) :: f_file!,bctop,bcbot
   !used for testing poisson with fcase=2
   sll_real64 :: c1, c2, c3, k1, k2, k3, x, y
   sll_real64 :: c1_mode, c2_mode, c3_mode, k1_mode, k2_mode, k3_mode
-
-  t1 => new_time_mark()
-  t2 => new_time_mark()
-  t3 => new_time_mark()
+  sll_real64 :: mode_slope(1:8),time_mode(1:8)
 
   !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
@@ -52,6 +49,8 @@ program cg_polar
   read(27,*)grad
   read(27,*)fcase
   read(27,*)scheme
+  read(27,*)interp_case
+  read(27,*)PPM_order
   read(27,*)visu
   read(27,*)f_file
   read(27,*)
@@ -105,6 +104,7 @@ program cg_polar
         theta = real(j-1,f64)*dtheta
       enddo
     end do
+!f=10._f64
 
   else if (fcase==3) then
     do i = 1,nr+1
@@ -163,6 +163,8 @@ program cg_polar
 
   fp1 = 0.0_f64
 
+  !call solve_poisson_polar(plan_sl%poisson,f,plan_sl%phi)!,ierr_poiss)
+
   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi,ierr_poiss)
   if (ierr_poiss.ne.0) then
     print*, 'WARNING: poisson error is larger than 1.e-12 for ', &
@@ -175,8 +177,15 @@ program cg_polar
   call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta, &
     visu,step,"CG")
 
+  print *,'#bc(1)=',bc(1)
+  print *,'#bc(2)=',bc(2)
+  print *,'#SLL_DIRICHLET=',SLL_DIRICHLET
+  print *,'#SLL_NEUMANN=',SLL_NEUMANN
+  print *,'#SLL_NEUMANN_MODE_0=',SLL_NEUMANN_MODE_0
+  
+
   !mode=1.5
-  if(bc(1)==DIRICHLET)then
+  if(bc(1)==SLL_DIRICHLET)then
     k1 = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
       2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
     k2 = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
@@ -192,7 +201,7 @@ program cg_polar
       2.0_f64*r1**2*log(rmin/r1))*log(rmax) / &
       (-4.0_f64*log(rmin/rmax))
   endif
-  if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
+  if((bc(1)==SLL_NEUMANN).or.(bc(1)==SLL_NEUMANN_MODE_0))then
     k1 = 0._f64
     k2 = r1**2/2._f64
     k3 = r1**2/2._f64-r2**2/2._f64
@@ -205,7 +214,7 @@ program cg_polar
   endif
 
   if (mode==0) then 
-    if(bc(1)==DIRICHLET)then
+    if(bc(1)==SLL_DIRICHLET)then
       k1_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
         2.0_f64*r2**2*log(r2/rmax))/(4.0_f64*log(rmin/rmax))
       k2_mode = (r1**2-r2**2+2.0_f64*r1**2*log(rmin/r1) + &
@@ -222,7 +231,7 @@ program cg_polar
         2.0_f64*r1**2*log(rmin/r1))*log(rmax) / &
         (-4.0_f64*log(rmin/rmax))
     endif
-    if((bc(1)==NEUMANN).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_NEUMANN).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = 0._f64
       k2_mode = r1**2/2._f64
       k3_mode = r1**2/2._f64-r2**2/2._f64
@@ -237,7 +246,7 @@ program cg_polar
   endif
 
   if(mode==1)then
-    if((bc(1)==NEUMANN))then
+    if((bc(1)==SLL_NEUMANN))then
       k1_mode = (-3._f64*r1*rmax**2-r2**3 + &
         3*rmax**2*r2+r1**3)/(6._f64*(rmin**2+rmax**2))
       k2_mode = (3._f64*r2*rmax**2-r2**3 + &
@@ -253,7 +262,7 @@ program cg_polar
         3*rmin**2*r1+r1**3)*rmax**2/(6._f64*(rmin**2+rmax**2))
     endif
 
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_DIRICHLET).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = (-3._f64*r1*rmax**2-r2**3 + &
         3*rmax**2*r2+r1**3)/(6._f64*(-rmin**2+rmax**2))
       k2_mode = (3._f64*r2*rmax**2-r2**3 - &
@@ -271,7 +280,7 @@ program cg_polar
   endif
 
   if(mode==3)then
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_DIRICHLET).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = (r1*r2*(r2**5-r1**5) - &
         5._f64*rmax**6*(r2-r1))/(30._f64*r2*r1*(rmin**6-rmax**6))
       k2_mode = (r1*r2*(r2**5-r1**5) - &
@@ -290,7 +299,7 @@ program cg_polar
   endif
 
   if(mode==7)then
-    if((bc(1)==DIRICHLET).or.(bc(1)==NEUMANN_MODE0))then
+    if((bc(1)==SLL_DIRICHLET).or.(bc(1)==SLL_NEUMANN_MODE_0))then
       k1_mode = -5._f64*r1**5*r2**14 + &
         5._f64*r1**14*r2**5-9._f64*r1**5*rmax**14 + &
         9._f64*r2**5*rmax**14
@@ -416,6 +425,7 @@ program cg_polar
     do i = 2,nr
       r   = rmin+real(i-1,f64)*dr
       w0  = w0+r*f(i,j)
+      !w0  = w0+f(i,j)
       l10 = l10+r*abs(f(i,j))
       l20 = l20+r*f(i,j)**2
       e0  = e0+r*(plan_sl%adv%field(1,i,j)**2 + &
@@ -430,36 +440,47 @@ program cg_polar
   e0    = e0*dr*dtheta/2.0_f64
   int_r = int_r*dr
   call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
+  do ii=1,8
+    time_mode(ii) = real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2 &
+     &+aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2
+  enddo
+  !mode_slope=time_mode
   write(23,*)'#t=0',w0,l10,l20,e0
   write(23,*)0.0_f64,w0,1.0_f64,1.0_f64,0.0_f64,e0, &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
-    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
+     time_mode(1:8)!,time_mode(1:8)
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!    real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
+!    aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
-  t1 => start_time_mark(t1)
+  
+
+
+
+
+  call set_time_mark(t1)
 
   do step = 1,nb_step
     if (step==101) then
-      t2 => start_time_mark(t2)
+      call set_time_mark(t2)
       temps = time_elapsed_between(t1,t2)
       temps = temps/100*real(nb_step,f32)
       hh    = floor(temps/3600.0d0)
@@ -477,9 +498,17 @@ program cg_polar
       !classical semi-Lagrangian scheme (order 1)
       call SL_classic(plan_sl,f,fp1)
 
+    else if (scheme==10) then
+      !semi-Lagrangian scheme remap (Euler, order 1)
+      call SL_remap(plan_sl,f,fp1,interp_case,PPM_order)
+
     else if (scheme==2) then
       !semi-Lagrangian predictive-corrective scheme
       call SL_ordre_2(plan_sl,f,fp1)
+
+    else if (scheme==20) then
+      !semi-Lagrangian scheme remap (predictive-corrective, order 2)
+      call SL_remap_ordre_2(plan_sl,f,fp1,interp_case,PPM_order)
 
     else if (scheme==3) then
       !leap-frog scheme
@@ -540,6 +569,7 @@ program cg_polar
       do i = 2,nr
         r  = rmin+real(i-1,f64)*dr
         w  = w+r*f(i,j)
+        !w  = w+f(i,j)
         l1 = l1+r*abs(f(i,j))
         l2 = l2+r*f(i,j)**2
         e  = e+r*(plan_sl%adv%field(1,i,j)**2 + &
@@ -553,43 +583,55 @@ program cg_polar
     e     = e*dr*dtheta/2.0_f64
     int_r = int_r*dr
     call fft_apply_plan(plan_sl%poisson%pfwd,int_r,int_r)
+    do ii=1,8
+      mode_slope(ii) = time_mode(ii)
+      time_mode(ii) = real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2 &
+       &+aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ii-1))**2
+       mode_slope(ii) = (log(time_mode(ii))-log(mode_slope(ii)))/dt
+    enddo
+    !mode_slope=(time_mode-mode_slope)/dt
+    
+    
     write(23,*) dt*real(step,f64),w,l1/l10,l2/l20,e-e0,e, &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &   !$7
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &  !$8
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &   !$9
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &  !$10
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &   !$11
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &  !$12
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &   !$13
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &  !$14
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &   !$15
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &  !$16
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &   !$17
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &  !$18
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), & 
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
-      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
-      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
+      time_mode,mode_slope
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &   !$7
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,0)), &  !$8
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &   !$9
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,1)), &  !$10
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &   !$11
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,2)), &  !$12
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &   !$13
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,3)), &  !$14
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &   !$15
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,4)), &  !$16
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &   !$17
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,7)), &  !$18
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), & 
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-1)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-2)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-3)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-4)), &
+!      real(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7)), &
+!      aimag(fft_get_mode(plan_sl%poisson%pfwd,int_r,ntheta-7))
 
     if ((step/500)*500==step) then
       print*,'#step',step
     end if
 
+#ifndef NOHDF5
     if (step==1 .or. step/visustep*visustep==step) then
-      call plot_f(step)
+      call plot_f(step/visustep)
     end if
+#endif
   end do
   write(23,*)' '
   write(23,*)' '
   close(23)
 
-  t3 => start_time_mark(t3)
+  call set_time_mark(t3)
   temps = time_elapsed_between(t1,t3)
   hh    = floor(temps/3600.0d0)
   min   = floor((temps-3600.0d0*real(hh))/60.0d0)
@@ -609,12 +651,10 @@ program cg_polar
   SLL_DEALLOCATE_ARRAY(f,i)
   SLL_DEALLOCATE_ARRAY(fp1,i)
   SLL_DEALLOCATE_ARRAY(g,i)
-  t1 => delete_time_mark(t1)
-  t2 => delete_time_mark(t2)
-  t3 => delete_time_mark(t3)
   call delete_SL_polar(plan_sl)
 
 
+#ifndef NOHDF5
 !*********************
 contains
 !*********************
@@ -661,11 +701,11 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
-      error,file_id,"Node")
+    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh",nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f
+
+#endif
  
 end program cg_polar

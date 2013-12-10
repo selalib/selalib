@@ -1,28 +1,41 @@
-!> \file sll_visu_pic.F90
-!> \namespace sll_visu_pic
-!> \authors                    
-!> Pierre Navaro (navaro@math.unistra.fr) 
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!> \author Pierre Navaro
 !> \brief  
 !> This module provides some routines for plotting during PIC simulations.
-!>
 module sll_visu_pic
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-use sll_io
-use sll_ascii_io
-use sll_gnuplot
-use sll_xdmf
+#include "sll_file_io.h"
 
 implicit none
 
+!> plot particles centers with gnuplot
 interface particles_center_gnuplot
    module procedure xv_particles_center_gnuplot
 end interface particles_center_gnuplot
 
+!> plot particles distribution with gnuplot
 interface distribution_gnuplot
    module procedure distribution_xv_gnuplot
 end interface distribution_gnuplot
 
+!> write point3d file to plot particles characteristics
 interface plot_format_points3d
    module procedure pq_plot_format_points3d
    module procedure pqr_plot_format_points3d
@@ -124,7 +137,7 @@ write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 write(file_id,*)"splot  '"//plot_name//"_"//fin//".dat' w l"
 close(file_id)
 
-call sll_gnuplot_rect_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
+call sll_gnuplot_field_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
 
 end subroutine distribution_xv_gnuplot
 

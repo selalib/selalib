@@ -1,5 +1,6 @@
 module diagno
-#include "selalib.h"
+#include "sll_working_precision.h"
+use sll_visu_pic
 use zone
 
 implicit none
@@ -637,7 +638,7 @@ do ipart=1,nbpart
  enddo
 enddo
 
-call sll_gnuplot_rect_2d(0._f64, dimx, 40, 0._f64, dimy, 40, df, 'density', iplot, error)  
+call sll_gnuplot_corect_2d(0._f64, dimx, 40, 0._f64, dimy, 40, df, 'density', iplot, error)  
 call sll_xdmf_corect2d_nodes('df_'//fin,df,"density",x_min,delta_x,y_min,delta_y) 
 
 end subroutine plot_particle_density

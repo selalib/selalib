@@ -4,7 +4,7 @@ program vp_non_unif_mesh
 #include "sll_memory.h"
 !contact: mehrenbe@math.unistra.fr for this  program
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   use bgk_mesh_construction
   use contrib_rho_module
@@ -26,13 +26,13 @@ program vp_non_unif_mesh
   sll_real64,dimension(:), pointer :: node_positions_x1_dual,node_positions_x2_dual
   sll_real64,dimension(:), pointer :: node_positions_x1_poisson
   sll_real64,dimension(:,:),pointer::f,f_init,f_store
-  sll_real64,dimension(:,:),pointer::x1n_array,x2n_array,x1c_array,x2c_array
-  sll_real64,dimension(:,:),pointer::jac_array
+  !sll_real64,dimension(:,:),pointer::x2n_array,x2c_array
+  !sll_real64,dimension(:,:),pointer::jac_array
   sll_real64, dimension(:,:), pointer :: a1,a2,psi
   sll_real64,dimension(:,:),pointer::integration_points
-  sll_int32  :: i1,i2,ierr,i,step,k,NN,N_alpha_x2,j1,N_x1_poisson,dual_case_x1,dual_case_x2
-  sll_real64 :: delta_x1,delta_x2,x1,x2,x1c,x2c
-  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
+  sll_int32  :: i1,i2,i,step,N_alpha_x2,j1,N_x1_poisson,dual_case_x1,dual_case_x2
+  sll_real64 :: delta_x1,delta_x2,x1,x2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2
   sll_real64 :: val,tmp,tmp0
   sll_real64 :: alpha_x2,shift
   sll_real64,dimension(:), pointer :: node_positions_x1_tmp,node_positions_x2_tmp  
@@ -356,11 +356,11 @@ program vp_non_unif_mesh
 
   
 
-  spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
-  spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
+  spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, SLL_PERIODIC)
+  spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, SLL_PERIODIC)
 
-  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
-  spl_per_x1_E =>  new_cubic_nonunif_spline_1D( N_x1_poisson, PERIODIC_SPLINE)
+  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, SLL_PERIODIC)
+  spl_per_x1_E =>  new_cubic_nonunif_spline_1D( N_x1_poisson, SLL_PERIODIC)
   do i1=1,nc_eta1+1
     do i2=1,nc_eta2+1
       x1 = x1_min+(x1_max-x1_min)*node_positions_x1(i1)

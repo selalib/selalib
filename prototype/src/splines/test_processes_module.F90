@@ -4,7 +4,7 @@
 ! Module: test_processes_module.F90
 !
 !> @brief 
-!> Module of test processes for sll_splines unit test
+!> Module of test processes for sll_cubic_splines unit test
 !   
 !> @authors                    
 !> Aliou DIOUF (aliou.l.diouf@inria.fr)
@@ -15,8 +15,8 @@ module test_processes_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use sll_splines
-  use numeric_constants
+  use sll_cubic_splines
+  use sll_constants
   use util_constants
   use test_func_module
   implicit none
@@ -44,10 +44,10 @@ module test_processes_module
   abstract interface
      function spline_interpolator_1d(  x, spline )
        use sll_working_precision
-       use sll_splines
+       use sll_cubic_splines
        sll_real64 :: spline_interpolator_1d
        sll_real64, intent(in) :: x
-       type(sll_spline_1D), pointer :: spline
+       type(sll_cubic_spline_1D), pointer :: spline
      end function spline_interpolator_1d
   end interface
 
@@ -55,11 +55,11 @@ module test_processes_module
   abstract interface
      function spline_interpolator_2d(  x, y, spline )
        use sll_working_precision
-       use sll_splines
+       use sll_cubic_splines
        sll_real64 :: spline_interpolator_2d
        sll_real64, intent(in) :: x
        sll_real64, intent(in) :: y
-       type(sll_spline_2D), pointer :: spline
+       type(sll_cubic_spline_2D), pointer :: spline
      end function spline_interpolator_2d
   end interface
 #endif
@@ -71,8 +71,8 @@ contains
     implicit none
 
     sll_int32                             :: i_test, ok, i, err 
-    type(sll_spline_1d), pointer         :: sp1
-    type(sll_spline_1d), pointer         :: sp2
+    type(sll_cubic_spline_1d), pointer         :: sp1
+    type(sll_cubic_spline_1d), pointer         :: sp2
     sll_real64                            :: x
     sll_real64                            :: phase
     sll_real64, allocatable, dimension(:) :: coordinates
@@ -107,13 +107,13 @@ contains
     end do
      
     print *, 'proceed to allocate the spline...'
-    sp1 =>  new_spline_1D( NP, XMIN, XMAX, PERIODIC_SPLINE )
+    sp1 =>  new_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
     call compute_spline_1D( data, sp1 )
     sp2 =>  new_spline_1D( &
          NP, &
          XMIN, &
          XMAX, &
-         HERMITE_SPLINE, &
+         SLL_HERMITE, &
          fprime(XMIN, i_test), &
          fprime(XMAX, i_test) )
     call compute_spline_1D( data, sp2 )
@@ -227,10 +227,10 @@ contains
 
     sll_int32                               :: i_test, j_test, ok
     sll_int32                               :: i, j, err
-    type(sll_spline_2d), pointer            :: sp2d_1
-    type(sll_spline_2d), pointer            :: sp2d_2
-    type(sll_spline_2d), pointer            :: sp2d_3
-    type(sll_spline_2d), pointer            :: sp2d_4
+    type(sll_cubic_spline_2d), pointer            :: sp2d_1
+    type(sll_cubic_spline_2d), pointer            :: sp2d_2
+    type(sll_cubic_spline_2d), pointer            :: sp2d_3
+    type(sll_cubic_spline_2d), pointer            :: sp2d_4
     sll_real64                              :: phase_x1, phase_x2
     sll_real64                              :: acc_2D, x1, x2
     sll_real64, allocatable, dimension(:,:) :: data_2d
@@ -261,7 +261,7 @@ contains
     sp2d_1 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         PERIODIC_SPLINE, PERIODIC_SPLINE )
+         SLL_PERIODIC, SLL_PERIODIC )
     call compute_spline_2D_prdc_prdc( data_2d, sp2d_1 )
     acc_2D = 0.0
     do j=1, NPX2
@@ -285,7 +285,7 @@ contains
     sp2d_2 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         HERMITE_SPLINE, PERIODIC_SPLINE, &
+         SLL_HERMITE, SLL_PERIODIC, &
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
     call compute_spline_2D_hrmt_prdc( data_2d, sp2d_2 )
@@ -310,7 +310,7 @@ contains
     sp2d_3 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         PERIODIC_SPLINE, HERMITE_SPLINE, &
+         SLL_PERIODIC, SLL_HERMITE, &
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
     call compute_spline_2D_prdc_hrmt( data_2d, sp2d_3 )
@@ -335,7 +335,7 @@ contains
     sp2d_4 => new_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
-         HERMITE_SPLINE, HERMITE_SPLINE,&
+         SLL_HERMITE, SLL_HERMITE,&
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
     call compute_spline_2D_hrmt_hrmt( data_2d, sp2d_4 )
@@ -368,6 +368,11 @@ contains
 
   end subroutine test_process_2d
 
+  function sincos_prod( x, y ) result(val)
+    sll_real64 :: val
+    sll_real64, intent(in) :: x, y
+    val = sin(x)*cos(y)
+  end function sincos_prod
 
   !*********************************************************************
   ! The above routines should be converted into individualized routines
@@ -405,7 +410,7 @@ contains
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_spline_1d), pointer :: spline
+    type(sll_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
  
     if(present(criterion)) then
@@ -430,7 +435,7 @@ contains
       npts, &
       xmin, &
       xmax, &
-      PERIODIC_SPLINE )
+      SLL_PERIODIC )
 
     call compute_spline_1D(data_in, spline)
     do i=0,npts-1
@@ -453,116 +458,173 @@ contains
     SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
   end subroutine interpolator_tester_1d_prdc
 
+
+  subroutine interpolator_tester_1d_hrmt( &
+    func, &           ! function to produce the data
+    result_f, &       ! function to produce the right result
+    interpolator_f, & ! function used to interpolate the data
+    xmin, &           ! extent of the domain over where the spline is tested
+    xmax, &
+    test_passed, &
+    criterion )
+#ifdef STDF95
+    sll_real64, external              :: func
+    sll_real64, external              :: result_f
+    sll_real64, external              :: interpolator_f
+#else
+    procedure(fx)                     :: func
+    procedure(fx)                     :: result_f
+    procedure(spline_interpolator_1d) :: interpolator_f
+#endif
+    sll_real64, intent(in)            :: xmin
+    sll_real64, intent(in)            :: xmax
+    logical, intent(out)              :: test_passed
+    sll_int32, parameter              :: npts_min = 9
+    sll_int32, parameter              :: npts_max = 129
+    sll_int32                         :: npts
+    sll_real64, intent(in), optional  :: criterion
+    sll_real64                        :: max_tolerable_err
+    sll_real64, allocatable, dimension(:) :: data_in
+    sll_real64, allocatable, dimension(:) :: correct_data_out
+    sll_int32  :: ierr, i
+    sll_real64 :: h1
+    sll_real64 :: x1
+    sll_real64 :: acc, val
+    type(sll_cubic_spline_1d), pointer :: spline
+    sll_real64 :: average_error
+ 
+    if(present(criterion)) then
+       max_tolerable_err = criterion
+    else
+       max_tolerable_err = 1.0e-14
+    end if
+
+    test_passed = .true.
+
+    do npts=npts_min, npts_max
+       h1 = (xmax - xmin)/real(npts-1,f64)
+       acc = 0.0_f64
+
+       ! allocate arrays and initialize them
+       SLL_ALLOCATE(data_in(npts),ierr)
+       SLL_ALLOCATE(correct_data_out(npts), ierr)
+
+       do i=0,npts-1
+          x1 = xmin + real(i,f64)*h1
+          data_in(i+1) = func(x1)
+          correct_data_out(i+1) = result_f(x1)
+       end do
+
+       spline => new_spline_1D( &
+            npts, &
+            xmin, &
+            xmax, &
+            SLL_HERMITE )
+
+       call compute_spline_1D(data_in, spline)
+       do i=0,npts-2
+          x1 = xmin + real(i,f64)*h1 
+          val = interpolator_f(x1,spline)
+          acc = acc + abs(val-correct_data_out(i+1))
+!!$                    print *, '(i) = ',i+1, 'correct value = ', &
+!!$                         correct_data_out(i+1), '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
+       end do
+       ! Do the last point separately because due to roundoff, the last value
+       ! is outside of the specified domain.
+       val = interpolator_f(xmax, spline)
+       acc = acc + abs(val-correct_data_out(i+1))
+!!$       print *, '(i) = ',npts, 'correct value = ', correct_data_out(npts), &
+!!$            '. Calculated = ', val, 'delta = ', h1, 'delta^4 = ', h1**4
+       average_error = acc/(real(npts,f64))
+       print *, 'Test for num. points: ', npts,'Average error = ', average_error
+       if( average_error .le. h1**4 ) then
+          test_passed = test_passed .and. .true.
+       else
+          test_passed = .false.
+          print *, 'Failure in case: num. points = ', npts, 'Average error = ', &
+               average_error, 'delta^4 = ', h1**4, 'fast algorithm? ', &
+               spline%use_fast_algorithm
+       end if
+       ! deallocate memory
+       call delete(spline)
+       SLL_DEALLOCATE_ARRAY(data_in, ierr)
+       SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
+    end do
+  end subroutine interpolator_tester_1d_hrmt
+
+
+
   ! Magic numbers inside this function should be converted to routine parameters
   subroutine test_spline_1d_hrmt ( &
     func_1d, &
-    slope_l, &
-    slope_r, &
     test_passed )
-
+    ! This function does not explicitly specifies the slopes since these are
+    ! computed by default inside the splines.
 #ifdef STDF95
     sll_real64             :: func_1d
 #else
     procedure(fx)          :: func_1d
 #endif
     logical, intent(out)   :: test_passed
-    sll_real64, intent(in) :: slope_l, slope_r
+    logical    :: local_test_passed
     sll_real64, allocatable, dimension(:) :: data_in
     sll_int32  :: ierr, i
     sll_real64 :: h1
     sll_real64 :: x1
     sll_real64 :: acc, val
-    type(sll_spline_1d), pointer :: spline
+    type(sll_cubic_spline_1d), pointer :: spline
     sll_real64 :: average_error
-    h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
-    acc = 0.0_f64
+    sll_int32, parameter :: np_min = 9
+    sll_int32, parameter :: np_max = 129
+    sll_int32            :: npts
 
-    SLL_ALLOCATE(data_in(NPX1),ierr)
-    do i=0,NPX1-1
-       x1 = X1MIN + real(i,f64)*h1 
-       data_in(i+1) = func_1d(x1)
+    local_test_passed = .true.
+    print *, 'X1MIN, X1MAX = ', X1MIN, X1MAX
+    ! Run the test over a range of data sizes.
+    do npts=np_min, np_max
+       h1 = (X1MAX - X1MIN)/real(npts-1,f64)
+       acc = 0.0_f64
+       SLL_ALLOCATE(data_in(npts),ierr)
+       do i=0,npts-1
+          x1 = X1MIN + real(i,f64)*h1 
+          data_in(i+1) = func_1d(x1)
+       end do
+       
+       spline => new_spline_1D( &
+            npts, &
+            X1MIN, &
+            X1MAX, &
+            SLL_HERMITE )
+       
+       call compute_spline_1D( data_in, spline )
+       !        print *, '1D coefficients: '
+       !    print *,  spline%coeffs(:)
+       acc = 0.0_f64
+       do i=0,npts-2 ! last point excluded and done separately...
+          x1 = X1MIN + real(i,f64)*h1 
+          val = interpolate_value(x1,spline)
+          !print *,'x = ', x1, 'true data: ',data_in(i+1), 'interpolated: ', val
+          acc = acc + abs(val-data_in(i+1))  
+       end do
+       ! Do the last point separately because due to roundoff error, it ends
+       ! up out of the range inside the loop.
+       val = interpolate_value(X1MAX, spline)
+       acc = acc + abs(val-data_in(npts))    
+
+       average_error = acc/(real(npts,f64))
+       print *, 'test_spline_1d_hrmt(): average error = ', average_error, &
+            'problem size = ', npts, 'points.'
+       if( average_error .le. 5.0e-15 ) then
+          local_test_passed = local_test_passed .and. .true.
+       else
+          local_test_passed = .false.
+          print *, 'test_spline_1d_hrmt(): TEST FAILED'
+          print *, 'problem size: ', npts, 'average error = ', average_error
+       end if
+       SLL_DEALLOCATE_ARRAY(data_in, ierr)
     end do
-
-    spline => new_spline_1D( &
-         NPX1, &
-         X1MIN, &
-         X1MAX, &
-         HERMITE_SPLINE, &
-         slope_l, &
-         slope_r )
-
-    call compute_spline_1D( data_in, spline )
-    !        print *, '1D coefficients: '
-    !    print *,  spline%coeffs(:)
-    acc = 0.0_f64
-    do i=0,NPX1-1
-       x1 = X1MIN + real(i,f64)*h1 
-       val = interpolate_value(x1,spline)
-       !print *, 'x = ', x1, 'true data: ', data_in(i+1), 'interpolated: ', val
-       acc = acc + abs(val-data_in(i+1))  
-    end do
-    
-    average_error = acc/(real(NPX1,f64))
-    print *, 'test_spline_1d_hrmt(): average error = ', average_error
-    if( average_error .le. 1.0e-15 ) then
-       test_passed = .true.
-    else
-       test_passed = .false.
-       print *, 'test_spline_1d_hrmt(): TEST FAILED'
-    end if
+    test_passed = local_test_passed
   end subroutine test_spline_1d_hrmt
-
-  subroutine test_spline_1d_hrmt_no_slopes ( &
-    func_1d, &
-    test_passed )
-
-#ifdef STDF95
-    sll_real64             :: func_1d
-#else
-    procedure(fx)          :: func_1d
-#endif
-    logical, intent(out)   :: test_passed
-    sll_real64, allocatable, dimension(:) :: data_in
-    sll_int32  :: ierr, i
-    sll_real64 :: h1
-    sll_real64 :: x1
-    sll_real64 :: acc, val
-    type(sll_spline_1d), pointer :: spline
-    sll_real64 :: average_error
-    h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
-    acc = 0.0_f64
-
-    SLL_ALLOCATE(data_in(NPX1),ierr)
-    do i=0,NPX1-1
-       x1 = X1MIN + real(i,f64)*h1 
-       data_in(i+1) = func_1d(x1)
-    end do
-
-    spline => new_spline_1D( &
-         NPX1, &
-         X1MIN, &
-         X1MAX, &
-         HERMITE_SPLINE )
-
-    call compute_spline_1D( data_in, spline )
-    ! print *, '1D coefficients: '
-    ! print *,  spline%coeffs(:)
-    acc = 0.0_f64
-    do i=0,NPX1-1
-       x1 = X1MIN + real(i,f64)*h1 
-       val = interpolate_value(x1,spline)
-       acc = acc + abs(val-data_in(i+1))  
-    end do
-    
-    average_error = acc/(real(NPX1,f64))
-    print *, 'test_spline_1d_hrmt_no_slopes(): average error = ', average_error
-    if( average_error .le. 1.0e-15 ) then
-       test_passed = .true.
-    else
-       test_passed = .false.
-       print *, 'test_spline_1d_hrmt_no_slopes(): TEST FAILED'
-    end if
-  end subroutine test_spline_1d_hrmt_no_slopes
 
 
   subroutine interpolator_tester_2d_prdc_prdc( &
@@ -587,7 +649,7 @@ contains
     sll_real64 :: h1, h2 ! cell spacings
     sll_real64 :: x1, x2
     sll_real64 :: acc, val
-    type(sll_spline_2d), pointer :: spline
+    type(sll_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
     h1 = (X1MAX - X1MIN)/real(NPX1-1,f64)
     h2 = (X2MAX - X2MIN)/real(NPX2-1,f64)
@@ -612,8 +674,8 @@ contains
       X1MAX, &
       X2MIN, &
       X2MAX, &
-      PERIODIC_SPLINE, &
-      PERIODIC_SPLINE )
+      SLL_PERIODIC, &
+      SLL_PERIODIC )
 
     call compute_spline_2D(data_in,spline)
 
@@ -665,7 +727,7 @@ contains
     sll_real64 :: h1, h2 ! cell spacings
     sll_real64 :: x1, x2
     sll_real64 :: acc, val, err, min_err, max_err
-    type(sll_spline_2d), pointer :: spline
+    type(sll_cubic_spline_2d), pointer :: spline
     sll_real64 :: average_error
     h1  = 1.0_f64/real(NPX1-1,f64)
     h2  = 1.0_f64/real(NPX2-1,f64)
@@ -701,8 +763,8 @@ contains
       1.0_f64, &
       0.0_f64, &
       1.0_f64, &
-      HERMITE_SPLINE, &
-      PERIODIC_SPLINE, &
+      SLL_HERMITE, &
+      SLL_PERIODIC, &
       x1_min_slopes=slopes_min, &
       x1_max_slopes=slopes_max )
 
@@ -761,7 +823,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta1_min_slopes
     sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -791,8 +853,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         PERIODIC_SPLINE, &
+         SLL_HERMITE, &
+         SLL_PERIODIC, &
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes )
 
@@ -850,7 +912,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta1_min_slopes
     sll_real64, dimension(:), allocatable   :: eta1_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -880,8 +942,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         PERIODIC_SPLINE ) !, &
+         SLL_HERMITE, &
+         SLL_PERIODIC ) !, &
 !         x1_min_slopes=eta1_min_slopes, &
 !         x1_max_slopes=eta1_max_slopes )
 
@@ -939,7 +1001,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -970,8 +1032,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         PERIODIC_SPLINE, &
-         HERMITE_SPLINE, & 
+         SLL_PERIODIC, &
+         SLL_HERMITE, & 
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
@@ -1028,7 +1090,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1059,8 +1121,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         PERIODIC_SPLINE, &
-         HERMITE_SPLINE ) !, & 
+         SLL_PERIODIC, &
+         SLL_HERMITE ) !, & 
 !         x2_min_slopes=eta2_min_slopes, &
 !         x2_max_slopes=eta2_max_slopes )
 
@@ -1125,7 +1187,7 @@ contains
     sll_real64, dimension(:), allocatable   :: eta2_min_slopes
     sll_real64, dimension(:), allocatable   :: eta2_max_slopes
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1166,8 +1228,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         HERMITE_SPLINE, & 
+         SLL_HERMITE, &
+         SLL_HERMITE, & 
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes, &
          x2_min_slopes=eta2_min_slopes, &
@@ -1214,7 +1276,7 @@ contains
     sll_int32 :: i, j, ierr
     sll_real64, dimension(:,:), allocatable :: data
     sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
-    type(sll_spline_2D), pointer :: spline
+    type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
     h2 = 1.0_f64/(NPX2-1)
@@ -1235,8 +1297,8 @@ contains
          1.0_f64, &
          0.0_f64, &
          1.0_f64, &
-         HERMITE_SPLINE, &
-         HERMITE_SPLINE )
+         SLL_HERMITE, &
+         SLL_HERMITE )
 
     call compute_spline_2D_hrmt_hrmt( data, spline )
 

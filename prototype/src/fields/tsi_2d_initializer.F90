@@ -1,17 +1,19 @@
 module sll_tsi_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use numeric_constants
+  use sll_constants
   use sll_scalar_field_initializers_base
   implicit none
 
 #ifdef STDF95
   type :: init_tsi_2d
-    type(sll_mapped_mesh_2d_discrete), pointer :: mesh
+    !type(sll_mapped_mesh_2d_discrete), pointer :: mesh
+    type(sll_coordinate_transformation_2d_discrete), pointer :: mesh
     sll_int32   :: data_position
 #else
   type, extends(scalar_field_2d_initializer_base) :: init_tsi_2d
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: mesh
 #endif
     sll_real64 :: eps
     sll_real64 :: kx
@@ -31,12 +33,14 @@ contains
   subroutine init_tsi_2d_initialize( init_obj, mesh, data_position, eps_val, &
        kx_val, v0_val, is_delta_f )
     type(init_tsi_2d), intent(inout)  :: init_obj
-    type(sll_mapped_mesh_2d_discrete), intent(in), target :: mesh
+    !type(sll_mapped_mesh_2d_discrete), intent(in), target :: mesh
+    type(sll_coordinate_transformation_2d_discrete), pointer :: mesh
 #else
   subroutine initialize_tsi_2d( init_obj, mesh, data_position, eps_val, &
        kx_val, v0_val, is_delta_f )
     class(init_tsi_2d), intent(inout)  :: init_obj
-    class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
+    ! class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: mesh
 #endif
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
@@ -71,11 +75,13 @@ contains
 #ifdef STDF95
   subroutine init_tsi_2d_f_of_x1x2( init_obj, data_out )
     type(init_tsi_2d), intent(inout)       :: init_obj
-    type(sll_mapped_mesh_2d_discrete), pointer    :: mesh
+    !type(sll_mapped_mesh_2d_discrete), pointer    :: mesh
+    type(sll_coordinate_transformation_2d_discrete), pointer :: mesh
 #else
   subroutine f_x1x2_tsi_2d( init_obj, data_out )
     class(init_tsi_2d), intent(inout)       :: init_obj
-    class(sll_mapped_mesh_2d_base), pointer    :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer    :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: mesh
 #endif
     sll_real64, dimension(:,:), intent(out)    :: data_out
     sll_int32  :: i
@@ -83,7 +89,7 @@ contains
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_real64 :: eps
-    sll_real64 :: xi
+    !sll_real64 :: xi
     sll_real64 :: v0
     sll_real64 :: kx
     sll_real64 :: x
@@ -93,11 +99,11 @@ contains
     v0 = init_obj%v0
     mesh => init_obj%mesh
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
-       num_pts1 = mesh%nc_eta1+1
-       num_pts2 = mesh%nc_eta2+1
+       num_pts1 = mesh%mesh%num_cells1+1
+       num_pts2 = mesh%mesh%num_cells2+1
     else if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
-       num_pts1 = mesh%nc_eta1
-       num_pts2 = mesh%nc_eta2
+       num_pts1 = mesh%mesh%num_cells1
+       num_pts2 = mesh%mesh%num_cells2
     end if
     kx = init_obj%kx
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )

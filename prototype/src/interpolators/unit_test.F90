@@ -1,25 +1,28 @@
 program unit_test
 #include "sll_working_precision.h"
-  use numeric_constants
-  use geometry_functions
-#ifndef STDF95
-  use sll_module_interpolators_2d_base
-#endif
-  use sll_cubic_spline_interpolator_2d
-  implicit none
+#include "sll_constants.h"
+#include "sll_interpolators.h"
+use sll_common_coordinate_transformations
+
+implicit none
 
 #define NPTS1 65 
 #define NPTS2 65 
 
-  type(cubic_spline_2d_interpolator) :: cs2d
+  !type(cubic_spline_2d_interpolator) :: cs2d
+  class(sll_interpolator_2d_base), pointer :: cs2d
   sll_real64, dimension(:,:), allocatable    :: x1
   sll_real64, dimension(:), allocatable      :: x1_eta1_min
   sll_real64, dimension(:), allocatable      :: x1_eta1_max
-
+  sll_real64, dimension(2) :: params ! for the transformation
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2, acc, acc1, acc2, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
 
+#define RMIN 0.1_f64
+#define RMAX 1.0_f64
+
+  params(:) = (/RMIN,RMAX/)
 
   print *,  'filling out discrete arrays for x1 '
   h1 = 1.0_f64/real(NPTS1-1,f64)
@@ -34,42 +37,55 @@ program unit_test
      do i=0,NPTS1-1
         eta1          = real(i,f64)*h1
         eta2          = real(j,f64)*h2
-        x1(i+1,j+1)   = x1_polar_f(eta1,eta2) 
+        x1(i+1,j+1)   = x1_polar_f(eta1,eta2,params) 
      end do
   end do
   print *, 'eta1, eta2 = ', real(NPTS1-1,f64)*h1, real(NPTS2-1,f64)*h2
-  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64)
+  print *, 'x1_polar_f(eta1=1, eta2=1) = ', x1_polar_f(1.0_f64,1.0_f64,params)
   ! Fill out the transformation's slopes at the borders
   do j=0,NPTS2-1
      eta1           = 0.0_f64
      eta2           = real(j,f64)*h2
-     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
+     x1_eta1_min(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
      eta1           = 1.0_f64
-     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2)
+     x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
   end do
 
   ! Test the 2D transformation:
   !
   ! X1 = (r1 + (r2-r1)*eta1)*cos(2*pi*eta2)
-
-#ifdef STDF95
-  call cubic_spline_initialize( cs2d, &
-#else
-  call cs2d%initialize( &
-#endif
+  
+  cs2d =>new_cubic_spline_2d_interpolator(&
        NPTS1, &
        NPTS2, &
        0.0_f64, &
        1.0_f64, &
        0.0_f64, &
        1.0_f64, &
-       HERMITE_SPLINE, &
-       PERIODIC_SPLINE, &
+       SLL_HERMITE, &
+       SLL_PERIODIC, &
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
+  
+  
+!#ifdef STDF95
+!  call cubic_spline_2d_initialize( cs2d, &
+!#else
+!  call cs2d%initialize( &
+!#endif
+!       NPTS1, &
+!       NPTS2, &
+!       0.0_f64, &
+!       1.0_f64, &
+!       0.0_f64, &
+!       1.0_f64, &
+!       SLL_HERMITE, &
+!       SLL_PERIODIC, &
+!       eta1_min_slopes=x1_eta1_min, &
+!       eta1_max_slopes=x1_eta1_max )
 
 #ifdef STDF95
-  call cubic_spline_compute_interpolants(cs2d,x1)
+  call cubic_spline_2d_compute_interpolants(cs2d,x1)
 #else
   call cs2d%compute_interpolants(x1)
 #endif
@@ -83,25 +99,25 @@ program unit_test
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
 #ifdef STDF95
-        node_val   = cubic_spline_interpolate_value(cs2d,eta1,eta2)
+        node_val   = cubic_spline_2d_interpolate_value(cs2d,eta1,eta2)
 #else
         node_val   = cs2d%interpolate_value(eta1,eta2)
 #endif
-        ref        = x1_polar_f(eta1,eta2)
+        ref        = x1_polar_f(eta1,eta2,params)
         acc        = acc + abs(node_val-ref)
 #ifdef STDF95
-        deriv1_val = cubic_spline_interpolate_derivative_eta1(cs2d,eta1,eta2)
+        deriv1_val = cubic_spline_2d_interpolate_derivative_eta1(cs2d,eta1,eta2)
 #else
         deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
 #endif
-        ref        = deriv_x1_polar_f_eta1(eta1,eta2)
+        ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
         acc1       = acc1 + abs(deriv1_val-ref)
 #ifdef STDF95
-        deriv2_val = cubic_spline_interpolate_derivative_eta2(cs2d,eta1,eta2)
+        deriv2_val = cubic_spline_2d_interpolate_derivative_eta2(cs2d,eta1,eta2)
 #else
         deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
 #endif
-        ref        = deriv_x1_polar_f_eta2(eta1,eta2)
+        ref        = deriv_x1_polar_f_eta2(eta1,eta2,params)
         acc2       = acc2 + abs(deriv2_val-ref)
      end do
   end do
@@ -126,13 +142,13 @@ subroutine test_interpolator_2d()
   sll_real64, dimension(NPTS1,NPTS2) :: data_out
 
 #ifdef STDF95
-  call cubic_spline_initialize(spline,NPTS1,NPTS2, &
+  call cubic_spline_2d_initialize(spline,NPTS1,NPTS2, &
                          0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+                         SLL_PERIODIC, SLL_PERIODIC )
 #else
   call spline%initialize(NPTS1,NPTS2, &
                          0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         PERIODIC_SPLINE, PERIODIC_SPLINE )
+                         SLL_PERIODIC, SLL_PERIODIC )
 #endif
   interp =>  spline
   do j = 1, NPTS2
@@ -150,7 +166,7 @@ subroutine test_interpolator_2d()
   end do
   end do
 #ifdef STDF95
-  data_out = cubic_spline_interpolate_array(interp,NPTS1, NPTS2, data_in, xx1, xx2)
+  data_out = cubic_spline_2d_interpolate_array(interp,NPTS1, NPTS2, data_in, xx1, xx2)
 #else
   data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
 #endif

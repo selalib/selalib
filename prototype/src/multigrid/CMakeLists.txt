@@ -1,41 +1,57 @@
-set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-IF(HDF5_INCLUDE_DIRS)
-   include_directories(${HDF5_INCLUDE_DIRS})
-ENDIF()
-add_library(multigrid STATIC 
-mgdend.F90 
-mgdkcyc.F90
-mgd3.F90
-gscale.F90
-gxch1cor.F90
-gxch1lin.F90
-gxch1pla.F90
-mgdbdry.F90 
-mgdcor.F90 
-mgderr.F90 
-mgdpfpde.F90 
-mgdphpde.F90 
-mgdppde.F90 
-mgdrelax.F90
-mgdrestr.F90
-mgdrpde.F90 
-mgdrsetf.F90
-mgdsetf.F90 
-mgdrtrsf.F90
-write_xdmf_3d.F90
-)
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
-   add_executable(test_multigrid unit_test.F90)
-   target_link_libraries(test_multigrid multigrid 
-                                        sll_low_level_file_io_parallel
-	                                sll_constants
-	                                sll_utilities
-	                                sll_collective
-	                                sll_memory
-	                                sll_assertion
-	                                sll_working_precision 
-                                        ${HDF5_LIBRARIES})
+IF (MPI_MODULE_ENABLED)
+ADD_LIBRARY(sll_mgd2 gxch1_2d.F90
+                     diagnostics.F90
+                     mgd2.F90)
+
+ADD_LIBRARY(sll_mgd3 mgdend_3d.F90 
+                     mgdkcyc_3d.F90
+                     mgd3.F90
+                     gscale_3d.F90
+                     gxch1cor_3d.F90
+                     gxch1lin_3d.F90
+                     gxch1pla_3d.F90
+                     mgdbdry_3d.F90 
+                     mgdcor_3d.F90 
+                     mgderr_3d.F90 
+                     mgdpfpde_3d.F90 
+                     mgdphpde_3d.F90 
+                     mgdppde_3d.F90 
+                     mgdrelax_3d.F90
+                     mgdrestr_3d.F90
+                     mgdrpde_3d.F90 
+                     mgdrsetf_3d.F90
+                     mgdsetf_3d.F90 
+                     mgdrtrsf_3d.F90)
+
+IF(HDF5_PARALLEL_ENABLED)
+
+   ADD_LIBRARY(sll_multigrid sll_multigrid_base.F90
+                             sll_multigrid_2d.F90)
+
+   TARGET_LINK_LIBRARIES(sll_multigrid sll_mgd2 
+                                       sll_remap 
+                                       sll_utilities)
+
+   ADD_EXECUTABLE(test_multigrid_2d test_multigrid_2d.F90)
+   
+   TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid 
+                                           sll_file_io_parallel )
+
+   ADD_EXECUTABLE(test_mgd3 unit_test_3d.F90 write_xdmf_3d.F90)
+
+   TARGET_LINK_LIBRARIES(test_mgd3 sll_mgd3 
+                                   sll_file_io_parallel
+	                           sll_utilities )
+
+#   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90 write_xdmf_2d.F90)
+#
+#   TARGET_LINK_LIBRARIES(test_mgd2 sll_mgd2 
+#                                   sll_file_io_parallel
+#	                             sll_collective
+#	                             sll_utilities
+#	                             sll_memory
+#	                             sll_assertion)
 
 ENDIF()
 
-
+ENDIF (MPI_MODULE_ENABLED)

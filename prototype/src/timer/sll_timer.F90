@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 !> @file sll_timer.F90
 !> @namespace sll_timer
 !> @author samuel de santis samuel.desantis@math.unistra.fr
@@ -28,104 +45,58 @@ module sll_timer
   implicit none
 
   !> @brief type use for clock reading
-  type time_mark
-    integer(kind=selected_int_kind(10)) :: clocks_ticks !< number of clocks ticks
-    integer(kind=selected_int_kind(10)) :: clocks_ticks_max !< the maximum value that clocks_ticks can reach
-    integer(kind=selected_int_kind(10)) :: clocks_ticks_per_sec !< the number of cycles per second
-  end type time_mark
+  type sll_time_mark
+    integer(kind=selected_int_kind(10)) :: clock_ticks !< number of clocks ticks
+    integer(kind=selected_int_kind(10)) :: clock_ticks_max !< the maximum value that clock_ticks can reach
+    integer(kind=selected_int_kind(10)) :: clock_ticks_per_sec !< the number of cycles per second
+  end type sll_time_mark
  
   contains
 
-  !> @brief allocate new time mark
-  !> @return a pointer to a new time mark
-  function new_time_mark()
-      type(time_mark), pointer :: new_time_mark
-      allocate(new_time_mark)
-      CALL SYSTEM_CLOCK(COUNT_RATE=new_time_mark%clocks_ticks_per_sec,&
-                         COUNT_MAX=new_time_mark%clocks_ticks_max)
-  end function new_time_mark
+  !> @brief reads time parameters from system and stores in argument
+  subroutine set_time_mark(timer_obj)
+    type(sll_time_mark), intent(out) :: timer_obj
+    call system_clock(COUNT=timer_obj%clock_ticks, &
+                      COUNT_RATE=timer_obj%clock_ticks_per_sec,&
+                      COUNT_MAX=timer_obj%clock_ticks_max)
+  end subroutine set_time_mark
  
-  !> @brief Start the timer
-  !> @param mark a pointer to the mark to initilize
-  !> @return a pointer to the mark
-  function start_time_mark(mark)
-    type(time_mark), pointer :: start_time_mark
-    type(time_mark), pointer :: mark
-    if( .not. associated(mark) ) then
-        print *, 'module SLL_TIMER : function START_TIME_MARK'
-        print *, 'argument must be a pointer associated to time_mark object'
-    endif
-    call system_clock(count=mark%clocks_ticks)
-    start_time_mark => mark
-  end function start_time_mark
 
-  !> @brief Reset the timer
-  !> @param mark a pointer to the mark to reset
-  !> @return a pointer to the mark
-  function reset_time_mark(mark)
-    type(time_mark), pointer :: reset_time_mark
-    type(time_mark), pointer :: mark
-    if( .not. associated(mark) ) then
-        print *, 'module SLL_TIMER : function RESET_TIME_MARK'
-        print *, 'argument must be a pointer associated to time_mark object'
-    endif
-    call system_clock(count=mark%clocks_ticks)
-    reset_time_mark => mark
-  end function reset_time_mark
-  
-  !> @brief Computes the time elapsed between two mark
+  !> @brief Computes the time elapsed between two time marks
   !> @param t0 a pointer to the first mark
   !> @param t1 a pointer to the second mark
   !> @return the time elapsed between t0 and t1 
   function time_elapsed_between(t0,t1)
-    real(kind=kind(0d0)) :: time_elapsed_between
-    type(time_mark), pointer            :: t0, t1
-    integer(kind=kind(t0%clocks_ticks)) :: clocks_ticks
+    real(kind=kind(0d0))                :: time_elapsed_between
+    type(sll_time_mark), intent(in)         :: t0, t1
+    integer(kind=kind(t0%clock_ticks)) :: clock_ticks
 
-    if( (.not. associated(t0)) .or. (.not. associated(t1)) ) then
-        print *, 'module SLL_TIMER : function TIME_ELAPSED_BETWEEN'
-        print *, 'argument must be a pointer associated to time_mark object'
-    endif
-
-    clocks_ticks = t1%clocks_ticks - t0%clocks_ticks
-    if (t1%clocks_ticks < t0%clocks_ticks) &
-         clocks_ticks = clocks_ticks + t0%clocks_ticks_max
-    time_elapsed_between = real(clocks_ticks,kind=kind(time_elapsed_between)) / t0%clocks_ticks_per_sec
+    clock_ticks = t1%clock_ticks - t0%clock_ticks
+!!$    if (t1%clock_ticks < t0%clock_ticks) then
+!!$       clock_ticks = clock_ticks + t0%clock_ticks_max
+!!$    end if
+    time_elapsed_between = &
+         real(clock_ticks,kind=kind(0d0))/real(t0%clock_ticks_per_sec,kind(0d0))
   end function time_elapsed_between
 
-  !> @brief Computes the time elapsed since one mark
-  !> @param t0 a pointer to the mark
+  !> @brief Computes the time elapsed since a particular time mark
+  !> @param reference mark
   !> @return the time elapsed since t0
   function time_elapsed_since(t0)
-    real(kind=kind(0d0)) :: time_elapsed_since
-    type(time_mark), pointer :: t0
-    type(time_mark) :: t1
-    integer(kind=kind(t0%clocks_ticks)) :: clocks_ticks
+    real(kind=kind(0d0))               :: time_elapsed_since
+    type(sll_time_mark), intent(in)        :: t0
+    integer(kind=selected_int_kind(10)):: t1
+!    type(sll_time_mark)                    :: t1
+    integer(kind=kind(t0%clock_ticks)) :: clock_ticks
 
-    if( .not. associated(t0) ) then
-        print *, 'module SLL_TIMER : function TIME_ELAPSED_SINCE'
-        print *, 'argument must be a pointer associated to time_mark object'
-    endif
-
-    call system_clock(count=t1%clocks_ticks)
-
-    clocks_ticks = t1%clocks_ticks - t0%clocks_ticks
-    if (t1%clocks_ticks < t0%clocks_ticks) &
-         clocks_ticks = clocks_ticks + t0%clocks_ticks_max
-    time_elapsed_since = real(clocks_ticks,kind=kind(time_elapsed_since))&
-                                               / t0%clocks_ticks_per_sec
+    call system_clock(count=t1)
+    clock_ticks = t1 - t0%clock_ticks
+!!$    if (t1%clock_ticks < t0%clock_ticks) then
+!!$       clock_ticks = clock_ticks + t0%clock_ticks_max
+!!$    end if
+    time_elapsed_since = &
+         real(clock_ticks,kind=kind(0d0))/real(t0%clock_ticks_per_sec,kind(0d0))
   end function time_elapsed_since
 
-  !> @brief deletes the mark in argument
-  !> @param t0 a pointer to the mark to delete
-  !> @return a null pointer 
-  function delete_time_mark(t0)
-    type(time_mark), pointer :: delete_time_mark
-    type(time_mark), pointer :: t0
-
-    deallocate(t0)
-    t0 => NULL()
-    delete_time_mark => NULL()
-  end function delete_time_mark
 
 end module sll_timer

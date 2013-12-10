@@ -6,6 +6,12 @@
   vmin = -6.0
   vmax = 6.0
 /
+&interpolator
+ interpol_x = 1
+ order_x = 4
+ interpol_v = 1
+ order_v = 4
+/
 &time_iterations
   dt = 0.05
   nbiter = 20000

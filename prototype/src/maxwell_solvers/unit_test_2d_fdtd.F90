@@ -1,3 +1,17 @@
+!>$L_x,L_y$ domain dimensions and M,N are integers.
+!>$
+!>\omega = \sqrt{(\frac{M\pi}{L_x})^2+(\frac{N\pi}{L_y})^2}
+!>$
+!>$
+!>B_z(x,y,t) =   - \cos(M \pi \frac{x}{L_x})  \cos(N \pi \frac{y}{L_y}) \cos(\omega t) 
+!>$
+!>$
+!>E_x(x,y,t) = \frac{c^2 N \pi }{\omega Ly} cos(M \pi \frac{x}{L_x}) \sin(N \pi  \frac{y}{L_y}) \sin(\omega t) 
+!>$
+!>$
+!>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
+!>$
+!>
 program test_maxwell_2d_fdtd
 !------------------------------------------------------------------------
 !  test 2D Maxwell solver based on finite differences on a staggered grid
@@ -5,9 +19,9 @@ program test_maxwell_2d_fdtd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use numeric_constants
+#include "sll_constants.h"
+#include "sll_maxwell_solvers_macros.h"
 
-use sll_maxwell
 use sll_maxwell_2d_fdtd
 
 implicit none
@@ -19,8 +33,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_fdtd)                      :: maxwell_TE
-type(maxwell_fdtd)                      :: maxwell_TM
+type(maxwell_2d_fdtd)                      :: maxwell_TE
+type(maxwell_2d_fdtd)                      :: maxwell_TM
 
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
@@ -32,17 +46,16 @@ sll_real64, dimension(:,:), allocatable :: by
 sll_real64, dimension(:,:), allocatable :: ez
 sll_real64, dimension(:,:), allocatable :: ez_exact
 
-sll_int32                          :: i, j
-sll_real64                         :: omega
-sll_real64                         :: time
-sll_int32                          :: istep, nstep
-sll_real64                         :: err_te
-sll_real64                         :: err_tm
-sll_real64                         :: dt
-sll_real64                         :: cfl = 0.5
+sll_int32                               :: i, j
+sll_real64                              :: omega
+sll_real64                              :: time
+sll_int32                               :: istep, nstep
+sll_real64                              :: err_te
+sll_real64                              :: err_tm
+sll_real64                              :: dt
+sll_real64                              :: cfl = 0.5
 
-sll_int32,  parameter              :: mode = 2
-
+sll_int32,  parameter                   :: mode = 2
 
 eta1_min = .0_f64; eta1_max = 1.0_f64
 eta2_min = .0_f64; eta2_max = 1.0_f64
@@ -66,15 +79,16 @@ time  = 0.
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
 
-SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(bz_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_CLEAR_ALLOCATE(ex(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ey(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
 
-SLL_ALLOCATE(bx(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(by(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ez(nc_eta1+1,nc_eta2+1), error)
-SLL_ALLOCATE(ez_exact(nc_eta1+1,nc_eta2+1), error)
+SLL_CLEAR_ALLOCATE(bx(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(by(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ez(1:nc_eta1+1,1:nc_eta2+1),error)
+
+SLL_CLEAR_ALLOCATE(bz_exact(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ez_exact(1:nc_eta1+1,1:nc_eta2+1),error)
 
 do istep = 1, nstep !*** Loop over time
 
@@ -91,15 +105,20 @@ do istep = 1, nstep !*** Loop over time
    ez_exact = - bz_exact
 
    if (istep == 1) then
+
       bz = bz_exact
       ez = ez_exact
-   end if
 
-   err_te = maxval(abs(bz_exact - bz))
-   err_tm = maxval(abs(ez_exact - ez))
-   write(*,"(10x,' istep = ',I6)",advance="no") istep
-   write(*,"(' time = ',g12.3,' sec')",advance="no") time
-   write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
+   else
+
+      err_te = maxval(bz-bz_exact)
+      err_tm = maxval(ez-ez_exact)
+   
+      write(*,"(10x,' istep = ',I6)",advance="no") istep
+      write(*,"(' time = ',g12.3,' sec')",advance="no") time
+      write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
+
+   end if
 
    !call plot_fields('ez',ez, ez_exact, istep, time)
 

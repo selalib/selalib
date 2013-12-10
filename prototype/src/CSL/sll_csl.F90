@@ -10,7 +10,7 @@ module sll_csl
 !#include "sll_mesh_types.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
+  use sll_constants
   !use sll_splines
   use cubic_non_uniform_splines
   use ode_solvers
@@ -64,17 +64,17 @@ contains
 
     ! initialize splines
     if (boundary1_type == PERIODIC) then
-       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, PERIODIC_SPLINE)
+       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, SLL_PERIODIC)
     else if (boundary1_type == COMPACT) then
-       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, HERMITE_SPLINE)
+       new_csl_workspace%spl_eta1 => new_cubic_nonunif_spline_1D( nc_eta1, SLL_HERMITE)
     else
        print*, 'sll_csl.F90: new_csl_workspace. boundary1_type ', boundary1_type, ' not implemented'
        stop
     end if
     if (boundary2_type == PERIODIC) then
-       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, PERIODIC_SPLINE)
+       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, SLL_PERIODIC)
     else if (boundary2_type == COMPACT) then
-       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, HERMITE_SPLINE)  
+       new_csl_workspace%spl_eta2 => new_cubic_nonunif_spline_1D( nc_eta2, SLL_HERMITE)  
     else
        print*, 'sll_csl.F90: new_csl_workspace. boundary2_type ', boundary2_type, ' not implemented'
        stop
@@ -216,12 +216,23 @@ contains
     SLL_ALLOCATE(primitive1(nc_eta1+1),ierr)
     SLL_ALLOCATE(eta1_out(nc_eta1+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta1+1),ierr)
+    SLL_ALLOCATE(df_jac_at_i(nc_eta1, nc_eta2),ierr)
 
     !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
 #ifdef STDF95
-    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D%extend_type )
+    !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D%extend_type )
+    do i2 = 1, nc_eta2
+       do i1 = 1, nc_eta1
+          df_jac_at_i(i1,i2) = dist_func_2D%extend_type%mesh%jacobian_at_cell(i1,i2)
+       end do
+    end do
 #else
-    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    do i2 = 1, nc_eta2
+       do i1 = 1, nc_eta1
+          df_jac_at_i(i2,i1) = dist_func_2D%mesh%jacobian_at_cell(i2,i1)
+       end do
+    end do
 #endif
     !do i2=1,nc_eta2
     !  do i1=1,nc_eta1
@@ -398,19 +409,36 @@ endif
     SLL_ALLOCATE(primitive2(nc_eta2+1),ierr)
     SLL_ALLOCATE(eta2_out(nc_eta2+1),ierr)
     SLL_ALLOCATE(jacobian(nc_eta2+1),ierr)
+    SLL_ALLOCATE(df_jac_at_i(nc_eta1, nc_eta2),ierr)
+    SLL_ALLOCATE(x1c_at_i(nc_eta1, nc_eta2),ierr)
+    SLL_ALLOCATE(x2c_at_i(nc_eta1, nc_eta2),ierr)
 
 #ifdef STDF95
-    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D%extend_type )
+    !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D%extend_type )
+    do i2 = 1, nc_eta2
+       do i1 = 1, nc_eta1
+          df_jac_at_i(i1,i2) = dist_func_2D%extend_type%mesh%jacobian_at_cell(i1,i2)
+          x1c_at_i(i2,i1) = dist_func_2D%mesh%x1_at_cell(i2,i1)
+          x2c_at_i(i2,i1) = dist_func_2D%mesh%x2_at_cell(i2,i1)
+       end do
+    end do
     !x1c_at_i => get_df_x1c_at_i( dist_func_2D%extend_type )        
     !x2c_at_i => get_df_x2c_at_i( dist_func_2D%extend_type )
-    x1c_at_i => FIELD_X1_CELL( dist_func_2D%extend_type )
-    x2c_at_i => FIELD_X2_CELL( dist_func_2D%extend_type )
+    !x1c_at_i => FIELD_X1_CELL( dist_func_2D%extend_type )
+    !x2c_at_i => FIELD_X2_CELL( dist_func_2D%extend_type )
 #else
-    df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    !df_jac_at_i => FIELD_JACOBIAN_CELL_DATA( dist_func_2D )
+    do i2 = 1, nc_eta2
+       do i1 = 1, nc_eta1
+          df_jac_at_i(i2,i1) = dist_func_2D%mesh%jacobian_at_cell(i2,i1)
+          x1c_at_i(i2,i1) = dist_func_2D%mesh%x1_at_cell(i2,i1)
+          x2c_at_i(i2,i1) = dist_func_2D%mesh%x2_at_cell(i2,i1)
+       end do
+    end do
     !x1c_at_i => get_df_x1c_at_i( dist_func_2D )        
     !x2c_at_i => get_df_x2c_at_i( dist_func_2D )
-    x1c_at_i => FIELD_X1_CELL( dist_func_2D )
-    x2c_at_i => FIELD_X2_CELL( dist_func_2D )
+    !x1c_at_i => FIELD_X1_CELL( dist_func_2D )
+    !x2c_at_i => FIELD_X2_CELL( dist_func_2D )
 #endif
 
     

@@ -11,7 +11,7 @@ program WENO_tester
 
   use WENO_interp
   use WENO_recon
-  use numeric_constants
+  use sll_constants
   implicit none
 #define NP 30
 

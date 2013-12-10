@@ -2,7 +2,7 @@ program test_sll_odd_degree_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use util_constants
 
 #ifndef STDF95
@@ -39,6 +39,8 @@ program test_sll_odd_degree_spline_interpolator_1d
   SLL_ALLOCATE(coordinates_disp(n), ierr)
   SLL_ALLOCATE(data_interp(n), ierr)
   SLL_ALLOCATE(data_interp_disp(n), ierr)
+
+
 
   print *, 'initialize data and interpolation_points array'
 

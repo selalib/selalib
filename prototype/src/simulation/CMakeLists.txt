@@ -1,288 +1,243 @@
 ##############################################################################
 ###      Sequential simulations
 ##############################################################################
-# compile with openmp flag
-IF(Fortran_COMPILER_NAME STREQUAL "xlf")
-  set(CMAKE_Fortran_FLAGS "-qxlf2003=polymorphic -qsmp=omp ${CMAKE_Fortran_FLAGS}")
-ELSEIF(Fortran_COMPILER_NAME STREQUAL "gfortran")
-  set(CMAKE_Fortran_FLAGS "-fopenmp")
-ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
-  set(CMAKE_Fortran_FLAGS "-openmp")
-ENDIF()
-
 #Here is defined the library containing the sequential simulations. 
 #Please add your new simulation_MYMETHOD.F90 
 ############################################################
 
-IF (STDF95)
-add_library(sll_simulation_1d STATIC simulation_1d.F90
-            simulation_VP1D_cartesian_non_unif.F90
-            simulation_VP1D_curvilinear_analytic.F90
-            simulation_vp1d_fourier_fem.F90)
-ELSE()
-add_library(sll_simulation_1d STATIC simulation_1d.F90
-            simulation_base_class.F90 
-            simulation_VP1D_cartesian_non_unif.F90
-            simulation_VP1D_curvilinear_analytic.F90
-            simulation_vp1d_fourier_fem.F90)
-ENDIF (STDF95)
+IF(MUDPACK_ENABLED)
 
-#Add new dependencies concerning simulation_MYMETHOD.F90
+ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
+                                     simulation_base_class.F90 
+                                     simulation_VP1D_cartesian_non_unif.F90
+                                     simulation_VP1D_curvilinear_analytic.F90
+                                     simulation_vp1d_fourier_fem.F90
+                                     simulation_guiding_center_2D_generalized_coords.F90
+                                     simulation_guiding_center_2D_generalized_coords_mudpack.F90
+                                     simulation_2d_guiding_center_cartesian.F90
+                                     simulation_2d_guiding_center_polar.F90)
 
-add_dependencies( sll_simulation_1d
-  cubic_non_uniform_splines
-  sll_tridiagonal
-  sll_splines
-  sll_fft
-  sll_constants
-  sll_utilities
-  sll_memory
-  sll_assertion 	
-  sll_working_precision
-  )
 
-#Here is defined the executables. 
+
+TARGET_LINK_LIBRARIES( sll_simulation_1d 
+                       sll_splines
+                       sll_poisson_solvers
+                       mudpack
+                       sll_fft
+		       sll_distribution_function
+		       sll_general_coordinate_elliptic_solvers
+		       deboor_splines
+		       #sll_scalar_field_1d_alternative
+		       sll_scalar_field_2d_alternative
+                       sll_electric_field_accumulators
+                       sll_scalar_field
+                       sll_interpolators
+                       sll_advection
+                       sll_splines
+		       sll_integration
+		       sll_reduction
+                       sll_constants
+                       sll_coordinate_transformations
+                       sll_logical_meshes
+                       sll_utilities
+                       sll_common_array_initializers
+		       sll_timer
+                       sll_memory
+                       sll_assertion 	
+                       sll_working_precision)
+
+
+# Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
 #Add also the corresponding dependencies in a target_link_libraries() command
 ###############################################################
 
-add_executable( test_VP1D_cartesian_non_unif unit_test_VP1D_cartesian_non_unif.F90 )
+MACRO(ADD_SIMULATION_1D TEST_NAME) 
+   ADD_EXECUTABLE(test_${TEST_NAME} unit_test_${TEST_NAME}.F90)
+   TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulation_1d)
+ENDMACRO(ADD_SIMULATION_1D)
 
-target_link_libraries( test_VP1D_cartesian_non_unif
-  sll_simulation_1d
-  cubic_non_uniform_splines
-  sll_tridiagonal
-  sll_constants
-  sll_utilities
-  sll_memory
-  sll_assertion 	
-  sll_working_precision
-  )
-
-add_executable( test_VP1D_curvilinear_analytic unit_test_VP1D_curvilinear_analytic.F90 )
-
-target_link_libraries( test_VP1D_curvilinear_analytic
-  sll_simulation_1d
-  cubic_non_uniform_splines
-  sll_tridiagonal
-  sll_constants
-  sll_utilities
-  sll_memory
-  sll_assertion 	
-  sll_working_precision
-  )
+ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
+ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
+ADD_SIMULATION_1D(vp1d_fourier_fem)
+ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
+ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
+ADD_SIMULATION_1D(2d_gc_cartesian)
+ADD_SIMULATION_1D(2d_gc_polar)
 
 
-
-
-add_executable( test_vp1d_fourier_fem unit_test_vp1d_fourier_fem.F90 )
-
-target_link_libraries( test_vp1d_fourier_fem
-  sll_simulation_1d
-  sll_splines
-  sll_fft
-  sll_constants
-  sll_utilities
-  sll_memory
-  sll_assertion 	
-  sll_working_precision
-  )
-
-
+ENDIF(MUDPACK_ENABLED)
 
 #Commands to be updated in the above simulation class standard
 #############################################################
 
-#add_executable(test_simulation_1d user_geometry_functions.F90 unit_test.F90)
-add_executable(polar_SL polar_SL.F90)
-add_executable(curvilinear_SL curvilinear_SL.F90)
+ADD_EXECUTABLE(polar_SL polar_SL.F90)
 
-#target_link_libraries(test_simulation_1d
-# 	sll_advection_field
-#	sll_mapped_meshes
-#	sll_interpolators
-#	sll_splines
-#	geometry_functions
-#	sll_distribution_function
-#	sll_scalar_field_2d	
-#	sll_constants
-#	sll_low_level_file_io
-# 	sll_utilities
-#	sll_memory
-#	sll_assertion
-#	sll_working_precision
-#  )
+TARGET_LINK_LIBRARIES(polar_SL sll_mapped_meshes
+	                         sll_interpolators
+	                         sll_constants
+	                         sll_file_io
+  	                         sll_utilities)
 
-target_link_libraries(polar_SL
-	sll_mapped_meshes
-	sll_interpolators
-	sll_splines
-	geometry_functions
-#	sll_distribution_function
-#	sll_scalar_field_2d	
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-	sll_assertion
-  )
+###
+
+ADD_EXECUTABLE(curvilinear_SL curvilinear_SL.F90)
   
-  target_link_libraries(curvilinear_SL
-	sll_mapped_meshes
-	sll_interpolators
-	sll_splines
-	geometry_functions
-#	sll_distribution_function
-#	sll_scalar_field_2d	
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-	sll_assertion
-  )
+TARGET_LINK_LIBRARIES(curvilinear_SL sll_mapped_meshes
+	                               sll_interpolators
+	                               sll_constants
+	                               sll_file_io
+  	                               sll_utilities)
+###
 
-add_executable(CG_polar
-		CG_polar.F90
-		#sll_poisson_2d_polar.F90
-		sll_advection_polar.F90
-		sll_polar_operators.F90
-		)
-add_dependencies(CG_polar sll_low_level_file_io)
+ADD_EXECUTABLE(CG_polar CG_polar.F90 sll_advection_polar.F90
+		                         sll_polar_operators.F90)
 
-#FILE(COPY CG_data.txt DESTINATION ${CMAKE_BINARY_DIR})
-target_link_libraries(CG_polar
-	sll_splines
-	sll_poisson_2d_polar
-        sll_low_level_file_io
-	sll_fft
-	sll_tridiagonal
-	sll_constants
-	sll_memory
-	sll_assertion
-	sll_timer
-	sll_utilities
-	)
-	
+TARGET_LINK_LIBRARIES(CG_polar sll_poisson_2d_polar
+	                         sll_utilities
+                               sll_file_io
+	                         sll_fft
+                               sll_splines
+	                         sll_constants
+	                         sll_timer)
+###
 
-IF (0)
-add_executable(Poisson_solver
-		poisson_output.F90
-		sll_poisson_2d_polar.F90
-		)
-target_link_libraries(Poisson_solver
-	sll_fft
-	sll_tridiagonal
-	sll_constants
-	sll_memory
-	sll_assertion
-	sll_utilities
-	)
-ENDIF()
+ADD_EXECUTABLE(VP1D_cart VP_uniform_cartesian_BSL.F90)
 
-IF(FFTPACK_ENABLED)
-IF(NOT STDF95)
-add_executable(VP1D_cart VP_uniform_cartesian_BSL.F90)
-target_link_libraries(VP1D_cart
-	sll_mapped_meshes
-	sll_interpolators
-	sll_fft
-	sll_splines
-	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-	sll_assertion 	
-	sll_poisson_1d_periodic
-	fftpack_module
-	)
+TARGET_LINK_LIBRARIES(VP1D_cart sll_mapped_meshes
+	                          sll_interpolators
+	                          sll_fft
+	                          sll_distribution_function
+	                          sll_scalar_field	
+	                          sll_constants
+	                          sll_file_io
+  	                          sll_utilities
+	                          sll_poisson_solvers
+	                          dfftpack)
 
+###
 
-add_executable(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
-target_link_libraries(VP1D_deltaf_cart
-	sll_mapped_meshes
-	sll_interpolators
-	sll_periodic_interp
-	sll_splines
-	sll_fft
-	geometry_functions
-	sll_distribution_function
-	sll_scalar_field_2d	
-	sll_constants
-	sll_low_level_file_io
-  	sll_utilities
-	sll_memory
-	sll_assertion 	
-	sll_poisson_1d_periodic
-	fftpack_module
-	${LAPACK_LIBRARIES}
-	)
-ENDIF(NOT STDF95)
-ENDIF()
+#IF(CMAKE_BUILD_TYPE MATCHES "Release")
+#OPENMP directives are activated only for release build
+
+#OPENMP directives are activated only for release build
+IF(CMAKE_BUILD_TYPE MATCHES "Release")
+
+   ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
+   TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_mapped_meshes
+	                                    sll_interpolators
+	                                    sll_periodic_interp
+	                                    sll_fft
+	                                    sll_distribution_function
+	                                    sll_scalar_field
+                                          sll_constants
+	                                    sll_file_io
+  	                                    sll_utilities
+	                                    sll_timer
+	                                    sll_poisson_solvers
+	                                    dfftpack)
+   IF(HDF5_ENABLED)
+     ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
+     TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
+	                           sll_interpolators
+	                           sll_periodic_interp
+	                           sll_fft
+	                           sll_distribution_function
+	                           sll_scalar_field
+	                           sll_constants
+	                           sll_file_io
+  	                           sll_utilities
+	                           sll_timer
+	                           sll_poisson_solvers
+	                           dfftpack)
+	ENDIF(HDF5_ENABLED)                           
+
+ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 
 #End of commands to be put in the class simulation standard
 ###################################################
-
 
 #############################################################################
 ###      Parallel simulations
 #############################################################################
 # ATTENTION: From here below, the simulations/tests are parallel
-set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
-IF(HDF5_ENABLE_PARALLEL AND HDF5_PARALLEL_ENABLED)
+   #Here is defined the library containing the parallel simulations. 
+   #Please add there your new simulation_MYMETHOD.F90 
+   ############################################################
 
-#Here is defined the library containing the parallel simulations. 
-#Please add your new simulation_MYMETHOD.F90 
-############################################################
+   ADD_LIBRARY( sll_simulations STATIC 
+     simulation_base_class.F90
+     simulation_2d_vlasov_poisson_cartesian.F90
+     simulation_4d_vlasov_poisson_cartesian.F90
+     simulation_4d_vlasov_parallel_poisson_sequential_cartesian.F90
+     simulation_4d_vlasov_poisson_general.F90
+     simulation_4d_qns_general.F90
+     #simulation_4d_mixed_qns_cartesian.F90
+     simulation_4d_DK_hybrid.F90
+     simulation_4d_vlasov_poisson_polar.F90
+     simulation_4d_drift_kinetic_polar.F90
+     simulation_4d_drift_kinetic_cartesian_finite_volume.F90
+     simulation_6d_vlasov_poisson_cartesian.F90 )
 
-add_library( sll_simulations STATIC simulation_base_class.F90 
-  simulation_4d_vlasov_poisson_cartesian.F90 )
+   #Add new dependencies concerning simulation_MYMETHOD.F90
+   SET(SIMULATION_DEPS sll_poisson_parallel
+                       sll_poisson_solvers
+                       sll_multigrid
+                       sll_fft
+		       sll_distribution_function
+		       sll_general_coordinate_elliptic_solvers
+		       deboor_splines
+		       #sll_scalar_field_1d_alternative
+		       sll_scalar_field_2d_alternative
+                       sll_electric_field_accumulators
+                       sll_scalar_field
+                       sll_interpolators
+                       sll_advection
+                       sll_splines
+                       sll_parallel_array_initializers	
+                       sll_remap
+                       sll_collective
+                       sll_parallel_utilities
+		       sll_integration
+		       sll_reduction
+                       sll_constants
+                       sll_coordinate_transformations
+                       sll_logical_meshes
+                       sll_file_io_parallel
+                       sll_utilities
+		       sll_timer
+                       sll_memory
+                       sll_assertion 	
+                       sll_working_precision)
 
-#Add new dependencies concerning simulation_MYMETHOD.F90
+   TARGET_LINK_LIBRARIES(sll_simulations ${SIMULATION_DEPS})
 
-add_dependencies( sll_simulations
-  sll_poisson_parallel
-  sll_fft
-  sll_electric_field_accumulators
-  sll_scalar_field_4d
-  sll_interpolators
-  sll_splines
-  sll_remap
-  sll_collective
-  sll_constants
-  sll_low_level_file_io_parallel
-  sll_utilities
-  sll_memory
-  sll_assertion 	
-  sll_working_precision
-  )
+   MACRO(ADD_SIMULATION TEST_NAME) 
+      ADD_EXECUTABLE(test_${TEST_NAME} unit_test_${TEST_NAME}.F90)
+      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulations)
+   ENDMACRO(ADD_SIMULATION)
 
-#Here is defined the executables. 
-#Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
-#Add also the corresponding dependencies in a target_link_libraries() command
-###############################################################
+   #Define the executables/tests here.
+   #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
+   #ADD_SIMULATION(MYMETHOD)
+   ###############################################################
 
-add_executable( test_vp4d_sim unit_test_4d.F90 )
+   ADD_SIMULATION(2d_vp_cartesian)
+   ADD_SIMULATION(4d)
+   ADD_SIMULATION(4d_vp_cartesian)
+   ADD_SIMULATION(4d_vp_general)
+   ADD_SIMULATION(4d_qns_general)
+#   ADD_SIMULATION(4d_mixed_qns_cartesian)
+   ADD_SIMULATION(4d_DK_hybrid)
+   ADD_SIMULATION(4d_vp_polar)
+   ADD_SIMULATION(4d_dk_polar)
+   ADD_SIMULATION(4d_dk_cartesian)
+   ADD_SIMULATION(6d)
 
-target_link_libraries( test_vp4d_sim
-  sll_simulations
-  sll_poisson_parallel
-  sll_fft
-  sll_electric_field_accumulators
-  sll_scalar_field_4d
-  sll_interpolators
-  sll_splines
-  sll_remap
-  sll_collective
-  sll_constants
-  sll_low_level_file_io_parallel
-  sll_utilities
-  sll_memory
-  sll_assertion 	
-  sll_working_precision
-  )
+   # Add postprocessing code for KEEN
+   ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
+   TARGET_LINK_LIBRARIES(VPpostprocessing_drive_KEEN dfftpack)
 
-ENDIF() 
+ENDIF()

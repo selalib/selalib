@@ -1,100 +1,102 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 IF(DEFINED CMAKE_BUILD_TYPE)
-   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "Choose the type of
-build, options are: Debug Release.")
+   SET(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING 
+   "Choose the type of build, options are: Debug Release.")
 ELSE()
-   SET(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build,
-options are: Debug Release.")
+   SET(CMAKE_BUILD_TYPE Debug CACHE STRING 
+   "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
+IF(OPTIONS_FILE)
+INCLUDE(${OPTIONS_FILE})
+ENDIF()
 
-PROJECT(SELALIB)
+PROJECT(selalib)
 ENABLE_LANGUAGE(Fortran)
 
 # local modules path
-set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
+SET(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake
                       ${CMAKE_SOURCE_DIR}/prototype/src/CMakeModules)
 
-include(F90FLAGS)
-include(CTest)
-set(CTEST_DROP_SITE_CDASH TRUE)
+INCLUDE(F90FLAGS)
 # Tests+Dashboard configuration
-enable_testing()
-include(Pipol)
+INCLUDE(CTest)
+
+SET(CTEST_DROP_SITE_CDASH TRUE)
+ENABLE_TESTING()
+INCLUDE(Pipol)
 
 MESSAGE(STATUS "CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
-if (${CMAKE_Fortran_COMPILER} MATCHES "ifort")
+IF (${CMAKE_Fortran_COMPILER} MATCHES "ifort")
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "-v" OUTPUT_VARIABLE source_path)
-  string(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
-else()
+  STRING(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+ELSE()
   EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
-  string(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
-endif()
+  STRING(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
+ENDIF()
 MESSAGE(STATUS "Fortran_COMPILER_VERSION:${Fortran_COMPILER_VERSION}")
-get_filename_component (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
-if(PIPOL_IMAGE)
-  set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${PIPOL_IMAGE_NAME}")
-  set(SITE "${PIPOL_SITE}")
-else(PIPOL_IMAGE)
-  set(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
-endif(PIPOL_IMAGE)
+GET_FILENAME_COMPONENT (Fortran_COMPILER_NAME ${CMAKE_Fortran_COMPILER} NAME)
+
+IF(PIPOL_IMAGE)
+  SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${PIPOL_IMAGE_NAME}")
+  SET(SITE "${PIPOL_SITE}")
+ELSE(PIPOL_IMAGE)
+  SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")
+ENDIF(PIPOL_IMAGE)
 
 MESSAGE(STATUS "BUILDNAME:${BUILDNAME}")
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Use Parallel HDF5" FORCE)
 SET(FFTW_ENABLED          ON CACHE BOOL "Use fftw library " FORCE)
 ADD_DEFINITIONS(-D_FFTW)
-SET(FFTPACK_ENABLED       OFF CACHE BOOL "Use fftpack library " FORCE)
-add_subdirectory (prototype/src)
-add_subdirectory (slv2d/src)
-add_subdirectory (pic2d/src)
-add_subdirectory (gysela_public/src)
+SET(FFT_DEFAULT_LIBRARY "FFTW" CACHE STRING "fftw library used" FORCE)
 
-# Pipol rc and nightly files are installed under share/pipol
-file(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
-foreach(_f ${rc_files})
-  install(FILES ${_f} DESTINATION share/pipol/selalib)
-endforeach(_f ${rc_files})
+SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build package only")
 
-file(GLOB nightly_files $ENV{HOME}/.pipol/nightly/*)
-foreach(_f ${nightly_files})
-  install(FILES ${_f} DESTINATION share/pipol/selalib/nightly)
-endforeach(_f ${nightly_files})
+IF(SLL_BUILD_PACKAGE)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-install(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
-        DESTINATION share/doc/pipol/)
+   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build" FORCE)
+   INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+   FIND_PACKAGE(MPI REQUIRED Fortran)
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+   INCLUDE(HDF5Config)
+   IF(NOT ${HDF5_IS_PARALLEL})
+      MESSAGE(SEND_ERROR "HDF5 must be parallel")
+   ENDIF()
+   FIND_PACKAGE(FFTW)
+   ADD_SUBDIRECTORY (prototype/src/fftpack)
+   ADD_SUBDIRECTORY (prototype/src/package)
+   # Packages generation
+   INCLUDE(CPackConfig) 
 
-include(DartConfig)
-include(Dart)
+ELSE()
 
-# Packages generation
-set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "SeLaLib prototype")
-set(CPACK_PACKAGE_DESCRIPTION 
-  "This Pipol package steps are: 
-     1. architecture reservation and OS deployement
-     2. git update from gforge 
-     3. compilation
-     4. test and visualisation on a dashboard
-     5. packages generation
-     6. gforge packages upload 
-  ")
+   ADD_SUBDIRECTORY (prototype/src)
 
-set(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/README.txt")
-set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/COPYING.txt")
+   IF(NOT STDF95)
+      ADD_SUBDIRECTORY (slv2d/src)
+      ADD_SUBDIRECTORY (pic2d/src)
+      ADD_SUBDIRECTORY (gysela_public/src)
+   ENDIF(NOT STDF95)
+   
+   # Pipol rc and nightly files are installed under share/pipol
+   FILE(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
+   FOREACH(_f ${rc_files})
+     INSTALL(FILES ${_f} DESTINATION share/pipol/selalib)
+   ENDFOREACH(_f ${rc_files})
+   
+   FILE(GLOB nightly_files $ENV{HOME}/.pipol/nightly/*)
+   FOREACH(_f ${nightly_files})
+     INSTALL(FILES ${_f} DESTINATION share/pipol/selalib/nightly)
+   ENDFOREACH(_f ${nightly_files})
+   
+   SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-set(CPACK_PACKAGE_NAME "selalib-prototype")
+   INSTALL(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
+           DESTINATION share/doc/pipol/)
+   
+   INCLUDE(DartConfig)
+   INCLUDE(Dart)
 
-set(CPACK_PACKAGE_VERSION_MAJOR 1)
-set(CPACK_PACKAGE_VERSION_MINOR 0)
-set(CPACK_PACKAGE_VERSION_PATCH 0)
-
-IF(PIPOL_IMAGE)
-  SET(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-1.2-${PIPOL_IMAGE_NAME}")
-ENDIF(PIPOL_IMAGE)
-
-set(CPACK_PACKAGE_CONTACT "Pierre Navaro 0368850173")
-
-include(CPack)
-
+ENDIF(SLL_BUILD_PACKAGE)

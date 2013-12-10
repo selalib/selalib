@@ -19,7 +19,7 @@ program test_poisson_3d_periodic_seq
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_poisson_solvers.h"
-  use numeric_constants
+  use sll_constants
   use sll_poisson_3d_periodic_seq
 
   implicit none
