@@ -188,6 +188,37 @@ contains
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_initializer_4d
 
+  function sll_landau_mode_initializer_4d( x, y, vx, vy, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: ky
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = kx, params(2) = ky, ', &
+            'params(3) = eps.'
+       stop
+    end if
+
+    SLL_ASSERT( size(params) >= 3 )
+
+    kx = params(1)
+    ky = params(2)
+    eps      = params(3)
+
+    factor1 = 1.0_f64/(2.0*sll_pi)
+    res = factor1 * &
+         (1.0_f64+eps*cos(kx*x)*cos(ky*y))*exp(-0.5_f64*(vx**2+vy**2))
+  end function sll_landau_mode_initializer_4d
+
+
   function sll_test_x_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
     sll_real64 :: sll_test_x_transport_initializer_v1v2x1x2
     sll_real64, intent(in) :: x
