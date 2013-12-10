@@ -528,7 +528,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     eps = params(5)
     kx  =  2. * sll_pi / (eta1_max - eta1_min)
     ky = kx
-    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+    factor1 = 1.0_f64/(2.0*sll_pi)
     sll_landau_2d_initializer_v1v2x1x2 = factor1 * &
          (1.0_f64+eps*cos(kx*x)*cos(ky*y))*exp(-0.5_f64*(vx**2+vy**2))
 

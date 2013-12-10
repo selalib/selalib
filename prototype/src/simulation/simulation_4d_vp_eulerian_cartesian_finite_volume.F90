@@ -797,7 +797,7 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
              !print*, 'coucou 1!!'
           if (sim%my_rank==0) then
              !print*, 'coucou 2!!'
-             open(399,file='log(energy)',position='append')
+             open(399,file='energy',position='append')
              if(itime==BUFFER_SIZE) then 
                 rewind(399)
              endif
