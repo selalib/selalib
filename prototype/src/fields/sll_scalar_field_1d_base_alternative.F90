@@ -13,6 +13,9 @@ module sll_module_scalar_field_1d_base
           derivative_value_at_point
      procedure(derivative_evaluation_integer), deferred, pass :: &
           derivative_value_at_indices
+     procedure(set_field_data_subroutine), deferred, pass :: set_field_data
+     procedure(field_1d_message_pass), deferred, pass :: &
+          update_interpolation_coefficients
      procedure(field_1d_file_output), deferred, pass :: write_to_file
      procedure(field_1d_subroutine), deferred, pass :: delete
      ! here we can continue with derivatives or whatever else that might
@@ -63,6 +66,21 @@ module sll_module_scalar_field_1d_base
      end function function_get_mesh
   end interface
 
+  abstract interface
+     subroutine set_field_data_subroutine( field, values )
+       use sll_working_precision
+       import sll_scalar_field_1d_base
+       class(sll_scalar_field_1d_base), intent(inout) :: field
+       sll_real64, dimension(:), intent(in) :: values
+     end subroutine set_field_data_subroutine
+  end interface
+
+  abstract interface
+     subroutine field_1d_message_pass( field )
+       import sll_scalar_field_1d_base
+       class(sll_scalar_field_1d_base), intent(inout) :: field
+     end subroutine field_1d_message_pass
+  end interface
 
   abstract interface
      function function_evaluation_real( field, eta ) result(res)
@@ -77,8 +95,8 @@ module sll_module_scalar_field_1d_base
   abstract interface
      function function_evaluation_integer( field, i ) result(res)
        use sll_working_precision
-       import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base), intent(in) :: field
+       import sll_scalar_field_1d_base
+       class(sll_scalar_field_1d_base), intent(in) :: field
        sll_int32, intent(in)  :: i
        sll_real64             :: res
      end function function_evaluation_integer

@@ -102,11 +102,15 @@ module sll_coordinate_transformation_2d_base_module
       end function matrix_geometry_function_ct
    end interface
    
+   ! It is mandatory to pass the params array since making it optional
+   ! poses problems when storing the parameters array inside the object to
+   ! pass it when the function is called.
    abstract interface
-      function transformation_func_nopass( eta1, eta2 ) result(res)
+      function transformation_func_nopass( eta1, eta2, params ) result(res)
         use sll_working_precision
         sll_real64, intent(in) :: eta1
         sll_real64, intent(in) :: eta2
+        sll_real64, dimension(:), intent(in) :: params
         sll_real64             :: res
       end function transformation_func_nopass
    end interface
@@ -122,6 +126,10 @@ module sll_coordinate_transformation_2d_base_module
    
    ! WE SHOULD PROBABLY HAVE A SINGLE FILE WITH ALL THE SIGNATURES THAT WE
    ! GENERALLY USE AND DO NOT DEPEND ON A BASE OR DERIVED TYPE.
+
+   ! The following interface is meant to specify the signature of the 
+   ! (possibly user-defined) functions that should be passed as arguments
+   ! to initialize the analytic transformations.
    abstract interface
       function two_arg_scalar_function( eta1, eta2 )
         use sll_working_precision

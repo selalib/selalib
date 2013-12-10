@@ -3,7 +3,7 @@ program cg_polar
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_timer
+  use sll_timer 
   use polar_operators
   use polar_advection
   use sll_fft
@@ -17,7 +17,7 @@ program cg_polar
   sll_real64, dimension (:)  , allocatable :: int_r
   sll_int32  :: i, j, step, visustep, hh, min, ss,ii
   sll_int32  :: nr, ntheta, nb_step
-  sll_int32  :: fcase, scheme, carac, grad, visu
+  sll_int32  :: fcase, scheme, carac, grad, visu, interp_case, PPM_order
   sll_int32  :: ierr_poiss
   sll_real64 :: dr, dtheta, rmin, rmax, r, theta, dt, tf, r1, r2
   sll_real64 :: w0, w, l10, l1, l20, l2, e, e0
@@ -49,6 +49,8 @@ program cg_polar
   read(27,*)grad
   read(27,*)fcase
   read(27,*)scheme
+  read(27,*)interp_case
+  read(27,*)PPM_order
   read(27,*)visu
   read(27,*)f_file
   read(27,*)
@@ -102,6 +104,7 @@ program cg_polar
         theta = real(j-1,f64)*dtheta
       enddo
     end do
+!f=10._f64
 
   else if (fcase==3) then
     do i = 1,nr+1
@@ -160,6 +163,8 @@ program cg_polar
 
   fp1 = 0.0_f64
 
+  !call solve_poisson_polar(plan_sl%poisson,f,plan_sl%phi)!,ierr_poiss)
+
   call poisson_solve_polar(plan_sl%poisson,f,plan_sl%phi,ierr_poiss)
   if (ierr_poiss.ne.0) then
     print*, 'WARNING: poisson error is larger than 1.e-12 for ', &
@@ -171,6 +176,13 @@ program cg_polar
   !write f in a file before calculations
   call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta, &
     visu,step,"CG")
+
+  print *,'#bc(1)=',bc(1)
+  print *,'#bc(2)=',bc(2)
+  print *,'#SLL_DIRICHLET=',SLL_DIRICHLET
+  print *,'#SLL_NEUMANN=',SLL_NEUMANN
+  print *,'#SLL_NEUMANN_MODE_0=',SLL_NEUMANN_MODE_0
+  
 
   !mode=1.5
   if(bc(1)==SLL_DIRICHLET)then
@@ -413,6 +425,7 @@ program cg_polar
     do i = 2,nr
       r   = rmin+real(i-1,f64)*dr
       w0  = w0+r*f(i,j)
+      !w0  = w0+f(i,j)
       l10 = l10+r*abs(f(i,j))
       l20 = l20+r*f(i,j)**2
       e0  = e0+r*(plan_sl%adv%field(1,i,j)**2 + &
@@ -485,9 +498,17 @@ program cg_polar
       !classical semi-Lagrangian scheme (order 1)
       call SL_classic(plan_sl,f,fp1)
 
+    else if (scheme==10) then
+      !semi-Lagrangian scheme remap (Euler, order 1)
+      call SL_remap(plan_sl,f,fp1,interp_case,PPM_order)
+
     else if (scheme==2) then
       !semi-Lagrangian predictive-corrective scheme
       call SL_ordre_2(plan_sl,f,fp1)
+
+    else if (scheme==20) then
+      !semi-Lagrangian scheme remap (predictive-corrective, order 2)
+      call SL_remap_ordre_2(plan_sl,f,fp1,interp_case,PPM_order)
 
     else if (scheme==3) then
       !leap-frog scheme
@@ -548,6 +569,7 @@ program cg_polar
       do i = 2,nr
         r  = rmin+real(i-1,f64)*dr
         w  = w+r*f(i,j)
+        !w  = w+f(i,j)
         l1 = l1+r*abs(f(i,j))
         l2 = l2+r*f(i,j)**2
         e  = e+r*(plan_sl%adv%field(1,i,j)**2 + &
@@ -679,10 +701,8 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
-      error,file_id,"Node")
+    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh",nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f
 

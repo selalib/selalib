@@ -127,9 +127,9 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
             print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
     end if
 
-    call printlog("Gradient_conj : duree du calcul =",ai_dtllevel=1)
-    
-    call printcputime ( )
+!VG!    call printlog("Gradient_conj : duree du calcul =",ai_dtllevel=1)
+!VG!    
+!VG!    call printcputime ( )
     
     deallocate(lpr_Ad)
     deallocate(lpr_d)
@@ -593,7 +593,7 @@ subroutine Gradient_conj_adjusted ( this, apr_B,apr_U,Masse_tot, ai_maxIter, ar_
     call Mult_CSR_Matrix_Vector( this , lpr_Ux , lpr_Ad )
 
     lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-    print*, dot_product(Masse_tot, lpr_Ux)
+    !print*, dot_product(Masse_tot, lpr_Ux)
     !-----------------
     !-------------------!
     ! calcul des normes !

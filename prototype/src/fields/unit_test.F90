@@ -19,7 +19,8 @@ program unit_test
   type(scalar_field_2d)                     :: field
   class(sll_coordinate_transformation_2d_base), pointer   :: m
   sll_int32 :: nc1, nc2, iplot
-  procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
+  procedure(transformation_func_nopass), pointer :: px1, px2, pjac11, pjac12, &
+       pjac21, pjac22
   type(init_landau_2d), target :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: pfinit
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
@@ -27,16 +28,18 @@ program unit_test
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   sll_int32 :: i,j
+  sll_real64, dimension(4) :: sinprod_params 
 
   nc1 = 10
   nc2 = 10
-  ml => new_logical_mesh_2d( nc1, nc1)
+  ml => new_logical_mesh_2d( nc1, nc2)
   px1 => sinprod_x1
   px2 => sinprod_x2
   pjac11 => sinprod_jac11
   pjac12 => sinprod_jac12
   pjac21 => sinprod_jac21
   pjac22 => sinprod_jac22
+  sinprod_params(:) = (/0.1_f64, 0.1_f64,1.0_f64,1.0_f64/)
 
   transf => new_coordinate_transformation_2d_analytic(&
        'sinprod',&
@@ -46,7 +49,8 @@ program unit_test
        pjac11, &
        pjac12, &
        pjac21, &
-       pjac22)
+       pjac22, &
+       sinprod_params )
   m => transf
 
   call init_landau%initialize(m,NODE_CENTERED_FIELD,0.001_f64)

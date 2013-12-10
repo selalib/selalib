@@ -102,7 +102,6 @@
     call pastix_fortran(pastix_data ,pastix_comm, &
          n,ia,ja,avals,perm,invp,rhs,nrhs,iparm,dparm)
 
-
     !
     ! Customize some parameters
     !
@@ -115,9 +114,12 @@
        iparm(IPARM_FACTORIZATION) = API_FACT_LDLT
 
     else
+
        iparm(IPARM_SYM)           = API_SYM_NO
        iparm(IPARM_FACTORIZATION) = API_FACT_LU
-    End if
+
+    end if
+
     iparm(IPARM_MATRIX_VERIFICATION) = API_NO
     iparm(IPARM_RHS_MAKING)          = API_RHS_1
 
@@ -141,6 +143,5 @@
 
     ! Clean up MPI
     call MPI_FINALIZE(IERR)   
-
 
   end program simple_f
