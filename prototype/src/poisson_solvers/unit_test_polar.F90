@@ -33,7 +33,7 @@ program test_poisson
   sll_real64 :: tol,r,theta,a,l1,l2,linf
   sll_int32 :: mod
 
-  print*,'Testing the Poisson solver in 2D, polar coordinate'
+  print*,'#Testing the Poisson solver in 2D, polar coordinate'
 
   rmin=1.0_f64
   rmax=2.0_f64
@@ -68,7 +68,8 @@ program test_poisson
         end do
      end do
      call poisson_solve_polar(plan,f,phi)
-
+     
+     
      l1=0.0_f64
      l2=0.0_f64
      linf=0.0_f64

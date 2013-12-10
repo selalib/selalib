@@ -354,22 +354,22 @@ contains ! *******************************************************************
       ! rho)
     
     type(general_coordinate_elliptic_solver),intent(inout) :: es
-    class(sll_scalar_field_2d_base), intent(in) :: a11_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a12_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a21_field_mat
-    class(sll_scalar_field_2d_base), intent(in) :: a22_field_mat
-    class(sll_scalar_field_2d_base), intent(in)     :: c_field
+    class(sll_scalar_field_2d_base), pointer :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer     :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local
-   !  sll_real64, dimension(:), allocatable   :: M_rho_loc
+    !  sll_real64, dimension(:), allocatable   :: M_rho_loc
     sll_real64, dimension(:,:), allocatable :: M_c_loc
     sll_real64, dimension(:,:), allocatable :: K_a11_loc
     sll_real64, dimension(:,:), allocatable :: K_a12_loc
     sll_real64, dimension(:,:), allocatable :: K_a21_loc
     sll_real64, dimension(:,:), allocatable :: K_a22_loc
     sll_real64, dimension(:,:), allocatable :: full_Matrix
-   ! sll_real64, dimension(:), pointer  :: Masse_tot
-   ! sll_real64, dimension(:), pointer  :: Stiff_tot
+    ! sll_real64, dimension(:), pointer  :: Masse_tot
+    ! sll_real64, dimension(:), pointer  :: Stiff_tot
     !sll_real64, dimension(:,:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Stiff_loc
@@ -413,7 +413,7 @@ contains ! *******************************************************************
     ! Stiff_tot(:) = 0.0_f64
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
-
+    
     full_Matrix(:,:) = 0.0_f64
    ! mesh = c_field%get_logical_mesh( )
     number_cells1 = es%num_cells1
@@ -425,7 +425,7 @@ contains ! *******************************************************************
           
           
           cell_index = i + number_cells1*(j-1)
-          
+
           call build_local_matrices( &
                es, &
                i, &
@@ -442,8 +442,9 @@ contains ! *******************************************************************
                K_a11_loc, &
                K_a12_loc, &
                K_a21_loc, &
-               K_a22_loc )
+               K_a22_loc)          
           
+
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -459,18 +460,19 @@ contains ! *******************************************************************
                full_Matrix,&
                es%masse,&
                es%stiff)
-
+          !print*, i,j
           
        end do
     end do
-
-   
-   ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+    
+    !print*, 'loop ok'
+    
+    ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a11_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a12_loc,ierr)
     SLL_DEALLOCATE_ARRAY(K_a21_loc,ierr)
-    SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr) 
+    SLL_DEALLOCATE_ARRAY(K_a22_loc,ierr)
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
@@ -538,7 +540,7 @@ contains ! *******************************************************************
        end do
     end do
     
-
+    
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
@@ -550,11 +552,9 @@ contains ! *******************************************************************
     end if
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
-
-   SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
-
-
+  
   ! This is based on the assumption that all the input fields have the same
   ! boundary conditions. TO DO: put all the boundary condition parameters in
   ! a single module called 'boundary_condition_convention' or something, which
@@ -570,17 +570,15 @@ contains ! *******************************************************************
        a21_field_mat, &
        a22_field_mat, &
        c_field, &
-      ! rho, &
-      ! M_rho_loc, &
        Masse_loc,&
        Stiff_loc,&
        M_c_loc, &
        K_a11_loc, &
        K_a12_loc, &
        K_a21_loc, &
-       K_a22_loc )
+       K_a22_loc)
     !    use sll_constants
-
+    
     type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
@@ -637,25 +635,34 @@ contains ! *******************************************************************
     sll_real64 :: val_a12
     sll_real64 :: val_a21
     sll_real64 :: val_a22
+    sll_real64 :: val_b1=0
+    sll_real64 :: val_b1_der1=0
+    sll_real64 :: val_b1_der2=0
+    sll_real64 :: val_b2=0
+    sll_real64 :: val_b2_der1=0
+    sll_real64 :: val_b2_der2=0
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
     sll_real64 :: B11
     sll_real64 :: B12
     sll_real64 :: B21
     sll_real64 :: B22
-
-    Masse_loc(:) = 0.0
-    Stiff_loc(:) = 0.0
-!    M_rho_loc(:) = 0.0
-    M_c_loc(:,:) = 0.0
-    K_a11_loc(:,:) = 0.0
-    K_a12_loc(:,:) = 0.0
-    K_a21_loc(:,:) = 0.0
-    K_a22_loc(:,:) = 0.0
-    dbiatx1(:,:)  = 0.0_f64
-    dbiatx2(:,:)  = 0.0_f64
-    work1(:,:) = 0.0_f64
-    work2(:,:) = 0.0_f64
+    sll_real64 :: MC
+    sll_real64 :: C1
+    sll_real64 :: C2    
+    
+    Masse_loc(:)      = 0.0
+    Stiff_loc(:)      = 0.0
+    !    M_rho_loc(:) = 0.0
+    M_c_loc(:,:)      = 0.0
+    K_a11_loc(:,:)    = 0.0
+    K_a12_loc(:,:)    = 0.0
+    K_a21_loc(:,:)    = 0.0
+    K_a22_loc(:,:)    = 0.0
+    dbiatx1(:,:)      = 0.0_f64
+    dbiatx2(:,:)      = 0.0_f64
+    work1(:,:)        = 0.0_f64
+    work2(:,:)        = 0.0_f64
     ! The supposition is that all fields use the same logical mesh
     delta1    = obj%delta_eta1!mesh2d%delta_eta1
     delta2    = obj%delta_eta2! mesh2d%delta_eta2
@@ -669,32 +676,32 @@ contains ! *******************************************************************
     bc_top    = obj%bc_top
     num_pts_g1 = size(obj%gauss_pts1,2) !obj%spline_degree1+2
     num_pts_g2 = size(obj%gauss_pts2,2)!obj%spline_degree2+2
-
-   ! print*, delta1,delta2,eta1_min,eta2_min,mesh2d%eta1_max,mesh2d%eta2_max
-   ! print*, bc_left,bc_right,bc_bottom,bc_top
-  
+    
+    ! print*, delta1,delta2,eta1_min,eta2_min,mesh2d%eta1_max,mesh2d%eta2_max
+    ! print*, bc_left,bc_right,bc_bottom,bc_top
+    
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
-
-  !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
+ 
+    !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
        gpt2  = eta2  + 0.5_f64*delta2 * ( obj%gauss_pts2(1,j) + 1.0_f64 )
        wgpt2 = 0.5_f64*delta2*obj%gauss_pts2(2,j) !ATTENTION 0.5
-
+       
        if ((obj%bc_bottom==SLL_PERIODIC).and.(obj%bc_top==SLL_PERIODIC))then
           ! rescale gauss point in interval [0,delta2]
           gtmp2 = 0.5_f64*delta2*( obj%gauss_pts2(1,j) + 1.0_f64) !ATTENTION 0.5
           local_spline_index2 = obj%spline_degree2 + 1
-
+          
        else if ((obj%bc_bottom == SLL_DIRICHLET).and.&
             (obj%bc_top    == SLL_DIRICHLET)) then
           gtmp2 = gpt2
           local_spline_index2 = obj%spline_degree2 + cell_j
        end if
-
-!
+ 
+       !
 !!$
        call bsplvd( &
             obj%knots2, &
@@ -704,7 +711,7 @@ contains ! *******************************************************************
             work2,&
             dbiatx2,&
             2)
-
+ 
        !print*, 'splin2=',dbiatx2
        !print*, 'knot2',obj%knots2
        do i=1,num_pts_g1
@@ -716,7 +723,7 @@ contains ! *******************************************************************
              
              gtmp1   = 0.5_f64*delta1*( obj%gauss_pts1(1,i) + 1.0_f64)! ATTENTION 0.5 
              local_spline_index1 = obj%spline_degree1 + 1
-
+             
           else if ((obj%bc_left  == SLL_DIRICHLET).and.&
                (obj%bc_right == SLL_DIRICHLET) ) then
              
@@ -725,8 +732,8 @@ contains ! *******************************************************************
              
           end if
      !     print*,  'gauss',obj%gauss_pts1(1,i)
-
           
+ 
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -736,45 +743,48 @@ contains ! *******************************************************************
                dbiatx1,&
                2 )
 
-          val_c   = c_field%value_at_point(gpt1,gpt2)
-          !print*, 'val,',val_c
-          val_a11 = a11_field_mat%value_at_point(gpt1,gpt2)
-          val_a12 = a12_field_mat%value_at_point(gpt1,gpt2)
-          val_a21 = a21_field_mat%value_at_point(gpt1,gpt2)
-          val_a22 = a22_field_mat%value_at_point(gpt1,gpt2)
+          val_c        = c_field%value_at_point(gpt1,gpt2)
+          val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
+          val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
+          val_a21      = a21_field_mat%value_at_point(gpt1,gpt2)
+          val_a22      = a22_field_mat%value_at_point(gpt1,gpt2)
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
+ 
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
           !print*, 'determinant', val_jac
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
                jac_mat(1,2)*jac_mat(1,2)*val_a22
-         ! print*, 'test11', B11
-!!$          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
-!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
-!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
-!!$               jac_mat(1,2)*jac_mat(2,1)*val_a12
-
+          
+ 
           B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a21
+          
 
-          !print*, 'test12', B12
-!!$          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
-!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
-!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
-!!$               jac_mat(1,2)*jac_mat(2,1)*val_a21
-
+          
           B21 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a12
-         !print*, 'test21', B21
+ 
           B22 = jac_mat(1,1)*jac_mat(1,1)*val_a22 - &
                jac_mat(1,1)*jac_mat(2,1)*(val_a21+val_a12) + &
                jac_mat(2,1)*jac_mat(2,1)*val_a11
+
+          MC =   jac_mat(2,2) * val_b1_der1 &
+               - jac_mat(2,1) * val_b1_der2 &
+               - jac_mat(1,2) * val_b2_der1 &
+               + jac_mat(1,1) * val_b2_der2
+          
+
+          C1 =   jac_mat(2,2) * val_b1 &
+               - jac_mat(1,2) * val_b2 ! jac_mat(1,1) ! a revoir
+          C2 =   jac_mat(1,1) * val_b2 &
+               - jac_mat(2,1) * val_b1! jac_mat(1,1) ! a revoir
           !print*, 'test22', B22
           ! loop over the splines supported in the cell that are different than
           ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
@@ -783,12 +793,12 @@ contains ! *******************************************************************
              do jj = 0,obj%spline_degree2
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
-         !       M_rho_loc(index1)= M_rho_loc(index1) + &
-          !           val_f*val_jac*wgpt1*wgpt2* &
-           !          dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
-
+                !       M_rho_loc(index1)= M_rho_loc(index1) + &
+                !           val_f*val_jac*wgpt1*wgpt2* &
+                !          dbiatx1(ii+1,1)*dbiatx2(jj+1,1)
                 
-
+                
+                
                 Masse_loc(index1) = &
                      Masse_loc(index1) + &
                      val_jac*wgpt1*wgpt2* &
@@ -845,6 +855,8 @@ contains ! *******************************************************************
                            B21*wgpt1*wgpt2/val_jac*  &
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
                            dbiatx2(jj+1,2)*dbiatx2(jjj+1,1)
+
+
                    end do
                 end do
              end do
@@ -854,9 +866,9 @@ contains ! *******************************************************************
  
   end subroutine build_local_matrices
   
+  
 
-
-
+  
   subroutine build_local_matrices_rho( &
        obj, &
        cell_i, &
@@ -866,7 +878,7 @@ contains ! *******************************************************************
        int_rho,&
        M_rho_loc)
     !    use sll_constants
-
+    
     type(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
@@ -908,8 +920,8 @@ contains ! *******************************************************************
     sll_real64 :: val_f
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
-   
-   
+    
+    
     M_rho_loc(:) = 0.0
     dbiatx1(:,:)  = 0.0_f64
     dbiatx2(:,:)  = 0.0_f64
@@ -932,14 +944,14 @@ contains ! *******************************************************************
     bc_top    = obj%bc_top
     num_pts_g1 = size(obj%gauss_pts1,2) !obj%spline_degree1+2
     num_pts_g2 = size(obj%gauss_pts2,2)!obj%spline_degree2+2
-
-   ! print*, delta1,delta2,eta1_min,eta2_min,mesh2d%eta1_max,mesh2d%eta2_max
+    
+    ! print*, delta1,delta2,eta1_min,eta2_min,mesh2d%eta1_max,mesh2d%eta2_max
    ! print*, bc_left,bc_right,bc_bottom,bc_top
-  
+    
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
-
-  !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
+    
+    !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
@@ -957,7 +969,7 @@ contains ! *******************************************************************
           local_spline_index2 = obj%spline_degree2 + cell_j
        end if
        ! gtmp2 = eta2  + 0.5_f64*delta2 * ( obj%gauss_pts2(1,j) + 1.0_f64 ) !- 0.0001
-   !    print*, 'test',gtmp2, eta2, delta2, obj%gauss_pts2(1,j)
+       !    print*, 'test',gtmp2, eta2, delta2, obj%gauss_pts2(1,j)
        !    print*, 'splin2=',dbiatx2,obj%spline_degree2,local_spline_index2
        !    print*, 'knot',obj%knots2
        ! dbiatx2(:,:) = 0.0
@@ -1026,7 +1038,7 @@ contains ! *******************************************************************
     end do
     
   end subroutine build_local_matrices_rho
-
+  
   subroutine local_to_global_matrices( &
        es,&
        cell_index, &
@@ -1054,6 +1066,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: K_a12_loc
     sll_real64, dimension(:,:), intent(in) :: K_a21_loc
     sll_real64, dimension(:,:), intent(in) :: K_a22_loc
+    
     !  Correspond to the full Matrix of linear system 
     !  It is not necessary to keep it  
     sll_real64, dimension(:,:), intent(inout) :: full_Matrix
@@ -1077,9 +1090,9 @@ contains ! *******************************************************************
     bc_right  = es%bc_right
     bc_bottom = es%bc_bottom
     bc_top    = es%bc_top
-
+    
  
-
+    
     do mm = 0,es%spline_degree2
        index3 = cell_j + mm
        
@@ -1113,7 +1126,7 @@ contains ! *******************************************************************
           !print*, x,b
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
-
+          
           do nn = 0,es%spline_degree2
              
              index4 = cell_j + nn
@@ -1141,18 +1154,17 @@ contains ! *******************************************************************
                    
                    nbsp1 = es%num_cells1 + es%spline_degree1
                 end if
-                   
+                
                 y         = index2 + (index4-1)*nbsp1
                 bprime    =  nn * ( es%spline_degree1 + 1 ) + j + 1
-                li_Aprime = es%local_to_global_spline_indices(bprime, &
-                                                              cell_index)
+                li_Aprime = es%local_to_global_spline_indices(bprime,cell_index)
                 elt_mat_global = &
-                     M_c_loc(b, bprime) - &
-                     K_a11_loc(b, bprime) - &
-                     K_a12_loc(b, bprime) - &
-                     K_a21_loc(b, bprime) - &
-                     K_a22_loc(b, bprime)
-
+                     M_c_loc(b, bprime)     - &
+                     K_a11_loc(b, bprime)   - &
+                     K_a12_loc(b, bprime)   - &
+                     K_a21_loc(b, bprime)   - &
+                     K_a22_loc(b, bprime)   
+                
 !!$                full_Matrix(x,y) = &
 !!$                     full_Matrix(x,y) + &
 !!$                     M_c_loc(b, bprime) - &
@@ -1176,38 +1188,38 @@ contains ! *******************************************************************
     !print *, 'a = ', csr_masse%opr_a(1:csr_masse%opi_ia(2)-1)
     !print*, cell_j,cell_i
   end subroutine local_to_global_matrices
-
-
-   subroutine local_to_global_matrices_rho( &
+  
+  
+  subroutine local_to_global_matrices_rho( &
        es,&
        cell_index, &
        cell_i, &
        cell_j, &
        M_rho_loc)
-     
+    
      type(general_coordinate_elliptic_solver)  :: es
      sll_int32 :: cell_index
      sll_int32 :: cell_i
      sll_int32 :: cell_j
      sll_real64, dimension(:), intent(in)   :: M_rho_loc
-    !  Correspond to the full Matrix of linear system 
-    !  It is not necessary to keep it  
+     !  Correspond to the full Matrix of linear system 
+     !  It is not necessary to keep it  
      sll_int32 :: index1, index3
-    sll_int32 :: i,j,mm, nn, b, bprime,x,y
-    sll_int32 :: nbsp,nbsp1
-    sll_int32 :: bc_left
-    sll_int32 :: bc_right
-    sll_int32 :: bc_bottom
-    sll_int32 :: bc_top
-    sll_int32 :: ierr 
-    
-    bc_left   = es%bc_left
-    bc_right  = es%bc_right
-    bc_bottom = es%bc_bottom
-    bc_top    = es%bc_top
-
-    
-    
+     sll_int32 :: i,j,mm, nn, b, bprime,x,y
+     sll_int32 :: nbsp,nbsp1
+     sll_int32 :: bc_left
+     sll_int32 :: bc_right
+     sll_int32 :: bc_bottom
+     sll_int32 :: bc_top
+     sll_int32 :: ierr 
+     
+     bc_left   = es%bc_left
+     bc_right  = es%bc_right
+     bc_bottom = es%bc_bottom
+     bc_top    = es%bc_top
+     
+     
+     
     do mm = 0,es%spline_degree2
        index3 = cell_j + mm
        
@@ -1267,7 +1279,7 @@ contains ! *******************************************************************
     es%tmp_rho_vec(:) = 0.0_f64
     !print*, 'source coeff=', es%rho_vec
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-        (bc_bottom == SLL_DIRICHLET).and. (bc_top   == SLL_DIRICHLET) ) then
+         (bc_bottom == SLL_DIRICHLET).and. (bc_top   == SLL_DIRICHLET) ) then
        
        do i = 1, es%total_num_splines_eta1
           do j = 1, es%total_num_splines_eta2
@@ -1279,11 +1291,11 @@ contains ! *******************************************************************
        end do
        
     else if ( (bc_left   == SLL_DIRICHLET).and.(bc_right==SLL_DIRICHLET) .and.&
-              (bc_bottom == SLL_DIRICHLET).and.(bc_top==SLL_DIRICHLET) ) then 
+         (bc_bottom == SLL_DIRICHLET).and.(bc_top==SLL_DIRICHLET) ) then 
        
        do i = 1, es%total_num_splines_eta1
           do j = 1, es%total_num_splines_eta2
-
+             
              elt  = i + es%total_num_splines_eta1 * (  j - 1)
              elt1 = i + 1 + ( es%total_num_splines_eta1 + 2 ) * j 
              es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
@@ -1296,7 +1308,7 @@ contains ! *******************************************************************
        es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
             es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
        
-   
+       
        
     else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
              (bc_bottom == SLL_PERIODIC).and. (bc_top   == SLL_PERIODIC) ) then
@@ -1310,19 +1322,14 @@ contains ! *******************************************************************
           end do
        end do
 
-
+       
     end if
-    
-   
-
     
    ! print *, 'a = ', es%csr_mat%opr_a(1:es%csr_mat%opi_ia(2)-1)
     call solve_gen_elliptic_eq(es,es%csr_mat,es%tmp_rho_vec,es%phi_vec)
-  
-
     
   end subroutine solve_linear_system
-
+  
   subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
     type(general_coordinate_elliptic_solver) :: es
     type(csr_matrix) :: csr_mat
@@ -1334,20 +1341,15 @@ contains ! *******************************************************************
     ar_eps = 1.d-13
     ai_maxIter = 100000
     !print*, ai_maxIter 
-   ! print *, 'a = ', csr_mat % opr_a(1:csr_mat%opi_ia(2)-1)
-    !print*, 'tttttttttttttt'
-    !print *, 'a = ', csr_masse % opr_a(1:csr_masse%opi_ia(2)-1)
-    if ( (es%bc_left == SLL_PERIODIC) .and. (es%bc_right == SLL_PERIODIC) .and. &
+    if ( (es%bc_left == SLL_PERIODIC).and.(es%bc_right == SLL_PERIODIC) .and. &
          (es%bc_bottom == SLL_PERIODIC) .and. (es%bc_top == SLL_PERIODIC) ) then
-
-
        call Gradient_conj(&
             csr_mat,&
             apr_B,&
             apr_U,&
             ai_maxIter,&
             ar_eps )
-
+       
     else 
        call Gradient_conj(csr_mat,&
             apr_B,&

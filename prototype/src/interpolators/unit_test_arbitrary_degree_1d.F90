@@ -8,7 +8,7 @@ program unit_test
 
 #define NPTS1 31
 #define NPTS2 31 
-#define SPL_DEG 4
+#define SPL_DEG 3
 #define X1MIN 0.0_f64
 #define X1MAX 1.0_f64
 
@@ -181,7 +181,7 @@ program unit_test
   print*, '--------------------------------------------'
   print*, ' Norm H1 error '
   print*, '--------------------------------------------'
-  print*,  'norm H1 error (periodic) =', sqrt(normH1_0),h1**(SPL_DEG-1)
+  print*,  'norm H1 error (periodic) =',  sqrt(normH1_0),h1**(SPL_DEG-1)
   print*,  'norm H1 error (dirichlet) =', sqrt(normH1_1),h1**(SPL_DEG-1)
 !!$
 !!$  if( (acc/(NPTS1*NPTS2)  .lt. 2.0e-16) .and. &
@@ -192,7 +192,15 @@ program unit_test
 !!$  end if
 !!$  print *, 'Average error, x1 deriv eta1 = ', acc1/(NPTS1)
 !!$  print *, 'Average error, x1 deriv eta1 = ', acc/(NPTS1)
- print *, 'PASSED'
+
+  if (  ( sqrt(normL2_0) <= h1**(SPL_DEG)) .AND. &
+        ( sqrt(normL2_1) <= h1**(SPL_DEG)) .AND. &
+        ( sqrt(normH1_0) <= h1**(SPL_DEG-1)) .AND. &
+        ( sqrt(normH1_1) <= h1**(SPL_DEG-1))) then
+     
+       
+     print *, 'PASSED'
+  end if
 
   deallocate(x)
   deallocate(reference)

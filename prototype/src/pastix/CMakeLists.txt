@@ -1,28 +1,59 @@
-set(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+IF(PASTIX_ENABLED)
 
-IF(PASTIX_FOUND)
-   include_directories(${PASTIX_INCLUDE_DIRS})
-   add_executable(test_pastix fmurge.F90)
-   add_executable(fsimple fsimple.F90 utils.F90)
-   add_executable(fstep-by-step fstep-by-step.F90 utils.F90)
+  FIND_PACKAGE(RT QUIET)
+  FIND_PACKAGE(SCOTCH QUIET)
+  FIND_PACKAGE(PASTIX QUIET)
 
-   target_link_libraries(test_pastix ${MURGE_LIBRARIES} 
-                                     ${PASTIX_LIBRARIES} 
-                                     ${BLAS_LIBRARIES}
-                                     ${PTSCOTCH_LIBRARIES})
+  IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
 
-   target_link_libraries(fsimple -lmatrix_driver ${PASTIX_LIBRARIES} 
-                                     ${BLAS_LIBRARIES}
-                                     ${PTSCOTCH_LIBRARIES})
+     INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
+     SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+     ADD_DEFINITIONS(-DDISTRIBUTED)
 
-   target_link_libraries(fstep-by-step -lmatrix_driver ${PASTIX_LIBRARIES} 
-                                     ${BLAS_LIBRARIES}
-                                     ${PTSCOTCH_LIBRARIES})
+     INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
 
-   if(UNIX AND NOT APPLE)
-       target_link_libraries(test_pastix rt)
-       target_link_libraries(fsimple rt)
-       target_link_libraries(fstep-by-step rt)
-   endif()
+     ADD_EXECUTABLE(fmurge fmurge.F90)
+     ADD_EXECUTABLE(fsimple fsimple.F90 utils.F90)
+     ADD_EXECUTABLE(pastix pastix.F90)
+     ADD_EXECUTABLE(fstep-by-step fstep-by-step.F90 utils.F90)
 
-ENDIF()
+     TARGET_LINK_LIBRARIES(fmurge  ${MURGE_LIBRARIES}
+                                   ${PASTIX_LIBRARIES}
+                                   ${PTSCOTCH_LIBRARIES}
+                                   ${BLAS_LIBRARIES})
+
+     TARGET_LINK_LIBRARIES(fsimple ${PASTIX_LIBRARIES} 
+                                   ${PTSCOTCH_LIBRARIES}
+                                   ${BLAS_LIBRARIES})
+
+     TARGET_LINK_LIBRARIES(pastix ${PASTIX_LIBRARIES} 
+                                  ${PTSCOTCH_LIBRARIES}
+                                  ${BLAS_LIBRARIES})
+
+     TARGET_LINK_LIBRARIES(fstep-by-step ${PASTIX_LIBRARIES} 
+                                         ${PTSCOTCH_LIBRARIES}
+                                         ${BLAS_LIBRARIES})
+
+     ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 )
+
+     TARGET_LINK_LIBRARIES(sll_pastix  sll_collective
+                                       ${MURGE_LIBRARIES} 
+                                       ${PASTIX_LIBRARIES} 
+                                       ${PTSCOTCH_LIBRARIES}
+                                       ${BLAS_LIBRARIES})
+
+     IF(UNIX AND NOT APPLE)
+
+       TARGET_LINK_LIBRARIES(sll_pastix    rt)
+       TARGET_LINK_LIBRARIES(fmurge        rt)
+       TARGET_LINK_LIBRARIES(fsimple       rt)
+       TARGET_LINK_LIBRARIES(fstep-by-step rt)
+
+     ENDIF()
+
+     ADD_EXECUTABLE(test_pastix unit_test.F90)
+     TARGET_LINK_LIBRARIES(test_pastix sll_pastix)
+
+   ENDIF()
+
+ENDIF(PASTIX_ENABLED)

@@ -1,0 +1,36 @@
+&mesh
+  num_cells_x1 = 63
+  num_cells_x2 = 31
+  num_cells_x3 = 7
+  num_cells_x4 = 15
+  r_min        = 0.1
+  r_max        = 1.   !14.5
+  phi_min      = 0.
+  phi_max      = 1508.
+  vpar_min     = -6.
+  vpar_max     = 6.
+/
+
+&equilibrium
+  tau0     = 1.
+  rho_peak = 0.5
+  kappan   = 0.8
+  deltarn  = 0.2
+  kappaTi  = 4.
+  deltarTi = 0.1
+  kappaTe  = 4.
+  deltarTe = 0.1
+/
+
+&perturbation
+  perturb_choice = 1
+  mmode          = 4
+  nmode          = 3
+  eps_perturb    = 0.001
+/
+
+&sim_params
+  dt                = 0.1
+  number_iterations = 10
+  spline_degree     = 3
+/

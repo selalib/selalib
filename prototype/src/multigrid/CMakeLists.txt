@@ -43,11 +43,10 @@ IF(HDF5_PARALLEL_ENABLED)
                                    sll_file_io_parallel
 	                           sll_utilities )
 
-#   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90)
+#   ADD_EXECUTABLE(test_mgd2 unit_test_2d.F90 write_xdmf_2d.F90)
 #
 #   TARGET_LINK_LIBRARIES(test_mgd2 sll_mgd2 
 #                                   sll_file_io_parallel
-#                     write_xdmf_2d.F90
 #	                             sll_collective
 #	                             sll_utilities
 #	                             sll_memory
