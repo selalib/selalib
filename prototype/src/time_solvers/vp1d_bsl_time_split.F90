@@ -7,8 +7,11 @@ program VP1d_BSL_time_split
 #include "sll_memory.h"
 #include "sll_field_2d.h"
 
-  use numeric_constants
-  use sll_module_mapped_meshes_2d_cartesian
+  use sll_constants
+!  use sll_module_mapped_meshes_2d_cartesian
+  use sll_common_coordinate_transformations
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
   use sll_cubic_spline_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
@@ -19,8 +22,10 @@ program VP1d_BSL_time_split
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
-  type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
-  class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
+  !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
+  !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
+  type(sll_logical_mesh_2d), pointer :: mesh2d_cart
+  class(sll_coordinate_transformation_2d_base), pointer   :: mesh2d_base
   type(init_landau_2d), target :: init_landau
   type(init_tsi_2d), target :: init_tsi
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
@@ -154,21 +159,40 @@ program VP1d_BSL_time_split
        is_delta_f
   close(param_out)
 
-  call initialize_mesh_2d_cartesian( &
-       mesh2d,           &
-       "mesh2d_cart",       &
-       xmin,         &
-       xmax,         &
-       Ncx+1,          &
-       vmin,         &
-       vmax,         &
-       Ncv+1           &
-       )
-  mesh2d_base => mesh2d
+!!$  call initialize_mesh_2d_cartesian( &
+!!$       mesh2d,           &
+!!$       "mesh2d_cart",       &
+!!$       xmin,         &
+!!$       xmax,         &
+!!$       Ncx+1,          &
+!!$       vmin,         &
+!!$       vmax,         &
+!!$       Ncv+1           &
+!!$       )
+!!$  mesh2d_base => mesh2d
+
+  mesh2d_cart => new_logical_mesh_2d( &
+       Ncx, &
+       Ncv,  &
+       xmin,       &
+       xmax,       &
+       vmin,       &
+       vmax       &
+   )
+  mesh2d_base => new_coordinate_transformation_2d_analytic( &
+       "mesh2d_cart",      &
+       mesh2d_cart,             &
+       identity_x1,    &
+       identity_x2,    &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       (/0.0_f64/) ) 
 
   ! initialize interpolators
-  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, PERIODIC_SPLINE )
-  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, HERMITE_SPLINE )
+  call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+  call interp_spline_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE )
   interp_x => interp_spline_x
   interp_v => interp_spline_v
 
@@ -201,7 +225,7 @@ program VP1d_BSL_time_split
   call write_scalar_field_2d(f) 
 
   ! initialize Poisson
-  call new(poisson_1d,xmin,xmax,Ncx,ierr)
+  call initialize(poisson_1d,xmin,xmax,Ncx,ierr)
   call solve(poisson_1d, efield, rho)
   ! Ponderomotive force at initial time. We use a sine wave
   ! with parameters k_dr and omega_dr.

@@ -1,12 +1,29 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 module sll_fft
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_utilities.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use fft_utils
+
+  use sll_fft_utils
+
   implicit none 
-
-
 
   type sll_fft_plan
     sll_real64, dimension(:), pointer :: twiddles => null()  ! twiddles factors
@@ -34,6 +51,7 @@ module sll_fft
   
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
+
 
 ! Flags to pass when we create a new plan
 ! We can define 31 different flags.
@@ -165,7 +183,11 @@ contains
   end function
 
   subroutine fftpack_apply_plan_c2c_1d(plan,array_in,array_out)
+#ifdef STDF95
+    type(sll_fft_plan), pointer                   :: plan
+#else
     type(sll_fft_plan), pointer, intent(in)       :: plan
+#endif
     sll_comp64, dimension(:), intent(inout)       :: array_in, array_out
     sll_int32  :: nx
     sll_real64 :: factor
@@ -215,7 +237,11 @@ contains
   end function
 
   subroutine fftpack_apply_plan_r2r_1d(plan,array_in,array_out)
+#ifdef STDF95
+    type(sll_fft_plan), pointer                     :: plan
+#else
     type(sll_fft_plan), pointer, intent(in)         :: plan
+#endif
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
     sll_int32  :: nx
     sll_real64 :: factor

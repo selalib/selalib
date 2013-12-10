@@ -1,10 +1,10 @@
 program remap_2d_unit_test
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-  use remapper
+  use sll_remapper
 !#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_utilities.h"
   implicit none
 
   ! Test of the 2D remapper takes a 2D array whose global size Nx*Ny,
@@ -13,8 +13,8 @@ program remap_2d_unit_test
   sll_real64, dimension(:,:), allocatable :: local_array2
   sll_comp64, dimension(:,:), allocatable :: local_array1c 
   sll_comp64, dimension(:,:), allocatable :: local_array2c
-  sll_real64, dimension(:,:), allocatable ::  arrays_diff
-  sll_real64, dimension(:,:), allocatable ::  arrays_diffc
+  sll_real64, dimension(:,:), allocatable :: arrays_diff
+  sll_comp64, dimension(:,:), allocatable :: arrays_diffc
   ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
   ! the full array.
   integer , parameter                       :: ni = 512
@@ -177,7 +177,7 @@ print *, 'applied plan'
      ! local sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
      ok = 1
-     call sll_collective_reduce_real( &
+     call sll_collective_reduce( &
           sll_world_collective, &
           (/ real(ok) /), & 
           1, &
@@ -300,8 +300,9 @@ print *, 'applied plan'
            global_indices =  local_to_global_2D( layout2, tmp_array )
            gi = global_indices(1)
            gj = global_indices(2)
-           arrays_diffc(i,j) = local_array2c(i,j) - (gi + (gj-1)*ni)
-           if (arrays_diffc(i,j)/=0) then
+           val = gi + (gj-1)*ni
+           arrays_diffc(i,j) = local_array2c(i,j) - cmplx(val,val,f64)
+           if (arrays_diffc(i,j)/= (0,0)) then
               test_passed = .false.
               print*, i_test, myrank, '"remap" unit test: FAIL'
               print *, i_test, myrank, 'local indices: ', '(', i, j, ')'
@@ -331,7 +332,7 @@ print *, 'applied plan'
      ! local sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
      ok = 1
-     call sll_collective_reduce_real( &
+     call sll_collective_reduce( &
           sll_world_collective, &
           (/ real(ok) /), & 
           1, &

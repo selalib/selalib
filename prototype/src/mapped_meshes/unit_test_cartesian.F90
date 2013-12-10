@@ -1,6 +1,6 @@
 program unit_test
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
   use sll_module_mapped_meshes_2d_cartesian
   implicit none
 
@@ -13,8 +13,8 @@ program unit_test
 
   type(sll_mapped_mesh_2d_cartesian)    :: map_a    ! analytic map
   sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2, delta, acc, acc1
-  sll_real64 :: node, node_a, node_d, interp, val_a
+  sll_real64 :: eta1, eta2, h1, h2, acc, acc1
+  sll_real64 :: node_a, val_a
 
   h1 = 1.0_f64/real(NPTS1-1,f64)
   h2 = 1.0_f64/real(NPTS2-1,f64)

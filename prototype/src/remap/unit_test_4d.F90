@@ -1,9 +1,9 @@
 program remap_test_4d
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-  use remapper
+  use sll_remapper
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_utilities.h"
   implicit none
 
   ! Test of the 4D remapper takes a 4D array whose global size N1*N2*N3*N4,
@@ -225,7 +225,7 @@ program remap_test_4d
      ! corresponding absolute values must be null. Each processor compute a local 
      ! sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
-     call sll_collective_reduce_real( &
+     call sll_collective_reduce( &
           sll_world_collective, &
           (/ real(ok) /), &
           1, &

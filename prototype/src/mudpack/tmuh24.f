@@ -172,25 +172,25 @@ c
 c
 c     dimension solution,right hand side, and work arrays
 c
-      real u(nnt,nnp),r(nnt,nnp),w(llwork)
+      real(8) u(nnt,nnp),r(nnt,nnp),w(llwork)
       integer iw(iitp1,jjpq1)
 c
 c     dimension input argument vectors and set up continguous storage
 c     for labelling entries
 c
       integer iparm(17),mgopt(4)
-      real fparm(6)
+      real(8) fparm(6)
       integer intl,nta,ntb,npc,npd,itp,jpq,iet,jep,nt,np,
      +                iguess,maxcy,method,nwork,lwork,iter
       common / iprm / intl,nta,ntb,npc,npd,itp,jpq,iet,jep,nt,np,
      +                iguess,maxcy,method,nwork,lwork,iter
-      real ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
+      real(8) ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
       common / fprm / ta,tb,pc,pd,tolmax,sinat(73),cosat(73),
      +                sinap(145),cosap(145),dlt,dlp
       integer i,j,ierror
-      real pi,sint,cost,sinp,cosp
-      real ctt,cpp,ct,cp,ce,tmp,dt,dp,dtt,dpp,ue,ut,up,utt,upp
-      real errm,p,t
+      real(8) pi,sint,cost,sinp,cosp
+      real(8) ctt,cpp,ct,cp,ce,tmp,dt,dp,dtt,dpp,ue,ut,up,utt,upp
+      real(8) errm,p,t
 c
 c     equivlance iparm,fparm with labelled commons iprm,fprm
 c
@@ -271,61 +271,61 @@ c
 c     preset sin,cos vectors to save computation on grid points
 c
       do i=1,nt
-	t = ta+(i-1)*dlt
-	sinat(i) = sin(t)
-	cosat(i) = cos(t)
+      t = ta+(i-1)*dlt
+      sinat(i) = sin(t)
+      cosat(i) = cos(t)
       end do
       do j=1,np
-	p = pc+(j-1)*dlp
-	sinap(j) = sin(p)
-	cosap(j) = cos(p)
+      p = pc+(j-1)*dlp
+      sinap(j) = sin(p)
+      cosap(j) = cos(p)
       end do
 c
 c     initialize right hand side and solution array except at poles
 c
       do i=2,nt-1
-	t = ta+(i-1)*dlt
-	sint = sinat(i)
-	cost = cosat(i)
-	do j=1,np
-	  p = pc+(j-1)*dlp
-	  call cof(t,p,ctt,cpp,ct,cp,ce)
+      t = ta+(i-1)*dlt
+      sint = sinat(i)
+      cost = cosat(i)
+      do j=1,np
+        p = pc+(j-1)*dlp
+        call cof(t,p,ctt,cpp,ct,cp,ce)
 c
 c         set intermediate variables for exact solution
 c
-	  sinp = sinap(j)
-	  cosp = cosap(j)
-	  tmp = (sint*cosp*sint*sinp*cost)
-	  dt = (2.*sint*cost*cost-sint**3)*(cosp*sinp)
-	  dp = (cosp**2-sinp**2)*(sint**2*cost)
-	  dtt = (2.*cost**3-4.*cost*sint**2-3.*sint**2*cost)*(cosp*sinp)
-	  dpp = (-4.*cosp*sinp)*(sint**2*cost)
+        sinp = sinap(j)
+        cosp = cosap(j)
+        tmp = (sint*cosp*sint*sinp*cost)
+        dt = (2.*sint*cost*cost-sint**3)*(cosp*sinp)
+        dp = (cosp**2-sinp**2)*(sint**2*cost)
+        dtt = (2.*cost**3-4.*cost*sint**2-3.*sint**2*cost)*(cosp*sinp)
+        dpp = (-4.*cosp*sinp)*(sint**2*cost)
 c
 c         set continuous solution and partial derivatives
 c
-	  ue = tmp*tmp
-	  ut = 2.*tmp*dt
-	  up = 2.*tmp*dp
-	  utt = 2.*(dt*dt+tmp*dtt)
-	  upp = 2.*(dp*dp+tmp*dpp)
+        ue = tmp*tmp
+        ut = 2.*tmp*dt
+        up = 2.*tmp*dp
+        utt = 2.*(dt*dt+tmp*dtt)
+        upp = 2.*(dp*dp+tmp*dpp)
 c
 c         set right hand side of continuous pde on grid
 c
-	  r(i,j) = ctt*utt+cpp*upp+ct*ut+cp*up+ce*ue
+        r(i,j) = ctt*utt+cpp*upp+ct*ut+cp*up+ce*ue
 c
 c         initialize solution array to zero
 c
-	  u(i,j) = 0.0
-	end do
+        u(i,j) = 0.0
+      end do
       end do
 c
 c     set u, r(unused) at poles
 c
       do j=1,np
-	u(1,j) = 0.0
-	r(1,j) = 0.0
-	u(nt,j) = 0.0
-	r(nt,j) = 0.0
+      u(1,j) = 0.0
+      r(1,j) = 0.0
+      u(nt,j) = 0.0
+      r(nt,j) = 0.0
       end do
 c
 c     print input parameters
@@ -378,14 +378,14 @@ c     compute and print exact maximum error
 c
       errm = 0.0
       do j=1,np
-	sinp = sinap(j)
-	cosp = cosap(j)
-	do i=1,nt
-	  sint = sinat(i)
-	  cost = cosat(i)
-	  ue = (sint*cosp*sint*sinp*cost)**2
-	  errm = amax1(errm,abs((u(i,j)-ue)))
-	end do
+      sinp = sinap(j)
+      cosp = cosap(j)
+      do i=1,nt
+        sint = sinat(i)
+        cost = cosat(i)
+        ue = (sint*cosp*sint*sinp*cost)**2
+        errm = dmax1(errm,abs((u(i,j)-ue)))
+      end do
       end do
       write(*,108) errm
   108 format(' maximum error  = ',e10.3 )
@@ -403,18 +403,18 @@ c
 c
 c     compute and print exact maximum error
 c
-	errm = 0.0
-	do j=1,np
-	  sinp = sinap(j)
-	  cosp = cosap(j)
-	  do i=1,nt
-	    sint = sinat(i)
-	    cost = cosat(i)
-	    ue = (sint*cosp*sint*sinp*cost)**2
-	    errm = amax1(errm,abs((u(i,j)-ue)))
-	  end do
-	end do
-	write(*,108) errm
+      errm = 0.0
+      do j=1,np
+        sinp = sinap(j)
+        cosp = cosap(j)
+        do i=1,nt
+          sint = sinat(i)
+          cost = cosat(i)
+          ue = (sint*cosp*sint*sinp*cost)**2
+          errm = dmax1(errm,abs((u(i,j)-ue)))
+        end do
+      end do
+      write(*,108) errm
       end if
 c
 c      attempt to improve approximation to fourth order
@@ -427,18 +427,18 @@ c
 c
 c     compute and print exact maximum error
 c
-	errm = 0.0
-	do j=1,np
-	  sinp = sinap(j)
-	  cosp = cosap(j)
-	  do i=1,nt
-	    sint = sinat(i)
-	    cost = cosat(i)
-	    ue = (sint*cosp*sint*sinp*cost)**2
-	    errm = amax1(errm,abs((u(i,j)-ue)))
-	  end do
-	end do
-	write(*,108) errm
+      errm = 0.0
+      do j=1,np
+        sinp = sinap(j)
+        cosp = cosap(j)
+        do i=1,nt
+          sint = sinat(i)
+          cost = cosat(i)
+          ue = (sint*cosp*sint*sinp*cost)**2
+          errm = dmax1(errm,abs((u(i,j)-ue)))
+        end do
+      end do
+      write(*,108) errm
       end if
       end
 
@@ -447,16 +447,16 @@ c
 c     coefficient subroutine
 c
       implicit none
-      real t,p,ctt,cpp,ct,cp,ce
+      real(8) t,p,ctt,cpp,ct,cp,ce
       integer intl,nta,ntb,npc,npd,itp,jpq,iet,jep,nt,np,
      +                iguess,maxcy,method,nwork,lwork,iter
-      real ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
+      real(8) ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
       common / iprm / intl,nta,ntb,npc,npd,itp,jpq,iet,jep,nt,np,
      +                iguess,maxcy,method,nwork,lwork,iter
       common / fprm / ta,tb,pc,pd,tolmax,sinat(73),cosat(73),
      +                sinap(145),cosap(145),dlt,dlp
       integer i,j
-      real sinp,cosp,sint,cost,sigma,dsigdt,dsigdp
+      real(8) sinp,cosp,sint,cost,sigma,dsigdt,dsigdp
 c
 c     set subscripts for current grid point (t,p)
 c
@@ -510,6 +510,11 @@ c
       end
 
       subroutine exact(t,p,utt,upp,ut,up,ue)
+      implicit none
+      integer i, j
+      real(8) t, p, utt, upp, ut, up, ue
+      real(8) sinp, cosp, sint, cost, dp, dpp, dt, dtt, tmp
+      real(8) ta,tb,pc,pd,tolmax,sinat,cosat,sinap,cosap,dlt,dlp
 c
 c     the exact solution used is the restriction of u(x,y,z) = (x*y*z)**2
 c     in cartesian coordinates to the surface of the sphere of radius one

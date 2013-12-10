@@ -80,7 +80,7 @@ C) Configuring (Makefile Generator)
 
         ./do-configure [OTHER OPTIONS] -D<PACKAGE>_ENABLED=ON
 
-      where <PACKAGE> is FFTPACK, FFTW, etc. and SLL_HOME is set to the
+      where <PACKAGE> FFTW, etc. and SLL_HOME is set to the
       selalib prototype source base directory (or your can just give it explicitly).
       (ex: selalib/prototype/src)
 
@@ -91,7 +91,7 @@ C) Configuring (Makefile Generator)
         EXTRA_ARGS=$@
         
         cmake \
-          -D SLL_CONFIGURE_OPTIONS_FILE:FILEPATH=MyConfigureOptions.cmake \
+          -D OPTIONS_FILE:FILEPATH=MyConfigureOptions.cmake \
           $EXTRA_ARGS \
           ${SLL_HOME}
        
@@ -99,7 +99,6 @@ C) Configuring (Makefile Generator)
 
       SET(CMAKE_BUILD_TYPE DEBUG CACHE STRING "" FORCE)
       SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "" FORCE)
-      SET(FFTPACK_ENABLED ON CACHE BOOL "" FORCE)
       SET(MPI_Fortran_COMPILER "mpiifort" CACHE BOOL "" FORCE) #Hydra build
       ...
 
@@ -124,7 +123,7 @@ C) Configuring (Makefile Generator)
     On systems where it is installed, the CMake GUI
     can be a nice way to configure SeLaLib if you are a user.  To make your
     configuration easily repeatable, you might want to create a fragement file
-    and just load it by setting SLL_CONFIGURE_OPTIONS_FILE (see above) in
+    and just load it by setting OPTIONS_FILE (see above) in
     the GUI.
 
 (*) Selecting the list of packages to enable:
@@ -140,7 +139,7 @@ C) Configuring (Makefile Generator)
   b) Configuring SeLaLib to test all effects of changing a given package(s):
   
     $ ./do-configure \
-       -D FFTPACK_ENABLE:BOOL=ON \
+       -D HDF5_ENABLE:BOOL=ON \
        -D FFTW_ENABLED:BOOL=OFF
   
 

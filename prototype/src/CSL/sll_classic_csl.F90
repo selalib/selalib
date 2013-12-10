@@ -3,7 +3,7 @@ module classical_conservative_semi_lagrangian
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   !use utils
   implicit none
@@ -12,7 +12,7 @@ contains
   
   subroutine csl_advection_per(f,spl_per,Xstar,node_positions,N)
     !Xstar and node_positions are normalized to [0,1]
-    use numeric_constants
+    use sll_constants
     use cubic_non_uniform_splines
     implicit none
     
@@ -108,7 +108,7 @@ contains
   end subroutine csl_advection_per
 
 subroutine poisson1dpertrap(E,L,N)
-  use numeric_constants
+  use sll_constants
   implicit none
   sll_int,intent(in)::N
   sll_real64,dimension(N+1),intent(inout)::E
@@ -146,7 +146,7 @@ end subroutine poisson1dpertrap
 
 subroutine compute_psi(a1,a2,rho,nc_eta1,nc_eta2,psi,phi_poisson,E,&
 geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,div_case)
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int,intent(in) :: nc_eta1,nc_eta2

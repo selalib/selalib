@@ -3,11 +3,11 @@ program radial_1d_SL
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_splines
-  use numeric_constants
+  use sll_cubic_splines
+  use sll_constants
   implicit none
 
-  type(sll_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
+  type(sll_cubic_spline_2D), pointer :: spl_bsl,spl_bsl_nc,spl_fsl,spl_fsl_nc
   sll_int32  :: N,Neta1,Neta2,mesh_case,test_case,step,nb_step,visu_step,field_case
   sll_int32  :: i,j,bc1_type,bc2_type,err,it
   sll_int32  :: i1,i2,i3
@@ -19,8 +19,8 @@ program radial_1d_SL
   sll_real64,dimension(:,:), pointer :: f,fh_bsl,fh_bsl_nc,fh_fsl,fh_fsl_nc
   sll_real64,dimension(:,:), pointer :: x1_array,x2_array,jac_array,eta1feet,eta2feet,eta1tot,eta2tot,x1tot,x2tot
   sll_real64,dimension(:,:), pointer :: diag
-  character*20 :: conv_name, mass_name
-  character*3  :: mesh_name, field_name, time_name
+  character(len=20) :: conv_name, mass_name
+  character(len=3)  :: mesh_name, field_name, time_name
   
   ! ---- * Parameters * ----
   
@@ -75,8 +75,8 @@ program radial_1d_SL
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
 
-    bc1_type = PERIODIC_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    bc1_type = SLL_PERIODIC
+    bc2_type = SLL_PERIODIC
   endif
   
   ! mesh type : polar or polar-like
@@ -88,8 +88,8 @@ program radial_1d_SL
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
 
-    bc1_type = HERMITE_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    bc1_type = SLL_HERMITE
+    bc2_type = SLL_PERIODIC
   endif
   
   ! mesh type : Collela
@@ -101,8 +101,8 @@ program radial_1d_SL
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
     
-    bc1_type = PERIODIC_SPLINE
-    bc2_type = PERIODIC_SPLINE
+    bc1_type = SLL_PERIODIC
+    bc2_type = SLL_PERIODIC
     
     alpha_mesh = 1._f64/100._f64
   endif
@@ -465,13 +465,13 @@ program radial_1d_SL
         endif
                                 
         ! --- Corrections on the BC ---
-        if (bc1_type.eq.HERMITE_SPLINE) then
+        if (bc1_type.eq.SLL_HERMITE) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.HERMITE_SPLINE) then
+        if (bc2_type.eq.SLL_HERMITE) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==PERIODIC_SPLINE) then
+        if (bc1_type==SLL_PERIODIC) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -479,7 +479,7 @@ program radial_1d_SL
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==PERIODIC_SPLINE) then
+        if (bc2_type==SLL_PERIODIC) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo
@@ -614,13 +614,13 @@ program radial_1d_SL
         endif
                           
         ! --- Corrections on the BC ---
-        if (bc1_type.eq.HERMITE_SPLINE) then
+        if (bc1_type.eq.SLL_HERMITE) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.HERMITE_SPLINE) then
+        if (bc2_type.eq.SLL_HERMITE) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==PERIODIC_SPLINE) then
+        if (bc1_type==SLL_PERIODIC) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -628,7 +628,7 @@ program radial_1d_SL
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==PERIODIC_SPLINE) then
+        if (bc2_type==SLL_PERIODIC) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo
@@ -740,13 +740,13 @@ program radial_1d_SL
         endif
                         
         ! --- Corrections on the BC ---
-        if (bc1_type.eq.HERMITE_SPLINE) then
+        if (bc1_type.eq.SLL_HERMITE) then
           eta1 = min(max(eta1,eta1_min),eta1_max)
         endif
-        if (bc2_type.eq.HERMITE_SPLINE) then
+        if (bc2_type.eq.SLL_HERMITE) then
           eta2 = min(max(eta2,eta2_min),eta2_max)
         endif
-        if (bc1_type==PERIODIC_SPLINE) then
+        if (bc1_type==SLL_PERIODIC) then
           do while (eta1>eta1_max)
             eta1 = eta1-(eta1_max-eta1_min)
           enddo
@@ -754,7 +754,7 @@ program radial_1d_SL
             eta1 = eta1+(eta1_max-eta1_min)
           enddo
         endif
-        if (bc2_type==PERIODIC_SPLINE) then
+        if (bc2_type==SLL_PERIODIC) then
           do while (eta2>eta2_max)
             eta2 = eta2-(eta2_max-eta2_min)
           enddo
@@ -827,9 +827,9 @@ program radial_1d_SL
       field_name = "rnh"
   END SELECT
   
-  i1 = T/100
-  i2 =(T-100*i1)/10
-  i3 = T-100*i1-10*i2
+  i1 = int(T)/100
+  i2 =(int(T)-100*i1)/10
+  i3 = int(T)-100*i1-10*i2
   time_name = char(i1+48)//char(i2+48)//char(i3+48)
   
   conv_name = 'Conv_'//mesh_name//'_'//field_name//'_'//time_name//'.dat'

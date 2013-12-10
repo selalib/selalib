@@ -4,7 +4,7 @@ program bgk_classic_csl
 #include "sll_memory.h"
 !contact: mehrenbe@math.unistra.fr for this  program
 
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   use bgk_mesh_construction
   use contrib_rho_module
@@ -27,10 +27,10 @@ program bgk_classic_csl
   sll_real64,dimension(:,:),pointer::jac_array
   sll_real64, dimension(:,:), pointer :: a1,a2,psi
   sll_real64,dimension(:,:,:),pointer::integration_points
-  sll_int32  :: i1,i2,ierr,i,step
-  sll_real64 :: delta_x1,delta_x2,x1,x2,x1c,x2c
-  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
-  sll_real64 :: val,tmp
+  sll_int32  :: i1,i2,i,step
+  sll_real64 :: delta_x1,delta_x2,x1,x2
+  sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1c
+  sll_real64 :: val
 
   
   
@@ -141,10 +141,10 @@ program bgk_classic_csl
 
   
 
-  spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
-  spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, PERIODIC_SPLINE)
+  spl_per_x1 =>  new_cubic_nonunif_spline_1D( N_x1, SLL_PERIODIC)
+  spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, SLL_PERIODIC)
 
-  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, PERIODIC_SPLINE)
+  spl_per_x1_rho =>  new_cubic_nonunif_spline_1D( N_x1, SLL_PERIODIC)
 
   do i1=1,nc_eta1+1
     do i2=1,nc_eta2+1

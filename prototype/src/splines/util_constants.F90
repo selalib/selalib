@@ -13,7 +13,7 @@
 
 module util_constants
 #include "sll_working_precision.h"
-  use numeric_constants
+  use sll_constants
   implicit none
 
   sll_int32,  parameter :: NP    =  65

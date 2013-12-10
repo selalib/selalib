@@ -1,30 +1,38 @@
+!test example to visualize particles
 module biot_savart
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-
-use sll_misc_utils
-use numeric_constants
-use sll_io
+#include "sll_utilities.h"
+#include "sll_constants.h"
+#include "sll_file_io.h"
 
 implicit none
 
-sll_real64 :: gam0, gomeg
+!> vortex circulation
+real(8) :: gam0
+!> angular velocity of vortex pair
+real(8) :: gomeg
+!> gaussian or constant distribution
 logical :: gauss = .true.
 
 contains
 
+!> Compute particles velocities
 subroutine vitesse (nbpart, xp, yp, op, up, vp, delta, time)
 implicit none
-sll_int32,  intent(in)     :: nbpart
-sll_real64, intent(in)     :: xp(nbpart), yp(nbpart), op(nbpart)
-sll_real64, intent(inout)  :: up(nbpart), vp(nbpart)
-sll_real64, intent(in)     :: delta
-sll_real64 :: xo, yo, dx, dy, usum, vsum, dpi
-sll_int32  :: j, k
-sll_real64 :: r2, r22, r2a1, r2a13, xm
-sll_real64 :: a1, a12, a122
-sll_real64 :: time
+integer,  intent(in)     :: nbpart      !< particles number
+real(8), intent(in)     :: xp(nbpart)  !< particles x position
+real(8), intent(in)     :: yp(nbpart)  !< particles y position
+real(8), intent(in)     :: op(nbpart)  !< particles strength
+real(8), intent(inout)  :: up(nbpart)  !< particles x velocity
+real(8), intent(inout)  :: vp(nbpart)  !< particles y velocity
+real(8), intent(in)     :: delta       !< smooth parameter
+real(8) :: xo, yo, dx, dy, usum, vsum, dpi
+integer  :: j, k
+real(8) :: r2, r22, r2a1, r2a13, xm
+real(8) :: a1, a12, a122
+real(8) :: time
 
 dpi   = 8.0 * atan( 1.0 )
 
@@ -58,17 +66,18 @@ do k = 1, nbpart/2
    
 end do
 
-
-   
 end subroutine vitesse
 
+!> move particles
 subroutine deplace (nbpart, xp, yp, up, vp, dt)
 implicit none
-sll_int32, intent(in)  :: nbpart
-sll_real64, intent(inout)  :: xp(nbpart), yp(nbpart)
-sll_real64, intent(in)     :: up(nbpart), vp(nbpart)
-sll_real64, intent(in)     :: dt
-sll_int32 :: k
+integer, intent(in)  :: nbpart
+real(8), intent(inout)  :: xp(nbpart) !< x particle position
+real(8), intent(inout)  :: yp(nbpart) !< y particle position
+real(8), intent(in)     :: up(nbpart) !< x particle velocity
+real(8), intent(in)     :: vp(nbpart) !< y particle velocity
+real(8), intent(in)     :: dt         !< time step
+integer :: k
 
 do k = 1, nbpart
    xp(k) = xp(k) + dt * up(k)
@@ -77,11 +86,14 @@ end do
    
 end subroutine deplace
 
+!> compute particles centers
 subroutine centres(nbpart, xp, yp, op, time)
 implicit none
-sll_int32, intent(in) :: nbpart
-sll_real64, dimension(nbpart), intent(in) :: xp, yp, op
-sll_real64 :: xc, yc, time
+integer, intent(in) :: nbpart
+real(8), dimension(nbpart), intent(in) :: xp !< x position
+real(8), dimension(nbpart), intent(in) :: yp !< y position
+real(8), dimension(nbpart), intent(in) :: op !< particle weight
+real(8) :: xc, yc, time
 
 xc = sum(xp(1:nbpart/2)*op(1:nbpart/2))
 yc = sum(yp(1:nbpart/2)*op(1:nbpart/2))
@@ -92,9 +104,10 @@ write(10,"(5f8.4)")time, xc/gam0, yc/gam0, &
 close(10)
 end subroutine centres
 
+!> compute real time
 function getRealTimer()
 implicit none
-sll_real64 :: out, getRealTimer
+real(8) :: out, getRealTimer
 sll_int64  :: count, count_rate
 call system_clock(count, count_rate)
 count = count - 1254348000*count_rate
@@ -103,24 +116,25 @@ out = out / count_rate
 getRealTimer = out
 end function getRealTimer
 
+!> initialize particles positions
 subroutine initialize( nstep, imov, xp, yp, op, delta, dt, nbpart ) 
 
 namelist/donnees/nstep, dt, imov, amach, nray, r0, delta
 
-sll_int32, parameter :: nsec0 = 6
-sll_int32 :: nstep, imov, idm, nbpart, nray, nsec, nr
-sll_real64, dimension(:), pointer :: xp
-sll_real64, dimension(:), pointer :: yp
-sll_real64, dimension(:), pointer :: op
+integer, parameter :: nsec0 = 6
+integer :: nstep, imov, idm, nbpart, nray, nsec, nr
+real(8), dimension(:), pointer :: xp
+real(8), dimension(:), pointer :: yp
+real(8), dimension(:), pointer :: op
 
-sll_real64, dimension(:), pointer :: rf
-sll_real64, dimension(:), pointer :: zf
-sll_real64, dimension(:), pointer :: gam
+real(8), dimension(:), pointer :: rf
+real(8), dimension(:), pointer :: zf
+real(8), dimension(:), pointer :: gam
 
-sll_real64 :: circ, al, ur, tau, aom, u0, r0
-sll_real64 :: amach, delta, dt
-sll_int32  :: k
-sll_int32  :: error, file_id
+real(8) :: circ, al, ur, tau, aom, u0, r0
+real(8) :: amach, delta, dt
+integer  :: k
+integer  :: error, file_id
 
 nstep = 2000
 dt    = 0.02
@@ -202,16 +216,17 @@ end subroutine initialize
 
 !---------------------------------------------------------------
 
+!> set particles positions on a disc
 subroutine distrib(rf, zf, cir, ray, idm, nray, nsec0, nr )
 
-sll_int32 :: i, j, k
-sll_int32 :: kd, nsec, nsec0, idm, nray, nr
+integer :: i, j, k
+integer :: kd, nsec, nsec0, idm, nray, nr
 
-sll_real64 :: rf( * ), zf( * ), cir( * ), ds( idm )
-sll_real64 :: ssurf, q, sigma, teta, dss, r1, r2, s1, s2, eps
-sll_real64 :: gamt, sgam, dteta, surf, ray, dray, r, dr
+real(8) :: rf( * ), zf( * ), cir( * ), ds( idm )
+real(8) :: ssurf, q, sigma, teta, dss, r1, r2, s1, s2, eps
+real(8) :: gamt, sgam, dteta, surf, ray, dray, r, dr
 
-sll_int32  :: file_id, error
+integer :: file_id, error
 
 
 !     rf,zf : position de la particule

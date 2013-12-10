@@ -2,7 +2,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use util_constants
 
 #ifndef STDF95
@@ -12,6 +12,7 @@ program unit_test
   use sll_cubic_spline_interpolator_1d
   use sll_quintic_spline_interpolator_1d
   use cubic_non_uniform_spline_interpolator_1d
+ ! use sll_periodic_interpolator_1d
   implicit none
 
 #ifdef STDF95
@@ -20,7 +21,7 @@ program unit_test
   class(sll_interpolator_1d_base), pointer     :: interp
 #endif
 
-  type(cubic_spline_1d_interpolator), target  :: spline
+  type(cubic_spline_1d_interpolator), target   :: spline
   type(quintic_spline_1d_interpolator), target :: quintic_spline
   type(cubic_non_uniform_spline_1d_interpolator), target  :: cubic_nonunif_spline
   !type(WENO_interp_1d), pointer               :: weno
@@ -58,26 +59,27 @@ program unit_test
 
   print*, 'Cubic spline interpolation'
 #ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, PERIODIC_SPLINE )
+  call cubic_spline_1d_interpolator_initialize(spline, n, x_min, x_max, SLL_PERIODIC )
 #else
-  call spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  call quintic_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
-  call cubic_nonunif_spline%initialize(n, x_min, x_max, PERIODIC_SPLINE )
+  call spline%initialize(n, x_min, x_max, SLL_PERIODIC )
+  !call quintic_spline%initialize(n, x_min, x_max, SLL_PERIODIC )
+  !call cubic_nonunif_spline%initialize(n, x_min, x_max, SLL_PERIODIC )
 #endif
 
   interp =>  spline
-  !interp =>  quintic_spline
-  interp =>  cubic_nonunif_spline
+!  interp =>  quintic_spline
+!  interp =>  cubic_nonunif_spline
 #ifdef STDF95
   out = cubic_spline_interpolate_array(interp, n, data, interpolation_points)
 #else
   out = interp%interpolate_array(n, data, interpolation_points)
 #endif
 
+
   error = 0.0_f64
   do i=1,n   
      error = max(error, abs(data_interp(i) - out(i)))
-     !print*, i, interpolation_points(i), data_interp(i) - out(i)
+    ! print*, i, interpolation_points(i), data_interp(i) - out(i)
   end do
   print*, '    error=',error
 

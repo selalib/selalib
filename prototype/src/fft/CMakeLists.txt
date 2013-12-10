@@ -1,48 +1,29 @@
-set(DEPENDENCIES
-	sll_utilities
-	sll_timer
-	sll_constants
-	sll_memory
-	sll_assertion
-	sll_working_precision
-)
-
-IF(FFTW_FOUND AND FFTW_ENABLED)
-  add_library(fftw_module STATIC fftw_module.F90)
-  LIST(APPEND DEPENDENCIES fftw_module)
-  target_link_libraries(fftw_module ${FFTW_LIBRARIES})
-  include_directories(${FFTW_INCLUDE_DIRS})
-ENDIF()
-
 IF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTPACK")
-  set(FFT_SRC sll_fft_mod_through_fftpack.F90)
-  set(DEPENDENCIES ${DEPENDENCIES} fftpack_module)
-  add_definitions(-D_DEFAULTFFTLIB=FFTPACK_MOD)
+
+  SET(FFT_SRC sll_fft_mod_through_fftpack.F90)
+  SET(DEPENDENCIES dfftpack)
+  ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTPACK_MOD)
+
 ELSEIF(${FFT_DEFAULT_LIBRARY} STREQUAL "FFTW")
-  set(FFT_SRC sll_fft_mod_through_legacy_fftw.F90)
-  add_definitions(-D_DEFAULTFFTLIB=FFTW_MOD)
+
+  IF(FFTW_FOUND AND FFTW_ENABLED)
+     INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
+     SET(FFT_SRC fftw3.F90 sll_fft_mod_through_fftw.F90)
+     SET(DEPENDENCIES ${FFTW_LIBRARIES})
+     ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTW_MOD)
+  ENDIF()
+
 ELSE()
-  set(FFT_SRC sll_fft_selalib_implementation.F90)
-  add_definitions(-D_DEFAULTFFTLIB=SLLFFT_MOD)
+
+  SET(FFT_SRC sll_fft_selalib_implementation.F90)
+  ADD_DEFINITIONS(-D_DEFAULTFFTLIB=SLLFFT_MOD)
+
 ENDIF()
 
-add_library(sll_fft STATIC
-	${FFT_SRC}
-	fft_utils.F90
+ADD_LIBRARY(sll_fft STATIC ${FFT_SRC} sll_fft_utils.F90)
 
-)
-add_dependencies(sll_fft ${DEPENDENCIES})
+TARGET_LINK_LIBRARIES(sll_fft sll_assertion sll_memory sll_utilities ${DEPENDENCIES})
 
-IF(FFTW_FOUND AND FFTW_ENABLED)
-	target_link_libraries(sll_fft fftw_module)
-ENDIF()
-IF(FFTPACK_ENABLED)
-	target_link_libraries(sll_fft fftpack_module)
-ENDIF()
+ADD_EXECUTABLE(test_fft unit_test.F90)
 
-add_executable(test_fft unit_test.F90)
-target_link_libraries(test_fft
-	sll_fft
-	${DEPENDENCIES}
-)
-
+TARGET_LINK_LIBRARIES(test_fft sll_fft)

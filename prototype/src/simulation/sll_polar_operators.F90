@@ -4,9 +4,9 @@ module polar_operators
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use poisson_polar
+  use sll_poisson_2d_polar
   use sll_fft
-  use sll_splines
+  use sll_cubic_splines
   implicit none
 
   !>type plan_polar_op
@@ -15,7 +15,7 @@ module polar_operators
      sll_real64 :: rmin,rmax,dr,dtheta
      sll_int32 :: nr,ntheta
      sll_int32 :: grad_case
-     type(sll_spline_2D), pointer :: spl_phi
+     type(sll_cubic_spline_2D), pointer :: spl_phi
      type(sll_fft_plan), pointer :: pfwd,pinv
      sll_comp64, dimension(:,:), pointer :: grad_fft
   end type plan_polar_op
@@ -68,7 +68,7 @@ contains
     end if
 
     this%spl_phi => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-         & HERMITE_SPLINE, PERIODIC_SPLINE,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
+         & SLL_HERMITE, SLL_PERIODIC,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
 
     SLL_ALLOCATE(bufr(ntheta),err)
     SLL_ALLOCATE(bufc(ntheta/2+1),err)
@@ -127,7 +127,7 @@ contains
     sll_int32 :: nr, ntheta
     sll_real64 :: dr, dtheta, rmin, rmax
     sll_int32 :: i,j
-    sll_real64 :: r,theta
+    sll_real64 :: r,theta,tmp
     sll_comp64 :: temp
 
     nr=plan%nr
@@ -136,7 +136,25 @@ contains
     dtheta=plan%dtheta
     rmin=plan%rmin
     rmax=plan%rmax
+    
+    !experimental
+    tmp=0._f64
+    do j=1,ntheta
+      tmp=tmp+phi(1,j)
+    enddo
+    tmp=tmp/real(ntheta,f64)
+    phi(1,:)=tmp
 
+    tmp=0._f64
+    do j=1,ntheta
+      tmp=tmp+phi(nr+1,j)
+    enddo
+    tmp=tmp/real(ntheta,f64)
+    phi(nr+1,:)=tmp
+
+    
+    
+    
     if (plan%grad_case==1) then
        ! center formula for r end theta
        ! decenter for r on boundaries
@@ -181,7 +199,7 @@ contains
        do i=1,nr+1
           do j=0,ntheta/2
              temp=fft_get_mode(plan%pfwd,plan%grad_fft(i,:),j)
-             temp=temp*cmplx(0.0_f64,real(j,f64))
+             temp=temp*cmplx(0.0_f64,real(j,f64),kind=f64)
              call fft_set_mode(plan%pinv,plan%grad_fft(i,:),temp,j)
           end do
        end do

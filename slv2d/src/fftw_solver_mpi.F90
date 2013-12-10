@@ -1,10 +1,10 @@
 program fftw_solver_mpi 
 use fftw3
-use numeric_constants
 
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+use sll_constants
 
 implicit none
 include "mpif.h"

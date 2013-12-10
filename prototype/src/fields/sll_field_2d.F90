@@ -33,10 +33,11 @@ module sll_field_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use numeric_constants
+  use sll_constants
   use sll_diagnostics
-  use sll_mapped_mesh_base
-  use sll_io
+  !use sll_mapped_mesh_base
+  use sll_coordinate_transformation_2d_base_module
+  use sll_file_io
   implicit none
 
   enum, bind(C)
@@ -49,7 +50,8 @@ module sll_field_2d
   end type vec2
 
   type scalar_field_2d
-     class(sll_mapped_mesh_2d_base), pointer :: mesh
+     !class(sll_mapped_mesh_2d_base), pointer :: mesh
+     class(sll_coordinate_transformation_2d_base), pointer   :: mesh
      sll_real64, dimension(:,:), pointer :: data
      sll_int32  :: data_position
      character(len=30) :: name
@@ -58,7 +60,8 @@ module sll_field_2d
   end type scalar_field_2d
 
   type vector_field_2d
-     class(sll_mapped_mesh_2d_base), pointer :: mesh
+     !class(sll_mapped_mesh_2d_base), pointer :: mesh
+     class(sll_coordinate_transformation_2d_base), pointer   :: mesh
      type(vec2), dimension(:,:), pointer :: data
      sll_int32  :: data_position
      character(len=30) :: name
@@ -77,7 +80,8 @@ contains   ! *****************************************************************
  
   subroutine new_scalar_field_2d( this, mesh, data_position, data_func)
     class(scalar_field_2d), intent(inout)   :: this
-    class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer   :: mesh
     sll_int32 :: data_position
     procedure(scalar_function_2D), pointer :: data_func
     ! local variables
@@ -155,7 +159,8 @@ contains   ! *****************************************************************
 
 
   subroutine write_sll_mapped_mesh_2d_base(mesh,mesh_name)
-    class(sll_mapped_mesh_2d_base) :: mesh
+    !class(sll_mapped_mesh_2d_base) :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer   :: mesh
     character(len=*), intent(in), optional :: mesh_name
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -166,12 +171,12 @@ contains   ! *****************************************************************
     sll_int32 :: ierr
 
     ! create 2D mesh
-    SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-    SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+    SLL_ALLOCATE(x1mesh(mesh%mesh%num_cell1+1,mesh%mesh%num_cell2+1), ierr)
+    SLL_ALLOCATE(x2mesh(mesh%mesh%num_cell1+1,mesh%mesh%num_cell2+1), ierr)
     eta1 = 0.0_f64
-    do i1=1, mesh%nc_eta1+1
+    do i1=1, mesh%mesh%num_cell1+1
        eta2 = 0.0_f64
-       do i2=1, mesh%nc_eta2+1
+       do i2=1, mesh%mesh%num_cell2+1
           x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
           x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
           eta2 = eta2 + mesh%delta_eta2 
@@ -179,9 +184,9 @@ contains   ! *****************************************************************
        eta1 = eta1 + mesh%delta_eta1
     end do
     if (present(mesh_name)) then
-       call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,trim(mesh_name))
+       call write_mesh(x1mesh,x2mesh,mesh%mesh%num_cell1+1,mesh%mesh%num_cell2+1,trim(mesh_name))
     else
-       call write_mesh(x1mesh,x2mesh,mesh%nc_eta1+1,mesh%nc_eta2+1,"mesh")
+       call write_mesh(x1mesh,x2mesh,mesh%mesh%num_cell1+1,mesh%mesh%num_cell2+1,"mesh")
     end if
   end subroutine write_sll_mapped_mesh_2d_base
 
@@ -190,7 +195,8 @@ contains   ! *****************************************************************
     character(len=*) :: name
     logical, optional  :: jacobian ! .true. if field data multiplied by jacobian is stored
     
-    class(sll_mapped_mesh_2d_base), pointer :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer   :: mesh
     sll_int32  :: i1
     sll_int32  :: i2
     sll_real64 :: eta1
@@ -203,23 +209,23 @@ contains   ! *****************************************************************
     ! create 2D mesh
     mesh => f2Dv1%mesh
     SLL_ASSERT(associated(mesh))    
-    SLL_ALLOCATE(val(mesh%nc_eta1 + 1,mesh%nc_eta2 + 1), ierr)
+    SLL_ALLOCATE(val(mesh%mesh%num_cell1 + 1,mesh%mesh%num_cell2 + 1), ierr)
 
     if (.not.(present(jacobian))) then
-       call write_vec1d(f2Dv1%data,mesh%nc_eta1+1,mesh%nc_eta2+1,name, &
+       call write_vec1d(f2Dv1%data,mesh%mesh%num_cell1+1,mesh%mesh%num_cell2+1,name, &
             "mesh",f2Dv1%data_position)
     else if (jacobian) then 
        ! quantity multiplied by Jacobian is stored, need to divide by jacobian for
        eta1 = 0.5_f64 * mesh%delta_eta1
-       do i1 = 1, mesh%nc_eta1
+       do i1 = 1, mesh%mesh%num_cell1
           eta2 =  0.5_f64 * mesh%delta_eta2
-          do i2 = 1, mesh%nc_eta2
+          do i2 = 1, mesh%mesh%num_cell2
              val(i1,i2) = f2Dv1%data( i1,i2) / mesh%jacobian (eta1, eta2)
              eta2 = eta2 + mesh%delta_eta2
           end do
           eta1 = eta1 + mesh%delta_eta1
        end do
-       call write_vec1d(val,mesh%nc_eta1+1,mesh%nc_eta2+1,name,"mesh",f2Dv1%data_position)
+       call write_vec1d(val,mesh%mesh%num_cell1+1,mesh%mesh%num_cell2+1,name,"mesh",f2Dv1%data_position)
     end if
   end subroutine write_scalar_field_2d
 end module sll_field_2d

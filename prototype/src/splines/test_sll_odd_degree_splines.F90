@@ -18,9 +18,10 @@ program test_sll_odd_degree_splines
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-use numeric_constants
+use sll_constants
 use sll_odd_degree_splines
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
+
   implicit none
 
   type(odd_degree_splines_uniform_plan), pointer    :: plan1
@@ -84,6 +85,8 @@ use arbitrary_degree_splines
 
         plan1 => new_odd_degree_splines_uniform(num_pts, degree, xmin, xmax)
         call compute_odd_degree_coeffs_uniform(f1, plan1)
+
+
         plan2 => new_odd_degree_splines_nonuniform(degree, x2)
         call compute_odd_degree_coeffs_nonuniform(f2, plan2)
 

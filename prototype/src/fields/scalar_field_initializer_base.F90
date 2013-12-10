@@ -25,9 +25,11 @@
 module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
 #ifdef STDF95
-  use sll_module_mapped_meshes_2d
+  !use sll_module_mapped_meshes_2d
+  use sll_module_coordinate_transformations_2d
 #else
-  use sll_module_mapped_meshes_2d_base
+  use sll_coordinate_transformation_2d_base_module
+  !use sll_module_mapped_meshes_2d_base
 #endif
 
   implicit none
@@ -69,10 +71,13 @@ module sll_scalar_field_initializers_base
   ! **************************************************************************
 
 #ifdef STDF95
+
   type :: scalar_field_4d_initializer_base
      sll_int32 :: data_position
   end type scalar_field_4d_initializer_base
+
 #else
+
   type, abstract :: scalar_field_4d_initializer_base
      sll_int32 :: data_position
    contains
@@ -88,6 +93,39 @@ module sll_scalar_field_initializers_base
        sll_real64, dimension(:,:,:,:), intent(out)            :: data_out
      end subroutine scalar_field_4d_initializer
   end interface
+
+#endif
+
+
+  ! **************************************************************************
+  !
+  !                              6D cases
+  !
+  ! **************************************************************************
+#ifdef STDF95
+
+  type :: scalar_field_6d_initializer_base
+     sll_int32 :: data_position
+  end type scalar_field_6d_initializer_base
+
+#else
+
+  type, abstract :: scalar_field_6d_initializer_base
+     sll_int32 :: data_position
+   contains
+     procedure(scalar_field_6d_initializer), deferred, pass :: f_of_6args
+  end type scalar_field_6d_initializer_base
+
+
+  abstract interface
+     subroutine scalar_field_6d_initializer( init_obj, data_out )
+       use sll_working_precision
+       import scalar_field_6d_initializer_base
+       class(scalar_field_6d_initializer_base), intent(inout) :: init_obj
+       sll_real64, dimension(:,:,:,:,:,:), intent(out)        :: data_out
+     end subroutine scalar_field_6d_initializer
+  end interface
+
 #endif
   
 end module sll_scalar_field_initializers_base

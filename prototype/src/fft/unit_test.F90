@@ -7,6 +7,8 @@ program unit_test
 #define FFTPACK_MOD 100
 #define FFTW_MOD 1000000000
 
+  type(sll_fft_plan), pointer :: p => null()
+
   sll_real64, parameter  :: err_max = 10E-14
   sll_int32, parameter   :: hmax = 1
   sll_int32, parameter   :: imin = 10
@@ -14,7 +16,6 @@ program unit_test
   sll_int32, parameter   :: n = 2**imax
   sll_int32, parameter   :: m1 = 2**6
   sll_int32, parameter   :: m2 = 2**4
-  type(sll_fft_plan), pointer :: p => null()
   sll_comp64, dimension(n) :: data_comp, data_copy
   sll_comp64, dimension(m1,m2) :: data_comp2d
   sll_real64, dimension(m1,m2) :: data_real2d
@@ -28,13 +29,12 @@ program unit_test
 
   call print_defaultfftlib()
 
-
-
 ! test getter and setter functions in complex case
   s = 2**imin
   do j=1,s
     CALL RANDOM_COMPLEX(data_comp(j))
   enddo
+
   data_copy(1:s) = data_comp(1:s)
   p => fft_new_plan(s,data_comp(1:s),data_comp(1:s),FFT_FORWARD)
   do i=0,s-1
@@ -42,8 +42,9 @@ program unit_test
     call fft_set_mode(p,data_comp(1:s),mode,i)
   enddo
   ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
+
   if( ierr .ne. 0_f64 ) then
-    print *,'Everage error too big',ierr
+    print *,'Average error too big',ierr
     stop
   else
     print *,'get and set mode complex ok'
@@ -63,7 +64,7 @@ program unit_test
   enddo
   ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
   if( ierr .ne. 0_f64 ) then
-    print *,'Everage error too big',ierr
+    print *,'Average error too big',ierr
     stop
   else
     print *,'get and set mode real ok'
@@ -117,7 +118,7 @@ program unit_test
     call fft_delete_plan(p)
     ierr = ERROR_MAX(data_comp(1:s) - data_copy(1:s))
     if( ierr > err_max ) then
-      stop 'Everage error too big'
+      stop 'Average error too big'
     endif
    enddo
   enddo
@@ -144,10 +145,12 @@ program unit_test
     call fft_delete_plan(p)
  
     ierr = MAXVAL(ABS( rdata(1:s) - rdata_copy(1:s) ))
+#ifdef FFTW_F2003
     if( ierr > err_max ) then
-      print*,'Everage error too big ',ierr
+      print*,'Average error too big ',ierr
       stop ''
     endif
+#endif
    enddo
   enddo
   print *, 'OK'
@@ -174,7 +177,7 @@ program unit_test
     call fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
-      stop 'Everage error too big'
+      stop 'Average error too big'
     endif
    enddo
   enddo
@@ -198,7 +201,7 @@ program unit_test
     call fft_delete_plan(p)
     ierr = MAXVAL(ABS(rdata_comp(1:s) - rdata_copy(1:s)))
     if( ierr > err_max ) then
-      stop 'Everage error too big'
+      stop 'Average error too big'
     endif
    enddo
   enddo
@@ -232,7 +235,7 @@ program unit_test
            ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
         enddo
         if( ierr > err_max ) then
-           stop 'Everage error too big'
+           stop 'Average error too big'
         endif
      enddo
   enddo
@@ -266,7 +269,7 @@ program unit_test
         enddo
         print *, 'max_error = ', err_var
         if( ierr > err_max ) then
-           stop 'Everage error too big'
+           stop 'Average error too big'
         endif
      enddo
   enddo
@@ -324,7 +327,7 @@ program unit_test
         enddo
         print *, 'error_max = ', ierr
         if( ierr > err_max ) then
-           stop 'Everage error too big'
+           stop 'Average error too big'
         endif
      enddo
   enddo
@@ -360,7 +363,7 @@ program unit_test
       ierr = MAX(ERROR_MAX(data_comp2d(1:s,j) - data_copy2d(1:s,j)),ierr)
     enddo
     if( ierr > err_max ) then
-      stop 'Everage error too big'
+      stop 'Average error too big'
     endif
    enddo
   enddo
@@ -397,7 +400,7 @@ program unit_test
       ierr = MAX(MAXVAL(ABS(data_real2d(1:s,j) - rdata_copy2d(1:s,j))),ierr)
     enddo
     if( ierr > err_max ) then
-      print*, 'Everage error too big', ierr
+      print*, 'Average error too big', ierr
       stop ''
     endif
    enddo
@@ -430,7 +433,7 @@ program unit_test
       ierr = MAX(MAXVAL(ABS(data_real2d(1:s,j) - rdata_copy2d(1:s,j))),ierr)
     enddo
     if( ierr > err_max ) then
-      print*, 'Everage error too big', ierr
+      print*, 'Average error too big', ierr
       stop ''
     endif
    enddo

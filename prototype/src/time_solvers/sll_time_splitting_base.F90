@@ -1,5 +1,3 @@
-!> \ file sll_time_splitting_base.F90
-!> \namespace sll_time_splitting
 !> \brief 
 !> The time splitting module provides a generic implementation of
 !> time splitting algorithms of different order 

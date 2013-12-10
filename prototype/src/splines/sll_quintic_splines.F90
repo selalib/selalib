@@ -1,4 +1,21 @@
 !**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!**************************************************************
 !
 ! Selalib 2012     
 ! Module: sll_quintic_splines.F90
@@ -18,7 +35,7 @@ module sll_quintic_splines
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_toep_penta_diagonal
-use arbitrary_degree_splines
+use sll_arbitrary_degree_splines
 implicit none
 
   type quintic_splines_uniform_plan
@@ -69,6 +86,7 @@ contains
     sll_real64                                  :: xmin
     sll_real64                                  :: xmax
     sll_int32                                   :: ierr
+    !sll_int32,  intent(in), optional            :: bc_type
 
     if( num_pts < 6 ) then
        print *, 'ERROR, new_quintic_splines_uniform: Because of the algorithm used, ', &

@@ -1,39 +1,82 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
+!> Module to solve Poisson equation on one dimensional mesh using FFT
+!> transform.
 module sll_poisson_1d_periodic
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use numeric_constants
+  use sll_constants
 
   implicit none
   private
-  public :: new, solve
+  public :: initialize, new, solve
 
+  !> Solver data structure
   type, public :: poisson_1d_periodic
-     sll_int32                         :: nc_eta1
-     sll_real64                        :: eta1_min
-     sll_real64                        :: eta1_max
-     sll_real64, dimension(:), pointer :: wsave
-     sll_real64, dimension(:), pointer :: work
+     sll_int32                         :: nc_eta1 !< number of cells
+     sll_real64                        :: eta1_min !< left corner
+     sll_real64                        :: eta1_max !< right corner
+     sll_real64, dimension(:), pointer :: wsave !< array used by fftpack
+     sll_real64, dimension(:), pointer :: work  !< array used by fftpack
   end type poisson_1d_periodic
 
+  !> Create a new poisson solver on 1d mesh
   interface new
      module procedure new_poisson_1d_periodic
   end interface
 
+  !> Initialize a new poisson solver on 1d mesh
+  interface initialize
+     module procedure initialize_poisson_1d_periodic
+  end interface
+
+  !> Solve the Poisson equation on 1d mesh and compute the potential
   interface solve
      module procedure solve_poisson_1d_periodic 
   end interface
 
 contains
 
-  subroutine new_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
-    type(poisson_1d_periodic),intent(out) :: this
-    sll_int32,intent(in)                   :: nc_eta1
-    sll_int32, intent(out)                 :: error 
-    sll_real64, intent(in)                 :: eta1_min
-    sll_real64, intent(in)                 :: eta1_max
+  !> Create a new solver
+  function new_poisson_1d_periodic(eta1_min,eta1_max,nc_eta1,error) &
+     result(this)
+     type(poisson_1d_periodic),pointer :: this     !< Solver data structure
+     sll_int32,intent(in)              :: nc_eta1  !< number of cells
+     sll_int32, intent(out)            :: error    !< error code
+     sll_real64, intent(in)            :: eta1_min !< left corner
+     sll_real64, intent(in)            :: eta1_max !< right corner
+
+     SLL_ALLOCATE(this, error)
+     call initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+
+  end function new_poisson_1d_periodic 
+  
+  !> Initialize the solver
+  subroutine initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
+
+    type(poisson_1d_periodic),intent(out) :: this     !< Solver data structure
+    sll_int32,intent(in)                  :: nc_eta1  !< number of cells
+    sll_int32, intent(out)                :: error    !< error code
+    sll_real64, intent(in)                :: eta1_min !< left corner
+    sll_real64, intent(in)                :: eta1_max !< right corner
 
     error = 0
     ! geometry
@@ -48,10 +91,10 @@ contains
     ! Allocate auxiliary arrays for fft in order to keep rhs unchanged
     SLL_ALLOCATE(this%work(nc_eta1+1),error)
 
-  end subroutine new_poisson_1d_periodic
-
+  end subroutine initialize_poisson_1d_periodic
 
   subroutine solve_poisson_1d_periodic(this, field, rhs)
+
     type(poisson_1d_periodic),intent(inout) :: this
     sll_real64, dimension(:), intent(out)     :: field
     sll_real64, dimension(:), intent(in)      :: rhs

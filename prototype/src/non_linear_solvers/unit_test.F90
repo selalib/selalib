@@ -32,7 +32,7 @@ program newton_raphson_tester
   ok = 1 
   y = 0.d0
   tolx = 1.e-16
-  tolf = 1.e-44
+  tolf = epsilon(1.0_f64)
 
   if (n_test <= nb_cores) then
      !$OMP PARALLEL num_threads(n_test)	

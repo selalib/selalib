@@ -1,17 +1,26 @@
-!****************************************************************************
-!
-! Selalib      
-! Module: unit_test_output.F90
-!
-!> @brief 
-!> layout output unit test
-!   
-!> @authors                    
-!> Pierre NAVARO (navaro@math.unistra.fr)
-!                                  
-!****************************************************************************
+!**************************************************************
+!  Copyright INRIA, CNRS
+!  Authors : 
+!     Pierre Navaro 
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 
 program test_layout_output
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_utilities.h"
+
   use sll_collective, only: sll_boot_collective, &
        sll_halt_collective
   
@@ -19,10 +28,8 @@ program test_layout_output
   use sll_hdf5_io_parallel, only: sll_hdf5_file_create, &
        sll_hdf5_write_array, &
        sll_hdf5_file_close
-  use remapper
-#include "sll_memory.h"
-#include "sll_working_precision.h"
-#include "misc_utils.h"
+  use sll_remapper
+
 
   implicit none
 

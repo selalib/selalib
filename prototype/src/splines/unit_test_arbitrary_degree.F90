@@ -2,7 +2,7 @@ program arbitrary_degree_spline_tester
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use arbitrary_degree_splines
+  use sll_arbitrary_degree_splines
   implicit none
 
   logical                                :: passed_test
@@ -12,15 +12,19 @@ program arbitrary_degree_spline_tester
   print *, 'Testing arbitrary degree splines module: '
   print *, '*****************************************************************'
 
-  call test_uniform_b_splines_randomly( passed_test )
   call test_nonuniform_arb_deg_splines_periodic( passed_test )
-  call test_nonuniform_arb_deg_splines_open( passed_test )
 
-  if( passed_test .eqv. .true. ) then
-     print *, 'PASSED'
-  else
-     print *, 'FAILED'
-  end if
+
+! Floating-point exception - erroneous arithmetic operation.
+! in these following tests
+ call test_uniform_b_splines_randomly( passed_test )
+ call test_nonuniform_arb_deg_splines_open( passed_test )
+
+ if( passed_test .eqv. .true. ) then
+    print *, 'PASSED'
+ else
+    print *, 'FAILED'
+ end if
 
 contains
 
@@ -38,7 +42,7 @@ contains
     sll_int32                   :: max_degree
     sll_int32                   :: ierr
 
-    criterion          = 1.0e-15
+    criterion          = 1.0e-14
     argument           = 0.0_f64
     num_tests          = 10000
     argument_copy      = argument
@@ -46,9 +50,9 @@ contains
  
     do j=0, max_degree
        do i=1,num_tests
-          SLL_CLEAR_ALLOCATE(results(j+1),ierr)
-          SLL_CLEAR_ALLOCATE(derivatives(j+1),ierr)
-          SLL_CLEAR_ALLOCATE(sp_and_derivs(2,j+1),ierr)
+          SLL_CLEAR_ALLOCATE(results(1:j+1),ierr)
+          SLL_CLEAR_ALLOCATE(derivatives(1:j+1),ierr)
+          SLL_CLEAR_ALLOCATE(sp_and_derivs(1:2,1:j+1),ierr)
           call random_number(argument)
           results(:) = uniform_b_splines_at_x(j, argument)
           derivatives(:) = uniform_b_spline_derivatives_at_x(j, argument)

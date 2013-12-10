@@ -1,6 +1,6 @@
 module user_geometry_functions
 #include "sll_working_precision.h"
-use numeric_constants
+use sll_constants
   implicit none
 contains
 #define MAKE_AFFINE_MAP(f_name, eta, a, b) \
