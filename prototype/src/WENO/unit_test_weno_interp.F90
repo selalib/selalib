@@ -27,7 +27,6 @@ program SLWENO_tester
   sll_int32 :: i_weno ! indicator for weno(1) or linear interpolation
 
   type(WENO_interp_1d), pointer :: sp1
-  sll_real64                   :: phase
   sll_real64, allocatable, dimension(:) :: data       ! data at coordinates_d with size NP
   sll_real64, allocatable, dimension(:) :: coordinates_d  ! coordinates for data with size NP
   sll_real64, allocatable, dimension(:) :: out        ! data at coordinates_i with size NP
@@ -60,7 +59,7 @@ program SLWENO_tester
      coordinates_d(i) = (i-0.5_f64)*dx
      coordinates_o(i) = coordinates_d(i) - dx/2.0_f64
      data(i)        = (sin(coordinates_d(i)) + cos(coordinates_d(i)))
-     data_interp(i) = (sin(coordinates_o(i)) + cos(coordinates_o(i))) 	 
+     data_interp(i) = (sin(coordinates_o(i)) + cos(coordinates_o(i)))
   enddo
   print *, 'proceed to allocate the data for WENO interpolation...'
   sp1 =>  new(NP, 0.0_f64, sll_pi*2.0_f64, order, i_weno)  
@@ -85,9 +84,9 @@ program SLWENO_tester
   print *, 'interpolating individual values from 1 to NP:'
   do i=1, NP
      accumulator1 = accumulator1 + abs(data_interp(i) - out(i))
-	 if(i.eq.1)then
-	 print *, abs(data_interp(i) - out(i)), data_interp(i) , out(i)
-	 endif
+     if(i.eq.1)then
+        print *, abs(data_interp(i) - out(i)), data_interp(i) , out(i)
+     endif
   end do
 
 

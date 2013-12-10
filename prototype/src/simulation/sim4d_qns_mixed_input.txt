@@ -1,0 +1,11 @@
+&sim_params
+  dt = 0.005
+  number_iterations = 10000
+
+/
+&grid_dims
+  num_cells_x1 = 32
+  num_cells_x2 = 32
+  num_cells_x3 = 32
+  num_cells_x4 = 32
+/

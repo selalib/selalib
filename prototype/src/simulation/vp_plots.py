@@ -2,8 +2,7 @@ from numpy import *
 from pylab import *
 import tables
 import string
-rundir='/Users/sonnen/Codes/selalib/prototype/build/runs/'
-
+rundir='/Users/sonnen/Codes/selalib/prototype/keen1d02/'
 
 thdiag = loadtxt(rundir+'thdiag.dat')
 efield = loadtxt(rundir+'exdiag.dat')
@@ -21,10 +20,13 @@ ncv = string.atoi(param[6])
 dt = string.atof(param[7])
 nbiter = string.atoi(param[8])
 freqdiag = string.atoi(param[9])
-if param[10]== 'F':
-    is_delta_f = False
-else:
+if param[10]== 0:
     is_delta_f = True
+else:
+    is_delta_f = False
+params_drive_file = open(rundir+'param_out_drive.dat')
+params_drive = params_drive_file.readline().split()
+omega_dr = string.atof(params_drive[8])
 edr = loadtxt(rundir+"eappdiag.dat")
 x=linspace(xmin,xmax,ncx+1)
 v=linspace(vmin,vmax,ncv+1)
@@ -37,7 +39,7 @@ else:
     
 def read_h5(it):
     """reads hdf5 file and returns dist_func array"""
-    h5file=tables.openFile('dist_func'+string.zfill(it,4)+'-dist_func.h5','r')
+    h5file=tables.openFile(rundir+'dist_func'+string.zfill(it,4)+'-dist_func.h5','r')
     obj = h5file.getNode("/dist_func")
     a = obj.read()
     h5file.close()
@@ -161,7 +163,7 @@ def phase(a):
 
 def plot_phase_modes_time(u,f=phase):
     uk = rfft(u)/u.shape[1]
-    t=arange(u.shape[0]) * dt
+    t=arange(u.shape[0]) * freqdiag * dt
     clf()
     hold(True)
     plot(t,f(uk[:,1])/t,'r',label='k=1')
@@ -177,7 +179,7 @@ def plot_phase_modes_time(u,f=phase):
 
 def plot_modes_time(u,f=abs):
     uk = rfft(u[:,:-1])/(ncx+1)
-    t=arange(u.shape[0]) * dt
+    t=arange(u.shape[0]) * freqdiag * dt
     clf()
     hold(True)
     plot(t,f(uk[:,1]),'r',label='k=1')
@@ -197,10 +199,10 @@ def plot_modes_frequency(u,istart=0,iend=-1,f=abs,step=1):
     of the Fourier modes starting at time t[itstart].
     The butterfly of a function u defined in [t1,t2] consists in extending
     it to [t1-t2,t2] by parity. It is then considered periodic on this interval."""
-    t=arange(u[::step,:].shape[0]) * dt * step
+    t=arange(u[::step,:].shape[0]) * freqdiag * dt * step
     nx = ncx+1
     # compute frequency range
-    freq = arange(t[istart:iend].size+1)*pi/(t[iend]-t[istart])
+    freq = arange(t[istart:iend].size+1)*pi/(t[iend]-t[istart])/omega_dr
     # compute Fourier transform of u
     uk = rfft(u[::step,:-1])/nx
     # compute the butterfly transform of the first 7 modes of uk (excluding 0)

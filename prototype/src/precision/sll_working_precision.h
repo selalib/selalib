@@ -1,6 +1,23 @@
 #ifndef _SLL_WORKING_PRECISION_
 #define _SLL_WORKING_PRECISION_
 
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
   ! For the definition of the kinds, refer to the file 
   ! sll_working_precision.F90
   !
@@ -34,7 +51,11 @@
 #define sll_comp32 complex(kind=f32)
 #define sll_comp64 complex(kind=f64)
 
+
 use sll_working_precision
+
+#define SLL_NULL_INT32  (/0.0_i32/)
+#define SLL_NULL_REAL64 (/0.0_f64/)
 
 #endif
 

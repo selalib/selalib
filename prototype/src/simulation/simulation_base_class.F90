@@ -9,8 +9,8 @@ module sll_simulation_base
 
   type, abstract :: sll_simulation_base_class
    contains
- !    procedure(simulation_initializer), pass(sim), deferred :: &
- !         read_from_file
+     procedure(simulation_initializer), pass(sim), deferred :: &
+          init_from_file
      procedure(simulation_execute), pass(sim), deferred :: run
   end type sll_simulation_base_class
 
@@ -18,8 +18,8 @@ module sll_simulation_base
   abstract interface
      subroutine simulation_initializer(sim, filename)
        import sll_simulation_base_class
-       class(sll_simulation_base_class) :: sim
-       character(len=*)      :: filename
+       class(sll_simulation_base_class), intent(inout) :: sim
+       character(len=*), intent(in)      :: filename
      end subroutine simulation_initializer
   end interface
 

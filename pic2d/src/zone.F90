@@ -1,5 +1,5 @@
 module zone
-#include "selalib.h"
+#include "sll_working_precision.h"
 
 sll_int32, parameter :: prec=8
 

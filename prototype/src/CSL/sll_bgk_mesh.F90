@@ -2,7 +2,7 @@ module bgk_mesh_construction
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-  use numeric_constants
+  use sll_constants
   use cubic_non_uniform_splines
   !use utils
   implicit none
@@ -11,7 +11,7 @@ contains
   subroutine construct_bgk_mesh(nc_eta1,nc_eta2,mesh_case,&
    &x1n_array,x2n_array,x1c_array,x2c_array,jac_array,integration_points,&
    &geom_x,geom_eta,alpha_mesh,N_x1,N_x2)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_int32,intent(in)::nc_eta1,nc_eta2,mesh_case,n_x1,n_x2
     sll_real64,intent(in)::geom_x(2,2),geom_eta(2,2),alpha_mesh
@@ -19,11 +19,11 @@ contains
     sll_real64,dimension(:,:),pointer::jac_array
     sll_real64,dimension(:,:,:),pointer::integration_points
     sll_int32  :: i1,i2,err,i
-    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1,x2,x1c,x2c
+    sll_real64 :: x1_min,x1_max,x2_min,x2_max,delta_x1,delta_x2,x1
     sll_real64 :: eta1_min,eta1_max,eta2_min,eta2_max,delta_eta1,delta_eta2,eta1,eta1c,eta2,eta2c
     sll_real64 :: val,tmp
     sll_real64 :: slope_mesh1,slope_mesh2,wk,ll,dxx,slope_mesh3
-    sll_int    ::Nzon,Nzon2,Nzon3
+    sll_int    ::Nzon,Nzon2
     sll_real64 , dimension(4)         :: ws
     sll_int , dimension(4)         :: Ns
 
@@ -577,12 +577,12 @@ contains
   end subroutine construct_bgk_mesh  
   
   subroutine compute_bgk_phi(L,Nx,mu,xi,tab_phi,tab_dphi)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_real64,intent(in) ::L,mu,xi
     sll_int,intent(in) :: Nx
     sll_real64 :: xmin,xmax,x,dx,k2,phi(2)
-    sll_int:: i,j
+    sll_int:: j
     sll_real64,dimension(:), pointer :: tab_phi,tab_dphi 
     xmin = 0._f64
     xmax = L/2._f64
@@ -764,9 +764,9 @@ contains
 !  Subroutine: To solve  the differential Equation with Runge Kutta 4 method             *
 !*****************************************************************************************
   subroutine Solve_Runge_K4(mu,xi,X,Phi,dx,Neq,Diff_Eq,Y,C)
-    use numeric_constants
+    use sll_constants
     implicit none
-#ifdef INTEL
+#ifdef __INTEL_COMPILER
     External Diff_Eq 
 #endif
     sll_int   :: Neq
@@ -796,7 +796,7 @@ contains
 !  Subroutine: To define  the differential Equation                                      *
 !*****************************************************************************************
   subroutine Diff_Eq(mu,xi,X,Phi,Dphi, Neq,Y,C)
-    use numeric_constants
+    use sll_constants
     implicit none
     sll_real64   :: mu,xi,y,c
     sll_int  :: Neq

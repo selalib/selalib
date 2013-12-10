@@ -3,36 +3,40 @@ program unit_test
 #include "sll_assert.h"
 #include "sll_field_2d.h"
 #include "sll_memory.h"
-  use numeric_constants
+#include "sll_constants.h"
+#include "sll_file_io.h"
+
   use distribution_function
-  !use sll_diagnostics
-  use sll_io
   use sll_csl
-  use sll_module_mapped_meshes_2d_cartesian
+  !use sll_module_mapped_meshes_2d_cartesian
+  use sll_common_coordinate_transformations
+  use sll_logical_meshes
+  use sll_module_coordinate_transformations_2d
   use sll_gaussian_2d_initializer
   use sll_cubic_spline_interpolator_1d
   implicit none
   
   sll_int32 :: nc_eta1_coarse, nc_eta2_coarse
-  sll_int32 :: nc_eta1_fine, nc_eta2_fine
-  sll_real64 :: delta_eta1_coarse, delta_eta2_coarse
-  sll_real64 :: delta_eta1_fine, delta_eta2_fine
-  sll_int32 :: i1, i2, it, n_steps
-  sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max, eta1, eta2, deltat, val, error, error1 
-  sll_real64 :: alpha1, alpha2
+  sll_int32 :: nc_eta1_fine!, nc_eta2_fine
+  !sll_real64 :: delta_eta1_coarse, delta_eta2_coarse
+  !sll_real64 :: delta_eta1_fine, delta_eta2_fine
+  sll_real64 :: eta1_min, eta1_max,  eta2_min, eta2_max
   procedure(scalar_function_2D), pointer :: x1_coarse, x1_fine, x2_coarse, x2_fine, jac_coarse, jac_fine
-  class(sll_mapped_mesh_2d_base), pointer   :: m
+  !class(sll_mapped_mesh_2d_base), pointer   :: m
+  type(sll_logical_mesh_2d), pointer :: mesh_c, mesh_f
+  class(sll_coordinate_transformation_2d_base), pointer   :: m
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
-  type(sll_mapped_mesh_2d_cartesian),target :: mesh_c,mesh_f
+  !type(sll_mapped_mesh_2d_cartesian),target :: mesh_c,mesh_f
   !type(geometry_2D), pointer :: geomc, geomf
   !type(mesh_descriptor_2D), pointer :: coarse_mesh
   !type(mesh_descriptor_2D), pointer :: fine_mesh
-  type(sll_distribution_function_2D) :: dist_func_coarse, dist_func_fine
-  type(scalar_field_2D), pointer :: rotating_field
-  type(scalar_field_2D), pointer :: uniform_field
-  type(csl_workspace), pointer :: csl_work
+  type(sll_distribution_function_2D) :: dist_func_fine
+  type(sll_distribution_function_2D) :: dist_func_coarse
+  !type(scalar_field_2D), pointer :: rotating_field
+  !type(scalar_field_2D), pointer :: uniform_field
+  !type(csl_workspace), pointer :: csl_work
   character(32),parameter  :: name = 'distribution_function'
   type(init_gaussian_2d),target :: pgaussian
   type(cubic_spline_1d_interpolator), target  :: interp_eta1
@@ -47,26 +51,32 @@ program unit_test
   nc_eta2_coarse = 100
   
   
-  call mesh_c%initialize( &
-    !mesh_c           &
-    "mesh_c",         & 
-    eta1_min,         &
-    eta1_max,         &
-    nc_eta1_coarse+1, &
-    eta2_min,         &
-    eta2_max,         &
-    nc_eta2_coarse+1  &
+  mesh_c => new_logical_mesh_2d( &
+       nc_eta1_coarse, &
+       nc_eta2_coarse,  &
+       eta1_min,       &
+       eta1_max,       &
+       eta2_min,       &
+       eta2_max       &
    )
-  
-  m => mesh_c
+  m => new_coordinate_transformation_2d_analytic( &
+       "mesh2d_cart",      &
+       mesh_c,             &
+       identity_x1,    &
+       identity_x2,    &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       (/0.0_f64/) ) 
 
   call pgaussian%initialize( m, CELL_CENTERED_FIELD)
 
   p_init_f => pgaussian
   
   ! Set up the interpolators for the distribution function
-  call interp_eta1%initialize( nc_eta1_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
-  call interp_eta2%initialize( nc_eta2_coarse+1, 0.0_f64, 1.0_f64, PERIODIC_SPLINE )
+  call interp_eta1%initialize( nc_eta1_coarse+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
+  call interp_eta2%initialize( nc_eta2_coarse+1, 0.0_f64, 1.0_f64, SLL_PERIODIC )
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
 

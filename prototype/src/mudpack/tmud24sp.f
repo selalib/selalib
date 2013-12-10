@@ -113,24 +113,24 @@ c
 c     set minimal required work space (see tmud2sp.f)
 c
       parameter (llwork = 13264)
-      real phi(nnx,nny),rhs(nnx,nny),work(llwork)
+      real(8) phi(nnx,nny),rhs(nnx,nny),work(llwork)
 c
 c     put integer and floating point argument names in contiguous
 c     storeage for labelling in vectors iprm,fprm
 c
       integer iprm(16),mgopt(4)
-      real fprm(6)
+      real(8) fprm(6)
       integer intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
       common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,
      +              iguess,maxcy,method,nwork,lwrkqd,itero
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
       equivalence(intl,iprm)
       equivalence(xa,fprm)
       integer i,j,ierror
-      real dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
-      real cex,cey
+      real(8) dlx,dly,x,y,cxx,cyy,cx,cy,ce,pxx,pyy,px,py,pe,errmax
+      real(8) cex,cey
 c
 c     declare coefficient and boundary condition input subroutines external
 c
@@ -202,31 +202,31 @@ c     set right hand side in rhs
 c     initialize phi to zero
 c
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	call cofx(x,cxx,cx,cex)
-	do j=1,ny
-	  y = yc+float(j-1)*dly
-	  call cofy(y,cyy,cy,cey)
-	  ce = cex+cey
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
-	  phi(i,j) = 0.0
-	end do
+      x = xa+float(i-1)*dlx
+      call cofx(x,cxx,cx,cex)
+      do j=1,ny
+        y = yc+float(j-1)*dly
+        call cofy(y,cyy,cy,cey)
+        ce = cex+cey
+        call exact(x,y,pxx,pyy,px,py,pe)
+        rhs(i,j) = cxx*pxx+cyy*pyy+cx*px+cy*py+ce*pe
+        phi(i,j) = 0.0
+      end do
       end do
 c
 c     set specified boundaries in phi
 c
       x = xb
       do j=1,ny
-	y = yc+float(j-1)*dly
-	call exact(x,y,pxx,pyy,px,py,pe)
-	phi(nx,j) = pe
+      y = yc+float(j-1)*dly
+      call exact(x,y,pxx,pyy,px,py,pe)
+      phi(nx,j) = pe
       end do
       y = yc
       do i=1,nx
-	x = xa+float(i-1)*dlx
-	call exact(x,y,pxx,pyy,px,py,pe)
-	phi(i,1) = pe
+      x = xa+float(i-1)*dlx
+      call exact(x,y,pxx,pyy,px,py,pe)
+      phi(i,1) = pe
       end do
       write(*,100)
   100 format(//' mud2sp test ')
@@ -275,12 +275,12 @@ c     compute and print maximum norm of error
 c
       errmax = 0.0
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exact(x,y,pxx,pyy,px,py,pe)
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
+      end do
       end do
       write(*,201) errmax
   201 format(' maximum error  =  ',e10.3)
@@ -293,18 +293,23 @@ c
   108 format(/' mud24sp test ', ' ierror = ',i2)
       if (ierror.gt.0) call exit(0)
       if (ierror .le. 0) then
+
 c
 c     compute and print maximum norm of error
 c
       errmax = 0.0
+      open(17,file='phi.dat')
       do j=1,ny
-	y = yc+(j-1)*dly
-	do i=1,nx
-	  x = xa+(i-1)*dlx
-	  call exact(x,y,pxx,pyy,px,py,pe)
-	  errmax = amax1(errmax,abs((phi(i,j)-pe)))
-	end do
+      y = yc+(j-1)*dly
+      do i=1,nx
+        x = xa+(i-1)*dlx
+        call exact(x,y,pxx,pyy,px,py,pe)
+        errmax = dmax1(errmax,abs((phi(i,j)-pe)))
+        write(17,*) x, y, phi(i,j), pe
       end do
+      write(17,*)
+      end do
+      close(17)
       write(*,201) errmax
       end if
       print*,"PASSED"
@@ -317,7 +322,7 @@ c
 c     input x dependent coefficients
 c
       implicit none
-      real x,cxx,cx,cex
+      real(8) x,cxx,cx,cex
       cxx = 1.0+x*x
       cx = 0.0
       cex = -x
@@ -329,7 +334,7 @@ c
 c     input y dependent coefficients
 c
       implicit none
-      real y,cyy,cy,cey
+      real(8) y,cyy,cy,cey
       cyy = exp(1.0-y)
       cy = -cyy
       cey = -y
@@ -342,24 +347,24 @@ c     input mixed derivative b.c. to mud2sp
 c
       implicit none
       integer kbdy
-      real xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
-      real xa,xb,yc,yd,tolmax,relmax
+      real(8) xory,alfa,gbdy,x,y,pe,px,py,pxx,pyy
+      real(8) xa,xb,yc,yd,tolmax,relmax
       common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
       if (kbdy.eq.1) then  ! x=xa boundary
-	y = xory
-	x = xa
-	call exact(x,y,pxx,pyy,px,py,pe)
-	alfa = -1.0
-	gbdy = px + alfa*pe
-	return
+      y = xory
+      x = xa
+      call exact(x,y,pxx,pyy,px,py,pe)
+      alfa = -1.0
+      gbdy = px + alfa*pe
+      return
       end if
       if (kbdy.eq.4) then  ! y=yd boundary
-	y = yd
-	x = xory
-	call exact(x,y,pxx,pyy,px,py,pe)
-	alfa = 1.0
-	gbdy = py + alfa*pe
-	return
+      y = yd
+      x = xory
+      call exact(x,y,pxx,pyy,px,py,pe)
+      alfa = 1.0
+      gbdy = py + alfa*pe
+      return
       end if
       end
 
@@ -368,7 +373,7 @@ c
 c     set an exact solution for testing mud2sp
 c
       implicit none
-      real x,y,pxx,pyy,px,py,pe
+      real(8) x,y,pxx,pyy,px,py,pe
       pe = (x**3+y**3+1.0)/3.0
       px = x*x
       py = y*y

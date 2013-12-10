@@ -1,0 +1,28 @@
+&geom
+  Ncx = 32 
+  Ncv = 64
+  nbox = 1
+  xmin = 0.0
+  vmin = -6.0
+  vmax = 6.0
+/
+&interpolator
+ interpol_x = 2
+ order_x = 4
+ interpol_v = 2
+ order_v = 4
+/
+&time_iterations
+  dt = 0.1
+  first_step = 0
+  nbiter = 600
+  freqdiag = 100
+  freqdiag_time = 1
+  split_case = 1
+/
+&landau
+  kmode = 0.5
+  eps = 1e-3
+  is_delta_f = 0
+  driven = .false.
+/

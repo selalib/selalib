@@ -4,8 +4,8 @@ program test_poisson
 #include "sll_assert.h"
 
   use polar_operators
-  use poisson_polar
-  use numeric_constants
+  use sll_poisson_2d_polar
+  use sll_constants
   implicit none
 
   !this code should become part of the unit_test for the Poisson solver in polar coordinates
@@ -33,7 +33,7 @@ program test_poisson
   sll_real64 :: tol,r,theta,a,l1,l2,linf
   sll_int32 :: mod
 
-  print*,'Testing the Poisson solver in 2D, polar coordinate'
+  print*,'#Testing the Poisson solver in 2D, polar coordinate'
 
   rmin=1.0_f64
   rmax=2.0_f64
@@ -50,8 +50,8 @@ program test_poisson
   tol=1.0e-14_f64
   test= .true.
   mod=0
-  bc(1)=DIRICHLET
-  bc(2)=DIRICHLET
+  bc(1)=SLL_DIRICHLET
+  bc(2)=SLL_DIRICHLET
 
   do while (test .and. mod<ntheta/2)
      do i =1,nr+1
@@ -68,7 +68,8 @@ program test_poisson
         end do
      end do
      call poisson_solve_polar(plan,f,phi)
-
+     
+     
      l1=0.0_f64
      l2=0.0_f64
      linf=0.0_f64
@@ -97,8 +98,8 @@ program test_poisson
 
      mod=mod+1
      if (mod==ntheta/2 .and. (bc(1)+bc(2)==5)) then
-        bc(1)=DIRICHLET
-        bc(2)=NEUMANN
+        bc(1)=SLL_DIRICHLET
+        bc(2)=SLL_NEUMANN
         mod=0
      end if
   end do
@@ -147,8 +148,8 @@ program test_poisson
 
      mod=mod+1
      if (mod==ntheta/2 .and. bc(1)+bc(2)==5) then
-        bc(2)=NEUMANN
-        bc(1)=DIRICHLET
+        bc(2)=SLL_NEUMANN
+        bc(1)=SLL_DIRICHLET
         mod=0
      end if
   end do

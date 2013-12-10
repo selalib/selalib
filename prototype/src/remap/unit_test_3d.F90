@@ -14,11 +14,11 @@
 
 program remap_test
   use sll_collective, only: sll_boot_collective, sll_halt_collective
-  use remapper
+  use sll_remapper
 !#include "sll_remap.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
-#include "misc_utils.h"
+#include "sll_utilities.h"
   implicit none
 
   ! Test of the 3D remapper takes a 3D array whose global size Nx*Ny*Nz,
@@ -214,7 +214,7 @@ program remap_test
      ! corresponding absolute values must be null. Each processor compute a local 
      ! sum and all local sums are finally added and the result is sent to 
      ! processor 0 which will check if equal 0 to validate the test. (*)
-     call sll_collective_reduce_real( &
+     call sll_collective_reduce( &
           sll_world_collective, &
           (/ real(ok) /), &
           1, &
@@ -396,7 +396,7 @@ contains
            ! hard to subdivide. In such case one may end up with less intervals
            ! and this is a problem since the number of processors is fixed from
            ! the beginning.
-           mid = (hi+lo)/2 + gaussian_dev()*spread
+           mid = (hi+lo)/2 + int(gaussian_dev())*spread
            !       mid = int(rand*(hi-lo))+lo
            call split_interval_randomly_aux( lo,   mid, gen+1, lim, loadi, ans )
            call split_interval_randomly_aux( mid+1, hi, gen+1, lim, loadi, ans )

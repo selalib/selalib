@@ -10,3 +10,8 @@ unit_test
 .DS_Store
 ChangeLog
 .AppleDouble
+build
+_build
+latex
+html
+usr

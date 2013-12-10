@@ -10,7 +10,10 @@
 !=========================================
 module diagnostiques_module
 
-#include "selalib.h"
+#define MPI_MASTER 0
+#include "sll_working_precision.h"
+#include "sll_file_io.h"
+use sll_collective
 use used_precision  
 use geometry_module
 

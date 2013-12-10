@@ -4,12 +4,13 @@
 module sll_gaussian_2d_initializer
 #include "sll_working_precision.h"
 #include "sll_assert.h"
-  use numeric_constants
+  use sll_constants
   use sll_scalar_field_initializers_base
   implicit none
 
   type, extends(scalar_field_2d_initializer_base) :: init_gaussian_2d
-    class(sll_mapped_mesh_2d_base), pointer :: mesh 
+!    class(sll_mapped_mesh_2d_base), pointer :: mesh 
+     class(sll_coordinate_transformation_2d_base), pointer :: mesh
     sll_real64 :: xc, yc
     sll_real64 :: sigma_x, sigma_y
   contains
@@ -21,7 +22,8 @@ contains
 
   subroutine initialize_gaussian_2d( init_obj, mesh, data_position, xc, yc, sigma_x, sigma_y )
     class(init_gaussian_2d), intent(inout)  :: init_obj
-    class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
+    !class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
+    class(sll_coordinate_transformation_2d_base), target :: mesh
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: xc, yc, sigma_x, sigma_y 
     init_obj%data_position = data_position
@@ -51,7 +53,8 @@ contains
 
   subroutine f_x1x2_gaussian_2d( init_obj, data_out )
     class(init_gaussian_2d), intent(inout)       :: init_obj
-    class(sll_mapped_mesh_2d_base), pointer      :: mesh
+    !class(sll_mapped_mesh_2d_base), pointer      :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: mesh
     sll_real64, dimension(:,:), intent(out)    :: data_out
 
     sll_int32  :: i
@@ -65,11 +68,11 @@ contains
     mesh => init_obj%mesh
 
     if (init_obj%data_position == CELL_CENTERED_FIELD) then
-       num_pts1 = mesh%nc_eta1
-       num_pts2 = mesh%nc_eta2
+       num_pts1 = mesh%mesh%num_cells1
+       num_pts2 = mesh%mesh%num_cells2
     else if (init_obj%data_position == NODE_CENTERED_FIELD) then
-       num_pts1 = mesh%nc_eta1 + 1
-       num_pts2 = mesh%nc_eta2 + 1
+       num_pts1 = mesh%mesh%num_cells1 + 1
+       num_pts2 = mesh%mesh%num_cells2 + 1
     else
        print*, 'sll_gaussian_2d_initializer: Pb with data_position', init_obj%data_position
     end if
@@ -90,9 +93,9 @@ contains
        ! jacobian times distribution function is stored
        do j=1,num_pts2
           do i=1, num_pts1
-             y = mesh%x2_cell(i,j)
-             x = mesh%x1_cell(i,j)
-             jac = mesh%jacobians_c(i,j)
+             y = mesh%x2_at_cell(i,j)
+             x = mesh%x1_at_cell(i,j)
+             jac = mesh%jacobian_at_cell(i,j)
              data_out(i,j) = &
                   jac / (2*sll_pi*init_obj%sigma_x*init_obj%sigma_y)*exp(-0.5_f64*( &
                   (x-init_obj%xc)**2/init_obj%sigma_x**2 + &

@@ -1,0 +1,115 @@
+&PARALLEL
+  Nbproc_r     = 2
+  Nbproc_theta = 2
+  Nbproc_mu    = 1
+  bloc_phi     = 4
+  Nbthread     = 4
+  transpose4D  = .false.,
+/
+
+&MESH
+  Nr           = 127
+  Ntheta       = 128
+  Nphi         = 32
+  Nvpar        = 47
+  Nmu            = 0
+  a            = 32.
+  rhomin       = 0.2
+  rhomax       = 0.8
+  Ltheta       = 6.283185307179586476925286766559005768394
+  Lphi         = 6.283185307179586476925286766559005768394
+  aspect_ratio = 3.
+  nb_vth0      = 6.
+  Lmu          = 0.
+  mumin        = 0.,
+  integral_vperp = .false., !?
+/
+
+&EQUIL
+  plasma_current = .false.
+  rbar_in_feq    = .false.
+  use_psibar     = .false.  !?
+  Zi             = 1
+  tau0           = 1.
+  read_n0        = .false.
+  read_Te        = .false.
+  read_Ti        = .false.
+  read_q         = .false.
+  profile_choice = 1
+  rpeak          = 0.5     
+  kappan         = 4.
+  kappaTi        = 27.
+  kappaTe        = 27.
+  deltarn        = 0.08
+  deltarTi       = 0.08
+  deltarTe       = 0.08
+  magnetic_shear = .false.   
+  q0             = 0.854     
+  deltaq         = 2.184     
+  alphaq         = 2.        
+  reversed_shear = .false. !?
+  qmin           = 1.5     !?
+  qa             = 3.      !?
+  rho_qmin       = 0.5     !?
+  B_curvature    = .false.
+  epsilon        = .001
+  m              = 16
+  n              = 8
+  init_perturb   = 2
+  zonal_flow     = .true.
+  filter_choice  = 0
+  filter_deltam  = 16
+  ExB_shear      = .false.
+  max_shear      = 0.01
+  rho_shear      = 0.5
+  deltar_shear   = 0.05,
+/
+
+  
+
+&ALGORITHM
+  leapfrog       = .false.
+  advec2Ddt      = 1.
+  hffilterfreq   = 8
+  hffiltertype   = 2
+  hffilterfref   = 4
+  reduceddt      = 4.
+  reducedbegin   = 1000.
+  reducedend     = 4000.!4200.
+  LF_average     = 100000
+  deltat         = 16.
+  nbiter         = 30
+  diag_nbstep    = 2
+  refresh_nbstep = 2,
+/
+
+
+&TEST
+  memory_test       = .false.
+  slab_geometry     = .true.
+  Rosenbluth_Hinton = .false.
+  m0n0_eq0          = .false.
+  single_m          = .false.
+  single_n          = .false.
+  solve_poiss       = .true.
+  coeff_pol         = 1.
+  RHS_only          = .false.
+  feq_choice        = 1
+  vpar0_option      = 3
+  Phi00BCr_Neumann  = .false.,  !?
+/
+
+&OUTPUT
+  integration_CS    = .true.
+  diag_level        = 4
+  Phi3D_saving      = .true.
+  FMoments3D_saving = .false.
+  f5D_saving        = .false.
+  CalviExp_saving   = .false.
+  Phi3D_nbstep      = 50
+  FMoments3D_nbstep = 500
+  f5D_nbstep        = 500
+  CalviExp_nbstep   = 1000
+  rst_saving        = .true.,
+/
+

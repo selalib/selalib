@@ -2,9 +2,9 @@ module periodic_interp_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-use arbitrary_degree_splines
-use sll_fft
-use numeric_constants
+#include "sll_fft.h"
+use sll_arbitrary_degree_splines
+use sll_constants
 
   implicit none
 
@@ -145,7 +145,7 @@ contains
     sll_real64, dimension(:), intent(out)   :: u_out  ! result
     sll_real64, intent(in)     :: alpha ! displacement normalized to cell size
     ! local variables
-    sll_int32 :: i, j, k, p, ishift, j0, imode
+    sll_int32 :: i, j, k, p, ishift, j0, imode,n
     sll_real64 :: beta, filter, mode
     sll_comp64 :: tmp,tmp2
     complex(8) :: int_fact, z
@@ -223,17 +223,33 @@ contains
     case (TRIGO_FFT_SELALIB)
        u_out = u
        call fft_apply_plan(this%pfwd,u_out,u_out)
-       tmp2=-ii*2._f64*sll_pi/this%N*alpha
-       do i=0,this%N/2
-         tmp=fft_get_mode(this%pfwd,u_out,i)
-         !print *,i,tmp,alpha
-         !tmp=tmp*exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+       n=this%N
+       tmp2=-ii*2._f64*sll_pi/n*alpha
+
+         GET_MODE0(tmp,u_out)
+         tmp=tmp*exp(tmp2*real(0,f64))
+         SET_MODE0(tmp,u_out)
+       do i=1,n/2-1
+         GET_MODE_LT_N_2(tmp,u_out,i,n)
          tmp=tmp*exp(tmp2*real(i,f64))
-         !print *,i,tmp,exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
-         call fft_set_mode(this%pfwd,u_out,tmp,i)
-         !tmp=fft_get_mode(this%pfwd,u_out,i)
-         !print *,i,tmp 
+         SET_MODE_LT_N_2(tmp,u_out,i,n)
        enddo
+         GET_MODE_N_2(tmp,u_out,n)
+         tmp=tmp*exp(tmp2*real(n/2,f64))
+         SET_MODE_N_2(tmp,u_out,n)
+
+!*** Without macro
+      ! do i=0,this%N/2
+      !   tmp=fft_get_mode(this%pfwd,u_out,i)
+      !   !print *,i,tmp,alpha
+      !   !tmp=tmp*exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+      !   tmp=tmp*exp(tmp2*real(i,f64))
+      !   !print *,i,tmp,exp(-ii*2._f64*sll_pi/this%N*alpha*real(i,f64))
+      !   call fft_set_mode(this%pfwd,u_out,tmp,i)
+      !   !tmp=fft_get_mode(this%pfwd,u_out,i)
+      !   !print *,i,tmp
+      ! enddo
+
        call fft_apply_plan(this%pinv,u_out,u_out)        
     case default
        print*, 'periodic_interp_module:interpolator ',this%interpolator, ' not implemented'

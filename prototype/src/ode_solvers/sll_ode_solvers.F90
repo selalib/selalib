@@ -190,8 +190,8 @@ contains
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
-    sll_int32  :: i, id, ileft, iright, i0, imax
-    sll_real64 :: xmax, xi, xi0, yi0, yi0p1, y1, x1, beta
+    sll_int32  :: i, ileft, iright, i0, imax
+    sll_real64 :: xi, xi0, yi0, yi0p1, x1, beta
     sll_real64 :: c     ! real coefficient
     sll_real64 :: period ! period of periodic domain
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
@@ -413,8 +413,8 @@ contains
     sll_real64, dimension(:)                     :: a     ! rhs at t = t_n
     sll_real64, dimension(:), pointer, optional  :: a_np1 ! rhs at t = t_n+1
     ! local variables
-    sll_int32  :: i, id, ileft, iright, i0, imax
-    sll_real64 :: xmax, xi, xi0, yi0, yi0p1, y1, x1, beta
+    sll_int32  :: i, ileft, iright, i0, imax
+    sll_real64 :: xi, xi0, yi0, yi0p1, x1, beta
     sll_real64 :: c     ! real coefficient
     sll_real64 :: period ! period of periodic domain
     sll_real64, dimension(ncx+1), target     :: zeros   ! array of zeros
@@ -749,7 +749,7 @@ contains
     sll_real64 :: eta_max
     sll_real64 :: eta_i, eta_k, eta_kp1
     sll_real64 :: deltatsub
-    sll_real64 :: a_n, a_np1, alpha, k2
+    sll_real64 :: a_n, a_np1, alpha
     sll_int32  :: i, id, isub
 
 #ifndef STDF95

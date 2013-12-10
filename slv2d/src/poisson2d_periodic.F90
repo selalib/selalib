@@ -1,11 +1,19 @@
 module poisson2d_periodic
 
-#include "selalib.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_fftw.h"
+use sll_constants
 
 use geometry_module
 use, intrinsic :: iso_c_binding
 implicit none
+
+#ifdef FFTW_F2003
 include 'fftw3.f03'
+#else
+include 'fftw3.f'
+#endif
 
 interface new
    module procedure new_potential
@@ -24,12 +32,16 @@ end interface free
 type :: poisson2dpp
    type(geometry)                       :: geom
    sll_real64, dimension(:,:), pointer  :: kx, ky, k2
-   type(C_PTR)                          :: fw, bw
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: rhot
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: ext
-   complex(C_DOUBLE_COMPLEX), dimension(:,:), pointer :: eyt
-   integer(C_SIZE_T) :: sz_rhot, sz_ext, sz_eyt
-   type(C_PTR) :: p_rhot, p_ext, p_eyt
+   fftw_plan                            :: fw, bw
+   fftw_comp  , dimension(:,:), pointer :: rhot
+   fftw_comp  , dimension(:,:), pointer :: ext
+   fftw_comp  , dimension(:,:), pointer :: eyt
+   fftw_int                             :: sz_rhot
+   fftw_int                             :: sz_ext
+   fftw_int                             :: sz_eyt
+   fftw_plan                            :: p_rhot
+   fftw_plan                            :: p_ext
+   fftw_plan                            :: p_eyt
 end type poisson2dpp
 
 sll_int32, parameter :: nthreads = 2
@@ -52,16 +64,26 @@ subroutine new_potential(self, rho, geomx, error )
    ny = geomx%ny
 
    SLL_ALLOCATE(self%k2(nx/2+1,ny), error)
+
+#ifdef FFTW_F2003
    self%sz_rhot = int((nx/2+1)*ny,C_SIZE_T)
    self%p_rhot = fftw_alloc_complex(self%sz_rhot)
    call c_f_pointer(self%p_rhot, self%rhot, [nx/2+1,ny])
+#else
+   SLL_ALLOCATE(self%rhot(nx/2+1,ny),error)
+#endif
 
-   call dfftw_init_threads(error)
-   if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   call dfftw_plan_with_nthreads(nthreads)
+   !call dfftw_init_threads(error)
+   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
+   !call dfftw_plan_with_nthreads(nthreads)
    
+#ifdef FFTW_F2003
    self%fw = fftw_plan_dft_r2c_2d(ny, nx, rho, self%rhot, FFTW_ESTIMATE)
    self%bw = fftw_plan_dft_c2r_2d(ny, nx, self%rhot, rho, FFTW_ESTIMATE)
+#else
+   call dfftw_plan_dft_r2c_2d(self%fw,nx,ny,rho,self%rhot,FFTW_PATIENT)
+   call dfftw_plan_dft_c2r_2d(self%bw,nx,ny,self%rhot,rho,FFTW_PATIENT)
+#endif
 
    dx = self%geom%dx
    dy = self%geom%dy
@@ -100,6 +122,7 @@ subroutine new_e_fields(self, ex, ey, geomx, error )
    dx = geomx%dx
    dy = geomx%dy
 
+#ifdef FFTW_F2003
    self%sz_rhot = int((nx/2+1)*ny,C_SIZE_T)
    self%p_rhot = fftw_alloc_complex(self%sz_rhot)
    call c_f_pointer(self%p_rhot, self%rhot, [nx/2+1,ny])
@@ -112,16 +135,29 @@ subroutine new_e_fields(self, ex, ey, geomx, error )
    self%p_eyt = fftw_alloc_complex(self%sz_eyt)
    call c_f_pointer(self%p_eyt, self%eyt, [nx/2+1,ny])
 
+#else
+
+   SLL_ALLOCATE(self%rhot(nx/2+1,ny), error)
+   SLL_ALLOCATE(self%ext(nx/2+1,ny), error)
+   SLL_ALLOCATE(self%eyt(nx/2+1,ny), error)
+
+#endif
+
    SLL_ALLOCATE(self%kx (nx/2+1,ny), error)
    SLL_ALLOCATE(self%ky (nx/2+1,ny), error)
    SLL_ALLOCATE(self%k2 (nx/2+1,ny), error)
 
-   call dfftw_init_threads(error)
-   if (error == 0) stop 'FFTW CAN''T USE THREADS'
-   call dfftw_plan_with_nthreads(nthreads)
+   !call dfftw_init_threads(error)
+   !if (error == 0) stop 'FFTW CAN''T USE THREADS'
+   !call dfftw_plan_with_nthreads(nthreads)
 
+#ifdef FFTW_F2003
    self%fw = fftw_plan_dft_r2c_2d(ny, nx, ex, self%ext, FFTW_ESTIMATE)
    self%bw = fftw_plan_dft_c2r_2d(ny, nx, self%eyt, ey, FFTW_ESTIMATE)
+#else
+   call dfftw_plan_dft_r2c_2d(self%fw, nx, ny, ex, self%ext, FFTW_PATIENT)
+   call dfftw_plan_dft_c2r_2d(self%bw, nx, ny, self%eyt, ey, FFTW_PATIENT)
+#endif
 
    kx0 = 2._f64*sll_pi/(nx*dx)
    ky0 = 2._f64*sll_pi/(ny*dy)
@@ -213,14 +249,18 @@ end subroutine solve_e_fields
 subroutine free_poisson(self)
 type(poisson2dpp) :: self
 sll_int32       :: error
+
+#ifdef FFTW_F2003
 call fftw_free(self%p_rhot)
 if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
+#endif
+
 call dfftw_destroy_plan(self%fw)
 call dfftw_destroy_plan(self%bw)
-if (nthreads > 1) then
-   call dfftw_cleanup_threads(error)
-end if
+!if (nthreads > 1) then
+!   call dfftw_cleanup_threads(error)
+!end if
 
 end subroutine
 

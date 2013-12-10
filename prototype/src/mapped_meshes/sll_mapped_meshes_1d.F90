@@ -2,12 +2,12 @@ module sll_module_mapped_meshes_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_splines
+use sll_cubic_splines
 #ifdef STDF95
-  ! We need sll_io because the function write_mesh is write
+  ! We need sll_file_io because the function write_mesh is write
   ! in the subclass in the F95 case
   ! (it's define in the abstract class in the 2003 case)
-  use sll_io
+!  use sll_file_io
   use sll_xdmf
   use sll_gnuplot
 #else 
@@ -46,11 +46,11 @@ module sll_module_mapped_meshes_1d
      sll_real64, dimension(:), pointer :: x1_cell
      sll_real64, dimension(:), pointer :: jacobians_n
      sll_real64, dimension(:), pointer :: jacobians_c
+     sll_real64, dimension(:), pointer :: params
 #ifdef STDF95
 #else
-     procedure(one_arg_scalar_function), pointer, nopass    :: x1_func  ! user
-     procedure(one_arg_scalar_function), pointer, nopass :: &
-          jacobian_func
+     procedure(one_arg_scalar_function_nopass), pointer, nopass :: x1_func !user
+     procedure(one_arg_scalar_function_nopass), pointer, nopass :: jacobian_func
    contains
      procedure, pass(mesh) :: initialize => initialize_mesh_1d_analytic
      procedure, pass(mesh) :: x1_at_node => x1_node_analytic_1d
@@ -79,7 +79,7 @@ module sll_module_mapped_meshes_1d
      type(cubic_spline_1d_interpolator), pointer          :: x1_interp
 #else
      class(sll_interpolator_1d_base), pointer             :: x1_interp
-     procedure(one_arg_scalar_function), pointer, nopass  :: x1_func
+!     procedure(one_arg_scalar_function), pointer, nopass  :: x1_func
     ! Samuel : this functions seems never initialize, see jacobian
     ! procedure(one_arg_message_passing_func_discr),pointer,pass :: jacobian_func
    contains
@@ -161,7 +161,8 @@ contains
     label,          &
     npts,           &
     x1_func,        &
-    jacobian_func )
+    jacobian_func,  &
+    params )
 
 #ifdef STDF95
     type(sll_mapped_mesh_1d_analytic), intent(inout)  :: mesh
@@ -175,10 +176,10 @@ contains
     sll_real64                                    :: x1_func
     sll_real64                                    :: jacobian_func
 #else
-    procedure(one_arg_scalar_function)            :: x1_func
-    procedure(one_arg_scalar_function)            :: jacobian_func
+    procedure(one_arg_scalar_function_nopass)     :: x1_func
+    procedure(one_arg_scalar_function_nopass)     :: jacobian_func
 #endif
-
+    sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: eta_1
     sll_real64 :: jacobian_val
@@ -192,6 +193,8 @@ contains
     delta_1         = 1.0_f64/(npts1 - 1)
     mesh%delta_eta1 = delta_1
 
+    SLL_ALLOCATE(mesh%params(size(params)),ierr)
+    mesh%params(:) = params(:)
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1), ierr)
     SLL_ALLOCATE(mesh%jacobians_c(npts1-1), ierr)
@@ -216,19 +219,19 @@ contains
     ! Fill the values of the transformation and the jacobians at the nodes
     do i=0, npts1 - 1
        eta_1 = real(i,f64)*delta_1
-       mesh%x1_node(i+1) = x1_func(eta_1)
+       mesh%x1_node(i+1) = x1_func(eta_1,params)
        ! for some compiler reason, the following intermediate 
        ! variable is required, else the jacobians_n array will not
        ! be filled out properly.
-       jacobian_val          = jacobian_func(eta_1)
+       jacobian_val          = jacobian_func(eta_1,params)
        mesh%jacobians_n(i+1) = jacobian_val
     end do
     
     ! Fill the values at the mid-point of the cells
     do i=0, npts1 - 2
        eta_1 = delta_1*(real(i,f64) + 0.5_f64)
-       mesh%x1_cell(i+1)     = x1_func(eta_1)
-       mesh%jacobians_c(i+1) = jacobian_func(eta_1)
+       mesh%x1_cell(i+1)     = x1_func(eta_1,params)
+       mesh%jacobians_c(i+1) = jacobian_func(eta_1,params)
     end do
   end subroutine initialize_mesh_1d_analytic
 
@@ -260,7 +263,7 @@ contains
     class(sll_mapped_mesh_1d_analytic) :: mesh
     sll_real64                         :: val
     sll_real64, intent(in) :: eta1
-    val = mesh%x1_func(eta1)
+    val = mesh%x1_func(eta1,mesh%params)
   end function x1_analytic_1d
 #endif
 
@@ -298,7 +301,7 @@ contains
     sll_real64                         :: val
     class(sll_mapped_mesh_1d_analytic) :: mesh
     sll_real64, intent(in) :: eta1
-    val = mesh%jacobian_func(eta1)
+    val = mesh%jacobian_func(eta1,mesh%params)
   end function jacobian_1d_analytic
 #endif
 

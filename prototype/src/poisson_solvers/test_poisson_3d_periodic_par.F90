@@ -19,8 +19,8 @@ program test_poisson_3d_periodic_par
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_poisson_solvers.h"
-  use remapper
-  use numeric_constants
+  use sll_remapper
+  use sll_constants
   use sll_poisson_3d_periodic_par
   use sll_collective
 
@@ -158,7 +158,7 @@ program test_poisson_3d_periodic_par
 
   end do
 
-     call sll_collective_reduce_real(sll_world_collective, (/ ok /), &
+     call sll_collective_reduce(sll_world_collective, (/ ok /), &
           1, MPI_PROD, 0, prod4test )
      if (myrank==0) then
 

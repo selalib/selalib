@@ -1,66 +1,61 @@
 module mgd3
-#ifdef INTEL
-implicit none
-include "mpif.h"
-#else
+#include "sll_working_precision.h"
 use mpi 
 implicit none
-#endif
 
 #include "mgd3.h"
 
-   integer, dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
-   integer, dimension(20)   :: kpbgn,kcbgn
-   integer, dimension(7,20) :: kdatatype
-   integer, dimension(20)   :: sxi,exi,syi,eyi,szi,ezi
-   integer, dimension(20)   :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
-   integer, dimension(7,20) :: rdatatype
-   integer, parameter :: iout=60
+   sll_int32 , dimension(20)   :: nxk,nyk,nzk,sxk,exk,syk,eyk,szk,ezk
+   sll_int32 , dimension(20)   :: kpbgn,kcbgn
+   sll_int32 , dimension(7,20) :: kdatatype
+   sll_int32 , dimension(20)   :: sxi,exi,syi,eyi,szi,ezi
+   sll_int32 , dimension(20)   :: nxr,nyr,nzr,sxr,exr,syr,eyr,szr,ezr
+   sll_int32 , dimension(7,20) :: rdatatype
+   sll_int32 , parameter       :: iout=6
 
    type, public :: block
-      integer :: id
-      integer :: sx, ex
-      integer :: sy, ey
-      integer :: sz, ez
-      integer :: ixp, jyq, kzr
-      integer :: iex, jey, kez
-      integer :: ngrid
-      integer :: neighbor(26),bd(26)
+      sll_int32  :: id
+      sll_int32  :: sx, ex
+      sll_int32  :: sy, ey
+      sll_int32  :: sz, ez
+      sll_int32  :: ixp, jyq, kzr
+      sll_int32  :: iex, jey, kez
+      sll_int32  :: ngrid
+      sll_int32  :: neighbor(26),bd(26)
    end type block
 
    type, public :: mg_solver
-      integer :: nx, ny, nz
-      integer :: ibdry
-      integer :: jbdry
-      integer :: kbdry
-      integer :: nxprocs
-      integer :: nyprocs
-      integer :: nzprocs
-      real(8) :: vbc(6),phibc(6,20)
-      integer :: comm3d,comm3dp,comm3dl,comm3dc
-      real(8) :: tolmax
-      real(8) :: xl,yl,zl
-      integer :: maxcy, kcycle, iprer, ipost, iresw
-      integer :: isol
+      sll_int32  :: nx, ny, nz
+      sll_int32  :: ibdry
+      sll_int32  :: jbdry
+      sll_int32  :: kbdry
+      sll_int32  :: nxprocs
+      sll_int32  :: nyprocs
+      sll_int32  :: nzprocs
+      sll_real64 :: vbc(6),phibc(6,20)
+      sll_int32  :: comm3d,comm3dp,comm3dl,comm3dc
+      sll_real64 :: tolmax
+      sll_real64 :: xl,yl,zl
+      sll_int32  :: maxcy, kcycle, iprer, ipost, iresw
+      sll_int32  :: isol
    end type mg_solver
 
-   real(8), private, allocatable :: work(:)
+   sll_real64, private, allocatable :: work(:)
 
    private grid1_type
-   real(8), parameter, private :: rro=1.0d0
+   sll_real64, parameter, private :: rro=1.0d0
 
 contains
 
-
-subroutine initialize(my_block,my_mg,nerror)
+subroutine initialize_mgd3(my_block,my_mg,nerror)
 
 implicit none
 
-integer     :: ngrid
-integer     :: ixp,jyq,kzr,iex,jey,kez,nxp2,nyp2,nzp2
-integer     :: sx,ex,sy,ey,sz,ez
-integer     :: nerror,m0,m1
-type(block) :: my_block
+integer         :: ngrid
+integer         :: ixp,jyq,kzr,iex,jey,kez,nxp2,nyp2,nzp2
+integer         :: sx,ex,sy,ey,sz,ez
+integer         :: nerror,m0,m1
+type(block)     :: my_block
 type(mg_solver) :: my_mg
  
 !------------------------------------------------------------------------
@@ -129,7 +124,6 @@ type(mg_solver) :: my_mg
 !------------------------------------------------------------------------
 integer :: i,j,k,nxf,nyf,nzf,nxm,nym,nzm,kps,nxc,nyc,nzc
 integer :: sxm,exm,sym,eym,szm,ezm
-character(len=20) :: outfile
 character(len=1)  :: num(10)
 data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 
@@ -138,13 +132,8 @@ data (num(i),i=1,10)/'0','1','2','3','4','5','6','7','8','9'/
 ! open file for output of messages and check that the number of 
 ! processes is correct
 !
-outfile='out'
-outfile(4:5)='_'
 m1=mod(my_block%id,10)+1
 m0=mod(my_block%id/10,10)+1
-outfile(5:6)=num(m0)
-outfile(6:7)=num(m1)
-open(iout,file=outfile,status='unknown',form='formatted')
 
 !------------------------------------------------------------------------
 ! set /mgd/ variables to zero
@@ -192,6 +181,7 @@ sz = my_block%sz ; ez = my_block%ez
 !
 ! check that the dimensions are correct
 !
+
 ixp = my_block%ixp 
 jyq = my_block%jyq 
 kzr = my_block%kzr 
@@ -644,7 +634,7 @@ return
     &      ' -> change the parameters (ixp,jyq,kzr) and',     &
     &      ' (iex,jyq,kez) in main',/)
 
-end subroutine initialize
+end subroutine initialize_mgd3
 
 
 subroutine grid1_type(gtype,sx,ex,sy,ey,sz,ez)
@@ -1072,22 +1062,18 @@ return
 end subroutine solve
 
 
+!------------------------------------------------------------------------
+!>  From the MPE library
+!>  This file contains a routine for producing a decomposition of a 1-d 
+!>  array when given a number of processors.  It may be used in "direct" 
+!>  product decomposition.  The values returned assume a "global" domain 
+!>  in [1:n]
 subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
 implicit none 
 
 integer :: n, numprocs, myid, s, e
 integer :: nlocal
 integer :: deficit
-!------------------------------------------------------------------------
-!  From the MPE library
-!  This file contains a routine for producing a decomposition of a 1-d 
-!  array when given a number of processors.  It may be used in "direct" 
-!  product decomposition.  The values returned assume a "global" domain 
-!  in [1:n]
-!
-! Code      : tmgd3
-! Called in : main
-! Calls     : --
 !------------------------------------------------------------------------
 nlocal  = n / numprocs
 s = myid * nlocal + 1

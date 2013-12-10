@@ -1,3 +1,20 @@
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+
 module sll_cubic_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -5,36 +22,48 @@ module sll_cubic_spline_interpolator_1d
 #ifndef STDF95
 use sll_module_interpolators_1d_base
 #endif
-use sll_splines
+use sll_cubic_splines
   implicit none
 
+!> Object for 1d cubic spline interpolation on uniform mesh
 #ifdef STDF95
-  type                                    ::  cubic_spline_1d_interpolator
-#else  
-  type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
-#endif
-     sll_real64, dimension(:), pointer     :: interpolation_points 
-     sll_int32                     :: num_points ! size
-     sll_int32                     :: bc_type
-     type(sll_spline_1D), pointer  :: spline
-#ifdef STDF95
+
+type ::  cubic_spline_1d_interpolator
+   sll_real64, dimension(:), pointer :: interpolation_points !< points positions
+   sll_int32                         :: num_points           !< size
+   sll_int32                         :: bc_type            !< boundary condition
+   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
+end type cubic_spline_1d_interpolator
+
 #else
-   contains
-     procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
-     procedure :: compute_interpolants => compute_interpolants_cs1d
-     procedure :: interpolate_value => interpolate_value_cs1d
-     procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
-     procedure :: interpolate_array_values => interpolate_values_cs1d
-     procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
-     procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
-     procedure :: interpolate_pointer_derivatives => &
-          interpolate_pointer_derivatives_cs1d
-     procedure, pass:: interpolate_array => spline_interpolate1d
-     procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
-     procedure, pass:: reconstruct_array
-     !generic :: initialize => initialize_cs1d_interpolator
+
+type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
+
+   sll_real64, dimension(:), pointer :: interpolation_points !< points position
+   sll_int32                         :: num_points           !< size
+   sll_int32                         :: bc_type            !< boundary condition
+   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
+
+contains
+
+procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
+procedure :: compute_interpolants => compute_interpolants_cs1d
+procedure :: interpolate_value => interpolate_value_cs1d
+procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+procedure :: interpolate_array_values => interpolate_values_cs1d
+procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
+procedure, pass:: interpolate_array => spline_interpolate1d
+procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
+procedure, pass:: reconstruct_array
+procedure, pass :: set_coefficients => set_coefficients_cs1d
+procedure, pass :: get_coefficients => get_coefficients_cs1d
+!generic :: initialize => initialize_cs1d_interpolator
+
+end type cubic_spline_1d_interpolator
+
 #endif
-  end type cubic_spline_1d_interpolator
 
   interface delete
      module procedure delete_cs1d
@@ -63,13 +92,11 @@ contains  ! ****************************************************************
        result(data_out)
     class(cubic_spline_1d_interpolator),  intent(in)       :: this
 #endif
-    !class(sll_spline_1D),  intent(in)      :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
-    ! local variables
-    sll_int32 :: ierr
     ! compute the interpolating spline coefficients
     call compute_spline_1D( data, this%spline )
     call interpolate_array_values( coordinates, data_out, num_points, &
@@ -86,7 +113,7 @@ contains  ! ****************************************************************
        result(data_out)
     class(cubic_spline_1d_interpolator),  intent(in)       :: this
 #endif
-    !class(sll_spline_1D),  intent(in)      :: this
+    !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
@@ -96,7 +123,6 @@ contains  ! ****************************************************************
     sll_real64 :: length, delta
     sll_real64 :: xmin, xmax 
     sll_int32 :: i
-    sll_int32 :: ierr
     ! compute the interpolating spline coefficients
     call compute_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
@@ -106,9 +132,9 @@ contains  ! ****************************************************************
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
 
-    if (this%bc_type == PERIODIC_SPLINE) then
+    if (this%bc_type == SLL_PERIODIC) then
        ! The case alpha = 0.0 is problematic. We need to further try to make
-       ! this computation in general more efficient, minimize the use of modulo
+       ! this computation in general m re efficient, minimize the use of modulo
        ! and even explore a uniform grid representation...
        if( alpha == 0.0_f64 ) then
           coordinates(:) = this%interpolation_points(:)
@@ -146,13 +172,19 @@ contains  ! ****************************************************************
   ! interface is the compute_interpolants routine which gets assigned to
   ! the cs1d at initialization time.  
 #ifdef STDF95
-  subroutine cubic_spline_compute_interpolants( interpolator, data_array )
+  subroutine cubic_spline_compute_interpolants( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     type(cubic_spline_1d_interpolator), intent(inout)  :: interpolator
 #else
-  subroutine compute_interpolants_cs1d( interpolator, data_array )
+  subroutine compute_interpolants_cs1d( interpolator, data_array,&
+       eta_coords, &
+       size_eta_coords)
     class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
+    sll_real64, dimension(:), intent(in),optional  :: eta_coords
+    sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_spline_1D( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine cubic_spline_compute_interpolants
@@ -178,7 +210,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
     call interpolate_array_values( vals_to_interpolate, output_array, &
          num_pts, interpolator%spline )
   end subroutine interpolate_values_cs1d
@@ -196,7 +227,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
-    sll_int32 :: ierr
     call interpolate_pointer_values( vals_to_interpolate, output, &
          num_pts, interpolator%spline )
   end subroutine interpolate_pointer_values_cs1d
@@ -215,7 +245,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
     call interpolate_array_derivatives( vals_to_interpolate, num_pts, &
          output_array, interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
@@ -233,7 +262,6 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
-    sll_int32 :: ierr
     call interpolate_pointer_derivatives( vals_to_interpolate, num_pts, &
          output, interpolator%spline )
   end subroutine interpolate_pointer_derivatives_cs1d
@@ -284,6 +312,33 @@ contains  ! ****************************************************************
 #endif
 
 
+  function new_cubic_spline_1d_interpolator( &
+    num_points, &
+    xmin, &
+    xmax, &
+    bc_type, &
+    slope_left, &
+    slope_right ) result(res)
+
+    type(cubic_spline_1d_interpolator),  pointer :: res
+    sll_int32,  intent(in)               :: num_points
+    sll_real64, intent(in)               :: xmin
+    sll_real64, intent(in)               :: xmax
+    sll_int32,  intent(in)               :: bc_type
+    sll_real64, intent(in), optional     :: slope_left
+    sll_real64, intent(in), optional     :: slope_right
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call initialize_cs1d_interpolator( &
+         res, &
+         num_points, &
+         xmin, &
+         xmax, &
+         bc_type, &
+         slope_left, &
+         slope_right )
+  end function new_cubic_spline_1d_interpolator
+
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
 
@@ -324,6 +379,7 @@ contains  ! ****************************************************************
        interpolator%interpolation_points(i) = &
             interpolator%interpolation_points(i-1) + delta
     end do
+    interpolator%interpolation_points(num_points) = xmax
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
        interpolator%spline => new_spline_1D( &
@@ -358,5 +414,30 @@ contains  ! ****************************************************************
 #endif
     call delete(obj%spline)
   end subroutine delete_cs1d
+
+  subroutine set_coefficients_cs1d( interpolator, coeffs )
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(inout)  :: interpolator 
+#else
+    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator 
+#endif
+    sll_real64, dimension(:), intent(in), optional :: coeffs
+    print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.'
+    stop
+  end subroutine set_coefficients_cs1d
+
+
+  function get_coefficients_cs1d(interpolator)
+#ifdef STDF95
+    type(cubic_spline_1d_interpolator),  intent(in)  :: interpolator 
+#else
+    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator 
+#endif
+    sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
+    
+    print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
+         'implemented yet.' 
+  end function get_coefficients_cs1d
 
 end module sll_cubic_spline_interpolator_1d

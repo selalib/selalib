@@ -1171,7 +1171,7 @@ C-----------------------------------------------
 
       SUBROUTINE CPPADD(N, IERROR, A, C, CBP, BP, BH)
       IMPLICIT NONE
-      real psgf,ppspf,ppsgf,cbsrh
+      REAL psgf,ppspf,ppsgf,cbsrh
       EXTERNAL        PSGF       ,PPSPF      ,PPSGF                     
 C-----------------------------------------------
 C   D u m m y   A r g u m e n t s
