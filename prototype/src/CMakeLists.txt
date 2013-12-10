@@ -70,13 +70,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
 
-   IF(MUDPACK_ENABLED)
-      ADD_SUBDIRECTORY(mudpack)
-   ENDIF()
-   IF(FISHPACK_ENABLED)
-      ADD_SUBDIRECTORY(fishpack)
-   ENDIF()
-
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
    ADD_SUBDIRECTORY(assert)
@@ -94,8 +87,11 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
+   ADD_SUBDIRECTORY(reduction)
    IF(NOT STDF95)
-      ADD_SUBDIRECTORY(coordinate_transformations)
+     ADD_SUBDIRECTORY(coordinate_transformations)
+     ADD_SUBDIRECTORY(characteristics)
+     ADD_SUBDIRECTORY(advection)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
@@ -104,6 +100,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
+      ADD_SUBDIRECTORY(parallel_utilities)
 
       IF(NOT STDF95)
          ADD_SUBDIRECTORY(parallel_array_initializers)
@@ -113,6 +110,12 @@ IF(NOT SLL_BUILD_PACKAGE)
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
+   
+   ADD_SUBDIRECTORY(mudpack)
+   ADD_SUBDIRECTORY(fishpack)
+   ADD_SUBDIRECTORY(opencl)
+   ADD_SUBDIRECTORY(pastix)
+   ADD_SUBDIRECTORY(wsmp)
 
    IF(NOT STDF95)
 
@@ -124,14 +127,8 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(BSL)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
-
-      FIND_PACKAGE(SUITESPARSE)
-      IF(SUITESPARSE_FOUND)
-         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
-         ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ENDIF(SUITESPARSE_FOUND)
-   
-      ADD_SUBDIRECTORY(mapped_meshes)
+      ADD_SUBDIRECTORY(discontinuous_galerkin) 
+      ADD_SUBDIRECTORY(mapped_meshes) # deprecated
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(distribution_function)
       ADD_SUBDIRECTORY(ode_solvers)
@@ -143,56 +140,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF(NOT STDF95)
 
-   IF(FORTRANCL_ENABLED)
-
-     FIND_PACKAGE(FORTRANCL QUIET)
-
-     IF(FORTRANCL_FOUND)
-
-       MESSAGE(STATUS "FORTRANCL FOUND")
-       INCLUDE_DIRECTORIES(${FORTRANCL_INCLUDE_DIRS})
-       ADD_SUBDIRECTORY(opencl)
-
-     ENDIF(FORTRANCL_FOUND)
-
-   ENDIF(FORTRANCL_ENABLED)
-
-
-   IF(PASTIX_ENABLED)
-
-      IF( DEFINED ENV{SCOTCH_ROOT} )
-
-         SET(SCOTCH_ROOT $ENV{SCOTCH_ROOT})
-         SET(PTSCOTCH_ROOT $ENV{SCOTCH_ROOT})
-
-      ENDIF()
-
-      IF( DEFINED ENV{PASTIX_ROOT} )
-
-         SET(PASTIX_ROOT $ENV{PASTIX_ROOT})
-         SET(MURGE_ROOT $ENV{PASTIX_ROOT})
-
-      ENDIF()
-
-      FIND_PACKAGE(RT QUIET)
-      FIND_PACKAGE(SCOTCH QUIET)
-      FIND_PACKAGE(PTSCOTCH QUIET)
-      FIND_PACKAGE(MURGE QUIET)
-      FIND_PACKAGE(PASTIX QUIET)
-
-      IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
-
-         MESSAGE(STATUS "PASTIX FOUND")
-         INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
-         ADD_SUBDIRECTORY(pastix)
-
-      ELSE()
-
-         MESSAGE(STATUS "PASTIX NOT FOUND")
-
-      ENDIF()
-
-   ENDIF(PASTIX_ENABLED)
 
    MESSAGE(STATUS "############################################################")
    MESSAGE(STATUS "####")
@@ -244,19 +191,7 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF()
 
-
-   IF(PETSC_ENABLED)
-
-      FIND_PACKAGE(PETSc)
-
-      IF(PETSC_FOUND)
-
-         INCLUDE_DIRECTORIES(${PETSC_INCLUDES})
-         ADD_SUBDIRECTORY(petsc_solvers)
-
-      ENDIF(PETSC_FOUND)
-
-   ENDIF()
+   ADD_SUBDIRECTORY(petsc_solvers)
 
    INCLUDE(DoxygenConfig)
 

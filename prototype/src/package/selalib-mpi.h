@@ -1,5 +1,5 @@
-#ifndef _SELALIB-MPI_H_
-#define _SELALIB-MPI_H_
+#ifndef _SELALIB_MPI_H_
+#define _SELALIB_MPI_H_
 
 !**************************************************************
 !  Copyright INRIA
@@ -24,6 +24,7 @@
 use sll_collective
 use sll_remapper
 
+#define MPI_MASTER 0
+
 #endif
 
-#define MPI_MASTER 0

@@ -55,7 +55,8 @@ program unit_test
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
-       sinprod_jac22 )
+       sinprod_jac22, &
+       (/0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/) )
 
   print *, 'initialization of the interpolators'
  ! Set up the interpolators for the field

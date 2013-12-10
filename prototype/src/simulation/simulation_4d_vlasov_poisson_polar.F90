@@ -323,7 +323,7 @@ contains
                      sim%layout_x1, &
                      sim%layout_x2, &
                      eta1_min,      &
-                     eta2_max,      &
+                     eta1_max,      &
                      sim%nc_x1,     &
                      sim%nc_x2,     &
                      SLL_DIRICHLET, &
@@ -520,7 +520,7 @@ contains
     call sll_gnuplot_2d_parallel( &
         eta3_min+(global_indices(1)-1)*delta_eta3, delta_eta3, &
         eta4_min+(global_indices(2)-1)*delta_eta4, delta_eta4, &
-        sim%proj_f_x3x4, "fxy", itime, error )
+        sim%proj_f_x3x4, "fvxvy", itime, error )
 
   end subroutine plot_f_x3x4
 

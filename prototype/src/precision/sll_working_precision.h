@@ -51,7 +51,11 @@
 #define sll_comp32 complex(kind=f32)
 #define sll_comp64 complex(kind=f64)
 
+
 use sll_working_precision
+
+#define SLL_NULL_INT32  (/0.0_i32/)
+#define SLL_NULL_REAL64 (/0.0_f64/)
 
 #endif
 

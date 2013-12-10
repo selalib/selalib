@@ -159,6 +159,8 @@ module sll_collective
      sll_int32                       :: key !< Control of rank assigment
      sll_int32                       :: rank !< Rank of the process
      sll_int32                       :: size !< Communicator size
+     sll_int32                       :: thread_level_required
+     sll_int32                       :: thread_level_provided
   end type sll_collective_t
 
   ! **********************************************************************
@@ -304,8 +306,20 @@ contains !************************** Operations **************************
   !> @brief Starts the paralell environment 
   subroutine sll_boot_collective( )
     sll_int32 :: ierr
-    call MPI_Init(ierr)
+
     SLL_ALLOCATE( sll_world_collective, ierr )
+
+#ifndef MPI_THREAD_MULTIPLE
+
+    call MPI_Init(ierr)
+#else
+    
+    sll_world_collective%thread_level_required = MPI_THREAD_MULTIPLE
+    
+    call MPI_Init_Thread(sll_world_collective%thread_level_required, &
+                         sll_world_collective%thread_level_provided, &
+                         ierr)
+#endif
     sll_world_collective%comm     = MPI_COMM_WORLD
     sll_world_collective%color    = 0
     sll_world_collective%key      = 0
@@ -543,6 +557,49 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_gatherv_real(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real
+
+
+
+  !> @brief Gathers real64 values into specified locations from all processes in a group
+  !> @param[in] col Wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] send_count number of elements in send buffer
+  !> @param[in] recvcnts integer array (of length group size) containing 
+  !!            the number of elements that are received from each process 
+  !> @param[in] displs integer array. Entry i specifies the displacement 
+  !!            relative to rec_buf at which to place the incoming data from process i
+  !> @param[in] root rank of receiving process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_gatherv_real64( col, send_buf, send_count, &
+       recvcnts, displs, root, rec_buf )
+    type(sll_collective_t), pointer      :: col
+    sll_real64, dimension(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)                :: send_count
+    sll_int32, dimension(:), intent(in)  :: recvcnts
+    sll_int32, dimension(:), intent(in)  :: displs
+    sll_real64, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    ! FIXME: Argument checking
+    call sll_check_collective_ptr( col )
+    ! displs, rec_buf and recvcnts significant only for root
+    if (col%rank .eq. root) then 
+      SLL_ASSERT( SIZE(recvcnts) .eq. col%size )
+      SLL_ASSERT( SIZE(displs) .eq. col%size )
+      SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
+    endif
+    call MPI_GATHERV( send_buf, send_count, MPI_REAL8,rec_buf,recvcnts,&
+         displs, MPI_REAL8, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_gatherv_real8(): MPI_GATHERV()' )
+  end subroutine sll_collective_gatherv_real64
+
+
+
+
+
+
+
 
   !> @brief Gathers integer data from all tasks and 
   !!        distribute the combined data to all tasks

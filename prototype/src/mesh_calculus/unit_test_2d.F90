@@ -29,7 +29,8 @@ program test_mesh_calculus
        identity_jac11, &
        identity_jac12, &
        identity_jac21, &
-       identity_jac22 )
+       identity_jac22, &
+       (/0.0_f64, 0.0_f64/) ) ! this doesn't matter for identity transformation
 
   Tp => new_coordinate_transformation_2d_analytic( &
        "polar_mesh_calculus", &
@@ -39,7 +40,8 @@ program test_mesh_calculus
        deriv_x1_polar_f_eta1, &
        deriv_x1_polar_f_eta2, &
        deriv_x2_polar_f_eta1, &
-       deriv_x2_polar_f_eta2 )
+       deriv_x2_polar_f_eta2, &
+       (/0.1_f64, 1.0_f64/) )
 
   volume = 0.0_f64
   do j=1,NCELLS1

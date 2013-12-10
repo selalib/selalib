@@ -30,7 +30,7 @@ module sll_module_scalar_field_1d_alternative
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_file_io.h"
-  use sll_module_scalar_field_1d_base_alternative
+  use sll_module_scalar_field_1d_base
   use sll_constants
   use sll_module_interpolators_1d_base
   use sll_arbitrary_degree_spline_interpolator_1d_module
@@ -40,7 +40,7 @@ module sll_module_scalar_field_1d_alternative
 !  use sll_scalar_field_initializers_base
   implicit none
   
-  type, extends(sll_scalar_field_1d_base_alternative) :: sll_scalar_field_1d_analytic_alt
+  type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_analytic_alt
      procedure(one_var_parametrizable_function), pointer, nopass :: func
      procedure(one_var_parametrizable_function), pointer, nopass :: first_derivative
      sll_real64, dimension(:), pointer        :: params
@@ -62,6 +62,9 @@ module sll_module_scalar_field_1d_alternative
           derivative_value_at_pt_analytic
      procedure, pass(field) :: derivative_value_at_indices => &
           derivative_value_at_index_analytic
+     procedure, pass(field) :: set_field_data => set_field_data_analytic_1d
+     procedure, pass(field) :: update_interpolation_coefficients => &
+          update_interp_coeffs_1d_analytic
      procedure, pass(field) :: write_to_file => write_to_file_analytic_1d
      procedure, pass(field) :: delete => delete_field_1d_analytic_alt
   end type sll_scalar_field_1d_analytic_alt
@@ -84,14 +87,15 @@ module sll_module_scalar_field_1d_alternative
           initialize_scalar_field_1d_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_1d_discrete_alt
-     procedure, pass(field) :: update_interpolation_coefficients => &
-          update_coeffs_scalar_field_1d
      procedure, pass(field) :: value_at_point => value_at_pt_discrete
      procedure, pass(field) :: value_at_indices => value_at_index_discrete
      procedure, pass(field) :: derivative_value_at_point => &
           derivative_value_at_pt_discrete
      procedure, pass(field) :: derivative_value_at_indices => &
           derivative_value_at_index_discrete
+     procedure, pass(field) :: set_field_data => set_field_data_discrete_1d
+     procedure, pass(field) :: update_interpolation_coefficients => &
+          update_interp_coeffs_1d_discrete
      procedure, pass(field) :: write_to_file => write_to_file_discrete_1d
      procedure, pass(field) :: delete => delete_field_1d_discrete_alt
   end type sll_scalar_field_2d_discrete_alt
@@ -198,6 +202,19 @@ contains   ! *****************************************************************
     func_params,&
     first_derivative)
   end function new_scalar_field_1d_analytic_alt
+
+  subroutine set_field_data_analytic_1d( field, values )
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
+    sll_real64, dimension(:), intent(in) :: values
+    print *, 'WARNING: set_field_data_analytic_1d(): it is useless to ', &
+         'call this function on an analytic scalar field.'
+  end subroutine set_field_data_analytic_1d
+
+  subroutine update_interp_coeffs_1d_analytic( field )
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
+    print *, 'WARNING: update_interpolation_coefficients_1d_analytic(): ', &
+         ' it is useless to call this function on an analytic scalar field.'
+  end subroutine update_interp_coeffs_1d_analytic
 
   subroutine delete_field_1d_analytic_alt( field )
     class(sll_scalar_field_1d_analytic_alt), intent(out) :: field
@@ -312,7 +329,7 @@ contains   ! *****************************************************************
     bc_left, &
     bc_right, &
     point_1d, &
-    sz_point,&) result(obj)
+    sz_point) result(obj)
 
     type(sll_scalar_field_1d_discrete_alt), pointer :: obj
     sll_real64, dimension(:), intent(in), target  :: array_1d
@@ -377,6 +394,18 @@ contains   ! *****************************************************************
     
   end subroutine initialize_scalar_field_1d_discrete_alt
   
+
+  subroutine set_field_data_discrete_1d( field, values )
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
+    sll_real64, dimension(:), intent(in) :: values
+    if ( size(field%values,1) .ne. size(values,1) ) then
+      print *, 'WARNING, set_field_data_discrete_1d(), passed array ', &
+        'is not of the size originally declared for this field.'
+    end if
+    field%values(:) = values(:)
+  end subroutine set_field_data_discrete_1d
+
+
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_1d_discrete_alt( field )
@@ -387,11 +416,12 @@ contains   ! *****************************************************************
     nullify(field%point_1d)
   end subroutine delete_field_1d_discrete_alt
   
-  subroutine update_coeffs_scalar_field_1d( field, data )
+
+  subroutine update_interp_coeffs_1d_discrete( field )
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
-    sll_real64, dimension(:), intent(in) :: data
-    call field%interp_1d%compute_interpolants( data )
-  end subroutine update_coeffs_scalar_field_1d
+    call field%interp_1d%compute_interpolants( field%values )
+  end subroutine update_interp_coeffs_1d_discrete
+
 
   function get_logical_mesh_1d_discrete_alt( field ) result(res)
     class(sll_scalar_field_1d_discrete_alt), intent(in) :: field

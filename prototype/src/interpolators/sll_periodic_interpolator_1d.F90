@@ -59,6 +59,35 @@ contains  ! ****************************************************************
   !   will be allocated on the stack (too big an array will crash the program),
   !   and some copy operation might be involved when "catching" the results.
 
+
+  function new_periodic_1d_interpolator( &
+    num_points, &
+    xmin, &
+    xmax, &
+    type, &
+    order)  result(res)
+    
+    type(per_1d_interpolator),  pointer :: res
+    sll_int32,  intent(in)               :: num_points
+    sll_real64, intent(in)               :: xmin
+    sll_real64, intent(in)               :: xmax
+    sll_int32,  intent(in)               :: type
+    sll_int32,  intent(in)               :: order
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call initialize_per1d_interpolator( &
+         res, &
+         num_points, &
+         xmin, &
+         xmax, &
+         type, &
+         order)
+  end function new_periodic_1d_interpolator
+
+
+
+
+
 #ifdef STDF95
   function per_interpolate_array(this, num_points, data, coordinates) &
        result(data_out)

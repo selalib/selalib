@@ -19,8 +19,7 @@ module sll_simulation_4d_vlasov_poisson_general
   use sll_gnuplot_parallel
   implicit none
 
-  type, extends(sll_simulation_base_class) :: &
-       sll_simulation_4d_vp_general
+  type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_general
   
      ! Parallel environment parameters
      sll_int32  :: world_size
@@ -234,6 +233,7 @@ contains
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
+    print *, 'executing simulation'
 
     buffer_counter = 1
 
@@ -266,6 +266,7 @@ contains
     sim%rho_seq_x2       => new_layout_2D( sll_world_collective )
     sim%split_rho_layout => new_layout_2D( sll_world_collective )
     sim%split_phi_layout => new_layout_2D( sll_world_collective )
+    print *, 'completed layout allocation'
 
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
@@ -418,6 +419,8 @@ contains
     ! These dimensions are also the ones needed for the array where we store
     ! the intermediate results of the charge density computation.
     SLL_ALLOCATE(sim%partial_reduction(loc_sz_x1,loc_sz_x2, loc_sz_x3),ierr)
+
+    print *, 'completed memory allocations'
     
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
@@ -427,6 +430,8 @@ contains
          sim%init_func, &
          sim%params, &
          transf_x1_x2=sim%transfx )
+
+    print *, 'initialized the distribution function'
 
     delta1 = sim%mesh2d_x%delta_eta1
     delta2 = sim%mesh2d_x%delta_eta2
@@ -440,22 +445,31 @@ contains
                                  sim%f_x3x4,             &
                                  sim%partial_reduction,  &
                                  sim%rho_split )
+
+    print *, 'computed charge density'
+
     sim%split_to_seqx1 => &
          NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
        
     global_indices(1:2) =  &
          local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
-       
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-         sim%mesh2d_x%delta_eta2, &
-         sim%rho_x1, &
-         "rho_x1", &
-         0, &
-         ierr )
+
+    print *, 'proceeding to write rho_x1 to a file'
+    if(sim%my_rank == 0) then
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2d_x%eta1_min + &
+               (global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+            sim%mesh2d_x%delta_eta1, &
+            sim%mesh2d_x%eta2_min + &
+            (global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+            sim%mesh2d_x%delta_eta2, &
+            sim%rho_x1, &
+            "rho_x1", &
+            0, &
+            ierr )
+       print *, 'printed rho_x1'
+    end if
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -525,7 +539,9 @@ contains
          SLL_PERIODIC, &
          SLL_PERIODIC )
 
+    print *, 'proceeding to carry out first advection'
     call advection_x1x2(sim,0.5*sim%dt)
+    print *, 'finished first advection in x1 and x2'
 
     ! other test cases use periodic bc's here...        
     call sim%interp_x3%initialize( &

@@ -23,6 +23,9 @@ program unit_test_1d
   sll_int32  :: i
   sll_real64 :: eta1, h1, delta, acc, acc1
   sll_real64 :: node, node_a, node_d, interp, val_a
+  sll_real64, dimension(2) :: params
+
+  params(:) = (/-1.0_f64, 1.0_f64/)
 
   print *,  'filling out discrete arrays for x1 ', &
        'needed in the discrete case'
@@ -33,16 +36,16 @@ program unit_test_1d
 
   do i=0,NPTS1-1
      eta1      = real(i,f64)*h1
-     x1(i+1)   = linear_map_f(eta1) 
-     jacs(i+1) = linear_map_jac_f(eta1)
+     x1(i+1)   = linear_map_f(eta1,params) 
+     jacs(i+1) = linear_map_jac_f(eta1,params)
   end do
   
   ! Fill out the transformation's slopes at the borders
   eta1           = 0.0_f64
   ! In 1D the slope is the jacobian.
-  x1_eta1_min = linear_map_jac_f(eta1)
+  x1_eta1_min = linear_map_jac_f(eta1,params)
   eta1           = 1.0_f64
-  x1_eta1_max = linear_map_jac_f(eta1)
+  x1_eta1_max = linear_map_jac_f(eta1,params)
 
   print *, '**********************************************************'
   print *, '              TESTING THE ANALYTIC MAP                    '
@@ -60,7 +63,8 @@ program unit_test_1d
        "map_a", &
        NPTS1, &
        linear_map_f, &
-       linear_map_jac_f )
+       linear_map_jac_f, &
+       params )
   print *, 'initialized analytic map in 1D'
 
 #ifdef STDF95
@@ -118,8 +122,8 @@ program unit_test_1d
        0.0_f64, &
        1.0_f64, &
        SLL_HERMITE, &
-       slope_left=linear_map_jac_f(0.0_f64), &
-       slope_right=linear_map_jac_f(1.0_f64) )
+       slope_left=linear_map_jac_f(0.0_f64,params), &
+       slope_right=linear_map_jac_f(1.0_f64,params) )
 
 #ifdef STDF95
   call initialize( map_d,&
