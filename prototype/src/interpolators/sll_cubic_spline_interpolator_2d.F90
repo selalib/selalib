@@ -55,6 +55,7 @@ module sll_cubic_spline_interpolator_2d
      procedure, pass :: set_coefficients => set_coefficients_cs2d
      procedure, pass :: get_coefficients => get_coefficients_cs2d
      procedure, pass :: coefficients_are_set => coefficients_are_set_cs2d
+     procedure, pass :: delete => delete_cubic_spline_2d_interpolator
     ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
 #endif
   end type cubic_spline_2d_interpolator
@@ -65,9 +66,9 @@ module sll_cubic_spline_interpolator_2d
 
 contains
 
-  subroutine delete_cubic_spline_2d_interpolator( interp )
-    type(cubic_spline_2d_interpolator) :: interp
-    call delete(interp%spline)
+  subroutine delete_cubic_spline_2d_interpolator( interpolator )
+    class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
+    call delete(interpolator%spline)
   end subroutine delete_cubic_spline_2d_interpolator
   
   function new_cubic_spline_2d_interpolator( &

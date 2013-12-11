@@ -3,6 +3,7 @@ program unit_test_2d
   use sll_constants
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
+  use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_2d
 #include "sll_file_io.h"
@@ -13,6 +14,7 @@ program unit_test_2d
   type(sll_logical_mesh_2d), pointer :: mesh
   type(sll_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
+  type(sll_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
   type(sll_coordinate_transformation_2d_analytic), pointer :: t_a_ptr !test
   ! for the discrete case...
   type(cubic_spline_2d_interpolator)   :: x1_interp
@@ -290,10 +292,10 @@ program unit_test_2d
 
 #ifdef STDF95
   call write_to_file(t_d)
-  call write_to_file(t_d)
+ 
 #else
   call t_d%write_to_file()
-  call t_d%write_to_file()
+ 
 #endif
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
@@ -307,15 +309,14 @@ program unit_test_2d
   ! Test of the initialization from a file of the discrete transformation.
   !
   ! *************************************************************************
-  
 
-  print *, 'Test of initialization from file for a discrete transformation:'
-  ! what is this chgt_test thing? I don't like it. If we need a name, then we
-  ! should include it in the initialization file. ECG
-  call t_d%read_from_file("../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
-  call t_d%write_to_file(SLL_IO_MTV)
+  print *, 'Test of initialization from file for a nurbs transformation:'
 
-  print*, t_d%jacobian_matrix(1._8,1._8)
+  call t_n%read_from_file("../src/coordinate_transformations/arbitrary_degree_2d_sample_input_file.nml")
+  t_n%mesh => mesh
+  call t_n%write_to_file()
+
+  print*, 'label t_n', t_n%label
 
   !call write_to_file(t_d)
   print *, 'reached end of unit test'
@@ -331,5 +332,8 @@ program unit_test_2d
   deallocate(x1_eta1_max)
   deallocate(x2_eta1_min)
   deallocate(x2_eta1_max)
+
+
+
 
 end program unit_test_2d
