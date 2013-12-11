@@ -543,34 +543,6 @@ contains
 
   end subroutine sll_2d_times_2d_parallel_array_initializer
 
-!in case of interpolation in the vx, vy, x, y direction
- subroutine sll_4d_parallel_array_initializer_finite_volume( &
-       layout, &
-       mesh2d_eta1_eta2, &
-       mesh2d_eta3_eta4, &
-       array, &
-       func, &
-       func_params, &
-       transf_x1_x2, &
-       transf_x3_x4, &
-! in case of a mesh with cell subdivisions
-       subcells1, &
-       subcells2, &
-       subcells3, &
-       subcells4)
-
-    type(layout_4D), pointer                    :: layout
-    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
-    type(sll_logical_mesh_2d), pointer          :: mesh2d_eta3_eta4
-    sll_real64, dimension(:,:,:,:), intent(out) :: array
-    procedure(sll_scalar_initializer_4d)        :: func
-    sll_real64, dimension(:), optional          :: func_params
-    sll_int32,optional   :: subcells1
-    sll_int32,optional   :: subcells2
-    sll_int32,optional   :: subcells3
-    sll_int32,optional   :: subcells4
-
-
   subroutine sll_4d_parallel_array_initializer( &
        layout, &
        mesh2d_eta1_eta2, &
@@ -1060,10 +1032,6 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_real64 :: x3
-    sll_real64 :: x4
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
