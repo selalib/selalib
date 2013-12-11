@@ -73,5 +73,4 @@ module sll_working_precision
   integer, parameter :: f32 = selected_real_kind(1,37)
   !> f64 is the kind type for 64-bit reals (double precision)
   integer, parameter :: f64 = selected_real_kind(1,99)
-
 end module sll_working_precision
