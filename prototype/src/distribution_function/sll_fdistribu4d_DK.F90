@@ -41,34 +41,39 @@ module sll_fdistribu4d_DK
   !---------------------------------------- -----------------------
   ! Initialization of the radial density profiles 
   !---------------------------------------- -----------------------
-  subroutine init_n0_r(r_peak,kappan,deltarn,n0_rmin, &
+  subroutine init_n0_r(r_peak,inv_Ln,deltarn,n0_rmin, &
     r_grid,n0_1d)
     sll_real64, intent(in) :: r_peak
-    sll_real64, intent(in) :: kappan
+    sll_real64, intent(in) :: inv_Ln
     sll_real64, intent(in) :: deltarn
     sll_real64, intent(in) :: n0_rmin
     sll_real64, dimension(:), intent(in)    :: r_grid
     sll_real64, dimension(:), intent(inout) :: n0_1d
 
     sll_int32  :: ierr, ir, Nr
-    sll_real64 :: delta_r, etai, etai_mid
-    sll_real64 :: tmp, inv_Ln0
+    sll_real64 :: dr, Lr
+    sll_real64 :: etai, etai_mid
+    sll_real64 :: tmp
     sll_real64 :: n0norm_tmp
+    sll_real64 :: deltarn_norm
 
-    Nr      = size(r_grid,1)
-    delta_r = r_grid(2)-r_grid(1)
+    Nr  = size(r_grid,1)
+    Lr  = r_grid(Nr)-r_grid(1)
+    dr  = r_grid(2)-r_grid(1)
+
+    deltarn_norm = deltarn*Lr
     
     !*** compute ns0 solution of :                           ***
     !***  2/(n0(r)+n0(r-1))*(n0(r)-n0(r-1))/dr               ***
     !***                  = -(1/Ln0)*cosh^-2(r-rpeak/deltar) ***
-    inv_Ln0  = kappan           !??? (1/Ln) = kappa_n0/R
+    !***  where (1/Ln) = kappa_n0/R                          ***
     n0_1d(1) = n0_rmin 
     do ir = 2,Nr
       etai     = r_grid(ir-1)
-      etai_mid = etai + delta_r*0.5_f64
-      tmp      = -inv_Ln0 * &
-        sech((etai_mid-r_peak)/deltarn)**2
-      tmp          = 0.5_f64*delta_r*tmp
+      etai_mid = etai + dr*0.5_f64
+      tmp      = -inv_Ln * &
+        sech((etai_mid-r_peak)/deltarn_norm)**2
+      tmp          = 0.5_f64*dr*tmp
       n0_1d(ir) = (1._f64+tmp)/(1._f64-tmp)*n0_1d(ir-1)
     enddo
 
@@ -81,7 +86,7 @@ module sll_fdistribu4d_DK
     n0norm_tmp = n0norm_tmp + 0.5_f64 * &
       (n0_1d(1)*r_grid(1) + n0_1d(Nr)*r_grid(Nr))
     ! -> division by int(rdr)
-    n0norm_tmp = n0norm_tmp*2._f64*delta_r / & 
+    n0norm_tmp = n0norm_tmp*2._f64*dr / & 
       (r_grid(Nr)**2-r_grid(1)**2)
 
     n0_1d(1:Nr) = n0_1d(1:Nr)/n0norm_tmp
@@ -91,10 +96,10 @@ module sll_fdistribu4d_DK
   !---------------------------------------------------------------
   ! Initialization of the radial temperature profiles 
   !---------------------------------------------------------------
-  subroutine init_T_r(r_peak,kappaT, &
+  subroutine init_T_r(r_peak,inv_LT, &
     deltarT,T_rmin,T_scal,r_grid,T_1d)
     sll_real64, intent(in) :: r_peak
-    sll_real64, intent(in) :: kappaT
+    sll_real64, intent(in) :: inv_LT
     sll_real64, intent(in) :: deltarT
     sll_real64, intent(in) :: T_rmin
     sll_real64, intent(in) :: T_scal
@@ -102,30 +107,34 @@ module sll_fdistribu4d_DK
     sll_real64, dimension(:), intent(inout) :: T_1d
     
     sll_int32  :: ierr, ir, Nr
-    sll_real64 :: delta_r, etai, etai_mid
-    sll_real64 :: tmp, inv_LT
+    sll_real64 :: dr, Lr
+    sll_real64 :: etai, etai_mid
+    sll_real64 :: tmp
     sll_real64 :: w0, w1, Tnorm_tmp
+    sll_real64 :: deltarT_norm
 
-    Nr      = size(r_grid,1)
-    delta_r = r_grid(2)-r_grid(1)
-    
-    !*** compute ns0 solution of :                           ***
-    !***  2/(n0(r)+n0(r-1))*(n0(r)-n0(r-1))/dr               ***
-    !***                  = -(1/Ln0)*cosh^-2(r-rpeak/deltar) ***
-    inv_LT  = kappaT           !??? (1/Ln) = kappa_n0/R
+    Nr  = size(r_grid,1)
+    Lr  = r_grid(Nr)-r_grid(1)
+    dr  = r_grid(2)-r_grid(1)
+    deltarT_norm = deltarT*Lr
+
+    !*** compute Ts solution of :                           ***
+    !***  2/(Ts(r)+Ts(r-1))*(Ts(r)-Ts(r-1))/dr               ***
+    !***                  = -(1/LTs)*cosh^-2(r-rpeak/deltar) ***
+    !***  where (1/LT) = kappa_Ts/R                          ***
     T_1d(1) = T_rmin
     do ir = 2,Nr
       etai     = r_grid(ir-1)
-      etai_mid = etai + delta_r*0.5_f64
+      etai_mid = etai + dr*0.5_f64
       tmp      = -inv_LT * &
-        sech((etai_mid-r_peak)/deltarT)**2
-      tmp      = 0.5_f64*delta_r*tmp
+        sech((etai_mid-r_peak)/deltarT_norm)**2
+      tmp      = 0.5_f64*dr*tmp
       T_1d(ir) = (1._f64+tmp)/(1._f64-tmp)*T_1d(ir-1)
     enddo
 
     !*** normalisation of the temperature to 1 at r=rpeak ***
-    ir         = int((r_peak-r_grid(1))/delta_r)
-    w1         = (r_peak-r_grid(ir))/delta_r
+    ir         = int((r_peak-r_grid(1))/dr)
+    w1         = (r_peak-r_grid(ir))/dr
     w0         = 1._f64-w1
     Tnorm_tmp  = w0*T_1d(ir)+w1*T_1d(ir+1)
     T_1d(1:Nr) = (T_1d(1:Nr)/Tnorm_tmp)/T_scal
@@ -171,7 +180,7 @@ module sll_fdistribu4d_DK
     sll_real64, intent(in) :: n0_r
     sll_real64, intent(in) :: Ti_r
 
-    val = n0_r*sqrt(2._f64*sll_pi*Ti_r) * &
+    val = n0_r/sqrt(2._f64*sll_pi*Ti_r) * &
       exp(-0.5_f64*vpar**2/Ti_r)
   end function compute_feq_val
 

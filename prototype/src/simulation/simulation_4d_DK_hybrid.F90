@@ -82,8 +82,7 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64, dimension(:),pointer :: diag_nrj_pot
      sll_real64, dimension(:),pointer :: diag_nrj_tot
      sll_real64, dimension(:),pointer :: diag_heat_flux
-     
-     
+          
      !--> 4D logical mesh (eta1,eta2,eta3,vpar)
      sll_int32 :: Neta1, Neta2, Neta3, Nvpar
      type(sll_logical_mesh_4d), pointer :: logical_mesh4d
@@ -113,6 +112,7 @@ module sll_simulation_4d_DK_hybrid_module
      sll_int32 :: bc_right_vpar
 
      !--> Density and temperature profiles
+     sll_real64 :: major_radius    !R0
      sll_real64, dimension(:)  , pointer :: n0_r
      sll_real64, dimension(:)  , pointer :: Ti_r
      sll_real64, dimension(:)  , pointer :: Te_r
@@ -318,10 +318,17 @@ contains
     sll_real64 :: Lr, dr
     sll_real64 :: theta_min, Ltheta, dtheta
     sll_real64 :: r_peak, n0_rmin
+    sll_real64 :: inv_Ln, inv_LTi, inv_LTe
     sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
     sll_real64, dimension(:), pointer   :: r_grid_tmp
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
+    
+    sll_real64 :: Lz
+
+    !--> Initialisation of R0 = major_radius
+    Lz               = abs(sim%phi_max-sim%phi_min)
+    sim%major_radius = Lz/(2._f64*sll_pi)
 
     !--> Initialization of r_grid
     Nr = sim%nc_x1+1
@@ -344,14 +351,18 @@ contains
     Ti_rmin = 1.3_f64
     Ti_scal = 1._f64
     
+    inv_Ln  = sim%kappan/sim%major_radius
+    inv_LTi = sim%kappaTi/sim%major_radius
+    inv_LTe = sim%kappaTe/sim%major_radius
+
     r_peak  = sim%r_min + sim%rho_peak * Lr
-    call init_n0_r(r_peak,sim%kappan, &
+    call init_n0_r(r_peak,inv_Ln, &
       sim%deltarn,n0_rmin,r_grid_tmp,sim%n0_r)
-    call init_T_r(r_peak,sim%kappaTi, &
+    call init_T_r(r_peak,inv_LTi, &
       sim%deltarTi,Ti_rmin,Ti_scal,r_grid_tmp,sim%Ti_r)
     Te_rmin = sim%Ti_r(1)
     Te_scal = sim%tau0
-    call init_T_r(r_peak,sim%kappaTe, &
+    call init_T_r(r_peak,inv_LTe, &
       sim%deltarTe,Te_rmin,Te_scal,r_grid_tmp,sim%Te_r)
 
     !--> Initialization of n0(x,y), Ti(x,y) and Te(x,y)
