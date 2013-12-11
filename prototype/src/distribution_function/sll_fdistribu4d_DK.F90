@@ -87,7 +87,38 @@ module sll_fdistribu4d_DK
     n0_1d(1:Nr) = n0_1d(1:Nr)/n0norm_tmp
   end subroutine init_n0_r
 
+  !---------------------------------------- -----------------------
+  ! Initialization of the profiles
+  ! solution of the following equation
+  !
+  !       1   d T(r)    = - kappa cosh^(-2)( (r- rx)/delta ) 
+  !      T(r) dr
+  !
+  !  kappa = params(1)
+  !  delta = params(2)
+  !  rx    = params(3)
+  !---------------------------------------- -----------------------
+  function profil_xy_exacte(x,y,params_profil) 
+    
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) ::params_profil
+    sll_real64 :: profil_xy_exacte
+    sll_real64 :: kappa
+    sll_real64 :: delta
+    sll_real64 :: rx
+    sll_real64 :: r
 
+    kappa = params_profil(1)
+    delta = params_profil(2)
+    rx    = params_profil(3)
+    r = sqrt(x**2+y**2)
+    profil_xy_exacte = exp(kappa*delta*tanh((r-rx)/delta))
+    
+  end function profil_xy_exacte
+
+  
+  
   !---------------------------------------------------------------
   ! Initialization of the radial temperature profiles 
   !---------------------------------------------------------------

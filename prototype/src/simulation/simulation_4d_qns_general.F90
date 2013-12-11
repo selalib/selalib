@@ -117,6 +117,10 @@ module sll_simulation_4d_qns_general_module
      procedure(two_var_parametrizable_function),nopass,pointer :: a22_f
      procedure(two_var_parametrizable_function),nopass,pointer :: b1_f
      procedure(two_var_parametrizable_function),nopass,pointer :: b2_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: der1_b1_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: der1_b2_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: der2_b1_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: der2_b2_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
      sll_real64, dimension(:), pointer :: a11_f_params
      sll_real64, dimension(:), pointer :: a12_f_params
@@ -158,8 +162,12 @@ contains
    a22_f_params, &
    b1_f, &
    b1_f_params, &
+   der1_b1_f,&
+   der2_b1_f,&
    b2_f, &
    b2_f_params, &
+   der1_b2_f,&
+   der2_b2_f,&
    c_f,&
    c_f_params, &
    spline_degre1,&
@@ -181,6 +189,10 @@ contains
    procedure(two_var_parametrizable_function) :: a22_f
    procedure(two_var_parametrizable_function) :: b1_f
    procedure(two_var_parametrizable_function) :: b2_f
+   procedure(two_var_parametrizable_function) :: der1_b1_f
+   procedure(two_var_parametrizable_function) :: der1_b2_f
+   procedure(two_var_parametrizable_function) :: der2_b1_f
+   procedure(two_var_parametrizable_function) :: der2_b2_f
    procedure(two_var_parametrizable_function) :: c_f
    sll_real64, dimension(:), intent(in) :: a11_f_params
    sll_real64, dimension(:), intent(in) :: a12_f_params
@@ -208,6 +220,10 @@ contains
    sim%a22_f     => a22_f
    sim%b1_f      => b1_f
    sim%b2_f      => b2_f
+   sim%der1_b1_f  => der1_b1_f
+   sim%der1_b2_f  => der1_b2_f
+   sim%der2_b1_f  => der2_b1_f
+   sim%der2_b2_f  => der2_b2_f
    sim%c_f       => c_f
    sim%spline_degree_eta1 = spline_degre1
    sim%spline_degree_eta2 = spline_degre2
@@ -465,7 +481,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top, &
-         sim%b1_f_params)
+         sim%b1_f_params,&
+         sim%der1_b1_f,&
+         sim%der2_b1_f)
     
     b2_field_vect => new_scalar_field_2d_analytic_alt( &
          sim%b2_f, &
@@ -475,7 +493,9 @@ contains
          sim%bc_right, &
          sim%bc_bottom, &
          sim%bc_top, &
-         sim%b2_f_params) 
+         sim%b2_f_params,&
+         sim%der1_b2_f,&
+         sim%der2_b2_f)
     
     
     c_field => new_scalar_field_2d_analytic_alt( &
@@ -840,6 +860,8 @@ contains
     ! unit square. But with the more general logical meshes, this is not
     ! true anymore, so this should be changed to depend on the values stored
     ! in the logical grids.
+
+
     
     call sim%interp_x1x2%initialize( &
          nc_x1+1, &
@@ -851,6 +873,7 @@ contains
          SLL_PERIODIC, &
          SLL_PERIODIC )
     
+  
     call advection_x1x2(sim,0.5*sim%dt)
     ! other test cases use periodic bc's here...        
     call sim%interp_x3%initialize( &
@@ -864,7 +887,7 @@ contains
          vmin4, &
          vmax4, &
          SLL_PERIODIC)
-    
+ 
     ! Initialize the poisson plan before going into the main loop.
     sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
@@ -880,7 +903,7 @@ contains
          sim%mesh2d_x%eta1_min, &  
          sim%mesh2d_x%eta1_max, & 
          sim%mesh2d_x%eta2_min, & 
-         sim%mesh2d_x%eta2_max ) 
+         sim%mesh2d_x%eta2_max )  
     
     call factorize_mat_es(&
          sim%qns, & 
@@ -1006,7 +1029,7 @@ contains
             sim%mesh2d_x,&
             sim%rho_full, &
             density_tot )
-       
+     
        ! print*, 'density', density_tot
        ! The subtraction of density_tot is supposed to be made inside the 
        ! elliptic solver.
@@ -1054,15 +1077,15 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call set_time_mark(t0)
-
+       call set_time_mark(t0)  
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
+ 
        time = time_elapsed_since(t0)
-       
-       print*, 'timer=', time
+     
+   !    print*, 'timer=', time
 !!$       if(sim%my_rank == 0) then
 !!$          call phi%write_to_file(itime)
 !!$       end if
