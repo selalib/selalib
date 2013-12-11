@@ -125,7 +125,7 @@ program vp_cartesian_4d
     identity_jac11,       &
     identity_jac12,       &
     identity_jac21,       &
-    identity_jac22 )
+    identity_jac22, (/0._f64,0._f64,0._f64,0._f64/) )
 
   tv => new_coordinate_transformation_2d_analytic( &
     'mapvxvy',          &
@@ -135,7 +135,7 @@ program vp_cartesian_4d
     identity_jac11,       &
     identity_jac12,       &
     identity_jac21,       &
-    identity_jac22 )
+    identity_jac22, (/0._f64,0._f64,0._f64,0._f64/) )
 
 
   ! define the values of the parameters for the landau initializer
