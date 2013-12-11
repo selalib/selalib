@@ -567,6 +567,7 @@ contains ! *******************************************************************
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
        call solve_linear_system_perper(es,mesh,es%masse)
+      
     else 
        call solve_linear_system(es,mesh)
     end if
@@ -1340,7 +1341,7 @@ contains ! *******************************************************************
     bc_right  = es%bc_right
     bc_bottom = es%bc_bottom
     bc_top    = es%bc_top
-
+  
     es%tmp_rho_vec(:) = 0.0_f64
     !print*, 'source coeff=', es%rho_vec
     if( (bc_left   == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &

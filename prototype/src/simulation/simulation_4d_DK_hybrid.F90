@@ -315,13 +315,16 @@ contains
     sll_int32  :: ir, itheta
     sll_int32  :: Nr, Ntheta 
     sll_int32  :: Nx, Ny
+    sll_int32  :: ieta1,ieta2
     sll_real64 :: Lr, dr
+    sll_real64 :: x,y
     sll_real64 :: theta_min, Ltheta, dtheta
     sll_real64 :: r_peak, n0_rmin
     sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
     sll_real64, dimension(:), pointer   :: r_grid_tmp
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
+    sll_real64, dimension(3) :: params_n0,params_Te,params_Ti
 
     !--> Initialization of r_grid
     Nr = sim%nc_x1+1
@@ -332,27 +335,27 @@ contains
       r_grid_tmp(ir) = sim%r_min + float(ir-1)*dr
     end do
 
-    !--> Initialization of n0(r), Ti(r) and Te(r)
-    SLL_ALLOCATE(sim%n0_r(Nr),ierr)
-    SLL_ALLOCATE(sim%Ti_r(Nr),ierr)
-    SLL_ALLOCATE(sim%Te_r(Nr),ierr)
-    sim%n0_r(:) = 0.0_f64
-    sim%Ti_r(:) = 0.0_f64
-    sim%Te_r(:) = 0.0_f64
+   ! !--> Initialization of n0(r), Ti(r) and Te(r)
+   ! SLL_ALLOCATE(sim%n0_r(Nr),ierr)
+   ! SLL_ALLOCATE(sim%Ti_r(Nr),ierr)
+   ! SLL_ALLOCATE(sim%Te_r(Nr),ierr)
+   ! sim%n0_r(:) = 0.0_f64
+   ! sim%Ti_r(:) = 0.0_f64
+   ! sim%Te_r(:) = 0.0_f64
 
     n0_rmin = 10._f64**19
     Ti_rmin = 1.3_f64
     Ti_scal = 1._f64
     
     r_peak  = sim%r_min + sim%rho_peak * Lr
-    call init_n0_r(r_peak,sim%kappan, &
-      sim%deltarn,n0_rmin,r_grid_tmp,sim%n0_r)
-    call init_T_r(r_peak,sim%kappaTi, &
-      sim%deltarTi,Ti_rmin,Ti_scal,r_grid_tmp,sim%Ti_r)
-    Te_rmin = sim%Ti_r(1)
-    Te_scal = sim%tau0
-    call init_T_r(r_peak,sim%kappaTe, &
-      sim%deltarTe,Te_rmin,Te_scal,r_grid_tmp,sim%Te_r)
+   ! call init_n0_r(r_peak,sim%kappan, &
+   !   sim%deltarn,n0_rmin,r_grid_tmp,sim%n0_r)
+   ! call init_T_r(r_peak,sim%kappaTi, &
+   !   sim%deltarTi,Ti_rmin,Ti_scal,r_grid_tmp,sim%Ti_r)
+   ! Te_rmin = sim%Ti_r(1)
+   ! Te_scal = sim%tau0
+   ! call init_T_r(r_peak,sim%kappaTe, &
+   !   sim%deltarTe,Te_rmin,Te_scal,r_grid_tmp,sim%Te_r)
 
     !--> Initialization of n0(x,y), Ti(x,y) and Te(x,y)
     Nx = sim%Neta1
@@ -360,12 +363,40 @@ contains
     SLL_ALLOCATE(sim%n0_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Ti_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Te_xy(Nx,Ny),ierr)
-    call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
-      sim%ygrid_2d,sim%n0_xy)
-    call function_xy_from_r(r_grid_tmp,sim%Ti_r,sim%xgrid_2d, &
-      sim%ygrid_2d,sim%Ti_xy)
-    call function_xy_from_r(r_grid_tmp,sim%Te_r,sim%xgrid_2d, &
-      sim%ygrid_2d,sim%Te_xy)
+   ! call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
+   !   sim%ygrid_2d,sim%n0_xy)
+   ! call function_xy_from_r(r_grid_tmp,sim%Ti_r,sim%xgrid_2d, &
+   !   sim%ygrid_2d,sim%Ti_xy)
+   ! call function_xy_from_r(r_grid_tmp,sim%Te_r,sim%xgrid_2d, &
+   !   sim%ygrid_2d,sim%Te_xy)
+
+    !!! paramas for radial density profiles
+    params_n0(1) = sim%kappan
+    params_n0(2) = sim%deltarn
+    params_n0(3) = r_peak
+
+    !!! paramas for radial temperature electrons profiles
+    params_Te(1) = sim%kappaTe
+    params_Te(2) = sim%deltarTe
+    params_Te(3) = r_peak
+
+    !!! paramas for radial temperature ions profiles
+    params_Ti(1) = sim%kappaTi
+    params_Ti(2) = sim%deltarTi
+    params_Ti(3) = r_peak
+
+
+    do ieta1 = 1, Nx
+       do ieta2 = 1, Ny 
+
+          x = sim%xgrid_2d(ieta1,ieta2)
+          y = sim%ygrid_2d(ieta1,ieta2)
+
+          sim%n0_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_n0)
+          sim%Ti_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Ti) 
+          sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
+       end do
+    end do
 
     !--> Initialization of B(x,y)
     SLL_ALLOCATE(sim%B_xy(Nx,Ny),ierr)
