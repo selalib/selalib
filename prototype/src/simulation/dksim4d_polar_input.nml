@@ -7,8 +7,8 @@
   r_max        = 14.5
   z_min      = 0.
   z_max      = 1506.759067
-  v_min     = -6.
-  v_max     = 6.
+  v_min     = -7.32
+  v_max     = 7.32
 /
 
 &equilibrium
@@ -20,9 +20,9 @@
   deltarTi = 1.45
   kappaTe  = 0.27586
   deltarTe = 1.45
-  QN_case  = "SLL_NO_QUASI_NEUTRAL"
+  !QN_case  = "SLL_NO_QUASI_NEUTRAL"
   !QN_case  = "SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW"
-  !QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
+  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
   poisson2d_BC_rmin = "SLL_NEUMANN_MODE_0"
   poisson2d_BC_rmax = "SLL_DIRICHLET"
 /
@@ -35,12 +35,14 @@
 /
 
 &sim_params
-  dt                = 8.
-  number_iterations = 100
-  time_loop_case = "SLL_TIME_LOOP_EULER" 
-  !time_loop_case = "SLL_TIME_PREDICTOR_CORRECTOR"
-  charac2d_case =  "SLL_CHARAC_EULER"
-  !charac2d_case =  "SLL_CHARAC_VERLET"
+  dt                = 8
+  !number_iterations = 100
+  number_iterations = 400
+  freq_diag_time = 1
+  !time_loop_case = "SLL_TIME_LOOP_EULER" 
+  time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
+  !charac2d_case =  "SLL_CHARAC_EULER"
+  charac2d_case =  "SLL_CHARAC_VERLET"
   advect2d_case = "SLL_BSL"
   interp_x1x2 = "SLL_CUBIC_SPLINES"
   phi_interp_x1x2 = "SLL_CUBIC_SPLINES"
