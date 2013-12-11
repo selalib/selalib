@@ -28,7 +28,9 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_common_array_initializers_module
   use sll_mudpack_curvilinear
   use sll_module_poisson_2d_elliptic_solver
-  !use sll_parallel_array_initializer_module
+  use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
+  use sll_timer
   use sll_fft
   implicit none
   
@@ -66,7 +68,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    class(sll_poisson_2d_base), pointer   :: poisson
    !type(poisson_2d_periodic), pointer   :: poisson
    !type(sll_plan_poisson_polar), pointer :: poisson 
-   ! type(mudpack_2d) :: poisson
+    type(mudpack_2d) :: poisson2
     
    !time_iterations
    sll_real64 :: dt
@@ -80,10 +82,13 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    sll_int32  :: quadrature_type1
    sll_int32  :: quadrature_type2
    !boundaries conditions 
-   sll_int32, intent(in)  :: bc_eta1_left
-   sll_int32, intent(in)  :: bc_eta1_right
-   sll_int32, intent(in)  :: bc_eta2_left
-   sll_int32, intent(in)  :: bc_eta2_right    
+   sll_int32  :: bc_eta1_left
+   sll_int32  :: bc_eta1_right
+   sll_int32  :: bc_eta2_left
+   sll_int32  :: bc_eta2_right
+   ! for QNS spline_degre in each direction
+   sll_int32  :: spline_degree_eta1
+   sll_int32  :: spline_degree_eta2    
   contains
     procedure, pass(sim) :: run => run_gc2d_curvilinear
     procedure, pass(sim) :: init_from_file => init_fake
@@ -192,8 +197,10 @@ contains
     sim%num_iterations = nb_step
     sim%freq_diag = visu_step
     sim%freq_diag_time = 1
+    sim%spline_degree_eta1 = 3
+    sim%spline_degree_eta2 = 3
     sim%quadrature_type1 = ES_GAUSS_LEGENDRE
-    sim%quadrature_type2= ES_GAUSS_LEGENDRE
+    sim%quadrature_type2 = ES_GAUSS_LEGENDRE
     sim%bc_eta1_left = SLL_DIRICHLET
     sim%bc_eta1_right= SLL_DIRICHLET
     sim%bc_eta2_left = SLL_PERIODIC
@@ -432,7 +439,7 @@ contains
      !poisson solver
     select case(poisson_case)    
       case ("MUDPACK")     
-        call initialize_poisson_curvilinear_mudpack(sim%poisson,&
+        call initialize_poisson_curvilinear_mudpack(sim%poisson2,&
          sim%transformation, &
          sim%b11,&
          sim%b12,&
@@ -452,25 +459,25 @@ contains
        case("ELLIPTIC_FINITE_ELEMENT_SOLVER")
         sim%poisson => new_poisson_2d_elliptic_solver( &
          sim%transformation,&
-         spline_degree_eta1, &
-         spline_degree_eta2, &
+         sim%spline_degree_eta1, &
+         sim%spline_degree_eta2, &
          nc_eta1, &
          nc_eta2, &
-         quadrature_type1, &
-         quadrature_type2, &
-         bc_eta1_left, &
-         bc_eta1_right, &
-         bc_eta2_left, &
-         bc_eta2_right, &
+         sim%quadrature_type1, &
+         sim%quadrature_type2, &
+         sim%bc_eta1_left, &
+         sim%bc_eta1_right, &
+         sim%bc_eta2_left, &
+         sim%bc_eta2_right, &
          eta1_min, &
          eta1_max, &
          eta2_min, &
          eta2_max, &
          sim%b11, & 
          sim%b12, & 
-         sim%21, & 
+         sim%b21, & 
          sim%b22, & 
-         sim%c ) &  
+         sim%c ) 
       case default
         print *,'#bad poisson_case',poisson_case
         print *,'#not implemented'
@@ -560,7 +567,7 @@ contains
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
     call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-    call compute_phi_from_rho(sim%poisson,phi,rho)
+    call sim%poisson%compute_phi_from_rho(phi, rho)
     call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
 
     
@@ -581,9 +588,9 @@ contains
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
       call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
-      call compute_phi_from_rho(sim%poisson, phi, rho) 
+      call sim%poisson%compute_phi_from_rho(phi, rho) 
       
-      call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+      call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
 !        call time_history_diagnostic_gc( &
@@ -618,8 +625,8 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
           call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-          call compute_phi_from_rho(sim%poisson, phi, rho)
-          call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+          call sim%poisson%compute_phi_from_rho(phi, rho)
+          call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
         case default  

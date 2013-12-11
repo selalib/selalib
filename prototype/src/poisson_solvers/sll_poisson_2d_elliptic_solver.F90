@@ -349,7 +349,8 @@ contains
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
    sll_int32 :: ierr
-    
+   
+   SLL_ALLOCATE(poisson,ierr)
    call initialize_poisson_2d_elliptic_solver(poisson, transf,&
    spline_degree_eta1, &
    spline_degree_eta2, &

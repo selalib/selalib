@@ -178,7 +178,7 @@ a21_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
+          SLL_HERMITE, &
           SLL_PERIODIC)                             
 !cxx_array = 1._f64          
 call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,cxx_array,cyy_array)          
@@ -189,8 +189,8 @@ call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,c
 call cxy_interp%compute_interpolants( cxy_array ) 
 
 call a12_a21_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,a12_array,a21_array)
-call ce_interp%compute_interpolants( a12_array ) 
-call ce_interp%compute_interpolants( a21_array ) 
+call a12_interp%compute_interpolants( a12_array ) 
+call a21_interp%compute_interpolants( a21_array ) 
 
 call coefx_array(eta1_min,eta2_min,delta1,delta2,nx,ny,cx_array)
 call cx_interp%compute_interpolants( cx_array ) 
