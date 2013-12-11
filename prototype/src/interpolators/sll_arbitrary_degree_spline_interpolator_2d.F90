@@ -75,6 +75,7 @@ use sll_utilities
     procedure, pass:: interpolate_array => interpolate_array_ad2d
     procedure, pass:: interpolate_array_disp => interpolate_2d_array_disp_ad2d
     procedure, pass:: get_coefficients => get_coefficients_ad2d
+    procedure, pass:: delete => delete_arbitrary_degree_2d_interpolator
 #endif
   end type arb_deg_2d_interpolator
 

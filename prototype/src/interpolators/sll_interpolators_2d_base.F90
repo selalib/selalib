@@ -63,6 +63,12 @@ module sll_module_interpolators_2d_base
 
      procedure(get_coeffs_2d), &
           pass,deferred :: get_coefficients
+
+     procedure(delete_interpolator_2d), & 
+          pass, deferred :: delete
+ 
+    ! generic, public :: delete => del !operator(delete) => del!
+     
   end type sll_interpolator_2d_base
   
 
@@ -200,6 +206,13 @@ module sll_module_interpolators_2d_base
        class(sll_interpolator_2d_base), intent(in) :: interpolator
        sll_real64, dimension(:,:), pointer         :: get_coeffs_2d     
      end function get_coeffs_2d
+  end interface
+
+  abstract interface 
+     subroutine delete_interpolator_2d(interpolator)
+       import sll_interpolator_2d_base
+       class(sll_interpolator_2d_base), intent(inout) :: interpolator
+     end subroutine delete_interpolator_2d
   end interface
 
 end module sll_module_interpolators_2d_base
