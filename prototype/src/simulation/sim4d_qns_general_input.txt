@@ -1,6 +1,6 @@
 &sim_params
-  dt = 0.005
-  number_iterations = 10
+  dt = 0.01
+  number_iterations = 500
 
 /
 &grid_dims

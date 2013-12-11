@@ -121,19 +121,23 @@ program qns_4d_general
        transformation_x, &
        sll_landau_initializer_4d,&! sll_periodic_periodic_gaussian2002_initializer_4d, &
        landau_params, &
-       func_one,  &
+       func_one,  &  ! a11
        f_one_params, &
-       func_zero, &
+       func_zero, &   !a12
        f_zero_params, &
-       func_zero, &
+       func_zero, &   !a21
        f_zero_params, &
-       func_one,  &
+       func_one,  &   !a22
        f_one_params, &
-       func_zero, &
+       func_zero, &   !b1
        f_zero_params, &
-       func_zero, &
+       func_zero, &   !der1 b1
+       func_zero, &   !der2 b1
+       func_zero, &   ! b2
        f_zero_params, &
-       func_zero, &
+       func_zero, &   !der1 b2
+       func_zero, &   !der2 b2
+       func_zero, &   ! c
        f_zero_params, &
        SPL_DEG1, & 
        SPL_DEG2, & 
