@@ -28,6 +28,11 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   use sll_module_poisson_2d_polar_solver
+  use sll_module_poisson_2d_elliptic_solver
+  use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
+
+
   
   !use sll_parallel_array_initializer_module
 
@@ -133,6 +138,11 @@ contains
     class(sll_interpolator_2d_base), pointer   :: A2_interp2d
     class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
+    sll_real64, dimension(:,:), pointer :: b11
+    sll_real64, dimension(:,:), pointer :: b12
+    sll_real64, dimension(:,:), pointer :: b21
+    sll_real64, dimension(:,:), pointer :: b22
+    sll_real64, dimension(:,:), pointer :: c
     character(len=256)      :: advect2d_case 
     character(len=256)      :: charac2d_case
     character(len=256)      :: f_interp2d_case 

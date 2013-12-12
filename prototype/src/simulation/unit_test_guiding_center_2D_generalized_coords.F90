@@ -77,7 +77,7 @@ program gc_2d_general
   
   !call simulation%init_from_file(filename_local)
     simulation%dt = 0.1_f64
-    simulation%num_iterations = 600
+    simulation%num_iterations = 5 !600
     simulation%carac_case = 3
     simulation%time_scheme = 2
     simulation%visu_step = 100
