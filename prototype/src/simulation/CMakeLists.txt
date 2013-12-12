@@ -25,24 +25,24 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        sll_poisson_solvers
                        mudpack
                        sll_fft
-		       sll_distribution_function
-		       sll_general_coordinate_elliptic_solvers
-		       deboor_splines
-		       #sll_scalar_field_1d_alternative
-		       sll_scalar_field_2d_alternative
+		           sll_distribution_function
+		           sll_general_coordinate_elliptic_solvers
+		           deboor_splines
+		           #sll_scalar_field_1d_alternative
+		           sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
                        sll_splines
-		       sll_integration
-		       sll_reduction
+		           sll_integration
+		           sll_reduction
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
                        sll_utilities
                        sll_common_array_initializers
-		       sll_timer
+		           sll_timer
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
@@ -180,6 +180,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
      simulation_4d_vlasov_poisson_polar.F90
      simulation_4d_drift_kinetic_polar.F90
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
+     simulation_4d_vp_eulerian_cartesian_finite_volume.F90	
      simulation_6d_vlasov_poisson_cartesian.F90 )
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
@@ -187,11 +188,11 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_poisson_solvers
                        sll_multigrid
                        sll_fft
-		       sll_distribution_function
-		       sll_general_coordinate_elliptic_solvers
-		       deboor_splines
-		       #sll_scalar_field_1d_alternative
-		       sll_scalar_field_2d_alternative
+		           sll_distribution_function
+		           sll_general_coordinate_elliptic_solvers
+		           deboor_splines
+		           #sll_scalar_field_1d_alternative
+		           sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
@@ -201,14 +202,15 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_remap
                        sll_collective
                        sll_parallel_utilities
-		       sll_integration
-		       sll_reduction
+                       sll_mesh_calculus
+		           sll_integration
+		           sll_reduction
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
                        sll_file_io_parallel
                        sll_utilities
-		       sll_timer
+		           sll_timer
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
@@ -236,6 +238,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    ADD_SIMULATION(4d_dk_polar)
    ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)
+   ADD_SIMULATION(4d_vp_eulerian_cartesian_finite_volume)
 
    # Add postprocessing code for KEEN
    ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
