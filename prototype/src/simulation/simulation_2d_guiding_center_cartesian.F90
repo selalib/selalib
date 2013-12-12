@@ -190,7 +190,7 @@ contains
     x1_max = 2._f64*sll_pi/k_mode
     x2_min = 0._f64
     x2_max = 2._f64*sll_pi
-    nb_step = 600
+    nb_step = 30
     
     dt = 0.1_f64
     visu_step = 100
