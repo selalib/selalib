@@ -296,6 +296,15 @@ contains
         eta2_min, &
         eta2_max )
         
+    ! compute matrix the field
+    print *,'Compute matrix the field'
+    call factorize_mat_es(&
+       poisson%elliptic_solver, &
+       poisson%a11_field, &
+       poisson%a12_field,&
+       poisson%a21_field,&
+       poisson%a22_field,&
+       poisson%c_field)    
         
  end subroutine initialize_poisson_2d_elliptic_solver
  
