@@ -2,7 +2,7 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-filename = 'DK4d_diag_d00000.h5'
+filename = 'DK4d_diag_d00001.h5'
 f_diag = ut.loadHDF5(filename)
 print "HDF5 file read = " + filename
 
@@ -70,11 +70,11 @@ mpp.ylabel('y')
 mpp.title('nrj_tot')
 mpp.plot(f_diag.nrj_tot)
 
-ax10 = fig.add_subplot(2,6,9)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('relative_error_masse')
-mpp.plot(f_diag.relative_error_masse)
+#ax10 = fig.add_subplot(2,6,9)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('relative_error_masse')
+#mpp.plot(f_diag.relative_error_masse)
 
 ax11 = fig.add_subplot(2,6,10)
 mpp.xlabel('x')
