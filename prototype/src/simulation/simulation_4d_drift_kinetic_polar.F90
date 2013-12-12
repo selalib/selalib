@@ -232,7 +232,8 @@ contains
     class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
     class(sll_interpolator_2d_base), pointer   :: f_interp2d
-    
+    sll_real64 :: charac2d_tol
+    sll_int32 :: charac2d_maxiter
 
 
 
@@ -336,6 +337,8 @@ contains
       charac2d_case, &
       time_loop_case, &
       advect2d_case, &
+      charac2d_tol, &
+      charac2d_maxiter, &
       interp_x1x2, &
       phi_interp_x1x2, &
       phi_interp_x3, &
@@ -649,7 +652,12 @@ contains
           eta1_min = sim%m_x1%eta_min, &
           eta1_max = sim%m_x1%eta_max, &
           eta2_min = sim%m_x2%eta_min, &
-          eta2_max = sim%m_x2%eta_max)
+          eta2_max = sim%m_x2%eta_max, &
+          x1_maxiter = charac2d_maxiter, &
+          x2_maxiter = charac2d_maxiter, &
+          x1_tol = charac2d_tol, &
+          x2_tol = charac2d_tol)
+
       case default
         print *,'#bad choice for charac_case', charac2d_case
         print *,'#in init_dk4d_polar'
@@ -1322,12 +1330,37 @@ contains
     class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     sll_int32 :: i,ierr,nc_x1
     sll_real64 :: x1,delta_x1,rpeak,tmp,x1_min,x1_max
+    sll_real64 :: inv_Ln
+    sll_real64 :: inv_LTi
+    sll_real64 :: inv_LTe
+    sll_real64 :: R0
+    sll_real64 :: x3_min
+    sll_real64 :: x3_max
+    sll_real64 :: deltarn
+    sll_real64 :: deltarTi
+    sll_real64 :: deltarTe
+    sll_real64 :: Lr
+    sll_real64 :: Lz
     
     nc_x1 = sim%m_x1%num_cells
     delta_x1 = sim%m_x1%delta_eta
     x1_min = sim%m_x1%eta_min
     x1_max = sim%m_x1%eta_max
+    x3_min = sim%m_x3%eta_min
+    x3_max = sim%m_x3%eta_max
     
+    Lr = x1_max-x1_min
+    Lz = x3_max-x3_min
+    
+    R0 = Lz/(2._f64*sll_pi)
+    inv_Ln = sim%kappan/R0
+    inv_LTi = sim%kappaTi/R0
+    inv_LTe = sim%kappaTe/R0
+    deltarn = sim%deltarn * Lr
+    deltarTi = sim%deltarTi * Lr
+    deltarTe = sim%deltarTe * Lr
+    
+   
     SLL_ALLOCATE(sim%n0_r(nc_x1+1),ierr)
     SLL_ALLOCATE(sim%Ti_r(nc_x1+1),ierr)
     SLL_ALLOCATE(sim%Te_r(nc_x1+1),ierr)
@@ -1336,10 +1369,17 @@ contains
     rpeak = x1_min+sim%rho_peak*(x1_max-x1_min)
     do i=1,nc_x1+1
       x1 = x1_min+real(i-1,f64)*delta_x1
-      sim%n0_r(i) = exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
-      sim%Ti_r(i)=exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))    
-      sim%Te_r(i)=exp(-sim%kappaTe*sim%deltarTe*tanh((x1-rpeak)/sim%deltarTe))
-      sim%dlog_density_r(i) = -sim%kappan*cosh((x1-rpeak)/sim%deltarn)**(-2)    
+      !sim%n0_r(i) = exp(-sim%kappan*sim%deltarn*tanh((x1-rpeak)/sim%deltarn))
+      !sim%Ti_r(i)=exp(-sim%kappaTi*sim%deltarTi*tanh((x1-rpeak)/sim%deltarTi))    
+      !sim%Te_r(i)=exp(-sim%kappaTe*sim%deltarTe*tanh((x1-rpeak)/sim%deltarTe))
+      !sim%dlog_density_r(i) = -sim%kappan*cosh((x1-rpeak)/sim%deltarn)**(-2)    
+
+      sim%n0_r(i) = exp(-inv_Ln*deltarn*tanh((x1-rpeak)/deltarn))
+      sim%Ti_r(i)=exp(-inv_LTi*deltarTi*tanh((x1-rpeak)/deltarTi))    
+      sim%Te_r(i)=exp(-inv_LTe*deltarTe*tanh((x1-rpeak)/deltarTe))
+      sim%dlog_density_r(i) = -inv_Ln*cosh((x1-rpeak)/deltarn)**(-2)    
+
+
     enddo
     
     !we then change the normalization for n0_r
