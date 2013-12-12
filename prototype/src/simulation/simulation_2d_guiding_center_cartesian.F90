@@ -112,13 +112,12 @@ contains
     sll_real64 :: x1_max
     sll_real64 :: x2_min
     sll_real64 :: x2_max
-    sll_real64 :: r_minus
-    sll_real64 :: r_plus
     sll_real64 :: eps
     sll_real64 :: k_mode
     sll_int32  :: nb_step
     sll_real64 :: dt
     sll_int32 :: visu_step
+    sll_int32 :: mudpack_method 
     class(sll_interpolator_2d_base), pointer :: f_interp2d
     class(sll_interpolator_2d_base), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
@@ -168,7 +167,10 @@ contains
     
     !poisson_case = "SLL_PHI_FROM_RHO"
     poisson_case = "SLL_E_FROM_RHO"
-    
+    mudpack_method = SLL_SEPARABLE
+                   ! SLL_SEPARABLE
+                   ! SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS
+                   ! SLL_NON_SEPARABLE_WITH_CROSS_TERMS
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -362,7 +364,7 @@ contains
           bc_eta1_right = SLL_PERIODIC,& 
           bc_eta2_left = SLL_PERIODIC,& 
           bc_eta2_right = SLL_PERIODIC,&
-          mudpack_case = SLL_SEPARABLE, &
+          mudpack_case = mudpack_method, &
           cxx = 1._f64, &
           cyy = 1._f64)
 
