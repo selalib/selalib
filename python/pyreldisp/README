@@ -1,0 +1,193 @@
+********************************************************
+*  File: README
+*  Date: 2013-12-11
+*
+*  README for PYRELDISP package
+*
+*  Contact persons:
+*   - Eric Sonnendrucker   : sonnen@ipp.mpg.de
+*   - Virginie Grandgirard : virginie.grandgirard@cea.fr
+*   - Matthieu Haeffele    : matthieu.haefele@ipp.mpg.de
+*   - Michel Mehrenberger  : mehrenbe@math.unistra.fr
+********************************************************
+
+-----------------------------------------------
+Contents
+-----------------------------------------------
+
+* Package Description
+------------------
+ A. Licence information
+ B. General description
+
+* Building the Code
+-------------------
+ A. Preliminaries
+ B. Compiling
+
+* Running the Code
+------------------
+ A. Running existing cases
+ B. Creating new cases
+
+
+**********************************
+* Package Description
+**********************************
+
+  A. Licence information 
+  --------------------------
+
+  The PYRELDISP package is based on the ZEAL package 
+   that can be downloaded from the Computer Physics 
+   Communications Program Library at
+     http://cpc.cs.qub.ac.uk/summaries/ADKW_v1_0.html
+  The reference is :
+      P. Kravanja, M. Van Barel, O. Ragos, M.N. Vrahatis, 
+      F.A. Zafiropoulos,
+      ZEAL: a mathematical software package for computing zeros 
+            of analytic functions.
+      Comput. Phys. Commun. 124 (2000) 212.
+
+
+  B. General description
+  --------------------------
+  
+  The PYRELDISP package provided a python interface to
+   calculate for given dispersion relation several informations as:
+    - frequency and growth rate of the modes,
+    - most unstable modes,
+    - eigenvector profiles, ...
+   In this first release the dispersion relations treated are the one
+    associated to:
+    - landau 1D problem,
+    - bump-on-tail case and
+    - drift-kinetic cylindrical 4D case.
+
+
+**********************************
+* Building the Code
+**********************************
+
+  A. Preliminaries
+  --------------------------
+
+  The PYRELDISP repository contains:
+    - a directory zeal_src/: which contains the fortran sources 
+        of ZEAL package
+    - python scripts
+    - .pyf files for interface between fortran and python
+       --> f2py is used to create this interface 
+           between both languages
+
+    Remark: On an ubuntu Linux, you could install the following
+     packages in order to be ready to use this software 
+      apt-get install gfortran
+      apt-get install python-scipy 
+      apt-get install python-dev
+      apt-get install python-matplotlib
+      apt-get install python-tk
+      apt-get install libatlas-base-dev
+
+
+  B. Compiling
+  --------------------------
+
+  The PYRELDISP package can be installed as follows:
+    1) Edit the 'setup.cfg' file and providing 
+        the needed compiler and libraries information 
+        (LAPACK is needed)
+
+       The following information should typically be provided :
+        - Fortran compilers : 'f77exec', 'f90exec' 
+        - Name of the lapack library : 'libraries'
+
+    2) Type the python command:
+        "python setup.py install" 
+
+    Rk: The compiling is done in a directory 'build/'.
+        If you want to recompile do not forget to delete it:
+	"rm -rf build/ ; python setup.py install"  
+
+
+**********************************
+* Running the Code
+**********************************
+
+  A. Running existing cases
+  --------------------------
+    
+    Three different cases are currently available
+     1) For Landau dispersion relation ('landau' extension used),
+         run python script 'landau.py':
+	
+     2) For Bump-On-Tail dispersion relation ('BOT' extension used),
+         run python script 'BOT.py':
+     
+     3) For gyrokinetic dispersion relation ('gyrokin' extension used)
+         (Rk: Corresponds to the 4D drift-kinetic cylindrical case 
+	       at the moment),
+         run python script 'gyrokin.py'
+ 
+     Rk: To run a python script, several ways are possible:
+           a) - Open a python interface by typing "python"
+              - Then, in python interface 
+                  >> execfile('landau.py')
+                or
+                  >> %run landau.py
+           b) Type directly: "python landau.py"
+           c) Type directly: "ipython landau.py"
+
+
+  B. Creating new cases
+  --------------------------
+  
+  For the following, let us called 'newcase' the new case
+   that we want to add. 
+  To be able to treat a new dispersion relation associated to
+   this new case 'newcase', you need:
+    1) To create at least the following files:    
+      1.1) 'fun_newcase.f90'  : which contains the definition of the
+          dispersion relation.
+    
+          BECAREFUL, for this file you have to respect the 
+           following rules:
+             - The name of the module must be 'Function_Input_Module'
+             - This module must contain the subroutine 'FDF' 
+                which correspond to the routine giving the
+    	       expression of the dispersion relation and 
+    	       its first derivative
+             - The function VALREG (always the same duplicated)
+	        
+           --> see 'fun_BOT.py' as example  
+                                
+      1.2) 'zeal_newcase.pyf': which describes the interface for f2py
+          BECAREFUL, this file must contains:
+	    - The interface for the module 'function_input_module'
+	    - Some common interfaces to all cases for the modules:
+	        'zout','zeal_input_module','split_module' 
+           --> see 'zeal_BOT.pyf as example
+   
+   2) To add the fact that you are going to create a new python 
+       library 'zealpy_newcase_.so'. 
+       ==> This must be done by editing and modifing the setup file
+            'setup.py' and adding the name of your new case 
+            in the 'pyreldisp_dic' directionary with a list 
+	    of the associated files which must be compiled.
+
+           Ex: pyreldisp_dic['newcase'] = ['fun_newcase.f90']
+
+   3) To recompile the PYRELDISP package. For this,
+        - delete the repository 'build/': "rm -r build"
+        - type "python setup.py install"
+      
+   4) To add python scripts, as follows:
+     4.1) 'newcase.py': main script which contains the call to 
+          the zealpy_newcase_.so library.
+	  --> see 'BOT.py as example
+
+     4.2) 'zealpy_newcase.py': which defines the class 'zealpy_newcase'
+     
+           BECAREFUL this class must inherit from the class 'zealpy',
+	    to be able to use the method 'get_zeros'
+         --> see 'zealpy_BOT.py as example
