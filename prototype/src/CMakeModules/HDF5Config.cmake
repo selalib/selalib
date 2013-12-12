@@ -66,7 +66,14 @@ IF(HDF5_FOUND)
       if( HDF5_HAVE_PARALLEL_DEFINE )
          set( HDF5_IS_PARALLEL TRUE )
       endif()
+      file( STRINGS "${HDF5_INCLUDE_DIR}/H5pubconf.h" 
+          HDF5_HAVE_GPFS_DEFINE
+          REGEX "HAVE_GPFS 1" )
+      if( HDF5_HAVE_GPFS_DEFINE )
+         set( HDF5_HAVE_GPFS TRUE )
+      endif()
    endif()
+
    set( HDF5_IS_PARALLEL ${HDF5_IS_PARALLEL} CACHE BOOL
        "HDF5 library compiled with parallel IO support" )
    mark_as_advanced( HDF5_IS_PARALLEL )
@@ -77,9 +84,14 @@ IF(HDF5_FOUND)
       MESSAGE(STATUS "HDF5 parallel not supported")
    ENDIF()
 
-   FIND_LIBRARY(GPFS_LIBRARY NAMES gpfs)
-   IF(GPFS_LIBRARY)
-      SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
+   set( HDF5_HAVE_GPFS ${HDF5_HAVE_GPFS} CACHE BOOL
+       "HDF5 library compiled with GPFS" )
+   MARK_AS_ADVANCED( HDF5_HAVE_GPFS )
+   IF(HDF5_HAVE_GPFS)
+      FIND_LIBRARY(GPFS_LIBRARY NAMES gpfs)
+      IF(GPFS_LIBRARY)
+         SET(HDF5_LIBRARIES ${HDF5_LIBRARIES} ${GPFS_LIBRARY})
+      ENDIF()
    ENDIF()
 
    INCLUDE_DIRECTORIES(${HDF5_INCLUDE_DIR})
