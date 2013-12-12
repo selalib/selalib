@@ -279,8 +279,9 @@ contains
     call poisson%rho_field%set_field_data( rho_values )
     call poisson%rho_field%update_interpolation_coefficients( )   
       
-    call initialize( &
-        poisson%elliptic_solver, &
+    !call initialize( &
+    !    poisson%elliptic_solver, &
+    poisson%elliptic_solver => new_general_elliptic_solver( &
         spline_degree_eta1, &
         spline_degree_eta2, &
         num_cells_eta1, &
@@ -407,8 +408,8 @@ contains
     delta2    = poisson%elliptic_solver%delta_eta2
     eta1_min  = poisson%elliptic_solver%eta1_min
     eta2_min  = poisson%elliptic_solver%eta2_min
-    nc_eta1   = poisson%elliptic_solver%num_cells1 + 1    
-    nc_eta2   = poisson%elliptic_solver%num_cells2 + 1
+    nc_eta1   = poisson%elliptic_solver%num_cells1 !+ 1    
+    nc_eta2   = poisson%elliptic_solver%num_cells2 !+ 1
     
     call poisson%rho_field%set_field_data(rho)
     call poisson%rho_field%update_interpolation_coefficients( )
