@@ -26,7 +26,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_mudpack_curvilinear
+  !use sll_mudpack_curvilinear
+  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -201,8 +202,8 @@ contains
     sim%spline_degree_eta2 = 3
     sim%quadrature_type1 = ES_GAUSS_LEGENDRE
     sim%quadrature_type2 = ES_GAUSS_LEGENDRE
-    sim%bc_eta1_left = SLL_DIRICHLET
-    sim%bc_eta1_right= SLL_DIRICHLET
+    sim%bc_eta1_left = SLL_PERIODIC!SLL_DIRICHLET
+    sim%bc_eta1_right= SLL_PERIODIC!SLL_DIRICHLET
     sim%bc_eta2_left = SLL_PERIODIC
     sim%bc_eta2_right= SLL_PERIODIC
     
@@ -439,30 +440,31 @@ contains
      !poisson solver
     select case(poisson_case)    
       case ("MUDPACK")     
-        call initialize_poisson_curvilinear_mudpack(sim%poisson2,&
+        !call initialize_poisson_curvilinear_mudpack(sim%poisson,&
+        sim%poisson => new_poisson_2d_mudpack_curvilinear_solver( &
          sim%transformation, &
-         sim%b11,&
-         sim%b12,&
-         sim%b21,&
-         sim%b22,&
-         sim%c,& 
          eta1_min,&
          eta1_max,&
          Nc_eta1,&
          eta2_min,&
          eta2_max,&
          Nc_eta2,&
-         SLL_PERIODIC,& 
-         SLL_PERIODIC,& 
-         SLL_PERIODIC,& 
-         SLL_PERIODIC)
+         sim%bc_eta1_left, &
+         sim%bc_eta1_right, &
+         sim%bc_eta2_left, &
+         sim%bc_eta2_right, &
+         sim%b11,&
+         sim%b12,&
+         sim%b21,&
+         sim%b22,&
+         sim%c)
        case("ELLIPTIC_FINITE_ELEMENT_SOLVER")
         sim%poisson => new_poisson_2d_elliptic_solver( &
          sim%transformation,&
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2, &
-         nc_eta1, &
-         nc_eta2, &
+         Nc_eta1, &
+         Nc_eta2, &
          sim%quadrature_type1, &
          sim%quadrature_type2, &
          sim%bc_eta1_left, &
