@@ -160,29 +160,29 @@ contains
     !here we do all the initialization
     !in future, we will use namelist file
 
-    nb_step = 1000
-    Nc_eta1 = 256
-    Nc_eta2 = 256
+    nb_step = 600
+    Nc_eta1 =  64
+    Nc_eta2 =  64
     dt = 0.1_f64
     visu_step = 100
     
-!    initial_function_case = "SLL_KHP1"
-!    k_mode = 0.5_f64
-!    eps = 0.015_f64
-!    eta1_min = 0._f64
-!    eta1_max = 2._f64*sll_pi/k_mode
-!    eta2_min = 0._f64
-!    eta2_max = 2._f64*sll_pi
-    
-    initial_function_case = "SLL_DIOCOTRON"
-    eta1_min = 1._f64
-    eta1_max = 10._f64
+    initial_function_case = "SLL_KHP1"
+    k_mode = 0.5_f64
+    eps = 0.015_f64
+    eta1_min = 0._f64
+    eta1_max = 2._f64*sll_pi/k_mode
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
-    r_minus = 4._f64
-    r_plus = 5._f64
-    k_mode = 3
-    eps = 1.e-6_f64
+    
+ !   initial_function_case = "SLL_DIOCOTRON"
+!    eta1_min = 1._f64
+!    eta1_max = 10._f64
+!    eta2_min = 0._f64
+!    eta2_max = 2._f64*sll_pi
+!    r_minus = 4._f64
+!    r_plus = 5._f64
+!    k_mode = 3
+!    eps = 1.e-6_f64
 
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
@@ -235,27 +235,27 @@ contains
       eta2_min , &
       eta2_max ) 
            
-!    sim%transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_identity_transformation", &
-!       sim%mesh_2d, &
-!       identity_x1, &
-!       identity_x2, &
-!       identity_jac11, &
-!       identity_jac12, &
-!       identity_jac21, &
-!       identity_jac22, &
-!       params_mesh   )  
-       
     sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_polar_transformation", &
+       "analytic_identity_transformation", &
        sim%mesh_2d, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, &
-       params_mesh  )     
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       params_mesh   )  
+       
+!    sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_polar_transformation", &
+!       sim%mesh_2d, &
+!       polar_x1, &
+!       polar_x2, &
+!       polar_jac11, &
+!       polar_jac12, &
+!       polar_jac21, &
+!       polar_jac22, &
+!       params_mesh  )     
 
 ! transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_collela_transformation", &
@@ -270,6 +270,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
+        print*," f interpolation SLL_CUBIC_SPLINES"
         f_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -291,6 +292,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
+       print*," A1_2d interpolation SLL_CUBIC_SPLINES"
         A1_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -300,6 +302,7 @@ contains
           eta2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
+       print*," A2_2d interpolation SLL_CUBIC_SPLINES"   
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -309,11 +312,13 @@ contains
           eta2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)  
+       print*," A1_1d interpolation SLL_CUBIC_SPLINES"   
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           SLL_HERMITE)
+       print*," A2_1d interpolation SLL_CUBIC_SPLINES"     
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
@@ -328,6 +333,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
+      print*," phi interpolation SLL_CUBIC_SPLINES"  
         phi_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -347,6 +353,7 @@ contains
 
     select case(charac2d_case)
       case ("SLL_EULER")
+         print*," charac = SLL_EULER"  
         charac2d => new_explicit_euler_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -356,7 +363,8 @@ contains
           eta2_max=eta2_max, &
           bc_type_1=SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC)    
-      case ("SLL_VERLET")      
+      case ("SLL_VERLET")    
+          print*," charac =SLL_VERLET"   
         charac2d => new_verlet_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -382,6 +390,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
+       print*,"advect2d = SLL_BSL "  
         sim%advect_2d => new_BSL_2d_advector(&
           f_interp2d, &
           charac2d, &
@@ -401,11 +410,13 @@ contains
     
     select case(initial_function_case)
       case ("SLL_KHP1")
+        print*,"f0 = SLL_KHP1"  
         sim%init_func => sll_KHP1_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = eps
         sim%params(2) = k_mode
       case("SLL_DIOCOTRON")
+        print*,"f0 = SLL_DIOCOTRON " 
         sim%init_func => sll_diocotron_initializer_2d
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = r_minus
@@ -423,8 +434,10 @@ contains
     !time_loop
     select case(time_loop_case)
       case ("SLL_EULER")
+        print*,"time_loop = SLL_EULER " 
         sim%time_loop_case = SLL_EULER
       case ("SLL_PREDICTOR_CORRECTOR")
+       print*,"time_loop = SLL_PREDICTOR_CORRECTOR " 
         sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
       case default
         print *,'#bad time_loop_case',time_loop_case
@@ -439,7 +452,8 @@ contains
     !poisson solver
      !poisson solver
     select case(poisson_case)    
-      case ("MUDPACK")     
+      case ("MUDPACK")    
+        print *,'poisson = MUDPACK'
         !call initialize_poisson_curvilinear_mudpack(sim%poisson,&
         sim%poisson => new_poisson_2d_mudpack_curvilinear_solver( &
          sim%transformation, &
@@ -459,6 +473,7 @@ contains
          sim%b22,&
          sim%c)
        case("ELLIPTIC_FINITE_ELEMENT_SOLVER")
+        print *,'poisson = ELLIPTIC_FINITE_ELEMENT_SOLVER '
         sim%poisson => new_poisson_2d_elliptic_solver( &
          sim%transformation,&
          sim%spline_degree_eta1, &
