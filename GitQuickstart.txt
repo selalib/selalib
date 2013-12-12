@@ -60,7 +60,7 @@ It will open a nice editor and help her to choose the right version. Close the e
 *She can now save her work on the local branch.
  git commit -m 'A new algorithm is available'
 
-*If morgane-branch nerver pushed, it exists only on her disk (invisible) ~~~~~(m--)m
+*If morgane-branch never pushed, it exists only on her disk (invisible) ~~~~~(m--)m
 But she wants to offer her new algorithm to the group.
 She goes back to the main branch:
  git checkout prototype-devel   (switch to prototype-devel)
