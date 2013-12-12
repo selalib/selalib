@@ -4,9 +4,11 @@
   num_cells_x3 = 10
   num_cells_x4 = 10
   r_min        = 0.1
-  r_max        = 1.   !14.5
+  r_max        = 14.5
   phi_min      = 0.
-  phi_max      = 1508.
+  !--> Lphi = Lz = 2*pi*R0 where R0 = minor_radius*aspect_ratio
+  !-->  ex: Lphi = 1508. with minor_radius = 14.5 and aspect_ratio = 16.5
+  phi_max      = 1508.  
   vpar_min     = -6.
   vpar_max     = 6.
 /
@@ -14,18 +16,18 @@
 &equilibrium
   tau0     = 1.
   rho_peak = 0.5
-  kappan   = 0.8
+  kappan   = 13.2   !-> inv_Ln = kappan/R0
   deltarn  = 0.2
-  kappaTi  = 4.
+  kappaTi  = 66.    !-> inv_LTi = kappaTi/R0
   deltarTi = 0.1
-  kappaTe  = 4.
+  kappaTe  = 66.    !-> inv_LTe = kappaTe/R0
   deltarTe = 0.1
 /
 
 &perturbation
   perturb_choice = 1
-  mmode          = 4
-  nmode          = 3
+  mmode          = 5
+  nmode          = 1
   eps_perturb    = 0.001
 /
 
