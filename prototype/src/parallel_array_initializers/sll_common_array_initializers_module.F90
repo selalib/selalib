@@ -241,7 +241,6 @@ contains
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_initializer_4d
 
-
   function sll_landau_mode_initializer_4d( x, y, vx, vy, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -272,6 +271,352 @@ contains
          (1.0_f64+eps*cos(kx*x)*cos(ky*y))*exp(-0.5_f64*(vx**2+vy**2))
   end function sll_landau_mode_initializer_4d
 
+
+  function sll_test_x_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_test_x_transport_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: kx
+
+    if( .not. present(params) ) then
+       print *, ' sll_test_x_transport_initializer, error: the params array', & 
+            'must be passed. params(1) = epsilon, params(2)=kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    t=params(11)
+    kx  =  2.0_f64 * sll_pi / (eta1_max - eta1_min)
+
+
+    !sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*(x-t))
+    sll_test_x_transport_initializer_v1v2x1x2 =sin(kx*(x-vx*t))
+    !sll_test_x_transport_initializer_v1v2x1x2 = exp(-4*x**2)
+
+  end function sll_test_x_transport_initializer_v1v2x1x2
+
+  function sll_test_y_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_test_y_transport_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_real64 :: kx
+
+    eta2_min = params(3)
+    eta2_max = params(4)
+    t=params(11)
+    kx  =  2.0_f64 * sll_pi / (eta2_max - eta2_min)
+    if( .not. present(params) ) then
+       print *, ' sll_test_y_transport_initializer, error: the params array', & 
+            'must be passed. params(1) = epsilon, params(2)=kx, params(3) = ky.'
+       stop
+    end if
+
+    sll_test_y_transport_initializer_v1v2x1x2 =sin(kx*(y-vy*t))
+    !sll_test_y_transport_initializer_v1v2x1x2 =exp(-4*y**2)
+    !sll_test_x_transport_initializer_v1v2x1x2 = 2_f64
+
+  end function sll_test_y_transport_initializer_v1v2x1x2
+
+
+  function sll_test_vx_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_test_vx_transport_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: kx,v,hh
+    if( .not. present(params) ) then
+       print *, ' sll_test_vx_transport_initializer, error: the params array', &
+            ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    t=params(11)
+    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+
+    !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
+    v=vx-t
+    hh=1
+    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    sll_test_vx_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh
+    !write(*,*) 'tini=',t
+
+!!$    sll_landau_initializer_v1v2x1x2 = 1
+!!$    if (x < 0) sll_landau_initializer_v1v2x1x2 = 0
+
+  end function sll_test_vx_transport_initializer_v1v2x1x2
+  function sll_test_vy_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_test_vy_transport_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+    sll_real64 :: v,hh
+    t=params(11)
+
+    if( .not. present(params) ) then
+       print *, ' sll_test_vy_transport_initializer, error: the params array', & 
+            'must be passed. params(1) = epsilon, params(2)=kx, params(3) = ky.'
+       stop
+    end if
+    v=vy-t
+    hh=1
+    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    sll_test_vy_transport_initializer_v1v2x1x2 =(1+(-3+(3-v**2)*v**2)*v**2)*hh
+    !sll_test_vy_transport_initializer_v1v2x1x2 =exp(-4*vy**2)
+    !sll_test_vy_transport_initializer_v1v2x1x2 = 2_f64
+
+  end function sll_test_vy_transport_initializer_v1v2x1x2
+
+  function sll_test_xvx_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_test_xvx_transport_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: kx,v,hh,xx
+    if( .not. present(params) ) then
+       print *, ' sll_test_xvx_transport_initializer, error: the params array', &
+            ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    t=params(11)
+    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+
+    !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
+    v=vx-t
+    xx=x-t*vx+t*t/2
+    hh=1
+    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    sll_test_xvx_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(kx*xx)
+
+  end function sll_test_xvx_transport_initializer_v1v2x1x2
+
+function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_test_yvy_transport_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_real64 :: ky,v,hh,yy
+    if( .not. present(params) ) then
+       print *, ' sll_test_yvy_transport_initializer, error: the params array', &
+            ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+       stop
+    end if
+
+    eta2_min = params(3)
+    eta2_max = params(4)
+    t=params(11)
+    ky  =  2. * sll_pi / (eta2_max - eta2_min)
+
+    !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
+    v=vy-t
+    yy=y-t*vy+t*t/2
+    hh=1
+    if ((v.gt.1).or.(v.lt.-1)) hh=0
+    sll_test_yvy_transport_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(ky*yy)
+
+  end function sll_test_yvy_transport_initializer_v1v2x1x2
+
+
+!!$function sll_test_transport_2d_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+!!$    sll_real64 :: sll_test_transport_2d_initializer_v1v2x1x2
+!!$    sll_real64, intent(in) :: x
+!!$    sll_real64, intent(in) :: y
+!!$    sll_real64, intent(in) :: vx
+!!$    sll_real64, intent(in) :: vy
+!!$    sll_real64 :: t
+!!$
+!!$    sll_real64, dimension(:), intent(in), optional :: params
+!!$    sll_real64 :: eta1_min
+!!$    sll_real64 :: eta1_max
+!!$    sll_real64 :: kx,v,hh,xx
+!!$    if( .not. present(params) ) then
+!!$       print *, ' sll_test_xvx_transport_initializer, error: the params array', &
+!!$            ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+!!$       stop
+!!$    end if
+!!$
+!!$    eta1_min = params(1)
+!!$    eta1_max = params(2)
+!!$    eta2_min = params(3)
+!!$    eta2_max = params(4)
+!!$    t=params(11)
+!!$    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+!!$    ky  =  2. * sll_pi / (eta2_max - eta2_min)
+!!$
+!!$    !sll_test_vx_transport_initializer_v1v2x1x2 =exp(-4*(vx-t)**2)
+!!$    vvx=vx-t
+!!$    xx=x-t*vx+t*t/2
+!!$    vvy=vx-t
+!!$    yy=x-t*vy+t*t/2
+!!$    hh=1
+!!$    if ((v.gt.1).or.(v.lt.-1)) hh=0
+!!$    sll_test_transport_2d_initializer_v1v2x1x2=(1+(-3+(3-v**2)*v**2)*v**2)*hh*sin(kx*(xx-v*t))
+!!$
+!!$  end function sll_test_transport_2d_initializer_v1v2x1x2
+
+
+  function sll_landau_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_landau_1d_xvx_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64  :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_1d_initializer_v1v2x1x2, error: the params array', &
+            'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    !kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx=0.2_f64
+    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+
+    sll_landau_1d_xvx_initializer_v1v2x1x2 = factor1 * &
+         (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
+  end function sll_landau_1d_xvx_initializer_v1v2x1x2
+
+  function sll_landau_1d_yvy_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_landau_1d_yvy_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64  :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: ky
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_1d_initializer_v1v2x1x2, error: the params array', &
+            'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    ky  =  2. * sll_pi / (eta2_max - eta2_min)
+    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+
+    sll_landau_1d_yvy_initializer_v1v2x1x2 = factor1 * &
+         (1.0_f64+eps*cos(ky*y))*exp(-0.5_f64*(vy**2))
+  end function sll_landau_1d_yvy_initializer_v1v2x1x2
+
+
+  function sll_landau_2d_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_landau_2d_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: ky
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_initializer_4d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    ky = kx
+    factor1 = 1.0_f64/(2.0*sll_pi)
+    sll_landau_2d_initializer_v1v2x1x2 = factor1 * &
+         (1.0_f64+eps*cos(kx*x)*cos(ky*y))*exp(-0.5_f64*(vx**2+vy**2))
+
+  end function sll_landau_2d_initializer_v1v2x1x2
 
 
   ! this function is a 1D landau initializer used for debugging

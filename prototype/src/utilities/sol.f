@@ -19,7 +19,7 @@ c                            partir de la matrice triangularisee
 c          nsym              indice de probleme non symetrique
 c       sorties
 c          vkgs,vkgd,vkgi    matrice triangularisee (si ifac.eq.1)
-c          vfg               solution (si isol.eq.1)
+c          vu                solution (si isol.eq.1)
 c          energ             energie du systeme (si nsym.eq.0)
 c          ier               mis a 1 si pivot nul rencontre
 c
@@ -170,10 +170,15 @@ c=======================================================================
       implicit real(8) (a-h,o-z)
       dimension x(n),y(n)
       data zero/0.d0/
-c-----------------------------------------------------------------------
+c234567------------------------------------------------------------------
       scal=zero
       do i=1,n
-      scal=scal+x(i)*y(i)
+!      write(*,*) 'scal',n,i,x(i)*y(i)
+!!!!! horrible !!!!!
+c$$$         if (abs(x(i)).gt.1.d-20.and.abs(y(i)).gt.1.d-20)
+c$$$     &    scal=scal+x(i)*y(i) 
+         scal=scal+x(i)*y(i) 
       enddo
+!      write(*,*) 'finscal'
       return
       end
