@@ -88,7 +88,6 @@ contains
    sll_int32 :: ierr
 
 
-   !SLL_ALLOCATE(poisson,ierr)
     np_eta1 = num_cells_eta1 + 1
     np_eta2 = num_cells_eta2 + 1
     
@@ -105,7 +104,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)
-
+   
    call poisson%interp_rho%initialize( &
          np_eta1, &
          np_eta2, &
@@ -133,7 +132,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)     
-         
+          
      call poisson%interp_a12%initialize( &
          np_eta1, &
          np_eta2, &
@@ -147,7 +146,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)    
-         
+           
     call poisson%interp_a21%initialize( &
          np_eta1, &
          np_eta2, &
@@ -161,7 +160,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2) 
-         
+          
     call poisson%interp_a22%initialize( &
          np_eta1, &
          np_eta2, &
@@ -175,7 +174,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)   
-         
+      
     call poisson%interp_c%initialize( &
          np_eta1, &
          np_eta2, &
@@ -189,7 +188,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)   
-                                      
+                                     
     poisson%a11_field => new_scalar_field_2d_discrete_alt( &
          "a11_check", &
          poisson%interp_a11, &
@@ -201,7 +200,7 @@ contains
    
     call poisson%a11_field%set_field_data( a11_values )
     call poisson%a11_field%update_interpolation_coefficients( )  
-    
+     
     poisson%a12_field => new_scalar_field_2d_discrete_alt( &
          "a12_check", &
          poisson%interp_a12, &
@@ -278,8 +277,9 @@ contains
    
     call poisson%rho_field%set_field_data( rho_values )
     call poisson%rho_field%update_interpolation_coefficients( )   
-      
-    call initialize( &
+   
+    SLL_ALLOCATE(poisson%elliptic_solver,ierr)
+    call initialize_general_elliptic_solver( &
         poisson%elliptic_solver, &
         spline_degree_eta1, &
         spline_degree_eta2, &
@@ -299,12 +299,12 @@ contains
     ! compute matrix the field
     print *,'Compute matrix the field'
     call factorize_mat_es(&
-       poisson%elliptic_solver, &
-       poisson%a11_field, &
-       poisson%a12_field,&
-       poisson%a21_field,&
-       poisson%a22_field,&
-       poisson%c_field)    
+        poisson%elliptic_solver, &
+        poisson%a11_field, &
+        poisson%a12_field,&
+        poisson%a21_field,&
+        poisson%a22_field,&
+        poisson%c_field)    
         
  end subroutine initialize_poisson_2d_elliptic_solver
  
