@@ -40,6 +40,7 @@ IF (NOT STDF95)
    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_base.F90
                                     sll_poisson_2d_fft.F90
                                     sll_poisson_2d_polar_solver.F90
+                                    sll_poisson_2d_periodic_solver.F90
                                     sll_poisson_3d_base.F90)
                                     
   IF(MUDPACK_ENABLED)                                    

@@ -7,11 +7,6 @@ sim => new_guiding_center_2d_cartesian()
 call sim%run( )
 
 
-
-sim => new_guiding_center_2d_cartesian()
-call sim%run( )
-
-
  print *,'#PASSED'
 
 end program guiding_center_2d_cartesian

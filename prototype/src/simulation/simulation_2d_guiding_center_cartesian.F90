@@ -27,15 +27,16 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_common_array_initializers_module
   use sll_mudpack_cartesian
   use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_periodic_solver
   !use sll_parallel_array_initializer_module
 
   implicit none
 
-#define POISSON_ABSTRACT
-  
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_PHI_FROM_RHO = 0
+  sll_int32, parameter :: SLL_E_FROM_RHO = 1
 
 
   type, extends(sll_simulation_base_class) :: &
@@ -57,14 +58,9 @@ module sll_simulation_2d_guiding_center_cartesian_module
 
    
    !poisson solver
-#ifdef POISSON_ABSTRACT   
    class(sll_poisson_2d_base), pointer   :: poisson
-#endif
-   !type(poisson_2d_periodic), pointer   :: poisson
-   !type(sll_plan_poisson_polar), pointer :: poisson 
-#ifndef POISSON_ABSTRACT 
-   type(mudpack_2d) :: poisson 
-#endif
+   sll_int32 :: poisson_case
+
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -137,6 +133,7 @@ contains
     character(len=256)      :: A_interp_case 
     character(len=256)      :: initial_function_case 
     character(len=256)      :: time_loop_case 
+    character(len=256)      :: poisson_solver
     character(len=256)      :: poisson_case
     sll_int32 :: ierr
     !character(len=256)      :: interp1d_x2_case 
@@ -166,7 +163,12 @@ contains
     initial_function_case = "SLL_KHP1" 
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-    poisson_case = "MUDPACK"   
+    !poisson_solver = "SLL_MUDPACK"   !use with "SLL_PHI_FROM_RHO"
+    poisson_solver = "SLL_POISSON_FFT"  !use with  "SLL_E_FROM_RHO"
+    
+    !poisson_case = "SLL_PHI_FROM_RHO"
+    poisson_case = "SLL_E_FROM_RHO"
+    
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -346,23 +348,9 @@ contains
     
     !poisson solver
      !poisson solver
-    select case(poisson_case)    
-      case ("MUDPACK")     
-#ifndef POISSON_ABSTRACT
-        call initialize_mudpack_cartesian(sim%poisson, & 
-          eta1_min= x1_min,&
-          eta1_max= x1_max,&
-          nc_eta1 = Nc_x1,&
-          eta2_min= x2_min,&
-          eta2_max= x2_max,&
-          nc_eta2 = Nc_x2,&
-          bc_eta1_left = SLL_PERIODIC,& 
-          bc_eta1_right= SLL_PERIODIC,& 
-          bc_eta2_left = SLL_PERIODIC,& 
-          bc_eta2_right= SLL_PERIODIC)
-#endif        
+    select case(poisson_solver)    
+      case ("SLL_MUDPACK")     
         !stop  
-#ifdef  POISSON_ABSTRACT         
         sim%poisson => new_poisson_2d_mudpack_solver( &
           eta1_min = x1_min,&
           eta1_max = x1_max,&
@@ -377,14 +365,39 @@ contains
           mudpack_case = SLL_SEPARABLE, &
           cxx = 1._f64, &
           cyy = 1._f64)
-#endif       
+
+      case ("SLL_POISSON_FFT")     
+        !stop  
+        sim%poisson => new_poisson_2d_periodic_solver( &
+          eta1_min = x1_min,&
+          eta1_max = x1_max,&
+          nc_eta1 = Nc_x1,&
+          eta2_min = x2_min,&
+          eta2_max = x2_max,&
+          nc_eta2 = Nc_x2)
+
          
+      case default
+        print *,'#bad poisson_solver',poisson_solver
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_cartesian'
+        stop
+    end select
+
+
+    select case(poisson_case)    
+      case ("SLL_PHI_FROM_RHO")     
+        sim%poisson_case = SLL_PHI_FROM_RHO
+      case ("SLL_E_FROM_RHO")
+        sim%poisson_case = SLL_E_FROM_RHO     
       case default
         print *,'#bad poisson_case',poisson_case
         print *,'#not implemented'
         print *,'#in initialize_guiding_center_2d_cartesian'
         stop
     end select
+
+
 
    
   end subroutine initialize_guiding_center_2d_cartesian
@@ -459,21 +472,31 @@ contains
         
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
-#ifndef POISSON_ABSTRACT    
-    call solve_mudpack_cartesian(sim%poisson,phi,-f)
-#else
-    call sim%poisson%compute_phi_from_rho( phi, -f )    
-#endif    
-    call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
-    print*,"PASSED"
+    !call sim%poisson%compute_phi_from_rho( phi, -f )    
+    !call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
+    !print*,"PASSED"
+
+    select case(sim%poisson_case) 
+      case (SLL_PHI_FROM_RHO)
+        call sim%poisson%compute_phi_from_rho( phi, -f )    
+        call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+      case (SLL_E_FROM_RHO)
+        call sim%poisson%compute_E_from_rho( A1, A2, f )        
+        phi = A1
+        A1 = A2
+        A2 = -phi
+     end select
+
+     call sll_gnuplot_write(A1,'A1_init',ierr)
+     call sll_gnuplot_write(A2,'A2_init',ierr)
     
     
     !print *,A1
     !print *,A2
     
-    open(unit = diag_id, file='diag_cartesian.dat',IOStat=IO_stat)
+    open(unit = diag_id, file='thdiag.dat',IOStat=IO_stat)
     if( IO_stat /= 0 ) then
-       print *, '#run_gc2d_cartesian (sim) failed to open file diag_catesian.dat'
+       print *, '#run_gc2d_cartesian (sim) failed to open file thdiag.dat'
        STOP
     end if
     
@@ -483,16 +506,19 @@ contains
       print*,"step= ", step
       f_old = f
 
-#ifndef POISSON_ABSTRACT    
-      call solve_mudpack_cartesian(sim%poisson,phi,-f_old)
-#else
-      call sim%poisson%compute_phi_from_rho( phi, -f_old )    
-#endif    
-      
+      select case(sim%poisson_case) 
+        case (SLL_PHI_FROM_RHO)
+          call sim%poisson%compute_phi_from_rho( phi, -f_old )    
+          call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+        case (SLL_E_FROM_RHO)
+          call sim%poisson%compute_E_from_rho( A1, A2, f_old )              
+          phi = A1
+          A1 = A2
+          A2 = -phi
+      end select
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
       !call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
       
-      call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
         call time_history_diagnostic_gc_cartesian( &
@@ -516,18 +542,23 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
-          !call poisson_solve_cartesian(sim%poisson,f,phi)
-#ifndef POISSON_ABSTRACT    
-          call solve_mudpack_cartesian(sim%poisson,phi,-f)
-#else
-          call sim%poisson%compute_phi_from_rho( phi, -f )    
-#endif    
-          
-          !call solve_mudpack_cartesian(sim%poisson, phi, -f)
-          
-          
-          
-          call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+
+          select case(sim%poisson_case) 
+            case (SLL_PHI_FROM_RHO)
+              call sim%poisson%compute_phi_from_rho( phi, -f_old )    
+              call compute_field_from_phi_2d_cartesian( &
+                phi, &
+                sim%mesh_2d, &
+                A1, &
+                A2, &
+                sim%phi_interp2d)      
+            case (SLL_E_FROM_RHO)
+              call sim%poisson%compute_E_from_rho( A1, A2, f_old )
+              phi = A1
+              A1 = A2
+              A2 = -phi              
+          end select
+
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
         case default  
@@ -544,6 +575,7 @@ contains
     
     close(diag_id)
 
+    print *,'#run_gc2d_cartesian PASSED'
     !print *,'#not implemented for the moment!'
   end subroutine run_gc2d_cartesian  
   
