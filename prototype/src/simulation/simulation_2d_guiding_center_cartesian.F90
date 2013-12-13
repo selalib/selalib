@@ -733,7 +733,7 @@ contains
     iplot = 0
 
     do step=1,nb_step+1
-      print*,"step= ", step
+      print*,"#step= ", step
       f_old = f
 
       select case(sim%poisson_case) 
