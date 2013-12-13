@@ -1,5 +1,5 @@
 import sys
-from params import params
+from pyreldisp_params import params
 
 #-------------------------------------------------------------
 # Class 'zealpy'  
