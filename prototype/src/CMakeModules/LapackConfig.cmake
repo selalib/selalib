@@ -12,10 +12,11 @@ IF(USE_MKL)
 
    SET(BLA_VENDOR "Intel")
 
-      INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
+      STRING(REGEX REPLACE "^([^:]*):" " " MKLROOT $ENV{MKLROOT})
+      INCLUDE_DIRECTORIES(${MKLROOT}/include/intel64/lp64 ${MKLROOT}/include)
       SET(BLAS_LIBRARIES " ")
       SET(BLAS_FOUND TRUE)
-      SET(LAPACK_LIBRARIES "-Wl,--start-group $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
+      SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
 
 ELSE()
@@ -48,8 +49,3 @@ ELSE(LAPACK_FOUND AND BLAS_FOUND)
   ENDIF(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
 
 ENDIF(LAPACK_FOUND AND BLAS_FOUND)
-
-MARK_AS_ADVANCED( LAPACK_LIBRARIES
-                  BLAS_LIBRARIES    )
-
-#SET(LINK_LIBRARIES ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})

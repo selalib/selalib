@@ -78,6 +78,19 @@ subroutine sll_gnuplot_write(array,array_name,error)
    write(file_id,"(a)")"pause -1 'Hit return to quit'"
    close(file_id)
 
+
+   open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
+   rewind(file_id)
+
+   !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
+   do ipoints = 1, npoints
+      write(file_id,*) array(ipoints)
+   end do
+   !write(file_id,"(a)")"e"
+   !write(file_id,"(a)")"pause -1 'Hit return to quit'"
+   close(file_id)
+
+
 end subroutine sll_gnuplot_write
 
 !> write a data file plotable by gnuplot to visualize a 2d field.

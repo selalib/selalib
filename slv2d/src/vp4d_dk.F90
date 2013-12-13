@@ -62,7 +62,12 @@ sll_real64, dimension(:,:),     pointer :: e_x
 sll_real64, dimension(:,:),     pointer :: e_y 
 sll_real64, dimension(:,:),     pointer :: profile 
 
-sll_int32  :: i,j,k,nbiter,scheme_case=2,qns_case=2
+sll_int32  :: i,j,k,nbiter,scheme_case=2,qns_case=1
+!scheme_case=1 EULER WITH 2DT
+!scheme_case=2 !PREDICTOR CORRECTOR
+!qns_case=0 !NO QUASI NEUTRAL
+!qns_case=1 !NO ZONAL FLOW
+!qns_case=2 !ZONAL FLOW
 sll_real64 :: dt
 sll_real64 :: R0     
 sll_int32  :: fdiag, fthdiag,adv_case(4) 
@@ -79,8 +84,10 @@ sll_int32 :: kmin(2),kmax(2)
 
 sll_real64 ::rpeak,deltarn,kappan,deltarTi,eps!,R0
 
-adv_case(1) = 2   !1: normal 2: delta-f
-adv_case(2) = 2   !1: BSL2D, 2: CSL2D
+sll_int32 :: ierr
+
+adv_case(1) = 1   !1: normal 2: delta-f
+adv_case(2) = 1   !1: BSL2D, 2: CSL2D
 adv_case(3:4) = (/4,8/)   ! for CSL2D (3,0): for ppm0; (3,1) for ppm1; (3,2) for ppm2 (4,d): for FD(2d+1)
 
 
@@ -201,7 +208,13 @@ iter=0
 !   
 !   !stop
 !   
-     
+
+   call sll_gnuplot_write(profile(1,:),'n0_r_init_slv2d',ierr)
+   call sll_gnuplot_write(profile(2,:),'Ti_r_init_slv2d',ierr)
+   call sll_gnuplot_write(profile(3,:),'Te_r_init_slv2d',ierr)
+   
+   call sll_gnuplot_write(rho_dk(:,1,1)/profile(1,:)-1._f64,'rho_slv2d_0',ierr)
+ 
    call solve_quasi_neutral(vlas2d,plan_poisson,rho_dk,phi,profile,qns_case)
    
    print *,'#delta=',deltarn/deltarTi
@@ -228,7 +241,7 @@ iter=0
    
    call transposevx(vlas2d,f4d)
    call thdiag(vlas2d,f4d,phi,real(iter,f64)*dt,jstartv,kmin,kmax)
-
+   
 
 do iter=1,nbiter
 
