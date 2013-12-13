@@ -57,6 +57,12 @@ contains
     
     if(Npts1>size(data_4d,1))then
       print *,'#Problem for size1 in compute_reduction_4d_to_3d_direction4'
+      print *,'#Npts=',(/Npts1,Npts2,Npts3,Npts4/)
+      print *,'#size(data_4d)=',(/ &
+        size(data_4d,1), &
+        size(data_4d,2), &
+        size(data_4d,3), &
+        size(data_4d,4) /)
       stop
     endif
     if(Npts2>size(data_4d,2))then
@@ -81,6 +87,7 @@ contains
               tmp = tmp + data_4d(i1,i2,i3,i4)
             end do
             data_3d(i1,i2,i3) = tmp*delta4
+            !data_3d(i1,i2,i3) = delta4*sum(data_4d(i1,i2,i3,1:Npts4-1))
           end do
         end do
       end do
