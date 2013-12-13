@@ -31,6 +31,8 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+  use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 
 
   
@@ -177,8 +179,8 @@ contains
     r_plus = 5._f64
     k_mode = 3
     eps = 1.e-6_f64
-    !nb_step = 600
-    nb_step = 30
+    nb_step = 600
+    !nb_step = 30
     
     dt = 0.1_f64
     !dt = 0.05_f64
@@ -194,7 +196,7 @@ contains
     time_loop_case = "SLL_PREDICTOR_CORRECTOR"    
     poisson_case = "POLAR_FFT"
     poisson_case = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER"
-    
+    poisson_case = "SLL_MUDPACK_CURVILINEAR"
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -403,11 +405,11 @@ contains
           polar_jac22, &
           params=(/0._f64,0._f64,0._f64,0._f64/))  
 
-          SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
-          SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
-          SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
-          SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
-          SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
         
         b11 = -1._f64
         b22 = -1._f64
@@ -436,6 +438,50 @@ contains
          b21, & 
          b22, & 
          c ) 
+
+      case ("SLL_MUDPACK_CURVILINEAR")     
+        transformation => new_coordinate_transformation_2d_analytic( &
+          "analytic_polar_transformation", &
+          sim%mesh_2d, &
+          polar_x1, &
+          polar_x2, &
+          polar_jac11, &
+          polar_jac12, &
+          polar_jac21, &
+          polar_jac22, &
+          params=(/0._f64,0._f64,0._f64,0._f64/))  
+
+        SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
+        
+        b11 = -1._f64
+        b22 = -1._f64
+        b12 = 0._f64
+        b21 = 0._f64
+        c = 0._f64
+
+
+        sim%poisson => new_poisson_2d_mudpack_curvilinear_solver( &
+         transformation, &
+         x1_min,&
+         x1_max,&
+         Nc_x1,&
+         x2_min,&
+         x2_max,&
+         Nc_x2,&
+         SLL_DIRICHLET, &
+         SLL_DIRICHLET, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         b11,&
+         b12,&
+         b21,&
+         b22,&
+         c)
+
 
       
           
@@ -538,13 +584,9 @@ contains
     iplot = 0
 
     do step=1,nb_step+1
+      print*,"#step= ", step
       f_old = f
-!#ifdef OLD_POISSON      
-!      call poisson_solve_polar(sim%poisson,f_old,phi)
-!#endif
-!#ifdef NEW_POISSON
       call sim%poisson%compute_phi_from_rho( phi, f_old )
-!#endif      
       call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
