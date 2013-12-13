@@ -346,12 +346,12 @@ contains
     end do
 
    ! !--> Initialization of n0(r), Ti(r) and Te(r)
-   ! SLL_ALLOCATE(sim%n0_r(Nr),ierr)
-   ! SLL_ALLOCATE(sim%Ti_r(Nr),ierr)
-   ! SLL_ALLOCATE(sim%Te_r(Nr),ierr)
-   ! sim%n0_r(:) = 0.0_f64
-   ! sim%Ti_r(:) = 0.0_f64
-   ! sim%Te_r(:) = 0.0_f64
+    SLL_ALLOCATE(sim%n0_r(Nr),ierr)
+    SLL_ALLOCATE(sim%Ti_r(Nr),ierr)
+    SLL_ALLOCATE(sim%Te_r(Nr),ierr)
+    sim%n0_r(:) = 0.0_f64
+    sim%Ti_r(:) = 0.0_f64
+    sim%Te_r(:) = 0.0_f64
 
     n0_rmin = 10._f64**19
     Ti_rmin = 1.3_f64
