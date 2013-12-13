@@ -356,12 +356,10 @@ contains
         call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, & 
            delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)
         
-        poisson%cxx_2d = -poisson%cxx_2d   
                       
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )
 
-        poisson%cyy_2d = -poisson%cyy_2d   
-            
+             
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )       
            
          poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -376,7 +374,6 @@ contains
         call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
           delta1,delta2,nx,ny,poisson%cxy_2d)  
 
-        poisson%cxy_2d = -poisson%cxy_2d   
 
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d )  
         
@@ -392,7 +389,6 @@ contains
         call coefx_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
           poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)
 
-        poisson%cx_2d = -poisson%cx_2d   
             
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
@@ -409,8 +405,6 @@ contains
           SLL_PERIODIC)    
         call coefy_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
           poisson%cyy_2d_interp,poisson%a12_interp,poisson%cy_2d)  
-
-        poisson%cy_2d = -poisson%cy_2d   
 
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
