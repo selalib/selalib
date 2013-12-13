@@ -1,4 +1,4 @@
-module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
+module sll_simulation_2d_guiding_center_curvilinear_module
 
 !the aim is to create guiding center cartesian in simulation class
 !related to
@@ -26,8 +26,12 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_mudpack_curvilinear
-  !use sll_parallel_array_initializer_module
+  !use sll_mudpack_curvilinear
+  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_module_poisson_2d_elliptic_solver
+  use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
+  use sll_timer
   use sll_fft
   implicit none
   
@@ -37,7 +41,7 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
 
 
   type, extends(sll_simulation_base_class) :: &
-    sll_simulation_2d_guiding_center_curvilinear_mudpack
+    sll_simulation_2d_guiding_center_curvilinear
 
    !geometry
    type(sll_logical_mesh_2d), pointer :: mesh_2d
@@ -60,11 +64,13 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
    sll_real64, dimension(:,:), pointer :: b21
    sll_real64, dimension(:,:), pointer :: b22
    sll_real64, dimension(:,:), pointer :: c
+   
    !poisson solver
-   !class(sll_poisson_2d_base), pointer   :: poisson
+   class(sll_poisson_2d_base), pointer   :: poisson
    !type(poisson_2d_periodic), pointer   :: poisson
    !type(sll_plan_poisson_polar), pointer :: poisson 
-    type(mudpack_2d) :: poisson 
+    type(mudpack_2d) :: poisson2
+    
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -73,13 +79,22 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
 
    !time_loop
    sll_int32 :: time_loop_case
-   
-       
+   ! quadrature 
+   sll_int32  :: quadrature_type1
+   sll_int32  :: quadrature_type2
+   !boundaries conditions 
+   sll_int32  :: bc_eta1_left
+   sll_int32  :: bc_eta1_right
+   sll_int32  :: bc_eta2_left
+   sll_int32  :: bc_eta2_right
+   ! for QNS spline_degre in each direction
+   sll_int32  :: spline_degree_eta1
+   sll_int32  :: spline_degree_eta2    
   contains
-    procedure, pass(sim) :: run => run_gc2d_curvilinear_mudpack
+    procedure, pass(sim) :: run => run_gc2d_curvilinear
     procedure, pass(sim) :: init_from_file => init_fake
      
-  end type sll_simulation_2d_guiding_center_curvilinear_mudpack
+  end type sll_simulation_2d_guiding_center_curvilinear
 
 
   abstract interface
@@ -96,20 +111,20 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
 
 contains
 
-  function new_guiding_center_2d_curvilinear_mudpack() result(sim)
-    type(sll_simulation_2d_guiding_center_curvilinear_mudpack), pointer :: sim    
+  function new_guiding_center_2d_curvilinear() result(sim)
+    type(sll_simulation_2d_guiding_center_curvilinear), pointer :: sim    
     sll_int32 :: ierr
     
     SLL_ALLOCATE(sim,ierr)
     
-    call initialize_guiding_center_2d_curvilinear_mudpack(sim)
+    call initialize_guiding_center_2d_curvilinear(sim)
     
   
   
-  end function new_guiding_center_2d_curvilinear_mudpack
+  end function new_guiding_center_2d_curvilinear
   
-  subroutine initialize_guiding_center_2d_curvilinear_mudpack(sim)
-    class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
+  subroutine initialize_guiding_center_2d_curvilinear(sim)
+    class(sll_simulation_2d_guiding_center_curvilinear), intent(inout) :: sim
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: eta1_min
@@ -145,29 +160,29 @@ contains
     !here we do all the initialization
     !in future, we will use namelist file
 
-    nb_step = 1000
-    Nc_eta1 = 256
-    Nc_eta2 = 256
+    nb_step = 600
+    Nc_eta1 =  64
+    Nc_eta2 =  64
     dt = 0.1_f64
     visu_step = 100
     
-!    initial_function_case = "SLL_KHP1"
-!    k_mode = 0.5_f64
-!    eps = 0.015_f64
-!    eta1_min = 0._f64
-!    eta1_max = 2._f64*sll_pi/k_mode
-!    eta2_min = 0._f64
-!    eta2_max = 2._f64*sll_pi
-    
-    initial_function_case = "SLL_DIOCOTRON"
-    eta1_min = 1._f64
-    eta1_max = 10._f64
+    initial_function_case = "SLL_KHP1"
+    k_mode = 0.5_f64
+    eps = 0.015_f64
+    eta1_min = 0._f64
+    eta1_max = 2._f64*sll_pi/k_mode
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
-    r_minus = 4._f64
-    r_plus = 5._f64
-    k_mode = 3
-    eps = 1.e-6_f64
+    
+ !   initial_function_case = "SLL_DIOCOTRON"
+!    eta1_min = 1._f64
+!    eta1_max = 10._f64
+!    eta2_min = 0._f64
+!    eta2_max = 2._f64*sll_pi
+!    r_minus = 4._f64
+!    r_plus = 5._f64
+!    k_mode = 3
+!    eps = 1.e-6_f64
 
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
@@ -177,13 +192,20 @@ contains
     advect2d_case = "SLL_BSL" 
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-    poisson_case = "MUDPACK"   
+    poisson_case = "ELLIPTIC_FINITE_ELEMENT_SOLVER " !"MUDPACK"   
     
     sim%dt = dt
     sim%num_iterations = nb_step
     sim%freq_diag = visu_step
     sim%freq_diag_time = 1
-    
+    sim%spline_degree_eta1 = 3
+    sim%spline_degree_eta2 = 3
+    sim%quadrature_type1 = ES_GAUSS_LEGENDRE
+    sim%quadrature_type2 = ES_GAUSS_LEGENDRE
+    sim%bc_eta1_left = SLL_PERIODIC!SLL_DIRICHLET
+    sim%bc_eta1_right= SLL_PERIODIC!SLL_DIRICHLET
+    sim%bc_eta2_left = SLL_PERIODIC
+    sim%bc_eta2_right= SLL_PERIODIC
     
     SLL_ALLOCATE(sim%b11(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b12(Nc_eta1+1,Nc_eta2+1),ierr)
@@ -193,8 +215,8 @@ contains
     
     do j=1,Nc_eta2+1
      do i=1,Nc_eta1+1
-        sim%b11(i,j)= 1._f64
-        sim%b22(i,j)= 1._f64
+        sim%b11(i,j)= -1._f64
+        sim%b22(i,j)= -1._f64
         sim%b12(i,j)= 0._f64
         sim%b21(i,j)= 0._f64
         sim%c(i,j) = 0._f64
@@ -213,27 +235,27 @@ contains
       eta2_min , &
       eta2_max ) 
            
-!    sim%transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_identity_transformation", &
-!       sim%mesh_2d, &
-!       identity_x1, &
-!       identity_x2, &
-!       identity_jac11, &
-!       identity_jac12, &
-!       identity_jac21, &
-!       identity_jac22, &
-!       params_mesh   )  
-       
     sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_polar_transformation", &
+       "analytic_identity_transformation", &
        sim%mesh_2d, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, &
-       params_mesh  )     
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       params_mesh   )  
+       
+!    sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_polar_transformation", &
+!       sim%mesh_2d, &
+!       polar_x1, &
+!       polar_x2, &
+!       polar_jac11, &
+!       polar_jac12, &
+!       polar_jac21, &
+!       polar_jac22, &
+!       params_mesh  )     
 
 ! transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_collela_transformation", &
@@ -248,6 +270,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
+        print*," f interpolation SLL_CUBIC_SPLINES"
         f_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -269,6 +292,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
+       print*," A1_2d interpolation SLL_CUBIC_SPLINES"
         A1_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -278,6 +302,7 @@ contains
           eta2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
+       print*," A2_2d interpolation SLL_CUBIC_SPLINES"   
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -287,11 +312,13 @@ contains
           eta2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)  
+       print*," A1_1d interpolation SLL_CUBIC_SPLINES"   
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           SLL_HERMITE)
+       print*," A2_1d interpolation SLL_CUBIC_SPLINES"     
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
@@ -306,6 +333,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
+      print*," phi interpolation SLL_CUBIC_SPLINES"  
         phi_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -325,6 +353,7 @@ contains
 
     select case(charac2d_case)
       case ("SLL_EULER")
+         print*," charac = SLL_EULER"  
         charac2d => new_explicit_euler_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -334,7 +363,8 @@ contains
           eta2_max=eta2_max, &
           bc_type_1=SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC)    
-      case ("SLL_VERLET")      
+      case ("SLL_VERLET")    
+          print*," charac =SLL_VERLET"   
         charac2d => new_verlet_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -360,6 +390,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
+       print*,"advect2d = SLL_BSL "  
         sim%advect_2d => new_BSL_2d_advector(&
           f_interp2d, &
           charac2d, &
@@ -379,11 +410,13 @@ contains
     
     select case(initial_function_case)
       case ("SLL_KHP1")
+        print*,"f0 = SLL_KHP1"  
         sim%init_func => sll_KHP1_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = eps
         sim%params(2) = k_mode
       case("SLL_DIOCOTRON")
+        print*,"f0 = SLL_DIOCOTRON " 
         sim%init_func => sll_diocotron_initializer_2d
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = r_minus
@@ -401,8 +434,10 @@ contains
     !time_loop
     select case(time_loop_case)
       case ("SLL_EULER")
+        print*,"time_loop = SLL_EULER " 
         sim%time_loop_case = SLL_EULER
       case ("SLL_PREDICTOR_CORRECTOR")
+       print*,"time_loop = SLL_PREDICTOR_CORRECTOR " 
         sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
       case default
         print *,'#bad time_loop_case',time_loop_case
@@ -417,24 +452,49 @@ contains
     !poisson solver
      !poisson solver
     select case(poisson_case)    
-      case ("MUDPACK")     
-        call initialize_poisson_curvilinear_mudpack(sim%poisson,&
+      case ("MUDPACK")    
+        print *,'poisson = MUDPACK'
+        !call initialize_poisson_curvilinear_mudpack(sim%poisson,&
+        sim%poisson => new_poisson_2d_mudpack_curvilinear_solver( &
          sim%transformation, &
-         sim%b11,&
-         sim%b12,&
-         sim%b21,&
-         sim%b22,&
-         sim%c,& 
          eta1_min,&
          eta1_max,&
          Nc_eta1,&
          eta2_min,&
          eta2_max,&
          Nc_eta2,&
-         SLL_PERIODIC,& 
-         SLL_PERIODIC,& 
-         SLL_PERIODIC,& 
-         SLL_PERIODIC)
+         sim%bc_eta1_left, &
+         sim%bc_eta1_right, &
+         sim%bc_eta2_left, &
+         sim%bc_eta2_right, &
+         sim%b11,&
+         sim%b12,&
+         sim%b21,&
+         sim%b22,&
+         sim%c)
+       case("ELLIPTIC_FINITE_ELEMENT_SOLVER")
+        print *,'poisson = ELLIPTIC_FINITE_ELEMENT_SOLVER '
+        sim%poisson => new_poisson_2d_elliptic_solver( &
+         sim%transformation,&
+         sim%spline_degree_eta1, &
+         sim%spline_degree_eta2, &
+         Nc_eta1, &
+         Nc_eta2, &
+         sim%quadrature_type1, &
+         sim%quadrature_type2, &
+         sim%bc_eta1_left, &
+         sim%bc_eta1_right, &
+         sim%bc_eta2_left, &
+         sim%bc_eta2_right, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         sim%b11, & 
+         sim%b12, & 
+         sim%b21, & 
+         sim%b22, & 
+         sim%c ) 
       case default
         print *,'#bad poisson_case',poisson_case
         print *,'#not implemented'
@@ -443,22 +503,22 @@ contains
     end select
 
    
-  end subroutine initialize_guiding_center_2d_curvilinear_mudpack
+  end subroutine initialize_guiding_center_2d_curvilinear
   
 
 
   subroutine init_fake(sim, filename)
-    class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
+    class(sll_simulation_2d_guiding_center_curvilinear), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
   
     print *,'# Do not use the routine init_vp4d_fake'
-    print *,'#use instead initialize_vlasov_par_poisson_seq_cart'
+    print *,'#use instead initialize_vlasov_par_poisson_seq_curv'
     stop
   
   end subroutine init_fake
   
-  subroutine run_gc2d_curvilinear_mudpack(sim)
-    class(sll_simulation_2d_guiding_center_curvilinear_mudpack), intent(inout) :: sim
+  subroutine run_gc2d_curvilinear(sim)
+    class(sll_simulation_2d_guiding_center_curvilinear), intent(inout) :: sim
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: delta_eta1
@@ -516,16 +576,16 @@ contains
           !x1 = sim%transformation%x1(eta1,eta2)
           !x2 = sim%transformation%x2(eta1,eta2)
           f(i1,i2) =  sim%init_func(eta1,eta2,sim%params) 
-          phi(1,i2) = 0._f64
-          phi(Nc_eta1+1,i2) = 0._f64
+          !phi(1,i2) = 0._f64
+          !phi(Nc_eta1+1,i2) = 0._f64
         end do
      end do
         
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
     call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,rho)
-    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
+    call sim%poisson%compute_phi_from_rho(phi, rho)
+    call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
 
     
     !print *,A1
@@ -545,12 +605,12 @@ contains
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
       call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
-      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho) 
+      call sim%poisson%compute_phi_from_rho(phi, rho) 
       
-      call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+      call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
-!        call time_history_diagnostic_gc_cartesian( &
+!        call time_history_diagnostic_gc( &
 !          diag_id, &    
 !          step-1, &
 !          dt, &
@@ -559,7 +619,7 @@ contains
 !          phi, &
 !          A1, &
 !          A2)
-          call time_history_diagnostic_gc_cartesian2( &
+          call time_history_diagnostic_gc2( &
           diag_id, &    
           step-1, &
           dt, &
@@ -582,14 +642,14 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
           call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho)
-          call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
+          call sim%poisson%compute_phi_from_rho(phi, rho)
+          call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
-          print *,'#in run_gc2d_cartesian'
+          print *,'#in run_gc2d_curvilinear'
           print *,'#available options are:'
           print *,'#SLL_EULER=',SLL_EULER
           print *,'#SLL_PREDICTOR_CORRECTOR=',SLL_PREDICTOR_CORRECTOR
@@ -601,10 +661,10 @@ contains
     close(diag_id)
 
     !print *,'#not implemented for the moment!'
-  end subroutine run_gc2d_curvilinear_mudpack 
+  end subroutine run_gc2d_curvilinear
   
   
-  subroutine compute_field_from_phi_2d_curvilinear_mudpack(phi,mesh_2d,transformation,A1,A2,interp2d)
+  subroutine compute_field_from_phi_2d_curvilinear(phi,mesh_2d,transformation,A1,A2,interp2d)
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(out) :: A1
     sll_real64, dimension(:,:), intent(out) :: A2
@@ -642,7 +702,7 @@ contains
     
     
     
-  end subroutine compute_field_from_phi_2d_curvilinear_mudpack
+  end subroutine compute_field_from_phi_2d_curvilinear
 
 
   subroutine compute_rho(f,rho,mesh_2d,transformation)
@@ -680,7 +740,7 @@ contains
       
   end subroutine compute_rho 
   
-  subroutine time_history_diagnostic_gc_cartesian( &
+  subroutine time_history_diagnostic_gc( &
     file_id, &    
     step, &
     dt, &
@@ -766,9 +826,9 @@ contains
     
     write(file_id,*) dt*real(step,f64),linf,l1,l2,mass,e   
     
-  end subroutine time_history_diagnostic_gc_cartesian
+  end subroutine time_history_diagnostic_gc
 
-  subroutine time_history_diagnostic_gc_cartesian2( &
+  subroutine time_history_diagnostic_gc2( &
     file_id, &    
     step, &
     dt, &
@@ -874,7 +934,7 @@ contains
     call fft_delete_plan(pfwd)
 
     
-  end subroutine time_history_diagnostic_gc_cartesian2
+  end subroutine time_history_diagnostic_gc2
 
 #ifndef NOHDF5
 !*********************
@@ -952,4 +1012,4 @@ contains
 #endif
 
 
-end module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
+end module sll_simulation_2d_guiding_center_curvilinear_module
