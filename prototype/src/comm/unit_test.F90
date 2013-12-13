@@ -8,8 +8,8 @@ program comm_unit_test
 #define PROBLEM_SIZE 4
 
   type(sll_comm_real64), pointer :: comm
-  sll_real64, dimension(:), allocatable, target :: array1
-  sll_real64, dimension(:), allocatable, target :: array2
+  sll_real64, dimension(:), pointer :: array1
+  sll_real64, dimension(:), pointer :: array2
   sll_real64, dimension(:), pointer :: buf1
   sll_real64, dimension(:), pointer :: buf2
   sll_int32 :: count
@@ -23,55 +23,82 @@ program comm_unit_test
   rank = sll_get_collective_rank(sll_world_collective)
   size = sll_get_collective_size(sll_world_collective)
   comm => new_comm_real64( sll_world_collective, 2, PROBLEM_SIZE )
-  print *, 'created new comm...'
+  if(rank == 0) then
+     print *, 'created new comm, size = ', size
+     call flush()
+  end if
 
+  ! In this test the processors in the communicator are organized as a ring,
+  ! thus there are two ports which are linked with the left(1) and right(2).
   call sll_create_comm_real64_ring( comm )
-  print *, 'configured the comm as a ring'
-  
+
+  if(rank == 0) then
+     print *, 'configured the comm as a ring'
+     call flush()
+  end if
+
   SLL_ALLOCATE(array1(PROBLEM_SIZE),ierr)
-  SLL_ALLOCATE(array2(PROBLEM_SIZE),ierr)
+  SLL_ALLOCATE(array2(PROBLEM_SIZE),ierr) !not used
 
   do i=1,PROBLEM_SIZE
-     array1(i) = rank*(PROBLEM_SIZE)+i
+     array1(i) = rank*PROBLEM_SIZE+i
   end do
 
-  print *, 'rank: ', rank, 'array = ', array1(:)
+  print *, 'rank: ', rank, 'problem size: ', PROBLEM_SIZE, 'array = ', array1(:)
 
+!  call sll_view_port(comm,1)
+!  call sll_view_port(comm,2)
+
+  ! Load the buffer on port 1 with the data and send
   buf1 => get_buffer(comm,1)
-  print *, 'buf1 is asociated: ', associated(buf1)
-
   buf1(1:PROBLEM_SIZE) = array1(1:PROBLEM_SIZE)
-
   call comm_send_real64( comm, 1, PROBLEM_SIZE)
   print *, 'rank: ', rank, ' sent buffer 1'
-!!$  call sleep(2)
-!!$  buf2 => get_buffer(comm,1)
-
-!  print *, 'rank: ', rank, 'contents of buffer in port 2 : ', buf2(:)
-!  print *, 'rank: ', rank, ' reading from buffer in port 2: ', 
-!  buf2 => get_buffer(comm,2)
-!  call comm_receive_real64( comm, 2, count )
-  buf2 => get_buffer(comm,2)
-  buf2(1:PROBLEM_SIZE) = array1(1:PROBLEM_SIZE)
-  call comm_send_real64( comm, 2, PROBLEM_SIZE )
-  print *, 'rank: ', rank, 'sent buffer 2'
-
-  call comm_receive_real64( comm, 1, count )
-  print *, 'rank: ', rank, 'received buffer 1'
+!!$  call sll_view_port(comm, 1)
+!!$  call sll_view_port(comm, 2)
+  ! Just check that the proper behavior is obtained. i.e.: the port becomes
+  ! unavailable for a write after a send.
   buf1 => get_buffer(comm,1)
-!  print *, 'rank: ', rank, ' received buffer 2, count = ', count
-  print *, 'rank: ', rank, 'received contents of buffer in port 1 : ', buf1(:)
 
-  call comm_receive_real64( comm, 2, count )
-  print *, 'rank: ', rank, 'received buffer 2'
+!!$  if(.not. associated(buf1)) then
+!!$     print *, 'rank: ', rank, 'buffer 1 is not present for writing'
+!!$  else
+!!$     print *, 'rank: ', rank, 'buffer 1 IS present for writing'
+!!$  end if
+!!$
+
   buf2 => get_buffer(comm,2)
-!  print *, 'rank: ', rank, ' received buffer 2, count = ', count
-  print *, 'rank: ', rank, 'received contents of buffer in port 2 : ', buf2(:)
+
+!!$  if(.not. associated(buf2)) then
+!!$     print *, 'rank: ', rank, 'buffer 2 is not present for writing'
+!!$  else
+!!$     print *, 'rank: ', rank, 'buffer 2 IS present for writing'
+!!$  end if
+
+  ! Load the buffer on port 2 with the data and send.
+  buf2(1:PROBLEM_SIZE) = array1(1:PROBLEM_SIZE)
+  print *, 'rank: ', rank, 'sending buffer on port 2:', buf2
+  call comm_send_real64( comm, 2, PROBLEM_SIZE)
+
+!!$  call sll_view_port(comm, 1)
+!!$  call sll_view_port(comm, 2)
+
+  print *, 'rank: ', rank, ' sent buffer 2'
+
+  ! And now receive the data.
+  call comm_receive_real64( comm, 1, count )
+  print *, 'rank ', rank, ' received count on port 1', count
+  buf1 => get_buffer(comm,1)
+  print *, 'rank ', rank, 'buffer received on port 1: ', buf1
+  call comm_receive_real64( comm, 2, count )
+  print *, 'rank ', rank, ' received count on port 2 ', count
+  buf2 => get_buffer(comm,2)
+  print *, 'rank: ', rank, ' reading from buffer in port 2: ', buf2
  
 
   print *, 'proceeding to delete comm...'
   call delete_comm_real64( comm )
-  call sll_halt_collective( )
+
   print *, 'PASSED'
 
 end program comm_unit_test
