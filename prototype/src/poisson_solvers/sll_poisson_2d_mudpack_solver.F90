@@ -38,9 +38,6 @@ use sll_cubic_spline_interpolator_2d
 !use sll_poisson_2d_polar
 implicit none
 
-  integer, parameter :: SLL_SEPARABLE  = 1    !< type of equation
-  integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2    !< type of equation
-  integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
 
   
 
@@ -785,7 +782,6 @@ contains
         mudpack_wrapper => null() 
 
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
-      
         if(present(cxx_1d).or.present(cyy_1d).or.present(cx_1d)& 
           .or.present(cy_1d).or.present(cex_1d).or.present(cey_1d)) then
           print *,'#1d arrays should not be here'
@@ -804,7 +800,7 @@ contains
           stop        
         endif
         if(present(cxx_2d))then
-          if(size(cxx_2d)< (nc_eta1+1)*(nc_eta2+1))then
+          if((size(cxx_2d,1)< (nc_eta1+1)).or.(size(cxx_2d,2)< (nc_eta2+1)))then
             print *,'#Bad size for cxx_2d',size(cxx_2d),(nc_eta1+1)*(nc_eta2+1)
             stop
           endif
@@ -828,7 +824,7 @@ contains
           stop        
         endif        
         if(present(cxy_2d))then
-          if(size(cxy_2d)< (nc_eta1+1)*(nc_eta2+1))then
+          if((size(cxy_2d,1)< (nc_eta1+1)).or.(size(cxy_2d,2)< (nc_eta2+1)))then
             print *,'#Bad size for cxy_2d',size(cxy_2d),(nc_eta1+1)*(nc_eta2+1)
             stop
           endif
@@ -850,7 +846,7 @@ contains
           stop        
         endif
         if(present(cyy_2d))then
-          if(size(cyy_2d)<(nc_eta1+1)*(nc_eta2+1))then
+          if((size(cyy_2d,1)< (nc_eta1+1)).or.(size(cyy_2d,2)< (nc_eta2+1)))then
             print *,'#Bad size for cyy_2d',size(cyy_2d),(nc_eta1+1)*(nc_eta2+1)
             stop
           endif
@@ -872,7 +868,7 @@ contains
           stop        
         endif
         if(present(cx_2d))then
-          if(size(cx_2d)<(nc_eta1+1)*(nc_eta2+1))then
+          if((size(cx_2d,1)< (nc_eta1+1)).or.(size(cx_2d,2)< (nc_eta2+1)))then
             print *,'#Bad size for cx_2d',size(cx_2d),(nc_eta1+1)*(nc_eta2+1)
             stop
           endif
@@ -894,7 +890,7 @@ contains
           stop        
         endif
         if(present(cy_2d))then
-          if(size(cy_2d)<(nc_eta1+1)*(nc_eta2+1))then
+          if((size(cy_2d,1)< (nc_eta1+1)).or.(size(cy_2d,2)< (nc_eta2+1)))then
             print *,'#Bad size for cy_2d',size(cy_2d),(nc_eta1+1)*(nc_eta2+1)
             stop
           endif
@@ -916,7 +912,7 @@ contains
           stop        
         endif
         if(present(ce_2d))then
-          if(size(ce_2d)<(nc_eta1+1)*(nc_eta2+1))then
+          if((size(ce_2d,1)< (nc_eta1+1)).or.(size(ce_2d,2)< (nc_eta2+1)))then
             print *,'#Bad size for ce_2d',size(ce_2d),(nc_eta1+1)*(nc_eta2+1)
             stop
           endif
@@ -1052,7 +1048,6 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
 
-
     select case (poisson%mudpack_case)
       case (SLL_SEPARABLE)
         if(associated(mudpack_wrapper))then
@@ -1112,7 +1107,6 @@ contains
           stop
         endif
         mudpack_wrapper => poisson
-
         call mud2cr(iprm, &
           fprm, &
           poisson%work, &
@@ -1124,8 +1118,9 @@ contains
           error)
         !write(*,107) error
         if (error > 0) call exit(0)
-        ! attempt to improve approximation to fourth order
-        call mud24cr(poisson%work,phi,error)
+        ! attempt to improve approximation to fourth order 
+        !! seems not to work for the moment
+!        call mud24cr(poisson%work,phi,error)
         !write (*,108) error
         if (error > 0) call exit(0)
         

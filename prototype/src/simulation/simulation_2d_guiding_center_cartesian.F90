@@ -28,7 +28,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_common_array_initializers_module
   !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_solver
-  !use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -148,7 +148,7 @@ contains
     sll_int32  :: nb_step
     sll_real64 :: dt
     sll_int32 :: visu_step
-    sll_int32 :: mudpack_method 
+     
     class(sll_interpolator_2d_base), pointer :: f_interp2d
     class(sll_interpolator_2d_base), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
@@ -165,6 +165,7 @@ contains
     character(len=256)      :: time_loop_case 
     character(len=256)      :: poisson_solver
     character(len=256)      :: poisson_case
+    character(len=256)      :: mudpack_method
     sll_real64, dimension(:,:), pointer :: b11
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
@@ -173,6 +174,12 @@ contains
     sll_int32 ::  spline_degree_eta1
     sll_int32 ::  spline_degree_eta2
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    sll_real64, dimension(:,:), allocatable :: cxx_2d
+    sll_real64, dimension(:,:), allocatable :: cxy_2d
+    sll_real64, dimension(:,:), allocatable :: cyy_2d
+    sll_real64, dimension(:,:), allocatable :: cx_2d
+    sll_real64, dimension(:,:), allocatable :: cy_2d
+    sll_real64, dimension(:,:), allocatable :: ce_2d
 
 
     sll_int32 :: ierr
@@ -182,15 +189,15 @@ contains
     !in future, we will use namelist file
 
     
-    Nc_x1 = 32 !128
-    Nc_x2 = 32 !128
+    Nc_x1 = 32
+    Nc_x2 = 32
     k_mode = 0.5_f64
     eps = 0.015_f64
     x1_min = 0._f64
     x1_max = 2._f64*sll_pi/k_mode
     x2_min = 0._f64
     x2_max = 2._f64*sll_pi
-    nb_step = 30
+    nb_step = 600
     
     dt = 0.1_f64
     visu_step = 100
@@ -203,16 +210,16 @@ contains
     initial_function_case = "SLL_KHP1" 
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-    !poisson_solver = "SLL_MUDPACK"   !use with "SLL_PHI_FROM_RHO"
-    poisson_solver = "SLL_POISSON_FFT"  !use with  "SLL_E_FROM_RHO"
-    poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    poisson_solver = "SLL_MUDPACK"   !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_POISSON_FFT"  !use with  "SLL_E_FROM_RHO"
+    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"
     
     poisson_case = "SLL_PHI_FROM_RHO"
     !poisson_case = "SLL_E_FROM_RHO"
-    mudpack_method = SLL_SEPARABLE
-                   ! SLL_SEPARABLE
-                   ! SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS
-                   ! SLL_NON_SEPARABLE_WITH_CROSS_TERMS
+    !mudpack_method = "SLL_SEPARABLE"
+    !mudpack_method = "SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS"
+    mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"
     
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3
@@ -400,20 +407,147 @@ contains
     select case(poisson_solver)    
       case ("SLL_MUDPACK")     
         !stop  
-        sim%poisson => new_poisson_2d_mudpack_solver( &
-          x1_min,&
-          x1_max,&
-          Nc_x1,&
-          x2_min,&
-          x2_max,&
-          Nc_x2,&
-          SLL_PERIODIC,& 
-          SLL_PERIODIC,& 
-          SLL_PERIODIC,& 
-          SLL_PERIODIC,&
-          mudpack_method, &
-          cxx = 1._f64, &
-          cyy = 1._f64)
+        
+        select case(mudpack_method)
+          case ("SLL_SEPARABLE")
+            sim%poisson => new_poisson_2d_mudpack_solver( &
+              x1_min,&
+              x1_max,&
+              Nc_x1,&
+              x2_min,&
+              x2_max,&
+              Nc_x2,&
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,&
+              SLL_SEPARABLE, &
+              cxx = 1._f64, &
+              cyy = 1._f64)
+          case ("SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS")   
+            SLL_ALLOCATE(cxx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cyy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(ce_2d(Nc_x1+1,Nc_x2+1),ierr)
+            
+            cxx_2d = 1._f64
+            cyy_2d = 1._f64
+            cx_2d = 0._f64
+            cy_2d = 0._f64
+            ce_2d = 0._f64
+             
+            sim%poisson => new_poisson_2d_mudpack_solver( &
+              x1_min,&
+              x1_max,&
+              Nc_x1,&
+              x2_min,&
+              x2_max,&
+              Nc_x2,&
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,&
+              SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS, &
+              cxx_2d = cxx_2d, &
+              cyy_2d = cyy_2d, &
+              cx_2d = cx_2d, &
+              cy_2d = cy_2d, &
+              ce_2d = ce_2d)
+              
+          case ("SLL_NON_SEPARABLE_WITH_CROSS_TERMS")   
+            SLL_ALLOCATE(cxx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cxy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cyy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(ce_2d(Nc_x1+1,Nc_x2+1),ierr)
+            
+            cxx_2d = 1._f64
+            cxy_2d = 0._f64
+            cyy_2d = 1._f64
+            cx_2d = 0._f64
+            cy_2d = 0._f64
+            ce_2d = 0._f64
+             
+            sim%poisson => new_poisson_2d_mudpack_solver( &
+              x1_min,&
+              x1_max,&
+              Nc_x1,&
+              x2_min,&
+              x2_max,&
+              Nc_x2,&
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,&
+              SLL_NON_SEPARABLE_WITH_CROSS_TERMS, &
+              cxx_2d = cxx_2d, &
+              cxy_2d = cxy_2d, &
+              cyy_2d = cyy_2d, &
+              cx_2d = cx_2d, &
+              cy_2d = cy_2d, &
+              ce_2d = ce_2d)
+              
+          case default
+            print *,'#bad mudpack_method',mudpack_method
+            print *,'#in initialize_guiding_center_2d_cartesian'
+            stop
+        end select    
+      case ("SLL_MUDPACK_CURVILINEAR")     
+!        transformation => new_coordinate_transformation_2d_analytic( &
+!          "analytic_identity_transformation", &
+!          sim%mesh_2d, &
+!          identity_x1, &
+!          identity_x2, &
+!          identity_jac11, &
+!          identity_jac12, &
+!          identity_jac21, &
+!          identity_jac22, &
+!          params=(/0._f64,0._f64,0._f64,0._f64/))  
+        transformation => new_coordinate_transformation_2d_analytic( &
+          "analytic_collela_transformation", &
+          sim%mesh_2d, &
+          sinprod_x1, &
+          sinprod_x2, &
+          sinprod_jac11, &
+          sinprod_jac12, &
+          sinprod_jac21, &
+          sinprod_jac22, &
+          params=(/ 0._f64, 0._f64, x1_max-x1_min, x2_max-x2_min/)  )  
+        !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
+        !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
+
+
+
+          SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
+        
+        b11 = -1._f64
+        b22 = -1._f64
+        b12 = 0._f64
+        b21 = 0._f64
+        c = 0._f64
+        sim%poisson => new_poisson_2d_mudpack_curvilinear_solver( &
+         transformation, &
+         x1_min,&
+         x1_max,&
+         Nc_x1,&
+         x2_min,&
+         x2_max,&
+         Nc_x2,&
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         b11,&
+         b12,&
+         b21,&
+         b22,&
+         c)
 
       case ("SLL_POISSON_FFT")     
         !stop  
@@ -572,7 +706,9 @@ contains
 
     select case(sim%poisson_case) 
       case (SLL_PHI_FROM_RHO)
+        
         call sim%poisson%compute_phi_from_rho( phi, -f )    
+        
         call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       case (SLL_E_FROM_RHO)
         call sim%poisson%compute_E_from_rho( A1, A2, f )        
