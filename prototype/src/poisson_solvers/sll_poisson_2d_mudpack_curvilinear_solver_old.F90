@@ -39,9 +39,6 @@ use sll_module_coordinate_transformations_2d
 !use sll_poisson_2d_polar
 implicit none
 
-  integer, parameter :: SLL_SEPARABLE  = 1    !< type of equation
-  integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2    !< type of equation
-  integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
 
   
 
@@ -357,8 +354,14 @@ contains
           SLL_PERIODIC, &
           SLL_PERIODIC)                            
         call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, & 
-           delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)           
-        call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )    
+           delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)
+        
+        poisson%cxx_2d = -poisson%cxx_2d   
+                      
+        call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )
+
+        poisson%cyy_2d = -poisson%cyy_2d   
+            
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )       
            
          poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -372,6 +375,9 @@ contains
           SLL_PERIODIC)    
         call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
           delta1,delta2,nx,ny,poisson%cxy_2d)  
+
+        poisson%cxy_2d = -poisson%cxy_2d   
+
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d )  
         
         poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -384,8 +390,13 @@ contains
           SLL_PERIODIC, &
           SLL_PERIODIC)    
         call coefx_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
-          poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)  
+          poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)
+
+        poisson%cx_2d = -poisson%cx_2d   
+            
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
+
+
 
         poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -398,6 +409,9 @@ contains
           SLL_PERIODIC)    
         call coefy_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
           poisson%cyy_2d_interp,poisson%a12_interp,poisson%cy_2d)  
+
+        poisson%cy_2d = -poisson%cy_2d   
+
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
         poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -478,7 +492,6 @@ contains
           stop
         endif
         mudpack_curvilinear_wrapper => poisson
-
         call mud2cr(iprm, &
           fprm, &
           poisson%work, &
@@ -491,7 +504,8 @@ contains
         !write(*,107) error
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
-        call mud24cr(poisson%work,phi,error)
+        ! seems not to work for the moment
+        !call mud24cr(poisson%work,phi,error)
         !write (*,108) error
         if (error > 0) call exit(0)
         
@@ -690,6 +704,7 @@ cyy = mudpack_curvilinear_wrapper%cyy_2d_interp%interpolate_value(x,y)
 cx  = mudpack_curvilinear_wrapper%cx_2d_interp%interpolate_value(x,y)
 cy  = mudpack_curvilinear_wrapper%cy_2d_interp%interpolate_value(x,y)
 ce  = mudpack_curvilinear_wrapper%ce_2d_interp%interpolate_value(x,y)
+
 return
 end
 !> input mixed derivative b.c. to mud2sp

@@ -30,4 +30,9 @@ integer, parameter :: PERIODIC     = 0    !< boundary condition parameter
 integer, parameter :: DIRICHLET    = 1    !< boundary condition parameter
 integer, parameter :: NEUMANN      = 2    !< boundary condition parameter
 
+integer, parameter :: SLL_SEPARABLE  = 1    !< type of equation
+integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2    !< type of equation
+integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
+
+
 end module sll_mudpack_base
