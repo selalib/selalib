@@ -464,7 +464,7 @@ contains ! *******************************************************************
           
        end do
     end do
-    
+
     !print*, 'loop ok'
     
     ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
@@ -1368,10 +1368,6 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: es
     !type(sll_logical_mesh_2d), pointer :: mesh2d
     sll_real64, dimension(:),pointer :: Masse_tot
-    
-    
-    es%tmp_rho_vec = 0.0_f64
-    
     
     es%tmp_rho_vec(:) = 0.0_f64
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
