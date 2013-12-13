@@ -76,7 +76,7 @@ module sll_comm_module
      type(buffer_real64), dimension(:), pointer :: buffer  ! 2 buffers only.
      ! a logical isn't used here due to the tagging system used. Use with care.
      ! For instance, since the bit is either 0 or 1, we can't use it to index
-     ! the buffer array, since Fortran indexing is 1-based...
+     ! the buffer array directly, since Fortran indexing is 1-based...
      sll_int32 :: bit        =  0 
      sll_int32 :: other_rank = -1
      sll_int32 :: other_port =  0
@@ -97,14 +97,31 @@ module sll_comm_module
 
 contains
 
-  function get_mpi_request( comm, port )
-    sll_int32                      :: get_mpi_request
+#define GET_MPI_REQUEST( comm, port ) \
+  comm%ports(port)%buffer(comm%ports(port)%bit+1)%request
+
+!!$  function get_mpi_request( comm, port )
+!!$    sll_int32                      :: get_mpi_request
+!!$    type(sll_comm_real64), pointer :: comm
+!!$    sll_int32, intent(in)          :: port
+!!$    sll_int32 :: bit_select
+!!$    bit_select = comm%ports(port)%bit
+!!$    get_mpi_request = comm%ports(port)%buffer(bit_select+1)%request
+!!$  end function get_mpi_request
+
+  subroutine sll_view_port(comm, port)
     type(sll_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
-    sll_int32 :: bit_select
-    bit_select = comm%ports(port)%bit
-    get_mpi_request = comm%ports(port)%buffer(bit_select+1)%request
-  end function get_mpi_request
+    print *, 'rank: ', sll_get_collective_rank(comm%collective), &
+         'port: ', port, &
+         'bit: ', comm%ports(port)%bit, &
+         'other_rank: ', comm%ports(port)%other_rank, &
+         'other_port: ', comm%ports(port)%other_port, &
+         'buffer(1)%data: ', comm%ports(port)%buffer(1)%data, &
+         'buffer(1)%request: ', comm%ports(port)%buffer(1)%request, &
+         'buffer(2)%data: ', comm%ports(port)%buffer(2)%data, &
+         'buffer(2)%request: ', comm%ports(port)%buffer(2)%request
+  end subroutine sll_view_port
 
   function flip_bit( bit )
     sll_int32 :: flip_bit
@@ -196,7 +213,7 @@ contains
     type(buffer_real64), intent(out) :: buff
     sll_int32, intent(in)            :: num_elems
     sll_int32                        :: ierr
-    SLL_ALLOCATE(buff%data(num_elems),ierr)
+    SLL_ALLOCATE(buff%data(num_elems+BUFFER_PADDING),ierr)
     buff%request = MPI_REQUEST_NULL
   end subroutine initialize_buffer_real64
 
@@ -237,7 +254,7 @@ contains
 
     SLL_ASSERT( associated(comm) )
     call check_port(comm, port)
-    if( get_mpi_request(comm,port) .ne. MPI_REQUEST_NULL) then
+    if( GET_MPI_REQUEST(comm,port) .ne. MPI_REQUEST_NULL) then
        port_is_busy = .true.
     else
        port_is_busy = .false.
@@ -323,8 +340,9 @@ contains
     call check_port(comm,remote_port)
     call check_other_rank( comm, remote )
 
-    print *, sll_get_collective_rank(comm%collective), ' rank = ', comm%rank,&
-         'args port = ', port, 'args remote = ', remote, 'args remote port = ',  remote_port
+!!$    print *, sll_get_collective_rank(comm%collective), ' rank = ', comm%rank,&
+!!$         'port = ', port, ' is connected with remote = ', remote, &
+!!$         'remote port = ',  remote_port
     if( port_is_busy(comm, port) ) then
        print *, 'comm module error: connect_ports(), port to connect is busy'
        stop
@@ -340,10 +358,10 @@ contains
     bit = comm%ports(port)%bit
     tag = receive_tag( bit, port, comm%ports(port)%other_port)
 
-!!$    write (*,'(a,i8,a, z8,a,z8,a,z8,a,z20)') 'rank: ', &
-!!$         sll_get_collective_rank(comm%collective), ' bit = ', bit, &
-!!$         ' port = ', port, ' other port = ', remote_port,&
-!!$         ' tag = ', tag
+    write (*,'(a,i8,a, z8,a,z8,a,z8,a,z20)') 'rank: ',  &
+         sll_get_collective_rank(comm%collective), ' port = ', port, &
+         ' bit = ', bit, ' other port = ', remote_port, &
+         ' tag = ', tag
 
 
     ! post a 'receive' on first buffer and then flip it. For now, we allow
@@ -351,13 +369,15 @@ contains
     ! this back to the collective module, so a wrapper routine is necessary.
     call MPI_IRecv( &
          comm%ports(port)%buffer(bit+1)%data, &
-         comm%buffer_size, &
+         comm%buffer_size+BUFFER_PADDING, &
          MPI_DOUBLE_PRECISION, &
          comm%ports(port)%other_rank, &
          tag, &
          comm%collective%comm, &
-         get_mpi_request(comm,port), &
+         GET_MPI_REQUEST(comm,port), &
          ierr )
+
+    call flip_buffer(comm,port)
   end subroutine connect_ports
 
   subroutine comm_send_real64( comm, port, size )
@@ -379,6 +399,11 @@ contains
     bit = comm%ports(port)%bit
     tag = send_tag( bit, port, comm%ports(port)%other_port)
 
+!!$    print *, 'sending operation, rank: ',  &
+!!$         sll_get_collective_rank(comm%collective), ' port = ', port, &
+!!$         ' bit = ', bit, ' other port = ', comm%ports(port)%other_port, &
+!!$         ' tag = ', tag , '  data = ', comm%ports(port)%buffer(bit+1)%data
+
     call MPI_Isend( &
          comm%ports(port)%buffer(bit+1)%data, &
          size+BUFFER_PADDING, &
@@ -386,13 +411,13 @@ contains
          comm%ports(port)%other_rank, &
          tag, &
          comm%collective%comm, &
-         get_mpi_request(comm,port), &
+         GET_MPI_REQUEST(comm,port), &
          ierr )
     if( ierr .ne. MPI_SUCCESS ) then
        print *, 'comm_send_real64() error in mpi call'
        stop
     end if
-
+    ! The other buffer should be with a pending 'receive'.
     call flip_buffer(comm,port)
   end subroutine comm_send_real64
 
@@ -408,13 +433,17 @@ contains
 
     ! error checking...
     if(.not. port_is_busy(comm, port) ) then
-       print *, 'comm_receive_real64() error: port', port, ' is busy; there ', &
-            'are imbalanced send and receive calls'
+       print *, 'comm_receive_real64() error: port', port, ' is not busy; ', &
+            'there are imbalanced send and receive calls.'
        stop
     end if
 
-    request = get_mpi_request(comm, port)
-    call MPI_Wait(request, stat, ierr)
+!    request = GET_MPI_REQUEST(comm, port)
+!!$    print *, ' inside receive rank: ', &
+!!$         sll_get_collective_rank(comm%collective), 'port: ', &
+!!$         port, GET_MPI_REQUEST(comm,port)
+
+    call MPI_Wait(GET_MPI_REQUEST(comm,port), stat, ierr)
     if(ierr .ne. MPI_SUCCESS) then
        print *, 'comm_receive_real64(), MPI_Wait error'
        stop
@@ -434,8 +463,8 @@ contains
        stop
     end if
 
-    request = get_mpi_request(comm, port)
-    call MPI_Wait(request, MPI_STATUS_IGNORE, ierr)
+!    request = GET_MPI_REQUEST(comm, port)
+    call MPI_Wait(GET_MPI_REQUEST(comm,port), MPI_STATUS_IGNORE, ierr)
     if(ierr .ne. MPI_SUCCESS) then
        print *, 'comm_receive_real64(), MPI_Wait error in second call.'
        stop
@@ -451,7 +480,7 @@ contains
          comm%ports(port)%other_rank, &
          tag, &
          comm%collective%comm, &
-         get_mpi_request(comm,port), &
+         GET_MPI_REQUEST(comm,port), &
          ierr )
     call sll_test_mpi_error(ierr, 'MPI_Irecv error')
 
@@ -475,15 +504,15 @@ contains
     do i=1,num_ports
        if( port_is_busy(comm,i) ) then
           ! block until the send's are completed.
-          request = get_mpi_request(comm, i)
-          call MPI_Wait(request, MPI_STATUS_IGNORE, ierr)
+!          request = GET_MPI_REQUEST(comm, i)
+          call MPI_Wait(GET_MPI_REQUEST(comm,i), MPI_STATUS_IGNORE, ierr)
           call sll_test_mpi_error(ierr, 'delete_comm_real64(), MPI_Wait()')
        end if
        call flip_buffer( comm, i )
        if( port_is_busy(comm,i) ) then
           ! drop the receive's
-          request = get_mpi_request(comm, i)
-          call MPI_Request_free(request, ierr)
+!          request = GET_MPI_REQUEST(comm, i)
+          call MPI_Request_free(GET_MPI_REQUEST(comm,i), ierr)
           call sll_test_mpi_error(ierr,'delete_comm_real64:MPI_Request_free()')
        end if
     end do
@@ -524,6 +553,51 @@ contains
     call connect_ports( comm, 2, mod(rank+size+1,size), 1 )
   end subroutine sll_create_comm_real64_ring
 
+  ! helper functions meant to be used internally within the 2D 'ring'.
+  subroutine find_ij( rank, nprocx, i, j )
+    sll_int32, intent(in)  :: rank
+    sll_int32, intent(in)  :: nprocx
+    sll_int32, intent(out) :: i
+    sll_int32, intent(out) :: j
+    j = int(rank/nprocx)
+    i = rank - j*nprocx
+  end subroutine find_ij
+
+  function rank_index( nprocx, i, j)
+    sll_int32  :: rank_index
+    sll_int32, intent(in)  :: nprocx
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    rank_index = i+nprocx*j
+  end function rank_index
+
+  subroutine sll_create_comm_real64_ring_2D( comm, nprocx, nprocy )
+    type(sll_comm_real64), pointer :: comm
+    sll_int32, intent(in) :: nprocx
+    sll_int32, intent(in) :: nprocy
+    sll_int32 :: rank
+    sll_int32 :: iloc
+    sll_int32 :: jloc
+    sll_int32 :: left
+    sll_int32 :: right
+    sll_int32 :: bottom
+    sll_int32 :: top
+
+    rank = sll_get_collective_rank(comm%collective)
+    call find_ij( rank, nprocx, iloc, jloc )
+    left   = mod(iloc+nprocx-1,nprocx)
+    right  = mod(iloc+nprocx+1,nprocx)
+    bottom = mod(jloc+nprocy-1,nprocy)
+    top    = mod(jloc+nprocy+1,nprocy)
+
+    call connect_ports( comm, 1, rank_index(nprocx, left, jloc),   2 )
+    call connect_ports( comm, 2, rank_index(nprocx, right,jloc),   1 )
+    call connect_ports( comm, 3, rank_index(nprocx, iloc, bottom), 4 )
+    call connect_ports( comm, 4, rank_index(nprocx, iloc, top),    3 )
+    ! do some checking here whether the comm has the right number of ports...
+!!$    call connect_ports( comm, 1, mod(rank+size-1,size), 2 )
+!!$    call connect_ports( comm, 2, mod(rank+size+1,size), 1 )
+  end subroutine sll_create_comm_real64_ring_2D
  
 #if 0
 
@@ -681,6 +755,6 @@ contains
 
 #undef SLL_MAX_NUM_PORTS
 #undef BUFFER_PADDING
-
+#undef GET_MPI_REQUEST
 
 end module sll_comm_module
