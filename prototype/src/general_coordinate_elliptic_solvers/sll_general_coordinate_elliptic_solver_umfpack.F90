@@ -1,4 +1,4 @@
-module sll_general_coordinate_elliptic_solver_module
+module sll_general_coordinate_elliptic_solver_module_umfpack
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -12,6 +12,7 @@ module sll_general_coordinate_elliptic_solver_module
   use gauss_legendre_integration
   use sll_timer
   !use LU
+  use mod_umfpack
   implicit none
 
 
@@ -50,6 +51,11 @@ module sll_general_coordinate_elliptic_solver_module
      !   global_spline_indices(local_spline_indices(i,j))
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
      type(csr_matrix) :: csr_mat
+     ! work arrays for Umfpack
+     sll_int32, dimension(:), pointer :: Ai, Ap
+     integer(umf_void) :: umf_symbolic
+     integer(umf_void) :: umf_numeric
+     sll_real64, dimension(:), pointer :: umf_control
      sll_real64, dimension(:), pointer :: rho_vec
      sll_real64, dimension(:), pointer :: phi_vec
      sll_real64, dimension(:), pointer :: tmp_rho_vec
@@ -254,6 +260,11 @@ contains ! *******************************************************************
         es%total_num_splines_loc, &
         es%local_to_global_spline_indices, &
         es%total_num_splines_loc )
+    
+    ! umfpack
+    SLL_ALLOCATE(es%umf_control(umfpack_control),ierr)
+    SLL_ALLOCATE(es%Ai(es%csr_mat%oi_nel),ierr)
+    SLL_ALLOCATE(es%Ap(es%csr_mat%oi_nR+1),ierr)
   end subroutine initialize_general_elliptic_solver
 
   function new_general_elliptic_solver( &
@@ -392,6 +403,8 @@ contains ! *******************************************************************
     character(len=*),parameter :: as_file1='mat'
     integer :: li_ios,li_ios1
     sll_int32 :: number_cells1,number_cells2
+    ! for Umfpack
+    sll_real64, dimension(umfpack_info) :: info
     
     total_num_splines_loc = es%total_num_splines_loc
     ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
@@ -465,6 +478,22 @@ contains ! *******************************************************************
        end do
     end do
 
+    ! Initialize Umfpack solver
+    !--------------------------
+    call umf4def(es%umf_control)  ! get the default configuration
+!    es%umf_control(umfpack_prl) = real( 2 , umf_dp ) ! change verbosity
+!    call umf4pcon(es%umf_control) ! update the umfpack configuration
+    ! modify the csr matrix to have indices starting at 0 as is the C convention
+    es%Ap = es%csr_mat%opi_ia(:) - 1
+    es%Ai = es%csr_mat%opi_ja(:) - 1
+    ! pre-order and symbolic analysis
+    call umf4sym (es%csr_mat%oi_nR, es%csr_mat%oi_nC, es%Ap, &
+         es%Ai, es%csr_mat%opr_a, es%umf_symbolic, es%umf_control, info)
+    ! numeric factorization
+    call umf4num (es%Ap, es%Ai, es%csr_mat%opr_a, &
+         es%umf_symbolic, es%umf_numeric, es%umf_control, info)
+    ! print info 
+    !call umf4pinf(es%umf_control,info) 
     !print*, 'loop ok'
     
     ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
@@ -494,6 +523,8 @@ contains ! *******************************************************************
     sll_int32 :: total_num_splines_loc
     sll_real64 :: int_rho
     sll_real64, dimension(:), allocatable   :: M_rho_loc
+
+    type(sll_time_mark) :: t_reference
     
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
@@ -514,6 +545,7 @@ contains ! *******************************************************************
        int_rho = 0.0_f64
     end if
     ! loop over domain cells build local matrices M_c_loc 
+    call set_time_mark(t_reference)
     do j=1,es%num_cells2
        do i=1,es%num_cells1
           ! cells are numbered in a linear fashion, convert from (i,j) indexing
@@ -539,8 +571,9 @@ contains ! *******************************************************************
           
        end do
     end do
+    print*, 'time build rhs matrices ', time_elapsed_since(t_reference) 
     
-    
+    call set_time_mark(t_reference)
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
@@ -550,7 +583,7 @@ contains ! *******************************************************************
        
        call solve_linear_system(es)
     end if
-    
+    print*, 'time solve linear system ', time_elapsed_since(t_reference) 
     call  phi%interp_2d%set_coefficients( es%phi_vec)
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
@@ -1337,6 +1370,10 @@ contains ! *******************************************************************
     sll_real64, dimension(:) :: apr_B 
     sll_int32  :: ai_maxIter
     sll_real64 :: ar_eps
+
+    ! for Umfpack
+    sll_int32  :: sys
+    sll_real64, dimension(umfpack_info) :: info
     
     ar_eps = 1.d-13
     ai_maxIter = 100000
@@ -1351,11 +1388,17 @@ contains ! *******************************************************************
             ar_eps )
        
     else 
-       call Gradient_conj(csr_mat,&
-            apr_B,&
-            apr_U,&
-            ai_maxIter,&
-            ar_eps )
+!!$       call Gradient_conj(csr_mat,&
+!!$            apr_B,&
+!!$            apr_U,&
+!!$            ai_maxIter,&
+!!$            ar_eps )
+       ! solve with umfpack
+       sys = 0
+        
+       call umf4sol(sys,apr_U,apr_B,es%umf_numeric,es%umf_control,info)
+       ! print info
+       ! call umf4pinf(es%umf_control,info) 
     end if
     !print*,'u', apr_U
   end subroutine solve_gen_elliptic_eq
@@ -1368,6 +1411,10 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: es
     !type(sll_logical_mesh_2d), pointer :: mesh2d
     sll_real64, dimension(:),pointer :: Masse_tot
+    
+    
+    es%tmp_rho_vec = 0.0_f64
+    
     
     es%tmp_rho_vec(:) = 0.0_f64
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
@@ -1460,7 +1507,7 @@ contains ! *******************************************************************
     !print*,' integrale de rho', int_rho
   end subroutine compute_integral_source_term
 
-end module sll_general_coordinate_elliptic_solver_module
+end module sll_general_coordinate_elliptic_solver_module_umfpack
 
 
  
