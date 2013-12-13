@@ -2,11 +2,7 @@ program test_general_elliptic_solver
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-#ifdef _UMFPACK
-  use sll_general_coordinate_elliptic_solver_module_umfpack
-#else
   use sll_general_coordinate_elliptic_solver_module
-#endif
   use sll_module_scalar_field_2d_alternative
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
@@ -17,8 +13,8 @@ program test_general_elliptic_solver
 
 #define SPLINE_DEG1 3
 #define SPLINE_DEG2 3
-#define NUM_CELLS1  64
-#define NUM_CELLS2  64
+#define NUM_CELLS1  128
+#define NUM_CELLS2  128
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
@@ -3367,7 +3363,8 @@ program test_general_elliptic_solver
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-
+ 
+  
   call factorize_mat_es(&
        es, &
        a11_field_mat, &
@@ -3377,10 +3374,11 @@ program test_general_elliptic_solver
        c_field)
  
   t12i = time_elapsed_since(t_reference) 
-  
+
   print *, 'Initialized ES object'
   call set_time_mark(t_reference)
-          
+
+        
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
