@@ -1,4 +1,4 @@
-module sll_comm_module
+module sll_point_to_point_comms_module
 #include "sll_assert.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -85,7 +85,7 @@ module sll_comm_module
   ! this should be the only public type
 
   ! Consider the dynamic allocation of the 'remotes' array...
-  type sll_comm_real64
+  type sll_p2p_comm_real64
      sll_int32 :: comm_size =  0
      sll_int32 :: rank      = -1
      sll_int32 :: num_ports
@@ -93,7 +93,7 @@ module sll_comm_module
      type(sll_collective_t), pointer :: collective
      type(port_real64), dimension(:),pointer :: ports  ! array of ports
    !  type(sll_remote), pointer       :: remotes  ! may not be needed
-  end type sll_comm_real64
+  end type sll_p2p_comm_real64
 
 contains
 
@@ -102,7 +102,7 @@ contains
 
 !!$  function get_mpi_request( comm, port )
 !!$    sll_int32                      :: get_mpi_request
-!!$    type(sll_comm_real64), pointer :: comm
+!!$    type(sll_p2p_comm_real64), pointer :: comm
 !!$    sll_int32, intent(in)          :: port
 !!$    sll_int32 :: bit_select
 !!$    bit_select = comm%ports(port)%bit
@@ -110,7 +110,7 @@ contains
 !!$  end function get_mpi_request
 
   subroutine sll_view_port(comm, port)
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     print *, 'rank: ', sll_get_collective_rank(comm%collective), &
          'port: ', port, &
@@ -140,7 +140,7 @@ contains
 
 
   subroutine flip_buffer( comm, port )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32 :: bit
 
@@ -152,7 +152,7 @@ contains
 
   function get_buffer( comm, port )
     sll_real64, dimension(:), pointer :: get_buffer
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32 :: bit
     SLL_ASSERT(associated(comm))
@@ -228,7 +228,7 @@ contains
   end subroutine initialize_port_real64
 
   subroutine check_buffer_size( comm, size )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: size
     SLL_ASSERT( associated(comm) )
     if( size > comm%buffer_size ) then
@@ -238,7 +238,7 @@ contains
   end subroutine check_buffer_size
 
   subroutine check_port( comm, port )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: port
     if( (port < 1) .or. (port > comm%num_ports) )then
        print *, 'comm module error, check_port(): ', &
@@ -249,7 +249,7 @@ contains
 
   function port_is_busy( comm, port )
     logical                        :: port_is_busy
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
 
     SLL_ASSERT( associated(comm) )
@@ -262,7 +262,7 @@ contains
   end function port_is_busy
 
   subroutine check_other_rank( comm, other_rank )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: other_rank
 
     if( (other_rank < 0) .or. (other_rank >= comm%comm_size) ) then
@@ -273,7 +273,7 @@ contains
 
   function get_num_ports( comm )
     sll_int32 :: get_num_ports
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
 
     SLL_ASSERT( associated(comm) )
     get_num_ports = comm%num_ports
@@ -281,7 +281,7 @@ contains
 
   function get_buffer_size( comm )
     sll_int32 :: get_buffer_size
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     SLL_ASSERT( associated(comm) )
     get_buffer_size = comm%buffer_size
   end function get_buffer_size
@@ -290,7 +290,7 @@ contains
     type(sll_collective_t), pointer :: collective
     sll_int32, intent(in)           :: num_ports
     sll_int32, intent(in)           :: buffer_size
-    type(sll_comm_real64), pointer  :: comm
+    type(sll_p2p_comm_real64), pointer  :: comm
     sll_int32                       :: ierr
     sll_int32                       :: i
     sll_int32                       :: padding
@@ -328,7 +328,7 @@ contains
   end function new_comm_real64
 
   subroutine connect_ports( comm, port, remote, remote_port )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32, intent(in)          :: remote
     sll_int32, intent(in)          :: remote_port
@@ -358,10 +358,10 @@ contains
     bit = comm%ports(port)%bit
     tag = receive_tag( bit, port, comm%ports(port)%other_port)
 
-    write (*,'(a,i8,a, z8,a,z8,a,z8,a,z20)') 'rank: ',  &
-         sll_get_collective_rank(comm%collective), ' port = ', port, &
-         ' bit = ', bit, ' other port = ', remote_port, &
-         ' tag = ', tag
+!!$    write (*,'(a,i8,a, z8,a,z8,a,z8,a,z20)') 'rank: ',  &
+!!$         sll_get_collective_rank(comm%collective), ' port = ', port, &
+!!$         ' bit = ', bit, ' other port = ', remote_port, &
+!!$         ' tag = ', tag
 
 
     ! post a 'receive' on first buffer and then flip it. For now, we allow
@@ -381,7 +381,7 @@ contains
   end subroutine connect_ports
 
   subroutine comm_send_real64( comm, port, size )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32, intent(in)          :: size
     sll_int32 :: bit
@@ -422,13 +422,14 @@ contains
   end subroutine comm_send_real64
 
   subroutine comm_receive_real64( comm, port, count )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in)          :: port
     sll_int32, intent(out)         :: count
     sll_int32, dimension(MPI_STATUS_SIZE) :: stat
     sll_int32 :: request
     sll_int32 :: bit
     sll_int64 :: tag
+    sll_int32 :: local_count ! remember: there is a padding
     sll_int32 :: ierr
 
     ! error checking...
@@ -449,7 +450,7 @@ contains
        stop
     end if
 
-    call MPI_Get_Count(stat, MPI_DOUBLE_PRECISION, count, ierr)
+    call MPI_Get_Count(stat, MPI_DOUBLE_PRECISION, local_count, ierr)
     if(ierr .ne. MPI_SUCCESS) then
        print *, 'comm_receive_real64(), MPI_Get_Count() error'
        stop
@@ -485,10 +486,11 @@ contains
     call sll_test_mpi_error(ierr, 'MPI_Irecv error')
 
     call flip_buffer(comm,port)
+    count = local_count - BUFFER_PADDING
   end subroutine comm_receive_real64
 
   subroutine delete_comm_real64( comm )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32 :: i
     sll_int32 :: request
     sll_int32 :: num_ports
@@ -521,6 +523,7 @@ contains
        SLL_DEALLOCATE(comm%ports(i)%buffer(1)%data,ierr)
        SLL_DEALLOCATE(comm%ports(i)%buffer(2)%data,ierr)
     end do
+    comm => null()
   end subroutine delete_comm_real64
 
   function port_num_is_valid( num )
@@ -542,7 +545,7 @@ contains
   ! returns it...
 
   subroutine sll_create_comm_real64_ring( comm )
-    type(sll_comm_real64), pointer :: comm
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32 :: rank
     sll_int32 :: size
     rank = sll_get_collective_rank(comm%collective)
@@ -571,8 +574,8 @@ contains
     rank_index = i+nprocx*j
   end function rank_index
 
-  subroutine sll_create_comm_real64_ring_2D( comm, nprocx, nprocy )
-    type(sll_comm_real64), pointer :: comm
+  subroutine sll_configure_comm_real64_ring_2D( comm, nprocx, nprocy )
+    type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: nprocx
     sll_int32, intent(in) :: nprocy
     sll_int32 :: rank
@@ -589,49 +592,17 @@ contains
     right  = mod(iloc+nprocx+1,nprocx)
     bottom = mod(jloc+nprocy-1,nprocy)
     top    = mod(jloc+nprocy+1,nprocy)
-
+    ! left connection
     call connect_ports( comm, 1, rank_index(nprocx, left, jloc),   2 )
+    ! right connection
     call connect_ports( comm, 2, rank_index(nprocx, right,jloc),   1 )
+    ! bottom connection
     call connect_ports( comm, 3, rank_index(nprocx, iloc, bottom), 4 )
+    ! top connection
     call connect_ports( comm, 4, rank_index(nprocx, iloc, top),    3 )
-    ! do some checking here whether the comm has the right number of ports...
-!!$    call connect_ports( comm, 1, mod(rank+size-1,size), 2 )
-!!$    call connect_ports( comm, 2, mod(rank+size+1,size), 1 )
-  end subroutine sll_create_comm_real64_ring_2D
+  end subroutine sll_configure_comm_real64_ring_2D
  
 #if 0
-
-  ! sll_new_comm() creates a ... new comm (what else?) from a collective.
-  ! Arguments:
-  ! - col:      the parent collective
-  ! - n_ports:  tne number of ports that the new collective has
-  ! - buf_size: the memory buffer size for each port
-  ! The returned comm is uninitialized. The only procedure one can apply
-  ! to it is sll_comm_configure() to declare a topology. Afterwards, 
-  ! sll_initialize_comm() will initialize the comm for this topology.
-
-  function sll_new_comm( col, n_ports, buf_size )
-    type(sll_collective_t), pointer :: col
-    type(sll_comm_t), pointer       :: sll_new_comm
-    sll_int32, intent(in)           :: n_ports
-    sll_int32, intent(in)           :: buf_size
-    sll_int32                       :: ierr
-    SLL_ASSERT( .true. .eq. port_num_is_valid(n_ports) )
-    SLL_ALLOCATE( sll_new_comm, ierr )
-    sll_new_comm%parent_collective => col
-
-  end function sll_new_comm
-
-
-  ! sll_delete_comm() deletes the given comm. This subroutine must be 
-  ! called by all the processes in the comm.
-
-  subroutine sll_delete_comm( com )
-
-  end subroutine sll_delete_comm
-
-
-
 
   ! sll_get_comm_parent() returns the collective which is parent to the comm.
 
@@ -655,88 +626,23 @@ contains
 
   end function sll_get_comm_buffer_size
 
-
-
-  ! sll_get_comm_buffer() gets the message buffer for a port.
-  ! Arguments:
-  ! - com: the comm we want the buffer of.
-  ! - n:   the port in the buffer
-  ! Returns a pointer to the beginning of the buffer. This may need to be
-  ! interfaced if we require specializations to different types in this 
-  ! Fortran implementation.
-
-  function sll_get_comm_buffer( com, n )
-
-  end function sll_get_comm_buffer
-
-
-  ! sll_configure_comm() sets up an edge in the topology of the comm.
-  ! Arguments:
-  ! - com:         the comm to configure.
-  ! - n:           the local port number
-  ! - remote_rank: the rank of hte remote process (as given by 
-  !                sll_get_comm_parent().
-  ! - remote_port: the remote port number.
-  ! This must be called on a new, initialized comm.
-
-  subroutine sll_configure_comm( com, n, remote_rank, remote_port )
-
-  end subroutine sll_configure_comm
-
-
-
-
-  ! sll_initialize_comm() must be called by all processes within the comm
-  ! before any buffers are examined or any communication started and
-  ! after the topology has been set by sll_configure_comm().
-
-  subroutine sll_initialize_comm( com )
-
-  end subroutine sll_initialize_comm
-
-
-  ! sll_comm_send() initiates a send on a given port, relinquishing the
-  ! message buffer. 
-  ! Arguments:
-  ! - com:    the comm
-  ! - n:      the port
-  ! - length: the size of the message in the buffer.
-
-  subroutine sll_comm_send( com, n, length )
-
-  end subroutine sll_comm_send
-
-
-
-  ! sll_comm_receive() completes a pending receive on a port, obtaining
-  ! a message buffer.
-  ! Arguments:
-  ! com: the comm
-  ! n:   the port
-  ! length: the length of the message in the newly acquired buffer.
-
-  subroutine sll_comm_receive( com, n, length )
-
-  end subroutine sll_comm_receive
-
-
   ! The following special patterns return a configured and initialized comm.
   !
   ! sll_new_comm_fan() creates a topology in the shape of a fan, centered
   ! at root, and with the ports connected as (root,i) <---->(i,0) (for i
-  ! different than root). That is to say, the rank i has port 0 connected 
+  ! different than root). That is to say, the rank i has port 1 connected 
   ! to root's port i.
-  !                          >   port 0, process 1
+  !                          >   port 1, process 1
   !                        /  
   !                       /
   !                      /
   !           port 1   <          
-  !     root  port 2   <------>  port 0, process 2
+  !     root  port 2   <------>  port 1, process 2
   !           port 3   <
   !                      \
   !                       \
   !                        \
-  !                          >   port 0, process 3
+  !                          >   port 1, process 3
   !
   ! Arguments:
   ! col:       collective on which to base this topology
@@ -757,4 +663,4 @@ contains
 #undef BUFFER_PADDING
 #undef GET_MPI_REQUEST
 
-end module sll_comm_module
+end module sll_point_to_point_comms_module
