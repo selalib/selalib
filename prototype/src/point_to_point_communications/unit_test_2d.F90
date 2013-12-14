@@ -6,8 +6,8 @@ program comm_unit_test_2d
 #include "sll_utilities.h"
   implicit none
 
-#define SZ_X 4
-#define SZ_Y 5
+#define SZ_X 256
+#define SZ_Y 512
 ! BUF_SIZE MUST BE THE GREATEST BETWEEN THE SZ_X AND SZ_Y
 #define BUF_SIZE SZ_Y
 
@@ -75,6 +75,7 @@ program comm_unit_test_2d
 
   ! And now receive the data.
   call comm_receive_real64( comm, 1, count )
+!  print *, 'rank ', rank, 'received ', count, 'elements on port 1'
   buf => get_buffer(comm,1)
   if( 0.0_f64 == sum(main_array(SZ_X,:)-buf(1:SZ_Y)) ) then
      local_pass(1) = .true.
