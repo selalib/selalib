@@ -101,6 +101,8 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
+      ADD_SUBDIRECTORY(point_to_point_communications)
+
 
       IF(NOT STDF95)
          ADD_SUBDIRECTORY(parallel_array_initializers)
