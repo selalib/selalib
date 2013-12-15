@@ -7,13 +7,15 @@ module sll_mudpack_cartesian
 #include "sll_file_io.h"
 
 use sll_mudpack_base
+use sll_cubic_spline_interpolator_1d
 
 implicit none
 
+class(sll_interpolator_1d_base), pointer   :: cxx_interp
 contains
 
 !> Initialize the Poisson solver using mudpack library
-subroutine initialize_mudpack_cartesian(this,                        &
+subroutine initialize_mudpack_cartesian( this,                        &
                                         eta1_min, eta1_max, nc_eta1, &
                                         eta2_min, eta2_max, nc_eta2, &
                                         bc_eta1_left, bc_eta1_right, &
@@ -49,6 +51,7 @@ common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
+sll_real64,dimension(:),allocatable :: cxx_array
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
@@ -61,6 +64,18 @@ ny = nc_eta2+1
 
 ! set minimum required work space
 llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
+
+cxx_interp => new_cubic_spline_1d_interpolator( &
+          nx, &
+          eta1_min, &
+          eta1_max, &
+          SLL_PERIODIC)
+allocate(cxx_array(nx))          
+
+cxx_array = 1._f64          
+          
+call cxx_interp%compute_interpolants( cxx_array )          
+
       
 allocate(this%work(llwork))
 icall = 0
@@ -220,9 +235,10 @@ end module sll_mudpack_cartesian
 
 !> input x dependent coefficients
 subroutine cofx(x,cxx,cx,cex)
+use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0
+cxx = 1.0 !cxx_interp%interpolate_value(x)
 cx  = 0.0
 cex = 0.0
 return
@@ -246,7 +262,7 @@ real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
-!subroutiner not used in periodic case
+!subroutine not used in periodic case
 if (kbdy == 1) then  ! x=xa boundary
    y = xory
    x = xa

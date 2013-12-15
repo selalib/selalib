@@ -54,6 +54,8 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   use sll_poisson_2d_periodic
   
   use sll_fft
+  use sll_reduction_module
+  
 
   use sll_simulation_base
   implicit none
@@ -72,8 +74,8 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    !initial function
    procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
-      
-   !advector (should replace interpolator)
+   sll_real64 :: nrj0   
+   !advector
    class(sll_advection_1d_base), pointer    :: advect_x1
    class(sll_advection_1d_base), pointer    :: advect_x2
    class(sll_advection_1d_base), pointer    :: advect_x3
@@ -148,9 +150,10 @@ contains
     logical, intent(in), optional :: split_begin_T
 
 
-
     
     sll_int32 :: ierr   
+
+
     SLL_ALLOCATE(sim,ierr)
     
     sim%mesh_x1 => null()
@@ -179,7 +182,6 @@ contains
       split_step, &
       nb_split_step, &
       split_begin_T)
-
      
   
   end function new_vlasov_par_poisson_seq_cart
@@ -263,7 +265,7 @@ contains
     sll_real64            :: kmode_x1
     sll_real64            :: kmode_x2
     sll_real64            :: eps
-    sll_int32             :: ierr 
+    sll_int32             :: ierr
       
     ! namelists for data input
     namelist / geometry /   &
@@ -280,7 +282,12 @@ contains
       x4_min, &
       x4_max, &
       nbox_x1, &
-      nbox_x2
+      nbox_x2, &
+      mesh_case_x1, &
+      mesh_case_x2, &
+      mesh_case_x3, &
+      mesh_case_x4
+      
     namelist / advector /   &
       advector_x1, &
       order_x1, &
@@ -312,54 +319,36 @@ contains
     endif
     if(present(mesh_x2))then
       sim%mesh_x2 => mesh_x2
-    else
-      sim%mesh_x2 => null()
     endif
     if(present(mesh_x3))then
       sim%mesh_x3 => mesh_x3
-    else
-      sim%mesh_x3 => null()
     endif
     if(present(mesh_x4))then
       sim%mesh_x4 => mesh_x4
-    else
-      sim%mesh_x4 => null()
     endif
     
     if(present(init_func))then
       sim%init_func => init_func
-    else
-      sim%init_func => null()  
     endif
 
     if(present(params))then
       sim%params => params
-    else
-      sim%params => null()  
     endif
 
     if(present(advect_x1))then
       sim%advect_x1 => advect_x1
-    else
-      sim%advect_x1 => advect_x1  
     endif
 
     if(present(advect_x2))then
       sim%advect_x2 => advect_x2
-    else
-      sim%advect_x2 => advect_x2  
     endif
 
     if(present(advect_x3))then
       sim%advect_x3 => advect_x3
-    else
-      sim%advect_x3 => advect_x3  
     endif
 
     if(present(advect_x4))then
       sim%advect_x4 => advect_x4
-    else
-      sim%advect_x4 => advect_x4  
     endif
     
     if(present(user_dt))then
@@ -377,13 +366,18 @@ contains
     if(present(user_freq_diag))then
       sim%freq_diag = user_freq_diag
     else
-      sim%freq_diag_time = user_freq_diag_time  
+      sim%freq_diag = 100000000  
     endif
+
+    if(present(user_freq_diag_time))then
+      sim%freq_diag_time = user_freq_diag_time
+    else
+      sim%freq_diag_time = 10000000  
+    endif
+
 
     if(present(split_step))then
       sim%split_step => split_step
-    else
-      sim%split_step => null()  
     endif
     
     if(present(nb_split_step))then
@@ -397,7 +391,7 @@ contains
     else
       sim%split_begin_T = .true. 
     endif
-        
+    
  
     if(present(filename))then
  
@@ -414,10 +408,10 @@ contains
     close(input_file)
     
     select case (mesh_case_x1)
-      case ("SLL_LANDAU")
+      case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_x1
         sim%mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
-      case ("LOGICAL_MESH")
+      case ("SLL_LOGICAL_MESH")
         sim%mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
       case default
          print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
@@ -426,10 +420,10 @@ contains
     end select
 
     select case (mesh_case_x2)
-      case ("SLL_LANDAU")
+      case ("SLL_LANDAU_MESH")
         x2_max = real(nbox_x2,f64) * 2._f64 * sll_pi / kmode_x1
         sim%mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
-      case ("LOGICAL_MESH")
+      case ("SLL_LOGICAL_MESH")
         sim%mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
       case default
          print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
@@ -438,7 +432,7 @@ contains
     end select
 
     select case (mesh_case_x3)
-      case ("LOGICAL_MESH")
+      case ("SLL_LOGICAL_MESH")
         sim%mesh_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=x3_min, eta_max=x3_max)
       case default
          print*,'#mesh_case_x3', mesh_case_x3, ' not implemented'
@@ -447,7 +441,7 @@ contains
     end select
 
     select case (mesh_case_x4)
-      case ("LOGICAL_MESH")
+      case ("SLL_LOGICAL_MESH")
         sim%mesh_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=x4_min, eta_max=x4_max)
       case default
          print*,'#mesh_case_x4', mesh_case_x4, ' not implemented'
@@ -547,6 +541,18 @@ contains
 
 
     select case (split_case)    
+      case ("SLL_LIE_TV") 
+        sim%nb_split_step = 2
+        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
+        sim%split_begin_T = .true.
+        sim%split_step(1) = 1._f64
+        sim%split_step(2) = 1._f64
+      case ("SLL_LIE_VT") 
+        sim%nb_split_step = 2
+        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
+        sim%split_begin_T = .false.
+        sim%split_step(1) = 1._f64
+        sim%split_step(2) = 1._f64
       case ("SLL_STRANG_TVT") 
         sim%nb_split_step = 3
         SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
@@ -729,6 +735,8 @@ contains
         sim%params(1) = kmode_x1
         sim%params(2) = kmode_x2
         sim%params(3) = eps
+        sim%nrj0 = (0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+        *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
       case default
         print *,'#init_func_case not implemented'
         print *,'#in initialize_vlasov_par_poisson_seq_cart'  
@@ -750,10 +758,489 @@ contains
   
   subroutine run_vp4d_cartesian(sim)
     class(sll_simulation_4d_vlasov_par_poisson_seq_cart), intent(inout) :: sim
+    sll_int32 :: world_size
+    sll_int32 :: my_rank
+    sll_int32 :: ierr
+    sll_int32, dimension(:), allocatable :: recv_sz
+    sll_int32, dimension(:), allocatable :: disps
+    sll_int32 :: send_size
+    sll_int32 :: nproc_x1
+    sll_int32 :: nproc_x2
+    sll_int32 :: nproc_x3
+    sll_int32 :: nproc_x4
+    sll_real64, dimension(:,:,:,:), allocatable :: f_seq_x3x4
+    sll_real64, dimension(:,:,:,:), allocatable :: f_seq_x1x2
+    sll_real64, dimension(:,:), allocatable :: rho_split
+    sll_real64, dimension(:,:), allocatable :: rho_full
+    sll_real64, dimension(:,:), allocatable :: intfdx_split
+    sll_real64, dimension(:,:), allocatable :: intfdx_full
+    sll_real64, dimension(:,:), allocatable :: E_x1
+    sll_real64, dimension(:,:), allocatable :: E_x2
+    sll_real64, dimension(:), allocatable :: send_buf_x1x2
+    sll_real64, dimension(:), allocatable :: recv_buf_x1x2
+    sll_real64, dimension(:), allocatable :: send_buf_x3x4
+    sll_real64, dimension(:), allocatable :: recv_buf_x3x4
+    sll_int32 :: loc_sz_x1
+    sll_int32 :: loc_sz_x2
+    sll_int32 :: loc_sz_x3
+    sll_int32 :: loc_sz_x4
+    sll_int32 :: nc_x1
+    sll_int32 :: nc_x2
+    sll_int32 :: nc_x3
+    sll_int32 :: nc_x4
+    sll_int32 :: itemp
+    type(layout_4D), pointer :: sequential_x1x2
+    type(layout_4D), pointer :: sequential_x3x4
+    type(layout_2D), pointer :: layout2d_par_x1x2
+    type(layout_2D), pointer :: layout2d_par_x3x4
+    sll_int32 :: power2
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: delta3
+    sll_real64 :: delta4
+    sll_real64 :: nrj 
+    sll_real64 :: ekin
+    type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
+    type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
+    sll_int32 :: istep
+    logical :: split_T
+    sll_int32 :: split_istep
+    sll_real64, dimension(:), allocatable     :: f1d
+    sll_int32 :: nc_max
+    sll_real64 :: alpha
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: i3
+    sll_int32 :: i4
+    sll_real64 :: time
+    sll_int32 :: th_diag_id
+    sll_int32 :: intfdx_id
+    sll_int32 :: rho_id
+    sll_int32 :: E_x1_id
+    sll_int32 :: E_x2_id
+    sll_int32 :: global_indices(4)
+    sll_int32 :: ig
+    sll_real64 :: tmp
+    sll_real64 :: ekin0
+    sll_real64 :: nrj0
+    
+    world_size = sll_get_collective_size(sll_world_collective)
+    my_rank    = sll_get_collective_rank(sll_world_collective)
+    
+    
+    nc_x1 = sim%mesh_x1%num_cells
+    nc_x2 = sim%mesh_x2%num_cells
+    nc_x3 = sim%mesh_x3%num_cells
+    nc_x4 = sim%mesh_x4%num_cells
+    
+    nc_max = maxval((/nc_x1,nc_x2,nc_x3,nc_x4/))
+    
+    SLL_ALLOCATE(f1d(nc_max+1),ierr)
+    
+    
+    delta1 = sim%mesh_x1%delta_eta
+    delta2 = sim%mesh_x2%delta_eta
+    delta3 = sim%mesh_x3%delta_eta
+    delta4 = sim%mesh_x4%delta_eta
+    
+   
     
     if(sll_get_collective_rank(sll_world_collective)==0) then
-      print *,'#not implemented for the moment!'
+      !print *,'world_size=',world_size
+      !print *,'#not implemented for the moment!'
     endif
+    SLL_ALLOCATE(recv_sz(world_size),ierr)
+    SLL_ALLOCATE(disps(world_size),ierr)
+
+
+    ! allocate the layouts...
+    sequential_x1x2  => new_layout_4D( sll_world_collective )
+    sequential_x3x4  => new_layout_4D( sll_world_collective )
+    layout2d_par_x1x2 => new_layout_2D( sll_world_collective )
+    layout2d_par_x3x4 => new_layout_2D( sll_world_collective )
+    
+    power2 = int(log(real(world_size))/log(2.0))
+    ! special case N = 1, so power2 = 0
+    if(power2 == 0) then
+       nproc_x1 = 1
+       nproc_x2 = 1
+       nproc_x3 = 1
+       nproc_x4 = 1
+    end if    
+    if(is_even(power2)) then
+       nproc_x1 = 2**(power2/2)
+       nproc_x2 = 2**(power2/2)
+       nproc_x3 = 1
+       nproc_x4 = 1
+    else 
+       nproc_x1 = 2**((power2-1)/2)
+       nproc_x2 = 2**((power2+1)/2)
+       nproc_x3 = 1
+       nproc_x4 = 1
+    end if
+
+    call initialize_layout_with_distributed_2D_array( &
+         nc_x1+1, & 
+         nc_x2+1, & 
+         nproc_x1, &
+         nproc_x2, &
+         layout2d_par_x1x2 )
+    call compute_local_sizes( layout2d_par_x1x2, loc_sz_x1, loc_sz_x2)
+    SLL_ALLOCATE(rho_split(loc_sz_x1,loc_sz_x2),ierr)
+    SLL_ALLOCATE(send_buf_x1x2(loc_sz_x1*loc_sz_x2), ierr)
+
+
+
+    
+    
+    
+    SLL_ALLOCATE(rho_full(nc_x1+1,nc_x2+1),ierr)
+    SLL_ALLOCATE(intfdx_full(nc_x3+1,nc_x4+1),ierr)
+    SLL_ALLOCATE(E_x1(nc_x1+1,nc_x2+1),ierr)
+    SLL_ALLOCATE(E_x2(nc_x1+1,nc_x2+1),ierr)
+    SLL_ALLOCATE(recv_buf_x1x2((nc_x1+1)*(nc_x2+1)),ierr)
+    SLL_ALLOCATE(recv_buf_x3x4((nc_x3+1)*(nc_x4+1)),ierr)
+
+
+
+    call initialize_layout_with_distributed_4D_array( &
+         nc_x1+1, &
+         nc_x2+1, &
+         nc_x3+1, &
+         nc_x4+1, &
+         nproc_x1, &
+         nproc_x2, &
+         nproc_x3, &
+         nproc_x4, &
+         sequential_x3x4 )
+    
+    call compute_local_sizes_4d( sequential_x3x4, &
+         loc_sz_x1, &
+         loc_sz_x2, &
+         loc_sz_x3, &
+         loc_sz_x4 )
+    
+    SLL_ALLOCATE(f_seq_x3x4(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
+
+    itemp = nproc_x3
+    nproc_x3 = nproc_x1
+    nproc_x1 = itemp
+    itemp = nproc_x4
+    nproc_x4 = nproc_x2 
+    nproc_x2 = itemp
+    
+    call initialize_layout_with_distributed_4D_array( &
+         nc_x1+1, & 
+         nc_x2+1, & 
+         nc_x3+1, &
+         nc_x4+1, &
+         nproc_x1, &
+         nproc_x2, &
+         nproc_x3, &
+         nproc_x4, &
+         sequential_x1x2 )
+    call compute_local_sizes_4d( sequential_x1x2, &
+         loc_sz_x1, &
+         loc_sz_x2, &
+         loc_sz_x3, &
+         loc_sz_x4 )
+    SLL_ALLOCATE(f_seq_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
+
+    call initialize_layout_with_distributed_2D_array( &
+         nc_x3+1, & 
+         nc_x4+1, & 
+         nproc_x3, &
+         nproc_x4, &
+         layout2d_par_x3x4 )
+    call compute_local_sizes( layout2d_par_x3x4, loc_sz_x3, loc_sz_x4)
+    SLL_ALLOCATE(intfdx_split(loc_sz_x3,loc_sz_x4),ierr)
+    SLL_ALLOCATE(send_buf_x3x4(loc_sz_x3*loc_sz_x4), ierr)
+
+
+
+
+    call sll_4d_parallel_array_initializer_cartesian( &
+         sequential_x3x4, &
+         sim%mesh_x1, &
+         sim%mesh_x2, &
+         sim%mesh_x3, &
+         sim%mesh_x4, &
+         f_seq_x3x4, &
+         sim%init_func, &
+         sim%params)
+    
+    call compute_local_sizes( layout2d_par_x1x2, loc_sz_x1, loc_sz_x2)    
+    call compute_reduction_4d_to_2d_direction34(&
+      f_seq_x3x4, &
+      rho_split, &
+      loc_sz_x1, &
+      loc_sz_x2, &
+      nc_x3+1, &
+      nc_x4+1, &
+      delta3, &    
+      delta4) 
+    call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
+    recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
+    send_size = size(send_buf_x1x2)
+    call compute_displacements_array_2d( &
+         layout2d_par_x1x2, &
+         world_size, &
+         disps )
+    call sll_collective_allgatherv_real64( &
+         sll_world_collective, &
+         send_buf_x1x2, &
+         send_size, &
+         recv_sz, &
+         disps, &
+         recv_buf_x1x2 )
+    call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
+
+    call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+
+
+    seqx3x4_to_seqx1x2 => &
+         NEW_REMAP_PLAN(sequential_x3x4,sequential_x1x2,f_seq_x3x4)
+    
+    seqx1x2_to_seqx3x4 => &
+         NEW_REMAP_PLAN(sequential_x1x2,sequential_x3x4,f_seq_x1x2)
+
+
+    ekin = (sim%mesh_x1%eta_max-sim%mesh_x1%eta_min) &
+      *(sim%mesh_x2%eta_max-sim%mesh_x2%eta_min) ! analytic expression
+    intfdx_full = 0._f64 ! to compute correctly
+    
+    nrj0=sim%nrj0
+    ekin0=ekin
+    
+     
+    if(sll_get_collective_rank(sll_world_collective)==0) then
+      call sll_ascii_file_create('thdiag.dat', th_diag_id, ierr)
+      call sll_binary_file_create('rho.bdat', rho_id, ierr)
+      call sll_binary_file_create('E_x1.bdat', E_x1_id, ierr)
+      call sll_binary_file_create('E_x2.bdat', E_x2_id, ierr)
+      call sll_binary_file_create('intfdx.bdat', rho_id, ierr)
+      call sll_binary_write_array_2d(rho_id,rho_full(1:nc_x1,1:nc_x2),ierr)  
+      call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
+      call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
+      call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)  
+      write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0!0.5*nrj+ekin
+    endif
+
+    
+    !print *,'#nrj=',nrj
+    call apply_remap_4D( seqx3x4_to_seqx1x2, f_seq_x3x4, f_seq_x1x2 )
+    call compute_local_sizes_4d( sequential_x1x2, &
+         loc_sz_x1, &
+         loc_sz_x2, &
+         loc_sz_x3, &
+         loc_sz_x4 )
+    
+    do istep = 1, sim%num_iterations
+      
+      split_T = sim%split_begin_T      
+      do split_istep=1,sim%nb_split_step
+        if(sll_get_collective_rank(sll_world_collective)==0) then        
+          print *,istep,split_istep,nrj
+        endif
+        if(split_T)then
+          !T advection
+          global_indices(1:4) = local_to_global_4D( sequential_x1x2, (/1, 1, 1, 1/) )
+          do i4=1,loc_sz_x4
+            do i3=1,loc_sz_x3
+              !advection in x1
+              ig=global_indices(3)
+              alpha = (sim%mesh_x3%eta_min + real(i3+ig-2,f64) * delta3) &
+                * sim%split_step(split_istep)
+              do i2=1,nc_x2+1
+                f1d(1:nc_x1+1)=f_seq_x1x2(1:nc_x1+1,i2,i3,i4) 
+                call sim%advect_x1%advect_1d_constant(&
+                  alpha, &
+                  sim%dt, &
+                  f1d(1:nc_x1+1), &
+                  f1d(1:nc_x1+1))
+                f_seq_x1x2(1:nc_x1+1,i2,i3,i4)=f1d(1:nc_x1+1)
+              enddo
+              !advection in x2
+              ig=global_indices(4)
+              alpha = (sim%mesh_x4%eta_min + real(i4+ig-2,f64) * delta4) &
+                * sim%split_step(split_istep)
+              do i1=1,nc_x1+1
+                f1d(1:nc_x2+1)=f_seq_x1x2(i1,1:nc_x2+1,i3,i4) 
+                call sim%advect_x2%advect_1d_constant(&
+                  alpha, &
+                  sim%dt, &
+                  f1d(1:nc_x2+1), &
+                  f1d(1:nc_x2+1))
+                f_seq_x1x2(i1,1:nc_x2+1,i3,i4)=f1d(1:nc_x2+1)
+              enddo                            
+            enddo 
+          enddo
+        else
+          !V advection
+          call apply_remap_4D( seqx1x2_to_seqx3x4, f_seq_x1x2, f_seq_x3x4 )
+          call compute_local_sizes_4d( sequential_x3x4, &
+           loc_sz_x1, &
+           loc_sz_x2, &
+           loc_sz_x3, &
+           loc_sz_x4 )
+          
+          !begin compute poisson
+          call compute_reduction_4d_to_2d_direction34(&
+            f_seq_x3x4, &
+            rho_split, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            nc_x3+1, &
+            nc_x4+1, &
+            delta3, &    
+            delta4) 
+          call load_buffer_2d( layout2d_par_x1x2, rho_split, send_buf_x1x2 )
+          recv_sz(:) = receive_counts_array_2d( layout2d_par_x1x2, world_size )    
+          send_size = size(send_buf_x1x2)
+          call compute_displacements_array_2d( &
+            layout2d_par_x1x2, &
+            world_size, &
+            disps )
+          call sll_collective_allgatherv_real64( &
+            sll_world_collective, &
+            send_buf_x1x2, &
+            send_size, &
+            recv_sz, &
+            disps, &
+            recv_buf_x1x2 )
+          call unload_buffer_2d(layout2d_par_x1x2, recv_buf_x1x2, rho_full)
+          call solve(sim%poisson,E_x1,E_x2,rho_full,nrj)
+          !end compute poisson 
+          
+          
+          
+          
+          
+          
+          global_indices(1:4) = local_to_global_4D( sequential_x3x4, (/1, 1, 1, 1/) ) 
+          do i2=1,loc_sz_x2
+            do i1=1,loc_sz_x1
+
+              !advection in x3
+              alpha = E_x1(i1-1+global_indices(1),i2-1+global_indices(2)) &
+                * sim%split_step(split_istep)
+              do i4=1,nc_x4+1
+                f1d(1:nc_x3+1)=f_seq_x3x4(i1,i2,1:nc_x3+1,i4) 
+                call sim%advect_x3%advect_1d_constant(&
+                  alpha, &
+                  sim%dt, &
+                  f1d(1:nc_x3+1), &
+                  f1d(1:nc_x3+1))
+                f_seq_x3x4(i1,i2,1:nc_x3+1,i4)=f1d(1:nc_x3+1)
+              enddo
+              !advection in x4
+              alpha = E_x2(i1-1+global_indices(1),i2-1+global_indices(2)) &
+                * sim%split_step(split_istep)
+              do i3=1,nc_x3+1
+                f1d(1:nc_x4+1)=f_seq_x3x4(i1,i2,i3,1:nc_x4+1) 
+                call sim%advect_x4%advect_1d_constant(&
+                  alpha, &
+                  sim%dt, &
+                  f1d(1:nc_x4+1), &
+                  f1d(1:nc_x4+1))
+                f_seq_x3x4(i1,i2,i3,1:nc_x4+1)=f1d(1:nc_x4+1)
+              enddo                            
+
+
+
+
+
+
+              
+            enddo 
+          enddo
+
+          call apply_remap_4D( seqx3x4_to_seqx1x2, f_seq_x3x4, f_seq_x1x2 )
+          call compute_local_sizes_4d( sequential_x1x2, &
+           loc_sz_x1, &
+           loc_sz_x2, &
+           loc_sz_x3, &
+           loc_sz_x4 )
+        endif
+        split_T = .not.(split_T)  
+      enddo
+      if (mod(istep,sim%freq_diag_time)==0) then
+        time = real(istep,f64)*sim%dt
+        
+        
+        
+        call compute_reduction_4d_to_2d_direction12(&
+            f_seq_x1x2, &
+            intfdx_split, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            loc_sz_x3, &
+            loc_sz_x4, &
+            delta1, &    
+            delta2) 
+        call load_buffer_2d( layout2d_par_x3x4, intfdx_split, send_buf_x3x4 )
+        recv_sz(:) = receive_counts_array_2d( layout2d_par_x3x4, world_size )    
+        send_size = size(send_buf_x3x4)
+        call compute_displacements_array_2d( &
+            layout2d_par_x3x4, &
+            world_size, &
+            disps )
+        call sll_collective_allgatherv_real64( &
+            sll_world_collective, &
+            send_buf_x3x4, &
+            send_size, &
+            recv_sz, &
+            disps, &
+            recv_buf_x3x4 )
+        call unload_buffer_2d(layout2d_par_x3x4, recv_buf_x3x4, intfdx_full)
+        if (mod(istep,sim%freq_diag)==0) then
+          if(sll_get_collective_rank(sll_world_collective)==0) then
+            call sll_binary_write_array_2d(intfdx_id,intfdx_full(1:nc_x3+1,1:nc_x4+1),ierr)
+          endif
+        endif
+
+
+        do i4=1,nc_x4+1
+          do i3=1,nc_x3+1
+            tmp = (sim%mesh_x4%eta_min + real(i4-1,f64) * delta4)**2
+            tmp = tmp+(sim%mesh_x3%eta_min + real(i3-1,f64) * delta3)**2
+            intfdx_full(i3,i4) = intfdx_full(i3,i4) * 0.5_f64*tmp 
+          enddo
+        enddo
+        
+        call compute_reduction_2d_to_0d(&
+            intfdx_full, &
+            ekin, &
+            nc_x3+1, &
+            nc_x4+1, &
+            delta3, &    
+            delta4) 
+        
+        
+        
+        
+        
+        if(sll_get_collective_rank(sll_world_collective)==0) then
+          write(th_diag_id,'(f12.5,5g20.12)') time, nrj,ekin,nrj0,ekin0!,ekin+0.5_f64*nrj
+        endif
+      endif
+      if (mod(istep,sim%freq_diag)==0) then
+        if(sll_get_collective_rank(sll_world_collective)==0) then
+          call sll_binary_write_array_2d(rho_id,rho_full(1:nc_x1,1:nc_x2),ierr)  
+          call sll_binary_write_array_2d(E_x1_id,E_x1(1:nc_x1,1:nc_x2),ierr)  
+          call sll_binary_write_array_2d(E_x2_id,E_x2(1:nc_x1,1:nc_x2),ierr)  
+        endif
+
+
+
+      endif   
+    enddo
+    
+    
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      call sll_ascii_file_close(th_diag_id,ierr) 
+    endif
+    
   end subroutine run_vp4d_cartesian    
   
   
