@@ -21,7 +21,7 @@
 !       +C \phi = rho
 !in polar coordinates
 !this leads when A_{1,2}=A_{2,1}=0 and B_2 = 0
-! A_11\partial_{1,1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
+! A_11\partial_{1,e1}\hat{phi}+B_1\partial_{1}\hat{phi}+(C+A_{2,2}k^2)\hat{phi} = \hat{rho}
 
 
 module sll_module_poisson_2d_polar_solver
@@ -33,9 +33,16 @@ use sll_module_poisson_2d_base
 use sll_poisson_2d_polar
 implicit none
 
+  sll_int32, parameter :: SLL_POISSON_CLASSIC = 0
+  sll_int32, parameter :: SLL_POISSON_DRIFT_KINETIC = 1
+
   type,extends(sll_poisson_2d_base) :: poisson_2d_polar_solver     
   
-  !type(sll_plan_poisson_polar), pointer                   :: poiss
+  type(sll_plan_poisson_polar), pointer                   :: poiss
+  sll_int32 :: poisson_case
+  sll_real64,dimension(:), pointer :: dlog_density
+  sll_real64,dimension(:), pointer :: inv_Te
+  
   
   contains
     procedure, pass(poisson) :: initialize => &
@@ -57,7 +64,8 @@ contains
     nc_eta2, &
     bc, &
     dlog_density, &
-    inv_Te) &     
+    inv_Te, &
+    poisson_case) &     
     result(poisson)
       
     type(poisson_2d_polar_solver),pointer :: poisson
@@ -68,6 +76,7 @@ contains
     sll_int32, intent(in) :: bc(2)
     sll_real64, dimension(:), intent(in), optional :: dlog_density
     sll_real64, dimension(:), intent(in), optional :: inv_Te
+    sll_int32, optional :: poisson_case
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
@@ -79,7 +88,8 @@ contains
       nc_eta2, &
       bc, &
       dlog_density, &
-      inv_Te)
+      inv_Te, &
+      poisson_case)
     
   end function new_poisson_2d_polar_solver
   
@@ -92,7 +102,8 @@ contains
     nc_eta2, &
     bc, &
     dlog_density, &
-    inv_Te)
+    inv_Te, &
+    poisson_case)
     class(poisson_2d_polar_solver) :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
@@ -101,29 +112,87 @@ contains
     sll_int32, intent(in) :: bc(2)
     sll_real64, dimension(:), intent(in), optional :: dlog_density
     sll_real64, dimension(:), intent(in), optional :: inv_Te
+    sll_int32, intent(in), optional :: poisson_case
     sll_int32 :: ierr
     sll_real64 :: delta_eta
     
-!    delta_eta = (eta1_max-eta1_min)/real(nc_eta1,f64)
-!    
-!    poisson%poiss => new_plan_poisson_polar( &
-!      delta_eta,& 
-!      eta1_min, &
-!      nc_eta1, &
-!      nc_eta2, &
-!      bc, &
-!      dlog_density, &
-!      inv_Te)
+    delta_eta = (eta1_max-eta1_min)/real(nc_eta1,f64)
+    
+    if(.not.(present(poisson_case)))then
+      poisson%poisson_case = SLL_POISSON_CLASSIC
+    else   
+      poisson%poisson_case = poisson_case  
+    endif
+    
+    !if(present(dlog_density))then
+    !  poisson%poisson_case = SLL_POISSON_CLASSIC
+    !else
+    !  poisson%poisson_case = poisson_case  
+    !endif
+    
+    select case(poisson%poisson_case)
+      case (SLL_POISSON_CLASSIC)
+         poisson%poiss => new_plan_poisson_polar( &
+          delta_eta,& 
+          eta1_min, &
+          nc_eta1, &
+          nc_eta2, &
+          bc)
+     case (SLL_POISSON_DRIFT_KINETIC)    
+        SLL_ALLOCATE(poisson%dlog_density(nc_eta1+1),ierr)
+        SLL_ALLOCATE(poisson%inv_Te(nc_eta1+1),ierr)
+        if(.not.(present(dlog_density)))then
+          print *,'#dlog_density should be present in initialize_poisson_2d_polar_solver'
+          stop
+        endif
+        if(size(dlog_density)<nc_eta1+1)then
+          print *,'#Bad size for dlog_density',size(dlog_density)
+          stop
+        endif
 
-        
+        if(.not.(present(inv_Te)))then
+          print *,'#dlog_density should be present in initialize_poisson_2d_polar_solver'
+          stop
+        endif
+        if(size(inv_Te)<nc_eta1+1)then
+          print *,'#Bad size for dlog_density',size(inv_Te)
+          stop
+        endif
+        poisson%dlog_density(1:nc_eta1+1)=dlog_density(1:nc_eta1+1)
+        poisson%inv_Te(1:nc_eta1+1)=inv_Te(1:nc_eta1+1)
+        poisson%poiss => new_plan_poisson_polar( &
+          delta_eta,& 
+          eta1_min, &
+          nc_eta1, &
+          nc_eta2, &
+          bc, &
+          poisson%dlog_density, &
+          poisson%inv_Te)
+      case default
+        print *,'#bad value of poisson_case=', poisson%poisson_case
+        print *,'#not implemented'
+        print *,'#in initialize_poisson_2d_polar_solver'
+        stop
+     end select   
   end subroutine initialize_poisson_2d_polar_solver
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_2d_polar( poisson, phi, rho )
-    class(poisson_2d_polar_solver) :: poisson
+    class(poisson_2d_polar_solver), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
     sll_real64,dimension(:,:),intent(out) :: phi
     
+    select case(poisson%poisson_case)
+      case (SLL_POISSON_CLASSIC)
+        call poisson_solve_polar(poisson%poiss,rho,phi)            
+      case (SLL_POISSON_DRIFT_KINETIC)    
+        call solve_poisson_polar(poisson%poiss,rho,phi)
+      case default
+        print *,'#bad value of poisson_case=', poisson%poisson_case
+        print *,'#not implemented'
+        print *,'in compute_phi_from_rho_2d_polar'
+        stop
+     end select   
     !call solve( poisson%poiss, rho, phi)
     
   end subroutine compute_phi_from_rho_2d_polar
@@ -137,7 +206,7 @@ contains
 !    end subroutine compute_E_from_phi_2d_fft
 
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
-    subroutine compute_E_from_rho_2d_polar( poisson, rho, E1, E2 )
+    subroutine compute_E_from_rho_2d_polar( poisson, E1, E2, rho )
       class(poisson_2d_polar_solver) :: poisson
       sll_real64,dimension(:,:),intent(in) :: rho
       sll_real64,dimension(:,:),intent(out) :: E1

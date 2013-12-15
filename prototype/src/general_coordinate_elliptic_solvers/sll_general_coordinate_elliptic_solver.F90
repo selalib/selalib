@@ -477,7 +477,7 @@ contains ! *******************************************************************
           
        end do
     end do
-    
+
     !print*, 'loop ok'
     
     ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
@@ -662,12 +662,12 @@ contains ! *******************************************************************
     sll_real64 :: val_a12
     sll_real64 :: val_a21
     sll_real64 :: val_a22
-    sll_real64 :: val_b1
-    sll_real64 :: val_b1_der1
-    sll_real64 :: val_b1_der2
-    sll_real64 :: val_b2
-    sll_real64 :: val_b2_der1
-    sll_real64 :: val_b2_der2
+    sll_real64 :: val_b1=0
+    sll_real64 :: val_b1_der1=0
+    sll_real64 :: val_b1_der2=0
+    sll_real64 :: val_b2=0
+    sll_real64 :: val_b2_der1=0
+    sll_real64 :: val_b2_der2=0
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
     sll_real64 :: B11
@@ -1392,10 +1392,6 @@ contains ! *******************************************************************
     type(general_coordinate_elliptic_solver) :: es
     !type(sll_logical_mesh_2d), pointer :: mesh2d
     sll_real64, dimension(:),pointer :: Masse_tot
-    
-    
-    es%tmp_rho_vec = 0.0_f64
-    
     
     es%tmp_rho_vec(:) = 0.0_f64
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
