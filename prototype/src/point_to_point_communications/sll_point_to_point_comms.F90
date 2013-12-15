@@ -574,7 +574,7 @@ contains
     rank_index = i+nprocx*j
   end function rank_index
 
-  subroutine sll_configure_comm_real64_ring_2D( comm, nprocx, nprocy )
+  subroutine sll_configure_comm_real64_torus_2D( comm, nprocx, nprocy )
     type(sll_p2p_comm_real64), pointer :: comm
     sll_int32, intent(in) :: nprocx
     sll_int32, intent(in) :: nprocy
@@ -600,7 +600,7 @@ contains
     call connect_ports( comm, 3, rank_index(nprocx, iloc, bottom), 4 )
     ! top connection
     call connect_ports( comm, 4, rank_index(nprocx, iloc, top),    3 )
-  end subroutine sll_configure_comm_real64_ring_2D
+  end subroutine sll_configure_comm_real64_torus_2D
  
 #if 0
 
