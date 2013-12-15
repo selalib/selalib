@@ -527,7 +527,7 @@ contains
 !    end subroutine compute_E_from_phi_2d_fft
 
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
-    subroutine compute_E_from_rho_2d_mudpack_curvilinear( poisson, rho, E1, E2 )
+    subroutine compute_E_from_rho_2d_mudpack_curvilinear( poisson, E1, E2, rho )
       class(poisson_2d_mudpack_curvilinear_solver) :: poisson
       sll_real64,dimension(:,:),intent(in) :: rho
       sll_real64,dimension(:,:),intent(out) :: E1
