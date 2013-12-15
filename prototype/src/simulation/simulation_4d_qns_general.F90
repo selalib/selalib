@@ -375,7 +375,7 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
-    sll_real64 :: tmp
+    sll_real64 :: tmp,numpart
     sll_real64, dimension(1) :: tmp1
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
@@ -398,6 +398,7 @@ contains
     sll_real64, dimension(:,:), pointer :: phi_values
     sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
+    sll_int32 :: droite_test_pente
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
@@ -1024,11 +1025,11 @@ contains
        ! - a change of the compute_coefficients interface to set the
        !   data parameter as optional...
        
-       call compute_average_f( &
-            sim,&
-            sim%mesh2d_x,&
-            sim%rho_full, &
-            density_tot )
+!!$       call compute_average_f( &
+!!$            sim,&
+!!$            sim%mesh2d_x,&
+!!$            sim%rho_full, &
+!!$            density_tot )
      
        ! print*, 'density', density_tot
        ! The subtraction of density_tot is supposed to be made inside the 
@@ -1078,6 +1079,7 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
        call set_time_mark(t0)  
+
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
@@ -1121,13 +1123,12 @@ contains
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
                      alpha3 )
-                
-                
                 efield_energy_total = efield_energy_total + &
-                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)- &
-                                        jac_m(1,2)*jac_m(2,1)) &
-                                        *((inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ &
-                                          (inv_j(1,2)*ex + inv_j(2,2)*ey)**2)
+                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)) &
+                     *abs( ( inv_j(1,1) *inv_j(1,1) + inv_j(1,2)*inv_j(1,2))*ex**2 &
+                     +2* ( inv_j(1,1) *inv_j(2,1) + inv_j(1,2)*inv_j(2,2))*abs(ex)*abs(ey) &
+                     + ( inv_j(2,1)*inv_j(2,1)  + inv_j(2,2)*inv_j(2,2))*ey**2)
+                
              end do
           end do
        end do
@@ -1137,7 +1138,7 @@ contains
        
        call compute_local_sizes_4d( sim%sequential_x3x4, &
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
-       
+       numpart = 0.0_f64
        ! dt in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
@@ -1147,7 +1148,7 @@ contains
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-
+                jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
@@ -1155,7 +1156,16 @@ contains
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
                      alpha4 )
+
+                
              end do
+             numpart = numpart + delta1*delta2*delta3*delta4 *&
+                  sum(sim%f_x3x4(i,j,:,:)) *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+!!$             efield_energy_total = efield_energy_total + &
+!!$                  delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)) &
+!!$                  *abs( ( inv_j(1,1) *inv_j(1,1) + inv_j(1,2)*inv_j(1,2))*ex**2 &
+!!$                  +2* ( inv_j(1,1) *inv_j(2,1) + inv_j(1,2)*inv_j(2,2))*abs(ex)*abs(ey) &
+!!$                  + ( inv_j(2,1)*inv_j(2,1)  + inv_j(2,2)*inv_j(2,2))*ey**2)
           end do
        end do
 
@@ -1166,8 +1176,8 @@ contains
        
        ! Approximate the integral of the distribution function along all
        ! directions.
-       num_particles_local(buffer_counter) = &
-            sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
+       num_particles_local(buffer_counter) = numpart
+           ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
        if( buffer_counter == BUFFER_SIZE ) then
           call sll_collective_reduce_real64( &
                sll_world_collective, &
@@ -1211,8 +1221,8 @@ contains
           ! Use next line only if no communications are needed!
           !       buffer_result(:) = buffer(:)
 
-          num_particles_local(buffer_counter) = &
-               sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
+          num_particles_local(buffer_counter) = numpart
+              ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
           if( buffer_counter == BUFFER_SIZE ) then
              call sll_collective_reduce_real64( &
                   sll_world_collective, &
@@ -1238,6 +1248,7 @@ contains
           if(sim%my_rank == 0) then
              open(efield_energy_file_id,file="electric_field_energy_qns",&
                   position="append")
+             
              if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)
              end if
@@ -1251,6 +1262,16 @@ contains
           buffer_counter         = buffer_counter + 1
        end if
        efield_energy_total    = 0.0_f64
+
+       if (sim%my_rank == 0) then
+          
+          open(droite_test_pente,file="droite_test_pente",&
+               position="append")
+          write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
+          close(droite_test_pente)
+       end if
+
+      
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
        ! Reconfigure data. 
        
@@ -1643,6 +1664,7 @@ contains
     end do
     !print*, length_total
     density_tot = density_tot/ (length_total)
+
   end subroutine compute_average_f
 
   ! Some ad-hoc functions to prepare data for allgather operations. Should
