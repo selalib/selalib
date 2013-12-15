@@ -794,6 +794,7 @@ contains ! *******************************************************************
           !print*,'matrix values', val_a11,val_a12,val_a21,val_a22
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
+          
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
@@ -826,6 +827,7 @@ contains ! *******************************************************************
                - jac_mat(1,2) * val_b2 ! jac_mat(1,1) ! a revoir
           C2 =   jac_mat(1,1) * val_b2 &
                - jac_mat(2,1) * val_b1! jac_mat(1,1) ! a revoir
+          !print*, C1,C2 
           !print*, 'test22', B22
           ! loop over the splines supported in the cell that are different than
           ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
@@ -1071,10 +1073,7 @@ contains ! *******************************************************************
                work1,&
                dbiatx1,&
                2 )
-          val_f   =rho%value_at_point(gpt1,gpt2) - int_rho! 0.05*cos(0.5*gpt1)
-          ! print*, 'valeur rho=',val_f,2*(2.0*sll_pi)**2*cos(2.0*sll_pi*gpt1)*cos(2.0*sll_pi*gpt2)
-          ! print*, 'val',gpt1,gpt2,val_f, 0.05*cos(0.5*gpt1), val_f-0.05*cos(0.5*gpt1)
-          !print*, 'val ', -2*(2*sll_pi)**2* sin(2*sll_pi*gpt1)*cos(2*sll_pi*gpt2),val_f
+          val_f   =rho%value_at_point(gpt1,gpt2) - int_rho! 
           jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
           
@@ -1490,8 +1489,11 @@ contains ! *******************************************************************
     sll_real64 :: wgpt1
     sll_real64 :: wgpt2
     sll_real64 :: val_f
+    sll_real64, dimension(2,2) :: jac_mat
+    sll_real64 :: val_jac
     ! global variables
     sll_real64 :: int_rho
+    sll_real64 :: int_jac
     
     
     ! The supposition is that all fields use the same logical mesh
@@ -1504,6 +1506,7 @@ contains ! *******************************************************************
     
     
     int_rho = 0.0_f64
+    int_jac = 0.0_f64
     do cell_j=1,es%num_cells2
        eta2  = eta2_min + (cell_j-1)*delta2
        do cell_i=1,es%num_cells1
@@ -1521,13 +1524,17 @@ contains ! *******************************************************************
                 wgpt1 = 0.5_f64*delta1*es%gauss_pts1(2,i)
                 
                 val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
+                jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
                 
-                int_rho = int_rho +  val_f *wgpt1*wgpt2
+                int_rho = int_rho +  val_f *wgpt1*wgpt2*val_jac
+                int_jac = int_jac + wgpt1*wgpt2*val_jac
              end do
           end do
        end do
     end do
     !print*,' integrale de rho', int_rho
+   int_rho = int_rho/int_jac
   end subroutine compute_integral_source_term
 
 end module sll_general_coordinate_elliptic_solver_module
