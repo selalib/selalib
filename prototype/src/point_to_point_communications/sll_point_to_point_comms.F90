@@ -89,7 +89,7 @@ module sll_point_to_point_comms_module
      sll_int32 :: comm_size =  0
      sll_int32 :: rank      = -1
      sll_int32 :: num_ports
-     sll_int64 :: buffer_size
+     sll_int32 :: buffer_size
      type(sll_collective_t), pointer :: collective
      type(port_real64), dimension(:),pointer :: ports  ! array of ports
    !  type(sll_remote), pointer       :: remotes  ! may not be needed
@@ -385,7 +385,7 @@ contains
     sll_int32, intent(in)          :: port
     sll_int32, intent(in)          :: size
     sll_int32 :: bit
-    sll_int64 :: tag
+    sll_int32 :: tag
     sll_int32 :: ierr
 
     ! arguments tests here
@@ -428,7 +428,7 @@ contains
     sll_int32, dimension(MPI_STATUS_SIZE) :: stat
     sll_int32 :: request
     sll_int32 :: bit
-    sll_int64 :: tag
+    sll_int32 :: tag
     sll_int32 :: local_count ! remember: there is a padding
     sll_int32 :: ierr
 
