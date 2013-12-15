@@ -24,7 +24,8 @@ IF(MUDPACK_ENABLED)
 
    SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
                                     sll_mudpack_cartesian.F90
-                                    sll_mudpack_polar.F90)
+                                    sll_mudpack_polar.F90
+                                    sll_mudpack_curvilinear.F90)
 
 ENDIF(MUDPACK_ENABLED)
    
@@ -39,7 +40,15 @@ IF (NOT STDF95)
    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_base.F90
                                     sll_poisson_2d_fft.F90
                                     sll_poisson_2d_polar_solver.F90
+                                    sll_poisson_2d_periodic_solver.F90
+                                    sll_poisson_2d_elliptic_solver.F90
                                     sll_poisson_3d_base.F90)
+                                    
+  IF(MUDPACK_ENABLED)                                    
+    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90
+                                     sll_poisson_2d_mudpack_curvilinear_solver_old.F90)
+  ENDIF(MUDPACK_ENABLED)                                    
+                                    
 ENDIF(NOT STDF95)
 
 
@@ -49,7 +58,7 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 
 IF(FFTW_FOUND AND FFTW_ENABLED)
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
@@ -122,7 +131,8 @@ IF(MUDPACK_ENABLED)
 
       ADD_EXECUTABLE(test_mudpack_${TEST_NAME} test_mudpack_${TEST_NAME}.F90)
       
-      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} sll_poisson_solvers 
+      TARGET_LINK_LIBRARIES(test_mudpack_${TEST_NAME} ${POISSON_LIBS}
+                                                      sll_poisson_solvers 
                                                       sll_file_io
                                                       mudpack)
 

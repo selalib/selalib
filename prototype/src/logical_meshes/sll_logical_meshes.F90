@@ -189,6 +189,7 @@ end if
     TEST_PRESENCE_AND_ASSIGN_VAL( m, eta1_max, eta1_max, 1.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, eta2_min, eta2_min, 0.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, eta2_max, eta2_max, 1.0_f64 )
+    !m%delta_eta1   = (m%eta1_max - m%eta1_min)/(real(num_cells1,f64)-1)
     m%delta_eta1   = (m%eta1_max - m%eta1_min)/real(num_cells1,f64)
     m%delta_eta2   = (m%eta2_max - m%eta2_min)/real(num_cells2,f64)
 
