@@ -6,6 +6,10 @@ program comm_unit_test_2d
 #include "sll_utilities.h"
   implicit none
 
+  ! This test takes a 2D array and sends the nodes at the borders to the
+  ! neighboring processors, mimicking the type of operations that one would do
+  ! on a ghost point scheme.
+
 #define SZ_X 256
 #define SZ_Y 512
 ! BUF_SIZE MUST BE THE GREATEST BETWEEN THE SZ_X AND SZ_Y
@@ -13,8 +17,7 @@ program comm_unit_test_2d
 
   type(sll_p2p_comm_real64), pointer :: comm
   sll_real64, dimension(:,:), pointer :: main_array
-  ! A single 'recyclable' pointer could be used of course...
-  sll_real64, dimension(:), pointer :: buf
+  sll_real64, dimension(:), pointer :: buf ! used to refer to port buffers
   sll_int32 :: count
   sll_int32 :: rank
   sll_int32 :: col_size   ! collective size
@@ -23,10 +26,29 @@ program comm_unit_test_2d
   logical, dimension(1)   :: local_pass
   logical, dimension(1)   :: general_pass
 
-  call sll_boot_collective()
+  call sll_boot_collective() 
 
   rank = sll_get_collective_rank(sll_world_collective)
   col_size = sll_get_collective_size(sll_world_collective)
+
+  ! each comm has, in this 2D example, 4 ports, with an associated memory
+  ! buffer of BUF_SIZE real64 elements.
+  !
+  !                +------------------------+
+  !                |         port 4         |
+  !                |                        |
+  !                |                        |
+  !                |                        |
+  !                |port 1            port 2|
+  !                |                        |
+  !                |                        |
+  !                |                        |
+  !                |         port 3         |
+  !                +------------------------+
+  !
+  ! All processes will contain a 'comm' configured like this after new_comm
+  ! is called.
+
   comm => new_comm_real64( sll_world_collective, 4, BUF_SIZE )
   if(rank == 0) then
      print *, 'created new comm, size = ', col_size
@@ -34,13 +56,18 @@ program comm_unit_test_2d
   end if
 
   ! In this test the processors in the communicator are organized as a 2D ring,
-  ! thus there are four ports which are linked with the left(1) and right(2)
-  ! and to the bottom(3) and top(4). At the borders of the domain, the ports
-  ! are linked periodically.
-  call sll_configure_comm_real64_ring_2d( comm,2,2 ) ! not general! change!! this will break if the program is run on a number of procs different than 4
+  ! thus there are four ports which are linked with the left (port 1) and 
+  ! right(port 2) and to the bottom(port 3) and top(port 4). At the borders of 
+  ! the domain, the ports are linked periodically. The 2D ring means that
+  ! the processors are arranged as a 2D mesh, with port 2 connected to the
+  ! port 3 of the right neighbor, port 4 to the port 3 of the upper neighbor
+  ! and so on. At the edges of the processor mesh, the processes are connected
+  ! periodically. Thus the processors are connected as a toroidal surface.
+
+  call sll_configure_comm_real64_torus_2d( comm,2,2 ) ! not general! change!! this will break if the program is run on a number of procs different than 4
 
   if(rank == 0) then
-     print *, 'configured the comm as a 2D ring'
+     print *, 'configured the comm as a toroidal surface'
      call flush()
   end if
 
@@ -52,11 +79,16 @@ program comm_unit_test_2d
         main_array(i,j) = real((i-1)+SZ_X*(j-1),f64)
      end do
   end do
-  !print *, 'rank: ', comm%rank, 'main array = ', main_array(:,:)
+
   ! Load the buffer on port 1 with the data and send
-  buf => get_buffer(comm,1)
+  ! one should always first ask comm for the buffer to write or read. The
+  ! second argument is the port number one is working with.
+  buf => get_buffer(comm,1)    
   buf(1:SZ_Y) = main_array(1,:)
+  ! Non-blocking send. We indicate the port to send and how many elements.
   call comm_send_real64( comm, 1, SZ_Y)
+  ! After this send operation, a call to get_buffer would yield a null pointer.
+  ! There would thus be no writable buffer at this point.
 
   buf => get_buffer(comm,2)
   buf(1:SZ_Y) = main_array(SZ_X,:)
@@ -73,7 +105,9 @@ program comm_unit_test_2d
   ! here in principle the user would do some useful work with the main core
   ! of the main array while the communications complete...
 
-  ! And now receive the data.
+  ! And now receive the data. Just indicate the number of the port to receive.
+  ! The count variable is an 'out' variable that has the information on how
+  ! many elements were received.
   call comm_receive_real64( comm, 1, count )
 !  print *, 'rank ', rank, 'received ', count, 'elements on port 1'
   buf => get_buffer(comm,1)
