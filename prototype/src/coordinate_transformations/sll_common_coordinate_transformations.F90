@@ -391,7 +391,7 @@ contains
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
-    sinprod_jac11 = 1.0_f64 + alpha1*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_jac11 = 1.0_f64 + alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac11
 
   function sinprod_jac12 ( eta1, eta2, params )
@@ -409,7 +409,7 @@ contains
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
-    sinprod_jac12 = alpha1*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
+    sinprod_jac12 = alpha1*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac12
 
   function sinprod_jac21 ( eta1, eta2, params )
@@ -427,7 +427,7 @@ contains
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
-    sinprod_jac21 = alpha2*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_jac21 = alpha2*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac21
 
   function sinprod_jac22 ( eta1, eta2, params )
@@ -445,7 +445,7 @@ contains
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
-    sinprod_jac22 = 1.0_f64 + alpha2*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
+    sinprod_jac22 = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -467,8 +467,8 @@ contains
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
-    sinprod_jac = 1.0_f64 + alpha2*pi2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
-                            alpha1*pi2*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
+                            alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_jac
 
 #if 0
