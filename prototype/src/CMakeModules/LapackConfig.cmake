@@ -1,40 +1,24 @@
 
-MESSAGE(STATUS "LAPACK:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
+MESSAGE(STATUS "LAPACK:Fortran_COMPILER_NAME:${Fortran_COMPILER_NAME}")
+
 SET(USE_MKL OFF CACHE BOOL "Using Intel Math Kernel Library")
 
-IF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+
+IF(Fortran_COMPILER_NAME MATCHES "ifort")
+   SET(USE_MKL ON)
+ENDIF()
+
+IF(USE_MKL)
 
    SET(BLA_VENDOR "Intel")
 
-   IF($ENV{MKLROOT} MATCHES "composer")
-
-      MESSAGE(STATUS "MKLROOT:$ENV{MKLROOT}")
-      INCLUDE_DIRECTORIES($ENV{MKLROOT}/include)
-      SET(LAPACK_LIBRARIES -L$ENV{MKLROOT}/lib -mkl=sequential)
-      SET(LAPACK_FOUND TRUE)
-      SET(USE_MKL ON)
+      STRING(REGEX REPLACE "^([^:]*):" " " MKLROOT $ENV{MKLROOT})
+      INCLUDE_DIRECTORIES(${MKLROOT}/include/intel64/lp64 ${MKLROOT}/include)
+      SET(BLAS_LIBRARIES " ")
       SET(BLAS_FOUND TRUE)
-      SET(BLAS_LIBRARIES  " ")
-
-   ELSEIF($ENV{HOSTNAME} MATCHES "hydra*") 
-                                      
-      INCLUDE_DIRECTORIES($ENV{MKLROOT}/include/intel64/lp64 $ENV{MKLROOT}/include)
-      SET(BLAS_LIBRARIES "")
-      SET(LAPACK_LIBRARIES "-Wl,--start-group  $ENV{MKLROOT}/lib/intel64/libmkl_intel_lp64.a $ENV{MKLROOT}/lib/intel64/libmkl_sequential.a $ENV{MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
+      SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_sequential.a ${MKLROOT}/lib/intel64/libmkl_core.a -Wl,--end-group -lm")
       SET(LAPACK_FOUND TRUE)
-      SET(BLAS_FOUND TRUE)
-      SET(USE_MKL ON)
-
-   ELSEIF($ENV{HOSTNAME} MATCHES "hpc-f0*")
-
-      SET(MKLPATH  "/opt/intel/Compiler/11.1/072/mkl/lib/em64t")
-      SET(LAPACK_LIBRARIES -L${MKLPATH} -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -openmp )
-      SET(LAPACK_FOUND TRUE)
-      SET(BLAS_FOUND TRUE)
-      SET(BLAS_LIBRARIES  " ")
-      SET(USE_MKL ON)
-
-   ENDIF()
 
 ELSE()
 
@@ -74,8 +58,3 @@ ELSE(LAPACK_FOUND AND BLAS_FOUND)
   ENDIF(LAPACK_LIBRARIES AND BLAS_LIBRARIES)
 
 ENDIF(LAPACK_FOUND AND BLAS_FOUND)
-
-MARK_AS_ADVANCED( LAPACK_LIBRARIES
-                  BLAS_LIBRARIES    )
-
-SET(LINK_LIBRARIES ${LAPACK_LIBRARIES} ${BLAS_LIBRARIES})

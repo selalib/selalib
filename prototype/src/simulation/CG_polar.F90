@@ -177,6 +177,13 @@ program cg_polar
   call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta, &
     visu,step,"CG")
 
+  print *,'#bc(1)=',bc(1)
+  print *,'#bc(2)=',bc(2)
+  print *,'#SLL_DIRICHLET=',SLL_DIRICHLET
+  print *,'#SLL_NEUMANN=',SLL_NEUMANN
+  print *,'#SLL_NEUMANN_MODE_0=',SLL_NEUMANN_MODE_0
+  
+
   !mode=1.5
   if(bc(1)==SLL_DIRICHLET)then
     k1 = (r1**2-r2**2+2.0_f64*r1**2*log(rmax/r1) + &
@@ -694,10 +701,8 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
-      error,file_id,"Node")
+    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh",nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f"//cplot,f,"values",error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f
 

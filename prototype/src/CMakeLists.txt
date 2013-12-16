@@ -70,7 +70,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
 
-
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
    ADD_SUBDIRECTORY(assert)
@@ -92,6 +91,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
+     ADD_SUBDIRECTORY(advection)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
@@ -101,6 +101,8 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
+      ADD_SUBDIRECTORY(point_to_point_communications)
+
 
       IF(NOT STDF95)
          ADD_SUBDIRECTORY(parallel_array_initializers)
@@ -111,9 +113,16 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(electric_field_accumulators)
    
+   ADD_SUBDIRECTORY(mudpack)
+   ADD_SUBDIRECTORY(fishpack)
+   ADD_SUBDIRECTORY(opencl)
+   ADD_SUBDIRECTORY(pastix)
+   ADD_SUBDIRECTORY(wsmp)
+
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
+      ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
@@ -121,13 +130,6 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(BSL)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
-
-      FIND_PACKAGE(SUITESPARSE)
-      IF(SUITESPARSE_FOUND)
-         INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
-         ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ENDIF(SUITESPARSE_FOUND)
-   
       ADD_SUBDIRECTORY(mapped_meshes) # deprecated
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(distribution_function)
@@ -140,10 +142,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF(NOT STDF95)
 
-   ADD_SUBDIRECTORY(mudpack)
-   ADD_SUBDIRECTORY(fishpack)
-   ADD_SUBDIRECTORY(opencl)
-   ADD_SUBDIRECTORY(pastix)
 
    MESSAGE(STATUS "############################################################")
    MESSAGE(STATUS "####")

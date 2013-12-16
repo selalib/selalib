@@ -38,7 +38,7 @@ module sll_cubic_spline_interpolator_2d
 #endif
      sll_int32                           :: npts1
      sll_int32                           :: npts2
-     type(sll_cubic_spline_2D), pointer        :: spline
+     type(sll_cubic_spline_2D), pointer  :: spline
      sll_int32                           :: bc_type1
      sll_int32                           :: bc_type2
      sll_real64, dimension(:,:), pointer :: interpolation_points 

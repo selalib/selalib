@@ -1,4 +1,6 @@
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER}) #MPI is needed by hdf5...
+IF(HDF5_IS_PARALLEL)
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+ENDIF(HDF5_IS_PARALLEL)
 
 ADD_LIBRARY(sll_mesh_calculus STATIC sll_mesh_calculus_module.F90 )
 

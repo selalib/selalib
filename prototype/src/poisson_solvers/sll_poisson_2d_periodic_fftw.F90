@@ -30,6 +30,13 @@ use fftw3
 
 implicit none
 
+
+!> Create a new poisson solver on 1d mesh
+interface new
+  module procedure new_poisson_2d_periodic_fftw
+end interface
+
+
 !> Initialize the Poisson solver using fftw library
 interface initialize
   module procedure initialize_poisson_2d_periodic_fftw
@@ -69,9 +76,39 @@ type, public :: poisson_2d_periodic
 
 end type poisson_2d_periodic
 
-public initialize, solve, delete
+public initialize, new, solve, delete
 
 contains
+
+
+  !> Create a new solver
+  function new_poisson_2d_periodic_fftw(&
+    x_min, &
+    x_max, &
+    nc_x, &
+    y_min, &
+    y_max, &
+    nc_y, &
+    error) &
+    result(this)
+   type(poisson_2d_periodic),pointer :: this   !< self object
+   sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
+   sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
+   sll_real64, intent(in)    :: x_min  !< left corner direction x
+   sll_real64, intent(in)    :: x_max  !< right corner direction x
+   sll_real64, intent(in)    :: y_min  !< left corner direction y
+   sll_real64, intent(in)    :: y_max  !< right corner direction y
+   sll_int32,  intent(out)   :: error  !< error code
+
+   SLL_ALLOCATE(this, error)
+   call initialize_poisson_2d_periodic_fftw( &
+           this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
+
+  end function new_poisson_2d_periodic_fftw 
+
+
+
+
 
 !> Initialize the Poisson solver
 subroutine initialize_poisson_2d_periodic_fftw(self, &
@@ -162,8 +199,8 @@ end subroutine initialize_poisson_2d_periodic_fftw
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
-   type(poisson_2d_periodic),intent(inout)   :: self !< self data object
-   sll_real64, dimension(:,:), intent(inout) :: rho  !< charge density
+   type(poisson_2d_periodic)   :: self !< self data object
+   sll_real64, dimension(:,:), intent(in) :: rho  !< charge density
    sll_real64, dimension(:,:), intent(out)   :: phi  !< electric potential
    sll_int32                                 :: nc_x !< number of cells direction x
    sll_int32                                 :: nc_y !< number of cells direction y
@@ -171,7 +208,8 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
+   phi(1:nc_x,1:nc_y) = rho(1:nc_x,1:nc_y)
+   call fftw_execute_dft_r2c(self%fw, phi(1:nc_x,1:nc_y), self%rht)
 
    self%rht = self%rht / self%k2
 
@@ -193,7 +231,7 @@ end subroutine solve_potential_poisson_2d_periodic_fftw
 subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
    type(poisson_2d_periodic),intent(inout)   :: self !< Self data object
-   sll_real64, dimension(:,:), intent(inout) :: rho  !< Charge density
+   sll_real64, dimension(:,:), intent(in) :: rho  !< Charge density
    sll_real64, dimension(:,:), intent(out)   :: e_x  !< Electric field x
    sll_real64, dimension(:,:), intent(out)   :: e_y  !< Electric field y
    sll_real64, optional                      :: nrj  !< Energy 
@@ -203,7 +241,8 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
+   e_x(1:nc_x,1:nc_y) = rho(1:nc_x,1:nc_y)
+   call fftw_execute_dft_r2c(self%fw, e_x(1:nc_x,1:nc_y), self%rht)
 
    self%ext(1,1) = 0.0_f64
    self%eyt(1,1) = 0.0_f64
@@ -225,12 +264,13 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    if (present(nrj)) then 
       dx = self%dx
       dy = self%dy
-      nrj=sum(e_x*e_x+e_y*e_y)*dx*dy
-      if (nrj>1.e-30) then 
-         nrj=0.5_f64*log(nrj)
-      else
-         nrj=-10**9
-      endif
+      nrj=sum(e_x(1:nc_x,1:nc_y)*e_x(1:nc_x,1:nc_y) &
+        +e_y(1:nc_x,1:nc_y)*e_y(1:nc_x,1:nc_y))*dx*dy
+      !if (nrj>1.e-30) then 
+      !   nrj=0.5_f64*log(nrj)
+      !else
+      !   nrj=-10**9
+      !endif
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftw

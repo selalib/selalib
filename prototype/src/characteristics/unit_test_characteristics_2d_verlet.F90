@@ -17,8 +17,6 @@
 
 program unit_test_characteristics_2d_verlet
 #include "sll_working_precision.h"
-use sll_module_characteristics_2d_base
-use sll_module_characteristics_2d_explicit_euler
 use sll_module_characteristics_2d_verlet
 use sll_boundary_condition_descriptors
 use sll_cubic_spline_interpolator_1d
@@ -26,11 +24,7 @@ use sll_cubic_spline_interpolator_2d
 
 implicit none
   
-  class(sll_characteristics_2d_base), pointer :: euler 
-  !class(sll_characteristics_2d_base),pointer :: verlet !also possible to declare this way
-  type(verlet_2d_charac_computer), pointer :: verlet ! use of new mandatory
-  !class(verlet_2d_charac_computer), pointer :: verlet ! also possible
-  !type(verlet_2d_charac_computer) :: verlet ! use with initialize
+  class(sll_characteristics_2d_base),pointer :: verlet
 
   
   sll_int32 :: Npts1
@@ -60,14 +54,6 @@ implicit none
   dt = 0.1_f64
   
   
-  !initialization for explicit_euler_2d
-  
-  euler => &
-    new_explicit_euler_2d_charac(&
-      Npts1, &
-      Npts2, &
-      SLL_SET_TO_LIMIT, &
-      SLL_PERIODIC)
 
   
   !initialization for verlet
@@ -81,7 +67,7 @@ implicit none
     Npts1, &
     0._f64, &
     1._f64, &
-    SLL_PERIODIC)
+    SLL_HERMITE)
 
   A1_interp_x1x2 => new_cubic_spline_2d_interpolator( &
        Npts1, &
@@ -138,45 +124,9 @@ implicit none
       A2(i,j) = input1(i)-0.5_f64
     enddo
   enddo
-  !call compute_explicit_euler_2d_charac( &
-  call euler%compute_characteristics( &
-      A1, &
-      A2, &
-      dt, &
-      input1, &
-      input2, &
-      output1, &
-      output2)
       
       
-  err = 0._f64
-  
-  do j=1,Npts2
-    do i=1,Npts1   
-      tmp = input1(i)-dt*A1(i,j)
-      if(tmp>1)then
-        tmp = 1._f64
-      endif
-      if(tmp<0)then
-        tmp = 0._f64
-      endif
-      tmp=abs(tmp-output1(i,j))
-      if(tmp>err)then
-        err=tmp
-      endif
-
-      tmp = input2(j)-dt*A2(i,j)
-      tmp = tmp-floor(tmp)
-      tmp=abs(tmp-output2(i,j))
-      if(tmp>err)then
-        err=tmp
-      endif      
-    enddo
-  enddo
-  
-  print *,'#err=',err
-  
-  
+  err = 0._f64  
   
   call verlet%compute_characteristics( &
       A1, &
