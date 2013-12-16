@@ -10,16 +10,19 @@ SET_TESTS_PROPERTIES(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_MPI_TEST(remap_3d test_remap_3d ${PROCS} ${ARGS})
 SET_TESTS_PROPERTIES(remap_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-SET(PROCS 4)
-ADD_MPI_TEST( point_to_point_comms_1d test_p2p_comms_1d ${PROCS} ${ARGS})
-SET_TESTS_PROPERTIES( point_to_point_comms_1d PROPERTIES PASS_REGULAR_EXPRESSION
-     "PASSED")
+IF(NOT STDF95)
 
-SET(PROCS 4)
-ADD_MPI_TEST( point_to_point_comms_2d test_p2p_comms_2d ${PROCS} ${ARGS})
-SET_TESTS_PROPERTIES( point_to_point_comms_2d PROPERTIES PASS_REGULAR_EXPRESSION
-     "PASSED")
+   SET(PROCS 4)
+   ADD_MPI_TEST( point_to_point_comms_1d test_p2p_comms_1d ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES( point_to_point_comms_1d PROPERTIES PASS_REGULAR_EXPRESSION
+        "PASSED")
 
+   SET(PROCS 4)
+   ADD_MPI_TEST( point_to_point_comms_2d test_p2p_comms_2d ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES( point_to_point_comms_2d PROPERTIES PASS_REGULAR_EXPRESSION
+        "PASSED")
+
+ENDIF(NOT STDF95)
 
 IF(PROCESSOR_COUNT GREATER 1)
 
