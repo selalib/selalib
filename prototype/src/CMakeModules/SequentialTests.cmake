@@ -42,11 +42,11 @@ ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 
 ADD_TEST(NAME fft COMMAND test_fft)
 
-ADD_TEST(NAME reduction COMMAND test_reduction)
-SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
 IF(NOT STDF95)
+
+   ADD_TEST(NAME reduction COMMAND test_reduction)
+   SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    ADD_TEST(NAME utilities COMMAND test_utilities)
    ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
 
