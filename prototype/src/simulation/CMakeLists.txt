@@ -32,7 +32,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d sll_splines
                        sll_coordinate_transformations
                        sll_logical_meshes
                        sll_utilities
-               sll_common_array_initializers
+                       sll_common_array_initializers
 		       sll_timer
                        sll_memory
                        sll_assertion 	
