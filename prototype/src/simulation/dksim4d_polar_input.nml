@@ -7,20 +7,24 @@
   r_max        = 14.5
   z_min      = 0.
   z_max      = 1506.759067
-  v_min     = -6.
-  v_max     = 6.
+  v_min     = -7.32
+  v_max     = 7.32
 /
 
 &equilibrium
   tau0     = 1.
   rho_peak = 0.5
-  kappan   = 0.055
-  deltarn  = 2.9
-  kappaTi  = 0.27586
-  deltarTi = 1.45
-  kappaTe  = 0.27586
-  deltarTe = 1.45
-  QN_case  = 0
+  kappan   = 13.2   !0.055
+  deltarn  = 0.2       !2.9
+  kappaTi  = 66.     !0.27586
+  deltarTi = 0.1     !1.45
+  kappaTe  = 66.        !0.27586
+  deltarTe = 0.1        !1.45
+  !QN_case  = "SLL_NO_QUASI_NEUTRAL"
+  !QN_case  = "SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW"
+  QN_case  = "SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW"
+  poisson2d_BC_rmin = "SLL_NEUMANN_MODE_0"
+  poisson2d_BC_rmax = "SLL_DIRICHLET"
 /
 
 &perturbation
@@ -31,7 +35,23 @@
 /
 
 &sim_params
-  dt                = 8.
-  number_iterations = 100
-  time_case = 1
+  dt                = 8
+  !number_iterations = 100
+  number_iterations = 200
+  freq_diag_time = 1
+  !time_loop_case = "SLL_TIME_LOOP_EULER" 
+  time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
+  !charac2d_case =  "SLL_CHARAC_EULER"
+  charac2d_case =  "SLL_CHARAC_VERLET"
+  charac2d_tol = 1e-12
+  charac2d_maxiter = 1000
+  advect2d_case = "SLL_BSL"
+  interp_x1x2 = "SLL_CUBIC_SPLINES"
+  phi_interp_x1x2 = "SLL_CUBIC_SPLINES"
+  phi_interp_x3 = "SLL_CUBIC_SPLINES"
+  advector_x3 = "SLL_SPLINES"
+  order_x3 = 4
+  advector_x4 = "SLL_SPLINES"
+  order_x4 = 4
+  poisson2d_case = "POLAR_FFT"
 /
