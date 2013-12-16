@@ -276,9 +276,9 @@ contains
          bc_eta2_right)
    
     call poisson%rho_field%set_field_data( rho_values )
-    call poisson%rho_field%update_interpolation_coefficients( )   
+    call poisson%rho_field%update_interpolation_coefficients( )
+       
     poisson%elliptic_solver => new_general_elliptic_solver( &
-        poisson%elliptic_solver, &
         spline_degree_eta1, &
         spline_degree_eta2, &
         num_cells_eta1, &
