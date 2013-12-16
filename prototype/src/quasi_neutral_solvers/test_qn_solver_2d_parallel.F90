@@ -22,10 +22,11 @@ program test_qn_solver_2d_parallel
   use sll_constants
   use sll_collective
   use sll_qn_solver_2d_parallel
+  use sll_boundary_condition_descriptors
 
 implicit none
 
-  character(len=100)                    :: BC ! Boundary_conditions
+  sll_int32                             :: BC ! Boundary_conditions
   sll_int32                             :: NP_r, NP_theta
   ! NP_r and NP_theta are the numbers of points in directions r and 
   ! theta respectively
@@ -48,9 +49,9 @@ implicit none
   do i=1,2
 
      if (i==1) then
-        BC = 'neumann'
+        BC = SLL_NEUMANN
      else
-        BC = 'dirichlet'
+        BC = SLL_DIRICHLET
      endif
      if (myrank==0) then
         call flush(6)
@@ -83,7 +84,7 @@ contains
 
   subroutine test_process(BC, NP_r, NP_theta, rmin, rmax, Te_seq, Zi, prod4test)
 
-    character(len=*)                                    :: BC ! Boundary_conditions
+    sll_int32                                           :: BC ! Boundary_conditions
     sll_int32                                           :: NP_r, NP_theta
     ! NP_r and NP_theta are the numbers of points in directions r and 
     ! theta respectively
@@ -112,7 +113,7 @@ contains
     type(layout_3D), pointer                            :: layout
     sll_int64                                           :: colsz ! collective size
 
-    if (BC=='neumann') then
+    if (BC==SLL_NEUMANN) then
        dr = (rmax-rmin)/(NP_r-1)
     else ! 'Dirichlet'
        dr = (rmax-rmin)/(NP_r+1)
@@ -144,7 +145,7 @@ contains
 
        theta = (j-1)*dtheta
        Mr = 4*abs(cos(theta))
-       if (BC=='neumann') then
+       if (BC==SLL_NEUMANN) then
           if (i_test==1) then
              f(j) = sin(rmax-rmin)*cos(theta)
           else
@@ -153,7 +154,7 @@ contains
        endif
 
        do i=1,NP_r
-          if (BC=='neumann') then
+          if (BC==SLL_NEUMANN) then
              r = rmin + (i-1)*dr
              c_seq(i) = 2/r
           else ! 'dirichlet'
@@ -209,7 +210,7 @@ contains
           gi = global(1)
           gj = global(2)
           theta = (gj-1)*dtheta
-          if (bc=='neumann') then
+          if (bc==SLL_NEUMANN) then
              r = rmin + (gi-1)*dr
           else ! 'dirichlet'
              r = rmin + gi*dr

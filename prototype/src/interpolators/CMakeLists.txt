@@ -1,21 +1,21 @@
 SET( INTERPOLATORS_SRC_FILES 
         sll_cubic_spline_interpolator_1d.F90
         sll_cubic_spline_interpolator_1d_nonuniform.F90
-        sll_cubic_spline_interpolator_2d.F90
         sll_quintic_spline_interpolator_1d.F90
         sll_quintic_spline_interpolator_1d_nonuniform.F90
         sll_odd_degree_spline_interpolator_1d.F90
         sll_odd_degree_spline_interpolator_1d_nonuniform.F90
         sll_lagrange_interpolator_1d.F90 
-        sll_periodic_interpolator_1d.F90
-        sll_arbitrary_degree_spline_interpolator_2d.F90 
-	sll_arbitrary_degree_spline_interpolator_1d.F90)
+        sll_periodic_interpolator_1d.F90)
 
 IF( NOT STDF95)
 
    SET( INTERPOLATORS_SRC_FILES ${INTERPOLATORS_SRC_FILES} 
         sll_interpolators_1d_base.F90
-        sll_interpolators_2d_base.F90 )
+        sll_interpolators_2d_base.F90 
+        sll_cubic_spline_interpolator_2d.F90
+	  sll_arbitrary_degree_spline_interpolator_1d.F90
+        sll_arbitrary_degree_spline_interpolator_2d.F90) 
 
 ENDIF(NOT STDF95)
 
@@ -39,6 +39,7 @@ ELSE()
                                             sll_utilities 
    		                            deboor_splines 
 					    sll_file_io
+   		                            deboor_splines 
                                             ${LAPACK_LIBRARIES} )
 ENDIF (NOT STDF95)
 
@@ -100,7 +101,10 @@ ADD_EXECUTABLE(test_odd_degree_interpolators_1d
 TARGET_LINK_LIBRARIES( test_odd_degree_interpolators_1d
                        sll_interpolators)
 
+IF(NOT STDF95)
+
 ADD_EXECUTABLE(test_periodic_interpolators_1d test_periodic_interpolation.F90)
 
 TARGET_LINK_LIBRARIES( test_periodic_interpolators_1d
                        sll_interpolators)
+ENDIF(NOT STDF95)
