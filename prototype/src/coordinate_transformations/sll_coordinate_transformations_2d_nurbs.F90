@@ -312,6 +312,7 @@ contains
        end do
     end if
 
+    print*, weights_2d
 
     eta1_min_minimal = knots1(1)
     eta2_min_minimal = knots2(1)
@@ -443,6 +444,7 @@ contains
          interp2d_1, &
          interp2d_2,&
          interp2d_3)
+    print*, 'ok'
 
   end subroutine read_from_file_2d_nurbs
 
