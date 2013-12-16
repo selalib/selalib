@@ -331,9 +331,11 @@ contains
 
     call umf4def(plan%control)
     plan%control(1)=2
+
     call umf4sym (int(plan%mat_poisson%m,umf_int),int(plan%mat_poisson%n,umf_int), &
          & plan%mat_poisson%ap,plan%mat_poisson%ai,plan%mat_poisson%ax, &
          & plan%symbolic,plan%control,plan%info)
+
     if (plan%info(1) .lt. 0) then
        print *,'Error occurred in umf4sym: ', plan%info (1)
        print*,'See documentation for more information'
