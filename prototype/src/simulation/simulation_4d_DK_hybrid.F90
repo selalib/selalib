@@ -388,18 +388,18 @@ contains
 
     !!! profil exacte
 !!$    !!! paramas for radial density profiles
-!!$    params_n0(1) = sim%kappan
-!!$    params_n0(2) = sim%deltarn
+!!$    params_n0(1) = inv_Ln
+!!$    params_n0(2) = sim%deltarn*Lr
 !!$    params_n0(3) = r_peak
 !!$
 !!$    !!! paramas for radial temperature electrons profiles
-!!$    params_Te(1) = sim%kappaTe
-!!$    params_Te(2) = sim%deltarTe
+!!$    params_Te(1) = inv_LTe
+!!$    params_Te(2) = sim%deltarTe*Lr
 !!$    params_Te(3) = r_peak
 !!$
 !!$    !!! paramas for radial temperature ions profiles
-!!$    params_Ti(1) = sim%kappaTi
-!!$    params_Ti(2) = sim%deltarTi
+!!$    params_Ti(1) = inv_LTi
+!!$    params_Ti(2) = sim%deltarTi*Lr
 !!$    params_Ti(3) = r_peak
 !!$
 !!$
