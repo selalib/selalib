@@ -8,7 +8,7 @@ module sll_simulation_2d_guiding_center_polar_module
 !for example of use
 
 !contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
-
+!         Adnane Hamiaz (hamiaz@math.unistra.fr)
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
