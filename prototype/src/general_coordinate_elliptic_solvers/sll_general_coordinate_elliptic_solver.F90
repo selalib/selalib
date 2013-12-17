@@ -366,7 +366,7 @@ contains ! *******************************************************************
        c_field)!, &
       ! rho)
     
-    type(general_coordinate_elliptic_solver),intent(inout) :: es
+    class(general_coordinate_elliptic_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base), pointer :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer :: a21_field_mat
@@ -497,8 +497,8 @@ contains ! *******************************************************************
        rho,&
        phi)
     use sll_timer
-    type(general_coordinate_elliptic_solver) :: es
-    type(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
+    class(general_coordinate_elliptic_solver) :: es
+    class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     class(sll_scalar_field_2d_base), intent(in)     :: rho
     
     !type(sll_logical_mesh_2d), pointer :: mesh
@@ -606,7 +606,7 @@ contains ! *******************************************************************
        K_a22_loc)
     !    use sll_constants
     
-    type(general_coordinate_elliptic_solver) :: obj
+    class(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
  !   type(sll_logical_mesh_2d) :: mesh2d
@@ -907,7 +907,7 @@ contains ! *******************************************************************
        M_rho_loc)
     !    use sll_constants
     
-    type(general_coordinate_elliptic_solver) :: obj
+    class(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
    ! type(sll_logical_mesh_2d), pointer :: mesh2d
@@ -1080,7 +1080,7 @@ contains ! *******************************************************************
        Masse_tot,&
        Stiff_tot)
     
-    type(general_coordinate_elliptic_solver)  :: es
+    class(general_coordinate_elliptic_solver)  :: es
     sll_int32 :: cell_index
     sll_int32 :: cell_i
     sll_int32 :: cell_j
@@ -1221,7 +1221,7 @@ contains ! *******************************************************************
        cell_j, &
        M_rho_loc)
     
-     type(general_coordinate_elliptic_solver)  :: es
+     class(general_coordinate_elliptic_solver)  :: es
      sll_int32 :: cell_index
      sll_int32 :: cell_i
      sll_int32 :: cell_j
@@ -1282,7 +1282,7 @@ contains ! *******************************************************************
   subroutine solve_linear_system( es )
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    type(general_coordinate_elliptic_solver) :: es
+    class(general_coordinate_elliptic_solver) :: es
    ! type(sll_logical_mesh_2d), pointer :: mesh2d
     !type(csr_matrix)  :: csr_masse
     integer :: elt, elt1
@@ -1355,7 +1355,7 @@ contains ! *******************************************************************
   end subroutine solve_linear_system
   
   subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
-    type(general_coordinate_elliptic_solver) :: es
+    class(general_coordinate_elliptic_solver) :: es
     type(csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 
@@ -1389,7 +1389,7 @@ contains ! *******************************************************************
   subroutine solve_linear_system_perper( es,Masse_tot )
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    type(general_coordinate_elliptic_solver) :: es
+    class(general_coordinate_elliptic_solver) :: es
     !type(sll_logical_mesh_2d), pointer :: mesh2d
     sll_real64, dimension(:),pointer :: Masse_tot
     
@@ -1404,7 +1404,7 @@ contains ! *******************************************************************
 
 
   subroutine solve_general_es_perper(es,csr_mat,apr_B,apr_U,Masse_tot)
-    type(general_coordinate_elliptic_solver) :: es
+    class(general_coordinate_elliptic_solver) :: es
     type(csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 
@@ -1426,7 +1426,7 @@ contains ! *******************************************************************
 
   subroutine compute_integral_source_term(es,rho, int_rho)
     ! input variables
-    type(general_coordinate_elliptic_solver) :: es
+    class(general_coordinate_elliptic_solver) :: es
    ! type(sll_logical_mesh_2d), pointer :: mesh2d
     class(sll_scalar_field_2d_base), intent(in)     :: rho
     ! local variables
