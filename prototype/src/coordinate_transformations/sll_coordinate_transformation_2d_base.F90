@@ -55,6 +55,7 @@ module sll_coordinate_transformation_2d_base_module
      ! jacobian_at_cell = jacobian_at_cell(i,j)
      procedure(geometry_function_indices_ct), deferred, pass :: jacobian_at_cell
      procedure(write_transformation_signature), deferred, pass :: write_to_file
+     procedure(read_transformation), deferred, pass            :: read_from_file
      procedure(transformation_subroutine), deferred, pass      :: delete 
   end type sll_coordinate_transformation_2d_base
 
@@ -174,5 +175,12 @@ module sll_coordinate_transformation_2d_base_module
       end subroutine transformation_subroutine
    end interface
 
+   abstract interface
+      subroutine read_transformation( transf, filename )
+        import :: sll_coordinate_transformation_2d_base
+        class(sll_coordinate_transformation_2d_base), intent(inout) :: transf
+        character(len=*), intent(in) :: filename
+      end subroutine read_transformation
+   end interface
 
  end module sll_coordinate_transformation_2d_base_module
