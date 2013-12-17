@@ -520,7 +520,13 @@ contains
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    sinprod_jac11_rect = 1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha1 = params(1)
+    else
+       alpha1 = 0.1_f64
+    end if 
+    sinprod_jac11_rect = 1.0_8 + 0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac11_rect
   
   function sinprod_jac12_rect ( eta1, eta2, params )
@@ -528,7 +534,13 @@ contains
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    sinprod_jac12_rect = 0.2_8 *sll_pi * sin (0.5*eta1) * cos (2*sll_pi*eta2)
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha1 = params(1)
+    else
+       alpha1 = 0.1_f64
+    end if
+    sinprod_jac12_rect = 2._8 *sll_pi*alpha1* sin (0.5*eta1) * cos (2*sll_pi*eta2)
   end function sinprod_jac12_rect
   
   function sinprod_jac21_rect ( eta1, eta2, params )
@@ -536,7 +548,13 @@ contains
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
-    sinprod_jac21_rect = 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha2 = params(2)
+    else
+       alpha2 = 0.1_f64
+    end if
+    sinprod_jac21_rect = 0.5_8*alpha2* cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac21_rect
 
   function sinprod_jac22_rect ( eta1, eta2, params )
@@ -544,8 +562,14 @@ contains
     real(8), intent(in)   :: eta1
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha2 = params(2)
+    else
+       alpha2 = 0.1_f64
+    end if
     sinprod_jac22_rect = 1.0_8 + &
-         0.2_8*sll_pi*sin(0.5*eta1)*cos(2*sll_pi*eta2)
+         2.0_8*sll_pi*alpha2*sin(0.5*eta1)*cos(2*sll_pi*eta2)
   end function sinprod_jac22_rect
   
   ! jacobian ie determinant of jacobian matrix
@@ -555,13 +579,21 @@ contains
     real(8), intent(in)   :: eta2
     sll_real64, dimension(:), optional, intent(in) :: params
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    if(present(params)) then
+       SLL_ASSERT(size(params) >= 2)
+       alpha2 = params(2)
+       alpha1 = params(1)
+    else
+       alpha2 = 0.1_f64
+       alpha1 = 0.1_f64
+    end if
     sinprod_jac_rect = &
-         (1.0_8 + 0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2))* &
-         (1.0_8 + 0.2_8* sll_pi * sin(0.5*eta1) * cos(2*sll_pi*eta2) ) - &
-         0.2_8 *sll_pi * sin (0.5*eta1) * cos (2*sll_pi*eta2) * &
-         0.5_8*0.1_8 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
+         (1.0_8 + 0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_pi*eta2))* &
+         (1.0_8 + 2.0_8* sll_pi*alpha2 * sin(0.5*eta1) * cos(2*sll_pi*eta2) ) - &
+         2.0_8 *sll_pi*alpha2 * sin (0.5*eta1) * cos (2*sll_pi*eta2) * &
+         0.5_8*alpha1 * cos (0.5*eta1) * sin (2*sll_pi*eta2)
   end function sinprod_jac_rect
-
+  
 
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

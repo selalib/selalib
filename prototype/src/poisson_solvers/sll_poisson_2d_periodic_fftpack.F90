@@ -252,12 +252,13 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
    field_y(:,nc_y+1) = field_y(:,1)
 
    if (present(nrj)) then 
-      nrj=sum(field_x*field_x+field_y*field_y)*this%dx*this%dy
-      if (nrj>1.e-30) then 
-         nrj=0.5_f64*log(nrj)
-      else
-         nrj=-10**9
-      endif
+      nrj=sum(field_x(1:nc_x,1:nc_y)*field_x(1:nc_x,1:nc_y) &
+        +field_y(1:nc_x,1:nc_y)*field_y(1:nc_x,1:nc_y))*this%dx*this%dy
+!      if (nrj>1.e-30) then 
+!         !nrj=0.5_f64*log(nrj)
+!      else
+!         nrj=-10**9
+!      endif
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftpack
