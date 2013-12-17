@@ -5,6 +5,7 @@ module sll_mudpack_base
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+use sll_cubic_spline_interpolator_2d
 
 implicit none
 sll_int32, private :: i, j, k
@@ -17,6 +18,7 @@ type, public :: mudpack_2d
    sll_int32  :: iprm(16) !< Indices to control grid sizes
    sll_real64 :: fprm(6)  !< Real to set boundary conditions
    sll_int32  :: iguess   !< Initial solution or loop over time
+   !class(sll_interpolator_2d_base), pointer   :: cxx_interp
 
 end type mudpack_2d
 
@@ -27,5 +29,10 @@ integer, parameter :: CYLINDRICAL  = 12   !< geometry parameter
 integer, parameter :: PERIODIC     = 0    !< boundary condition parameter
 integer, parameter :: DIRICHLET    = 1    !< boundary condition parameter
 integer, parameter :: NEUMANN      = 2    !< boundary condition parameter
+
+integer, parameter :: SLL_SEPARABLE  = 1    !< type of equation
+integer, parameter :: SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2    !< type of equation
+integer, parameter :: SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3    !< type of equation
+
 
 end module sll_mudpack_base

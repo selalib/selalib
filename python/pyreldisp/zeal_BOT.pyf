@@ -1,0 +1,90 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module zealpy_BOT_ ! in 
+    !********************************************************
+    ! INTERFACE REQUIRED FOR BOT CASE
+    !********************************************************
+    !--> Module function_input_module  
+    interface
+       module function_input_module 
+         real*8  :: kmode
+         real*8  :: a_bump
+         real*8  :: v0
+         real*8  :: kbT
+         real*8  :: sigmab
+         real*8  :: l0ld
+
+         !--> Arrays required for all cases
+         double complex allocatable, dimension(:,:) :: vecteur
+         double precision :: ordre_grandeur
+    end interface
+
+
+    !********************************************************
+    ! INTERFACES REQUIRED FOR ALL CASES
+    !********************************************************
+    !--> Module zout (in zeal4py.f90)
+    interface  
+        module zout 
+            integer allocatable,dimension(:) :: multiplicities
+            double complex allocatable,dimension(:) :: zeros
+            integer :: distinctnumber
+            integer :: totalnumber
+            double complex allocatable,dimension(:) :: fzeros
+            logical allocatable,dimension(:) :: refinement_ok
+            integer :: refinednumber
+            logical :: fail
+            integer :: information
+            subroutine zeal ! in :zeal:zeal4py.f90:zeal_module
+        end module zout
+    end interface 
+
+    !--> Module zeal_input_module
+    interface
+       module zeal_input_module
+         double precision,dimension(2) :: lv
+         double precision,dimension(2) :: h
+       end module zeal_input_module
+    end interface
+
+    !--> Module split_module
+    interface
+       module split_module
+         logical :: fail1
+         logical :: fail2
+         logical :: fail3
+         logical :: fail4
+         subroutine trap1
+         end subroutine trap1
+         subroutine trap2
+         end subroutine trap2
+         subroutine trap3
+         end subroutine trap3
+         subroutine trap4
+         end subroutine trap4
+         subroutine plot(Xmin, Xmax, Y, pas, tabu, &
+           tabv, tabux, tabuy, tabpsix)
+            double precision intent(in) :: Xmin, Xmax, Y
+            double precision, dimension(101)  :: tabu
+            double precision, dimension(101)  :: tabv
+            double precision, dimension(101)  :: tabpsix
+            double precision, dimension(101)  :: tabux
+            double precision, dimension(101)  :: tabuy
+            integer :: pas
+         end subroutine plot
+       end module split_module
+    end interface
+
+    !--> Module math_tools_module
+    interface 
+       module math_tools_module
+         subroutine check_overflow(omega,fomega) 
+           double complex intent(in)  :: omega
+           double complex intent(out) :: fomega
+         end subroutine check_overflow
+       end module math_tools_module
+    end interface
+end python module
+
+
