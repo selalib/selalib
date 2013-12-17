@@ -205,6 +205,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_mesh_calculus
 		           sll_integration
 		           sll_reduction
+                   sll_time_splitting
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes

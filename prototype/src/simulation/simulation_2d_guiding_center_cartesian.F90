@@ -248,7 +248,7 @@ contains
       spline_degree_eta2    
 
 
-    !set default parameters
+    !! set default parameters
     
     !geometry
     mesh_case_x1="SLL_LANDAU_MESH"
@@ -323,43 +323,6 @@ contains
     Nc_x1 = num_cells_x1
     Nc_x2 = num_cells_x2
      
-    
-!    Nc_x1 = 32
-!    Nc_x2 = 32
-!    k_mode = 0.5_f64
-!    eps = 0.015_f64
-!    x1_min = 0._f64
-!    x1_max = 2._f64*sll_pi/k_mode
-!    x2_min = 0._f64
-!    x2_max = 2._f64*sll_pi
-!    nb_step = 600
-!    
-!    dt = 0.1_f64
-!    visu_step = 100
-!    f_interp2d_case = "SLL_CUBIC_SPLINES"
-!    phi_interp2d_case = "SLL_CUBIC_SPLINES"
-!    A_interp_case = "SLL_CUBIC_SPLINES"
-!    charac2d_case = "SLL_VERLET"
-!    !charac2d_case = "SLL_EULER"
-!    advect2d_case = "SLL_BSL"
-!    initial_function_case = "SLL_KHP1" 
-!    !time_loop_case = "SLL_EULER"
-!    time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-!    !poisson_solver = "SLL_MUDPACK"   !use with "SLL_PHI_FROM_RHO"
-!    poisson_solver = "SLL_POISSON_FFT"  
-!    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
-!    !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"
-!    
-!    poisson_case = "SLL_PHI_FROM_RHO"
-!    !poisson_case = "SLL_E_FROM_RHO"
-!    !mudpack_method = "SLL_SEPARABLE"
-!    !mudpack_method = "SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS"
-!    mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"
-!    
-!    spline_degree_eta1 = 3
-!    spline_degree_eta2 = 3
-    
-    
     
     sim%dt = dt
     sim%num_iterations = number_iterations
