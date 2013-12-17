@@ -7,16 +7,17 @@
 #  SUITESPARSE_LIBRARY_DIR      - Library main directory containing suitesparse libs
 #  SUITESPARSE_LIBRARY_DIRS     - all Library directories containing suitesparse libs
 
+SET(SUITESPARSE_ROOT "/usr" CACHE PATH "Root directory for SuiteSParse library")
+
 IF (SUITESPARSE_INCLUDE_DIRS)
   # Already in cache, be silent
   SET(SUITESPARSE_FIND_QUIETLY TRUE)
 ENDIF (SUITESPARSE_INCLUDE_DIRS)
 
 FIND_PATH( CHOLMOD_INCLUDE_DIR cholmod.h
-           PATHS /opt/local/include 
-                 /usr/include 
-        	 /usr/include/suitesparse/ 
-                 /usr/local/include)
+           PATHS ${SUITESPARSE_ROOT} /opt/local /usr/local
+           PATH_SUFFIXES include include/suitesparse)
+    
 
 MESSAGE(STATUS "CHOLMOD_INCLUDE_DIR:${CHOLMOD_INCLUDE_DIR}")
 
@@ -25,7 +26,8 @@ MACRO(FIND_SUITESPARSE_LIBRARY LIB )
 SET(_LIB ${LIB}-NOTFOUND)
 FIND_LIBRARY( _LIB
               NAMES ${LIB}
-              PATHS /usr/lib /usr/lib64 /opt/local/lib /usr/local/lib )
+              PATHS ${SUITESPARSE_ROOT} /opt/local /usr/local
+              PATH_SUFFIXES lib lib64)
 
 IF(_LIB)
    LIST ( APPEND SUITESPARSE_LIBRARIES ${_LIB})
