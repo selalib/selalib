@@ -12,10 +12,6 @@
 !./bin/test_2d_gc_polar ../selalib/prototype/src/simulation/gcsim2d_polar_input
 !diagnostic:
 !gnuplot -persist ../post_proc/sim2d_gc_polar.gnu
-! for changing parameters:
-! copy ../selalib/prototype/src/simulation/gcsim2d_polar_input.nml
-! in build/my_gcsim2d_polar_input.nml and modif
-! execute ./bin/test_2d_gc_polar my_gcsim2d_polar_input
 
 
 &geometry
