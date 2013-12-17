@@ -515,7 +515,7 @@ contains ! *******************************************************************
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     
-    !call set_time_mark(t0)
+   ! call set_time_mark(t0)
     
     
     M_rho_loc = 0.0
@@ -530,6 +530,10 @@ contains ! *******************************************************************
     else 
        int_rho = 0.0_f64
     end if
+   ! time = time_elapsed_since(t0)
+
+   ! print*, 'time to construct the rho', time
+   ! call set_time_mark(t0)
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -567,7 +571,7 @@ contains ! *******************************************************************
     
     !time = time_elapsed_since(t0)
 
-    !print*, 'time to construct the matrix', time 
+!    print*, 'time to construct the matrix', time 
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
@@ -1466,26 +1470,26 @@ contains ! *******************************************************************
        do cell_i=1,es%num_cells1
           eta1  = eta1_min + (cell_i-1)*delta1
           !  print*, 'point base',eta1,eta2,num_pts_g1,num_pts_g2
-          do j=1,num_pts_g2
+         ! do j=1,num_pts_g2
              ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
              ! the bottom edge of the cell.
-             gpt2  = eta2  + 0.5_f64*delta2 * ( es%gauss_pts2(1,j) + 1.0_f64 )
-             wgpt2 = 0.5_f64*delta2*es%gauss_pts2(2,j) !ATTENTION 0.5
+         !    gpt2  = eta2  + 0.5_f64*delta2 * ( es%gauss_pts2(1,j) + 1.0_f64 )
+         !    wgpt2 = 0.5_f64*delta2*es%gauss_pts2(2,j) !ATTENTION 0.5
              
-             do i=1,num_pts_g1
+         !    do i=1,num_pts_g1
                 ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-                gpt1  = eta1  + 0.5_f64*delta1 * ( es%gauss_pts1(1,i) + 1.0_f64 )
-                wgpt1 = 0.5_f64*delta1*es%gauss_pts1(2,i)
+         !       gpt1  = eta1  + 0.5_f64*delta1 * ( es%gauss_pts1(1,i) + 1.0_f64 )
+         !       wgpt1 = 0.5_f64*delta1*es%gauss_pts1(2,i)
                 
-                val_f   =rho%value_at_point(gpt1,gpt2)! 0.05*cos(0.5*gpt1)
+                val_f   =rho%value_at_point(eta1,eta2)!gpt1,gpt2)! 0.05*cos(0.5*gpt1)
                 
-                jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                jac_mat(:,:) = rho%get_jacobian_matrix(eta1,eta2)!gpt1,gpt2)
                 val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
                 
-                int_rho = int_rho +  val_f  * wgpt1*wgpt2
-                int_jac = int_jac +  val_jac* wgpt1*wgpt2
-             end do
-          end do
+                int_rho = int_rho +  val_f  * val_jac!wgpt1*wgpt2
+                int_jac = int_jac +  val_jac   !* wgpt1*wgpt2
+           !  end do
+          !end do
        end do
     end do
     int_rho = int_rho/ int_jac
