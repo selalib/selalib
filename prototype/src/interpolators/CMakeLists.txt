@@ -27,9 +27,9 @@ IF (NOT STDF95)
                                             sll_lagrange_interpolation
                                             sll_fft
                                             sll_utilities 
-   		                                deboor_splines 
+   		                            deboor_splines 
                                             sll_coordinate_transformations
-					              sll_timer
+					    sll_timer
                                             ${LAPACK_LIBRARIES} )
 ELSE()
    TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
@@ -37,7 +37,9 @@ ELSE()
                                             sll_lagrange_interpolation
                                             sll_fft
                                             sll_utilities 
-   		                                deboor_splines 
+   		                            deboor_splines 
+					    sll_file_io
+   		                            deboor_splines 
                                             ${LAPACK_LIBRARIES} )
 ENDIF (NOT STDF95)
 
@@ -51,7 +53,7 @@ IF(NOT STDF95)
    ADD_EXECUTABLE(test_arb_deg_spline_interpolators_2d 
                   unit_test_arbitrary_degree_2d.F90 )
    TARGET_LINK_LIBRARIES( test_arb_deg_spline_interpolators_2d
-#                          sll_interpolators
+                          sll_interpolators
 #                          sll_splines
 #			    sll_file_io
 #                          sll_utilities
@@ -60,7 +62,7 @@ IF(NOT STDF95)
 #                          sll_memory
 #                          sll_working_precision 
 #			  deboor_splines
- sll_interpolators sll_file_io)
+)
 
    ADD_EXECUTABLE(test_arb_deg_spline_interpolators_1d 
                   unit_test_arbitrary_degree_1d.F90 )
@@ -69,7 +71,10 @@ IF(NOT STDF95)
 
    ADD_EXECUTABLE(test_interpolators_2d unit_test.F90)
    
-   TARGET_LINK_LIBRARIES( test_interpolators_2d sll_interpolators)
+   TARGET_LINK_LIBRARIES( test_interpolators_2d 
+     sll_interpolators
+     sll_utilities )
+
 ENDIF()
 
 
