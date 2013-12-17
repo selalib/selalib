@@ -1,28 +1,102 @@
-&geom
-  Ncx = 32 
-  Ncv = 64
-  nbox = 1
-  xmin = 0.0
-  vmin = -6.0
-  vmax = 6.0
+! PARAMETERS ARE SET FOR THE FOLLOWING GNUPLOT DIAGNOSTIC
+! script to put in ../post_proc/vp2d_sim.gnu
+!set term aqua 1 fsize 20
+!set logscale y
+!p 'thdiag.dat' u 1:(sqrt($7)) w l lw 2,\
+!  2.6e-3*exp(-0.1533*x) lw 2!
+!execution:
+!ctest --verbose -R sim2d_vp_cart
+!or:
+!time mpirun -np 8 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian
+!diagnostic:
+!gnuplot -persist ../post_proc/vp2d_sim.gnu
+
+
+&geometry
+  mesh_case_x1 = "SLL_LANDAU_MESH"
+  num_cells_x1 = 32
+  x1_min = 0.0
+  nbox_x1 = 1
+  mesh_case_x2 = "SLL_LOGICAL_MESH"
+  num_cells_x2 = 64
+  x2_min = -6.0
+  x2_max = 6.0
 /
-&interpolator
- interpol_x = 2
- order_x = 4
- interpol_v = 2
- order_v = 4
+
+&initial_function
+  initial_function_case = "SLL_LANDAU"
+  kmode = 0.5
+  eps = 0.001
 /
+
 &time_iterations
   dt = 0.1
-  first_step = 0
-  nbiter = 600
-  freqdiag = 100
-  freqdiag_time = 1
-  split_case = 1
+  number_iterations = 600
+  freq_diag = 100
+  freq_diag_time = 1
+  split_case = "SLL_STRANG_VTV" 
+  !split_case = "SLL_STRANG_TVT" 
+  !split_case = "SLL_ORDER6VPnew1_VTV" 
+  !split_case = "SLL_ORDER6VPnew2_VTV" 
+  !split_case = "SLL_ORDER6_VTV"
+  !split_case = "SLL_LIE_TV"
 /
-&landau
-  kmode = 0.5
-  eps = 1e-3
-  is_delta_f = 0
-  driven = .false.
+
+
 /
+&advector
+ advector_x1 = "SLL_SPLINES"
+ order_x1 = 4
+ !advector_x1 = "SLL_LAGRANGE"
+ !order_x1 = 4
+ advector_x2 = "SLL_SPLINES"
+ order_x2 = 4
+ !advector_x2 = "SLL_LAGRANGE"
+ !order_x2 = 4
+/
+
+
+&drive
+  drive_type = "SLL_NO_DRIVE"
+  !drive_type = "SLL_KEEN_DRIVE"  
+    !keen_t0 = 0.
+    !keen_tL = 69.
+    !keen_tR = 307.
+    !keen_twL = 20.
+    !keen_twR = 20.
+    !keen_tflat = 100.
+    !keen_turn_drive_off = .true.
+    !keen_Edrmax = 0.2
+    !keen_omegadr = 0.37	
+/
+
+!! old namelist
+
+! &geom
+!   Ncx = 32 
+!   Ncv = 64
+!   nbox = 1
+!   xmin = 0.0
+!   vmin = -6.0
+!   vmax = 6.0
+! /
+! &interpolator
+!  interpol_x = 2
+!  order_x = 4
+!  interpol_v = 2
+!  order_v = 4
+! /
+! &time_iterations
+!   dt = 0.1
+!   first_step = 0
+!   nbiter = 600
+!   freqdiag = 100
+!   freqdiag_time = 1
+!   split_case = 1
+! /
+! &landau
+!   kmode = 0.5
+!   eps = 1e-3
+!   is_delta_f = 0
+!   driven = .false.
+! /
