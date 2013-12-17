@@ -54,6 +54,8 @@ module sll_cubic_spline_interpolator_2d
      procedure, pass :: interpolate_array_disp => spline_interpolate2d_disp
      procedure, pass :: set_coefficients => set_coefficients_cs2d
      procedure, pass :: get_coefficients => get_coefficients_cs2d
+     procedure, pass :: coefficients_are_set => coefficients_are_set_cs2d
+     procedure, pass :: delete => delete_cubic_spline_2d_interpolator
     ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
 #endif
   end type cubic_spline_2d_interpolator
@@ -64,9 +66,9 @@ module sll_cubic_spline_interpolator_2d
 
 contains
 
-  subroutine delete_cubic_spline_2d_interpolator( interp )
-    type(cubic_spline_2d_interpolator) :: interp
-    call delete(interp%spline)
+  subroutine delete_cubic_spline_2d_interpolator( interpolator )
+    class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
+    call delete(interpolator%spline)
   end subroutine delete_cubic_spline_2d_interpolator
   
   function new_cubic_spline_2d_interpolator( &
@@ -412,14 +414,39 @@ contains
   end function 
 
 #ifdef STDF95
-  subroutine cubic_spline_2d_set_coefficients( interpolator, coeffs_1d, coeffs_2d )
+  subroutine cubic_spline_2d_set_coefficients(&
+       interpolator,&
+       coeffs_1d,&
+       coeffs_2d,&
+       coeff2d_size1,&
+       coeff2d_size2,&
+       knots1,&
+       size_knots1,&
+       knots2,&
+       size_knots2)
     type (cubic_spline_2d_interpolator),  intent(inout) :: interpolator
 #else
-  subroutine set_coefficients_cs2d( interpolator, coeffs_1d, coeffs_2d )
+  subroutine set_coefficients_cs2d( &
+       interpolator,&
+       coeffs_1d,&
+       coeffs_2d,&
+       coeff2d_size1,&
+       coeff2d_size2,&
+       knots1,&
+       size_knots1,&
+       knots2,&
+       size_knots2)
     class(cubic_spline_2d_interpolator),  intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in), optional :: coeffs_1d
     sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
+    ! size coeffs 2D 
+    sll_int32, intent(in), optional :: coeff2d_size1
+    sll_int32, intent(in), optional :: coeff2d_size2
+    sll_real64, dimension(:), intent(in), optional   :: knots1
+    sll_real64, dimension(:), intent(in), optional   :: knots2
+    sll_int32, intent(in), optional :: size_knots1
+    sll_int32, intent(in), optional :: size_knots2
     print *, 'set_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.'
     stop
@@ -461,5 +488,11 @@ contains
          'implemented yet.' 
   end function get_coefficients_cs2d
 #endif
+
+  function coefficients_are_set_cs2d( interpolator ) result(res)
+    class(cubic_spline_2d_interpolator), intent(in) :: interpolator
+    logical :: res
+    print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
+  end function coefficients_are_set_cs2d
 
 end module sll_cubic_spline_interpolator_2d

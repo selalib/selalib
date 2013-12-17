@@ -1041,7 +1041,7 @@ subroutine plot_f1(rho,sim,itime)!
 
   sll_int32 :: file_id, hfile_id
   sll_int32 :: error
-  type(sll_simulation_2d_guiding_center_generalized) :: sim
+  class(sll_simulation_2d_guiding_center_generalized) :: sim
   !sll_real64, dimension (:,:), intent(in):: rho
   class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
   sll_real64, dimension(:,:),allocatable :: f
