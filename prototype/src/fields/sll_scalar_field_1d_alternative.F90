@@ -57,12 +57,12 @@ module sll_module_scalar_field_1d_alternative
           initialize_scalar_field_1d_analytic_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_1d_analytic_alt
-     procedure, pass(field) :: value_at_point => value_at_pt_analytic
-     procedure, pass(field) :: value_at_indices => value_at_index_analytic
+     procedure, pass(field) :: value_at_point => value_at_pt_analytic_1d
+     procedure, pass(field) :: value_at_indices => value_at_index_analytic_1d
      procedure, pass(field) :: derivative_value_at_point => &
-          derivative_value_at_pt_analytic
+          derivative_value_at_pt_analytic_1d
      procedure, pass(field) :: derivative_value_at_indices => &
-          derivative_value_at_index_analytic
+          derivative_value_at_index_analytic_1d
      procedure, pass(field) :: set_field_data => set_field_data_analytic_1d
      procedure, pass(field) :: update_interpolation_coefficients => &
           update_interp_coeffs_1d_analytic
@@ -88,12 +88,12 @@ module sll_module_scalar_field_1d_alternative
           initialize_scalar_field_1d_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_1d_discrete_alt
-     procedure, pass(field) :: value_at_point => value_at_pt_discrete
+     procedure, pass(field) :: value_at_point => value_at_pt_discrete_1d
      procedure, pass(field) :: value_at_indices => value_at_index_discrete_1d
      procedure, pass(field) :: derivative_value_at_point => &
-          derivative_value_at_pt_discrete
+          derivative_value_at_pt_discrete_1d
      procedure, pass(field) :: derivative_value_at_indices => &
-          derivative_value_at_index_discrete
+          derivative_value_at_index_discrete_1d
      procedure, pass(field) :: set_field_data => set_field_data_discrete_1d
      procedure, pass(field) :: update_interpolation_coefficients => &
           update_interp_coeffs_1d_discrete
@@ -129,53 +129,53 @@ contains   ! *****************************************************************
   ! **************************************************************************
   
 
-  function value_at_pt_analytic( field, eta )
+  function value_at_pt_analytic_1d( field, eta )
     class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             ::  value_at_pt_analytic
-    value_at_pt_analytic = field%func(eta, field%params)
-  end function value_at_pt_analytic
+    sll_real64             ::  value_at_pt_analytic_1d
+    value_at_pt_analytic_1d = field%func(eta, field%params)
+  end function value_at_pt_analytic_1d
 
-  function value_at_index_analytic( field, i )
+  function value_at_index_analytic_1d( field, i )
     class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: value_at_index_analytic
+    sll_real64            :: value_at_index_analytic_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    value_at_index_analytic = field%func(eta, field%params)
-  end function value_at_index_analytic
+    value_at_index_analytic_1d = field%func(eta, field%params)
+  end function value_at_index_analytic_1d
 
-  function derivative_value_at_pt_analytic( field, eta)
+  function derivative_value_at_pt_analytic_1d( field, eta)
     class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             :: derivative_value_at_pt_analytic
+    sll_real64             :: derivative_value_at_pt_analytic_1d
     
     if ( field%present_derivative ) then 
-       derivative_value_at_pt_analytic = &
+       derivative_value_at_pt_analytic_1d = &
             field%first_derivative(eta,field%params)
     else 
        print*,' first derivative is not given in the initialization'
     end if
     
-  end function derivative_value_at_pt_analytic
+  end function derivative_value_at_pt_analytic_1d
 
   
-  function derivative_value_at_index_analytic( field, i)
+  function derivative_value_at_index_analytic_1d( field, i)
     class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: derivative_value_at_index_analytic
+    sll_real64            :: derivative_value_at_index_analytic_1d
     
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     
     if ( field%present_derivative ) then 
-       derivative_value_at_index_analytic = &
+       derivative_value_at_index_analytic_1d = &
             field%first_derivative(eta,field%params)
     else 
        print*,' first derivative is not given in the initialization'
     end if
     
-  end function derivative_value_at_index_analytic
+  end function derivative_value_at_index_analytic_1d
   
   function new_scalar_field_1d_analytic_alt( &
        func, &
@@ -458,13 +458,13 @@ contains   ! *****************************************************************
     res => field%mesh
   end function get_logical_mesh_1d_discrete_alt
 
-  function value_at_pt_discrete( field, eta)
+  function value_at_pt_discrete_1d( field, eta)
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             :: value_at_pt_discrete
+    sll_real64             :: value_at_pt_discrete_1d
     
-    value_at_pt_discrete = field%interp_1d%interpolate_value(eta)
-  end function value_at_pt_discrete
+    value_at_pt_discrete_1d = field%interp_1d%interpolate_value(eta)
+  end function value_at_pt_discrete_1d
   
   function value_at_index_discrete_1d( field, i )
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
@@ -475,24 +475,24 @@ contains   ! *****************************************************************
     value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
   end function value_at_index_discrete_1d
   
-  function derivative_value_at_pt_discrete( field, eta )
+  function derivative_value_at_pt_discrete_1d( field, eta )
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             :: derivative_value_at_pt_discrete
+    sll_real64             :: derivative_value_at_pt_discrete_1d
     
-    derivative_value_at_pt_discrete = &
+    derivative_value_at_pt_discrete_1d = &
          field%interp_1d%interpolate_derivative_eta1(eta)
-  end function derivative_value_at_pt_discrete
+  end function derivative_value_at_pt_discrete_1d
   
-  function derivative_value_at_index_discrete( field, i )
+  function derivative_value_at_index_discrete_1d( field, i )
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: derivative_value_at_index_discrete
+    sll_real64            :: derivative_value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    derivative_value_at_index_discrete = &
+    derivative_value_at_index_discrete_1d = &
          field%interp_1d%interpolate_derivative_eta1(eta)
-  end function derivative_value_at_index_discrete
+  end function derivative_value_at_index_discrete_1d
 
   subroutine write_to_file_discrete_1d( field, tag )
     class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
