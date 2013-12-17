@@ -1,9 +1,14 @@
 module sll_simulation_2d_guiding_center_cartesian_module
 
-!the aim is to create guiding center cartesian in simulation class
-!related to
-!simulation_guiding_center_2D_generalized_coords.F90
-!but here geometry and test is specifically cartesian
+!2d guiding center cartesian simulation
+!related to simulation_2d_guiding_center_curvilinear.F90
+!but here geometry and test are specifically cartesian
+
+!see ../selalib/prototype/src/simulation/gcsim2d_cartesian_input.nml
+!for example of use
+
+!contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
+
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -25,17 +30,48 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  use sll_mudpack_cartesian
+  !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_solver
+  use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+  use sll_module_poisson_2d_elliptic_solver
+  use sll_module_scalar_field_2d_base
+  use sll_module_scalar_field_2d_alternative
+  use sll_timer
+  use sll_fft
+  use sll_module_poisson_2d_periodic_solver
+
+!#include "sll_working_precision.h"
+!#include "sll_assert.h"
+!#include "sll_memory.h"
+!#include "sll_field_2d.h"
+!#include "sll_utilities.h"
+!#include "sll_poisson_solvers.h"
+!  use sll_constants
+!  use sll_logical_meshes  
+!  use sll_module_advection_1d_periodic
+!  use sll_module_advection_2d_BSL
+!  use sll_module_characteristics_2d_explicit_euler
+!  use sll_module_characteristics_2d_verlet
+!  use sll_reduction_module
+!  use sll_simulation_base
+!  use sll_cubic_spline_interpolator_2d
+!  use sll_cubic_spline_interpolator_1d
+!  use sll_coordinate_transformation_2d_base_module
+!  use sll_module_coordinate_transformations_2d
+!  use sll_common_coordinate_transformations
+!  use sll_common_array_initializers_module
+!  use sll_mudpack_cartesian
+!  use sll_module_poisson_2d_mudpack_solver
+!  use sll_module_poisson_2d_periodic_solver
   !use sll_parallel_array_initializer_module
 
   implicit none
 
-#define POISSON_ABSTRACT
-  
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_PHI_FROM_RHO = 0
+  sll_int32, parameter :: SLL_E_FROM_RHO = 1
 
 
   type, extends(sll_simulation_base_class) :: &
@@ -57,14 +93,9 @@ module sll_simulation_2d_guiding_center_cartesian_module
 
    
    !poisson solver
-#ifdef POISSON_ABSTRACT   
    class(sll_poisson_2d_base), pointer   :: poisson
-#endif
-   !type(poisson_2d_periodic), pointer   :: poisson
-   !type(sll_plan_poisson_polar), pointer :: poisson 
-#ifndef POISSON_ABSTRACT 
-   type(mudpack_2d) :: poisson 
-#endif
+   sll_int32 :: poisson_case
+
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -96,33 +127,68 @@ module sll_simulation_2d_guiding_center_cartesian_module
 
 contains
 
-  function new_guiding_center_2d_cartesian() result(sim)
+  function new_guiding_center_2d_cartesian(filename) result(sim)
     type(sll_simulation_2d_guiding_center_cartesian), pointer :: sim    
+    character(len=*), intent(in), optional :: filename
     sll_int32 :: ierr
     
     SLL_ALLOCATE(sim,ierr)
     
-    call initialize_guiding_center_2d_cartesian(sim)
+    call initialize_guiding_center_2d_cartesian(sim,filename)
     
   
   
   end function new_guiding_center_2d_cartesian
   
-  subroutine initialize_guiding_center_2d_cartesian(sim)
+  subroutine initialize_guiding_center_2d_cartesian(sim, filename)
     class(sll_simulation_2d_guiding_center_cartesian), intent(inout) :: sim
+    character(len=*), intent(in), optional :: filename
+    sll_int32             :: IO_stat
+    sll_int32, parameter  :: input_file = 99
+    
+    !geometry
+    character(len=256) :: mesh_case_x1
+    sll_int32 :: num_cells_x1
+    sll_real64 :: x1_min
+    sll_int32 :: nbox_x1
+    character(len=256) :: mesh_case_x2
+    sll_int32 :: num_cells_x2
+    sll_real64 :: x2_min
+    sll_int32 :: nbox_x2
+    
+    !initial_function
+    character(len=256) :: initial_function_case
+    sll_real64 :: kmode_x1
+    sll_real64 :: kmode_x2
+    sll_real64 :: eps
+    
+    !time_iterations
+    sll_real64 :: dt
+    sll_int32 :: number_iterations
+    sll_int32 :: freq_diag
+    sll_int32 :: freq_diag_time
+    character(len=256) :: time_loop_case
+
+    !advector
+    character(len=256) :: advect2d_case 
+    character(len=256) :: f_interp2d_case
+    character(len=256) :: phi_interp2d_case
+    character(len=256) ::  charac2d_case
+    character(len=256) ::  A_interp_case
+
+ 
+    !poisson
+    character(len=256) :: poisson_case
+    character(len=256) :: poisson_solver
+    character(len=256) :: mudpack_method    
+    sll_int32 :: spline_degree_eta1
+    sll_int32 :: spline_degree_eta2
+
+    !local variables
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
-    sll_real64 :: x1_min
     sll_real64 :: x1_max
-    sll_real64 :: x2_min
-    sll_real64 :: x2_max
-    sll_real64 :: r_minus
-    sll_real64 :: r_plus
-    sll_real64 :: eps
-    sll_real64 :: k_mode
-    sll_int32  :: nb_step
-    sll_real64 :: dt
-    sll_int32 :: visu_step
+    sll_real64 :: x2_max     
     class(sll_interpolator_2d_base), pointer :: f_interp2d
     class(sll_interpolator_2d_base), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
@@ -130,52 +196,179 @@ contains
     class(sll_interpolator_2d_base), pointer   :: A2_interp2d
     class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    character(len=256)      :: advect2d_case 
-    character(len=256)      :: charac2d_case
-    character(len=256)      :: f_interp2d_case 
-    character(len=256)      :: phi_interp2d_case 
-    character(len=256)      :: A_interp_case 
-    character(len=256)      :: initial_function_case 
-    character(len=256)      :: time_loop_case 
-    character(len=256)      :: poisson_case
+    sll_real64, dimension(:,:), pointer :: b11
+    sll_real64, dimension(:,:), pointer :: b12
+    sll_real64, dimension(:,:), pointer :: b21
+    sll_real64, dimension(:,:), pointer :: b22
+    sll_real64, dimension(:,:), pointer :: c
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    sll_real64, dimension(:,:), allocatable :: cxx_2d
+    sll_real64, dimension(:,:), allocatable :: cxy_2d
+    sll_real64, dimension(:,:), allocatable :: cyy_2d
+    sll_real64, dimension(:,:), allocatable :: cx_2d
+    sll_real64, dimension(:,:), allocatable :: cy_2d
+    sll_real64, dimension(:,:), allocatable :: ce_2d
     sll_int32 :: ierr
-    !character(len=256)      :: interp1d_x2_case 
-    
-    !here we do all the initialization
-    !in future, we will use namelist file
 
+    namelist /geometry/ &
+      mesh_case_x1, &
+      num_cells_x1, &
+      x1_min, &
+      nbox_x1, &
+      mesh_case_x2, &
+      num_cells_x2, &
+      x2_min, &
+      nbox_x2
+
+    namelist /initial_function/ &
+      initial_function_case, &
+      kmode_x1, &
+      kmode_x2, &
+      eps
+
+    namelist /time_iterations/ &
+      dt, &
+      number_iterations, &
+      freq_diag, &
+      freq_diag_time, &
+      time_loop_case
+
+    namelist /advector/ &
+      advect2d_case, &   
+      f_interp2d_case, &
+      phi_interp2d_case, &
+      charac2d_case, &
+      A_interp_case
+
+    namelist /poisson/ &
+      poisson_case, &
+      poisson_solver, &
+      mudpack_method, &    
+      spline_degree_eta1, &
+      spline_degree_eta2    
+
+
+    !set default parameters
     
-    Nc_x1 = 128
-    Nc_x2 = 128
-    k_mode = 0.5_f64
+    !geometry
+    mesh_case_x1="SLL_LANDAU_MESH"
+    num_cells_x1 = 32
+    x1_min = 0.0_f64
+    nbox_x1 = 1
+    mesh_case_x2="SLL_LANDAU_MESH"
+    num_cells_x2 = 32
+    x2_min = 0.0_f64
+    nbox_x2 = 1
+    
+    !initial function
+    initial_function_case="SLL_KHP1"
+    kmode_x1 = 0.5_f64
+    kmode_x2 = 1._f64
     eps = 0.015_f64
-    x1_min = 0._f64
-    x1_max = 2._f64*sll_pi/k_mode
-    x2_min = 0._f64
-    x2_max = 2._f64*sll_pi
-    nb_step = 600
     
+    !time_iterations
     dt = 0.1_f64
-    visu_step = 100
-    f_interp2d_case = "SLL_CUBIC_SPLINES"
-    phi_interp2d_case = "SLL_CUBIC_SPLINES"
-    A_interp_case = "SLL_CUBIC_SPLINES"
-    charac2d_case = "SLL_VERLET"
-    !charac2d_case = "SLL_EULER"
-    advect2d_case = "SLL_BSL"
-    initial_function_case = "SLL_KHP1" 
+    number_iterations  = 600
+    freq_diag = 100
+    freq_diag_time = 1
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-    poisson_case = "MUDPACK"   
+
+    !advector
+    advect2d_case = "SLL_BSL"    
+    f_interp2d_case = "SLL_CUBIC_SPLINES"
+    phi_interp2d_case = "SLL_CUBIC_SPLINES"
+    !charac2d_case = "SLL_EULER"
+    charac2d_case = "SLL_VERLET"
+    A_interp_case = "SLL_CUBIC_SPLINES"
+    
+    !poisson
+    poisson_case = "SLL_PHI_FROM_RHO"
+    !poisson_case = "SLL_E_FROM_RHO"    
+    poisson_solver = "SLL_POISSON_FFT"  
+    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_MUDPACK"   !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    !mudpack_method = "SLL_SEPARABLE"
+    !mudpack_method = "SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS"
+    mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"    
+    spline_degree_eta1 = 3
+    spline_degree_eta2 = 3    
+
+
+    if(present(filename))then
+      open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+        if( IO_stat /= 0 ) then
+          print *, '#initialize_guiding_center_2d_cartesian() failed to open file ', &
+          trim(filename)//'.nml'
+          STOP
+        end if
+      print *,'#initialization with filename:'
+      print *,'#',trim(filename)//'.nml'
+      read(input_file, geometry) 
+      read(input_file, initial_function)
+      read(input_file, time_iterations)
+      read(input_file, advector)
+      read(input_file, poisson)
+      close(input_file)
+    else
+      print *,'#initialization with default parameters'    
+    endif
+
+
+
+
+    x1_max = 2._f64*sll_pi/kmode_x1
+    x2_max = 2._f64*sll_pi/kmode_x2
+    Nc_x1 = num_cells_x1
+    Nc_x2 = num_cells_x2
+     
+    
+!    Nc_x1 = 32
+!    Nc_x2 = 32
+!    k_mode = 0.5_f64
+!    eps = 0.015_f64
+!    x1_min = 0._f64
+!    x1_max = 2._f64*sll_pi/k_mode
+!    x2_min = 0._f64
+!    x2_max = 2._f64*sll_pi
+!    nb_step = 600
+!    
+!    dt = 0.1_f64
+!    visu_step = 100
+!    f_interp2d_case = "SLL_CUBIC_SPLINES"
+!    phi_interp2d_case = "SLL_CUBIC_SPLINES"
+!    A_interp_case = "SLL_CUBIC_SPLINES"
+!    charac2d_case = "SLL_VERLET"
+!    !charac2d_case = "SLL_EULER"
+!    advect2d_case = "SLL_BSL"
+!    initial_function_case = "SLL_KHP1" 
+!    !time_loop_case = "SLL_EULER"
+!    time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+!    !poisson_solver = "SLL_MUDPACK"   !use with "SLL_PHI_FROM_RHO"
+!    poisson_solver = "SLL_POISSON_FFT"  
+!    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+!    !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"
+!    
+!    poisson_case = "SLL_PHI_FROM_RHO"
+!    !poisson_case = "SLL_E_FROM_RHO"
+!    !mudpack_method = "SLL_SEPARABLE"
+!    !mudpack_method = "SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS"
+!    mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"
+!    
+!    spline_degree_eta1 = 3
+!    spline_degree_eta2 = 3
+    
+    
     
     sim%dt = dt
-    sim%num_iterations = nb_step
-    sim%freq_diag = visu_step
-    sim%freq_diag_time = 1
+    sim%num_iterations = number_iterations
+    sim%freq_diag = freq_diag
+    sim%freq_diag_time = freq_diag_time
 
     sim%mesh_2d => new_logical_mesh_2d( &
-      Nc_x1, &
-      Nc_x2, &
+      num_cells_x1, &
+      num_cells_x2, &
       eta1_min = x1_min, &
       eta1_max = x1_max, &
       eta2_min = x2_min, &
@@ -319,7 +512,7 @@ contains
         sim%init_func => sll_KHP1_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = eps
-        sim%params(2) = k_mode
+        sim%params(2) = kmode_x1
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
@@ -341,50 +534,233 @@ contains
         stop
     end select
     
-    
-    
+
     
     !poisson solver
-     !poisson solver
+    
     select case(poisson_case)    
-      case ("MUDPACK")     
-#ifndef POISSON_ABSTRACT
-        call initialize_mudpack_cartesian(sim%poisson, & 
-          eta1_min= x1_min,&
-          eta1_max= x1_max,&
-          nc_eta1 = Nc_x1,&
-          eta2_min= x2_min,&
-          eta2_max= x2_max,&
-          nc_eta2 = Nc_x2,&
-          bc_eta1_left = SLL_PERIODIC,& 
-          bc_eta1_right= SLL_PERIODIC,& 
-          bc_eta2_left = SLL_PERIODIC,& 
-          bc_eta2_right= SLL_PERIODIC)
-#endif        
-        !stop  
-#ifdef  POISSON_ABSTRACT         
-        sim%poisson => new_poisson_2d_mudpack_solver( &
-          eta1_min = x1_min,&
-          eta1_max = x1_max,&
-          nc_eta1 = Nc_x1,&
-          eta2_min = x2_min,&
-          eta2_max = x2_max,&
-          nc_eta2 = Nc_x2,&
-          bc_eta1_left = SLL_PERIODIC,& 
-          bc_eta1_right = SLL_PERIODIC,& 
-          bc_eta2_left = SLL_PERIODIC,& 
-          bc_eta2_right = SLL_PERIODIC,&
-          mudpack_case = SLL_SEPARABLE, &
-          cxx = 1._f64, &
-          cyy = 1._f64)
-#endif       
-         
+      case ("SLL_PHI_FROM_RHO")     
+        sim%poisson_case = SLL_PHI_FROM_RHO
+      case ("SLL_E_FROM_RHO")
+        sim%poisson_case = SLL_E_FROM_RHO     
       case default
         print *,'#bad poisson_case',poisson_case
         print *,'#not implemented'
         print *,'#in initialize_guiding_center_2d_cartesian'
         stop
     end select
+    
+    select case(poisson_solver)    
+      case ("SLL_MUDPACK")     
+        !stop  
+        
+        select case(mudpack_method)
+          case ("SLL_SEPARABLE")
+            sim%poisson => new_poisson_2d_mudpack_solver( &
+              x1_min,&
+              x1_max,&
+              Nc_x1,&
+              x2_min,&
+              x2_max,&
+              Nc_x2,&
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,&
+              SLL_SEPARABLE, &
+              cxx = 1._f64, &
+              cyy = 1._f64)
+          case ("SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS")   
+            SLL_ALLOCATE(cxx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cyy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(ce_2d(Nc_x1+1,Nc_x2+1),ierr)
+            
+            cxx_2d = 1._f64
+            cyy_2d = 1._f64
+            cx_2d = 0._f64
+            cy_2d = 0._f64
+            ce_2d = 0._f64
+             
+            sim%poisson => new_poisson_2d_mudpack_solver( &
+              x1_min,&
+              x1_max,&
+              Nc_x1,&
+              x2_min,&
+              x2_max,&
+              Nc_x2,&
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,&
+              SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS, &
+              cxx_2d = cxx_2d, &
+              cyy_2d = cyy_2d, &
+              cx_2d = cx_2d, &
+              cy_2d = cy_2d, &
+              ce_2d = ce_2d)
+              
+          case ("SLL_NON_SEPARABLE_WITH_CROSS_TERMS")   
+            SLL_ALLOCATE(cxx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cxy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cyy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cx_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(cy_2d(Nc_x1+1,Nc_x2+1),ierr)
+            SLL_ALLOCATE(ce_2d(Nc_x1+1,Nc_x2+1),ierr)
+            
+            cxx_2d = 1._f64
+            cxy_2d = 0._f64
+            cyy_2d = 1._f64
+            cx_2d = 0._f64
+            cy_2d = 0._f64
+            ce_2d = 0._f64
+             
+            sim%poisson => new_poisson_2d_mudpack_solver( &
+              x1_min,&
+              x1_max,&
+              Nc_x1,&
+              x2_min,&
+              x2_max,&
+              Nc_x2,&
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,& 
+              SLL_PERIODIC,&
+              SLL_NON_SEPARABLE_WITH_CROSS_TERMS, &
+              cxx_2d = cxx_2d, &
+              cxy_2d = cxy_2d, &
+              cyy_2d = cyy_2d, &
+              cx_2d = cx_2d, &
+              cy_2d = cy_2d, &
+              ce_2d = ce_2d)
+              
+          case default
+            print *,'#bad mudpack_method',mudpack_method
+            print *,'#in initialize_guiding_center_2d_cartesian'
+            stop
+        end select    
+      case ("SLL_MUDPACK_CURVILINEAR")     
+!        transformation => new_coordinate_transformation_2d_analytic( &
+!          "analytic_identity_transformation", &
+!          sim%mesh_2d, &
+!          identity_x1, &
+!          identity_x2, &
+!          identity_jac11, &
+!          identity_jac12, &
+!          identity_jac21, &
+!          identity_jac22, &
+!          params=(/0._f64,0._f64,0._f64,0._f64/))  
+        transformation => new_coordinate_transformation_2d_analytic( &
+          "analytic_collela_transformation", &
+          sim%mesh_2d, &
+          sinprod_x1, &
+          sinprod_x2, &
+          sinprod_jac11, &
+          sinprod_jac12, &
+          sinprod_jac21, &
+          sinprod_jac22, &
+          params=(/ 0._f64, 0._f64, x1_max-x1_min, x2_max-x2_min/)  )  
+        !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
+        !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
+
+
+
+          SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
+        
+        b11 = 1._f64
+        b22 = 1._f64
+        b12 = 0._f64
+        b21 = 0._f64
+        c = 0._f64
+        sim%poisson => new_poisson_2d_mudpack_curvilinear_solver( &
+         transformation, &
+         x1_min,&
+         x1_max,&
+         Nc_x1,&
+         x2_min,&
+         x2_max,&
+         Nc_x2,&
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         b11,&
+         b12,&
+         b21,&
+         b22,&
+         c)
+
+      case ("SLL_POISSON_FFT")     
+        !stop  
+        sim%poisson => new_poisson_2d_periodic_solver( &
+          x1_min,&
+          x1_max,&
+          Nc_x1,&
+          x2_min,&
+          x2_max,&
+          Nc_x2)
+      case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
+        transformation => new_coordinate_transformation_2d_analytic( &
+          "analytic_identity_transformation", &
+          sim%mesh_2d, &
+          identity_x1, &
+          identity_x2, &
+          identity_jac11, &
+          identity_jac12, &
+          identity_jac21, &
+          identity_jac22, &
+          params=(/0._f64,0._f64,0._f64,0._f64/))  
+
+          SLL_ALLOCATE(b11(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
+        
+        b11 = 1._f64
+        b22 = 1._f64
+        b12 = 0._f64
+        b21 = 0._f64
+        c = 0._f64
+        
+        sim%poisson => new_poisson_2d_elliptic_solver( &
+         transformation,&
+         spline_degree_eta1, &
+         spline_degree_eta2, &
+         Nc_x1, &
+         Nc_x2, &
+         ES_GAUSS_LEGENDRE, &
+         ES_GAUSS_LEGENDRE, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         x1_min, &
+         x1_max, &
+         x2_min, &
+         x2_max, &
+         b11, & 
+         b12, & 
+         b21, & 
+         b22, & 
+         c ) 
+
+         
+      case default
+        print *,'#bad poisson_solver',poisson_solver
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_cartesian'
+        stop
+    end select
+
+
+
+
 
    
   end subroutine initialize_guiding_center_2d_cartesian
@@ -457,44 +833,47 @@ contains
       end do
     end do
         
-    !solve poisson
-    !call poisson_solve_cartesian(sim%poisson,f,phi)
-#ifndef POISSON_ABSTRACT    
-    call solve_mudpack_cartesian(sim%poisson,phi,-f)
-#else
-    call sim%poisson%compute_phi_from_rho( phi, -f )    
-#endif    
-    call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
-    print*,"PASSED"
+
+    select case(sim%poisson_case) 
+      case (SLL_PHI_FROM_RHO)        
+        call sim%poisson%compute_phi_from_rho( phi, f )            
+        call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+      case (SLL_E_FROM_RHO)
+        call sim%poisson%compute_E_from_rho( A2, A1, f )        
+        A1 = -A1
+     end select
+
+     call sll_gnuplot_write(A1(1,:),'A1_init',ierr)
+     call sll_gnuplot_write(A2(1,:),'A2_init',ierr)
     
     
-    !print *,A1
-    !print *,A2
-    
-    open(unit = diag_id, file='diag_cartesian.dat',IOStat=IO_stat)
+    open(unit = diag_id, file='thdiag.dat',IOStat=IO_stat)
     if( IO_stat /= 0 ) then
-       print *, '#run_gc2d_cartesian (sim) failed to open file diag_catesian.dat'
+       print *, '#run_gc2d_cartesian (sim) failed to open file thdiag.dat'
        STOP
     end if
     
     iplot = 0
 
     do step=1,nb_step+1
-      print*,"step= ", step
       f_old = f
 
-#ifndef POISSON_ABSTRACT    
-      call solve_mudpack_cartesian(sim%poisson,phi,-f_old)
-#else
-      call sim%poisson%compute_phi_from_rho( phi, -f_old )    
-#endif    
-      
+      select case(sim%poisson_case) 
+        case (SLL_PHI_FROM_RHO)
+          call sim%poisson%compute_phi_from_rho( phi, f_old )    
+          call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
+        case (SLL_E_FROM_RHO)
+          call sim%poisson%compute_E_from_rho( A2, A1, f_old )              
+          A1 = -A1
+      end select
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
       !call solve_mudpack_cartesian(sim%poisson, phi, -f_old)
       
-      call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
+        if(sim%poisson_case==SLL_E_FROM_RHO) then
+          call sim%poisson%compute_phi_from_rho( phi, f_old )
+        endif
         call time_history_diagnostic_gc_cartesian( &
           diag_id, &    
           step-1, &
@@ -507,6 +886,7 @@ contains
       endif            
      
       if(modulo(step-1,sim%freq_diag)==0)then
+        print*,"#step= ", step
         call plot_f_cartesian(iplot,f,sim%mesh_2d)
         iplot = iplot+1  
       endif            
@@ -516,20 +896,21 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
-          !call poisson_solve_cartesian(sim%poisson,f,phi)
-#ifndef POISSON_ABSTRACT    
-          call solve_mudpack_cartesian(sim%poisson,phi,-f)
-#else
-          call sim%poisson%compute_phi_from_rho( phi, -f )    
-#endif    
-          
-          !call solve_mudpack_cartesian(sim%poisson, phi, -f)
-          
-          
-          
-          call compute_field_from_phi_2d_cartesian(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)      
-          f_old = f
-          call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
+
+          select case(sim%poisson_case) 
+            case (SLL_PHI_FROM_RHO)
+              call sim%poisson%compute_phi_from_rho( phi, f )    
+              call compute_field_from_phi_2d_cartesian( &
+                phi, &
+                sim%mesh_2d, &
+                A1, &
+                A2, &
+                sim%phi_interp2d)      
+            case (SLL_E_FROM_RHO)
+              call sim%poisson%compute_E_from_rho( A2, A1, f )
+              A1 = -A1
+          end select
+          call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
@@ -544,7 +925,7 @@ contains
     
     close(diag_id)
 
-    !print *,'#not implemented for the moment!'
+    print *,'#run_gc2d_cartesian PASSED'
   end subroutine run_gc2d_cartesian  
   
   
@@ -620,7 +1001,7 @@ contains
     sll_real64 :: delta_x2
     sll_real64 :: x1
     sll_int32 :: ierr 
-
+    type(sll_fft_plan), pointer         :: pfwd
     
     Nc_x1 = mesh_2d%num_cells1
     Nc_x2 = mesh_2d%num_cells2
@@ -671,8 +1052,18 @@ contains
     l1 = l1*delta_x2
     l2 = sqrt(l2*delta_x2)
     e  = e*delta_x2
+
+
     
-    write(file_id,*) dt*real(step,f64),linf,l1,l2,mass,e
+    write(file_id,*) &
+      dt*real(step,f64), &
+      linf, &
+      l1, &
+      l2, &
+      mass, &
+      e, &
+      maxval(abs(A1(1:Nc_x1+1,1:Nc_x2+1)**2+A2(1:Nc_x1+1,1:Nc_x2+1)**2)), &
+      maxval(abs(phi(1:Nc_x1+1,1:Nc_x2+1)))
 
 
     
