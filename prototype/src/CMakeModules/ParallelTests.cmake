@@ -10,6 +10,20 @@ SET_TESTS_PROPERTIES(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_MPI_TEST(remap_3d test_remap_3d ${PROCS} ${ARGS})
 SET_TESTS_PROPERTIES(remap_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+IF(NOT STDF95)
+
+   SET(PROCS 4)
+   ADD_MPI_TEST( point_to_point_comms_1d test_p2p_comms_1d ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES( point_to_point_comms_1d PROPERTIES PASS_REGULAR_EXPRESSION
+        "PASSED")
+
+   SET(PROCS 4)
+   ADD_MPI_TEST( point_to_point_comms_2d test_p2p_comms_2d ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES( point_to_point_comms_2d PROPERTIES PASS_REGULAR_EXPRESSION
+        "PASSED")
+
+ENDIF(NOT STDF95)
+
 IF(PROCESSOR_COUNT GREATER 1)
 
    ADD_MPI_TEST(remap_4d test_remap_4d ${PROCS} ${ARGS})
@@ -17,6 +31,7 @@ IF(PROCESSOR_COUNT GREATER 1)
 
    ADD_MPI_TEST(remap_6d test_remap_6d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 
    IF(NOT STDF95)
 
@@ -44,6 +59,10 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+######
+
+      IF(FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
+
       ADD_MPI_TEST(poisson_per_cart_par_2d 
                    test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(poisson_per_cart_par_2d
@@ -52,6 +71,14 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
       ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
+      ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+      ENDIF()
+
+######
 
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_cartesian_input)
       ADD_MPI_TEST(sim4d_vp_cart test_4d_vp_cartesian ${PROCS} ${ARGS})
@@ -65,9 +92,6 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       ADD_MPI_TEST(sim4d_DK_polar test_4d_dk_polar ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(sim4d_DK_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
-      ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/sim4d_qns_general_input.txt)
       ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
