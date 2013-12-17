@@ -147,21 +147,21 @@ contains
       case (SLL_STRANG_TVT) ! Strang splitting TVT
         split%nb_split_step = 3
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-        split%split_begin_T = 1
+        split%split_begin_T = .true.
         split%split_step(1) = 0.5_f64
         split%split_step(2) = 1._f64
         split%split_step(3) = split%split_step(1)
       case (SLL_STRANG_VTV) ! Strang splitting VTV
         split%nb_split_step = 3
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-        split%split_begin_T = 0
+        split%split_begin_T = .false.
         split%split_step(1) = 0.5_f64
         split%split_step(2) = 1._f64
         split%split_step(3) = split%split_step(1)
       case (SLL_TRIPLE_JUMP_TVT) ! triple jump TVT
         split%nb_split_step = 7
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-        split%split_begin_T = 1
+        split%split_begin_T = .true.
         split%split_step(1) = 0.675603595979829_f64
         split%split_step(2) = 1.351207191959658_f64
         split%split_step(3) = -0.17560359597982855_f64
@@ -172,7 +172,7 @@ contains
       case (SLL_TRIPLE_JUMP_VTV) ! triple jump VTV
         split%nb_split_step = 7
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-        split%split_begin_T = 0
+        split%split_begin_T = .false.
         split%split_step(1) = 0.675603595979829_f64
         split%split_step(2) = 1.351207191959658_f64
         split%split_step(3) = -0.17560359597982855_f64
@@ -183,7 +183,7 @@ contains
       case (SLL_ORDER6_VTV) ! Order 6 VTV
         split%nb_split_step = 23
         SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-        split%split_begin_T = 0
+        split%split_begin_T = .false.
         split%split_step(1) = 0.0414649985182624_f64
         split%split_step(2) = 0.123229775946271_f64
         split%split_step(3) = 0.198128671918067_f64
@@ -211,7 +211,7 @@ contains
         if(present(dt))then
           split%nb_split_step = 9
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-          split%split_begin_T = 1
+          split%split_begin_T = .true.
           split%split_step(1) = 0.1095115577513980413559540_f64
           split%split_step(2) = 0.268722208204814693684441_f64&
             -2._f64*dt**2*0.000805681667096178271312_f64&
@@ -233,7 +233,7 @@ contains
         if(present(dt))then        
           split%nb_split_step = 9
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-          split%split_begin_T = 0
+          split%split_begin_T = .false.
           split%split_step(1) = 0.359950808794143627485664_f64&
             -2._f64*dt**2*(-0.01359558332625151635_f64)&
             +4._f64*dt**4*(-8.562814848565929e-6_f64)
@@ -257,7 +257,7 @@ contains
         if(present(dt))then        
           split%nb_split_step = 9
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-          split%split_begin_T = 1
+          split%split_begin_T = .true.
           split%split_step(1) = 0.1095115577513980413559540_f64
           split%split_step(2) = 0.268722208204814693684441_f64&
             -2._f64*dt**2*0.000805681667096178271312_f64&
@@ -281,7 +281,7 @@ contains
         if(present(dt))then        
           split%nb_split_step = 11
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-          split%split_begin_T = 0
+          split%split_begin_T = .false.
           split%split_step(1) = 0.0490864609761162454914412_f64&
             -2._f64*dt**2*(0.0000697287150553050840999_f64)
           split%split_step(2) = 0.1687359505634374224481957_f64
@@ -307,7 +307,7 @@ contains
         if(present(dt))then        
           split%nb_split_step = 11
           SLL_ALLOCATE(split%split_step(split%nb_split_step),ierr)
-          split%split_begin_T = 0
+          split%split_begin_T = .false.
           split%split_step(1) = 0.083335463273305120964507_f64&
             -2._f64*dt**2*(-0.00015280483587048489661_f64)&
             +4._f64*dt**4*( -0.0017675734111895638156_f64)&

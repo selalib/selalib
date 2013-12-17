@@ -684,6 +684,10 @@ contains
     sll_int32 :: split_istep
     sll_int32 :: split_x
     sll_int32 :: split_x_init
+    
+    logical :: split_T
+    
+    
 !    sll_int32, parameter :: SLL_STRANG_TVT           = 0 
 !    sll_int32, parameter :: SLL_STRANG_VTV           = 1 
 !    sll_int32, parameter :: SLL_TRIPLE_JUMP_TVT      = 2 
@@ -1125,11 +1129,11 @@ contains
         endif
       endif  
 
-      split_x = sim%split%split_begin_T !split_x_init
+      split_T = sim%split%split_begin_T !split_x_init
       t_step = real(istep-1,f64)
       do split_istep=1,sim%split%nb_split_step
-        
-        if(split_x==1)then
+        if(split_T) then
+        !if(split_x==1)then
           !! T ADVECTION 
           !advection in x
           do i = 1, local_size_x2
@@ -1201,8 +1205,8 @@ contains
           global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
 
         endif
-        split_x= 1-split_x
-      
+        !split_x= 1-split_x
+        split_T = .not.(split_T)
       enddo
       
 
