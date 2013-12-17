@@ -14,17 +14,13 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-!> @author
-!> Michel Mehrenberger (mehrenbe@math.unistra.fr)
-!> Nicolas Crouseilles
-!> Edwin Chacon Golcher (for checking code writing/interfaces/reusability)
-!> @brief 
-!> Simulation class to solve 4D vlasov poisson equation
-!> parallelization follows simulation_4d_qns_general.F90
-!> differs from simulation_4d_vlasov_poisson_cartesian.F90
-!> as Poisson solvers is not intended to be parallel for the moment
-!> should include new advectors and input files with explicit names
-!> implementation and test of high order splitting is today's application goal  
+! Vlasov-Poisson simulation in 2Dx2D
+! Poisson is sequential and Vlasov parallel
+!
+! contact: Michel Mehrenberger (mehrenbe@math.unistra.fr)
+!
+! current investigations:
+!   High order splitting in time
 
 
 module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
@@ -58,6 +54,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   
 
   use sll_simulation_base
+  use sll_time_splitting_coeff_module
   implicit none
 
 
@@ -75,6 +72,14 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
    sll_real64 :: nrj0   
+
+   !time_iterations
+   sll_real64 :: dt
+   sll_int32  :: num_iterations
+   sll_int32  :: freq_diag
+   sll_int32  :: freq_diag_time
+   type(splitting_coeff), pointer :: split
+   
    !advector
    class(sll_advection_1d_base), pointer    :: advect_x1
    class(sll_advection_1d_base), pointer    :: advect_x2
@@ -84,22 +89,7 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
    !poisson solver
    !class(sll_poisson_2d_base), pointer   :: poisson
    type(poisson_2d_periodic), pointer   :: poisson
-
-   
-   !time_iterations
-   sll_real64 :: dt
-   sll_int32  :: num_iterations
-   sll_int32  :: freq_diag
-   sll_int32  :: freq_diag_time
-  
-   
-   !parameters for splitting
-   sll_real64, dimension(:), pointer :: split_step
-   sll_int32 :: nb_split_step
-   logical :: split_begin_T
-
-   
-              
+                 
    contains
      procedure, pass(sim) :: run => run_vp4d_cartesian
      procedure, pass(sim) :: init_from_file => init_vp4d_fake
@@ -110,123 +100,26 @@ contains
   
   
   function new_vlasov_par_poisson_seq_cart( &
-    filename, &
-    mesh_x1, &
-    mesh_x2, &
-    mesh_x3, &
-    mesh_x4, &
-    init_func, &
-    params, &
-    advect_x1, &
-    advect_x2, &
-    advect_x3, &
-    advect_x4, &
-    dt, &
-    num_iterations, &
-    freq_diag, &
-    freq_diag_time, &
-    split_step, &
-    nb_split_step, &
-    split_begin_T) &
+    filename ) &
     result(sim)    
     type(sll_simulation_4d_vlasov_par_poisson_seq_cart), pointer :: sim    
     character(len=*), intent(in), optional                                :: filename
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x1
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x2
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x3
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x4
-    procedure(sll_scalar_initializer_4d), optional :: init_func
-    sll_real64, dimension(:), pointer, optional :: params
-    class(sll_advection_1d_base), pointer, optional    :: advect_x1
-    class(sll_advection_1d_base), pointer, optional    :: advect_x2
-    class(sll_advection_1d_base), pointer, optional    :: advect_x3
-    class(sll_advection_1d_base), pointer, optional    :: advect_x4
-    sll_real64, intent(in), optional :: dt
-    sll_int32, intent(in), optional  :: num_iterations
-    sll_int32, intent(in), optional  :: freq_diag
-    sll_int32, intent(in), optional  :: freq_diag_time
-    sll_real64, dimension(:), pointer, optional :: split_step
-    sll_int32, intent(in), optional :: nb_split_step
-    logical, intent(in), optional :: split_begin_T
-
-
-    
     sll_int32 :: ierr   
 
-
-    SLL_ALLOCATE(sim,ierr)
-    
-    sim%mesh_x1 => null()
-    sim%mesh_x2 => null()
-    sim%mesh_x3 => null()
-    sim%mesh_x4 => null()
-    sim%init_func => null()
-        
+    SLL_ALLOCATE(sim,ierr)            
     call initialize_vlasov_par_poisson_seq_cart( &
       sim, &
-      filename, &
-      mesh_x1, &
-      mesh_x2, &
-      mesh_x3, &
-      mesh_x4, &
-      init_func, &
-      params, &
-      advect_x1, &
-      advect_x2, &
-      advect_x3, &
-      advect_x4, &
-      dt, &
-      num_iterations, &
-      freq_diag, &
-      freq_diag_time, &
-      split_step, &
-      nb_split_step, &
-      split_begin_T)
-     
-  
+      filename)
+       
   end function new_vlasov_par_poisson_seq_cart
 
 
   subroutine initialize_vlasov_par_poisson_seq_cart( &
     sim, &
-    filename, &
-    mesh_x1, &
-    mesh_x2, &
-    mesh_x3, &
-    mesh_x4, &
-    init_func, &
-    params, &
-    advect_x1, &
-    advect_x2, &
-    advect_x3, &
-    advect_x4, &
-    user_dt, &
-    user_num_iterations, &
-    user_freq_diag, &
-    user_freq_diag_time, &
-    split_step, &
-    nb_split_step, &
-    split_begin_T)
-    
+    filename)
+        
     class(sll_simulation_4d_vlasov_par_poisson_seq_cart), intent(inout) :: sim
     character(len=*), intent(in), optional                                :: filename
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x1
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x2
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x3
-    type(sll_logical_mesh_1d), pointer, optional :: mesh_x4
-    procedure(sll_scalar_initializer_4d), optional :: init_func
-    sll_real64, dimension(:), pointer, optional :: params
-    class(sll_advection_1d_base), pointer, optional    :: advect_x1
-    class(sll_advection_1d_base), pointer, optional    :: advect_x2
-    class(sll_advection_1d_base), pointer, optional    :: advect_x3
-    class(sll_advection_1d_base), pointer, optional    :: advect_x4
-    sll_real64, intent(in), optional :: user_dt
-    sll_int32, intent(in), optional  :: user_num_iterations
-    sll_int32, intent(in), optional  :: user_freq_diag
-    sll_int32, intent(in), optional  :: user_freq_diag_time
-    sll_real64, dimension(:), pointer, optional :: split_step
-    sll_int32, intent(in), optional :: nb_split_step
-    logical, intent(in), optional :: split_begin_T
     intrinsic :: trim
     sll_int32             :: IO_stat
     sll_int32, parameter  :: input_file = 99
@@ -257,11 +150,11 @@ contains
     sll_int32             :: order_x3
     sll_int32             :: order_x4
     sll_real64            :: dt
-    sll_int32             :: nbiter
-    sll_int32             :: freqdiag
-    sll_int32             :: freqdiag_time
+    sll_int32             :: number_iterations
+    sll_int32             :: freq_diag
+    sll_int32             :: freq_diag_time
     character(len=256)      :: split_case
-    character(len=256)      :: init_func_case
+    character(len=256)      :: initial_function_case
     sll_real64            :: kmode_x1
     sll_real64            :: kmode_x2
     sll_real64            :: eps
@@ -287,6 +180,20 @@ contains
       mesh_case_x2, &
       mesh_case_x3, &
       mesh_case_x4
+
+    namelist / initial_function / &
+      initial_function_case, &
+      kmode_x1, &
+      kmode_x2, &
+      eps
+
+    namelist / time_iterations / &
+      dt, &
+      number_iterations, &
+      freq_diag, &
+      freq_diag_time, &
+      split_case
+
       
     namelist / advector /   &
       advector_x1, &
@@ -298,115 +205,82 @@ contains
       advector_x4, &
       order_x4
 
-    namelist / time_iterations / &
-      dt, &
-      nbiter, &
-      freqdiag, &
-      freqdiag_time, &
-      split_case
 
-    namelist / initial_function / &
-      init_func_case, &
-      kmode_x1, &
-      kmode_x2, &
-      eps
  
- 
- 
-   
-    if(present(mesh_x1))then
-      sim%mesh_x1 => mesh_x1
-    endif
-    if(present(mesh_x2))then
-      sim%mesh_x2 => mesh_x2
-    endif
-    if(present(mesh_x3))then
-      sim%mesh_x3 => mesh_x3
-    endif
-    if(present(mesh_x4))then
-      sim%mesh_x4 => mesh_x4
-    endif
-    
-    if(present(init_func))then
-      sim%init_func => init_func
-    endif
+    !!set default parameters
 
-    if(present(params))then
-      sim%params => params
-    endif
+    !geometry
+    mesh_case_x1="SLL_LANDAU_MESH"
+    num_cells_x1 = 16
+    x1_min = 0.0_f64
+    nbox_x1 = 1
+    mesh_case_x2="SLL_LANDAU_MESH"
+    num_cells_x2 = 16
+    x2_min = 0.0_f64
+    nbox_x2 = 1
+    mesh_case_x3="SLL_LOGICAL_MESH"   
+    num_cells_x3 = 16
+    x3_min = -6._f64
+    x3_max = 6._f64
+    mesh_case_x4="SLL_LOGICAL_MESH"   
+    num_cells_x4 = 16
+    x4_min = -6._f64
+    x4_max = 6._f64
 
-    if(present(advect_x1))then
-      sim%advect_x1 => advect_x1
-    endif
-
-    if(present(advect_x2))then
-      sim%advect_x2 => advect_x2
-    endif
-
-    if(present(advect_x3))then
-      sim%advect_x3 => advect_x3
-    endif
-
-    if(present(advect_x4))then
-      sim%advect_x4 => advect_x4
-    endif
-    
-    if(present(user_dt))then
-      sim%dt = user_dt
-    else
-      sim%dt = 0._f64  
-    endif
-
-    if(present(user_num_iterations))then
-      sim%num_iterations = user_num_iterations
-    else
-      sim%num_iterations = 0._f64  
-    endif
-
-    if(present(user_freq_diag))then
-      sim%freq_diag = user_freq_diag
-    else
-      sim%freq_diag = 100000000  
-    endif
-
-    if(present(user_freq_diag_time))then
-      sim%freq_diag_time = user_freq_diag_time
-    else
-      sim%freq_diag_time = 10000000  
-    endif
+    !initial_function
+    initial_function_case="SLL_LANDAU"
+    kmode_x1 = 0.5_f64
+    kmode_x2 = 0.5_f64
+    eps = 1e-3_f64
 
 
-    if(present(split_step))then
-      sim%split_step => split_step
-    endif
-    
-    if(present(nb_split_step))then
-      sim%nb_split_step = nb_split_step
-    else
-      sim%nb_split_step = 0 
-    endif
+    !time_iterations
+    dt = 2._f64
+    number_iterations = 5
+    freq_diag = 100
+    freq_diag_time = 1
+    !split_case = "SLL_STRANG_VTV" 
+    !split_case = "SLL_STRANG_TVT" 
+    split_case = "SLL_ORDER6VPnew1_VTV" 
+    !split_case = "SLL_ORDER6VPnew2_VTV" 
+    !split_case = "SLL_ORDER6_VTV"
+    !split_case = "SLL_LIE_TV"
 
-    if(present(split_begin_T))then
-      sim%split_begin_T = split_begin_T
-    else
-      sim%split_begin_T = .true. 
-    endif
-    
+
+
+    !advector
+    advector_x1 = "SLL_LAGRANGE"
+    order_x1 = 4
+    advector_x2 = "SLL_LAGRANGE"
+    order_x2 = 4
+    advector_x3 = "SLL_LAGRANGE"
+    order_x3 = 4
+    advector_x4 = "SLL_LAGRANGE"
+    order_x4 = 4
  
     if(present(filename))then
  
-    open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
-    if( IO_stat /= 0 ) then
-       print *, '#initialize_vlasov_par_poisson_seq_cart() failed to open file ', &
-         trim(filename)//'.nml'
-       STOP
-    end if
-    read(input_file, geometry) 
-    read(input_file, advector)
-    read(input_file, time_iterations)
-    read(input_file, initial_function)
-    close(input_file)
-    
+      open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+      if( IO_stat /= 0 ) then
+        print *, '#initialize_vlasov_par_poisson_seq_cart() failed to open file ', &
+          trim(filename)//'.nml'
+        stop
+      end if
+      if(sll_get_collective_rank(sll_world_collective)==0)then
+        print *,'#initialization with filename:'
+        print *,'#',trim(filename)//'.nml'
+      endif      
+      read(input_file, geometry) 
+      read(input_file, initial_function)
+      read(input_file, time_iterations)
+      read(input_file, advector)
+      close(input_file)
+    else
+      if(sll_get_collective_rank(sll_world_collective)==0)then
+        print *,'#initialization with default parameters'
+      endif      
+    endif   
+    !geometry
     select case (mesh_case_x1)
       case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode_x1
@@ -414,11 +288,10 @@ contains
       case ("SLL_LOGICAL_MESH")
         sim%mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
       case default
-         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
-         print*,'#in initialize_vlasov_par_poisson_seq_cart'
-         stop 
+        print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
+        print*,'#in initialize_vlasov_par_poisson_seq_cart'
+        stop 
     end select
-
     select case (mesh_case_x2)
       case ("SLL_LANDAU_MESH")
         x2_max = real(nbox_x2,f64) * 2._f64 * sll_pi / kmode_x1
@@ -426,31 +299,81 @@ contains
       case ("SLL_LOGICAL_MESH")
         sim%mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
       case default
-         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
-         print*,'#in initialize_vlasov_par_poisson_seq_cart'
-         stop 
+        print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
+        print*,'#in initialize_vlasov_par_poisson_seq_cart'
+        stop 
     end select
-
     select case (mesh_case_x3)
       case ("SLL_LOGICAL_MESH")
         sim%mesh_x3 => new_logical_mesh_1d(num_cells_x3,eta_min=x3_min, eta_max=x3_max)
       case default
-         print*,'#mesh_case_x3', mesh_case_x3, ' not implemented'
-         print*,'#in initialize_vlasov_par_poisson_seq_cart'
-         stop 
+        print*,'#mesh_case_x3', mesh_case_x3, ' not implemented'
+        print*,'#in initialize_vlasov_par_poisson_seq_cart'
+        stop 
     end select
-
     select case (mesh_case_x4)
       case ("SLL_LOGICAL_MESH")
         sim%mesh_x4 => new_logical_mesh_1d(num_cells_x4,eta_min=x4_min, eta_max=x4_max)
       case default
-         print*,'#mesh_case_x4', mesh_case_x4, ' not implemented'
-         print*,'#in initialize_vlasov_par_poisson_seq_cart'
-         stop 
+        print*,'#mesh_case_x4', mesh_case_x4, ' not implemented'
+        print*,'#in initialize_vlasov_par_poisson_seq_cart'
+        stop 
     end select
-    
+
+    !initial function
+    select case (initial_function_case)
+      case ("SLL_LANDAU")
+        sim%init_func => sll_landau_mode_initializer_4d
+        SLL_ALLOCATE(sim%params(3),ierr)
+        sim%params(1) = kmode_x1
+        sim%params(2) = kmode_x2
+        sim%params(3) = eps
+        sim%nrj0 = (0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
+      case default
+        print *,'#init_func_case not implemented'
+        print *,'#in initialize_vlasov_par_poisson_seq_cart'  
+        stop
+    end select
 
 
+    !time iterations
+    sim%dt=dt
+    sim%num_iterations=number_iterations
+    sim%freq_diag=freq_diag
+    sim%freq_diag_time=freq_diag_time
+    select case (split_case)    
+      case ("SLL_LIE_TV")
+        sim%split => new_time_splitting_coeff(SLL_LIE_TV)
+      case ("SLL_LIE_VT") 
+        sim%split => new_time_splitting_coeff(SLL_LIE_VT)
+      case ("SLL_STRANG_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_STRANG_TVT)
+      case ("SLL_STRANG_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_STRANG_VTV)
+      case ("SLL_TRIPLE_JUMP_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_TVT)
+      case ("SLL_TRIPLE_JUMP_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_TRIPLE_JUMP_VTV)
+      case ("SLL_ORDER6_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6_VTV)
+      case ("SLL_ORDER6VP_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VP_TVT,dt=dt)
+      case ("SLL_ORDER6VP_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VP_VTV,dt=dt)
+      case ("SLL_ORDER6VPnew_TVT") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew_TVT,dt=dt)
+      case ("SLL_ORDER6VPnew1_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew1_VTV,dt=dt)
+      case ("SLL_ORDER6VPnew2_VTV") 
+        sim%split => new_time_splitting_coeff(SLL_ORDER6VPnew2_VTV,dt=dt)
+      case default
+        print *,'#split_case not defined'
+        print *,'#in initialize_vlasov_par_poisson_seq_cart'
+        stop       
+    end select
+
+    !advector 
     select case (advector_x1)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x1 => new_periodic_1d_advector( &
@@ -466,13 +389,10 @@ contains
           x1_max, &
           LAGRANGE, & 
           order_x1)
-       case default
-         print*,'#advector in x1', advector_x1, ' not implemented'
-         stop 
+      case default
+        print*,'#advector in x1', advector_x1, ' not implemented'
+        stop 
     end select
-
-
-
     select case (advector_x2)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x2 => new_periodic_1d_advector( &
@@ -488,11 +408,10 @@ contains
           x2_max, &
           LAGRANGE, & 
           order_x2) 
-       case default
-         print*,'#advector in x2', advector_x2, ' not implemented'
-         stop 
+      case default
+        print*,'#advector in x2', advector_x2, ' not implemented'
+        stop 
     end select
-
     select case (advector_x3)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x3 => new_periodic_1d_advector( &
@@ -508,11 +427,10 @@ contains
           x3_max, &
           LAGRANGE, & 
           order_x3) 
-       case default
-         print*,'#advector in x3', advector_x3, ' not implemented'
-         stop 
+      case default
+        print*,'#advector in x3', advector_x3, ' not implemented'
+        stop 
     end select
-
     select case (advector_x4)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x4 => new_periodic_1d_advector( &
@@ -528,198 +446,12 @@ contains
           x4_max, &
           LAGRANGE, & 
           order_x4) 
-       case default
-         print*,'#advector in x4', advector_x4, ' not implemented'
-         stop 
-    end select
-
-    sim%dt=dt
-    sim%num_iterations=nbiter
-    sim%freq_diag=freqdiag
-    sim%freq_diag_time=freqdiag_time
-
-
-
-    select case (split_case)    
-      case ("SLL_LIE_TV") 
-        sim%nb_split_step = 2
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .true.
-        sim%split_step(1) = 1._f64
-        sim%split_step(2) = 1._f64
-      case ("SLL_LIE_VT") 
-        sim%nb_split_step = 2
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 1._f64
-        sim%split_step(2) = 1._f64
-      case ("SLL_STRANG_TVT") 
-        sim%nb_split_step = 3
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .true.
-        sim%split_step(1) = 0.5_f64
-        sim%split_step(2) = 1._f64
-        sim%split_step(3) = sim%split_step(1)
-      case ("SLL_STRANG_VTV") 
-        sim%nb_split_step = 3
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 0.5_f64
-        sim%split_step(2) = 1._f64
-        sim%split_step(3) = sim%split_step(1)
-      case ("SLL_TRIPLE_JUMP_TVT") 
-        sim%nb_split_step = 7
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .true.
-        sim%split_step(1) = 0.675603595979829_f64
-        sim%split_step(2) = 1.351207191959658_f64
-        sim%split_step(3) = -0.17560359597982855_f64
-        sim%split_step(4) = -1.702414383919315_f64
-        sim%split_step(5) = sim%split_step(3)
-        sim%split_step(6) = sim%split_step(2)
-        sim%split_step(7) = sim%split_step(1)
-      case ("SLL_TRIPLE_JUMP_VTV") 
-        sim%nb_split_step = 7
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 0.675603595979829_f64
-        sim%split_step(2) = 1.351207191959658_f64
-        sim%split_step(3) = -0.17560359597982855_f64
-        sim%split_step(4) = -1.702414383919315_f64
-        sim%split_step(5) = sim%split_step(3)
-        sim%split_step(6) = sim%split_step(2)
-        sim%split_step(7) = sim%split_step(1)
-      case ("SLL_ORDER6_VTV") 
-        sim%nb_split_step = 23
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 0.0414649985182624_f64
-        sim%split_step(2) = 0.123229775946271_f64
-        sim%split_step(3) = 0.198128671918067_f64
-        sim%split_step(4) = 0.290553797799558_f64
-        sim%split_step(5) = -0.0400061921041533_f64
-        sim%split_step(6) = -0.127049212625417_f64
-        sim%split_step(7) = 0.0752539843015807_f64          
-        sim%split_step(8) = -0.246331761062075_f64
-        sim%split_step(9) = -0.0115113874206879_f64
-        sim%split_step(10) = 0.357208872795928_f64
-        sim%split_step(11) = 0.23666992478693111_f64
-        sim%split_step(12) = 0.20477705429147008_f64
-        sim%split_step(13) = sim%split_step(11)
-        sim%split_step(14) = sim%split_step(10)
-        sim%split_step(15) = sim%split_step(9)          
-        sim%split_step(16) = sim%split_step(8)
-        sim%split_step(17) = sim%split_step(7)
-        sim%split_step(18) = sim%split_step(6)
-        sim%split_step(19) = sim%split_step(5)
-        sim%split_step(20) = sim%split_step(4)
-        sim%split_step(21) = sim%split_step(3)
-        sim%split_step(22) = sim%split_step(2)
-        sim%split_step(23) = sim%split_step(1)          
-      case ("SLL_ORDER6VP_TVT") 
-        sim%nb_split_step = 9
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .true.
-        sim%split_step(1) = 0.1095115577513980413559540_f64
-        sim%split_step(2) = 0.268722208204814693684441_f64&
-          -2._f64*sim%dt**2*0.000805681667096178271312_f64&
-          +4._f64*sim%dt**4*0.000017695766224036466792_f64
-        sim%split_step(3) = 0.4451715080955340951457244_f64
-        sim%split_step(4) = 0.2312777917951853063155588_f64&
-          -2._f64*sim%dt**2*0.003955911930042478239763_f64&
-          +4._f64*sim%dt**4*0.000052384078562246674986_f64
-        sim%split_step(5) = -0.1093661316938642730033570_f64
-        sim%split_step(6) = sim%split_step(4)
-        sim%split_step(7) = sim%split_step(3)
-        sim%split_step(8) = sim%split_step(2)
-        sim%split_step(9) = sim%split_step(1)
-      case ("SLL_ORDER6VP_VTV") 
-        sim%nb_split_step = 9
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 0.359950808794143627485664_f64&
-          -2._f64*sim%dt**2*(-0.01359558332625151635_f64)&
-          +4._f64*sim%dt**4*(-8.562814848565929e-6_f64)
-        sim%split_step(2) = 1.079852426382430882456991_f64
-        sim%split_step(3) = -0.1437147273026540434771131_f64&
-          -2._f64*sim%dt**2*(-0.00385637757897273261_f64)&
-          +4._f64*sim%dt**4*(0.0004883788785819335822_f64)
-        sim%split_step(4) = -0.579852426382430882456991_f64
-        sim%split_step(5) = 0.567527837017020831982899_f64&
-          -2._f64*sim%dt**2*(-0.03227361602037480885_f64)&
-          +4._f64*sim%dt**4*0.002005141087312622342_f64
-        sim%split_step(6) = sim%split_step(4)
-        sim%split_step(7) = sim%split_step(3)
-        sim%split_step(8) = sim%split_step(2)
-        sim%split_step(9) = sim%split_step(1)
-      case ("SLL_ORDER6VPnew_TVT") 
-        sim%nb_split_step = 9
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .true.
-        sim%split_step(1) = 0.1095115577513980413559540_f64
-        sim%split_step(2) = 0.268722208204814693684441_f64&
-          -2._f64*sim%dt**2*0.000805681667096178271312_f64&
-          +4._f64*sim%dt**4*(8.643923349886021963e-6_f64)&
-          -8._f64*sim%dt**6*(1.4231479258353431522e-6_f64)
-        sim%split_step(3) = 0.4451715080955340951457244_f64
-        sim%split_step(4) = 0.2312777917951853063155588_f64&
-          -2._f64*sim%dt**2*0.003955911930042478239763_f64&
-          +4._f64*sim%dt**4*(0.000061435921436397119815_f64)
-        sim%split_step(5) = -0.1093661316938642730033570_f64
-        sim%split_step(6) = sim%split_step(4)
-        sim%split_step(7) = sim%split_step(3)
-        sim%split_step(8) = sim%split_step(2)
-        sim%split_step(9) = sim%split_step(1)
-      case ("SLL_ORDER6VPnew1_VTV") 
-        sim%nb_split_step = 11
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 0.0490864609761162454914412_f64&
-          -2._f64*sim%dt**2*(0.0000697287150553050840999_f64)
-        sim%split_step(2) = 0.1687359505634374224481957_f64
-        sim%split_step(3) = 0.2641776098889767002001462_f64&
-          -2._f64*sim%dt**2*(0.000625704827430047189169_f64)&
-          +4._f64*sim%dt**4*(-2.91660045768984781644e-6_f64)
-        sim%split_step(4) = 0.377851589220928303880766_f64
-        sim%split_step(5) = 0.1867359291349070543084126_f64&
-          -2._f64*sim%dt**2*(0.00221308512404532556163_f64)&
-          +4._f64*sim%dt**4*(0.0000304848026170003878868_f64)&
-          -8._f64*sim%dt**6*(4.98554938787506812159e-7_f64)
-        sim%split_step(6) = -0.0931750795687314526579244_f64
-        sim%split_step(7) = sim%split_step(5)
-        sim%split_step(8) = sim%split_step(4)
-        sim%split_step(9) = sim%split_step(3)
-        sim%split_step(10) = sim%split_step(2)
-        sim%split_step(11) = sim%split_step(1)
-      case ("SLL_ORDER6VPnew2_VTV") 
-        sim%nb_split_step = 11
-        SLL_ALLOCATE(sim%split_step(sim%nb_split_step),ierr)
-        sim%split_begin_T = .false.
-        sim%split_step(1) = 0.083335463273305120964507_f64&
-          -2._f64*sim%dt**2*(-0.00015280483587048489661_f64)&
-          +4._f64*sim%dt**4*( -0.0017675734111895638156_f64)&
-          -8._f64*sim%dt**6*( 0.00021214072262165668039_f64)
-        sim%split_step(2) = 0.72431592569108212422250_f64
-        sim%split_step(3) = 0.827694857845135145869413_f64&
-          -2._f64*sim%dt**2*(-0.010726848627286273332_f64)&
-          +4._f64*sim%dt**4*(0.012324362982853212700_f64)
-        sim%split_step(4) = -0.4493507217041624582458844_f64
-        sim%split_step(5) = -0.4110303211184402668339201_f64&
-          -2._f64*sim%dt**2*(0.014962337009932798678_f64)
-        !  +4._f64*sim%dt**4*(-0.20213028317750837901_f64)
-        sim%split_step(6) = 0.4500695920261606680467717_f64
-        sim%split_step(7) = sim%split_step(5)
-        sim%split_step(8) = sim%split_step(4)
-        sim%split_step(9) = sim%split_step(3)
-        sim%split_step(10) = sim%split_step(2)
-        sim%split_step(11) = sim%split_step(1)
       case default
-        print *,'#sim%split_case not defined'
-        print *,'#in initialize_vlasov_par_poisson_seq_cart'
-        stop       
+        print*,'#advector in x4', advector_x4, ' not implemented'
+        stop 
     end select
-
-
+      
+    !poisson: for the moment no choice
     sim%poisson => new(&
       x1_min, &
       x1_max, &
@@ -728,22 +460,7 @@ contains
       x2_max, &
       num_cells_x2, &
       ierr)
-    select case (init_func_case)
-      case ("SLL_LANDAU")
-        sim%init_func => sll_landau_mode_initializer_4d
-        SLL_ALLOCATE(sim%params(3),ierr)
-        sim%params(1) = kmode_x1
-        sim%params(2) = kmode_x2
-        sim%params(3) = eps
-        sim%nrj0 = (0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
-        *(1._f64/kmode_x1**2+1._f64/kmode_x2**2) 
-      case default
-        print *,'#init_func_case not implemented'
-        print *,'#in initialize_vlasov_par_poisson_seq_cart'  
-        stop
-    end select
-    
-    endif    
+        
   end subroutine initialize_vlasov_par_poisson_seq_cart
   
   subroutine init_vp4d_fake(sim, filename)
@@ -1036,12 +753,14 @@ contains
          loc_sz_x4 )
     
     do istep = 1, sim%num_iterations
-      
-      split_T = sim%split_begin_T      
-      do split_istep=1,sim%nb_split_step
+      if (mod(istep-1,sim%freq_diag)==0) then
         if(sll_get_collective_rank(sll_world_collective)==0) then        
-          print *,istep,split_istep,nrj
+          print *,'#step=',istep-1,real(istep-1,f64)*sim%dt
         endif
+      endif  
+      
+      split_T = sim%split%split_begin_T      
+      do split_istep=1,sim%split%nb_split_step
         if(split_T)then
           !T advection
           global_indices(1:4) = local_to_global_4D( sequential_x1x2, (/1, 1, 1, 1/) )
@@ -1050,7 +769,7 @@ contains
               !advection in x1
               ig=global_indices(3)
               alpha = (sim%mesh_x3%eta_min + real(i3+ig-2,f64) * delta3) &
-                * sim%split_step(split_istep)
+                * sim%split%split_step(split_istep)
               do i2=1,nc_x2+1
                 f1d(1:nc_x1+1)=f_seq_x1x2(1:nc_x1+1,i2,i3,i4) 
                 call sim%advect_x1%advect_1d_constant(&
@@ -1063,7 +782,7 @@ contains
               !advection in x2
               ig=global_indices(4)
               alpha = (sim%mesh_x4%eta_min + real(i4+ig-2,f64) * delta4) &
-                * sim%split_step(split_istep)
+                * sim%split%split_step(split_istep)
               do i1=1,nc_x1+1
                 f1d(1:nc_x2+1)=f_seq_x1x2(i1,1:nc_x2+1,i3,i4) 
                 call sim%advect_x2%advect_1d_constant(&
@@ -1123,7 +842,7 @@ contains
 
               !advection in x3
               alpha = E_x1(i1-1+global_indices(1),i2-1+global_indices(2)) &
-                * sim%split_step(split_istep)
+                * sim%split%split_step(split_istep)
               do i4=1,nc_x4+1
                 f1d(1:nc_x3+1)=f_seq_x3x4(i1,i2,1:nc_x3+1,i4) 
                 call sim%advect_x3%advect_1d_constant(&
@@ -1135,7 +854,7 @@ contains
               enddo
               !advection in x4
               alpha = E_x2(i1-1+global_indices(1),i2-1+global_indices(2)) &
-                * sim%split_step(split_istep)
+                * sim%split%split_step(split_istep)
               do i3=1,nc_x3+1
                 f1d(1:nc_x4+1)=f_seq_x3x4(i1,i2,i3,1:nc_x4+1) 
                 call sim%advect_x4%advect_1d_constant(&
