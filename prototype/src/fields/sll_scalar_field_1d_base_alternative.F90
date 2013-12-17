@@ -6,8 +6,8 @@ module sll_module_scalar_field_1d_base
   ! Fundamental field type
   type, abstract :: sll_scalar_field_1d_base 
    contains
-     procedure(function_get_mesh), deferred, pass :: get_logical_mesh
-     procedure(function_evaluation_real), deferred, pass :: value_at_point
+     procedure(function_get_mesh_1d), deferred, pass :: get_logical_mesh
+     procedure(function_evaluation_real_1d), deferred, pass :: value_at_point
      procedure(function_evaluation_integer_1d), deferred, pass :: value_at_indices
      procedure(derivative_evaluation_real), deferred, pass :: &
           derivative_value_at_point
@@ -34,18 +34,18 @@ module sll_module_scalar_field_1d_base
        sll_real64, dimension(:), intent(in) :: values
      end subroutine set_field_data_subroutine_1d
   end interface
-
-
+  
+  
   abstract interface
-     function function_get_mesh(field) result(res)
+     function function_get_mesh_1d(field) result(res)
        use sll_logical_meshes
        import sll_scalar_field_1d_base
        class(sll_scalar_field_1d_base), intent(in) :: field
        type(sll_logical_mesh_1d), pointer :: res  ! a implementer
-     end function function_get_mesh
+     end function function_get_mesh_1d
   end interface
-
-
+  
+  
   abstract interface
      subroutine field_1d_message_pass( field )
        import sll_scalar_field_1d_base
@@ -54,13 +54,13 @@ module sll_module_scalar_field_1d_base
   end interface
 
   abstract interface
-     function function_evaluation_real( field, eta ) result(res)
+     function function_evaluation_real_1d( field, eta ) result(res)
        use sll_working_precision
        import sll_scalar_field_1d_base
        class(sll_scalar_field_1d_base), intent(inout) :: field
        sll_real64, intent(in) :: eta
        sll_real64             :: res
-     end function function_evaluation_real
+     end function function_evaluation_real_1d
   end interface
 
   abstract interface
