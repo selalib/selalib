@@ -15,6 +15,10 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
+!> @author
+!> Adnane Hamiaz (hamiaz@math.unistra.fr)
+!> Michel Mehrenberger (mehrenbe@math.unistra.fr)
+!**************************************************************
 
 
 !solves \sum_{i,j=1}^2 A_{i,j}\partial_{i,j} phi
@@ -51,6 +55,7 @@ implicit none
   sll_real64, dimension(:,:), pointer :: cx_2d
   sll_real64, dimension(:,:), pointer :: cy_2d
   sll_real64, dimension(:,:), pointer :: ce_2d
+  sll_real64, dimension(:,:), pointer :: rho
   class(sll_interpolator_2d_base), pointer   :: cxx_2d_interp
   class(sll_interpolator_2d_base), pointer   :: cyy_2d_interp
   class(sll_interpolator_2d_base), pointer   :: cxy_2d_interp
@@ -61,6 +66,7 @@ implicit none
   class(sll_interpolator_2d_base), pointer   :: a22_interp
   class(sll_interpolator_2d_base), pointer   :: a12_interp
   class(sll_interpolator_2d_base), pointer   :: a21_interp
+  class(sll_coordinate_transformation_2d_base), pointer :: transformation
   sll_int32  :: mudpack_curvilinear_case
   sll_real64, dimension(:), pointer :: work !< array for tmp data
   sll_int32  :: mgopt(4) !< Option to control multigrid
@@ -288,7 +294,7 @@ contains
 !    write(*,104) intl
 
 !call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)       
-
+    poisson%transformation => transf
     poisson%cxx_2d_interp => null()
     poisson%cyy_2d_interp => null()
     poisson%cx_2d_interp => null()
@@ -296,8 +302,9 @@ contains
     poisson%ce_2d_interp => null()
     poisson%a12_interp => null()
     poisson%a21_interp => null()
-    
-    poisson%mudpack_curvilinear_case =  SLL_NON_SEPARABLE_WITH_CROSS_TERMS                  
+    SLL_ALLOCATE(poisson%rho(nc_eta1+1,nc_eta2+1),ierr) 
+    poisson%mudpack_curvilinear_case =  SLL_NON_SEPARABLE_WITH_CROSS_TERMS   
+                   
      !******SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
     select case (poisson%mudpack_curvilinear_case)  
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
@@ -354,12 +361,8 @@ contains
           SLL_PERIODIC, &
           SLL_PERIODIC)                            
         call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, & 
-           delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)
-        
-                      
-        call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )
-
-             
+           delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)                             
+        call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )         
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )       
            
          poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -373,8 +376,6 @@ contains
           SLL_PERIODIC)    
         call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
           delta1,delta2,nx,ny,poisson%cxy_2d)  
-
-
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d )  
         
         poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -387,12 +388,8 @@ contains
           SLL_PERIODIC, &
           SLL_PERIODIC)    
         call coefx_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
-          poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)
-
-            
+          poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)          
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
-
-
 
         poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -405,7 +402,6 @@ contains
           SLL_PERIODIC)    
         call coefy_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
           poisson%cyy_2d_interp,poisson%a12_interp,poisson%cy_2d)  
-
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
         poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
@@ -445,8 +441,18 @@ contains
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack_curvilinear( poisson, phi, rho )
     class(poisson_2d_mudpack_curvilinear_solver), target :: poisson
-    sll_real64,dimension(:,:),intent(in) :: rho
-    sll_real64,dimension(:,:),intent(out) :: phi
+    sll_real64,dimension(:,:), intent(in) :: rho
+    sll_real64,dimension(:,:), intent(out) :: phi
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
     !sll_real64        :: phi(:,:)  !< Electric potential
     !sll_real64        :: rhs(:,:)  !< Charge density
     !put integer and floating point argument names in contiguous
@@ -477,7 +483,44 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
 
+    Nc_eta1  = poisson%transformation%mesh%num_cells1
+    Nc_eta2  = poisson%transformation%mesh%num_cells2
+    eta1_min = poisson%transformation%mesh%eta1_min
+    eta2_min = poisson%transformation%mesh%eta2_min
+    delta_eta1 = poisson%transformation%mesh%delta_eta1
+    delta_eta2 = poisson%transformation%mesh%delta_eta2
 
+    poisson%rho(1:Nc_eta1+1,1:Nc_eta2+1) =  0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        poisson%rho(i1,i2)=-rho(i1,i2)*poisson%transformation%jacobian(eta1,eta2)
+      end do
+    end do
+    
+    if(nxa == SLL_DIRICHLET) then
+       do i2=1,Nc_eta2+1
+          phi(1,i2) = 0._f64
+       end do
+    endif
+    if(nxb == SLL_DIRICHLET) then
+       do i2=1,Nc_eta2+1
+          phi(Nc_eta1+1,i2) = 0._f64
+       end do
+    endif
+    if(nyc == SLL_DIRICHLET) then
+       do i1=1,Nc_eta1+1
+          phi(i1,1) = 0._f64
+       end do
+    endif
+    if(nyd == SLL_DIRICHLET) then
+       do i1=1,Nc_eta1+1
+          phi(i1,Nc_eta2+1) = 0._f64
+       end do
+    endif 
+    
+     
     select case (poisson%mudpack_curvilinear_case)
           
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
@@ -491,7 +534,7 @@ contains
           poisson%work, &
           mudpack_curvilinear_cofcr, &
           mudpack_curvilinear_bndcr, &
-          rho, &
+          poisson%rho, &
           phi, &
           poisson%mgopt, &
           error)

@@ -520,11 +520,11 @@ contains
           phi(Nc_eta1+1,i2) = 0._f64
         end do
      end do
-        
+  
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
-    call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,rho)
+    !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
+    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,f)
     call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
 
     
@@ -544,8 +544,8 @@ contains
       f_old = f
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
-      call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
-      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho) 
+      !call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
+      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f_old) 
       
       call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
@@ -581,8 +581,8 @@ contains
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
-          call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho)
+          !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
+          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f)
           call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)

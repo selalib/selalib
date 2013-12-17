@@ -1,10 +1,8 @@
 module sll_simulation_2d_guiding_center_curvilinear_module
 
-!the aim is to create guiding center cartesian in simulation class
-!related to
-!simulation_guiding_center_2D_generalized_coords_mudpack.F90
-!but here geometry and test is specifically cartesian
-
+!2d guiding center cartesian simulation
+!contact: Adnane Hamiaz (hamiaz@math.unistra.fr
+!         Michel Mehrenberger (mehrenbe@math.unistra.fr)
 
 #include "sll_working_precision.h"
 #include "sll_assert.h"
