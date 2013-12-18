@@ -118,6 +118,8 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(opencl)
    ADD_SUBDIRECTORY(pastix)
    ADD_SUBDIRECTORY(wsmp)
+   ADD_SUBDIRECTORY(petsc_solvers)
+   ADD_SUBDIRECTORY(linear_solvers)
 
    IF(NOT STDF95)
 
@@ -193,7 +195,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF()
 
-   ADD_SUBDIRECTORY(petsc_solvers)
 
    INCLUDE(DoxygenConfig)
 

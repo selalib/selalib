@@ -29,6 +29,5 @@ end interface solve
 interface delete
 end interface delete
 
-contains
 
 end module sll_linear_solvers
