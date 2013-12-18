@@ -8,6 +8,7 @@ program test_poisson_2d_periodic_cart_par
   use sll_collective
   use hdf5
   use sll_hdf5_io_parallel
+  use sll_gnuplot_parallel
 
   implicit none
 
@@ -15,7 +16,7 @@ program test_poisson_2d_periodic_cart_par
 
   sll_int32                               :: ncx, ncy
   sll_int32                               :: nx_loc, ny_loc
-  sll_int32                               :: ierr
+  sll_int32                               :: error
   sll_real64                              :: Lx, Ly
   sll_real64                              :: dx, dy
   sll_real64                              :: x, y
@@ -33,6 +34,7 @@ program test_poisson_2d_periodic_cart_par
   sll_int32                               :: e
   sll_real32                              :: ok 
   sll_real32, dimension(1)                :: prod4test
+  sll_int32                               :: offset(2)
 
   ok = 1.0
 
@@ -68,9 +70,9 @@ program test_poisson_2d_periodic_cart_par
   call compute_local_sizes( layout_x, nx_loc, ny_loc )
   call sll_view_lims_2D( layout_x )
 
-  SLL_ALLOCATE(rho(nx_loc,ny_loc), ierr)
-  SLL_ALLOCATE(phi_an(nx_loc,ny_loc), ierr)
-  SLL_ALLOCATE(phi(nx_loc,ny_loc), ierr)
+  SLL_ALLOCATE(rho(nx_loc,ny_loc), error)
+  SLL_ALLOCATE(phi_an(nx_loc,ny_loc), error)
+  SLL_ALLOCATE(phi(nx_loc,ny_loc), error)
 
   ! initialize reference array
   do j=1,ny_loc
@@ -85,28 +87,19 @@ program test_poisson_2d_periodic_cart_par
      end do
   end do
 
-!  print *, 'proceeding to write rho to file: '  
-!  call parallel_hdf5_write_array_2d( 'q_density.h5', &
-!                                     ncx+1,          &
-!                                     ncy+1,          &
-!                                     rho,            &
-!                                    'rho',           &
-!                                    layout_x)
-!  print *, 'finished writing rho to file.'
+
+  offset(1) =  get_layout_2D_i_min( layout_x, myrank ) - 1
+  offset(2) =  get_layout_2D_j_min( layout_x, myrank ) - 1
+  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
+                                    dble(offset(2)), dble(1), &
+                                    rho, "rho_p", 1, error)  
 
   call solve_poisson_2d_periodic_cartesian_par(plan, rho, phi)
 
-!  offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
-!  offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
-!
-!  !Gnuplot output
-!  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
-!                                    dble(offset(2)), dble(1), &
-!                                    zdata, "rect_mesh", 1, error)  
-!print *, 'phi: ', phi(:,:)
+  call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
+                                    dble(offset(2)), dble(1), &
+                                    phi, "phi_p", 1, error)  
 
-!  call parallel_hdf5_write_array_2d( 'phi_analytical.h5', ncx+1, ncy+1, phi_an, 'phi_an', layout_x)
-!  call parallel_hdf5_write_array_2d( 'phi_computed.h5', ncx+1, ncy+1, phi, 'phi', layout_x)
   average_err  = 0.d0
   do j=1,ny_loc
      do i=1,nx_loc
@@ -128,9 +121,9 @@ program test_poisson_2d_periodic_cart_par
      stop
   endif
  
-  SLL_DEALLOCATE_ARRAY(phi,    ierr)
-  SLL_DEALLOCATE_ARRAY(rho,    ierr)
-  SLL_DEALLOCATE_ARRAY(phi_an, ierr)
+  SLL_DEALLOCATE_ARRAY(phi,    error)
+  SLL_DEALLOCATE_ARRAY(rho,    error)
+  SLL_DEALLOCATE_ARRAY(phi_an, error)
 
   call sll_collective_reduce(sll_world_collective, (/ ok /), &
        1, MPI_PROD, 0, prod4test )
@@ -149,46 +142,5 @@ program test_poisson_2d_periodic_cart_par
   call delete_poisson_2d_periodic_plan_cartesian_par(plan)
 
   call sll_halt_collective()
-
-contains
-
-  ! Experimental interface for an hdf5 array writer in parallel
-  subroutine parallel_hdf5_write_array_2d( &
-    filename, &
-    n_pts1, &
-    n_pts2, &
-    array, &
-    dataset_name, &
-    layout )
-
-    character(len=*), intent(in)           :: filename
-    sll_int32, intent(in)                  :: n_pts1
-    sll_int32, intent(in)                  :: n_pts2
-    integer(HSIZE_T), dimension(1:2)       :: global_dims
-    sll_real64, dimension(:,:), intent(in) :: array
-    character(len=*), intent(in)           :: dataset_name
-    type(layout_2D), pointer               :: layout
-    sll_int32                              :: error
-    integer(HID_T)                         :: file_id
-    integer(HSIZE_T), dimension(1:2)       :: offset
-    type(sll_collective_t), pointer        :: col
-    sll_int32                              :: myrank
-
-    SLL_ASSERT( associated(layout) )
-    col => get_layout_collective( layout )
-    myrank = sll_get_collective_rank( col )
-    global_dims(:) = (/ n_pts1,n_pts2 /)
-    
-
-    offset(1) = get_layout_i_min( layout, myrank ) - 1
-    offset(2) = get_layout_j_min( layout, myrank ) - 1
-    print*, myrank, offset
-
-    call sll_hdf5_file_create(filename,file_id,error)
-    call sll_hdf5_write_array(file_id,global_dims,offset, &
-                              array,dataset_name,error)
-    call sll_hdf5_file_close(file_id,error)
-
-  end subroutine parallel_hdf5_write_array_2d
 
 end program test_poisson_2d_periodic_cart_par
