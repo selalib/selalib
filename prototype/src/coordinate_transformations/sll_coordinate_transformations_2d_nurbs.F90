@@ -312,7 +312,6 @@ contains
        end do
     end if
 
-    print*, weights_2d
 
     eta1_min_minimal = knots1(1)
     eta2_min_minimal = knots2(1)
@@ -439,12 +438,12 @@ contains
          eta2_min = eta2_min_minimal,&
          eta2_max = eta2_max_minimal)
 
+    transf%mesh =>null()
     call transf%initialize( &
          label, &
          interp2d_1, &
          interp2d_2,&
          interp2d_3)
-    print*, 'ok'
 
   end subroutine read_from_file_2d_nurbs
 
@@ -964,23 +963,13 @@ contains
     sll_real64, dimension(:,:), pointer :: x2mesh
     sll_int32  :: i1
     sll_int32  :: i2
-    sll_real64 :: eta1
-    sll_real64 :: eta2
     sll_int32  :: ierr
     sll_int32  :: file_id
     sll_int32  :: npts_eta1
     sll_int32  :: npts_eta2
-    sll_real64 :: eta1_min
-    sll_real64 :: eta2_min
-    sll_real64 :: delta_eta1
-    sll_real64 :: delta_eta2
 
     npts_eta1  = transf%mesh%num_cells1 +1
     npts_eta2  = transf%mesh%num_cells2 +1
-    eta1_min   = transf%mesh%eta1_min
-    eta2_min   = transf%mesh%eta1_min
-    delta_eta1 = transf%mesh%delta_eta1
-    delta_eta2 = transf%mesh%delta_eta2
 
     if (.not. present(output_format)) then
        local_format = SLL_IO_XDMF
@@ -988,22 +977,18 @@ contains
        local_format = output_format
     end if
 
+
     if ( .not. transf%written ) then
 
        if (local_format == SLL_IO_XDMF) then
           SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
           SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
-          eta1 = eta1_min
           do i1=1, npts_eta1
-             eta2 = eta2_min
              do i2=1, npts_eta2
                 x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
                 x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
-                eta2 = eta2 + delta_eta2 
              end do
-             eta1 = eta1 + delta_eta1
           end do
-       
           call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
                npts_eta1,npts_eta2,file_id,ierr)
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
@@ -1034,6 +1019,9 @@ contains
     end if
 
     transf%written = .true.
+
+    SLL_DEALLOCATE(x1mesh,ierr)
+    SLL_DEALLOCATE(x2mesh,ierr)
   end subroutine
 
   ! The coordinate transformation is reserving to itself the right to 
@@ -1053,6 +1041,8 @@ contains
     transf%written = .false.
     call transf%x1_interp%delete()
     call transf%x2_interp%delete()
+    call transf%x3_interp%delete()
+    nullify( transf%mesh2d_minimal)
     nullify( transf%mesh)
     
   end subroutine delete_transformation_2d_nurbs
