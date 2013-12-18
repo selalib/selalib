@@ -1,3 +1,6 @@
+FILE(GLOB NML_FILES "*.nml")
+FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+
 ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_coordinate_transformation_2d_base.F90
             sll_coordinate_transformations_2d.F90
