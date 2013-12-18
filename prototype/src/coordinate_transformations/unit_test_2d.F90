@@ -313,12 +313,13 @@ program unit_test_2d
   print *, 'Test of initialization from file for a nurbs transformation:'
 
   call t_n%read_from_file&
-       ("circle_5mp_patch4.nml")
-  t_n%mesh => mesh
+       ("../src/coordinate_transformations/circle_5mp_patch4.nml")
+  t_n%mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
   call t_n%write_to_file()
 
   print*, 'label t_n', t_n%label
 
+  call delete(t_n)
   !call write_to_file(t_d)
   print *, 'reached end of unit test'
 
