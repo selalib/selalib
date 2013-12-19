@@ -112,7 +112,7 @@ contains
          loc_sz_x1, &
          loc_sz_x2 )
 
-    plan%seq_x1_local_sz_x1 = ncx + 1 !loc_sz_x1 
+    plan%seq_x1_local_sz_x1 = loc_sz_x1 
     plan%seq_x1_local_sz_x2 = loc_sz_x2
 
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
@@ -239,7 +239,7 @@ contains
          loc_sz_x1, &
          loc_sz_x2 )
 
-    plan%seq_x1_local_sz_x1 = ncx 
+    plan%seq_x1_local_sz_x1 = loc_sz_x1  ! ncx
     plan%seq_x1_local_sz_x2 = loc_sz_x2
 
     SLL_ALLOCATE( plan%fft_x_array(loc_sz_x1,loc_sz_x2),ierr)
@@ -423,9 +423,8 @@ contains
     ! INTERFACE SINCE THIS POINT FALLS OUTSIDE OF THE POINTS IN THE ARRAY
     ! TOUCHED BY THE FFT. This is another reason to permit not including the
     ! last point in the periodic cases...
-    do i=1,npx_loc
-       plan%fft_y_array(i,npy_loc) = plan%fft_y_array(i,1)
-    end do
+
+    plan%fft_y_array(:,npy_loc) = plan%fft_y_array(:,1)
 
     ! Prepare to take inverse FFTs in x-direction
     call apply_remap_2D( plan%rmp_yx, plan%fft_y_array, plan%fft_x_array )
@@ -436,11 +435,13 @@ contains
     call fft_apply_plan(plan%px_inv, plan%fft_x_array, plan%fft_x_array)
 
     ! Also ensure the periodicity in x
-    do j=1,npy_loc
-       plan%fft_x_array(npx_loc,j) = plan%fft_x_array(1,j)
-    end do
-    !print *, 'before copying the last line, npx_loc = ', npx_loc, 'npy_loc = ', npy_loc
+    plan%fft_x_array(npx_loc,:) = plan%fft_x_array(1,:)
+
+    !print*, 'before copying the last line, '
+    !print*, 'npx_loc = ', npx_loc, 'npy_loc = ', npy_loc
+
     phi(1:npx_loc,1:npy_loc) = real(plan%fft_x_array(1:npx_loc,1:npy_loc),f64)
+
   end subroutine solve_poisson_2d_periodic_cartesian_par
 
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
