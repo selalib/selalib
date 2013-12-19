@@ -32,15 +32,12 @@ IF(HDF5_PARALLEL_ENABLED)
 
    ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
 
-   TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_utilities 
-                                              sll_collective
-                                              ${HDF5_LIBRARIES} )
+   TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective ${HDF5_LIBRARIES} )
    IF(NOT STDF95) 
 
       ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
 
-      TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel
-                                             sll_remap)
+      TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
    ENDIF()
 
 ENDIF()

@@ -18,29 +18,29 @@ contains
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine initialize_poisson_polar_mudpack(this, phi, rhs, &
-                                            r_min, r_max, nr, &
+subroutine initialize_poisson_polar_mudpack(this,                      &
+                                            r_min, r_max, nr,          &
                                             theta_min, theta_max, nth, &
-                                            bc_r_min, bc_r_max, &
+                                            bc_r_min, bc_r_max,        &
                                             bc_theta_min, bc_theta_max )
 implicit none
 
-type(mudpack_2d) :: this                  !< Solver object
-sll_real64, intent(in) :: r_min           !< radius min
-sll_real64, intent(in) :: r_max           !< radius min
-sll_real64, intent(in) :: theta_min       !< theta min
-sll_real64, intent(in) :: theta_max       !< theta max
-sll_int32, intent(in)  :: nr              !< radius number of points
-sll_int32, intent(in)  :: nth             !< theta number of points
+type(mudpack_2d) :: this            !< Solver object
+sll_real64, intent(in) :: r_min     !< radius min
+sll_real64, intent(in) :: r_max     !< radius min
+sll_real64, intent(in) :: theta_min !< theta min
+sll_real64, intent(in) :: theta_max !< theta max
+sll_int32, intent(in)  :: nr        !< radius number of points
+sll_int32, intent(in)  :: nth       !< theta number of points
 sll_int32 :: icall
 sll_int32 :: iiex,jjey,llwork
-sll_int32 :: bc_r_min                     !< left boundary condition r
-sll_int32 :: bc_r_max                     !< right boundary condition r
-sll_int32 :: bc_theta_min                 !< left boundary condition theta
-sll_int32 :: bc_theta_max                 !< right boundary condition theta
+sll_int32 :: bc_r_min               !< left boundary condition r
+sll_int32 :: bc_r_max               !< right boundary condition r
+sll_int32 :: bc_theta_min           !< left boundary condition theta
+sll_int32 :: bc_theta_max           !< right boundary condition theta
 
-sll_real64, intent(inout) ::  phi(:,:)    !< electric potential
-sll_real64, intent(inout) ::  rhs(:,:)    !< charge density
+sll_real64 ::  phi(nr,nth)          !< electric potential
+sll_real64 ::  rhs(nr,nth)          !< charge density
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm

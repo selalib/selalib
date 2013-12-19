@@ -900,7 +900,7 @@ subroutine thdiag(this,f,phi,t,jstartv,kmin,kmax)
    sll_real64, intent(in) :: t  ! current time
    ! variables locales
    sll_int32 :: i,iv, j,jv
-   sll_real64 :: x, vx, y, vy,nrj
+   sll_real64 :: x, vx, y, vy,nrj,nrj2
    !sll_real64,dimension(7) :: diagloc
    sll_real64,dimension(11) :: auxloc
    sll_real64,dimension(13) :: aux
@@ -910,6 +910,7 @@ subroutine thdiag(this,f,phi,t,jstartv,kmin,kmax)
    sll_int32 :: my_num, num_threads
    sll_int32 :: comm
    sll_real64,dimension(:,:),allocatable :: mode_tmp
+   sll_int32 :: ierr
 
    comm   = sll_world_collective%comm
    my_num = sll_get_collective_rank(sll_world_collective)
@@ -996,6 +997,7 @@ subroutine thdiag(this,f,phi,t,jstartv,kmin,kmax)
 
   nrj = 0._f64
   nrj = sum(phi(this%geomx%nx/2,1:this%geomx%ny,1:this%geomv%nx)**2)*this%geomx%dy*this%geomv%dx
+  nrj2 = sum(phi(1:this%geomx%nx,1:this%geomx%ny,1)**2)*this%geomx%dx*this%geomx%dy
 
 if (my_num==MPI_MASTER) then
    
@@ -1039,13 +1041,18 @@ if (my_num==MPI_MASTER) then
    !b=8 epot
    !b=9..  mode
    
-   print *,t,nrj,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
+   print *,t,nrj2,nrj,aux(4)+aux(5),aux(1:5),mode_tmp(kmin(1):kmax(1),kmin(2):kmax(2))
    !real(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2))),aimag(mode_tab(kmin(1):kmax(1),kmin(2):kmax(2)))
    !stop
    
    SLL_DEALLOCATE_ARRAY(mode_tab,err)
    SLL_DEALLOCATE_ARRAY(mode_tmp,err)
    
+   if(t==0)then
+     call sll_gnuplot_write(phi(:,1,1),'phi_slv2d_0',ierr)
+   endif
+   
+      
 end if
 
 end subroutine thdiag

@@ -109,7 +109,7 @@ pre-build {
     reinplace "s| /opt/hwloc|${prefix}|" ${worksrcpath}/config.in
 }
 
-build.target all
+build.target all install
 
 destroot {
  eval xinstall -m 755 [glob ${worksrcpath}/../install/bin/*] ${destroot}${prefix}/bin
