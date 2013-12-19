@@ -111,7 +111,7 @@ cxx_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
           
 cyy_interp => new_cubic_spline_2d_interpolator( &
@@ -121,7 +121,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC) 
           
  cxy_interp => new_cubic_spline_2d_interpolator( &
@@ -131,7 +131,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)  
           
  cx_interp => new_cubic_spline_2d_interpolator( &
@@ -141,7 +141,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC) 
  cy_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -150,7 +150,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)    
                                          
 ce_interp => new_cubic_spline_2d_interpolator( &
@@ -160,7 +160,7 @@ ce_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)   
 a12_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -169,7 +169,7 @@ a12_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC) 
 a21_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -178,7 +178,7 @@ a21_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)                             
 !cxx_array = 1._f64          
 call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,cxx_array,cyy_array)          
@@ -207,8 +207,8 @@ icall = 0
 intl = 0
 
 ! set boundary condition flags
-nxa = bc_eta1_left  + 1 
-nxb = bc_eta1_right + 1
+nxa = bc_eta1_left  
+nxb = bc_eta1_right 
 nyc = bc_eta2_left  
 nyd = bc_eta2_right 
 
