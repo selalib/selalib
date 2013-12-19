@@ -18,7 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_sparse_matrix
+use sll_sparse
 use sll_linear_solvers
 
 #endif
