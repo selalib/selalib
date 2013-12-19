@@ -147,7 +147,7 @@ module sll_fdistribu4d_DK
     sll_real64, intent(in) :: n0_r
     sll_real64, intent(in) :: Ti_r
 
-    val = n0_r*sqrt(2._f64*sll_pi*Ti_r) * &
+    val = n0_r/sqrt(2._f64*sll_pi*Ti_r) * &
       exp(-0.5_f64*vpar**2/Ti_r)
   end function compute_feq_val
 
