@@ -100,8 +100,8 @@ def main ():
     tokens  = []
     knots1_is_written = False
     knots  = []
-    knots1 = []
-    knots2 = []
+    knots1 = ""
+    knots2 = ""
     x1 = []
     x2 = []
     wgts = []
@@ -260,10 +260,10 @@ def main ():
                             continue
                     else:       # just reading knots data
                         if knots1_is_written == False: 
-                            knots1.append(linetemp)
+                            knots1 = knots1 + " ".join(linetemp)
                             continue
                         else:
-                            knots1.append(linetemp)
+                            knots2 = knots2 + " ".join(linetemp)
                             continue
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
