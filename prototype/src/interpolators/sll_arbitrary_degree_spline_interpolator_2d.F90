@@ -1187,18 +1187,21 @@ contains
        interpolator%size_coeffs2 = sz2!+1
        interpolator%size_t1 = order1 + sz1
        interpolator%size_t2 = order2 + sz2 !+ 1
+       
+       !print*, size(data_array(1:sz1,1:sz2-1),1)
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
-       call spli2d_dirper( sz1, order1, point_location_eta1, &
+       call spli2d_dirper( sz1, order1, point_location_eta1(1:sz1), &
             period2, sz2, order2, point_location_eta2(1:sz2-1), & !+1
             data_array(1:sz1,1:sz2-1), interpolator%coeff_splines(1:sz1,1:sz2),&!+1
             interpolator%t1(1:sz1+order1), &
             interpolator%t2(1:sz2+order2) ) !+1
 
-       ! boundary condition non homogene
-       interpolator%coeff_splines(1,1:sz2)   = interpolator%slope_left(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = interpolator%slope_right(1:sz2)
+      ! print*, 'oulala'
+       ! boundary condition non homogene  a revoir !!!!! 
+       !interpolator%coeff_splines(1,1:sz2)   = interpolator%slope_left(1:sz2)
+       !interpolator%coeff_splines(sz1,1:sz2) = interpolator%slope_right(1:sz2)
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = sz1!+1

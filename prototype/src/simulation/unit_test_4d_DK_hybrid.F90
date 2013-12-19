@@ -56,8 +56,9 @@ program DK_hybrid_4d
        deriv_x1_polar_f_eta2, &
        deriv_x2_polar_f_eta1, &
        deriv_x2_polar_f_eta2, &
-       (/0.1_f64,1.0_f64/)) ! these were the default values for this map
+       (/simulation%r_min,simulation%r_max/)) ! these were the default values for this map
 
+  print*, ' transformation ok'
   !*** initialize 4D drift-kinetic Vlasov ***
   call initialize(simulation, &
     world_size, &
@@ -73,6 +74,7 @@ program DK_hybrid_4d
     print*,': ---> First step'
   call first_step_4d_DK_hybrid(simulation)
 
+  print*, 'first step ok'
   !*** Global loop ***
   if (simulation%my_rank.eq.0) &
     print*,': ---> Run'
