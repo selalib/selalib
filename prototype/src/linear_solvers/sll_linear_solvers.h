@@ -18,6 +18,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-use sll_linear_symetric
+use sll_sparse_matrix
+use sll_linear_solvers
 
 #endif
