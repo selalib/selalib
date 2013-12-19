@@ -552,7 +552,7 @@ contains ! *******************************************************************
           ! to the linear array index.
           
           cell_index = i+es%num_cells1*(j-1)
-          
+          call set_time_mark(t_reference)
           call build_local_matrices_rho( &
                es, &
                i, &
@@ -562,13 +562,15 @@ contains ! *******************************************************************
                int_rho,&
                M_rho_loc)
           
+          print*, 'time build local matrices ', time_elapsed_since(t_reference) 
+          call set_time_mark(t_reference)
           call local_to_global_matrices_rho( &
                es, &
                cell_index, &
                i, &
                j, &
                M_rho_loc)
-          
+          print*, 'time local to global matrices ', time_elapsed_since(t_reference)
        end do
     end do
     print*, 'time build rhs matrices ', time_elapsed_since(t_reference) 
