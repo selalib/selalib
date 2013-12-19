@@ -500,7 +500,8 @@ contains
           x1_max, &
           Nc_x1, &
           Nc_x2, &
-          (/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
+          !(/SLL_NEUMANN_MODE_0, SLL_DIRICHLET/))
+          (/SLL_DIRICHLET, SLL_DIRICHLET/))
       case ("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
         transformation => new_coordinate_transformation_2d_analytic( &
           "analytic_polar_transformation", &
@@ -519,8 +520,8 @@ contains
         SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
         SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
         
-        b11 = -1._f64
-        b22 = -1._f64
+        b11 = 1._f64
+        b22 = 1._f64
         b12 = 0._f64
         b21 = 0._f64
         c = 0._f64
@@ -565,8 +566,8 @@ contains
         SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
         SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
         
-        b11 = -1._f64
-        b22 = -1._f64
+        b11 = 1._f64
+        b22 = 1._f64
         b12 = 0._f64
         b21 = 0._f64
         c = 0._f64
@@ -589,7 +590,6 @@ contains
          b21,&
          b22,&
          c)
-
 
       
           
@@ -670,9 +670,14 @@ contains
         f(i1,i2) =  sim%init_func(x1,x2,sim%params)
       end do
     end do
+
         
     call sim%poisson%compute_phi_from_rho( phi, f )
+
+
+
     call compute_field_from_phi_2d_polar(phi,sim%mesh_2d,A1,A2,sim%phi_interp2d)
+    
     
     
     
