@@ -33,15 +33,20 @@ SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSIO
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+IF(MUDPACK_ENABLED)
+   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
+   SET_TESTS_PROPERTIES(guiding_center_2D_generalized_coords PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ENDIF(MUDPACK_ENABLED)
+
 ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 
 ADD_TEST(NAME fft COMMAND test_fft)
 
-ADD_TEST(NAME reduction COMMAND test_reduction)
-SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
 IF(NOT STDF95)
+
+   ADD_TEST(NAME reduction COMMAND test_reduction)
+   SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    ADD_TEST(NAME utilities COMMAND test_utilities)
    ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
 
@@ -66,13 +71,17 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_1d_periodic COMMAND test_advection_1d_periodic)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    
-   SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/gcsim2d_cartesian_input)
-   ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
-   SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   IF(MUDPACK_ENABLED)
 
-   SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/gcsim2d_polar_input)
-   ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
-   SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/gcsim2d_cartesian_input)
+      ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
+      SET_TESTS_PROPERTIES(sim2d_gc_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/gcsim2d_polar_input)
+      ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
+      SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   ENDIF(MUDPACK_ENABLED)
 
 
 

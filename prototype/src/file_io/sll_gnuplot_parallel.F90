@@ -152,11 +152,13 @@ end if
 
 call sll_new_file_id(file_id, error)
 call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
+write(*,*) cproc//"/"//array_name//'_'//fin//'.dat'
 do i = 1, size(array,1)
    x = x_min+(i-1)*delta_x
-   do j = 1, size(array,2)
+   do j = 1, size(array,2)	
       y = y_min + (j-1)*delta_y
-      write(file_id,*) x, y, array(i,j)
+      write(file_id,*) x, y, sngl(array(i,j))
+      !write(*,*) x, y, sngl(array(i,j))
    end do
    write(file_id,*)
 enddo

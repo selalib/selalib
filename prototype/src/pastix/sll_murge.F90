@@ -92,8 +92,8 @@ subroutine initialize_murge()
   Me = sll_get_collective_rank( sll_world_collective )
   NTasks = sll_get_collective_size( sll_world_collective )
 
-  n = 3
-  dof = 1000
+  n = 100
+  dof = 1
 
   xmin = 0.
   xmax = 1.
