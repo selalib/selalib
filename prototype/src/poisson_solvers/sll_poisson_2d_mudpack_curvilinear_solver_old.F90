@@ -108,7 +108,8 @@ contains
     b12, &
     b21, &
     b22, &
-    c) &
+    c, &
+    mudpack_curvilinear_case) &
     result(poisson)
       
     type(poisson_2d_mudpack_curvilinear_solver),pointer :: poisson
@@ -122,7 +123,7 @@ contains
     sll_int32, intent(in) :: bc_eta1_right
     sll_int32, intent(in) :: bc_eta2_left
     sll_int32, intent(in) :: bc_eta2_right
-    !sll_int32, intent(in) :: mudpack_curvilinear_case
+    sll_int32, intent(in), optional :: mudpack_curvilinear_case
     sll_real64, dimension(:,:), intent(in) :: b11
     sll_real64, dimension(:,:), intent(in) :: b12
     sll_real64, dimension(:,:), intent(in) :: b21
@@ -152,7 +153,8 @@ contains
       b12, &
       b21, &
       b22, &
-      c)
+      c, &
+      mudpack_curvilinear_case)
     
   end function new_poisson_2d_mudpack_curvilinear_solver
   
@@ -174,7 +176,8 @@ contains
     b12, &
     b21, &
     b22, &
-    c)
+    c, &
+    mudpack_curvilinear_case)
     class(poisson_2d_mudpack_curvilinear_solver), target :: poisson
     sll_real64, intent(in) :: eta1_min
     sll_real64, intent(in) :: eta1_max
@@ -186,6 +189,7 @@ contains
     sll_int32, intent(in) :: bc_eta1_right
     sll_int32, intent(in) :: bc_eta2_left
     sll_int32, intent(in) :: bc_eta2_right
+    sll_int32, intent(in), optional :: mudpack_curvilinear_case
     sll_real64, dimension(:,:), intent(in) :: b11
     sll_real64, dimension(:,:), intent(in) :: b12
     sll_real64, dimension(:,:), intent(in) :: b21
@@ -215,7 +219,7 @@ contains
     equivalence(xa,fprm)
     !declare coefficient and boundary condition input subroutines external
     !external mudpack_curvilinear_cofx,mudpack_curvilinear_cofy,mudpack_curvilinear_bndsp
-    !external mudpack_curvilinear_cof
+    external mudpack_curvilinear_cof
     external mudpack_curvilinear_cofcr
     external mudpack_curvilinear_bndcr
     !!!! end variables for mudpack_curvilinear 
@@ -293,7 +297,12 @@ contains
 !    write(*,103) xa,xb,yc,yd,tolmax
 !    write(*,104) intl
 
-!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)       
+!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error) 
+    if(present(mudpack_curvilinear_case)) then
+      poisson%mudpack_curvilinear_case =  mudpack_curvilinear_case
+    else
+      poisson%mudpack_curvilinear_case =  SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
+    endif  
     poisson%transformation => transf
     poisson%cxx_2d_interp => null()
     poisson%cyy_2d_interp => null()
@@ -303,18 +312,13 @@ contains
     poisson%a12_interp => null()
     poisson%a21_interp => null()
     SLL_ALLOCATE(poisson%rho(nc_eta1+1,nc_eta2+1),ierr) 
-    poisson%mudpack_curvilinear_case =  SLL_NON_SEPARABLE_WITH_CROSS_TERMS   
-                   
-     !******SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
-    select case (poisson%mudpack_curvilinear_case)  
-      case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
-        
-       SLL_ALLOCATE(poisson%cxx_2d(nc_eta1+1,nc_eta2+1),ierr)       
-       SLL_ALLOCATE(poisson%cxy_2d(nc_eta1+1,nc_eta2+1),ierr)
-       SLL_ALLOCATE(poisson%cyy_2d(nc_eta1+1,nc_eta2+1),ierr)
-       SLL_ALLOCATE(poisson%cx_2d(nc_eta1+1,nc_eta2+1),ierr) 
-       SLL_ALLOCATE(poisson%cy_2d(nc_eta1+1,nc_eta2+1),ierr)
-       SLL_ALLOCATE(poisson%ce_2d(nc_eta1+1,nc_eta2+1),ierr)      
+    
+    SLL_ALLOCATE(poisson%cxx_2d(nc_eta1+1,nc_eta2+1),ierr)       
+    !SLL_ALLOCATE(poisson%cxy_2d(nc_eta1+1,nc_eta2+1),ierr)
+    SLL_ALLOCATE(poisson%cyy_2d(nc_eta1+1,nc_eta2+1),ierr)
+    SLL_ALLOCATE(poisson%cx_2d(nc_eta1+1,nc_eta2+1),ierr) 
+    SLL_ALLOCATE(poisson%cy_2d(nc_eta1+1,nc_eta2+1),ierr)
+    SLL_ALLOCATE(poisson%ce_2d(nc_eta1+1,nc_eta2+1),ierr)      
         
     
        poisson%a12_interp => new_cubic_spline_2d_interpolator( &
@@ -364,19 +368,7 @@ contains
            delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)                             
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )         
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )       
-           
-         poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
-          nx, &
-          ny, &
-          eta1_min, &
-          eta1_max, &
-          eta2_min, &
-          eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
-        call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
-          delta1,delta2,nx,ny,poisson%cxy_2d)  
-        call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d )  
+        
         
         poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -414,9 +406,40 @@ contains
           SLL_PERIODIC, &
           SLL_PERIODIC)       
         poisson%ce_2d = -c 
-        call poisson%ce_2d_interp%compute_interpolants( poisson%ce_2d )          
-
-                 
+        call poisson%ce_2d_interp%compute_interpolants( poisson%ce_2d )         
+                   
+     !******SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
+    select case (poisson%mudpack_curvilinear_case)  
+    
+      case (SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS)                            
+        if(associated(mudpack_curvilinear_wrapper))then
+          print *,'#Problem mudpack_curvilinear_wrapper is not null()'
+          stop
+        endif
+        mudpack_curvilinear_wrapper => poisson
+        call mud2(iprm,fprm,poisson%work, &
+          mudpack_curvilinear_cof, &
+          mudpack_curvilinear_bndcr, &
+          rhs, &
+          phi, &
+          poisson%mgopt, &
+          error)
+        mudpack_curvilinear_wrapper => null() 
+        
+      case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)   
+          SLL_ALLOCATE(poisson%cxy_2d(nc_eta1+1,nc_eta2+1),ierr)
+          poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
+          nx, &
+          ny, &
+          eta1_min, &
+          eta1_max, &
+          eta2_min, &
+          eta2_max, &
+          SLL_PERIODIC, &
+          SLL_PERIODIC)    
+        call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
+          delta1,delta2,nx,ny,poisson%cxy_2d)  
+        call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d )                  
         if(associated(mudpack_curvilinear_wrapper))then
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
           stop
@@ -472,7 +495,7 @@ contains
 
     !declare coefficient and boundary condition input subroutines external
     !external mudpack_curvilinear_cofx,mudpack_curvilinear_cofy,mudpack_curvilinear_bndsp
-    !external mudpack_curvilinear_cof
+    external mudpack_curvilinear_cof
     external mudpack_curvilinear_cofcr
     external mudpack_curvilinear_bndcr
     !set initial guess because solve should be called every time step in a
@@ -522,7 +545,31 @@ contains
     
      
     select case (poisson%mudpack_curvilinear_case)
-          
+    
+      case (SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS)
+        if(associated(mudpack_curvilinear_wrapper))then
+          print *,'#Problem mudpack_curvilinear_wrapper is not null()'
+          stop
+        endif
+        mudpack_curvilinear_wrapper => poisson
+        call mud2(iprm, &
+          fprm, &
+          poisson%work, &
+          mudpack_curvilinear_cof, &
+          mudpack_curvilinear_bndcr, &
+          poisson%rho, &
+          phi, &
+          poisson%mgopt, &
+          error)
+        !write(*,107) error
+        if (error > 0) call exit(0)
+        ! attempt to improve approximation to fourth order
+        ! seems not to work for the moment
+        call mud24(poisson%work,phi,error)
+        !write (*,108) error
+        if (error > 0) call exit(0)   
+         mudpack_curvilinear_wrapper => null() 
+            
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)
         if(associated(mudpack_curvilinear_wrapper))then
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
@@ -542,10 +589,9 @@ contains
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
         ! seems not to work for the moment
-        !call mud24cr(poisson%work,phi,error)
+        call mud24cr(poisson%work,phi,error)
         !write (*,108) error
-        if (error > 0) call exit(0)
-        
+        if (error > 0) call exit(0)        
          mudpack_curvilinear_wrapper => null()
          
       case default
