@@ -97,7 +97,11 @@ def main ():
     readfilename   = ""
     currently_reading = ""
     num_slots = 0
+    tokens  = []
     knots1_is_written = False
+    knots  = []
+    knots1 = []
+    knots2 = []
     x1 = []
     x2 = []
     wgts = []
@@ -123,7 +127,8 @@ def main ():
         print( "user$ ./arb_deg_txt_to_namelist.py filename.txt")
         sys.exit()
     else:                   # exactly one argument given
-        inputname = args[0]
+        tokens = args[0].split('/')
+        inputname = tokens[len(tokens)-1]
     # check whether the user has given the .txt extension or not, and create 
     # the name of the output file. Echo to screen the names of the files to be
     # read and written.
@@ -237,21 +242,29 @@ def main ():
                     currently_reading = ""
                     continue
                 elif currently_reading == "knots":
-                    if knots1_is_written == False:
-                        logical_mesh_locations1 = remove_duplicates(linetemp)
-                        tmp = " ".join(linetemp) # one space between elems
-                        writefile.write("    knots1 = "+ tmp + "\n")
-                        writefile.write("/" + "\n\n")
-                        currently_reading = ""
-                        knots1_is_written = True
-                        continue
-                    elif knots1_is_written == True:
-                        logical_mesh_locations2 = remove_duplicates(linetemp)
-                        tmp = " ".join(linetemp) # one space between elems
-                        writefile.write("    knots2 = "+ tmp + "\n")
-                        writefile.write("/" + "\n\n")
-                        currently_reading = ""
-                        continue
+                    if linetemp[0] == "#":  # done reading this set of knots
+                        if knots1_is_written == False:  # this is the first set
+                            logical_mesh_locations1=remove_duplicates(knots1)
+                            tmp = " ".join(knots1) # one space between elems
+                            writefile.write("    knots1 = "+ tmp + "\n")
+                            writefile.write("/" + "\n\n")
+                            # we're still reading knots
+                            knots1_is_written = True
+                            continue
+                        else: # this is the second set of knots
+                            logical_mesh_locations2=remove_duplicates(knots2)
+                            tmp = " ".join(knots2) # one space between elems
+                            writefile.write("    knots2 = "+ tmp + "\n")
+                            writefile.write("/" + "\n\n")
+                            currently_reading = "points" # next field
+                            continue
+                    else:       # just reading knots data
+                        if knots1_is_written == False: 
+                            knots1.append(linetemp)
+                            continue
+                        else:
+                            knots1.append(linetemp)
+                            continue
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
                         writefile.write("    control_pts1 = "+" ".join(x1)+"\n")
