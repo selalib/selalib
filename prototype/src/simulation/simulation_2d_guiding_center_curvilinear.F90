@@ -320,14 +320,16 @@ contains
     SLL_ALLOCATE(sim%c(Nc_eta1+1,Nc_eta2+1),ierr)
     
     
-    !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
-    !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
-    params_mesh = (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)
     
     if (initial_function_case == "SLL_KHP1") then
         eta1_max = 2._f64*sll_pi/kmode_eta1
         eta2_max = 2._f64*sll_pi/kmode_eta2
     endif
+
+    !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
+    !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
+    params_mesh = (/ 0._f64, 0._f64, eta1_max-eta1_min, eta2_max-eta2_min/)
+
         
     sim%mesh_2d => new_logical_mesh_2d( &
       Nc_eta1, &
@@ -359,16 +361,16 @@ contains
 !       polar_jac22, &
 !       params_mesh  )     
 
-!    sim%transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_collela_transformation", &
-!       sim%mesh_2d, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22, &
-!       params_mesh  )  
+    sim%transformation => new_coordinate_transformation_2d_analytic( &
+       "analytic_collela_transformation", &
+       sim%mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22, &
+       params_mesh  )  
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
@@ -653,8 +655,7 @@ contains
     sll_int32 :: nb_step
     sll_int32 :: step
     sll_real64 :: dt
-    sll_int32 :: diag_id = 88 
-    sll_int32             :: IO_stat
+    sll_int32 :: thdiag_id
     sll_int32 :: iplot
     
     Nc_eta1 = sim%mesh_2d%num_cells1
@@ -698,16 +699,18 @@ contains
     !print *,A1
     !print *,A2
     
-    open(unit = diag_id, file='diag_curvilinear.dat',IOStat=IO_stat)
-    if( IO_stat /= 0 ) then
-       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
-       STOP
-    end if
-    open(unit = diag_id+1, file='diag2_curvilinear.dat',IOStat=IO_stat)
-    if( IO_stat /= 0 ) then
-       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
-       STOP
-    end if
+    call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
+    
+!    open(unit = diag_id, file='diag_curvilinear.dat',IOStat=IO_stat)
+!    if( IO_stat /= 0 ) then
+!       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
+!       STOP
+!    end if
+!    open(unit = diag_id+1, file='diag2_curvilinear.dat',IOStat=IO_stat)
+!    if( IO_stat /= 0 ) then
+!       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
+!       STOP
+!    end if
     
     iplot = 0
 
@@ -718,17 +721,17 @@ contains
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
       call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       if(modulo(step-1,sim%freq_diag_time)==0)then
+!        call time_history_diagnostic_gc2( &
+!          diag_id+1 , &    
+!          step-1, &
+!          dt, &
+!          sim%mesh_2d, &
+!          f, &
+!          phi, &
+!          A1, &
+!          A2)
         call time_history_diagnostic_gc( &
-          diag_id , &    
-          step-1, &
-          dt, &
-          sim%mesh_2d, &
-          f, &
-          phi, &
-          A1, &
-          A2)
-        call time_history_diagnostic_gc2( &
-          diag_id+1, &    
+          thdiag_id, &    
           step-1, &
           dt, &
           sim%mesh_2d, &
@@ -750,8 +753,8 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
           call sim%poisson%compute_phi_from_rho(phi, f)
           call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
-          f_old = f
-          call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
+          !f_old = f
+          call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
@@ -764,8 +767,7 @@ contains
          
     enddo
     
-    close(diag_id)
-    close(diag_id+1)
+    close(thdiag_id)
     !print *,'#not implemented for the moment!'
   end subroutine run_gc2d_curvilinear
   
@@ -930,7 +932,15 @@ contains
     l2 = sqrt(l2*delta_eta2)
     e  = e*delta_eta2
     
-    write(file_id,*) dt*real(step,f64),linf,l1,l2,mass,e   
+    write(file_id,*) &
+      dt*real(step,f64), &
+      linf, &
+      l1, &
+      l2, &
+      mass, &
+      e, &
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1)))
+   
     
   end subroutine time_history_diagnostic_gc
 
@@ -1035,7 +1045,14 @@ contains
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
     
-    write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode(1:8)!,mode_slope
+    write(file_id,*) &
+      dt*real(step,f64), &
+      w, &
+      l1, &
+      l2, &
+      e, &
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
+      time_mode(1:8)!,mode_slope
 
     call fft_delete_plan(pfwd)
 
