@@ -97,6 +97,8 @@ module sll_simulation_4d_DK_hybrid_module
      !--> Norm of norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
      sll_real64, dimension(:,:), pointer :: norm_square_xy
 
+     !-->  1D mesh
+     sll_real64, dimension(:), pointer :: r_grid
      !--> 2D physic mesh
      sll_real64, dimension(:,:), pointer :: xgrid_2d
      sll_real64, dimension(:,:), pointer :: ygrid_2d
@@ -317,16 +319,15 @@ contains
     sll_int32  :: Nx, Ny
     sll_int32  :: ieta1,ieta2
     sll_real64 :: Lr, dr
-    sll_real64 :: x,y
+    sll_real64 :: x,y,r_point
     sll_real64 :: theta_min, Ltheta, dtheta
     sll_real64 :: r_peak, n0_rmin
     sll_real64 :: inv_Ln, inv_LTi, inv_LTe
     sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
-    sll_real64, dimension(:), pointer   :: r_grid_tmp
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
 
-!!AB   sll_real64, dimension(3) :: params_n0,params_Te,params_Ti
+    sll_real64, dimension(3) :: params_n0,params_Te,params_Ti
 
     
     sll_real64 :: Lz
@@ -338,11 +339,11 @@ contains
 
     !--> Initialization of r_grid
     Nr = sim%nc_x1+1
-    SLL_ALLOCATE(r_grid_tmp(Nr),ierr)
+    SLL_ALLOCATE(sim%r_grid(Nr),ierr)
     Lr = abs(sim%r_max-sim%r_min)
     dr = Lr/float(Nr-1)
     do ir = 1,Nr
-      r_grid_tmp(ir) = sim%r_min + float(ir-1)*dr
+      sim%r_grid(ir) = sim%r_min + float(ir-1)*dr
     end do
 
    ! !--> Initialization of n0(r), Ti(r) and Te(r)
@@ -363,14 +364,14 @@ contains
 
     r_peak  = sim%r_min + sim%rho_peak * Lr
 
-    call init_n0_r(r_peak,inv_Ln, &
-      sim%deltarn,n0_rmin,r_grid_tmp,sim%n0_r)
-    call init_T_r(r_peak,inv_LTi, &
-      sim%deltarTi,Ti_rmin,Ti_scal,r_grid_tmp,sim%Ti_r)
-    Te_rmin = sim%Ti_r(1)
-    Te_scal = sim%tau0
-    call init_T_r(r_peak,inv_LTe, &
-      sim%deltarTe,Te_rmin,Te_scal,r_grid_tmp,sim%Te_r)
+  !  call init_n0_r(r_peak,inv_Ln, &
+  !    sim%deltarn,n0_rmin,sim%r_grid,sim%n0_r)
+  !  call init_T_r(r_peak,inv_LTi, &
+  !    sim%deltarTi,Ti_rmin,Ti_scal,sim%r_grid,sim%Ti_r)
+  !  Te_rmin = sim%Ti_r(1)
+  !  Te_scal = sim%tau0
+  !  call init_T_r(r_peak,inv_LTe, &
+  !    sim%deltarTe,Te_rmin,Te_scal,sim%r_grid,sim%Te_r)
 
 
     !--> Initialization of n0(x,y), Ti(x,y) and Te(x,y)
@@ -379,41 +380,49 @@ contains
     SLL_ALLOCATE(sim%n0_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Ti_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Te_xy(Nx,Ny),ierr)
-    call function_xy_from_r(r_grid_tmp,sim%n0_r,sim%xgrid_2d, &
-         sim%ygrid_2d,sim%n0_xy)
-    call function_xy_from_r(r_grid_tmp,sim%Ti_r,sim%xgrid_2d, &
-         sim%ygrid_2d,sim%Ti_xy)
-    call function_xy_from_r(r_grid_tmp,sim%Te_r,sim%xgrid_2d, &
-         sim%ygrid_2d,sim%Te_xy)
+   ! call function_xy_from_r(sim%r_grid,sim%n0_r,sim%xgrid_2d, &
+   !      sim%ygrid_2d,sim%n0_xy)
+   ! call function_xy_from_r(sim%r_grid,sim%Ti_r,sim%xgrid_2d, &
+   !      sim%ygrid_2d,sim%Ti_xy)
+   ! call function_xy_from_r(sim%r_grid,sim%Te_r,sim%xgrid_2d, &
+   !      sim%ygrid_2d,sim%Te_xy)
 
     !!! profil exacte
-!!$    !!! paramas for radial density profiles
-!!$    params_n0(1) = inv_Ln
-!!$    params_n0(2) = sim%deltarn*Lr
-!!$    params_n0(3) = r_peak
-!!$
-!!$    !!! paramas for radial temperature electrons profiles
-!!$    params_Te(1) = inv_LTe
-!!$    params_Te(2) = sim%deltarTe*Lr
-!!$    params_Te(3) = r_peak
-!!$
-!!$    !!! paramas for radial temperature ions profiles
-!!$    params_Ti(1) = inv_LTi
-!!$    params_Ti(2) = sim%deltarTi*Lr
-!!$    params_Ti(3) = r_peak
-!!$
-!!$
-!!$    do ieta1 = 1, Nx
-!!$       do ieta2 = 1, Ny 
-!!$
-!!$          x = sim%xgrid_2d(ieta1,ieta2)
-!!$          y = sim%ygrid_2d(ieta1,ieta2)
-!!$
-!!$          sim%n0_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_n0)
-!!$          sim%Ti_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Ti) 
-!!$          sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
-!!$       end do
-!!$    end do
+    !!! paramas for radial density profiles
+    params_n0(1) = inv_Ln
+    params_n0(2) = sim%deltarn*Lr
+    params_n0(3) = r_peak
+
+    !!! paramas for radial temperature electrons profiles
+    params_Te(1) = inv_LTe
+    params_Te(2) = sim%deltarTe*Lr
+    params_Te(3) = r_peak
+
+    !!! paramas for radial temperature ions profiles
+    params_Ti(1) = inv_LTi
+    params_Ti(2) = sim%deltarTi*Lr
+    params_Ti(3) = r_peak
+
+
+    do ir = 1,Nr
+
+       r_point = sim%r_grid(ir)
+       sim%n0_r(ir) =  profil_r_exacte(r_point,params_n0) 
+       sim%Te_r(ir) =  profil_r_exacte(r_point,params_Te)
+       sim%Ti_r(ir) =  profil_r_exacte(r_point,params_Ti) 
+       
+    end do
+    do ieta1 = 1, Nx
+       do ieta2 = 1, Ny 
+
+          x = sim%xgrid_2d(ieta1,ieta2)
+          y = sim%ygrid_2d(ieta1,ieta2)
+
+          sim%n0_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_n0)
+          sim%Ti_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Ti) 
+          sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
+       end do
+    end do
 
     !--> Initialization of B(x,y)
     SLL_ALLOCATE(sim%B_xy(Nx,Ny),ierr)
@@ -430,15 +439,17 @@ contains
         float(itheta-1)*dtheta
     end do
 
-    call init_Brtheta(r_grid_tmp,theta_grid_tmp,B_rtheta_tmp)
+    call init_Brtheta(sim%r_grid,theta_grid_tmp,B_rtheta_tmp)
     call function_xy_from_rtheta( &
-      r_grid_tmp,theta_grid_tmp, &
+      sim%r_grid,theta_grid_tmp, &
       B_rtheta_tmp,sim%xgrid_2d,sim%ygrid_2d, &
       sim%B_xy)
 
-    SLL_DEALLOCATE(r_grid_tmp,ierr)
     SLL_DEALLOCATE(theta_grid_tmp,ierr)
     SLL_DEALLOCATE(B_rtheta_tmp,ierr)
+
+
+    print*, 'profil ok'
   end subroutine init_profiles_DK
 
 
@@ -588,6 +599,7 @@ contains
        sim%bc_right_vpar, &
        sim%spline_degree_vpar)
 
+   
   end subroutine allocate_fdistribu4d_DK
 
 
@@ -675,6 +687,7 @@ contains
 
     SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
+     print*, 'initialize fdistribution'
   end subroutine initialize_fdistribu4d_DK
 
 
@@ -969,6 +982,7 @@ contains
     call initialize_vector_B_QN_DK (sim,B1,B2) 
     call initialize_scalar_C_QN_DK ( sim, C )
    
+    
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22, B1, B2 and C
     sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
@@ -980,9 +994,12 @@ contains
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
 
+    
     call sim%QN_A11%set_field_data( A11 )
+    
     call sim%QN_A11%update_interpolation_coefficients( )
 
+   ! print*, 'hello'
     sim%QN_A12 => new_scalar_field_2d_discrete_alt( &
       "QN_A12", &
       sim%interp2d_QN_A12, &     
@@ -1297,7 +1314,7 @@ contains
     !--> Transformation initialization
     sim%transf_xy => transf_xy
 
-
+    
     !--> Initialization of the (x,y) 2D mesh and
     !--> Initialization of the square of the norm 
     Nx = sim%Neta1
@@ -1332,15 +1349,16 @@ contains
 
     !--> Radial profile initialisation
     call init_profiles_DK(sim)
-
+    
     !*** Allocation of the distribution function ***
     call allocate_fdistribu4d_DK(sim)
     
     !*** Allocation of the QN solveR ***
     call allocate_QN_DK(sim)
-
+    
     !*** Initialization of the QN solver ***
     call initialize_QN_DK (sim)
+    print*, 'okkkkkk'
   end subroutine initialize_4d_DK_hybrid
 
 
@@ -1467,6 +1485,7 @@ contains
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
     call set_time_mark(t0)
+    print*, 'initialize fdistribution'
     call initialize_fdistribu4d_DK(sim)
     call set_time_mark(t1)
     elaps_time = time_elapsed_between(t0,t1)
@@ -1478,9 +1497,13 @@ contains
       call sll_hdf5_file_create(filename_prof,file_id,file_err)
       !--> Saving of the 1D radial profiles of 
       !-->  temperatures and density
+      call sll_hdf5_write_array_1d(file_id,sim%r_grid,'r_grid',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
+!!$      call sll_hdf5_write_array_1d(file_id,sim%n0_r_func,'n0_r_func',file_err)
+!!$      call sll_hdf5_write_array_1d(file_id,sim%Ti_r_func,'Ti_r_func',file_err)
+!!$      call sll_hdf5_write_array_1d(file_id,sim%Te_r_func,'Te_r_func',file_err)
       !--> Saving of the 2D (x,y) profiles of 
       !-->  temperatures and density
       call sll_hdf5_write_array_2d(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
@@ -1551,6 +1574,8 @@ contains
 
     !*** Save initial step in HDF5 file ***
     call writeHDF5_diag( sim )
+
+    
   end subroutine first_step_4d_DK_hybrid
   
 
@@ -1668,7 +1693,7 @@ contains
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2
     sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
     sll_real64 :: eta1,eta2, alpha1,alpha2, E_eta1, E_eta2
-    sll_real64 :: val_jac
+    sll_real64 :: val_jac,val_B
     sll_real64, dimension(:,:), pointer :: f2d_eta1eta2_tmp
         
     call compute_local_sizes_4d( sim%layout4d_seqx1x2, &
@@ -1699,12 +1724,18 @@ contains
             E_eta1  = sim%E3d_eta1_seqx1x2(ieta1,ieta2,iloc3)
             E_eta2  = sim%E3d_eta2_seqx1x2(ieta1,ieta2,iloc3)
             val_jac = sim%transf_xy%jacobian(eta1,eta2)
-            alpha1  = - deltat_advec*E_eta2/ val_jac
-            alpha2  =   deltat_advec*E_eta1/ val_jac
+            !print*, val_jac
+            val_B   = sim%B_xy(ieta1,ieta2)
+            alpha1  = - deltat_advec*E_eta2/ (val_jac*val_B)
+            alpha2  =   deltat_advec*E_eta1/ (val_jac*val_B)
             eta1    = sim%eta1_grid(ieta1) - alpha1
             eta2    = sim%eta2_grid(ieta2) - alpha2
+          !  print*, eta1,eta2
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
               sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+           ! print*,'---------------------'
+           ! print*,'test_values', eta1,eta2,sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) -f2d_eta1eta2_tmp(ieta1,ieta2)
+           ! print*,'---------------------'
           end do
         end do
       end do
@@ -1728,6 +1759,7 @@ contains
     elaps_time_advec = 0.0
     elaps_time_QN    = 0.0
 !!$
+   
     do iter = 1,sim%nb_iter
       if (sim%my_rank.eq.0) &
         print*,' ===> ITERATION = ',iter
@@ -1836,25 +1868,20 @@ contains
     ix3_diag   = int(sim%Neta3/4)
     ivpar_diag = int(sim%Nvpar/3)
 
-!!$<<<<<<< HEAD
-!!$    diag_masse_result       = 0.0_f64
-!!$    diag_norm_L1_result     = 0.0_f64
-!!$    diag_norm_L2_result     = 0.0_f64
-!!$    diag_norm_Linf_result   = 0.0_f64
-!!$    diag_entropy_kin_result = 0.0_f64
-!!$    diag_nrj_kin_result     = 0.0_f64
-!!$    diag_nrj_pot_result     = 0.0_f64
-!!$    diag_nrj_tot_result     = 0.0_f64
-!!$    diag_heat_flux_result   = 0.0_f64
-!!$    diag_relative_error_nrj_tot_result = 0.0_f64
-!!$ 
-!!$   call sll_collective_reduce_real64( &
-!!$=======
+    diag_masse_result       = 0.0_f64
+    diag_norm_L1_result     = 0.0_f64
+    diag_norm_L2_result     = 0.0_f64
+    diag_norm_Linf_result   = 0.0_f64
+    diag_entropy_kin_result = 0.0_f64
+    diag_nrj_kin_result     = 0.0_f64
+    diag_nrj_pot_result     = 0.0_f64
+    diag_nrj_tot_result     = 0.0_f64
+    diag_heat_flux_result   = 0.0_f64
+    diag_relative_error_nrj_tot_result = 0.0_f64
     diag_masse_result = 0.0
     
     print*, 'myrank',sim%my_rank,'test',sim%diag_masse(1:sim%count_save_diag + 1)
     call sll_collective_reduce_real64( &
-!!$>>>>>>> origin/4d-drift-kinetic-hybrid
                sll_world_collective, &
                sim%diag_masse(1:sim%count_save_diag + 1), &
                sim%count_save_diag + 1, &
@@ -2019,8 +2046,7 @@ contains
             i2 = glob_ind4d(2)
             delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
                  sim%feq_xyvpar(i1,i2,i4)
-            intf_dvpar = intf_dvpar + &
-                 delta_f*delta_vpar
+            intf_dvpar = intf_dvpar + delta_f*delta_vpar
            
           end do
 
@@ -2268,7 +2294,10 @@ contains
     SLL_DEALLOCATE(sim%eta2_grid,ierr)
     SLL_DEALLOCATE(sim%eta3_grid,ierr)
     SLL_DEALLOCATE(sim%vpar_grid,ierr)
+    SLL_DEALLOCATE(sim%r_grid,ierr) 
     SLL_DEALLOCATE(sim%norm_square_xy,ierr)
+    SLL_DEALLOCATE(sim%xgrid_2d,ierr)
+    SLL_DEALLOCATE(sim%ygrid_2d,ierr) 
     SLL_DEALLOCATE(sim%n0_r,ierr)
     SLL_DEALLOCATE(sim%Ti_r,ierr)
     SLL_DEALLOCATE(sim%Te_r,ierr)
