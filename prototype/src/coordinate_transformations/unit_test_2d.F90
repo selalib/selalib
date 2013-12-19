@@ -312,8 +312,7 @@ program unit_test_2d
 
   print *, 'Test of initialization from file for a nurbs transformation:'
 
-  call t_n%read_from_file&
-       ("../src/coordinate_transformations/circle_5mp_patch4.nml")
+  call t_n%read_from_file("./circle_5mp_patch4.nml")
   t_n%mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
   call t_n%write_to_file()
 
