@@ -42,6 +42,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
+    ${SLL_DIR}/file_io/sll_file_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
     ${SLL_DIR}/file_io/sll_hdf5_io.F90
@@ -62,7 +63,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_2d.F90
     ${SLL_DIR}/interpolators/sll_interpolators_2d_base.F90
     ${SLL_DIR}/interpolators/sll_cubic_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_1d.F90
+    ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
@@ -125,7 +130,11 @@ SET(DIST_NAME "selalib-1.0.0")
 ADD_CUSTOM_TARGET(release 
 COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
+COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
+COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
 COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
 COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
 COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
