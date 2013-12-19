@@ -521,6 +521,9 @@ contains
         poisson%rho(i1,i2)=-rho(i1,i2)*poisson%transformation%jacobian(eta1,eta2)
       end do
     end do
+
+        
+    
     
     if(nxa == SLL_DIRICHLET) then
        do i2=1,Nc_eta2+1
@@ -589,7 +592,12 @@ contains
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
         ! seems not to work for the moment
-        call mud24cr(poisson%work,phi,error)
+        !call mud24cr(poisson%work,phi,error)
+        call mud24cr(poisson%work, &
+          mudpack_curvilinear_cofcr, &
+          mudpack_curvilinear_bndcr, &
+          phi, &
+          error)
         !write (*,108) error
         if (error > 0) call exit(0)        
          mudpack_curvilinear_wrapper => null()

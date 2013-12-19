@@ -42,9 +42,9 @@
     A_interp_case = "SLL_CUBIC_SPLINES"
 /
 &poisson 
-   ! poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
-    mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"    
+    !mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"    
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3  
 /    
