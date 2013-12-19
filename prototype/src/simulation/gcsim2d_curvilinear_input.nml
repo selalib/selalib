@@ -1,0 +1,50 @@
+!execution:
+!./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input
+!diagnostic:
+! for changing parameters:
+! copy ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input.nml
+! in build/my_gcsim2d_curvilinear_input.nml and modif
+! execute ./bin/test_2d_gc_curvilinear my_gcsim2d_curvilinear_input
+
+
+&geometry
+    mesh_case_eta1="SLL_LANDAU_MESH"
+    num_cells_eta1 = 128
+    eta1_min = 0.
+    eta1_max = 6.28
+    nbox_eta1 = 1
+    mesh_case_eta2="SLL_LANDAU_MESH"
+    num_cells_eta2 = 32
+    eta2_min = 0.
+    eta2_max = 6.28
+    nbox_eta2 = 1
+/    
+&initial_function
+    initial_function_case="SLL_KHP1"
+    kmode_eta1 = 0.5
+    kmode_eta2 = 1.
+    eps = 0.015
+/    
+&time_iterations
+    dt = 0.1
+    number_iterations  = 600
+    freq_diag = 100
+    freq_diag_time = 1
+    !time_loop_case = "SLL_EULER"
+    time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+/
+&advector
+    advect2d_case = "SLL_BSL"    
+    f_interp2d_case = "SLL_CUBIC_SPLINES"
+    phi_interp2d_case = "SLL_CUBIC_SPLINES"
+    !charac2d_case = "SLL_EULER"
+    charac2d_case = "SLL_VERLET"
+    A_interp_case = "SLL_CUBIC_SPLINES"
+/
+&poisson 
+   ! poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    mudpack_method = "SLL_NON_SEPARABLE_WITH_CROSS_TERMS"    
+    spline_degree_eta1 = 3
+    spline_degree_eta2 = 3  
+/    
