@@ -25,7 +25,9 @@ sll_real64  :: x
 sll_int32   :: error
 sll_int32   :: i, j
 
+#ifdef PASTIX
 call sll_boot_collective()
+#endif
 
 ncells = 33
 
@@ -46,6 +48,7 @@ nnzeros = 3*n+2
 
 call initialize(csc_matrix, n, nnzeros, error)
 
+#ifdef PASTIX
 call initialize(pastix, n, nnzeros)
 
 j=1
@@ -80,6 +83,8 @@ end do
     
 print*,'   error=',maxval(abs(sol-sol_exact))
 
+
 call sll_halt_collective()
+#endif
 
 end program test_linear_solvers

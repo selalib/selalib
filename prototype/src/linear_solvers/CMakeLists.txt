@@ -9,6 +9,7 @@ IF(PASTIX_ENABLED)
    ADD_EXECUTABLE(test_linear_solvers unit_test_linear_solvers.F90)
    TARGET_LINK_LIBRARIES(test_linear_solvers sll_linear_solvers 
                                              sll_pastix 
+                                             sll_collective
                                              sll_sparse)
 ELSE()
    ADD_EXECUTABLE(test_linear_solvers unit_test_linear_solvers.F90)
