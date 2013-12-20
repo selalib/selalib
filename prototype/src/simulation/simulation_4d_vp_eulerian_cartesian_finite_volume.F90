@@ -13,11 +13,14 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   use sll_logical_meshes
   use sll_mesh_calculus_2d_module
   use sll_gnuplot_parallel
+  use sll_timer
+  use sll_point_to_point_comms_module
   implicit none
 
   type, extends(sll_simulation_base_class) :: &
        sll_simulation_4d_vp_eulerian_cartesian_finite_volume
   ! Parallel environment parameters
+  sll_int32  :: buf_size
   sll_int32  :: world_size
   sll_int32  :: my_rank
   sll_int32  :: power2 ! 2^power2 = number of processes available
@@ -47,12 +50,16 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   sll_int32  :: np_v1  ! velocity nodes
   sll_int32  :: np_v2
   sll_int32 :: np_x1
+  ! used to refer to port buffers
+  sll_real64, dimension(:), pointer :: buf1,buf2,buf3,buf4
+  !buf1 pour prendre les valeur de port 1 et buf2 pour prendre les valeur de port2 
 
   ! number of local nodes in each element
   sll_int32 :: np_loc
   sll_real64 :: eps=0.0_f64 !0 center flux, if not decentered flux
 
   ! for initializers
+  type(sll_p2p_comm_real64), pointer :: comm
   type(sll_logical_mesh_2d), pointer    :: mesh2dx,mesh2dv
   class(sll_coordinate_transformation_2d_base),pointer     :: tx,tv
   type(poisson_2d_periodic_plan_cartesian_par), pointer :: poisson_plan
@@ -87,20 +94,22 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   sll_real64, dimension(:),pointer  :: Bv2m_diag,Bv2m_low,Bv2m_sup
   ! distribution functions at time steps n, star and n+1 
   ! communications are needed only in the x3 direction
-  sll_real64, dimension(:,:,:,:), pointer     :: fn_v1v2x1
+  sll_real64, dimension(:,:,:,:), pointer     :: fn_v1v2
   !attention, it's a local variable
-  sll_real64, dimension(:,:,:,:), pointer     :: fn_star_v1v2x1
-  sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2x1
-  sll_real64, dimension(:,:,:,:), pointer     :: dtfn_v1v2x1
+  sll_real64, dimension(:,:,:,:), pointer     :: fn_star_v1v2
+  sll_real64, dimension(:,:,:,:), pointer     :: fnp1_v1v2
+  sll_real64, dimension(:,:,:,:), pointer     :: dtfn_v1v2
   ! charge density
   sll_real64, dimension(:,:), allocatable     :: rho_x1
+  sll_real64, dimension(:,:), allocatable     :: rho_split
   ! potential 
   sll_real64, dimension(:,:), allocatable     :: phi_x1
-
-  type(layout_4d),pointer :: sequential_v1v2x1
-  type(layout_2d),pointer :: phi_seq_x1
+  sll_real64, dimension(:,:), allocatable     :: phi_split
+  type(layout_4d),pointer :: sequential_v1v2_layout
+  type(layout_2d),pointer :: phi_seq_x1_layout
   type(layout_2d),pointer :: split_rho_layout
-
+  type(remap_plan_2D_real64), pointer :: split_to_seqx1
+  type(remap_plan_2D_real64), pointer :: seqx1_to_split
 contains
   procedure, pass(sim) :: run => run_vp_cart
   procedure, pass(sim) :: init_from_file => init_vp_cart
@@ -201,7 +210,7 @@ subroutine initialize_vp4d( &
 !!$       y_mil(iy)=sim%mesh2dx%eta2_min+iY*sim%mesh2dx%delta_eta2- &
 !!$            sim%mesh2dx%delta_eta2/2
 !!$    enddo
-!!$    !initialize for fn_v1v2x1
+!!$    !initialize for fn_v1v2
 !!$
 !!$    write(*,*) 'sim%np_v1 =', sim%np_v1
 !!$    do ivx=1,sim%np_v1
@@ -210,7 +219,7 @@ subroutine initialize_vp4d( &
 !!$          do ix=1,sim%nc_x1
 !!$             do iy=1,sim%nc_x2
 !!$          write(*,*) 'bizzare1'
-!!$                sim%fn_v1v2x1(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
+!!$                sim%fn_v1v2(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
 !!$                     vy_mil(ivy),x_mil(ix),y_mil(iy),params)
 !!$             end do
 !!$          end do
@@ -225,11 +234,11 @@ subroutine initialize_vp4d( &
 !!$          do ivx=1,sim%np_v1
 !!$             do ivy=1,sim%np_v2
 !!$                write(*,*) 'bizzare'
-!!$                sim%fn_v1v2x1(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
+!!$                sim%fn_v1v2(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
 !!$                     vy_mil(ivy),x_mil(ix),y_mil(iy),params)
 !!$                mm=sim%np_v1*(ivy-1)+ivx
 !!$                sim%rho_x1(ix,iy)=sim%rho_x1(ix,iy)+ &
-!!$                     sim%fn_v1v2x1(ivx,ivy,ix,iy)*sim%p(mm
+!!$                     sim%fn_v1v2(ivx,ivy,ix,iy)*sim%p(mm
 !!$             enddo
 !!$          end do
 !!$          write(*,*) 'rho (',ix,',',iy,') = ', sim%rho_x1(ix,iy)
@@ -277,7 +286,6 @@ subroutine run_vp_cart(sim)
  sll_real64,dimension(:,:),allocatable :: f_y_exact,f_vy_exact
  sll_real64,dimension(:,:),allocatable :: f_x_exact2,f_x_num
  sll_real64,dimension(:),pointer :: ww,w1
- sll_real64,dimension(:,:),pointer :: rho_x1_temp
  sll_real64,dimension(:,:),pointer :: energ
  sll_real64,dimension(:),pointer :: vx_mil
  sll_real64,dimension(:),pointer :: vy_mil
@@ -309,8 +317,9 @@ subroutine run_vp_cart(sim)
  sim%my_rank    = sll_get_collective_rank(sll_world_collective)  
 
  ! allocate the layouts...
- sim%sequential_v1v2x1  => new_layout_4D( sll_world_collective )
- sim%phi_seq_x1       => new_layout_2D( sll_world_collective )
+ sim%sequential_v1v2_layout  => new_layout_4D( sll_world_collective )
+ sim%phi_seq_x1_layout       => new_layout_2D( sll_world_collective )
+ sim%split_rho_layout => new_layout_2D( sll_world_collective )
 
  sim%degree=sim%params(6)
  sim%nsch=sim%params(10)
@@ -328,11 +337,16 @@ subroutine run_vp_cart(sim)
 
  sim%nproc_v1 = 1
  sim%nproc_v2 = 1
- sim%nproc_x1 = 1
- sim%nproc_x2 = sim%world_size
-
+ if( (int(sqrt(real(sim%world_size))))**2/=sim%world_size ) then
+    print *, 'sim%world_size must be a square number', sim%world_size
+    STOP
+ end if
+!write(*,*) 'test ', sqrt(real(9))
+!stop
+ sim%nproc_x1 = int(sqrt(real(sim%world_size)))
+ sim%nproc_x2 = int(sqrt(real(sim%world_size)))
  ! init the layout for the distribution function
- ! the mesh is split only in the x3 direction
+ ! the mesh is split on the x1 et x2  direction
  call initialize_layout_with_distributed_4D_array( &
       sim%np_v1, &
       sim%np_v2, &
@@ -342,59 +356,91 @@ subroutine run_vp_cart(sim)
       sim%nproc_v2, &
       sim%nproc_x1, &
       sim%nproc_x2, &
-      sim%sequential_v1v2x1)
+      sim%sequential_v1v2_layout)
+
+ ! Allocate the array needed to store the local chunk of the distribution
+ ! function data. First compute the local sizes.
+ call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+      loc_sz_v1, &
+      loc_sz_v2, &
+      loc_sz_x1, &
+      loc_sz_x2 )
+ sim%buf_size=loc_sz_v2*loc_sz_v1*loc_sz_x1*loc_sz_x2
+ !initialize for the comm
+ sim%comm => new_comm_real64(sll_world_collective,4, sim%buf_size )
+  call sll_configure_comm_real64_torus_2d( sim%comm,sim%nproc_x1,sim%nproc_x2 )
+!write(*,*) 'verify 2 loc_sz_x1',loc_sz_x1
+!write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
+!stop
+ !write(*,*) 'sim%np_v1',sim%np_v1,loc_sz_v1
+!print *, 'just about to allocate dtfn_v1v2:', loc_sz_x1
+ ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
+ SLL_ALLOCATE(sim%fn_v1v2(loc_sz_v1,loc_sz_v2,loc_sz_x1,loc_sz_x2),ierr)
+!just essayer car c'est une variable local de RK4
+ SLL_ALLOCATE(sim%fn_star_v1v2(loc_sz_v1,loc_sz_v2,loc_sz_x1,loc_sz_x2),ierr)
+ SLL_ALLOCATE(sim%fnp1_v1v2(loc_sz_v1,loc_sz_v2,loc_sz_x1,loc_sz_x2),ierr)
+ SLL_ALLOCATE(sim%dtfn_v1v2(loc_sz_v1,loc_sz_v2,loc_sz_x1,loc_sz_x2),ierr)
+
+ SLL_ALLOCATE(ww(sim%np_v1*sim%np_v2),ierr)
+ SLL_ALLOCATE(w1(sim%np_v1*sim%np_v2),ierr)
+ SLL_ALLOCATE(energ(loc_sz_x1,loc_sz_x2),ierr)
 
 
-
- ! potential layout
+ ! iz=0 corresponds to the mean values of rho and phi
+!write(*,*) 'verified loc_sz_x1',loc_sz_x1
+!write(*,*) 'verify loc_sz_x2',loc_sz_x2 
+ SLL_ALLOCATE(sim%rho_split(loc_sz_x1,loc_sz_x2),ierr)
+ !write(*,*) 'size rho_split',size(sim%rho_split(1,:))
+ SLL_ALLOCATE(sim%phi_split(loc_sz_x1,loc_sz_x2),ierr)
+!write(*,*) sim%my_rank,'taille ',sim%nc_x1, sim%nc_x2, sim%nproc_x1, sim%nproc_x2
  call initialize_layout_with_distributed_2D_array( &
       sim%nc_x1, &
       sim%nc_x2, &
       sim%nproc_x1, &
       sim%nproc_x2, &
-      sim%phi_seq_x1)
+      sim%split_rho_layout)
 
+ sim%nproc_x1 = 1
+ sim%nproc_x2 = sim%world_size
+!!$sim%nproc_x1 =1
+!!$ sim%nproc_x2 = sim%world_size
+ ! potential layout
+ !write(*,*) ' sim%nproc_x1', sim%nproc_x1
+!write(*,*) ' sim%nproc_x2', sim%nproc_x2
+ call initialize_layout_with_distributed_2D_array( &
+      sim%nc_x1, &
+      sim%nc_x2, &
+      sim%nproc_x1, &
+      sim%nproc_x2, &
+      sim%phi_seq_x1_layout)
+call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+!!$write(*,*) sim%my_rank,'taille ',sim%nc_x1, sim%nc_x2, sim%nproc_x1, sim%nproc_x2
+!!$ call initialize_layout_with_distributed_2D_array( &
+!!$      sim%nc_x1, &
+!!$      sim%nc_x2, &
+!!$      sim%nproc_x1, &
+!!$      sim%nproc_x2, &
+!!$      sim%split_rho_layout)
+ !apres changer et faire inverse
+ SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
+ !write(*,*) 'size rho_x1',size(sim%rho_x1(1,:))
+ SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
+ !write(*,*) 'taille de rho_x1', size(sim%rho_x1(1,:)),size(sim%rho_x1(:,1))
+ !write(*,*) 'arrive ici'
  sim%poisson_plan=>new_poisson_2d_periodic_plan_cartesian_par_alt( &
-      sim%phi_seq_x1, &
+      sim%phi_seq_x1_layout, &
       sim%nc_x1, &
       sim%nc_x2, &
       sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min, &
       sim%mesh2dx%eta2_max-sim%mesh2dx%eta2_min )
+ !write(*,*) 'arrive ici2'
+
+ 
 
 
- call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
- ! iz=0 corresponds to the mean values of rho and phi
-write(*,*) 'verified loc_sz_x1',loc_sz_x1
-write(*,*) 'verify loc_sz_x2',loc_sz_x2 
- SLL_ALLOCATE(sim%rho_x1(loc_sz_x1,loc_sz_x2),ierr)
- write(*,*) 'size rho_x1',size(sim%rho_x1(1,:))
- SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,0:loc_sz_x2+1),ierr)
+ !!!!!!!!!!
  !SLL_ALLOCATE(sim%phi_x1(loc_sz_x1,loc_sz_x2),ierr)
  !print *, 'rank = ', sim%my_rank, 'local sizes of phi: ', loc_sz_x1, loc_sz_x2
-
- ! Allocate the array needed to store the local chunk of the distribution
- ! function data. First compute the local sizes.
- call compute_local_sizes_4d( sim%sequential_v1v2x1, &
-      loc_sz_v1, &
-      loc_sz_v2, &
-      loc_sz_x1, &
-      loc_sz_x2 )
-write(*,*) 'verify 2 loc_sz_x1',loc_sz_x1
-write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
-!stop
- !write(*,*) 'sim%np_v1',sim%np_v1,loc_sz_v1
-!print *, 'just about to allocate dtfn_v1v2x1:', loc_sz_x1
- ! iz=0 and iz=loc_sz_x2+1 correspond to ghost cells.
- SLL_ALLOCATE(sim%fn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
-!just essayer car c'est une variable local de RK4
- SLL_ALLOCATE(sim%fn_star_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
- SLL_ALLOCATE(sim%fnp1_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
- SLL_ALLOCATE(sim%dtfn_v1v2x1(loc_sz_v1,loc_sz_v2,loc_sz_x1,0:loc_sz_x2+1),ierr)
-
- SLL_ALLOCATE(ww(sim%np_v1*sim%np_v2),ierr)
- SLL_ALLOCATE(w1(sim%np_v1*sim%np_v2),ierr)
- SLL_ALLOCATE(energ(loc_sz_x1,loc_sz_x2+1),ierr)
- SLL_ALLOCATE(rho_x1_temp(loc_sz_x1,0:loc_sz_x2+1),ierr)
 
 
  ! initialize here the distribution function
@@ -406,16 +452,27 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
  ! parallel_array_initializers/sll_common_array_initializers_module.F90
 
 !!$    call sll_4d_parallel_array_initializer_cartesian( &
-!!$         sim%sequential_v1v2x1, &
+!!$         sim%sequential_v1v2, &
 !!$         sim%mesh4d, &
-!!$         sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
+!!$         sim%fn_v1v2(:,:,:,1:loc_sz_x2), &
 !!$         sim%init_func, &
 !!$         sim%params)
+ call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+      loc_sz_v1, &
+      loc_sz_v2, &
+      loc_sz_x1, &
+      loc_sz_x2 )
+ !call sll_view_lims_4D(sim%sequential_v1v2_layout)
+!!$ write(*,*) 'taille fn_v1v2_1',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),1)
+!!$ write(*,*) 'taille fn_v1v2_2',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),2)
+!!$ write(*,*) 'taille fn_v1v2_3',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),3)
+!!$ write(*,*) 'taille fn_v1v2_4',size(sim%fn_v1v2(:,:,:,1:loc_sz_x2),4)
+!!$ write(*,*) 'loc_sz_x2',loc_sz_x2
  call sll_4d_parallel_array_initializer_finite_volume( &
-      sim%sequential_v1v2x1, &
+      sim%sequential_v1v2_layout, &
       sim%mesh2dv, &
       sim%mesh2dx, &
-      sim%fn_v1v2x1(:,:,:,1:loc_sz_x2), &
+      sim%fn_v1v2(:,:,:,1:loc_sz_x2), &
       sim%init_func , &
       sim%params, &
       sim%tv, &
@@ -496,9 +553,9 @@ write(*,*) 'verify 2 loc_sz_x2',loc_sz_x2
 !!$    volume=sim%mesh2dx%delta_eta1 * &
 !!$         sim%mesh2dx%delta_eta2 
 
- global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+ global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
  ! cell volumes, check this...
-print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
+!print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
  do j=1,loc_sz_x2
     do i=1,loc_sz_x1 ! loc_sz_x1 is number of points, we're processing cells
        ic=i+global_indices(3)-1
@@ -511,7 +568,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$ do j=1,loc_sz_x2
 !!$    do i=1,loc_sz_x1-1 ! loc_sz_x1 is number of points, we're processing cells
 !!$       global_indices(1:4) =  &
-!!$            local_to_global_4D(sim%sequential_v1v2x1, (/1,1,i,j/) )
+!!$            local_to_global_4D(sim%sequential_v1v2, (/1,1,i,j/) )
 !!$       sim%volume(i,j) = &
 !!$            cell_volume( sim%tx, global_indices(3),global_indices(4),3)
 !!$    end do
@@ -541,6 +598,17 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
        sim%surfx2(i,j+1)=edge_length_eta2_plus( sim%tx, ic, jc,3)  
     end do
  end do
+
+!plan
+!write(*,*) 'planter ici 1'
+
+ sim%split_to_seqx1 => &
+         NEW_REMAP_PLAN(sim%split_rho_layout,sim%phi_seq_x1_layout,sim%rho_split)
+!write(*,*) 'planter ici 2'
+ sim%seqx1_to_split => &
+         NEW_REMAP_PLAN(sim%phi_seq_x1_layout,sim%split_rho_layout, sim%phi_x1)
+!write(*,*) 'planter ici 3'
+
 
  !write(*,*) 'vertical',sim%my_rank,sum(sim%surfx1(1,:))
  !write(*,*) 'horizontal',sim%my_rank,sum(sim%surfx2(1,:))
@@ -575,7 +643,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$    write(*,*) 'surf/volum =  ', 2*(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
 !!$         sim%volume(1,1)*sim%mesh2dx%delta_eta1
 !!$    stop
- write(*,*) 'coucou'
+! write(*,*) 'coucou'
  ! space cfl condition
  sim%dt = sim%cfl*sim%volume(1,1)/2/(sim%surfx1(1,1)+sim%surfx2(1,1))/ &
       max(sim%mesh2dv%eta1_max,sim%mesh2dv%eta2_max,abs(sim%mesh2dv%eta1_min), &
@@ -598,45 +666,51 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
     !call mpi_comm(sim)
     !sim%rho_x1=0.0_f64
 
-    !compute rho
+    !compute rho_split c-a-d calculer avec parallel sur 2 directions
 !!$    do i=1,loc_sz_x1
 !!$       do j=1,loc_sz_x2
 !!$          do ii=1,loc_sz_v1
 !!$             do jj=1,loc_sz_v2
 !!$                mm=loc_sz_v1*(jj-1)+ii
-!!$                ! sim%rho_x1(i,j)=sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)*sim%mesh2dx%delta_eta1* sim%mesh2dx%delta_eta2
-!!$                sim%rho_x1(i,j)=sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)* & 
+!!$                ! sim%rho_split(i,j)=sim%rho_split(i,j)+sim%fn_v1v2(ii,jj,i,j)*sim%mesh2dx%delta_eta1* sim%mesh2dx%delta_eta2
+!!$                sim%rho_split(i,j)=sim%rho_split(i,j)+sim%fn_v1v2(ii,jj,i,j)* & 
 !!$                     sim%p(mm)
 !!$             enddo
 !!$          end do
-!!$! !!$            write(*,*) 'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+!!$! !!$            write(*,*) 'rho (',i,',',j,') = ', sim%rho_split(i,j)
 !!$! !!$            write(*,*) 'rhoexact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
 !!$       enddo
 !!$    enddo
 
-   !au bord
-    call mpi_comm(sim)
-    !rho_x1_temp=0.0_f64
-    sim%rho_x1 = 0.0_f64
+    sim%rho_split = 0.0_f64
     do i=1,loc_sz_x1
        do j=1,loc_sz_x2
           !write(*,*) i,j
           do ii=1,loc_sz_v1
              do jj=1,loc_sz_v2
                 mm=loc_sz_v1*(jj-1)+ii
-                sim%rho_x1(i,j) = &
-                     sim%rho_x1(i,j)+sim%fn_v1v2x1(ii,jj,i,j)*sim%p(mm)
-                !write(*,*) 'fn',ii,jj,sim%fn_v1v2x1(ii,jj,i,j)
+                sim%rho_split(i,j) = &
+                     sim%rho_split(i,j)+sim%fn_v1v2(ii,jj,i,j)*sim%p(mm)
+                !write(*,*) 'fn',ii,jj,sim%fn_v1v2(ii,jj,i,j)
              enddo
           end do
-           !write(*,*) 'x',x_mil(i),'rho (',i,',',j,') = ', sim%rho_x1(i,j)
+           !write(*,*) 'x',x_mil(i),'rho (',i,',',j,') = ', sim%rho_split(i,j)
            !write(*,*) 'rho_exact (',i,',',j,') = ', x_mil(i), sin(0.5*(x_mil(i)-sim%mesh2dx%delta_eta1/2))
            !write(*,*) 'rho_exact (',i,',',j,') = ', x_mil(i)-sim%mesh2dx%delta_eta1/2, (1+sim%params(5)*cos(0.5_f64*(x_mil(i)-sim%mesh2dx%delta_eta1/2)))*0.99999998
           !stop
        enddo
     enddo
-    !stop
+    !write(*,*) 'probleme ici 3'
+    !allouer pour rho_x1 et phi_x1
 
+    !ordonner rho_split sur x1 pour utiliser le Poisson solver.
+    !call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+    !call sll_view_lims_2D(sim%split_rho_layout)
+    !write(*,*) 'taille  sim%rho_x1',size( sim%rho_x1,1),size( sim%rho_x1,2)
+    !write(*,*) sim%my_rank, 'taille  sim%rho_split',size( sim%rho_split,1),size( sim%rho_split,2)
+    call apply_remap_2D(sim%split_to_seqx1, sim%rho_split,sim%rho_x1)
+    !stop
+    !write(*,*) 'probleme ici 4'
 !!$   do i=1,loc_sz_x1
 !!$    write(*,*) 'rho_x1_temp (',i,',:) = ', rho_x1_temp(i,:)
 !!$   end do
@@ -661,22 +735,38 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 !!$    enddo
     !stop
     sim%phi_x1=0.0_f64
+!!$    write(*,*) 'taille de rho_x1', size(sim%rho_x1(1,:)),size(sim%rho_x1(:,1))
+!!$    stop
+    call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
+    !write(*,*) 'planter poisson'
+
     call solve_poisson_2d_periodic_cartesian_par_alt(sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1(:,1:loc_sz_x2))
-    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2) !attention false for several processors
+    sim%phi_x1(:,0)=sim%phi_x1(:,loc_sz_x2)
     sim%phi_x1(:,loc_sz_x2+1)=sim%phi_x1(:,1)
 !!$write(*,*) 'phi avance = ', sim%phi_x1(:,1)
 !!$      sim%phi_x1=-sim%phi_x1
 !!$write(*,*) 'phi apres = ', sim%phi_x1(:,1)
 !attention the sign of phi after the solver Poisson
    sim%phi_x1=-sim%phi_x1
+   !revient dans le split layout pour phi
+!write(*,*) sim%my_rank, 'here 1'
+    call apply_remap_2D( sim%seqx1_to_split, sim%phi_x1, sim%phi_split)
 !!$    do i=1,loc_sz_x1
 !!$       write (*,*)  'x',x_mil(i)-sim%mesh2dx%delta_eta1/2,'phi = ', sim%phi_x1(i,:)
 !!$    enddo
     !stop
-
+    !revenir dans le bon valeur du loc_sz
+!write(*,*) sim%my_rank, 'here 2'
+ call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+      loc_sz_v1, &
+      loc_sz_v2, &
+      loc_sz_x1, &
+      loc_sz_x2 )
     t=t+sim%dt
+
+!write(*,*) sim%my_rank, 'here 1'
     if (sim%nsch == 0) then
        call euler(sim)
     elseif (sim%nsch == 1) then
@@ -684,6 +774,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
     elseif (sim%nsch == 2) then
        call RK4(sim)
     end if
+!write(*,*) sim%my_rank, 'here 2'
     !try to compute the energy in the transport test case here
 !!$       write(*,*) 'loc_sz_v1',loc_sz_v1
 !!$       write(*,*) 'sim%np_v2',sim%np_v2
@@ -695,7 +786,7 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
           !energ(ic,jc)=0.0_f64
           do iy=1,loc_sz_v2
              do ix=1,loc_sz_v1
-                w1((iy-1)*loc_sz_v1+ix)=sim%fn_v1v2x1(ix,iy,ic,jc)
+                w1((iy-1)*loc_sz_v1+ix)=sim%fn_v1v2(ix,iy,ic,jc)
              end do
           end do
           call MULKU(sim%M1_sup,sim%M1_diag,sim%M1_low, &
@@ -718,7 +809,6 @@ print *, 'what is the size of loc_sz_x2??? ', loc_sz_x2
 
 
 if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
-       write(*,*) 'loc_sz_x1 =', loc_sz_x1
        do ic=1,loc_sz_x1
           do jc=1,loc_sz_x2
              icL=ic-1
@@ -728,7 +818,7 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
              elseif(ic.ge.loc_sz_x1)then
                 icR=1
              end if
-             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+             global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
                   (/1,1,1,1/) )
              x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
                   sim%mesh2dx%delta_eta1
@@ -736,31 +826,14 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
                   sim%mesh2dx%delta_eta2
              jac_m=sim%tx%jacobian_matrix(x1,x2)
              inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
-!!$    !write(*,*) 'verify the matrix: (1,1)',  inv_jac(1,1)
-!!$    !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
-!!$    !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
-!!$    !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
-             !write(*,*) '2*dx',2*sim%mesh2dx%delta_eta1*inv_jac(1,1)
-             Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-             Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-!!$             Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-!!$                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-!!$                  sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$             Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-!!$                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-!!$                  sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-!!$             if (Ey > 0) then
-!!$               write(*,*) 'Ey', Ey
-!!$             end if
-          !    write(*,*) 'Ex', Ex
+             Ex=-(sim%phi_split(icR,jc)-sim%phi_split(icL,jc))/2/ &
+                  sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(ic,jc+1)- &
+                  sim%phi_split(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+             Ey=-(sim%phi_split(ic,jc+1)-sim%phi_split(ic,jc-1))/2/ &
+                  sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,jc)- &
+                  sim%phi_split(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
 
-              !write(*,*) 'entrer ici ou pas???????'
              det=sim%tx%jacobian(x1,x2)
-            !write(*,*) 'verify the matrix: det = ',  det
              if(sim%test==2) then
                 Ex=1.0_f64
                 Ey=0.0_f64
@@ -772,18 +845,9 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
              sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                   sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
           end do
-          !write(*,*) 'Ex', Ex
-          !stop
-
-          !write(*,*) 'delta _eta 1 =', sim%mesh2dx%delta_eta1
-          !write(*,*) 'Enorm = ',sim%Enorm
        end do
-       !stop
-       !write(*,*) 'here4'
-       !write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', sqrt(sim%Enorm)
        write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
-!stop
-       !write(*,*) 'iter = ',itime, ' t = ', t 
+
        buffer(buffer_counter) = sqrt(sim%Enorm)
        if(buffer_counter==BUFFER_SIZE) then
           call sll_collective_reduce_real64(sll_world_collective, &
@@ -794,10 +858,8 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
                buffer_result )
 
           buffer_counter=1
-             !print*, 'coucou 1!!'
           if (sim%my_rank==0) then
-             !print*, 'coucou 2!!'
-             open(399,file='energy',position='append')
+             open(399,file='log(energy)',position='append')
              if(itime==BUFFER_SIZE) then 
                 rewind(399)
              endif
@@ -809,30 +871,28 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
           end if
        else
           buffer_counter=buffer_counter+1
-             !print*, 'coucou 3!!'
        end if
     end if
-!!$write(*,*) 'il pass ici????????'
  end do
 
  write(*,*) 'number of iteration', itime
  write(*,*) 'final time ',t
 
 
- !stop
 
 
- call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+
+ call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
       loc_sz_v1, loc_sz_v2, loc_sz_x1, loc_sz_x2) 
  !write (*,*) 'loc_sz_x1', loc_sz_x1
 !!$    do i=1,loc_sz_v1
-!!$       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2x1(i,1,:,1)))
+!!$       write(*,*) 'i',i,'max',maxval(abs(sim%fn_v1v2(i,1,:,1)))
 !!$    end do
 !!$    
  allocate (plotf2d_c1(loc_sz_x1,loc_sz_v1))
  do i = 1, loc_sz_x1
     do j = 1, loc_sz_v1
-       plotf2d_c1(i,j) = sim%fn_v1v2x1(j,1,i,1)
+       plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
        if (plotf2d_c1(i,j).gt.100) then
        write(*,*) ' plotf2d_c1(i,j)',  plotf2d_c1(i,j)
        end if
@@ -844,7 +904,7 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
  allocate (plotf2d_c2(loc_sz_x2,loc_sz_v2))
  do i = 1, loc_sz_x2
     do j = 1, loc_sz_v2
-       plotf2d_c2(i,j) = sim%fn_v1v2x1(1,j,1,i)
+       plotf2d_c2(i,j) = sim%fn_v1v2(1,j,1,i)
     end do
  end do
 
@@ -861,7 +921,7 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
 !!$ end do
 !!$ do i = 1, loc_sz_x1
 !!$    do j = 1, loc_sz_v1
-!!$       df = sim%fn_v1v2x1(j,1,i,1)
+!!$       df = sim%fn_v1v2(j,1,i,1)
 !!$       write(file_id_3,*) xmil(i), node(j), df 
 !!$    end do
 !!$ end do
@@ -877,11 +937,11 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
 !!$
 !!$    do i = 1, loc_sz_x1
 !!$       do j = 1, loc_sz_x2
-!!$          plotphi2d(i,j) = sim%phi_x1(i,j)
+!!$          plotphi2d(i,j) = sim%phi_split(i,j)
 !!$       end do
 !!$    end do
 
- global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+ global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
  write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
  write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
  call sll_gnuplot_rect_2d_parallel( &
@@ -931,7 +991,7 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
 
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-!!$          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+!!$          global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2, &
 !!$               (/1,1,1,1/) )
 !!$          f_x_exact(i,j) = exp(-4*(modulo(((i-1)*sim%mesh2dx%delta_eta1 &
 !!$               -(sim%mesh2dv%eta1_min+(j-1)*sim%mesh2dv%delta_eta1/sim%degree)*t),sim%mesh2dx%eta1_max-sim%mesh2dx%eta1_min)+sim%mesh2dx%eta1_min)**2)
@@ -1636,14 +1696,16 @@ end subroutine velocity_mesh_connectivity
 subroutine delete_vp_cart( sim )
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume) :: sim
  sll_int32 :: ierr
- SLL_DEALLOCATE( sim%fn_v1v2x1, ierr )
- SLL_DEALLOCATE( sim%fn_star_v1v2x1, ierr )
- SLL_DEALLOCATE( sim%fnp1_v1v2x1, ierr )
- SLL_DEALLOCATE_ARRAY( sim%dtfn_v1v2x1, ierr )
+ SLL_DEALLOCATE( sim%fn_v1v2, ierr )
+ SLL_DEALLOCATE( sim%fn_star_v1v2, ierr )
+ SLL_DEALLOCATE( sim%fnp1_v1v2, ierr )
+ SLL_DEALLOCATE_ARRAY( sim%dtfn_v1v2, ierr )
  SLL_DEALLOCATE_ARRAY( sim%rho_x1, ierr )
+ SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
+ SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
  SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
- call delete( sim%sequential_v1v2x1 )
- call delete( sim%phi_seq_x1 )
+ call delete( sim%sequential_v1v2_layout)
+ call delete( sim%phi_seq_x1_layout )
 end subroutine delete_vp_cart
 
 ! we put the reduction functions here for now, since we are only using
@@ -2194,6 +2256,8 @@ end subroutine fluxnum
 ! time derivative of f
 subroutine dtf(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+ sll_int32 :: i,j,k,beg
+ sll_int32 :: count1,count2,count3,count4
  sll_int32  :: loc_sz_v1
  sll_int32  :: loc_sz_v2
  sll_int32  :: loc_sz_x1
@@ -2218,80 +2282,156 @@ subroutine dtf(sim)
  mp=6    ! write the log on screen
 
  !nsym=0    
- call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
+! write(*,*) sim%my_rank, 'planter dans dtf1'
+ call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
  ! init
- sim%dtfn_v1v2x1=0.0_f64
-
+ sim%dtfn_v1v2=0.0_f64
+ !write(*,*) sim%my_rank, 'planter dans dtf2'
  !compute the fluxes in the x1 direction
  vn(1)=1*sim%surfx1(1,1) ! temporaire !!!!
  vn(2)=0
  ! Added the following because this is the proper layout that should be used
  ! to compute the local sizes for the following loop. ECG
- call compute_local_sizes_4d( sim%sequential_v1v2x1, loc_sz_v1, loc_sz_v2, &
+ call compute_local_sizes_4d( sim%sequential_v1v2_layout, loc_sz_v1, loc_sz_v2, &
       loc_sz_x1, loc_sz_x2 )
 
- do jc=1,loc_sz_x2
-    do ic=0,loc_sz_x1-1
-       icL=ic
-       if (icL.le.0) icL=loc_sz_x1
-       icR=ic+1
-       call fluxnum(sim,sim%fn_v1v2x1(:,:,icL,jc), &
-            sim%fn_v1v2x1(:,:,icR,jc),vn,flux)
-       sim%dtfn_v1v2x1(:,:,icL,jc)=sim%dtfn_v1v2x1(:,:,icL,jc)-flux
-       sim%dtfn_v1v2x1(:,:,icR,jc)=sim%dtfn_v1v2x1(:,:,icR,jc)+flux
+!communication pour les processors
+ sim%buf1 => get_buffer(sim%comm,1) 
+ do k=1,loc_sz_x2
+    do j=1,loc_sz_v2
+       do i=1, loc_sz_v1
+          sim%buf1(i+(j-1)*loc_sz_v1+(k-1)*loc_sz_v1*loc_sz_v2) &
+               = sim%fn_v1v2(i,j,1,k)
+       end do
     end do
  end do
+ call comm_send_real64(sim%comm,1,loc_sz_v1*loc_sz_v2*loc_sz_x2)
+ sim%buf2 => get_buffer(sim%comm,2) 
+ do k=1,loc_sz_x2
+    do j=1,loc_sz_v2
+       do i=1, loc_sz_v1
+          sim%buf2(i+(j-1)*loc_sz_v1+(k-1)*loc_sz_v1*loc_sz_v2) &
+               = sim%fn_v1v2(i,j,loc_sz_x1,k)
+       end do
+    end do
+ end do
+ call comm_send_real64(sim%comm,2,loc_sz_v1*loc_sz_v2*loc_sz_x2)
+ sim%buf3 => get_buffer(sim%comm,3) 
+ do k=1,loc_sz_x1
+    do j=1,loc_sz_v2
+       do i=1, loc_sz_v1
+          sim%buf3(i+(j-1)*loc_sz_v1+(k-1)*loc_sz_v1*loc_sz_v2) &
+               = sim%fn_v1v2(i,j,k,1)
+       end do
+    end do
+ end do
+ call comm_send_real64(sim%comm,3,loc_sz_v1*loc_sz_v2*loc_sz_x1)
+ sim%buf4 => get_buffer(sim%comm,4) 
+ do k=1,loc_sz_x1
+    do j=1,loc_sz_v2
+       do i=1, loc_sz_v1
+          sim%buf4(i+(j-1)*loc_sz_v1+(k-1)*loc_sz_v1*loc_sz_v2) &
+               = sim%fn_v1v2(i,j,k,loc_sz_x2)
+       end do
+    end do
+ end do
+ call comm_send_real64(sim%comm,4,loc_sz_v1*loc_sz_v2*loc_sz_x1)
 
- !write(*,*) 'sim%dtfn_v1v2x1',maxval(abs(sim%dtfn_v1v2x1(1,1,:,:)))
+ do jc=1,loc_sz_x2
+    do ic=1,loc_sz_x1-1
+       icL=ic
+       icR=ic+1
+       call fluxnum(sim,sim%fn_v1v2(:,:,icL,jc), &
+            sim%fn_v1v2(:,:,icR,jc),vn,flux)
+       sim%dtfn_v1v2(:,:,icL,jc)=sim%dtfn_v1v2(:,:,icL,jc)-flux
+       sim%dtfn_v1v2(:,:,icR,jc)=sim%dtfn_v1v2(:,:,icR,jc)+flux
+    end do
+ end do
+ call comm_receive_real64(sim%comm,1,count1)
+ call comm_receive_real64(sim%comm,2,count2)
+ if ((count1.ne.loc_sz_v1*loc_sz_v2*loc_sz_x2).or. &
+      (count2.ne.loc_sz_v1*loc_sz_v2*loc_sz_x2)) then
+    write(*,*) 'problem avec send de mpi'
+    stop
+ endif
+ sim%buf1 => get_buffer(sim%comm,1)
+ sim%buf2 => get_buffer(sim%comm,2)
+ do jc=1,loc_sz_x2
+    beg=(jc-1)*loc_sz_v1*loc_sz_v2
+    call  fluxnum(sim,sim%buf1(beg+1:beg+loc_sz_v1*loc_sz_v2), &
+         sim%fn_v1v2(:,:,1,jc),vn,flux)
+    sim%dtfn_v1v2(:,:,1,jc)=sim%dtfn_v1v2(:,:,1,jc)+flux
+    call  fluxnum(sim,sim%fn_v1v2(:,:,loc_sz_x1,jc), &
+         sim%buf2(beg+1:beg+loc_sz_v1*loc_sz_v2),vn,flux)
+    sim%dtfn_v1v2(:,:,loc_sz_x1,jc)=sim%dtfn_v1v2(:,:,loc_sz_x1,jc)-flux
+ end do
+ !write(*,*) sim%my_rank, 'planter dans dtf4'
+
+ !write(*,*) 'sim%dtfn_v1v2',maxval(abs(sim%dtfn_v1v2(1,1,:,:)))
 
  !compute the fluxes in the x2 direction
  !write(*,*) 'ENTRER DANS dtf'
  vn(1)=0 ! temporaire !!!!
  vn(2)=1*sim%surfx2(1,1)
+ !write(*,*) sim%my_rank, 'planter dans dtf1'
  do ic=1,loc_sz_x1
-    do jc=0,loc_sz_x2
+    do jc=1,loc_sz_x2-1
        jcL=jc
        jcR=jc+1
-       call fluxnum(sim,sim%fn_v1v2x1(:,:,ic,jcL), &
-            sim%fn_v1v2x1(:,:,ic,jcR),vn,flux)
-       !write(*,*) '0=', (sim%fn_v1v2x1(:,:,ic,jcR)+sim%fn_v1v2x1(:,:,ic,jcL))-flux
-       !   sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL) &
-       !        -flux/sim%mesh2dx%delta_eta2
-       !    sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR) &
-       !        +flux/sim%mesh2dx%delta_eta2
-       !flux=0
-       sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)-flux
-       sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)+flux
-!!$       sim%dtfn_v1v2x1(:,:,ic,jcL)=sim%dtfn_v1v2x1(:,:,ic,jcL)+flux
-!!$       sim%dtfn_v1v2x1(:,:,ic,jcR)=sim%dtfn_v1v2x1(:,:,ic,jcR)-flux
+       call fluxnum(sim,sim%fn_v1v2(:,:,ic,jcL), &
+            sim%fn_v1v2(:,:,ic,jcR),vn,flux)
+       sim%dtfn_v1v2(:,:,ic,jcL)=sim%dtfn_v1v2(:,:,ic,jcL)-flux
+       sim%dtfn_v1v2(:,:,ic,jcR)=sim%dtfn_v1v2(:,:,ic,jcR)+flux
     end do
  end do
-
-!!$    write(*,*) 'sim%dtfn_v1v2x1'
-!!$    do jc=0,loc_sz_x2+1
-!!$       write(*,*) jc, sim%dtfn_v1v2x1(1,1,:,jc)
-!!$    end do
-!!$ 
-
- !write(*,*) 'ici3'
- ! source terms
-! write(*,*) 'size1 phi_x1',size(sim%phi_x1(1,:)),loc_sz_x2+2
-!!$ write(*,*) 'size2 phi_x1',size(sim%phi_x1(:,1)),loc_sz_x1
-!!$ stop
-!!$write(*,*) 'phi avance = ', sim%phi_x1(:,1)
-!!$      sim%phi_x1=-sim%phi_x1
-!!$write(*,*) 'phi apres = ', sim%phi_x1(:,1)
-!!$stop
+ call comm_receive_real64(sim%comm,3,count3)
+ call comm_receive_real64(sim%comm,4,count4)
+ if ((count3.ne.loc_sz_v1*loc_sz_v2*loc_sz_x1).or. &
+      (count4.ne.loc_sz_v1*loc_sz_v2*loc_sz_x1)) then
+    write(*,*) 'problem avec send de mpi'
+    stop
+ endif
+ sim%buf3 => get_buffer(sim%comm,3)
+ sim%buf4 => get_buffer(sim%comm,4)
  do ic=1,loc_sz_x1
-    do jc=1,loc_sz_x2
+    beg=(ic-1)*loc_sz_v1*loc_sz_v2
+    call  fluxnum(sim,sim%buf3(beg+1:beg+loc_sz_v1*loc_sz_v2), &
+         sim%fn_v1v2(:,:,ic,1),vn,flux)
+    sim%dtfn_v1v2(:,:,ic,1)=sim%dtfn_v1v2(:,:,ic,1)+flux
+    call  fluxnum(sim,sim%fn_v1v2(:,:,ic,loc_sz_x2), &
+         sim%buf4(beg+1:beg+loc_sz_v1*loc_sz_v2),vn,flux)
+    sim%dtfn_v1v2(:,:,ic,loc_sz_x2)=sim%dtfn_v1v2(:,:,ic,loc_sz_x2)-flux
+ end do
+ ! pour phi
+ sim%buf1 => get_buffer(sim%comm,1) 
+ do k=1,loc_sz_x2
+    sim%buf1(k)=sim%phi_split(1,k)
+ end do
+ call comm_send_real64(sim%comm,1,loc_sz_x2)
+
+ sim%buf2 => get_buffer(sim%comm,2) 
+ do k=1,loc_sz_x2
+    sim%buf2(k)=sim%phi_split(loc_sz_x1,k)
+ end do
+ call comm_send_real64(sim%comm,2,loc_sz_x2)
+
+ sim%buf3 => get_buffer(sim%comm,3) 
+ do k=1,loc_sz_x1
+    sim%buf3(k)=sim%phi_split(k,1)
+ end do
+ call comm_send_real64(sim%comm,3,loc_sz_x1)
+
+ sim%buf4 => get_buffer(sim%comm,4) 
+ do k=1,loc_sz_x1
+    sim%buf4(k)=sim%phi_split(k,loc_sz_x2)
+ end do
+ call comm_send_real64(sim%comm,2,loc_sz_x1)
+
+ do ic=2,loc_sz_x1-1
+    do jc=2,loc_sz_x2-1
        icL=ic-1
        icR=ic+1
-       if(ic.le.1) then
-          icL=loc_sz_x1
-       elseif(ic.ge.loc_sz_x1)then
-          icR=1
-       end if
-       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, &
+       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
             (/1,1,1,1/) )
        x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
             sim%mesh2dx%delta_eta1
@@ -2299,69 +2439,237 @@ subroutine dtf(sim)
             sim%mesh2dx%delta_eta2
        jac_m=sim%tx%jacobian_matrix(x1,x2)
        inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
-!!$             !write(*,*) 'verify the matrix: (1,1)',  inv_jac(1,1)
-!!$             !write(*,*) 'verify the matrix: (1,2)',  inv_jac(1,2)
-!!$             !write(*,*) 'verify the matrix: (2,1)',  inv_jac(2,1)
-!!$             !write(*,*) 'verify the matrix: (2,2)',  inv_jac(2,2)
-   
+       Ex=-(sim%phi_split(icR,jc)-sim%phi_split(icL,jc))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(ic,jc+1)- &
+            sim%phi_split(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%phi_split(ic,jc+1)-sim%phi_split(ic,jc-1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,jc)- &
+            sim%phi_split(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
 
-       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-
-
-
-!!$       Ex=(sim%phi_x1(icR,jc)-sim%phi_x1(icL,jc))/2/ &
-!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-!!$            sim%phi_x1(ic,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$       Ey=(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc-1))/2/ &
-!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-!!$            sim%phi_x1(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-!!$       write(*,*) 'inv_jac(1,1)',inv_jac(1,1)
-!!$       write(*,*) 'inv_jac(2,1)',inv_jac(2,1)
-!!$       write(*,*) 'inv_jac(2,1)',inv_jac(1,2)
-!!$       stop
-!!$       Ex=-(sim%phi_x1(icR,jc)-sim%phi_x1(ic,jc))/ &
-!!$            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_x1(ic,jc+1)- &
-!!$            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$       Ey=-(sim%phi_x1(ic,jc+1)-sim%phi_x1(ic,jc))/ &
-!!$            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_x1(icR,jc)- &
-!!$            sim%phi_x1(ic,jc))/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-       call sourcenum(sim,Ex,Ey,sim%fn_v1v2x1(:,:,ic,jc), &
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,ic,jc), &
             source)
-       !write(*,*) 'Ex',Ex,'Ey',Ey, 'source',source
-       !write(*,*) 'Ey avance = ', Ey
-!!$          write(*,*) 'source = ', source
-!!$          write(*,*) 'coucou'
-       !          stop
 
-       temp=sim%dtfn_v1v2x1(:,:,ic,jc)-sim%volume(1,1)*source
-!!$          sim%dtfn_v1v2x1(:,:,ic,jc)=sim%dtfn_v1v2x1(:,:,ic,jc)+sim%volume(1,1)*source
-          !write(*,*) 'volume1 = ',sim%volume(1,1)
-          !stop
+
+       temp=sim%dtfn_v1v2(:,:,ic,jc)-sim%volume(1,1)*source
+
        call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
             sim%mkld, &
-            sim%dtfn_v1v2x1(:,:,ic,jc),&
+            sim%dtfn_v1v2(:,:,ic,jc),&
+            sim%np_v1*sim%np_v2, &
+            mp,ifac,isol,nsym,void,ierr,&
+            sim%nsky)
+
+    end do
+ end do
+
+ call comm_receive_real64(sim%comm,3,count3)
+ call comm_receive_real64(sim%comm,4,count4)
+ if ((count3.ne.loc_sz_x1).or.(count4.ne.loc_sz_x1)) then
+    write(*,*) 'problem avec send de mpi'
+    stop
+ endif
+ sim%buf3 => get_buffer(sim%comm,3)
+ sim%buf4 => get_buffer(sim%comm,4)
+
+ do ic=2,loc_sz_x1-1
+    icL=ic-1
+    icR=ic+1
+    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+         (/1,1,1,1/) )
+    x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+         sim%mesh2dx%delta_eta1
+    x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+         sim%mesh2dx%delta_eta2
+    jac_m=sim%tx%jacobian_matrix(x1,x2)
+    inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+
+    Ex=-(sim%phi_split(icR,1)-sim%phi_split(icL,1))/2/ &
+         sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(ic,2)- &
+         sim%buf3(ic))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+    Ey=-(sim%phi_split(ic,2)-sim%buf3(ic))/2/ &
+         sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,1)- &
+         sim%phi_split(icL,1))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+    call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,ic,1), &
+         source)
+    temp=sim%dtfn_v1v2(:,:,ic,1)-sim%volume(1,1)*source
+    call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+         sim%mkld, &
+         sim%dtfn_v1v2(:,:,ic,1),&
+         sim%np_v1*sim%np_v2, &
+         mp,ifac,isol,nsym,void,ierr,&
+         sim%nsky)
+
+    Ex=-(sim%phi_split(icR,loc_sz_x2)-sim%phi_split(icL,loc_sz_x2))/2/ &
+         sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%buf4(ic)- &
+         sim%phi_split(ic,loc_sz_x2-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+    Ey=-(sim%buf4(ic)-sim%phi_split(ic,loc_sz_x2-1))/2/ &
+         sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,loc_sz_x2)- &
+         sim%phi_split(icL,loc_sz_x2))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+    call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,ic,loc_sz_x2), &
+         source)
+    temp=sim%dtfn_v1v2(:,:,ic,loc_sz_x2)-sim%volume(1,1)*source
+    call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+         sim%mkld, &
+         sim%dtfn_v1v2(:,:,ic,loc_sz_x2),&
+         sim%np_v1*sim%np_v2, &
+         mp,ifac,isol,nsym,void,ierr,&
+         sim%nsky)
+ end do
+
+ call comm_receive_real64(sim%comm,1,count1)
+ call comm_receive_real64(sim%comm,2,count2)
+ if ((count1.ne.loc_sz_x2).or.(count2.ne.loc_sz_x2)) then
+    write(*,*) 'problem avec send de mpi'
+    stop
+ endif
+ sim%buf1 => get_buffer(sim%comm,1)
+ sim%buf2 => get_buffer(sim%comm,2)
+!pour ic=1
+ do jc=2,loc_sz_x2-1
+       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+            (/1,1,1,1/) )
+       x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+            sim%mesh2dx%delta_eta1
+       x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+            sim%mesh2dx%delta_eta2
+       jac_m=sim%tx%jacobian_matrix(x1,x2)
+       inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+       Ex=-(sim%phi_split(2,jc)-sim%buf1(jc))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(1,jc+1)- &
+            sim%phi_split(1,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%phi_split(1,jc+1)-sim%phi_split(1,jc-1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(2,jc)- &
+            sim%buf1(jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,1,jc), &
+            source)
+
+
+       temp=sim%dtfn_v1v2(:,:,1,jc)-sim%volume(1,1)*source
+
+       call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+            sim%mkld, &
+            sim%dtfn_v1v2(:,:,1,jc),&
+            sim%np_v1*sim%np_v2, &
+            mp,ifac,isol,nsym,void,ierr,&
+            sim%nsky)
+
+    end do
+!pour ic=loc_sz_x1
+ do jc=2,loc_sz_x2-1
+       global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
+            (/1,1,1,1/) )
+       x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
+            sim%mesh2dx%delta_eta1
+       x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
+            sim%mesh2dx%delta_eta2
+       jac_m=sim%tx%jacobian_matrix(x1,x2)
+       inv_jac=sim%tx%inverse_jacobian_matrix(x1,x2)
+       Ex=-(sim%buf2(jc)-sim%phi_split(loc_sz_x1-1,jc))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(loc_sz_x1,jc+1)- &
+            sim%phi_split(loc_sz_x1,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%phi_split(loc_sz_x1,jc+1)-sim%phi_split(loc_sz_x1,jc-1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%buf2(jc)- &
+            sim%phi_split(loc_sz_x1-1,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,loc_sz_x1,jc), &
+            source)
+
+
+       temp=sim%dtfn_v1v2(:,:,loc_sz_x1,jc)-sim%volume(1,1)*source
+
+       call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+            sim%mkld, &
+            sim%dtfn_v1v2(:,:,loc_sz_x1,jc),&
+            sim%np_v1*sim%np_v2, &
+            mp,ifac,isol,nsym,void,ierr,&
+            sim%nsky)
+
+    end do
+!pour ic=1 et jc=1
+  Ex=-(sim%phi_split(2,1)-sim%buf1(1))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(1,2)- &
+            sim%buf3(1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%phi_split(1,2)-sim%buf3(1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(2,1)- &
+            sim%buf1(1))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,1,1), &
+            source)
+
+
+       temp=sim%dtfn_v1v2(:,:,1,1)-sim%volume(1,1)*source
+
+       call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+            sim%mkld, &
+            sim%dtfn_v1v2(:,:,1,1),&
+            sim%np_v1*sim%np_v2, &
+            mp,ifac,isol,nsym,void,ierr,&
+            sim%nsky)
+!pour ic=1 et jc=loc_sz_x2
+      Ex=-(sim%phi_split(2,loc_sz_x2)-sim%buf1(loc_sz_x2))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%buf2(1)- &
+            sim%phi_split(1,loc_sz_x2-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%buf2(1)-sim%phi_split(1,loc_sz_x2-1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(2,loc_sz_x2)- &
+            sim%buf1(loc_sz_x2))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,1,loc_sz_x2), &
+            source)
+
+
+       temp=sim%dtfn_v1v2(:,:,1,loc_sz_x2)-sim%volume(1,1)*source
+
+       call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+            sim%mkld, &
+            sim%dtfn_v1v2(:,:,1,loc_sz_x2),&
+            sim%np_v1*sim%np_v2, &
+            mp,ifac,isol,nsym,void,ierr,&
+            sim%nsky)
+!pour ic=loc_sz_x1 et jc=1
+       Ex=-(sim%buf2(1)-sim%phi_split(loc_sz_x1-1,1))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(loc_sz_x1,2)- &
+            sim%buf3(loc_sz_x1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%phi_split(loc_sz_x1,2)-sim%buf3(loc_sz_x1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%buf2(1)- &
+            sim%phi_split(loc_sz_x1-1,1))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,loc_sz_x1,1), &
+            source)
+
+
+       temp=sim%dtfn_v1v2(:,:,loc_sz_x1,1)-sim%volume(1,1)*source
+
+       call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+            sim%mkld, &
+            sim%dtfn_v1v2(:,:,loc_sz_x1,1),&
+            sim%np_v1*sim%np_v2, &
+            mp,ifac,isol,nsym,void,ierr,&
+            sim%nsky)
+       !pour ic=loc_sz_x1 et jc=loc_sz_x2
+       Ex=-(sim%buf2(loc_sz_x2)-sim%phi_split(loc_sz_x1-1,loc_sz_x2))/2/ &
+            sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%buf4(loc_sz_x1)- &
+            sim%phi_split(loc_sz_x1,loc_sz_x2-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
+       Ey=-(sim%buf4(loc_sz_x1)-sim%phi_split(loc_sz_x1,loc_sz_x2-1))/2/ &
+            sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%buf2(loc_sz_x2)- &
+            sim%phi_split(loc_sz_x1-1,loc_sz_x2))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
+
+       call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,loc_sz_x1,loc_sz_x2), &
+            source)
+
+
+       temp=sim%dtfn_v1v2(:,:,loc_sz_x1,loc_sz_x2)-sim%volume(1,1)*source
+
+       call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
+            sim%mkld, &
+            sim%dtfn_v1v2(:,:,loc_sz_x1,loc_sz_x2),&
             sim%np_v1*sim%np_v2, &
             mp,ifac,isol,nsym,void,ierr,&
             sim%nsky)
 
 
 
-       !if we call the sol here, it means that we have to call many times
-       !so if we call the sol out of the loop so we have to call it only 
-       !one time and we have juste modify the temp=>vector,no?
-    end do
- end do
-!stop
- !write(*,*) 'sim%dtfn_v1v2x1'
-!!$          do jc=0,loc_sz_x2+1
-!!$             write(*,*) jc, sim%dtfn_v1v2x1(1,1,:,jc)
-!!$          end do
-!!$          stop
+
 
  SLL_DEALLOCATE_ARRAY(flux,ierr)
  SLL_DEALLOCATE_ARRAY(temp,ierr)
@@ -2374,130 +2682,123 @@ subroutine euler(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
  sll_int32 :: jc
  sll_int32  :: loc_sz_x2,loc_sz_x1
- call compute_local_sizes_2d( sim%phi_seq_x1, loc_sz_x1, loc_sz_x2)
+ call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
  ! mpi communications
- !write(*,*) 'sim%dtfn_v1v2x1= ', sim%dtfn_v1v2x1
+ !write(*,*) 'sim%dtfn_v1v2= ', sim%dtfn_v1v2
 !!$    do jc=0,loc_sz_x2+1
-!!$       write(*,*) 'avant',jc, sim%fn_v1v2x1(1,1,:,jc)
+!!$       write(*,*) 'avant',jc, sim%fn_v1v2(1,1,:,jc)
 !!$    end do
- call mpi_comm(sim)
 !!$    do jc=0,loc_sz_x2+1
-!!$       write(*,*) 'apres',jc, sim%fn_v1v2x1(1,1,:,jc)
+!!$       write(*,*) 'apres',jc, sim%fn_v1v2(1,1,:,jc)
 !!$    end do
  !write(*,*) 'ici1'
  call dtf(sim)
  !write(*,*) 'ici2'
 !!$    do jc=0,loc_sz_x2+1
-!!$       write(*,*) 'apres',jc, sim%dtfn_v1v2x1(1,1,:,jc)
+!!$       write(*,*) 'apres',jc, sim%dtfn_v1v2(1,1,:,jc)
 !!$    end do
  !stop
- !write(*,*) 'fist call dtf: sim%dtfn_v1v2x1= ', sim%dtfn_v1v2x1
-!!$    sim%fn_v1v2x1 = sim%fn_v1v2x1 &
-!!$         + sim%dt*sim%dtfn_v1v2x1/sim%volume(1,1)
- sim%fn_v1v2x1 = sim%fn_v1v2x1 &
-      +sim%dtfn_v1v2x1/sim%volume(1,1)*sim%dt
+ !write(*,*) 'fist call dtf: sim%dtfn_v1v2= ', sim%dtfn_v1v2
+!!$    sim%fn_v1v2 = sim%fn_v1v2 &
+!!$         + sim%dt*sim%dtfn_v1v2/sim%volume(1,1)
+ sim%fn_v1v2 = sim%fn_v1v2 &
+      +sim%dtfn_v1v2/sim%volume(1,1)*sim%dt
  !write(*,*) 'volume = ',sim%volume(1,1)
  !stop
 !!$    do jc=0,loc_sz_x2+1
-!!$       write(*,*) 'apres',jc, sim%fn_v1v2x1(1,1,:,jc)
+!!$       write(*,*) 'apres',jc, sim%fn_v1v2(1,1,:,jc)
 !!$    end do
- !write(*,*) 'second call dtf: sim%dtfn_v1v2x1= ', sim%dtfn_v1v2x1
+ !write(*,*) 'second call dtf: sim%dtfn_v1v2= ', sim%dtfn_v1v2
 end subroutine euler
 
 subroutine RK2(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
- ! mpi communications
- call mpi_comm(sim)
  call dtf(sim)
- sim%fnp1_v1v2x1 = sim%fn_v1v2x1
- sim%fn_v1v2x1 = sim%fn_v1v2x1 &
-      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
-!!$    write(*,*) sim%dtfn_v1v2x1
-!!$    stop
- call mpi_comm(sim)
+ sim%fnp1_v1v2 = sim%fn_v1v2
+ sim%fn_v1v2 = sim%fn_v1v2 &
+      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2
  call dtf(sim)
- sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
-      + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2x1
+ sim%fn_v1v2 = sim%fnp1_v1v2 &
+      + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2
 end subroutine RK2
 
 subroutine RK4(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
- ! mpi communications
- call mpi_comm(sim)
  call dtf(sim)
- sim%fn_star_v1v2x1 = sim%fn_v1v2x1
- sim%fn_v1v2x1 = sim%fn_star_v1v2x1 &
-      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
- sim%fnp1_v1v2x1 = sim%fn_star_v1v2x1+sim%dt/6/sim%volume(1,1) &
-      *sim%dtfn_v1v2x1
- call mpi_comm(sim)
+ sim%fn_star_v1v2 = sim%fn_v1v2
+ sim%fn_v1v2 = sim%fn_star_v1v2 &
+      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2
+ sim%fnp1_v1v2 = sim%fn_star_v1v2+sim%dt/6/sim%volume(1,1) &
+      *sim%dtfn_v1v2
  call dtf(sim)
- sim%fn_v1v2x1 = sim%fn_star_v1v2x1 &
-      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2x1
- sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%dt/3/sim%volume(1,1) &
-      *sim%dtfn_v1v2x1
- call mpi_comm(sim)
+ sim%fn_v1v2 = sim%fn_star_v1v2 &
+      + sim%dt/2/sim%volume(1,1)*sim%dtfn_v1v2
+ sim%fnp1_v1v2 = sim%fnp1_v1v2+sim%dt/3/sim%volume(1,1) &
+      *sim%dtfn_v1v2
  call dtf(sim)
- sim%fn_v1v2x1 = sim%fn_star_v1v2x1 &
-      + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2x1
- sim%fnp1_v1v2x1 = sim%fnp1_v1v2x1+sim%dt/3/sim%volume(1,1) &
-      *sim%dtfn_v1v2x1
- call mpi_comm(sim)
+ sim%fn_v1v2 = sim%fn_star_v1v2 &
+      + sim%dt/sim%volume(1,1)*sim%dtfn_v1v2
+ sim%fnp1_v1v2 = sim%fnp1_v1v2+sim%dt/3/sim%volume(1,1) &
+      *sim%dtfn_v1v2
  call dtf(sim)
- sim%fn_v1v2x1 = sim%fnp1_v1v2x1 &
-      + sim%dt/6/sim%volume(1,1)*sim%dtfn_v1v2x1
+ sim%fn_v1v2 = sim%fnp1_v1v2 &
+      + sim%dt/6/sim%volume(1,1)*sim%dtfn_v1v2
 end subroutine RK4
 
-subroutine mpi_comm(sim)
- class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
- sll_int32 :: ierr
- sll_int32  :: loc_sz_v1
- sll_int32  :: loc_sz_v2
- sll_int32  :: loc_sz_x1
- sll_int32  :: loc_sz_x2
- sll_int32  :: ranktop
- sll_int32  :: rankbottom
- sll_int32  :: datasize,datasizephi
-
- call compute_local_sizes_4d( sim%sequential_v1v2x1, &
-      loc_sz_v1, &
-      loc_sz_v2, &
-      loc_sz_x1, &
-      loc_sz_x2 )
- ranktop=mod(sim%my_rank+1,sim%world_size)
- rankbottom=sim%my_rank-1
- if (rankbottom.lt.0) rankbottom=sim%world_size-1
- datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
- datasizephi=loc_sz_x1
-
- Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,loc_sz_x2),datasize, &
-      MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-      sim%fn_v1v2x1(1,1,1,0),datasize,            &
-      MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
-
- Call mpi_SENDRECV(sim%phi_x1(1,loc_sz_x2),datasizephi, &
-      MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
-      sim%phi_x1(1,0),datasizephi,            &
-      MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
-      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
-
- ! bottom communications
- Call mpi_SENDRECV(sim%fn_v1v2x1(1,1,1,1),datasize, &
-      MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-      sim%fn_v1v2x1(1,1,1,loc_sz_x2+1),datasize,            &
-      MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
-
- Call mpi_SENDRECV(sim%phi_x1(1,1),datasizephi, &
-      MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
-      sim%phi_x1(1,loc_sz_x2+1),datasizephi,            &
-      MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
-      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
-
-
-
-end subroutine mpi_comm
+!!$subroutine mpi_comm(sim)
+!!$ class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+!!$ sll_int32 :: ierr
+!!$ sll_int32  :: loc_sz_v1
+!!$ sll_int32  :: loc_sz_v2
+!!$ sll_int32  :: loc_sz_x1
+!!$ sll_int32  :: loc_sz_x2
+!!$ sll_int32  :: ranktop
+!!$ sll_int32  :: rankbottom
+!!$ sll_int32  :: rankright
+!!$ sll_int32  :: rankleft
+!!$ sll_int32  :: datasize,datasizephi
+!!$
+!!$ call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+!!$      loc_sz_v1, &
+!!$      loc_sz_v2, &
+!!$      loc_sz_x1, &
+!!$      loc_sz_x2 )
+!!$ ranktop=mod(sim%my_rank+1,sim%world_size)
+!!$ rankbottom=sim%my_rank-1
+!!$ ranktop=mod(sim%my_rank+1,sim%world_size)
+!!$ rankbottom=sim%my_rank-1
+!!$ if (rankbottom.lt.0) rankbottom=sim%world_size-1
+!!$ datasize=loc_sz_v1*loc_sz_v2*loc_sz_x1
+!!$ datasizephi=loc_sz_x1
+!!$
+!!$ Call mpi_SENDRECV(sim%fn_v1v2(1,1,1,loc_sz_x2),datasize, &
+!!$      MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+!!$      sim%fn_v1v2(1,1,1,0),datasize,            &
+!!$      MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+!!$      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+!!$
+!!$ Call mpi_SENDRECV(sim%phi_split(1,loc_sz_x2),datasizephi, &
+!!$      MPI_DOUBLE_PRECISION,ranktop,sim%my_rank,              &
+!!$      sim%phi_split(1,0),datasizephi,            &
+!!$      MPI_DOUBLE_PRECISION,rankbottom,rankbottom,              &
+!!$      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)   
+!!$
+!!$ ! bottom communications
+!!$ Call mpi_SENDRECV(sim%fn_v1v2(1,1,1,1),datasize, &
+!!$      MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+!!$      sim%fn_v1v2(1,1,1,loc_sz_x2+1),datasize,            &
+!!$      MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+!!$      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+!!$
+!!$ Call mpi_SENDRECV(sim%phi_split(1,1),datasizephi, &
+!!$      MPI_DOUBLE_PRECISION,rankbottom,sim%my_rank,              &
+!!$      sim%phi_split(1,loc_sz_x2+1),datasizephi,            &
+!!$      MPI_DOUBLE_PRECISION,ranktop,ranktop,              &
+!!$      MPI_COMM_WORLD,MPI_STATUS_IGNORE ,ierr)       
+!!$
+!!$
+!!$
+!!$end subroutine mpi_comm
 
 !compute the L2 norm for the test cases in one dimension
 subroutine normL2(sim,w1,w2,res)
@@ -2541,7 +2842,7 @@ subroutine fn_L2_norm(sim,norml2_glob)
   SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
   call lag_gauss(sim%degree,gauss,weight,lag,dlag)
 
-  call compute_local_sizes_4d( sim%sequential_v1v2x1, &
+  call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
        loc_sz_v1, &
        loc_sz_v2, &
        loc_sz_x1, &
@@ -2549,7 +2850,7 @@ subroutine fn_L2_norm(sim,norml2_glob)
 
 
 
-  global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+  global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
 
   ! loop on cells and elems
   normL2=0
@@ -2580,7 +2881,7 @@ subroutine fn_L2_norm(sim,norml2_glob)
                        do ib2=1,sim%degree+1
                           iv1=(icv1-1)*sim%degree+ib1
                           iv2=(icv2-1)*sim%degree+ib2
-                          f=f+sim%fn_v1v2x1(iv1,iv2,icx1,icx2)*lag(ib1,igv1)*lag(ib2,igv2)
+                          f=f+sim%fn_v1v2(iv1,iv2,icx1,icx2)*lag(ib1,igv1)*lag(ib2,igv2)
                        end do
                     end do
                     f=f-sim%init_func(v1,v2,x1,x2,sim%params)
