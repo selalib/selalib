@@ -90,8 +90,49 @@ contains
       res = (1.0_f64+eps*cos(k_mode*theta))
     else
       res = 0._f64  
-    endif     
+    endif 
+       
   end function sll_diocotron_initializer_2d
+  
+  function sll_diocotron_initializer_2d2( x, y, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: k_mode
+    sll_real64 :: r_minus
+    sll_real64 :: r_plus
+    sll_real64 :: r
+    sll_real64 :: theta
+
+    if( .not. present(params) ) then
+       print *, '#sll_diocotron_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = r_minus'
+       print *,'#params(2)= r_plus params(3)=epsilon param(4)=k_mode'     
+       stop
+    end if
+    SLL_ASSERT(size(params)>=4)
+    r_minus = params(1) 
+    r_plus =  params(2)
+    eps = params(3) 
+    k_mode = params(4) 
+    
+    r= sqrt(x**2+y**2)
+    
+    if (y>=0) then
+      theta = acos(x/r)
+    else
+      theta = 2._f64*sll_pi-acos(x/r)
+    endif
+    if((r>=r_minus).and.(r<=r_plus))then
+      res = (1.0_f64+eps*cos(k_mode*theta))
+    else
+      res = 0._f64  
+    endif 
+  
+  end function sll_diocotron_initializer_2d2
 
   function sll_KHP1_2d( x, y, params ) result(res)
    sll_real64 :: res
