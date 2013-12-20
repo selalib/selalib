@@ -204,7 +204,9 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_pt_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
-       print*,' first derivative in eta1 is not given in the initialization'
+       print*,field%name, &
+            'first_deriv_eta1_value_at_pt_analytic(), ERROR: ', &
+            ': first derivative in eta1 is not given in the initialization'
     end if
 
   end function first_deriv_eta1_value_at_pt_analytic
@@ -219,7 +221,9 @@ contains   ! *****************************************************************
        first_deriv_eta2_value_at_pt_analytic = &
             field%first_deriv_eta2(eta1,eta2,field%params)
     else 
-       print*,' first derivative in eta2 is not given in the initialization'
+       print*, field%name, &
+            'first_deriv_eta2_value_at_pt_analytic(), ERROR: ', &
+            ': first derivative in eta2 is not given in the initialization'
     end if
     
   end function first_deriv_eta2_value_at_pt_analytic
@@ -239,7 +243,9 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_index_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
-       print*,' first derivative in eta1 is not given in the initialization'
+       print*,field%name, &
+            'first_deriv_eta1_value_at_index_analytic(): ERROR, ', &
+            'first derivative in eta1 is not given in the initialization'
     end if
     
   end function first_deriv_eta1_value_at_index_analytic

@@ -1,6 +1,16 @@
+FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
+
+MESSAGE(STATUS "Coordinate transformation")
+MESSAGE(STATUS ${CMAKE_CURRENT_SOURCE_DIR})
+MESSAGE(STATUS ${CMAKE_BINARY_DIR})
+MESSAGE(STATUS ${TXT_FILES})
+
+FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+
 ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_coordinate_transformation_2d_base.F90
             sll_coordinate_transformations_2d.F90
+	    sll_coordinate_transformations_2d_nurbs.F90
             sll_common_coordinate_transformations.F90)
 
 TARGET_LINK_LIBRARIES(sll_coordinate_transformations sll_interpolators

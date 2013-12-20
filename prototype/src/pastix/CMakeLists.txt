@@ -54,6 +54,7 @@ IF(PASTIX_ENABLED)
      ADD_EXECUTABLE(test_pastix unit_test.F90)
      TARGET_LINK_LIBRARIES(test_pastix sll_pastix)
 
+
    ENDIF()
 
 ENDIF(PASTIX_ENABLED)

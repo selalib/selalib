@@ -26,14 +26,15 @@ program DK_hybrid_4d
   ! Parallelization initialization
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
+  print*, 'init from file'
   world_size = sll_get_collective_size(sll_world_collective)
   my_rank    = sll_get_collective_rank(sll_world_collective)
-
   ! Reading of the input file 'sim4d_DK_hybrid_input.txt'
   call getarg(1,filename)
   filename_local = trim(filename)
   call simulation%init_from_file(filename_local)
 
+  print*, 'get logical mesh 4d'
   !*** logical mesh for space coordinates ***
   logical_mesh4D => new_logical_mesh_4d( &
     simulation%nc_x1,simulation%nc_x2, &
@@ -55,8 +56,9 @@ program DK_hybrid_4d
        deriv_x1_polar_f_eta2, &
        deriv_x2_polar_f_eta1, &
        deriv_x2_polar_f_eta2, &
-       (/0.1_f64,1.0_f64/)) ! these were the default values for this map
+       (/simulation%r_min,simulation%r_max/)) ! these were the default values for this map
 
+  print*, ' transformation ok'
   !*** initialize 4D drift-kinetic Vlasov ***
   call initialize(simulation, &
     world_size, &
@@ -67,11 +69,21 @@ program DK_hybrid_4d
   if (my_rank.eq.0) &
     call transf_xy%write_to_file()
 
-  !** Fisrt step ***
+  !*** Fisrt step ***
+  if (simulation%my_rank.eq.0) &
+    print*,': ---> First step'
   call first_step_4d_DK_hybrid(simulation)
 
-!VG!  call simulation%run( )
-!VG!  call delete(simulation)
+  print*, 'first step ok'
+  !*** Global loop ***
+  if (simulation%my_rank.eq.0) &
+    print*,': ---> Run'
+  call simulation%run( )
+
+  !*** Erase the memory used for the simulation ***
+  if (simulation%my_rank.eq.0) &
+    print*,': ---> Delete'
+  call delete(simulation)
 
   print *, 'reached end of 4d DK hybrid test'
   print *, 'PASSED'

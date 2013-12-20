@@ -25,7 +25,7 @@ program collective_test
   sll_int32, allocatable, dimension(:) :: sendcounts, recvcounts
   sll_int32, allocatable, dimension(:) :: sdispls, rdispls
   
-
+  
   call sll_boot_collective()
   rank = sll_get_collective_rank( sll_world_collective )
   size = sll_get_collective_size( sll_world_collective )
