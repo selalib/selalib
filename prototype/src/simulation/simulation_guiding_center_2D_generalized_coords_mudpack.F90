@@ -145,29 +145,29 @@ contains
     !here we do all the initialization
     !in future, we will use namelist file
 
-    nb_step = 1000
-    Nc_eta1 = 256
-    Nc_eta2 = 256
+    nb_step = 600
+    Nc_eta1 = 128
+    Nc_eta2 = 128
     dt = 0.1_f64
     visu_step = 100
     
-!    initial_function_case = "SLL_KHP1"
-!    k_mode = 0.5_f64
-!    eps = 0.015_f64
-!    eta1_min = 0._f64
-!    eta1_max = 2._f64*sll_pi/k_mode
-!    eta2_min = 0._f64
-!    eta2_max = 2._f64*sll_pi
-    
-    initial_function_case = "SLL_DIOCOTRON"
-    eta1_min = 1._f64
-    eta1_max = 10._f64
+    initial_function_case = "SLL_KHP1"
+    k_mode = 0.5_f64
+    eps = 0.015_f64
+    eta1_min = 0._f64
+    eta1_max = 2._f64*sll_pi/k_mode
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
-    r_minus = 4._f64
-    r_plus = 5._f64
-    k_mode = 3
-    eps = 1.e-6_f64
+    
+    !initial_function_case = "SLL_DIOCOTRON"
+!    eta1_min = 1._f64
+!    eta1_max = 10._f64
+!    eta2_min = 0._f64
+!    eta2_max = 2._f64*sll_pi
+!    r_minus = 4._f64
+!    r_plus = 5._f64
+!    k_mode = 3
+!    eps = 1.e-6_f64
 
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
@@ -177,7 +177,7 @@ contains
     advect2d_case = "SLL_BSL" 
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-    poisson_case = "MUDPACK"   
+    poisson_case = "SLL_MUDPACK_CURVILINEAR"   
     
     sim%dt = dt
     sim%num_iterations = nb_step
@@ -213,27 +213,27 @@ contains
       eta2_min , &
       eta2_max ) 
            
-!    sim%transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_identity_transformation", &
-!       sim%mesh_2d, &
-!       identity_x1, &
-!       identity_x2, &
-!       identity_jac11, &
-!       identity_jac12, &
-!       identity_jac21, &
-!       identity_jac22, &
-!       params_mesh   )  
-       
     sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_polar_transformation", &
+       "analytic_identity_transformation", &
        sim%mesh_2d, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, &
-       params_mesh  )     
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       params_mesh   )  
+       
+ !   sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_polar_transformation", &
+!       sim%mesh_2d, &
+!       polar_x1, &
+!       polar_x2, &
+!       polar_jac11, &
+!       polar_jac12, &
+!       polar_jac21, &
+!       polar_jac22, &
+!       params_mesh  )     
 
 ! transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_collela_transformation", &
@@ -255,7 +255,7 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, & !SLL_HERMITE, &
           SLL_PERIODIC)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
@@ -276,7 +276,7 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, & !SLL_HERMITE, &
           SLL_PERIODIC)
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
@@ -285,18 +285,18 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, & !SLL_HERMITE, &
           SLL_PERIODIC)  
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_HERMITE)
+          SLL_PERIODIC) !SLL_HERMITE)
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_HERMITE)
+          SLL_PERIODIC) !SLL_HERMITE)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -313,7 +313,7 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, & !SLL_HERMITE, &
           SLL_PERIODIC)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
@@ -332,7 +332,7 @@ contains
           eta1_max=eta1_max, &
           eta2_min=eta2_min, &
           eta2_max=eta2_max, &
-          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_1=SLL_PERIODIC, & !SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC)    
       case ("SLL_VERLET")      
         charac2d => new_verlet_2d_charac(&
@@ -342,7 +342,7 @@ contains
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_1=SLL_PERIODIC, & !SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC, &
           eta1_min=eta1_min, &
           eta1_max=eta1_max, &
@@ -384,7 +384,7 @@ contains
         sim%params(1) = eps
         sim%params(2) = k_mode
       case("SLL_DIOCOTRON")
-        sim%init_func => sll_diocotron_initializer_2d
+        sim%init_func => sll_diocotron_initializer_2d2
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = r_minus
         sim%params(2) = r_plus
@@ -417,7 +417,7 @@ contains
     !poisson solver
      !poisson solver
     select case(poisson_case)    
-      case ("MUDPACK")     
+      case ("SLL_MUDPACK_CURVILINEAR")     
         call initialize_poisson_curvilinear_mudpack(sim%poisson,&
          sim%transformation, &
          sim%b11,&
@@ -513,14 +513,12 @@ contains
         eta2=eta2_min+real(i2-1,f64)*delta_eta2
         do i1=1,Nc_eta1+1
           eta1=eta1_min+real(i1-1,f64)*delta_eta1
-          !x1 = sim%transformation%x1(eta1,eta2)
-          !x2 = sim%transformation%x2(eta1,eta2)
-          f(i1,i2) =  sim%init_func(eta1,eta2,sim%params) 
-          phi(1,i2) = 0._f64
-          phi(Nc_eta1+1,i2) = 0._f64
+          x1 = sim%transformation%x1(eta1,eta2)
+          x2 = sim%transformation%x2(eta1,eta2)
+          f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
         end do
      end do
-        
+  
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
     call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
@@ -550,16 +548,7 @@ contains
       call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
-!        call time_history_diagnostic_gc_cartesian( &
-!          diag_id, &    
-!          step-1, &
-!          dt, &
-!          sim%mesh_2d, &
-!          f, &
-!          phi, &
-!          A1, &
-!          A2)
-          call time_history_diagnostic_gc_cartesian2( &
+        call time_history_diagnostic_gc_cartesian( &
           diag_id, &    
           step-1, &
           dt, &
@@ -568,6 +557,15 @@ contains
           phi, &
           A1, &
           A2)
+!          call time_history_diagnostic_gc_cartesian2( &
+!          diag_id, &    
+!          step-1, &
+!          dt, &
+!          sim%mesh_2d, &
+!          f, &
+!          phi, &
+!          A1, &
+!          A2)
       endif            
      
       if(modulo(step-1,sim%freq_diag)==0)then
