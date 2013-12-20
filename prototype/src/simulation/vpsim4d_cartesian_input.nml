@@ -1,17 +1,7 @@
-! PARAMETERS ARE SET FOR THE FOLLOWING GNUPLOT DIAGNOSTIC
-! script to put in ../post_proc/vp4d_sim.gnu
-!set term aqua 1 fsize 20
-!set logscale y
-!p 'thdiag.dat' u ($1):(sqrt($2)) w lp lw 2, \
-!  '../post_proc/vp4d_sim_ref_16.dat' u ($1):(sqrt($2)) w l lw 2 title 'reference 16', \
-!  '../post_proc/vp4d_sim_ref_32.dat' u ($1):(sqrt($2)) w l lw 2 title 'reference 32', \
-!  7.e-3*exp(-0.394*x) lw 2
-!execution:
 !ctest --verbose -R sim4d_vp_cart
-!or:
+!or
 !time mpirun -np 8 ./bin/test_4d_vp_cartesian ../selalib/prototype/src/simulation/vpsim4d_cartesian_input
-!diagnostic:
-!gnuplot -persist ../post_proc/vp4d_sim.gnu
+!gnuplot -persist ../selalib/prototype/src/simulation/vpsim4d_cartesian.gnu
 
 &geometry
   mesh_case_x1="SLL_LANDAU_MESH"
