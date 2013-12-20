@@ -314,6 +314,7 @@ contains !************************** Operations **************************
 
     SLL_ALLOCATE( sll_world_collective, ierr )
 
+
 #ifndef MPI_THREAD_MULTIPLE
 
     call MPI_Init(ierr)
