@@ -21,4 +21,8 @@
 use sll_sparse
 use sll_linear_solvers
 
+#ifdef PASTIX
+use sll_pastix
+#endif
+
 #endif
