@@ -15,7 +15,6 @@ ADD_EXECUTABLE(test_scalar_field_alternative
 
 TARGET_LINK_LIBRARIES(test_scalar_field_alternative sll_scalar_field_2d_alternative)
 
-
 SET(SLL_SCALAR_FIELD_SRCS sll_scalar_field_1d.F90
                           scalar_field_initializer_base.F90
                           sll_scalar_field_2d_base.F90
@@ -27,6 +26,19 @@ SET(SLL_SCALAR_FIELD_SRCS sll_scalar_field_1d.F90
                           tsi_2d_initializer.F90)
 
 
+ADD_LIBRARY(sll_scalar_field_1d_alternative STATIC 
+               sll_scalar_field_1d_base_alternative.F90
+               sll_scalar_field_1d_alternative.F90)		
+
+TARGET_LINK_LIBRARIES(sll_scalar_field_1d_alternative
+                      sll_logical_meshes
+                      sll_interpolators
+                      sll_file_io
+                      sll_utilities)
+
+ADD_EXECUTABLE(test_scalar_fields_1d_alternative unit_test_1d_alternative.F90)
+
+TARGET_LINK_LIBRARIES(test_scalar_fields_1d_alternative sll_scalar_field_1d_alternative)
 
 IF (MPI_MODULE_ENABLED)
    SET(SLL_SCALAR_FIELD_SRCS ${SLL_SCALAR_FIELD_SRCS}

@@ -40,10 +40,13 @@ IF (NOT STDF95)
    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_base.F90
                                     sll_poisson_2d_fft.F90
                                     sll_poisson_2d_polar_solver.F90
+                                    sll_poisson_2d_periodic_solver.F90
+                                    sll_poisson_2d_elliptic_solver.F90
                                     sll_poisson_3d_base.F90)
                                     
   IF(MUDPACK_ENABLED)                                    
-    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90)
+    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90
+                                     sll_poisson_2d_mudpack_curvilinear_solver_old.F90)
   ENDIF(MUDPACK_ENABLED)                                    
                                     
 ENDIF(NOT STDF95)
