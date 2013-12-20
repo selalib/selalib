@@ -61,6 +61,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    sll_real64, dimension(:,:), pointer :: b12
    sll_real64, dimension(:,:), pointer :: b21
    sll_real64, dimension(:,:), pointer :: b22
+   sll_real64, dimension(:,:), pointer :: b1
+   sll_real64, dimension(:,:), pointer :: b2
    sll_real64, dimension(:,:), pointer :: c
    
    !poisson solver
@@ -317,6 +319,8 @@ contains
     SLL_ALLOCATE(sim%b12(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b21(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b22(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(sim%b1(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(sim%b2(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%c(Nc_eta1+1,Nc_eta2+1),ierr)
     
     
@@ -586,6 +590,8 @@ contains
         sim%b22 = 1._f64
         sim%b12 = 0._f64
         sim%b21 = 0._f64
+        sim%b1  = 0._f64
+        sim%b2  = 0._f64
         sim%c   = 0._f64 
         
         sim%poisson => new_poisson_2d_elliptic_solver( &
@@ -608,6 +614,8 @@ contains
          sim%b12, & 
          sim%b21, & 
          sim%b22, & 
+         sim%b1, & 
+         sim%b2, & 
          sim%c ) 
       case default
         print *,'#bad poisson_case',poisson_solver
@@ -741,10 +749,12 @@ contains
           A2)
       endif            
      
+#ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
+#endif
       
       select case (sim%time_loop_case)
         case (SLL_EULER)
