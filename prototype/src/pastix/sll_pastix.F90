@@ -7,6 +7,7 @@ module sll_pastix
 #include "sll_memory.h"
 
 use sll_collective
+use sll_sparse
 
 implicit none
 private
@@ -33,10 +34,12 @@ sll_int32                             :: psize
 
 interface initialize
    module procedure initialize_pastix
+   module procedure initialize_pastix_with_csc_matrix
 end interface initialize
 
 interface solve
-   module procedure solve_pastix
+   module procedure solve_pastix_with_rhs
+   module procedure solve_pastix_without_rhs
 end interface solve
 
 interface factorize
@@ -51,11 +54,11 @@ public :: initialize, factorize, solve, delete
 
 contains
 
-subroutine initialize_pastix(this,npts,nnzero)
+subroutine initialize_pastix(this,npts,nnzeros)
 
    type(pastix_solver)   :: this
    sll_int32, intent(in) :: npts
-   pastix_int_t          :: nnzero
+   pastix_int_t          :: nnzeros
    sll_int32             :: error
 
    this%ncols = npts
@@ -69,8 +72,8 @@ subroutine initialize_pastix(this,npts,nnzero)
 
    ! Allocating
    SLL_ALLOCATE( this%colptr(1:npts+1), error)
-   SLL_ALLOCATE( this%row(1:nnzero)   , error)
-   SLL_ALLOCATE( this%avals(1:nnzero) , error)
+   SLL_ALLOCATE( this%row(1:nnzeros)   , error)
+   SLL_ALLOCATE( this%avals(1:nnzeros) , error)
    SLL_ALLOCATE( this%rhs(1:npts)     , error)
 
    ! First PaStiX call to initiate parameters
@@ -101,6 +104,57 @@ subroutine initialize_pastix(this,npts,nnzero)
 
 end subroutine initialize_pastix
 
+subroutine initialize_pastix_with_csc_matrix(this, csc_matrix)
+
+   type(pastix_solver)   :: this
+   type(sll_csc_matrix)  :: csc_matrix
+   pastix_int_t          :: npts
+   sll_int32             :: error
+
+   npts  = csc_matrix%n
+   prank = sll_get_collective_rank( sll_world_collective )
+   psize = sll_get_collective_size( sll_world_collective )
+   comm  = sll_world_collective%comm
+
+   ! Get options ftom command line
+   this%nbthread = 1
+   this%verbose  = API_VERBOSE_NO
+ 
+   
+   this%colptr => csc_matrix%colptr
+   this%row    => csc_matrix%row
+   this%avals  => csc_matrix%avals
+   SLL_ALLOCATE( this%rhs(1:npts)     , error)
+
+   ! First PaStiX call to initiate parameters
+
+   this%pastix_data                   = 0
+   this%nrhs                          = 1
+   this%iparm(IPARM_MODIFY_PARAMETER) = API_NO
+   this%iparm(IPARM_START_TASK)       = API_TASK_INIT
+   this%iparm(IPARM_END_TASK)         = API_TASK_INIT
+
+   call pastix_fortran(this%pastix_data,comm,npts,this%colptr,this%row, &
+                       this%avals,this%perm,this%invp,this%rhs,    &
+                       this%nrhs,this%iparm,this%dparm)
+
+   ! Customize some parameters
+
+   this%iparm(IPARM_THREAD_NBR) = this%nbthread  
+   this%iparm(IPARM_VERBOSE)    = this%verbose
+
+   this%iparm(IPARM_SYM)           = API_SYM_YES   ! API_SYM_NO
+   this%iparm(IPARM_FACTORIZATION) = API_FACT_LDLT ! API_FACT_LU
+
+   this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
+
+   SLL_ALLOCATE(this%perm(npts), error)
+   SLL_ALLOCATE(this%invp(npts), error)
+
+
+end subroutine initialize_pastix_with_csc_matrix
+
+
 subroutine factorize_pastix(this)
 
    type(pastix_solver) :: this
@@ -122,7 +176,7 @@ subroutine factorize_pastix(this)
 
 end subroutine factorize_pastix
 
-subroutine solve_pastix(this, sol)
+subroutine solve_pastix_without_rhs(this, sol)
 
    type(pastix_solver)      :: this
    sll_real64, dimension(:) :: sol
@@ -142,7 +196,31 @@ subroutine solve_pastix(this, sol)
 
    sol = this%rhs
 
-end subroutine solve_pastix
+end subroutine solve_pastix_without_rhs
+
+subroutine solve_pastix_with_rhs(this, rhs, sol)
+
+   type(pastix_solver)      :: this
+   sll_real64, dimension(:) :: rhs
+   sll_real64, dimension(:) :: sol
+
+   comm = sll_world_collective%comm
+
+   this%rhs = rhs
+
+   ! Call PaStiX updown and refinement
+   this%iparm(IPARM_START_TASK) = API_TASK_SOLVE
+   this%iparm(IPARM_END_TASK)   = API_TASK_REFINE
+   ! rhs will be changed to solution 
+   call pastix_fortran(this%pastix_data ,comm,                  &
+                       this%ncols,this%colptr,this%row,         &
+                       this%avals,this%perm,this%invp,          &
+                       this%rhs,this%nrhs,this%iparm,this%dparm)
+
+   sol = this%rhs
+
+
+end subroutine solve_pastix_with_rhs
 
 subroutine delete_pastix(this)
 
