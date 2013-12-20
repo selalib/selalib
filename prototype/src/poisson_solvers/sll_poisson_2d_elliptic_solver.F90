@@ -1,3 +1,27 @@
+!**************************************************************
+!**************************************************************
+!  Copyright INRIA
+!  Authors : 
+!     CALVI project team
+!  
+!  This code SeLaLib (for Semi-Lagrangian-Library) 
+!  is a parallel library for simulating the plasma turbulence 
+!  in a tokamak.
+!  
+!  This software is governed by the CeCILL-B license 
+!  under French law and abiding by the rules of distribution 
+!  of free software.  You can  use, modify and redistribute 
+!  the software under the terms of the CeCILL-B license as 
+!  circulated by CEA, CNRS and INRIA at the following URL
+!  "http://www.cecill.info". 
+!**************************************************************
+!> @author
+!> Adnane Hamiaz (hamiaz@math.unistra.fr)
+!> Michel Mehrenberger (mehrenbe@math.unistra.fr)
+!**************************************************************
+
+
+
 module sll_module_poisson_2d_elliptic_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -276,7 +300,8 @@ contains
          bc_eta2_right)
    
     call poisson%rho_field%set_field_data( rho_values )
-    call poisson%rho_field%update_interpolation_coefficients( )   
+    call poisson%rho_field%update_interpolation_coefficients( )
+       
     poisson%elliptic_solver => new_general_elliptic_solver( &
         spline_degree_eta1, &
         spline_degree_eta2, &
