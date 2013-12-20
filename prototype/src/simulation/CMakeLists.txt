@@ -198,7 +198,8 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_interpolators
                        sll_advection
                        sll_splines
-                       sll_parallel_array_initializers	
+                       sll_parallel_array_initializers
+		       sll_point_to_point_communications	
                        sll_remap
                        sll_collective
                        sll_parallel_utilities
