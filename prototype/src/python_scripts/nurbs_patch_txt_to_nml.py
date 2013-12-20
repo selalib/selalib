@@ -100,8 +100,8 @@ def main ():
     tokens  = []
     knots1_is_written = False
     knots  = []
-    knots1 = ""
-    knots2 = ""
+    knots1 = []
+    knots2 = []
     x1 = []
     x2 = []
     wgts = []
@@ -172,7 +172,6 @@ def main ():
         writefile.write("/" + "\n\n")
 
         linelist = readfile.readlines()
-
         for line in linelist:
             linetemp = line.split() # split in constituent tokens
             if len(linetemp) > 0:
@@ -260,10 +259,13 @@ def main ():
                             continue
                     else:       # just reading knots data
                         if knots1_is_written == False: 
-                            knots1 = knots1 + " ".join(linetemp)
+                            print(linetemp)
+                            knots1.extend(linetemp)
+#                            knots1 = knots1 + "".join(linetemp)
                             continue
                         else:
-                            knots2 = knots2 + " ".join(linetemp)
+                            knots2.extend(linetemp)
+#                            knots2 = knots2 + " ".join(linetemp)
                             continue
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
