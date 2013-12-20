@@ -42,7 +42,7 @@
 &sim_params
   dt                = 32
   !number_iterations = 100
-  number_iterations = 5
+  number_iterations = 2
   freq_diag_time = 1
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
   time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
