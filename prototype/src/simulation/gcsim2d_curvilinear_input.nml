@@ -1,10 +1,5 @@
-!execution:
 !./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input
-!diagnostic:
-! for changing parameters:
-! copy ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input.nml
-! in build/my_gcsim2d_curvilinear_input.nml and modif
-! execute ./bin/test_2d_gc_curvilinear my_gcsim2d_curvilinear_input
+!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear.gnu
 
 
 &geometry
