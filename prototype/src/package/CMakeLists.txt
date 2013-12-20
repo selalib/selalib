@@ -58,6 +58,24 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
+    ${SLL_DIR}/deboor_splines/dvalue1d.f90
+    ${SLL_DIR}/deboor_splines/bvalue2d.f90
+    ${SLL_DIR}/deboor_splines/dvalue2d.f90
+    ${SLL_DIR}/deboor_splines/bsplvb.f90
+    ${SLL_DIR}/deboor_splines/bvalue.f90
+    ${SLL_DIR}/deboor_splines/spli1d_per.f90
+    ${SLL_DIR}/deboor_splines/spli1d_dir.f90
+    ${SLL_DIR}/deboor_splines/spli2d_per.f90
+    ${SLL_DIR}/deboor_splines/spli2d.f90
+    ${SLL_DIR}/deboor_splines/spli2d_custom.f90
+    ${SLL_DIR}/deboor_splines/spli2d_perper.f90
+    ${SLL_DIR}/deboor_splines/banfac.f90  
+    ${SLL_DIR}/deboor_splines/interv.f90  
+    ${SLL_DIR}/deboor_splines/splint.f90
+    ${SLL_DIR}/deboor_splines/banslv.f90  
+    ${SLL_DIR}/deboor_splines/bsplvd.f90
+    ${SLL_DIR}/deboor_splines/knots.f90
+    ${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/interpolators/sll_interpolators_1d_base.F90
     ${SLL_DIR}/interpolators/sll_odd_degree_spline_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_quintic_spline_interpolator_1d.F90
