@@ -259,13 +259,10 @@ def main ():
                             continue
                     else:       # just reading knots data
                         if knots1_is_written == False: 
-                            print(linetemp)
                             knots1.extend(linetemp)
-#                            knots1 = knots1 + "".join(linetemp)
                             continue
                         else:
                             knots2.extend(linetemp)
-#                            knots2 = knots2 + " ".join(linetemp)
                             continue
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
