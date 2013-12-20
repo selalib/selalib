@@ -34,7 +34,7 @@ module sll_module_poisson_2d_elliptic_solver
 implicit none
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_elliptic_solver      
-    class(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
+    type(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
     class(sll_scalar_field_2d_discrete_alt), pointer        :: phi_field
     class(sll_scalar_field_2d_base), pointer                :: rho_field
     class(sll_scalar_field_2d_base), pointer                :: a11_field
