@@ -1,15 +1,7 @@
-! PARAMETERS ARE SET FOR THE FOLLOWING GNUPLOT DIAGNOSTIC
-! script to put in ../post_proc/vp2d_sim.gnu
-!set term aqua 1 fsize 20
-!set logscale y
-!p 'thdiag.dat' u 1:(sqrt($7)) w l lw 2,\
-!  2.6e-3*exp(-0.1533*x) lw 2!
-!execution:
 !ctest --verbose -R sim2d_vp_cart
-!or:
-!time mpirun -np 8 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian
-!diagnostic:
-!gnuplot -persist ../post_proc/vp2d_sim.gnu
+!or
+!./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_input
+!gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian.gnu
 
 
 &geometry
