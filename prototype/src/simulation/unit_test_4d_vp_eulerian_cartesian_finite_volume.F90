@@ -104,7 +104,7 @@ program vp_cartesian_4d
 !9: landau damping 1d sur y-vy
 
 
-#define DEG  3 ! polynomial degree
+#define DEG  2 ! polynomial degree
 #define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
