@@ -1064,11 +1064,11 @@ subroutine run_vp_cart(sim)
                   buffer, &
                   BUFFER_SIZE, &
                   MPI_SUM, &
-                  0, &
+                  1, &
                   buffer_result )
 
              buffer_counter=1
-             if (sim%my_rank==0) then
+             if (sim%my_rank==1) then
                 open(file_id_4,file='energy',position='append')
                 if(itime==BUFFER_SIZE) then 
                    rewind(file_id_4)
@@ -1082,6 +1082,7 @@ subroutine run_vp_cart(sim)
           else
              buffer_counter=buffer_counter+1
           end if
+          sim%Enorm = 0.0_f64
        end if
     end do
 
