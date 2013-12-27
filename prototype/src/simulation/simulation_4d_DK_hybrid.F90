@@ -1370,7 +1370,7 @@ contains
   subroutine solve_QN( sim )
     use sll_common_coordinate_transformations, only : &
       polar_eta2
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32 :: ieta1, ieta2, iloc3
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
@@ -1406,7 +1406,7 @@ contains
   ! Compute the electric field
   !----------------------------------------------------
   subroutine compute_Efield( sim )
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32  :: ierr
     sll_int32  :: ieta1, ieta2, ieta3
@@ -2018,7 +2018,7 @@ contains
   !  Out: rho3d_seqx3(x1=distrib,x2=distrib,x3=*)
   !-----------------------------------------------------------
   subroutine compute_charge_density(sim)
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
 
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3, Nvpar
@@ -2095,7 +2095,7 @@ contains
   
   subroutine compute_energy(sim)
 
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     
 
     ! local variables
@@ -2199,7 +2199,7 @@ contains
   
   subroutine compute_norm_L1_L2_Linf(sim)
     
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar
