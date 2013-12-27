@@ -377,7 +377,6 @@ contains
        end do
     end if
     SLL_ASSERT(sz .le. interpolator%num_pts* interpolator%num_pts)
-    print*, size(data_array), sz
     SLL_ASSERT(size(data_array) .le. sz)
     SLL_ASSERT(size(point_locate_eta)  .ge. sz)
     
@@ -448,8 +447,8 @@ contains
   
     end select
        
-    knot_tmp = interpolator%t(1:interpolator%size_t)
-    coef_tmp = interpolator%coeff_splines(1:size_coeffs)
+    knot_tmp => interpolator%t(1:interpolator%size_t)
+    coef_tmp => interpolator%coeff_splines(1:size_coeffs)
     val = bvalue( &
          knot_tmp,&
          coef_tmp,&
@@ -501,8 +500,8 @@ contains
        
     end select
     
-    knot_tmp =  interpolator%t(1:interpolator%size_t)
-    coef_tmp = interpolator%coeff_splines(1:size_coeffs)
+    knot_tmp =>  interpolator%t(1:interpolator%size_t)
+    coef_tmp => interpolator%coeff_splines(1:size_coeffs)
     val = dvalue1d( &
          res, &
          size_coeffs, &
@@ -510,7 +509,6 @@ contains
          coef_tmp, &
          knot_tmp,&
          1)
-    
   end function interpolate_derivative_ad1d
   
   function interpolate_array_ad1d( &
