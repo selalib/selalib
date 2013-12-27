@@ -20,6 +20,9 @@ module sll_arbitrary_degree_spline_interpolator_1d_module
 #include "sll_memory.h"
 #include "sll_assert.h" 
   use sll_module_interpolators_1d_base
+  use sll_module_deboor_splines_1d
+  
+
   implicit none
   
   ! in what follows, the direction '1' is in the contiguous memory direction.
@@ -379,8 +382,7 @@ contains
     
     order  = interpolator%spline_degree + 1
     period = interpolator%eta_max - interpolator%eta_min
-    
-   ! print*, 'pointlocate',point_locate_eta1
+
     select case (interpolator%bc_selector)
     case (0) ! periodic
        interpolator%size_coeffs = sz !+ 1
@@ -391,7 +393,6 @@ contains
             interpolator%t(1:order + sz ))!+ 1))
        
        
-     !  print*, 'moyenne', sum( interpolator%coeff_splines(1:sz+1))
        
     case (9) ! 2. dirichlet-left, dirichlet-right
        interpolator%size_coeffs = sz
@@ -411,22 +412,22 @@ contains
   function interpolate_value_ad1d( &
        interpolator, &
        eta1) result(val)
+    
 
     class(arb_deg_1d_interpolator), intent(inout)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64                     :: val
     sll_int32 :: size_coeffs
-    sll_real64 :: bvalue
+    !sll_real64 :: bvalue
     sll_real64 :: res
-
+    sll_real64,dimension(:),pointer :: knot_tmp
+    sll_real64,dimension(:),pointer :: coef_tmp
     size_coeffs = interpolator%size_coeffs
 
     res = eta1
     select case (interpolator%bc_selector)
     case (0) ! periodic
-!!$       if ( res .ge. interpolator%eta_max ) then 
-!!$          res = res -(interpolator%eta_max-interpolator%eta_min)
-!!$       end if
+
        if( res < interpolator%eta_min ) then
           res = res+interpolator%eta_max-interpolator%eta_min
        else if( res >  interpolator%eta_max ) then
@@ -446,10 +447,11 @@ contains
   
     end select
        
-    !print*, 'coucou'
+    knot_tmp = interpolator%t(1:interpolator%size_t)
+    coef_tmp = interpolator%coeff_splines(1:size_coeffs)
     val = bvalue( &
-         interpolator%t(1:interpolator%size_t),&
-         interpolator%coeff_splines(1:size_coeffs),&
+         knot_tmp,&
+         coef_tmp,&
          size_coeffs, &
          interpolator%spline_degree+1, &
          res,0)
@@ -464,9 +466,11 @@ contains
     sll_real64, intent(in)         :: eta1
     sll_real64                     :: val
     sll_int32 :: size_coeffs
-    sll_real64 :: dvalue1d
+   ! sll_real64 :: dvalue1d
     sll_real64 :: res
-    
+    sll_real64, dimension(:),pointer :: knot_tmp 
+    sll_real64, dimension(:),pointer :: coef_tmp
+
     SLL_ASSERT( eta1 .ge. interpolator%eta_min )
     SLL_ASSERT( eta1 .le. interpolator%eta_max )
 
@@ -476,9 +480,7 @@ contains
     
     select case (interpolator%bc_selector)
     case (0) ! periodic
-!!$       if ( res > interpolator%eta_max ) then 
-!!$          res = res -(interpolator%eta_max-interpolator%eta_min)
-!!$       end if
+!
        if( res < interpolator%eta_min ) then
           res = res+interpolator%eta_max-interpolator%eta_min
        else if( res >  interpolator%eta_max ) then
@@ -498,12 +500,14 @@ contains
        
     end select
     
+    knot_tmp =  interpolator%t(1:interpolator%size_t)
+    coef_tmp = interpolator%coeff_splines(1:size_coeffs)
     val = dvalue1d( &
          res, &
          size_coeffs, &
          interpolator%spline_degree+1, &
-         interpolator%coeff_splines(1:size_coeffs), &
-         interpolator%t(1:interpolator%size_t),&
+         coef_tmp, &
+         knot_tmp,&
          1)
     
   end function interpolate_derivative_ad1d
