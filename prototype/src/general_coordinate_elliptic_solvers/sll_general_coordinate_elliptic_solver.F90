@@ -596,7 +596,7 @@ contains ! *******************************************************************
     time = time_elapsed_since(t0)
 
     print*, 'time to construct the rho', time
-   ! call set_time_mark(t0)
+    call set_time_mark(t0)
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -632,9 +632,9 @@ contains ! *******************************************************************
        end do
     end do
     
-  !  time = time_elapsed_since(t0)
+   time = time_elapsed_since(t0)
 
-   ! print*, 'time to construct the matrix', time 
+    print*, 'time to construct the matrix', time 
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
