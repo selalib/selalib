@@ -1222,6 +1222,7 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) ) !+1
 
+
        SLL_DEALLOCATE( data_array_tmp,ierr)
       ! print*, 'oulala'
        ! boundary condition non homogene  a revoir !!!!! 
@@ -1550,13 +1551,14 @@ contains
           print*, 'problem  y < eta2_min'
           stop
        end if
-       end select
+    end select
 
-       !SLL_ALLOCATE(knot1_tmp(interpolator%size_t1),ierr)
-       !SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
-       knot1_tmp => interpolator%t1(1:interpolator%size_t1)
-       knot2_tmp => interpolator%t2(1:interpolator%size_t2)
-       tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+    !SLL_ALLOCATE(knot1_tmp(interpolator%size_t1),ierr)
+    !SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
+    knot1_tmp => interpolator%t1(1:interpolator%size_t1)
+    knot2_tmp => interpolator%t2(1:interpolator%size_t2)
+    tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+    
     val = dvalue2d( &
          res1, &
          res2, &
@@ -1568,12 +1570,12 @@ contains
          knot1_tmp, &
          knot2_tmp,&
          1,0)
-
-     !SLL_DEALLOCATE(knot1_tmp,ierr)
-     !SLL_DEALLOCATE(knot2_tmp,ierr)
+    
+    !SLL_DEALLOCATE(knot1_tmp,ierr)
+    !SLL_DEALLOCATE(knot2_tmp,ierr)
     
   end function interpolate_derivative1_ad2d
-  
+     
 
 #ifdef STDF95
   function arbitrary_degree_spline_interp2d_interpolate_derivative2( &
