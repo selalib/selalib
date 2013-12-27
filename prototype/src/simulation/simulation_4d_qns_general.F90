@@ -2202,7 +2202,7 @@ contains
   
   subroutine compute_energy_qns(sim,phi)
 
-    type(sll_simulation_4d_qns_general), intent(inout) :: sim
+    class(sll_simulation_4d_qns_general), intent(inout) :: sim
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
 
     ! local variables
@@ -2308,7 +2308,7 @@ contains
   
   subroutine compute_norm_L1_L2_Linf_qns(sim)
     
-    type(sll_simulation_4d_qns_general), intent(inout) :: sim
+    class(sll_simulation_4d_qns_general), intent(inout) :: sim
     
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Nv1,Nv2
