@@ -11,6 +11,7 @@ program test_general_elliptic_solver
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_timer
+
 #include "sll_memory.h"
 #include "sll_working_precision.h"
   implicit none
@@ -172,6 +173,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever ) 
 
+ 
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
@@ -273,6 +275,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
+  
   call phi%set_field_data( values )
   call phi%update_interpolation_coefficients( )
 
@@ -324,10 +327,10 @@ program test_general_elliptic_solver
   t1e = time_elapsed_since(t_reference)
 
   !print *, 'Completed solution',es%phi_vec
-  print*, 'reorganizaton of splines coefficients of solution'
-  
-  !  print *, 'Compare the values of the transformation at the nodes: '
-  
+!  print*, 'reorganizaton of splines coefficients of solution'
+
+    print *, 'Compare the values of the transformation at the nodes: '
+!!$  
   acc1 = 0.0_f64
   normL2_1 = 0.0_f64
   normH1_1 = 0.0_f64
@@ -337,7 +340,9 @@ program test_general_elliptic_solver
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
+    
         node_val   = phi%value_at_point(eta1,eta2)
+
         grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
         grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         ref        = sol_exacte_perper(eta1,eta2)
@@ -351,12 +356,14 @@ program test_general_elliptic_solver
                 'theoretical = ', ref, 'difference=', node_val-ref
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', grad1_node_val, &
                 'theoretical = ', grad1ref, 'difference=',grad1ref-grad1_node_val
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', grad2_node_val, &
+                'theoretical = ', grad2ref, 'difference=',grad2ref-grad2_node_val
            
         end if
         acc1        = acc1 + abs(node_val-ref)
         normL2_1    = normL2_1 + (node_val-ref)**2*h1*h2
         normH1_1    = normH1_1 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-        !integrale_solution = integrale_solution + ref*h1*h2!node_val
+        integrale_solution = integrale_solution + ref*h1*h2!node_val
      end do
   end do
 
@@ -364,7 +371,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=',sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
   
-  
+ 
   ! delete things...
   call delete(es)
   call rho%delete()
@@ -620,7 +627,8 @@ program test_general_elliptic_solver
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
        'integrale de la solution exacte=', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
-  
+
+
   ! delete things...
   call delete(es)
   call rho%delete()
@@ -877,6 +885,8 @@ program test_general_elliptic_solver
   end do
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
        ' integrale de la solution exacte =', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
+
+  
   call phi%write_to_file(0)
   ! delete things...
   call delete(es)
@@ -3855,8 +3865,8 @@ program test_general_elliptic_solver
        ',  solution time (s): ', t12e,'Norm L2',sqrt(normL2_12),'Norm H1',sqrt(normH1_12)
   
 !!$  
-
-
+!print*,h1**(SPLINE_DEG1-2)*h2**(SPLINE_DEG2-2)
+!borne_L2 = 1.8*sll_pi**2*h1**(SPLINE_DEG1-1)*h2**(SPLINE_DEG2-1)
   if ( ( sqrt(normL2_1) <= h1**(SPLINE_DEG1-1))   .AND. &
        ( sqrt(normL2_2) <= h1**(SPLINE_DEG1-1))   .AND. &
        ( sqrt(normL2_3) <= h1**(SPLINE_DEG1 -1))   .AND. &
