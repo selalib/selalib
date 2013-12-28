@@ -15,10 +15,10 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_1d_periodic
+program unit_test_advection_1d_non_uniform_cubic_splines
 #include "sll_working_precision.h"
 use sll_module_advection_1d_base
-use sll_module_advection_1d_periodic
+use sll_module_advection_1d_non_uniform_cubic_splines
 
 implicit none
   
@@ -50,11 +50,10 @@ implicit none
   
   input = 1._f64
   
-  adv => new_periodic_1d_advector( &
+  adv => new_non_uniform_cubic_splines_1d_advector( &
     num_cells, &
     xmin, &
     xmax, &
-    SPLINE, &
     order) 
   
   call adv%advect_1d_constant(&
@@ -67,7 +66,7 @@ implicit none
   err = maxval(abs(input-output))
   
   print *,'#err=',err
-  if(err==0)then  
+  if(err<1.e-15)then  
     print *,'#PASSED' 
   endif
 
