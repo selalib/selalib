@@ -1143,13 +1143,13 @@ contains
     f(1)=(f(1)-M)*(node_positions(2)-node_positions(1))
     tmp=f(1)
     f(1)=0._f64
-    do i=2,N+1
+    do i=2,N!+1
       f(i)=(f(i)-M)*(node_positions(i+1)-node_positions(i))
       tmp2=f(i)
       f(i)=f(i-1)+tmp
       tmp=tmp2
     enddo    
-    
+    f(N+1)=f(N)+tmp
     
     
     !print *,f(1),f(N+1) 
