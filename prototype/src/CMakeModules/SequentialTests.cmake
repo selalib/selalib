@@ -71,6 +71,11 @@ IF(NOT STDF95)
    ADD_TEST(NAME characteristics_2d_explicit_euler COMMAND test_characteristics_2d_explicit_euler)
    ADD_TEST(NAME characteristics_2d_verlet COMMAND test_characteristics_2d_verlet)
    ADD_TEST(NAME advection_1d_periodic COMMAND test_advection_1d_periodic)
+   ADD_TEST(
+     NAME
+     advection_1d_non_uniform_cubic_splines 
+     COMMAND
+     test_advection_1d_non_uniform_cubic_splines)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    
    IF(MUDPACK_ENABLED)
@@ -95,6 +100,11 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(
+     advection_1d_non_uniform_cubic_splines
+     PROPERTIES 
+     PASS_REGULAR_EXPRESSION
+     "PASSED")
    SET_TESTS_PROPERTIES(advection_2d_BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

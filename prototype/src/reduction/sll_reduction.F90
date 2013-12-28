@@ -377,6 +377,19 @@ contains
     res = res*delta
   end function compute_integral_trapezoid_1d
 
+  function compute_integral_conservative_1d(data, Npts, node_positions) result(res)
+    sll_real64, dimension(:), intent(in)    :: data
+    sll_int32, intent(in) :: Npts
+    sll_real64, dimension(:), intent(in) :: node_positions
+    sll_real64 :: res
+    sll_int32 :: i
+    
+    res = 0._f64
+    do i=1,Npts-1
+      res = res + data(i)*(node_positions(i+1)-node_positions(i))
+    enddo
+  end function compute_integral_conservative_1d
+
 
 
 end module sll_reduction_module
