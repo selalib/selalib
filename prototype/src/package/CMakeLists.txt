@@ -76,6 +76,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/deboor_splines/bsplvd.f90
     ${SLL_DIR}/deboor_splines/knots.f90
     ${SLL_DIR}/deboor_splines/splopt.f90
+    ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
+    ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_2d.F90
     ${SLL_DIR}/interpolators/sll_interpolators_1d_base.F90
     ${SLL_DIR}/interpolators/sll_odd_degree_spline_interpolator_1d.F90
     ${SLL_DIR}/interpolators/sll_quintic_spline_interpolator_1d.F90
