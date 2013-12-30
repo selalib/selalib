@@ -1195,6 +1195,8 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2-1),ierr)
  
        data_array_tmp = data_array(1:sz1-1,1:sz2-1)
+       SLL_ASSERT(associated(point_location_eta1_tmp))
+       SLL_ASSERT(associated(point_location_eta2_tmp))
        call spli2d_perper( &
             period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+1
             period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
