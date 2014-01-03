@@ -60,6 +60,11 @@
  integration_case = "SLL_CONSERVATIVE"
 /
 
+&poisson
+  poisson_solver = "SLL_FFT"
+  !poisson_solver = "SLL_POLAR"
+/
+
 
 &drive
   !drive_type = "SLL_NO_DRIVE"

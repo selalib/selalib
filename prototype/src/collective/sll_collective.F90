@@ -206,7 +206,8 @@ module sll_collective
 
   !> @brief Gathers into specified locations from all processes in a group.
   interface sll_collective_gatherv
-     module procedure sll_collective_gatherv_real
+     module procedure sll_collective_gatherv_real, &
+          sll_collective_gatherv_real64
   end interface
   
   !> @brief Sends data from one process to all other processes
@@ -525,8 +526,8 @@ contains !************************** Operations **************************
     !rec_count = send_sz*col%size
     !Note that the 5th argument at the root indicates the number of items
     !it receives from each task. It is not the total number of items received.
-    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, send_sz, &
-         MPI_REAL, root, col%comm, ierr )
+    call MPI_GATHER( send_buf, send_sz, MPI_DOUBLE_PRECISION, rec_buf, send_sz, &
+         MPI_DOUBLE_PRECISION, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
   end subroutine sll_collective_gather_real64
@@ -559,8 +560,17 @@ contains !************************** Operations **************************
       SLL_ASSERT( SIZE(displs) .eq. col%size )
       SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
     endif
-    call MPI_GATHERV( send_buf, send_count, MPI_REAL,rec_buf,recvcnts,&
-         displs, MPI_REAL, root, col%comm, ierr )
+    call MPI_GATHERV( &
+      send_buf, &
+      send_count, &
+      MPI_REAL, &
+      rec_buf, &
+      recvcnts, &
+      displs, &
+      MPI_REAL, &
+      root, &
+      col%comm, &
+      ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gatherv_real(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real
@@ -598,7 +608,7 @@ contains !************************** Operations **************************
     call MPI_GATHERV( send_buf, send_count, MPI_REAL8,rec_buf,recvcnts,&
          displs, MPI_REAL8, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_gatherv_real8(): MPI_GATHERV()' )
+         'sll_collective_gatherv_real64(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real64
 
 
@@ -838,7 +848,7 @@ contains !************************** Operations **************************
       send_buf, &
       rec_buf, &
       count, &
-      MPI_REAL8, &
+      MPI_DOUBLE_PRECISION, &
       op, &
       col%comm, &
       ierr )
