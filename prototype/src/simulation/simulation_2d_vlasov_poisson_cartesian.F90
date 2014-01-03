@@ -50,6 +50,8 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   use sll_fft
   use sll_simulation_base
   use sll_time_splitting_coeff_module
+  use sll_module_poisson_1d_periodic_solver
+  use sll_module_poisson_1d_polar_solver
   implicit none
 
   integer, parameter :: SLL_ADVECTIVE = 0
@@ -99,6 +101,12 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    class(sll_advection_1d_base), pointer    :: advect_x1
    class(sll_advection_1d_base), pointer    :: advect_x2
    sll_int32 :: advection_form_x2
+   sll_real64 :: factor_x1
+   sll_real64 :: factor_x2_rho
+   sll_real64 :: factor_x2_1
+
+   !poisson solver
+   class(sll_poisson_1d_base), pointer   :: poisson
            
    contains
      procedure, pass(sim) :: run => run_vp2d_cartesian
@@ -151,6 +159,7 @@ contains
     character(len=256) :: initial_function_case
     sll_real64 :: kmode
     sll_real64 :: eps
+    sll_real64 :: alpha_gaussian
     
     !time_iterations
     sll_real64 :: dt
@@ -166,6 +175,12 @@ contains
     sll_int32 :: order_x2
     character(len=256) :: advection_form_x2
     character(len=256) :: integration_case
+    sll_real64 :: factor_x1
+    sll_real64 :: factor_x2_rho
+    sll_real64 :: factor_x2_1
+
+    !poisson
+    character(len=256) :: poisson_solver
     
     !drive
     character(len=256) :: drive_type
@@ -213,7 +228,8 @@ contains
     namelist /initial_function/ &
       initial_function_case, &
       kmode, &
-      eps
+      eps, &
+      alpha_gaussian
 
     namelist /time_iterations/ &
       dt, &
@@ -228,7 +244,14 @@ contains
       advector_x2, &
       order_x2, &
       advection_form_x2, &
+      factor_x1, &
+      factor_x2_rho, &
+      factor_x2_1, &
       integration_case
+
+    namelist /poisson/ &
+      poisson_solver
+
 
     namelist / drive / &
       drive_type, &
@@ -272,6 +295,8 @@ contains
     initial_function_case = "SLL_LANDAU"
     kmode = 0.5_f64
     eps = 0.001_f64
+    !initial_function_case = "SLL_BEAM"
+    alpha_gaussian = 0.2_f64
     
     !time_iterations
     dt = 0.1_f64
@@ -291,8 +316,15 @@ contains
     advector_x2 = "SLL_LAGRANGE"
     order_x2 = 4
     advection_form_x2 = "SLL_ADVECTIVE"
+    factor_x1 = 1._f64
+    factor_x2_rho = 1._f64
+    factor_x2_1 = 1._f64
+
     !integration_case = "SLL_RECTANGLE"
     integration_case = "SLL_TRAPEZOID"
+    
+    !poisson
+    poisson_solver = "SLL_FFT"
     
     !drive
     drive_type = "SLL_NO_DRIVE"
@@ -321,6 +353,7 @@ contains
       read(input_file, initial_function)
       read(input_file, time_iterations)
       read(input_file, advector)
+      read(input_file, poisson)
       read(input_file, drive)
       close(input_file)
     else
@@ -370,6 +403,9 @@ contains
     
     
     !initial function
+    sim%nrj0 = 0._f64
+    sim%kx = kmode
+    sim%eps = eps
     select case (initial_function_case)
       case ("SLL_LANDAU")
         sim%init_func => sll_landau_initializer_2d
@@ -381,7 +417,11 @@ contains
           !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
         !for the moment
         sim%kx = kmode
-        sim%eps = eps             
+        sim%eps = eps
+      case ("SLL_BEAM")  
+        sim%init_func => sll_beam_initializer_2d
+        SLL_ALLOCATE(sim%params(1),ierr)
+        sim%params(1) = alpha_gaussian             
       case default
         print *,'#init_func_case not implemented'
         print *,'#in init_vp2d_par_cart'  
@@ -483,7 +523,13 @@ contains
         print *,'#in init_vp2d_par_cart'
         stop 
     end select  
-
+    
+    sim%factor_x1 = factor_x1
+    sim%factor_x2_rho = factor_x2_rho
+    sim%factor_x2_1 = factor_x2_1
+    
+    
+    
     SLL_ALLOCATE(sim%integration_weight(sim%num_dof_x2),ierr)
     select case (integration_case)
       case ("SLL_RECTANGLE")
@@ -507,9 +553,28 @@ contains
         print *,'#in init_vp2d_par_cart'  
         stop      
     end select  
+    
+    !poisson
+    select case (poisson_solver)
+      case ("SLL_FFT")
+        sim%poisson => new_poisson_1d_periodic_solver( &
+          x1_min, &
+          x1_max, &
+          num_cells_x1)
+      case ("SLL_POLAR")
+        sim%poisson => new_poisson_1d_polar_solver( &
+          x1_min, &
+          x1_max, &
+          num_cells_x1)
+      case default
+        print*,'#poisson_solver', poisson_solver, ' not implemented'
+        print *,'#in init_vp2d_par_cart'
+        stop 
+    end select
+    
+    
 
-
-
+    !drive
     select case (drive_type)
       case ("SLL_NO_DRIVE")
         sim%driven = .false.
@@ -655,10 +720,11 @@ contains
     sll_real64,dimension(:,:),pointer :: f_visu 
     sll_real64,dimension(:),pointer :: f_visu_buf1d
     sll_real64,dimension(:),pointer :: f_x1_buf1d
+    sll_int32 :: iplot
     
     !for temporary poisson
-    sll_int32 :: N_buf_poisson
-    sll_real64, dimension(:), allocatable :: buf_poisson
+    !sll_int32 :: N_buf_poisson
+    !sll_real64, dimension(:), allocatable :: buf_poisson
 
 
 
@@ -670,8 +736,8 @@ contains
       SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
       SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
     else
-      SLL_ALLOCATE(f_visu(1:0,1:0),ierr)          
-      SLL_ALLOCATE(f_visu_buf1d(1:0),ierr)          
+      SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
+      SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)          
     endif
 
     collective_size = sll_get_collective_size(sll_world_collective)
@@ -777,7 +843,7 @@ contains
        sim%init_func, &
        sim%params)
     
-    
+    !f_x1 = 1._f64
     
     call sll_2d_parallel_array_initializer_cartesian( &
        layout_x1, &
@@ -788,6 +854,8 @@ contains
        sll_landau_initializer_2d, &
        (/ sim%kx,0._f64 /))
     
+    !f_x1_init = 0._f64
+    
     call compute_displacements_array_2d( &
       layout_x1, &
       collective_size, &
@@ -797,21 +865,46 @@ contains
       collective_size )
 
     call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
+    !call sll_collective_gatherv_real64( &
+    !print *,'#before',sll_get_collective_rank(sll_world_collective), maxval(f_x1_buf1d),minval(f_x1_buf1d)
+    
     call sll_collective_gatherv_real64( &
       sll_world_collective, &
       f_x1_buf1d, &
-      sll_get_collective_rank(sll_world_collective), &
+      local_size_x1*local_size_x2, &
+      !sll_get_collective_rank(sll_world_collective), &
       collective_recvcnts, &
       collective_displs, &
       0, &
       f_visu_buf1d )
+    
+    !print *,'#after',sll_get_collective_rank(sll_world_collective), maxval(f_visu_buf1d),minval(f_visu_buf1d)
+    
+    
+      
+      
     f_visu = reshape(f_visu_buf1d, shape(f_visu))
     if(sll_get_collective_rank(sll_world_collective)==0)then
       !print *,'#begin f0.bdat'                    
+      !print *,'#maxf',maxval(f_x1_buf1d),minval(f_x1_buf1d)
+      !print *,'#maxf',maxval(f_visu_buf1d),minval(f_visu_buf1d)
+      !print *,'#maxf',maxval(f_visu), minval(f_visu) 
       call sll_binary_file_create('f0.bdat', file_id, ierr)
       call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
       call sll_binary_file_close(file_id,ierr)
+      !print *,'#maxf',maxval(f_x1_buf1d),minval(f_x1_buf1d)
+      !print *,'#maxf',maxval(f_visu_buf1d),minval(f_visu_buf1d)
+      !print *,'#maxf',maxval(f_visu), minval(f_visu) 
+#ifndef NOHDF5
+      iplot = 1
+      call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+      iplot = iplot+1  
+#endif
+      print *,'#maxf',maxval(f_visu), minval(f_visu) 
+      !print *,'#maxf',maxval(f_x1), minval(f_x1)   
+
     endif
+    
     
     
     
@@ -838,7 +931,8 @@ contains
 
 
     !rho = 1._f64-sim%mesh2d%delta_eta2*rho        
-    rho = 1._f64-rho        
+    !rho = 1._f64-rho        
+    rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho        
     
     !efield(1:np_x1-1) = rho(1:np_x1-1)
     !call poisson1dper(buf_poisson, &
@@ -847,7 +941,8 @@ contains
     !  np_x1-1)
     !efield(np_x1) = efield(1)
     
-    call solve(poisson_1d, efield, rho)
+    !call solve(poisson_1d, efield, rho)
+    call sim%poisson%compute_E_from_rho( efield, rho )
         
     ! Ponderomotive force at initial time. We use a sine wave
     ! with parameters k_dr and omega_dr.
@@ -887,7 +982,8 @@ contains
     call sll_collective_gatherv_real64( &
       sll_world_collective, &
       f_x1_buf1d, &
-      sll_get_collective_rank(sll_world_collective), &
+      local_size_x1*local_size_x2, &
+      !sll_get_collective_rank(sll_world_collective), &
       collective_recvcnts, &
       collective_displs, &
       0, &
@@ -922,7 +1018,8 @@ contains
             !alpha = (sim%mesh2d%eta2_min + real(i+ig-2,f64) * sim%mesh2d%delta_eta2) &
             !* sim%split%split_step(split_istep)
             ig = i+global_indices(2)-1
-            alpha = node_positions_x2(ig) * sim%split%split_step(split_istep) 
+            !alpha = node_positions_x2(ig) * sim%split%split_step(split_istep) 
+            alpha = sim%factor_x1*node_positions_x2(ig) * sim%split%split_step(split_istep) 
             f1d(1:np_x1) = f_x1(1:np_x1,i)
             
             
@@ -955,7 +1052,8 @@ contains
           !call mpi_barrier(sll_world_collective%comm,ierr)
           !call mpi_allreduce(rho_loc,rho,np_x1,MPI_REAL8,MPI_SUM,sll_world_collective%comm,ierr)
           !rho = 1._f64-sim%mesh2d%delta_eta2*rho
-          rho = 1._f64-rho
+          !rho = 1._f64-rho
+          rho = sim%factor_x2_1*1._f64-sim%factor_x2_rho*rho
 
           !efield(1:np_x1-1) = rho(1:np_x1-1)
           !call poisson1dper(buf_poisson, &
@@ -966,7 +1064,9 @@ contains
 
 
           
-          call solve(poisson_1d, efield, rho)
+          !call solve(poisson_1d, efield, rho)
+          call sim%poisson%compute_E_from_rho( efield, rho )
+          
           if (sim%driven) then
             call PFenvelope(adr, t_step*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
               sim%t0, sim%turn_drive_off)
@@ -1034,8 +1134,10 @@ contains
           tmp_loc(1)= tmp_loc(1)+sum(f_x1(i,1:local_size_x2))
           tmp_loc(2)= tmp_loc(2)+sum(abs(f_x1(i,1:local_size_x2)))
           tmp_loc(3)= tmp_loc(3)+sum((f_x1(i,1:local_size_x2))**2)
-          tmp_loc(4)= tmp_loc(4)+sum(f_x1(i,1:local_size_x2)*sim%x2_array(1:local_size_x2))
-          tmp_loc(5)= tmp_loc(5)+sum(f_x1(i,1:local_size_x2)*sim%x2_array(1:local_size_x2)**2)          
+          tmp_loc(4)= tmp_loc(4) +sum(f_x1(i,1:local_size_x2) &
+            *sim%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2))          
+          tmp_loc(5)= tmp_loc(5)+sum(f_x1(i,1:local_size_x2) &
+            *sim%x2_array(global_indices(2)-1+1:global_indices(2)-1+local_size_x2)**2)          
         end do
         
         call sll_collective_allreduce( &
@@ -1062,10 +1164,21 @@ contains
           do k=0,nb_mode
             rho_mode(k)=fft_get_mode(pfwd,buf_fft,k)
           enddo  
-          write(th_diag_id,'(f12.5,13g20.12)') time, mass, l1norm, momentum, l2norm, &
-             kinetic_energy, potential_energy, kinetic_energy + potential_energy, &
-             abs(rho_mode(0)),abs(rho_mode(1)),abs(rho_mode(2)),abs(rho_mode(3)), &
-             abs(rho_mode(4)),abs(rho_mode(5))
+          write(th_diag_id,'(f12.5,13g20.12)') &
+            time, &
+            mass, &
+            l1norm, &
+            momentum, &
+            l2norm, &
+            kinetic_energy, &
+            potential_energy, &
+            kinetic_energy + potential_energy, &
+            abs(rho_mode(0)), &
+            abs(rho_mode(1)), &
+            abs(rho_mode(2)), &
+            abs(rho_mode(3)), &
+            abs(rho_mode(4)), &
+            abs(rho_mode(5))
           if(sim%driven)then
             call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
             call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
@@ -1082,7 +1195,8 @@ contains
           call sll_collective_gatherv_real64( &
             sll_world_collective, &
             f_x1_buf1d, &
-            sll_get_collective_rank(sll_world_collective), &
+            local_size_x1*local_size_x2, &
+            !sll_get_collective_rank(sll_world_collective), &
             collective_recvcnts, &
             collective_displs, &
             0, &
@@ -1091,6 +1205,25 @@ contains
           if(sll_get_collective_rank(sll_world_collective)==0) then
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)  
           endif
+          !we store f for visu
+          call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
+          call sll_collective_gatherv_real64( &
+            sll_world_collective, &
+            f_x1_buf1d, &
+            local_size_x1*local_size_x2, &
+            !sll_get_collective_rank(sll_world_collective), &
+            collective_recvcnts, &
+            collective_displs, &
+            0, &
+            f_visu_buf1d )
+          f_visu = reshape(f_visu_buf1d, shape(f_visu))
+          if(sll_get_collective_rank(sll_world_collective)==0) then
+#ifndef NOHDF5
+            call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+            iplot = iplot+1  
+#endif
+          endif
+                    
         endif
           
 
@@ -1363,6 +1496,79 @@ contains
     endif
     return
   end subroutine PFenvelope
+
+
+#ifndef NOHDF5
+!*********************
+!*********************
+
+  !---------------------------------------------------
+  ! Save the mesh structure
+  !---------------------------------------------------
+  subroutine plot_f_cartesian(iplot,f,mesh_2d)
+    use sll_xdmf
+    use sll_hdf5_io
+    sll_int32 :: file_id
+    sll_int32 :: error
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32 :: i, j
+    sll_int32, intent(in) :: iplot
+    character(len=4)      :: cplot
+    sll_int32             :: nnodes_x1, nnodes_x2
+    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: r
+    sll_real64 :: theta
+    sll_real64 ::  x1_min, x2_min
+    sll_real64 ::  x1_max, x2_max  
+    sll_real64 :: dx1
+    sll_real64 :: dx2
+    
+    
+    nnodes_x1 = mesh_2d%num_cells1+1
+    nnodes_x2 = mesh_2d%num_cells2+1
+    x1_min = mesh_2d%eta1_min
+    x1_max = mesh_2d%eta1_max
+    x2_min = mesh_2d%eta2_min
+    x2_max = mesh_2d%eta2_max
+    dx1 = mesh_2d%delta_eta1
+    dx2 = mesh_2d%delta_eta2
+    
+    !print *,'#maxf=',iplot,maxval(f),minval(f)
+    
+
+    
+    if (iplot == 1) then
+
+      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+      do j = 1,nnodes_x2
+        do i = 1,nnodes_x1
+          x1(i,j) = x1_min+real(i-1,f32)*dx1
+          x2(i,j) = x2_min+real(j-1,f32)*dx2
+        end do
+      end do
+      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_hdf5_file_close(file_id, error)
+      deallocate(x1)
+      deallocate(x2)
+
+    end if
+
+    call int2string(iplot,cplot)
+    call sll_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
+      nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f"//cplot,f,"values", &
+      error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+  end subroutine plot_f_cartesian
+
+#endif
 
 
 

@@ -22,6 +22,15 @@ gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian.gnu
 #mpirun -np 8 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen
 gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen.gnu
 
+#for beam
+./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam
+#mpirun -np 8 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam
+gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam.gnu
+
+#for vlasov without splitting
+./bin/test_2d_vp_no_split ../selalib/prototype/src/simulation/vpsim2d_no_split_beam
+gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_no_split_beam.gnu
+
 #vlasov poisson 4D parallel for vlasov, sequential for poisson
 ctest --verbose -R sim4d_vp_cart
 #time mpirun -np 8 ./bin/test_4d_vp_cartesian ../selalib/prototype/src/simulation/vpsim4d_cartesian_input
