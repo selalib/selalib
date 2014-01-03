@@ -7,16 +7,20 @@
 
 IF(MUDPACK_ENABLED)
 
-ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
-                                     simulation_base_class.F90 
-                                     simulation_VP1D_cartesian_non_unif.F90
-                                     simulation_VP1D_curvilinear_analytic.F90
-                                     simulation_vp1d_fourier_fem.F90
-                                     simulation_guiding_center_2D_generalized_coords.F90
-                                     simulation_guiding_center_2D_generalized_coords_mudpack.F90
-                                     simulation_2d_guiding_center_curvilinear.F90
-                                     simulation_2d_guiding_center_cartesian.F90
-                                     simulation_2d_guiding_center_polar.F90)
+  ADD_LIBRARY(
+    sll_simulation_1d
+    STATIC
+    simulation_1d.F90
+    simulation_base_class.F90 
+    simulation_VP1D_cartesian_non_unif.F90
+    simulation_VP1D_curvilinear_analytic.F90
+    simulation_vp1d_fourier_fem.F90
+    simulation_2d_vlasov_poisson_no_splitting.F90
+    simulation_guiding_center_2D_generalized_coords.F90
+    simulation_guiding_center_2D_generalized_coords_mudpack.F90
+    simulation_2d_guiding_center_curvilinear.F90
+    simulation_2d_guiding_center_cartesian.F90
+    simulation_2d_guiding_center_polar.F90)
 
 
 
@@ -61,6 +65,7 @@ ENDMACRO(ADD_SIMULATION_1D)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem)
+ADD_SIMULATION_1D(2d_vp_no_split)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
 ADD_SIMULATION_1D(2d_gc_cartesian)

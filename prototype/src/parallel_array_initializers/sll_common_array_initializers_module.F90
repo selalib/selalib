@@ -15,7 +15,7 @@ contains
 
   ! -------------------------------------------------------------------------
   !
-  !             Landau damping 4d initialization function
+  !             Landau damping 2d initialization function
   !
   ! -------------------------------------------------------------------------
   !
@@ -133,6 +133,44 @@ contains
     endif 
   
   end function sll_diocotron_initializer_2d2
+
+
+  !
+  
+
+  function sll_beam_initializer_2d( x, vx, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: alpha
+    sll_real64 :: x_plus
+    sll_real64 :: x_minus
+    
+
+    if( .not. present(params) ) then
+       print *, '#sll_beam_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = alpha'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=1)
+    alpha = params(1) 
+    
+    x_plus = (x+1.2_f64)/0.3_f64
+    x_minus = (x-1.2_f64)/0.3_f64
+    res = 4._f64/sqrt(2._f64*sll_pi*alpha)
+    res = res*(0.5_f64*erf(x_plus)-0.5_f64*erf(x_minus))
+    res = res*exp(-vx**2/(2*alpha))    
+
+  end function sll_beam_initializer_2d
+
+
+  
+  
+  
+  
+
 
   function sll_KHP1_2d( x, y, params ) result(res)
    sll_real64 :: res
