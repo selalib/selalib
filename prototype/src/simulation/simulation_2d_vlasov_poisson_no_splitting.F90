@@ -1114,8 +1114,6 @@ contains
 
     
     
-    print *,'#not implemented for the moment'
-    stop    
     
   end subroutine run_vp2d_no_split
 

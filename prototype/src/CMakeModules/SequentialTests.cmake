@@ -88,6 +88,11 @@ IF(NOT STDF95)
       ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
       SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim2d_no_split_beam)
+      ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
+      SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
    ENDIF(MUDPACK_ENABLED)
 
 
