@@ -28,7 +28,8 @@ gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen.gnu
 gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam.gnu
 
 #for vlasov without splitting
-./bin/test_2d_vp_no_split ../selalib/prototype/src/simulation/vpsim2d_no_split_beam
+ctest --verbose -R sim2d_vp_no_split
+#./bin/test_2d_vp_no_split ../selalib/prototype/src/simulation/vpsim2d_no_split_beam
 gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_no_split_beam.gnu
 
 #vlasov poisson 4D parallel for vlasov, sequential for poisson
