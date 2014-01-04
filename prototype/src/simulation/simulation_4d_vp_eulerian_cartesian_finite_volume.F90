@@ -269,7 +269,7 @@ subroutine run_vp_cart(sim)
  sll_int32  :: k
  sll_int32  :: l
  sll_int32 :: count1, count2, count3, count4
- sll_real64 :: vmin
+ sll_real64 :: vmin,E2norm_ex
  sll_real64 :: vmax
  sll_real64 :: dv
  sll_int32  :: ierr
@@ -803,6 +803,8 @@ subroutine run_vp_cart(sim)
   call sll_new_file_id(file_id_4,ierr)
 
     if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
+!!$       write(*,*) 'my_rank =', sim%my_rank, 'x1 =', loc_sz_x1
+!!$       write(*,*) 'my_rank =', sim%my_rank, 'x2 =', loc_sz_x2
        sim%buf1 => get_buffer(sim%comm,1) 
        do k=1,loc_sz_x2
           sim%buf1(k)=sim%phi_split(1,k)
@@ -1058,22 +1060,23 @@ subroutine run_vp_cart(sim)
 
           write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
 
-          buffer(buffer_counter) = sqrt(sim%Enorm)
+          buffer(buffer_counter) = sim%Enorm
           if(buffer_counter==BUFFER_SIZE) then
              call sll_collective_reduce_real64(sll_world_collective, &
                   buffer, &
                   BUFFER_SIZE, &
                   MPI_SUM, &
-                  1, &
+                  0, &
                   buffer_result )
-
+!!$       write(*,*) 'e my_rank =', sim%my_rank, 'x1 =', loc_sz_x1
+!!$       write(*,*) 'e my_rank =', sim%my_rank, 'x2 =', loc_sz_x2
              buffer_counter=1
-             if (sim%my_rank==1) then
+             if (sim%my_rank==0) then
                 open(file_id_4,file='energy',position='append')
                 if(itime==BUFFER_SIZE) then 
                    rewind(file_id_4)
                 endif
-                buffer_result(:)=log(buffer_result(:))
+                buffer_result(:)=log(sqrt(buffer_result(:)))
                 do i=1,BUFFER_SIZE
                    write(file_id_4,*) t, buffer_result(i)
                 enddo
@@ -1082,14 +1085,25 @@ subroutine run_vp_cart(sim)
           else
              buffer_counter=buffer_counter+1
           end if
-          sim%Enorm = 0.0_f64
+          !sim%Enorm = 0.0_f64
        end if
     end do
 
     write(*,*) 'number of iteration', itime
     write(*,*) 'final time ',t
 
-
+    if (sim%test==1) then
+       if (sim%my_rank==0) then
+          t=0.d0
+          open(699,file='asymptotic')
+          do while(t<sim%tmax)
+             call solexact(sim,t,E2norm_ex)
+             write(699,*) t,log(sqrt(E2norm_ex))
+             t=t+sim%dt
+          end do
+          close(699)
+       end if
+    end if
 
 
 
@@ -1346,13 +1360,14 @@ subroutine run_vp_cart(sim)
 !!$  close(file_id_1)
     sim%params(11)=t
     call fn_L2_norm(sim,erreurL2_G)
-    write(*,*) 'erreurL2=',erreurL2_G
+    !write(*,*) 'erreurL2=',erreurL2_G
+    if (sim%my_rank==0) then
     call sll_new_file_id(file_id_2,ierr)
-    inquire(file='log(err_G)', exist=exist)
+    inquire(file='logerr', exist=exist)
     if (exist) then
-       open(file_id_2,file='log(err_G)',status='old',position='append', action='write')
+       open(file_id_2,file='logerr',status='old',position='append', action='write')
     else
-       open(file_id_2, file='log(err_G)', status="new", action="write")
+       open(file_id_2, file='logerr', status="new", action="write")
     end if
 
     if(sim%test==0)then
@@ -1370,10 +1385,8 @@ subroutine run_vp_cart(sim)
        write(file_id_2,*) -log(sim%mesh2dx%delta_eta2), log(erreurL2_G)
     end if
 
-
-
     close(file_id_2)
-
+ end if
 
     if (sim%test .eq. 1) then
        write(*,*) 'we r using the Landau damping 1d xvx test case'
@@ -3123,6 +3136,60 @@ subroutine run_vp_cart(sim)
 
 
   end subroutine fn_L2_norm
+  !Solution Exact of the test case Landau damping 1D x_vx
+  !compute with the formula of Eric Sonnendrucker
+  subroutine solexact(sim,t,E2norm_ex)
+
+  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim
+sll_int32 :: i,nx,ierr
+sll_real64,intent(in) ::t
+sll_real64, intent(out) :: E2norm_ex
+sll_real64 :: kx, eps,dx
+sll_real64, dimension(:),pointer :: E,xmil
+!sll_real64, dimension(nx) ::xmil
+nx=sim%nc_x1
+eps=sim%params(5)
+kx= 2.* sll_pi / (sim%params(2) - sim%params(1))
+!kx=0.2_f64
+dx=sim%mesh2dx%delta_eta1
+ SLL_ALLOCATE(E(0:nx-1),ierr)
+ SLL_ALLOCATE(xmil(nx),ierr)
+do i=1,nx
+   xmil(i)=sim%mesh2dx%eta1_min+i*sim%mesh2dx%delta_eta1- &
+        sim%mesh2dx%delta_eta1/2
+end do
+!write(*,*) 'entrer en solexact'
+!write(*,*) 'kx =',kx, nx
+    if (kx>0.19 .and. kx< 0.21) then
+       do i=1,nx
+          E(i-1)=4*eps*1.129664*exp(-0.0000551*t)*sin(kx*xmil(i))*cos(1.0640*t-0.00127377)
+       enddo
+
+    else if (kx>0.29 .and. kx< 0.31)then
+       do i=1,nx
+
+          E(i-1)=4*eps*0.63678*exp(-0.0126*t)*sin(kx*xmil(i))*cos(1.1598*t-0.114267)
+       enddo
+    else if (kx>0.39 .and. kx< 0.41) then
+       do i=1,nx 
+          E(i-1)=4*eps*0.424666*exp(-0.0661*t)*sin(kx*xmil(i))*cos(1.2850*t-0.3357725);
+       enddo
+    else if (kx>0.49 .and. kx< 0.51)then
+       do i=1,nx
+          E(i-1)=4*eps*0.3677*exp(-0.1533*t)*sin(kx*xmil(i))*cos(1.4156*t-0.536245);
+       enddo
+    endif
+
+    ! L2-norm
+    E2norm_ex=0.d0;
+    do i=0,nx-1
+       !E2norm_ex=E2norm_ex+E(i)*E(i)*dx*sim%mesh2dx%delta_eta2
+       E2norm_ex=E2norm_ex+E(i)*E(i)*dx
+    enddo
+!write(*,*) 'nx = ', nx, dx
+ SLL_DEALLOCATE_ARRAY(E,ierr)
+ SLL_DEALLOCATE_ARRAY(xmil,ierr)
+  end subroutine solexact
 
 
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
