@@ -55,6 +55,7 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
 
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_LEAP_FROG = 2 
 
 
   type, extends(sll_simulation_base_class) :: &
@@ -80,8 +81,8 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
    sll_int32 :: num_iterations
    sll_int32 :: freq_diag
    sll_int32 :: freq_diag_time
-   sll_int32  :: time_loop_case
- 
+   sll_int32 :: time_loop_case
+   sll_int32 :: freq_leap_frog
   
    !parameters for drive
    logical :: driven
@@ -172,6 +173,7 @@ contains
     sll_int32 :: freq_diag
     sll_int32 :: freq_diag_time
     character(len=256) :: time_loop_case
+    sll_int32 :: freq_leap_frog
 
     !advector
     character(len=256) :: advect2d_case 
@@ -243,7 +245,8 @@ contains
       number_iterations, &
       freq_diag, &
       freq_diag_time, &
-      time_loop_case
+      time_loop_case, &
+      freq_leap_frog
 
     namelist /advector/ &
       advect2d_case, &   
@@ -303,7 +306,7 @@ contains
     freq_diag_time = 1
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-
+    freq_leap_frog = 1e9 
 
     !advector
     advect2d_case = "SLL_BSL"    
@@ -427,6 +430,9 @@ contains
         sim%time_loop_case = SLL_EULER
       case ("SLL_PREDICTOR_CORRECTOR")
         sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
+      case ("SLL_LEAP_FROG")
+        sim%time_loop_case = SLL_LEAP_FROG
+        sim%freq_leap_frog = freq_leap_frog
       case default
         print *,'#bad time_loop_case',time_loop_case
         print *,'#not implemented'
@@ -710,6 +716,9 @@ contains
 
 
     sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init
+    
+    sll_real64,dimension(:,:),pointer :: f_store
+    
     sll_real64,dimension(:),pointer :: rho,efield,e_app,rho_loc
     sll_real64, dimension(:), allocatable :: rho_split
     sll_real64, dimension(:), allocatable :: rho_full
@@ -790,6 +799,7 @@ contains
     SLL_ALLOCATE(f_x2(np_x1,np_x2),ierr)
 
     SLL_ALLOCATE(f_x1(np_x1,np_x2),ierr)    
+    SLL_ALLOCATE(f_store(np_x1,np_x2),ierr)    
     SLL_ALLOCATE(f_x1_init(np_x1,np_x2),ierr)    
 
 
@@ -999,6 +1009,18 @@ contains
 
 
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_x2, f_x1)
+        case (SLL_LEAP_FROG)
+          if(istep==1)then
+            call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_x2, f_x1)
+            f_store = f_x2
+          else
+            call sim%advect_2d%advect_2d(A1, A2, 2*sim%dt, f_store, f_x1)            
+            if(mod(istep,sim%freq_leap_frog)==0) then
+              f_store = 0.5_f64*(f_store+f_x1)
+            else
+              f_store = f_x2   
+            endif                        
+          endif              
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'

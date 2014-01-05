@@ -28,7 +28,8 @@
   freq_diag = 100
   freq_diag_time = 1
   !time_loop_case = "SLL_EULER"
-  time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+  !time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+  time_loop_case = "SLL_LEAP_FROG" 
 /
 
 &advector

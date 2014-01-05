@@ -71,6 +71,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_LEAP_FROG = 2 
   sll_int32, parameter :: SLL_PHI_FROM_RHO = 0
   sll_int32, parameter :: SLL_E_FROM_RHO = 1
 
@@ -493,6 +494,8 @@ contains
         sim%time_loop_case = SLL_EULER
       case ("SLL_PREDICTOR_CORRECTOR")
         sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
+      case ("SLL_LEAP_FROG")
+        sim%time_loop_case = SLL_LEAP_FROG
       case default
         print *,'#bad time_loop_case',time_loop_case
         print *,'#not implemented'
@@ -764,6 +767,7 @@ contains
     sll_int32 :: i2
     sll_real64,dimension(:,:), pointer :: f
     sll_real64,dimension(:,:), pointer :: f_old
+    sll_real64,dimension(:,:), pointer :: f_store
     sll_real64,dimension(:,:), pointer :: phi
     sll_real64,dimension(:,:), pointer :: A1 !advection fields
     sll_real64,dimension(:,:), pointer :: A2
@@ -790,6 +794,7 @@ contains
     !allocation
     SLL_ALLOCATE(f(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(f_old(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(f_store(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(phi(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(A1(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(A2(Nc_x1+1,Nc_x2+1),ierr)
@@ -886,6 +891,14 @@ contains
               A1 = -A1
           end select
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
+        case (SLL_LEAP_FROG)
+          if(step==1)then
+            call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_old, f)
+            f_store = f_old
+          else
+            call sim%advect_2d%advect_2d(A1, A2, 2*sim%dt, f_store, f)
+            f_store = f_old            
+          endif    
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
