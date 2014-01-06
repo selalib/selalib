@@ -1972,6 +1972,8 @@ contains
         sim%xgrid_2d,'xgrid_2d',file_err)
       call sll_hdf5_write_array_2d(file_id, &
         sim%ygrid_2d,'ygrid_2d',file_err)
+      call sll_hdf5_write_array_1d(file_id, &
+        sim%r_grid,'r_grid',file_err)
       call sll_hdf5_write_array_2d(file_id, &
         sim%rho3d_seqx1x2(:,:,ix3_diag),'rho2d_xy',file_err)
       call sll_hdf5_write_array_2d(file_id, &
