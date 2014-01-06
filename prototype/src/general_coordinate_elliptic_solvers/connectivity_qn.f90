@@ -1,4 +1,4 @@
-module connectivity_Module
+module connectivity_module
   implicit none
 
   integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1
@@ -297,4 +297,4 @@ contains
     end do
   end subroutine initLM
       
-end Module connectivity_Module
+end module connectivity_module

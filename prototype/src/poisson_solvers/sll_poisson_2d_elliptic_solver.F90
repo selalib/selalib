@@ -34,13 +34,15 @@ module sll_module_poisson_2d_elliptic_solver
 implicit none
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_elliptic_solver      
-    class(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
+    type(general_coordinate_elliptic_solver), pointer      :: elliptic_solver
     class(sll_scalar_field_2d_discrete_alt), pointer        :: phi_field
     class(sll_scalar_field_2d_base), pointer                :: rho_field
     class(sll_scalar_field_2d_base), pointer                :: a11_field
     class(sll_scalar_field_2d_base), pointer                :: a12_field
     class(sll_scalar_field_2d_base), pointer                :: a21_field
     class(sll_scalar_field_2d_base), pointer                :: a22_field
+    class(sll_scalar_field_2d_base), pointer                :: b1_field
+    class(sll_scalar_field_2d_base), pointer                :: b2_field
     class(sll_scalar_field_2d_base), pointer                :: c_field
     type(arb_deg_2d_interpolator)                           :: interp_rho
     type(arb_deg_2d_interpolator)                           :: interp_phi
@@ -48,6 +50,8 @@ implicit none
     type(arb_deg_2d_interpolator)                           :: interp_a12
     type(arb_deg_2d_interpolator)                           :: interp_a21
     type(arb_deg_2d_interpolator)                           :: interp_a22
+    type(arb_deg_2d_interpolator)                           :: interp_b1
+    type(arb_deg_2d_interpolator)                           :: interp_b2
     type(arb_deg_2d_interpolator)                           :: interp_c
   contains
     procedure, pass(poisson) :: initialize => &
@@ -82,6 +86,8 @@ contains
    a12_values, & 
    a21_values, & 
    a22_values, & 
+   b1_values,&
+   b2_values,&
    c_values ) 
    
    class(poisson_2d_elliptic_solver),        target  :: poisson
@@ -106,6 +112,8 @@ contains
    sll_real64, dimension(:,:)          :: a12_values
    sll_real64, dimension(:,:)          :: a21_values
    sll_real64, dimension(:,:)          :: a22_values
+   sll_real64, dimension(:,:)          :: b1_values
+   sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
@@ -198,8 +206,36 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)   
+
+    call poisson%interp_a21%initialize( &
+         np_eta1, &
+         np_eta2, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         bc_eta1_left, &
+         bc_eta1_right, &
+         bc_eta2_left, &
+         bc_eta2_right,&
+         spline_degree_eta1, &
+         spline_degree_eta2) 
+          
+    call poisson%interp_b1%initialize( &
+         np_eta1, &
+         np_eta2, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         bc_eta1_left, &
+         bc_eta1_right, &
+         bc_eta2_left, &
+         bc_eta2_right,&
+         spline_degree_eta1, &
+         spline_degree_eta2)
       
-    call poisson%interp_c%initialize( &
+    call poisson%interp_b2%initialize( &
          np_eta1, &
          np_eta2, &
          eta1_min, &
@@ -260,6 +296,30 @@ contains
    
     call poisson%a22_field%set_field_data( a22_values )
     call poisson%a22_field%update_interpolation_coefficients( )
+
+    poisson%b1_field => new_scalar_field_2d_discrete_alt( &
+         "b1_check", &
+         poisson%interp_b1, &
+         transf, &
+         bc_eta1_left, &
+         bc_eta1_right, &
+         bc_eta2_left, &
+         bc_eta2_right)
+   
+    call poisson%b1_field%set_field_data( b1_values )
+    call poisson%b1_field%update_interpolation_coefficients( ) 
+    
+    poisson%b2_field => new_scalar_field_2d_discrete_alt( &
+         "b2_check", &
+         poisson%interp_b2, &
+         transf, &
+         bc_eta1_left, &
+         bc_eta1_right, &
+         bc_eta2_left, &
+         bc_eta2_right)
+   
+    call poisson%b2_field%set_field_data( b2_values )
+    call poisson%b2_field%update_interpolation_coefficients( )
     
     poisson%c_field => new_scalar_field_2d_discrete_alt( &
          "c_check", &
@@ -326,6 +386,8 @@ contains
         poisson%a12_field,&
         poisson%a21_field,&
         poisson%a22_field,&
+        poisson%b1_field,&
+        poisson%b2_field,&
         poisson%c_field)    
         
  end subroutine initialize_poisson_2d_elliptic_solver
@@ -351,6 +413,8 @@ contains
    a12_values, & 
    a21_values, & 
    a22_values, & 
+   b1_values,&
+   b2_values,&
    c_values ) &
    result(poisson)
    
@@ -376,6 +440,8 @@ contains
    sll_real64, dimension(:,:)          :: a12_values
    sll_real64, dimension(:,:)          :: a21_values
    sll_real64, dimension(:,:)          :: a22_values
+   sll_real64, dimension(:,:)          :: b1_values
+   sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
    sll_int32 :: np_eta1
    sll_int32 :: np_eta2
@@ -401,6 +467,8 @@ contains
    a12_values, & 
    a21_values, & 
    a22_values, & 
+   b1_values,&
+   b2_values,&
    c_values )  
   end function new_poisson_2d_elliptic_solver
   

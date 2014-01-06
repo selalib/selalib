@@ -6,6 +6,7 @@ program unit_test_2d
   use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_2d
+  
 #include "sll_file_io.h"
   implicit none
 
@@ -29,6 +30,7 @@ program unit_test_2d
   sll_real64 :: eta1, eta2, h1, h2, delta, acc, acc1
   sll_real64 :: node, node_a, node_d, interp, val_a
   sll_real64, dimension(2) :: params   ! for the polar transformation
+  logical    :: l_exists
 
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64
@@ -312,14 +314,20 @@ program unit_test_2d
 
   print *, 'Test of initialization from file for a nurbs transformation:'
 
-  call t_n%read_from_file("./circle_5mp_patch4.nml")
-  t_n%mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
-  call t_n%write_to_file()
+  inquire(file="circle_5mp_patch4.nml", exist=l_exists)
 
-  print*, 'label t_n', t_n%label
+  if (l_exists) then
+     call t_n%read_from_file("circle_5mp_patch4.nml")
+     t_n%mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+     call t_n%write_to_file()
 
-  call delete(t_n)
-  !call write_to_file(t_d)
+     print*, 'label t_n', t_n%label
+
+     call delete(t_n)
+     !call write_to_file(t_d)
+  else
+     print *, 'nml file is missing '
+  end if
   print *, 'reached end of unit test'
 
   ! apply some more relaxed criterion for the jacobian
