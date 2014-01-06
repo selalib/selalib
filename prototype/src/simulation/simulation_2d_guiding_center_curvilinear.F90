@@ -264,8 +264,8 @@ contains
     !poisson 
     !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
-    mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
-   ! mudpack_method = SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS  
+    !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
+    mudpack_method = SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS  
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3    
 
@@ -328,10 +328,10 @@ contains
     if (initial_function_case == "SLL_KHP1") then
         eta1_max = 2._f64*sll_pi/kmode_eta1
         eta2_max = 2._f64*sll_pi/kmode_eta2
-     else
+    else
         eta2_max = 2._f64*sll_pi
-        r_minus = 4._f64
-        r_plus = 5._f64         
+        r_minus  = 4._f64
+        r_plus   = 5._f64   
     endif
 
     !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
@@ -347,7 +347,7 @@ contains
       eta2_min , &
       eta2_max ) 
            
-   sim%transformation => new_coordinate_transformation_2d_analytic( &
+    sim%transformation => new_coordinate_transformation_2d_analytic( &
        "analytic_identity_transformation", &
        sim%mesh_2d, &
        identity_x1, &
@@ -529,7 +529,7 @@ contains
         sim%params(2) = kmode_eta1
       case("SLL_DIOCOTRON")
         print*,"f0 = SLL_DIOCOTRON " 
-        sim%init_func => sll_diocotron_initializer_2d2
+        sim%init_func => sll_diocotron_initializer_2d
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = r_minus
         sim%params(2) = r_plus
@@ -563,7 +563,7 @@ contains
      !poisson solver
     select case(poisson_solver)    
       case ("SLL_MUDPACK_CURVILINEAR")    
-        print *,'poisson = MUDPACK_CURVILINEAR',mudpack_method
+        print *,'poisson = MUDPACK_CURVILINEAR'
         sim%b11 = 1._f64
         sim%b22 = 1._f64
         sim%b12 = 0._f64
@@ -707,11 +707,22 @@ contains
     !solve poisson
     call sim%poisson%compute_phi_from_rho(phi, f)
     call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
-      print*, maxval(phi)
+    
     !print *,A1
     !print *,A2
     
     call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
+    
+!    open(unit = diag_id, file='diag_curvilinear.dat',IOStat=IO_stat)
+!    if( IO_stat /= 0 ) then
+!       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
+!       STOP
+!    end if
+!    open(unit = diag_id+1, file='diag2_curvilinear.dat',IOStat=IO_stat)
+!    if( IO_stat /= 0 ) then
+!       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
+!       STOP
+!    end if
     
     iplot = 0
 
@@ -722,7 +733,7 @@ contains
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
       call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       if(modulo(step-1,sim%freq_diag_time)==0)then
-!        call time_history_diagnostic_gc( &
+!        call time_history_diagnostic_gc2( &
 !          diag_id+1 , &    
 !          step-1, &
 !          dt, &
@@ -731,7 +742,7 @@ contains
 !          phi, &
 !          A1, &
 !          A2)
-        call time_history_diagnostic_gc2( &
+        call time_history_diagnostic_gc( &
           thdiag_id, &    
           step-1, &
           dt, &
@@ -1042,7 +1053,10 @@ contains
     e  = 0.5_f64*e*delta_eta2
     call fft_apply_plan(pfwd,int_r,int_r)
     do i1=1,8
+      !mode_slope(i1) = time_mode(i1)
       time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
+      !mode_slope(i1) = &
+      !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
     
     write(file_id,*) &
@@ -1052,7 +1066,7 @@ contains
       l2, &
       e, &
       maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
-      time_mode(1:8)
+      time_mode(1:8)!,mode_slope
 
     call fft_delete_plan(pfwd)
 
