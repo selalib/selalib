@@ -260,7 +260,7 @@ initial_function_case = "SLL_DIOCOTRON"
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear_mudpack'
         stop
     end select
 
@@ -516,18 +516,15 @@ initial_function_case = "SLL_DIOCOTRON"
           x1 = sim%transformation%x1(eta1,eta2)
           x2 = sim%transformation%x2(eta1,eta2)
           f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
-          phi(1,i2) = 0._f64
-          phi(Nc_eta1+1,i2) = 0._f64
         end do
      end do
   
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
-    call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,rho)
-    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
-
-    
+    !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
+    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,f)
+    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
+     
     !print *,A1
     !print *,A2
     
@@ -544,9 +541,8 @@ initial_function_case = "SLL_DIOCOTRON"
       f_old = f
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
-      call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
-      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho) 
-      
+      !call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
+      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f) 
       call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
@@ -581,8 +577,9 @@ initial_function_case = "SLL_DIOCOTRON"
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
-          call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho)
+          !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
+          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f)
+          print*,'t=0, phi = ', maxval(phi),'f = ', maxval(f)
           call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
@@ -869,7 +866,14 @@ initial_function_case = "SLL_DIOCOTRON"
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
     
-    write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode(1:8)!,mode_slope
+    write(file_id,*) &
+    dt*real(step,f64), &
+    w, &
+    l1, &
+    l2, &
+    e, &
+    maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
+    time_mode(1:8)!,mode_slope
 
     call fft_delete_plan(pfwd)
 
