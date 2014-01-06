@@ -23,6 +23,7 @@ class(sll_interpolator_2d_base), pointer   :: cy_interp
 class(sll_interpolator_2d_base), pointer   :: ce_interp
 class(sll_interpolator_2d_base), pointer   :: a12_interp
 class(sll_interpolator_2d_base), pointer   :: a21_interp
+class(sll_coordinate_transformation_2d_base), pointer :: transformation
 contains
 
 !> Initialize the Poisson solver in curvilinear coordinates using MUDPACK
@@ -103,7 +104,7 @@ allocate(a12_array(nx,ny))
 allocate(a21_array(nx,ny))
 allocate(phi(nx,ny))
 
-
+transformation => transf
 cxx_interp => new_cubic_spline_2d_interpolator( &
           nx, &
           ny, &
@@ -261,10 +262,7 @@ write(*,102) (this%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
-do j=1,ny
- phi(1,j) = 0._f64
- phi(nx,j) = 0._f64
-enddo 
+
 call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
 
 write (*,200) ierror,iprm(16)
@@ -292,7 +290,7 @@ end subroutine initialize_poisson_curvilinear_mudpack
 
 
 !> Solve the Poisson equation and get the potential
-subroutine solve_poisson_curvilinear_mudpack(this, phi, rhs)
+subroutine solve_poisson_curvilinear_mudpack(this, phi, rho)
 implicit none
 
 ! set grid size params
@@ -301,7 +299,8 @@ sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
 sll_real64, intent(inout) ::  phi(:,:) !< electric potential
-sll_real64, intent(inout) ::  rhs(:,:) !< charge density
+sll_real64, intent(inout) ::  rho(:,:)
+sll_real64,pointer :: rhs(:,:) !< charge density
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
@@ -311,7 +310,8 @@ sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 sll_int32  :: ierror
 sll_int32  :: iprm(16)
-sll_real64 :: fprm(6)
+sll_real64 :: fprm(6),eta1,eta2
+sll_int32 :: i1,i2
 
 common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
                 iguess,maxcy,method,nwork,lwrkqd,itero
@@ -320,8 +320,39 @@ common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
+!    
 ! declare coefficient and boundary condition input subroutines external
 external coefcr,bndcr
+
+allocate(rhs(nx,ny))
+rhs=0._f64
+    do i2=1,ny
+      eta2=yc+real(i2-1,f64)*(yd-yc)/(ny-1)
+      do i1=1,nx
+        eta1=xa+real(i1-1,f64)*(xb-xa)/(nx-1)
+        rhs(i1,i2)=-rho(i1,i2)*transformation%jacobian(eta1,eta2)
+      end do
+    end do
+  if(nxa == SLL_DIRICHLET) then
+       do i2=1,ny
+          phi(1,i2) = 0._f64
+       end do
+    endif
+    if(nxb == SLL_DIRICHLET) then
+       do i2=1,ny
+          phi(nx,i2) = 0._f64
+       end do
+    endif
+    if(nyc == SLL_DIRICHLET) then
+       do i1=1,nx
+          phi(i1,1) = 0._f64
+       end do
+    endif
+    if(nyd == SLL_DIRICHLET) then
+       do i1=1,nx
+          phi(i1,ny) = 0._f64
+       end do
+    endif 
 
 icall = 1
 intl  = 1
@@ -344,7 +375,7 @@ if (ierror > 0) call exit(0)
 107 format(' error = ',i2)
 108 format(/' mud24sp test ', ' error = ',i2)
 
-
+deallocate(rhs)
 return
 end subroutine solve_poisson_curvilinear_mudpack
 
