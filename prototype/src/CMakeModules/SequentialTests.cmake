@@ -65,10 +65,17 @@ IF(NOT STDF95)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
    ADD_TEST(NAME advection_field COMMAND test_advection_field)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
+   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
+   ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
    ADD_TEST(NAME characteristics_2d_explicit_euler COMMAND test_characteristics_2d_explicit_euler)
    ADD_TEST(NAME characteristics_2d_verlet COMMAND test_characteristics_2d_verlet)
    ADD_TEST(NAME advection_1d_periodic COMMAND test_advection_1d_periodic)
+   ADD_TEST(
+     NAME
+     advection_1d_non_uniform_cubic_splines 
+     COMMAND
+     test_advection_1d_non_uniform_cubic_splines)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    
    IF(MUDPACK_ENABLED)
@@ -81,19 +88,28 @@ IF(NOT STDF95)
       ADD_TEST(NAME sim2d_gc_polar COMMAND test_2d_gc_polar ${ARGS})
       SET_TESTS_PROPERTIES(sim2d_gc_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim2d_no_split_beam)
+      ADD_TEST(NAME sim2d_vp_no_split COMMAND test_2d_vp_no_split ${ARGS})
+      SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+
    ENDIF(MUDPACK_ENABLED)
 
 
 
 
+
    SET_TESTS_PROPERTIES(coordinate_transformations PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-   ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    SET_TESTS_PROPERTIES(fields_2d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
+   SET_TESTS_PROPERTIES(fields_1d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(
+     advection_1d_non_uniform_cubic_splines
+     PROPERTIES 
+     PASS_REGULAR_EXPRESSION
+     "PASSED")
    SET_TESTS_PROPERTIES(advection_2d_BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
