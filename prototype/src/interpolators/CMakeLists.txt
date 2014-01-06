@@ -14,7 +14,7 @@ IF( NOT STDF95)
         sll_interpolators_1d_base.F90
         sll_interpolators_2d_base.F90 
         sll_cubic_spline_interpolator_2d.F90
-	  sll_arbitrary_degree_spline_interpolator_1d.F90
+	sll_arbitrary_degree_spline_interpolator_1d.F90
         sll_arbitrary_degree_spline_interpolator_2d.F90) 
 
 ENDIF(NOT STDF95)
@@ -38,8 +38,7 @@ ELSE()
                                             sll_fft
                                             sll_utilities 
    		                            deboor_splines 
-					    sll_file_io
-   		                            deboor_splines 
+					    sll_file_io 
                                             ${LAPACK_LIBRARIES} )
 ENDIF (NOT STDF95)
 

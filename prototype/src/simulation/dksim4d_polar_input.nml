@@ -1,3 +1,8 @@
+!ctest --verbose -R sim4d_DK_polar
+!or
+!time mpirun -np 16 ./bin/test_4d_dk_polar ../selalib/prototype/src/simulation/dksim4d_polar_input.nml
+!gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar.gnu 
+
 &mesh
   num_cells_x1 = 32
   num_cells_x2 = 32
@@ -35,9 +40,9 @@
 /
 
 &sim_params
-  dt                = 8
+  dt                = 32
   !number_iterations = 100
-  number_iterations = 200
+  number_iterations = 2
   freq_diag_time = 1
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
   time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"

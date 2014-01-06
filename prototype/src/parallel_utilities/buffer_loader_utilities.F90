@@ -87,6 +87,51 @@ contains
 
   end subroutine load_buffer_2d
 
+  subroutine load_buffer32_2d( layout, data, buffer )
+    type(layout_2D), pointer   :: layout
+    sll_real32, dimension(:,:), intent(in) :: data
+    sll_real32, dimension(:),  intent(out) :: buffer
+    sll_int32 :: myrank
+    sll_int32 :: data_size
+    sll_int32 :: send_size
+    type(sll_collective_t), pointer :: col
+    sll_int32 :: imin, imax
+    sll_int32 :: jmin, jmax
+    sll_int32 :: size_i, size_j
+    sll_int32 :: i,j
+    sll_int32 :: counter
+
+    col => get_layout_collective( layout )
+    myrank = sll_get_collective_rank( col )
+    data_size = size(data,1)*size(data,2)
+!print *, 'data1: ', size(data,1), 'data2:', size(data,2)
+    imin = get_layout_i_min( layout, myrank )
+    imax = get_layout_i_max( layout, myrank )
+    jmin = get_layout_j_min( layout, myrank )
+    jmax = get_layout_j_max( layout, myrank )
+    size_i = imax - imin + 1
+    size_j = jmax - jmin + 1
+
+!!$    if( data_size .ne. size_i*size_j ) then
+!!$       print *, 'function load_buffer():'
+!!$       print *, 'size(data) = ', size(data,1), size(data,2)
+!!$       print *, 'warning from rank ', myrank
+!!$       print *, 'there seems to be a discrepancy between the data size ', &
+!!$            'passed and the size declared in the layout.'
+!!$       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
+!!$    end if
+!!$print *, 'size_j', size_j, 'size_i', size_i
+    counter=0
+    do j=1,size_j
+       do i=1,size_i
+          counter = counter + 1
+          buffer(counter) = data(i,j)
+       end do
+    end do
+
+  end subroutine load_buffer32_2d
+
+
 
   ! this function is also a helper for collective routines for example gatherv
   ! should be change into subroutine 

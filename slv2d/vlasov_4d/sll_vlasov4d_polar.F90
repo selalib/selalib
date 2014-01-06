@@ -133,7 +133,7 @@ subroutine initialize_vp4d_polar( this,        &
        polar_jac11, &
        polar_jac12, &
        polar_jac21, &
-       polar_jac22 )
+       polar_jac22, (/0.0_f64/) )
 
   this%nc_x1 = this%geomx%num_cells1
   this%nc_x2 = this%geomx%num_cells2

@@ -201,6 +201,8 @@ contains
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
     sll_real64, dimension(:,:), pointer :: b22
+    sll_real64, dimension(:,:), pointer :: b1
+    sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
     sll_real64, dimension(:,:), allocatable :: cxx_2d
@@ -684,14 +686,19 @@ contains
           SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
           SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
           SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b1(Nc_x1+1,Nc_x2+1),ierr)
+          SLL_ALLOCATE(b2(Nc_x1+1,Nc_x2+1),ierr)
           SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
         
         b11 = 1._f64
         b22 = 1._f64
         b12 = 0._f64
         b21 = 0._f64
+        b1 = 0._f64
+        b2 = 0._f64
         c = 0._f64
         
+
         sim%poisson => new_poisson_2d_elliptic_solver( &
          transformation,&
          spline_degree_eta1, &
@@ -712,6 +719,8 @@ contains
          b12, & 
          b21, & 
          b22, & 
+         b1,  &
+         b2,  &
          c ) 
 
          
@@ -849,11 +858,13 @@ contains
           A2)
       endif            
      
+#ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         print*,"#step= ", step
         call plot_f_cartesian(iplot,f,sim%mesh_2d)
         iplot = iplot+1  
       endif            
+#endif
       
       select case (sim%time_loop_case)
         case (SLL_EULER)
