@@ -134,12 +134,7 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
-     
-    if(present(mudpack_curvilinear_case)) then
-      poisson%mudpack_curvilinear_case =  mudpack_curvilinear_case
-    else
-      poisson%mudpack_curvilinear_case = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
-    endif    
+      
                     
     call initialize_poisson_2d_mudpack_curvilinear_solver( &
       poisson, &
@@ -159,7 +154,7 @@ contains
       b21, &
       b22, &
       c, &
-      poisson%mudpack_curvilinear_case)
+      mudpack_curvilinear_case)
     
   end function new_poisson_2d_mudpack_curvilinear_solver
   
@@ -303,7 +298,11 @@ contains
 !    write(*,104) intl
 
 !call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error) 
-
+    if(present(mudpack_curvilinear_case)) then
+      poisson%mudpack_curvilinear_case =  mudpack_curvilinear_case
+    else
+      poisson%mudpack_curvilinear_case =  SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
+    endif  
     poisson%transformation => transf
     poisson%cxx_2d_interp => null()
     poisson%cyy_2d_interp => null()
@@ -513,14 +512,18 @@ contains
     eta2_min = poisson%transformation%mesh%eta2_min
     delta_eta1 = poisson%transformation%mesh%delta_eta1
     delta_eta2 = poisson%transformation%mesh%delta_eta2
-    poisson%rho =  0._f64
+
+    poisson%rho(1:Nc_eta1+1,1:Nc_eta2+1) =  0._f64
     do i2=1,Nc_eta2+1
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
         poisson%rho(i1,i2)=-rho(i1,i2)*poisson%transformation%jacobian(eta1,eta2)
       end do
-    end do  
+    end do
+
+        
+    
     
     if(nxa == SLL_DIRICHLET) then
        do i2=1,Nc_eta2+1
@@ -542,6 +545,7 @@ contains
           phi(i1,Nc_eta2+1) = 0._f64
        end do
     endif 
+    
      
     select case (poisson%mudpack_curvilinear_case)
     
@@ -564,7 +568,7 @@ contains
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
         ! seems not to work for the moment
-        !call mud24(poisson%work,phi,error)
+        call mud24(poisson%work,phi,error)
         !write (*,108) error
         if (error > 0) call exit(0)   
          mudpack_curvilinear_wrapper => null() 
@@ -573,7 +577,7 @@ contains
         if(associated(mudpack_curvilinear_wrapper))then
           print *,'#Problem mudpack_curvilinear_wrapper is not null()'
           stop
-        endif        
+        endif
         mudpack_curvilinear_wrapper => poisson
         call mud2cr(iprm, &
           fprm, &
