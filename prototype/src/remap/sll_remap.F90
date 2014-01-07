@@ -1576,7 +1576,8 @@ contains  !******************************************************************
     type(box_type), dimension(:), pointer :: new_recv_boxes; \
     sll_int32                            :: new_i; \
     sll_int32                            :: my_color; \
-    sll_int32                            :: exchange_size; \
+    sll_int32                            :: exchange_size_s; \
+    sll_int32                            :: exchange_size_r; \
     logical, dimension(1:1)              :: is_uniform_local; \
     logical, dimension(1:1)              :: is_uniform_collective; \
     sll_int32                            :: new_sdisp; \
@@ -1651,12 +1652,21 @@ contains  !******************************************************************
     SLL_DEALLOCATE_ARRAY( lowest_color, ierr ); \
     SLL_DEALLOCATE_ARRAY( colors, ierr ); \
     SLL_DEALLOCATE_ARRAY( colors_copy, ierr ); \
-    exchange_size = plan%send_counts(0); \
+    exchange_size_s = plan%send_counts(0); \
     do i=0,new_col_sz-1; \
-       if(plan%send_counts(i) .eq. exchange_size) then; \
-          is_uniform_local(1) = .true.; \
+       if(plan%send_counts(i) .eq. exchange_size_s) then; \
+          is_uniform_local(1) = is_uniform_local(1) .and. .true.; \
        else; \
-          is_uniform_local(1) = .false.; \
+          is_uniform_local(1) = is_uniform_local(1) .and. .false.; \
+          exit; \
+       end if; \
+    end do; \
+    exchange_size_r = plan%recv_counts(0); \
+    do i=0,new_col_sz-1; \
+       if(plan%recv_counts(i) .eq. exchange_size_r) then; \
+          is_uniform_local(1) = is_uniform_local(1) .and. .true.; \
+       else; \
+          is_uniform_local(1) = is_uniform_local(1) .and. .false.; \
           exit; \
        end if; \
     end do; \
