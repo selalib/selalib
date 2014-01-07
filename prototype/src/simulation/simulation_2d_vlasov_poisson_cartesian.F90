@@ -418,6 +418,28 @@ contains
         !for the moment
         sim%kx = kmode
         sim%eps = eps
+      case ("SLL_BUMP_ON_TAIL")
+        sim%init_func => sll_bump_on_tail_initializer_2d
+        SLL_ALLOCATE(sim%params(2),ierr)
+        sim%params(1) = kmode
+        sim%params(2) = eps
+        sim%nrj0 = 0._f64  !compute the right value
+        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+        !for the moment
+        sim%kx = kmode
+        sim%eps = eps
+      case ("SLL_TWO_STREAM_INSTABILITY")
+        sim%init_func => sll_two_stream_instability_initializer_2d
+        SLL_ALLOCATE(sim%params(2),ierr)
+        sim%params(1) = kmode
+        sim%params(2) = eps
+        sim%nrj0 = 0._f64  !compute the right value
+        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+        !for the moment
+        sim%kx = kmode
+        sim%eps = eps
       case ("SLL_BEAM")  
         sim%init_func => sll_beam_initializer_2d
         SLL_ALLOCATE(sim%params(1),ierr)
@@ -997,13 +1019,14 @@ contains
 
 
 
-
+    if(sll_get_collective_rank(sll_world_collective)==0) then        
+      print *,'#step=',0,real(0,f64)*sim%dt
+    endif
     
-
     do istep = 1, sim%num_iterations
-      if (mod(istep-1,sim%freq_diag)==0) then
+      if (mod(istep,sim%freq_diag)==0) then
         if(sll_get_collective_rank(sll_world_collective)==0) then        
-          print *,'#step=',istep-1,real(istep-1,f64)*sim%dt
+          print *,'#step=',istep,real(istep,f64)*sim%dt
         endif
       endif  
 
@@ -1203,6 +1226,18 @@ contains
             f_visu_buf1d )
           f_visu = reshape(f_visu_buf1d, shape(f_visu))
           if(sll_get_collective_rank(sll_world_collective)==0) then
+            do i=1,num_dof_x2
+              f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
+            enddo
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intdeltafdx', &
+              iplot )
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intdeltafdx')                        
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)  
           endif
           !we store f for visu
@@ -1218,10 +1253,22 @@ contains
             f_visu_buf1d )
           f_visu = reshape(f_visu_buf1d, shape(f_visu))
           if(sll_get_collective_rank(sll_world_collective)==0) then
+            do i=1,num_dof_x2
+              f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
+            enddo
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intfdx', &
+              iplot )
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intfdx')
 #ifndef NOHDF5
             call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
-            iplot = iplot+1  
 #endif
+            iplot = iplot+1  
           endif
                     
         endif
