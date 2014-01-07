@@ -693,7 +693,6 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/fft/sll_fft.F90 \
                          @CMAKE_CURRENT_SOURCE_DIR@/mgd3 \
                          @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
                          @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples \
                          @CMAKE_CURRENT_SOURCE_DIR@/opencl \
                          @CMAKE_CURRENT_SOURCE_DIR@/pastix \
                          @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
