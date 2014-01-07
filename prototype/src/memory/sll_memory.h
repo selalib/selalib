@@ -96,7 +96,6 @@ use sll_memory
   ! **************************************************************************
   ! IMPLEMENTATION NOTES FOR sll_memory.h:
   !
-  ! This is an exploratory implementation of Selalib's basic memory allocator.
   ! There are only two things that we ask of the memory allocator:
   ! 1. To allocate the memory requested, and
   ! 2. In case of failure, to stop the program execution with a message 
