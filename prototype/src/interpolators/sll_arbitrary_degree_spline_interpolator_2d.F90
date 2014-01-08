@@ -803,8 +803,8 @@ contains
          
          interpolator%size_coeffs1 =  num_cells1 + sp_deg1 + 1
          interpolator%size_coeffs2 =  num_cells2 + sp_deg2
-         interpolator%size_t1      = 2.0_f64*sp_deg1 + num_cells1 + 1 + 1
-         interpolator%size_t2      = 2.0_f64*sp_deg2 + num_cells2 + 1
+         interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1 + 1
+         interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
          nb_spline_eta1            = num_cells1
          nb_spline_eta2            = num_cells2 + sp_deg2 - 2
        
@@ -864,8 +864,8 @@ contains
       case(585) ! 4. dirichlet in all sides
          interpolator%size_coeffs1=  num_cells1 + sp_deg1
          interpolator%size_coeffs2=  num_cells2 + sp_deg2
-         interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
-         interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2 + 1
+         interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
+         interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
          nb_spline_eta1 = num_cells1 + sp_deg1 - 2
          nb_spline_eta2 = num_cells2 + sp_deg2 - 2
          
@@ -1318,13 +1318,13 @@ contains
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
     !sll_real64 :: bvalue2d
-    integer  :: li_i, li_j, li_mflag, li_lefty
+    !integer  :: li_i, li_j, li_mflag, li_lefty
     sll_real64 :: res1,res2
-    sll_int32  :: ierr
+    !sll_int32  :: ierr
     sll_real64,dimension(:), pointer:: tmp_tx,tmp_ty
     sll_real64,dimension(:,:), pointer:: tmp_coeff
-    type(sll_time_mark)  :: t0 
-    double precision :: time
+    !type(sll_time_mark)  :: t0 
+    !double precision :: time
 
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
@@ -1460,7 +1460,7 @@ contains
     sll_real64, dimension(:),pointer :: knot1_tmp
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
 
     SLL_ASSERT( eta1 .ge. interpolator%eta1_min )
     SLL_ASSERT( eta1 .le. interpolator%eta1_max )
@@ -1600,7 +1600,7 @@ contains
     sll_int32 :: size_coeffs2
     !sll_real64 :: dvalue2d
     sll_real64 :: res1,res2
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     sll_real64, dimension(:),pointer :: knot1_tmp
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
@@ -1733,9 +1733,15 @@ contains
     sll_int32, intent(in)         :: num_points2
 
     sll_real64, dimension(num_points1,num_points2) :: res
- 
-    print *, 'interpolate_array_ad2d: not implemented'
+    
+    print *, '#interpolate_array_ad2d: not implemented'
     res = -1000000._f64
+    print *,maxval(eta1)
+    print *,maxval(eta2)
+    print *,maxval(data_in)
+    print *,num_points1
+    print *,num_points2
+    stop
   end function !interpolate_array_ad2d
   
 #ifdef STDF95
@@ -1762,8 +1768,18 @@ contains
     sll_real64, dimension(:,:), intent(in)         :: alpha2  
     sll_real64, dimension(num_points1,num_points2) :: res
     
-    print *, 'interpolate_2d_array_disp_ad2d: not implemented.'
+    
+    
+    print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
+    !for preventing warning of unused objects
+    print *,num_points1 
+    print *,num_points2
+    print *,maxval(data_in)
+    print *,alpha1
+    print *,alpha2     
     res = -1000000._f64
+    stop
+    
   end function !interpolate_2d_array_disp_ad2d
     
    
