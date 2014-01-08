@@ -3711,6 +3711,8 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
 
+  t12i = time_elapsed_since(t_reference) 
+
   call factorize_mat_es(&
        es, &
        a11_field_mat, &
