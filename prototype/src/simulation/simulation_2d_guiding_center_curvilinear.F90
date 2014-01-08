@@ -336,7 +336,7 @@ contains
 
     !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
     !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
-    params_mesh = (/ 0._f64, 0._f64, eta1_max-eta1_min, eta2_max-eta2_min/)
+    params_mesh = (/ 1.e-3_f64, 1.e-3_f64, eta1_max-eta1_min, eta2_max-eta2_min/)
 
         
     sim%mesh_2d => new_logical_mesh_2d( &
@@ -347,16 +347,16 @@ contains
       eta2_min , &
       eta2_max ) 
            
-    sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
-       sim%mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       params_mesh   )  
+!    sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_identity_transformation", &
+!       sim%mesh_2d, &
+!       identity_x1, &
+!       identity_x2, &
+!       identity_jac11, &
+!       identity_jac12, &
+!       identity_jac21, &
+!       identity_jac22, &
+!       params_mesh   )  
        
 !    sim%transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_polar_transformation", &
@@ -369,16 +369,16 @@ contains
 !       polar_jac22, &
 !       params_mesh  )     
 
-!    sim%transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_collela_transformation", &
-!       sim%mesh_2d, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22, &
-!       params_mesh  )  
+    sim%transformation => new_coordinate_transformation_2d_analytic( &
+       "analytic_collela_transformation", &
+       sim%mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22, &
+       params_mesh  )  
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
