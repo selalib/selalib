@@ -437,7 +437,8 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
     
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    stop      
   end function get_coefficients_cs1d
 
 end module sll_cubic_spline_interpolator_1d
