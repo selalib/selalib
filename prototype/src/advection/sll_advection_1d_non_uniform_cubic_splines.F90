@@ -102,6 +102,11 @@ contains
     
     dx = (xmax-xmin)/real(num_cells,f64)
     
+    if(order.ne.4)then
+      print *,'#Warning order=4 is enforced'
+      print *,'#in initialize_non_uniform_cubic_splines_1d_advector'
+    endif
+    
     if(present(node_positions))then
       if(size(node_positions,1)<num_cells+1)then
         print *,'#size problem for node_positions'

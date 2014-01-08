@@ -376,6 +376,7 @@ contains  ! ****************************************************************
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
     print *,interpolator%num_points
+    get_coefficients_cs1d = 0._f64
     stop      
   end function get_coefficients_cs1d
   

@@ -410,10 +410,10 @@ contains  ! ****************************************************************
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
-       res(:) = 0.0_f64
-       
+       res(:) = 0.0_f64       
        print *,'#warning reconstruct_array is dummy'
        print *,'#', this%num_points
+       print *,maxval(data)       
        
   end function reconstruct_array
 
@@ -438,6 +438,7 @@ contains  ! ****************************************************************
     if(present(coeffs))then
       print *,'#coefs are present'
     endif
+    print *,interpolator%num_points
     stop
   end subroutine set_coefficients_cs1d
 
