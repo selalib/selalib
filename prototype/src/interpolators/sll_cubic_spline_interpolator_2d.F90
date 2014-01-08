@@ -492,6 +492,7 @@ contains
   function coefficients_are_set_cs2d( interpolator ) result(res)
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
     logical :: res
+    res = .false.
     print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
   end function coefficients_are_set_cs2d
 
