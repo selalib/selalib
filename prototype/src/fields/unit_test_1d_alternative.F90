@@ -12,31 +12,29 @@ program unit_test_1d_alternative
 #define ETA1MAX  1.0_f64
 #define PRINT_COMPARISON .false.
   
-  type(sll_logical_mesh_1d), pointer               :: mesh_1d
+  type(sll_logical_mesh_1d), pointer       :: mesh_1d
   ! either of these type declarations can be used to work. Initialization is
   ! different.
-  class(sll_scalar_field_1d_base), pointer              :: field_1d
-
-  class(sll_scalar_field_1d_base), pointer              :: periodic_anal
-  class(sll_scalar_field_1d_base), pointer              :: dirichlet_anal
-  class(sll_scalar_field_1d_base), pointer              :: periodic_discrete
-  class(sll_scalar_field_1d_base), pointer              :: dirichlet_discrete
-  sll_int32 :: nc1, iplot
-  sll_real64 :: grad1_node_val,grad1ref
-  sll_real64, dimension(:), pointer :: tab_values
-  type(arb_deg_1d_interpolator), target                 :: interp_1d
-  sll_real64 :: node_val,ref
-
-  sll_real64, dimension(:),   allocatable    :: point1
-  sll_real64 :: eta1
-  sll_real64  :: h1
-  sll_int32 :: npts1,npts2
-  sll_int32 :: i,j
-  sll_int32 :: ierr
-  real(8), external :: test_function_per
-  real(8), external :: test_function_per_der1
-  real(8), external :: test_function_dir
-  real(8), external :: test_function_dir_der1
+  class(sll_scalar_field_1d_base), pointer :: field_1d
+  class(sll_scalar_field_1d_base), pointer :: periodic_anal
+  class(sll_scalar_field_1d_base), pointer :: dirichlet_anal
+  class(sll_scalar_field_1d_base), pointer :: periodic_discrete
+  class(sll_scalar_field_1d_base), pointer :: dirichlet_discrete
+  sll_int32                                :: nc1, iplot
+  sll_real64                               :: grad1_node_val,grad1ref
+  sll_real64, dimension(:), pointer        :: tab_values
+  type(arb_deg_1d_interpolator), target    :: interp_1d
+  sll_real64                               :: node_val,ref
+  sll_real64, dimension(:),   allocatable  :: point1
+  sll_real64                               :: eta1
+  sll_real64                               :: h1
+  sll_int32                                :: npts1,npts2
+  sll_int32                                :: i,j
+  sll_int32                                :: ierr
+  real(8), external                        :: test_function_per
+  real(8), external                        :: test_function_per_der1
+  real(8), external                        :: test_function_dir
+  real(8), external                        :: test_function_dir_der1
 
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4
   sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4
