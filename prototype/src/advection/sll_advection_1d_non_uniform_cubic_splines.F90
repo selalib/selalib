@@ -188,7 +188,7 @@ contains
     sll_real64,intent(in)::alpha
     sll_real64 :: dx
     sll_int32  :: i
-    sll_real64 :: M,tmp,tmp2
+    !sll_real64 :: M,tmp,tmp2
     !temporary allocations
     sll_real64,dimension(:),pointer :: buf,Xstar,node_pos,coeffs
     sll_int32,dimension(:),pointer :: ibuf 
