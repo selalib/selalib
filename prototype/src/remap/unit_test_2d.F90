@@ -17,8 +17,8 @@ program remap_2d_unit_test
   sll_comp64, dimension(:,:), allocatable :: arrays_diffc
   ! Take a 2D array of dimensions ni*nj where ni, nj are the dimensions of
   ! the full array.
-  integer , parameter                       :: ni = 512
-  integer , parameter                       :: nj = 512
+  integer , parameter                       :: ni = 129 !512
+  integer , parameter                       :: nj = 512 !512
   ! Local sizes
   integer                                   :: loc_sz_i_init
   integer                                   :: loc_sz_j_init
@@ -77,7 +77,16 @@ program remap_2d_unit_test
      end if
      layout1  => new_layout_2D( sll_world_collective )        
      call factorize_in_random_2powers_2d(colsz, npi, npj)
+     if(i_test==1)then
+        npi = 1
+        npj = colsz
+     endif
+     if(i_test==2)then
+       npi = colsz
+       npj = 1
+     endif
 
+     
      if( myrank .eq. 0 ) then
         print *, 'source configuration: ', npi, npj
      end if
@@ -106,6 +115,16 @@ program remap_2d_unit_test
      
      layout2  => new_layout_2D( sll_world_collective )
      call factorize_in_random_2powers_2d(colsz, npi, npj)
+     if(i_test==1)then
+       npi = colsz
+       npj = 1
+     endif
+     if(i_test==2)then
+        npi = 1
+        npj = colsz
+     endif
+
+
      if( myrank .eq. 0 ) then
         print *, 'target configuration: ', npi, npj
      end if

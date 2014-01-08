@@ -192,7 +192,7 @@ contains
     sll_real64 :: keen_tflat
     logical :: keen_turn_drive_off
     sll_real64 :: keen_Edrmax
-    sll_real64 :: keen_omegadr	
+    sll_real64 :: keen_omegadr
     
     
     !local variables
@@ -539,7 +539,7 @@ contains
         sim%num_dof_x2 = num_cells_x2+1
       case ("SLL_CONSERVATIVE")
         sim%advection_form_x2 = SLL_CONSERVATIVE
-        sim%num_dof_x2 = num_cells_x2	
+        sim%num_dof_x2 = num_cells_x2
       case default
         print*,'#advection_form_x2', advection_form_x2, ' not implemented'
         print *,'#in init_vp2d_par_cart'
@@ -799,6 +799,14 @@ contains
     !definition of remap
     remap_plan_x1_x2 => NEW_REMAP_PLAN(layout_x1, layout_x2, f_x1)
     remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
+    
+    remap_plan_x2_x1%is_uniform = .false.
+    remap_plan_x1_x2%is_uniform = .false.
+    
+    !      print *,'hello',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
+    !      call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
+    !      print *,'hello2',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
+
 
     
     !allocation of 1d arrays
@@ -919,7 +927,15 @@ contains
       !print *,'#maxf',maxval(f_visu), minval(f_visu) 
 #ifndef NOHDF5
       iplot = 1
-      call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+      call plot_f_cartesian( &
+        iplot, &
+        f_visu, &
+        sim%x1_array, &
+        np_x1, &
+        node_positions_x2, &
+        sim%num_dof_x2, &
+        'f')        
+        !sim%mesh2d)
       iplot = iplot+1  
 #endif
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
@@ -927,6 +943,8 @@ contains
 
     endif
     
+
+
     
     
     
@@ -1101,6 +1119,7 @@ contains
           endif
         
         else
+
           !! V ADVECTION 
           !transposition
           call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
@@ -1132,10 +1151,13 @@ contains
             
             f_x2(i,1:num_dof_x2) = f1d(1:num_dof_x2)
           end do
+
           !transposition
+          !print *,'hello',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
           call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
+
 
         endif
         !split_x= 1-split_x
@@ -1239,6 +1261,20 @@ contains
               node_positions_x2(1:num_dof_x2), &
               'intdeltafdx')                        
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)  
+
+#ifndef NOHDF5
+            call plot_f_cartesian( &
+              iplot, &
+              f_visu, &
+              sim%x1_array, &
+              np_x1, &
+              node_positions_x2, &
+              sim%num_dof_x2, &
+              'deltaf')                    
+        !call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+#endif
+          
+          
           endif
           !we store f for visu
           call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
@@ -1266,7 +1302,15 @@ contains
               node_positions_x2(1:num_dof_x2), &
               'intfdx')
 #ifndef NOHDF5
-            call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+        call plot_f_cartesian( &
+          iplot, &
+          f_visu, &
+          sim%x1_array, &
+          np_x1, &
+          node_positions_x2, &
+          sim%num_dof_x2, &
+          'f')                    
+        !call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
 #endif
             iplot = iplot+1  
           endif
@@ -1552,18 +1596,31 @@ contains
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
-  subroutine plot_f_cartesian(iplot,f,mesh_2d)
+  subroutine plot_f_cartesian( &
+    iplot, &
+    f, &
+    node_positions_x1, &
+    nnodes_x1, &
+    node_positions_x2, &
+    nnodes_x2, &
+    array_name)    
+    !mesh_2d)
     use sll_xdmf
     use sll_hdf5_io
     sll_int32 :: file_id
     sll_int32 :: error
+    sll_real64, dimension(:), intent(in) :: node_positions_x1
+    sll_real64, dimension(:), intent(in) :: node_positions_x2    
+     character(len=*), intent(in) :: array_name !< field name
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32, intent(in) :: nnodes_x1
+    sll_int32, intent(in) :: nnodes_x2
     sll_int32 :: i, j
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
-    sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    !sll_int32             :: nnodes_x1, nnodes_x2
+    !type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64 :: r
     sll_real64 :: theta
@@ -1573,14 +1630,14 @@ contains
     sll_real64 :: dx2
     
     
-    nnodes_x1 = mesh_2d%num_cells1+1
-    nnodes_x2 = mesh_2d%num_cells2+1
-    x1_min = mesh_2d%eta1_min
-    x1_max = mesh_2d%eta1_max
-    x2_min = mesh_2d%eta2_min
-    x2_max = mesh_2d%eta2_max
-    dx1 = mesh_2d%delta_eta1
-    dx2 = mesh_2d%delta_eta2
+    !nnodes_x1 = mesh_2d%num_cells1+1
+    !nnodes_x2 = mesh_2d%num_cells2+1
+    !x1_min = mesh_2d%eta1_min
+    !x1_max = mesh_2d%eta1_max
+    !x2_min = mesh_2d%eta2_min
+    !x2_max = mesh_2d%eta2_max
+    !dx1 = mesh_2d%delta_eta1
+    !dx2 = mesh_2d%delta_eta2
     
     !print *,'#maxf=',iplot,maxval(f),minval(f)
     
@@ -1592,8 +1649,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
+          x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
         end do
       end do
       call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
@@ -1608,9 +1665,9 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
+    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
+    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_cartesian
