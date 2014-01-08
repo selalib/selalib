@@ -698,7 +698,8 @@ EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/fft/sll_fft.F90 \
                          @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
                          @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
                          @CMAKE_CURRENT_SOURCE_DIR@/BSL \
-                         @CMAKE_CURRENT_SOURCE_DIR@/CSL
+                         @CMAKE_CURRENT_SOURCE_DIR@/CSL \
+                         @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
