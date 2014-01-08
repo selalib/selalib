@@ -471,10 +471,10 @@ contains
     delta_left  = spline_obj%k(2)       - spline_obj%k(1)
     delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
 
-    if ( delta == 0.0 ) then
-       if ( current .le. 1 ) then
+    if ( delta < epsilon(1.0_f64) ) then
+       if ( current <= 1 ) then
           delta = delta_left
-       else if( current .ge. num_pts ) then
+       else if( current >= num_pts-1 ) then
           delta = delta_right
        end if
     end if
