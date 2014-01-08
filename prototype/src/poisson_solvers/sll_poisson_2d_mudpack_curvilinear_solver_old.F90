@@ -208,7 +208,8 @@ contains
     !storeage for labelling in vectors iprm,fprm
     sll_int32  :: iprm(16)
     sll_real64 :: fprm(6)
-    sll_int32  :: i,error
+    !sll_int32  :: i
+    sll_int32 :: error
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -632,6 +633,15 @@ contains
       
       print *,'#compute_E_from_rho_2d_mudpack_curvilinear'      
       print *,'#not implemented for the moment'
+      E1 = 0._f64
+      E2 = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%cxx_2d)))then
+        print *,'#poisson%cxx_2d is not associated'
+      endif
+
+
       stop
       
       !call solve( poisson%poiss, E1, E2, rho)
