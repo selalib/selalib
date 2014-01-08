@@ -1144,8 +1144,7 @@ contains
             /(interpolator%num_pts2 -1)
        SLL_ALLOCATE(point_location_eta1(sz1),ierr)
        SLL_ALLOCATE(point_location_eta2(sz2),ierr)
-       SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
-       SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
+      
        
        do i = 1,sz1
           point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
@@ -1153,13 +1152,19 @@ contains
        do i = 1,sz2
           point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
        end do
-       do i = 1,sz1-1
-          point_location_eta1_tmp(i) = interpolator%eta1_min + delta_eta1*(i-1)
-       end do
-       do i = 1,sz2-1
-          point_location_eta2_tmp(i) = interpolator%eta2_min + delta_eta2*(i-1)
-       end do
+!!$       do i = 1,sz1-1
+!!$          point_location_eta1_tmp(i) = interpolator%eta1_min + delta_eta1*(i-1)
+!!$       end do
+!!$       do i = 1,sz2-1
+!!$          point_location_eta2_tmp(i) = interpolator%eta2_min + delta_eta2*(i-1)
+!!$       end do
+
+      
     end if
+    SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
+    SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
+    point_location_eta1_tmp = point_location_eta1(1:sz1-1)
+    point_location_eta2_tmp = point_location_eta2(1:sz2-1)
     
     
     ! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
