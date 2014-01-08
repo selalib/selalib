@@ -3429,6 +3429,8 @@ program test_general_elliptic_solver
   acc11 = 0.0_f64
   integrale_solution_exacte = 0.0
   integrale_solution = 0.0
+  normL2_11 = 0.0_f64
+  normH1_11 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -3708,6 +3710,8 @@ program test_general_elliptic_solver
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
+
+  t12i = time_elapsed_since(t_reference) 
 
   call factorize_mat_es(&
        es, &

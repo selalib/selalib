@@ -531,6 +531,8 @@ contains
       sll_real64,dimension(:,:),intent(out) :: E1
       sll_real64,dimension(:,:),intent(out) :: E2
       
+      E1 = 0.0_f64
+      E2 = 0.0_f64
       print *,'#compute_E_from_rho_2d_elliptic_solver'      
       print *,'#not implemented for the moment'
       E1 = 0._f64
