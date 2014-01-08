@@ -1736,6 +1736,7 @@ contains
     
     print *, '#interpolate_array_ad2d: not implemented'
     res = -1000000._f64
+    print *,this%num_pts1
     print *,maxval(eta1)
     print *,maxval(eta2)
     print *,maxval(data_in)
@@ -1772,6 +1773,7 @@ contains
     
     print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
     !for preventing warning of unused objects
+    print *,this%num_pts1
     print *,num_points1 
     print *,num_points2
     print *,maxval(data_in)
