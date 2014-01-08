@@ -604,7 +604,7 @@ contains
     sll_real64, dimension(:,:)     :: phi    !< electric potential
     sll_int32                      :: nx
     sll_int32                      :: ny
-    sll_int32                      :: i
+    !sll_int32                      :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
