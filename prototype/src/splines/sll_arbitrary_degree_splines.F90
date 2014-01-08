@@ -459,27 +459,6 @@ contains
 
   end function b_spline_derivatives_at_x
 
-  subroutine check_if_delta_is_equal_to_zero(delta, current, spline_obj)
-
-    sll_real64, intent(inout)                 :: delta
-    sll_int32, intent(in)                     :: current
-    sll_int32                                 :: num_pts
-    type(arbitrary_degree_spline_1d), pointer :: spline_obj
-    sll_real64                                :: delta_left, delta_right
-
-    num_pts = spline_obj%num_pts
-    delta_left  = spline_obj%k(2)       - spline_obj%k(1)
-    delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
-
-    if ( delta < epsilon(1.0_f64) ) then
-       if ( current <= 1 ) then
-          delta = delta_left
-       else if( current >= num_pts-1 ) then
-          delta = delta_right
-       end if
-    end if
-
-  end subroutine check_if_delta_is_equal_to_zero
 
   function b_splines_and_derivs_at_x( spline_obj, cell, x )
     type(arbitrary_degree_spline_1d), pointer      :: spline_obj
@@ -591,9 +570,9 @@ contains
        current = cell - deg + i - 1
        delta1 = spline_obj%k(current+deg) - spline_obj%k(current)
        delta2 = spline_obj%k(current+deg+1) - spline_obj%k(current+1) 
-       derivs(i) = ( deg*splines(i)/delta1 - deg*splines(i+1)/delta2 )
        call check_if_delta_is_equal_to_zero(delta1, current, spline_obj)
        call check_if_delta_is_equal_to_zero(delta2, current, spline_obj)
+       derivs(i) = ( deg*splines(i)/delta1 - deg*splines(i+1)/delta2 )
        !delta_x = spline_obj%k(current+1) - spline_obj%k(current)
        !if( delta_x == 0.0 ) then
        !   if( current .le. 1 ) then
@@ -649,6 +628,30 @@ contains
     endif  
     b_splines_and_derivs_at_x(1,1:deg+1) = splines(1:deg+1)
   end function b_splines_and_derivs_at_x
+
+  subroutine check_if_delta_is_equal_to_zero(delta, current, spline_obj)
+
+    sll_real64, intent(inout)                 :: delta
+    sll_int32, intent(in)                     :: current
+    sll_int32                                 :: num_pts
+    type(arbitrary_degree_spline_1d), pointer :: spline_obj
+    sll_real64                                :: delta_left, delta_right
+
+    num_pts = spline_obj%num_pts
+    delta_left  = spline_obj%k(2)       - spline_obj%k(1)
+    delta_right = spline_obj%k(num_pts) - spline_obj%k(num_pts-1)
+
+    print*, delta, epsilon(1.0_f64), current, num_pts
+    if ( delta < epsilon(1.0_f64) ) then
+       if ( current <= 1 ) then
+          delta = delta_left
+       else if( current >= num_pts-1 ) then
+          delta = delta_right
+       end if
+    end if
+    print*, delta, current, num_pts
+
+  end subroutine check_if_delta_is_equal_to_zero
 
   subroutine delete_arbitrary_order_spline_1d( spline )
     type(arbitrary_degree_spline_1d), pointer :: spline
