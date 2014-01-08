@@ -280,7 +280,6 @@ contains
 
     do j=1,num_tests
        call random_number(rnd)
-       print*, ' test number = ', j, rnd
        x = min_val + rnd*(knots(num_pts)-min_val)
        cell = find_index( x, knots, num_pts )
        acc = 0.0_f64
@@ -300,9 +299,7 @@ contains
        
        ! test spline derivatives
        acc = 0.0_f64
-       print"(a10,2i4,3f12.3)", 'cell, x = ',cell,num_pts,x,spline%xmin,spline%xmax
        answer(:) = b_spline_derivatives_at_x(spline, cell, x)
-       if (j==6) stop
        acc = sum(answer(1:degree+1))
        passed_test = passed_test .and. (abs(acc) < criterion)
        if( passed_test .eqv. .false. ) then
