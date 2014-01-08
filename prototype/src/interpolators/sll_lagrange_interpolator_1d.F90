@@ -246,7 +246,7 @@ end subroutine interpolate_pointer_values_li1d
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     ! lagrange interpolation only implemented for constant displacement
     print*, 'interpolate_array_li1d: ', &
          'not implemented for lagrange interpolation'

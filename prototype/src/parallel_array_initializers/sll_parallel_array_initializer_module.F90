@@ -81,8 +81,8 @@ contains
     sll_real64 :: eta2_min
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: x1
-    sll_real64 :: x2
+    !sll_real64 :: x1
+    !sll_real64 :: x2
     sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
@@ -233,10 +233,10 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_real64 :: x3
-    sll_real64 :: x4
+    !sll_real64 :: x1
+    !sll_real64 :: x2
+    !sll_real64 :: x3
+    !sll_real64 :: x4
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then

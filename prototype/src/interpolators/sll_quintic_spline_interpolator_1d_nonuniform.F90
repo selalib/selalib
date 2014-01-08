@@ -147,6 +147,15 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
+    
+    if(present(eta_coords))then
+      print *,'#Warning eta_coords present but not used'
+    endif
+    if(present(size_eta_coords))then
+      print *,'#Warning size_eta_coords present but not used'
+    endif
+    
+    
     call compute_quintic_coeffs_nonuniform( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine quintic_spline_compute_interpolants_nonuniform
@@ -239,7 +248,14 @@ contains  ! ****************************************************************
     sll_int32                        :: ierr
     sll_int32  :: i  
     sll_real64, intent(in), dimension(:) :: knots
-    
+    print *,'#Warning bc_type provided but not used',bc_type
+    print *,'#Warning xmax provided but not used',xmax
+    if(present(slope_left))then
+      print *,'#Warning slope_left present but not used'
+    endif
+    if(present(slope_right))then
+      print *,'#Warning slope_right present but not used'
+    endif
     interpolator%num_points = num_points
     SLL_ALLOCATE(interpolator%interpolation_points(num_points),ierr)
     interpolator%interpolation_points(1) = xmin
@@ -259,7 +275,11 @@ contains  ! ****************************************************************
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
-       res(:) = 0.0_f64
+       res(:) = 0.0_f64       
+       print *,'#Warning dummy procedure reconstruct_array'
+       print *,maxval(data)
+       print *,this%num_points
+       
   end function reconstruct_array
   
   subroutine delete_qs1d_nonuniform( obj )
@@ -281,6 +301,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
          'implemented yet.'
+    if(present(coeffs))then
+      print *,'#coeffs present but not used'
+    endif
+    print *,interpolator%num_points     
     stop
   end subroutine set_coefficients_qs1d_nonuniform
 
@@ -294,7 +318,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer   :: get_coefficients_qs1d_nonuniform    
     
     print *, 'get_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    get_coefficients_qs1d_nonuniform = 0._f64
+    print *,interpolator%num_points
+    stop      
   end function get_coefficients_qs1d_nonuniform
 
 
