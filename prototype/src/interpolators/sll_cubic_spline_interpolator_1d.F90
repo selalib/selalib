@@ -186,6 +186,13 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
     call compute_spline_1D( data_array, interpolator%spline )
+    
+    if(present(eta_coords))then
+      print *,'#warning eta_coords not taken into account'
+    endif
+    if(present(size_eta_coords))then
+      print *,'#warning size_eta_coords not taken into account'
+    endif
 #ifdef STDF95
   end subroutine cubic_spline_compute_interpolants
 #else
@@ -404,6 +411,10 @@ contains  ! ****************************************************************
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
        res(:) = 0.0_f64
+       
+       print *,'#warning reconstruct_array is dummy'
+       print *,'#', this%num_points
+       
   end function reconstruct_array
 
   subroutine delete_cs1d( obj )
@@ -422,8 +433,11 @@ contains  ! ****************************************************************
     class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator 
 #endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
-    print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
+    print *, '#set_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
+    if(present(coeffs))then
+      print *,'#coefs are present'
+    endif
     stop
   end subroutine set_coefficients_cs1d
 
@@ -437,7 +451,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
     
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    get_coefficients_cs1d = 0._f64      
+    print *,  interpolator%num_points
+    stop    
   end function get_coefficients_cs1d
 
 end module sll_cubic_spline_interpolator_1d
