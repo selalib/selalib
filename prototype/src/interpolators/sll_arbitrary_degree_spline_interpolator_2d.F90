@@ -223,10 +223,10 @@ contains
     sll_real64, dimension(:),optional :: slope_right
     sll_real64, dimension(:),optional :: slope_bottom
     sll_real64, dimension(:),optional :: slope_top
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_left
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_right
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_top
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_left => null()
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_right => null()
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom => null()
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_top => null()
     sll_int32 :: ierr
     sll_int32 :: tmp1
     sll_int32 :: tmp2
@@ -345,6 +345,7 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
+
        if (present(slope_left)) then 
           sz_slope_left = size(slope_left)
           if ( sz_slope_left .ne. interpolator%num_pts2 ) then 
