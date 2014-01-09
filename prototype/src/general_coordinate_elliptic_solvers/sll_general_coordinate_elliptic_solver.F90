@@ -1528,11 +1528,7 @@ contains ! *******************************************************************
     sll_real64 :: eta2
     sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
     sll_int32  :: num_pts_g2 ! number of gauss points in second direction
-    sll_int32  :: cell_i, cell_j,i,j
-    sll_real64 :: gpt1
-    sll_real64 :: gpt2
-    sll_real64 :: wgpt1
-    sll_real64 :: wgpt2
+    sll_int32  :: cell_i, cell_j
     sll_real64 :: val_f
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
