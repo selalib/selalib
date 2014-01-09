@@ -164,10 +164,10 @@ contains  ! ****************************************************************
     sll_int32, intent(in),optional                 :: size_eta_coords
     
     if(present(eta_coords))then
-      print *,'#Warning eta_coords present but not used'
+      !print *,'#Warning eta_coords present but not used'
     endif
     if(present(size_eta_coords))then
-      print *,'#Warning size_eta_coords present but not used'
+      !print *,'#Warning size_eta_coords present but not used'
     endif
     
     call compute_quintic_coeffs_uniform( data_array, interpolator%spline )
