@@ -45,7 +45,7 @@ contains
         logical, optional :: al_stdoutput
         integer, optional :: ai_dtllevel
         ! LOCAL VARIABLES
-        integer  :: li_ios, li_flag, li_err
+        integer  :: li_ios
 
         mi_dtllevel  = 0
         if ( present ( ai_dtllevel )  ) then
@@ -153,7 +153,6 @@ contains
         ! LOCAL VARIABLES
         logical :: ll_condition
         integer :: li_dtllevel
-        integer :: li_i
 
         ll_condition = .TRUE.
         if ( present ( al_condition ) ) then
