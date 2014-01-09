@@ -361,7 +361,7 @@ contains
 
     ! Apply the kernel 
     do j=1, npy_loc-1 ! last point was not transformed
-       do i=1, npx_loc
+       do i=1, npx_loc-1
           ! Make sure that the first mode is set to zero so that we get an
           ! answer with zero mean value. This step assumes that the (1,1) point
           ! will always be at the border of any splitting of the domains. This 
