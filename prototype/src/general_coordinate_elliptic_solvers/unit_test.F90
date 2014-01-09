@@ -1,19 +1,22 @@
 program test_general_elliptic_solver
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-#ifdef _UMFPACK
-  use sll_general_coordinate_elliptic_solver_module_umfpack
-#else
-  use sll_general_coordinate_elliptic_solver_module
-#endif
   use sll_module_scalar_field_2d_alternative
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_timer
 
-#include "sll_memory.h"
-#include "sll_working_precision.h"
+
+#ifdef _UMFPACK
+  use sll_general_coordinate_elliptic_solver_module_umfpack
+#else
+  use sll_general_coordinate_elliptic_solver_module
+#endif
+
   implicit none
 
 #define SPLINE_DEG1 3
