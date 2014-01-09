@@ -113,9 +113,9 @@ contains
     subroutine todense_csrMatrix(csr_mat, apr_dense)
     implicit none
     type(csr_matrix) :: csr_mat
-    real(8), dimension(:,:),INTENT(INOUT) :: apr_dense		
+    real(8), dimension(:,:),INTENT(INOUT) :: apr_dense
     !local var
-    integer  :: li_i,li_j,li_k	        
+    integer  :: li_i,li_j,li_k
 
     !initialisation
     do li_i =1,csr_mat%oi_nR 
@@ -124,7 +124,7 @@ contains
 
         li_j = csr_mat%opi_ja(li_k)
 
-        apr_dense ( li_i , li_j ) = csr_mat%opr_a ( li_k )	
+        apr_dense ( li_i , li_j ) = csr_mat%opr_a ( li_k )
 
      end do
                     

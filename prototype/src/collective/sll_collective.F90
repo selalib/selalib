@@ -163,6 +163,7 @@ module sll_collective
      sll_int32                       :: thread_level_provided
   end type sll_collective_t
 
+
   ! **********************************************************************
   ! A few rare global variables.
   ! The sll_world_collective just wraps around MPI_WORLD_COMM. This gets
@@ -205,7 +206,8 @@ module sll_collective
 
   !> @brief Gathers into specified locations from all processes in a group.
   interface sll_collective_gatherv
-     module procedure sll_collective_gatherv_real
+     module procedure sll_collective_gatherv_real, &
+          sll_collective_gatherv_real64
   end interface
   
   !> @brief Sends data from one process to all other processes
@@ -222,7 +224,8 @@ module sll_collective
   !> @brief Combines values from all processes and distributes
   !!        the result back to all processes. 
   interface sll_collective_allreduce
-     module procedure sll_collective_allreduce_real, &
+     module procedure sll_collective_allreduce_real32, &
+                      sll_collective_allreduce_real64, &
                       sll_collective_allreduce_logical
   end interface
   
@@ -251,7 +254,13 @@ module sll_collective
                       sll_collective_alltoallV_complex_double
   end interface
 
+
+
+
 contains !************************** Operations **************************
+
+
+
 
   ! First a couple of utilities for this module
   !> @brief Checks if the pointer \a ptr is associated to an object.
@@ -275,8 +284,6 @@ contains !************************** Operations **************************
     sll_int32, intent(in)        :: ierr
     character(len=*), intent(in) :: descriptor
 
-    SLL_ASSERT( ierr .eq. MPI_SUCCESS ) ! redundant, make a choice between
-                                        ! asserting and this function.
     if( ierr .ne. MPI_SUCCESS ) then
        write (*, '(a, a)') 'MPI error code failure: ', descriptor
     end if
@@ -308,6 +315,7 @@ contains !************************** Operations **************************
     sll_int32 :: ierr
 
     SLL_ALLOCATE( sll_world_collective, ierr )
+
 
 #ifndef MPI_THREAD_MULTIPLE
 
@@ -518,8 +526,8 @@ contains !************************** Operations **************************
     !rec_count = send_sz*col%size
     !Note that the 5th argument at the root indicates the number of items
     !it receives from each task. It is not the total number of items received.
-    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, send_sz, &
-         MPI_REAL, root, col%comm, ierr )
+    call MPI_GATHER( send_buf, send_sz, MPI_DOUBLE_PRECISION, rec_buf, send_sz, &
+         MPI_DOUBLE_PRECISION, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
   end subroutine sll_collective_gather_real64
@@ -552,8 +560,17 @@ contains !************************** Operations **************************
       SLL_ASSERT( SIZE(displs) .eq. col%size )
       SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
     endif
-    call MPI_GATHERV( send_buf, send_count, MPI_REAL,rec_buf,recvcnts,&
-         displs, MPI_REAL, root, col%comm, ierr )
+    call MPI_GATHERV( &
+      send_buf, &
+      send_count, &
+      MPI_REAL, &
+      rec_buf, &
+      recvcnts, &
+      displs, &
+      MPI_REAL, &
+      root, &
+      col%comm, &
+      ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gatherv_real(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real
@@ -591,7 +608,7 @@ contains !************************** Operations **************************
     call MPI_GATHERV( send_buf, send_count, MPI_REAL8,rec_buf,recvcnts,&
          displs, MPI_REAL8, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_gatherv_real8(): MPI_GATHERV()' )
+         'sll_collective_gatherv_real64(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real64
 
 
@@ -784,7 +801,7 @@ contains !************************** Operations **************************
   !> @param[in] count number of elements in send buffer
   !> @param[in] op operation
   !> @param[out] rec_buf starting address of receive buffer
-  subroutine sll_collective_allreduce_real( col, send_buf, count, op, &
+  subroutine sll_collective_allreduce_real32( col, send_buf, count, op, &
        rec_buf )
     type(sll_collective_t), pointer       :: col
     sll_real32, dimension(:), intent(in)  :: send_buf ! what would change...
@@ -793,11 +810,54 @@ contains !************************** Operations **************************
     sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
-    call MPI_ALLREDUCE( send_buf, rec_buf, count, MPI_REAL, op, &
-         col%comm, ierr )
-    call sll_test_mpi_error( ierr, &
-         'sll_collective_allreduce_real(): MPI_ALLREDUCE()' )
-  end subroutine sll_collective_allreduce_real
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_REAL, &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_real32(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_real32
+
+
+  !> @brief Combines real values from all processes and 
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+  subroutine sll_collective_allreduce_real64( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_real64, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_real64, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_DOUBLE_PRECISION, &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_real64
+
+
 
   !> @brief Combines logical values from all processes and 
   !!        distributes the result back to all processes
@@ -1134,8 +1194,8 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_int(): MPI_BARRIER()' )
     call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
-                        recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
-                        col%comm, ierr )
+         recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
+         col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
     call MPI_BARRIER( col%comm, ierr )
@@ -1146,71 +1206,75 @@ contains !************************** Operations **************************
 !POSING PROBLEM WITH F95 STANDARD. WE SHOULD COME BACK TO THIS
 !
 !warning sll_collective_alltoallV_int_simple is not fixed
+
   ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
- subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
-                                            recv_buf,col )
-!#ifdef STDF95
-!    sll_int32, dimension(:), intent(in) :: send_buf
-!    sll_int32, dimension(:), intent(in) :: send_cnts
-!    sll_int32, dimension(:), intent(out) :: recv_buf
-!    type(sll_collective_t), pointer     :: col
-!
-!    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
-!    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
-!#else
-   sll_int32, dimension(:), intent(in) :: send_buf
-   sll_int32, dimension(:), intent(in) :: send_cnts
-   !sll_int32, ,allocatable dimension(:) :: recv_buf
-   sll_int32, pointer, dimension(:) :: recv_buf
-   sll_int32, allocatable, dimension(:) :: send_displs
-   sll_int32, allocatable, dimension(:) :: recv_cnts
-   sll_int32, allocatable, dimension(:) :: recv_displs
-   type(sll_collective_t), pointer     :: col
-   sll_int32                          :: ierr,size_comm,i,sendcnts_size
-   sll_int32                          :: dum
-   sendcnts_size = size(send_cnts)
-
-   ! FIXME: ARG CHECKING!
-   call sll_check_collective_ptr( col )
-   call MPI_BARRIER( col%comm, ierr )
-   call sll_test_mpi_error( ierr, &
-        'sll_collective_alltoallV_int(): MPI_BARRIER()' )
-
-   size_comm = sll_get_collective_size(col)
-   SLL_ASSERT( sendcnts_size .eq. size_comm )
-     
-   ! Define RECV_CNTS
-   SLL_ALLOCATE(recv_cnts(size_comm),ierr)
-   call sll_collective_alltoall_int( send_cnts ,1 ,1, &
-                                  recv_cnts, col)
-
-   ! Define RECV_BUF
-   dum = SUM(recv_cnts)
-   SLL_ALLOCATE(recv_buf(dum),ierr)
-
-   ! Define SEND_DISPLS
-   SLL_ALLOCATE(send_displs(size_comm),ierr)
-   send_displs(1)=0
-   do i=2,size_comm
-     send_displs(i)=send_displs(i-1)+send_cnts(i-1)
-   enddo
-
-   ! Define RECV_DISPLS
-   SLL_ALLOCATE(recv_displs(size_comm),ierr)
-   recv_displs(1)=0
-   do i=2,size_comm
-     recv_displs(i)=recv_displs(i-1)+recv_cnts(i-1)
-   enddo
-
-   call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
+  subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
+       recv_buf,col )
+    !#ifdef STDF95
+    !    sll_int32, dimension(:), intent(in) :: send_buf
+    !    sll_int32, dimension(:), intent(in) :: send_cnts
+    !    sll_int32, dimension(:), intent(out) :: recv_buf
+    !    type(sll_collective_t), pointer     :: col
+    !
+    !    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
+    !    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
+    !#else
+    sll_int32, dimension(:), intent(in) :: send_buf
+    sll_int32, dimension(:), intent(in) :: send_cnts
+    !sll_int32, ,allocatable dimension(:) :: recv_buf
+    sll_int32, pointer, dimension(:) :: recv_buf
+    sll_int32, allocatable, dimension(:) :: send_displs
+    sll_int32, allocatable, dimension(:) :: recv_cnts
+    sll_int32, allocatable, dimension(:) :: recv_displs
+    type(sll_collective_t), pointer     :: col
+    sll_int32                          :: ierr,size_comm,i,sendcnts_size
+    sll_int32                          :: dum
+    sendcnts_size = size(send_cnts)
+    
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_int(): MPI_BARRIER()' )
+    
+    size_comm = sll_get_collective_size(col)
+    SLL_ASSERT( sendcnts_size .eq. size_comm )
+    
+    ! Define RECV_CNTS
+    SLL_ALLOCATE(recv_cnts(size_comm),ierr)
+    call sll_collective_alltoall_int( send_cnts ,1 ,1, &
+         recv_cnts, col)
+    
+    ! Define RECV_BUF
+    dum = SUM(recv_cnts)
+    SLL_ALLOCATE(recv_buf(dum),ierr)
+    
+    ! Define SEND_DISPLS
+    SLL_ALLOCATE(send_displs(size_comm),ierr)
+    send_displs(1)=0
+    do i=2,size_comm
+       send_displs(i)=send_displs(i-1)+send_cnts(i-1)
+    enddo
+    
+    ! Define RECV_DISPLS
+    SLL_ALLOCATE(recv_displs(size_comm),ierr)
+    recv_displs(1)=0
+    do i=2,size_comm
+       recv_displs(i)=recv_displs(i-1)+recv_cnts(i-1)
+    enddo
+    
+    call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
                        recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
                        col%comm, ierr )
-   call sll_test_mpi_error( ierr, &
-        'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
-   call MPI_BARRIER( col%comm, ierr )
-   SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
-   SLL_DEALLOCATE_ARRAY(send_displs,ierr)
-   SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
-end subroutine sll_collective_alltoallV_int_simple
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_alltoallV_int(): MPI_ALLTOALLV()' )
+    call MPI_BARRIER( col%comm, ierr )
+    SLL_DEALLOCATE_ARRAY(recv_displs,ierr)
+    SLL_DEALLOCATE_ARRAY(send_displs,ierr)
+    SLL_DEALLOCATE_ARRAY(recv_cnts,ierr)
+  end subroutine sll_collective_alltoallV_int_simple
+
+  ! Explore if the Irecv calls can be made into collective calls in this module
+  !  subroutine sll_collective_Irecv( )
 
 end module sll_collective

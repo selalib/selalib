@@ -101,6 +101,8 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
+      ADD_SUBDIRECTORY(point_to_point_communications)
+
 
       IF(NOT STDF95)
          ADD_SUBDIRECTORY(parallel_array_initializers)
@@ -114,12 +116,18 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)
    ADD_SUBDIRECTORY(opencl)
+
+
+   ADD_SUBDIRECTORY(sparse)
    ADD_SUBDIRECTORY(pastix)
    ADD_SUBDIRECTORY(wsmp)
+   ADD_SUBDIRECTORY(petsc_solvers)
+   ADD_SUBDIRECTORY(linear_solvers)
 
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
+      ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
       ADD_SUBDIRECTORY(maxwell_solvers)
@@ -127,7 +135,6 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(BSL)
       ADD_SUBDIRECTORY(CSL)
       ADD_SUBDIRECTORY(visu_pic)
-      ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ADD_SUBDIRECTORY(mapped_meshes) # deprecated
       ADD_SUBDIRECTORY(time_solvers)
       ADD_SUBDIRECTORY(distribution_function)
@@ -191,7 +198,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    ENDIF()
 
-   ADD_SUBDIRECTORY(petsc_solvers)
 
    INCLUDE(DoxygenConfig)
 

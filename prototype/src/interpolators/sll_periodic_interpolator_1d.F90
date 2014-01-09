@@ -103,10 +103,16 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! local variables
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     ! periodic interpolation only implemented for constant displacement
     print*, 'periodic_interpolate1d: periodic interpolation not implemented', &
          ' for array of displacements'
+    data_out = -1000000._f64
+    print *,num_points
+    print *,maxval(coordinates)
+    print *,maxval(data)
+    print *,maxval(data_out)
+    print *,this%num_points
     stop
   end function 
 
@@ -159,6 +165,14 @@ contains  ! ****************************************************************
     sll_int32, intent(in),optional                 :: size_eta_coords
     print*, 'compute_interpolants_per1d:', &
          ' not implemented for periodic interpolation'
+    if(present(eta_coords))then
+      print *,'eta_coords present but not used'
+    endif
+    if(present(size_eta_coords))then
+      print *,'size_eta_coords present but not used'
+    endif
+    print *,maxval(data_array)
+    print *,interpolator%num_points
     stop
 #ifdef STDF95
   end subroutine periodic_compute_interpolants
@@ -184,10 +198,13 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
-    output_array = 0.0
+    !sll_int32 :: ierr
+    output_array = -1000000._f64
     print*, 'interpolate_values_per1d:', &
          ' not implemented for periodic interpolation'
+    print *,interpolator%num_points
+    print *,num_pts
+    print *,maxval(vals_to_interpolate)         
     stop
   end subroutine interpolate_values_per1d
 
@@ -204,9 +221,13 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     print*, 'interpolate_pointer_values_per1d: ', &
          'not implemented for periodic interpolation'
+    output = -1000000._f64
+    print *,interpolator%num_points
+    print *,num_pts
+    print *,maxval(vals_to_interpolate)
     stop
   end subroutine interpolate_pointer_values_per1d
 
@@ -226,10 +247,14 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    sll_int32 :: ierr
-    output_array = 0.0
-     print*, 'interpolate_array_derivatives: ', &
+    !sll_int32 :: ierr
+
+    print*, 'interpolate_array_derivatives: ', &
          'not implemented for periodic interpolation'
+    output_array = -1000000._f64
+    print *,interpolator%num_points
+    print *,num_pts
+    print *,maxval(vals_to_interpolate)
     stop
   end subroutine interpolate_derivatives_per1d
 
@@ -246,9 +271,14 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
-    sll_int32 :: ierr
-     print*, 'interpolate_pointer_derivatives_per1d:  ', &
-         'not implemented for periodic interpolation'
+    !sll_int32 :: ierr
+    print*, 'interpolate_pointer_derivatives_per1d:  ', &
+      'not implemented for periodic interpolation'
+    output = -1000000._f64
+    print *,interpolator%num_points
+    print *,num_pts
+    print *,maxval(vals_to_interpolate)
+    print *,maxval(output)
     stop
   end subroutine interpolate_pointer_derivatives_per1d
 
@@ -263,6 +293,9 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_per1d: ', &
          'not implemented for periodic interpolation'
+    val = -1000000._f64
+    print *,eta1
+    print *,interpolator%num_points
     stop
   end function
   
@@ -278,6 +311,9 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_deriv1_per1d: ', &
          'not implemented for periodic interpolation'
+    val = -1000000._f64
+    print *,eta1
+    print *,interpolator%num_points
     stop
 #ifdef STDF95
   end function periodic_interpolate_derivative_eta1
@@ -296,6 +332,9 @@ contains  ! ****************************************************************
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_f95: ', &
          'not implemented for periodic interpolation'
+    val = -1000000._f64
+    print *,eta1
+    print *,interpolator%num_points
     stop
 #ifdef STDF95
   end function periodic_interpolate_derivative_f95
@@ -330,9 +369,9 @@ contains  ! ****************************************************************
     sll_real64, intent(in)               :: xmax
     sll_int32,  intent(in)               :: type
     sll_int32,  intent(in)               :: order
-    sll_int32                            :: ierr
-    sll_int32  :: i  
-    sll_real64 :: delta
+    !sll_int32                            :: ierr
+    !sll_int32  :: i  
+    !sll_real64 :: delta
     
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
@@ -356,6 +395,10 @@ contains  ! ****************************************************************
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
        res(:) = 0.0_f64
+       print *,'#Warning reconstruct_array dummy function'
+       print *,'#',maxval(data)
+       print *,'#',num_points
+       print *,'#',this%num_points
   end function reconstruct_array
 
   subroutine delete_per1d( obj )
@@ -376,6 +419,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_per1d(): ERROR: This function has not been ', &
          'implemented yet.'
+    if(present(coeffs))then
+      print *,'#coeffs present but not used'
+    endif     
+    print *,interpolator%num_points    
     stop
   end subroutine set_coefficients_per1d
 
@@ -389,7 +436,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer            :: get_coefficients_per1d     
     
     print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    print *,interpolator%num_points
+    get_coefficients_per1d = 0._f64
+    stop      
   end function get_coefficients_per1d
 
 end module sll_periodic_interpolator_1d
