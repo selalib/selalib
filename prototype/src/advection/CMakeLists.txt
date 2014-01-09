@@ -2,6 +2,7 @@ IF( NOT STDF95)
 
   SET( ADVECTION_SRC_FILES 
 	sll_advection_1d_periodic.F90
+	sll_advection_1d_non_uniform_cubic_splines.F90
 	sll_advection_1d_base.F90
 	sll_advection_2d_BSL.F90
 	sll_advection_2d_base.F90)
@@ -15,6 +16,7 @@ IF( NOT STDF95)
   TARGET_LINK_LIBRARIES( 
     sll_advection
     sll_periodic_interp
+    sll_splines
     sll_characteristics
     sll_interpolators
   )
@@ -26,6 +28,16 @@ IF( NOT STDF95)
   TARGET_LINK_LIBRARIES(
     test_advection_1d_periodic
     sll_advection)
+
+  ADD_EXECUTABLE(
+    test_advection_1d_non_uniform_cubic_splines
+    unit_test_advection_1d_non_uniform_cubic_splines.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_advection_1d_non_uniform_cubic_splines
+    sll_advection)
+
+
 
   ADD_EXECUTABLE(
     test_advection_2d_BSL

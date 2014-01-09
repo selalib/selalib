@@ -37,13 +37,19 @@ ENDIF(FISHPACK_ENABLED)
 
 
 IF (NOT STDF95)
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_base.F90
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_1d_base.F90
+                                    sll_poisson_1d_periodic_solver.F90
+                                    sll_poisson_1d_polar_solver.F90
+                                    sll_poisson_2d_base.F90
                                     sll_poisson_2d_fft.F90
                                     sll_poisson_2d_polar_solver.F90
+                                    sll_poisson_2d_periodic_solver.F90
+                                    sll_poisson_2d_elliptic_solver.F90
                                     sll_poisson_3d_base.F90)
                                     
   IF(MUDPACK_ENABLED)                                    
-    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90)
+    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90
+                                     sll_poisson_2d_mudpack_curvilinear_solver_old.F90)
   ENDIF(MUDPACK_ENABLED)                                    
                                     
 ENDIF(NOT STDF95)
@@ -81,6 +87,15 @@ IF (NOT STDF95)
     test_poisson_2d_polar_solver
     sll_poisson_solvers
     sll_poisson_2d_polar)
+
+  ADD_EXECUTABLE(
+    test_poisson_1d_polar_solver
+    unit_test_poisson_1d_polar_solver.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_poisson_1d_polar_solver
+    sll_poisson_solvers)
+
 
 
 ENDIF(NOT STDF95)

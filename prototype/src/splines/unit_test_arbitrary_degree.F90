@@ -1,105 +1,43 @@
 program arbitrary_degree_spline_tester
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
+
   use sll_arbitrary_degree_splines
+
   implicit none
 
   logical                                :: passed_test
   passed_test = .true.
 
   print *, '*****************************************************************'
-  print *, 'Testing arbitrary degree splines module: '
+  print *, ' Testing arbitrary degree splines module: '
   print *, '*****************************************************************'
 
+  print *, '*****************************************************************'
+  print *, ' non uniform periodic '
+  print *, '*****************************************************************'
   call test_nonuniform_arb_deg_splines_periodic( passed_test )
+  print *, '*****************************************************************'
+  print *, ' uniform B-splines randomly '
+  print *, '*****************************************************************'
+  call test_uniform_b_splines_randomly( passed_test )
+  print *, '*****************************************************************'
+  print *, ' non uniform open '
+  print *, '*****************************************************************'
+  call test_nonuniform_arb_deg_splines_open( passed_test )
 
-
-! Floating-point exception - erroneous arithmetic operation.
-! in these following tests
- call test_uniform_b_splines_randomly( passed_test )
- call test_nonuniform_arb_deg_splines_open( passed_test )
-
- if( passed_test .eqv. .true. ) then
-    print *, 'PASSED'
- else
-    print *, 'FAILED'
- end if
+  if (passed_test) then
+     print *, 'PASSED'
+  else
+     print *, 'FAILED'
+  end if
 
 contains
 
-  subroutine test_uniform_b_splines_randomly( passed_flag )
-    logical, intent(inout)      :: passed_flag
-    sll_real64                  :: criterion
-    sll_real64                  :: argument
-    sll_real64                  :: argument_copy
-    sll_real64, dimension(:), allocatable   :: results
-    sll_real64, dimension(:), allocatable   :: derivatives
-    sll_real64, dimension(:,:), allocatable :: sp_and_derivs
-    sll_int32                   :: num_tests
-    sll_int32                   :: i
-    sll_int32                   :: j
-    sll_int32                   :: max_degree
-    sll_int32                   :: ierr
-
-    criterion          = 1.0e-14
-    argument           = 0.0_f64
-    num_tests          = 10000
-    argument_copy      = argument
-    max_degree         = 12
- 
-    do j=0, max_degree
-       do i=1,num_tests
-          SLL_CLEAR_ALLOCATE(results(1:j+1),ierr)
-          SLL_CLEAR_ALLOCATE(derivatives(1:j+1),ierr)
-          SLL_CLEAR_ALLOCATE(sp_and_derivs(1:2,1:j+1),ierr)
-          call random_number(argument)
-          results(:) = uniform_b_splines_at_x(j, argument)
-          derivatives(:) = uniform_b_spline_derivatives_at_x(j, argument)
-          sp_and_derivs(:,:) = uniform_b_splines_and_derivs_at_x(j, argument)
-          passed_flag = passed_flag .and. &
-               (abs(sum(results)-1.0_f64).le.criterion)
-
-          if( passed_flag .eqv. .false. ) then
-             print *, 'Test_uniform_b_splines, values: wrong result for x = ', &
-                  argument
-             print *, 'Degree = ', j, 'Reduction = ', sum(results)
-             print*, 'Exiting...'
-             stop
-          end if
-
-          passed_flag = passed_flag .and. &
-               (abs(sum(derivatives)-0.0_f64).le.criterion)
-          if( passed_flag .eqv. .false. ) then
-             print *, 'Test_uniform_b_splines, derivs: wrong result for x = ', &
-                  argument
-             print *, 'Degree = ', j, 'Reduction = ', sum(derivatives)
-             print*, 'Exiting...'
-             stop
-          end if
-
-          passed_flag = passed_flag .and. &
-               (abs(sum( sp_and_derivs(1,:) ) - 1.0_f64).le.criterion) .and. &
-               (abs(sum( sp_and_derivs(2,:) ) - 0.0_f64).le.criterion)
-          if( passed_flag .eqv. .false. ) then
-             print *, 'Test_uniform_b_splines, vals and derivs: ', &
-                  'wrong result for x = ', argument
-             print *, 'Degree = ', j, 'Reduction = ', sum(sp_and_derivs)
-             print*, 'Exiting...'
-             stop
-          end if
-          results(:)         = 0.0_f64
-          derivatives(:)     = 0.0_f64
-          sp_and_derivs(:,:) = 0.0_f64
-
-          SLL_DEALLOCATE_ARRAY(results, ierr)
-          SLL_DEALLOCATE_ARRAY(derivatives, ierr)
-          SLL_DEALLOCATE_ARRAY(sp_and_derivs, ierr)
-       end do
-    end do
-  end subroutine test_uniform_b_splines_randomly
-
   subroutine test_nonuniform_arb_deg_splines_periodic( passed_test )
+
     logical, intent(inout) :: passed_test
     sll_real64, dimension(:), allocatable :: knots
     sll_int32  :: i,j
@@ -121,10 +59,10 @@ contains
 
     num_tests = 10
     criterion = 1.0e-15
-    degree  = 3
-    min_val = 0.0
-    num_pts = 10
-    step    = 1.0
+    degree    = 3
+    min_val   = 0.0
+    num_pts   = 10
+    step      = 1.0
     SLL_ALLOCATE(knots(num_pts),ierr)
     SLL_ALLOCATE(answer1(degree+1),ierr)
     SLL_ALLOCATE(answer2(degree+1),ierr)
@@ -208,12 +146,87 @@ contains
           print*, 'Exiting...'
           stop
        end if
+
     end do
+
     SLL_DEALLOCATE_ARRAY(answer1, ierr)
     SLL_DEALLOCATE_ARRAY(answer2, ierr)
     SLL_DEALLOCATE_ARRAY(answer3, ierr)
+
     call delete(spline)
   end subroutine test_nonuniform_arb_deg_splines_periodic
+
+  subroutine test_uniform_b_splines_randomly( passed_flag )
+    logical, intent(inout)      :: passed_flag
+    sll_real64                  :: criterion
+    sll_real64                  :: argument
+    sll_real64                  :: argument_copy
+    sll_real64, dimension(:), allocatable   :: results
+    sll_real64, dimension(:), allocatable   :: derivatives
+    sll_real64, dimension(:,:), allocatable :: sp_and_derivs
+    sll_int32                   :: num_tests
+    sll_int32                   :: i
+    sll_int32                   :: j
+    sll_int32                   :: max_degree
+    sll_int32                   :: ierr
+
+    criterion          = 1.0e-14
+    argument           = 0.0_f64
+    num_tests          = 10000
+    argument_copy      = argument
+    max_degree         = 12
+ 
+    do j=0, max_degree
+       do i=1,num_tests
+          SLL_CLEAR_ALLOCATE(results(1:j+1),ierr)
+          SLL_CLEAR_ALLOCATE(derivatives(1:j+1),ierr)
+          SLL_CLEAR_ALLOCATE(sp_and_derivs(1:2,1:j+1),ierr)
+          call random_number(argument)
+          results(:) = uniform_b_splines_at_x(j, argument)
+          derivatives(:) = uniform_b_spline_derivatives_at_x(j, argument)
+          sp_and_derivs(:,:) = uniform_b_splines_and_derivs_at_x(j, argument)
+          passed_flag = passed_flag .and. &
+               (abs(sum(results)-1.0_f64).le.criterion)
+
+          if( passed_flag .eqv. .false. ) then
+             print *, 'Test_uniform_b_splines, values: wrong result for x = ', &
+                  argument
+             print *, 'Degree = ', j, 'Reduction = ', sum(results)
+             print*, 'Exiting...'
+             stop
+          end if
+
+          passed_flag = passed_flag .and. &
+               (abs(sum(derivatives)-0.0_f64).le.criterion)
+          if( passed_flag .eqv. .false. ) then
+             print *, 'Test_uniform_b_splines, derivs: wrong result for x = ', &
+                  argument
+             print *, 'Degree = ', j, 'Reduction = ', sum(derivatives)
+             print*, 'Exiting...'
+             stop
+          end if
+
+          passed_flag = passed_flag .and. &
+               (abs(sum( sp_and_derivs(1,:) ) - 1.0_f64).le.criterion) .and. &
+               (abs(sum( sp_and_derivs(2,:) ) - 0.0_f64).le.criterion)
+          if( passed_flag .eqv. .false. ) then
+             print *, 'Test_uniform_b_splines, vals and derivs: ', &
+                  'wrong result for x = ', argument
+             print *, 'Degree = ', j, 'Reduction = ', sum(sp_and_derivs)
+             print*, 'Exiting...'
+             stop
+          end if
+          results(:)         = 0.0_f64
+          derivatives(:)     = 0.0_f64
+          sp_and_derivs(:,:) = 0.0_f64
+
+          SLL_DEALLOCATE_ARRAY(results, ierr)
+          SLL_DEALLOCATE_ARRAY(derivatives, ierr)
+          SLL_DEALLOCATE_ARRAY(sp_and_derivs, ierr)
+       end do
+    end do
+  end subroutine test_uniform_b_splines_randomly
+
 
   ! The case of 'open' boundary condition yields spline values different
   ! than in the 'periodic' case. Since we can not compare with the uniform

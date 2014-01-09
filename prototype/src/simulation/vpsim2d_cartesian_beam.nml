@@ -1,0 +1,99 @@
+!./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam
+!gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_beam.gnu
+
+
+&geometry
+  mesh_case_x1 = "SLL_LOGICAL_MESH"
+  num_cells_x1 = 128
+  x1_min = -4.0
+  x1_max = 4.0
+  mesh_case_x2 = "SLL_LOGICAL_MESH"
+  num_cells_x2 = 128
+  x2_min = -4.0
+  x2_max = 4.0
+/
+
+&initial_function
+  initial_function_case = "SLL_LANDAU"
+  kmode = 0.5
+  eps = 0.001
+  initial_function_case = "SLL_BEAM"
+  alpha_gaussian = 0.2
+/
+
+&time_iterations
+  dt = 0.5 !0.2
+  number_iterations = 41 !300
+  freq_diag = 10
+  freq_diag_time = 1
+  !split_case = "SLL_STRANG_VTV" 
+  !split_case = "SLL_STRANG_TVT" 
+  split_case = "SLL_ORDER6VPnew1_VTV" 
+  !split_case = "SLL_ORDER6VPnew2_VTV" 
+  !split_case = "SLL_ORDER6_VTV"
+  !split_case = "SLL_LIE_TV"
+/
+
+&advector
+  advector_x1 = "SLL_SPLINES"
+  order_x1 = 4
+  !advector_x1 = "SLL_LAGRANGE"
+  !order_x1 = 4
+  advector_x2 = "SLL_SPLINES"
+  order_x2 = 4
+  !advector_x2 = "SLL_LAGRANGE"
+  !order_x2 = 4
+  factor_x1 = 1.4285714285714285714 !1/0.7
+  factor_x2_1 = -2.8571428571428571429 !2/0.7
+  factor_x2_rho = -1.
+/
+
+&poisson
+  !poisson_solver = "SLL_FFT"
+  poisson_solver = "SLL_POLAR"
+/
+
+&drive
+  drive_type = "SLL_NO_DRIVE"
+  !drive_type = "SLL_KEEN_DRIVE"  
+    !keen_t0 = 0.
+    !keen_tL = 69.
+    !keen_tR = 307.
+    !keen_twL = 20.
+    !keen_twR = 20.
+    !keen_tflat = 100.
+    !keen_turn_drive_off = .true.
+    !keen_Edrmax = 0.2
+    !keen_omegadr = 0.37	
+/
+
+!! old namelist
+
+! &geom
+!   Ncx = 32 
+!   Ncv = 64
+!   nbox = 1
+!   xmin = 0.0
+!   vmin = -6.0
+!   vmax = 6.0
+! /
+! &interpolator
+!  interpol_x = 2
+!  order_x = 4
+!  interpol_v = 2
+!  order_v = 4
+! /
+! &time_iterations
+!   dt = 0.1
+!   first_step = 0
+!   nbiter = 600
+!   freqdiag = 100
+!   freqdiag_time = 1
+!   split_case = 1
+! /
+! &landau
+!   kmode = 0.5
+!   eps = 1e-3
+!   is_delta_f = 0
+!   driven = .false.
+! /

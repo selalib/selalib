@@ -79,11 +79,12 @@ function bvalue ( t, bcoef, n, k, x, jderiv )
   integer k
   integer n
 
-  real ( kind = 8 ) aj(k)
-  real ( kind = 8 ) bcoef(n)
+  real ( kind = 8 ),dimension(:),pointer:: aj !(k)
+  real ( kind = 8 ),dimension(:),pointer:: bcoef!(n)
   real ( kind = 8 ) bvalue
-  real ( kind = 8 ) dl(k)
-  real ( kind = 8 ) dr(k)
+  real ( kind = 8 ):: tmp_value
+  real ( kind = 8 ),dimension(:),pointer:: dl!(k)
+  real ( kind = 8 ),dimension(:),pointer:: dr!(k)
   integer i
   integer ilo
   integer j
@@ -93,11 +94,19 @@ function bvalue ( t, bcoef, n, k, x, jderiv )
   integer jderiv
   integer jj
   integer mflag
-  real ( kind = 8 ) t(n+k)
+  real ( kind = 8 ),dimension(:),pointer:: t!(n+k)
   real ( kind = 8 ) x
 
-  bvalue = 0.0D+00
+  bvalue = 0.0_8
 
+  allocate(aj(k))
+  allocate(dl(k))
+  allocate(dr(k))
+
+  aj(:)=0.0_8
+  dl(:)=0.0_8
+  dr(:)=0.0_8
+  
   if ( k <= jderiv ) then
     return
   end if
@@ -145,7 +154,7 @@ function bvalue ( t, bcoef, n, k, x, jderiv )
     end do
 
     do j = i, k-1
-      aj(k-j) = 0.0D+00
+      aj(k-j) = 0.0_8
       dl(j) = dl(i)
     end do
 
@@ -161,7 +170,7 @@ function bvalue ( t, bcoef, n, k, x, jderiv )
     end do
 
     do j = k+n-i, k-1
-      aj(j+1) = 0.0D+00
+      aj(j+1) = 0.0_8
       dr(j) = dr(k+n-i)
     end do
 
@@ -205,4 +214,9 @@ function bvalue ( t, bcoef, n, k, x, jderiv )
   bvalue = aj(1)
 
   return
+  deallocate(aj)
+  deallocate(dl)
+  deallocate(dr)
+
+
 end function bvalue
