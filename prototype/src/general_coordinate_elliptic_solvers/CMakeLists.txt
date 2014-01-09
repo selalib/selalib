@@ -1,8 +1,8 @@
 
    ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
+     connectivity_qn.f90
      sll_general_coordinate_elliptic_solver.F90
      profilmat.f90
-     connectivity_qn.f90
      GC.f90
      sparse_matrix.F90
      sparse_matrix_con.F90
@@ -20,20 +20,9 @@
      coocsr.f90 
      linpack.f90)
    
-#   ADD_DEPENDENCIES( sll_general_coordinate_elliptic_solvers
-#     sll_scalar_field_2d_alternative
-#     sll_integration
-#     sll_memory
-#     sll_boundary_condition_descriptors
-#     sll_assertion
-#     sll_constants
-#     sll_timer
-#     sll_working_precision
-#     deboor_splines
-#     )
-
    ADD_EXECUTABLE(test_general_coordinates_elliptic_solver unit_test.F90)
-   target_link_libraries( test_general_coordinates_elliptic_solver
+
+   TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
      sll_general_coordinate_elliptic_solvers
      sll_scalar_field_2d_alternative
      sll_interpolators
@@ -84,19 +73,6 @@
 #     coocsr.f90 
 #     linpack.f90)
 #
-#   ADD_DEPENDENCIES( sll_general_coordinate_elliptic_solvers_umfpack
-#     sll_scalar_field_2d_alternative
-#     sll_integration
-#     sll_memory
-#     sll_boundary_condition_descriptors
-#     sll_assertion
-#     sll_constants
-#     sll_timer
-#     sll_working_precision
-#     deboor_splines
-#     )
-#
-
 #   ADD_EXECUTABLE(test_general_coordinates_elliptic_solver_umfpack unit_test.F90)
 #
 #   target_link_libraries( test_general_coordinates_elliptic_solver_umfpack
@@ -130,4 +106,3 @@
 #     )
 #
 # ENDIF()
-
