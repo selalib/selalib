@@ -230,16 +230,16 @@ contains
     sll_int32, intent(in), optional                 :: size_eta1_coords
     sll_int32, intent(in),optional                  :: size_eta2_coords
     if(present(eta1_coords))then
-      print *,'#Warning eta1_coords not used'
+      !print *,'#Warning eta1_coords not used'
     endif
     if(present(eta2_coords))then
-      print *,'#Warning eta2_coords not used'
+      !print *,'#Warning eta2_coords not used'
     endif
     if(present(size_eta1_coords))then
-      print *,'#Warning size_eta1_coords not used'
+      !print *,'#Warning size_eta1_coords not used'
     endif
     if(present(size_eta2_coords))then
-      print *,'#Warning size_eta2_coords not used'
+      !print *,'#Warning size_eta2_coords not used'
     endif    
     call compute_spline_2D( data_array, interpolator%spline )
   end subroutine
