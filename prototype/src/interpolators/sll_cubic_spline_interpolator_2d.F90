@@ -536,8 +536,8 @@ contains
     logical :: res
     res = .false.
     print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
-    print *,interpolator%npts1
-    stop
+    print *,'#',interpolator%npts1
+    !stop
   end function coefficients_are_set_cs2d
 
 end module sll_cubic_spline_interpolator_2d

@@ -272,11 +272,11 @@ contains
     !sll_int32  :: time_case    
     character(len=256)      :: advect2d_case 
     character(len=256)      :: charac2d_case
-    character(len=256)      :: f_interp2d_case 
-    character(len=256)      :: phi_interpx1x2
-    character(len=256)      :: phi_interpx3
-    character(len=256)      :: A_interp_case 
-    character(len=256)      :: initial_function_case 
+    !character(len=256)      :: f_interp2d_case 
+    !character(len=256)      :: phi_interpx1x2
+    !character(len=256)      :: phi_interpx3
+    !character(len=256)      :: A_interp_case 
+    !character(len=256)      :: initial_function_case 
     character(len=256)      :: time_loop_case 
     character(len=256)      :: poisson2d_case 
     character(len=256)      :: QN_case 
@@ -749,10 +749,10 @@ contains
     sll_int32 :: nc_x2
     sll_int32 :: nc_x3
     sll_int32 :: nc_x4
-    sll_int32 :: i1
-    sll_int32 :: i2
-    sll_int32 :: i3
-    sll_int32 :: i4
+    !sll_int32 :: i1
+    !sll_int32 :: i2
+    !sll_int32 :: i3
+    !sll_int32 :: i4
     sll_int32 :: ierr
     sll_real64 :: dt
     sll_int32 :: th_diag_id 
@@ -1134,7 +1134,7 @@ contains
     sll_int32 :: nc_x4
     sll_int32 :: i1
     sll_int32 :: i2
-    sll_int32 :: i3
+    !sll_int32 :: i3
     sll_int32 :: i4
     sll_int32 :: ierr
     sll_int32 :: global_indices(4)
@@ -1206,9 +1206,9 @@ contains
     sll_int32 :: i1
     sll_int32 :: i2
     sll_int32 :: i3
-    sll_int32 :: i4
+    !sll_int32 :: i4
     sll_int32 :: ierr
-    sll_int32 :: global_indices(4)
+    !sll_int32 :: global_indices(4)
     sll_real64 :: alpha
     sll_int32 :: loc_sz_x1
     sll_int32 :: loc_sz_x2
@@ -1263,13 +1263,13 @@ contains
     sll_int32 :: nc_x2
     sll_int32 :: nc_x3
     sll_int32 :: nc_x4
-    sll_int32 :: i1
-    sll_int32 :: i2
+    !sll_int32 :: i1
+    !sll_int32 :: i2
     sll_int32 :: i3
     sll_int32 :: i4
     sll_int32 :: ierr
-    sll_int32 :: global_indices(4)
-    sll_real64 :: alpha
+    !sll_int32 :: global_indices(4)
+    !sll_real64 :: alpha
     sll_int32 :: loc_sz_x1
     sll_int32 :: loc_sz_x2
     sll_int32 :: loc_sz_x3
@@ -1322,7 +1322,11 @@ contains
 
   subroutine delete_dk4d_polar( sim )
     class(sll_simulation_4d_drift_kinetic_polar) :: sim
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
+    
+    print *,'#delete_dk4d_polar not implemented'
+    print *,sim%dt
+    
   end subroutine delete_dk4d_polar
   
   
@@ -1404,7 +1408,7 @@ contains
   subroutine allocate_fdistribu4d_DK( sim )
     class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
 
-    sll_int32 :: ierr, itemp
+    sll_int32 :: ierr !, itemp
     sll_int32 :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
 
     ! layout for sequential operations in x3 and x4. 
@@ -1605,7 +1609,7 @@ contains
   subroutine allocate_QN_DK( sim )
     class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
 
-    type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    !type(sll_logical_mesh_2d), pointer :: logical_mesh2d
     sll_int32 :: ierr, itemp
     !sll_int32 :: i1, i2, i3, i4
     !sll_int32 :: iloc1, iloc2, iloc3, iloc4
@@ -1708,7 +1712,8 @@ contains
     class(sll_simulation_4d_drift_kinetic_polar), intent(inout) :: sim
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: iloc1, iloc2, iloc3
-    sll_int32 :: i1, i2, i3
+    !sll_int32 :: i1, i2
+    sll_int32 :: i3
     sll_real64 :: tmp
     sll_int32 :: glob_ind(3)    
 
