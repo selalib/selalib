@@ -15,7 +15,7 @@ Implicit None
 #endif
     character(len=MAXMSG) :: ms_msg
 
-    CHARACTER(LEN=10), PARAMETER :: FMT1_REAL = "(F5.3)"
+    CHARACTER(LEN=10), PARAMETER :: FMT1_REAL = "(F8.3)"
 
     integer, parameter :: MAXSTAMP = 16
     character(len=MAXSTAMP) :: ms_stamp
