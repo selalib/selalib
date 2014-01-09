@@ -188,10 +188,10 @@ contains  ! ****************************************************************
     call compute_spline_1D( data_array, interpolator%spline )
     
     if(present(eta_coords))then
-      print *,'#warning eta_coords not taken into account'
+      !print *,'#warning eta_coords not taken into account'
     endif
     if(present(size_eta_coords))then
-      print *,'#warning size_eta_coords not taken into account'
+      !print *,'#warning size_eta_coords not taken into account'
     endif
 #ifdef STDF95
   end subroutine cubic_spline_compute_interpolants
