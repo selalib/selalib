@@ -23,6 +23,8 @@ module sll_fdistribu4d_DK
 
   implicit none
 
+  sll_real64, dimension(1) :: whatever  ! dummy params array
+
   contains
 
   !---------------------------------------- 
@@ -39,34 +41,39 @@ module sll_fdistribu4d_DK
   !---------------------------------------- -----------------------
   ! Initialization of the radial density profiles 
   !---------------------------------------- -----------------------
-  subroutine init_n0_r(r_peak,kappan,deltarn,n0_rmin, &
+  subroutine init_n0_r(r_peak,inv_Ln,deltarn,n0_rmin, &
     r_grid,n0_1d)
     sll_real64, intent(in) :: r_peak
-    sll_real64, intent(in) :: kappan
+    sll_real64, intent(in) :: inv_Ln
     sll_real64, intent(in) :: deltarn
     sll_real64, intent(in) :: n0_rmin
     sll_real64, dimension(:), intent(in)    :: r_grid
     sll_real64, dimension(:), intent(inout) :: n0_1d
 
     sll_int32  :: ierr, ir, Nr
-    sll_real64 :: delta_r, etai, etai_mid
-    sll_real64 :: tmp, inv_Ln0
+    sll_real64 :: dr, Lr
+    sll_real64 :: etai, etai_mid
+    sll_real64 :: tmp
     sll_real64 :: n0norm_tmp
+    sll_real64 :: deltarn_norm
 
-    Nr      = size(r_grid,1)
-    delta_r = r_grid(2)-r_grid(1)
+    Nr  = size(r_grid,1)
+    Lr  = r_grid(Nr)-r_grid(1)
+    dr  = r_grid(2)-r_grid(1)
+
+    deltarn_norm = deltarn*Lr
     
     !*** compute ns0 solution of :                           ***
     !***  2/(n0(r)+n0(r-1))*(n0(r)-n0(r-1))/dr               ***
     !***                  = -(1/Ln0)*cosh^-2(r-rpeak/deltar) ***
-    inv_Ln0  = kappan           !??? (1/Ln) = kappa_n0/R
+    !***  where (1/Ln) = kappa_n0/R                          ***
     n0_1d(1) = n0_rmin 
     do ir = 2,Nr
       etai     = r_grid(ir-1)
-      etai_mid = etai + delta_r*0.5_f64
-      tmp      = -inv_Ln0 * &
-        sech((etai_mid-r_peak)/deltarn)**2
-      tmp          = 0.5_f64*delta_r*tmp
+      etai_mid = etai + dr*0.5_f64
+      tmp      = -inv_Ln * &
+        sech((etai_mid-r_peak)/deltarn_norm)**2
+      tmp          = 0.5_f64*dr*tmp
       n0_1d(ir) = (1._f64+tmp)/(1._f64-tmp)*n0_1d(ir-1)
     enddo
 
@@ -79,20 +86,79 @@ module sll_fdistribu4d_DK
     n0norm_tmp = n0norm_tmp + 0.5_f64 * &
       (n0_1d(1)*r_grid(1) + n0_1d(Nr)*r_grid(Nr))
     ! -> division by int(rdr)
-    n0norm_tmp = n0norm_tmp*2._f64*delta_r / & 
+    n0norm_tmp = n0norm_tmp*2._f64*dr / & 
       (r_grid(Nr)**2-r_grid(1)**2)
 
     n0_1d(1:Nr) = n0_1d(1:Nr)/n0norm_tmp
   end subroutine init_n0_r
 
+  !---------------------------------------- -----------------------
+  ! Initialization of the profiles
+  ! solution of the following equation
+  !
+  !       1   d T(r)    = - kappa cosh^(-2)( (r- rx)/delta ) 
+  !      T(r) dr
+  !
+  !  kappa = params(1)
+  !  delta = params(2)
+  !  rx    = params(3)
+  !---------------------------------------- -----------------------
+  function profil_xy_exacte(x,y,params_profil) 
+    
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, dimension(:), intent(in) ::params_profil
+    sll_real64 :: profil_xy_exacte
+    sll_real64 :: kappa
+    sll_real64 :: delta
+    sll_real64 :: rx
+    sll_real64 :: r
 
+    kappa = params_profil(1)
+    delta = params_profil(2)
+    rx    = params_profil(3)
+    r = sqrt(x**2+y**2)
+    profil_xy_exacte = exp(-kappa*delta*tanh((r-rx)/delta))
+    
+  end function profil_xy_exacte
+
+
+    !---------------------------------------- -----------------------
+  ! Initialization of the profiles
+  ! solution of the following equation
+  !
+  !       1   d T(r)    = - kappa cosh^(-2)( (r- rx)/delta ) 
+  !      T(r) dr
+  !
+  !  kappa = params(1)
+  !  delta = params(2)
+  !  rx    = params(3)
+  !---------------------------------------- -----------------------
+  function profil_r_exacte(r,params_profil) 
+    
+    sll_real64, intent(in) :: r
+    sll_real64, dimension(:), intent(in) ::params_profil
+    sll_real64 :: profil_r_exacte
+    sll_real64 :: kappa
+    sll_real64 :: delta
+    sll_real64 :: rx
+
+    kappa = params_profil(1)
+    delta = params_profil(2)
+    rx    = params_profil(3)
+    profil_r_exacte = exp(-kappa*delta*tanh((r-rx)/delta))
+    
+  end function profil_r_exacte
+
+  
+  
   !---------------------------------------------------------------
   ! Initialization of the radial temperature profiles 
   !---------------------------------------------------------------
-  subroutine init_T_r(r_peak,kappaT, &
+  subroutine init_T_r(r_peak,inv_LT, &
     deltarT,T_rmin,T_scal,r_grid,T_1d)
     sll_real64, intent(in) :: r_peak
-    sll_real64, intent(in) :: kappaT
+    sll_real64, intent(in) :: inv_LT
     sll_real64, intent(in) :: deltarT
     sll_real64, intent(in) :: T_rmin
     sll_real64, intent(in) :: T_scal
@@ -100,34 +166,60 @@ module sll_fdistribu4d_DK
     sll_real64, dimension(:), intent(inout) :: T_1d
     
     sll_int32  :: ierr, ir, Nr
-    sll_real64 :: delta_r, etai, etai_mid
-    sll_real64 :: tmp, inv_LT
+    sll_real64 :: dr, Lr
+    sll_real64 :: etai, etai_mid
+    sll_real64 :: tmp
     sll_real64 :: w0, w1, Tnorm_tmp
+    sll_real64 :: deltarT_norm
 
-    Nr      = size(r_grid,1)
-    delta_r = r_grid(2)-r_grid(1)
-    
-    !*** compute ns0 solution of :                           ***
-    !***  2/(n0(r)+n0(r-1))*(n0(r)-n0(r-1))/dr               ***
-    !***                  = -(1/Ln0)*cosh^-2(r-rpeak/deltar) ***
-    inv_LT  = kappaT           !??? (1/Ln) = kappa_n0/R
+    Nr  = size(r_grid,1)
+    Lr  = r_grid(Nr)-r_grid(1)
+    dr  = r_grid(2)-r_grid(1)
+    deltarT_norm = deltarT*Lr
+
+    !*** compute Ts solution of :                           ***
+    !***  2/(Ts(r)+Ts(r-1))*(Ts(r)-Ts(r-1))/dr               ***
+    !***                  = -(1/LTs)*cosh^-2(r-rpeak/deltar) ***
+    !***  where (1/LT) = kappa_Ts/R                          ***
     T_1d(1) = T_rmin
     do ir = 2,Nr
       etai     = r_grid(ir-1)
-      etai_mid = etai + delta_r*0.5_f64
+      etai_mid = etai + dr*0.5_f64
       tmp      = -inv_LT * &
-        sech((etai_mid-r_peak)/deltarT)**2
-      tmp      = 0.5_f64*delta_r*tmp
+        sech((etai_mid-r_peak)/deltarT_norm)**2
+      tmp      = 0.5_f64*dr*tmp
       T_1d(ir) = (1._f64+tmp)/(1._f64-tmp)*T_1d(ir-1)
     enddo
 
     !*** normalisation of the temperature to 1 at r=rpeak ***
-    ir         = int((r_peak-r_grid(1))/delta_r)
-    w1         = (r_peak-r_grid(ir))/delta_r
+    ir         = int((r_peak-r_grid(1))/dr)
+    w1         = (r_peak-r_grid(ir))/dr
     w0         = 1._f64-w1
     Tnorm_tmp  = w0*T_1d(ir)+w1*T_1d(ir+1)
     T_1d(1:Nr) = (T_1d(1:Nr)/Tnorm_tmp)/T_scal
   end subroutine init_T_r
+
+
+  !---------------------------------------------------------------
+  ! Initialisation of the magnetic field B(r,theta)
+  !---------------------------------------------------------------
+  subroutine init_Brtheta(r_grid,theta_grid,B_rtheta)
+    sll_real64, dimension(:)  , intent(in)    :: r_grid
+    sll_real64, dimension(:)  , intent(in)    :: theta_grid
+    sll_real64, dimension(:,:), intent(inout) :: B_rtheta
+
+    sll_int32 :: ir, itheta
+    sll_int32 :: Nr, Ntheta
+
+    Nr     = size(r_grid,1)
+    Ntheta = size(theta_grid,1)
+
+    do itheta = 1,Ntheta
+      do ir = 1,Nr
+        B_rtheta(ir,itheta) = 1._f64
+      end do
+    end do
+  end subroutine init_Brtheta
 
 
   !---------------------------------------------------------------
@@ -147,7 +239,7 @@ module sll_fdistribu4d_DK
     sll_real64, intent(in) :: n0_r
     sll_real64, intent(in) :: Ti_r
 
-    val = n0_r*sqrt(2._f64*sll_pi*Ti_r) * &
+    val = n0_r/sqrt(2._f64*sll_pi*Ti_r) * &
       exp(-0.5_f64*vpar**2/Ti_r)
   end function compute_feq_val
 
@@ -201,7 +293,7 @@ module sll_fdistribu4d_DK
     sll_int32  :: ix, iy
     sll_real64 :: r, x, y
  
-    type(sll_cubic_spline_1d), pointer :: sp1d_r
+    type(sll_cubic_spline_1D), pointer :: sp1d_r
 
     Nr   = size(r_grid,1)
     Npt1 = size(xgrid_2d,1)
@@ -222,6 +314,55 @@ module sll_fdistribu4d_DK
     end do
     call delete(sp1d_r)
   end subroutine function_xy_from_r
+
+
+  !----------------------------------------------------
+  ! Compute func(x,y) from func(r,theta)
+  !----------------------------------------------------
+  subroutine function_xy_from_rtheta(r_grid,theta_grid, &
+    func_rtheta,xgrid_2d,ygrid_2d,func_xy)
+    use sll_constants
+    use sll_cubic_splines
+    use sll_common_coordinate_transformations, only : &
+      polar_eta1, polar_eta2
+    sll_real64, dimension(:)  , intent(in)  :: r_grid
+    sll_real64, dimension(:)  , intent(in)  :: theta_grid
+    sll_real64, dimension(:,:), intent(in)  :: func_rtheta
+    sll_real64, dimension(:,:), intent(in)  :: xgrid_2d
+    sll_real64, dimension(:,:), intent(in)  :: ygrid_2d
+    sll_real64, dimension(:,:), intent(out) :: func_xy
+
+    sll_int32  :: Nr, Ntheta
+    sll_int32  :: Npt1, Npt2
+    sll_int32  :: ix, iy
+    sll_real64 :: r, theta, x, y
+ 
+    type(sll_cubic_spline_2D), pointer :: sp2d_rtheta
+
+    Nr     = size(r_grid,1)
+    Ntheta = size(theta_grid,1)
+    Npt1   = size(xgrid_2d,1)
+    Npt2   = size(xgrid_2d,2)
+
+    sp2d_rtheta => new_spline_2d(Npt1,Npt2, &
+      r_grid(1),r_grid(Nr), &
+      theta_grid(1),theta_grid(Ntheta), &
+      SLL_HERMITE,SLL_PERIODIC)
+    call compute_spline_2D(func_rtheta,sp2d_rtheta)
+
+    do iy = 1,Npt2
+      do ix = 1,Npt1
+        x     = xgrid_2d(ix,iy)
+        y     = ygrid_2d(ix,iy)
+        r     = polar_eta1(x,y,whatever)
+        r     = min(max(r,r_grid(1)),r_grid(Nr))
+        theta = polar_eta2(x,y,whatever)
+        theta = modulo(theta,2._f64*sll_pi)
+        func_xy(ix,iy) = interpolate_value_2D(r,theta,sp2d_rtheta)
+      end do
+    end do
+    call delete(sp2d_rtheta)
+  end subroutine function_xy_from_rtheta
 
 
   !----------------------------------------------------
@@ -249,9 +390,9 @@ module sll_fdistribu4d_DK
     do ivpar = 1,Nvpar
       do iy = 1,Npt2
         do ix = 1,Npt1
-          feq_xyvpar(ix,iy,ivpar) = n0_xy(ix,iy) * &
-            sqrt(2._f64*sll_pi*Ti_xy(ix,iy)) * &
-            exp(-0.5_f64*vpar_grid(ivpar)**2/Ti_xy(ix,iy))
+           feq_xyvpar(ix,iy,ivpar) = n0_xy(ix,iy) * &
+                exp(-0.5_f64*vpar_grid(ivpar)**2/Ti_xy(ix,iy))&
+                /sqrt(2._f64*sll_pi*Ti_xy(ix,iy))
         end do
       end do
     end do

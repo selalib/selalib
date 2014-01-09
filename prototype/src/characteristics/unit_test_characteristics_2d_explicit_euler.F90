@@ -32,7 +32,7 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: output2
   sll_real64, dimension(:,:), allocatable :: A1
   sll_real64, dimension(:,:), allocatable :: A2
-  sll_int32 :: ierr
+  !sll_int32 :: ierr
   sll_int32 :: i
   sll_int32 :: j
   sll_real64 :: dt

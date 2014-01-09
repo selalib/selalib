@@ -1,0 +1,62 @@
+&geometry
+  mesh_case_x1 = "SLL_LANDAU_MESH"
+  num_cells_x1 = 256
+  x1_min = 0.0
+  nbox_x1 = 1
+  mesh_case_x2 = "SLL_LOGICAL_MESH"
+  num_cells_x2 = 1024
+  x2_min = -6.0
+  x2_max = 6.0
+/
+
+&initial_function
+  initial_function_case = "SLL_TWO_STREAM_INSTABILITY"
+  kmode = 0.5
+  eps = 0.01
+/
+
+&time_iterations
+  dt = 1.75 !0.5
+  number_iterations = 20 !70
+  freq_diag = 5 !35
+  freq_diag_time = 1
+  !split_case = "SLL_STRANG_VTV" 
+  !split_case = "SLL_STRANG_TVT" 
+  split_case = "SLL_ORDER6VPnew1_VTV" 
+  !split_case = "SLL_ORDER6VPnew2_VTV" 
+  !split_case = "SLL_ORDER6_VTV"
+  !split_case = "SLL_LIE_TV"
+/
+
+
+/
+&advector
+ !advector_x1 = "SLL_SPLINES"
+ !order_x1 = 4
+ advector_x1 = "SLL_LAGRANGE"
+ order_x1 = 18
+ !advector_x2 = "SLL_SPLINES"
+ !order_x2 = 4
+ advector_x2 = "SLL_LAGRANGE"
+ order_x2 = 18
+/
+
+&poisson
+  poisson_solver = "SLL_FFT"
+  !poisson_solver = "SLL_POLAR"
+/
+
+
+&drive
+  drive_type = "SLL_NO_DRIVE"
+  !drive_type = "SLL_KEEN_DRIVE"  
+    !keen_t0 = 0.
+    !keen_tL = 69.
+    !keen_tR = 307.
+    !keen_twL = 20.
+    !keen_twR = 20.
+    !keen_tflat = 100.
+    !keen_turn_drive_off = .true.
+    !keen_Edrmax = 0.2
+    !keen_omegadr = 0.37	
+/

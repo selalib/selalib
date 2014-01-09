@@ -199,8 +199,8 @@ end subroutine initialize_poisson_2d_periodic_fftw
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
-   type(poisson_2d_periodic),intent(inout)   :: self !< self data object
-   sll_real64, dimension(:,:), intent(inout) :: rho  !< charge density
+   type(poisson_2d_periodic)   :: self !< self data object
+   sll_real64, dimension(:,:), intent(in) :: rho  !< charge density
    sll_real64, dimension(:,:), intent(out)   :: phi  !< electric potential
    sll_int32                                 :: nc_x !< number of cells direction x
    sll_int32                                 :: nc_y !< number of cells direction y
@@ -208,7 +208,8 @@ subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
+   phi(1:nc_x,1:nc_y) = rho(1:nc_x,1:nc_y)
+   call fftw_execute_dft_r2c(self%fw, phi(1:nc_x,1:nc_y), self%rht)
 
    self%rht = self%rht / self%k2
 
@@ -230,7 +231,7 @@ end subroutine solve_potential_poisson_2d_periodic_fftw
 subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
    type(poisson_2d_periodic),intent(inout)   :: self !< Self data object
-   sll_real64, dimension(:,:), intent(inout) :: rho  !< Charge density
+   sll_real64, dimension(:,:), intent(in) :: rho  !< Charge density
    sll_real64, dimension(:,:), intent(out)   :: e_x  !< Electric field x
    sll_real64, dimension(:,:), intent(out)   :: e_y  !< Electric field y
    sll_real64, optional                      :: nrj  !< Energy 
@@ -240,7 +241,8 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    nc_x = self%nc_x
    nc_y = self%nc_y
 
-   call fftw_execute_dft_r2c(self%fw, rho(1:nc_x,1:nc_y), self%rht)
+   e_x(1:nc_x,1:nc_y) = rho(1:nc_x,1:nc_y)
+   call fftw_execute_dft_r2c(self%fw, e_x(1:nc_x,1:nc_y), self%rht)
 
    self%ext(1,1) = 0.0_f64
    self%eyt(1,1) = 0.0_f64
@@ -262,12 +264,13 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
    if (present(nrj)) then 
       dx = self%dx
       dy = self%dy
-      nrj=sum(e_x*e_x+e_y*e_y)*dx*dy
-      if (nrj>1.e-30) then 
-         nrj=0.5_f64*log(nrj)
-      else
-         nrj=-10**9
-      endif
+      nrj=sum(e_x(1:nc_x,1:nc_y)*e_x(1:nc_x,1:nc_y) &
+        +e_y(1:nc_x,1:nc_y)*e_y(1:nc_x,1:nc_y))*dx*dy
+      !if (nrj>1.e-30) then 
+      !   nrj=0.5_f64*log(nrj)
+      !else
+      !   nrj=-10**9
+      !endif
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftw

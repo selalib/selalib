@@ -15,7 +15,7 @@ program test_lagrange
 !  sll_real64 :: p012, p123
   !-----> for test of derivatives
   sll_real64 :: w(-20:20)
-  sll_int32 :: ierr
+  !sll_int32 :: ierr
   sll_int32 :: p
   sll_int32 :: r,s
 

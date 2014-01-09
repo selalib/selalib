@@ -18,29 +18,30 @@ contains
 
 !> Initialize the Poisson solver in polar coordinates using MUDPACK
 !> library
-subroutine initialize_poisson_polar_mudpack(this, phi, rhs, &
-                                            r_min, r_max, nr, &
+subroutine initialize_poisson_polar_mudpack(this,                      &
+                                            r_min, r_max, nr,          &
                                             theta_min, theta_max, nth, &
-                                            bc_r_min, bc_r_max, &
+                                            bc_r_min, bc_r_max,        &
                                             bc_theta_min, bc_theta_max )
 implicit none
 
-type(mudpack_2d) :: this                  !< Solver object
-sll_real64, intent(in) :: r_min           !< radius min
-sll_real64, intent(in) :: r_max           !< radius min
-sll_real64, intent(in) :: theta_min       !< theta min
-sll_real64, intent(in) :: theta_max       !< theta max
-sll_int32, intent(in)  :: nr              !< radius number of points
-sll_int32, intent(in)  :: nth             !< theta number of points
+type(mudpack_2d) :: this            !< Solver object
+sll_real64, intent(in) :: r_min     !< radius min
+sll_real64, intent(in) :: r_max     !< radius min
+sll_real64, intent(in) :: theta_min !< theta min
+sll_real64, intent(in) :: theta_max !< theta max
+sll_int32, intent(in)  :: nr        !< radius number of points
+sll_int32, intent(in)  :: nth       !< theta number of points
 sll_int32 :: icall
-sll_int32 :: iiex,jjey,llwork
-sll_int32 :: bc_r_min                     !< left boundary condition r
-sll_int32 :: bc_r_max                     !< right boundary condition r
-sll_int32 :: bc_theta_min                 !< left boundary condition theta
-sll_int32 :: bc_theta_max                 !< right boundary condition theta
+!sll_int32 :: iiex,jjey
+sll_int32 :: llwork
+sll_int32 :: bc_r_min               !< left boundary condition r
+sll_int32 :: bc_r_max               !< right boundary condition r
+sll_int32 :: bc_theta_min           !< left boundary condition theta
+sll_int32 :: bc_theta_max           !< right boundary condition theta
 
-sll_real64, intent(inout) ::  phi(:,:)    !< electric potential
-sll_real64, intent(inout) ::  rhs(:,:)    !< charge density
+sll_real64 ::  phi(nr,nth)          !< electric potential
+sll_real64 ::  rhs(nr,nth)          !< charge density
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
@@ -51,7 +52,9 @@ common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
-sll_int32  :: i,j,ierror
+sll_int32  :: i
+!sll_int32 :: j
+sll_int32 :: ierror
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 
@@ -213,7 +216,7 @@ end module sll_mudpack_polar
 subroutine coef_polar(x,y,cxx,cxy,cyy,cx,cy,ce)
 implicit none
 real(8) :: x,y,cxx,cxy,cyy,cx,cy,ce
-cxx = 1.0 
+cxx = 1.0 +0.0*y
 cxy = 0.0 
 cyy = 1.0 / (x*x) 
 cx  = 1.0 / x 
@@ -236,7 +239,7 @@ if (kbdy.eq.2) then
    ! where x = yorx.   alfa,beta,gama,gbdy corresponding to alfyd(x),
    ! betyd(x),gamyd(x),gbdyd(y) must be output.
 
-   alfa = 1.0
+   alfa = 1.0+0.0*xory
    beta = 0.0
    gama = 0.0
    gbdy = 0.0
