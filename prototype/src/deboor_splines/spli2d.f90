@@ -115,6 +115,8 @@ subroutine spli2d ( tau, gtau, t, n, k, m, work, q, bcoef, iflag )
 !
 !  Construct the N interpolation equations.
 !
+
+  print*, n, tau(1:n)
   do i = 1, n
 
     taui = tau(i)

@@ -258,11 +258,13 @@ contains
     ! The following could probably be abstracted for convenience
     sll_int32 :: iplot
     character(len=4) :: cplot
-    class(sll_scalar_field_2d_base), pointer                :: a11_field_mat
-    class(sll_scalar_field_2d_base), pointer                :: a12_field_mat
-    class(sll_scalar_field_2d_base), pointer                :: a21_field_mat
-    class(sll_scalar_field_2d_base), pointer                :: a22_field_mat
-    class(sll_scalar_field_2d_base), pointer                :: c_field
+    class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: a22_field_mat
+    class(sll_scalar_field_2d_base), pointer              :: b1_field
+    class(sll_scalar_field_2d_base), pointer              :: b2_field
+    class(sll_scalar_field_2d_base), pointer              :: c_field
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_n_ptr
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_np1_ptr
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho_nm1_ptr
@@ -316,6 +318,29 @@ contains
          sim%params_field) 
      
 
+    b1_field => new_scalar_field_2d_analytic_alt( &
+          sim%c_f, &
+         "c_field", &
+         sim%transf, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%params_field)
+
+    b2_field => new_scalar_field_2d_analytic_alt( &
+          sim%c_f, &
+         "c_field", &
+         sim%transf, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%params_field)
+       
+    !print*,'pass 1'
+       
+    !print*,'pass 1'
     c_field => new_scalar_field_2d_analytic_alt( &
           sim%c_f, &
          "c_field", &
@@ -438,6 +463,8 @@ contains
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
+       b1_field, &
+       b2_field, &
        c_field)
        
   
@@ -604,9 +631,11 @@ contains
      write(30,*) itime*sim%dt, val_intg_L1,val_intg_L2,val_intg_Linf,val_mass,val_energy
      
     
+#ifndef NOHDF5
      if (itime==1 .or. ((itime/sim%visu_step)*sim%visu_step==itime)) then
      call plot_f1(rho_n_ptr,sim,itime)
      endif
+#endif
      
     end do ! main loop
     
@@ -1034,6 +1063,7 @@ subroutine calcul_integral(rho_n,phi,&
 
 !****************************************************************************
 
+#ifndef NOHDF5
 subroutine plot_f1(rho,sim,itime)!
 
   use sll_xdmf
@@ -1041,7 +1071,7 @@ subroutine plot_f1(rho,sim,itime)!
 
   sll_int32 :: file_id, hfile_id
   sll_int32 :: error
-  type(sll_simulation_2d_guiding_center_generalized) :: sim
+  class(sll_simulation_2d_guiding_center_generalized) :: sim
   !sll_real64, dimension (:,:), intent(in):: rho
   class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
   sll_real64, dimension(:,:),allocatable :: f
@@ -1093,4 +1123,5 @@ subroutine plot_f1(rho,sim,itime)!
   deallocate(f)
  end subroutine plot_f1
 
+#endif
 end module sll_simulation_2d_guiding_center_generalized_coords_module

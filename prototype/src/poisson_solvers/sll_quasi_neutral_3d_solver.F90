@@ -83,7 +83,7 @@ contains
     sll_int32, intent(in) :: nc_eta3
     type(layout_3D),  pointer           :: start_layout
     !sll_int32, intent(in) :: bc(2)
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     sll_int64                        :: colsz ! collective size
     type(sll_collective_t), pointer  :: collective
     sll_int32                        :: loc_sz_x1
@@ -165,6 +165,14 @@ contains
     class(quasi_neutral_3d_solver) :: poisson
     sll_real64,dimension(:,:,:),intent(in) :: rho
     sll_real64,dimension(:,:,:),intent(out) :: phi
+
+      phi = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%poiss)))then
+        print *,'#poisson%poiss is not associated'
+      endif
+
     
     !call solve( poisson%poiss, rho, phi)
     
@@ -188,6 +196,19 @@ contains
       
       print *,'#compute_E_from_rho_3d_quasi_neutral'      
       print *,'#not implemented for the moment'
+      
+      
+      E1 = 0._f64
+      E2 = 0._f64
+      E3 = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%poiss)))then
+        print *,'#poisson%poiss is not associated'
+      endif
+
+      
+      
       stop
       
       !call solve( poisson%poiss, E1, E2, rho)

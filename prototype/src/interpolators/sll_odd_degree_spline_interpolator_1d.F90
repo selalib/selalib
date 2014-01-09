@@ -164,6 +164,14 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
+    
+    if(present(eta_coords))then
+      !print *,'#Warning eta_coords present but not used'
+    endif
+    if(present(size_eta_coords))then
+      !print *,'#Warning size_eta_coords present but not used'
+    endif
+    
     call compute_odd_degree_coeffs_uniform( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine odd_degree_spline_compute_interpolants
@@ -264,6 +272,13 @@ contains  ! ****************************************************************
        deg = 5 ! degree is by default 5
     endif
     
+    if(present(slope_left))then
+      print *,'#Warning, slope_left present but not used'
+    endif
+    if(present(slope_right))then
+      print *,'#Warning, slope_right present but not used'
+    endif
+    
     interpolator%num_points = num_points
     SLL_ALLOCATE(interpolator%interpolation_points(num_points),ierr)
     interpolator%interpolation_points(1) = xmin
@@ -286,6 +301,10 @@ contains  ! ****************************************************************
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
        res(:) = 0.0_f64
+       print *,'#warning reconstruct_array is dummy'
+       print *,'#',num_points
+       print *,'#',maxval(data)
+       print *,'#',this%num_points
   end function reconstruct_array
   
   subroutine delete_qs1d( obj )
@@ -306,6 +325,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_qs1d(): ERROR: This function has not been ', &
          'implemented yet.'
+    if(present(coeffs))then
+      print *,'#coeffs is prensent but not used'
+    endif
+    print *,interpolator%num_points
     stop
   end subroutine set_coefficients_qs1d
 
@@ -319,6 +342,9 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer            :: get_coefficients_qs1d     
     
     print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    print *,interpolator%num_points
+    get_coefficients_qs1d = 0._f64
+    stop      
   end function get_coefficients_qs1d
 end module sll_odd_degree_spline_interpolator_1d

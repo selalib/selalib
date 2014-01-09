@@ -42,14 +42,15 @@ sll_real64, intent(in) :: eta2_max       !< eta2 max
 sll_int32, intent(in)  :: nc_eta1              !<  number of cells
 sll_int32, intent(in)  :: nc_eta2              !<  number of cells
 sll_int32 :: icall
-sll_int32 :: iiex,jjey,llwork
+!sll_int32 :: iiex,jjey
+sll_int32 :: llwork
 sll_int32 :: bc_eta1_left                    !< left boundary condition r
 sll_int32 :: bc_eta1_right                   !< right boundary condition r
 sll_int32 :: bc_eta2_left                    !< left boundary condition theta
 sll_int32 :: bc_eta2_right                   !< right boundary condition theta
 
-sll_real64, pointer ::  phi(:)    !< electric potential
-sll_real64, pointer ::  rhs(:)    !< charge density
+sll_real64, pointer ::  phi(:,:)    !< electric potential
+sll_real64, pointer ::  rhs(:,:)    !< charge density
 sll_real64, dimension(:,:), pointer :: b11
 sll_real64, dimension(:,:), pointer :: b12
 sll_real64, dimension(:,:), pointer :: b21
@@ -83,7 +84,7 @@ equivalence(intl,iprm)
 equivalence(xa,fprm)
 
 ! declare coefficient and boundary condition input subroutines external
-external coef,bndcr
+external coefcr,bndcr
 
 nx = nc_eta1+1
 ny = nc_eta2+1
@@ -101,6 +102,8 @@ allocate(cy_array(nx,ny))
 allocate(ce_array(nx,ny)) 
 allocate(a12_array(nx,ny))
 allocate(a21_array(nx,ny))
+allocate(phi(nx,ny))
+
 
 cxx_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -187,8 +190,8 @@ call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,c
 call cxy_interp%compute_interpolants( cxy_array ) 
 
 call a12_a21_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,a12_array,a21_array)
-call ce_interp%compute_interpolants( a12_array ) 
-call ce_interp%compute_interpolants( a21_array ) 
+call a12_interp%compute_interpolants( a12_array ) 
+call a21_interp%compute_interpolants( a21_array ) 
 
 call coefx_array(eta1_min,eta2_min,delta1,delta2,nx,ny,cx_array)
 call cx_interp%compute_interpolants( cx_array ) 
@@ -205,10 +208,10 @@ icall = 0
 intl = 0
 
 ! set boundary condition flags
-nxa = bc_eta1_left 
-nxb = bc_eta1_right
-nyc = bc_eta2_left 
-nyd = bc_eta2_right
+nxa = bc_eta1_left  
+nxb = bc_eta1_right 
+nyc = bc_eta2_left  
+nyd = bc_eta2_right 
 
 ! set grid sizes from parameter statements
 ixp = 2
@@ -246,8 +249,8 @@ method = 0
 
 ! set mesh increments
 xa = eta1_min
-xb = eta2_max
-yc = eta1_min
+xb = eta1_max
+yc = eta2_min
 yd = eta2_max
 
 ! set for no error control flag
@@ -259,7 +262,11 @@ write(*,102) (this%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
-call mud2cr(iprm,fprm,this%work,coef,bndcr,rhs,phi,this%mgopt,ierror)
+do j=1,ny
+ phi(1,j) = 0._f64
+ phi(nx,j) = 0._f64
+enddo 
+call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
 
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
@@ -315,20 +322,29 @@ equivalence(intl,iprm)
 equivalence(xa,fprm)
 
 ! declare coefficient and boundary condition input subroutines external
-external coef,bndcr
+external coefcr,bndcr
 
 icall = 1
 intl  = 1
 write(*,106) intl,method,iguess
-! attempt solution
-call mud2cr(iprm,fprm,this%work,coef,bndcr,rhs,phi,this%mgopt,ierror)
-SLL_ASSERT(ierror == 0)
-! attempt fourth order approximation
-call mud24cr(this%work,coef,bndcr,phi,ierror)
-SLL_ASSERT(ierror == 0)
 
-106 format(/' approximation call to mud2cr', &
-    /' intl = ',i2, ' method = ',i2,' iguess = ',i2)
+! attempt solution
+call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
+!SLL_ASSERT(ierror == 0)
+write(*,107) ierror
+if (ierror > 0) call exit(0)
+
+! attempt fourth order approximation
+call mud24cr(this%work,coefcr,bndcr,phi,ierror)
+!SLL_ASSERT(ierror == 0)
+write (*,108) ierror
+if (ierror > 0) call exit(0)
+
+106 format(/' approximation call to mud2sp', &
+    &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)
+107 format(' error = ',i2)
+108 format(/' mud24sp test ', ' error = ',i2)
+
 
 return
 end subroutine solve_poisson_curvilinear_mudpack
@@ -462,7 +478,7 @@ end module sll_mudpack_curvilinear
 
 !> input pde coefficients at any grid point (x,y) in the solution region
 !> (xa.le.x.le.xb,yc.le.y.le.yd) to mud2cr
-subroutine coef(x,y,cxx,cxy,cyy,cx,cy,ce)
+subroutine coefcr(x,y,cxx,cxy,cyy,cx,cy,ce)
 use sll_mudpack_curvilinear
 implicit none
 real(8)  :: x,cxx,cx,cxy
@@ -486,13 +502,27 @@ real(8)  :: xory,alfa,beta,gama,gbdy
 if (kbdy.eq.2) then
 
    ! x=xb boundary.
-   ! b.c. has the form alfyd(x)*px+betyd(x)*py+gamyd(x)*pe = gbdyd(x)
-   ! where x = yorx.   alfa,beta,gama,gbdy corresponding to alfyd(x),
-   ! betyd(x),gamyd(x),gbdyd(y) must be output.
+   ! b.c. has the form alfxb(y)*px+betxb(y)*py+gamxb(y)*pe = gbdxb(y)
+   ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxb(y),
+   ! betxb(y),gamxb(y),gbdxb(y) must be output.
 
-   alfa = 1.0
+   alfa = 0.0+0*xory
    beta = 0.0
-   gama = 0.0
+   gama = 1.0
+   gbdy = 0.0
+
+end if
+
+if (kbdy.eq.1) then
+
+   ! x=xa boundary.
+   ! b.c. has the form alfxa(y)*px+betxa(y)*py+gamxa(y)*pe = gbdxa(y)
+   ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxa(y),
+   ! betxa(y),gamxa(y),gbdxa(y) must be output.
+
+   alfa = 0.0
+   beta = 0.0
+   gama = 1.0
    gbdy = 0.0
 
 end if

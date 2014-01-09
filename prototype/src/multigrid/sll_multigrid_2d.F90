@@ -903,7 +903,7 @@ call mgdbdry(sx,ex,sy,ey,phi,this%block%bd,this%phibc)
 endif
 
 if (nprscr.and.this%block%id.eq.0) write(6,120) relmax,iter,acorr
-120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
+120 format('  P MGD     err=',e12.3,' iters=',i5,' pcorr=',e12.3)
 
 if (error == 1) then
    write(6,210)

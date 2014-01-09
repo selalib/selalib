@@ -145,7 +145,7 @@ module mod_umfpack
  ! select here is consistent with the compile options of
  ! umf4_f77wrapper.c, see the Makefile).
  !integer*4, parameter ::           & ! small matrices
- sll_int32, parameter ::           & ! large matrices
+ sll_int32, parameter ::           & 
    umf_int_example = 1
  integer, parameter ::             &
    umf_int = kind(umf_int_example)

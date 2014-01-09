@@ -44,6 +44,11 @@ contains
     ! are to be kept inside the sim object. Look at the parallel vp4d simulation
     ! for an example.
     print *, 'This is a dummy function. Needs implementation.'
+    
+    print *,filename
+    print *,sim%dt
+    stop
+    
   end subroutine VP1D_curvilinear_analytic_init
 
   ! Note that the following function has no local variables, which is silly...
@@ -93,6 +98,7 @@ contains
     dt=0.1_f64
     nb_step=601
     
+    sim%dt = dt
     
     N=max(nc_eta1,nc_eta2)
     
@@ -506,7 +512,14 @@ geom_x,x1n_array,x2n_array,x1c_array,x2c_array,jac_array,delta_eta1,delta_eta2,d
   x1_max = geom_x(2,1)
   x2_min = geom_x(1,2)
   x2_max = geom_x(2,2)
-
+  
+  
+  if(x1n_array(1,1)==1e-23)then
+    print *,'#is that possible?'
+  endif
+  if(x2n_array(1,1)==1e-23)then
+    print *,'#is that possible?'
+  endif
 
 
     E=rho-1._f64
@@ -1023,6 +1036,12 @@ Xstar,spl_per_x1)
   sll_real64,dimension(:,:),pointer:: a1,f
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x1
   sll_int32 :: i1,i2,i1m1
+
+  if(geom_x(1,1)==1e-23)then
+    print *,'#is that possible?'
+  endif
+
+
   do i2=1,N_x2
     buf(1:N_x1) = f(1:N_x1,i2)
     do i1=1,N_x1
@@ -1046,6 +1065,11 @@ Xstar,spl_per_x2)
   sll_real64,dimension(:,:),pointer:: a2,f
   type(cubic_nonunif_spline_1D), pointer :: spl_per_x2
   sll_int32 :: i1,i2,i2m1
+  
+  if(geom_x(1,1)==1e-23)then
+    print *,'#is that possible?'
+  endif
+  
   do i1=1,N_x1
     buf(1:N_x2) = f(i1,1:N_x2)
     Xstar(1:N_x2) = node_positions_x2(1:N_x2)!-dt*a2(i1,1:N_x2)

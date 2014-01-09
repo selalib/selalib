@@ -77,7 +77,7 @@ contains
     sll_real64, intent(in)              :: eta1_max !< right corner
     sll_int32                           :: i
     sll_int32                           :: j
-    sll_int32                           :: nnzero
+    sll_int32                           :: nnzeros
 
     error = 0
     ! geometry
@@ -85,8 +85,8 @@ contains
     this%eta1_min = eta1_min
     this%eta1_max = eta1_max
 
-    nnzero = 3*(nc_eta1-1) + 2
-    call initialize(this%pastix, nc_eta1-1, nnzero)
+    nnzeros = 3*(nc_eta1-1) + 2
+    call initialize(this%pastix, nc_eta1-1, nnzeros)
 
     j=1
     do i = 1, nc_eta1-1
