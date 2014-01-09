@@ -16,7 +16,7 @@ program vlasov_poisson_6d
   call sll_boot_collective() ! Wrap this up in something else
 
   print *, 'Proceed to run simulation.'
-  call flush()
+  call flush(6)
 
   ! In this test, the name of the file to open is provided as a command line
   ! argument.

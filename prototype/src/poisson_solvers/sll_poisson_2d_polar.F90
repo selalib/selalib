@@ -184,6 +184,7 @@ contains
     this%rmin=rmin
     this%nr=nr
     this%ntheta=ntheta
+
     if (present(bc)) then
       this%bc=bc
     else
@@ -315,7 +316,7 @@ contains
     sll_real64 :: kval
 
     sll_comp64 :: err_loc
-    sll_int32  :: ierr_sup_1em12
+    !sll_int32  :: ierr_sup_1em12
     sll_real64 :: err
 
     nr     = plan%nr
@@ -510,7 +511,7 @@ contains
     ntheta = plan%ntheta
     rmin   = plan%rmin
     dr     = plan%dr
-
+    
     bc         = plan%bc
     plan%f_fft = f
 
@@ -573,13 +574,13 @@ contains
       call solve_cyclic_tridiag(plan%cts,plan%ipiv,plan%fk(2:nr),nr-1,plan%phik(2:nr))
 
       !boundary condition at rmin
-      if(bc(1)==1)then !Dirichlet
+      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
         plan%phik(1)=0.0_f64
       endif
-      if(bc(1)==2)then
+      if(bc(1)==SLL_NEUMANN)then
         plan%phik(1)=plan%phik(2) !Neumann
       endif
-      if(bc(1)==3)then 
+      if(bc(1)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           plan%phik(1)=plan%phik(2)
         else !Dirichlet for other modes
@@ -588,13 +589,13 @@ contains
       endif
 
       !boundary condition at rmax
-      if(bc(2)==1)then !Dirichlet
+      if(bc(2)==SLL_DIRICHLET)then !Dirichlet
         plan%phik(nr+1)=0.0_f64
       endif
-      if(bc(2)==2)then
+      if(bc(2)==SLL_NEUMANN)then
         plan%phik(nr+1)=plan%phik(nr) !Neumann
       endif
-      if(bc(2)==3)then 
+      if(bc(2)==SLL_NEUMANN_MODE_0)then 
         if(k==0)then!Neumann for mode zero
           plan%phik(nr+1)=plan%phik(nr)
         else !Dirichlet for other modes

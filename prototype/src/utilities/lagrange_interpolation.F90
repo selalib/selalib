@@ -55,7 +55,7 @@ use sll_boundary_condition_descriptors
   
   interface weight_product_x1
      module procedure weight_product1d, &
-     	              weight_product2d_x1
+       weight_product2d_x1
   end interface
 
   interface weight_product_x2
@@ -413,7 +413,7 @@ contains
   end subroutine weight_product2d_x2
 
   subroutine compute_size_hermite1d(N,p,N_size,dim_size)
-    sll_real64, dimension(:,:), pointer  :: initialize_interpolants_hermite1d
+    !sll_real64, dimension(:,:), pointer  :: initialize_interpolants_hermite1d
     sll_int32, intent(in) :: N
     sll_int32, intent(in) :: p
     sll_int32, intent(out) :: N_size
@@ -493,12 +493,12 @@ contains
     sll_int32, intent(in) :: N(2)
     sll_int32, intent(in) :: p(2)
     sll_int32, intent(in) :: bc_type(2)
-    sll_real64 :: w(SLL_SIZE_STENCIL_MIN:SLL_SIZE_STENCIL_MIN)
-    sll_int32 :: r,s
+    !sll_real64 :: w(SLL_SIZE_STENCIL_MIN:SLL_SIZE_STENCIL_MIN)
+    !sll_int32 :: r,s
     sll_int32 :: i,j,k
     sll_real64,dimension(:),pointer :: bufin_x1,bufin_x2
     sll_real64,dimension(:,:),pointer :: bufout_x1,bufout_x2
-    sll_int32 :: dim(2)
+    !sll_int32 :: dim(2)
     sll_int32  :: N_size(2)
     sll_int32  :: dim_size(2)
 
@@ -544,56 +544,56 @@ contains
 
 
 
-  subroutine interpolate_hermite1d_c1(coef,N,i,x,fval)
-    sll_real64, dimension(:,:), pointer :: coef
-    sll_int32, intent(in) :: N
-    sll_int32, intent(in) :: i
-    sll_real64, intent(in) :: x
-    sll_real64, intent(out) :: fval    
-    sll_real64 :: w(0:3)
-    sll_int32  :: i1    
-      
-    w(0)=(2._f64*x+1._f64)*(1._f64-x)*(1._f64-x)
-    w(1)=x*x*(3._f64-2._f64*x)
-    w(2)=x*(1._f64-x)*(1._f64-x)
-    w(3)=x*x*(x-1._f64)
-    i1=i+1
-    
-    fval=w(0)*coef(1,i)+w(1)*coef(1,i1)+w(2)*coef(2,i)+w(3)*coef(2,i1)
+!  subroutine interpolate_hermite1d_c1(coef,N,i,x,fval)
+!    sll_real64, dimension(:,:), pointer :: coef
+!    sll_int32, intent(in) :: N
+!    sll_int32, intent(in) :: i
+!    sll_real64, intent(in) :: x
+!    sll_real64, intent(out) :: fval    
+!    sll_real64 :: w(0:3)
+!    sll_int32  :: i1    
+!      
+!    w(0)=(2._f64*x+1._f64)*(1._f64-x)*(1._f64-x)
+!    w(1)=x*x*(3._f64-2._f64*x)
+!    w(2)=x*(1._f64-x)*(1._f64-x)
+!    w(3)=x*x*(x-1._f64)
+!    i1=i+1
+!    
+!    fval=w(0)*coef(1,i)+w(1)*coef(1,i1)+w(2)*coef(2,i)+w(3)*coef(2,i1)
+!
+!  end subroutine interpolate_hermite1d_c1
+!
+!  subroutine interpolate_hermite1d_c0(coef,N,i,x,fval)
+!    sll_real64, dimension(:,:), pointer :: coef
+!    sll_int32, intent(in) :: N
+!    sll_int32, intent(in) :: i
+!    sll_real64, intent(in) :: x
+!    sll_real64, intent(out) :: fval    
+!    sll_real64 :: w(0:3)
+!    sll_int32  :: i1    
+!      
+!    w(0)=(2._f64*x+1._f64)*(1._f64-x)*(1._f64-x);
+!    w(1)=x*x*(3._f64-2._f64*x)
+!    w(2)=x*(1._f64-x)*(1._f64-x)
+!    w(3)=x*x*(x-1._f64)
+!    i1=i+1
+!    
+!    fval=w(0)*coef(1,i)+w(1)*coef(1,i1)+w(2)*coef(2,i)+w(3)*coef(3,i1)
+!
+!  end subroutine interpolate_hermite1d_c0
 
-  end subroutine interpolate_hermite1d_c1
-
-  subroutine interpolate_hermite1d_c0(coef,N,i,x,fval)
-    sll_real64, dimension(:,:), pointer :: coef
-    sll_int32, intent(in) :: N
-    sll_int32, intent(in) :: i
-    sll_real64, intent(in) :: x
-    sll_real64, intent(out) :: fval    
-    sll_real64 :: w(0:3)
-    sll_int32  :: i1    
-      
-    w(0)=(2._f64*x+1._f64)*(1._f64-x)*(1._f64-x);
-    w(1)=x*x*(3._f64-2._f64*x)
-    w(2)=x*(1._f64-x)*(1._f64-x)
-    w(3)=x*x*(x-1._f64)
-    i1=i+1
-    
-    fval=w(0)*coef(1,i)+w(1)*coef(1,i1)+w(2)*coef(2,i)+w(3)*coef(3,i1)
-
-  end subroutine interpolate_hermite1d_c0
-
-  subroutine interpolate_hermite2d_c0_c1(coef,N,i,x,fval)
-
-    sll_real64, dimension(:,:,:,:), pointer :: coef
-    sll_int32, intent(in) :: N(2)
-    sll_int32, intent(in) :: i(2)
-    sll_real64, intent(in) :: x(2)
-    sll_real64, intent(out) :: fval 
-    
-    fval = 0
-    
-
-  end subroutine interpolate_hermite2d_c0_c1
+!  subroutine interpolate_hermite2d_c0_c1(coef,N,i,x,fval)
+!
+!    sll_real64, dimension(:,:,:,:), pointer :: coef
+!    sll_int32, intent(in) :: N(2)
+!    sll_int32, intent(in) :: i(2)
+!    sll_real64, intent(in) :: x(2)
+!    sll_real64, intent(out) :: fval 
+!    
+!    fval = 0
+!    
+!
+!  end subroutine interpolate_hermite2d_c0_c1
 
 
 
