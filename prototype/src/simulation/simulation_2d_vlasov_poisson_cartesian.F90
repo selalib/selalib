@@ -385,9 +385,9 @@ contains
       case ("SLL_TWO_GRID_MESH")
         bloc_coord(1) = (x2_fine_min-x2_min)/(x2_max-x2_min)
         bloc_coord(2) = (x2_fine_max-x2_min)/(x2_max-x2_min)
-        bloc_index(1) = density_x2_min_to_x2_fine_min
-        bloc_index(2) = density_x2_fine_min_to_x2_fine_max
-        bloc_index(3) = density_x2_fine_max_to_x2_max
+        bloc_index(1) = floor(density_x2_min_to_x2_fine_min)
+        bloc_index(2) = floor(density_x2_fine_min_to_x2_fine_max)
+        bloc_index(3) = floor(density_x2_fine_max_to_x2_max)
                 
         call compute_bloc(bloc_coord,bloc_index,num_cells_x2)
         SLL_ALLOCATE(sim%x2_array(num_cells_x2+1),ierr)
@@ -672,6 +672,8 @@ contains
   
     print *,'# Do not use the routine init_vp2d_fake'
     print *,'#use instead init_vp2d_par_cart'
+    print *,sim%dt
+    print *,filename
     stop
   
   end subroutine init_vp2d_fake
@@ -682,8 +684,8 @@ contains
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
     sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init
     sll_real64,dimension(:),pointer :: rho,efield,e_app,rho_loc
-    sll_real64, dimension(:), allocatable :: rho_split
-    sll_real64, dimension(:), allocatable :: rho_full
+    !sll_real64, dimension(:), allocatable :: rho_split
+    !sll_real64, dimension(:), allocatable :: rho_full
     
     sll_int32 :: rhotot_id
     sll_int32 :: efield_id     
@@ -711,13 +713,13 @@ contains
     sll_real64  ::   time, mass, momentum, l1norm, l2norm
     sll_real64  ::   kinetic_energy,potential_energy
 
-    sll_real64, dimension(:), allocatable :: x2_array
+    !sll_real64, dimension(:), allocatable :: x2_array
     sll_real64, dimension(:), allocatable :: x2_array_unit
     sll_real64, dimension(:), allocatable :: x2_array_middle
-    sll_real64, dimension(:), allocatable :: x1_array
+    !sll_real64, dimension(:), allocatable :: x1_array
     sll_real64, dimension(:), allocatable :: node_positions_x2
     sll_real64 :: mean
-    character(len=4)           :: fin   
+    !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
     type(sll_fft_plan), pointer         :: pfwd
@@ -727,12 +729,12 @@ contains
     sll_int32 :: nb_mode = 5
     sll_real64 :: t_step
     sll_int32 :: split_istep
-    sll_int32 :: split_x
-    sll_int32 :: split_x_init
+    !sll_int32 :: split_x
+    !sll_int32 :: split_x_init
     sll_int32 :: num_dof_x2 
     
     logical :: split_T
-    sll_int32 ::conservative_case
+    !sll_int32 ::conservative_case
     
     
     ! for parallelization (output of distribution function in one single file)
@@ -1345,7 +1347,12 @@ contains
 
   subroutine delete_vp2d_par_cart( sim )
     class(sll_simulation_2d_vlasov_poisson_cart) :: sim
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
+    
+    print *,'#delete_vp2d_par_cart not implemented'
+    print *,sim%dt
+    
+    
   end subroutine delete_vp2d_par_cart
 
 
@@ -1389,7 +1396,7 @@ contains
     sll_int32,intent(in):: N
     sll_real64,intent(in)::M
     sll_int32::i
-    sll_real64::dx,tmp,tmp2
+    sll_real64::dx,tmp!,tmp2
     dx = 1._f64/real(N,f64)
     
     tmp=f(1)
@@ -1567,7 +1574,7 @@ contains
     sll_real64, intent(out) :: S
     logical, intent(in) :: turn_drive_off
     ! local variables
-    sll_int32 :: i 
+    !sll_int32 :: i 
     sll_real64 :: epsilon
 
     ! The envelope function is defined such that it is zero at t0,
@@ -1585,6 +1592,7 @@ contains
     if(S<0) then
        S = 0.
     endif
+    S = S + 0.*tflat ! for use of unused
     return
   end subroutine PFenvelope
 
@@ -1622,12 +1630,12 @@ contains
     !sll_int32             :: nnodes_x1, nnodes_x2
     !type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: r
-    sll_real64 :: theta
-    sll_real64 ::  x1_min, x2_min
-    sll_real64 ::  x1_max, x2_max  
-    sll_real64 :: dx1
-    sll_real64 :: dx2
+    !sll_real64 :: r
+    !sll_real64 :: theta
+    !sll_real64 ::  x1_min, x2_min
+    !sll_real64 ::  x1_max, x2_max  
+    !sll_real64 :: dx1
+    !sll_real64 :: dx2
     
     
     !nnodes_x1 = mesh_2d%num_cells1+1

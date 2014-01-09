@@ -469,6 +469,8 @@ contains
   
     print *,'# Do not use the routine init_vp4d_fake'
     print *,'#use instead initialize_vlasov_par_poisson_seq_cart'
+    print *,sim%dt
+    print *,filename
     stop
   
   end subroutine init_vp4d_fake
