@@ -26,6 +26,7 @@ Post-Doc
 --------
 * `Aurore BACK <https://sites.google.com/site/siteauroreback/>`_
 * `Adnane HAMIAZ <http://www.linkedin.com/pub/hamiaz-adnane/59/11b/671>`_
+* `Morgane BERGOT <http://math.univ-lyon1.fr/~bergot/>`_
 
 Ph.D. student
 -------------
