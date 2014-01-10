@@ -31,24 +31,24 @@ program VP1d_BSL_time_split
   class(scalar_field_2d_initializer_base), pointer    :: p_init_f
   type(sll_distribution_function_2d)   :: f
   type(poisson_1d_periodic)  :: poisson_1d
-  type(vp_cartesian_2d), target :: ts_vp_cart_2d
+  !type(vp_cartesian_2d), target :: ts_vp_cart_2d
   class(time_splitting), pointer :: time_split
   type(app_field_params) :: params
   sll_real64, dimension(:), allocatable :: rho
   sll_real64, dimension(:), allocatable :: efield
   sll_real64, dimension(:), allocatable :: e_app ! applied field
-  sll_real64, dimension(:), pointer :: f1d
+  !sll_real64, dimension(:), pointer :: f1d
   sll_real64, dimension(:), allocatable :: f_maxwellian
   sll_real64, dimension(:), allocatable :: v_array
   sll_int32  :: Ncx, Ncv   ! number of cells
   sll_int32, parameter  :: input_file = 33, th_diag = 34, ex_diag = 35, rho_diag = 36
   sll_int32, parameter  :: param_out = 37, eapp_diag = 38, adr_diag = 39
-  sll_real64 :: kmode, omegadr, omegadr0
+  sll_real64 :: kmode, omegadr !omegadr0
   logical    :: driven
   sll_int32  :: is_delta_f
   sll_real64 :: xmin, xmax, vmin, vmax
   sll_real64 :: delta_x, delta_v
-  sll_real64 :: alpha
+  !sll_real64 :: alpha
   sll_real64 :: dt 
   sll_int32  :: nbiter
   sll_int32  :: freqdiag
@@ -58,7 +58,7 @@ program VP1d_BSL_time_split
   sll_int32  :: istep
   sll_int32  :: nbox
   sll_real64 :: eps
-  sll_real64 :: v, v0
+  sll_real64 :: v0 !, v
   sll_int32  :: i, j
   sll_int32  :: ierr   ! error flag 
   sll_real64 :: t0, twL, twR, tstart, tflat, tL, tR
