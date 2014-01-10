@@ -1265,6 +1265,7 @@ contains
 
        if (sim%my_rank == 0) then
           
+          call sll_new_file_id(droite_test_pente, ierr) 
           open(droite_test_pente,file="droite_test_pente",&
                position="append")
           write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
