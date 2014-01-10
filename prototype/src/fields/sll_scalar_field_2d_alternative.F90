@@ -530,8 +530,8 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
-    sll_int32 :: SPLINE_DEG1
-    sll_int32 :: SPLINE_DEG2
+    !sll_int32 :: SPLINE_DEG1
+    !sll_int32 :: SPLINE_DEG2
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
@@ -585,7 +585,7 @@ contains   ! *****************************************************************
     sll_real64, dimension(:), optional :: point2_1d
     sll_int32,optional :: sz_point1
     sll_int32,optional :: sz_point2
-    sll_int32 :: i
+    !sll_int32 :: i
     sll_int32 :: ierr   
 
     m2d => transformation%mesh
