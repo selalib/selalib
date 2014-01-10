@@ -68,6 +68,8 @@ IF(NOT STDF95)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
+   ADD_TEST(NAME characteristics_1d_explicit_euler COMMAND test_characteristics_1d_explicit_euler)
+   ADD_TEST(NAME characteristics_1d_trapezoid COMMAND test_characteristics_1d_trapezoid)
    ADD_TEST(NAME characteristics_2d_explicit_euler COMMAND test_characteristics_2d_explicit_euler)
    ADD_TEST(NAME characteristics_2d_verlet COMMAND test_characteristics_2d_verlet)
    ADD_TEST(NAME advection_1d_periodic COMMAND test_advection_1d_periodic)
@@ -76,7 +78,9 @@ IF(NOT STDF95)
      advection_1d_non_uniform_cubic_splines 
      COMMAND
      test_advection_1d_non_uniform_cubic_splines)
+   ADD_TEST(NAME advection_1d_BSL COMMAND test_advection_1d_BSL)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
+   ADD_TEST(NAME advection_2d_CSL1D COMMAND test_advection_2d_CSL1D)
    
    IF(MUDPACK_ENABLED)
 
