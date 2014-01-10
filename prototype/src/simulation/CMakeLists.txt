@@ -24,7 +24,6 @@ IF(MUDPACK_ENABLED)
     simulation_2d_guiding_center_polar.F90)
 
 
-
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
                        sll_splines
                        sll_poisson_solvers
@@ -211,15 +210,15 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_collective
                        sll_parallel_utilities
                        sll_mesh_calculus
-		           sll_integration
-		           sll_reduction
-                   sll_time_splitting
+		       sll_integration
+		       sll_reduction
+                       sll_time_splitting
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
                        sll_file_io_parallel
                        sll_utilities
-		           sll_timer
+		       sll_timer
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
