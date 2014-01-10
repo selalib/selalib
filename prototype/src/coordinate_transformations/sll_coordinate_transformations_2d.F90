@@ -12,6 +12,7 @@ module sll_module_coordinate_transformations_2d
 #else
   use sll_module_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
+  use sll_module_deboor_splines_2d
 
 
 #endif
@@ -318,9 +319,6 @@ contains
 #endif
     type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
-    sll_real64 :: jacobian_val
-    sll_int32  :: i
-    sll_int32  :: j
     sll_int32  :: npts1
     sll_int32  :: npts2
     sll_real64 :: delta_1
@@ -769,7 +767,9 @@ contains
   subroutine read_from_file_2d_analytic( transf, filename )
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
     character(len=*), intent(in) :: filename
+    print *, filename
     print *, 'read_from_file_2d_analytic: not yet implemented'
+    call sll_display(transf%mesh)
     ! here we could put a case select to choose which analytic transformation
     ! we would like to use.
   end subroutine read_from_file_2d_analytic
@@ -1475,7 +1475,6 @@ contains
     class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
-    sll_int32 :: interpolator_type
     character(len=256) :: filename_local
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id
@@ -1502,7 +1501,6 @@ contains
     sll_int32  :: bc_right
     sll_int32  :: bc_bottom
     sll_int32  :: bc_top
-    sll_int32  :: sz_nodes1, sz_nodes2
 !    sll_real64, dimension(:,:), allocatable :: nodes1
 !    sll_real64, dimension(:,:), allocatable :: nodes2
     sll_int32  :: number_cells1,number_cells2
@@ -1521,8 +1519,7 @@ contains
     namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
     namelist /logical_mesh_2d/ number_cells1,number_cells2
-    character(len=80) :: line_buffer
-
+  
     if(len(filename) >= 256) then
        print *, 'ERROR, read_coefficients_from_file => ',&
             'read_from_file_discrete():',&

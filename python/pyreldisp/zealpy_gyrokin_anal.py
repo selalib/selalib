@@ -45,6 +45,7 @@ class zealpy_gyrokin_anal(zealpy_gyrokin):
             rmesh,rpeak,invLTe,deltarTe)
         [n0,dlogn0,ddlogn0] = compute_n0_dlogn0_anal(
             rmesh,rpeak,invLn0,deltarn0)
+        self.eta = dlogTi/dlogn0
 
         Zi = self.param_anal.get_value('Zi')
         self.params.set_value('Zi',Zi)

@@ -568,10 +568,12 @@ contains
 !          A2)
       endif            
      
+#ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
+#endif
       
       select case (sim%time_loop_case)
         case (SLL_EULER)

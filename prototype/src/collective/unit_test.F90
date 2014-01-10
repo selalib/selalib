@@ -129,7 +129,7 @@ program collective_test
   sendbuf_real(:)=rank
   SLL_ALLOCATE(recvbuf_real(1),ierr)
 
-  call sll_collective_allreduce_real( sll_world_collective,& 
+  call sll_collective_allreduce_real32( sll_world_collective,& 
          sendbuf_real,1,MPI_SUM,recvbuf_real )
  
   call sll_collective_barrier(sll_world_collective)
