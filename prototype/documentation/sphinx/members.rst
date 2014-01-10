@@ -5,14 +5,14 @@ Members
 
 Lead developer
 ---------------
-* `Edwin CHACON GOLCHER <http://www.linkedin.com/profile/view?id=1947857&locale=en_US&trk=tyah&trkInfo=tas%3Aedwin%2Cidx%3A2-1-2>`_
+* `Edwin CHACON GOLCHER <http://www.linkedin.com/pub/edwin-chacón-golcher/0/79b/295>`_
 
 Scientific Staff
 ----------------
 
 * `Eric SONNENDRUCKER <http://www.ipp.mpg.de/ippcms/eng/pr/institut/organigramm/leitung/sonnendruecker.html>`_
 * `Michel MEHRENBERGER <https://www.researchgate.net/profile/Michel_Mehrenberger/>`_
-* `Emmanuel FRENOD <http://www.linkedin.com/profile/view?id=40494135&locale=fr_FR&trk=tyah&trkInfo=tas%3Afrenod%2Cidx%3A1-1-1>`_
+* `Emmanuel FRENOD <http://www.linkedin.com/pub/emmanuel-frenod/11/68a/133>`_
 * `Sever HIRSTOAGA <http://www-irma.u-strasbg.fr/~hirstoag/>`_
 * `Laurent NAVORET  <http://www-irma.u-strasbg.fr/~navoret>`_
 * `Virgine GRANDGIRARD <http://www.researchgate.net/profile/Virginie_Grandgirard/>`_
@@ -38,5 +38,5 @@ Past members
 
 * Raphael BLANCHARD      
 * `Samuel DE SANTIS <http://www.linkedin.com/pub/samuel-de-santis/80/468/815>`_
-* `Aliou DIOUF <http://www.linkedin.com/profile/view?id=175492618&locale=en_US&trk=tyah2&trkInfo=tas%3Aalio%2Cidx%3A2-2-3>`_
+* `Aliou DIOUF <http://www.linkedin.com/pub/aliou-diouf/4a/932/28a>`_
 * Eric MADAULE 
