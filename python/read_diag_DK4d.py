@@ -2,10 +2,9 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-filename = '/Users/back/selalib/prototype/build/DK4d_diag_d00001.h5'
-f_diag = ut.loadHDF5(filename)
+filename = '/Users/back/selalib/prototype/build/DK4d_diag_d00010.h5'
 print "HDF5 file read = " + filename
-
+f_diag = ut.loadHDF5(filename)
 
 fig = mpp.figure(figsize=(18,9))
 
@@ -37,12 +36,12 @@ mpp.ylabel('vpar')#
 mpp.title('f2D_zvpar')
 fig.colorbar(p4)
 
-#ax5 = fig.add_subplot(2,7,5)
-#p5  = ax5.pcolormesh(f_diag.E2d_eta1_xy)
-#mpp.xlabel('x')
-#mpp.ylabel('y')
-#mpp.title('E2d_eta1_xy')
-#fig.colorbar(p5)
+ax5 = fig.add_subplot(2,6,5)
+p5  = ax5.pcolormesh(f_diag.E2d_eta1_xy)
+mpp.xlabel('x')
+mpp.ylabel('y')
+mpp.title('E2d_eta1_xy')
+fig.colorbar(p5)
 
 ax6 = fig.add_subplot(2,6,5)
 p6  = ax6.pcolormesh(f_diag.E2d_eta2_xy)
@@ -52,23 +51,54 @@ mpp.title('E2d_eta2_xy')
 fig.colorbar(p6)
 
 
-ax7 = fig.add_subplot(2,6,6)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('nrj_kin')
-mpp.plot(f_diag.nrj_kin)
+#ax7 = fig.add_subplot(2,6,6)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('nrj_kin')
+#mpp.plot(f_diag.nrj_kin)
 
-ax8 = fig.add_subplot(2,6,7)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('nrj_pot')
-mpp.plot(f_diag.nrj_pot)
+#ax8 = fig.add_subplot(2,6,7)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('nrj_pot')
+#mpp.plot(f_diag.nrj_pot)
 
-ax9 = fig.add_subplot(2,6,8)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('nrj_tot')
-mpp.plot(f_diag.nrj_tot)
+#ax9 = fig.add_subplot(2,6,8)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('nrj_tot')
+#mpp.plot(f_diag.nrj_tot)
+
+
+
+#ax10 = fig.add_subplot(2,6,9)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+
+#mpp.hold(True)
+#mpp.plot(f_diag.r_grid,f_diag.n0_r,'r+')
+#mpp.plot(f_diag.r_grid,f_diag.n0_r_func,'b')
+#mpp.title('profil n0_r')
+#mpp.hold(False)
+
+#ax11 = fig.add_subplot(2,6,10)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.hold(True)
+#mpp.plot(f_diag.r_grid,f_diag.Ti_r,'r+')
+#mpp.plot(f_diag.r_grid,f_diag.Ti_r_func,'b')
+#mpp.title('profil Ti_r')
+#mpp.hold(False)
+
+#ax12 = fig.add_subplot(2,6,11)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+
+#mpp.hold(True)
+#mpp.plot(f_diag.r_grid,f_diag.Te_r,'r+')
+#mpp.plot(f_diag.r_grid,f_diag.Te_r_func,'b')
+#mpp.title('profil Te_r')
+#mpp.hold(False)
 
 #ax10 = fig.add_subplot(2,6,9)
 #mpp.xlabel('x')
@@ -76,24 +106,27 @@ mpp.plot(f_diag.nrj_tot)
 #mpp.title('relative_error_masse')
 #mpp.plot(f_diag.relative_error_masse)
 
-ax11 = fig.add_subplot(2,6,10)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('L1_norm')
-mpp.plot(f_diag.L1_norm)
+#ax11 = fig.add_subplot(2,6,10)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('L1_norm')
+#mpp.plot(f_diag.L1_norm)
 
-ax12 = fig.add_subplot(2,6,11)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('L2_norm')
-mpp.plot(f_diag.L2_norm)
+#ax12 = fig.add_subplot(2,6,11)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('L2_norm')
+#mpp.plot(f_diag.L2_norm)
 
-ax13 = fig.add_subplot(2,6,12)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('Linf_norm')
-mpp.plot(f_diag.Linf_norm)
+#ax13 = fig.add_subplot(2,6,12)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('Linf_norm')
+#mpp.plot(f_diag.Linf_norm)
 
+#fig1=mpp.figure()
+#mpp.plot(f_diag.xgrid_2d,f_diag.ygrid_2d,'+')
+#fig1.show()
 
 fig.show()
 

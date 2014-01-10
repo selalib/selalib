@@ -1,4 +1,4 @@
-module connectivity_Module
+module connectivity_module
   implicit none
 
   integer, parameter :: CONNECT_PERIODIC = 0, CONNECT_DIRICHLET = 1
@@ -25,9 +25,9 @@ contains
     integer, dimension(:)   :: global_spline_indices
     integer, dimension(:,:) :: local_to_global_spline_indices
 
-    integer :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
-     integer :: li_e,li_i_, li_j_,t1,t2
-    integer :: li_i, li_j, li_iloc, li_jloc, li_Bloc, li_B,maille    
+   ! integer :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
+    integer :: li_i_, li_j_!,t1,t2
+    integer :: li_iloc, li_jloc, li_Bloc, li_B,maille    
     
     !print*, 'local_spline_indices=', local_spline_indices(1,1)
 
@@ -107,7 +107,7 @@ contains
     
     integer :: li_d,num_cells1,num_cells2,spline_degree2
     integer :: li_i, li_j, li_A
-    integer :: li_dof,ai_sizePB
+    !integer :: li_dof,ai_sizePB
     integer :: li_L
     integer, dimension(:) :: global_spline_indices
     
@@ -155,7 +155,7 @@ contains
     
     integer :: li_d,num_cells1,num_cells2,spline_degree1
     integer :: li_i, li_j, li_A
-    integer :: li_dof,ai_sizePB
+    !integer :: li_dof,ai_sizePB
     integer, dimension(:) :: global_spline_indices
 
     li_d = 0
@@ -200,7 +200,7 @@ contains
 
     integer :: li_d,num_cells1,num_cells2
     integer :: li_i, li_j, li_A
-    integer :: li_dof,ai_sizePB
+   ! integer :: li_dof!,ai_sizePB
     integer, dimension(:) :: global_spline_indices
     
     li_d = 0
@@ -224,7 +224,7 @@ contains
 
     integer :: li_d,num_cells1,num_cells2,spline_degree1,spline_degree2
     integer :: li_i, li_j, li_A, li_L
-    integer :: li_dof,ai_sizePB
+    !integer :: li_dof!,ai_sizePB
     integer, dimension(:) :: global_spline_indices
     
     li_d = 0
@@ -297,4 +297,4 @@ contains
     end do
   end subroutine initLM
       
-end Module connectivity_Module
+end module connectivity_module

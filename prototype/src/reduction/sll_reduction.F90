@@ -186,6 +186,9 @@ contains
         end do
       end do
     else
+      if(present(integration_func_params))then
+        print *,'integration_func_params is present'
+      endif
       print *,'#not implemented yet'
       print *,'#in compute_reduction_4d_to_2d_direction34'
       stop
@@ -275,6 +278,9 @@ contains
         end do
       end do
     else
+      if(present(integration_func_params))then
+        print *,'integration_func_params is present'
+      endif
       print *,'#not implemented yet'
       print *,'#in compute_reduction_4d_to_2d_direction12'
       stop
@@ -347,6 +353,9 @@ contains
 
           res = res*delta1
     else
+      if(present(integration_func_params))then
+        print *,'integration_func_params is present'
+      endif
       print *,'#not implemented yet'
       print *,'#in compute_reduction_2d_to_0d'
       stop
@@ -370,12 +379,31 @@ contains
     sll_real64 :: res
     sll_int32 :: i
     
+    if(present(func_params))then
+      if(size(func_params)>100)then
+        print *,'#size of func_params is >100'
+      endif
+    endif
+    
     res = 0.5*(data(1)+data(Npts))
     do i=2,Npts-1
       res = res + data(i)
     enddo
     res = res*delta
   end function compute_integral_trapezoid_1d
+
+  function compute_integral_conservative_1d(data, Npts, node_positions) result(res)
+    sll_real64, dimension(:), intent(in)    :: data
+    sll_int32, intent(in) :: Npts
+    sll_real64, dimension(:), intent(in) :: node_positions
+    sll_real64 :: res
+    sll_int32 :: i
+    
+    res = 0._f64
+    do i=1,Npts-1
+      res = res + data(i)*(node_positions(i+1)-node_positions(i))
+    enddo
+  end function compute_integral_conservative_1d
 
 
 

@@ -32,6 +32,7 @@ module sll_module_scalar_field_1d_alternative
 #include "sll_file_io.h"
   use sll_module_scalar_field_1d_base
   use sll_constants
+  use sll_logical_meshes
   use sll_module_interpolators_1d_base
   use sll_arbitrary_degree_spline_interpolator_1d_module
   use sll_utilities
@@ -48,7 +49,7 @@ module sll_module_scalar_field_1d_alternative
      !     sll_int32                                :: plot_counter
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( mesh_1d)   :: mesh    ! a implementer
+     type( sll_logical_mesh_1d),pointer   :: mesh   
      ! allows to decide if the user put the derivative of the analiytic function: func
      logical :: present_derivative
    contains
@@ -56,12 +57,12 @@ module sll_module_scalar_field_1d_alternative
           initialize_scalar_field_1d_analytic_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_1d_analytic_alt
-     procedure, pass(field) :: value_at_point => value_at_pt_analytic
-     procedure, pass(field) :: value_at_indices => value_at_index_analytic
+     procedure, pass(field) :: value_at_point => value_at_pt_analytic_1d
+     procedure, pass(field) :: value_at_indices => value_at_index_analytic_1d
      procedure, pass(field) :: derivative_value_at_point => &
-          derivative_value_at_pt_analytic
+          derivative_value_at_pt_analytic_1d
      procedure, pass(field) :: derivative_value_at_indices => &
-          derivative_value_at_index_analytic
+          derivative_value_at_index_analytic_1d
      procedure, pass(field) :: set_field_data => set_field_data_analytic_1d
      procedure, pass(field) :: update_interpolation_coefficients => &
           update_interp_coeffs_1d_analytic
@@ -69,7 +70,7 @@ module sll_module_scalar_field_1d_alternative
      procedure, pass(field) :: delete => delete_field_1d_analytic_alt
   end type sll_scalar_field_1d_analytic_alt
   
-  type, extends(sll_scalar_field_1d_base_alternative) :: sll_scalar_field_1d_discrete_alt
+  type, extends(sll_scalar_field_1d_base) :: sll_scalar_field_1d_discrete_alt
      sll_real64, dimension(:), pointer  :: values
      !sll_real64, dimension(:,:), pointer  :: coeff_spline
      !sll_int32                            :: sz_coeff1
@@ -81,24 +82,24 @@ module sll_module_scalar_field_1d_alternative
      !sll_real64, dimension(:,:), pointer :: point2d
      sll_int32 :: bc_left
      sll_int32 :: bc_right
-     type( mesh_1d)   :: mesh    ! a implementer
+     type( sll_logical_mesh_1d),pointer :: mesh   
    contains
      procedure, pass(field) :: initialize => &
           initialize_scalar_field_1d_discrete_alt
      procedure, pass(field) :: get_logical_mesh => &
           get_logical_mesh_1d_discrete_alt
-     procedure, pass(field) :: value_at_point => value_at_pt_discrete
-     procedure, pass(field) :: value_at_indices => value_at_index_discrete
+     procedure, pass(field) :: value_at_point => value_at_pt_discrete_1d
+     procedure, pass(field) :: value_at_indices => value_at_index_discrete_1d
      procedure, pass(field) :: derivative_value_at_point => &
-          derivative_value_at_pt_discrete
+          derivative_value_at_pt_discrete_1d
      procedure, pass(field) :: derivative_value_at_indices => &
-          derivative_value_at_index_discrete
+          derivative_value_at_index_discrete_1d
      procedure, pass(field) :: set_field_data => set_field_data_discrete_1d
      procedure, pass(field) :: update_interpolation_coefficients => &
           update_interp_coeffs_1d_discrete
      procedure, pass(field) :: write_to_file => write_to_file_discrete_1d
      procedure, pass(field) :: delete => delete_field_1d_discrete_alt
-  end type sll_scalar_field_2d_discrete_alt
+  end type sll_scalar_field_1d_discrete_alt
 
 
 
@@ -128,59 +129,60 @@ contains   ! *****************************************************************
   ! **************************************************************************
   
 
-  function value_at_pt_analytic( field, eta )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+  function value_at_pt_analytic_1d( field, eta )
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             ::  value_at_pt_analytic
-    value_at_pt_analytic = field%func(eta, field%params)
-  end function value_at_pt_analytic
+    sll_real64             ::  value_at_pt_analytic_1d
+    value_at_pt_analytic_1d = field%func(eta, field%params)
+  end function value_at_pt_analytic_1d
 
-  function value_at_index_analytic( field, i )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+  function value_at_index_analytic_1d( field, i )
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: value_at_index_analytic
+    sll_real64            :: value_at_index_analytic_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    value_at_index_analytic = field%func(eta, field%params)
-  end function value_at_index_analytic
+    value_at_index_analytic_1d = field%func(eta, field%params)
+  end function value_at_index_analytic_1d
 
-  function derivative_value_at_pt_analytic( field, eta)
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+  function derivative_value_at_pt_analytic_1d( field, eta)
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             :: derivative_value_at_pt_analytic
+    sll_real64             :: derivative_value_at_pt_analytic_1d
     
-    if ( field%present_derivative_int ) then 
-       derivative_value_at_pt_analytic = &
+    if ( field%present_derivative ) then 
+       derivative_value_at_pt_analytic_1d = &
             field%first_derivative(eta,field%params)
     else 
        print*,' first derivative is not given in the initialization'
     end if
     
-  end function derivative_value_at_pt_analytic
+  end function derivative_value_at_pt_analytic_1d
 
   
-  function derivative_value_at_index_analytic( field, i)
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+  function derivative_value_at_index_analytic_1d( field, i)
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: derivative_value_at_index_analytic
+    sll_real64            :: derivative_value_at_index_analytic_1d
     
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
     
-    if ( field%present_derivative_int ) then 
-       derivative_value_at_index_analytic = &
+    if ( field%present_derivative ) then 
+       derivative_value_at_index_analytic_1d = &
             field%first_derivative(eta,field%params)
     else 
        print*,' first derivative is not given in the initialization'
     end if
     
-  end function derivative_value_at_index_analytic
+  end function derivative_value_at_index_analytic_1d
   
   function new_scalar_field_1d_analytic_alt( &
        func, &
        field_name, &
        bc_left, &
        bc_right, &
+       mesh, &
        func_params,&
        first_derivative) result(obj)
     
@@ -192,6 +194,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32  :: ierr
+    type(sll_logical_mesh_1d),pointer   :: mesh
  
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
@@ -199,6 +202,7 @@ contains   ! *****************************************************************
     field_name, &
     bc_left, &
     bc_right, &
+    mesh, &
     func_params,&
     first_derivative)
   end function new_scalar_field_1d_analytic_alt
@@ -208,13 +212,16 @@ contains   ! *****************************************************************
     sll_real64, dimension(:), intent(in) :: values
     print *, 'WARNING: set_field_data_analytic_1d(): it is useless to ', &
          'call this function on an analytic scalar field.'
+     print*, field%bc_left*values(1)
   end subroutine set_field_data_analytic_1d
 
   subroutine update_interp_coeffs_1d_analytic( field )
     class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     print *, 'WARNING: update_interpolation_coefficients_1d_analytic(): ', &
          ' it is useless to call this function on an analytic scalar field.'
+    print*, field%bc_left
   end subroutine update_interp_coeffs_1d_analytic
+
 
   subroutine delete_field_1d_analytic_alt( field )
     class(sll_scalar_field_1d_analytic_alt), intent(out) :: field
@@ -232,6 +239,7 @@ contains   ! *****************************************************************
     field_name, &
     bc_left, &
     bc_right, &
+    mesh, &
     func_params, &
     first_derivative)
 
@@ -240,18 +248,20 @@ contains   ! *****************************************************************
     procedure(one_var_parametrizable_function), optional :: first_derivative
     character(len=*), intent(in)                    :: field_name
     sll_real64, dimension(:), intent(in), optional, target :: func_params
+    type(sll_logical_mesh_1d),pointer   :: mesh
+
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
  
     field%func      => func
-    field%params    => func_params   
+    if (present(func_params)) field%params    => func_params   
     field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right
-    
+    field%mesh      => mesh
     if (present(first_derivative)) then
        field%first_derivative => first_derivative
-       field%present_derivative_int = .TRUE.
+       field%present_derivative = .TRUE.
     end if
   end subroutine initialize_scalar_field_1d_analytic_alt
 
@@ -279,37 +289,40 @@ contains   ! *****************************************************************
 
 
   subroutine write_to_file_analytic_1d( field, tag )
-    class(sll_scalar_field_1d_analytic_alt), intent(in) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
     sll_real64, dimension(:), allocatable :: values
     sll_real64                              :: eta
-    type(sll_logical_mesh_1d), pointer      :: mesh
     sll_int32 :: i
     sll_int32 :: ierr
-    
+    ! print*, 'passed'
     ! use the logical mesh information to find out the extent of the
     ! domain and allocate the arrays for the plotter.
-    mesh   => field%get_logical_mesh()
-    nptsx = mesh%num_cells + 1
+    !mesh   => field%get_logical_mesh()
+    !print*, 'passed'
+    nptsx = field%mesh%num_cells + 1
+
+    !print*, 'passed',nptsx
     SLL_ALLOCATE(xcoords(nptsx),ierr)
     SLL_ALLOCATE(values(nptsx),ierr)
-    
+    ! print*, 'passed'
     ! Fill the arrays with the needed information.
     do i=1, nptsx
-       eta = mesh%eta_min + (i-1)*mesh%delta_eta
-       xcoords(i) = x(eta)
-       values(i)   = field%value_at_point(eta)
+       eta = field%mesh%eta_min + (i-1)*field%mesh%delta_eta
+       xcoords(i) =  eta
+       values(i)   = field%value_at_point(eta)*tag
     end do
     
-    call sll_gnuplot_curv_1d( & ! a implementer
-         nptsx, &
-         xcoords, &
-         values, &
-         trim(field%name), &
-         tag, &
-         ierr )
+    print*, 'not implemented  sll_gnuplot_curv_1d'
+!!$    call sll_gnuplot_curv_1d( & ! a implementer
+!!$         nptsx, &
+!!$         xcoords, &
+!!$         values, &
+!!$         trim(field%name), &
+!!$         tag, &
+!!$         ierr )
     
     SLL_DEALLOCATE_ARRAY(xcoords,ierr)
     SLL_DEALLOCATE_ARRAY(values,ierr)
@@ -323,19 +336,20 @@ contains   ! *****************************************************************
   ! **************************************************************************
 
   function new_scalar_field_1d_discrete_alt( &
-    array_1d, &
+   ! array_1d, &
     field_name, &
     interpolator_1d, &
     bc_left, &
     bc_right, &
+    mesh, &
     point_1d, &
     sz_point) result(obj)
 
     type(sll_scalar_field_1d_discrete_alt), pointer :: obj
-    sll_real64, dimension(:), intent(in), target  :: array_1d
+!    sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_1d_base), target        :: interpolator_1d ! a implementer
-    sll_int32 :: SPLINE_DEG1
+     type(sll_logical_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32, optional :: sz_point
     ! sll_real64, dimension(:,:), optional :: point2d
@@ -345,52 +359,67 @@ contains   ! *****************************************************************
     
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
-         array_1d, &
+        ! array_1d, &
          field_name, &
          interpolator_1d, &
          bc_left, &
          bc_right, &
+         mesh,&
          point_1d,&
          sz_point)
   end function new_scalar_field_1d_discrete_alt
+
   
   subroutine initialize_scalar_field_1d_discrete_alt( &
     field, &
-    array_1d, &
+   ! array_1d, &
     field_name, &
     interpolator_1d, &
     bc_left, &
     bc_right, &
+    mesh,&
     point_1d, &
     sz_point)
     
     
     class(sll_scalar_field_1d_discrete_alt)         :: field
-    sll_real64, dimension(:), intent(in), target  :: array_1d
+   ! sll_real64, dimension(:), intent(in), target  :: array_1d
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_1d_base), target        :: interpolator_1d
-
+    type(sll_logical_mesh_1d),pointer   :: mesh
     sll_real64, dimension(:), optional :: point_1d
     sll_int32,optional :: sz_point
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
-    sll_int32 :: i
     sll_int32 :: ierr   
     
-    
-    field%values => array_1d
+   ! field%values => array_1d
     field%interp_1d => interpolator_1d
     !    field%mesh%written = .false.
     field%name      = trim(field_name)
     field%bc_left   = bc_left
     field%bc_right  = bc_right
+    field%mesh      => mesh
+
+    !SLL_ALLOCATE(point(sz_point),ierr)
+    SLL_ALLOCATE(field%values(field%mesh%num_cells+1),ierr)
+    
+!!$    if ( present( point_1d) .and. present(sz_point)) then
+!!$       print*, ' not implemented yet in initialize_scalar_field_1d_discrete_alt'
+!!$       stop
+!!$    end if
+!!$    if ( present( point_1d) .and. .not. present(sz_point)) then
+!!$       print*, ' problem presence of point_1d and not the size in '
+!!$       print*, 'initialize_scalar_field_1d_discrete_alt'
+!!$       stop
+!!$    end if
     
     
    
-    call field%interp_1d%compute_interpolants( &  !  a implementer
-         array_1d, &
-         point_1d, &
-         sz_point )
+!!$    call field%interp_1d%compute_interpolants( &  !  a implementer
+!!$         array_1d, &
+!!$         point_1d, &
+!!$         sz_point )
     
   end subroutine initialize_scalar_field_1d_discrete_alt
   
@@ -413,7 +442,7 @@ contains   ! *****************************************************************
     ! just nullify pointers, nothing to deallocate that this object owns.
     nullify(field%values)
     nullify(field%interp_1d)
-    nullify(field%point_1d)
+    nullify(field%point)
   end subroutine delete_field_1d_discrete_alt
   
 
@@ -429,44 +458,44 @@ contains   ! *****************************************************************
     res => field%mesh
   end function get_logical_mesh_1d_discrete_alt
 
-  function value_at_pt_discrete( field, eta)
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+  function value_at_pt_discrete_1d( field, eta)
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             :: value_at_pt_discrete
+    sll_real64             :: value_at_pt_discrete_1d
     
-    value_at_pt_discrete = field%interp_1d%interpolate_value(eta)
-  end function value_at_pt_discrete
+    value_at_pt_discrete_1d = field%interp_1d%interpolate_value(eta)
+  end function value_at_pt_discrete_1d
   
-  function value_at_index_discrete( field, i )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+  function value_at_index_discrete_1d( field, i )
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: value_at_index_discrete
+    sll_real64            :: value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    value_at_index_discrete = field%interp_1d%interpolate_value(eta) ! a implementer
-  end function value_at_index_discrete
+    value_at_index_discrete_1d = field%interp_1d%interpolate_value(eta) 
+  end function value_at_index_discrete_1d
   
-  function first_derivative_value_at_pt_discrete( field, eta )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+  function derivative_value_at_pt_discrete_1d( field, eta )
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_real64, intent(in) :: eta
-    sll_real64             :: first_derivative_value_at_pt_discrete
+    sll_real64             :: derivative_value_at_pt_discrete_1d
     
-    first_derivative_value_at_pt_discrete = &
-         field%interp_1d%interpolate_derivative(eta) !a implementer
-  end function first_derivative_value_at_pt_discrete
+    derivative_value_at_pt_discrete_1d = &
+         field%interp_1d%interpolate_derivative_eta1(eta)
+  end function derivative_value_at_pt_discrete_1d
   
-  function first_derivative_value_at_index_discrete( field, i )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+  function derivative_value_at_index_discrete_1d( field, i )
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in) :: i
     sll_real64            :: eta
-    sll_real64            :: first_derivative_value_at_index_discrete
+    sll_real64            :: derivative_value_at_index_discrete_1d
     eta = field%mesh%eta_min + real(i-1,f64)*field%mesh%delta_eta
-    first_derivative_value_at_index_discrete = &
-         field%interp_1d%interpolate_derivative(eta)
-  end function first_derivative_value_at_index_discrete
+    derivative_value_at_index_discrete_1d = &
+         field%interp_1d%interpolate_derivative_eta1(eta)
+  end function derivative_value_at_index_discrete_1d
 
   subroutine write_to_file_discrete_1d( field, tag )
-    class(sll_scalar_field_1d_discrete_alt), intent(in) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     sll_int32, intent(in)                               :: tag
     sll_int32 :: nptsx
     sll_real64, dimension(:), allocatable :: xcoords
@@ -480,24 +509,25 @@ contains   ! *****************************************************************
     ! domain and allocate the arrays for the plotter.
     mesh   => field%get_logical_mesh()
     nptsx = mesh%num_cells + 1
-    SLL_ALLOCATE(x1coords(nptsx),ierr)
+
+    SLL_ALLOCATE(xcoords(nptsx),ierr)
     SLL_ALLOCATE(values(nptsx),ierr)
     
     ! Fill the arrays with the needed information.
     do i=1, nptsx
-          eta = mesh%eta_min + (i-1)*mesh%delta_eta
-          xcoords(i) = fiel%x(eta)
-          values(i)   = field%value_at_point(eta)
-       end do
+       eta = mesh%eta_min + (i-1)*mesh%delta_eta
+       xcoords(i)  = eta!field%x(eta)
+       values(i)   = field%value_at_point(eta)*tag
     end do
 
-    call sll_gnuplot_curv_1d( &
-         nptsx, &
-         xcoords, &
-         values, &
-         trim(field%name), &
-         tag, &
-         ierr )
+    print*, 'not implement the sll_gnuplot_curv_1d '
+!!$    call sll_gnuplot_curv_1d( &
+!!$         nptsx, &
+!!$         xcoords, &
+!!$         values, &
+!!$         trim(field%name), &
+!!$         tag, &
+!!$         ierr )
 
     SLL_DEALLOCATE_ARRAY(xcoords,ierr)
     SLL_DEALLOCATE_ARRAY(values,ierr)

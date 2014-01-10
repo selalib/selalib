@@ -149,7 +149,12 @@ contains  ! ****************************************************************
       sll_real64, dimension(:), intent(in)           :: data_array
       sll_real64, dimension(:), intent(in),optional  :: eta_coords
       sll_int32, intent(in),optional                 :: size_eta_coords
-      
+      if(present(eta_coords))then
+        !print *,'#Warning eta_coords present but not used'
+      endif
+      if(present(size_eta_coords))then
+        !print *,'#Warning size_eta_coords present but not used'
+      endif
       call compute_spline_1D( data_array, interpolator%spline )
   end subroutine
 
@@ -327,6 +332,9 @@ contains  ! ****************************************************************
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
        sll_real64, dimension(num_points)    :: res
+       print *,'#warning reconstruct_array is dummy'
+       print *,'#',this%num_points
+       print *,maxval(data)
        res(:) = 0.0_f64
   end function reconstruct_array
 
@@ -349,6 +357,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
+    print *,interpolator%num_points
+    if(present(coeffs))then
+      print *,'coeffs are present'
+    endif
     stop
   end subroutine set_coefficients_cs1d
 
@@ -362,7 +374,10 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d     
     
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    print *,interpolator%num_points
+    get_coefficients_cs1d = 0._f64
+    stop      
   end function get_coefficients_cs1d
   
   

@@ -1,18 +1,22 @@
 program test_general_elliptic_solver
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
+  use sll_module_scalar_field_2d_alternative
+  use sll_constants
+  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_timer
+
+
 #ifdef _UMFPACK
   use sll_general_coordinate_elliptic_solver_module_umfpack
 #else
   use sll_general_coordinate_elliptic_solver_module
 #endif
-  use sll_module_scalar_field_2d_alternative
-  use sll_constants
-  use sll_arbitrary_degree_spline_interpolator_2d_module
-  use sll_timer
-#include "sll_memory.h"
-#include "sll_working_precision.h"
+
   implicit none
 
 #define SPLINE_DEG1 3
@@ -43,7 +47,7 @@ program test_general_elliptic_solver
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
   sll_real64 :: t1i, t1e, t2i, t2e, t3i, t3e, t4i, t4e, t5i, t5e, t6i, t6e, &
-       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i,t55e,t55i
+       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i
   ! sll_real64 :: t105e,t105i,t115e,t115i,t125i,t125e
   real(8), external :: func_zero
   real(8), external :: func_one
@@ -57,7 +61,7 @@ program test_general_elliptic_solver
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), pointer :: values
   sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
-  sll_real64 :: acc10,acc11,acc12,acc95,acc55
+  sll_real64 :: acc10,acc11,acc12,acc95
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4,normL2_5,normL2_6
   sll_real64 :: normL2_7,normL2_8,normL2_9,normL2_95,normL2_10,normL2_11,normL2_12
   sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4,normH1_5,normH1_6
@@ -70,7 +74,6 @@ program test_general_elliptic_solver
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
 !  sll_real64, dimension(:,:), pointer        :: test_coeff
-  sll_real64, dimension(2,2) :: jac_m
   sll_real64 :: val_jac
   sll_int32 :: ierr
   sll_int32  :: i, j
@@ -107,7 +110,6 @@ program test_general_elliptic_solver
   real(8), external :: source_term_chgt_adim
   real(8) :: integrale_solution
   real(8) :: integrale_solution_exacte
-  real(8) :: integrale__deriv_solution
  ! sll_real64 :: node_val1
   !sll_real64 :: epsi
   !sll_real64 :: epsi1
@@ -172,6 +174,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever ) 
 
+ 
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
@@ -273,6 +276,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC )
+  
   call phi%set_field_data( values )
   call phi%update_interpolation_coefficients( )
 
@@ -310,8 +314,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-             ! rho)
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+      ! rho)
 
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
@@ -322,10 +328,10 @@ program test_general_elliptic_solver
   t1e = time_elapsed_since(t_reference)
 
   !print *, 'Completed solution',es%phi_vec
-  print*, 'reorganizaton of splines coefficients of solution'
-  
-  !  print *, 'Compare the values of the transformation at the nodes: '
-  
+!  print*, 'reorganizaton of splines coefficients of solution'
+
+    print *, 'Compare the values of the transformation at the nodes: '
+!!$  
   acc1 = 0.0_f64
   normL2_1 = 0.0_f64
   normH1_1 = 0.0_f64
@@ -335,7 +341,9 @@ program test_general_elliptic_solver
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
         eta2       = real(j,f64)*h2 + ETA2MIN
+    
         node_val   = phi%value_at_point(eta1,eta2)
+
         grad1_node_val = phi%first_deriv_eta1_value_at_point(eta1, eta2)
         grad2_node_val = phi%first_deriv_eta2_value_at_point(eta1, eta2)
         ref        = sol_exacte_perper(eta1,eta2)
@@ -349,12 +357,14 @@ program test_general_elliptic_solver
                 'theoretical = ', ref, 'difference=', node_val-ref
            print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', grad1_node_val, &
                 'theoretical = ', grad1ref, 'difference=',grad1ref-grad1_node_val
+           print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', grad2_node_val, &
+                'theoretical = ', grad2ref, 'difference=',grad2ref-grad2_node_val
            
         end if
         acc1        = acc1 + abs(node_val-ref)
         normL2_1    = normL2_1 + (node_val-ref)**2*h1*h2
         normH1_1    = normH1_1 + ((grad1_node_val-grad1ref)**2+(grad2_node_val-grad2ref)**2)*h1*h2
-        !integrale_solution = integrale_solution + ref*h1*h2!node_val
+        integrale_solution = integrale_solution + ref*h1*h2!node_val
      end do
   end do
 
@@ -362,7 +372,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=',sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
   
-  
+ 
   ! delete things...
   call delete(es)
   call rho%delete()
@@ -571,7 +581,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+       !rho)
   
 !!$
   call solve_general_coordinates_elliptic_eq(&
@@ -615,7 +628,8 @@ program test_general_elliptic_solver
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
        'integrale de la solution exacte=', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
-  
+
+
   ! delete things...
   call delete(es)
   call rho%delete()
@@ -625,6 +639,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -717,17 +733,42 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       whatever  ) 
+       whatever) 
+  
+
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero) 
+  
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
   
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       whatever )
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever)
 
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_perdir, &
@@ -799,8 +840,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-  print *, 'factorized mass matrices'
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+      ! rho)
 
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
@@ -813,7 +856,6 @@ program test_general_elliptic_solver
   
   t3e = time_elapsed_since(t_reference)
 
-  print *, 'solved for phi, proceeding to assess results...'
 
   acc3 = 0.0_f64
   normL2_3 = 0.0_f64
@@ -844,6 +886,8 @@ program test_general_elliptic_solver
   end do
   print*, 'integrale de la solution =', sum(calculated(1:npts1-1,1:npts2-1))*h1*h2,&
        ' integrale de la solution exacte =', sum(reference(1:npts1-1,1:npts2-1))*h1*h2
+
+  
   call phi%write_to_file(0)
   ! delete things...
   call delete(es)
@@ -854,6 +898,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -946,15 +992,39 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever ) 
   
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       whatever )
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever)
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_dirper, &
@@ -1024,8 +1094,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-         
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -1071,6 +1143,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -1166,16 +1240,42 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        whatever ) 
   
+
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
        T, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       whatever )
-
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever)
+  
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_perper, &
        "rho5", &     
@@ -1244,9 +1344,11 @@ program test_general_elliptic_solver
        a11_field_mat, &
        a12_field_mat,&
        a21_field_mat,&
-        a22_field_mat,&
-       c_field)
-         
+       a22_field_mat,&
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -1309,6 +1411,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -1405,7 +1509,31 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        whatever ) 
-
+  
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
@@ -1487,8 +1615,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-         
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -1552,7 +1682,9 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
-   call T%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
+  call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
   SLL_DEALLOCATE_ARRAY(calculated,ierr)
@@ -1644,7 +1776,32 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       whatever ) 
+       whatever) 
+  
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
 
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
@@ -1724,8 +1881,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-         
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -1787,6 +1946,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
 
   SLL_DEALLOCATE(values, ierr)
@@ -1879,18 +2040,43 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       whatever) 
+  
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
        SLL_PERIODIC, &
-       whatever ) 
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
 
   c_field => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "c_field", &
        T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       whatever )
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever)
   
   rho => new_scalar_field_2d_analytic_alt( &
        source_term_chgt_dirper, &
@@ -1900,7 +2086,7 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_PERIODIC,&
        SLL_PERIODIC, &
-       whatever )
+       whatever)
   
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -1961,8 +2147,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-         
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -2026,6 +2214,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -2127,9 +2317,44 @@ program test_general_elliptic_solver
        SLL_PERIODIC, &
        SLL_PERIODIC,&
        SLL_PERIODIC,&
+       SLL_PERIODIC,&
+       whatever)
+    
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
        SLL_PERIODIC, &
-       whatever ) 
-   
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever)
+  
+  
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2158,17 +2383,7 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
-
-
-  c_field => new_scalar_field_2d_analytic_alt( &
-       func_zero, &
-       "c_field", &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       whatever )  
+  
   ! terme_source_interp => interp_2d_term_source
   
   rho => new_scalar_field_2d_discrete_alt( &
@@ -2249,8 +2464,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-       
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -2317,6 +2534,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -2419,8 +2638,45 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_PERIODIC,&
        SLL_PERIODIC, &
-       whatever ) 
+       whatever)
   
+  
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever)
+  
+  
+
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2484,16 +2740,6 @@ program test_general_elliptic_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
-
-  c_field => new_scalar_field_2d_analytic_alt( &
-       func_zero, &
-       "c_field", &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       whatever )
   
   phi => new_scalar_field_2d_discrete_alt( &
        "phi9", &
@@ -2539,8 +2785,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-         
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -2607,6 +2855,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -2653,7 +2903,7 @@ program test_general_elliptic_solver
   
   ! Second, initialize the coordinate transformation associated with this 
   ! problem.
-  T => new_coordinate_transformation_2d_analytic( &
+   T => new_coordinate_transformation_2d_analytic( &
        "analytic", &
        mesh_2d, &
        sinprod_x1, &
@@ -2706,8 +2956,46 @@ program test_general_elliptic_solver
        SLL_PERIODIC,&
        SLL_DIRICHLET,&
        SLL_DIRICHLET, &
-       whatever ) 
+       whatever)
   
+
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+ 
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever)
+
+  
+
   allocate(point1(npts1))
   allocate(point2(npts2))
   allocate(tab_rho(npts1,npts2))
@@ -2768,16 +3056,6 @@ program test_general_elliptic_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
 !!$  
-
-  c_field => new_scalar_field_2d_analytic_alt( &
-       func_zero, &
-       "c_field", &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       whatever )
   
   phi => new_scalar_field_2d_discrete_alt( &
        "phi10", &
@@ -2823,8 +3101,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-         
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+  
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -2889,6 +3169,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   call T%delete()
   
   SLL_DEALLOCATE(values, ierr)
@@ -2987,8 +3269,44 @@ program test_general_elliptic_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET,&
        SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       whatever) 
+  
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
        SLL_DIRICHLET, &
-       whatever ) 
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       whatever)
+
+
 
   allocate(point1(npts1))
   allocate(point2(npts2))
@@ -3018,15 +3336,7 @@ program test_general_elliptic_solver
   
   terme_source_interp => interp_2d_term_source
 
-  c_field => new_scalar_field_2d_analytic_alt( &
-       func_zero, &
-       "c_field", &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       whatever )
+
 
   rho => new_scalar_field_2d_discrete_alt( &
        "rho11", &
@@ -3101,8 +3411,10 @@ program test_general_elliptic_solver
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
-       
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+
   !print*, 'solve'
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
@@ -3118,6 +3430,8 @@ program test_general_elliptic_solver
   acc11 = 0.0_f64
   integrale_solution_exacte = 0.0
   integrale_solution = 0.0
+  normL2_11 = 0.0_f64
+  normH1_11 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -3168,6 +3482,8 @@ program test_general_elliptic_solver
   call a21_field_mat%delete()
   call a22_field_mat%delete()
 
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   
   call T%delete()
 
@@ -3265,7 +3581,44 @@ program test_general_elliptic_solver
        SLL_DIRICHLET,&
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       whatever ) 
+       whatever) 
+  
+
+  b1_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b1", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero)
+  
+  b2_field_vect => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "b2", &
+       T, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever, &
+       first_deriv_eta1 = func_zero, &
+       first_deriv_eta2 = func_zero) 
+  
+  c_field => new_scalar_field_2d_analytic_alt( &
+       func_zero, &
+       "c_field", &
+       T, &
+       SLL_DIRICHLET,&
+       SLL_DIRICHLET,&
+       SLL_PERIODIC, &
+       SLL_PERIODIC, &
+       whatever)
+  
+  
   
   SLL_ALLOCATE(point1(npts1),ierr)
   SLL_ALLOCATE(point2(npts2),ierr)
@@ -3295,15 +3648,6 @@ program test_general_elliptic_solver
   
   terme_source_interp => interp_2d_term_source
 
-  c_field => new_scalar_field_2d_analytic_alt( &
-       func_zero, &
-       "c_field", &
-       T, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       whatever )
 
   rho => new_scalar_field_2d_discrete_alt( &
        "rho12", &
@@ -3368,19 +3712,18 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
 
+  t12i = time_elapsed_since(t_reference) 
+
   call factorize_mat_es(&
        es, &
        a11_field_mat, &
        a12_field_mat,&
        a21_field_mat,&
        a22_field_mat,&
-       c_field)
- 
-  t12i = time_elapsed_since(t_reference) 
-  
-  print *, 'Initialized ES object'
-  call set_time_mark(t_reference)
-          
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field)!, &
+
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -3445,6 +3788,8 @@ program test_general_elliptic_solver
   call a12_field_mat%delete()
   call a21_field_mat%delete()
   call a22_field_mat%delete()
+  call b1_field_vect%delete()
+  call b2_field_vect%delete()
   
   call T%delete()
 
@@ -3525,8 +3870,8 @@ program test_general_elliptic_solver
        ',  solution time (s): ', t12e,'Norm L2',sqrt(normL2_12),'Norm H1',sqrt(normH1_12)
   
 !!$  
-
-
+!print*,h1**(SPLINE_DEG1-2)*h2**(SPLINE_DEG2-2)
+!borne_L2 = 1.8*sll_pi**2*h1**(SPLINE_DEG1-1)*h2**(SPLINE_DEG2-1)
   if ( ( sqrt(normL2_1) <= h1**(SPLINE_DEG1-1))   .AND. &
        ( sqrt(normL2_2) <= h1**(SPLINE_DEG1-1))   .AND. &
        ( sqrt(normL2_3) <= h1**(SPLINE_DEG1 -1))   .AND. &
@@ -3570,6 +3915,7 @@ function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  print*, eta1, eta2, params
   res = 1.0_8
 end function func_one
 
@@ -3578,6 +3924,7 @@ function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  print*, eta1, eta2, params
   res = 0.0_8
 end function func_zero
 
@@ -3586,6 +3933,7 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  print*, eta1, eta2, params
   res = 0.0_8
 end function func_epsi
 
@@ -3604,12 +3952,14 @@ function source_term_perper( eta1, eta2) result(res)
   real(8), intent(in) :: eta2
   ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
+  print*, eta1, eta2
   res =  0.001*cos(2*sll_pi*eta1)!!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
 end function source_term_perper
 
 real(8) function sol_exacte_perper(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
 end function sol_exacte_perper
@@ -3617,12 +3967,14 @@ end function sol_exacte_perper
 real(8) function sol_exacte_perper_der1(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der2
@@ -3641,6 +3993,8 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   intrinsic :: sin 
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+
+  print*, eta1, eta2, params
   source_term_perdir = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
       ! -(16.0*sll_pi**2*eta2**4 &
       ! - 16.0*sll_pi**2*eta2**2 &
@@ -3689,6 +4043,7 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   use sll_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+  print*, eta1, eta2, params
   source_term_dirper = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
      ! -(16.0*sll_pi**2*eta1**4 &
      ! - 16.0*sll_pi**2*eta1**2 &
@@ -3743,6 +4098,8 @@ real(8) function rho_rtheta(eta1,eta2,params) ! in the path
   real(8) :: x, y
   real(8), dimension(:), intent(in), optional :: params
   
+  if (present(params)) print*, params
+
   x = eta2*cos(2*sll_pi*eta1)
   y = eta2*sin(2*sll_pi*eta1)
   
@@ -3759,6 +4116,7 @@ real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
   intrinsic :: sin
   real(8), dimension(:), intent(in), optional :: params
   
+  if (present(params)) print*, params
   
   sol_exacte_rtheta = ( eta2**2-1)*(eta2**2-0.5**2)*eta2**2&
        *cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
@@ -4101,12 +4459,14 @@ end function sol_exacte_chgt_dirper_der2
 real(8) function adimension_chgt_x(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   adimension_chgt_x = 2*sll_pi*eta1 !+ eta2)
 end function adimension_chgt_x
 
 real(8) function adimension_chgt_y(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   adimension_chgt_y = 2*sll_pi*eta2
 end function adimension_chgt_y
 
@@ -4114,24 +4474,28 @@ end function adimension_chgt_y
 real(8) function jac11_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac11_adimension_chgt = 2*sll_pi
 end function jac11_adimension_chgt
 
 real(8) function jac12_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac12_adimension_chgt = 0.0!sll_pi
 end function jac12_adimension_chgt
 
 real(8) function jac21_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac21_adimension_chgt = 0.0!2*sll_pi!0.0
 end function jac21_adimension_chgt
 
 real(8) function jac22_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac22_adimension_chgt = 2*sll_pi
 end function jac22_adimension_chgt
 

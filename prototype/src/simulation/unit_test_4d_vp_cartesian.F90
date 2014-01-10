@@ -23,7 +23,6 @@ program vlasov_poisson_4d
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_time_mark)  :: t0
-  sll_real64 :: time 
 
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
@@ -44,8 +43,7 @@ program vlasov_poisson_4d
 
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#reached end of sim4d_vp_cart test'
-    time = time_elapsed_since(t0)
-    print *, '#time elapsed since t0 : ',time
+    print *, '#time elapsed since t0 : ', time_elapsed_since(t0)
     print *, '#PASSED'
   endif
 
