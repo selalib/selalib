@@ -18,11 +18,12 @@ program unit_test
   sll_real64, dimension(:), allocatable    :: reference
   !sll_real64, dimension(:), allocatable    :: calculated
   !sll_real64, dimension(:), allocatable    :: difference
-  sll_int32 :: ierr
-  sll_int32  :: i, j
+  !sll_int32 :: ierr
+  sll_int32  :: i !, j
   sll_real64 :: eta1, h1
-  sll_real64 :: acc, acc1, acc2, acc3, node_val, ref, deriv1_val
-  sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1
+  sll_real64 :: acc, acc1, acc2, node_val, ref, deriv1_val
+  !sll_real64 ::  acc3
+  sll_real64 ::   acc_der1,acc1_der1, acc2_der1 !, acc3_der1
   sll_real64 :: normL2_0, normL2_1,normL2_2,normH1_0,normH1_1,normH1_2
   
   print *,  'filling out discrete arrays for x1 '

@@ -48,12 +48,16 @@ module sll_parallel_array_initializer_module
   
   interface sll_4d_parallel_array_initializer
     module procedure sll_2d_times_2d_parallel_array_initializer
-   end interface
+  end interface
   
+  interface  sll_2d_parallel_array_initializer_cartesian
+    module procedure sll_2d_parallel_array_initializer_cartesian_logical_2d
+    module procedure sll_2d_parallel_array_initializer_cartesian_array_1d_1d
+  end interface 
 contains
 
   
-  subroutine sll_2d_parallel_array_initializer_cartesian( &
+  subroutine sll_2d_parallel_array_initializer_cartesian_logical_2d( &
        layout, &
        mesh2d, &
        array, &
@@ -77,8 +81,8 @@ contains
     sll_real64 :: eta2_min
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: x1
-    sll_real64 :: x2
+    !sll_real64 :: x1
+    !sll_real64 :: x2
     sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
@@ -126,7 +130,70 @@ contains
       end do
     end do
 
-  end subroutine sll_2d_parallel_array_initializer_cartesian
+  end subroutine sll_2d_parallel_array_initializer_cartesian_logical_2d
+
+  subroutine sll_2d_parallel_array_initializer_cartesian_array_1d_1d( &
+       layout, &
+       x1_array, &
+       x2_array, &
+       array, &
+       func, &
+       func_params)
+
+    type(layout_2D), pointer                    :: layout
+    sll_real64, dimension(:), intent(in) :: x1_array
+    sll_real64, dimension(:), intent(in) :: x2_array
+    sll_real64, dimension(:,:), intent(out) :: array
+    procedure(sll_scalar_initializer_2d)        :: func
+    sll_real64, dimension(:), optional          :: func_params
+
+
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: loc_size_x1
+    sll_int32  :: loc_size_x2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
+
+    if( .not. associated(layout) ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#passed layout is uninitialized.'
+    end if
+
+!    if( .not. associated(mesh2d) ) then
+!       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+!            '#passed mesh2d_eta1_eta2 argument is uninitialized.'
+!    end if
+
+
+    call compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
+
+    if( size(array,1) .lt. loc_size_x1 ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#first dimension of passed array is inconsistent with ', &
+            '#the size contained in the passed layout.'
+    end if
+
+    if( size(array,2) .lt. loc_size_x2 ) then
+       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+            '#second dimension of passed array is inconsistent with ', &
+            '#the size contained in the passed layout.'
+    end if
+
+
+
+    do j=1,loc_size_x2
+      do i=1,loc_size_x1
+        gi(:) = local_to_global_2D( layout, (/i,j/) )
+        eta1 = x1_array(gi(1))
+        eta2 = x2_array(gi(2))
+        array(i,j) = func(eta1,eta2,func_params)
+      end do
+    end do
+
+  end subroutine sll_2d_parallel_array_initializer_cartesian_array_1d_1d
+
 
 
   subroutine sll_4d_parallel_array_initializer_cartesian_aux( &
@@ -166,10 +233,10 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_real64 :: x3
-    sll_real64 :: x4
+    !sll_real64 :: x1
+    !sll_real64 :: x2
+    !sll_real64 :: x3
+    !sll_real64 :: x4
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then

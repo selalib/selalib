@@ -15,7 +15,7 @@ Implicit None
 #endif
     character(len=MAXMSG) :: ms_msg
 
-    CHARACTER(LEN=10), PARAMETER :: FMT1_REAL = "(F5.3)"
+    CHARACTER(LEN=10), PARAMETER :: FMT1_REAL = "(F8.3)"
 
     integer, parameter :: MAXSTAMP = 16
     character(len=MAXSTAMP) :: ms_stamp
@@ -45,7 +45,7 @@ contains
         logical, optional :: al_stdoutput
         integer, optional :: ai_dtllevel
         ! LOCAL VARIABLES
-        integer  :: li_ios, li_flag, li_err
+        integer  :: li_ios
 
         mi_dtllevel  = 0
         if ( present ( ai_dtllevel )  ) then
@@ -153,7 +153,6 @@ contains
         ! LOCAL VARIABLES
         logical :: ll_condition
         integer :: li_dtllevel
-        integer :: li_i
 
         ll_condition = .TRUE.
         if ( present ( al_condition ) ) then

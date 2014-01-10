@@ -9,9 +9,15 @@
   x1_min = 0.0
   nbox_x1 = 1
   mesh_case_x2 = "SLL_LOGICAL_MESH"
-  num_cells_x2 = 512
+  num_cells_x2 = 174 !214 !134 !374 !10/64*512+64-10
   x2_min = -6.0
   x2_max = 6.0
+  mesh_case_x2 = "SLL_TWO_GRID_MESH"
+    x2_fine_min = 0.375 !0.36
+    x2_fine_max = 2.25 !2.28
+    density_x2_min_to_x2_fine_min = 1
+    density_x2_fine_min_to_x2_fine_max = 12
+    density_x2_fine_max_to_x2_max = 1
 /
 
 &initial_function
@@ -42,8 +48,21 @@
  order_x1 = 18
  !advector_x2 = "SLL_SPLINES"
  !order_x2 = 4
- advector_x2 = "SLL_LAGRANGE"
+ advector_x2 = "SLL_NON_UNIFORM_CUBIC_SPLINES"
+ !advector_x2 = "SLL_LAGRANGE"
+ !advector_x2 = "SLL_SPLINES"
  order_x2 = 18
+ !order_x2 = 4
+ advection_form_x2 = "SLL_CONSERVATIVE"
+ !advection_form_x2 = "SLL_ADVECTIVE"
+ !integration_case = "SLL_RECTANGLE"
+ !integration_case = "SLL_TRAPEZOID"
+ integration_case = "SLL_CONSERVATIVE"
+/
+
+&poisson
+  poisson_solver = "SLL_FFT"
+  !poisson_solver = "SLL_POLAR"
 /
 
 
