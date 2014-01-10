@@ -156,7 +156,7 @@ contains
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
-    sll_int32 :: interpolator_type
+    !sll_int32 :: interpolator_type
     character(len=256) :: filename_local
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id

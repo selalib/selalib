@@ -33,7 +33,7 @@ program unit_test_alternative
   class(sll_scalar_field_2d_base), pointer      :: periodique_dirichlet_discrete
   class(sll_scalar_field_2d_base), pointer      :: dirichlet_dirichlet_discrete
   class(sll_scalar_field_2d_base), pointer      :: dirichlet_periodique_discrete
-  sll_int32 :: nc1, nc2, iplot
+  sll_int32 :: nc1, nc2!, iplot
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(:,:), pointer :: tab_values
   type(arb_deg_2d_interpolator), target                 :: interp_2d
@@ -45,16 +45,16 @@ program unit_test_alternative
   ! type(cubic_spline_1d_interpolator), target  :: interp_eta2
   ! class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   ! class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
-  type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
-  class(sll_scalar_field_2d_base), pointer              :: rho
+  !type(arb_deg_2d_interpolator), target    :: interp_2d_term_source
+  !class(sll_scalar_field_2d_base), pointer              :: rho
   !sll_real64, dimension(:,:), allocatable    :: calculated
   !sll_real64, dimension(:,:), allocatable    :: difference
-  sll_real64, dimension(:,:), pointer    :: tab_rho
+  !sll_real64, dimension(:,:), pointer    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
   sll_real64 :: eta1,eta2
   sll_real64  :: h1,h2
-  sll_int32 :: npts1,npts2
+  !sll_int32 :: npts1,npts2
   sll_int32 :: i,j
   !sll_int32 :: ierr
 !!$  real(8), external :: test_function_perper
