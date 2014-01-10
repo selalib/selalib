@@ -474,7 +474,7 @@ contains ! *******************************************************************
                S_b1_loc,  &
                S_b2_loc )
 
-         ! time = time_elapsed_since(t1)
+         ! time = sll_time_elapsed_since(t1)
          ! print *, 'time elapsed build_local_matrice : ',time
 
 
@@ -500,7 +500,7 @@ contains ! *******************************************************************
                es%masse,&
                es%stiff)
           !print*, i,j
-         ! time = time_elapsed_since(t1)
+         ! time = sll_time_elapsed_since(t1)
           !print *, 'time elapsed since local_to_global : ',time
        end do
     end do
@@ -567,7 +567,7 @@ contains ! *******************************************************************
     end if
 
 
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
     ig2 = 0 
@@ -594,10 +594,10 @@ contains ! *******************************************************************
        end do
     end do
 
-    time = time_elapsed_since(t0)
+    time = sll_time_elapsed_since(t0)
 
     !print*, 'time to construct the rho', time
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -616,7 +616,7 @@ contains ! *******************************************************************
                int_rho,&
                M_rho_loc)
 
-         ! time = time_elapsed_since(t1)
+         ! time = sll_time_elapsed_since(t1)
 
          ! print*, 'time to construct the build_local', time
          ! call set_time_mark(t2)
@@ -626,14 +626,14 @@ contains ! *******************************************************************
                i, &
                j, &
                M_rho_loc)
-         ! time = time_elapsed_since(t2)
+         ! time = sll_time_elapsed_since(t2)
 
          ! print*, 'time to construct the local_to_global', time
           
        end do
     end do
     
-   time = time_elapsed_since(t0)
+   time = sll_time_elapsed_since(t0)
 
    ! print*, 'time to construct the matrix', time 
     
