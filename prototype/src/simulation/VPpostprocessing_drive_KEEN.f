@@ -4,16 +4,19 @@
       program VPpostprocessing_drive
       
       implicit none
-      integer N, Nv, Nt, i, j, nsave, nsavef, it, Nout, nrho, mbox
+      integer N, Nv, Nt, i, j, nsave, nsavef, it, mbox
       integer nmovierho, nmovieefield, nmoviedeltaf, ivmin, ivmax
       integer modeorder, nmovieEdr, nharmonics, nsavef1, nsavef2
       integer ierr,numarg, iargc
       !parameter (N=1024, Nv=4096)
-      double precision pi, dt, t, k0, eps, vxmax, vxmin, Tmax, L
+      double precision pi, dt, k0
+      !integer  Nout, nrho, 
+      !double precision eps, f0_max, t,
+      double precision vxmax, vxmin, Tmax, L
       double precision Edrmax
       double precision omega0, Tsetup, vrangemax, vrangemin
       real(8), allocatable :: rhotot(:), efield(:), deltaf(:, :)
-      double precision max_delta_f, min_delta_f,  entropy
+      double precision max_delta_f, min_delta_f !,  entropy
       real(8), allocatable :: x(:), v(:)
       double precision rhofundamental, efieldfundamental, Q
       real(8), allocatable :: rhoharmonics(:)
@@ -30,8 +33,8 @@
       character(20) :: rundir
       double precision tflat, tL, tR, twL, twR
       ! These variables have to do with partition
-      integer N_orange, N_blue
-      double precision part_boundaries(10), f0_max
+      !integer N_orange, N_blue
+      !double precision part_boundaries(10)
       real(8), allocatable :: orange_v(:), orange_f(:)
       real(8), allocatable :: blue_v(:), blue_f(:)
       

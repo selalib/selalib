@@ -52,7 +52,7 @@ program comm_unit_test_2d
   comm => new_comm_real64( sll_world_collective, 4, BUF_SIZE )
   if(rank == 0) then
      print *, 'created new comm, size = ', col_size
-     call flush()
+     call flush(6)
   end if
 
   ! In this test the processors in the communicator are organized as a 2D ring,
@@ -68,7 +68,7 @@ program comm_unit_test_2d
 
   if(rank == 0) then
      print *, 'configured the comm as a toroidal surface'
-     call flush()
+     call flush(6)
   end if
 
   SLL_ALLOCATE(main_array(SZ_X,SZ_Y),ierr)

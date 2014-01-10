@@ -94,7 +94,7 @@ subroutine spli2d_dirper (&
   
   lpr_g ( 1 : ai_nx , 1 : ai_ny -1 ) = apr_g ( 1 : ai_nx , 1 : ai_ny -1)
   lpr_g (1: ai_nx , ai_ny ) = apr_g ( 1 : ai_nx, 1 )
-  !print*, 'rer1'
+  !print*, 'rer1',lpr_tauy(1:ai_ny)
   call spli2d_custom (&
        ai_nx,&
        ai_kx,&

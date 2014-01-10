@@ -342,6 +342,36 @@ contains  ! ****************************************************************
     !print *,'error of compute_spline=',linf_err
   end subroutine compute_spline_nonunif_1D_periodic_aux
 
+  subroutine compute_spline_nonunif_1D_periodic_aux2( f, N, buf, ibuf, coeffs )
+    sll_real64, dimension(:) :: f
+    sll_real64, dimension(:), pointer :: buf
+    sll_real64, dimension(:), pointer :: coeffs
+    sll_int32, intent(in) :: N
+    sll_real64, dimension(:), pointer :: cts!, a
+    sll_int32, dimension(:), pointer  :: ipiv,ibuf
+    !sll_real64 :: linf_err,tmp
+    !a    => buf(1:3*N) 
+    cts  => buf(3*N+1:10*N)
+    ipiv => ibuf(1:N)
+
+    !compute the spline coefficients
+    call solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
+    coeffs(-1) = coeffs(N-1)
+    coeffs(N)  = coeffs(0)
+    coeffs(N+1) = coeffs(1)
+    
+    !linf_err=0._f64
+    !do i=1,N    
+    !  tmp=a(3*(i-1)+1)*coeffs(i-2)+a(3*(i-1)+2)*coeffs(i-1)+a(3*(i-1)+3)*coeffs(i)-f(i)
+    !  if(abs(tmp)>linf_err)then
+    !    linf_err=abs(tmp)
+    !  endif
+    !enddo
+    !print *,'error of compute_spline=',linf_err
+  end subroutine compute_spline_nonunif_1D_periodic_aux2
+
+
+
   subroutine compute_spline_nonunif_1D_hermite_aux( f, N, buf, ibuf, coeffs, lift )
     sll_real64, dimension(:), pointer :: f,buf,coeffs
     sll_int32, intent(in) :: N
@@ -504,6 +534,114 @@ contains  ! ****************************************************************
 
     enddo  
   end subroutine interpolate_array_value_nonunif
+
+
+  subroutine interpolate_array_value_nonunif_aux( a_in, a_out, n, node_pos,coeffs,n_cells )
+    sll_int32, intent(in) :: n,n_cells
+    sll_real64, dimension(1:n), intent(in)  :: a_in
+    !sll_real64, dimension(-1:n+1), intent(in)  :: node_pos
+    sll_real64, dimension(1:n), intent(out) :: a_out
+    sll_real64                         :: x
+    !type(cubic_nonunif_spline_1D), pointer      :: spline
+    sll_int32 :: i,j,shift=3
+    sll_real64 ::xx
+    sll_real64, dimension(:), pointer :: Xj
+    sll_real64, dimension(:), pointer :: coef,coeffs,node_pos
+    sll_real64 :: w(4)
+    
+    !do i=-1,n_cells+1
+    !  print *,i,node_pos(i)
+    !enddo
+    
+    xx=a_in(1)
+    !xx = (x-spline%xmin)/(spline%xmax-spline%xmin)
+    if(.not.((xx .ge. 0.0_f64) .and. (xx .le. 1.0_f64 ))) then
+      print *,'bad_value of x=',x!, 'xmin=', spline%xmin, 'xmax=', spline%xmax, xx,xx-1.0_f64
+      print *,'in subroutine interpolate_array_value_nonunif()'
+      STOP
+    endif
+    !SLL_ASSERT( (xx .ge. 0.0_f64) .and. (xx .le. 1.0_f64 ))
+    
+    !localization of xx
+    j=0
+    if (xx==1.0_f64) then
+      j = n_cells      
+    else
+      do while(node_pos(j).le.xx)
+        j = j+1
+      enddo
+    endif
+    
+    do i=1,n
+    
+      x = a_in(i)
+      if(.not.((x .ge. 0.0_f64) .and. (x .le. 1.0_f64 ))) then
+        print *,'bad_value of a_in(',i,')=',a_in(i)!, 'xmin=', spline%xmin, 'xmax=', spline%xmax 
+        print *,'in subroutine interpolate_array_value_nonunif()'
+        STOP
+      endif
+      if (x==1.0_f64) then
+        j = n_cells!spline%n_cells      
+      else
+        if(x.ge.xx) then
+          do while(node_pos(j).le.x)
+            j = j+1
+          enddo
+        else
+          do while(node_pos(j).gt.x)
+            j = j-1
+          enddo
+          j=j+1
+        endif  
+      endif
+      xx=x
+      Xj => node_pos(j-shift:)
+      
+      !print *,i,Xj(0+shift),xx,Xj(1+shift)
+      !print *,i,Xj(-2+shift:3+shift)
+      !stop
+      if(.not.((xx .ge. Xj(0+shift)) .and. (xx .lt. Xj(1+shift)))) then
+        if(xx.ne.1.0_f64) then
+          print *,Xj(0+shift),xx,Xj(1+shift)
+        
+          stop
+        endif  
+      endif
+      !SLL_ASSERT( (xx .ge. Xj(0+shift)) .and. (xx .le. Xj(1+shift) ))
+      !SLL_ASSERT( (Xj(0+shift)==spline%node_positions(j-1)) .and. (Xj(1+shift)==spline%node_positions(j)))
+    
+      !compute weights
+      w(1)=(Xj(shift+1)-xx)*(Xj(shift+1)-xx)*(Xj(shift+1)-xx)&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+1)-Xj(shift-2)));    
+      w(2)=(Xj(shift+1)-xx)*(Xj(shift+1)-xx)*(xx-Xj(shift-2))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+1)-Xj(shift-2)));
+      w(2)=w(2)+(Xj(shift+2)-xx)*(Xj(shift+1)-xx)*(xx-Xj(shift-1))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+2)-Xj(shift-1)));
+      w(2)=w(2)+(Xj(shift+2)-xx)*(Xj(shift+2)-xx)*(xx-Xj(shift+0))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+2)-Xj(shift-1)));    
+      w(3)=(Xj(shift+1)-xx)*(xx-Xj(shift-1))*(xx-Xj(shift-1))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+1)-Xj(shift-1))*(Xj(shift+2)-Xj(shift-1)));
+      w(3)=w(3)+(Xj(shift+2)-xx)*(xx-Xj(shift-1))*(xx-Xj(shift+0))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+2)-Xj(shift-1)));
+      w(3)=w(3)+(Xj(shift+3)-xx)*(xx-Xj(shift+0))*(xx-Xj(shift+0))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+3)-Xj(shift+0)));    
+      w(4)=(xx-Xj(shift+0))*(xx-Xj(shift+0))*(xx-Xj(shift+0))&
+      &/((Xj(shift+1)-Xj(shift+0))*(Xj(shift+2)-Xj(shift+0))*(Xj(shift+3)-Xj(shift+0)));
+    
+      !coef => spline%coeffs(j-1:)
+      !print *,i,xx,j,w(1),w(2),w(3),w(4)!,Xj(-2:3)
+      !a_out(i) = w(0)*coef(0)+w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)
+
+      coef => coeffs(j-2:)
+      a_out(i) = w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)+w(4)*coef(4)
+      !print *,i,xx,j,w(1),w(2),w(3),w(4),coef(1:4),a_out(i)
+      !print *,Xj(shift-2:shift+3)
+      !stop
+    enddo
+    !do i=1,n
+    !  print *,i,a_in(i),a_out(i)
+    !enddo  
+  end subroutine interpolate_array_value_nonunif_aux
 
 
 

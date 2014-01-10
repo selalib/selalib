@@ -3,7 +3,6 @@
 !./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_input
 !gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian.gnu
 
-
 &geometry
   mesh_case_x1 = "SLL_LANDAU_MESH"
   num_cells_x1 = 32
@@ -45,6 +44,11 @@
  order_x2 = 4
  !advector_x2 = "SLL_LAGRANGE"
  !order_x2 = 4
+/
+
+&poisson
+  poisson_solver = "SLL_FFT"
+  !poisson_solver = "SLL_POLAR"
 /
 
 

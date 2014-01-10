@@ -60,7 +60,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ######
-
+#
       IF(FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
 
       ADD_MPI_TEST(poisson_per_cart_par_2d 
@@ -68,9 +68,9 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET_TESTS_PROPERTIES(poisson_per_cart_par_2d
                            PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
-      ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_input.txt)
+#      ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
+#      SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
       ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
