@@ -855,10 +855,19 @@ program unit_test_alternative
        ( sqrt(normL2_2) <= h1**(SPLINE_DEG1))   .AND. &
        ( sqrt(normL2_3) <= h1**(SPLINE_DEG1))   .AND. &
        ( sqrt(normL2_4) <= h1**(SPLINE_DEG1))   .AND. &
+       ( sqrt(normL2_5) <= h1**(SPLINE_DEG1))   .AND. &
+       ( sqrt(normL2_6) <= h1**(SPLINE_DEG1))   .AND. &
+       ( sqrt(normL2_7) <= h1**(SPLINE_DEG1))   .AND. &
+       ( sqrt(normL2_8) <= h1**(SPLINE_DEG1))   .AND. &
        ( sqrt(normH1_1) <= h1**(SPLINE_DEG1-1)) .AND. &
        ( sqrt(normH1_2) <= h1**(SPLINE_DEG1-1)) .AND. &
        ( sqrt(normH1_3) <= h1**(SPLINE_DEG1-1)) .AND. &
-       ( sqrt(normH1_4) <= h1**(SPLINE_DEG1-1))) then
+       ( sqrt(normH1_4) <= h1**(SPLINE_DEG1-1)) .AND. &
+       ( sqrt(normH1_5) <= h1**(SPLINE_DEG1-1)) .AND. &
+       ( sqrt(normH1_6) <= h1**(SPLINE_DEG1-1)) .AND. &
+       ( sqrt(normH1_7) <= h1**(SPLINE_DEG1-1)) .AND. &
+       ( sqrt(normH1_8) <= h1**(SPLINE_DEG1-1)) .AND. &
+       ( sqrt(normH1_8) <= h1**(SPLINE_DEG1-1))) then
      
      
      print *, 'PASSED'

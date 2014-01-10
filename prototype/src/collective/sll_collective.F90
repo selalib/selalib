@@ -206,7 +206,8 @@ module sll_collective
 
   !> @brief Gathers into specified locations from all processes in a group.
   interface sll_collective_gatherv
-     module procedure sll_collective_gatherv_real
+     module procedure sll_collective_gatherv_real, &
+          sll_collective_gatherv_real64
   end interface
   
   !> @brief Sends data from one process to all other processes
@@ -223,7 +224,8 @@ module sll_collective
   !> @brief Combines values from all processes and distributes
   !!        the result back to all processes. 
   interface sll_collective_allreduce
-     module procedure sll_collective_allreduce_real, &
+     module procedure sll_collective_allreduce_real32, &
+                      sll_collective_allreduce_real64, &
                       sll_collective_allreduce_logical
   end interface
   
@@ -313,6 +315,7 @@ contains !************************** Operations **************************
     sll_int32 :: ierr
 
     SLL_ALLOCATE( sll_world_collective, ierr )
+
 
 #ifndef MPI_THREAD_MULTIPLE
 
@@ -523,8 +526,8 @@ contains !************************** Operations **************************
     !rec_count = send_sz*col%size
     !Note that the 5th argument at the root indicates the number of items
     !it receives from each task. It is not the total number of items received.
-    call MPI_GATHER( send_buf, send_sz, MPI_REAL, rec_buf, send_sz, &
-         MPI_REAL, root, col%comm, ierr )
+    call MPI_GATHER( send_buf, send_sz, MPI_DOUBLE_PRECISION, rec_buf, send_sz, &
+         MPI_DOUBLE_PRECISION, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gather_real(): MPI_GATHER()' )
   end subroutine sll_collective_gather_real64
@@ -557,8 +560,17 @@ contains !************************** Operations **************************
       SLL_ASSERT( SIZE(displs) .eq. col%size )
       SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
     endif
-    call MPI_GATHERV( send_buf, send_count, MPI_REAL,rec_buf,recvcnts,&
-         displs, MPI_REAL, root, col%comm, ierr )
+    call MPI_GATHERV( &
+      send_buf, &
+      send_count, &
+      MPI_REAL, &
+      rec_buf, &
+      recvcnts, &
+      displs, &
+      MPI_REAL, &
+      root, &
+      col%comm, &
+      ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_gatherv_real(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real
@@ -596,7 +608,7 @@ contains !************************** Operations **************************
     call MPI_GATHERV( send_buf, send_count, MPI_REAL8,rec_buf,recvcnts,&
          displs, MPI_REAL8, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_gatherv_real8(): MPI_GATHERV()' )
+         'sll_collective_gatherv_real64(): MPI_GATHERV()' )
   end subroutine sll_collective_gatherv_real64
 
 
@@ -789,7 +801,7 @@ contains !************************** Operations **************************
   !> @param[in] count number of elements in send buffer
   !> @param[in] op operation
   !> @param[out] rec_buf starting address of receive buffer
-  subroutine sll_collective_allreduce_real( col, send_buf, count, op, &
+  subroutine sll_collective_allreduce_real32( col, send_buf, count, op, &
        rec_buf )
     type(sll_collective_t), pointer       :: col
     sll_real32, dimension(:), intent(in)  :: send_buf ! what would change...
@@ -798,11 +810,54 @@ contains !************************** Operations **************************
     sll_real32, dimension(:), intent(out) :: rec_buf  ! would also change
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
-    call MPI_ALLREDUCE( send_buf, rec_buf, count, MPI_REAL, op, &
-         col%comm, ierr )
-    call sll_test_mpi_error( ierr, &
-         'sll_collective_allreduce_real(): MPI_ALLREDUCE()' )
-  end subroutine sll_collective_allreduce_real
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_REAL, &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_real32(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_real32
+
+
+  !> @brief Combines real values from all processes and 
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+  subroutine sll_collective_allreduce_real64( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_real64, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_real64, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_DOUBLE_PRECISION, &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_real64
+
+
 
   !> @brief Combines logical values from all processes and 
   !!        distributes the result back to all processes

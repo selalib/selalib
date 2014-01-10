@@ -54,8 +54,7 @@ implicit none
     num_cells, &
     xmin, &
     xmax, &
-!    LAGRANGE, & 
-    SPLINE, & 
+    SPLINE, &
     order) 
   
   call adv%advect_1d_constant(&

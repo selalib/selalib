@@ -37,8 +37,8 @@ sll_int32,  intent(in)  :: bc_eta2_right !< boundary condtion
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
 sll_int32               :: icall, iiex, jjey, llwork
 
-sll_real64, pointer :: phi(:) !< electric potential
-sll_real64, pointer :: rhs(:) !< charge density
+sll_real64 :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
+sll_real64 :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
@@ -238,7 +238,7 @@ subroutine cofx(x,cxx,cx,cex)
 use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0 !cxx_interp%interpolate_value(x)
+cxx = 1.0 +0.0*x !cxx_interp%interpolate_value(x)
 cx  = 0.0
 cex = 0.0
 return
@@ -248,7 +248,7 @@ end
 subroutine cofy(y,cyy,cy,cey)
 implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0
+cyy = 1.0+0.0*y
 cy  = 0.0
 cey = 0.0
 return

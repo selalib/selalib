@@ -8,7 +8,9 @@ program test_periodic_interp
   sll_real64               :: u(16*N0), u_exact(16*N0), u_out(16*N0)
   type(periodic_interp_work), pointer :: interp
   sll_real64 :: alpha, error, old_error
-  sll_int32 :: i, p, N, i0, mode 
+  sll_int32 :: i, p, N
+  !sll_int32 :: i0
+  sll_int32 :: mode 
 
   error = 0.0_8
   print*, 'Testing order of periodic interpolation'

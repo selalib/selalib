@@ -214,6 +214,15 @@ contains
       
       print *,'#compute_E_from_rho_2d_polar'      
       print *,'#not implemented for the moment'
+      
+      E1 = 0._f64
+      E2 = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%poiss)))then
+        print *,'#poisson%poiss is not associated'
+      endif
+
       stop
       
       !call solve( poisson%poiss, E1, E2, rho)

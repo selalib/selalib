@@ -7,16 +7,21 @@
 
 IF(MUDPACK_ENABLED)
 
-ADD_LIBRARY(sll_simulation_1d STATIC simulation_1d.F90
-                                     simulation_base_class.F90 
-                                     simulation_VP1D_cartesian_non_unif.F90
-                                     simulation_VP1D_curvilinear_analytic.F90
-                                     simulation_vp1d_fourier_fem.F90
-                                     simulation_guiding_center_2D_generalized_coords.F90
-                                     simulation_guiding_center_2D_generalized_coords_mudpack.F90
-                                     simulation_2d_guiding_center_curvilinear.F90
-                                     simulation_2d_guiding_center_cartesian.F90
-                                     simulation_2d_guiding_center_polar.F90)
+  ADD_LIBRARY(
+    sll_simulation_1d
+    STATIC
+    simulation_1d.F90
+    simulation_base_class.F90 
+    simulation_VP1D_cartesian_non_unif.F90
+    simulation_VP1D_curvilinear_analytic.F90
+    simulation_vp1d_fourier_fem.F90
+    simulation_2d_vlasov_poisson_no_splitting.F90
+    simulation_2d_analytic_field_cartesian.F90
+    simulation_guiding_center_2D_generalized_coords.F90
+    simulation_guiding_center_2D_generalized_coords_mudpack.F90
+    simulation_2d_guiding_center_curvilinear.F90
+    simulation_2d_guiding_center_cartesian.F90
+    simulation_2d_guiding_center_polar.F90)
 
 
 
@@ -42,7 +47,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        sll_logical_meshes
                        sll_utilities
                        sll_common_array_initializers
-		           sll_timer
+		       sll_timer
                        sll_memory
                        sll_assertion 	
                        sll_working_precision)
@@ -61,8 +66,10 @@ ENDMACRO(ADD_SIMULATION_1D)
 ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem)
+ADD_SIMULATION_1D(2d_vp_no_split)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
+ADD_SIMULATION_1D(2d_af_cartesian)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
 ADD_SIMULATION_1D(2d_gc_curvilinear)
@@ -175,7 +182,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
      simulation_4d_vlasov_parallel_poisson_sequential_cartesian.F90
      simulation_4d_vlasov_poisson_general.F90
      simulation_4d_qns_general.F90
-     #simulation_4d_mixed_qns_cartesian.F90
+#     simulation_4d_mixed_qns_cartesian.F90
      simulation_4d_DK_hybrid.F90
      simulation_4d_vlasov_poisson_polar.F90
      simulation_4d_drift_kinetic_polar.F90
@@ -188,11 +195,11 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_poisson_solvers
                        sll_multigrid
                        sll_fft
-		           sll_distribution_function
-		           sll_general_coordinate_elliptic_solvers
-		           deboor_splines
-		           #sll_scalar_field_1d_alternative
-		           sll_scalar_field_2d_alternative
+		       sll_distribution_function
+		       sll_general_coordinate_elliptic_solvers
+		       deboor_splines
+		       sll_scalar_field_1d_alternative
+		       sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators

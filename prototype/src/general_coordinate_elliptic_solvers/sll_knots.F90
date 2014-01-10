@@ -46,10 +46,11 @@ contains
           eta = eta + delta
           knots(i) = eta
        enddo
-       do i = num_cells + spline_degree + 2, num_cells + 1 + 2*spline_degree
-          knots(i) = eta
+       do i = num_cells + spline_degree + 1, num_cells + 1 + 2*spline_degree
+          knots(i) = eta_max
        enddo
     end if
+
   end subroutine initialize_knots
 
 
