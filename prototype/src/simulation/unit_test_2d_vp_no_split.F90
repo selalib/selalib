@@ -1,8 +1,8 @@
 program vlasov_poisson_2d_no_split
 #include "sll_working_precision.h"
+#include "sll_constants.h"
   use sll_simulation_2d_vlasov_poisson_no_splitting
   use sll_timer
-  use sll_constants
   implicit none
 
   class(sll_simulation_base_class), pointer :: sim
@@ -12,7 +12,7 @@ program vlasov_poisson_2d_no_split
   sll_real64 :: time 
   
   print *, '#Start time mark t0'
-  call set_time_mark(t0)
+  call sll_set_time_mark(t0)
 
   call get_command_argument(1, filename)
   if (len_trim(filename) == 0)then
@@ -22,7 +22,7 @@ program vlasov_poisson_2d_no_split
     sim => new_vp2d_no_split( filename_local )
   endif
   call sim%run( )
-  time = time_elapsed_since(t0)
+  time = sll_time_elapsed_since(t0)
   print *, '#time elapsed since t0 : ',time
   print *,'#PASSED'
 

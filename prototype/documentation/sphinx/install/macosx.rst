@@ -16,7 +16,7 @@ Install Homebrew (not compatible with macports) ::
 	$ brew install fftw
 	$ cd selalib/prototype/build
 	$ cmake ../src -DPASTIX_ENABLED=ON  \
-   		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libszip.a" \
+   		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
    		-DHDF5_PARALLEL_ENABLED=ON
 	$ make
 
