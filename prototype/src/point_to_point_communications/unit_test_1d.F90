@@ -28,7 +28,7 @@ program comm_unit_test
   comm => new_comm_real64( sll_world_collective, 2, PROBLEM_SIZE )
   if(rank == 0) then
      print *, 'created new comm, size = ', size
-     call flush()
+     call flush(6)
   end if
 
   ! In this test the processors in the communicator are organized as a ring,
@@ -37,7 +37,7 @@ program comm_unit_test
 
   if(rank == 0) then
      print *, 'configured the comm as a 1D ring'
-     call flush()
+     call flush(6)
   end if
 
   SLL_ALLOCATE(array1(PROBLEM_SIZE),ierr)

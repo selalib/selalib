@@ -880,8 +880,10 @@ end subroutine advect_CG_polar2
 
     sll_int32 :: nr,ntheta
     sll_real64 :: dr, dtheta, rmin, rmax
-    sll_int32 :: i,j,maxiter,iter,kr,k
-    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta,geom_x(2,2),dt
+    sll_int32 :: i
+    sll_real64 :: geom_x(2,2),dt
+    !sll_real64 :: ar,atheta,r,rr,rrn,theta,tolr,tolth,ttheta,tthetan,
+    !sll_int32 :: iter,j,k,kr,maxiter
     sll_real64,dimension(:,:,:),allocatable::carac
     sll_real64,dimension(:,:),allocatable::buf2d
 
@@ -934,7 +936,7 @@ end subroutine advect_CG_polar2
     type(sll_plan_adv_polar),pointer :: plan
     sll_int32,intent(in) :: nr, ntheta
     sll_real64,intent(in) :: dt, dr, dtheta, rmin, rmax
-    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
+    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth!,ar,atheta
     sll_int32 :: i,j,maxiter,iter,kr,k
     sll_real64,dimension(2,-1:nr+1,-1:ntheta),intent(inout)::carac  
 
@@ -1111,7 +1113,8 @@ end subroutine advect_CG_polar2
     type(sll_plan_adv_polar),pointer :: plan
     sll_int32,intent(in) :: nr, ntheta
     sll_real64,intent(in) :: dt, dr, dtheta, rmin, rmax
-    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth,ar,atheta
+    sll_real64 :: r,theta,rr,rrn,ttheta,tthetan,tolr,tolth
+    !sll_real64 :: ar,atheta
     sll_int32 :: i,j,maxiter,iter,kr,k
     !sll_real64,dimension(2,-1:nr,-1:ntheta),intent(inout)::carac  
 
@@ -1661,20 +1664,23 @@ end subroutine advect_CG_polar2
     sll_real64,dimension(0:N0,0:N1-1)::buf2d
     sll_real64,dimension(1:N0+1,1:N1)::f
     sll_real64,dimension(2,-1:N0+1,-1:N1)::carac
-    sll_real64::xx(4),yy(4),xA,yA,xB,yB,res,xx0,yy0,x,xxn,y,yyn,dx,dy
+    sll_real64::xx(4),yy(4),xA,yA,xB,yB,res,dx,dy
     sll_real64::xA_loc,yA_loc,xB_loc,yB_loc
-    sll_int32::i,j,ii(4),jj(4),im1,jm1,i0,j0,i1,j1,s,k,sx,sy,minfl,maxfl,ix,iii,iy,iiii,jjjj
+    sll_int32::i,j,ii(4),jj(4),i0,j0,i1,j1,s,k,sx,sy,minfl,maxfl
     sll_real64,dimension(:),allocatable::intx,inty
-    sll_int32,dimension(:,:),allocatable::tnbr
+    !sll_int32,dimension(:,:),allocatable::tnbr
     sll_int32,dimension(:,:,:),allocatable::cell
     sll_real64,dimension(:,:),allocatable::tt,tcell,dir,aretesh,aretesv,sommets,aretesvg,aretesvd,areteshb,areteshh,&
     sommetsbg,sommetsbd,sommetshg,sommetshd
-    sll_real64,dimension(:,:,:,:),allocatable::tpts
+    !sll_real64,dimension(:,:,:,:),allocatable::tpts
     sll_int32::nbx(4),nby(4),nbmax,dirx,diry,ell,ell1,imin,jmin,imax,jmax,i0_loc,j0_loc
-    sll_real64::xx1,xx2,yy1,yy2,w00,w10,w01,w20,w02,w11,w21,&
-		w12,w22,c00,c10,c01,c20,c02,c11,c12,c21,c22,&
-		fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1,xxx,yyy
-    sll_int32::im2,ib,ip1,ip2,jm2,jb,jp1,jp2   
+    !sll_real64::yyy
+    !sll_int32::im2,ip1,ip2,jm2,jb,jp1,jp2   
+    !sll_real64 :: c00,c01,c02,c10,c11,c12,c20,c21,c22,fij,fijm1,fijp1,fim1j,fim1jm1
+    !sll_real64 :: fim1jp1,fip1j,fip1jm1,fip1jp1,
+    !sll_int32 :: ib,iii,iiii,ix,iy,jjjj,im1,jm1,
+    !sll_real64 :: w00,w10,w01,w20,w02,w11,w21,w12,w22,x,xx0,xx1,xx2,xxn,xxx,yy0,yyy1,yy2
+    !sll_real64 :: yyn
 
     nbmax=30
     !print*,f(1,33)
@@ -1705,7 +1711,7 @@ end subroutine advect_CG_polar2
     do j=0,N1-1
       do i=0,N0
 
-	f(i+1,j+1)=0._f64
+        f(i+1,j+1)=0._f64
 
         !im1=modulo(i-1,N0)
 	!i1=modulo(i+1,N0)
@@ -1730,15 +1736,15 @@ end subroutine advect_CG_polar2
 !print*,i,j,xx(1),yy(1),xx(2),yy(2),xx(3),yy(3),xx(4),yy(4)
 
         !normalization
-	xx(1)=(xx(1)-dom(0,0))/dom(1,0)*real(N0,f64)
-	xx(2)=(xx(2)-dom(0,0))/dom(1,0)*real(N0,f64)
-	xx(3)=(xx(3)-dom(0,0))/dom(1,0)*real(N0,f64)
-	xx(4)=(xx(4)-dom(0,0))/dom(1,0)*real(N0,f64)
-	
-	yy(1)=(yy(1)-dom(0,1))/dom(1,1)*real(N1,f64)
-	yy(2)=(yy(2)-dom(0,1))/dom(1,1)*real(N1,f64)
-	yy(3)=(yy(3)-dom(0,1))/dom(1,1)*real(N1,f64)
-	yy(4)=(yy(4)-dom(0,1))/dom(1,1)*real(N1,f64)
+    xx(1)=(xx(1)-dom(0,0))/dom(1,0)*real(N0,f64)
+    xx(2)=(xx(2)-dom(0,0))/dom(1,0)*real(N0,f64)
+    xx(3)=(xx(3)-dom(0,0))/dom(1,0)*real(N0,f64)
+    xx(4)=(xx(4)-dom(0,0))/dom(1,0)*real(N0,f64)
+    
+    yy(1)=(yy(1)-dom(0,1))/dom(1,1)*real(N1,f64)
+    yy(2)=(yy(2)-dom(0,1))/dom(1,1)*real(N1,f64)
+    yy(3)=(yy(3)-dom(0,1))/dom(1,1)*real(N1,f64)
+    yy(4)=(yy(4)-dom(0,1))/dom(1,1)*real(N1,f64)
 
         xx=xx+0.5_f64
         yy=yy+0.5_f64 
@@ -1759,10 +1765,10 @@ end subroutine advect_CG_polar2
         jj(3)=floor(yy(3))
         jj(4)=floor(yy(4))
 	
-	imin=min(ii(1),ii(2),ii(3),ii(4))
-	jmin=min(jj(1),jj(2),jj(3),jj(4))
-	imax=max(ii(1),ii(2),ii(3),ii(4))
-	jmax=max(jj(1),jj(2),jj(3),jj(4))
+    imin=min(ii(1),ii(2),ii(3),ii(4))
+    jmin=min(jj(1),jj(2),jj(3),jj(4))
+    imax=max(ii(1),ii(2),ii(3),ii(4))
+    jmax=max(jj(1),jj(2),jj(3),jj(4))
 
 !        allocate(tnbr(imin:imax,jmin:jmax))
 !        allocate(tpts(imin:imax,jmin:jmax,100,2))
@@ -1774,90 +1780,90 @@ end subroutine advect_CG_polar2
 
     do ell=1,4
 
-	ell1=ell+1;if(ell1==5)ell1=1  
-	xA=xx(ell);yA=yy(ell);xB=xx(ell1);yB=yy(ell1)
-	i0=ii(ell);j0=jj(ell);i1=ii(ell1);j1=jj(ell1)
+    ell1=ell+1;if(ell1==5)ell1=1  
+    xA=xx(ell);yA=yy(ell);xB=xx(ell1);yB=yy(ell1)
+    i0=ii(ell);j0=jj(ell);i1=ii(ell1);j1=jj(ell1)
 
-	s=1;
-	if(i0<i1)then
-	  do k=i0+1,i1
-	    tt(s,1)=(real(k,f64)-xA)/(xB-xA)
-	    s=s+1
-	  enddo	  
-	  dirx=1
-	endif
-	if(i0>i1)then
-	  do k=i0,i1+1,-1
-	    tt(s,1)=(real(k,f64)-xA)/(xB-xA)
-	    s=s+1
-	  enddo
-	  dirx=-1
-	endif
-        nbx(ell)=s-1;
-	s=1;
-	if(j0<j1)then
-	  do k=j0+1,j1
-	    tt(s,2)=(real(k,f64)-yA)/(yB-yA)
-	    s=s+1
-	  enddo
-	  diry=1
-	endif
-	if(j0>j1)then
-	  do k=j0,j1+1,-1
-	    tt(s,2)=(real(k,f64)-yA)/(yB-yA)
-	    s=s+1
-	  enddo
-	  diry=-1
-	endif
-	nby(ell)=s-1
-	
-	cell(1,1,ell)=i0
-	cell(2,1,ell)=j0
-	tcell(1,ell)=0._f64
-	sx=1;sy=1
-	s=1
+    s=1;
+    if(i0<i1)then
+      do k=i0+1,i1
+        tt(s,1)=(real(k,f64)-xA)/(xB-xA)
+        s=s+1
+      enddo
+      dirx=1
+    endif
+    if(i0>i1)then
+      do k=i0,i1+1,-1
+        tt(s,1)=(real(k,f64)-xA)/(xB-xA)
+        s=s+1
+      enddo
+      dirx=-1
+    endif
+    nbx(ell)=s-1;
+    s=1;
+    if(j0<j1)then
+      do k=j0+1,j1
+        tt(s,2)=(real(k,f64)-yA)/(yB-yA)
+        s=s+1
+      enddo
+      diry=1
+    endif
+    if(j0>j1)then
+      do k=j0,j1+1,-1
+        tt(s,2)=(real(k,f64)-yA)/(yB-yA)
+        s=s+1
+      enddo
+      diry=-1
+    endif
+    nby(ell)=s-1
+    
+    cell(1,1,ell)=i0
+    cell(2,1,ell)=j0
+    tcell(1,ell)=0._f64
+    sx=1;sy=1
+    s=1
 
-	do while((sx<=nbx(ell)).and.(sy<=nby(ell)))
-	  if(tt(sx,1)<tt(sy,2))then
-	    s=s+1
-	    cell(1,s,ell)=cell(1,s-1,ell)+dirx
-	    cell(2,s,ell)=cell(2,s-1,ell)
-	    tcell(s,ell)=tt(sx,1)
-	    intx(2*cell(1,s-1,ell)+(dirx-1)/2-2*imin)=yA+tt(sx,1)*(yB-yA)
-	    dir(s,1)=1
-	    dir(s,2)=dirx  
-	    sx=sx+1	
-	  else
-	    s=s+1
-	    cell(1,s,ell)=cell(1,s-1,ell)
-	    cell(2,s,ell)=cell(2,s-1,ell)+diry
-	    tcell(s,ell)=tt(sy,2)
-	    inty(2*cell(2,s-1,ell)+(diry-1)/2-2*jmin)=xA+tt(sy,2)*(xB-xA)
-	    dir(s,1)=2
-	    dir(s,2)=diry	  
-	    sy=sy+1	    
-	  endif
-	enddo
-	do while(sx<=nbx(ell))
-	  s=s+1
-	  cell(1,s,ell)=cell(1,s-1,ell)+dirx
-	  cell(2,s,ell)=cell(2,s-1,ell)
-	  tcell(s,ell)=tt(sx,1)
-	  intx(2*cell(1,s-1,ell)+(dirx-1)/2-2*imin)=yA+tt(sx,1)*(yB-yA)
-	  dir(s,1)=1
-	  dir(s,2)=dirx
-	  sx=sx+1
-	enddo  
-	do while(sy<=nby(ell))
-	  s=s+1
-	  cell(1,s,ell)=cell(1,s-1,ell)
-	  cell(2,s,ell)=cell(2,s-1,ell)+diry
-	  tcell(s,ell)=tt(sy,2)
-	  inty(2*cell(2,s-1,ell)+(diry-1)/2-2*jmin)=xA+tt(sy,2)*(xB-xA)
-	  dir(s,1)=2
-	  dir(s,2)=diry	  
-	  sy=sy+1
-	enddo        
+    do while((sx<=nbx(ell)).and.(sy<=nby(ell)))
+      if(tt(sx,1)<tt(sy,2))then
+        s=s+1
+        cell(1,s,ell)=cell(1,s-1,ell)+dirx
+        cell(2,s,ell)=cell(2,s-1,ell)
+        tcell(s,ell)=tt(sx,1)
+        intx(2*cell(1,s-1,ell)+(dirx-1)/2-2*imin)=yA+tt(sx,1)*(yB-yA)
+        dir(s,1)=1
+        dir(s,2)=dirx  
+        sx=sx+1
+      else
+        s=s+1
+        cell(1,s,ell)=cell(1,s-1,ell)
+        cell(2,s,ell)=cell(2,s-1,ell)+diry
+        tcell(s,ell)=tt(sy,2)
+        inty(2*cell(2,s-1,ell)+(diry-1)/2-2*jmin)=xA+tt(sy,2)*(xB-xA)
+        dir(s,1)=2
+        dir(s,2)=diry
+        sy=sy+1
+      endif
+    enddo
+    do while(sx<=nbx(ell))
+      s=s+1
+      cell(1,s,ell)=cell(1,s-1,ell)+dirx
+      cell(2,s,ell)=cell(2,s-1,ell)
+      tcell(s,ell)=tt(sx,1)
+      intx(2*cell(1,s-1,ell)+(dirx-1)/2-2*imin)=yA+tt(sx,1)*(yB-yA)
+      dir(s,1)=1
+      dir(s,2)=dirx
+      sx=sx+1
+    enddo  
+    do while(sy<=nby(ell))
+      s=s+1
+      cell(1,s,ell)=cell(1,s-1,ell)
+      cell(2,s,ell)=cell(2,s-1,ell)+diry
+      tcell(s,ell)=tt(sy,2)
+      inty(2*cell(2,s-1,ell)+(diry-1)/2-2*jmin)=xA+tt(sy,2)*(xB-xA)
+      dir(s,1)=2
+      dir(s,2)=diry
+      sy=sy+1
+    enddo        
 !#endif
 
 !Computation of extern edges
@@ -1878,17 +1884,17 @@ if ((ell==1) .or. (ell==4) .or. ((ell==2) .and. (i==N0)) .or. ((ell==3) .and. (j
           else
             if(dir(k,1)==1)then
               xB_loc=real(cell(1,k,ell)+(1-dir(k,2))/2,f64)
-              yB_loc=yy(ell)+tcell(k,ell)*(yy(ell1)-yy(ell))        	  
+              yB_loc=yy(ell)+tcell(k,ell)*(yy(ell1)-yy(ell))
             else
-              xB_loc=xx(ell)+tcell(k,ell)*(xx(ell1)-xx(ell))					
-              yB_loc=real(cell(2,k,ell)+(1-dir(k,2))/2,f64)       	  
+              xB_loc=xx(ell)+tcell(k,ell)*(xx(ell1)-xx(ell))
+              yB_loc=real(cell(2,k,ell)+(1-dir(k,2))/2,f64)
             endif
           endif
 
           call calcule_coeff(N0,N1,buf2d,i0_loc,j0_loc,xA_loc,yA_loc,xB_loc,yB_loc,res,aretesh,aretesv,sommets,areteshb,areteshh,&
           aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,interp_case)
 
-	  f(i+1,j+1)=f(i+1,j+1)+res
+      f(i+1,j+1)=f(i+1,j+1)+res
 
           if ((i-1>=0) .and. (ell==4)) then
             f(i,j+1)=f(i,j+1)-res
@@ -1898,18 +1904,16 @@ if ((ell==1) .or. (ell==4) .or. ((ell==2) .and. (i==N0)) .or. ((ell==3) .and. (j
           endif
         enddo
 endif
-        
-      end do  	
+      end do
 
 !#endif
 
 !Computation of vertical intern edges
 
 !#ifdef COMPUTE_V
-	
-	do ell=0,imax-imin-1
-	minfl=min(floor(intx(2*ell)),floor(intx(2*ell+1)))
-	maxfl=max(floor(intx(2*ell)),floor(intx(2*ell+1)))
+    do ell=0,imax-imin-1
+    minfl=min(floor(intx(2*ell)),floor(intx(2*ell+1)))
+    maxfl=max(floor(intx(2*ell)),floor(intx(2*ell+1)))
 
         i0_loc=imin+ell
         yB_loc=min(intx(2*ell),intx(2*ell+1))
@@ -1923,39 +1927,37 @@ endif
           endif
 
           call calcule_coeffv(N0,N1,buf2d,i0_loc,j0_loc,yA_loc,yB_loc,res,aretesh,aretesv,sommets,areteshb,areteshh,&
-	  aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,interp_case)
+        aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,interp_case)
           f(i+1,j+1)=f(i+1,j+1)+res
-
-	  enddo
-	enddo
+      enddo
+    enddo
 
 !#endif
 
 !Computation of horizontal intern edges
 
 !#ifdef COMPUTE_X
-	
-	do ell=0,jmax-jmin-1
-	minfl=min(floor(inty(2*ell)),floor(inty(2*ell+1)))
-	maxfl=max(floor(inty(2*ell)),floor(inty(2*ell+1)))
+    do ell=0,jmax-jmin-1
+      minfl=min(floor(inty(2*ell)),floor(inty(2*ell+1)))
+      maxfl=max(floor(inty(2*ell)),floor(inty(2*ell+1)))
 
-        j0_loc=jmin+ell
-        xA_loc=min(inty(2*ell),inty(2*ell+1))
-        do k=0,maxfl-minfl
-          xB_loc=xA_loc
-          i0_loc=minfl+k  
-          if(k==maxfl-minfl)then
-            xA_loc=max(inty(2*ell),inty(2*ell+1))
-          else
-            xA_loc=real(minfl+k+1,f64)
-          endif
+      j0_loc=jmin+ell
+      xA_loc=min(inty(2*ell),inty(2*ell+1))
+       do k=0,maxfl-minfl
+         xB_loc=xA_loc
+         i0_loc=minfl+k  
+         if(k==maxfl-minfl)then
+           xA_loc=max(inty(2*ell),inty(2*ell+1))
+         else
+           xA_loc=real(minfl+k+1,f64)
+         endif
           
-          call calcule_coeffh(N0,N1,buf2d,i0_loc,j0_loc,xA_loc,xB_loc,res,aretesh,aretesv,sommets,areteshb,areteshh,&
-	  aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,interp_case)
-	  f(i+1,j+1)=f(i+1,j+1)+res
+         call calcule_coeffh(N0,N1,buf2d,i0_loc,j0_loc,xA_loc,xB_loc,res,aretesh,aretesv,sommets,areteshb,areteshh,&
+      aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,interp_case)
+      f(i+1,j+1)=f(i+1,j+1)+res
 
-	  enddo
-	enddo
+      enddo
+    enddo
 
 !#endif
 !        deallocate(tnbr)
@@ -1968,7 +1970,6 @@ endif
 !#ifdef DIAG_TIME
 !      f=buf2d
 !#endif
-
     deallocate(tt,cell,tcell,intx,inty,dir)
 
     if ((interp_case==3) .or. (interp_case==6) .or. (interp_case==7)) then
@@ -1982,129 +1983,120 @@ endif
    
 
   end subroutine advect2d_CSL_CG
+  subroutine aux(N0,N1,f,aretesh,aretesv,sommets,ordre,dom) !used in PPM case
 
-	subroutine aux(N0,N1,f,aretesh,aretesv,sommets,ordre,dom) !used in PPM case
-
-		sll_int32,intent(in)::N0,N1,ordre
-                sll_real64,dimension(0:1,0:1),intent(in)::dom
-		real(f64),dimension(0:N0,0:N1-1),intent(in)::f
-            !    sll_real64,dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
-		sll_int32::i,j,im3,im2,im1,ib,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2
-		real(f64),dimension(0:N0,0:N1-1),intent(inout)::aretesh,aretesv,sommets
+    sll_int32,intent(in)::N0,N1,ordre
+    sll_real64,dimension(0:1,0:1),intent(in)::dom
+    real(f64),dimension(0:N0,0:N1-1),intent(in)::f
+    !    sll_real64,dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
+    sll_int32::i,j,im3,im2,im1,ib,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2
+    real(f64),dimension(0:N0,0:N1-1),intent(inout)::aretesh,aretesv,sommets
 !		print*,N0,N1,ordre
 !stop
-
-		do i=0,N0
-			do j=0,N1-1
-				im3=i-3
-				im2=i-2
-				im1=i-1
-				ip1=i+1
-				ip2=i+2
-				if(i-3<=0)im3=0;
-				if(i-2<=0)im2=0;
-				if(i-1<=0)im1=0;
-				ib=i;
-				if(i+1>=N0)ip1=N0;
-				if(i+2>=N0)ip2=N0;
-				
-				!im3=modulo(i-3,N0)
-				!im2=modulo(i-2,N0)
-				!im1=modulo(i-1,N0)
-				!ib=modulo(i,N0)
-				!ip1=modulo(i+1,N0)
-				!ip2=modulo(i+2,N0)
-				jm3=modulo(j-3,N1)
-				jm2=modulo(j-2,N1)
-				jm1=modulo(j-1,N1)
-				jb=modulo(j,N1)
-				jp1=modulo(j+1,N1)
-				jp2=modulo(j+2,N1)
-
-				if (ordre==1) then !PPM1
-					aretesv(i,j)=7._f64/12._f64*(f(im1,jb)+f(ib,jb)) &
-					-1._f64/12._f64*(f(im2,jb)+f(ip1,jb))
-					aretesh(i,j)=7._f64/12._f64*(f(ib,jm1)+f(ib,jb)) &	
-					-1._f64/12._f64*(f(ib,jm2)+f(ib,jp1))
-				else if (ordre==2) then !PPM2
-					aretesv(i,j)=1._f64/60._f64*(f(ip2,jb)+f(im3,jb)) &
-					-8._f64/60._f64*(f(ip1,jb)+f(im2,jb)) &
-					+37._f64/60._f64*(f(ib,jb)+f(im1,jb))
-					aretesh(i,j)=1._f64/60._f64*(f(ib,jp2)+f(ib,jm3)) &
-					-8._f64/60._f64*(f(ib,jp1)+f(ib,jm2)) &
-					+37._f64/60._f64*(f(ib,jb)+f(ib,jm1))
-				else if (ordre==0) then !PPM0
-					aretesv(i,j)=1._f64/2._f64*(f(ib,jb)+f(im1,jb))
-					aretesh(i,j)=1._f64/2._f64*(f(ib,jb)+f(ib,jm1))
-				end if
-			end do
-		end do	
-
-		do i=0,N0
-			do j=0,N1-1
-				!im3=modulo(i-3,N0)
-				!im2=modulo(i-2,N0)
-				!im1=modulo(i-1,N0)
-				!ib=modulo(i,N0)
-				!ip1=modulo(i+1,N0)
-				!ip2=modulo(i+2,N0)
-				im3=i-3
-				im2=i-2
-				im1=i-1
-				ip1=i+1
-				ip2=i+2
-				if(i-3<=0)im3=0;
-				if(i-2<=0)im2=0;
-				if(i-1<=0)im1=0;
-				ib=i;
-				if(i+1>=N0)ip1=N0;
-				if(i+2>=N0)ip2=N0;
-				
-				
-				
-				jm3=modulo(j-3,N1)
-				jm2=modulo(j-2,N1)
-				jm1=modulo(j-1,N1)
-				jb=modulo(j,N1)
-				jp1=modulo(j+1,N1)
-				jp2=modulo(j+2,N1)
-
-				if (ordre==1) then !PPM1
-					sommets(i,j)=7._f64/12._f64*(aretesv(ib,jm1)+aretesv(ib,jb)) &
-					-1._f64/12._f64*(aretesv(ib,jm2)+aretesv(ib,jp1))
-				else if (ordre==2) then !PPM2
-					sommets(i,j)=1._f64/60._f64*(aretesv(ib,jp2)+aretesv(ib,jm3)) &
-					-8._f64/60._f64*(aretesv(ib,jp1)+aretesv(ib,jm2)) &
-					+37._f64/60._f64*(aretesv(ib,jb)+aretesv(ib,jm1))
-				else if (ordre==0) then !PPM0
-					sommets(i,j)=1._f64/2._f64*(aretesv(ib,jb)+aretesv(ib,jm1))
-				end if
-			end do
-		end do
-
-	end subroutine aux
-
-
-	subroutine aux2(N0,N1,f,areteshb,areteshh,aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,ordre,carac,dom) !used in PPM case
-
-		integer,intent(in)::N0,N1,ordre
-                real(f64),dimension(0:1,0:1),intent(in)::dom
-		real(f64),dimension(0:N0,0:N1-1),intent(in)::f
-                real(f64),dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
-		integer::i,j,im3,im2,im1,ib,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2,i3
-		real(f64),dimension(0:N0,0:N1-1),intent(inout)::areteshb,areteshh,aretesvg,aretesvd,&
-                sommetsbg,sommetsbd,sommetshg,sommetshd
-    real(f64) ::w(-ordre:ordre+1),tmp,ww(-ordre:ordre)
     
-    !f2py intent(in)::buf,f
-    integer::r,s,ii,d   
-!		print*,N0,N1,ordre
-!stop
+    if(dom(1,1)==1e-23)then
+      print *,'#is this possible?'
+    endif
 
+
+    do i=0,N0
+      do j=0,N1-1
+        im3=i-3
+        im2=i-2
+        im1=i-1
+        ip1=i+1
+        ip2=i+2
+        if(i-3<=0)im3=0;
+        if(i-2<=0)im2=0;
+        if(i-1<=0)im1=0;
+        ib=i;
+        if(i+1>=N0)ip1=N0;
+        if(i+2>=N0)ip2=N0;
+        jm3=modulo(j-3,N1)
+        jm2=modulo(j-2,N1)
+        jm1=modulo(j-1,N1)
+        jb=modulo(j,N1)
+        jp1=modulo(j+1,N1)
+        jp2=modulo(j+2,N1)
+        if (ordre==1) then !PPM1
+          aretesv(i,j)=7._f64/12._f64*(f(im1,jb)+f(ib,jb)) &
+            -1._f64/12._f64*(f(im2,jb)+f(ip1,jb))
+          aretesh(i,j)=7._f64/12._f64*(f(ib,jm1)+f(ib,jb)) &	
+            -1._f64/12._f64*(f(ib,jm2)+f(ib,jp1))
+        else if (ordre==2) then !PPM2
+          aretesv(i,j)=1._f64/60._f64*(f(ip2,jb)+f(im3,jb)) &
+            -8._f64/60._f64*(f(ip1,jb)+f(im2,jb)) &
+            +37._f64/60._f64*(f(ib,jb)+f(im1,jb))
+          aretesh(i,j)=1._f64/60._f64*(f(ib,jp2)+f(ib,jm3)) &
+            -8._f64/60._f64*(f(ib,jp1)+f(ib,jm2)) &
+            +37._f64/60._f64*(f(ib,jb)+f(ib,jm1))
+        else if (ordre==0) then !PPM0
+          aretesv(i,j)=1._f64/2._f64*(f(ib,jb)+f(im1,jb))
+          aretesh(i,j)=1._f64/2._f64*(f(ib,jb)+f(ib,jm1))
+        end if
+      end do
+    end do
+    
+    do i=0,N0
+      do j=0,N1-1
+        im3=i-3
+        im2=i-2
+        im1=i-1
+        ip1=i+1
+        ip2=i+2
+        if(i-3<=0)im3=0;
+        if(i-2<=0)im2=0;
+        if(i-1<=0)im1=0;
+        ib=i;
+        if(i+1>=N0)ip1=N0;
+        if(i+2>=N0)ip2=N0;
+				
+				
+				
+        jm3=modulo(j-3,N1)
+        jm2=modulo(j-2,N1)
+        jm1=modulo(j-1,N1)
+        jb=modulo(j,N1)
+        jp1=modulo(j+1,N1)
+        jp2=modulo(j+2,N1)
+
+        if (ordre==1) then !PPM1
+          sommets(i,j)=7._f64/12._f64*(aretesv(ib,jm1)+aretesv(ib,jb)) &
+            -1._f64/12._f64*(aretesv(ib,jm2)+aretesv(ib,jp1))
+        else if (ordre==2) then !PPM2
+          sommets(i,j)=1._f64/60._f64*(aretesv(ib,jp2)+aretesv(ib,jm3)) &
+            -8._f64/60._f64*(aretesv(ib,jp1)+aretesv(ib,jm2)) &
+            +37._f64/60._f64*(aretesv(ib,jb)+aretesv(ib,jm1))
+        else if (ordre==0) then !PPM0
+          sommets(i,j)=1._f64/2._f64*(aretesv(ib,jb)+aretesv(ib,jm1))
+        end if
+      end do
+    end do
+
+  end subroutine aux
+
+
+  subroutine aux2(N0,N1,f,areteshb,areteshh,aretesvg,aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd,ordre,carac,dom) !used in PPM case
+    integer,intent(in)::N0,N1,ordre
+    real(f64),dimension(0:1,0:1),intent(in)::dom
+    real(f64),dimension(0:N0,0:N1-1),intent(in)::f
+    real(f64),dimension(2,-1:N0+1,-1:N1+1),intent(in)::carac
+    integer::i,j,i3
+    real(f64),dimension(0:N0,0:N1-1),intent(inout)::areteshb,areteshh,aretesvg,aretesvd,&
+      sommetsbg,sommetsbd,sommetshg,sommetshd
+    real(f64) ::w(-ordre:ordre+1),tmp,ww(-ordre:ordre)
+    integer::r,s,ii,d
+    !integer :: ib,im3,im2,im1,ip1,ip2,jm3,jm2,jm1,jb,jp1,jp2
+       
     d=ordre
     r=-d
     s=d+1
-    
+    if(carac(1,1,1)==1e-23)then
+      print *,'#is this possible?'
+    endif
+    if(dom(1,1)==1e-23)then
+      print *,'#is this possible?'
+    endif
     !maple code for generation of w
     !for k from r to -1 do
     !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
@@ -2135,7 +2127,7 @@ endif
         tmp=tmp*real(-j,f64)
       enddo
       w(i)=tmp      
-    enddo
+     enddo
 
 !    do i=r,-1
 !      tmp=1._f64
@@ -2158,7 +2150,6 @@ endif
 !      tmp=tmp*real(i,f64)
 !      w(i)=1._f64/tmp      
 !    enddo
-
 
 
     do i=1,s
@@ -2286,531 +2277,441 @@ endif
       enddo
     enddo
 
-	end subroutine aux2
+  end subroutine aux2
 	
 	
-	subroutine calcule_coeff(N0,N1,a_moyenne,i,j,x1,y1,x2,y2,res,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
-                sommetsbg,sommetsbd,sommetshg,sommetshd,cas)
-
-	        sll_int32,intent(in)::N0,N1,i,j,cas
-		real(f64),intent(in)::x1,y1,x2,y2
-		real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
-                sommetsbg,sommetsbd,sommetshg,sommetshd
-		real(f64)::xx1,xx2,yy1,yy2,aux,dax,day,bx,by,c,w00,w10,w01,w20,w02,w11,w21,w12,w22,&
-                c00,c10,c01,c20,c02,c11,c12,c21,c22,sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
-		fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1
-		sll_int32::im2,im1,ib,ip1,ip2,jm2,jm1,jb,jp1,jp2
-		real(f64),intent(out)::res
+  subroutine calcule_coeff(N0,N1,a_moyenne,i,j,x1,y1,x2,y2,res,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+    sommetsbg,sommetsbd,sommetshg,sommetshd,cas)
+    sll_int32,intent(in)::N0,N1,i,j,cas
+    real(f64),intent(in)::x1,y1,x2,y2
+    real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+      sommetsbg,sommetsbd,sommetshg,sommetshd
+    real(f64)::xx1,xx2,yy1,yy2,dax,day,bx,by,c,w00,w10,w01,w20,w02,w11,w21,w12,w22
+    real(f64)::  c00,c10,c01,c20,c02,c11,c12,c21,c22,sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1
+    real(f64)::fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1
+    sll_int32::im2,im1,ib,ip1,ip2,jm2,jm1,jb,jp1,jp2
+    real(f64),intent(out)::res
+	!real(f64) :: aux
 		
-		if(cas==0)then
-		  return
-		endif
-
-
-		!im2=modulo(i-2,N0)
-		!im1=modulo(i-1,N0)
-		!ib=modulo(i,N0)
-		!ip1=modulo(i+1,N0)
-		!ip2=modulo(i+2,N0)
-		im2=i-2
-		im1=i-1
-		ib=i
-		ip1=i+1
-		ip2=i+2
+    if(cas==0)then
+      return
+    endif
+    im2=i-2
+    im1=i-1
+    ib=i
+    ip1=i+1
+    ip2=i+2
 		
-		if(i-2<=0)im2=0;
-		if(i-1<=0)im1=0;
-		if(i<=0)ib=0;
-		if(i+1<=0)ip1=0;
-		if(i+2<=0)ip2=0;
+    if(i-2<=0)im2=0;
+    if(i-1<=0)im1=0;
+    if(i<=0)ib=0;
+    if(i+1<=0)ip1=0;
+    if(i+2<=0)ip2=0;
 
-		if(i-2>=N0)im2=N0;
-		if(i-1>=N0)im1=N0;		
-		if(i>=N0)ib=N0;
-		if(i+1>=N0)ip1=N0;
-		if(i+2>=N0)ip2=N0;
+    if(i-2>=N0)im2=N0;
+    if(i-1>=N0)im1=N0;
+    if(i>=N0)ib=N0;
+    if(i+1>=N0)ip1=N0;
+    if(i+2>=N0)ip2=N0;
 
 		
-		jm2=modulo(j-2,N1)
-		jm1=modulo(j-1,N1)
-		jb=modulo(j,N1)
-		jp1=modulo(j+1,N1)
-		jp2=modulo(j+2,N1)
+    jm2=modulo(j-2,N1)
+    jm1=modulo(j-1,N1)
+    jb=modulo(j,N1)
+    jp1=modulo(j+1,N1)
+    jp2=modulo(j+2,N1)
 
 !1: Lauritzen, 2: Lag3, 3: PPM
 
-		xx1=x1-real(i,f64)
-		xx2=x2-real(i,f64)
-		yy1=y1-real(j,f64)
-		yy2=y2-real(j,f64)
+    xx1=x1-real(i,f64)
+    xx2=x2-real(i,f64)
+    yy1=y1-real(j,f64)
+    yy2=y2-real(j,f64)
 
-		w00=1._f64/2._f64*(xx2+xx1)*(yy2-yy1)
-		w10=1._f64/6._f64*(xx2**2+xx2*xx1+xx1**2)*(yy2-yy1)
-		w01=-1._f64/6._f64*(yy2**2+yy2*yy1+yy1**2)*(xx2-xx1)
-		w20=1._f64/12._f64*(xx2+xx1)*(xx2**2+xx1**2)*(yy2-yy1)
-		w02=-1._f64/12._f64*(yy2+yy1)*(yy2**2+yy1**2)*(xx2-xx1)
-		w11=1._f64/24._f64*(yy2*(3._f64*xx2**2+2._f64*xx2*xx1+xx1**2)+yy1*(xx2**2+2._f64*xx2*xx1+3._f64*xx1**2))*(yy2-yy1)
-		w21=-1._f64/60._f64*(6._f64*xx1**2*yy1**2+6._f64*xx2**2*yy2**2+xx1**2*yy2**2+xx2**2*yy1**2+3._f64*xx1**2*yy1*yy2+ &
-		3._f64*xx2**2*yy1*yy2+3._f64*xx1*xx2*yy1**2+3._f64*xx1*xx2*yy2**2+4._f64*xx1*xx2*yy1*yy2)*(xx2-xx1)
-		w12=1._f64/60._f64*(6._f64*xx1**2*yy1**2+6._f64*xx2**2*yy2**2+xx1**2*yy2**2+xx2**2*yy1**2+3._f64*xx1**2*yy1*yy2+ &
-		3._f64*xx2**2*yy1*yy2+3._f64*xx1*xx2*yy1**2+3._f64*xx1*xx2*yy2**2+4._f64*xx1*xx2*yy1*yy2)*(yy2-yy1)
-		w22=-1._f64/180._f64*(10._f64*xx1**2*yy1**3+10._f64*xx2**2*yy2**3+xx2**2*yy1**3+xx1**2*yy2**3+4._f64*xx1*xx2*yy1**3 &
-		+4._f64*xx1*xx2*yy2**3+6._f64*xx1**2*yy1**2*yy2+3._f64*xx1**2*yy1*yy2**2+3._f64*xx2**2*yy1**2*yy2+6._f64*xx2**2*yy1*yy2**2 &
-		+6._f64*xx1*xx2*yy1**2*yy2+6._f64*xx1*xx2*yy1*yy2**2)*(xx2-xx1)
+    w00=1._f64/2._f64*(xx2+xx1)*(yy2-yy1)
+    w10=1._f64/6._f64*(xx2**2+xx2*xx1+xx1**2)*(yy2-yy1)
+    w01=-1._f64/6._f64*(yy2**2+yy2*yy1+yy1**2)*(xx2-xx1)
+    w20=1._f64/12._f64*(xx2+xx1)*(xx2**2+xx1**2)*(yy2-yy1)
+    w02=-1._f64/12._f64*(yy2+yy1)*(yy2**2+yy1**2)*(xx2-xx1)
+    w11=1._f64/24._f64*(yy2*(3._f64*xx2**2+2._f64*xx2*xx1+xx1**2)+yy1*(xx2**2+2._f64*xx2*xx1+3._f64*xx1**2))*(yy2-yy1)
+    w21=-1._f64/60._f64*(6._f64*xx1**2*yy1**2+6._f64*xx2**2*yy2**2+xx1**2*yy2**2+xx2**2*yy1**2+3._f64*xx1**2*yy1*yy2+ &
+      3._f64*xx2**2*yy1*yy2+3._f64*xx1*xx2*yy1**2+3._f64*xx1*xx2*yy2**2+4._f64*xx1*xx2*yy1*yy2)*(xx2-xx1)
+    w12=1._f64/60._f64*(6._f64*xx1**2*yy1**2+6._f64*xx2**2*yy2**2+xx1**2*yy2**2+xx2**2*yy1**2+3._f64*xx1**2*yy1*yy2+ &
+      3._f64*xx2**2*yy1*yy2+3._f64*xx1*xx2*yy1**2+3._f64*xx1*xx2*yy2**2+4._f64*xx1*xx2*yy1*yy2)*(yy2-yy1)
+    w22=-1._f64/180._f64*(10._f64*xx1**2*yy1**3+10._f64*xx2**2*yy2**3+xx2**2*yy1**3+xx1**2*yy2**3+4._f64*xx1*xx2*yy1**3 &
+      +4._f64*xx1*xx2*yy2**3+6._f64*xx1**2*yy1**2*yy2+3._f64*xx1**2*yy1*yy2**2+3._f64*xx2**2*yy1**2*yy2+6._f64*xx2**2*yy1*yy2**2 &
+      +6._f64*xx1*xx2*yy1**2*yy2+6._f64*xx1*xx2*yy1*yy2**2)*(xx2-xx1)
 
-	if (cas==1) then !Lauritzen
+    if (cas==1) then !Lauritzen
 
-		dax=1._f64/12._f64*(-a_moyenne(ip2,jb)+8._f64*a_moyenne(ip1,jb)-8._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
-		day=1._f64/12._f64*(-a_moyenne(ib,jp2)+8._f64*a_moyenne(ib,jp1)-8._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
-		bx=1._f64/4._f64*(a_moyenne(ip2,jb)-6._f64*a_moyenne(ip1,jb)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
-		by=1._f64/4._f64*(a_moyenne(ib,jp2)-6._f64*a_moyenne(ib,jp1)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
-		c=1._f64/4._f64*(a_moyenne(ip1,jp1)-a_moyenne(im1,jp1)-a_moyenne(ip1,jm1)+a_moyenne(im1,jm1))
+      dax=1._f64/12._f64*(-a_moyenne(ip2,jb)+8._f64*a_moyenne(ip1,jb)-8._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
+      day=1._f64/12._f64*(-a_moyenne(ib,jp2)+8._f64*a_moyenne(ib,jp1)-8._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
+      bx=1._f64/4._f64*(a_moyenne(ip2,jb)-6._f64*a_moyenne(ip1,jb)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
+      by=1._f64/4._f64*(a_moyenne(ib,jp2)-6._f64*a_moyenne(ib,jp1)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
+      c=1._f64/4._f64*(a_moyenne(ip1,jp1)-a_moyenne(im1,jp1)-a_moyenne(ip1,jm1)+a_moyenne(im1,jm1))
 
-		c00=a_moyenne(ib,jb)-0.5_f64*dax-0.5_f64*day-1._f64/6._f64*bx-1._f64/6._f64*by+1._f64/4._f64*c
-		c10=dax+bx-0.5_f64*c
-		c01=day+by-0.5_f64*c
-		c20=-bx
-		c02=-by
-		c11=c
+      c00=a_moyenne(ib,jb)-0.5_f64*dax-0.5_f64*day-1._f64/6._f64*bx-1._f64/6._f64*by+1._f64/4._f64*c
+      c10=dax+bx-0.5_f64*c
+      c01=day+by-0.5_f64*c
+      c20=-bx
+      c02=-by
+      c11=c
 
-		res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11
+      res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11
 
-	else if (cas==2) then !Lagrange 3
+    else if (cas==2) then !Lagrange 3
 
-		fim1jm1=a_moyenne(im1,jm1)
-		fim1j=a_moyenne(im1,jb)
-		fim1jp1=a_moyenne(im1,jp1)
-		fijm1=a_moyenne(ib,jm1)
-		fij=a_moyenne(ib,jb)
-		fijp1=a_moyenne(ib,jp1)
-		fip1jm1=a_moyenne(ip1,jm1)
-		fip1j=a_moyenne(ip1,jb)
-		fip1jp1=a_moyenne(ip1,jp1)
+      fim1jm1=a_moyenne(im1,jm1)
+      fim1j=a_moyenne(im1,jb)
+      fim1jp1=a_moyenne(im1,jp1)
+      fijm1=a_moyenne(ib,jm1)
+      fij=a_moyenne(ib,jb)
+      fijp1=a_moyenne(ib,jp1)
+      fip1jm1=a_moyenne(ip1,jm1)
+      fip1j=a_moyenne(ip1,jb)
+      fip1jp1=a_moyenne(ip1,jp1)
 
-		c00=1._f64/9._f64*fim1jm1+5._f64/18._f64*fim1j-1._f64/18._f64*fim1jp1+5._f64/18._f64*fijm1+25._f64/36._f64*fij-5._f64/36._f64*fijp1 &
-		-1._f64/18._f64*fip1jm1-5._f64/36._f64*fip1j+1._f64/36._f64*fip1jp1
-		c10=-1._f64/3._f64*fim1jm1-5._f64/6._f64*fim1j+1._f64/6._f64*fim1jp1+1._f64/3._f64*fijm1+5._f64/6._f64*fij-1._f64/6._f64*fijp1
-		c20=1._f64/6._f64*fim1jm1+5._f64/12._f64*fim1j-1._f64/12._f64*fim1jp1-1._f64/3._f64*fijm1-5._f64/6._f64*fij+1._f64/6._f64*fijp1 &
-		+1._f64/6._f64*fip1jm1+5._f64/12._f64*fip1j-1._f64/12._f64*fip1jp1
-		c01=-1._f64/3._f64*fim1jm1+1._f64/3._f64*fim1j-5._f64/6._f64*fijm1+5._f64/6._f64*fij+1._f64/6._f64*fip1jm1-1._f64/6._f64*fip1j
-		c11=fim1jm1-fim1j-fijm1+fij
-		c21=-1._f64/2._f64*fim1jm1+1._f64/2._f64*fim1j+fijm1-fij-1._f64/2._f64*fip1jm1+1._f64/2._f64*fip1j
-		c02=1._f64/6._f64*fim1jm1-1._f64/3._f64*fim1j+1._f64/6._f64*fim1jp1+5._f64/12._f64*fijm1-5._f64/6._f64*fij+5._f64/12._f64*fijp1 &
-		-1._f64/12._f64*fip1jm1+1._f64/6._f64*fip1j-1._f64/12._f64*fip1jp1
-		c12=-1._f64/2._f64*fim1jm1+fim1j-1._f64/2._f64*fim1jp1+1._f64/2._f64*fijm1-fij+1._f64/2._f64*fijp1
-		c22=1._f64/4._f64*fim1jm1-1._f64/2._f64*fim1j+1._f64/4._f64*fim1jp1-1._f64/2._f64*fijm1+fij-1._f64/2._f64*fijp1+1._f64/4._f64*fip1jm1 &
-		-1._f64/2._f64*fip1j+1._f64/4._f64*fip1jp1
+      c00=1._f64/9._f64*fim1jm1+5._f64/18._f64*fim1j-1._f64/18._f64*fim1jp1+5._f64/18._f64*fijm1+25._f64/36._f64*fij-5._f64/36._f64*fijp1 &
+        -1._f64/18._f64*fip1jm1-5._f64/36._f64*fip1j+1._f64/36._f64*fip1jp1
+      c10=-1._f64/3._f64*fim1jm1-5._f64/6._f64*fim1j+1._f64/6._f64*fim1jp1+1._f64/3._f64*fijm1+5._f64/6._f64*fij-1._f64/6._f64*fijp1
+      c20=1._f64/6._f64*fim1jm1+5._f64/12._f64*fim1j-1._f64/12._f64*fim1jp1-1._f64/3._f64*fijm1-5._f64/6._f64*fij+1._f64/6._f64*fijp1 &
+        +1._f64/6._f64*fip1jm1+5._f64/12._f64*fip1j-1._f64/12._f64*fip1jp1
+      c01=-1._f64/3._f64*fim1jm1+1._f64/3._f64*fim1j-5._f64/6._f64*fijm1+5._f64/6._f64*fij+1._f64/6._f64*fip1jm1-1._f64/6._f64*fip1j
+      c11=fim1jm1-fim1j-fijm1+fij
+      c21=-1._f64/2._f64*fim1jm1+1._f64/2._f64*fim1j+fijm1-fij-1._f64/2._f64*fip1jm1+1._f64/2._f64*fip1j
+      c02=1._f64/6._f64*fim1jm1-1._f64/3._f64*fim1j+1._f64/6._f64*fim1jp1+5._f64/12._f64*fijm1-5._f64/6._f64*fij+5._f64/12._f64*fijp1 &
+        -1._f64/12._f64*fip1jm1+1._f64/6._f64*fip1j-1._f64/12._f64*fip1jp1
+      c12=-1._f64/2._f64*fim1jm1+fim1j-1._f64/2._f64*fim1jp1+1._f64/2._f64*fijm1-fij+1._f64/2._f64*fijp1
+      c22=1._f64/4._f64*fim1jm1-1._f64/2._f64*fim1j+1._f64/4._f64*fim1jp1-1._f64/2._f64*fijm1+fij-1._f64/2._f64*fijp1+1._f64/4._f64*fip1jm1 &
+        -1._f64/2._f64*fip1j+1._f64/4._f64*fip1jp1
 
-		res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11+w21*c21+w12*c12+w22*c22
+      res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11+w21*c21+w12*c12+w22*c22
 
-	else if (cas==3) then !PPM
+    else if (cas==3) then !PPM
+      sij=sommets(ib,jb)
+      sip1j=sommets(ip1,jb)
+      sijp1=sommets(ib,jp1)
+      sip1jp1=sommets(ip1,jp1)
+      avij=aretesv(ib,jb)
+      avip1j=aretesv(ip1,jb)
+      ahij=aretesh(ib,jb)
+      ahijp1=aretesh(ib,jp1)
+      fij=a_moyenne(ib,jb)
 
-		sij=sommets(ib,jb)
-		sip1j=sommets(ip1,jb)
-		sijp1=sommets(ib,jp1)
-		sip1jp1=sommets(ip1,jp1)
-		avij=aretesv(ib,jb)
-		avip1j=aretesv(ip1,jb)
-		ahij=aretesh(ib,jb)
-		ahijp1=aretesh(ib,jp1)
-		fij=a_moyenne(ib,jb)
+      c00=sij
+      c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
+      c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
+      c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
+      c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
+      c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
+      c02=3._f64*sij+3._f64*sijp1-6._f64*avij
+      c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
+      c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
 
-		!sij=49._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ib,jm1)+a_moyenne(im1,jb)+a_moyenne(ib,jb))&
-		!-7._f64/144._f64*(a_moyenne(im2,jm1)+a_moyenne(ip1,jm1)+a_moyenne(im2,jb)+a_moyenne(ip1,jb))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm2)+a_moyenne(ib,jm2)+a_moyenne(im1,jp1)+a_moyenne(ib,jp1))&
-		!+1._f64/144._f64*(a_moyenne(im2,jm2)+a_moyenne(ip1,jm2)+a_moyenne(im2,jp1)+a_moyenne(ip1,jp1))
-		!sip1j=49._f64/144._f64*(a_moyenne(ib,jm1)+a_moyenne(ip1,jm1)+a_moyenne(ib,jb)+a_moyenne(ip1,jb))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ip2,jm1)+a_moyenne(im1,jb)+a_moyenne(ip2,jb))&
-		!-7._f64/144._f64*(a_moyenne(ib,jm2)+a_moyenne(ip1,jm2)+a_moyenne(ib,jp1)+a_moyenne(ip1,jp1))&
-		!+1._f64/144._f64*(a_moyenne(im1,jm2)+a_moyenne(ip2,jm2)+a_moyenne(im1,jp1)+a_moyenne(ip2,jp1))
-		!sijp1=49._f64/144._f64*(a_moyenne(im1,jb)+a_moyenne(ib,jb)+a_moyenne(im1,jp1)+a_moyenne(ib,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im2,jb)+a_moyenne(ip1,jb)+a_moyenne(im2,jp1)+a_moyenne(ip1,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ib,jm1)+a_moyenne(im1,jp2)+a_moyenne(ib,jp2))&
-		!+1._f64/144._f64*(a_moyenne(im2,jm1)+a_moyenne(ip1,jm1)+a_moyenne(im2,jp2)+a_moyenne(ip1,jp2))
-		!sip1jp1=49._f64/144._f64*(a_moyenne(ib,jb)+a_moyenne(ip1,jb)+a_moyenne(ib,jp1)+a_moyenne(ip1,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im1,jb)+a_moyenne(ip2,jb)+a_moyenne(im1,jp1)+a_moyenne(ip2,jp1))&
-		!-7._f64/144._f64*(a_moyenne(ib,jm1)+a_moyenne(ip1,jm1)+a_moyenne(ib,jp2)+a_moyenne(ip1,jp2))&
-		!+1._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ip2,jm1)+a_moyenne(im1,jp2)+a_moyenne(ip2,jp2))
-		!avij=7._f64/12._f64*(a_moyenne(im1,jb)+a_moyenne(ib,jb))-1._f64/12._f64*(a_moyenne(im2,jb)+a_moyenne(ip1,jb))
-		!avip1j=7._f64/12._f64*(a_moyenne(ib,jb)+a_moyenne(ip1,jb))-1._f64/12._f64*(a_moyenne(im1,jb)+a_moyenne(ip2,jb))
-		!ahij=7._f64/12._f64*(a_moyenne(ib,jm1)+a_moyenne(ib,jb))-1._f64/12._f64*(a_moyenne(ib,jm2)+a_moyenne(ib,jp1))
-		!ahijp1=7._f64/12._f64*(a_moyenne(ib,jb)+a_moyenne(ib,jp1))-1._f64/12._f64*(a_moyenne(ib,jm1)+a_moyenne(ib,jp2))
+      res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11+w21*c21+w12*c12+w22*c22
 
+    else if (cas==4) then
 
-		c00=sij
-		c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
-		c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
-		c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
-		c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
-		c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
-		c02=3._f64*sij+3._f64*sijp1-6._f64*avij
-		c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
-		c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
+      sij=sommetshd(ib,jb)
+      sip1j=sommetshg(ip1,jb)
+      sijp1=sommetsbd(ib,jp1)
+      sip1jp1=sommetsbg(ip1,jp1)
+      avij=aretesvd(ib,jb)
+      avip1j=aretesvg(ip1,jb)
+      ahij=areteshh(ib,jb)
+      ahijp1=areteshb(ib,jp1)
+      fij=a_moyenne(ib,jb)
 
-		res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11+w21*c21+w12*c12+w22*c22
+      c00=sij
+      c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
+      c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
+      c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
+      c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
+      c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
+      c02=3._f64*sij+3._f64*sijp1-6._f64*avij
+      c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
+      c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
 
-	else if (cas==4) then
+      res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11+w21*c21+w12*c12+w22*c22
 
-		sij=sommetshd(ib,jb)
-		sip1j=sommetshg(ip1,jb)
-		sijp1=sommetsbd(ib,jp1)
-		sip1jp1=sommetsbg(ip1,jp1)
-		avij=aretesvd(ib,jb)
-		avip1j=aretesvg(ip1,jb)
-		ahij=areteshh(ib,jb)
-		ahijp1=areteshb(ib,jp1)
-		fij=a_moyenne(ib,jb)
+    endif
 
-		c00=sij
-		c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
-		c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
-		c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
-		c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
-		c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
-		c02=3._f64*sij+3._f64*sijp1-6._f64*avij
-		c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
-		c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
-
-		res=w00*c00+w10*c10+w01*c01+w20*c20+w02*c02+w11*c11+w21*c21+w12*c12+w22*c22
-
-	  endif
-
-	end subroutine calcule_coeff
+  end subroutine calcule_coeff
 
 
+  subroutine calcule_coeffh(N0,N1,a_moyenne,i,j,x1,x2,res,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+    sommetsbg,sommetsbd,sommetshg,sommetshd,cas)
 
-	subroutine calcule_coeffh(N0,N1,a_moyenne,i,j,x1,x2,res,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
-                sommetsbg,sommetsbd,sommetshg,sommetshd,cas)
-
-	        sll_int32,intent(in)::N0,N1,i,j,cas
-		real(f64),intent(in)::x1,x2
-		real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
-                sommetsbg,sommetsbd,sommetshg,sommetshd
-		real(f64)::xx1,xx2,yy,aux,day,by,w01,w02,w21,w22,w00,w10,w20,w11,w12,c01,c02,c21,c22,c00,c10,c20,c11,c12,&
-		sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
-		fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1,c,yy1,yy2
-		sll_int32::im2,im1,ib,ip1,ip2,jm2,jm1,jb,jp1,jp2
-		real(f64),intent(out)::res
+    sll_int32,intent(in)::N0,N1,i,j,cas
+    real(f64),intent(in)::x1,x2
+    real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+      sommetsbg,sommetsbd,sommetshg,sommetshd
+    real(f64)::xx1,xx2,day,by,w01,w02,w21,w22,c01,c02,c21,c22,&
+      sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
+     fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1,c
+    !real(f64) :: aux,,c00,c10,c11,c12,c20,w00,w10,w11,w12,w20,yy,yy1,yy2
+    sll_int32::im2,im1,ib,ip1,ip2,jm2,jm1,jb,jp1,jp2
+    real(f64),intent(out)::res
 		
-		if(cas==0)then
-		  return
-		endif
-
-		!im2=modulo(i-2,N0)
-		!im1=modulo(i-1,N0)
-		!ib=modulo(i,N0)
-		!ip1=modulo(i+1,N0)
-		!ip2=modulo(i+2,N0)
-		im2=i-2
-		im1=i-1
-		ib=i
-		ip1=i+1
-		ip2=i+2
+    if(cas==0)then
+      return
+    endif
+    im2=i-2
+    im1=i-1
+    ib=i
+    ip1=i+1
+    ip2=i+2
 		
-		if(i-2<=0)im2=0;
-		if(i-1<=0)im1=0;
-		if(i<=0)ib=0;
-		if(i+1<=0)ip1=0;
-		if(i+2<=0)ip2=0;
+    if(i-2<=0)im2=0;
+    if(i-1<=0)im1=0;
+    if(i<=0)ib=0;
+    if(i+1<=0)ip1=0;
+    if(i+2<=0)ip2=0;
 
-		if(i-2>=N0)im2=N0;
-		if(i-1>=N0)im1=N0;		
-		if(i>=N0)ib=N0;
-		if(i+1>=N0)ip1=N0;
-		if(i+2>=N0)ip2=N0;
+    if(i-2>=N0)im2=N0;
+    if(i-1>=N0)im1=N0;
+    if(i>=N0)ib=N0;
+    if(i+1>=N0)ip1=N0;
+    if(i+2>=N0)ip2=N0;
 
 		
 		
-		jm2=modulo(j-2,N1)
-		jm1=modulo(j-1,N1)
-		jb=modulo(j,N1)
-		jp1=modulo(j+1,N1)
-		jp2=modulo(j+2,N1)
+    jm2=modulo(j-2,N1)
+    jm1=modulo(j-1,N1)
+    jb=modulo(j,N1)
+    jp1=modulo(j+1,N1)
+    jp2=modulo(j+2,N1)
 
 !1: Lauritzen, 2: Lag3, 3: PPM
 
-		xx1=x1-real(i,f64)
-		xx2=x2-real(i,f64)
+    xx1=x1-real(i,f64)
+    xx2=x2-real(i,f64)
 
-		w01=-1._f64/2._f64*(xx2-xx1)
-		w02=-1._f64/3._f64*(xx2-xx1)
-		w21=-1._f64/6._f64*(xx1**2+xx2**2+xx1*xx2)*(xx2-xx1)
-		w22=-1._f64/9._f64*(xx1**2+xx2**2+xx1*xx2)*(xx2-xx1)
+    w01=-1._f64/2._f64*(xx2-xx1)
+    w02=-1._f64/3._f64*(xx2-xx1)
+    w21=-1._f64/6._f64*(xx1**2+xx2**2+xx1*xx2)*(xx2-xx1)
+    w22=-1._f64/9._f64*(xx1**2+xx2**2+xx1*xx2)*(xx2-xx1)
 
-	if (cas==1) then !Lauritzen
+    if (cas==1) then !Lauritzen
+      
+      day=1._f64/12._f64*(-a_moyenne(ib,jp2)+8._f64*a_moyenne(ib,jp1)-8._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
+      by=1._f64/4._f64*(a_moyenne(ib,jp2)-6._f64*a_moyenne(ib,jp1)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
+      c=1._f64/4._f64*(a_moyenne(ip1,jp1)-a_moyenne(im1,jp1)-a_moyenne(ip1,jm1)+a_moyenne(im1,jm1))
 
-		day=1._f64/12._f64*(-a_moyenne(ib,jp2)+8._f64*a_moyenne(ib,jp1)-8._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
-		by=1._f64/4._f64*(a_moyenne(ib,jp2)-6._f64*a_moyenne(ib,jp1)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
-		c=1._f64/4._f64*(a_moyenne(ip1,jp1)-a_moyenne(im1,jp1)-a_moyenne(ip1,jm1)+a_moyenne(im1,jm1))
+      c01=day+by-0.5_f64*c
+      c02=-by
 
-		c01=day+by-0.5_f64*c
-		c02=-by
+      res=w01*c01+w02*c02
+    else if (cas==2) then !Lagrange 3
 
-		res=w01*c01+w02*c02
+      fim1jm1=a_moyenne(im1,jm1)
+      fim1j=a_moyenne(im1,jb)
+      fim1jp1=a_moyenne(im1,jp1)
+      fijm1=a_moyenne(ib,jm1)
+      fij=a_moyenne(ib,jb)
+      fijp1=a_moyenne(ib,jp1)
+      fip1jm1=a_moyenne(ip1,jm1)
+      fip1j=a_moyenne(ip1,jb)
+      fip1jp1=a_moyenne(ip1,jp1)
 
-	else if (cas==2) then !Lagrange 3
+      c01=-1._f64/3._f64*fim1jm1+1._f64/3._f64*fim1j-5._f64/6._f64*fijm1+5._f64/6._f64*fij+1._f64/6._f64*fip1jm1-1._f64/6._f64*fip1j
+      c21=-1._f64/2._f64*fim1jm1+1._f64/2._f64*fim1j+fijm1-fij-1._f64/2._f64*fip1jm1+1._f64/2._f64*fip1j
+      c02=1._f64/6._f64*fim1jm1-1._f64/3._f64*fim1j+1._f64/6._f64*fim1jp1+5._f64/12._f64*fijm1-5._f64/6._f64*fij+5._f64/12._f64*fijp1 &
+        -1._f64/12._f64*fip1jm1+1._f64/6._f64*fip1j-1._f64/12._f64*fip1jp1
+      c22=1._f64/4._f64*fim1jm1-1._f64/2._f64*fim1j+1._f64/4._f64*fim1jp1-1._f64/2._f64*fijm1+fij-1._f64/2._f64*fijp1+1._f64/4._f64*fip1jm1 &
+        -1._f64/2._f64*fip1j+1._f64/4._f64*fip1jp1
 
-		fim1jm1=a_moyenne(im1,jm1)
-		fim1j=a_moyenne(im1,jb)
-		fim1jp1=a_moyenne(im1,jp1)
-		fijm1=a_moyenne(ib,jm1)
-		fij=a_moyenne(ib,jb)
-		fijp1=a_moyenne(ib,jp1)
-		fip1jm1=a_moyenne(ip1,jm1)
-		fip1j=a_moyenne(ip1,jb)
-		fip1jp1=a_moyenne(ip1,jp1)
+      res=w01*c01+w02*c02+w21*c21+w22*c22
+    else if (cas==3) then !PPM
 
-		c01=-1._f64/3._f64*fim1jm1+1._f64/3._f64*fim1j-5._f64/6._f64*fijm1+5._f64/6._f64*fij+1._f64/6._f64*fip1jm1-1._f64/6._f64*fip1j
-		c21=-1._f64/2._f64*fim1jm1+1._f64/2._f64*fim1j+fijm1-fij-1._f64/2._f64*fip1jm1+1._f64/2._f64*fip1j
-		c02=1._f64/6._f64*fim1jm1-1._f64/3._f64*fim1j+1._f64/6._f64*fim1jp1+5._f64/12._f64*fijm1-5._f64/6._f64*fij+5._f64/12._f64*fijp1 &
-		-1._f64/12._f64*fip1jm1+1._f64/6._f64*fip1j-1._f64/12._f64*fip1jp1
-		c22=1._f64/4._f64*fim1jm1-1._f64/2._f64*fim1j+1._f64/4._f64*fim1jp1-1._f64/2._f64*fijm1+fij-1._f64/2._f64*fijp1+1._f64/4._f64*fip1jm1 &
-		-1._f64/2._f64*fip1j+1._f64/4._f64*fip1jp1
+      sij=sommets(ib,jb)
+      sip1j=sommets(ip1,jb)
+      sijp1=sommets(ib,jp1)
+      sip1jp1=sommets(ip1,jp1)
+      avij=aretesv(ib,jb)
+      avip1j=aretesv(ip1,jb)
+      ahij=aretesh(ib,jb)
+      ahijp1=aretesh(ib,jp1)
+      fij=a_moyenne(ib,jb)
+      c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
+      c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
+      c02=3._f64*sij+3._f64*sijp1-6._f64*avij
+      c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
 
-		res=w01*c01+w02*c02+w21*c21+w22*c22
+      res=w01*c01+w02*c02+w21*c21+w22*c22
 
-	else if (cas==3) then !PPM
+    else if (cas==4) then
+      sij=sommetshd(ib,jb)
+      sip1j=sommetshg(ip1,jb)
+      sijp1=sommetsbd(ib,jp1)
+      sip1jp1=sommetsbg(ip1,jp1)
+      avij=aretesvd(ib,jb)
+      avip1j=aretesvg(ip1,jb)
+      ahij=areteshh(ib,jb)
+      ahijp1=areteshb(ib,jp1)
+      fij=a_moyenne(ib,jb)
 
-		sij=sommets(ib,jb)
-		sip1j=sommets(ip1,jb)
-		sijp1=sommets(ib,jp1)
-		sip1jp1=sommets(ip1,jp1)
-		avij=aretesv(ib,jb)
-		avip1j=aretesv(ip1,jb)
-		ahij=aretesh(ib,jb)
-		ahijp1=aretesh(ib,jp1)
-		fij=a_moyenne(ib,jb)
+      c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
+      c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
+      c02=3._f64*sij+3._f64*sijp1-6._f64*avij
+      c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
 
-		!sij=49._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ib,jm1)+a_moyenne(im1,jb)+a_moyenne(ib,jb))&
-		!-7._f64/144._f64*(a_moyenne(im2,jm1)+a_moyenne(ip1,jm1)+a_moyenne(im2,jb)+a_moyenne(ip1,jb))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm2)+a_moyenne(ib,jm2)+a_moyenne(im1,jp1)+a_moyenne(ib,jp1))&
-		!+1._f64/144._f64*(a_moyenne(im2,jm2)+a_moyenne(ip1,jm2)+a_moyenne(im2,jp1)+a_moyenne(ip1,jp1))
-		!sip1j=49._f64/144._f64*(a_moyenne(ib,jm1)+a_moyenne(ip1,jm1)+a_moyenne(ib,jb)+a_moyenne(ip1,jb))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ip2,jm1)+a_moyenne(im1,jb)+a_moyenne(ip2,jb))&
-		!-7._f64/144._f64*(a_moyenne(ib,jm2)+a_moyenne(ip1,jm2)+a_moyenne(ib,jp1)+a_moyenne(ip1,jp1))&
-		!+1._f64/144._f64*(a_moyenne(im1,jm2)+a_moyenne(ip2,jm2)+a_moyenne(im1,jp1)+a_moyenne(ip2,jp1))
-		!sijp1=49._f64/144._f64*(a_moyenne(im1,jb)+a_moyenne(ib,jb)+a_moyenne(im1,jp1)+a_moyenne(ib,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im2,jb)+a_moyenne(ip1,jb)+a_moyenne(im2,jp1)+a_moyenne(ip1,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ib,jm1)+a_moyenne(im1,jp2)+a_moyenne(ib,jp2))&
-		!+1._f64/144._f64*(a_moyenne(im2,jm1)+a_moyenne(ip1,jm1)+a_moyenne(im2,jp2)+a_moyenne(ip1,jp2))
-		!sip1jp1=49._f64/144._f64*(a_moyenne(ib,jb)+a_moyenne(ip1,jb)+a_moyenne(ib,jp1)+a_moyenne(ip1,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im1,jb)+a_moyenne(ip2,jb)+a_moyenne(im1,jp1)+a_moyenne(ip2,jp1))&
-		!-7._f64/144._f64*(a_moyenne(ib,jm1)+a_moyenne(ip1,jm1)+a_moyenne(ib,jp2)+a_moyenne(ip1,jp2))&
-		!+1._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ip2,jm1)+a_moyenne(im1,jp2)+a_moyenne(ip2,jp2))
-		!avij=7._f64/12._f64*(a_moyenne(im1,jb)+a_moyenne(ib,jb))-1._f64/12._f64*(a_moyenne(im2,jb)+a_moyenne(ip1,jb))
-		!avip1j=7._f64/12._f64*(a_moyenne(ib,jb)+a_moyenne(ip1,jb))-1._f64/12._f64*(a_moyenne(im1,jb)+a_moyenne(ip2,jb))
-		!ahij=7._f64/12._f64*(a_moyenne(ib,jm1)+a_moyenne(ib,jb))-1._f64/12._f64*(a_moyenne(ib,jm2)+a_moyenne(ib,jp1))
-		!ahijp1=7._f64/12._f64*(a_moyenne(ib,jb)+a_moyenne(ib,jp1))-1._f64/12._f64*(a_moyenne(ib,jm1)+a_moyenne(ib,jp2))
+      res=w01*c01+w02*c02+w21*c21+w22*c22
 
-		c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
-		c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
-		c02=3._f64*sij+3._f64*sijp1-6._f64*avij
-		c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
+    endif
 
-		res=w01*c01+w02*c02+w21*c21+w22*c22
+  end subroutine calcule_coeffh
 
-	else if (cas==4) then
-
-		sij=sommetshd(ib,jb)
-		sip1j=sommetshg(ip1,jb)
-		sijp1=sommetsbd(ib,jp1)
-		sip1jp1=sommetsbg(ip1,jp1)
-		avij=aretesvd(ib,jb)
-		avip1j=aretesvg(ip1,jb)
-		ahij=areteshh(ib,jb)
-		ahijp1=areteshb(ib,jp1)
-		fij=a_moyenne(ib,jb)
-
-		c01=-4._f64*sij-2._f64*sijp1+6._f64*avij
-		c21=-12._f64*sij-12._f64*sip1j+24._f64*ahij-6._f64*sijp1-6*sip1jp1+12._f64*ahijp1+18._f64*avij+18._f64*avip1j-36._f64*fij
-		c02=3._f64*sij+3._f64*sijp1-6._f64*avij
-		c22=9._f64*sij+9._f64*sip1j-18._f64*ahij+9._f64*sijp1+9._f64*sip1jp1-18._f64*ahijp1-18._f64*avij-18*avip1j+36._f64*fij
-
-		res=w01*c01+w02*c02+w21*c21+w22*c22
-
-	  endif
-
-	end subroutine calcule_coeffh
-
-
-
-	subroutine calcule_coeffv(N0,N1,a_moyenne,i,j,y1,y2,res,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
-                sommetsbg,sommetsbd,sommetshg,sommetshd,cas)
-
-	        sll_int32,intent(in)::N0,N1,i,j,cas
-		real(f64),intent(in)::y1,y2
-		real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,&
-                aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd
-		real(f64)::xx,yy1,yy2,aux,dax,bx,by,c,w00,w10,w20,w11,w12,w01,w02,w21,w22,&
-		c00,c10,c20,c11,c12,c01,c02,c21,c22,sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
-		fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1,day,xx1,xx2
-		sll_int32::im2,im1,ib,ip1,ip2,jm2,jm1,jb,jp1,jp2
-		real(f64),intent(out)::res
+  subroutine calcule_coeffv(N0,N1,a_moyenne,i,j,y1,y2,res,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,aretesvd,&
+    sommetsbg,sommetsbd,sommetshg,sommetshd,cas)
+    
+    sll_int32,intent(in)::N0,N1,i,j,cas
+    real(f64),intent(in)::y1,y2
+    real(f64),dimension(0:N0,0:N1-1),intent(in)::a_moyenne,aretesh,aretesv,sommets,areteshb,areteshh,aretesvg,&
+      aretesvd,sommetsbg,sommetsbd,sommetshg,sommetshd
+    real(f64)::yy1,yy2
+    !real(f64) :: xx,aux,w01,w02,w21,w22,xx1,xx2
+    real(f64) :: dax,bx,by,c
+    real(f64) :: w00
+    real(f64) :: w10,w20,w11,w12,c00,c10,c20,c11,c12
+    !real(f64) ::  c01,c02,c21,c22
+    real(f64) :: sij,sip1j,sijp1,sip1jp1,avij,avip1j,ahij,ahijp1,&
+      fij,fim1jm1,fim1j,fim1jp1,fijm1,fijp1,fip1jm1,fip1j,fip1jp1,day
+    sll_int32::im2,im1,ib,ip1,ip2,jm2,jm1,jb,jp1,jp2
+    real(f64),intent(out)::res
 		
-		if(cas==0)then
-		  return
-		endif
+    if(cas==0)then
+      return
+    endif
 
-		!im2=modulo(i-2,N0)
-		!im1=modulo(i-1,N0)
-		!ib=modulo(i,N0)
-		!ip1=modulo(i+1,N0)
-		!ip2=modulo(i+2,N0)
-		im2=i-2
-		im1=i-1
-		ib=i
-		ip1=i+1
-		ip2=i+2
+    im2=i-2
+    im1=i-1
+    ib=i
+    ip1=i+1
+    ip2=i+2
 		
-		if(i-2<=0)im2=0;
-		if(i-1<=0)im1=0;
-		if(i<=0)ib=0;
-		if(i+1<=0)ip1=0;
-		if(i+2<=0)ip2=0;
+    if(i-2<=0)im2=0;
+    if(i-1<=0)im1=0;
+    if(i<=0)ib=0;
+    if(i+1<=0)ip1=0;
+    if(i+2<=0)ip2=0;
 
-		if(i-2>=N0)im2=N0;
-		if(i-1>=N0)im1=N0;		
-		if(i>=N0)ib=N0;
-		if(i+1>=N0)ip1=N0;
-		if(i+2>=N0)ip2=N0;
+    if(i-2>=N0)im2=N0;
+    if(i-1>=N0)im1=N0;
+    if(i>=N0)ib=N0;
+    if(i+1>=N0)ip1=N0;
+    if(i+2>=N0)ip2=N0;
 
 		
 		
 		
-		jm2=modulo(j-2,N1)
-		jm1=modulo(j-1,N1)
-		jb=modulo(j,N1)
-		jp1=modulo(j+1,N1)
-		jp2=modulo(j+2,N1)
+    jm2=modulo(j-2,N1)
+    jm1=modulo(j-1,N1)
+    jb=modulo(j,N1)
+    jp1=modulo(j+1,N1)
+    jp2=modulo(j+2,N1)
 
 !1: Lauritzen, 2: Lag3, 3: PPM
-		yy1=y1-real(j,f64)
-		yy2=y2-real(j,f64)
+    yy1=y1-real(j,f64)
+    yy2=y2-real(j,f64)
+    w00=yy2-yy1
+    w10=1._f64/2._f64*(yy2-yy1)
+    w20=1._f64/3._f64*(yy2-yy1)
+    w11=1._f64/4._f64*(yy1+yy2)*(yy2-yy1)
+    w12=1._f64/6._f64*(yy1**2+yy2**2+yy1*yy2)*(yy2-yy1)
 
-		w00=yy2-yy1
-		w10=1._f64/2._f64*(yy2-yy1)
-		w20=1._f64/3._f64*(yy2-yy1)
-		w11=1._f64/4._f64*(yy1+yy2)*(yy2-yy1)
-		w12=1._f64/6._f64*(yy1**2+yy2**2+yy1*yy2)*(yy2-yy1)
+    if (cas==1) then !Lauritzen
 
-	if (cas==1) then !Lauritzen
+      dax=1._f64/12._f64*(-a_moyenne(ip2,jb)+8._f64*a_moyenne(ip1,jb)-8._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
+      day=1._f64/12._f64*(-a_moyenne(ib,jp2)+8._f64*a_moyenne(ib,jp1)-8._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
+      bx=1._f64/4._f64*(a_moyenne(ip2,jb)-6._f64*a_moyenne(ip1,jb)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
+      by=1._f64/4._f64*(a_moyenne(ib,jp2)-6._f64*a_moyenne(ib,jp1)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
+      c=1._f64/4._f64*(a_moyenne(ip1,jp1)-a_moyenne(im1,jp1)-a_moyenne(ip1,jm1)+a_moyenne(im1,jm1))
 
-		dax=1._f64/12._f64*(-a_moyenne(ip2,jb)+8._f64*a_moyenne(ip1,jb)-8._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
-		day=1._f64/12._f64*(-a_moyenne(ib,jp2)+8._f64*a_moyenne(ib,jp1)-8._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
-		bx=1._f64/4._f64*(a_moyenne(ip2,jb)-6._f64*a_moyenne(ip1,jb)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(im1,jb)+a_moyenne(im2,jb))
-		by=1._f64/4._f64*(a_moyenne(ib,jp2)-6._f64*a_moyenne(ib,jp1)+10._f64*a_moyenne(ib,jb)-6._f64*a_moyenne(ib,jm1)+a_moyenne(ib,jm2))
-		c=1._f64/4._f64*(a_moyenne(ip1,jp1)-a_moyenne(im1,jp1)-a_moyenne(ip1,jm1)+a_moyenne(im1,jm1))
+      c00=a_moyenne(ib,jb)-0.5_f64*dax-0.5_f64*day-1._f64/6._f64*bx-1._f64/6._f64*by+1._f64/4._f64*c
+      c10=dax+bx-0.5_f64*c
+      c20=-bx
+      c11=c
+      res=w00*c00+w10*c10+w20*c20+w11*c11
+    else if (cas==2) then !Lagrange 3
+      fim1jm1=a_moyenne(im1,jm1)
+      fim1j=a_moyenne(im1,jb)
+      fim1jp1=a_moyenne(im1,jp1)
+      fijm1=a_moyenne(ib,jm1)
+      fij=a_moyenne(ib,jb)
+      fijp1=a_moyenne(ib,jp1)
+      fip1jm1=a_moyenne(ip1,jm1)
+      fip1j=a_moyenne(ip1,jb)
+      fip1jp1=a_moyenne(ip1,jp1)
 
-		c00=a_moyenne(ib,jb)-0.5_f64*dax-0.5_f64*day-1._f64/6._f64*bx-1._f64/6._f64*by+1._f64/4._f64*c
-		c10=dax+bx-0.5_f64*c
-		c20=-bx
-		c11=c
+      c00=1._f64/9._f64*fim1jm1+5._f64/18._f64*fim1j-1._f64/18._f64*fim1jp1+5._f64/18._f64*fijm1+25._f64/36._f64*fij-5._f64/36._f64*fijp1 &
+        -1._f64/18._f64*fip1jm1-5._f64/36._f64*fip1j+1._f64/36._f64*fip1jp1
+      c10=-1._f64/3._f64*fim1jm1-5._f64/6._f64*fim1j+1._f64/6._f64*fim1jp1+1._f64/3._f64*fijm1+5._f64/6._f64*fij-1._f64/6._f64*fijp1
+      c20=1._f64/6._f64*fim1jm1+5._f64/12._f64*fim1j-1._f64/12._f64*fim1jp1-1._f64/3._f64*fijm1-5._f64/6._f64*fij+1._f64/6._f64*fijp1 &
+        +1._f64/6._f64*fip1jm1+5._f64/12._f64*fip1j-1._f64/12._f64*fip1jp1
+      c11=fim1jm1-fim1j-fijm1+fij
+      c12=-1._f64/2._f64*fim1jm1+fim1j-1._f64/2._f64*fim1jp1+1._f64/2._f64*fijm1-fij+1._f64/2._f64*fijp1
+      
+      res=w00*c00+w10*c10+w20*c20+w11*c11+w12*c12
+    else if (cas==3) then !PPM
+      sij=sommets(ib,jb)
+      sip1j=sommets(ip1,jb)
+      sijp1=sommets(ib,jp1)
+      sip1jp1=sommets(ip1,jp1)
+      avij=aretesv(ib,jb)
+      avip1j=aretesv(ip1,jb)
+      ahij=aretesh(ib,jb)
+      ahijp1=aretesh(ib,jp1)
+      fij=a_moyenne(ib,jb)
 
-		res=w00*c00+w10*c10+w20*c20+w11*c11
+      c00=sij
+      c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
+      c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
+      c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
+      c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
 
-	else if (cas==2) then !Lagrange 3
+      res=w00*c00+w10*c10+w20*c20+w11*c11+w12*c12
 
-		fim1jm1=a_moyenne(im1,jm1)
-		fim1j=a_moyenne(im1,jb)
-		fim1jp1=a_moyenne(im1,jp1)
-		fijm1=a_moyenne(ib,jm1)
-		fij=a_moyenne(ib,jb)
-		fijp1=a_moyenne(ib,jp1)
-		fip1jm1=a_moyenne(ip1,jm1)
-		fip1j=a_moyenne(ip1,jb)
-		fip1jp1=a_moyenne(ip1,jp1)
+    else if (cas==4) then
 
-		c00=1._f64/9._f64*fim1jm1+5._f64/18._f64*fim1j-1._f64/18._f64*fim1jp1+5._f64/18._f64*fijm1+25._f64/36._f64*fij-5._f64/36._f64*fijp1 &
-		-1._f64/18._f64*fip1jm1-5._f64/36._f64*fip1j+1._f64/36._f64*fip1jp1
-		c10=-1._f64/3._f64*fim1jm1-5._f64/6._f64*fim1j+1._f64/6._f64*fim1jp1+1._f64/3._f64*fijm1+5._f64/6._f64*fij-1._f64/6._f64*fijp1
-		c20=1._f64/6._f64*fim1jm1+5._f64/12._f64*fim1j-1._f64/12._f64*fim1jp1-1._f64/3._f64*fijm1-5._f64/6._f64*fij+1._f64/6._f64*fijp1 &
-		+1._f64/6._f64*fip1jm1+5._f64/12._f64*fip1j-1._f64/12._f64*fip1jp1
-		c11=fim1jm1-fim1j-fijm1+fij
-		c12=-1._f64/2._f64*fim1jm1+fim1j-1._f64/2._f64*fim1jp1+1._f64/2._f64*fijm1-fij+1._f64/2._f64*fijp1
+      sij=sommetshd(ib,jb)
+      sip1j=sommetshg(ip1,jb)
+      sijp1=sommetsbd(ib,jp1)
+      sip1jp1=sommetsbg(ip1,jp1)
+      avij=aretesvd(ib,jb)
+      avip1j=aretesvg(ip1,jb)
+      ahij=areteshh(ib,jb)
+      ahijp1=areteshb(ib,jp1)
+      fij=a_moyenne(ib,jb)
+      c00=sij
 
-		res=w00*c00+w10*c10+w20*c20+w11*c11+w12*c12
+      c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
+      c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
+      c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
+      c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
 
-	else if (cas==3) then !PPM
+      res=w00*c00+w10*c10+w20*c20+w11*c11+w12*c12
 
-		sij=sommets(ib,jb)
-		sip1j=sommets(ip1,jb)
-		sijp1=sommets(ib,jp1)
-		sip1jp1=sommets(ip1,jp1)
-		avij=aretesv(ib,jb)
-		avip1j=aretesv(ip1,jb)
-		ahij=aretesh(ib,jb)
-		ahijp1=aretesh(ib,jp1)
-		fij=a_moyenne(ib,jb)
+    endif
 
-		!sij=49._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ib,jm1)+a_moyenne(im1,jb)+a_moyenne(ib,jb))&
-		!-7._f64/144._f64*(a_moyenne(im2,jm1)+a_moyenne(ip1,jm1)+a_moyenne(im2,jb)+a_moyenne(ip1,jb))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm2)+a_moyenne(ib,jm2)+a_moyenne(im1,jp1)+a_moyenne(ib,jp1))&
-		!+1._f64/144._f64*(a_moyenne(im2,jm2)+a_moyenne(ip1,jm2)+a_moyenne(im2,jp1)+a_moyenne(ip1,jp1))
-		!sip1j=49._f64/144._f64*(a_moyenne(ib,jm1)+a_moyenne(ip1,jm1)+a_moyenne(ib,jb)+a_moyenne(ip1,jb))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ip2,jm1)+a_moyenne(im1,jb)+a_moyenne(ip2,jb))&
-		!-7._f64/144._f64*(a_moyenne(ib,jm2)+a_moyenne(ip1,jm2)+a_moyenne(ib,jp1)+a_moyenne(ip1,jp1))&
-		!+1._f64/144._f64*(a_moyenne(im1,jm2)+a_moyenne(ip2,jm2)+a_moyenne(im1,jp1)+a_moyenne(ip2,jp1))
-		!sijp1=49._f64/144._f64*(a_moyenne(im1,jb)+a_moyenne(ib,jb)+a_moyenne(im1,jp1)+a_moyenne(ib,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im2,jb)+a_moyenne(ip1,jb)+a_moyenne(im2,jp1)+a_moyenne(ip1,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ib,jm1)+a_moyenne(im1,jp2)+a_moyenne(ib,jp2))&
-		!+1._f64/144._f64*(a_moyenne(im2,jm1)+a_moyenne(ip1,jm1)+a_moyenne(im2,jp2)+a_moyenne(ip1,jp2))
-		!sip1jp1=49._f64/144._f64*(a_moyenne(ib,jb)+a_moyenne(ip1,jb)+a_moyenne(ib,jp1)+a_moyenne(ip1,jp1))&
-		!-7._f64/144._f64*(a_moyenne(im1,jb)+a_moyenne(ip2,jb)+a_moyenne(im1,jp1)+a_moyenne(ip2,jp1))&
-		!-7._f64/144._f64*(a_moyenne(ib,jm1)+a_moyenne(ip1,jm1)+a_moyenne(ib,jp2)+a_moyenne(ip1,jp2))&
-		!+1._f64/144._f64*(a_moyenne(im1,jm1)+a_moyenne(ip2,jm1)+a_moyenne(im1,jp2)+a_moyenne(ip2,jp2))
-		!avij=7._f64/12._f64*(a_moyenne(im1,jb)+a_moyenne(ib,jb))-1._f64/12._f64*(a_moyenne(im2,jb)+a_moyenne(ip1,jb))
-		!avip1j=7._f64/12._f64*(a_moyenne(ib,jb)+a_moyenne(ip1,jb))-1._f64/12._f64*(a_moyenne(im1,jb)+a_moyenne(ip2,jb))
-		!ahij=7._f64/12._f64*(a_moyenne(ib,jm1)+a_moyenne(ib,jb))-1._f64/12._f64*(a_moyenne(ib,jm2)+a_moyenne(ib,jp1))
-		!ahijp1=7._f64/12._f64*(a_moyenne(ib,jb)+a_moyenne(ib,jp1))-1._f64/12._f64*(a_moyenne(ib,jm1)+a_moyenne(ib,jp2))
-
-		c00=sij
-		c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
-		c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
-		c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
-		c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
-
-		res=w00*c00+w10*c10+w20*c20+w11*c11+w12*c12
-
-	else if (cas==4) then
-
-		sij=sommetshd(ib,jb)
-		sip1j=sommetshg(ip1,jb)
-		sijp1=sommetsbd(ib,jp1)
-		sip1jp1=sommetsbg(ip1,jp1)
-		avij=aretesvd(ib,jb)
-		avip1j=aretesvg(ip1,jb)
-		ahij=areteshh(ib,jb)
-		ahijp1=areteshb(ib,jp1)
-		fij=a_moyenne(ib,jb)
-		c00=sij
-
-		c10=-4._f64*sij-2._f64*sip1j+6._f64*ahij
-		c20=3._f64*sij+3._f64*sip1j-6._f64*ahij
-		c11=16._f64*sij+8._f64*sip1j-24._f64*ahij+8._f64*sijp1+4._f64*sip1jp1-12._f64*ahijp1-24._f64*avij-12._f64*avip1j+36._f64*fij
-		c12=-12._f64*sij-6._f64*sip1j+18._f64*ahij-12._f64*sijp1-6._f64*sip1jp1+18._f64*ahijp1+24._f64*avij+12._f64*avip1j-36._f64*fij
-
-		res=w00*c00+w10*c10+w20*c20+w11*c11+w12*c12
-
-	  endif
-
-	end subroutine calcule_coeffv
+  end subroutine calcule_coeffv
 
 
 
-	subroutine init_random_seed()
-		implicit none
-		sll_int32 :: i, n, heure
-		sll_int32, DIMENSION(:), ALLOCATABLE :: graine
+  subroutine init_random_seed()
+    implicit none
+    sll_int32 :: i, n, heure
+    sll_int32, DIMENSION(:), ALLOCATABLE :: graine
         
-		CALL RANDOM_SEED(size = n)
-		ALLOCATE(graine(n))
-		CALL SYSTEM_CLOCK(COUNT=heure)
-		graine = heure + 37 * (/ (i - 1, i = 1, n) /)
+    CALL RANDOM_SEED(size = n)
+    ALLOCATE(graine(n))
+    CALL SYSTEM_CLOCK(COUNT=heure)
+    graine = heure + 37 * (/ (i - 1, i = 1, n) /)
 !print*,heure
-		CALL RANDOM_SEED(PUT = graine)
-		DEALLOCATE(graine)
+    CALL RANDOM_SEED(PUT = graine)
+    DEALLOCATE(graine)
 
-	end subroutine
+  end subroutine
 
 
 

@@ -158,7 +158,7 @@ contains
     !poisson
     character(len=256) :: poisson_case
     character(len=256) :: poisson_solver
-    character(len=256) :: mudpack_method    
+    !character(len=256) :: mudpack_method    
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
 
@@ -180,6 +180,8 @@ contains
     sll_real64, dimension(:,:), pointer :: b12
     sll_real64, dimension(:,:), pointer :: b21
     sll_real64, dimension(:,:), pointer :: b22
+    sll_real64, dimension(:,:), pointer :: b1
+    sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
 !    sll_real64, dimension(:,:), allocatable :: cxx_2d
@@ -518,6 +520,8 @@ contains
         SLL_ALLOCATE(b12(Nc_x1+1,Nc_x2+1),ierr)
         SLL_ALLOCATE(b21(Nc_x1+1,Nc_x2+1),ierr)
         SLL_ALLOCATE(b22(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b1(Nc_x1+1,Nc_x2+1),ierr)
+        SLL_ALLOCATE(b2(Nc_x1+1,Nc_x2+1),ierr)
         SLL_ALLOCATE(c(Nc_x1+1,Nc_x2+1),ierr)
         
         b11 = 1._f64
@@ -546,6 +550,8 @@ contains
          b12, & 
          b21, & 
          b22, & 
+         b1, & 
+         b2, & 
          c ) 
 
       case ("SLL_MUDPACK_CURVILINEAR")     
@@ -613,6 +619,8 @@ contains
   
     print *,'# Do not use the routine init_vp4d_fake'
     print *,'#use instead initialize_vlasov_par_poisson_seq_cart'
+    print *,sim%dt
+    print *,filename
     stop
   
   end subroutine init_fake
@@ -706,11 +714,13 @@ contains
           A2)
       endif            
       
+#ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         print*,"#step= ", step
         call plot_f_polar(iplot,f,sim%mesh_2d)
         iplot = iplot+1  
       endif            
+#endif
       
       select case (sim%time_loop_case)
         case (SLL_EULER)
