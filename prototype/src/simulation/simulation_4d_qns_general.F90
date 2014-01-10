@@ -1078,14 +1078,14 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call set_time_mark(t0)  
+       call sll_set_time_mark(t0)  
 
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
  
-       time = time_elapsed_since(t0)
+       time = sll_time_elapsed_since(t0)
      
    !    print*, 'timer=', time
 !!$       if(sim%my_rank == 0) then
