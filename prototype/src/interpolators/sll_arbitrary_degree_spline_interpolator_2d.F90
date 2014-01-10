@@ -1231,6 +1231,7 @@ contains
        !interpolator%coeff_splines(1,1:sz2)   = interpolator%slope_left(1:sz2)
        !interpolator%coeff_splines(sz1,1:sz2) = interpolator%slope_right(1:sz2)
   
+
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = sz1!+1
        interpolator%size_coeffs2 = sz2
@@ -1487,12 +1488,6 @@ contains
           res2 = res2+interpolator%eta2_min-interpolator%eta2_max
        end if
        
-       if ( res1 < interpolator%eta1_min ) then 
-          res1 = res1 + (interpolator%eta1_max-interpolator%eta1_min)
-       end if
-       if ( res2 < interpolator%eta2_min ) then 
-          res2 = res2 +(interpolator%eta2_max-interpolator%eta2_min)
-       end if
 
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
@@ -1559,8 +1554,8 @@ contains
     !SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
     knot1_tmp => interpolator%t1(1:interpolator%size_t1)
     knot2_tmp => interpolator%t2(1:interpolator%size_t2)
-    tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
-    
+    tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+
     val = dvalue2d( &
          res1, &
          res2, &

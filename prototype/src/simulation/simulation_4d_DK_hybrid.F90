@@ -160,6 +160,8 @@ module sll_simulation_4d_DK_hybrid_module
      !--> 3D electric field
      sll_real64, dimension(:,:,:), pointer :: E3d_eta1_seqx1x2
      sll_real64, dimension(:,:,:), pointer :: E3d_eta2_seqx1x2
+     sll_real64, dimension(:,:,:), pointer :: E3d_x1_seqx1x2
+     sll_real64, dimension(:,:,:), pointer :: E3d_x2_seqx1x2
      sll_real64, dimension(:,:,:), pointer :: E3d_eta3_seqx3
 
      !--> For general QN solver
@@ -770,6 +772,8 @@ contains
     SLL_ALLOCATE(sim%phi3d_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     SLL_ALLOCATE(sim%E3d_eta1_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     SLL_ALLOCATE(sim%E3d_eta2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%E3d_x1_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%E3d_x2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
     logical_mesh2d => sim%transf_xy%mesh
@@ -1393,6 +1397,8 @@ contains
            sim%phi3d_seqx1x2(ieta1,ieta2,iloc3) = sim%phi2d%value_at_indices(ieta1,ieta2)
         end do
       end do
+     ! print*,'first', sim%phi3d_seqx1x2(1,:,iloc3)
+     ! print*,'second', sim%phi3d_seqx1x2(sim%Neta1,:,iloc3)
     end do
     if (sim%my_rank.eq.0) &
       call sim%phi2d%write_to_file(iloc3)
@@ -1414,6 +1420,7 @@ contains
     sll_int32  :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_real64 :: eta1, eta2, eta3
     sll_real64, dimension(:), pointer :: phi1d_seqx3_tmp
+    sll_real64, dimension(2,2)  :: matinv_jac
 
     !--> Compute E3d_eta1_seqx1x2 = -dPhi3d_seqx1x2/deta1 and 
     !-->  E3d_eta2_seqx1x2 = -dPhi3d_seqx1x2/deta2
@@ -1426,14 +1433,27 @@ contains
     do iloc3 = 1,loc3d_sz_x3
       call sim%phi2d%set_field_data( sim%phi3d_seqx1x2(:,:,iloc3) )
       call sim%phi2d%update_interpolation_coefficients( )
+     ! print*,'first', sim%phi3d_seqx1x2(1,:,iloc3)
+     ! print*,'second', sim%phi3d_seqx1x2(sim%Neta1,:,iloc3)
       do ieta2 = 1,sim%Neta2
         eta2 = sim%eta2_grid(ieta2)
         do ieta1 = 1,sim%Neta1
           eta1 = sim%eta1_grid(ieta1)
+          matinv_jac(:,:) = sim%transf_xy%inverse_jacobian_matrix(eta1,eta2) 
+
           sim%E3d_eta1_seqx1x2(ieta1,ieta2,iloc3) = &
             - sim%phi2d%first_deriv_eta1_value_at_point(eta1,eta2)
+
           sim%E3d_eta2_seqx1x2(ieta1,ieta2,iloc3) = &
             - sim%phi2d%first_deriv_eta2_value_at_point(eta1,eta2)
+
+          sim%E3d_x1_seqx1x2(ieta1,ieta2,iloc3) = &
+               matinv_jac(1,1)*sim%E3d_eta1_seqx1x2(ieta1,ieta2,iloc3) &
+               + matinv_jac(2,1)*sim%E3d_eta2_seqx1x2(ieta1,ieta2,iloc3)
+
+          sim%E3d_x2_seqx1x2(ieta1,ieta2,iloc3) = &
+               matinv_jac(1,2)*sim%E3d_eta1_seqx1x2(ieta1,ieta2,iloc3) &
+               + matinv_jac(2,2)*sim%E3d_eta2_seqx1x2(ieta1,ieta2,iloc3)
         end do
       end do
     end do
@@ -1983,6 +2003,10 @@ contains
       call sll_hdf5_write_array_2d(file_id, &
         sim%E3d_eta2_seqx1x2(:,:,ix3_diag),'E2d_eta2_xy',file_err)
       call sll_hdf5_write_array_2d(file_id, &
+        sim%E3d_x1_seqx1x2(:,:,ix3_diag),'E2d_x1_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%E3d_x2_seqx1x2(:,:,ix3_diag),'E2d_x2_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
         sim%f4d_seqx1x2(:,:,ix3_diag,ivpar_diag),'f2d_xy',file_err)
       call sll_hdf5_write_array_2d(file_id, &
         sim%f4d_seqx3x4(ix1_diag,ix2_diag,:,:),'f2d_zvpar',file_err)
@@ -2322,6 +2346,8 @@ contains
     SLL_DEALLOCATE(sim%phi3d_seqx3,ierr)
     SLL_DEALLOCATE(sim%E3d_eta1_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_eta2_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_x1_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_x2_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
     SLL_DEALLOCATE(sim%diag_masse,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)

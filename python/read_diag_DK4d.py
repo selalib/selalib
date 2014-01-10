@@ -2,52 +2,52 @@ import utils_func as ut
 import matplotlib as mp
 import matplotlib.pyplot as mpp
 
-filename = '/Users/back/selalib/prototype/build/DK4d_diag_d00002.h5'
+filename = '/Users/back/selalib/prototype/build/DK4d_diag_d00000.h5'
 print "HDF5 file read = " + filename
 f_diag = ut.loadHDF5(filename)
 
 fig = mpp.figure(figsize=(18,9))
 
-ax1 = fig.add_subplot(2,6,1)
-p1  = ax1.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.phi2d_xy)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('Phi2D_xy')
-fig.colorbar(p1)
+#ax1 = fig.add_subplot(1,1,1)
+#p1  = ax1.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.phi2d_xy)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('Phi2D_xy')
+#fig.colorbar(p1)
 
-ax2 = fig.add_subplot(2,6,2)
-p2  = ax2.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.rho2d_xy)
+ax2 = fig.add_subplot(1,3,3)
+p2  = ax2.pcolormesh(f_diag.rho2d_xy)
 mpp.xlabel('x')
 mpp.ylabel('y')
 mpp.title('rho2D_xy')
 fig.colorbar(p2)
 
-ax3 = fig.add_subplot(2,6,3)
-p3  = ax3.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.f2d_xy)
+#ax3 = fig.add_subplot(2,6,3)
+#p3  = ax3.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.f2d_xy)
+#mpp.xlabel('x')
+#mpp.ylabel('y')
+#mpp.title('f2D_xy')
+#fig.colorbar(p3)
+
+#ax4 = fig.add_subplot(2,6,4)
+#p4  = ax4.pcolormesh(f_diag.f2d_zvpar)
+#mpp.xlabel('z')
+#mpp.ylabel('vpar')#
+#mpp.title('f2D_zvpar')
+#fig.colorbar(p4)
+
+ax5 = fig.add_subplot(1,3,1)
+p5  = ax5.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.E2d_x1_xy)
 mpp.xlabel('x')
 mpp.ylabel('y')
-mpp.title('f2D_xy')
-fig.colorbar(p3)
-
-ax4 = fig.add_subplot(2,6,4)
-p4  = ax4.pcolormesh(f_diag.f2d_zvpar)
-mpp.xlabel('z')
-mpp.ylabel('vpar')#
-mpp.title('f2D_zvpar')
-fig.colorbar(p4)
-
-ax5 = fig.add_subplot(2,6,5)
-p5  = ax5.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.E2d_eta1_xy)
-mpp.xlabel('x')
-mpp.ylabel('y')
-mpp.title('E2d_eta1_xy')
+mpp.title('E2d_x1_xy')
 fig.colorbar(p5)
 
-ax6 = fig.add_subplot(2,6,6)
-p6  = ax6.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.E2d_eta2_xy)
+ax6 = fig.add_subplot(1,3,2)
+p6  = ax6.pcolormesh(f_diag.xgrid_2d,f_diag.ygrid_2d,f_diag.E2d_x2_xy)
 mpp.xlabel('x')
 mpp.ylabel('y')
-mpp.title('E2d_eta2_xy')
+mpp.title('E2d_x2_xy')
 fig.colorbar(p6)
 
 
