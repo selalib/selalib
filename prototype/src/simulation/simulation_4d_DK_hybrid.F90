@@ -1488,11 +1488,11 @@ contains
 
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     print*, 'initialize fdistribution'
     call initialize_fdistribu4d_DK(sim)
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for initialize_fdistribu4d_DK = ', elaps_time
         
@@ -1522,12 +1522,12 @@ contains
     end if
 
     !*** Computation of the rhs of QN ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call compute_charge_density(sim)
     !--> compute rho3d_seqx1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2, sim%rho3d_seqx3, sim%rho3d_seqx1x2 )
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_charge_density = ', elaps_time
 
@@ -1539,7 +1539,7 @@ contains
     end if
 
     !*** Matrix factorization for QN solver ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call factorize_mat_es( &
          sim%QNS, & 
          sim%QN_A11, &
@@ -1549,24 +1549,24 @@ contains
          sim%QN_B1,  &
          sim%QN_B2,  &
          sim%QN_C)
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for factorize_mat_es = ', elaps_time
 
     !*** Compute Phi(t=t0) by solving the QN equation ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call solve_QN(sim)
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for solve_QN = ', elaps_time
 
     !*** Compute E = -grad Phi ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call compute_Efield( sim )
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_Efield = ', elaps_time
 
@@ -1768,7 +1768,7 @@ contains
       if (sim%my_rank.eq.0) &
         print*,' ===> ITERATION = ',iter
 
-      call set_time_mark(t0)
+      call sll_set_time_mark(t0)
       !--> Advection in vpar direction'
       call advec1D_vpar(sim,0.5_f64*sim%dt)
 
@@ -1793,19 +1793,19 @@ contains
       !--> Sequential to solve the quasi-neutral equation
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
       
-      call set_time_mark(t1)
+      call sll_set_time_mark(t1)
       elaps_time_advec = elaps_time_advec + &
-        time_elapsed_between(t0,t1)
+        sll_time_elapsed_between(t0,t1)
         
       !--> Solve the quasi-neutral equation
-      call set_time_mark(t0)
+      call sll_set_time_mark(t0)
       !-----> Computation of the rhs of QN 
       call compute_charge_density(sim)
       !-----> Solve QN
       call solve_QN( sim )
-      call set_time_mark(t1)
+      call sll_set_time_mark(t1)
       elaps_time_QN = elaps_time_QN + &
-        time_elapsed_between(t0,t1)
+        sll_time_elapsed_between(t0,t1)
 
       !--> Compute the new electric field
       call compute_Efield( sim )
