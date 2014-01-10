@@ -1,6 +1,6 @@
 &mesh
-  num_cells_x1 = 30
-  num_cells_x2 = 35
+  num_cells_x1 = 60
+  num_cells_x2 = 65
   num_cells_x3 = 10
   num_cells_x4 = 64
   r_min        = 0.1
@@ -38,5 +38,5 @@
 /
 
 &diagnostics
-   diag2D_step = 0.1
+   diag2D_step = 0.0
 /
