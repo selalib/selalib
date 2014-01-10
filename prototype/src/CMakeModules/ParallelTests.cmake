@@ -49,10 +49,6 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
    
    IF(NOT STDF95)
 
-      ADD_MPI_TEST(poisson_3d_periodic_par 
-                   test_poisson_3d_periodic_par ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
-                           PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -60,6 +56,11 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 ######
 #
       IF(FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
+
+      ADD_MPI_TEST(poisson_3d_periodic_par 
+                   test_poisson_3d_periodic_par ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(poisson_3d_periodic_par 
+                           PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       ADD_MPI_TEST(poisson_per_cart_par_2d 
                    test_poisson_2d_per_cart_par ${PROCS} ${ARGS})
