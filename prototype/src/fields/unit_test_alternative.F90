@@ -23,7 +23,7 @@ program unit_test_alternative
   class(sll_coordinate_transformation_2d_base), pointer :: T
   ! either of these type declarations can be used to work. Initialization is
   ! different.
-  class(sll_scalar_field_2d_base), pointer         :: field_2d
+ ! class(sll_scalar_field_2d_base), pointer         :: field_2d
 
   class(sll_scalar_field_2d_base), pointer         :: doubly_periodic_anal
   class(sll_scalar_field_2d_base), pointer         :: periodique_dirichlet_anal
@@ -47,8 +47,8 @@ program unit_test_alternative
   ! class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
   class(sll_scalar_field_2d_base), pointer              :: rho
-  sll_real64, dimension(:,:), allocatable    :: calculated
-  sll_real64, dimension(:,:), allocatable    :: difference
+  !sll_real64, dimension(:,:), allocatable    :: calculated
+  !sll_real64, dimension(:,:), allocatable    :: difference
   sll_real64, dimension(:,:), pointer    :: tab_rho
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
@@ -56,7 +56,7 @@ program unit_test_alternative
   sll_real64  :: h1,h2
   sll_int32 :: npts1,npts2
   sll_int32 :: i,j
-  sll_int32 :: ierr
+  !sll_int32 :: ierr
 !!$  real(8), external :: test_function_perper
 !!$  real(8), external :: test_function_perper_der1
 !!$  real(8), external :: test_function_perper_der2
