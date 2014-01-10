@@ -39,8 +39,6 @@ IF(PROCESSOR_COUNT GREATER 1)
       SET_TESTS_PROPERTIES(parallel_array_initializers
 	PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      ADD_MPI_TEST(qns2d_parallel test_qn_solver_2d_parallel ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(qns2d_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    ENDIF()
 
@@ -75,6 +73,8 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
       ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      ADD_MPI_TEST(qns2d_parallel test_qn_solver_2d_parallel ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns2d_parallel PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
       ENDIF()
 
