@@ -204,6 +204,7 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_pt_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
+       first_deriv_eta1_value_at_pt_analytic = 0.0_f64
        print*,field%name, &
             'first_deriv_eta1_value_at_pt_analytic(), ERROR: ', &
             ': first derivative in eta1 is not given in the initialization'
@@ -215,12 +216,13 @@ contains   ! *****************************************************************
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64            :: first_deriv_eta2_value_at_pt_analytic
+    sll_real64            :: first_deriv_eta2_value_at_pt_analytic 
     
     if ( field%present_deriv_eta2_int ) then 
        first_deriv_eta2_value_at_pt_analytic = &
             field%first_deriv_eta2(eta1,eta2,field%params)
     else 
+       first_deriv_eta2_value_at_pt_analytic  = 0.0_f64
        print*, field%name, &
             'first_deriv_eta2_value_at_pt_analytic(), ERROR: ', &
             ': first derivative in eta2 is not given in the initialization'
@@ -243,6 +245,7 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_index_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
+       first_deriv_eta1_value_at_index_analytic = 0.0_f64
        print*,field%name, &
             'first_deriv_eta1_value_at_index_analytic(): ERROR, ', &
             'first derivative in eta1 is not given in the initialization'

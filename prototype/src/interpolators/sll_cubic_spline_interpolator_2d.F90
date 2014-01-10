@@ -229,6 +229,18 @@ contains
     sll_real64, dimension(:), intent(in),optional   :: eta2_coords
     sll_int32, intent(in), optional                 :: size_eta1_coords
     sll_int32, intent(in),optional                  :: size_eta2_coords
+    if(present(eta1_coords))then
+      !print *,'#Warning eta1_coords not used'
+    endif
+    if(present(eta2_coords))then
+      !print *,'#Warning eta2_coords not used'
+    endif
+    if(present(size_eta1_coords))then
+      !print *,'#Warning size_eta1_coords not used'
+    endif
+    if(present(size_eta2_coords))then
+      !print *,'#Warning size_eta2_coords not used'
+    endif    
     call compute_spline_2D( data_array, interpolator%spline )
   end subroutine
 
@@ -449,6 +461,33 @@ contains
     sll_int32, intent(in), optional :: size_knots2
     print *, 'set_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.'
+    print *,interpolator%npts1
+    if(present(coeffs_1d))then
+      print *,'coeffs_1d present but not used'
+    endif     
+    if(present(coeffs_2d))then
+      print *,'coeffs_2d present but not used'
+    endif     
+    if(present(coeff2d_size1))then
+      print *,'coeff2d_size1 present but not used'
+    endif     
+    if(present(coeff2d_size2))then
+      print *,'coeff2d_size2 present but not used'
+    endif     
+    if(present(knots1))then
+      print *,'knots1 present but not used'
+    endif     
+    if(present(knots2))then
+      print *,'knots2 present but not used'
+    endif     
+    if(present(size_knots1))then
+      print *,'size_knots1 present but not used'
+    endif     
+    if(present(size_knots2))then
+      print *,'size_knots2 present but not used'
+    endif     
+
+
     stop
   end subroutine !set_coefficients_cs2d
   
@@ -485,7 +524,10 @@ contains
     sll_real64, dimension(:,:), pointer            :: get_coefficients_cs2d     
     
     print *, 'get_coefficients_cs2d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    get_coefficients_cs2d = 0._f64
+    print *,interpolator%npts1    
+    stop      
   end function get_coefficients_cs2d
 #endif
 
@@ -494,6 +536,8 @@ contains
     logical :: res
     res = .false.
     print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
+    print *,'#',interpolator%npts1
+    !stop
   end function coefficients_are_set_cs2d
 
 end module sll_cubic_spline_interpolator_2d

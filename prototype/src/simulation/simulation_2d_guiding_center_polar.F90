@@ -158,7 +158,7 @@ contains
     !poisson
     character(len=256) :: poisson_case
     character(len=256) :: poisson_solver
-    character(len=256) :: mudpack_method    
+    !character(len=256) :: mudpack_method    
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
 
@@ -619,6 +619,8 @@ contains
   
     print *,'# Do not use the routine init_vp4d_fake'
     print *,'#use instead initialize_vlasov_par_poisson_seq_cart'
+    print *,sim%dt
+    print *,filename
     stop
   
   end subroutine init_fake

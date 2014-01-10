@@ -37,7 +37,7 @@ contains
         real(wp) :: ar_value
         integer :: ai_A, ai_Aprime
         !local var
-        integer :: li_result, li_i, li_j, li_k
+        integer :: li_result, li_j, li_k
 
         li_result = 0
 
@@ -69,7 +69,7 @@ contains
         integer :: ai_A, ai_Aprime
         logical :: al_flag
         !local var
-        integer :: li_result, li_i, li_j, li_k
+        integer :: li_result, li_j, li_k
 
         li_result = 0
 

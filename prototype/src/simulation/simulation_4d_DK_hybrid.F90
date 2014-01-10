@@ -1844,8 +1844,8 @@ contains
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    sll_int32 :: ix1_diag, ix2_diag
-    sll_int32 :: ix3_diag, ivpar_diag
+    sll_int32  :: ix1_diag, ix2_diag
+    sll_int32  :: ix3_diag, ivpar_diag
 
     !--> diagnostics norm
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_masse_result
@@ -1860,6 +1860,9 @@ contains
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_tot_result
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_heat_flux_result
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_relative_error_nrj_tot_result
+
+    sll_int32  :: idum
+    sll_real64 :: dum
     
     !--> For initial profile HDF5 saving
     integer             :: file_err
@@ -1957,10 +1960,14 @@ contains
                0, &
                diag_nrj_tot_result )
 
-    diag_relative_error_nrj_tot_result(:) = &
-         (diag_nrj_tot_result(:)-diag_nrj_tot_result(1))/&
-         sqrt(0.5*( (diag_nrj_kin_result(:)-diag_nrj_kin_result(1) )**2 + &
-                    (diag_nrj_pot_result(:)-diag_nrj_pot_result(1) )**2 ) ) 
+    do idum = 1, sim%count_save_diag+1
+       dum  = sqrt(.5*((diag_nrj_kin_result(idum)-diag_nrj_kin_result(1))**2 + &
+                       (diag_nrj_pot_result(idum)-diag_nrj_pot_result(1))**2 ) ) 
+
+       if ( dum /= 0.0_f64) &
+          diag_relative_error_nrj_tot_result(idum) = &
+             (diag_nrj_tot_result(idum)-diag_nrj_tot_result(1))/dum
+    end do
 
     write(filename_HDF5,'(A,'//numfmt//',A)') &
       "DK4d_diag", sim%count_save_diag, ".h5"
@@ -2264,6 +2271,7 @@ contains
                            abs(delta_f)**2 * val_jac * &
                            delta_eta1*delta_eta2*delta_eta3*delta_vpar
                       
+                      if ( delta_f /= 0.0_f64) &
                       entropy_kin = entropy_kin - &
                         delta_f* log(abs(delta_f)) * val_jac * &
                         delta_eta1*delta_eta2*delta_eta3*delta_vpar

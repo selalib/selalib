@@ -227,8 +227,7 @@ my_mg%ipost  = ipost
 my_mg%iresw  = iresw
 my_mg%isol   = 2
 
-call mgd2_solver(my_block,my_mg,p,f,r,work, &
-               rro, iter,.true.,nerror)
+call mgd2_solver(my_block,my_mg,p,f,r,work, rro, iter,.true.,nerror)
 
 if (nerror.eq.1) goto 1000
 ! compare numerical and exact solutions

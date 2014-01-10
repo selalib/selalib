@@ -361,7 +361,7 @@ contains
 
     ! Apply the kernel 
     do j=1, npy_loc-1 ! last point was not transformed
-       do i=1, npx_loc
+       do i=1, npx_loc-1
           ! Make sure that the first mode is set to zero so that we get an
           ! answer with zero mean value. This step assumes that the (1,1) point
           ! will always be at the border of any splitting of the domains. This 
@@ -604,7 +604,7 @@ contains
     sll_real64, dimension(:,:)     :: phi    !< electric potential
     sll_int32                      :: nx
     sll_int32                      :: ny
-    sll_int32                      :: i
+    !sll_int32                      :: i
 
     ! Note that this checks for strict sizes, not an array being bigger
     ! than a certain size, but exactly a desired size... This may be a bit
