@@ -38,6 +38,8 @@ implicit none
       initialize_non_uniform_cubic_splines_1d_advector
     procedure, pass(adv) :: advect_1d_constant => &
       non_uniform_cubic_splines_advect_1d_constant
+    procedure, pass(adv) :: advect_1d => &
+      non_uniform_cubic_splines_advect_1d
   
   end type non_uniform_cubic_splines_1d_advector
    
@@ -179,6 +181,32 @@ contains
 !    output(num_cells+1) = output(1)
       
   end subroutine non_uniform_cubic_splines_advect_1d_constant
+
+  subroutine non_uniform_cubic_splines_advect_1d(&
+    adv, &
+    A, &
+    dt, &
+    input, &
+    output)
+    class(non_uniform_cubic_splines_1d_advector) :: adv
+    sll_real64, dimension(:), intent(in) :: A
+    sll_real64, intent(in) :: dt 
+    sll_real64, dimension(:), intent(in) :: input
+    sll_real64, dimension(:), intent(out) :: output      
+    
+    print *,'#non_uniform_cubic_splines_advect_1d'
+    print *,'#not implemented for the moment'
+    print *,maxval(A)
+    print *,dt
+    print *,maxval(input)
+    output= 0._f64
+    print *,adv%num_cells
+    stop
+           
+  end subroutine non_uniform_cubic_splines_advect_1d
+
+
+
 
   subroutine constant_advection_spl_non_unif_per(f,alpha,node_positions,N)
     !alpha and node_positions are normalized to [0,1]
