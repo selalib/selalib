@@ -94,7 +94,7 @@ end if
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
     sll_real64, optional, intent(in) :: eta_max
-    sll_real64 :: delta
+    !sll_real64 :: delta
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
@@ -231,9 +231,9 @@ end if
     sll_real64, optional, intent(in) :: eta2_max
     sll_real64, optional, intent(in) :: eta3_min
     sll_real64, optional, intent(in) :: eta3_max
-    sll_real64 :: delta1
-    sll_real64 :: delta2
-    sll_real64 :: delta3
+    !sll_real64 :: delta1
+    !sll_real64 :: delta2
+    !sll_real64 :: delta3
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)

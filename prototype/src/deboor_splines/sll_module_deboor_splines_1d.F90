@@ -812,8 +812,8 @@ contains
     implicit none
     ! INPUT
     sll_int32  :: ai_nx, ai_kx
-    sll_real64, dimension ( ai_nx) :: apr_taux		
-    sll_real64, dimension ( ai_nx) :: apr_g	
+    sll_real64, dimension ( ai_nx) :: apr_taux
+    sll_real64, dimension ( ai_nx) :: apr_g
     ! OUTPUT
     sll_real64, dimension ( ai_nx  ) :: apr_Bcoef
     sll_real64, dimension ( ai_nx + ai_kx ) :: apr_tx
@@ -884,14 +884,14 @@ contains
     ! INPUT
     sll_real64 :: ar_L 
     sll_int32  :: ai_nx, ai_kx
-    sll_real64, dimension ( ai_nx) :: apr_taux		
-    sll_real64, dimension ( ai_nx) :: apr_g	
+    sll_real64, dimension ( ai_nx) :: apr_taux
+    sll_real64, dimension ( ai_nx) :: apr_g
     ! OUTPUT
     sll_real64, dimension ( ai_nx ) :: apr_Bcoef
     sll_real64, dimension ( ai_nx + ai_kx) :: apr_tx
     ! LOCAL VARIABLES		
     sll_real64, dimension ( ai_nx) :: lpr_taux
-    sll_real64, dimension ( ai_nx) :: lpr_g	
+    sll_real64, dimension ( ai_nx) :: lpr_g
     sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work
     sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
     sll_int32 :: iflag
@@ -903,10 +903,10 @@ contains
   
     
     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )
-    lpr_taux ( ai_nx ) = apr_taux ( ai_nx )! apr_taux ( 1 ) + ar_L
+    lpr_taux ( ai_nx ) = apr_taux ( ai_nx ) !apr_taux ( 1 ) + ar_L
     
     lpr_g ( 1 : ai_nx - 1  ) = apr_g ( 1 : ai_nx - 1 )
-    lpr_g ( ai_nx) = apr_g ( ai_nx )	!apr_g ( 1 )		
+    lpr_g ( ai_nx) = apr_g ( ai_nx ) !apr_g ( 1 )		
     
     
     apr_tx ( 1 : ai_kx ) = lpr_taux ( 1 )
