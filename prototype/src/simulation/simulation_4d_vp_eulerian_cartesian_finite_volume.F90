@@ -833,7 +833,7 @@ subroutine run_vp_cart(sim)
     write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
   call sll_new_file_id(file_id_4,ierr)
 
-    if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
+    if((sim%test==1).or.(sim%test==9).or.(sim%test==5).or.(sim%test==10)) then
 !!$       write(*,*) 'my_rank =', sim%my_rank, 'x1 =', loc_sz_x1
 !!$       write(*,*) 'my_rank =', sim%my_rank, 'x2 =', loc_sz_x2
        sim%buf1 => get_buffer(sim%comm,1) 
@@ -1278,7 +1278,7 @@ subroutine run_vp_cart(sim)
     allocate (plotf2d_c1(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-          plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
+          plotf2d_c1(i,j) = max(0.0_f64,sim%fn_v1v2(j,1,i,1))
           if (plotf2d_c1(i,j).gt.100) then
              write(*,*) ' plotf2d_c1(i,j)',  plotf2d_c1(i,j)
           end if
@@ -1589,6 +1589,8 @@ subroutine run_vp_cart(sim)
        write(*,*) 'landau damping 2d test case'
     else if (sim%test .eq. 6) then
        write(*,*) 'the xvx-transport test case'
+    else if (sim%test .eq. 10) then
+       write(*,*) 'the two stream instability 1D test case'
     endif
 
     if (abs(sim%eps).gt.1.e-10_f64 ) then

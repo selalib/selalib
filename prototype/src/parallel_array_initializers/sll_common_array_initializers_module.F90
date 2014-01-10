@@ -583,6 +583,46 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
   end function sll_landau_1d_xvx_initializer_v1v2x1x2
 
+function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_twostream_1d_xvx_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64  :: t,v0
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_twostream_1d_initializer_v1v2x1x2, error: the params array', &
+            'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    v0=3.0_f64
+    !kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx=0.2_f64
+    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+
+    sll_twostream_1d_xvx_initializer_v1v2x1x2 = factor1/2 * &
+         (1.0_f64+eps*cos(kx*x))*(exp(-0.5_f64*((vx-v0)**2))+ &
+         exp(-0.5_f64*((vx+v0)**2)))
+  end function sll_twostream_1d_xvx_initializer_v1v2x1x2
+
   function sll_landau_1d_yvy_initializer_v1v2x1x2( vx, vy, x, y, params ) 
     sll_real64 :: sll_landau_1d_yvy_initializer_v1v2x1x2
     sll_real64, intent(in) :: x
