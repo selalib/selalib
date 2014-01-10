@@ -54,8 +54,6 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   ADD_TEST(NAME qns2d COMMAND test_qn_solver_2d)
-   SET_TESTS_PROPERTIES(qns2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 #consider merging the following 2 tests
    ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
