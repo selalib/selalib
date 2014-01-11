@@ -60,6 +60,11 @@ INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 INCLUDE(HDF5Config)
 
+IF(MPI_MODULE_ENABLED)
+   INCLUDE(ProcessorCount)
+   INCLUDE(POEConfig)
+ENDIF()
+
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
@@ -192,8 +197,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    IF(MPI_MODULE_ENABLED)
 
-      INCLUDE(ProcessorCount)
-      INCLUDE(POEConfig)
       INCLUDE(ParallelTests)
 
    ENDIF()

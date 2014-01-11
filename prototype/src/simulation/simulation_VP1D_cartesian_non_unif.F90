@@ -46,6 +46,11 @@ contains
     ! are to be kept inside the sim object. Look at the parallel vp4d simulation
     ! for an example.
     print *, 'This is a dummy function. Needs implementation.'
+    
+    print *,filename
+    print *,sim%dt
+    stop
+    
   end subroutine VP1D_cart_non_unif_init
 
   ! Note that the following function has no local variables, which is silly...
@@ -119,7 +124,8 @@ contains
     spl_per_x2 =>  new_cubic_nonunif_spline_1D( N_x2, SLL_PERIODIC)
 
     spl_per_x1_poisson =>  new_cubic_nonunif_spline_1D( N_x1_poisson, SLL_PERIODIC)
-
+    
+    sim%dt = dt 
 
     SLL_ALLOCATE(node_positions_x1(N_x1+1),err)
     SLL_ALLOCATE(node_positions_x2(N_x2+1),err)

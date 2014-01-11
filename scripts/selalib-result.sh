@@ -1,3 +1,9 @@
+# swirling deformation flow (analytical field)
+
+./bin/test_2d_af_cartesian ../selalib/prototype/src/simulation/afsim2d_cartesian_sdf
+#gnuplot -persist ../selalib/prototype/src/simulation/afsim2d_cartesian_sdf.gnu
+
+
 #guiding center simulations
 
 ctest --verbose -R sim2d_gc_cart
@@ -16,6 +22,15 @@ gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear.gnu
 ctest --verbose -R sim2d_vp_cart
 #./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_input
 gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian.gnu
+
+#for bump on tail
+mpirun -np 2 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_bot
+gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_bot.gnu
+
+#for two stream instability
+mpirun -np 2 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_tsi
+gnuplot -persist ../selalib/prototype/src/simulation/vpsim2d_cartesian_tsi.gnu
+
 
 #for keen
 ./bin/test_2d_vp_cartesian ../selalib/prototype/src/simulation/vpsim2d_cartesian_keen

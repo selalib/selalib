@@ -1,5 +1,6 @@
 module fft_module
   implicit none
+
   type, public :: fftclass
      real, dimension(:), pointer ::  coefc, work, workc
      double precision, dimension(:), pointer :: coefd, workd, coefcd
