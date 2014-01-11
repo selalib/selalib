@@ -434,8 +434,8 @@ contains
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
-   sll_real64, dimension(:,:), pointer :: phi_values
-   sll_real64, dimension(:,:), pointer :: rho_values
+   !sll_real64, dimension(:,:), pointer :: phi_values
+   !sll_real64, dimension(:,:), pointer :: rho_values
    sll_real64, dimension(:,:)          :: a11_values
    sll_real64, dimension(:,:)          :: a12_values
    sll_real64, dimension(:,:)          :: a21_values
@@ -443,8 +443,8 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
-   sll_int32 :: np_eta1
-   sll_int32 :: np_eta2
+   !sll_int32 :: np_eta1
+   !sll_int32 :: np_eta2
    sll_int32 :: ierr
    
    SLL_ALLOCATE(poisson,ierr)
@@ -484,8 +484,8 @@ contains
     sll_real64 :: delta2
     sll_real64 :: eta1_min
     sll_real64 :: eta2_min
-    sll_real64 :: eta1
-    sll_real64 :: eta2
+    !sll_real64 :: eta1
+    !sll_real64 :: eta2
     sll_int32  :: i,j
     sll_int32  :: nc_eta1
     sll_int32  :: nc_eta2
@@ -531,9 +531,22 @@ contains
       sll_real64,dimension(:,:),intent(out) :: E1
       sll_real64,dimension(:,:),intent(out) :: E2
       
+      E1 = 0.0_f64
+      E2 = 0.0_f64
       print *,'#compute_E_from_rho_2d_elliptic_solver'      
       print *,'#not implemented for the moment'
+      E1 = 0._f64
+      E2 = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%elliptic_solver)))then
+        print *,'#poisson%elliptic_solver is not associated'
+      endif
+      
       stop
+      
+      
+      
       
       !call solve( poisson%poiss, E1, E2, rho)
       

@@ -40,6 +40,8 @@ implicit none
       initialize_periodic_1d_advector
     procedure, pass(adv) :: advect_1d_constant => &
       periodic_advect_1d_constant
+    procedure, pass(adv) :: advect_1d => &
+      periodic_advect_1d_fake
   
   end type periodic_1d_advector
    
@@ -138,6 +140,30 @@ contains
     output(num_cells+1) = output(1)
       
   end subroutine periodic_advect_1d_constant
+
+
+  subroutine periodic_advect_1d_fake(&
+    adv, &
+    A, &
+    dt, &
+    input, &
+    output)
+    class(periodic_1d_advector) :: adv
+    sll_real64, dimension(:), intent(in) :: A
+    sll_real64, intent(in) :: dt 
+    sll_real64, dimension(:), intent(in) :: input
+    sll_real64, dimension(:), intent(out) :: output      
+    
+    print *,'#periodic_advect_1d_fake'
+    print *,'#not implemented'
+    print *,maxval(A)
+    print *,dt
+    print *,maxval(input)
+    output= 0._f64
+    print *,adv%num_cells
+    stop
+           
+  end subroutine periodic_advect_1d_fake
 
 
 

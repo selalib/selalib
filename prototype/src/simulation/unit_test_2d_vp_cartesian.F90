@@ -20,7 +20,7 @@ program vlasov_poisson_2d
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Start time mark t0'
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     print *, '#Booting parallel environment...'
   endif
 
@@ -36,7 +36,7 @@ program vlasov_poisson_2d
 
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#reached end of vp2d test'
-    time = time_elapsed_since(t0)
+    time = sll_time_elapsed_since(t0)
     print *, '#time elapsed since t0 : ',time
     print *, '#PASSED'
   endif

@@ -1339,25 +1339,25 @@ contains
   function plane( x, y )
     sll_real64 :: plane
     sll_real64, intent(in) :: x, y
-    plane = 2.0*x + 1.0
+    plane = 2.0*x + 1.0+0._f64*y
   end function plane
 
   function plane_deriv( x, y )
     sll_real64 :: plane_deriv
     sll_real64, intent(in) :: x, y
-    plane_deriv = 2.0
+    plane_deriv = 2.0+ 0._f64*x+0._f64*y
   end function plane_deriv
 
   function plane2( x, y)
     sll_real64 :: plane2
     sll_real64, intent(in) :: x, y
-    plane2 = 2.0*y + 1.0
+    plane2 = 2.0*y + 1.0+ 0._f64*x
   end function plane2
 
   function plane2_deriv( x, y )
     sll_real64 :: plane2_deriv
     sll_real64, intent(in) :: x, y
-    plane2_deriv = 2.0
+    plane2_deriv = 2.0+ 0._f64*x+0._f64*y
   end function plane2_deriv
 
   function plane3( x, y)
@@ -1369,13 +1369,13 @@ contains
   function plane3_deriv_x( x, y )
     sll_real64 :: plane3_deriv_x
     sll_real64, intent(in) :: x, y
-    plane3_deriv_x = 2.0
+    plane3_deriv_x = 2.0+ 0._f64*x+0._f64*y
   end function plane3_deriv_x
 
   function plane3_deriv_y( x, y )
     sll_real64 :: plane3_deriv_y
     sll_real64, intent(in) :: x, y
-    plane3_deriv_y = 2.0
+    plane3_deriv_y = 2.0+ 0._f64*x+0._f64*y
   end function plane3_deriv_y
 
   function polar_x( eta1, eta2 )
@@ -1393,7 +1393,7 @@ contains
   function deriv1_polar_x( eta1, eta2 )
     sll_real64 :: deriv1_polar_x
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
+    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)+0._f64*eta1
   end function deriv1_polar_x
 
   function deriv2_polar_x( eta1, eta2 )
@@ -1405,7 +1405,7 @@ contains
   function deriv1_polar_y( eta1, eta2 )
     sll_real64 :: deriv1_polar_y
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
+    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)+0._f64*eta1
   end function deriv1_polar_y
 
   function deriv2_polar_y( eta1, eta2 )

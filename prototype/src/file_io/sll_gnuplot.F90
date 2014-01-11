@@ -93,6 +93,63 @@ subroutine sll_gnuplot_write(array,array_name,error)
 
 end subroutine sll_gnuplot_write
 
+
+subroutine sll_gnuplot_write_1d( &
+  array, &
+  x_array, &
+  array_name, &
+  iplot)
+
+   sll_real64, dimension(:), intent(in) :: array      !< data
+   sll_real64, dimension(:), intent(in) :: x_array      !< data
+   character(len=*), intent(in)         :: array_name !< field name
+   sll_int32,intent(in),optional :: iplot
+   sll_int32               :: error      !< error code
+   sll_int32                            :: file_id    !< file unit number
+   sll_int32                            :: npoints
+   sll_int32                            :: ipoints    
+   logical                              :: lopen
+   character(len=4)      :: cplot
+   
+   npoints = size(array)
+
+   error=0
+
+   do 100 file_id=20,99
+
+      inquire(unit=file_id,opened=lopen)
+      if(lopen) then
+         cycle
+      else
+         open(file_id,status='SCRATCH',err=100)
+         close(file_id,status='DELETE',err=100)
+         goto 200
+      end if
+ 
+   100 continue
+   error=1
+   200 continue
+   error=0
+   if(present(iplot))then
+     call int2string(iplot,cplot)
+     open(file_id,FILE=trim(array_name)//cplot//".dat",FORM='FORMATTED',IOSTAT=error)
+   else
+     open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
+   endif
+   rewind(file_id)
+
+   !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
+   do ipoints = 1, npoints
+      write(file_id,*) x_array(ipoints), array(ipoints)
+   end do
+   !write(file_id,"(a)")"e"
+   !write(file_id,"(a)")"pause -1 'Hit return to quit'"
+   close(file_id)
+
+
+end subroutine sll_gnuplot_write_1d
+
+
 !> write a data file plotable by gnuplot to visualize a 2d field.
 !> Axis are rectangular and spacing is constant
 subroutine sll_gnuplot_corect_2d(xmin, xmax, nx, ymin, ymax, ny, &

@@ -28,8 +28,8 @@ module sll_module_advection_1d_base
   contains
     procedure(signature_advect_1d_constant), deferred, pass(adv) :: &
       advect_1d_constant
-!    procedure(signature_advect_1d), deferred, pass(advector) :: &
-!      advect_1d
+    procedure(signature_advect_1d), deferred, pass(adv) :: &
+      advect_1d
   
   end type sll_advection_1d_base
 
@@ -57,21 +57,22 @@ module sll_module_advection_1d_base
 
 ! for A non constant in 1d
 
-! abstract interface
-!    subroutine signature_advect_1d(&
-!       advector, &
-!       A, &
-!       dt, &
-!       input, &
-!       output)
-!      use sll_working_precision
-!      import sll_module_advection_1d_base       
-!      class(sll_advection_1d_base) :: advector
-!      sll_real64, dimension(:) :: A
-!      sll_real64, dimension(:), intent(in) :: input
-!      sll_real64, dimension(:), intent(out) :: output
-!   end subroutine signature_advect_1d
-! end interface
+ abstract interface
+    subroutine signature_advect_1d(&
+       adv, &
+       A, &
+       dt, &
+       input, &
+       output)
+      use sll_working_precision
+      import sll_advection_1d_base       
+      class(sll_advection_1d_base) :: adv
+      sll_real64, dimension(:), intent(in) :: A
+      sll_real64, intent(in) :: dt 
+      sll_real64, dimension(:), intent(in) :: input
+      sll_real64, dimension(:), intent(out) :: output
+   end subroutine signature_advect_1d
+ end interface
 
 
 
