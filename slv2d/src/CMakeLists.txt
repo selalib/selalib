@@ -94,8 +94,8 @@ SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
               geometry.F90
               maxwell2dfdtd.F90
-              poisson2dpp_seq.F90
               fft_module.F90
+              poisson2dpp_seq.F90
               poisson2d_periodic.F90
               precision.F90
               splinenn.F90

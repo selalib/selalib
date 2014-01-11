@@ -186,6 +186,9 @@ contains
         end do
       end do
     else
+      if(present(integration_func_params))then
+        print *,'integration_func_params is present'
+      endif
       print *,'#not implemented yet'
       print *,'#in compute_reduction_4d_to_2d_direction34'
       stop
@@ -275,6 +278,9 @@ contains
         end do
       end do
     else
+      if(present(integration_func_params))then
+        print *,'integration_func_params is present'
+      endif
       print *,'#not implemented yet'
       print *,'#in compute_reduction_4d_to_2d_direction12'
       stop
@@ -347,6 +353,9 @@ contains
 
           res = res*delta1
     else
+      if(present(integration_func_params))then
+        print *,'integration_func_params is present'
+      endif
       print *,'#not implemented yet'
       print *,'#in compute_reduction_2d_to_0d'
       stop
@@ -369,6 +378,12 @@ contains
     sll_real64, dimension(:), intent(in) ,optional :: func_params
     sll_real64 :: res
     sll_int32 :: i
+    
+    if(present(func_params))then
+      if(size(func_params)>100)then
+        print *,'#size of func_params is >100'
+      endif
+    endif
     
     res = 0.5*(data(1)+data(Npts))
     do i=2,Npts-1

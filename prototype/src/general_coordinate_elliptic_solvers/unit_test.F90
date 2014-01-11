@@ -1,19 +1,22 @@
 program test_general_elliptic_solver
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-#ifdef _UMFPACK
-  use sll_general_coordinate_elliptic_solver_module_umfpack
-#else
-  use sll_general_coordinate_elliptic_solver_module
-#endif
   use sll_module_scalar_field_2d_alternative
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_timer
 
-#include "sll_memory.h"
-#include "sll_working_precision.h"
+
+#ifdef _UMFPACK
+  use sll_general_coordinate_elliptic_solver_module_umfpack
+#else
+  use sll_general_coordinate_elliptic_solver_module
+#endif
+
   implicit none
 
 #define SPLINE_DEG1 3
@@ -44,7 +47,7 @@ program test_general_elliptic_solver
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
   sll_real64 :: t1i, t1e, t2i, t2e, t3i, t3e, t4i, t4e, t5i, t5e, t6i, t6e, &
-       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i,t55e,t55i
+       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i
   ! sll_real64 :: t105e,t105i,t115e,t115i,t125i,t125e
   real(8), external :: func_zero
   real(8), external :: func_one
@@ -58,7 +61,7 @@ program test_general_elliptic_solver
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), pointer :: values
   sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
-  sll_real64 :: acc10,acc11,acc12,acc95,acc55
+  sll_real64 :: acc10,acc11,acc12,acc95
   sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4,normL2_5,normL2_6
   sll_real64 :: normL2_7,normL2_8,normL2_9,normL2_95,normL2_10,normL2_11,normL2_12
   sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4,normH1_5,normH1_6
@@ -71,7 +74,6 @@ program test_general_elliptic_solver
   sll_real64, dimension(:),   allocatable    :: point1
   sll_real64, dimension(:),   allocatable    :: point2
 !  sll_real64, dimension(:,:), pointer        :: test_coeff
-  sll_real64, dimension(2,2) :: jac_m
   sll_real64 :: val_jac
   sll_int32 :: ierr
   sll_int32  :: i, j
@@ -108,7 +110,6 @@ program test_general_elliptic_solver
   real(8), external :: source_term_chgt_adim
   real(8) :: integrale_solution
   real(8) :: integrale_solution_exacte
-  real(8) :: integrale__deriv_solution
  ! sll_real64 :: node_val1
   !sll_real64 :: epsi
   !sll_real64 :: epsi1
@@ -281,7 +282,7 @@ program test_general_elliptic_solver
 
   print *, 'initialized fields...'
 
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call initialize_general_elliptic_solver( &
        es, &
@@ -300,11 +301,11 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
  
-  t1i = time_elapsed_since(t_reference)
+  t1i = sll_time_elapsed_since(t_reference)
  
   print *, 'Initialized ES object'
 
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   ! compute matrix the field
  call factorize_mat_es(&
@@ -324,7 +325,7 @@ program test_general_elliptic_solver
        rho,&
        phi)
   
-  t1e = time_elapsed_since(t_reference)
+  t1e = sll_time_elapsed_since(t_reference)
 
   !print *, 'Completed solution',es%phi_vec
 !  print*, 'reorganizaton of splines coefficients of solution'
@@ -551,7 +552,7 @@ program test_general_elliptic_solver
   print *, 'initialized fields...'
 !  print *, 'a = ', es%csr_mat%opr_a
 
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call initialize_general_elliptic_solver( &
        es, &
@@ -569,10 +570,10 @@ program test_general_elliptic_solver
        ETA1MAX, &
        ETA2MIN, &
        ETA2MAX)
-  t2i = time_elapsed_since(t_reference) 
+  t2i = sll_time_elapsed_since(t_reference) 
   print *, 'Initialized ES object'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
  call factorize_mat_es(&
        es, &
@@ -593,7 +594,7 @@ program test_general_elliptic_solver
   
   !print *, 'Completed solution',es%phi_vec
   
-  t2e = time_elapsed_since(t_reference)
+  t2e = sll_time_elapsed_since(t_reference)
   
 !  print *, 'Compare the values of the transformation at the nodes: '
   
@@ -808,7 +809,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call initialize_general_elliptic_solver( &
        es, &
@@ -827,11 +828,11 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t3i = time_elapsed_since(t_reference) 
+  t3i = sll_time_elapsed_since(t_reference) 
 
   print *, 'Initialized ES object'
 
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call factorize_mat_es(&
        es, &
@@ -853,7 +854,7 @@ program test_general_elliptic_solver
   !call interp_2d%set_coefficients( es%phi_vec)
  
   
-  t3e = time_elapsed_since(t_reference)
+  t3e = sll_time_elapsed_since(t_reference)
 
 
   acc3 = 0.0_f64
@@ -1063,7 +1064,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -1082,10 +1083,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t4i = time_elapsed_since(t_reference) 
+  t4i = sll_time_elapsed_since(t_reference) 
   print *, 'Initialized ES object'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call factorize_mat_es(&
        es, &
@@ -1102,7 +1103,7 @@ program test_general_elliptic_solver
        es,&
        rho,&
        phi)
-  t4e = time_elapsed_since(t_reference) 
+  t4e = sll_time_elapsed_since(t_reference) 
   
   
   acc4 = 0.0_f64
@@ -1314,7 +1315,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -1333,10 +1334,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t5i = time_elapsed_since(t_reference) 
+  t5i = sll_time_elapsed_since(t_reference) 
   print *, 'Initialized ES object'
   
-  call set_time_mark(t_reference)  
+  call sll_set_time_mark(t_reference)  
 
   call factorize_mat_es(&
        es, &
@@ -1355,7 +1356,7 @@ program test_general_elliptic_solver
        phi)
   !print *, 'Completed solution',es%phi_vec
   
-  t5e = time_elapsed_since(t_reference)  
+  t5e = sll_time_elapsed_since(t_reference)  
   
   !  print *, 'Compare the values of the transformation at the nodes: '
   
@@ -1583,7 +1584,7 @@ program test_general_elliptic_solver
   
   !  print *, 'a = ', es%csr_mat%opr_a
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call initialize_general_elliptic_solver( &
        es, &
@@ -1602,11 +1603,11 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
 
-  t6i = time_elapsed_since(t_reference) 
+  t6i = sll_time_elapsed_since(t_reference) 
   
   print *, 'Initialized ES object'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call factorize_mat_es(&
        es, &
@@ -1623,7 +1624,7 @@ program test_general_elliptic_solver
        es,&
        rho,&
        phi)
-  t6e = time_elapsed_since(t_reference)
+  t6e = sll_time_elapsed_since(t_reference)
   
   
   !  print *, 'Compare the values of the transformation at the nodes: '
@@ -1850,7 +1851,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   call initialize_general_elliptic_solver( &
        es, &
        SPLINE_DEG1, &
@@ -1868,11 +1869,11 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t7i = time_elapsed_since(t_reference) 
+  t7i = sll_time_elapsed_since(t_reference) 
   
   print *, 'Initialized ES object'
 
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call factorize_mat_es(&
        es, &
@@ -1890,7 +1891,7 @@ program test_general_elliptic_solver
        rho,&
        phi)
 !!$ !!$
-  t7e = time_elapsed_since(t_reference)
+  t7e = sll_time_elapsed_since(t_reference)
   
   
 !  print *, 'Compare the values of the transformation at the nodes: '
@@ -2116,7 +2117,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -2135,10 +2136,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t8i = time_elapsed_since(t_reference) 
+  t8i = sll_time_elapsed_since(t_reference) 
   
   print *, 'Initialized ES object'
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call factorize_mat_es(&
        es, &
@@ -2158,7 +2159,7 @@ program test_general_elliptic_solver
   
   !print *, 'Completed solution',es%phi_vec
   
-  t8e = time_elapsed_since(t_reference)
+  t8e = sll_time_elapsed_since(t_reference)
   
   
   
@@ -2433,7 +2434,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -2452,10 +2453,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t95i = time_elapsed_since(t_reference) 
+  t95i = sll_time_elapsed_since(t_reference) 
   
   print *, 'Initialized ES object'
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call factorize_mat_es(&
        es, &
@@ -2475,7 +2476,7 @@ program test_general_elliptic_solver
   
   !print *, 'Completed solution',es%phi_vec
   
-  t95e = time_elapsed_since(t_reference)
+  t95e = sll_time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
@@ -2753,7 +2754,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -2772,10 +2773,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t9i = time_elapsed_since(t_reference) 
+  t9i = sll_time_elapsed_since(t_reference) 
   
   print *, 'Initialized ES object'
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
 
   call factorize_mat_es(&
@@ -2795,7 +2796,7 @@ program test_general_elliptic_solver
        phi)
   !print *, 'Completed solution',es%phi_vec
   
-  t9e = time_elapsed_since(t_reference)
+  t9e = sll_time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
@@ -3069,7 +3070,7 @@ program test_general_elliptic_solver
   
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -3088,10 +3089,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
 
-  t10i = time_elapsed_since(t_reference) 
+  t10i = sll_time_elapsed_since(t_reference) 
   
   print *, 'Initialized ES object'
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
 
   call factorize_mat_es(&
@@ -3110,7 +3111,7 @@ program test_general_elliptic_solver
        rho,&
        phi)
 !!$  
-  t10e = time_elapsed_since(t_reference)
+  t10e = sll_time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
@@ -3380,7 +3381,7 @@ program test_general_elliptic_solver
   call phi%update_interpolation_coefficients()
   
   print *, 'initialized fields...'
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
   
   call initialize_general_elliptic_solver( &
        es, &
@@ -3399,10 +3400,10 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
   
-  t11i = time_elapsed_since(t_reference) 
+  t11i = sll_time_elapsed_since(t_reference) 
 
   !print *, 'Initialized ES object'
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call factorize_mat_es(&
        es, &
@@ -3422,13 +3423,15 @@ program test_general_elliptic_solver
        phi)
  ! print*, 'aye'
 !!$  
-  t11e = time_elapsed_since(t_reference)
+  t11e = sll_time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
   acc11 = 0.0_f64
   integrale_solution_exacte = 0.0
   integrale_solution = 0.0
+  normL2_11 = 0.0_f64
+  normH1_11 = 0.0_f64
   do j=0,npts2-1
      do i=0,npts1-1
         eta1       = real(i,f64)*h1 + ETA1MIN
@@ -3690,7 +3693,7 @@ program test_general_elliptic_solver
    
   print *, 'initialized fields...'
   
-  call set_time_mark(t_reference)
+  call sll_set_time_mark(t_reference)
 
   call initialize_general_elliptic_solver( &
        es, &
@@ -3709,6 +3712,8 @@ program test_general_elliptic_solver
        ETA2MIN, &
        ETA2MAX)
 
+  t12i = sll_time_elapsed_since(t_reference)
+
   call factorize_mat_es(&
        es, &
        a11_field_mat, &
@@ -3725,7 +3730,7 @@ program test_general_elliptic_solver
        rho,&
        phi)
   
-  t12e = time_elapsed_since(t_reference)
+  t12e = sll_time_elapsed_since(t_reference)
   
   print *, 'Compare the values of the transformation at the nodes: '
   
@@ -3910,6 +3915,7 @@ function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  print*, eta1, eta2, params
   res = 1.0_8
 end function func_one
 
@@ -3918,6 +3924,7 @@ function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  print*, eta1, eta2, params
   res = 0.0_8
 end function func_zero
 
@@ -3926,6 +3933,7 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
+  print*, eta1, eta2, params
   res = 0.0_8
 end function func_epsi
 
@@ -3944,12 +3952,14 @@ function source_term_perper( eta1, eta2) result(res)
   real(8), intent(in) :: eta2
   ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
+  print*, eta1, eta2
   res =  0.001*cos(2*sll_pi*eta1)!!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
 end function source_term_perper
 
 real(8) function sol_exacte_perper(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
 end function sol_exacte_perper
@@ -3957,12 +3967,14 @@ end function sol_exacte_perper
 real(8) function sol_exacte_perper_der1(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der2
@@ -3981,6 +3993,8 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   intrinsic :: sin 
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+
+  print*, eta1, eta2, params
   source_term_perdir = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
       ! -(16.0*sll_pi**2*eta2**4 &
       ! - 16.0*sll_pi**2*eta2**2 &
@@ -4029,6 +4043,7 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   use sll_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
+  print*, eta1, eta2, params
   source_term_dirper = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
      ! -(16.0*sll_pi**2*eta1**4 &
      ! - 16.0*sll_pi**2*eta1**2 &
@@ -4083,6 +4098,8 @@ real(8) function rho_rtheta(eta1,eta2,params) ! in the path
   real(8) :: x, y
   real(8), dimension(:), intent(in), optional :: params
   
+  if (present(params)) print*, params
+
   x = eta2*cos(2*sll_pi*eta1)
   y = eta2*sin(2*sll_pi*eta1)
   
@@ -4099,6 +4116,7 @@ real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
   intrinsic :: sin
   real(8), dimension(:), intent(in), optional :: params
   
+  if (present(params)) print*, params
   
   sol_exacte_rtheta = ( eta2**2-1)*(eta2**2-0.5**2)*eta2**2&
        *cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
@@ -4441,12 +4459,14 @@ end function sol_exacte_chgt_dirper_der2
 real(8) function adimension_chgt_x(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   adimension_chgt_x = 2*sll_pi*eta1 !+ eta2)
 end function adimension_chgt_x
 
 real(8) function adimension_chgt_y(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   adimension_chgt_y = 2*sll_pi*eta2
 end function adimension_chgt_y
 
@@ -4454,24 +4474,28 @@ end function adimension_chgt_y
 real(8) function jac11_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac11_adimension_chgt = 2*sll_pi
 end function jac11_adimension_chgt
 
 real(8) function jac12_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac12_adimension_chgt = 0.0!sll_pi
 end function jac12_adimension_chgt
 
 real(8) function jac21_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac21_adimension_chgt = 0.0!2*sll_pi!0.0
 end function jac21_adimension_chgt
 
 real(8) function jac22_adimension_chgt(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
+  print*, eta1, eta2
   jac22_adimension_chgt = 2*sll_pi
 end function jac22_adimension_chgt
 
