@@ -13,9 +13,125 @@ module sll_common_array_initializers_module
 contains
 
 
+
+  function sll_gaussian_initializer_2d( x_1, x_2, params ) 
+    sll_real64 :: sll_gaussian_initializer_2d
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: xc_1
+    sll_real64 :: xc_2
+    sll_real64 :: sigma_1
+    sll_real64 :: sigma_2
+    !sll_real64 :: kx
+    !sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_gaussian_initializer_2d, error: ', &
+         'the params array must be passed.', &
+         ' params(1) = xc_1', &
+         ' params(2) = xc_2', &
+         ' params(3) = sigma_1', &
+         ' params(4) = sigma_2'
+    end if
+    SLL_ASSERT(size(params)>=4)
+    xc_1 = params(1)
+    xc_2 = params(2)
+    sigma_1 = params(3)
+    sigma_2 = params(4)
+    sll_gaussian_initializer_2d =  &
+         exp(-0.5_f64*(x_1-xc_1)**2/sigma_1**2 &
+         -0.5_f64*(x_2-xc_2)**2/sigma_2**2)
+  end function sll_gaussian_initializer_2d
+
+
+  function sll_cos_bell_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: xc_1
+    sll_real64 :: xc_2
+    sll_real64 :: r
+
+    if( .not. present(params) ) then
+       print *, 'sll_cos_bell_initializer_2d, error: ', &
+         'the params array must be passed.', &
+         ' params(1) = xc_1', &
+         ' params(2) = xc_2'
+    end if
+    SLL_ASSERT(size(params)>=2)
+    xc_1 = params(1)
+    xc_2 = params(2)
+    
+    r = sqrt((x_1-xc_1)**2+(x_2-xc_2)**2)
+    
+    if(r<0.5_f64*sll_pi)then
+      res = cos(r)**6
+    else
+      res = 0._f64
+    endif
+    
+  end function sll_cos_bell_initializer_2d
+
+
+
+
+  !swirling deformation flow
+
+  function sll_SDF_A1_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif
+    res = -cos(0.5_f64*x_1)**2*sin(x_2)
+  end function sll_SDF_A1_initializer_2d
+
+  function sll_SDF_A2_initializer_2d( x_1, x_2, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x_1
+    sll_real64, intent(in) :: x_2 
+    sll_real64, dimension(:), intent(in), optional :: params
+    if(present(params))then
+      if(size(params)>=100)then
+        print *,'#params needs not to have size >=100'
+      endif
+    endif    
+    res = cos(0.5_f64*x_2)**2*sin(x_1)
+  end function sll_SDF_A2_initializer_2d
+
+
+  function sll_SDF_time_initializer_1d( t, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: t
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: time_period
+
+    if( .not. present(params) ) then
+      print *, 'sll_SDF_time_initializer_1d, error: ', &
+        'the params array must be passed.', &
+        ' params(1) = time_period'
+      stop
+    end if
+    SLL_ASSERT(size(params)>=1)
+    time_period = params(1)
+    res = sll_pi*cos(sll_pi*t/time_period)
+  end function sll_SDF_time_initializer_1d
+
+
+
+
+  
+
+
   ! -------------------------------------------------------------------------
   !
-  !             Landau damping 4d initialization function
+  !             Landau damping 2d initialization function
   !
   ! -------------------------------------------------------------------------
   !
@@ -36,31 +152,70 @@ contains
     sll_real64 :: factor1
 
     if( .not. present(params) ) then
-       print *, 'sll_landau_initializer_4d, error: the params array must ', &
-            'be passed. params(1) = epsilon, params(2) = kx, params(3) = ky.'
+       print *, 'sll_landau_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx.'
        stop
     end if
     SLL_ASSERT(size(params)>=2)
     kx = params(1)
     eps = params(2)
 
-    !Normalization
-    !sagemath command
-    !sage : var('u v epsilon a b c d x y')
-    !sage : f(a,b,c,d,epsilon) =integral(integral(integral(integral((1+epsilon*cos(2*pi/(b-a)*x))*exp(-(u*u+v*v)/2),u,-oo,oo),v,-oo,oo),x,a,b),y,c,d)
-    
-!!$    factor1 =  1./( (eta2_min - eta2_max) &
-!!$               *(((eta1_min - eta1_max)* &
-!!$               sin(2*sll_pi*eta1_min/(eta1_min - eta1_max)) &
-!!$                - (eta1_min - eta1_max)* &
-!!$               sin(2*sll_pi*eta1_max/(eta1_min - eta1_max)))*eps  &
-!!$               + 2*sll_pi*eta1_min - 2*sll_pi*eta1_max))
     factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
-!!$    sll_landau_initializer_4d = factor1 * &
-!!$         (1.0_f64/((eta2_max-eta2_min)*(eta1_max-eta1_min))+eps*cos(kx*x))*exp(-0.5_f64*(vx**2+vy**2))
     sll_landau_initializer_2d = factor1 * &
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*vx**2)
   end function sll_landau_initializer_2d
+
+
+  function sll_bump_on_tail_initializer_2d( x, vx, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_bump_on_tail_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx.'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=2)
+    kx = params(1)
+    eps = params(2)
+    factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
+    res = factor1 * (1._f64+eps*cos(kx*x))&
+      *(0.9_f64*exp(-0.5_f64*vx**2)+0.2_f64*exp(-0.5_f64*(vx-4.5_f64)**2/0.5**2))
+    !nbox = 3     
+  end function sll_bump_on_tail_initializer_2d
+
+  function sll_two_stream_instability_initializer_2d( x, vx, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_two_stream_instability_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = epsilon, params(2) = kx.'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=2)
+    kx = params(1)
+    eps = params(2)
+    factor1 = 1.0_f64/sqrt(2.0_f64*sll_pi)
+    res = factor1 * (1._f64+eps*cos(kx*x))*vx**2*exp(-0.5_f64*vx**2)
+  end function sll_two_stream_instability_initializer_2d
+
+
+  
+  
+  
 
   function sll_diocotron_initializer_2d( r, theta, params ) result(res)
     sll_real64 :: res
@@ -133,6 +288,44 @@ contains
     endif 
   
   end function sll_diocotron_initializer_2d2
+
+
+  !
+  
+
+  function sll_beam_initializer_2d( x, vx, params ) result(res)
+    sll_real64 :: res
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: vx
+ 
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: alpha
+    sll_real64 :: x_plus
+    sll_real64 :: x_minus
+    
+
+    if( .not. present(params) ) then
+       print *, '#sll_beam_initializer_2d, error: the params array must ', &
+            'be passed. params(1) = alpha'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=1)
+    alpha = params(1) 
+    
+    x_plus = (x+1.2_f64)/0.3_f64
+    x_minus = (x-1.2_f64)/0.3_f64
+    res = 4._f64/sqrt(2._f64*sll_pi*alpha)
+    res = res*(0.5_f64*erf(x_plus)-0.5_f64*erf(x_minus))
+    res = res*exp(-vx**2/(2*alpha))    
+
+  end function sll_beam_initializer_2d
+
+
+  
+  
+  
+  
+
 
   function sll_KHP1_2d( x, y, params ) result(res)
    sll_real64 :: res
@@ -252,6 +445,7 @@ contains
        print *, 'sll_landau_initializer_4d, error: the params array must ', &
             'be passed. params(1) = eta1_min, params(2) = eta1_max, ', &
             'params(3) = eta2_min, params(4) = eta2_max, params(5) = epsilon.'
+       print *,'does not depend on y',y
        stop
     end if
 
@@ -329,6 +523,7 @@ contains
     if( .not. present(params) ) then
        print *, ' sll_test_x_transport_initializer, error: the params array', & 
             'must be passed. params(1) = epsilon, params(2)=kx, params(3) = ky.'
+       print *,'does not depend on y,vy',y,vy     
        stop
     end if
 
@@ -364,6 +559,7 @@ contains
     if( .not. present(params) ) then
        print *, ' sll_test_y_transport_initializer, error: the params array', & 
             'must be passed. params(1) = epsilon, params(2)=kx, params(3) = ky.'
+       print *,'does not depend on x vx',x,vx     
        stop
     end if
 
@@ -389,6 +585,7 @@ contains
     if( .not. present(params) ) then
        print *, ' sll_test_vx_transport_initializer, error: the params array', &
             ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+       print *,'does not depend on x,y,vy',x,y,vy
        stop
     end if
 
@@ -417,20 +614,21 @@ contains
     sll_real64 :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
-    sll_real64 :: eta1_min
-    sll_real64 :: eta1_max
-    sll_real64 :: eta2_min
-    sll_real64 :: eta2_max
+    !sll_real64 :: eta1_min
+    !sll_real64 :: eta1_max
+    !sll_real64 :: eta2_min
+    !sll_real64 :: eta2_max
 
-    sll_real64 :: eps
-    sll_real64 :: kx
-    sll_real64 :: factor1
+    !sll_real64 :: eps
+    !sll_real64 :: kx
+    !sll_real64 :: factor1
     sll_real64 :: v,hh
     t=params(11)
 
     if( .not. present(params) ) then
        print *, ' sll_test_vy_transport_initializer, error: the params array', & 
             'must be passed. params(1) = epsilon, params(2)=kx, params(3) = ky.'
+       print *, 'does not depend on x,y,vx',x,y,vx     
        stop
     end if
     v=vy-t
@@ -457,6 +655,7 @@ contains
     if( .not. present(params) ) then
        print *, ' sll_test_xvx_transport_initializer, error: the params array', &
             ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+       print *, 'does not depend on y and vy',y,vy
        stop
     end if
 
@@ -489,6 +688,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     if( .not. present(params) ) then
        print *, ' sll_test_yvy_transport_initializer, error: the params array', &
             ' mustbe passed. params(1)=epsilon,params(2)=kx, params(3) = ky.'
+       print *,'does not depend on x and vx',x,vx
        stop
     end if
 
@@ -551,7 +751,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
-    sll_real64  :: t
+    !sll_real64  :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
@@ -566,6 +766,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     if( .not. present(params) ) then
        print *, 'sll_landau_1d_initializer_v1v2x1x2, error: the params array', &
             'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       print *,'does not depend on y and vy',y,vy
        stop
     end if
 
@@ -589,7 +790,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
-    sll_real64  :: t
+    !sll_real64  :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
@@ -604,6 +805,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     if( .not. present(params) ) then
        print *, 'sll_landau_1d_initializer_v1v2x1x2, error: the params array', &
             'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       print *,'does not depend on vx and x',vx,x
        stop
     end if
 
@@ -679,6 +881,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     if( .not. present(params) ) then
        print *, 'sll_landau_initializer_dk_test_4d, error: the params array must ', &
             'be passed. params(1) = epsilon, params(2) = kx'
+       print *,'does not depend on x2,x3',x2,x3     
        stop
     end if
 

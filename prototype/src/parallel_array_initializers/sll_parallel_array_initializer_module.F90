@@ -81,8 +81,8 @@ contains
     sll_real64 :: eta2_min
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: x1
-    sll_real64 :: x2
+    !sll_real64 :: x1
+    !sll_real64 :: x2
     sll_int32, dimension(1:2)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
@@ -143,7 +143,6 @@ contains
     type(layout_2D), pointer                    :: layout
     sll_real64, dimension(:), intent(in) :: x1_array
     sll_real64, dimension(:), intent(in) :: x2_array
-    type(sll_logical_mesh_2d), pointer          :: mesh2d
     sll_real64, dimension(:,:), intent(out) :: array
     procedure(sll_scalar_initializer_2d)        :: func
     sll_real64, dimension(:), optional          :: func_params
@@ -162,10 +161,10 @@ contains
             '#passed layout is uninitialized.'
     end if
 
-    if( .not. associated(mesh2d) ) then
-       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
-            '#passed mesh2d_eta1_eta2 argument is uninitialized.'
-    end if
+!    if( .not. associated(mesh2d) ) then
+!       print *, '#sll_2d_parallel_array_initializer_cartesian error: ', &
+!            '#passed mesh2d_eta1_eta2 argument is uninitialized.'
+!    end if
 
 
     call compute_local_sizes( layout, loc_size_x1, loc_size_x2) 
@@ -234,10 +233,10 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
-    sll_real64 :: x1
-    sll_real64 :: x2
-    sll_real64 :: x3
-    sll_real64 :: x4
+    !sll_real64 :: x1
+    !sll_real64 :: x2
+    !sll_real64 :: x3
+    !sll_real64 :: x4
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then

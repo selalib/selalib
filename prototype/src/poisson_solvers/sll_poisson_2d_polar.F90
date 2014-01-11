@@ -316,7 +316,7 @@ contains
     sll_real64 :: kval
 
     sll_comp64 :: err_loc
-    sll_int32  :: ierr_sup_1em12
+    !sll_int32  :: ierr_sup_1em12
     sll_real64 :: err
 
     nr     = plan%nr

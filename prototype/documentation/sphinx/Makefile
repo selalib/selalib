@@ -43,7 +43,7 @@ html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 	rm -f *~ *.*~
 
-rsync:
+rsync: doc html
 	rsync -vurz --exclude 'releases' --delete -e ssh $(BUILDDIR)/html/* scm.gforge.inria.fr:/home/groups/selalib/htdocs/
 
 	@echo

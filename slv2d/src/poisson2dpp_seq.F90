@@ -1,12 +1,12 @@
 module poisson2dpp_seq
 
+#include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_constants.h"
+
 use used_precision
 use geometry_module
 use fft_module
-#include "sll_memory.h"
-#include "sll_working_precision.h"
-use sll_constants
-
 
 implicit none
 public :: new, dealloc, solve, transposexy, transposeyx
