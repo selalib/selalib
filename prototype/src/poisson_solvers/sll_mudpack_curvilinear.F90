@@ -42,7 +42,8 @@ sll_real64, intent(in) :: eta2_max       !< eta2 max
 sll_int32, intent(in)  :: nc_eta1              !<  number of cells
 sll_int32, intent(in)  :: nc_eta2              !<  number of cells
 sll_int32 :: icall
-sll_int32 :: iiex,jjey,llwork
+!sll_int32 :: iiex,jjey
+sll_int32 :: llwork
 sll_int32 :: bc_eta1_left                    !< left boundary condition r
 sll_int32 :: bc_eta1_right                   !< right boundary condition r
 sll_int32 :: bc_eta2_left                    !< left boundary condition theta
@@ -505,7 +506,7 @@ if (kbdy.eq.2) then
    ! where xory= y.   alfa,beta,gama,gbdxb corresponding to alfxb(y),
    ! betxb(y),gamxb(y),gbdxb(y) must be output.
 
-   alfa = 0.0
+   alfa = 0.0+0*xory
    beta = 0.0
    gama = 1.0
    gbdy = 0.0

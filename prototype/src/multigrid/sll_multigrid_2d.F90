@@ -699,10 +699,10 @@ end subroutine initialize_multigrid_2d
 !>
 subroutine solve_multigrid_2d(this, rhs, phi, r)
 
-type(sll_multigrid_solver_2d)     :: this
-sll_real64, dimension(:,:)        :: rhs
-sll_real64, dimension(:,:)        :: phi
-sll_real64, dimension(:,:)        :: r
+type(sll_multigrid_solver_2d) :: this
+sll_real64, dimension(:,:)    :: rhs
+sll_real64, dimension(:,:)    :: phi
+sll_real64, dimension(:,:)    :: r
 
 sll_int32  :: iter
 sll_real64 :: avo, acorr, relmax
@@ -903,7 +903,7 @@ call mgdbdry(sx,ex,sy,ey,phi,this%block%bd,this%phibc)
 endif
 
 if (nprscr.and.this%block%id.eq.0) write(6,120) relmax,iter,acorr
-120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
+120 format('  P MGD     err=',e12.3,' iters=',i5,' pcorr=',e12.3)
 
 if (error == 1) then
    write(6,210)

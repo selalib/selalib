@@ -55,6 +55,7 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
 
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_LEAP_FROG = 2 
 
 
   type, extends(sll_simulation_base_class) :: &
@@ -80,8 +81,8 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
    sll_int32 :: num_iterations
    sll_int32 :: freq_diag
    sll_int32 :: freq_diag_time
-   sll_int32  :: time_loop_case
- 
+   sll_int32 :: time_loop_case
+   sll_int32 :: freq_leap_frog
   
    !parameters for drive
    logical :: driven
@@ -172,6 +173,7 @@ contains
     sll_int32 :: freq_diag
     sll_int32 :: freq_diag_time
     character(len=256) :: time_loop_case
+    sll_int32 :: freq_leap_frog
 
     !advector
     character(len=256) :: advect2d_case 
@@ -197,7 +199,7 @@ contains
     sll_real64 :: keen_tflat
     logical :: keen_turn_drive_off
     sll_real64 :: keen_Edrmax
-    sll_real64 :: keen_omegadr	
+    sll_real64 :: keen_omegadr
     
     
     !local variables
@@ -243,7 +245,8 @@ contains
       number_iterations, &
       freq_diag, &
       freq_diag_time, &
-      time_loop_case
+      time_loop_case, &
+      freq_leap_frog
 
     namelist /advector/ &
       advect2d_case, &   
@@ -303,7 +306,7 @@ contains
     freq_diag_time = 1
     !time_loop_case = "SLL_EULER"
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-
+    freq_leap_frog = 1000000000 
 
     !advector
     advect2d_case = "SLL_BSL"    
@@ -427,6 +430,9 @@ contains
         sim%time_loop_case = SLL_EULER
       case ("SLL_PREDICTOR_CORRECTOR")
         sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
+      case ("SLL_LEAP_FROG")
+        sim%time_loop_case = SLL_LEAP_FROG
+        sim%freq_leap_frog = freq_leap_frog
       case default
         print *,'#bad time_loop_case',time_loop_case
         print *,'#not implemented'
@@ -699,6 +705,8 @@ contains
   
     print *,'# Do not use the routine init_vp2d_fake'
     print *,'#use instead init_vp2d_par_cart'
+    print *,filename
+    print *,sim%dt
     stop
   
   end subroutine init_vp2d_fake
@@ -710,9 +718,12 @@ contains
 
 
     sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init
+    
+    sll_real64,dimension(:,:),pointer :: f_store
+    
     sll_real64,dimension(:),pointer :: rho,efield,e_app,rho_loc
-    sll_real64, dimension(:), allocatable :: rho_split
-    sll_real64, dimension(:), allocatable :: rho_full
+    !sll_real64, dimension(:), allocatable :: rho_split
+    !sll_real64, dimension(:), allocatable :: rho_full
     
     sll_int32 :: rhotot_id
     sll_int32 :: efield_id     
@@ -723,24 +734,24 @@ contains
     sll_int32 :: th_diag_id
     sll_real64, dimension(:), pointer     :: f1d
     sll_int32 :: np_x1,np_x2
-    sll_int32 :: nproc_x1,nproc_x2
-    sll_int32 :: global_indices(2)
+    !sll_int32 :: nproc_x1,nproc_x2
+    !sll_int32 :: global_indices(2)
     sll_int32 :: ierr
-    sll_int32 :: local_size_x1,local_size_x2
-    type(poisson_1d_periodic)  :: poisson_1d
+    !sll_int32 :: local_size_x1,local_size_x2
+    !type(poisson_1d_periodic)  :: poisson_1d
     sll_real64 :: adr
-    sll_real64::alpha
-    sll_real64 ::tmp_loc(5),tmp(5)
-    sll_int32  ::i,istep,ig,k
-    
+    !sll_real64::alpha,tmp_loc(5),
+    sll_real64 ::tmp(5)
+    sll_int32  ::i,istep,k
+    !sll_int32 :: ig
     sll_real64  ::   time, mass, momentum, l1norm, l2norm
     sll_real64  ::   kinetic_energy,potential_energy
 
-    sll_real64, dimension(:), allocatable :: x2_array
+    !sll_real64, dimension(:), allocatable :: x2_array
     sll_real64, dimension(:), allocatable :: x2_array_unit
     sll_real64, dimension(:), allocatable :: x2_array_middle
-    sll_real64, dimension(:), allocatable :: x1_array
-    character(len=4)           :: fin   
+    !sll_real64, dimension(:), allocatable :: x1_array
+    !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
     type(sll_fft_plan), pointer         :: pfwd
@@ -760,8 +771,8 @@ contains
     sll_real64 :: x2
      
     
-    logical :: split_T
-    sll_int32 ::conservative_case
+    !logical :: split_T
+    !sll_int32 ::conservative_case
     
     
     ! for parallelization (output of distribution function in one single file)
@@ -790,6 +801,7 @@ contains
     SLL_ALLOCATE(f_x2(np_x1,np_x2),ierr)
 
     SLL_ALLOCATE(f_x1(np_x1,np_x2),ierr)    
+    SLL_ALLOCATE(f_store(np_x1,np_x2),ierr)    
     SLL_ALLOCATE(f_x1_init(np_x1,np_x2),ierr)    
 
 
@@ -999,6 +1011,18 @@ contains
 
 
           call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_x2, f_x1)
+        case (SLL_LEAP_FROG)
+          if(istep==1)then
+            call sim%advect_2d%advect_2d(A1, A2, sim%dt, f_x2, f_x1)
+            f_store = f_x2
+          else
+            call sim%advect_2d%advect_2d(A1, A2, 2*sim%dt, f_store, f_x1)            
+            if(mod(istep,sim%freq_leap_frog)==0) then
+              f_store = 0.5_f64*(f_store+f_x1)
+            else
+              f_store = f_x2   
+            endif                        
+          endif              
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
@@ -1119,7 +1143,10 @@ contains
 
   subroutine delete_vp2d_no_split( sim )
     class(sll_simulation_2d_vlasov_poisson_no_split) :: sim
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
+    
+    print *,sim%dt
+    
   end subroutine delete_vp2d_no_split
 
 
@@ -1155,7 +1182,7 @@ contains
     sll_real64, intent(out) :: S
     logical, intent(in) :: turn_drive_off
     ! local variables
-    sll_int32 :: i 
+    !sll_int32 :: i 
     sll_real64 :: epsilon
 
     ! The envelope function is defined such that it is zero at t0,
@@ -1173,6 +1200,7 @@ contains
     if(S<0) then
        S = 0.
     endif
+    S = S+0._f64*tflat ! just to remove unused tflat
     return
   end subroutine PFenvelope
 
@@ -1197,8 +1225,8 @@ contains
     sll_int32             :: nnodes_x1, nnodes_x2
     type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: r
-    sll_real64 :: theta
+    !sll_real64 :: r
+    !sll_real64 :: theta
     sll_real64 ::  x1_min, x2_min
     sll_real64 ::  x1_max, x2_max  
     sll_real64 :: dx1

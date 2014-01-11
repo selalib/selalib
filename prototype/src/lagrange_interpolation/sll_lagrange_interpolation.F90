@@ -53,9 +53,11 @@ subroutine compute_lagrange_interpolation_1D(alpha,lagrange)
  
  h=(lagrange%xmax-lagrange%xmin)/(lagrange%nb_cell)
  if(alpha<0)then
- index_gap=alpha/h-1
+ !index_gap=alpha/h-1
+ index_gap=floor(alpha/h)-1
  else
- index_gap=alpha/h
+ !index_gap=alpha/h
+ index_gap=floor(alpha/h)
  end if
  
  do i=1,2*lagrange%d-1
@@ -89,10 +91,12 @@ sll_real64,dimension(1:lagrange%nb_cell+1),intent(in) :: fi
 
 h=(lagrange%xmax-lagrange%xmin)/(lagrange%nb_cell)
 if(lagrange%alpha<0)then
-index_gap=lagrange%alpha/h-1
+!index_gap=lagrange%alpha/h-1
+index_gap=floor(lagrange%alpha/h)-1
 beta=h+mod(lagrange%alpha,h)
 else
-index_gap=lagrange%alpha/h
+!index_gap=lagrange%alpha/h
+index_gap=floor(lagrange%alpha/h)
 beta=mod(lagrange%alpha,h)
 end if
 
