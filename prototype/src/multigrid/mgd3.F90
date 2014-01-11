@@ -1052,10 +1052,10 @@ call mgdbdry(sx,ex,sy,ey,sz,ez,phif,bd,vbc,IOUT)
 
 if (isol.eq.1) then
    if (myid.eq.0) write(IOUT,110) relmax,iter,acorr
-   110 format('  R MGD     err=',e8.3,' iters=',i5,' rcorr=',e9.3)
+   110 format('  R MGD     err=',e11.3,' iters=',i5,' rcorr=',e11.3)
 else
   if (myid.eq.0) write(IOUT,120) relmax,iter,acorr
-   120 format('  P MGD     err=',e8.3,' iters=',i5,' pcorr=',e9.3)
+   120 format('  P MGD     err=',e11.3,' iters=',i5,' pcorr=',e11.3)
 end if
 
 return

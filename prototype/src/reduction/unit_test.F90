@@ -65,6 +65,13 @@ end program test_reduction
     real(8), dimension(:), intent(in) ,optional :: func_params
     real(8) :: res
     integer :: i
+
+    if(present(func_params))then
+      if(size(func_params)>100)then
+        print *,'#size of func_params is >100'
+      endif
+    endif
+
     
     res = 0.5*(data(1)+data(Npts))
     do i=2,Npts-1

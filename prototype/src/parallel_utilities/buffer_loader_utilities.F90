@@ -20,7 +20,7 @@ contains
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
     sll_int32 :: size_i, size_j
-    sll_int32 :: i,j
+    !sll_int32 :: i,j
     sll_int32 :: counter
     sll_int32 :: rank
 
@@ -49,7 +49,7 @@ contains
     sll_real64, dimension(:),  intent(out) :: buffer
     sll_int32 :: myrank
     sll_int32 :: data_size
-    sll_int32 :: send_size
+    !sll_int32 :: send_size
     type(sll_collective_t), pointer :: col
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
@@ -93,7 +93,7 @@ contains
     sll_real32, dimension(:),  intent(out) :: buffer
     sll_int32 :: myrank
     sll_int32 :: data_size
-    sll_int32 :: send_size
+    !sll_int32 :: send_size
     type(sll_collective_t), pointer :: col
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
@@ -167,7 +167,7 @@ contains
     sll_int32 :: box
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
-    sll_int32 :: size_i, size_j
+    !sll_int32 :: size_i, size_j
     sll_int32 :: pos            ! position in buffer
     col => get_layout_collective( layout )
     col_sz = sll_get_collective_size( col )

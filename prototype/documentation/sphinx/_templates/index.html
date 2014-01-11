@@ -3,18 +3,11 @@
 {% block body %}
 <h1>SeLaLib</h1>
 <p><i>
-Bibliothèque modulaire pour la simulation du modèle gyrocinétique par une méthode semi-Lagrangienne.
-</i></p>
-<p>
-Dans le cadre de l'<a href="http://www-math.u-strasbg.fr/ae_fusion">action d'envergure nationale Fusion</a>, <a href="http://www-math.u-strasbg.fr/calvi/">l'EPI Calvi</a> développe en collaboration avec le CEA de Cadarache le code GYSELA de simulation gyrocinétique pour la simulation de la turbulence dans les plasmas de Tokamaks. Le développement et le test de nouvelles méthodes numériques se fait en général sur différents modèles simplifiés avant son intégration dans GYSELA. Aucune spécification n'est mise en oeuvre dans cet objectif, ce qui implique plusieurs réécritures du code avant l'intégration définitive, ce qui est un processus lourd et inefficace. SeLaLib est une API pour les composants numériques de base mise en oeuvre également dans GYSELA et un canevas parallèle unique permettant de rationaliser, de fiabiliser et de simplifier le travail de développement.
-</p>
-
-<p><i>
-Modular library for the gyrokinetic simulation model by a semi-Lagrangian method.
+Modular library for the gyrokinetic simulation of tokamak plasmas by the semi-lagrangian method.
 </i>
 </p>
 <p>
-As part of <a href="http://www-math.u-strasbg.fr/ae_fusion">french action Fusion</a>, <a href="http://www-math.u-strasbg.fr/calvi/">Calvi INRIA projetct</a> developed in collaboration with CEA Cadarache GYSELA simulation code for gyrokinetic simulation of plasma turbulence in Tokamaks. Development and testing of new numerical methods is generally done on different simplified models before its integration into GYSELA. No specification is implemented for this aim, which involves several rewriting code lines before the final integration, which is cumbersome and inefficient. SeLaLib is an API for components of basic numerical implementation also in GYSELA, a framework for parallel single streamline built in order to improve reliability and simplify the work of development.
+In the context of the <a href="http://www-math.u-strasbg.fr/ae_fusion">French Action Fusion (Action 'envergure Nationale Fusion)</a> and a longstanding collaboration between the CEA-Cadarache (French Atomic Energy Commision) and the  <a href="http://www-math.u-strasbg.fr/calvi/">Calvi INRIA Project Team</a> based at the University of Strasbourg, we are currently developing the Selalib library. Selalib is a collection of interfaces and implementations of individual building blocks that can help researchers create and test numerical methods, develop new types of simulations, parallelization schemes, etc., either independently or in preparation for making modifications in existing production code such as <a href='http://gyseladoc.gforge.inria.fr'>GYSELA</a>, the CEA's massively parallel gyrokinetic, full-tokamak simulator. The Selalib project arose from the need of researchers to develop numerical methods with simplified test cases while also having independently tested modules that would facilitate gradual changes in existing production code. While originally envisioned to be specialized on the semi-lagrangian method, the abstractions that we have built can be used with other types of approaches, such as particle-in-cell. Thus far, the development is being kept within an international group of collaborators, but we expect a release later in 2014. Stay tuned! 
 </p>
 Sign in to the INRIA GForge and 
 <a href="http://lists.gforge.inria.fr/mailman/listinfo/selalib-devel">Subscribe to the developers list</a> 
@@ -39,7 +32,7 @@ Sign in to the INRIA GForge and
     <span class="linkdescr">Download and install SeLaLib</span></p>
     <p class="biglink"><a class="biglink" href="{{ pathto("prototype/guide_tools") }}">Guide</a><br/>
     <span class="linkdescr">Learn more about Developer tools</span></p>
-    <p class="biglink"><a class="biglink" href="/html">Documentation</a><br/>
+    <p class="biglink"><a class="biglink" href="/doxygen/html">Documentation</a><br/>
     <span class="linkdescr">Description of all modules</span></p>
   </td>
   <td width="50%">

@@ -94,7 +94,7 @@ end if
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: eta_min
     sll_real64, optional, intent(in) :: eta_max
-    sll_real64 :: delta
+    !sll_real64 :: delta
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
@@ -152,7 +152,6 @@ end if
     sll_real64, dimension(:), pointer :: eta1_node
     sll_int32  :: num_cells
     sll_real64 :: eta_min
-    sll_real64 :: eta_max
     sll_real64 :: delta_eta
     sll_int32 :: i
     sll_int32 :: ierr
@@ -184,8 +183,6 @@ end if
     sll_real64, optional, intent(in) :: eta1_max
     sll_real64, optional, intent(in) :: eta2_min
     sll_real64, optional, intent(in) :: eta2_max
-    sll_real64 :: delta1
-    sll_real64 :: delta2
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
@@ -231,9 +228,9 @@ end if
     sll_real64, optional, intent(in) :: eta2_max
     sll_real64, optional, intent(in) :: eta3_min
     sll_real64, optional, intent(in) :: eta3_max
-    sll_real64 :: delta1
-    sll_real64 :: delta2
-    sll_real64 :: delta3
+    !sll_real64 :: delta1
+    !sll_real64 :: delta2
+    !sll_real64 :: delta3
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)

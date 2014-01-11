@@ -223,10 +223,10 @@ contains
     sll_real64, dimension(:),optional :: slope_right
     sll_real64, dimension(:),optional :: slope_bottom
     sll_real64, dimension(:),optional :: slope_top
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_left
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_right
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_top
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_left => null()
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_right => null()
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom => null()
+    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_top => null()
     sll_int32 :: ierr
     sll_int32 :: tmp1
     sll_int32 :: tmp2
@@ -345,6 +345,7 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
+
        if (present(slope_left)) then 
           sz_slope_left = size(slope_left)
           if ( sz_slope_left .ne. interpolator%num_pts2 ) then 
@@ -803,8 +804,8 @@ contains
          
          interpolator%size_coeffs1 =  num_cells1 + sp_deg1 + 1
          interpolator%size_coeffs2 =  num_cells2 + sp_deg2
-         interpolator%size_t1      = 2.0_f64*sp_deg1 + num_cells1 + 1 + 1
-         interpolator%size_t2      = 2.0_f64*sp_deg2 + num_cells2 + 1
+         interpolator%size_t1      = 2*sp_deg1 + num_cells1 + 1 + 1
+         interpolator%size_t2      = 2*sp_deg2 + num_cells2 + 1
          nb_spline_eta1            = num_cells1
          nb_spline_eta2            = num_cells2 + sp_deg2 - 2
        
@@ -864,8 +865,8 @@ contains
       case(585) ! 4. dirichlet in all sides
          interpolator%size_coeffs1=  num_cells1 + sp_deg1
          interpolator%size_coeffs2=  num_cells2 + sp_deg2
-         interpolator%size_t1 = 2.0_f64*sp_deg1 + num_cells1 + 1
-         interpolator%size_t2 = 2.0_f64*sp_deg2 + num_cells2 + 1
+         interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
+         interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
          nb_spline_eta1 = num_cells1 + sp_deg1 - 2
          nb_spline_eta2 = num_cells2 + sp_deg2 - 2
          
@@ -1144,8 +1145,7 @@ contains
             /(interpolator%num_pts2 -1)
        SLL_ALLOCATE(point_location_eta1(sz1),ierr)
        SLL_ALLOCATE(point_location_eta2(sz2),ierr)
-       SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
-       SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
+      
        
        do i = 1,sz1
           point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
@@ -1153,13 +1153,19 @@ contains
        do i = 1,sz2
           point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
        end do
-       do i = 1,sz1-1
-          point_location_eta1_tmp(i) = interpolator%eta1_min + delta_eta1*(i-1)
-       end do
-       do i = 1,sz2-1
-          point_location_eta2_tmp(i) = interpolator%eta2_min + delta_eta2*(i-1)
-       end do
+!!$       do i = 1,sz1-1
+!!$          point_location_eta1_tmp(i) = interpolator%eta1_min + delta_eta1*(i-1)
+!!$       end do
+!!$       do i = 1,sz2-1
+!!$          point_location_eta2_tmp(i) = interpolator%eta2_min + delta_eta2*(i-1)
+!!$       end do
+
+      
     end if
+    SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
+    SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
+    point_location_eta1_tmp = point_location_eta1(1:sz1-1)
+    point_location_eta2_tmp = point_location_eta2(1:sz2-1)
     
     
     ! the size of data_array  must be <= interpolator%num_pts1 + 4*interpolator%spline_degree1
@@ -1195,8 +1201,10 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1-1,1:sz2-1),ierr)
  
        data_array_tmp = data_array(1:sz1-1,1:sz2-1)
-       SLL_ASSERT(associated(point_location_eta1_tmp))
-       SLL_ASSERT(associated(point_location_eta2_tmp))
+       if ( .not. associated(point_location_eta1_tmp)) &
+          SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
+       if ( .not. associated(point_location_eta2_tmp)) &
+          SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
        call spli2d_perper( &
             period1, sz1, order1, point_location_eta1_tmp,&!(1:sz1-1), & !+1
             period2, sz2, order2, point_location_eta2_tmp,&!(1:sz2-1), & !+1
@@ -1319,13 +1327,13 @@ contains
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
     !sll_real64 :: bvalue2d
-    integer  :: li_i, li_j, li_mflag, li_lefty
+    !integer  :: li_i, li_j, li_mflag, li_lefty
     sll_real64 :: res1,res2
-    sll_int32  :: ierr
+    !sll_int32  :: ierr
     sll_real64,dimension(:), pointer:: tmp_tx,tmp_ty
     sll_real64,dimension(:,:), pointer:: tmp_coeff
-    type(sll_time_mark)  :: t0 
-    double precision :: time
+    !type(sll_time_mark)  :: t0 
+    !double precision :: time
 
     size_coeffs1 = interpolator%size_coeffs1
     size_coeffs2 = interpolator%size_coeffs2
@@ -1461,7 +1469,7 @@ contains
     sll_real64, dimension(:),pointer :: knot1_tmp
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
 
     SLL_ASSERT( eta1 .ge. interpolator%eta1_min )
     SLL_ASSERT( eta1 .le. interpolator%eta1_max )
@@ -1595,7 +1603,7 @@ contains
     sll_int32 :: size_coeffs2
     !sll_real64 :: dvalue2d
     sll_real64 :: res1,res2
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
     sll_real64, dimension(:),pointer :: knot1_tmp
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
@@ -1728,9 +1736,16 @@ contains
     sll_int32, intent(in)         :: num_points2
 
     sll_real64, dimension(num_points1,num_points2) :: res
- 
-    print *, 'interpolate_array_ad2d: not implemented'
+    
+    print *, '#interpolate_array_ad2d: not implemented'
     res = -1000000._f64
+    print *,this%num_pts1
+    print *,maxval(eta1)
+    print *,maxval(eta2)
+    print *,maxval(data_in)
+    print *,num_points1
+    print *,num_points2
+    stop
   end function !interpolate_array_ad2d
   
 #ifdef STDF95
@@ -1757,8 +1772,19 @@ contains
     sll_real64, dimension(:,:), intent(in)         :: alpha2  
     sll_real64, dimension(num_points1,num_points2) :: res
     
-    print *, 'interpolate_2d_array_disp_ad2d: not implemented.'
+    
+    
+    print *, '#interpolate_2d_array_disp_ad2d: not implemented.'
+    !for preventing warning of unused objects
+    print *,this%num_pts1
+    print *,num_points1 
+    print *,num_points2
+    print *,maxval(data_in)
+    print *,alpha1
+    print *,alpha2     
     res = -1000000._f64
+    stop
+    
   end function !interpolate_2d_array_disp_ad2d
     
    
