@@ -45,14 +45,14 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 16
-#define NCELL2 16
-#define NCELL3 16
-#define NCELL4 16
-!!$#define NCELL1 16
-!!$#define NCELL2 16
-!!$#define NCELL3 16
-!!$#define NCELL4 16
+!!$#define NCELL1 32
+!!$#define NCELL2 4
+!!$#define NCELL3 128
+!!$#define NCELL4 4
+#define NCELL1 32
+#define NCELL2 32
+#define NCELL3 64
+#define NCELL4 64
 !!$!transport
 !!$#define ETA1MIN -1.0_f64
 !!$#define ETA1MAX 1.0_f64
@@ -92,7 +92,7 @@ program vp_cartesian_4d
 
 
 #define TINI 0.0_f64
-#define TMAX 10.0e0_f64
+#define TMAX 40.0e0_f64
 !#define TMAX 0._f64
 #define CFL 0.5_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
@@ -104,7 +104,7 @@ program vp_cartesian_4d
 !9: landau damping 1d sur y-vy
 
 
-#define DEG  2 ! polynomial degree
+#define DEG  3 ! polynomial degree
 #define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
