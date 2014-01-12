@@ -46,7 +46,7 @@ module sll_module_scalar_field_1d_alternative
      procedure(one_var_parametrizable_function), pointer, nopass :: first_derivative
      sll_real64, dimension(:), pointer        :: params
      character(len=64)                        :: name
-     !     sll_int32                                :: plot_counter
+     !     sll_int32                          :: plot_counter
      sll_int32 :: bc_left
      sll_int32 :: bc_right
      type( sll_logical_mesh_1d),pointer   :: mesh   
@@ -224,7 +224,7 @@ contains   ! *****************************************************************
 
 
   subroutine delete_field_1d_analytic_alt( field )
-    class(sll_scalar_field_1d_analytic_alt), intent(out) :: field
+    class(sll_scalar_field_1d_analytic_alt) :: field
     ! nothing internal do deallocate, just nullify pointers. Can't call
     ! delete on them because the field does not 'own' these data.
     nullify(field%func)
@@ -438,11 +438,15 @@ contains   ! *****************************************************************
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_1d_discrete_alt( field )
-    class(sll_scalar_field_1d_discrete_alt), intent(out) :: field
+    class(sll_scalar_field_1d_discrete_alt) :: field
     ! just nullify pointers, nothing to deallocate that this object owns.
+    !print*, associated(field%values)
+    !print*, associated(field%interp_1d)
+    !print*, associated(field%point)
+
     nullify(field%values)
     nullify(field%interp_1d)
-    nullify(field%point)
+    !nullify(field%point)
   end subroutine delete_field_1d_discrete_alt
   
 

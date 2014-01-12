@@ -22,7 +22,7 @@ program unit_test_1d_alternative
   class(sll_scalar_field_1d_base), pointer :: dirichlet_discrete
   sll_int32                                :: nc1!, iplot
   sll_real64                               :: grad1_node_val,grad1ref
-  sll_real64, dimension(:), pointer        :: tab_values
+  sll_real64, dimension(:), allocatable    :: tab_values
   type(arb_deg_1d_interpolator), target    :: interp_1d
   sll_real64                               :: node_val,ref
   sll_real64, dimension(:),   allocatable  :: point1
@@ -43,23 +43,17 @@ program unit_test_1d_alternative
   h1 = (ETA1MAX-ETA1MIN)/real(nc1,f64)
   print *, 'h1 = ', h1
   
-
-
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_1d => new_logical_mesh_1d( NUM_CELLS1,ETA1MIN, ETA1MAX)
   
   print *, 'initialized mesh 1D'
   
-  
-  
   ! ******************************************************************
   ! ------------------ TEST ANALYTIC ------------------------------  
   ! ******************************************************************
-  
-!!! --------------------------------------------------------------------------
+  ! --------------------------------------------------------------------------
   !   Test case periodic analytic
   !----------------------------------------------------------------------------
-  
   
   ! ----> initialization of the field
   periodic_anal  => new_scalar_field_1d_analytic_alt( &
@@ -186,10 +180,10 @@ program unit_test_1d_alternative
        point1,&
        nc1+1)
 
-  print*, 'pasesd'
+  print*, 'passed'
   ! ------- > allocation values of field
   call periodic_discrete%set_field_data(tab_values)
-  print*, 'pasesd'
+  print*, 'passed'
   ! --------> Compute coefficients of the field
   call periodic_discrete%update_interpolation_coefficients( )
   
@@ -217,7 +211,6 @@ program unit_test_1d_alternative
   !print*, normH1_5
   ! -------> field visualization 
 !!$  call periodic_discrete%write_to_file(0)
-
 
   ! -------> delete field
   call periodic_discrete%delete()
