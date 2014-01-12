@@ -811,26 +811,26 @@ subroutine run_vp_cart(sim)
 !!$       write(*,*) 'loc_sz_v1',loc_sz_v1
 !!$       write(*,*) 'sim%np_v2',sim%np_v2
 !!$       stop
-    energ=0.0_f64
-    ww=0.0_f64
-    do ic=1,loc_sz_x1
-       do jc=1,loc_sz_x2
-          !energ(ic,jc)=0.0_f64
-          do iy=1,loc_sz_v2
-             do ix=1,loc_sz_v1
-                w1((iy-1)*loc_sz_v1+ix)=sim%fn_v1v2(ix,iy,ic,jc)
-             end do
-          end do
-          call MULKU(sim%M1_sup,sim%M1_diag,sim%M1_low, &
-               sim%mkld,w1,sim%np_v1*sim%np_v2,1,ww, &
-               sim%nsky)
-          do iy=1,sim%np_v1*sim%np_v2
-             energ(ic,jc)=energ(ic,jc)+w1(iy)*ww(iy)
-          end do
-          !write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
-       end do
-    end do
-    write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
+!!$    energ=0.0_f64
+!!$    ww=0.0_f64
+!!$    do ic=1,loc_sz_x1
+!!$       do jc=1,loc_sz_x2
+!!$          !energ(ic,jc)=0.0_f64
+!!$          do iy=1,loc_sz_v2
+!!$             do ix=1,loc_sz_v1
+!!$                w1((iy-1)*loc_sz_v1+ix)=sim%fn_v1v2(ix,iy,ic,jc)
+!!$             end do
+!!$          end do
+!!$          call MULKU(sim%M1_sup,sim%M1_diag,sim%M1_low, &
+!!$               sim%mkld,w1,sim%np_v1*sim%np_v2,1,ww, &
+!!$               sim%nsky)
+!!$          do iy=1,sim%np_v1*sim%np_v2
+!!$             energ(ic,jc)=energ(ic,jc)+w1(iy)*ww(iy)
+!!$          end do
+!!$          !write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
+!!$       end do
+!!$    end do
+!!$    !write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
   call sll_new_file_id(file_id_4,ierr)
 
     if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
@@ -1278,7 +1278,7 @@ subroutine run_vp_cart(sim)
     allocate (plotf2d_c1(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-          plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
+          plotf2d_c1(i,j) = max(0.0_f64,sim%fn_v1v2(j,1,i,1))
           if (plotf2d_c1(i,j).gt.100) then
              write(*,*) ' plotf2d_c1(i,j)',  plotf2d_c1(i,j)
           end if
@@ -1288,7 +1288,7 @@ subroutine run_vp_cart(sim)
     allocate (plotf2d_c2(loc_sz_x2,loc_sz_v2))
     do i = 1, loc_sz_x2
        do j = 1, loc_sz_v2
-          plotf2d_c2(i,j) = sim%fn_v1v2(1,j,1,i)
+          plotf2d_c2(i,j) = max(0.0_f64,sim%fn_v1v2(1,j,1,i))
        end do
     end do
     !write(*,*) 'after plotf2d_c2'
