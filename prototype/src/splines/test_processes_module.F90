@@ -581,15 +581,16 @@ contains
     local_test_passed = .true.
     print *, 'X1MIN, X1MAX = ', X1MIN, X1MAX
     ! Run the test over a range of data sizes.
+    print*, np_min , np_max
     do npts=np_min, np_max
        h1 = (X1MAX - X1MIN)/real(npts-1,f64)
        acc = 0.0_f64
+       print*, npts
        SLL_ALLOCATE(data_in(npts),ierr)
        do i=0,npts-1
           x1 = X1MIN + real(i,f64)*h1 
           data_in(i+1) = func_1d(x1)
        end do
-       
        spline => new_spline_1D( &
             npts, &
             X1MIN, &
@@ -597,8 +598,8 @@ contains
             SLL_HERMITE )
        
        call compute_spline_1D( data_in, spline )
-       !        print *, '1D coefficients: '
-       !    print *,  spline%coeffs(:)
+       print *, '1D coefficients: '
+       print *,  spline%coeffs(:)
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 

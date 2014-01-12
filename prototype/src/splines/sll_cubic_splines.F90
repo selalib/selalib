@@ -614,7 +614,7 @@ contains  ! ****************************************************************
 
   subroutine compute_spline_1D_hermite( f, spline )
     sll_real64, dimension(:), intent(in), target :: f    ! data to be fit
-    type(sll_cubic_spline_1D), pointer         :: spline
+    type(sll_cubic_spline_1D), pointer   :: spline
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: np
     sll_real64, dimension(:), pointer :: fp
@@ -623,6 +623,7 @@ contains  ! ****************************************************************
     sll_real64                        :: slope_r
     sll_real64                        :: delta
     sll_real64                        :: r_delta ! reciprocal
+    sll_int32                         :: i
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
@@ -637,7 +638,7 @@ contains  ! ****************************************************************
             spline%n_points, ' . Passed size: ', size(f)
        STOP
     end if
-    fp      => f
+    fp      =>  f
     np      =  spline%n_points
     d       => spline%d
     coeffs  => spline%coeffs(0:)
@@ -657,12 +658,13 @@ contains  ! ****************************************************************
        slope_r = spline%slope_R
     end if
 
-    if( spline%use_fast_algorithm .eqv. .false. ) then
+
+    if( .not. spline%use_fast_algorithm ) then
        ! load the source term.
-       spline%f_aux(2:np+1) = f(1:np)
+       spline%f_aux(2:) = fp
        ! set the end-points to reflect the slope information
-       spline%f_aux(1)    = f(1)  + (1.0_f64/3.0_f64)*delta*slope_l
-       spline%f_aux(np+2) = f(np) - (1.0_f64/3.0_f64)*delta*slope_r
+       spline%f_aux(1)    = fp(1)  + (1.0_f64/3.0_f64)*delta*slope_l
+       spline%f_aux(np+2) = fp(np) - (1.0_f64/3.0_f64)*delta*slope_r
        call solve_cyclic_tridiag_double( &
             spline%cts, &
             spline%ipiv, &
@@ -1036,7 +1038,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)  :: array_in
     sll_int32, intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(out) :: array_out
-    type(sll_cubic_spline_1d), pointer          :: spline
+    type(sll_cubic_spline_1d), pointer    :: spline
     sll_real64, dimension(:), pointer     :: coeffs
     sll_int32 :: i
 
@@ -1062,7 +1064,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer  :: ptr_in
     sll_int32, intent(in)              :: num_pts
     sll_real64, dimension(:), pointer  :: ptr_out
-    type(sll_cubic_spline_1d), pointer       :: spline
+    type(sll_cubic_spline_1d), pointer :: spline
     sll_real64, dimension(:), pointer  :: coeffs
     sll_int32 :: i
 
