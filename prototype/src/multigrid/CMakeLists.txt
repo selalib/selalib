@@ -38,6 +38,7 @@ IF(HDF5_PARALLEL_ENABLED)
                                            sll_file_io_parallel )
 
 
+   HOSTLIST_CREATE()
    SET(PROCS 4)
    SET(ARGS  " ")
    ADD_MPI_TEST(multigrid_2d test_multigrid_2d ${PROCS} ${ARGS})
