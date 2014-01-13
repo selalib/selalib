@@ -176,10 +176,10 @@ contains
   if (c_associated(this%p_tmp_y)) call fftw_free(this%p_tmp_y)
 #endif
 
-  call dfftw_destroy_plan(this%fwx)
-  call dfftw_destroy_plan(this%fwy)
-  call dfftw_destroy_plan(this%bwx)
-  call dfftw_destroy_plan(this%bwy)
+  call fftw_destroy_plan(this%fwx)
+  call fftw_destroy_plan(this%fwy)
+  call fftw_destroy_plan(this%bwx)
+  call fftw_destroy_plan(this%bwy)
 
  end subroutine free_vlasov4d_spectral
 
