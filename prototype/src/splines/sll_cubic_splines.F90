@@ -623,7 +623,7 @@ contains  ! ****************************************************************
     sll_real64                        :: slope_r
     sll_real64                        :: delta
     sll_real64                        :: r_delta ! reciprocal
-    sll_int32                         :: i
+    !sll_int32                         :: i
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
@@ -661,7 +661,7 @@ contains  ! ****************************************************************
 
     if( .not. spline%use_fast_algorithm ) then
        ! load the source term.
-       spline%f_aux(2:) = fp
+       spline%f_aux(2:np+1) = fp(1:np)
        ! set the end-points to reflect the slope information
        spline%f_aux(1)    = fp(1)  + (1.0_f64/3.0_f64)*delta*slope_l
        spline%f_aux(np+2) = fp(np) - (1.0_f64/3.0_f64)*delta*slope_r
