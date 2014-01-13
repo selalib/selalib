@@ -256,8 +256,8 @@ if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
 if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
 #endif
 
-call dfftw_destroy_plan(self%fw)
-call dfftw_destroy_plan(self%bw)
+call fftw_destroy_plan(self%fw)
+call fftw_destroy_plan(self%bw)
 !if (nthreads > 1) then
 !   call dfftw_cleanup_threads(error)
 !end if
