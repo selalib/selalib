@@ -224,11 +224,13 @@ contains   ! *****************************************************************
 
 
   subroutine delete_field_1d_analytic_alt( field )
-    class(sll_scalar_field_1d_analytic_alt), intent(out) :: field
+    class(sll_scalar_field_1d_analytic_alt), intent(inout) :: field
     ! nothing internal do deallocate, just nullify pointers. Can't call
     ! delete on them because the field does not 'own' these data.
+    !print*, associated(field%func)
+    !print*, associated(field%params)
     nullify(field%func)
-    nullify(field%params)
+    !nullify(field%params) !not associated
   end subroutine delete_field_1d_analytic_alt
 
   ! For those cases in which handling pointers to field structures is not
@@ -438,7 +440,7 @@ contains   ! *****************************************************************
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_1d_discrete_alt( field )
-    class(sll_scalar_field_1d_discrete_alt), intent(out) :: field
+    class(sll_scalar_field_1d_discrete_alt), intent(inout) :: field
     ! just nullify pointers, nothing to deallocate that this object owns.
     !print*, associated(field%values)
     !print*, associated(field%interp_1d)
@@ -446,7 +448,7 @@ contains   ! *****************************************************************
 
     nullify(field%values)
     nullify(field%interp_1d)
-    !nullify(field%point)
+    !nullify(field%point) !not associated
   end subroutine delete_field_1d_discrete_alt
   
 
