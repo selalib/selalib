@@ -115,7 +115,7 @@ module sll_module_scalar_field_1d_base
   abstract interface
      subroutine field_1d_subroutine( field )
        import sll_scalar_field_1d_base
-       class(sll_scalar_field_1d_base), intent(out) :: field
+       class(sll_scalar_field_1d_base), intent(inout) :: field
      end subroutine field_1d_subroutine
   end interface
 !  
