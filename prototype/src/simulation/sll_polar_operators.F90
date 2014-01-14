@@ -98,7 +98,7 @@ contains
     end if
     call fft_delete_plan(this%pfwd)
     call fft_delete_plan(this%pinv)
-    call delete_spline_2d(this%spl_phi)
+    call sll_delete(this%spl_phi)
     SLL_DEALLOCATE(this,err)
     this=>null()
 
