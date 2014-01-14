@@ -156,7 +156,7 @@ contains
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
-    sll_int32 :: interpolator_type
+    !sll_int32 :: interpolator_type
     character(len=256) :: filename_local
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id
@@ -183,7 +183,7 @@ contains
     sll_int32  :: bc_right
     sll_int32  :: bc_bottom
     sll_int32  :: bc_top
-    sll_int32  :: sz_nodes1, sz_nodes2
+    !sll_int32  :: sz_nodes1, sz_nodes2
     sll_int32  :: number_cells1,number_cells2
     sll_int32 :: sz_knots1,sz_knots2
     sll_int32 :: i,j
@@ -200,7 +200,7 @@ contains
     namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
     namelist /logical_mesh_2d/ number_cells1,number_cells2
-    character(len=80) :: line_buffer
+    !character(len=80) :: line_buffer
 
     if(len(filename) >= 256) then
        print *, 'ERROR, read_coefficients_from_file => ',&
