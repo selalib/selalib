@@ -38,7 +38,7 @@ contains
         !>
         integer, optional :: ai_COEF
         !local var
-        integer :: li_err, li_flag
+        !integer :: li_err, li_flag
         integer :: li_nnz
         integer, dimension(:,:), pointer :: lpi_columns
         integer, dimension(:), pointer :: lpi_occ
@@ -115,9 +115,9 @@ contains
         integer :: li_e
         integer :: li_b_C
         integer :: li_A_C
-        integer :: li_b_R
-        integer :: li_A_R
-        integer :: li_index
+        !integer :: li_b_R
+        !integer :: li_A_R
+        !integer :: li_index
         integer :: li_i
         integer :: li_size
         integer :: li_nen_C
@@ -188,7 +188,7 @@ contains
         ! _C FOR ROWS
         ! _R FOR COLUMNS
         implicit none
-        type(csr_matrix) :: self
+        !type(csr_matrix) :: self
         integer :: ai_nC
         integer :: ai_nR
         integer :: ai_npatch
@@ -208,12 +208,10 @@ contains
         integer :: li_b_R
         integer :: li_A_R
         integer :: li_i
-        integer :: li_err
-        integer :: li_flag
         integer :: li_result
         logical :: ll_done
         integer, dimension(2) :: lpi_size
-        real(wp), dimension(:), pointer :: lpr_tmp
+        !real(wp), dimension(:), pointer :: lpr_tmp
         integer, dimension(:,:), pointer :: lpi_columns
 
         DO li_id = 1, ai_npatch

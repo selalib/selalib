@@ -501,9 +501,11 @@ contains
   subroutine init_fake(sim, filename)
     class(sll_simulation_2d_analytic_field_cartesian), intent(inout) :: sim
     character(len=*), intent(in)                                :: filename
-  
+    
     print *,'# Do not use the routine init_vp4d_fake'
     print *,'#use instead initialize_vlasov_par_poisson_seq_cart'
+    print *,'#filename=',filename
+    print *,sim%dt
     stop
   
   end subroutine init_fake
@@ -656,8 +658,8 @@ contains
     sll_int32             :: nnodes_x1, nnodes_x2
     type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: r
-    sll_real64 :: theta
+    !sll_real64 :: r
+    !sll_real64 :: theta
     sll_real64 ::  x1_min, x2_min
     sll_real64 ::  x1_max, x2_max  
     sll_real64 :: dx1

@@ -35,12 +35,12 @@ implicit none
   sll_real64, dimension(:,:), allocatable :: output2
   sll_real64, dimension(:,:), allocatable :: A1
   sll_real64, dimension(:,:), allocatable :: A2
-  sll_int32 :: ierr
+  !sll_int32 :: ierr
   sll_int32 :: i
   sll_int32 :: j
   sll_real64 :: dt
   sll_real64 :: err
-  sll_real64 :: tmp
+  !sll_real64 :: tmp
   class(sll_interpolator_2d_base), pointer   :: A1_interp_x1x2
   class(sll_interpolator_2d_base), pointer   :: A2_interp_x1x2
   class(sll_interpolator_1d_base), pointer   :: A1_interp_x1

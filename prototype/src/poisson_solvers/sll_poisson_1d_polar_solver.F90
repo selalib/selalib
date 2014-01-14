@@ -82,8 +82,11 @@ contains
     sll_real64, intent(in) :: eta1_max
     sll_int32, intent(in) :: nc_eta1
     sll_int32, intent(in), optional :: bc
-    sll_int32 :: ierr
-        
+    !sll_int32 :: ierr
+    
+    if(present(bc))then
+      print *,'#Warning bc=',bc,'present but not used'
+    endif    
     poisson%length = eta1_max-eta1_min
     poisson%nc_eta1 = nc_eta1
     
@@ -97,6 +100,10 @@ contains
 
     print *,'#compute_phi_from_rho_1d_polar'
     print *,'#not implemented yet'
+    phi = 0._f64    
+    print *,poisson%nc_eta1
+    print *,maxval(rho)  
+    stop
     stop
     
     
