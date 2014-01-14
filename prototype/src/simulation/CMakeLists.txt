@@ -17,6 +17,7 @@ IF(MUDPACK_ENABLED)
     simulation_vp1d_fourier_fem.F90
     simulation_2d_vlasov_poisson_no_splitting.F90
     simulation_2d_analytic_field_cartesian.F90
+    simulation_2d_analytic_field_curvilinear.F90
     simulation_guiding_center_2D_generalized_coords.F90
     simulation_guiding_center_2D_generalized_coords_mudpack.F90
     simulation_2d_guiding_center_curvilinear.F90
@@ -70,6 +71,7 @@ ADD_SIMULATION_1D(2d_vp_no_split)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
 ADD_SIMULATION_1D(2d_af_cartesian)
+ADD_SIMULATION_1D(2d_af_curvilinear)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
 ADD_SIMULATION_1D(2d_gc_curvilinear)
