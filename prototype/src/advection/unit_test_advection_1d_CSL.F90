@@ -58,7 +58,7 @@ implicit none
   !enddo
 
   x_min_bis = x_min -0.5_f64*delta
-  x_max_bis = x_max +0.5_f64*delta
+  x_max_bis = x_max -0.5_f64*delta
   
   input = 1._f64
 
@@ -68,13 +68,13 @@ implicit none
 
 
   interp => new_cubic_spline_1d_interpolator( &
-    num_cells+2, &
+    num_cells+1, &
     x_min_bis, &
     x_max_bis, &
     SLL_PERIODIC)
 
   charac => new_explicit_euler_conservative_1d_charac(&
-    num_cells+2, &
+    num_cells+1, &
     eta_min=x_min_bis, &
     eta_max=x_max_bis, &
     bc_type=SLL_PERIODIC)    
@@ -82,15 +82,15 @@ implicit none
   adv => new_CSL_1d_advector(&
     interp, &
     charac, &
-    num_cells+2, &
+    num_cells+1, &
     eta_min = x_min_bis, &
     eta_max = x_max_bis)
   
   call adv%advect_1d(A, dt, input, output)
   
-!  do i=1,num_cells+1
-!    print *,i,input(i),output(i)
-!  enddo
+  do i=1,num_cells+1
+    print *,i,input(i),output(i)
+  enddo
   
   err=maxval(abs(input-output))
   

@@ -176,11 +176,11 @@ contains
     
     call function_to_primitive(adv%buf1d,adv%eta_coords_unit,Npts-1,mean)
 
-!    print *,'mean=',mean
+    !print *,'#mean=',mean
 !
-!    do i=1,Npts
-!      print *,i,adv%buf1d(i),adv%eta_coords_unit(i)
-!    enddo
+    !do i=1,Npts
+    !  print *,i,input(i),adv%buf1d(i),adv%eta_coords_unit(i)
+    !enddo
     
     !stop
     
@@ -200,6 +200,8 @@ contains
     call primitive_to_function(adv%buf1d_out,adv%eta_coords_unit,Npts-1,mean)
     
     output(1:Npts-1) = adv%buf1d_out(1:Npts-1)
+    
+    output(Npts) = output(1) !warning only valid in periodic case
           
   end subroutine CSL_advect_1d
 
