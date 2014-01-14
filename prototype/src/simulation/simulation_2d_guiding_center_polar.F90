@@ -591,6 +591,8 @@ contains
          SLL_DIRICHLET, &
          SLL_PERIODIC, &
          SLL_PERIODIC, &
+         SLL_HERMITE, &
+         SLL_PERIODIC, &
          b11,&
          b12,&
          b21,&

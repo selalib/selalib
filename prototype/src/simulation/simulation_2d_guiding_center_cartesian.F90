@@ -658,6 +658,8 @@ contains
          SLL_PERIODIC, &
          SLL_PERIODIC, &
          SLL_PERIODIC, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC, &
          b11,&
          b12,&
          b21,&
