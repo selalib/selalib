@@ -357,8 +357,8 @@ contains
         Nc_x1_bis = Nc_x1
       case ("SLL_CSL")
         x1_min_bis = x1_min-0.5_f64*mesh_x1%delta_eta
-        x1_max_bis = x1_max+0.5_f64*mesh_x1%delta_eta
-        Nc_x1_bis = Nc_x1+1
+        x1_max_bis = x1_max-0.5_f64*mesh_x1%delta_eta
+        Nc_x1_bis = Nc_x1
       case default
         print *,'#bad value of advect1d_x1_case'
         stop  
@@ -371,8 +371,8 @@ contains
         Nc_x2_bis = Nc_x2
       case ("SLL_CSL")
         x2_min_bis = x2_min-0.5_f64*mesh_x2%delta_eta
-        x2_max_bis = x2_max+0.5_f64*mesh_x2%delta_eta        
-        Nc_x2_bis = Nc_x2+1
+        x2_max_bis = x2_max-0.5_f64*mesh_x2%delta_eta        
+        Nc_x2_bis = Nc_x2
       case default
         print *,'#bad value of advect1d_x2_case'
         stop  
