@@ -2,18 +2,20 @@ module sll_general_coordinate_elliptic_solver_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
+
   use GC
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+  use sll_arbitrary_degree_spline_interpolator_2d_module
   use sparsematrix_module
   use connectivity_module
   use sll_knots
   use gauss_legendre_integration
   use sll_timer
   !use LU
-  implicit none
 
+  implicit none
 
   type :: general_coordinate_elliptic_solver
      sll_int32 :: total_num_splines_loc
@@ -27,6 +29,8 @@ module sll_general_coordinate_elliptic_solver_module
      sll_real64:: eta2_min   
      sll_real64, dimension(:), pointer :: knots1
      sll_real64, dimension(:), pointer :: knots2
+     sll_real64, dimension(:), pointer :: knots1_rho
+     sll_real64, dimension(:), pointer :: knots2_rho
      sll_real64, dimension(:,:), pointer :: gauss_pts1
      sll_real64, dimension(:,:), pointer :: gauss_pts2
      sll_int32 :: bc_left
@@ -52,7 +56,11 @@ module sll_general_coordinate_elliptic_solver_module
      !!! contains the values of all splines in all gauss points
      sll_real64, dimension(:,:), pointer :: values_splines_eta1
      sll_real64, dimension(:,:), pointer :: values_splines_eta2
+     sll_real64, dimension(:,:), pointer :: values_splines_gauss1
+     sll_real64, dimension(:,:), pointer :: values_splines_gauss2
      sll_real64, dimension(:,:), pointer :: values_jacobian
+     sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
+     sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
      type(csr_matrix) :: csr_mat
      sll_real64, dimension(:), pointer :: rho_vec
      sll_real64, dimension(:), pointer :: phi_vec
@@ -204,6 +212,8 @@ contains ! *******************************************************************
    solution_size = es%total_num_splines_eta1*es%total_num_splines_eta2
    SLL_ALLOCATE(es%knots1(knots1_size),ierr1)
    SLL_ALLOCATE(es%knots2(knots2_size),ierr)
+   SLL_ALLOCATE(es%knots1_rho(num_cells_eta1 + spline_degree_eta1 + 2),ierr1)
+   SLL_ALLOCATE(es%knots2_rho(num_cells_eta2 + spline_degree_eta2 + 2 ),ierr)
    SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
    SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
@@ -260,6 +270,49 @@ contains ! *******************************************************************
         es%total_num_splines_loc )
 
 
+
+    es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
+    es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
+    
+    
+     if ( mod(spline_degree_eta1 +1,2) == 0 ) then
+        do i = spline_degree_eta1 +1 + 1, num_cells_eta1 + 1
+           es%knots1_rho ( i ) = eta1_min +  ( i - (spline_degree_eta1 +1)/2-1 )*es%delta_eta1 
+           
+        end do
+     else
+        
+        do i = spline_degree_eta1 +1 + 1, num_cells_eta1 + 1
+           es%knots1_rho ( i ) = &
+                0.5*( eta1_min + ( i - (spline_degree_eta1)/2 -1)*es%delta_eta1 + &
+                eta1_min +  ( i -1 - (spline_degree_eta1)/2 -1)*es%delta_eta1 )
+           
+        end do
+     
+     end if
+
+     es%knots2_rho ( 1 : spline_degree_eta2 +1 ) = eta2_min
+     es%knots2_rho ( num_cells_eta2 + 2 : num_cells_eta2 + 1 + spline_degree_eta2 +1 ) = eta2_max
+    
+     
+     if ( mod(spline_degree_eta2 +1,2) == 0 ) then
+        do i = spline_degree_eta2 +1 + 1, num_cells_eta2 + 1
+           es%knots2_rho ( i ) = eta2_min +  ( i - (spline_degree_eta2 +1)/2-1 )*es%delta_eta2 
+           
+        end do
+     else
+        
+        do i = spline_degree_eta2 +1 + 1, num_cells_eta2 + 1
+           es%knots2_rho ( i ) = &
+                0.5*( eta2_min + ( i - (spline_degree_eta2)/2 -1)*es%delta_eta2 + &
+                eta2_min +  ( i -1 - (spline_degree_eta2)/2 -1)*es%delta_eta2 )
+           
+        end do
+        
+     end if
+     
+     
+
     !! allocation of the table containning all values of splines in each direction 
     !! in each gauss points
 
@@ -269,8 +322,14 @@ contains ! *******************************************************************
     es%values_splines_eta2 = 0.0_f64
     SLL_ALLOCATE(es%values_jacobian(num_cells_eta1*(spline_degree_eta1+2),num_cells_eta2*(spline_degree_eta2+2)),ierr)
     es%values_jacobian = 0.0_f64
+    SLL_ALLOCATE(es%values_splines_gauss1(num_cells_eta1*(spline_degree_eta1+2), spline_degree_eta1+1),ierr)
+    es%values_splines_gauss1 = 0.0_f64
+    SLL_ALLOCATE(es%values_splines_gauss2(num_cells_eta2*(spline_degree_eta2+2), spline_degree_eta2+1),ierr)
+    es%values_splines_gauss2 = 0.0_f64
+    SLL_ALLOCATE(es%tab_index_coeff1(num_cells_eta1*(spline_degree_eta1+2)),ierr)
+    SLL_ALLOCATE(es%tab_index_coeff2(num_cells_eta2*(spline_degree_eta2+2)),ierr)
   end subroutine initialize_general_elliptic_solver
-
+  
   function new_general_elliptic_solver( &
    spline_degree_eta1, &
    spline_degree_eta2, &
@@ -302,13 +361,13 @@ contains ! *******************************************************************
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
-   sll_int32 :: knots1_size
-   sll_int32 :: knots2_size
-   sll_int32 :: num_splines1
-   sll_int32 :: num_splines2
-   sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
+   !sll_int32 :: knots1_size
+   !sll_int32 :: knots2_size
+   !sll_int32 :: num_splines1
+   !sll_int32 :: num_splines2
+   !sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr
-   sll_int32 :: solution_size
+   !sll_int32 :: solution_size
 
    SLL_ALLOCATE(es,ierr)
    call initialize( &
@@ -355,6 +414,13 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%tmp_rho_vec,ierr)
     SLL_DEALLOCATE(es%masse,ierr)
     SLL_DEALLOCATE(es%stiff,ierr)
+    SLL_DEALLOCATE(es%knots1_rho,ierr)
+    SLL_DEALLOCATE(es%knots2_rho,ierr)
+    SLL_DEALLOCATE(es%values_splines_eta1,ierr)
+    SLL_DEALLOCATE(es%values_splines_eta2,ierr)
+    SLL_DEALLOCATE(es%values_jacobian,ierr)
+    SLL_DEALLOCATE(es%values_splines_gauss1,ierr)
+    SLL_DEALLOCATE(es%values_splines_gauss2,ierr)
   end subroutine delete_elliptic
 
 
@@ -399,12 +465,12 @@ contains ! *******************************************************************
     sll_real64, dimension(:), allocatable :: Stiff_loc
     !sll_int32, dimension(:), allocatable :: ipvt
     !sll_real64, dimension(:), allocatable :: z
-    sll_int32 :: total_num_splines_eta1
-    sll_int32 :: total_num_splines_eta2
-    sll_int32 :: spline_degree_eta1
-    sll_int32 :: spline_degree_eta2
-    sll_int32 :: num_cells_eta1
-    sll_int32 :: num_cells_eta2
+    !sll_int32 :: total_num_splines_eta1
+    !sll_int32 :: total_num_splines_eta2
+    !sll_int32 :: spline_degree_eta1
+    !sll_int32 :: spline_degree_eta2
+    !sll_int32 :: num_cells_eta1
+    !sll_int32 :: num_cells_eta2
     sll_int32 :: total_num_splines_loc
     sll_int32 :: ierr,ierr1
     sll_int32 :: i
@@ -412,12 +478,12 @@ contains ! *******************************************************************
     sll_int32 :: cell_index
 
     !    type(sll_time_mark) :: timer
-    sll_real64 :: res,eta1,eta2
+    !sll_real64 :: res!,eta1,eta2
     character(len=*),parameter :: as_file1='mat'
-    integer :: li_ios,li_ios1
-    type(sll_time_mark)  :: t0 
-    type(sll_time_mark)  :: t1 
-    sll_real64           :: time
+    !integer :: li_ios,li_ios1
+    !type(sll_time_mark)  :: t0 
+    !type(sll_time_mark)  :: t1 
+    !sll_real64           :: time
     
     total_num_splines_loc = es%total_num_splines_loc
     ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
@@ -472,8 +538,8 @@ contains ! *******************************************************************
                M_b_vect_loc, &
                S_b1_loc,  &
                S_b2_loc )
-
-         ! time = time_elapsed_since(t1)
+        
+         ! time = sll_time_elapsed_since(t1)
          ! print *, 'time elapsed build_local_matrice : ',time
 
 
@@ -499,11 +565,12 @@ contains ! *******************************************************************
                es%masse,&
                es%stiff)
           !print*, i,j
-         ! time = time_elapsed_since(t1)
+         ! time = sll_time_elapsed_since(t1)
           !print *, 'time elapsed since local_to_global : ',time
+          
        end do
     end do
-
+   
     !print*, 'loop ok'
     
     ! SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
@@ -528,28 +595,35 @@ contains ! *******************************************************************
     use sll_timer
     class(general_coordinate_elliptic_solver) :: es
     class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
-    class(sll_scalar_field_2d_base), intent(in)     :: rho
+    class(sll_scalar_field_2d_base), intent(in),target  :: rho
     sll_int32 :: i
     sll_int32 :: j,ierr
     sll_int32 :: cell_index
     sll_int32 :: total_num_splines_loc
-    sll_real64 :: int_rho
+    sll_real64 :: int_rho,int_jac
     sll_real64, dimension(:), allocatable   :: M_rho_loc
     type(sll_time_mark)  :: t0 
-    type(sll_time_mark)  :: t1,t2
+    !type(sll_time_mark)  :: t1,t2
     double precision :: time
     sll_real64, dimension(:,:), allocatable   :: rho_at_gauss
     sll_int32 :: num_pts_g1, num_pts_g2, ig1, ig2, ig, jg
     sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
-
+    sll_int32  :: index_coef1, index_coef2
+    sll_int32  :: ideg1,ideg2
+    sll_real64, dimension(2,2) :: jac_mat
+    sll_real64 :: val_jac
+    class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
+    class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
+    sll_real64, dimension(:,:), pointer :: coeff_rho
+    
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
-
+    
     
     num_pts_g1 = size(es%gauss_pts1,2)
     num_pts_g2 = size(es%gauss_pts2,2)
     SLL_ALLOCATE(rho_at_gauss(es%num_cells1*num_pts_g1,es%num_cells2*num_pts_g2),ierr)
- 
+    rho_at_gauss(:,:) = 0.0_f64
     
     
     M_rho_loc = 0.0
@@ -557,46 +631,155 @@ contains ! *******************************************************************
 
     !    call set_time_mark(timer) ! comment this
     ! compute the intergale of the term source inn the case periodique periodique
-    if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
-         .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
-       
-       call compute_integral_source_term(es,rho, int_rho)
-    else 
-       int_rho = 0.0_f64
-    end if
+    !  if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
+    !       .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+    
+    !     call compute_integral_source_term(es,rho, int_rho)
+    !  else 
+    !     int_rho = 0.0_f64
+    !  end if
 
-
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
     ig2 = 0 
-    do j=1,es%num_cells2
-       eta2  = es%eta2_min + (j-1)*es%delta_eta2
-       do i=1,es%num_cells1
-          eta1  = es%eta1_min + (i-1)*es%delta_eta1
-          do jg=1,num_pts_g2
-             ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
-             ! the bottom edge of the cell.
-             gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
-             wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
-             
-             ig2 = jg + (j-1)*num_pts_g2
-             do ig=1,num_pts_g1
-                ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-                gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
-                wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
+    int_rho = 0.0_f64
+    int_jac = 0.0_f64
+    
+    ! afin d'optimiser la construction de la matrice rho
+    ! on va proceder de la facon qui suit 
+    base_field_pointer => rho
+    select type( type_field => base_field_pointer)
+    class is (sll_scalar_field_2d_discrete_alt)
+       base_interpolator_pointer => type_field%interp_2d
+       select type( type_interpolator => base_interpolator_pointer)
+       class is (arb_deg_2d_interpolator)
+          coeff_rho => type_interpolator%get_coefficients()
+          !print*, coeff_rho(1,:)
+          do j=1,es%num_cells2
+             eta2  = es%eta2_min + (j-1)*es%delta_eta2
+             do i=1,es%num_cells1
+                eta1  = es%eta1_min + (i-1)*es%delta_eta1
+                do jg=1,num_pts_g2
+                   ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
+                   ! the bottom edge of the cell.
+                   gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
+                   wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
+                   
+                   ig2 = jg + (j-1)*num_pts_g2
+                   do ig=1,num_pts_g1
+                      ! rescale Gauss points to be in interval [eta1,eta1+delta1]
+                      gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
+                      wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
+                      
+                      ig1 = ig + (i-1)*num_pts_g1
+                      
+                      jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                      val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      int_jac = int_jac + wgpt2*wgpt1*val_jac
+                      do ideg1 = 1,es%spline_degree1 + 1
+                         do ideg2 = 1,es%spline_degree2 + 1
+                            
+                            
+                            index_coef1 = es%tab_index_coeff1(i + es%num_cells1*(ig-1)) &
+                                 - es%spline_degree1 + ( ideg1 -1)
+                            index_coef2 = es%tab_index_coeff2(j + es%num_cells2*(jg-1)) &
+                                 - es%spline_degree2 + ( ideg2 -1)
+                            rho_at_gauss(ig1,ig2) = rho_at_gauss(ig1,ig2) +&
+                                 coeff_rho(index_coef1,index_coef2)*&
+                                 es%values_splines_gauss1(i + es%num_cells1*(ig-1), ideg1)*&
+                                 es%values_splines_gauss2(j + es%num_cells2*(jg-1), ideg2)
+                            
+                            
+                          end do
+                       end do
+                       int_rho = int_rho + rho_at_gauss(ig1,ig2)*wgpt1*wgpt2*val_jac
+                   end do
+                end do
+             end do
+          end do
+       class DEFAULT
 
-                ig1 = ig + (i-1)*num_pts_g1
-                rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2) - int_rho!
+          do j=1,es%num_cells2
+             eta2  = es%eta2_min + (j-1)*es%delta_eta2
+             do i=1,es%num_cells1
+                eta1  = es%eta1_min + (i-1)*es%delta_eta1
+                do jg=1,num_pts_g2
+                   ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
+                   ! the bottom edge of the cell.
+                   gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
+                   wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
+                
+                   ig2 = jg + (j-1)*num_pts_g2
+                   do ig=1,num_pts_g1
+                      ! rescale Gauss points to be in interval [eta1,eta1+delta1]
+                      gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
+                      wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
+                      
+                      ig1 = ig + (i-1)*num_pts_g1
+                      
+                      
+                      rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
+                      jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                      val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
+                      int_jac = int_jac + wgpt2*wgpt1*val_jac
+                   
+                   
+                   end do
+                end do
+             end do
+          end do
+
+          
+          
+       end select
+       
+    class is (sll_scalar_field_2d_analytic_alt)
+       
+       do j=1,es%num_cells2
+          eta2  = es%eta2_min + (j-1)*es%delta_eta2
+          do i=1,es%num_cells1
+             eta1  = es%eta1_min + (i-1)*es%delta_eta1
+             do jg=1,num_pts_g2
+                ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
+                ! the bottom edge of the cell.
+                gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
+                wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
+                
+                ig2 = jg + (j-1)*num_pts_g2
+                do ig=1,num_pts_g1
+                   ! rescale Gauss points to be in interval [eta1,eta1+delta1]
+                   gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
+                   wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
+                   
+                   ig1 = ig + (i-1)*num_pts_g1
+                   
+                   
+                   rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
+                   jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                   val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                   int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
+                   int_jac = int_jac + wgpt2*wgpt1*val_jac
+                   
+                   
+                end do
              end do
           end do
        end do
-    end do
-
-    time = time_elapsed_since(t0)
-
-    !print*, 'time to construct the rho', time
-    call set_time_mark(t0)
+       
+    end select
+    time = sll_time_elapsed_since(t0)
+    
+    print*, 'time to construct the rho', time
+    
+    if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
+         .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+       
+       rho_at_gauss = rho_at_gauss - int_rho/int_jac
+    end if
+    call sll_set_time_mark(t0)
+    
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -614,32 +797,32 @@ contains ! *******************************************************************
                rho_at_gauss, &
                int_rho,&
                M_rho_loc)
-
-         ! time = time_elapsed_since(t1)
-
-         ! print*, 'time to construct the build_local', time
-         ! call set_time_mark(t2)
+          
+          ! time = sll_time_elapsed_since(t1)
+          
+          ! print*, 'time to construct the build_local', time
+          ! call set_time_mark(t2)
           call local_to_global_matrices_rho( &
                es, &
                cell_index, &
                i, &
                j, &
                M_rho_loc)
-         ! time = time_elapsed_since(t2)
-
-         ! print*, 'time to construct the local_to_global', time
+          ! time = sll_time_elapsed_since(t2)
+          
+          ! print*, 'time to construct the local_to_global', time
           
        end do
     end do
     
-   time = time_elapsed_since(t0)
-
-   ! print*, 'time to construct the matrix', time 
+    time = sll_time_elapsed_since(t0)
+    
+    ! print*, 'time to construct the matrix', time 
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
        call solve_linear_system_perper(es,es%masse)
-      
+       
     else 
        call solve_linear_system(es)
     end if
@@ -688,7 +871,7 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base), pointer :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
-    sll_real64 :: epsi
+    !sll_real64 :: epsi
     !sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
     sll_real64, dimension(:,:), intent(out) :: K_a11_loc
@@ -731,6 +914,8 @@ contains ! *******************************************************************
     sll_real64, dimension(obj%spline_degree2+1,obj%spline_degree2+1) :: work2
     sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1
     sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2
+    sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1_rho
+    sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2_rho
     sll_real64 :: val_f
     sll_real64 :: val_c
     sll_real64 :: val_a11
@@ -752,6 +937,8 @@ contains ! *******************************************************************
     sll_real64 :: MC
     sll_real64 :: C1
     sll_real64 :: C2    
+    sll_int32 :: left_x,left_y
+    sll_int32 :: mflag_x, mflag_y
     
     Masse_loc(:)      = 0.0
     Stiff_loc(:)      = 0.0
@@ -816,10 +1003,21 @@ contains ! *******************************************************************
             work2,&
             dbiatx2,&
             2)
+
+       call interv ( obj%knots2_rho, obj%num_cells2 + obj%spline_degree2+ 2, gpt2, left_y, mflag_y )
+       call bsplvd( &
+            obj%knots2_rho, &
+            obj%spline_degree2+1,&
+            gpt2,&
+            left_y,&
+            work2,&
+            dbiatx2_rho,&
+            2)
+
        ! we stocke the values of spline to construct the source term
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
-       !print*, 'splin2=',dbiatx2
-       !print*, 'knot2',obj%knots2
+       obj%values_splines_gauss2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2_rho(:,1)
+       obj%tab_index_coeff2(cell_j + obj%num_cells2*(j-1)) = left_y
        do i=1,num_pts_g1
           ! rescale Gauss points to be in interval [eta1,eta1+delta1]
           gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
@@ -849,10 +1047,23 @@ contains ! *******************************************************************
                dbiatx1,&
                2 )
 
+          call interv ( obj%knots1_rho, obj%num_cells1 + obj%spline_degree1+ 2, gpt1, &
+               left_x, mflag_x )
+     
+          call bsplvd(&
+               obj%knots1_rho,&
+               obj%spline_degree1+1,&
+               gpt1,&
+               left_x,&
+               work1,&
+               dbiatx1_rho,&
+               2 )
+
           obj%values_splines_eta1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1(:,1)
-
+          obj%values_splines_gauss1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
+          obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
+ 
           val_c        = c_field%value_at_point(gpt1,gpt2)
-
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
           val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
           val_a21      = a21_field_mat%value_at_point(gpt1,gpt2)
@@ -870,7 +1081,7 @@ contains ! *******************************************************************
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
 
           obj%values_jacobian(cell_i + obj%num_cells1*(i-1),cell_j + obj%num_cells2*(j-1)) = val_jac
-
+        
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
@@ -999,7 +1210,7 @@ contains ! *******************************************************************
           end do
        end do
     end do
- 
+    
   end subroutine build_local_matrices
   
   
@@ -1020,7 +1231,7 @@ contains ! *******************************************************************
     sll_int32, intent(in) :: cell_j
     class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64, dimension(:,:), intent(in)   :: rho_at_gauss
-    sll_real64 :: epsi
+    !sll_real64 :: epsi
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
     sll_int32 :: bc_left    
     sll_int32 :: bc_right
@@ -1037,28 +1248,28 @@ contains ! *******************************************************************
     sll_int32  :: tmp2
     sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
     sll_int32  :: num_pts_g2 ! number of gauss points in second direction
-    sll_int32  :: i,ii,iii
-    sll_int32  :: j,jj,jjj
+    sll_int32  :: i,ii!,iii
+    sll_int32  :: j,jj!,jjj
     sll_real64 :: gpt1
     sll_real64 :: gpt2
     sll_real64 :: wgpt1
     sll_real64 :: wgpt2
-    sll_real64 :: gtmp1
-    sll_real64 :: gtmp2
-    sll_int32  :: local_spline_index1
-    sll_int32  :: local_spline_index2
+    !sll_real64 :: gtmp1
+    !sll_real64 :: gtmp2
+    !sll_int32  :: local_spline_index1
+    !sll_int32  :: local_spline_index2
     sll_int32  :: index1
-    sll_int32  :: index2
+    !sll_int32  :: index2
     sll_real64, dimension(obj%spline_degree1+1,obj%spline_degree1+1) :: work1
     sll_real64, dimension(obj%spline_degree2+1,obj%spline_degree2+1) :: work2
     sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1
     sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2
     sll_real64 :: val_f
-    sll_real64, dimension(2,2) :: jac_mat
+    !sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac,spline1,spline2
-    type(sll_time_mark)  :: t0 
-    type(sll_time_mark)  :: t1,t2
-    double precision :: time
+    !type(sll_time_mark)  :: t0 
+    !type(sll_time_mark)  :: t1,t2
+    !double precision :: time
     
     M_rho_loc(:) = 0.0
     dbiatx1(:,:)  = 0.0_f64
@@ -1192,13 +1403,13 @@ contains ! *******************************************************************
     sll_int32 :: i,j,mm, nn, b, bprime,x,y
     sll_int32 :: li_A, li_Aprime
     sll_real64 :: elt_mat_global
-    sll_real64 :: elt_masse
+    !sll_real64 :: elt_masse
     sll_int32 :: nbsp,nbsp1
     sll_int32 :: bc_left
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
-    sll_int32 :: ierr 
+    !sll_int32 :: ierr 
     
     bc_left   = es%bc_left
     bc_right  = es%bc_right
@@ -1322,13 +1533,13 @@ contains ! *******************************************************************
      !  Correspond to the full Matrix of linear system 
      !  It is not necessary to keep it  
      sll_int32 :: index1, index3
-     sll_int32 :: i,j,mm, nn, b, bprime,x,y
-     sll_int32 :: nbsp,nbsp1
+     sll_int32 :: i,mm, b, x!,y
+     sll_int32 :: nbsp!,nbsp1
      sll_int32 :: bc_left
      sll_int32 :: bc_right
      sll_int32 :: bc_bottom
      sll_int32 :: bc_top
-     sll_int32 :: ierr 
+     !sll_int32 :: ierr 
      
      bc_left   = es%bc_left
      bc_right  = es%bc_right
@@ -1377,8 +1588,8 @@ contains ! *******************************************************************
     !type(csr_matrix)  :: csr_masse
     integer :: elt, elt1
     integer :: i,j
-    sll_real64, dimension(:), allocatable :: resul
-    integer :: li_ios
+    !sll_real64, dimension(:), allocatable :: resul
+    !integer :: li_ios
     character(len=*),parameter :: as_file='rho', as_file1='phi',as_file2='mat'
     sll_int32 :: bc_left
     sll_int32 :: bc_right
@@ -1528,11 +1739,7 @@ contains ! *******************************************************************
     sll_real64 :: eta2
     sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
     sll_int32  :: num_pts_g2 ! number of gauss points in second direction
-    sll_int32  :: cell_i, cell_j,i,j
-    sll_real64 :: gpt1
-    sll_real64 :: gpt2
-    sll_real64 :: wgpt1
-    sll_real64 :: wgpt2
+    sll_int32  :: cell_i, cell_j
     sll_real64 :: val_f
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
