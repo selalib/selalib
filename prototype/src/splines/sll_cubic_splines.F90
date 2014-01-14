@@ -98,8 +98,14 @@ module sll_cubic_splines
      logical                             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
+  private delete_spline_1D, delete_spline_2D, compute_spline_1D_periodic_aux,&
+       compute_spline_1D_hermite_aux, interpolate_value_aux, &
+       interpolate_derivative_aux, compute_spline_2d_prdc_prdc, &
+       compute_spline_2d_hrmt_prdc, compute_spline_2D_prdc_hrmt, &
+       compute_spline_2d_hrmt_hrmt
 
-  interface delete
+
+  interface sll_delete
      module procedure delete_spline_1D, delete_spline_2D
   end interface
 
