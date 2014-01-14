@@ -616,7 +616,7 @@ contains   ! *****************************************************************
   subroutine delete_field_2d_discrete_alt( field )
     class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
     sll_int32 :: ierr
-    if(allocated(field%values))     SLL_DEALLOCATE(field%values,ierr)
+    if(associated(field%values))    SLL_DEALLOCATE(field%values,ierr)
     if(associated(field%T))         nullify(field%T)
     if(associated(field%interp_2d)) nullify(field%interp_2d)
     if(associated(field%point1_1d)) nullify(field%point1_1d)
