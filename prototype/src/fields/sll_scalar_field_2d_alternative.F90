@@ -358,12 +358,12 @@ contains   ! *****************************************************************
   end subroutine update_interpolation_coefficients_2d_analytic
 
   subroutine delete_field_2d_analytic_alt( field )
-    class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
+    class(sll_scalar_field_2d_analytic_alt), intent(inout) :: field
     ! nothing internal do deallocate, just nullify pointers. Can't call
     ! delete on them because the field does not 'own' these data.
-    nullify(field%func)
-    nullify(field%params)
-    nullify(field%T)
+    if(associated(field%func))  nullify(field%func)
+    if(associated(field%params))nullify(field%params)
+    if(associated(field%T))     nullify(field%T)
   end subroutine delete_field_2d_analytic_alt
 
   ! For those cases in which handling pointers to field structures is not
@@ -614,15 +614,13 @@ contains   ! *****************************************************************
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_2d_discrete_alt( field )
-    class(sll_scalar_field_2d_discrete_alt), intent(out) :: field
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
     sll_int32 :: ierr
-    if( associated(field%values) ) then
-       SLL_DEALLOCATE(field%values,ierr)
-    end if
-    nullify(field%T)
-    nullify(field%interp_2d)
-    nullify(field%point1_1d)
-    nullify(field%point2_1d)
+    if(associated(field%values))    SLL_DEALLOCATE(field%values,ierr)
+    if(associated(field%T))         nullify(field%T)
+    if(associated(field%interp_2d)) nullify(field%interp_2d)
+    if(associated(field%point1_1d)) nullify(field%point1_1d)
+    if(associated(field%point2_1d)) nullify(field%point2_1d)
   end subroutine delete_field_2d_discrete_alt
 
   subroutine set_field_data_discrete_2d( field, values )
