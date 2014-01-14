@@ -87,15 +87,15 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
     sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta1
-    sll_real64 :: eta1_min
+    !sll_real64 :: eta1_min
     sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_real64 :: max1
-    sll_real64 :: min1
+    !sll_real64 :: max1
+    !sll_real64 :: min1
     sll_real64 :: max2
     sll_real64 :: min2
-    sll_real64 :: factor1
+    !sll_real64 :: factor1
     sll_real64 :: factor2
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
@@ -148,12 +148,12 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
     sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta1
-    sll_real64 :: eta1_min
+    !sll_real64 :: eta1_min
     sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_real64 :: max1
-    sll_real64 :: min1
+    !sll_real64 :: max1
+    !sll_real64 :: min1
     sll_real64 :: max2
     sll_real64 :: min2
 !    sll_real64 :: factor1
@@ -210,13 +210,13 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta2
     sll_real64 :: eta1_min
-    sll_real64 :: eta2_min
+    !sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: max1
     sll_real64 :: min1
-    sll_real64 :: max2
-    sll_real64 :: min2
+    !sll_real64 :: max2
+    !sll_real64 :: min2
     sll_real64 :: factor1
 !    sll_real64 :: factor2
     sll_int32  :: i
@@ -271,13 +271,13 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta2
     sll_real64 :: eta1_min
-    sll_real64 :: eta2_min
+    !sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: max1
     sll_real64 :: min1
-    sll_real64 :: max2
-    sll_real64 :: min2
+    !sll_real64 :: max2
+    !sll_real64 :: min2
     sll_real64 :: factor1
 !    sll_real64 :: factor2
     sll_int32  :: i
@@ -331,15 +331,15 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
     sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta1
-    sll_real64 :: eta1_min
+    !sll_real64 :: eta1_min
     sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_real64 :: max1
-    sll_real64 :: min1
+    !sll_real64 :: max1
+    !sll_real64 :: min1
     sll_real64 :: max2
     sll_real64 :: min2
-    sll_real64 :: factor1
+    !sll_real64 :: factor1
     sll_real64 :: factor2
     sll_int32  :: j
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
@@ -403,15 +403,15 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
     sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta1
-    sll_real64 :: eta1_min
+    !sll_real64 :: eta1_min
     sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_real64 :: max1
-    sll_real64 :: min1
+    !sll_real64 :: max1
+    !sll_real64 :: min1
     sll_real64 :: max2
     sll_real64 :: min2
-    sll_real64 :: factor1
+    !sll_real64 :: factor1
     sll_real64 :: factor2
     sll_int32  :: j
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
@@ -476,15 +476,15 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta2
     sll_real64 :: eta1_min
-    sll_real64 :: eta2_min
+    !sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: max1
     sll_real64 :: min1
-    sll_real64 :: max2
-    sll_real64 :: min2
+    !sll_real64 :: max2
+    !sll_real64 :: min2
     sll_real64 :: factor1
-    sll_real64 :: factor2
+    !sll_real64 :: factor2
     sll_int32  :: i
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
@@ -548,15 +548,15 @@ contains
 !    sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta2
     sll_real64 :: eta1_min
-    sll_real64 :: eta2_min
+    !sll_real64 :: eta2_min
     sll_real64 :: delta1
     sll_real64 :: delta2
     sll_real64 :: max1
     sll_real64 :: min1
-    sll_real64 :: max2
-    sll_real64 :: min2
+    !sll_real64 :: max2
+    !sll_real64 :: min2
     sll_real64 :: factor1
-    sll_real64 :: factor2
+    !sll_real64 :: factor2
     sll_int32  :: i
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2

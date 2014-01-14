@@ -18,13 +18,22 @@
 program unit_test_advection_2d_CSL1D
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_advection_2d_CSL1D
+use sll_module_advection_2d_tensor_product
 use sll_module_characteristics_2d_explicit_euler
 use sll_cubic_spline_interpolator_2d
+use sll_module_advection_1d_BSL
+use sll_module_characteristics_1d_explicit_euler
+use sll_cubic_spline_interpolator_1d
 
 implicit none
   
   class(sll_advection_2d_base), pointer :: adv
+  class(sll_advection_1d_base), pointer :: adv_x1
+  class(sll_advection_1d_base), pointer :: adv_x2
+  class(sll_interpolator_1d_base), pointer :: interp_x1
+  class(sll_interpolator_1d_base), pointer :: interp_x2
+  class(sll_characteristics_1d_base), pointer :: charac_x1
+  class(sll_characteristics_1d_base), pointer :: charac_x2
   class(sll_interpolator_2d_base), pointer :: interp
   class(sll_characteristics_2d_base), pointer :: charac
   sll_real64 :: x1_min
@@ -80,6 +89,45 @@ implicit none
   err=0._f64
 
 
+
+  interp_x1 => new_cubic_spline_1d_interpolator( &
+    num_cells_x1+1, &
+    x1_min, &
+    x1_max, &
+    SLL_PERIODIC)
+
+
+  charac_x1 => new_explicit_euler_1d_charac(&
+      num_cells_x1+1, &
+      SLL_PERIODIC)
+  
+  adv_x1 => new_BSL_1d_advector(&
+    interp_x1, &
+    charac_x1, &
+    num_cells_x1+1, &
+    eta_coords = x1_mesh)
+
+  interp_x2 => new_cubic_spline_1d_interpolator( &
+    num_cells_x2+1, &
+    x2_min, &
+    x2_max, &
+    SLL_PERIODIC)
+
+
+  charac_x2 => new_explicit_euler_1d_charac(&
+      num_cells_x2+1, &
+      SLL_PERIODIC)
+  
+  adv_x2 => new_BSL_1d_advector(&
+    interp_x2, &
+    charac_x2, &
+    num_cells_x2+1, &
+    eta_coords = x2_mesh)
+
+
+
+
+
   interp => new_cubic_spline_2d_interpolator( &
     num_cells_x1+1, &
     num_cells_x2+1, &
@@ -97,14 +145,12 @@ implicit none
       SLL_PERIODIC, &
       SLL_PERIODIC)
   
-  adv => new_CSL1D_2d_advector(&
-    interp, &
-    charac, &
+  adv => new_tensor_product_2d_advector(&
+    adv_x1, &
+    adv_x2, &
     num_cells_x1+1, &
-    num_cells_x2+1, &
-    eta1_coords = x1_mesh, &
-    eta2_coords = x2_mesh)
-  
+    num_cells_x2+1)
+    
   call adv%advect_2d(A1, A2, dt, input, output)
   
   err=maxval(abs(input-output))
