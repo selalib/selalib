@@ -45,12 +45,14 @@ contains
     sll_int32 :: interpolator  ! kind of interpolator
     sll_int32 :: order  ! order of method
     ! local variables
-    sll_int32 :: ierr, i, j, k
+    sll_int32 :: ierr, i, j
+    !sll_int32 :: k
     sll_int32 :: p ! spline degree
     sll_int32 :: icoarse  ! coarsening factor for stabilization of trigonometric interpolation
     sll_real64, dimension(order) :: biatx
-    sll_real64 :: mode, val
-    sll_real64, dimension(:), allocatable :: buf !for fft_selalib
+    !sll_real64 :: mode
+    !sll_real64 :: val
+    !sll_real64, dimension(:), allocatable :: buf !for fft_selalib
 
     SLL_ALLOCATE( this, ierr )
     this%N = N
@@ -145,10 +147,14 @@ contains
     sll_real64, dimension(:), intent(out)   :: u_out  ! result
     sll_real64, intent(in)     :: alpha ! displacement normalized to cell size
     ! local variables
-    sll_int32 :: i, j, k, p, ishift, j0, imode,n
-    sll_real64 :: beta, filter, mode
+    sll_int32 :: i, j, k, p, ishift
+    !sll_int32 :: j0
+    sll_int32 ::  imode,n
+    sll_real64 :: beta, filter
+    !sll_real64 :: mode
     sll_comp64 :: tmp,tmp2
-    complex(8) :: int_fact, z
+    !complex(8) :: int_fact
+    !complex(8) :: z
     ! 
     sll_real64, dimension(this%order) :: biatx
     
@@ -353,7 +359,8 @@ contains
     real(8),dimension(1:Ncoef),intent(in)::coefd
     real(8),dimension(1:N),intent(inout)::E
     real(8),intent(in)::alpha
-    integer::i,ix
+    integer::i
+    !integer::ix
     real(8)::rea,ima,reb,imb,tmp,x
     !localization
     !

@@ -581,15 +581,16 @@ contains
     local_test_passed = .true.
     print *, 'X1MIN, X1MAX = ', X1MIN, X1MAX
     ! Run the test over a range of data sizes.
+    print*, np_min , np_max
     do npts=np_min, np_max
        h1 = (X1MAX - X1MIN)/real(npts-1,f64)
        acc = 0.0_f64
+       print*, npts
        SLL_ALLOCATE(data_in(npts),ierr)
        do i=0,npts-1
           x1 = X1MIN + real(i,f64)*h1 
           data_in(i+1) = func_1d(x1)
        end do
-       
        spline => new_spline_1D( &
             npts, &
             X1MIN, &
@@ -597,8 +598,8 @@ contains
             SLL_HERMITE )
        
        call compute_spline_1D( data_in, spline )
-       !        print *, '1D coefficients: '
-       !    print *,  spline%coeffs(:)
+       print *, '1D coefficients: '
+       print *,  spline%coeffs(:)
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 
@@ -1339,25 +1340,25 @@ contains
   function plane( x, y )
     sll_real64 :: plane
     sll_real64, intent(in) :: x, y
-    plane = 2.0*x + 1.0
+    plane = 2.0*x + 1.0+0._f64*y
   end function plane
 
   function plane_deriv( x, y )
     sll_real64 :: plane_deriv
     sll_real64, intent(in) :: x, y
-    plane_deriv = 2.0
+    plane_deriv = 2.0+ 0._f64*x+0._f64*y
   end function plane_deriv
 
   function plane2( x, y)
     sll_real64 :: plane2
     sll_real64, intent(in) :: x, y
-    plane2 = 2.0*y + 1.0
+    plane2 = 2.0*y + 1.0+ 0._f64*x
   end function plane2
 
   function plane2_deriv( x, y )
     sll_real64 :: plane2_deriv
     sll_real64, intent(in) :: x, y
-    plane2_deriv = 2.0
+    plane2_deriv = 2.0+ 0._f64*x+0._f64*y
   end function plane2_deriv
 
   function plane3( x, y)
@@ -1369,13 +1370,13 @@ contains
   function plane3_deriv_x( x, y )
     sll_real64 :: plane3_deriv_x
     sll_real64, intent(in) :: x, y
-    plane3_deriv_x = 2.0
+    plane3_deriv_x = 2.0+ 0._f64*x+0._f64*y
   end function plane3_deriv_x
 
   function plane3_deriv_y( x, y )
     sll_real64 :: plane3_deriv_y
     sll_real64, intent(in) :: x, y
-    plane3_deriv_y = 2.0
+    plane3_deriv_y = 2.0+ 0._f64*x+0._f64*y
   end function plane3_deriv_y
 
   function polar_x( eta1, eta2 )
@@ -1393,7 +1394,7 @@ contains
   function deriv1_polar_x( eta1, eta2 )
     sll_real64 :: deriv1_polar_x
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
+    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)+0._f64*eta1
   end function deriv1_polar_x
 
   function deriv2_polar_x( eta1, eta2 )
@@ -1405,7 +1406,7 @@ contains
   function deriv1_polar_y( eta1, eta2 )
     sll_real64 :: deriv1_polar_y
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
+    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)+0._f64*eta1
   end function deriv1_polar_y
 
   function deriv2_polar_y( eta1, eta2 )
