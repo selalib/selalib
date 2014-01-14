@@ -138,7 +138,7 @@ contains
     enddo
 
     do i2=1,Npts2
-      adv%buf1d(1:Npts1) = input(1:Npts1,i2)
+      adv%buf1d(1:Npts1) = output(1:Npts1,i2)
       call adv%advect_x1%advect_1d( &
         A1(1:Npts1,i2), &
         0.5_f64*dt, &
