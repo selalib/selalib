@@ -932,7 +932,7 @@ subroutine calcul_integral(rho_n,phi,&
     integer :: ig,jg, mx,my
     sll_real64 :: ptgaussx, ptgaussy, wgaussptx,wgausspty
     sll_real64 :: val1,val2
-    sll_real64 :: valjac,et1i,et2i,valf,yg,etap,valEx,valEy
+    sll_real64 :: valjac,et1i,et2i,valf,yg,valEx,valEy
     sll_real64 :: valdx_1,valdx_2,valdy_1,valdy_2
     sll_real64 :: delta_eta1, delta_eta2, eta1_min, eta1_max
     sll_real64:: eta2_min, eta2_max
@@ -1081,7 +1081,6 @@ subroutine plot_f1(rho,sim,itime)!
   sll_int32, intent(in) :: itime
   character(len=4)      :: cplot
   sll_int32             :: nnodes_x1, nnodes_x2
-  sll_real64 :: eta1,eta2,delta_eta1,delta_eta2,eta1_min,eta2_min
   
 
   nnodes_x1 = sim%nc_x1+1
