@@ -182,11 +182,12 @@ contains
           SLL_CLEAR_ALLOCATE(derivatives(1:j+1),ierr)
           SLL_CLEAR_ALLOCATE(sp_and_derivs(1:2,1:j+1),ierr)
           call random_number(argument)
+
           results(:) = uniform_b_splines_at_x(j, argument)
           derivatives(:) = uniform_b_spline_derivatives_at_x(j, argument)
           sp_and_derivs(:,:) = uniform_b_splines_and_derivs_at_x(j, argument)
-          passed_flag = passed_flag .and. &
-               (abs(sum(results)-1.0_f64).le.criterion)
+
+          passed_flag = passed_flag .and. (abs(sum(results)-1.0_f64).le.criterion)
 
           if( passed_flag .eqv. .false. ) then
              print *, 'Test_uniform_b_splines, values: wrong result for x = ', &
@@ -212,7 +213,8 @@ contains
           if( passed_flag .eqv. .false. ) then
              print *, 'Test_uniform_b_splines, vals and derivs: ', &
                   'wrong result for x = ', argument
-             print *, 'Degree = ', j, 'Reduction = ', sum(sp_and_derivs)
+             print *, 'Degree = ', j, 'Reduction = ', sum(sp_and_derivs(1,:)) &
+                                                    , sum(sp_and_derivs(2,:))
              print*, 'Exiting...'
              stop
           end if
