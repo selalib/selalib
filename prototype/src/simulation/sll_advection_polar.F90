@@ -122,7 +122,7 @@ contains
 
     if (associated(this)) then
        SLL_DEALLOCATE_ARRAY(this%field,err)
-       call delete_spline_2d(this%spl_f)
+       call sll_delete(this%spl_f)
        SLL_DEALLOCATE(this,err)
        this=>null()
     end if
