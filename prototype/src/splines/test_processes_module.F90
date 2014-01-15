@@ -107,16 +107,16 @@ contains
     end do
      
     print *, 'proceed to allocate the spline...'
-    sp1 =>  new_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
-    call compute_spline_1D( data, sp1 )
-    sp2 =>  new_spline_1D( &
+    sp1 =>  new_cubic_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
+    call compute_cubic_spline_1D( data, sp1 )
+    sp2 =>  new_cubic_spline_1D( &
          NP, &
          XMIN, &
          XMAX, &
          SLL_HERMITE, &
          fprime(XMIN, i_test), &
          fprime(XMAX, i_test) )
-    call compute_spline_1D( data, sp2 )
+    call compute_cubic_spline_1D( data, sp2 )
     
     print *, 'cumulative errors: '
     print *, 'periodic case, NP-1 points: '
@@ -258,11 +258,11 @@ contains
     end do
         
     ! Test the periodic-periodic spline2d 
-    sp2d_1 => new_spline_2D( NPX1, NPX2, &
+    sp2d_1 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_PERIODIC, SLL_PERIODIC )
-    call compute_spline_2D( data_2d, sp2d_1 )
+    call compute_cubic_spline_2D( data_2d, sp2d_1 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -282,13 +282,13 @@ contains
     endif
     ! Test the Hermite-periodic spline2d
     !print *, 'Testing hermite-periodic spline. Test 1'
-    sp2d_2 => new_spline_2D( NPX1, NPX2, &
+    sp2d_2 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_HERMITE, SLL_PERIODIC, &
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
-    call compute_spline_2D( data_2d, sp2d_2 )
+    call compute_cubic_spline_2D( data_2d, sp2d_2 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -307,13 +307,13 @@ contains
        stop
     endif
     ! Test the periodic-Hermite spline2d
-    sp2d_3 => new_spline_2D( NPX1, NPX2, &
+    sp2d_3 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_PERIODIC, SLL_HERMITE, &
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
-    call compute_spline_2D( data_2d, sp2d_3 )
+    call compute_cubic_spline_2D( data_2d, sp2d_3 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -332,13 +332,13 @@ contains
        stop
     endif
     ! Test the Hermite-Hermite spline2d
-    sp2d_4 => new_spline_2D( NPX1, NPX2, &
+    sp2d_4 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_HERMITE, SLL_HERMITE,&
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
-    call compute_spline_2D( data_2d, sp2d_4 )
+    call compute_cubic_spline_2D( data_2d, sp2d_4 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -431,13 +431,13 @@ contains
        correct_data_out(i+1) = result_f(x1)
     end do
 
-    spline => new_spline_1D( &
+    spline => new_cubic_spline_1D( &
       npts, &
       xmin, &
       xmax, &
       SLL_PERIODIC )
 
-    call compute_spline_1D(data_in, spline)
+    call compute_cubic_spline_1D(data_in, spline)
     do i=0,npts-1
        x1 = xmin + real(i,f64)*h1 
        val = interpolator_f(x1,spline)
@@ -515,13 +515,13 @@ contains
           correct_data_out(i+1) = result_f(x1)
        end do
 
-       spline => new_spline_1D( &
+       spline => new_cubic_spline_1D( &
             npts, &
             xmin, &
             xmax, &
             SLL_HERMITE )
 
-       call compute_spline_1D(data_in, spline)
+       call compute_cubic_spline_1D(data_in, spline)
        do i=0,npts-2
           x1 = xmin + real(i,f64)*h1 
           val = interpolator_f(x1,spline)
@@ -591,13 +591,13 @@ contains
           x1 = X1MIN + real(i,f64)*h1 
           data_in(i+1) = func_1d(x1)
        end do
-       spline => new_spline_1D( &
+       spline => new_cubic_spline_1D( &
             npts, &
             X1MIN, &
             X1MAX, &
             SLL_HERMITE )
        
-       call compute_spline_1D( data_in, spline )
+       call compute_cubic_spline_1D( data_in, spline )
        print *, '1D coefficients: '
        print *,  spline%coeffs(:)
        acc = 0.0_f64
@@ -668,7 +668,7 @@ contains
        end do
     end do
 
-    spline => new_spline_2D( &
+    spline => new_cubic_spline_2D( &
       NPX1, &
       NPX2, &
       X1MIN, &
@@ -678,7 +678,7 @@ contains
       SLL_PERIODIC, &
       SLL_PERIODIC )
 
-    call compute_spline_2D(data_in,spline)
+    call compute_cubic_spline_2D(data_in,spline)
 
     do j=0,NPX2-1
        do i=0,NPX1-1
@@ -757,7 +757,7 @@ contains
        slopes_max(j+1) = slope_max_func(1.0_f64,x2)
     end do
 
-    spline => new_spline_2D( &
+    spline => new_cubic_spline_2D( &
       NPX1, &
       NPX2, &
       0.0_f64, &
@@ -769,7 +769,7 @@ contains
       x1_min_slopes=slopes_min, &
       x1_max_slopes=slopes_max )
 
-    call compute_spline_2D(data_in,spline)
+    call compute_cubic_spline_2D(data_in,spline)
 
     do j=0,NPX2-1
        do i=0,NPX1-1
@@ -847,7 +847,7 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -859,7 +859,7 @@ contains
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes )
 
-    call compute_spline_2D( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -936,7 +936,7 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -948,7 +948,7 @@ contains
 !         x1_min_slopes=eta1_min_slopes, &
 !         x1_max_slopes=eta1_max_slopes )
 
-    call compute_spline_2D( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1026,7 +1026,7 @@ contains
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1038,7 +1038,7 @@ contains
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1115,7 +1115,7 @@ contains
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1127,7 +1127,7 @@ contains
 !         x2_min_slopes=eta2_min_slopes, &
 !         x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1222,7 +1222,7 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1236,7 +1236,7 @@ contains
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1291,7 +1291,7 @@ contains
        end do
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1301,7 +1301,7 @@ contains
          SLL_HERMITE, &
          SLL_HERMITE )
 
-    call compute_spline_2D( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
