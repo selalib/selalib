@@ -1,9 +1,9 @@
 # swirling deformation flow (analytical field)
 ./bin/test_2d_af_cartesian ../selalib/prototype/src/simulation/afsim2d_cartesian_sdf
-#gnuplot -persist ../selalib/prototype/src/simulation/afsim2d_cartesian_sdf.gnu
+gnuplot -persist ../selalib/prototype/src/simulation/afsim2d_cartesian_sdf.gnu
 
 #../selalib/prototype/src/simulation/simulation_2d_analytic_field_curvilinear.F90
-./bin/test_2d_af_curvilinear ../selalib/prototype/src/simulation/afsim2d_curvilinear_sdf
+#./bin/test_2d_af_curvilinear ../selalib/prototype/src/simulation/afsim2d_curvilinear_sdf
 
 
 #guiding center simulations
@@ -17,16 +17,16 @@ ctest --verbose -R sim2d_gc_polar
 gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_polar.gnu
 
 #curvilinear colella
-./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input
-gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear.gnu
+#./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input
+#gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear.gnu
 
 #curvilinear cartesian
-./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_cart
-gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_cart.gnu
+#./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_cart
+#gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_cart.gnu
 
 #curvilinear polar
-./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_polar
-gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_polar.gnu
+#./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input_polar
+#gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear_polar.gnu
 
 
 
@@ -66,6 +66,6 @@ gnuplot -persist ../selalib/prototype/src/simulation/vpsim4d_cartesian.gnu
 
 
 #drift kinetic 4D polar
-ctest --verbose -R sim4d_DK_polar
+#ctest --verbose -R sim4d_DK_polar
 #time mpirun -np 16 ./bin/test_4d_dk_polar ../selalib/prototype/src/simulation/dksim4d_polar_input.nml
-gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar.gnu 
+#gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar.gnu 
