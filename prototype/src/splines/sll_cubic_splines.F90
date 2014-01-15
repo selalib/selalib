@@ -41,7 +41,7 @@ module sll_cubic_splines
   
   !> @brief basic type for one-dimensional cubic spline data.
   type  ::  sll_cubic_spline_1D
-  !   private
+     private
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
      sll_real64                        :: rdelta   ! reciprocal of delta
@@ -72,7 +72,7 @@ module sll_cubic_splines
 
   !> @brief basic type for one-dimensional cubic spline data
   type sll_cubic_spline_2D
-   !  private
+     private
      sll_int32                           :: num_pts_x1
      sll_int32                           :: num_pts_x2
      sll_real64                          :: x1_delta
@@ -121,6 +121,26 @@ module sll_cubic_splines
      module procedure delete_cubic_spline_1D, delete_cubic_spline_2D
   end interface
 
+  interface get_x1_min
+     module procedure get_x1_min_cs1d, get_x1_min_cs2d
+  end interface get_x1_min
+
+  interface get_x1_max
+     module procedure get_x1_max_cs1d, get_x1_max_cs2d
+  end interface get_x1_max
+
+  interface get_x1_delta
+     module procedure get_delta_cs1d, get_x1_delta_cs2d
+  end interface get_x1_delta
+
+  interface get_x2_max
+     module procedure get_x2_max_cs2d
+  end interface get_x2_max
+
+  interface get_x2_delta
+     module procedure get_x2_delta_cs2d
+  end interface get_x2_delta
+
   ! Some useful macros that should probably be put in a different file to 
   ! make them more widely accessible. Here we use them to compute default
   ! values for the slopes. 
@@ -147,6 +167,25 @@ module sll_cubic_splines
 
 
 contains  ! ****************************************************************
+
+#define MAKE_GET_SLOT_FUNCTION( fname, datatype, slot, ret_type )    \
+  function fname( spline_obj ) result(val);                \
+    type(datatype), pointer :: spline_obj;                 \
+    ret_type :: val;                                       \
+    val = spline_obj%slot;                                 \
+  end function fname
+
+
+MAKE_GET_SLOT_FUNCTION( get_x1_min_cs1d, sll_cubic_spline_1d, xmin, sll_real64 )
+MAKE_GET_SLOT_FUNCTION( get_x1_max_cs1d, sll_cubic_spline_1d, xmax, sll_real64 )
+MAKE_GET_SLOT_FUNCTION( get_delta_cs1d,  sll_cubic_spline_1d, delta,sll_real64 )
+
+MAKE_GET_SLOT_FUNCTION(get_x1_min_cs2d, sll_cubic_spline_2d, x1_min, sll_real64 )
+MAKE_GET_SLOT_FUNCTION(get_x1_max_cs2d, sll_cubic_spline_2d, x1_max, sll_real64 )
+MAKE_GET_SLOT_FUNCTION(get_x2_min_cs2d, sll_cubic_spline_2d, x2_min, sll_real64 )
+MAKE_GET_SLOT_FUNCTION(get_x2_max_cs2d, sll_cubic_spline_2d, x2_max, sll_real64 )
+MAKE_GET_SLOT_FUNCTION(get_x1_delta_cs2d,sll_cubic_spline_2d,x1_delta,sll_real64)
+MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64)
 
   ! The following implementation embodies the algorithm described in
   ! Eric Sonnendrucker's "A possibly faster algorithm for cubic splines on
