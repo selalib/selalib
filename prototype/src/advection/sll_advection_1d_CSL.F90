@@ -27,6 +27,7 @@ use sll_boundary_condition_descriptors
 use sll_module_advection_1d_base
 use sll_module_characteristics_1d_base
 use sll_module_interpolators_1d_base
+use sll_constants
 implicit none
 
   type,extends(sll_advection_1d_base) :: CSL_1d_advector
@@ -160,6 +161,7 @@ contains
     sll_real64, dimension(:), intent(out) :: output      
     sll_int32 :: Npts
     sll_real64 :: mean
+    sll_real64 :: x1
     sll_int32 :: i
     Npts = adv%Npts
     
@@ -171,18 +173,31 @@ contains
     
     adv%buf1d(1:Npts-1) = input(1:Npts-1)
 
-    
+!    do i=1,Npts
+!      !x1 = adv%eta_coords(1)+real(i-1,f64)*(adv%eta_coords(Npts)-adv%eta_coords(1))/real(Npts-1,f64)
+!      x1 = adv%eta_coords_unit(i)
+!      adv%buf1d(i) = cos(2._f64*sll_pi*x1)
+!    enddo
     
     
     call function_to_primitive(adv%buf1d,adv%eta_coords_unit,Npts-1,mean)
 
+    !adv%buf1d(1:Npts) = adv%buf1d(1:Npts)*(adv%eta_coords(Npts)-adv%eta_coords(1))
     !print *,'#mean=',mean
 !
+!    do i=1,Npts
+!      !print *,i,input(i),adv%buf1d(i),adv%eta_coords_unit(i),adv%eta_coords(i)
+!      print *,adv%eta_coords_unit(i),cos(2._f64*sll_pi*adv%eta_coords_unit(i)),adv%buf1d(i), &
+!      sin(2._f64*sll_pi*adv%eta_coords_unit(i))/(2._f64*sll_pi)
+!      !-sin(adv%eta_coords(i)-adv%eta_coords(1))/(2._f64*sll_pi)
+!    enddo
+
     !do i=1,Npts
-    !  print *,i,input(i),adv%buf1d(i),adv%eta_coords_unit(i)
+    !  print *,i,adv%eta_coords(i),adv%charac_feet(i)
     !enddo
+
     
-    !stop
+!    stop
     
     
 !    call adv%interp%compute_interpolants( &
@@ -196,6 +211,9 @@ contains
       Npts, &
       adv%buf1d, &
       adv%charac_feet)      
+
+    !adv%buf1d_out(1:Npts) = adv%buf1d_out(1:Npts)/(adv%eta_coords(Npts)-adv%eta_coords(1))
+
     
     call primitive_to_function(adv%buf1d_out,adv%eta_coords_unit,Npts-1,mean)
     
