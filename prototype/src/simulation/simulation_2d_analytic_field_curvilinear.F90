@@ -80,6 +80,10 @@ module sll_simulation_2d_analytic_field_curvilinear_module
    sll_int32  :: bc_eta1_right
    sll_int32  :: bc_eta2_left
    sll_int32  :: bc_eta2_right
+   sll_int32  :: bc_interp2d_eta1
+   sll_int32  :: bc_interp2d_eta2   
+   sll_int32  :: bc_charac2d_eta1
+   sll_int32  :: bc_charac2d_eta2 
   contains
     procedure, pass(sim) :: run => run_af2d_curvilinear
     procedure, pass(sim) :: init_from_file => init_fake
@@ -129,7 +133,9 @@ contains
     sll_int32, parameter  :: input_file = 99
         
     !geometry
-    character(len=256) :: mesh_case
+    character(len=256) :: mesh_case_eta1
+    character(len=256) :: mesh_case_eta2
+    character(len=256) :: transf_case
     sll_int32 :: num_cells_eta1
     sll_int32 :: num_cells_eta2
     sll_real64 :: eta1_min
@@ -170,21 +176,23 @@ contains
  
     !boundaries conditions
     !character(len=256) :: boundaries_conditions
-    sll_int32 :: bc_interp2d_eta1
-    sll_int32 :: bc_interp2d_eta2   
-    sll_int32 :: bc_charac2d_eta1
-    sll_int32 :: bc_charac2d_eta2  
-    sll_int32 :: bc_eta1_left
-    sll_int32 :: bc_eta1_right
-    sll_int32 :: bc_eta2_left
-    sll_int32 :: bc_eta2_right 
-     
+    character(len=256) :: bc_interp2d_eta1
+    character(len=256) :: bc_interp2d_eta2   
+    character(len=256) :: bc_charac2d_eta1
+    character(len=256) :: bc_charac2d_eta2  
+    character(len=256) :: bc_eta1_left
+    character(len=256) :: bc_eta1_right
+    character(len=256) :: bc_eta2_left
+    character(len=256) :: bc_eta2_right  
+    
     !local variables
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
     sll_real64 :: r_minus
     sll_real64 :: r_plus
     sll_int32 :: visu_step
+    type(sll_logical_mesh_1d), pointer :: mesh_x1
+    type(sll_logical_mesh_1d), pointer :: mesh_x2
     class(sll_interpolator_2d_base), pointer :: f_interp2d
     class(sll_interpolator_2d_base), pointer :: phi_interp2d
     class(sll_characteristics_2d_base), pointer :: charac2d
@@ -200,13 +208,15 @@ contains
     !in future, we will use namelist file
     
     namelist /geometry/ &
-      mesh_case, &
+      mesh_case_eta1, &
+      mesh_case_eta2, &
       num_cells_eta1, &
       num_cells_eta2, &
       eta1_min, &
       eta1_max, &
       eta2_min, &
       eta2_max, &
+      transf_case,&
       alpha1  , &
       alpha2
 
@@ -250,7 +260,9 @@ contains
         !! set default parameters
     
     !geometry
-    mesh_case="SLL_LANDAU_MESH"
+    transf_case = "SLL_CARTESIAN"
+    mesh_case_eta1="SLL_LOGICAL_MESH"
+    mesh_case_eta2="SLL_LOGICAL_MESH"
     num_cells_eta1 = 128
     num_cells_eta2 = 128
     eta1_min = 0.0_f64
@@ -283,7 +295,16 @@ contains
     charac2d_case = "SLL_VERLET"
     A_interp_case = "SLL_CUBIC_SPLINES"
     advection_field_case = "SLL_SWIRLING_DEFORMATION_FLOW"
-   
+    
+    !boundaries conditions
+    sim%bc_eta1_left = SLL_PERIODIC
+    sim%bc_eta1_right= SLL_PERIODIC
+    sim%bc_eta2_left = SLL_PERIODIC
+    sim%bc_eta2_right= SLL_PERIODIC 
+    sim%bc_interp2d_eta1 = SLL_PERIODIC
+    sim%bc_interp2d_eta2 = SLL_PERIODIC
+    sim%bc_charac2d_eta1 = SLL_PERIODIC
+    sim%bc_charac2d_eta2 = SLL_PERIODIC
 
     if(present(filename))then
       open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
@@ -312,44 +333,168 @@ contains
     sim%num_iterations = number_iterations
     sim%freq_diag = freq_diag 
     sim%freq_diag_time = freq_diag_time
-  
-    sim%bc_eta1_left = bc_eta1_left
-    sim%bc_eta1_right= bc_eta1_right
-    sim%bc_eta2_left = bc_eta2_left
-    sim%bc_eta2_right= bc_eta2_right
    
-    
-    select case (mesh_case)
-      case ("SLL_LANDAU_MESH")
-        eta1_max = 2._f64*sll_pi/kmode_eta1
-        eta2_max = 2._f64*sll_pi/kmode_eta2
-      case ("SLL_POLAR_MESH")
-        eta2_max = 2._f64*sll_pi
-      case ("SLL_COLLELA_MESH")  
-        eta1_max = 2._f64*sll_pi/kmode_eta1
-        eta2_max = 2._f64*sll_pi/kmode_eta2
-         !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
-         !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
-         params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
-
+    select case(bc_eta1_left)
+      case ("SLL_PERIODIC")
+        print*,"#bc_eta1_left = SLL_PERIODIC" 
+        sim%bc_eta1_left = SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_eta1_left = SLL_DIRICHLET"  
+        sim%bc_eta1_left = SLL_DIRICHLET
       case default
-        print *,'#bad mesh_case',mesh_case
+        print *,'#bad bc_eta1_left',bc_eta1_left
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+    
+    select case(bc_eta1_right)
+      case ("SLL_PERIODIC")
+        print*,"#bc_eta1_right = SLL_PERIODIC" 
+        sim%bc_eta1_right = SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_eta1_right = SLL_DIRICHLET"  
+        sim%bc_eta1_right = SLL_DIRICHLET
+      case default
+        print *,'#bad bc_eta1_right',bc_eta1_right
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+    
+       select case(bc_eta2_left)
+      case ("SLL_PERIODIC")
+        print*,"#bc_eta2_left = SLL_PERIODIC" 
+        sim%bc_eta2_left = SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_eta2_left = SLL_DIRICHLET"  
+        sim%bc_eta2_left = SLL_DIRICHLET
+      case default
+        print *,'#bad bc_eta2_left',bc_eta2_left
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+    
+    select case(bc_eta2_right)
+      case ("SLL_PERIODIC")
+        print*,"#bc_eta2_right = SLL_PERIODIC" 
+        sim%bc_eta2_right = SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_eta2_right = SLL_DIRICHLET"  
+        sim%bc_eta2_right = SLL_DIRICHLET
+      case default
+        print *,'#bad bc_eta2_right',bc_eta2_right
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+    
+    select case(bc_interp2d_eta1)
+      case ("SLL_PERIODIC")
+        print*,"#bc_interp2d_eta1= SLL_PERIODIC" 
+        sim%bc_interp2d_eta1 = SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_interp2d_eta1 = SLL_DIRICHLET"  
+        sim%bc_interp2d_eta1= SLL_DIRICHLET
+      case ("SLL_HERMITE")
+        print*,"#bc_interp2d_eta1 = SLL_HERMITE"  
+        sim%bc_interp2d_eta1= SLL_HERMITE 
+      case default
+        print *,'#bad bc_interp2d_eta1',bc_interp2d_eta1
         print *,'#not implemented'
         print *,'#in initialize_analytic_field_2d_curvilinear'
         stop
     end select
 
-        
-    sim%mesh_2d => new_logical_mesh_2d( &
-      Nc_eta1, &
-      Nc_eta2, &
-      eta1_min , &
-      eta1_max , &
-      eta2_min , &
-      eta2_max ) 
+    select case(bc_interp2d_eta2)
+      case ("SLL_PERIODIC")
+        print*,"#bc_interp2d_eta2= SLL_PERIODIC" 
+        sim%bc_interp2d_eta2 = SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_interp2d_eta2 = SLL_DIRICHLET"  
+        sim%bc_interp2d_eta2= SLL_DIRICHLET
+      case ("SLL_HERMITE")
+        print*,"#bc_interp2d_eta2 = SLL_HERMITE"  
+        sim%bc_interp2d_eta2= SLL_HERMITE 
+      case default
+        print *,'#bad bc_interp2d_eta2',bc_interp2d_eta2
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+    
+    select case(bc_charac2d_eta1)
+      case ("SLL_PERIODIC")
+        print*,"#bc_charac2d_eta1= SLL_PERIODIC" 
+        sim%bc_charac2d_eta1= SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_charac2d_eta1 = SLL_DIRICHLET"  
+        sim%bc_charac2d_eta1= SLL_DIRICHLET
+      case ("SLL_HERMITE")
+        print*,"#bc_charac2d_eta1 = SLL_HERMITE"  
+        sim%bc_charac2d_eta1= SLL_HERMITE 
+      case ("SLL_SET_TO_LIMIT")
+        print*,"#bc_charac2d_eta1 = SLL_SET_TO_LIMIT"  
+        sim%bc_charac2d_eta1= SLL_SET_TO_LIMIT    
+      case default
+        print *,'#bad bc_charac2d_eta1',bc_charac2d_eta1
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+
+    select case(bc_charac2d_eta2)
+      case ("SLL_PERIODIC")
+        print*,"#bc_charac2d_eta2= SLL_PERIODIC" 
+        sim%bc_charac2d_eta2= SLL_PERIODIC
+      case ("SLL_DIRICHLET")
+        print*,"#bc_charac2d_eta2= SLL_DIRICHLET"  
+        sim%bc_charac2d_eta2= SLL_DIRICHLET
+      case ("SLL_HERMITE")
+        print*,"#bc_charac2d_eta2 = SLL_HERMITE"  
+        sim%bc_charac2d_eta2= SLL_HERMITE 
+      case ("SLL_SET_TO_LIMIT")
+        print*,"#bc_charac2d_eta2 = SLL_SET_TO_LIMIT"  
+        sim%bc_charac2d_eta2= SLL_SET_TO_LIMIT   
+      case default
+        print *,'#bad bc_charac2d_eta2',bc_charac2d_eta2
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
+    
+    
+    select case (mesh_case_eta1)
+      case ("SLL_LOGICAL_MESH")
+        mesh_x1 => new_logical_mesh_1d(Nc_eta1,eta_min=eta1_min, eta_max=eta1_max)  
+      case default
+        print*,'#mesh_case_eta1', mesh_case_eta1, ' not implemented'
+        stop 
+    end select
+    select case (mesh_case_eta2)
+      case ("SLL_LOGICAL_MESH")
+        mesh_x2 => new_logical_mesh_1d(Nc_eta2,eta_min=eta2_min, eta_max=eta2_max)
+      case default
+        print*,'#mesh_case_eta2', mesh_case_eta2, ' not implemented'
+        stop 
+    end select
+    sim%mesh_2d => tensor_product_1d_1d( mesh_x1, mesh_x2)
+    !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
+    !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
+    params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
+          
+!   sim%mesh_2d => new_logical_mesh_2d( &
+!      Nc_eta1, &
+!      Nc_eta2, &
+!      eta1_min , &
+!      eta1_max , &
+!      eta2_min , &
+!      eta2_max ) 
       
-    select case (mesh_case)
-      case ("SLL_LANDAU_MESH")       
+    select case (transf_case)
+      case ("SLL_CARTESIAN")
+        print*,'#transf_case =SLL_CARTESIAN'       
         sim%transformation => new_coordinate_transformation_2d_analytic( &
          "analytic_identity_transformation", &
          sim%mesh_2d, &
@@ -360,7 +505,8 @@ contains
          identity_jac21, &
          identity_jac22, &
          params_mesh   )  
-      case ("SLL_POLAR_MESH") 
+      case ("SLL_POLAR") 
+        print*,'#transf_case =SLL_POLAR'  
         sim%transformation => new_coordinate_transformation_2d_analytic( &
          "analytic_polar_transformation", &
          sim%mesh_2d, &
@@ -371,7 +517,8 @@ contains
          polar_jac21, &
          polar_jac22, &
          params_mesh  )     
-      case ("SLL_COLLELA_MESH")
+      case ("SLL_COLLELA")
+        print*,'#transf_case =SLL_COLLELA'  
         sim%transformation => new_coordinate_transformation_2d_analytic( &
          "analytic_collela_transformation", &
          sim%mesh_2d, &
@@ -383,7 +530,7 @@ contains
          sinprod_jac22, &
          params_mesh  )  
         case default
-        print *,'#bad mesh_case',mesh_case
+        print *,'#bad transf_case',transf_case
         print *,'#not implemented'
         print *,'#in initialize_analytic_field_2d_curvilinear'
         stop
@@ -391,7 +538,7 @@ contains
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-        print*," f interpolation SLL_CUBIC_SPLINES"
+        print*,"#f interpolation SLL_CUBIC_SPLINES"
         f_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -399,8 +546,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          bc_interp2d_eta1, &
-          bc_interp2d_eta2)
+          sim%bc_interp2d_eta1, &
+          sim%bc_interp2d_eta2)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -413,7 +560,7 @@ contains
 
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
-       print*," A1_2d interpolation SLL_CUBIC_SPLINES"
+       print*,"#A1_2d interpolation SLL_CUBIC_SPLINES"
         A1_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -421,9 +568,9 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          bc_interp2d_eta1, &
-          bc_interp2d_eta2)
-       print*," A2_2d interpolation SLL_CUBIC_SPLINES"   
+          sim%bc_interp2d_eta1, &
+          sim%bc_interp2d_eta2)
+       print*,"#A2_2d interpolation SLL_CUBIC_SPLINES"   
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -431,20 +578,20 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          bc_interp2d_eta1, &
-          bc_interp2d_eta2)  
-       print*," A1_1d interpolation SLL_CUBIC_SPLINES"   
+          sim%bc_interp2d_eta1, &
+          sim%bc_interp2d_eta2)  
+       print*,"#A1_1d interpolation SLL_CUBIC_SPLINES"   
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          bc_interp2d_eta1)
-       print*," A2_1d interpolation SLL_CUBIC_SPLINES"     
+          sim%bc_interp2d_eta1)
+       print*,"#A2_1d interpolation SLL_CUBIC_SPLINES"     
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          bc_interp2d_eta1)
+          sim%bc_interp2d_eta1)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -454,7 +601,7 @@ contains
 
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
-      print*," phi interpolation SLL_CUBIC_SPLINES"  
+      print*,"#phi interpolation SLL_CUBIC_SPLINES"  
         phi_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -462,8 +609,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          bc_interp2d_eta1, &
-          bc_interp2d_eta2)         
+          sim%bc_interp2d_eta1, &
+          sim%bc_interp2d_eta2)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
@@ -474,7 +621,7 @@ contains
 
     select case(charac2d_case)
       case ("SLL_EULER")
-         print*," charac = SLL_EULER"  
+         print*,"#charac = SLL_EULER"  
         charac2d => new_explicit_euler_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -482,10 +629,10 @@ contains
           eta1_max=eta1_max, &
           eta2_min=eta2_min, &
           eta2_max=eta2_max, &
-          bc_type_1=bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
-          bc_type_2=bc_charac2d_eta2)    
+          bc_type_1=sim%bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
+          bc_type_2=sim%bc_charac2d_eta2)    
       case ("SLL_VERLET")    
-          print*," charac =SLL_VERLET"   
+          print*,"#charac =SLL_VERLET"   
         charac2d => new_verlet_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
@@ -493,8 +640,8 @@ contains
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1=bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
-          bc_type_2=bc_charac2d_eta2, &
+          bc_type_1=sim%bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
+          bc_type_2=sim%bc_charac2d_eta2, &
           eta1_min=eta1_min, &
           eta1_max=eta1_max, &
           eta2_min=eta2_min, &
@@ -511,7 +658,7 @@ contains
 
     select case(advect2d_case)
       case ("SLL_BSL")
-       print*,"advect2d = SLL_BSL "  
+       print*,"#advect2d = SLL_BSL "  
         sim%advect_2d => new_BSL_2d_advector(&
           f_interp2d, &
           charac2d, &
@@ -546,13 +693,13 @@ contains
    
     select case(initial_function_case)
       case ("SLL_KHP1")
-        print*,"f0 = SLL_KHP1" 
+        print*,"#f0 = SLL_KHP1" 
         sim%init_func => sll_KHP1_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = eps
         sim%params(2) = kmode_eta1
       case ("SLL_GAUSSIAN")
-        print*,"f0 = SLL_GAUSSIAN " 
+        print*,"#f0 = SLL_GAUSSIAN " 
         sim%init_func => sll_gaussian_initializer_2d
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = xc_1
@@ -560,19 +707,11 @@ contains
         sim%params(3) = sigma_1
         sim%params(4) = sigma_2
       case ("SLL_COS_BELL")
-        print*,"f0 = SLL__COS_BELL " 
+        print*,"#f0 = SLL__COS_BELL " 
         sim%init_func => sll_cos_bell_initializer_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = xc_1
-        sim%params(2) = xc_2
-       case("SLL_DIOCOTRON")
-        print*,"f0 = SLL_DIOCOTRON " 
-        sim%init_func => sll_diocotron_initializer_2d2
-        SLL_ALLOCATE(sim%params(4),ierr)
-        sim%params(1) = r_minus
-        sim%params(2) = r_plus
-        sim%params(3) = eps
-        sim%params(4) = kmode_eta2   
+        sim%params(2) = xc_2  
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
@@ -583,10 +722,10 @@ contains
     !time_loop
     select case(time_loop_case)
       case ("SLL_EULER")
-        print*,"time_loop = SLL_EULER " 
+        print*,"#time_loop = SLL_EULER " 
         sim%time_loop_case = SLL_EULER
       case ("SLL_PREDICTOR_CORRECTOR")
-       print*,"time_loop = SLL_PREDICTOR_CORRECTOR " 
+       print*,"#time_loop = SLL_PREDICTOR_CORRECTOR " 
         sim%time_loop_case = SLL_PREDICTOR_CORRECTOR
       case default
         print *,'#bad time_loop_case',time_loop_case
