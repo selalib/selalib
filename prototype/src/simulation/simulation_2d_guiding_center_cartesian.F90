@@ -26,6 +26,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_characteristics_2d_verlet
   use sll_module_advection_1d_BSL
   use sll_module_advection_1d_CSL
+  use sll_module_advection_1d_PSM
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
@@ -514,6 +515,10 @@ contains
         x1_min_bis = x1_min
         x1_max_bis = x1_max
         Nc_x1_bis = Nc_x1
+      case ("SLL_PSM")
+        x1_min_bis = x1_min
+        x1_max_bis = x1_max
+        Nc_x1_bis = Nc_x1
       case ("SLL_CSL")
         x1_min_bis = x1_min-0.5_f64*sim%mesh_2d%delta_eta1
         x1_max_bis = x1_max-0.5_f64*sim%mesh_2d%delta_eta1
@@ -525,6 +530,10 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
+        x2_min_bis = x2_min
+        x2_max_bis = x2_max
+        Nc_x2_bis = Nc_x2
+      case ("SLL_PSM")
         x2_min_bis = x2_min
         x2_max_bis = x2_max
         Nc_x2_bis = Nc_x2
@@ -641,6 +650,11 @@ contains
           Nc_x1_bis+1, &
           eta_min = x1_min_bis, &
           eta_max = x1_max_bis)
+      case ("SLL_PSM")
+        advect_1d_x1 => new_PSM_1d_advector(&
+          Nc_x1+1, &
+          eta_min = x1_min, &
+          eta_max = x1_max)
       case default
         print *,'#bad advect_case',advect1d_x1_case
         print *,'#not implemented'
@@ -663,6 +677,11 @@ contains
           Nc_x2_bis+1, &
           eta_min = x2_min_bis, &
           eta_max = x2_max_bis)
+      case ("SLL_PSM")
+        advect_1d_x2 => new_PSM_1d_advector(&
+          Nc_x2+1, &
+          eta_min = x2_min, &
+          eta_max = x2_max)
       case default
         print *,'#bad advect_case',advect1d_x2_case
         print *,'#not implemented'
