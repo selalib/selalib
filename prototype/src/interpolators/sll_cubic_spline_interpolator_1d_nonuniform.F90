@@ -344,7 +344,7 @@ contains  ! ****************************************************************
 #else  
     class(cubic_non_uniform_spline_1d_interpolator) :: obj
 #endif
-    call delete(obj%spline)
+    call sll_delete(obj%spline)
   end subroutine delete_cs1d
 
   
