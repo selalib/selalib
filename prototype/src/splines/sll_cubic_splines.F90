@@ -34,6 +34,7 @@ module sll_cubic_splines
   use sll_boundary_condition_descriptors
   implicit none
   
+  !> @brief basic type for one-dimensional cubic spline data
   type  ::  sll_cubic_spline_1D
      sll_int32                         :: n_points ! size
      sll_real64                        :: delta    ! discretization step
@@ -42,11 +43,11 @@ module sll_cubic_splines
      sll_real64                        :: xmax
      sll_int32                         :: bc_type  ! periodic, hermite
      ! check: the following pointer is not used!
-     sll_real64, dimension(:), pointer :: data     ! data for the spline fit
-     sll_real64, dimension(:), pointer :: d        ! scratch space D (L*D = F),
+     sll_real64, dimension(:), pointer :: data =>null()! data for the spline fit
+     sll_real64, dimension(:), pointer :: d =>null() ! scratch space D (L*D=F),
                                                    ! refer to algorithm below.
                                                    ! Size depends on BC's.
-     sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
+     sll_real64, dimension(:), pointer :: coeffs=>null() ! the spline coeffs
      sll_real64                        :: slope_L  ! left slope, for Hermite
      sll_real64                        :: slope_R  ! right slope, for Hermite
      logical                           :: compute_slope_L
@@ -55,15 +56,15 @@ module sll_cubic_splines
      ! tridiagonal system solution. Note that we use the same nomenclature
      ! as in the sll_tridiagonal module.
      logical                           :: use_fast_algorithm
-     sll_real64, dimension(:), pointer :: a
-     sll_real64, dimension(:), pointer :: cts
-     sll_int32, dimension(:), pointer  :: ipiv 
-     sll_real64, dimension(:), pointer :: f_aux ! Hermite needs extended f array
+     sll_real64, dimension(:), pointer :: a => null()
+     sll_real64, dimension(:), pointer :: cts => null()
+     sll_int32, dimension(:), pointer  :: ipiv => null()
+     ! Hermite needs extended f array:
+     sll_real64, dimension(:), pointer :: f_aux => null() 
   end type sll_cubic_spline_1D
 
-  ! Are x1 and x2 the coordinates that we should use? Or are eta1 and eta2
-  ! the more logical ones given that the splines live in an uniform mesh??
-  ! Need to define this and then be consistent throughout.
+
+  !> @brief basic type for one-dimensional cubic spline data
   type sll_cubic_spline_2D
      sll_int32                           :: num_pts_x1
      sll_int32                           :: num_pts_x2
@@ -78,35 +79,39 @@ module sll_cubic_splines
      sll_int32                           :: x1_bc_type
      sll_int32                           :: x2_bc_type
      ! if data is not used, it should be deleted make a decision...
-     sll_real64, dimension(:,:), pointer :: data   ! data for the spline fit
-     sll_real64, dimension(:), pointer   :: d1     ! scratch space D (L*D = F),
-                                                   ! refer to algorithm below.
-                                                   ! Size depends on BC's.
-     sll_real64, dimension(:), pointer   :: d2     ! Second scratch space
-     sll_real64, dimension(:,:), pointer :: coeffs   ! the spline coefficients
-     sll_real64, dimension(:), pointer   :: x1_min_slopes
-     sll_real64, dimension(:), pointer   :: x1_max_slopes
-     sll_real64, dimension(:), pointer   :: x2_min_slopes
-     sll_real64, dimension(:), pointer   :: x2_max_slopes
-     sll_real64, dimension(:), pointer   :: x1_min_slopes_coeffs
-     sll_real64, dimension(:), pointer   :: x1_max_slopes_coeffs
-     sll_real64, dimension(:), pointer   :: x2_min_slopes_coeffs
-     sll_real64, dimension(:), pointer   :: x2_max_slopes_coeffs
+     ! data for the spline fit
+     sll_real64, dimension(:,:), pointer :: data => null()  
+     ! scratch space D (L*D = F), refer to algorithm below. Size depends on BCs.
+     sll_real64, dimension(:), pointer   :: d1 => null()   
+     ! Second scratch space: 
+     sll_real64, dimension(:), pointer   :: d2 => null()   
+     ! the spline coefficients:
+     sll_real64, dimension(:,:), pointer :: coeffs => null()  
+     sll_real64, dimension(:), pointer   :: x1_min_slopes => null()
+     sll_real64, dimension(:), pointer   :: x1_max_slopes => null()
+     sll_real64, dimension(:), pointer   :: x2_min_slopes => null()
+     sll_real64, dimension(:), pointer   :: x2_max_slopes => null()
+     sll_real64, dimension(:), pointer   :: x1_min_slopes_coeffs => null()
+     sll_real64, dimension(:), pointer   :: x1_max_slopes_coeffs => null()
+     sll_real64, dimension(:), pointer   :: x2_min_slopes_coeffs => null()
+     sll_real64, dimension(:), pointer   :: x2_max_slopes_coeffs => null()
      logical                             :: compute_slopes_x1_min
      logical                             :: compute_slopes_x1_max
      logical                             :: compute_slopes_x2_min
      logical                             :: compute_slopes_x2_max
   end type sll_cubic_spline_2D
 
-  private delete_spline_1D, delete_spline_2D, compute_spline_1D_periodic_aux,&
-       compute_spline_1D_hermite_aux, interpolate_value_aux, &
+  private delete_cubic_spline_1D, delete_cubic_spline_2D, &
+       compute_spline_1D_periodic_aux,&
+       compute_spline_1D_hermite_aux, compute_spline_1d_periodic, &
+       compute_spline_1d_hermite, interpolate_value_aux, &
        interpolate_derivative_aux, compute_spline_2d_prdc_prdc, &
        compute_spline_2d_hrmt_prdc, compute_spline_2D_prdc_hrmt, &
        compute_spline_2d_hrmt_hrmt
 
 
   interface sll_delete
-     module procedure delete_spline_1D, delete_spline_2D
+     module procedure delete_cubic_spline_1D, delete_cubic_spline_2D
   end interface
 
   ! Some useful macros that should probably be put in a different file to 
@@ -149,8 +154,8 @@ contains  ! ****************************************************************
   ! spline algorithm is used.
 #define NUM_TERMS 27  
   !> create new spline object
-  function new_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
-    type(sll_cubic_spline_1D), pointer         :: new_spline_1D
+  function new_cubic_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
+    type(sll_cubic_spline_1D), pointer   :: new_cubic_spline_1D
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -160,20 +165,20 @@ contains  ! ****************************************************************
     sll_int32                            :: ierr
     sll_int32                            :: i
 
-    SLL_ALLOCATE( new_spline_1D, ierr )
-    new_spline_1D%n_points = num_points
-    new_spline_1D%xmin     = xmin
-    new_spline_1D%xmax     = xmax
-    new_spline_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
-    new_spline_1D%rdelta   = 1.0_f64/new_spline_1D%delta
-    new_spline_1D%bc_type  = bc_type
+    SLL_ALLOCATE( new_cubic_spline_1D, ierr )
+    new_cubic_spline_1D%n_points = num_points
+    new_cubic_spline_1D%xmin     = xmin
+    new_cubic_spline_1D%xmax     = xmax
+    new_cubic_spline_1D%delta    = (xmax - xmin)/real((num_points-1),f64)
+    new_cubic_spline_1D%rdelta   = 1.0_f64/new_cubic_spline_1D%delta
+    new_cubic_spline_1D%bc_type  = bc_type
     if( num_points .lt. NUM_TERMS ) then
-       new_spline_1D%use_fast_algorithm = .false.
+       new_cubic_spline_1D%use_fast_algorithm = .false.
     else
-       new_spline_1D%use_fast_algorithm = .true.
+       new_cubic_spline_1D%use_fast_algorithm = .true.
     end if
     if( xmin .gt. xmax ) then
-       print *, 'ERROR, new_spline_1D: xmin is greater than xmax, ', &
+       print *, 'ERROR, new_cubic_spline_1D: xmin is greater than xmax, ', &
             'this would cause all sorts of errors.'
        STOP
     end if
@@ -182,105 +187,105 @@ contains  ! ****************************************************************
     select case (bc_type)
     case (SLL_PERIODIC)
        if( present(sl) .or. present(sr) ) then
-          print *, 'new_spline_1D(): it is not allowed to specify the ',&
+          print *, 'new_cubic_spline_1D(): it is not allowed to specify the ',&
                'end ifin the case of periodic boundary conditions. ', &
                'Exiting program...'
-          STOP 'new_spline_1D'
+          STOP 'new_cubic_spline_1D'
        else
           ! Assign some value, but this value should never be used in the
           ! periodic case anyway.
-          new_spline_1D%slope_L = 0.0
-          new_spline_1D%slope_R = 0.0
+          new_cubic_spline_1D%slope_L = 0.0
+          new_cubic_spline_1D%slope_R = 0.0
        end if
-       if( new_spline_1D%use_fast_algorithm .eqv. .false. ) then
-          SLL_ALLOCATE(new_spline_1D%a(3*num_points),ierr)
-          SLL_ALLOCATE(new_spline_1D%cts(7*num_points),ierr)
-          SLL_ALLOCATE(new_spline_1D%ipiv(num_points),ierr)
-          new_spline_1D%f_aux => null() ! not needed in periodic case
+       if( new_cubic_spline_1D%use_fast_algorithm .eqv. .false. ) then
+          SLL_ALLOCATE(new_cubic_spline_1D%a(3*num_points),ierr)
+          SLL_ALLOCATE(new_cubic_spline_1D%cts(7*num_points),ierr)
+          SLL_ALLOCATE(new_cubic_spline_1D%ipiv(num_points),ierr)
+          new_cubic_spline_1D%f_aux => null() ! not needed in periodic case
           ! Initialize and factorize the tridiagonal system. See detailed
           ! comment below regarding the structure of this matrix.
-          new_spline_1D%a(1) = 1.0_f64/6.0_f64
-          new_spline_1D%a(2) = 4.0_f64/6.0_f64
-          new_spline_1D%a(3) = 1.0_f64/6.0_f64
-          new_spline_1D%a(3*num_points-2) = 1.0_f64/6.0_f64
-          new_spline_1D%a(3*num_points-1) = 4.0_f64/6.0_f64
-          new_spline_1D%a(3*num_points  ) = 1.0_f64/6.0_f64
+          new_cubic_spline_1D%a(1) = 1.0_f64/6.0_f64
+          new_cubic_spline_1D%a(2) = 4.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3) = 1.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3*num_points-2) = 1.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3*num_points-1) = 4.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3*num_points  ) = 1.0_f64/6.0_f64
           do i=1,num_points-2
-             new_spline_1D%a(3*i+1) = 1.0_f64/6.0_f64
-             new_spline_1D%a(3*i+2) = 4.0_f64/6.0_f64
-             new_spline_1D%a(3*i+3) = 1.0_f64/6.0_f64
+             new_cubic_spline_1D%a(3*i+1) = 1.0_f64/6.0_f64
+             new_cubic_spline_1D%a(3*i+2) = 4.0_f64/6.0_f64
+             new_cubic_spline_1D%a(3*i+3) = 1.0_f64/6.0_f64
           end do
           call setup_cyclic_tridiag( &
-               new_spline_1D%a, &
+               new_cubic_spline_1D%a, &
                num_points, &
-               new_spline_1D%cts, &
-               new_spline_1D%ipiv )
+               new_cubic_spline_1D%cts, &
+               new_cubic_spline_1D%ipiv )
        else
-          new_spline_1D%a => null()
-          new_spline_1D%cts => null()
-          new_spline_1D%ipiv => null()
-          new_spline_1D%f_aux => null()
+          new_cubic_spline_1D%a => null()
+          new_cubic_spline_1D%cts => null()
+          new_cubic_spline_1D%ipiv => null()
+          new_cubic_spline_1D%f_aux => null()
        end if
     case (SLL_HERMITE)
        if( present(sl) ) then
-          new_spline_1D%slope_L = sl
-          new_spline_1D%compute_slope_L = .false.
+          new_cubic_spline_1D%slope_L = sl
+          new_cubic_spline_1D%compute_slope_L = .false.
        else
-          new_spline_1D%slope_L = 0.0           ! just a filler value
-          new_spline_1D%compute_slope_L = .true.
+          new_cubic_spline_1D%slope_L = 0.0           ! just a filler value
+          new_cubic_spline_1D%compute_slope_L = .true.
        end if
        if( present(sr) ) then
-          new_spline_1D%slope_R = sr
-          new_spline_1D%compute_slope_R = .false.
+          new_cubic_spline_1D%slope_R = sr
+          new_cubic_spline_1D%compute_slope_R = .false.
        else
-          new_spline_1D%slope_R = 0.0           ! just a filler value
-          new_spline_1D%compute_slope_R = .true.
+          new_cubic_spline_1D%slope_R = 0.0           ! just a filler value
+          new_cubic_spline_1D%compute_slope_R = .true.
        end if
-       if( new_spline_1D%use_fast_algorithm .eqv. .false. ) then
-          SLL_ALLOCATE(new_spline_1D%a(3*(num_points+2)),ierr)
-          SLL_ALLOCATE(new_spline_1D%cts(7*(num_points+2)),ierr)
-          SLL_ALLOCATE(new_spline_1D%ipiv(num_points+2),ierr)
-          SLL_ALLOCATE(new_spline_1D%f_aux(num_points+2),ierr)
+       if( new_cubic_spline_1D%use_fast_algorithm .eqv. .false. ) then
+          SLL_ALLOCATE(new_cubic_spline_1D%a(3*(num_points+2)),ierr)
+          SLL_ALLOCATE(new_cubic_spline_1D%cts(7*(num_points+2)),ierr)
+          SLL_ALLOCATE(new_cubic_spline_1D%ipiv(num_points+2),ierr)
+          SLL_ALLOCATE(new_cubic_spline_1D%f_aux(num_points+2),ierr)
           ! Initialize and factorize the tridiagonal system. See detailed
           ! comment below regarding the structure of this matrix. Matrix 'a'
           ! is (np+2)X(np+2)
-          new_spline_1D%a(1) = 0.0_f64
-          new_spline_1D%a(2) = 4.0_f64/6.0_f64
-          new_spline_1D%a(3) = 2.0_f64/6.0_f64
-          new_spline_1D%a(3*(num_points+2)-2) = 2.0_f64/6.0_f64
-          new_spline_1D%a(3*(num_points+2)-1) = 4.0_f64/6.0_f64
-          new_spline_1D%a(3*(num_points+2)  ) = 0.0_f64
+          new_cubic_spline_1D%a(1) = 0.0_f64
+          new_cubic_spline_1D%a(2) = 4.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3) = 2.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3*(num_points+2)-2) = 2.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3*(num_points+2)-1) = 4.0_f64/6.0_f64
+          new_cubic_spline_1D%a(3*(num_points+2)  ) = 0.0_f64
           do i=1,num_points
-             new_spline_1D%a(3*i+1) = 1.0_f64/6.0_f64
-             new_spline_1D%a(3*i+2) = 4.0_f64/6.0_f64
-             new_spline_1D%a(3*i+3) = 1.0_f64/6.0_f64
+             new_cubic_spline_1D%a(3*i+1) = 1.0_f64/6.0_f64
+             new_cubic_spline_1D%a(3*i+2) = 4.0_f64/6.0_f64
+             new_cubic_spline_1D%a(3*i+3) = 1.0_f64/6.0_f64
           end do
           call setup_cyclic_tridiag( &
-               new_spline_1D%a, &
+               new_cubic_spline_1D%a, &
                num_points+2, &
-               new_spline_1D%cts, &
-               new_spline_1D%ipiv )
+               new_cubic_spline_1D%cts, &
+               new_cubic_spline_1D%ipiv )
        else
-          new_spline_1D%a => null()
-          new_spline_1D%cts => null()
-          new_spline_1D%ipiv => null()
-          new_spline_1D%f_aux => null()
+          new_cubic_spline_1D%a => null()
+          new_cubic_spline_1D%cts => null()
+          new_cubic_spline_1D%ipiv => null()
+          new_cubic_spline_1D%f_aux => null()
        end if
     case default
-       print *, 'ERROR: new_spline_1D(): not recognized boundary condition'
+       print *, 'ERROR: new_cubic_spline_1D(): not recognized boundary condition'
        STOP
     end select
-    if( new_spline_1D%use_fast_algorithm .eqv. .true. ) then
-       SLL_ALLOCATE( new_spline_1D%d(num_points),   ierr )
+    if( new_cubic_spline_1D%use_fast_algorithm .eqv. .true. ) then
+       SLL_ALLOCATE( new_cubic_spline_1D%d(num_points),   ierr )
     else
-       new_spline_1D%d => null()
+       new_cubic_spline_1D%d => null()
     end if
     ! note how the indexing of the coefficients array includes the end-
     ! points 0, num_points, num_points+1, num_points+2. These are meant to 
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
-    SLL_ALLOCATE( new_spline_1D%coeffs(0:num_points+2), ierr )
-  end function new_spline_1D
+    SLL_ALLOCATE( new_cubic_spline_1D%coeffs(0:num_points+2), ierr )
+  end function new_cubic_spline_1D
   
   ! - data: the array whose data must be fit with the cubic spline.
   ! - np: (number of points; length of the data array that must be fit with 
@@ -391,7 +396,7 @@ contains  ! ****************************************************************
 
   !> compute_spline_1D() computes the spline coefficients using the parameters
   !> initially given to 'spline' and using 'f' as the data.
-  subroutine compute_spline_1D( f, spline )
+  subroutine compute_cubic_spline_1D( f, spline )
     sll_real64, dimension(:), intent(in) :: f    ! data to be fit
     sll_int32                            :: bc_type
     type(sll_cubic_spline_1D), pointer         :: spline
@@ -411,7 +416,7 @@ contains  ! ****************************************************************
        print *, 'ERROR: compute_spline_1D(): not recognized boundary condition'
        STOP
     end select
-  end subroutine compute_spline_1D
+  end subroutine compute_cubic_spline_1D
 
 
   ! The following auxiliary functions:
@@ -834,27 +839,6 @@ contains  ! ****************************************************************
     interpolate_value = interpolate_value_aux( x, xmin, rh, coeffs )
   end function interpolate_value
 
-!  !> Just a copy of the function interpolate_value but with a different name.
-!  !> Need because, i want a function in my interpolator interface called interpolate value
-!  !> and i have a polymorphic error.
-!  function interpolate_value_1D( x, spline )
-!    sll_real64                        :: interpolate_value_1D
-!    intrinsic                         :: associated, int, real
-!    sll_real64, intent(in)            :: x
-!    type(sll_cubic_spline_1D), pointer      :: spline
-!    sll_real64, dimension(:), pointer :: coeffs
-!    sll_real64                        :: xmin
-!    sll_real64                        :: rh   ! reciprocal of cell spacing
-!    ! We set these as assertions since we want the flexibility of turning
-!    ! them off.
-!    SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-!    SLL_ASSERT( associated(spline) )
-!    xmin = spline%xmin
-!    rh        = spline%rdelta
-!    coeffs => spline%coeffs
-!    interpolate_value_1D = interpolate_value_aux( x, xmin, rh, coeffs )
-!  end function interpolate_value_1D
-  
   !> interpolates the values given as an array of points as input.
   subroutine interpolate_array_values( a_in, a_out, n, spline )
     intrinsic                               :: associated, int, real
@@ -1036,8 +1020,8 @@ contains  ! ****************************************************************
 
   subroutine interpolate_array_derivatives( &
     array_in, &
-    num_pts, &
     array_out, &
+    num_pts, &
     spline )
 
     intrinsic :: associated
@@ -1062,8 +1046,8 @@ contains  ! ****************************************************************
   ! FIXME: The following subroutine is not in the unit test
   subroutine interpolate_pointer_derivatives( &
     ptr_in, &
-    num_pts, &
     ptr_out, &
+    num_pts, &
     spline )
 
     intrinsic :: associated
@@ -1088,7 +1072,7 @@ contains  ! ****************************************************************
   end subroutine interpolate_pointer_derivatives
 
 
-  subroutine delete_spline_1D( spline )
+  subroutine delete_cubic_spline_1D( spline )
     type(sll_cubic_spline_1D), pointer :: spline
     sll_int32                    :: ierr
     ! Fixme: some error checking, whether the spline pointer is associated
@@ -1108,7 +1092,7 @@ contains  ! ****************************************************************
        end if
     end if
     SLL_DEALLOCATE( spline, ierr )
-  end subroutine delete_spline_1D
+  end subroutine delete_cubic_spline_1D
 
   !-----------------------------------------------------------------------
   !
@@ -1116,7 +1100,7 @@ contains  ! ****************************************************************
   !
   !----------------------------------------------------------------------
 
-  function new_spline_2D( &
+  function new_cubic_spline_2D( &
     num_pts_x1,   &
     num_pts_x2,   &
     x1_min,       &
@@ -1134,7 +1118,7 @@ contains  ! ****************************************************************
     x2_min_slopes, &
     x2_max_slopes )
 
-    type(sll_cubic_spline_2D), pointer         :: new_spline_2D
+    type(sll_cubic_spline_2D), pointer         :: new_cubic_spline_2D
     sll_int32,  intent(in)               :: num_pts_x1
     sll_int32,  intent(in)               :: num_pts_x2
     sll_real64, intent(in)               :: x1_min
@@ -1154,26 +1138,26 @@ contains  ! ****************************************************************
     sll_int32                            :: bc_selector
     sll_int32                            :: ierr
     sll_int32                            :: i
-    SLL_ALLOCATE( new_spline_2D, ierr )
-    new_spline_2D%num_pts_x1 = num_pts_x1
-    new_spline_2D%num_pts_x2 = num_pts_x2
-    new_spline_2D%x1_min     = x1_min
-    new_spline_2D%x1_max     = x1_max
-    new_spline_2D%x2_min     = x2_min
-    new_spline_2D%x2_max     = x2_max
-    new_spline_2D%x1_delta   = (x1_max - x1_min)/real((num_pts_x1-1),f64)
-    new_spline_2D%x2_delta   = (x2_max - x2_min)/real((num_pts_x2-1),f64)
-    new_spline_2D%x1_rdelta  = 1.0_f64/new_spline_2D%x1_delta
-    new_spline_2D%x2_rdelta  = 1.0_f64/new_spline_2D%x2_delta
-    new_spline_2D%x1_bc_type = x1_bc_type
-    new_spline_2D%x2_bc_type = x2_bc_type
+    SLL_ALLOCATE( new_cubic_spline_2D, ierr )
+    new_cubic_spline_2D%num_pts_x1 = num_pts_x1
+    new_cubic_spline_2D%num_pts_x2 = num_pts_x2
+    new_cubic_spline_2D%x1_min     = x1_min
+    new_cubic_spline_2D%x1_max     = x1_max
+    new_cubic_spline_2D%x2_min     = x2_min
+    new_cubic_spline_2D%x2_max     = x2_max
+    new_cubic_spline_2D%x1_delta   = (x1_max - x1_min)/real((num_pts_x1-1),f64)
+    new_cubic_spline_2D%x2_delta   = (x2_max - x2_min)/real((num_pts_x2-1),f64)
+    new_cubic_spline_2D%x1_rdelta  = 1.0_f64/new_cubic_spline_2D%x1_delta
+    new_cubic_spline_2D%x2_rdelta  = 1.0_f64/new_cubic_spline_2D%x2_delta
+    new_cubic_spline_2D%x1_bc_type = x1_bc_type
+    new_cubic_spline_2D%x2_bc_type = x2_bc_type
     if( (num_pts_x1 .le. NUM_TERMS) .or. (num_pts_x2 .le. NUM_TERMS) ) then
-       print *, 'ERROR, new_spline_2D: Because of the algorithm used, this ', &
+       print *, 'ERROR, new_cubic_spline_2D: Because of the algorithm used, this ', &
        'function is meant to be used with arrays that are at least of size = 28'
-       STOP 'new_spline_2D()'
+       STOP 'new_cubic_spline_2D()'
     end if
     if( (x1_min .gt. x1_max) .or. (x2_min .gt. x2_max) ) then
-       print *, 'ERROR, new_spline_1D: one of the xmin is greater than the ', &
+       print *, 'ERROR, new_cubic_spline_2D: one of the xmin is greater than the ', &
        'corresponding xmax, this would cause all sorts of errors.'
        STOP
     end if
@@ -1194,8 +1178,8 @@ contains  ! ****************************************************************
        SLL_ASSERT(size(x2_max_slopes) .ge. num_pts_x1 )
     end if
 
-    SLL_ALLOCATE( new_spline_2D%d1(num_pts_x1),   ierr )
-    SLL_ALLOCATE( new_spline_2D%d2(num_pts_x2),   ierr )
+    SLL_ALLOCATE( new_cubic_spline_2D%d1(num_pts_x1),   ierr )
+    SLL_ALLOCATE( new_cubic_spline_2D%d2(num_pts_x2),   ierr )
 
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
@@ -1223,80 +1207,80 @@ contains  ! ****************************************************************
           present(const_slope_x1_min) .or. present(const_slope_x1_max) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) )then
 
-          print *, 'new_spline_2D(): it is not allowed to specify the end', &
+          print *, 'new_cubic_spline_2D(): it is not allowed to specify the end', &
                'slopes in the case of doubly periodic boundary conditions.', &
                'Exiting program...'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        else
-          new_spline_2d%x1_min_slopes => null()
-          new_spline_2d%x1_max_slopes => null()
-          new_spline_2d%x2_min_slopes => null()
-          new_spline_2d%x2_max_slopes => null()
-          new_spline_2d%x1_min_slopes_coeffs => null()
-          new_spline_2d%x1_max_slopes_coeffs => null()
-          new_spline_2d%x2_min_slopes_coeffs => null()
-          new_spline_2d%x2_max_slopes_coeffs => null()
+          new_cubic_spline_2d%x1_min_slopes => null()
+          new_cubic_spline_2d%x1_max_slopes => null()
+          new_cubic_spline_2d%x2_min_slopes => null()
+          new_cubic_spline_2d%x2_max_slopes => null()
+          new_cubic_spline_2d%x1_min_slopes_coeffs => null()
+          new_cubic_spline_2d%x1_max_slopes_coeffs => null()
+          new_cubic_spline_2d%x2_min_slopes_coeffs => null()
+          new_cubic_spline_2d%x2_max_slopes_coeffs => null()
        end if
     case ( 6 ) 
        ! Hermite condition in X1 and periodic in X2 
        if( &
           present(x2_min_slopes) .or. present(x2_max_slopes) .or. &
           present(const_slope_x2_min) .or. present(const_slope_x2_max) ) then
-          print *, 'new_spline_2D(): hermite-periodic case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-periodic case, it is not ', &
                'allowed to specify the end slopes in the case of periodic ', &
                'boundary conditions.', &
                'Exiting program...'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
-          print *, 'new_spline_2D(): hermite-periodic-case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-periodic-case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x1_min and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x1_max) .and. present(x1_max_slopes) ) then
-          print *, 'new_spline_2D(): hermite-periodic-case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-periodic-case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x1_max and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
 
        ! X2 slope arrays are not needed
-       new_spline_2d%x2_min_slopes => null()
-       new_spline_2d%x2_max_slopes => null()
-       new_spline_2d%x2_min_slopes_coeffs => null()
-       new_spline_2d%x2_max_slopes_coeffs => null()
+       new_cubic_spline_2d%x2_min_slopes => null()
+       new_cubic_spline_2d%x2_max_slopes => null()
+       new_cubic_spline_2d%x2_min_slopes_coeffs => null()
+       new_cubic_spline_2d%x2_max_slopes_coeffs => null()
 
        ! But X1 slopes are.
-       SLL_ALLOCATE(new_spline_2d%x1_min_slopes(num_pts_x2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_min_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_max_slopes(num_pts_x2),ierr)
 
        ! And since the X1 direction splines are computed second, then we
        ! need to convert the slope information into spline coefficient
        ! information.
-       SLL_ALLOCATE(new_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
 
        ! NOTE: because we are using the spline coefficients directly and not
        ! the slope values, the slope values are redundant and at this point
        ! we could deallocate those arrays...
 
        ! The following macro is obviously intended only for use within
-       ! new_spline_2D(). But this should be replaced with a subroutine
+       ! new_cubic_spline_2D(). But this should be replaced with a subroutine
        ! whenever possible.
 #define FILL_SLOPES(const_opt, input_opt, numpts, output, slopes) \
        if( present(input_opt) ) then;                           \
           do i=1,numpts;                                        \
-             new_spline_2D%output(i) = input_opt(i);            \
+             new_cubic_spline_2D%output(i) = input_opt(i);            \
           end do;                                               \
-          new_spline_2D%slopes = .false.;                       \
+          new_cubic_spline_2D%slopes = .false.;                       \
        else if( present(const_opt) ) then;                      \
           do i=1,numpts;                                        \
-             new_spline_2D%output(i) = const_opt;               \
+             new_cubic_spline_2D%output(i) = const_opt;               \
           end do;                                               \
-          new_spline_2D%slopes = .false.;                       \
+          new_cubic_spline_2D%slopes = .false.;                       \
        else;                                                    \
-          new_spline_2D%slopes = .true.;                        \
+          new_cubic_spline_2D%slopes = .true.;                        \
        end if
 
        ! Set the values of the slopes at x1_min     
@@ -1310,38 +1294,38 @@ contains  ! ****************************************************************
        if( &
           present(x1_min_slopes) .or. present(x1_max_slopes) .or. &
           present(const_slope_x1_min) .or. present(const_slope_x1_max) ) then
-          print *, 'new_spline_2D(): periodic-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): periodic-hermite case, it is not ', &
                'allowed to specify the end slopes in the case of periodic ', &
                'boundary conditions.', &
                'Exiting program...'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
-          print *, 'new_spline_2D(): periodic-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): periodic-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_min and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x2_max) .and. present(x2_max_slopes) ) then
-          print *, 'new_spline_2D(): periodic-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): periodic-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_max and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
 
        ! X1 slope arrays are not needed
-       new_spline_2d%x1_min_slopes => null()
-       new_spline_2d%x1_max_slopes => null()
-       new_spline_2d%x1_min_slopes_coeffs => null()
-       new_spline_2d%x1_max_slopes_coeffs => null()
+       new_cubic_spline_2d%x1_min_slopes => null()
+       new_cubic_spline_2d%x1_max_slopes => null()
+       new_cubic_spline_2d%x1_min_slopes_coeffs => null()
+       new_cubic_spline_2d%x1_max_slopes_coeffs => null()
 
        ! But X2 slopes are.
-       SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
-       SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x2_min_slopes(num_pts_x1),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x2_max_slopes(num_pts_x1),ierr)
        ! Except that the slope information is used directly, and not as
        ! spline coefficients data.
-       new_spline_2d%x2_min_slopes_coeffs => null()
-       new_spline_2d%x2_max_slopes_coeffs => null()
+       new_cubic_spline_2d%x2_min_slopes_coeffs => null()
+       new_cubic_spline_2d%x2_max_slopes_coeffs => null()
 
        ! Set the values of the slopes at x2_min     
        FILL_SLOPES(const_slope_x2_min,x2_min_slopes,num_pts_x1,x2_min_slopes,compute_slopes_x2_min)
@@ -1352,43 +1336,43 @@ contains  ! ****************************************************************
     case( 10 )
        ! Hermite conditions in both, X1 and X2
        if( present(const_slope_x1_min) .and. present(x1_min_slopes) ) then
-          print *, 'new_spline_2D(): hermite-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x1_min and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x1_max) .and. present(x1_max_slopes) ) then
-          print *, 'new_spline_2D(): hermite-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_max and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x2_min) .and. present(x2_min_slopes) ) then
-          print *, 'new_spline_2D(): hermite-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_min and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
        if( present(const_slope_x2_max) .and. present(x2_max_slopes) ) then
-          print *, 'new_spline_2D(): hermite-hermite case, it is not ', &
+          print *, 'new_cubic_spline_2D(): hermite-hermite case, it is not ', &
                'allowed to specify simultaneously a constant value for ', &
                'the slopes at x2_max and an array-specified set of slopes.'
-          STOP 'new_spline_2D'
+          STOP 'new_cubic_spline_2D'
        end if
 
        ! Both, X1 and X2 slope arrays are needed.
-       SLL_ALLOCATE(new_spline_2d%x1_min_slopes(num_pts_x2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x1_max_slopes(num_pts_x2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x2_min_slopes(num_pts_x1),ierr)
-       SLL_ALLOCATE(new_spline_2d%x2_max_slopes(num_pts_x1),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_min_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_max_slopes(num_pts_x2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x2_min_slopes(num_pts_x1),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x2_max_slopes(num_pts_x1),ierr)
        ! Given the order in which we compute the splines, first along X2 and 
        ! then along X1, the coefficients-as-slopes data would never be used
        ! in the X2 direction. Consider eliminating these pointers from the 
        ! object.
-       new_spline_2d%x2_min_slopes_coeffs => null()
-       new_spline_2d%x2_max_slopes_coeffs => null()
-       SLL_ALLOCATE(new_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
-       SLL_ALLOCATE(new_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
+       new_cubic_spline_2d%x2_min_slopes_coeffs => null()
+       new_cubic_spline_2d%x2_max_slopes_coeffs => null()
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_min_slopes_coeffs(0:num_pts_x2+2),ierr)
+       SLL_ALLOCATE(new_cubic_spline_2d%x1_max_slopes_coeffs(0:num_pts_x2+2),ierr)
 
        ! Set the values of the slopes at x1_min     
        FILL_SLOPES(const_slope_x1_min,x1_min_slopes,num_pts_x2,x1_min_slopes,compute_slopes_x1_min)
@@ -1403,7 +1387,7 @@ contains  ! ****************************************************************
        FILL_SLOPES(const_slope_x2_max,x2_max_slopes,num_pts_x1,x2_max_slopes,compute_slopes_x2_max)
 
     case default
-       print *, 'ERROR: new_spline_2D(): ', &
+       print *, 'ERROR: new_cubic_spline_2D(): ', &
             'did not recognize given boundary conditions.'
        STOP
     end select
@@ -1412,8 +1396,8 @@ contains  ! ****************************************************************
     ! points 0, num_points, num_points+1, num_points+2. These are meant to 
     ! store the boundary condition-specific data. The 'periodic' BC does
     ! not use the num_points+2 point.
-    SLL_ALLOCATE( new_spline_2D%coeffs(0:num_pts_x1+2,0:num_pts_x2+2), ierr )
-  end function new_spline_2D
+    SLL_ALLOCATE( new_cubic_spline_2D%coeffs(0:num_pts_x1+2,0:num_pts_x2+2), ierr )
+  end function new_cubic_spline_2D
 
   subroutine compute_spline_2D_prdc_prdc( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
@@ -1925,7 +1909,7 @@ contains  ! ****************************************************************
     end do
   end subroutine compute_spline_2D_hrmt_hrmt
 
-  subroutine compute_spline_2D( data, spline )
+  subroutine compute_cubic_spline_2D( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
     type(sll_cubic_spline_2D), pointer         :: spline
     sll_int32 :: bc1
@@ -1983,7 +1967,7 @@ contains  ! ****************************************************************
             'did not recognize given boundary condition combination.'
        STOP
     end select
-  end subroutine compute_spline_2D
+  end subroutine compute_cubic_spline_2D
 
   ! deposit_value_2D(): given a spline that describes the decomposition 
   ! of the distribution function at time t^n, and two 2D arrays x1 and x2 
@@ -2507,13 +2491,13 @@ contains  ! ****************************************************************
   end function interpolate_x2_derivative_2D
 
 
-  subroutine delete_spline_2D( spline )
+  subroutine delete_cubic_spline_2D( spline )
     type(sll_cubic_spline_2D), pointer :: spline
     sll_int32                    :: ierr
     ! Fixme: some error checking, whether the spline pointer is associated
     ! for instance
     if( .not. associated(spline) ) then
-       print *, 'delete_spline_2D(): passed spline is not associated'
+       print *, 'delete_cubic_spline_2D(): passed spline is not associated'
        STOP
     end if
     SLL_DEALLOCATE( spline%d1, ierr )
@@ -2521,7 +2505,7 @@ contains  ! ****************************************************************
     SLL_DEALLOCATE( spline%coeffs, ierr )
     spline%data => null()
     SLL_DEALLOCATE( spline, ierr )
-  end subroutine delete_spline_2D
+  end subroutine delete_cubic_spline_2D
 
 
 #undef NUM_TERMS
