@@ -15,16 +15,20 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> \file sll_cubic_splines.F90
-!> \namespace sll_cubic_splines
-!> \brief  
-!> provides capabilities for data interpolation with 
-!> cubic B-splines and different boundary conditions
-!> \details
-!> (at the time of this writing: periodic, hermite). The data to be 
-!> interpolated is represented by a simple array.  The spline coefficients 
-!> and other information are stored in a spline object, which is also used 
-!> to interpolate the fitted data.
+!> @file sll_cubic_splines.F90
+!> @namespace sll_cubic_splines
+!> @brief  
+!> provides capabilities for data and derivative
+!> interpolation with cubic B-splines and different 
+!> boundary conditions
+!> @details
+!> Supported boundary conditions presently:  periodic, hermite. 
+!> User needs to declare a pointer to the spline object. The pointer needs
+!> to be allocated and initialized with the appropriate 'new_' function. 
+!> Afterwards this initialized object can be used to compute the spline 
+!> coefficients and interpolate data at a given point or collections of points.
+!> Derivatives can also be interpolated. After usage, resources allocated
+!> for the spline object can be liberated by a call to 'sll_delete()'
 !> 
 module sll_cubic_splines
 #include "sll_working_precision.h"
@@ -153,7 +157,19 @@ contains  ! ****************************************************************
   ! The following parameter determines the problem size at which the alternative
   ! spline algorithm is used.
 #define NUM_TERMS 27  
-  !> create new spline object
+  !> @brief Returns a pointer to a heap-allocated cubic spline object.
+  !> @param[IN] num_points Number of points that where the data to be 
+  !> interpolated are represented.
+  !> @param[IN] xmin Minimum value of the abscissae where the data are meant 
+  !> to be interpolated.
+  !> @param[IN] xmax Minimum value of the abscissae where the data are meant 
+  !> to be interpolated.
+  !> @param[IN] bc_type A boundary condition specifier. Must be one of the
+  !> symbols defined in the SLL_BOUNDARY_CONDITION_DESCRIPTORS module.
+  !> @param[IN] sl OPTIONAL: The value of the slope at xmin, for use in the case
+  !> of hermite boundary conditions.
+  !> @param[IN] sr OPTIONAL: The value of the slope at xmin, for use in the case
+  !> of hermite boundary conditions.
   function new_cubic_spline_1D( num_points, xmin, xmax, bc_type, sl, sr )
     type(sll_cubic_spline_1D), pointer   :: new_cubic_spline_1D
     sll_int32,  intent(in)               :: num_points
