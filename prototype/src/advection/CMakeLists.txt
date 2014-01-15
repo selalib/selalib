@@ -5,6 +5,7 @@ IF( NOT STDF95)
 	sll_advection_1d_non_uniform_cubic_splines.F90
 	sll_advection_1d_BSL.F90
 	sll_advection_1d_CSL.F90
+	sll_advection_1d_PSM.F90
 	sll_advection_1d_base.F90
 	sll_advection_2d_BSL.F90
 	sll_advection_2d_tensor_product.F90
@@ -54,6 +55,14 @@ IF( NOT STDF95)
 
   TARGET_LINK_LIBRARIES(
     test_advection_1d_CSL
+    sll_advection)
+
+  ADD_EXECUTABLE(
+    test_advection_1d_PSM
+    unit_test_advection_1d_PSM.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_advection_1d_PSM
     sll_advection)
 
 
