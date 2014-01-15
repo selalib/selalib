@@ -4,9 +4,10 @@ IF( NOT STDF95)
 	sll_advection_1d_periodic.F90
 	sll_advection_1d_non_uniform_cubic_splines.F90
 	sll_advection_1d_BSL.F90
+	sll_advection_1d_CSL.F90
 	sll_advection_1d_base.F90
 	sll_advection_2d_BSL.F90
-	sll_advection_2d_CSL1D.F90
+	sll_advection_2d_tensor_product.F90
 	sll_advection_2d_base.F90)
 
 
@@ -47,6 +48,15 @@ IF( NOT STDF95)
     test_advection_1d_BSL
     sll_advection)
 
+  ADD_EXECUTABLE(
+    test_advection_1d_CSL
+    unit_test_advection_1d_CSL.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_advection_1d_CSL
+    sll_advection)
+
+
 
 
   ADD_EXECUTABLE(
@@ -58,11 +68,11 @@ IF( NOT STDF95)
     sll_advection)
 
   ADD_EXECUTABLE(
-    test_advection_2d_CSL1D
-    unit_test_advection_2d_CSL1D.F90)
+    test_advection_2d_tensor_product
+    unit_test_advection_2d_tensor_product.F90)
 
   TARGET_LINK_LIBRARIES(
-    test_advection_2d_CSL1D
+    test_advection_2d_tensor_product
     sll_advection)
 
     

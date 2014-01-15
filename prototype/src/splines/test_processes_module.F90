@@ -211,8 +211,8 @@ contains
        end if
     endif
      
-    call delete_spline_1D(sp1)
-    call delete_spline_1D(sp2)
+    call sll_delete(sp1)
+    call sll_delete(sp2)
     
     SLL_DEALLOCATE_ARRAY(data, err)
     SLL_DEALLOCATE_ARRAY(deriv, err)
@@ -262,7 +262,7 @@ contains
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_PERIODIC, SLL_PERIODIC )
-    call compute_spline_2D_prdc_prdc( data_2d, sp2d_1 )
+    call compute_spline_2D( data_2d, sp2d_1 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -288,7 +288,7 @@ contains
          SLL_HERMITE, SLL_PERIODIC, &
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
-    call compute_spline_2D_hrmt_prdc( data_2d, sp2d_2 )
+    call compute_spline_2D( data_2d, sp2d_2 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -313,7 +313,7 @@ contains
          SLL_PERIODIC, SLL_HERMITE, &
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
-    call compute_spline_2D_prdc_hrmt( data_2d, sp2d_3 )
+    call compute_spline_2D( data_2d, sp2d_3 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -338,7 +338,7 @@ contains
          SLL_HERMITE, SLL_HERMITE,&
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
-    call compute_spline_2D_hrmt_hrmt( data_2d, sp2d_4 )
+    call compute_spline_2D( data_2d, sp2d_4 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -357,10 +357,10 @@ contains
        stop
     endif
      
-    call delete(sp2d_1)
-    call delete(sp2d_2)
-    call delete(sp2d_3)
-    call delete(sp2d_4)
+    call sll_delete(sp2d_1)
+    call sll_delete(sp2d_2)
+    call sll_delete(sp2d_3)
+    call sll_delete(sp2d_4)
     
     SLL_DEALLOCATE_ARRAY(data_2d, err)
     SLL_DEALLOCATE_ARRAY(coordinates_i,err)
@@ -453,7 +453,7 @@ contains
        test_passed = .false.
     end if
     ! deallocate memory
-    call delete(spline)
+    call sll_delete(spline)
     SLL_DEALLOCATE_ARRAY(data_in, ierr)
     SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
   end subroutine interpolator_tester_1d_prdc
@@ -546,7 +546,7 @@ contains
                spline%use_fast_algorithm
        end if
        ! deallocate memory
-       call delete(spline)
+       call sll_delete(spline)
        SLL_DEALLOCATE_ARRAY(data_in, ierr)
        SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
     end do
@@ -859,7 +859,7 @@ contains
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes )
 
-    call compute_spline_2D_hrmt_prdc( data, spline )
+    call compute_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -948,7 +948,7 @@ contains
 !         x1_min_slopes=eta1_min_slopes, &
 !         x1_max_slopes=eta1_max_slopes )
 
-    call compute_spline_2D_hrmt_prdc( data, spline )
+    call compute_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1038,7 +1038,7 @@ contains
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D_prdc_hrmt( data, spline )
+    call compute_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1127,7 +1127,7 @@ contains
 !         x2_min_slopes=eta2_min_slopes, &
 !         x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D_prdc_hrmt( data, spline )
+    call compute_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1236,7 +1236,7 @@ contains
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D_hrmt_hrmt( data, spline )
+    call compute_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1301,7 +1301,7 @@ contains
          SLL_HERMITE, &
          SLL_HERMITE )
 
-    call compute_spline_2D_hrmt_hrmt( data, spline )
+    call compute_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
