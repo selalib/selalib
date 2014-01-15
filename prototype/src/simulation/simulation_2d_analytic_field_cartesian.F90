@@ -20,6 +20,7 @@ module sll_simulation_2d_analytic_field_cartesian_module
   use sll_module_characteristics_2d_verlet
   use sll_module_advection_1d_BSL
   use sll_module_advection_1d_CSL
+  use sll_module_advection_1d_PSM
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
@@ -355,6 +356,10 @@ contains
         x1_min_bis = x1_min
         x1_max_bis = x1_max
         Nc_x1_bis = Nc_x1
+      case ("SLL_PSM")
+        x1_min_bis = x1_min
+        x1_max_bis = x1_max
+        Nc_x1_bis = Nc_x1
       case ("SLL_CSL")
         x1_min_bis = x1_min-0.5_f64*mesh_x1%delta_eta
         x1_max_bis = x1_max-0.5_f64*mesh_x1%delta_eta
@@ -366,6 +371,10 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
+        x2_min_bis = x2_min
+        x2_max_bis = x2_max
+        Nc_x2_bis = Nc_x2
+      case ("SLL_PSM")
         x2_min_bis = x2_min
         x2_max_bis = x2_max
         Nc_x2_bis = Nc_x2
@@ -570,6 +579,11 @@ contains
           Nc_x1_bis+1, &
           eta_min = x1_min_bis, &
           eta_max = x1_max_bis)
+      case ("SLL_PSM")
+        advect_1d_x1 => new_PSM_1d_advector(&
+          Nc_x1+1, &
+          eta_min = x1_min, &
+          eta_max = x1_max)
       case default
         print *,'#bad advect_case',advect1d_x1_case
         print *,'#not implemented'
@@ -592,6 +606,11 @@ contains
           Nc_x2_bis+1, &
           eta_min = x2_min_bis, &
           eta_max = x2_max_bis)
+      case ("SLL_PSM")
+        advect_1d_x2 => new_PSM_1d_advector(&
+          Nc_x2+1, &
+          eta_min = x2_min, &
+          eta_max = x2_max)
       case default
         print *,'#bad advect_case',advect1d_x2_case
         print *,'#not implemented'
@@ -756,6 +775,12 @@ contains
     sll_real64,dimension(:,:), pointer :: A2
     sll_real64,dimension(:,:), pointer :: A1_init !advection fields
     sll_real64,dimension(:,:), pointer :: A2_init
+    sll_real64,dimension(:), pointer :: f_visu_buf1d
+    sll_real64,dimension(:), pointer :: node_positions_x1
+    sll_real64,dimension(:), pointer :: node_positions_x2
+    type(sll_logical_mesh_1d), pointer :: mesh_x1
+    type(sll_logical_mesh_1d), pointer :: mesh_x2
+
     sll_int32 :: ierr
     sll_int32 :: nb_step
     sll_int32 :: step
@@ -764,6 +789,7 @@ contains
     sll_int32             :: IO_stat
     sll_int32 :: iplot
     sll_real64 :: time_factor
+    sll_int32 :: i
     
     Nc_x1 = sim%mesh_2d%num_cells1
     Nc_x2 = sim%mesh_2d%num_cells2
@@ -776,6 +802,8 @@ contains
     nb_step = sim%num_iterations
     dt = sim%dt
     
+    mesh_x1 => new_logical_mesh_1d(Nc_x1,eta_min=x1_min, eta_max=x1_max)
+    mesh_x2 => new_logical_mesh_1d(Nc_x2,eta_min=x2_min, eta_max=x2_max)
     
     !allocation
     SLL_ALLOCATE(f(Nc_x1+1,Nc_x2+1),ierr)
@@ -786,8 +814,10 @@ contains
     SLL_ALLOCATE(A2(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(A1_init(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(A2_init(Nc_x1+1,Nc_x2+1),ierr)
+    SLL_ALLOCATE(f_visu_buf1d(Nc_x2+1),ierr)
 
-    
+    call initialize_eta1_node_1d( mesh_x1, node_positions_x1 )
+    call initialize_eta1_node_1d( mesh_x2, node_positions_x2 )
 
     
     !initialisation of distribution function
@@ -813,7 +843,7 @@ contains
     
     iplot = 0
 
-    do step=0,nb_step-1
+    do step=0,nb_step
       f_old = f
 
      
@@ -825,6 +855,18 @@ contains
       if(modulo(step,sim%freq_diag)==0)then
         print*,"#step= ", step
         call plot_f_cartesian(iplot,f,sim%mesh_2d)
+        do i=1,Nc_x2+1
+          f_visu_buf1d(i) = sum(f(1:Nc_x1,i))*delta_x1
+        enddo
+        call sll_gnuplot_write_1d( &
+          f_visu_buf1d(1:Nc_x2+1), &
+          node_positions_x2(1:Nc_x2+1), &
+          'intfdx', &
+          iplot )
+        call sll_gnuplot_write_1d( &
+          f_visu_buf1d(1:Nc_x2+1), &
+          node_positions_x2(1:Nc_x2+1), &
+          'intfdx')
         iplot = iplot+1  
       endif            
 #endif

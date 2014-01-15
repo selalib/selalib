@@ -80,6 +80,7 @@ IF(NOT STDF95)
      test_advection_1d_non_uniform_cubic_splines)
    ADD_TEST(NAME advection_1d_BSL COMMAND test_advection_1d_BSL)
    ADD_TEST(NAME advection_1d_CSL COMMAND test_advection_1d_CSL)
+   ADD_TEST(NAME advection_1d_PSM COMMAND test_advection_1d_PSM)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    ADD_TEST(NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product)
    
