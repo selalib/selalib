@@ -542,8 +542,7 @@ contains
        else
           test_passed = .false.
           print *, 'Failure in case: num. points = ', npts, 'Average error = ', &
-               average_error, 'delta^4 = ', h1**4, 'fast algorithm? ', &
-               spline%use_fast_algorithm
+               average_error, 'delta^4 = ', h1**4
        end if
        ! deallocate memory
        call sll_delete(spline)
@@ -598,8 +597,6 @@ contains
             SLL_HERMITE )
        
        call compute_cubic_spline_1D( data_in, spline )
-       print *, '1D coefficients: '
-       print *,  spline%coeffs(:)
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 
