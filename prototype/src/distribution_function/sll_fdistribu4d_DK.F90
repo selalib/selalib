@@ -312,7 +312,7 @@ module sll_fdistribu4d_DK
         func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
     end do
-    call delete(sp1d_r)
+    call sll_delete(sp1d_r)
   end subroutine function_xy_from_r
 
 
@@ -361,7 +361,7 @@ module sll_fdistribu4d_DK
         func_xy(ix,iy) = interpolate_value_2D(r,theta,sp2d_rtheta)
       end do
     end do
-    call delete(sp2d_rtheta)
+    call sll_delete(sp2d_rtheta)
   end subroutine function_xy_from_rtheta
 
 

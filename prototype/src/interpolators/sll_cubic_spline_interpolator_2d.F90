@@ -68,7 +68,7 @@ contains
 
   subroutine delete_cubic_spline_2d_interpolator( interpolator )
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-    call delete(interpolator%spline)
+    call sll_delete(interpolator%spline)
   end subroutine delete_cubic_spline_2d_interpolator
   
   function new_cubic_spline_2d_interpolator( &
