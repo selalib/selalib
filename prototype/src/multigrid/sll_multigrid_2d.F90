@@ -699,10 +699,10 @@ end subroutine initialize_multigrid_2d
 !>
 subroutine solve_multigrid_2d(this, rhs, phi, r)
 
-type(sll_multigrid_solver_2d)     :: this
-sll_real64, dimension(:,:)        :: rhs
-sll_real64, dimension(:,:)        :: phi
-sll_real64, dimension(:,:)        :: r
+type(sll_multigrid_solver_2d) :: this
+sll_real64, dimension(:,:)    :: rhs
+sll_real64, dimension(:,:)    :: phi
+sll_real64, dimension(:,:)    :: r
 
 sll_int32  :: iter
 sll_real64 :: avo, acorr, relmax

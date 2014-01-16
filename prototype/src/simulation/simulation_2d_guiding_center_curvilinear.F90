@@ -131,16 +131,15 @@ contains
     sll_int32, parameter  :: input_file = 99
         
     !geometry
-    character(len=256) :: mesh_case_eta1
+    character(len=256) :: mesh_case
     sll_int32 :: num_cells_eta1
+    sll_int32 :: num_cells_eta2
     sll_real64 :: eta1_min
     sll_real64 :: eta1_max
-    sll_int32 :: nbox_eta1
-    character(len=256) :: mesh_case_eta2
-    sll_int32 :: num_cells_eta2
     sll_real64 :: eta2_min
     sll_real64 :: eta2_max
-    sll_int32 :: nbox_eta2
+    sll_real64 :: alpha1
+    sll_real64 :: alpha2
     
      !initial_function
     character(len=256) :: initial_function_case
@@ -169,6 +168,17 @@ contains
     sll_int32 :: spline_degree_eta1
     sll_int32 :: spline_degree_eta2
     
+    !boundaries conditions
+    !character(len=256) :: boundaries_conditions
+    sll_int32 :: bc_interp2d_eta1
+    sll_int32 :: bc_interp2d_eta2   
+    sll_int32 :: bc_charac2d_eta1
+    sll_int32 :: bc_charac2d_eta2  
+    sll_int32 :: bc_eta1_left
+    sll_int32 :: bc_eta1_right
+    sll_int32 :: bc_eta2_left
+    sll_int32 :: bc_eta2_right 
+     
     !local variables
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
@@ -188,21 +198,22 @@ contains
     !in future, we will use namelist file
     
     namelist /geometry/ &
-      mesh_case_eta1, &
+      mesh_case, &
       num_cells_eta1, &
+      num_cells_eta2, &
       eta1_min, &
       eta1_max, &
-      nbox_eta1, &
-      mesh_case_eta2, &
-      num_cells_eta2, &
       eta2_min, &
       eta2_max, &
-      nbox_eta2
+      alpha1  , &
+      alpha2
 
     namelist /initial_function/ &
       initial_function_case, &
       kmode_eta1, &
       kmode_eta2, &
+      r_minus  ,&
+      r_plus   ,&
       eps
 
     namelist /time_iterations/ &
@@ -224,20 +235,30 @@ contains
       mudpack_method, &    
       spline_degree_eta1, &
       spline_degree_eta2    
+      
+     namelist /boundaries/ &
+      bc_interp2d_eta1, &
+      bc_interp2d_eta2, &    
+      bc_charac2d_eta1, &
+      bc_charac2d_eta2, &
+      bc_eta1_left,  &
+      bc_eta1_right, &
+      bc_eta2_left,  &
+      bc_eta2_right   
     
         !! set default parameters
     
     !geometry
-    mesh_case_eta1="SLL_LANDAU_MESH"
+    mesh_case="SLL_LANDAU_MESH"
     num_cells_eta1 = 128
+    num_cells_eta2 = 128
     eta1_min = 0.0_f64
     eta1_max = 2._f64*sll_pi
-    nbox_eta1 = 1
-    mesh_case_eta2="SLL_LANDAU_MESH"
-    num_cells_eta2 = 128
     eta2_min = 0.0_f64
     eta2_max = 2._f64*sll_pi
-    nbox_eta2 = 1
+    alpha1 = 0._f64
+    alpha2 = 0._f64
+    params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
     
     !initial function
     initial_function_case="SLL_KHP1"
@@ -284,6 +305,7 @@ contains
       read(input_file, time_iterations)
       read(input_file, advector)
       read(input_file, poisson)
+      read(input_file, boundaries)
       close(input_file)
     else
       print *,'#initialization with default parameters'    
@@ -310,10 +332,10 @@ contains
     sim%spline_degree_eta2 = spline_degree_eta2
     sim%quadrature_type1 = ES_GAUSS_LEGENDRE
     sim%quadrature_type2 = ES_GAUSS_LEGENDRE
-    sim%bc_eta1_left = SLL_PERIODIC !SLL_DIRICHLET
-    sim%bc_eta1_right= SLL_PERIODIC !SLL_DIRICHLET
-    sim%bc_eta2_left = SLL_PERIODIC
-    sim%bc_eta2_right= SLL_PERIODIC
+    sim%bc_eta1_left = bc_eta1_left
+    sim%bc_eta1_right= bc_eta1_right
+    sim%bc_eta2_left = bc_eta2_left
+    sim%bc_eta2_right= bc_eta2_right
     
     SLL_ALLOCATE(sim%b11(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b12(Nc_eta1+1,Nc_eta2+1),ierr)
@@ -324,15 +346,25 @@ contains
     SLL_ALLOCATE(sim%c(Nc_eta1+1,Nc_eta2+1),ierr)
     
     
-    
-    if (initial_function_case == "SLL_KHP1") then
+    select case (mesh_case)
+      case ("SLL_LANDAU_MESH")
         eta1_max = 2._f64*sll_pi/kmode_eta1
         eta2_max = 2._f64*sll_pi/kmode_eta2
-    endif
+      case ("SLL_POLAR_MESH")
+        eta2_max = 2._f64*sll_pi
+      case ("SLL_COLLELA_MESH")  
+        eta1_max = 2._f64*sll_pi/kmode_eta1
+        eta2_max = 2._f64*sll_pi/kmode_eta2
+         !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
+         !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
+         params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
 
-    !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
-    !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
-    params_mesh = (/ 0._f64, 0._f64, eta1_max-eta1_min, eta2_max-eta2_min/)
+      case default
+        print *,'#bad mesh_case',mesh_case
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
+        stop
+    end select
 
         
     sim%mesh_2d => new_logical_mesh_2d( &
@@ -342,39 +374,47 @@ contains
       eta1_max , &
       eta2_min , &
       eta2_max ) 
-           
-    sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
-       sim%mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       params_mesh   )  
-       
-!    sim%transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_polar_transformation", &
-!       sim%mesh_2d, &
-!       polar_x1, &
-!       polar_x2, &
-!       polar_jac11, &
-!       polar_jac12, &
-!       polar_jac21, &
-!       polar_jac22, &
-!       params_mesh  )     
-
-    sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_collela_transformation", &
-       sim%mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
-       params_mesh  )  
+      
+    select case (mesh_case)
+      case ("SLL_LANDAU_MESH")       
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_identity_transformation", &
+         sim%mesh_2d, &
+         identity_x1, &
+         identity_x2, &
+         identity_jac11, &
+         identity_jac12, &
+         identity_jac21, &
+         identity_jac22, &
+         params_mesh   )  
+      case ("SLL_POLAR_MESH") 
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_polar_transformation", &
+         sim%mesh_2d, &
+         polar_x1, &
+         polar_x2, &
+         polar_jac11, &
+         polar_jac12, &
+         polar_jac21, &
+         polar_jac22, &
+         params_mesh  )     
+      case ("SLL_COLLELA_MESH")
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_collela_transformation", &
+         sim%mesh_2d, &
+         sinprod_x1, &
+         sinprod_x2, &
+         sinprod_jac11, &
+         sinprod_jac12, &
+         sinprod_jac21, &
+         sinprod_jac22, &
+         params_mesh  )  
+        case default
+        print *,'#bad mesh_case',mesh_case
+        print *,'#not implemented'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
+        stop
+    end select  
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
@@ -386,12 +426,12 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
 
@@ -408,8 +448,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)
        print*," A2_2d interpolation SLL_CUBIC_SPLINES"   
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
@@ -418,24 +458,24 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)  
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)  
        print*," A1_1d interpolation SLL_CUBIC_SPLINES"   
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC)
+          bc_interp2d_eta1)
        print*," A2_1d interpolation SLL_CUBIC_SPLINES"     
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC)
+          bc_interp2d_eta1)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
 
@@ -449,12 +489,12 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)         
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
 
@@ -469,8 +509,8 @@ contains
           eta1_max=eta1_max, &
           eta2_min=eta2_min, &
           eta2_max=eta2_max, &
-          bc_type_1=SLL_PERIODIC, & !SLL_SET_TO_LIMIT, &
-          bc_type_2=SLL_PERIODIC)    
+          bc_type_1=bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
+          bc_type_2=bc_charac2d_eta2)    
       case ("SLL_VERLET")    
           print*," charac =SLL_VERLET"   
         charac2d => new_verlet_2d_charac(&
@@ -480,8 +520,8 @@ contains
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1=SLL_PERIODIC, & !SLL_SET_TO_LIMIT, &
-          bc_type_2=SLL_PERIODIC, &
+          bc_type_1=bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
+          bc_type_2=bc_charac2d_eta2, &
           eta1_min=eta1_min, &
           eta1_max=eta1_max, &
           eta2_min=eta2_min, &
@@ -489,7 +529,7 @@ contains
       case default
         print *,'#bad charac2d_case',charac2d_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
 
@@ -511,7 +551,7 @@ contains
       case default
         print *,'#bad advect_case',advect2d_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
     
@@ -525,7 +565,7 @@ contains
         sim%params(2) = kmode_eta1
       case("SLL_DIOCOTRON")
         print*,"f0 = SLL_DIOCOTRON " 
-        sim%init_func => sll_diocotron_initializer_2d
+        sim%init_func => sll_diocotron_initializer_2d2
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = r_minus
         sim%params(2) = r_plus
@@ -534,7 +574,7 @@ contains
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
     
@@ -550,7 +590,7 @@ contains
       case default
         print *,'#bad time_loop_case',time_loop_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
     
@@ -559,7 +599,7 @@ contains
      !poisson solver
     select case(poisson_solver)    
       case ("SLL_MUDPACK_CURVILINEAR")    
-        print *,'poisson = MUDPACK_CURVILINEAR'
+        print *,'poisson = MUDPACK_CURVILINEAR', mudpack_method
         sim%b11 = 1._f64
         sim%b22 = 1._f64
         sim%b12 = 0._f64
@@ -578,6 +618,8 @@ contains
          sim%bc_eta1_right, &
          sim%bc_eta2_left, &
          sim%bc_eta2_right, &
+         bc_interp2d_eta1, &
+         bc_interp2d_eta2, &
          sim%b11,&
          sim%b12,&
          sim%b21,&
@@ -620,7 +662,7 @@ contains
       case default
         print *,'#bad poisson_case',poisson_solver
         print *,'#not implemented'
-        print *,'#in initialize_mudpack_curvilinear'
+        print *,'#in  initialize_guiding_center_2d_curvilinear'
         stop
     end select
 
@@ -664,6 +706,7 @@ contains
     sll_int32 :: step
     sll_real64 :: dt
     sll_int32 :: thdiag_id
+    sll_int32 :: thdiagp_id
     sll_int32 :: iplot
     
     Nc_eta1 = sim%mesh_2d%num_cells1
@@ -706,9 +749,9 @@ contains
     
     !print *,A1
     !print *,A2
-    
+    thdiagp_id=thdiag_id+1
     call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
-    
+    call sll_ascii_file_create('thdiagp.dat', thdiagp_id, ierr)
 !    open(unit = diag_id, file='diag_curvilinear.dat',IOStat=IO_stat)
 !    if( IO_stat /= 0 ) then
 !       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
@@ -725,21 +768,21 @@ contains
     do step=1,nb_step+1
       print*,"step= ", step
       f_old = f
-
+      
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
       call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       if(modulo(step-1,sim%freq_diag_time)==0)then
-!        call time_history_diagnostic_gc2( &
-!          diag_id+1 , &    
-!          step-1, &
-!          dt, &
-!          sim%mesh_2d, &
-!          f, &
-!          phi, &
-!          A1, &
-!          A2)
         call time_history_diagnostic_gc( &
-          thdiag_id, &    
+          thdiag_id , &    
+          step-1, &
+          dt, &
+          sim%mesh_2d, &
+          f, &
+          phi, &
+          A1, &
+          A2)
+        call time_history_diagnostic_gc2( &
+          thdiagp_id, &    
           step-1, &
           dt, &
           sim%mesh_2d, &
@@ -748,14 +791,12 @@ contains
           A1, &
           A2)
       endif            
-     
 #ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
         call plot_f_curvilinear(iplot,f,sim%mesh_2d,sim%transformation)
         iplot = iplot+1  
       endif            
-#endif
-      
+#endif  
       select case (sim%time_loop_case)
         case (SLL_EULER)
           call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
@@ -763,7 +804,6 @@ contains
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
           call sim%poisson%compute_phi_from_rho(phi, f)
           call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
-          !f_old = f
           call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
@@ -774,10 +814,10 @@ contains
           print *,'#SLL_PREDICTOR_CORRECTOR=',SLL_PREDICTOR_CORRECTOR
           
       end select
-         
     enddo
     
     close(thdiag_id)
+    close(thdiagp_id)
     !print *,'#not implemented for the moment!'
   end subroutine run_gc2d_curvilinear
   
