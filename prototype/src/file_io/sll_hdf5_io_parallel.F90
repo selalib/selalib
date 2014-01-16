@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> @brief
-!> Implements the functions to write hdf5 file to store heavy data
+!> Parallel version of sll_hdf5_io
 !> @details
 !> With HDF5 you can store several datasets in a single file.
 !> - HDF5 file (http://www.hdfgroup.org/HDF5/)
