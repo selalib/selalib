@@ -15,49 +15,16 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!------------------------------------------------------------------------------
-! SELALIB
-!------------------------------------------------------------------------------
-!
-! MODULE: sll_assert
-!
-!> @author
-!> Module Author Name and Affiliation
-!
-! DESCRIPTION: 
-!> This is a very small but very useful capability that permits
-!! the developer to devise many sorts of defensive programming techniques.
-!!
-!! The simple idea is that of declaring a condition that is expected to be 
-!! true, thus triggering a descriptive error if the condition is violated.
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 
 module sll_assert
   implicit none
 
 contains
 
-   !---------------------------------------------------------------------------  
-   !> @author 
-   !> Routine Author Name.
-   !
-   ! DESCRIPTION: 
-   !> Output pattern in the case of assertion error.
-   !!
-   !! This routine just takes the informations about the assertion error and writes them on the sreen. 
-   !
-   ! REVISION HISTORY:
-   ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-   !
-   !> @param[in] msg short description of the error
-   !> @param[in] file file name in which the error occurred
-   !> @param[in] line line number of the call
-   !---------------------------------------------------------------------------
-
+  ! This routine just takes the informations about the assertion error and 
+  ! writes them on the sreen. 
+  ! This function is only meant to be used by the assert macro. No Doxygen 
+  ! documentation needed.
 subroutine sll_assertion(msg, file, line)
   intrinsic :: trim
   character(len=*), intent(in) :: msg
