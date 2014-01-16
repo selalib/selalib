@@ -1,5 +1,3 @@
-!> @author Pierre Navaro
-!> tests I/O functions 
 module test_io
 #include "sll_memory.h"
 #include "sll_working_precision.h"
