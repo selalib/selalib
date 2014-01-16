@@ -15,7 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write xml file to store light data
 !> @details

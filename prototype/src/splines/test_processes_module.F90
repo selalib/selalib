@@ -1,16 +1,3 @@
-!****************************************************
-!
-! Selalib      
-! Module: test_processes_module.F90
-!
-!> @brief 
-!> Module of test processes for sll_cubic_splines unit test
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr)
-!                                  
-!****************************************************
-
 module test_processes_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
