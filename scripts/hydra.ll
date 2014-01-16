@@ -12,4 +12,10 @@
 # @ notify_user = $(user)@rzg.mpg.de
 # @ queue
 cd /ptmp/pin/all
+module load intel
+module load mpi.ibm
+module load cmake
+module load hdf5-mpi
+module load fftw
+module load git
 make Experimental

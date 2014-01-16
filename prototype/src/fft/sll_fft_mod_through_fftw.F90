@@ -170,7 +170,7 @@ contains
   subroutine fft_set_mode_real_1d(plan,data,new_value,k)
     type(sll_fft_plan), pointer :: plan
     sll_real64, dimension(0:)   :: data
-    sll_int32                   :: k, n_2, n, index_mode
+    sll_int32                   :: k, n_2, n!, index_mode
     sll_comp64                  :: new_value
 
     n = plan%problem_shape(1)

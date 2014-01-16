@@ -98,7 +98,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)   :: data
     sll_real64, dimension(num_points)      :: data_out
     ! compute the interpolating spline coefficients
-    call compute_spline_1D( data, this%spline )
+    call compute_cubic_spline_1D( data, this%spline )
     call interpolate_array_values( coordinates, data_out, num_points, &
          this%spline )
   end function 
@@ -124,7 +124,7 @@ contains  ! ****************************************************************
     sll_real64 :: xmin, xmax 
     sll_int32 :: i
     ! compute the interpolating spline coefficients
-    call compute_spline_1D( data, this%spline )
+    call compute_cubic_spline_1D( data, this%spline )
     ! compute array of coordinates where interpolation is performed from displacement
     length = this%interpolation_points(num_points) - &
              this%interpolation_points(1)
@@ -185,7 +185,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
-    call compute_spline_1D( data_array, interpolator%spline )
+    call compute_cubic_spline_1D( data_array, interpolator%spline )
     
     if(present(eta_coords))then
       !print *,'#warning eta_coords not taken into account'
@@ -252,8 +252,8 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
-    call interpolate_array_derivatives( vals_to_interpolate, num_pts, &
-         output_array, interpolator%spline )
+    call interpolate_array_derivatives( vals_to_interpolate, output_array, &
+         num_pts,  interpolator%spline )
   end subroutine interpolate_derivatives_cs1d
 
   subroutine interpolate_pointer_derivatives_cs1d( &
@@ -269,8 +269,8 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
-    call interpolate_pointer_derivatives( vals_to_interpolate, num_pts, &
-         output, interpolator%spline )
+    call interpolate_pointer_derivatives( vals_to_interpolate, output, &
+         num_pts, interpolator%spline )
   end subroutine interpolate_pointer_derivatives_cs1d
 
 #ifdef STDF95
@@ -389,14 +389,15 @@ contains  ! ****************************************************************
     interpolator%interpolation_points(num_points) = xmax
     interpolator%bc_type = bc_type
     if (present(slope_left).and.present(slope_right)) then
-       interpolator%spline => new_spline_1D( &
+       interpolator%spline => new_cubic_spline_1D( &
             num_points, &
             xmin, xmax, &
             bc_type, &
             slope_left, &
             slope_right )
     else
-       interpolator%spline => new_spline_1D(num_points, xmin, xmax, bc_type)
+       interpolator%spline => &
+            new_cubic_spline_1D(num_points, xmin, xmax, bc_type)
     end if
   end subroutine
 
@@ -423,7 +424,7 @@ contains  ! ****************************************************************
 #else  
     class(cubic_spline_1d_interpolator) :: obj
 #endif
-    call delete(obj%spline)
+    call sll_delete(obj%spline)
   end subroutine delete_cs1d
 
   subroutine set_coefficients_cs1d( interpolator, coeffs )
