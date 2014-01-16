@@ -12,14 +12,17 @@ program vp_cartesian_4d
   use sll_common_array_initializers_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
+  use sll_timer
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx,mv
+  type(sll_time_mark)  :: t0 
   class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv
   sll_real64, dimension(1:11) :: landau_params
+  sll_real64 :: time
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -45,14 +48,14 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
+!!$#define NCELL1 32
+!!$#define NCELL2 4
+!!$#define NCELL3 128
+!!$#define NCELL4 4
 #define NCELL1 32
-#define NCELL2 4
-#define NCELL3 128
-#define NCELL4 4
-!!$#define NCELL1 16
-!!$#define NCELL2 16
-!!$#define NCELL3 16
-!!$#define NCELL4 16
+#define NCELL2 32
+#define NCELL3 64
+#define NCELL4 64
 !!$!transport
 !!$#define ETA1MIN -1.0_f64
 !!$#define ETA1MAX 1.0_f64
@@ -62,15 +65,15 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 1.0_f64
 !!$#define ETA4MIN -1.0_f64
 !!$#define ETA4MAX 1.0_f64
-!landau 1d sur xvx
-#define ETA1MIN -8.0_f64
-#define ETA1MAX 8.0_f64
-#define ETA2MIN -0.5_f64
-#define ETA2MAX 0.5_f64
-#define ETA3MIN 0.0_f64
-#define ETA3MAX 2.0_f64*sll_pi/0.2
-#define ETA4MIN 0.0_f64
-#define ETA4MAX 1.0_f64
+!landau 1d sur xvx or 2 streams
+!!$#define ETA1MIN -8.0_f64
+!!$#define ETA1MAX 8.0_f64
+!!$#define ETA2MIN -0.5_f64
+!!$#define ETA2MAX 0.5_f64
+!!$#define ETA3MIN 0.0_f64
+!!$#define ETA3MAX 2.0_f64*sll_pi/0.2
+!!$#define ETA4MIN 0.0_f64
+!!$#define ETA4MAX 1.0_f64
 !!$!landau 1d sur yvy
 !!$#define ETA1MIN -0.5_f64
 !!$#define ETA1MAX 0.5_f64
@@ -81,23 +84,23 @@ program vp_cartesian_4d
 !!$#define ETA4MIN 0.0_f64
 !!$#define ETA4MAX 4.0_f64*sll_pi
 !!$!landau 2D
-!!$#define ETA1MIN -6.0_f64
-!!$#define ETA1MAX 6.0_f64
-!!$#define ETA2MIN -6.0_f64
-!!$#define ETA2MAX 6.0_f64
-!!$#define ETA3MIN 0.0_f64
-!!$#define ETA3MAX 4.0_f64*sll_pi
-!!$#define ETA4MIN 0.0_f64
-!!$#define ETA4MAX 4.0_f64*sll_pi
+#define ETA1MIN -6.0_f64
+#define ETA1MAX 6.0_f64
+#define ETA2MIN -6.0_f64
+#define ETA2MAX 6.0_f64
+#define ETA3MIN 0.0_f64
+#define ETA3MAX 4.0_f64*sll_pi
+#define ETA4MIN 0.0_f64
+#define ETA4MAX 4.0_f64*sll_pi
 
 
 #define TINI 0.0_f64
-#define TMAX 0.01e0_f64
+#define TMAX 20.0e0_f64
 !#define TMAX 0._f64
-#define CFL 0.4_f64
+#define CFL 1.2_f64
 #define ELECMAX 1._f64 ! upper bound estimate for the electric field
-#define EPSILON 0.005
-#define TEST 10
+#define EPSILON 0.05
+#define TEST 5
 ! 0: x transport 1: landau damping 1d xvx  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
 !6: transport x-vx 7: transport y-vy 8: transport 2d
@@ -105,8 +108,8 @@ program vp_cartesian_4d
 !10: two-streams instability
 
 
-#define DEG  3 ! polynomial degree
-#define SCHEME 1
+#define DEG  2 ! polynomial degree
+#define SCHEME 2
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
 
@@ -230,8 +233,11 @@ program vp_cartesian_4d
             TMAX )
 
     end if
-
+  print *, 'Start time mark t0'
+  call set_time_mark(t0)
   call simulation%run( )
+  time = time_elapsed_since(t0)
+  print *, 'time of simulation est  : ',time
   call delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
