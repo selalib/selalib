@@ -19,12 +19,14 @@ program unit_test_advection_1d_CSL
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_module_advection_1d_CSL
+use sll_module_advection_1d_PSM
 use sll_module_characteristics_1d_explicit_euler_conservative
 use sll_cubic_spline_interpolator_1d
 
 implicit none
   
   class(sll_advection_1d_base), pointer :: adv
+  class(sll_advection_1d_base), pointer :: adv_ref
   class(sll_interpolator_1d_base), pointer :: interp
   class(sll_characteristics_1d_base), pointer :: charac
   sll_real64 :: x_min
@@ -34,6 +36,7 @@ implicit none
   sll_int32 :: num_cells
   sll_real64, dimension(:), allocatable :: input
   sll_real64, dimension(:), allocatable :: output
+  sll_real64, dimension(:), allocatable :: output_ref
   !sll_real64, dimension(:), pointer :: mesh
   sll_real64 :: dt
   sll_real64,dimension(:), allocatable :: A
@@ -41,16 +44,18 @@ implicit none
   sll_int32 :: ierr
   sll_int32 :: i
   sll_real64 :: delta
+  sll_real64 :: x
   
   x_min = 0._f64
   x_max = 1._f64
   num_cells = 100
-  dt = 0._f64 !0.1_f64
+  dt = 0.01_f64 !0.1_f64
   
   delta = (x_max-x_min)/real(num_cells,f64)
   !SLL_ALLOCATE(mesh(num_cells+1),ierr)
   SLL_ALLOCATE(input(num_cells+1),ierr)
   SLL_ALLOCATE(output(num_cells+1),ierr)
+  SLL_ALLOCATE(output_ref(num_cells+1),ierr)
   SLL_ALLOCATE(A(num_cells+1),ierr)
 
   !do i=1,num_cells+1
@@ -63,6 +68,12 @@ implicit none
   input = 1._f64
 
   A = 1._f64
+  
+  do i=1,num_cells+1
+    x = x_min+real(i,f64)*delta
+    A(i) = sin(2._f64*sll_pi*x)
+    input(i) = sin(2._f64*sll_pi*x)
+  enddo
 
   err=0._f64
 
@@ -85,14 +96,26 @@ implicit none
     num_cells+1, &
     eta_min = x_min_bis, &
     eta_max = x_max_bis)
+
+  adv_ref => new_PSM_1d_advector(&
+    num_cells+1, &
+    eta_min = x_min, &
+    eta_max = x_max)
+
+
   
   call adv%advect_1d(A, dt, input, output)
+
+  call adv_ref%advect_1d(A, dt, input, output_ref)
+
   
   do i=1,num_cells+1
-    print *,i,input(i),output(i)
+    print *,i,input(i),output(i),output_ref(i)
   enddo
+
+
   
-  err=maxval(abs(input-output))
+  err=maxval(abs(output_ref-output))
   
   print *,'#err=',err
   if(err<1.e-15_f64)then  

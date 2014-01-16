@@ -312,7 +312,7 @@ contains
     do i=1,N-1
       f(i)=f(i+1)-f(i)+M*(node_positions(i+1)-node_positions(i))
     enddo
-    f(N)=tmp-f(N)+M*(node_positions(1)+1._f64-node_positions(N))
+    f(N)=tmp-f(N)+M*(node_positions(N+1)-node_positions(N))
 
 
     !from mean compute f

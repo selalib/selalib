@@ -193,11 +193,11 @@ contains
 !  print *,i, input(i),output(i)
 !enddo
     
-    do i=1,Npts
-      if((output(i)<=eta_min).or.(output(i)>=eta_max))then
-        output(i)=charac%process_outside_point(output(i),eta_min,eta_max)
-      endif      
-    enddo
+!    do i=1,Npts
+!      if((output(i)<=eta_min).or.(output(i)>=eta_max))then
+!        output(i)=charac%process_outside_point(output(i),eta_min,eta_max)
+!      endif      
+!    enddo
       
   end subroutine compute_explicit_euler_conservative_1d_charac
 
