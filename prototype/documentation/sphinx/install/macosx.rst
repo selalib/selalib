@@ -9,15 +9,15 @@ Install Homebrew (not compatible with macports) ::
 
 	$ ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go/install)"
 	$ brew tap homebrew/science
-      $ brew install git
-      $ brew install cmake
+	$ brew install git
+	$ brew install cmake
 	$ brew install hdf5 --enable-fortran --enable-parallel
 	$ brew install pastix
 	$ brew install fftw
 	$ cd selalib/prototype/build
 	$ cmake ../src -DPASTIX_ENABLED=ON  \
-   		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
-   		-DHDF5_PARALLEL_ENABLED=ON
+		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
+		-DHDF5_PARALLEL_ENABLED=ON
 	$ make
 
 ==============================
