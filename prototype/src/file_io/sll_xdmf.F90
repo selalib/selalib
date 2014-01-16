@@ -15,7 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
 !> @brief 
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details
