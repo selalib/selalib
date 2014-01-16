@@ -192,60 +192,7 @@ subroutine initialize_vp4d( &
  sim%params    => params
 
  sim%tmax = tmax
-!!$    SLL_ALLOCATE(vx_mil(sim%np_v1),ierr)
-!!$    SLL_ALLOCATE(vy_mil(sim%np_v2),ierr)
-!!$    SLL_ALLOCATE(x_mil(sim%nc_x1),ierr)
-!!$    SLL_ALLOCATE(y_mil(sim%nc_x2),ierr)
-!!$    do ivx=1,sim%np_v1
-!!$       vx_mil(ivx)=sim%mesh2dv%eta1_min+(ivx-1)*sim%mesh2dv%delta_eta1/sim%degree
-!!$    enddo
-!!$    do ivy=1,sim%np_v2
-!!$       vy_mil(ivy)=sim%mesh2dv%eta2_min+(ivy-1)*sim%mesh2dv%delta_eta2/sim%degree
-!!$    enddo
-!!$    do ix=1,sim%nc_x1
-!!$       x_mil(ix)=sim%mesh2dx%eta1_min+ix*sim%mesh2dx%delta_eta1- &
-!!$            sim%mesh2dx%delta_eta1/2
-!!$    enddo
-!!$    do iy=1,sim%nc_x2
-!!$       y_mil(iy)=sim%mesh2dx%eta2_min+iY*sim%mesh2dx%delta_eta2- &
-!!$            sim%mesh2dx%delta_eta2/2
-!!$    enddo
-!!$    !initialize for fn_v1v2
-!!$
-!!$    write(*,*) 'sim%np_v1 =', sim%np_v1
-!!$    do ivx=1,sim%np_v1
-!!$       write(*,*) 'entrer dans le boucle'
-!!$       do ivy=1,sim%np_v2
-!!$          do ix=1,sim%nc_x1
-!!$             do iy=1,sim%nc_x2
-!!$          write(*,*) 'bizzare1'
-!!$                sim%fn_v1v2(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
-!!$                     vy_mil(ivy),x_mil(ix),y_mil(iy),params)
-!!$             end do
-!!$          end do
-!!$       end do
-!!$    end do
-!!$    write(*,*) 'bizzare!!!!!!!!'
-!!$    !sim%rho_x1=0.0_f64
-!!$    do ix=1,sim%nc_x1
-!!$       write(*,*) 'bizzare1'
-!!$       do iy=1,sim%nc_x2
-!!$          write(*,*) 'bizzare'
-!!$          do ivx=1,sim%np_v1
-!!$             do ivy=1,sim%np_v2
-!!$                write(*,*) 'bizzare'
-!!$                sim%fn_v1v2(ivx,ivy,ix,iy)=init_func(vx_mil(ivx), &
-!!$                     vy_mil(ivy),x_mil(ix),y_mil(iy),params)
-!!$                mm=sim%np_v1*(ivy-1)+ivx
-!!$                sim%rho_x1(ix,iy)=sim%rho_x1(ix,iy)+ &
-!!$                     sim%fn_v1v2(ivx,ivy,ix,iy)*sim%p(mm
-!!$             enddo
-!!$          end do
-!!$          write(*,*) 'rho (',ix,',',iy,') = ', sim%rho_x1(ix,iy)
-!!$          write(*,*) 'rho_exact (',ix,',',iy,') = ', (1+0.05_f64*cos(0.5_f64*x_mil(ix)))*14.51831643_f64/sqrt(sll_pi)
-!!$       enddo
-!!$    enddo
-!!$       write(*,*) 'bizzareend'
+
 
 end subroutine initialize_vp4d
 
@@ -256,6 +203,7 @@ end subroutine initialize_vp4d
 subroutine run_vp_cart(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
  logical :: exist
+  type(sll_time_mark)  :: t0,t1
  sll_int32  :: file_id_1
  sll_int32  :: file_id_2
  sll_int32  :: file_id_3
@@ -270,7 +218,7 @@ subroutine run_vp_cart(sim)
  sll_int32  :: l
  sll_int32 :: count1, count2, count3, count4
  sll_real64 :: vmin,E2norm_ex
- sll_real64 :: vmax
+ sll_real64 :: vmax,time,time1
  sll_real64 :: dv
  sll_int32  :: ierr
  sll_int32  :: itime
@@ -666,45 +614,21 @@ subroutine run_vp_cart(sim)
  do while(t.lt.sim%tmax)
     itime=itime+1
     sim%Enorm = 0.0_f64
-!write(*,*) 'boucle de temps 1'
-    !compute the charge density
-    !recalculer dans maillage logical
-    !call mpi_comm(sim)
-    !sim%rho_x1=0.0_f64
 
     !compute rho_split c-a-d calculer avec parallel sur 2 directions
-!!$    do i=1,loc_sz_x1
-!!$       do j=1,loc_sz_x2
-!!$          do ii=1,loc_sz_v1
-!!$             do jj=1,loc_sz_v2
-!!$                mm=loc_sz_v1*(jj-1)+ii
-!!$                ! sim%rho_split(i,j)=sim%rho_split(i,j)+sim%fn_v1v2(ii,jj,i,j)*sim%mesh2dx%delta_eta1* sim%mesh2dx%delta_eta2
-!!$                sim%rho_split(i,j)=sim%rho_split(i,j)+sim%fn_v1v2(ii,jj,i,j)* & 
-!!$                     sim%p(mm)
-!!$             enddo
-!!$          end do
-!!$! !!$            write(*,*) 'rho (',i,',',j,') = ', sim%rho_split(i,j)
-!!$! !!$            write(*,*) 'rhoexact (',i,',',j,') = ', (1+sim%params(5)*cos(0.5_f64*x_mil(i)))*21.28_f64/sqrt(sll_pi)
-!!$       enddo
-!!$    enddo
 
     sim%rho_split = 0.0_f64
     do i=1,loc_sz_x1
        do j=1,loc_sz_x2
-          !write(*,*) i,j
           do ii=1,loc_sz_v1
              do jj=1,loc_sz_v2
                 mm=loc_sz_v1*(jj-1)+ii
                 sim%rho_split(i,j) = &
                      sim%rho_split(i,j)+sim%fn_v1v2(ii,jj,i,j)*sim%p(mm)
-                !write(*,*) 'fn',ii,jj,sim%fn_v1v2(ii,jj,i,j)
              enddo
           end do
        enddo
     enddo
-!!$if (sim%my_rank==0) then
-!!$write(*,*) ' sim%rho_split(1,1)=', sim%rho_split(1,1)
-!!$end if
 
 !!$    !if (sim%my_rank==0) then
 !!$       do i=1,loc_sz_x1
@@ -721,6 +645,7 @@ subroutine run_vp_cart(sim)
     !call sll_view_lims_2D(sim%split_rho_layout)
     !write(*,*) 'taille  sim%rho_x1',size( sim%rho_x1,1),size( sim%rho_x1,2)
     !write(*,*) sim%my_rank, 'taille  sim%rho_split',size( sim%rho_split,1),size( sim%rho_split,2)
+    !call set_time_mark(t0)
     call apply_remap_2D(sim%split_to_seqx1, sim%rho_split,sim%rho_x1)
 !!$if (sim%my_rank==0) then
 !!$write(*,*) ' sim%rho_x1(1,1)=', sim%rho_x1(1,1)
@@ -759,6 +684,7 @@ subroutine run_vp_cart(sim)
     call solve_poisson_2d_periodic_cartesian_par_alt(sim%poisson_plan, &
          sim%rho_x1, &
          sim%phi_x1(:,1:loc_sz_x2))
+
 !!$    !if (sim%my_rank==0) then
 !!$       do i=1,loc_sz_x1
 !!$          do j=1,loc_sz_x2
@@ -776,6 +702,8 @@ subroutine run_vp_cart(sim)
     !revient dans le split layout pour phi
     !write(*,*) sim%my_rank, 'here 1'
     call apply_remap_2D( sim%seqx1_to_split, sim%phi_x1, sim%phi_split)
+    !time = time_elapsed_since(t0)
+    !print *, 'time of solveur poisson is  : ',time
 !!$    do i=1,loc_sz_x1
 !!$       write (*,*)  'x',x_mil(i)-sim%mesh2dx%delta_eta1/2,'phi = ', sim%phi_x1(i,:)
 !!$    enddo
@@ -788,16 +716,9 @@ subroutine run_vp_cart(sim)
          loc_sz_v2, &
          loc_sz_x1, &
          loc_sz_x2 )
-!!$    !if (sim%my_rank==0) then
-!!$       do i=1,loc_sz_x1
-!!$          do j=1,loc_sz_x2
-!!$             write(*,*) ' sim%phi_split',sim%my_rank,i, j,  sim%phi_split(i,j)
-!!$          end do
-!!$        end do
-!!$    !end if
     t=t+sim%dt
 
-    !write(*,*) sim%my_rank, 'here 1'
+ !call set_time_mark(t1)
     if (sim%nsch == 0) then
        call euler(sim)
     elseif (sim%nsch == 1) then
@@ -805,37 +726,12 @@ subroutine run_vp_cart(sim)
     elseif (sim%nsch == 2) then
        call RK4(sim)
     end if
-!write(*,*) 'boucle de temps 2'
-    !write(*,*) sim%my_rank, 'here 2'
-    !try to compute the energy in the transport test case here
-!!$       write(*,*) 'loc_sz_v1',loc_sz_v1
-!!$       write(*,*) 'sim%np_v2',sim%np_v2
-!!$       stop
-!!$    energ=0.0_f64
-!!$    ww=0.0_f64
-!!$    do ic=1,loc_sz_x1
-!!$       do jc=1,loc_sz_x2
-!!$          !energ(ic,jc)=0.0_f64
-!!$          do iy=1,loc_sz_v2
-!!$             do ix=1,loc_sz_v1
-!!$                w1((iy-1)*loc_sz_v1+ix)=sim%fn_v1v2(ix,iy,ic,jc)
-!!$             end do
-!!$          end do
-!!$          call MULKU(sim%M1_sup,sim%M1_diag,sim%M1_low, &
-!!$               sim%mkld,w1,sim%np_v1*sim%np_v2,1,ww, &
-!!$               sim%nsky)
-!!$          do iy=1,sim%np_v1*sim%np_v2
-!!$             energ(ic,jc)=energ(ic,jc)+w1(iy)*ww(iy)
-!!$          end do
-!!$          !write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
-!!$       end do
-!!$    end do
-!!$    !write(*,*) 'iter = ',itime, ' t = ', t , 'energ(1,1)', energ(1,1)
+  !time1 = time_elapsed_since(t1)
+  !print *, 'time of schema is  : ',time1
+
   call sll_new_file_id(file_id_4,ierr)
 
     if((sim%test==1).or.(sim%test==9).or.(sim%test==5).or.(sim%test==10)) then
-!!$       write(*,*) 'my_rank =', sim%my_rank, 'x1 =', loc_sz_x1
-!!$       write(*,*) 'my_rank =', sim%my_rank, 'x2 =', loc_sz_x2
        sim%buf1 => get_buffer(sim%comm,1) 
        do k=1,loc_sz_x2
           sim%buf1(k)=sim%phi_split(1,k)
@@ -877,9 +773,6 @@ subroutine run_vp_cart(sim)
              Ey=-(sim%phi_split(ic,jc+1)-sim%phi_split(ic,jc-1))/2/ &
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,jc)- &
                   sim%phi_split(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-!!$          !******************REPARER
-!!$          Ey=0
-          !write(*,*) 'Ex',ic, jc,  Ex
              det=sim%tx%jacobian(x1,x2)
              if(sim%test==2) then
                 Ex=1.0_f64
@@ -940,12 +833,11 @@ subroutine run_vp_cart(sim)
           Ex=-(sim%phi_split(icR,loc_sz_x2)-sim%phi_split(icL,loc_sz_x2))/2/ &
                sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%buf4(ic)- &
                sim%phi_split(ic,loc_sz_x2-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-          !write(*,*) 'Ex',ic, jc,  Ex
+
           Ey=-(sim%buf4(ic)-sim%phi_split(ic,loc_sz_x2-1))/2/ &
                sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,loc_sz_x2)- &
                sim%phi_split(icL,loc_sz_x2))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-!!$          !******************REPARER
-!!$          Ey=0
+
           det=sim%tx%jacobian(x1,x2)
           if(sim%test==2) then
              Ex=1.0_f64
@@ -957,7 +849,6 @@ subroutine run_vp_cart(sim)
           endif
           sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
-          !write(*,*) 'pro mpi 3', sim%Enorm
        end do
        call comm_receive_real64(sim%comm,1,count1)
        call comm_receive_real64(sim%comm,2,count2)
@@ -967,7 +858,6 @@ subroutine run_vp_cart(sim)
        endif
        sim%buf1 => get_buffer(sim%comm,1)
        sim%buf2 => get_buffer(sim%comm,2)
-          !pour ic=1
           do jc=2,loc_sz_x2-1
              global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, &
                   (/1,1,1,1/) )
@@ -980,15 +870,14 @@ subroutine run_vp_cart(sim)
              Ex=-(sim%phi_split(2,jc)-sim%buf1(jc))/2/ &
                   sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(1,jc+1)- &
                   sim%phi_split(1,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-              !write(*,*) 'Ex at 1',  Ex
+
              if (abs(Ex).gt.100) then
                    write(*,*) 'ou',sim%my_rank,1, jc, Ex
              end if
              Ey=-(sim%phi_split(1,jc+1)-sim%phi_split(1,jc-1))/2/ &
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(2,jc)- &
                   sim%buf1(jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)  
-!!$          !******************REPARER
-!!$          Ey=0 
+
              det=sim%tx%jacobian(x1,x2)
              if(sim%test==2) then
                 Ex=1.0_f64
@@ -1014,7 +903,7 @@ subroutine run_vp_cart(sim)
              Ex=-(sim%buf2(jc)-sim%phi_split(loc_sz_x1-1,jc))/2/ &
                   sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(loc_sz_x1,jc+1)- &
                   sim%phi_split(loc_sz_x1,jc-1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-             !write(*,*) 'Ex at 2',  Ex
+            
              Ey=-(sim%phi_split(loc_sz_x1,jc+1)-sim%phi_split(loc_sz_x1,jc-1))/2/ &
                   sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%buf2(jc)- &
                   sim%phi_split(loc_sz_x1-1,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
@@ -1043,10 +932,7 @@ subroutine run_vp_cart(sim)
           Ex=-(sim%phi_split(2,1)-sim%buf1(1))/2/ &
                sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(1,2)- &
                sim%buf3(1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-          !write(*,*) 'Ex at 3',  Ex
-          !sim%Enorm = 0.0_f64
-          !write(*,*) 'pro mpi 0', sim%Enorm
-          !write(*,*) 'ou',sim%my_rank,1, 1, Ex
+
           Ey=-(sim%phi_split(1,2)-sim%buf3(1))/2/ &
                sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(2,1)- &
                sim%buf1(1))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
@@ -1150,25 +1036,11 @@ subroutine run_vp_cart(sim)
           Ex=-(sim%buf2(1)-sim%phi_split(loc_sz_x1-1,1))/2/ &
                sim%mesh2dx%delta_eta1*inv_jac(1,1)-(sim%phi_split(loc_sz_x1,2)- &
                sim%buf3(loc_sz_x1))/2/sim%mesh2dx%delta_eta2*inv_jac(2,1)
-!!$          Ey=0
-!!$!******************REPARER
+
           Ey=-(sim%phi_split(loc_sz_x1,2)-sim%buf3(loc_sz_x1))/2/ &
                sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%buf2(1)- &
                sim%phi_split(loc_sz_x1-1,1))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-!!$          !******************REPARER
-!!$          Ey=0
-!!$          if(sim%my_rank==0) then
-!!$             write(*,*) 'check', 2, loc_sz_x2
-!!$             write(*,*) 'Ex at point (2,1) = ', Ex
-!!$             write(*,*) 'phi_split (2,2) = ', sim%phi_split(2,2)
-!!$             write(*,*) 'phi_split (1,1) = ', sim%phi_split(1,1)
-!!$             write(*,*) 'phi_split (1,0) = ', sim%buf2(1)
-!!$             write(*,*) 'phi_split (0,2) = ', sim%buf1(2)
-!!$             write(*,*) ' sim%mesh2dx%delta_eta1',sim%mesh2dx%delta_eta1
-!!$             write(*,*) ' sim%mesh2dx%delta_eta2',sim%mesh2dx%delta_eta2
-!!$             write(*,*) 'inv_jac(1,1)',inv_jac(1,1)
-!!$             write(*,*) 'inv_jac(2,1)',inv_jac(2,1)
-!!$          end if
+
           det=sim%tx%jacobian(x1,x2)
           if(sim%test==2) then
              Ex=1.0_f64
@@ -1233,15 +1105,13 @@ subroutine run_vp_cart(sim)
                   MPI_SUM, &
                   0, &
                   buffer_result )
-!!$       write(*,*) 'e my_rank =', sim%my_rank, 'x1 =', loc_sz_x1
-!!$       write(*,*) 'e my_rank =', sim%my_rank, 'x2 =', loc_sz_x2
              buffer_counter=1
              if (sim%my_rank==0) then
                 open(file_id_4,file='energy',position='append')
                 if(itime==BUFFER_SIZE) then 
                    rewind(file_id_4)
                 endif
-                !write(*,*) 'E(1,1)',  buffer_result
+
                 buffer_result(:)=log(sqrt(buffer_result(:)))
                 do i=1,BUFFER_SIZE
                    write(file_id_4,*) t, buffer_result(i)
@@ -1367,31 +1237,9 @@ subroutine run_vp_cart(sim)
          0, &
          ierr)
 
-!!!!!!!!!!!!!!!!!!!simplify
-!!$    allocate (f_exact(loc_sz_x1,loc_sz_v1))
-!!$ do ix = 1, loc_sz_x1
-!!$    do jvx = 1, loc_sz_v1
-!!$       do iy = 1, loc_sz_x2
-!!$          do jvy = 1, loc_sz_v2
-!!$             x1=(ix-1)*sim%mesh2dx%delta_eta1+sim%mesh2dx%eta1_min
-!!$             v1=sim%mesh2dv%eta1_min+(jvx-1)*sim%mesh2dv%delta_eta1/sim%degree
-!!$             x2=(iy-1)*sim%mesh2dx%delta_eta2+sim%mesh2dx%eta2_min
-!!$             v2=sim%mesh2dv%eta2_min+(jvy-1)*sim%mesh2dv%delta_eta2/sim%degree
-!!$
-!!$             sim%params(11)=t
-!!$             f_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
-!!$          end do
-!!$       end do
-!!$    end do
-!!$ end do
-!!!!!!!!!!!!!!!!!!!!!!!!!!
 
     if((sim%test==0) .or. (sim%test==6))then
        allocate (f_x_exact(loc_sz_x1,loc_sz_v1))
-!!$    x1=  sim%mesh2dx%eta1_min+real(global_indices(3)-1,f64)* &
-!!$         sim%mesh2dx%delta_eta1
-!!$    x2=  sim%mesh2dx%eta2_min+real(global_indices(4)-1,f64)* &
-!!$         sim%mesh2dx%delta_eta2
 
        do i = 1, loc_sz_x1
           do j = 1, loc_sz_v1
@@ -1445,9 +1293,7 @@ subroutine run_vp_cart(sim)
             0, &
             ierr)
     end if
-!!$
-!!$
-!!$
+
     if(sim%test==2)then
        allocate (f_vx_exact(loc_sz_x1,loc_sz_v1))
        do i = 1, loc_sz_x1
@@ -2625,6 +2471,7 @@ subroutine run_vp_cart(sim)
   subroutine fluxnum(sim,wL,wR,vn,flux)
 
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+
     sll_real64,dimension(2),intent(in) :: vn
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(in) :: wL,wR
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(out) :: flux
@@ -2632,30 +2479,22 @@ subroutine run_vp_cart(sim)
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: flux1,flux2
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: wm
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
+   ! sll_real64 :: time
 
     sim%test=sim%params(8)
     wm=(wL+wR)/2
 
     flux1=0
     flux2=0
-    !verify the subroutine mulku
-    !c'est ici le bug
-    !stop
-    !prinf *, 
-    !write(*,*) 'ENTRER DANS FLUXNUM'
+   ! call set_time_mark(t0)
     call MULKU(sim%Av1_sup,sim%Av1_diag,sim%Av1_low, &
          sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux1,sim%nsky)
+    !time = time_elapsed_since(t0)
+    !print *, 'time of one MULKU is  : ',time
     call MULKU(sim%Av2_sup,sim%Av2_diag,sim%Av2_low, &
          sim%mkld,wm,sim%np_v1*sim%np_v2,1,flux2,sim%nsky)
-    ! write(*,*) 'nnoe = ', sim%np_v1*sim%np_v2
-    !print *, 'bonjour2'
+
     flux=vn(1)*flux1+vn(2)*flux2-sim%eps/2*(wR-wL)
-!!$    flux=vn(1)*wL*4
-!!$    flux=wm*vn(1)
-!!$  write(*,*) 'vn(1)',vn(1)
-!!$  write(*,*) 'vn(2)',vn(2)
-!!$  stop
-!!$     write(*,*) '0=', (wm-flux)*vn(1)
     if((sim%test==2).or.(sim%test==3)) then
        flux=0.0_f64
     end if
@@ -2664,7 +2503,8 @@ subroutine run_vp_cart(sim)
 
   ! time derivative of f
   subroutine dtf(sim)
-    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim   
+    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
+  type(sll_time_mark)  :: t0,t2  
     sll_int32 :: i,j,k,beg
     sll_int32 :: count1,count2,count3,count4
     sll_int32  :: loc_sz_v1
@@ -2674,7 +2514,7 @@ subroutine run_vp_cart(sim)
     sll_int32  :: ierr,ifac,isol,nsym,mp
     sll_real64 :: void,Ex,Ey,vn(2)
     sll_int32 :: ic,jc,icL,icR,jcL,jcR
-    sll_real64 :: x1,x2
+    sll_real64 :: x1,x2,time,time2
     sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
     sll_int32,dimension(4)  :: global_indices
 
@@ -2857,19 +2697,23 @@ subroutine run_vp_cart(sim)
           Ey=-(sim%phi_split(ic,jc+1)-sim%phi_split(ic,jc-1))/2/ &
                sim%mesh2dx%delta_eta2*inv_jac(2,2)-(sim%phi_split(icR,jc)- &
                sim%phi_split(icL,jc))/2/sim%mesh2dx%delta_eta1*inv_jac(1,2)
-
+  !call set_time_mark(t0)
           call sourcenum(sim,Ex,Ey,sim%fn_v1v2(:,:,ic,jc), &
                source)
+ ! time = time_elapsed_since(t0)
+  !print *, 'time of one sourcnum is  : ',time
 
 
           temp=sim%dtfn_v1v2(:,:,ic,jc)-sim%volume(1,1)*source
-
+  !call set_time_mark(t2)
           call sol(sim%M_sup,sim%M_diag,sim%M_low,temp, &
                sim%mkld, &
                sim%dtfn_v1v2(:,:,ic,jc),&
                sim%np_v1*sim%np_v2, &
                mp,ifac,isol,nsym,void,ierr,&
                sim%nsky)
+  !time2 = time_elapsed_since(t2)
+  !print *, 'time of one subr sol is : ',time2
 
        end do
     end do
@@ -3141,8 +2985,10 @@ subroutine run_vp_cart(sim)
 
   subroutine euler(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+  type(sll_time_mark)  :: t0 
     sll_int32 :: jc
     sll_int32  :: loc_sz_x2,loc_sz_x1
+    sll_real64 :: time
     call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
     ! mpi communications
     !write(*,*) 'sim%dtfn_v1v2= ', sim%dtfn_v1v2
@@ -3153,7 +2999,10 @@ subroutine run_vp_cart(sim)
 !!$       write(*,*) 'apres',jc, sim%fn_v1v2(1,1,:,jc)
 !!$    end do
     !write(*,*) 'ici1'
+  !call set_time_mark(t0)
     call dtf(sim)
+  !time = time_elapsed_since(t0)
+  !print *, 'time of simulation est  : ',time
     !write(*,*) 'ici2'
 !!$    do jc=0,loc_sz_x2+1
 !!$       write(*,*) 'apres',jc, sim%dtfn_v1v2(1,1,:,jc)
