@@ -99,7 +99,7 @@ subroutine sll_gnuplot_write_1d( &
   array_name, &
   iplot)
 
-   sll_real64, dimension(:), intent(in) :: y_array      !< Y data
+   sll_real64, dimension(:), intent(in) :: y_array    !< Y data
    sll_real64, dimension(:), intent(in) :: x_array    !< X data
    character(len=*), intent(in)         :: array_name !< field name
    sll_int32,intent(in),optional        :: iplot      !< Plot index 
@@ -108,9 +108,9 @@ subroutine sll_gnuplot_write_1d( &
    sll_int32                            :: npoints
    sll_int32                            :: ipoints    
    logical                              :: lopen
-   character(len=4)      :: cplot
+   character(len=4)                     :: cplot
    
-   npoints = size(array)
+   npoints = size(x_array)
 
    error=0
 
