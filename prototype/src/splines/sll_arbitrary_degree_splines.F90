@@ -872,6 +872,8 @@ contains
     ! And from this we recursively build the higher degree splines.
     splines(:)               = 0.0_f64
     splines(degree+1) = 1.0_f64
+    derivs(:)               = 0.0_f64
+    
     
     ! Build the higher order splines. 
     last = 2*degree  
