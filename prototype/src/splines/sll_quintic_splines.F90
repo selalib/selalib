@@ -339,7 +339,7 @@ contains
 
   function quintic_splines_interpolator_nonuniform_array(array, &
                             num_pts, plan) result(res)
-m 
+ 
     sll_real64, dimension(:)                    :: array
     type(quintic_splines_nonuniform_plan), pointer :: plan
     sll_int32                                   :: i, num_pts
