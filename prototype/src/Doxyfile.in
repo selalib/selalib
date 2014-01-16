@@ -707,7 +707,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/fft \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fields \
-@CMAKE_CURRENT_SOURCE_DIR@/file_io \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/integration \
@@ -1437,7 +1436,7 @@ LATEX_HIDE_INDICES     = NO
 # Note that which sources are shown also depends on other settings
 # such as SOURCE_BROWSER.
 
-LATEX_SOURCE_CODE      = NO
+LATEX_SOURCE_CODE      = YES
 
 # The LATEX_BIB_STYLE tag can be used to specify the style to use for the
 # bibliography, e.g. plainnat, or ieeetr. The default style is "plain". See
