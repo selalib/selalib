@@ -6,11 +6,11 @@
 
 &geometry
   mesh_case_x1="SLL_LOGICAL_MESH"
-  num_cells_x1 = 256
+  num_cells_x1 = 64
   x1_min = -3.1415926535897932385
   x1_max = 3.1415926535897932385
   mesh_case_x2="SLL_LOGICAL_MESH"
-  num_cells_x2 = 256
+  num_cells_x2 = 64
   x2_min = -3.1415926535897932385
   x2_max = 3.1415926535897932385
 /
@@ -27,8 +27,8 @@
 /
 
 &time_iterations
-  dt = 0.75
-  number_iterations  = 2
+  dt = 0.075
+  number_iterations  = 10
   freq_diag = 1
   freq_diag_time = 1
   !time_loop_case = "SLL_EULER"

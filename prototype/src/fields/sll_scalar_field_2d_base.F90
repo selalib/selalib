@@ -173,7 +173,7 @@ module sll_module_scalar_field_2d_base
   abstract interface
      subroutine field_2d_subroutine( field )
        import sll_scalar_field_2d_base
-       class(sll_scalar_field_2d_base), intent(out) :: field
+       class(sll_scalar_field_2d_base), intent(inout) :: field
      end subroutine field_2d_subroutine
   end interface
 

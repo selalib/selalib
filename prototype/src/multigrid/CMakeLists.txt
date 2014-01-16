@@ -37,6 +37,15 @@ IF(HDF5_PARALLEL_ENABLED)
    TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid 
                                            sll_file_io_parallel )
 
+   IF(POE_FOUND)
+      HOSTLIST_CREATE()
+   ENDIF(POE_FOUND)
+
+   SET(PROCS 4)
+   SET(ARGS  " ")
+   ADD_MPI_TEST(multigrid_2d test_multigrid_2d ${PROCS} ${ARGS})
+   SET(multigrid_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    ADD_EXECUTABLE(test_mgd3 unit_test_3d.F90 write_xdmf_3d.F90)
 
    TARGET_LINK_LIBRARIES(test_mgd3 sll_mgd3 

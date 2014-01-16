@@ -699,7 +699,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
 @CMAKE_CURRENT_SOURCE_DIR@/characteristics \
 @CMAKE_CURRENT_SOURCE_DIR@/collective \
-@CMAKE_CURRENT_SOURCE_DIR@/constants \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
 @CMAKE_CURRENT_SOURCE_DIR@/discontinuous_galerkin \
@@ -741,7 +740,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/remap \
 @CMAKE_CURRENT_SOURCE_DIR@/simulation \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse \
-@CMAKE_CURRENT_SOURCE_DIR@/splines \
 @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/timer \
 @CMAKE_CURRENT_SOURCE_DIR@/utilities \
