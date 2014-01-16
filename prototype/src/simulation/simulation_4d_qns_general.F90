@@ -1078,14 +1078,14 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call set_time_mark(t0)  
+       call sll_set_time_mark(t0)  
 
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
  
-       time = time_elapsed_since(t0)
+       time = sll_time_elapsed_since(t0)
      
    !    print*, 'timer=', time
 !!$       if(sim%my_rank == 0) then
@@ -1265,6 +1265,7 @@ contains
 
        if (sim%my_rank == 0) then
           
+          call sll_new_file_id(droite_test_pente, ierr) 
           open(droite_test_pente,file="droite_test_pente",&
                position="append")
           write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002

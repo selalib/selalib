@@ -204,6 +204,7 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_pt_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
+       first_deriv_eta1_value_at_pt_analytic = 0.0_f64
        print*,field%name, &
             'first_deriv_eta1_value_at_pt_analytic(), ERROR: ', &
             ': first derivative in eta1 is not given in the initialization'
@@ -215,12 +216,13 @@ contains   ! *****************************************************************
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64            :: first_deriv_eta2_value_at_pt_analytic
+    sll_real64            :: first_deriv_eta2_value_at_pt_analytic 
     
     if ( field%present_deriv_eta2_int ) then 
        first_deriv_eta2_value_at_pt_analytic = &
             field%first_deriv_eta2(eta1,eta2,field%params)
     else 
+       first_deriv_eta2_value_at_pt_analytic  = 0.0_f64
        print*, field%name, &
             'first_deriv_eta2_value_at_pt_analytic(), ERROR: ', &
             ': first derivative in eta2 is not given in the initialization'
@@ -243,6 +245,7 @@ contains   ! *****************************************************************
        first_deriv_eta1_value_at_index_analytic = &
             field%first_deriv_eta1(eta1,eta2,field%params)
     else 
+       first_deriv_eta1_value_at_index_analytic = 0.0_f64
        print*,field%name, &
             'first_deriv_eta1_value_at_index_analytic(): ERROR, ', &
             'first derivative in eta1 is not given in the initialization'
@@ -355,12 +358,12 @@ contains   ! *****************************************************************
   end subroutine update_interpolation_coefficients_2d_analytic
 
   subroutine delete_field_2d_analytic_alt( field )
-    class(sll_scalar_field_2d_analytic_alt), intent(out) :: field
+    class(sll_scalar_field_2d_analytic_alt), intent(inout) :: field
     ! nothing internal do deallocate, just nullify pointers. Can't call
     ! delete on them because the field does not 'own' these data.
-    nullify(field%func)
-    nullify(field%params)
-    nullify(field%T)
+    if(associated(field%func))  nullify(field%func)
+    if(associated(field%params))nullify(field%params)
+    if(associated(field%T))     nullify(field%T)
   end subroutine delete_field_2d_analytic_alt
 
   ! For those cases in which handling pointers to field structures is not
@@ -527,8 +530,8 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base), target :: transformation
-    sll_int32 :: SPLINE_DEG1
-    sll_int32 :: SPLINE_DEG2
+    !sll_int32 :: SPLINE_DEG1
+    !sll_int32 :: SPLINE_DEG2
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: bc_bottom
@@ -582,7 +585,7 @@ contains   ! *****************************************************************
     sll_real64, dimension(:), optional :: point2_1d
     sll_int32,optional :: sz_point1
     sll_int32,optional :: sz_point2
-    sll_int32 :: i
+    !sll_int32 :: i
     sll_int32 :: ierr   
 
     m2d => transformation%mesh
@@ -611,15 +614,13 @@ contains   ! *****************************************************************
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_2d_discrete_alt( field )
-    class(sll_scalar_field_2d_discrete_alt), intent(out) :: field
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
     sll_int32 :: ierr
-    if( associated(field%values) ) then
-       SLL_DEALLOCATE(field%values,ierr)
-    end if
-    nullify(field%T)
-    nullify(field%interp_2d)
-    nullify(field%point1_1d)
-    nullify(field%point2_1d)
+    if(associated(field%values))    SLL_DEALLOCATE(field%values,ierr)
+    if(associated(field%T))         nullify(field%T)
+    if(associated(field%interp_2d)) nullify(field%interp_2d)
+    if(associated(field%point1_1d)) nullify(field%point1_1d)
+    if(associated(field%point2_1d)) nullify(field%point2_1d)
   end subroutine delete_field_2d_discrete_alt
 
   subroutine set_field_data_discrete_2d( field, values )
