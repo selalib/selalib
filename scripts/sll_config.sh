@@ -10,7 +10,7 @@ WD="`pwd`"
 # change these if you want; leave everything else alone
 # make sure path names are absolute
 SLL_DIR="${HOME}/Codes/selalib"
-SLL_BUILD="$WD/build"
+SLL_BUILD="$WD/build_with_macports"
 # -------------------------------------------------------
 
 INFO( ) {
@@ -107,5 +107,4 @@ case "$OS" in
       fi;;
    linux)  ${CMAKE} $EXTRA_ARGS ${SLL_DIR}/prototype/src ;;
 esac
-INFO "To build the library go to build directory and type make"
 

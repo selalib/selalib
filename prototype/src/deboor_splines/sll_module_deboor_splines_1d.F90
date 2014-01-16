@@ -633,7 +633,7 @@ contains
     sll_real64,dimension(:),pointer:: aj !(k)
     sll_real64,dimension(:),pointer:: bcoef!(n)
     sll_real64:: res
-    sll_real64:: tmp_value
+    !sll_real64:: tmp_value
     sll_real64,dimension(:),pointer:: dl!(k)
     sll_real64,dimension(:),pointer:: dr!(k)
     sll_int32 :: i
@@ -812,18 +812,18 @@ contains
     implicit none
     ! INPUT
     sll_int32  :: ai_nx, ai_kx
-    sll_real64, dimension ( ai_nx) :: apr_taux		
-    sll_real64, dimension ( ai_nx) :: apr_g	
+    sll_real64, dimension ( ai_nx) :: apr_taux
+    sll_real64, dimension ( ai_nx) :: apr_g
     ! OUTPUT
     sll_real64, dimension ( ai_nx  ) :: apr_Bcoef
     sll_real64, dimension ( ai_nx + ai_kx ) :: apr_tx
     ! LOCAL VARIABLES		
     sll_real64, dimension ( ai_nx ) :: lpr_work1
-    sll_real64, dimension ( ai_nx         ) :: lpr_work2
+    !sll_real64, dimension ( ai_nx         ) :: lpr_work2
     sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work31
-    sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_real64, dimension ( ai_nx + ai_kx ) :: t 
-    sll_int32  :: li_i, li_j, li_iflag,iflag,iflag1
+    !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
+    !sll_real64, dimension ( ai_nx + ai_kx ) :: t 
+    sll_int32  :: li_i, li_iflag
     
     lpr_work1(:) = 0.0
     
@@ -884,16 +884,16 @@ contains
     ! INPUT
     sll_real64 :: ar_L 
     sll_int32  :: ai_nx, ai_kx
-    sll_real64, dimension ( ai_nx) :: apr_taux		
-    sll_real64, dimension ( ai_nx) :: apr_g	
+    sll_real64, dimension ( ai_nx) :: apr_taux
+    sll_real64, dimension ( ai_nx) :: apr_g
     ! OUTPUT
     sll_real64, dimension ( ai_nx ) :: apr_Bcoef
     sll_real64, dimension ( ai_nx + ai_kx) :: apr_tx
     ! LOCAL VARIABLES		
     sll_real64, dimension ( ai_nx) :: lpr_taux
-    sll_real64, dimension ( ai_nx) :: lpr_g	
+    sll_real64, dimension ( ai_nx) :: lpr_g
     sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work
-    sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
+    !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
     sll_int32 :: iflag
     sll_int32 :: li_i
     if ( ar_L == 0.0_8 ) then
@@ -903,10 +903,10 @@ contains
   
     
     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )
-    lpr_taux ( ai_nx ) = apr_taux ( ai_nx )! apr_taux ( 1 ) + ar_L
+    lpr_taux ( ai_nx ) = apr_taux ( ai_nx ) !apr_taux ( 1 ) + ar_L
     
     lpr_g ( 1 : ai_nx - 1  ) = apr_g ( 1 : ai_nx - 1 )
-    lpr_g ( ai_nx) = apr_g ( ai_nx )	!apr_g ( 1 )		
+    lpr_g ( ai_nx) = apr_g ( ai_nx ) !apr_g ( 1 )		
     
     
     apr_tx ( 1 : ai_kx ) = lpr_taux ( 1 )
