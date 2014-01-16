@@ -18,7 +18,7 @@
 !> @file sll_constants.F90
 !> @namespace sll_constants
 !> @brief Set some physical and mathematical constants
-!> @details Set in this file all mathematical ans physical constants
+!> @details This file should contain all mathematical ans physical constants to be used library-wide.
 !> 
 !> <b> How to use it </b>
 !>
@@ -46,13 +46,13 @@ sll_real64, parameter :: sll_epsilon_0 = 8.854187817D-12
 sll_real64, parameter :: sll_mu_0 = 12.566370614D-7 
 
 !> @param electron charge magnitude (49) C      
-sll_real64, parameter :: sll_e_charge = 1.60217733D-19 
+sll_real64, parameter :: sll_e_charge = 1.602176565D-19 
 
 !> @param electron mass (54) kg                  
-sll_real64, parameter :: sll_e_mass = 9.1093897D-31    
+sll_real64, parameter :: sll_e_mass = 9.10938291D-31    
 
 !> @param proton mass (10) kg                    
-sll_real64, parameter :: sll_proton_mass = 1.6726231D-27
+sll_real64, parameter :: sll_proton_mass = 1.672621777D-27
 
 !> @param standard grav. accel., sea level m/s^2 
 sll_real64, parameter :: sll_g = 9.80665D0             
