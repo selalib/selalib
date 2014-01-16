@@ -116,12 +116,12 @@ program remap_2d_unit_test
      layout2  => new_layout_2D( sll_world_collective )
      call factorize_in_random_2powers_2d(colsz, npi, npj)
      if(i_test==1)then
-       npi = colsz
+       npi = int(colsz,i32)
        npj = 1
      endif
      if(i_test==2)then
         npi = 1
-        npj = colsz
+        npj = int(colsz,i32)
      endif
 
 

@@ -476,12 +476,12 @@ program cg_polar
 
 
 
-  call set_time_mark(t1)
+  call sll_set_time_mark(t1)
 
   do step = 1,nb_step
     if (step==101) then
-      call set_time_mark(t2)
-      temps = time_elapsed_between(t1,t2)
+      call sll_set_time_mark(t2)
+      temps = sll_time_elapsed_between(t1,t2)
       temps = temps/100*real(nb_step,f32)
       hh    = floor(temps/3600.0d0)
       min   = floor((temps-3600.0d0*real(hh))/60.0d0)
@@ -631,8 +631,8 @@ program cg_polar
   write(23,*)' '
   close(23)
 
-  call set_time_mark(t3)
-  temps = time_elapsed_between(t1,t3)
+  call sll_set_time_mark(t3)
+  temps = sll_time_elapsed_between(t1,t3)
   hh    = floor(temps/3600.0d0)
   min   = floor((temps-3600.0d0*real(hh))/60.0d0)
   ss    = floor(temps-3600.0d0*real(hh)-60.0d0*real(min))

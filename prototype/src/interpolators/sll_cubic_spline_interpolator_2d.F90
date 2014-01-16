@@ -68,7 +68,7 @@ contains
 
   subroutine delete_cubic_spline_2d_interpolator( interpolator )
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-    call delete(interpolator%spline)
+    call sll_delete(interpolator%spline)
   end subroutine delete_cubic_spline_2d_interpolator
   
   function new_cubic_spline_2d_interpolator( &
@@ -189,7 +189,7 @@ contains
     interpolator%npts2 = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
-    interpolator%spline => new_spline_2D( &
+    interpolator%spline => new_cubic_spline_2D( &
          npts1, &
          npts2, &
          eta1_min, &
@@ -241,7 +241,7 @@ contains
     if(present(size_eta2_coords))then
       !print *,'#Warning size_eta2_coords not used'
     endif    
-    call compute_spline_2D( data_array, interpolator%spline )
+    call compute_cubic_spline_2D( data_array, interpolator%spline )
   end subroutine
 
 #ifdef STDF95
@@ -306,7 +306,7 @@ contains
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
-    call compute_spline_2D( data_in, this%spline )
+    call compute_cubic_spline_2D( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
 #ifdef STDF95
@@ -360,14 +360,14 @@ contains
     sll_int32                                      :: i
     sll_int32                                      :: j
 
-    eta1_min   = this%spline%x1_min 
-    eta1_max   = this%spline%x1_max 
-    eta2_min   = this%spline%x2_min 
-    eta2_max   = this%spline%x2_max 
-    delta_eta1 = this%spline%x1_delta  
-    delta_eta2 = this%spline%x2_delta  
+    eta1_min   = get_x1_min( this%spline ) !this%spline%x1_min 
+    eta1_max   = get_x1_max( this%spline ) !this%spline%x1_max 
+    eta2_min   = get_x1_min( this%spline ) !this%spline%x2_min 
+    eta2_max   = get_x2_max( this%spline ) !this%spline%x2_max 
+    delta_eta1 = get_x1_delta( this%spline ) !this%spline%x1_delta  
+    delta_eta2 = get_x2_delta( this%spline ) !this%spline%x2_delta  
     
-    call compute_spline_2D( data_in, this%spline )
+    call compute_cubic_spline_2D( data_in, this%spline )
 
     if(this%bc_type1 == SLL_PERIODIC .and. &
        this%bc_type2 == SLL_PERIODIC ) then
