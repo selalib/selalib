@@ -43,14 +43,14 @@
     spline_degree_eta2 = 3  
 /    
 &boundaries
-    bc_interp2d_eta1 =  3
-    bc_interp2d_eta2 =  0
-    bc_charac2d_eta1 =  5
-    bc_charac2d_eta2 =  0
-    bc_eta1_left     =  1
-    bc_eta1_right    =  1 
-    bc_eta2_left     =  0
-    bc_eta2_right    =  0
+    bc_interp2d_eta1 =  "SLL_HERMITE"
+    bc_interp2d_eta2 =  "SLL_PERIODIC"
+    bc_charac2d_eta1 =  "SLL_SET_TO_LIMIT"
+    bc_charac2d_eta2 =  "SLL_PERIODIC"
+    bc_eta1_left     =  "SLL_DIRICHLET"
+    bc_eta1_right    =  "SLL_DIRICHLET" 
+    bc_eta2_left     =  "SLL_PERIODIC"
+    bc_eta2_right    =  "SLL_PERIODIC"
 /   
 
 !! SLL_PERIODIC    = 0  SLL_DIRICHLET      = 1   SLL_NEUMANN        = 2

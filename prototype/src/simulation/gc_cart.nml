@@ -6,11 +6,11 @@
 
 &geometry
   mesh_case_x1="SLL_LANDAU_MESH"
-  num_cells_x1 = 32
+  num_cells_x1 = 256
   x1_min = 0.0
   nbox_x1 = 1
   mesh_case_x2="SLL_LANDAU_MESH"
-  num_cells_x2 = 32
+  num_cells_x2 = 256
   x2_min = 0.0
   nbox_x2 = 1
 /
@@ -28,8 +28,8 @@
   freq_diag = 100
   freq_diag_time = 1
   !time_loop_case = "SLL_EULER"
-  !time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
-  time_loop_case = "SLL_LEAP_FROG" 
+  time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+  !time_loop_case = "SLL_LEAP_FROG" 
 /
 
 &advector
@@ -37,6 +37,8 @@
   advect2d_case = "SLL_TENSOR_PRODUCT"
     advect1d_x1_case = "SLL_BSL"
     advect1d_x2_case = "SLL_BSL"
+    advect1d_x1_case = "SLL_PSM"
+    advect1d_x2_case = "SLL_PSM"
     !advect1d_x1_case = "SLL_CSL"
     !advect1d_x2_case = "SLL_CSL"
     !charac1d_x1_case = "SLL_EULER"    
