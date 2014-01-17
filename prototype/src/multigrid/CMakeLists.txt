@@ -37,6 +37,9 @@ IF(HDF5_PARALLEL_ENABLED)
    TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid 
                                            sll_file_io_parallel )
 
+   IF(POE_FOUND)
+      HOSTLIST_CREATE()
+   ENDIF(POE_FOUND)
 
    SET(PROCS 4)
    SET(ARGS  " ")

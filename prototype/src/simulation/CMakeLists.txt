@@ -5,6 +5,12 @@
 #Please add your new simulation_MYMETHOD.F90 
 ############################################################
 
+FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
+FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+FILE(GLOB NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
+FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+
+
 IF(MUDPACK_ENABLED)
 
   ADD_LIBRARY(
@@ -17,6 +23,7 @@ IF(MUDPACK_ENABLED)
     simulation_vp1d_fourier_fem.F90
     simulation_2d_vlasov_poisson_no_splitting.F90
     simulation_2d_analytic_field_cartesian.F90
+    simulation_2d_analytic_field_curvilinear.F90
     simulation_guiding_center_2D_generalized_coords.F90
     simulation_guiding_center_2D_generalized_coords_mudpack.F90
     simulation_2d_guiding_center_curvilinear.F90
@@ -29,18 +36,18 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        sll_poisson_solvers
                        mudpack
                        sll_fft
-		           sll_distribution_function
-		           sll_general_coordinate_elliptic_solvers
-		           deboor_splines
-		           #sll_scalar_field_1d_alternative
-		           sll_scalar_field_2d_alternative
+                       sll_distribution_function
+                       sll_general_coordinate_elliptic_solvers
+                       deboor_splines
+                       #sll_scalar_field_1d_alternative
+                       sll_scalar_field_2d_alternative
                        sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
                        sll_splines
-		           sll_integration
-		           sll_reduction
+                       sll_integration
+                       sll_reduction
                        sll_constants
                        sll_coordinate_transformations
                        sll_logical_meshes
@@ -69,6 +76,7 @@ ADD_SIMULATION_1D(2d_vp_no_split)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
 ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
 ADD_SIMULATION_1D(2d_af_cartesian)
+ADD_SIMULATION_1D(2d_af_curvilinear)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
 ADD_SIMULATION_1D(2d_gc_curvilinear)

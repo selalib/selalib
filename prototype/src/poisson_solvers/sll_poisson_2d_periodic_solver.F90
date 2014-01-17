@@ -4,13 +4,21 @@ module sll_module_poisson_2d_periodic_solver
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
 use sll_module_poisson_2d_base
-use sll_poisson_2d_periodic
+#ifdef FFTW
+use sll_poisson_2d_periodic_fftw
+#else
+use sll_poisson_2d_periodic_fftpack
+#endif
 implicit none
 
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_periodic_solver     
   
-  type(poisson_2d_periodic), pointer                   :: poiss
+#ifdef FFTW
+  type(poisson_2d_periodic_fftw), pointer                   :: poiss
+#else
+  type(poisson_2d_periodic_fftpack), pointer                   :: poiss
+#endif
   
   
   contains
@@ -26,6 +34,7 @@ implicit none
   end type poisson_2d_periodic_solver
 
 contains
+
   function new_poisson_2d_periodic_solver( &
     eta1_min, &
     eta1_max, &

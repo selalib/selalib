@@ -55,7 +55,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 
 ######
 #
-      IF(FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
+      IF(FFT_LIB MATCHES "SLLFFT")
 
       ADD_MPI_TEST(poisson_3d_periodic_par 
                    test_poisson_3d_periodic_par ${PROCS} ${ARGS})
@@ -71,7 +71,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 #      ADD_MPI_TEST(vp4d_sim test_4d ${PROCS} ${ARGS})
 #      SET_TESTS_PROPERTIES(vp4d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_general_input.txt)
+      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_general_input.txt)
       ADD_MPI_TEST(vp4d_sim_general test_4d_vp_general ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(vp4d_sim_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
       ADD_MPI_TEST(qns2d_parallel test_qn_solver_2d_parallel ${PROCS} ${ARGS})
@@ -81,20 +81,20 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 
 ######
 
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim4d_cartesian_input)
+      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim4d_cartesian_input)
       ADD_MPI_TEST(sim4d_vp_cart test_4d_vp_cartesian ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(sim4d_vp_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim2d_cartesian_input)
+      SET(ARGS ${CMAKE_BINARY_DIR}/vpsim2d_cartesian_input)
       ADD_MPI_TEST(sim2d_vp_cart test_2d_vp_cartesian ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(sim2d_vp_cart PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_polar_input.nml)
+      SET(ARGS ${CMAKE_BINARY_DIR}/dksim4d_polar_input.nml)
       ADD_MPI_TEST(sim4d_DK_polar test_4d_dk_polar ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(sim4d_DK_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
    
 
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/sim4d_qns_general_input.txt)
+      SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.txt)
       ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
@@ -103,7 +103,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 #      ADD_MPI_TEST(vp4d_sim_mixed_qns_cartesian test_4d_mixed_qns_cartesian ${PROCS} ${ARGS})
 #      SET_TESTS_PROPERTIES(vp4d_sim_mixed_qns_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-      SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/sim4d_DK_hybrid_input.txt)
+      SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_DK_hybrid_input.txt)
       ADD_MPI_TEST(sim4d_DK_hybrid test_4d_DK_hybrid ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(sim4d_DK_hybrid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
@@ -111,7 +111,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
-      IF (FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
+      IF (FFT_LIB MATCHES "SLLFFT")
       SET(PROCS 4)
  #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
       ADD_MPI_TEST(vp_4d_eulerian test_4d_vp_eulerian_cartesian_finite_volume ${PROCS} ${ARGS})
@@ -121,7 +121,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
    
       IF(PROCESSOR_COUNT GREATER 1)
    
-         SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/vpsim6d_input.txt)
+         SET(ARGS ${CMAKE_BINARY_DIR}/vpsim6d_input.txt)
          ADD_MPI_TEST(vp6d_sim test_6d ${PROCS} ${ARGS})
          SET_TESTS_PROPERTIES(vp6d_sim PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
     

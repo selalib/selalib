@@ -299,9 +299,9 @@ module sll_fdistribu4d_DK
     Npt1 = size(xgrid_2d,1)
     Npt2 = size(xgrid_2d,2)
 
-    sp1d_r => new_spline_1d(Npt1, &
+    sp1d_r => new_cubic_spline_1d(Npt1, &
       r_grid(1),r_grid(Nr),SLL_HERMITE)
-    call compute_spline_1D(func_r,sp1d_r)
+    call compute_cubic_spline_1D(func_r,sp1d_r)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
@@ -312,7 +312,7 @@ module sll_fdistribu4d_DK
         func_xy(ix,iy) = interpolate_value(r,sp1d_r)
       end do
     end do
-    call delete(sp1d_r)
+    call sll_delete(sp1d_r)
   end subroutine function_xy_from_r
 
 
@@ -344,11 +344,11 @@ module sll_fdistribu4d_DK
     Npt1   = size(xgrid_2d,1)
     Npt2   = size(xgrid_2d,2)
 
-    sp2d_rtheta => new_spline_2d(Npt1,Npt2, &
+    sp2d_rtheta => new_cubic_spline_2d(Npt1,Npt2, &
       r_grid(1),r_grid(Nr), &
       theta_grid(1),theta_grid(Ntheta), &
       SLL_HERMITE,SLL_PERIODIC)
-    call compute_spline_2D(func_rtheta,sp2d_rtheta)
+    call compute_cubic_spline_2D(func_rtheta,sp2d_rtheta)
 
     do iy = 1,Npt2
       do ix = 1,Npt1
@@ -361,7 +361,7 @@ module sll_fdistribu4d_DK
         func_xy(ix,iy) = interpolate_value_2D(r,theta,sp2d_rtheta)
       end do
     end do
-    call delete(sp2d_rtheta)
+    call sll_delete(sp2d_rtheta)
   end subroutine function_xy_from_rtheta
 
 
