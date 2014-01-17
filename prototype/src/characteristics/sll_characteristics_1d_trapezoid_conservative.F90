@@ -15,75 +15,94 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-module sll_module_characteristics_1d_explicit_euler_conservative
+!http://en.wikipedia.org/wiki/Trapezoidal_rule_%28differential_equations%29
+
+module sll_module_characteristics_1d_trapezoid_conservative
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
 use sll_module_characteristics_1d_base
+use sll_module_interpolators_1d_base
+
 implicit none
 
-  type,extends(sll_characteristics_1d_base) :: explicit_euler_conservative_1d_charac_computer
+  type,extends(sll_characteristics_1d_base) :: trapezoid_conservative_1d_charac_computer
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
-    sll_real64                              :: eta_max
-    sll_int32 :: bc_type  
+    sll_real64                              :: eta_max  
     procedure(signature_process_outside_point), pointer, nopass    :: &
       process_outside_point
-     
+    class(sll_interpolator_1d_base), pointer               :: A_interp
+    sll_int32 :: maxiter
+    sll_real64 :: tol
+    sll_int32 :: bc_type 
   contains
     procedure, pass(charac) :: initialize => &
-      initialize_explicit_euler_conservative_1d_charac
+      initialize_trapezoid_conservative_1d_charac
     procedure, pass(charac) :: compute_characteristics => &
-      compute_explicit_euler_conservative_1d_charac
-  end type explicit_euler_conservative_1d_charac_computer
+      compute_trapezoid_conservative_1d_charac
+  end type trapezoid_conservative_1d_charac_computer
 
 contains
-  function new_explicit_euler_conservative_1d_charac(&
+  function new_trapezoid_conservative_1d_charac(&
       Npts, &
+      A_interp, &
       bc_type, &
       eta_min, &
       eta_max, &
-      process_outside_point) &
+      process_outside_point, &
+      maxiter, &
+      tol) &
       result(charac)
       
-    type(explicit_euler_conservative_1d_charac_computer),pointer :: charac
+    type(trapezoid_conservative_1d_charac_computer),pointer :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point), optional    :: &
       process_outside_point
+    class(sll_interpolator_1d_base), target :: A_interp
+    sll_int32, intent(in), optional :: maxiter
+    sll_real64, intent(in), optional :: tol
     sll_int32 :: ierr
       
     SLL_ALLOCATE(charac,ierr)
-    call initialize_explicit_euler_conservative_1d_charac(&
+    call initialize_trapezoid_conservative_1d_charac(&
       charac, &
       Npts, &
+      A_interp, &
       bc_type, &
       eta_min, &
       eta_max, &
-      process_outside_point)
+      process_outside_point, &
+      maxiter, &
+      tol)
 
     
-  end function new_explicit_euler_conservative_1d_charac
-  
-  
-  subroutine initialize_explicit_euler_conservative_1d_charac(&
+  end function new_trapezoid_conservative_1d_charac
+  subroutine initialize_trapezoid_conservative_1d_charac(&
       charac, &
       Npts, &
+      A_interp, &
       bc_type, &
       eta_min, &
       eta_max, &
-      process_outside_point)
+      process_outside_point, &
+      maxiter, &
+      tol)
       
-    class(explicit_euler_conservative_1d_charac_computer) :: charac
+    class(trapezoid_conservative_1d_charac_computer) :: charac
     sll_int32, intent(in) :: Npts
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
     procedure(signature_process_outside_point), optional    :: &
       process_outside_point
+    class(sll_interpolator_1d_base), target :: A_interp
+    sll_int32, intent(in), optional :: maxiter
+    sll_real64, intent(in), optional :: tol
 
 
     charac%Npts = Npts
@@ -99,9 +118,7 @@ contains
     else
       charac%eta_max = 1._f64
     endif
-    
-    
-    
+        
     
     if(present(process_outside_point)) then
       charac%process_outside_point => process_outside_point
@@ -109,47 +126,65 @@ contains
     else if(.not.(present(bc_type))) then
       print *,'#provide boundary condition'
       print *,'#bc_type or process_outside_point function'
-      print *,'#in initialize_explicit_euler_1d_charac'
+      print *,'#in initialize_trapezoid_conservative_1d_charac'
       stop
     else
       charac%bc_type = bc_type
       select case (bc_type)
         case (SLL_PERIODIC)
-          charac%process_outside_point => process_outside_point_periodic                    
+          charac%process_outside_point => process_outside_point_periodic          
         case (SLL_SET_TO_LIMIT)
           charac%process_outside_point => process_outside_point_set_to_limit        
         case default
           print *,'#bad value of boundary condition'
-          print *,'#in initialize_explicit_euler_1d_charac'
+          print *,'#in initialize_trapezoid_conservative_1d_charac'
           stop
         end select
     endif
-    
+
     if((present(process_outside_point)).and.(present(bc_type)))then
       print *,'#provide either process_outside_point or bc_type'
       print *,'#and not both'
-      print *,'#in initialize_explicit_euler_2d_charac'
+      print *,'#in initialize_trapezoid_conservative_1d_charac'
       stop
     endif
     
+    charac%A_interp => A_interp
+    
+    if(present(maxiter))then
+      charac%maxiter = maxiter
+    else
+      charac%maxiter = 1000  
+    endif
 
+
+    if(present(tol))then
+      charac%tol = tol
+    else
+      charac%tol = 1.e-12_f64  
+    endif
 
     
     
-  end subroutine initialize_explicit_euler_conservative_1d_charac
+  end subroutine initialize_trapezoid_conservative_1d_charac
 
-  subroutine compute_explicit_euler_conservative_1d_charac( &
+  subroutine compute_trapezoid_conservative_1d_charac( &
       charac, &
       A, &
       dt, &
       input, &
       output)
             
-    class(explicit_euler_conservative_1d_charac_computer) :: charac
+    class(trapezoid_conservative_1d_charac_computer) :: charac
     sll_real64, dimension(:), intent(in) :: A
     sll_real64, intent(in) :: dt
     sll_real64, dimension(:), intent(in) ::  input
     sll_real64, dimension(:), intent(out) :: output
+    sll_int32 :: j
+    sll_real64 :: x2
+    sll_real64 :: x2_old
+    sll_real64 :: x2_i !i for inside, so that interpolation is possible
+    sll_int32 :: iter
     sll_int32 :: i
     sll_int32 :: Npts
     sll_real64 :: eta_min
@@ -161,13 +196,44 @@ contains
     eta_min = charac%eta_min
     eta_max = charac%eta_max
     
-    SLL_ASSERT(size(A)>=charac%Npts-1)
-    SLL_ASSERT(size(input)>=charac%Npts)
-    SLL_ASSERT(size(output)>=charac%Npts)
+    SLL_ASSERT(size(A)>=Npts)
+    SLL_ASSERT(size(input)>=Npts)
+    SLL_ASSERT(size(output)>=Npts)
     
-    do i=1,Npts-1
-      output(i) = 0.5_f64*(input(i)+input(i+1))-dt*A(i)
+    call charac%A_interp%compute_interpolants( &
+      A, &
+      input, &
+      Npts)
+    do j=1,Npts-1
+        !We start from Y(t_{n+1})=y_j
+        !and look for Y(t_n) = Yn
+        !Yn = y_j-(A(y_j)+A(Yn))*dt/2
+        x2 = 0.5_f64*(input(j)+input(j+1))-dt*A(j)
+        x2_old = 0._f64
+        iter = 0
+        do while (iter<charac%maxiter .and. abs(x2_old-x2)>charac%tol)
+          x2_old = x2
+          x2_i = x2
+          if((x2<=eta_min).or.(x2>=eta_max))then
+            x2_i= charac%process_outside_point(x2,eta_min,eta_max)
+          else
+            x2_i = x2  
+          endif                      
+          x2 = 0.5_f64*(input(j)+input(j+1)) &
+            -0.5_f64*dt*(charac%A_interp%interpolate_value(x2_i)+A(j))
+        end do
+        if (iter==charac%maxiter .and. abs(x2_old-x2)>charac%tol) then
+          print*,'#not enough iterations for compute_trapezoid_conservative_1d_charac',&
+            iter,abs(x2_old-x2)
+          stop
+        end if
+        !if((x2<=eta_min).or.(x2>=eta_max))then
+        !  x2 =  charac%process_outside_point(x2,eta_min,eta_max)
+        !endif                      
+        output(j) = x2  
     enddo
+
+
     select case (charac%bc_type)
       case (SLL_PERIODIC)
         output_min = output(Npts-1) - (eta_max-eta_min)
@@ -186,24 +252,15 @@ contains
       output(i) = 0.5_f64*(output(i)+output(i-1))
     enddo
     output(1) = 0.5_f64*(output(1)+output_min)
+
     
-!print *,eta_min,eta_max
-!print *,output_min,output_max
-!    
-!do i=1,Npts
-!  print *,i, input(i),output(i)
-!enddo
     
-!    do i=1,Npts
-!      if((output(i)<=eta_min).or.(output(i)>=eta_max))then
-!        output(i)=charac%process_outside_point(output(i),eta_min,eta_max)
-!      endif      
-!    enddo
+    
       
-  end subroutine compute_explicit_euler_conservative_1d_charac
+  end subroutine compute_trapezoid_conservative_1d_charac
 
 
 
   
   
-end module sll_module_characteristics_1d_explicit_euler_conservative
+end module sll_module_characteristics_1d_trapezoid_conservative
