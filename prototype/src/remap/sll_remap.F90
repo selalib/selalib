@@ -15,6 +15,26 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> @file sll_remap.F90
+!> @namespace sll_remapper
+!> @brief  
+!> Remap provides capabilities for global data reconfigurations in a parallel 
+!> machine. All that is needed is a specification of the initial and final
+!> configurations, the creation of a remap plan that uses these specifications
+!> as input and an application of the plan. For details about the interface,
+!> follow the link sll_remapper .
+!> @details Suppose that a given dataset is represented by a multi-dimensional
+!> array which is distributed on multiple processors. The specifics of this
+!> distribution (which portion of the global array is contained in which 
+!> processor) are contained in an object called a 'layout'. To reconfigure
+!> data, we need initial and final layouts, a remap 'plan' which uses the 
+!> given layouts for its initialization and finally an application of the 
+!> plan on the data described by the layouts. The data reconfiguration is an
+!> out-of-place operation, so the module client is responsible for the
+!> allocation of the appropriate arrays. Remap operates on multi-dimensional
+!> arrays of several of the basic Fortran types. 
+
+
 module sll_remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -26,39 +46,39 @@ module sll_remapper
   
   ! The box types contain information on the index limits contained        
   ! in a given processor.
-  type box_2D
-     sll_int32 :: i_min, i_max
-     sll_int32 :: j_min, j_max
+  type SLL_PRIV :: box_2D
+     sll_int32 SLL_PRIV :: i_min, i_max
+     sll_int32 SLL_PRIV :: j_min, j_max
   end type box_2D
 
-  type box_3D
-     sll_int32 :: i_min, i_max
-     sll_int32 :: j_min, j_max
-     sll_int32 :: k_min, k_max
+  type SLL_PRIV :: box_3D
+     sll_int32 SLL_PRIV :: i_min, i_max
+     sll_int32 SLL_PRIV :: j_min, j_max
+     sll_int32 SLL_PRIV :: k_min, k_max
   end type box_3D
 
-  type box_4D
-     sll_int32 :: i_min, i_max
-     sll_int32 :: j_min, j_max
-     sll_int32 :: k_min, k_max
-     sll_int32 :: l_min, l_max
+  type SLL_PRIV :: box_4D
+     sll_int32 SLL_PRIV :: i_min, i_max
+     sll_int32 SLL_PRIV :: j_min, j_max
+     sll_int32 SLL_PRIV :: k_min, k_max
+     sll_int32 SLL_PRIV :: l_min, l_max
   end type box_4D
 
-  type box_5D
-     sll_int32 :: i_min, i_max
-     sll_int32 :: j_min, j_max
-     sll_int32 :: k_min, k_max
-     sll_int32 :: l_min, l_max
-     sll_int32 :: m_min, m_max
+  type SLL_PRIV :: box_5D
+     sll_int32 SLL_PRIV :: i_min, i_max
+     sll_int32 SLL_PRIV :: j_min, j_max
+     sll_int32 SLL_PRIV :: k_min, k_max
+     sll_int32 SLL_PRIV :: l_min, l_max
+     sll_int32 SLL_PRIV :: m_min, m_max
   end type box_5D
 
-  type box_6D
-     sll_int32 :: i_min, i_max
-     sll_int32 :: j_min, j_max
-     sll_int32 :: k_min, k_max
-     sll_int32 :: l_min, l_max
-     sll_int32 :: m_min, m_max
-     sll_int32 :: n_min, n_max
+  type SLL_PRIV :: box_6D
+     sll_int32 SLL_PRIV :: i_min, i_max
+     sll_int32 SLL_PRIV :: j_min, j_max
+     sll_int32 SLL_PRIV :: k_min, k_max
+     sll_int32 SLL_PRIV :: l_min, l_max
+     sll_int32 SLL_PRIV :: m_min, m_max
+     sll_int32 SLL_PRIV :: n_min, n_max
   end type box_6D
 
   
@@ -66,28 +86,28 @@ module sll_remapper
   ! array of boxes that describes the distribution of data among
   ! different nodes.
   type layout_2D
-     type(sll_collective_t), pointer     :: collective
-     type(box_2D), dimension(:), pointer :: boxes
+     type(sll_collective_t), pointer SLL_PRIV     :: collective
+     type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_2D
 
   type layout_3D
-     type(sll_collective_t), pointer     :: collective
-     type(box_3D), dimension(:), pointer :: boxes
+     type(sll_collective_t), pointer SLL_PRIV     :: collective
+     type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_3D
 
   type layout_4D
-     type(sll_collective_t), pointer     :: collective
-     type(box_4D), dimension(:), pointer :: boxes
+     type(sll_collective_t), pointer  SLL_PRIV    :: collective
+     type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_4D
 
   type layout_5D
-     type(sll_collective_t), pointer     :: collective
-     type(box_5D), dimension(:), pointer :: boxes
+     type(sll_collective_t), pointer  SLL_PRIV    :: collective
+     type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
   end type layout_5D
 
   type layout_6D
-     type(sll_collective_t), pointer     :: collective
-     type(box_6D), dimension(:), pointer :: boxes
+     type(sll_collective_t), pointer  SLL_PRIV    :: collective
+     type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_6D
 
 
@@ -104,31 +124,45 @@ module sll_remapper
   ! amount of data is going to be sent to all the processes in a 
   ! communicator (sender included). This is important to know because we can
   ! then replace the call to alltoallv by a call to alltoall.
+
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
   type type_name;                                             \
-     type(layout_type), pointer            :: initial_layout; \
-     type(layout_type), pointer            :: final_layout;   \
-     integer, dimension(:), pointer        :: send_displs;    \
-     integer, dimension(:), pointer        :: send_counts;    \
-     integer, dimension(:), pointer        :: recv_displs;    \
-     integer, dimension(:), pointer        :: recv_counts;    \
-     type(box_type), dimension(:), pointer :: send_boxes;     \
-     type(box_type), dimension(:), pointer :: recv_boxes;     \
-     type(sll_collective_t), pointer       :: collective;     \
-     data_type, dimension(:), pointer      :: send_buffer;    \
-     data_type, dimension(:), pointer      :: recv_buffer;    \
-     logical                               :: is_uniform;     \
+     type(layout_type), pointer SLL_PRIV            :: initial_layout=>null();\
+     type(layout_type), pointer SLL_PRIV            :: final_layout=>null();  \
+     integer, dimension(:), pointer SLL_PRIV        :: send_displs=>null();   \
+     integer, dimension(:), pointer SLL_PRIV        :: send_counts=>null();   \
+     integer, dimension(:), pointer SLL_PRIV        :: recv_displs=>null();   \
+     integer, dimension(:), pointer SLL_PRIV        :: recv_counts=>null();   \
+     type(box_type), dimension(:), pointer SLL_PRIV :: send_boxes=>null();    \
+     type(box_type), dimension(:), pointer SLL_PRIV :: recv_boxes=>null();    \
+     type(sll_collective_t), pointer SLL_PRIV       :: collective=>null();    \
+     data_type, dimension(:), pointer SLL_PRIV      :: send_buffer=>null();   \
+     data_type, dimension(:), pointer SLL_PRIV      :: recv_buffer=>null();   \
+     logical SLL_PRIV                               :: is_uniform=.false.;    \
   end type type_name
 
+
   ! 2D Remap types:
+
+  !> @brief basic type for 2D remap for the 32-bit integer type.
   MAKE_REMAP_PLAN(remap_plan_2D_int32, layout_2D, box_2D, sll_int32)
+  !> @brief basic type for 2D remap for the 64-bit real type.
   MAKE_REMAP_PLAN(remap_plan_2D_real64, layout_2D, box_2D, sll_real64)
+  !> @brief basic type for 2D remap for the 64-bit complex type.
   MAKE_REMAP_PLAN(remap_plan_2D_comp64, layout_2D, box_2D, sll_comp64)
+
   ! 3D Remap types:
+
+  !> @brief basic type for 3D remap for the 32-bit integer type.
   MAKE_REMAP_PLAN(remap_plan_3D_int32, layout_3D, box_3D, sll_int32)
+  !> @brief basic type for 3D remap for the 64-bit real type.
   MAKE_REMAP_PLAN(remap_plan_3D_real64, layout_3D, box_3D, sll_real64)
+  !> @brief basic type for 3D remap for the 64-bit complex type.
   MAKE_REMAP_PLAN(remap_plan_3D_comp64, layout_3D, box_3D, sll_comp64)
+
   ! 4D Remap types:
+
+  !> @brief basic type for 4D remap for the 32-bit integer type.
   MAKE_REMAP_PLAN(remap_plan_4D_int32, layout_4D, box_4D, sll_int32)
   MAKE_REMAP_PLAN(remap_plan_4D_real64, layout_4D, box_4D, sll_real64)
   MAKE_REMAP_PLAN(remap_plan_4D_comp64, layout_4D, box_4D, sll_comp64)
