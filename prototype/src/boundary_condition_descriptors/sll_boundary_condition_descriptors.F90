@@ -21,6 +21,7 @@ module sll_boundary_condition_descriptors
 #include "sll_working_precision.h"
   implicit none
 
+  sll_int32, parameter :: SLL_USER_DEFINED   = -1 
   sll_int32, parameter :: SLL_PERIODIC       = 0 
   sll_int32, parameter :: SLL_DIRICHLET      = 1 
   sll_int32, parameter :: SLL_NEUMANN        = 2

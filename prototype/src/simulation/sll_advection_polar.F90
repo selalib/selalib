@@ -98,11 +98,11 @@ contains
     this%ntheta=ntheta
     this%time_scheme=time_scheme
 
-    this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-         & SLL_HERMITE, SLL_PERIODIC,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-
-   ! this%spl_f => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-   !      & SLL_PERIODIC, SLL_PERIODIC)
+    this%spl_f => &
+         new_cubic_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
+         SLL_HERMITE, SLL_PERIODIC, &
+         const_slope_x1_min = 0._f64, &
+         const_slope_x1_max = 0._f64 )
 
   end function new_plan_adv_polar
 
@@ -122,7 +122,7 @@ contains
 
     if (associated(this)) then
        SLL_DEALLOCATE_ARRAY(this%field,err)
-       call delete_spline_2d(this%spl_f)
+       call sll_delete(this%spl_f)
        SLL_DEALLOCATE(this,err)
        this=>null()
     end if
@@ -208,7 +208,7 @@ contains
     rmax=plan%rmax
 
     !construction of spline coefficients for f
-    call compute_spline_2D(fn,plan%spl_f)
+    call compute_cubic_spline_2D(fn,plan%spl_f)
 
     !if (plan%time_scheme==1) then
        !explicit Euler
@@ -313,7 +313,7 @@ end subroutine advect_CG_polar2
     rmax=plan%rmax
 
     !construction of spline coefficients for f
-    call compute_spline_2D(fn,plan%spl_f)
+    call compute_cubic_spline_2D(fn,plan%spl_f)
 
     if (plan%time_scheme==1) then
        !explicit Euler

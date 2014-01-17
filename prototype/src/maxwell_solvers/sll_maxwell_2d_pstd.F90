@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -21,16 +19,14 @@
 call fftw_execute_dft_r2c(self%fwx, field, self%tmp_x);       \
 self%tmp_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%tmp_x;     \
 call fftw_execute_dft_c2r(self%bwx, self%tmp_x, self%d_dx);   \
-self%d_dx = self%d_dx / nx
+self%d_dx = self%d_dx / nc_x
 
 #define D_DY(field)                                           \
 call fftw_execute_dft_r2c(self%fwy, field, self%tmp_y);       \
 self%tmp_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%tmp_y;     \
 call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
-self%d_dy = self%d_dy / ny
+self%d_dy = self%d_dy / nc_y
 
-!> @author
-!> Pierre Navaro
 !> @brief
 !> Implements the Maxwell solver in 2D with periodic boundary conditions
 !> with PSTD method.
@@ -94,8 +90,8 @@ public :: initialize, delete, solve, ampere, faraday
 
 !> Maxwell solver object
 type, public :: maxwell_2d_pstd
-   sll_int32                          :: nx           !< x nodes number
-   sll_int32                          :: ny           !< y nodes number
+   sll_int32                          :: nc_x         !< x cells number
+   sll_int32                          :: nc_y         !< y cells number
    sll_real64, dimension(:), pointer  :: d_dx         !< field x derivative
    sll_real64, dimension(:), pointer  :: d_dy         !< field y derivative
    sll_real64, dimension(:), pointer  :: kx           !< x wave number
@@ -121,15 +117,15 @@ sll_int32, private :: i, j
 contains
 
 !> Initialize 2d maxwell solver on cartesian mesh with PSTD scheme
-subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
+subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
 
    type(maxwell_2d_pstd) :: self         !< maxwell object
    sll_real64         :: xmin         !< xmin
    sll_real64         :: xmax         !< xmax
    sll_real64         :: ymin         !< ymin
    sll_real64         :: ymax         !< ymax
-   sll_int32          :: nx           !< x nodes number
-   sll_int32          :: ny           !< y nodes number
+   sll_int32          :: nc_x         !< x cells number
+   sll_int32          :: nc_y         !< y cells number
    sll_int32          :: polarization !< TE or TM
    sll_int32          :: error        !< error code
    sll_real64         :: dx           !< x space step
@@ -137,43 +133,43 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nx,ymin,ymax,ny,polarization)
    sll_real64         :: kx0
    sll_real64         :: ky0
 
-   self%nx = nx
-   self%ny = ny
+   self%nc_x = nc_x
+   self%nc_y = nc_y
    self%polarization = polarization
 
    self%e_0  = 1._f64
    self%mu_0 = 1._f64
 
-   SLL_ALLOCATE(self%d_dx(nx), error)
-   SLL_ALLOCATE(self%d_dy(ny), error)
+   SLL_ALLOCATE(self%d_dx(nc_x), error)
+   SLL_ALLOCATE(self%d_dy(nc_y), error)
 
-   FFTW_ALLOCATE(self%tmp_x,nx/2+1,self%sz_tmp_x,self%p_tmp_x)
-   FFTW_ALLOCATE(self%tmp_y,ny/2+1,self%sz_tmp_y,self%p_tmp_y)
+   FFTW_ALLOCATE(self%tmp_x,nc_x/2+1,self%sz_tmp_x,self%p_tmp_x)
+   FFTW_ALLOCATE(self%tmp_y,nc_y/2+1,self%sz_tmp_y,self%p_tmp_y)
 
-   NEW_FFTW_PLAN_R2C_1D(self%fwx, nx, self%d_dx,  self%tmp_x)
-   NEW_FFTW_PLAN_C2R_1D(self%bwx, nx, self%tmp_x, self%d_dx)
-   NEW_FFTW_PLAN_R2C_1D(self%fwy, ny, self%d_dy,  self%tmp_y)
-   NEW_FFTW_PLAN_C2R_1D(self%bwy, ny, self%tmp_y, self%d_dy)
+   NEW_FFTW_PLAN_R2C_1D(self%fwx, nc_x, self%d_dx,  self%tmp_x)
+   NEW_FFTW_PLAN_C2R_1D(self%bwx, nc_x, self%tmp_x, self%d_dx)
+   NEW_FFTW_PLAN_R2C_1D(self%fwy, nc_y, self%d_dy,  self%tmp_y)
+   NEW_FFTW_PLAN_C2R_1D(self%bwy, nc_y, self%tmp_y, self%d_dy)
 
    !call dfftw_init_threads(error)
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
 
-   SLL_ALLOCATE(self%kx(nx/2+1), error)
-   SLL_ALLOCATE(self%ky(ny/2+1), error)
+   SLL_ALLOCATE(self%kx(nc_x/2+1), error)
+   SLL_ALLOCATE(self%ky(nc_y/2+1), error)
    
-   dx = (xmax-xmin) / nx
-   dy = (ymax-ymin) / ny
+   dx = (xmax-xmin) / nc_x
+   dy = (ymax-ymin) / nc_y
 
-   kx0 = 2._f64*sll_pi/(nx*dx)
-   ky0 = 2._f64*sll_pi/(ny*dy)
+   kx0 = 2._f64*sll_pi/(nc_x*dx)
+   ky0 = 2._f64*sll_pi/(nc_y*dy)
 
-   do i=2,nx/2+1
+   do i=2,nc_x/2+1
       self%kx(i) = (i-1)*kx0
    end do
    self%kx(1) = 1.0_f64
-   do j=2,ny/2+1
+   do j=2,nc_y/2+1
       self%ky(j) = (j-1)*ky0
    end do
    self%ky(1) = 1.0_f64
@@ -218,15 +214,15 @@ subroutine bc_periodic_2d_pstd(self, fx, fy, fz)
    sll_real64 , intent(inout), dimension(:,:) :: fx   !< Ex or Bx
    sll_real64 , intent(inout), dimension(:,:) :: fy   !< Ey or By
    sll_real64 , intent(inout), dimension(:,:) :: fz   !< Bz or Ez
-   sll_int32 :: nx, ny
+   sll_int32 :: nc_x, nc_y
 
-   nx = self%nx
-   ny = self%ny
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
-   fx(:,ny+1) = fx(:,1) 
-   fy(nx+1,:) = fy(1,:)
-   fz(nx+1,:) = fz(1,:)
-   fz(:,ny+1) = fz(:,1)
+   fx(:,nc_y+1) = fx(:,1) 
+   fy(nc_x+1,:) = fy(1,:)
+   fz(nc_x+1,:) = fz(1,:)
+   fz(:,nc_y+1) = fz(:,1)
 
 end subroutine bc_periodic_2d_pstd
 
@@ -274,24 +270,24 @@ subroutine faraday_tm_2d_pstd(self, hx, hy, ez, dt)
    sll_real64, dimension(:,:), intent(inout) :: hx      !< Magnetic field x
    sll_real64, dimension(:,:), intent(inout) :: hy      !< Magnetic field y
    sll_real64, dimension(:,:), intent(inout) :: ez      !< Electric field z
-   sll_int32                                 :: nx      !< x nodes number
-   sll_int32                                 :: ny      !< y nodes number
+   sll_int32                                 :: nc_x    !< x cells number
+   sll_int32                                 :: nc_y    !< y cells number
    sll_real64, intent(in)                    :: dt      !< time step
    sll_real64                                :: dt_mu
 
-   nx = self%nx
-   ny = self%ny
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
    dt_mu = dt / self%mu_0 
 
-   do i = 1, nx
-      D_DY(ez(i,1:ny))
-      hx(i,1:ny) = hx(i,1:ny) - dt_mu * self%d_dy
+   do i = 1, nc_x
+      D_DY(ez(i,1:nc_y))
+      hx(i,1:nc_y) = hx(i,1:nc_y) - dt_mu * self%d_dy
    end do
 
-   do j = 1, ny
-      D_DX(ez(1:nx,j))
-      hy(1:nx,j) = hy(1:nx,j) + dt_mu * self%d_dx
+   do j = 1, nc_y
+      D_DX(ez(1:nc_x,j))
+      hy(1:nc_x,j) = hy(1:nc_x,j) + dt_mu * self%d_dx
    end do
 
 end subroutine faraday_tm_2d_pstd
@@ -299,28 +295,28 @@ end subroutine faraday_tm_2d_pstd
 !> Solve faraday equation (ex,ey,hz)
 subroutine faraday_te_2d_pstd(self, ex, ey, hz, dt)
 
-   type(maxwell_2d_pstd),intent(inout)          :: self   !< maxwell object
+   type(maxwell_2d_pstd),intent(inout)       :: self   !< maxwell object
    sll_real64, dimension(:,:), intent(inout) :: ex     !< electric field x
    sll_real64, dimension(:,:), intent(inout) :: ey     !< electric field y
    sll_real64, dimension(:,:), intent(inout) :: hz     !< magnetic field z
-   sll_int32                                 :: nx     !< x nodes number
-   sll_int32                                 :: ny     !< y nodes number
+   sll_int32                                 :: nc_x   !< x cells number
+   sll_int32                                 :: nc_y   !< y cells number
    sll_real64, intent(in)                    :: dt     !< time step
    sll_real64                                :: dt_mu
 
-   nx = self%nx
-   ny = self%ny
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
    dt_mu = dt / self%mu_0 
 
-   do i = 1, nx
-      D_DY(ex(i,1:ny))
-      hz(i,1:ny) = hz(i,1:ny) + dt_mu * self%d_dy
+   do i = 1, nc_x
+      D_DY(ex(i,1:nc_y))
+      hz(i,1:nc_y) = hz(i,1:nc_y) + dt_mu * self%d_dy
    end do
 
-   do j = 1, ny
-      D_DX(ey(1:nx,j))
-      hz(1:nx,j) = hz(1:nx,j) - dt_mu * self%d_dx
+   do j = 1, nc_y
+      D_DX(ey(1:nc_x,j))
+      hz(1:nc_x,j) = hz(1:nc_x,j) - dt_mu * self%d_dx
    end do
 
 end subroutine faraday_te_2d_pstd
@@ -328,9 +324,9 @@ end subroutine faraday_te_2d_pstd
 !> Solve ampere maxwell equation (hx,hy,ez)
 subroutine ampere_tm_2d_pstd(self, hx, hy, ez, dt, jz)
 
-   type(maxwell_2d_pstd),intent(inout)      :: self   !< maxwell object
-   sll_int32                             :: nx     !< x nodes number
-   sll_int32                             :: ny     !< y nodes number
+   type(maxwell_2d_pstd),intent(inout)   :: self   !< maxwell object
+   sll_int32                             :: nc_x   !< x cells number
+   sll_int32                             :: nc_y   !< y cells number
    sll_real64, dimension(:,:)            :: hx     !< magnetic field x
    sll_real64, dimension(:,:)            :: hy     !< magnetic field y
    sll_real64, dimension(:,:)            :: ez     !< electric field z
@@ -338,19 +334,19 @@ subroutine ampere_tm_2d_pstd(self, hx, hy, ez, dt, jz)
    sll_real64                            :: dt_e
    sll_real64, dimension(:,:), optional  :: jz     !< current z
 
-   nx = self%nx
-   ny = self%ny
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
    dt_e = dt / self%e_0
 
-   do j = 1, ny
-      D_DX(hy(1:nx,j))
-      ez(1:nx,j) = ez(1:nx,j) + dt_e * self%d_dx
+   do j = 1, nc_y
+      D_DX(hy(1:nc_x,j))
+      ez(1:nc_x,j) = ez(1:nc_x,j) + dt_e * self%d_dx
    end do
 
-   do i = 1, nx
-      D_DY(hx(i,1:ny))
-      ez(i,1:ny) = ez(i,1:ny) - dt_e * self%d_dy
+   do i = 1, nc_x
+      D_DY(hx(i,1:nc_y))
+      ez(i,1:nc_y) = ez(i,1:nc_y) - dt_e * self%d_dy
    end do
 
    if (present(jz)) then
@@ -371,22 +367,22 @@ subroutine ampere_te_2d_pstd(self, ex, ey, hz, dt, jx, jy)
    sll_real64, dimension(:,:), optional  :: jy     !< current y
 
    sll_real64                            :: dt_e
-   sll_int32                             :: nx
-   sll_int32                             :: ny
+   sll_int32                             :: nc_x
+   sll_int32                             :: nc_y
 
-   nx = self%nx
-   ny = self%ny
+   nc_x = self%nc_x
+   nc_y = self%nc_y
 
    dt_e = dt / self%e_0
 
-   do j = 1, ny
-      D_DX(hz(1:nx,j))
-      ey(1:nx,j) = ey(1:nx,j) - dt_e * self%d_dx
+   do j = 1, nc_y
+      D_DX(hz(1:nc_x,j))
+      ey(1:nc_x,j) = ey(1:nc_x,j) - dt_e * self%d_dx
    end do
 
-   do i = 1, nx
-      D_DY(hz(i,1:ny))
-      ex(i,1:ny) = ex(i,1:ny) + dt_e * self%d_dy
+   do i = 1, nc_x
+      D_DY(hz(i,1:nc_y))
+      ex(i,1:nc_y) = ex(i,1:nc_y) + dt_e * self%d_dy
    end do
 
    if (present(jx) .and. present(jy)) then

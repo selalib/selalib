@@ -4,11 +4,11 @@
 ! Selalib      
 ! Module: test_func_module.F90
 !
-!> @brief 
-!> Module of test functions for sll_splines unit test
+! @brief 
+! Module of test functions for sll_splines unit test
 !   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr)
+! @authors                    
+! Aliou DIOUF (aliou.l.diouf@inria.fr)
 !                                  
 !****************************************************
 
