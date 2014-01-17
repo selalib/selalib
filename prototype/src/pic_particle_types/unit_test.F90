@@ -1,12 +1,15 @@
 program particles_tester
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
+
   use sll_particle_group_2d_module
+
   implicit none
 
 #define NUM_PARTICLES 1000000_i64
 #define GUARD_SIZE    100000_i64
 #define PARTICLE_ARRAY_SIZE 1500000_i64
-
-  type(sll_particle_group_2d), pointer :: p_group
 
   p_group => new_particle_2d_group( &
        NUM_PARTICLES, &
@@ -16,4 +19,8 @@ program particles_tester
   call delete( p_group )
 
   print *, 'PASSED'
+
+  contains
+
+
 end program particles_tester
