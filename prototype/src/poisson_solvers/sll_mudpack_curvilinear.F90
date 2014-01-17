@@ -300,7 +300,7 @@ sll_int32 :: icall
 sll_int32, parameter :: iixp = 2 , jjyq = 2
 
 sll_real64, intent(inout) ::  phi(:,:) !< electric potential
-sll_real64, intent(inout) ::  rho(:,:)
+sll_real64, intent(inout) ::  rho(:,:) !< charge density
 sll_real64,pointer :: rhs(:,:) !< charge density
 
 ! put sll_int32 and floating point argument names in contiguous
