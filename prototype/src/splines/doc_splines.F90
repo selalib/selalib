@@ -6,6 +6,11 @@
 !> <b> Modules available </b>
 !>
 !> - sll_cubic_splines
+!> - sll_quintic_splines
+!> - cubic_non_uniform_splines
+!> - deboor_arbitrary_degree_splines
+!> - sll_arbitrary_degree_splines
+!> - sll_odd_degree_splines
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include "sll_file_io.h" \endcode
