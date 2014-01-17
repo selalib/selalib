@@ -20,7 +20,7 @@ program unit_test_advection_1d_CSL
 #include "sll_memory.h"
 use sll_module_advection_1d_CSL
 use sll_module_advection_1d_PSM
-use sll_module_characteristics_1d_explicit_euler_conservative
+use sll_module_characteristics_1d_trapezoid_conservative
 use sll_cubic_spline_interpolator_1d
 
 implicit none
@@ -28,6 +28,7 @@ implicit none
   class(sll_advection_1d_base), pointer :: adv
   class(sll_advection_1d_base), pointer :: adv_ref
   class(sll_interpolator_1d_base), pointer :: interp
+  class(sll_interpolator_1d_base), pointer :: A_interp
   class(sll_characteristics_1d_base), pointer :: charac
   sll_real64 :: x_min
   sll_real64 :: x_max
@@ -84,8 +85,17 @@ implicit none
     x_max_bis, &
     SLL_PERIODIC)
 
-  charac => new_explicit_euler_conservative_1d_charac(&
+  A_interp => new_cubic_spline_1d_interpolator( &
     num_cells+1, &
+    x_min, &
+    x_max, &
+    SLL_PERIODIC)
+
+
+
+  charac => new_trapezoid_conservative_1d_charac(&
+    num_cells+1, &
+    A_interp, &
     eta_min=x_min_bis, &
     eta_max=x_max_bis, &
     bc_type=SLL_PERIODIC)    
@@ -95,7 +105,8 @@ implicit none
     charac, &
     num_cells+1, &
     eta_min = x_min_bis, &
-    eta_max = x_max_bis)
+    eta_max = x_max_bis, &
+    bc_type = SLL_PERIODIC)
 
   adv_ref => new_PSM_1d_advector(&
     num_cells+1, &
