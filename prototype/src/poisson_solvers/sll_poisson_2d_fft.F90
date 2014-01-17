@@ -21,12 +21,20 @@ module sll_module_poisson_2d_fft
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
 use sll_module_poisson_2d_base
-use sll_poisson_2D_periodic
+#ifdef FFTW
+use sll_poisson_2D_periodic_fftw
+#else
+use sll_poisson_2D_periodic_fftpack
+#endif
 implicit none
 
   type,extends(sll_poisson_2d_base) :: poisson_2d_fft_solver     
   
-  type(poisson_2d_periodic), pointer                   :: poiss
+#ifdef FFTW
+  type(poisson_2d_periodic_fftw), pointer                   :: poiss
+#else
+  type(poisson_2d_periodic_fftpack), pointer                   :: poiss
+#endif
   
   contains
     procedure, pass(poisson) :: initialize => &

@@ -406,6 +406,7 @@ contains
        interpolator%coeff_splines(1)  = interpolator%slope_left
        interpolator%coeff_splines(sz) = interpolator%slope_right
     end select
+    SLL_DEALLOCATE(point_locate_eta,ierr)
   end subroutine compute_interpolants_ad1d
 
 
