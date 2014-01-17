@@ -421,6 +421,8 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%values_jacobian,ierr)
     SLL_DEALLOCATE(es%values_splines_gauss1,ierr)
     SLL_DEALLOCATE(es%values_splines_gauss2,ierr)
+    SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
+    SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
   end subroutine delete_elliptic
 
 
@@ -829,6 +831,7 @@ contains ! *******************************************************************
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
   
   ! This is based on the assumption that all the input fields have the same
