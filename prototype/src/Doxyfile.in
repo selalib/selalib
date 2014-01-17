@@ -395,14 +395,14 @@ EXTRACT_ANON_NSPACES   = NO
 # various overviews, but no documentation section is generated.
 # This option has no effect if EXTRACT_ALL is enabled.
 
-HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_MEMBERS     = YES
 
 # If the HIDE_UNDOC_CLASSES tag is set to YES, Doxygen will hide all
 # undocumented classes that are normally visible in the class hierarchy.
 # If set to NO (the default) these classes will be included in the various
 # overviews. This option has no effect if EXTRACT_ALL is enabled.
 
-HIDE_UNDOC_CLASSES     = NO
+HIDE_UNDOC_CLASSES     = YES
 
 # If the HIDE_FRIEND_COMPOUNDS tag is set to YES, Doxygen will hide all
 # friend (class|struct|union) declarations.
@@ -628,7 +628,7 @@ WARN_IF_DOC_ERROR      = YES
 # wrong or incomplete parameter documentation, but not about the absence of
 # documentation.
 
-WARN_NO_PARAMDOC       = NO
+WARN_NO_PARAMDOC       = YES
 
 # The WARN_FORMAT tag determines the format of the warning messages that
 # doxygen can produce. The string should contain the $file, $line, and $text
@@ -699,7 +699,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
 @CMAKE_CURRENT_SOURCE_DIR@/characteristics \
 @CMAKE_CURRENT_SOURCE_DIR@/collective \
-@CMAKE_CURRENT_SOURCE_DIR@/constants \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
 @CMAKE_CURRENT_SOURCE_DIR@/discontinuous_galerkin \
@@ -708,7 +707,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/fft \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fields \
-@CMAKE_CURRENT_SOURCE_DIR@/file_io \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/integration \
@@ -733,7 +731,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/petsc_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
-@CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/precision \
 @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
 @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
@@ -741,7 +738,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/remap \
 @CMAKE_CURRENT_SOURCE_DIR@/simulation \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse \
-@CMAKE_CURRENT_SOURCE_DIR@/splines \
 @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/timer \
 @CMAKE_CURRENT_SOURCE_DIR@/utilities \
@@ -761,7 +757,7 @@ EXCLUDE_SYMLINKS       = NO
 # against the file with absolute path, so to exclude all test directories
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = */test/*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -906,7 +902,7 @@ VERBATIM_HEADERS       = YES
 # of all compounds will be generated. Enable this if the project
 # contains a lot of classes, structs, unions or interfaces.
 
-ALPHABETICAL_INDEX     = YES
+ALPHABETICAL_INDEX     = NO
 
 # If the alphabetical index is enabled (see ALPHABETICAL_INDEX) then
 # the COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns
@@ -1439,7 +1435,7 @@ LATEX_HIDE_INDICES     = NO
 # Note that which sources are shown also depends on other settings
 # such as SOURCE_BROWSER.
 
-LATEX_SOURCE_CODE      = NO
+LATEX_SOURCE_CODE      = YES
 
 # The LATEX_BIB_STYLE tag can be used to specify the style to use for the
 # bibliography, e.g. plainnat, or ieeetr. The default style is "plain". See
