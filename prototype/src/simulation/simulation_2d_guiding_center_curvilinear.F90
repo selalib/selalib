@@ -23,6 +23,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
+  use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
   use sll_cubic_spline_interpolator_2d
@@ -32,7 +33,9 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
   !use sll_mudpack_curvilinear
+#ifdef MUDPACK
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+#endif
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -76,8 +79,9 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    class(sll_poisson_2d_base), pointer   :: poisson
    !type(poisson_2d_periodic), pointer   :: poisson
    !type(sll_plan_poisson_polar), pointer :: poisson 
+#ifdef MUDPACK
     type(mudpack_2d) :: poisson2
-    
+#endif    
    !time_iterations
    sll_real64 :: dt
    sll_int32  :: num_iterations
@@ -258,7 +262,11 @@ contains
       f_interp2d_case, &
       phi_interp2d_case, &
       charac2d_case, &
-      A_interp_case
+      A_interp_case, &
+      charac1d_x1_case, &
+      charac1d_x2_case, &
+      advect1d_x1_case, &   
+      advect1d_x2_case  
 
     namelist /poisson/ &
       poisson_solver, &
@@ -325,7 +333,12 @@ contains
     !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
     poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
     !mudpack_method = SLL_NON_SEPARABLE_WITH_CROSS_TERMS  
+#ifdef MUDPACK
+
     mudpack_method = SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS  
+#else
+    mudpack_method = 0
+#endif
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3    
      
@@ -752,6 +765,14 @@ contains
           bc_type= sim%bc_charac2d_eta1, &
           eta_min=eta1_min_bis, &
           eta_max=eta1_max_bis)
+      case ("SLL_TRAPEZOID_CONSERVATIVE")
+        charac1d_x1 => &
+          new_trapezoid_conservative_1d_charac(&
+          Nc_eta1_bis+1, &
+          A1_interp1d_x1, &
+          bc_type=SLL_PERIODIC, &
+          eta_min=eta1_min_bis, &
+          eta_max=eta1_max_bis)
       case ("SLL_EULER_CONSERVATIVE")
         charac1d_x1 => new_explicit_euler_conservative_1d_charac(&
           Nc_eta1_bis+1, &
@@ -786,6 +807,14 @@ contains
           eta_min=eta2_min_bis, &
           eta_max=eta2_max_bis, &
           bc_type= sim%bc_charac2d_eta2)    
+      case ("SLL_TRAPEZOID_CONSERVATIVE")
+        charac1d_x2 => &
+          new_trapezoid_conservative_1d_charac(&
+          Nc_eta2_bis+1, &
+          A2_interp1d_x2, &
+          bc_type=SLL_PERIODIC, &
+          eta_min=eta2_min_bis, &
+          eta_max=eta2_max_bis)
       case default
         print *,'#bad charac1d_x2_case',charac1d_x2_case
         print *,'#not implemented'
@@ -807,7 +836,8 @@ contains
           charac1d_x1, &
           Nc_eta1_bis+1, &
           eta_min = eta1_min_bis, &
-          eta_max = eta1_max_bis)
+          eta_max = eta1_max_bis, &
+          bc_type = sim%bc_charac2d_eta1)
       case ("SLL_PSM")
         advect_1d_x1 => new_PSM_1d_advector(&
           Nc_eta1+1, &
@@ -834,7 +864,8 @@ contains
           charac1d_x2, &
           Nc_eta2_bis+1, &
           eta_min = eta2_min_bis, &
-          eta_max = eta2_max_bis)
+          eta_max = eta2_max_bis, &
+          bc_type = sim%bc_charac2d_eta2)
       case ("SLL_PSM")
         advect_1d_x2 => new_PSM_1d_advector(&
           Nc_eta2+1, &
@@ -953,6 +984,7 @@ contains
     
      !poisson solver
     select case(poisson_solver)    
+#ifdef MUDPACK
       case ("SLL_MUDPACK_CURVILINEAR")    
         print *,'#poisson = MUDPACK_CURVILINEAR', mudpack_method
         sim%b11 = 1._f64
@@ -981,6 +1013,7 @@ contains
          sim%b22,&
          sim%c, &
          mudpack_curvilinear_case = mudpack_method)
+#endif
        case("SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER")
         print *,'#poisson = ELLIPTIC_FINITE_ELEMENT_SOLVER '
         sim%b11 = 1._f64
