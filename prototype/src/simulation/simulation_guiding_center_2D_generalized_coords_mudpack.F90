@@ -145,29 +145,29 @@ contains
     !here we do all the initialization
     !in future, we will use namelist file
 
-    nb_step = 500
+    nb_step = 600
     Nc_eta1 = 256
     Nc_eta2 = 256
     dt = 0.1_f64
     visu_step = 100
     
-!    initial_function_case = "SLL_KHP1"
-!    k_mode = 0.5_f64
-!    eps = 0.015_f64
-!    eta1_min = 0._f64
-!    eta1_max = 2._f64*sll_pi/k_mode
-!    eta2_min = 0._f64
-!    eta2_max = 2._f64*sll_pi
-    
-initial_function_case = "SLL_DIOCOTRON"
-    eta1_min = 1._f64
-    eta1_max = 10._f64
+    initial_function_case = "SLL_KHP1"
+    k_mode = 0.5_f64
+    eps = 0.015_f64
+    eta1_min = 0._f64
+    eta1_max = 2._f64*sll_pi/k_mode
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
-    r_minus = 4._f64
-    r_plus = 5._f64
-    k_mode = 3
-    eps = 1.e-6_f64
+    
+   !initial_function_case = "SLL_DIOCOTRON"
+!    eta1_min = 1._f64
+!    eta1_max = 10._f64
+!    eta2_min = 0._f64
+!    eta2_max = 2._f64*sll_pi
+!    r_minus = 4._f64
+!    r_plus = 5._f64
+!    k_mode = 3
+!    eps = 1.e-6_f64
 
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
@@ -203,7 +203,7 @@ initial_function_case = "SLL_DIOCOTRON"
     
     !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
     !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
-    params_mesh = (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)
+    params_mesh = (/ 1.e-6_f64, 1.e-6_f64, eta1_max-eta1_min, eta2_max - eta2_min/)
     
     sim%mesh_2d => new_logical_mesh_2d( &
       Nc_eta1, &
@@ -224,28 +224,28 @@ initial_function_case = "SLL_DIOCOTRON"
 !       identity_jac22, &
 !       params_mesh   )  
        
-   sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_polar_transformation", &
-       sim%mesh_2d, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, &
-       params_mesh  )     
-
-! transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_collela_transformation", &
+!   sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_polar_transformation", &
 !       sim%mesh_2d, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22, &
-!       params_mesh  )  
-      
+!       polar_x1, &
+!       polar_x2, &
+!       polar_jac11, &
+!       polar_jac12, &
+!       polar_jac21, &
+!       polar_jac22, &
+!       params_mesh  )     
+
+ sim%transformation => new_coordinate_transformation_2d_analytic( &
+       "analytic_collela_transformation", &
+       sim%mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22, &
+       params_mesh  )  
+    
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
         f_interp2d => new_cubic_spline_2d_interpolator( &
@@ -255,7 +255,7 @@ initial_function_case = "SLL_DIOCOTRON"
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
@@ -263,7 +263,6 @@ initial_function_case = "SLL_DIOCOTRON"
         print *,'#in initialize_guiding_center_2d_curvilinear_mudpack'
         stop
     end select
-
 
 
 
@@ -276,7 +275,7 @@ initial_function_case = "SLL_DIOCOTRON"
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
@@ -285,18 +284,18 @@ initial_function_case = "SLL_DIOCOTRON"
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)  
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_HERMITE)
+          SLL_PERIODIC)
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_HERMITE)
+          SLL_PERIODIC)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -313,7 +312,7 @@ initial_function_case = "SLL_DIOCOTRON"
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
@@ -332,7 +331,7 @@ initial_function_case = "SLL_DIOCOTRON"
           eta1_max=eta1_max, &
           eta2_min=eta2_min, &
           eta2_max=eta2_max, &
-          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_1=SLL_PERIODIC, & !SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC)    
       case ("SLL_VERLET")      
         charac2d => new_verlet_2d_charac(&
@@ -342,7 +341,7 @@ initial_function_case = "SLL_DIOCOTRON"
           A2_interp2d, &
           A1_interp1d_x1, &
           A2_interp1d_x1, &
-          bc_type_1=SLL_SET_TO_LIMIT, &
+          bc_type_1=SLL_PERIODIC, & !SLL_SET_TO_LIMIT, &
           bc_type_2=SLL_PERIODIC, &
           eta1_min=eta1_min, &
           eta1_max=eta1_max, &
@@ -397,7 +396,7 @@ initial_function_case = "SLL_DIOCOTRON"
         stop
     end select
     
-    
+ 
     !time_loop
     select case(time_loop_case)
       case ("SLL_EULER")
@@ -417,7 +416,7 @@ initial_function_case = "SLL_DIOCOTRON"
     !poisson solver
      !poisson solver
     select case(poisson_case)    
-      case ("SLL_MUDPACK_CURVILINEAR")     
+      case ("SLL_MUDPACK_CURVILINEAR")   
         call initialize_poisson_curvilinear_mudpack(sim%poisson,&
          sim%transformation, &
          sim%b11,&
@@ -431,8 +430,8 @@ initial_function_case = "SLL_DIOCOTRON"
          eta2_min,&
          eta2_max,&
          Nc_eta2,&
-         SLL_DIRICHLET,& 
-         SLL_DIRICHLET,& 
+         SLL_PERIODIC,& 
+         SLL_PERIODIC,& 
          SLL_PERIODIC,& 
          SLL_PERIODIC)
       case default
@@ -523,7 +522,8 @@ initial_function_case = "SLL_DIOCOTRON"
     !call poisson_solve_cartesian(sim%poisson,f,phi)
     !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
     call solve_poisson_curvilinear_mudpack(sim%poisson,phi,f)
-    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
+    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d, &
+                                            sim%transformation,A1,A2,sim%phi_interp2d)  
      
     !print *,A1
     !print *,A2
@@ -546,7 +546,7 @@ initial_function_case = "SLL_DIOCOTRON"
       call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
-        call time_history_diagnostic_gc_cartesian2( &
+        call time_history_diagnostic_gc_cartesian( &
           diag_id, &    
           step-1, &
           dt, &
@@ -555,7 +555,7 @@ initial_function_case = "SLL_DIOCOTRON"
           phi, &
           A1, &
           A2)
-!          call time_history_diagnostic_gc_cartesian2( &
+!          call time_history_diagnostic_gc_polar( &
 !          diag_id, &    
 !          step-1, &
 !          dt, &
@@ -763,11 +763,18 @@ initial_function_case = "SLL_DIOCOTRON"
     l2 = sqrt(l2*delta_eta2)
     e  = e*delta_eta2
     
-    write(file_id,*) dt*real(step,f64),linf,l1,l2,mass,e   
+    write(file_id,*) &
+      dt*real(step,f64), &
+      linf, &
+      l1, &
+      l2, &
+      mass, &
+      e, &
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1)))   
     
   end subroutine time_history_diagnostic_gc_cartesian
 
-  subroutine time_history_diagnostic_gc_cartesian2( &
+  subroutine time_history_diagnostic_gc_polar( &
     file_id, &    
     step, &
     dt, &
@@ -874,13 +881,12 @@ initial_function_case = "SLL_DIOCOTRON"
     l1, &
     l2, &
     e, &
-    maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
     time_mode(1:8)!,mode_slope
 
     call fft_delete_plan(pfwd)
 
     
-  end subroutine time_history_diagnostic_gc_cartesian2
+  end subroutine time_history_diagnostic_gc_polar
 
 #ifndef NOHDF5
 !*********************

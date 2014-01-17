@@ -708,7 +708,8 @@ do j=1,ny
                    
    a21= b21(i,j)*(jac_m(1,2)*jac_m(1,2)+jac_m(2,2)*jac_m(2,2))- &
                    & b22(i,j)*(jac_m(2,1)*jac_m(2,2)+jac_m(1,1)*jac_m(1,2))  
-   cxy_array(i,j)= (a12+a21)/transf%jacobian(eta1,eta2)                              
+   cxy_array(i,j)= (a12+a21)/transf%jacobian(eta1,eta2) 
+  !write(100,*) eta1,eta2, cxy_array(i,j), transf%jacobian(eta1,eta2)                           
  enddo
 enddo 
 end subroutine coefxy_array
