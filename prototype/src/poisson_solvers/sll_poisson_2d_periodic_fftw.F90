@@ -15,10 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
-!> @brief  Implements the Poisson solver in 2D with periodic boundary conditions
+!> @brief  
+!> Implements the Poisson solver in 2D with periodic boundary conditions
+!> @details
 !> This module uses fftw library
-module sll_poisson_2d_periodic
+module sll_poisson_2d_periodic_fftw
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -30,12 +31,10 @@ use fftw3
 
 implicit none
 
-
 !> Create a new poisson solver on 1d mesh
 interface new
   module procedure new_poisson_2d_periodic_fftw
 end interface
-
 
 !> Initialize the Poisson solver using fftw library
 interface initialize
@@ -50,12 +49,12 @@ end interface
 
 !> Delete the Poisson solver object
 interface delete
-   module procedure free_poisson_2d_periodic_fftw
+   module procedure delete_poisson_2d_periodic_fftw
 end interface
 
 !> derived type to solve the Poisson equation on 2d regular cartesian mesh 
 !> with periodic boundary conditions on both sides
-type, public :: poisson_2d_periodic
+type, public :: poisson_2d_periodic_fftw
 
    sll_real64, dimension(:,:), pointer :: kx       !< wave number in x
    sll_real64, dimension(:,:), pointer :: ky       !< wave number in y
@@ -74,7 +73,7 @@ type, public :: poisson_2d_periodic
    fftw_plan                           :: p_ext    !< C array pointer
    fftw_plan                           :: p_eyt    !< C array pointer
 
-end type poisson_2d_periodic
+end type poisson_2d_periodic_fftw
 
 public initialize, new, solve, delete
 
@@ -92,7 +91,7 @@ contains
     nc_y, &
     error) &
     result(this)
-   type(poisson_2d_periodic),pointer :: this   !< self object
+   type(poisson_2d_periodic_fftw),pointer :: this   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -116,7 +115,7 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
                       x_min, x_max, nc_x, &
                       y_min, y_max, nc_y, error )
 
-   type(poisson_2d_periodic) :: self   !< Self data object
+   type(poisson_2d_periodic_fftw) :: self   !< Self data object
    sll_real64, intent(in)    :: x_min  !< left corner direction x
    sll_real64, intent(in)    :: x_max  !< right corner direction x
    sll_real64, intent(in)    :: y_min  !< left corner direction y
@@ -200,7 +199,7 @@ end subroutine initialize_poisson_2d_periodic_fftw
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftw(self, phi, rho)
 
-   type(poisson_2d_periodic)   :: self !< self data object
+   type(poisson_2d_periodic_fftw)   :: self !< self data object
    sll_real64, dimension(:,:), intent(in) :: rho  !< charge density
    sll_real64, dimension(:,:), intent(out)   :: phi  !< electric potential
    sll_int32                                 :: nc_x !< number of cells direction x
@@ -231,7 +230,7 @@ end subroutine solve_potential_poisson_2d_periodic_fftw
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 
-   type(poisson_2d_periodic),intent(inout)   :: self !< Self data object
+   type(poisson_2d_periodic_fftw),intent(inout)   :: self !< Self data object
    sll_real64, dimension(:,:), intent(in) :: rho  !< Charge density
    sll_real64, dimension(:,:), intent(out)   :: e_x  !< Electric field x
    sll_real64, dimension(:,:), intent(out)   :: e_y  !< Electric field y
@@ -277,22 +276,23 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
 end subroutine solve_e_fields_poisson_2d_periodic_fftw
 
 !> Delete the Poisson object
-subroutine free_poisson_2d_periodic_fftw(self)
-type(poisson_2d_periodic) :: self
+subroutine delete_poisson_2d_periodic_fftw(self)
+
+   type(poisson_2d_periodic_fftw) :: self
 
 #ifdef FFTW_F2003
-call fftw_free(self%p_rht)
-if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
-if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
+   call fftw_free(self%p_rht)
+   if (c_associated(self%p_ext)) call fftw_free(self%p_ext)
+   if (c_associated(self%p_eyt)) call fftw_free(self%p_eyt)
 #endif
 
-call fftw_destroy_plan(self%fw)
-call fftw_destroy_plan(self%bw)
+   call fftw_destroy_plan(self%fw)
+   call fftw_destroy_plan(self%bw)
 
-!if (nthreads > 1) then
-   !call dfftw_cleanup_threads(error)
-!end if
+   !if (nthreads > 1) then
+      !call dfftw_cleanup_threads(error)
+   !end if
 
-end subroutine
+end subroutine delete_poisson_2d_periodic_fftw
 
-end module sll_poisson_2D_periodic
+end module sll_poisson_2D_periodic_fftw
