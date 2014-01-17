@@ -78,7 +78,7 @@ Details about principle parameters
 | DISABLED_MPI_MODULE    | ON/OFF         | When set to ON disable all reference |
 |                        |                | to mpi and run SeLaLib in sequential.|
 +------------------------+----------------+--------------------------------------+
-|  FFT_DEFAULT_LIBRARY   | SLLFFT         | By default SLLFFT. SeLaLib provide   |
+|  FFT_LIB               | SLLFFT         | By default SLLFFT. SeLaLib provide   |
 |                        | FFTPACK        | a fast fourier transform module      |
 |                        | FFTW           | around 3 libraries, fftpack, fftw and|
 |                        |                | his own implementation (see XXX)     |

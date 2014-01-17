@@ -1,10 +1,8 @@
-!> @author
-!> Pierre Navaro
 !> @brief
 !> Implements the Poisson solver in 2D with periodic boundary conditions
 !> @details
 !> This module uses FFTPACK library
-module sll_poisson_2d_periodic
+module sll_poisson_2d_periodic_fftpack
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -31,15 +29,15 @@ end type fftclass
 
 !> Object with data to solve Poisson equation on 2d domain with
 !> periodic boundary conditions
-type, public :: poisson_2d_periodic
+type, public :: poisson_2d_periodic_fftpack
   sll_int32   :: nc_x  !< number of cells direction x
   sll_int32   :: nc_y  !< number of cells direction y
-  sll_real64  :: dx    !< step size direction x
-  sll_real64  :: dy    !< step size direction y
   sll_real64  :: x_min !< left corner direction x
   sll_real64  :: x_max !< right corner direction x
   sll_real64  :: y_min !< left corner direction y
   sll_real64  :: y_max !< right corner direction y
+  sll_real64  :: dx    !< step size direction x
+  sll_real64  :: dy    !< step size direction y
   sll_comp64, dimension(:,:), pointer :: rhst !< rhs fft
   sll_comp64, dimension(:,:), pointer :: ext  !< x electric field fft
   sll_comp64, dimension(:,:), pointer :: eyt  !< y electric field fft
@@ -48,7 +46,7 @@ type, public :: poisson_2d_periodic
   sll_real64, dimension(:,:), pointer :: k2   !< \f$ k_x^2+k_y^2 \f$
   type(fftclass)                      :: fftx !< fft plan in direction x
   type(fftclass)                      :: ffty !< fft plan in direction y
-end type poisson_2d_periodic
+end type poisson_2d_periodic_fftpack
 
 !> Create a new poisson solver on 1d mesh
 interface new
@@ -71,7 +69,6 @@ end interface
    !module procedure free_poisson_2d_periodic_fftpack
 !end interface
 
-
 interface fft
    module procedure doubfft, doubcfft
 end interface
@@ -83,10 +80,8 @@ public :: initialize, new, solve
 
 contains
 
-
-
-
   !> Create a new solver
+  !> @return
   function new_poisson_2d_periodic_fftpack(&
     x_min, &
     x_max, &
@@ -96,7 +91,8 @@ contains
     nc_y, &
     error) &
     result(this)
-   type(poisson_2d_periodic),pointer :: this   !< self object
+
+   type(poisson_2d_periodic_fftpack),pointer :: this   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -118,7 +114,7 @@ contains
 subroutine initialize_poisson_2d_periodic_fftpack( &
            this, x_min, x_max, nc_x, y_min, y_max, nc_y, error )
 
-   type(poisson_2d_periodic) :: this   !< self object
+   type(poisson_2d_periodic_fftpack) :: this   !< self object
    sll_int32,  intent(in)    :: nc_x   !< number of cells direction x
    sll_int32,  intent(in)    :: nc_y   !< number of cells direction y
    sll_real64, intent(in)    :: x_min  !< left corner direction x
@@ -153,7 +149,7 @@ end subroutine initialize_poisson_2d_periodic_fftpack
 !> return potential.
 subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
 
-   type(poisson_2d_periodic)               :: this !< self object
+   type(poisson_2d_periodic_fftpack)       :: this !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs  !< charge density
    sll_real64, dimension(:,:), intent(out) :: sol  !< electric potential
    sll_int32                               :: nc_x !< number of cells direction x
@@ -197,7 +193,7 @@ end subroutine solve_potential_poisson_2d_periodic_fftpack
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,nrj)
 
-   type(poisson_2d_periodic)               :: this    !< self object
+   type(poisson_2d_periodic_fftpack)       :: this    !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs     !< charge density
    sll_real64, dimension(:,:), intent(out) :: field_x !< electric field direction x
    sll_real64, dimension(:,:), intent(out) :: field_y !< electric field direction y
@@ -265,7 +261,7 @@ end subroutine solve_e_fields_poisson_2d_periodic_fftpack
 
 subroutine wave_number_vectors(this)
 
-   type(poisson_2d_periodic) :: this
+   type(poisson_2d_periodic_fftpack) :: this
    sll_int32  :: ik, jk
    sll_int32  :: nc_x, nc_y
    sll_real64 :: kx, ky, kx0, ky0
@@ -410,4 +406,4 @@ subroutine doubcfftinv(this,array)
 
 end subroutine doubcfftinv
 
-end module sll_poisson_2D_periodic
+end module sll_poisson_2D_periodic_fftpack

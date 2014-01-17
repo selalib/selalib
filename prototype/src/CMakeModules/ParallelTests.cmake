@@ -55,7 +55,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 
 ######
 #
-      IF(FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
+      IF(FFT_LIB MATCHES "SLLFFT")
 
       ADD_MPI_TEST(poisson_3d_periodic_par 
                    test_poisson_3d_periodic_par ${PROCS} ${ARGS})
@@ -111,7 +111,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(dk4d_sim_cartesian PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    
-      IF (FFT_DEFAULT_LIBRARY MATCHES "SLLFFT")
+      IF (FFT_LIB MATCHES "SLLFFT")
       SET(PROCS 4)
  #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
       ADD_MPI_TEST(vp_4d_eulerian test_4d_vp_eulerian_cartesian_finite_volume ${PROCS} ${ARGS})

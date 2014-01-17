@@ -14,7 +14,7 @@ module sll_module_poisson_1d_base
   end type sll_poisson_1d_base
 
   abstract interface
-    ! solves -\Delta phi = rho in 1d
+    !> solves \f[ -\Delta phi = rho \f] in 1d 
     subroutine signature_compute_phi_from_rho_1d( poisson, phi, rho )
       use sll_working_precision
       import sll_poisson_1d_base      

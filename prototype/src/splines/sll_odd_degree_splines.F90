@@ -167,10 +167,12 @@ contains
 
 
 
+  !> \f[ 
   !> s(x_i) = f(x_i) 
   !       <=>
   !> c_{i-degree}*b_{i-degree} + ... + c_i*b_i = f(x_i), i=-degree..n
   !> c_j=0 if j<i-degree or j>n  
+  !> \f]
   function odd_degree_splines_interpolator_uniform_value(x, plan) result(s)
 
     sll_real64                                     :: x, xmin, xmax

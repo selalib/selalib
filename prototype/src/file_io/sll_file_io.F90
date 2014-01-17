@@ -23,7 +23,7 @@
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include "sll_file_io.h" \endcode
-!> - Link with   <code>sll_file_io</code> library
+!> - Link with   <code>-lsll_file_io</code> library
 !>
 !> <b> Examples </b>
 !> - Plot a 2D field described on a cartesian mesh, axis are perpendicular and spacing is constant.
