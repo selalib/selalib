@@ -1,7 +1,7 @@
 IF(FFTW_FOUND AND FFTW_ENABLED)
 
    ADD_LIBRARY(sll_maxwell_solvers STATIC ../fft/fftw3.F90
-                                          sll_maxwell_solvers.F90
+                                          sll_maxwell_solvers_base.F90
                                           sll_maxwell_2d_fdtd.F90
                                           sll_maxwell_2d_pstd.F90
                                           sll_maxwell_2d_diga.F90

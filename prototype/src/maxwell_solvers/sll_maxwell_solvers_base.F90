@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -15,20 +13,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro 
-!> @namespace sll_maxwell_solvers
-!> @brief 
-!> Library to solve Maxwell equation in 2D and 3D
-!> @details
-!> Solvers available:
-!> - sll_maxwell_2d_fdtd
-!> - sll_maxwell_3d_fdtd
-!> - sll_maxwell_2d_pstd
-!> - sll_maxwell_3d_pstd
-!> - sll_maxwell_2d_periodic_cartesian_par
-!>
-!> This module contains all Maxwell solvers
-module sll_maxwell_solvers
+!> This module contains common subroutines for  Maxwell solvers
+module sll_maxwell_solvers_base
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -88,4 +74,4 @@ close(90)
 
 end subroutine plot_two_fields
 
-end module sll_maxwell_solvers
+end module sll_maxwell_solvers_base
