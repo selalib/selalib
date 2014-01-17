@@ -15,10 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
 !> @brief
-!> Implements the functions to write data file plotable by GNUplot
-!> for parallel simulations
+!> parallel version of sll_gnuplot
 #define MPI_MASTER 0
 
 module sll_gnuplot_parallel

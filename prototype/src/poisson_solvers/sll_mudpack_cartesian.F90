@@ -1,4 +1,7 @@
-!> Module to use MUDPACK library to solve Poisson equation on cartesian mesh
+!> @brief
+!> Module to use MUDPACK library to solve Poisson equation 
+!> @details We consider a regular cartesian mesh
+!>
 !> MUDPACK library is available on this website
 !> http://www2.cisl.ucar.edu/resources/legacy/mudpack
 module sll_mudpack_cartesian

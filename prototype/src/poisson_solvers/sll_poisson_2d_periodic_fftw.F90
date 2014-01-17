@@ -82,6 +82,7 @@ contains
 
 
   !> Create a new solver
+  !> @return
   function new_poisson_2d_periodic_fftw(&
     x_min, &
     x_max, &
