@@ -1,9 +1,6 @@
-!> \brief  
-!> The splines module provides capabilities for 1D data interpolation with cubic B-splines
-!> on non uniform mesh and different boundary conditions
-!> (at the time of this writing: periodic). The data to be interpolated is represented by a 
-!> simple array.
-!> contact: mehrenbe@math.unistra.fr for this module
+!> @brief  
+!> The splines module provides capabilities for 1D data interpolation 
+!> with cubic B-splines on non uniform mesh 
 !> 
 module cubic_non_uniform_splines
 #include "sll_working_precision.h"
@@ -14,20 +11,22 @@ module cubic_non_uniform_splines
 
   implicit none
 
+  !> Spline object
   type cubic_nonunif_spline_1D
-    sll_int32                         :: n_cells ! number of cells
-    sll_real64, dimension(:), pointer :: node_positions     ! the non uniform mesh normalized on (0,1)
-    sll_real64, dimension(:), pointer :: buf      ! memory buffer
-    sll_int32                         :: size_buf  ! size of the buffer 
-    sll_int32, dimension(:), pointer ::  ibuf      ! memory buffer of integers
-    sll_int32                         :: size_ibuf  ! size of the buffer of integers 
-    sll_real64, dimension(:), pointer :: coeffs   ! the spline coefficients
-    sll_real64                        :: xmin
-    sll_real64                        :: xmax
-    sll_int32                         :: bc_type  ! periodic or hermite 
-    LOGICAL                           :: is_setup ! check that splines are setup
-    sll_real64                        :: slope_L  ! left slope, for Hermite
-    sll_real64                        :: slope_R  ! right slope, for Hermite
+    sll_int32                         :: n_cells        !< number of cells
+    sll_real64, dimension(:), pointer :: node_positions !< the non uniform 
+                                                        !< mesh normalized on (0,1)
+    sll_real64, dimension(:), pointer :: buf            !< memory buffer
+    sll_int32                         :: size_buf       !< size of the buffer 
+    sll_int32, dimension(:), pointer ::  ibuf           !< memory buffer of integers
+    sll_int32                         :: size_ibuf      !< integers buffer size
+    sll_real64, dimension(:), pointer :: coeffs         !< spline coefficients
+    sll_real64                        :: xmin           !< left corner
+    sll_real64                        :: xmax           !< right corner
+    sll_int32                         :: bc_type        !< periodic or hermite 
+    LOGICAL                           :: is_setup       !< check splines setup
+    sll_real64                        :: slope_L        !< left slope, for Hermite
+    sll_real64                        :: slope_R        !< right slope, for Hermite
   end type cubic_nonunif_spline_1D
 
   

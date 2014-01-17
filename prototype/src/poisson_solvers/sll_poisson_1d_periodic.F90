@@ -56,6 +56,7 @@ module sll_poisson_1d_periodic
 contains
 
   !> Create a new solver
+  !> @return
   function new_poisson_1d_periodic(eta1_min,eta1_max,nc_eta1,error) &
      result(this)
      type(poisson_1d_periodic),pointer :: this     !< Solver data structure
