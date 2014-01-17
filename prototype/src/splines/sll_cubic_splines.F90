@@ -2609,6 +2609,30 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     SLL_DEALLOCATE( spline%d2, ierr )
     SLL_DEALLOCATE( spline%coeffs, ierr )
     spline%data => null()
+    if( associated(spline%x1_min_slopes) ) then
+       SLL_DEALLOCATE( spline%x1_min_slopes, ierr )
+    end if
+    if( associated(spline%x1_max_slopes) ) then
+       SLL_DEALLOCATE( spline%x1_max_slopes, ierr )
+    end if
+    if( associated(spline%x2_min_slopes) ) then
+       SLL_DEALLOCATE( spline%x2_min_slopes, ierr )
+    end if
+    if( associated(spline%x2_max_slopes) ) then
+       SLL_DEALLOCATE( spline%x2_max_slopes, ierr )
+    end if
+    if( associated(spline%x1_min_slopes_coeffs) ) then
+       SLL_DEALLOCATE( spline%x1_min_slopes_coeffs, ierr )
+    end if
+    if( associated(spline%x1_max_slopes_coeffs) ) then
+       SLL_DEALLOCATE( spline%x1_max_slopes_coeffs, ierr )
+    end if
+    if( associated(spline%x2_min_slopes_coeffs) ) then
+       SLL_DEALLOCATE( spline%x2_min_slopes_coeffs, ierr )
+    end if
+    if( associated(spline%x2_max_slopes_coeffs) ) then
+       SLL_DEALLOCATE( spline%x2_max_slopes_coeffs, ierr )
+    end if
     SLL_DEALLOCATE( spline, ierr )
   end subroutine delete_cubic_spline_2D
 
