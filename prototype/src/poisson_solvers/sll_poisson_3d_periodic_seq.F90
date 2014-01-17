@@ -90,11 +90,6 @@ contains
     logical, save                                :: flag = .true.
 
     ! Checking input arguments consistency
-    if ( rho(1,1,1) /= 0.d0 ) then     
-       print *, '3D periodic poisson cannot be solved without rho(1,1,1)=0'
-       print *, 'Exiting...'
-       stop
-    endif
     if (flag) then
        call verify_argument_sizes_seq(plan, rho, phi)
        flag = .false.
@@ -153,8 +148,9 @@ contains
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
                 plan%hat_phi(i,j,k) = 0.d0
              else
-                plan%hat_phi(i,j,k) = plan%hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
-                                                        + (ind_y/Ly)**2+(ind_z/Lz)**2))
+                plan%hat_phi(i,j,k) = &
+                    plan%hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
+                    + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
        enddo
@@ -189,7 +185,7 @@ contains
   !> Delete the 3d poisson solver object
   subroutine delete_poisson_3d_periodic_plan_seq(plan)
 
-    type (poisson_3d_periodic_plan_seq), pointer :: plan !< Structure for Poisson solver
+    type(poisson_3d_periodic_plan_seq), pointer :: plan !< Poisson solver object
     sll_int32                                    :: ierr
 
     ! Fixme: some error checking, whether the poisson pointer is associated
