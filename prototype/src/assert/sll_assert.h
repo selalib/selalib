@@ -36,6 +36,22 @@
 # define SLL_ASSERT(x) 
 #endif
 
+
+   ! The intent of the SLL_PRIV macro is to enforce the interface 'walls' for
+   ! a given type, preventing unintended access to the given type internals.
+   ! However, while debugging it may also be desired to permit direct access.
+   ! the SLL_PRIV macro serves as a switchable 'private' declaration. The
+   ! tricky part is that it should be used always as the last attribute in a
+   ! declaration, since if it were to follow a comma, a compiler would not 
+   ! react happily.
+#ifdef DEBUG
+# define SLL_PRIV
+#else
+# define SLL_PRIV ,private
+#endif
+
+
+
 use sll_assert
 
 

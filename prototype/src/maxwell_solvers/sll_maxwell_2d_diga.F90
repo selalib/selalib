@@ -1,5 +1,5 @@
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
-!> * Gauss Lobatto
+!> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
 module sll_maxwell_2d_diga
 #include "sll_maxwell_solvers_macros.h"
@@ -33,7 +33,6 @@ interface operator(+)
   module procedure W_vector_addition
 end interface operator(+)
 
-
 type :: edge_type
    sll_real64                            :: length 
    sll_real64, dimension(:,:), pointer   :: n
@@ -63,10 +62,12 @@ type, public :: maxwell_2d_diga
  type(cell_type), dimension(:,:), pointer                  :: cell !< mesh cells
 end type maxwell_2d_diga
 
+!> Create a Maxwell solver object using Discontinuous Galerkine 
 interface initialize
    module procedure initialize_maxwell_2d_diga
 end interface initialize
 
+!> Solve Maxell system
 interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
