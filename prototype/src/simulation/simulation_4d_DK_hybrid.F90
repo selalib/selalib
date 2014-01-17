@@ -1098,6 +1098,8 @@ contains
     SLL_DEALLOCATE(A12,ierr)
     SLL_DEALLOCATE(A21,ierr)
     SLL_DEALLOCATE(A22,ierr)
+    SLL_DEALLOCATE(B1,ierr)
+    SLL_DEALLOCATE(B2,ierr)
     SLL_DEALLOCATE(C,ierr)
   end subroutine initialize_QN_DK
 

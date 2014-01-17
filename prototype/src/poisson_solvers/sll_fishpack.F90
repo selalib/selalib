@@ -1,3 +1,8 @@
+!> @brief 
+!> Interface module to use fishpack libarary
+!> @details
+!> You have to download and install fishpack 
+!> http://www2.cisl.ucar.edu/resources/legacy/fishpack
 module sll_fishpack
 
 #include "sll_working_precision.h"

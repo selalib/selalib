@@ -9,6 +9,8 @@ module load cmake/2.8.7
 module load hdf5/gcc47/1.8.8 
 module load fftw/gcc47/3.3  
 module load openmpi/gcc47/1.6.3-multiplethread
+export PASTIX_ROOT=/softs/cemracs/pastix/gcc
+export SCOTCH_ROOT=/softs/cemracs/scotch/gcc
 cmake ${HOME}/selalib/prototype/src \
       -DOPTIONS_FILE=${HOME}/selalib/cmake/ccamu.cmake \
       -DHDF5_PARALLEL_ENABLED=ON \

@@ -15,8 +15,10 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> Module to solve Poisson equation on one dimensional mesh using FFT
-!> transform.
+!> @brief
+!> Solve Poisson equation 1D using Pastix solver
+!> @details
+!> More about Pastix http://pastix.gforge.inria.fr
 module sll_poisson_1d_pastix
 
 #include "sll_working_precision.h"
