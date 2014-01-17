@@ -1,6 +1,7 @@
 !>
-!> Poisson solver in polar coordinates using mudpack library
-!>
+!> @brief
+!> Poisson solver in general coordinates using mudpack library
+!> @details
 !> red/black gauss-seidel point relaxation is used along with the
 !> the default multigrid options.  first mud2cr is called to generate
 !> a second-order approximation.  then mud24cr is called to improve
