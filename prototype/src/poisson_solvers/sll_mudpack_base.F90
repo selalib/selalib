@@ -1,4 +1,6 @@
+!> @brief
 !> Base module to provide interface to mudpack library
+!> @details
 !> This library contains multigrid solvers for PDE equations
 module sll_mudpack_base
 
