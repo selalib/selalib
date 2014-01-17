@@ -3,6 +3,7 @@ SET(POISSON_LIBS sll_fft
                  sll_file_io
                  sll_utilities
                  sll_timer
+		 sll_assertion
                  dfftpack)
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
@@ -58,6 +59,7 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 IF(FFTW_ENABLED)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
+                                             sll_assertion
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
