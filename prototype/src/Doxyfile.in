@@ -736,7 +736,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
 @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/reduction \
-@CMAKE_CURRENT_SOURCE_DIR@/remap \
 @CMAKE_CURRENT_SOURCE_DIR@/simulation \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse \
 @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
