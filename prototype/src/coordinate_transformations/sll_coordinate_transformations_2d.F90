@@ -762,6 +762,12 @@ contains
        print*,' Warning, you have already written the mesh '
     end if
     transf%written = .true.
+    if( associated(x1mesh) ) then
+       SLL_DEALLOCATE(x1mesh, ierr)
+    end if
+    if( associated(x2mesh) ) then
+       SLL_DEALLOCATE(x2mesh, ierr)
+    end if
   end subroutine
 
   subroutine read_from_file_2d_analytic( transf, filename )
