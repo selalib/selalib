@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -14,8 +12,6 @@
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
 !**************************************************************
-!> @author
-!> Pierre Navaro 
 !> @brief
 !> Implements the Maxwell solver in 2D with FDTD method
 !>

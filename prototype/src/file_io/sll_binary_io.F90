@@ -15,14 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
-!> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write binary file to store heavy data
 !> @details
+!> This functions can be used only for sequential application.
 !> one file = one dataset \n
 !> If HDF5 is not installed you can use this module. \n
 !> This is controlled by the variable <code>HDF5_ENABLE</code>.
+!>
 module sll_binary_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"

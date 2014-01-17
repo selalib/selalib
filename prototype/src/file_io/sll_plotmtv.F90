@@ -15,9 +15,12 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
 !> @brief
-!> Implements the functions to write data file plotable by GNUplot
+!> Implements the functions to write data file plotable by Plotmtv
+!> @details
+!> Plotmtv website
+!>
+!> http://www.phy.ornl.gov/csep/CSEP/CORNELL/TUTORIAL/PLOTMTV/OVERVIEW.html
 module sll_plotmtv
 #include "sll_working_precision.h"
 #include "sll_assert.h"
