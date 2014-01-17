@@ -421,6 +421,8 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%values_jacobian,ierr)
     SLL_DEALLOCATE(es%values_splines_gauss1,ierr)
     SLL_DEALLOCATE(es%values_splines_gauss2,ierr)
+    SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
+    SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
   end subroutine delete_elliptic
 
 
@@ -457,10 +459,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: M_b_vect_loc
     sll_real64, dimension(:,:), allocatable :: S_b1_loc
     sll_real64, dimension(:,:), allocatable :: S_b2_loc
-    sll_real64, dimension(:,:), allocatable :: full_Matrix
-    ! sll_real64, dimension(:), pointer  :: Masse_tot
-    ! sll_real64, dimension(:), pointer  :: Stiff_tot
-    !sll_real64, dimension(:,:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Stiff_loc
     !sll_int32, dimension(:), allocatable :: ipvt
@@ -498,18 +496,10 @@ contains ! *******************************************************************
     !SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
-    
-    !   Allocation full_Matrix 
-    SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,es%total_num_splines_eta2*es%total_num_splines_eta1),ierr1)
-   ! SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-    ! SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-    full_Matrix(:,:) = 0.0_f64
-   ! Masse_tot(:) = 0.0_f64
-    ! Stiff_tot(:) = 0.0_f64
+
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
     
-    full_Matrix(:,:) = 0.0_f64
     !call set_time_mark(t0)
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -561,7 +551,6 @@ contains ! *******************************************************************
                M_b_vect_loc, &
                S_b1_loc, &
                S_b2_loc, &
-               full_Matrix,&
                es%masse,&
                es%stiff)
           !print*, i,j
@@ -584,7 +573,6 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
-    SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
   end subroutine factorize_mat_es
   
   
@@ -639,7 +627,7 @@ contains ! *******************************************************************
     !     int_rho = 0.0_f64
     !  end if
 
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
     ig2 = 0 
@@ -769,16 +757,16 @@ contains ! *******************************************************************
        end do
        
     end select
-    time = sll_time_elapsed_since(t0)
+   ! time = sll_time_elapsed_since(t0)
     
-    print*, 'time to construct the rho', time
+   ! print*, 'time to construct the rho', time
     
     if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
          .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
        
        rho_at_gauss = rho_at_gauss - int_rho/int_jac
     end if
-    call sll_set_time_mark(t0)
+   ! call sll_set_time_mark(t0)
     
     ! loop over domain cells build local matrices M_c_loc 
     do j=1,es%num_cells2
@@ -815,7 +803,7 @@ contains ! *******************************************************************
        end do
     end do
     
-    time = sll_time_elapsed_since(t0)
+   ! time = sll_time_elapsed_since(t0)
     
     ! print*, 'time to construct the matrix', time 
     
@@ -829,6 +817,7 @@ contains ! *******************************************************************
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
+    SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
   
   ! This is based on the assumption that all the input fields have the same
@@ -1374,7 +1363,6 @@ contains ! *******************************************************************
        M_b_vect_loc, &
        S_b1_loc, &
        S_b2_loc, &
-       full_Matrix,&
        Masse_tot,&
        Stiff_tot)
     
@@ -1392,9 +1380,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: S_b1_loc
     sll_real64, dimension(:,:), intent(in) :: S_b2_loc
     
-    !  Correspond to the full Matrix of linear system 
-    !  It is not necessary to keep it  
-    sll_real64, dimension(:,:), intent(inout) :: full_Matrix
     sll_real64, dimension(:), intent(in) :: Masse_loc
     sll_real64, dimension(:), intent(in) :: Stiff_loc
     sll_real64, dimension(:), intent(inout) :: Masse_tot
@@ -1493,15 +1478,6 @@ contains ! *******************************************************************
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
                 
-!!$                full_Matrix(x,y) = &
-!!$                     full_Matrix(x,y) + &
-!!$                     M_c_loc(b, bprime) - &
-!!$                     K_a11_loc(b, bprime) - &
-!!$                     K_a12_loc(b, bprime) - &
-!!$                     K_a21_loc(b, bprime) - &
-!!$                     K_a22_loc(b, bprime)
-                !print*, 'elt', full_Matrix(x,y)
-                ! elt_masse = Masse_loc(b,bprime)
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
                    ! call add_MVal(csr_masse,elt_masse,li_A,li_Aprime)
