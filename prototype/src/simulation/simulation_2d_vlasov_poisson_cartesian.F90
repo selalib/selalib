@@ -802,9 +802,6 @@ contains
     remap_plan_x1_x2 => NEW_REMAP_PLAN(layout_x1, layout_x2, f_x1)
     remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
     
-    remap_plan_x2_x1%is_uniform = .false.
-    remap_plan_x1_x2%is_uniform = .false.
-    
     !      print *,'hello',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
     !      call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
     !      print *,'hello2',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)

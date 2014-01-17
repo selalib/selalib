@@ -1550,7 +1550,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
             'did not recognize given boundary conditions.'
        STOP
     end select
-    ! Reminder: Fortran arrays are column-major ordered...
     ! Note: The indexing of the coefficients array includes the end-
     ! points 0, num_points, num_points+1, num_points+2. These are meant to 
     ! store the boundary condition-specific data. The 'periodic' BC does
@@ -1660,13 +1659,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! in memory.
     do i=1,npx1 
        datap  => data(i,1:npx2)
-       ! Intentionally, we make coeffs point to the index 1 of the coefficients
-       ! array. coeffs(0) is still a valid call, which happens inside
-       ! compute_spline_1D_periodic_aux(). This is an ugly trick and
-       ! this demonstrates that the _aux() function is broken. (We need 
-       ! knowledge of its internals to use it properly). This should be 
-       ! fixed.
-       coeffs    => spline%coeffs(i,0:npx2+2)
+       coeffs => spline%coeffs(i,0:npx2+2)
        call compute_spline_1D_periodic_aux( datap, npx2, d2, coeffs )
     end do
     ! build splines along the x1 direction (the Hermite direction). 
@@ -1679,33 +1672,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
 
     ! First, compute the spline coefficients along the lines (:,0) and
     ! (:,npx2+1)
-#if 0
-    datap => spline%coeffs(1:npx1,0)
-    coeffs => spline%coeffs(0:npx1+2,0)
-    min_slope = spline%x1_min_slopes(npx2-1)
-    max_slope = spline%x1_max_slopes(npx2-1)
-    call compute_spline_1D_hermite_aux( &
-         datap, &
-         npx1, &
-         spline%d1, &
-         min_slope, &  
-         max_slope,       &
-         spline%x1_delta, &
-         coeffs )
-
-    datap => spline%coeffs(1:npx1,npx2+1)
-    coeffs => spline%coeffs(0:npx1+2,npx2+1)
-    min_slope = spline%x1_min_slopes(2)
-    max_slope = spline%x1_max_slopes(2)
-    call compute_spline_1D_hermite_aux( &
-         datap, &
-         npx1, &
-         spline%d1, &
-         min_slope, &  
-         max_slope,       &
-         spline%x1_delta, &
-         coeffs )
-#endif
     r_x1_delta = 1.0_f64/spline%x1_delta
     if( spline%compute_slopes_x1_min .eqv. .true. ) then
        ! compute default value for the derivative at the first point based 
@@ -1717,10 +1683,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                                          3.0_f64*data(3,j) + &
                                (4.0_f64/3.0_f64)*data(4,j) - &
                                         0.25_f64*data(5,j) )
-! Earlier version (delete when happy with substitute):
-!!$          r_x1_delta*(-1.5_f64*data(1,j) + &
-!!$               2.0_f64*data(2,j) - &
-!!$               0.5_f64*data(3,j) )
        end do
     end if
     if( spline%compute_slopes_x1_max .eqv. .true. ) then
@@ -1732,10 +1694,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                              3.0_f64*data(npx1-2,j) - &
                              4.0_f64*data(npx1-1,j) + &
                  (25.0_f64/12.0_f64)*data(npx1,j) )
-!!$! Previous estimate:
-!!$          r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
-!!$               2.0_f64*data(npx1-1,j) + &
-!!$               1.5_f64*data(npx1,j) )
        end do
     end if
     ! At this point, the values of the slopes are available because either
@@ -1825,11 +1783,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                3.0_f64*data(i,3) + &
                (4.0_f64/3.0_f64)*data(i,4) - &
                0.25_f64*data(i,5))
-
-!!$          ! previous estimate:
-!!$          r_x2_delta*(-1.5_f64*data(i,1) + &
-!!$               2.0_f64*data(i,2) - &
-!!$               0.5_f64*data(i,3) )
        end do
     end if
     if( spline%compute_slopes_x2_max .eqv. .true. ) then
@@ -1842,11 +1795,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                              3.0_f64*data(i,npx2-2) - &
                              4.0_f64*data(i,npx2-1) + &
                  (25.0_f64/12.0_f64)*data(i,npx2) )
-
-!!$          ! previous estimate (delete eventually)
-!!$          r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
-!!$               2.0_f64*data(i,npx2-1) + &
-!!$               1.5_f64*data(i,npx2) )
        end do
     end if
 
@@ -1932,11 +1880,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                                         3.0_f64*data(3,j) + &
                               (4.0_f64/3.0_f64)*data(4,j) - &
                                        0.25_f64*data(5,j))
-
-!!$          ! previous estimate:
-!!$          r_x1_delta*(-1.5_f64*data(1,j) + &
-!!$               2.0_f64*data(2,j) - &
-!!$               0.5_f64*data(3,j) )
        end do
     end if
     if( spline%compute_slopes_x1_max .eqv. .true. ) then
@@ -1949,11 +1892,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                               3.0_f64*data(npx1-2,j) - &
                               4.0_f64*data(npx1-1,j) + &
                   (25.0_f64/12.0_f64)*data(npx1,j) )
-
-!!$          ! previous estimate:
-!!$          r_x1_delta*( 0.5_f64*data(npx1-2,j) - &
-!!$               2.0_f64*data(npx1-1,j) + &
-!!$               1.5_f64*data(npx1,j) )
        end do
     end if
 
@@ -1967,11 +1905,6 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                3.0_f64*data(i,3) + &
                (4.0_f64/3.0_f64)*data(i,4) - &
                0.25_f64*data(i,5))
-
-!!$          !previous estimate:
-!!$          r_x2_delta*(-1.5_f64*data(i,1) + &
-!!$               2.0_f64*data(i,2) - &
-!!$               0.5_f64*data(i,3) )
        end do
     end if
     if( spline%compute_slopes_x2_max .eqv. .true. ) then
@@ -1984,25 +1917,13 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
                              3.0_f64*data(i,npx2-2) - &
                              4.0_f64*data(i,npx2-1) + &
                  (25.0_f64/12.0_f64)*data(i,npx2) )
-
-!!$          !previous estimate
-!!$          r_x2_delta*( 0.5_f64*data(i,npx2-2) - &
-!!$               2.0_f64*data(i,npx2-1) + &
-!!$               1.5_f64*data(i,npx2) )
        end do
     end if
-
 
     ! build splines along the x2 direction. Note: due to Fortran's 
     ! column-major ordering, this uses long strides in memory.
     do i=1,npx1 
        datap  => data(i,1:npx2)
-       ! Intentionally, we make coeffs point to the index 1 of the coefficients
-       ! array. coeffs(0) is still a valid call, which is what 
-       ! compute_spline_1D_periodic_aux() does. This is an ugly trick and
-       ! this demonstrates that the _aux() function is broken. (We need 
-       ! knowledge of its internals to use it properly). This should be 
-       ! fixed.
        coeffs => spline%coeffs(i,0:npx2+2) 
        min_slope = spline%x2_min_slopes(i)
        max_slope = spline%x2_max_slopes(i)
@@ -2069,7 +1990,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   end subroutine compute_spline_2D_hrmt_hrmt
 
 
-
+  !> @brief Computes the spline coefficients for the given data. The 
+  !> coeffcients are first computed in the second direction of the array
+  !> (i.e. the x2 direction) and then in the first (x1) direction.
+  !> @param[in] data The 2D array with the data for which the cubic spline
+  !> decomposition is sought.
+  !> @param[inout] a pointer to an initialized spline object.
   subroutine compute_cubic_spline_2D( data, spline )
     sll_real64, dimension(:,:), intent(in), target :: data  ! data to be fit
     type(sll_cubic_spline_2D), pointer         :: spline
@@ -2420,7 +2346,11 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     			 
   end subroutine deposit_value_2D
 
-
+  !> @brief Returns the interpolated value of the image of the point (x1,x2)
+  !> using the spline decomposition stored in the spline object.
+  !> @param[in] x1 first coordinate.
+  !> @param[in] x2 second coordinate.
+  !> @param[in] pointer to spline object.
   function interpolate_value_2D( x1, x2, spline )
     sll_real64                          :: interpolate_value_2D
     intrinsic                           :: associated, int, real
@@ -2497,6 +2427,13 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !         partial x1
   !
   ! evaluated at the point (x1,x2). (Sorry for the ambiguous use of x1)
+
+  !> @brief Returns the interpolated value of the derivative in the x1 
+  !> direction at the point
+  !> (x1,x2) using the spline decomposition stored in the spline object.
+  !> @param[in] x1 first coordinate.
+  !> @param[in] x2 second coordinate.
+  !> @param[in] pointer to spline object.
   function interpolate_x1_derivative_2D( x1, x2, spline )
     sll_real64                          :: interpolate_x1_derivative_2D
     intrinsic                           :: associated, int, real
@@ -2580,6 +2517,13 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   !         partial x2
   !
   ! evaluated at the point (x1,x2). (Sorry for the ambiguous use of x1)
+
+  !> @brief Returns the interpolated value of the derivative in the x2 
+  !> direction at the point
+  !> (x1,x2) using the spline decomposition stored in the spline object.
+  !> @param[in] x1 first coordinate.
+  !> @param[in] x2 second coordinate.
+  !> @param[in] pointer to spline object.
   function interpolate_x2_derivative_2D( x1, x2, spline )
     sll_real64                          :: interpolate_x2_derivative_2D
     intrinsic                           :: associated, int, real
