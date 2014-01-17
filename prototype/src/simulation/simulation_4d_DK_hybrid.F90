@@ -178,7 +178,7 @@ module sll_simulation_4d_DK_hybrid_module
      type(arb_deg_2d_interpolator) :: interp2d_QN_B2
      type(arb_deg_2d_interpolator) :: interp2d_QN_C
      class(sll_scalar_field_2d_base) , pointer :: rho2d
-     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d ! for derivative in eta3
+     type(sll_scalar_field_1d_discrete_alt), pointer::phi1d! for derivative in eta3
      type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
      class(sll_scalar_field_2d_base), pointer :: QN_A11 
      class(sll_scalar_field_2d_base), pointer :: QN_A12
@@ -626,7 +626,7 @@ contains
     sll_real64 :: dphi, Lphi, dvpar, Lvpar
     sll_real64, dimension(:), pointer :: phi_grid_tmp
     sll_real64, dimension(:), pointer :: vpar_grid_tmp
-
+    sll_real64 :: tmp,r_peak
     Nx    = sim%Neta1
     Ny    = sim%Neta2
     Nphi  = sim%Neta3
@@ -662,6 +662,8 @@ contains
       loc4d_sz_x3, &
       loc4d_sz_x4 )
 
+    r_peak  = sim%r_min + sim%rho_peak * abs(sim%r_max-sim%r_min)
+
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
@@ -672,21 +674,26 @@ contains
             i2 = glob_ind4d(2)
             i3 = glob_ind4d(3)
             i4 = glob_ind4d(4)
-            theta_j = polar_eta2( &
-              sim%xgrid_2d(i1,i2), &
-              sim%ygrid_2d(i1,i2), &
-              (/0.0_f64/)) ! irrelevant for polar_eta2
+            theta_j = sim%logical_mesh4d%eta2_min + &
+        (i2-1)*sim%logical_mesh4d%delta_eta2 
+           ! theta_j = polar_eta2( &
+           !      sim%xgrid_2d(i1,i2), &
+           !      sim%ygrid_2d(i1,i2), &
+           !      (/0.0_f64/)) ! irrelevant for polar_eta2
             phi_k   = phi_grid_tmp(i3) 
+            tmp = exp(-(sim%r_grid(i1)-r_peak)**2/&
+                 (4._f64*sim%deltarn/sim%deltarTi)) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
                  sim%feq_xyvpar(i1,i2,i4) * &
-                 (1._f64 + sim%eps_perturb*cos(real(sim%mmode)*theta_j + &
-                 2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi))
+                 (1._f64 + sim%eps_perturb*&
+                 cos(2*sll_pi*real(sim%mmode)*theta_j + &
+                 2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi) * tmp)
           end do
         end do
       end do
     end do
 
-    call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
+    call apply_remap_4D(sim%seqx3x4_to_seqx1x2,sim%f4d_seqx3x4,sim%f4d_seqx1x2)
 
     SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
@@ -1102,6 +1109,8 @@ contains
     SLL_DEALLOCATE(A12,ierr)
     SLL_DEALLOCATE(A21,ierr)
     SLL_DEALLOCATE(A22,ierr)
+    SLL_DEALLOCATE(B1,ierr)
+    SLL_DEALLOCATE(B2,ierr)
     SLL_DEALLOCATE(C,ierr)
   end subroutine initialize_QN_DK
 
@@ -1525,9 +1534,7 @@ contains
       call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
       call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
-!!$      call sll_hdf5_write_array_1d(file_id,sim%n0_r_func,'n0_r_func',file_err)
-!!$      call sll_hdf5_write_array_1d(file_id,sim%Ti_r_func,'Ti_r_func',file_err)
-!!$      call sll_hdf5_write_array_1d(file_id,sim%Te_r_func,'Te_r_func',file_err)
+
       !--> Saving of the 2D (x,y) profiles of 
       !-->  temperatures and density
       call sll_hdf5_write_array_2d(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
@@ -1735,7 +1742,8 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do ieta2 = 1,sim%Neta2
           do ieta1 = 1,sim%Neta1
-            f2d_eta1eta2_tmp(ieta1,ieta2) = sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4)            
+            f2d_eta1eta2_tmp(ieta1,ieta2)=&
+                 sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4)            
           end do
         end do
 
@@ -1750,16 +1758,14 @@ contains
             val_jac = sim%transf_xy%jacobian(eta1,eta2)
             !print*, val_jac
             val_B   = sim%B_xy(ieta1,ieta2)
-            alpha1  = - deltat_advec*E_eta2/ (val_jac*val_B)
-            alpha2  =   deltat_advec*E_eta1/ (val_jac*val_B)
+            alpha1  =  deltat_advec*E_eta2/ (val_jac*val_B)
+            alpha2  =  -deltat_advec*E_eta1/ (val_jac*val_B)
             eta1    = sim%eta1_grid(ieta1) - alpha1
             eta2    = sim%eta2_grid(ieta2) - alpha2
-          !  print*, eta1,eta2
+
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
               sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
-           ! print*,'---------------------'
-           ! print*,'test_values', eta1,eta2,sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) -f2d_eta1eta2_tmp(ieta1,ieta2)
-           ! print*,'---------------------'
+
           end do
         end do
       end do
@@ -1796,13 +1802,13 @@ contains
       call advec1D_eta3(sim,0.5_f64*sim%dt)
    
       !--> Sequential for the advection in eta1eta2
-      call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
+      call apply_remap_4D(sim%seqx3x4_to_seqx1x2,sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
 
       !--> Advection in eta1,eta2 direction'
       call advec2D_eta1eta2(sim,sim%dt)
     
       !--> Sequential for the advection in eta3 and in vpar
-      call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_seqx1x2, sim%f4d_seqx3x4 )
+      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4 )
     
       !--> Advection in eta3 direction'
       call advec1D_eta3(sim,0.5_f64*sim%dt)
@@ -1811,7 +1817,7 @@ contains
       call advec1D_vpar(sim,0.5_f64*sim%dt)
       
       !--> Sequential to solve the quasi-neutral equation
-      call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
+      call apply_remap_4D(sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
       
       call sll_set_time_mark(t1)
       elaps_time_advec = elaps_time_advec + &
@@ -1831,7 +1837,7 @@ contains
       call compute_Efield( sim )
 
       !--> Sequential for the advection in eta3 and in vpar
-      call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f4d_seqx1x2, sim%f4d_seqx3x4 )
+      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4)
      
 
       !--> Save results in HDF5 files
@@ -1982,7 +1988,7 @@ contains
 
     do idum = 1, sim%count_save_diag+1
        dum  = sqrt(.5*((diag_nrj_kin_result(idum)-diag_nrj_kin_result(1))**2 + &
-                       (diag_nrj_pot_result(idum)-diag_nrj_pot_result(1))**2 ) ) 
+                       (diag_nrj_pot_result(idum)-diag_nrj_pot_result(1))**2)) 
 
        if ( dum /= 0.0_f64) &
           diag_relative_error_nrj_tot_result(idum) = &
@@ -2081,8 +2087,7 @@ contains
                   (/iloc1,iloc2,i3,i4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
-            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                 sim%feq_xyvpar(i1,i2,i4)
+            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - sim%feq_xyvpar(i1,i2,i4)
             intf_dvpar = intf_dvpar + delta_f*delta_vpar
            
           end do
