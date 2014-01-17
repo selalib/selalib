@@ -15,8 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Eric MADAULE
-!> @brief Poisson equation solver in polar coordinate
+!> @brief Poisson equation solver in polar coordinates
 !> @details Solver for the Poisson equation 
 !> \f[ \Delta \phi = f \f]
 !> in polar coordinate
@@ -137,6 +136,7 @@ contains
 
 !> Creation of sll_plan_poisson_polar object for the 
 !> Poisson solver in polar coordinate
+!> @return
   function new_plan_poisson_polar(dr,rmin,nr,ntheta,bc,dlog_density,inv_Te) result(this)
 
     implicit none
@@ -146,9 +146,11 @@ contains
     sll_int32  :: nr             !< number of space in direction r
     sll_int32  :: ntheta         !< number of space in direction theta
     sll_int32, optional :: bc(2) !< Boundary conditions, can be combined with +
-                                 !< bc is optionnal and default is Dirichlet condition in rmin and rmax
-    type(sll_plan_poisson_polar), pointer :: this !< Poisson solver structure
-    sll_real64,dimension(:),optional ::dlog_density,inv_Te !< for quasi neutral solver
+                                 !< optional and default is Dirichlet in rmin and rmax
+
+    type(sll_plan_poisson_polar), pointer :: this    !< Poisson solver structure
+    sll_real64,dimension(:),optional :: dlog_density !< for quasi neutral solver
+    sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
 
     sll_int32 :: err
     sll_real64, dimension(:), allocatable :: buf
@@ -209,7 +211,7 @@ contains
   subroutine initialize_poisson_polar(this, rmin,rmax,nr,ntheta,bc_rmin,bc_rmax,dlog_density,inv_Te)
 
     implicit none
-    type(sll_plan_poisson_polar) :: this !< Poisson solver structure
+    type(sll_plan_poisson_polar) :: this !< Poisson solver object
 
     sll_real64               :: rmin     !< rmin
     sll_real64               :: rmax     !< rmax
@@ -219,7 +221,9 @@ contains
     sll_int32, optional      :: bc_rmax  !< radial boundary conditions
     sll_int32                :: error
     sll_real64, dimension(:), allocatable :: buf
-    sll_real64,dimension(:),optional ::dlog_density,inv_Te
+
+    sll_real64,dimension(:),optional ::dlog_density !< For quasi neutral solver
+    sll_real64,dimension(:),optional ::inv_Te       !< For quasi neutral solver
 
     SLL_ALLOCATE(this%f_fft(nr+1,ntheta+1),error)
     SLL_ALLOCATE(this%fk(nr+1),error)

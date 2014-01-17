@@ -58,6 +58,7 @@ contains
   !> Presently, this function receives the geometric information as 
   !> individual arguments. We should consider passing the 'simple geometry'
   !> object that we have for the cartesian cases.
+  !> @return
   function new_poisson_2d_periodic_plan_cartesian_par( &
     start_layout, &   
     ncx, &            
@@ -185,6 +186,7 @@ contains
   !> object that we have for the cartesian cases. The 'alt' version does not
   !> consider the last point in the problem, the arrays involved and the layout
   !> that represents them should also not include this last point
+  !> @return
   function new_poisson_2d_periodic_plan_cartesian_par_alt( &
     start_layout, &   
     ncx, &            
