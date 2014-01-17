@@ -10,7 +10,7 @@
 ! DESCRIPTION: 
 !
 !> @brief
-!> Initialisation of the distribution function for the
+!> Initialisation of the distribution functioinit_fequilibrium_xyn for the
 !>  drift-kinetic 4D simulation
 !>
 !>@details
