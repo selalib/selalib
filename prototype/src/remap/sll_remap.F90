@@ -46,25 +46,25 @@ module sll_remapper
   
   ! The box types contain information on the index limits contained        
   ! in a given processor.
-  type box_2D
+  type SLL_PRIV :: box_2D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
   end type box_2D
 
-  type box_3D
+  type SLL_PRIV :: box_3D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
      sll_int32 SLL_PRIV :: k_min, k_max
   end type box_3D
 
-  type box_4D
+  type SLL_PRIV :: box_4D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
      sll_int32 SLL_PRIV :: k_min, k_max
      sll_int32 SLL_PRIV :: l_min, l_max
   end type box_4D
 
-  type box_5D
+  type SLL_PRIV :: box_5D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
      sll_int32 SLL_PRIV :: k_min, k_max
@@ -72,7 +72,7 @@ module sll_remapper
      sll_int32 SLL_PRIV :: m_min, m_max
   end type box_5D
 
-  type box_6D
+  type SLL_PRIV :: box_6D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
      sll_int32 SLL_PRIV :: k_min, k_max
@@ -127,18 +127,18 @@ module sll_remapper
 
 #define MAKE_REMAP_PLAN( type_name, layout_type, box_type, data_type )   \
   type type_name;                                             \
-     type(layout_type), pointer SLL_PRIV            :: initial_layout; \
-     type(layout_type), pointer SLL_PRIV            :: final_layout;   \
-     integer, dimension(:), pointer SLL_PRIV        :: send_displs;    \
-     integer, dimension(:), pointer SLL_PRIV        :: send_counts;    \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_displs;    \
-     integer, dimension(:), pointer SLL_PRIV        :: recv_counts;    \
-     type(box_type), dimension(:), pointer SLL_PRIV :: send_boxes;     \
-     type(box_type), dimension(:), pointer SLL_PRIV :: recv_boxes;     \
-     type(sll_collective_t), pointer SLL_PRIV       :: collective;     \
-     data_type, dimension(:), pointer SLL_PRIV      :: send_buffer;    \
-     data_type, dimension(:), pointer SLL_PRIV      :: recv_buffer;    \
-     logical SLL_PRIV                               :: is_uniform;     \
+     type(layout_type), pointer SLL_PRIV            :: initial_layout=>null();\
+     type(layout_type), pointer SLL_PRIV            :: final_layout=>null();  \
+     integer, dimension(:), pointer SLL_PRIV        :: send_displs=>null();   \
+     integer, dimension(:), pointer SLL_PRIV        :: send_counts=>null();   \
+     integer, dimension(:), pointer SLL_PRIV        :: recv_displs=>null();   \
+     integer, dimension(:), pointer SLL_PRIV        :: recv_counts=>null();   \
+     type(box_type), dimension(:), pointer SLL_PRIV :: send_boxes=>null();    \
+     type(box_type), dimension(:), pointer SLL_PRIV :: recv_boxes=>null();    \
+     type(sll_collective_t), pointer SLL_PRIV       :: collective=>null();    \
+     data_type, dimension(:), pointer SLL_PRIV      :: send_buffer=>null();   \
+     data_type, dimension(:), pointer SLL_PRIV      :: recv_buffer=>null();   \
+     logical SLL_PRIV                               :: is_uniform=.false.;    \
   end type type_name
 
 
@@ -153,10 +153,16 @@ module sll_remapper
 
   ! 3D Remap types:
 
+  !> @brief basic type for 3D remap for the 32-bit integer type.
   MAKE_REMAP_PLAN(remap_plan_3D_int32, layout_3D, box_3D, sll_int32)
+  !> @brief basic type for 3D remap for the 64-bit real type.
   MAKE_REMAP_PLAN(remap_plan_3D_real64, layout_3D, box_3D, sll_real64)
+  !> @brief basic type for 3D remap for the 64-bit complex type.
   MAKE_REMAP_PLAN(remap_plan_3D_comp64, layout_3D, box_3D, sll_comp64)
+
   ! 4D Remap types:
+
+  !> @brief basic type for 4D remap for the 32-bit integer type.
   MAKE_REMAP_PLAN(remap_plan_4D_int32, layout_4D, box_4D, sll_int32)
   MAKE_REMAP_PLAN(remap_plan_4D_real64, layout_4D, box_4D, sll_real64)
   MAKE_REMAP_PLAN(remap_plan_4D_comp64, layout_4D, box_4D, sll_comp64)
