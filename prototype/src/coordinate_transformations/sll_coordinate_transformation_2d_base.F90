@@ -29,7 +29,7 @@ module sll_coordinate_transformation_2d_base_module
      type(sll_logical_mesh_2d), pointer :: mesh
      !logical to remember when the mesh has already been written to file
      character(len=64) :: label
-     logical           :: written! = .false.
+     logical           :: written = .false.
    contains
      ! x1 = x1(eta1,eta2)
      procedure(geometry_function_ct), deferred, pass       :: x1
