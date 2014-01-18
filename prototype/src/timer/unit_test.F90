@@ -1,6 +1,7 @@
 program unit_test
   use sll_timer
   implicit none
+#define MARGIN 0.1
 
   type(sll_time_mark)  :: t0 
   type(sll_time_mark)  :: t1 
@@ -23,7 +24,7 @@ program unit_test
   time = sll_time_elapsed_since(t0)
   print *, 'time elapsed since t0 : ',time
 
-  a = int(time)  
+  a = int(time+MARGIN)  
 
   print *, 'Start time mark t1'
   call sll_set_time_mark(t1)

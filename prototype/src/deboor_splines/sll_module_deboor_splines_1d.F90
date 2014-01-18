@@ -660,6 +660,9 @@ contains
     dr(:)=0.0_8
     
     if ( k <= jderiv ) then
+       SLL_DEALLOCATE(aj,ierr)
+       SLL_DEALLOCATE(dl,ierr)
+       SLL_DEALLOCATE(dr,ierr)
        return
     end if
     !
@@ -672,6 +675,9 @@ contains
     call interv ( t, n+k, x, i, mflag )
     
     if ( mflag /= 0 ) then
+       SLL_DEALLOCATE(aj,ierr)
+       SLL_DEALLOCATE(dl,ierr)
+       SLL_DEALLOCATE(dr,ierr)
        return
     end if
     !
@@ -679,6 +685,9 @@ contains
     !
     if ( k <= 1 ) then
        res = bcoef(i)
+       SLL_DEALLOCATE(aj,ierr)
+       SLL_DEALLOCATE(dl,ierr)
+       SLL_DEALLOCATE(dr,ierr)
        return
     end if
     !
@@ -765,10 +774,12 @@ contains
 
     res = aj(1)
     
-    return
     SLL_DEALLOCATE(aj,ierr)
     SLL_DEALLOCATE(dl,ierr)
     SLL_DEALLOCATE(dr,ierr)
+    
+    return
+    
     
     
   end function bvalue
