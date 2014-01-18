@@ -9,8 +9,8 @@
     eta1_max = 6.28
     eta2_min = 0.
     eta2_max = 6.28
-    alpha1 = 0.e-2
-    alpha2 = 0.e-2
+    alpha1 = 1.e-2
+    alpha2 = 1.e-2
 /    
 &initial_function
     initial_function_case="SLL_KHP1"
@@ -37,12 +37,12 @@
       !charac1d_x2_case = "SLL_EULER"    
       charac1d_x1_case = "SLL_TRAPEZOID"    
       charac1d_x2_case = "SLL_TRAPEZOID"    
-    advect1d_x1_case = "SLL_CSL"
-    advect1d_x2_case = "SLL_CSL"
+    !advect1d_x1_case = "SLL_CSL"
+    !advect1d_x2_case = "SLL_CSL"
       !charac1d_x1_case = "SLL_EULER_CONSERVATIVE"    
       !charac1d_x2_case = "SLL_EULER_CONSERVATIVE"    
-      charac1d_x1_case = "SLL_TRAPEZOID_CONSERVATIVE"    
-      charac1d_x2_case = "SLL_TRAPEZOID_CONSERVATIVE"      
+      !charac1d_x1_case = "SLL_TRAPEZOID_CONSERVATIVE"    
+      !charac1d_x2_case = "SLL_TRAPEZOID_CONSERVATIVE"      
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
     !charac2d_case = "SLL_EULER"
@@ -50,8 +50,8 @@
     A_interp_case = "SLL_CUBIC_SPLINES"
 /
 &poisson 
-    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
-    poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
     mudpack_method =  3 !"SLL_NON_SEPARABLE_WITH_CROSS_TERMS"    
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3  

@@ -688,12 +688,22 @@ contains
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
+        A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+          Nc_eta2+1, &
+          eta2_min, &
+          eta2_max, &
+          sim%bc_interp2d_eta2)
        print*,"#A2_1d interpolation SLL_CUBIC_SPLINES"     
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
+        A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+          Nc_eta2+1, &
+          eta2_min, &
+          eta2_max, &
+          sim%bc_interp2d_eta2)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
