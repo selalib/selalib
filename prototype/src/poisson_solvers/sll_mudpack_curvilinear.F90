@@ -1,4 +1,3 @@
-!>
 !> @brief
 !> Poisson solver in general coordinates using mudpack library
 !> @details
@@ -6,7 +5,6 @@
 !> the default multigrid options.  first mud2cr is called to generate
 !> a second-order approximation.  then mud24cr is called to improve
 !> the estimate to fourth-order.
-!>
 module sll_mudpack_curvilinear
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -25,43 +23,58 @@ class(sll_interpolator_2d_base), pointer   :: ce_interp
 class(sll_interpolator_2d_base), pointer   :: a12_interp
 class(sll_interpolator_2d_base), pointer   :: a21_interp
 class(sll_coordinate_transformation_2d_base), pointer :: transformation
+
 contains
 
 !> Initialize the Poisson solver in curvilinear coordinates using MUDPACK
 !> library
-subroutine initialize_poisson_curvilinear_mudpack(this,transf,b11, b12,b21,b22,c, &
-                                            eta1_min, eta1_max, nc_eta1,          &
-                                            eta2_min, eta2_max, nc_eta2, &
-                                            bc_eta1_left, bc_eta1_right, &
-                                            bc_eta2_left,bc_eta2_right)
-implicit none
+subroutine initialize_poisson_curvilinear_mudpack( &
+   this,          &
+   transf,        &
+   b11,           &
+   b12,           &
+   b21,           &
+   b22,           &
+   c,             &
+   eta1_min,      &
+   eta1_max,      &
+   nc_eta1,       &
+   eta2_min,      &
+   eta2_max,      &
+   nc_eta2,       &
+   bc_eta1_left,  &
+   bc_eta1_right, &
+   bc_eta2_left,  &
+   bc_eta2_right)
 
-type(mudpack_2d) :: this                  !< Solver object
-sll_real64, intent(in) :: eta1_min           !< eta1 min
-sll_real64, intent(in) :: eta1_max           !< eta1 min
-sll_real64, intent(in) :: eta2_min       !< eta2 min
-sll_real64, intent(in) :: eta2_max       !< eta2 max
-sll_int32, intent(in)  :: nc_eta1              !<  number of cells
-sll_int32, intent(in)  :: nc_eta2              !<  number of cells
+type(mudpack_2d) :: this              !< Solver object
+sll_real64, intent(in) :: eta1_min    !< eta1 min
+sll_real64, intent(in) :: eta1_max    !< eta1 min
+sll_real64, intent(in) :: eta2_min    !< eta2 min
+sll_real64, intent(in) :: eta2_max    !< eta2 max
+sll_int32, intent(in)  :: nc_eta1     !<  number of cells
+sll_int32, intent(in)  :: nc_eta2     !<  number of cells
 sll_int32 :: icall
 !sll_int32 :: iiex,jjey
 sll_int32 :: llwork
-sll_int32 :: bc_eta1_left                    !< left boundary condition r
-sll_int32 :: bc_eta1_right                   !< right boundary condition r
-sll_int32 :: bc_eta2_left                    !< left boundary condition theta
-sll_int32 :: bc_eta2_right                   !< right boundary condition theta
+sll_int32 :: bc_eta1_left             !< left boundary condition r
+sll_int32 :: bc_eta1_right            !< right boundary condition r
+sll_int32 :: bc_eta2_left             !< left boundary condition theta
+sll_int32 :: bc_eta2_right            !< right boundary condition theta
 
-sll_real64, pointer ::  phi(:,:)    !< electric potential
-sll_real64, pointer ::  rhs(:,:)    !< charge density
-sll_real64, dimension(:,:), pointer :: b11
-sll_real64, dimension(:,:), pointer :: b12
-sll_real64, dimension(:,:), pointer :: b21
-sll_real64, dimension(:,:), pointer :: b22
-sll_real64, dimension(:,:), pointer :: c
-class(sll_coordinate_transformation_2d_base), pointer :: transf
-! put sll_int32 and floating point argument names in contiguous
+sll_real64, pointer ::  phi(:,:)      !< electric potential
+sll_real64, pointer ::  rhs(:,:)      !< charge density
+
+sll_real64, dimension(:,:), pointer :: b11 !< for general coordinate solver
+sll_real64, dimension(:,:), pointer :: b12 !< for general coordinate solver
+sll_real64, dimension(:,:), pointer :: b21 !< for general coordinate solver
+sll_real64, dimension(:,:), pointer :: b22 !< for general coordinate solver
+sll_real64, dimension(:,:), pointer :: c   !< for general coordinate solver
+
+class(sll_coordinate_transformation_2d_base), pointer :: transf !< coordinate transformation
+
+! put integer and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
-
 sll_int32 :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny,&
               iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2cr/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -302,7 +315,7 @@ sll_int32, parameter :: iixp = 2 , jjyq = 2
 
 sll_real64, intent(inout) ::  phi(:,:) !< electric potential
 sll_real64, intent(inout) ::  rho(:,:) !< charge density
-sll_real64,pointer :: rhs(:,:) !< charge density
+sll_real64, pointer       ::  rhs(:,:) !< charge density
 
 ! put sll_int32 and floating point argument names in contiguous
 ! storeage for labelling in vectors iprm,fprm
