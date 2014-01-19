@@ -3,11 +3,11 @@
 ! Selalib      
 ! Module: util_constants.F90
 !
-!> @brief 
-!> Module of utilitity constants for sll_splines unit test
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr)
+! @brief 
+! Module of utilitity constants for sll_splines unit test
+!  
+! @authors                    
+! Aliou DIOUF (aliou.l.diouf@inria.fr)
 !                                  
 !*********************************************************
 

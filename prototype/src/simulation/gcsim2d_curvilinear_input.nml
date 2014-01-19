@@ -27,7 +27,22 @@
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
 /
 &advector
-    advect2d_case = "SLL_BSL"    
+  advect2d_case = "SLL_BSL"    
+    !charac2d_case = "SLL_EULER"
+    charac2d_case = "SLL_VERLET"
+  advect2d_case = "SLL_TENSOR_PRODUCT"
+    advect1d_x1_case = "SLL_BSL"
+    advect1d_x2_case = "SLL_BSL"
+      !charac1d_x1_case = "SLL_EULER"    
+      !charac1d_x2_case = "SLL_EULER"    
+      charac1d_x1_case = "SLL_TRAPEZOID"    
+      charac1d_x2_case = "SLL_TRAPEZOID"    
+    !advect1d_x1_case = "SLL_CSL"
+    !advect1d_x2_case = "SLL_CSL"
+      !charac1d_x1_case = "SLL_EULER_CONSERVATIVE"    
+      !charac1d_x2_case = "SLL_EULER_CONSERVATIVE"    
+      !charac1d_x1_case = "SLL_TRAPEZOID_CONSERVATIVE"    
+      !charac1d_x2_case = "SLL_TRAPEZOID_CONSERVATIVE"      
     f_interp2d_case = "SLL_CUBIC_SPLINES"
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
     !charac2d_case = "SLL_EULER"
@@ -42,14 +57,14 @@
     spline_degree_eta2 = 3  
 /    
 &boundaries
-    bc_interp2d_eta1 =  0
-    bc_interp2d_eta2 =  0
-    bc_charac2d_eta1 =  0
-    bc_charac2d_eta2 =  0
-    bc_eta1_left     =  0
-    bc_eta1_right    =  0
-    bc_eta2_left     =  0
-    bc_eta2_right    =  0
+    bc_interp2d_eta1 =  "SLL_PERIODIC"
+    bc_interp2d_eta2 =  "SLL_PERIODIC"
+    bc_charac2d_eta1 =  "SLL_PERIODIC"
+    bc_charac2d_eta2 =  "SLL_PERIODIC"
+    bc_eta1_left     =  "SLL_PERIODIC"
+    bc_eta1_right    =  "SLL_PERIODIC"
+    bc_eta2_left     =  "SLL_PERIODIC"
+    bc_eta2_right    =  "SLL_PERIODIC"
 /   
 
 !! SLL_PERIODIC    = 0 SLL_DIRICHLET      = 1  SLL_NEUMANN        = 2

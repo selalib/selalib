@@ -33,10 +33,10 @@ SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSIO
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-IF(MUDPACK_ENABLED)
-   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
-   SET_TESTS_PROPERTIES(guiding_center_2D_generalized_coords PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF(MUDPACK_ENABLED)
+#IF(MUDPACK_ENABLED)
+#   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
+#   SET_TESTS_PROPERTIES(guiding_center_2D_generalized_coords PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#ENDIF(MUDPACK_ENABLED)
 
 ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 

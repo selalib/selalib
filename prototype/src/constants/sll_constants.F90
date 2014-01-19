@@ -15,16 +15,16 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @file sll_constants.F90
-!> @namespace sll_constants
-!> @brief Set some physical and mathematical constants
-!> @details This file should contain all mathematical ans physical constants to be used library-wide.
-!> 
+!> @brief
+!> Fortran module where set some physical and mathematical constants.
+!> @details
+!> This file should contain all mathematical and physical 
+!> constants to be used library-wide.
+!>
 !> <b> How to use it </b>
-!>
-!> @code #include "sll_constants.h" @endcode
-!>
-!> More details by following this link sll_constants
+!> @code 
+!> #include "sll_constants.h" 
+!> @endcode
 module sll_constants
 #include "sll_working_precision.h"
 

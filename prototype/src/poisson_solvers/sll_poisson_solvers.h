@@ -27,7 +27,14 @@
 #define SET_POISSON_RHS( p, f )    p%rhs => f
 
 use sll_poisson_1d_periodic
-use sll_poisson_2d_periodic
 use sll_poisson_2d_polar
+
+#ifdef FFTW
+use sll_poisson_2d_periodic_fftw
+#define poisson_2d_periodic poisson_2d_periodic_fftw
+#else
+use sll_poisson_2d_periodic_fftpack
+#define poisson_2d_periodic poisson_2d_periodic_fftpack
+#endif
 
 #endif

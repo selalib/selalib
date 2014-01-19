@@ -15,7 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
 !> @brief 
 !> Implements the functions to write xdmf file plotable by VisIt
 !> @details
@@ -440,8 +439,6 @@ end subroutine sll_xdmf_rect3d_nodes
 !>Subroutine to write a 2D array in xdmf format.
 !>The field is describe on a cartesian mesh.
 !>Nodes coordinates are defined by x and y (2d arrays).
-!> @note
-!> See example in @link test_io @endlink
 subroutine sll_xdmf_curv2d_nodes( file_name, array, array_name,  &
                                   eta1, eta2, file_format) 
 
@@ -528,11 +525,23 @@ call sll_xml_file_close(file_id,error)
 
 end subroutine sll_xdmf_curv2d_nodes
 
+!>@brief
 !>Subroutine to write a 3D array in xdmf format.
 !>The field is describe on a cartesian mesh.
 !>Nodes coordinates are defined by x,y,z (3d arrays).
-!> @note
-!> See example in @link test_io @endlink
+!>@details
+!> Example:
+!>@code
+!>call sll_xdmf_open(file_name,mesh_name,nnodes_x1,nnodes_x2,nnodes_x3,file_id,error)
+!>call sll_xdmf_write_array(mesh_name,x1,'x1',error)
+!>call sll_xdmf_write_array(mesh_name,x2,'x2',error)
+!>call sll_xdmf_write_array(mesh_name,x3,'x3',error)
+!>call sll_xdmf_write_array("field3d",df,"NodeVal",error,file_id,"Node")
+!>call sll_xdmf_write_array("field3d",df(1:ncells_x1,1:ncells_x2,1:ncells_x3), &
+!>                          "CellVal",error,file_id,"Cell")
+!>call sll_xdmf_close(file_id,error)
+!>@endcode
+
 subroutine sll_xdmf_curv3d_nodes( file_name, array, array_name,  &
                                   eta1, eta2, eta3, file_format) 
 
