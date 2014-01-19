@@ -15,8 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
-!> @brief
 !> Implements the functions to write data file plotable by GNUplot
 module sll_gnuplot
 #include "sll_working_precision.h"
@@ -94,24 +92,25 @@ subroutine sll_gnuplot_write(array,array_name,error)
 end subroutine sll_gnuplot_write
 
 
+!> This subroutine write a data file to plot a 1d curve
 subroutine sll_gnuplot_write_1d( &
-  array, &
+  y_array, &
   x_array, &
   array_name, &
   iplot)
 
-   sll_real64, dimension(:), intent(in) :: array      !< data
-   sll_real64, dimension(:), intent(in) :: x_array      !< data
+   sll_real64, dimension(:), intent(in) :: y_array    !< Y data
+   sll_real64, dimension(:), intent(in) :: x_array    !< X data
    character(len=*), intent(in)         :: array_name !< field name
-   sll_int32,intent(in),optional :: iplot
-   sll_int32               :: error      !< error code
+   sll_int32,intent(in),optional        :: iplot      !< Plot index 
+   sll_int32                            :: error      !< error code
    sll_int32                            :: file_id    !< file unit number
    sll_int32                            :: npoints
    sll_int32                            :: ipoints    
    logical                              :: lopen
-   character(len=4)      :: cplot
+   character(len=4)                     :: cplot
    
-   npoints = size(array)
+   npoints = size(x_array)
 
    error=0
 
@@ -140,7 +139,7 @@ subroutine sll_gnuplot_write_1d( &
 
    !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
    do ipoints = 1, npoints
-      write(file_id,*) x_array(ipoints), array(ipoints)
+      write(file_id,*) sngl(x_array(ipoints)), sngl(y_array(ipoints))
    end do
    !write(file_id,"(a)")"e"
    !write(file_id,"(a)")"pause -1 'Hit return to quit'"

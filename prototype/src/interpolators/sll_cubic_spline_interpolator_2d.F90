@@ -360,12 +360,12 @@ contains
     sll_int32                                      :: i
     sll_int32                                      :: j
 
-    eta1_min   = this%spline%x1_min 
-    eta1_max   = this%spline%x1_max 
-    eta2_min   = this%spline%x2_min 
-    eta2_max   = this%spline%x2_max 
-    delta_eta1 = this%spline%x1_delta  
-    delta_eta2 = this%spline%x2_delta  
+    eta1_min   = get_x1_min( this%spline ) !this%spline%x1_min 
+    eta1_max   = get_x1_max( this%spline ) !this%spline%x1_max 
+    eta2_min   = get_x1_min( this%spline ) !this%spline%x2_min 
+    eta2_max   = get_x2_max( this%spline ) !this%spline%x2_max 
+    delta_eta1 = get_x1_delta( this%spline ) !this%spline%x1_delta  
+    delta_eta2 = get_x2_delta( this%spline ) !this%spline%x2_delta  
     
     call compute_cubic_spline_2D( data_in, this%spline )
 

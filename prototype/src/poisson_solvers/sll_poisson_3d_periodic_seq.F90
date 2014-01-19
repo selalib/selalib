@@ -1,19 +1,5 @@
-
-!*************************************************************************
-!
-! Selalib 2012     
-! Module: sll_poisson_3d_periodic.F90
-!
 !> @brief 
-!> Selalib 3D poisson solver
-!> Start date: Feb. 08, 2012
-!> Last modification: April 10, 2012
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr), 
-!> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
-!                                  
-!*************************************************************************
+!> 3D poisson solver
 
 module sll_poisson_3d_periodic_seq
 
@@ -51,20 +37,21 @@ contains
 
   !> Allocate a structure to solve Poisson equation on 3d cartesian mesh
   !> with periodic boundary conditions
+  !> @return
   function new_poisson_3d_periodic_plan_seq(nx ,ny ,nz, Lx, Ly, Lz) &
                                                          result(plan)
 
-    sll_int32                                    :: nx !< number of points in x
-    sll_int32                                    :: ny !< number of points in y
-    sll_int32                                    :: nz !< number of points in z
+    sll_int32                                    :: nx   !< number of points in x
+    sll_int32                                    :: ny   !< number of points in y
+    sll_int32                                    :: nz   !< number of points in z
     sll_comp64,                    dimension(nx) :: x
     sll_comp64,                    dimension(ny) :: y
     sll_comp64,                    dimension(nz) :: z
     sll_int32                                    :: ierr
-    sll_real64                                   :: Lx !< Length along x
-    sll_real64                                   :: Ly !< Length along y
-    sll_real64                                   :: Lz !< Length along z
-    type (poisson_3d_periodic_plan_seq), pointer :: plan
+    sll_real64                                   :: Lx   !< Length along x
+    sll_real64                                   :: Ly   !< Length along y
+    sll_real64                                   :: Lz   !< Length along z
+    type (poisson_3d_periodic_plan_seq), pointer :: plan !< Poisson solver type
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE(plan%hat_rho(nx,ny,nz), ierr)
@@ -103,11 +90,6 @@ contains
     logical, save                                :: flag = .true.
 
     ! Checking input arguments consistency
-    if ( rho(1,1,1) /= 0.d0 ) then     
-       print *, '3D periodic poisson cannot be solved without rho(1,1,1)=0'
-       print *, 'Exiting...'
-       stop
-    endif
     if (flag) then
        call verify_argument_sizes_seq(plan, rho, phi)
        flag = .false.
@@ -166,8 +148,9 @@ contains
              if ( (ind_x==0) .and. (ind_y==0) .and. (ind_z==0) ) then
                 plan%hat_phi(i,j,k) = 0.d0
              else
-                plan%hat_phi(i,j,k) = plan%hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
-                                                        + (ind_y/Ly)**2+(ind_z/Lz)**2))
+                plan%hat_phi(i,j,k) = &
+                    plan%hat_rho(i,j,k)/(4*sll_pi**2*((ind_x/Lx)**2 &
+                    + (ind_y/Ly)**2+(ind_z/Lz)**2))
              endif
           enddo
        enddo
@@ -202,7 +185,7 @@ contains
   !> Delete the 3d poisson solver object
   subroutine delete_poisson_3d_periodic_plan_seq(plan)
 
-    type (poisson_3d_periodic_plan_seq), pointer :: plan !< Structure for Poisson solver
+    type(poisson_3d_periodic_plan_seq), pointer :: plan !< Poisson solver object
     sll_int32                                    :: ierr
 
     ! Fixme: some error checking, whether the poisson pointer is associated
