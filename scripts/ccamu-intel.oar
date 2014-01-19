@@ -5,14 +5,12 @@
 #OAR -O selalib.out
 #OAR -E selalib.err
 module purge
-module load hdf5/intel/1.8.8
+module load hdf5/intel/1.8.8-cemracs
 module load fftw/intel/3.3
 module load intel/13.1.2
 module load cmake/2.8.7
-export HDF5_ROOT=/softs/hdf5/intel/1.8.8
+export HDF5_ROOT=/softs/cemracs/selalib/intel
 export FFTW_ROOT=/softs/fftw/intel/3.3
-export PASTIX_ROOT=/softs/cemracs/selalib
-export SCOTCH_ROOT=/softs/cemracs/selalib
 cd /scratch/pnavaro
 mkdir selalib-intel
 cd selalib-intel; {

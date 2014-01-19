@@ -4,15 +4,17 @@
 
 
 &geometry
-  mesh_case ="SLL_COLLELA_MESH"
+  mesh_case_eta1 = "SLL_LOGICAL_MESH"
+  mesh_case_eta2 = "SLL_LOGICAL_MESH"
   num_cells_eta1 = 256
   num_cells_eta2 = 256
   eta1_min = -3.1415926535897932385
   eta1_max = 3.1415926535897932385
   eta2_min = -3.1415926535897932385
   eta2_max = 3.1415926535897932385
-  alpha1 = 1.e-2
-  alpha2 = 1.e-2
+  transf_case = "SLL_COLLELA"
+  alpha1 = 0.e-2
+  alpha2 = 0.e-2
 /
 
 &initial_function
@@ -24,13 +26,11 @@
   initial_function_case="SLL_COS_BELL"
     xc_1 = 1.
     xc_2 = -0.2
-    kmode_eta1 = 2.
-    kmode_eta2 = 2.
 /
 
 &time_iterations
-  dt = 0.125
-  number_iterations  = 12
+  dt = 0.75
+  number_iterations  = 2
   freq_diag = 1
   freq_diag_time = 1
   !time_loop_case = "SLL_EULER"
@@ -48,14 +48,14 @@
   time_period = 1.5
 /
 &boundaries
-    bc_interp2d_eta1 =  0
-    bc_interp2d_eta2 =  0
-    bc_charac2d_eta1 =  0
-    bc_charac2d_eta2 =  0
-    bc_eta1_left     =  0
-    bc_eta1_right    =  0
-    bc_eta2_left     =  0
-    bc_eta2_right    =  0
+    bc_interp2d_eta1 =  "SLL_PERIODIC"
+    bc_interp2d_eta2 =  "SLL_PERIODIC"
+    bc_charac2d_eta1 =  "SLL_PERIODIC"
+    bc_charac2d_eta2 =  "SLL_PERIODIC"
+    bc_eta1_left     =  "SLL_PERIODIC"
+    bc_eta1_right    =  "SLL_PERIODIC"
+    bc_eta2_left     =  "SLL_PERIODIC"
+    bc_eta2_right    =  "SLL_PERIODIC"
 /   
 
 !! SLL_PERIODIC    = 0 SLL_DIRICHLET      = 1  SLL_NEUMANN        = 2

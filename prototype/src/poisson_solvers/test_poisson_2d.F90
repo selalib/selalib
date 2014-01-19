@@ -5,8 +5,6 @@ program test_poisson_2d
 #include "sll_poisson_solvers.h"
 #include "sll_constants.h"
 
-   use sll_poisson_2D_periodic
-
    implicit none
 
    sll_real64  :: eta1_max, eta1_min, eta2_max, eta2_min
@@ -22,7 +20,12 @@ program test_poisson_2d
    sll_real64, dimension(:,:),allocatable      :: rhs
    sll_real64, dimension(:,:),allocatable      :: phi
    sll_real64, dimension(:,:),allocatable      :: phi_exact
-   type(poisson_2d_periodic)                   :: poisson
+
+#ifdef FFTW
+   type(poisson_2d_periodic_fftw) :: poisson
+#else
+   type(poisson_2d_periodic_fftpack) :: poisson
+#endif
 
    sll_real64                         :: x1, x2
    sll_int32                          :: mode

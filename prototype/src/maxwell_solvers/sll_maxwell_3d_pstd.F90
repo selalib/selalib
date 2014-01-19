@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -35,8 +33,6 @@ self%tmp_z = -cmplx(0.0_f64,self%kz,kind=f64)*self%tmp_z;     \
 call fftw_execute_dft_c2r(self%bwz, self%tmp_z, self%d_dz);   \
 self%d_dz = self%d_dz / nc_z
 
-!> @author
-!> Pierre Navaro
 !> @brief
 !> Implements the Maxwell solver in 3D with periodic boundary conditions
 !> with PSTD method.

@@ -116,6 +116,9 @@ contains
     
     if ( li_mflag .NE. 0 ) then
        res = 0.0_8
+       SLL_DEALLOCATE(lpr_coef,ierr)
+       SLL_DEALLOCATE(tmp_coef,ierr)
+       SLL_DEALLOCATE(tmp_ty,ierr)
        return 
     end if
     
@@ -139,6 +142,10 @@ contains
          ai_ky,&
          ar_y,&
          deriv2 )
+
+    SLL_DEALLOCATE(lpr_coef,ierr)
+    SLL_DEALLOCATE(tmp_coef,ierr)
+    SLL_DEALLOCATE(tmp_ty,ierr)
     
   end function dvalue2d
   
@@ -544,8 +551,8 @@ contains
      end if
      
     
-     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )				
-     lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_L						
+     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )		
+     lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_L				
      
      lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny ) = apr_g ( 1 : ai_nx - 1 , 1 : ai_ny )
      lpr_g ( ai_nx , 1 : ai_ny ) = apr_g ( 1 , 1 : ai_ny )		

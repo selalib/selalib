@@ -30,6 +30,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
+  use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
   use sll_cubic_spline_interpolator_2d
@@ -38,9 +39,11 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
+#ifdef MUDPACK
   !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_solver
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+#endif
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -594,6 +597,14 @@ contains
           bc_type=SLL_PERIODIC, &
           eta_min=x1_min_bis, &
           eta_max=x1_max_bis)
+      case ("SLL_TRAPEZOID_CONSERVATIVE")
+        charac1d_x1 => &
+          new_trapezoid_conservative_1d_charac(&
+          Nc_x1_bis+1, &
+          A1_interp1d_x1, &
+          bc_type=SLL_PERIODIC, &
+          eta_min=x1_min_bis, &
+          eta_max=x1_max_bis)
       case ("SLL_EULER_CONSERVATIVE")
         charac1d_x1 => new_explicit_euler_conservative_1d_charac(&
           Nc_x1_bis+1, &
@@ -628,6 +639,14 @@ contains
           eta_min=x2_min_bis, &
           eta_max=x2_max_bis, &
           bc_type=SLL_PERIODIC)    
+      case ("SLL_TRAPEZOID_CONSERVATIVE")
+        charac1d_x2 => &
+          new_trapezoid_conservative_1d_charac(&
+          Nc_x2_bis+1, &
+          A2_interp1d_x2, &
+          bc_type=SLL_PERIODIC, &
+          eta_min=x2_min_bis, &
+          eta_max=x2_max_bis)
       case default
         print *,'#bad charac1d_x2_case',charac1d_x2_case
         print *,'#not implemented'
@@ -649,7 +668,8 @@ contains
           charac1d_x1, &
           Nc_x1_bis+1, &
           eta_min = x1_min_bis, &
-          eta_max = x1_max_bis)
+          eta_max = x1_max_bis, &
+          bc_type = SLL_PERIODIC)
       case ("SLL_PSM")
         advect_1d_x1 => new_PSM_1d_advector(&
           Nc_x1+1, &
@@ -676,7 +696,8 @@ contains
           charac1d_x2, &
           Nc_x2_bis+1, &
           eta_min = x2_min_bis, &
-          eta_max = x2_max_bis)
+          eta_max = x2_max_bis, &
+          bc_type = SLL_PERIODIC)
       case ("SLL_PSM")
         advect_1d_x2 => new_PSM_1d_advector(&
           Nc_x2+1, &
@@ -768,6 +789,7 @@ contains
     end select
     
     select case(poisson_solver)    
+#ifdef MUDPACK
       case ("SLL_MUDPACK")     
         !stop  
         
@@ -913,7 +935,7 @@ contains
          b21,&
          b22,&
          c)
-
+#endif
       case ("SLL_POISSON_FFT")     
         !stop  
         sim%poisson => new_poisson_2d_periodic_solver( &
