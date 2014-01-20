@@ -46,7 +46,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
-
+  sll_int32, parameter :: SLL_ADVECTIVE = 0 
+  sll_int32, parameter :: SLL_CONSERVATIVE = 1
 
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_guiding_center_curvilinear
@@ -104,7 +105,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    sll_int32  :: bc_charac2d_eta2
    ! for QNS spline_degre in each direction
    sll_int32  :: spline_degree_eta1
-   sll_int32  :: spline_degree_eta2    
+   sll_int32  :: spline_degree_eta2   
+   sll_int32  :: advection_form
   contains
     procedure, pass(sim) :: run => run_gc2d_curvilinear
     procedure, pass(sim) :: init_from_file => init_fake
@@ -181,7 +183,8 @@ contains
     character(len=256) :: charac1d_x2_case
     character(len=256) :: f_interp1d_x1_case
     character(len=256) :: f_interp1d_x2_case
- 
+    character(len=256) :: advection_form
+    
     !poisson
     character(len=256) :: poisson_solver
     sll_int32 :: mudpack_method    
@@ -266,7 +269,8 @@ contains
       charac1d_x1_case, &
       charac1d_x2_case, &
       advect1d_x1_case, &   
-      advect1d_x2_case  
+      advect1d_x2_case, &
+      advection_form  
 
     namelist /poisson/ &
       poisson_solver, &
@@ -320,6 +324,7 @@ contains
     charac2d_case = "SLL_VERLET"
     A_interp_case = "SLL_CUBIC_SPLINES"
     
+    advection_form = "SLL_CONSERVATIVE"
     advect1d_x1_case = "SLL_BSL"
     advect1d_x2_case = "SLL_BSL"
     charac1d_x1_case = "SLL_EULER"
@@ -393,7 +398,7 @@ contains
     sim%spline_degree_eta2 = spline_degree_eta2
     sim%quadrature_type1 = ES_GAUSS_LEGENDRE
     sim%quadrature_type2 = ES_GAUSS_LEGENDRE
-    
+      
     SLL_ALLOCATE(sim%b11(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b12(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(sim%b21(Nc_eta1+1,Nc_eta2+1),ierr)
@@ -600,6 +605,18 @@ contains
         print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select  
+     
+    select case(advection_form)
+      case ("SLL_CONSERVATIVE")
+        sim%advection_form = SLL_CONSERVATIVE
+      case ("SLL_ADVECTIVE")  
+        sim%advection_form = SLL_ADVECTIVE
+      case default
+        print *,'#bad advection_form',advection_form
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
      
      select case(advect1d_x1_case)
       case ("SLL_BSL")
@@ -1093,6 +1110,7 @@ contains
     sll_int32 :: i1 
     sll_int32 :: i2
     sll_real64,dimension(:,:), pointer :: f
+    sll_real64,dimension(:,:), pointer :: f_conserv
     sll_real64,dimension(:,:), pointer :: f_old
     sll_real64,dimension(:,:), pointer :: rho
     sll_real64,dimension(:,:), pointer :: phi
@@ -1125,7 +1143,7 @@ contains
     SLL_ALLOCATE(phi(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A1(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2(Nc_eta1+1,Nc_eta2+1),ierr)
-
+    SLL_ALLOCATE(f_conserv(Nc_eta1+1,Nc_eta2+1),ierr)
     
 
     
@@ -1196,12 +1214,44 @@ contains
 #endif  
       select case (sim%time_loop_case)
         case (SLL_EULER)
-          call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
+          select case (sim%advection_form)
+            case(SLL_CONSERVATIVE)
+              call compute_f_to_f_conserv(f_old,f_conserv,sim%transformation,sim%mesh_2d)
+              call sim%advect_2d%advect_2d(A1, A2, dt, f_conserv, f)
+              f_conserv =f
+              call compute_f_conserv_to_f(f_conserv,f,sim%transformation,sim%mesh_2d)
+            case(SLL_ADVECTIVE)  
+              call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
+           case default 
+              print *,'#bad advection_form',sim%advection_form
+          end select    
         case (SLL_PREDICTOR_CORRECTOR)
-          call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
+          select case (sim%advection_form)
+            case(SLL_CONSERVATIVE)
+              call compute_f_to_f_conserv(f_old,f_conserv,sim%transformation,sim%mesh_2d)
+              call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_conserv, f)
+              f_conserv =f
+              call compute_f_conserv_to_f(f_conserv,f,sim%transformation,sim%mesh_2d)
+            case(SLL_ADVECTIVE)  
+              call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
+           case default 
+              print *,'#bad advection_form',sim%advection_form
+          end select    
+          !call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
           call sim%poisson%compute_phi_from_rho(phi, f)
           call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
-          call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
+          !call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
+          select case (sim%advection_form)
+            case(SLL_CONSERVATIVE)
+              call compute_f_to_f_conserv(f_old,f_conserv,sim%transformation,sim%mesh_2d)
+              call sim%advect_2d%advect_2d(A1, A2, dt, f_conserv, f)
+              f_conserv =f
+              call compute_f_conserv_to_f(f_conserv,f,sim%transformation,sim%mesh_2d)
+            case(SLL_ADVECTIVE)  
+              call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
+           case default 
+              print *,'#bad advection_form',sim%advection_form
+          end select    
         case default  
           print *,'#bad time_loop_case',sim%time_loop_case
           print *,'#not implemented'
@@ -1260,9 +1310,9 @@ contains
   end subroutine compute_field_from_phi_2d_curvilinear
 
 
-  subroutine compute_rho(f,rho,mesh_2d,transformation)
+  subroutine compute_f_to_f_conserv(f,f_conserv,transformation,mesh_2d)
     sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64, dimension(:,:), intent(out) :: rho
+    sll_real64, dimension(:,:), intent(out) :: f_conserv
     type(sll_logical_mesh_2d), pointer :: mesh_2d
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
     sll_int32 :: Nc_eta1
@@ -1283,18 +1333,53 @@ contains
     delta_eta1 = mesh_2d%delta_eta1
     delta_eta2 = mesh_2d%delta_eta2
 
-    rho(1:Nc_eta1+1,1:Nc_eta2+1) =  0._f64
+    f_conserv(1:Nc_eta1+1,1:Nc_eta2+1) =  0._f64
     do i2=1,Nc_eta2+1
       eta2=eta2_min+real(i2-1,f64)*delta_eta2
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
-        rho(i1,i2)=-f(i1,i2)*transformation%jacobian(eta1,eta2)
+        f_conserv(i1,i2)=f(i1,i2)*transformation%jacobian(eta1,eta2)
       end do
     end do
     
       
-  end subroutine compute_rho 
+  end subroutine compute_f_to_f_conserv
   
+  
+   subroutine compute_f_conserv_to_f(f_conserv,f,transformation,mesh_2d)
+    sll_real64, dimension(:,:), intent(out) :: f
+    sll_real64, dimension(:,:), intent(in) :: f_conserv
+    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32 :: i1
+    sll_int32 :: i2
+    
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    eta1_min = mesh_2d%eta1_min
+    eta2_min = mesh_2d%eta2_min
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    f(1:Nc_eta1+1,1:Nc_eta2+1) =  0._f64
+    do i2=1,Nc_eta2+1
+      eta2=eta2_min+real(i2-1,f64)*delta_eta2
+      do i1=1,Nc_eta1+1
+        eta1=eta1_min+real(i1-1,f64)*delta_eta1
+        f(i1,i2)=f_conserv(i1,i2)/transformation%jacobian(eta1,eta2)
+      end do
+    end do
+    
+      
+  end subroutine compute_f_conserv_to_f
   subroutine time_history_diagnostic_gc( &
     file_id, &    
     step, &
