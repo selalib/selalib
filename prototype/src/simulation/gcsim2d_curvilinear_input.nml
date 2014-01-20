@@ -18,7 +18,7 @@
     initial_function_case="SLL_KHP1"
     kmode_eta1 = 0.5
     kmode_eta2 = 1.
-    eps = 0.015
+    eps = 1e-6 !0.015
 /    
 &time_iterations
     dt = 0.5

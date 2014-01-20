@@ -328,6 +328,10 @@ contains
     if (initial_function_case == "SLL_KHP1") then
         eta1_max = 2._f64*sll_pi/kmode_eta1
         eta2_max = 2._f64*sll_pi/kmode_eta2
+    else
+        eta2_max = 2._f64*sll_pi
+        r_minus  = 4._f64
+        r_plus   = 5._f64   
     endif
 
     !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
@@ -365,16 +369,16 @@ contains
 !       polar_jac22, &
 !       params_mesh  )     
 
-    sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_collela_transformation", &
-       sim%mesh_2d, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
-       params_mesh  )  
+!    sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_collela_transformation", &
+!       sim%mesh_2d, &
+!       sinprod_x1, &
+!       sinprod_x2, &
+!       sinprod_jac11, &
+!       sinprod_jac12, &
+!       sinprod_jac21, &
+!       sinprod_jac22, &
+!       params_mesh  )  
       
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
