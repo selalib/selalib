@@ -47,8 +47,6 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   
   use sll_module_advection_1d_periodic
 
-  use sll_poisson_2d_periodic
-  
   use sll_fft
   use sll_reduction_module
   
@@ -469,6 +467,8 @@ contains
   
     print *,'# Do not use the routine init_vp4d_fake'
     print *,'#use instead initialize_vlasov_par_poisson_seq_cart'
+    print *,sim%dt
+    print *,filename
     stop
   
   end subroutine init_vp4d_fake
@@ -529,7 +529,7 @@ contains
     sll_int32 :: i2
     sll_int32 :: i3
     sll_int32 :: i4
-    sll_real64 :: time
+    sll_real64 :: time = 0.0_f64
     sll_int32 :: th_diag_id
     sll_int32 :: intfdx_id
     sll_int32 :: rho_id

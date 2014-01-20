@@ -68,7 +68,7 @@ contains
 
   subroutine delete_cubic_spline_2d_interpolator( interpolator )
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-    call delete(interpolator%spline)
+    call sll_delete(interpolator%spline)
   end subroutine delete_cubic_spline_2d_interpolator
   
   function new_cubic_spline_2d_interpolator( &
@@ -189,7 +189,7 @@ contains
     interpolator%npts2 = npts2
     interpolator%bc_type1 = eta1_bc_type
     interpolator%bc_type2 = eta2_bc_type
-    interpolator%spline => new_spline_2D( &
+    interpolator%spline => new_cubic_spline_2D( &
          npts1, &
          npts2, &
          eta1_min, &
@@ -229,7 +229,19 @@ contains
     sll_real64, dimension(:), intent(in),optional   :: eta2_coords
     sll_int32, intent(in), optional                 :: size_eta1_coords
     sll_int32, intent(in),optional                  :: size_eta2_coords
-    call compute_spline_2D( data_array, interpolator%spline )
+    if(present(eta1_coords))then
+      !print *,'#Warning eta1_coords not used'
+    endif
+    if(present(eta2_coords))then
+      !print *,'#Warning eta2_coords not used'
+    endif
+    if(present(size_eta1_coords))then
+      !print *,'#Warning size_eta1_coords not used'
+    endif
+    if(present(size_eta2_coords))then
+      !print *,'#Warning size_eta2_coords not used'
+    endif    
+    call compute_cubic_spline_2D( data_array, interpolator%spline )
   end subroutine
 
 #ifdef STDF95
@@ -294,7 +306,7 @@ contains
     ! local variables
     sll_int32 :: i,j
     ! compute the interpolating spline coefficients
-    call compute_spline_2D( data_in, this%spline )
+    call compute_cubic_spline_2D( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
 #ifdef STDF95
@@ -348,14 +360,14 @@ contains
     sll_int32                                      :: i
     sll_int32                                      :: j
 
-    eta1_min   = this%spline%x1_min 
-    eta1_max   = this%spline%x1_max 
-    eta2_min   = this%spline%x2_min 
-    eta2_max   = this%spline%x2_max 
-    delta_eta1 = this%spline%x1_delta  
-    delta_eta2 = this%spline%x2_delta  
+    eta1_min   = get_x1_min( this%spline ) !this%spline%x1_min 
+    eta1_max   = get_x1_max( this%spline ) !this%spline%x1_max 
+    eta2_min   = get_x1_min( this%spline ) !this%spline%x2_min 
+    eta2_max   = get_x2_max( this%spline ) !this%spline%x2_max 
+    delta_eta1 = get_x1_delta( this%spline ) !this%spline%x1_delta  
+    delta_eta2 = get_x2_delta( this%spline ) !this%spline%x2_delta  
     
-    call compute_spline_2D( data_in, this%spline )
+    call compute_cubic_spline_2D( data_in, this%spline )
 
     if(this%bc_type1 == SLL_PERIODIC .and. &
        this%bc_type2 == SLL_PERIODIC ) then
@@ -449,6 +461,33 @@ contains
     sll_int32, intent(in), optional :: size_knots2
     print *, 'set_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.'
+    print *,interpolator%npts1
+    if(present(coeffs_1d))then
+      print *,'coeffs_1d present but not used'
+    endif     
+    if(present(coeffs_2d))then
+      print *,'coeffs_2d present but not used'
+    endif     
+    if(present(coeff2d_size1))then
+      print *,'coeff2d_size1 present but not used'
+    endif     
+    if(present(coeff2d_size2))then
+      print *,'coeff2d_size2 present but not used'
+    endif     
+    if(present(knots1))then
+      print *,'knots1 present but not used'
+    endif     
+    if(present(knots2))then
+      print *,'knots2 present but not used'
+    endif     
+    if(present(size_knots1))then
+      print *,'size_knots1 present but not used'
+    endif     
+    if(present(size_knots2))then
+      print *,'size_knots2 present but not used'
+    endif     
+
+
     stop
   end subroutine !set_coefficients_cs2d
   
@@ -485,14 +524,20 @@ contains
     sll_real64, dimension(:,:), pointer            :: get_coefficients_cs2d     
     
     print *, 'get_coefficients_cs2d(): ERROR: This function has not been ', &
-         'implemented yet.' 
+         'implemented yet.'
+    get_coefficients_cs2d = 0._f64
+    print *,interpolator%npts1    
+    stop      
   end function get_coefficients_cs2d
 #endif
 
   function coefficients_are_set_cs2d( interpolator ) result(res)
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
     logical :: res
+    res = .false.
     print *, 'coefficients_are_set_cs2d(): this function has not been implemented yet.'
+    print *,'#',interpolator%npts1
+    !stop
   end function coefficients_are_set_cs2d
 
 end module sll_cubic_spline_interpolator_2d

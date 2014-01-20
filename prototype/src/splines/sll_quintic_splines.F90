@@ -20,14 +20,7 @@
 ! Selalib 2012     
 ! Module: sll_quintic_splines.F90
 !
-!> @brief 
-!> Selalib quintic splines interpolator
-!
-!> Last modification: Nov. 29, 2012
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr)
-!                                  
+! Selalib quintic splines interpolator
 !**************************************************************
 
 module sll_quintic_splines
@@ -346,7 +339,7 @@ contains
 
   function quintic_splines_interpolator_nonuniform_array(array, &
                             num_pts, plan) result(res)
-  
+ 
     sll_real64, dimension(:)                    :: array
     type(quintic_splines_nonuniform_plan), pointer :: plan
     sll_int32                                   :: i, num_pts

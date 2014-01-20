@@ -43,6 +43,7 @@
 HOST=`hostname -s`
 echo "${HOST}"
 ARCH=`uname -s`
+CMAKE='cmake'
 
 if [[ $PIPOL_IMAGE_NAME ]]; then
    echo "PIPOL_IMAGE_NAME:${PIPOL_IMAGE_NAME}"
@@ -132,12 +133,12 @@ if [[ `hostname -s` == "irma-4600" ]]; then
   export HDF5_ROOT=/opt/local
   export FFTW_ROOT=/opt/local
   export MKLROOT=/opt/intel/composer_xe_2013.4.183/mkl
-  alias cmake='/usr/local/bin/cmake'
+  export CMAKE=/usr/local/bin/cmake
 fi
 
 mkdir build
 cd build; {
-cmake ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
+${CMAKE} ${HOMEDIR}/selalib -DCMAKE_BUILD_TYPE=Release
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild

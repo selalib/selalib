@@ -146,8 +146,8 @@ contains
     !in future, we will use namelist file
 
     nb_step = 600
-    Nc_eta1 = 128
-    Nc_eta2 = 128
+    Nc_eta1 = 256
+    Nc_eta2 = 256
     dt = 0.1_f64
     visu_step = 100
     
@@ -159,7 +159,7 @@ contains
     eta2_min = 0._f64
     eta2_max = 2._f64*sll_pi
     
-    !initial_function_case = "SLL_DIOCOTRON"
+   !initial_function_case = "SLL_DIOCOTRON"
 !    eta1_min = 1._f64
 !    eta1_max = 10._f64
 !    eta2_min = 0._f64
@@ -203,7 +203,7 @@ contains
     
     !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
     !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
-    params_mesh = (/ 0.1_f64, 0.1_f64, 1.0_f64, 1.0_f64/)
+    params_mesh = (/ 1.e-6_f64, 1.e-6_f64, eta1_max-eta1_min, eta2_max - eta2_min/)
     
     sim%mesh_2d => new_logical_mesh_2d( &
       Nc_eta1, &
@@ -213,18 +213,18 @@ contains
       eta2_min , &
       eta2_max ) 
            
-    sim%transformation => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
-       sim%mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       params_mesh   )  
+!    sim%transformation => new_coordinate_transformation_2d_analytic( &
+!       "analytic_identity_transformation", &
+!       sim%mesh_2d, &
+!       identity_x1, &
+!       identity_x2, &
+!       identity_jac11, &
+!       identity_jac12, &
+!       identity_jac21, &
+!       identity_jac22, &
+!       params_mesh   )  
        
- !   sim%transformation => new_coordinate_transformation_2d_analytic( &
+!   sim%transformation => new_coordinate_transformation_2d_analytic( &
 !       "analytic_polar_transformation", &
 !       sim%mesh_2d, &
 !       polar_x1, &
@@ -235,17 +235,17 @@ contains
 !       polar_jac22, &
 !       params_mesh  )     
 
-! transformation => new_coordinate_transformation_2d_analytic( &
-!       "analytic_collela_transformation", &
-!       sim%mesh_2d, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22, &
-!       params_mesh  )  
-      
+ sim%transformation => new_coordinate_transformation_2d_analytic( &
+       "analytic_collela_transformation", &
+       sim%mesh_2d, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22, &
+       params_mesh  )  
+    
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
         f_interp2d => new_cubic_spline_2d_interpolator( &
@@ -255,15 +255,14 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, & !SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
-        print *,'#in initialize_guiding_center_2d_polar'
+        print *,'#in initialize_guiding_center_2d_curvilinear_mudpack'
         stop
     end select
-
 
 
 
@@ -276,7 +275,7 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, & !SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
         A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
@@ -285,18 +284,18 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, & !SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)  
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC) !SLL_HERMITE)
+          SLL_PERIODIC)
         A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
-          SLL_PERIODIC) !SLL_HERMITE)
+          SLL_PERIODIC)
       case default
         print *,'#bad A_interp_case',A_interp_case
         print *,'#not implemented'
@@ -313,7 +312,7 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, & !SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)         
       case default
         print *,'#bad phi_interp2d_case',phi_interp2d_case
@@ -397,7 +396,7 @@ contains
         stop
     end select
     
-    
+ 
     !time_loop
     select case(time_loop_case)
       case ("SLL_EULER")
@@ -417,7 +416,7 @@ contains
     !poisson solver
      !poisson solver
     select case(poisson_case)    
-      case ("SLL_MUDPACK_CURVILINEAR")     
+      case ("SLL_MUDPACK_CURVILINEAR")   
         call initialize_poisson_curvilinear_mudpack(sim%poisson,&
          sim%transformation, &
          sim%b11,&
@@ -521,11 +520,11 @@ contains
   
     !solve poisson
     !call poisson_solve_cartesian(sim%poisson,f,phi)
-    call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,rho)
-    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
-
-    
+    !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
+    call solve_poisson_curvilinear_mudpack(sim%poisson,phi,f)
+    call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d, &
+                                            sim%transformation,A1,A2,sim%phi_interp2d)  
+     
     !print *,A1
     !print *,A2
     
@@ -542,9 +541,8 @@ contains
       f_old = f
       
       !call poisson_solve_cartesian(sim%poisson,f_old,phi)
-      call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
-      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho) 
-      
+      !call compute_rho(f_old,rho,sim%mesh_2d,sim%transformation)
+      call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f) 
       call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       
       if(modulo(step-1,sim%freq_diag_time)==0)then
@@ -557,7 +555,7 @@ contains
           phi, &
           A1, &
           A2)
-!          call time_history_diagnostic_gc_cartesian2( &
+!          call time_history_diagnostic_gc_polar( &
 !          diag_id, &    
 !          step-1, &
 !          dt, &
@@ -581,8 +579,9 @@ contains
         case (SLL_PREDICTOR_CORRECTOR)
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
           !call poisson_solve_cartesian(sim%poisson,f,phi)
-          call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
-          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, rho)
+          !call compute_rho(f,rho,sim%mesh_2d,sim%transformation)
+          call solve_poisson_curvilinear_mudpack(sim%poisson, phi, f)
+          print*,'t=0, phi = ', maxval(phi),'f = ', maxval(f)
           call compute_field_from_phi_2d_curvilinear_mudpack(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
           f_old = f
           call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*sim%dt, f_old, f)
@@ -764,11 +763,18 @@ contains
     l2 = sqrt(l2*delta_eta2)
     e  = e*delta_eta2
     
-    write(file_id,*) dt*real(step,f64),linf,l1,l2,mass,e   
+    write(file_id,*) &
+      dt*real(step,f64), &
+      linf, &
+      l1, &
+      l2, &
+      mass, &
+      e, &
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1)))   
     
   end subroutine time_history_diagnostic_gc_cartesian
 
-  subroutine time_history_diagnostic_gc_cartesian2( &
+  subroutine time_history_diagnostic_gc_polar( &
     file_id, &    
     step, &
     dt, &
@@ -869,12 +875,18 @@ contains
       !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
     enddo
     
-    write(file_id,*) dt*real(step,f64),w,l1,l2,e,time_mode(1:8)!,mode_slope
+    write(file_id,*) &
+    dt*real(step,f64), &
+    w, &
+    l1, &
+    l2, &
+    e, &
+    time_mode(1:8)!,mode_slope
 
     call fft_delete_plan(pfwd)
 
     
-  end subroutine time_history_diagnostic_gc_cartesian2
+  end subroutine time_history_diagnostic_gc_polar
 
 #ifndef NOHDF5
 !*********************

@@ -1,0 +1,5 @@
+SET(CMAKE_Fortran_COMPILER  "/usr/local/bin/gfortran" CACHE FILEPATH     " " FORCE)
+SET(PASTIX_ENABLED          ON         CACHE BOOL         " " FORCE)
+SET(HDF5_PARALLEL_ENABLED   ON         CACHE BOOL         " " FORCE)
+SET(ZLIB_LIBRARIES "/usr/lib/libz.dylib;/usr/local/lib/libsz.a" CACHE FILEPATH " " FORCE)
+SET(HDF5_LIBRARIES "/usr/local/lib/libhdf5_fortran.a;/usr/local/lib/libhdf5.a;/usr/local/lib/libsz.dylib;/usr/lib/libz.dylib" CACHE FILEPATH " " FORCE)

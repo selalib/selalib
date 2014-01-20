@@ -150,7 +150,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)
-         
+       
     call poisson%interp_a11%initialize( &
          np_eta1, &
          np_eta2, &
@@ -220,6 +220,20 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2) 
+     
+    call poisson%interp_c%initialize( &
+         np_eta1, &
+         np_eta2, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         bc_eta1_left, &
+         bc_eta1_right, &
+         bc_eta2_left, &
+         bc_eta2_right,&
+         spline_degree_eta1, &
+         spline_degree_eta2)     
           
     call poisson%interp_b1%initialize( &
          np_eta1, &
@@ -248,7 +262,7 @@ contains
          bc_eta2_right,&
          spline_degree_eta1, &
          spline_degree_eta2)   
-                                     
+                                   
     poisson%a11_field => new_scalar_field_2d_discrete_alt( &
          "a11_check", &
          poisson%interp_a11, &
@@ -257,10 +271,10 @@ contains
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
-   
+  
     call poisson%a11_field%set_field_data( a11_values )
     call poisson%a11_field%update_interpolation_coefficients( )  
-     
+   
     poisson%a12_field => new_scalar_field_2d_discrete_alt( &
          "a12_check", &
          poisson%interp_a12, &
@@ -320,7 +334,7 @@ contains
    
     call poisson%b2_field%set_field_data( b2_values )
     call poisson%b2_field%update_interpolation_coefficients( )
-    
+  
     poisson%c_field => new_scalar_field_2d_discrete_alt( &
          "c_check", &
          poisson%interp_c, &
@@ -329,15 +343,15 @@ contains
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
-   
+
     call poisson%c_field%set_field_data( c_values )
     call poisson%c_field%update_interpolation_coefficients( )
-    
+ 
     SLL_ALLOCATE(phi_values(np_eta1,np_eta2),ierr)
     SLL_ALLOCATE(rho_values(np_eta1,np_eta2),ierr)
     phi_values(:,:) = 0.0_f64
     rho_values(:,:) = 0.0_f64
-  
+    
     poisson%phi_field => new_scalar_field_2d_discrete_alt( &
          "phi_check", &
          poisson%interp_phi, &
@@ -346,7 +360,6 @@ contains
          bc_eta1_right, &
          bc_eta2_left, &
          bc_eta2_right)
-   
     call poisson%phi_field%set_field_data( phi_values )
     call poisson%phi_field%update_interpolation_coefficients( )  
     
@@ -361,7 +374,9 @@ contains
    
     call poisson%rho_field%set_field_data( rho_values )
     call poisson%rho_field%update_interpolation_coefficients( )
-       
+    
+    ! initialize of general_elliptic_solver
+    print *,'new_general_elliptic_solver'   
     poisson%elliptic_solver => new_general_elliptic_solver( &
         spline_degree_eta1, &
         spline_degree_eta2, &
@@ -434,8 +449,8 @@ contains
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
-   sll_real64, dimension(:,:), pointer :: phi_values
-   sll_real64, dimension(:,:), pointer :: rho_values
+   !sll_real64, dimension(:,:), pointer :: phi_values
+   !sll_real64, dimension(:,:), pointer :: rho_values
    sll_real64, dimension(:,:)          :: a11_values
    sll_real64, dimension(:,:)          :: a12_values
    sll_real64, dimension(:,:)          :: a21_values
@@ -443,11 +458,12 @@ contains
    sll_real64, dimension(:,:)          :: b1_values
    sll_real64, dimension(:,:)          :: b2_values
    sll_real64, dimension(:,:)          :: c_values
-   sll_int32 :: np_eta1
-   sll_int32 :: np_eta2
+   !sll_int32 :: np_eta1
+   !sll_int32 :: np_eta2
    sll_int32 :: ierr
    
    SLL_ALLOCATE(poisson,ierr)
+   
    call initialize_poisson_2d_elliptic_solver(poisson, transf,&
    spline_degree_eta1, &
    spline_degree_eta2, &
@@ -470,6 +486,7 @@ contains
    b1_values,&
    b2_values,&
    c_values )  
+   
   end function new_poisson_2d_elliptic_solver
   
   subroutine compute_phi_from_rho_2d_elliptic_solver(poisson,phi,rho )
@@ -484,8 +501,8 @@ contains
     sll_real64 :: delta2
     sll_real64 :: eta1_min
     sll_real64 :: eta2_min
-    sll_real64 :: eta1
-    sll_real64 :: eta2
+    !sll_real64 :: eta1
+    !sll_real64 :: eta2
     sll_int32  :: i,j
     sll_int32  :: nc_eta1
     sll_int32  :: nc_eta2
@@ -531,9 +548,22 @@ contains
       sll_real64,dimension(:,:),intent(out) :: E1
       sll_real64,dimension(:,:),intent(out) :: E2
       
+      E1 = 0.0_f64
+      E2 = 0.0_f64
       print *,'#compute_E_from_rho_2d_elliptic_solver'      
       print *,'#not implemented for the moment'
+      E1 = 0._f64
+      E2 = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%elliptic_solver)))then
+        print *,'#poisson%elliptic_solver is not associated'
+      endif
+      
       stop
+      
+      
+      
       
       !call solve( poisson%poiss, E1, E2, rho)
       

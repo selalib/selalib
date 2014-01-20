@@ -35,9 +35,10 @@ program unit_test
 
   type(sll_distribution_function_2d)   :: df 
   character(32)  :: name = 'dist_func'
-  character(len=4) :: cstep
+  !character(len=4) :: cstep
   sll_real64 :: deltat
-  sll_int32 :: iter, nbiter 
+  !sll_int32 :: iter
+  sll_int32 :: nbiter 
   type(init_gaussian_2d), target :: init_gaussian
 #ifdef STDF95
   type(scalar_field_2d_initializer_base), pointer    :: p_init_f
