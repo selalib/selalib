@@ -77,6 +77,11 @@ contains
     
     print *,'#compute_phi_from_rho_1d_periodic'
     print *,'#not implemented yet'
+    phi = 0._f64
+    if(.not.(associated(poisson%poiss)))then
+      print *,'#poisson%poiss not associated'
+    endif
+    print *,maxval(rho)  
     stop
     !call solve(poisson%poiss, phi, rho)
     

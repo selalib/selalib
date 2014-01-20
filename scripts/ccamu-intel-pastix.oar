@@ -6,9 +6,11 @@
 #OAR -E selalib.err
 module purge
 module load cmake/2.8.7
-module load hdf5/intel/1.8.8
+module load hdf5/intel/1.8.8-cemracs
 module load fftw/intel/3.3
 module load openmpi/intel/1.6.3-multiplethread
+export HDF5_ROOT=/softs/cemracs/selalib/intel
+export FFTW_ROOT=/softs/fftw/intel/3.3
 export PASTIX_ROOT=/softs/cemracs/pastix/intel
 export SCOTCH_ROOT=/softs/cemracs/scotch/intel
 cmake ${HOME}/selalib/prototype/src \

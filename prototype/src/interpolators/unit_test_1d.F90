@@ -22,8 +22,8 @@ program unit_test
 #endif
 
   type(cubic_spline_1d_interpolator), target   :: spline
-  type(quintic_spline_1d_interpolator), target :: quintic_spline
-  type(cubic_non_uniform_spline_1d_interpolator), target  :: cubic_nonunif_spline
+  !type(quintic_spline_1d_interpolator), target :: quintic_spline
+  !type(cubic_non_uniform_spline_1d_interpolator), target  :: cubic_nonunif_spline
   !type(WENO_interp_1d), pointer               :: weno
 
   sll_real64                            :: error

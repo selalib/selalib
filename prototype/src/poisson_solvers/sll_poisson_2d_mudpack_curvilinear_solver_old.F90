@@ -34,6 +34,7 @@ module sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #include "sll_memory.h"
 #include "sll_assert.h"
 !use sll_boundary_condition_descriptors
+use sll_constants
 use sll_module_poisson_2d_base
 use sll_mudpack_base
 use sll_cubic_spline_interpolator_1d
@@ -104,6 +105,8 @@ contains
     bc_eta1_right, &
     bc_eta2_left, &
     bc_eta2_right, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2, &
     b11, &
     b12, &
     b21, &
@@ -123,6 +126,8 @@ contains
     sll_int32, intent(in) :: bc_eta1_right
     sll_int32, intent(in) :: bc_eta2_left
     sll_int32, intent(in) :: bc_eta2_right
+    sll_int32, intent(in) :: bc_interp2d_eta1
+    sll_int32, intent(in) :: bc_interp2d_eta2
     sll_int32, intent(in), optional :: mudpack_curvilinear_case
     sll_real64, dimension(:,:), intent(in) :: b11
     sll_real64, dimension(:,:), intent(in) :: b12
@@ -149,6 +154,8 @@ contains
       bc_eta1_right, &
       bc_eta2_left, &
       bc_eta2_right, &
+      bc_interp2d_eta1, &
+      bc_interp2d_eta2, &
       b11, &
       b12, &
       b21, &
@@ -172,6 +179,8 @@ contains
     bc_eta1_right, &
     bc_eta2_left, &
     bc_eta2_right, &
+    bc_interp2d_eta1, &
+    bc_interp2d_eta2, &
     b11, &
     b12, &
     b21, &
@@ -189,6 +198,8 @@ contains
     sll_int32, intent(in) :: bc_eta1_right
     sll_int32, intent(in) :: bc_eta2_left
     sll_int32, intent(in) :: bc_eta2_right
+    sll_int32, intent(in) :: bc_interp2d_eta1
+    sll_int32, intent(in) :: bc_interp2d_eta2
     sll_int32, intent(in), optional :: mudpack_curvilinear_case
     sll_real64, dimension(:,:), intent(in) :: b11
     sll_real64, dimension(:,:), intent(in) :: b12
@@ -208,7 +219,8 @@ contains
     !storeage for labelling in vectors iprm,fprm
     sll_int32  :: iprm(16)
     sll_real64 :: fprm(6)
-    sll_int32  :: i,error
+    !sll_int32  :: i
+    sll_int32 :: error
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -328,8 +340,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)        
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)        
        poisson%a21_interp => new_cubic_spline_2d_interpolator( &
           nx, &
           ny, &
@@ -337,8 +349,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC) 
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)    
         SLL_ALLOCATE(a12_array(nx,ny),ierr)
         SLL_ALLOCATE(a21_array(nx,ny),ierr)  
         call a12_a21_array(b11,b12,b21,b22,transf,eta1_min, &
@@ -353,8 +365,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)              
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)                
         poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
           nx, &
           ny, &
@@ -362,8 +374,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)                            
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)                              
         call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, & 
            delta1,delta2,nx,ny,poisson%cxx_2d ,poisson%cyy_2d)                             
         call poisson%cxx_2d_interp%compute_interpolants( poisson%cxx_2d )         
@@ -377,8 +389,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)       
         call coefx_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
           poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)          
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
@@ -390,8 +402,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)     
         call coefy_array(eta1_min,eta2_min,delta1,delta2,nx,ny, &
           poisson%cyy_2d_interp,poisson%a12_interp,poisson%cy_2d)  
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
@@ -403,8 +415,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)       
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)       
         poisson%ce_2d = -c 
         call poisson%ce_2d_interp%compute_interpolants( poisson%ce_2d )         
                    
@@ -435,8 +447,8 @@ contains
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_PERIODIC, &
-          SLL_PERIODIC)    
+          bc_interp2d_eta1, &
+          bc_interp2d_eta2)     
         call coefxy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min, &
           delta1,delta2,nx,ny,poisson%cxy_2d)  
         call poisson%cxy_2d_interp%compute_interpolants( poisson%cxy_2d )                  
@@ -519,10 +531,10 @@ contains
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
         poisson%rho(i1,i2)=-rho(i1,i2)*poisson%transformation%jacobian(eta1,eta2)
+        !write(100,*) eta1,eta2,1._f64+1e-3*2.*sll_pi*sin(2.*sll_pi*(eta1+eta2)/real(Nc_eta1,f64)*delta_eta1)/real(Nc_eta1,f64)*delta_eta1-poisson%transformation%jacobian(eta1,eta2)
       end do
     end do
-
-        
+    
     
     
     if(nxa == SLL_DIRICHLET) then
@@ -592,7 +604,6 @@ contains
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
         ! seems not to work for the moment
-        !call mud24cr(poisson%work,phi,error)
         call mud24cr(poisson%work, &
           mudpack_curvilinear_cofcr, &
           mudpack_curvilinear_bndcr, &
@@ -608,10 +619,6 @@ contains
         stop 
     end select
 
-
-
-    
-    !call solve( poisson%poiss, rho, phi)
     
   end subroutine compute_phi_from_rho_2d_mudpack_curvilinear
 
@@ -632,6 +639,15 @@ contains
       
       print *,'#compute_E_from_rho_2d_mudpack_curvilinear'      
       print *,'#not implemented for the moment'
+      E1 = 0._f64
+      E2 = 0._f64
+      print *,maxval(rho)
+      
+      if(.not.(associated(poisson%cxx_2d)))then
+        print *,'#poisson%cxx_2d is not associated'
+      endif
+
+
       stop
       
       !call solve( poisson%poiss, E1, E2, rho)
@@ -692,7 +708,8 @@ do j=1,ny
                    
    a21= b21(i,j)*(jac_m(1,2)*jac_m(1,2)+jac_m(2,2)*jac_m(2,2))- &
                    & b22(i,j)*(jac_m(2,1)*jac_m(2,2)+jac_m(1,1)*jac_m(1,2))  
-   cxy_array(i,j)= (a12+a21)/transf%jacobian(eta1,eta2)                              
+   cxy_array(i,j)= (a12+a21)/transf%jacobian(eta1,eta2) 
+  !write(100,*) eta1,eta2, cxy_array(i,j), transf%jacobian(eta1,eta2)                           
  enddo
 enddo 
 end subroutine coefxy_array

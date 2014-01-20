@@ -15,8 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
-!> @brief
 !> Implements the functions to write data file plotable by GNUplot
 module sll_gnuplot
 #include "sll_working_precision.h"
@@ -92,6 +90,64 @@ subroutine sll_gnuplot_write(array,array_name,error)
 
 
 end subroutine sll_gnuplot_write
+
+
+!> This subroutine write a data file to plot a 1d curve
+subroutine sll_gnuplot_write_1d( &
+  y_array, &
+  x_array, &
+  array_name, &
+  iplot)
+
+   sll_real64, dimension(:), intent(in) :: y_array    !< Y data
+   sll_real64, dimension(:), intent(in) :: x_array    !< X data
+   character(len=*), intent(in)         :: array_name !< field name
+   sll_int32,intent(in),optional        :: iplot      !< Plot index 
+   sll_int32                            :: error      !< error code
+   sll_int32                            :: file_id    !< file unit number
+   sll_int32                            :: npoints
+   sll_int32                            :: ipoints    
+   logical                              :: lopen
+   character(len=4)                     :: cplot
+   
+   npoints = size(x_array)
+
+   error=0
+
+   do 100 file_id=20,99
+
+      inquire(unit=file_id,opened=lopen)
+      if(lopen) then
+         cycle
+      else
+         open(file_id,status='SCRATCH',err=100)
+         close(file_id,status='DELETE',err=100)
+         goto 200
+      end if
+ 
+   100 continue
+   error=1
+   200 continue
+   error=0
+   if(present(iplot))then
+     call int2string(iplot,cplot)
+     open(file_id,FILE=trim(array_name)//cplot//".dat",FORM='FORMATTED',IOSTAT=error)
+   else
+     open(file_id,FILE=trim(array_name)//".dat",FORM='FORMATTED',IOSTAT=error)
+   endif
+   rewind(file_id)
+
+   !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
+   do ipoints = 1, npoints
+      write(file_id,*) sngl(x_array(ipoints)), sngl(y_array(ipoints))
+   end do
+   !write(file_id,"(a)")"e"
+   !write(file_id,"(a)")"pause -1 'Hit return to quit'"
+   close(file_id)
+
+
+end subroutine sll_gnuplot_write_1d
+
 
 !> write a data file plotable by gnuplot to visualize a 2d field.
 !> Axis are rectangular and spacing is constant

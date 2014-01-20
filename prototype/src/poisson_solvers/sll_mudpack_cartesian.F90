@@ -1,4 +1,7 @@
-!> Module to use MUDPACK library to solve Poisson equation on cartesian mesh
+!> @brief
+!> Module to use MUDPACK library to solve Poisson equation 
+!> @details We consider a regular cartesian mesh
+!>
 !> MUDPACK library is available on this website
 !> http://www2.cisl.ucar.edu/resources/legacy/mudpack
 module sll_mudpack_cartesian
@@ -238,7 +241,7 @@ subroutine cofx(x,cxx,cx,cex)
 use sll_mudpack_cartesian
 implicit none
 real(8)  :: x,cxx,cx,cex
-cxx = 1.0 !cxx_interp%interpolate_value(x)
+cxx = 1.0 +0.0*x !cxx_interp%interpolate_value(x)
 cx  = 0.0
 cex = 0.0
 return
@@ -248,7 +251,7 @@ end
 subroutine cofy(y,cyy,cy,cey)
 implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0
+cyy = 1.0+0.0*y
 cy  = 0.0
 cey = 0.0
 return

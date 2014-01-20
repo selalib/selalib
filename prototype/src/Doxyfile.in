@@ -395,7 +395,7 @@ EXTRACT_ANON_NSPACES   = NO
 # various overviews, but no documentation section is generated.
 # This option has no effect if EXTRACT_ALL is enabled.
 
-HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_MEMBERS     = YES
 
 # If the HIDE_UNDOC_CLASSES tag is set to YES, Doxygen will hide all
 # undocumented classes that are normally visible in the class hierarchy.
@@ -628,7 +628,7 @@ WARN_IF_DOC_ERROR      = YES
 # wrong or incomplete parameter documentation, but not about the absence of
 # documentation.
 
-WARN_NO_PARAMDOC       = NO
+WARN_NO_PARAMDOC       = YES
 
 # The WARN_FORMAT tag determines the format of the warning messages that
 # doxygen can produce. The string should contain the $file, $line, and $text
@@ -688,18 +688,60 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/fft/sll_fft.F90 \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/mgd3 \
-                         @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
-                         @CMAKE_CURRENT_SOURCE_DIR@/examples \
-                         @CMAKE_CURRENT_SOURCE_DIR@/opencl \
-                         @CMAKE_CURRENT_SOURCE_DIR@/pastix \
-                         @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
-                         @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
-                         @CMAKE_CURRENT_SOURCE_DIR@/BSL \
-                         @CMAKE_CURRENT_SOURCE_DIR@/CSL
+EXCLUDE                =  \
+@CMAKE_CURRENT_SOURCE_DIR@/BSL \
+@CMAKE_CURRENT_SOURCE_DIR@/CSL \
+@CMAKE_CURRENT_SOURCE_DIR@/LinRood \
+@CMAKE_CURRENT_SOURCE_DIR@/WENO \
+@CMAKE_CURRENT_SOURCE_DIR@/advection \
+@CMAKE_CURRENT_SOURCE_DIR@/advection_field \
+@CMAKE_CURRENT_SOURCE_DIR@/assert \
+@CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
+@CMAKE_CURRENT_SOURCE_DIR@/characteristics \
+@CMAKE_CURRENT_SOURCE_DIR@/collective \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
+@CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
+@CMAKE_CURRENT_SOURCE_DIR@/discontinuous_galerkin \
+@CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
+@CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/fft \
+@CMAKE_CURRENT_SOURCE_DIR@/fftpack \
+@CMAKE_CURRENT_SOURCE_DIR@/fields \
+@CMAKE_CURRENT_SOURCE_DIR@/fishpack \
+@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/integration \
+@CMAKE_CURRENT_SOURCE_DIR@/interpolators \
+@CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
+@CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
+@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/memory \
+@CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
+@CMAKE_CURRENT_SOURCE_DIR@/mudpack \
+@CMAKE_CURRENT_SOURCE_DIR@/multigrid \
+@CMAKE_CURRENT_SOURCE_DIR@/non_linear_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/opencl \
+@CMAKE_CURRENT_SOURCE_DIR@/package \
+@CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
+@CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
+@CMAKE_CURRENT_SOURCE_DIR@/pastix \
+@CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/petsc_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
+@CMAKE_CURRENT_SOURCE_DIR@/precision \
+@CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
+@CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/reduction \
+@CMAKE_CURRENT_SOURCE_DIR@/simulation \
+@CMAKE_CURRENT_SOURCE_DIR@/sparse \
+@CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/timer \
+@CMAKE_CURRENT_SOURCE_DIR@/utilities \
+@CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
+@CMAKE_CURRENT_SOURCE_DIR@/wsmp 
+
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -713,7 +755,7 @@ EXCLUDE_SYMLINKS       = NO
 # against the file with absolute path, so to exclude all test directories
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       =
+EXCLUDE_PATTERNS       = *test*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -858,7 +900,7 @@ VERBATIM_HEADERS       = YES
 # of all compounds will be generated. Enable this if the project
 # contains a lot of classes, structs, unions or interfaces.
 
-ALPHABETICAL_INDEX     = YES
+ALPHABETICAL_INDEX     = NO
 
 # If the alphabetical index is enabled (see ALPHABETICAL_INDEX) then
 # the COLS_IN_ALPHA_INDEX tag can be used to specify the number of columns
@@ -1391,7 +1433,7 @@ LATEX_HIDE_INDICES     = NO
 # Note that which sources are shown also depends on other settings
 # such as SOURCE_BROWSER.
 
-LATEX_SOURCE_CODE      = NO
+LATEX_SOURCE_CODE      = YES
 
 # The LATEX_BIB_STYLE tag can be used to specify the style to use for the
 # bibliography, e.g. plainnat, or ieeetr. The default style is "plain". See

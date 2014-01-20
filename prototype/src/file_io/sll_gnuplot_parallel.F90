@@ -15,10 +15,8 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
 !> @brief
-!> Implements the functions to write data file plotable by GNUplot
-!> for parallel simulations
+!> parallel version of sll_gnuplot
 #define MPI_MASTER 0
 
 module sll_gnuplot_parallel
@@ -155,7 +153,7 @@ call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, er
 write(*,*) cproc//"/"//array_name//'_'//fin//'.dat'
 do i = 1, size(array,1)
    x = x_min+(i-1)*delta_x
-   do j = 1, size(array,2)	
+   do j = 1, size(array,2)
       y = y_min + (j-1)*delta_y
       write(file_id,*) x, y, sngl(array(i,j))
       !write(*,*) x, y, sngl(array(i,j))

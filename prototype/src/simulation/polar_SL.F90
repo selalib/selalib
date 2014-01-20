@@ -70,22 +70,22 @@ program radial_1d_SL
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation spline 
-  spl_bsl => new_spline_2D(Nr+1, Ntheta+1, &
+  spl_bsl => new_cubic_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
     SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_bsl_nc => new_spline_2D(Nr+1, Ntheta+1, &
+  spl_bsl_nc => new_cubic_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
     SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_fsl => new_spline_2D(Nr+1, Ntheta+1, &
+  spl_fsl => new_cubic_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
     SLL_HERMITE, SLL_PERIODIC,&
     const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
-  spl_fsl_nc => new_spline_2D(Nr+1, Ntheta+1, &
+  spl_fsl_nc => new_cubic_spline_2D(Nr+1, Ntheta+1, &
     rmin, rmax, &
     0._f64, 2._f64*sll_pi, &
     SLL_HERMITE, SLL_PERIODIC,&
@@ -313,10 +313,10 @@ program radial_1d_SL
       fh_fsl_nc(i,Ntheta+1)=fh_fsl_nc(i,1)
     enddo
       
-    call compute_spline_2D(fh_bsl,spl_bsl)
-    call compute_spline_2D(fh_bsl_nc,spl_bsl_nc)
-    call compute_spline_2D(fh_fsl,spl_fsl)
-    call compute_spline_2D(fh_fsl_nc,spl_fsl_nc)
+    call compute_cubic_spline_2D(fh_bsl,spl_bsl)
+    call compute_cubic_spline_2D(fh_bsl_nc,spl_bsl_nc)
+    call compute_cubic_spline_2D(fh_fsl,spl_fsl)
+    call compute_cubic_spline_2D(fh_fsl_nc,spl_fsl_nc)
     
     do i=1,Nr+1
       do j=1,Ntheta+1

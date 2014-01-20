@@ -1,5 +1,6 @@
 \documentclass[]{report}   % list options between brackets
 \usepackage{amsmath, verbatim}    
+\usepackage{color}
 
 % user-defined commands here
 
@@ -11,19 +12,21 @@
 \maketitle
 
 \begin{abstract}
- This is a draft for a guide to the facilities offered by Selalib, the Semi-Lagrangian Library. It serves as a record for module descriptions, design decision, pending issues, etc., which are relevant for the development and improvement of the library. The main focus is the exposed API, thus the document also serves as a working document for the architectural specifications. More specific implementation details should be found in the comments within the source code. We may decide later to extract those either with an automatic system or in a developer's manual. At the time of writing this version of the draft, the library contains only a few modules in the lower levels and aims at having a minimalist structure. Of those capabilities that could be deemed interesting enough by the managers of GYSELA, the intent would be to incorporate them that code. In this sense, this library prototype can also be a testbed for ideas and suggestions that could eventually be absorbed into production code.
+ This is a draft for a guide to the facilities offered by Selalib, the Semi-Lagrangian Library. It serves as a record for module descriptions, design decision, pending issues, etc., which are relevant for the development and improvement of the library. The main focus is the exposed API, thus the document also serves as a working document for the architectural specifications. More specific implementation details should be found in the comments within the source code. 
 \end{abstract}
 
 \tableofcontents
 
 \chapter{Introduction}             % chapter 1
-Selalib is the \emph{Se}mi-\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semi-lagrangian approach. The present version of the top-level types and interfaces is the same as discussed in Selalib's project meeting in January 2011. 
+Selalib is the \emph{Se}mi\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semilagrangian approach. However, most of the modules contained in the library are not intrinsically related with the semilagrangian method, but are more general utilities which could be used in different contexts. A principle in the development of the library has been to continually identify specific functionalities and to attempt to promote them into their own standalone module, with a sufficiently general interface which may still be reasonably efficient.
 
 Selalib is structured in layers. One can think about these layers as libraries in their own right. A given layer can use the capabilities offered by a lower layer through the exposed interface, but never from a higher level. The layer with the lowest level of abstraction presently contains basic utilities like memory allocators, assertions and basic numeric types. The second layer is composed of numerical and parallel utilities. The third and highest level of the library contains the semi-lagrangian methodology tools, types and methods. This manual will ultimately describe each of these layers.
 
-Most of the native types and operations provided by Selalib are prefixed by \verb+sll_+. In this way you can at least have an expectation of finding documentation (if a user) and a starting point of where to start looking if you wish to dive into some particular aspect of an implementation (if a developer). This is an early implementation, so the prefix to designate Selalib's features could change. It is also worth considering to eliminate the prefix for the lower layers of the library, as these are general/reusable components that could in principle be used in different projects. In such case, the \verb+sll_+ prefix would be reserved for the top-level layer that implements the specific semi-lagrangian functionality.
+Most of the native types and operations provided by Selalib are prefixed by \verb+sll_+. In this way you can at least have an expectation of finding documentation (if a user) and a starting point of where to start looking if you wish to dive into some particular aspect of an implementation (if a developer). 
 
-The Selalib prototype is written in Fortran 95. There are some aspects of its implementation that may warrant some commentary as these aspects have an impact on how the library is used. For instance, the full library would be imported by the declaration:
+Selalib is written in Fortran 2003. We have deviated from the original intent to make Selalib fully f95-compatible for multiple reasons: the newer standard permits a separation of interface and implementation which is desirable in a development like this, the reduction in coding that is obtained with the use of abstract classes is appealing for a project with quite limited manpower as this one, and finally, the desire to make this product as forward-looking as possible.
+
+There are some aspects of the library's implementation that may warrant some commentary as these have an impact on how the library is used. For instance, the full library can be imported by the declaration \textcolor{red}{(Pierre, is this true presently?)}:
 \begin{verbatim}
 #include "selalib.h"
 \end{verbatim}
@@ -31,9 +34,9 @@ instead of the more Fortran-natural form:
 \begin{verbatim}
 use selalib
 \end{verbatim}
-The reason for this is that some features of the library are implemented as \emph{macros}. To the user of the library, it makes no difference whether some functionality is implemented in the form of a procedure or a macro, with the exception that presently, macro names are written in \verb+ALL-CAPS+ (but we could change this). The use of the macro is required to offer certain capabilities, like informative error messages. For a developer, the use of the macros is needed in many cases to reduce code redundancy. The need for the use of macros will hopefully be more understandable when the reader sees the behavior of calls to simple macros like \verb+SLL_ALLOCATE()+ or \verb+SLL_ASSERT()+.
+The reason for this is that some features of the library are implemented as \emph{macros}. To the user of the library, it makes no difference whether some functionality is implemented in the form of a procedure or a macro, with the exception that presently, macro names are written in \verb+ALL-CAPS+. The use of the macro is required to offer certain capabilities, like informative error messages. For a developer, the use of the macros is needed in many cases to reduce code redundancy. The need for the use of macros will hopefully be more understandable when the reader sees the behavior of calls to simple macros like \verb+SLL_ALLOCATE()+ or \verb+SLL_ASSERT()+.
 
-A macro is a pre-processor directive. Selalib uses only very simple macros that are handled by \emph{fpp}, the Fortran Pre-Processor. \emph{fpp}'s capabilities are very limited and one peculiarity of its output is that macros are expanded into a single long line, which can easily surpass the 132 character limit that Fortran systems have. For this reason alone, the compilation of Selalib requires the use of a compilation flag: \verb+-ffree-line-length-none+ (in \textbf{gfortran}) or its equivalent in another compiler. On a similar vein, some compilers require the extension \verb+.F90+ (as opposed to \verb+.f90+) in order to apply a preprocessing step. Thus, all files in Selalib use the \verb+.F90+ extension, and this is another reason that clients of this version of the library should as well.
+A macro is a pre-processor directive. Selalib uses only very simple macros that are handled by \emph{fpp}, the Fortran Pre-Processor. \emph{fpp}'s capabilities are very limited and one peculiarity of its output is that macros are expanded into a single long line, which can easily surpass the 132 character limit that Fortran systems have. For this reason alone, the compilation of Selalib requires the use of a compilation flag: \verb+-ffree-line-length-none+ (in \textbf{gfortran}) or its equivalent in another compiler. On a similar vein, some compilers require the extension \verb+.F90+ (as opposed to \verb+.f90+) in order to apply a preprocessing step. Thus, all files in Selalib use the \verb+.F90+ extension. Clients of the library which want to use the macro facilities should thus also use this extension as well.
 
 
 %\section{Introduction}     % section 1.1
@@ -47,9 +50,8 @@ A macro is a pre-processor directive. Selalib uses only very simple macros that 
 As a \emph{convenience}, Selalib offers aliases to some of Fortran's basic numeric types. This is intended to:
 \begin{enumerate}
 \item concisely and uniformly make clear the intended precision of a given variable, 
-\item permit mixed precision representations when needed (for example, a developer could wish to represent a particular real number with a combination of a 32-bit integer and a 32-bit real instead of a single 64-bit real as is sometimes done in ultra-high performance software), 
-\item provide a centralized location to change the precision of a numerical representation program-wide, and
-\item save from the typing of a few characters.
+\item permit mixed precision representations when needed (for example, a developer could wish to represent a particular real number with a combination of a 32-bit integer and a 32-bit real instead of a single 64-bit real as is sometimes done in ultra-high performance software), and
+\item provide a centralized location to change the precision of a numerical representation program-wide.
 \end{enumerate}
 
 \subsection{Exposed Interface}         % subsection 2.1.1
@@ -72,7 +74,7 @@ alias & shorthand for... \\
 \vspace{+0.5cm}
 
 
-Where the kind type parameters \verb+i32+, \verb+i64+, \verb+f32+ and \verb+f64+ have been defined to give a representation that is at least the denoted size for a given number. \verb+user+ is available for a flexible kind type parameter. These kind type parameters can also be used to specify the precision of numerical constants in the usual Fortran way, i.e. \verb+3.14159265_f32+.
+Where the kind type parameters \verb+i32+, \verb+i64+, \verb+f32+ and \verb+f64+ have been defined to give a representation that is at least the denoted size for a given number. \verb+user+ is available for a flexible kind type parameter. These kind type parameters can also be used to specify the precision of numerical constants in the usual Fortran way, i.e. \verb+3.14159265_f32+. The use of these constants is encouraged for development within the library as then we can in principle change the numeric precision library-wide if needed with only a parameter change.
 
 \subsection{Usage}
 To use the module in a stand-alone way, use the line:
@@ -80,7 +82,7 @@ To use the module in a stand-alone way, use the line:
 #include "sll_working_precision.h"
 \end{verbatim}
 
-The aliases are to be used like the native Fortran types that they are aliasing:
+These types are to be used like the native Fortran types that they are aliasing:
 
 \begin{verbatim}
      sll_real64 :: my_pi
@@ -110,12 +112,12 @@ Selalib's memory allocators are simple wrappers around Fortran's native allocato
 \end{enumerate}
 
 \subsection{Exposed Interface}
-The interface to these allocators follows very closely the interface of Fortran's \verb+allocate()+ and \verb+deallocate()+ functions. The user may decide to allocate arrays or pointers of any type, and up to the same number of dimensions as permitted by a given Fortran implementation. The exposed macros are:
+The interface to these allocators follows very closely the interface of Fortran's \verb+allocate()+ and \verb+deallocate()+ functions, except for a mandatory integer variable argument which does not need to be initialized. The user may decide to allocate arrays or pointers of any type, and up to the same number of dimensions as permitted by a given Fortran implementation. The exposed macros are:
 
 \begin{verbatim}
      SLL_ALLOCATE( array_and_lims, ierr )
 \end{verbatim}
-This is the basic memory allocator with the same syntax as Fortran's native \verb+allocate()+ but with a required integer error parameter. Any type and dimension can be given as an argument.
+This is the basic memory allocator with the same syntax as Fortran's native \verb+allocate()+ but with a required integer error parameter. Any type and dimension that the native fortran allocator would accept can be given as the argument \verb+array_and_lims+.
 
 \begin{verbatim}
      SLL_CLEAR_ALLOCATE( array_and_lims, ierr )
@@ -124,7 +126,7 @@ Same behavior as \verb+SLL_ALLOCATE()+ but also initializes the allocated memory
 \begin{verbatim}
      SLL_DEALLOCATE( array_and_lims, ierr )
 \end{verbatim}
-Basic deallocator. It is a wrapper around Fortran's native \verb+deallocate()+ function but also nullifies the pointer given as an argument after deallocation.
+Basic deallocator. It is a wrapper around Fortran's native \verb+deallocate()+ function but also nullifies the pointer given as an argument after deallocation. This is a difference between the native Fortran routine and this wrapper, as we have thus needed to distinguish between the call that deallocates a pointer and a simple array:
 \begin{verbatim}
      SLL_DEALLOCATE_ARRAY( array, ierr )
 \end{verbatim}
@@ -133,8 +135,6 @@ The array deallocator differs from the previous in that it does not attempt to n
      SLL_INIT_ARRAY( array, val )
 \end{verbatim}
 While not really an allocator/deallocator, we expose this macro for convenience in initializing an array with a given constant value. For consistency, it may be decided to eliminate this from the interface.
-
-In contrast with the native \verb+allocate()+, Selalib's allocators require that the user provide an integer variable for error checking (\verb+ierr+).
 
 \subsection{Usage}
 
@@ -166,7 +166,7 @@ Unit-tested.
 
 \section{Assertions}
 \subsection{Description}
-This is a very small but very useful capability that permits the developer to devise many sorts of defensive programming techniques. The simple idea is that of declaring a condition that is expected to be true, thus triggering a descriptive error if the condition is violated.
+This is a very small but very useful capability that permits the developer to devise many sorts of defensive programming techniques. The simple idea is that of declaring a condition that is expected to be true, thus triggering a descriptive error if the condition is violated. The assertions are only present while compiling the library in \verb+DEBUG+ mode, thus any overhead associated with the test can be eliminated by changing the type of compilation. For this reason, the types of tests that should be permanent should not be implemented with the assert facility.
 
 \subsection{Exposed Interface}
 Wherever a specific condition needs to be asserted, simply write:
@@ -175,7 +175,7 @@ Wherever a specific condition needs to be asserted, simply write:
 \end{verbatim}
 Thus the condition to be checked must be cast in the form of a logical statement. Falseness of such statement would trigger an assertion error.
 
-The assertions can be used liberally since they are controlled by a \verb+-DEBUG+ flag at compilation time. Absence of this flag will delete all calls to \verb+SLL_ASSERT()+ from the code. Hence, assertion conditions can be used during a debugging or testing phase without increasing the overhead in production code.
+The assertions can be used liberally since they are controlled by a \verb+-DEBUG+ flag at compilation time (\verb+DEBUG+ compilation mode). Absence of this flag (i.e. in \verb+RELEASE+ compilation mode) will delete all calls to \verb+SLL_ASSERT()+ from the code. Hence, assertion conditions can be used during a debugging or testing phase without increasing the overhead in production code.
 
 \subsection{Usage}
 To use the \emph{assertions} module in a stand-alone way, use the line:
@@ -184,11 +184,6 @@ To use the \emph{assertions} module in a stand-alone way, use the line:
 \end{verbatim}
 However, all the following steps are necessary:
 
-\begin{enumerate}
-\item to make sure that the macros expand properly when using \textbf{gfortran}, include the compilation flag \verb+-DGFORTRAN+. This is to ensure that the assertion conditions can be properly converted into strings to be returned in case that an assertion is triggered,
-\item when using \textbf{gfortran}, use pass along the flag \verb+-ffree-line-length-none+ to prevent compilation error as some of the included macros may go beyond Fortrans 132 character limit,
-\item to activate the assertions, pass along the flag \verb+-DDEBUG+. If this flag is not present, the assertions will compile into nothing, which may be desirable after the code has been debugged.
-\end{enumerate}
 An example may be the checking of in-range indices on a protected array:
 
 \begin{verbatim}
@@ -226,51 +221,65 @@ which of course doesn't even need to happen at the moment of the first error.
 \subsection{Status}
 Unit tested.
 
+\subsection{Developer notes}
+\begin{enumerate}
+\item the \verb+SLL_ASSERT()	+ macro needs some other macros to convert parameters into strings, but the way to accomplish this may vary depending on the compiler used. If problems are found, make sure that the appropriate macro is used in the \verb+sll_assert.h+ to activate the proper behavior of such macros. As an example, when using \textbf{gfortran} compiler, notice the role played by the \verb+-DGFORTRAN+ flag.
+\item when using \textbf{gfortran}, use pass along the flag \verb+-ffree-line-length-none+ to prevent compilation error as some of the included macros may go beyond Fortrans 132 character limit. Use the equivalent flag when changing compilers. All of this should be set within CMake.
+\end{enumerate}
+
+
+
 \section{Timing Utility}
 \subsection{Description}
-Selalib has its own timing facility, capable of resolving time periods slightly shorter than 2 $\mu s$. 
+When a high-resolution timer is available the measurable time interval can be a bit smaller than 2 $\mu s$.
 
 \subsection{Exposed Interface}
 
-In a tentative way, presently we hide the fact that the timing utility is based on external \emph{C} functions and the \verb+iso_c_binding+ features of $f2003$. The module's capabilities are brought into the client code by the line:
+The module is imported by
 \begin{verbatim}
-#include "sll_timer.h"
+use sll_timer
 \end{verbatim}
-which defines the type \verb+time_mark+. Instances of this type can be used to store clock readings. The timing utility also allows to measure the time elapsed since a particular time mark was set. The available functions are:
+or
+\begin{verbatim}
+include sll_timer
+\end{verbatim}
+which defines the type \verb+sll_time_mark+ which is meant to be treated as an opaque object i.e. only interact with it through the methods defined for it. An instance of this type can be used to measure time intervals with the following routines:
 
 \begin{verbatim}
-     set_time_mark()
-     reset_time_mark( time_mark )
-     time_elapsed_since( time_mark )
+     set_time_mark( mark)
+     time_elapsed_since( mark )
+     time_elapsed_between( mark_0, mark_1 )
 \end{verbatim}
 
-\verb+set_time_mark()+ is a function with no arguments that returns an instance of the \verb+time_mark+ type, set to a clock reading done at the moment of the function call.
+\verb+set_time_mark( mark )+ is a routine that takes an \verb+sll_time_mark+ object and sets is internals to mark the time at the moment of the routine call.
 
-\verb+reset_time_mark( time_mark )+ is also a function, and has essentially a redundant role to \verb+set_time_mark()+. It will take a time mark and return it updated with a new clock reading.
+\verb+time_elapsed_since( mark )+ is a function that takes a time mark as an argument and returns the time, \emph{in seconds} between the clock reading contained in the passed argument and the moment at which the function was called.
 
-\verb+time_elapsed_since( time_mark )+ is a function that takes a time mark as an argument and returns the time, \emph{in seconds} since the clock reading contained in the passed argument.
+\verb+time_elapsed_between( mark_0, mark_1 )+ is a function which takes two time marks that must have been set before obviously and will return the time elapsed between them.
+
+
 
 \subsection{Usage}
 Here is an example of the use of this module:
 
 \begin{verbatim}
 1     program timer_test
-2     #include "timer.h"
+2     use sll_timer
 3     implicit none
 4     integer(8) :: i, j, k
 5     real(c_double), dimension(:), allocatable :: dt
-6     time_mark      :: tmark
+6     type(sll_time_mark) :: tmark
 7
 8     #define ITERATIONS 1000
 9 
 10    allocate(dt(ITERATIONS))
 11
 12    do i=1,ITERATIONS
-13       tmark = reset_time_mark(tmark)
+13       call sll_set_time_mark(tmark)
 14       do k=1,100000    ! Just a delay
 15          j = i * i - i
 16       end do
-17       dt(i) = time_elapsed_since(tmark) 
+17       dt(i) = sll_time_elapsed_since(tmark) 
 18    end do
 19    ! print diagnostics here, averages, min, max, etc.
 \end{verbatim}
@@ -293,10 +302,141 @@ Sets the time marker with a current clock reading.
 We store the result of the timing operation.
 \end{description}
 
-Any number of time markers can be declared and set at different points. So this minimal interface should be sufficient for most needs. An important point is that this module requires linking with the \emph{real time} system library, thus \verb+-lrt+ should appear as an instruction to the linker during the build.
+Any number of time markers can be declared and set at different points. 
 
 \subsection{Status}
 Unit-tested.
+
+
+\section{Constants}
+
+  \subsection{Description}
+  Selalib provides a single file that specifies commonly used constants as read-only parameters that can be used library-wide or by users.
+
+  \subsection{Exposed Interface}
+  Selalib simply defines a list of symbols, all in units of the International System when applicable. To use, just write either
+  
+  \begin{verbatim}
+use sll_constants
+\end{verbatim}
+or
+\begin{verbatim}
+include sll_constants.
+\end{verbatim}
+The symbols defined are:
+  
+  \begin{description}
+    \item[sll\_pi]: mathematical constant $\pi$
+    \item[sll\_c]: speed of light [$m/s$].
+    \item[sll\_epsilon\_0]: permittivity of free space ($\epsilon_0$) [$F/m$].
+    \item[sll\_mu\_0]: permeability of free space ($\mu_0$) [$N/A^2$].
+    \item[sll\_e\_charge]: fundamental charge [$C$].
+    \item[sll\_e\_mass]: mass of the electron [$kg$].
+    \item[sll\_proton\_mass]: mass of the proton [$kg$].
+    \item[sll\_g]: gravitational acceleration at sea level [$m/s^2$]
+  \end{description}
+  
+
+
+
+\section{Logical Meshes}
+
+    \subsection{Description}
+    
+    Selalib solves its PDEs on structured grids\footnote{We use the terms \emph{mesh} and \emph{grid} interchangeably.}. Furthermore, the actual solutions of the equations are carried out on rectangular, uniform grids (i.e. cartesian) which within Selalib are referred to as \emph{logical meshes}. This means that when dealing with \emph{physical domains} (i.e. the actual geometry that is to be modeled) there is a coordinate transformation that maps the logical mesh to the physical domain\footnote{Or multiple coordinate transformations, in case that the physical domain is represented by multiple patches.}. Such coordinate transformations will be discussed on a different chapter. Here we occupy ourselves with the description of the logical mesh itself. The specification of a logical mesh is quite simple, as at a minimum it only needs the number of cells in each dimension and the values of the endpoints. As a convention, the coordinates in the logical meshes are always referred to by the symbol $\eta$. Thus the coordinate for the 1D mesh is $\eta_1$, for the 2D mesh they are $\eta_1$ and $\eta_2$ and so on.
+
+
+    \subsection{Exposed Interface}
+    
+    
+    Public types:
+    
+    \begin{verbatim}
+    sll_logical_mesh_1d
+    sll_logical_mesh_2d
+    sll_logical_mesh_3d
+    sll_logical_mesh_4d
+     \end{verbatim}
+     
+    Routines:
+     
+     \begin{verbatim}
+    new_logical_mesh_1d( num_cells,         
+                         eta1_min, 
+	                         eta1_max )
+	                                              
+    new_logical_mesh_2d( num_cells1, 
+                         num_cells2, 
+                         eta1_min, 
+                         eta1_max, 
+                         eta2_min, 
+                         eta2_max )
+                              
+    new_logical_mesh_3d( num_cells1, 
+                         num_cells2,
+                         num_cells3, 
+                         eta1_min, 
+                         eta1_max, 
+                         eta2_min, 
+                         eta2_max, 
+                         eta3_min, 
+                         eta3_max )
+                             
+    new_logical_mesh_4d( num_cells1, 
+                         num_cells2,
+                         num_cells3,
+                         num_cells4, 
+                         eta1_min, 
+                         eta1_max, 
+                         eta2_min, 
+                         eta2_max, 
+                         eta3_min, 
+                         eta3_max, 
+                         eta4_min, 
+                         eta4_max )          
+                              
+     sll_display( mesh )  ! generic, for any mesh dimension      
+     delete( mesh )  ! generic, for any mesh dimension
+     \end{verbatim}
+
+
+The 'new' functions return pointers to allocated and initialized meshes. All the parameters that specify the limits of the values of \emph{eta} are optional. These limits default to 0.0 and 1.0 for their minimum and maximum values. The routine \verb+sll_display( )+ is helpful to show the contents of a given mesh.
+
+
+As a rare case in Selalib, the interface of the logical meshes permits direct access to their internals. The slots available for each type are:
+
+\begin{verbatim}
+    num_cellsX
+    etaX_min
+    etaX_max
+    delta_etaX
+\end{verbatim}
+where 'X' stands for the index of the direction of interest (1, 2, 3, etc.). Direct access is meant for reading, as the 'new' functions are enough to produce duly initialized logical meshes. Thus a user can directly access any of these slots as in:
+
+\begin{verbatim}
+    mesh%delta_eta1
+\end{verbatim}
+
+\subsection{Usage}
+
+\begin{verbatim}
+1 program logical_meshes
+2 use sll_logical_meshes
+3  implicit none
+4
+5  type(sll_logical_mesh_2d), pointer :: m2d
+6  
+7  m2d => new_logical_mesh_2d(64, 64)
+8
+9  call sll_display(m2d)
+10
+11 call delete(m2d)
+12 end program logical_meshes
+\end{verbatim}
+
+\subsection{Status}
+Unit-tested.
+
 
 \section{File IO}
 
@@ -402,33 +542,62 @@ the system would have been solved in-place.
 \subsection{Status}
 Unit-tested.
 
-\section{Splines}
+
+
+
+
+\section{Cubic Splines}
+
 \subsection{Description}
-The splines module provides capabilities for 1D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated is represented by a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data.
+The cubic splines module provides capabilities for 1D and 2D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated are stored in a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data.
+
 \subsection{Exposed Interface}
-Fundamental type:
+Fundamental types:
 \begin{verbatim}
-     sll_spline_1d
+     sll_cubic_spline_1d
+     sll_cubic_spline_2d
 \end{verbatim}
 Like all the other fundamental types in Selalib, this type is declared as a pointer and only manipulated through the functions and subroutines described below. For more explicit examples, see the usage section.
 
 Available functions:
 \begin{verbatim}
-     new_spline_1D( num_points, 
-                    xmin, 
-                    xmax, 
-                    bc_type, 
-                    slope_L, 
-                    slope_R )  
-     set_slope_left( spline_object, value )
-     set_slope_right(spline_object, value )
-     compute_spline_1D( data, bc_type, spline_object )
-     compute_spline_1D_periodic( data, spline_object )
-     compute_spline_1D_hermite ( data, spline_object )
-     delete( spline_object )
-     delete_spline_1D( spline_object )
+     new_cubic_spline_1D( num_points, 
+                          xmin, 
+                          xmax, 
+                          bc_type, 
+                          slope_L, 
+                          slope_R )  
+     compute_cubic_spline_1D( data, spline_object )
      interpolate_value( x, spline_object )
+     interpolate_derivative( x, spline_object )
      interpolate_array_values( a_in, a_out, np, spline_object )
+     interpolate_pointer_values( a_in, a_out, np, spline_object )
+     interpolate_array_derivatives( a_in, a_out, np, spline_object )
+     interpolate_pointer_derivatives( ptr_in, ptr_out, np, spline_object )
+     sll_delete( spline_object )
+     
+     new_cubic_spline_2d( num_pts_x1,  
+                          num_pts_x2,  
+                          x1_min,      
+                          x1_max,     
+                          x2_min,      
+                          x2_max,     
+                          x1_bc_type, 
+                          x2_bc_type,  
+                          const_slope_x1_min,
+                          const_slope_x1_max,
+                          const_slope_x2_min, 
+                          const_slope_x2_max,
+                          x1_min_slopes,
+                          x1_max_slopes,
+                          x2_min_slopes, 
+                          x2_max_slopes )
+       compute_cubic_spline_2d( data, spline_object )
+       interpolate_value_2d( x1, x2, spline_object )
+       interpolate_x1_derivative_2d( x1, x2, spline_object )
+       interpolate_x2_derivative_2d( x1, x2, spline_object )      
+       
+       sll_delete( spline_object )             
 \end{verbatim}
 \verb+new_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and doing some partial initialization of the object. Hence the full creation of a spline is a three-step process: the first one is the declaration of the spline pointer, the second is its assignment through a call to the \verb+new_spline_1D()+ function. The last step, which fully initializes the spline by computing all the coefficients is carried out by calling \verb+compute_spline_1D()+. This last call uses information inside the partially initialized spline object. For details, see the usage section below. 
 
@@ -1095,13 +1264,6 @@ In testing.
 
 
 
-
-\section{Logical Meshes}
-
-   \subsection{Description}
-   The types of mathematical problems which we aim at studying are usually most easily solved on regular cartesian grids. Because of reasons which will become clear when we discuss the coordinate transformations module, in Selalib we follow the convention of calling the simplest cartesian grids by the name \emph{logical meshes}. We use the terms \emph{grid} and \emph{mesh} interchangeably in this text. In the code we use exclusively the term \emph{mesh}. Also by our convention, these grids will represent a uniform meshing of a multidimensional domain on the logical coordinates $\eta_1, \eta_2, ..., \eta_n$. 
-   
-   The logical meshes are thus very simple entities, and they represent an aggregate of information like the extent of the domain in each direction, and the number of cells in which such direction is divided.
 
 
 

@@ -2,7 +2,44 @@
    :maxdepth: 2
 
 ==============================
-Install dependencies on MACOSX
+Install dependencies with Homebrew
+==============================
+ 
+Install Homebrew (not compatible with macports) ::
+
+	$ ruby -e "$(curl -fsSL https://raw.github.com/mxcl/homebrew/go/install)"
+	$ brew tap homebrew/science
+	$ brew install git
+	$ brew install cmake
+	$ brew install hdf5 --enable-fortran --enable-parallel
+	$ brew install pastix
+	$ brew install fftw
+	$ cd selalib/prototype/build
+	$ cmake ../src -DPASTIX_ENABLED=ON  \
+		-DZLIB_LIBRARIES="/usr/lib/libz.dylib;/usr/local/lib/libsz.a" \
+		-DHDF5_PARALLEL_ENABLED=ON
+	$ make
+
+==============================
+Install dependencies with macports
+==============================
+
+Install xcode and command-line tools ::
+
+	$ xcode-select --install﻿
+ 
+Install macports (http://www.macports.org/install.php) and ::
+
+	$ sudo port install openmpi 
+	$ sudo port install hdf5-18 +fortran+openmpi
+	$ sudo port install fftw-3
+	$ sudo port install cmake  +universal 
+	$ sudo port install git-core +bash_completion
+	$ sudo port install gnuplot doxygen texlive-latex
+
+
+==============================
+Install dependencies from scratch on MACOSX
 ==============================
 
 Download gcc+gfortran on http://hpc.sourceforge.net ::
