@@ -16,8 +16,8 @@ ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 SET(SLL_BUILD_PACKAGE OFF CACHE BOOL "Build library without test programs")
-SET(MUDPACK_ENABLED   OFF CACHE BOOL "Build mudpack library")
-SET(FISHPACK_ENABLED  OFF CACHE BOOL "Build fishpack library")
+SET(MUDPACK_ENABLED   ON  CACHE BOOL "Build mudpack library")
+SET(FISHPACK_ENABLED  ON  CACHE BOOL "Build fishpack library")
 SET(FORTRANCL_ENABLED OFF CACHE BOOL "Enable OpenCL test programs")
 SET(PASTIX_ENABLED    OFF CACHE BOOL "Build PasTiX solvers ")
 SET(PETSC_ENABLED     OFF CACHE BOOL "Enable PETSc solvers")
@@ -59,6 +59,11 @@ INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 INCLUDE(HDF5Config)
+
+IF(MPI_MODULE_ENABLED)
+   INCLUDE(ProcessorCount)
+   INCLUDE(POEConfig)
+ENDIF()
 
 
 # include's .h files
@@ -192,8 +197,6 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    IF(MPI_MODULE_ENABLED)
 
-      INCLUDE(ProcessorCount)
-      INCLUDE(POEConfig)
       INCLUDE(ParallelTests)
 
    ENDIF()

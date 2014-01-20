@@ -15,10 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> \author Pierre Navaro
-!> \brief
+!> @brief
 !> Implements the functions to write hdf5 file to store heavy data.
-!> \details
+!> @details
 !> With HDF5 you can store several datasets in a single file.
 !> @note 
 !> link with sll_file_io

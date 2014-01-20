@@ -192,7 +192,7 @@ contains
     sll_real64 :: keen_tflat
     logical :: keen_turn_drive_off
     sll_real64 :: keen_Edrmax
-    sll_real64 :: keen_omegadr	
+    sll_real64 :: keen_omegadr
     
     
     !local variables
@@ -385,9 +385,9 @@ contains
       case ("SLL_TWO_GRID_MESH")
         bloc_coord(1) = (x2_fine_min-x2_min)/(x2_max-x2_min)
         bloc_coord(2) = (x2_fine_max-x2_min)/(x2_max-x2_min)
-        bloc_index(1) = density_x2_min_to_x2_fine_min
-        bloc_index(2) = density_x2_fine_min_to_x2_fine_max
-        bloc_index(3) = density_x2_fine_max_to_x2_max
+        bloc_index(1) = floor(density_x2_min_to_x2_fine_min)
+        bloc_index(2) = floor(density_x2_fine_min_to_x2_fine_max)
+        bloc_index(3) = floor(density_x2_fine_max_to_x2_max)
                 
         call compute_bloc(bloc_coord,bloc_index,num_cells_x2)
         SLL_ALLOCATE(sim%x2_array(num_cells_x2+1),ierr)
@@ -409,6 +409,28 @@ contains
     select case (initial_function_case)
       case ("SLL_LANDAU")
         sim%init_func => sll_landau_initializer_2d
+        SLL_ALLOCATE(sim%params(2),ierr)
+        sim%params(1) = kmode
+        sim%params(2) = eps
+        sim%nrj0 = 0._f64  !compute the right value
+        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+        !for the moment
+        sim%kx = kmode
+        sim%eps = eps
+      case ("SLL_BUMP_ON_TAIL")
+        sim%init_func => sll_bump_on_tail_initializer_2d
+        SLL_ALLOCATE(sim%params(2),ierr)
+        sim%params(1) = kmode
+        sim%params(2) = eps
+        sim%nrj0 = 0._f64  !compute the right value
+        !(0.5_f64*eps*sll_pi)**2/(kmode_x1*kmode_x2) &
+          !*(1._f64/kmode_x1**2+1._f64/kmode_x2**2)
+        !for the moment
+        sim%kx = kmode
+        sim%eps = eps
+      case ("SLL_TWO_STREAM_INSTABILITY")
+        sim%init_func => sll_two_stream_instability_initializer_2d
         SLL_ALLOCATE(sim%params(2),ierr)
         sim%params(1) = kmode
         sim%params(2) = eps
@@ -517,7 +539,7 @@ contains
         sim%num_dof_x2 = num_cells_x2+1
       case ("SLL_CONSERVATIVE")
         sim%advection_form_x2 = SLL_CONSERVATIVE
-        sim%num_dof_x2 = num_cells_x2	
+        sim%num_dof_x2 = num_cells_x2
       case default
         print*,'#advection_form_x2', advection_form_x2, ' not implemented'
         print *,'#in init_vp2d_par_cart'
@@ -650,6 +672,8 @@ contains
   
     print *,'# Do not use the routine init_vp2d_fake'
     print *,'#use instead init_vp2d_par_cart'
+    print *,sim%dt
+    print *,filename
     stop
   
   end subroutine init_vp2d_fake
@@ -660,8 +684,8 @@ contains
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
     sll_real64,dimension(:,:),pointer :: f_x1,f_x2,f_x1_init
     sll_real64,dimension(:),pointer :: rho,efield,e_app,rho_loc
-    sll_real64, dimension(:), allocatable :: rho_split
-    sll_real64, dimension(:), allocatable :: rho_full
+    !sll_real64, dimension(:), allocatable :: rho_split
+    !sll_real64, dimension(:), allocatable :: rho_full
     
     sll_int32 :: rhotot_id
     sll_int32 :: efield_id     
@@ -689,13 +713,13 @@ contains
     sll_real64  ::   time, mass, momentum, l1norm, l2norm
     sll_real64  ::   kinetic_energy,potential_energy
 
-    sll_real64, dimension(:), allocatable :: x2_array
+    !sll_real64, dimension(:), allocatable :: x2_array
     sll_real64, dimension(:), allocatable :: x2_array_unit
     sll_real64, dimension(:), allocatable :: x2_array_middle
-    sll_real64, dimension(:), allocatable :: x1_array
+    !sll_real64, dimension(:), allocatable :: x1_array
     sll_real64, dimension(:), allocatable :: node_positions_x2
     sll_real64 :: mean
-    character(len=4)           :: fin   
+    !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
     type(sll_fft_plan), pointer         :: pfwd
@@ -705,12 +729,12 @@ contains
     sll_int32 :: nb_mode = 5
     sll_real64 :: t_step
     sll_int32 :: split_istep
-    sll_int32 :: split_x
-    sll_int32 :: split_x_init
+    !sll_int32 :: split_x
+    !sll_int32 :: split_x_init
     sll_int32 :: num_dof_x2 
     
     logical :: split_T
-    sll_int32 ::conservative_case
+    !sll_int32 ::conservative_case
     
     
     ! for parallelization (output of distribution function in one single file)
@@ -777,6 +801,11 @@ contains
     !definition of remap
     remap_plan_x1_x2 => NEW_REMAP_PLAN(layout_x1, layout_x2, f_x1)
     remap_plan_x2_x1 => NEW_REMAP_PLAN(layout_x2, layout_x1, f_x2)
+    
+    !      print *,'hello',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
+    !      call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
+    !      print *,'hello2',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
+
 
     
     !allocation of 1d arrays
@@ -897,7 +926,15 @@ contains
       !print *,'#maxf',maxval(f_visu), minval(f_visu) 
 #ifndef NOHDF5
       iplot = 1
-      call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+      call plot_f_cartesian( &
+        iplot, &
+        f_visu, &
+        sim%x1_array, &
+        np_x1, &
+        node_positions_x2, &
+        sim%num_dof_x2, &
+        'f')        
+        !sim%mesh2d)
       iplot = iplot+1  
 #endif
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
@@ -905,6 +942,8 @@ contains
 
     endif
     
+
+
     
     
     
@@ -997,13 +1036,14 @@ contains
 
 
 
-
+    if(sll_get_collective_rank(sll_world_collective)==0) then        
+      print *,'#step=',0,real(0,f64)*sim%dt
+    endif
     
-
     do istep = 1, sim%num_iterations
-      if (mod(istep-1,sim%freq_diag)==0) then
+      if (mod(istep,sim%freq_diag)==0) then
         if(sll_get_collective_rank(sll_world_collective)==0) then        
-          print *,'#step=',istep-1,real(istep-1,f64)*sim%dt
+          print *,'#step=',istep,real(istep,f64)*sim%dt
         endif
       endif  
 
@@ -1078,6 +1118,7 @@ contains
           endif
         
         else
+
           !! V ADVECTION 
           !transposition
           call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
@@ -1109,10 +1150,13 @@ contains
             
             f_x2(i,1:num_dof_x2) = f1d(1:num_dof_x2)
           end do
+
           !transposition
+          !print *,'hello',size(f_x1,1),size(f_x1,2),size(f_x2,1),size(f_x2,2)
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
           call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
+
 
         endif
         !split_x= 1-split_x
@@ -1203,7 +1247,33 @@ contains
             f_visu_buf1d )
           f_visu = reshape(f_visu_buf1d, shape(f_visu))
           if(sll_get_collective_rank(sll_world_collective)==0) then
+            do i=1,num_dof_x2
+              f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
+            enddo
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intdeltafdx', &
+              iplot )
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intdeltafdx')                        
             call sll_binary_write_array_2d(deltaf_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)  
+
+#ifndef NOHDF5
+            call plot_f_cartesian( &
+              iplot, &
+              f_visu, &
+              sim%x1_array, &
+              np_x1, &
+              node_positions_x2, &
+              sim%num_dof_x2, &
+              'deltaf')                    
+        !call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
+#endif
+          
+          
           endif
           !we store f for visu
           call load_buffer_2d( layout_x1, f_x1, f_x1_buf1d )
@@ -1218,10 +1288,30 @@ contains
             f_visu_buf1d )
           f_visu = reshape(f_visu_buf1d, shape(f_visu))
           if(sll_get_collective_rank(sll_world_collective)==0) then
+            do i=1,num_dof_x2
+              f_visu_buf1d(i) = sum(f_visu(1:np_x1-1,i))*sim%mesh2d%delta_eta1
+            enddo
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intfdx', &
+              iplot )
+            call sll_gnuplot_write_1d( &
+              f_visu_buf1d(1:num_dof_x2), &
+              node_positions_x2(1:num_dof_x2), &
+              'intfdx')
 #ifndef NOHDF5
-            call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
-            iplot = iplot+1  
+        call plot_f_cartesian( &
+          iplot, &
+          f_visu, &
+          sim%x1_array, &
+          np_x1, &
+          node_positions_x2, &
+          sim%num_dof_x2, &
+          'f')                    
+        !call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
 #endif
+            iplot = iplot+1  
           endif
                     
         endif
@@ -1254,7 +1344,12 @@ contains
 
   subroutine delete_vp2d_par_cart( sim )
     class(sll_simulation_2d_vlasov_poisson_cart) :: sim
-    sll_int32 :: ierr
+    !sll_int32 :: ierr
+    
+    print *,'#delete_vp2d_par_cart not implemented'
+    print *,sim%dt
+    
+    
   end subroutine delete_vp2d_par_cart
 
 
@@ -1298,7 +1393,7 @@ contains
     sll_int32,intent(in):: N
     sll_real64,intent(in)::M
     sll_int32::i
-    sll_real64::dx,tmp,tmp2
+    sll_real64::dx,tmp!,tmp2
     dx = 1._f64/real(N,f64)
     
     tmp=f(1)
@@ -1476,7 +1571,7 @@ contains
     sll_real64, intent(out) :: S
     logical, intent(in) :: turn_drive_off
     ! local variables
-    sll_int32 :: i 
+    !sll_int32 :: i 
     sll_real64 :: epsilon
 
     ! The envelope function is defined such that it is zero at t0,
@@ -1494,6 +1589,7 @@ contains
     if(S<0) then
        S = 0.
     endif
+    S = S + 0.*tflat ! for use of unused
     return
   end subroutine PFenvelope
 
@@ -1505,35 +1601,48 @@ contains
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------
-  subroutine plot_f_cartesian(iplot,f,mesh_2d)
+  subroutine plot_f_cartesian( &
+    iplot, &
+    f, &
+    node_positions_x1, &
+    nnodes_x1, &
+    node_positions_x2, &
+    nnodes_x2, &
+    array_name)    
+    !mesh_2d)
     use sll_xdmf
     use sll_hdf5_io
     sll_int32 :: file_id
     sll_int32 :: error
+    sll_real64, dimension(:), intent(in) :: node_positions_x1
+    sll_real64, dimension(:), intent(in) :: node_positions_x2    
+     character(len=*), intent(in) :: array_name !< field name
     sll_real64, dimension(:,:), allocatable :: x1
     sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32, intent(in) :: nnodes_x1
+    sll_int32, intent(in) :: nnodes_x2
     sll_int32 :: i, j
     sll_int32, intent(in) :: iplot
     character(len=4)      :: cplot
-    sll_int32             :: nnodes_x1, nnodes_x2
-    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    !sll_int32             :: nnodes_x1, nnodes_x2
+    !type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: r
-    sll_real64 :: theta
-    sll_real64 ::  x1_min, x2_min
-    sll_real64 ::  x1_max, x2_max  
-    sll_real64 :: dx1
-    sll_real64 :: dx2
+    !sll_real64 :: r
+    !sll_real64 :: theta
+    !sll_real64 ::  x1_min, x2_min
+    !sll_real64 ::  x1_max, x2_max  
+    !sll_real64 :: dx1
+    !sll_real64 :: dx2
     
     
-    nnodes_x1 = mesh_2d%num_cells1+1
-    nnodes_x2 = mesh_2d%num_cells2+1
-    x1_min = mesh_2d%eta1_min
-    x1_max = mesh_2d%eta1_max
-    x2_min = mesh_2d%eta2_min
-    x2_max = mesh_2d%eta2_max
-    dx1 = mesh_2d%delta_eta1
-    dx2 = mesh_2d%delta_eta2
+    !nnodes_x1 = mesh_2d%num_cells1+1
+    !nnodes_x2 = mesh_2d%num_cells2+1
+    !x1_min = mesh_2d%eta1_min
+    !x1_max = mesh_2d%eta1_max
+    !x2_min = mesh_2d%eta2_min
+    !x2_max = mesh_2d%eta2_max
+    !dx1 = mesh_2d%delta_eta1
+    !dx2 = mesh_2d%delta_eta2
     
     !print *,'#maxf=',iplot,maxval(f),minval(f)
     
@@ -1545,8 +1654,8 @@ contains
       SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
       do j = 1,nnodes_x2
         do i = 1,nnodes_x1
-          x1(i,j) = x1_min+real(i-1,f32)*dx1
-          x2(i,j) = x2_min+real(j-1,f32)*dx2
+          x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
+          x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
         end do
       end do
       call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
@@ -1561,9 +1670,9 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","cartesian_mesh", &
+    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
+    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_cartesian

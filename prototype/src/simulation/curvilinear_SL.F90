@@ -173,19 +173,19 @@ program radial_1d_SL
   SLL_ALLOCATE(diag(10,0:nb_step), err)
 	
   ! creation of the splines
-  spl_bsl => new_spline_2D(Neta1+1, Neta2+1, &
+  spl_bsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_pi, &
     bc1_type, bc2_type)
-  spl_bsl_nc => new_spline_2D(Neta1+1, Neta2+1, &
+  spl_bsl_nc => new_cubic_spline_2D(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_pi, &
     bc1_type, bc2_type)
-  spl_fsl => new_spline_2D(Neta1+1, Neta2+1, &
+  spl_fsl => new_cubic_spline_2D(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_pi, &
     bc1_type, bc2_type)
-  spl_fsl_nc => new_spline_2D(Neta1+1, Neta2+1, &
+  spl_fsl_nc => new_cubic_spline_2D(Neta1+1, Neta2+1, &
     eta1_min, eta1_max, &
     0._f64, 2._f64*sll_pi, &
     bc1_type, bc2_type)
@@ -335,10 +335,10 @@ program radial_1d_SL
       fh_fsl_nc(i,Neta2+1) = fh_fsl_nc(i,1)
     enddo
       
-    call compute_spline_2D(fh_bsl,spl_bsl)
-    call compute_spline_2D(fh_bsl_nc,spl_bsl_nc)
-    call compute_spline_2D(fh_fsl,spl_fsl)
-    call compute_spline_2D(fh_fsl_nc,spl_fsl_nc)
+    call compute_cubic_spline_2D(fh_bsl,spl_bsl)
+    call compute_cubic_spline_2D(fh_bsl_nc,spl_bsl_nc)
+    call compute_cubic_spline_2D(fh_fsl,spl_fsl)
+    call compute_cubic_spline_2D(fh_fsl_nc,spl_fsl_nc)
     
     do i=1,Neta1+1
       do j=1,Neta2+1

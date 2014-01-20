@@ -1,16 +1,3 @@
-!****************************************************
-!
-! Selalib      
-! Module: test_processes_module.F90
-!
-!> @brief 
-!> Module of test processes for sll_cubic_splines unit test
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr)
-!                                  
-!****************************************************
-
 module test_processes_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -107,16 +94,16 @@ contains
     end do
      
     print *, 'proceed to allocate the spline...'
-    sp1 =>  new_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
-    call compute_spline_1D( data, sp1 )
-    sp2 =>  new_spline_1D( &
+    sp1 =>  new_cubic_spline_1D( NP, XMIN, XMAX, SLL_PERIODIC )
+    call compute_cubic_spline_1D( data, sp1 )
+    sp2 =>  new_cubic_spline_1D( &
          NP, &
          XMIN, &
          XMAX, &
          SLL_HERMITE, &
          fprime(XMIN, i_test), &
          fprime(XMAX, i_test) )
-    call compute_spline_1D( data, sp2 )
+    call compute_cubic_spline_1D( data, sp2 )
     
     print *, 'cumulative errors: '
     print *, 'periodic case, NP-1 points: '
@@ -211,8 +198,8 @@ contains
        end if
     endif
      
-    call delete_spline_1D(sp1)
-    call delete_spline_1D(sp2)
+    call sll_delete(sp1)
+    call sll_delete(sp2)
     
     SLL_DEALLOCATE_ARRAY(data, err)
     SLL_DEALLOCATE_ARRAY(deriv, err)
@@ -258,11 +245,11 @@ contains
     end do
         
     ! Test the periodic-periodic spline2d 
-    sp2d_1 => new_spline_2D( NPX1, NPX2, &
+    sp2d_1 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_PERIODIC, SLL_PERIODIC )
-    call compute_spline_2D_prdc_prdc( data_2d, sp2d_1 )
+    call compute_cubic_spline_2D( data_2d, sp2d_1 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -282,13 +269,13 @@ contains
     endif
     ! Test the Hermite-periodic spline2d
     !print *, 'Testing hermite-periodic spline. Test 1'
-    sp2d_2 => new_spline_2D( NPX1, NPX2, &
+    sp2d_2 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_HERMITE, SLL_PERIODIC, &
          const_slope_x1_min = fprime(X1MIN, i_test), &
          const_slope_x1_max = fprime(X1MAX, i_test) )
-    call compute_spline_2D_hrmt_prdc( data_2d, sp2d_2 )
+    call compute_cubic_spline_2D( data_2d, sp2d_2 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -307,13 +294,13 @@ contains
        stop
     endif
     ! Test the periodic-Hermite spline2d
-    sp2d_3 => new_spline_2D( NPX1, NPX2, &
+    sp2d_3 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_PERIODIC, SLL_HERMITE, &
          const_slope_x2_min = fprime(X2MIN, j_test), &
          const_slope_x2_max = fprime(X2MAX, j_test) )
-    call compute_spline_2D_prdc_hrmt( data_2d, sp2d_3 )
+    call compute_cubic_spline_2D( data_2d, sp2d_3 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -332,13 +319,13 @@ contains
        stop
     endif
     ! Test the Hermite-Hermite spline2d
-    sp2d_4 => new_spline_2D( NPX1, NPX2, &
+    sp2d_4 => new_cubic_spline_2D( NPX1, NPX2, &
          X1MIN, X1MAX, &
          X2MIN, X2MAX, &
          SLL_HERMITE, SLL_HERMITE,&
          fprime(X1MIN, i_test), fprime(X1MAX, i_test), &
          fprime(X2MIN, j_test), fprime(X2MAX, j_test) )   
-    call compute_spline_2D_hrmt_hrmt( data_2d, sp2d_4 )
+    call compute_cubic_spline_2D( data_2d, sp2d_4 )
     acc_2D = 0.0
     do j=1, NPX2
        do i=1, NPX1
@@ -357,10 +344,10 @@ contains
        stop
     endif
      
-    call delete(sp2d_1)
-    call delete(sp2d_2)
-    call delete(sp2d_3)
-    call delete(sp2d_4)
+    call sll_delete(sp2d_1)
+    call sll_delete(sp2d_2)
+    call sll_delete(sp2d_3)
+    call sll_delete(sp2d_4)
     
     SLL_DEALLOCATE_ARRAY(data_2d, err)
     SLL_DEALLOCATE_ARRAY(coordinates_i,err)
@@ -431,13 +418,13 @@ contains
        correct_data_out(i+1) = result_f(x1)
     end do
 
-    spline => new_spline_1D( &
+    spline => new_cubic_spline_1D( &
       npts, &
       xmin, &
       xmax, &
       SLL_PERIODIC )
 
-    call compute_spline_1D(data_in, spline)
+    call compute_cubic_spline_1D(data_in, spline)
     do i=0,npts-1
        x1 = xmin + real(i,f64)*h1 
        val = interpolator_f(x1,spline)
@@ -453,7 +440,7 @@ contains
        test_passed = .false.
     end if
     ! deallocate memory
-    call delete(spline)
+    call sll_delete(spline)
     SLL_DEALLOCATE_ARRAY(data_in, ierr)
     SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
   end subroutine interpolator_tester_1d_prdc
@@ -515,13 +502,13 @@ contains
           correct_data_out(i+1) = result_f(x1)
        end do
 
-       spline => new_spline_1D( &
+       spline => new_cubic_spline_1D( &
             npts, &
             xmin, &
             xmax, &
             SLL_HERMITE )
 
-       call compute_spline_1D(data_in, spline)
+       call compute_cubic_spline_1D(data_in, spline)
        do i=0,npts-2
           x1 = xmin + real(i,f64)*h1 
           val = interpolator_f(x1,spline)
@@ -542,11 +529,10 @@ contains
        else
           test_passed = .false.
           print *, 'Failure in case: num. points = ', npts, 'Average error = ', &
-               average_error, 'delta^4 = ', h1**4, 'fast algorithm? ', &
-               spline%use_fast_algorithm
+               average_error, 'delta^4 = ', h1**4
        end if
        ! deallocate memory
-       call delete(spline)
+       call sll_delete(spline)
        SLL_DEALLOCATE_ARRAY(data_in, ierr)
        SLL_DEALLOCATE_ARRAY(correct_data_out, ierr)
     end do
@@ -581,24 +567,23 @@ contains
     local_test_passed = .true.
     print *, 'X1MIN, X1MAX = ', X1MIN, X1MAX
     ! Run the test over a range of data sizes.
+    print*, np_min , np_max
     do npts=np_min, np_max
        h1 = (X1MAX - X1MIN)/real(npts-1,f64)
        acc = 0.0_f64
+       print*, npts
        SLL_ALLOCATE(data_in(npts),ierr)
        do i=0,npts-1
           x1 = X1MIN + real(i,f64)*h1 
           data_in(i+1) = func_1d(x1)
        end do
-       
-       spline => new_spline_1D( &
+       spline => new_cubic_spline_1D( &
             npts, &
             X1MIN, &
             X1MAX, &
             SLL_HERMITE )
        
-       call compute_spline_1D( data_in, spline )
-       !        print *, '1D coefficients: '
-       !    print *,  spline%coeffs(:)
+       call compute_cubic_spline_1D( data_in, spline )
        acc = 0.0_f64
        do i=0,npts-2 ! last point excluded and done separately...
           x1 = X1MIN + real(i,f64)*h1 
@@ -667,7 +652,7 @@ contains
        end do
     end do
 
-    spline => new_spline_2D( &
+    spline => new_cubic_spline_2D( &
       NPX1, &
       NPX2, &
       X1MIN, &
@@ -677,7 +662,7 @@ contains
       SLL_PERIODIC, &
       SLL_PERIODIC )
 
-    call compute_spline_2D(data_in,spline)
+    call compute_cubic_spline_2D(data_in,spline)
 
     do j=0,NPX2-1
        do i=0,NPX1-1
@@ -756,7 +741,7 @@ contains
        slopes_max(j+1) = slope_max_func(1.0_f64,x2)
     end do
 
-    spline => new_spline_2D( &
+    spline => new_cubic_spline_2D( &
       NPX1, &
       NPX2, &
       0.0_f64, &
@@ -768,7 +753,7 @@ contains
       x1_min_slopes=slopes_min, &
       x1_max_slopes=slopes_max )
 
-    call compute_spline_2D(data_in,spline)
+    call compute_cubic_spline_2D(data_in,spline)
 
     do j=0,NPX2-1
        do i=0,NPX1-1
@@ -846,7 +831,7 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -858,7 +843,7 @@ contains
          x1_min_slopes=eta1_min_slopes, &
          x1_max_slopes=eta1_max_slopes )
 
-    call compute_spline_2D_hrmt_prdc( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -935,7 +920,7 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(1.0_f64,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -947,7 +932,7 @@ contains
 !         x1_min_slopes=eta1_min_slopes, &
 !         x1_max_slopes=eta1_max_slopes )
 
-    call compute_spline_2D_hrmt_prdc( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1025,7 +1010,7 @@ contains
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1037,7 +1022,7 @@ contains
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D_prdc_hrmt( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1114,7 +1099,7 @@ contains
        eta2_max_slopes(i+1) = eta2_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1126,7 +1111,7 @@ contains
 !         x2_min_slopes=eta2_min_slopes, &
 !         x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D_prdc_hrmt( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1221,7 +1206,7 @@ contains
        eta1_max_slopes(j+1) = eta1_max_slope_func(eta1,eta2)
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1235,7 +1220,7 @@ contains
          x2_min_slopes=eta2_min_slopes, &
          x2_max_slopes=eta2_max_slopes )
 
-    call compute_spline_2D_hrmt_hrmt( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1290,7 +1275,7 @@ contains
        end do
     end do
 
-    spline =>new_spline_2D( &
+    spline =>new_cubic_spline_2D( &
          NPX1, &
          NPX2, &
          0.0_f64, &
@@ -1300,7 +1285,7 @@ contains
          SLL_HERMITE, &
          SLL_HERMITE )
 
-    call compute_spline_2D_hrmt_hrmt( data, spline )
+    call compute_cubic_spline_2D( data, spline )
 
     ! compare results
     acc = 0.0_f64
@@ -1339,25 +1324,25 @@ contains
   function plane( x, y )
     sll_real64 :: plane
     sll_real64, intent(in) :: x, y
-    plane = 2.0*x + 1.0
+    plane = 2.0*x + 1.0+0._f64*y
   end function plane
 
   function plane_deriv( x, y )
     sll_real64 :: plane_deriv
     sll_real64, intent(in) :: x, y
-    plane_deriv = 2.0
+    plane_deriv = 2.0+ 0._f64*x+0._f64*y
   end function plane_deriv
 
   function plane2( x, y)
     sll_real64 :: plane2
     sll_real64, intent(in) :: x, y
-    plane2 = 2.0*y + 1.0
+    plane2 = 2.0*y + 1.0+ 0._f64*x
   end function plane2
 
   function plane2_deriv( x, y )
     sll_real64 :: plane2_deriv
     sll_real64, intent(in) :: x, y
-    plane2_deriv = 2.0
+    plane2_deriv = 2.0+ 0._f64*x+0._f64*y
   end function plane2_deriv
 
   function plane3( x, y)
@@ -1369,13 +1354,13 @@ contains
   function plane3_deriv_x( x, y )
     sll_real64 :: plane3_deriv_x
     sll_real64, intent(in) :: x, y
-    plane3_deriv_x = 2.0
+    plane3_deriv_x = 2.0+ 0._f64*x+0._f64*y
   end function plane3_deriv_x
 
   function plane3_deriv_y( x, y )
     sll_real64 :: plane3_deriv_y
     sll_real64, intent(in) :: x, y
-    plane3_deriv_y = 2.0
+    plane3_deriv_y = 2.0+ 0._f64*x+0._f64*y
   end function plane3_deriv_y
 
   function polar_x( eta1, eta2 )
@@ -1393,7 +1378,7 @@ contains
   function deriv1_polar_x( eta1, eta2 )
     sll_real64 :: deriv1_polar_x
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
+    deriv1_polar_x = (r2-r1)*cos(2.0_f64*sll_pi*eta2)+0._f64*eta1
   end function deriv1_polar_x
 
   function deriv2_polar_x( eta1, eta2 )
@@ -1405,7 +1390,7 @@ contains
   function deriv1_polar_y( eta1, eta2 )
     sll_real64 :: deriv1_polar_y
     sll_real64, intent(in) :: eta1, eta2
-    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
+    deriv1_polar_y = (r2-r1)*sin(2.0_f64*sll_pi*eta2)+0._f64*eta1
   end function deriv1_polar_y
 
   function deriv2_polar_y( eta1, eta2 )

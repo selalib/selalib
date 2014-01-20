@@ -67,8 +67,11 @@ contains
        SLL_ALLOCATE(this%grad_fft(nr+1,ntheta/2+1),err)
     end if
 
-    this%spl_phi => new_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
-         & SLL_HERMITE, SLL_PERIODIC,const_slope_x1_min = 0._f64,const_slope_x1_max = 0._f64)
+    this%spl_phi => &
+         new_cubic_spline_2D(nr+1,ntheta+1,rmin,rmax,0._f64, 2._f64*sll_pi, &
+         SLL_HERMITE, SLL_PERIODIC, &
+         const_slope_x1_min = 0._f64, &
+         const_slope_x1_max = 0._f64)
 
     SLL_ALLOCATE(bufr(ntheta),err)
     SLL_ALLOCATE(bufc(ntheta/2+1),err)
@@ -98,7 +101,7 @@ contains
     end if
     call fft_delete_plan(this%pfwd)
     call fft_delete_plan(this%pinv)
-    call delete_spline_2d(this%spl_phi)
+    call sll_delete(this%spl_phi)
     SLL_DEALLOCATE(this,err)
     this=>null()
 
@@ -212,7 +215,7 @@ contains
     else if (plan%grad_case==3) then
        ! using splines for r and theta
 
-       call compute_spline_2D(phi,plan%spl_phi)
+       call compute_cubic_spline_2D(phi,plan%spl_phi)
 
        do j=1,ntheta
           theta=real(j-1,f64)*dtheta

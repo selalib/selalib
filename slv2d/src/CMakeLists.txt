@@ -77,7 +77,7 @@ IF(NOT HDF5_FOUND)
    ENDIF()
 ENDIF(NOT HDF5_FOUND)
 
-SET(FFT_DEFAULT_LIBRARY "FFTW")
+SET(FFT_LIB "FFTW")
 SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
@@ -94,8 +94,8 @@ SET(SLV2D_SRC silo_module.F90
               diagnostiques.F90
               geometry.F90
               maxwell2dfdtd.F90
-              poisson2dpp_seq.F90
               fft_module.F90
+              poisson2dpp_seq.F90
               poisson2d_periodic.F90
               precision.F90
               splinenn.F90
@@ -229,7 +229,9 @@ ENABLE_TESTING()
 
 INCLUDE(POEConfig)
 SET(PROCS 4)
-SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml)
+FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+SET(ARGS "slv2d.nml")
 
 ADD_MPI_TEST(test_vp4d       vp4d_transpose       ${PROCS} ${ARGS})
 ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})
