@@ -91,9 +91,9 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      procedure, pass(sim) :: init_from_file => init_vp6d_par_cart
   end type sll_simulation_6d_vlasov_poisson_cart
 
-  interface delete
+  interface sll_delete
      module procedure delete_vp6d_par_cart
-  end interface delete
+  end interface sll_delete
 
 contains
 
@@ -908,20 +908,20 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%ey_split, ierr )
     SLL_DEALLOCATE_ARRAY( sim%ez_x3, ierr )
     SLL_DEALLOCATE_ARRAY( sim%ez_split, ierr )
-    call delete( sim%sequential_x1x2x3 )
-    call delete( sim%sequential_x4x5x6 )
-    call delete( sim%rho_seq_x1 )
-    call delete( sim%rho_seq_x2 )
-    call delete( sim%rho_seq_x3 )
-    call delete( sim%split_rho_layout )
-    call delete( sim%split_to_seqx1 )
-    call delete( sim%seqx1_to_seqx2 )
-    call delete( sim%seqx2_to_seqx3 )
-    call delete( sim%ex_x1_to_split )
-    call delete( sim%ey_x2_to_split )
-    call delete( sim%ez_x3_to_split )
-    call delete( sim%seqx1x2x3_to_seqx4x5x6 )
-    call delete( sim%seqx4x5x6_to_seqx1x2x3 )
+    call sll_delete( sim%sequential_x1x2x3 )
+    call sll_delete( sim%sequential_x4x5x6 )
+    call sll_delete( sim%rho_seq_x1 )
+    call sll_delete( sim%rho_seq_x2 )
+    call sll_delete( sim%rho_seq_x3 )
+    call sll_delete( sim%split_rho_layout )
+    call sll_delete( sim%split_to_seqx1 )
+    call sll_delete( sim%seqx1_to_seqx2 )
+    call sll_delete( sim%seqx2_to_seqx3 )
+    call sll_delete( sim%ex_x1_to_split )
+    call sll_delete( sim%ey_x2_to_split )
+    call sll_delete( sim%ez_x3_to_split )
+    call sll_delete( sim%seqx1x2x3_to_seqx4x5x6 )
+    call sll_delete( sim%seqx4x5x6_to_seqx1x2x3 )
     call delete( sim%interp_x1 )
     call delete( sim%interp_x2 )
     call delete( sim%interp_x3 )

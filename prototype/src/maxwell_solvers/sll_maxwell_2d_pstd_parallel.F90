@@ -381,10 +381,10 @@ contains
     call fftw_destroy_plan(plan%bwx)
     call fftw_destroy_plan(plan%bwy)
 
-    call delete(plan%rmp_xy)
-    call delete(plan%rmp_yx)
-    call delete(plan%layout_x)
-    call delete(plan%layout_y)
+    call sll_delete(plan%rmp_xy)
+    call sll_delete(plan%rmp_yx)
+    call sll_delete(plan%layout_x)
+    call sll_delete(plan%layout_y)
 
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 
