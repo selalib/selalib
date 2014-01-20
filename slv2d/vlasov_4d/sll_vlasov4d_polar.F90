@@ -360,10 +360,10 @@ subroutine initialize_vp4d_polar( this,        &
     SLL_DEALLOCATE( this%f, error )
     SLL_DEALLOCATE( this%ft, error )
 
-    call delete( this%layout_x )
-    call delete( this%layout_v )
-    call delete( this%x_to_v )
-    call delete( this%v_to_x )
+    call sll_delete( this%layout_x )
+    call sll_delete( this%layout_v )
+    call sll_delete( this%x_to_v )
+    call sll_delete( this%v_to_x )
 
   end subroutine delete_vp4d_par_polar
 
