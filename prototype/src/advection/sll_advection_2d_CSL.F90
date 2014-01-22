@@ -255,8 +255,8 @@ contains
     sll_int32 :: i0_loc
     sll_int32 :: j0_loc
     sll_real64 :: res
-    sll_real64 :: minfl
-    sll_real64 :: maxfl
+    sll_int32 :: minfl
+    sll_int32 :: maxfl
     
     
     
