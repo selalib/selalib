@@ -20,10 +20,11 @@ IF( NOT STDF95)
 
   TARGET_LINK_LIBRARIES( 
     sll_advection
-    sll_periodic_interp
-    sll_splines
     sll_characteristics
     sll_interpolators
+    sll_periodic_interp
+    sll_splines
+    sll_utilities
   )
 
   ADD_EXECUTABLE(
@@ -95,17 +96,14 @@ IF( NOT STDF95)
     sll_advection)
 
     
-    
-    
-
   ADD_EXECUTABLE(
     test_aligned_translation_2d
     aligned_translation_2d.F90)
 
   TARGET_LINK_LIBRARIES(
     test_aligned_translation_2d
-    sll_utilities
-    sll_advection)
+    sll_advection
+    sll_utilities)
 
   ADD_EXECUTABLE(
     test_rotation_2d
