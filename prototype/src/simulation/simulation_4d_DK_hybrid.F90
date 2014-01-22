@@ -92,7 +92,6 @@ module sll_simulation_4d_DK_hybrid_module
      sll_real64, dimension(:), pointer :: eta3_grid
      sll_real64, dimension(:), pointer :: vpar_grid
      
-
      !--> Coordinate transformation F
      class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
      !--> Norm of norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
@@ -205,6 +204,267 @@ module sll_simulation_4d_DK_hybrid_module
   end interface initialize
 
 contains
+
+  !************************************************************
+  !  4D DRIFT-KINETIC HYBRID SIMULATION
+  !************************************************************
+
+  !----------------------------------------------------
+  ! Initialization of the drift-kinetic 4D simulation
+  !----------------------------------------------------
+  subroutine initialize_4d_DK_hybrid( sim, &
+    world_size, &
+    my_rank, &
+    logical_mesh4d, &
+    transf_xy)
+
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_int32                        , intent(in)    :: world_size
+    sll_int32                        , intent(in)    :: my_rank
+    type(sll_logical_mesh_4d)        , pointer       :: logical_mesh4d
+    class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
+
+    sll_int32 :: ierr
+    sll_int32 :: ieta1, ieta2, ieta3, ivpar
+    sll_int32 :: Nx, Ny
+    sll_int32 :: size_diag
+
+    !--> Parallelization initialization
+    sim%world_size = world_size
+    sim%my_rank    = my_rank
+
+    !--> Initialization of the number of points
+    sim%Neta1 = sim%nc_x1+1
+    sim%Neta2 = sim%nc_x2+1
+    sim%Neta3 = sim%nc_x3+1
+    sim%Nvpar = sim%nc_x4+1
+
+    !--> Initialization of the boundary conditions
+    sim%bc_left_eta1  = SLL_DIRICHLET
+    sim%bc_right_eta1 = SLL_DIRICHLET
+    sim%bc_left_eta2  = SLL_PERIODIC
+    sim%bc_right_eta2 = SLL_PERIODIC
+    sim%bc_left_eta3  = SLL_PERIODIC
+    sim%bc_right_eta3 = SLL_PERIODIC
+    sim%bc_left_vpar  = SLL_DIRICHLET
+    sim%bc_right_vpar = SLL_DIRICHLET
+
+    !--> Logical mesh initialization
+    sim%logical_mesh4d => logical_mesh4d
+    SLL_ALLOCATE(sim%eta1_grid(sim%Neta1),ierr)    
+    SLL_ALLOCATE(sim%eta2_grid(sim%Neta2),ierr)
+    SLL_ALLOCATE(sim%eta3_grid(sim%Neta3),ierr)
+    SLL_ALLOCATE(sim%vpar_grid(sim%Nvpar),ierr)
+    do ieta1 = 1,sim%Neta1
+      sim%eta1_grid(ieta1) = sim%logical_mesh4d%eta1_min + &
+        (ieta1-1)*sim%logical_mesh4d%delta_eta1
+    end do
+    do ieta2 = 1,sim%Neta2
+      sim%eta2_grid(ieta2) = sim%logical_mesh4d%eta2_min + &
+        (ieta2-1)*sim%logical_mesh4d%delta_eta2
+    end do
+    do ieta3 = 1,sim%Neta3
+      sim%eta3_grid(ieta3) = sim%logical_mesh4d%eta3_min + &
+        (ieta3-1)*sim%logical_mesh4d%delta_eta3
+    end do
+    do ivpar = 1,sim%Nvpar
+      sim%vpar_grid(ivpar) = sim%logical_mesh4d%eta4_min + &
+        (ivpar-1)*sim%logical_mesh4d%delta_eta4
+    end do
+
+    !--> Transformation initialization
+    sim%transf_xy => transf_xy
+    
+    !--> Initialization of the (x,y) 2D mesh and
+    !--> Initialization of the square of the norm 
+    Nx = sim%Neta1
+    Ny = sim%Neta2
+    SLL_ALLOCATE(sim%xgrid_2d(Nx,Ny),ierr)
+    SLL_ALLOCATE(sim%ygrid_2d(Nx,Ny),ierr)
+    SLL_ALLOCATE(sim%norm_square_xy(Nx,Ny),ierr)
+    do ieta2 = 1,sim%Neta2
+      do ieta1 = 1,sim%Neta1
+        sim%xgrid_2d(ieta1,ieta2) = &
+          sim%transf_xy%x1_at_node(ieta1,ieta2)
+        sim%ygrid_2d(ieta1,ieta2) = &
+          sim%transf_xy%x2_at_node(ieta1,ieta2)
+        sim%norm_square_xy(ieta1,ieta2) = sim%xgrid_2d(ieta1,ieta2)**2 &
+                                        + sim%ygrid_2d(ieta1,ieta2)**2
+      end do
+    end do
+
+    !--> Initialization diagnostics for the norm
+    size_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
+    SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_norm_L1(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_norm_L2(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_norm_Linf(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_entropy_kin(size_diag),ierr)
+    
+    !--> Initialization diagnostics for the energy
+    SLL_ALLOCATE(sim%diag_nrj_kin(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_nrj_pot(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_nrj_tot(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_heat_flux(size_diag),ierr)
+
+    !--> Radial profile initialisation
+    call init_profiles_DK(sim)
+    
+    !*** Allocation of the distribution function ***
+    call allocate_fdistribu4d_DK(sim)
+    
+    !*** Allocation of the QN solveR ***
+    call allocate_QN_DK(sim)
+    
+    !*** Initialization of the QN solver ***
+    call initialize_QN_DK (sim)
+
+  end subroutine initialize_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! Run drift-kinetic 4D simulation
+  !----------------------------------------------------
+  subroutine run_4d_DK_hybrid( sim )
+
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    integer :: iter
+
+    !--> For timers
+    type(sll_time_mark) :: t0, t1 
+    double precision    :: elaps_time_advec, elaps_time_QN
+
+    elaps_time_advec = 0.0
+    elaps_time_QN    = 0.0
+   
+    do iter = 1,sim%nb_iter
+      if (sim%my_rank.eq.0) &
+        print*,' ===> ITERATION = ',iter
+
+      call sll_set_time_mark(t0)
+      !--> Advection in vpar direction'
+      call advec1D_vpar(sim,0.5_f64*sim%dt)
+
+      ! --> Advection in eta3 direction'
+      call advec1D_eta3(sim,0.5_f64*sim%dt)
+   
+      !--> Sequential for the advection in eta1eta2
+      call apply_remap_4D(sim%seqx3x4_to_seqx1x2,sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
+
+      !--> Advection in eta1,eta2 direction'
+      call advec2D_eta1eta2(sim,sim%dt)
+    
+      !--> Sequential for the advection in eta3 and in vpar
+      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4 )
+    
+      !--> Advection in eta3 direction'
+      call advec1D_eta3(sim,0.5_f64*sim%dt)
+
+      !--> Advection in vpar direction'
+      call advec1D_vpar(sim,0.5_f64*sim%dt)
+      
+      !--> Sequential to solve the quasi-neutral equation
+      call apply_remap_4D(sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
+      
+      call sll_set_time_mark(t1)
+      elaps_time_advec = elaps_time_advec + &
+        sll_time_elapsed_between(t0,t1)
+        
+      !--> Solve the quasi-neutral equation
+      call sll_set_time_mark(t0)
+      !-----> Computation of the rhs of QN 
+      call compute_charge_density(sim)
+      !-----> Solve QN
+      call solve_QN( sim )
+      call sll_set_time_mark(t1)
+      elaps_time_QN = elaps_time_QN + &
+        sll_time_elapsed_between(t0,t1)
+
+      !--> Compute the new electric field
+      call compute_Efield( sim )
+
+      !--> Sequential for the advection in eta3 and in vpar
+      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4)     
+
+      !--> Save results in HDF5 files
+      if ( mod(iter,int(sim%diag2D_step/sim%dt)) == 0) then
+
+          !--> Compute energy kinetic, potential and total
+         call compute_energy(sim)
+         
+         !--> Compute L1 norm, L2 norm, L infini norm
+         call compute_norm_L1_L2_Linf(sim)
+
+         call writeHDF5_diag( sim )
+
+      end if
+   end do
+   
+    if (sim%my_rank.eq.0) then
+       print*, ' Time for advec in run_4d_DK_hybrid  = ', elaps_time_advec
+       print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
+    end if
+  end subroutine run_4d_DK_hybrid
+
+
+  !----------------------------------------------------
+  ! Initialization of the drift-kinetic 4D simulation
+  !----------------------------------------------------
+  subroutine delete_4d_DK_hybrid( sim )
+
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32 :: ierr
+
+    SLL_DEALLOCATE(sim%eta1_grid,ierr)    
+    SLL_DEALLOCATE(sim%eta2_grid,ierr)
+    SLL_DEALLOCATE(sim%eta3_grid,ierr)
+    SLL_DEALLOCATE(sim%vpar_grid,ierr)
+    SLL_DEALLOCATE(sim%r_grid,ierr) 
+    SLL_DEALLOCATE(sim%norm_square_xy,ierr)
+    SLL_DEALLOCATE(sim%xgrid_2d,ierr)
+    SLL_DEALLOCATE(sim%ygrid_2d,ierr) 
+    SLL_DEALLOCATE(sim%n0_r,ierr)
+    SLL_DEALLOCATE(sim%Ti_r,ierr)
+    SLL_DEALLOCATE(sim%Te_r,ierr)
+    SLL_DEALLOCATE(sim%n0_xy,ierr)
+    SLL_DEALLOCATE(sim%Ti_xy,ierr)
+    SLL_DEALLOCATE(sim%Te_xy,ierr)
+    SLL_DEALLOCATE(sim%B_xy,ierr)
+    SLL_DEALLOCATE(sim%feq_xyvpar,ierr)
+    SLL_DEALLOCATE(sim%f4d_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%f4d_seqx3x4,ierr)
+    call delete(sim%layout4d_seqx1x2)
+    call delete(sim%layout4d_seqx3x4)
+    SLL_DEALLOCATE(sim%rho3d_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%rho3d_seqx3,ierr)
+    SLL_DEALLOCATE(sim%phi3d_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%phi3d_seqx3,ierr)
+    SLL_DEALLOCATE(sim%E3d_eta1_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_eta2_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_x1_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_x2_seqx1x2,ierr)
+    SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
+    SLL_DEALLOCATE(sim%diag_masse,ierr)
+    SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
+    SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
+    SLL_DEALLOCATE(sim%diag_norm_Linf,ierr)
+    SLL_DEALLOCATE(sim%diag_entropy_kin,ierr)
+    SLL_DEALLOCATE(sim%diag_nrj_kin,ierr)
+    SLL_DEALLOCATE(sim%diag_nrj_pot,ierr)
+    SLL_DEALLOCATE(sim%diag_nrj_tot,ierr)
+    SLL_DEALLOCATE(sim%diag_heat_flux,ierr)
+    call delete(sim%layout3d_seqx1x2)
+    call delete(sim%layout3d_seqx3)
+
+  end subroutine delete_4d_DK_hybrid
+
+
+
+  !************************************************************
+  !  PROFILE INITIALISATION
+  !************************************************************
 
   !----------------------------------------------------------
   !  Read the initial data file : sim4d_DK_hybrid_input.txt
@@ -331,14 +591,12 @@ contains
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
 
     sll_real64, dimension(3) :: params_n0,params_Te,params_Ti
-
     
     sll_real64 :: Lz
 
     !--> Initialisation of R0 = major_radius
     Lz               = abs(sim%phi_max-sim%phi_min)
     sim%major_radius = Lz/(2._f64*sll_pi)
-
 
     !--> Initialization of r_grid
     Nr = sim%nc_x1+1
@@ -390,34 +648,30 @@ contains
    ! call function_xy_from_r(sim%r_grid,sim%Te_r,sim%xgrid_2d, &
    !      sim%ygrid_2d,sim%Te_xy)
 
-    !!! profil exacte
-    !!! paramas for radial density profiles
+    !--> parameters for radial density profiles
     params_n0(1) = inv_Ln
     params_n0(2) = sim%deltarn*Lr
     params_n0(3) = r_peak
 
-    !!! paramas for radial temperature electrons profiles
+    !--> parameters for radial temperature electrons profiles
     params_Te(1) = inv_LTe
     params_Te(2) = sim%deltarTe*Lr
     params_Te(3) = r_peak
 
-    !!! paramas for radial temperature ions profiles
+    !--> parameter for radial temperature ions profiles
     params_Ti(1) = inv_LTi
     params_Ti(2) = sim%deltarTi*Lr
     params_Ti(3) = r_peak
 
-
     do ir = 1,Nr
-
-       r_point = sim%r_grid(ir)
-       sim%n0_r(ir) =  profil_r_exacte(r_point,params_n0) 
-       sim%Te_r(ir) =  profil_r_exacte(r_point,params_Te)
-       sim%Ti_r(ir) =  profil_r_exacte(r_point,params_Ti) 
-       
+      r_point = sim%r_grid(ir)
+      sim%n0_r(ir) =  init_exact_profile_r(r_point,params_n0) 
+      sim%Te_r(ir) =  init_exact_profile_r(r_point,params_Te)
+      sim%Ti_r(ir) =  init_exact_profile_r(r_point,params_Ti)        
     end do
-    do ieta1 = 1, Nx
-       do ieta2 = 1, Ny 
 
+    do ieta1 = 1,Nx
+       do ieta2 = 1,Ny 
           x = sim%xgrid_2d(ieta1,ieta2)
           y = sim%ygrid_2d(ieta1,ieta2)
 
@@ -451,10 +705,12 @@ contains
     SLL_DEALLOCATE(theta_grid_tmp,ierr)
     SLL_DEALLOCATE(B_rtheta_tmp,ierr)
 
-
-    print*, 'profil ok'
   end subroutine init_profiles_DK
 
+
+  !************************************************************
+  !  DISTRIBUTION FUNCTION INITIALISATION
+  !************************************************************
 
   !----------------------------------------------------
   ! Allocation of the distribution function for
@@ -471,7 +727,6 @@ contains
     sll_int32 :: nproc_x3
     sll_int32 :: nproc_x4 
    
-
     ! layout for sequential operations in x3 and x4. 
     ! Make an even split for x1 and x2, or as close as 
     ! even if the power of 2 is odd. This should 
@@ -601,7 +856,6 @@ contains
        sim%bc_left_vpar, &
        sim%bc_right_vpar, &
        sim%spline_degree_vpar)
-
    
   end subroutine allocate_fdistribu4d_DK
 
@@ -698,13 +952,20 @@ contains
     SLL_DEALLOCATE(phi_grid_tmp,ierr)
     SLL_DEALLOCATE(vpar_grid_tmp,ierr)
      print*, 'initialize fdistribution'
+
   end subroutine initialize_fdistribu4d_DK
 
+
+
+  !************************************************************
+  !  QUASI-NEUTRALITY SOLVING
+  !************************************************************
 
   !----------------------------------------------------
   ! Allocation for QN solver
   !----------------------------------------------------
   subroutine allocate_QN_DK( sim )
+
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     type(sll_logical_mesh_2d), pointer :: logical_mesh2d
@@ -880,7 +1141,6 @@ contains
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)    
 
-
     call sim%interp2d_QN_B1%initialize( &
       logical_mesh2d%num_cells1 +1, &
       logical_mesh2d%num_cells2 +1, &
@@ -894,8 +1154,7 @@ contains
       sim%bc_right_eta2, &
       sim%spline_degree_eta1, &
       sim%spline_degree_eta2)
-    
-    
+        
     call sim%interp2d_QN_B2%initialize( &
       logical_mesh2d%num_cells1 +1, &
       logical_mesh2d%num_cells2 +1, &
@@ -965,6 +1224,7 @@ contains
   ! Initialization of the QN coefficients
   !----------------------------------------------------
   subroutine initialize_QN_DK ( sim )
+
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32 :: ierr
@@ -989,12 +1249,10 @@ contains
     SLL_ALLOCATE(C(Neta1,Neta2),ierr)
     
     !---> Initialization of the matrices A11, A12, A21, A22, B1, B2 and C
-    
     call initialize_matrix_A_QN_DK (sim,A11,A12,A21,A22) 
     call initialize_vector_B_QN_DK (sim,B1,B2) 
     call initialize_scalar_C_QN_DK ( sim, C )
-   
-    
+       
     !---> Initialization of the 2D fields associated to
     !--->  A11, A12, A21, A22, B1, B2 and C
     sim%QN_A11 => new_scalar_field_2d_discrete_alt( &
@@ -1005,13 +1263,10 @@ contains
       sim%bc_right_eta1, &
       sim%bc_left_eta2, &
       sim%bc_right_eta2)
-
     
-    call sim%QN_A11%set_field_data( A11 )
-    
+    call sim%QN_A11%set_field_data( A11 )    
     call sim%QN_A11%update_interpolation_coefficients( )
 
-   ! print*, 'hello'
     sim%QN_A12 => new_scalar_field_2d_discrete_alt( &
       "QN_A12", &
       sim%interp2d_QN_A12, &     
@@ -1048,7 +1303,6 @@ contains
     call sim%QN_A22%set_field_data( A22 )
     call sim%QN_A22%update_interpolation_coefficients( )
 
-
     sim%QN_B1 => new_scalar_field_2d_discrete_alt( &
          "QN_B1", &
          sim%interp2d_QN_B1, &     
@@ -1060,7 +1314,6 @@ contains
     
     call sim%QN_B1%set_field_data( B1 )
     call sim%QN_B1%update_interpolation_coefficients( )
-    
     
     sim%QN_B2 => new_scalar_field_2d_discrete_alt( &
          "QN_B2", &
@@ -1112,6 +1365,7 @@ contains
     SLL_DEALLOCATE(B1,ierr)
     SLL_DEALLOCATE(B2,ierr)
     SLL_DEALLOCATE(C,ierr)
+
   end subroutine initialize_QN_DK
 
 
@@ -1192,6 +1446,7 @@ contains
         sim,&
         values_B1,&
         values_B2 )
+
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_real64, dimension(:,:), pointer :: values_B1
     sll_real64, dimension(:,:), pointer :: values_B2
@@ -1226,6 +1481,7 @@ contains
         values_B2(ieta1,ieta2) = 0.0!-val_tmp*y_tmp
       end do
     end do
+
   end subroutine initialize_vector_B_QN_DK
 
 
@@ -1239,6 +1495,7 @@ contains
   subroutine initialize_scalar_C_QN_DK (&
        sim,&
        values_C )
+
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_real64, dimension(:,:), pointer :: values_C
 
@@ -1260,119 +1517,8 @@ contains
               sim%Te_xy(ieta1,ieta2)
       end do
     end do
+
   end subroutine initialize_scalar_C_QN_DK
-
-
-  !----------------------------------------------------
-  ! Initialization of the drift-kinetic 4D simulation
-  !----------------------------------------------------
-  subroutine initialize_4d_DK_hybrid( sim, &
-    world_size, &
-    my_rank, &
-    logical_mesh4d, &
-    transf_xy)
-    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
-    sll_int32                        , intent(in)    :: world_size
-    sll_int32                        , intent(in)    :: my_rank
-    type(sll_logical_mesh_4d)        , pointer       :: logical_mesh4d
-    class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
-
-    sll_int32 :: ierr
-    sll_int32 :: ieta1, ieta2, ieta3, ivpar
-    sll_int32 :: Nx, Ny
-    sll_int32 :: size_diag
-
-    !--> Parallelization initialization
-    sim%world_size = world_size
-    sim%my_rank    = my_rank
-
-    !--> Initialization of the number of points
-    sim%Neta1 = sim%nc_x1+1
-    sim%Neta2 = sim%nc_x2+1
-    sim%Neta3 = sim%nc_x3+1
-    sim%Nvpar = sim%nc_x4+1
-
-    !--> Initialization of the boundary conditions
-    sim%bc_left_eta1  = SLL_DIRICHLET
-    sim%bc_right_eta1 = SLL_DIRICHLET
-    sim%bc_left_eta2  = SLL_PERIODIC
-    sim%bc_right_eta2 = SLL_PERIODIC
-    sim%bc_left_eta3  = SLL_PERIODIC
-    sim%bc_right_eta3 = SLL_PERIODIC
-    sim%bc_left_vpar  = SLL_DIRICHLET
-    sim%bc_right_vpar = SLL_DIRICHLET
-
-    !--> Logical mesh initialization
-    sim%logical_mesh4d => logical_mesh4d
-    SLL_ALLOCATE(sim%eta1_grid(sim%Neta1),ierr)    
-    SLL_ALLOCATE(sim%eta2_grid(sim%Neta2),ierr)
-    SLL_ALLOCATE(sim%eta3_grid(sim%Neta3),ierr)
-    SLL_ALLOCATE(sim%vpar_grid(sim%Nvpar),ierr)
-    do ieta1 = 1,sim%Neta1
-      sim%eta1_grid(ieta1) = sim%logical_mesh4d%eta1_min + &
-        (ieta1-1)*sim%logical_mesh4d%delta_eta1
-    end do
-    do ieta2 = 1,sim%Neta2
-      sim%eta2_grid(ieta2) = sim%logical_mesh4d%eta2_min + &
-        (ieta2-1)*sim%logical_mesh4d%delta_eta2
-    end do
-    do ieta3 = 1,sim%Neta3
-      sim%eta3_grid(ieta3) = sim%logical_mesh4d%eta3_min + &
-        (ieta3-1)*sim%logical_mesh4d%delta_eta3
-    end do
-    do ivpar = 1,sim%Nvpar
-      sim%vpar_grid(ivpar) = sim%logical_mesh4d%eta4_min + &
-        (ivpar-1)*sim%logical_mesh4d%delta_eta4
-    end do
-
-    !--> Transformation initialization
-    sim%transf_xy => transf_xy
-
-    
-    !--> Initialization of the (x,y) 2D mesh and
-    !--> Initialization of the square of the norm 
-    Nx = sim%Neta1
-    Ny = sim%Neta2
-    SLL_ALLOCATE(sim%xgrid_2d(Nx,Ny),ierr)
-    SLL_ALLOCATE(sim%ygrid_2d(Nx,Ny),ierr)
-    SLL_ALLOCATE(sim%norm_square_xy(Nx,Ny),ierr)
-    do ieta2 = 1,sim%Neta2
-      do ieta1 = 1,sim%Neta1
-        sim%xgrid_2d(ieta1,ieta2) = &
-          sim%transf_xy%x1_at_node(ieta1,ieta2)
-        sim%ygrid_2d(ieta1,ieta2) = &
-          sim%transf_xy%x2_at_node(ieta1,ieta2)
-        sim%norm_square_xy(ieta1,ieta2) = sim%xgrid_2d(ieta1,ieta2)**2 &
-                                        + sim%ygrid_2d(ieta1,ieta2)**2
-      end do
-    end do
-
-    !--> Initialization diagnostics for the norm
-    size_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
-    SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_norm_L1(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_norm_L2(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_norm_Linf(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_entropy_kin(size_diag),ierr)
-    
-    !--> Initialization diagnostics for the energy
-    SLL_ALLOCATE(sim%diag_nrj_kin(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_nrj_pot(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_nrj_tot(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_heat_flux(size_diag),ierr)
-
-    !--> Radial profile initialisation
-    call init_profiles_DK(sim)
-    
-    !*** Allocation of the distribution function ***
-    call allocate_fdistribu4d_DK(sim)
-    
-    !*** Allocation of the QN solveR ***
-    call allocate_QN_DK(sim)
-    
-    !*** Initialization of the QN solver ***
-    call initialize_QN_DK (sim)
-  end subroutine initialize_4d_DK_hybrid
 
 
   !----------------------------------------------------
@@ -1466,7 +1612,6 @@ contains
         end do
       end do
     end do
-
      
     !--> Compute E3d_eta3_seqx3 = -dPhi3d_seqx3/deta3
     SLL_ALLOCATE(phi1d_seqx3_tmp(sim%Neta3),ierr)
@@ -1492,6 +1637,11 @@ contains
     SLL_DEALLOCATE(phi1d_seqx3_tmp,ierr)
   end subroutine compute_Efield
 
+
+
+  !************************************************************
+  !  VLASOV SOLVING
+  !************************************************************
 
   !----------------------------------------------------
   ! First step of the drift-kinetic 4D simulation :
@@ -1604,9 +1754,7 @@ contains
     call compute_norm_L1_L2_Linf(sim)
 
     !*** Save initial step in HDF5 file ***
-    call writeHDF5_diag( sim )
-
-    
+    call writeHDF5_diag( sim )    
   end subroutine first_step_4d_DK_hybrid
   
 
@@ -1668,9 +1816,10 @@ contains
   ! 1D advection in eta3 direction
   !----------------------------------------------------
   subroutine advec1D_eta3( sim, deltat_advec )
+
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_real64                        , intent(in)    :: deltat_advec
-    
+
     sll_int32 :: ierr
     sll_int32 :: iloc1, iloc2
     sll_int32 :: ieta3, ivpar
@@ -1678,46 +1827,48 @@ contains
     sll_int32 :: loc4d_sz_x3, loc4d_sz_x4
     sll_real64:: eta3, alpha3, vpar
     sll_real64, dimension(:), pointer :: f1d_eta3_tmp
-    
+
     call compute_local_sizes_4d( sim%layout4d_seqx3x4, &
       loc4d_sz_x1, &
       loc4d_sz_x2, &
       loc4d_sz_x3, &
       loc4d_sz_x4 )    
-    
+
     !---> deta3/dt = vpar
     SLL_ALLOCATE(f1d_eta3_tmp(sim%Neta3),ierr)
     do iloc2 = 1,loc4d_sz_x2
-       do iloc1 = 1,loc4d_sz_x1
-          do ivpar = 1,sim%Nvpar
-             vpar   = sim%vpar_grid(ivpar)
-             do ieta3 = 1,sim%Neta3
-                f1d_eta3_tmp(ieta3) = sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar)               
-             end do
-             call sim%interp1d_f_eta3%compute_interpolants(f1d_eta3_tmp)  
-             
-             
-             do ieta3 = 1,sim%Neta3
-                alpha3 = deltat_advec*vpar
-                eta3    = sim%eta3_grid(ieta3) - alpha3
-                
-                sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
-                     sim%interp1d_f_eta3%interpolate_value(eta3)
-             end do
+      do iloc1 = 1,loc4d_sz_x1
+        do ivpar = 1,sim%Nvpar
+          vpar   = sim%vpar_grid(ivpar)
+          do ieta3 = 1,sim%Neta3
+            f1d_eta3_tmp(ieta3) = sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar)               
           end do
+          call sim%interp1d_f_eta3%compute_interpolants(f1d_eta3_tmp)  
+
+
+          do ieta3 = 1,sim%Neta3
+            alpha3 = deltat_advec*vpar
+            eta3    = sim%eta3_grid(ieta3) - alpha3
+
+            sim%f4d_seqx3x4(iloc1,iloc2,ieta3,ivpar) = &
+              sim%interp1d_f_eta3%interpolate_value(eta3)
+          end do
+        end do
       end do
-   end do
-   SLL_DEALLOCATE(f1d_eta3_tmp,ierr)
- end subroutine advec1D_eta3
+    end do
+    SLL_DEALLOCATE(f1d_eta3_tmp,ierr)
+
+  end subroutine advec1D_eta3
 
 
- !----------------------------------------------------
+  !----------------------------------------------------
   ! 2D advection in eta1eta2 direction
   !----------------------------------------------------
   subroutine advec2D_eta1eta2( sim, deltat_advec )
+
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_real64                        , intent(in)    :: deltat_advec
-    
+
     sll_int32 :: ierr
     sll_int32 :: iloc3, iloc4
     sll_int32 :: ieta1, ieta2
@@ -1726,24 +1877,24 @@ contains
     sll_real64 :: eta1,eta2, alpha1,alpha2, E_eta1, E_eta2
     sll_real64 :: val_jac,val_B
     sll_real64, dimension(:,:), pointer :: f2d_eta1eta2_tmp
-        
+
     call compute_local_sizes_4d( sim%layout4d_seqx1x2, &
-         loc4d_sz_x1, &
-         loc4d_sz_x2, &
-         loc4d_sz_x3, &
-         loc4d_sz_x4 )    
-    
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )    
+
     !---> ( deta1/dt )                              ( 0    -1 ) (  d phi/deta1 ) 
     !     (          )=  1 / (B* jac(eta_1,eta2) )  (         ) (              )
     !---> ( deta2/dt )                              ( 1     0 ) (  d phi/deta2 )
     SLL_ALLOCATE(f2d_eta1eta2_tmp(sim%Neta1,sim%Neta2),ierr)
-    
+
     do iloc4 = 1,loc4d_sz_x4
       do iloc3 = 1,loc4d_sz_x3
         do ieta2 = 1,sim%Neta2
           do ieta1 = 1,sim%Neta1
             f2d_eta1eta2_tmp(ieta1,ieta2)=&
-                 sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4)            
+              sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4)            
           end do
         end do
 
@@ -1771,101 +1922,20 @@ contains
       end do
     end do
     SLL_DEALLOCATE(f2d_eta1eta2_tmp,ierr)
+
   end subroutine advec2D_eta1eta2
 
 
-  !----------------------------------------------------
-  ! Run drift-kinetic 4D simulation
-  !----------------------------------------------------
-  subroutine run_4d_DK_hybrid( sim )
-    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    integer :: iter
-
-    !--> For timers
-    type(sll_time_mark) :: t0, t1 
-    double precision    :: elaps_time_advec, elaps_time_QN
-
-    elaps_time_advec = 0.0
-    elaps_time_QN    = 0.0
-!!$
-   
-    do iter = 1,sim%nb_iter
-      if (sim%my_rank.eq.0) &
-        print*,' ===> ITERATION = ',iter
-
-      call sll_set_time_mark(t0)
-      !--> Advection in vpar direction'
-      call advec1D_vpar(sim,0.5_f64*sim%dt)
-
-      ! --> Advection in eta3 direction'
-      call advec1D_eta3(sim,0.5_f64*sim%dt)
-   
-      !--> Sequential for the advection in eta1eta2
-      call apply_remap_4D(sim%seqx3x4_to_seqx1x2,sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
-
-      !--> Advection in eta1,eta2 direction'
-      call advec2D_eta1eta2(sim,sim%dt)
-    
-      !--> Sequential for the advection in eta3 and in vpar
-      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4 )
-    
-      !--> Advection in eta3 direction'
-      call advec1D_eta3(sim,0.5_f64*sim%dt)
-
-      !--> Advection in vpar direction'
-      call advec1D_vpar(sim,0.5_f64*sim%dt)
-      
-      !--> Sequential to solve the quasi-neutral equation
-      call apply_remap_4D(sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
-      
-      call sll_set_time_mark(t1)
-      elaps_time_advec = elaps_time_advec + &
-        sll_time_elapsed_between(t0,t1)
-        
-      !--> Solve the quasi-neutral equation
-      call sll_set_time_mark(t0)
-      !-----> Computation of the rhs of QN 
-      call compute_charge_density(sim)
-      !-----> Solve QN
-      call solve_QN( sim )
-      call sll_set_time_mark(t1)
-      elaps_time_QN = elaps_time_QN + &
-        sll_time_elapsed_between(t0,t1)
-
-      !--> Compute the new electric field
-      call compute_Efield( sim )
-
-      !--> Sequential for the advection in eta3 and in vpar
-      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4)
-     
-
-      !--> Save results in HDF5 files
-      if ( mod(iter,int(sim%diag2D_step/sim%dt)) == 0) then
-
-          !--> Compute energy kinetic, potential and total
-         call compute_energy(sim)
-         
-         !--> Compute L1 norm, L2 norm, L infini norm
-         call compute_norm_L1_L2_Linf(sim)
-
-         call writeHDF5_diag( sim )
-
-      end if
-   end do
-   
-    if (sim%my_rank.eq.0) then
-       print*, ' Time for advec in run_4d_DK_hybrid  = ', elaps_time_advec
-       print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
-    end if
-  end subroutine run_4d_DK_hybrid
+  !************************************************************
+  !  DIAGNOSTICS
+  !************************************************************
  
-
   !----------------------------------------------------
   ! 
   !----------------------------------------------------
   subroutine writeHDF5_diag( sim )
-   ! use sll_collective
+
     use sll_hdf5_io, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
@@ -2048,6 +2118,7 @@ contains
       call sll_hdf5_file_close(file_id,file_err)
     end if
     sim%count_save_diag = sim%count_save_diag + 1
+
   end subroutine writeHDF5_diag
 
  
@@ -2061,8 +2132,8 @@ contains
   !  Out: rho3d_seqx3(x1=distrib,x2=distrib,x3=*)
   !-----------------------------------------------------------
   subroutine compute_charge_density(sim)
-    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3, Nvpar
     sll_int32  :: iloc1, iloc2
@@ -2099,6 +2170,7 @@ contains
     end do
     !--> compute rho3d_seqx1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
+
   end subroutine compute_charge_density
   
 
@@ -2133,12 +2205,10 @@ contains
   !       phi3d_seqx3(x1=distrib,x2=distrib,x3=*)
   !  Out: nrj_pot
   !
-  !-----------------------------------------------------------
-  
+  !-----------------------------------------------------------  
   subroutine compute_energy(sim)
 
-    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
-    
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim    
 
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar,Neta1,Neta2
@@ -2151,7 +2221,7 @@ contains
     sll_int32  :: i1,i2,i3,i4
     sll_int32, dimension(1:4) :: glob_ind4d
     sll_real64 :: nrj_kin,nrj_pot,nrj_tot,heat_flux
-    
+
     Neta1_loc  = size(sim%f4d_seqx3x4,1)
     Neta2_loc  = size(sim%f4d_seqx3x4,2)
     Neta1      = sim%nc_x1 + 1
@@ -2162,62 +2232,64 @@ contains
     delta_eta2 = sim%logical_mesh4d%delta_eta2
     delta_eta3 = sim%logical_mesh4d%delta_eta3
     delta_vpar = sim%logical_mesh4d%delta_eta4
-    
-    
+
+
     nrj_kin   = 0.0
     nrj_pot   = 0.0
     nrj_tot   = 0.0
     heat_flux = 0.0
-    
+
     !-> Computation of the energy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc
-       do iloc1 = 1,Neta1_loc
-          do i4 = 1,Nvpar-1
-             vpar = sim%vpar_grid(i4)
-             do i3 = 1,Neta3-1
-                val_elec_pot        = sim%phi3d_seqx3(iloc1,iloc2,i3)
-                !val_elec_field_eta1 = sim%
-                
-                glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
-                     (/iloc1,iloc2,i3,i4/))
-                i1 = glob_ind4d(1)
-                i2 = glob_ind4d(2)
-                
-                if (i1 .ne. Neta1) then
-                   if (i2 .ne. Neta2) then 
-                      
-                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
-                      
-                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                           sim%feq_xyvpar(i1,i2,i4)
-                      
-                      
-                      nrj_kin = nrj_kin + &
-                           delta_f * vpar**2 * 0.5 * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      nrj_pot = nrj_pot + &
-                           delta_f * val_elec_pot * 0.5 * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      ! definition FALSE 
-                      ! heat_flux = heat_flux + &
-                      !     delta_f * vpar**2* 0.5* val_jac * &
-                      !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                   end if
-                end if
-             end do
+      do iloc1 = 1,Neta1_loc
+        do i4 = 1,Nvpar-1
+          vpar = sim%vpar_grid(i4)
+          do i3 = 1,Neta3-1
+            val_elec_pot        = sim%phi3d_seqx3(iloc1,iloc2,i3)
+            !val_elec_field_eta1 = sim%
+
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+              (/iloc1,iloc2,i3,i4/))
+            i1 = glob_ind4d(1)
+            i2 = glob_ind4d(2)
+
+            if (i1 .ne. Neta1) then
+              if (i2 .ne. Neta2) then 
+
+                val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+
+                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                  sim%feq_xyvpar(i1,i2,i4)
+
+
+                nrj_kin = nrj_kin + &
+                  delta_f * vpar**2 * 0.5 * val_jac * &
+                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                nrj_pot = nrj_pot + &
+                  delta_f * val_elec_pot * 0.5 * val_jac * &
+                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                ! definition FALSE 
+                ! heat_flux = heat_flux + &
+                !     delta_f * vpar**2* 0.5* val_jac * &
+                !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
+              end if
+            end if
           end do
-       end do
+        end do
+      end do
     end do
 
     nrj_tot = nrj_kin + nrj_pot
-    
+
     sim%diag_nrj_kin(sim%count_save_diag + 1)   = nrj_kin
     sim%diag_nrj_pot(sim%count_save_diag + 1)   = nrj_pot
     sim%diag_nrj_tot(sim%count_save_diag + 1)   = nrj_tot
     sim%diag_heat_flux(sim%count_save_diag + 1) = heat_flux
+
   end subroutine compute_energy
+
 
   !-----------------------------------------------------------
   ! Computation of the L1 norm , i.e   
@@ -2238,8 +2310,7 @@ contains
   !
   ! Computation of the L infini = max( abs( delta f) )
   !-----------------------------------------------------------
-  
-  subroutine compute_norm_L1_L2_Linf(sim)
+    subroutine compute_norm_L1_L2_Linf(sim)
     
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     
@@ -2264,7 +2335,6 @@ contains
     delta_eta2 = sim%logical_mesh4d%delta_eta2
     delta_eta3 = sim%logical_mesh4d%delta_eta3
     delta_vpar = sim%logical_mesh4d%delta_eta4
-
     
     norm_L1    = 0.0
     norm_L2    = 0.0
@@ -2274,105 +2344,55 @@ contains
 
     !-> Computation of the enrgy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc
-       do iloc1 = 1,Neta1_loc
-          do i3 = 1,Neta3-1
-             do i4 = 1,Nvpar-1
-                
-                glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
-                     (/iloc1,iloc2,i3,i4/))
-                i1 = glob_ind4d(1)
-                i2 = glob_ind4d(2)
-                
-                if (i1 .ne. Neta1) then
-                   if (i2 .ne. Neta2) then 
-                      
-                      val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
-                      
-                      delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4)
-                      
-                      masse   = masse + &
-                           delta_f * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      norm_L1 = norm_L1 + &
-                           abs(delta_f) * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                   
-                      norm_L2 = norm_L2 + &
-                           abs(delta_f)**2 * val_jac * &
-                           delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      if ( delta_f /= 0.0_f64) &
-                      entropy_kin = entropy_kin - &
-                        delta_f* log(abs(delta_f)) * val_jac * &
-                        delta_eta1*delta_eta2*delta_eta3*delta_vpar
-                      
-                      norm_Linf = max(abs(delta_f),norm_Linf)
-                   end if
-                end if
-             end do
+      do iloc1 = 1,Neta1_loc
+        do i3 = 1,Neta3-1
+          do i4 = 1,Nvpar-1
+
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+              (/iloc1,iloc2,i3,i4/))
+            i1 = glob_ind4d(1)
+            i2 = glob_ind4d(2)
+
+            if (i1 .ne. Neta1) then
+              if (i2 .ne. Neta2) then 
+
+                val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+
+                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4)
+
+                masse   = masse + &
+                  delta_f * val_jac * &
+                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                norm_L1 = norm_L1 + &
+                  abs(delta_f) * val_jac * &
+                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                norm_L2 = norm_L2 + &
+                  abs(delta_f)**2 * val_jac * &
+                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                if ( delta_f /= 0.0_f64) &
+                  entropy_kin = entropy_kin - &
+                  delta_f* log(abs(delta_f)) * val_jac * &
+                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                norm_Linf = max(abs(delta_f),norm_Linf)
+              end if
+            end if
           end do
-       end do
+        end do
+      end do
     end do
-    
+
     norm_L2   = sqrt(norm_L2)
-    
+
     sim%diag_masse(sim%count_save_diag + 1)       = masse
     sim%diag_norm_L1(sim%count_save_diag + 1)     = norm_L1
     sim%diag_norm_L2(sim%count_save_diag + 1)     = norm_L2
     sim%diag_norm_Linf(sim%count_save_diag + 1)   = norm_Linf
     sim%diag_entropy_kin(sim%count_save_diag + 1) = entropy_kin
+
   end subroutine compute_norm_L1_L2_Linf
-  
-
-  !----------------------------------------------------
-  ! Initialization of the drift-kinetic 4D simulation
-  !----------------------------------------------------
-  subroutine delete_4d_DK_hybrid( sim )
-    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
-
-    sll_int32 :: ierr
-
-    SLL_DEALLOCATE(sim%eta1_grid,ierr)    
-    SLL_DEALLOCATE(sim%eta2_grid,ierr)
-    SLL_DEALLOCATE(sim%eta3_grid,ierr)
-    SLL_DEALLOCATE(sim%vpar_grid,ierr)
-    SLL_DEALLOCATE(sim%r_grid,ierr) 
-    SLL_DEALLOCATE(sim%norm_square_xy,ierr)
-    SLL_DEALLOCATE(sim%xgrid_2d,ierr)
-    SLL_DEALLOCATE(sim%ygrid_2d,ierr) 
-    SLL_DEALLOCATE(sim%n0_r,ierr)
-    SLL_DEALLOCATE(sim%Ti_r,ierr)
-    SLL_DEALLOCATE(sim%Te_r,ierr)
-    SLL_DEALLOCATE(sim%n0_xy,ierr)
-    SLL_DEALLOCATE(sim%Ti_xy,ierr)
-    SLL_DEALLOCATE(sim%Te_xy,ierr)
-    SLL_DEALLOCATE(sim%B_xy,ierr)
-    SLL_DEALLOCATE(sim%feq_xyvpar,ierr)
-    SLL_DEALLOCATE(sim%f4d_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%f4d_seqx3x4,ierr)
-    call delete(sim%layout4d_seqx1x2)
-    call delete(sim%layout4d_seqx3x4)
-    SLL_DEALLOCATE(sim%rho3d_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%rho3d_seqx3,ierr)
-    SLL_DEALLOCATE(sim%phi3d_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%phi3d_seqx3,ierr)
-    SLL_DEALLOCATE(sim%E3d_eta1_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%E3d_eta2_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%E3d_x1_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%E3d_x2_seqx1x2,ierr)
-    SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
-    SLL_DEALLOCATE(sim%diag_masse,ierr)
-    SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
-    SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
-    SLL_DEALLOCATE(sim%diag_norm_Linf,ierr)
-    SLL_DEALLOCATE(sim%diag_entropy_kin,ierr)
-    SLL_DEALLOCATE(sim%diag_nrj_kin,ierr)
-    SLL_DEALLOCATE(sim%diag_nrj_pot,ierr)
-    SLL_DEALLOCATE(sim%diag_nrj_tot,ierr)
-    SLL_DEALLOCATE(sim%diag_heat_flux,ierr)
-    call delete(sim%layout3d_seqx1x2)
-    call delete(sim%layout3d_seqx3)
-  end subroutine delete_4d_DK_hybrid
 
 end module sll_simulation_4d_DK_hybrid_module
