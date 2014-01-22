@@ -70,7 +70,11 @@ IF(NOT STDF95)
    ADD_TEST(NAME characteristics_1d_explicit_euler_conservative
      COMMAND test_characteristics_1d_explicit_euler_conservative)
    ADD_TEST(NAME characteristics_1d_trapezoid COMMAND test_characteristics_1d_trapezoid)
+   ADD_TEST(NAME characteristics_1d_trapezoid_conservative
+     COMMAND test_characteristics_1d_trapezoid_conservative)
    ADD_TEST(NAME characteristics_2d_explicit_euler COMMAND test_characteristics_2d_explicit_euler)
+   ADD_TEST(NAME characteristics_2d_explicit_euler_conservative 
+     COMMAND test_characteristics_2d_explicit_euler_conservative)
    ADD_TEST(NAME characteristics_2d_verlet COMMAND test_characteristics_2d_verlet)
    ADD_TEST(NAME advection_1d_periodic COMMAND test_advection_1d_periodic)
    ADD_TEST(
@@ -82,6 +86,7 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_1d_CSL COMMAND test_advection_1d_CSL)
    ADD_TEST(NAME advection_1d_PSM COMMAND test_advection_1d_PSM)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
+   ADD_TEST(NAME advection_2d_CSL COMMAND test_advection_2d_CSL)
    ADD_TEST(NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product)
    
    IF(MUDPACK_ENABLED)
