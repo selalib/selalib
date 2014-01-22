@@ -9,6 +9,7 @@ IF( NOT STDF95)
 	sll_advection_1d_base.F90
 	sll_advection_2d_BSL.F90
 	sll_advection_2d_tensor_product.F90
+	sll_advection_2d_CSL.F90
 	sll_advection_2d_base.F90)
 
 
@@ -82,6 +83,15 @@ IF( NOT STDF95)
 
   TARGET_LINK_LIBRARIES(
     test_advection_2d_tensor_product
+    sll_advection)
+
+
+  ADD_EXECUTABLE(
+    test_advection_2d_CSL
+    unit_test_advection_2d_CSL.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_advection_2d_CSL
     sll_advection)
 
     
