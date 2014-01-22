@@ -282,15 +282,15 @@ contains
       do i=0,Nc_x1
         
         output(i+1,j+1)=0._f64
-        xx(1)=(xx(1)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
-        xx(2)=(xx(2)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
-        xx(3)=(xx(3)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
-        xx(4)=(xx(4)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
+        xx(1)=((xx(1)-x1_min)/(x1_max-x1_min))*real(Nc_x1,f64)
+        xx(2)=((xx(2)-x1_min)/(x1_max-x1_min))*real(Nc_x1,f64)
+        xx(3)=((xx(3)-x1_min)/(x1_max-x1_min))*real(Nc_x1,f64)
+        xx(4)=((xx(4)-x1_min)/(x1_max-x1_min))*real(Nc_x1,f64)
 
-        yy(1)=(yy(1)-x2_min)/(x2_max-x2_min)*real(Nc_x2,f64)
-        yy(2)=(yy(2)-x2_min)/(x2_max-x2_min)*real(Nc_x2,f64)
-        yy(3)=(yy(3)-x2_min)/(x2_max-x2_min)*real(Nc_x2,f64)
-        yy(4)=(yy(4)-x2_min)/(x2_max-x2_min)*real(Nc_x2,f64)
+        yy(1)=((yy(1)-x2_min)/(x2_max-x2_min))*real(Nc_x2,f64)
+        yy(2)=((yy(2)-x2_min)/(x2_max-x2_min))*real(Nc_x2,f64)
+        yy(3)=((yy(3)-x2_min)/(x2_max-x2_min))*real(Nc_x2,f64)
+        yy(4)=((yy(4)-x2_min)/(x2_max-x2_min))*real(Nc_x2,f64)
     
 
         xx=xx+0.5_f64
