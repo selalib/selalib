@@ -37,7 +37,7 @@
 !>       params )
 !>
 !>  call simulation%run()
-!>  call delete(simulation)
+!>  call sll_delete(simulation)
 !> \endcode
 
 #define MPI_MASTER 0
@@ -116,9 +116,9 @@ contains
 
 end type sll_simulation_4d_vp_polar
 
-interface delete
+interface sll_delete
    module procedure delete_vp4d_par_polar
-end interface delete
+end interface sll_delete
 
 interface initialize
    module procedure initialize_vp4d_polar
@@ -529,10 +529,10 @@ contains
     sll_int32 :: error
     SLL_DEALLOCATE( sim%f_x1x2, error )
     SLL_DEALLOCATE( sim%f_x3x4, error )
-    call delete( sim%sequential_x1x2 )
-    call delete( sim%sequential_x3x4 )
-    call delete( sim%seqx1x2_to_seqx3x4 )
-    call delete( sim%seqx3x4_to_seqx1x2 )
+    call sll_delete( sim%sequential_x1x2 )
+    call sll_delete( sim%sequential_x3x4 )
+    call sll_delete( sim%seqx1x2_to_seqx3x4 )
+    call sll_delete( sim%seqx3x4_to_seqx1x2 )
     call delete( sim%interp_x1x2 )
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )

@@ -93,9 +93,9 @@ module sll_simulation_4d_vlasov_poisson_general
      procedure, pass(sim) :: init_from_file => init_vp4d_par_gen
   end type sll_simulation_4d_vp_general
 
-  interface delete
+  interface sll_delete
      module procedure delete_vp4d_par_gen
-  end interface delete
+  end interface sll_delete
 
   interface initialize
      module procedure initialize_vp4d_general
@@ -1039,16 +1039,16 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
-    call delete( sim%sequential_x1x2 )
-    call delete( sim%sequential_x3x4 )
-    call delete( sim%rho_seq_x1 )
-    call delete( sim%rho_seq_x2 )
-    call delete( sim%split_rho_layout )
-    call delete( sim%split_to_seqx1 )
-    call delete( sim%efld_seqx1_to_seqx2 )
-    call delete( sim%efld_seqx2_to_split )
-    call delete( sim%seqx1x2_to_seqx3x4 )
-    call delete( sim%seqx3x4_to_seqx1x2 )
+    call sll_delete( sim%sequential_x1x2 )
+    call sll_delete( sim%sequential_x3x4 )
+    call sll_delete( sim%rho_seq_x1 )
+    call sll_delete( sim%rho_seq_x2 )
+    call sll_delete( sim%split_rho_layout )
+    call sll_delete( sim%split_to_seqx1 )
+    call sll_delete( sim%efld_seqx1_to_seqx2 )
+    call sll_delete( sim%efld_seqx2_to_split )
+    call sll_delete( sim%seqx1x2_to_seqx3x4 )
+    call sll_delete( sim%seqx3x4_to_seqx1x2 )
     call delete( sim%interp_x1x2 )
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )
