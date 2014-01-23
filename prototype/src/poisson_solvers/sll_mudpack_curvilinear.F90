@@ -84,7 +84,6 @@ common/ftmud2cr/xa,xb,yc,yd,tolmax,relmax
 sll_int32  :: i,j,ierror
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
-
 sll_real64,dimension(:,:),allocatable :: cxx_array
 sll_real64,dimension(:,:),allocatable :: cyy_array
 sll_real64,dimension(:,:),allocatable :: cxy_array
@@ -94,12 +93,12 @@ sll_real64,dimension(:,:),allocatable :: ce_array
 sll_real64,dimension(:,:),allocatable :: a12_array
 sll_real64,dimension(:,:),allocatable :: a21_array
 sll_real64 :: delta1,delta2
-
+sll_int32,  parameter   :: iixp = 2 , jjyq = 2
 equivalence(intl,iprm)
 equivalence(xa,fprm)
 
 ! declare coefficient and boundary condition input subroutines external
-external coefcr,bndcr
+external coefcr,bndcr,cofx,cofy
 
 nx = nc_eta1+1
 ny = nc_eta2+1
@@ -127,7 +126,7 @@ cxx_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)
           
 cyy_interp => new_cubic_spline_2d_interpolator( &
@@ -137,7 +136,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC) 
           
  cxy_interp => new_cubic_spline_2d_interpolator( &
@@ -147,7 +146,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)  
           
  cx_interp => new_cubic_spline_2d_interpolator( &
@@ -157,7 +156,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC) 
  cy_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -166,7 +165,7 @@ cyy_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)    
                                          
 ce_interp => new_cubic_spline_2d_interpolator( &
@@ -176,7 +175,7 @@ ce_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)   
 a12_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -185,7 +184,7 @@ a12_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC) 
 a21_interp => new_cubic_spline_2d_interpolator( &
           nx, &
@@ -194,7 +193,7 @@ a21_interp => new_cubic_spline_2d_interpolator( &
           eta1_max, &
           eta2_min, &
           eta2_max, &
-          SLL_HERMITE, &
+          SLL_PERIODIC, &
           SLL_PERIODIC)                             
 !cxx_array = 1._f64          
 call coefxxyy_array(b11,b12,b21,b22,transf,eta1_min,eta2_min,delta1,delta2,nx,ny,cxx_array,cyy_array)          
@@ -229,14 +228,14 @@ nyc = bc_eta2_left
 nyd = bc_eta2_right 
 print*,nxa,nxb,nyc,nyd
 ! set grid sizes from parameter statements
-ixp = 2
-jyq = 2
+ixp = iixp 
+jyq = jjyq 
 iex = ceiling(log((nx-1.)/ixp)/log(2.))+1
 jey = ceiling(log((ny-1.)/jyq)/log(2.))+1
 
 nx = ixp*(2**(iex-1))+1
 ny = jyq*(2**(jey-1))+1
-
+allocate(this%iwork(ixp+1,jyq+1))
 if (nx /= nc_eta1+1 .or. ny /= nc_eta2+1) then
    print*, "nx,nc_eta1+1=", nx, nc_eta1+1
    print*, "ny,nc_eta2+1=", ny, nc_eta2+1
@@ -254,7 +253,7 @@ this%mgopt(4) = 3
 maxcy = 3
 
 ! set no initial guess forcing full multigrid cycling
-iguess = 0
+iguess =  0 !1
 
 ! set work space length approximation from parameter statement
 nwork = llwork
@@ -278,8 +277,9 @@ write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
 
 
-call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
-
+!call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
+ call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
 write (*,200) ierror,iprm(16)
 if (ierror > 0) call exit(0)
 
@@ -337,7 +337,7 @@ equivalence(xa,fprm)
 
 !    
 ! declare coefficient and boundary condition input subroutines external
-external coefcr,bndcr
+external coefcr,bndcr,cofx,cofy
 
 allocate(rhs(nx,ny))
 rhs=0._f64
@@ -374,13 +374,17 @@ intl  = 1
 write(*,106) intl,method,iguess
 
 ! attempt solution
-call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2cr(iprm,fprm,this%work,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
+call muh2cr(iprm,fprm,this%work,this%iwork,coefcr,bndcr,rhs,phi,this%mgopt,ierror)
+!call mud2sp(iprm,fprm,this%work,cofx,cofy,bndcr,rhs,phi,this%mgopt,ierror)
 !SLL_ASSERT(ierror == 0)
 write(*,107) ierror
 if (ierror > 0) call exit(0)
 
 ! attempt fourth order approximation
-call mud24cr(this%work,coefcr,bndcr,phi,ierror)
+!call mud24cr(this%work,coefcr,bndcr,phi,ierror)
+call muh24cr(this%work,this%iwork,coefcr,bndcr,phi,ierror)
+!call mud24sp(this%work,phi,ierror)
 !SLL_ASSERT(ierror == 0)
 write (*,108) ierror
 if (ierror > 0) call exit(0)
@@ -388,7 +392,7 @@ if (ierror > 0) call exit(0)
 106 format(/' approximation call to mud2sp', &
     &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 107 format(' error = ',i2)
-108 format(/' mud24sp test ', ' error = ',i2)
+108 format(/' mud24cr test ', ' error = ',i2)
 
 deallocate(rhs)
 return
@@ -536,7 +540,26 @@ cy  = cy_interp%interpolate_value(x,y)
 ce  = ce_interp%interpolate_value(x,y)
 return
 end subroutine
+!> input x dependent coefficients
+subroutine cofx(x,cxx,cx,cex)
+use sll_mudpack_cartesian
+implicit none
+real(8)  :: x,cxx,cx,cex
+cxx = 1.0  !cxx_interp%interpolate_value(x)
+cx  = 0.0
+cex = 0.0
+return
+end
 
+!> input y dependent coefficients
+subroutine cofy(y,cyy,cy,cey)
+implicit none
+real(8)  :: y,cyy,cy,cey
+cyy = 1.0
+cy  = 0.0
+cey = 0.0
+return
+end
 !> input mixed "oblique" derivative b.c. to mud2cr
 !> at upper y boundary
 subroutine bndcr(kbdy,xory,alfa,beta,gama,gbdy)
