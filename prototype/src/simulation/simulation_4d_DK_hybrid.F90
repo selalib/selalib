@@ -72,7 +72,7 @@ module sll_simulation_4d_DK_hybrid_module
     sll_real64 :: diag2D_step
 
     !--> diagnostics norm
-    sll_real64, dimension(:),pointer :: diag_masse
+    sll_real64, dimension(:),pointer :: diag_mass
     sll_real64, dimension(:),pointer :: diag_norm_L1
     sll_real64, dimension(:),pointer :: diag_norm_L2
     sll_real64, dimension(:),pointer :: diag_norm_Linf
@@ -177,7 +177,7 @@ module sll_simulation_4d_DK_hybrid_module
     type(arb_deg_2d_interpolator) :: interp2d_QN_B2
     type(arb_deg_2d_interpolator) :: interp2d_QN_C
     class(sll_scalar_field_2d_base) , pointer :: rho2d
-    type(sll_scalar_field_1d_discrete_alt), pointer::phi1d! for derivative in eta3
+    type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d! for derivative in eta3
     type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
     class(sll_scalar_field_2d_base), pointer :: QN_A11 
     class(sll_scalar_field_2d_base), pointer :: QN_A12
@@ -227,7 +227,7 @@ contains
     sll_int32 :: ierr
     sll_int32 :: ieta1, ieta2, ieta3, ivpar
     sll_int32 :: Nx, Ny
-    sll_int32 :: size_diag
+    sll_int32 :: nb_diag
 
     !--> Parallelization initialization
     sim%world_size = world_size
@@ -294,19 +294,19 @@ contains
     end do
 
     !--> Initialization diagnostics for the norm
-    size_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
+    nb_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
 
-    SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_norm_L1(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_norm_L2(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_norm_Linf(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_entropy_kin(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_mass(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_norm_L1(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_norm_L2(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_norm_Linf(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_entropy_kin(nb_diag),ierr)
 
     !--> Initialization diagnostics for the energy
-    SLL_ALLOCATE(sim%diag_nrj_kin(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_nrj_pot(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_nrj_tot(size_diag),ierr)
-    SLL_ALLOCATE(sim%diag_heat_flux(size_diag),ierr)
+    SLL_ALLOCATE(sim%diag_nrj_kin(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_nrj_pot(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_nrj_tot(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_heat_flux(nb_diag),ierr)
 
     !--> Radial profile initialisation
     call init_profiles_DK(sim)
@@ -330,7 +330,7 @@ contains
 
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    integer :: iter
+    sll_int32 :: iter, diag_num
 
     !--> For timers
     type(sll_time_mark) :: t0, t1 
@@ -394,16 +394,17 @@ contains
 
       !--> Save results in HDF5 files
       if ( mod(iter,int(sim%diag2D_step/sim%dt)) == 0) then
+        sim%count_save_diag = sim%count_save_diag + 1
+        diag_num            = sim%count_save_diag
 
         !--> Compute energy kinetic, potential and total
-        call compute_energy(sim)
+        call compute_energy(sim,diag_num)
 
         !--> Compute L1 norm, L2 norm, L infini norm
-        call compute_norm_L1_L2_Linf(sim)
+        call compute_norm_L1_L2_Linf(sim,diag_num)
 
         !--> Save diagnostics in HDF5 format
-        call writeHDF5_cross_section_diag( sim )
-
+        call writeHDF5_cross_section_diag(sim,diag_num)
       end if
     end do
 
@@ -456,7 +457,7 @@ contains
     SLL_DEALLOCATE(sim%E3d_x1_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_x2_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
-    SLL_DEALLOCATE(sim%diag_masse,ierr)
+    SLL_DEALLOCATE(sim%diag_mass,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
     SLL_DEALLOCATE(sim%diag_norm_Linf,ierr)
@@ -575,7 +576,6 @@ contains
     !--> Diagnostics
     sim%diag2D_step   = diag2D_step
 
-    sim%count_save_diag = 0
   end subroutine init_4d_DK_hybrid
 
 
@@ -681,14 +681,14 @@ contains
     end do
 
     do ieta1 = 1,Nx
-       do ieta2 = 1,Ny 
-          x = sim%xgrid_2d(ieta1,ieta2)
-          y = sim%ygrid_2d(ieta1,ieta2)
+      do ieta2 = 1,Ny 
+        x = sim%xgrid_2d(ieta1,ieta2)
+        y = sim%ygrid_2d(ieta1,ieta2)
 
-          sim%n0_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_n0)
-          sim%Ti_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Ti) 
-          sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
-       end do
+        sim%n0_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_n0)
+        sim%Ti_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Ti) 
+        sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
+      end do
     end do
 
     !--> Initialization of B(x,y)
@@ -703,7 +703,7 @@ contains
     dtheta    = Ltheta/float(Ntheta-1)
     do itheta = 1,Ntheta
       theta_grid_tmp(itheta) = theta_min + &
-        float(itheta-1)*dtheta
+          float(itheta-1)*dtheta
     end do
 
     call init_Brtheta(sim%r_grid,theta_grid_tmp,B_rtheta_tmp)
@@ -932,26 +932,26 @@ contains
       do iloc3 = 1,loc4d_sz_x3
         do iloc2 = 1,loc4d_sz_x2
           do iloc1 = 1,loc4d_sz_x1
-             glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
-                  (/iloc1,iloc2,iloc3,iloc4/))
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+                (/iloc1,iloc2,iloc3,iloc4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
             i3 = glob_ind4d(3)
             i4 = glob_ind4d(4)
             theta_j = sim%logical_mesh4d%eta2_min + &
-        (i2-1)*sim%logical_mesh4d%delta_eta2 
-           ! theta_j = polar_eta2( &
-           !      sim%xgrid_2d(i1,i2), &
-           !      sim%ygrid_2d(i1,i2), &
-           !      (/0.0_f64/)) ! irrelevant for polar_eta2
+                (i2-1)*sim%logical_mesh4d%delta_eta2 
+            ! theta_j = polar_eta2( &
+            !      sim%xgrid_2d(i1,i2), &
+            !      sim%ygrid_2d(i1,i2), &
+            !      (/0.0_f64/)) ! irrelevant for polar_eta2
             phi_k   = phi_grid_tmp(i3) 
             tmp = exp(-(sim%r_grid(i1)-r_peak)**2/&
-                 (4._f64*sim%deltarn/sim%deltarTi)) 
+                (4._f64*sim%deltarn/sim%deltarTi)) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
-                 sim%feq_xyvpar(i1,i2,i4) * &
-                 (1._f64 + sim%eps_perturb*&
-                 cos(2*sll_pi*real(sim%mmode)*theta_j + &
-                 2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi) * tmp)
+                sim%feq_xyvpar(i1,i2,i4) * &
+                (1._f64 + sim%eps_perturb*&
+                cos(2*sll_pi*real(sim%mmode)*theta_j + &
+                2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi) * tmp)
           end do
         end do
       end do
@@ -1723,6 +1723,8 @@ contains
     use sll_timer
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     
+    sll_int32 :: diag_num
+
     !--> For timers
     type(sll_time_mark) :: t0, t1 
     double precision    :: elaps_time
@@ -1782,14 +1784,17 @@ contains
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_Efield = ', elaps_time
 
-    !*** Compute energy kinetic, potential and total
-    call compute_energy(sim)
+    !*** Diagnostics at time t=0 ***
+    sim%count_save_diag = 1
+    diag_num = sim%count_save_diag
+    !--> Compute energy kinetic, potential and total
+    call compute_energy(sim,diag_num)
     
-    !*** Compute L1 norm, L2 norm, L infini norm
-    call compute_norm_L1_L2_Linf(sim)
+    !--> Compute L1 norm, L2 norm, L infini norm
+    call compute_norm_L1_L2_Linf(sim,diag_num)
 
-    !*** Save initial step in HDF5 file ***
-    call writeHDF5_cross_section_diag( sim )    
+    !--> Save initial step in HDF5 file
+    call writeHDF5_cross_section_diag(sim,diag_num)    
   end subroutine first_step_4d_DK_hybrid
   
 
@@ -2015,11 +2020,12 @@ contains
   !
   ! Rk: One file 'DK4d_diag_d<num_diag>.h5' per diagnostic
   !--------------------------------------------------------------
-  subroutine writeHDF5_cross_section_diag( sim )
+  subroutine writeHDF5_cross_section_diag( sim, diag_num )
 
     use sll_hdf5_io, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_int32                         , intent(in)    :: diag_num
 
     sll_int32  :: ix1_diag, ix2_diag
     sll_int32  :: ix3_diag, ivpar_diag
@@ -2036,7 +2042,7 @@ contains
     ivpar_diag = int(sim%Nvpar/3)
 
     write(filename_HDF5,'(A,'//numfmt//',A)') &
-      "DK4d_diag", sim%count_save_diag, ".h5"
+      "DK4d_diag", diag_num, ".h5"
 
     if (sim%my_rank.eq.0) then
       print*,'--> Save HDF5 file: ',filename_HDF5
@@ -2076,7 +2082,6 @@ contains
       call sll_hdf5_write_array_2d(file_id, &
         sim%f4d_seqx3x4(ix1_diag,ix2_diag,:,:),'f2d_zvpar',file_err)
     end if
-    sim%count_save_diag = sim%count_save_diag + 1
 
   end subroutine writeHDF5_cross_section_diag
   
@@ -2092,148 +2097,172 @@ contains
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     !--> diagnostics norm
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_masse_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_norm_L1_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_norm_L2_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_norm_Linf_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_entropy_kin_result
+    sll_real64, dimension(:), pointer :: diag_mass_tmp
+    sll_real64, dimension(:), pointer :: diag_norm_L1_tmp
+    sll_real64, dimension(:), pointer :: diag_norm_L2_tmp
+    sll_real64, dimension(:), pointer :: diag_norm_Linf_tmp
+    sll_real64, dimension(:), pointer :: diag_entropy_kin_tmp
     
     !--> diagnostics energy
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_kin_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_pot_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_tot_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_heat_flux_result
-    sll_real64, dimension(sim%count_save_diag + 1) :: diag_relative_error_nrj_tot_result
+    sll_real64, dimension(:), pointer :: diag_nrj_kin_tmp
+    sll_real64, dimension(:), pointer :: diag_nrj_pot_tmp
+    sll_real64, dimension(:), pointer :: diag_nrj_tot_tmp
+    sll_real64, dimension(:), pointer :: diag_heat_flux_tmp
+    sll_real64, dimension(:), pointer :: diag_relative_error_nrj_tot_tmp
 
-    sll_int32  :: idum
+    sll_int32  :: ierr
+    sll_int32  :: idiag, nb_diag
     sll_real64 :: dum
     
     !--> For conservation law HDF5 saving
     integer             :: file_err
     sll_int32           :: file_id
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
-    
-    diag_masse_result       = 0.0_f64
-    diag_norm_L1_result     = 0.0_f64
-    diag_norm_L2_result     = 0.0_f64
-    diag_norm_Linf_result   = 0.0_f64
-    diag_entropy_kin_result = 0.0_f64
-    diag_nrj_kin_result     = 0.0_f64
-    diag_nrj_pot_result     = 0.0_f64
-    diag_nrj_tot_result     = 0.0_f64
-    diag_heat_flux_result   = 0.0_f64
-    diag_relative_error_nrj_tot_result = 0.0_f64
-    diag_masse_result = 0.0
-    
-    print*, 'myrank',sim%my_rank,'test',sim%diag_masse(1:sim%count_save_diag + 1)
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_masse(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_masse_result )
+
+    nb_diag = size(sim%diag_mass)
+
+    SLL_ALLOCATE(diag_mass_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_norm_L1_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_norm_L2_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_norm_Linf_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_entropy_kin_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_nrj_kin_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_nrj_pot_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_nrj_tot_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_heat_flux_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_relative_error_nrj_tot_tmp(nb_diag),ierr)
+
+    diag_mass_tmp        = 0.0_f64
+    diag_norm_L1_tmp     = 0.0_f64
+    diag_norm_L2_tmp     = 0.0_f64
+    diag_norm_Linf_tmp   = 0.0_f64
+    diag_entropy_kin_tmp = 0.0_f64
+    diag_nrj_kin_tmp     = 0.0_f64
+    diag_nrj_pot_tmp     = 0.0_f64
+    diag_nrj_tot_tmp     = 0.0_f64
+    diag_heat_flux_tmp   = 0.0_f64
+    diag_relative_error_nrj_tot_tmp = 0.0_f64
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_norm_L1(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_norm_L1_result )
+        sll_world_collective, &
+        sim%diag_mass, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_mass_tmp )
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_norm_L2(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_norm_L2_result )
+        sll_world_collective, &
+        sim%diag_norm_L1, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_norm_L1_tmp )
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_norm_Linf(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_norm_Linf_result )
+        sll_world_collective, &
+        sim%diag_norm_L2, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_norm_L2_tmp )
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_entropy_kin(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_entropy_kin_result )
+        sll_world_collective, &
+        sim%diag_norm_Linf, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_norm_Linf_tmp )
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_nrj_kin(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_nrj_kin_result )
+        sll_world_collective, &
+        sim%diag_entropy_kin, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_entropy_kin_tmp )
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_heat_flux(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_heat_flux_result )
-    
-    call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_nrj_pot(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_nrj_pot_result )
+        sll_world_collective, &
+        sim%diag_nrj_kin, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_nrj_kin_tmp )
 
     call sll_collective_reduce_real64( &
-               sll_world_collective, &
-               sim%diag_nrj_tot(1:sim%count_save_diag + 1), &
-               sim%count_save_diag + 1, &
-               MPI_SUM, &
-               0, &
-               diag_nrj_tot_result )
+        sll_world_collective, &
+        sim%diag_heat_flux, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_heat_flux_tmp )
 
-    do idum = 1, sim%count_save_diag+1
-       dum  = sqrt(.5*((diag_nrj_kin_result(idum)-diag_nrj_kin_result(1))**2 + &
-                       (diag_nrj_pot_result(idum)-diag_nrj_pot_result(1))**2)) 
+    call sll_collective_reduce_real64( &
+        sll_world_collective, &
+        sim%diag_nrj_pot, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_nrj_pot_tmp )
 
-       if ( dum /= 0.0_f64) &
-          diag_relative_error_nrj_tot_result(idum) = &
-             (diag_nrj_tot_result(idum)-diag_nrj_tot_result(1))/dum
+    call sll_collective_reduce_real64( &
+        sll_world_collective, &
+        sim%diag_nrj_tot, &
+        nb_diag, &
+        MPI_SUM, &
+        0, &
+        diag_nrj_tot_tmp )
+
+    do idiag = 1,nb_diag
+      dum  = sqrt(.5*((diag_nrj_kin_tmp(idiag)-diag_nrj_kin_tmp(1))**2 + &
+          (diag_nrj_pot_tmp(idiag)-diag_nrj_pot_tmp(1))**2)) 
+
+      if ( dum /= 0.0_f64) &
+          diag_relative_error_nrj_tot_tmp(idiag) = &
+          (diag_nrj_tot_tmp(idiag)-diag_nrj_tot_tmp(1))/dum
     end do
 
     if (sim%my_rank.eq.0) then
       print*,'--> Save HDF5 file: ',filename_CL
       call sll_hdf5_file_create(filename_CL,file_id,file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_nrj_kin_result(:),'nrj_kin',file_err)
+          diag_nrj_kin_tmp(:),'nrj_kin',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_nrj_pot_result(:),'nrj_pot',file_err)
+          diag_nrj_pot_tmp(:),'nrj_pot',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_nrj_tot_result(:),'nrj_tot',file_err)
+          diag_nrj_tot_tmp(:),'nrj_tot',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_relative_error_nrj_tot_result(:),&
-                          'relative_error_nrj_tot',file_err)
+          diag_relative_error_nrj_tot_tmp(:),&
+          'relative_error_nrj_tot',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_heat_flux_result(:),'heat_flux',file_err)
+          diag_heat_flux_tmp(:),'heat_flux',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_masse_result(:),&
-                          'masse',file_err)
+          diag_mass_tmp(:),&
+          'mass',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_norm_L1_result(:),'L1_norm',file_err)
+          diag_norm_L1_tmp(:),'L1_norm',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_norm_L2_result(:),'L2_norm',file_err)
+          diag_norm_L2_tmp(:),'L2_norm',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_norm_Linf_result(:),'Linf_norm',file_err)
+          diag_norm_Linf_tmp(:),'Linf_norm',file_err)
       call sll_hdf5_write_array_1d(file_id,&
-                          diag_entropy_kin_result(:),'entropy_kin',file_err)
+          diag_entropy_kin_tmp(:),'entropy_kin',file_err)
       call sll_hdf5_file_close(file_id,file_err)
     end if
+
+    SLL_DEALLOCATE(diag_mass_tmp,ierr)
+    SLL_DEALLOCATE(diag_norm_L1_tmp,ierr)
+    SLL_DEALLOCATE(diag_norm_L2_tmp,ierr)
+    SLL_DEALLOCATE(diag_norm_Linf_tmp,ierr)
+    SLL_DEALLOCATE(diag_entropy_kin_tmp,ierr)
+    SLL_DEALLOCATE(diag_nrj_kin_tmp,ierr)
+    SLL_DEALLOCATE(diag_nrj_pot_tmp,ierr)
+    SLL_DEALLOCATE(diag_nrj_tot_tmp,ierr)
+    SLL_DEALLOCATE(diag_heat_flux_tmp,ierr)
+    SLL_DEALLOCATE(diag_relative_error_nrj_tot_tmp,ierr)
+
   end subroutine writeHDF5_conservation_laws
 
 
@@ -2269,9 +2298,10 @@ contains
   !  Out: nrj_pot
   !
   !-----------------------------------------------------------  
-  subroutine compute_energy(sim)
+  subroutine compute_energy(sim,diag_num)
 
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim    
+    sll_int32                         , intent(in)    :: diag_num
 
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar,Neta1,Neta2
@@ -2344,10 +2374,10 @@ contains
 
     nrj_tot = nrj_kin + nrj_pot
 
-    sim%diag_nrj_kin(sim%count_save_diag + 1)   = nrj_kin
-    sim%diag_nrj_pot(sim%count_save_diag + 1)   = nrj_pot
-    sim%diag_nrj_tot(sim%count_save_diag + 1)   = nrj_tot
-    sim%diag_heat_flux(sim%count_save_diag + 1) = heat_flux
+    sim%diag_nrj_kin(diag_num)   = nrj_kin
+    sim%diag_nrj_pot(diag_num)   = nrj_pot
+    sim%diag_nrj_tot(diag_num)   = nrj_tot
+    sim%diag_heat_flux(diag_num) = heat_flux
 
   end subroutine compute_energy
 
@@ -2371,9 +2401,10 @@ contains
   !
   ! Computation of the L infini = max( abs( delta f) )
   !-----------------------------------------------------------
-    subroutine compute_norm_L1_L2_Linf(sim)
+  subroutine compute_norm_L1_L2_Linf(sim,diag_num)
     
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+    sll_int32                         , intent(in)    :: diag_num
     
     ! local variables
     sll_int32  :: Neta1_loc,Neta2_loc,Neta3,Nvpar
@@ -2384,7 +2415,7 @@ contains
     sll_int32  :: iloc1, iloc2
     sll_int32  :: i1,i2,i3,i4
     sll_int32, dimension(1:4) :: glob_ind4d
-    sll_real64 :: masse, norm_L1,norm_L2,norm_Linf,entropy_kin
+    sll_real64 :: mass, norm_L1,norm_L2,norm_Linf,entropy_kin
 
     Neta1_loc  = size(sim%f4d_seqx3x4,1)
     Neta2_loc  = size(sim%f4d_seqx3x4,2)
@@ -2400,7 +2431,7 @@ contains
     norm_L1    = 0.0
     norm_L2    = 0.0
     norm_Linf  = 0.0
-    masse      = 0.0
+    mass       = 0.0
     entropy_kin= 0.0
 
     !-> Computation of the enrgy kinetic locally in (x1,x2) directions
@@ -2421,7 +2452,7 @@ contains
 
                 delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4)
 
-                masse   = masse + &
+                mass   = mass + &
                   delta_f * val_jac * &
                   delta_eta1*delta_eta2*delta_eta3*delta_vpar
 
@@ -2448,11 +2479,11 @@ contains
 
     norm_L2   = sqrt(norm_L2)
 
-    sim%diag_masse(sim%count_save_diag + 1)       = masse
-    sim%diag_norm_L1(sim%count_save_diag + 1)     = norm_L1
-    sim%diag_norm_L2(sim%count_save_diag + 1)     = norm_L2
-    sim%diag_norm_Linf(sim%count_save_diag + 1)   = norm_Linf
-    sim%diag_entropy_kin(sim%count_save_diag + 1) = entropy_kin
+    sim%diag_mass(diag_num)        = mass
+    sim%diag_norm_L1(diag_num)     = norm_L1
+    sim%diag_norm_L2(diag_num)     = norm_L2
+    sim%diag_norm_Linf(diag_num)   = norm_Linf
+    sim%diag_entropy_kin(diag_num) = entropy_kin
 
   end subroutine compute_norm_L1_L2_Linf
 
