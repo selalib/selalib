@@ -229,7 +229,9 @@ ENABLE_TESTING()
 
 INCLUDE(POEConfig)
 SET(PROCS 4)
-SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml)
+FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+SET(ARGS "slv2d.nml")
 
 ADD_MPI_TEST(test_vp4d       vp4d_transpose       ${PROCS} ${ARGS})
 ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})

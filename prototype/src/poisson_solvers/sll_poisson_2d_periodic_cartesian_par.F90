@@ -590,12 +590,12 @@ contains
     call fft_delete_plan(plan%py_inv)
 
 !    call delete( plan%layout_x ) ! can't delete this, the plan does not own it
-    call delete( plan%layout_seq_x1 )
-    call delete( plan%layout_seq_x2 )
+    call sll_delete( plan%layout_seq_x1 )
+    call sll_delete( plan%layout_seq_x2 )
     SLL_DEALLOCATE_ARRAY(plan%fft_x_array, ierr)
     SLL_DEALLOCATE_ARRAY(plan%fft_y_array, ierr)
-    call delete( plan%rmp_xy )
-    call delete( plan%rmp_yx )
+    call sll_delete( plan%rmp_xy )
+    call sll_delete( plan%rmp_yx )
     SLL_DEALLOCATE(plan, ierr)
   end subroutine delete_poisson_2d_periodic_plan_cartesian_par
 
