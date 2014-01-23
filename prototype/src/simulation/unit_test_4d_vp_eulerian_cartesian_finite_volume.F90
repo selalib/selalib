@@ -219,7 +219,7 @@ program vp_cartesian_4d
     end if
 
   call simulation%run( )
-  call delete(simulation)
+  call sll_delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 
