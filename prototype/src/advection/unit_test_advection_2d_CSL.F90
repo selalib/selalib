@@ -50,7 +50,7 @@ implicit none
   x2_max = 1._f64
   num_cells_x1 = 32
   num_cells_x2 = 32
-  dt = 0.1_f64
+  dt = 0.1_f64 !0.1_f64
   
   delta_x1 = (x1_max-x1_min)/real(num_cells_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(num_cells_x2,f64)
