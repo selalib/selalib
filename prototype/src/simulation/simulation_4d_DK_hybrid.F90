@@ -31,176 +31,176 @@ module sll_simulation_4d_DK_hybrid_module
 
 #define PRINT_PLOTS 1
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_DK_hybrid
-     ! Parallel environment parameters
-     sll_int32  :: world_size
-     sll_int32  :: my_rank
-     sll_int32  :: power2 ! 2^power2 = number of processes available
-     ! Mesh parameters
-     sll_int32  :: nc_x1
-     sll_int32  :: nc_x2
-     sll_int32  :: nc_x3
-     sll_int32  :: nc_x4
-     sll_real64 :: r_min
-     sll_real64 :: r_max
-     sll_real64 :: phi_min
-     sll_real64 :: phi_max
-     sll_real64 :: vpar_min
-     sll_real64 :: vpar_max
-     !--> Equilibrium
-     sll_real64 :: tau0      !-> tau0 = Ti(rpeak)/Te(rpeak)
-     sll_real64 :: rho_peak    
-     sll_real64 :: kappan   
-     sll_real64 :: deltarn  
-     sll_real64 :: kappaTi  
-     sll_real64 :: deltarTi 
-     sll_real64 :: kappaTe  
-     sll_real64 :: deltarTe     
-     !--> Pertubation
-     sll_int32  :: perturb_choice
-     sll_int32  :: mmode
-     sll_int32  :: nmode
-     sll_real64 :: eps_perturb   
-     ! Physics/numerical parameters
-     sll_real64 :: dt
-     sll_int32  :: nb_iter
-     sll_int32  :: spline_degree_eta1
-     sll_int32  :: spline_degree_eta2
-     sll_int32  :: spline_degree_eta3
-     sll_int32  :: spline_degree_vpar
+    ! Parallel environment parameters
+    sll_int32  :: world_size
+    sll_int32  :: my_rank
+    sll_int32  :: power2 ! 2^power2 = number of processes available
+    ! Mesh parameters
+    sll_int32  :: nc_x1
+    sll_int32  :: nc_x2
+    sll_int32  :: nc_x3
+    sll_int32  :: nc_x4
+    sll_real64 :: r_min
+    sll_real64 :: r_max
+    sll_real64 :: phi_min
+    sll_real64 :: phi_max
+    sll_real64 :: vpar_min
+    sll_real64 :: vpar_max
+    !--> Equilibrium
+    sll_real64 :: tau0      !-> tau0 = Ti(rpeak)/Te(rpeak)
+    sll_real64 :: rho_peak    
+    sll_real64 :: kappan   
+    sll_real64 :: deltarn  
+    sll_real64 :: kappaTi  
+    sll_real64 :: deltarTi 
+    sll_real64 :: kappaTe  
+    sll_real64 :: deltarTe     
+    !--> Pertubation
+    sll_int32  :: perturb_choice
+    sll_int32  :: mmode
+    sll_int32  :: nmode
+    sll_real64 :: eps_perturb   
+    ! Physics/numerical parameters
+    sll_real64 :: dt
+    sll_int32  :: nb_iter
+    sll_int32  :: spline_degree_eta1
+    sll_int32  :: spline_degree_eta2
+    sll_int32  :: spline_degree_eta3
+    sll_int32  :: spline_degree_vpar
 
-     ! diagnostics
-     sll_real64 :: diag2D_step
-     
-     !--> diagnostics norm
-     sll_real64, dimension(:),pointer :: diag_masse
-     sll_real64, dimension(:),pointer :: diag_norm_L1
-     sll_real64, dimension(:),pointer :: diag_norm_L2
-     sll_real64, dimension(:),pointer :: diag_norm_Linf
-     sll_real64, dimension(:),pointer :: diag_entropy_kin
+    ! diagnostics
+    sll_real64 :: diag2D_step
 
-     !--> diagnostics energy
-     sll_real64, dimension(:),pointer :: diag_nrj_kin
-     sll_real64, dimension(:),pointer :: diag_nrj_pot
-     sll_real64, dimension(:),pointer :: diag_nrj_tot
-     sll_real64, dimension(:),pointer :: diag_heat_flux
-          
-     !--> 4D logical mesh (eta1,eta2,eta3,vpar)
-     sll_int32 :: Neta1, Neta2, Neta3, Nvpar
-     type(sll_logical_mesh_4d), pointer :: logical_mesh4d
-     sll_real64, dimension(:), pointer :: eta1_grid
-     sll_real64, dimension(:), pointer :: eta2_grid
-     sll_real64, dimension(:), pointer :: eta3_grid
-     sll_real64, dimension(:), pointer :: vpar_grid
-     
-     !--> Coordinate transformation F
-     class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
-     !--> Norm of norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
-     sll_real64, dimension(:,:), pointer :: norm_square_xy
+    !--> diagnostics norm
+    sll_real64, dimension(:),pointer :: diag_masse
+    sll_real64, dimension(:),pointer :: diag_norm_L1
+    sll_real64, dimension(:),pointer :: diag_norm_L2
+    sll_real64, dimension(:),pointer :: diag_norm_Linf
+    sll_real64, dimension(:),pointer :: diag_entropy_kin
 
-     !-->  1D mesh
-     sll_real64, dimension(:), pointer :: r_grid
-     !--> 2D physic mesh
-     sll_real64, dimension(:,:), pointer :: xgrid_2d
-     sll_real64, dimension(:,:), pointer :: ygrid_2d
+    !--> diagnostics energy
+    sll_real64, dimension(:),pointer :: diag_nrj_kin
+    sll_real64, dimension(:),pointer :: diag_nrj_pot
+    sll_real64, dimension(:),pointer :: diag_nrj_tot
+    sll_real64, dimension(:),pointer :: diag_heat_flux
 
-     !--> For boundary conditions
-     sll_int32 :: bc_left_eta1
-     sll_int32 :: bc_right_eta1
-     sll_int32 :: bc_left_eta2
-     sll_int32 :: bc_right_eta2
-     sll_int32 :: bc_left_eta3
-     sll_int32 :: bc_right_eta3
-     sll_int32 :: bc_left_vpar
-     sll_int32 :: bc_right_vpar
+    !--> 4D logical mesh (eta1,eta2,eta3,vpar)
+    sll_int32 :: Neta1, Neta2, Neta3, Nvpar
+    type(sll_logical_mesh_4d), pointer :: logical_mesh4d
+    sll_real64, dimension(:), pointer :: eta1_grid
+    sll_real64, dimension(:), pointer :: eta2_grid
+    sll_real64, dimension(:), pointer :: eta3_grid
+    sll_real64, dimension(:), pointer :: vpar_grid
 
-     !--> Density and temperature profiles
-     sll_real64 :: major_radius    !R0
-     sll_real64, dimension(:)  , pointer :: n0_r
-     sll_real64, dimension(:)  , pointer :: Ti_r
-     sll_real64, dimension(:)  , pointer :: Te_r
-     sll_real64, dimension(:,:), pointer :: n0_xy
-     sll_real64, dimension(:,:), pointer :: Ti_xy
-     sll_real64, dimension(:,:), pointer :: Te_xy
+    !--> Coordinate transformation F
+    class(sll_coordinate_transformation_2d_base), pointer :: transf_xy
+    !--> Norm of norm**2 = (F_1(eta1, eta2)**2 + F_2(eta1, eta2)**2)
+    sll_real64, dimension(:,:), pointer :: norm_square_xy
 
-     !--> Magnetic field
-     sll_real64, dimension(:,:), pointer :: B_xy
- 
-     !--> Equilibrium distribution function
-     sll_real64, dimension(:,:,:), pointer :: feq_xyvpar
+    !-->  1D mesh
+    sll_real64, dimension(:), pointer :: r_grid
+    !--> 2D physic mesh
+    sll_real64, dimension(:,:), pointer :: xgrid_2d
+    sll_real64, dimension(:,:), pointer :: ygrid_2d
 
-     !--> 4D distribution function 
-     !----> sequential in (x1,x2) and parallel in (x3,x4)
-     type(layout_4D), pointer :: layout4d_seqx1x2
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx1x2 
-     !----> parallel in (x1,x2) and sequential in (x3,x4) 
-     type(layout_4D), pointer :: layout4d_seqx3x4
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx3x4
-     !----> for remapping
-     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
-     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
-     !----> for interpolations
-     type(arb_deg_2d_interpolator) :: interp2d_f_eta1eta2
-     type(arb_deg_1d_interpolator) :: interp1d_f_eta3
-     type(arb_deg_1d_interpolator) :: interp1d_f_vpar
+    !--> For boundary conditions
+    sll_int32 :: bc_left_eta1
+    sll_int32 :: bc_right_eta1
+    sll_int32 :: bc_left_eta2
+    sll_int32 :: bc_right_eta2
+    sll_int32 :: bc_left_eta3
+    sll_int32 :: bc_right_eta3
+    sll_int32 :: bc_left_vpar
+    sll_int32 :: bc_right_vpar
 
-     !--> 3D charge density and 3D electric potential
-     !----> sequential in (x1,x2)
-     type(layout_3D), pointer :: layout3d_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: rho3d_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: phi3d_seqx1x2 
-     !----> sequential in x3
-     type(layout_3D), pointer :: layout3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: rho3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: phi3d_seqx3
-     !----> for remapping
-     type(remap_plan_3D_real64), pointer :: seqx1x2_to_seqx3
-     type(remap_plan_3D_real64), pointer :: seqx3_to_seqx1x2
+    !--> Density and temperature profiles
+    sll_real64 :: major_radius    !R0
+    sll_real64, dimension(:)  , pointer :: n0_r
+    sll_real64, dimension(:)  , pointer :: Ti_r
+    sll_real64, dimension(:)  , pointer :: Te_r
+    sll_real64, dimension(:,:), pointer :: n0_xy
+    sll_real64, dimension(:,:), pointer :: Ti_xy
+    sll_real64, dimension(:,:), pointer :: Te_xy
 
-     !--> 3D electric field
-     sll_real64, dimension(:,:,:), pointer :: E3d_eta1_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: E3d_eta2_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: E3d_x1_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: E3d_x2_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: E3d_eta3_seqx3
+    !--> Magnetic field
+    sll_real64, dimension(:,:), pointer :: B_xy
 
-     !--> For general QN solver
-     type(general_coordinate_elliptic_solver), pointer :: QNS
-     ! interpolation any arbitrary spline
-     type(arb_deg_2d_interpolator) :: interp2d_rho_eta1eta2
-     type(arb_deg_2d_interpolator) :: interp2d_Phi_eta1eta2
-     type(arb_deg_1d_interpolator) :: interp1d_Phi_eta3
-     type(arb_deg_2d_interpolator) :: interp2d_QN_A11
-     type(arb_deg_2d_interpolator) :: interp2d_QN_A12
-     type(arb_deg_2d_interpolator) :: interp2d_QN_A21
-     type(arb_deg_2d_interpolator) :: interp2d_QN_A22
-     type(arb_deg_2d_interpolator) :: interp2d_QN_B1
-     type(arb_deg_2d_interpolator) :: interp2d_QN_B2
-     type(arb_deg_2d_interpolator) :: interp2d_QN_C
-     class(sll_scalar_field_2d_base) , pointer :: rho2d
-     type(sll_scalar_field_1d_discrete_alt), pointer::phi1d! for derivative in eta3
-     type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
-     class(sll_scalar_field_2d_base), pointer :: QN_A11 
-     class(sll_scalar_field_2d_base), pointer :: QN_A12
-     class(sll_scalar_field_2d_base), pointer :: QN_A21
-     class(sll_scalar_field_2d_base), pointer :: QN_A22
-     class(sll_scalar_field_2d_base), pointer :: QN_B1
-     class(sll_scalar_field_2d_base), pointer :: QN_B2
-     class(sll_scalar_field_2d_base), pointer :: QN_C
+    !--> Equilibrium distribution function
+    sll_real64, dimension(:,:,:), pointer :: feq_xyvpar
 
-     !---> For diagnostic saving
-     sll_int32 :: count_save_diag
+    !--> 4D distribution function 
+    !----> sequential in (x1,x2) and parallel in (x3,x4)
+    type(layout_4D), pointer :: layout4d_seqx1x2
+    sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx1x2 
+    !----> parallel in (x1,x2) and sequential in (x3,x4) 
+    type(layout_4D), pointer :: layout4d_seqx3x4
+    sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx3x4
+    !----> for remapping
+    type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
+    type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
+    !----> for interpolations
+    type(arb_deg_2d_interpolator) :: interp2d_f_eta1eta2
+    type(arb_deg_1d_interpolator) :: interp1d_f_eta3
+    type(arb_deg_1d_interpolator) :: interp1d_f_vpar
 
-   contains
-     procedure, pass(sim) :: run => run_4d_DK_hybrid
-     procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
+    !--> 3D charge density and 3D electric potential
+    !----> sequential in (x1,x2)
+    type(layout_3D), pointer :: layout3d_seqx1x2
+    sll_real64, dimension(:,:,:), pointer :: rho3d_seqx1x2 
+    sll_real64, dimension(:,:,:), pointer :: phi3d_seqx1x2 
+    !----> sequential in x3
+    type(layout_3D), pointer :: layout3d_seqx3
+    sll_real64, dimension(:,:,:), pointer :: rho3d_seqx3
+    sll_real64, dimension(:,:,:), pointer :: phi3d_seqx3
+    !----> for remapping
+    type(remap_plan_3D_real64), pointer :: seqx1x2_to_seqx3
+    type(remap_plan_3D_real64), pointer :: seqx3_to_seqx1x2
+
+    !--> 3D electric field
+    sll_real64, dimension(:,:,:), pointer :: E3d_eta1_seqx1x2
+    sll_real64, dimension(:,:,:), pointer :: E3d_eta2_seqx1x2
+    sll_real64, dimension(:,:,:), pointer :: E3d_x1_seqx1x2
+    sll_real64, dimension(:,:,:), pointer :: E3d_x2_seqx1x2
+    sll_real64, dimension(:,:,:), pointer :: E3d_eta3_seqx3
+
+    !--> For general QN solver
+    type(general_coordinate_elliptic_solver), pointer :: QNS
+    ! interpolation any arbitrary spline
+    type(arb_deg_2d_interpolator) :: interp2d_rho_eta1eta2
+    type(arb_deg_2d_interpolator) :: interp2d_Phi_eta1eta2
+    type(arb_deg_1d_interpolator) :: interp1d_Phi_eta3
+    type(arb_deg_2d_interpolator) :: interp2d_QN_A11
+    type(arb_deg_2d_interpolator) :: interp2d_QN_A12
+    type(arb_deg_2d_interpolator) :: interp2d_QN_A21
+    type(arb_deg_2d_interpolator) :: interp2d_QN_A22
+    type(arb_deg_2d_interpolator) :: interp2d_QN_B1
+    type(arb_deg_2d_interpolator) :: interp2d_QN_B2
+    type(arb_deg_2d_interpolator) :: interp2d_QN_C
+    class(sll_scalar_field_2d_base) , pointer :: rho2d
+    type(sll_scalar_field_1d_discrete_alt), pointer::phi1d! for derivative in eta3
+    type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d
+    class(sll_scalar_field_2d_base), pointer :: QN_A11 
+    class(sll_scalar_field_2d_base), pointer :: QN_A12
+    class(sll_scalar_field_2d_base), pointer :: QN_A21
+    class(sll_scalar_field_2d_base), pointer :: QN_A22
+    class(sll_scalar_field_2d_base), pointer :: QN_B1
+    class(sll_scalar_field_2d_base), pointer :: QN_B2
+    class(sll_scalar_field_2d_base), pointer :: QN_C
+
+    !---> For diagnostic saving
+    sll_int32 :: count_save_diag
+
+  contains
+    procedure, pass(sim) :: run => run_4d_DK_hybrid
+    procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
   end type sll_simulation_4d_DK_hybrid
 
   interface sll_delete
-     module procedure delete_4d_DK_hybrid
+    module procedure delete_4d_DK_hybrid
   end interface sll_delete
 
   interface initialize
-     module procedure initialize_4d_DK_hybrid
+    module procedure initialize_4d_DK_hybrid
   end interface initialize
 
 contains
@@ -213,10 +213,10 @@ contains
   ! Initialization of the drift-kinetic 4D simulation
   !----------------------------------------------------
   subroutine initialize_4d_DK_hybrid( sim, &
-    world_size, &
-    my_rank, &
-    logical_mesh4d, &
-    transf_xy)
+      world_size, &
+      my_rank, &
+      logical_mesh4d, &
+      transf_xy)
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_int32                        , intent(in)    :: world_size
@@ -257,24 +257,24 @@ contains
     SLL_ALLOCATE(sim%vpar_grid(sim%Nvpar),ierr)
     do ieta1 = 1,sim%Neta1
       sim%eta1_grid(ieta1) = sim%logical_mesh4d%eta1_min + &
-        (ieta1-1)*sim%logical_mesh4d%delta_eta1
+          (ieta1-1)*sim%logical_mesh4d%delta_eta1
     end do
     do ieta2 = 1,sim%Neta2
       sim%eta2_grid(ieta2) = sim%logical_mesh4d%eta2_min + &
-        (ieta2-1)*sim%logical_mesh4d%delta_eta2
+          (ieta2-1)*sim%logical_mesh4d%delta_eta2
     end do
     do ieta3 = 1,sim%Neta3
       sim%eta3_grid(ieta3) = sim%logical_mesh4d%eta3_min + &
-        (ieta3-1)*sim%logical_mesh4d%delta_eta3
+          (ieta3-1)*sim%logical_mesh4d%delta_eta3
     end do
     do ivpar = 1,sim%Nvpar
       sim%vpar_grid(ivpar) = sim%logical_mesh4d%eta4_min + &
-        (ivpar-1)*sim%logical_mesh4d%delta_eta4
+          (ivpar-1)*sim%logical_mesh4d%delta_eta4
     end do
 
     !--> Transformation initialization
     sim%transf_xy => transf_xy
-    
+
     !--> Initialization of the (x,y) 2D mesh and
     !--> Initialization of the square of the norm 
     Nx = sim%Neta1
@@ -285,22 +285,23 @@ contains
     do ieta2 = 1,sim%Neta2
       do ieta1 = 1,sim%Neta1
         sim%xgrid_2d(ieta1,ieta2) = &
-          sim%transf_xy%x1_at_node(ieta1,ieta2)
+            sim%transf_xy%x1_at_node(ieta1,ieta2)
         sim%ygrid_2d(ieta1,ieta2) = &
-          sim%transf_xy%x2_at_node(ieta1,ieta2)
+            sim%transf_xy%x2_at_node(ieta1,ieta2)
         sim%norm_square_xy(ieta1,ieta2) = sim%xgrid_2d(ieta1,ieta2)**2 &
-                                        + sim%ygrid_2d(ieta1,ieta2)**2
+            + sim%ygrid_2d(ieta1,ieta2)**2
       end do
     end do
 
     !--> Initialization diagnostics for the norm
     size_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
+
     SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L1(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L2(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_Linf(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_entropy_kin(size_diag),ierr)
-    
+
     !--> Initialization diagnostics for the energy
     SLL_ALLOCATE(sim%diag_nrj_kin(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_nrj_pot(size_diag),ierr)
@@ -309,13 +310,13 @@ contains
 
     !--> Radial profile initialisation
     call init_profiles_DK(sim)
-    
+
     !*** Allocation of the distribution function ***
     call allocate_fdistribu4d_DK(sim)
-    
+
     !*** Allocation of the QN solveR ***
     call allocate_QN_DK(sim)
-    
+
     !*** Initialization of the QN solver ***
     call initialize_QN_DK (sim)
 
@@ -337,10 +338,10 @@ contains
 
     elaps_time_advec = 0.0
     elaps_time_QN    = 0.0
-   
+
     do iter = 1,sim%nb_iter
       if (sim%my_rank.eq.0) &
-        print*,' ===> ITERATION = ',iter
+          print*,' ===> ITERATION = ',iter
 
       call sll_set_time_mark(t0)
       !--> Advection in vpar direction'
@@ -348,29 +349,32 @@ contains
 
       ! --> Advection in eta3 direction'
       call advec1D_eta3(sim,0.5_f64*sim%dt)
-   
+
       !--> Sequential for the advection in eta1eta2
-      call apply_remap_4D(sim%seqx3x4_to_seqx1x2,sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
+      call apply_remap_4D(sim%seqx3x4_to_seqx1x2, &
+          sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
 
       !--> Advection in eta1,eta2 direction'
       call advec2D_eta1eta2(sim,sim%dt)
-    
+
       !--> Sequential for the advection in eta3 and in vpar
-      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4 )
-    
+      call apply_remap_4D(sim%seqx1x2_to_seqx3x4, &
+          sim%f4d_seqx1x2,sim%f4d_seqx3x4 )
+
       !--> Advection in eta3 direction'
       call advec1D_eta3(sim,0.5_f64*sim%dt)
 
       !--> Advection in vpar direction'
       call advec1D_vpar(sim,0.5_f64*sim%dt)
-      
+
       !--> Sequential to solve the quasi-neutral equation
-      call apply_remap_4D(sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
-      
+      call apply_remap_4D(sim%seqx3x4_to_seqx1x2, &
+          sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
+
       call sll_set_time_mark(t1)
       elaps_time_advec = elaps_time_advec + &
-        sll_time_elapsed_between(t0,t1)
-        
+          sll_time_elapsed_between(t0,t1)
+
       !--> Solve the quasi-neutral equation
       call sll_set_time_mark(t0)
       !-----> Computation of the rhs of QN 
@@ -379,32 +383,38 @@ contains
       call solve_QN( sim )
       call sll_set_time_mark(t1)
       elaps_time_QN = elaps_time_QN + &
-        sll_time_elapsed_between(t0,t1)
+          sll_time_elapsed_between(t0,t1)
 
       !--> Compute the new electric field
       call compute_Efield( sim )
 
       !--> Sequential for the advection in eta3 and in vpar
-      call apply_remap_4D(sim%seqx1x2_to_seqx3x4,sim%f4d_seqx1x2,sim%f4d_seqx3x4)     
+      call apply_remap_4D(sim%seqx1x2_to_seqx3x4, &
+          sim%f4d_seqx1x2,sim%f4d_seqx3x4)     
 
       !--> Save results in HDF5 files
       if ( mod(iter,int(sim%diag2D_step/sim%dt)) == 0) then
 
-          !--> Compute energy kinetic, potential and total
-         call compute_energy(sim)
-         
-         !--> Compute L1 norm, L2 norm, L infini norm
-         call compute_norm_L1_L2_Linf(sim)
+        !--> Compute energy kinetic, potential and total
+        call compute_energy(sim)
 
-         call writeHDF5_diag( sim )
+        !--> Compute L1 norm, L2 norm, L infini norm
+        call compute_norm_L1_L2_Linf(sim)
+
+        !--> Save diagnostics in HDF5 format
+        call writeHDF5_cross_section_diag( sim )
 
       end if
-   end do
-   
+    end do
+
+    !--> Save 'conservation_laws.h5' HDF5 file
+    call writeHDF5_conservation_laws( sim )
+
     if (sim%my_rank.eq.0) then
-       print*, ' Time for advec in run_4d_DK_hybrid  = ', elaps_time_advec
-       print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
+      print*, ' Time for advec in run_4d_DK_hybrid  = ', elaps_time_advec
+      print*, ' Time for QN in run_4d_DK_hybrid     = ', elaps_time_QN
     end if
+
   end subroutine run_4d_DK_hybrid
 
 
@@ -1521,6 +1531,63 @@ contains
   end subroutine initialize_scalar_C_QN_DK
 
 
+  !-----------------------------------------------------------
+  ! Computation of the charge density, i.e   
+  !   rho(x,y,z) = \int delta f dvpar
+  !   delta f = f(x,y,z,vpar) - feq(x,y,vpar) 
+  !
+  ! Rk: This corresponds to the RHS of the quasi-neutrality
+  !     equation
+  !
+  !  In : f4d_seqx3x4(x1=distrib,x2=distrib,x3=*,x4=*)
+  !       feq3d_seqx1x2x4(x1=*,x2=*,x4=*)
+  !  Out: rho3d_seqx3(x1=distrib,x2=distrib,x3=*)
+  !-----------------------------------------------------------
+  subroutine compute_charge_density(sim)
+
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    sll_int32  :: Neta1_loc,Neta2_loc,Neta3, Nvpar
+    sll_int32  :: iloc1, iloc2
+    sll_int32  :: i1, i2, i3, i4
+    sll_real64 :: delta_f
+    sll_real64 :: delta_vpar, intf_dvpar
+    sll_int32, dimension(1:4) :: glob_ind4d
+
+    Neta1_loc  = size(sim%f4d_seqx3x4,1)
+    Neta2_loc  = size(sim%f4d_seqx3x4,2)
+    Neta3      = size(sim%f4d_seqx3x4,3)
+    Nvpar      = size(sim%f4d_seqx3x4,4)
+    delta_vpar = sim%logical_mesh4d%delta_eta4 
+
+    !-> Computation of the charge density locally in (x1,x2) directions
+    do i3 = 1,Neta3
+      do iloc2 = 1,Neta2_loc
+        do iloc1 = 1,Neta1_loc
+
+          intf_dvpar = 0._f64
+
+          do i4 = 1,Nvpar-1
+            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+                  (/iloc1,iloc2,i3,i4/))
+            i1 = glob_ind4d(1)
+            i2 = glob_ind4d(2)
+            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                sim%feq_xyvpar(i1,i2,i4)
+            intf_dvpar = intf_dvpar + delta_f*delta_vpar           
+          end do
+
+          sim%rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar
+
+        end do
+      end do
+    end do
+    !--> compute rho3d_seqx1x2
+    call apply_remap_3D(sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
+
+  end subroutine compute_charge_density
+
+
   !----------------------------------------------------
   ! Compute Phi(eta1,eta1,phi) by solving
   !  the quasi-neutrality equation by using
@@ -1563,9 +1630,12 @@ contains
   end subroutine solve_QN
 
 
-  !----------------------------------------------------
+  !--------------------------------------------------------------
   ! Compute the electric field
-  !----------------------------------------------------
+  !   E = - grad Phi 
+  ! where Phi is the electrostatic potential solution of
+  ! quasi-neutrality equation
+  !--------------------------------------------------------------
   subroutine compute_Efield( sim )
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
@@ -1583,8 +1653,7 @@ contains
       loc3d_sz_x1, &
       loc3d_sz_x2, &
       loc3d_sz_x3)
-    
-  
+      
     do iloc3 = 1,loc3d_sz_x3
       call sim%phi2d%set_field_data( sim%phi3d_seqx1x2(:,:,iloc3) )
       call sim%phi2d%update_interpolation_coefficients( )
@@ -1652,14 +1721,7 @@ contains
   !----------------------------------------------------
   subroutine first_step_4d_DK_hybrid( sim )
     use sll_timer
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
-      sll_hdf5_write_array_1d, sll_hdf5_file_close
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
-
-    !--> For initial profile HDF5 saving
-    integer                      :: file_err
-    sll_int32                    :: file_id
-    character(len=12), parameter :: filename_prof = "init_prof.h5"
     
     !--> For timers
     type(sll_time_mark) :: t0, t1 
@@ -1675,28 +1737,8 @@ contains
     if (sim%my_rank.eq.0) &
       print*, ' Time for initialize_fdistribu4d_DK = ', elaps_time
         
-    !*** Saving of the radial profiles in HDF5 file ***
-    if (sim%my_rank.eq.0) then
-      call sll_hdf5_file_create(filename_prof,file_id,file_err)
-      !--> Saving of the 1D radial profiles of 
-      !-->  temperatures and density
-      call sll_hdf5_write_array_1d(file_id,sim%r_grid,'r_grid',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
-      call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
-
-      !--> Saving of the 2D (x,y) profiles of 
-      !-->  temperatures and density
-      call sll_hdf5_write_array_2d(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
-      call sll_hdf5_write_array_2d(file_id,sim%ygrid_2d,'ygrid_2d',file_err)
-      call sll_hdf5_write_array_2d(file_id,sim%n0_xy,'n0_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id,sim%Ti_xy,'Ti_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id,sim%Te_xy,'Te_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id,sim%B_xy,'B_xy',file_err)
-      !---> Saving of the 3D equilibrium function feq(x,y,vpar)
-      call sll_hdf5_write_array_3d(file_id,sim%feq_xyvpar,'feq_xyvpar',file_err)
-      call sll_hdf5_file_close(file_id,file_err)
-    end if
+    !*** Saving of the equilibrium state in HDF5 file 'init_state.h5' ***
+    call writeHDF5_equilibrium_state(sim)
 
     !*** Computation of the rhs of QN ***
     call sll_set_time_mark(t0)
@@ -1707,13 +1749,6 @@ contains
     elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_charge_density = ', elaps_time
-
-    if (sim%my_rank.eq.0) then
-      call sll_hdf5_file_create('rho_resu.h5',file_id,file_err)
-      call sll_hdf5_write_array_3d(file_id,sim%rho3d_seqx3,'rho3d_seqx3',file_err)
-      call sll_hdf5_write_array_3d(file_id,sim%rho3d_seqx1x2,'rho3d_seqx1x2',file_err)
-      call sll_hdf5_file_close(file_id,file_err)
-    end if
 
     !*** Matrix factorization for QN solver ***
     call sll_set_time_mark(t0)
@@ -1754,7 +1789,7 @@ contains
     call compute_norm_L1_L2_Linf(sim)
 
     !*** Save initial step in HDF5 file ***
-    call writeHDF5_diag( sim )    
+    call writeHDF5_cross_section_diag( sim )    
   end subroutine first_step_4d_DK_hybrid
   
 
@@ -1930,11 +1965,57 @@ contains
   !************************************************************
   !  DIAGNOSTICS
   !************************************************************
+
+  !------------------------------------------------------------
+  ! Save the initial density and temperature profiles
+  !  and the equilibrium state in the file 'init_state.h5'
+  !------------------------------------------------------------
+  subroutine writeHDF5_equilibrium_state( sim )
+
+    use sll_hdf5_io, only: sll_hdf5_file_create, &
+        sll_hdf5_write_array_1d, sll_hdf5_file_close
+
+    type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
+
+    !--> For initial equilibrium state HDF5 saving
+    integer                      :: file_err
+    sll_int32                    :: file_id
+    character(len=13), parameter :: filename_prof = "init_state.h5"
+
+    if (sim%my_rank.eq.0) then
+      call sll_hdf5_file_create(filename_prof,file_id,file_err)
+      !--> Saving of the 1D radial profiles of 
+      !-->  temperatures and density
+      call sll_hdf5_write_array_1d(file_id,sim%r_grid,'r_grid',file_err)
+      call sll_hdf5_write_array_1d(file_id,sim%n0_r,'n0_r',file_err)
+      call sll_hdf5_write_array_1d(file_id,sim%Ti_r,'Ti_r',file_err)
+      call sll_hdf5_write_array_1d(file_id,sim%Te_r,'Te_r',file_err)
+
+      !--> Saving of the 2D (x,y) profiles of 
+      !-->  temperatures and density
+      call sll_hdf5_write_array_2d(file_id,sim%xgrid_2d,'xgrid_2d',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%ygrid_2d,'ygrid_2d',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%n0_xy,'n0_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%Ti_xy,'Ti_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%Te_xy,'Te_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%B_xy,'B_xy',file_err)
+      !---> Saving of the 3D equilibrium function feq(x,y,vpar)
+      call sll_hdf5_write_array_3d(file_id,sim%feq_xyvpar,'feq_xyvpar',file_err)
+      call sll_hdf5_file_close(file_id,file_err)
+    end if
+
+  end subroutine writeHDF5_equilibrium_state
  
-  !----------------------------------------------------
-  ! 
-  !----------------------------------------------------
-  subroutine writeHDF5_diag( sim )
+
+  !--------------------------------------------------------------
+  ! Save 2D cross-sections for:
+  !  - Electrostatic potential
+  !  - Electric field
+  !  - Distribution function
+  !
+  ! Rk: One file 'DK4d_diag_d<num_diag>.h5' per diagnostic
+  !--------------------------------------------------------------
+  subroutine writeHDF5_cross_section_diag( sim )
 
     use sll_hdf5_io, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
@@ -1942,6 +2023,73 @@ contains
 
     sll_int32  :: ix1_diag, ix2_diag
     sll_int32  :: ix3_diag, ivpar_diag
+    
+    !--> For initial profile HDF5 saving
+    integer             :: file_err
+    sll_int32           :: file_id
+    character(len=80)   :: filename_HDF5
+    character(20), save :: numfmt = "'_d',i5.5"
+    
+    ix1_diag   = int(sim%Neta1/2)
+    ix2_diag   = int(sim%Neta2/3)
+    ix3_diag   = int(sim%Neta3/4)
+    ivpar_diag = int(sim%Nvpar/3)
+
+    write(filename_HDF5,'(A,'//numfmt//',A)') &
+      "DK4d_diag", sim%count_save_diag, ".h5"
+
+    if (sim%my_rank.eq.0) then
+      print*,'--> Save HDF5 file: ',filename_HDF5
+      call sll_hdf5_file_create(filename_HDF5,file_id,file_err)
+      !---> Mesh 1D
+      call sll_hdf5_write_array_1d(file_id, &
+        sim%eta1_grid,'eta1_grid',file_err)
+      call sll_hdf5_write_array_1d(file_id, &
+        sim%eta2_grid,'eta2_grid',file_err)
+      call sll_hdf5_write_array_1d(file_id, &
+        sim%eta3_grid,'eta3_grid',file_err)
+      call sll_hdf5_write_array_1d(file_id, &
+        sim%vpar_grid,'vpar_grid',file_err)
+      !---> Mesh 2D
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%xgrid_2d,'xgrid_2d',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%ygrid_2d,'ygrid_2d',file_err)
+      !---> RHS of QN equation
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%rho3d_seqx1x2(:,:,ix3_diag),'rho2d_xy',file_err)
+      !---> Electrostatic potential
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%Phi3d_seqx1x2(:,:,ix3_diag),'phi2d_xy',file_err)
+      !---> Electric field
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%E3d_eta1_seqx1x2(:,:,ix3_diag),'E2d_eta1_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%E3d_eta2_seqx1x2(:,:,ix3_diag),'E2d_eta2_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%E3d_x1_seqx1x2(:,:,ix3_diag),'E2d_x1_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%E3d_x2_seqx1x2(:,:,ix3_diag),'E2d_x2_xy',file_err)
+      !---> Distribution function
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%f4d_seqx1x2(:,:,ix3_diag,ivpar_diag),'f2d_xy',file_err)
+      call sll_hdf5_write_array_2d(file_id, &
+        sim%f4d_seqx3x4(ix1_diag,ix2_diag,:,:),'f2d_zvpar',file_err)
+    end if
+    sim%count_save_diag = sim%count_save_diag + 1
+
+  end subroutine writeHDF5_cross_section_diag
+  
+
+  !----------------------------------------------------
+  ! 
+  !----------------------------------------------------
+  subroutine writeHDF5_conservation_laws( sim )
+
+    use sll_hdf5_io, only: sll_hdf5_file_create, &
+      sll_hdf5_write_array_1d, sll_hdf5_file_close
+
+    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
     !--> diagnostics norm
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_masse_result
@@ -1960,17 +2108,11 @@ contains
     sll_int32  :: idum
     sll_real64 :: dum
     
-    !--> For initial profile HDF5 saving
+    !--> For conservation law HDF5 saving
     integer             :: file_err
     sll_int32           :: file_id
-    character(len=80)   :: filename_HDF5
-    character(20), save :: numfmt = "'_d',i5.5"
+    character(len=20), parameter :: filename_CL = "conservation_laws.h5"
     
-    ix1_diag   = int(sim%Neta1/2)
-    ix2_diag   = int(sim%Neta2/3)
-    ix3_diag   = int(sim%Neta3/4)
-    ivpar_diag = int(sim%Nvpar/3)
-
     diag_masse_result       = 0.0_f64
     diag_norm_L1_result     = 0.0_f64
     diag_norm_L2_result     = 0.0_f64
@@ -2065,34 +2207,9 @@ contains
              (diag_nrj_tot_result(idum)-diag_nrj_tot_result(1))/dum
     end do
 
-    write(filename_HDF5,'(A,'//numfmt//',A)') &
-      "DK4d_diag", sim%count_save_diag, ".h5"
-
     if (sim%my_rank.eq.0) then
-      print*,'--> Save HDF5 file: ',filename_HDF5
-      call sll_hdf5_file_create(filename_HDF5,file_id,file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%xgrid_2d,'xgrid_2d',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%ygrid_2d,'ygrid_2d',file_err)
-      call sll_hdf5_write_array_1d(file_id, &
-        sim%r_grid,'r_grid',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%rho3d_seqx1x2(:,:,ix3_diag),'rho2d_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%Phi3d_seqx1x2(:,:,ix3_diag),'phi2d_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%E3d_eta1_seqx1x2(:,:,ix3_diag),'E2d_eta1_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%E3d_eta2_seqx1x2(:,:,ix3_diag),'E2d_eta2_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%E3d_x1_seqx1x2(:,:,ix3_diag),'E2d_x1_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%E3d_x2_seqx1x2(:,:,ix3_diag),'E2d_x2_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%f4d_seqx1x2(:,:,ix3_diag,ivpar_diag),'f2d_xy',file_err)
-      call sll_hdf5_write_array_2d(file_id, &
-        sim%f4d_seqx3x4(ix1_diag,ix2_diag,:,:),'f2d_zvpar',file_err)
+      print*,'--> Save HDF5 file: ',filename_CL
+      call sll_hdf5_file_create(filename_CL,file_id,file_err)
       call sll_hdf5_write_array_1d(file_id,&
                           diag_nrj_kin_result(:),'nrj_kin',file_err)
       call sll_hdf5_write_array_1d(file_id,&
@@ -2117,62 +2234,8 @@ contains
                           diag_entropy_kin_result(:),'entropy_kin',file_err)
       call sll_hdf5_file_close(file_id,file_err)
     end if
-    sim%count_save_diag = sim%count_save_diag + 1
+  end subroutine writeHDF5_conservation_laws
 
-  end subroutine writeHDF5_diag
-
- 
-
-  !-----------------------------------------------------------
-  ! Computation of the charge density, i.e   
-  !   rho(x,y,z) = \int delta f dvpar
-  !   delta f = f(x,y,z,vpar) - feq(x,y,vpar) 
-  !  In : f4d_seqx3x4(x1=distrib,x2=distrib,x3=*,x4=*)
-  !       feq3d_seqx1x2x4(x1=*,x2=*,x4=*)
-  !  Out: rho3d_seqx3(x1=distrib,x2=distrib,x3=*)
-  !-----------------------------------------------------------
-  subroutine compute_charge_density(sim)
-
-    class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
-
-    sll_int32  :: Neta1_loc,Neta2_loc,Neta3, Nvpar
-    sll_int32  :: iloc1, iloc2
-    sll_int32  :: i1, i2, i3, i4
-    sll_real64 :: delta_f
-    sll_real64 :: delta_vpar, intf_dvpar
-    sll_int32, dimension(1:4) :: glob_ind4d
-
-    Neta1_loc  = size(sim%f4d_seqx3x4,1)
-    Neta2_loc  = size(sim%f4d_seqx3x4,2)
-    Neta3      = size(sim%f4d_seqx3x4,3)
-    Nvpar      = size(sim%f4d_seqx3x4,4)
-    delta_vpar = sim%logical_mesh4d%delta_eta4 
-
-    !-> Computation of the charge density locally in (x1,x2) directions
-    do i3 = 1,Neta3
-      do iloc2 = 1,Neta2_loc
-        do iloc1 = 1,Neta1_loc
-          intf_dvpar = 0._f64
-          do i4 = 1,Nvpar-1
-            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
-                  (/iloc1,iloc2,i3,i4/))
-            i1 = glob_ind4d(1)
-            i2 = glob_ind4d(2)
-            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - sim%feq_xyvpar(i1,i2,i4)
-            intf_dvpar = intf_dvpar + delta_f*delta_vpar
-           
-          end do
-
-          sim%rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar
-
-        end do
-      end do
-    end do
-    !--> compute rho3d_seqx1x2
-    call apply_remap_3D(sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
-
-  end subroutine compute_charge_density
-  
 
   !-----------------------------------------------------------
   ! Computation of the kinetic energy, i.e   
@@ -2245,8 +2308,7 @@ contains
         do i4 = 1,Nvpar-1
           vpar = sim%vpar_grid(i4)
           do i3 = 1,Neta3-1
-            val_elec_pot        = sim%phi3d_seqx3(iloc1,iloc2,i3)
-            !val_elec_field_eta1 = sim%
+            val_elec_pot = sim%phi3d_seqx3(iloc1,iloc2,i3)
 
             glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
               (/iloc1,iloc2,i3,i4/))
@@ -2260,7 +2322,6 @@ contains
 
                 delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
                   sim%feq_xyvpar(i1,i2,i4)
-
 
                 nrj_kin = nrj_kin + &
                   delta_f * vpar**2 * 0.5 * val_jac * &
