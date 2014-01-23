@@ -1129,7 +1129,11 @@ contains
         !write(*,107) error
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
-        call mud24cr(poisson%work,phi,error)
+        call mud24cr(poisson%work, &
+          mudpack_cofcr, &
+          mudpack_bndsp, &
+          phi, &
+          error)
         !write (*,108) error
         if (error > 0) call exit(0)
         

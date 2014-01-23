@@ -268,7 +268,7 @@ contains
     x2_min = adv%eta2_coords(1)
     x2_max = adv%eta2_coords(adv%Npts2)
     
-    
+        
     call adv%charac%compute_characteristics( &
       A1, &
       A2, &
@@ -278,11 +278,24 @@ contains
       adv%charac_feet1, &
       adv%charac_feet2)
    
-    do j=0,Nc_x2
-      do i=0,Nc_x1
+    do j=0,Nc_x2-1
+      do i=0,Nc_x1-1
         
         output(i+1,j+1)=0._f64
-        xx(1)=(xx(1)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
+        
+        xx(1) = adv%charac_feet1(i+1,j+1)
+        xx(2) = adv%charac_feet1(i+2,j+1)
+        xx(3) = adv%charac_feet1(i+2,j+2)
+        xx(4) = adv%charac_feet1(i+1,j+2)
+
+        yy(1) = adv%charac_feet2(i+1,j+1)
+        yy(2) = adv%charac_feet2(i+2,j+1)
+        yy(3) = adv%charac_feet2(i+2,j+2)
+        yy(4) = adv%charac_feet2(i+1,j+2)
+
+        
+        
+        xx(1)=(xx(1)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)        
         xx(2)=(xx(2)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
         xx(3)=(xx(3)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
         xx(4)=(xx(4)-x1_min)/(x1_max-x1_min)*real(Nc_x1,f64)
@@ -442,12 +455,12 @@ contains
 
             output(i+1,j+1)=output(i+1,j+1)+res
 
-            if ((i-1>=0) .and. (ell==4)) then
-              output(i,j+1)=output(i,j+1)-res
-            endif
-            if ((j-1>=0) .and. (ell==1)) then
-              output(i+1,j)=output(i+1,j)-res
-            endif
+            !if ((i-1>=0) .and. (ell==4)) then
+            !  output(i,j+1)=output(i,j+1)-res
+            !endif
+            !if ((j-1>=0) .and. (ell==1)) then
+            !  output(i+1,j)=output(i+1,j)-res
+            !endif
           enddo
         endif
       end do
@@ -674,6 +687,32 @@ contains
     
     call compute_ww(ww_x1,r_x1,s_x1)
     call compute_ww(ww_x2,r_x2,s_x2)
+
+!        tmp=0._f64
+!        do ii=r,s-1
+!          i3=i+ii-1;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+!          tmp=tmp+ww(r+s-1-ii)*f(i3,j)
+!        enddo
+!        aretesvg(i,j)=tmp
+!        tmp=0._f64
+!        do ii=r,s-1
+!          i3=i+ii;if(i3<=0)i3=0;if(i3>=N0)i3=N0          
+!          tmp=tmp+ww(ii)*f(i3,j)
+!        enddo
+!        aretesvd(i,j)=tmp
+!        tmp=0._f64
+!        do ii=r,s-1
+!          tmp=tmp+ww(ii)*f(i,modulo(j+ii,N1))
+!        enddo
+!        areteshh(i,j)=tmp
+!        tmp=0._f64
+!        do ii=r,s-1
+!          tmp=tmp+ww(r+s-1-ii)*f(i,modulo(j+ii-1,N1))
+!        enddo
+!        areteshb(i,j)=tmp
+
+
+
     
   end subroutine compute_aux2_new
   
