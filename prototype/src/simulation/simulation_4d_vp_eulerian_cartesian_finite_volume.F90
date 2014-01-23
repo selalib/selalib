@@ -56,7 +56,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   ! number of local nodes in each element
   sll_int32 :: np_loc
-  sll_real64 :: eps=0.0_f64 !0 center flux, if not decentered flux
+  sll_real64 :: eps=0.003_f64 !0 center flux, if not decentered flux
 
   ! for initializers
   type(sll_p2p_comm_real64), pointer :: comm
@@ -698,7 +698,9 @@ subroutine run_vp_cart(sim)
 !!$      sim%phi_x1=-sim%phi_x1
 !!$write(*,*) 'phi apres = ', sim%phi_x1(:,1)
     !attention the sign of phi after the solver Poisson
-    sim%phi_x1=-sim%phi_x1
+    if((sim%test.ne.11).and.(sim%test.ne.12)) then
+       sim%phi_x1=-sim%phi_x1
+    end if
     !revient dans le split layout pour phi
     !write(*,*) sim%my_rank, 'here 1'
     call apply_remap_2D( sim%seqx1_to_split, sim%phi_x1, sim%phi_split)
@@ -731,7 +733,8 @@ subroutine run_vp_cart(sim)
 
   call sll_new_file_id(file_id_4,ierr)
 
-    if((sim%test==1).or.(sim%test==9).or.(sim%test==5).or.(sim%test==10)) then
+    if((sim%test==1).or.(sim%test==9).or.(sim%test==5).or.(sim%test==10) &
+         .or.(sim%test==11).or.(sim%test==12)) then
        sim%buf1 => get_buffer(sim%comm,1) 
        do k=1,loc_sz_x2
           sim%buf1(k)=sim%phi_split(1,k)
@@ -1080,18 +1083,6 @@ subroutine run_vp_cart(sim)
              Ex=0.0_f64
              Ey=1.0_f64
           endif
-!!$          if(sim%my_rank==2) then
-!!$             write(*,*) 'Ex at point (2,4) = ', Ex
-!!$             write(*,*) 'phi_split (1,2) = ', sim%phi_split(1,2)
-!!$             write(*,*) 'phi_split (2,1) = ', sim%phi_split(2,1)
-!!$             write(*,*) 'phi_split (3,2) = ', sim%buf2(2)
-!!$             write(*,*) 'phi_split (2,3) = ', sim%buf4(2)
-!!$             write(*,*) ' sim%mesh2dx%delta_eta1',sim%mesh2dx%delta_eta1
-!!$             write(*,*) ' sim%mesh2dx%delta_eta2',sim%mesh2dx%delta_eta2
-!!$             write(*,*) 'inv_jac(1,1)',inv_jac(1,1)
-!!$             write(*,*) 'inv_jac(2,1)',inv_jac(2,1)
-!!$             write(*,*) 'det',det
-!!$          end if
           sim%Enorm=sim%Enorm + sim%mesh2dx%delta_eta1* &
                sim%mesh2dx%delta_eta2*det*(Ex**2+Ey**2)
           write(*,*) 'iter = ',itime, ' t = ', t ,' energy  = ', log(sqrt(sim%Enorm))
@@ -1128,18 +1119,18 @@ subroutine run_vp_cart(sim)
     write(*,*) 'number of iteration', itime
     write(*,*) 'final time ',t
 
-    if (sim%test==1) then
-       if (sim%my_rank==0) then
-          t=0.d0
-          open(699,file='asymptotic')
-          do while(t<sim%tmax)
-             call solexact(sim,t,E2norm_ex)
-             write(699,*) t,log(sqrt(E2norm_ex))
-             t=t+sim%dt
-          end do
-          close(699)
-       end if
-    end if
+!!$    if (sim%test==1) then
+!!$       if (sim%my_rank==0) then
+!!$          t=0.d0
+!!$          open(699,file='asymptotic')
+!!$          do while(t<sim%tmax)
+!!$             call solexact(sim,t,E2norm_ex)
+!!$             write(699,*) t,log(sqrt(E2norm_ex))
+!!$             t=t+sim%dt
+!!$          end do
+!!$          close(699)
+!!$       end if
+!!$    end if
 
 
 
@@ -1199,23 +1190,23 @@ subroutine run_vp_cart(sim)
 
 
     global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
-!!$    if(sim%test==1) then
-!!$       allocate (plotrho_split(loc_sz_x1,loc_sz_x2))
-!!$       do i = 1, loc_sz_x1
-!!$          do j=1,loc_sz_x2
-!!$             plotrho_split(i,j) = sim%rho_split(i,j)
-!!$          end do
-!!$       end do
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$            sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
-!!$            sim%mesh2dx%delta_eta1, &
-!!$            sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
-!!$            sim%mesh2dx%delta_eta2, &
-!!$            plotrho_split, &
-!!$            "plotrho_split", &
-!!$            0, &
-!!$            ierr)
-!!$    end if
+    !if(sim%test==1) then
+       allocate (plotrho_split(loc_sz_x1,loc_sz_x2))
+       do i = 1, loc_sz_x1
+          do j=1,loc_sz_x2
+             plotrho_split(i,j) =  max(0.0_f64,sim%rho_split(i,j))
+          end do
+       end do
+       call sll_gnuplot_rect_2d_parallel( &
+            sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+            sim%mesh2dx%delta_eta1, &
+            sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+            sim%mesh2dx%delta_eta2, &
+            plotrho_split, &
+            "plotrho_split", &
+            0, &
+            ierr)
+    !end if
     write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
     write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
     call sll_gnuplot_rect_2d_parallel( &
@@ -1437,6 +1428,10 @@ subroutine run_vp_cart(sim)
        write(*,*) 'the xvx-transport test case'
     else if (sim%test .eq. 10) then
        write(*,*) 'the two stream instability 1D test case'
+    else if (sim%test .eq. 11) then
+       write(*,*) 'the galaxy 1D test case'
+    else if (sim%test .eq. 12) then
+       write(*,*) 'the galaxy 2D test case'
     endif
 
     if (abs(sim%eps).gt.1.e-10_f64 ) then
@@ -3212,6 +3207,84 @@ subroutine run_vp_cart(sim)
 
 
   end subroutine fn_L2_norm
+
+!!$  !calcul the first moment 
+!!$  subroutine first_moment(sim,moment)
+!!$
+!!$    class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(in) :: sim
+!!$
+!!$    sll_real64,dimension(:,:),allocatable :: lag,dlag
+!!$    sll_real64,dimension(:),allocatable :: gauss,weight
+!!$    sll_int32  :: ierr,loc_sz_x1,loc_sz_x2,loc_sz_v1,loc_sz_v2
+!!$    sll_int32,dimension(4)  :: global_indices
+!!$    sll_real64 :: x1,x2,v1,v2,f,mm,det,vol_loc,vol_glob
+!!$    sll_int32  :: ib1,ib2,icv1,icv2,igv1,igv2,icx1,icx2,iv1,iv2
+!!$    sll_real64,intent(out) :: moment
+!!$
+!!$    SLL_ALLOCATE(weight(sim%degree+1),ierr)
+!!$    SLL_ALLOCATE(gauss(sim%degree+1),ierr)
+!!$    SLL_ALLOCATE(lag(sim%degree+1,sim%degree+1),ierr)
+!!$    SLL_ALLOCATE(dlag(sim%degree+1,sim%degree+1),ierr)
+!!$    call lag_gauss(sim%degree,gauss,weight,lag,dlag)
+!!$
+!!$    call compute_local_sizes_4d( sim%sequential_v1v2_layout, &
+!!$         loc_sz_v1, &
+!!$         loc_sz_v2, &
+!!$         loc_sz_x1, &
+!!$         loc_sz_x2 )
+!!$
+!!$
+!!$
+!!$    global_indices(1:4)=local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
+!!$
+!!$    ! loop on cells and elems
+!!$    mm=0
+!!$    vol_loc=0
+!!$    do icx1=1,loc_sz_x1
+!!$       do icx2=1,loc_sz_x2
+!!$          do icv1=1,sim%nc_v1
+!!$             do icv2=1,sim%nc_v2
+!!$                ! loop on velocity gauss points
+!!$                do igv1=1,sim%degree+1
+!!$                   do igv2=1,sim%degree+1
+!!$                      f=0
+!!$                      x1=sim%mesh2dx%eta1_min+ &
+!!$                           (icx1-1)*sim%mesh2dx%delta_eta1
+!!$                      x2=sim%mesh2dx%eta2_min+ &
+!!$                           (icx2-1)*sim%mesh2dx%delta_eta2
+!!$                      ! we suppose a uniform mesh in x1,x2
+!!$                      v1=sim%mesh2dv%eta1_min+ &
+!!$                           (icv1-1+gauss(igv1))*sim%mesh2dv%delta_eta1
+!!$                      v2=sim%mesh2dv%eta2_min+ &
+!!$                           (icv2-1+gauss(igv2))*sim%mesh2dv%delta_eta2
+!!$                      det=sim%tv%jacobian(v1,v2)* &
+!!$                           sim%mesh2dv%delta_eta1*sim%mesh2dv%delta_eta2 &
+!!$                           *sim%mesh2dx%delta_eta1*sim%mesh2dx%delta_eta2
+!!$                      do ib1=1,sim%degree+1
+!!$                         do ib2=1,sim%degree+1
+!!$                            iv1=(icv1-1)*sim%degree+ib1
+!!$                            iv2=(icv2-1)*sim%degree+ib2
+!!$                            f=f+sim%fn_v1v2(iv1,iv2,icx1,icx2)*lag(ib1,igv1)*lag(ib2,igv2)
+!!$                         end do
+!!$                      end do
+!!$                      f=f-sim%init_func(v1,v2,x1,x2,sim%params)
+!!$                      vol_loc=vol_loc+weight(igv1)*weight(igv2)*det
+!!$                      normL2=normL2+f*f*weight(igv1)*weight(igv2)*det
+!!$                   end do
+!!$                end do
+!!$             end do
+!!$          end do
+!!$       end do
+!!$    end do
+!!$
+!!$    Call MPI_ALLREDUCE(normL2,normL2_glob,1,MPI_DOUBLE_PRECISION,MPI_SUM,&
+!!$         MPI_COMM_WORLD,ierr)
+!!$    Call MPI_ALLREDUCE(vol_loc,vol_glob,1,MPI_DOUBLE_PRECISION,MPI_SUM,&
+!!$         MPI_COMM_WORLD,ierr)
+!!$    normL2_glob=sqrt(normL2_glob/vol_glob)
+!!$
+!!$
+!!$  end subroutine first_moment
   !Solution Exact of the test case Landau damping 1D x_vx
   !compute with the formula of Eric Sonnendrucker
   subroutine solexact(sim,t,E2norm_ex)
