@@ -22,7 +22,7 @@ ENDIF()
 
 ADD_LIBRARY(sll_fft STATIC ${FFT_SRC} sll_fft_utils.F90)
 
-TARGET_LINK_LIBRARIES(sll_fft sll_assertion sll_memory sll_utilities ${DEPENDENCIES})
+TARGET_LINK_LIBRARIES(sll_fft ${DEPENDENCIES} sll_utilities sll_memory sll_assertion)
 
 ADD_EXECUTABLE(test_fft unit_test.F90)
 
