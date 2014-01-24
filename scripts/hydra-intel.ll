@@ -18,4 +18,4 @@ module load cmake
 module load hdf5-mpi
 module load fftw
 module load git
-make Experimental
+make NightlyTest
