@@ -945,7 +945,103 @@ contains
 !!$
 !!$#undef A
 !!$#undef B
-  
+
+
+  ! **************************************************************************
+  !
+  ! "D-shaped annular geometry";
+  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+  ! (102) p 2968):
+  !
+  !        x1 = 1.7_f64+(0.074_f64*(2._f64*eta1-1)+0.536_f64)* &
+  !              & cos(pi2*eta2+0.4290421957_f64*sin(pi2*eta2))
+  !        x2 = 1.66_f64*(0.074_f64*(2._f64*eta1-1)+0.536_f64)*sin(2._f64*sll_pi*eta2)
+  !
+  ! Domain: [0,1] X [0,1]
+  !
+  ! **************************************************************************
+
+  ! direct mapping
+  function D_sharped_Geo_x1 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    pi2 = 2.0_f64*sll_pi
+    D_sharped_Geo_x1= 1.7_f64+(0.074_f64*(2._f64*eta1-1)+0.536_f64)* &
+                      cos(pi2*eta2+0.4290421957_f64*sin(pi2*eta2))
+  end function D_sharped_Geo_x1
+
+  function D_sharped_Geo_x2 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:),intent(in) :: params
+    sll_real64  :: pi2
+     pi2 = 2.0_f64*sll_pi
+    D_sharped_Geo_x2 = 1.66_f64*(0.074_f64*(2._f64*eta1-1)+0.536_f64)*sin(pi2*eta2)
+  end function D_sharped_Geo_x2
+
+  ! jacobian matrix
+  function D_sharped_Geo_jac11 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    pi2 = 2.0_f64*sll_pi
+    D_sharped_Geo_jac11 = 0.148_f64*cos(pi2*eta2 + 0.4290421957_f64*sin(pi2*eta2)) 
+  end function D_sharped_Geo_jac11
+
+  function D_sharped_Geo_jac12 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    pi2 = 2.0_f64*sll_pi
+    D_sharped_Geo_jac12 = -(0.148_f64*eta1 + 0.462_f64)*sin(pi2*eta2 + 0.4290421957_f64* &
+                           sin(pi2*eta2))*(pi2 + 0.8580843914_f64*cos(pi2*eta2)*sll_pi)            !dx/deta2
+  end function D_sharped_Geo_jac12
+
+  function D_sharped_Geo_jac21 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    pi2 = 2.0_f64*sll_pi
+    D_sharped_Geo_jac21 = 0.24568_f64*sin(pi2*eta2)
+  end function D_sharped_Geo_jac21
+
+  function D_sharped_Geo_jac22 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    pi2 = 2.0_f64*sll_pi
+    D_sharped_Geo_jac22 = 3.32_f64*sll_pi*(0.148_f64*eta1 + 0.462_f64)*cos(pi2*eta2)
+  end function D_sharped_Geo_jac22
+
+   ! jacobian ie determinant of jacobian matrix
+  function D_sharped_Geo_jac ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: jac_11,jac_12,jac_21,jac_22
+    sll_real64  :: pi2
+    pi2 = 2.0_f64*sll_pi
+    jac_11 = 0.148_f64*cos(pi2*eta2 + 0.4290421957_f64*sin(pi2*eta2))
+    jac_12 = -(0.148*eta1 + 0.462_f64)*sin(pi2*eta2 + 0.4290421957_f64* &
+              sin(pi2*eta2))*(pi2 + 0.8580843914_f64*cos(pi2*eta2)*sll_pi)
+    jac_21 = 0.24568_f64*sin(pi2*eta2) 
+    jac_22 = 3.32_f64*sll_pi*(0.148_f64*eta1 + 0.462_f64)*cos(pi2*eta2)
+    D_sharped_Geo_jac = jac_11*jac_22 - jac_12*jac_21
+  end function D_sharped_Geo_jac
+        
 
 end module sll_common_coordinate_transformations
 
