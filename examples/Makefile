@@ -3,16 +3,13 @@ F90 = gfortran
 OPT = -O3 #-xHost -ip -openmp
 LD  = gfortran
    
-F90FLAGS = -I${SLL_ROOT}/include -I${SLL_ROOT}/include/fortran
+F90FLAGS = -I${SLL_ROOT}/include/selalib
 LDFLAGS = -L${SLL_ROOT}/lib 
 LIBS = -lselalib -ldfftpack
 
-PROG = landau
-OBJS = landau.o
-
 all: $(PROG)
 
-$(PROG): $(OBJS)
+landau.exe: landau.F90
 	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
 
 run:
