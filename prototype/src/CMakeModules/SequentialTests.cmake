@@ -79,7 +79,8 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_1d_BSL COMMAND test_advection_1d_BSL)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    ADD_TEST(NAME advection_2d_CSL1D COMMAND test_advection_2d_CSL1D)
-   
+   ADD_TEST(NAME gyroaverage_polar COMMAND test_gyroaverage_2d_polar_computation)
+  
    IF(MUDPACK_ENABLED)
 
       SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/gcsim2d_cartesian_input)
@@ -113,6 +114,7 @@ IF(NOT STDF95)
      PASS_REGULAR_EXPRESSION
      "PASSED")
    SET_TESTS_PROPERTIES(advection_2d_BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

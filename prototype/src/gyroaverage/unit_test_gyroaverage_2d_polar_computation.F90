@@ -36,19 +36,19 @@ implicit none
   eta_min(1) = 0.1_f64
   eta_max(1) = 0.9_f64
   eta_min(2) = 0._f64
-  eta_max(2) = 2._f64*SLL_PI  
+  eta_max(2) = 2._f64*sll_pi  
   
   Nc(1)=16
   Nc(2)=16
   
-  SLL_ALLOCATE(f(N(1)+1,N(2)),ierr)
-  SLL_ALLOCATE(Jf(N(1)+1,N(2)),ierr)
+  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)),ierr)
+  SLL_ALLOCATE(Jf(Nc(1)+1,Nc(2)),ierr)
   
   f = 1._f64
   err = 0._f64
   larmor_rad = 0.01_f64
 
-  gyroaverage => new_gyroaverage_2d_polar_solver( &
+  gyroaverage => new_gyroaverage_2d_polar_computation( &
     eta_min, &
     eta_max, &
     Nc)

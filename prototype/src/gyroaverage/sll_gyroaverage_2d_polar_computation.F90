@@ -41,6 +41,11 @@ implicit none
   
     type(sll_plan_gyroaverage_polar), pointer                   :: gyro
     sll_int32 :: gyroaverage_case
+    sll_real64  :: eta_min(2)
+    sll_real64 :: eta_max(2)
+    sll_int32 :: Nc(2)
+    sll_int32 :: N_points  
+    sll_int32 :: interp_degree(2)
 
     contains
       procedure, pass(gyroaverage) :: initialize => &
@@ -58,7 +63,7 @@ contains
     N_points, &
     interp_degree, &
     gyroaverage_case) &     
-    result(poisson)
+    result(gyroaverage)
       
     type(gyroaverage_2d_polar_computation),pointer :: gyroaverage
     sll_real64, intent(in) :: eta_min(2)
@@ -149,32 +154,32 @@ contains
 
   subroutine compute_gyroaverage_2d_polar( gyroaverage, larmor_rad, f, Jf  )
     class(gyroaverage_2d_polar_computation), target :: gyroaverage
-    sll_real64 :: larmor_rad
+    sll_real64, intent(in) :: larmor_rad
     sll_real64,dimension(:,:),intent(in) :: f
     sll_real64,dimension(:,:),intent(out) :: Jf
 
     select case(gyroaverage%gyroaverage_case)
-      case (SLL_GYROAVERAGE_PADE)
-        call compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
-      case (SLL_GYROAVERAGE_HERMITE)
-        call compute_gyroaverage_points_polar_hermite(gyroaverage%gyro,f,larmor_rad)           
-      case (SLL_GYROAVERAGE_HERMITE_C1)
-        call compute_gyroaverage_points_polar_hermite_c1(gyroaverage%gyro,f,larmor_rad)
-      case (SLL_GYROAVERAGE_HERMITE_C1_PRECOMPUTE)
-        call pre_compute_gyroaverage_polar_hermite_c1(gyroaverage%gyro,larmor_rad)
-        call compute_gyroaverage_pre_compute_polar_hermite_c1(gyroaverage%gyro,f)
-      case (SLL_GYROAVERAGE_HERMITE_C1_WITH_INVARIANCE)
-        call compute_gyroaverage_points_polar_with_invar_hermite_c1(gyroaverage%gyro,f,larmor_rad)
-      case (SLL_GYROAVERAGE_SPLINES)
-        call compute_gyroaverage_points_polar_spl(gyroaverage%gyro,f,larmor_rad)
-      case (SLL_GYROAVERAGE_SPLINES_PRECOMPUTE)
-        call pre_compute_gyroaverage_polar_spl(gyroaverage%gyro,larmor_rad)
-        call compute_gyroaverage_pre_compute_polar_spl(gyroaverage%gyro,f)
-      case (SLL_GYROAVERAGE_SPLINES_WITH_INVARIANCE)
-        call compute_gyroaverage_points_polar_with_invar_spl(gyroaverage%gyro,f,larmor_rad)
-      case (SLL_GYROAVERAGE_SPLINES_PRECOMPUTE_WITH_FFT)
-        call pre_compute_gyroaverage_polar_spl_FFT(gyroaverage%gyro,larmor_rad)
-        call compute_gyroaverage_pre_compute_polar_spl_FFT(gyroaverage%gyro,f)
+!      case (SLL_GYROAVERAGE_PADE)
+!        call compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
+!      case (SLL_GYROAVERAGE_HERMITE)
+!        call compute_gyroaverage_points_polar_hermite(gyroaverage%gyro,f,larmor_rad)           
+!      case (SLL_GYROAVERAGE_HERMITE_C1)
+!        call compute_gyroaverage_points_polar_hermite_c1(gyroaverage%gyro,f,larmor_rad)
+!      case (SLL_GYROAVERAGE_HERMITE_C1_PRECOMPUTE)
+!        call pre_compute_gyroaverage_polar_hermite_c1(gyroaverage%gyro,larmor_rad)
+!        call compute_gyroaverage_pre_compute_polar_hermite_c1(gyroaverage%gyro,f)
+!      case (SLL_GYROAVERAGE_HERMITE_C1_WITH_INVARIANCE)
+!        call compute_gyroaverage_points_polar_with_invar_hermite_c1(gyroaverage%gyro,f,larmor_rad)
+!      case (SLL_GYROAVERAGE_SPLINES)
+!        call compute_gyroaverage_points_polar_spl(gyroaverage%gyro,f,larmor_rad)
+!      case (SLL_GYROAVERAGE_SPLINES_PRECOMPUTE)
+!        call pre_compute_gyroaverage_polar_spl(gyroaverage%gyro,larmor_rad)
+!        call compute_gyroaverage_pre_compute_polar_spl(gyroaverage%gyro,f)
+!      case (SLL_GYROAVERAGE_SPLINES_WITH_INVARIANCE)
+!        call compute_gyroaverage_points_polar_with_invar_spl(gyroaverage%gyro,f,larmor_rad)
+!      case (SLL_GYROAVERAGE_SPLINES_PRECOMPUTE_WITH_FFT)
+!        call pre_compute_gyroaverage_polar_spl_FFT(gyroaverage%gyro,larmor_rad)
+!        call compute_gyroaverage_pre_compute_polar_spl_FFT(gyroaverage%gyro,f)
       case default
         print *,'#bad value of gyroaverage_case=', gyroaverage%gyroaverage_case
         print *,'#not implemented'
