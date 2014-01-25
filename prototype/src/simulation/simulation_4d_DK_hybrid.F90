@@ -71,6 +71,10 @@ module sll_simulation_4d_DK_hybrid_module
     ! diagnostics
     sll_real64 :: diag2D_step
 
+    !--> diagnostics for time
+    sll_real64 :: iter_time
+    sll_real64, dimension(:),pointer :: time_evol
+
     !--> diagnostics norm
     sll_real64, dimension(:),pointer :: diag_mass
     sll_real64, dimension(:),pointer :: diag_norm_L1
@@ -296,6 +300,8 @@ contains
     !--> Initialization diagnostics for the norm
     nb_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
 
+    SLL_ALLOCATE(sim%time_evol(nb_diag),ierr)
+
     SLL_ALLOCATE(sim%diag_mass(nb_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L1(nb_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L2(nb_diag),ierr)
@@ -340,8 +346,10 @@ contains
     elaps_time_QN    = 0.0
 
     do iter = 1,sim%nb_iter
+      sim%iter_time = sim%iter_time + sim%dt
       if (sim%my_rank.eq.0) &
-          print*,' ===> ITERATION = ',iter
+          print*,' ===> ITERATION = ',iter, '/',sim%nb_iter,'==> ', &
+          sim%iter_time
 
       call sll_set_time_mark(t0)
       !--> Advection in vpar direction'
@@ -457,6 +465,7 @@ contains
     SLL_DEALLOCATE(sim%E3d_x1_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_x2_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
+    SLL_DEALLOCATE(sim%time_evol,ierr)
     SLL_DEALLOCATE(sim%diag_mass,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
@@ -2029,7 +2038,9 @@ contains
 
     sll_int32  :: ix1_diag, ix2_diag
     sll_int32  :: ix3_diag, ivpar_diag
-    
+
+    sll_real64, dimension(1) :: iter_time_tmp
+
     !--> For initial profile HDF5 saving
     integer             :: file_err
     sll_int32           :: file_id
@@ -2047,6 +2058,10 @@ contains
     if (sim%my_rank.eq.0) then
       print*,'--> Save HDF5 file: ',filename_HDF5
       call sll_hdf5_file_create(filename_HDF5,file_id,file_err)
+      !---> Time
+      iter_time_tmp = sim%iter_time
+      call sll_hdf5_write_array_1d(file_id, &
+        iter_time_tmp,'time_diag',file_err)
       !---> Mesh 1D
       call sll_hdf5_write_array_1d(file_id, &
         sim%eta1_grid,'eta1_grid',file_err)
@@ -2228,6 +2243,8 @@ contains
       print*,'--> Save HDF5 file: ',filename_CL
       call sll_hdf5_file_create(filename_CL,file_id,file_err)
       call sll_hdf5_write_array_1d(file_id,&
+          sim%time_evol(:),'time_evol',file_err)
+      call sll_hdf5_write_array_1d(file_id,&
           diag_nrj_kin_tmp(:),'nrj_kin',file_err)
       call sll_hdf5_write_array_1d(file_id,&
           diag_nrj_pot_tmp(:),'nrj_pot',file_err)
@@ -2326,6 +2343,7 @@ contains
     delta_eta3 = sim%logical_mesh4d%delta_eta3
     delta_vpar = sim%logical_mesh4d%delta_eta4
 
+    sim%time_evol(diag_num) = sim%iter_time
 
     nrj_kin   = 0.0
     nrj_pot   = 0.0
