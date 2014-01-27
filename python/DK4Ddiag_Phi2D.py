@@ -39,6 +39,8 @@ def Phi2D_xy_plot(resu):
                                  resu.ygrid_2d[itime_diag,:,:], \
                                  resu.phi2d_xy[itime_diag,:,:]) 
 
+        fig.show()
+
         #--> Ask time        
         [stime_diag,itime_diag] = GYSut.Ask_time(resu.time_diag)
     #end while
