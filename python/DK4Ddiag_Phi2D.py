@@ -24,7 +24,7 @@ GYSut = GYSutils.impall('GYSutils')
 # --------
 # choice 1
 #------------------------------------------------------
-def GPhi2D_xy(resu):
+def Phi2D_xy_plot(resu):
     """ Phi(x,y)"""
     
     #--> Ask time
@@ -42,4 +42,4 @@ def GPhi2D_xy(resu):
         #--> Ask time        
         [stime_diag,itime_diag] = GYSut.Ask_time(resu.time_diag)
     #end while
-#end def GPhi2D_xy
+#end def Phi2D_xy_plot
