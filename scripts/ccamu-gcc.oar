@@ -9,14 +9,5 @@ module purge
 module load cmake/2.8.7 hdf5/gcc47/1.8.8 fftw/gcc47/3.3
 export HDF5_ROOT=/softs/hdf5/gcc47/1.8.8/
 export FFTW_ROOT=/softs/fftw/gcc47/3.3/
-cd /scratch/pnavaro
-mkdir selalib-build
-cd selalib-build; {
-cmake ${HOME}/selalib -DCMAKE_BUILD_TYPE=Release -DOPTIONS_FILE=${HOME}/selalib/cmake/ccamu.cmake
-make NightlyUpdate
-make NightlyConfigure
-make NightlyBuild
+cd /scratch/pnavaro/selalib-build
 make NightlyTest
-make NightlySubmit
-}; cd -
-rm -rf /scratch/pnavaro/selalib-build
