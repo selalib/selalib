@@ -40,6 +40,8 @@ def f2D_xy_plot(resu):
                                  resu.ygrid_2d[itime_diag,:,:], \
                                  resu.f2d_xy[itime_diag,:,:]) 
 
+        fig.show()
+
         #--> Ask time        
         [stime_diag,itime_diag] = GYSut.Ask_time(resu.time_diag)
     #end while
@@ -66,6 +68,8 @@ def f2D_zvpar_plot(resu):
         p1  = ax1.pcolormesh(resu.eta3_grid[itime_diag,:], \
                                  resu.vpar_grid[itime_diag,:], \
                                  resu.f2d_zvpar[itime_diag,:,:]) 
+
+        fig.show()
 
         #--> Ask time        
         [stime_diag,itime_diag] = GYSut.Ask_time(resu.time_diag)

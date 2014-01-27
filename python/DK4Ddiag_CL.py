@@ -51,10 +51,12 @@ def L1_L2_Linf_norms_plot(resu):
         p3  = mpp.plot(resu.time_evol,resu.Linf_norm,'+-')
         mpp.grid(True)
 
+        fig.show()
+
         #--> Ask time        
         [stime_diag,itime_diag] = GYSut.Ask_time(resu.time_diag)
     #end while
-#end def f2D_xy_plot
+#end def L1_L2_Linf_norms_plot
 
 
 #------------------------------------------------------
@@ -81,6 +83,8 @@ def energies_plot(resu):
         mpp.grid(True)
         mpp.legend()
         mpp.hold(False)
+
+        fig.show()
         
         #--> Ask time        
         [stime_diag,itime_diag] = GYSut.Ask_time(resu.time_diag)
