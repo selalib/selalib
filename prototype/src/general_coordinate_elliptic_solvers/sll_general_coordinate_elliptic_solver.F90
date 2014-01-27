@@ -1091,14 +1091,26 @@ contains ! *******************************************************************
                jac_mat(1,2)*jac_mat(1,2)*val_a22
           
           
-          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+!!$          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+!!$               jac_mat(1,2)*jac_mat(2,1)*val_a21
+!!$          
+!!$
+!!$          
+!!$          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+!!$               jac_mat(1,2)*jac_mat(2,1)*val_a12
+
+          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a21
           
-
           
-          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+          
+          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a12
