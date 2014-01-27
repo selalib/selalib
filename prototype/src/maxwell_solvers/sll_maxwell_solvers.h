@@ -21,6 +21,9 @@
 
 
 use sll_maxwell_2d_fdtd
+
+#ifdef FFTW
 use sll_maxwell_2d_pstd
+#endif
 
 #endif

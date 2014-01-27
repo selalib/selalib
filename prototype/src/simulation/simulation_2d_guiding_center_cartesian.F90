@@ -39,9 +39,11 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
+#ifdef MUDPACK
   !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_solver
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
+#endif
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -787,6 +789,7 @@ contains
     end select
     
     select case(poisson_solver)    
+#ifdef MUDPACK
       case ("SLL_MUDPACK")     
         !stop  
         
@@ -932,7 +935,7 @@ contains
          b21,&
          b22,&
          c)
-
+#endif
       case ("SLL_POISSON_FFT")     
         !stop  
         sim%poisson => new_poisson_2d_periodic_solver( &
