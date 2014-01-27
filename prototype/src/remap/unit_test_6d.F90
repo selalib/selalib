@@ -410,9 +410,9 @@ program remap_test_6d
        
      call sll_collective_barrier(sll_world_collective)
   
-     call delete_layout_6D( layout1 )
-     call delete_layout_6D( layout2 )
-     call delete( rmp6 )
+     call sll_delete( layout1 )
+     call sll_delete( layout2 )
+     call sll_delete( rmp6 )
      SLL_DEALLOCATE_ARRAY(local_array1, ierr)
      SLL_DEALLOCATE_ARRAY(local_array2, ierr)
      SLL_DEALLOCATE_ARRAY(arrays_diff, ierr)

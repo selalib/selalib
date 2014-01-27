@@ -3,6 +3,7 @@ SET(POISSON_LIBS sll_fft
                  sll_file_io
                  sll_utilities
                  sll_timer
+		 sll_assertion
                  dfftpack)
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
@@ -17,8 +18,8 @@ IF(FFTW_ENABLED)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
+ ADD_DEFINITIONS(-DMUDPACK)
+ SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
                                     sll_mudpack_cartesian.F90
                                     sll_mudpack_polar.F90
                                     sll_mudpack_curvilinear.F90)
@@ -58,6 +59,7 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 IF(FFTW_ENABLED)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
+                                             sll_assertion
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
