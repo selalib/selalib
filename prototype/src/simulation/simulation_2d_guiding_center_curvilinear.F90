@@ -48,7 +48,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
   sll_int32, parameter :: SLL_ADVECTIVE = 0 
   sll_int32, parameter :: SLL_CONSERVATIVE = 1
-
+  sll_int32, parameter :: SLL_X_Y = 0
+  sll_int32, parameter :: SLL_ETA1_ETA2 = 1
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_guiding_center_curvilinear
 
@@ -60,6 +61,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   
    !initial function
    procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
+   sll_int32  :: type_var
    sll_real64, dimension(:), pointer :: params
       
    !advector
@@ -160,6 +162,7 @@ contains
     
      !initial_function
     character(len=256) :: initial_function_case
+    character(len=256) :: type_var
     sll_real64 :: kmode_eta1
     sll_real64 :: kmode_eta2
     sll_real64 :: eps
@@ -248,6 +251,7 @@ contains
       alpha2
 
     namelist /initial_function/ &
+      type_var, &
       initial_function_case, &
       kmode_eta1, &
       kmode_eta2, &
@@ -305,6 +309,7 @@ contains
     params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
     
     !initial function
+    type_var = "SLL_X_Y"
     initial_function_case="SLL_KHP1"
     kmode_eta1 = 0.5_f64
     kmode_eta2 = 1._f64
@@ -772,8 +777,9 @@ contains
         print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
-
-     select case (f_interp1d_x1_case)
+    sim%phi_interp2d => phi_interp2d 
+    
+    select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
         f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1_bis+1, &
@@ -965,9 +971,6 @@ contains
         stop
     end select
 
-  
-    sim%phi_interp2d => phi_interp2d
-
     select case(advect2d_case)
       case ("SLL_BSL")
        print*,"#advect2d = SLL_BSL "  
@@ -994,6 +997,19 @@ contains
         stop
     end select
     
+    select case(type_var)
+      case ("SLL_X_Y")
+        print*,"# type_var = SLL_X_Y" 
+        sim%type_var = SLL_X_Y
+      case ("SLL_ETA1_ETA2")
+        print*,"## tupe_var =  SLL_ETA1_ETA2"  
+        sim%type_var = SLL_ETA1_ETA2
+      case default
+        print *,'#bad type_var',type_var
+        print *,'#not implemented'
+        print *,'#in initialize_analytic_field_2d_curvilinear'
+        stop
+    end select
     
     select case(initial_function_case)
       case ("SLL_KHP1")
@@ -1180,18 +1196,32 @@ contains
   
 
     
-    !initialisation of distribution function    
-     do i2=1,Nc_eta2+1
-        eta2=eta2_min+real(i2-1,f64)*delta_eta2
-        do i1=1,Nc_eta1+1
-          eta1=eta1_min+real(i1-1,f64)*delta_eta1
-          x1 = sim%transformation%x1(eta1,eta2)
-          x2 = sim%transformation%x2(eta1,eta2)
-          f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
-          !f(i1,i2) = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)!
-          f(i1,i2) =  4._f64*eta1*(1._f64 - eta1)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2))
-        end do
-     end do   
+    !initialisation of distribution function
+    select case(sim%type_var)    
+       case(SLL_X_Y)
+         do i2=1,Nc_eta2+1
+           eta2=eta2_min+real(i2-1,f64)*delta_eta2
+           do i1=1,Nc_eta1+1
+             eta1=eta1_min+real(i1-1,f64)*delta_eta1
+             x1 = sim%transformation%x1(eta1,eta2)
+             x2 = sim%transformation%x2(eta1,eta2)
+             f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
+           end do
+         end do 
+       case(SLL_ETA1_ETA2)
+          do i2=1,Nc_eta2+1
+           eta2=eta2_min+real(i2-1,f64)*delta_eta2
+           do i1=1,Nc_eta1+1
+             eta1=eta1_min+real(i1-1,f64)*delta_eta1
+             f(i1,i2) =  sim%init_func(eta1,eta2,sim%params) 
+           end do
+         end do 
+       case default
+        print *,'#bad type_var',sim%type_var
+        print *,'#not implemented'
+        print *,'#in  run_gc2d_curvilinear'
+        stop
+    end select      
     !solve poisson
     call sim%poisson%compute_phi_from_rho(phi, f)
     call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
