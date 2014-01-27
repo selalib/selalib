@@ -334,7 +334,8 @@ contains
 
    sll_real64, dimension(:), intent(in), optional :: params
    sll_real64 :: eps
-   sll_real64 :: k_mode
+   sll_real64 :: k_mode_x
+   sll_real64 :: k_mode_y
 
    if( .not. present(params) ) then
       print *, '#sll_KHP1_2d, error: the params array must ', &
@@ -342,16 +343,32 @@ contains
       print *,'#params(1)= eps  param(2)=k_mode'
       stop
    end if
-   SLL_ASSERT(size(params)>=2)
+   SLL_ASSERT(size(params)>=3)
    eps = params(1)
-   k_mode = params(2)
+   k_mode_x = params(2)
+   k_mode_y = params(3)
 
-   res = sin(y)+eps*cos(k_mode*x)
+   res = sin(k_mode_y*y)+eps*cos(k_mode_x*x)
 
   end function sll_KHP1_2d
 
 
-
+  function sll_DSG_2d( eta1, eta2, params ) result(res)
+    sll_real64  :: res
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in), optional :: params    
+    
+    sll_real64  :: beta
+    if( .not. present(params) ) then
+       print *, '#sll_sll_D_sharped_Geo_2d, error: the params array must ', &
+            'be passed. params(1) = beta'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=1)
+    beta = params(1) 
+    res =  4._f64*eta1*(1._f64 - eta1)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2))
+  end function sll_DSG_2d
 
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution

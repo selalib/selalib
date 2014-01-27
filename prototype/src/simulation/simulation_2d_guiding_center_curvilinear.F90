@@ -225,12 +225,14 @@ contains
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
+    sll_real64, dimension(5) :: params_mesh_DSG
     sll_real64 :: eta1_min_bis
     sll_real64 :: eta1_max_bis
     sll_real64 :: eta2_min_bis
     sll_real64 :: eta2_max_bis
     sll_int32  :: Nc_eta1_bis
     sll_int32  :: Nc_eta2_bis
+    sll_real64 :: alpha11,alpha22,alpha3,alpha4,alpha5
     !here we do all the initialization
     !in future, we will use namelist file
     
@@ -324,7 +326,7 @@ contains
     charac2d_case = "SLL_VERLET"
     A_interp_case = "SLL_CUBIC_SPLINES"
     
-    advection_form = "SLL_CONSERVATIVE"
+    advection_form = "SLL_ADVECTIVE"
     advect1d_x1_case = "SLL_BSL"
     advect1d_x2_case = "SLL_BSL"
     charac1d_x1_case = "SLL_EULER"
@@ -539,8 +541,8 @@ contains
     
     select case (mesh_case)
       case ("SLL_LANDAU_MESH")
-        eta1_max = 2._f64*sll_pi/kmode_eta1
-        eta2_max = 2._f64*sll_pi/kmode_eta2
+        eta1_max = 2._f64 *sll_pi/kmode_eta1
+        eta2_max = 2._f64 *sll_pi/kmode_eta2
       case ("SLL_POLAR_MESH")
         eta2_max = 2._f64*sll_pi
       case ("SLL_COLLELA_MESH")  
@@ -549,6 +551,20 @@ contains
          !  In collela  mesh params_mesh =( alpha1, alpha2, L1, L2 ) such that :
          !  x1= eta1 + alpha1*sin(2*pi*eta1/L1)*sin(2*pi*eta2/L2)
          params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
+      case ("SLL_D_SHAPED_MESH")
+        eta1_max = eta1_max
+        eta2_max = eta2_max
+         !        x1 = alpha1+(alpha2*(2._f64*eta1-1)+alpha3)* &
+         !             cos(2._f64*sll_pi*eta2+alpha4*sin(2._f64*sll_p*eta2))
+         !        x2 = alpha5*(alpha2*(2._f64*eta1-1)+alpha3)*sin(2._f64*sll_pi*eta2)
+         ! Domain: [0,1] X [0,1]
+         ! By default the values of the alpha parameters are:
+             alpha11 =1.7_f64
+             alpha22 =0.074_f64
+             alpha3  =0.536_f64
+             alpha4  =0.4290421957_f64
+             alpha5  =1.66_f64
+          params_mesh_DSG = (/ alpha11, alpha22, alpha3,alpha4,alpha5/)
       case default
         print *,'#bad mesh_case',mesh_case
         print *,'#not implemented'
@@ -599,6 +615,17 @@ contains
          sinprod_jac21, &
          sinprod_jac22, &
          params_mesh  )  
+       case ("SLL_D_SHAPED_MESH")
+        sim%transformation => new_coordinate_transformation_2d_analytic( &
+         "analytic_D_SHAPED_transformation", &
+         sim%mesh_2d, &
+         D_sharped_Geo_x1, &
+         D_sharped_Geo_x2, &
+         D_sharped_Geo_jac11, &
+         D_sharped_Geo_jac12, &
+         D_sharped_Geo_jac21, &
+         D_sharped_Geo_jac22, &
+         params_mesh_DSG  )    
         case default
         print *,'#bad mesh_case',mesh_case
         print *,'#not implemented'
@@ -972,9 +999,10 @@ contains
       case ("SLL_KHP1")
         print*,"#f0 = SLL_KHP1"  
         sim%init_func => sll_KHP1_2d
-        SLL_ALLOCATE(sim%params(2),ierr)
+        SLL_ALLOCATE(sim%params(3),ierr)
         sim%params(1) = eps
         sim%params(2) = kmode_eta1
+        sim%params(3) = kmode_eta2
       case("SLL_DIOCOTRON")
         print*,"#f0 = SLL_DIOCOTRON " 
         sim%init_func => sll_diocotron_initializer_2d2
@@ -983,6 +1011,11 @@ contains
         sim%params(2) = r_plus
         sim%params(3) = eps
         sim%params(4) = kmode_eta2  
+       case ("SLL_DSG_2D")
+        print*,"#f0 = SLL_DSG_2D"  
+        sim%init_func => SLL_DSG_2D
+        SLL_ALLOCATE(sim%params(1),ierr)
+        sim%params(1) = 0._f64
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
@@ -1140,11 +1173,11 @@ contains
     SLL_ALLOCATE(f(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(f_old(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(rho(Nc_eta1+1,Nc_eta2+1),ierr)
-    SLL_ALLOCATE(phi(Nc_eta1+1,Nc_eta2+1),ierr)
+    SLL_ALLOCATE(phi(Nc_eta1+1,Nc_eta2+1),ierr); phi = 0._f64
     SLL_ALLOCATE(A1(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(A2(Nc_eta1+1,Nc_eta2+1),ierr)
     SLL_ALLOCATE(f_conserv(Nc_eta1+1,Nc_eta2+1),ierr)
-    
+  
 
     
     !initialisation of distribution function    
@@ -1155,29 +1188,26 @@ contains
           x1 = sim%transformation%x1(eta1,eta2)
           x2 = sim%transformation%x2(eta1,eta2)
           f(i1,i2) =  sim%init_func(x1,x2,sim%params) 
+          !f(i1,i2) = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)!
+          f(i1,i2) =  4._f64*eta1*(1._f64 - eta1)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2))
         end do
-     end do
-        
+     end do   
     !solve poisson
     call sim%poisson%compute_phi_from_rho(phi, f)
-    call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)
-    
-    !print *,A1
-    !print *,A2
+    call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
+!    do i2=1,Nc_eta2+1
+!        eta2=eta2_min+real(i2-1,f64)*delta_eta2
+!        do i1=1,Nc_eta1+1
+!          eta1=eta1_min+real(i1-1,f64)*delta_eta1
+!         write(201,*) eta1,eta2,phi(i1,i2),sin(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
+!        end do
+!     end do   
+!     stop  
+    !print *,maxval(A1)
+    !print *,maxval(A2)
     thdiagp_id=thdiag_id+1
     call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
     call sll_ascii_file_create('thdiagp.dat', thdiagp_id, ierr)
-!    open(unit = diag_id, file='diag_curvilinear.dat',IOStat=IO_stat)
-!    if( IO_stat /= 0 ) then
-!       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
-!       STOP
-!    end if
-!    open(unit = diag_id+1, file='diag2_curvilinear.dat',IOStat=IO_stat)
-!    if( IO_stat /= 0 ) then
-!       print *, '#run_gc2d_curvilinear (sim) failed to open file diag_curvilinear.dat'
-!       STOP
-!    end if
-    
     iplot = 0
 
     do step=1,nb_step+1
@@ -1192,6 +1222,7 @@ contains
           step-1, &
           dt, &
           sim%mesh_2d, &
+          sim%transformation, &
           f, &
           phi, &
           A1, &
@@ -1232,15 +1263,13 @@ contains
               call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_conserv, f)
               f_conserv =f
               call compute_f_conserv_to_f(f_conserv,f,sim%transformation,sim%mesh_2d)
-            case(SLL_ADVECTIVE)  
+            case(SLL_ADVECTIVE) 
               call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
            case default 
               print *,'#bad advection_form',sim%advection_form
           end select    
-          !call sim%advect_2d%advect_2d(A1, A2, 0.5_f64*dt, f_old, f)
           call sim%poisson%compute_phi_from_rho(phi, f)
           call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
-          !call sim%advect_2d%advect_2d(A1, A2, dt, f_old, f)
           select case (sim%advection_form)
             case(SLL_CONSERVATIVE)
               call compute_f_to_f_conserv(f_old,f_conserv,sim%transformation,sim%mesh_2d)
@@ -1385,6 +1414,7 @@ contains
     step, &
     dt, &
     mesh_2d, &
+    transformation,&
     f, &
     phi, &
     A1, &
@@ -1393,6 +1423,7 @@ contains
     sll_int32, intent(in) :: step
     sll_real64, intent(in) :: dt
     type(sll_logical_mesh_2d), pointer :: mesh_2d
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation
     sll_real64, dimension(:,:), intent(in) :: f
     sll_real64, dimension(:,:), intent(in) :: phi
     sll_real64, dimension(:,:), intent(in) :: A1
@@ -1402,13 +1433,18 @@ contains
     sll_real64 :: l1
     sll_real64 :: l2
     sll_real64 :: e
+    sll_real64 :: eta1
+    sll_real64 :: eta2
     sll_real64, dimension(:),allocatable :: data
+    sll_real64, dimension(1:2,1:2) :: jac_m
     sll_int32 :: i1
     sll_int32 :: i2
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
-    sll_real64 ::eta1_min
-    sll_real64 ::eta1_max
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
     sll_real64 :: delta_eta1
     sll_real64 :: delta_eta2
     sll_int32 :: ierr 
@@ -1420,7 +1456,8 @@ contains
     
     eta1_min = mesh_2d%eta1_min
     eta1_max = mesh_2d%eta1_max
-
+    eta2_min = mesh_2d%eta2_min
+    eta2_max = mesh_2d%eta2_max
     delta_eta1 = mesh_2d%delta_eta1
     delta_eta2 = mesh_2d%delta_eta2
 
@@ -1433,23 +1470,31 @@ contains
      e     = 0.0_f64
     
     do i2 = 1, Nc_eta2+1
+      eta2 = eta2_min + (i2-1)* delta_eta2 
       do i1=1,Nc_eta1+1
-        data(i1) = f(i1,i2)
+        eta1 = eta2_min + (i1-1)* delta_eta1
+        data(i1) = f(i1,i2)*transformation%jacobian(eta1,eta2)
       enddo
       mass = mass + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
-        data(i1) = abs(f(i1,i2))
+        eta1 = eta2_min + (i1-1)* delta_eta1
+        data(i1) = abs(f(i1,i2))*transformation%jacobian(eta1,eta2)
       enddo
       l1 = l1 + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
-        data(i1) = (f(i1,i2))**2
+        eta1 = eta2_min + (i1-1)* delta_eta1
+        data(i1) = (f(i1,i2))**2 *transformation%jacobian(eta1,eta2)
       enddo
       l2 = l2 + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
       do i1=1,Nc_eta1+1
-        data(i1) = A2(i1,i2)**2+A1(i1,i2)**2
+        eta1 = eta2_min + (i1-1)* delta_eta1
+        jac_m  =  transformation%jacobian_matrix(eta1,eta2)
+        data(i1) = (( jac_m(2,2)*A1(i1,i2) - jac_m(2,1)*A2(i1,i2) )**2 + &
+        ( -jac_m(1,2)*A1(i1,i2) + jac_m(1,1)*A2(i1,i2) )**2) &
+        /abs(transformation%jacobian(eta1,eta2)) 
       enddo
       e = e + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
 
@@ -1666,5 +1711,155 @@ contains
 
 #endif
 
-
+subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f ) 
+    sll_real64, intent(in)   :: eta1_min,eta1_max
+    sll_real64, intent(in)   :: eta2_min,eta2_max  
+    sll_int32, intent(in)    :: n_eta1,n_eta2  
+    type(arb_deg_2d_interpolator)   :: a11_interp
+    type(arb_deg_2d_interpolator)   :: a22_interp
+    type(arb_deg_2d_interpolator)   :: a12_interp
+    sll_real64,dimension(:,:),allocatable :: cxx_array
+    sll_real64,dimension(:,:),allocatable :: cyy_array
+    sll_real64,dimension(:,:),allocatable :: cxy_array
+    sll_real64,dimension(:,:),allocatable :: cx_array
+    sll_real64,dimension(:,:),allocatable :: cy_array
+    sll_real64,dimension(:,:),intent(out)  :: f
+    sll_real64  :: pi2
+    sll_real64  :: eta1
+    sll_real64  :: eta2
+    sll_real64  :: delta1
+    sll_real64  :: delta2
+    sll_real64  :: jac
+    sll_real64  :: jac_11
+    sll_real64  :: jac_12
+    sll_real64  :: jac_21 
+    sll_real64  :: jac_22
+    sll_real64  :: dphi_eta1
+    sll_real64  :: dphi_eta2
+    sll_real64  :: ddphi_eta11
+    sll_real64  :: ddphi_eta22
+    sll_real64  :: ddphi_eta12
+    sll_real64  :: rho
+    sll_int32   :: i,j,spline_degree_eta1, spline_degree_eta2
+    sll_real64, dimension(:), allocatable      :: eta1_pos
+    sll_real64, dimension(:), allocatable      :: eta2_pos
+    
+    allocate(cxx_array(n_eta1+1,n_eta2+1)) 
+    allocate(cyy_array(n_eta1+1,n_eta2+1)) 
+    allocate(cxy_array(n_eta1+1,n_eta2+1)) 
+    allocate(cx_array(n_eta1+1,n_eta2+1)) 
+    allocate(cy_array(n_eta1+1,n_eta2+1))
+    allocate(eta1_pos(n_eta1+1))
+    allocate(eta2_pos(n_eta2+1))
+    pi2 = 2.0_f64*sll_pi
+    
+    delta1 = (eta1_max - eta1_min)/n_eta1
+    delta2 = (eta2_max - eta2_min)/n_eta2
+    do j= 1, n_eta2+1
+      eta2= eta2_min + (j-1)*delta2
+      do i= 1, n_eta1+1
+         eta1= eta1_min + (i-1)*delta1
+         jac_11 = 0.148_f64*cos(pi2*eta2 + 0.4290421957_f64*sin(pi2*eta2))
+         jac_12 = -(0.148*eta1 + 0.462_f64)*sin(pi2*eta2 + 0.4290421957_f64* &
+              sin(pi2*eta2))*(pi2 + 0.8580843914_f64*cos(pi2*eta2)*sll_pi)
+         jac_21 = 0.24568_f64*sin(pi2*eta2) 
+         jac_22 = 3.32_f64*sll_pi*(0.148_f64*eta1 + 0.462_f64)*cos(pi2*eta2)
+         jac = jac_11*jac_22 - jac_12*jac_21   
+ 
+         cxx_array(i,j) = (jac_12*jac_12 + jac_22*jac_22)/jac
+         cyy_array(i,j) = (jac_11*jac_11 + jac_21*jac_21)/jac
+         cxy_array(i,j) =-2._f64*(jac_11*jac_12 + jac_21*jac_22)/jac
+         
+         eta1_pos(i) = eta1
+         eta2_pos(j) = eta2
+       enddo
+     enddo  
+     
+   spline_degree_eta1 = 3
+   spline_degree_eta2 = 3  
+   call a11_interp%initialize( &
+         n_eta1+1, &
+         n_eta2+1, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         SLL_DIRICHLET, &
+         SLL_DIRICHLET, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC,&
+         spline_degree_eta1, &
+         spline_degree_eta2)            
+   call a22_interp%initialize( &
+         n_eta1+1, &
+         n_eta2+1, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         SLL_DIRICHLET, &
+         SLL_DIRICHLET, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC,&
+         spline_degree_eta1, &
+         spline_degree_eta2)    
+           
+          
+    call a12_interp%initialize( &
+         n_eta1+1, &
+         n_eta2+1, &
+         eta1_min, &
+         eta1_max, &
+         eta2_min, &
+         eta2_max, &
+         SLL_DIRICHLET, &
+         SLL_DIRICHLET, &
+         SLL_PERIODIC, &
+         SLL_PERIODIC,&
+         spline_degree_eta1, &
+         spline_degree_eta2)   
+    call a11_interp%compute_interpolants(cxx_array, &
+       eta1_pos,&
+       n_eta1+1,&
+       eta2_pos,&
+       n_eta2+1)   
+    call a22_interp%compute_interpolants(cyy_array,&
+       eta1_pos,&
+       n_eta1+1,&
+       eta2_pos,&
+       n_eta2+1)
+    call a12_interp%compute_interpolants(cxy_array/2., &
+       eta1_pos,&
+       n_eta1+1,&
+       eta2_pos,&
+       n_eta2+1)
+    do j= 1, n_eta2+1
+      eta2= eta2_min + (j-1)*delta2
+      do i= 1, n_eta1+1 
+         eta1= eta1_min + (i-1)*delta1 
+         jac_11 = 0.148_f64*cos(pi2*eta2 + 0.4290421957_f64*sin(pi2*eta2))
+         jac_12 = -(0.148*eta1 + 0.462_f64)*sin(pi2*eta2 + 0.4290421957_f64* &
+                  sin(pi2*eta2))*(pi2 + 0.8580843914_f64*cos(pi2*eta2)*sll_pi)
+         jac_21 = 0.24568_f64*sin(pi2*eta2) 
+         jac_22 = 3.32_f64*sll_pi*(0.148_f64*eta1 + 0.462_f64)*cos(pi2*eta2)
+         jac    = jac_11*jac_22 - jac_12*jac_21
+    
+         dphi_eta1   = 4._f64*(1._f64-eta1)*(1._f64+0.1_f64*sin(4._f64*pi2*eta2))
+         dphi_eta2   = 4._f64*eta1*(1._f64-eta1)*(pi2*0.4*cos(4._f64*pi2*eta2))
+         ddphi_eta11 = -4._f64*(1._f64+0.1*sin(4._f64*pi2*eta2))
+         ddphi_eta22 = -4._f64*eta1*(1._f64-eta1)*(pi2*pi2*1.6_f64*sin(4._f64*pi2*eta2))
+         ddphi_eta12 = 4._f64*(1._f64-eta1)*(pi2*0.4_f64*cos(4._f64*pi2*eta2))   
+                  
+         cx_array(i,j)  = (a11_interp%interpolate_derivative_eta1(eta1,eta2)+ &
+                           a12_interp%interpolate_derivative_eta2(eta1,eta2))
+         cy_array(i,j)  = (a22_interp%interpolate_derivative_eta2(eta1,eta2)+ &
+                           a12_interp%interpolate_derivative_eta1(eta1,eta2))  
+         write(202,*) eta1,eta2,cx_array(i,j),cy_array(i,j)                                     
+         rho = (cxx_array(i,j)*ddphi_eta11 + cyy_array(i,j)*ddphi_eta22 + &
+                 cxy_array(i,j)*ddphi_eta12 + cx_array(i,j) *dphi_eta1   + &
+                 cy_array(i,j) *dphi_eta2)
+         f(i,j) = rho/jac
+     enddo
+    enddo 
+  end subroutine sll_DSG 
 end module sll_simulation_2d_guiding_center_curvilinear_module
