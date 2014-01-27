@@ -38,17 +38,22 @@ def L1_L2_Linf_norms_plot(resu):
         #--> L1-norm
         ax1 = fig.add_subplot(1,3,1)
         p1  = mpp.plot(resu.time_evol,resu.L1_norm,'+-')
+        mpp.xlabel('time')
+        mpp.ylabel('L1-norm')
         mpp.grid(True)
 
         #--> L2-norm
         ax2 = fig.add_subplot(1,3,2)
         p2  = mpp.plot(resu.time_evol,resu.L2_norm,'+-')
         mpp.xlabel('time')
+        mpp.ylabel('L2-norm')
         mpp.grid(True)
 
         #--> L3-norm
         ax3 = fig.add_subplot(1,3,3)
         p3  = mpp.plot(resu.time_evol,resu.Linf_norm,'+-')
+        mpp.xlabel('time')
+        mpp.ylabel('Linf-norm')
         mpp.grid(True)
 
         fig.show()
