@@ -25,6 +25,7 @@ class DK4Dresu():
     # DK4Dresu initialisation
     #---------------------------------------
     def __init__(self,DK4Ddir=''):
+
         #--> Initialization of the GYSELA result directory
         if (DK4Ddir==''):
             self.Directory = Ask_directory()
@@ -38,6 +39,7 @@ class DK4Dresu():
         print " " + str(self.Directory)
         print " ********************************************************************"
         self.Prefix = self.Directory+'/'
+
     #end def ___init__
 
 
@@ -45,6 +47,7 @@ class DK4Dresu():
     # Result reading
     #---------------------------------------
     def find_existing_results(self,ifirst_resufile=-1,ilast_resufile=-1):
+
         """ Result reading"""
 
         #--> Read all the existing results
@@ -69,13 +72,31 @@ class DK4Dresu():
             self.iend = ilast_resufile 
         #end if
         self.nfile = self.iend-self.ibeg+1
+
     #end def find_existing_results
+
+
+    #--------------------------------------------------
+    # Reading of the files 'conservation_laws.h5'
+    #--------------------------------------------------
+    def read_conservation_laws(self):
+
+        """ Reading of the files 'conservation_laws.h5'"""
+
+        #--> Load the file
+        H = GYSut.loadHDF5(self.Prefix+'/conservation_laws.h5')
+        for iname in H.keys:
+            exec "self.%s = H.%s" % (iname,iname)
+        #end for
+    
+    #end read_conservation_laws
 
 
     #--------------------------------------------------
     # Reading of the files 'DK4d_diag_d<num_diag>.h5'
     #--------------------------------------------------
     def read_diag(self):
+
         """ Reading of the files 'DK4d_diag_d<num_diag>.h5'"""
 
         #--> Find all the result files
@@ -111,6 +132,7 @@ class DK4Dresu():
 #  analysed
 #---------------------------------------------------------
 def Ask_directory():
+
     """ Ask which directory contains DK4D results
     to be analysed"""
 
@@ -128,6 +150,7 @@ def Ask_directory():
         status = -1
         return status
     return directory
+
 #end def Ask_directory
 
 
@@ -136,6 +159,7 @@ def Ask_directory():
 #  and create the list of file names required
 #---------------------------------------------------------------------
 def Ask_resultFiles(diagnum_list):
+
     """ Ask which files will be treated in the GYSELA diagnostics
     and create the list of file names required"""
 
@@ -158,6 +182,7 @@ def Ask_resultFiles(diagnum_list):
     l_tmp          = filter(lambda x: int(x) <= int(str_last_ask), diagnum_list)
     indx_last_ask  = diagnum_list.index(l_tmp[-1])
     return [indx_first_ask,indx_last_ask]
+
 #end def Ask_resultFiles
 
 
