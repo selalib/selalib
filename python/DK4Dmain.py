@@ -29,6 +29,7 @@ if (Lresu_read):
 if (STOP != 1):
     if (Lresu_read):
         resu = DK4D.DK4Dresu(DK4Ddir)
+        resu.read_conservation_laws()
         resu.read_diag()
     #end if
 #end if
