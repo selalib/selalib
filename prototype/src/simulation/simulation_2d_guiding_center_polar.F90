@@ -34,9 +34,10 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+#ifdef MUDPACK
   use sll_module_poisson_2d_mudpack_solver
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
-
+#endif
 
   
   !use sll_parallel_array_initializer_module
@@ -553,7 +554,7 @@ contains
          b1, & 
          b2, & 
          c ) 
-
+#ifdef MUDPACK
       case ("SLL_MUDPACK_CURVILINEAR")     
         transformation => new_coordinate_transformation_2d_analytic( &
           "analytic_polar_transformation", &
@@ -599,7 +600,7 @@ contains
          b22,&
          c)
 
-      
+#endif      
           
       case default
         print *,'#bad poisson_solver',poisson_solver
