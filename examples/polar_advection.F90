@@ -1,11 +1,10 @@
 #define MPI_MASTER 0
 
 ! Sample computation with the following characteristics:
-! - vlasov-poisson
-! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with arbitrary coordinate 
-!   transformation
-!   in the x,y variables.
-! - parallel
+! - Simple advection 
+! - Polar mesh with analytic coordinate transformation
+! - Initial field is a gaussain function
+!
 
 program polar_advection
 #include "selalib.h"
