@@ -94,7 +94,7 @@ program qns_4d_general
        "analytic_colela_transformation", &
        mx, &
        sinprod_x1, &
-       sinprod_x1, &
+       sinprod_x2, &
        sinprod_jac11, &
        sinprod_jac12, &
        sinprod_jac21, &
