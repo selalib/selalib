@@ -48,6 +48,10 @@ ADD_CUSTOM_TARGET( clear
    COMMAND find . -name *.a -delete
    COMMAND find . -name *.o -delete
    COMMAND find . -name *.cmake -delete
+   COMMAND find . -name *.xmf -delete
+   COMMAND find . -name *.h5 -delete
+   COMMAND find . -name *.gnu -delete
+   COMMAND find . -name *.dat -delete
    COMMAND rm -rf bin
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
