@@ -12,6 +12,7 @@ module sll_general_coordinate_elliptic_solver_module
   use connectivity_module
   use sll_knots
   use gauss_legendre_integration
+  use gauss_lobatto_integration
   use sll_timer
   !use LU
 
@@ -152,22 +153,26 @@ contains ! *******************************************************************
    ! Allocate and fill the gauss points/weights information.
    ! First direction
    select case(quadrature_type1)
-      case (ES_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
-         es%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
-      case (ES_GAUSS_LOBATTO)
-         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
-              'because the interface of that function is not good.'
+   case (ES_GAUSS_LEGENDRE)
+      SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+      es%gauss_pts1(:,:) = gauss_legendre_points_and_weights(spline_degree_eta1+2)
+   case (ES_GAUSS_LOBATTO)
+      SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+      es%gauss_pts1(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta1+2)
+   case DEFAULT
+      print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
    end select
-
+      
    select case(quadrature_type2)
-      case (ES_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
-         es%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
-      case (ES_GAUSS_LOBATTO)
-         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
-              'because the interface of that function is not good.'
-
+   case (ES_GAUSS_LEGENDRE)
+      SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+      es%gauss_pts2(:,:) = gauss_legendre_points_and_weights(spline_degree_eta2+2)
+   case (ES_GAUSS_LOBATTO)
+      SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+      es%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta2+2)
+   case DEFAULT
+      print *, 'new_general_qn_solver(): have not type of gauss points in the second direction'
+      
    end select
 
 
