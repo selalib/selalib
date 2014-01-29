@@ -67,7 +67,7 @@ program unit_test
      end do
   end do
   
-  call sll_gnuplot_field_2d( &
+  call sll_gnuplot_2d( &
        X1MIN, &
        X1MAX, &
        NPTS1, &
@@ -140,13 +140,13 @@ program unit_test
      end do
   end do
 
-  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
+  call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
        calculated, 'calculated_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
+  call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN, X2MAX, NPTS2, &
        difference, 'difference_interp_arb_deg', 0, ierr)
 
-  call sll_gnuplot_field_2d(X1MIN, X1MAX, NPTS1, X2MIN ,X2MAX, NPTS2, &
+  call sll_gnuplot_2d(X1MIN, X1MAX, NPTS1, X2MIN ,X2MAX, NPTS2, &
        ad2d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
   
   
