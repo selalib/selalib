@@ -124,7 +124,7 @@ def main ():
             inputname += next
     elif (len(args) > 1): # 2 or more arguments given
         print( "Please enter one argument only. Usage: ")
-        print( "user$ ./arb_deg_txt_to_namelist.py filename.txt")
+        print( "user$ ./nurbs_patch_txt_to_nml.py filename.txt")
         sys.exit()
     else:                   # exactly one argument given
         tokens = args[0].split('/')

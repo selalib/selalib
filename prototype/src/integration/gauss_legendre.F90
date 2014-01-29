@@ -70,6 +70,8 @@ contains
   ! due to the advantage of the simplified interface.
 
 #define SELECT_CASES  \
+    case(1); \
+       xk(1)  = 0.0_f64 ; wk(1)  =  2.0_f64;\
     case (2); \
        xk(1)  = -1.0_f64/sqrt(3.0_f64); wk(1)  =  1.0_f64;\
        xk(2)  =  1.0_f64/sqrt(3.0_f64); wk(2)  =  1.0_f64; \
@@ -255,46 +257,55 @@ contains
 !!$    gauss_legendre_integral_interpolated_1D = c1*ans
 !!$  end function gauss_legendre_integral_interpolated_1D
 
+
+
+  !> @brief Returns a 2d array size(2,npoints) containing gauss-legendre 
+  !> points and weights in the interval [a,b].
+  !> @param[in] npoints Number of gauss points.
+  !> @param[in] a OPTIONAL Minimum value of the interval.
+  !> @param[in] b OPTIONAL Maximun value of the interval.
+
+
   !> gauss_points(degree) returns a real 2D array with the values of the
   !> locations of the gaussian points 'x_k' in the [-1,1] interval and
   !> their corresponding weights 'w_k'. Each column of the answer array
   !> contains the pair (x_k, w_k). Optionally, the user may provide the
   !> endpoints for the desired interval [a,b] where the gauss points should
   !> be mapped.
-  function gauss_points( degree, a, b ) result(xw)
-    sll_int32, intent(in)              :: degree
+  function gauss_legendre_points_and_weights(npoints, a, b ) result(xw)
+    sll_int32, intent(in)              :: npoints
     sll_real64, intent(in), optional   :: a
     sll_real64, intent(in), optional   :: b
-    sll_real64, dimension(2,1:degree)  :: xw
-    sll_real64, dimension(1:degree)    :: xk
-    sll_real64, dimension(1:degree)    :: wk
+    sll_real64, dimension(2,1:npoints)  :: xw
+    sll_real64, dimension(1:npoints)    :: xk
+    sll_real64, dimension(1:npoints)    :: wk
     sll_real64                         :: c1
     sll_real64                         :: c2
     sll_int32                          :: k
 
-    SLL_ASSERT( degree >= 2 )
-
+    SLL_ASSERT( npoints >= 1 )
+    
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
-
+    
     ! fill out the xk and wk arrays.
-    select case(degree)
+    select case(npoints)
        SELECT_CASES
     end select
-
+    
     if(present(a) .and. present(b)) then
        ! need to map the interval [-1,1] into the interval [a,b].
        c1 = 0.5_f64*(b-a)
        c2 = 0.5_f64*(b+a)
-       do k=1,degree
+       do k=1,npoints
           xw(1,k) = c1*xk(k) + c2
-          xw(2,k) = wk(k)
+          xw(2,k) = wk(k)*c1
        end do
     else ! use default values in the [-1,1] interval
-       xw(1,1:degree) = xk(1:degree)
-       xw(2,1:degree) = wk(1:degree)
+       xw(1,1:npoints) = xk(1:npoints)
+       xw(2,1:npoints) = wk(1:npoints)
     end if
 
-  end function gauss_points
+  end function gauss_legendre_points_and_weights
 
 end module gauss_legendre_integration

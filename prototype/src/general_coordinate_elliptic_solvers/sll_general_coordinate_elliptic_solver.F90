@@ -12,6 +12,7 @@ module sll_general_coordinate_elliptic_solver_module
   use connectivity_module
   use sll_knots
   use gauss_legendre_integration
+  use gauss_lobatto_integration
   use sll_timer
   !use LU
 
@@ -152,22 +153,26 @@ contains ! *******************************************************************
    ! Allocate and fill the gauss points/weights information.
    ! First direction
    select case(quadrature_type1)
-      case (ES_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
-         es%gauss_pts1(:,:) = gauss_points(spline_degree_eta1+2)
-      case (ES_GAUSS_LOBATTO)
-         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
-              'because the interface of that function is not good.'
+   case (ES_GAUSS_LEGENDRE)
+      SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+      es%gauss_pts1(:,:) = gauss_legendre_points_and_weights(spline_degree_eta1+2)
+   case (ES_GAUSS_LOBATTO)
+      SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+      es%gauss_pts1(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta1+2)
+   case DEFAULT
+      print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
    end select
-
+      
    select case(quadrature_type2)
-      case (ES_GAUSS_LEGENDRE)
-         SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
-         es%gauss_pts2(:,:) = gauss_points(spline_degree_eta2+2)
-      case (ES_GAUSS_LOBATTO)
-         print *, 'new_general_qn_solver(): not implemented gauss_lobatto ',&
-              'because the interface of that function is not good.'
-
+   case (ES_GAUSS_LEGENDRE)
+      SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+      es%gauss_pts2(:,:) = gauss_legendre_points_and_weights(spline_degree_eta2+2)
+   case (ES_GAUSS_LOBATTO)
+      SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+      es%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta2+2)
+   case DEFAULT
+      print *, 'new_general_qn_solver(): have not type of gauss points in the second direction'
+      
    end select
 
 
@@ -662,8 +667,9 @@ contains ! *******************************************************************
                       
                       ig1 = ig + (i-1)*num_pts_g1
                       
-                      jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
-                      val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      !jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                      !val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      val_jac = es%values_jacobian(i + es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
                       int_jac = int_jac + wgpt2*wgpt1*val_jac
                       do ideg1 = 1,es%spline_degree1 + 1
                          do ideg2 = 1,es%spline_degree2 + 1
@@ -708,8 +714,9 @@ contains ! *******************************************************************
                       
                       
                       rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-                      jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
-                      val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      !jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                      !val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      val_jac = es%values_jacobian(i + es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
                       int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                       int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
@@ -745,8 +752,9 @@ contains ! *******************************************************************
                    
                    
                    rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-                   jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
-                   val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                   !jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                   !val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                   val_jac = es%values_jacobian(i + es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
                    int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                    int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
@@ -1077,14 +1085,26 @@ contains ! *******************************************************************
                jac_mat(1,2)*jac_mat(1,2)*val_a22
           
           
-          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+!!$          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
+!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+!!$               jac_mat(1,2)*jac_mat(2,1)*val_a21
+!!$          
+!!$
+!!$          
+!!$          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+!!$               jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
+!!$               jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
+!!$               jac_mat(1,2)*jac_mat(2,1)*val_a12
+
+          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a21
           
-
           
-          B21 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
+          
+          B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
                jac_mat(1,2)*jac_mat(2,1)*val_a12
