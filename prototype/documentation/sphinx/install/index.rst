@@ -4,10 +4,11 @@ Installation
 Linux packages
 ==============
 
-Selalib is available as a package 
+Selalib is available as an archive
+ * as a `tar gz  file </releases/selalib-0.5.0.tar.gz>`_
 
-* as a `deb package </releases/selalib_1.0.0_amd64.deb>`_
-* as a `rpm package </releases/selalib-1.0.0.fc18.x86_64.rpm>`_
+.. * as a `deb package </releases/selalib_1.0.0_amd64.deb>`_
+   * as a `rpm package </releases/selalib-1.0.0.fc18.x86_64.rpm>`_
 
 Install the package on Ubuntu 12.10 with::
 
