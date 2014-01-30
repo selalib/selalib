@@ -1,0 +1,18 @@
+SeLaLib
+
+Modular Fortran library for the gyrokinetic simulation model by a semi-Lagrangian method.
+
+Install Dependencies
+====================
+
+$ apt-get install gfortran openmpi-bin libhdf5-openmpi-dev \
+                  libopenmpi-dev doxygen liblapack-dev \
+                  libfftw3-dev cmake gnuplot
+
+Build the library and run examples
+==================================
+       
+$ cmake .
+$ make 
+$ make examples
+$ ./bin/landau | gnuplot
