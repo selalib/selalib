@@ -681,8 +681,9 @@ contains ! *******************************************************************
                       
                       ig1 = ig + (i-1)*num_pts_g1
                       
-                      jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
-                      val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      !jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                      !val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      val_jac = es%values_jacobian(i + es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
                       int_jac = int_jac + wgpt2*wgpt1*val_jac
                       do ideg1 = 1,es%spline_degree1 + 1
                          do ideg2 = 1,es%spline_degree2 + 1
@@ -727,8 +728,9 @@ contains ! *******************************************************************
                       
                       
                       rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-                      jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
-                      val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      !jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                      !val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                      val_jac = es%values_jacobian(i + es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
                       int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                       int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
@@ -764,8 +766,9 @@ contains ! *******************************************************************
                    
                    
                    rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-                   jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
-                   val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                   !jac_mat(:,:) = rho%get_jacobian_matrix(gpt1,gpt2)
+                   !val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+                   val_jac = es%values_jacobian(i + es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
                    int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                    int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
