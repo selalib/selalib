@@ -12,7 +12,6 @@ use sll_gnuplot
 
 implicit none
 
-class(sll_interpolator_2d_base), pointer    :: interp_xy
 type(cubic_spline_2d_interpolator), target  :: spline_xy
 
 type(sll_logical_mesh_2d), pointer                    :: logical_mesh
@@ -48,7 +47,6 @@ call spline_xy%initialize( nc_eta1+1, nc_eta2+1, &
                            eta1_min, eta1_max,   &
                            eta2_min, eta2_max,   &
                            SLL_PERIODIC, SLL_PERIODIC )
-!interp_xy => spline_xy
 
 transfx => new_coordinate_transformation_2d_analytic( &
        "analytic_polar_transformation", &
