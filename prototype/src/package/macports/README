@@ -15,4 +15,4 @@ Build the library and run examples
 $ cmake .
 $ make 
 $ make examples
-$ ./bin/landau | gnuplot
+$ ./examples/landau | gnuplot
