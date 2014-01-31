@@ -122,6 +122,8 @@ module sll_simulation_4d_qns_general_module
      procedure(two_var_parametrizable_function),nopass,pointer :: der2_b1_f
      procedure(two_var_parametrizable_function),nopass,pointer :: der2_b2_f
      procedure(two_var_parametrizable_function),nopass,pointer :: c_f
+     procedure(two_var_parametrizable_function),nopass,pointer :: elec_field_ext_1
+     procedure(two_var_parametrizable_function),nopass,pointer :: elec_field_ext_2
      sll_real64, dimension(:), pointer :: a11_f_params
      sll_real64, dimension(:), pointer :: a12_f_params
      sll_real64, dimension(:), pointer :: a21_f_params
@@ -129,6 +131,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:), pointer :: b1_f_params
      sll_real64, dimension(:), pointer :: b2_f_params
      sll_real64, dimension(:), pointer :: c_f_params
+     sll_real64, dimension(:), pointer :: elec_field_ext_f_params
    contains
      procedure, pass(sim) :: run => run_4d_qns_general
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen
@@ -175,107 +178,118 @@ contains
    bc_left,&
    bc_right,&
    bc_bottom,&
-   bc_top)
+   bc_top,&
+   electric_field_ext_1,&
+   electric_field_ext_2,&
+   elec_field_ext_f_params)
+    
+    type(sll_simulation_4d_qns_general), intent(inout)     :: sim
+    type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
+    type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
+    class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
+    procedure(sll_scalar_initializer_4d)                  :: init_func
+    sll_real64, dimension(:), target                      :: params
+    procedure(two_var_parametrizable_function) :: a11_f
+    procedure(two_var_parametrizable_function) :: a12_f
+    procedure(two_var_parametrizable_function) :: a21_f
+    procedure(two_var_parametrizable_function) :: a22_f
+    procedure(two_var_parametrizable_function) :: b1_f
+    procedure(two_var_parametrizable_function) :: b2_f
+    procedure(two_var_parametrizable_function) :: der1_b1_f
+    procedure(two_var_parametrizable_function) :: der1_b2_f
+    procedure(two_var_parametrizable_function) :: der2_b1_f
+    procedure(two_var_parametrizable_function) :: der2_b2_f
+    procedure(two_var_parametrizable_function) :: c_f
+    procedure(two_var_parametrizable_function) :: electric_field_ext_1
+    procedure(two_var_parametrizable_function) :: electric_field_ext_2
+    sll_real64, dimension(:), intent(in) :: a11_f_params
+    sll_real64, dimension(:), intent(in) :: a12_f_params
+    sll_real64, dimension(:), intent(in) :: a21_f_params
+    sll_real64, dimension(:), intent(in) :: a22_f_params
+    sll_real64, dimension(:), intent(in) :: b1_f_params
+    sll_real64, dimension(:), intent(in) :: b2_f_params
+    sll_real64, dimension(:), intent(in) :: c_f_params
+    sll_real64, dimension(:), intent(in) :: elec_field_ext_f_params
+    sll_int32  :: spline_degre1
+    sll_int32  :: spline_degre2
+    sll_int32  :: bc_left
+    sll_int32  :: bc_right
+    sll_int32  :: bc_bottom
+    sll_int32  :: bc_top
+    sll_int32 :: ierr
+    
+    sim%mesh2d_x  => mesh2d_x
+    sim%mesh2d_v  => mesh2d_v
+    sim%transfx   => transformation_x
+    sim%init_func => init_func
+    sim%params    => params
+    sim%a11_f     => a11_f
+    sim%a12_f     => a12_f
+    sim%a21_f     => a21_f
+    sim%a22_f     => a22_f
+    sim%b1_f      => b1_f
+    sim%b2_f      => b2_f
+    sim%der1_b1_f  => der1_b1_f
+    sim%der1_b2_f  => der1_b2_f
+    sim%der2_b1_f  => der2_b1_f
+    sim%der2_b2_f  => der2_b2_f
+    sim%c_f       => c_f
+    sim%spline_degree_eta1 = spline_degre1
+    sim%spline_degree_eta2 = spline_degre2
+    
+    sim%bc_left   = bc_left
+    sim%bc_right  = bc_right
+    sim%bc_bottom = bc_bottom
+    sim%bc_top    = bc_top
 
-   type(sll_simulation_4d_qns_general), intent(inout)     :: sim
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
-   type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
-   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
-   procedure(sll_scalar_initializer_4d)                  :: init_func
-   sll_real64, dimension(:), target                      :: params
-   procedure(two_var_parametrizable_function) :: a11_f
-   procedure(two_var_parametrizable_function) :: a12_f
-   procedure(two_var_parametrizable_function) :: a21_f
-   procedure(two_var_parametrizable_function) :: a22_f
-   procedure(two_var_parametrizable_function) :: b1_f
-   procedure(two_var_parametrizable_function) :: b2_f
-   procedure(two_var_parametrizable_function) :: der1_b1_f
-   procedure(two_var_parametrizable_function) :: der1_b2_f
-   procedure(two_var_parametrizable_function) :: der2_b1_f
-   procedure(two_var_parametrizable_function) :: der2_b2_f
-   procedure(two_var_parametrizable_function) :: c_f
-   sll_real64, dimension(:), intent(in) :: a11_f_params
-   sll_real64, dimension(:), intent(in) :: a12_f_params
-   sll_real64, dimension(:), intent(in) :: a21_f_params
-   sll_real64, dimension(:), intent(in) :: a22_f_params
-   sll_real64, dimension(:), intent(in) :: b1_f_params
-   sll_real64, dimension(:), intent(in) :: b2_f_params
-   sll_real64, dimension(:), intent(in) :: c_f_params
-   sll_int32  :: spline_degre1
-   sll_int32  :: spline_degre2
-   sll_int32  :: bc_left
-   sll_int32  :: bc_right
-   sll_int32  :: bc_bottom
-   sll_int32  :: bc_top
-   sll_int32 :: ierr
+    sim%elec_field_ext_1 => electric_field_ext_1
+    sim%elec_field_ext_2 => electric_field_ext_2
+    
+    SLL_ALLOCATE(sim%a11_f_params(size(a11_f_params)),ierr)
+    SLL_ALLOCATE(sim%a12_f_params(size(a12_f_params)),ierr)
+    SLL_ALLOCATE(sim%a21_f_params(size(a21_f_params)),ierr)
+    SLL_ALLOCATE(sim%a22_f_params(size(a22_f_params)),ierr)
+    SLL_ALLOCATE(sim%b1_f_params(size(b1_f_params)),ierr)
+    SLL_ALLOCATE(sim%b2_f_params(size(b2_f_params)),ierr)
+    SLL_ALLOCATE(sim%c_f_params(size(c_f_params)),ierr)
+    SLL_ALLOCATE(sim%elec_field_ext_f_params(size(elec_field_ext_f_params)),ierr)
 
-   sim%mesh2d_x  => mesh2d_x
-   sim%mesh2d_v  => mesh2d_v
-   sim%transfx   => transformation_x
-   sim%init_func => init_func
-   sim%params    => params
-   sim%a11_f     => a11_f
-   sim%a12_f     => a12_f
-   sim%a21_f     => a21_f
-   sim%a22_f     => a22_f
-   sim%b1_f      => b1_f
-   sim%b2_f      => b2_f
-   sim%der1_b1_f  => der1_b1_f
-   sim%der1_b2_f  => der1_b2_f
-   sim%der2_b1_f  => der2_b1_f
-   sim%der2_b2_f  => der2_b2_f
-   sim%c_f       => c_f
-   sim%spline_degree_eta1 = spline_degre1
-   sim%spline_degree_eta2 = spline_degre2
-
-   sim%bc_left   = bc_left
-   sim%bc_right  = bc_right
-   sim%bc_bottom = bc_bottom
-   sim%bc_top    = bc_top
-
-   SLL_ALLOCATE(sim%a11_f_params(size(a11_f_params)),ierr)
-   SLL_ALLOCATE(sim%a12_f_params(size(a12_f_params)),ierr)
-   SLL_ALLOCATE(sim%a21_f_params(size(a21_f_params)),ierr)
-   SLL_ALLOCATE(sim%a22_f_params(size(a22_f_params)),ierr)
-   SLL_ALLOCATE(sim%b1_f_params(size(b1_f_params)),ierr)
-   SLL_ALLOCATE(sim%b2_f_params(size(b2_f_params)),ierr)
-   SLL_ALLOCATE(sim%c_f_params(size(c_f_params)),ierr)
-
-   sim%a11_f_params(:) = a11_f_params
-   sim%a12_f_params(:) = a12_f_params
-   sim%a21_f_params(:) = a21_f_params
-   sim%a22_f_params(:) = a22_f_params
-   sim%b1_f_params(:) = b1_f_params
-   sim%b2_f_params(:) = b2_f_params
-   sim%c_f_params(:) = c_f_params
-
-   call sim%interp_phi%initialize( &
-        sim%mesh2d_x%num_cells1 +1, &
-        sim%mesh2d_x%num_cells2 +1, &
-        sim%mesh2d_x%eta1_min, &
-        sim%mesh2d_x%eta1_max, &
-        sim%mesh2d_x%eta2_min, &
-        sim%mesh2d_x%eta2_max, &
-        sim%bc_left, &
-        sim%bc_right, &
-        sim%bc_bottom, &
-        sim%bc_top, &
-        sim%spline_degree_eta1, &
-        sim%spline_degree_eta2)
-
-   call sim%interp_rho%initialize( &
-        sim%mesh2d_x%num_cells1 +1, &
-        sim%mesh2d_x%num_cells2 +1, &
-        sim%mesh2d_x%eta1_min, &
-        sim%mesh2d_x%eta1_max, &
-        sim%mesh2d_x%eta2_min, &
-        sim%mesh2d_x%eta2_max, &
-        sim%bc_left, &
-        sim%bc_right, &
-        sim%bc_bottom, &
-        sim%bc_top, &
-        sim%spline_degree_eta1, &
-        sim%spline_degree_eta2)
+    sim%a11_f_params(:) = a11_f_params
+    sim%a12_f_params(:) = a12_f_params
+    sim%a21_f_params(:) = a21_f_params
+    sim%a22_f_params(:) = a22_f_params
+    sim%b1_f_params(:)  = b1_f_params
+    sim%b2_f_params(:)  = b2_f_params
+    sim%c_f_params(:)   = c_f_params
+    sim%elec_field_ext_f_params(:) = elec_field_ext_f_params
+    
+    call sim%interp_phi%initialize( &
+         sim%mesh2d_x%num_cells1 +1, &
+         sim%mesh2d_x%num_cells2 +1, &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%eta1_max, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%eta2_max, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%spline_degree_eta1, &
+         sim%spline_degree_eta2)
+    
+    call sim%interp_rho%initialize( &
+         sim%mesh2d_x%num_cells1 +1, &
+         sim%mesh2d_x%num_cells2 +1, &
+         sim%mesh2d_x%eta1_min, &
+         sim%mesh2d_x%eta1_max, &
+         sim%mesh2d_x%eta2_min, &
+         sim%mesh2d_x%eta2_max, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%spline_degree_eta1, &
+         sim%spline_degree_eta2)
   end subroutine initialize_4d_qns_general
 
 
@@ -390,6 +404,8 @@ contains
     class(sll_scalar_field_2d_base), pointer              :: b1_field_vect
     class(sll_scalar_field_2d_base), pointer              :: b2_field_vect
     class(sll_scalar_field_2d_base), pointer              :: c_field
+    class(sll_scalar_field_2d_base), pointer              :: elec_field_ext_1
+    class(sll_scalar_field_2d_base), pointer              :: elec_field_ext_2
     class(sll_scalar_field_2d_discrete_alt), pointer      :: rho
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(:), allocatable :: send_buf
@@ -508,7 +524,28 @@ contains
          sim%bc_bottom, &
          sim%bc_top, &
          sim%c_f_params)
-   
+
+    elec_field_ext_1 => new_scalar_field_2d_analytic_alt( &
+         sim%elec_field_ext_1, &
+         "E1_ext", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%elec_field_ext_f_params )
+
+    
+    elec_field_ext_2 => new_scalar_field_2d_analytic_alt( &
+         sim%elec_field_ext_2, &
+         "E2_ext", &
+         sim%transfx, &
+         sim%bc_left, &
+         sim%bc_right, &
+         sim%bc_bottom, &
+         sim%bc_top, &
+         sim%elec_field_ext_f_params )
+
 
     SLL_ALLOCATE(phi_values(nc_x1+1,nc_x2+1),ierr)
     phi_values(:,:) = 0.0_f64
@@ -1119,6 +1156,7 @@ contains
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
+                alpha3 = alpha3 -sim%dt*elec_field_ext_1%value_at_point(eta1,eta2)
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
@@ -1132,7 +1170,7 @@ contains
              end do
           end do
        end do
-
+       
        !print*, 'energy total', efield_energy_total
        !efield_energy_total = sqrt(efield_energy_total)
        
@@ -1152,6 +1190,7 @@ contains
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
+                alpha4 = alpha4 -sim%dt*elec_field_ext_2%value_at_point(eta1,eta2)
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &

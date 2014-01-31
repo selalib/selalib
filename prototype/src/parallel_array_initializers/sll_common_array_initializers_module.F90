@@ -1110,4 +1110,79 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     
   end function sll_periodic_periodic_gaussian2002_initializer_4d
 
+
+
+ !---------------------------------------------------------------------------
+  !
+  !                         Gaussian beam 4d initializer
+  !
+  ! 4D distribution in [0,1]X[0,1][-9,9]X[-9,9]  with the property of being 
+  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
+  !
+  ! f(x,y,vx,vy) = n0/ vth^2  exp(-0.5*((x-xc)^2+(y-yc)^2)/xth^2)/ (2*sll_pi*sigma_x)
+  !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2)/vth^2)/ (2*sll_pi*sigma_v)
+  !                          
+  !  This function is described in the article of Besse and Sonnendrucker 2005
+  ! 'Semi‐Lagrangian Schemes for the Two‐Dimensional Vlasov‐Poisson System on
+  !   Unstructured Meshes'
+  !
+  ! It is meant to be used in the intervals:
+  ! x:  [ 0,1]
+  ! y:  [ 0,1]
+  ! vx: [-9,9]
+  ! vy: [-9,9]
+  
+  ! convention for the params array:
+  ! params(1) = vth
+  ! params(2) = xth
+  ! params(3) = sigma_x
+  ! params(4) = sigma_v
+  ! params(5) = vxc
+  ! params(6) = vyc
+  ! params(7) = xc
+  ! params(8) = yc
+  ! params(9) = n0
+  !---------------------------------------------------------------------------
+  
+  function sll_gaussian_beam_initializer_4d( x, y, vx, vy, params ) &
+       result(val)
+    
+    sll_real64 :: val
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: vxc
+    sll_real64 :: vyc
+    sll_real64 :: sigma_x
+    sll_real64 :: sigma_v
+    sll_real64 :: xc,yc
+    sll_real64 :: vt,xt,n0
+    
+    if( .not. present(params) ) then
+       print *, 'sll_gaussian_initializer_4d, error: the params array must ', &
+            'be passed: ', &
+            'params(1) = vt, params(2) = xt, params(3) = sigma_x, params(4) = sigma_v',&
+            ' params(5) = vxc, params(6) = vyc, params(7) = xc, params(8) = yc, params(9) = n0'
+       stop
+    end if
+    
+    vt      = params(1)
+    xt      = params(2)
+    sigma_x = params(3)
+    sigma_v = params(4) 
+    vxc     = params(5)
+    vyc     = params(6)
+    xc      = params(7)
+    yc      = params(8)
+    n0      = params(9)
+    
+    
+    val = (n0/(vt*vt))*exp(-0.5*((x-xc)*(x-xc)+(y-yc)*(y-yc))/(xt*xt))/ (2*sll_pi*sigma_x) &
+         * exp(-0.5*((vx-vxc)*(vx-vxc)+(vy-vyc)*(vy-vyc))/(vt*vt))/ (2*sll_pi*sigma_v)
+    
+  end function sll_gaussian_beam_initializer_4d
+
 end module sll_common_array_initializers_module

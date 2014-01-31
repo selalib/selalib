@@ -24,11 +24,14 @@ program qns_4d_general
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
+  sll_real64, dimension(1:2) :: elec_field_ext_params
   sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
   sll_real64, dimension(1) :: f_zero_params
   sll_real64, dimension(1) :: f_one_params
   sll_real64, dimension(1) :: f_minus_one_params
   sll_real64, dimension(1) :: f_epsi_params
+  sll_real64, external :: electric_field_ext_1
+  sll_real64, external :: electric_field_ext_2
 
 
   print *, 'Booting parallel environment...'
@@ -108,12 +111,7 @@ program qns_4d_general
   landau_params(3) = mx%eta2_min      !eta2_min
   landau_params(4) = mx%eta2_max
   landau_params(5) = 0.05     !eps
-!!$  gaussian_params(1) = 2.0*sll_pi !xc
-!!$  gaussian_params(2) = 2.0*sll_pi !yc
-!!$  gaussian_params(3) = 0.0        !vxc
-!!$  gaussian_params(4) = 0.0        !vyc
-!!$  gaussian_params(5) = 1.0        !vxc
-!!$  gaussian_params(6) = 0.0        !vyc
+
 !!$
 
   !! 2002 et 2009 sll_periodic_periodic_gaussian2009_initializer_4d   
@@ -126,6 +124,18 @@ program qns_4d_general
   landau_params(6) = 0.0_f64     !eps
   landau_params(7) = 0.05_f64     !eps
   landau_params(8) = 1._f64     !eps
+
+  ! sll_gaussian_beam_initializer_4d parameters
+
+  landau_params(1) = 1.0_f64!vth
+  landau_params(2) = mx%eta1_max!xth
+  landau_params(3) = 1.0_f64!sigma_x
+  landau_params(4) = 1.0_f64!sigma_v
+  landau_params(5) = 0.0_f64!vxc
+  landau_params(6) = 0.0_f64!vyc
+  landau_params(7) = 0.0_f64!xc
+  landau_params(8) = 0.0_f64!yc
+  landau_params(9) = 1.0_f64!n0
   
   ! initialize simulation object with the above parameters
   call initialize_4d_qns_general( &
@@ -133,7 +143,7 @@ program qns_4d_general
        mx, &
        mv, &
        transformation_x, &
-       sll_periodic_periodic_gaussian2002_initializer_4d, &
+       sll_gaussian_beam_initializer_4d, &
        landau_params, &
        func_one,  &  ! a11
        f_one_params, &
@@ -158,7 +168,10 @@ program qns_4d_general
        SLL_PERIODIC, &
        SLL_PERIODIC, &
        SLL_PERIODIC, &
-       SLL_PERIODIC )
+       SLL_PERIODIC, &
+       electric_field_ext_1,&
+       electric_field_ext_2,&
+       elec_field_ext_params)
 
 
 !  ! define the values of the parameters for the landau initializer
@@ -223,6 +236,22 @@ function func_epsi( eta1, eta2, params ) result(res)
   res = 0.00001_8
 end function func_epsi
 
+function electric_field_ext_1(x,y,params) result(res)
+  real(8), intent(in) :: x
+  real(8), intent(in) :: y
+  real(8), dimension(:), intent(in) :: params
+  real(8) :: res
+  res = params(1)*x
+end function electric_field_ext_1
+
+
+function electric_field_ext_2(x,y,params) result(res)
+  real(8), intent(in) :: x
+  real(8), intent(in) :: y
+  real(8), dimension(:), intent(in) :: params
+  real(8) :: res
+  res = params(2)*y
+end function electric_field_ext_2
 
 
 
