@@ -644,8 +644,8 @@ contains ! *******************************************************************
     SLL_ALLOCATE(rho_at_gauss(es%num_cells1*num_pts_g1,es%num_cells2*num_pts_g2),ierr)
     rho_at_gauss(:,:) = 0.0_f64
     
-    SLL_ALLOCATE(rho_coeff_1d((es%num_cells1+1)*(es%num_cells2+1)),ierr)
-    SLL_ALLOCATE(resul_rho_1d(size(es%rho_vec)),ierr)
+    SLL_ALLOCATE(rho_coeff_1d(size(es%full_masse,2)),ierr)
+    SLL_ALLOCATE(resul_rho_1d(size(es%full_masse,1)),ierr)
     M_rho_loc     = 0.0_f64
     es%rho_vec(:) = 0.0_f64
     rho_coeff_1d  = 0.0_f64
@@ -718,7 +718,7 @@ contains ! *******************************************************************
           do j=1,es%num_cells2+1
              do i=1,es%num_cells1+1
                 
-                cell_index = i+(es%num_cells1+1)*(j-1)
+                cell_index = i+(es%num_cells1)*(j-1)
                 if(( i< es%num_cells1+1) .and. (j<es%num_cells2+1)) then
                    call build_local_matrices_rho( &
                         es, &
@@ -731,13 +731,13 @@ contains ! *******************************************************************
                    
                    call local_to_global_matrices_rho( &
                         es, &
-                        i+(es%num_cells1)*(j-1), &
+                        cell_index, &
                         i, &
                         j, &
                         M_rho_loc)
                 end if
                 
-                rho_coeff_1d(cell_index) = coeff_rho(i,j)
+                rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
              end do
           end do
 
