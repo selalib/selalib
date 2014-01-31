@@ -26,3 +26,7 @@ Simple advection::
  $ gnuplot f_polar_advection.gnu 
  $ mpirun -np 4 ./examples/parallel_advection
  $ gnuplot f_parallel.gnu 
+
+Vlasov-Poisson in 4d space ::
+
+ $ mpirun -np 4 ./examples/vlasov_poisson_parallel | gnuplot
