@@ -21,8 +21,8 @@ program test_general_elliptic_solver
 
 #define SPLINE_DEG1 3
 #define SPLINE_DEG2 3
-#define NUM_CELLS1  64
-#define NUM_CELLS2  64
+#define NUM_CELLS1  10
+#define NUM_CELLS2  10
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
