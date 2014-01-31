@@ -1541,13 +1541,13 @@ contains ! *******************************************************************
                      S_b2_loc( b, bprime)
                 
 
-                index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + j
-                index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2 + nn
+                index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
+                index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2 + mm
                 index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
-                es%local_to_global_spline_indices_source(bprime,cell_index)= index
+                es%local_to_global_spline_indices_source(b,cell_index)= index
     
 
-                full_Matrix(x,index) = full_Matrix(x,index) + Source_loc(bprime,b)
+                full_Matrix(y,index) = full_Matrix(y,index) + Source_loc(b,bprime)
                 ! elt_masse = Masse_loc(b,bprime)
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
