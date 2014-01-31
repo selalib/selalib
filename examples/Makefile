@@ -9,10 +9,12 @@ HDF5_LIBRARIES = -L${HDF5_LIBDIR} -lhdf5_fortran -lhdf5
 MPIF90 = mpif90
    
 F90FLAGS = -I${SLL_ROOT}/include/selalib ${OPT}
-LDFLAGS = ${F90FLAGS} -L${SLL_ROOT}/lib 
-LIBS = -lselalib -ldfftpack ${HDF5_LIBRARIES}
+LDFLAGS = ${F90FLAGS} 
+LIBS = ${SLL_ROOT}/lib/libselalib.a \
+       ${SLL_ROOT}/lib/libdfftpack.a \
+       ${HDF5_LIBRARIES}
 
-PROGS = landau polar_advection landau_parallel
+PROGS = landau polar_advection landau_parallel parallel_advection
 all: ${PROGS}
 
 landau: landau.F90
@@ -24,11 +26,14 @@ polar_advection: polar_advection.F90
 landau_parallel: landau_parallel.F90
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
+parallel_advection: parallel_advection.F90
+	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
+
 run:
 	./landau | gnuplot
  
 clean:
-	rm -f $(PROG) *.o *.mod *.dat *.gnu
+	rm -f *.exe *.o *.mod *.dat *.gnu
 
 .SUFFIXES: $(SUFFIXES) .F90
 

@@ -42,11 +42,11 @@ program landau_parallel
   sll_real64, parameter :: x_min = 0.0_f64                 !
   sll_real64, parameter :: x_max = 4.*sll_pi               !
   sll_real64, parameter :: v_min = - 6.0_f64               !
-  sll_real64, parameter :: v_max = + 6.0_f64               !
+  sll_real64, parameter :: v_max = + 6.0_f64                 !
   sll_real64, parameter :: delta_x = (x_max-x_min)/nc_x    !
   sll_real64, parameter :: delta_v = (v_max-v_min)/nc_v    !
   sll_real64, parameter :: delta_t = 0.05_f64              !
-  sll_int32,  parameter :: n_step  = 1000                  !
+  sll_int32,  parameter :: n_step  = 1000                   !
   sll_real64, dimension(n_step) :: nrj                     !
                                                            !
 !###########################################################

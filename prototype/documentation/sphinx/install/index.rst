@@ -14,5 +14,15 @@ Build the library and run examples::
  $ cmake .
  $ make 
  $ make examples
- $ ./examples/landau | gnuplot
 
+Landau damping::
+
+ $ ./examples/landau | gnuplot
+ $ mpirun -np 4 ./examples/landau_parallel | gnuplot
+
+Simple advection::
+
+ $ ./examples/polar_advection
+ $ gnuplot f_polar_advection.gnu 
+ $ mpirun -np 4 ./examples/parallel_advection
+ $ gnuplot f_parallel.gnu 

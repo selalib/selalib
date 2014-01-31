@@ -23,6 +23,7 @@
 
 use sll_collective
 use sll_remapper
+use sll_gnuplot_parallel
 
 #define MPI_MASTER 0
 
