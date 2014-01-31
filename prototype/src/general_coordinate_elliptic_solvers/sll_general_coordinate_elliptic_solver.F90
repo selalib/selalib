@@ -339,7 +339,7 @@ contains ! *******************************************************************
     SLL_ALLOCATE(es%tab_index_coeff1(num_cells_eta1*(spline_degree_eta1+2)),ierr)
     SLL_ALLOCATE(es%tab_index_coeff2(num_cells_eta2*(spline_degree_eta2+2)),ierr)
      
-    SLL_ALLOCATE(es%full_masse(es%total_num_splines_eta1*es%total_num_splines_eta2,(es%num_cells1+1)*(es%num_cells2+1)),ierr)
+    SLL_ALLOCATE(es%full_masse(vec_sz,(es%num_cells1+1)*(es%num_cells2+1)),ierr)
     es%full_masse=0.0_f64
   end subroutine initialize_general_elliptic_solver
   
