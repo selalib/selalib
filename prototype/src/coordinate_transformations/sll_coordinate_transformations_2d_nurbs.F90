@@ -113,7 +113,7 @@ contains
     SLL_ALLOCATE(res,ierr)
     call read_from_file_2d_nurbs( res, filename )
   end function new_nurbs_2d_transformation_from_file
-!!$
+
   subroutine read_from_file_2d_nurbs( transf, filename )
     use sll_arbitrary_degree_spline_interpolator_2d_module
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
