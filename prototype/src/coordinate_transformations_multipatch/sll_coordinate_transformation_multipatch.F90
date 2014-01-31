@@ -57,10 +57,21 @@ module sll_coordinate_transformation_multipatch_module
      sll_int32 :: number_patches
      character(len=128), dimension(:), pointer :: patch_names
      sll_int32, dimension(:,:), pointer :: connectivities
-     class(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer ::&
+     class(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
           transfs
-!   contains
-!     procedure, pass(mp) :: read_from_file => read_from_file_multipatch_2d
+   contains
+     procedure, pass :: x1_node => x1_node_multipatch_2d
+     procedure, pass :: x2_node => x2_node_multipatch_2d
+     procedure, pass :: jacobian_at_node => jacobian_at_node_multipatch_2d
+     procedure, pass :: x1 => x1_multipatch_2d
+     procedure, pass :: x2 => x2_multipatch_2d
+     procedure, pass :: x1_at_cell => x1_at_cell_multipatch_2d
+     procedure, pass :: x2_at_cell => x2_at_cell_multipatch_2d
+     procedure, pass :: jacobian_at_cell => jacobian_at_cell_multipatch_2d
+     procedure, pass :: jacobian => jacobian_multipatch_2d
+     procedure, pass :: jacobian_matrix => jacobian_matrix_multipatch_2d
+     procedure, pass :: inverse_jacobian_matrix => inverse_jm_multipatch_2d
+     procedure, pass :: write_to_file => write_to_file_multipatch_2d
   end type sll_coordinate_transformation_multipatch_2d
 
   interface initialize_from_file
@@ -158,6 +169,130 @@ contains
     res(1) = mp%connectivities(patch+1,2*face+1)
     res(2) = mp%connectivities(patch+1,2*face+2)
   end function get_connectivity
+
+  function x1_node_multipatch_2d( mp, i, j, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%x1_at_node(i,j)
+  end function x1_node_multipatch_2d
+
+  function x2_node_multipatch_2d( mp, i, j, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%x2_at_node(i,j)
+  end function x2_node_multipatch_2d
+
+  function jacobian_at_node_multipatch_2d( mp, i, j, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%jacobian_at_node(i,j)
+  end function jacobian_at_node_multipatch_2d
+
+  function x1_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%x1(eta1,eta2)
+  end function x1_multipatch_2d
+
+  function x2_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%x2(eta1,eta2)
+  end function x2_multipatch_2d
+
+  function x1_at_cell_multipatch_2d( mp, i, j, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%x1_at_cell(i,j)
+  end function x1_at_cell_multipatch_2d
+
+  function x2_at_cell_multipatch_2d( mp, i, j, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%x2_at_cell(i,j)
+  end function x2_at_cell_multipatch_2d
+
+  function jacobian_at_cell_multipatch_2d( mp, i, j, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)   :: i
+    sll_int32, intent(in)   :: j
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%jacobian_at_cell(i,j)
+  end function jacobian_at_cell_multipatch_2d
+
+  function jacobian_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+    sll_real64 :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%jacobian(eta1,eta2)
+  end function jacobian_multipatch_2d
+
+  function jacobian_matrix_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+    sll_real64, dimension(1:2,1:2) :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%jacobian_matrix(eta1,eta2)
+  end function jacobian_matrix_multipatch_2d
+
+  function inverse_jm_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+    sll_real64, dimension(1:2,1:2) :: val
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_int32, intent(in)   :: patch
+    SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
+    val = mp%transfs(patch)%T%inverse_jacobian_matrix(eta1,eta2)
+  end function inverse_jm_multipatch_2d
+
+  subroutine write_to_file_multipatch_2d( mp, output_format )
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in), optional :: output_format
+    sll_int32 :: i
+    sll_int32 :: np
+    np = mp%number_patches
+    do i=1,np
+       call mp%transfs(i-1)%T%write_to_file( output_format )
+    end do
+    ! it would be nice to add some kind of 'master' file, in such way that
+    ! loading this master with the visualizing program would automatically load
+    ! each patch...
+  end subroutine write_to_file_multipatch_2d
 
   subroutine delete_multipatch_2d( mp )
     type(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
