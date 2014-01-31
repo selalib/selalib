@@ -132,6 +132,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    IF(NOT STDF95)
 
       ADD_SUBDIRECTORY(fields)
+      ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
       ADD_SUBDIRECTORY(discontinuous_galerkin) 
       ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
       ADD_SUBDIRECTORY(poisson_solvers)
