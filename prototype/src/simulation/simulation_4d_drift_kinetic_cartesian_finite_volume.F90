@@ -324,6 +324,8 @@ contains
          sim%mesh4d%delta_eta1, &
          sim%mesh4d%eta2_min+(global_indices(2)-1)*sim%mesh4d%delta_eta2, &
          sim%mesh4d%delta_eta2, &
+         size(plotf2d,1), &
+         size(plotf2d,2), &
          plotf2d, &
          "plotf2d", &
          0, &
