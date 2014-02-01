@@ -432,22 +432,26 @@ contains
          transf_x1_x2=sim%transfx )
 
     print *, 'initialized the distribution function'
-
+    call compute_local_sizes(sim%sequential_x3x4, loc_sz_x1, loc_sz_x2, &
+         loc_sz_x3, loc_sz_x4 )
+    call test_4d_array_values( sim%f_x3x4, loc_sz_x1, loc_sz_x2, &
+         loc_sz_x3, loc_sz_x4, sim%my_rank )
     delta1 = sim%mesh2d_x%delta_eta1
     delta2 = sim%mesh2d_x%delta_eta2
     delta3 = sim%mesh2d_v%delta_eta1
     delta4 = sim%mesh2d_v%delta_eta2
-
+    call compute_local_sizes(sim%sequential_x3x4,loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4)
+    sim%rho_split(:,:) = 0.0_f64
     call compute_charge_density( sim%mesh2d_x,           &
                                  sim%mesh2d_v,           &
-                                 size(sim%f_x3x4,1),     &
-                                 size(sim%f_x3x4,2),     &
+                                 loc_sz_x1,     &
+                                 loc_sz_x2,     &
                                  sim%f_x3x4,             &
                                  sim%partial_reduction,  &
                                  sim%rho_split )
 
     print *, 'computed charge density'
-
+    !print *, sim%my_rank, 'split: ', sim%rho_split
     sim%split_to_seqx1 => &
          NEW_REMAP_PLAN(sim%split_rho_layout, sim%rho_seq_x1, sim%rho_split)
     call apply_remap_2D( sim%split_to_seqx1, sim%rho_split, sim%rho_x1 )
@@ -459,6 +463,8 @@ contains
 ! This program is crashing at this point. Why is 
 !    if(sim%my_rank == 0) then
     call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+    !print *, sim%my_rank, 'sizes of rho_x1: ',  size(sim%rho_x1,1), size(sim%rho_x1,2)
+!print *, sim%my_rank, 'rho_x1', sim%rho_x1
 
        call sll_gnuplot_rect_2d_parallel( &
             sim%mesh2d_x%eta1_min + &
@@ -1101,14 +1107,14 @@ contains
 
     sll_int32 :: i, j, k, l
     
-    numpts3 = mv%num_cells1
-    numpts4 = mv%num_cells2
+    numpts3 = mv%num_cells1+1
+    numpts4 = mv%num_cells2+1
     delta3  = mv%delta_eta1
     delta4  = mv%delta_eta2
 
     partial(:,:,:) = 0.0
-    
-    ! This expects partial to be already initialized to zero!!!
+    ! rho must be initialized to zero unless multiple distribution functions
+    ! are used.
     do k=1,numpts3
        do j=1,numpts2
           do i=1,numpts1
@@ -1121,7 +1127,8 @@ contains
           end do
        end do
     end do
-    
+!    partial(i,j,k) = sum(f(i,j,k,:))
+!    partial = partial*delta4    
     ! Carry out the final reduction on x3. Note that rho is not initialized
     ! to zero since it may already have the partial charge accumulation from
     ! other species.
@@ -1136,6 +1143,9 @@ contains
           end do
        end do
     end do
+
+!    rho(i,j) = sum(partial(i,j,:))
+!    rho = rho*delta3
   end subroutine compute_charge_density
   
 !!$  ! Super-ugly and ad-hoc but this needs to be done if we use the last point
@@ -1491,6 +1501,24 @@ contains
 !!$
 !!$  end subroutine compute_electric_field_energy
 
+  subroutine test_4d_array_values( array, dim1, dim2, dim3, dim4, rank )
+    sll_real64, dimension(:,:,:,:), intent(in) :: array
+    sll_int32, intent(in) :: dim1, dim2, dim3, dim4
+    sll_int32 :: i,j,k,l,rank
+
+    do l=1,dim4
+       do k=1, dim3
+          do j=1, dim2
+             do i=1, dim1
+                if(array(i,j,k,l) < 1e-17) then
+                   print *, 'rank: ', rank, 'uninitialized value found: ', &
+                        array(i,j,k,l)
+                end if
+             end do
+          end do
+       end do
+    end do
+  end subroutine test_4d_array_values
 
 
 end module sll_simulation_4d_vlasov_poisson_general
