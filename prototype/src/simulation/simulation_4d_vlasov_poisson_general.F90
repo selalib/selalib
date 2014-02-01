@@ -456,7 +456,10 @@ contains
          local_to_global_2D( sim%rho_seq_x1, (/1, 1/) )
 
     print *, 'proceeding to write rho_x1 to a file'
-    if(sim%my_rank == 0) then
+! This program is crashing at this point. Why is 
+!    if(sim%my_rank == 0) then
+    call compute_local_sizes_2d( sim%rho_seq_x1, loc_sz_x1, loc_sz_x2 )
+
        call sll_gnuplot_rect_2d_parallel( &
             sim%mesh2d_x%eta1_min + &
                (global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
@@ -464,12 +467,13 @@ contains
             sim%mesh2d_x%eta2_min + &
             (global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
             sim%mesh2d_x%delta_eta2, &
+            loc_sz_x1, loc_sz_x2, &
             sim%rho_x1, &
             "rho_x1", &
             0, &
             ierr )
        print *, 'printed rho_x1'
-    end if
+ !   end if
 
     ! With the distribution function initialized in at least one configuration,
     ! we can proceed to carry out the computation of the electric potential.
@@ -667,6 +671,8 @@ contains
           sim%mesh2d_x%delta_eta1, &
           sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
           sim%mesh2d_x%delta_eta2, &
+          size(sim%rho_x1,1), &
+          size(sim%rho_x1,2), &
           sim%rho_x1, &
           "rho_x1", &
           itime, &
@@ -686,6 +692,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%phi_x1,1), &
+         size(sim%phi_x1,2), &
          sim%phi_x1, &
          "phi_x1", &
          itime, &
