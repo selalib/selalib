@@ -521,7 +521,7 @@ contains ! *******************************************************************
     Source_loc(:,:) = 0.0_f64
     
     full_Matrix(:,:) = 0.0_f64
-    es%full_masse = 0.0_f64
+    es%full_masse(:,:) = 0.0_f64
     !call set_time_mark(t0)
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -719,7 +719,7 @@ contains ! *******************************************************************
              do i=1,es%num_cells1+1
                 
                 cell_index = i+(es%num_cells1)*(j-1)
-                if(( i< es%num_cells1+1) .and. (j<es%num_cells2+1)) then
+                if(( i<= es%num_cells1) .and. (j<=es%num_cells2)) then
                    call build_local_matrices_rho( &
                         es, &
                         i, &
@@ -747,7 +747,7 @@ contains ! *******************************************************************
 !!$          print*,'diff', es%rho_vec-resul_rho_1d
 !!$          print*, 'vrai',es%rho_vec
 !!$          print*, 'faux', resul_rho_1d
-!!$          print*, size(es%full_masse,1),size(es%full_masse,2),size(rho_coeff_1d),size(resul_rho_1d)
+          print*, size(es%full_masse,1),size(es%full_masse,2),size(rho_coeff_1d),size(resul_rho_1d)
           resul_rho_1d = Matmul(es%full_masse,rho_coeff_1d)
           print*,'diff', es%rho_vec-resul_rho_1d
           print*, 'vrai',es%rho_vec
@@ -1001,7 +1001,7 @@ contains ! *******************************************************************
     !    M_rho_loc(:) = 0.0
     M_c_loc(:,:)      = 0.0
     K_a11_loc(:,:)    = 0.0
-    Source_loc(:,:)   = 0.0
+    Source_loc(:,:)   = 0.0_f64
     K_a12_loc(:,:)    = 0.0
     K_a21_loc(:,:)    = 0.0
     K_a22_loc(:,:)    = 0.0
