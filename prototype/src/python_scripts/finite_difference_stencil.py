@@ -72,7 +72,7 @@ def main ():
     b = [ 0 if i != deg else 1 for i in range(0,rank)]
     # build the 'A' matrix:
     A = [ [(i**row)/m.factorial(row) for i in dists] for row in range(0,rank)]
-    print(A)
+    # print(A)
     coeffs = numpy.linalg.solve(A,b)
     print(coeffs)
 
