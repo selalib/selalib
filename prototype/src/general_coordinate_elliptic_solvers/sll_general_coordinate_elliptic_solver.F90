@@ -746,8 +746,9 @@ contains ! *******************************************************************
 !!$          print*,'diff', es%rho_vec-resul_rho_1d
 !!$          print*, 'vrai',es%rho_vec
 !!$          print*, 'faux', resul_rho_1d
-          print*, size(es%full_masse,1),size(es%full_masse,2),size(rho_coeff_1d),size(resul_rho_1d)
+          print*, size(es%full_masse,1),size(es%full_masse,2),size(rho_coeff_1d),size(resul_rho_1d),size(es%rho_vec)
           print*, 'hello',es%full_masse(1,:)
+          print*, 'hah',rho_coeff_1d
           resul_rho_1d = Matmul(es%full_masse,rho_coeff_1d)
           print*,'diff', es%rho_vec-resul_rho_1d
           print*, 'vrai',es%rho_vec
