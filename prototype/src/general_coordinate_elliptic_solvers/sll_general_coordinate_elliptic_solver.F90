@@ -568,7 +568,6 @@ contains ! *******************************************************************
                M_b_vect_loc, &
                S_b1_loc, &
                S_b2_loc, &
-               es%full_masse,&
                es%masse,&
                es%stiff,&
                Source_loc)
@@ -748,6 +747,7 @@ contains ! *******************************************************************
 !!$          print*, 'vrai',es%rho_vec
 !!$          print*, 'faux', resul_rho_1d
           print*, size(es%full_masse,1),size(es%full_masse,2),size(rho_coeff_1d),size(resul_rho_1d)
+          print*, 'hello',es%full_masse(1,:)
           resul_rho_1d = Matmul(es%full_masse,rho_coeff_1d)
           print*,'diff', es%rho_vec-resul_rho_1d
           print*, 'vrai',es%rho_vec
@@ -928,7 +928,7 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base), pointer :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     !sll_real64 :: epsi
-    sll_real64, dimension(:,:), intent(out) :: Source_loc
+    sll_real64, dimension(:,:), intent(inout) :: Source_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
     sll_real64, dimension(:,:), intent(out) :: K_a11_loc
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
@@ -1420,7 +1420,6 @@ contains ! *******************************************************************
        M_b_vect_loc, &
        S_b1_loc, &
        S_b2_loc, &
-       full_Matrix,&
        Masse_tot,&
        Stiff_tot,&
        Source_loc)
@@ -1442,7 +1441,6 @@ contains ! *******************************************************************
     
     !  Correspond to the full Matrix of linear system 
     !  It is not necessary to keep it  
-    sll_real64, dimension(:,:), intent(inout) :: full_Matrix
     sll_real64, dimension(:), intent(in) :: Masse_loc
     sll_real64, dimension(:), intent(in) :: Stiff_loc
     sll_real64, dimension(:), intent(inout) :: Masse_tot
@@ -1547,7 +1545,7 @@ contains ! *******************************************************************
                 es%local_to_global_spline_indices_source(b,cell_index)= index
     
 
-                full_Matrix(y,index) = full_Matrix(y,index) + Source_loc(b,bprime)
+                es%full_masse(y,index) = es%full_masse(y,index) + Source_loc(b,bprime)
                 ! elt_masse = Masse_loc(b,bprime)
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
