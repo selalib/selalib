@@ -57,7 +57,7 @@ module sll_coordinate_transformation_multipatch_module
      sll_int32 :: number_patches
      character(len=128), dimension(:), pointer :: patch_names
      sll_int32, dimension(:,:), pointer :: connectivities
-     class(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
+     type(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
           transfs
    contains
      procedure, pass :: x1_node => x1_node_multipatch_2d
