@@ -1,7 +1,7 @@
 !-----------------------------------------------------------------------
       subroutine getu (n,a,ja,ia,ao,jao,iao)
       integer n, ia(*), ja(*), iao(*), jao(*)
-      real*8 a(*), ao(*)
+      real(8) a(*), ao(*)
 !------------------------------------------------------------------------
 ! this subroutine extracts the upper triangular part of a matrix
 ! and writes the result ao, jao, iao. The routine is in place in
@@ -23,7 +23,7 @@
 !
 !------------------------------------------------------------------------
 ! local variables
-      real*8 t
+      real(8) t
       integer ko, k, i, kdiag, kfirst
       ko = 0
       do  7 i=1, n
