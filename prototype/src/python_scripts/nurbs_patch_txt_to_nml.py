@@ -195,12 +195,12 @@ def main ():
                         elif linetemp[1] == "knots":
                             if knots1_is_written == False:
                                 num_slots += 1           # add 1 to slot count
-                                currently_reading = "knots"
+                                currently_reading = "knots1"
                                 writefile.write("&knots_1\n")
                                 continue
                             elif knots1_is_written == True:
                                 num_slots += 1           # add 1 to slot count
-                                currently_reading = "knots"
+                                currently_reading = "knots2"
                                 writefile.write("&knots_2\n")
                                 continue
                         elif linetemp[1] == "points":
@@ -240,30 +240,23 @@ def main ():
                     writefile.write("/" + "\n\n")
                     currently_reading = ""
                     continue
-                elif currently_reading == "knots":
-                    if linetemp[0] == "#":  # done reading this set of knots
-                        if knots1_is_written == False:  # this is the first set
-                            logical_mesh_locations1=remove_duplicates(knots1)
-                            tmp = " ".join(knots1) # one space between elems
-                            writefile.write("    knots1 = "+ tmp + "\n")
-                            writefile.write("/" + "\n\n")
-                            # we're still reading knots
-                            knots1_is_written = True
-                            continue
-                        else: # this is the second set of knots
-                            logical_mesh_locations2=remove_duplicates(knots2)
-                            tmp = " ".join(knots2) # one space between elems
-                            writefile.write("    knots2 = "+ tmp + "\n")
-                            writefile.write("/" + "\n\n")
-                            currently_reading = "points" # next field
-                            continue
-                    else:       # just reading knots data
-                        if knots1_is_written == False: 
-                            knots1.extend(linetemp)
-                            continue
-                        else:
-                            knots2.extend(linetemp)
-                            continue
+                elif currently_reading == "knots1":
+                    knots1.extend(linetemp)
+                    logical_mesh_locations1=remove_duplicates(knots1)
+                    tmp = " ".join(knots1) # one space between elems
+                    writefile.write("    knots1 = "+ tmp + "\n")
+                    writefile.write("/" + "\n\n")
+                    currently_reading = ""
+                    knots1_is_written = True
+                    continue
+                elif currently_reading == "knots2":
+                    knots2.extend(linetemp) 
+                    logical_mesh_locations2=remove_duplicates(knots2)
+                    tmp = " ".join(knots2) # one space between elems
+                    writefile.write("    knots2 = "+ tmp + "\n")
+                    writefile.write("/" + "\n\n")
+                    currently_reading = ""
+                    continue
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
                         writefile.write("    control_pts1 = "+" ".join(x1)+"\n")
