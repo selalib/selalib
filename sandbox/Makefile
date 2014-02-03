@@ -46,7 +46,7 @@ poisson_2d_parallel: poisson_2d_parallel.o
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
 clean:
-	rm -f *.exe *.o *.mod *.dat *.gnu
+	rm -rf *.exe *.o *.mod *.dat *.gnu *.exe.dSYM 00* fort.*
 
 .SUFFIXES: $(SUFFIXES) .F90
 
