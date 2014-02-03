@@ -149,7 +149,7 @@ REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(INOUT)  :: apr_y
 INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
 !local var
 INTEGER :: li_i, li_k_1, li_k_2
-INTEGER*4, DIMENSION(3) :: lpi_param
+INTEGER, DIMENSION(3) :: lpi_param
 
 IF (ai_transa==1) THEN
 PRINT *, 'CSR_GEMV: not yet implemented'

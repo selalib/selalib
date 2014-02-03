@@ -1,6 +1,6 @@
 !-----------------------------------------------------------------------
       subroutine getdia (nrow,ncol,job,a,ja,ia,len,diag,idiag,ioff)
-      real*8 diag(*),a(*)
+      real(8) diag(*),a(*)
       integer nrow, ncol, job, len, ioff, ia(*), ja(*), idiag(*)
 !-----------------------------------------------------------------------
 ! this subroutine extracts a given diagonal from a matrix stored in csr
