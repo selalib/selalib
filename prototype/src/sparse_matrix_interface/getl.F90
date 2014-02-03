@@ -1,7 +1,7 @@
 !------------------------------------------------------------------------
       subroutine getl (n,a,ja,ia,ao,jao,iao)
       integer n, ia(*), ja(*), iao(*), jao(*)
-      real*8 a(*), ao(*)
+      real(8) a(*), ao(*)
 !------------------------------------------------------------------------
 ! this subroutine extracts the lower triangular part of a matrix
 ! and writes the result ao, jao, iao. The routine is in place in
@@ -23,7 +23,7 @@
 !
 !------------------------------------------------------------------------
 ! local variables
-      real*8 t
+      real(8) t
       integer ko, kold, kdiag, k, i
 !
 ! inititialize ko (pointer for output matrix)
