@@ -37,13 +37,13 @@ module SparseMatrix_Module
         module procedure Mult_CSR_Matrix_Vector
     end interface
 
-    interface Mult_MScal
-        module procedure Mult_CSR_Matrix_Scalar
-    end interface
+!    interface Mult_MScal
+!        module procedure Mult_CSR_Matrix_Scalar
+!    end interface
 
-    interface Add_MScal
-        module procedure Add_CSR_Matrix_Scalar
-    end interface
+!    interface Add_MScal
+!        module procedure Add_CSR_Matrix_Scalar
+!    end interface
 
     interface add_MVal
         module procedure add_to_csr_Matrix &
@@ -54,9 +54,9 @@ module SparseMatrix_Module
         module procedure add_csr_Matrix
     end interface
 
-    interface mult_csr_Matrix
-        module procedure mult_csr_Matrix
-    end interface
+!    interface mult_csr_Matrix
+!        module procedure mult_csr_Matrix
+!    end interface
 
     interface eigenval_for_circulant
         module procedure eigenval_for_circulant
