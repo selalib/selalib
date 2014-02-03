@@ -66,6 +66,7 @@ IF(NOT STDF95)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
    ADD_TEST(NAME coordinate_transformation_multipatch_2d 
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMAND test_coordinate_transformation_multipatch_2d)
    SET_TESTS_PROPERTIES(coordinate_transformation_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
