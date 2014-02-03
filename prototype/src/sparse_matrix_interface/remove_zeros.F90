@@ -4,18 +4,18 @@ implicit none
         INTEGER :: NR
         INTEGER :: NC
         INTEGER :: ANNZ        
-        REAL*8, DIMENSION(ANNZ)  :: A
+        REAL(8), DIMENSION(ANNZ)  :: A
         INTEGER, DIMENSION(ANNZ) :: JA
         INTEGER, DIMENSION(NR+1) :: IA
         ! LOCAL VARIABLES
-        REAL*8, DIMENSION(:), POINTER  :: T
+        REAL(8), DIMENSION(:), POINTER  :: T
         INTEGER, DIMENSION(:), POINTER :: IT
         INTEGER, DIMENSION(:), POINTER :: JT
         integer  :: TNNZ
         integer  :: li_i
         integer  :: li_k
         integer  :: li_j
-        REAL*8 :: epsilon        
+        REAL(8) :: epsilon        
 
         epsilon = 1.0e-13
 
