@@ -27,18 +27,15 @@ module sll_gyroaverage_2d_polar
   use sll_boundary_condition_descriptors
 
   implicit none
+
   type sll_plan_gyroaverage_polar
-    
-     !> Domain 
      
      sll_real64          :: eta_min(2)     !< r min et theta min
      sll_real64          :: eta_max(2)     !< r max et theta max
      sll_int32           :: Nc(2)          !< number of cells in r and in theta
      
-     !> Method
-     
      sll_int32           :: N_points          !< number of points on the circle
-     sll_int32           ::	interp_degree(2)  !< degree of interpolation in r and theta
+     sll_int32           :: interp_degree(2)  !< interpolation degrees in r,theta
 
      sll_real64, dimension(:,:), pointer    :: points
      sll_real64, dimension(:,:,:), pointer  :: deriv
@@ -51,71 +48,104 @@ module sll_gyroaverage_2d_polar
      sll_real64, dimension(:,:,:), pointer  :: A_fft
 
   end type sll_plan_gyroaverage_polar
-  
-  !> SLL_GYROAVERAGE_PADE
-  
-! ... 
+
+contains
+
+
+  function new_plan_gyroaverage_polar_hermite(eta_min,eta_max,Nc,N_points,interp_degree,deriv_size) result(this)
+
+    implicit none
+
+    sll_real64, intent(in) :: eta_min(2)
+    sll_real64, intent(in) :: eta_max(2)
+    sll_int32, intent(in)  :: Nc(2)
+    sll_int32, intent(in)  :: N_points  
+    sll_int32, intent(in)  :: interp_degree(2)
+    sll_int32, intent(in)  :: deriv_size
+    type(sll_plan_gyroaverage_polar), pointer :: this
+
+    sll_int32 :: err
+
+    SLL_ALLOCATE(this,err)
+    SLL_ALLOCATE(this%deriv(deriv_size,Nc(1)+1,Nc(2)+1),err)
+    SLL_ALLOCATE(this%points(3,N_points),err)
+       
+    this%eta_min=eta_min
+    this%eta_max=eta_max
+    this%Nc=Nc
+    this%N_points=N_points
+    this%interp_degree=interp_degree
     
-  !> SLL_GYROAVERAGE_HERMITE
+  end function new_plan_gyroaverage_polar_hermite
+  
+  
+  
+  
+  
+  
+  
+  
 
-! subroutine compute_gyroaverage_points_polar_hermite(gyro,f,rho)
-!    type(sll_plan_gyroaverage_polar)  :: gyro
+!subroutine compute_gyroaverage_pade_polar(gyro,f,rho)
+!    type(sll_plan_gyroaverage_polar_pade)  :: gyro
+!    sll_real64,dimension(:,:),allocatable :: fcomp
 !    sll_real64,dimension(:,:),intent(inout) :: f
+!    sll_real64,dimension(:),allocatable :: buf,diagm1,diag,diagp1
 !    sll_real64,intent(in)::rho
-!    sll_int32::i,j,k,ii(2),s
-!    sll_real64::fval,sum_fval,eta_star(2),eta(2),delta_eta(2),x(2)
+!    sll_int32 :: i,j,k
+!    sll_real64::sum_fval,eta_star(2),eta(2),x(2),dr
+!    sll_int32 :: ierr
 !    
-!    fval=0._f64
-!    delta_eta(1)=(gyro%eta_max(1)-gyro%eta_min(1))/real(gyro%N(1),f64)
-!    delta_eta(2)=(gyro%eta_max(2)-gyro%eta_min(2))/real(gyro%N(2),f64)
+!    dr=(gyro%eta_max(1)-gyro%eta_min(1))/real(gyro%Nc(1),f64)
 !    
-!    call hermite_coef_nat_per(f(1:gyro%N(1)+1,1:gyro%N(2)),gyro%deriv,gyro%N,gyro%interp_degree)
+!	SLL_ALLOCATE(buf(2*gyro%Nc(2)+15),ierr)
+!	SLL_ALLOCATE(fcomp(1:gyro%Nc(1)+1,1:gyro%Nc(2)),ierr)
+!	SLL_ALLOCATE(diagm1(1:gyro%Nc(1)+1),ierr)
+!	SLL_ALLOCATE(diag(1:gyro%Nc(1)+1),ierr)
+!	SLL_ALLOCATE(diagp1(1:gyro%Nc(1)+1),ierr)
+!
+!	fcomp(1:gyro%Nc(1)+1,1:gyro%Nc(2))=f(1:gyro%Nc(1)+1,1:gyro%Nc(2))
+!
+!    !*** Perform FFT 1D in theta direction of ***
+!    !***   the system solution                ***
+!	call dffti(gyro%Nc(2),buf)
+!	do i=1,gyro%Nc(1)+1
+!		call dfftf(gyro%Nc(2),fcomp(i,:),buf)
+!	enddo
+!	fcomp=fcomp/real(gyro%Nc(2),f64)
+!
+! 	!***POISSON
+!	do k=1,gyro%Nc(2)
+!	  do i=1,gyro%Nc(1)
+!	    diagm1(i+1)=-(rho(1)**2/4)*(1/dr**2-1/(2*dr*(gyro%eta_min(1)+ &
+!	    	(gyro%eta_max(1)-gyro%eta_min(1))*real(i,f64)/real(gyro%Nc(1),f64))))
+!	    diag(i)=1-(rho(1)**2/4)*(-(2/dr**2)-((floor(k/2._f64)*1._f64)/ &
+!	    	(gyro%eta_min(1)+(gyro%eta_max(1)-gyro%eta_min(1))*real(i-1,f64)/real(gyro%Nc(1),f64)))**2)
+!	    diagp1(i)=-(rho(1)**2/4)*(1/dr**2+1/(2*dr*(gyro%eta_min(1)+ &
+!	    	(gyro%eta_max(1)-gyro%eta_min(1))*real(i-1,f64)/real(gyro%Nc(1),f64))))
+!	  enddo
+!	  diagm1(1)=0._f64
+!	  diagp1(gyro%Nc(1)+1)=0._f64
+!	  diag(1)=1._f64
+!	  diag(gyro%Nc(1)+1)=1._f64
+!	  !***  Dirichlet boundary conditions ***	  
+!	  diagp1(1)=0._f64
+!	  diagm1(gyro%Nc(1)+1)=0._f64
+!	  !***  Neumann boundary conditions ***
+!!	  diagp1(1)=-1._f64
+!!	  diagm1(gyro%Nc(1)+1)=-1._f64
+!	  call solve_tridiag(diagm1,diag,diagp1,fcomp(1:gyro%Nc(1)+1,k),f(1:gyro%Nc(1)+1,k),gyro%Nc(1)+1)
+!	enddo
+!
+!	!*** Perform FFT 1D inverse ***
+!	do i=1,gyro%Nc(1)+1
+!	  call dfftb(gyro%Nc(2),f(i+1,1:gyro%Nc(2)),buf)
+!	enddo
+!         
+!    !*** duplicate periodic value ***
+!    f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
 !    
-!    do j=1,gyro%N(2)
-!     eta(2)=gyro%eta_min(2)+real(j-1,f64)*delta_eta(2)
-!      do i=1,gyro%N(1)+1
-!        eta(1)=gyro%eta_min(1)+real(i-1,f64)*delta_eta(1)       
-!        sum_fval = 0._f64
-!        do k=1,gyro%N_points
-!          x(1) = eta(1)*cos(eta(2))+rho*gyro%points(1,k)
-!          x(2) = eta(1)*sin(eta(2))+rho*gyro%points(2,k)
-!          call localize_polar(x,gyro%eta_min,gyro%eta_max,ii,eta_star,gyro%N)
-!          call interpolate_hermite(gyro%deriv,ii,eta_star,fval,gyro%N)
-!          sum_fval = sum_fval+gyro%points(3,k)*fval
-!        enddo
-!        f(i,j) = sum_fval
-!      enddo
-!    enddo
-!    f(1:gyro%N(1)+1,gyro%N(2)+1)=f(1:gyro%N(1)+1,1)
-!    
-!  end subroutine compute_gyroaverage_points_polar_hermite
+!  end subroutine compute_gyroaverage_pade_polar
 
-  !> SLL_GYROAVERAGE_HERMITE_C1
-  
-! ...    
-
-  !> SLL_GYROAVERAGE_HERMITE_C1_PRECOMPUTE
-  
-! ...    
-  
-  !> SLL_GYROAVERAGE_HERMITE_C1_WITH_INVARIANCE
-  
-! ...    
-
-  !> SLL_GYROAVERAGE_SPLINES
-  
-! ...    
-
-  !> SLL_GYROAVERAGE_SPLINES_PRECOMPUTE
-  
-! ...    
-
-  !> SLL_GYROAVERAGE_SPLINES_WITH_INVARIANCE
-  
-! ...  
-
-  !> SLL_GYROAVERAGE_SPLINES_PRECOMPUTE_WITH_FFT
-  
-! ...  
 
 end module sll_gyroaverage_2d_polar
