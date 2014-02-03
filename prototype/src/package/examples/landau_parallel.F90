@@ -140,15 +140,9 @@ program landau_parallel
 
       call compute_charge()
       call solve(poisson,efield,rho)
-
-      call advection_v(delta_t)
-
-      call apply_remap_2D( v_to_x, ft, f )
-
-      call advection_x(delta_t)
-
       if (prank == MPI_MASTER) then
          nrj(i_step) = 0.5_f64*log(sum(efield*efield)*delta_x)
+         write(12,'(2e15.3)') (i_step-1)*delta_t, nrj(i_step)
          write(*,100) .0,n_step*delta_t,-29.5,0.5
          do j_step = 1, i_step
             print'(2e15.3)', (j_step-1)*delta_t, nrj(j_step)
@@ -156,7 +150,16 @@ program landau_parallel
          print'(a)','e'
       end if
 
+      call advection_v(delta_t)
+
+      call apply_remap_2D( v_to_x, ft, f )
+
+      call advection_x(delta_t)
+
+
   end do
+
+
 
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &

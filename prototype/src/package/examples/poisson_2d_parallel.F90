@@ -84,6 +84,7 @@ program poisson_2d_parallel
   offset(2) =  get_layout_2D_j_min( layout_x, myrank ) - 1
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
+                                    size(phi,1), size(phi,2), &
                                     phi, "phi", 1, error)  
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)

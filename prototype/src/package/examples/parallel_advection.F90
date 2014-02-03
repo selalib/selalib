@@ -127,6 +127,7 @@ program parallel_advection
 
       call sll_gnuplot_2d_parallel( offset_eta1, delta_eta1, &
                                     offset_eta2, delta_eta2, &
+                                    size(f_eta1,1), size(f_eta1,2), &
                                     f_eta1, 'f_parallel', &
                                     i_step, error)
 
