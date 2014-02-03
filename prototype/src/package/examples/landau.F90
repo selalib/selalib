@@ -89,11 +89,12 @@ do i_step = 1, n_step
    end do
 
    call solve(poisson, ex , rho)
+   nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
+   write(11,'(2e15.3)') (i_step-1)*delta_t, nrj(i_step)
 
    call advection_v(delta_t)
    call advection_x(delta_t)
    
-   nrj(i_step) = 0.5_f64*log(sum(ex*ex)*delta_eta1)
    
    open(11, file='thf_2d.dat', position='append')
    if (i_step == 1) rewind(11)
@@ -109,6 +110,7 @@ do i_step = 1, n_step
    print'(a)','e'
 
 end do
+
 
 100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
 
