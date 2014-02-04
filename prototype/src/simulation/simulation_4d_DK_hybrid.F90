@@ -88,6 +88,9 @@ module sll_simulation_4d_DK_hybrid_module
     sll_real64, dimension(:),pointer :: diag_nrj_tot
     sll_real64, dimension(:),pointer :: diag_heat_flux
 
+    !---> diagnostiocs phisquare
+    sll_real64, dimension(:),pointer :: diag_phisquare
+
     !--> 4D logical mesh (eta1,eta2,eta3,vpar)
     sll_int32 :: Neta1, Neta2, Neta3, Nvpar
     type(sll_logical_mesh_4d), pointer :: logical_mesh4d
@@ -313,6 +316,7 @@ contains
     SLL_ALLOCATE(sim%diag_nrj_pot(nb_diag),ierr)
     SLL_ALLOCATE(sim%diag_nrj_tot(nb_diag),ierr)
     SLL_ALLOCATE(sim%diag_heat_flux(nb_diag),ierr)
+    SLL_ALLOCATE(sim%diag_phisquare(nb_diag),ierr)
 
     !--> Radial profile initialisation
     call init_profiles_DK(sim)
@@ -467,6 +471,7 @@ contains
     SLL_DEALLOCATE(sim%E3d_eta3_seqx3,ierr)
     SLL_DEALLOCATE(sim%time_evol,ierr)
     SLL_DEALLOCATE(sim%diag_mass,ierr)
+    SLL_DEALLOCATE(sim%diag_phisquare,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L1,ierr)
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
     SLL_DEALLOCATE(sim%diag_norm_Linf,ierr)
@@ -2122,6 +2127,7 @@ contains
     sll_real64, dimension(:), pointer :: diag_nrj_kin_tmp
     sll_real64, dimension(:), pointer :: diag_nrj_pot_tmp
     sll_real64, dimension(:), pointer :: diag_nrj_tot_tmp
+    sll_real64, dimension(:), pointer :: diag_phisquare_tmp
     sll_real64, dimension(:), pointer :: diag_heat_flux_tmp
     sll_real64, dimension(:), pointer :: diag_relative_error_nrj_tot_tmp
 
@@ -2146,6 +2152,7 @@ contains
     SLL_ALLOCATE(diag_nrj_tot_tmp(nb_diag),ierr)
     SLL_ALLOCATE(diag_heat_flux_tmp(nb_diag),ierr)
     SLL_ALLOCATE(diag_relative_error_nrj_tot_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_phisquare_tmp(nb_diag),ierr)
 
     diag_mass_tmp        = 0.0_f64
     diag_norm_L1_tmp     = 0.0_f64
@@ -2157,6 +2164,7 @@ contains
     diag_nrj_tot_tmp     = 0.0_f64
     diag_heat_flux_tmp   = 0.0_f64
     diag_relative_error_nrj_tot_tmp = 0.0_f64
+    diag_phisquare_tmp   = 0.0_f64
 
     call sll_collective_reduce_real64( &
         sll_world_collective, &
@@ -2230,43 +2238,53 @@ contains
         0, &
         diag_nrj_tot_tmp )
 
+    call sll_collective_reduce_real64( &
+         sll_world_collective, &
+         sim%diag_phisquare, &
+         nb_diag, &
+         MPI_SUM, &
+         0, &
+         diag_phisquare_tmp )
+
     do idiag = 1,nb_diag
-      dum  = sqrt(.5*((diag_nrj_kin_tmp(idiag)-diag_nrj_kin_tmp(1))**2 + &
-          (diag_nrj_pot_tmp(idiag)-diag_nrj_pot_tmp(1))**2)) 
-
-      if ( dum /= 0.0_f64) &
-          diag_relative_error_nrj_tot_tmp(idiag) = &
-          (diag_nrj_tot_tmp(idiag)-diag_nrj_tot_tmp(1))/dum
+       dum  = sqrt(.5*((diag_nrj_kin_tmp(idiag)-diag_nrj_kin_tmp(1))**2 + &
+            (diag_nrj_pot_tmp(idiag)-diag_nrj_pot_tmp(1))**2)) 
+       
+       if ( dum /= 0.0_f64) &
+            diag_relative_error_nrj_tot_tmp(idiag) = &
+            (diag_nrj_tot_tmp(idiag)-diag_nrj_tot_tmp(1))/dum
     end do
-
+    
     if (sim%my_rank.eq.0) then
-      print*,'--> Save HDF5 file: ',filename_CL
-      call sll_hdf5_file_create(filename_CL,file_id,file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          sim%time_evol(:),'time_evol',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_nrj_kin_tmp(:),'nrj_kin',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_nrj_pot_tmp(:),'nrj_pot',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_nrj_tot_tmp(:),'nrj_tot',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_relative_error_nrj_tot_tmp(:),&
-          'relative_error_nrj_tot',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_heat_flux_tmp(:),'heat_flux',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_mass_tmp(:),&
-          'mass',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_norm_L1_tmp(:),'L1_norm',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_norm_L2_tmp(:),'L2_norm',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_norm_Linf_tmp(:),'Linf_norm',file_err)
-      call sll_hdf5_write_array_1d(file_id,&
-          diag_entropy_kin_tmp(:),'entropy_kin',file_err)
-      call sll_hdf5_file_close(file_id,file_err)
+       print*,'--> Save HDF5 file: ',filename_CL
+       call sll_hdf5_file_create(filename_CL,file_id,file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            sim%time_evol(:),'time_evol',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_nrj_kin_tmp(:),'nrj_kin',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_nrj_pot_tmp(:),'nrj_pot',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_nrj_tot_tmp(:),'nrj_tot',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_relative_error_nrj_tot_tmp(:),&
+            'relative_error_nrj_tot',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_heat_flux_tmp(:),'heat_flux',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_mass_tmp(:),&
+            'mass',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_norm_L1_tmp(:),'L1_norm',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_norm_L2_tmp(:),'L2_norm',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_norm_Linf_tmp(:),'Linf_norm',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_entropy_kin_tmp(:),'entropy_kin',file_err)
+       call sll_hdf5_write_array_1d(file_id,&
+            diag_phisquare_tmp(:),'phisquare',file_err)
+       call sll_hdf5_file_close(file_id,file_err)
     end if
 
     SLL_DEALLOCATE(diag_mass_tmp,ierr)
@@ -2279,6 +2297,7 @@ contains
     SLL_DEALLOCATE(diag_nrj_tot_tmp,ierr)
     SLL_DEALLOCATE(diag_heat_flux_tmp,ierr)
     SLL_DEALLOCATE(diag_relative_error_nrj_tot_tmp,ierr)
+    SLL_DEALLOCATE(diag_phisquare_tmp,ierr)
 
   end subroutine writeHDF5_conservation_laws
 
@@ -2331,6 +2350,7 @@ contains
     sll_int32  :: i1,i2,i3,i4
     sll_int32, dimension(1:4) :: glob_ind4d
     sll_real64 :: nrj_kin,nrj_pot,nrj_tot,heat_flux
+    sll_real64 :: phisquare
 
     Neta1_loc  = size(sim%f4d_seqx3x4,1)
     Neta2_loc  = size(sim%f4d_seqx3x4,2)
@@ -2349,44 +2369,53 @@ contains
     nrj_pot   = 0.0
     nrj_tot   = 0.0
     heat_flux = 0.0
+    phisquare = 0.0
 
     !-> Computation of the energy kinetic locally in (x1,x2) directions
     do iloc2 = 1,Neta2_loc
       do iloc1 = 1,Neta1_loc
-        do i4 = 1,Nvpar-1
-          vpar = sim%vpar_grid(i4)
-          do i3 = 1,Neta3-1
+         do i3 = 1,Neta3-1
             val_elec_pot = sim%phi3d_seqx3(iloc1,iloc2,i3)
+            do i4 = 1,Nvpar-1
+               vpar = sim%vpar_grid(i4)
 
-            glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
-              (/iloc1,iloc2,i3,i4/))
-            i1 = glob_ind4d(1)
-            i2 = glob_ind4d(2)
+               glob_ind4d(:) = local_to_global_4D(sim%layout4d_seqx3x4, &
+                    (/iloc1,iloc2,i3,i4/))
+               i1 = glob_ind4d(1)
+               i2 = glob_ind4d(2)
 
+               if (i1 .ne. Neta1) then
+                  if (i2 .ne. Neta2) then 
+                     
+                     val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+                     
+                     delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
+                          sim%feq_xyvpar(i1,i2,i4)
+
+                     nrj_kin = nrj_kin + &
+                          delta_f * vpar**2 * 0.5 * val_jac * &
+                          delta_eta1*delta_eta2*delta_eta3*delta_vpar
+
+                     nrj_pot = nrj_pot + &
+                          delta_f * val_elec_pot * 0.5 * val_jac * &
+                          delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                     
+                     
+                     ! definition FALSE 
+                     ! heat_flux = heat_flux + &
+                     !     delta_f * vpar**2* 0.5* val_jac * &
+                     !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
+                  end if
+               end if
+            end do
+            
             if (i1 .ne. Neta1) then
-              if (i2 .ne. Neta2) then 
-
-                val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
-
-                delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                  sim%feq_xyvpar(i1,i2,i4)
-
-                nrj_kin = nrj_kin + &
-                  delta_f * vpar**2 * 0.5 * val_jac * &
-                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
-
-                nrj_pot = nrj_pot + &
-                  delta_f * val_elec_pot * 0.5 * val_jac * &
-                  delta_eta1*delta_eta2*delta_eta3*delta_vpar
-
-                ! definition FALSE 
-                ! heat_flux = heat_flux + &
-                !     delta_f * vpar**2* 0.5* val_jac * &
-                !    delta_eta1*delta_eta2*delta_eta3*delta_vpar
-              end if
+               if (i2 .ne. Neta2) then 
+                  phisquare = phisquare + val_elec_pot**2 *val_jac &
+                       *delta_eta1*delta_eta2*delta_eta3
+               end if
             end if
-          end do
-        end do
+         end do
       end do
     end do
 
@@ -2396,6 +2425,7 @@ contains
     sim%diag_nrj_pot(diag_num)   = nrj_pot
     sim%diag_nrj_tot(diag_num)   = nrj_tot
     sim%diag_heat_flux(diag_num) = heat_flux
+    sim%diag_phisquare(diag_num) = phisquare
 
   end subroutine compute_energy
 
