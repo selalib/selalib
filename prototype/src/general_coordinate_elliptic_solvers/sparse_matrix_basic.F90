@@ -25,6 +25,7 @@ contains
         !local var
         integer :: li_err, li_flag
 
+        print*, 'tet'
         self % ol_use_mm_format = .FALSE.
 
         self % oi_nR = ai_nR
