@@ -23,6 +23,11 @@ def DK4Ddiag(resu):
         print '  *   1 : Phi(x,y)'
         print ' '
 
+        print ' '
+        print ' **** PHI3D DIAGNOSTICS ****'
+        print '  *   2 : int Phi(x,y,z)**2 jac dx dy dz'
+        print ' '
+
         print ' **** F2D DIAGNOSTICS ****'
         print '  *   21 : f2D(x,y)'
         print '  *   22 : f2D(z,vpar)'
@@ -64,6 +69,8 @@ def DK4Ddiag_choice(ichoice,resu):
         DK4D_CL.L1_L2_Linf_norms_plot(resu)
     elif (ichoice == 32):
         DK4D_CL.energies_plot(resu)
+    elif (ichoice == 2):
+        DK4D_Phi2D.Int_phisquare_plot(resu)
 
 #end def DK4Ddiag_choice
 
