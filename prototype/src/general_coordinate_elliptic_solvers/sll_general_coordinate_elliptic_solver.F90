@@ -45,8 +45,12 @@ module sll_general_coordinate_elliptic_solver_module
      ! nomenclature. The indexing of the
      ! splines in this array depends on the boundary conditions.
      sll_int32, dimension(:), pointer :: global_spline_indices 
+     sll_int32, dimension(:), pointer :: global_spline_indices_source
+     sll_int32, dimension(:), pointer :: global_spline_indices_source_bis
      ! the following is otherwise known as "IEN"
+     sll_int32, dimension(:,:), pointer :: local_spline_indices_source
      sll_int32, dimension(:,:), pointer :: local_spline_indices
+      sll_int32, dimension(:,:), pointer :: local_spline_indices_source_bis
      ! the following is otherwise known as "LM". Same as global_spline_indices
      ! but including the changes resulting from the boundary conditions.
      ! This is:
@@ -54,6 +58,7 @@ module sll_general_coordinate_elliptic_solver_module
      !   global_spline_indices(local_spline_indices(i,j))
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
+     sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
 
      !!! contains the values of all splines in all gauss points
      sll_real64, dimension(:,:), pointer :: values_splines_eta1
@@ -134,12 +139,24 @@ contains ! *******************************************************************
    num_splines2 = num_cells_eta2 + spline_degree_eta2
    SLL_ALLOCATE(es%global_spline_indices(num_splines1*num_splines2),ierr)
    es%global_spline_indices(:) = 0
+   SLL_ALLOCATE(es%global_spline_indices_source((num_cells_eta1+1)*(num_cells_eta2+1)),ierr)
+   es%global_spline_indices_source(:) = 0
+   SLL_ALLOCATE(es%global_spline_indices_source_bis(num_splines1*num_splines2),ierr)
+   es%global_spline_indices_source_bis(:) = 0
+
    SLL_ALLOCATE(es%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_spline_indices(:,:) = 0
+   SLL_ALLOCATE(es%local_spline_indices_source((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+   es%local_spline_indices_source(:,:) = 0
+    SLL_ALLOCATE(es%local_spline_indices_source_bis((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+   es%local_spline_indices_source_bis(:,:) = 0
+
    SLL_ALLOCATE(es%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_to_global_spline_indices = 0
    SLL_ALLOCATE(es%local_to_global_spline_indices_source((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_to_global_spline_indices_source = 0
+   SLL_ALLOCATE(es%local_to_global_spline_indices_source_bis((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+   es%local_to_global_spline_indices_source_bis = 0
    ! This should be changed to verify that the passed BC's are part of the
    ! recognized list described in sll_boundary_condition_descriptors...
    es%bc_left   = bc_left
@@ -421,8 +438,13 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%global_spline_indices,ierr)
     SLL_DEALLOCATE(es%local_spline_indices,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices,ierr)
-    call free_csr(es%csr_mat)
+    SLL_DEALLOCATE(es%global_spline_indices_source,ierr)
+    SLL_DEALLOCATE(es%local_spline_indices_source,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source,ierr)
+    SLL_DEALLOCATE(es%global_spline_indices_source_bis,ierr)
+    SLL_DEALLOCATE(es%local_spline_indices_source_bis,ierr)
+    SLL_DEALLOCATE(es%local_to_global_spline_indices_source_bis,ierr)
+    call free_csr(es%csr_mat)
     call free_csr(es%csr_mat_source)
     SLL_DEALLOCATE(es%rho_vec,ierr)
     SLL_DEALLOCATE(es%phi_vec,ierr)
@@ -478,12 +500,16 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: full_Matrix
     sll_real64, dimension(:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Stiff_loc
-    sll_real64, dimension(:,:), pointer :: Source_loc
+    sll_real64, dimension(:,:,:), pointer :: Source_loc
     sll_int32 :: total_num_splines_loc
     sll_int32 :: ierr,ierr1
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: cell_index
+    sll_int32 :: bc_left
+    sll_int32 :: bc_right
+    sll_int32 :: bc_bottom
+    sll_int32 :: bc_top
 
     !    type(sll_time_mark) :: timer
     !sll_real64 :: res!,eta1,eta2
@@ -493,10 +519,15 @@ contains ! *******************************************************************
     !type(sll_time_mark)  :: t1 
     !sll_real64           :: time
     
+
+    bc_left   = es%bc_left
+    bc_right  = es%bc_right
+    bc_bottom = es%bc_bottom
+    bc_top    = es%bc_top
     total_num_splines_loc = es%total_num_splines_loc
     ! SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     !SLL_ALLOCATE(Source_loc(es%num_cells1*es%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
-    SLL_ALLOCATE(Source_loc(total_num_splines_loc,total_num_splines_loc),ierr)
+    SLL_ALLOCATE(Source_loc(es%num_cells1*es%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a12_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -518,7 +549,7 @@ contains ! *******************************************************************
     ! Stiff_tot(:) = 0.0_f64
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
-    Source_loc(:,:) = 0.0_f64
+    Source_loc(:,:,:) = 0.0_f64
     
     full_Matrix(:,:) = 0.0_f64
     es%full_masse(:,:) = 0.0_f64
@@ -574,20 +605,60 @@ contains ! *******************************************************************
           
        end do
     end do
-    print*,  es%tab_index_coeff1
-    print*,  es%tab_index_coeff2
+   
+
+    call initconnectivity( &
+        es%num_cells1, &
+        es%num_cells2, &
+        es%spline_degree1, &
+        es%spline_degree2, &
+        es%bc_left, &
+        es%bc_right, &
+        es%bc_bottom, &
+        es%bc_top, &
+        es%local_spline_indices_source_bis, &
+        es%global_spline_indices_source_bis, &
+        es%local_to_global_spline_indices_source_bis )
+
+!!$    print*, size(es%global_spline_indices_source_bis),(es%num_cells1+es%spline_degree1)*(es%num_cells1+es%spline_degree1)
+!!$
+!!$    es%global_spline_indices_source_bis = 0
+!!$    es%local_to_global_spline_indices_source_bis = 0
+!!$
+!!$    call xi_eta_init(&
+!!$       es%num_cells1+es%spline_degree1,&
+!!$       es%num_cells2+es%spline_degree2,&
+!!$       es%global_spline_indices_source_bis)
+    
+!!$    print*, es%global_spline_indices_source_bis
+!!$    print*, es%local_spline_indices_source_bis
+!!$
+!!$    print*, size(es%local_to_global_spline_indices_source_bis,2),size(es%local_to_global_spline_indices_source,2),es%total_num_splines_eta1*es%total_num_splines_eta2
+!!$    call initLM( &
+!!$         es%num_cells1,&
+!!$         es%num_cells2,&
+!!$         es%spline_degree1,&
+!!$         es%spline_degree2,&
+!!$         es%local_spline_indices_source_bis,&
+!!$         es%global_spline_indices_source_bis,&
+!!$         es%local_to_global_spline_indices_source_bis)
+!!$
+    print*,  es%local_to_global_spline_indices_source_bis
+    print*, size(es%local_to_global_spline_indices_source_bis,2)
+    print*, es%total_num_splines_eta1*es%total_num_splines_eta2
     
     call create_CSR( &
          es%csr_mat_source, &
          es%total_num_splines_eta1*es%total_num_splines_eta2, &
          (es%num_cells1+1)*(es%num_cells2+1),&
          es%num_cells1*es%num_cells2, &
-         es%local_to_global_spline_indices, &
+         es%local_to_global_spline_indices_source_bis, &
          es%total_num_splines_loc, &
          es%local_to_global_spline_indices_source, &
          es%total_num_splines_loc )
 
-   ! call compute_Source_matrice(es,Source_loc)
+    print*, 'hello'
+    call compute_Source_matrice(es,Source_loc)
     
     SLL_DEALLOCATE_ARRAY(Source_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
@@ -708,12 +779,12 @@ contains ! *******************************************************************
                 end do
              end do
           end do
-          if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
-               .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
-             
-             rho_at_gauss = rho_at_gauss - int_rho/int_jac
-          end if
-          
+!!$          if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
+!!$               .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+!!$             
+!!$             rho_at_gauss = rho_at_gauss - int_rho/int_jac
+!!$          end if
+!!$          
           do j=1,es%num_cells2+1
              do i=1,es%num_cells1+1
                 
@@ -740,16 +811,18 @@ contains ! *******************************************************************
              end do
           end do
 
-        !  call Mult_CSR_Matrix_Vector(es%csr_mat_source,rho_coeff_1d,resul_rho_1d)
+          call Mult_CSR_Matrix_Vector(es%csr_mat_source,rho_coeff_1d,resul_rho_1d)
           
-!!$          
-!!$          print*,'diff', es%rho_vec-resul_rho_1d
-!!$          print*, 'vrai',es%rho_vec
-!!$          print*, 'faux', resul_rho_1d
-          print*, size(es%full_masse,1),size(es%full_masse,2),size(rho_coeff_1d),size(resul_rho_1d),size(es%rho_vec)
-          print*, 'hello',es%full_masse(1,:)
-          print*, 'hah',rho_coeff_1d
-          resul_rho_1d = Matmul(es%full_masse,rho_coeff_1d)
+          
+          !print*,'diff', es%rho_vec-resul_rho_1d
+          !print*, 'vrai',es%rho_vec
+          !print*, 'faux', resul_rho_1d
+          print*, es%csr_mat_source%opr_a(1:size(es%full_masse,2))
+          print*, es%csr_mat_source%opi_ia(1:size(es%full_masse,2))
+          print*, es%csr_mat_source%opi_ja(1:size(es%full_masse,2))
+          print*, es%full_masse(1,:)
+
+          !resul_rho_1d = Matmul(es%full_masse,rho_coeff_1d)
           print*,'diff', es%rho_vec-resul_rho_1d
           print*, 'vrai',es%rho_vec
           print*, 'faux', resul_rho_1d
@@ -929,7 +1002,7 @@ contains ! *******************************************************************
     class(sll_scalar_field_2d_base), pointer :: c_field
     !class(sll_scalar_field_2d_base), intent(in)     :: rho
     !sll_real64 :: epsi
-    sll_real64, dimension(:,:), intent(inout) :: Source_loc
+    sll_real64, dimension(:,:,:), intent(inout) :: Source_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
     sll_real64, dimension(:,:), intent(out) :: K_a11_loc
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
@@ -1002,7 +1075,7 @@ contains ! *******************************************************************
     !    M_rho_loc(:) = 0.0
     M_c_loc(:,:)      = 0.0
     K_a11_loc(:,:)    = 0.0
-    Source_loc(:,:)   = 0.0_f64
+   ! Source_loc(:,:)   = 0.0_f64
     K_a12_loc(:,:)    = 0.0
     K_a21_loc(:,:)    = 0.0
     K_a22_loc(:,:)    = 0.0
@@ -1214,8 +1287,8 @@ contains ! *******************************************************************
                       
                       index2 =  jjj*(obj%spline_degree1 + 1) + iii + 1
 !!$                      
-                      Source_loc(index1, index2) = &
-                           Source_loc(index1, index2) + &
+                      Source_loc(cell_index,index1, index2) = &
+                           Source_loc(cell_index,index1, index2) + &
                            val_jac*wgpt1*wgpt2* &
                            dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
@@ -1438,7 +1511,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: M_b_vect_loc
     sll_real64, dimension(:,:), intent(in) :: S_b1_loc
     sll_real64, dimension(:,:), intent(in) :: S_b2_loc
-    sll_real64, dimension(:,:), intent(in) :: Source_loc
+    sll_real64, dimension(:,:,:), intent(in) :: Source_loc
     
     !  Correspond to the full Matrix of linear system 
     !  It is not necessary to keep it  
@@ -1546,7 +1619,7 @@ contains ! *******************************************************************
                 es%local_to_global_spline_indices_source(b,cell_index)= index
     
 
-                es%full_masse(y,index) = es%full_masse(y,index) + Source_loc(b,bprime)
+                es%full_masse(y,index) = es%full_masse(y,index) + Source_loc(cell_index,b,bprime)
                 ! elt_masse = Masse_loc(b,bprime)
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
@@ -1792,7 +1865,7 @@ contains ! *******************************************************************
              do ideg1 = 0,es%spline_degree1
                 
                 b          =  ideg2 * ( es%spline_degree1 + 1 ) + ideg1 + 1
-                li_A       =  es%local_to_global_spline_indices(b, cell_index)
+                li_A       =  es%local_to_global_spline_indices_source_bis(b, cell_index)
                 
                 do jdeg2 = 0,es%spline_degree2
                    
@@ -1803,9 +1876,9 @@ contains ! *******************************************************************
                       
                       elt_mat_global = Source_loc(cell_index,bprime,b)
 
-                      if ( (li_A > 0) .and. (li_Aprime > 0) ) then
+                      !if ( (li_A > 0) .and. (li_Aprime > 0)) then
                          call add_MVal(es%csr_mat_source,elt_mat_global,li_A,li_Aprime)
-                      end if
+                      !end if
                       
                    end do
                 end do
@@ -1814,6 +1887,9 @@ contains ! *******************************************************************
        end do
     end do
 
+    print*, Source_loc(1,1,:)
+    print*, es%local_to_global_spline_indices_source(:,1)
+    print*, es%local_to_global_spline_indices_source_bis(:,1)
   end subroutine compute_Source_matrice
 
 end module sll_general_coordinate_elliptic_solver_module
