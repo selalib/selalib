@@ -11,5 +11,14 @@ module load intel/13.1.2
 module load cmake/2.8.7
 export HDF5_ROOT=/softs/cemracs/selalib/intel
 export FFTW_ROOT=/softs/fftw/intel/3.3
-cd /scratch/pnavaro/selalib-intel
+cd /scratch/pnavaro
+mkdir selalib-intel
+cd selalib-intel; {
+cmake ${HOME}/selalib -DOPTIONS_FILE=${HOME}/selalib/cmake/ccamu-intel.cmake
+make NightlyUpdate
+make NightlyConfigure
+make NightlyBuild
 make NightlyTest
+make NightlySubmit
+}; cd -
+rm -rf /scratch/pnavaro/selalib-intel
