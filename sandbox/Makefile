@@ -1,3 +1,4 @@
+SRCS_DIR = /Users/navaro/Codes/selalib/prototype/src/package/examples
 SLL_ROOT = /Users/navaro/Codes/selalib/usr
 F90 = gfortran
 OPT = -g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0
@@ -24,42 +25,26 @@ all: landau polar_advection landau_parallel \
      parallel_advection vlasov_poisson_parallel \
      poisson_2d_parallel
 
-landau: landau.o
+landau: ${SRCS_DIR}/landau.F90
 	$(F90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
-polar_advection: polar_advection.o
+polar_advection: ${SRCS_DIR}/polar_advection.F90
 	$(F90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
-landau_parallel: landau_parallel.o
+landau_parallel: ${SRCS_DIR}/landau_parallel.F90
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
-parallel_advection: parallel_advection.o
+parallel_advection: ${SRCS_DIR}/parallel_advection.F90
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
-vlasov_poisson_parallel: vlasov_poisson_parallel.o
+vlasov_poisson_parallel: ${SRCS_DIR}/vlasov_poisson_parallel.F90
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
  
-vlasov_maxwell_parallel: vlasov_maxwell_parallel.o
+vlasov_maxwell_parallel: ${SRCS_DIR}/vlasov_maxwell_parallel.F90
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
-poisson_2d_parallel: poisson_2d_parallel.o
+poisson_2d_parallel: ${SRCS_DIR}/poisson_2d_parallel.F90
 	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
 clean:
 	rm -rf *.exe *.o *.mod *.dat *.gnu *.exe.dSYM 00* fort.*
-
-.SUFFIXES: $(SUFFIXES) .F90
-
-.F90.o:
-	$(F90) $(F90FLAGS) -c $<
-
-.mod.o:
-	$(F90) $(F90FLAGS) -c $*.F90
-
-landau.o: landau.F90
-landau_parallel.o: landau_parallel.F90
-parallel_advection.o: parallel_advection.F90
-polar_advection.o: polar_advection.F90
-vlasov_poisson_parallel.o: vlasov_poisson_parallel.F90
-vlasov_maxwell_parallel.o: vlasov_maxwell_parallel.F90
-poisson_2d_parallel.o : poisson_2d_parallel.F90
