@@ -264,7 +264,7 @@ end if
          num_cells2, &
          eta1_min, &
          eta1_max, &
-         eta1_min, &
+         eta2_min, &
          eta2_max )
 
   end function new_logical_mesh_2d
