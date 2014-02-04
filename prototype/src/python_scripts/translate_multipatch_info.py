@@ -320,9 +320,7 @@ def main ():
                         connectivities[opatch][oface*2+1] = face
                         currently_reading_sub = ""
                         continue
-        pp.pprint( connectivities )
         flattened = [item for sublist in connectivities for item in sublist]
-        print( flattened )
 
         writefile.write("    connectivities = " + 
                         " ".join([str(item) for item in  flattened]) + "\n")
