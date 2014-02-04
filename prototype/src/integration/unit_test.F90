@@ -27,26 +27,26 @@ program integration_tester
   write (*,'(f22.15)') 1.00000
 
   print *, 'Test gauss_points()'
-  print *, gauss_points(5,-1.0_f64,1.0_f64)
+  print *, gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
 
   x = gauss_lobatto_points( 10, -1._f64, 1._f64)
   w = gauss_lobatto_weights(10)
-
+  
   do i = 1, 10
      write(*,"(2f20.15)") &
-     x(i), w(i)
+          x(i), w(i)
   end do
 
-! sage: x = PolynomialRing(RealField(200),'x').gen()
-! sage: n = 10
-! sage: P=legendre_P(n-1,x)
-! sage: L=P.derivative()
-! sage: proots = L.roots()
-! sage: xk = [-1]+[ proots[i][0] for i in range(n-2)]+[1]
-! sage: wk =[2/(n*(n-1))]+[2/(n*(n-1)*(legendre_P(n-1,xk[i]))^2) for i in range(1,n-1)]+[2/(n*(n-1))]
-! sage: for i in range(10):
-! sage:    print " %28.15f %28.15f " % (xk[i], wk[i])
-
+  ! sage: x = PolynomialRing(RealField(200),'x').gen()
+  ! sage: n = 10
+  ! sage: P=legendre_P(n-1,x)
+  ! sage: L=P.derivative()
+  ! sage: proots = L.roots()
+  ! sage: xk = [-1]+[ proots[i][0] for i in range(n-2)]+[1]
+  ! sage: wk =[2/(n*(n-1))]+[2/(n*(n-1)*(legendre_P(n-1,xk[i]))^2) for i in range(1,n-1)]+[2/(n*(n-1))]
+  ! sage: for i in range(10):
+  ! sage:    print " %28.15f %28.15f " % (xk[i], wk[i])
+  
   print*, " ** exact values with sage"
 
   write(*,*) " -1.000000000000000  0.022222222222222  "
@@ -68,7 +68,7 @@ program integration_tester
   write (string, '( "(",I2,"f20.15)" )' )  n
   do i = 1, n
      write(*,string) ( d(i,j), j = 1, n)
-  end do 
+  end do
 
   allocate(dlag(4,4))
   dlag(1,1) = -0.3000000000000000000000000000000000000000D1
