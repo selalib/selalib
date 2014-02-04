@@ -97,7 +97,7 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_2d_CSL COMMAND test_advection_2d_CSL)
    ADD_TEST(NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product)
    
-   IF(MUDPACK_ENABLED)
+   #IF(MUDPACK_ENABLED)
 
       SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
       ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
@@ -112,7 +112,7 @@ IF(NOT STDF95)
       SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
-   ENDIF(MUDPACK_ENABLED)
+   #ENDIF(MUDPACK_ENABLED)
 
 
 
@@ -123,6 +123,12 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(fields_1d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_1d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_1d_trapezoid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_1d_trapezoid_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_verlet PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(
      advection_1d_non_uniform_cubic_splines
