@@ -41,16 +41,13 @@ module sll_general_coordinate_elliptic_solver_module
      sll_int32 :: spline_degree1
      sll_int32 :: spline_degree2
      sll_real64 :: epsi
+     sll_real64 :: intjac
      ! the following is otherwise known as "ID" in Aurore Back's original
      ! nomenclature. The indexing of the
      ! splines in this array depends on the boundary conditions.
      sll_int32, dimension(:), pointer :: global_spline_indices 
-     sll_int32, dimension(:), pointer :: global_spline_indices_source
-     sll_int32, dimension(:), pointer :: global_spline_indices_source_bis
      ! the following is otherwise known as "IEN"
-     sll_int32, dimension(:,:), pointer :: local_spline_indices_source
      sll_int32, dimension(:,:), pointer :: local_spline_indices
-      sll_int32, dimension(:,:), pointer :: local_spline_indices_source_bis
      ! the following is otherwise known as "LM". Same as global_spline_indices
      ! but including the changes resulting from the boundary conditions.
      ! This is:
@@ -139,17 +136,9 @@ contains ! *******************************************************************
    num_splines2 = num_cells_eta2 + spline_degree_eta2
    SLL_ALLOCATE(es%global_spline_indices(num_splines1*num_splines2),ierr)
    es%global_spline_indices(:) = 0
-   SLL_ALLOCATE(es%global_spline_indices_source((num_cells_eta1+1)*(num_cells_eta2+1)),ierr)
-   es%global_spline_indices_source(:) = 0
-   SLL_ALLOCATE(es%global_spline_indices_source_bis(num_splines1*num_splines2),ierr)
-   es%global_spline_indices_source_bis(:) = 0
 
    SLL_ALLOCATE(es%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_spline_indices(:,:) = 0
-   SLL_ALLOCATE(es%local_spline_indices_source((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-   es%local_spline_indices_source(:,:) = 0
-    SLL_ALLOCATE(es%local_spline_indices_source_bis((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
-   es%local_spline_indices_source_bis(:,:) = 0
 
    SLL_ALLOCATE(es%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_to_global_spline_indices = 0
@@ -250,6 +239,7 @@ contains ! *******************************************************************
    es%phi_vec(:) = 0.0
    es%masse(:) = 0.0
    es%stiff(:) = 0.0
+   es%intjac   = 0.0_f64
    do i = 1, knots1_size
       es%knots1(i) = 0.0
    !   print*, i,  es%knots1(i)
@@ -272,6 +262,8 @@ contains ! *******************************************************************
         bc_bottom, &
         bc_top, &
         es%knots2 )
+
+
  
    call initconnectivity( &
         num_cells_eta1, &
@@ -438,11 +430,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%global_spline_indices,ierr)
     SLL_DEALLOCATE(es%local_spline_indices,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices,ierr)
-    SLL_DEALLOCATE(es%global_spline_indices_source,ierr)
-    SLL_DEALLOCATE(es%local_spline_indices_source,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source,ierr)
-    SLL_DEALLOCATE(es%global_spline_indices_source_bis,ierr)
-    SLL_DEALLOCATE(es%local_spline_indices_source_bis,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source_bis,ierr)
     call free_csr(es%csr_mat)
     call free_csr(es%csr_mat_source)
@@ -606,50 +594,10 @@ contains ! *******************************************************************
        end do
     end do
    
-
-    call initconnectivity( &
-        es%num_cells1, &
-        es%num_cells2, &
-        es%spline_degree1, &
-        es%spline_degree2, &
-        es%bc_left, &
-        es%bc_right, &
-        es%bc_bottom, &
-        es%bc_top, &
-        es%local_spline_indices_source_bis, &
-        es%global_spline_indices_source_bis, &
-        es%local_to_global_spline_indices_source_bis )
-
-!!$    print*, size(es%global_spline_indices_source_bis),(es%num_cells1+es%spline_degree1)*(es%num_cells1+es%spline_degree1)
-!!$
-!!$    es%global_spline_indices_source_bis = 0
-!!$    es%local_to_global_spline_indices_source_bis = 0
-!!$
-!!$    call xi_eta_init(&
-!!$       es%num_cells1+es%spline_degree1,&
-!!$       es%num_cells2+es%spline_degree2,&
-!!$       es%global_spline_indices_source_bis)
-    
-!!$    print*, es%global_spline_indices_source_bis
-!!$    print*, es%local_spline_indices_source_bis
-!!$
-!!$    print*, size(es%local_to_global_spline_indices_source_bis,2),size(es%local_to_global_spline_indices_source,2),es%total_num_splines_eta1*es%total_num_splines_eta2
-!!$    call initLM( &
-!!$         es%num_cells1,&
-!!$         es%num_cells2,&
-!!$         es%spline_degree1,&
-!!$         es%spline_degree2,&
-!!$         es%local_spline_indices_source_bis,&
-!!$         es%global_spline_indices_source_bis,&
-!!$         es%local_to_global_spline_indices_source_bis)
-!!$
-    print*,  es%local_to_global_spline_indices_source_bis
-    print*, size(es%local_to_global_spline_indices_source_bis,2)
-    print*, es%total_num_splines_eta1*es%total_num_splines_eta2
     
     call create_CSR( &
          es%csr_mat_source, &
-         es%total_num_splines_eta1*es%total_num_splines_eta2, &
+         size(es%full_masse,1),&!(es%num_cells1+es%spline_degree1+1)*(es%num_cells2+es%spline_degree2+1),&
          (es%num_cells1+1)*(es%num_cells2+1),&
          es%num_cells1*es%num_cells2, &
          es%local_to_global_spline_indices_source_bis, &
@@ -657,7 +605,6 @@ contains ! *******************************************************************
          es%local_to_global_spline_indices_source, &
          es%total_num_splines_loc )
 
-    print*, 'hello'
     call compute_Source_matrice(es,Source_loc)
     
     SLL_DEALLOCATE_ARRAY(Source_loc,ierr)
@@ -715,13 +662,11 @@ contains ! *******************************************************************
     rho_at_gauss(:,:) = 0.0_f64
     
     SLL_ALLOCATE(rho_coeff_1d(size(es%full_masse,2)),ierr)
-    SLL_ALLOCATE(resul_rho_1d(size(es%full_masse,1)),ierr)
     M_rho_loc     = 0.0_f64
     es%rho_vec(:) = 0.0_f64
     rho_coeff_1d  = 0.0_f64
-    resul_rho_1d  = 0.0_f64
     
-
+  
     call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
@@ -738,94 +683,23 @@ contains ! *******************************************************************
        select type( type_interpolator => base_interpolator_pointer)
        class is (arb_deg_2d_interpolator)
           coeff_rho => type_interpolator%get_coefficients()
-          do j=1,es%num_cells2
-             eta2  = es%eta2_min + (j-1)*es%delta_eta2
-             do i=1,es%num_cells1
-                eta1  = es%eta1_min + (i-1)*es%delta_eta1
-                do jg=1,num_pts_g2
-                   ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
-                   ! the bottom edge of the cell.
-                   gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
-                   wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
-                   
-                   ig2 = jg + (j-1)*num_pts_g2
-                   do ig=1,num_pts_g1
-                      ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-                      gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
-                      wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
-                      
-                      ig1 = ig + (i-1)*num_pts_g1
-                      
-                      val_jac = es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
-                      int_jac = int_jac + wgpt2*wgpt1*val_jac
-                      do ideg1 = 1,es%spline_degree1 + 1
-                         do ideg2 = 1,es%spline_degree2 + 1
-                            
-                            
-                            index_coef1 = es%tab_index_coeff1(i + es%num_cells1*(ig-1)) &
-                                 - es%spline_degree1 + ( ideg1 -1)
-                            index_coef2 = es%tab_index_coeff2(j + es%num_cells2*(jg-1)) &
-                                 - es%spline_degree2 + ( ideg2 -1)
-                            rho_at_gauss(ig1,ig2) = rho_at_gauss(ig1,ig2) +&
-                                 coeff_rho(index_coef1,index_coef2)*&
-                                 es%values_splines_gauss1(i + es%num_cells1*(ig-1), ideg1)*&
-                                 es%values_splines_gauss2(j + es%num_cells2*(jg-1), ideg2)
-                            
-                            
-                          end do
-                       end do
-                       int_rho = int_rho + rho_at_gauss(ig1,ig2)*wgpt1*wgpt2*val_jac
-                   end do
-                end do
-             end do
-          end do
-!!$          if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
-!!$               .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
-!!$             
-!!$             rho_at_gauss = rho_at_gauss - int_rho/int_jac
-!!$          end if
-!!$          
+                  
+          ! put the spline coefficients in a 1d array
           do j=1,es%num_cells2+1
              do i=1,es%num_cells1+1
-                
-                cell_index = i+(es%num_cells1)*(j-1)
-                if(( i<= es%num_cells1) .and. (j<=es%num_cells2)) then
-                   call build_local_matrices_rho( &
-                        es, &
-                        i, &
-                        j, &
-                        rho, &
-                        rho_at_gauss, &
-                        int_rho,&
-                        M_rho_loc)
-                   
-                   call local_to_global_matrices_rho( &
-                        es, &
-                        cell_index, &
-                        i, &
-                        j, &
-                        M_rho_loc)
-                end if
                 
                 rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
              end do
           end do
 
-          call Mult_CSR_Matrix_Vector(es%csr_mat_source,rho_coeff_1d,resul_rho_1d)
-          
-          
-          !print*,'diff', es%rho_vec-resul_rho_1d
-          !print*, 'vrai',es%rho_vec
-          !print*, 'faux', resul_rho_1d
-          print*, es%csr_mat_source%opr_a(1:size(es%full_masse,2))
-          print*, es%csr_mat_source%opi_ia(1:size(es%full_masse,2))
-          print*, es%csr_mat_source%opi_ja(1:size(es%full_masse,2))
-          print*, es%full_masse(1,:)
+          call Mult_CSR_Matrix_Vector(es%csr_mat_source,rho_coeff_1d,es%rho_vec)
 
-          !resul_rho_1d = Matmul(es%full_masse,rho_coeff_1d)
-          print*,'diff', es%rho_vec-resul_rho_1d
-          print*, 'vrai',es%rho_vec
-          print*, 'faux', resul_rho_1d
+          if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
+               .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+             
+             es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
+          end if
+
        class DEFAULT
 
           do j=1,es%num_cells2
@@ -1149,6 +1023,8 @@ contains ! *******************************************************************
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
        obj%values_splines_gauss2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2_rho(:,1)
        obj%tab_index_coeff2(cell_j + obj%num_cells2*(j-1)) = left_y
+
+       
        do i=1,num_pts_g1
           ! rescale Gauss points to be in interval [eta1,eta1+delta1]
           gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
@@ -1193,7 +1069,7 @@ contains ! *******************************************************************
           obj%values_splines_eta1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1(:,1)
           obj%values_splines_gauss1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
           obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
- 
+
           val_c        = c_field%value_at_point(gpt1,gpt2)
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
           val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
@@ -1213,6 +1089,7 @@ contains ! *******************************************************************
 
           obj%values_jacobian(cell_i + obj%num_cells1*(i-1),cell_j + obj%num_cells2*(j-1)) = val_jac
         
+          obj%intjac = obj%intjac + wgpt2*wgpt1*val_jac
           ! The B matrix is  by (J^(-1)) A^T (J^(-1))^T 
           B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
@@ -1521,6 +1398,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:), intent(inout) :: Stiff_tot
     sll_int32 :: index1, index2, index3, index4
     sll_int32 :: index_coef1,index_coef2,index
+    sll_int32 :: index_coef1_phi,index_coef2_phi,index_phi
     sll_int32 :: i,j,mm, nn, b, bprime,x,y
     sll_int32 :: li_A, li_Aprime
     sll_real64 :: elt_mat_global
@@ -1568,6 +1446,7 @@ contains ! *******************************************************************
           x          =  index1 + (index3-1)*nbsp
           b          =  mm * ( es%spline_degree1 + 1 ) + i + 1
           li_A       =  es%local_to_global_spline_indices(b, cell_index)
+          
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
           
@@ -1617,8 +1496,10 @@ contains ! *******************************************************************
                 index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2 + mm
                 index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
                 es%local_to_global_spline_indices_source(b,cell_index)= index
-    
 
+                es%local_to_global_spline_indices_source_bis(bprime,cell_index)= y!index_phi
+                
+               
                 es%full_masse(y,index) = es%full_masse(y,index) + Source_loc(cell_index,b,bprime)
                 ! elt_masse = Masse_loc(b,bprime)
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
@@ -1876,9 +1757,9 @@ contains ! *******************************************************************
                       
                       elt_mat_global = Source_loc(cell_index,bprime,b)
 
-                      !if ( (li_A > 0) .and. (li_Aprime > 0)) then
+                      if ( (li_A > 0) .and. (li_Aprime > 0)) then
                          call add_MVal(es%csr_mat_source,elt_mat_global,li_A,li_Aprime)
-                      !end if
+                      end if
                       
                    end do
                 end do
@@ -1887,9 +1768,7 @@ contains ! *******************************************************************
        end do
     end do
 
-    print*, Source_loc(1,1,:)
-    print*, es%local_to_global_spline_indices_source(:,1)
-    print*, es%local_to_global_spline_indices_source_bis(:,1)
+
   end subroutine compute_Source_matrice
 
 end module sll_general_coordinate_elliptic_solver_module
