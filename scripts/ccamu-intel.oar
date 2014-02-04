@@ -4,6 +4,7 @@
 #OAR -l nodes=4,walltime=00:40:00
 #OAR -O selalib.out
 #OAR -E selalib.err
+source /etc/profile
 module purge
 module load hdf5/intel/1.8.8-cemracs
 module load fftw/intel/3.3
