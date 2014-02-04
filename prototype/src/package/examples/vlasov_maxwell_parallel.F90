@@ -4,9 +4,9 @@ program vlasov_maxwell_parallel
 
   implicit none
 
-  sll_int32,  parameter :: nstep    = 200
+  sll_int32,  parameter :: nstep    = 2000
   sll_real64, dimension(nstep) :: nrj
-  sll_real64, parameter :: delta_t  = 0.05
+  sll_real64, parameter :: delta_t  = 0.01
   sll_real64, parameter :: eta1_min = 0.0_f64
   sll_real64, parameter :: eta1_max = 4*sll_pi
   sll_real64, parameter :: eta2_min = 0.0_f64
@@ -29,7 +29,6 @@ program vlasov_maxwell_parallel
   sll_real64 :: eps
   
   type(poisson_2d_periodic) :: poisson 
-  type(maxwell_2d_fdtd)     :: maxwell
 
   sll_real64, dimension(:,:,:,:),  pointer   :: f_x
   sll_real64, dimension(:,:,:,:),  pointer   :: f_v
@@ -39,9 +38,6 @@ program vlasov_maxwell_parallel
   type(remap_plan_4D_real64), pointer        :: v_to_x
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ex = 0.
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ey = 0.
-  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: bz = 0.
-  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: jx = 0.
-  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: jy = 0.
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: rho = 0.
 
   class(sll_interpolator_1d_base), pointer   :: interp_eta1
@@ -49,9 +45,6 @@ program vlasov_maxwell_parallel
 
   type(cubic_spline_1d_interpolator), target :: spl_eta1
   type(cubic_spline_1d_interpolator), target :: spl_eta2
-
-  class(sll_interpolator_2d_base), pointer   :: interp_v
-  type(cubic_spline_2d_interpolator), target :: spl_v
 
   sll_int32  :: istep, jstep
   sll_int32  :: prank, comm
@@ -62,6 +55,16 @@ program vlasov_maxwell_parallel
   sll_int32  :: global_indices(4)
   sll_real64 :: x, y, vx, vy, v2, kx
   sll_int32  :: error
+
+
+  type(maxwell_2d_pstd)     :: maxwell
+
+  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: bz = 0.
+  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: jx = 0.
+  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: jy = 0.
+
+  class(sll_interpolator_2d_base), pointer   :: interp_v
+  type(cubic_spline_2d_interpolator), target :: spl_v
 
   call sll_boot_collective()
 
@@ -76,18 +79,20 @@ program vlasov_maxwell_parallel
      stop
   end if
 
-  call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC)
-  call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC)
-
-  interp_eta1 => spl_eta1
-  interp_eta2 => spl_eta2
-
   call spl_v%initialize(nc_eta3+1, nc_eta4+1,  &
     &                   eta3_min, eta3_max,    &
     &                   eta4_min, eta4_max,    &
     &                   SLL_HERMITE, SLL_HERMITE)
 
   interp_v => spl_v
+
+
+
+  call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC)
+  call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC)
+
+  interp_eta1 => spl_eta1
+  interp_eta2 => spl_eta2
 
   layout_x => new_layout_4D( sll_world_collective )        
   call initialize_layout_with_distributed_4D_array( &
@@ -142,11 +147,11 @@ program vlasov_maxwell_parallel
   end do
   end do
 
-  call initialize(maxwell,eta1_min, eta1_max, nc_eta1,  &
-                          eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
-
   call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
                            eta2_min, eta2_max, nc_eta2, error)
+
+  call initialize(maxwell, eta1_min, eta1_max, nc_eta1,  &
+                           eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
   call compute_charge()
   call solve(poisson,ex,ey,rho)
@@ -160,34 +165,40 @@ program vlasov_maxwell_parallel
 
      call apply_remap_4D( x_to_v, f_x, f_v )
 
+     !call compute_charge()
+     !call solve(poisson,ex,ey,rho)
      call compute_current()
-
      call ampere(maxwell,ex,ey,bz,delta_t,jx,jy) 
 
-     !call faraday(maxwell,ex,ey,bz,0.5*delta_t)   
-
-     call advection_v(delta_t)
-
-     !call faraday(maxwell,ex,ey,bz,0.5*delta_t)   
-
-     call apply_remap_4D( v_to_x, f_v, f_x )
-
-     call advection_eta1(delta_t)
-
-     call advection_eta2(delta_t)
-
-     if ( prank == MPI_MASTER) then
+     if (prank == MPI_MASTER) then
         nrj(istep) = 0.5_f64*log(sum(ex*ex+ey*ey)*delta_eta1*delta_eta2)
-        write(*,100) .0,nstep*delta_t,-29.5,0.5
+        write(*,100) .0,nstep*delta_t,-9.5,0.5
         do jstep = 1, istep
          print'(2e15.3)', (jstep-1)*delta_t, nrj(jstep)
         end do
         print'(a)','e'
      end if
 
+     !call faraday(maxwell,ex,ey,bz,0.5*delta_t)   
+     call advection_v(delta_t)
+     !call faraday(maxwell,ex,ey,bz,0.5*delta_t)   
+
+     call apply_remap_4D( v_to_x, f_v, f_x )
+
+     call advection_eta1(delta_t)
+     call advection_eta2(delta_t)
+
+
   end do
 
 100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
+
+
+  if (prank == MPI_MASTER) then
+     do jstep = 1, nstep
+         write(14,'(2e15.3)') (jstep-1)*delta_t, nrj(jstep)
+     end do
+  end if
 
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &
@@ -211,8 +222,7 @@ contains
 
    dvxvy = delta_eta3*delta_eta4
 
-   call compute_local_sizes_4d(layout_v, &
-        loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
    
    locrho = 0.
    do j=1,loc_sz_j
@@ -229,49 +239,6 @@ contains
    call mpi_allreduce(locrho,rho,(nc_eta1+1)*(nc_eta2+1),MPI_REAL8,MPI_SUM,comm,error)
 
  end subroutine compute_charge
-
- subroutine compute_current()
-
-   sll_int32                                  :: error
-   sll_real64                                 :: vx
-   sll_real64                                 :: vy 
-   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: locjx
-   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: locjy
-   sll_int32                                  :: c
-   sll_int32                                  :: comm
-   sll_real64                                 :: dvxvy
-
-   dvxvy = delta_eta3*delta_eta4
-
-   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-
-   locjx = 0.; locjy = 0.
-   do l=1,loc_sz_l
-   do k=1,loc_sz_k
-   do j=1,loc_sz_j
-   do i=1,loc_sz_i
-      global_indices = local_to_global_4D(layout_v,(/i,j,k,l/)) 
-      gi = global_indices(1)
-      gj = global_indices(2)
-      gk = global_indices(3)
-      gl = global_indices(4)
-      vx = eta3_min+(gk-1)*delta_eta3
-      vy = eta4_min+(gl-1)*delta_eta4
-      locjx(gi,gj) = locjx(gi,gj) + dvxvy*f_v(i,j,k,l) * vx
-      locjy(gi,gj) = locjy(gi,gj) + dvxvy*f_v(i,j,k,l) * vy
-   end do
-   end do
-   end do
-   end do
-
-   jx = 0.; jy = 0.
-   comm   = sll_world_collective%comm
-   call mpi_barrier(comm,error)
-   c=(nc_eta1+1)*(nc_eta2+1)
-   call mpi_allreduce(locjx,jx,c, MPI_REAL8,MPI_SUM,comm,error)
-   call mpi_allreduce(locjy,jy,c, MPI_REAL8,MPI_SUM,comm,error)
-
- end subroutine compute_current
 
 
  subroutine advection_eta1(dt)
@@ -319,6 +286,51 @@ contains
 
  end subroutine advection_eta2
 
+ subroutine compute_current()
+
+   sll_int32                                  :: error
+   sll_real64                                 :: vx
+   sll_real64                                 :: vy 
+   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: locjx
+   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: locjy
+   sll_int32                                  :: c
+   sll_int32                                  :: comm
+   sll_real64                                 :: dvxvy
+
+   dvxvy = delta_eta3*delta_eta4
+
+   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
+   locjx = 0.0_f64
+   locjy = 0.0_f64
+
+   do l=1,loc_sz_l
+   do k=1,loc_sz_k
+   do j=1,loc_sz_j
+   do i=1,loc_sz_i
+      global_indices = local_to_global_4D(layout_v,(/i,j,k,l/)) 
+      gi = global_indices(1)
+      gj = global_indices(2)
+      gk = global_indices(3)
+      gl = global_indices(4)
+      vx = eta3_min+(gk-1)*delta_eta3
+      vy = eta4_min+(gl-1)*delta_eta4
+      locjx(gi,gj) = locjx(gi,gj) + dvxvy*f_v(i,j,k,l) * vx
+      locjy(gi,gj) = locjy(gi,gj) + dvxvy*f_v(i,j,k,l) * vy
+   end do
+   end do
+   end do
+   end do
+
+   jx = 0.0_f64
+   jy = 0.0_f64
+   comm   = sll_world_collective%comm
+   call mpi_barrier(comm,error)
+   c=(nc_eta1+1)*(nc_eta2+1)
+   call mpi_allreduce(locjx,jx,c, MPI_REAL8,MPI_SUM,comm,error)
+   call mpi_allreduce(locjy,jy,c, MPI_REAL8,MPI_SUM,comm,error)
+
+ end subroutine compute_current
 
  subroutine advection_v(dt)
 

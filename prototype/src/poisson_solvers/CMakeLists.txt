@@ -3,7 +3,7 @@ SET(POISSON_LIBS sll_fft
                  sll_file_io
                  sll_utilities
                  sll_timer
-		 sll_assertion
+		     sll_assertion
                  dfftpack)
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
@@ -11,7 +11,7 @@ SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_2d_polar.F90
                  sll_poisson_2d_periodic_fftpack.F90)
 
-IF(FFTW_ENABLED)
+IF(FFTW_ENABLED AND FFTW_FOUND)
 
    SET(POISSON_SRCS "${POISSON_SRCS};../fft/fftw3.F90;sll_poisson_2d_periodic_fftw.F90")
 
@@ -57,7 +57,7 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
 
 
-IF(FFTW_ENABLED)
+IF(FFTW_ENABLED AND FFTW_FOUND)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
                                              sll_assertion
                                              dfftpack 

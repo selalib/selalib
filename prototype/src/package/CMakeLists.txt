@@ -107,6 +107,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
+    ${SLL_DIR}/fft/fftw3.F90
  )
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
@@ -117,9 +120,6 @@ IF(${FFT_LIB} MATCHES "FFTPACK")
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
-      ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-      ${SLL_DIR}/fft/fftw3.F90
       ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90)
 
 ELSE()

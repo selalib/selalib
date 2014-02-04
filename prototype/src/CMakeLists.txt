@@ -15,6 +15,7 @@ PROJECT(SLL)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
+SET(FFTW_ENABLED         ON  CACHE BOOL "Enable use of FFTW library")
 SET(SLL_BUILD_PACKAGE    OFF CACHE BOOL "Build library without test programs")
 SET(MUDPACK_ENABLED      ON  CACHE BOOL "Build mudpack library")
 SET(FISHPACK_ENABLED     ON  CACHE BOOL "Build fishpack library")
