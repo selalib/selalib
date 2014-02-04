@@ -11,6 +11,7 @@ ADD_TEST(NAME constants                 COMMAND test_constants)
 ADD_TEST(NAME timer                     COMMAND test_timer)
 SET_TESTS_PROPERTIES(timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_TEST(NAME logical_meshes            COMMAND test_logical_meshes)
+ADD_TEST(NAME logical_meshes_multipatch COMMAND test_logical_meshes_multipatch)
 ADD_TEST(NAME tridiagonal               COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange                  COMMAND test_lagrange)
 ADD_TEST(NAME toeplitz_penta_diagonal   COMMAND test_toeplitz_penta_diagonal)
@@ -24,6 +25,8 @@ ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
 
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES 
+  PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -65,6 +68,11 @@ IF(NOT STDF95)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
+   ADD_TEST(NAME coordinate_transformation_multipatch_2d 
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND test_coordinate_transformation_multipatch_2d)
+   SET_TESTS_PROPERTIES(coordinate_transformation_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
    ADD_TEST(NAME characteristics_1d_explicit_euler COMMAND test_characteristics_1d_explicit_euler)
    ADD_TEST(NAME characteristics_1d_explicit_euler_conservative
@@ -89,7 +97,7 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_2d_CSL COMMAND test_advection_2d_CSL)
    ADD_TEST(NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product)
    
-   IF(MUDPACK_ENABLED)
+   #IF(MUDPACK_ENABLED)
 
       SET(ARGS ${CMAKE_BINARY_DIR}/gcsim2d_cartesian_input)
       ADD_TEST(NAME sim2d_gc_cart COMMAND test_2d_gc_cartesian ${ARGS})
@@ -104,7 +112,7 @@ IF(NOT STDF95)
       SET_TESTS_PROPERTIES(sim2d_vp_no_split PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
-   ENDIF(MUDPACK_ENABLED)
+   #ENDIF(MUDPACK_ENABLED)
 
 
 
@@ -115,6 +123,12 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(fields_1d_alternative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(general_coordinate_elliptic_solver PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_1d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_1d_trapezoid PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_1d_trapezoid_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_explicit_euler_conservative PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(characteristics_2d_verlet PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(advection_1d_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(
      advection_1d_non_uniform_cubic_splines
