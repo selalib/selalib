@@ -16,7 +16,7 @@ program vlasov_poisson_parallel
   sll_real64, parameter :: eta4_min = -6.0_f64
   sll_real64, parameter :: eta4_max = +6.0_f64
 
-  sll_int32, parameter :: nc_eta1 = 64
+  sll_int32, parameter :: nc_eta1 = 32
   sll_int32, parameter :: nc_eta2 = 32
   sll_int32, parameter :: nc_eta3 = 32
   sll_int32, parameter :: nc_eta4 = 32
@@ -36,9 +36,9 @@ program vlasov_poisson_parallel
   type(layout_4D), pointer                   :: layout_v
   type(remap_plan_4D_real64), pointer        :: x_to_v 
   type(remap_plan_4D_real64), pointer        :: v_to_x
-  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ex
-  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ey
-  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: rho
+  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ex = 0.
+  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: ey = 0.
+  sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: rho = 0.
 
   class(sll_interpolator_1d_base), pointer   :: interp_eta1
   class(sll_interpolator_1d_base), pointer   :: interp_eta2
@@ -154,6 +154,15 @@ program vlasov_poisson_parallel
      call compute_charge()
      call solve(poisson,ex,ey,rho)
 
+     if (prank == MPI_MASTER) then
+        nrj(istep) = 0.5_f64*log(sum(ex*ex+ey*ey)*delta_eta1*delta_eta2)
+        write(*,100) .0,nstep*delta_t,-9.5,0.5
+        do jstep = 1, istep
+         print'(2e15.3)', (jstep-1)*delta_t, nrj(jstep)
+        end do
+        print'(a)','e'
+     end if
+
      call advection_eta3(delta_t)
      call advection_eta4(delta_t)
 
@@ -162,21 +171,17 @@ program vlasov_poisson_parallel
      call advection_eta1(delta_t)
      call advection_eta2(delta_t)
 
-     if (prank == MPI_MASTER) then
-
-        nrj(istep) = 0.5_f64*log(sum(ex*ex+ey*ey)*delta_eta1*delta_eta2)
-   
-        write(*,100) .0,nstep*delta_t,-9.5,0.5
-        do jstep = 1, istep
-         print'(2e15.3)', (jstep-1)*delta_t, nrj(jstep)
-        end do
-        print'(a)','e'
-
-     end if
 
   end do
 
 100 format('p [',f5.1,':',f5.1,'][',f6.1,':',f6.1,'] ''-'' w l')
+
+
+  if (prank == MPI_MASTER) then
+     do jstep = 1, nstep
+         write(13,'(2e15.3)') (jstep-1)*delta_t, nrj(jstep)
+     end do
+  end if
 
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &
