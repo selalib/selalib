@@ -7,6 +7,7 @@
 source /etc/profile
 module purge
 module load cmake/2.8.7 hdf5/gcc47/1.8.8 fftw/gcc47/3.3
+module load Python/3.3.0
 export HDF5_ROOT=/softs/hdf5/gcc47/1.8.8/
 export FFTW_ROOT=/softs/fftw/gcc47/3.3/
 mkdir selalib-build
