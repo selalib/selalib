@@ -10,6 +10,7 @@ set key bottom right
 
 set title "guiding center 2d polar"
 
-p   'thdiagp.dat' u 1: 10 w l lw 3,\
-     1.e-11*exp(0.3673*x) lw 2
-  #'../post_proc/gcsim2d_polar_ref.dat' u 1:10 w l lw 2 title 'reference',\
+p   'thdiagp.dat' u 1: (sqrt($10)) w l lw 3,\
+     '../post_proc/gcsim2d_polar_ref.dat' u 1:($10) w l lw 2 title 'reference',\
+     3.5e-6*exp(0.183*x) lw 2
+    
