@@ -1,25 +1,31 @@
 SLL_ROOT = /Users/navaro/Codes/selalib/usr
 F90 = gfortran
 OPT = -O3 #-xHost -ip -openmp
-LD  = gfortran
+
+HDF5_INCDIR = /usr/local/include
+HDF5_LIBDIR = /usr/local/lib
+HDF5_LIBRARIES = -L${HDF5_LIBDIR} -lhdf5_fortran -lhdf5
+
+MPIF90 = mpif90
    
-F90FLAGS = -I${SLL_ROOT}/include -I${SLL_ROOT}/include/fortran
-LDFLAGS = -L${SLL_ROOT}/lib 
-LIBS = -lselalib -ldfftpack
+F90FLAGS = -I${SLL_ROOT}/include/selalib -ffree-line-length-none
+LDFLAGS = ${F90FLAGS} -L${SLL_ROOT}/lib 
+LIBS = -lselalib -ldfftpack ${HDF5_LIBRARIES}
 
-PROG = landau
-OBJS = landau.o
+PROGS = landau polar_advection
+all: ${PROGS}
 
-all: $(PROG)
+landau: landau.F90
+	$(F90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
-$(PROG): $(OBJS)
-	$(LD) $(LDFLAGS) -o $@ $(OBJS) $(LIBS)
+polar_advection: polar_advection.F90
+	$(MPIF90) $(LDFLAGS) -o $@.exe $^ $(LIBS)
 
 run:
 	./landau | gnuplot
  
 clean:
-	rm -f $(PROG) $(OBJS) *.mod
+	rm -f $(PROG) *.o *.mod *.dat *.gnu
 
 .SUFFIXES: $(SUFFIXES) .F90
 

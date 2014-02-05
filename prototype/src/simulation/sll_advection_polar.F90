@@ -1670,8 +1670,9 @@ end subroutine advect_CG_polar2
     sll_real64,dimension(:),allocatable::intx,inty
     !sll_int32,dimension(:,:),allocatable::tnbr
     sll_int32,dimension(:,:,:),allocatable::cell
-    sll_real64,dimension(:,:),allocatable::tt,tcell,dir,aretesh,aretesv,sommets,aretesvg,aretesvd,areteshb,areteshh,&
-    sommetsbg,sommetsbd,sommetshg,sommetshd
+    sll_real64,dimension(:,:),allocatable::tt,tcell,dir,aretesh,aretesv,sommets,aretesvg, &
+      aretesvd,areteshb,areteshh,&
+      sommetsbg,sommetsbd,sommetshg,sommetshd
     !sll_real64,dimension(:,:,:,:),allocatable::tpts
     sll_int32::nbx(4),nby(4),nbmax,dirx,diry,ell,ell1,imin,jmin,imax,jmax,i0_loc,j0_loc
     !sll_real64::yyy
