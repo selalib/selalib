@@ -3,7 +3,7 @@ SLL_ROOT = /Users/navaro/Codes/selalib/usr
 F90 = gfortran
 OPT = -g -Wall -ffree-line-length-none -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow,underflow -O0
 
-OPT = -O3 -ffree-line-length-none  
+#OPT = -O3 -ffree-line-length-none  
 
 HDF5_INCDIR = /usr/local/include
 HDF5_LIBDIR = /usr/local/lib
@@ -21,6 +21,7 @@ LIBS = ${SLL_ROOT}/lib/libselalib.a \
        ${SLL_ROOT}/lib/libdfftpack.a \
        ${HDF5_LIBRARIES} ${FFTW_LIBRARIES}
 
+default: vlasov_maxwell_parallel 
 all: landau                  \
      polar_advection         \
      landau_parallel         \
