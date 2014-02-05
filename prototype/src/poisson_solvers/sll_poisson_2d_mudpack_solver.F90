@@ -1129,7 +1129,11 @@ contains
         !write(*,107) error
         if (error > 0) call exit(0)
         ! attempt to improve approximation to fourth order
-        call mud24cr(poisson%work,phi,error)
+        call mud24cr(poisson%work, &
+          mudpack_cofcr, &
+          mudpack_bndsp, &
+          phi, &
+          error)
         !write (*,108) error
         if (error > 0) call exit(0)
         
@@ -1242,6 +1246,7 @@ real(8)  :: xory,alfa,gbdy,x,y,pe,px,py
 real(8)  :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 
+pe = 0.0
 !subroutine not used in periodic case
 if (kbdy == 1) then  ! x=xa boundary
    y = xory

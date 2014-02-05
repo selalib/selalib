@@ -359,7 +359,7 @@ module sll_remapper
      module procedure apply_remap_6D_double, apply_remap_6D_int
   end interface apply_remap_6D
 
-  interface delete
+  interface sll_delete
      module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
           delete_layout_5D, delete_layout_6D, &
           delete_remap_2D_int32, &
@@ -374,7 +374,7 @@ module sll_remapper
           delete_remap_6D_int32, &
           delete_remap_6D_real64, &
           delete_remap_6D_comp64
-  end interface delete
+  end interface sll_delete
 
   interface compute_local_sizes
      module procedure compute_local_sizes_2d, compute_local_sizes_3d, &

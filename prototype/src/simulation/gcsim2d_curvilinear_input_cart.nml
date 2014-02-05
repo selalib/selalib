@@ -17,8 +17,8 @@
     eps = 1e-6 !0.015
 /    
 &time_iterations
-    dt = 0.3
-    number_iterations  = 50
+    dt = 0.5
+    number_iterations  = 120
     freq_diag = 100
     freq_diag_time = 1
     !time_loop_case = "SLL_EULER"
@@ -40,14 +40,14 @@
     spline_degree_eta2 = 3  
 /    
 &boundaries
-    bc_interp2d_eta1 =  0
-    bc_interp2d_eta2 =  0
-    bc_charac2d_eta1 =  0
-    bc_charac2d_eta2 =  0
-    bc_eta1_left     =  0
-    bc_eta1_right    =  0
-    bc_eta2_left     =  0
-    bc_eta2_right    =  0
+    bc_interp2d_eta1 =  "SLL_PERIODIC"
+    bc_interp2d_eta2 =  "SLL_PERIODIC"
+    bc_charac2d_eta1 =  "SLL_PERIODIC"
+    bc_charac2d_eta2 =  "SLL_PERIODIC"
+    bc_eta1_left     =  "SLL_PERIODIC"
+    bc_eta1_right    =  "SLL_PERIODIC"
+    bc_eta2_left     =  "SLL_PERIODIC"
+    bc_eta2_right    =  "SLL_PERIODIC"
 /   
 
 !! SLL_PERIODIC    = 0 SLL_DIRICHLET      = 1  SLL_NEUMANN        = 2
