@@ -51,7 +51,6 @@ contains
     eta_max, &
     Nc, &
     N_points, &
-    interp_degree, &
     splines_case) &     
     result(gyroaverage)
       
@@ -82,7 +81,7 @@ contains
     Nc, &
     N_points, &
     splines_case)
-    class(gyroaverage_2d_polar_hermite_solver) :: gyroaverage
+    class(gyroaverage_2d_polar_splines_solver) :: gyroaverage
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
@@ -99,45 +98,26 @@ contains
 
     
     select case(gyroaverage%splines_case)
-       case (1)
+       case (1,2,3,4)
           gyroaverage%gyro => new_plan_gyroaverage_polar_splines( &
           eta_min, &
           eta_max, &
           Nc, &
           N_points)
-       case (2)
-          gyroaverage%gyro => new_plan_gyroaverage_polar_splines_with_invariance( &
-          eta_min, &
-          eta_max, &
-          Nc, &
-          N_points)
-       case (3)
-          gyroaverage%gyro => new_plan_gyroaverage_polar_splines_precompute( &
-          eta_min, &
-          eta_max, &
-          Nc, &
-          N_points) 
-       case (4)
-          gyroaverage%gyro => new_plan_gyroaverage_polar_splines_precompute_FFT( &
-          eta_min, &
-          eta_max, &
-          Nc, &
-          N_points) 
        case default
           print *,'#bad value of splines_case=', gyroaverage%splines_case
           print *,'#not implemented'
           print *,'#in initialize_gyroaverage_2d_polar_splines_solver'
           stop
     end select   
-           
+
   end subroutine initialize_gyroaverage_2d_polar_splines_solver
   
 
-  subroutine compute_gyroaverage_2d_polar_splines( gyroaverage, larmor_rad, f, Jf  )
-    class(gyroaverage_2d_polar_computation), target :: gyroaverage
+  subroutine compute_gyroaverage_2d_polar_splines( gyroaverage, larmor_rad, f)
+    class(gyroaverage_2d_polar_splines_solver), target :: gyroaverage
     sll_real64, intent(in) :: larmor_rad
-    sll_real64,dimension(:,:),intent(in) :: f
-    sll_real64,dimension(:,:),intent(out) :: Jf
+    sll_real64,dimension(:,:),intent(inout) :: f
 
     select case(gyroaverage%splines_case)
       case (1)
@@ -156,8 +136,6 @@ contains
         print *,'compute_gyroaverage_2d_polar_splines'
         stop
      end select 
-     
-     Jf=f  
     
   end subroutine compute_gyroaverage_2d_polar_splines
   

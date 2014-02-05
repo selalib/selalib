@@ -15,7 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
 module sll_module_gyroaverage_2d_polar_hermite_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -125,11 +124,10 @@ contains
   end subroutine initialize_gyroaverage_2d_polar_hermite_solver
   
 
-  subroutine compute_gyroaverage_2d_polar_hermite( gyroaverage, larmor_rad, f, Jf  )
-    class(gyroaverage_2d_polar_computation), target :: gyroaverage
+  subroutine compute_gyroaverage_2d_polar_hermite( gyroaverage, larmor_rad, f )
+    class(gyroaverage_2d_polar_hermite_solver), target :: gyroaverage
     sll_real64, intent(in) :: larmor_rad
-    sll_real64,dimension(:,:),intent(in) :: f
-    sll_real64,dimension(:,:),intent(out) :: Jf
+    sll_real64,dimension(:,:),intent(inout) :: f
 
     select case(gyroaverage%hermite_case)
       case (1)
@@ -146,9 +144,7 @@ contains
         print *,'#not implemented'
         print *,'compute_gyroaverage_2d_polar_hermite'
         stop
-     end select 
-     
-     Jf=f  
+     end select
     
   end subroutine compute_gyroaverage_2d_polar_hermite
   
