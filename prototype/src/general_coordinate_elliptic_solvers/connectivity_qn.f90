@@ -84,6 +84,8 @@ contains
             (bc_bottom==CONNECT_DIRICHLET).and.(bc_top==CONNECT_DIRICHLET))then
 
        call xi_DIR_eta_DIR_init(nb_spl_x,nb_spl_y,global_spline_indices)
+
+       
     end if
     
     ! INITIALIIZING THE LOCATION MATRIX LM ARRAY
@@ -97,6 +99,73 @@ contains
          local_to_global_spline_indices)
 
   end subroutine initconnectivity
+
+
+  subroutine initconnectivity_bis( &
+    num_cells1, &
+    num_cells2, &
+    spline_degree1, &
+    spline_degree2, &
+    bc_left, &
+    bc_right, &
+    bc_bottom, &
+    bc_top, &
+    local_spline_indices, &
+    global_spline_indices, &
+    local_to_global_spline_indices )
+    
+    integer :: num_cells1, num_cells2, spline_degree1, spline_degree2
+    integer :: bc_left, bc_right, bc_bottom, bc_top
+    integer :: nb_spl_x,nb_spl_y
+    integer, dimension(:,:) :: local_spline_indices
+    integer, dimension(:)   :: global_spline_indices
+    integer, dimension(:,:) :: local_to_global_spline_indices
+    
+   ! integer :: BC  ! 0 if periodic-Dirichlet and 1 if Dirichlet-Dirichlet 
+    integer :: li_i_, li_j_!,t1,t2
+    integer :: li_iloc, li_jloc, li_Bloc, li_B,maille    
+    
+    !print*, 'local_spline_indices=', local_spline_indices(1,1)
+
+    ! loop over elements
+   do li_j_ = 1, num_cells2    
+       do li_i_=1, num_cells1  
+          maille = num_cells1*(li_j_-1) + li_i_
+          do li_jloc = 0 , spline_degree2
+             do li_iloc = 0, spline_degree1
+                li_B = (li_j_ -1)*(num_cells1+spline_degree1) + li_i_ + &
+                          li_jloc*(num_cells1+spline_degree1) + li_iloc 
+                li_Bloc = li_jloc * (spline_degree1 + 1) + li_iloc + 1
+                local_spline_indices(li_Bloc, maille) = li_B
+             end do
+          end do
+       end do
+    end do
+
+   ! print*, local_spline_indices
+    ! INITIALIIZING THE ID ARRAY
+    !select case ( ai_TYPE_PBC)
+
+    !case ( BC_XI_DIR_ETA_PER )
+    nb_spl_x= num_cells1 + spline_degree1
+    nb_spl_y= num_cells2 + spline_degree2
+    
+    call xi_eta_init(&
+         nb_spl_x,&
+         nb_spl_y,&
+         global_spline_indices)
+    
+    ! INITIALIIZING THE LOCATION MATRIX LM ARRAY
+    call initLM(&
+         num_cells1,&
+         num_cells2,&
+         spline_degree1,&
+         spline_degree2,&
+         local_spline_indices,&
+         global_spline_indices,&
+         local_to_global_spline_indices)
+
+  end subroutine initconnectivity_bis
 
   !--------------------------------------------------------------------------
   subroutine xi_DIR_eta_PER_init( &
@@ -215,6 +284,27 @@ contains
   end subroutine xi_DIR_eta_DIR_init
 
 
+  subroutine xi_eta_init(&
+       num_cells1,&
+       num_cells2,&
+       global_spline_indices)
+
+    integer :: li_d,num_cells1,num_cells2
+    integer :: li_i, li_j, li_A
+    ! integer :: li_dof!,ai_sizePB
+    integer, dimension(:) :: global_spline_indices
+    
+    li_d = 0
+    
+    do li_j = 1, num_cells2
+       do li_i = 1, num_cells1
+          li_A = li_i + num_cells1*(li_j-1)
+          li_d = li_d + 1
+          global_spline_indices(li_A) = li_d
+       end do
+    end do
+  end subroutine xi_eta_init
+
   subroutine xi_PER_eta_PER_init(&
        num_cells1,&
        num_cells2,&
@@ -290,11 +380,13 @@ contains
        
        do li_b = 1, (spline_degree1+1)*(spline_degree2+1)
           
-          ! print*, global_spline_indices(local_spline_indices(li_b, li_e))
           local_to_global_spline_indices(li_b, li_e) = &
                global_spline_indices(local_spline_indices(li_b, li_e))
        end do
     end do
   end subroutine initLM
+
+
+
       
 end module connectivity_module
