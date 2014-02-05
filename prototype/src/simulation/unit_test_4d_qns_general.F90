@@ -13,6 +13,7 @@ program qns_4d_general
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
+  use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
   implicit none
 
@@ -22,6 +23,7 @@ program qns_4d_general
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
+  !class(sll_coordinate_transformation_2d_nurbs), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
   sll_real64, dimension(1:6) :: gaussian_params
   sll_real64, dimension(1:2) :: elec_field_ext_params
@@ -63,25 +65,52 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
-#define NPTS2 32
+#define NPTS1 66
+#define NPTS2 66
 #define NPTS3 32
 #define NPTS4 32
 #define SPL_DEG1 3 
 #define SPL_DEG2 3
 
+  ! ---------------------------------------------------------------------
   ! logical mesh for space coordinates
   ! NPTS1 and NPTS2 is the number of cells
-  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
-       eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
-       eta2_min=0.0_f64, eta2_max= 4.0_f64*sll_pi )
+  ! ---------------------------------------------------------------------
+
+
+  ! mesh for the test case 
+  !  sll_periodic_periodic_gaussian2009_initializer_4d   
+  !  sll_periodic_periodic_gaussian2002_initializer_4d
+  ! sll_landau_initializer_4d
+
+!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,       & 
+!!$       eta1_min=0.0_f64, eta1_max= 4.0_f64*sll_pi, &
+!!$       eta2_min=0.0_f64, eta2_max= 4.0_f64*sll_pi )
+!!$  
+!!$  ! logical mesh for velocity coordinates
+!!$  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+!!$       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
+!!$       eta2_min=-6.0_f64, eta2_max=6.0_f64)
+
+
+  ! mesh for the test case 
+  ! sll_gaussian_beam_initializer_4d
+  
+  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
+       eta1_min=0.0_f64, eta1_max= 1.0_f64, &
+       eta2_min=0.0_f64, eta2_max= 1.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
-       eta1_min=-6.0_f64, eta1_max=6.0_f64, &
-       eta2_min=-6.0_f64, eta2_max=6.0_f64)
-  
+       eta1_min=-9.0_f64, eta1_max=9.0_f64, &
+       eta2_min=-9.0_f64, eta2_max=9.0_f64)
+
+  ! ---------------------------------------------------------------------
   ! coordinate transformation associated with space coordinates
+  ! ---------------------------------------------------------------------
+
+  ! identity transformation
+
 !!$  transformation_x => new_coordinate_transformation_2d_analytic( &
 !!$       "analytic_identity_transformation", &
 !!$       mx, &
@@ -93,37 +122,46 @@ program qns_4d_general
 !!$       identity_jac22, &
 !!$       (/ 0.0_f64 /) )
 
-  transformation_x => new_coordinate_transformation_2d_analytic( &
-       "analytic_colela_transformation", &
-       mx, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, &
-       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
+  ! colella transformation
+  
+!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic_colela_transformation", &
+!!$       mx, &
+!!$       sinprod_x1, &
+!!$       sinprod_x2, &
+!!$       sinprod_jac11, &
+!!$       sinprod_jac12, &
+!!$       sinprod_jac21, &
+!!$       sinprod_jac22, &
+!!$       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
 
+
+   transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n63x63p3x3_patch0.nml")
+  !transformation_x%mesh => mx
+   print*, 'transformation ok'
+  ! ---------------------------------------------------------------------
   ! define the values of the parameters for the landau initializer
-!!!!! sll_landau_initializer_4d
-  landau_params(1) = mx%eta1_min      !eta1_min
-  landau_params(2) = mx%eta1_max
-  landau_params(3) = mx%eta2_min      !eta2_min
-  landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.05     !eps
+  ! ---------------------------------------------------------------------
 
+!!$  ! sll_landau_initializer_4d
+!!$  landau_params(1) = mx%eta1_min      !eta1_min
+!!$  landau_params(2) = mx%eta1_max
+!!$  landau_params(3) = mx%eta2_min      !eta2_min
+!!$  landau_params(4) = mx%eta2_max
+!!$  landau_params(5) = 0.05     !eps
 !!$
 
-  !! 2002 et 2009 sll_periodic_periodic_gaussian2009_initializer_4d   
-!  sll_periodic_periodic_gaussian2002_initializer_4d
-  landau_params(1) = mx%eta1_min      !eta1_min
-  landau_params(2) = mx%eta1_max
-  landau_params(3) = mx%eta2_min      !eta2_min
-  landau_params(4) = mx%eta2_max
-  landau_params(5) = 0.0_f64     !eps
-  landau_params(6) = 0.0_f64     !eps
-  landau_params(7) = 0.05_f64     !eps
-  landau_params(8) = 1._f64     !eps
+!!$  ! 2002 et 2009 sll_periodic_periodic_gaussian2009_initializer_4d   
+!!$  !  sll_periodic_periodic_gaussian2002_initializer_4d
+!!$  landau_params(1) = mx%eta1_min      !eta1_min
+!!$  landau_params(2) = mx%eta1_max
+!!$  landau_params(3) = mx%eta2_min      !eta2_min
+!!$  landau_params(4) = mx%eta2_max
+!!$  landau_params(5) = 0.0_f64     !eps
+!!$  landau_params(6) = 0.0_f64     !eps
+!!$  landau_params(7) = 0.05_f64     !eps
+!!$  landau_params(8) = 1._f64     !eps
+
 
   ! sll_gaussian_beam_initializer_4d parameters
 
@@ -137,7 +175,10 @@ program qns_4d_general
   landau_params(8) = 0.0_f64!yc
   landau_params(9) = 1.0_f64!n0
   
+
+  ! ---------------------------------------------------------------------
   ! initialize simulation object with the above parameters
+  ! ---------------------------------------------------------------------
   call initialize_4d_qns_general( &
        simulation, &
        mx, &
@@ -174,20 +215,6 @@ program qns_4d_general
        elec_field_ext_params)
 
 
-!  ! define the values of the parameters for the landau initializer
-!  gaussian_params(1) = 3.0*sll_pi !xc
-!  gaussian_params(2) = 2.0*sll_pi !yc
-!  gaussian_params(3) = 0.0        !vxc
-!  gaussian_params(4) = 0.0        !vyc
-!
-!  ! initialize simulation object with the above parameters
-!  call initialize_vp4d_general( &
-!       simulation, &
-!       mx, &
-!       mv, &
-!       transformation_x, &
-!       sll_gaussian_initializer_4d, &
-!       gaussian_params )
   print *, ' f initialized '
 
   call simulation%run( )
@@ -197,6 +224,8 @@ program qns_4d_general
 
   call sll_halt_collective()
 
+  !call delete(simulation)
+  !call delete(transformation_x)
 
 end program qns_4d_general
 
