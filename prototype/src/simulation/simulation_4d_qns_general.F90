@@ -788,6 +788,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%rho_split,1), &
+         size(sim%rho_split,2), &
          sim%rho_split, &
          "rho_split", &
          0, &
@@ -825,6 +827,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%rho_full,1), &
+         size(sim%rho_full,2), &
          sim%rho_full, &
          "rho_full", &
          0, &
@@ -866,6 +870,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%rho_full,1), &
+         size(sim%rho_full,2), &
          sim%rho_full, &
          "rho_full", &
          0, &
@@ -1044,6 +1050,8 @@ contains
                sim%mesh2d_x%delta_eta1, &
                sim%mesh2d_x%eta2_min, &
                sim%mesh2d_x%delta_eta2, &
+               size(sim%rho_full,1), &
+               size(sim%rho_full,2), &
                sim%rho_full, &
                "rho_full_check", &
                itime, &
