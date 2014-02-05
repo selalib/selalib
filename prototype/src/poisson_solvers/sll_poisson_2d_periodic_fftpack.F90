@@ -130,6 +130,8 @@ subroutine initialize_poisson_2d_periodic_fftpack( &
    this%x_max = x_max
    this%y_min = y_min
    this%y_max = y_max
+   this%dx   = (x_max-x_min) / nc_x
+   this%dy   = (y_max-y_min) / nc_y
 
    SLL_ALLOCATE(this%rhst(nc_y,nc_x/2+1), error)
    SLL_ALLOCATE(this%ext (nc_y,nc_x/2+1), error)

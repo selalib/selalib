@@ -83,7 +83,7 @@ program DK_hybrid_4d
   !*** Erase the memory used for the simulation ***
   if (simulation%my_rank.eq.0) &
     print*,': ---> Delete'
-  call delete(simulation)
+  call sll_delete(simulation)
 
   print *, 'reached end of 4d DK hybrid test'
   print *, 'PASSED'

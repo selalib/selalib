@@ -3,9 +3,11 @@ program test_io_parallel
 
 use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 use sll_collective
+#ifdef HDF5_PARALLEL
 use sll_hdf5_io_parallel
-use sll_xml_io
 use sll_xdmf_parallel
+#endif
+use sll_xml_io
 use sll_gnuplot_parallel
 use sll_remapper
 #include "sll_memory.h"
@@ -125,11 +127,13 @@ contains
   !Gnuplot output
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
+                                    size(zdata,1), size(zdata,2), &
                                     zdata, "rect_mesh", 1, error)  
 
   call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
+#ifdef HDF5_PARALLEL
   !Begin high level version
 
   call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
@@ -167,6 +171,8 @@ contains
      print *, '--------------------'
 
   end if
+
+#endif
 
   !End low level version
 
@@ -245,9 +251,12 @@ contains
      enddo
   enddo
 
+
   offset(1) = get_layout_3D_i_min( layout, myrank ) - 1
   offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
   offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
+
+#ifdef HDF5_PARALLEL
 
   call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)
@@ -280,6 +289,7 @@ contains
      print *, '--------------------'
   end if
 
+#endif
 
   call sll_collective_barrier(sll_world_collective)
   
