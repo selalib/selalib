@@ -485,7 +485,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: M_b_vect_loc
     sll_real64, dimension(:,:), allocatable :: S_b1_loc
     sll_real64, dimension(:,:), allocatable :: S_b2_loc
-    !sll_real64, dimension(:,:), allocatable :: full_Matrix
+    sll_real64, dimension(:,:), allocatable :: full_Matrix
     sll_real64, dimension(:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Stiff_loc
     sll_real64, dimension(:,:,:), pointer :: Source_loc
@@ -529,17 +529,17 @@ contains ! *******************************************************************
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
     
     !   Allocation full_Matrix 
-    !SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,(es%num_cells1+1)*(es%num_cells2+1)),ierr1)
+    SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,(es%num_cells1+1)*(es%num_cells2+1)),ierr1)
    ! SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     ! SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
-    !full_Matrix(:,:) = 0.0_f64
+    full_Matrix(:,:) = 0.0_f64
    ! Masse_tot(:) = 0.0_f64
     ! Stiff_tot(:) = 0.0_f64
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
     Source_loc(:,:,:) = 0.0_f64
     
-    !full_Matrix(:,:) = 0.0_f64
+    full_Matrix(:,:) = 0.0_f64
     es%full_masse(:,:) = 0.0_f64
     !call set_time_mark(t0)
     do j=1,es%num_cells2
@@ -618,7 +618,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
-    !SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
+    SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
   end subroutine factorize_mat_es
   
   
