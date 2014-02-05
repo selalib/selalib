@@ -4,9 +4,9 @@ program vlasov_maxwell_parallel
 
   implicit none
 
-  sll_int32,  parameter :: nstep    = 2000
+  sll_int32,  parameter :: nstep    = 1000
   sll_real64, dimension(nstep) :: nrj
-  sll_real64, parameter :: delta_t  = 0.01
+  sll_real64, parameter :: delta_t  = 0.02
   sll_real64, parameter :: eta1_min = 0.0_f64
   sll_real64, parameter :: eta1_max = 4*sll_pi
   sll_real64, parameter :: eta2_min = 0.0_f64
@@ -56,7 +56,6 @@ program vlasov_maxwell_parallel
   sll_real64 :: x, y, vx, vy, v2, kx
   sll_int32  :: error
 
-
   type(maxwell_2d_pstd)     :: maxwell
 
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: bz = 0.
@@ -65,6 +64,10 @@ program vlasov_maxwell_parallel
 
   class(sll_interpolator_2d_base), pointer   :: interp_v
   type(cubic_spline_2d_interpolator), target :: spl_v
+
+  sll_int32  :: offset(4)
+  sll_real64 :: offset_eta3, offset_eta4
+  sll_real64, dimension(:,:), allocatable :: proj_f_v
 
   call sll_boot_collective()
 
@@ -86,8 +89,6 @@ program vlasov_maxwell_parallel
 
   interp_v => spl_v
 
-
-
   call spl_eta1%initialize(nc_eta1+1, eta1_min, eta1_max, SLL_PERIODIC)
   call spl_eta2%initialize(nc_eta2+1, eta2_min, eta2_max, SLL_PERIODIC)
 
@@ -104,6 +105,7 @@ program vlasov_maxwell_parallel
 
   call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(f_x(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),error)
+  SLL_CLEAR_ALLOCATE(proj_f_v(1:loc_sz_k,1:loc_sz_l),error)
 
   layout_v => new_layout_4D( sll_world_collective )
   call initialize_layout_with_distributed_4D_array( &
@@ -165,8 +167,6 @@ program vlasov_maxwell_parallel
 
      call apply_remap_4D( x_to_v, f_x, f_v )
 
-     !call compute_charge()
-     !call solve(poisson,ex,ey,rho)
      call compute_current()
      call ampere(maxwell,ex,ey,bz,delta_t,jx,jy) 
 
@@ -184,10 +184,10 @@ program vlasov_maxwell_parallel
      !call faraday(maxwell,ex,ey,bz,0.5*delta_t)   
 
      call apply_remap_4D( v_to_x, f_v, f_x )
+     
 
      call advection_eta1(delta_t)
      call advection_eta2(delta_t)
-
 
   end do
 
@@ -341,6 +341,9 @@ contains
 
   call compute_local_sizes_4d(layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
+  alpha_x = 1.0
+  alpha_y = 0.0 
+
   do i=1,loc_sz_i
   do j=1,loc_sz_j
 
@@ -365,10 +368,33 @@ contains
      end do
 
      f_v(i,j,:,:) = interp_v%interpolate_array_disp(loc_sz_k,loc_sz_l, &
-                                                 f_v(i,j,:,:),alpha_x,alpha_y)
+                                         f_v(i,j,:,:),alpha_x,alpha_y)
   end do
   end do
+  
 
  end subroutine advection_v
+
+ subroutine plot_proj_f_v()
+
+    offset = local_to_global_4D(layout_x,(/1,1,1,1/)) 
+    offset_eta3 = (offset(3)-1)*delta_eta3
+    offset_eta4 = (offset(4)-1)*delta_eta4
+
+    call compute_local_sizes_4d(layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+    do l=1,loc_sz_l 
+    do k=1,loc_sz_k
+       proj_f_v(k,l) = sum(f_x(:,:,k,l))
+    end do
+    end do
+
+    call sll_gnuplot_2d_parallel( offset_eta3, delta_eta3, &
+                                  offset_eta4, delta_eta4, &
+                                  size(proj_f_v,1),        &
+                                  size(proj_f_v,2),        &
+                                  proj_f_v, 'f_v',         &
+                                  istep, error)
+
+ end subroutine plot_proj_f_v
 
 end program vlasov_maxwell_parallel
