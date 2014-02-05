@@ -314,7 +314,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(* time.asctime())
+        if options.verbose: print( time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)
