@@ -79,14 +79,12 @@ contains
   end subroutine initialize_gyroaverage_2d_polar_pade_solver
   
 
-  subroutine compute_gyroaverage_2d_polar_pade( gyroaverage, larmor_rad, f, Jf  )
-    class(gyroaverage_2d_polar_computation), target :: gyroaverage
+  subroutine compute_gyroaverage_2d_polar_pade( gyroaverage, larmor_rad, f)
+    class(gyroaverage_2d_polar_pade_solver), target :: gyroaverage
     sll_real64, intent(in) :: larmor_rad
-    sll_real64,dimension(:,:),intent(in) :: f
-    sll_real64,dimension(:,:),intent(out) :: Jf
+    sll_real64,dimension(:,:),intent(inout) :: f
 
     call compute_gyroaverage_pade_polar(gyroaverage%gyro,f,larmor_rad)
-    Jf=f  
     
   end subroutine compute_gyroaverage_2d_polar_pade
   
