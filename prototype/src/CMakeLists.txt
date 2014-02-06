@@ -108,6 +108,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
    ADD_SUBDIRECTORY(pic_particle_types)
+   ADD_SUBDIRECTORY(particle_initializers)
 
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
