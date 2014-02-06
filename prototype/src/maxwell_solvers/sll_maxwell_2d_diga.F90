@@ -9,6 +9,7 @@ module sll_maxwell_2d_diga
 #include "sll_file_io.h"
 #include "sll_integration.h"
 #include "sll_utilities.h"
+#include "sll_assert.h"
 
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
@@ -490,32 +491,50 @@ subroutine diga_plot_2d( this, field )
 end subroutine diga_plot_2d
 
 function new_diga_field_2d( this, init_function) result(field)
-type(maxwell_2d_diga)  :: this
-sll_real64, external :: init_function
-sll_real64, pointer :: field(:,:,:,:)
-sll_real64 :: offset(2)
-sll_real64 :: eta1
-sll_real64 :: eta2
-sll_int32  :: i, j, ii, jj
 
-SLL_CLEAR_ALLOCATE(field(1:this%nc_eta1,1:this%nc_eta2,1:this%d+1,1:this%d+1),error)
+   type(maxwell_2d_diga)          :: this
+   sll_real64, external, optional :: init_function
+   sll_real64, pointer            :: field(:,:,:,:)
+   
+   SLL_CLEAR_ALLOCATE(field(1:this%nc_eta1,1:this%nc_eta2,1:this%d+1,1:this%d+1),error)
 
-do i = 1, this%nc_eta1
-do j = 1, this%nc_eta1
-   offset(1) = this%eta1_min + (i-1)*this%delta_eta1
-   offset(2) = this%eta2_min + (j-1)*this%delta_eta2
-   do ii = 1, this%d+1
-   do jj = 1, this%d+1
-      eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%delta_eta1
-      eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%delta_eta2
-      field(i,j,ii,jj) = init_function(this%tau%x1(eta1,eta2), &
-                                       this%tau%x2(eta1,eta2), &
-                                       0.0_f64)
-   end do
-   end do
-end do
-end do
+   if (present(init_function)) then
+      call initialize_diga_field_2d( this, field, init_function, 0.0_f64) 
+   end if
+
 end function new_diga_field_2d
+   
+subroutine initialize_diga_field_2d( this, field, init_function, time) 
+
+   type(maxwell_2d_diga)          :: this
+   sll_real64, pointer            :: field(:,:,:,:)
+   sll_real64, external           :: init_function
+   sll_real64                     :: time
+   sll_real64                     :: offset(2)
+   sll_real64                     :: eta1
+   sll_real64                     :: eta2
+   sll_int32                      :: i, j, ii, jj
+   
+   SLL_ASSERT(associated(field))
+
+   do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta1
+      offset(1) = this%eta1_min + (i-1)*this%delta_eta1
+      offset(2) = this%eta2_min + (j-1)*this%delta_eta2
+      do ii = 1, this%d+1
+      do jj = 1, this%d+1
+         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%delta_eta1
+         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%delta_eta2
+         field(i,j,ii,jj) = init_function(this%tau%x1(eta1,eta2), &
+                                          this%tau%x2(eta1,eta2), &
+                                          time)
+      end do
+      end do
+   end do
+   end do
+
+end subroutine initialize_diga_field_2d
+
 
 
 end module sll_maxwell_2d_diga
