@@ -55,11 +55,25 @@ end type cell_type
 !> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
 type, public :: maxwell_2d_diga
- type(sll_logical_mesh_2d), pointer                        :: mesh !< Logical mesh
- class(sll_coordinate_transformation_2d_analytic), pointer :: tau  !< Geometric transformation
- sll_int32                                                 :: polarization !< TE or TM
- sll_int32                                                 :: d    !< d of gauss integration
- type(cell_type), dimension(:,:), pointer                  :: cell !< mesh cells
+
+   type(sll_logical_mesh_2d), pointer              :: mesh !< Logical mesh
+   class(sll_coordinate_transformation_2d_analytic), &
+      pointer                                      :: tau  !< transformation
+   sll_int32                                       :: polarization !< TE or TM
+   sll_int32                                       :: d    !< d of gauss integration
+   type(cell_type), dimension(:,:), pointer        :: cell !< mesh cells
+   sll_int32                                       :: nc_eta1
+   sll_int32                                       :: nc_eta2
+   sll_real64                                      :: eta1_min
+   sll_real64                                      :: eta1_max
+   sll_real64                                      :: delta_eta1
+   sll_real64                                      :: eta2_min
+   sll_real64                                      :: eta2_max
+   sll_real64                                      :: delta_eta2
+   sll_real64, dimension(:,:,:,:), pointer         :: bz
+   sll_real64, dimension(:), allocatable           :: xgalo
+   sll_real64, dimension(:), allocatable           :: wgalo
+
 end type maxwell_2d_diga
 
 !> Create a Maxwell solver object using Discontinuous Galerkine 
@@ -75,7 +89,6 @@ end interface solve
 sll_int32                  :: error
 type(w_vector)             :: V
 type(w_vector)             :: F
-
 sll_real64, dimension(3,3) :: A1
 sll_real64, dimension(3,3) :: A2
 
@@ -90,25 +103,34 @@ contains
 !> Construction of the derivative matrix for Gauss-Lobatto 2D
 !> \f[ mdiag(i,j)  =  int(Phi_{i,j}.Phi_{k,l})_{[-1;1]}^2  \f]
 !> \f[             =  w_i w_j det(\tau'(\hat{\eta}_{i,j} \delta_{i,k}.\delta_{j,l}\f]
-subroutine initialize_maxwell_2d_diga( this, tau, d, polarization)
+subroutine initialize_maxwell_2d_diga( this, tau, d, init_function, polarization)
 type( maxwell_2d_diga ) :: this !< solver data object
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 sll_int32  :: polarization
 sll_int32  :: d
 sll_int32  :: nddl
 sll_int32  :: ncells
-sll_real64 :: xgalo(d+1)
-sll_real64 :: wgalo(d+1)
 sll_real64 :: dlag(d+1,d+1)
 sll_real64 :: det
 sll_real64 :: jac_mat(2,2)
 sll_real64 :: inv_jac_mat(2,2)
-sll_real64 :: eta1_p, eta2_p
+sll_real64 :: eta1_p
+sll_real64 :: eta2_p
 sll_real64 :: mdiag
 sll_int32  :: i, j, k, l, ii, jj, kk, ll
+sll_real64, external ::  init_function
 
-this%tau          => tau
-this%mesh         => tau%mesh
+this%tau   => tau
+this%mesh  => tau%mesh
+
+this%nc_eta1    = tau%mesh%num_cells1
+this%nc_eta2    = tau%mesh%num_cells2
+this%eta1_min   = tau%mesh%eta1_min
+this%eta2_min   = tau%mesh%eta2_min
+this%eta1_max   = tau%mesh%eta1_max
+this%eta2_max   = tau%mesh%eta2_max
+this%delta_eta1 = tau%mesh%delta_eta1
+this%delta_eta2 = tau%mesh%delta_eta2
 
 this%d            =  d
 this%polarization = polarization
@@ -116,25 +138,25 @@ this%polarization = polarization
 call tau%write_to_file(SLL_IO_MTV)
 
 nddl   = (d+1)*(d+1)
-ncells = this%mesh%num_cells1*this%mesh%num_cells2
-xgalo  = gauss_lobatto_points(d+1,-1._f64,1._f64)
-wgalo  = gauss_lobatto_weights(d+1)
+ncells = this%nc_eta1*this%nc_eta2
+
+SLL_ALLOCATE(this%xgalo(d+1),error)
+SLL_ALLOCATE(this%wgalo(d+1),error)
+
+this%xgalo  = gauss_lobatto_points(d+1,-1._f64,1._f64)
+this%wgalo  = gauss_lobatto_weights(d+1)
 dlag   = gauss_lobatto_derivative_matrix(d+1, -1._f64, 1._f64) 
 
+this%bz => new_diga_field_2d(this, init_function)
+
+call diga_plot_2d(this, this%bz)
+stop
 call sll_display(dlag, "f8.3")
 
-do j = 1, this%mesh%num_cells2+1
-   do i = 1, this%mesh%num_cells1+1
-   write(11,*) tau%mesh%eta1_min+(i-1)*tau%mesh%delta_eta1, &
-               tau%mesh%eta2_min+(j-1)*tau%mesh%delta_eta2, 1.
-   end do
-   write(11,*) 
-end do
+SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
-SLL_ALLOCATE(this%cell(this%mesh%num_cells1,this%mesh%num_cells2), error)
-
-do i = 1, this%mesh%num_cells1
-do j = 1, this%mesh%num_cells2
+do i = 1, this%nc_eta1
+do j = 1, this%nc_eta2
 
    SLL_CLEAR_ALLOCATE(this%cell(i,j)%MassMatrix(1:(d+1)*(d+1))            , error)
    SLL_CLEAR_ALLOCATE(this%cell(i,j)%DxMatrix(1:(d+1)*(d+1),1:(d+1)*(d+1)), error)
@@ -142,12 +164,12 @@ do j = 1, this%mesh%num_cells2
 
    do ii = 1, d+1
    do jj = 1, d+1
-      eta1_p  = (i-0.5+0.5*xgalo(ii))*tau%mesh%delta_eta1+tau%mesh%eta1_min
-      eta2_p  = (j-0.5+0.5*xgalo(jj))*tau%mesh%delta_eta2+tau%mesh%eta2_min
+      eta1_p  = (i-0.5+0.5*this%xgalo(ii))*this%delta_eta1+this%eta1_min
+      eta2_p  = (j-0.5+0.5*this%xgalo(jj))*this%delta_eta2+this%eta2_min
       jac_mat = tau%jacobian_matrix(eta1_p,eta2_p)
       det     = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
 
-      mdiag   = wgalo(ii)*wgalo(jj)*det
+      mdiag   = this%wgalo(ii)*this%wgalo(jj)*det
       this%cell(i,j)%MassMatrix((ii-1)*(d+1)+jj) = mdiag
 
       do ll = 1, d+1
@@ -163,7 +185,7 @@ do j = 1, this%mesh%num_cells2
    end do
    end do
 
-   call compute_normals(tau, i, j, d, xgalo, wgalo, this%cell(i,j) )
+   call compute_normals(tau, i, j, d, this%xgalo, this%wgalo, this%cell(i,j) )
 
    SLL_CLEAR_ALLOCATE(this%cell(i,j)%W%f(1:(d+1)*(d+1),3),error)
 
@@ -295,8 +317,8 @@ sll_int32 :: edge, left, right, node, side
 sll_int32 :: i, j, k, l
 
 !Loop over cells
-do i = 1, this%mesh%num_cells1
-do j = 1, this%mesh%num_cells2
+do i = 1, this%nc_eta1
+do j = 1, this%nc_eta2
 
    F%f(:,1) = matmul(this%cell(i,j)%DxMatrix,this%cell(i,j)%W%f(:,1)) &
             + matmul(this%cell(i,j)%DyMatrix,this%cell(i,j)%W%f(:,1))
@@ -311,15 +333,15 @@ do j = 1, this%mesh%num_cells2
       select case(side)
       case(SOUTH)
          k = i
-         l = 1+modulo(j-2,this%mesh%num_cells2) 
+         l = 1+modulo(j-2,this%nc_eta2) 
       case(EAST)
-         k = 1+modulo(i  ,this%mesh%num_cells1)
+         k = 1+modulo(i  ,this%nc_eta1)
          l = j
       case(NORTH)
          k = i
-         l = 1+modulo(j  ,this%mesh%num_cells2)
+         l = 1+modulo(j  ,this%nc_eta2)
       case(WEST)
-         k = 1+modulo(i-2,this%mesh%num_cells1)
+         k = 1+modulo(i-2,this%nc_eta1)
          l = j
       end select
 
@@ -329,7 +351,7 @@ do j = 1, this%mesh%num_cells2
          left  = dof_local(side, node, this%d)
          right = dof_neighbor(side, node, this%d)
 
-         V%f(k,:) = 0.5*(this%cell(i,j)%W%f(left,:)+this%cell(k,l)%W%f(right,:))
+         !V%f(k,:) = 0.5*(this%cell(i,j)%W%f(left,:)+this%cell(k,l)%W%f(right,:))
 
          V%f(node,:) = this%cell(i,j)%edge(side)%n(node,1)*matmul(A1,V%f(node,:)) &
                      + this%cell(i,j)%edge(side)%n(node,2)*matmul(A2,V%f(node,:))
@@ -338,7 +360,7 @@ do j = 1, this%mesh%num_cells2
 
    end do
 
-   this%cell(i,j)%W = this%cell(i,j)%W / this%cell(i,j)%MassMatrix
+   !this%cell(i,j)%W = this%cell(i,j)%W / this%cell(i,j)%MassMatrix
 
 end do
 end do
@@ -415,6 +437,86 @@ case(WEST)
 end select
 
 end function dof_neighbor
+
+
+subroutine diga_plot_2d( this, field )
+
+   type(maxwell_2d_diga)  :: this
+   sll_real64, intent(in) :: field(:,:,:,:)
+   sll_int32              :: file_id
+   sll_int32              :: gnu_id
+   sll_real64             :: eta1, eta2
+   sll_real64             :: offset(2)
+   sll_int32              :: i, j, ii, jj
+   sll_int32              :: icell
+   character(len=4)       :: ccell
+
+   call sll_ascii_file_create("test.gnu", gnu_id, error)
+
+   icell = 0
+   do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta2
+ 
+      icell = icell+1
+      call int2string(icell, ccell)
+      if (icell == 1) then
+         write(gnu_id,"(a)",advance='no') "splot 'test"//ccell//".dat' w l"
+      else
+         write(gnu_id,"(a)",advance='no') ",'test"//ccell//".dat' w l "
+      end if
+
+      call sll_ascii_file_create("test"//ccell//".dat", file_id, error)
+
+      offset(1) = this%eta1_min + (i-1)*this%delta_eta1
+      offset(2) = this%eta2_min + (j-1)*this%delta_eta2
+      do ii = 1, this%d+1
+      do jj = 1, this%d+1
+         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%delta_eta1
+         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%delta_eta2
+         write(file_id,*) this%tau%x1(eta1,eta2), &
+                          this%tau%x2(eta1,eta2), &
+                          sngl(field(i,j,ii,jj))
+      end do
+      write(file_id,*)
+      end do
+      close(file_id)
+
+   end do
+   end do
+
+   write(gnu_id,*)
+   close(gnu_id)
+   
+end subroutine diga_plot_2d
+
+function new_diga_field_2d( this, init_function) result(field)
+type(maxwell_2d_diga)  :: this
+sll_real64, external :: init_function
+sll_real64, pointer :: field(:,:,:,:)
+sll_real64 :: offset(2)
+sll_real64 :: eta1
+sll_real64 :: eta2
+sll_int32  :: i, j, ii, jj
+
+SLL_CLEAR_ALLOCATE(field(1:this%nc_eta1,1:this%nc_eta2,1:this%d+1,1:this%d+1),error)
+
+do i = 1, this%nc_eta1
+do j = 1, this%nc_eta1
+   offset(1) = this%eta1_min + (i-1)*this%delta_eta1
+   offset(2) = this%eta2_min + (j-1)*this%delta_eta2
+   do ii = 1, this%d+1
+   do jj = 1, this%d+1
+      eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%delta_eta1
+      eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%delta_eta2
+      field(i,j,ii,jj) = init_function(this%tau%x1(eta1,eta2), &
+                                       this%tau%x2(eta1,eta2), &
+                                       0.0_f64)
+   end do
+   end do
+end do
+end do
+end function new_diga_field_2d
+
 
 end module sll_maxwell_2d_diga
 

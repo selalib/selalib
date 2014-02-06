@@ -12,6 +12,7 @@
 !>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
 !>$
 !>
+
 program test_maxwell_2d_diga
 !--------------------------------------------------------------------------
 !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh
@@ -29,11 +30,14 @@ use sll_maxwell_2d_diga
 
 implicit none
 
+sll_int32, parameter :: nstep   = 1
+sll_int32, parameter :: nc_eta1 = 3
+sll_int32, parameter :: nc_eta2 = 3
+
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
-sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
 type(sll_logical_mesh_2d), pointer :: mesh
@@ -52,18 +56,18 @@ sll_real64, dimension(:,:), allocatable :: by
 sll_real64, dimension(:,:), allocatable :: ez
 sll_real64, dimension(:,:), allocatable :: ez_exact
 
-sll_int32                               :: i, j
-sll_real64                              :: omega
-sll_real64                              :: time
-sll_int32                               :: istep, nstep
-sll_real64                              :: err_te
-sll_real64                              :: err_tm
-sll_real64                              :: dt
-sll_real64                              :: cfl = 0.5
-sll_int32                               :: degree = 2
-sll_int32,  parameter                   :: mode = 2
+sll_int32   :: i, j, mode = 2
+sll_int32   :: degree = 3
+sll_real64  :: omega
+sll_real64  :: time
+sll_int32   :: istep
+sll_real64  :: err_te
+sll_real64  :: err_tm
+sll_real64  :: dt
+sll_real64  :: cfl = 0.5
 
-nc_eta1 = 2; nc_eta2 = 1
+sll_real64 :: fcos
+external :: fcos
 
 !mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
@@ -108,13 +112,11 @@ tau => new_coordinate_transformation_2d_analytic( &
        identity_jac22,                            &
        SLL_NULL_REAL64 )
 
-call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
+call initialize(maxwell_TE, tau, degree, fcos, TE_POLARIZATION)
 
-stop
-call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
+call initialize(maxwell_TM, tau, degree, fcos, TM_POLARIZATION)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
-nstep = 100
 
 time  = 0.
 
@@ -138,9 +140,9 @@ do istep = 1, nstep !*** Loop over time
 
    do j = 1, nc_eta2+1
    do i = 1, nc_eta1+1
-      bz_exact(i,j) =   - cos(mode*sll_pi*(i-0.5_f64)*delta_eta1)    &
-                        * cos(mode*sll_pi*(j-0.5_f64)*delta_eta2)    &
-                        * cos(omega*time)
+      bz_exact(i,j) =   fcos(mode*(i-0.5_f64)*delta_eta1, &
+                             mode*(j-0.5_f64)*delta_eta2, &
+                             omega*time)
    end do
    end do
 
@@ -178,6 +180,8 @@ DEALLOCATE(ex)
 DEALLOCATE(ey)
 DEALLOCATE(bz)
 DEALLOCATE(bz_exact)
+DEALLOCATE(ez_exact)
 call delete(mesh)
 
 end program test_maxwell_2d_diga
+

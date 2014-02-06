@@ -81,7 +81,7 @@ Details about principle parameters
 |  FFT_LIB               | SLLFFT         | By default SLLFFT. SeLaLib provide   |
 |                        | FFTPACK        | a fast fourier transform module      |
 |                        | FFTW           | around 3 libraries, fftpack, fftw and|
-|                        |                | his own implementation (see XXX)     |
+|                        |                | his own implementation.              |
 +------------------------+----------------+--------------------------------------+
 |  HDF5_ROOT             | /usr/local     | For output we need to link the lib   |
 |  FFTW_ROOT             | /opt/local     | with HDF5 and FFTW3. Parallel is     |
