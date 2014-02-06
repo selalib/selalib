@@ -70,6 +70,8 @@ contains
     SLL_ALLOCATE(this%deriv(deriv_size,Nc(1)+1,Nc(2)+1),err)
     SLL_ALLOCATE(this%points(3,N_points),err)
        
+    call compute_shape_circle(this%points,N_points)   
+       
     this%eta_min=eta_min
     this%eta_max=eta_max
     this%Nc=Nc
@@ -94,6 +96,8 @@ contains
 
     SLL_ALLOCATE(this,err)
     SLL_ALLOCATE(this%points(3,N_points),err)
+    
+    call compute_shape_circle(this%points,N_points) 
        
     this%eta_min=eta_min
     this%eta_max=eta_max
@@ -112,6 +116,9 @@ contains
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
     type(sll_plan_gyroaverage_polar), pointer :: this
+    sll_int32 :: err
+     
+    SLL_ALLOCATE(this,err) 
        
     this%eta_min=eta_min
     this%eta_max=eta_max
@@ -161,13 +168,13 @@ contains
     sll_real64,intent(in)::rho
     sll_int32 ::i,j,k,ii(2),s
     sll_real64::fval,sum_fval,eta_star(2),eta(2),delta_eta(2),x(2)
-    
+
     fval=0._f64
     delta_eta(1)=(gyro%eta_max(1)-gyro%eta_min(1))/real(gyro%Nc(1),f64)
     delta_eta(2)=(gyro%eta_max(2)-gyro%eta_min(2))/real(gyro%Nc(2),f64)
     
     call hermite_c1_coef_nat_per(f(1:gyro%Nc(1)+1,1:gyro%Nc(2)),gyro%deriv,gyro%Nc,gyro%interp_degree)
-    
+
     do j=1,gyro%Nc(2)
      eta(2)=gyro%eta_min(2)+real(j-1,f64)*delta_eta(2)
      !eta(2)=gyro%eta_min(2) ! to uncomment for compatibility with precompute 
@@ -189,6 +196,7 @@ contains
         f(i,j) = sum_fval
       enddo
     enddo
+
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
     
   end subroutine compute_gyroaverage_points_polar_hermite_c1
@@ -886,14 +894,16 @@ subroutine compute_gyroaverage_pre_compute_polar_spl_FFT(gyro,f)
     sll_int32 ::error
     
     dr=(gyro%eta_max(1)-gyro%eta_min(1))/real(gyro%Nc(1),f64)
-    
+
 	SLL_ALLOCATE(buf(1:2*gyro%Nc(2)+15),error)
 	SLL_ALLOCATE(fcomp(1:gyro%Nc(1)+1,1:gyro%Nc(2)),error)
 	SLL_ALLOCATE(diagm1(1:gyro%Nc(1)+1),error)
 	SLL_ALLOCATE(diag(1:gyro%Nc(1)+1),error)
 	SLL_ALLOCATE(diagp1(1:gyro%Nc(1)+1),error)
+	
 
 	fcomp(1:gyro%Nc(1)+1,1:gyro%Nc(2))=f(1:gyro%Nc(1)+1,1:gyro%Nc(2))
+	
 
     !*** Perform FFT 1D in theta direction of ***
     !***   the system solution                ***
@@ -1756,6 +1766,23 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     end do backsub
 
   end subroutine solve_tridiag
+
+
+
+  subroutine compute_shape_circle(points,N_points)
+    sll_int32,intent(in) :: N_points
+    sll_real64,dimension(:,:) ::points
+    sll_int32 :: i
+    sll_real64 :: x
+    do i=1,N_points
+      x = 2._f64*sll_pi*real(i,f64)/(real(N_points,f64))
+      points(1,i) = cos(x)
+      points(2,i) = sin(x)
+      points(3,i) = 1._f64/real(N_points,f64)
+    enddo
+   
+  end subroutine compute_shape_circle
+
 
 
 
