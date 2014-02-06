@@ -24,16 +24,16 @@ module sll_particle_group_2d_module
   implicit none
 
   type :: sll_particle_group_2d
-     sll_int64 :: number_particles
+     sll_int64 :: number_particles! peut etre a faire en SLL_PRIV
      sll_int64 :: active_particles
      sll_int32 :: guard_list_size
      type(sll_particle_2d), dimension(:), pointer       :: p_list
      type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
   end type sll_particle_group_2d
 
-  interface delete
+  interface sll_delete
      module procedure delete_particle_2d_group
-  end interface
+  end interface sll_delete
 
 contains
 

@@ -76,7 +76,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        deboor_splines
                        #sll_scalar_field_1d_alternative
                        sll_scalar_field_2d_alternative
-                       sll_electric_field_accumulators
+                       #sll_electric_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
