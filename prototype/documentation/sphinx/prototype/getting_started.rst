@@ -75,7 +75,7 @@ Details about principle parameters
 +------------------------+----------------+--------------------------------------+
 |          KEY           | POSSIBLE VALUE |                DESCRIPTION           |
 +========================+================+======================================+
-| DISABLED_MPI_MODULE    | ON/OFF         | When set to ON disable all reference |
+| MPI_MODULE_ENABLED     | ON/OFF         | When set to ON disable all reference |
 |                        |                | to mpi and run SeLaLib in sequential.|
 +------------------------+----------------+--------------------------------------+
 |  FFT_LIB               | SLLFFT         | By default SLLFFT. SeLaLib provide   |

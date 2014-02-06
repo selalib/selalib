@@ -3,7 +3,7 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = /opt/local/bin/sphinx-build-2.7
+SPHINXBUILD   = /Library/Frameworks/EPD64.framework/Versions/Current/bin/sphinx-build
 PAPER         =
 BUILDDIR      = ../build
 
