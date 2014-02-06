@@ -61,7 +61,7 @@ implicit none
   
   call gyroaverage%compute_gyroaverage( larmor_rad, f)
 
-  print *,maxval(f),minval(f)
+  print *,minval(f),maxval(f)
 
   if(err==0)then    
     print *, '#PASSED'

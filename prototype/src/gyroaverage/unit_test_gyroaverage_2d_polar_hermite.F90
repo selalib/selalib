@@ -55,7 +55,7 @@ implicit none
   interp_degree(2) = 3
   
   hermite_case = 2
-
+  
   gyroaverage => new_gyroaverage_2d_polar_hermite_solver( &
     eta_min, &
     eta_max, &
@@ -63,10 +63,10 @@ implicit none
     N_points, &
     interp_degree, &
     hermite_case)
-  
+
   call gyroaverage%compute_gyroaverage( larmor_rad, f)
 
-  print *,maxval(f),minval(f)
+  print *,minval(f),maxval(f)
 
   if(err==0)then    
     print *, '#PASSED'
