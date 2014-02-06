@@ -29,8 +29,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/linear_solvers/sll_linear_solvers.h
 )
 
-FILE(COPY        ${SLL_MACROS}
-     DESTINATION ${CMAKE_BINARY_DIR}/include)
+FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 
 IF(NOT STDF95)
 SET(SLL_SOURCE_FILES
