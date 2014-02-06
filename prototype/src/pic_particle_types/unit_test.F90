@@ -6,6 +6,7 @@ program particles_tester
   use sll_particle_group_2d_module
 
   implicit none
+  type(sll_particle_group_2d), pointer  :: p_group
 
 #define NUM_PARTICLES 1000000_i64
 #define GUARD_SIZE    100000_i64
@@ -16,7 +17,7 @@ program particles_tester
        PARTICLE_ARRAY_SIZE, &
        GUARD_SIZE )
 
-  call delete( p_group )
+  call sll_delete( p_group )
 
   print *, 'PASSED'
 
