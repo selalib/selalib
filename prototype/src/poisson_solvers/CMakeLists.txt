@@ -18,8 +18,8 @@ IF(FFTW_ENABLED)
 ENDIF()
 
 IF(MUDPACK_ENABLED)
-
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
+ ADD_DEFINITIONS(-DMUDPACK)
+ SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
                                     sll_mudpack_cartesian.F90
                                     sll_mudpack_polar.F90
                                     sll_mudpack_curvilinear.F90)

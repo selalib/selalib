@@ -82,7 +82,7 @@ end do
 call test_periodic()
 !call test_dirichlet()
 
-call delete(layout)
+call sll_delete(layout)
 
 !SLL_DEALLOCATE_ARRAY(phi, error)
 !SLL_DEALLOCATE_ARRAY(rho, error)
