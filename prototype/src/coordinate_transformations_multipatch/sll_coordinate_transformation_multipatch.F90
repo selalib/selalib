@@ -48,6 +48,7 @@ module sll_coordinate_transformation_multipatch_module
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_file_io.h"
+  use sll_logical_meshes_multipatch
   use sll_module_coordinate_transformations_2d_nurbs
   implicit none
 
@@ -55,33 +56,45 @@ module sll_coordinate_transformation_multipatch_module
   !> entity and dealt with only through the methods in this module.
   type :: sll_coordinate_transformation_multipatch_2d
      sll_int32 :: number_patches
-     character(len=128), dimension(:), pointer :: patch_names
-     sll_int32, dimension(:,:), pointer :: connectivities
+     character(len=128), dimension(:), pointer :: patch_names => null()
+     sll_int32, dimension(:,:), pointer :: connectivities => null()
+     type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
      type(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
-          transfs
+          transfs => null()
    contains
-     procedure, pass :: x1_node => x1_node_multipatch_2d
-     procedure, pass :: x2_node => x2_node_multipatch_2d
-     procedure, pass :: jacobian_at_node => jacobian_at_node_multipatch_2d
-     procedure, pass :: x1 => x1_multipatch_2d
-     procedure, pass :: x2 => x2_multipatch_2d
-     procedure, pass :: x1_at_cell => x1_at_cell_multipatch_2d
-     procedure, pass :: x2_at_cell => x2_at_cell_multipatch_2d
-     procedure, pass :: jacobian_at_cell => jacobian_at_cell_multipatch_2d
-     procedure, pass :: jacobian => jacobian_multipatch_2d
-     procedure, pass :: jacobian_matrix => jacobian_matrix_multipatch_2d
-     procedure, pass :: inverse_jacobian_matrix => inverse_jm_multipatch_2d
-     procedure, pass :: write_to_file => write_to_file_multipatch_2d
+     procedure, pass :: read_from_file => read_from_file_ctmp2d
+     procedure, pass :: get_number_patches => get_number_patches_ctmp2d
+     procedure, pass :: get_transformation => get_transformation_ctmp2d
+     procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
+     procedure, pass :: get_connectivity => get_connectivity_ctmp2d
+     procedure, pass :: x1_node => x1_node_ctmp2d
+     procedure, pass :: x2_node => x2_node_ctmp2d
+     procedure, pass :: jacobian_at_node => jacobian_at_node_ctmp2d
+     procedure, pass :: x1 => x1_ctmp2d
+     procedure, pass :: x2 => x2_ctmp2d
+     procedure, pass :: x1_at_cell => x1_at_cell_ctmp2d
+     procedure, pass :: x2_at_cell => x2_at_cell_ctmp2d
+     procedure, pass :: jacobian_at_cell => jacobian_at_cell_ctmp2d
+     procedure, pass :: jacobian => jacobian_ctmp2d
+     procedure, pass :: jacobian_matrix => jacobian_matrix_ctmp2d
+     procedure, pass :: inverse_jacobian_matrix => inverse_jm_ctmp2d
+     procedure, pass :: write_to_file => write_to_file_ctmp2d
   end type sll_coordinate_transformation_multipatch_2d
-
-  interface initialize_from_file
-     module procedure read_from_file_multipatch_2d
-  end interface initialize_from_file
 
 contains
 
-  subroutine read_from_file_multipatch_2d( mp, filename )
-    type(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+  function new_coordinate_transformation_multipatch_2d( filename ) result(res)
+    type(sll_coordinate_transformation_multipatch_2d), pointer :: res
+    character(len=*), intent(in) :: filename
+    sll_int32 :: ierr
+
+    SLL_ALLOCATE(res,ierr)
+    call res%read_from_file(trim(filename))
+
+  end function new_coordinate_transformation_multipatch_2d
+
+  subroutine read_from_file_ctmp2d( mp, filename )
+    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
     character(len=*), intent(in) :: filename
     character(len=256) :: label
     character(len=256) :: filename_local
@@ -157,10 +170,32 @@ contains
 
     SLL_DEALLOCATE(connectivities,ierr)
     SLL_DEALLOCATE(connectivities_reshaped,ierr)
-  end subroutine read_from_file_multipatch_2d
+  end subroutine read_from_file_ctmp2d
 
-  function get_connectivity( mp, patch, face ) result(res)
-    type(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+  function get_number_patches_ctmp2d( mp ) result(res)
+    sll_int32 :: res
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    res = mp%number_patches
+  end function get_number_patches_ctmp2d
+
+  function get_logical_mesh_ctmp2d( mp, patch ) result(res)
+    type(sll_logical_mesh_2d), pointer :: res
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    call mp%logical_mesh_mp%get_logical_mesh(patch)
+  end function get_logical_mesh_ctmp2d
+
+  function get_transformation_ctmp2d( mp, patch ) result(res)
+    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    res => mp%transfs(patch+1)%T
+  end function get_transformation_ctmp2d 
+
+  function get_connectivity_ctmp2d( mp, patch, face ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: patch
     sll_int32, intent(in)   :: face
     sll_int32, dimension(2) :: res
@@ -168,9 +203,9 @@ contains
     SLL_ASSERT(face  >= 0 .and. face <= 3)
     res(1) = mp%connectivities(patch+1,2*face+1)
     res(2) = mp%connectivities(patch+1,2*face+2)
-  end function get_connectivity
+  end function get_connectivity_ctmp2d
 
-  function x1_node_multipatch_2d( mp, i, j, patch ) result(val)
+  function x1_node_ctmp2d( mp, i, j, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: i
@@ -178,9 +213,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%x1_at_node(i,j)
-  end function x1_node_multipatch_2d
+  end function x1_node_ctmp2d
 
-  function x2_node_multipatch_2d( mp, i, j, patch ) result(val)
+  function x2_node_ctmp2d( mp, i, j, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: i
@@ -188,9 +223,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%x2_at_node(i,j)
-  end function x2_node_multipatch_2d
+  end function x2_node_ctmp2d
 
-  function jacobian_at_node_multipatch_2d( mp, i, j, patch ) result(val)
+  function jacobian_at_node_ctmp2d( mp, i, j, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: i
@@ -198,9 +233,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%jacobian_at_node(i,j)
-  end function jacobian_at_node_multipatch_2d
+  end function jacobian_at_node_ctmp2d
 
-  function x1_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+  function x1_ctmp2d( mp, eta1, eta2, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)   :: eta1
@@ -208,9 +243,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%x1(eta1,eta2)
-  end function x1_multipatch_2d
+  end function x1_ctmp2d
 
-  function x2_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+  function x2_ctmp2d( mp, eta1, eta2, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)   :: eta1
@@ -218,9 +253,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%x2(eta1,eta2)
-  end function x2_multipatch_2d
+  end function x2_ctmp2d
 
-  function x1_at_cell_multipatch_2d( mp, i, j, patch ) result(val)
+  function x1_at_cell_ctmp2d( mp, i, j, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: i
@@ -228,9 +263,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%x1_at_cell(i,j)
-  end function x1_at_cell_multipatch_2d
+  end function x1_at_cell_ctmp2d
 
-  function x2_at_cell_multipatch_2d( mp, i, j, patch ) result(val)
+  function x2_at_cell_ctmp2d( mp, i, j, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: i
@@ -238,9 +273,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%x2_at_cell(i,j)
-  end function x2_at_cell_multipatch_2d
+  end function x2_at_cell_ctmp2d
 
-  function jacobian_at_cell_multipatch_2d( mp, i, j, patch ) result(val)
+  function jacobian_at_cell_ctmp2d( mp, i, j, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in)   :: i
@@ -248,9 +283,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%jacobian_at_cell(i,j)
-  end function jacobian_at_cell_multipatch_2d
+  end function jacobian_at_cell_ctmp2d
 
-  function jacobian_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+  function jacobian_ctmp2d( mp, eta1, eta2, patch ) result(val)
     sll_real64 :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)   :: eta1
@@ -258,9 +293,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%jacobian(eta1,eta2)
-  end function jacobian_multipatch_2d
+  end function jacobian_ctmp2d
 
-  function jacobian_matrix_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+  function jacobian_matrix_ctmp2d( mp, eta1, eta2, patch ) result(val)
     sll_real64, dimension(1:2,1:2) :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)   :: eta1
@@ -268,9 +303,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%jacobian_matrix(eta1,eta2)
-  end function jacobian_matrix_multipatch_2d
+  end function jacobian_matrix_ctmp2d
 
-  function inverse_jm_multipatch_2d( mp, eta1, eta2, patch ) result(val)
+  function inverse_jm_ctmp2d( mp, eta1, eta2, patch ) result(val)
     sll_real64, dimension(1:2,1:2) :: val
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_real64, intent(in)   :: eta1
@@ -278,9 +313,9 @@ contains
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
     val = mp%transfs(patch)%T%inverse_jacobian_matrix(eta1,eta2)
-  end function inverse_jm_multipatch_2d
+  end function inverse_jm_ctmp2d
 
-  subroutine write_to_file_multipatch_2d( mp, output_format )
+  subroutine write_to_file_ctmp2d( mp, output_format )
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in), optional :: output_format
     sll_int32 :: i
@@ -292,13 +327,13 @@ contains
     ! it would be nice to add some kind of 'master' file, in such way that
     ! loading this master with the visualizing program would automatically load
     ! each patch...
-  end subroutine write_to_file_multipatch_2d
+  end subroutine write_to_file_ctmp2d
 
-  subroutine delete_multipatch_2d( mp )
+  subroutine delete_ctmp2d( mp )
     type(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
     sll_int32 :: ierr
     SLL_DEALLOCATE(mp%connectivities,ierr)
     SLL_DEALLOCATE(mp%patch_names,ierr)
-  end subroutine delete_multipatch_2d
+  end subroutine delete_ctmp2d
 
 end module sll_coordinate_transformation_multipatch_module
