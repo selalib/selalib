@@ -10,8 +10,14 @@ FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 FILE(GLOB NML_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.nml")
 FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
-
 IF(MUDPACK_ENABLED)
+
+ ADD_DEFINITIONS(-DMUDPACK)
+
+ENDIF(MUDPACK_ENABLED)
+
+
+#IF(MUDPACK_ENABLED)
 
   ADD_LIBRARY(
     sll_simulation_1d
@@ -24,12 +30,13 @@ IF(MUDPACK_ENABLED)
     simulation_2d_vlasov_poisson_no_splitting.F90
     simulation_2d_analytic_field_cartesian.F90
     simulation_2d_analytic_field_curvilinear.F90
-    simulation_guiding_center_2D_generalized_coords.F90
-    simulation_guiding_center_2D_generalized_coords_mudpack.F90
+    #simulation_guiding_center_2D_generalized_coords.F90
+    #simulation_guiding_center_2D_generalized_coords_mudpack.F90
     simulation_2d_guiding_center_curvilinear.F90
     simulation_2d_guiding_center_cartesian.F90
     simulation_2d_guiding_center_polar.F90)
 
+IF(MUDPACK_ENABLED)
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
                        sll_splines
@@ -58,6 +65,34 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        sll_assertion 	
                        sll_working_precision)
 
+ELSE(MUDPACK_ENABLED)
+
+TARGET_LINK_LIBRARIES( sll_simulation_1d 
+                       sll_splines
+                       sll_poisson_solvers
+                       sll_fft
+                       sll_distribution_function
+                       sll_general_coordinate_elliptic_solvers
+                       deboor_splines
+                       #sll_scalar_field_1d_alternative
+                       sll_scalar_field_2d_alternative
+                       sll_electric_field_accumulators
+                       sll_scalar_field
+                       sll_interpolators
+                       sll_advection
+                       sll_splines
+                       sll_integration
+                       sll_reduction
+                       sll_constants
+                       sll_coordinate_transformations
+                       sll_logical_meshes
+                       sll_utilities
+                       sll_common_array_initializers
+		       sll_timer
+                       sll_memory
+                       sll_assertion 	
+                       sll_working_precision)
+ENDIF(MUDPACK_ENABLED)
 
 # Define executables here. 
 #Please add your new test_MYMETHOD executable, built on unit_test_MYMETHOD.F90
@@ -73,15 +108,15 @@ ADD_SIMULATION_1D(VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem)
 ADD_SIMULATION_1D(2d_vp_no_split)
-ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
-ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
+#ADD_SIMULATION_1D(guiding_center_2D_generalized_coords)
+#ADD_SIMULATION_1D(guiding_center_2D_generalized_coords_mudpack)
 ADD_SIMULATION_1D(2d_af_cartesian)
 ADD_SIMULATION_1D(2d_af_curvilinear)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
 ADD_SIMULATION_1D(2d_gc_curvilinear)
 
-ENDIF(MUDPACK_ENABLED)
+#ENDIF(MUDPACK_ENABLED)
 
 #Commands to be updated in the above simulation class standard
 #############################################################

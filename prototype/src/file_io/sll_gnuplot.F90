@@ -26,7 +26,7 @@ use sll_utilities, only: sll_new_file_id, int2string
 implicit none
 
 !> write file pltable by gnuplot to visualize 2d field
-interface sll_gnuplot_field_2d
+interface sll_gnuplot_2d
 module procedure sll_gnuplot_corect_2d
 module procedure sll_gnuplot_rect_2d
 module procedure sll_gnuplot_curv_2d
