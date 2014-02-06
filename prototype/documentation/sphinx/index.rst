@@ -19,6 +19,11 @@ Contents:
    Installation <install/index>
    Prototype <prototype/getting_started>
    Building Tools <prototype/guide_tools>
+   QuickStart Guide <install/quickstart>
+   Ubuntu dependencies <install/ubuntu>
+   Fedora dependencies <install/fedora>
+   Macosx dependencies <install/macosx>
+   Project members     <members>
 
 Some pages of this documentation display equations via the `jsMath
 <http://www.math.union.edu/~dpvc/jsMath/welcome.html>`_ package. They should

@@ -1,5 +1,5 @@
-Installation
-************
+Build the library and run examples
+**********************************
 
 Selalib is available as `an archive file </releases/selalib-0.5.0.tar.gz>`_
 
