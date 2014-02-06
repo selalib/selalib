@@ -45,6 +45,7 @@ contains
         integer :: li_COEF
         integer :: li_maxnen_C
 
+        print*, 'okk'
         !> \todo il y a un bug ici, il faudra reduire li_COEF et voir
         li_COEF = 20
         if (present(ai_COEF)) then
