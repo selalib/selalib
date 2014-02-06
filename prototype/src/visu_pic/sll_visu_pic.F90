@@ -137,7 +137,7 @@ write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 write(file_id,*)"splot  '"//plot_name//"_"//fin//".dat' w l"
 close(file_id)
 
-call sll_gnuplot_field_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
+call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
 
 end subroutine distribution_xv_gnuplot
 
