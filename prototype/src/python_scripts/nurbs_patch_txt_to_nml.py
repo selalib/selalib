@@ -255,7 +255,6 @@ def main ():
                         knots1.extend(linetemp)
                 elif currently_reading == "knots2":
                     if linetemp[0] == "#": # finished list of points
-                       
                         logical_mesh_locations2=remove_duplicates(knots2)
                         tmp = " ".join(knots2) # one space between elems
                         writefile.write("    knots2 = "+ tmp + "\n")
@@ -264,8 +263,7 @@ def main ():
                         currently_reading = "points"
                         continue
                     else:
-                         knots2.extend(linetemp) 
-                    
+                        knots2.extend(linetemp) 
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
                         writefile.write("    control_pts1 = "+" ".join(x1)+"\n")
@@ -323,7 +321,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(  time.asctime())
+        if options.verbose: print( time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)
