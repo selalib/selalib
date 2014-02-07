@@ -43,8 +43,8 @@ sll_int32  :: error
 type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 
-type(maxwell_2d_diga)                   :: maxwell_TE
-type(maxwell_2d_diga)                   :: maxwell_TM
+type(maxwell_2d_diga)   :: maxwell_TE
+type(maxwell_2d_diga)   :: maxwell_TM
 
 type(dg_field), pointer :: ex
 type(dg_field), pointer :: ey
@@ -55,7 +55,7 @@ type(dg_field), pointer :: by
 type(dg_field), pointer :: ez
 type(dg_field), pointer :: ez_exact
 
-sll_int32   :: i, j, mode = 2
+sll_int32   :: mode = 2
 sll_int32   :: degree = 5
 sll_real64  :: omega
 sll_real64  :: time
@@ -110,15 +110,21 @@ tau => new_coordinate_transformation_2d_analytic( &
        identity_jac22,                            &
        SLL_NULL_REAL64 )
 
-
 ex => new_dg_field( degree, tau) 
 ey => new_dg_field( degree, tau) 
 ez => new_dg_field( degree, tau) 
 bx => new_dg_field( degree, tau) 
 by => new_dg_field( degree, tau) 
-bz => new_dg_field( degree, tau, fcos) 
+bz => new_dg_field( degree, tau) 
 
-call plot_dg_field( bz, 'test')
+ez_exact => new_dg_field( degree, tau, fcos) 
+bz_exact => new_dg_field( degree, tau, fcos) 
+
+bz = bz_exact
+ez%array = - bz_exact%array
+
+call plot_dg_field( bz, 'bz')
+call plot_dg_field( ez, 'ez')
 stop
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
@@ -128,13 +134,9 @@ time  = 0.
 omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
         &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
 
+call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
-ez_exact => new_dg_field( degree, tau, fcos) 
-bz_exact => new_dg_field( degree, tau, fcos) 
-
-call initialize(maxwell_TE, tau, degree, fcos, TE_POLARIZATION)
-
-call initialize(maxwell_TM, tau, degree, fcos, TM_POLARIZATION)
+call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
 
 do istep = 1, nstep !*** Loop over time
 
