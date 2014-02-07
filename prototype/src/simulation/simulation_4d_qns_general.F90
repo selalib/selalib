@@ -64,7 +64,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:,:,:,:), pointer     :: f_x1x2 
      sll_real64, dimension(:,:,:,:), pointer     :: f_x3x4
      sll_real64, dimension(:,:,:), allocatable   :: partial_reduction
-     sll_real64, dimension(:,:), pointer     :: rho_full 
+     sll_real64, dimension(:,:), pointer         :: rho_full 
      sll_real64, dimension(:,:), allocatable     :: rho_x2 
      sll_real64, dimension(:,:), allocatable     :: rho_split
 
@@ -840,7 +840,7 @@ contains
          sim%rho_full, &
          density_tot )
     
-    ! print*, 'density', density_tot
+     print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
          "rho_field_check", &
@@ -917,8 +917,10 @@ contains
          SLL_PERIODIC, &
          SLL_PERIODIC )
     
-  
+    print*, 'advection x1x2'
     call advection_x1x2(sim,0.5*sim%dt)
+
+    print*, 'first advection ok'
     ! other test cases use periodic bc's here...        
     call sim%interp_x3%initialize( &
          nc_x3+1, &
@@ -932,6 +934,7 @@ contains
          vmax4, &
          SLL_PERIODIC)
  
+    print*, 'initialize qns'
     ! Initialize the poisson plan before going into the main loop.
     sim%qns => new_general_elliptic_solver( &
          sim%spline_degree_eta1, & 
@@ -1129,13 +1132,14 @@ contains
             sim%qns, &
             rho, &
             phi )
+       print*, 'solver ok'
  
        time = sll_time_elapsed_since(t0)
      
-   !    print*, 'timer=', time
-!!$       if(sim%my_rank == 0) then
-!!$          call phi%write_to_file(itime)
-!!$       end if
+       print*, 'timer=', time
+       if(sim%my_rank == 0) then
+          call phi%write_to_file(itime)
+       end if
        
        call compute_local_sizes_4d( sim%sequential_x1x2, &
             loc_sz_x1,           &
@@ -1147,7 +1151,7 @@ contains
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
-       
+       print*, 'advection vx'
        ! Start with dt in vx...(x3)
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
