@@ -80,6 +80,7 @@ module sll_module_coordinate_transformations_2d
      sll_real64, dimension(:), pointer :: params => null() ! transf params
    contains
      procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic
+     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_analytic
      ! Functions with integer arguments
      procedure, pass(transf) :: x1_at_node => x1_node_analytic
      procedure, pass(transf) :: x2_at_node => x2_node_analytic
@@ -131,6 +132,7 @@ module sll_module_coordinate_transformations_2d
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
+     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_discrete
      procedure, pass(transf) :: x1_at_node => x1_node_discrete
      procedure, pass(transf) :: x2_at_node => x2_node_discrete
      procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_discrete
@@ -421,7 +423,11 @@ contains
     nullify( transf%jacobian_matrix_function )
   end subroutine delete_transformation_2d_analytic
 
-
+  function get_logical_mesh_analytic( transf ) result(res)
+    class(sll_coordinate_transformation_2d_analytic), intent(in) :: transf
+    type(sll_logical_mesh_2d), pointer :: res
+    res => transf%mesh
+  end function get_logical_mesh_analytic
 
 #ifdef STDF95
 #else
@@ -786,6 +792,13 @@ contains
   !        Functions for the discrete general transformation
   !
   !**************************************************************************
+
+  function get_logical_mesh_discrete( transf ) result(res)
+    class(sll_coordinate_transformation_2d_discrete), intent(in) :: transf
+    type(sll_logical_mesh_2d), pointer :: res
+    res => transf%mesh
+  end function get_logical_mesh_discrete
+
 
   function x1_node_discrete( transf, i, j ) result(val)
 #ifdef STDF95
