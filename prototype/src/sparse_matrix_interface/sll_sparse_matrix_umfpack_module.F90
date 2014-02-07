@@ -24,7 +24,8 @@ module sll_sparse_matrix_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  implicit none
+use mod_umfpack
+
 
   !> @brief type for CSR format
   type sll_csr_matrix
@@ -38,6 +39,11 @@ module sll_sparse_matrix_module
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
         !................
+    ! work arrays for Umfpack
+    sll_int32, dimension(:), pointer :: Ai, Ap
+    integer(umf_void) :: umf_symbolic
+    integer(umf_void) :: umf_numeric
+    sll_real64, dimension(:), pointer :: umf_control
   end type sll_csr_matrix
 
 
@@ -124,10 +130,8 @@ contains
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
     sll_int32 :: ierr
-
-    !print *,'#num_rows=',num_rows
-    !print *,'#num_nz=',num_nz
-
+    sll_real64, dimension(umfpack_info) :: info
+    
     
     li_COEF = 10
     SLL_ALLOCATE(lpi_columns(num_rows, 0:li_COEF * num_local_dof_col),ierr)
@@ -153,9 +157,6 @@ contains
     SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
     SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
     
-    print *,'#num_rows=',num_rows
-    print *,'#num_nz=',num_nz
-    
     call sll_init_SparseMatrix( &
       mat, &
       num_elements, &
@@ -167,15 +168,56 @@ contains
       lpi_occ)
     
     mat%opr_a(:) = 0.0_f64
+    
+    !print *,umfpack_control
+    !stop
+    
+    SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+    SLL_ALLOCATE(mat%Ai(num_nz),ierr)
+    SLL_ALLOCATE(mat%Ap(num_rows+1),ierr)
+
+    call umf4def(mat%umf_control)  ! get the default configuration
+!    es%umf_control(umfpack_prl) = real( 2 , umf_dp ) ! change verbosity
+!    call umf4pcon(es%umf_control) ! update the umfpack configuration
+    ! modify the csr matrix to have indices starting at 0 as is the C convention
+    mat%Ap = mat%opi_ia(:) - 1
+    mat%Ai = mat%opi_ja(:) - 1
+    
+    
+    
+    ! pre-order and symbolic analysis
+    call umf4sym( &
+      mat%num_rows, &
+      mat%num_cols, &
+      mat%Ap, &
+      mat%Ai, &
+      mat%opr_a, &
+      mat%umf_symbolic, &
+      mat%umf_control, &
+      info)
+    ! numeric factorization
+    call umf4num( &
+      mat%Ap, &
+      mat%Ai, &
+      mat%opr_a, &
+      mat%umf_symbolic, &
+      mat%umf_numeric, &
+      mat%umf_control, &
+      info)
+
+
+    
+    
     SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
     SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
-
+    
+   
   end subroutine initialize_csr_matrix
 
 
   subroutine sll_mult_csr_matrix_vector(mat, input, output)
     implicit none
-    type(sll_csr_matrix), intent(in) :: mat
+    type(sll_csr_matrix) :: mat
     sll_real64, dimension(:), intent(in) :: input
     sll_real64, dimension(:), intent(out) :: output
     !local var
@@ -198,7 +240,7 @@ contains
 
   subroutine sll_add_to_csr_matrix(mat, val, ai_A, ai_Aprime)
     implicit none
-    type(sll_csr_matrix), intent(inout) :: mat
+    type(sll_csr_matrix) :: mat
     sll_real64, intent(in) :: val
     sll_int32, intent(in) :: ai_A
     sll_int32, intent(in) :: ai_Aprime
@@ -218,156 +260,31 @@ contains
 
   end subroutine sll_add_to_csr_matrix
 
+
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
-    type(sll_csr_matrix), intent(in) :: mat
+    type(sll_csr_matrix) :: mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B
     !local var
-    !sll_int32  :: sys
-    !sll_real64, dimension(umfpack_info) :: info
-    !sys = 0
-    !call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
-    !use SparseMatrix_Module
-    !implicit none
-    !type(csr_matrix) :: this
-    !real(8), dimension(:) :: apr_U
-    !real(8), dimension(:) :: apr_B
-    integer  :: ai_maxIter
-    real(8) :: ar_eps
-    !local var
-    real(8), dimension(:), pointer :: lpr_Ad
-    real(8), dimension(:), pointer :: lpr_r
-    real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux
-    real(8) :: lr_Norm2r1
-    real(8) :: lr_Norm2r0
-    real(8) :: lr_NormInfb
-    real(8) :: lr_NormInfr
-    real(8) :: lr_ps
-    real(8) :: lr_beta
-    real(8) :: lr_alpha
-    logical  :: ll_continue
-    integer  :: li_iter
-    integer  :: li_err
-    integer  :: li_flag
-	
-    ar_eps = 1.d-13
-    ai_maxIter = 100000
-	
-		
-    if ( mat%num_rows /= mat%num_cols ) then
-            PRINT*,'#ERROR Gradient_conj: The matrix must be square'
-            stop
-    end if
-
-    if ( ( dabs ( MAXVAL ( apr_B ) ) < ar_eps ) .AND. ( dabs ( MINVAL ( apr_B ) ) < ar_eps ) ) then
-            apr_U = 0.0_8
-            return
-    end if
-
-    allocate(lpr_Ad(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=10
-    allocate(lpr_r(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=20
-    allocate(lpr_d(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=30
-    allocate(lpr_Ux(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=40
-    !================!
-    ! initialisation !
-    !================!
-    apr_U(:)  = 0.0_8
-    lpr_Ux(:) = apr_U(:)
-    li_iter = 0
-    call sll_mult_csr_matrix_vector( mat , lpr_Ux , lpr_Ad )
-    !-------------------!
-    ! calcul des normes !
-    !-------------------!
-    lpr_r       = apr_B - lpr_Ad
-    lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
-    lr_NormInfb = maxval( dabs( apr_B ) )
-
-    lpr_d = lpr_r
-    !================!
-
-!    print *,'%%%%'
-    ll_continue=.true.
-    do while(ll_continue)
-            li_iter = li_iter + 1
-            !--------------------------------------!
-            ! calcul du ak parametre optimal local !
-            !--------------------------------------!
-
-            call sll_mult_csr_matrix_vector( mat , lpr_d , lpr_Ad )
-            
-            lr_ps = DOT_PRODUCT( lpr_Ad , lpr_d )
-            lr_alpha = lr_Norm2r0 / lr_ps
-            
-            !==================================================!
-            ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-            !==================================================!
-            ! calcul des composantes residuelles
-            !-----------------------------------
-            lpr_r = lpr_r - lr_alpha * lpr_Ad
-            
-            !----------------------------------------!
-            ! approximations ponctuelles au rang k+1 !
-            !----------------------------------------!
-            lpr_Ux = lpr_Ux + lr_alpha * lpr_d
-            
-            !-------------------------------------------------------!
-            ! (a) extraction de la norme infinie du residu          !
-            !     pour le test d'arret                              !
-            ! (b) extraction de la norme euclidienne du residu rk+1 !
-            !-------------------------------------------------------!
-            lr_NormInfr = maxval(dabs( lpr_r ))
-            lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
-            
-            !==================================================!
-            ! calcul de la nouvelle direction de descente dk+1 !
-            !==================================================!
-            lr_beta = lr_Norm2r1 / lr_Norm2r0
-            lr_Norm2r0 = lr_Norm2r1
-            lpr_d = lpr_r + lr_beta * lpr_d
-            
-            !-------------------!
-            ! boucle suivante ? !
-            !-------------------!
-            ll_continue=( ( lr_NormInfr / lr_NormInfb ) >= ar_eps ) .AND. ( li_iter < ai_maxIter )
-            !print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
-            
-    end do
-    apr_U = lpr_Ux
-    
-    if ( li_iter == ai_maxIter ) then
-            print*,'Warning Gradient_conj : li_iter == ai_maxIter'
-            print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-    end if
-
-!VG!    call printlog("Gradient_conj : duree du calcul =",ai_dtllevel=1)
-!VG!    
-!VG!    call printcputime ( )
-    
-    deallocate(lpr_Ad)
-    deallocate(lpr_d)
-    deallocate(lpr_r)
-    deallocate(lpr_Ux)
-
-
-
-
-
-
-
-
-
-
-
-
-
+    sll_int32  :: sys
+    sll_real64, dimension(umfpack_info) :: info
+    sys = 0
+    call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
     
   end subroutine sll_solve_csr_matrix
+
+
+!    sll_int32  :: sys
+!    sll_real64, dimension(umfpack_info) :: info
+!      call umf4sol(sys,apr_U,apr_B,es%umf_numeric,es%umf_control,info)
+!       call Gradient_conj(&
+!            csr_mat,&
+!            apr_B,&
+!            apr_U,&
+!            ai_maxIter,&
+!            ar_eps )
+
 
 
 
