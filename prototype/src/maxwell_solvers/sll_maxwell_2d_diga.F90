@@ -45,6 +45,10 @@ type :: cell_type
 
 end type cell_type
 
+type :: array_ptr
+   sll_real64, dimension(:,:,:,:), pointer :: array   
+end type array_ptr
+
 !> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
 type, public :: maxwell_2d_diga
@@ -62,7 +66,7 @@ type, public :: maxwell_2d_diga
    sll_real64                                :: eta2_min
    sll_real64                                :: eta2_max
    sll_real64                                :: delta_eta2
-   type(dg_field), dimension(:), allocatable :: w_vector              
+   type(array_ptr), dimension(3)             :: w_vector              
    sll_real64, dimension(3,3)                :: A1
    sll_real64, dimension(3,3)                :: A2
    sll_real64, dimension(:,:,:), pointer     :: flux
@@ -89,7 +93,7 @@ public :: initialize, solve
 contains
 
 !> Initialize Maxwell solver object using DG method.
-subroutine initialize_maxwell_2d_diga( this, tau, degree, init_function, polarization)
+subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
    type( maxwell_2d_diga )     :: this !< solver data object
    sll_transformation, pointer :: tau
@@ -104,7 +108,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, init_function, polariz
    sll_real64                  :: eta2_p
    sll_real64                  :: mdiag
    sll_int32                   :: i, j, ii, jj, kk, ll
-   sll_real64, external        :: init_function
    sll_real64                  :: xgalo(degree+1)
    sll_real64                  :: wgalo(degree+1)
 
@@ -211,6 +214,11 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    type(dg_field), optional :: rho  !< charge density
    sll_int32 :: left, right, node, side
    sll_int32 :: i, j, k, l
+
+
+   this%w_vector(1)%array => ex%array
+   this%w_vector(2)%array => ex%array
+   this%w_vector(3)%array => bz%array
 
    !Loop over cells
    do i = 1, this%nc_eta1
