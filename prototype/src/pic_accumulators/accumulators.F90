@@ -31,7 +31,8 @@ module sll_accumulators
      sll_real64 :: q_ne
   end type charge_accumulator_cell
 
-  type field_accumulator_cell! for interpolating theelec field from
+  type field_accumulator_cell! for interpolating the elec field from
+                     ! its grid values(in this type) in the particles
      sll_real64 :: Ex_sw
      sll_real64 :: Ex_se
      sll_real64 :: Ex_nw
@@ -40,21 +41,36 @@ module sll_accumulators
      sll_real64 :: Ey_se
      sll_real64 :: Ey_nw
      sll_real64 :: Ey_ne
-                     ! its grid values(in this type) in the paticles
   end type field_accumulator_cell
 
 
 contains
   
-  subroutine calculate_chargedensity( &
+  subroutine sll_calculate_chargedensity( &
                 cells_number,  &
-                particle_list, &
+                p_group, &
                 charge_density )
 
     sll_int32, intent(in) :: cells_number
-    type(sll_particle_group_2d), pointer, intent(in) :: particle_list
-    type(charge_accumulator_cell), dimension(:,:), intent(out) :: charge_density
+    type(sll_particle_group_2d), intent(in) :: p_group
+    type(charge_accumulator_cell), dimension(:), intent(out) :: charge_density
+    sll_int64    ::  j
+    
+    charge_density = 0._f64
+    do j = 1, p_group%num_particles
+       charge_density(p_group%p_list(j)%ic)%q_sw = &
+            charge_density(p_group%p_list(j)%ic)%q_sw + &
+            p_group%p_list(j)%q &
+            * (1._f64 - p_group%p_list(j)%dx/m2d%delta_eta1) &
+            * (1._f64 - p_group%p_list(j)%dy/m2d%delta_eta2)
+       charge_density(p_group%p_list(j)%ic)%q_se = &
 
-  end subroutine calculate_chargedensity
+       charge_density(p_group%p_list(j)%ic)%q_nw = &
+
+       charge_density(p_group%p_list(j)%ic)%q_ne = &
+            
+    enddo
+
+  end subroutine sll_calculate_chargedensity
   
 end module sll_accumulators
