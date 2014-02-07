@@ -65,8 +65,8 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 66
-#define NPTS2 66
+#define NPTS1 32
+#define NPTS2 32
 #define NPTS3 32
 #define NPTS4 32
 #define SPL_DEG1 3 
@@ -136,8 +136,8 @@ program qns_4d_general
 !!$       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
 
 
-   transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n63x63p3x3_patch0.nml")
-  !transformation_x%mesh => mx
+   transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n31x31p3x3_patch0.nml")
+  transformation_x%mesh => mx
    print*, 'transformation ok'
   ! ---------------------------------------------------------------------
   ! define the values of the parameters for the landau initializer
