@@ -57,11 +57,13 @@ module sll_module_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
      sll_real64, dimension(:,:), pointer :: x1_cell =>null()
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
-     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
      class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
+     sll_int32 :: num_cells1 
+     sll_int32 :: num_cells2
+     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
    contains
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
      procedure, pass(transf) :: x2_at_node => x2_node_nurbs
@@ -81,7 +83,7 @@ module sll_module_coordinate_transformations_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
   type sll_coordinate_transformation_2d_nurbs_ptr
-     class(sll_coordinate_transformation_2d_nurbs), pointer :: T
+     type(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
 
   interface delete
@@ -107,7 +109,7 @@ contains
   ! We set this logical mesh outside of the read_from_file routine.
   ! -------------------------------------------------------------------------
   function new_nurbs_2d_transformation_from_file( filename ) result(res)
-    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
     character(len=*), intent(in) :: filename
     sll_int32 :: ierr
     SLL_ALLOCATE(res,ierr)
@@ -299,7 +301,6 @@ contains
 !!$    ! the number of points is the knots witout the multiplicity
    
     sz_knots1 = size(knots1)
-
     sz_knots2 = size(knots2)
 
     ! Initialize the first interpolator for 
@@ -394,8 +395,15 @@ contains
          size_knots2   = sz_knots2)
 
 
-    ! initialization of minimal mesh given by file                              
-    ! must be inutile 
+    ! initialization of minimal mesh given by file.                             
+    ! This is temporary, we have not decided if this object should take
+    ! possession of the logical mesh or not... For now we keep the minimum
+    ! information related with the number of cells to at least be able to
+    ! initialize a logical mesh outside of the object.
+
+    transf%num_cells1 = number_cells1
+    transf%num_cells2 = number_cells2
+
     transf%mesh2d_minimal => new_logical_mesh_2d(&
          number_cells1,&
          number_cells2,&

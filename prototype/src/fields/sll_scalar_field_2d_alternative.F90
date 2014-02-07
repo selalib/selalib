@@ -151,9 +151,9 @@ module sll_module_scalar_field_2d_alternative
      end function scalar_function_2D
   end interface
 
-  interface delete
+  interface sll_delete
      module procedure delete_field_2d_analytic_alt, delete_field_2d_discrete_alt
-  end interface delete
+  end interface sll_delete
 
 
 contains   ! *****************************************************************

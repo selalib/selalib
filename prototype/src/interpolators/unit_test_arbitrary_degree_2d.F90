@@ -154,7 +154,7 @@ program unit_test
   print *, '              periodic-dirichlet case'
   print *, '***********************************************************'
 
-  call delete(ad2d)
+  call sll_delete(ad2d)
 
   do j=0,NPTS2-1
      do i=0,NPTS1-1
@@ -231,7 +231,7 @@ program unit_test
   print *, '              dirichlet-periodic case'
   print *, '***********************************************************'
   
-  call delete(ad2d)
+  call sll_delete(ad2d)
 
   !reinitialize data
   ! assumes eta mins are 0
@@ -306,7 +306,7 @@ program unit_test
   print *, '              dirichlet-dirichlet case'
   print *, '***********************************************************'
   
-  call delete(ad2d)
+  call sll_delete(ad2d)
 
   !reinitialize data
 
