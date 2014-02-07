@@ -32,12 +32,12 @@ end type dg_field
 !interface operator(+)
 !  module procedure dg_field_add
 !end interface operator(+)
-!
+
 !interface operator(-)
 !  module procedure dg_field_sub
 !end interface operator(-)
 
-public :: new_dg_field, plot_dg_field
+public :: new_dg_field, plot_dg_field, operator(-)
 
 sll_int32, private :: error
 
@@ -154,6 +154,7 @@ subroutine plot_dg_field( this, field_name )
    
 end subroutine plot_dg_field
 
+
 !function dg_field_add( W1, W2) result(W3)
 !
 !  type(dg_field), intent(in) :: W1
@@ -167,7 +168,7 @@ end subroutine plot_dg_field
 !  W3%array  = W1%array + W2%array
 !
 !end function dg_field_add
-!
+
 !function dg_field_sub( W1, W2) result(W3)
 !
 !  type(dg_field), intent(in) :: W1
