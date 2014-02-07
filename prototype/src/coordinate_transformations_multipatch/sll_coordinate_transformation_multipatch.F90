@@ -56,9 +56,9 @@ module sll_coordinate_transformation_multipatch_module
   !> entity and dealt with only through the methods in this module.
   type :: sll_coordinate_transformation_multipatch_2d
      sll_int32 :: number_patches
-     character(len=128), dimension(:), pointer :: patch_names => null()
-     sll_int32, dimension(:,:), pointer :: connectivities => null()
-     type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
+!     character(len=128), dimension(:), pointer :: patch_names => null()
+     sll_int32, dimension(:,:),pointer :: connectivities => null()
+ !    type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
      type(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
           transfs => null()
    contains
@@ -78,8 +78,13 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: jacobian => jacobian_ctmp2d
      procedure, pass :: jacobian_matrix => jacobian_matrix_ctmp2d
      procedure, pass :: inverse_jacobian_matrix => inverse_jm_ctmp2d
+     procedure, pass :: delete => delete_ctmp2d
      procedure, pass :: write_to_file => write_to_file_ctmp2d
   end type sll_coordinate_transformation_multipatch_2d
+
+  interface sll_delete
+     module procedure delete_stmp2d_ptr
+  end interface sll_delete
 
 contains
 
@@ -150,6 +155,7 @@ contains
     SLL_ALLOCATE(connectivities(number_patches*8),ierr)
     SLL_ALLOCATE(connectivities_reshaped(8,number_patches),ierr)
     SLL_ALLOCATE(mp%transfs(number_patches),ierr)
+!    SLL_ALLOCATE(mp%patch_names(number_patches),ierr)
     read( input_file_id, connectivity )
     connectivities_reshaped = reshape(connectivities,(/8,5/))
     print *, 'connectivity array: ', connectivities_reshaped
@@ -183,7 +189,7 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%logical_mesh_mp%get_logical_mesh(patch)
+    res => mp%transfs(patch+1)%t%get_logical_mesh()
   end function get_logical_mesh_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)
@@ -330,10 +336,17 @@ contains
   end subroutine write_to_file_ctmp2d
 
   subroutine delete_ctmp2d( mp )
-    type(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
     sll_int32 :: ierr
     SLL_DEALLOCATE(mp%connectivities,ierr)
-    SLL_DEALLOCATE(mp%patch_names,ierr)
+!    SLL_DEALLOCATE(mp%patch_names,ierr)
   end subroutine delete_ctmp2d
+
+  subroutine delete_stmp2d_ptr( mp )
+    type(sll_coordinate_transformation_multipatch_2d), pointer :: mp
+    sll_int32 :: ierr
+    call mp%delete()
+    SLL_DEALLOCATE(mp,ierr)
+  end subroutine delete_stmp2d_ptr
 
 end module sll_coordinate_transformation_multipatch_module

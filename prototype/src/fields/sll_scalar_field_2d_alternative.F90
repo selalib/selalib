@@ -580,7 +580,7 @@ contains   ! *****************************************************************
     !sll_int32 :: i
     sll_int32 :: ierr   
 
-    m2d => transformation%mesh
+    m2d => transformation%get_logical_mesh()
     field%T => transformation
     field%interp_2d => interpolator_2d
     !    field%mesh%written = .false.
@@ -644,7 +644,7 @@ contains   ! *****************************************************************
   function get_logical_mesh_2d_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     type(sll_logical_mesh_2d), pointer :: res
-    res => field%T%mesh
+    res => field%T%get_logical_mesh()
   end function get_logical_mesh_2d_discrete_alt
 
   function get_jacobian_matrix_discrete_alt( field, eta1, eta2 ) result(res)

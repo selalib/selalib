@@ -143,6 +143,9 @@ contains   ! *****************************************************************
        ! create the patch-dedicated interpolator.
        lm=>fmp%transf%get_logical_mesh(i)
 
+       !------------------------------------------------------------------
+       !                      WARNING!!!!!!!!
+       !------------------------------------------------------------------
        ! WARNING: Note that here the convention established in CAID is 
        ! HARDWIRED.  Specifically, the numbering of the faces in a given patch 
        ! is numbered in CAID as:
@@ -167,7 +170,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_bottom = SLL_HERMITE
+          bc_bottom = SLL_DIRICHLET !SLL_HERMITE
        else
           bc_bottom = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -176,7 +179,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_left = SLL_HERMITE
+          bc_left = SLL_DIRICHLET !SLL_HERMITE
        else
           bc_left = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -185,7 +188,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_top = SLL_HERMITE
+          bc_top = SLL_DIRICHLET !SLL_HERMITE
        else
           bc_top = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -194,7 +197,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_right = SLL_HERMITE
+          bc_right = SLL_DIRICHLET !SLL_HERMITE
        else
           bc_right = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -204,7 +207,7 @@ contains   ! *****************************************************************
        write(patch_name, format_string) trim(field_name), "_patch", i
        print *, 'building patch named ', patch_name
 
-       fmp%interps(i)%interp => new_arbitrary_degree_spline_interp2d( &
+       fmp%interps(i+1)%interp => new_arbitrary_degree_spline_interp2d( &
             lm%num_cells1+1, &
             lm%num_cells2+1, &
             lm%eta1_min, &
@@ -216,11 +219,11 @@ contains   ! *****************************************************************
             bc_bottom, &
             bc_top, &
             3, &
-            3 )   ! <--- hardwired degree of splines, not OK
+            3 )   ! <--- HARDWIRED degree of splines, not OK
 
-       fmp%fields(i)%f => new_scalar_field_2d_discrete_alt( &
+       fmp%fields(i+1)%f => new_scalar_field_2d_discrete_alt( &
             patch_name, &
-            fmp%interps(i)%interp, &
+            fmp%interps(i+1)%interp, &
             fmp%transf%get_transformation(i), &
             bc_left, &
             bc_right, &
@@ -255,8 +258,8 @@ contains   ! *****************************************************************
 
     num_patches = field%get_number_patches()
     do i=0,num_patches-1
-       call sll_delete(field%fields(i)%f)
-       call sll_delete(field%interps(i)%interp)
+       call sll_delete(field%fields(i+1)%f)
+       call sll_delete(field%interps(i+1)%interp)
     end do
 
     SLL_DEALLOCATE( field%fields, ierr )
@@ -264,9 +267,8 @@ contains   ! *****************************************************************
 
     if( field%owns_memory .eqv. .true. ) then
        do i=0, num_patches-1
-          SLL_DEALLOCATE(field%patch_data(i)%array,ierr)
+          SLL_DEALLOCATE(field%patch_data(i+1)%array,ierr)
        end do
-       SLL_DEALLOCATE(field%fields,ierr)
     end if
   end subroutine delete_field_sfmp2d
 
@@ -285,12 +287,15 @@ contains   ! *****************************************************************
        stop
     end if
     
-    do i=0,field%num_patches
+    num_patches = field%num_patches
+    SLL_ALLOCATE(field%patch_data(num_patches),ierr)
+
+    do i=0,num_patches-1
        lm => field%transf%get_logical_mesh(i)
        numpts1 = lm%num_cells1+1
        numpts2 = lm%num_cells2+1
-       SLL_ALLOCATE(field%patch_data(i)%array(numpts1,numpts2),ierr)
-       call field%set_field_data(i,field%patch_data(i)%array)
+       SLL_ALLOCATE(field%patch_data(i+1)%array(numpts1,numpts2),ierr)
+       call field%set_field_data(i,field%patch_data(i+1)%array)
     end do
     field%owns_memory = .true.
   end subroutine allocate_memory_sfmp2d
@@ -302,10 +307,9 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer                  :: lm
     sll_int32                                           :: numpts1
     sll_int32                                           :: numpts2
-    sll_int32                                           :: i
 
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    lm => mp%transf%get_logical_mesh(i)
+    lm => mp%transf%get_logical_mesh(patch)
     numpts1 = lm%num_cells1+1
     numpts2 = lm%num_cells2+1
 

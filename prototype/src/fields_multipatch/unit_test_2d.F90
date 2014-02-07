@@ -13,9 +13,13 @@ program unit_test_fields_multipatch
   print *, 'initialized multipatch transformation'
   
   F => new_scalar_field_multipatch_2d("test_field_multipatch", T)
-  
+  print *, 'initialized scalar field multipatch'
 
+  call F%allocate_memory()
+  print *, 'allocated memory within the field'
      
+  call delete_stmp2d_ptr(T)
+  call sll_delete(F)
   print *, 'PASSED'
   
 end program unit_test_fields_multipatch
