@@ -4,6 +4,7 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
                                           sll_maxwell_solvers_base.F90
                                           sll_maxwell_2d_fdtd.F90
                                           sll_maxwell_2d_pstd.F90
+                                          sll_dg_fields.F90
                                           sll_maxwell_2d_diga.F90
                                           sll_maxwell_3d_pstd.F90)
 
@@ -34,8 +35,10 @@ IF(FFTW_FOUND AND FFTW_ENABLED)
 ELSE()
 
    ADD_LIBRARY(sll_maxwell_solvers STATIC sll_maxwell_solvers_base.F90 
+                                          sll_maxwell_2d_fdtd.F90
+                                          sll_dg_fields.F90
                                           sll_maxwell_2d_diga.F90
-                                          sll_maxwell_2d_fdtd.F90)
+   )
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
