@@ -3,6 +3,8 @@ module sll_general_coordinate_elliptic_solver_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+#define MODIF_UMFPACK_SPM
+
   use GC
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
@@ -14,6 +16,9 @@ module sll_general_coordinate_elliptic_solver_module
   use gauss_legendre_integration
   use gauss_lobatto_integration
   use sll_timer
+#ifdef MODIF_UMFPACK_SPM  
+  use sll_sparse_matrix_module
+#endif
   !use LU
 
   implicit none
@@ -67,6 +72,10 @@ module sll_general_coordinate_elliptic_solver_module
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
      type(csr_matrix) :: csr_mat
      type(csr_matrix) :: csr_mat_source
+#ifdef MODIF_UMFPACK_SPM
+     type(sll_csr_matrix), pointer :: sll_csr_mat
+     type(sll_csr_matrix), pointer :: sll_csr_mat_source
+#endif
      sll_real64, dimension(:), pointer :: rho_vec
      sll_real64, dimension(:), pointer :: phi_vec
      sll_real64, dimension(:), pointer :: tmp_rho_vec
@@ -278,6 +287,12 @@ contains ! *******************************************************************
         es%global_spline_indices, &
         es%local_to_global_spline_indices )
 
+   print *,"#solution_size=",solution_size   
+   print *,"#solution_size=",solution_size   
+   print *,"#num_cells_eta1*num_cells_eta2=",num_cells_eta1*num_cells_eta2   
+   print *,"#num_cells_eta1*num_cells_eta2=",es%total_num_splines_loc   
+
+
     call create_CSR( &
         es%csr_mat, &
         solution_size, &
@@ -287,6 +302,23 @@ contains ! *******************************************************************
         es%total_num_splines_loc, &
         es%local_to_global_spline_indices, &
         es%total_num_splines_loc )
+
+#ifdef MODIF_UMFPACK_SPM    
+    es%sll_csr_mat => new_csr_matrix( &
+      solution_size, &
+      solution_size, &
+      num_cells_eta1*num_cells_eta2, &
+      es%local_to_global_spline_indices, &
+      es%total_num_splines_loc, &
+      es%local_to_global_spline_indices, &
+      es%total_num_splines_loc )
+   print *,"#solution_size=",solution_size   
+   print *,"#solution_size=",solution_size   
+   print *,"#num_cells_eta1*num_cells_eta2=",num_cells_eta1*num_cells_eta2   
+   print *,"#num_cells_eta1*num_cells_eta2=",es%total_num_splines_loc   
+            
+#endif   
+    
 
 
 
@@ -593,6 +625,19 @@ contains ! *******************************************************************
           
        end do
     end do
+
+
+#ifdef MODIF_UMFPACK_SPM    
+    es%sll_csr_mat_source => new_csr_matrix( &
+      size(es%full_masse,1),&!(es%num_cells1+es%spline_degree1+1)*(es%num_cells2+es%spline_degree2+1),&
+      (es%num_cells1+1)*(es%num_cells2+1),&
+      es%num_cells1*es%num_cells2, &
+      es%local_to_global_spline_indices_source_bis, &
+      es%total_num_splines_loc, &
+      es%local_to_global_spline_indices_source, &
+      es%total_num_splines_loc )
+#endif   
+
    
     
     call create_CSR( &
@@ -691,9 +736,11 @@ contains ! *******************************************************************
                 rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
              end do
           end do
-
+#ifdef MODIF_UMFPACK_SPM
+          call sll_mult_csr_matrix_vector(es%sll_csr_mat_source,rho_coeff_1d,es%rho_vec)
+#else 
           call Mult_CSR_Matrix_Vector(es%csr_mat_source,rho_coeff_1d,es%rho_vec)
-
+#endif
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
                .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
@@ -1676,11 +1723,17 @@ contains ! *******************************************************************
             ar_eps )
        
     else 
+#ifdef MODIF_UMFPACK_SPM
+       call sll_solve_csr_matrix(es%sll_csr_mat, apr_B, apr_U)
+       !print *,apr_B
+       !stop
+#else
        call Gradient_conj(csr_mat,&
             apr_B,&
             apr_U,&
             ai_maxIter,&
             ar_eps )
+#endif
     end if
     !print*,'u', apr_U
   end subroutine solve_gen_elliptic_eq
@@ -1758,7 +1811,15 @@ contains ! *******************************************************************
                       elt_mat_global = Source_loc(cell_index,bprime,b)
 
                       if ( (li_A > 0) .and. (li_Aprime > 0)) then
+#ifdef MODIF_UMFPACK_SPM
+                         call sll_add_to_csr_matrix( &
+                           es%sll_csr_mat_source, &
+                           elt_mat_global, &
+                           li_A, &
+                           li_Aprime)
+#else
                          call add_MVal(es%csr_mat_source,elt_mat_global,li_A,li_Aprime)
+#endif
                       end if
                       
                    end do
