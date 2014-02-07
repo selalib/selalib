@@ -57,12 +57,13 @@ module sll_module_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
      sll_real64, dimension(:,:), pointer :: x1_cell =>null()
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
-     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
      class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
+     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
    contains
+     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
      procedure, pass(transf) :: x2_at_node => x2_node_nurbs
      procedure, pass(transf) :: jacobian_at_node =>transf_2d_jacobian_node_nurbs
@@ -81,7 +82,7 @@ module sll_module_coordinate_transformations_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
   type sll_coordinate_transformation_2d_nurbs_ptr
-     class(sll_coordinate_transformation_2d_nurbs), pointer :: T
+     type(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
 
   interface delete
@@ -107,7 +108,7 @@ contains
   ! We set this logical mesh outside of the read_from_file routine.
   ! -------------------------------------------------------------------------
   function new_nurbs_2d_transformation_from_file( filename ) result(res)
-    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
     character(len=*), intent(in) :: filename
     sll_int32 :: ierr
     SLL_ALLOCATE(res,ierr)
@@ -146,7 +147,6 @@ contains
     sll_int32  :: bc_right
     sll_int32  :: bc_bottom
     sll_int32  :: bc_top
-    !sll_int32  :: sz_nodes1, sz_nodes2
     sll_int32  :: number_cells1,number_cells2
     sll_int32 :: sz_knots1,sz_knots2
     sll_int32 :: i,j
@@ -280,10 +280,13 @@ contains
        end do
     end if
 
-
+    ! Is this worth it? Is there the expectation that the extreme values
+    ! coming from CAID are anything other than 0 and 1??
     eta1_min_minimal = knots1(1)
     eta2_min_minimal = knots2(1)
-    eta1_max_minimal = knots1(num_pts1+spline_deg1+1)
+    ! Aurore: discuss, we could simply put the knots array without the 
+    ! duplicates in the .nml file
+    eta1_max_minimal = knots1(num_pts1+spline_deg1+1) 
     eta2_max_minimal = knots2(num_pts2+spline_deg2+1)
 
     ! for the moment we put the boundary condition like a dirichlet 
@@ -299,7 +302,6 @@ contains
 !!$    ! the number of points is the knots witout the multiplicity
    
     sz_knots1 = size(knots1)
-
     sz_knots2 = size(knots2)
 
     ! Initialize the first interpolator for 
@@ -394,8 +396,12 @@ contains
          size_knots2   = sz_knots2)
 
 
-    ! initialization of minimal mesh given by file                              
-    ! must be inutile 
+    ! initialization of minimal mesh given by file.                             
+    ! This is temporary, we have not decided if this object should take
+    ! possession of the logical mesh or not... For now we keep the minimum
+    ! information related with the number of cells to at least be able to
+    ! initialize a logical mesh outside of the object.
+
     transf%mesh2d_minimal => new_logical_mesh_2d(&
          number_cells1,&
          number_cells2,&
@@ -404,11 +410,15 @@ contains
          eta2_min = eta2_min_minimal,&
          eta2_max = eta2_max_minimal)
 
-    transf%mesh =>null()
-    transf%label = trim(label)
+    transf%mesh  => null()
+    transf%label =  trim(label)
   end subroutine read_from_file_2d_nurbs
 
-
+  function get_logical_mesh_nurbs_2d( transf ) result(res)
+    type(sll_logical_mesh_2d), pointer :: res
+    class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
+    res => transf%mesh2d_minimal
+  end function get_logical_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
