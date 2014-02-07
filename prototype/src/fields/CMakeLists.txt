@@ -56,3 +56,5 @@ ADD_EXECUTABLE(test_scalar_field unit_test.F90)
 
 TARGET_LINK_LIBRARIES(test_scalar_field sll_scalar_field)
 
+ADD_LIBRARY(sll_dg_fields STATIC sll_dg_fields_2d.F90)		
+
