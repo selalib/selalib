@@ -117,7 +117,7 @@ contains
     namelist /patch_names/ patches
 
     if(len(filename) >= 256) then
-       print *, 'ERROR, read_from_file_multipatch_2d => ',&
+       print *, 'ERROR, read_from_file_ctmp2d => ',&
             'filenames longer than 256 characters are not allowed.'
        STOP
     end if
@@ -127,13 +127,13 @@ contains
     call sll_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
        print *, 'ERROR while trying to obtain an unique identifier for file ',&
-            filename, '. Called from read_from_file_multipatch_2d().'
+            filename, '. Called from read_from_file_ctmp2d().'
        stop
     end if
     open(unit=input_file_id, file=filename_local, STATUS="OLD", IOStat=IO_stat)
     if( IO_Stat .ne. 0 ) then
        print *, 'ERROR while opening file ',filename, &
-            '. Called from read_from_file_multipatch_2d().'
+            '. Called from read_from_file_ctmp2d().'
        stop
     end if
 
@@ -183,7 +183,7 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    call mp%logical_mesh_mp%get_logical_mesh(patch)
+    res => mp%logical_mesh_mp%get_logical_mesh(patch)
   end function get_logical_mesh_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)

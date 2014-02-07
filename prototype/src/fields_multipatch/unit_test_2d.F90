@@ -1,31 +1,20 @@
 program unit_test_fields_multipatch
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  use sll_module_scalar_field_2d_multpatch
+  use sll_module_scalar_field_2d_multipatch
   use sll_coordinate_transformation_multipatch_module
   implicit none
 
   
-  class(sll_coordinate_transformation_multipatch_2d), pointer :: T
- 
-  T => new_coordinate_transformation_multipatch_2d("circle_5mp_info.nml")
+  type(sll_coordinate_transformation_multipatch_2d), pointer :: T
+  type(sll_scalar_field_multipatch_2d), pointer              :: F
 
+  T => new_coordinate_transformation_multipatch_2d("circle_5mp_info.nml")
+  print *, 'initialized multipatch transformation'
   
-  print *, 'initialized mesh 2D'
+  F => new_scalar_field_multipatch_2d("test_field_multipatch", T)
   
-  ! coordinate transformation
-  T => new_coordinate_transformation_2d_analytic( &
-       "analytic", &
-       mesh_2d, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       params_identity )
-  print *, 'initialized transformation'
-  
+
      
   print *, 'PASSED'
   
