@@ -13,11 +13,11 @@ program initialize_tester
 #define GUARD_SIZE    10000_i64
 #define PARTICLE_ARRAY_SIZE 150000_i64
 #define ALPHA  0.5_f64
-#define NC_X 64_i32
+#define NC_X 256_i32
 #define XMIN 0._f64
 #define KX   0.5_f64
 #define XMAX 2._f64*sll_pi/KX
-#define NC_Y 16_i32
+#define NC_Y 64_i32
 #define YMIN 0._f64
 #define YMAX 1._f64
 
@@ -26,7 +26,8 @@ program initialize_tester
   type(sll_particle_group_2d), pointer :: init_group
   type(sll_logical_mesh_2d),   pointer :: m2d
   sll_int64 :: j
-  
+  character(5) :: ncx_name, ncy_name
+
   init_group => new_particle_2d_group( &
        NUM_PARTICLES, &
        PARTICLE_ARRAY_SIZE, &
@@ -39,7 +40,9 @@ program initialize_tester
        ALPHA, KX, m2d, &
        NUM_PARTICLES, init_group )
 
-  open(83,file='vitesses_positions.dat')
+  write(ncx_name,'(i3)') NC_X
+  write(ncy_name,'(i3)') NC_Y
+  open(83,file='vit_pos_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
   do j=1,NUM_PARTICLES
      write(83,*) init_group%p_list(j)%vx, init_group%p_list(j)%vy, &
      init_group%p_list(j)%ic, init_group%p_list(j)%dx, init_group%p_list(j)%dy, &
@@ -51,6 +54,7 @@ program initialize_tester
   close(83)
   
   call sll_delete( init_group )
+  call delete( m2d )
   print*, "PASSED"
 
 contains
