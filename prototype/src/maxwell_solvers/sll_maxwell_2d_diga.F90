@@ -45,9 +45,13 @@ type :: cell_type
 
 end type cell_type
 
-type :: array_ptr
+type :: array4d_ptr
    sll_real64, dimension(:,:,:,:), pointer :: array   
-end type array_ptr
+end type array4d_ptr
+
+type :: array2d_ptr
+   sll_real64, dimension(:,:), pointer :: array   
+end type array2d_ptr
 
 !> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
@@ -66,11 +70,11 @@ type, public :: maxwell_2d_diga
    sll_real64                                :: eta2_min
    sll_real64                                :: eta2_max
    sll_real64                                :: delta_eta2
-   type(array_ptr), dimension(3)             :: w_vector              
+   type(array4d_ptr), dimension(3)           :: w_vector              
+   type(array2d_ptr), dimension(3)           :: f_vector              
+   type(array2d_ptr), dimension(3)           :: r_vector              
    sll_real64, dimension(3,3)                :: A1
    sll_real64, dimension(3,3)                :: A2
-   sll_real64, dimension(:,:,:), pointer     :: flux
-   sll_real64, dimension(:,:,:), pointer     :: rhs
 
 end type maxwell_2d_diga
 
@@ -84,9 +88,7 @@ interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
 
-sll_int32                  :: error
-type(dg_field)             :: V
-type(dg_field)             :: F
+sll_int32, private :: error
 
 public :: initialize, solve
 
@@ -107,7 +109,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    sll_real64                  :: eta1_p
    sll_real64                  :: eta2_p
    sll_real64                  :: mdiag
-   sll_int32                   :: i, j, ii, jj, kk, ll
+   sll_int32                   :: i, j, k, ii, jj, kk, ll
    sll_real64                  :: xgalo(degree+1)
    sll_real64                  :: wgalo(degree+1)
 
@@ -130,9 +132,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
    nddl   = (degree+1)*(degree+1)
    ncells = this%nc_eta1*this%nc_eta2
-
-   SLL_ALLOCATE(this%flux(degree+1,degree+1,3),error)
-   SLL_ALLOCATE(this%rhs(degree+1,degree+1,3),error)
 
    dlag   = gauss_lobatto_derivative_matrix(degree+1, -1._f64, 1._f64) 
 
@@ -185,15 +184,18 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    !call sll_display(this%cell(1,1)%MassMatrix(:),"f7.2")
    !call sll_display(this%cell(1,1)%DxMatrix(:,:),"f7.2")
    !call sll_display(this%cell(1,1)%DyMatrix(:,:),"f7.2")
-   !SLL_CLEAR_ALLOCATE(F%f(1:(d+1)*(d+1),3),error)
-   !SLL_CLEAR_ALLOCATE(V%f(1:d+1,3),error)
 
-   this%A1 = reshape((/ 0._f64, 0._f64, 0._f64,  &
-                        0._f64, 0._f64, 1._f64,  &
-                        0._f64, 1._f64, 0._f64/), (/3,3/))
+   do k=1,3
+      SLL_CLEAR_ALLOCATE(this%f_vector(k)%array(1:degree+1,1:degree+1),error)
+      SLL_CLEAR_ALLOCATE(this%r_vector(k)%array(1:degree+1,1:degree+1),error)
+   end do
+
+   this%A1 = reshape((/ 0._f64, 0._f64,  0._f64,  &
+                        0._f64, 0._f64,  1._f64,  &
+                        0._f64, 1._f64,  0._f64/), (/3,3/))
    
-   this%A2 = reshape((/ 0._f64, 0._f64, -1._f64, &
-                        0._f64, 0._f64,  0._f64, &
+   this%A2 = reshape((/ 0._f64, 0._f64, -1._f64,  &
+                        0._f64, 0._f64,  0._f64,  &
                        -1._f64, 0._f64,  0._f64/), (/3,3/))
 
 end subroutine initialize_maxwell_2d_diga
@@ -202,19 +204,19 @@ end subroutine initialize_maxwell_2d_diga
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
 
-   type( maxwell_2d_diga )    :: this           !< Maxwell solver object
+   type( maxwell_2d_diga )  :: this !< Maxwell solver object
 
-   type(dg_field) :: ex             !< x electric field
-   type(dg_field) :: ey             !< y electric field
-   type(dg_field) :: bz             !< z magnetic field
-   sll_real64, intent(in)     :: dt !< time step
+   type(dg_field), target   :: ex   !< x electric field
+   type(dg_field), target   :: ey   !< y electric field
+   type(dg_field), target   :: bz   !< z magnetic field
+   sll_real64, intent(in)   :: dt   !< time step
 
    type(dg_field), optional :: jx   !< x current field
    type(dg_field), optional :: jy   !< y current field
    type(dg_field), optional :: rho  !< charge density
-   sll_int32 :: left, right, node, side
-   sll_int32 :: i, j, k, l
 
+   sll_int32                :: left, right, node, side
+   sll_int32                :: i, j, k, l
 
    this%w_vector(1)%array => ex%array
    this%w_vector(2)%array => ex%array
@@ -224,15 +226,20 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
 
-      this%flux(:,:,1) =  &
-             matmul(this%cell(i,j)%DxMatrix,this%w_vector(1)%array(i,j,:,:)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(1)%array(i,j,:,:))
-      this%flux(:,:,2) =  &
-             matmul(this%cell(i,j)%DxMatrix,this%w_vector(2)%array(i,j,:,:)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(2)%array(i,j,:,:))
-      this%flux(:,:,3) =  &
-             matmul(this%cell(i,j)%DxMatrix,this%w_vector(3)%array(i,j,:,:)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(3)%array(i,j,:,:))
+     
+      this%r_vector(1)%array(:,:) = jx%array(:,:,i,j)
+      this%r_vector(2)%array(:,:) = jy%array(:,:,i,j)
+      this%r_vector(3)%array(:,:) = 0.0_f64
+
+      this%f_vector(1)%array(:,:) =  &
+             matmul(this%cell(i,j)%DxMatrix,this%w_vector(1)%array(:,:,i,j)) &
+           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(1)%array(:,:,i,j))
+      this%f_vector(2)%array(:,:) =  &
+             matmul(this%cell(i,j)%DxMatrix,this%w_vector(2)%array(:,:,i,j)) &
+           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(2)%array(:,:,i,j))
+      this%f_vector(3)%array(:,:) =  &
+             matmul(this%cell(i,j)%DxMatrix,this%w_vector(3)%array(:,:,i,j)) &
+           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(3)%array(:,:,i,j))
 
       do side = 1, 4 ! Loop over edges
  

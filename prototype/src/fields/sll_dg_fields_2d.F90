@@ -64,7 +64,7 @@ function new_dg_field( degree, tau, init_function ) result (this)
    this%wgalo  = gauss_lobatto_weights(degree+1)
    nc_eta1 = tau%mesh%num_cells1
    nc_eta2 = tau%mesh%num_cells2
-   SLL_CLEAR_ALLOCATE(this%array(1:nc_eta1,1:nc_eta2,1:degree+1,1:degree+1),error)
+   SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
 
    if (present(init_function)) then
       call initialize_dg_field( this, init_function, 0.0_f64) 
@@ -92,7 +92,7 @@ subroutine initialize_dg_field( this, init_function, time)
       do jj = 1, this%degree+1
          eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%tau%mesh%delta_eta1
          eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
-         this%array(i,j,ii,jj) = init_function(this%tau%x1(eta1,eta2), &
+         this%array(ii,jj,i,j) = init_function(this%tau%x1(eta1,eta2), &
                                                this%tau%x2(eta1,eta2), &
                                                time)
       end do
@@ -140,7 +140,7 @@ subroutine plot_dg_field( this, field_name )
          eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
          write(file_id,*) this%tau%x1(eta1,eta2), &
                           this%tau%x2(eta1,eta2), &
-                          sngl(this%array(i,j,ii,jj))
+                          sngl(this%array(ii,jj,i,j))
       end do
       write(file_id,*)
       end do
