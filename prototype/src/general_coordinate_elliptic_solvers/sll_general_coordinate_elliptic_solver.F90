@@ -16,6 +16,8 @@ module sll_general_coordinate_elliptic_solver_module
   use gauss_legendre_integration
   use gauss_lobatto_integration
   use sll_timer
+  use sparse_matrix_def
+  use SparseMatrix_LM_Module
 #ifdef MODIF_UMFPACK_SPM  
   use sll_sparse_matrix_module
 #endif
@@ -81,7 +83,9 @@ module sll_general_coordinate_elliptic_solver_module
      sll_real64, dimension(:), pointer :: tmp_rho_vec
      sll_real64, dimension(:), pointer :: masse
      sll_real64, dimension(:), pointer :: stiff
+#ifndef MODIF_UMFPACK_SPM
      sll_real64, dimension(:,:), pointer :: full_masse
+#endif
   end type general_coordinate_elliptic_solver
 
   ! For the integration mode.  
@@ -379,9 +383,10 @@ contains ! *******************************************************************
     es%values_splines_gauss2 = 0.0_f64
     SLL_ALLOCATE(es%tab_index_coeff1(num_cells_eta1*(spline_degree_eta1+2)),ierr)
     SLL_ALLOCATE(es%tab_index_coeff2(num_cells_eta2*(spline_degree_eta2+2)),ierr)
-     
+#ifndef MODIF_UMFPACK_SPM     
     SLL_ALLOCATE(es%full_masse(vec_sz,(es%num_cells1+1)*(es%num_cells2+1)),ierr)
     es%full_masse=0.0_f64
+#endif
   end subroutine initialize_general_elliptic_solver
   
   function new_general_elliptic_solver( &
@@ -399,7 +404,9 @@ contains ! *******************************************************************
    eta1_max, &
    eta2_min, &
    eta2_max ) result(es)
-
+#ifdef MODIF_UMFPACK_SPM
+   use sll_timer
+#endif
    type(general_coordinate_elliptic_solver), pointer :: es
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
@@ -422,6 +429,15 @@ contains ! *******************************************************************
    !sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr
    !sll_int32 :: solution_size
+#ifdef MODIF_UMFPACK_SPM
+    type(sll_time_mark)  :: t0 
+    !type(sll_time_mark)  :: t1,t2
+    double precision :: time
+    call sll_set_time_mark(t0)
+#endif
+    
+
+
 
    SLL_ALLOCATE(es,ierr)
    call initialize( &
@@ -440,6 +456,11 @@ contains ! *******************************************************************
         eta1_max, &
         eta2_min, &
         eta2_max )
+#ifdef MODIF_UMFPACK_SPM    
+    time = sll_time_elapsed_since(t0)
+    print*, '#time for new_general_elliptic_solver', time
+#endif    
+
  end function new_general_elliptic_solver
  
  subroutine delete_elliptic( es )
@@ -480,7 +501,9 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%values_splines_gauss2,ierr)
     SLL_DEALLOCATE(es%tab_index_coeff1,ierr)
     SLL_DEALLOCATE(es%tab_index_coeff2,ierr)
+#ifndef MODIF_UMFPACK_SPM
     SLL_DEALLOCATE(es%full_masse,ierr)
+#endif
   end subroutine delete_elliptic
 
 
@@ -496,8 +519,6 @@ contains ! *******************************************************************
        c_field)!, &
       ! rho)
     use sll_timer
-
-
     type(general_coordinate_elliptic_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base), pointer :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
@@ -517,7 +538,9 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), allocatable :: M_b_vect_loc
     sll_real64, dimension(:,:), allocatable :: S_b1_loc
     sll_real64, dimension(:,:), allocatable :: S_b2_loc
+#ifndef MODIF_UMFPACK_SPM    
     sll_real64, dimension(:,:), allocatable :: full_Matrix
+#endif    
     sll_real64, dimension(:), allocatable :: Masse_loc
     sll_real64, dimension(:), allocatable :: Stiff_loc
     sll_real64, dimension(:,:,:), pointer :: Source_loc
@@ -530,6 +553,11 @@ contains ! *******************************************************************
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
+#ifdef MODIF_UMFPACK_SPM
+    type(sll_time_mark)  :: t0 
+    !type(sll_time_mark)  :: t1,t2
+    double precision :: time
+#endif
 
     !    type(sll_time_mark) :: timer
     !sll_real64 :: res!,eta1,eta2
@@ -538,6 +566,9 @@ contains ! *******************************************************************
     !type(sll_time_mark)  :: t0 
     !type(sll_time_mark)  :: t1 
     !sll_real64           :: time
+#ifdef MODIF_UMFPACK_SPM
+    call sll_set_time_mark(t0)
+#endif
     
 
     bc_left   = es%bc_left
@@ -559,20 +590,22 @@ contains ! *******************************************************************
     !SLL_ALLOCATE(Masse_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
     SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
-    
+#ifndef MODIF_UMFPACK_SPM        
     !   Allocation full_Matrix 
     SLL_ALLOCATE(full_Matrix(es%total_num_splines_eta1*es%total_num_splines_eta2,(es%num_cells1+1)*(es%num_cells2+1)),ierr1)
    ! SLL_ALLOCATE( Masse_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     ! SLL_ALLOCATE( Stiff_tot(es%total_num_splines_eta1*es%total_num_splines_eta2),ierr)
     full_Matrix(:,:) = 0.0_f64
+#endif
    ! Masse_tot(:) = 0.0_f64
     ! Stiff_tot(:) = 0.0_f64
     Masse_loc(:) = 0.0_f64
     Stiff_loc(:) = 0.0_f64
     Source_loc(:,:,:) = 0.0_f64
-    
+#ifndef MODIF_UMFPACK_SPM    
     full_Matrix(:,:) = 0.0_f64
     es%full_masse(:,:) = 0.0_f64
+#endif
     !call set_time_mark(t0)
     do j=1,es%num_cells2
        do i=1,es%num_cells1
@@ -626,20 +659,27 @@ contains ! *******************************************************************
        end do
     end do
 
-
 #ifdef MODIF_UMFPACK_SPM    
+    call sll_factorize_csr_matrix(es%sll_csr_mat)
     es%sll_csr_mat_source => new_csr_matrix( &
-      size(es%full_masse,1),&!(es%num_cells1+es%spline_degree1+1)*(es%num_cells2+es%spline_degree2+1),&
+      size(es%masse,1), &
+      !size(es%full_masse,1),&!(es%num_cells1+es%spline_degree1+1)*(es%num_cells2+es%spline_degree2+1),&
       (es%num_cells1+1)*(es%num_cells2+1),&
       es%num_cells1*es%num_cells2, &
       es%local_to_global_spline_indices_source_bis, &
       es%total_num_splines_loc, &
       es%local_to_global_spline_indices_source, &
       es%total_num_splines_loc )
-#endif   
-
-   
-    
+    call create_CSR( &
+         es%csr_mat_source, &
+         size(es%masse,1), &!(es%num_cells1+es%spline_degree1+1)*(es%num_cells2+es%spline_degree2+1),&
+         (es%num_cells1+1)*(es%num_cells2+1),&
+         es%num_cells1*es%num_cells2, &
+         es%local_to_global_spline_indices_source_bis, &
+         es%total_num_splines_loc, &
+         es%local_to_global_spline_indices_source, &
+         es%total_num_splines_loc )
+#else
     call create_CSR( &
          es%csr_mat_source, &
          size(es%full_masse,1),&!(es%num_cells1+es%spline_degree1+1)*(es%num_cells2+es%spline_degree2+1),&
@@ -649,6 +689,12 @@ contains ! *******************************************************************
          es%total_num_splines_loc, &
          es%local_to_global_spline_indices_source, &
          es%total_num_splines_loc )
+
+
+#endif   
+
+   
+    
 
     call compute_Source_matrice(es,Source_loc)
     
@@ -663,7 +709,15 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
+#ifndef MODIF_UMFPACK_SPM
     SLL_DEALLOCATE_ARRAY(full_Matrix,ierr)
+#endif
+#ifdef MODIF_UMFPACK_SPM    
+    time = sll_time_elapsed_since(t0)
+    print*, '#time for factorize_mat_es', time
+#endif    
+
+
   end subroutine factorize_mat_es
   
   
@@ -705,8 +759,11 @@ contains ! *******************************************************************
     num_pts_g2 = size(es%gauss_pts2,2)
     SLL_ALLOCATE(rho_at_gauss(es%num_cells1*num_pts_g1,es%num_cells2*num_pts_g2),ierr)
     rho_at_gauss(:,:) = 0.0_f64
-    
+#ifdef MODIF_UMFPACK_SPM    
+  SLL_ALLOCATE(rho_coeff_1d((es%num_cells1+1)*(es%num_cells2+1)),ierr)
+#else
     SLL_ALLOCATE(rho_coeff_1d(size(es%full_masse,2)),ierr)
+#endif
     M_rho_loc     = 0.0_f64
     es%rho_vec(:) = 0.0_f64
     rho_coeff_1d  = 0.0_f64
@@ -862,12 +919,13 @@ contains ! *******************************************************************
        
     end select
     time = sll_time_elapsed_since(t0)
-    
+#ifndef MODIF_UMFPACK_SPM    
     print*, 'time to construct the rho', time
-    
+#endif    
     
     if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
          .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
+       
        call solve_linear_system_perper(es,es%masse)
        
     else 
@@ -1546,11 +1604,21 @@ contains ! *******************************************************************
 
                 es%local_to_global_spline_indices_source_bis(bprime,cell_index)= y!index_phi
                 
-               
+#ifndef MODIF_UMFPACK_SPM               
                 es%full_masse(y,index) = es%full_masse(y,index) + Source_loc(cell_index,b,bprime)
+#endif
                 ! elt_masse = Masse_loc(b,bprime)
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
+#ifdef MODIF_UMFPACK_SPM
+                         call sll_add_to_csr_matrix( &
+                           es%sll_csr_mat, &
+                           elt_mat_global, &
+                           li_A, &
+                           li_Aprime)
                    call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
+#else
+                   call add_MVal(es%csr_mat,elt_mat_global,li_A,li_Aprime)
+#endif                   
                    ! call add_MVal(csr_masse,elt_masse,li_A,li_Aprime)
                 end if
                 
@@ -1768,6 +1836,8 @@ contains ! *******************************************************************
     
     ar_eps = 1.d-13
     ai_maxIter = 100000
+    
+    
     call Gradient_conj_adjusted(&
          csr_mat,&
          apr_B,&
