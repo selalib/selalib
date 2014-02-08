@@ -87,9 +87,14 @@ use sll_module_deboor_splines_2d
 #endif
   end type arb_deg_2d_interpolator
 
-  interface delete
+  type sll_arb_deg_2d_interpolator_ptr
+     type(arb_deg_2d_interpolator), pointer :: interp
+  end type sll_arb_deg_2d_interpolator_ptr
+
+
+  interface sll_delete
      module procedure delete_arbitrary_degree_2d_interpolator
-  end interface delete
+  end interface sll_delete
 
 contains
 
