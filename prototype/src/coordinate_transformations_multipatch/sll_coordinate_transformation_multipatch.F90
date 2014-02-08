@@ -157,7 +157,7 @@ contains
     SLL_ALLOCATE(mp%transfs(number_patches),ierr)
 !    SLL_ALLOCATE(mp%patch_names(number_patches),ierr)
     read( input_file_id, connectivity )
-    connectivities_reshaped = reshape(connectivities,(/8,5/))
+    connectivities_reshaped = reshape(connectivities,(/8,number_patches/))
     print *, 'connectivity array: ', connectivities_reshaped
     SLL_ALLOCATE(mp%connectivities(number_patches,8),ierr)
     mp%connectivities = transpose(connectivities_reshaped)
@@ -328,7 +328,7 @@ contains
     sll_int32 :: np
     np = mp%number_patches
     do i=1,np
-       call mp%transfs(i-1)%T%write_to_file( output_format )
+       call mp%transfs(i)%T%write_to_file( output_format )
     end do
     ! it would be nice to add some kind of 'master' file, in such way that
     ! loading this master with the visualizing program would automatically load

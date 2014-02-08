@@ -369,7 +369,7 @@ contains
 
     transf%x3_interp => new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  & 
-         number_cells2 + 2,  & 
+         number_cells2 + 1,  & 
          eta1_min_minimal,  & 
          eta1_max_minimal,  & 
          eta2_min_minimal,  & 
@@ -422,6 +422,7 @@ contains
 
   function x1_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -432,10 +433,12 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
 
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -457,6 +460,7 @@ contains
 
    function x2_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -467,10 +471,12 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
 
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -491,6 +497,7 @@ contains
 
   function x1_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -501,13 +508,15 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
     
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
 
-    SLL_ASSERT( i <= transf%mesh%num_cells1)
-    SLL_ASSERT( j <= transf%mesh%num_cells2)
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
+
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
     
     eta1 = eta1_min + (i-0.5_f64) * delta1  
     eta2 = eta2_min + (j-0.5_f64) * delta2 
@@ -528,6 +537,7 @@ contains
   
    function x2_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -538,13 +548,14 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
 
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
-    SLL_ASSERT( i <= transf%mesh%num_cells1)
-    SLL_ASSERT( j <= transf%mesh%num_cells2)
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
     
     eta1 = eta1_min + (i-0.5_f64) * delta1 
     eta2 = eta2_min + (j-0.5_f64) * delta2 
@@ -658,6 +669,7 @@ contains
   
   function transf_2d_jacobian_node_nurbs( transf, i, j )
     class(sll_coordinate_transformation_2d_nurbs)   :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
@@ -672,10 +684,12 @@ contains
     sll_real64  :: j21
     sll_real64  :: j22
     
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -724,6 +738,7 @@ contains
   
   function jacobian_2d_cell_nurbs( transf, i, j ) result(var)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64                         :: var
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
@@ -737,13 +752,16 @@ contains
     sll_real64  :: j12
     sll_real64  :: j21
     sll_real64  :: j22
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
-    SLL_ASSERT( i <= transf%mesh%num_cells1)
-    SLL_ASSERT( j <= transf%mesh%num_cells2)
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
     
     eta1 = eta1_min + (i-0.5_f64) * delta1 
     eta2 = eta2_min + (j-0.5_f64) * delta2 
@@ -924,6 +942,7 @@ contains
   subroutine write_to_file_2d_nurbs(transf,output_format)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, optional :: output_format 
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -934,8 +953,11 @@ contains
     sll_int32  :: npts_eta1
     sll_int32  :: npts_eta2
 
-    npts_eta1  = transf%mesh%num_cells1 +1
-    npts_eta2  = transf%mesh%num_cells2 +1
+    lm => transf%get_logical_mesh()
+
+    npts_eta1  = lm%num_cells1 +1
+    npts_eta2  = lm%num_cells2 +1
+
 
     if (.not. present(output_format)) then
        local_format = SLL_IO_XDMF
@@ -955,6 +977,7 @@ contains
                 x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
              end do
           end do
+
           call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
                npts_eta1,npts_eta2,file_id,ierr)
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
