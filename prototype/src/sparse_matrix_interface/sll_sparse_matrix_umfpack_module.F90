@@ -130,7 +130,7 @@ contains
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
     sll_int32 :: ierr
-    sll_real64, dimension(umfpack_info) :: info
+    !sll_real64, dimension(umfpack_info) :: info
     
     
     li_COEF = 10
@@ -180,11 +180,27 @@ contains
 !    es%umf_control(umfpack_prl) = real( 2 , umf_dp ) ! change verbosity
 !    call umf4pcon(es%umf_control) ! update the umfpack configuration
     ! modify the csr matrix to have indices starting at 0 as is the C convention
+    
+    
+    
+
+
+    
+    
+    SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
+    SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
+    
+   
+  end subroutine initialize_csr_matrix
+  
+  subroutine sll_factorize_csr_matrix(mat)
+    type(sll_csr_matrix), intent(inout) :: mat
+    sll_real64, dimension(umfpack_info) :: info
+
     mat%Ap = mat%opi_ia(:) - 1
     mat%Ai = mat%opi_ja(:) - 1
-    
-    
-    
+
+
     ! pre-order and symbolic analysis
     call umf4sym( &
       mat%num_rows, &
@@ -195,6 +211,8 @@ contains
       mat%umf_symbolic, &
       mat%umf_control, &
       info)
+
+    
     ! numeric factorization
     call umf4num( &
       mat%Ap, &
@@ -205,15 +223,9 @@ contains
       mat%umf_control, &
       info)
 
-
     
-    
-    SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
-    SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
-    
-   
-  end subroutine initialize_csr_matrix
-
+  end subroutine sll_factorize_csr_matrix
+  
 
   subroutine sll_mult_csr_matrix_vector(mat, input, output)
     implicit none
@@ -271,7 +283,8 @@ contains
     sll_real64, dimension(umfpack_info) :: info
     sys = 0
     call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
-    
+    !print *,apr_U
+    !stop
   end subroutine sll_solve_csr_matrix
 
 
