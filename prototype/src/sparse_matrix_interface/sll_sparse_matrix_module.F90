@@ -172,6 +172,13 @@ contains
 
   end subroutine initialize_csr_matrix
 
+  subroutine sll_factorize_csr_matrix(mat)
+    type(sll_csr_matrix), intent(inout) :: mat
+    
+    print *,'#sll_factorize_csr_matrix does nothing here'
+    
+  end subroutine sll_factorize_csr_matrix
+
 
   subroutine sll_mult_csr_matrix_vector(mat, input, output)
     implicit none
