@@ -109,6 +109,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(reduction)
    ADD_SUBDIRECTORY(pic_particle_types)
    ADD_SUBDIRECTORY(particle_initializers)
+   ADD_SUBDIRECTORY(pic_accumulators)
 
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
