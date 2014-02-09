@@ -46,28 +46,26 @@ contains
     sll_int32 :: ierr
     sll_real64 :: xn, yn, interm_y, nu
     
-    do j=1,num_particles
+    do j=1,num_particles! standard Gaussian function in velocity 2D
        nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
             (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
        p_group%p_list(j)%vx = nu * cos(suite_hamm(j,2)*2.0_f64*sll_pi)
        p_group%p_list(j)%vy = nu * sin(suite_hamm(j,2)*2.0_f64*sll_pi)
     enddo
 
-    !Methode du rejet pour la fonction 1+alpha*cos(k*x)
+    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     j=1
     do while (j<=num_particles)
        call random_number(xn)
        xn = (m2d%eta1_max - m2d%eta1_min)*xn + m2d%eta1_min
        call random_number(yn)
        yn = (2._f64*alpha)*yn + 1._f64 - alpha
-       if (eval(alpha, k, xn) >= yn ) then
+       if (eval_landau(alpha, k, xn) >= yn ) then
           interm_y = (m2d%eta2_max - m2d%eta2_min)*suite_hamm(j,3) & 
                      + m2d%eta2_min
-          call sll_initialize_particle2D(  &
+          call sll_init_spatial_particle2D(  &
                xn, interm_y, &
-               m2d%num_cells1, m2d%num_cells2, &
-               m2d%eta1_min, m2d%eta2_min, &
-               m2d%delta_eta1, m2d%delta_eta2, &
+               m2d, &
                p_group%p_list(j)%ic, &
                p_group%p_list(j)%dx, &
                p_group%p_list(j)%dy     )
@@ -93,29 +91,26 @@ contains
     offset = mod( x - xmin, dx )
   end subroutine compute_cell_and_offset
 
-  subroutine sll_initialize_particle2D( x, y, &
-                      ncx, ncy, &
-                      mesh_xmin, mesh_ymin, &
-                      mesh_dx, mesh_dy,  &
+  subroutine sll_init_spatial_particle2D( x, y, &
+                      m2d,   &
                       icell, &
                       offset_x, offset_y )
 
     sll_real64, intent(in)  :: x, y
-    sll_real64, intent(in)  :: mesh_xmin, mesh_ymin, mesh_dx, mesh_dy
-    sll_int32,  intent(in)  :: ncx, ncy
+    type(sll_logical_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(out) :: icell
     sll_real32, intent(out) :: offset_x, offset_y
     sll_int32               :: icell_x, icell_y
 
-    call compute_cell_and_offset(x, mesh_xmin, mesh_dx, icell_x, offset_x)
-    if ( (icell_x<0).or.(icell_x>ncx) ) print*,'ERROR: bad icell_x', icell_x
+    call compute_cell_and_offset(x, m2d%eta1_min, m2d%delta_eta1, icell_x, offset_x)
+    if ( (icell_x<0).or.(icell_x>m2d%num_cells1) ) print*,'ERROR: bad icell_x', icell_x
 
-    call compute_cell_and_offset(y, mesh_ymin, mesh_dy, icell_y, offset_y)
-    if ( (icell_y<0).or.(icell_y>ncy) ) print*,'ERROR: bad icell_y', icell_y
+    call compute_cell_and_offset(y, m2d%eta2_min, m2d%delta_eta2, icell_y, offset_y)
+    if ( (icell_y<0).or.(icell_y>m2d%num_cells2) ) print*,'ERROR: bad icell_y', icell_y
 
-    icell = icell_x + 1 + icell_y*ncx
-    if ( (icell<1).or.(icell>ncx*ncy) ) print*,'ERROR: bad icell', icell
-  end subroutine sll_initialize_particle2D
+    icell = icell_x + 1 + icell_y * m2d%num_cells1
+    if ( (icell<1).or.(icell > (m2d%num_cells1*m2d%num_cells2)) ) print*,'ERROR: bad icell', icell
+  end subroutine sll_init_spatial_particle2D
 
 !! !> @brief Returns
 !! !> @param[in]
@@ -138,10 +133,10 @@ contains
     suite_hamm = h 
   end function suite_hamm
 
-  function eval(alp, kx, x)
+  function eval_landau(alp, kx, x)
     sll_real64 :: alp, kx, x
-    sll_real64 :: eval
-    eval = 1._f64 + alp * cos(kx * x)
-  end function eval
+    sll_real64 :: eval_landau
+    eval_landau = 1._f64 + alp * cos(kx * x)
+  end function eval_landau
 
 end module sll_particle_initializers
