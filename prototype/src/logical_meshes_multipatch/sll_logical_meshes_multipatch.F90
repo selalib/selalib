@@ -33,20 +33,20 @@ module sll_logical_meshes_multipatch
      sll_int32 :: number_patches
      type(sll_logical_mesh_2d_ptr), dimension(:), pointer :: meshes
    contains
-     procedure, pass :: initialize_patch => initialize_patch_2d
-     procedure, pass :: get_num_cells1   => get_num_cells1_mp2d
-     procedure, pass :: get_num_cells2   => get_num_cells2_mp2d
-     procedure, pass :: get_eta1_min     => get_eta1_min_mp2d
-     procedure, pass :: get_eta1_max     => get_eta1_max_mp2d
-     procedure, pass :: get_eta2_min     => get_eta2_min_mp2d
-     procedure, pass :: get_eta2_max     => get_eta2_max_mp2d
-     procedure, pass :: get_delta_eta1   => get_delta_eta1_mp2d
-     procedure, pass :: get_delta_eta2   => get_delta_eta2_mp2d
+     procedure, pass :: initialize_patch => initialize_patch_lmmp2d
+     procedure, pass :: get_num_cells1   => get_num_cells1_lmmp2d
+     procedure, pass :: get_num_cells2   => get_num_cells2_lmmp2d
+     procedure, pass :: get_eta1_min     => get_eta1_min_lmmp2d
+     procedure, pass :: get_eta1_max     => get_eta1_max_lmmp2d
+     procedure, pass :: get_eta2_min     => get_eta2_min_lmmp2d
+     procedure, pass :: get_eta2_max     => get_eta2_max_lmmp2d
+     procedure, pass :: get_delta_eta1   => get_delta_eta1_lmmp2d
+     procedure, pass :: get_delta_eta2   => get_delta_eta2_lmmp2d
+     procedure, pass :: get_logical_mesh => get_logical_mesh_lmmp2d
   end type sll_logical_mesh_multipatch_2d
 
-  ! this should be sll_delete library-wide...
   interface sll_delete
-     module procedure delete_logical_mesh_multipatch_2d
+     module procedure delete_logical_mesh_lmmp2d
   end interface sll_delete
 
 
@@ -85,7 +85,7 @@ contains
   !> minimum value of the eta1 parameter in the logical mesh.
   !> @param eta2_max optional double precision value which represents the 
   !> maximum value of the eta1 parameter in the logical mesh.
-  subroutine initialize_patch_2d( &
+  subroutine initialize_patch_lmmp2d( &
     mp, &
     patch, &
     num_cells1, &
@@ -117,7 +117,7 @@ contains
                                 eta1_max, &
                                 eta2_min, &
                                 eta2_max )
-  end subroutine initialize_patch_2d
+  end subroutine initialize_patch_lmmp2d
 
 #define MAKE_ACCESS_FUNC_MULTIPATCH( fname, obj_typ, slot, ret_typ ) \
   function fname( mp, patch ) result(res); \
@@ -130,23 +130,31 @@ contains
 
 #define OBJECT sll_logical_mesh_multipatch_2d
 
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_num_cells1_mp2d, OBJECT,num_cells1,sll_int32)
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_num_cells2_mp2d, OBJECT,num_cells2,sll_int32)
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_eta1_min_mp2d, OBJECT, eta1_min,sll_real64)
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_eta1_max_mp2d, OBJECT, eta1_max,sll_real64)
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_eta2_min_mp2d, OBJECT, eta2_min,sll_real64 )
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_eta2_max_mp2d, OBJECT, eta2_max,sll_real64 )
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_delta_eta1_mp2d,OBJECT,delta_eta1,sll_real64)
-  MAKE_ACCESS_FUNC_MULTIPATCH( get_delta_eta2_mp2d,OBJECT,delta_eta2,sll_real64)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_num_cells1_lmmp2d,OBJECT,num_cells1,sll_int32)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_num_cells2_lmmp2d,OBJECT,num_cells2,sll_int32)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_eta1_min_lmmp2d, OBJECT, eta1_min,sll_real64)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_eta1_max_lmmp2d, OBJECT, eta1_max,sll_real64)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_eta2_min_lmmp2d, OBJECT, eta2_min,sll_real64)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_eta2_max_lmmp2d, OBJECT, eta2_max,sll_real64)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_delta_eta1_lmmp2d,OBJECT,delta_eta1,sll_real64)
+MAKE_ACCESS_FUNC_MULTIPATCH(get_delta_eta2_lmmp2d,OBJECT,delta_eta2,sll_real64)
 
 #undef MAKE_ACCESS_FUNC_MULTIPATCH
-#undef MP2D
+#undef LMMP2D
 
-  subroutine delete_logical_mesh_multipatch_2d( mp )
+  function get_logical_mesh_lmmp2d( mp, patch ) result(res)
+    type(sll_logical_mesh_2d), pointer               :: res
+    class(sll_logical_mesh_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)                            :: patch
+    SLL_ASSERT( (patch >=0) .and. (patch < mp%number_patches) )
+    res => mp%meshes(patch+1)%lm
+  end function get_logical_mesh_lmmp2d
+
+  subroutine delete_logical_mesh_lmmp2d( mp )
     type(sll_logical_mesh_multipatch_2d), pointer :: mp
     sll_int32 :: ierr
     SLL_DEALLOCATE(mp%meshes, ierr)
     SLL_DEALLOCATE(mp, ierr)
-  end subroutine delete_logical_mesh_multipatch_2d
+  end subroutine delete_logical_mesh_lmmp2d
 
 end module sll_logical_meshes_multipatch
