@@ -67,10 +67,12 @@ program qns_4d_general
 ! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
 #define NPTS2 32
-#define NPTS3 32
-#define NPTS4 32
-#define SPL_DEG1 3 
-#define SPL_DEG2 3
+#define NPTS3 128
+#define NPTS4 128
+#define SPL_DEG_ETA1 3 
+#define SPL_DEG_ETA2 3
+#define SPL_DEG_VX 3 
+#define SPL_DEG_VY 3
 
   ! ---------------------------------------------------------------------
   ! logical mesh for space coordinates
@@ -204,12 +206,18 @@ program qns_4d_general
        func_zero, &   !der2 b2
        func_zero, &   ! c
        f_zero_params, &
-       SPL_DEG1, & 
-       SPL_DEG2, & 
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
-       SLL_PERIODIC, &
+       SPL_DEG_ETA1, & 
+       SPL_DEG_ETA2, & 
+       SPL_DEG_VX, & 
+       SPL_DEG_VY, & 
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
        electric_field_ext_1,&
        electric_field_ext_2,&
        elec_field_ext_params)

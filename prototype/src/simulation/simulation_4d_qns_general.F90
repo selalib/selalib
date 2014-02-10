@@ -20,6 +20,7 @@ module sll_simulation_4d_qns_general_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+  use sll_arbitrary_degree_spline_interpolator_1d_module
   use sll_timer
   implicit none
 
@@ -44,11 +45,18 @@ module sll_simulation_4d_qns_general_module
      ! for QNS spline_degre in each direction
      sll_int32  :: spline_degree_eta1
      sll_int32  :: spline_degree_eta2
+     ! the degree of interpolation in vx and vy
+     sll_int32  :: spline_degree_vx
+     sll_int32  :: spline_degree_vy
      ! for QNS boundary conditions
-     sll_int32  :: bc_left
-     sll_int32  :: bc_right
-     sll_int32  :: bc_bottom
-     sll_int32  :: bc_top
+     sll_int32  :: bc_eta1_0
+     sll_int32  :: bc_eta1_1
+     sll_int32  :: bc_eta2_0
+     sll_int32  :: bc_eta2_1
+     sll_int32  :: bc_vx_0
+     sll_int32  :: bc_vx_1
+     sll_int32  :: bc_vy_0
+     sll_int32  :: bc_vy_1
      ! the logical meshes are split in two one for space, one for velocity
      type(sll_logical_mesh_2d), pointer    :: mesh2d_x
      type(sll_logical_mesh_2d), pointer    :: mesh2d_v
@@ -99,10 +107,12 @@ module sll_simulation_4d_qns_general_module
      type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
-     type(cubic_spline_2d_interpolator) :: interp_x1x2
+     !type(cubic_spline_2d_interpolator) :: interp_x1x2
+     type(arb_deg_2d_interpolator) :: interp_x1x2
 !!$     type(cubic_spline_1d_interpolator) :: interp_x1
 !!$     type(cubic_spline_1d_interpolator) :: interp_x2
      type(cubic_spline_1d_interpolator) :: interp_x3
+     !type(arb_deg_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! interpolation any arbitrary spline
       type(arb_deg_2d_interpolator)     :: interp_rho
@@ -173,12 +183,18 @@ contains
    der2_b2_f,&
    c_f,&
    c_f_params, &
-   spline_degre1,&
-   spline_degre2,&
-   bc_left,&
-   bc_right,&
-   bc_bottom,&
-   bc_top,&
+   spline_degre_eta1,&
+   spline_degre_eta2,&
+   spline_degre_vx,&
+   spline_degre_vy,&
+   bc_eta1_0,&
+   bc_eta1_1,&
+   bc_eta2_0,&
+   bc_eta2_1,&
+   bc_vx_0,&
+   bc_vx_1,&
+   bc_vy_0,&
+   bc_vy_1,&
    electric_field_ext_1,&
    electric_field_ext_2,&
    elec_field_ext_f_params)
@@ -210,12 +226,18 @@ contains
     sll_real64, dimension(:), intent(in) :: b2_f_params
     sll_real64, dimension(:), intent(in) :: c_f_params
     sll_real64, dimension(:), intent(in) :: elec_field_ext_f_params
-    sll_int32  :: spline_degre1
-    sll_int32  :: spline_degre2
-    sll_int32  :: bc_left
-    sll_int32  :: bc_right
-    sll_int32  :: bc_bottom
-    sll_int32  :: bc_top
+    sll_int32  :: spline_degre_eta1
+    sll_int32  :: spline_degre_eta2
+    sll_int32  :: spline_degre_vx
+    sll_int32  :: spline_degre_vy
+    sll_int32  :: bc_eta1_0
+    sll_int32  :: bc_eta1_1
+    sll_int32  :: bc_eta2_0
+    sll_int32  :: bc_eta2_1
+    sll_int32  :: bc_vx_0
+    sll_int32  :: bc_vx_1
+    sll_int32  :: bc_vy_0
+    sll_int32  :: bc_vy_1
     sll_int32 :: ierr
     
     sim%mesh2d_x  => mesh2d_x
@@ -234,13 +256,21 @@ contains
     sim%der2_b1_f  => der2_b1_f
     sim%der2_b2_f  => der2_b2_f
     sim%c_f       => c_f
-    sim%spline_degree_eta1 = spline_degre1
-    sim%spline_degree_eta2 = spline_degre2
+    sim%spline_degree_eta1 = spline_degre_eta1
+    sim%spline_degree_eta2 = spline_degre_eta2
+    sim%spline_degree_vx = spline_degre_vx
+    sim%spline_degree_vy = spline_degre_vy
     
-    sim%bc_left   = bc_left
-    sim%bc_right  = bc_right
-    sim%bc_bottom = bc_bottom
-    sim%bc_top    = bc_top
+    
+    sim%bc_eta1_0   = bc_eta1_0
+    sim%bc_eta1_1   = bc_eta1_1
+    sim%bc_eta2_0   = bc_eta2_0
+    sim%bc_eta2_1   = bc_eta2_1
+
+    sim%bc_vx_0     = bc_vx_0
+    sim%bc_vx_1     = bc_vx_1
+    sim%bc_vy_0     = bc_vy_0
+    sim%bc_vy_1     = bc_vy_1
 
     sim%elec_field_ext_1 => electric_field_ext_1
     sim%elec_field_ext_2 => electric_field_ext_2
@@ -270,10 +300,10 @@ contains
          sim%mesh2d_x%eta1_max, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%eta2_max, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
     
@@ -284,10 +314,10 @@ contains
          sim%mesh2d_x%eta1_max, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%eta2_max, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
   end subroutine initialize_4d_qns_general
@@ -454,50 +484,50 @@ contains
          sim%a11_f, &
          "a11", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%a11_f_params ) 
 
     a12_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a12_f, &
          "a12", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%a12_f_params ) 
 
     a21_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a21_f, &
          "a21", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%a21_f_params )
     
     a22_field_mat => new_scalar_field_2d_analytic_alt( &
          sim%a22_f, &
          "a22", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%a22_f_params) 
 
     b1_field_vect => new_scalar_field_2d_analytic_alt( &
          sim%b1_f, &
          "b1", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%b1_f_params,&
          sim%der1_b1_f,&
          sim%der2_b1_f)
@@ -506,10 +536,10 @@ contains
          sim%b2_f, &
          "b2", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%b2_f_params,&
          sim%der1_b2_f,&
          sim%der2_b2_f)
@@ -519,20 +549,20 @@ contains
          sim%c_f, &
          "c_field", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%c_f_params)
 
     elec_field_ext_1 => new_scalar_field_2d_analytic_alt( &
          sim%elec_field_ext_1, &
          "E1_ext", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%elec_field_ext_f_params )
 
     
@@ -540,10 +570,10 @@ contains
          sim%elec_field_ext_2, &
          "E2_ext", &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%elec_field_ext_f_params )
 
 
@@ -555,10 +585,10 @@ contains
          "phi_check", &
          sim%interp_phi, &
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1)
     call phi%set_field_data( phi_values )
     call phi%update_interpolation_coefficients( )
     
@@ -846,10 +876,10 @@ contains
          "rho_field_check", &
          sim%interp_rho, &     
          sim%transfx, &
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top)
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1)
     
     call rho%set_field_data( sim%rho_full )
     call rho%update_interpolation_coefficients( )
@@ -907,32 +937,56 @@ contains
 
 
     
-    call sim%interp_x1x2%initialize( &
-         nc_x1+1, &
-         nc_x2+1, &
+!!$    call sim%interp_x1x2%initialize( &
+!!$         nc_x1+1, &
+!!$         nc_x2+1, &
+!!$         sim%mesh2d_x%eta1_min, &
+!!$         sim%mesh2d_x%eta1_max, &
+!!$         sim%mesh2d_x%eta2_min, &
+!!$         sim%mesh2d_x%eta2_max, &
+!!$         SLL_HERMITE,&
+!!$         SLL_HERMITE)
+!!$         !sim%bc_eta1_0, &
+!!$         !sim%bc_eta2_1)
+    
+     call sim%interp_x1x2%initialize( &
+         sim%mesh2d_x%num_cells1 +1, &
+         sim%mesh2d_x%num_cells2 +1, &
          sim%mesh2d_x%eta1_min, &
          sim%mesh2d_x%eta1_max, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%eta2_max, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC )
-    
-    print*, 'advection x1x2'
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
+         sim%spline_degree_eta1, &
+         sim%spline_degree_eta2)
+
+  
     call advection_x1x2(sim,0.5*sim%dt)
 
-    print*, 'first advection ok'
+   
     ! other test cases use periodic bc's here...        
+!!$    call sim%interp_x3%initialize( &
+!!$         nc_x3+1, &
+!!$         vmin3, &
+!!$         vmax3, &
+!!$         sim%bc_vx_0,&
+!!$         sim%bc_vx_1,&
+!!$         sim%spline_degree_vx)
+
     call sim%interp_x3%initialize( &
          nc_x3+1, &
          vmin3, &
          vmax3, &
-         SLL_PERIODIC)
+         SLL_PERIODIC)!sim%bc_vx_0)
     
     call sim%interp_x4%initialize( &
          nc_x4+1, &
          vmin4, &
          vmax4, &
-         SLL_PERIODIC)
+        SLL_PERIODIC)! sim%bc_vy_0)
  
     print*, 'initialize qns'
     ! Initialize the poisson plan before going into the main loop.
@@ -943,10 +997,10 @@ contains
          sim%mesh2d_x%num_cells2, &
          ES_GAUSS_LEGENDRE, &  ! put in arguments
          ES_GAUSS_LEGENDRE, &  ! put in arguments
-         sim%bc_left, &
-         sim%bc_right, &
-         sim%bc_bottom, &
-         sim%bc_top, &
+         sim%bc_eta1_0, &
+         sim%bc_eta1_1, &
+         sim%bc_eta2_0, &
+         sim%bc_eta2_1, &
          sim%mesh2d_x%eta1_min, &  
          sim%mesh2d_x%eta1_max, & 
          sim%mesh2d_x%eta2_min, & 
@@ -1023,15 +1077,17 @@ contains
        global_indices(1:2) =  &
             local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
        
-!!$       call sll_gnuplot_rect_2d_parallel( &
-!!$          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
-!!$          sim%mesh2d_x%delta_eta1, &
-!!$          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
-!!$          sim%mesh2d_x%delta_eta2, &
-!!$          sim%rho_split, &
-!!$          "rho_split", &
-!!$          itime, &
-!!$          ierr )
+       call sll_gnuplot_rect_2d_parallel( &
+          sim%mesh2d_x%eta1_min+(global_indices(1)-1)*sim%mesh2d_x%delta_eta1, &
+          sim%mesh2d_x%delta_eta1, &
+          sim%mesh2d_x%eta2_min+(global_indices(2)-1)*sim%mesh2d_x%delta_eta2, &
+          sim%mesh2d_x%delta_eta2, &
+          size(sim%rho_split,1), &
+          size(sim%rho_split,2), &
+          sim%rho_split, &
+          "rho_split", &
+          itime, &
+          ierr )
        
        call load_buffer( sim%split_rho_layout, sim%rho_split, send_buf )
        
@@ -1127,13 +1183,12 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
        call sll_set_time_mark(t0)  
-
+       print*, '---------------------------'
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
-       print*, 'solver ok'
- 
+       print*, '---------------------------'
        time = sll_time_elapsed_since(t0)
      
        print*, 'timer=', time
@@ -1160,7 +1215,7 @@ contains
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
-                !print*, phi%value_at_indices(i,j), 0.05/0.5**2*cos(0.5*(eta1))
+               
                 inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 
@@ -1370,7 +1425,7 @@ contains
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
     sll_int32 :: gi, gj, gk, gl
-    sll_real64, dimension(1:2,1:2) :: inv_j
+    sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha1, alpha2
@@ -1396,26 +1451,61 @@ contains
                 eta3 = sim%mesh2d_v%eta1_min + (gk-1)*sim%mesh2d_v%delta_eta1
                 eta4 = sim%mesh2d_v%eta2_min + (gl-1)*sim%mesh2d_v%delta_eta2
                 inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
                 alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
 
                 eta1 = eta1+alpha1
-                ! This is hardwiring the periodic BC, please improve this...
-                if( eta1 <  sim%mesh2d_x%eta1_min ) then
-                   eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
-                else if( eta1 >  sim%mesh2d_x%eta1_max ) then
-                   eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
+                ! This is hardwiring the periodic BC, please improve this..
+                if (( sim%bc_eta1_0 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta1_1 == SLL_PERIODIC) ) then
+                ! PERIODIC TEST CASE.
+                   if( eta1 <  sim%mesh2d_x%eta1_min ) then
+                      eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
+                   else if( eta1 >  sim%mesh2d_x%eta1_max ) then
+                      eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
+                   end if
+                else if (( sim%bc_eta1_0 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta1_1 == SLL_DIRICHLET) ) then
+                   
+                   ! DIRCHLET TEST CASE
+                   if( eta1 <  sim%mesh2d_x%eta1_min ) then
+                      eta1 = sim%mesh2d_x%eta1_min
+                   else if( eta1 >  sim%mesh2d_x%eta1_max ) then
+                      eta1 = sim%mesh2d_x%eta1_max
+                   end if
+                else 
+                   print*, 'problem boundary conditon for particles motions in eta1'
+                   stop
                 end if
 
                 eta2 = eta2+alpha2
-                if( eta2 <  sim%mesh2d_x%eta2_min ) then
-                   eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
-                else if( eta2 >  sim%mesh2d_x%eta2_max ) then
-                   eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                if (( sim%bc_eta2_0 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta2_1 == SLL_PERIODIC) ) then
+                ! PERIODIC TEST CASE.
+                   if( eta2 <  sim%mesh2d_x%eta2_min ) then
+                      eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
+                   else if( eta2 >  sim%mesh2d_x%eta2_max ) then
+                      eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                   end if
+                else if (( sim%bc_eta2_0 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta1_1 == SLL_DIRICHLET) ) then
+                   
+                   ! DIRCHLET TEST CASE
+                   if( eta2 <  sim%mesh2d_x%eta2_min ) then
+                      eta2 =sim%mesh2d_x%eta2_min
+                   else if( eta2 >  sim%mesh2d_x%eta2_max ) then
+                      eta2 = sim%mesh2d_x%eta2_max
+                   end if
+                else 
+                   print*, 'problem boundary conditon for particles motions in eta2'
+                   stop
                 end if
-                
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
 
+
+                !print*, 'before', eta1,eta2,i,j
+                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
 !!$             !call sim%interp_x1%compute_interpolants( sim%f_x1x2(i,:,k,l) )
@@ -1431,7 +1521,7 @@ contains
           end do
        end do
     end do
-
+   
   end subroutine advection_x1x2
 
   subroutine advection_x3(sim,phi,deltat,efield_energy_total)
@@ -1578,7 +1668,7 @@ contains
     call sll_delete( sim%efld_seqx2_to_split )
     call sll_delete( sim%seqx1x2_to_seqx3x4 )
     call sll_delete( sim%seqx3x4_to_seqx1x2 )
-    call delete( sim%interp_x1x2 )
+    call sll_delete( sim%interp_x1x2 )
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )
     SLL_DEALLOCATE(sim%diag_masse,ierr)
@@ -1772,15 +1862,7 @@ contains
     size_i = imax - imin + 1
     size_j = jmax - jmin + 1
 
-!!$    if( data_size .ne. size_i*size_j ) then
-!!$       print *, 'function load_buffer():'
-!!$       print *, 'size(data) = ', size(data,1), size(data,2)
-!!$       print *, 'warning from rank ', myrank
-!!$       print *, 'there seems to be a discrepancy between the data size ', &
-!!$            'passed and the size declared in the layout.'
-!!$       print *, 'data size = ', data_size, 'size from layout = ', size_i*size_j
-!!$    end if
-!!$print *, 'size_j', size_j, 'size_i', size_i
+
     counter=0
     do j=1,size_j
        do i=1,size_i
