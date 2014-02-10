@@ -57,6 +57,6 @@ program initialize_tester
   call delete( m2d )
   print*, "PASSED"
 
-contains
+!contains
   
 end program initialize_tester
