@@ -57,10 +57,10 @@ program accumulate_tester
   
   call sll_delete( part_group )
   call delete( m2d )
-  call delete_accum( charge_dens )
+  call sll_delete( charge_dens )
 
   print*, "PASSED"
 
-contains
+!contains
   
 end program accumulate_tester
