@@ -21,7 +21,7 @@ module sll_accumulators
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  use sll_particle_group_2d_module!representations
+  use sll_particle_representations
   implicit none
   
   type charge_accumulator_cell! for particles deposition on the grid
@@ -43,54 +43,36 @@ module sll_accumulators
      sll_real64 :: Ey_ne
   end type field_accumulator_cell
 
-  interface delete_accum
-     module procedure delete_accumulatecharge
-  end interface delete_accum
+  interface sll_delete
+     module procedure delete_accumulate_charge
+  end interface sll_delete
 
 contains
   
   subroutine sll_accumulate_charge( &
-                mesh_dx, mesh_dy, &
-                p_group, &
-                charge_density )
+                particle, &
+                charge )
 
-    sll_real64, intent(in)  ::  mesh_dx, mesh_dy
-    type(sll_particle_group_2d), intent(in) :: p_group
-    type(charge_accumulator_cell), dimension(:), pointer, intent(inout) :: charge_density
+    type(sll_particle_2d), intent(in) :: particle
+    type(charge_accumulator_cell), intent(inout) :: charge
     sll_int64    ::  j
     
-!    charge_density = 0._f64
+    charge%q_sw = charge%q_sw + &
+         particle%q * (1._f64 - particle%dx) * (1._f64 - particle%dy)
 
-    do j = 1, p_group%number_particles
-       charge_density(p_group%p_list(j)%ic)%q_sw = &
-            charge_density(p_group%p_list(j)%ic)%q_sw + &
-            p_group%p_list(j)%q &
-            * (1._f64 - p_group%p_list(j)%dx/mesh_dx) &
-            * (1._f64 - p_group%p_list(j)%dy/mesh_dy)
+    charge%q_se = charge%q_se + &
+         particle%q * particle%dx * (1._f64 - particle%dy)
 
-       charge_density(p_group%p_list(j)%ic)%q_se = &
-            charge_density(p_group%p_list(j)%ic)%q_se + &
-            p_group%p_list(j)%q &
-            * p_group%p_list(j)%dx/mesh_dx &
-            * (1._f64 - p_group%p_list(j)%dy/mesh_dy)
+    charge%q_nw = charge%q_nw + &
+         particle%q * (1._f64 - particle%dx) * particle%dy
 
-       charge_density(p_group%p_list(j)%ic)%q_nw = &
-            charge_density(p_group%p_list(j)%ic)%q_nw + &
-            p_group%p_list(j)%q &
-            * (1._f64 - p_group%p_list(j)%dx/mesh_dx) &
-            * p_group%p_list(j)%dy/mesh_dy
-
-       charge_density(p_group%p_list(j)%ic)%q_ne = &
-            charge_density(p_group%p_list(j)%ic)%q_ne + &
-            p_group%p_list(j)%q &
-            * p_group%p_list(j)%dx/mesh_dx &
-            * p_group%p_list(j)%dy/mesh_dy
-    enddo
+    charge%q_ne = charge%q_ne + &
+         particle%q * particle%dx * particle%dy
 
   end subroutine sll_accumulate_charge
 
 
-  function new_accumulatecharge( &
+  function new_accumulate_charge( &
        cells_number ) result(cha)
 
     sll_int32, intent(in) :: cells_number
@@ -103,9 +85,9 @@ contains
     cha(:)%q_nw = 0._f64
     cha(:)%q_ne = 0._f64
 
-  end function new_accumulatecharge
+  end function new_accumulate_charge
   
-  subroutine delete_accumulatecharge( allcharge )
+  subroutine delete_accumulate_charge( allcharge )
      type(charge_accumulator_cell), dimension(:), pointer :: allcharge
      sll_int32  :: ierr
      
@@ -113,6 +95,6 @@ contains
         print*, 'delete_accumulate_charge: ERROR, charge was not associated'
      endif
      SLL_DEALLOCATE(allcharge, ierr)
-   end subroutine delete_accumulatecharge
+   end subroutine delete_accumulate_charge
 
 end module sll_accumulators
