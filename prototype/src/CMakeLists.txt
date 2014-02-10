@@ -110,6 +110,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(pic_particle_types)
    ADD_SUBDIRECTORY(particle_initializers)
    ADD_SUBDIRECTORY(pic_accumulators)
+   ADD_SUBDIRECTORY(field_accumulators)
 
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
@@ -134,7 +135,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(field_accumulators)
+
    
    ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)

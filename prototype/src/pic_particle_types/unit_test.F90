@@ -21,7 +21,7 @@ program particles_tester
 
   print *, 'PASSED'
 
-  contains
+!  contains
 
 
 end program particles_tester
