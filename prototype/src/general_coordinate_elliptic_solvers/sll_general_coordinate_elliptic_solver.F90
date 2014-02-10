@@ -693,15 +693,15 @@ contains ! *******************************************************************
           end do
 
           call Mult_CSR_Matrix_Vector(es%csr_mat_source,rho_coeff_1d,es%rho_vec)
-
+          
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
                .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
              es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
           end if
-
+          
        class DEFAULT
-
+          
           do j=1,es%num_cells2
              eta2  = es%eta2_min + (j-1)*es%delta_eta2
              do i=1,es%num_cells1
@@ -828,6 +828,7 @@ contains ! *******************************************************************
     end if
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
+
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
