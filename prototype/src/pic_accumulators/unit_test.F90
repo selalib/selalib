@@ -27,10 +27,8 @@ program accumulate_tester
   implicit none
   type(sll_particle_group_2d), pointer :: part_group
   type(sll_logical_mesh_2d),   pointer :: m2d
-  type(charge_accumulator_cell), dimension(:), pointer :: charge_dens
+  type(charge_accumulator_cell), dimension(:), pointer :: all_charge
   sll_int64 :: j
-  sll_int32 :: k, l
-  character(5) :: ncx_name, ncy_name
 
   part_group => new_particle_2d_group( &
        NUM_PARTICLES, &
@@ -44,20 +42,16 @@ program accumulate_tester
        ALPHA, KX, m2d, &
        NUM_PARTICLES, part_group )
 
-  charge_dens => new_accumulatecharge( NC_X*NC_Y )
+  all_charge => new_accumulate_charge( NC_X*NC_Y )
 
-  call sll_accumulate_charge( m2d%delta_eta1, m2d%delta_eta2,  &
-       part_group, charge_dens )
+  do j=1, part_group%number_particles
+     call sll_accumulate_charge( part_group%p_list(j), &
+                     all_charge( part_group%p_list(j)%ic ) )
+  enddo
 
-!!$  write(ncx_name,'(i3)') NC_X
-!!$  write(ncy_name,'(i3)') NC_Y
-!!$  open(83,file='Charge_'//trim(adjustl(ncx_name))//'x'//trim(adjustl(ncy_name))//'.dat')
-!!$  write(83, *) 
-!!$  close(83)
-  
   call sll_delete( part_group )
   call delete( m2d )
-  call sll_delete( charge_dens )
+  call sll_delete( all_charge )
 
   print*, "PASSED"
 
