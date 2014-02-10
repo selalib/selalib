@@ -43,9 +43,9 @@ module sll_accumulators
      sll_real64 :: Ey_ne
   end type field_accumulator_cell
 
-  interface delete_accum
+  interface sll_delete
      module procedure delete_accumulatecharge
-  end interface delete_accum
+  end interface sll_delete
 
 contains
   
