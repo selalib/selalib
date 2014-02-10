@@ -1183,12 +1183,10 @@ contains
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
        call sll_set_time_mark(t0)  
-       print*, '---------------------------'
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
-       print*, '---------------------------'
        time = sll_time_elapsed_since(t0)
      
        print*, 'timer=', time

@@ -167,7 +167,7 @@ program qns_4d_general
 
   ! sll_gaussian_beam_initializer_4d parameters
 
-  landau_params(1) = 1.0_f64!vth
+  landau_params(1) = 0.25_f64!vth
   landau_params(2) = mx%eta1_max!xth
   landau_params(3) = 1.0_f64!sigma_x
   landau_params(4) = 1.0_f64!sigma_v
