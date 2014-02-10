@@ -89,6 +89,8 @@ contains
 
     i_cell = int( (x - xmin)/dx )
     offset = mod( x - xmin, dx )
+    offset = offset/dx! the cell for a charge accumulator is [0,1]x[0,1]
+!                                and not [0,delta_x]x[0,delta_y]  !!!
   end subroutine compute_cell_and_offset
 
   subroutine sll_init_spatial_particle2D( x, y, &
@@ -104,12 +106,14 @@ contains
 
     call compute_cell_and_offset(x, m2d%eta1_min, m2d%delta_eta1, icell_x, offset_x)
     if ( (icell_x<0).or.(icell_x>m2d%num_cells1) ) print*,'ERROR: bad icell_x', icell_x
+    if ( (offset_x<0).or.(offset_x.ge.1) ) print*, 'ERROR: bad offset_x', offset_x
 
     call compute_cell_and_offset(y, m2d%eta2_min, m2d%delta_eta2, icell_y, offset_y)
     if ( (icell_y<0).or.(icell_y>m2d%num_cells2) ) print*,'ERROR: bad icell_y', icell_y
+    if ( (offset_y<0).or.(offset_y.ge.1) ) print*, 'ERROR: bad offset_y', offset_y
 
     icell = icell_x + 1 + icell_y * m2d%num_cells1
-    if ( (icell<1).or.(icell > (m2d%num_cells1*m2d%num_cells2)) ) print*,'ERROR: bad icell', icell
+    if ( (icell<1).or.(icell>(m2d%num_cells1*m2d%num_cells2)) ) print*,'ERROR: bad icell', icell
   end subroutine sll_init_spatial_particle2D
 
 !! !> @brief Returns
