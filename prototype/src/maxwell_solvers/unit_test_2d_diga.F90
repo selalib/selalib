@@ -125,7 +125,6 @@ ez%array = - bz_exact%array
 
 call plot_dg_field( bz, 'bz')
 call plot_dg_field( ez, 'ez')
-stop
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
@@ -136,7 +135,7 @@ omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
-call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
+!call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
 
 do istep = 1, nstep !*** Loop over time
 
@@ -160,10 +159,8 @@ do istep = 1, nstep !*** Loop over time
 
    end if
 
-   !call plot_fields('ez',ez, ez_exact, istep, time)
-
    call solve(maxwell_TE, ex, ey, bz, dt)
-   call solve(maxwell_TM, bx, by, ez, dt)
+   !call solve(maxwell_TM, bx, by, ez, dt)
 
    time = time + 0.5_f64*dt
 

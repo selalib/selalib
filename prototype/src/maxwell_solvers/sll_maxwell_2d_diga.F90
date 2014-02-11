@@ -57,24 +57,24 @@ end type array2d_ptr
 !> method in two dimensions with general coordinates
 type, public :: maxwell_2d_diga
 
-   sll_transformation, pointer               :: tau  !< transformation
-   type(sll_logical_mesh_2d), pointer        :: mesh !< Logical mesh
-   sll_int32                                 :: polarization !< TE or TM
-   sll_int32                                 :: degree !< degree of gauss integration
-   type(cell_type), dimension(:,:), pointer  :: cell !< mesh cells
-   sll_int32                                 :: nc_eta1
-   sll_int32                                 :: nc_eta2
-   sll_real64                                :: eta1_min
-   sll_real64                                :: eta1_max
-   sll_real64                                :: delta_eta1
-   sll_real64                                :: eta2_min
-   sll_real64                                :: eta2_max
-   sll_real64                                :: delta_eta2
-   type(array4d_ptr), dimension(3)           :: w_vector              
-   type(array2d_ptr), dimension(3)           :: f_vector              
-   type(array2d_ptr), dimension(3)           :: r_vector              
-   sll_real64, dimension(3,3)                :: A1
-   sll_real64, dimension(3,3)                :: A2
+   sll_transformation, pointer              :: tau  !< transformation
+   type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
+   sll_int32                                :: polarization !< TE or TM
+   sll_int32                                :: degree !< degree of gauss integration
+   type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
+   sll_int32                                :: nc_eta1
+   sll_int32                                :: nc_eta2
+   sll_real64                               :: eta1_min
+   sll_real64                               :: eta1_max
+   sll_real64                               :: delta_eta1
+   sll_real64                               :: eta2_min
+   sll_real64                               :: eta2_max
+   sll_real64                               :: delta_eta2
+   type(array4d_ptr), dimension(3)          :: w_vector              
+   type(array2d_ptr), dimension(3)          :: f_vector              
+   type(array2d_ptr), dimension(3)          :: r_vector              
+   sll_real64, dimension(3,3)               :: A1
+   sll_real64, dimension(3,3)               :: A2
 
 end type maxwell_2d_diga
 
@@ -265,7 +265,8 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             left  = dof_local(side, node, this%degree)
             right = dof_neighbor(side, node, this%degree)
    
-            !V%f(k,:) = 0.5*(this%cell(i,j)%W%f(left,:)+this%cell(k,l)%W%f(right,:))
+            !flux (:) = 0.5*(this%%w_vector(:)%array(left, :,i,j) &
+                     !+      this%%w_vector(:)%array(right,:,i,j))
    
             !V%field(node,:) = &
             !   this%cell(i,j)%edge(side)%n(node,1)*matmul(A1,V%field(node,:)) &
@@ -280,6 +281,8 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    
    end do
    end do
+
+STOP 'STOPPED'
 
 end  subroutine solve_maxwell_2d_diga
 
