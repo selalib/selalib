@@ -952,11 +952,11 @@ contains
   ! "D-shaped annular geometry";
   ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
   ! (102) p 2968):
-  !
-  !        x1 = alpha1+(alpha2*(2._f64*eta1-1)+alpha3)* &
-  !             cos(2._f64*sll_pi*eta2+alpha4*sin(2._f64*sll_p*eta2))
-  !        x2 = alpha5*(alpha2*(2._f64*eta1-1)+alpha3)*sin(2._f64*sll_pi*eta2)
-  ! Domain: [0,1] X [0,1]
+  !        eta1 = eta1-eta1_min/eta1_max-eta1_min
+  !        eta2 = eta2-eta2_min/eta2_max-eta2_min
+  !        x1 = alpha1+(alpha2*(2*eta1-1)+alpha3)*cos(2*pi*eta2+alpha4*sin(2*pi*eta2))
+  !        x2 = alpha5*(alpha2*(2*eta1-1)+alpha3)*sin(2*pi*eta2)
+  ! 
   ! By default the values of the alpha parameters are:
   !    alpha1 =1.7_f64
   !    alpha2 =0.074_f64
@@ -966,7 +966,7 @@ contains
   !
   ! These parameters are stored in the params array as: 
   !     ( alpha1, alpha2, alpha3, alpha4,alpha5 )
-  ! Domain: [0,1] X [0,1]
+  ! Domain: [eta1_min,eta1_max] X [eta2_min,eta2_max]
   !
   ! **************************************************************************
 
@@ -982,16 +982,29 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
     pi2 = 2.0_f64*sll_pi
-    D_sharped_Geo_x1= alpha1+(alpha2*(2._f64*eta1-1)+alpha3)* &
-                      cos(pi2*eta2+alpha4*sin(pi2*eta2))
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_x1= alpha1+(alpha2*(2._f64*eta1n-1._f64)+alpha3)* &
+                      cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
   end function D_sharped_Geo_x1
 
   function D_sharped_Geo_x2 ( eta1, eta2, params )
@@ -1005,15 +1018,28 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
-     pi2 = 2.0_f64*sll_pi
-    D_sharped_Geo_x2 = alpha5*(alpha2*(2._f64*eta1-1)+alpha3)*sin(pi2*eta2)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_x2 = alpha5*(alpha2*(2._f64*eta1n-1._f64)+alpha3)*sin(pi2*eta2n)
   end function D_sharped_Geo_x2
 
   ! jacobian matrix
@@ -1028,15 +1054,29 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
     pi2 = 2.0_f64*sll_pi
-    D_sharped_Geo_jac11 = alpha2*2._f64*cos(pi2*eta2+alpha4*sin(pi2*eta2))
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac11 = alpha2*2._f64*cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
+    D_sharped_Geo_jac11 = D_sharped_Geo_jac11 /(eta1_max - eta1_min) 
   end function D_sharped_Geo_jac11
 
   function D_sharped_Geo_jac12 ( eta1, eta2, params )
@@ -1050,16 +1090,30 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
     pi2 = 2.0_f64*sll_pi
-    D_sharped_Geo_jac12 = -(alpha2*(2._f64*eta1-1)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2))*&
-                          sin(pi2*eta2+alpha4*sin(pi2*eta2))   
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac12 = -(alpha2*(2._f64*eta1n-1._f64)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2n))*&
+                          sin(pi2*eta2n+alpha4*sin(pi2*eta2n)) 
+    D_sharped_Geo_jac12 = D_sharped_Geo_jac12/(eta2_max - eta2_min)                        
   end function D_sharped_Geo_jac12
 
   function D_sharped_Geo_jac21 ( eta1, eta2, params )
@@ -1073,15 +1127,28 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
     pi2 = 2.0_f64*sll_pi
-    D_sharped_Geo_jac21 = 2._f64*alpha5*alpha2*sin(pi2*eta2)
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac21 = 2._f64*alpha5*alpha2*sin(pi2*eta2n)
+    D_sharped_Geo_jac21 = D_sharped_Geo_jac21/(eta1_max - eta1_min)
   end function D_sharped_Geo_jac21
 
   function D_sharped_Geo_jac22 ( eta1, eta2, params )
@@ -1095,15 +1162,28 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
     pi2 = 2.0_f64*sll_pi
-    D_sharped_Geo_jac22 = alpha5*(alpha2*(2._f64*eta1 - 1._f64)+alpha3)*cos(pi2*eta2)*pi2
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac22 = alpha5*(alpha2*(2._f64*eta1n - 1._f64)+alpha3)*cos(pi2*eta2n)*pi2
+    D_sharped_Geo_jac22 =  D_sharped_Geo_jac22/(eta2_max - eta2_min) 
   end function D_sharped_Geo_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -1119,20 +1199,36 @@ contains
     sll_real64  :: alpha3
     sll_real64  :: alpha4
     sll_real64  :: alpha5
-
-    SLL_ASSERT(size(params) >= 5)
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
     alpha1 = params(1)
     alpha2 = params(2)
     alpha3 = params(3)
     alpha4 = params(4)
     alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
     pi2 = 2.0_f64*sll_pi
-    jac_11 = alpha2*2._f64*cos(pi2*eta2+alpha4*sin(pi2*eta2))
-    jac_12 =  -(alpha2*(2._f64*eta1-1)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2))*&
-               sin(pi2*eta2+alpha4*sin(pi2*eta2))   
-    jac_21 = 2._f64*alpha5*alpha2*sin(pi2*eta2) 
-    jac_22 = alpha5*(alpha2*(2._f64*eta1 - 1._f64)+alpha3)*cos(pi2*eta2)*pi2
+    
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    
+    jac_11 = alpha2*2._f64*cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
+    jac_12 =  -(alpha2*(2._f64*eta1n-1._f64)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2n))*&
+               sin(pi2*eta2n+alpha4*sin(pi2*eta2n))   
+    jac_21 = 2._f64*alpha5*alpha2*sin(pi2*eta2n) 
+    jac_22 = alpha5*(alpha2*(2._f64*eta1n - 1._f64)+alpha3)*cos(pi2*eta2n)*pi2
     D_sharped_Geo_jac = jac_11*jac_22 - jac_12*jac_21
+    
+    D_sharped_Geo_jac = D_sharped_Geo_jac/((eta1_max - eta1_min)*(eta2_max - eta2_min))
   end function D_sharped_Geo_jac
         
 
