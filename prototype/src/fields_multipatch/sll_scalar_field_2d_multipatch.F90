@@ -54,6 +54,14 @@ module sll_module_scalar_field_2d_multipatch
      ! that needs to be set with the proper access function.
      logical                                         :: owns_memory = .false.
      type(multipatch_data_2d), dimension(:), pointer :: patch_data => null()
+     ! The following memory buffers are meant to mimic the type of 
+     ! organization that we will need for the parallel case. The actual 
+     ! size of these buffers depend on the degree of the spline used to 
+     ! reconstruct the field data and of course the logical mesh size.
+     type(multipatch_data_2d), dimension(:), pointer :: buffer0
+     type(multipatch_data_2d), dimension(:), pointer :: buffer1
+     type(multipatch_data_2d), dimension(:), pointer :: buffer2
+     type(multipatch_data_2d), dimension(:), pointer :: buffer3
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
