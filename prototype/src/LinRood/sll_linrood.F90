@@ -43,7 +43,7 @@ contains
     type (sll_distribution_function_2D)  :: dist_func_2D 
     !type (weno_recon_1d) :: recon_eta1, recon_eta2
     !type (weno_interp_1d) :: interp_eta1, interp_eta2
-
+    type(sll_logical_mesh_2d), pointer :: mesh
     sll_int32  :: ierr
     sll_int32  :: i_weno
     sll_int32  :: nc_eta1
@@ -54,8 +54,9 @@ contains
 !    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
 !    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
 !#else
-    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
-    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D ) 
+    mesh => dist_func_2d%transf%get_logical_mesh()
+    nc_eta1    = mesh%num_cells1
+    nc_eta2    = mesh%num_cells2
 
     ! save dimensions in plan
     this%nc_eta1 = nc_eta1  
@@ -91,7 +92,7 @@ contains
    type(scalar_field_2d), intent(in) :: advfield
    sll_real64  :: deltat
    sll_real64  :: t
-
+   type(sll_logical_mesh_2d), pointer :: mesh
    ! local variables
    sll_int32 :: i1, i2
    sll_int32 :: nc_eta1, nc_eta2
@@ -105,8 +106,9 @@ contains
 !   nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
 !   nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type )
 !#else
-   nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D ) 
-   nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D )
+   mesh => dist_func_2D%transf%get_logical_mesh()
+   nc_eta1    = mesh%num_cells1
+   nc_eta2    = mesh%num_cells2
 !#endif
    delta_eta1 = 1.0_8 / nc_eta1
    delta_eta2 = 1.0_8 / nc_eta2
