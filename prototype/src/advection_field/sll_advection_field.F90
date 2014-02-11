@@ -99,18 +99,19 @@ contains
     type(hamiltonian_advection_field_2d), intent(inout)   :: this
     type(scalar_field_1d), intent(in)                  :: phi_self
     type(scalar_field_1d), intent(in), optional        :: phi_external
-
+    type(sll_logical_mesh_2d), pointer                 :: mesh
     sll_int32 :: nc_eta1
     sll_int32 :: nc_eta2
     sll_int32 :: i1, i2
     sll_real64 :: mass
 
+    mesh => this%transf%get_logical_mesh()
 !#ifdef STDF95
 !    nc_eta1 = GET_FIELD_NC_ETA1( this%extend_type ) 
 !    nc_eta2 = GET_FIELD_NC_ETA2( this%extend_type )     
 !#else
-    nc_eta1 = GET_FIELD_NC_ETA1( this ) 
-    nc_eta2 = GET_FIELD_NC_ETA2( this ) 
+    nc_eta1 = mesh%num_cells1 
+    nc_eta2 = mesh%num_cells2
 !#endif
     mass    = this%pmass    
     if (present(phi_external)) then 
@@ -119,7 +120,7 @@ contains
 !#ifdef STDF95
 !             this%extend_type%data(i1,i2) = 0.5_f64*mass * x2_at_node(this%extend_type%mesh, i1,i2)**2 &
 !#else 
-             this%data(i1,i2) = 0.5_f64*mass * this%mesh%x2_at_node(i1,i2)**2 &
+             this%data(i1,i2) = 0.5_f64*mass * this%transf%x2_at_node(i1,i2)**2 &
 !#endif
                   + this%pcharge*phi_self%data(i1)  &
                   + phi_external%data(i1)
@@ -131,7 +132,7 @@ contains
 !#ifdef STDF95
 !             this%extend_type%data(i1,i2) = 0.5_f64*mass * x2_at_node(this%extend_type%mesh, i1,i2)**2 &
 !#else
-             this%data(i1,i2) = 0.5_f64*mass * this%mesh%x2_at_node(i1,i2)**2 &
+             this%data(i1,i2) = 0.5_f64*mass * this%transf%x2_at_node(i1,i2)**2 &
 !#endif
                   + this%pcharge*phi_self%data(i1)
           end do
