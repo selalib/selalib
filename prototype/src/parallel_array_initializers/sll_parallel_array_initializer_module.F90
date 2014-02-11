@@ -922,7 +922,7 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       m => transf_x1_x2%get_logical_mesh()
+       m => transf_x1_x2%mesh
        if(.not. associated(m, mesh2d_eta1_eta2) )&
           then 
 
@@ -935,7 +935,7 @@ contains
     end if
 
     if(present( transf_x3_x4 ) ) then
-       m => transf_x3_x4%get_logical_mesh()
+       m => transf_x3_x4%mesh
        if(.not. associated(m,mesh2d_eta3_eta4) )&
           then 
 
