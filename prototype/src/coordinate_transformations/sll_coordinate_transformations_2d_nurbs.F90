@@ -62,7 +62,7 @@ module sll_module_coordinate_transformations_2d_nurbs
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
      type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
-     type(sll_logical_mesh_2d), pointer :: mesh
+!     type(sll_logical_mesh_2d), pointer :: mesh
    contains
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs

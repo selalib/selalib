@@ -71,7 +71,7 @@ module sll_module_coordinate_transformations_2d
 #else
      !character(len=64) :: label
      !logical           :: written! = .false.
-     type(sll_logical_mesh_2d), pointer :: mesh => null()
+     !type(sll_logical_mesh_2d), pointer :: mesh => null()
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
@@ -130,7 +130,7 @@ module sll_module_coordinate_transformations_2d
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(sll_interpolator_2d_base), pointer               :: x1_interp
      class(sll_interpolator_2d_base), pointer               :: x2_interp
-     type(sll_logical_mesh_2d), pointer :: mesh => null()
+     !type(sll_logical_mesh_2d), pointer :: mesh => null()
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
