@@ -249,6 +249,7 @@ contains
        
   end function sll_diocotron_initializer_2d
   
+  
   function sll_diocotron_initializer_2d2( x, y, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -288,11 +289,7 @@ contains
     endif 
   
   end function sll_diocotron_initializer_2d2
-
-
-  !
-  
-
+ 
   function sll_beam_initializer_2d( x, vx, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -359,15 +356,26 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in), optional :: params    
     
-    sll_real64  :: beta
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
     if( .not. present(params) ) then
        print *, '#sll_sll_D_sharped_Geo_2d, error: the params array must ', &
-            'be passed. params(1) = beta'
+            'be passed. params(1) = eta1_min, params(2) = eta2_min', &
+            'be passed. params(3) = eta1_max, params(4) = eta2_max'
        stop
     end if
-    SLL_ASSERT(size(params)>=1)
-    beta = params(1) 
-    res =  4._f64*eta1*(1._f64 - eta1)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2))
+    SLL_ASSERT(size(params)>=4)
+    eta1_min =params(1)
+    eta2_min =params(2)
+    eta1_max =params(3)
+    eta2_max =params(4)
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    res =  4._f64*eta1n*(1._f64 - eta1n)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2n))
   end function sll_DSG_2d
 
 
