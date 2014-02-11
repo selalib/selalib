@@ -58,10 +58,14 @@ module sll_module_scalar_field_2d_multipatch
      ! organization that we will need for the parallel case. The actual 
      ! size of these buffers depend on the degree of the spline used to 
      ! reconstruct the field data and of course the logical mesh size.
-     type(multipatch_data_2d), dimension(:), pointer :: buffer0
-     type(multipatch_data_2d), dimension(:), pointer :: buffer1
-     type(multipatch_data_2d), dimension(:), pointer :: buffer2
-     type(multipatch_data_2d), dimension(:), pointer :: buffer3
+     type(multipatch_data_2d), dimension(:), pointer :: buffers0
+     type(multipatch_data_2d), dimension(:), pointer :: buffers1
+     type(multipatch_data_2d), dimension(:), pointer :: buffers2
+     type(multipatch_data_2d), dimension(:), pointer :: buffers3
+     type(multipatch_data_2d), dimension(:), pointer :: derivs0
+     type(multipatch_data_2d), dimension(:), pointer :: derivs1
+     type(multipatch_data_2d), dimension(:), pointer :: derivs2
+     type(multipatch_data_2d), dimension(:), pointer :: derivs3
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
@@ -86,10 +90,14 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: delete => delete_field_sfmp2d
   end type sll_scalar_field_multipatch_2d
 
+
+  type multipatch_data_1d
+     sll_real64, dimension(:), pointer :: array => null()
+  end type multipatch_data_1d
+
   type multipatch_data_2d
      sll_real64, dimension(:,:), pointer :: array => null()
   end type multipatch_data_2d
-
 
   interface sll_delete
      module procedure delete_field_sfmp2d_ptr
@@ -130,6 +138,8 @@ contains   ! *****************************************************************
     sll_int32  :: bc_right
     sll_int32  :: bc_bottom
     sll_int32  :: bc_top
+    sll_int32  :: num_pts1
+    sll_int32  :: num_pts2
     sll_int32  :: ierr
 
     fmp%transf => transf
@@ -238,6 +248,42 @@ contains   ! *****************************************************************
             bc_bottom, &
             bc_top )
     end do
+
+    ! Allocate the memory needed to work with the patch compatibility
+    ! algorithms. Each buffer depends on the size of the logical mesh 
+    ! associated with a given patch border.
+    SLL_ALLOCATE(fmp%buffers0(num_patches),ierr)
+    SLL_ALLOCATE(fmp%buffers1(num_patches),ierr)
+    SLL_ALLOCATE(fmp%buffers2(num_patches),ierr)
+    SLL_ALLOCATE(fmp%buffers3(num_patches),ierr)
+    SLL_ALLOCATE(fmp%derivs0(num_patches),ierr)
+    SLL_ALLOCATE(fmp%derivs1(num_patches),ierr)
+    SLL_ALLOCATE(fmp%derivs2(num_patches),ierr)
+    SLL_ALLOCATE(fmp%derivs3(num_patches),ierr)
+
+    ! WARNING: this is temporary, then number of derivatives to be estimated
+    ! should come from the degree of the spline interpolation used for the
+    ! field data. For the cubic splines we only specify the first derivative,
+    ! but this should be extended once we are more confident of the 
+    ! soundness of this methodology.
+#define NUM_DERIVS 1
+
+    do i=1,num_patches
+       lm => fmp%transf%get_logical_mesh(i-1)
+       num_pts1 = lm%num_cells1 + 1
+       num_pts2 = lm%num_cells2 + 1
+       SLL_ALLOCATE(fmp%buffers0(i)%array(num_pts1,NUM_DERIVS),ierr)
+       SLL_ALLOCATE(fmp%buffers1(i)%array(num_pts2,NUM_DERIVS),ierr)
+       SLL_ALLOCATE(fmp%buffers2(i)%array(num_pts1,NUM_DERIVS),ierr)
+       SLL_ALLOCATE(fmp%buffers3(i)%array(num_pts2,NUM_DERIVS),ierr)
+       ! The calculation of the compatibility conditions between patches is
+       ! being written with the future parallelization in mind, hence the
+       ! redundant calculation of the slopes...
+       SLL_ALLOCATE(fmp%derivs0(i)%array(num_pts1,NUM_DERIVS),ierr)
+       SLL_ALLOCATE(fmp%derivs1(i)%array(num_pts2,NUM_DERIVS),ierr)
+       SLL_ALLOCATE(fmp%derivs2(i)%array(num_pts1,NUM_DERIVS),ierr)
+       SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
+    end do
   end subroutine initialize_scalar_field_sfmp2d
 
 
@@ -344,6 +390,34 @@ contains   ! *****************************************************************
     ! the patches. This is where most of the work will be for a while...
     call mp%fields(patch+1)%f%update_interpolation_coefficients( )
   end subroutine update_interp_coeffs_sfmp2d
+
+  subroutine compute_compatible_derivatives_in_borders( fmp )
+    class(sll_scalar_field_multipatch_2d), intent(inout) :: fmp
+    type(sll_logical_mesh_2d), pointer :: m
+    sll_int32 :: num_patches
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: num_pts1
+    sll_int32 :: num_pts1
+    sll_int32, dimension(2) :: connectivity
+
+    num_patches = fmp%num_patches
+
+    do i=1,num_patches
+       m => fmp%transf%get_logical_mesh(i-1)
+       num_pts1 = lm%num_cells1 + 1
+       num_pts2 = lm%num_cells2 + 1
+       ! Here we should have a select case and adjust the calculation to 
+       ! the degree of the derivatives which should be calculated. Presently
+       ! we only put the cubic spline compatibility condition which only 
+       ! requires the calculation of the first derivative.
+
+       ! Compute local contribution to face 0 (south face).
+       connectivity(:) = fmp%transf%get_connectivity(i-1,0)
+       if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
+          ! por aqui
+    end do
+  end subroutine compute_compatible_derivatives_in_borders
 
   function get_patch_transformation_sfmp2d( mp, patch ) result(res)
     type(sll_coordinate_transformation_2d_nurbs), pointer :: res
