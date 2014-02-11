@@ -159,6 +159,9 @@ contains
     sll_real64 :: eta2_max
     sll_real64 :: alpha1
     sll_real64 :: alpha2
+    sll_real64 :: alpha3
+    sll_real64 :: alpha4
+    sll_real64 :: alpha5
     
      !initial_function
     character(len=256) :: initial_function_case
@@ -228,14 +231,14 @@ contains
     class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
-    sll_real64, dimension(5) :: params_mesh_DSG
+    sll_real64, dimension(9) :: params_mesh_DSG
     sll_real64 :: eta1_min_bis
     sll_real64 :: eta1_max_bis
     sll_real64 :: eta2_min_bis
     sll_real64 :: eta2_max_bis
     sll_int32  :: Nc_eta1_bis
     sll_int32  :: Nc_eta2_bis
-    sll_real64 :: alpha11,alpha22,alpha3,alpha4,alpha5
+
     !here we do all the initialization
     !in future, we will use namelist file
     
@@ -248,7 +251,10 @@ contains
       eta2_min, &
       eta2_max, &
       alpha1  , &
-      alpha2
+      alpha2  , &
+      alpha3  , &
+      alpha4  , & 
+      alpha5
 
     namelist /initial_function/ &
       type_var, &
@@ -307,7 +313,10 @@ contains
     alpha1 = 0._f64
     alpha2 = 0._f64
     params_mesh = (/ alpha1, alpha2, eta1_max-eta1_min, eta2_max-eta2_min/)
-    
+    alpha3 = 0._f64
+    alpha4 = 0._f64
+    alpha5 = 0._f64
+    params_mesh_DSG = (/ alpha1, alpha2, alpha3,alpha4,alpha5,eta1_min,eta2_min,eta1_max,eta2_max/)
     !initial function
     type_var = "SLL_X_Y"
     initial_function_case="SLL_KHP1"
@@ -564,12 +573,12 @@ contains
          !        x2 = alpha5*(alpha2*(2._f64*eta1-1)+alpha3)*sin(2._f64*sll_pi*eta2)
          ! Domain: [0,1] X [0,1]
          ! By default the values of the alpha parameters are:
-             alpha11 =1.7_f64
-             alpha22 =0.074_f64
-             alpha3  =0.536_f64
-             alpha4  =0.4290421957_f64
-             alpha5  =1.66_f64
-          params_mesh_DSG = (/ alpha11, alpha22, alpha3,alpha4,alpha5/)
+         !             alpha1  = 1.7_f64
+         !             alpha2  = 0.074_f64
+         !             alpha3  = 0.536_f64
+         !             alpha4  = 0.4290421957_f64
+         !             alpha5  = 1.66_f64
+        params_mesh_DSG = (/ alpha1, alpha2, alpha3,alpha4,alpha5,eta1_min,eta2_min,eta1_max,eta2_max/)
       case default
         print *,'#bad mesh_case',mesh_case
         print *,'#not implemented'
@@ -1020,18 +1029,29 @@ contains
         sim%params(2) = kmode_eta1
         sim%params(3) = kmode_eta2
       case("SLL_DIOCOTRON")
-        print*,"#f0 = SLL_DIOCOTRON " 
+        print*,"#f0 = SLL_DIOCOTRON (X,Y)" 
         sim%init_func => sll_diocotron_initializer_2d2
         SLL_ALLOCATE(sim%params(4),ierr)
         sim%params(1) = r_minus
         sim%params(2) = r_plus
         sim%params(3) = eps
-        sim%params(4) = kmode_eta2  
+        sim%params(4) = kmode_eta2
        case ("SLL_DSG_2D")
         print*,"#f0 = SLL_DSG_2D"  
         sim%init_func => SLL_DSG_2D
-        SLL_ALLOCATE(sim%params(1),ierr)
-        sim%params(1) = 0._f64
+        SLL_ALLOCATE(sim%params(4),ierr)
+        sim%params(1) = eta1_min
+        sim%params(2) = eta2_min
+        sim%params(3) = eta1_max
+        sim%params(4) = eta2_max 
+        case("SLL_DIOCOTRON_ETA1_ETA2")
+        print*,"#f0 = SLL_DIOCOTRON (ETA1,ETA2)" 
+        sim%init_func => sll_diocotron_initializer_2d
+        SLL_ALLOCATE(sim%params(4),ierr)
+        sim%params(1) = r_minus
+        sim%params(2) = r_plus
+        sim%params(3) = eps
+        sim%params(4) = kmode_eta2 *2._f64*sll_pi 
       case default
         print *,'#bad initial_function_case',initial_function_case
         print *,'#not implemented'
@@ -1214,6 +1234,7 @@ contains
            do i1=1,Nc_eta1+1
              eta1=eta1_min+real(i1-1,f64)*delta_eta1
              f(i1,i2) =  sim%init_func(eta1,eta2,sim%params) 
+             write(201,*) eta1,eta2,f(i1,i2)
            end do
          end do 
        case default
@@ -1221,7 +1242,8 @@ contains
         print *,'#not implemented'
         print *,'#in  run_gc2d_curvilinear'
         stop
-    end select      
+    end select    
+
     !solve poisson
     call sim%poisson%compute_phi_from_rho(phi, f)
     call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)  
@@ -1233,8 +1255,10 @@ contains
 !        end do
 !     end do   
 !     stop  
-    !print *,maxval(A1)
-    !print *,maxval(A2)
+    print *,maxval(phi)
+    print *,maxval(A1)
+    print *,maxval(A2)
+
     thdiagp_id=thdiag_id+1
     call sll_ascii_file_create('thdiag.dat', thdiag_id, ierr)
     call sll_ascii_file_create('thdiagp.dat', thdiagp_id, ierr)
@@ -1247,17 +1271,16 @@ contains
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
       call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       if(modulo(step-1,sim%freq_diag_time)==0)then
-        call time_history_diagnostic_gc( &
+        call time_history_diagnostic_gc2( &
           thdiag_id , &    
           step-1, &
           dt, &
-          sim%mesh_2d, &
-          sim%transformation, &
+          sim%mesh_2d, & ! sim%transformation, &
           f, &
           phi, &
           A1, &
           A2)
-        call time_history_diagnostic_gc2( &
+        call time_history_diagnostic_gc3( &
           thdiagp_id, &    
           step-1, &
           dt, &
@@ -1265,7 +1288,8 @@ contains
           f, &
           phi, &
           A1, &
-          A2)
+          A2, &
+          sim%params)
       endif            
 #ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
@@ -1477,6 +1501,8 @@ contains
     sll_real64 :: eta2_max
     sll_real64 :: delta_eta1
     sll_real64 :: delta_eta2
+    sll_real64 :: dphi_eta1
+    sll_real64 :: dphi_eta2
     sll_int32 :: ierr 
 
     
@@ -1522,8 +1548,10 @@ contains
       do i1=1,Nc_eta1+1
         eta1 = eta2_min + (i1-1)* delta_eta1
         jac_m  =  transformation%jacobian_matrix(eta1,eta2)
-        data(i1) = (( jac_m(2,2)*A1(i1,i2) - jac_m(2,1)*A2(i1,i2) )**2 + &
-        ( -jac_m(1,2)*A1(i1,i2) + jac_m(1,1)*A2(i1,i2) )**2) &
+        dphi_eta1 = A1(i1,i2)* transformation%jacobian(eta1,eta2)
+        dphi_eta2 = -A2(i1,i2)* transformation%jacobian(eta1,eta2)
+        data(i1) = (( jac_m(2,2)*dphi_eta1 - jac_m(2,1)*dphi_eta2 )**2 + &
+        ( -jac_m(1,2)*dphi_eta1 + jac_m(1,1)*dphi_eta2 )**2) &
         /abs(transformation%jacobian(eta1,eta2)) 
       enddo
       e = e + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
@@ -1665,7 +1693,128 @@ contains
 
     
   end subroutine time_history_diagnostic_gc2
+  
+  subroutine time_history_diagnostic_gc3( &
+    file_id, &    
+    step, &
+    dt, &
+    mesh_2d, &
+    f, &
+    phi, &
+    A1, &
+    A2, &
+    params)
+    sll_int32, intent(in) :: file_id
+    sll_int32, intent(in) :: step
+    sll_real64, intent(in) :: dt
+    type(sll_logical_mesh_2d), pointer :: mesh_2d
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64, dimension(:,:), intent(in) :: phi
+    sll_real64, dimension(:,:), intent(in) :: A1
+    sll_real64, dimension(:,:), intent(in) :: A2
+    sll_real64 :: params(9)
+    sll_real64 :: time_mode(8) 
+    !sll_real64 :: mode_slope(8) 
+    sll_real64 :: w
+    sll_real64 :: l1
+    sll_real64 :: l2
+    sll_real64 :: e
+    sll_real64, dimension(:),allocatable :: int_r
+    sll_real64, dimension(:),allocatable :: data
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: Nc_eta1
+    sll_int32 :: Nc_eta2
+    sll_real64 ::eta1_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_real64 :: eta1
+    sll_int32 :: ierr 
+    type(sll_fft_plan), pointer         :: pfwd
+    sll_real64 :: alpha1,alpha2,alpha3,alpha4,alpha5
+    Nc_eta1 = mesh_2d%num_cells1
+    Nc_eta2 = mesh_2d%num_cells2
+    
+    
+    eta1_min = mesh_2d%eta1_min
 
+    delta_eta1 = mesh_2d%delta_eta1
+    delta_eta2 = mesh_2d%delta_eta2
+
+    
+    SLL_ALLOCATE(int_r(Nc_eta2),ierr)
+    SLL_ALLOCATE(data(Nc_eta1+1),ierr)
+    pfwd => fft_new_plan(Nc_eta2,int_r,int_r,FFT_FORWARD,FFT_NORMALIZE)
+ 
+    w     = 0.0_f64
+    l1    = 0.0_f64
+    l2    = 0.0_f64
+    e     = 0.0_f64
+    int_r = 0.0_f64
+    alpha1 = params(5)
+    alpha2 = params(6)
+    alpha3 = params(7) 
+    alpha4 = params(8) 
+    alpha5 = params(9) 
+   
+    do i2 = 1, Nc_eta2
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min+real(i1-1,f64)*delta_eta1
+        data(i1) = eta1*f(i1,i2)
+      enddo
+      w = w + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min+real(i1-1,f64)*delta_eta1
+        data(i1) = eta1*abs(f(i1,i2))
+      enddo
+      l1 = l1 + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min+real(i1-1,f64)*delta_eta1
+        data(i1) = eta1*(f(i1,i2))**2
+      enddo
+      l2 = l2 + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min+real(i1-1,f64)*delta_eta1
+        data(i1) = eta1*((eta1*A2(i1,i2))**2+A1(i1,i2)**2)
+      enddo
+      e = e + compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)
+
+      do i1=1,Nc_eta1+1
+        eta1 = eta1_min+real(i1-1,f64)*delta_eta1
+        !data(i1) = 4._f64*sll_pi*alpha5*alpha2*(alpha2*(2.*eta1 - 1._f64)+alpha3)*phi(i1,i2)
+        data(i1) = abs((alpha2*(2._f64*eta1-1._f64)+alpha3))*phi(i1,i2)
+      enddo
+      int_r(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)     
+    enddo
+
+    w = w*delta_eta2
+    l1 = l1*delta_eta2
+    l2 = sqrt(l2*delta_eta2)
+    e  = 0.5_f64*e*delta_eta2
+    call fft_apply_plan(pfwd,int_r,int_r)
+    do i1=1,8
+      !mode_slope(i1) = time_mode(i1)
+      time_mode(i1) = abs(fft_get_mode(pfwd,int_r,i1-1))**2
+      !mode_slope(i1) = &
+      !  (log(0*time_mode(i1)+1.e-40_f64)-log(0*mode_slope(i1)+1.e-40_f64))/(dt+1.e-40_f64)
+    enddo
+    
+    write(file_id,*) &
+      dt*real(step,f64), &
+      w, &
+      l1, &
+      l2, &
+      e, &
+      maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1))), &
+      time_mode(1:8)!,mode_slope
+
+    call fft_delete_plan(pfwd)
+
+    
+  end subroutine time_history_diagnostic_gc3
 #ifndef NOHDF5
 !*********************
 !*********************
