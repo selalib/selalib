@@ -491,7 +491,9 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       if( .not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) ) then 
+       if(.not. associated(transf_x1_x2%get_logical_mesh(),mesh2d_eta1_eta2) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x1_x2 transformation ', &
                'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
@@ -501,7 +503,9 @@ contains
     end if
 
     if(present( transf_x3_x4 ) ) then
-       if( .not. associated(transf_x3_x4%mesh, mesh2d_eta3_eta4) ) then 
+       if(.not. associated(transf_x3_x4%get_logical_mesh(),mesh2d_eta3_eta4) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x3_x4 transformation ', &
                'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
@@ -872,6 +876,7 @@ contains
     sll_real64 :: x4
     sll_int32  :: case_selector
     sll_int32    :: sub1,sub2,sub3,sub4
+    type(sll_logical_mesh_2d), pointer :: m
     sll_int32, dimension(1:4)  :: gi ! global indices in the distributed array
 
     if( .not. associated(layout) ) then
@@ -917,7 +922,10 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       if( .not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) ) then 
+       m => transf_x1_x2%mesh
+       if(.not. associated(m, mesh2d_eta1_eta2) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x1_x2 transformation ', &
                'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
@@ -927,7 +935,10 @@ contains
     end if
 
     if(present( transf_x3_x4 ) ) then
-       if( .not. associated(transf_x3_x4%mesh, mesh2d_eta3_eta4) ) then 
+       m => transf_x3_x4%mesh
+       if(.not. associated(m,mesh2d_eta3_eta4) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x3_x4 transformation ', &
                'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
