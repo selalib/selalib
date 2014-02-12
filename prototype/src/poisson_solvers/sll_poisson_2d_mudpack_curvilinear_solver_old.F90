@@ -534,11 +534,9 @@ contains
       do i1=1,Nc_eta1+1
         eta1=eta1_min+real(i1-1,f64)*delta_eta1
         poisson%rho(i1,i2)=-rho(i1,i2)*poisson%transformation%jacobian(eta1,eta2)
-        !write(100,*) eta1,eta2,1._f64+1e-3*2.*sll_pi*sin(2.*sll_pi*(eta1+eta2)/real(Nc_eta1,f64)*delta_eta1)/real(Nc_eta1,f64)*delta_eta1-poisson%transformation%jacobian(eta1,eta2)
       end do
     end do
-    
-    
+        
     
     if(nxa == SLL_DIRICHLET) then
        do i2=1,Nc_eta2+1
