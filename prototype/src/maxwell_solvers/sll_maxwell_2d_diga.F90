@@ -45,15 +45,7 @@ type :: cell_type
 
 end type cell_type
 
-type :: array4d_ptr
-   sll_real64, dimension(:,:,:,:), pointer :: array   
-end type array4d_ptr
 
-type :: array2d_ptr
-   sll_real64, dimension(:,:), pointer :: array   
-end type array2d_ptr
-
-!> Data object to solve Maxwell equations with discontinuous Galerkine
 !> method in two dimensions with general coordinates
 type, public :: maxwell_2d_diga
 
@@ -70,9 +62,9 @@ type, public :: maxwell_2d_diga
    sll_real64                               :: eta2_min
    sll_real64                               :: eta2_max
    sll_real64                               :: delta_eta2
-   type(array4d_ptr), dimension(3)          :: w_vector              
-   type(array2d_ptr), dimension(3)          :: f_vector              
-   type(array2d_ptr), dimension(3)          :: r_vector              
+   sll_real64, dimension(:,:), pointer      :: w_vector              
+   sll_real64, dimension(:,:), pointer      :: f_vector              
+   sll_real64, dimension(:,:), pointer      :: r_vector              
    sll_real64, dimension(3,3)               :: A1
    sll_real64, dimension(3,3)               :: A2
 
@@ -109,7 +101,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    sll_real64                  :: eta1_p
    sll_real64                  :: eta2_p
    sll_real64                  :: mdiag
-   sll_int32                   :: i, j, k, ii, jj, kk, ll
+   sll_int32                   :: i, j, ii, jj, kk, ll
    sll_real64                  :: xgalo(degree+1)
    sll_real64                  :: wgalo(degree+1)
 
@@ -185,10 +177,9 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    !call sll_display(this%cell(1,1)%DxMatrix(:,:),"f7.2")
    !call sll_display(this%cell(1,1)%DyMatrix(:,:),"f7.2")
 
-   do k=1,3
-      SLL_CLEAR_ALLOCATE(this%f_vector(k)%array(1:degree+1,1:degree+1),error)
-      SLL_CLEAR_ALLOCATE(this%r_vector(k)%array(1:degree+1,1:degree+1),error)
-   end do
+   SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),3),error)
+   SLL_CLEAR_ALLOCATE(this%f_vector((degree+1)*(degree+1),3),error)
+   SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),3),error)
 
    this%A1 = reshape((/ 0._f64, 0._f64,  0._f64,  &
                         0._f64, 0._f64,  1._f64,  &
@@ -216,30 +207,43 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    type(dg_field), optional :: rho  !< charge density
 
    sll_int32                :: left, right, node, side
-   sll_int32                :: i, j, k, l
+   sll_int32                :: i, j, k, l, ii, jj
+   sll_real64               :: flux(3)
 
-   this%w_vector(1)%array => ex%array
-   this%w_vector(2)%array => ex%array
-   this%w_vector(3)%array => bz%array
 
+   print*, dt
    !Loop over cells
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
 
-     
-      this%r_vector(1)%array(:,:) = jx%array(:,:,i,j)
-      this%r_vector(2)%array(:,:) = jy%array(:,:,i,j)
-      this%r_vector(3)%array(:,:) = 0.0_f64
+      do jj = 1, this%degree+1
+      do ii = 1, this%degree+1
+         k = (ii-1)*(this%degree+1)+jj
+         this%w_vector(k,1) = ex%array(ii,jj,i,j)
+         this%w_vector(k,2) = ey%array(ii,jj,i,j)
+         this%w_vector(k,3) = bz%array(ii,jj,i,j)
+      end do
+      end do
+         
+      if(present(jx) .and. present(jy) .and. present(rho)) then
+         do jj = 1, this%degree+1
+         do ii = 1, this%degree+1
+            this%r_vector(k,1) = jx%array(ii,jj,i,j)
+            this%r_vector(k,2) = jy%array(ii,jj,i,j)
+            this%r_vector(k,3) = rho%array(ii,jj,i,j)
+         end do
+         end do
+      end if
 
-      this%f_vector(1)%array(:,:) =  &
-             matmul(this%cell(i,j)%DxMatrix,this%w_vector(1)%array(:,:,i,j)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(1)%array(:,:,i,j))
-      this%f_vector(2)%array(:,:) =  &
-             matmul(this%cell(i,j)%DxMatrix,this%w_vector(2)%array(:,:,i,j)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(2)%array(:,:,i,j))
-      this%f_vector(3)%array(:,:) =  &
-             matmul(this%cell(i,j)%DxMatrix,this%w_vector(3)%array(:,:,i,j)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(3)%array(:,:,i,j))
+      this%f_vector(:,1) =  &
+             matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
+           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
+      this%f_vector(:,2) =  &
+             matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2)) &
+           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2))
+      this%f_vector(:,3) =  &
+             matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
+           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3))
 
       do side = 1, 4 ! Loop over edges
  
@@ -265,8 +269,8 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             left  = dof_local(side, node, this%degree)
             right = dof_neighbor(side, node, this%degree)
    
-            !flux (:) = 0.5*(this%%w_vector(:)%array(left, :,i,j) &
-                     !+      this%%w_vector(:)%array(right,:,i,j))
+            flux (:) = 0.5*(this%w_vector(left, :) &
+                     +      this%w_vector(right,:))
    
             !V%field(node,:) = &
             !   this%cell(i,j)%edge(side)%n(node,1)*matmul(A1,V%field(node,:)) &
@@ -282,7 +286,6 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    end do
    end do
 
-STOP 'STOPPED'
 
 end  subroutine solve_maxwell_2d_diga
 
@@ -353,9 +356,6 @@ function dof_neighbor(edge,dof,degree)
    end select
 
 end function dof_neighbor
-
-
-
 
 !> Compute cell normals
 subroutine compute_normals(tau, i, j, d, x, w, cell )
@@ -445,6 +445,25 @@ subroutine compute_normals(tau, i, j, d, x, w, cell )
    cell%edge(WEST)%length = length * c1
 
 end subroutine compute_normals
+
+sll_int32 function global_ddl( degree, iface, local_ddl)
+
+   sll_int32, intent(in)  :: degree
+   sll_int32, intent(in)  :: iface
+   sll_int32, intent(in)  :: local_ddl
+   
+   select case(iface)
+   case(SOUTH)
+   global_ddl = local_ddl
+   case(EAST)
+   global_ddl = local_ddl*(degree+1)
+   case(NORTH)
+   global_ddl = degree*(degree+1)+local_ddl
+   case(WEST)
+   global_ddl = (local_ddl-1)*(degree+1) + 1
+   end select 
+
+end function global_ddl
 
 end module sll_maxwell_2d_diga
 
