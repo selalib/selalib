@@ -32,8 +32,8 @@ use sll_maxwell_2d_diga
 implicit none
 
 sll_int32, parameter :: nstep   = 1
-sll_int32, parameter :: nc_eta1 = 3
-sll_int32, parameter :: nc_eta2 = 3
+sll_int32, parameter :: nc_eta1 = 2
+sll_int32, parameter :: nc_eta2 = 2
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
