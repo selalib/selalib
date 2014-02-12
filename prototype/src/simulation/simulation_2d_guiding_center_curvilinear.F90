@@ -1265,7 +1265,9 @@ contains
     iplot = 0
 
     do step=1,nb_step+1
-      print*,"step= ", step
+      if(modulo(step-1,sim%freq_diag)==0)then 
+         print*,"step= ", step
+      endif   
       f_old = f
       
       call sim%poisson%compute_phi_from_rho(phi, f_old) 

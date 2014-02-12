@@ -3,12 +3,17 @@
 
 &geometry
     mesh_case ="SLL_D_SHAPED_MESH"
-    num_cells_eta1 = 100
-    num_cells_eta2 = 64
+    num_cells_eta1 = 128
+    num_cells_eta2 = 128
     eta1_min = 0.
     eta1_max = 1.
     eta2_min = 0.
     eta2_max = 1.
+    alpha1  = 1.7
+    alpha2  = 0.074
+    alpha3  = 0.536
+    alpha4  = 0.4290421957
+    alpha5  = 1.66
 
 /    
 &initial_function
@@ -17,7 +22,7 @@
 /    
 &time_iterations
     dt = 0.1
-    number_iterations  = 600
+    number_iterations  = 400
     freq_diag = 50
     freq_diag_time = 1
     !time_loop_case = "SLL_EULER"
@@ -26,8 +31,8 @@
 &advector
     advection_form = "SLL_ADVECTIVE"
     advect2d_case = "SLL_BSL"    
-    charac2d_case = "SLL_EULER"
-    !charac2d_case = "SLL_VERLET"
+    !charac2d_case = "SLL_EULER"
+    charac2d_case = "SLL_VERLET"
     !advect2d_case = "SLL_TENSOR_PRODUCT"
     advect1d_x1_case = "SLL_BSL"
     advect1d_x2_case = "SLL_BSL"
