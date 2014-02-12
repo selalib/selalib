@@ -391,31 +391,264 @@ contains   ! *****************************************************************
     call mp%fields(patch+1)%f%update_interpolation_coefficients( )
   end subroutine update_interp_coeffs_sfmp2d
 
+
+  ! THIS SHOULD BE CHANGED TO INCLUDE THE CASE IN WHICH THE CELL SPACING
+  ! CHANGES IN BETWEEN PATCHES!!!
   subroutine compute_compatible_derivatives_in_borders( fmp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: fmp
     type(sll_logical_mesh_2d), pointer :: m
     sll_int32 :: num_patches
+    sll_int32 :: ip
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: num_pts1
-    sll_int32 :: num_pts1
+    sll_int32 :: num_pts2
+    sll_int32 :: other_patch
+    sll_int32 :: other_face
+    sll_int32 :: current_face
+    sll_real64 :: rdelta1
+    sll_real64 :: rdelta2
     sll_int32, dimension(2) :: connectivity
+    sll_real64, dimension(:,:), pointer :: d
+    sll_real64, dimension(:,:), pointer :: buf
+    sll_real64, dimension(:,:), pointer :: this_buffer
+    sll_real64, dimension(:,:), pointer :: other_buffer
+    sll_real64, dimension(:,:), pointer :: derivs
 
     num_patches = fmp%num_patches
 
-    do i=1,num_patches
-       m => fmp%transf%get_logical_mesh(i-1)
-       num_pts1 = lm%num_cells1 + 1
-       num_pts2 = lm%num_cells2 + 1
+    do ip=1,num_patches
+       m => fmp%transf%get_logical_mesh(ip-1)
+       num_pts1 = m%num_cells1 + 1
+       num_pts2 = m%num_cells2 + 1
+       rdelta1  = 1.0_f64/m%delta_eta1
+       rdelta2  = 1.0_f64/m%delta_eta2
+       d   => fmp%patch_data(ip)%array
+
        ! Here we should have a select case and adjust the calculation to 
        ! the degree of the derivatives which should be calculated. Presently
        ! we only put the cubic spline compatibility condition which only 
        ! requires the calculation of the first derivative.
 
+       ! ---------------------------------------------------------------------
+       !
        ! Compute local contribution to face 0 (south face).
-       connectivity(:) = fmp%transf%get_connectivity(i-1,0)
+       !
+       ! ---------------------------------------------------------------------
+       connectivity(:) = fmp%transf%get_connectivity(ip-1,0)
+       buf => fmp%buffers0(ip)%array
+
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          ! por aqui
+          ! this face is connected, thus the calculation is 'shared' between
+          ! the patches. The stencil used is:
+          !         
+          ! f'_(0) = (1/h)(-(5/3)f_(-3)+(3/20)f_(-2)-(3/4)f_(-1) +
+          !                 (3/4)f_( 1)-(3/20)f_( 2)+(5/3)f_( 3) )
+          !
+          ! Thus note that for the moment this is assuming that h is the same
+          ! on both patches...
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts1 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = ((3.0_f64/4.0_f64 )*d(i,2) - &
+                            (3.0_f64/20.0_f64)*d(i,3) + &
+                            (5.0_f64/3.0_f64 )*d(i,4))*rdelta2
+             end do
+          end do
+       else 
+          ! the face is not connected. Use different stencil:
+          !
+          ! f'_(0) = (1/h)(-2.45*f_(0) +  6*f_(1) -    7.5*f_(2) + (20/3)*f_(3) 
+          !                -3.75*f_(4) + 1.2*f(5) - (5/30)*f_(6))
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts1 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = (-2.45_f64*d(i,1) + 6.0_f64*d(i,2) -7.5_f64*d(i,3) &
+                            + (20.0_f64/3.0_f64)*d(i,4) - 3.75*d(i,5) &
+                            + 1.2*d(i,6) - (5.0_f64/30.0_f64 )*d(i,7))*rdelta2
+             end do
+          end do
+       end if
+
+       ! ---------------------------------------------------------------------
+       !
+       ! Compute local contribution to face 2 (north face).
+       !
+       ! ---------------------------------------------------------------------
+       connectivity(:) = fmp%transf%get_connectivity(ip-1,2)
+       buf => fmp%buffers2(ip)%array
+
+       if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
+          ! this face is connected, thus the calculation is 'shared' between
+          ! the patches. The stencil used is:
+          !         
+          ! f'_(0) = (1/h)(-(5/3)f_(-3)+(3/20)f_(-2)-(3/4)f_(-1) +
+          !                 (3/4)f_( 1)-(3/20)f_( 2)+(5/3)f_( 3) )
+          !
+          ! Thus note that for the moment this is assuming that h is the same
+          ! on both patches...
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts1 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = (- (5.0_f64/3.0_f64 )*d(i,num_pts2-3) &
+                            + (3.0_f64/20.0_f64)*d(i,num_pts2-2) &
+                            - (3.0_f64/4.0_f64 )*d(i,num_pts2-1) )*rdelta2
+             end do
+          end do
+       else 
+          ! the face is not connected. Use different stencil:
+          !
+          ! f'_(0) = (1/h)(+2.45*f_(0) -  6*f_(-1) + 7.5*f_(-2) - (20/3)*f_(-3) 
+          !                +3.75*f_(-4) -1.2*f(-5) + (5/30)*f_(-6))
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts1 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = (+ (5.0_f64/30.0_f64)*d(i,num_pts2-6) &
+                            - 1.2               *d(i,num_pts2-5) &
+                            + 3.75              *d(i,num_pts2-4) &
+                            - (20.0_f64/3.0_f64)*d(i,num_pts2-3) &
+                            + 7.5_f64           *d(i,num_pts2-2) &
+                            - 6.0_f64           *d(i,num_pts2-1) & 
+                            + 2.45_f64          *d(i,num_pts2) )*rdelta2
+             end do
+          end do
+       end if
+
+       ! ---------------------------------------------------------------------
+       !
+       ! Compute local contribution to face 1 (west face).
+       !
+       ! ---------------------------------------------------------------------
+       connectivity(:) = fmp%transf%get_connectivity(ip-1,1)
+       buf => fmp%buffers1(ip)%array
+
+       if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
+          ! this face is connected, thus the calculation is 'shared' between
+          ! the patches. The stencil used is:
+          !         
+          ! f'_(0) = (1/h)(-(5/3)f_(-3)+(3/20)f_(-2)-(3/4)f_(-1) +
+          !                 (3/4)f_( 1)-(3/20)f_( 2)+(5/3)f_( 3) )
+          !
+          ! Thus note that for the moment this is assuming that h is the same
+          ! on both patches...
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts2 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = ((3.0_f64/4.0_f64 )*d(2,i) - &
+                            (3.0_f64/20.0_f64)*d(3,i) + &
+                            (5.0_f64/3.0_f64 )*d(4,i))*rdelta1
+             end do
+          end do
+       else 
+          ! the face is not connected. Use different stencil:
+          !
+          ! f'_(0) = (1/h)(-2.45*f_(0) +  6*f_(1) -    7.5*f_(2) + (20/3)*f_(3) 
+          !                -3.75*f_(4) + 1.2*f(5) - (5/30)*f_(6))
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts2
+                ! only compute the first derivative contribution for now
+                buf(i,j) = (-2.45_f64*d(1,i) + 6.0_f64*d(2,i) -7.5_f64*d(3,i) &
+                            + (20.0_f64/3.0_f64)*d(4,i) - 3.75*d(5,i) &
+                            + 1.2*d(6,i) - (5.0_f64/30.0_f64 )*d(7,i))*rdelta1
+             end do
+          end do
+       end if
+
+       ! ---------------------------------------------------------------------
+       !
+       ! Compute local contribution to face 3 (east face).
+       !
+       ! ---------------------------------------------------------------------
+       connectivity(:) = fmp%transf%get_connectivity(ip-1,3)
+       buf => fmp%buffers3(ip)%array
+
+       if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
+          ! this face is connected, thus the calculation is 'shared' between
+          ! the patches. The stencil used is:
+          !         
+          ! f'_(0) = (1/h)(-(5/3)f_(-3)+(3/20)f_(-2)-(3/4)f_(-1) +
+          !                 (3/4)f_( 1)-(3/20)f_( 2)+(5/3)f_( 3) )
+          !
+          ! Thus note that for the moment this is assuming that h is the same
+          ! on both patches...
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts2 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = (- (5.0_f64/3.0_f64 )*d(num_pts1-3,i) &
+                            + (3.0_f64/20.0_f64)*d(num_pts1-2,i) &
+                            - (3.0_f64/4.0_f64 )*d(num_pts1-1,i) )*rdelta1
+             end do
+          end do
+       else 
+          ! the face is not connected. Use different stencil:
+          !
+          ! f'_(0) = (1/h)(+2.45*f_(0) -  6*f_(-1) + 7.5*f_(-2) - (20/3)*f_(-3) 
+          !                +3.75*f_(-4) -1.2*f(-5) + (5/30)*f_(-6))
+          do j=1,1 ! <--- this would be the number of derivatives to calculate
+             do i=1,num_pts2 
+                ! only compute the first derivative contribution for now
+                buf(i,j) = (+ (5.0_f64/30.0_f64)*d(num_pts1-6,i) &
+                            - 1.2               *d(num_pts1-5,i) &
+                            + 3.75              *d(num_pts1-4,i) &
+                            - (20.0_f64/3.0_f64)*d(num_pts1-3,i) &
+                            + 7.5_f64           *d(num_pts1-2,i) &
+                            - 6.0_f64           *d(num_pts1-1,i) & 
+                            + 2.45_f64          *d(num_pts1  ,i) )*rdelta1
+             end do
+          end do
+       end if
+    end do
+
+    ! The buffers contain the contribution from each patch to the derivative
+    ! calculation for the faces which are connected and the actual 
+    ! derivative of the data for those faces which aren't.
+    ! Proceed to assemble the derivatives information for each border.
+
+    do ip=1,num_patches
+       do current_face=0,3
+          connectivity(:) = fmp%transf%get_connectivity(ip-1,current_face)
+          other_patch = connectivity(1)
+          other_face  = connectivity(2)
+          ! select the derivs and local buffers
+          select case ( current_face )
+          case(0)
+             derivs      => fmp%derivs0(ip)%array
+             this_buffer => fmp%buffers0(ip)%array
+          case(1)
+             derivs      => fmp%derivs1(ip)%array
+             this_buffer => fmp%buffers1(ip)%array
+          case(2)
+             derivs      => fmp%derivs2(ip)%array
+             this_buffer => fmp%buffers2(ip)%array
+          case(3)
+             derivs      => fmp%derivs3(ip)%array
+             this_buffer => fmp%buffers3(ip)%array
+          end select
+
+          if( (other_patch <  0) .and. (other_face <  0) ) then
+             ! This is an exterior face, the slopes have been computed 
+             ! locally already.
+             derivs(:,:) = this_buffer(:,:)
+          else
+             ! Face shared between patches, need to combine two buffers.
+             this_buffer => fmp%buffers0(ip)%array
+             select case ( other_face )
+             case(0)
+                other_buffer => fmp%buffers0(other_patch+1)%array
+             case(1)
+                other_buffer => fmp%buffers1(other_patch+1)%array
+             case(2)
+                other_buffer => fmp%buffers2(other_patch+1)%array
+             case(3)
+                other_buffer => fmp%buffers3(other_patch+1)%array
+             case default
+                print *, 'ERROR in ', __FILE__, __LINE__,'face connectivity ', &
+                     'found not between the expected integers 0 and 3.'
+                stop
+             end select
+             derivs(:,:) = other_buffer(:,:) + this_buffer(:,:)
+          end if
+       end do
     end do
   end subroutine compute_compatible_derivatives_in_borders
 
