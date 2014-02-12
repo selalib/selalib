@@ -26,7 +26,8 @@ module sll_coordinate_transformation_2d_base_module
      ! as error checking, test the association of this pointer within the
      ! functions that receive an argument of 
      ! class(sll_coordinate_transformation_2d_base)
-     type(sll_logical_mesh_2d), pointer :: mesh
+
+     type(sll_logical_mesh_2d), pointer :: mesh => null()
      !logical to remember when the mesh has already been written to file
      character(len=64) :: label
      logical           :: written = .false.
