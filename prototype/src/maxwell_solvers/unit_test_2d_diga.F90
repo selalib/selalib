@@ -56,7 +56,7 @@ type(dg_field), pointer :: ez
 type(dg_field), pointer :: ez_exact
 
 sll_int32   :: mode = 2
-sll_int32   :: degree = 5
+sll_int32   :: degree = 2
 sll_real64  :: omega
 sll_real64  :: time
 sll_int32   :: istep

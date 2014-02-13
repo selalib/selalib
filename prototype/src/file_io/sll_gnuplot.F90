@@ -30,6 +30,7 @@ interface sll_gnuplot_2d
 module procedure sll_gnuplot_corect_2d
 module procedure sll_gnuplot_rect_2d
 module procedure sll_gnuplot_curv_2d
+module procedure sll_gnuplot_mesh_2d
 end interface
 
 contains  
@@ -236,6 +237,37 @@ close(file_id)
 
 end subroutine sll_gnuplot_rect_2d
 
+!> write a data file plotable by gnuplot to visualize a 2d curvilinear mesh
+subroutine sll_gnuplot_mesh_2d( nx, ny, xcoord, ycoord, array_name, error)  
+sll_int32                    :: nx         !< x points number
+sll_int32                    :: ny         !< y points number
+sll_real64, dimension(nx,ny) :: xcoord     !< x coordinates
+sll_real64, dimension(nx,ny) :: ycoord     !< y coordiantes
+character(len=*)             :: array_name !< field name
+sll_int32, save :: gnu_id
+sll_int32 :: file_id
+sll_int32 :: error                         !< error code
+sll_int32 :: i, j
+
+call sll_new_file_id(gnu_id, error)
+
+open(gnu_id,file=array_name//".gnu")
+write(gnu_id,*)"set view 0,0"
+write(gnu_id,*)"splot '"//array_name//"_mesh.dat' with lines"
+close(gnu_id)
+
+call sll_ascii_file_create(array_name//'_mesh.dat', file_id, error )
+do i=1,nx
+   do j=1,ny
+      write(file_id,*) sngl(xcoord(i,j)), &
+                       sngl(ycoord(i,j)), 0.0_f32
+   end do
+   write(file_id,*)
+enddo
+close(file_id)
+
+end subroutine sll_gnuplot_mesh_2d
+
 
 !> write a data file plotable by gnuplot to visualize a 2d field on structured
 !> curvilinear mesh
@@ -279,3 +311,4 @@ end subroutine sll_gnuplot_curv_2d
 
 
 end module sll_gnuplot
+
