@@ -42,6 +42,7 @@ sll_int32  :: error
 
 type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+class(sll_coordinate_transformation_2d_analytic), pointer :: colella
 
 type(maxwell_2d_diga)   :: maxwell_TE
 type(maxwell_2d_diga)   :: maxwell_TM
@@ -89,15 +90,16 @@ delta_eta2 = mesh%delta_eta2
 ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 
-!tau => new_coordinate_transformation_2d_analytic( &
-!       "collela_transformation", &
-!       mesh, &
-!       sinprod_x1, &
-!       sinprod_x2, &
-!       sinprod_jac11, &
-!       sinprod_jac12, &
-!       sinprod_jac21, &
-!       sinprod_jac22 )
+tau => new_coordinate_transformation_2d_analytic( &
+       "collela_transformation", &
+       mesh, &
+       sinprod_x1, &
+       sinprod_x2, &
+       sinprod_jac11, &
+       sinprod_jac12, &
+       sinprod_jac21, &
+       sinprod_jac22, & 
+       SLL_NULL_REAL64 )
 
 tau => new_coordinate_transformation_2d_analytic( &
        "identity_transformation",                 &
