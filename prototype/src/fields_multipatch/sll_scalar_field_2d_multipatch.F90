@@ -77,6 +77,7 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: get_number_patches  => get_number_patches_sfmp2d
      procedure, pass :: value_at_point      => value_at_pt_sfmp2d
      procedure, pass :: value_at_indices    => value_at_indices_sfmp2d
+     procedure, pass :: set_value_at_indices => set_value_at_indices_sfmp2d
      procedure, pass :: first_deriv_eta1_value_at_point => &
           first_deriv_eta1_value_at_pt_sfmp2d
      procedure, pass :: first_deriv_eta2_value_at_point => &
@@ -374,21 +375,15 @@ contains   ! *****************************************************************
     call mp%fields(patch+1)%f%set_field_data(values)
   end subroutine set_field_data_sfmp2d
 
-  subroutine update_interp_coeffs_sfmp2d( mp, patch )
+  subroutine update_interp_coeffs_sfmp2d( mp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
-    sll_int32, intent(in)                               :: patch
-    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    ! This is a crucial and difficult function in the sense that its role is
-    ! to convert a problem that is by nature global to something local. In
-    ! other words, the spline coefficients are to be computed on a per-patch
-    ! basis needing some kind of compatibility condition at the internal
-    ! edges and hopefully this will result in a useful spline reconstruction
-    ! of the data competitive with what would have been calculated if the 
-    ! calculation had taken place globally.
-    !
-    ! We need to abstract a function that handles the compatibility between
-    ! the patches. This is where most of the work will be for a while...
-    call mp%fields(patch+1)%f%update_interpolation_coefficients( )
+    sll_int32 :: ipatch
+    ! patches must agree on the compatibility in internal borders before
+    ! individually launching the update coefficients per patch.
+    call compute_compatible_derivatives_in_borders(mp)
+    do ipatch=0,mp%num_patches-1
+       call mp%fields(ipatch+1)%f%update_interpolation_coefficients( )
+    end do
   end subroutine update_interp_coeffs_sfmp2d
 
 
@@ -697,6 +692,16 @@ contains   ! *****************************************************************
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
     res = mp%fields(patch+1)%f%value_at_indices(i,j)
   end function value_at_indices_sfmp2d
+
+  subroutine set_value_at_indices_sfmp2d( mp, i, j, patch, val )
+    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in)                             :: i
+    sll_int32, intent(in)                             :: j
+    sll_int32, intent(in)                             :: patch
+    sll_real64, intent(in)                            :: val
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
+    mp%patch_data(patch+1)%array(i,j) = val
+  end subroutine set_value_at_indices_sfmp2d
 
   function first_deriv_eta1_value_at_pt_sfmp2d( mp, eta1, eta2, patch ) &
     result(res)
