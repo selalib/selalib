@@ -388,6 +388,12 @@ contains   ! *****************************************************************
   subroutine update_interp_coeffs_sfmp2d( mp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32 :: ipatch
+    ! WARNING: this step would be unnecessary if the fields referred to 
+    ! their data via a pointer, the following call will be copying lots of
+    ! arrays...
+    do ipatch=0,mp%num_patches-1
+       call mp%fields(ipatch+1)%f%set_field_data(mp%patch_data(ipatch+1)%array)
+    end do
     ! patches must agree on the compatibility in internal borders before
     ! individually launching the update coefficients per patch.
     call compute_compatible_derivatives_in_borders(mp)
