@@ -143,6 +143,7 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts2
     sll_int32  :: ierr
 
+    fmp%field_name = field_name
     fmp%transf => transf
     
     ! to build the name of each patch.
@@ -768,6 +769,7 @@ contains   ! *****************************************************************
     sll_int32                                        :: i
     sll_int32                                        :: gnu_id
     sll_int32                                        :: error
+    character(len=4)                                 :: ctag
 
     num_patches = mp%num_patches
     do i=1, num_patches
@@ -776,16 +778,18 @@ contains   ! *****************************************************************
 
     call sll_new_file_id(gnu_id, error)
 
-    !open(gnu_id,file=trim(mp%field_name)//".gnu")
-    open(gnu_id,file="test.gnu")
-    write(gnu_id,*)"splot '"//mp%fields(1)%f%name//"_0.dat' w l"
-    close(gnu_id)
-    do i=2, num_patches
-        write(gnu_id,"(a)",advance='no') &
-        ", '"//mp%fields(i)%f%name//"_"//char(i+48)//"'.dat' w l"
-    end do
-    write(gnu_id,*)
-    close(gnu_id)
+    call int2string(tag,ctag)
+    open(gnu_id,file=trim(mp%field_name)//".gnu")
+    write(gnu_id,"(a)",advance='no') &
+        "splot '"//trim(mp%fields(1)%f%name)//"_"//ctag//".dat' w l"
+    if (num_patches > 1) then
+       do i=2, num_patches
+           write(gnu_id,"(a)",advance='no') &
+        ", '"//trim(mp%fields(i)%f%name)//"_"//ctag//".dat' w l"
+       end do
+       write(gnu_id,*)
+       close(gnu_id)
+    end if
 
   end subroutine write_to_file_sfmp2d
 

@@ -53,6 +53,7 @@ program unit_test_fields_multipatch
   end do
 
   call F%update_interpolation_coefficients()
+  print*, trim(F%field_name)
   call F%write_to_file(0)
 
   call delete_stmp2d_ptr(T)
