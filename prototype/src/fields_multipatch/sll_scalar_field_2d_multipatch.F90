@@ -757,11 +757,27 @@ contains   ! *****************************************************************
     sll_int32, intent(in)                            :: tag
     sll_int32                                        :: num_patches
     sll_int32                                        :: i
+    sll_int32                                        :: gnu_id
+    sll_int32                                        :: error
 
     num_patches = mp%num_patches
-    do i=0, num_patches-1
-       call mp%fields(i)%f%write_to_file( tag )
+    do i=1, num_patches
+        call mp%fields(i)%f%write_to_file( tag )
     end do
+
+    call sll_new_file_id(gnu_id, error)
+
+    !open(gnu_id,file=trim(mp%field_name)//".gnu")
+    open(gnu_id,file="test.gnu")
+    write(gnu_id,*)"splot '"//mp%fields(1)%f%name//"_0.dat' w l"
+    close(gnu_id)
+    do i=2, num_patches
+        write(gnu_id,"(a)",advance='no') &
+        ", '"//mp%fields(i)%f%name//"_"//char(i+48)//"'.dat' w l"
+    end do
+    write(gnu_id,*)
+    close(gnu_id)
+
   end subroutine write_to_file_sfmp2d
 
 end module sll_module_scalar_field_2d_multipatch
