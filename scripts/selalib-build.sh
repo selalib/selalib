@@ -78,6 +78,9 @@ elif [[ "$HOST" =~ "vpn-irma" ]]; then
 elif [[ "$HOST" =~ "doct" || "$HOST" =~ "reserve" ]]; then
    WORKDIR="/Users/irma"
    HOMEDIR="/Users/irma"
+elif [[ "$HOST" = irma-gpu3 ]]; then
+   WORKDIR="/scratch/navaro"
+   HOMEDIR=${HOME}
 elif [[ "$HOST" = *irma-* ]]; then
    WORKDIR="/scratch/navaro"
    HOMEDIR=${HOME}/Vlasov
