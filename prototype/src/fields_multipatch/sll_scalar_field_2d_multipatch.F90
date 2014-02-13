@@ -353,6 +353,15 @@ contains   ! *****************************************************************
        call field%set_field_data(i,field%patch_data(i+1)%array)
     end do
     field%owns_memory = .true.
+    ! And link each patch with the newly allocated memory.
+    do i=0,num_patches-1
+       call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
+    end do
+
+    ! And link each patch with the newly allocated memory.
+    do i=0,num_patches-1
+       call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
+    end do
   end subroutine allocate_memory_sfmp2d
 
   subroutine set_field_data_sfmp2d( mp, patch, values )
