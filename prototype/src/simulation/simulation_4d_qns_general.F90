@@ -92,6 +92,15 @@ module sll_simulation_4d_qns_general_module
      !---> For diagnostic saving
      sll_int32 :: count_save_diag
 
+     !---> To stocke the values of Jacobian in mesh points
+
+     sll_real64,dimension(:,:,:,:),pointer :: values_jacobian_mat
+     sll_real64,dimension(:,:),    pointer :: values_jacobian
+     sll_real64,dimension(:,:,:,:),pointer :: values_jacobian_matinv
+
+     ! ---> point mesh logical
+     sll_real64,dimension(:),pointer :: pt_eta1
+     sll_real64,dimension(:),pointer :: pt_eta2
      ! for remap
      type(layout_4D), pointer :: sequential_x1x2
      type(layout_4D), pointer :: sequential_x3x4
@@ -320,6 +329,15 @@ contains
          sim%bc_eta2_1, &
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
+
+    SLL_ALLOCATE(sim%values_jacobian_mat(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1,2,2),ierr)
+    sim%values_jacobian_mat(:,:,:,:) = 0.0_f64
+    SLL_ALLOCATE(sim%values_jacobian_matinv(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1,2,2),ierr)
+    sim%values_jacobian_matinv(:,:,:,:) = 0.0_f64
+    SLL_ALLOCATE(sim%values_jacobian(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
+    sim%values_jacobian(:,:) = 0.0_f64
+    SLL_ALLOCATE(sim%pt_eta1(sim%mesh2d_x%num_cells1 +1),ierr)
+    SLL_ALLOCATE(sim%pt_eta2(sim%mesh2d_x%num_cells2 +1),ierr)
   end subroutine initialize_4d_qns_general
 
 
@@ -478,6 +496,9 @@ contains
     vmax3  = sim%mesh2d_v%eta1_max
     vmin4  = sim%mesh2d_v%eta2_min
     vmax4  = sim%mesh2d_v%eta2_max
+
+    ! compute Jacobian and logical mesh points
+    call compute_values_jacobian_and_mesh_points(sim)
     ! Start with the fields
     
     a11_field_mat => new_scalar_field_2d_analytic_alt( &
@@ -852,25 +873,25 @@ contains
 !!$    end if
     call unload_buffer(sim%split_rho_layout, recv_buf, sim%rho_full)
     
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min, &
-         sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min, &
-         sim%mesh2d_x%delta_eta2, &
-         size(sim%rho_full,1), &
-         size(sim%rho_full,2), &
-         sim%rho_full, &
-         "rho_full", &
-         0, &
-         ierr )
-    
-    call compute_average_f( &
-         sim,&
-         sim%mesh2d_x,&
-         sim%rho_full, &
-         density_tot )
-    
-     print*, 'density', density_tot
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2d_x%eta1_min, &
+!!$         sim%mesh2d_x%delta_eta1, &
+!!$         sim%mesh2d_x%eta2_min, &
+!!$         sim%mesh2d_x%delta_eta2, &
+!!$         size(sim%rho_full,1), &
+!!$         size(sim%rho_full,2), &
+!!$         sim%rho_full, &
+!!$         "rho_full", &
+!!$         0, &
+!!$         ierr )
+!!$    
+!!$    call compute_average_f( &
+!!$         sim,&
+!!$         sim%mesh2d_x,&
+!!$         sim%rho_full, &
+!!$         density_tot )
+!!$    
+!!$     print*, 'density', density_tot
     
     rho => new_scalar_field_2d_discrete_alt( &
          "rho_field_check", &
@@ -919,9 +940,7 @@ contains
          loc_sz_x2, &
          loc_sz_x3, &
          loc_sz_x4 )
-    
 
-    
     ! First dt/2 advection for eta1-eta2:
     
     ! compute the spline coefficients
@@ -980,13 +999,13 @@ contains
          nc_x3+1, &
          vmin3, &
          vmax3, &
-         SLL_PERIODIC)!sim%bc_vx_0)
+         SLL_HERMITE)!sim%bc_vx_0)
     
     call sim%interp_x4%initialize( &
          nc_x4+1, &
          vmin4, &
          vmax4, &
-        SLL_PERIODIC)! sim%bc_vy_0)
+        SLL_HERMITE)! sim%bc_vy_0)
  
     print*, 'initialize qns'
     ! Initialize the poisson plan before going into the main loop.
@@ -1022,6 +1041,7 @@ contains
     !                                MAIN LOOP
     !
     ! ------------------------------------------------------------------------
+    !print*, sim%f_x1x2(1,1,:,:)
     
     do itime=1,sim%num_iterations
        if(sim%my_rank == 0) then
@@ -1116,8 +1136,7 @@ contains
                itime, &
                ierr )
        end if
-       
-       
+    
        ! the rho field has a pointer to sim%rho_full so it is already 
        ! 'aware' that the data has changed. However, the interpolation
        ! coefficients are out of date.
@@ -1189,7 +1208,7 @@ contains
             phi )
        time = sll_time_elapsed_since(t0)
      
-       print*, 'timer=', time
+       print*, 'timer to solve QNS =', time
        if(sim%my_rank == 0) then
           call phi%write_to_file(itime)
        end if
@@ -1211,11 +1230,15 @@ contains
              do i=1,loc_sz_x1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
-                eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
+                !eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
+                eta1 = sim%pt_eta1(global_indices(1))
+                !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
+                eta2 = sim%pt_eta2(global_indices(2))
                
-                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+                inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
+                !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                jac_m  =  sim%values_jacobian_mat(global_indices(1),global_indices(2),:,:)
+                ! sim%transfx%jacobian_matrix(eta1,eta2)
                 
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
@@ -1227,7 +1250,8 @@ contains
                      sim%f_x3x4(i,j,:,l), &
                      alpha3 )
                 efield_energy_total = efield_energy_total + &
-                     delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)) &
+                     delta1*delta2*&
+                     abs(sim%values_jacobian(global_indices(1),global_indices(2))) &
                      *abs( ( inv_j(1,1) *inv_j(1,1) + inv_j(1,2)*inv_j(1,2))*ex**2 &
                      +2* ( inv_j(1,1) *inv_j(2,1) + inv_j(1,2)*inv_j(2,2))*abs(ex)*abs(ey) &
                      + ( inv_j(2,1)*inv_j(2,1)  + inv_j(2,2)*inv_j(2,2))*ey**2)
@@ -1248,10 +1272,14 @@ contains
              do k=1,sim%mesh2d_v%num_cells1+1
                 global_indices(1:2) = &
                      local_to_global_2D( sim%split_rho_layout, (/i,j/))
-                eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
-                eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
-                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+                !eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
+                !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
+                eta1 = sim%pt_eta1(global_indices(1))
+                eta2 = sim%pt_eta2(global_indices(2))
+                !inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
+                !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+                jac_m  =  sim%values_jacobian_mat(global_indices(1),global_indices(2),:,:)
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
@@ -1264,7 +1292,8 @@ contains
                 
              end do
              numpart = numpart + delta1*delta2*delta3*delta4 *&
-                  sum(sim%f_x3x4(i,j,:,:)) *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+                  sum(sim%f_x3x4(i,j,:,:))*&
+                  abs(sim%values_jacobian(global_indices(1),global_indices(2)))
 !!$             efield_energy_total = efield_energy_total + &
 !!$                  delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)) &
 !!$                  *abs( ( inv_j(1,1) *inv_j(1,1) + inv_j(1,2)*inv_j(1,2))*ex**2 &
@@ -1436,6 +1465,7 @@ contains
     do l=1,loc_sz_x4
        do k=1,loc_sz_x3
           call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
+          
           do j=1,loc_sz_x2
              do i=1,loc_sz_x1
                 global_indices = &
@@ -1444,65 +1474,105 @@ contains
                 gj = global_indices(2)
                 gk = global_indices(3)
                 gl = global_indices(4)
-                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*sim%mesh2d_x%delta_eta1
-                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*sim%mesh2d_x%delta_eta2
+!!$                eta1 = sim%mesh2d_x%eta1_min + (gi-1)*sim%mesh2d_x%delta_eta1
+!!$                eta2 = sim%mesh2d_x%eta2_min + (gj-1)*sim%mesh2d_x%delta_eta2
+                eta1 = sim%pt_eta1(gi)
+                eta2 = sim%pt_eta2(gj)
                 eta3 = sim%mesh2d_v%eta1_min + (gk-1)*sim%mesh2d_v%delta_eta1
                 eta4 = sim%mesh2d_v%eta2_min + (gl-1)*sim%mesh2d_v%delta_eta2
-                inv_j  = sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+                inv_j  =  sim%values_jacobian_matinv(gi,gj,:,:) 
+                !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
                 alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
-
+                
                 eta1 = eta1+alpha1
+                eta2 = eta2+alpha2
                 ! This is hardwiring the periodic BC, please improve this..
                 if (( sim%bc_eta1_0 == SLL_PERIODIC) .and.&
-                     (sim%bc_eta1_1 == SLL_PERIODIC) ) then
-                ! PERIODIC TEST CASE.
+                     (sim%bc_eta1_1 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta2_0 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta2_1 == SLL_PERIODIC)) then
+                   
+                   ! PERIODIC TEST CASE.
                    if( eta1 <  sim%mesh2d_x%eta1_min ) then
                       eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
                    else if( eta1 >  sim%mesh2d_x%eta1_max ) then
                       eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
                    end if
-                else if (( sim%bc_eta1_0 == SLL_DIRICHLET) .and.&
-                     (sim%bc_eta1_1 == SLL_DIRICHLET) ) then
-                   
-                   ! DIRCHLET TEST CASE
-                   if( eta1 <  sim%mesh2d_x%eta1_min ) then
-                      eta1 = sim%mesh2d_x%eta1_min
-                   else if( eta1 >  sim%mesh2d_x%eta1_max ) then
-                      eta1 = sim%mesh2d_x%eta1_max
-                   end if
-                else 
-                   print*, 'problem boundary conditon for particles motions in eta1'
-                   stop
-                end if
-
-                eta2 = eta2+alpha2
-                if (( sim%bc_eta2_0 == SLL_PERIODIC) .and.&
-                     (sim%bc_eta2_1 == SLL_PERIODIC) ) then
-                ! PERIODIC TEST CASE.
                    if( eta2 <  sim%mesh2d_x%eta2_min ) then
                       eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
                    else if( eta2 >  sim%mesh2d_x%eta2_max ) then
                       eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
                    end if
-                else if (( sim%bc_eta2_0 == SLL_DIRICHLET) .and.&
-                     (sim%bc_eta1_1 == SLL_DIRICHLET) ) then
-                   
-                   ! DIRCHLET TEST CASE
-                   if( eta2 <  sim%mesh2d_x%eta2_min ) then
-                      eta2 =sim%mesh2d_x%eta2_min
-                   else if( eta2 >  sim%mesh2d_x%eta2_max ) then
-                      eta2 = sim%mesh2d_x%eta2_max
+
+                   sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+
+                else if (( sim%bc_eta1_0 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta1_1 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta2_0 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta2_1 == SLL_DIRICHLET)) then
+
+                   if( eta1 <  sim%mesh2d_x%eta1_min ) then
+                      eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
+                   else if( eta1 >  sim%mesh2d_x%eta1_max ) then
+                      eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
                    end if
+                   if( eta2 <  sim%mesh2d_x%eta2_min ) then
+                      !eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
+                      sim%f_x1x2(i,j,k,l) = 0.0_f64
+                   else if( eta2 >  sim%mesh2d_x%eta2_max ) then
+                      !eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                      sim%f_x1x2(i,j,k,l) = 0.0_f64
+                   else
+                      sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                   end if
+                   
+                else if (( sim%bc_eta1_0 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta1_1 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta2_0 == SLL_PERIODIC) .and.&
+                     (sim%bc_eta2_1 == SLL_PERIODIC)) then
+
+                   if( eta2 <  sim%mesh2d_x%eta2_min ) then
+                      eta2 = eta2+sim%mesh2d_x%eta2_max-sim%mesh2d_x%eta2_min
+                   else if( eta2 >  sim%mesh2d_x%eta2_max ) then
+                      eta2 = eta2+sim%mesh2d_x%eta2_min-sim%mesh2d_x%eta2_max
+                   end if
+                   if( eta1 <  sim%mesh2d_x%eta1_min ) then
+                      !eta1 = eta1+sim%mesh2d_x%eta1_max-sim%mesh2d_x%eta1_min
+                      sim%f_x1x2(i,j,k,l) = 0.0_f64
+                   else if( eta1 >  sim%mesh2d_x%eta1_max ) then
+                      !eta1 = eta1+sim%mesh2d_x%eta1_min-sim%mesh2d_x%eta1_max
+                      sim%f_x1x2(i,j,k,l) = 0.0_f64
+                   else
+                      sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                   end if
+                else if (( sim%bc_eta1_0 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta1_1 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta2_0 == SLL_DIRICHLET) .and.&
+                     (sim%bc_eta2_1 == SLL_DIRICHLET)) then
+                   
+                   if(  (eta2 <  sim%mesh2d_x%eta2_min ) .or.&
+                        (eta2 >  sim%mesh2d_x%eta2_max ) .or.&
+                        (eta1 <  sim%mesh2d_x%eta1_min ) .or.&
+                        (eta1 >  sim%mesh2d_x%eta1_max )) then
+                      sim%f_x1x2(i,j,k,l) = 0.0_f64
+                   else
+                      sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                   end if
+                   !sim%f_x1x2(1,:,k,l) = 0.0_f64
+                   !sim%f_x1x2(:,1,k,l) = 0.0_f64
+                   !sim%f_x1x2(sim%mesh2d_x%num_cells1 +1,:,k,l) = 0.0_f64
+                   !sim%f_x1x2(:,sim%mesh2d_x%num_cells2 +1,k,l) = 0.0_f64
                 else 
                    print*, 'problem boundary conditon for particles motions in eta2'
                    stop
                 end if
+                !print*,sim%f_x1x2(i,j,k,l),gk,gl,gi,gj,alpha1,alpha2,eta1,eta2,eta3,eta4
 
-
+                
                 !print*, 'before', eta1,eta2,i,j
-                sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
+                !sim%f_x1x2(i,j,k,l) = sim%interp_x1x2%interpolate_value(eta1,eta2)
                 
 !!$             alpha1 = -(vmin3 + (k-1)*delta3)*sim%dt*0.5_f64
 !!$             alpha2 = -(vmin4 + (l-1)*delta4)*sim%dt*0.5_f64
@@ -1517,9 +1587,12 @@ contains
 
              end do
           end do
+          !print*, sim%f_x1x2(1,1,k,l) 
        end do
     end do
    
+ 
+
   end subroutine advection_x1x2
 
   subroutine advection_x3(sim,phi,deltat,efield_energy_total)
@@ -1556,8 +1629,11 @@ contains
              eta2   =  sim%mesh2d_v%eta2_min + &
                   real(global_indices(2)-1,f64)*sim%mesh2d_v%delta_eta2
              
-             inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-             jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
+             !FAUX
+             inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
+             !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+             jac_m  =  sim%values_jacobian_mat(global_indices(1),global_indices(2),:,:)
+             !sim%transfx%jacobian_matrix(eta1,eta2)
              
              ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
              ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
@@ -1586,8 +1662,8 @@ contains
     
     
   end subroutine advection_x3
-
-
+  
+  
   subroutine advection_x4(sim,phi,deltat,efield_energy_total)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
@@ -1620,7 +1696,9 @@ contains
                   real(global_indices(1)-1,f64)*sim%mesh2d_v%delta_eta1
              eta2   =  sim%mesh2d_v%eta2_min + &
                   real(global_indices(2)-1,f64)*sim%mesh2d_v%delta_eta2
-             inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+             !FAUX
+             inv_j  = sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)  
+             !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
              
              ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
              ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
@@ -1674,7 +1752,18 @@ contains
     SLL_DEALLOCATE(sim%diag_norm_L2,ierr)
     SLL_DEALLOCATE(sim%diag_norm_Linf,ierr)
     SLL_DEALLOCATE(sim%diag_entropy_kin,ierr)
-    
+
+    !---> DEALLOCATE mat fort jacobian
+
+    SLL_DEALLOCATE(sim%values_jacobian_mat,ierr)
+    SLL_DEALLOCATE(sim%values_jacobian_matinv,ierr)
+    SLL_DEALLOCATE(sim%values_jacobian,ierr)
+
+    ! ---> DEALLOCATE array 1D contains mesh points
+
+    SLL_DEALLOCATE(sim%pt_eta1,ierr)
+    SLL_DEALLOCATE(sim%pt_eta2,ierr)
+
     !--> DEALLOCATE diagnostics for the energy
     SLL_DEALLOCATE(sim%diag_nrj_kin,ierr)
     SLL_DEALLOCATE(sim%diag_nrj_pot,ierr)
@@ -1792,14 +1881,18 @@ contains
     length_total = 0.0_f64
     do j=1,numpts2-1
        do i=1,numpts1-1
-          eta1 = sim%mesh2d_x%eta1_min + (i-1)*sim%mesh2d_x%delta_eta1
-          eta2 = sim%mesh2d_x%eta2_min + (j-1)*sim%mesh2d_x%delta_eta2
-          jac_m  = sim%transfx%jacobian_matrix(eta1,eta2)
+          !eta1 = sim%mesh2d_x%eta1_min + (i-1)*sim%mesh2d_x%delta_eta1
+          eta1 = sim%pt_eta1(i)
+          eta2 = sim%pt_eta2(j)
+          !eta2 = sim%mesh2d_x%eta2_min + (j-1)*sim%mesh2d_x%delta_eta2
+          jac_m  = sim%values_jacobian_mat(i,j,:,:)
+          !sim%transfx%jacobian_matrix(eta1,eta2)
+          
           density_tot = density_tot + rho(i,j)*delta1*delta2*&
-               (jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+               (sim%values_jacobian(i,j))
           !print*, jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)
           length_total = length_total + &
-               delta1*delta2*(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1))
+               delta1*delta2*(sim%values_jacobian(i,j))
        end do
     end do
     !print*, length_total
@@ -2381,16 +2474,20 @@ contains
                 i1 = glob_ind4d(1)
                 i2 = glob_ind4d(2)
 
-                eta1   =  sim%mesh2d_x%eta1_min + real(i1-1,f64)*delta_eta1
-                eta2   =  sim%mesh2d_x%eta2_min + real(i2-1,f64)*delta_eta2
+                !eta1   =  sim%mesh2d_x%eta1_min + real(i1-1,f64)*delta_eta1
+                !eta2   =  sim%mesh2d_x%eta2_min + real(i2-1,f64)*delta_eta2
+                eta1 = sim%pt_eta1(i1)
+                eta2 = sim%pt_eta2(i2)
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
-                inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-
+                inv_j  =  sim%values_jacobian_matinv(i1,i2,:,:)
+                !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+                
                 if (i1 .ne. Neta1) then
                    if (i2 .ne. Neta2) then 
                       
-                      val_jac = abs(sim%transfx%jacobian_at_node(i1,i2))
+                      val_jac = sim%values_jacobian(i1,i2)
+                      !abs(sim%transfx%jacobian_at_node(i1,i2))
                       
                       delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
                       
@@ -2398,26 +2495,26 @@ contains
                       nrj_kin = nrj_kin + &
                            delta_f * (v1**2 + v2**2) * 0.5 * val_jac * &
                            delta_eta1*delta_eta2*delta_v1*delta_v2
-                    
+                      
                    end if
                 end if
              end do
           end do
-
+          
           nrj_pot = nrj_pot + &
                ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ &
                (inv_j(1,2)*ex + inv_j(2,2)*ey)**2) * 0.5 * val_jac * &
                delta_eta1*delta_eta2
        end do
     end do
-
+    
     nrj_tot = nrj_kin + nrj_pot
     
     sim%diag_nrj_kin(sim%count_save_diag + 1)   = nrj_kin
     sim%diag_nrj_pot(sim%count_save_diag + 1)   = nrj_pot
     sim%diag_nrj_tot(sim%count_save_diag + 1)   = nrj_tot
   end subroutine compute_energy_qns
-
+  
   !-----------------------------------------------------------
   ! Computation of the L1 norm , i.e   
   !   Norm_L1 = \int abs(delta f) * jac dvpar deta1 deta2 deta3
@@ -2485,7 +2582,8 @@ contains
                 if (i1 .ne. Neta1) then
                    if (i2 .ne. Neta2) then 
                       
-                      val_jac = abs(sim%transfx%jacobian_at_node(i1,i2))
+                      val_jac = sim%values_jacobian(i1,i2)
+                      !abs(sim%transfx%jacobian_at_node(i1,i2))
                       
                       delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
                       
@@ -2496,14 +2594,14 @@ contains
                       norm_L1 = norm_L1 + &
                            abs(delta_f) * val_jac * &
                            delta_eta1*delta_eta2*delta_v1*delta_v2
-
+                      
                       norm_L2 = norm_L2 + &
                            abs(delta_f)**2 * val_jac * &
                            delta_eta1*delta_eta2*delta_v1*delta_v2
                       
                       entropy_kin = entropy_kin - &
-                        delta_f* log(abs(delta_f)) * val_jac * &
-                        delta_eta1*delta_eta2*delta_v1*delta_v2
+                           delta_f* log(abs(delta_f)) * val_jac * &
+                           delta_eta1*delta_eta2*delta_v1*delta_v2
                       
                       norm_Linf = max(abs(delta_f),norm_Linf)
                    end if
@@ -2522,4 +2620,36 @@ contains
     sim%diag_entropy_kin(sim%count_save_diag + 1) = entropy_kin
   end subroutine compute_norm_L1_L2_Linf_qns
 
+  subroutine compute_values_jacobian_and_mesh_points(sim)
+    class(sll_simulation_4d_qns_general), intent(inout) :: sim
+    sll_real64 :: delta1,delta2
+    sll_int32  :: i,j
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta1,eta2
+    
+    delta1 = sim%mesh2d_x%delta_eta1
+    delta2 = sim%mesh2d_x%delta_eta2
+    
+    eta1_min = sim%mesh2d_x%eta1_min
+    eta2_min = sim%mesh2d_x%eta2_min
+    
+    do j=1,sim%mesh2d_x%num_cells2 +1
+       eta2   =  eta2_min + real(j-1,f64)*delta2
+       sim%pt_eta2(j) = eta2
+       do i=1,sim%mesh2d_x%num_cells1 +1
+          eta1   =  eta1_min + real(i-1,f64)*delta1
+          sim%pt_eta1(i) = eta1
+          
+          sim%values_jacobian_matinv(i,j,:,:)=  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
+          sim%values_jacobian_mat(i,j,:,:)   =  sim%transfx%jacobian_matrix(eta1,eta2)
+          sim%values_jacobian(i,j)           =  sim%values_jacobian_mat(i,j,1,1)*&
+                                                sim%values_jacobian_mat(i,j,2,2)-&
+                                                sim%values_jacobian_mat(i,j,1,2)*&
+                                                sim%values_jacobian_mat(i,j,2,1)
+          
+       end do
+    end do
+    
+  end subroutine compute_values_jacobian_and_mesh_points
 end module sll_simulation_4d_qns_general_module

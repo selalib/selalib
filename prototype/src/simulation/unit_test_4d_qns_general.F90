@@ -48,6 +48,7 @@ program qns_4d_general
   f_one_params(:) = (/0.0_f64/)
   f_minus_one_params(:) = (/0.0_f64/)
   f_epsi_params(:) = (/0.0_f64/)
+  elec_field_ext_params(:) = (/0.0_f64,0.0_f64/)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
@@ -67,8 +68,8 @@ program qns_4d_general
 ! hardwired, this should be consistent with whatever is read from a file
 #define NPTS1 32
 #define NPTS2 32
-#define NPTS3 128
-#define NPTS4 128
+#define NPTS3 32
+#define NPTS4 32
 #define SPL_DEG_ETA1 3 
 #define SPL_DEG_ETA2 3
 #define SPL_DEG_VX 3 
