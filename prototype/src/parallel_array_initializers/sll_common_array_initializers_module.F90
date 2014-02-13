@@ -1116,10 +1116,10 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
   !
   !                         Gaussian beam 4d initializer
   !
-  ! 4D distribution in [0,1]X[0,1][-9,9]X[-9,9]  with the property of being 
+  ! 4D distribution in S^1(r=6)X[-9,9]X[-9,9]  with the property of being 
   ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
   !
-  ! f(x,y,vx,vy) = n0/ vth^2  exp(-0.5*((x-xc)^2+(y-yc)^2)/xth^2)/ (2*sll_pi*sigma_x)
+  ! f(x,y,vx,vy) = n0/ vth^2  exp(-0.5*((6x-xc)^2+(6y-yc)^2)/xth^2)/ (2*sll_pi*sigma_x)
   !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2)/vth^2)/ (2*sll_pi*sigma_v)
   !                          
   !  This function is described in the article of Besse and Sonnendrucker 2005
@@ -1180,7 +1180,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     n0      = params(9)
     
     
-    val = (n0/(vt*vt))*exp(-0.5*((x-xc)*(x-xc)+(y-yc)*(y-yc))/(xt*xt))/ (2*sll_pi*sigma_x) &
+    val = (n0/(vt*vt))*exp(-0.5*((6*x-xc)*(6*x-xc)+(6*y-yc)*(6*y-yc))/(xt*xt))/ (2*sll_pi*sigma_x) &
          * exp(-0.5*((vx-vxc)*(vx-vxc)+(vy-vyc)*(vy-vyc))/(vt*vt))/ (2*sll_pi*sigma_v)
     
   end function sll_gaussian_beam_initializer_4d
