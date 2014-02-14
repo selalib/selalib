@@ -1,7 +1,7 @@
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
-!     Pierre Navaro 
+!     TONUS project team
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 

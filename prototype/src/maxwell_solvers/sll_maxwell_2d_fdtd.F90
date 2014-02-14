@@ -46,7 +46,8 @@ implicit none
 
 !> Initialize maxwell solver 2d with FDTD scheme
 interface initialize
- module procedure new_maxwell_2d_fdtd
+ module procedure initialize_maxwell_2d_fdtd
+ module procedure initialize_maxwell_2d_fdtd_alt
 end interface
 !> Solve maxwell solver 2d with FDTD scheme
 interface solve
@@ -80,9 +81,36 @@ end type maxwell_2d_fdtd
 contains
 
 !>Initilialize the maxwell solver
-subroutine new_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
+subroutine initialize_maxwell_2d_fdtd_alt(this, x1, x2, nc_x, &
+                                      y1, y2, nc_y, polarization )
 
-   type(maxwell_2d_fdtd) :: this           !< maxwell solver object
+   type(maxwell_2d_fdtd) :: this         !< maxwell solver object
+   sll_real64            :: x1           !< first incidice along x
+   sll_real64            :: y1           !< last indice along x
+   sll_real64            :: x2           !< first indice along y
+   sll_real64            :: y2           !< last indice along y
+   sll_int32             :: nc_x         !< size step along y
+   sll_int32             :: nc_y         !< size step along y
+   sll_int32             :: polarization !< TE or TM
+
+   this%c   = 1.0_f64
+   this%e_0 = 1.0_f64
+   
+   this%dx  = (x2-x1)/nc_x
+   this%dy  = (y2-y1)/nc_y
+   this%i1  = 1
+   this%j1  = nc_x+1
+   this%i2  = 1
+   this%j2  = nc_y+1
+
+   this%polarization = polarization
+
+end subroutine initialize_maxwell_2d_fdtd_alt
+
+!>Initilialize the maxwell solver
+subroutine initialize_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
+
+   type(maxwell_2d_fdtd) :: this        !< maxwell solver object
    sll_int32          :: i1             !< first incidice along x
    sll_int32          :: j1             !< last indice along x
    sll_int32          :: i2             !< first indice along y
@@ -103,7 +131,7 @@ subroutine new_maxwell_2d_fdtd(this, i1, j1, i2, j2, dx, dy, polarization )
    this%j2 = j2
    this%polarization = polarization
 
-end subroutine new_maxwell_2d_fdtd
+end subroutine initialize_maxwell_2d_fdtd
 
 !> this routine exists only for testing purpose. Use ampere and faraday
 !> in your appication.

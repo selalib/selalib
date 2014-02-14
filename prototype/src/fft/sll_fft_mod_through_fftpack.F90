@@ -36,7 +36,6 @@ module sll_fft
 
   interface fft_new_plan
     module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d, &
-                    ! à implémenter
                      fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d , &
                      fftpack_new_plan_c2r_2d, fftpack_new_plan_r2c_2d, &
                      fftpack_new_plan_c2c_2d
@@ -76,8 +75,6 @@ module sll_fft
   end interface
 
 contains
-
-
 
   subroutine print_defaultfftlib()
     print *, 'The library used is FFTPACK'

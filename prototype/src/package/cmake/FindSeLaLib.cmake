@@ -8,25 +8,19 @@
 #  Usage:
 #  find_package(SeLaLib)
 #
-SET(TRIAL_PATHS $ENV{SELALIB_ROOT}/usr
-                /usr/local)
+SET(TRIAL_PATHS /usr /usr/local /opt/local)
 
-FIND_PATH (SELALIB_ROOT include/selalib.h
-           HINTS ENV SELALIB_ROOT
-           PATHS /usr/local $ENV{HOME}/local
-           DOC "SeLaLib directory")
-
-FIND_PATH(SELALIB_INCLUDES NAMES selalib.h 
+FIND_PATH(SELALIB_INCLUDE_DIRS NAMES selalib.h 
                            HINTS ${TRIAL_PATHS} 
-                           PATH_SUFFIXES include 
+                           PATH_SUFFIXES include/selalib
                            DOC "SeLaLib include path")
 
-FIND_LIBRARY(SELALIB_LIBRARIES NAMES selalib 
-                               HINTS ${TRIAL_PATHS}   
+FIND_LIBRARY(SELALIB_LIBRARIES NAMES selalib
+                               HINTS ${TRIAL_PATHS} 
                                PATH_SUFFIXES lib 
                                DOC "SeLaLib libraries")
 
-IF(SELALIB_LIBRARIES AND SELALIB_INCLUDES)
+IF(SELALIB_LIBRARIES AND SELALIB_INCLUDE_DIRS)
    SET(SELALIB_FOUND TRUE)
 ELSE()
    SET(SELALIB_FOUND FALSE)
