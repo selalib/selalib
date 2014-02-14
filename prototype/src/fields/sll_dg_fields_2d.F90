@@ -27,7 +27,15 @@ type, public :: dg_field
    sll_real64, dimension(:), pointer       :: xgalo
    sll_real64, dimension(:), pointer       :: wgalo
 
+contains
+
+   procedure, pass :: write_to_file => plot_dg_field_2d
+
 end type dg_field
+
+interface plot_dg_field
+   module procedure plot_dg_field_2d
+end interface plot_dg_field
 
 !interface operator(+)
 !  module procedure dg_field_add
@@ -102,9 +110,9 @@ subroutine initialize_dg_field( this, init_function, time)
 
 end subroutine initialize_dg_field
 
-subroutine plot_dg_field( this, field_name )
+subroutine plot_dg_field_2d( this, field_name )
 
-   type(dg_field)         :: this
+   class(dg_field)        :: this
    character(len=*)       :: field_name
    sll_int32              :: file_id
    sll_int32              :: gnu_id
@@ -152,8 +160,7 @@ subroutine plot_dg_field( this, field_name )
    write(gnu_id,*)
    close(gnu_id)
    
-end subroutine plot_dg_field
-
+end subroutine plot_dg_field_2d
 
 !function dg_field_add( W1, W2) result(W3)
 !

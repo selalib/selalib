@@ -10,7 +10,6 @@ module sll_maxwell_2d_diga
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
-#include "sll_file_io.h"
 #include "sll_integration.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
@@ -63,8 +62,8 @@ type, public :: maxwell_2d_diga
    sll_real64                               :: eta2_max
    sll_real64                               :: delta_eta2
    sll_real64, dimension(:,:), pointer      :: w_vector              
-   sll_real64, dimension(:,:), pointer      :: f_vector              
    sll_real64, dimension(:,:), pointer      :: r_vector              
+   sll_real64, dimension(:,:,:,:), pointer  :: f
    sll_real64, dimension(3,3)               :: A1
    sll_real64, dimension(3,3)               :: A2
    sll_real64, dimension(:),   pointer      :: xgalo
@@ -124,7 +123,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    this%degree       =  degree
    this%polarization = polarization
 
-   call tau%write_to_file(SLL_IO_MTV)
 
    nddl   = (degree+1)*(degree+1)
    ncells = this%nc_eta1*this%nc_eta2
@@ -182,8 +180,9 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    !call sll_display(this%cell(1,1)%DyMatrix(:,:),"f7.2")
 
    SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),3),error)
-   SLL_CLEAR_ALLOCATE(this%f_vector((degree+1)*(degree+1),3),error)
    SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),3),error)
+
+   SLL_CLEAR_ALLOCATE(this%f(1:nddl,1:3,1:this%nc_eta1,1:this%nc_eta2),error)
 
    this%A1 = reshape((/ 0._f64, 0._f64,  0._f64,  &
                         0._f64, 0._f64,  1._f64,  &
@@ -211,10 +210,13 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    type(dg_field), optional :: rho  !< charge density
 
    sll_int32                :: left, right, node, side
-   sll_int32                :: i, j, k, l, ii, jj
+   sll_int32                :: i, j, k, l, ii, jj, kk
    sll_real64               :: flux(3)
    sll_real64               :: vec_n1
    sll_real64               :: vec_n2
+   sll_real64               :: offset(2), eta1, eta2
+   sll_int32                :: icell, gnu_id, file_id
+   character(len=4)         :: ccell
 
 
    print*, dt
@@ -241,13 +243,13 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
          end do
       end if
 
-      this%f_vector(:,1) =  &
+      this%f(:,1,i,j) =  &
            + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
            + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
-      this%f_vector(:,2) =  &
+      this%f(:,2,i,j) =  &
            + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2)) &
            + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2))
-      this%f_vector(:,3) =  &
+      this%f(:,3,i,j) =  &
            + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
            + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3))
 
@@ -281,21 +283,66 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             flux (:) = (0.5*(this%w_vector(left, :) &
                          +   this%w_vector(right,:))) * this%wgalo
    
-            this%f_vector(node,:) = this%f_vector(node,:) + &
-                                    vec_n1*matmul(this%A1,flux) &
-                                  + vec_n2*matmul(this%A2,flux)
+            this%f(node,:,i,j) = this%f(node,:,i,j) + &
+                                 vec_n1*matmul(this%A1,flux) &
+                               + vec_n2*matmul(this%A2,flux)
    
          end do
    
       end do
    
-      this%f_vector(:,1) = this%f_vector(:,1) / this%cell(i,j)%MassMatrix
-      this%f_vector(:,2) = this%f_vector(:,2) / this%cell(i,j)%MassMatrix
-      this%f_vector(:,3) = this%f_vector(:,3) / this%cell(i,j)%MassMatrix
+      this%f(:,1,i,j) = this%f(:,1,i,j) / this%cell(i,j)%MassMatrix
+      this%f(:,2,i,j) = this%f(:,2,i,j) / this%cell(i,j)%MassMatrix
+      this%f(:,3,i,j) = this%f(:,3,i,j) / this%cell(i,j)%MassMatrix
 
-      this%w_vector(:,1) = - dt * this%f_vector(:,3)
-      this%w_vector(:,2) = + dt * this%f_vector(:,3)
-      this%w_vector(:,3) = + dt * (this%f_vector(:,3)-this%f_vector(:,1))
+   end do
+   end do
+
+   call sll_ascii_file_create("flux.gnu", gnu_id, error)
+
+   icell = 0
+   do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta2
+ 
+      icell = icell+1
+
+      call int2string(icell, ccell)
+
+      if (icell == 1) then
+         write(gnu_id,"(a)",advance='no') "splot 'flux"//ccell//".dat' w l"
+      else
+         write(gnu_id,"(a)",advance='no') ",'flux"//ccell//".dat' w l "
+      end if
+
+      call sll_ascii_file_create("flux"//ccell//".dat", file_id, error)
+
+      offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
+      offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
+      kk = 0
+      do ii = 1, this%degree+1
+      do jj = 1, this%degree+1
+         kk = kk+1
+         eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%tau%mesh%delta_eta1
+         eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
+         write(file_id,*) this%tau%x1(eta1,eta2), &
+                          this%tau%x2(eta1,eta2), &
+                          sngl(this%f(kk,1,i,j))
+      end do
+      write(file_id,*)
+      end do
+      close(file_id)
+
+   end do
+   end do
+
+   write(gnu_id,*)
+   close(gnu_id)
+   
+   do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta2
+      !this%w_vector(:,1) = - dt * this%f_vector(:,3)
+      !this%w_vector(:,2) = + dt * this%f_vector(:,3)
+      !this%w_vector(:,3) = + dt * (this%f_vector(:,3)-this%f_vector(:,1))
    
    end do
    end do
@@ -462,7 +509,6 @@ subroutine compute_normals(tau, i, j, d, x, w, cell )
    cell%edge(WEST)%length = length * c1
 
 end subroutine compute_normals
-
 
 end module sll_maxwell_2d_diga
 

@@ -22,6 +22,7 @@ program test_maxwell_2d_diga
 #include "sll_assert.h"
 #include "sll_constants.h"
 #include "sll_maxwell_solvers_macros.h"
+#include "sll_file_io.h"
 
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
@@ -90,7 +91,7 @@ delta_eta2 = mesh%delta_eta2
 ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 
-tau => new_coordinate_transformation_2d_analytic( &
+colella => new_coordinate_transformation_2d_analytic( &
        "collela_transformation", &
        mesh, &
        sinprod_x1, &
@@ -99,7 +100,9 @@ tau => new_coordinate_transformation_2d_analytic( &
        sinprod_jac12, &
        sinprod_jac21, &
        sinprod_jac22, & 
-       SLL_NULL_REAL64 )
+       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
+
+call colella%write_to_file(SLL_IO_GNUPLOT)
 
 tau => new_coordinate_transformation_2d_analytic( &
        "identity_transformation",                 &
@@ -111,6 +114,8 @@ tau => new_coordinate_transformation_2d_analytic( &
        identity_jac21,                            &
        identity_jac22,                            &
        SLL_NULL_REAL64 )
+
+call tau%write_to_file(SLL_IO_MTV)
 
 ex => new_dg_field( degree, tau) 
 ey => new_dg_field( degree, tau) 
