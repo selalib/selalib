@@ -37,7 +37,7 @@ end type dg_field
 !  module procedure dg_field_sub
 !end interface operator(-)
 
-public :: new_dg_field, plot_dg_field, operator(-)
+public :: new_dg_field, plot_dg_field!, operator(-)
 
 sll_int32, private :: error
 
