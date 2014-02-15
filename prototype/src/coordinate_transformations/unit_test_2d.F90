@@ -153,6 +153,7 @@ program unit_test_2d
   call write_to_file(t_a)
 #else
   call t_a%write_to_file()
+  !call t_a%write_to_file(SLL_IO_MTV)
 #endif
 
 
@@ -297,6 +298,7 @@ program unit_test_2d
  
 #else
   call t_d%write_to_file()
+  !call t_d%write_to_file(SLL_IO_MTV)
  
 #endif
 
