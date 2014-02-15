@@ -1,5 +1,3 @@
-SET(HDF5_ENABLED          ON              CACHE BOOL "Use HDF5 format for data output ")
-SET(HDF5_PARALLEL_ENABLED OFF             CACHE BOOL "Use Parallel HDF5")
 SET(HDF5_ROOT             $ENV{HDF5_ROOT} CACHE PATH "HDF5 location")
 
 IF(NOT HDF5_FOUND AND HDF5_ENABLED)
