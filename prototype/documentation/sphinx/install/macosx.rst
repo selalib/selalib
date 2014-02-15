@@ -42,6 +42,8 @@ Install macports (http://www.macports.org/install.php) and ::
 Install dependencies from scratch on MACOSX
 ==============================
 
+Some software version numbers could have changed.
+
 Download gcc+gfortran on http://hpc.sourceforge.net ::
 
    $ sudo tar -zxvf gcc-bin.tar.gz -C /

@@ -43,7 +43,7 @@ module sll_scalar_field_2d
 
   type scalar_field_2d
      !class(sll_mapped_mesh_2d_base), pointer  :: mesh
-     class(sll_coordinate_transformation_2d_base), pointer :: mesh
+     class(sll_coordinate_transformation_2d_base), pointer :: transf
      class(sll_interpolator_1d_base), pointer :: eta1_interpolator
      class(sll_interpolator_1d_base), pointer :: eta2_interpolator
      sll_real64, dimension(:,:), pointer      :: data
@@ -67,20 +67,20 @@ contains   ! *****************************************************************
   subroutine initialize_scalar_field_2d( &
     this, &
     field_name, &
-    mesh, &
+    transf, &
     data_position, &
     eta1_interpolator, &
     eta2_interpolator, &
     initializer )
 
     class(scalar_field_2d), intent(inout)               :: this
-    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
+    type(sll_logical_mesh_2d), pointer                  :: mesh
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -91,15 +91,18 @@ contains   ! *****************************************************************
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
 
-    SLL_ASSERT(associated(mesh))
-    this%mesh => mesh
-    this%mesh%written = .false.
+
+    this%transf => transf
+    this%transf%written = .false.
     
+    mesh => transf%get_logical_mesh()
+    SLL_ASSERT(associated(mesh))
+
     this%name  = trim(field_name)
-    num_cells1 = mesh%mesh%num_cells1
-    num_cells2 = mesh%mesh%num_cells2
-    num_pts1   = mesh%mesh%num_cells1+1
-    num_pts2   = mesh%mesh%num_cells2+1
+    num_cells1 = mesh%num_cells1
+    num_cells2 = mesh%num_cells2
+    num_pts1   = mesh%num_cells1+1
+    num_pts2   = mesh%num_cells2+1
 
     ! For an initializing function, argument check should not be assertions
     ! but more permanent if-tests. There is no reason to turn these off ever.
@@ -161,7 +164,7 @@ contains   ! *****************************************************************
   subroutine delete_scalar_field_2d( this )
     type(scalar_field_2d), pointer :: this
     sll_int32                      :: ierr
-    nullify(this%mesh)
+    nullify(this%transf)
     SLL_DEALLOCATE(this%data, ierr)
   end subroutine delete_scalar_field_2d
 
@@ -172,12 +175,12 @@ contains   ! *****************************************************************
     output_format)
 
     class(scalar_field_2d) :: scalar_field
-    !class(sll_mapped_mesh_2d_base), pointer :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     logical, optional      :: multiply_by_jacobian 
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
     sll_int32              :: local_format 
+    type(sll_logical_mesh_2d), pointer :: mesh
 
     sll_int32  :: i1
     sll_int32  :: i2
@@ -200,15 +203,16 @@ contains   ! *****************************************************************
        local_format = output_format
     end if
 
-    mesh => scalar_field%mesh
+    transf => scalar_field%transf
+    mesh => transf%get_logical_mesh()
 
     SLL_ASSERT(associated(mesh))  
-    if (.not. mesh%written) then
-       call mesh%write_to_file(local_format)
+    if (.not. transf%written) then
+       call transf%write_to_file(local_format)
     end if
 
-    num_pts1 = mesh%mesh%num_cells1+1
-    num_pts2 = mesh%mesh%num_cells2+1
+    num_pts1 = mesh%num_cells1+1
+    num_pts2 = mesh%num_cells2+1
     if (scalar_field%data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(val(num_pts1,num_pts2), ierr)
     else
@@ -220,14 +224,14 @@ contains   ! *****************************************************************
     else !if (multiply_by_jacobian) then 
 
        if (scalar_field%data_position == CELL_CENTERED_FIELD) then
-          eta2 =  0.5_f64 * mesh%mesh%delta_eta2
-          do i2 = 1, mesh%mesh%num_cells2
-             eta1 = 0.5_f64 * mesh%mesh%delta_eta1
-             do i1 = 1, mesh%mesh%num_cells1
-                val(i1,i2) = scalar_field%data(i1,i2) / mesh%jacobian(eta1, eta2)
-                eta1 = eta1 + mesh%mesh%delta_eta1
+          eta2 =  0.5_f64 * mesh%delta_eta2
+          do i2 = 1, mesh%num_cells2
+             eta1 = 0.5_f64 * mesh%delta_eta1
+             do i1 = 1, mesh%num_cells1
+                val(i1,i2) = scalar_field%data(i1,i2)/transf%jacobian(eta1,eta2)
+                eta1 = eta1 + mesh%delta_eta1
              end do
-             eta2 = eta2 + mesh%mesh%delta_eta2
+             eta2 = eta2 + mesh%delta_eta2
           end do
        else
           eta2 =  0.0_f64 
@@ -235,9 +239,9 @@ contains   ! *****************************************************************
              eta1 = 0.0_f64 
              do i1 = 1, num_pts1
                 val(i1,i2) = scalar_field%data(i1,i2)
-                eta1 = eta1 + mesh%mesh%delta_eta1
+                eta1 = eta1 + mesh%delta_eta1
              end do
-             eta2 = eta2 + mesh%mesh%delta_eta2
+             eta2 = eta2 + mesh%delta_eta2
           end do
        end if
      
@@ -261,7 +265,7 @@ contains   ! *****************************************************************
           name = output_file_name
        end if
        call sll_xdmf_open(trim(name)//".xmf", &
-            scalar_field%mesh%label,        &
+            scalar_field%transf%label,        &
             num_pts1,num_pts2,file_id,ierr)
       
        call sll_xdmf_write_array(trim(name), &
