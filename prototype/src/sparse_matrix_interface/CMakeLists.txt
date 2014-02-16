@@ -22,6 +22,7 @@ ENDIF()
 ADD_LIBRARY(spm STATIC ${SPM_FILES})
 
 
+<<<<<<< HEAD
 set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
 install(TARGETS spm DESTINATION lib)
 install(FILES ${spm_mods} DESTINATION include)
@@ -63,3 +64,8 @@ ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix)
 
 
+=======
+#set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
+#install(TARGETS spm DESTINATION lib)
+#install(FILES ${spm_mods} DESTINATION include)
+>>>>>>> prototype-devel

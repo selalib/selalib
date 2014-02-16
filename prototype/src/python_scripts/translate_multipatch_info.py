@@ -103,6 +103,8 @@ import sys, os, traceback, optparse
 import time
 import re
 import pprint
+
+sys.stdout = open('translate_multipatch_info.out', 'w')
 #from pexpect import run, spawn
 
 def main ():
