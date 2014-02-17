@@ -1,4 +1,5 @@
-set term aqua 1 fsize 20
+set term x11 
+#set term aqua 1 fsize 20
 set logscale y
 set key bottom right
 p 'thdiag.dat' u ($1):(sqrt($2)) w p,\

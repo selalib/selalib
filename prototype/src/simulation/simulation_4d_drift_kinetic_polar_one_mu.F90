@@ -61,6 +61,9 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_cubic_spline_interpolator_2d
   use sll_module_advection_1d_periodic
   use sll_module_poisson_2d_polar_solver
+  use sll_module_gyroaverage_2d_polar_hermite_solver
+  use sll_module_gyroaverage_2d_polar_splines_solver
+  use sll_module_gyroaverage_2d_polar_pade_solver
 
 
   implicit none
@@ -126,7 +129,9 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
      sll_int32  :: perturb_choice
      sll_int32  :: mmode
      sll_int32  :: nmode
-     sll_real64 :: eps_perturb   
+     sll_real64 :: eps_perturb  
+     !--> Gyroaverage
+     sll_real64  :: mu 
 
      !--> 4D logical mesh (r,theta,phi,vpar)
      !type(sll_logical_mesh_4d), pointer :: logical_mesh4d
@@ -190,7 +195,8 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
     class(sll_characteristics_2d_base), pointer :: charac_x1x2
     class(sll_advection_1d_base), pointer :: adv_x3
     class(sll_advection_1d_base), pointer :: adv_x4
-
+    
+    class(sll_gyroaverage_2d_base), pointer :: gyroaverage
 
     class(sll_poisson_2d_base), pointer   :: poisson2d
     class(sll_poisson_2d_base), pointer   :: poisson2d_mean
@@ -234,8 +240,10 @@ contains
     class(sll_interpolator_2d_base), pointer   :: f_interp2d
     sll_real64 :: charac2d_tol
     sll_int32 :: charac2d_maxiter
-
-
+    sll_real64 :: eta_min_gyro(2)
+    sll_real64 :: eta_max_gyro(2)
+    sll_int32 :: Nc_gyro(2)
+    sll_int32 :: interp_degree_gyro(2)
 
 
     !--> Mesh
@@ -264,6 +272,12 @@ contains
     sll_int32  :: mmode
     sll_int32  :: nmode
     sll_real64 :: eps_perturb   
+    !--> Gyroaverage
+    sll_real64              :: mu
+    character(len=256)      :: gyroaverage_case
+    sll_int32               :: gyroaverage_N_points
+    sll_int32               :: gyroaverage_interp_degree_x1
+    sll_int32               :: gyroaverage_interp_degree_x2
     !--> Algorithm
     sll_real64 :: dt
     sll_int32  :: number_iterations
@@ -278,7 +292,7 @@ contains
     !character(len=256)      :: A_interp_case 
     !character(len=256)      :: initial_function_case 
     character(len=256)      :: time_loop_case 
-    character(len=256)      :: poisson2d_case 
+    character(len=256)      :: poisson2d_case
     character(len=256)      :: QN_case 
     character(len=256)      :: advector_x3 
     character(len=256)      :: advector_x4
@@ -346,7 +360,12 @@ contains
       advector_x4, &
       order_x3, &
       order_x4, &
-      poisson2d_case
+      poisson2d_case, &
+      gyroaverage_case, &
+      mu, &
+      gyroaverage_N_points, &
+      gyroaverage_interp_degree_x1, &
+      gyroaverage_interp_degree_x2
       
       !, spline_degree
 
@@ -380,6 +399,7 @@ contains
     
     SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
     
+
     
     select case (poisson2d_BC_rmin)
       case ("SLL_DIRICHLET")
@@ -482,6 +502,11 @@ contains
       print *,'#number_iterations=',number_iterations
       print *,'#time_loop_case=',time_loop_case
       print *,'#charac2d_case=',charac2d_case
+      print *,'##gyroaverage'
+      print *,'#gyroaverage_case=',gyroaverage_case
+      print *,'#mu=',mu
+      print *,'#gyroaverage_N_points=',gyroaverage_N_points
+      print *,'#gyroaverage_interp_degree=',gyroaverage_interp_degree_x1,gyroaverage_interp_degree_x2   
     endif
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -530,6 +555,68 @@ contains
         stop
     end select
     
+    !--> gyroaverage
+    
+    sim%mu = mu
+    
+    eta_min_gyro(1) = sim%m_x1%eta_min
+    eta_max_gyro(1) = sim%m_x1%eta_max
+    eta_min_gyro(2) = 0._f64
+    eta_max_gyro(2) = 2._f64*sll_pi
+    
+    print *,"eta_min_gyro=",eta_min_gyro
+    print *,"eta_max_gyro=",eta_max_gyro
+    
+    Nc_gyro(1)=sim%m_x1%num_cells
+    Nc_gyro(2)=sim%m_x2%num_cells
+    interp_degree_gyro(1)=gyroaverage_interp_degree_x1
+    interp_degree_gyro(2)=gyroaverage_interp_degree_x2
+  
+    select case (gyroaverage_case)
+      case ("HERMITE")       
+
+        sim%gyroaverage => new_gyroaverage_2d_polar_hermite_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro, &
+          gyroaverage_N_points, &
+          interp_degree_gyro, &
+          1)
+          
+      case ("HERMITE_C1")       
+
+        sim%gyroaverage => new_gyroaverage_2d_polar_hermite_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro, &
+          gyroaverage_N_points, &
+          interp_degree_gyro, &
+          2)
+          
+       case ("SPLINES")       
+
+        sim%gyroaverage => new_gyroaverage_2d_polar_splines_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro, &
+          gyroaverage_N_points, &
+          1)
+          
+       case ("PADE")       
+
+        sim%gyroaverage => new_gyroaverage_2d_polar_pade_solver( &
+          eta_min_gyro, &
+          eta_max_gyro, &
+          Nc_gyro)
+          
+      case default
+        print *,'#bad gyroaverage_case',gyroaverage_case
+        print *,'#not implemented'
+        print *,'#in init_dk4d_polar'
+        stop
+    end select
+
+
 
 !    select case (sim%QN_case)
 !      case (SLL_NO_QUASI_NEUTRAL)
@@ -795,8 +882,6 @@ contains
 
     call initialize_fdistribu4d_DK(sim,sim%layout4d_seqx1x2x4,sim%f4d_seqx1x2x4)
 
-
-    
         
     do iter=1,sim%num_iterations    
 
@@ -837,8 +922,10 @@ contains
       endif
 
           
-      call solve_quasi_neutral( sim )
+      !call solve_quasi_neutral( sim )
+      call solve_quasi_neutral_with_gyroaverage( sim )
       call compute_field_dk( sim )
+      call gyroaverage_field_dk( sim )
 
 
       if(modulo(iter,sim%freq_diag_time)==0)then
@@ -1783,6 +1870,125 @@ contains
   
   end subroutine solve_quasi_neutral
   
+  
+  
+  
+  subroutine solve_quasi_neutral_with_gyroaverage(sim)
+    class(sll_simulation_4d_drift_kinetic_polar_one_mu), intent(inout) :: sim
+    sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
+    sll_int32 :: iloc1, iloc2, iloc3
+    !sll_int32 :: i1, i2
+    sll_int32 :: i3
+    sll_real64 :: tmp
+    sll_int32 :: glob_ind(3)    
+    sll_int32 :: nc_x1, nc_x2
+            
+    nc_x1 = sim%m_x1%num_cells
+    nc_x2 = sim%m_x2%num_cells
+
+    select case (sim%QN_case)
+      case (SLL_NO_QUASI_NEUTRAL)
+      ! no quasi neutral solver as in CRPP-CONF-2001-069
+        call compute_local_sizes_3d( &
+          sim%layout3d_seqx3, &
+          loc3d_sz_x1, &
+          loc3d_sz_x2, &
+          loc3d_sz_x3 )        
+        if((loc3d_sz_x3).ne.(sim%m_x3%num_cells+1))then
+          print *,'#Problem of parallelization dimension in solve_quasi_neutral'
+          print *,'#sll_simulation_4d_drift_kinetic_polar type simulation'
+          stop
+        endif        
+        do iloc2 = 1, loc3d_sz_x2
+          do iloc1 = 1, loc3d_sz_x1          
+            tmp = sum(sim%rho3d_seqx3(iloc1,iloc2,1:sim%m_x3%num_cells))&
+              /real(sim%m_x3%num_cells,f64)
+            SLL_ASSERT(loc3d_sz_x3==sim%m_x3%num_cells+1)
+            do i3 = 1,sim%m_x3%num_cells+1
+              glob_ind(:) = local_to_global_3D(sim%layout3d_seqx3, &
+                (/iloc1,iloc2,i3/))                        
+              sim%phi3d_seqx3(iloc1,iloc2,i3) = (sim%rho3d_seqx3(iloc1,iloc2,i3)-tmp)&
+                *sim%Te_r(glob_ind(1))/sim%n0_r(glob_ind(1))
+            enddo    
+          enddo
+        enddo  
+        call apply_remap_3D( &
+          sim%remap_plan_seqx3_to_seqx1x2, &
+          sim%phi3d_seqx3, &
+          sim%phi3d_seqx1x2 )  
+      case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
+        call compute_local_sizes_3d( &
+          sim%layout3d_seqx1x2, &
+          loc3d_sz_x1, &
+          loc3d_sz_x2, &
+          loc3d_sz_x3 )
+            
+        do iloc3 = 1,loc3d_sz_x3    
+          call sim%gyroaverage%compute_gyroaverage( &
+          sim%mu, &
+          sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+        enddo    
+                  
+        do iloc2=1, loc3d_sz_x2
+          do iloc1=1, loc3d_sz_x1
+            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
+          enddo
+        enddo
+        do iloc3=1, loc3d_sz_x3
+          call sim%poisson2d%compute_phi_from_rho( &
+            sim%phi3d_seqx1x2(:,:,iloc3), &
+            sim%phi3d_seqx1x2(:,:,iloc3) )
+        enddo
+        call apply_remap_3D( &
+          sim%remap_plan_seqx1x2_to_seqx3, &
+          sim%phi3d_seqx1x2, &
+          sim%phi3d_seqx3 )            
+      case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
+        print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
+        print *,'#not implemented yet '
+        stop      
+      case default
+        print *,'#bad value for sim%QN_case'
+        stop  
+    end select        
+  
+  end subroutine solve_quasi_neutral_with_gyroaverage
+  
+
+
+
+subroutine gyroaverage_field_dk(sim)
+    class(sll_simulation_4d_drift_kinetic_polar_one_mu), intent(inout) :: sim
+    sll_int32 :: loc_sz_x1
+    sll_int32 :: loc_sz_x2
+    sll_int32 :: loc_sz_x3
+    sll_int32 :: i3
+    sll_int32 :: nc_x1, nc_x2
+            
+    nc_x1 = sim%m_x1%num_cells
+    nc_x2 = sim%m_x2%num_cells
+
+    call compute_local_sizes_3d( &
+      sim%layout3d_seqx1x2, &
+      loc_sz_x1, &
+      loc_sz_x2, &
+      loc_sz_x3 )
+
+    do i3 = 1,loc_sz_x3
+      call sim%gyroaverage%compute_gyroaverage( &
+        sqrt(2*sim%mu), &
+        sim%A1_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+      call sim%gyroaverage%compute_gyroaverage( &
+        sqrt(2*sim%mu), &
+        sim%A2_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+      call sim%gyroaverage%compute_gyroaverage( &
+        sqrt(2*sim%mu), &
+        sim%A3_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+    enddo          
+
+
+  end subroutine gyroaverage_field_dk
 
   
 

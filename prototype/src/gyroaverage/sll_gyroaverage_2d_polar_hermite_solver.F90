@@ -91,7 +91,6 @@ contains
     sll_int32              :: deriv_size
     sll_int32, optional    :: hermite_case
     sll_int32 :: ierr
-
     
     if(.not.(present(hermite_case)))then
       gyroaverage%hermite_case = 2

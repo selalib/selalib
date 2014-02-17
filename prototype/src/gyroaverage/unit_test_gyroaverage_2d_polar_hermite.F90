@@ -34,6 +34,7 @@ implicit none
   sll_real64 :: larmor_rad
   sll_real64,dimension(:,:),allocatable :: f
   sll_int32  :: ierr
+  sll_int32  :: i
   
   eta_min(1) = 0.1_f64
   eta_max(1) = 0.9_f64
@@ -43,7 +44,7 @@ implicit none
   Nc(1)=16
   Nc(2)=16
   
-  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)),ierr)
+  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)+1),ierr)
   
   f = 1._f64
   err = 0._f64
@@ -64,9 +65,12 @@ implicit none
     interp_degree, &
     hermite_case)
 
+    do i = 1,10
   call gyroaverage%compute_gyroaverage( larmor_rad, f)
+    print *,minval(f),maxval(f)
+	enddo
 
-  print *,minval(f),maxval(f)
+
 
   if(err==0)then    
     print *, '#PASSED'
