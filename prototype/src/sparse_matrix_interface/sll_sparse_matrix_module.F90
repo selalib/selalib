@@ -241,6 +241,29 @@ contains
     end do
 
   end subroutine sll_add_to_csr_matrix
+  
+  subroutine sll_sub_to_csr_matrix(mat, val, ai_A, ai_Aprime,Masse_tot)
+    implicit none
+    type(sll_csr_matrix) :: mat
+    sll_real64, intent(in) :: val
+    sll_int32, intent(in) :: ai_A
+    sll_int32, intent(in) :: ai_Aprime
+    sll_real64, dimension(:) :: Masse_tot
+    !local var
+    sll_int32 :: li_j
+    sll_int32 :: li_k
+
+
+    ! THE CURRENT LINE IS self%opi_ia(ai_A)
+    do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
+      li_j = mat % opi_ja(li_k)
+      if (li_j == ai_Aprime) then
+        mat % opr_a(li_k) = mat % opr_a(li_k) + val - Masse_tot(li_k)
+        exit
+      end if
+    end do
+
+  end subroutine sll_sub_to_csr_matrix
 
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none

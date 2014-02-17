@@ -645,7 +645,7 @@ contains ! *******************************************************************
        end do
     end do
 
-    
+    !call sll_subtract_to_csr_matrix(es%sll_csr_mat, es%masse)
     call sll_factorize_csr_matrix(es%sll_csr_mat)
     es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
@@ -1535,11 +1535,17 @@ contains ! *******************************************************************
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    
-                   call sll_add_to_csr_matrix( &
+                   !call sll_add_to_csr_matrix( &
+                   !     es%sll_csr_mat, &
+                   !     elt_mat_global, &
+                   !     li_A, &
+                   !     li_Aprime)
+                   call sll_sub_to_csr_matrix( &
                         es%sll_csr_mat, &
                         elt_mat_global, &
                         li_A, &
-                        li_Aprime)
+                        li_Aprime,& 
+                        Masse_tot)     
                 end if
                 
              end do
