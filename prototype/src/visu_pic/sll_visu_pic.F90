@@ -15,7 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> \author Pierre Navaro
 !> \brief  
 !> This module provides some routines for plotting during PIC simulations.
 module sll_visu_pic
@@ -47,7 +46,8 @@ sll_int32, private :: i, j, k
 contains
 
 !> To plot particles run : gnuplot -persitant plot_name.gnu
-subroutine xv_particles_center_gnuplot( plot_name, x, v, xmin, xmax, vmin, vmax, iplot, time )
+subroutine xv_particles_center_gnuplot( plot_name, &
+           x, v, xmin, xmax, vmin, vmax, iplot, time )
 character(len=*), intent(in) :: plot_name
 sll_real64, dimension(:), intent(in) :: x, v
 sll_int32 :: iplot, error
@@ -120,7 +120,8 @@ sll_real64, dimension(nx,nv) :: df
 sll_real64 :: time
 sll_real64 :: delta_x, delta_v, xmin, xmax, vmin, vmax
 character(len=4) :: fin
-sll_int32 :: file_id, error
+!sll_int32 :: file_id
+sll_int32 :: error
 
 delta_x = (xmax-xmin)/nx
 delta_v = (vmax-vmin)/nv
@@ -128,14 +129,15 @@ call int2string(iplot,fin)
 
 SLL_ASSERT(size(x)==size(v))
 
+write(*,"(A7,G10.3)")"Time = ",time
 call compute_df( df, x, v, xmin, xmax, nx, vmin, vmax, nv)
 
-call sll_new_file_id(file_id, error)
-open( file_id, file = plot_name//'.gnu', position="append" )
-if ( iplot == 1 ) rewind(file_id)
-write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
-write(file_id,*)"splot  '"//plot_name//"_"//fin//".dat' w l"
-close(file_id)
+!call sll_new_file_id(file_id, error)
+!open( file_id, file = plot_name//'.gnu', position="append" )
+!if ( iplot == 1 ) rewind(file_id)
+!write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
+!write(file_id,*)"splot  '"//plot_name//"_"//fin//".dat' w l"
+!close(file_id)
 
 call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
 
@@ -281,7 +283,9 @@ end subroutine plot_format_xmdv
 
 !>VisIt readable output for particles density
 !>Data file format could be XML, HDF5 or Binary (not fully implemented yet)
-subroutine distribution_xdmf(plot_name, x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)  
+subroutine distribution_xdmf(plot_name, x, v, w, &
+                             xmin, xmax, nx,     &
+                             vmin, vmax, nv, iplot)  
 character(len=*), intent(in) :: plot_name
 sll_real64, dimension(:), intent(in) :: x
 sll_real64, dimension(:), intent(in) :: v
@@ -301,6 +305,38 @@ delta_v = (vmax-vmin)/(nv-1)
 call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x, vmin, delta_v) 
 
 end subroutine distribution_xdmf
+
+!>Compute grid field from particles distribution with the NGP scheme 
+!> (Nearest Grid Point)
+subroutine compute_df_ngp(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)  
+sll_real64, dimension(:), intent(in) :: xp, yp, wp
+sll_real64, intent(in) :: xmin, xmax, ymin, ymax
+sll_int32 :: ip, jp, kp
+sll_real64 :: xt, yt
+sll_int32 :: nx, ny
+sll_real64, dimension(nx,ny), intent(out) :: df
+sll_int32 :: nbpart
+
+nbpart = size(xp)
+SLL_ASSERT(nbpart == size(yp))
+SLL_ASSERT(nbpart == size(wp))
+df = 0.0
+
+do kp = 1,nbpart
+
+   xt = (xp(kp)-xmin)/(xmax-xmin)*nx
+   yt = (yp(kp)-ymin)/(ymax-ymin)*ny
+
+   ip = floor(xt)
+   jp = floor(yt)
+
+   SLL_ASSERT(ip >= 1 .and. ip <= nx .and. jp >= 1 .and. jp <= ny)
+
+   df(ip,jp)=df(ip,jp)+wp(kp)
+
+end do
+
+end subroutine compute_df_ngp
 
 !>Compute grid field from particles distribution with the CIC scheme (Cloud In
 !Cell)
@@ -341,5 +377,193 @@ do kp = 1,nbpart
 end do
 
 end subroutine compute_df_cic
+
+subroutine compute_df_m4(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)  
+sll_real64, dimension(:), intent(in) :: xp, yp, wp
+sll_real64, intent(in) :: xmin, xmax, ymin, ymax
+sll_int32 :: ip, jp, kp
+sll_real64 :: xt, yt
+sll_int32 :: nx, ny
+sll_real64, dimension(nx,ny), intent(out) :: df
+sll_real64 :: x, cx, cm1x, cm2x, cp1x, cp2x
+sll_real64 :: y, cy, cm1y, cm2y, cp1y, cp2y
+
+
+do kp = 1, size(xp)
+
+   xt = (xp(kp)-xmin)/(xmax-xmin)*nx
+   yt = (yp(kp)-ymin)/(ymax-ymin)*ny
+
+   ip = floor(xt)
+   jp = floor(yt)
+
+   x = xt - ip
+   y = yt - jp
+
+   cm2x = f_m4(2.+x)
+   cp2x = f_m4(2.-x)
+   cm1x = f_m4(1.+x)
+   cp1x = f_m4(1.-x)
+   cx   = f_m4(x)
+   cy   = f_m4(y)
+   cm2y = f_m4(2.+y)
+   cp2y = f_m4(2.-y)
+   cm1y = f_m4(1.+y)
+   cp1y = f_m4(1.-y)
+
+   if ( i > 2 .and. j > 2 .and. i < nx-1 .and. j < ny-1 ) then
+	
+   df(ip-2,jp-2) = df(ip-2,jp-2) + cm2x * cm2y * wp(kp)
+   df(ip-2,jp-1) = df(ip-2,jp-1) + cm2x * cm1y * wp(kp)
+   df(ip-2,jp  ) = df(ip-2,jp  ) + cm2x * cy   * wp(kp)
+   df(ip-2,jp+1) = df(ip-2,jp+1) + cm2x * cp1y * wp(kp)
+   df(ip-2,jp+2) = df(ip-2,jp+2) + cm2x * cp2y * wp(kp)
+
+   df(ip-1,jp-2) = df(ip-1,jp-2) + cm1x * cm2y * wp(kp)
+   df(ip-1,jp-1) = df(ip-1,jp-1) + cm1x * cm1y * wp(kp)
+   df(ip-1,jp  ) = df(ip-1,jp  ) + cm1x * cy   * wp(kp)
+   df(ip-1,jp+1) = df(ip-1,jp+1) + cm1x * cp1y * wp(kp)
+   df(ip-1,jp+2) = df(ip-1,jp+2) + cm1x * cp2y * wp(kp)
+
+   df(ip  ,jp-2) = df(ip  ,jp-2) + cx   * cm2y * wp(kp)
+   df(ip  ,jp-1) = df(ip  ,jp-1) + cx   * cm1y * wp(kp)
+   df(ip  ,jp  ) = df(ip  ,jp  ) + cx   * cy   * wp(kp)
+   df(ip  ,jp+1) = df(ip  ,jp+1) + cx   * cp1y * wp(kp)
+   df(ip  ,jp+2) = df(ip  ,jp+2) + cx   * cp2y * wp(kp)
+
+   df(ip+1,jp-2) = df(ip+1,jp-2) + cp1x * cm2y * wp(kp)
+   df(ip+1,jp-1) = df(ip+1,jp-1) + cp1x * cm1y * wp(kp)
+   df(ip+1,jp  ) = df(ip+1,jp  ) + cp1x * cy   * wp(kp)
+   df(ip+1,jp+1) = df(ip+1,jp+1) + cp1x * cp1y * wp(kp)
+   df(ip+1,jp+2) = df(ip+1,jp+2) + cp1x * cp2y * wp(kp)
+
+   df(ip+2,jp-2) = df(ip+2,jp-2) + cp2x * cm2y * wp(kp)
+   df(ip+2,jp-1) = df(ip+2,jp-1) + cp2x * cm1y * wp(kp)
+   df(ip+2,jp  ) = df(ip+2,jp  ) + cp2x * cy   * wp(kp)
+   df(ip+2,jp+1) = df(ip+2,jp+1) + cp2x * cp1y * wp(kp)
+   df(ip+2,jp+2) = df(ip+2,jp+2) + cp2x * cp2y * wp(kp)
+
+   end if
+
+end do
+
+end subroutine compute_df_m4
+
+
+!> M4 function from Monhagan (SPH method)
+sll_real64 pure function f_m4( x )
+sll_real64, intent(in) :: x      
+if( x .gt. 2. ) then
+   f_m4 = 0.
+else if ( x .ge. 1. .and. x .le. 2. ) then
+   f_m4 = 0.5 * (2.-x)**2 * (1.-x)
+else if ( x .le. 1. ) then
+   f_m4 = 1. - 2.5 *x**2 + 1.5 * (dabs(x))**3 
+end if
+
+return
+end function f_m4
+
+!>GNUplot readable output for particles density
+subroutine distribution_m4_gnuplot(plot_name, x, v, w, &
+                             xmin, xmax, nx,     &
+                             vmin, vmax, nv, iplot)  
+character(len=*), intent(in) :: plot_name
+sll_real64, dimension(:), intent(in) :: x
+sll_real64, dimension(:), intent(in) :: v
+sll_real64, dimension(:), intent(in) :: w
+sll_int32, intent(in) :: nx
+sll_int32, intent(in) :: nv
+sll_int32 :: iplot, error
+sll_real64, dimension(nx,nv) :: df
+sll_real64 :: xmin, xmax, vmin, vmax
+character(len=4) :: fin
+
+call int2string(iplot, fin)
+
+call compute_df_m4(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)  
+
+call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
+
+end subroutine distribution_m4_gnuplot
+
+#define FONCTION1( X ) (0.75_f64-(X)*(X))
+
+#define FONCTION2( X ) (0.5_f64 * ( 1.5_f64 - (X) )**2)
+
+#define BSPLINES(X,Y) \
+c_1x = FONCTION2(1+X); \
+c1x  = FONCTION1(X)  ; \
+c2x  = FONCTION2(1-X); \
+c_1y = FONCTION2(1+Y); \
+c1y  = FONCTION1(Y)  ; \
+c2y  = FONCTION2(1-Y)
+
+
+subroutine compute_df_tsc(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)  
+sll_real64, dimension(:), intent(in) :: xp, yp, wp
+sll_real64, intent(in) :: xmin, xmax, ymin, ymax
+sll_int32 :: ip, jp, kp
+sll_real64 :: xt, yt
+sll_int32 :: nx, ny
+sll_real64, dimension(nx,ny), intent(out) :: df
+sll_real64 :: x, c1x, c_1x, c2x
+sll_real64 :: y, c1y, c_1y, c2y
+
+
+do kp = 1, size(xp)
+
+   xt = (xp(kp)-xmin)/(xmax-xmin)*nx
+   yt = (yp(kp)-ymin)/(ymax-ymin)*ny
+
+   ip = floor(xt)
+   jp = floor(yt)
+
+   x = xt - ip
+   y = yt - jp
+
+   BSPLINES(x,y)
+
+   if ( ip > 1 .and. ip < nx .and. jp > 1 .and. jp < ny) then
+
+   df( ip  ,jp  ) = df( ip  ,jp  ) + c1x*c1y   * wp(kp)
+   df( ip  ,jp-1) = df( ip  ,jp-1) + c1x*c_1y  * wp(kp)
+   df( ip  ,jp+1) = df( ip  ,jp+1) + c1x*c2y   * wp(kp)
+   df( ip-1,jp  ) = df( ip-1,jp  ) + c_1x*c1y  * wp(kp)
+   df( ip-1,jp-1) = df( ip-1,jp-1) + c_1x*c_1y * wp(kp)
+   df( ip-1,jp+1) = df( ip-1,jp+1) + c_1x*c2y  * wp(kp)
+   df( ip+1,jp  ) = df( ip+1,jp  ) + c2x*c1y   * wp(kp)
+   df( ip+1,jp-1) = df( ip+1,jp-1) + c2x*c_1y  * wp(kp)
+   df( ip+1,jp+1) = df( ip+1,jp+1) + c2x*c2y   * wp(kp)
+
+   end if
+
+end do
+
+end subroutine compute_df_tsc
+
+!>GNUplot readable output for particles density
+subroutine distribution_tsc_gnuplot(plot_name, x, v, w, &
+                             xmin, xmax, nx,     &
+                             vmin, vmax, nv, iplot)  
+character(len=*), intent(in) :: plot_name
+sll_real64, dimension(:), intent(in) :: x
+sll_real64, dimension(:), intent(in) :: v
+sll_real64, dimension(:), intent(in) :: w
+sll_int32, intent(in) :: nx
+sll_int32, intent(in) :: nv
+sll_int32 :: iplot, error
+sll_real64, dimension(nx,nv) :: df
+sll_real64 :: xmin, xmax, vmin, vmax
+character(len=4) :: fin
+
+call int2string(iplot, fin)
+
+call compute_df_tsc(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)  
+
+call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
+
+end subroutine distribution_tsc_gnuplot
+
 
 end module sll_visu_pic

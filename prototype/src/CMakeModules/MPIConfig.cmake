@@ -1,5 +1,3 @@
-SET(MPI_MODULE_ENABLED ON CACHE BOOL " ")
-
 IF($ENV{HOSTNAME} MATCHES "hydra*")
    SET(MPI_Fortran_COMPILER "mpiifort")
 ENDIF()
