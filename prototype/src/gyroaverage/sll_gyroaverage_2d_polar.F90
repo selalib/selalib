@@ -140,6 +140,7 @@ contains
     delta_eta(2)=(gyro%eta_max(2)-gyro%eta_min(2))/real(gyro%Nc(2),f64)
     
     call hermite_coef_nat_per(f(1:gyro%Nc(1)+1,1:gyro%Nc(2)),gyro%deriv,gyro%Nc,gyro%interp_degree)
+
     
     do j=1,gyro%Nc(2)
      eta(2)=gyro%eta_min(2)+real(j-1,f64)*delta_eta(2)
@@ -156,6 +157,7 @@ contains
         f(i,j) = sum_fval
       enddo
     enddo
+    
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
     
   end subroutine compute_gyroaverage_points_polar_hermite
@@ -197,7 +199,7 @@ contains
       enddo
     enddo
 
-    f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
+    !f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
     
   end subroutine compute_gyroaverage_points_polar_hermite_c1
   
@@ -1197,7 +1199,7 @@ subroutine compute_w_hermite(w,r,s)
     !do ii=r,s
     !  print *,ii,w(r+s-ii)
     !enddo
-    !stop
+    !
 
   
   end subroutine compute_w_hermite
@@ -1276,6 +1278,7 @@ subroutine compute_w_hermite(w,r,s)
       w(s,3)=x(s)*x(s)*(x(s)-1._f64)
       i1(s)=i(s)+1
     enddo
+
     
     g(0,0)=f(0,i(1),i(2))          !f(0,0)
     g(1,0)=f(0,i1(1),i(2))         !f(1,0)
@@ -1294,11 +1297,14 @@ subroutine compute_w_hermite(w,r,s)
     g(2,3)=f(7,i(1),i(2))          !fxy(0,1) 
     g(3,3)=f(8,i(1),i(2))          !fxy(1,1)
 
+
+
     do s=0,3
       tmp(s)=w(1,0)*g(0,s)+w(1,1)*g(1,s)+w(1,2)*g(2,s)+w(1,3)*g(3,s)
     enddo  
-    
+
     fval=w(2,0)*tmp(0)+w(2,1)*tmp(1)+w(2,2)*tmp(2)+w(2,3)*tmp(3)
+  
     !print *,fval,' t',f    
   end subroutine interpolate_hermite
 

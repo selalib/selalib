@@ -41,8 +41,8 @@
 
 &sim_params
   dt                = 32
-  !number_iterations = 100
-  number_iterations = 1
+  number_iterations = 10
+  !number_iterations = 1
   freq_diag_time = 1
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
   time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
@@ -59,4 +59,9 @@
   advector_x4 = "SLL_SPLINES"
   order_x4 = 4
   poisson2d_case = "POLAR_FFT"
+  gyroaverage_case = "HERMITE_C1"
+  mu = 1.0e-3
+  gyroaverage_N_points = 4
+  gyroaverage_interp_degree_x1 = 3
+  gyroaverage_interp_degree_x2 = 3
 /
