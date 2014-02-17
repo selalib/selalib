@@ -991,6 +991,7 @@ contains
     sll_real64 :: delta3
     sll_real64 :: delta4
     sll_int32 :: ierr
+    sll_int32 :: i
     dt = sim%dt
 
     Nc_x1 = sim%m_x1%num_cells
@@ -1006,13 +1007,24 @@ contains
 
 
     nrj = 0._f64
-    call compute_reduction_2d_to_0d(&
-      sim%phi3d_seqx1x2(:,:,1)**2, &
-      nrj, &
-      Nc_x1+1, &
-      Nc_x2+1, &
-      delta1, &    
-      delta2)
+    i=1
+    nrj = 0.5*(sim%m_x1%eta_min+real(i-1,f64)*delta1)* &
+        sum(sim%phi3d_seqx1x2(i,1:Nc_x2,1)**2)*delta2
+    do i = 2,Nc_x1
+      nrj = nrj+(sim%m_x1%eta_min+real(i-1,f64)*delta1)* &
+        sum(sim%phi3d_seqx1x2(i,1:Nc_x2,1)**2)*delta2
+    enddo
+    i=Nc_x1+1
+    nrj = nrj+0.5*(sim%m_x1%eta_min+real(i-1,f64)*delta1)* &
+        sum(sim%phi3d_seqx1x2(i,1:Nc_x2,1)**2)*delta2
+    nrj = nrj*delta1  
+!    call compute_reduction_2d_to_0d(&
+!      sim%phi3d_seqx1x2(:,:,1)**2, &
+!      nrj, &
+!      Nc_x1+1, &
+!      Nc_x2+1, &
+!      delta1, &    
+!      delta2)
     !nrj = sum(phi(this%geomx%nx/2,1:this%geomx%ny,1:this%geomv%nx)**2)*this%geomx%dy*this%geomv%dx
 
 
