@@ -64,10 +64,12 @@ type, public :: maxwell_2d_diga
    sll_real64, dimension(:,:), pointer      :: w_vector              
    sll_real64, dimension(:,:), pointer      :: r_vector              
    sll_real64, dimension(:,:,:,:), pointer  :: f
-   sll_real64, dimension(3,3)               :: A1
-   sll_real64, dimension(3,3)               :: A2
+   sll_real64, dimension(4,4)               :: A1
+   sll_real64, dimension(4,4)               :: A2
    sll_real64, dimension(:),   pointer      :: xgalo
    sll_real64, dimension(:),   pointer      :: wgalo
+   type(dg_field), pointer                  :: po
+   sll_real64                               :: xi
 
 end type maxwell_2d_diga
 
@@ -184,13 +186,19 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
    SLL_CLEAR_ALLOCATE(this%f(1:nddl,1:3,1:this%nc_eta1,1:this%nc_eta2),error)
 
-   this%A1 = reshape((/ 0._f64, 0._f64,  0._f64,  &
-                        0._f64, 0._f64,  1._f64,  &
-                        0._f64, 1._f64,  0._f64/), (/3,3/))
+   this%xi = 0.0_f64
+
+   this%A1 = reshape((/ 0.0_f64, 0.0_f64, 0.0_f64, this%xi,  &
+                        0.0_f64, 0.0_f64, 1.0_f64, 0.0_f64,  &
+                        0.0_f64, 1.0_f64, 0.0_f64, 0.0_f64,  &
+                        this%xi, 1.0_f64, 0.0_f64, 0.0_f64   /), (/4,4/))
    
-   this%A2 = reshape((/ 0._f64, 0._f64, -1._f64,  &
-                        0._f64, 0._f64,  0._f64,  &
-                       -1._f64, 0._f64,  0._f64/), (/3,3/))
+   this%A2 = reshape((/ 0.0_f64, 0.0_f64, -1.0_f64, 0.0_f64, &
+                        0.0_f64, 0.0_f64,  0.0_f64, this%xi, &
+                       -1.0_f64, 0.0_f64,  0.0_f64, 0.0_f64, &
+                        0.0_f64, this%xi,  0.0_f64, 0.0_f64, /), (/4,4/))
+
+   this%po => new_dg_field( degree, tau) 
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -211,7 +219,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
 
    sll_int32                :: left, right, node, side
    sll_int32                :: i, j, k, l, ii, jj, kk
-   sll_real64               :: flux(3)
+   sll_real64               :: flux(4)
    sll_real64               :: vec_n1
    sll_real64               :: vec_n2
    sll_real64               :: offset(2), eta1, eta2
@@ -230,28 +238,14 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
          this%w_vector(k,1) = ex%array(ii,jj,i,j)
          this%w_vector(k,2) = ey%array(ii,jj,i,j)
          this%w_vector(k,3) = bz%array(ii,jj,i,j)
+         this%w_vector(k,4) = this%po%array(ii,jj,i,j)
       end do
       end do
          
-      if(present(jx) .and. present(jy) .and. present(rho)) then
-         do jj = 1, this%degree+1
-         do ii = 1, this%degree+1
-            this%r_vector(k,1) = jx%array(ii,jj,i,j)
-            this%r_vector(k,2) = jy%array(ii,jj,i,j)
-            this%r_vector(k,3) = rho%array(ii,jj,i,j)
-         end do
-         end do
-      end if
-
-      this%f(:,1,i,j) =  &
-           + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
-      this%f(:,2,i,j) =  &
-           + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2))
-      this%f(:,3,i,j) =  &
-           + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
-           + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3))
+      this%f(:,1,i,j) = matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1))
+      this%f(:,2,i,j) = matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2))
+      this%f(:,3,i,j) = matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
+      this%f(:,4,i,j) = matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2)) &
 
       do side = 1, 4 ! Loop over edges
  
@@ -270,6 +264,15 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             k = 1+modulo(i-2,this%nc_eta1)
             l = j
          end select
+
+         do jj = 1, this%degree+1
+         do ii = 1, this%degree+1
+            kk = (ii-1)*(this%degree+1)+jj
+            this%r_vector(kk,1) = ex%array(ii,jj,k,l)
+            this%r_vector(kk,2) = ey%array(ii,jj,k,l)
+            this%r_vector(kk,3) = bz%array(ii,jj,k,l)
+         end do
+         end do
    
          !Compute the fluxes on edge points
          do node = 1, this%degree+1
@@ -280,8 +283,8 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
-            flux (:) = (0.5*(this%w_vector(left, :) &
-                         +   this%w_vector(right,:))) * this%wgalo
+            flux(:) = (0.5*(this%w_vector(left, :) &
+                        +   this%r_vector(right,:))) * this%wgalo(node)
    
             this%f(node,:,i,j) = this%f(node,:,i,j) + &
                                  vec_n1*matmul(this%A1,flux) &
@@ -291,12 +294,39 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    
       end do
    
-      this%f(:,1,i,j) = this%f(:,1,i,j) / this%cell(i,j)%MassMatrix
-      this%f(:,2,i,j) = this%f(:,2,i,j) / this%cell(i,j)%MassMatrix
-      this%f(:,3,i,j) = this%f(:,3,i,j) / this%cell(i,j)%MassMatrix
+      this%f(:,1,i,j) = this%f(:,1,i,j) / this%cell(i,j)%MassMatrix(:)
+      this%f(:,2,i,j) = this%f(:,2,i,j) / this%cell(i,j)%MassMatrix(:)
+      this%f(:,3,i,j) = this%f(:,3,i,j) / this%cell(i,j)%MassMatrix(:)
+
+      if(present(jx) .and. present(jy)) then
+         do jj = 1, this%degree+1
+         do ii = 1, this%degree+1
+            this%f(:,1,i,j) = this%f(:,1,i,j) + jx%array(ii,jj,i,j)
+            this%f(:,2,i,j) = this%f(:,2,i,j) + jy%array(ii,jj,i,j)
+         end do
+         end do
+      end if
 
    end do
    end do
+
+
+   do j = 1, this%nc_eta2
+   do i = 1, this%nc_eta1
+
+      do jj = 1, this%degree+1
+      do ii = 1, this%degree+1
+         kk = (ii-1)*(this%degree+1)+jj
+         ex%array(ii,jj,i,j) = - dt * this%f(kk,3,i,j)
+         ey%array(ii,jj,i,j) = + dt * this%f(kk,3,i,j)
+         bz%array(ii,jj,i,j) = + dt * (   this%f(kk,2,i,j) &
+                                        - this%f(kk,1,i,j))
+      end do
+      end do
+   
+   end do
+   end do
+
 
    call sll_ascii_file_create("flux.gnu", gnu_id, error)
 
@@ -326,7 +356,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
          eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
          write(file_id,*) this%tau%x1(eta1,eta2), &
                           this%tau%x2(eta1,eta2), &
-                          sngl(this%f(kk,1,i,j))
+                          sngl(this%f(kk,3,i,j))
       end do
       write(file_id,*)
       end do
@@ -338,16 +368,6 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    write(gnu_id,*)
    close(gnu_id)
    
-   do i = 1, this%nc_eta1
-   do j = 1, this%nc_eta2
-      !this%w_vector(:,1) = - dt * this%f_vector(:,3)
-      !this%w_vector(:,2) = + dt * this%f_vector(:,3)
-      !this%w_vector(:,3) = + dt * (this%f_vector(:,3)-this%f_vector(:,1))
-   
-   end do
-   end do
-
-
 end  subroutine solve_maxwell_2d_diga
 
 !function W_divide_by_DiagMatrix( W1, D) result(W2)
