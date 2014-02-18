@@ -1535,17 +1535,11 @@ contains ! *******************************************************************
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    
-                   !call sll_add_to_csr_matrix( &
-                   !     es%sll_csr_mat, &
-                   !     elt_mat_global, &
-                   !     li_A, &
-                   !     li_Aprime)
-                   call sll_sub_to_csr_matrix( &
+                   call sll_add_to_csr_matrix( &
                         es%sll_csr_mat, &
                         elt_mat_global, &
                         li_A, &
-                        li_Aprime,& 
-                        Masse_tot)     
+                        li_Aprime)   
                 end if
                 
              end do

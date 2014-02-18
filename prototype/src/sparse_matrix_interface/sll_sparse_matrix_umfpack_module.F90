@@ -46,9 +46,26 @@ use mod_umfpack
     sll_real64, dimension(:), pointer :: umf_control
   end type sll_csr_matrix
 
+  interface sll_delete
+     module procedure delete_csr_matrix
+  end interface sll_delete
+     
 
 contains
 
+
+  subroutine delete_csr_matrix(csr_mat)
+    type(sll_csr_matrix),pointer :: csr_mat
+    sll_int32 :: ierr
+
+    nullify(csr_mat)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ja,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opr_a,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_i,ierr)
+    
+    
+  end subroutine delete_csr_matrix
 
   !> @brief allocates the memory space for a new CSR type on the heap,
   !> initializes it with the given arguments and returns a pointer to the
@@ -265,35 +282,14 @@ contains
     do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
       li_j = mat % opi_ja(li_k)
       if (li_j == ai_Aprime) then
-        mat % opr_a(li_k) = mat % opr_a(li_k) + val
+        mat % opr_a(li_k) = mat % opr_a(li_k) + val 
         exit
       end if
     end do
 
   end subroutine sll_add_to_csr_matrix
  
-  subroutine sll_sub_to_csr_matrix(mat, val, ai_A, ai_Aprime,Masse_tot)
-    implicit none
-    type(sll_csr_matrix) :: mat
-    sll_real64, intent(in) :: val
-    sll_int32, intent(in) :: ai_A
-    sll_int32, intent(in) :: ai_Aprime
-    sll_real64, dimension(:) :: Masse_tot
-    !local var
-    sll_int32 :: li_j
-    sll_int32 :: li_k
-
-
-    ! THE CURRENT LINE IS self%opi_ia(ai_A)
-    do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
-      li_j = mat % opi_ja(li_k)
-      if (li_j == ai_Aprime) then
-        mat % opr_a(li_k) = mat % opr_a(li_k) + val - Masse_tot(li_k)
-        exit
-      end if
-    end do
-
-  end subroutine sll_sub_to_csr_matrix
+  
 
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
@@ -527,7 +523,20 @@ subroutine Partition(A, marker)
 
 end subroutine Partition
 
-
+   subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
+    implicit none
+    type(sll_csr_matrix) :: mat
+    sll_real64, dimension(:) :: apr_U
+    sll_real64, dimension(:) :: apr_B
+    sll_real64, dimension(:) :: Masse_tot
+    !local var
+    sll_int32  :: sys
+    sll_real64, dimension(umfpack_info) :: info
+    sys = 0
+    call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
+    !print *,apr_U
+    !stop
+  end subroutine sll_solve_csr_matrix_perper
 
 
 
@@ -541,6 +550,8 @@ end subroutine Partition
 !        es%total_num_splines_loc, &
 !        es%local_to_global_spline_indices, &
 !        es%total_num_splines_loc )
+
+
 
 
 
