@@ -168,11 +168,11 @@ contains
          bc_bottom, &
          bc_top, &
          spline_degree1, &
-         spline_degree2,&
-         slope_left,&
-         slope_right,&
-         slope_bottom,&
-         slope_top)
+         spline_degree2)!,&
+         !slope_left,&
+         !slope_right,&
+         !slope_bottom,&
+         !slope_top)
   end function new_arbitrary_degree_spline_interp2d
 
   ! -----------------------------------------------
@@ -196,12 +196,11 @@ contains
     bc_bottom, &
     bc_top, &
     spline_degree1, &
-    spline_degree2,&
-    slope_left,&
-    slope_right,&
-    slope_bottom,&
-    slope_top)
-    use sll_arbitrary_degree_spline_interpolator_1d_module
+    spline_degree2)
+!!$    slope_left,&
+!!$    slope_right,&
+!!$    slope_bottom,&
+!!$    slope_top)
 
 #ifdef STDF95
     type (arb_deg_2d_interpolator):: interpolator
@@ -220,27 +219,11 @@ contains
     sll_int32, intent(in) :: bc_top
     sll_int32, intent(in) :: spline_degree1
     sll_int32, intent(in) :: spline_degree2
-    ! In the case of Dirichlet boundary conditions we can have 
-    ! non homogene and homogene case
-    ! slope_  represente the value of a function in the nodes of boundary
-    ! if the user put anything we consider that is equal to 0 
-    sll_real64, dimension(:),optional :: slope_left
-    sll_real64, dimension(:),optional :: slope_right
-    sll_real64, dimension(:),optional :: slope_bottom
-    sll_real64, dimension(:),optional :: slope_top
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_left => null()
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_right => null()
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom => null()
-    type(arb_deg_1d_interpolator),pointer :: interp1d_slope_top => null()
     sll_int32 :: ierr
     sll_int32 :: tmp1
     sll_int32 :: tmp2
     sll_int64 :: bc_selector
-    sll_int32 :: sz_slope_left,sz_slope_right,sz_slope_bottom,sz_slope_top
-    ! only for troubleshooting
-!!$    type(sll_time_mark) :: tm
-!!$    sll_real64 :: time
-
+   
 
     ! do some argument checking...
     if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC)).or.&
@@ -317,8 +300,8 @@ contains
     interpolator%eta2_max = eta2_max
     interpolator%bc_left  = bc_left
     interpolator%bc_right = bc_right
-    interpolator%bc_left  = bc_bottom
-    interpolator%bc_right = bc_top
+    interpolator%bc_bottom= bc_bottom
+    interpolator%bc_top   = bc_top
     interpolator%bc_selector = bc_selector
     interpolator%num_pts1 = num_pts1
     interpolator%num_pts2 = num_pts2
@@ -327,7 +310,7 @@ contains
     SLL_ALLOCATE(interpolator%slope_right (num_pts2),ierr)
     SLL_ALLOCATE(interpolator%slope_bottom(num_pts1),ierr)
     SLL_ALLOCATE(interpolator%slope_top   (num_pts1),ierr)
-
+  
     ! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
     select case (bc_selector)
     case (0) ! 1. periodic-periodic
@@ -351,15 +334,107 @@ contains
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
+       interpolator%slope_left(:) = 0.0_f64
+       interpolator%slope_right(:) = 0.0_f64
+       
+    case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
+
+        ! Allocate the knots in each direction 
+       SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
+       SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
+
+       ! Allocate the coefficients spline
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + 2*spline_degree1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 + spline_degree2 !- 1
+       SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
+
+       interpolator%slope_bottom(:) = 0.0_f64
+       interpolator%slope_top(:) = 0.0_f64
+       
+    case (585) ! 4. dirichlet in all sides
+        ! Allocate the knots in each direction
+       SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
+       SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
+
+       ! Allocate the coefficients spline
+       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
+       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
+       SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
+       interpolator%slope_top(:)    = 0.0_f64
+       interpolator%slope_bottom(:) = 0.0_f64
+       interpolator%slope_left(:)   = 0.0_f64
+       interpolator%slope_right(:)  = 0.0_f64
+       
+    case default
+       print*,'initialize_ad2d_interpolator: BC combination not implemented.'
+    end select
+
+    ! knots and coeff splines allocations 
+    interpolator%coeff_splines(:,:) = 0.0_f64
+    ! the minimun is to be of class C^0 everywhere on the knots
+    ! i.e. each knot have multiplicity (spline_degree1+1) 
+    ! so the maximun number of knots is num_pts1*(spline_degree1+1)
+    SLL_ALLOCATE( interpolator%t1(num_pts1*(spline_degree1+1)),ierr)
+    SLL_ALLOCATE( interpolator%t2(num_pts2*(spline_degree2+1)),ierr) 
+
+    interpolator%t1(:) = 0.0_f64
+    interpolator%t2(:) = 0.0_f64
+  end subroutine !initialize_ad2d_interpolator
+
+
+
+  subroutine set_slope2d(&
+       interpolator,&
+       slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+
+     use sll_arbitrary_degree_spline_interpolator_1d_module
+#ifdef STDF95
+    type (arb_deg_2d_interpolator):: interpolator
+#else
+    class(arb_deg_2d_interpolator):: interpolator
+#endif
+    sll_real64, dimension(:),optional :: slope_left
+    sll_real64, dimension(:),optional :: slope_right
+    sll_real64, dimension(:),optional :: slope_bottom
+    sll_real64, dimension(:),optional :: slope_top
+    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_left => null()
+    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_right => null()
+    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom=> null()
+    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_top => null()
+    sll_int32 :: sz_slope_left,sz_slope_right,sz_slope_bottom,sz_slope_top
+    sll_int32 :: ierr
+    sll_int64 :: bc_selector
+    sll_int32 :: num_pts1
+    sll_int32 :: num_pts2
+    sll_int32 :: bc_left
+    sll_int32 :: bc_right
+    sll_int32 :: bc_bottom
+    sll_int32 :: bc_top
+
+    
+    num_pts1 = interpolator%num_pts1
+    num_pts2 = interpolator%num_pts2
+    bc_selector = interpolator%bc_selector
+    bc_left  = interpolator%bc_left 
+    bc_right = interpolator%bc_right 
+    bc_bottom= interpolator%bc_bottom  
+    bc_top   = interpolator%bc_top
+
+    
+    select case (bc_selector)
+       
+    case (9) ! dirichlet-left, dirichlet-right, periodic
        if (present(slope_left)) then 
           sz_slope_left = size(slope_left)
           if ( sz_slope_left .ne. interpolator%num_pts2 ) then 
              print*, ' problem in the initialization of arb_deg_spline 2d'
-             print*, ' slope_left must have the size of numbers of pts in direction 2 '
+             print*, 'slope_left must have the size of numbers of pts in direction 2 '
              stop
           end if
-          
-          call interp1d_slope_left%initialize(&
+          interp1d_slope_left => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
@@ -385,7 +460,7 @@ contains
              stop
           end if
           
-          call interp1d_slope_right%initialize(&
+          interp1d_slope_right => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
@@ -402,18 +477,8 @@ contains
        else
           interpolator%slope_right(:) = 0.0_f64
        end if
-
     case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
-
-        ! Allocate the knots in each direction 
-       SLL_ALLOCATE( interpolator%knots1(2*spline_degree1+2),ierr )
-       SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-       ! Allocate the coefficients spline
-       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + 2*spline_degree1
-       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 + spline_degree2 !- 1
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
+       
        if (present(slope_bottom)) then 
           sz_slope_bottom = size(slope_bottom)
           if ( sz_slope_bottom .ne. interpolator%num_pts1 ) then 
@@ -422,7 +487,7 @@ contains
              stop
           end if
           
-          call interp1d_slope_bottom%initialize(&
+          interp1d_slope_bottom =>  new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
@@ -439,7 +504,7 @@ contains
        else
           interpolator%slope_bottom(:) = 0.0_f64
        end if
-
+       
        if (present(slope_top)) then 
           sz_slope_top = size(slope_top)
           if ( sz_slope_top .ne. interpolator%num_pts1 ) then 
@@ -448,7 +513,7 @@ contains
              stop
           end if
           
-          call  interp1d_slope_top%initialize(&
+          interp1d_slope_top => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
@@ -465,18 +530,8 @@ contains
        else
           interpolator%slope_top(:) = 0.0_f64
        end if
-
     case (585) ! 4. dirichlet in all sides
-        ! Allocate the knots in each direction
-       SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-       SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
-
-       ! Allocate the coefficients spline
-       tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
-       tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-
-
+       
        if (present(slope_left)) then 
           sz_slope_left = size(slope_left)
           if ( sz_slope_left .ne. interpolator%num_pts2 ) then 
@@ -484,14 +539,17 @@ contains
              print*, ' slope_left must have the size of numbers of pts in direction 2 '
              stop
           end if
-          
-          call interp1d_slope_left%initialize(&
+
+          interp1d_slope_left =>  new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
                interpolator%bc_bottom, &
                interpolator%bc_top, &
-               interpolator%spline_degree2,&
+               interpolator%spline_degree2)
+
+          call set_slope1d(&
+               interp1d_slope_left,&
                slope_left(1),&
                slope_left(sz_slope_left))
           
@@ -513,16 +571,18 @@ contains
              stop
           end if
           
-          call interp1d_slope_right%initialize(&
+          interp1d_slope_right => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts2, &
                interpolator%eta2_min, &
                interpolator%eta2_max, &
                interpolator%bc_bottom, &
                interpolator%bc_top, &
-               interpolator%spline_degree2,&
+               interpolator%spline_degree2)
+          
+          call set_slope1d(&
+               interp1d_slope_right,&
                slope_right(1),&
                slope_right(sz_slope_right))
-          
           
           call interp1d_slope_right%compute_interpolants( &
                slope_right(1:sz_slope_right))
@@ -543,16 +603,18 @@ contains
              stop
           end if
           
-          call interp1d_slope_bottom%initialize(&
+          interp1d_slope_bottom=> new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
                interpolator%bc_left, &
                interpolator%bc_right, &
-               interpolator%spline_degree1,&
+               interpolator%spline_degree1)
+
+          call set_slope1d(&
+               interp1d_slope_bottom,&
                slope_bottom(1),&
                slope_bottom(sz_slope_bottom))
-         
           
           call interp1d_slope_bottom%compute_interpolants( &
                slope_bottom(1:sz_slope_bottom))
@@ -572,16 +634,18 @@ contains
              stop
           end if
           
-          call interp1d_slope_top%initialize(&
+          interp1d_slope_top => new_arbitrary_degree_1d_interpolator(&
                interpolator%num_pts1, &
                interpolator%eta1_min, &
                interpolator%eta1_max, &
                interpolator%bc_left, &
                interpolator%bc_right, &
-               interpolator%spline_degree1,&
+               interpolator%spline_degree1)
+          
+          call set_slope1d(&
+               interp1d_slope_top,&
                slope_top(1),&
                slope_top(sz_slope_top))
-          
           
           call interp1d_slope_top%compute_interpolants( &
                slope_top(1:sz_slope_top))
@@ -592,25 +656,12 @@ contains
        else
           interpolator%slope_top(:) = 0.0_f64
        end if
-       
-
+      
 
     case default
-       print *, 'initialize_ad2d_interpolator: BC combination not implemented.'
+       print*,'initialize_ad2d_interpolator: BC combination not implemented.'
     end select
-
-    ! knots and coeff splines allocations 
-    interpolator%coeff_splines(:,:) = 0.0_f64
-    ! the minimun is to be of class C^0 everywhere on the knots
-    ! i.e. each knot have multiplicity (spline_degree1+1) 
-    ! so the maximun number of knots is num_pts1*(spline_degree1+1)
-    SLL_ALLOCATE( interpolator%t1(num_pts1*(spline_degree1+1)),ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2*(spline_degree2+1)),ierr) 
-
-    interpolator%t1(:) = 0.0_f64
-    interpolator%t2(:) = 0.0_f64
-  end subroutine !initialize_ad2d_interpolator
-
+  end subroutine set_slope2d
 
 
   ! -------------------------------------------------------------

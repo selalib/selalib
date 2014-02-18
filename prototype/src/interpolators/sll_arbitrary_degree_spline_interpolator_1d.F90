@@ -109,22 +109,18 @@ contains
          eta_max, &
          bc_left, &
          bc_right, &
-         spline_degree,&
-         slope_left,&
-         slope_right)
-
+         spline_degree)
+    
   end function new_arbitrary_degree_1d_interpolator
 
   subroutine initialize_ad1d_interpolator( &
-    interpolator, &
-    num_pts, &
-    eta_min, &
-    eta_max, &
-    bc_left, &
-    bc_right, &
-    spline_degree,&
-    slope_left,&
-    slope_right)
+       interpolator, &
+       num_pts, &
+       eta_min, &
+       eta_max, &
+       bc_left, &
+       bc_right, &
+       spline_degree)
 
     class(arb_deg_1d_interpolator), intent(inout) :: interpolator
     sll_int32, intent(in) :: num_pts
@@ -136,8 +132,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: tmp
     sll_int64 :: bc_selector
-    sll_real64, intent(in), optional     :: slope_left
-    sll_real64, intent(in), optional     :: slope_right
     
     ! do some argument checking...
     if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC))) then
@@ -179,36 +173,24 @@ contains
     interpolator%bc_right      = bc_right
     interpolator%bc_selector   = bc_selector
     interpolator%num_pts       = num_pts
-
-    if (present(slope_left)) then 
-       interpolator%slope_left = slope_left
-    else
-       interpolator%slope_left = 0.0_f64
-    end if
-
-    
-    if (present(slope_right)) then 
-       interpolator%slope_right = slope_right
-    else
-       interpolator%slope_right = 0.0_f64
-    end if
     
     select case (bc_selector)
     case (0) ! 1. periodic
        SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
        tmp = num_pts*num_pts
        SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-
+       
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
        tmp = num_pts*num_pts
        SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-
+       interpolator%slope_left = 0.0_f64
+       interpolator%slope_right = 0.0_f64
        
     case default
        print *, 'initialize_ad1d_interpolator: BC combination not implemented.'
     end select
-
+    
     interpolator%coeff_splines(:) = 0.0_f64
     SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
     interpolator%t(:) = 0.0_f64
@@ -316,6 +298,34 @@ contains
       stop
    end select
  end subroutine set_coefficients_ad1d
+
+ subroutine set_slope1d(interpolator,slope_left,slope_right)
+
+   class(arb_deg_1d_interpolator), intent(inout) :: interpolator
+   sll_real64, intent(in), optional     :: slope_left
+   sll_real64, intent(in), optional     :: slope_right
+   sll_int32 :: bc_left
+   sll_int32 :: bc_right
+   sll_int64 :: bc_selector
+   
+   bc_left = interpolator%bc_left
+   bc_right= interpolator%bc_right
+   bc_selector = interpolator%bc_selector
+
+   if (present(slope_left)) then 
+      interpolator%slope_left = slope_left
+   else
+       interpolator%slope_left = 0.0_f64
+    end if
+    
+    
+    if (present(slope_right)) then 
+       interpolator%slope_right = slope_right
+    else
+       interpolator%slope_right = 0.0_f64
+    end if
+   
+ end subroutine set_slope1d
 
  subroutine compute_interpolants_ad1d( &
       interpolator,data_array, &
