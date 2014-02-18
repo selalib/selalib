@@ -32,21 +32,26 @@ use sll_maxwell_2d_diga
 
 implicit none
 
-sll_int32, parameter :: nstep   = 1
-sll_int32, parameter :: nc_eta1 = 2
-sll_int32, parameter :: nc_eta2 = 2
+!=====================================!
+! Simulation parameters               !
+!=====================================!
+sll_int32, parameter :: nstep   = 1   !
+sll_int32, parameter :: nc_eta1 = 2   !
+sll_int32, parameter :: nc_eta2 = 2   !
+sll_int32, parameter :: mode = 2      !
+sll_int32, parameter :: degree = 2    !
+!=====================================!
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
-sll_int32  :: error
 
 type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 class(sll_coordinate_transformation_2d_analytic), pointer :: colella
 
 type(maxwell_2d_diga)   :: maxwell_TE
-type(maxwell_2d_diga)   :: maxwell_TM
+!type(maxwell_2d_diga)   :: maxwell_TM
 
 type(dg_field), pointer :: ex
 type(dg_field), pointer :: ey
@@ -57,8 +62,6 @@ type(dg_field), pointer :: by
 type(dg_field), pointer :: ez
 type(dg_field), pointer :: ez_exact
 
-sll_int32   :: mode = 2
-sll_int32   :: degree = 2
 sll_real64  :: omega
 sll_real64  :: time
 sll_int32   :: istep
@@ -167,6 +170,8 @@ do istep = 1, nstep !*** Loop over time
    end if
 
    call solve(maxwell_TE, ex, ey, bz, dt)
+   call plot_dg_field( ex, 'ex')
+   call plot_dg_field( ey, 'ey')
    !call solve(maxwell_TM, bx, by, ez, dt)
 
    time = time + 0.5_f64*dt
