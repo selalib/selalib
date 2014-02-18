@@ -76,8 +76,8 @@ sll_real64, external :: fcos
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta2_min=-1._f64)
 
-write(*,*) mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
-write(*,*) mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
+write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
+write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
 
 eta1_min = mesh%eta1_min
 eta1_max = mesh%eta1_max

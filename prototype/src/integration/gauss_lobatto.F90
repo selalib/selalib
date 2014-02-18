@@ -142,8 +142,6 @@ contains
        
     end if
     
-    
-    
     end function gauss_lobatto_points
 
   function gauss_lobatto_weights( n,a,b ) result(wk)
@@ -187,19 +185,24 @@ contains
   !> \f]
   function  gauss_lobatto_derivative_matrix(n, a, b) result(der)
 
-    sll_real64 :: a, b
+    sll_real64, intent(in), optional :: a, b
     sll_int32  :: n,i,j,l,m
     sll_real64 :: prod
     sll_real64 :: x(n), der(n,n)
 
-    x = gauss_lobatto_points( n, a, b ) 
+    if (present(a) .and. present(b)) then
+       x = gauss_lobatto_points( n, a, b ) 
+    else
+       x = gauss_lobatto_points( n ) 
+    end if
+
     der = 0.0
     
     do j=1,n
     do i=1,n
        do l=1,n
           if ( j /= l ) then
-             prod= 1d0
+             prod = 1d0
              do m=1,n 
                 if ( m /= l .and. m /= j ) prod=prod*(x(i)-x(m))/(x(j)-x(m))
              end do
