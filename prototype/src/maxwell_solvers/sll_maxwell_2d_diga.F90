@@ -133,39 +133,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    xgalo  = gauss_lobatto_points(degree+1)
    wgalo  = gauss_lobatto_weights(degree+1)
 
-   do j=1,degree+1
-      do i=1,degree+1
-         do l=1,j-1
-            prod=1.0_f64
-            do m=1,l-1
-               prod=prod*(xgalo(i)-xgalo(m))/(xgalo(j)-xgalo(m))
-            end do
-            do m=l+1,j-1
-               prod=prod*(xgalo(i)-xgalo(m))/(xgalo(j)-xgalo(m))
-            end do
-            do m=j+1,degree+1
-               prod=prod*(xgalo(i)-xgalo(m))/(xgalo(j)-xgalo(m))
-            end do
-            prod=prod/(xgalo(j)-xgalo(l))
-            dlag(i,j)=dlag(i,j)+prod
-         end do
-         do l=j+1,degree+1
-            prod=1.0_f64
-            do m=1,j-1
-               prod=prod*(xgalo(i)-xgalo(m))/(xgalo(j)-xgalo(m))
-            end do
-            do m=j+1,l-1
-               prod=prod*(xgalo(i)-xgalo(m))/(xgalo(j)-xgalo(m))
-            end do
-            do m=l+1,degree+1
-               prod=prod*(xgalo(i)-xgalo(m))/(xgalo(j)-xgalo(m))
-            end do
-            prod=prod/(xgalo(j)-xgalo(l))
-            dlag(i,j)=dlag(i,j)+prod
-         end do
-         dlag(i,j)=dlag(i,j)*wgalo(i)
-      end do
-   end do
 
    dlag = gauss_lobatto_derivative_matrix(degree+1) 
 
