@@ -92,7 +92,7 @@ contains ! *******************************************************************
 
 
 
-  !> @brief Initialization for elleptic solver.
+  !> @brief Initialization for elliptic solver.
   !> @details To have the function phi such that 
   !>  div( A grad phi ) + B grad phi + C phi = rho
   !>  where A is a matrix of functions , B a vectorial function,
