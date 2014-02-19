@@ -98,6 +98,12 @@ use sll_module_deboor_splines_2d
 
 contains
 
+  !> @brief delete interpolator arbitrary degree splines.
+  !> @details   
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_2d_interpolator
+  !
   subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
 #ifdef STDF95
     type (arb_deg_2d_interpolator), intent(inout) :: interpolator
@@ -116,6 +122,27 @@ contains
     SLL_DEALLOCATE(interpolator%slope_top,ierr)
   end subroutine delete_arbitrary_degree_2d_interpolator
 
+  !> @brief Initialization of a pointer interpolator arbitrary degree splines.
+  !> @details To have the interpolator arbitrary degree splines
+  !> 
+  !> The parameters are
+  !> @param es the type general_coordinate_elliptic_solver
+  !> @param[in] num_pts1 the number of points in the direction eta1
+  !> @param[in] num_pts2 the number of points in the direction eta2
+  !> @param[in] eta1_min the minimun in the direction eta1
+  !> @param[in] eta1_max the maximun in the direction eta1
+  !> @param[in] eta2_min the minimun in the direction eta2
+  !> @param[in] eta2_max the maximun in the direction eta2
+  !> @param[in] bc_left  the boundary condition at left in the direction eta1
+  !> @param[in] bc_right the boundary condition at right in the direction eta2
+  !> @param[in] bc_bottom the boundary condition at left in the direction eta2
+  !> @param[in] bc_top the boundary condition at right in the direction eta2
+  !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
+
+  !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
+the maximun in the direction eta1
+  !> @return the type general_coordinate_elliptic_solver
+
   function new_arbitrary_degree_spline_interp2d( &
     num_pts1, &
     num_pts2, &
@@ -128,11 +155,7 @@ contains
     bc_bottom, &
     bc_top, &
     spline_degree1, &
-    spline_degree2,&
-    slope_left,&
-    slope_right,&
-    slope_bottom,&
-    slope_top) result( res )
+    spline_degree2) result( res )
 
     type(arb_deg_2d_interpolator), pointer :: res
     sll_int32, intent(in) :: num_pts1
@@ -147,13 +170,9 @@ contains
     sll_int32, intent(in) :: bc_top
     sll_int32, intent(in) :: spline_degree1
     sll_int32, intent(in) :: spline_degree2
-    sll_real64, dimension(:),optional :: slope_left
-    sll_real64, dimension(:),optional :: slope_right
-    sll_real64, dimension(:),optional :: slope_bottom
-    sll_real64, dimension(:),optional :: slope_top
     sll_int32 :: ierr
     
-    SLL_ALLOCATE(res, ierr)
+    SLL_ALLOCATE(res,ierr)
 
     call initialize_ad2d_interpolator( &
          res,&
@@ -168,11 +187,7 @@ contains
          bc_bottom, &
          bc_top, &
          spline_degree1, &
-         spline_degree2)!,&
-         !slope_left,&
-         !slope_right,&
-         !slope_bottom,&
-         !slope_top)
+         spline_degree2)
   end function new_arbitrary_degree_spline_interp2d
 
   ! -----------------------------------------------
@@ -197,10 +212,6 @@ contains
     bc_top, &
     spline_degree1, &
     spline_degree2)
-!!$    slope_left,&
-!!$    slope_right,&
-!!$    slope_bottom,&
-!!$    slope_top)
 
 #ifdef STDF95
     type (arb_deg_2d_interpolator):: interpolator
@@ -290,7 +301,6 @@ contains
        bc_selector = bc_selector + 2048
     end if
 
-
     ! Initialization in the type of interpolator
     interpolator%spline_degree1 = spline_degree1
     interpolator%spline_degree2 = spline_degree2
@@ -305,6 +315,7 @@ contains
     interpolator%bc_selector = bc_selector
     interpolator%num_pts1 = num_pts1
     interpolator%num_pts2 = num_pts2
+   
 
     SLL_ALLOCATE(interpolator%slope_left  (num_pts2),ierr)
     SLL_ALLOCATE(interpolator%slope_right (num_pts2),ierr)
@@ -390,12 +401,8 @@ contains
        slope_bottom,&
        slope_top)
 
-     use sll_arbitrary_degree_spline_interpolator_1d_module
-#ifdef STDF95
-    type (arb_deg_2d_interpolator):: interpolator
-#else
-    class(arb_deg_2d_interpolator):: interpolator
-#endif
+    use sll_arbitrary_degree_spline_interpolator_1d_module
+    class(arb_deg_2d_interpolator),pointer:: interpolator
     sll_real64, dimension(:),optional :: slope_left
     sll_real64, dimension(:),optional :: slope_right
     sll_real64, dimension(:),optional :: slope_bottom
@@ -414,7 +421,6 @@ contains
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
 
-    
     num_pts1 = interpolator%num_pts1
     num_pts2 = interpolator%num_pts2
     bc_selector = interpolator%bc_selector
@@ -423,8 +429,8 @@ contains
     bc_bottom= interpolator%bc_bottom  
     bc_top   = interpolator%bc_top
 
-    
     select case (bc_selector)
+    case(0)
        
     case (9) ! dirichlet-left, dirichlet-right, periodic
        if (present(slope_left)) then 
@@ -661,6 +667,7 @@ contains
     case default
        print*,'initialize_ad2d_interpolator: BC combination not implemented.'
     end select
+
   end subroutine set_slope2d
 
 
