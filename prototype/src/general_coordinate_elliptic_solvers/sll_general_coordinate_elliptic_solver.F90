@@ -655,7 +655,7 @@ contains ! *******************************************************************
 
     if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
          (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-       SLL_ASSERT(size(Masse_tot) == es%total_num_splines_eta1*es%total_num_splines_eta2)
+       SLL_ASSERT(size(es%masse) == es%total_num_splines_eta1*es%total_num_splines_eta2)
        
        do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2
     
