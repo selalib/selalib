@@ -586,7 +586,6 @@ end subroutine Partition
 
 
 subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
-    use SparseMatrix_Module
     implicit none
     type(sll_csr_matrix) :: this
     real(8), dimension(:) :: apr_U
