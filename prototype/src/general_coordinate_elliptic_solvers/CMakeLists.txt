@@ -19,6 +19,10 @@
      sll_knots.F90
      coocsr.f90 
      linpack.f90)
+
+TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers 
+  sll_sparse_matrix )
+
    
    ADD_EXECUTABLE(test_general_coordinates_elliptic_solver unit_test.F90)
 
