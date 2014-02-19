@@ -122,11 +122,10 @@ contains
     SLL_DEALLOCATE(interpolator%slope_top,ierr)
   end subroutine delete_arbitrary_degree_2d_interpolator
 
-  !> @brief Initialization of a pointer interpolator arbitrary degree splines.
-  !> @details To have the interpolator arbitrary degree splines
+  !> @brief Initialization of a pointer interpolator arbitrary degree splines 2d.
+  !> @details To have the interpolator arbitrary degree splines 2d
   !> 
   !> The parameters are
-  !> @param es the type general_coordinate_elliptic_solver
   !> @param[in] num_pts1 the number of points in the direction eta1
   !> @param[in] num_pts2 the number of points in the direction eta2
   !> @param[in] eta1_min the minimun in the direction eta1
@@ -138,10 +137,8 @@ contains
   !> @param[in] bc_bottom the boundary condition at left in the direction eta2
   !> @param[in] bc_top the boundary condition at right in the direction eta2
   !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
-
   !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
-the maximun in the direction eta1
-  !> @return the type general_coordinate_elliptic_solver
+  !> @return the type arb_deg_2d_interpolator
 
   function new_arbitrary_degree_spline_interp2d( &
     num_pts1, &
@@ -194,6 +191,24 @@ the maximun in the direction eta1
   ! This subroutine allocate the type of interpolator
   !    the  arbitrary_spline_interp2d
   ! -----------------------------------------------
+  !> @brief Initialization of an interpolator arbitrary degree splines 2d.
+  !> @details To have the interpolator arbitrary degree splines 2d
+  !> 
+  !> The parameters are
+  !> @params interpolator the type arb_deg_2d_interpolator
+  !> @param[in] num_pts1 the number of points in the direction eta1
+  !> @param[in] num_pts2 the number of points in the direction eta2
+  !> @param[in] eta1_min the minimun in the direction eta1
+  !> @param[in] eta1_max the maximun in the direction eta1
+  !> @param[in] eta2_min the minimun in the direction eta2
+  !> @param[in] eta2_max the maximun in the direction eta2
+  !> @param[in] bc_left  the boundary condition at left in the direction eta1
+  !> @param[in] bc_right the boundary condition at right in the direction eta2
+  !> @param[in] bc_bottom the boundary condition at left in the direction eta2
+  !> @param[in] bc_top the boundary condition at right in the direction eta2
+  !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
+  !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
+  !> @return the type arb_deg_2d_interpolator
 #ifdef STDF95
   subroutine arbitrary_degree_spline_interp2d_initialize( &
 #else
@@ -392,7 +407,16 @@ the maximun in the direction eta1
     interpolator%t2(:) = 0.0_f64
   end subroutine !initialize_ad2d_interpolator
 
-
+  !> @brief Initialization of the boundary for interpolator arbitrary degree splines 2d.
+  !> @details Initialization of the boundary
+  !>  interpolator arbitrary degree splines 2d
+  !> The parameters are
+  !> @params interpolator the type arb_deg_2d_interpolator
+  !> @param[in],optional,slope_left a 1d arrays contains values in the left in the direction eta1  
+  !> @param[in],optional,slope_right a 1d arrays contains values in the right in the direction eta1 
+  !> @param[in],optional,slope_bottom a 1d arrays contains values in the left in the direction eta2 
+  !> @param[in],optional, slope_top a 1d arrays contains values in the right in the direction eta2
+  !> @return the type arb_deg_2d_interpolator
 
   subroutine set_slope2d(&
        interpolator,&
@@ -677,6 +701,22 @@ the maximun in the direction eta1
   !  a table in 1d corresponding of coefficients 2d
   ! 
   ! -------------------------------------------------------------
+  !> @brief initializing the coefficients of splines.
+  !> @details  initializing the coefficients of splines
+  !>  in the cas of linearization of them i.e. if we have 
+  !>  a table in 1d corresponding of coefficients 2d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param[in],optional, coeffs_1d the 1d arrays corresponding of the splines coefficients
+  !> @param[in],optional, coeffs_2d the 2d arrays corresponding of the splines coefficients
+  !> @param[in],optional, coeff2d_size1 the number of rows of coeffs_2d
+  !> @param[in],optional, coeff2d_size2 the number of columns of coeffs_2d
+  !> @param[in],optional, knots1 the knots in the direction eta1
+  !> @param[in],optional, size_knots1 the size of knots in the direction eta1
+  !> @param[in],optional, knots2  the knots in the direction eta2
+  !> @param[in],optional, size_knots2 the size of knots in the direction eta2
+  !> @return the type arb_deg_2d_interpolator
 #ifdef STDF95
   subroutine arbitrary_degree_spline_interp2_set_coefficients( &
 #else
@@ -1102,6 +1142,24 @@ the maximun in the direction eta1
  !  we consider that the values of the function is on the points in the mesh_2d
  !   ----------------------------------------------------------------
 
+  !> @brief computing the coefficients spline with a given 
+  !>  data_array 2D cooresponding at the values of a function 
+  !> @details computing the coefficients spline with a given 
+  !>  data_array 2D coorespondind at the values of a function 
+  !>  on eta1_coords of size size_eta1_coords in the first direction and 
+  !>  on eta2_coords of size size_eta2_coords in the second direction
+  !>  if the eta1_coords and eta2_coords is not given 
+  !>  we consider that the values of the function is on the points in the mesh_2d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param[in] data_array the 2d arrays corresponding at the values of a function
+  !> @param[in],optional, eta1_coords the 1d arrays corresponding at the points eta1 
+  !> @param[in],optional, size_eta1_coords the size of eta1_coords
+  !> @param[in],optional  eta2_coords the 1d arrays corresponding at the points eta2
+  !> @param[in],optional, size_eta2_coords the size of eta2_coords
+  !> @return the type arb_deg_2d_interpolator
+
 #ifdef STDF95
   subroutine arbitrary_degree_spline_interp2d_compute_interpolants( &
 #else
@@ -1216,12 +1274,6 @@ the maximun in the direction eta1
        do i = 1,sz2
           point_location_eta2(i) = interpolator%eta2_min + delta_eta2*(i-1)
        end do
-!!$       do i = 1,sz1-1
-!!$          point_location_eta1_tmp(i) = interpolator%eta1_min + delta_eta1*(i-1)
-!!$       end do
-!!$       do i = 1,sz2-1
-!!$          point_location_eta2_tmp(i) = interpolator%eta2_min + delta_eta2*(i-1)
-!!$       end do
 
       
     end if
@@ -1368,6 +1420,15 @@ the maximun in the direction eta1
   !  ----------------------------------------------------------
   !  Interpolation on the points eta1 and eta2 
   !  ---------------------------------------------------------
+  !> @brief Interpolation on the points eta1 and eta2 
+  !> @details computing the values with the interpolator arbitrary degree splines 2d
+  !>  on the points eta1 and eta2 of arbitrary degree splines 2d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param[in] eta1 the point inthe first direction
+  !> @param[in] eta2 the point inthe second direction 
+  !> @return val the values on the points eta1 and eta2 
 #ifdef STDF95
   function arbitrary_degree_spline_interp2d_interpolate_value( &
 #else
@@ -1507,6 +1568,16 @@ the maximun in the direction eta1
   end function interpolate_value_ad2d
 
 
+  !> @brief First derivative in eta1 interpolation on the points eta1 and eta2 
+  !> @details computing the values of the first derivative in eta1
+  !> with the interpolator arbitrary degree splines 2d
+  !> on the points eta1 and eta2 of arbitrary degree splines 2d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param[in] eta1 the point inthe first direction
+  !> @param[in] eta2 the point inthe second direction 
+  !> @return val the values on the points eta1 and eta2 of the first derivative in eta1
 #ifdef STDF95
   function arbitrary_degree_spline_interp2d_interpolate_derivative1( &
 #else
@@ -1649,7 +1720,17 @@ the maximun in the direction eta1
     
   end function interpolate_derivative1_ad2d
      
-
+  !> @brief First derivative in eta2 Interpolation on the points eta1 and eta2 
+  !> using the arbitrary degree splines interpolator 2d
+  !> @details computing the values of the first derivative in eta2
+  !> with the interpolator arbitrary degree splines 2d
+  !> on the points eta1 and eta2 of arbitrary degree splines 2d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param[in] eta1 the point inthe first direction
+  !> @param[in] eta2 the point inthe second direction 
+  !> @return val the values on the points eta1 and eta2 of the first derivative in eta2
 #ifdef STDF95
   function arbitrary_degree_spline_interp2d_interpolate_derivative2( &
 #else
@@ -1780,6 +1861,7 @@ the maximun in the direction eta1
    ! SLL_DEALLOCATE(knot2_tmp,ierr)
   end function interpolate_derivative2_ad2d !interpolate_derivative2_ad2d
 
+  
 #ifdef STDF95
   function arbitrary_degree_spline_interp2d_interpolate_array( &
 #else
@@ -1856,6 +1938,7 @@ the maximun in the direction eta1
   end function !interpolate_2d_array_disp_ad2d
     
    
+  
 #ifdef STDF95
   function arbitrary_degree_spline_interp2d_get_coefficients(interpolator)
     type (arb_deg_2d_interpolator), intent(in):: interpolator
