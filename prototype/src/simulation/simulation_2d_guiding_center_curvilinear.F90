@@ -1271,16 +1271,17 @@ contains
       call sim%poisson%compute_phi_from_rho(phi, f_old) 
       call compute_field_from_phi_2d_curvilinear(phi,sim%mesh_2d,sim%transformation,A1,A2,sim%phi_interp2d)      
       if(modulo(step-1,sim%freq_diag_time)==0)then
-        call time_history_diagnostic_gc2( &
+        call time_history_diagnostic_collela( &
           thdiag_id , &    
           step-1, &
           dt, &
-          sim%mesh_2d, & ! sim%transformation, &
+          sim%mesh_2d, &
+          sim%transformation, &
           f, &
           phi, &
           A1, &
           A2)
-        call time_history_diagnostic_gc3( &
+        call time_history_diagnostic_polar( &
           thdiagp_id, &    
           step-1, &
           dt, &
@@ -1288,8 +1289,7 @@ contains
           f, &
           phi, &
           A1, &
-          A2, &
-          sim%params)
+          A2)
       endif            
 #ifndef NOHDF5
       if(modulo(step-1,sim%freq_diag)==0)then
@@ -1463,7 +1463,7 @@ contains
     
       
   end subroutine compute_f_conserv_to_f
-  subroutine time_history_diagnostic_gc( &
+  subroutine time_history_diagnostic_collela( &
     file_id, &    
     step, &
     dt, &
@@ -1577,9 +1577,9 @@ contains
       maxval(abs(phi(1:Nc_eta1+1,1:Nc_eta2+1)))
    
     
-  end subroutine time_history_diagnostic_gc
+  end subroutine time_history_diagnostic_collela
 
-  subroutine time_history_diagnostic_gc2( &
+  subroutine time_history_diagnostic_polar( &
     file_id, &    
     step, &
     dt, &
@@ -1692,7 +1692,7 @@ contains
     call fft_delete_plan(pfwd)
 
     
-  end subroutine time_history_diagnostic_gc2
+  end subroutine time_history_diagnostic_polar
   
   subroutine time_history_diagnostic_gc3( &
     file_id, &    
@@ -1784,8 +1784,7 @@ contains
 
       do i1=1,Nc_eta1+1
         eta1 = eta1_min+real(i1-1,f64)*delta_eta1
-        !data(i1) = 4._f64*sll_pi*alpha5*alpha2*(alpha2*(2.*eta1 - 1._f64)+alpha3)*phi(i1,i2)
-        data(i1) = abs((alpha2*(2._f64*eta1-1._f64)+alpha3))*phi(i1,i2)
+        data(i1) = eta1*phi(i1,i2)
       enddo
       int_r(i2) = compute_integral_trapezoid_1d(data, Nc_eta1+1, delta_eta1)     
     enddo
