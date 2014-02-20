@@ -1080,7 +1080,7 @@ contains ! *******************************************************************
           gtmp2 = 0.5_f64*delta2*( obj%gauss_pts2(1,j) + 1.0_f64) !ATTENTION 0.5
           local_spline_index2 = obj%spline_degree2 + 1
           
-       else if ((obj%bc_bottom == SLL_DIRICHET).and.&
+       else if ((obj%bc_bottom == SLL_DIRICHLET).and.&
             (obj%bc_top    == SLL_DIRICHLET)) then
           gtmp2 = gpt2
           local_spline_index2 = obj%spline_degree2 + cell_j
