@@ -81,7 +81,8 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col ) &
+    num_local_dof_col,&
+     sll_perper ) &
     result(mat)
     type(sll_csr_matrix), pointer :: mat
     sll_int32, intent(in) :: num_rows
@@ -92,6 +93,7 @@ contains
     sll_int32, dimension(:,:), intent(in) :: local_to_global_col
     sll_int32, intent(in) :: num_local_dof_col
     sll_int32 :: ierr
+    sll_int32,optional :: sll_perper
     SLL_ALLOCATE(mat, ierr)
     call initialize_csr_matrix( &
       mat, &
@@ -101,7 +103,8 @@ contains
       local_to_global_row, &
       num_local_dof_row, &
       local_to_global_col, &
-      num_local_dof_col )
+      num_local_dof_col,&
+      sll_perper )
       
   end function new_csr_matrix
 
@@ -125,7 +128,8 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col )
+    num_local_dof_col, &
+    sll_perper )
     type(sll_csr_matrix), intent(inout) :: mat
     sll_int32, intent(in) :: num_rows
     sll_int32, intent(in) :: num_cols
@@ -141,7 +145,7 @@ contains
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
     sll_int32 :: ierr
-
+    sll_int32,optional :: sll_perper
     !print *,'#num_rows=',num_rows
     !print *,'#num_nz=',num_nz
 
