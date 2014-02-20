@@ -653,20 +653,21 @@ contains ! *******************************************************************
        end do
     end do
 
-   ! if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-   !      (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-   !    SLL_ASSERT(size(es%masse) == es%total_num_splines_eta1*es%total_num_splines_eta2)
-   !    
-   !    do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2
-   ! 
-   !       call sll_add_to_csr_matrix( &
-   !            es%sll_csr_mat, &
-   !            es%masse(i), &
-   !            es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
-   !            i)
-   !       
-   !    end do
-   ! end if
+
+    if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
+         (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
+       SLL_ASSERT(size(es%masse) == es%total_num_splines_eta1*es%total_num_splines_eta2)
+       
+       do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2
+    
+          call sll_add_to_csr_matrix( &
+               es%sll_csr_mat, &
+               es%masse(i), &
+               es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
+               i)
+          
+       end do
+    end if
     
     call sll_factorize_csr_matrix(es%sll_csr_mat)
     es%sll_csr_mat_source => new_csr_matrix( &
@@ -1079,7 +1080,7 @@ contains ! *******************************************************************
           gtmp2 = 0.5_f64*delta2*( obj%gauss_pts2(1,j) + 1.0_f64) !ATTENTION 0.5
           local_spline_index2 = obj%spline_degree2 + 1
           
-       else if ((obj%bc_bottom == SLL_DIRICHLET).and.&
+       else if ((obj%bc_bottom == SLL_DIRICHET).and.&
             (obj%bc_top    == SLL_DIRICHLET)) then
           gtmp2 = gpt2
           local_spline_index2 = obj%spline_degree2 + cell_j
