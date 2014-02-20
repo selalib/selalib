@@ -87,7 +87,8 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col ) &
+    num_local_dof_col, &
+    sll_perper ) &
     result(mat)
     type(sll_csr_matrix), pointer :: mat
     sll_int32, intent(in) :: num_rows
@@ -98,6 +99,7 @@ contains
     sll_int32, dimension(:,:), intent(in) :: local_to_global_col
     sll_int32, intent(in) :: num_local_dof_col
     sll_int32 :: ierr
+    sll_int32, optional :: sll_perper
     SLL_ALLOCATE(mat, ierr)
     call initialize_csr_matrix( &
       mat, &
@@ -107,7 +109,8 @@ contains
       local_to_global_row, &
       num_local_dof_row, &
       local_to_global_col, &
-      num_local_dof_col )
+      num_local_dof_col, &
+      sll_perper )
       
   end function new_csr_matrix
 
@@ -131,7 +134,8 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col )
+    num_local_dof_col,&
+    sll_perper )
     type(sll_csr_matrix), intent(inout) :: mat
     sll_int32, intent(in) :: num_rows
     sll_int32, intent(in) :: num_cols
@@ -147,6 +151,7 @@ contains
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
     sll_int32 :: ierr
+    sll_int32,optional :: sll_perper
     !sll_real64, dimension(umfpack_info) :: info
     
     
@@ -156,6 +161,7 @@ contains
     lpi_columns(:,:) = 0
     lpi_occ(:) = 0
     ! COUNTING NON ZERO ELEMENTS
+
     num_nz = sll_count_non_zero_elts( &
       num_rows, &
       num_cols, &
@@ -166,7 +172,9 @@ contains
       num_local_dof_col, &
       lpi_columns, &
       lpi_occ)
-
+    if (present(sll_perper).and. sll_perper == 0) then
+      num_nz = num_rows * num_cols
+    end if
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
