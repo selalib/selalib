@@ -177,9 +177,9 @@ program unit_test
        X1MAX, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SPL_DEG,&
-       3.0_f64,&
-       3.0_f64)
+       SPL_DEG)
+
+  call set_slope1d(ad1d,3.0_f64,3.0_f64)
   
   call ad1d%compute_interpolants( &
        x(1:NPTS1))
