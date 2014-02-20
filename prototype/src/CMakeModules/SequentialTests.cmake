@@ -80,7 +80,7 @@ IF(PYTHON_EXECUTABLE)
    ADD_TEST(NAME scalar_field_multipatch_2d
      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
      COMMAND test_scalar_field_multipatch_2d)
-   SET_TESTS_PROPERTIES(scalar_field_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(scalar_field_multipatch_2dgit add  PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ELSE()
 

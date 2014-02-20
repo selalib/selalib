@@ -92,7 +92,7 @@ contains ! *******************************************************************
 
 
 
-  !> @brief Initialization for elliptic solver.
+  !> @brief Initialization for elleptic solver.
   !> @details To have the function phi such that 
   !>  div( A grad phi ) + B grad phi + C phi = rho
   !>  where A is a matrix of functions , B a vectorial function,
@@ -261,11 +261,11 @@ contains ! *******************************************************************
    SLL_ALLOCATE(es%knots2_rho(num_cells_eta2 + spline_degree_eta2 + 2 ),ierr)
    SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
-   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-      
-      solution_size = solution_size +1
-   end if
+  ! if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
+  !      (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+  !    
+  !    solution_size = solution_size +1
+  ! end if
 
    SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
    SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
@@ -653,20 +653,20 @@ contains ! *******************************************************************
        end do
     end do
 
-    if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-         (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-       SLL_ASSERT(size(Masse_tot) == es%total_num_splines_eta1*es%total_num_splines_eta2)
-       
-       do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2
-    
-          call sll_add_to_csr_matrix( &
-               es%sll_csr_mat, &
-               es%masse(i), &
-               es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
-               i)
-          
-       end do
-    end if
+   ! if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
+   !      (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
+   !    SLL_ASSERT(size(es%masse) == es%total_num_splines_eta1*es%total_num_splines_eta2)
+   !    
+   !    do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2
+   ! 
+   !       call sll_add_to_csr_matrix( &
+   !            es%sll_csr_mat, &
+   !            es%masse(i), &
+   !            es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
+   !            i)
+   !       
+   !    end do
+   ! end if
     
     call sll_factorize_csr_matrix(es%sll_csr_mat)
     es%sll_csr_mat_source => new_csr_matrix( &
@@ -1547,13 +1547,8 @@ contains ! *******************************************************************
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
                 
-!!$                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-!!$                     (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-!!$                   elt_mat_global = elt_mat_global - Masse_loc(b)
-!!$                   
-!!$                end if
+    
                 
-
                 index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
                 index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2 + mm
                 index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
