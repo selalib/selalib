@@ -157,6 +157,7 @@ contains ! *******************************************************************
    sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
+   sll_int32 :: sll_perper  
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -225,6 +226,7 @@ contains ! *******************************************************************
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = num_cells_eta1*num_cells_eta2
+      sll_perper  = 0 
    else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
        (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
 
@@ -234,6 +236,7 @@ contains ! *******************************************************************
       knots1_size = 2*spline_degree_eta1+2
       knots2_size = 2*spline_degree_eta2+num_cells_eta2+1
       vec_sz      = num_cells_eta1*(num_cells_eta2+spline_degree_eta2)
+      sll_perper  = 1
    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
             (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
@@ -242,6 +245,7 @@ contains ! *******************************************************************
       knots1_size = 2*spline_degree_eta1+num_cells_eta1+1
       knots2_size = 2*spline_degree_eta2+2
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*num_cells_eta2
+      sll_perper  = 1
    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
        (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
 
@@ -251,6 +255,7 @@ contains ! *******************************************************************
       knots2_size = 2*spline_degree_eta2 + num_cells_eta2+1
       vec_sz      = (num_cells_eta1 + spline_degree_eta1)*&
                     (num_cells_eta2 + spline_degree_eta2)
+      sll_perper  = 1              
    end if
 
  
@@ -261,12 +266,6 @@ contains ! *******************************************************************
    SLL_ALLOCATE(es%knots2_rho(num_cells_eta2 + spline_degree_eta2 + 2 ),ierr)
    SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
-   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-      
-      solution_size = solution_size +1
-   end if
-
    SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
    SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
    SLL_ALLOCATE(es%masse(vec_sz),ierr)
@@ -309,7 +308,7 @@ contains ! *******************************************************************
         es%local_spline_indices, &
         es%global_spline_indices, &
         es%local_to_global_spline_indices )
-
+   
    es%sll_csr_mat => new_csr_matrix( &
       solution_size, &
       solution_size, &
@@ -317,7 +316,8 @@ contains ! *******************************************************************
       es%local_to_global_spline_indices, &
       es%total_num_splines_loc, &
       es%local_to_global_spline_indices, &
-      es%total_num_splines_loc )
+      es%total_num_splines_loc, &
+      sll_perper )
 
     es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
     es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
@@ -572,6 +572,7 @@ contains ! *******************************************************************
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
+    sll_int32 :: sll_perper
     type(sll_time_mark)  :: t0 
     double precision :: time
     
@@ -584,7 +585,12 @@ contains ! *******************************************************************
     bc_bottom = es%bc_bottom
     bc_top    = es%bc_top
     total_num_splines_loc = es%total_num_splines_loc
-    
+    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
+       (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+       sll_perper = 0
+    else
+       sll_perper = 1  
+    end if   
     SLL_ALLOCATE(Source_loc(es%num_cells1*es%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(M_c_loc(total_num_splines_loc,total_num_splines_loc),ierr)
     SLL_ALLOCATE(K_a11_loc(total_num_splines_loc,total_num_splines_loc),ierr)
@@ -653,25 +659,6 @@ contains ! *******************************************************************
        end do
     end do
 
-<<<<<<< HEAD
-    !call sll_subtract_to_csr_matrix(es%sll_csr_mat, es%masse)
-=======
-    if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-         (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-       SLL_ASSERT(size(Masse_tot) == es%total_num_splines_eta1*es%total_num_splines_eta2)
-       
-       do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2
-    
-          call sll_add_to_csr_matrix( &
-               es%sll_csr_mat, &
-               es%masse(i), &
-               es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
-               i)
-          
-       end do
-    end if
-    
->>>>>>> origin/umfpack_spm
     call sll_factorize_csr_matrix(es%sll_csr_mat)
     es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
@@ -680,7 +667,8 @@ contains ! *******************************************************************
          es%local_to_global_spline_indices_source_bis, &
          es%total_num_splines_loc, &
          es%local_to_global_spline_indices_source, &
-         es%total_num_splines_loc )
+         es%total_num_splines_loc, &
+         sll_perper  )
 
     
     call compute_Source_matrice(es,Source_loc)
@@ -1551,11 +1539,11 @@ contains ! *******************************************************************
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
                 
-!!$                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-!!$                     (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-!!$                   elt_mat_global = elt_mat_global - Masse_loc(b)
-!!$                   
-!!$                end if
+                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
+                     (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
+                   elt_mat_global = elt_mat_global - Masse_loc(b)
+                   
+                end if
                 
 
                 index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
