@@ -249,6 +249,7 @@ contains   ! *****************************************************************
             bc_right, &
             bc_bottom, &
             bc_top )
+       
     end do
 
     ! Allocate the memory needed to work with the patch compatibility
@@ -268,6 +269,7 @@ contains   ! *****************************************************************
     ! field data. For the cubic splines we only specify the first derivative,
     ! but this should be extended once we are more confident of the 
     ! soundness of this methodology.
+    
 #define NUM_DERIVS 1
 
     do i=1,num_patches
@@ -286,6 +288,8 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(fmp%derivs2(i)%array(num_pts1,NUM_DERIVS),ierr)
        SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
     end do
+
+    
   end subroutine initialize_scalar_field_sfmp2d
 
 
@@ -377,7 +381,7 @@ contains   ! *****************************************************************
     lm => mp%transf%get_logical_mesh(patch)
     numpts1 = lm%num_cells1+1
     numpts2 = lm%num_cells2+1
-
+    
     ! this should be probably changed by something more informative which
     ! writes the name of the field, etc.
     SLL_ASSERT( size(values,1) >= numpts1 )
@@ -798,5 +802,47 @@ contains   ! *****************************************************************
     end if
 
   end subroutine write_to_file_sfmp2d
+
+  subroutine set_slope_mp(mp,patch,slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+    
+    sll_real64, dimension(:),optional :: slope_left
+    sll_real64, dimension(:),optional :: slope_right
+    sll_real64, dimension(:),optional :: slope_bottom
+    sll_real64, dimension(:),optional :: slope_top
+    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
+    class(arb_deg_2d_interpolator),pointer:: interpolator
+    sll_int32 :: patch
+    sll_int32 :: num_pts1,num_pts2
+
+    interpolator => mp%interps(patch+1)%interp
+
+    num_pts1 = interpolator%num_pts1
+    num_pts2 = interpolator%num_pts2
+
+    if ( (present(slope_left)) .and. &
+         (present(slope_right)) .and. &
+         (present(slope_bottom)) .and. &
+         (present(slope_top)) ) then
+
+       call set_slope2d(&
+         interpolator,&
+         slope_left,&
+         slope_right,&
+         slope_bottom,&
+         slope_top)
+    else
+       
+       call set_slope2d(&
+            interpolator,&
+            mp%patch_data(patch+1)%array(1,1:num_pts2),&
+            mp%patch_data(patch+1)%array(num_pts1,1:num_pts2),&
+            mp%patch_data(patch+1)%array(1:num_pts1,1),&
+            mp%patch_data(patch+1)%array(1:num_pts1,num_pts2))
+    end if
+
+  end subroutine set_slope_mp
 
 end module sll_module_scalar_field_2d_multipatch
