@@ -1139,7 +1139,8 @@ subroutine run_vp_cart(sim)
     allocate (plotf2d_c1(loc_sz_x1,loc_sz_v1))
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
-          plotf2d_c1(i,j) = max(0.0_f64,sim%fn_v1v2(j,1,i,1))
+plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
+          !plotf2d_c1(i,j) = max(0.0_f64,sim%fn_v1v2(j,1,i,1))
           if (plotf2d_c1(i,j).gt.100) then
              write(*,*) ' plotf2d_c1(i,j)',  plotf2d_c1(i,j)
           end if
