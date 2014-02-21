@@ -23,11 +23,13 @@ module sll_particle_initializers
   use sll_constants, only: sll_pi
   use sll_particle_group_2d_module
   use sll_logical_meshes
+  use sll_visu_pic
 
   implicit none
   
-  private suite_hamm! ! In the future, we have to build a directory called
-!!!  ---                random_number_generators 
+  private suite_hamm, sll_init_spatial_particle2D
+! !  In the future, we have to build a directory called
+! !  random_number_generators 
 
 
 contains
@@ -45,7 +47,11 @@ contains
     sll_int64 :: j
     sll_int32 :: ierr
     sll_real64 :: xn, yn, interm_y, nu
-    
+    sll_real64, dimension(1:num_particles)  :: particles_X, particles_Y, poids
+!!$    sll_real64, dimension(m2d%num_cells1,m2d%num_cells2) :: dens
+!!!    character(len=5) :: nom
+
+
     do j=1,num_particles! standard Gaussian function in velocity 2D
        nu = thermal_speed*sqrt( -2.0_f64*log(1.0_f64 - &
             (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
@@ -55,6 +61,8 @@ contains
 
     !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     j=1
+    open(90,file='initial_random_parts.dat')
+    write(90,*) '#  POSITIONS         VITESSES'
     do while (j<=num_particles)
        call random_number(xn)
        xn = (m2d%eta1_max - m2d%eta1_min)*xn + m2d%eta1_min
@@ -63,6 +71,10 @@ contains
        if (eval_landau(alpha, k, xn) >= yn ) then
           interm_y = (m2d%eta2_max - m2d%eta2_min)*suite_hamm(j,3) & 
                      + m2d%eta2_min
+!          write(90,*) xn, interm_y
+          particles_X(j) = xn
+          particles_Y(j) = interm_y
+          poids(j) = 1._f64
           call sll_init_spatial_particle2D(  &
                xn, interm_y, &
                m2d, &
@@ -73,6 +85,16 @@ contains
        endif
     enddo
     print*, 'nb d essais', j
+    close(90)
+    
+!!$    call compute_df_cic(particles_X, particles_Y, poids, &
+!!$         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
+!!$         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, dens)
+    
+    call distribution_xv_gnuplot( 'TEST', particles_X, particles_Y, &
+         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
+         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, 1, 0._f64)
+    print*, 'OK for the writing'
 
   end subroutine sll_initialize_some4Dfunction
 
@@ -86,11 +108,16 @@ contains
     sll_real64, intent(in)  ::  x, xmin, dx
     sll_int32,  intent(out) ::  i_cell
     sll_real32, intent(out) ::  offset
+    sll_real64  :: temp
 
-    i_cell = int( (x - xmin)/dx )
-    offset = mod( x - xmin, dx )
-    offset = offset/dx! the cell for a charge accumulator is [0,1]x[0,1]
-!                                and not [0,delta_x]x[0,delta_y]  !!!
+    temp = (x - xmin)/dx
+    i_cell = int(temp)
+    offset = temp - real(i_cell,f64)
+
+!!$    i_cell = int( (x - xmin)/dx )
+!!$    offset = mod( x - xmin, dx )
+!!$    offset = offset/dx! the cell for a charge accumulator is [0,1]x[0,1]
+!                           and not [0,delta_x]x[0,delta_y]  !!!
   end subroutine compute_cell_and_offset
 
   subroutine sll_init_spatial_particle2D( x, y, &
