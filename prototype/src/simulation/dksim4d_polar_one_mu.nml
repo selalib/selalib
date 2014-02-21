@@ -40,8 +40,8 @@
 /
 
 &sim_params
-  dt                = 32
-  number_iterations = 10
+  dt                = 8
+  number_iterations = 400
   !number_iterations = 1
   freq_diag_time = 1
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
@@ -62,6 +62,8 @@
   gyroaverage_case = "HERMITE_C1"
   mu = 1.0e-3
   gyroaverage_N_points = 4
-  gyroaverage_interp_degree_x1 = 3
-  gyroaverage_interp_degree_x2 = 3
+  gyroaverage_N_points_n0 = 128
+  gyroaverage_interp_degree_x1 = 17
+  gyroaverage_interp_degree_x2 = 17
+  delta_n_method = 0
 /

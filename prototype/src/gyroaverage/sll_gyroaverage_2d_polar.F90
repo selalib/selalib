@@ -199,7 +199,7 @@ contains
       enddo
     enddo
 
-    !f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
+    f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
     
   end subroutine compute_gyroaverage_points_polar_hermite_c1
   
