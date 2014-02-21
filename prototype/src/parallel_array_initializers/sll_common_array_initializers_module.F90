@@ -911,14 +911,24 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     !2 blocs de particles
  if ((x.le.lmax).and.(x.ge.lmin).and.(y.le.-lmin).and.(y.ge.-lmax)) then
        v0x=-0.5
-       v0y=0
-       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x-lmil)**2+(y+lmil)**2))
+       v0y=0.5
+       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-0.5_f64*((x-lmil)**2+(y+lmil)**2))
     end if
     if ((y.le.lmax).and.(y.ge.lmin).and.(x.le.-lmin).and.(x.ge.-lmax)) then
        v0x=0.5
-       v0y=0
-        sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x+lmil)**2+(y-lmil)**2))
+       v0y=-0.5
+        sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-0.5_f64*((x+lmil)**2+(y-lmil)**2))
      end if
+!!$ if ((x.le.lmax).and.(x.ge.lmin).and.(y.le.-lmin).and.(y.ge.-lmax)) then
+!!$       v0x=-1.0
+!!$       v0y=0
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x-lmil)**2+(y+lmil)**2))
+!!$    end if
+!!$    if ((y.le.lmax).and.(y.ge.lmin).and.(x.le.-lmin).and.(x.ge.-lmax)) then
+!!$       v0x=1.0
+!!$       v0y=0
+!!$        sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x+lmil)**2+(y-lmil)**2))
+!!$     end if
   !  end if
 !!$    if ((x.le.lmax).and.(x.ge.lmin).and.(y.le.-lmin).and.(y.ge.-lmax)) then
 !!$       v0x=-1.0
