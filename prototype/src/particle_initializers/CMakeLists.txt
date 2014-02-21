@@ -4,12 +4,12 @@ ADD_LIBRARY( sll_pic_initializers STATIC
 TARGET_LINK_LIBRARIES(sll_pic_initializers
   sll_memory
   sll_assertion
-  sll_working_precision )
-
-
-ADD_EXECUTABLE(test_pic_initializers unit_test.F90  )
-
-TARGET_LINK_LIBRARIES(test_pic_initializers
+  sll_working_precision
+  sll_visu_pic 
   sll_pic_initializers
   sll_pic_particles
   sll_logical_meshes )
+ADD_EXECUTABLE(test_pic_initializers unit_test.F90  )
+
+TARGET_LINK_LIBRARIES(test_pic_initializers
+  sll_pic_initializers)
