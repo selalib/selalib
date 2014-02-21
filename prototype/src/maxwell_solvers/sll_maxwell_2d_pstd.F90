@@ -155,7 +155,6 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
    !if (error == 0) stop 'FFTW CAN''T USE THREADS'
    !call dfftw_plan_with_nthreads(nthreads)
    
-
    SLL_ALLOCATE(self%kx(nc_x/2+1), error)
    SLL_ALLOCATE(self%ky(nc_y/2+1), error)
    
@@ -206,14 +205,13 @@ subroutine solve_maxwell_2d_pstd(self, fx, fy, fz, dt)
 
 end subroutine solve_maxwell_2d_pstd
 
-
 !> Impose periodic boundary conditions
 subroutine bc_periodic_2d_pstd(self, fx, fy, fz)
 
-   type(maxwell_2d_pstd), intent(inout)          :: self !< maxwell object
-   sll_real64 , intent(inout), dimension(:,:) :: fx   !< Ex or Bx
-   sll_real64 , intent(inout), dimension(:,:) :: fy   !< Ey or By
-   sll_real64 , intent(inout), dimension(:,:) :: fz   !< Bz or Ez
+   type(maxwell_2d_pstd), intent(inout)      :: self !< maxwell object
+   sll_real64, intent(inout), dimension(:,:) :: fx   !< Ex or Bx
+   sll_real64, intent(inout), dimension(:,:) :: fy   !< Ey or By
+   sll_real64, intent(inout), dimension(:,:) :: fz   !< Bz or Ez
    sll_int32 :: nc_x, nc_y
 
    nc_x = self%nc_x

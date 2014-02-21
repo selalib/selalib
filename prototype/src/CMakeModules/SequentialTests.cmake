@@ -76,6 +76,10 @@ IF(NOT STDF95)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
+
+FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
+IF(PYTHON_EXECUTABLE)
+
    ADD_TEST(NAME coordinate_transformation_multipatch_2d 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMAND test_coordinate_transformation_multipatch_2d)
@@ -85,6 +89,12 @@ IF(NOT STDF95)
      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
      COMMAND test_scalar_field_multipatch_2d)
    SET_TESTS_PROPERTIES(scalar_field_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ELSE()
+
+   MESSAGE(WARNING "python3 not found")
+
+ENDIF(PYTHON_EXECUTABLE)
 
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
@@ -154,7 +164,7 @@ IF(NOT STDF95)
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   IF(FFTW_ENABLED)
+   IF(FFTW_ENABLED AND FFTW_FOUND)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
       SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ENDIF()
