@@ -29,8 +29,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/linear_solvers/sll_linear_solvers.h
 )
 
-FILE(COPY        ${SLL_MACROS}
-     DESTINATION ${CMAKE_BINARY_DIR}/include)
+FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 
 IF(NOT STDF95)
 SET(SLL_SOURCE_FILES
@@ -91,6 +90,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
@@ -106,6 +106,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
+    ${SLL_DIR}/fft/fftw3.F90
  )
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
@@ -116,9 +119,6 @@ IF(${FFT_LIB} MATCHES "FFTPACK")
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
-      ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-      ${SLL_DIR}/fft/fftw3.F90
       ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90)
 
 ELSE()
@@ -137,6 +137,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
        ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
+       ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
  )
 
@@ -146,15 +147,17 @@ ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
 
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
-SET(DIST_NAME "selalib-0.0.0")
+SET(DIST_NAME "selalib-0.5.0")
 
 ADD_CUSTOM_TARGET(release 
 COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/README ${CMAKE_BINARY_DIR}/${DIST_NAME}/
 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
+COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 ${CMAKE_BINARY_DIR}/${DIST_NAME}/
 COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png ${CMAKE_BINARY_DIR}/${DIST_NAME}/
 COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../../../examples ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
+COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
 COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
 COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
 COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
