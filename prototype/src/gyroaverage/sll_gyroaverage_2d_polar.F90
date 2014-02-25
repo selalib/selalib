@@ -160,6 +160,10 @@ contains
     
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
     
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
+    
   end subroutine compute_gyroaverage_points_polar_hermite
   
   
@@ -200,6 +204,11 @@ contains
     enddo
 
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
+    
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
+    
     
   end subroutine compute_gyroaverage_points_polar_hermite_c1
   
@@ -242,7 +251,11 @@ contains
 	enddo  
 
     f(1:gyro%Nc(1)+1,1:gyro%Nc(2))=sum_fval(0:gyro%Nc(1),0:gyro%Nc(2)-1)
-    f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)  
+    f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1) 
+    
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
    
     SLL_DEALLOCATE_ARRAY(sum_fval,error)
     
@@ -389,6 +402,10 @@ contains
     
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
     
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
+    
   end subroutine compute_gyroaverage_pre_compute_polar_hermite_c1
   
   
@@ -461,6 +478,9 @@ contains
     enddo
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
    
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64 
    
     SLL_DEALLOCATE_ARRAY(dnat,error)
     SLL_DEALLOCATE_ARRAY(lnat,error)   
@@ -539,6 +559,10 @@ contains
 
    f(1:gyro%Nc(1)+1,1:gyro%Nc(2))=sum_fval(0:gyro%Nc(1),0:gyro%Nc(2)-1)
    f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)  
+   
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
 
    SLL_DEALLOCATE_ARRAY(gyro%lunat,error)
    SLL_DEALLOCATE_ARRAY(gyro%luper,error)
@@ -697,6 +721,10 @@ contains
     
     f(1:gyro%Nc(1)+1,1:gyro%Nc(2))=tmp_f(1:gyro%Nc(1)+1,1:gyro%Nc(2))
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
+    
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
        
     SLL_DEALLOCATE_ARRAY(dnat,error)
     SLL_DEALLOCATE_ARRAY(lnat,error)
@@ -871,6 +899,10 @@ subroutine compute_gyroaverage_pre_compute_polar_spl_FFT(gyro,f)
  
     f(1:gyro%Nc(1)+1,1:gyro%Nc(2))=tmp_f(1:gyro%Nc(1)+1,0:gyro%Nc(2)-1)
     f(1:gyro%Nc(1)+1,gyro%Nc(2)+1)=f(1:gyro%Nc(1)+1,1)
+    
+    ! We force zero condition at radius r_min and r_max
+    f(1,1:gyro%Nc(2)+1)=0._f64
+    f(gyro%Nc(1)+1,1:gyro%Nc(2)+1)=0._f64
        
     SLL_DEALLOCATE_ARRAY(dnat,error)
     SLL_DEALLOCATE_ARRAY(lnat,error)
