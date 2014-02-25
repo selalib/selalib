@@ -132,7 +132,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
      sll_real64 :: eps_perturb  
      !--> Gyroaverage
      sll_real64  :: mu 
-     sll_int32  :: delta_n_method
+     sll_int32  :: delta_f_method
 
      !--> 4D logical mesh (r,theta,phi,vpar)
      !type(sll_logical_mesh_4d), pointer :: logical_mesh4d
@@ -201,7 +201,6 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
     class(sll_advection_1d_base), pointer :: adv_x4
     
     class(sll_gyroaverage_2d_base), pointer :: gyroaverage
-    class(sll_gyroaverage_2d_base), pointer :: gyroaverage_n0
 
     class(sll_poisson_2d_base), pointer   :: poisson2d
     class(sll_poisson_2d_base), pointer   :: poisson2d_mean
@@ -280,9 +279,8 @@ contains
     !--> Gyroaverage
     sll_real64              :: mu
     character(len=256)      :: gyroaverage_case
-    sll_int32               :: delta_n_method
+    sll_int32               :: delta_f_method
     sll_int32               :: gyroaverage_N_points
-    sll_int32               :: gyroaverage_N_points_n0
     sll_int32               :: gyroaverage_interp_degree_x1
     sll_int32               :: gyroaverage_interp_degree_x2
     sll_real64,dimension(:,:), allocatable :: gyro_tmp
@@ -374,10 +372,9 @@ contains
       gyroaverage_case, &
       mu, &
       gyroaverage_N_points, &
-      gyroaverage_N_points_n0, &
       gyroaverage_interp_degree_x1, &
       gyroaverage_interp_degree_x2, &
-      delta_n_method
+      delta_f_method
       
       !, spline_degree
 
@@ -410,7 +407,7 @@ contains
     sim%deltarTe = deltarTe
     
     SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
-    sim%delta_n_method=delta_n_method
+    sim%delta_f_method=delta_f_method
     
     select case (poisson2d_BC_rmin)
       case ("SLL_DIRICHLET")
@@ -517,9 +514,8 @@ contains
       print *,'#gyroaverage_case=',gyroaverage_case
       print *,'#mu=',mu
       print *,'#gyroaverage_N_points=',gyroaverage_N_points
-      print *,'#gyroaverage_N_points_n0=',gyroaverage_N_points_n0
       print *,'#gyroaverage_interp_degree=',gyroaverage_interp_degree_x1,gyroaverage_interp_degree_x2 
-      print *,'#delta_n_method=',delta_n_method
+      print *,'#delta_f_method=',delta_f_method
         
     endif
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -678,100 +674,7 @@ contains
     end select
 
 
-  select case (sim%delta_n_method)     
-    case (1)  
-    select case (gyroaverage_case)
-      case ("HERMITE")       
-          
-        sim%gyroaverage_n0 => new_gyroaverage_2d_polar_hermite_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          interp_degree_gyro, &
-          1)
-          
-      case ("HERMITE_C1")       
-          
-        sim%gyroaverage_n0 => new_gyroaverage_2d_polar_hermite_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          interp_degree_gyro, &
-          2)
-         
-      case ("HERMITE_C1_PRECOMPUTE")       
-          
-        sim%gyroaverage_n0 => new_gyroaverage_2d_polar_hermite_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          interp_degree_gyro, &
-          3)
-          
-    case ("HERMITE_C1_INVARIANCE")       
-          
-        sim%gyroaverage_n0 => new_gyroaverage_2d_polar_hermite_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          interp_degree_gyro, &
-          4)
-          
-       case ("SPLINES")       
-          
-         sim%gyroaverage_n0 => new_gyroaverage_2d_polar_splines_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          1)
-          
-       case ("SPLINES_INVARIANCE")       
-          
-         sim%gyroaverage_n0 => new_gyroaverage_2d_polar_splines_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          2)
-          
-       case ("SPLINES_PRECOMPUTE")       
-          
-         sim%gyroaverage_n0 => new_gyroaverage_2d_polar_splines_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          3)
-          
-       case ("SPLINES_PRECOMPUTE_FFT")       
-          
-         sim%gyroaverage_n0 => new_gyroaverage_2d_polar_splines_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro, &
-          gyroaverage_N_points_n0, &
-          4)
-          
-       case ("PADE")       
-          
-        sim%gyroaverage_n0 => new_gyroaverage_2d_polar_pade_solver( &
-          eta_min_gyro, &
-          eta_max_gyro, &
-          Nc_gyro)
-          
-      case default
-        print *,'#bad gyroaverage_case',gyroaverage_case
-        print *,'#not implemented'
-        print *,'#in init_dk4d_polar'
-        stop
-    end select
-  end select
-
+  
 
 
 !    select case (sim%QN_case)
@@ -968,23 +871,6 @@ contains
          print*,'#advector in x4', advector_x4, ' not implemented'
          stop 
     end select
-        
-  select case (sim%delta_n_method)     
-    case (1)  
-    SLL_ALLOCATE(sim%gyro_n0_r(sim%m_x1%num_cells+1),ierr) 
-    SLL_ALLOCATE(gyro_tmp(sim%m_x1%num_cells+1,sim%m_x2%num_cells+1),ierr)
-    do i1=1,sim%m_x1%num_cells+1
-      do i2=1,sim%m_x2%num_cells+1
-         gyro_tmp(i1,i2)=sim%n0_r(i1) 	
-      end do
-    end do
-    call sim%gyroaverage_n0%compute_gyroaverage( &
-        sqrt(2*sim%mu), &
-        gyro_tmp(1:sim%m_x1%num_cells+1,1:sim%m_x2%num_cells+1))
-    do i1=1,sim%m_x1%num_cells+1
-        sim%gyro_n0_r(i1)=gyro_tmp(i1,sim%m_x2%num_cells/2)	
-    end do
-  end select 
      
     
 
@@ -2110,8 +1996,9 @@ contains
           
           
           
-      select case (sim%delta_n_method)     
+      select case (sim%delta_f_method)     
       	case (0)
+      	
         do iloc3 = 1,loc3d_sz_x3    
           call sim%gyroaverage%compute_gyroaverage( &
           sqrt(2*sim%mu), &
@@ -2126,10 +2013,11 @@ contains
         enddo
         
         case (1)
+               
         do iloc1 = 1,loc3d_sz_x1  
           sim%rho3d_seqx1x2(iloc1,:,:)=sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
         enddo
-        
+               
         do iloc3 = 1,loc3d_sz_x3    
           call sim%gyroaverage%compute_gyroaverage( &
           sqrt(2*sim%mu), &
@@ -2139,9 +2027,10 @@ contains
         do iloc2=1, loc3d_sz_x2
           do iloc1=1, loc3d_sz_x1
             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              (sim%rho3d_seqx1x2(iloc1,iloc2,:)+sim%gyro_n0_r(iloc1))/sim%n0_r(iloc1)-1._f64
+              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
           enddo
         enddo
+         
       case default
         print *,'#bad value for sim%delta_n_method'
         stop  

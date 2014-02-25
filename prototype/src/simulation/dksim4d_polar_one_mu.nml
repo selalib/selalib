@@ -61,9 +61,8 @@
   poisson2d_case = "POLAR_FFT"
   gyroaverage_case = "HERMITE_C1"
   mu = 1.0e-3
-  gyroaverage_N_points = 4
-  gyroaverage_N_points_n0 = 128
-  gyroaverage_interp_degree_x1 = 17
-  gyroaverage_interp_degree_x2 = 17
-  delta_n_method = 0
+  gyroaverage_N_points = 16
+  gyroaverage_interp_degree_x1 = 3
+  gyroaverage_interp_degree_x2 = 3
+  delta_f_method = 1
 /
