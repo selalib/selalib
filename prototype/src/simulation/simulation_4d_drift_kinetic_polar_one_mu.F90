@@ -591,6 +591,7 @@ contains
           Nc_gyro, &
           gyroaverage_N_points, &
           interp_degree_gyro, &
+          sqrt(2*sim%mu), &
           1)
 
       case ("HERMITE_C1")       
@@ -601,9 +602,10 @@ contains
           Nc_gyro, &
           gyroaverage_N_points, &
           interp_degree_gyro, &
+          sqrt(2*sim%mu), &
           2)
          
-      case ("HERMITE_C1_PRECOMPUTE")       
+      case ("HERMITE_C1_PRECOMPUTE")     
 
         sim%gyroaverage => new_gyroaverage_2d_polar_hermite_solver( &
           eta_min_gyro, &
@@ -611,6 +613,7 @@ contains
           Nc_gyro, &
           gyroaverage_N_points, &
           interp_degree_gyro, &
+          sqrt(2*sim%mu), &
           3)
           
     case ("HERMITE_C1_INVARIANCE")       
@@ -621,6 +624,7 @@ contains
           Nc_gyro, &
           gyroaverage_N_points, &
           interp_degree_gyro, &
+          sqrt(2*sim%mu), &
           4)
           
        case ("SPLINES")       
@@ -871,8 +875,6 @@ contains
          print*,'#advector in x4', advector_x4, ' not implemented'
          stop 
     end select
-     
-    
 
   end subroutine init_dk4d_polar
 
