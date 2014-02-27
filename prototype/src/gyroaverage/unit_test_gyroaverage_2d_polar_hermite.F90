@@ -63,6 +63,7 @@ implicit none
     Nc, &
     N_points, &
     interp_degree, &
+    larmor_rad, &
     hermite_case)
 
     do i = 1,10

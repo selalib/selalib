@@ -49,6 +49,7 @@ contains
     Nc, &
     N_points, &
     interp_degree, &
+    larmor_rad, &
     hermite_case) &     
     result(gyroaverage)
       
@@ -58,6 +59,7 @@ contains
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, intent(in)  :: N_points  
     sll_int32, intent(in)  :: interp_degree(2)
+    sll_real64, intent(in) :: larmor_rad
     sll_int32, optional    :: hermite_case
     sll_int32 :: ierr
       
@@ -69,6 +71,7 @@ contains
       Nc, &
       N_points, &
       interp_degree, &
+      larmor_rad, &
       hermite_case)
     
   end function new_gyroaverage_2d_polar_hermite_solver
@@ -81,6 +84,7 @@ contains
     Nc, &
     N_points, &
     interp_degree, &
+    larmor_rad, &
     hermite_case)
     class(gyroaverage_2d_polar_hermite_solver) :: gyroaverage
     sll_real64, intent(in) :: eta_min(2)
@@ -88,6 +92,7 @@ contains
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, intent(in)  :: N_points  
     sll_int32, intent(in)  :: interp_degree(2)
+    sll_real64, intent(in) :: larmor_rad
     sll_int32              :: deriv_size
     sll_int32, optional    :: hermite_case
     sll_int32 :: ierr
@@ -119,6 +124,11 @@ contains
           print *,'#in initialize_gyroaverage_2d_polar_hermite_solver'
           stop
     end select   
+    
+    select case(gyroaverage%hermite_case)
+      case (3)
+        call pre_compute_gyroaverage_polar_hermite_c1(gyroaverage%gyro,larmor_rad)
+    end select
            
   end subroutine initialize_gyroaverage_2d_polar_hermite_solver
   
@@ -134,7 +144,6 @@ contains
       case (2)
         call compute_gyroaverage_points_polar_hermite_c1(gyroaverage%gyro,f,larmor_rad)
       case (3)
-        call pre_compute_gyroaverage_polar_hermite_c1(gyroaverage%gyro,larmor_rad)
         call compute_gyroaverage_pre_compute_polar_hermite_c1(gyroaverage%gyro,f)
       case (4)
         call compute_gyroaverage_points_polar_with_invar_hermite_c1(gyroaverage%gyro,f,larmor_rad)
