@@ -41,7 +41,7 @@
 
 &sim_params
   dt                = 8
-  number_iterations = 400
+  number_iterations = 1000
   !number_iterations = 1
   freq_diag_time = 1
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
@@ -49,7 +49,7 @@
   !charac2d_case =  "SLL_CHARAC_EULER"
   charac2d_case =  "SLL_CHARAC_VERLET"
   charac2d_tol = 1e-12
-  charac2d_maxiter = 1000
+  charac2d_maxiter = 2!1000
   advect2d_case = "SLL_BSL"
   interp_x1x2 = "SLL_CUBIC_SPLINES"
   phi_interp_x1x2 = "SLL_CUBIC_SPLINES"
@@ -59,8 +59,10 @@
   advector_x4 = "SLL_SPLINES"
   order_x4 = 4
   poisson2d_case = "POLAR_FFT"
-  gyroaverage_case = "HERMITE_C1"
-  mu = 1.0e-3
+  !gyroaverage_case = "HERMITE_C1"
+  !gyroaverage_case = "SPLINES"
+  gyroaverage_case = "PADE"
+  mu = 1.0e-0
   gyroaverage_N_points = 16
   gyroaverage_interp_degree_x1 = 3
   gyroaverage_interp_degree_x2 = 3
