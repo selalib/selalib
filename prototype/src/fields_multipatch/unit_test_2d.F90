@@ -10,6 +10,7 @@ program unit_test_fields_multipatch
   type(sll_scalar_field_multipatch_2d), pointer              :: F
   type(sll_logical_mesh_2d), pointer                         :: m
   type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
+  class(arb_deg_2d_interpolator),pointer:: interpolator
   sll_int32  :: ipatch
   sll_int32  :: i
   sll_int32  :: j
@@ -23,6 +24,7 @@ program unit_test_fields_multipatch
   sll_real64 :: delta2
   sll_real64 :: x1
   sll_real64 :: x2
+  sll_int32  :: ierr
 
   T => new_coordinate_transformation_multipatch_2d("identity_mp_info.nml")
   print *, 'initialized multipatch transformation'
@@ -52,6 +54,7 @@ program unit_test_fields_multipatch
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1
      delta2   = m%delta_eta2
+
      do j=1,num_pts1
         eta2 = (j-1)*delta2
         do i=1,num_pts2
@@ -61,9 +64,13 @@ program unit_test_fields_multipatch
            x1 = transf%x1(eta1,eta2)
            x2 = transf%x2(eta1,eta2)
            val  = test_function(x1,x2)
-           call F%set_value_at_indices( i, j, ipatch, val )     
+           call F%set_value_at_indices( i, j, ipatch, val ) 
         end do
      end do
+  
+     print *, 'updating multipatch field coefficients in the boundary'
+     call set_slope_mp(F,ipatch)
+
   end do
 
   print *, 'updating multipatch field interpolation coefficients...'
