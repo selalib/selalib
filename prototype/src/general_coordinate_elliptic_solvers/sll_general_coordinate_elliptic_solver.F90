@@ -903,14 +903,14 @@ contains ! *******************************************************************
     print*, 'time to construct the rho', time
 
     
-!!$    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
-!!$         .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
-!!$       
-!!$       call solve_linear_system_perper(es,es%masse)
-!!$       
-!!$    else 
-    call solve_linear_system(es)
-    !!    end if
+  if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
+        .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
+      
+     call solve_linear_system_perper(es,es%masse)
+       
+  else 
+     call solve_linear_system(es)
+  end if
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
@@ -1540,12 +1540,6 @@ contains ! *******************************************************************
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
                 
-
-                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-                     (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-                   elt_mat_global = elt_mat_global - Masse_loc(b)
-                   
-                end if
 
                 
                 index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
