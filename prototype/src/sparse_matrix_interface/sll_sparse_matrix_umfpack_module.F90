@@ -51,10 +51,6 @@ use mod_umfpack
   end interface sll_delete
      
 
-  interface sll_delete
-     module procedure delete_csr_matrix
-  end interface sll_delete
-     
 
 contains
 
@@ -177,9 +173,7 @@ contains
       num_local_dof_col, &
       lpi_columns, &
       lpi_occ)
-    if (present(sll_perper).and. sll_perper == 0) then
-      num_nz = num_rows * num_cols
-    end if
+
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
@@ -536,12 +530,16 @@ subroutine Partition(A, marker)
 
 end subroutine Partition
 
-   subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
+
+
+
+
+  subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
     implicit none
     type(sll_csr_matrix) :: mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B
-    sll_real64, dimension(:) :: Masse_tot
+    real(8), dimension(:), pointer :: Masse_tot
     !local var
     sll_int32  :: sys
     sll_real64, dimension(umfpack_info) :: info
@@ -549,135 +547,6 @@ end subroutine Partition
     call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
     !print *,apr_U
     !stop
-  end subroutine sll_solve_csr_matrix_perper
-
-
-subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
-    implicit none
-    type(sll_csr_matrix) :: this
-    real(8), dimension(:) :: apr_U
-    real(8), dimension(:) :: apr_B
-    integer  :: ai_maxIter
-    real(8) :: ar_eps
-    !local var
-    real(8), dimension(:), pointer :: lpr_Ad
-    real(8), dimension(:), pointer :: lpr_r
-    real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux
-    real(8), dimension(:), pointer :: Masse_tot
-    real(8) :: lr_Norm2r1
-    real(8) :: lr_Norm2r0
-    real(8) :: lr_NormInfb
-    real(8) :: lr_NormInfr
-    real(8) :: lr_ps
-    real(8) :: lr_beta
-    real(8) :: lr_alpha
-    logical  :: ll_continue
-    integer  :: li_iter
-    integer  :: li_err
-    integer  :: li_flag
-
-    ai_maxIter = 100000
-    ar_eps = 1.d-13
-		
-    if ( this%num_rows /= this%num_cols ) then
-            PRINT*,'ERROR Gradient_conj: The matrix must be square'
-            stop
-    end if
-
-    if ( ( dabs ( MAXVAL ( apr_B ) ) < ar_eps ) .AND. ( dabs ( MINVAL ( apr_B ) ) < ar_eps ) ) then
-            apr_U = 0.0_8
-            return
-    end if
-
-    allocate(lpr_Ad(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=10
-    allocate(lpr_r(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=20
-    allocate(lpr_d(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=30
-    allocate(lpr_Ux(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=40
-    !================!
-    ! initialisation !
-    !================!
-    apr_U(:)  = 0.0_8
-    lpr_Ux(:) = apr_U(:)
-    li_iter = 0
-    call sll_mult_csr_matrix_vector( this , lpr_Ux , lpr_Ad )
-
-    lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-    !print*, dot_product(Masse_tot, lpr_Ux)
-    !-----------------
-    !-------------------!
-    ! calcul des normes !
-    !-------------------!
-    lpr_r       = apr_B - lpr_Ad
-    lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
-    lr_NormInfb = maxval( dabs( apr_B ) )
-
-    lpr_d = lpr_r
-    !================!
-
-!    print *,'%%%%'
-    ll_continue=.true.
-    do while(ll_continue)
-            li_iter = li_iter + 1
-            !--------------------------------------!
-            ! calcul du ak parametre optimal local !
-            !--------------------------------------!
-
-            call sll_mult_csr_matrix_vector( this , lpr_d , lpr_Ad )
-            
-            lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_d)
-            lr_ps = DOT_PRODUCT( lpr_Ad , lpr_d )
-            lr_alpha = lr_Norm2r0 / lr_ps
-            
-            !==================================================!
-            ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-            !==================================================!
-            ! calcul des composantes residuelles
-            !-----------------------------------
-            lpr_r = lpr_r - lr_alpha * lpr_Ad
-            
-            !----------------------------------------!
-            ! approximations ponctuelles au rang k+1 !
-            !----------------------------------------!
-            lpr_Ux = lpr_Ux + lr_alpha * lpr_d
-            
-            !-------------------------------------------------------!
-            ! (a) extraction de la norme infinie du residu          !
-            !     pour le test d'arret                              !
-            ! (b) extraction de la norme euclidienne du residu rk+1 !
-            !-------------------------------------------------------!
-            lr_NormInfr = maxval(dabs( lpr_r ))
-            lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
-            
-            !==================================================!
-            ! calcul de la nouvelle direction de descente dk+1 !
-            !==================================================!
-            lr_beta = lr_Norm2r1 / lr_Norm2r0
-            lr_Norm2r0 = lr_Norm2r1
-            lpr_d = lpr_r + lr_beta * lpr_d
-            !lpr_d(1) =  apr_B(1)
-            !-------------------!
-            ! boucle suivante ? !
-            !-------------------!
-            ll_continue=( ( lr_NormInfr / lr_NormInfb ) >= ar_eps ) .AND. ( li_iter < ai_maxIter )
-            !print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
-            
-    end do
-    apr_U = lpr_Ux
-    
-    if ( li_iter == ai_maxIter ) then
-            print*,'Warning Gradient_conj : li_iter == ai_maxIter'
-            print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-    end if
-    
-    deallocate(lpr_Ad)
-    deallocate(lpr_d)
-    deallocate(lpr_r)
-    deallocate(lpr_Ux)
   end subroutine sll_solve_csr_matrix_perper
 !    call create_CSR( &
 !        es%csr_mat, &
