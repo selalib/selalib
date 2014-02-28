@@ -19,7 +19,7 @@
     eps = 1.e-6 !0.015
 /    
 &time_iterations
-    dt = 0.1
+    dt = 0.3
     number_iterations  = 50
     freq_diag = 100
     freq_diag_time = 1

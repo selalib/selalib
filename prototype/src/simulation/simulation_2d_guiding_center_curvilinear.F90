@@ -1117,7 +1117,12 @@ contains
         sim%b21 = 0._f64
         sim%b1  = 0._f64
         sim%b2  = 0._f64
-        sim%c   = 1.e-10_f64 
+        if (sim%bc_eta1_left == SLL_PERIODIC .and. sim%bc_eta1_right == SLL_PERIODIC .and. &
+             sim%bc_eta2_left== SLL_PERIODIC .and. sim%bc_eta2_right== SLL_PERIODIC) then
+            sim%c   = 1.e-7_f64 
+        else
+            sim%c   = 0._f64
+        endif    
         
         sim%poisson => new_poisson_2d_elliptic_solver( &
          sim%transformation,&
