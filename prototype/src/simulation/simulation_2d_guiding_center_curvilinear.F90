@@ -1117,7 +1117,7 @@ contains
         sim%b21 = 0._f64
         sim%b1  = 0._f64
         sim%b2  = 0._f64
-        sim%c   = 0._f64 
+        sim%c   = 1.e-10_f64 
         
         sim%poisson => new_poisson_2d_elliptic_solver( &
          sim%transformation,&

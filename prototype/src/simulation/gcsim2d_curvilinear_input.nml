@@ -19,7 +19,7 @@
     eps = 1.e-6 !0.015
 /    
 &time_iterations
-    dt = 0.3
+    dt = 0.1
     number_iterations  = 50
     freq_diag = 100
     freq_diag_time = 1
@@ -27,12 +27,12 @@
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
 /
 &advector
-   advection_form = "SLL_CONSERVATIVE"
+   !advection_form = "SLL_CONSERVATIVE"
    advection_form = "SLL_ADVECTIVE"
-  !advect2d_case = "SLL_BSL"    
+   advect2d_case = "SLL_BSL"    
     !charac2d_case = "SLL_EULER"
     charac2d_case = "SLL_VERLET"
-    advect2d_case = "SLL_TENSOR_PRODUCT"
+   ! advect2d_case = "SLL_TENSOR_PRODUCT"
     advect1d_x1_case = "SLL_BSL"
     advect1d_x2_case = "SLL_BSL"
       !charac1d_x1_case = "SLL_EULER"    
