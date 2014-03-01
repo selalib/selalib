@@ -896,8 +896,6 @@ contains
     sll_int32 :: nc_x4
     sll_int32 :: i1
     sll_int32 :: i2
-    !sll_int32 :: i3
-    !sll_int32 :: i4
     sll_int32 :: ierr
     sll_real64 :: dt
     sll_int32 :: th_diag_id 
@@ -942,7 +940,6 @@ contains
 
 
 
-
         
     do iter=1,sim%num_iterations    
 
@@ -955,8 +952,7 @@ contains
     
     !print *,'#locsize it',iter,sim%my_rank,loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4
 
-   
-      
+       
       call compute_rho_dk(sim)    
 
       if(sll_get_collective_rank(sll_world_collective)==0) then
@@ -994,9 +990,7 @@ contains
           sim, &
           th_diag_id, &    
           iter-1)
-      endif            
-
-
+      endif           
 
       
       select case (sim%time_case)
@@ -1010,9 +1004,13 @@ contains
           call advection_x3( sim, 0.5_f64*dt )
           call advection_x4( sim, 0.5_f64*dt )
           call advection_x1x2( sim, 0.5_f64*dt )
-          call compute_rho_dk(sim)    
-          call solve_quasi_neutral( sim )
+!          call compute_rho_dk(sim)    
+!          call solve_quasi_neutral( sim )
+!          call compute_field_dk( sim )
+	      call compute_rho_dk(sim)  
+          call solve_quasi_neutral_with_gyroaverage( sim )
           call compute_field_dk( sim )
+          call gyroaverage_field_dk( sim )
           
           !correction
           sim%f4d_seqx1x2x4 = f4d_store
@@ -1028,6 +1026,7 @@ contains
           print *,'#in run_dk4d_polar'
           stop
       end select          
+    
     
     enddo
     
@@ -1333,13 +1332,13 @@ contains
             sim%layout4d_seqx3, &
             (/i1, i2, 1, i4/) )
           alpha = sim%m_x4%eta_min+real(global_indices(4)-1,f64)*sim%m_x4%delta_eta
-          f1d(1:nc_x3+1)=sim%f4d_seqx3(i1,i2,1:nc_x3+1,i4) 
+          f1d(1:nc_x3+1)=sim%f4d_seqx3(i1,i2,1:nc_x3+1,i4)!-sim%feq_x1x4(i1,i4)
           call sim%adv_x3%advect_1d_constant(&
             alpha, &
             dt, &
             f1d(1:nc_x3+1), &
             f1d(1:nc_x3+1))
-            sim%f4d_seqx3(i1,i2,1:nc_x3+1,i4)=f1d(1:nc_x3+1)
+            sim%f4d_seqx3(i1,i2,1:nc_x3+1,i4)=f1d(1:nc_x3+1)!+sim%feq_x1x4(i1,i4)
          enddo
       enddo
     enddo    
