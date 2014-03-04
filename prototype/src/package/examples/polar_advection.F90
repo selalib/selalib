@@ -1,19 +1,16 @@
 #define MPI_MASTER 0
 
 ! Sample computation with the following characteristics:
-! - vlasov-poisson
-! - 4D: x, y, vx, vy (or x1, x2, x3, x4) with arbitrary coordinate 
-!   transformation
-!   in the x,y variables.
-! - parallel
+! - Simple advection 
+! - Polar mesh with analytic coordinate transformation
+! - Initial field is a gaussain function
+!
 
 program polar_advection
 #include "selalib.h"
-use sll_gnuplot
 
 implicit none
 
-class(sll_interpolator_2d_base), pointer    :: interp_xy
 type(cubic_spline_2d_interpolator), target  :: spline_xy
 
 type(sll_logical_mesh_2d), pointer                    :: logical_mesh
@@ -49,7 +46,6 @@ call spline_xy%initialize( nc_eta1+1, nc_eta2+1, &
                            eta1_min, eta1_max,   &
                            eta2_min, eta2_max,   &
                            SLL_PERIODIC, SLL_PERIODIC )
-!interp_xy => spline_xy
 
 transfx => new_coordinate_transformation_2d_analytic( &
        "analytic_polar_transformation", &
