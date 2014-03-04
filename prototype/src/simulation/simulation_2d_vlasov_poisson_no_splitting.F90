@@ -32,7 +32,6 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
 #include "sll_poisson_solvers.h"
   use sll_constants
   use sll_logical_meshes  
-  use sll_gnuplot_parallel
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations

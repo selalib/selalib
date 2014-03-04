@@ -25,3 +25,41 @@ ADD_LIBRARY(spm STATIC ${SPM_FILES})
 set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
 install(TARGETS spm DESTINATION lib)
 install(FILES ${spm_mods} DESTINATION include)
+
+IF(SUITESPARSE_FOUND)
+  ADD_LIBRARY(sll_sparse_matrix STATIC sll_sparse_matrix_umfpack_module.F90)
+ElSE()
+  ADD_LIBRARY(sll_sparse_matrix STATIC sll_sparse_matrix_module.F90)
+ENDIF()
+
+TARGET_LINK_LIBRARIES( sll_sparse_matrix 
+  sll_working_precision 
+  sll_memory
+  sll_assertion)
+
+
+
+
+
+IF(SUITESPARSE_FOUND)
+  ADD_LIBRARY(sll_umfpack_wrapper STATIC
+    ../discontinuous_galerkin/mod_umfpack.F90
+    ../discontinuous_galerkin/umf4_f77wrapper.c)
+
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix 
+    sll_umfpack_wrapper 
+    ${SUITESPARSE_LIBRARIES}
+    ${BLAS_LIBRARIES})
+ENDIF()
+
+
+  
+  
+  
+  
+
+ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
+
+TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix)
+
+
