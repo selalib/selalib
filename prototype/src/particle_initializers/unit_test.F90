@@ -13,11 +13,11 @@ program initialize_tester
 #define GUARD_SIZE    10000_i64
 #define PARTICLE_ARRAY_SIZE 150000_i64
 #define ALPHA  0.5_f64
-#define NC_X 256_i32
+#define NC_X 128_i32
 #define XMIN 0._f64
 #define KX   0.5_f64
 #define XMAX 2._f64*sll_pi/KX
-#define NC_Y 64_i32
+#define NC_Y 32_i32
 #define YMIN 0._f64
 #define YMAX 1._f64
 
@@ -46,10 +46,11 @@ program initialize_tester
   do j=1,NUM_PARTICLES
      write(83,*) init_group%p_list(j)%vx, init_group%p_list(j)%vy, &
      init_group%p_list(j)%ic, init_group%p_list(j)%dx, init_group%p_list(j)%dy, &
-     init_group%p_list(j)%dx + m2d%delta_eta1 * real( &!  reconstruction of part%X
-       mod(init_group%p_list(j)%ic-1,m2d%num_cells1), f64), &
-     init_group%p_list(j)%dy + m2d%delta_eta2  &!  reconstruction of part%Y
-     * real( int( (init_group%p_list(j)%ic-1)/m2d%num_cells1) )
+!
+      m2d%delta_eta1*( init_group%p_list(j)%dx  &!  reconstruction of part%X
+       + real(mod(init_group%p_list(j)%ic-1,m2d%num_cells1), f64) ), &
+      m2d%delta_eta2*( init_group%p_list(j)%dy  &!  reconstruction of part%Y
+       + real( int( (init_group%p_list(j)%ic-1)/m2d%num_cells1), f64 ) )
   enddo
   close(83)
   
