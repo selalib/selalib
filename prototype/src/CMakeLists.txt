@@ -115,7 +115,7 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
    ADD_SUBDIRECTORY(pic_particle_types)
-   ADD_SUBDIRECTORY(particle_initializers)
+   ADD_SUBDIRECTORY(pic_particle_initializers)
    ADD_SUBDIRECTORY(pic_accumulators)
    ADD_SUBDIRECTORY(field_accumulators)
 
