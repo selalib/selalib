@@ -71,7 +71,7 @@ contains
        if (eval_landau(alpha, k, xn) >= yn ) then
           interm_y = (m2d%eta2_max - m2d%eta2_min)*suite_hamm(j,3) & 
                      + m2d%eta2_min
-!          write(90,*) xn, interm_y
+          write(90,*) xn, interm_y
           particles_X(j) = xn
           particles_Y(j) = interm_y
           poids(j) = 1._f64
@@ -124,7 +124,7 @@ contains
                       m2d,   &
                       icell, &
                       offset_x, offset_y )
-
+! transforms a particle position (x,y) in our type (icell, dx, dy)
     sll_real64, intent(in)  :: x, y
     type(sll_logical_mesh_2d), intent(in) :: m2d
     sll_int32,  intent(out) :: icell
