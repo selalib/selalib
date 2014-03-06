@@ -217,10 +217,14 @@ end if
   end subroutine get_hex_num
 
 
-  subroutine from_global_index(mesh, index) 
+  subroutine from_global_index_k1(mesh, index) 
       type(hex_logical_mesh_2d), pointer :: mesh
-      sll_int32 :: index, hex_num, first_index, last_index
-      sll_int32 :: k1, k2
+      sll_int32 :: index
+      sll_int32 :: hex_num
+      sll_int32 :: first_index
+      sll_int32 :: last_index
+      sll_int32, intent(out) :: k1
+
       hex_num = get_hex_num(index)
       first_index = 3*(hex_num - 1)*hex_num + 1
       last_index  = 3*(hex_num + 1)*hex_num
@@ -228,42 +232,88 @@ end if
       if (index .le. first_index+hex_num) then
          !index on first edge
          k1 = hex_num
-         k2 = index - first_index
       elseif (index .le. first_index+2*hex_num) then
          !index on second edge
          k1 = first_index + 2*hex_num - index
-         k2 = hex_num
       elseif (index .le. first_index+3*hex_num-1) then
          !index on third edge
-         k2 = first_index + 3*hex_num - index 
          k1 = first_index + 2*hex_num - index 
       elseif (index .le. first_index+4*hex_num) then
          !index on forth edge
          k1 = - hex_num
-         k2 = first_index + 3*hex_num - index
       elseif (index .le.  first_index+5*hex_num) then
          !index on fifth edge
          k1 = index - first_index - 5*hex_num
+      elseif (index .le. last_index) then
+         !index of sixth edge
+         k1 = hex_num + first_index + 6*hex_num - index
+      else
+       print *, "ERROR : in from_global_index_k1(index)"
+       print *, "Not recognized index"
+       STOP 'from_global_index'
+    endif
+  end subroutine from_global_index_k1
+
+
+
+
+  subroutine from_global_index_k2(mesh, index) 
+
+      type(hex_logical_mesh_2d), pointer :: mesh
+      sll_int32 :: index
+      sll_int32 :: hex_num
+      sll_int32 :: first_index
+      sll_int32 :: last_index
+      sll_int32, intent(out) :: k2
+
+      hex_num = get_hex_num(index)
+      first_index = 3*(hex_num - 1)*hex_num + 1
+      last_index  = 3*(hex_num + 1)*hex_num
+      
+      if (index .le. first_index+hex_num) then
+         !index on first edge
+         k2 = index - first_index
+      elseif (index .le. first_index+2*hex_num) then
+         !index on second edge
+         k2 = hex_num
+      elseif (index .le. first_index+3*hex_num-1) then
+         !index on third edge
+         k2 = first_index + 3*hex_num - index 
+      elseif (index .le. first_index+4*hex_num) then
+         !index on forth edge
+         k2 = first_index + 3*hex_num - index
+      elseif (index .le.  first_index+5*hex_num) then
+         !index on fifth edge
          k2 = -hex_num
       elseif (index .le. last_index) then
          !index of sixth edge
          k2 = first_index + 6*hex_num - index
-         k1 = hex_num + k2
       else
-       print *, "ERROR : in from_global_index(index)"
+       print *, "ERROR : in from_global_index_k2(index)"
        print *, "Not recognized index"
        STOP 'from_global_index'
     endif
-  end subroutine from_global_index
+  end subroutine from_global_index_k2
+
+
 
 
 
   subroutine local_index(mesh,i,j)
       type(hex_logical_mesh_2d), pointer :: mesh
-      sll_int32 :: 
+      sll_int32 :: i, j
+      sll_int32 :: k1_i, k2_i
+      sll_int32 :: k1_j, k2_j
+      sll_int32, intent(out) :: new_index
+
+      k1_i = from_global_index_k1(i)
+      k2_i = from_global_index_k2(i)
+      k1_j = from_global_index_k1(j)
+      k2_j = from_global_index_k2(j)
+
+      new_index = global_index(k1_i - k1_j, k2_i - k2_j)
+
   end subroutine local_index
-
-
 
 
 
