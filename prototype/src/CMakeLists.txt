@@ -230,7 +230,7 @@ IF(NOT BUILD_WITHOUT_TEST)
    INCLUDE(DoxygenConfig)
 
 ENDIF(NOT BUILD_WITHOUT_TEST)
-
+# why is this not dependent on the SLL_BUILD_PACKAGE configuration flag??
 ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
