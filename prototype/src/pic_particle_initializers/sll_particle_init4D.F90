@@ -91,9 +91,9 @@ contains
 !!$         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
 !!$         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, dens)
     
-    call distribution_xv_gnuplot( 'TEST', particles_X, particles_Y, &
-         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
-         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, 1, 0._f64)
+!!$    call distribution_xv_gnuplot( 'TEST', particles_X, particles_Y, &
+!!$         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
+!!$         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, 1, 0._f64)
     print*, 'OK for the writing'
 
   end subroutine sll_initialize_some4Dfunction
@@ -131,16 +131,23 @@ contains
     sll_real32, intent(out) :: offset_x, offset_y
     sll_int32               :: icell_x, icell_y
 
-    call compute_cell_and_offset(x, m2d%eta1_min, m2d%delta_eta1, icell_x, offset_x)
-    if ( (icell_x<0).or.(icell_x>m2d%num_cells1) ) print*,'ERROR: bad icell_x', icell_x
-    if ( (offset_x<0).or.(offset_x.ge.1) ) print*, 'ERROR: bad offset_x', offset_x
+    call compute_cell_and_offset(x, m2d%eta1_min, m2d%delta_eta1, icell_x, &
+         offset_x)
+    if ( (icell_x<0).or.(icell_x>m2d%num_cells1) ) &
+         print*,'ERROR: bad icell_x', icell_x
+    if ( (offset_x<0).or.(offset_x.ge.1) ) &
+         print*, 'ERROR: bad offset_x', offset_x
 
-    call compute_cell_and_offset(y, m2d%eta2_min, m2d%delta_eta2, icell_y, offset_y)
-    if ( (icell_y<0).or.(icell_y>m2d%num_cells2) ) print*,'ERROR: bad icell_y', icell_y
-    if ( (offset_y<0).or.(offset_y.ge.1) ) print*, 'ERROR: bad offset_y', offset_y
+    call compute_cell_and_offset(y, m2d%eta2_min, m2d%delta_eta2, icell_y, &
+         offset_y)
+    if ( (icell_y<0).or.(icell_y>m2d%num_cells2) ) &
+         print*,'ERROR: bad icell_y', icell_y
+    if ( (offset_y<0).or.(offset_y.ge.1) ) &
+         print*, 'ERROR: bad offset_y', offset_y
 
     icell = icell_x + 1 + icell_y * m2d%num_cells1
-    if ( (icell<1).or.(icell>(m2d%num_cells1*m2d%num_cells2)) ) print*,'ERROR: bad icell', icell
+    if ( (icell<1).or.(icell>(m2d%num_cells1*m2d%num_cells2)) ) &
+         print*,'ERROR: bad icell', icell
   end subroutine sll_init_spatial_particle2D
 
 !! !> @brief Returns
