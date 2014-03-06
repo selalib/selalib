@@ -1,5 +1,6 @@
 IF(FFTW_FOUND AND FFTW_ENABLED)
-
+  # this is very strange. Why compile fftw3.F90 here? this compilation should
+  # depend on the configuration flags only!
    ADD_LIBRARY(sll_maxwell_solvers STATIC ../fft/fftw3.F90
                                           sll_maxwell_solvers_base.F90
                                           sll_maxwell_2d_fdtd.F90
