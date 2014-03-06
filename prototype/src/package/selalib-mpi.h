@@ -23,6 +23,8 @@
 
 use sll_collective
 use sll_remapper
+use sll_gnuplot_parallel
+use sll_poisson_2d_periodic_cartesian_par
 
 #define MPI_MASTER 0
 
