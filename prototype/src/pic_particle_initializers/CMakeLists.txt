@@ -14,6 +14,6 @@ ADD_EXECUTABLE(test_pic_initializers unit_test.F90  )
 TARGET_LINK_LIBRARIES(test_pic_initializers
   sll_pic_initializers
 #  sll_visu_pic
- # sll_collective
+ sll_collective
  # sll_file_io )
 )
