@@ -91,9 +91,9 @@ contains
 !!$         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
 !!$         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, dens)
     
-!!$    call distribution_xv_gnuplot( 'TEST', particles_X, particles_Y, &
-!!$         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
-!!$         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, 1, 0._f64)
+    call distribution_xv_gnuplot( 'TEST', particles_X, particles_Y, &
+         m2d%eta1_min, m2d%eta1_max, m2d%num_cells1, &
+         m2d%eta2_min, m2d%eta2_max, m2d%num_cells2, 1, 0._f64)
     print*, 'OK for the writing'
 
   end subroutine sll_initialize_some4Dfunction
