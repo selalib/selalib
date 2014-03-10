@@ -602,7 +602,7 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     real(8), dimension(:), pointer :: lpr_Ad
     real(8), dimension(:), pointer :: lpr_r
     real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux
+    real(8), dimension(:), pointer :: lpr_Ux,one
     real(8), dimension(:), pointer :: Masse_tot
     real(8) :: lr_Norm2r1
     real(8) :: lr_Norm2r0
@@ -637,16 +637,21 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     if (li_err.ne.0) li_flag=30
     allocate(lpr_Ux(this%num_rows),stat=li_err)
     if (li_err.ne.0) li_flag=40
+    allocate(one(this%num_rows),stat=li_err)
+    if (li_err.ne.0) li_flag=50
     !================!
     ! initialisation !
     !================!
+    !apr_U(3:this%num_rows)  = 0.0_8
+    !apr_U(1)  = 1.0_8
+    !apr_U(2)  = -1.0_8
     apr_U(:)  = 0.0_8
+    one(:) = 1.
     lpr_Ux(:) = apr_U(:)
     li_iter = 0
     call sll_mult_csr_matrix_vector( this , lpr_Ux , lpr_Ad )
-
     lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-    !print*, dot_product(Masse_tot, lpr_Ux)
+    !print*, 'calcul des normes',dot_product(lpr_Ad, one),maxval(lpr_Ad)
     !-----------------
     !-------------------!
     ! calcul des normes !
@@ -717,6 +722,7 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     deallocate(lpr_d)
     deallocate(lpr_r)
     deallocate(lpr_Ux)
+    deallocate(one)
   end subroutine sll_solve_csr_matrix_perper
 
 
