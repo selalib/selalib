@@ -41,7 +41,7 @@ module sll_remapper
 #include "sll_assert.h"
 #include "sll_utilities.h"
   use sll_collective
-  use sll_electric_field_2d_accumulator ! terrible dependency here...
+!  use sll_electric_field_2d_accumulator ! terrible dependency here...
   implicit none
   
   ! The box types contain information on the index limits contained        

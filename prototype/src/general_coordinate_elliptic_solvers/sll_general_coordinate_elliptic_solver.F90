@@ -653,6 +653,7 @@ contains ! *******************************************************************
        end do
     end do
 
+
     if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
          (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
        SLL_ASSERT(size(es%masse) == es%total_num_splines_eta1*es%total_num_splines_eta2)
@@ -1547,13 +1548,8 @@ contains ! *******************************************************************
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
                 
-!!$                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC) .and.&
-!!$                     (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then
-!!$                   elt_mat_global = elt_mat_global - Masse_loc(b)
-!!$                   
-!!$                end if
+    
                 
-
                 index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
                 index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2 + mm
                 index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
