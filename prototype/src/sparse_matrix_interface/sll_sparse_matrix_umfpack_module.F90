@@ -545,8 +545,7 @@ end subroutine Partition
     sll_real64, dimension(umfpack_info) :: info
     sys = 0
     call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
-    !print *,apr_U
-    !stop
+    
   end subroutine sll_solve_csr_matrix_perper
 !    call create_CSR( &
 !        es%csr_mat, &

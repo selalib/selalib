@@ -807,7 +807,7 @@ contains ! *******************************************************************
                       int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                       int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
-                   
+                 
                    end do
                 end do
              end do
@@ -907,7 +907,6 @@ contains ! *******************************************************************
         .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
       
      call solve_linear_system_perper(es,es%masse)
-       
   else 
      call solve_linear_system(es)
   end if
@@ -1753,7 +1752,7 @@ contains ! *******************************************************************
          apr_B,&
          apr_U,&
          Masse_tot)
-    
+   ! apr_U = apr_U - sum(apr_U)/es%intjac*Masse_tot
   end subroutine solve_general_es_perper
 
   subroutine compute_Source_matrice(es,Source_loc)
