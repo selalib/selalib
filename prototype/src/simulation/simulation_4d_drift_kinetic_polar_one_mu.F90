@@ -110,6 +110,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
      sll_real64 :: dt
      sll_int32  :: num_iterations
      sll_int32  :: freq_diag_time
+     sll_int32  :: freq_diag
      sll_int32  :: time_case
      sll_int32  :: charac_case
      !sll_int32  :: spline_degree_eta1, spline_degree_eta2
@@ -289,6 +290,7 @@ contains
     sll_real64 :: dt
     sll_int32  :: number_iterations
     sll_int32  :: freq_diag_time
+    sll_int32  :: freq_diag
     !sll_int32  :: charac_case
     !sll_int32  :: time_case    
     character(len=256)      :: advect2d_case 
@@ -356,6 +358,7 @@ contains
       dt, & 
       number_iterations, &
       freq_diag_time, &
+      freq_diag, &
       charac2d_case, &
       time_loop_case, &
       advect2d_case, &
@@ -473,6 +476,7 @@ contains
     sim%dt                 = dt
     sim%num_iterations     = number_iterations
     sim%freq_diag_time     = freq_diag_time
+    sim%freq_diag     = freq_diag
     !sim%spline_degree_eta1 = spline_degree
     !sim%spline_degree_eta2 = spline_degree
     !sim%spline_degree_eta3 = spline_degree
@@ -899,6 +903,7 @@ contains
     sll_int32 :: ierr
     sll_real64 :: dt
     sll_int32 :: th_diag_id 
+    sll_int32 :: i_plot 
     
     dt = sim%dt    
     
@@ -939,6 +944,7 @@ contains
     call initialize_fdistribu4d_DK(sim,sim%layout4d_seqx1x2x4,sim%f4d_seqx1x2x4)
 
 
+    i_plot = 0
 
         
     do iter=1,sim%num_iterations    
@@ -1026,19 +1032,45 @@ contains
           print *,'#in run_dk4d_polar'
           stop
       end select          
+
+    if(sll_get_collective_rank(sll_world_collective)==0) then
     
-    if(iter==5)then    
-        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
+      if(modulo(iter,sim%freq_diag)==0) then
+        i_plot = i_plot+1
+        call sll_gnuplot_corect_2d( &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          nc_x1+1, &
+          sim%m_x2%eta_min, &
+          sim%m_x2%eta_max, &
+          nc_x2+1, &
+          sim%f4d_seqx1x2x4(:,:,1,nc_x4/2), &
+          'fdist', &
+          i_plot, &
+          ierr)
+#ifndef NOHDF5
+        call plot_f_polar(i_plot,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),sim%m_x1,sim%m_x2)
+#endif
+   
+          
+                    
+      endif
     endif
-    if(iter==400)then    
-        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
-    endif
-    if(iter==1000)then    
-        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
-    endif
-    if(iter==3500)then    
-        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
-    endif
+
+    
+!    if(iter==5)then    
+!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
+!    endif
+!    if(iter==400)then    
+!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
+!    endif
+!    if(iter==1000)then    
+!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
+!    endif
+!    if(iter==3500)then    
+!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
+!    endif
+
     enddo
     
 
@@ -2106,6 +2138,81 @@ subroutine gyroaverage_field_dk(sim)
 
 
   end subroutine gyroaverage_field_dk
+
+
+#ifndef NOHDF5
+!*********************
+!*********************
+
+  !---------------------------------------------------
+  ! Save the mesh structure
+  !---------------------------------------------------
+  subroutine plot_f_polar(iplot,f,m_x1,m_x2)
+    use sll_xdmf
+    use sll_hdf5_io
+    sll_int32 :: file_id
+    sll_int32 :: error
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32 :: i, j
+    sll_int32, intent(in) :: iplot
+    character(len=4)      :: cplot
+    sll_int32             :: nnodes_x1, nnodes_x2
+    type(sll_logical_mesh_1d), pointer :: m_x1
+    type(sll_logical_mesh_1d), pointer :: m_x2
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: r
+    sll_real64 :: theta
+    sll_real64 :: rmin
+    sll_real64 :: rmax
+    sll_real64 :: dr
+    sll_real64 :: dtheta
+    
+    
+    nnodes_x1 = m_x1%num_cells+1
+    nnodes_x2 = m_x2%num_cells+1
+    rmin = m_x1%eta_min
+    rmax = m_x1%eta_max
+    dr = m_x1%delta_eta
+    dtheta = m_x2%delta_eta
+    
+    !print *,'#maxf=',iplot,maxval(f),minval(f)
+    
+
+    
+    if (iplot == 1) then
+
+      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+      do j = 1,nnodes_x2
+        do i = 1,nnodes_x1
+          r       = rmin+real(i-1,f32)*dr
+          theta   = real(j-1,f32)*dtheta
+          x1(i,j) = r*cos(theta)
+          x2(i,j) = r*sin(theta)
+        end do
+      end do
+      call sll_hdf5_file_create("polar_mesh-x1.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create("polar_mesh-x2.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_hdf5_file_close(file_id, error)
+      deallocate(x1)
+      deallocate(x2)
+
+    end if
+
+    call int2string(iplot,cplot)
+    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
+      nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f"//cplot,f,"values", &
+      error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+  end subroutine plot_f_polar
+
+#endif
+
 
   
 
