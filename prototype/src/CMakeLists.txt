@@ -114,6 +114,11 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
+   ADD_SUBDIRECTORY(pic_particle_types)
+   ADD_SUBDIRECTORY(pic_particle_initializers)
+   ADD_SUBDIRECTORY(pic_accumulators)
+   ADD_SUBDIRECTORY(field_accumulators)
+
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
@@ -137,7 +142,7 @@ IF(NOT BUILD_WITHOUT_TEST)
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(electric_field_accumulators)
+
    
    ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)
@@ -230,7 +235,7 @@ IF(NOT BUILD_WITHOUT_TEST)
    INCLUDE(DoxygenConfig)
 
 ENDIF(NOT BUILD_WITHOUT_TEST)
-
+# why is this not dependent on the SLL_BUILD_PACKAGE configuration flag??
 ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
