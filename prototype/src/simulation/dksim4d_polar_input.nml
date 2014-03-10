@@ -44,6 +44,7 @@
   number_iterations = 4000
   !number_iterations = 2
   freq_diag_time = 1
+  freq_diag = 100
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
   time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
   charac2d_case =  "SLL_CHARAC_EULER"
