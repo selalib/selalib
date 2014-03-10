@@ -1027,7 +1027,18 @@ contains
           stop
       end select          
     
-    
+    if(iter==5)then    
+        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
+    endif
+    if(iter==400)then    
+        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
+    endif
+    if(iter==1000)then    
+        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
+    endif
+    if(iter==3500)then    
+        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
+    endif
     enddo
     
 

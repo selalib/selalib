@@ -128,9 +128,9 @@ CONTAINS
        A(2,i) = 2+ dr*dr*( (ktheta**2-0.25_dp)/rmesh(i)**2 &
          + 1/(Zi*Te(i)) + 0.5_dp*(0.5_dp*dlogn0(i)**2 &
          + dlogn0(i)/rmesh(i) + ddlogn0(i)) &
-         + (1+rho*zeta)/Ti(i) - ktheta/(rmesh(i)*kpar*sqrt(2*Ti(i))) &
+         + BESJN(0,1.0)**2*((1+rho*zeta)/Ti(i) - ktheta/(rmesh(i)*kpar*sqrt(2*Ti(i))) &
          *((dlogn0(i)-0.5_DP*dlogTi(i))*zeta &
-         + dlogTi(i)*rho*(1+rho*zeta)))
+         + dlogTi(i)*rho*(1+rho*zeta))))
        A(1,i) = -1.0_dp
        A(3,i) = -1.0_dp
     end do
@@ -150,7 +150,7 @@ CONTAINS
     do i = 1, NNr  
        rho = omega/(kpar*sqrt(2.0_dp*Ti(i)))
        call FriedConte(rho,zeta,dzeta)
-       Ap(i) = dr*dr*((zeta+rho*dzeta)/Ti(i) - &
+       Ap(i) = BESJN(0,1.0)**2*dr*dr*((zeta+rho*dzeta)/Ti(i) - &
          ktheta/(rmesh(i)*kpar*sqrt(2*Ti(i))) * &
          (dlogn0(i)*dzeta + dlogTi(i) * &
          (1+2*rho*zeta+(rho**2-0.5_dp)*dzeta))) / &
