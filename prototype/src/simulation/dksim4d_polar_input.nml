@@ -40,14 +40,14 @@
 /
 
 &sim_params
-  dt                = 32
-  number_iterations = 100
+  dt                = 2
+  number_iterations = 4000
   !number_iterations = 2
   freq_diag_time = 1
   !time_loop_case = "SLL_TIME_LOOP_EULER" 
   time_loop_case = "SLL_TIME_LOOP_PREDICTOR_CORRECTOR"
-  !charac2d_case =  "SLL_CHARAC_EULER"
-  charac2d_case =  "SLL_CHARAC_VERLET"
+  charac2d_case =  "SLL_CHARAC_EULER"
+  !charac2d_case =  "SLL_CHARAC_VERLET"
   charac2d_tol = 1e-12
   charac2d_maxiter = 1000
   advect2d_case = "SLL_BSL"
