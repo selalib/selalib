@@ -50,6 +50,7 @@ ENDIF()
 SET(LIBS selalib ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
+                                    sll_vlasov4d_spectral_charge.F90
                                     sll_vlasov4d_maxwell.F90
                                     sll_vlasov4d_poisson.F90
                                     sll_vlasov4d_polar.F90
