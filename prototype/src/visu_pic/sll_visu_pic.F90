@@ -516,6 +516,8 @@ sll_real64 :: x, c1x, c_1x, c2x
 sll_real64 :: y, c1y, c_1y, c2y
 
 
+df = 0.0_f64
+
 do kp = 1, size(xp)
 
    xt = (xp(kp)-xmin)/(xmax-xmin)*nx
