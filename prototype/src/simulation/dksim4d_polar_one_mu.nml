@@ -40,8 +40,8 @@
 /
 
 &sim_params
-  dt                = 2
-  number_iterations = 4000
+  dt                = 8
+  number_iterations = 400
   !number_iterations = 1
   freq_diag_time = 1
   freq_diag = 100
@@ -63,7 +63,7 @@
   gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
   !gyroaverage_case = "SPLINES"
   !gyroaverage_case = "PADE"
-  mu = 0.0e-1
+  mu = 2.2e-0
   gyroaverage_N_points = 1024
   gyroaverage_interp_degree_x1 = 3
   gyroaverage_interp_degree_x2 = 3
