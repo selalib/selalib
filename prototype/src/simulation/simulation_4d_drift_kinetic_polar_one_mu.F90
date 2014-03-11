@@ -987,8 +987,9 @@ contains
           
       !call solve_quasi_neutral( sim )
       call solve_quasi_neutral_with_gyroaverage( sim )
+      call gyroaverage_phi_dk( sim )
       call compute_field_dk( sim )
-      call gyroaverage_field_dk( sim )
+      !call gyroaverage_field_dk( sim )
 
 
       if(modulo(iter,sim%freq_diag_time)==0)then
@@ -998,7 +999,6 @@ contains
           iter-1)
       endif           
 
-      
       select case (sim%time_case)
         case (SLL_TIME_LOOP_EULER)
           call advection_x3( sim, dt )
@@ -1015,8 +1015,9 @@ contains
 !          call compute_field_dk( sim )
 	      call compute_rho_dk(sim)  
           call solve_quasi_neutral_with_gyroaverage( sim )
+          call gyroaverage_phi_dk( sim )
           call compute_field_dk( sim )
-          call gyroaverage_field_dk( sim )
+          !call gyroaverage_field_dk( sim )
           
           !correction
           sim%f4d_seqx1x2x4 = f4d_store
@@ -1279,6 +1280,47 @@ contains
 
 
   end subroutine compute_field_dk
+
+
+
+
+subroutine gyroaverage_phi_dk( sim )
+    class(sll_simulation_4d_drift_kinetic_polar_one_mu) :: sim
+    sll_int32 :: loc_sz_x1
+    sll_int32 :: loc_sz_x2
+    sll_int32 :: loc_sz_x3
+    sll_int32 :: i3
+    sll_int32 :: nc_x1
+    sll_int32 :: nc_x2
+
+     
+    nc_x1 = sim%m_x1%num_cells
+    nc_x2 = sim%m_x2%num_cells
+
+    call compute_local_sizes_3d( &
+      sim%layout3d_seqx1x2, &
+      loc_sz_x1, &
+      loc_sz_x2, &
+      loc_sz_x3 )
+
+    do i3 = 1,loc_sz_x3
+      call sim%gyroaverage%compute_gyroaverage( &
+        sqrt(2*sim%mu), &
+        sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+    enddo   
+    
+    call apply_remap_3D( &
+      sim%remap_plan_seqx1x2_to_seqx3, &
+      sim%phi3d_seqx1x2, &
+      sim%phi3d_seqx3 )   
+
+  end subroutine gyroaverage_phi_dk
+
+
+
+
+
+
 
 
   subroutine compute_rho_dk( sim )
