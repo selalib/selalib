@@ -52,7 +52,6 @@ use sll_constants
  end type vlasov4d_spectral_charge
 
  sll_int32, private :: i, j, k, l
- sll_int32, private :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
  sll_int32, private :: global_indices(4), gi, gj, gk, gl
  sll_int32, private :: ierr
 
@@ -75,9 +74,10 @@ contains
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
-  sll_real64        :: dx, dy, kx0, ky0
+  sll_real64        :: kx0, ky0
   integer(C_SIZE_T) :: sz_tmp_x, sz_tmp_y
   sll_int32         :: psize, prank, comm
+  sll_int32         :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
   this%interp_x3x4 => interp_x3x4
 
@@ -192,6 +192,7 @@ contains
 
   sll_real64, intent(in) :: dt
   sll_real64 :: vx, x3_min, delta_x3
+  sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
@@ -210,7 +211,7 @@ contains
            call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
            !calcul du flux
-           do i=2,this%nc_eta1
+           do i=2,this%nc_eta1/2+1
               this%tmp_x(i) = this%tmp_x(i)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx(i)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx(i))
            enddo
            this%tmp_x(1)=0._f64
@@ -232,7 +233,7 @@ contains
         do j=1,loc_sz_j
            call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
-           do i=2,this%nc_eta1
+           do i=2,this%nc_eta1/2+1
               this%tmp_x(i) = this%tmp_x(i)*exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*vx)
            enddo
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
@@ -250,6 +251,7 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: x4_min, delta_x4
   sll_real64 :: vy
+  sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
   SLL_ASSERT( .not. this%transposed)
 
@@ -264,8 +266,9 @@ contains
      do k=1,loc_sz_k
         do i=1,loc_sz_i
            call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
-           do j=2,this%nc_eta2
-              this%tmp_y(j) = this%tmp_y(j)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
+           do j=2,this%nc_eta2/2+1
+              this%tmp_y(j) =  &
+                 this%tmp_y(j)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
            enddo
            this%tmp_y(1)=0._f64
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
@@ -284,8 +287,9 @@ contains
      do k=1,loc_sz_k
         do i=1,loc_sz_i
            call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
-           do j=2,this%nc_eta2
-              this%tmp_y(j) = this%tmp_y(j)*exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
+           do j=2,this%nc_eta2/2+1
+              this%tmp_y(j) = &
+                 this%tmp_y(j)*exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
            enddo
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
            this%f(i,:,k,l) = this%d_dy / loc_sz_j
@@ -301,11 +305,12 @@ subroutine advection_x3x4(this,dt)
   sll_real64, intent(in) :: dt
   sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_x
   sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_y
-  sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_x_tmp
-  sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_y_tmp
+  !sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_x_tmp
+  !sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_y_tmp
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
+  sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
   x3_min   = this%eta3_min
   x3_max   = this%eta3_max
@@ -361,14 +366,9 @@ end subroutine advection_x3x4
    sll_real64 :: dxy
    sll_real64 :: vx 
    sll_real64, dimension(this%nc_eta1,this%nc_eta2) :: locjx
+   sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
-   if( present(star)) then
-!      df => this%ft_star
-      df => this%f_star
-   else
-!      df => this%ft
-      df => this%f
-   end if
+   df = merge(this%f_star, this%ft, present(star))
    
    dxy = this%delta_eta3*this%delta_eta4
    SLL_ASSERT(this%transposed)
@@ -416,6 +416,7 @@ end subroutine advection_x3x4
    sll_real64 :: dxy
    sll_real64, dimension(this%nc_eta1,this%nc_eta2) :: locjy
    sll_real64, dimension(:,:,:,:), pointer :: df
+   sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
    if( present(star)) then
 !      df => this%ft_star
