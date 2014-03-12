@@ -510,13 +510,15 @@ call initialize(poiss2dpp,rho,geomx,iflag)
 call initialize(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 !Intitialisation du champ electrique
 
-!call transposexv(vlas2d,f)
-!call densite_charge(vlas2d,rho)
-do i=1,geomx%nx
-   do j=1,geomx%nx
-      rho(i,j)=sum(f(i,j,1:geomv%nx,1:geomv%ny))*geomv%dx*geomv%dy
-   enddo
-enddo
+call transposexv(vlas2d,f)
+call densite_charge(vlas2d,rho)
+call transposevx(vlas2d,f)
+!do i=1,geomx%nx
+!   do j=1,geomx%nx
+!      rho(i,j)=sum(f(i,j,1:geomv%nx,1:geomv%ny))*geomv%dx*geomv%dy
+!   enddo
+!enddo
+
 jx=rho
 !rho=rho-1._8
 
