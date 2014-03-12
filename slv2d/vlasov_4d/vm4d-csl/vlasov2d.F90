@@ -14,7 +14,7 @@ module Vlasov2d_module
 
  implicit none
  private
- public :: new, dealloc,advection_x, advection_v,&
+ public :: initialize, dealloc,advection_x, advection_v,&
            densite_charge,transposexv,transposevx,thdiag,thdiag_tab,densite_courant
 
  type, public :: vlasov2d
@@ -31,7 +31,7 @@ module Vlasov2d_module
  ! variables globales 
  sll_real64, dimension(:,:),allocatable :: P_x, P_y
 
- interface new
+ interface initialize
    module procedure new_vlasov2d
  end interface
 
