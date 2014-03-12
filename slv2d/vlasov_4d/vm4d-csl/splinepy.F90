@@ -3,7 +3,7 @@ module splinepy_class
   use geometry_module!1d_module
   implicit none
   private
-  public :: new, interpole
+  public :: initialize, interpole
   type, public :: splinepy
      type (geometry) :: geomx,geomv
      real(wp) :: a1y, a2y, a3y, a4y ! coef de la matrice 2x2 per.
@@ -17,7 +17,7 @@ module splinepy_class
      integer :: jstartx, jendx
      integer :: jstartv, jendv  ! definition de la bande de calcul
   end type splinepy
-  interface new
+  interface initialize
      module procedure new_splinepy
   end interface
   interface interpole
