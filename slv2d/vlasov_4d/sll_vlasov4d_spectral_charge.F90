@@ -221,6 +221,8 @@ contains
      end do
   end do
 
+  call apply_remap_4D( this%x_to_v, this%f_star, this%ft_star) 
+
 !calculer le courant avec la formule f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
 !jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
   call densite_courantx(this, "*")
@@ -277,6 +279,7 @@ contains
      end do
   end do
 
+  call apply_remap_4D( this%x_to_v, this%f_star, this%ft_star) 
   call densite_couranty(this, "*")
 
   
@@ -369,11 +372,9 @@ end subroutine advection_x3x4
    sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
    if( present(star)) then
-!      df => this%ft_star
-      df => this%f_star
+      df => this%ft_star
    else
-!      df => this%ft
-      df => this%f
+      df => this%ft
    end if
    
    dxy = this%delta_eta3*this%delta_eta4
@@ -385,7 +386,6 @@ end subroutine advection_x3x4
                                loc_sz_k,      &
                                loc_sz_l)        
 
-!   print *,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l,shape(df),shape(this%f_star)
    locjx = 0.0_f64
    do l=1,loc_sz_l
       do k=1,loc_sz_k
@@ -427,11 +427,9 @@ end subroutine advection_x3x4
    sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
    if( present(star)) then
-!      df => this%ft_star
-      df => this%f_star
+      df => this%ft_star
    else
-!      df => this%ft
-      df => this%f
+      df => this%ft
    end if
 
 
@@ -442,22 +440,22 @@ end subroutine advection_x3x4
 
    locjy(:,:) = 0.
    do l=1,loc_sz_l
-   do k=1,loc_sz_k
-   do j=1,loc_sz_j
-   do i=1,loc_sz_i
-      global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
-      gi = global_indices(1)
-      gj = global_indices(2)
-      gk = global_indices(3)
-      gl = global_indices(4)
-      vy = this%eta4_min+(gl-1)*this%delta_eta4
-      locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) 
+      do k=1,loc_sz_k
+         do j=1,loc_sz_j
+            do i=1,loc_sz_i
+               global_indices = local_to_global_4D(this%layout_v,(/i,j,k,l/)) 
+               gi = global_indices(1)
+               gj = global_indices(2)
+               gk = global_indices(3)
+               gl = global_indices(4)
+               vy = this%eta4_min+(gl-1)*this%delta_eta4
+               locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) 
+            end do
+         end do
+      end do
    end do
-   end do
-   end do
-   end do
-
-   this%jy1(:,:) = 0.
+   
+   this%jy1(:,:) = 0._8
    comm   = sll_world_collective%comm
    call mpi_barrier(comm,error)
    c=this%nc_eta1*this%nc_eta2
