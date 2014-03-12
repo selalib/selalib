@@ -254,7 +254,11 @@ contains
        vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
        v2 = vx*vx+vy*vy
-       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+       vlasov4d%f(i,j,k,l)=(1+eps*cos(ky*y))*1/(2*sll_pi)*exp(-.5*v2)
+!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x)*cos(ky*y))*1/(2*sll_pi)*exp(-.5*v2)
+!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*(x+y)))*1/(2*sll_pi)*exp(-.5*v2)
+!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)*vx*vx
 
     end do
     end do
