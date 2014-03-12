@@ -222,9 +222,9 @@ contains
 
     call read_input_file(vlasov4d)
 
-    call spl_x3x4%initialize(vlasov4d%nc_eta1, vlasov4d%nc_eta2,   & 
-                             vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                             vlasov4d%eta2_min, vlasov4d%eta2_max, &
+    call spl_x3x4%initialize(vlasov4d%nc_eta3, vlasov4d%nc_eta4,   & 
+                             vlasov4d%eta3_min, vlasov4d%eta3_max, &
+                             vlasov4d%eta4_min, vlasov4d%eta4_max, &
     &                        SLL_PERIODIC, SLL_PERIODIC)
 
 

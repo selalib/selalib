@@ -44,6 +44,7 @@ module sll_vlasov4d_base
    sll_real64 :: eta1_min, eta2_min, eta3_min, eta4_min
    sll_real64 :: eta1_max, eta2_max, eta3_max, eta4_max
    sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
+   sll_int32  :: va 
  end type vlasov4d_base
 
 
@@ -75,11 +76,13 @@ contains
   sll_int32  :: nbiter      ! number of loops over time
   sll_int32  :: fdiag       ! diagnostics frequency
   sll_int32  :: fthdiag     ! time history frequency
+  sll_int32  :: va = 0      ! test case type
 
   namelist /time/ dt, nbiter
   namelist /diag/ fdiag, fthdiag
   namelist /phys_space/ x0,x1,y0,y1,nx,ny
   namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
+  namelist /algo_charge/ va
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -92,6 +95,7 @@ contains
      read(idata,NML=diag)
      read(idata,NML=phys_space)
      read(idata,NML=vel_space)
+     read(idata,NML=algo_charge)
 
   end if
 
@@ -111,6 +115,7 @@ contains
   call mpi_bcast(vy1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(va,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
   this%dt         = dt
   this%nbiter     = nbiter
@@ -145,6 +150,8 @@ contains
   this%delta_eta3 = this%geomv%delta_eta1
   this%delta_eta4 = this%geomv%delta_eta2
 
+  this%va         = va
+
   if (prank == MPI_MASTER) then
 
        write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
@@ -157,6 +164,19 @@ contains
           this%eta4_min, this%eta4_max, this%delta_eta3, this%delta_eta4
        write(*,*) 'dt,nbiter,fdiag,fthdiag'
        write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
+       write(*,*) " Algo charge "
+       select case(va) 
+       case(0)
+       print*, 'Valis' 
+       case(1)
+       print*, 'Vlasov-Poisson'
+       case(2)
+       print*, " diag charge "
+       case(3)
+       print*, "classic algorithm"
+       end select
+
+
   
   endif
 
