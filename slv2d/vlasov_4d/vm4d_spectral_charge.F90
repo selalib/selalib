@@ -21,9 +21,9 @@ program vm4d_spectral_charge
   sll_int64  :: psize
 
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
-  sll_int32  :: va
+!  sll_int32  :: va
 
-  va=0 !(va=0 --> Valis ; va=1 --> Vlasov-Poisson ; va=2 --> diag charge ; va=3 --> classic algorithm)
+!  va=0 !(va=0 --> Valis ; va=1 --> Vlasov-Poisson ; va=2 --> diag charge ; va=3 --> classic algorithm)
 
   call sll_boot_collective()
   prank = sll_get_collective_rank(sll_world_collective)
@@ -61,7 +61,7 @@ program vm4d_spectral_charge
      end if
 
 
-     if ((va==0).or.(va==3)) then 
+     if ((vlasov4d%va==0).or.(vlasov4d%va==3)) then 
         !f --> ft, current (this%jx,this%jy), ft-->f
         call transposexv(vlasov4d)
         !compute this%jx, this%jy (zero average) at time tn
@@ -81,7 +81,7 @@ program vm4d_spectral_charge
         !compute (vlasov4d%ex,vlasov4d%ey)=E^{n+1/2} from vlasov4d%bzn=B^n
         call solve_ampere(vlasov4d,maxwell,0.5_f64*vlasov4d%dt) 
 
-        if (va==3) then 
+        if (vlasov4d%va==3) then 
            vlasov4d%jx3=vlasov4d%jx
            vlasov4d%jy3=vlasov4d%jy
         endif
@@ -94,7 +94,7 @@ program vm4d_spectral_charge
      call advection_x2(vlasov4d,0.5_f64*vlasov4d%dt)
 
 
-     if (va==1) then 
+     if (vlasov4d%va==1) then 
         call transposexv(vlasov4d)
         !compute rho^{n+1}
         call compute_charge(vlasov4d)
@@ -120,7 +120,7 @@ program vm4d_spectral_charge
      !advec x + compute this%jx1
      call advection_x1(vlasov4d,0.5_f64*vlasov4d%dt)
 
-     if (va==0) then 
+     if (vlasov4d%va==0) then 
         !compute the good jy current
         vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
         !compute the good jx current
@@ -138,7 +138,7 @@ program vm4d_spectral_charge
         vlasov4d%eyn=vlasov4d%ey
      endif
 
-     if (va==3) then 
+     if (vlasov4d%va==3) then 
         !f --> ft, current (this%jx,this%jy), ft-->f
         call transposexv(vlasov4d)
         !compute this%jx, this%jy (zero average) at time tn
@@ -163,7 +163,7 @@ program vm4d_spectral_charge
      endif
 
 
-     if (va==0) then 
+     if (vlasov4d%va==0) then 
         call transposexv(vlasov4d)
         !compute rho^{n+1}
         call compute_charge(vlasov4d)
