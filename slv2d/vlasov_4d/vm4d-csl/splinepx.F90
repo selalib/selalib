@@ -3,7 +3,7 @@ module splinepx_class
   use geometry_module!1d_module
   implicit none
   private
-  public :: new, interpole
+  public :: initialize, interpole
   type, public :: splinepx
      type (geometry) :: geomx,geomv
      real(wp) :: a1x, a2x, a3x, a4x ! coef de la matrice 2x2 per.
@@ -17,7 +17,7 @@ module splinepx_class
      integer :: jstartx, jendx
      integer :: jstartv, jendv  ! definition de la bande de calcul
   end type splinepx
-  interface new
+  interface initialize
      module procedure new_splinepx
   end interface
   interface interpole

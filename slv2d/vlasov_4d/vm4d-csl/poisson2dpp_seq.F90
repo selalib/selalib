@@ -9,7 +9,7 @@ use sll_constants
 
 
 implicit none
-public :: new, dealloc, solve, transposexy, transposeyx
+public :: initialize, dealloc, solve, transposexy, transposeyx
 
 type, public:: poisson2dpp
    complex(wp), dimension(:,:), pointer :: rhot, ext, eyt
@@ -19,7 +19,7 @@ type, public:: poisson2dpp
    sll_int32 :: jstartx,jendx,istartk,iendk
 end type poisson2dpp
 
-interface new
+interface initialize
    module procedure new_poisson2dpp
 end interface
 interface dealloc

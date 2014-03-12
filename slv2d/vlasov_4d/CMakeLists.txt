@@ -24,11 +24,12 @@ FIND_PACKAGE(MPI)
 
 SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-INCLUDE(HDF5Config)
 
 SET(FFTW_ENABLED ON CACHE BOOL "Enable FFTW" FORCE)
 SET(HDF5_ENABLED ON CACHE BOOL "Enable HDF5" FORCE)
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel" FORCE)
+
+INCLUDE(HDF5Config)
 
 IF(HDF5_IS_PARALLEL) 
    MESSAGE(STATUS "HDF5 parallel supported")
@@ -45,6 +46,8 @@ IF (CMAKE_PROJECT_NAME MATCHES "vlasov4d")
   INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/package)
   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
                  ${CMAKE_BINARY_DIR}/package)
+  ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
+                 ${CMAKE_BINARY_DIR}/fftpack)
 ENDIF()
 
 SET(LIBS selalib ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
@@ -69,3 +72,5 @@ TARGET_LINK_LIBRARIES(vm4d          selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vp4d_polar    selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral_charge selalib_vlasov4d ${LIBS})
+
+ADD_SUBDIRECTORY(vm4d-csl)

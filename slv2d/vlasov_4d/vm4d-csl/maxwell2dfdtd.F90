@@ -10,14 +10,14 @@ sll_real64, private, parameter :: e0  = 1d0
 sll_real64, private, parameter :: c = 1d0, csq = 1d0
 sll_real64, private :: dex_dx, dey_dy, dex_dy, dey_dx
 sll_real64, private :: dbz_dx, dbz_dy
-public :: new, dealloc, solve_Ampere, solve_faraday
+public :: initialize, dealloc, solve_Ampere, solve_faraday
 type, public:: maxwell2dfdtd
    type(geometry) :: geomx
    logical :: transpose
    sll_int32 :: jstartx,jendx,istartk,iendk
 end type maxwell2dfdtd
 
-interface new
+interface initialize
    module procedure new_maxwell2dfdtd
 end interface
 interface dealloc

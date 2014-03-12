@@ -377,9 +377,9 @@ call mpi_bcast(vy1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(nvx,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(nvy,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 
-call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
+call initialize(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
-call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
+call initialize(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
 end subroutine initglobal
 
@@ -505,9 +505,9 @@ do jv=jstartv,jendv
 end do
 
 !Initialisation du module poisson
-call new(poiss2dpp,rho,geomx,iflag)
+call initialize(poiss2dpp,rho,geomx,iflag)
 !Initialisation du module vlasov
-call new(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
+call initialize(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 !Intitialisation du champ electrique
 
 !call transposexv(vlas2d,f)
@@ -597,9 +597,9 @@ close(15+my_num)
 close(16+my_num)
 
 ! initialisation du calcul du champ magnetique
-call new(maxw2dfdtd,geomx,iflag, jstartx, jendx)
-call new(splx,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
-call new(sply,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
+call initialize(maxw2dfdtd,geomx,iflag, jstartx, jendx)
+call initialize(splx,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
+call initialize(sply,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 
 end subroutine initlocal
 
