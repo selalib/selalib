@@ -210,7 +210,7 @@ contains
            call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
            !calcul du flux
-           do i=2,this%nc_eta1
+           do i=2,this%nc_eta1/2+1
               this%tmp_x(i) = this%tmp_x(i)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx(i)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx(i))
            enddo
            this%tmp_x(1)=0._f64
@@ -232,7 +232,7 @@ contains
         do j=1,loc_sz_j
            call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
-           do i=2,this%nc_eta1
+           do i=2,this%nc_eta1/2+1
               this%tmp_x(i) = this%tmp_x(i)*exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*vx)
            enddo
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
@@ -264,7 +264,7 @@ contains
      do k=1,loc_sz_k
         do i=1,loc_sz_i
            call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
-           do j=2,this%nc_eta2
+           do j=2,this%nc_eta2/2+1
               this%tmp_y(j) = this%tmp_y(j)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
            enddo
            this%tmp_y(1)=0._f64
@@ -284,7 +284,7 @@ contains
      do k=1,loc_sz_k
         do i=1,loc_sz_i
            call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
-           do j=2,this%nc_eta2
+           do j=2,this%nc_eta2/2+1
               this%tmp_y(j) = this%tmp_y(j)*exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
            enddo
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
@@ -372,12 +372,14 @@ end subroutine advection_x3x4
    
    dxy = this%delta_eta3*this%delta_eta4
    SLL_ASSERT(this%transposed)
+
    call compute_local_sizes_4d(this%layout_v, &
                                loc_sz_i,      &
                                loc_sz_j,      &
                                loc_sz_k,      &
                                loc_sz_l)        
 
+!   print *,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l,shape(df),shape(this%f_star)
    locjx = 0.0_f64
    do l=1,loc_sz_l
       do k=1,loc_sz_k
