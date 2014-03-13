@@ -1,5 +1,4 @@
 ADD_LIBRARY(slv2d STATIC 
-              silo_module.F90
               diagnostiques.F90
               geometry.F90
               maxwell2dfdtd.F90
