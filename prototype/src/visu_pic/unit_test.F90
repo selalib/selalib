@@ -94,9 +94,9 @@ time = 0.0
 xmin = -3; xmax = 3.
 ymin = -2; ymax = 2.
 
+print*, nstep
 do istep = 1, nstep       !loop over time
    
-
    call vitesse(nbpart, xp, yp, op, up, vp, delta, time)
 
    !call centres(nbpart, xp, yp, op, time)
