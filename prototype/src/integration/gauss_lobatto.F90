@@ -183,22 +183,13 @@ contains
   !> \f[
   !>  der(i,j)=(Phi'_i(x_j))
   !> \f]
-  function  gauss_lobatto_derivative_matrix(n, a, b) result(der)
+  function  gauss_lobatto_derivative_matrix(n, x, w) result(der)
 
-    sll_real64, intent(in), optional :: a, b
     sll_int32  :: n,i,j,l,m
     sll_real64 :: prod
     sll_real64 :: x(n), w(n), der(n,n)
 
-    if (present(a) .and. present(b)) then
-       x = gauss_lobatto_points( n, a, b ) 
-       w = gauss_lobatto_weights( n, a, b ) 
-    else
-       x = gauss_lobatto_points( n ) 
-       w = gauss_lobatto_weights( n ) 
-    end if
-
-   do j=1,n
+    do j=1,n
       do i=1,n
          do l=1,j-1
             prod=1.0_f64
@@ -230,7 +221,7 @@ contains
          end do
          der(i,j)=der(i,j)*w(i)
       end do
-   end do
+    end do
 
   end function gauss_lobatto_derivative_matrix
 
