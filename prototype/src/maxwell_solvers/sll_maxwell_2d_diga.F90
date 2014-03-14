@@ -83,7 +83,7 @@ sll_real64, dimension(:,:,:,:), pointer  :: f
 sll_real64, dimension(4,4)               :: A1
 sll_real64, dimension(4,4)               :: A2
 
-public :: initialize, solve
+public :: initialize, solve, advection
 
 contains
 
@@ -97,16 +97,17 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    sll_int32                   :: nddl
    sll_int32                   :: ncells
    sll_real64                  :: x(degree+1)
-   sll_real64                  :: w(degree+1)
-   sll_real64                  :: dlag(degree+1,degree+1)
+   sll_real64                  :: y(degree+1)
+   sll_real64                  :: wx(degree+1)
+   sll_real64                  :: wy(degree+1)
+   sll_real64                  :: dlagx(degree+1,degree+1)
+   sll_real64                  :: dlagy(degree+1,degree+1)
    sll_real64                  :: det
    sll_real64                  :: jac_mat(2,2)
    sll_real64                  :: inv_jac_mat(2,2)
    sll_real64                  :: mdiag
    sll_int32                   :: i, j, ii, jj, kk, ll
-   sll_real64                  :: eta1
-   sll_real64                  :: eta2
-   sll_real64                  :: xa, xb, ya, yb, cx1, cx2, cy1, cy2
+   sll_real64                  :: xa, xb, ya, yb
 
    this%tau   => tau
    this%mesh  => tau%mesh
@@ -126,11 +127,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    nddl   = (degree+1)*(degree+1)
    ncells = this%nc_eta1*this%nc_eta2
 
-
    SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
-   x    = gauss_lobatto_points(degree+1)
-   w    = gauss_lobatto_weights(degree+1)
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -143,21 +141,21 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
       xa = this%cell(i,j)%eta1_min ; xb  = this%cell(i,j)%eta1_max 
       ya = this%cell(i,j)%eta2_min ; yb  = this%cell(i,j)%eta2_max 
-      cx1 = 0.5_f64 * (xb-xa); cx2 = 0.5_f64 * (xb+xa)
-      cy1 = 0.5_f64 * (yb-ya); cy2 = 0.5_f64 * (yb+ya)
-
+      x     = gauss_lobatto_points(degree+1,xa,xb)
+      y     = gauss_lobatto_points(degree+1,ya,yb)
+      wx    = gauss_lobatto_weights(degree+1,xa,xb)
+      wy    = gauss_lobatto_weights(degree+1,ya,yb)
+      dlagx = gauss_lobatto_derivative_matrix(degree+1, x, wx)
+      dlagy = gauss_lobatto_derivative_matrix(degree+1, y, wy)
 
       do ii = 1, degree+1
       do jj = 1, degree+1
 
-         eta1  = xa + cx1*x(ii)+cx2
-         eta2  = ya + cy1*x(jj)+cy2
+         jac_mat     = tau%jacobian_matrix(x(ii),y(jj))
+         inv_jac_mat = tau%inverse_jacobian_matrix(x(ii),y(jj))
+         det         = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
+         mdiag       = wx(ii)*wy(jj)*det
 
-         jac_mat = tau%jacobian_matrix(eta1,eta2)
-         inv_jac_mat = tau%inverse_jacobian_matrix(eta1,eta2)
-         det     = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
-
-         mdiag   = cx1*cy1*w(ii)*w(jj)*det
          this%cell(i,j)%MassMatrix((ii-1)*(degree+1)+jj) = mdiag
 
          do ll = 1, degree+1
@@ -165,24 +163,23 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
             if (jj == ll) &
                this%cell(i,j)%DxMatrix((ii-1)*(degree+1)+jj,(kk-1)*(degree+1)+ll) &
-                  = mdiag*dlag(ii,kk)
+                  = mdiag*dlagx(ii,kk)
 
             if (ii == kk) &
                this%cell(i,j)%DyMatrix((ii-1)*(degree+1)+jj,(kk-1)*(degree+1)+ll) &
-                  = mdiag*dlag(jj,ll)
+                  = mdiag*dlagy(jj,ll)
          end do
          end do
 
       end do
       end do
 
-   call sll_display(this%cell(1,1)%MassMatrix(:),"f7.2")
+      !call sll_display(this%cell(1,1)%MassMatrix(:),"f7.2")
+      !call sll_display(this%cell(i,j)%DxMatrix(:,:),"f8.4")
+      !call sll_display(this%cell(i,j)%DyMatrix(:,:),"f8.4")
 
    end do
    end do
-
-   !call sll_display(this%cell(1,1)%DxMatrix(:,:),"f7.2")
-   !call sll_display(this%cell(1,1)%DyMatrix(:,:),"f7.2")
 
    SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),4),error)
@@ -203,33 +200,156 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
 end subroutine initialize_maxwell_2d_diga
 
-function derivative_matrix(n,x,w) result(der)
+!> Solve the maxwell equation
+subroutine advection( this, phi, dt )
 
-   sll_int32, intent(in)   :: n
-   sll_real64, intent(in)  :: x(n)
-   sll_real64, intent(in)  :: w(n)
-   sll_real64              :: der(n,n)
-   sll_int32               :: i,j,l,m
-   sll_real64              :: prod
+   type( maxwell_2d_diga )  :: this !< Maxwell solver object
 
-   do j=1,n
-      do i=1,n
-         do l=1,n
-            if ( l /= j ) then
-               prod=1.0_f64
-               do m=1,n
-                  if (m /= j .and. m /= l) &
-                     prod=prod*(x(i)-x(m))/(x(j)-x(m))
-               end do
-               prod=prod/(x(j)-x(l))
-               der(i,j)=der(i,j)+prod
-            end if
-         end do
-         der(i,j)=der(i,j)*w(i)
+   type(dg_field), target   :: phi  !< field
+   sll_real64, intent(in)   :: dt   !< time step
+
+   sll_int32        :: left, right, node, side
+   sll_int32        :: i, j, k, l, ii, jj, kk
+   sll_real64       :: vec_n1
+   sll_real64       :: vec_n2
+   sll_real64       :: offset(2), eta1, eta2
+   sll_int32        :: icell, gnu_id, file_id
+   character(len=4) :: ccell
+   sll_real64       :: x(this%degree+1)
+   sll_real64       :: w(this%degree+1)
+   sll_real64       :: flux
+
+   x  = gauss_lobatto_points(this%degree+1)
+   w  = gauss_lobatto_weights(this%degree+1)
+
+   do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta2
+
+      do jj = 1, this%degree+1
+      do ii = 1, this%degree+1
+         k = (ii-1)*(this%degree+1)+jj
+         this%w_vector(k,1) = phi%array(ii,jj,i,j)
       end do
+      end do
+         
+      f(:,1,i,j) =   matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
+                   + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
+
+      do side = 1, 4 ! Loop over edges
+ 
+         !boundary conditions are periodic
+         select case(side)
+         case(SOUTH)
+            k = i
+            l = 1+modulo(j-2,this%nc_eta2) 
+         case(EAST)
+            k = 1+modulo(i  ,this%nc_eta1)
+            l = j
+         case(NORTH)
+            k = i
+            l = 1+modulo(j  ,this%nc_eta2)
+         case(WEST)
+            k = 1+modulo(i-2,this%nc_eta1)
+            l = j
+         end select
+
+         print*, side, i, j, k, l
+
+         do jj = 1, this%degree+1
+         do ii = 1, this%degree+1
+            kk = (ii-1)*(this%degree+1)+jj
+            this%r_vector(kk,1) = phi%array(ii,jj,k,l)
+         end do
+         end do
+   
+         !Compute the fluxes on edge points
+         do node = 1, this%degree+1
+   
+            left  = dof_local(side, node, this%degree)
+            right = dof_neighbor(side, node, this%degree)
+
+            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
+            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
+   
+            flux = (0.5*(this%w_vector(left, 1)   &
+                     +   this%r_vector(right,1))) &
+                  * w(node) * this%cell(i,j)%edge(side)%length
+  
+            f(node,1,i,j) = f(node,1,i,j) + vec_n1*flux + vec_n2*flux
+
+
+         end do
+   
+      end do
+   
+      f(:,1,i,j) = f(:,1,i,j) / this%cell(i,j)%MassMatrix(:)
+
+   end do
    end do
 
-end function derivative_matrix
+!!!!! PLOT FLUX !!!
+
+#ifdef DEBUG
+
+   call sll_ascii_file_create("flux.gnu", gnu_id, error)
+
+
+   icell = 0
+   do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta2
+ 
+      icell = icell+1
+
+      call int2string(icell, ccell)
+
+      if (icell == 1) then
+         write(gnu_id,"(a)",advance='no') "splot 'flux"//ccell//".dat' w l"
+      else
+         write(gnu_id,"(a)",advance='no') ",'flux"//ccell//".dat' w l "
+      end if
+
+      call sll_ascii_file_create("flux"//ccell//".dat", file_id, error)
+
+      offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
+      offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
+      kk = 0
+      do ii = 1, this%degree+1
+      do jj = 1, this%degree+1
+         kk = kk+1
+         eta1 = offset(1) + 0.5 * (x(ii) + 1.0) * this%tau%mesh%delta_eta1
+         eta2 = offset(2) + 0.5 * (x(jj) + 1.0) * this%tau%mesh%delta_eta2
+         write(file_id,*) this%tau%x1(eta1,eta2), &
+                          this%tau%x2(eta1,eta2), &
+                          f(kk,1,i,j)
+      end do
+      write(file_id,*)
+      end do
+      close(file_id)
+
+   end do
+   end do
+
+   write(gnu_id,*)
+   close(gnu_id)
+
+   STOP 'put by Pierre'
+
+#endif
+
+!   do j = 1, this%nc_eta2
+!   do i = 1, this%nc_eta1
+!
+!      do jj = 1, this%degree+1
+!      do ii = 1, this%degree+1
+!         kk = (ii-1)*(this%degree+1)+jj
+!         phi%array(ii,jj,i,j) = phi%array(ii,jj,i,j) - dt * f(kk,1,i,j)
+!      end do
+!      end do
+!   
+!   end do
+!   end do
+   
+end subroutine advection
 
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
@@ -245,18 +365,16 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    type(dg_field), optional :: jy   !< y current field
    type(dg_field), optional :: rho  !< charge density
 
-   sll_int32                :: left, right, node, side
-   sll_int32                :: i, j, k, l, ii, jj, kk
-   sll_real64               :: flux(4)
-   sll_real64               :: vec_n1
-   sll_real64               :: vec_n2
-   sll_real64               :: offset(2), eta1, eta2
-   sll_int32                :: icell, gnu_id, file_id
-   character(len=4)         :: ccell
-   sll_real64               :: x(this%degree+1)
+   sll_int32        :: left, right, node, side
+   sll_int32        :: i, j, k, l, ii, jj, kk
+   sll_real64       :: vec_n1
+   sll_real64       :: vec_n2
+   sll_real64       :: offset(2), eta1, eta2
+   sll_int32        :: icell, gnu_id, file_id
+   character(len=4) :: ccell
+   sll_real64       :: x(this%degree+1)
 
 
-   !Loop over cells
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
 
@@ -355,24 +473,6 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    end do
    end do
 
-
-   do j = 1, this%nc_eta2
-   do i = 1, this%nc_eta1
-
-      do jj = 1, this%degree+1
-      do ii = 1, this%degree+1
-         kk = (ii-1)*(this%degree+1)+jj
-         ex%array(ii,jj,i,j) = ex%array(ii,jj,i,j) - dt * f(kk,1,i,j)
-         ey%array(ii,jj,i,j) = ey%array(ii,jj,i,j) - dt * f(kk,2,i,j)
-         bz%array(ii,jj,i,j) = bz%array(ii,jj,i,j) - dt * f(kk,3,i,j)
-         po%array(ii,jj,i,j) = po%array(ii,jj,i,j) - dt * f(kk,4,i,j)
-      end do
-      end do
-   
-   end do
-   end do
-
-
 !!!!! PLOT FLUX !!!
 
 #ifdef DEBUG
@@ -407,7 +507,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
          eta2 = offset(2) + 0.5 * (x(jj) + 1.0) * this%tau%mesh%delta_eta2
          write(file_id,*) this%tau%x1(eta1,eta2), &
                           this%tau%x2(eta1,eta2), &
-                          sngl(f(kk,1,i,j))
+                          f(kk,1,i,j)
       end do
       write(file_id,*)
       end do
@@ -420,35 +520,24 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    close(gnu_id)
 
 #endif
+
+   do j = 1, this%nc_eta2
+   do i = 1, this%nc_eta1
+
+      do jj = 1, this%degree+1
+      do ii = 1, this%degree+1
+         kk = (ii-1)*(this%degree+1)+jj
+         ex%array(ii,jj,i,j) = ex%array(ii,jj,i,j) - dt * f(kk,1,i,j)
+         ey%array(ii,jj,i,j) = ey%array(ii,jj,i,j) - dt * f(kk,2,i,j)
+         bz%array(ii,jj,i,j) = bz%array(ii,jj,i,j) - dt * f(kk,3,i,j)
+         po%array(ii,jj,i,j) = po%array(ii,jj,i,j) - dt * f(kk,4,i,j)
+      end do
+      end do
+   
+   end do
+   end do
    
 end  subroutine solve_maxwell_2d_diga
-
-!function W_divide_by_DiagMatrix( W1, D) result(W2)
-!
-!  type(dg_field), intent(in)           :: W1
-!  sll_real64, dimension(:), intent(in) :: D
-!  type(dg_field)                       :: W2
-!  
-!  W2%field(:,1) = W1%field(:,1) / D(:)
-!  W2%field(:,2) = W1%field(:,2) / D(:)
-!  W2%field(:,3) = W1%field(:,3) / D(:)
-!
-!end function W_divide_by_DiagMatrix
-!
-!function W_multiply_by_Matrix( AMat, W1) result(W2)
-!
-!  type(dg_field), intent(in)             :: W1
-!  sll_real64, dimension(3,3), intent(in) :: AMat
-!  type(dg_field)                         :: W2
-!  sll_int32                              :: i, n
-!
-!  do i = 1, W2%nddl
-!     W2%field(i,:) = matmul(AMat,W1%field(i,:))
-!  end do
-!
-!end function W_multiply_by_Matrix
-
-
 
 function dof_local(edge,dof,degree)
 
@@ -469,7 +558,6 @@ function dof_local(edge,dof,degree)
    end select
 
 end function dof_local
-
 
 function dof_neighbor(edge,dof,degree)
 
@@ -509,8 +597,6 @@ subroutine compute_normals(tau, i, j, d, cell )
    
    cell%eta1_max = cell%eta1_min + tau%mesh%delta_eta1
    cell%eta2_max = cell%eta2_min + tau%mesh%delta_eta2
-   
-   print"(/,4f8.3)", cell%eta1_min, cell%eta1_max, cell%eta2_min, cell%eta2_max
    
    do side = 1, 4
       SLL_CLEAR_ALLOCATE(cell%edge(side)%vec_norm(1:d+1,1:2),error)
