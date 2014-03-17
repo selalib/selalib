@@ -135,7 +135,7 @@ program vlasov_poisson_4d_general
   print *, ' f initialized '
 
   call simulation%run( )
-  call delete(simulation)
+  call sll_delete(simulation)
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 

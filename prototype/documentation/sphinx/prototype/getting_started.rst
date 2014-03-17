@@ -75,13 +75,13 @@ Details about principle parameters
 +------------------------+----------------+--------------------------------------+
 |          KEY           | POSSIBLE VALUE |                DESCRIPTION           |
 +========================+================+======================================+
-| DISABLED_MPI_MODULE    | ON/OFF         | When set to ON disable all reference |
+| MPI_MODULE_ENABLED     | ON/OFF         | When set to ON disable all reference |
 |                        |                | to mpi and run SeLaLib in sequential.|
 +------------------------+----------------+--------------------------------------+
-|  FFT_DEFAULT_LIBRARY   | SLLFFT         | By default SLLFFT. SeLaLib provide   |
+|  FFT_LIB               | SLLFFT         | By default SLLFFT. SeLaLib provide   |
 |                        | FFTPACK        | a fast fourier transform module      |
 |                        | FFTW           | around 3 libraries, fftpack, fftw and|
-|                        |                | his own implementation (see XXX)     |
+|                        |                | his own implementation.              |
 +------------------------+----------------+--------------------------------------+
 |  HDF5_ROOT             | /usr/local     | For output we need to link the lib   |
 |  FFTW_ROOT             | /opt/local     | with HDF5 and FFTW3. Parallel is     |

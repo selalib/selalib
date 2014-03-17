@@ -1,4 +1,3 @@
-FIND_PACKAGE(SUITESPARSE)
 IF(SUITESPARSE_FOUND)
 
    INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
@@ -17,12 +16,12 @@ IF(SUITESPARSE_FOUND)
 
    TARGET_LINK_LIBRARIES(test_vp_dg sll_working_precision
                                     sll_vp_dg
-	                              sll_constants
-	                              sll_utilities
-	                              sll_boundary_condition_descriptors
+                                    sll_constants
+                                    sll_utilities
+                                    sll_boundary_condition_descriptors
                                     ${SUITESPARSE_LIBRARIES}
                                     ${LAPACK_LIBRARIES}
-				            ${BLAS_LIBRARIES})
+                                    ${BLAS_LIBRARIES})
 
    IF(UNIX AND NOT APPLE)
       TARGET_LINK_LIBRARIES(test_vp_dg rt)

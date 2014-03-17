@@ -107,9 +107,9 @@ contains
 
 end type sll_simulation_4d_vp_eulerian_cartesian_finite_volume
 
-interface delete
+interface sll_delete
   module procedure delete_vp_cart
-end interface delete
+end interface sll_delete
 
 contains
 
@@ -889,15 +889,20 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
       sim%mesh2dx%delta_eta1, &
       sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
       sim%mesh2dv%delta_eta1/sim%degree, &
+      size(plotf2d_c1,1), &
+      size(plotf2d_c1,2), &
       plotf2d_c1, &
       "plotf2d_c1", &
       0, &
       ierr)
+
  call sll_gnuplot_rect_2d_parallel( &
       sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
       sim%mesh2dx%delta_eta2, &
       sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
       sim%mesh2dv%delta_eta2/sim%degree, &
+      size(plotf2d_c2,1), &
+      size(plotf2d_c2,2), &
       plotf2d_c2, &
       "plotf2d_c2", &
       0, &
@@ -953,6 +958,8 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
          sim%mesh2dx%delta_eta1, &
          sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
          sim%mesh2dv%delta_eta1/sim%degree, &
+         size(f_x_exact,1), &
+         size(f_x_exact,2), &
          f_x_exact, &
          "plotfxtransport", &
          0, &
@@ -976,6 +983,8 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
          sim%mesh2dx%delta_eta2, &
          sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
          sim%mesh2dv%delta_eta2/sim%degree, &
+         size(f_y_exact,1), &
+         size(f_y_exact,2), &
          f_y_exact, &
          "plotfytransport", &
          0, &
@@ -996,11 +1005,14 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
           f_vx_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
        end do
     end do
+
     call sll_gnuplot_rect_2d_parallel( &
          sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
          sim%mesh2dx%delta_eta1, &
          sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
          sim%mesh2dv%delta_eta1/sim%degree, &
+         size(f_vx_exact,1), &
+         size(f_vx_exact,2), &
          f_vx_exact, &
          "plotfvxtransport", &
          0, &
@@ -1024,6 +1036,8 @@ if((sim%test==1).or.(sim%test==9).or.(sim%test==5)) then
          sim%mesh2dx%delta_eta2, &
          sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
          sim%mesh2dv%delta_eta2/sim%degree, &
+         size(f_vy_exact,1), &
+         size(f_vy_exact,2), &
          f_vy_exact, &
          "plotfvytransport", &
          0, &
@@ -1642,8 +1656,8 @@ subroutine delete_vp_cart( sim )
  SLL_DEALLOCATE_ARRAY( sim%dtfn_v1v2x1, ierr )
  SLL_DEALLOCATE_ARRAY( sim%rho_x1, ierr )
  SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
- call delete( sim%sequential_v1v2x1 )
- call delete( sim%phi_seq_x1 )
+ call sll_delete( sim%sequential_v1v2x1 )
+ call sll_delete( sim%phi_seq_x1 )
 end subroutine delete_vp_cart
 
 ! we put the reduction functions here for now, since we are only using

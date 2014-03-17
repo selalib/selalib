@@ -22,7 +22,7 @@
 !> - Modules available
 !>   + sll_fishpack
 !>   + sll_mudpack_cartesian
-!>   + sll_mudpack_colella
+!>   + sll_mudpack_curvilinear
 !>   + sll_mudpack_polar
 !>   + sll_poisson_1d_periodic
 !>   + sll_poisson_2d_fem
@@ -34,6 +34,7 @@
 !> - Parallel solvers
 !>   + sll_poisson_2d_periodic_cartesian_par
 !>   + sll_poisson_polar_parallel
+!>   + sll_poisson_3d_periodic_par
 !>
 !> - Import module with  :
 !> \code
@@ -51,7 +52,7 @@ implicit none
 !> Poisson solver base class on 2d cartesian mesh
 !> with periodic boundary conditions
 !> We use FFT to solve Potential or Electric fields
-type, public  :: poisson_2d
+type, public  :: sll_poisson_2d
   sll_int32   :: nc_x       !< number of cells along x
   sll_int32   :: nc_y       !< number of cells along y
   sll_real64  :: dx         !< step size along x
@@ -60,12 +61,12 @@ type, public  :: poisson_2d
   sll_real64  :: x_max      !< right corner of y dimension
   sll_real64  :: y_min      !< left corner of y dimension
   sll_real64  :: y_max      !< right corner of y dimension
-end type poisson_2d
+end type sll_poisson_2d
 
 !> Poisson solver base class on 3d cartesian mesh
 !> with periodic boundary conditions
 !> We use FFT to solve Potential or Electric fields
-type, public  :: poisson_3d
+type, public  :: sll_poisson_3d
   sll_int32   :: nc_x       !< number of cells along x
   sll_int32   :: nc_y       !< number of cells along y
   sll_int32   :: nc_z       !< number of cells along z
@@ -78,6 +79,6 @@ type, public  :: poisson_3d
   sll_real64  :: y_max      !< right corner of y dimension
   sll_real64  :: z_min      !< left corner of z dimension
   sll_real64  :: z_max      !< right corner of z dimension
-end type poisson_3d
+end type sll_poisson_3d
 
 end module sll_poisson_solvers
