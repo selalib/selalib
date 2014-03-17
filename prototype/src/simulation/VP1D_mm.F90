@@ -272,7 +272,7 @@ program VP1d_deltaf
   ! initialize interpolators
   select case (interpol_x)
   case (1) ! periodic cubic spline
-     interp_spline_x => new_spline_1d( Ncx + 1, xmin, xmax, SLL_PERIODIC )
+     interp_spline_x => new_cubic_spline_1d( Ncx + 1, xmin, xmax, SLL_PERIODIC )
 !     call interp_spline_x%initialize( Ncx + 1, xmin, xmax, SLL_PERIODIC )
 !     interp_x => interp_spline_x
   case (2) ! arbitrary order periodic splines
@@ -286,8 +286,8 @@ program VP1d_deltaf
   end select
      select case (interpol_v)
   case (1) ! hermite cubic spline
-      interp_spline_v => new_spline_1d( Ncv + 1,vmin, vmax, SLL_HERMITE )
-      interp_spline_vh => new_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), SLL_HERMITE )
+      interp_spline_v => new_cubic_spline_1d( Ncv + 1,vmin, vmax, SLL_HERMITE )
+      interp_spline_vh => new_cubic_spline_1d( Ncvh + 1, vh_array(1), vh_array(Ncvh+1), SLL_HERMITE )
   case (2) ! arbitrary order periodic splines
      call interp_per_v%initialize( Ncv + 1, vmin, vmax, SPLINE, order_v)
      interp_v => interp_per_v
@@ -326,7 +326,7 @@ program VP1d_deltaf
   !--------------------------------------------
   do i=1,Ncx+1
      !compute splines coef associated to fg and evalute splines on the fine mesh vh_array --> ff1
-     call compute_spline_1D(fg(i,:), interp_spline_v)
+     call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
      call interpolate_array_values(vh_array, ff1(i,:), Ncvh+1, interp_spline_v)
 
      !compute ff:=deltaf on the fine mesh: ff(v_j)=f(v_j)-ff1(v_j), v_j\in vh_array
@@ -400,7 +400,7 @@ program VP1d_deltaf
 
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call compute_spline_1D(fg(i,:), interp_spline_v)
+        call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -428,7 +428,7 @@ program VP1d_deltaf
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call compute_spline_1D(ff(i,:),interp_spline_vh)
+        call compute_cubic_spline_1D(ff(i,:),interp_spline_vh)
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -456,7 +456,7 @@ program VP1d_deltaf
         
         !compute splines coef associated to fg 
         !and compute, for the coarse grid in v fg^{n+1}(x_i)=fg^n(x_i^*) -> fg
-        call compute_spline_1D(fg(:,j), interp_spline_x)
+        call compute_cubic_spline_1D(fg(:,j), interp_spline_x)
         alpha = (vmin + (j-1) * delta_v) * dt
         do i=1, Ncx+1
            xg_array(i)=x_array(i)-alpha
@@ -474,7 +474,7 @@ program VP1d_deltaf
      do j=1,Ncvh+1 
         !compute splines coef associated to ff 
         !and compute, for the fine grid in v ff^{n+1}(x_i)=ff^n(x_i^*) -> ff
-        call compute_spline_1D(ff(:,j), interp_spline_x)
+        call compute_cubic_spline_1D(ff(:,j), interp_spline_x)
         alpha = vh_array(j) * dt 
         do i=1, Ncx+1
            xg_array(i)=x_array(i)-alpha
@@ -521,7 +521,7 @@ program VP1d_deltaf
         
         !compute splines coef associated to fg 
         !and compute fg^{n+1}(v_j)=fg^n(v_j^*) (v_j on the coarse mesh) -> fg
-        call compute_spline_1D(fg(i,:),interp_spline_v)
+        call compute_cubic_spline_1D(fg(i,:),interp_spline_v)
         alpha = -(efield(i)+e_app(i)) * 0.5_f64 * dt
         do j=1,Ncv+1
            vg_array(j)=v_array(j)+alpha
@@ -550,7 +550,7 @@ program VP1d_deltaf
         ff(i,:)=ff(i,:)-mass/real(Ncvh+1,f64)
 
         !compute splines coef associated to ff 
-        call compute_spline_1D(ff(i,:), interp_spline_vh)
+        call compute_cubic_spline_1D(ff(i,:), interp_spline_vh)
 
         do j=1,Ncvh+1
            vhg_array(j)=vh_array(j)+alpha
@@ -637,7 +637,7 @@ program VP1d_deltaf
 
   !compute fg on the fine mesh -> ff1 (for diagnostic)
   do i=1,Ncx+1
-     call compute_spline_1D(fg(i,:), interp_spline_v)
+     call compute_cubic_spline_1D(fg(i,:), interp_spline_v)
      call interpolate_array_values(vh_array,ff1(i,:),Ncvh+1,interp_spline_v)
   enddo
 

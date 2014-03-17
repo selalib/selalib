@@ -56,6 +56,7 @@ module sll_poisson_1d_periodic
 contains
 
   !> Create a new solver
+  !> @return
   function new_poisson_1d_periodic(eta1_min,eta1_max,nc_eta1,error) &
      result(this)
      type(poisson_1d_periodic),pointer :: this     !< Solver data structure
@@ -96,10 +97,10 @@ contains
   subroutine solve_poisson_1d_periodic(this, field, rhs)
 
     type(poisson_1d_periodic),intent(inout) :: this
-    sll_real64, dimension(:), intent(out)     :: field
-    sll_real64, dimension(:), intent(in)      :: rhs
-    sll_int32                                 :: ik
-    sll_real64                                :: kx0, kx, k2
+    sll_real64, dimension(:), intent(out)   :: field
+    sll_real64, dimension(:), intent(in)    :: rhs
+    sll_int32                               :: ik
+    sll_real64                              :: kx0, kx, k2
 
     ! Check that field and rhs are both associated to the 
     ! same mesh with the right number of cells 

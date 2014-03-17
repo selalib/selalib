@@ -1,7 +1,6 @@
 ADD_LIBRARY(sll_remap STATIC sll_remap.F90)
 
-TARGET_LINK_LIBRARIES(sll_remap sll_collective 
-                                sll_electric_field_accumulators)  # this has to disappear
+TARGET_LINK_LIBRARIES(sll_remap sll_collective) 
 
 
 ADD_EXECUTABLE(test_remap_2d unit_test_2d.F90)

@@ -15,8 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
-!> @brief
 !> Implements the functions to write data file plotable by GNUplot
 module sll_gnuplot
 #include "sll_working_precision.h"
@@ -28,10 +26,11 @@ use sll_utilities, only: sll_new_file_id, int2string
 implicit none
 
 !> write file pltable by gnuplot to visualize 2d field
-interface sll_gnuplot_field_2d
-module procedure sll_gnuplot_corect_2d
-module procedure sll_gnuplot_rect_2d
-module procedure sll_gnuplot_curv_2d
+interface sll_gnuplot_2d
+   module procedure sll_gnuplot_corect_2d
+   module procedure sll_gnuplot_rect_2d
+   module procedure sll_gnuplot_curv_2d
+   module procedure sll_gnuplot_mesh_2d
 end interface
 
 contains  
@@ -94,24 +93,25 @@ subroutine sll_gnuplot_write(array,array_name,error)
 end subroutine sll_gnuplot_write
 
 
+!> This subroutine write a data file to plot a 1d curve
 subroutine sll_gnuplot_write_1d( &
-  array, &
+  y_array, &
   x_array, &
   array_name, &
   iplot)
 
-   sll_real64, dimension(:), intent(in) :: array      !< data
-   sll_real64, dimension(:), intent(in) :: x_array      !< data
+   sll_real64, dimension(:), intent(in) :: y_array    !< Y data
+   sll_real64, dimension(:), intent(in) :: x_array    !< X data
    character(len=*), intent(in)         :: array_name !< field name
-   sll_int32,intent(in),optional :: iplot
-   sll_int32               :: error      !< error code
+   sll_int32,intent(in),optional        :: iplot      !< Plot index 
+   sll_int32                            :: error      !< error code
    sll_int32                            :: file_id    !< file unit number
    sll_int32                            :: npoints
    sll_int32                            :: ipoints    
    logical                              :: lopen
-   character(len=4)      :: cplot
+   character(len=4)                     :: cplot
    
-   npoints = size(array)
+   npoints = size(x_array)
 
    error=0
 
@@ -140,7 +140,7 @@ subroutine sll_gnuplot_write_1d( &
 
    !write(file_id,"(a)")"plot '-' t '"//trim(array_name)//"' with linesp"
    do ipoints = 1, npoints
-      write(file_id,*) x_array(ipoints), array(ipoints)
+      write(file_id,*) sngl(x_array(ipoints)), sngl(y_array(ipoints))
    end do
    !write(file_id,"(a)")"e"
    !write(file_id,"(a)")"pause -1 'Hit return to quit'"
@@ -180,6 +180,7 @@ open(gnu_id,file=array_name//".gnu", position="append")
 write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
 close(gnu_id)
 
+print*, size(array,1), size(array,2), nx, ny
 call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
 dx = (xmax-xmin)/(nx-1)
 dy = (ymax-ymin)/(ny-1)
@@ -187,6 +188,7 @@ x = xmin
 do i=1,nx
    y = ymin
    do j=1,ny
+      print*, i, j, x, y, array(i,j)
       write(file_id,*) sngl(x),sngl(y),sngl(array(i,j))
       y = y + dy
    end do
@@ -237,6 +239,37 @@ close(file_id)
 
 end subroutine sll_gnuplot_rect_2d
 
+!> write a data file plotable by gnuplot to visualize a 2d curvilinear mesh
+subroutine sll_gnuplot_mesh_2d( nx, ny, xcoord, ycoord, array_name, error)  
+sll_int32                    :: nx         !< x points number
+sll_int32                    :: ny         !< y points number
+sll_real64, dimension(nx,ny) :: xcoord     !< x coordinates
+sll_real64, dimension(nx,ny) :: ycoord     !< y coordiantes
+character(len=*)             :: array_name !< field name
+sll_int32, save :: gnu_id
+sll_int32 :: file_id
+sll_int32 :: error                         !< error code
+sll_int32 :: i, j
+
+call sll_new_file_id(gnu_id, error)
+
+open(gnu_id,file=array_name//".gnu")
+write(gnu_id,*)"set view 0,0"
+write(gnu_id,*)"splot '"//array_name//"_mesh.dat' with lines"
+close(gnu_id)
+
+call sll_ascii_file_create(array_name//'_mesh.dat', file_id, error )
+do i=1,nx
+   do j=1,ny
+      write(file_id,*) sngl(xcoord(i,j)), &
+                       sngl(ycoord(i,j)), 0.0_f32
+   end do
+   write(file_id,*)
+enddo
+close(file_id)
+
+end subroutine sll_gnuplot_mesh_2d
+
 
 !> write a data file plotable by gnuplot to visualize a 2d field on structured
 !> curvilinear mesh
@@ -280,3 +313,4 @@ end subroutine sll_gnuplot_curv_2d
 
 
 end module sll_gnuplot
+
