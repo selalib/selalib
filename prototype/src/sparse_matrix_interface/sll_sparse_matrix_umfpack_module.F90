@@ -35,6 +35,8 @@ use mod_umfpack
     sll_int32, dimension(:), pointer :: opi_ia
     sll_int32, dimension(:), pointer :: opi_ja
     sll_real64, dimension(:), pointer :: opr_a
+    
+    sll_real64, dimension(:), pointer :: api_occ
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -159,6 +161,9 @@ contains
     li_COEF = 10
     SLL_ALLOCATE(lpi_columns(num_rows, 0:li_COEF * num_local_dof_col),ierr)
     SLL_ALLOCATE(lpi_occ(num_rows + 1),ierr)
+    if (sll_perper ==0 ) then 
+       SLL_ALLOCATE(mat%api_occ(num_rows + 1),ierr); mat%api_occ(:) = 0
+    end if    
     lpi_columns(:,:) = 0
     lpi_occ(:) = 0
     ! COUNTING NON ZERO ELEMENTS
@@ -173,7 +178,9 @@ contains
       num_local_dof_col, &
       lpi_columns, &
       lpi_occ)
-
+    if (sll_perper ==0 ) then 
+       mat%api_occ(1:num_rows) = lpi_occ(1:num_rows)
+    end if
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
@@ -216,6 +223,125 @@ contains
     
    
   end subroutine initialize_csr_matrix
+ 
+  subroutine initialize_csr_matrix_tot( &
+    mat, &
+    mat_a)
+    type(sll_csr_matrix), intent(inout) :: mat
+    type(sll_csr_matrix), intent(inout) :: mat_a
+    !local variables
+    sll_int32, dimension(:), pointer :: position
+    sll_int32 :: li_err, li_i, li_k,li_j
+    sll_int32 :: num_nz
+
+
+    print*,' COUNTING NON ZERO ELEMENTS init'
+    num_nz = mat_a%num_nz + 2*mat_a%num_rows  
+    mat%num_nz = num_nz    
+    print*,'pass 1', mat_a%num_nz,mat%num_nz 
+    mat%num_rows = mat_a%num_rows  +  1
+    print*,'pass 2',mat_a%num_rows , mat%num_rows
+    mat%num_cols = mat_a%num_cols  +  1
+    print*,'pass 3',mat_a%num_cols , mat%num_cols 
+
+    
+    SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
+    SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
+    SLL_ALLOCATE(position(mat%num_rows),ierr)
+    SLL_ALLOCATE(mat%api_occ(mat%num_rows+1),ierr); mat%api_occ(:) = 0
+    mat%opr_a(:) = 0.0_f64
+    
+     print*,'  INITIALIZING ia '
+    mat%opi_ia(1) = 1
+    mat%api_occ(1:mat%num_rows-1) = mat_a%api_occ(1:mat_a%num_rows) + 1
+    mat%api_occ(mat%num_rows) = mat_a%num_rows
+    do li_i = 1, mat%num_rows
+      mat%opi_ia(li_i + 1) = mat%opi_ia(1) + SUM(mat%api_occ(1: li_i))
+    end do
+      mat%opi_ia(mat%num_rows + 1) = mat%opi_ia(mat%num_rows) + 1
+      
+    do li_k = 0,mat_a%num_rows - 1 
+      mat%opi_ja(mat%num_nz - li_k)= mat_a%num_rows - li_k
+    end do
+   
+    do li_k = 1,mat%num_rows
+      position(li_k) = SUM(mat%api_occ(1: li_k))
+    end do
+
+    li_k = 1
+    li_j = 1
+    li_i = 0
+    mat%opi_ja(1:mat%num_nz - mat_a%num_rows) = 0 
+    do li_k = 1,mat%num_nz - mat_a%num_rows
+      if(li_k == position(li_j)) then
+         mat%opi_ja(li_k ) = mat%num_rows
+         li_j = li_j + 1
+         li_i = li_i + 1 
+      elseif(li_k < position(li_j)) then
+         mat%opi_ja(li_k ) = mat_a%opi_ja(li_k - li_i)
+      end if
+    end do  
+    print*,'  INITIALIZING ja '
+   ! SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+   ! SLL_ALLOCATE(mat%Ai(num_nz),ierr)
+   ! SLL_ALLOCATE(mat%Ap(mat%num_rows+1),ierr)
+
+    !call umf4def(mat%umf_control)  ! get the default configuration
+    print*,'  INITIALIZING ia ja  ok'
+  SLL_DEALLOCATE_ARRAY(position,li_err)
+  !SLL_DEALLOCATE_ARRAY(mat_a%api_occ,li_err)  
+  !SLL_DEALLOCATE_ARRAY(mat%api_occ,li_err)   
+  
+  end subroutine initialize_csr_matrix_tot
+
+  function new_csr_matrix_tot(mat_a) result(mat)
+    type(sll_csr_matrix), pointer :: mat
+    type(sll_csr_matrix) :: mat_a
+    
+    call initialize_csr_matrix_tot( &
+         mat, &
+         mat_a)
+  end function new_csr_matrix_tot
+  
+   subroutine csr_matrix_tot( &
+    mat, &
+    mat_a, &
+    masse_tot)
+    type(sll_csr_matrix), intent(inout) :: mat
+    type(sll_csr_matrix), intent(inout) :: mat_a
+    sll_real64, dimension(:), pointer :: masse_tot
+    !local variables
+    sll_int32, dimension(:), pointer :: position
+    sll_int32 :: li_err, li_i, li_k,li_j
+    sll_int32 :: num_nz
+
+    print*,' COUNTING NON ZERO ELEMENTS'
+    SLL_ALLOCATE(position(mat%num_rows),ierr)
+    do li_k = 1,mat%num_rows
+      position(li_k) = SUM(mat%api_occ(1: li_k))
+    end do
+    do li_k = 0,mat_a%num_rows - 1 
+      mat%opr_a(mat%num_nz - li_k ) = masse_tot(li_k +1)
+    end do
+    li_k = 1
+    li_j = 1
+    li_i = 0
+    do li_k = 1,mat%num_nz - mat_a%num_rows
+      if(li_k == position(li_j)) then 
+         mat%opr_a(li_k ) = Masse_tot(li_j)
+         li_j = li_j + 1
+         li_i = li_i + 1 
+      elseif(li_k < position(li_j)) then
+         mat%opr_a(li_k )  = mat_a%opr_a(li_k - li_i) 
+      end if
+    end do  
+    
+  SLL_DEALLOCATE_ARRAY(position,li_err)
+  SLL_DEALLOCATE_ARRAY(mat%api_occ,li_err)   
+  SLL_DEALLOCATE_ARRAY(mat_a%api_occ,li_err) 
+  end subroutine csr_matrix_tot
+ 
   
   subroutine sll_factorize_csr_matrix(mat)
     type(sll_csr_matrix), intent(inout) :: mat
@@ -236,7 +362,7 @@ contains
       mat%umf_control, &
       info)
 
-    
+   
     ! numeric factorization
     call umf4num( &
       mat%Ap, &

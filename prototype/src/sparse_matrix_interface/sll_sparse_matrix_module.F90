@@ -34,6 +34,8 @@ module sll_sparse_matrix_module
     sll_int32, dimension(:), pointer :: opi_ia
     sll_int32, dimension(:), pointer :: opi_ja
     sll_real64, dimension(:), pointer :: opr_a
+    
+    sll_real64, dimension(:), pointer :: api_occ
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -165,11 +167,10 @@ contains
       local_to_global_col, &
       num_local_dof_col, &
       lpi_columns, &
-      lpi_occ)
-
+      lpi_occ)      
     mat%num_rows = num_rows
     mat%num_cols = num_cols
-    mat%num_nz = num_nz
+    mat%num_nz = num_nz   
     SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
     SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
     SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
@@ -192,6 +193,7 @@ contains
     SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
 
   end subroutine initialize_csr_matrix
+
 
   subroutine sll_factorize_csr_matrix(mat)
     type(sll_csr_matrix), intent(inout) :: mat
