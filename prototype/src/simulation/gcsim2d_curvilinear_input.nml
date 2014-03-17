@@ -3,8 +3,8 @@
 
 &geometry
     mesh_case ="SLL_COLLELA_MESH"
-    num_cells_eta1 = 64
-    num_cells_eta2 = 64
+    num_cells_eta1 = 32
+    num_cells_eta2 = 32
     eta1_min = 0.
     eta1_max = 6.28
     eta2_min = 0.

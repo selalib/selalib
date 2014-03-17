@@ -67,6 +67,7 @@ module sll_general_coordinate_elliptic_solver_module
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
      type(sll_csr_matrix), pointer :: sll_csr_mat
+     type(sll_csr_matrix), pointer :: sll_csr_mat_tot
      type(sll_csr_matrix), pointer :: sll_csr_mat_source
      sll_real64, dimension(:), pointer :: rho_vec
      sll_real64, dimension(:), pointer :: phi_vec
@@ -318,7 +319,9 @@ contains ! *******************************************************************
       es%local_to_global_spline_indices, &
       es%total_num_splines_loc, &
       sll_perper )
-
+   if(sll_perper == 0 )then   
+      es%sll_csr_mat_tot => new_csr_matrix_tot(es%sll_csr_mat)   
+   end if
     es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
     es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
     
@@ -612,7 +615,7 @@ contains ! *******************************************************************
           
           
           cell_index = i+es%num_cells1*(j-1)
-          
+          print*,'pass1'
           call build_local_matrices( &
                es, &
                cell_index,&
@@ -636,7 +639,7 @@ contains ! *******************************************************************
                S_b1_loc,  &
                S_b2_loc,&
                Source_loc)
-          
+          print*,'pass'
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -658,9 +661,18 @@ contains ! *******************************************************************
           
        end do
     end do
-
-
-    call sll_factorize_csr_matrix(es%sll_csr_mat)
+    print*,'es%sll_csr_mat_tot'
+    !if (sll_perper == 0) then
+    !   print*,'es%sll_csr_mat_tot'
+    !   call csr_matrix_tot( &
+    !      es%sll_csr_mat_tot, &
+    !      es%sll_csr_mat, &
+    !      es%masse)
+    !   call sll_factorize_csr_matrix(es%sll_csr_mat_tot)
+    !else
+       call sll_factorize_csr_matrix(es%sll_csr_mat)      
+   ! end if 
+    stop
     es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
          (es%num_cells1+1)*(es%num_cells2+1),&
@@ -907,6 +919,7 @@ contains ! *******************************************************************
         .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
       
      call solve_linear_system_perper(es,es%masse)
+        
   else 
      call solve_linear_system(es)
   end if
@@ -1728,14 +1741,30 @@ contains ! *******************************************************************
     ! is given in terms of the spline coefficients that represent phi.
     class(general_coordinate_elliptic_solver) :: es
     sll_real64, dimension(:),pointer :: Masse_tot
+    sll_real64, dimension(:),pointer :: tmp_phi_vec2
+    sll_real64, dimension(:),pointer :: tmp_rho_vec2
+    sll_int32 :: ierr
     
+    SLL_ALLOCATE(tmp_phi_vec2(es%total_num_splines_eta1*es%total_num_splines_eta2 +1),ierr)
+    SLL_ALLOCATE(tmp_rho_vec2(es%total_num_splines_eta1*es%total_num_splines_eta2 +1),ierr)
+    tmp_rho_vec2(:) = 0.0_f64
+    tmp_phi_vec2(:) = 0.0_f64
+    tmp_rho_vec2(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
+         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
+    call solve_general_es_perper(es,es%sll_csr_mat_tot,tmp_rho_vec2,tmp_phi_vec2, &
+         Masse_tot) 
+    es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) = &
+       tmp_phi_vec2(1:es%total_num_splines_eta1*es%total_num_splines_eta2)    
+       
+         
     es%tmp_rho_vec(:) = 0.0_f64
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
-         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
- 
-    call solve_general_es_perper(es,es%sll_csr_mat,es%tmp_rho_vec,es%phi_vec, &
-         Masse_tot) 
- 
+         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)     
+    !call solve_general_es_perper(es,es%sll_csr_mat,es%tmp_rho_vec,es%phi_vec, &
+    !     Masse_tot) 
+         
+    SLL_DEALLOCATE(tmp_phi_vec2,ierr)
+    SLL_DEALLOCATE(tmp_rho_vec2,ierr)
   end subroutine solve_linear_system_perper
 
 
