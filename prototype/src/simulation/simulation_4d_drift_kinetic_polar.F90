@@ -897,12 +897,12 @@ contains
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
           nc_x2+1, &
-          sim%f4d_seqx1x2x4(:,:,1,nc_x4/2), &
+          sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1), &
           'fdist', &
           i_plot, &
           ierr)
 #ifndef NOHDF5
-        call plot_f_polar(i_plot,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),sim%m_x1,sim%m_x2)
+        call plot_f_polar(i_plot,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1),sim%m_x1,sim%m_x2)
 #endif
    
           
