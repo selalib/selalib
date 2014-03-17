@@ -117,8 +117,7 @@ program test_general_elliptic_solver
  ! epsi  =  0.000_f64
  ! epsi1 =  0.000_f64 ! penalization method
   sll_real64, dimension(1) :: whatever  ! dummy params array
-  
-  
+
 !!$  !*******************************************************************
 !!$  !        WHITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA
 !!$  !*******************************************************************
@@ -144,7 +143,8 @@ program test_general_elliptic_solver
   SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
 
-  ! First thing, initialize the logical mesh associated with this problem.        
+  ! First thing, initialize the logical mesh associated with this problem. 
+
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 
@@ -308,7 +308,7 @@ program test_general_elliptic_solver
   call sll_set_time_mark(t_reference)
 
   ! compute matrix the field
- call factorize_mat_es(&
+  call factorize_mat_es(&
        es, &
        a11_field_mat, &
        a12_field_mat,&
@@ -332,6 +332,7 @@ program test_general_elliptic_solver
 
     print *, 'Compare the values of the transformation at the nodes: '
 !!$  
+    
   acc1 = 0.0_f64
   normL2_1 = 0.0_f64
   normH1_1 = 0.0_f64
@@ -3915,7 +3916,6 @@ function func_one( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
-  print*, eta1, eta2, params
   res = 1.0_8
 end function func_one
 
@@ -3924,7 +3924,6 @@ function func_zero( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
-  print*, eta1, eta2, params
   res = 0.0_8
 end function func_zero
 
@@ -3933,7 +3932,7 @@ function func_epsi( eta1, eta2, params ) result(res)
   real(8), intent(in) :: eta2
   real(8), dimension(:), intent(in) :: params
   real(8) :: res
-  print*, eta1, eta2, params
+
   res = 0.0_8
 end function func_epsi
 
@@ -3952,14 +3951,15 @@ function source_term_perper( eta1, eta2) result(res)
   real(8), intent(in) :: eta2
   ! real(8), dimension(:), intent(in), optional :: params
   real(8) :: res
-  print*, eta1, eta2
-  res =  0.001*cos(2*sll_pi*eta1)!!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
+
+  res =  0.001*cos(2*sll_pi*eta1)
+  !!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
 end function source_term_perper
 
 real(8) function sol_exacte_perper(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
-  print*, eta1, eta2
+  
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
 end function sol_exacte_perper
@@ -3967,14 +3967,14 @@ end function sol_exacte_perper
 real(8) function sol_exacte_perper_der1(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
-  print*, eta1, eta2
+  
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der1
 real(8) function sol_exacte_perper_der2(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
-  print*, eta1, eta2
+  
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
 end function sol_exacte_perper_der2
@@ -3994,7 +3994,7 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
 
-  print*, eta1, eta2, params
+  
   source_term_perdir = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
       ! -(16.0*sll_pi**2*eta2**4 &
       ! - 16.0*sll_pi**2*eta2**2 &
@@ -4024,6 +4024,8 @@ real(8) function sol_exacte_perdir_der1(eta1,eta2)
   !real(8), dimension(:), intent(in), optional :: params
   sol_exacte_perdir_der1 = 2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
 end function sol_exacte_perdir_der1
+
+
 real(8) function sol_exacte_perdir_der2(eta1,eta2)
   use sll_constants
   real(8) :: eta1,eta2
@@ -4043,7 +4045,7 @@ real(8) function source_term_dirper(eta1,eta2,params) ! in the path
   use sll_constants
   real(8),intent(in) :: eta1,eta2
   real(8), dimension(:), intent(in), optional :: params
-  print*, eta1, eta2, params
+
   source_term_dirper = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
      ! -(16.0*sll_pi**2*eta1**4 &
      ! - 16.0*sll_pi**2*eta1**2 &

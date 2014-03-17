@@ -134,9 +134,9 @@ module sll_simulation_4d_qns_general_module
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen
   end type sll_simulation_4d_qns_general
 
-  interface delete
+  interface sll_delete
      module procedure delete_4d_qns_gen
-  end interface delete
+  end interface sll_delete
 
   interface initialize
      module procedure initialize_4d_qns_general
@@ -751,6 +751,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%rho_split,1), &
+         size(sim%rho_split,2), &
          sim%rho_split, &
          "rho_split", &
          0, &
@@ -788,6 +790,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%rho_full,1), &
+         size(sim%rho_full,2), &
          sim%rho_full, &
          "rho_full", &
          0, &
@@ -829,6 +833,8 @@ contains
          sim%mesh2d_x%delta_eta1, &
          sim%mesh2d_x%eta2_min, &
          sim%mesh2d_x%delta_eta2, &
+         size(sim%rho_full,1), &
+         size(sim%rho_full,2), &
          sim%rho_full, &
          "rho_full", &
          0, &
@@ -1007,6 +1013,8 @@ contains
                sim%mesh2d_x%delta_eta1, &
                sim%mesh2d_x%eta2_min, &
                sim%mesh2d_x%delta_eta2, &
+               size(sim%rho_full,1), &
+               size(sim%rho_full,2), &
                sim%rho_full, &
                "rho_full_check", &
                itime, &
@@ -1517,16 +1525,16 @@ contains
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
-    call delete( sim%sequential_x1x2 )
-    call delete( sim%sequential_x3x4 )
-    call delete( sim%rho_full_layout )
-    call delete( sim%rho_seq_x2 )
-    call delete( sim%split_rho_layout )
-    call delete( sim%split_to_full )
-    call delete( sim%efld_seqx1_to_seqx2 )
-    call delete( sim%efld_seqx2_to_split )
-    call delete( sim%seqx1x2_to_seqx3x4 )
-    call delete( sim%seqx3x4_to_seqx1x2 )
+    call sll_delete( sim%sequential_x1x2 )
+    call sll_delete( sim%sequential_x3x4 )
+    call sll_delete( sim%rho_full_layout )
+    call sll_delete( sim%rho_seq_x2 )
+    call sll_delete( sim%split_rho_layout )
+    call sll_delete( sim%split_to_full )
+    call sll_delete( sim%efld_seqx1_to_seqx2 )
+    call sll_delete( sim%efld_seqx2_to_split )
+    call sll_delete( sim%seqx1x2_to_seqx3x4 )
+    call sll_delete( sim%seqx3x4_to_seqx1x2 )
     call delete( sim%interp_x1x2 )
     call delete( sim%interp_x3 )
     call delete( sim%interp_x4 )

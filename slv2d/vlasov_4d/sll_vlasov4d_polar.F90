@@ -346,6 +346,7 @@ subroutine initialize_vp4d_polar( this,        &
     call sll_gnuplot_2d_parallel( &
         this%eta3_min+(global_indices(1)-1)*this%delta_eta3, this%delta_eta3, &
         this%eta4_min+(global_indices(2)-1)*this%delta_eta4, this%delta_eta4, &
+        size(this%proj_f_x3x4,1), size(this%proj_f_x3x4,2),                   & 
         this%proj_f_x3x4, "fvxvy", itime, error )
 
   end subroutine plot_ft
@@ -360,10 +361,10 @@ subroutine initialize_vp4d_polar( this,        &
     SLL_DEALLOCATE( this%f, error )
     SLL_DEALLOCATE( this%ft, error )
 
-    call delete( this%layout_x )
-    call delete( this%layout_v )
-    call delete( this%x_to_v )
-    call delete( this%v_to_x )
+    call sll_delete( this%layout_x )
+    call sll_delete( this%layout_v )
+    call sll_delete( this%x_to_v )
+    call sll_delete( this%v_to_x )
 
   end subroutine delete_vp4d_par_polar
 

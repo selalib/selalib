@@ -194,9 +194,9 @@ module sll_simulation_4d_DK_hybrid_module
      procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
   end type sll_simulation_4d_DK_hybrid
 
-  interface delete
+  interface sll_delete
      module procedure delete_4d_DK_hybrid
-  end interface delete
+  end interface sll_delete
 
   interface initialize
      module procedure initialize_4d_DK_hybrid
@@ -772,7 +772,7 @@ contains
     SLL_ALLOCATE(sim%E3d_eta2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
-    logical_mesh2d => sim%transf_xy%mesh
+    logical_mesh2d => sim%transf_xy%get_logical_mesh()
 
     !---> For iterpolations of Phi
     call sim%interp2d_Phi_eta1eta2%initialize( &
@@ -1076,7 +1076,7 @@ contains
     call sim%QN_C%update_interpolation_coefficients( )
 
     !---> Initialization of the QNS type
-    logical_mesh2d => sim%transf_xy%mesh
+    logical_mesh2d => sim%transf_xy%get_logical_mesh()
 
     sim%QNS => new_general_elliptic_solver( &
       sim%spline_degree_eta1, & 
@@ -1098,6 +1098,8 @@ contains
     SLL_DEALLOCATE(A12,ierr)
     SLL_DEALLOCATE(A21,ierr)
     SLL_DEALLOCATE(A22,ierr)
+    SLL_DEALLOCATE(B1,ierr)
+    SLL_DEALLOCATE(B2,ierr)
     SLL_DEALLOCATE(C,ierr)
   end subroutine initialize_QN_DK
 
@@ -2320,8 +2322,8 @@ contains
     SLL_DEALLOCATE(sim%feq_xyvpar,ierr)
     SLL_DEALLOCATE(sim%f4d_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%f4d_seqx3x4,ierr)
-    call delete(sim%layout4d_seqx1x2)
-    call delete(sim%layout4d_seqx3x4)
+    call sll_delete(sim%layout4d_seqx1x2)
+    call sll_delete(sim%layout4d_seqx3x4)
     SLL_DEALLOCATE(sim%rho3d_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%rho3d_seqx3,ierr)
     SLL_DEALLOCATE(sim%phi3d_seqx1x2,ierr)
@@ -2338,8 +2340,8 @@ contains
     SLL_DEALLOCATE(sim%diag_nrj_pot,ierr)
     SLL_DEALLOCATE(sim%diag_nrj_tot,ierr)
     SLL_DEALLOCATE(sim%diag_heat_flux,ierr)
-    call delete(sim%layout3d_seqx1x2)
-    call delete(sim%layout3d_seqx3)
+    call sll_delete(sim%layout3d_seqx1x2)
+    call sll_delete(sim%layout3d_seqx3)
   end subroutine delete_4d_DK_hybrid
 
 end module sll_simulation_4d_DK_hybrid_module

@@ -69,6 +69,12 @@ module sll_arbitrary_degree_spline_interpolator_1d_module
 
 contains
 
+  !> @brief delete interpolator arbitrary degree splines.
+  !> @details   
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_1d_interpolator
+
   subroutine delete_arbitrary_degree_1d_interpolator( interpolator )
     class(arb_deg_1d_interpolator), intent(inout) :: interpolator
     sll_int32 :: ierr
@@ -78,15 +84,25 @@ contains
   end subroutine delete_arbitrary_degree_1d_interpolator
 
 
+  !> @brief Initialization of a pointer interpolator arbitrary degree splines 1d.
+  !> @details To have the interpolator arbitrary degree splines 1d such as a pointer
+  !> 
+  !> The parameters are
+  !> @param[in] num_pts the number of points
+  !> @param[in] eta_min the minimun
+  !> @param[in] eta_max the maximun
+  !> @param[in] bc_left  the boundary condition at left
+  !> @param[in] bc_right the boundary condition at right
+  !> @param[in] spline_degree the degree of B-spline
+  !> @return the type interpolator arbitrary degree splines 1d
+
   function new_arbitrary_degree_1d_interpolator(&
        num_pts, &
        eta_min, &
        eta_max, &
        bc_left, &
        bc_right, &
-       spline_degree,&
-       slope_left,&
-       slope_right) result(interpolator)
+       spline_degree) result(interpolator)
     
     class(arb_deg_1d_interpolator),pointer :: interpolator
     sll_int32, intent(in) :: num_pts
@@ -95,8 +111,6 @@ contains
     sll_int32, intent(in) :: bc_left
     sll_int32, intent(in) :: bc_right
     sll_int32, intent(in) :: spline_degree
-    sll_real64, intent(in), optional     :: slope_left
-    sll_real64, intent(in), optional     :: slope_right
     sll_int32 :: ierr
 
 
@@ -109,22 +123,31 @@ contains
          eta_max, &
          bc_left, &
          bc_right, &
-         spline_degree,&
-         slope_left,&
-         slope_right)
-
+         spline_degree)
+    
   end function new_arbitrary_degree_1d_interpolator
 
+  !> @brief Initialization of interpolator arbitrary degree splines 1d.
+  !> @details To have the interpolator arbitrary degree splines 1d
+  !> 
+  !> The parameters are
+  !> @params interpolator the type arb_deg_1d_interpolator 
+  !> @param[in] num_pts the number of points
+  !> @param[in] eta_min the minimun
+  !> @param[in] eta_max the maximun
+  !> @param[in] bc_left  the boundary condition at left
+  !> @param[in] bc_right the boundary condition at right
+  !> @param[in] spline_degree the degree of B-spline
+  !> @return the type arb_deg_1d_interpolator
+
   subroutine initialize_ad1d_interpolator( &
-    interpolator, &
-    num_pts, &
-    eta_min, &
-    eta_max, &
-    bc_left, &
-    bc_right, &
-    spline_degree,&
-    slope_left,&
-    slope_right)
+       interpolator, &
+       num_pts, &
+       eta_min, &
+       eta_max, &
+       bc_left, &
+       bc_right, &
+       spline_degree)
 
     class(arb_deg_1d_interpolator), intent(inout) :: interpolator
     sll_int32, intent(in) :: num_pts
@@ -136,8 +159,6 @@ contains
     sll_int32 :: ierr
     sll_int32 :: tmp
     sll_int64 :: bc_selector
-    sll_real64, intent(in), optional     :: slope_left
-    sll_real64, intent(in), optional     :: slope_right
     
     ! do some argument checking...
     if(((bc_left  == SLL_PERIODIC).and.(bc_right.ne. SLL_PERIODIC))) then
@@ -179,41 +200,37 @@ contains
     interpolator%bc_right      = bc_right
     interpolator%bc_selector   = bc_selector
     interpolator%num_pts       = num_pts
-
-    if (present(slope_left)) then 
-       interpolator%slope_left = slope_left
-    else
-       interpolator%slope_left = 0.0_f64
-    end if
-
-    
-    if (present(slope_right)) then 
-       interpolator%slope_right = slope_right
-    else
-       interpolator%slope_right = 0.0_f64
-    end if
     
     select case (bc_selector)
     case (0) ! 1. periodic
        SLL_ALLOCATE( interpolator%knots(2*spline_degree+2),ierr )
        tmp = num_pts*num_pts
        SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-
+       
     case (9) ! 2. dirichlet-left, dirichlet-right
        SLL_ALLOCATE( interpolator%knots(num_pts+2*spline_degree),ierr )
        tmp = num_pts*num_pts
        SLL_ALLOCATE( interpolator%coeff_splines(tmp),ierr)
-
+       interpolator%slope_left = 0.0_f64
+       interpolator%slope_right = 0.0_f64
        
     case default
        print *, 'initialize_ad1d_interpolator: BC combination not implemented.'
     end select
-
+    
     interpolator%coeff_splines(:) = 0.0_f64
     SLL_ALLOCATE( interpolator%t(num_pts*num_pts),ierr)
     interpolator%t(:) = 0.0_f64
   end subroutine initialize_ad1d_interpolator
   
+  !> @brief initializing the coefficients of splines.
+  !> @details  initializing the coefficients of splines
+  !>  fot the arbitrary degree splines interpolator 1d 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_1d_interpolator
+  !> @param[in],optional, coeffs the 1d arrays corresponding of the splines coefficients
+  !> @return the type arb_deg_1d_interpolator
+
   subroutine set_coefficients_ad1d( &
    interpolator, &
    coeffs)
@@ -317,6 +334,56 @@ contains
    end select
  end subroutine set_coefficients_ad1d
 
+ !> @brief Initialization of the boundary for interpolator arbitrary degree splines 1d.
+  !> @details Initialization of the boundary
+  !>  interpolator arbitrary degree splines 1d
+  !> The parameters are
+  !> @params interpolator the type arb_deg_1d_interpolator
+  !> @param[in],optional,slope_left a array contains the value in the left
+  !> @param[in],optional,slope_right a array contains the value in the right
+  !> @return the type arb_deg_1d_interpolator
+ subroutine set_slope1d(interpolator,slope_left,slope_right)
+
+   class(arb_deg_1d_interpolator), intent(inout) :: interpolator
+   sll_real64, intent(in), optional     :: slope_left
+   sll_real64, intent(in), optional     :: slope_right
+   sll_int32 :: bc_left
+   sll_int32 :: bc_right
+   sll_int64 :: bc_selector
+   
+   bc_left = interpolator%bc_left
+   bc_right= interpolator%bc_right
+   bc_selector = interpolator%bc_selector
+
+   if (present(slope_left)) then 
+      interpolator%slope_left = slope_left
+   else
+       interpolator%slope_left = 0.0_f64
+    end if
+    
+    
+    if (present(slope_right)) then 
+       interpolator%slope_right = slope_right
+    else
+       interpolator%slope_right = 0.0_f64
+    end if
+   
+  end subroutine set_slope1d
+
+  !> @brief computing the coefficients spline with a given 
+  !>  data_array 1D cooresponding at the values of a function 
+  !> @details computing the coefficients spline with a given 
+  !>  data_array 1D coorespondind at the values of a function 
+  !>  on eta_coords of size size_eta_coords
+  !>  if the eta_coords and eta_coords is not given 
+  !>  we consider that the values of the function is on the points in the mesh_1d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_1d_interpolator
+  !> @param[in] data_array the 1d arrays corresponding at the values of a function
+  !> @param[in],optional, eta_coords the 1d arrays  
+  !> @param[in],optional, size_eta_coords the size of eta_coords
+  !> @return the type arb_deg_1d_interpolator
  subroutine compute_interpolants_ad1d( &
       interpolator,data_array, &
       eta_coords, &
@@ -406,9 +473,19 @@ contains
        interpolator%coeff_splines(1)  = interpolator%slope_left
        interpolator%coeff_splines(sz) = interpolator%slope_right
     end select
+    SLL_DEALLOCATE(point_locate_eta,ierr)
   end subroutine compute_interpolants_ad1d
 
 
+  !> @brief Interpolation on the points eta using 
+  !> the arbitrary degree splines interpolator 1d 
+  !> @details computing the values with the interpolator arbitrary degree splines 1d
+  !>  on the points eta of arbitrary degree splines 1d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_1d_interpolator
+  !> @param[in] eta the point 
+  !> @return val the values on the points eta
   function interpolate_value_ad1d( &
        interpolator, &
        eta1) result(val)
@@ -457,6 +534,16 @@ contains
          res,0)
   end function interpolate_value_ad1d
 
+
+  !> @brief First derivative interpolation on the point eta 
+  !> @details computing the values of the first derivative
+  !> with the interpolator arbitrary degree splines 1d
+  !> on the points eta of arbitrary degree splines 1d
+  !> 
+  !> The parameters are
+  !> @param interpolator the type arb_deg_1d_interpolator
+  !> @param[in] eta the point 
+  !> @return val the values on the point eta of the first derivative
 
   function interpolate_derivative_ad1d( &
     interpolator, &
