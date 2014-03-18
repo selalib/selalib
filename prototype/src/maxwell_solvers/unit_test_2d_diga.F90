@@ -39,7 +39,7 @@ sll_int32, parameter :: nstep   = 10  !
 sll_int32, parameter :: nc_eta1 = 2   !
 sll_int32, parameter :: nc_eta2 = 2   !
 sll_int32, parameter :: mode    = 2   !
-sll_int32, parameter :: degree  = 3   !
+sll_int32, parameter :: degree  = 2   !
 !=====================================!
 
 sll_real64 :: eta1_max, eta1_min
@@ -75,8 +75,8 @@ sll_real64, external :: fcos, gaussian, add
 
 !mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-5._f64, eta1_max=5._f64, &
-                            eta2_min=-5._f64, eta2_max=5._f64)
+                            eta1_min=-1._f64, eta1_max=1._f64, &
+                            eta2_min=-1._f64, eta2_max=1._f64)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2

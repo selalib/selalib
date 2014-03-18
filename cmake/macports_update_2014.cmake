@@ -11,7 +11,7 @@ SET(MPI_C_COMPILER           "/opt/local/bin/mpicc"            CACHE FILEPATH " 
 SET(MPI_C_INCLUDE_PATH       "/opt/local/include"              CACHE PATH     " " FORCE)
 SET(MPI_CXX_COMPILER         "/opt/local/bin/mpicxx"           CACHE FILEPATH " " FORCE)
 SET(MPI_CXX_INCLUDE_PATH     "/opt/local/include"              CACHE PATH     " " FORCE)
-SET(MPI_Fortran_COMPILER     "/opt/local/bin/mpif90"           CACHE FILEPATH " " FORCE)
+SET(MPI_Fortran_COMPILER     "/opt/local/bin/mpif90-openmpi-devel-mp" CACHE FILEPATH " " FORCE)
 SET(MPI_Fortran_INCLUDE_PATH "/opt/local/lib"                  CACHE PATH     " " FORCE)
 SET(MPI_C_LIBRARIES          "/opt/local/lib/libmpi.dylib"     CACHE FILEPATH " " FORCE)
 SET(MPI_CXX_LIBRARIES        "/opt/local/lib/libmpi_cxx.dylib" CACHE FILEPATH " " FORCE)
