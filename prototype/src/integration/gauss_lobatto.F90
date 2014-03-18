@@ -183,12 +183,16 @@ contains
   !> \f[
   !>  der(i,j)=(Phi'_i(x_j))
   !> \f]
-  function  gauss_lobatto_derivative_matrix(n, x, w) result(der)
+  function  gauss_lobatto_derivative_matrix(n, x, w) result(d)
 
-    sll_int32  :: n,i,j,l,m
+    sll_int32,  intent(in) :: n
+    sll_real64, intent(in) :: x(n)
+    sll_real64, intent(in) :: w(n)
+    sll_int32  :: i,j,l,m
     sll_real64 :: prod
-    sll_real64 :: x(n), w(n), der(n,n)
+    sll_real64 :: d(n,n)
 
+    d = 0.0_f64
     do j=1,n
       do i=1,n
          do l=1,j-1
@@ -203,7 +207,7 @@ contains
                prod=prod*(x(i)-x(m))/(x(j)-x(m))
             end do
             prod=prod/(x(j)-x(l))
-            der(i,j)=der(i,j)+prod
+            d(i,j)=d(i,j)+prod
          end do
          do l=j+1,n
             prod=1.0_f64
@@ -217,9 +221,9 @@ contains
                prod=prod*(x(i)-x(m))/(x(j)-x(m))
             end do
             prod=prod/(x(j)-x(l))
-            der(i,j)=der(i,j)+prod
+            d(i,j)=d(i,j)+prod
          end do
-         der(i,j)=der(i,j)*w(i)
+         d(i,j)=d(i,j)*w(i)
       end do
     end do
 
