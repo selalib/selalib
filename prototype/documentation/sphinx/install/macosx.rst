@@ -1,6 +1,10 @@
 .. toctree::
    :maxdepth: 2
 
+Install xcode and command-line tools (OSX Mavericks) ::
+
+	$ xcode-select --install﻿
+
 ==============================
 Install dependencies with Homebrew
 ==============================
@@ -27,9 +31,6 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 Install dependencies with macports
 ==============================
 
-Install xcode and command-line tools ::
-
-	$ xcode-select --install﻿
 
 .. warning::
  Since 2014 update of macports, some changes in openmpi could cause troubles.
@@ -40,6 +41,15 @@ Install macports (http://www.macports.org/install.php) and ::
 	$ sudo port install hdf5-18 +fortran+gfortran+openmpi_devel
 	$ sudo port install fftw-3
 	$ sudo port install cmake git-core 
+	$ sudo port select --set mpi openmpi-devel-mp-fortran
+
+If you want to run tests that use nurbs ::
+
+	$ sudo port install python34
+	$ sudo port select --set python python34
+
+A special options file is available in selalib/cmake directory ::
+
 	$ mkdir selalib/prototype/build
 	$ cd selalib/prototype/build
 	$ cmake ../src -DOPTIONS_FILE=../../cmake/macports_update_2014.cmake 
