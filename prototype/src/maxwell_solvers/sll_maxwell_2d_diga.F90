@@ -148,6 +148,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
       dlagx = gauss_lobatto_derivative_matrix(degree+1, x, wx)
       dlagy = gauss_lobatto_derivative_matrix(degree+1, y, wy)
 
+      call sll_display(wx,"f9.4")
+
       do ii = 1, degree+1
       do jj = 1, degree+1
 
@@ -174,12 +176,14 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
       end do
       end do
 
-      !call sll_display(this%cell(1,1)%MassMatrix(:),"f7.2")
-      !call sll_display(this%cell(i,j)%DxMatrix(:,:),"f8.4")
-      !call sll_display(this%cell(i,j)%DyMatrix(:,:),"f8.4")
 
    end do
    end do
+
+   call sll_display(this%cell(2,2)%MassMatrix,"f9.4")
+   call sll_display(this%cell(2,2)%DxMatrix,"f9.4")
+   call sll_display(this%cell(2,2)%DyMatrix,"f9.4")
+   stop
 
    SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),4),error)
