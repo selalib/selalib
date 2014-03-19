@@ -237,7 +237,7 @@ subroutine advection( this, phi, dt )
          
       f(:,1,i,j) =   matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
                    + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
-
+ZZ
       do side = 1, 4 ! Loop over edges
  
          !boundary conditions are periodic
@@ -270,6 +270,7 @@ subroutine advection( this, phi, dt )
    
             left  = dof_local(side, node, this%degree)
             right = dof_neighbor(side, node, this%degree)
+            
 
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
@@ -278,7 +279,7 @@ subroutine advection( this, phi, dt )
                      +   this%r_vector(right,1))) &
                   * w(node) * this%cell(i,j)%edge(side)%length
   
-            !f(node,1,i,j) = f(node,1,i,j) + vec_n1*flux + vec_n2*flux
+            f(node,1,i,j) = f(node,1,i,j) + vec_n1*flux + vec_n2*flux
 
 
          end do
