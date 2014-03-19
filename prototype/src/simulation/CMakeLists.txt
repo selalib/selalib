@@ -34,7 +34,8 @@ ENDIF(MUDPACK_ENABLED)
     #simulation_guiding_center_2D_generalized_coords_mudpack.F90
     simulation_2d_guiding_center_curvilinear.F90
     simulation_2d_guiding_center_cartesian.F90
-    simulation_2d_guiding_center_polar.F90)
+    simulation_2d_guiding_center_polar.F90
+    simulation_2d_guiding_center_polar_one_mu.F90)
 
 IF(MUDPACK_ENABLED)
 
@@ -117,6 +118,7 @@ ADD_SIMULATION_1D(2d_af_cartesian)
 ADD_SIMULATION_1D(2d_af_curvilinear)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
+ADD_SIMULATION_1D(2d_gc_polar_one_mu)
 ADD_SIMULATION_1D(2d_gc_curvilinear)
 
 #ENDIF(MUDPACK_ENABLED)
