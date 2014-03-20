@@ -237,7 +237,7 @@ subroutine advection( this, phi, dt )
          
       f(:,1,i,j) =   matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
                    + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
-ZZ
+
       do side = 1, 4 ! Loop over edges
  
          !boundary conditions are periodic
