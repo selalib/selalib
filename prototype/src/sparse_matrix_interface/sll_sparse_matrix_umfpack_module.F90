@@ -35,8 +35,6 @@ use mod_umfpack
     sll_int32, dimension(:), pointer :: opi_ia
     sll_int32, dimension(:), pointer :: opi_ja
     sll_real64, dimension(:), pointer :: opr_a
-    
-    sll_real64, dimension(:), pointer :: api_occ
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -90,8 +88,7 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col, &
-    sll_perper ) &
+    num_local_dof_col) &
     result(mat)
     type(sll_csr_matrix), pointer :: mat
     sll_int32, intent(in) :: num_rows
@@ -102,7 +99,6 @@ contains
     sll_int32, dimension(:,:), intent(in) :: local_to_global_col
     sll_int32, intent(in) :: num_local_dof_col
     sll_int32 :: ierr
-    sll_int32, optional :: sll_perper
     SLL_ALLOCATE(mat, ierr)
     call initialize_csr_matrix( &
       mat, &
@@ -112,8 +108,7 @@ contains
       local_to_global_row, &
       num_local_dof_row, &
       local_to_global_col, &
-      num_local_dof_col, &
-      sll_perper )
+      num_local_dof_col)
       
   end function new_csr_matrix
 
@@ -137,8 +132,7 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col,&
-    sll_perper )
+    num_local_dof_col)
     type(sll_csr_matrix), intent(inout) :: mat
     sll_int32, intent(in) :: num_rows
     sll_int32, intent(in) :: num_cols
@@ -154,16 +148,13 @@ contains
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
     sll_int32 :: ierr
-    sll_int32,optional :: sll_perper
     !sll_real64, dimension(umfpack_info) :: info
     
     
     li_COEF = 10
     SLL_ALLOCATE(lpi_columns(num_rows, 0:li_COEF * num_local_dof_col),ierr)
     SLL_ALLOCATE(lpi_occ(num_rows + 1),ierr)
-    if (sll_perper ==0 ) then 
-       SLL_ALLOCATE(mat%api_occ(num_rows + 1),ierr); mat%api_occ(:) = 0
-    end if    
+  
     lpi_columns(:,:) = 0
     lpi_occ(:) = 0
     ! COUNTING NON ZERO ELEMENTS
@@ -178,9 +169,7 @@ contains
       num_local_dof_col, &
       lpi_columns, &
       lpi_occ)
-    if (sll_perper ==0 ) then 
-       mat%api_occ(1:num_rows) = lpi_occ(1:num_rows)
-    end if
+
     mat%num_rows = num_rows
     mat%num_cols = num_cols
     mat%num_nz = num_nz
@@ -228,128 +217,135 @@ contains
     mat, &
     mat_a)
     type(sll_csr_matrix), intent(inout) :: mat
-    type(sll_csr_matrix), intent(inout) :: mat_a
-    !local variables
-    sll_int32, dimension(:), pointer :: position
-    sll_int32 :: li_err, li_i, li_k,li_j
-    sll_int32 :: num_nz
+    type(sll_csr_matrix), intent(in) :: mat_a
+    sll_int32 :: ierr
 
-
-    print*,' COUNTING NON ZERO ELEMENTS init'
-    num_nz = mat_a%num_nz + 2*mat_a%num_rows  
-    mat%num_nz = num_nz    
-    print*,'pass 1', mat_a%num_nz,mat%num_nz 
+    !print*,' COUNTING NON ZERO ELEMENTS'
+    mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
+    print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
     mat%num_rows = mat_a%num_rows  +  1
-    print*,'pass 2',mat_a%num_rows , mat%num_rows
+    print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
     mat%num_cols = mat_a%num_cols  +  1
-    print*,'pass 3',mat_a%num_cols , mat%num_cols 
+    print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
     SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
     SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
     SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
-    SLL_ALLOCATE(position(mat%num_rows),ierr)
-    SLL_ALLOCATE(mat%api_occ(mat%num_rows+1),ierr); mat%api_occ(:) = 0
     mat%opr_a(:) = 0.0_f64
     
-     print*,'  INITIALIZING ia '
-    mat%opi_ia(1) = 1
-    mat%api_occ(1:mat%num_rows-1) = mat_a%api_occ(1:mat_a%num_rows) + 1
-    mat%api_occ(mat%num_rows) = mat_a%num_rows
-    do li_i = 1, mat%num_rows
-      mat%opi_ia(li_i + 1) = mat%opi_ia(1) + SUM(mat%api_occ(1: li_i))
-    end do
-      mat%opi_ia(mat%num_rows + 1) = mat%opi_ia(mat%num_rows) + 1
-      
-    do li_k = 0,mat_a%num_rows - 1 
-      mat%opi_ja(mat%num_nz - li_k)= mat_a%num_rows - li_k
-    end do
-   
-    do li_k = 1,mat%num_rows
-      position(li_k) = SUM(mat%api_occ(1: li_k))
-    end do
+    
+    SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
+    SLL_ALLOCATE(mat%Ai(mat%num_nz),ierr)
+    SLL_ALLOCATE(mat%Ap(mat%num_rows+1),ierr)
+    ! get the default configuration
+    call umf4def(mat%umf_control)  
 
-    li_k = 1
-    li_j = 1
-    li_i = 0
-    mat%opi_ja(1:mat%num_nz - mat_a%num_rows) = 0 
-    do li_k = 1,mat%num_nz - mat_a%num_rows
-      if(li_k == position(li_j)) then
-         mat%opi_ja(li_k ) = mat%num_rows
-         li_j = li_j + 1
-         li_i = li_i + 1 
-      elseif(li_k < position(li_j)) then
-         mat%opi_ja(li_k ) = mat_a%opi_ja(li_k - li_i)
-      end if
-    end do  
-    print*,'  INITIALIZING ja '
-   ! SLL_ALLOCATE(mat%umf_control(umfpack_control),ierr)
-   ! SLL_ALLOCATE(mat%Ai(num_nz),ierr)
-   ! SLL_ALLOCATE(mat%Ap(mat%num_rows+1),ierr)
-
-    !call umf4def(mat%umf_control)  ! get the default configuration
-    print*,'  INITIALIZING ia ja  ok'
-  SLL_DEALLOCATE_ARRAY(position,li_err)
-  !SLL_DEALLOCATE_ARRAY(mat_a%api_occ,li_err)  
-  !SLL_DEALLOCATE_ARRAY(mat%api_occ,li_err)   
-  
   end subroutine initialize_csr_matrix_tot
 
   function new_csr_matrix_tot(mat_a) result(mat)
     type(sll_csr_matrix), pointer :: mat
     type(sll_csr_matrix) :: mat_a
-    
+    sll_int32 :: ierr
+    SLL_ALLOCATE(mat, ierr)
     call initialize_csr_matrix_tot( &
          mat, &
          mat_a)
   end function new_csr_matrix_tot
-  
-   subroutine csr_matrix_tot( &
-    mat, &
-    mat_a, &
-    masse_tot)
-    type(sll_csr_matrix), intent(inout) :: mat
-    type(sll_csr_matrix), intent(inout) :: mat_a
-    sll_real64, dimension(:), pointer :: masse_tot
-    !local variables
-    sll_int32, dimension(:), pointer :: position
-    sll_int32 :: li_err, li_i, li_k,li_j
-    sll_int32 :: num_nz
-
-    print*,' COUNTING NON ZERO ELEMENTS'
-    SLL_ALLOCATE(position(mat%num_rows),ierr)
-    do li_k = 1,mat%num_rows
-      position(li_k) = SUM(mat%api_occ(1: li_k))
-    end do
-    do li_k = 0,mat_a%num_rows - 1 
-      mat%opr_a(mat%num_nz - li_k ) = masse_tot(li_k +1)
-    end do
-    li_k = 1
-    li_j = 1
-    li_i = 0
-    do li_k = 1,mat%num_nz - mat_a%num_rows
-      if(li_k == position(li_j)) then 
-         mat%opr_a(li_k ) = Masse_tot(li_j)
-         li_j = li_j + 1
-         li_i = li_i + 1 
-      elseif(li_k < position(li_j)) then
-         mat%opr_a(li_k )  = mat_a%opr_a(li_k - li_i) 
-      end if
-    end do  
+   
+  subroutine csr_add_one_constraint( &
+    ia_in, &
+    ja_in, &
+    a_in, &
+    num_rows_in, &
+    num_nz_in, &
+    constraint_vec, &
+    ia_out, &
+    ja_out, &
+    a_out)
+    integer, dimension(:), intent(in) :: ia_in  
+    integer, dimension(:), intent(in) :: ja_in  
+    real(8), dimension(:), intent(in) :: a_in
+    integer, intent(in) :: num_rows_in
+    integer, intent(in) :: num_nz_in
+    real(8), dimension(:), intent(in) :: constraint_vec
+    integer, dimension(:), intent(out) :: ia_out
+    integer, dimension(:), intent(out) :: ja_out
+    real(8), dimension(:), intent(out) :: a_out
+    integer :: num_rows_out
+    integer :: num_nz_out
+    integer :: i
+    integer :: s
+    integer :: k
     
-  SLL_DEALLOCATE_ARRAY(position,li_err)
-  SLL_DEALLOCATE_ARRAY(mat%api_occ,li_err)   
-  SLL_DEALLOCATE_ARRAY(mat_a%api_occ,li_err) 
-  end subroutine csr_matrix_tot
- 
+    
+    num_rows_out = num_rows_in+1
+    num_nz_out = num_nz_in+2*num_rows_in
+    
+    if(size(ia_in)<num_rows_in+1) then
+      print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
+      stop
+    endif
+    if(size(ja_in)<num_nz_in) then
+      print *, '#problem of size of ja_in', size(ja_in),num_nz_in
+      stop
+    endif
+    if(size(a_in)<num_nz_in) then
+      print *, '#problem of size of a_in', size(a_in),num_nz_in
+      stop
+    endif
+    if(size(ia_out)<num_rows_out+1) then
+      print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
+      stop
+    endif
+    if(size(ja_out)<num_nz_out) then
+      print *, '#problem of size of ja_out', size(ja_out),num_nz_out
+      stop
+    endif
+    if(size(a_out)<num_nz_out) then
+      print *, '#problem of size of a_out', size(a_out),num_nz_out
+      stop
+    endif
+    if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
+      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
+      stop
+    endif
+    
+    s = 1
+    do i=1,num_rows_in
+      ia_out(i) = s
+      do k = ia_in(i), ia_in(i+1)-1
+        a_out(s) = a_in(k)
+        ja_out(s) = ja_in(k)
+        s = s+1
+      enddo
+      a_out(s) = constraint_vec(i)
+      ja_out(s) = num_rows_out
+      s = s+1
+    enddo
+    ia_out(num_rows_in+1) = s
+    do i=1,num_rows_in
+      a_out(s) = constraint_vec(i)
+      ja_out(s) = i
+      s = s+1      
+    enddo
+    ia_out(num_rows_in+2) = s
+     
+    if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
+      print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
+      stop
+    endif
+    
+  end subroutine csr_add_one_constraint
   
   subroutine sll_factorize_csr_matrix(mat)
     type(sll_csr_matrix), intent(inout) :: mat
     sll_real64, dimension(umfpack_info) :: info
-
+    sll_int32 :: ierr
+    
+    
     mat%Ap = mat%opi_ia(:) - 1
     mat%Ai = mat%opi_ja(:) - 1
-
 
     ! pre-order and symbolic analysis
     call umf4sym( &
@@ -665,7 +661,7 @@ end subroutine Partition
     type(sll_csr_matrix) :: mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B
-    real(8), dimension(:), pointer :: Masse_tot
+    sll_real64, dimension(:), pointer :: Masse_tot
     !local var
     sll_int32  :: sys
     sll_real64, dimension(umfpack_info) :: info
