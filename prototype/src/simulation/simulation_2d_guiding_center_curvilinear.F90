@@ -1119,7 +1119,7 @@ contains
         sim%b2  = 0._f64
         if (sim%bc_eta1_left == SLL_PERIODIC .and. sim%bc_eta1_right == SLL_PERIODIC .and. &
              sim%bc_eta2_left== SLL_PERIODIC .and. sim%bc_eta2_right== SLL_PERIODIC) then
-            sim%c   = 5.e-8_f64  ! entre 1e-8 et 1e-7
+            sim%c   = 0.e-8_f64  ! entre 1e-8 et 1e-7
         else
             sim%c   = 0._f64
         endif    
