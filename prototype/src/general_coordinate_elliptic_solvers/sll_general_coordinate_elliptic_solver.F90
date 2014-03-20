@@ -67,7 +67,7 @@ module sll_general_coordinate_elliptic_solver_module
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
      type(sll_csr_matrix), pointer :: sll_csr_mat
-     type(sll_csr_matrix), pointer :: sll_csr_mat_tot
+     type(sll_csr_matrix), pointer :: sll_csr_mat_with_constraint
      type(sll_csr_matrix), pointer :: sll_csr_mat_source
      sll_real64, dimension(:), pointer :: rho_vec
      sll_real64, dimension(:), pointer :: phi_vec
@@ -664,7 +664,7 @@ contains ! *******************************************************************
     end do
  
 if (sll_perper == 0) then
-   es%sll_csr_mat_tot => new_csr_matrix_tot(es%sll_csr_mat)  
+   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
    call csr_add_one_constraint( &
     es%sll_csr_mat%opi_ia, & 
     es%sll_csr_mat%opi_ja, &
@@ -672,10 +672,10 @@ if (sll_perper == 0) then
     es%sll_csr_mat%num_rows, &
     es%sll_csr_mat%num_nz, &
     es%masse, &
-    es%sll_csr_mat_tot%opi_ia, &
-    es%sll_csr_mat_tot%opi_ja, &
-    es%sll_csr_mat_tot%opr_a)  
-   call sll_factorize_csr_matrix(es%sll_csr_mat_tot)
+    es%sll_csr_mat_with_constraint%opi_ia, &
+    es%sll_csr_mat_with_constraint%opi_ja, &
+    es%sll_csr_mat_with_constraint%opr_a)  
+   call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
  else
    call sll_factorize_csr_matrix(es%sll_csr_mat)      
  end if 
@@ -1749,7 +1749,7 @@ if (sll_perper == 0) then
     es%tmp_phi_vec(:) = 0.0_f64
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
          es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
-    call solve_general_es_perper(es,es%sll_csr_mat_tot,es%tmp_rho_vec,es%tmp_phi_vec) 
+    call solve_general_es_perper(es,es%sll_csr_mat_with_constraint,es%tmp_rho_vec,es%tmp_phi_vec) 
     es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) = &
        es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)    
 
@@ -1761,7 +1761,7 @@ if (sll_perper == 0) then
     type(sll_csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 
-    ! We use a simple conjugate gradient on the new matrice csr_mat_tot (with constraint)
+    ! We use a simple conjugate gradient on the new matrice csr_mat_with_constraint (with constraint)
     call sll_solve_csr_matrix(&
          csr_mat,&
          apr_B,&
