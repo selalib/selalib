@@ -123,6 +123,7 @@ IF(NOT BUILD_WITHOUT_TEST)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
      ADD_SUBDIRECTORY(advection)
+     ADD_SUBDIRECTORY(gyroaverage)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
