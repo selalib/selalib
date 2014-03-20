@@ -28,6 +28,7 @@ type :: mgd2_solver
 
 end type mgd2_solver
 
+integer :: ierr
 
 contains
 
@@ -259,6 +260,7 @@ end subroutine initialize
 
 !> solve Poisson using mgd2
 subroutine solve(this, p, f, r)
+
    type(mgd2_solver) :: this
    sll_real64, dimension(:,:) :: p
    sll_real64, dimension(:,:) :: f
@@ -270,11 +272,11 @@ subroutine solve(this, p, f, r)
    sll_int32,  parameter      :: iresw  = 1
    sll_int32,  parameter      :: ipost  = 1
    sll_real64, parameter      :: tolmax = 1.0d-05
-   sll_int32                  :: nerror
    sll_real64, parameter      :: rro    = 1.0_f64
    sll_int32                  :: myid
    sll_int32                  :: ierr
    sll_int32                  :: iter
+   sll_int32                  :: nerror
 
    call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
 
