@@ -242,7 +242,7 @@ c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 c Called in : main
 c Calls     : MPI_TYPE_FREE
 c------------------------------------------------------------------------
-      integer k,ierr
+      integer k
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
@@ -281,7 +281,7 @@ c Called in : mgdsolver
 c Calls     : MPI_ALLREDUCE
 c------------------------------------------------------------------------
       REALN phloc,reloc
-      integer i,j,ierr
+      integer i,j
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
@@ -305,12 +305,8 @@ c
 c
 c global reduce across all processes
 c
-# if double_precision
       call MPI_ALLREDUCE(reloc,relmax,1,MPI_DOUBLE_PRECISION,MPI_MAX,
      1                   comm2d,ierr)
-# else
-      call MPI_ALLREDUCE(reloc,relmax,1,MPI_REAL,MPI_MAX,comm2d,ierr)
-# endif
 # if cdebug
       nallreduce=nallreduce+1
 # endif
@@ -413,7 +409,8 @@ c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
 c Called in : main
 c Calls     : grid1_type
 c------------------------------------------------------------------------
-      integer i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,ierr,nxc,nyc
+
+      integer i,j,k,nxf,nyf,nxm,nym,kps,sxm,exm,sym,eym,nxc,nyc
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
@@ -1300,6 +1297,7 @@ c Calls     : --
 c------------------------------------------------------------------------
       REALN dlx,odlxx,dly,odlyy
       integer i,j,is,js
+      double precision c1, c2, c3, c4
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
@@ -1824,8 +1822,11 @@ c------------------------------------------------------------------------
       integer sxf,exf,syf,eyf,nxf,nyf,sxc,exc,syc,eyc,nxc,nyc
       integer ipf,irf,ipc,irc,sxm,exm,sym,eym,nxm,nym,ip,ic,kcur
       integer itype,jtype,ijtype,lev,ir1,ir2
+      integer icf, k
+      REALN relmax
 # if cdebug
       double precision tinitial
+
       tinitial=MPI_WTIME()
 # endif
 c------------------------------------------------------------------------
@@ -2028,5 +2029,45 @@ c
 # endif
       end if
 c
+      return
+      end
+      subroutine grid1_type(itype,jtype,ijtype,realtype,sx,ex,sy,ey,
+     1                      IOUT)
+# include "compdir.inc"
+      include "mpif.h"
+      integer itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
+c------------------------------------------------------------------------
+c Define the 3 derived datatypes needed to communicate the boundary
+c data of (sx-1:ex+1,sy-1:ey+1) arrays between 'myid' and its 8
+c neighbors
+c
+c Code      : tmgd2
+c Called in : mgdinit
+c Calls     : MPI_TYPE_CONTIGUOUS, MPI_TYPE_COMMIT, MPI_TYPE_VECTOR
+c------------------------------------------------------------------------
+      integer ier
+# if cdebug
+      double precision tinitial
+      tinitial=MPI_WTIME()
+# endif
+c
+c datatype for one row
+c
+      call MPI_TYPE_CONTIGUOUS(ex-sx+1,realtype,itype,ierr)
+      call MPI_TYPE_COMMIT(itype,ierr)
+c
+c datatype for one column
+c
+      call MPI_TYPE_VECTOR(ey-sy+1,1,ex-sx+3,realtype,jtype,ierr)
+      call MPI_TYPE_COMMIT(jtype,ierr)
+c
+c datatype for one 1*1 corner
+c
+      call MPI_TYPE_CONTIGUOUS(1,realtype,ijtype,ierr)
+      call MPI_TYPE_COMMIT(ijtype,ierr)
+c
+# if cdebug
+      timing(7)=timing(7)+MPI_WTIME()-tinitial
+# endif
       return
       end
