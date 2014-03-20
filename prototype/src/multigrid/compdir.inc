@@ -1,12 +1,7 @@
 # define WMGD 0
-# define double_precision 1
-# if double_precision
 # define REALN real(8)
-      implicit double precision(a-h,o-z)
-# else
-# define REALN real*4
-      implicit real*4(a-h,o-z)
-# endif
+      implicit none
+
 # define NBLOCKGR 1
 # define cdebug  0
 # if cdebug
@@ -26,3 +21,5 @@
       logical nocterr
       common/mpitiming/timing(100),nsteptiming,nocterr
 # endif
+
+      integer ierr
