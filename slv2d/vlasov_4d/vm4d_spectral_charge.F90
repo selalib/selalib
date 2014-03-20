@@ -48,7 +48,8 @@ program vm4d_spectral_charge
   !ft --> f
   call transposevx(vlasov4d)
 
-  mass0=sum(vlasov4d%rho)*vlasov4d%delta_eta1*vlasov4d%delta_eta2
+  mass0=sum(vlasov4d%rho(1:vlasov4d%nc_eta1,1:vlasov4d%nc_eta2))*vlasov4d%delta_eta1*vlasov4d%delta_eta2
+  print *,'mass init',mass0
 
   !###############
   !TIME LOOP
@@ -74,7 +75,7 @@ program vm4d_spectral_charge
         call solve_faraday(vlasov4d,maxwell,vlasov4d%dt)  
         
         !compute vlasov4d%bzn=B^n=0.5(B^{n+1/2}+B^{n-1/2})          
-        vlasov4d%bzn=0.5_8*(vlasov4d%bz+vlasov4d%bzn)
+        vlasov4d%bzn=0.5_f64*(vlasov4d%bz+vlasov4d%bzn)
         vlasov4d%exn=vlasov4d%ex
         vlasov4d%eyn=vlasov4d%ey
         
@@ -101,7 +102,6 @@ program vm4d_spectral_charge
         call transposevx(vlasov4d)
         !compute E^{n+1} via Poisson
         call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
-        print *,'nrj-1',nrj
      endif
 
      call transposexv(vlasov4d)
@@ -113,7 +113,7 @@ program vm4d_spectral_charge
      !copy jy^{**}
      vlasov4d%jy=vlasov4d%jy1
      !advec y + compute this%jy1
-     call advection_x2(vlasov4d,0.5*vlasov4d%dt)
+     call advection_x2(vlasov4d,0.5_f64*vlasov4d%dt)
      
      !copy jx^*
      vlasov4d%jx=vlasov4d%jx1
@@ -125,6 +125,9 @@ program vm4d_spectral_charge
         vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
         !compute the good jx current
         vlasov4d%jx=0.5_f64*(vlasov4d%jx+vlasov4d%jx1)
+        print *,'sum jx jy',sum(vlasov4d%jx)*vlasov4d%delta_eta1*vlasov4d%delta_eta2,&
+             sum(vlasov4d%jy)*vlasov4d%delta_eta1*vlasov4d%delta_eta2, &
+             maxval(vlasov4d%jx),maxval(vlasov4d%jy)
 
         !compute E^{n+1} from B^{n+1/2}, vlasov4d%jx, vlasov4d%jy, E^n
         vlasov4d%ex=vlasov4d%exn
@@ -149,7 +152,7 @@ program vm4d_spectral_charge
         !compute J^{n+1/2}=0.5*(J^n+J^{n+1})
         vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy3)
         vlasov4d%jx=0.5_f64*(vlasov4d%jx+vlasov4d%jx3)
-        
+
         !compute E^{n+1} from B^{n+1/2}, vlasov4d%jx, vlasov4d%jy, E^n
         vlasov4d%ex=vlasov4d%exn
         vlasov4d%ey=vlasov4d%eyn
@@ -168,26 +171,30 @@ program vm4d_spectral_charge
         !compute rho^{n+1}
         call compute_charge(vlasov4d)
         call transposevx(vlasov4d)
+
         !compute E^{n+1} via Poisson
         call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
-        print *,'nrj-2',nrj        
-
-        print *,'verif charge conservation',maxval(vlasov4d%exn-vlasov4d%ex),maxval(vlasov4d%eyn-vlasov4d%ey)
-        print *,'verif charge conservation',minval(vlasov4d%exn-vlasov4d%ex),minval(vlasov4d%eyn-vlasov4d%ey)
-        print *,'mass',maxval(vlasov4d%exn),maxval(vlasov4d%ex),(sum(vlasov4d%rho(1:vlasov4d%nc_eta1,1:vlasov4d%nc_eta2))*vlasov4d%delta_eta3*vlasov4d%delta_eta4-mass0)/mass0
-        print *,' ',minval(vlasov4d%eyn),minval(vlasov4d%ey),maxval(vlasov4d%bz),maxval(vlasov4d%bzn)
-!        vlasov4d%ex=vlasov4d%exn
-!        vlasov4d%ey=vlasov4d%eyn
+!        print *,'verif charge conservation',maxval(vlasov4d%exn-vlasov4d%ex), &
+!             maxval(vlasov4d%eyn-vlasov4d%ey)
      endif
+     
+     if (vlasov4d%va==1) then 
+        !recompute the electric field at time (n+1) for diagnostics
+        call transposexv(vlasov4d)
+        !compute rho^{n+1}
+        call compute_charge(vlasov4d)
+        call transposevx(vlasov4d)
+        !compute E^{n+1} via Poisson
+        call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho,nrj)
+     endif
+
 
      if (mod(iter,vlasov4d%fthdiag).eq.0) then 
-        nrj=sum(vlasov4d%ex*vlasov4d%ex+vlasov4d%ey*vlasov4d%ey) &
-           *(vlasov4d%delta_eta1)*(vlasov4d%delta_eta2)
-        nrj=0.5_f64*log(nrj)
-        print *,'nrj-3',nrj
         call write_energy(vlasov4d, iter*vlasov4d%dt)
-
      endif
+
+ 
+
 
   end do
 
@@ -211,7 +218,7 @@ contains
     
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
-    sll_real64 :: xi, eps, kx, ky
+    sll_real64 :: eps, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
     sll_int32 :: psize
@@ -238,47 +245,47 @@ contains
     ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
     do l=1,loc_sz_l 
-    do k=1,loc_sz_k
-    do j=1,loc_sz_j
-    do i=1,loc_sz_i
-
-       global_indices = local_to_global_4D(vlasov4d%layout_x,(/i,j,k,l/)) 
-       gi = global_indices(1)
-       gj = global_indices(2)
-       gk = global_indices(3)
-       gl = global_indices(4)
-
-       x  = vlasov4d%eta1_min+(gi-1)*vlasov4d%delta_eta1
-       y  = vlasov4d%eta2_min+(gj-1)*vlasov4d%delta_eta2
-       vx = vlasov4d%eta3_min+(gk-1)*vlasov4d%delta_eta3
-       vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
-
-       v2 = vx*vx+vy*vy
-!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
-       vlasov4d%f(i,j,k,l)=(1+eps*cos(ky*y))*1/(2*sll_pi)*exp(-.5*v2)
-!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x)*cos(ky*y))*1/(2*sll_pi)*exp(-.5*v2)
-!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*(x+y)))*1/(2*sll_pi)*exp(-.5*v2)
-!       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)*vx*vx
-
+       do k=1,loc_sz_k
+          do j=1,loc_sz_j
+             do i=1,loc_sz_i
+                
+                global_indices = local_to_global_4D(vlasov4d%layout_x,(/i,j,k,l/)) 
+                gi = global_indices(1)
+                gj = global_indices(2)
+                gk = global_indices(3)
+                gl = global_indices(4)
+                
+                x  = vlasov4d%eta1_min+(gi-1)*vlasov4d%delta_eta1
+                y  = vlasov4d%eta2_min+(gj-1)*vlasov4d%delta_eta2
+                vx = vlasov4d%eta3_min+(gk-1)*vlasov4d%delta_eta3
+                vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
+                
+                v2 = vx*vx+vy*vy
+                       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*x))*1/(2*sll_pi)*exp(-0.5_f64*v2)
+                !       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(ky*y))*1/(2*sll_pi)*exp(-0.5_f64*v2)
+                !vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*x)*cos(ky*y))*1/(2*sll_pi)*exp(-0.5_f64*v2)
+                !       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*(x+y)))*1/(2*sll_pi)*exp(-0.5_f64*v2)
+                !       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*x))*1/(2*sll_pi)*exp(-0.5_f64*v2)*vx*vx
+                
+             end do
+          end do
+       end do
     end do
-    end do
-    end do
-    end do
-
+    
     print *,'init'
-
-
+    
+    
     call initialize(maxwell, &
          vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
          vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, TE_POLARIZATION)
-
+    
     call initialize(poisson, &
          vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
          vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, error)
-
-
+    
+    
   end subroutine initlocal
-
+  
   subroutine solve_ampere(vlasov4d, maxwell2d, dt)
     type(vlasov4d_spectral_charge)   :: vlasov4d 
     type(maxwell_2d_pstd)     :: maxwell2d
