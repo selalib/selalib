@@ -215,6 +215,8 @@ contains
 !####################################################################################
 
   subroutine initlocal()
+
+    use init_functions
     
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
@@ -261,11 +263,19 @@ contains
                 vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
                 
                 v2 = vx*vx+vy*vy
-                       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*x))*1/(2*sll_pi)*exp(-0.5_f64*v2)
-                !       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(ky*y))*1/(2*sll_pi)*exp(-0.5_f64*v2)
-                !vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*x)*cos(ky*y))*1/(2*sll_pi)*exp(-0.5_f64*v2)
-                !       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*(x+y)))*1/(2*sll_pi)*exp(-0.5_f64*v2)
-                !       vlasov4d%f(i,j,k,l)=(1._f64+eps*cos(kx*x))*1/(2*sll_pi)*exp(-0.5_f64*v2)*vx*vx
+
+                select case(vlasov4d%num_case)
+                case(1)
+                    vlasov4d%f(i,j,k,l)= landau_1d(eps, kx, x, v2)
+                case(2)
+                    vlasov4d%f(i,j,k,l)= landau_1d(eps, ky, y, v2)
+                case(3)
+                    vlasov4d%f(i,j,k,l)= landau_cos_prod(eps, kx, ky, x, y, v2)
+                case(4)
+                    vlasov4d%f(i,j,k,l)= landau_cos_sum(eps, kx, ky, x, y, v2)
+                case(5)
+                    vlasov4d%f(i,j,k,l)= tsi(eps, kx, x, vx, v2)
+                end select
                 
              end do
           end do
