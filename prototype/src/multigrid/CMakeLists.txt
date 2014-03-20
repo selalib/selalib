@@ -9,6 +9,6 @@ IF (MPI_MODULE_ENABLED)
 
   ADD_EXECUTABLE(test_multigrid_2d test_multigrid_2d.F90)
 
-  TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid_2d)
+  TARGET_LINK_LIBRARIES(test_multigrid_2d sll_multigrid_2d sll_memory)
 
 ENDIF (MPI_MODULE_ENABLED)

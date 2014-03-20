@@ -5,6 +5,7 @@
       integer sx,ex,sy,ey,IOUT
       REALN a(sx-1:ex+1,sy-1:ey+1)
       integer comm2d,neighbor(8),bd(8),ijdatatype
+      integer ierr
 c------------------------------------------------------------------------
 c Subroutine to exchange one corner point of boundary data between 
 c "diagonally" neighboring processes. This subroutineccan be used to 
@@ -165,6 +166,7 @@ c
       integer sx,ex,sy,ey,IOUT
       REALN a(sx-1:ex+1,sy-1:ey+1)
       integer comm2d,neighbor(8),bd(8),idatatype,jdatatype
+      integer ierr
 c------------------------------------------------------------------------
 c Subroutine to exchange one-lines (one row and one column) of 
 c boundary data between "directly" neighboring processes. This subroutine 

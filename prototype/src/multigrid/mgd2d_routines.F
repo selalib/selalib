@@ -228,6 +228,7 @@ c
       integer sxi,exi,syi,eyi
       integer nxr,nyr,sxr,exr,syr,eyr
       integer irdatatype,jrdatatype,ijrdatatype
+      integer ierr
       common/mgd/nxk(20),nyk(20),sxk(20),exk(20),syk(20),eyk(20),
      1           kpbgn(20),kcbgn(20),ikdatatype(20),jkdatatype(20),
      2           ijkdatatype(20),sxi(20),exi(20),syi(20),eyi(20),
@@ -268,6 +269,7 @@ c
 # include "compdir.inc"
       include "mpif.h"
       integer sxm,exm,sym,eym,comm2d,IOUT
+      integer ierr
       REALN relmax
       REALN phio(sxm-1:exm+1,sym-1:eym+1)
       REALN phin(sxm-1:exm+1,sym-1:eym+1)
@@ -2035,6 +2037,7 @@ c
      1                      IOUT)
 # include "compdir.inc"
       include "mpif.h"
+      integer ierr
       integer itype,jtype,ijtype,realtype,sx,ex,sy,ey,IOUT
 c------------------------------------------------------------------------
 c Define the 3 derived datatypes needed to communicate the boundary
