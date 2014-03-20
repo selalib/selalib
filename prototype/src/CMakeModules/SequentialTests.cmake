@@ -92,7 +92,7 @@ IF(PYTHON_EXECUTABLE)
 
 ELSE()
 
-   MESSAGE(WARNING "python3 not found")
+   MESSAGE(STATUS "python3 not found")
 
 ENDIF(PYTHON_EXECUTABLE)
 
