@@ -22,4 +22,3 @@
       common/mpitiming/timing(100),nsteptiming,nocterr
 # endif
 
-      integer ierr
