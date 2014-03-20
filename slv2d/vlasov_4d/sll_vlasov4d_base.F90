@@ -400,10 +400,10 @@ contains
 
    if (prank == MPI_MASTER) then
       diag=0.
-      aux=0.
+!      aux=0.
       aux(13)=t
       aux(12)=nrj
-      write(*,"('time ', g12.3,' test nrj',f10.5)") t, nrj
+      write(*,"('time ', g12.3,' test nrj',f10.5, f10.5)") t, nrj, aux(1)
       call time_history(ithf, "thf","(13(1x,e15.6))",aux(1:13))
    end if
 
@@ -677,13 +677,13 @@ contains
  end subroutine write_fx3x4
 
  subroutine write_energy(this, time)
- class(vlasov4d_base) :: this
- sll_real64 :: time, nrj
-
- nrj=sum(this%ex*this%ex+this%ey*this%ey)*this%delta_eta1*this%delta_eta2
- nrj=0.5_f64*log(nrj)
- call thdiag(this,nrj,time)
-
+   class(vlasov4d_base) :: this
+   sll_real64 :: time, nrj
+   
+   nrj=sum(this%ex*this%ex+this%ey*this%ey)*this%delta_eta1*this%delta_eta2
+   nrj=0.5_f64*log(nrj)
+   call thdiag(this,nrj,time)
+   
  end subroutine write_energy
 
 end module sll_vlasov4d_base
