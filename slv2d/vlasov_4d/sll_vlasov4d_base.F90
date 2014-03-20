@@ -45,6 +45,7 @@ module sll_vlasov4d_base
    sll_real64 :: eta1_max, eta2_max, eta3_max, eta4_max
    sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
    sll_int32  :: va 
+   sll_int32  :: num_case 
  end type vlasov4d_base
 
 
@@ -66,23 +67,25 @@ contains
   sll_int32                             :: comm
   sll_int32  :: idata !< file unit for namelist
 
-  sll_int32  :: nx, ny      ! dimensions de l'espace physique
-  sll_int32  :: nvx, nvy    ! dimensions de l'espace des vitesses
-  sll_real64 :: x0, y0      ! coordonnees debut du maillage espace physique
-  sll_real64 :: vx0, vy0    ! coordonnees debut du maillage espace vitesses
-  sll_real64 :: x1, y1      ! coordonnees fin du maillage espace physique
-  sll_real64 :: vx1, vy1    ! coordonnees fin du maillage espace vitesses
-  sll_real64 :: dt          ! time step
-  sll_int32  :: nbiter      ! number of loops over time
-  sll_int32  :: fdiag       ! diagnostics frequency
-  sll_int32  :: fthdiag     ! time history frequency
-  sll_int32  :: va = 0      ! test case type
+  sll_int32  :: nx, ny           ! dimensions de l'espace physique
+  sll_int32  :: nvx, nvy         ! dimensions de l'espace des vitesses
+  sll_real64 :: x0, y0           ! coordonnees debut du maillage espace physique
+  sll_real64 :: vx0, vy0         ! coordonnees debut du maillage espace vitesses
+  sll_real64 :: x1, y1           ! coordonnees fin du maillage espace physique
+  sll_real64 :: vx1, vy1         ! coordonnees fin du maillage espace vitesses
+  sll_real64 :: dt               ! time step
+  sll_int32  :: nbiter           ! number of loops over time
+  sll_int32  :: fdiag            ! diagnostics frequency
+  sll_int32  :: fthdiag          ! time history frequency
+  sll_int32  :: va = 0           ! algo charge type
+  sll_int32  :: num_case         ! test case
 
   namelist /time/ dt, nbiter
   namelist /diag/ fdiag, fthdiag
   namelist /phys_space/ x0,x1,y0,y1,nx,ny
   namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
   namelist /algo_charge/ va
+  namelist /test_case/ num_case
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -96,6 +99,7 @@ contains
      read(idata,NML=phys_space)
      read(idata,NML=vel_space)
      read(idata,NML=algo_charge)
+     read(idata,NML=test_case)
 
   end if
 
@@ -116,6 +120,7 @@ contains
   call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(va,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(num_case,1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
   this%dt         = dt
   this%nbiter     = nbiter
@@ -151,6 +156,7 @@ contains
   this%delta_eta4 = this%geomv%delta_eta2
 
   this%va         = va
+  this%num_case   = num_case
 
   if (prank == MPI_MASTER) then
 

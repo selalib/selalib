@@ -65,7 +65,7 @@ ADD_EXECUTABLE(vp4d          vp4d_remapper.F90)
 ADD_EXECUTABLE(vm4d          vm4d_remapper.F90)
 ADD_EXECUTABLE(vm4d_spectral vm4d_spectral.F90)
 ADD_EXECUTABLE(vp4d_polar    vp4d_polar.F90)
-ADD_EXECUTABLE(vm4d_spectral_charge vm4d_spectral_charge.F90)
+ADD_EXECUTABLE(vm4d_spectral_charge vm4d_spectral_charge.F90 init_functions.F90)
 
 TARGET_LINK_LIBRARIES(vp4d          selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d          selalib_vlasov4d ${LIBS})
