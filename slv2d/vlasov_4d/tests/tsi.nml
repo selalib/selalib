@@ -1,0 +1,6 @@
+&time dt=0.5, nbiter=1000/
+&diag fdiag=1000, fthdiag=1/
+&phys_space x0=0., x1=12.566370614359172, y0=0., y1=12.566370614359172, nx=128, ny=128/
+&vel_space vx0=-6.0, vx1=6.0, vy0=-6.0, vy1=6.0, nvx=128, nvy=128/
+&algo_charge va=0/
+&test_case num_case=5/ ! TSI

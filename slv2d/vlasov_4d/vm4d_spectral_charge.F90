@@ -265,15 +265,15 @@ contains
                 v2 = vx*vx+vy*vy
 
                 select case(vlasov4d%num_case)
-                case(1)
+                case(LANDAU_X_CASE)
                     vlasov4d%f(i,j,k,l)= landau_1d(eps, kx, x, v2)
-                case(2)
+                case(LANDAU_Y_CASE)
                     vlasov4d%f(i,j,k,l)= landau_1d(eps, ky, y, v2)
-                case(3)
+                case(LANDAU_COS_PROD_CASE)
                     vlasov4d%f(i,j,k,l)= landau_cos_prod(eps, kx, ky, x, y, v2)
-                case(4)
+                case(LANDAU_COS_SUM_CASE)
                     vlasov4d%f(i,j,k,l)= landau_cos_sum(eps, kx, ky, x, y, v2)
-                case(5)
+                case(TSI_CASE)
                     vlasov4d%f(i,j,k,l)= tsi(eps, kx, x, vx, v2)
                 end select
                 

@@ -2,7 +2,14 @@ module init_functions
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 
-  implicit none
+implicit none
+
+integer, parameter :: LANDAU_X_CASE = 1
+integer, parameter :: LANDAU_Y_CASE = 2
+integer, parameter :: LANDAU_COS_PROD_CASE = 3
+integer, parameter :: LANDAU_COS_SUM_CASE  = 4
+integer, parameter :: TSI_CASE  = 5
+
 
 contains
 
