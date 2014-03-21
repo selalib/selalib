@@ -9,7 +9,7 @@ program vm4d_transpose
 
 use geometry_module
 use maxwell2dfdtd_module
-!use poisson2dpp_seq
+use poisson2dpp_seq
 use diagnostiques_module
 use vlasov4d_plot
 use vlasov2d_module
@@ -24,8 +24,8 @@ implicit none
 type (geometry)      :: geomx      ! geometrie dans l'espace physique
 type (geometry)      :: geomv      ! geometrie dans l'espace des vitesses
 type (maxwell2dfdtd) :: maxw2dfdtd ! champ electromagnetique
-!type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
-type(mudpack_2d)     :: poiss2dpp
+type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
+type(mudpack_2d)     :: poisson_mg
 type (vlasov2d)      :: vlas2d     ! vlasov
 type (splinepx)      :: splx       ! vlasov1d
 type (splinepy)      :: sply       ! vlasov1d
@@ -51,7 +51,10 @@ sll_real64 :: nrj,nrjex,nrjey,nrjbz
 sll_real64 :: nrjtab(4)
 sll_int32  :: error, iplot
 sll_int32  :: comm, my_num, num_threads
-sll_int32  :: va = VA_VALIS, meth = METH_CSL_PPM1, num_case = LANDAU_X_CASE
+
+sll_int32  :: va       = VA_VALIS
+sll_int32  :: meth     = METH_CSL_PPM1
+sll_int32  :: num_case = LANDAU_X_CASE
 
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
@@ -70,11 +73,7 @@ if (my_num == MPI_MASTER) then
    print*,'MPI Version of slv2d running on ',num_threads, ' processors'
 end if
 
-call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
-
-!va=0 (valis) ; va=1 (old version) ; va=2 (Vlasov-Poisson)
-!meth=0 (bsl cubic splines) ; meth=1 (csl cubic splines) ; meth=2 (csl Lag3) ; meth=3 (csl ppm1) ; meth=4 (csl ppm2)
-
+call initglobal()
 
 if (my_num == MPI_MASTER) then
    ! write some run data
@@ -94,9 +93,7 @@ if (my_num == MPI_MASTER) then
    write(*,"(g15.3,1x,3i6)") dt,nbiter,fdiag,fthdiag
 endif
 
-call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
-               f,f1,rho,ex,ey,ex1,ey1,ex2,ey2,bz,bz1,jx,jy, &
-               vlas2d,maxw2dfdtd,splx,sply,va)
+call initlocal( )
 
 
 ! ecriture des resultats par le processeur 0 a l'instant initial
@@ -162,7 +159,7 @@ do iter=1,nbiter
    ! transposition de la fonction de distribution
    call transposexv(vlas2d,f)
 
-   if (va==2) then 
+   if (va==VA_VLASOV_POISSON) then 
       !Vlasov-Poisson case
       call densite_charge(vlas2d,rho)
 
@@ -170,11 +167,12 @@ do iter=1,nbiter
 !      call poisson1d(vlas2d%geomx,rho,ex)
 !      ey=0._8;bz=0._f64;bz1=0._f64
 
-      call solve_poisson(poiss2dpp,ex,ey,rho,nrj)
+      call solve(poiss2dpp,ex,ey,rho,nrj)
+      !call solve_poisson_mg(poisson_mg)
       call average(geomx,ex,ey)
    endif
 
-   if (va==1) then 
+   if (va==VA_OLD_FUNCTION) then 
       ! calcul de la densite de courant et de charge
       call densite_charge(vlas2d,rho)
       call densite_courant(vlas2d,jx,jy)
@@ -194,7 +192,7 @@ do iter=1,nbiter
 
    ! advection d'un pas de temps en vitesse
 
-   if ((va==0).or.(va==2)) then 
+   if ((va==VA_VALIS).or.(va==VA_VLASOV_POISSON)) then 
       !compute (ex2, ey2) en i,j
       call average_int(vlas2d,ex,ey,ex2,ey2)
 
@@ -214,7 +212,7 @@ do iter=1,nbiter
    Jx=0.5_8*(Jx1+Jx2)
    Jy=0.5_8*(Jy1+Jy2)
 
-   if (va==0) then 
+   if (va==VA_VALIS) then 
 
       !diagnostiques pour verifier la charge 
 !!$      call verif_charge(vlas2d,div,ex1,ey1)
@@ -255,18 +253,19 @@ do iter=1,nbiter
 !!$
 !!$      print *,' '
       !jusque la
-   endif
 
-   if (va==2) then 
+   else if (va==VA_VLASOV_POISSON) then 
+
       call transposexv(vlas2d,f)
       call densite_charge(vlas2d,rho)
       call transposevx(vlas2d,f)
 
-      call solve_poisson(poiss2dpp,ex,ey,rho,nrj)
-   endif
+      call solve(poiss2dpp,ex,ey,rho,nrj)
+      !call solve_poisson_mg(poisson_mg)
 
 
-   if (va==1) then 
+   else if (va==VA_OLD_FUNCTION) then 
+
       call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
       !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
       call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
@@ -283,13 +282,16 @@ do iter=1,nbiter
       ! advection d'un demi-pas de temps en espace     
       call advection1d_x(splx,f,0.5_f64*dt,Jx1,meth)
       call advection1d_y(sply,f,0.5_f64*dt,Jy1,meth)
+
    endif
    
    !Diagnostic
    if (mod(iter,fdiag).eq.0) then 
       ! ecriture des resultats par le processeur 0
+      call flush(6)
       call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv, &
                           jstartx,jendx,jstartv,jendv,iter/fdiag)
+      call flush(6)
    endif
 
    if (mod(iter,fthdiag).eq.0) then 
@@ -302,6 +304,7 @@ do iter=1,nbiter
       nrjtab(4)=0.5_8*sum(ex*ex+ey*ey+bz*bz)*vlas2d%geomx%dx*vlas2d%geomx%dy
       call thdiag_tab(vlas2d,f,nrjtab,iter*dt,jstartv)
    endif
+
 
 end do
 tcpu2 = MPI_WTIME()
@@ -336,15 +339,10 @@ subroutine plot_solution( )
 
 end subroutine plot_solution
 
-subroutine initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
+subroutine initglobal()
 !-------------------------------------------------------
 ! sert a l'initialisation globale du programme VP2D
 !-------------------------------------------------------
-type(geometry)  :: geomx, geomv  ! geometrie globale du probleme
-sll_real64     :: dt       ! pas de temps
-sll_int32      :: nbiter   ! nombre d'iterations en temps
-sll_int32      :: fdiag    ! frequences des diagnostiques
-sll_int32      :: fthdiag    ! frequences des historiques en temps
 sll_int32      :: nx, ny   ! dimensions de l'espace physique
 sll_int32      :: nvx, nvy ! dimensions de l'espace des vitesses
 sll_real64     :: x0, y0   ! coordonnees debut du maillage espace physique
@@ -352,9 +350,6 @@ sll_real64     :: vx0, vy0 ! coordonnees debut du maillage espace vitesses
 sll_real64     :: x1, y1   ! coordonnees fin du maillage espace physique
 sll_real64     :: vx1, vy1 ! coordonnees fin du maillage espace vitesses
 sll_int32      :: iflag,ierr  ! indicateur d'erreur
-sll_int32      :: comm
-sll_int32      :: my_num
-sll_int32      :: num_threads
 
 ! definition of namelists
 namelist /time/ dt, nbiter
@@ -364,16 +359,14 @@ namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
 namelist /algo_charge/ va, meth
 namelist /test_case/ num_case
 
-num_threads  = sll_get_collective_size(sll_world_collective)
-my_num = sll_get_collective_rank(sll_world_collective)
-comm   = sll_world_collective%comm
-   
 if (my_num == MPI_MASTER) then
    call fichinit
    read(idata,NML=time)
    read(idata,NML=diag)
    read(idata,NML=phys_space)
    read(idata,NML=vel_space)
+   read(idata,NML=algo_charge)
+   read(idata,NML=test_case)
 end if
 
 call mpi_barrier(comm,ierr)
@@ -404,35 +397,13 @@ call initialize(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
 end subroutine initglobal
 
-subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
-                     f,f1,rho,ex,ey,ex1,ey1,ex2,ey2,bz,bz1,jx,jy,vlas2d,maxw2dfdtd,  &
-                     splx,sply,va)
+subroutine initlocal()
 
-use splinepx_class
-use splinepy_class
-
-!-------------------------------------------------------
-! sert a l'initialisation en parallele du programme VP2D
-!-------------------------------------------------------
-type(geometry) :: geomx, geomv  ! geometrie globale du probleme
-sll_int32 :: jstartv,jendv,jstartx,jendx ! definition de la bande du proc
-sll_real64, dimension(:,:,:,:),pointer :: f,f1
-sll_real64, dimension(:,:),pointer :: rho,ex,ey,ex1,ey1,ex2,ey2,bz,bz1,jx,jy
-type(vlasov2d) :: vlas2d
-type(splinepx) :: splx
-type(splinepy) :: sply
-type(maxwell2dfdtd) :: maxw2dfdtd
-integer, intent(in) :: va
 !variables locales
 sll_int32 :: ipiece_size_v, ipiece_size_x
 sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky,nrj,vth,Tr,mass,u
-sll_int32 :: i,j,iv,jv,iflag, comm
-sll_int32 :: my_num, num_threads
+sll_int32 :: i,j,iv,jv,iflag
 
-my_num = sll_get_collective_rank(sll_world_collective)
-num_threads = sll_get_collective_size(sll_world_collective)
-
-comm   = sll_world_collective%comm
 
 ! cas sequentiel
 jstartv=1
@@ -445,7 +416,6 @@ jendx=geomx%ny
 ! the total size of the y zone is ny
 ! ipiece_size = n/num_threads rounded up
 
-print*, my_num, num_threads, geomv%ny, geomx%ny
 ipiece_size_v = (geomv%ny + num_threads - 1) / num_threads
 ipiece_size_x = (geomx%ny + num_threads - 1) / num_threads
 ! zone a traiter en fonction du numero de process
@@ -461,8 +431,8 @@ print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, &
                     jstartv,jendv,ipiece_size_v
 
 ! allocation dynamique des tableaux
-SLL_ALLOCATE(f(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
-SLL_ALLOCATE(f1(geomx%nx,geomx%ny,geomv%nx,jstartv:jendv),iflag)
+SLL_CLEAR_ALLOCATE(f(1:geomx%nx,1:geomx%ny,1:geomv%nx,jstartv:jendv),iflag)
+SLL_CLEAR_ALLOCATE(f1(1:geomx%nx,1:geomx%ny,1:geomv%nx,jstartv:jendv),iflag)
 !!$  SLL_ALLOCATE(rho(geomx%nx,jstartx:jendx),iflag)
 !!$  if (iflag.ne.0) stop 'erreur dans l allocation de rho'
 !!$  SLL_ALLOCATE(ex(geomx%nx,jstartx:jendx),iflag)
@@ -543,7 +513,7 @@ do jv=jstartv,jendv
 end do
 
 !Initialisation du module poisson
-!call initialize(poiss2dpp,rho,geomx,iflag)
+call initialize(poiss2dpp,rho,geomx,iflag)
 !Initialisation du module vlasov
 call initialize(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 !Intitialisation du champ electrique
@@ -560,14 +530,15 @@ call transposevx(vlas2d,f)
 jx=rho
 !rho=rho-1._8
 
-!call solve(poiss2dpp,ex,ey,rho,nrj)
+call solve(poiss2dpp,ex,ey,rho,nrj)
 
-call initialize_mudpack_cartesian(poiss2dpp,                      &
-                                  geomx%x0, geomx%x1, geomx%nx, &
-                                  geomx%y0, geomx%y1, geomx%ny, &
-                                  PERIODIC, PERIODIC,   &
-                                  PERIODIC, PERIODIC)
-
+!call initialize_mudpack_cartesian(poisson_mg,                      &
+!                                  geomx%x0, geomx%x1, geomx%nx, &
+!                                  geomx%y0, geomx%y1, geomx%ny, &
+!                                  PERIODIC, PERIODIC,   &
+!                                  PERIODIC, PERIODIC)
+!
+!call solve_poisson_mg(poisson_mg)
 
 call average(geomx,ex,ey)
 
@@ -615,7 +586,6 @@ do jv=jstartv,jendv
 end do
 
 call transposexv(vlas2d,f)
-
 
 call verif_charge(vlas2d,rho,ex,ey)
 
@@ -791,50 +761,43 @@ subroutine verif_charge(vlas2d,rho,ex,ey)
 
 end subroutine verif_charge
 
-subroutine solve_poisson(poiss2dpp,ex,ey,rho,nrj)
-type(mudpack_2d) :: poiss2dpp
-real(8), pointer :: ex(:,:)
-real(8), pointer :: ey(:,:)
-real(8), pointer :: rho(:,:)
-integer   :: il, ir, jr, jl
-real(8), optional   :: nrj
+subroutine solve_poisson_mg(this)
 
-jxp(1:geomx%nx,1:geomx%ny) = jx - 1.
-jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-1.
-jxp(1:geomx%nx,geomx%ny+1) = jx(:,1)-1.
-jxp(geomx%nx+1,geomx%ny+1) = jx(1,1)-1.
-
-call solve_mudpack_cartesian(poiss2dpp, phi, jxp)
-
-
-do j = 2, geomx%ny-1
-   jl = merge(i-1, geomx%nx,i>1       )
-   jr = merge(i+1, 1       ,i<geomx%nx)
-   do i = 2, geomx%ny-1
-      il = merge(i-1,geomx%nx, i>1       )
-      ir = merge(i+1,      1 , i<geomx%nx)
-      ex(i,j) = 0.5 * (phi(il,j)-phi(ir,j)) / geomx%dx
-      ey(i,j) = 0.5 * (phi(i,jl)-phi(i,jr)) / geomx%dy
-   end do
-end do
-
-    if (present(nrj)) then 
-       nrj=0._wp
-       do i=1,geomx%nx
-          do j=1,geomx%ny
-             nrj=nrj+ex(i,j)*ex(i,j)+ey(i,j)*ey(i,j)          
-          enddo
-       enddo
+   type(mudpack_2d) :: this
+   integer   :: il, ir, jr, jl
    
-       nrj=nrj*geomx%dx*geomx%dy
-       if (nrj>1.e-30) then 
-          nrj=0.5_wp*log(nrj)
-       else
-          nrj=-10**9
-       endif
-   end if
+   jxp(1:geomx%nx,1:geomx%ny) = jx     -1.
+   jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-1.
+   jxp(1:geomx%nx,geomx%ny+1) = jx(:,1)-1.
+   jxp(geomx%nx+1,geomx%ny+1) = jx(1,1)-1.
+   
+   call solve_mudpack_cartesian(this, phi, jxp)
+   
+   do j = 1, geomx%ny
+      jl = merge(i-1, geomx%nx,i>1       )
+      jr = merge(i+1, 1       ,i<geomx%nx)
+      do i = 1, geomx%ny
+         il = merge(i-1,geomx%nx, i>1       )
+         ir = merge(i+1,      1 , i<geomx%nx)
+         ex(i,j) = 0.5 * (phi(il,j)-phi(ir,j)) / geomx%dx
+         ey(i,j) = 0.5 * (phi(i,jl)-phi(i,jr)) / geomx%dy
+      end do
+   end do
+   
+   nrj=0._wp
+   do i=1,geomx%nx
+      do j=1,geomx%ny
+         nrj=nrj+ex(i,j)*ex(i,j)+ey(i,j)*ey(i,j)          
+      enddo
+   enddo
+      
+   nrj=nrj*geomx%dx*geomx%dy
+   if (nrj>1.e-30) then 
+      nrj=0.5_wp*log(nrj)
+   else
+      nrj=-10**9
+   endif
 
-
-end subroutine solve_poisson
+end subroutine solve_poisson_mg
 
 end program vm4d_transpose
