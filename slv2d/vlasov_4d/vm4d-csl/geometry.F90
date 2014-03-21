@@ -60,6 +60,8 @@ subroutine new_geometry1(geom,x0,y0,nx,ny,dx,dy,error,bc)
    sll_int32 :: i    
    sll_int32 :: error 
 
+
+
    geom%x0=x0;geom%x1=x1
    geom%y0=y0;geom%y1=y1
    if ((bc.eq."perxy").or.(bc.eq."perx")) then
@@ -84,6 +86,7 @@ subroutine new_geometry1(geom,x0,y0,nx,ny,dx,dy,error,bc)
    do i=1,ny
       geom%ygrid(i)=geom%y0+(i-1)*geom%dy
    enddo
+
 
 end subroutine new_geometry2      
 
