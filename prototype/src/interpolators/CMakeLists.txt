@@ -14,6 +14,7 @@ IF( NOT STDF95)
         sll_interpolators_1d_base.F90
         sll_interpolators_2d_base.F90 
         sll_cubic_spline_interpolator_2d.F90
+        sll_hermite_interpolator_2d.F90
 	sll_arbitrary_degree_spline_interpolator_1d.F90
         sll_arbitrary_degree_spline_interpolator_2d.F90) 
 
@@ -25,6 +26,7 @@ IF (NOT STDF95)
    TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
                                             sll_periodic_interp
                                             sll_lagrange_interpolation
+                                            sll_hermite_interpolation
                                             sll_fft
                                             sll_utilities 
    		                            deboor_splines 
@@ -35,7 +37,8 @@ ELSE()
    TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
                                             sll_periodic_interp
                                             sll_lagrange_interpolation
-                                            sll_fft
+                                            sll_hermite_interpolation
+                                             sll_fft
                                             sll_utilities 
    		                            deboor_splines 
 					    sll_file_io 
