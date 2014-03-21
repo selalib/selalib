@@ -457,7 +457,8 @@ if (my_num==MPI_MASTER) then
    aux(12)=nrjtab(1);aux(13)=nrjtab(2);aux(14)=nrjtab(3)
    aux(15)=nrjtab(4)+0.5_8*aux(10)+0.5_8*aux(5)
 !   write(*,"('time ', g8.3,' test nrj',f10.5)") t, nrjtab
-   print *,'time, nrj',t,nrjtab(1:4)
+   print *,'time, nrj',t,nrjtab(1:4), aux(1)
+   print *,' '
    call time_history("thf","(16(1x,e15.6))",aux(1:16))
 end if
 
