@@ -268,7 +268,6 @@ contains
 
   !End high level version
 
-
   call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)
   call sll_hdf5_file_close(file_id, error)
