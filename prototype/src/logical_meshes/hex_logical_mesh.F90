@@ -29,9 +29,9 @@ module hex_logical_meshes
      sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
      sll_real64 :: delta      ! cell spacing
      ! generator vectors (r1, r2, r3) coordinates -- need to be scaled by delta
-     sll_real64 :: r1_x1 = sqrt(3)*0.5 
+     sll_real64 :: r1_x1 = sqrt(real(3, f64))*0.5 
      sll_real64 :: r1_x2 = 0.5
-     sll_real64 :: r2_x1 = -sqrt(3)*0.5
+     sll_real64 :: r2_x1 = -sqrt(real(3, f64))*0.5
      sll_real64 :: r2_x2 = 0.5
      sll_real64 :: r3_x1 = 0.0
      sll_real64 :: r3_x2 = 1.0
@@ -46,9 +46,6 @@ module hex_logical_meshes
      module procedure delete_hex_logical_mesh_2d
   end interface delete
 
-  interface sll_display
-     module procedure display_logical_mesh_2d
-  end interface sll_display
 
 contains
 
@@ -61,8 +58,8 @@ end if
 
   function new_hex_logical_mesh_2d( &
     num_cells, &
-    centerx1, &
-    centerx2, &
+    center_x1, &
+    center_x2, &
     radius ) result(m)
 
     type(hex_logical_mesh_2d), pointer :: m
@@ -92,7 +89,7 @@ end if
 
     type(hex_logical_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: num_cells
-    sll_real64, intent(in) :: radius
+    sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
     sll_real64, optional, intent(in) :: center_x2
 
@@ -101,20 +98,18 @@ end if
     TEST_PRESENCE_AND_ASSIGN_VAL( m, radius, radius, 1.0_f64 )
 
     m%num_cells = num_cells
-    m%num_radius = radius
+    m%radius    = radius
     m%center_x1 = center_x1
     m%center_x2 = center_x2
     m%delta = m%radius/real(num_cells,f64)
 
-
     ! resizing :
-    r1_x1 = r1_x1 * m%delta
-    r1_x2 = r1_x2 * m%delta
-    r2_x1 = r2_x1 * m%delta
-    r2_x2 = r2_x2 * m%delta
-    r3_x1 = r3_x1 * m%delta
-    r3_x2 = r3_x2 * m%delta
-
+    m%r1_x1 = m%r1_x1 * m%delta
+    m%r1_x2 = m%r1_x2 * m%delta
+    m%r2_x1 = m%r2_x1 * m%delta
+    m%r2_x2 = m%r2_x2 * m%delta
+    m%r3_x1 = m%r3_x1 * m%delta
+    m%r3_x2 = m%r3_x2 * m%delta
 
     if ( m%radius <= 0.) then
        print*,'ERROR, initialize_hex_logical_mesh_2d(): ', &
@@ -131,35 +126,34 @@ end if
   end subroutine initialize_hex_logical_mesh_2d
 
 
-  subroutine x1_node(mesh, k1, k2) result(val)
-    type(hex_logical_mesh_2d), pointer :: m
+  function x1_node(mesh, k1, k2) result(val)
+    type(hex_logical_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
-    sll_real64, intent(out)  :: val
-    val = m%r1_x1*k1 + m%r2_x1*k2 + m%center_x1
-  end subroutine x1_node
+    sll_real64 :: val
+    val = mesh%r1_x1*k1 + mesh%r2_x1*k2 + mesh%center_x1
+  end function x1_node
 
-  subroutine x2_node(mesh, k1, k2) result(val)
-    type(hex_logical_mesh_2d), pointer :: m
+
+  function x2_node(mesh, k1, k2) result(val)
+    type(hex_logical_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
-    sll_real64, intent(out)  :: val
-    val = m%r1_x2*k1 + m%r2_x2*k2 + m%center_x1
-  end subroutine x2_node
+    sll_real64  :: val
+    val = mesh%r1_x2*k1 + mesh%r2_x2*k2 + mesh%center_x1
+  end function x2_node
 
 
-
-
-  subroutine global_index(mesh, k1, k2) result(val)
+  function global_index(mesh, k1, k2) result(val)
     ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
     ! returns global index of that mesh point.
-    type(hex_logical_mesh_2d), pointer :: m
+    type(hex_logical_mesh_2d), pointer :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
-    sll_real64, intent(out) :: val
+    sll_int32 :: val
     sll_int32 :: hex_num, first_index
 
-    ! We compute the hexagone-ring number
+    ! We compute the hexagon-ring number
     if (k1*k2 .ge. 0.) then
        hex_num = max( abs(k1), abs(k2))
     else 
@@ -195,18 +189,19 @@ end if
        print *, "Not recognized combination of k1,k2"
        STOP 'global_index'
     endif
-  end subroutine global_index
+  end function global_index
 
 
-  subroutine get_hex_num(index)
+  function get_hex_num(index) result(hex_num)
       sll_int32 :: index
-      sll_int32, intent(out) :: hex_num = 0
-      sll_int32 ::  flag = 0
+      sll_int32 :: hex_num
+      sll_int32 :: flag = 0
       
+      hex_num = 0
       if (index .eq. 0) then
          hex_num = 0
       else
-         while(flag .eq. 0) do
+         do while(flag .eq. 0)
              if (index .gt. 3*hex_num*(hex_num+1)) then
                 hex_num = hex_num + 1
              else
@@ -214,16 +209,16 @@ end if
              endif
          enddo
       endif
-  end subroutine get_hex_num
+  end function get_hex_num
 
 
-  subroutine from_global_index_k1(mesh, index) 
+  function from_global_index_k1(mesh, index) result(k1)
       type(hex_logical_mesh_2d), pointer :: mesh
       sll_int32 :: index
       sll_int32 :: hex_num
       sll_int32 :: first_index
       sll_int32 :: last_index
-      sll_int32, intent(out) :: k1
+      sll_int32 :: k1
 
       hex_num = get_hex_num(index)
       first_index = 3*(hex_num - 1)*hex_num + 1
@@ -252,19 +247,17 @@ end if
        print *, "Not recognized index"
        STOP 'from_global_index'
     endif
-  end subroutine from_global_index_k1
+  end function from_global_index_k1
 
 
-
-
-  subroutine from_global_index_k2(mesh, index) 
+  function from_global_index_k2(mesh, index) result(k2)
 
       type(hex_logical_mesh_2d), pointer :: mesh
       sll_int32 :: index
       sll_int32 :: hex_num
       sll_int32 :: first_index
       sll_int32 :: last_index
-      sll_int32, intent(out) :: k2
+      sll_int32 :: k2
 
       hex_num = get_hex_num(index)
       first_index = 3*(hex_num - 1)*hex_num + 1
@@ -293,28 +286,27 @@ end if
        print *, "Not recognized index"
        STOP 'from_global_index'
     endif
-  end subroutine from_global_index_k2
+  end function from_global_index_k2
 
 
-
-
-
-  subroutine local_index(mesh,i,j)
+  function local_index(mesh,i,j) result(new_index)
+      ! returns the index of the point Pj as if the 
+      ! notation had as origin Pi
+      ! ie. local_index(mesh,i,i) = 0
       type(hex_logical_mesh_2d), pointer :: mesh
       sll_int32 :: i, j
       sll_int32 :: k1_i, k2_i
       sll_int32 :: k1_j, k2_j
-      sll_int32, intent(out) :: new_index
+      sll_int32 :: new_index
 
-      k1_i = from_global_index_k1(i)
-      k2_i = from_global_index_k2(i)
-      k1_j = from_global_index_k1(j)
-      k2_j = from_global_index_k2(j)
+      k1_i = from_global_index_k1(mesh, i)
+      k2_i = from_global_index_k2(mesh, i)
+      k1_j = from_global_index_k1(mesh, j)
+      k2_j = from_global_index_k2(mesh, j)
 
-      new_index = global_index(k1_i - k1_j, k2_i - k2_j)
+      new_index = global_index(mesh, k1_i - k1_j, k2_i - k2_j)
 
-  end subroutine local_index
-
+  end function local_index
 
 
 
@@ -323,8 +315,8 @@ end if
     sll_int32 :: ierr
     if(.not. associated(mesh))then
        print *, 'delete_hex_logical_mesh_2d'
-       print *, 'ERROR: passed argument is not '&
-                'associated. Crash imminent...'
+       print *, 'ERROR: passed argument is not associated'
+       print *, '       Crash imminent...'
        STOP
     end if
     SLL_DEALLOCATE(mesh, ierr)
