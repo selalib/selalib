@@ -63,7 +63,8 @@ end do
 call initialize_mudpack_cartesian(poisson,                     &
                                   eta1_min, eta1_max, nc_eta1, &
                                   eta2_min, eta2_max, nc_eta2, &
-                                  PERIODIC, PERIODIC, PERIODIC, PERIODIC)
+                                  SLL_PERIODIC, SLL_PERIODIC,  &
+                                  SLL_PERIODIC, sll_PERIODIC)
 
 SLL_CLEAR_ALLOCATE(phi( 1:nc_eta1+1,1:nc_eta2+1),error)
 SLL_CLEAR_ALLOCATE(rhs( 1:nc_eta1+1,1:nc_eta2+1),error)
