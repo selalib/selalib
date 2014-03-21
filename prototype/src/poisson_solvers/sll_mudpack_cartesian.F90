@@ -10,11 +10,19 @@ module sll_mudpack_cartesian
 #include "sll_file_io.h"
 
 use sll_mudpack_base
-use sll_cubic_spline_interpolator_1d
+!use sll_cubic_spline_interpolator_1d
 
 implicit none
 
-class(sll_interpolator_1d_base), pointer   :: cxx_interp
+interface initialize
+   module procedure  initialize_mudpack_cartesian
+end interface initialize
+
+interface solve
+   module procedure  solve_mudpack_cartesian
+end interface solve
+
+!class(sll_interpolator_1d_base), pointer   :: cxx_interp
 contains
 
 !> Initialize the Poisson solver using mudpack library
@@ -54,7 +62,7 @@ common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
-sll_real64,dimension(:),allocatable :: cxx_array
+!sll_real64,dimension(:),allocatable :: cxx_array
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
@@ -68,16 +76,16 @@ ny = nc_eta2+1
 ! set minimum required work space
 llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
 
-cxx_interp => new_cubic_spline_1d_interpolator( &
-          nx, &
-          eta1_min, &
-          eta1_max, &
-          SLL_PERIODIC)
-allocate(cxx_array(nx))          
-
-cxx_array = 1._f64          
-          
-call cxx_interp%compute_interpolants( cxx_array )          
+!cxx_interp => new_cubic_spline_1d_interpolator( &
+!          nx, &
+!          eta1_min, &
+!          eta1_max, &
+!          SLL_PERIODIC)
+!allocate(cxx_array(nx))          
+!
+!cxx_array = 1._f64          
+!          
+!call cxx_interp%compute_interpolants( cxx_array )          
 
       
 allocate(this%work(llwork))
@@ -169,17 +177,21 @@ end subroutine initialize_mudpack_cartesian
 
 
 !> Compute the potential using mudpack library on cartesian mesh
-subroutine solve_mudpack_cartesian(this, phi, rhs)
+subroutine solve_mudpack_cartesian(this, phi, rhs, ex, ey)
 
-type(mudpack_2d)  :: this      !< Data structure for Poisson solver
-sll_real64        :: phi(:,:)  !< Electric potential
-sll_real64        :: rhs(:,:)  !< Charge density
+type(mudpack_2d)     :: this      !< Data structure for Poisson solver
+sll_real64           :: phi(:,:)  !< Electric potential
+sll_real64           :: rhs(:,:)  !< Charge density
+sll_real64, optional :: ex(:,:)   !< Electric field
+sll_real64, optional :: ey(:,:)   !< Electric field
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 sll_int32  :: error
+sll_int32  :: i, j
+sll_real64 :: dx, dy
 
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
@@ -216,6 +228,17 @@ if (error > 0) call exit(0)
     &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)
 107 format(' error = ',i2)
 108 format(/' mud24sp test ', ' error = ',i2)
+
+if (present(ex) .and. present(ey)) then
+   dx = (xb-xa)/(nx-1)
+   dy = (yc-yd)/(ny-1)
+   do j = 1, nx-1
+      do i = 1, ny-1
+         ex(i,j) = (phi(i+1,j)-phi(i,j)) / dx
+         ey(i,j) = (phi(i,j+1)-phi(i,j)) / dy
+      end do
+   end do
+end if
      
 end subroutine solve_mudpack_cartesian
 
@@ -251,7 +274,7 @@ end
 subroutine cofy(y,cyy,cy,cey)
 implicit none
 real(8)  :: y,cyy,cy,cey
-cyy = 1.0+0.0*y
+cyy = 1.0 +0.0*y
 cy  = 0.0
 cey = 0.0
 return

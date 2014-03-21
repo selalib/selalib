@@ -1,4 +1,7 @@
 program landau_4d
+
+#define MULTIGRID 1
+
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -8,8 +11,11 @@ program landau_4d
 use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
-
 use sll_utilities, only: int2string
+
+#ifdef MULTIGRID
+use sll_mudpack_cartesian
+#endif
 
 implicit none
   
@@ -40,7 +46,11 @@ sll_real64, dimension(:,:), allocatable :: jy
 sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
+#ifdef MULTIGRID
+type(mudpack_2d) :: poisson
+#else
 type(poisson_2d_periodic) :: poisson
+#endif
 !type(maxwell_2d_fdtd)        :: maxwell_TE
 
 class(sll_interpolator_1d_base), pointer    :: interp_1

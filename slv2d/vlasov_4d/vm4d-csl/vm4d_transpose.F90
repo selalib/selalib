@@ -5,6 +5,7 @@ program vm4d_transpose
 !-------------------------------------------------------------------
 
 #define MPI_MASTER 0
+
 #include "selalib.h"
 
 use geometry_module
@@ -25,7 +26,7 @@ type (geometry)      :: geomx      ! geometrie dans l'espace physique
 type (geometry)      :: geomv      ! geometrie dans l'espace des vitesses
 type (maxwell2dfdtd) :: maxw2dfdtd ! champ electromagnetique
 type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
-type(mudpack_2d)     :: poisson_mg
+type (mudpack_2d)    :: poisson_mg
 type (vlasov2d)      :: vlas2d     ! vlasov
 type (splinepx)      :: splx       ! vlasov1d
 type (splinepy)      :: sply       ! vlasov1d
@@ -128,7 +129,7 @@ end do
 
 do iter=1,nbiter
 
-   if (va==0) then 
+   if (va==VA_VALIS) then 
       div=rho;df=rho
       call transposexv(vlas2d,f)
       call densite_courant(vlas2d,jx,jy)
@@ -512,8 +513,6 @@ do jv=jstartv,jendv
    end do
 end do
 
-!Initialisation du module poisson
-call initialize(poiss2dpp,rho,geomx,iflag)
 !Initialisation du module vlasov
 call initialize(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 !Intitialisation du champ electrique
@@ -530,13 +529,14 @@ call transposevx(vlas2d,f)
 jx=rho
 !rho=rho-1._8
 
+call initialize(poiss2dpp,rho,geomx,iflag)
 call solve(poiss2dpp,ex,ey,rho,nrj)
 
 !call initialize_mudpack_cartesian(poisson_mg,                      &
 !                                  geomx%x0, geomx%x1, geomx%nx, &
 !                                  geomx%y0, geomx%y1, geomx%ny, &
-!                                  PERIODIC, PERIODIC,   &
-!                                  PERIODIC, PERIODIC)
+!                                  SLL_PERIODIC, SLL_PERIODIC,   &
+!                                  SLL_PERIODIC, SLL_PERIODIC)
 !
 !call solve_poisson_mg(poisson_mg)
 
@@ -764,7 +764,6 @@ end subroutine verif_charge
 subroutine solve_poisson_mg(this)
 
    type(mudpack_2d) :: this
-   integer   :: il, ir, jr, jl
    
    jxp(1:geomx%nx,1:geomx%ny) = jx     -1.
    jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-1.
@@ -774,13 +773,9 @@ subroutine solve_poisson_mg(this)
    call solve_mudpack_cartesian(this, phi, jxp)
    
    do j = 1, geomx%ny
-      jl = merge(i-1, geomx%nx,i>1       )
-      jr = merge(i+1, 1       ,i<geomx%nx)
       do i = 1, geomx%ny
-         il = merge(i-1,geomx%nx, i>1       )
-         ir = merge(i+1,      1 , i<geomx%nx)
-         ex(i,j) = 0.5 * (phi(il,j)-phi(ir,j)) / geomx%dx
-         ey(i,j) = 0.5 * (phi(i,jl)-phi(i,jr)) / geomx%dy
+         ex(i,j) = (phi(i+1,j)-phi(i,j)) / geomx%dx
+         ey(i,j) = (phi(i,j+1)-phi(i,j)) / geomx%dy
       end do
    end do
    
