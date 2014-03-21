@@ -62,7 +62,7 @@ contains
 
     eps = init_obj%eps
     transf => init_obj%transf
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
 
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
        num_pts1 = mesh%num_cells1+1
