@@ -1,4 +1,6 @@
-ADD_LIBRARY(sll_logical_meshes STATIC sll_logical_meshes.F90)
+ADD_LIBRARY(sll_logical_meshes STATIC 
+  sll_logical_meshes.F90
+  hex_logical_mesh.F90)
 
 TARGET_LINK_LIBRARIES( sll_logical_meshes sll_working_precision sll_memory)
 
