@@ -41,7 +41,7 @@
 
 &sim_params
   dt                = 8
-  number_iterations = 10
+  number_iterations = 2
   !number_iterations = 1
   freq_diag_time = 1
   freq_diag = 100
