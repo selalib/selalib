@@ -41,10 +41,10 @@ sll_real64, intent(in)  :: eta2_min      !< left corner x direction
 sll_real64, intent(in)  :: eta2_max      !< right corner x direction
 sll_int32,  intent(in)  :: nc_eta1       !< number of cells x direction
 sll_int32,  intent(in)  :: nc_eta2       !< number of cells y direction
-sll_int32,  intent(in)  :: bc_eta1_left  !< boundary condtion
-sll_int32,  intent(in)  :: bc_eta1_right !< boundary condtion
-sll_int32,  intent(in)  :: bc_eta2_left  !< boundary condtion
-sll_int32,  intent(in)  :: bc_eta2_right !< boundary condtion
+sll_int32,  optional    :: bc_eta1_left  !< boundary condtion
+sll_int32,  optional    :: bc_eta1_right !< boundary condtion
+sll_int32,  optional    :: bc_eta2_left  !< boundary condtion
+sll_int32,  optional    :: bc_eta2_right !< boundary condtion
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
 sll_int32               :: icall, iiex, jjey, llwork
 
@@ -97,10 +97,10 @@ jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
 intl = 0
 
 !set boundary condition flags
-nxa  = bc_eta1_left
-nxb  = bc_eta1_right
-nyc  = bc_eta2_left
-nyd  = bc_eta2_right
+nxa  = merge(bc_eta1_left,  0, present(bc_eta1_left))
+nxb  = merge(bc_eta1_right, 0, present(bc_eta1_right))
+nyc  = merge(bc_eta2_left,  0, present(bc_eta2_left))
+nyd  = merge(bc_eta2_right, 0, present(bc_eta2_right))
 
 !set grid sizes from parameter statements
 ixp  = iixp
@@ -146,10 +146,12 @@ yd = eta2_max
 !set for no error control flag
 tolmax = 0.0
 
+#ifdef DEBUG
 write(*,101) (iprm(i),i=1,15)
 write(*,102) (this%mgopt(i),i=1,4)
 write(*,103) xa,xb,yc,yd,tolmax
 write(*,104) intl
+#endif
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
@@ -157,33 +159,34 @@ call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 write (*,200) error,iprm(16)
 if (error > 0) call exit(0)
 
-101 format(/' integer input arguments ', &
-    &/'intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
-    &/' ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
-    &/' nx = ',i3,' ny = ',i3,' iguess = ',i2,' maxcy = ',i2, &
-    &/' method = ',i2, ' work space estimate = ',i7)
-102 format(/' multigrid option arguments ', &
-    &/' kcycle = ',i2, &
-    &/' iprer = ',i2, &
-    &/' ipost = ',i2, &
-    &/' intpol = ',i2)
-103 format(/' floating point input parameters ', &
-    &/' xa = ',f6.3,' xb = ',f6.3,' yc = ',f6.3,' yd = ',f6.3, &
-    &/' tolerance (error control) =   ',e10.3)
-104 format(/' discretization call to mud2sp', ' intl = ', i2)
-200 format(' error = ',i2, ' minimum work space = ',i7)
+101 format(/'# integer input arguments ', &
+    &/'#intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
+    &/'# ixp = ',i2,' jyq = ',i2,' iex = ',i2,' jey = ',i2 &
+    &/'# nx = ',i3,' ny = ',i3,' iguess = ',i2,' maxcy = ',i2, &
+    &/'# method = ',i2, ' work space estimate = ',i7)
+102 format(/'# multigrid option arguments ', &
+    &/'# kcycle = ',i2, &
+    &/'# iprer = ',i2, &
+    &/'# ipost = ',i2, &
+    &/'# intpol = ',i2)
+103 format(/'# floating point input parameters ', &
+    &/'# xa = ',f6.3,' xb = ',f6.3,' yc = ',f6.3,' yd = ',f6.3, &
+    &/'# tolerance (error control) =   ',e10.3)
+104 format(/'# discretization call to mud2sp', ' intl = ', i2)
+200 format('# error = ',i2, ' minimum work space = ',i7)
      
 end subroutine initialize_mudpack_cartesian
 
 
 !> Compute the potential using mudpack library on cartesian mesh
-subroutine solve_mudpack_cartesian(this, phi, rhs, ex, ey)
+subroutine solve_mudpack_cartesian(this, phi, rhs, ex, ey, nrj)
 
 type(mudpack_2d)     :: this      !< Data structure for Poisson solver
 sll_real64           :: phi(:,:)  !< Electric potential
 sll_real64           :: rhs(:,:)  !< Charge density
 sll_real64, optional :: ex(:,:)   !< Electric field
 sll_real64, optional :: ey(:,:)   !< Electric field
+sll_real64, optional :: nrj
 
 !put integer and floating point argument names in contiguous
 !storeage for labelling in vectors iprm,fprm
@@ -212,22 +215,29 @@ iguess = this%iguess
 
 !attempt solution
 intl = 1
+#ifdef DEBUG
 write(*,106) intl,method,iguess
+#endif
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
+
+#ifdef DEBUG
 write(*,107) error
 if (error > 0) call exit(0)
+#endif
 
 ! attempt to improve approximation to fourth order
 call mud24sp(this%work,phi,error)
 
+#ifdef DEBUG
 write (*,108) error
 if (error > 0) call exit(0)
+#endif
 
-106 format(/' approximation call to mud2sp', &
-    &/' intl = ',i2, ' method = ',i2,' iguess = ',i2)
-107 format(' error = ',i2)
-108 format(/' mud24sp test ', ' error = ',i2)
+106 format(/'#approximation call to mud2sp', &
+    &/'# intl = ',i2, ' method = ',i2,' iguess = ',i2)
+107 format('#error = ',i2)
+108 format(/'# mud24sp test ', ' error = ',i2)
 
 if (present(ex) .and. present(ey)) then
    dx = (xb-xa)/(nx-1)
@@ -238,7 +248,14 @@ if (present(ex) .and. present(ey)) then
          ey(i,j) = (phi(i,j+1)-phi(i,j)) / dy
       end do
    end do
+
+   if (present(nrj)) then 
+      nrj=sum(ex(1:nx-1,1:ny-1)*ex(1:nx-1,1:ny-1)+ &
+              ey(1:nx-1,1:ny-1)*ey(1:nx-1,1:ny-1))*dx*dy
+   end if
+
 end if
+
      
 end subroutine solve_mudpack_cartesian
 
