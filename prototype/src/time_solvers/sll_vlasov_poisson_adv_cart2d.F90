@@ -85,7 +85,7 @@ contains
        f1d = cubic_spline_interpolate_array_at_displacement( this%interpx, this%Ncx+1, f1d, displacement)
     end do
 #else    
-    mesh => this%dist_func%transf%get_logical_mesh()
+    mesh => this%dist_func%transf%mesh
 
     vmin = this%dist_func%transf%x2_at_node(1,1)
     vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
@@ -120,7 +120,7 @@ contains
     
     time = this%current_time
 
-    mesh => this%dist_func%transf%get_logical_mesh()
+    mesh => this%dist_func%transf%mesh
 
     xmin = this%dist_func%transf%x1_at_node(1,1)
     xmax = this%dist_func%transf%x1_at_node(this%Ncx+1,1)
