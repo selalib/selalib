@@ -43,6 +43,7 @@ sll_real64, dimension(:,:), allocatable :: ey
 sll_real64, dimension(:,:), allocatable :: bz
 sll_real64, dimension(:,:), allocatable :: jx
 sll_real64, dimension(:,:), allocatable :: jy
+sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
@@ -74,7 +75,11 @@ sll_int32  :: i1, i2, i3, i4
 eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_pi
 eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_pi
 
+#ifdef MULTIGRID
+nc_eta1 = 32; nc_eta2 = 32
+#else
 nc_eta1 = 31; nc_eta2 = 31
+#endif
 
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
@@ -89,6 +94,7 @@ delta_eta3 = (eta3_max-eta3_min)/nc_eta3
 delta_eta4 = (eta4_max-eta4_min)/nc_eta4
 
 SLL_ALLOCATE(f(nc_eta1+1,nc_eta2+1,nc_eta3+1,nc_eta4+1),error)
+SLL_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
@@ -162,7 +168,12 @@ do i_step = 1, n_step !Loop over time
 
    !call faraday(maxwell_TE, ex, ey, bz, delta_t)
 
+#ifdef MULTIGRID
+   call solve(poisson,phi,rho,ex,ey,nrj(i_step))
+#else
    call solve(poisson,ex,ey,rho,nrj(i_step))
+#endif
+
    call online_plot() 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
       call plot_field(ex,"ex",i_step/10)
