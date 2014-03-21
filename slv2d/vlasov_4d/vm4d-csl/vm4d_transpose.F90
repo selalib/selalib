@@ -48,7 +48,7 @@ sll_real64 :: nrj,nrjex,nrjey,nrjbz
 sll_real64 :: nrjtab(4)
 sll_int32  :: error, iplot
 sll_int32  :: comm, my_num, num_threads
-sll_int32  :: va, meth
+sll_int32  :: va, meth, num_case
 
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
@@ -339,13 +339,16 @@ sll_real64     :: x1, y1   ! coordonnees fin du maillage espace physique
 sll_real64     :: vx1, vy1 ! coordonnees fin du maillage espace vitesses
 sll_int32      :: iflag,ierr  ! indicateur d'erreur
 sll_int32      :: comm
-sll_int32 :: my_num, num_threads
+sll_int32      :: my_num
+sll_int32      :: num_threads
 
 ! definition of namelists
 namelist /time/ dt, nbiter
 namelist /diag/ fdiag, fthdiag! freq. of diags and time hist diags in steps
 namelist /phys_space/ x0,x1,y0,y1,nx,ny
 namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
+namelist /algo_charge/ va, meth
+namelist /test_case/ num_case
 
 num_threads  = sll_get_collective_size(sll_world_collective)
 my_num = sll_get_collective_rank(sll_world_collective)
@@ -375,7 +378,9 @@ call mpi_bcast(vy0,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(vx1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(vy1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(nvx,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
-call mpi_bcast(nvy,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(va,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(meth,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(num_case,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 
 call initialize(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
