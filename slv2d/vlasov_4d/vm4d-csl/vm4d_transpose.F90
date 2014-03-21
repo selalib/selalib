@@ -9,20 +9,23 @@ program vm4d_transpose
 
 use geometry_module
 use maxwell2dfdtd_module
-use poisson2dpp_seq
+!use poisson2dpp_seq
 use diagnostiques_module
 use vlasov4d_plot
 use vlasov2d_module
 use splinepx_class
 use splinepy_class
 use vlasov1d_module
+use init_functions
+use sll_mudpack_cartesian
 
 implicit none
 
 type (geometry)      :: geomx      ! geometrie dans l'espace physique
 type (geometry)      :: geomv      ! geometrie dans l'espace des vitesses
 type (maxwell2dfdtd) :: maxw2dfdtd ! champ electromagnetique
-type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
+!type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
+type(mudpack_2d)     :: poiss2dpp
 type (vlasov2d)      :: vlas2d     ! vlasov
 type (splinepx)      :: splx       ! vlasov1d
 type (splinepy)      :: sply       ! vlasov1d
@@ -48,12 +51,14 @@ sll_real64 :: nrj,nrjex,nrjey,nrjbz
 sll_real64 :: nrjtab(4)
 sll_int32  :: error, iplot
 sll_int32  :: comm, my_num, num_threads
-sll_int32  :: va, meth, num_case
+sll_int32  :: va = VA_VALIS, meth = METH_CSL_PPM1, num_case = LANDAU_X_CASE
 
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
 sll_real64, allocatable, dimension(:,:) :: df
 sll_real64 :: tcpu1, tcpu2
+
+sll_real64, dimension(:,:),pointer :: phi, jxp
 
 call sll_boot_collective()
 num_threads  = sll_get_collective_size(sll_world_collective)
@@ -68,9 +73,7 @@ end if
 call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 
 !va=0 (valis) ; va=1 (old version) ; va=2 (Vlasov-Poisson)
-va=0
 !meth=0 (bsl cubic splines) ; meth=1 (csl cubic splines) ; meth=2 (csl Lag3) ; meth=3 (csl ppm1) ; meth=4 (csl ppm2)
-meth=3
 
 
 if (my_num == MPI_MASTER) then
@@ -93,7 +96,7 @@ endif
 
 call initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                f,f1,rho,ex,ey,ex1,ey1,ex2,ey2,bz,bz1,jx,jy, &
-               vlas2d,maxw2dfdtd,poiss2dpp,splx,sply,va)
+               vlas2d,maxw2dfdtd,splx,sply,va)
 
 
 ! ecriture des resultats par le processeur 0 a l'instant initial
@@ -167,7 +170,7 @@ do iter=1,nbiter
 !      call poisson1d(vlas2d%geomx,rho,ex)
 !      ey=0._8;bz=0._f64;bz1=0._f64
 
-      call solve(poiss2dpp,ex,ey,rho,nrj)
+      call solve_poisson(poiss2dpp,ex,ey,rho,nrj)
       call average(geomx,ex,ey)
    endif
 
@@ -259,7 +262,7 @@ do iter=1,nbiter
       call densite_charge(vlas2d,rho)
       call transposevx(vlas2d,f)
 
-      call solve(poiss2dpp,ex,ey,rho,nrj)
+      call solve_poisson(poiss2dpp,ex,ey,rho,nrj)
    endif
 
 
@@ -389,6 +392,7 @@ call mpi_bcast(vy0,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(vx1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(vy1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(nvx,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(nvy,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(va,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(meth,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(num_case,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
@@ -397,11 +401,12 @@ call initialize(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
 call initialize(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
+
 end subroutine initglobal
 
 subroutine initlocal(geomx,geomv,jstartv,jendv,jstartx,jendx, &
                      f,f1,rho,ex,ey,ex1,ey1,ex2,ey2,bz,bz1,jx,jy,vlas2d,maxw2dfdtd,  &
-                     poiss2dpp,splx,sply,va)
+                     splx,sply,va)
 
 use splinepx_class
 use splinepy_class
@@ -417,7 +422,6 @@ type(vlasov2d) :: vlas2d
 type(splinepx) :: splx
 type(splinepy) :: sply
 type(maxwell2dfdtd) :: maxw2dfdtd
-type(poisson2dpp) :: poiss2dpp
 integer, intent(in) :: va
 !variables locales
 sll_int32 :: ipiece_size_v, ipiece_size_x
@@ -440,6 +444,8 @@ jendx=geomx%ny
 ! the total size of the vx zone is nvx
 ! the total size of the y zone is ny
 ! ipiece_size = n/num_threads rounded up
+
+print*, my_num, num_threads, geomv%ny, geomx%ny
 ipiece_size_v = (geomv%ny + num_threads - 1) / num_threads
 ipiece_size_x = (geomx%ny + num_threads - 1) / num_threads
 ! zone a traiter en fonction du numero de process
@@ -476,6 +482,9 @@ SLL_CLEAR_ALLOCATE(bz1(1:geomx%nx,1:geomx%ny),iflag)
 SLL_CLEAR_ALLOCATE(jx(1:geomx%nx,1:geomx%ny),iflag)
 SLL_CLEAR_ALLOCATE(jy(1:geomx%nx,1:geomx%ny),iflag)
 
+SLL_CLEAR_ALLOCATE(phi(1:geomx%nx+1,1:geomx%ny+1),iflag)
+SLL_CLEAR_ALLOCATE(jxp(1:geomx%nx+1,1:geomx%ny+1),iflag)
+
 ! initialisation parallele des tableaux globaux, 
 ! ce qui permet  de les distribuer sur les processeurs
 ! initialisation de la fonction de distribution 
@@ -495,6 +504,19 @@ do jv=jstartv,jendv
          y=geomx%y0+real(j-1,8)*geomx%dy
          do i=1,geomx%nx
             x=geomx%x0+real(i-1,8)*geomx%dx
+
+            select case(num_case)
+                case(LANDAU_X_CASE)
+                    f(i,j,iv,jv)= landau_1d(eps, kx, x, v2)
+                case(LANDAU_Y_CASE)
+                    f(i,j,iv,jv)= landau_1d(eps, ky, y, v2)
+                case(LANDAU_COS_PROD_CASE)
+                    f(i,j,iv,jv)= landau_cos_prod(eps, kx, ky, x, y, v2)
+                case(LANDAU_COS_SUM_CASE)
+                    f(i,j,iv,jv)= landau_cos_sum(eps, kx, ky, x, y, v2)
+                case(TSI_CASE)
+                    f(i,j,iv,jv)= tsi(eps, kx, x, vx, v2)
+            end select
 !            f(i,j,iv,jv)=(1+eps*((cos(2*kx*x)+cos(3*kx*x))/1.2 &
 !                 + cos(kx*x)))* &
 !                 1/(2*pi)*((2-2*xi)/(3-2*xi))* &
@@ -504,7 +526,7 @@ do jv=jstartv,jendv
 !Landau 2d somme
 !            f(i,j,iv,jv)=(1._wp+eps*cos(kx*(x+y)))*1._wp/(2._wp*sll_pi)*exp(-0.5_wp*v2)
 !Landau 1dx
-            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
+            !f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
 !Landau 1dy
 !            f(i,j,iv,jv)=(1._wp+eps*cos(ky*y))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
 !TSI 1dx
@@ -521,7 +543,7 @@ do jv=jstartv,jendv
 end do
 
 !Initialisation du module poisson
-call initialize(poiss2dpp,rho,geomx,iflag)
+!call initialize(poiss2dpp,rho,geomx,iflag)
 !Initialisation du module vlasov
 call initialize(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
 !Intitialisation du champ electrique
@@ -538,7 +560,13 @@ call transposevx(vlas2d,f)
 jx=rho
 !rho=rho-1._8
 
-call solve(poiss2dpp,ex,ey,rho,nrj)
+!call solve(poiss2dpp,ex,ey,rho,nrj)
+
+call initialize_mudpack_cartesian(poiss2dpp,                      &
+                                  geomx%x0, geomx%x1, geomx%nx, &
+                                  geomx%y0, geomx%y1, geomx%ny, &
+                                  PERIODIC, PERIODIC,   &
+                                  PERIODIC, PERIODIC)
 
 
 call average(geomx,ex,ey)
@@ -763,6 +791,50 @@ subroutine verif_charge(vlas2d,rho,ex,ey)
 
 end subroutine verif_charge
 
+subroutine solve_poisson(poiss2dpp,ex,ey,rho,nrj)
+type(mudpack_2d) :: poiss2dpp
+real(8), pointer :: ex(:,:)
+real(8), pointer :: ey(:,:)
+real(8), pointer :: rho(:,:)
+integer   :: il, ir, jr, jl
+real(8), optional   :: nrj
 
+jxp(1:geomx%nx,1:geomx%ny) = jx - 1.
+jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-1.
+jxp(1:geomx%nx,geomx%ny+1) = jx(:,1)-1.
+jxp(geomx%nx+1,geomx%ny+1) = jx(1,1)-1.
+
+call solve_mudpack_cartesian(poiss2dpp, phi, jxp)
+
+
+do j = 2, geomx%ny-1
+   jl = merge(i-1, geomx%nx,i>1       )
+   jr = merge(i+1, 1       ,i<geomx%nx)
+   do i = 2, geomx%ny-1
+      il = merge(i-1,geomx%nx, i>1       )
+      ir = merge(i+1,      1 , i<geomx%nx)
+      ex(i,j) = 0.5 * (phi(il,j)-phi(ir,j)) / geomx%dx
+      ey(i,j) = 0.5 * (phi(i,jl)-phi(i,jr)) / geomx%dy
+   end do
+end do
+
+    if (present(nrj)) then 
+       nrj=0._wp
+       do i=1,geomx%nx
+          do j=1,geomx%ny
+             nrj=nrj+ex(i,j)*ex(i,j)+ey(i,j)*ey(i,j)          
+          enddo
+       enddo
+   
+       nrj=nrj*geomx%dx*geomx%dy
+       if (nrj>1.e-30) then 
+          nrj=0.5_wp*log(nrj)
+       else
+          nrj=-10**9
+       endif
+   end if
+
+
+end subroutine solve_poisson
 
 end program vm4d_transpose

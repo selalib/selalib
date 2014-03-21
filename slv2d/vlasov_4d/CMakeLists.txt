@@ -48,6 +48,9 @@ IF (CMAKE_PROJECT_NAME MATCHES "vlasov4d")
                  ${CMAKE_BINARY_DIR}/package)
   ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
                  ${CMAKE_BINARY_DIR}/fftpack)
+  SET(MUDPACK_ENABLED ON)
+  ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/mudpack 
+                 ${CMAKE_BINARY_DIR}/mudpack)
 ENDIF()
 
 SET(LIBS selalib ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
