@@ -105,7 +105,7 @@ contains
     sll_int32 :: i1, i2
     sll_real64 :: mass
 
-    mesh => this%transf%get_logical_mesh()
+    mesh => this%transf%mesh
 !#ifdef STDF95
 !    nc_eta1 = GET_FIELD_NC_ETA1( this%extend_type ) 
 !    nc_eta2 = GET_FIELD_NC_ETA2( this%extend_type )     

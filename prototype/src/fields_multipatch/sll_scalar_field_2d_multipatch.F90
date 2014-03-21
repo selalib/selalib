@@ -159,10 +159,11 @@ contains   ! *****************************************************************
     ! hardwired for the moment. It would be desirable to make this an option.
     ! This could only be properly done when all the compilers we care about
     ! permit us to make arrays of a type which contains a polymorphic pointer.
+    print *, 'proceeding to create the patches...'
     do i=0, num_patches-1
        ! create the patch-dedicated interpolator.
        lm=>fmp%transf%get_logical_mesh(i)
-
+       print *, 'extracted logical mesh from patch ', i
        !------------------------------------------------------------------
        !                      WARNING!!!!!!!!
        !------------------------------------------------------------------
@@ -240,7 +241,7 @@ contains   ! *****************************************************************
             bc_top, &
             3, &
             3 )   ! <--- HARDWIRED degree of splines, not OK
-
+       print *, 'created interpolator for patch ', i
        fmp%fields(i+1)%f => new_scalar_field_2d_discrete_alt( &
             patch_name, &
             fmp%interps(i+1)%interp, &
@@ -249,7 +250,7 @@ contains   ! *****************************************************************
             bc_right, &
             bc_bottom, &
             bc_top )
-       
+       print *, 'created field associated to patch ', i
     end do
 
     ! Allocate the memory needed to work with the patch compatibility
@@ -381,7 +382,7 @@ contains   ! *****************************************************************
     lm => mp%transf%get_logical_mesh(patch)
     numpts1 = lm%num_cells1+1
     numpts2 = lm%num_cells2+1
-    
+
     ! this should be probably changed by something more informative which
     ! writes the name of the field, etc.
     SLL_ASSERT( size(values,1) >= numpts1 )
