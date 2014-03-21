@@ -520,7 +520,7 @@ contains
     intl = 1
     !write(*,106) intl,method,iguess
 
-    mesh => poisson%transformation%get_logical_mesh()
+    mesh => poisson%transformation%mesh
     Nc_eta1    = mesh%num_cells1
     Nc_eta2    = mesh%num_cells2
     eta1_min   = mesh%eta1_min
