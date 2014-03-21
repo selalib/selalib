@@ -49,6 +49,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
+  use sll_hermite_interpolator_2d
   use sll_simulation_base
   use sll_fdistribu4D_DK
   use sll_logical_meshes
@@ -310,6 +311,8 @@ contains
     character(len=256)      :: phi_interp_x3
     character(len=256)      :: poisson2d_BC_rmin
     character(len=256)      :: poisson2d_BC_rmax
+    sll_int32 :: hermite_degree_eta1 
+    sll_int32 :: hermite_degree_eta2 
 
     
     sll_int32               :: order_x3
@@ -377,7 +380,9 @@ contains
       gyroaverage_N_points, &
       gyroaverage_interp_degree_x1, &
       gyroaverage_interp_degree_x2, &
-      delta_f_method
+      delta_f_method, &
+      hermite_degree_eta1, &          
+      hermite_degree_eta2       
       
       !, spline_degree
 
@@ -707,6 +712,48 @@ contains
           sim%m_x2%eta_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
+        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          SLL_HERMITE)
+        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          SLL_HERMITE)
+        A1_interp2d => new_cubic_spline_2d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          sim%m_x2%eta_min, &
+          sim%m_x2%eta_max, &
+          SLL_HERMITE, &
+          SLL_PERIODIC)
+        A2_interp2d => new_cubic_spline_2d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          sim%m_x2%eta_min, &
+          sim%m_x2%eta_max, &
+          SLL_HERMITE, &
+          SLL_PERIODIC)
+      case ("SLL_HERMITE")
+        f_interp2d => new_hermite_2d_interpolator( &
+          sim%m_x1%num_cells+1, &
+          sim%m_x2%num_cells+1, &
+          sim%m_x1%eta_min, &
+          sim%m_x1%eta_max, &
+          sim%m_x2%eta_min, &
+          sim%m_x2%eta_max, &
+          hermite_degree_eta1, &          
+          hermite_degree_eta2, &          
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_DIRICHLET, &
+          SLL_HERMITE_PERIODIC)
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           sim%m_x1%num_cells+1, &
           sim%m_x1%eta_min, &
