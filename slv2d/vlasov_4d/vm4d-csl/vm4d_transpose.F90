@@ -532,13 +532,29 @@ jx=rho
 call initialize(poiss2dpp,rho,geomx,iflag)
 call solve(poiss2dpp,ex,ey,rho,nrj)
 
-!call initialize_mudpack_cartesian(poisson_mg,                      &
-!                                  geomx%x0, geomx%x1, geomx%nx, &
-!                                  geomx%y0, geomx%y1, geomx%ny, &
-!                                  SLL_PERIODIC, SLL_PERIODIC,   &
-!                                  SLL_PERIODIC, SLL_PERIODIC)
-!
-!call solve_poisson_mg(poisson_mg)
+do i = 1, geomx%nx
+do j = 1, geomx%ny
+write(12,*) i, j, ex(i,j)
+end do
+write(12,*) 
+end do
+
+call initialize_mudpack_cartesian(poisson_mg,                      &
+                                  geomx%x0, geomx%x1, geomx%nx, &
+                                  geomx%y0, geomx%y1, geomx%ny, &
+                                  SLL_PERIODIC, SLL_PERIODIC,   &
+                                  SLL_PERIODIC, SLL_PERIODIC)
+
+call solve_poisson_mg(poisson_mg)
+
+do i = 1, geomx%nx
+do j = 1, geomx%ny
+write(13,*) i, j, ex(i,j)
+end do
+write(13,*) 
+end do
+
+stop
 
 call average(geomx,ex,ey)
 
@@ -773,7 +789,7 @@ subroutine solve_poisson_mg(this)
    call solve_mudpack_cartesian(this, phi, jxp)
    
    do j = 1, geomx%ny
-      do i = 1, geomx%ny
+      do i = 1, geomx%nx
          ex(i,j) = (phi(i+1,j)-phi(i,j)) / geomx%dx
          ey(i,j) = (phi(i,j+1)-phi(i,j)) / geomx%dy
       end do
