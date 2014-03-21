@@ -40,7 +40,7 @@ implicit none
   Nc(1)=16
   Nc(2)=16
   
-  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)),ierr)
+  SLL_ALLOCATE(f(Nc(1)+1,Nc(2)+1),ierr)
   
   f = 1._f64
   err = 0._f64
