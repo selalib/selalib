@@ -70,7 +70,7 @@ call initglobal(geomx,geomv,dt,nbiter,fdiag,fthdiag)
 !va=0 (valis) ; va=1 (old version) ; va=2 (Vlasov-Poisson)
 va=0
 !meth=0 (bsl cubic splines) ; meth=1 (csl cubic splines) ; meth=2 (csl Lag3) ; meth=3 (csl ppm1) ; meth=4 (csl ppm2)
-meth=1
+meth=3
 
 
 if (my_num == MPI_MASTER) then
@@ -205,32 +205,34 @@ do iter=1,nbiter
    call transposevx(vlas2d,f)
 
    ! advection d'un demi-pas de temps en espace     
-   call advection1d_x(splx,f,0.5_f64*dt,Jx2,meth)
    call advection1d_y(sply,f,0.5_f64*dt,Jy2,meth)
+   call advection1d_x(splx,f,0.5_f64*dt,Jx2,meth)
 
    Jx=0.5_8*(Jx1+Jx2)
    Jy=0.5_8*(Jy1+Jy2)
 
    if (va==0) then 
 
-      call verif_charge(vlas2d,div,ex1,ey1)
-
-      do i=2,vlas2d%geomx%nx
-         do j=2,vlas2d%geomx%ny
-            div(i,j)=df(i,j)-(dt/vlas2d%geomx%dx)*(Jx(i,j)-Jx(i-1,j)) & 
-                 -(dt/vlas2d%geomx%dy)*(Jy(i,j)-Jy(i,j-1))
-         enddo
-      enddo
-      do j=2,vlas2d%geomx%ny
-            div(1,j)=df(1,j)-(dt/vlas2d%geomx%dx)*(Jx(1,j)-Jx(vlas2d%geomx%nx,j)) & 
-                 -(dt/vlas2d%geomx%dy)*(Jy(1,j)-Jy(1,j-1))
-      enddo
-      do i=2,vlas2d%geomx%nx
-            div(i,1)=df(i,1)-(dt/vlas2d%geomx%dx)*(Jx(i,1)-Jx(i-1,1)) & 
-                 -(dt/vlas2d%geomx%dy)*(Jy(i,1)-Jy(i,vlas2d%geomx%ny))
-      enddo
-      div(1,1)=df(1,1)-(dt/vlas2d%geomx%dx)*(Jx(1,1)-Jx(vlas2d%geomx%nx,1)) & 
-           -(dt/vlas2d%geomx%dy)*(Jy(1,1)-Jy(1,vlas2d%geomx%ny))
+      !diagnostiques pour verifier la charge 
+!!$      call verif_charge(vlas2d,div,ex1,ey1)
+!!$
+!!$      do i=2,vlas2d%geomx%nx
+!!$         do j=2,vlas2d%geomx%ny
+!!$            div(i,j)=df(i,j)-(dt/vlas2d%geomx%dx)*(Jx(i,j)-Jx(i-1,j)) & 
+!!$                 -(dt/vlas2d%geomx%dy)*(Jy(i,j)-Jy(i,j-1))
+!!$         enddo
+!!$      enddo
+!!$      do j=2,vlas2d%geomx%ny
+!!$            div(1,j)=df(1,j)-(dt/vlas2d%geomx%dx)*(Jx(1,j)-Jx(vlas2d%geomx%nx,j)) & 
+!!$                 -(dt/vlas2d%geomx%dy)*(Jy(1,j)-Jy(1,j-1))
+!!$      enddo
+!!$      do i=2,vlas2d%geomx%nx
+!!$            div(i,1)=df(i,1)-(dt/vlas2d%geomx%dx)*(Jx(i,1)-Jx(i-1,1)) & 
+!!$                 -(dt/vlas2d%geomx%dy)*(Jy(i,1)-Jy(i,vlas2d%geomx%ny))
+!!$      enddo
+!!$      div(1,1)=df(1,1)-(dt/vlas2d%geomx%dx)*(Jx(1,1)-Jx(vlas2d%geomx%nx,1)) & 
+!!$           -(dt/vlas2d%geomx%dy)*(Jy(1,1)-Jy(1,vlas2d%geomx%ny))
+      !jusque la
 
       call c_l_periodiques(maxw2dfdtd,ex1,ey1,bz,Jx,Jy,dt)
       call solve_ampere(maxw2dfdtd,ex1,ey1,bz,Jx,Jy,nrj,dt)
@@ -240,17 +242,26 @@ do iter=1,nbiter
 
 
       !verif charge conservation
+!!$
+!!$      call transposexv(vlas2d,f)
+!!$      call densite_charge(vlas2d,rho)
+!!$      call transposevx(vlas2d,f)
+!!$
+!!$      print *,'verif rho',sum(abs(rho-div))
+!!$      call verif_charge(vlas2d,div,ex,ey)
+!!$
+!!$      print *,' '
+      !jusque la
+   endif
 
+   if (va==2) then 
       call transposexv(vlas2d,f)
       call densite_charge(vlas2d,rho)
       call transposevx(vlas2d,f)
 
-      print *,'verif rho',sum(abs(rho-div))
-      call verif_charge(vlas2d,div,ex,ey)
-
-      print *,' '
-
+      call solve(poiss2dpp,ex,ey,rho,nrj)
    endif
+
 
    if (va==1) then 
       call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
@@ -279,7 +290,7 @@ do iter=1,nbiter
    endif
 
    if (mod(iter,fthdiag).eq.0) then 
-      print *,'bz,ey,ex',maxval(bz),maxval(ey),maxval(ex)
+!      print *,'bz,ey,ex',maxval(bz),maxval(ey),maxval(ex)
       nrj=0.5_8*log(sum(ex*ex+ey*ey)*vlas2d%geomx%dx*vlas2d%geomx%dy)
       nrjex=sum(ex*ex)*vlas2d%geomx%dx*vlas2d%geomx%dy !0.5_8*log(sum(ex*ex+ey*ey)*vlas2d%geomx%dx*vlas2d%geomx%dy)
       nrjey=0.5_8*log(sum(ey*ey)*vlas2d%geomx%dx*vlas2d%geomx%dy)
@@ -493,11 +504,11 @@ do jv=jstartv,jendv
 !Landau 2d somme
 !            f(i,j,iv,jv)=(1._wp+eps*cos(kx*(x+y)))*1._wp/(2._wp*sll_pi)*exp(-0.5_wp*v2)
 !Landau 1dx
-!            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
+            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
 !Landau 1dy
 !            f(i,j,iv,jv)=(1._wp+eps*cos(ky*y))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
 !TSI 1dx
-            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
+!            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
 !BOT 1dx (to do)
 !            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(0.9_8*exp(-0.5_8*vx*vx)+0.1_8*exp(-0.5_8*(vx-u)*(vx-u)))* &
 !                 (1._wp/(2._wp*sll_pi))*exp(-0.5_wp*vy*vy)
@@ -563,13 +574,13 @@ do jv=jstartv,jendv
          y=geomx%y0+real(j-1,8)*geomx%dy
          do i=1,geomx%nx
             x=geomx%x0+real(i-1,8)*geomx%dx
-!            f(i,j,iv,jv)=rho(i,j)*1._wp/(2._wp*sll_pi)*exp(-0.5_wp*v2)
+            f(i,j,iv,jv)=rho(i,j)/(2._wp*sll_pi)*exp(-0.5_wp*v2)
 !bot 1dx
 !            f(i,j,iv,jv)=rho(i,j)*(0.9_8*exp(-0.5_8*vx*vx)+0.1_8*exp(-(vx-u)*(vx-u)/2._8))* &
 !                 (1._wp/(2._wp*sll_pi))*exp(-0.5_wp*vy*vy)
 
 !TSI 1dx
-            f(i,j,iv,jv)=rho(i,j)*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
+!            f(i,j,iv,jv)=rho(i,j)*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
          end do
       end do
    end do
