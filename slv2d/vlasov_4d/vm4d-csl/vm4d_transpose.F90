@@ -147,14 +147,10 @@ do iter=1,nbiter
       jx1=0._8;jy1=0._8
 
       call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,0.5_8*dt)
-      !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,0.5_8*dt)
-      
       call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,0.5_8*dt)
       !(ex, ey)=(ex, ey)(n+1/2)
    endif
 
-   ! advection d'un demi-pas de temps en espace
-   !call advection_x(vlas2d,f,.5*dt)
    call advection1d_x(splx,f,0.5_f64*dt,Jx1,meth)
    call advection1d_y(sply,f,0.5_f64*dt,Jy1,meth)
 
@@ -162,68 +158,27 @@ do iter=1,nbiter
    call transposexv(vlas2d,f)
 
    if (va==VA_VLASOV_POISSON) then 
-      !Vlasov-Poisson case
       call densite_charge(vlas2d,rho)
-
-      !specific 1dx
-!      call poisson1d(vlas2d%geomx,rho,ex)
-!      ey=0._8;bz=0._f64;bz1=0._f64
 
       if (mud_case==SPECTRAL) then 
          call solve(poiss2dpp,ex,ey,rho,nrj)
          call average(geomx,ex,ey)
-!         do i=2,geomx%nx
-!            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-!         enddo
-!         close(10+iter)
-
       else
-         phi=0._8
          call solve_poisson_mg(poisson_mg)
-!         do i=2,geomx%nx
-!            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-!         enddo
-!         close(10+iter)
-!         stop
-
+         !specific 1dx
+         call poisson1d(vlas2d%geomx,rho,ex)
+         ey=0._8;bz=0._f64;bz1=0._f64
       endif
          
    endif
 
-   if (va==VA_OLD_FUNCTION) then 
-      ! calcul de la densite de courant et de charge
-      call densite_charge(vlas2d,rho)
-      call densite_courant(vlas2d,jx,jy)
-      
-      ! calcul du champ magnetique Bz(k+1/2)
-      if (iter == 1) then
-         call solve_faraday(maxw2dfdtd,ex,ey,bz,0.5_f64*dt)
-      else
-         call solve_faraday(maxw2dfdtd,ex,ey,bz,dt)
-      end if
-      
-      call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
-      !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
-      
-      call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
-   endif
-
-   ! advection d'un pas de temps en vitesse
-
-   if ((va==VA_VALIS).or.(va==VA_VLASOV_POISSON)) then 
-      !compute (ex2, ey2) en i,j
-      call average_int(vlas2d,ex,ey,ex2,ey2)
-
-   else 
-      ex2=ex;ey2=ey;bz=0._8
-   endif
+   !compute (ex2, ey2) en i,j
+   call average_int(vlas2d,ex,ey,ex2,ey2)
 
    call advection_v(vlas2d,ex2,ey2,dt,bz)
 
-   ! transposition de la fonction de distribution
    call transposevx(vlas2d,f)
 
-   ! advection d'un demi-pas de temps en espace     
    call advection1d_y(sply,f,0.5_f64*dt,Jy2,meth)
    call advection1d_x(splx,f,0.5_f64*dt,Jx2,meth)
 
@@ -231,46 +186,17 @@ do iter=1,nbiter
    Jy=0.5_8*(Jy1+Jy2)
 
    if (va==VA_VALIS) then 
-
-      !diagnostiques pour verifier la charge 
-!!$      call verif_charge(vlas2d,div,ex1,ey1)
-!!$
-!!$      do i=2,vlas2d%geomx%nx
-!!$         do j=2,vlas2d%geomx%ny
-!!$            div(i,j)=df(i,j)-(dt/vlas2d%geomx%dx)*(Jx(i,j)-Jx(i-1,j)) & 
-!!$                 -(dt/vlas2d%geomx%dy)*(Jy(i,j)-Jy(i,j-1))
-!!$         enddo
-!!$      enddo
-!!$      do j=2,vlas2d%geomx%ny
-!!$            div(1,j)=df(1,j)-(dt/vlas2d%geomx%dx)*(Jx(1,j)-Jx(vlas2d%geomx%nx,j)) & 
-!!$                 -(dt/vlas2d%geomx%dy)*(Jy(1,j)-Jy(1,j-1))
-!!$      enddo
-!!$      do i=2,vlas2d%geomx%nx
-!!$            div(i,1)=df(i,1)-(dt/vlas2d%geomx%dx)*(Jx(i,1)-Jx(i-1,1)) & 
-!!$                 -(dt/vlas2d%geomx%dy)*(Jy(i,1)-Jy(i,vlas2d%geomx%ny))
-!!$      enddo
-!!$      div(1,1)=df(1,1)-(dt/vlas2d%geomx%dx)*(Jx(1,1)-Jx(vlas2d%geomx%nx,1)) & 
-!!$           -(dt/vlas2d%geomx%dy)*(Jy(1,1)-Jy(1,vlas2d%geomx%ny))
-      !jusque la
-
       call c_l_periodiques(maxw2dfdtd,ex1,ey1,bz,Jx,Jy,dt)
       call solve_ampere(maxw2dfdtd,ex1,ey1,bz,Jx,Jy,nrj,dt)
-
       ex=ex1;ey=ey1
 
-
-
       !verif charge conservation
-!!$
-!!$      call transposexv(vlas2d,f)
-!!$      call densite_charge(vlas2d,rho)
-!!$      call transposevx(vlas2d,f)
-!!$
-!!$      print *,'verif rho',sum(abs(rho-div))
-!!$      call verif_charge(vlas2d,div,ex,ey)
-!!$
-!!$      print *,' '
-      !jusque la
+      call transposexv(vlas2d,f)
+      call densite_charge(vlas2d,rho)
+      call transposevx(vlas2d,f)
+
+      call verif_rho(vlas2d,div,df,rho,Jx,Jy)
+      call verif_charge(vlas2d,div,ex,ey)
 
    else if (va==VA_VLASOV_POISSON) then 
 
@@ -278,51 +204,14 @@ do iter=1,nbiter
       call densite_charge(vlas2d,rho)
       call transposevx(vlas2d,f)
 
-
       if (mud_case==SPECTRAL) then 
-!         do i=2,geomx%nx
-!            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-!         enddo
-!         close(11+iter)
          call solve(poiss2dpp,ex,ey,rho,nrj)
-!         do i=2,geomx%nx
-!            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-!         enddo
-!         close(12+iter)
-!         stop
       else
-         phi=0._8
-!         do i=2,geomx%nx
-!            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-!         enddo
-!         close(11+iter)
          call solve_poisson_mg(poisson_mg)
-!         do i=2,geomx%nx
-!            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-!         enddo
-!         close(12+iter)
-         !stop
+         !specific 1dx
+         call poisson1d(geomx,rho,ex)
+         ey=1.e-13
       endif
-
-
-   else if (va==VA_OLD_FUNCTION) then 
-
-      call c_l_periodiques(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
-      !call silver_muller(maxw2dfdtd,ex,ey,bz,jx,jy,dt)
-      call solve_ampere(maxw2dfdtd,ex,ey,bz,jx,jy,nrj,dt)
-      
-      ! transposition de la fonction de distribution
-      call transposexv(vlas2d,f)
-      
-      ! advection d'un pas de temps en vitesse
-      call advection_v(vlas2d,ex,ey,dt,bz)
-      
-      ! transposition de la fonction de distribution
-      call transposevx(vlas2d,f)
-      
-      ! advection d'un demi-pas de temps en espace     
-      call advection1d_x(splx,f,0.5_f64*dt,Jx1,meth)
-      call advection1d_y(sply,f,0.5_f64*dt,Jy1,meth)
 
    endif
    
@@ -336,9 +225,8 @@ do iter=1,nbiter
    endif
 
    if (mod(iter,fthdiag).eq.0) then 
-!      print *,'bz,ey,ex',maxval(bz),maxval(ey),maxval(ex)
       nrj=0.5_8*log(sum(ex*ex+ey*ey)*vlas2d%geomx%dx*vlas2d%geomx%dy)
-      nrjex=sum(ex*ex)*vlas2d%geomx%dx*vlas2d%geomx%dy !0.5_8*log(sum(ex*ex+ey*ey)*vlas2d%geomx%dx*vlas2d%geomx%dy)
+      nrjex=sum(ex*ex)*vlas2d%geomx%dx*vlas2d%geomx%dy 
       nrjey=0.5_8*log(sum(ey*ey)*vlas2d%geomx%dx*vlas2d%geomx%dy)
       nrjbz=0.5_8*log(max(sum(bz*bz)*vlas2d%geomx%dx*vlas2d%geomx%dy,1.e-12))
       nrjtab(1)=nrjex;nrjtab(2)=nrjey;nrjtab(3)=nrjbz
@@ -477,13 +365,6 @@ print*,'init zone ',my_num,jstartx,jendx,ipiece_size_x, &
 ! allocation dynamique des tableaux
 SLL_CLEAR_ALLOCATE(f(1:geomx%nx,1:geomx%ny,1:geomv%nx,jstartv:jendv),iflag)
 SLL_CLEAR_ALLOCATE(f1(1:geomx%nx,1:geomx%ny,1:geomv%nx,jstartv:jendv),iflag)
-!!$  SLL_ALLOCATE(rho(geomx%nx,jstartx:jendx),iflag)
-!!$  if (iflag.ne.0) stop 'erreur dans l allocation de rho'
-!!$  SLL_ALLOCATE(ex(geomx%nx,jstartx:jendx),iflag)
-!!$  if (iflag.ne.0) stop 'erreur dans l allocation de ex'
-!!$  SLL_ALLOCATE(ey(geomx%nx,jstartx:jendx),iflag)
-!!$  if (iflag.ne.0) stop 'erreur dans l allocation de ey'
-! Poisson n'est pas parallele pour l'instant
 SLL_CLEAR_ALLOCATE(rho(1:geomx%nx,1:geomx%ny),iflag)
 SLL_CLEAR_ALLOCATE(ex(1:geomx%nx,1:geomx%ny),iflag)
 SLL_CLEAR_ALLOCATE(ey(1:geomx%nx,1:geomx%ny),iflag)
@@ -531,20 +412,6 @@ do jv=jstartv,jendv
                 case(TSI_CASE)
                     f(i,j,iv,jv)= tsi(eps, kx, x, vx, v2)
             end select
-!            f(i,j,iv,jv)=(1+eps*((cos(2*kx*x)+cos(3*kx*x))/1.2 &
-!                 + cos(kx*x)))* &
-!                 1/(2*pi)*((2-2*xi)/(3-2*xi))* &
-!                 (1+.5*vx*vx/(1-xi))*exp(-.5*v2)
-!Landau 2d produit
-!            f(i,j,iv,jv)=(1._wp+eps*(cos(kx*x)*cos(ky*y)))*1._wp/(2._wp*sll_pi)*exp(-0.5_wp*v2)
-!Landau 2d somme
-!            f(i,j,iv,jv)=(1._wp+eps*cos(kx*(x+y)))*1._wp/(2._wp*sll_pi)*exp(-0.5_wp*v2)
-!Landau 1dx
-            !f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
-!Landau 1dy
-!            f(i,j,iv,jv)=(1._wp+eps*cos(ky*y))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)
-!TSI 1dx
-!            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
 !BOT 1dx (to do)
 !            f(i,j,iv,jv)=(1._wp+eps*cos(kx*x))*(0.9_8*exp(-0.5_8*vx*vx)+0.1_8*exp(-0.5_8*(vx-u)*(vx-u)))* &
 !                 (1._wp/(2._wp*sll_pi))*exp(-0.5_wp*vy*vy)
@@ -558,104 +425,67 @@ end do
 
 !Initialisation du module vlasov
 call initialize(vlas2d,geomx,geomv,iflag,jstartx,jendx,jstartv,jendv)
-!Intitialisation du champ electrique
 
+!Intitialisation du champ electrique
 call transposexv(vlas2d,f)
 call densite_charge(vlas2d,rho)
 call transposevx(vlas2d,f)
-!do i=1,geomx%nx
-!   do j=1,geomx%nx
-!      rho(i,j)=sum(f(i,j,1:geomv%nx,1:geomv%ny))*geomv%dx*geomv%dy
-!   enddo
-!enddo
-
 jx=rho
-!rho=rho-1._8
 
 if (mud_case==SPECTRAL) then 
    call initialize(poiss2dpp,rho,geomx,iflag)
    call solve(poiss2dpp,ex,ey,rho,nrj)
-
-   do i = 1, geomx%nx
-      do j = 1, geomx%ny
- !        write(12,*) i, j, ex(i,j)
-      end do
- !     write(12,*) 
-   end do
-
    !compute ex(x_{i+1/2}, y_j), ey(x_i, y_{j+1/2})
    call average(geomx,ex,ey)
-
+   print *,'MUD CASE',mud_case
 else
-
-   call initialize_mudpack_cartesian(poisson_mg,                      &
+   call initialize_mudpack_cartesian(poisson_mg, &
         geomx%x0, geomx%x1, geomx%nx, &
         geomx%y0, geomx%y1, geomx%ny, &
         SLL_PERIODIC, SLL_PERIODIC,   &
         SLL_PERIODIC, SLL_PERIODIC)
-   
    !compute ex(x_{i+1/2}, y_j), ey(x_i, y_{j+1/2})
-   phi=0._8
    call solve_poisson_mg(poisson_mg)
-   
-   do i = 1, geomx%nx
-      do j = 1, geomx%ny
-!         write(13,*) i, j, ex(i,j)
-      end do
-!      write(13,*) 
-   end do
-   
+   print *,'MUD CASE',mud_case
+   !specific 1dx
+   call poisson1d(geomx,rho,ex)
+   ey=0._8
+   call verif_charge(vlas2d,rho,ex,ey)
 endif
 
+if (mud_case==SPECTRAL) then 
+   call compute_rho_for_charge(vlas2d,rho,ex,ey)
 
-!compute rho such that 
-![ex(x_{i+1/2}, y_j)-ex(x_{i-1/2}, y_j)]/dx + [ey(x_i, y_{j+1/2})-ey(x_i, y_{j-1/2})]/dy 
-!= rho(x_i,y_j)-1
-
-rho=0._8
-do i=2,geomx%nx
-   do j=2,geomx%ny
-      rho(i,j)=(ex(i,j)-ex(i-1,j))/geomx%dx+(ey(i,j)-ey(i,j-1))/geomx%dy+1._8
-   enddo
-enddo
-!i=1, for all j=2,ny
-do j=2,geomx%ny
-   rho(1,j)=(ex(1,j)-ex(geomx%nx,j))/geomx%dx+(ey(1,j)-ey(1,j-1))/geomx%dy+1._8
-enddo
-do i=2,geomx%nx
-   rho(i,1)=(ex(i,1)-ex(i-1,1))/geomx%dx+(ey(i,1)-ey(i,geomx%ny))/geomx%dy+1._8
-enddo
-rho(1,1)=(ex(1,1)-ex(geomx%nx,1))/geomx%dx+(ey(1,1)-ey(1,geomx%ny))/geomx%dy+1._8
-
-!compute f a partir de rho
-f=0._8
-mass=0._8
-do jv=jstartv,jendv
-   vy = geomv%y0+real(jv-1,8)*geomv%dy
-   do iv=1,geomv%nx
-      vx = geomv%x0+real(iv-1,8)*geomv%dx
-      v2 = vx*vx+vy*vy
-      do j=1,geomx%ny
-         y=geomx%y0+real(j-1,8)*geomx%dy
-         do i=1,geomx%nx
-            x=geomx%x0+real(i-1,8)*geomx%dx
-            f(i,j,iv,jv)=rho(i,j)/(2._wp*sll_pi)*exp(-0.5_wp*v2)
-!bot 1dx
-!            f(i,j,iv,jv)=rho(i,j)*(0.9_8*exp(-0.5_8*vx*vx)+0.1_8*exp(-(vx-u)*(vx-u)/2._8))* &
-!                 (1._wp/(2._wp*sll_pi))*exp(-0.5_wp*vy*vy)
-
-!TSI 1dx
-!            f(i,j,iv,jv)=rho(i,j)*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
+   !compute f a partir de rho
+   f=0._8
+   do jv=jstartv,jendv
+      vy = geomv%y0+real(jv-1,8)*geomv%dy
+      do iv=1,geomv%nx
+         vx = geomv%x0+real(iv-1,8)*geomv%dx
+         v2 = vx*vx+vy*vy
+         do j=1,geomx%ny
+            y=geomx%y0+real(j-1,8)*geomx%dy
+            do i=1,geomx%nx
+               x=geomx%x0+real(i-1,8)*geomx%dx
+               f(i,j,iv,jv)=rho(i,j)/(2._wp*sll_pi)*exp(-0.5_wp*v2)
+               !bot 1dx
+               !            f(i,j,iv,jv)=rho(i,j)*(0.9_8*exp(-0.5_8*vx*vx)+0.1_8*exp(-(vx-u)*(vx-u)/2._8))* &
+               !                 (1._wp/(2._wp*sll_pi))*exp(-0.5_wp*vy*vy)
+               
+               !TSI 1dx
+               !            f(i,j,iv,jv)=rho(i,j)*(1._wp/(2._wp*sll_pi))*exp(-0.5_wp*v2)*vx*vx
+            end do
          end do
       end do
    end do
-end do
+   
+endif
 
 call transposexv(vlas2d,f)
 
 call verif_charge(vlas2d,rho,ex,ey)
 
-!weibel instabiity (to do)
+!weibel instability (to do)
 do i=1,geomx%nx
    x=geomx%x0+real(i-0.5_8,8)*geomx%dx
    do j=1,geomx%ny
@@ -690,7 +520,7 @@ subroutine poisson1d(geomx,rho,ex)
   sll_real64, dimension(:,:),pointer,intent(in)  :: rho
   sll_real64, dimension(:,:),pointer,intent(out) :: ex
   integer :: i,j
-  sll_real64 :: mass,x
+  sll_real64 :: mass
 
   do j=1,geomx%ny
      ex(1,j)=0._8
@@ -705,11 +535,6 @@ subroutine poisson1d(geomx,rho,ex)
      enddo
 
   enddo
-
-!!$  do i=1,geomx%nx
-!!$     x=geomx%x0+(i-1)*geomx%dx
-!!$     print *,x+0.5*geomx%dx,ex(i,4),(0.05_8/0.5_8)*sin(0.5_8*(x+0.5*geomx%dx)),rho(i,4)-1._8,rho(i,4)
-!!$  enddo
 
 end subroutine poisson1d
 
@@ -806,26 +631,86 @@ subroutine verif_charge(vlas2d,rho,ex,ey)
      enddo
   enddo
   !i=1, for all j=2,ny
-!!$  do j=2,vlas2d%geomx%ny
-!!$     mass=mass+abs((ex(1,j)-ex(vlas2d%geomx%nx,j))/vlas2d%geomx%dx &
-!!$          +(ey(1,j)-ey(1,j-1))/vlas2d%geomx%dy-(rho(1,j)-1._8))
-!!$  enddo
-!!$  !j=1, for all i=2,nx
-!!$  do i=2,vlas2d%geomx%nx
-!!$     mass=mass+abs((ex(i,1)-ex(i-1,1))/vlas2d%geomx%dx &
-!!$          +(ey(i,1)-ey(i,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(i,1)-1._8))
-!!$  enddo
-!!$  !i=j=1
-!!$  mass=mass+abs((ex(1,1)-ex(vlas2d%geomx%nx,1))/vlas2d%geomx%dx &
-!!$       +(ey(1,1)-ey(1,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(1,1)-1._8))
+  do j=2,vlas2d%geomx%ny
+     mass=mass+abs((ex(1,j)-ex(vlas2d%geomx%nx,j))/vlas2d%geomx%dx &
+          +(ey(1,j)-ey(1,j-1))/vlas2d%geomx%dy-(rho(1,j)-1._8))
+  enddo
+  !j=1, for all i=2,nx
+  do i=2,vlas2d%geomx%nx
+     mass=mass+abs((ex(i,1)-ex(i-1,1))/vlas2d%geomx%dx &
+          +(ey(i,1)-ey(i,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(i,1)-1._8))
+  enddo
+  !i=j=1
+  mass=mass+abs((ex(1,1)-ex(vlas2d%geomx%nx,1))/vlas2d%geomx%dx &
+       +(ey(1,1)-ey(1,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(1,1)-1._8))
 
 
-!  if (mass>1.e-12) then 
+  if (mass>1.e-11) then 
      print *,'verif Poisson',mass*vlas2d%geomx%dx*vlas2d%geomx%dy
-!  endif
+     print *,' '
+  endif
 
 
 end subroutine verif_charge
+
+
+
+subroutine verif_rho(vlas2d,rho_pred,rho_tn,rho_ref,Jx,Jy)
+  type(vlasov2d) :: vlas2d
+  sll_real64, dimension(1:vlas2d%geomx%nx,1:vlas2d%geomx%ny), intent(in) :: rho_tn
+  sll_real64, dimension(1:vlas2d%geomx%nx,1:vlas2d%geomx%ny),intent(out) :: rho_pred
+  sll_real64, dimension(:,:),pointer :: rho_ref,Jx,Jy
+  integer :: i,j
+  
+  do i=2,vlas2d%geomx%nx
+     do j=2,vlas2d%geomx%ny
+        rho_pred(i,j)=rho_tn(i,j)-(dt/vlas2d%geomx%dx)*(Jx(i,j)-Jx(i-1,j)) & 
+             -(dt/vlas2d%geomx%dy)*(Jy(i,j)-Jy(i,j-1))
+     enddo
+  enddo
+  do j=2,vlas2d%geomx%ny
+     rho_pred(1,j)=rho_tn(1,j)-(dt/vlas2d%geomx%dx)*(Jx(1,j)-Jx(vlas2d%geomx%nx,j)) & 
+          -(dt/vlas2d%geomx%dy)*(Jy(1,j)-Jy(1,j-1))
+  enddo
+  do i=2,vlas2d%geomx%nx
+     rho_pred(i,1)=rho_tn(i,1)-(dt/vlas2d%geomx%dx)*(Jx(i,1)-Jx(i-1,1)) & 
+          -(dt/vlas2d%geomx%dy)*(Jy(i,1)-Jy(i,vlas2d%geomx%ny))
+  enddo
+  rho_pred(1,1)=rho_tn(1,1)-(dt/vlas2d%geomx%dx)*(Jx(1,1)-Jx(vlas2d%geomx%nx,1)) & 
+       -(dt/vlas2d%geomx%dy)*(Jy(1,1)-Jy(1,vlas2d%geomx%ny))
+  
+  if (sum(abs(rho_ref-rho_pred))>1.e-11) then 
+     print *,'verif rho',sum(abs(rho_ref-rho_pred))*vlas2d%geomx%dx*vlas2d%geomx%dy
+     print *,' '
+  endif
+  
+end subroutine verif_rho
+
+subroutine compute_rho_for_charge(vlas2d,rho,ex,ey)
+  type(vlasov2d) :: vlas2d
+  sll_real64, dimension(:,:),pointer :: rho,ex,ey
+  integer :: i,j
+  
+  !compute rho such that discrete Poisson is ensured
+  ![ex(x_{i+1/2}, y_j)-ex(x_{i-1/2}, y_j)]/dx + [ey(x_i, y_{j+1/2})-ey(x_i, y_{j-1/2})]/dy 
+  != rho(x_i,y_j)-1
+  
+  rho=0._8
+  do i=2,vlas2d%geomx%nx
+     do j=2,vlas2d%geomx%ny
+        rho(i,j)=(ex(i,j)-ex(i-1,j))/vlas2d%geomx%dx+(ey(i,j)-ey(i,j-1))/vlas2d%geomx%dy+1._8
+     enddo
+  enddo
+  !i=1, for all j=2,ny
+  do j=2,vlas2d%geomx%ny
+     rho(1,j)=(ex(1,j)-ex(vlas2d%geomx%nx,j))/vlas2d%geomx%dx+(ey(1,j)-ey(1,j-1))/vlas2d%geomx%dy+1._8
+  enddo
+  do i=2,vlas2d%geomx%nx
+     rho(i,1)=(ex(i,1)-ex(i-1,1))/vlas2d%geomx%dx+(ey(i,1)-ey(i,vlas2d%geomx%ny))/vlas2d%geomx%dy+1._8
+  enddo
+  rho(1,1)=(ex(1,1)-ex(vlas2d%geomx%nx,1))/vlas2d%geomx%dx+(ey(1,1)-ey(1,vlas2d%geomx%ny))/vlas2d%geomx%dy+1._8
+  
+end subroutine compute_rho_for_charge
 
 subroutine solve_poisson_mg(this)
 
