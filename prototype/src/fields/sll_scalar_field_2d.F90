@@ -95,7 +95,7 @@ contains   ! *****************************************************************
     this%transf => transf
     this%transf%written = .false.
     
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
     SLL_ASSERT(associated(mesh))
 
     this%name  = trim(field_name)
@@ -204,7 +204,7 @@ contains   ! *****************************************************************
     end if
 
     transf => scalar_field%transf
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
 
     SLL_ASSERT(associated(mesh))  
     if (.not. transf%written) then

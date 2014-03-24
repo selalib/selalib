@@ -23,6 +23,11 @@ ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
+ADD_TEST(NAME hermite_interpolation    COMMAND test_hermite_interpolation)
+ADD_TEST(NAME pic_particles             COMMAND test_pic_particles)
+ADD_TEST(NAME pic_initializers          COMMAND test_pic_initializers)
+ADD_TEST(NAME pic_accumulator           COMMAND test_pic_accumulator)
+#ADD_TEST(NAME pic_simulation_4d         COMMAND test_4d_vp_pic_cartesian)
 
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES 
@@ -35,6 +40,11 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(hermite_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#SET_TESTS_PROPERTIES(pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #IF(MUDPACK_ENABLED)
 #   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
@@ -84,7 +94,7 @@ IF(PYTHON_EXECUTABLE)
 
 ELSE()
 
-   MESSAGE(WARNING "python3 not found")
+   MESSAGE(STATUS "python3 not found")
 
 ENDIF(PYTHON_EXECUTABLE)
 
@@ -112,6 +122,9 @@ ENDIF(PYTHON_EXECUTABLE)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    ADD_TEST(NAME advection_2d_CSL COMMAND test_advection_2d_CSL)
    ADD_TEST(NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product)
+   ADD_TEST(NAME gyroaverage_polar_hermite COMMAND test_gyroaverage_2d_polar_hermite)
+   ADD_TEST(NAME gyroaverage_polar_splines COMMAND test_gyroaverage_2d_polar_splines)
+   ADD_TEST(NAME gyroaverage_polar_pade COMMAND test_gyroaverage_2d_polar_pade)
    
    #IF(MUDPACK_ENABLED)
 
@@ -152,6 +165,9 @@ ENDIF(PYTHON_EXECUTABLE)
      PASS_REGULAR_EXPRESSION
      "PASSED")
    SET_TESTS_PROPERTIES(advection_2d_BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar_hermite PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar_pade PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
