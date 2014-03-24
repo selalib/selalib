@@ -46,7 +46,7 @@ sll_int32,  optional    :: bc_eta1_right !< boundary condtion
 sll_int32,  optional    :: bc_eta2_left  !< boundary condtion
 sll_int32,  optional    :: bc_eta2_right !< boundary condtion
 sll_int32,  parameter   :: iixp = 2 , jjyq = 2
-sll_int32               :: icall, iiex, jjey, llwork
+sll_int32               :: iiex, jjey, llwork
 
 sll_real64 :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
 sll_real64 :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
@@ -89,7 +89,6 @@ llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
 
       
 allocate(this%work(llwork))
-icall = 0
 iiex = ceiling(log((nx-1.)/iixp)/log(2.))+1
 jjey = ceiling(log((ny-1.)/jjyq)/log(2.))+1
 
@@ -125,7 +124,7 @@ this%mgopt(3) = 1
 this%mgopt(4) = 3
 
 !set for three cycles to ensure second-order approximation is computed
-maxcy = 3
+maxcy = 5
 
 !set no initial guess forcing full multigrid cycling
 this%iguess = 0
@@ -194,7 +193,7 @@ sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 sll_int32  :: error
 sll_int32  :: i, j
-sll_real64 :: dx, dy
+sll_real64 :: dx, dy, avg
 
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
@@ -219,6 +218,7 @@ intl = 1
 write(*,106) intl,method,iguess
 #endif
 
+rhs = rhs - sum(rhs) / (nx*ny)
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
 #ifdef DEBUG
