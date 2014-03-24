@@ -48,10 +48,10 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 8
-#define NCELL2 8
-#define NCELL3 128
-#define NCELL4 128
+#define NCELL1 32
+#define NCELL2 32
+#define NCELL3 64
+#define NCELL4 64
 !!$#define NCELL1 16
 !!$#define NCELL2 16
 !!$#define NCELL3 32
@@ -74,15 +74,15 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 2.0_f64*sll_pi/0.2
 !!$#define ETA4MIN 0.0_f64
 !!$#define ETA4MAX 1.0_f64
-!!$!galaxy 1d sur xvx 
-#define ETA1MIN -5.0_f64
-#define ETA1MAX 5.0_f64
-#define ETA2MIN -5.0_f64
-#define ETA2MAX 5.0_f64
-#define ETA3MIN -12.0_f64
-#define ETA3MAX 12.0_f64
-#define ETA4MIN -12.0_f64
-#define ETA4MAX 12.0_f64
+!galaxy 1d sur xvx 
+!!$#define ETA1MIN -4.0_f64
+!!$#define ETA1MAX 4.0_f64
+!!$#define ETA2MIN -4.0_f64
+!!$#define ETA2MAX 4.0_f64
+!!$#define ETA3MIN -12.0_f64
+!!$#define ETA3MAX 12.0_f64
+!!$#define ETA4MIN -12.0_f64
+!!$#define ETA4MAX 12.0_f64
 !!$!landau 1d sur yvy
 !!$#define ETA1MIN -0.5_f64
 !!$#define ETA1MAX 0.5_f64
@@ -92,24 +92,24 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 1.0_f64
 !!$#define ETA4MIN 0.0_f64
 !!$#define ETA4MAX 4.0_f64*sll_pi
-!landau 2D
-!!$#define ETA1MIN -6.0_f64
-!!$#define ETA1MAX 6.0_f64
-!!$#define ETA2MIN -6.0_f64
-!!$#define ETA2MAX 6.0_f64
-!!$#define ETA3MIN 0.0_f64
-!!$#define ETA3MAX 4.0_f64*sll_pi
-!!$#define ETA4MIN 0.0_f64
-!!$#define ETA4MAX 4.0_f64*sll_pi
+!!$!landau 2D
+#define ETA1MIN -6.0_f64
+#define ETA1MAX 6.0_f64
+#define ETA2MIN -6.0_f64
+#define ETA2MAX 6.0_f64
+#define ETA3MIN 0.0_f64
+#define ETA3MAX 4.0_f64*sll_pi
+#define ETA4MIN 0.0_f64
+#define ETA4MAX 4.0_f64*sll_pi
 
 
 #define TINI 0.0_f64
-#define TMAX 0.01_f64
+#define TMAX 0.001_f64
 !#define TMAX 0._f64
-#define CFL 1.5_f64
+#define CFL 0.7_f64
 #define ELECMAX 1.0_f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
-#define TEST 12
+#define TEST 5
 ! 0: x transport 1: landau damping 1d xvx  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
 !6: transport x-vx 7: transport y-vy 8: transport 2d
@@ -118,8 +118,8 @@ program vp_cartesian_4d
 !11: galaxy 1D test case
 !12: galaxy 2D test case
 
-#define DEG  2 ! polynomial degree
-#define SCHEME 2
+#define DEG  3 ! polynomial degree
+#define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
 
