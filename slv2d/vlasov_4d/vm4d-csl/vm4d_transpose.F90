@@ -56,6 +56,7 @@ sll_int32  :: comm, my_num, num_threads
 sll_int32  :: va       = VA_VALIS
 sll_int32  :: meth     = METH_CSL_PPM1
 sll_int32  :: num_case = LANDAU_X_CASE
+sll_int32  :: mud_case = SPECTRAL
 
 sll_real64, allocatable, dimension(:,:) :: x1
 sll_real64, allocatable, dimension(:,:) :: x2
@@ -168,9 +169,25 @@ do iter=1,nbiter
 !      call poisson1d(vlas2d%geomx,rho,ex)
 !      ey=0._8;bz=0._f64;bz1=0._f64
 
-      call solve(poiss2dpp,ex,ey,rho,nrj)
-      !call solve_poisson_mg(poisson_mg)
-      call average(geomx,ex,ey)
+      if (mud_case==SPECTRAL) then 
+         call solve(poiss2dpp,ex,ey,rho,nrj)
+         call average(geomx,ex,ey)
+         do i=2,geomx%nx
+            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+         enddo
+         close(10+iter)
+
+      else
+         phi=0._8
+         call solve_poisson_mg(poisson_mg)
+         do i=2,geomx%nx
+            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+         enddo
+         close(10+iter)
+!         stop
+
+      endif
+         
    endif
 
    if (va==VA_OLD_FUNCTION) then 
@@ -261,8 +278,31 @@ do iter=1,nbiter
       call densite_charge(vlas2d,rho)
       call transposevx(vlas2d,f)
 
-      call solve(poiss2dpp,ex,ey,rho,nrj)
-      !call solve_poisson_mg(poisson_mg)
+
+      if (mud_case==SPECTRAL) then 
+         do i=2,geomx%nx
+            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+         enddo
+         close(11+iter)
+         call solve(poiss2dpp,ex,ey,rho,nrj)
+         do i=2,geomx%nx
+            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+         enddo
+         close(12+iter)
+         stop
+      else
+         phi=0._8
+         do i=2,geomx%nx
+            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+         enddo
+         close(11+iter)
+         call solve_poisson_mg(poisson_mg)
+         do i=2,geomx%nx
+            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+         enddo
+         close(12+iter)
+         stop
+      endif
 
 
    else if (va==VA_OLD_FUNCTION) then 
@@ -359,6 +399,7 @@ namelist /phys_space/ x0,x1,y0,y1,nx,ny
 namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
 namelist /algo_charge/ va, meth
 namelist /test_case/ num_case
+namelist /solver_poisson/ mud_case
 
 if (my_num == MPI_MASTER) then
    call fichinit
@@ -368,6 +409,7 @@ if (my_num == MPI_MASTER) then
    read(idata,NML=vel_space)
    read(idata,NML=algo_charge)
    read(idata,NML=test_case)
+   read(idata,NML=solver_poisson)
 end if
 
 call mpi_barrier(comm,ierr)
@@ -390,6 +432,7 @@ call mpi_bcast(nvy,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(va,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(meth,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(num_case,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+call mpi_bcast(mud_case,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 
 call initialize(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
 
@@ -529,34 +572,41 @@ call transposevx(vlas2d,f)
 jx=rho
 !rho=rho-1._8
 
-call initialize(poiss2dpp,rho,geomx,iflag)
-call solve(poiss2dpp,ex,ey,rho,nrj)
+if (mud_case==SPECTRAL) then 
+   call initialize(poiss2dpp,rho,geomx,iflag)
+   call solve(poiss2dpp,ex,ey,rho,nrj)
 
-do i = 1, geomx%nx
-do j = 1, geomx%ny
-write(12,*) i, j, ex(i,j)
-end do
-write(12,*) 
-end do
+   do i = 1, geomx%nx
+      do j = 1, geomx%ny
+ !        write(12,*) i, j, ex(i,j)
+      end do
+ !     write(12,*) 
+   end do
 
-call initialize_mudpack_cartesian(poisson_mg,                      &
-                                  geomx%x0, geomx%x1, geomx%nx, &
-                                  geomx%y0, geomx%y1, geomx%ny, &
-                                  SLL_PERIODIC, SLL_PERIODIC,   &
-                                  SLL_PERIODIC, SLL_PERIODIC)
+   !compute ex(x_{i+1/2}, y_j), ey(x_i, y_{j+1/2})
+   call average(geomx,ex,ey)
 
-call solve_poisson_mg(poisson_mg)
+else
 
-do i = 1, geomx%nx
-do j = 1, geomx%ny
-write(13,*) i, j, ex(i,j)
-end do
-write(13,*) 
-end do
+   call initialize_mudpack_cartesian(poisson_mg,                      &
+        geomx%x0, geomx%x1, geomx%nx, &
+        geomx%y0, geomx%y1, geomx%ny, &
+        SLL_PERIODIC, SLL_PERIODIC,   &
+        SLL_PERIODIC, SLL_PERIODIC)
+   
+   !compute ex(x_{i+1/2}, y_j), ey(x_i, y_{j+1/2})
+   phi=0._8
+   call solve_poisson_mg(poisson_mg)
+   
+   do i = 1, geomx%nx
+      do j = 1, geomx%ny
+!         write(13,*) i, j, ex(i,j)
+      end do
+!      write(13,*) 
+   end do
+   
+endif
 
-stop
-
-call average(geomx,ex,ey)
 
 !compute rho such that 
 ![ex(x_{i+1/2}, y_j)-ex(x_{i-1/2}, y_j)]/dx + [ey(x_i, y_{j+1/2})-ey(x_i, y_{j-1/2})]/dy 
@@ -780,11 +830,14 @@ end subroutine verif_charge
 subroutine solve_poisson_mg(this)
 
    type(mudpack_2d) :: this
-   
-   jxp(1:geomx%nx,1:geomx%ny) = jx     -1.
-   jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-1.
-   jxp(1:geomx%nx,geomx%ny+1) = jx(:,1)-1.
-   jxp(geomx%nx+1,geomx%ny+1) = jx(1,1)-1.
+   sll_real64 :: mass
+
+   mass=sum(jx(1:geomx%nx,1:geomx%ny))/(real(geomx%nx,8)*real(geomx%ny,8))
+
+   jxp(1:geomx%nx,1:geomx%ny) = jx     -mass
+   jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-mass
+   jxp(1:geomx%nx,geomx%ny+1) = jx(:,1)-mass
+   jxp(geomx%nx+1,geomx%ny+1) = jx(1,1)-mass
    
    call solve_mudpack_cartesian(this, phi, jxp)
    
