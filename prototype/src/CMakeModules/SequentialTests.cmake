@@ -23,6 +23,11 @@ ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
+ADD_TEST(NAME hermite_interpolation    COMMAND test_hermite_interpolation)
+ADD_TEST(NAME pic_particles             COMMAND test_pic_particles)
+ADD_TEST(NAME pic_initializers          COMMAND test_pic_initializers)
+ADD_TEST(NAME pic_accumulator           COMMAND test_pic_accumulator)
+#ADD_TEST(NAME pic_simulation_4d         COMMAND test_4d_vp_pic_cartesian)
 
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES 
@@ -35,6 +40,11 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(hermite_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#SET_TESTS_PROPERTIES(pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #IF(MUDPACK_ENABLED)
 #   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
@@ -68,10 +78,26 @@ IF(NOT STDF95)
    ADD_TEST(NAME coordinate_transformations COMMAND test_coordinate_transformations_2d)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
+
+FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
+IF(PYTHON_EXECUTABLE)
+
    ADD_TEST(NAME coordinate_transformation_multipatch_2d 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
             COMMAND test_coordinate_transformation_multipatch_2d)
    SET_TESTS_PROPERTIES(coordinate_transformation_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+   ADD_TEST(NAME scalar_field_multipatch_2d
+     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+     COMMAND test_scalar_field_multipatch_2d)
+   SET_TESTS_PROPERTIES(scalar_field_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ELSE()
+
+   MESSAGE(STATUS "python3 not found")
+
+ENDIF(PYTHON_EXECUTABLE)
+
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
    ADD_TEST(NAME characteristics_1d_explicit_euler COMMAND test_characteristics_1d_explicit_euler)
@@ -96,6 +122,9 @@ IF(NOT STDF95)
    ADD_TEST(NAME advection_2d_BSL COMMAND test_advection_2d_BSL)
    ADD_TEST(NAME advection_2d_CSL COMMAND test_advection_2d_CSL)
    ADD_TEST(NAME advection_2d_tensor_product COMMAND test_advection_2d_tensor_product)
+   ADD_TEST(NAME gyroaverage_polar_hermite COMMAND test_gyroaverage_2d_polar_hermite)
+   ADD_TEST(NAME gyroaverage_polar_splines COMMAND test_gyroaverage_2d_polar_splines)
+   ADD_TEST(NAME gyroaverage_polar_pade COMMAND test_gyroaverage_2d_polar_pade)
    
    #IF(MUDPACK_ENABLED)
 
@@ -136,11 +165,14 @@ IF(NOT STDF95)
      PASS_REGULAR_EXPRESSION
      "PASSED")
    SET_TESTS_PROPERTIES(advection_2d_BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar_hermite PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(gyroaverage_polar_pade PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   IF(FFTW_ENABLED)
+   IF(FFTW_ENABLED AND FFTW_FOUND)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
       SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ENDIF()

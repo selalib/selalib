@@ -88,6 +88,8 @@ import time
 import re
 #from pexpect import run, spawn
 
+sys.stdout = open('nurbs_patch_txt_to_nml.out', 'w')
+
 def main ():
 
     global options, args
@@ -241,22 +243,29 @@ def main ():
                     currently_reading = ""
                     continue
                 elif currently_reading == "knots1":
-                    knots1.extend(linetemp)
-                    logical_mesh_locations1=remove_duplicates(knots1)
-                    tmp = " ".join(knots1) # one space between elems
-                    writefile.write("    knots1 = "+ tmp + "\n")
-                    writefile.write("/" + "\n\n")
-                    currently_reading = ""
-                    knots1_is_written = True
-                    continue
+                    if linetemp[0] == "#": # finished list of points
+                        logical_mesh_locations1=remove_duplicates(knots1)
+                        tmp = " ".join(knots1) # one space between elems
+                        writefile.write("    knots1 = "+ tmp + "\n")
+                        writefile.write("/" + "\n\n")
+                        # currently_reading = ""
+                        writefile.write("&knots_2\n")
+                        currently_reading = "knots2"
+                        knots1_is_written = True
+                        continue
+                    else:
+                        knots1.extend(linetemp)
                 elif currently_reading == "knots2":
-                    knots2.extend(linetemp) 
-                    logical_mesh_locations2=remove_duplicates(knots2)
-                    tmp = " ".join(knots2) # one space between elems
-                    writefile.write("    knots2 = "+ tmp + "\n")
-                    writefile.write("/" + "\n\n")
-                    currently_reading = ""
-                    continue
+                    if linetemp[0] == "#": # finished list of points
+                        logical_mesh_locations2=remove_duplicates(knots2)
+                        tmp = " ".join(knots2) # one space between elems
+                        writefile.write("    knots2 = "+ tmp + "\n")
+                        writefile.write("/" + "\n\n")
+                        writefile.write("&control_points\n")
+                        currently_reading = "points"
+                        continue
+                    else:
+                        knots2.extend(linetemp) 
                 elif currently_reading == "points":
                     if linetemp[0] == "#": # finished list of points
                         writefile.write("    control_pts1 = "+" ".join(x1)+"\n")
@@ -314,7 +323,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(* time.asctime())
+        if options.verbose: print( time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)
