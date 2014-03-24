@@ -31,6 +31,8 @@
   number_iterations = 100
   freq_diag = 20
   freq_diag_time = 1
+  nb_mode = 20
+  time_init = 0.
   !split_case = "SLL_STRANG_VTV" 
   !split_case = "SLL_STRANG_TVT" 
   split_case = "SLL_ORDER6VPnew1_VTV" 
