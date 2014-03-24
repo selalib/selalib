@@ -32,21 +32,26 @@ use sll_maxwell_2d_diga
 
 implicit none
 
-sll_int32, parameter :: nstep   = 1
-sll_int32, parameter :: nc_eta1 = 2
-sll_int32, parameter :: nc_eta2 = 2
+!=====================================!
+! Simulation parameters               !
+!=====================================!
+sll_int32, parameter :: nstep   = 10  !
+sll_int32, parameter :: nc_eta1 = 2   !
+sll_int32, parameter :: nc_eta2 = 2   !
+sll_int32, parameter :: mode    = 2   !
+sll_int32, parameter :: degree  = 2   !
+!=====================================!
 
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
-sll_int32  :: error
 
 type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 class(sll_coordinate_transformation_2d_analytic), pointer :: colella
 
 type(maxwell_2d_diga)   :: maxwell_TE
-type(maxwell_2d_diga)   :: maxwell_TM
+!type(maxwell_2d_diga)   :: maxwell_TM
 
 type(dg_field), pointer :: ex
 type(dg_field), pointer :: ey
@@ -56,9 +61,8 @@ type(dg_field), pointer :: bx
 type(dg_field), pointer :: by
 type(dg_field), pointer :: ez
 type(dg_field), pointer :: ez_exact
+type(dg_field), pointer :: phi
 
-sll_int32   :: mode = 2
-sll_int32   :: degree = 2
 sll_real64  :: omega
 sll_real64  :: time
 sll_int32   :: istep
@@ -67,14 +71,15 @@ sll_real64  :: err_tm
 sll_real64  :: dt
 sll_real64  :: cfl = 0.5
 
-sll_real64, external :: fcos
+sll_real64, external :: fcos, gaussian, add
 
 !mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-1._f64, eta2_min=-1._f64)
+                            eta1_min=-1._f64, eta1_max=1._f64, &
+                            eta2_min=-1._f64, eta2_max=1._f64)
 
-write(*,*) mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
-write(*,*) mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
+write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
+write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
 
 eta1_min = mesh%eta1_min
 eta1_max = mesh%eta1_max
@@ -124,14 +129,16 @@ bx => new_dg_field( degree, tau)
 by => new_dg_field( degree, tau) 
 bz => new_dg_field( degree, tau) 
 
+phi => new_dg_field( degree, tau, add) 
+
 ez_exact => new_dg_field( degree, tau, fcos) 
 bz_exact => new_dg_field( degree, tau, fcos) 
 
 bz = bz_exact
 ez%array = - bz_exact%array
 
-call plot_dg_field( bz, 'bz')
-call plot_dg_field( ez, 'ez')
+!call plot_dg_field( bz, 'bz')
+!call plot_dg_field( ez, 'ez')
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
@@ -146,27 +153,32 @@ call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
 do istep = 1, nstep !*** Loop over time
 
+   call plot_dg_field( phi, 'phi')
+   call advection(maxwell_TE, phi, dt)
+
    time = time + 0.5_f64*dt
 
-   ez_exact%array = - bz_exact%array
+   !ez_exact%array = - bz_exact%array
+!
+!   if (istep == 1) then
+!
+!      bz = bz_exact
+!      ez = ez_exact
+!
+!   else
+!
+!      err_te = maxval(bz%array-bz_exact%array)
+!      err_tm = maxval(ez%array-ez_exact%array)
+!   
+!      write(*,"(10x,' istep = ',I6)",advance="no") istep
+!      write(*,"(' time = ',g12.3,' sec')",advance="no") time
+!      write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
 
-   if (istep == 1) then
-
-      bz = bz_exact
-      ez = ez_exact
-
-   else
-
-      err_te = maxval(bz%array-bz_exact%array)
-      err_tm = maxval(ez%array-ez_exact%array)
-   
-      write(*,"(10x,' istep = ',I6)",advance="no") istep
-      write(*,"(' time = ',g12.3,' sec')",advance="no") time
-      write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
-
-   end if
-
-   call solve(maxwell_TE, ex, ey, bz, dt)
+!   end if
+!
+   !call solve(maxwell_TE, ex, ey, bz, dt)
+   !call plot_dg_field( ex, 'ex')
+   !call plot_dg_field( ey, 'ey')
    !call solve(maxwell_TM, bx, by, ez, dt)
 
    time = time + 0.5_f64*dt
