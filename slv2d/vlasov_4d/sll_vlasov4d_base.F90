@@ -84,8 +84,8 @@ contains
   namelist /diag/ fdiag, fthdiag
   namelist /phys_space/ x0,x1,y0,y1,nx,ny
   namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
-  namelist /algo_charge/ va
   namelist /test_case/ num_case
+  namelist /algo_charge/ va
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -98,8 +98,8 @@ contains
      read(idata,NML=diag)
      read(idata,NML=phys_space)
      read(idata,NML=vel_space)
-     read(idata,NML=algo_charge)
      read(idata,NML=test_case)
+     read(idata,NML=algo_charge)
 
   end if
 
