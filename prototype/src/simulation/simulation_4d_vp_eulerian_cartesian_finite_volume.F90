@@ -56,7 +56,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
 
   ! number of local nodes in each element
   sll_int32 :: np_loc
-  sll_real64 :: eps=0.003_f64 !0 center flux, if not decentered flux
+  sll_real64 :: eps=0.001_f64 !0 center flux, if not decentered flux
 
   ! for initializers
   type(sll_p2p_comm_real64), pointer :: comm
@@ -701,6 +701,7 @@ subroutine run_vp_cart(sim)
     if((sim%test.ne.11).and.(sim%test.ne.12)) then
        sim%phi_x1=-sim%phi_x1
     end if
+     ! sim%phi_x1=-sim%phi_x1
     !revient dans le split layout pour phi
     !write(*,*) sim%my_rank, 'here 1'
     call apply_remap_2D( sim%seqx1_to_split, sim%phi_x1, sim%phi_split)
@@ -1140,6 +1141,7 @@ subroutine run_vp_cart(sim)
     do i = 1, loc_sz_x1
        do j = 1, loc_sz_v1
 plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
+!write(*,*) 'check this ', sim%fn_v1v2(j,1,i,1)
           !plotf2d_c1(i,j) = max(0.0_f64,sim%fn_v1v2(j,1,i,1))
           if (plotf2d_c1(i,j).gt.100) then
              write(*,*) ' plotf2d_c1(i,j)',  plotf2d_c1(i,j)
@@ -1195,7 +1197,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
        allocate (plotrho_split(loc_sz_x1,loc_sz_x2))
        do i = 1, loc_sz_x1
           do j=1,loc_sz_x2
-             plotrho_split(i,j) =  max(0.0_f64,sim%rho_split(i,j))
+             !plotrho_split(i,j) =  max(0.0_f64,sim%rho_split(i,j))
+             plotrho_split(i,j) =  sim%rho_split(i,j)
           end do
        end do
        call sll_gnuplot_rect_2d_parallel( &
@@ -2439,6 +2442,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     endif
 
     source=Ex*source1+Ey*source2
+
     !source=-source
     !    write(*,*) 'source = ',  source
     !    stop
@@ -2450,6 +2454,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     if((sim%test==0).or.(sim%test==4)) then
        source=0.0_f64
     endif
+      !source=0.0_f64
 
 !!$    !can we do as following ? so we have to call only one 
 !!$    !time the subroutine mulk
