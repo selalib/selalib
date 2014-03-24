@@ -224,15 +224,18 @@ write(file_id,"(2f12.5)") delta_eta1, delta_eta2
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
-   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
-                             "' NumberType='Float' Precision='8' Format='HDF'>"
-   write(file_id,"(a)")array_name//".h5:/node_values"
+
+if(present(file_format)) then
+   if( file_format == "HDF5") then
+      write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                "' NumberType='Float' Precision='8' Format='HDF'>"
+      write(file_id,"(a)")array_name//".h5:/node_values"
 #ifndef NOHDF5
-   call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
-   call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
-   call sll_hdf5_file_close(hfile_id, error)
+      call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
+      call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
+      call sll_hdf5_file_close(hfile_id, error)
 #endif
+   end if
 else
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='XML'>"
