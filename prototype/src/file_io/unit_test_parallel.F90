@@ -258,6 +258,16 @@ contains
 
 #ifdef HDF5_PARALLEL
 
+  !Begin high level version
+
+  call sll_xdmf_open(myrank,"3d-data.xmf","mesh3d",ni,nj,nk,xml_id,error)
+  call sll_xdmf_write_array("mesh3d",datadims,offset,xdata,'x1',error)
+  call sll_xdmf_write_array("mesh3d",datadims,offset,ydata,'x2',error)
+  call sll_xdmf_write_array("mesh3d",datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_xdmf_close(xml_id,error)
+
+  !End high level version
+
   call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)
   call sll_hdf5_file_close(file_id, error)

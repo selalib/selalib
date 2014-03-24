@@ -9,7 +9,7 @@ use biot_savart
 
 implicit none
 
-!call plot_test_2d()
+call plot_test_2d()
 
 call test_animation_2d()
 
@@ -39,16 +39,16 @@ SLL_ALLOCATE(w(nbpart),error)
 do i = 1, nbpart 
    t = float(i) / float(nbpart-1)
    angle = t * (sll_pi * 2.) * 50.
-   r = t * 10.
+   r = t * 2.
    x(i) = r * cos(angle)
    v(i) = r * sin(angle)
 end do
 
 w = sqrt(x*x+v*v)
 
-xmin = -12; xmax = 12
-vmin = -12; vmax = 12
-nx = 32
+xmin = -4; xmax = 4
+vmin = -4; vmax = 4
+nx = 64
 nv = 64
 SLL_ALLOCATE(density(nx,nv), error)
 
@@ -61,6 +61,13 @@ call plot_format_points3d( "pic_xv", x, v, iplot)
 call plot_format_xmdv( "pic_xv", x, v, iplot, xmin, xmax, vmin, vmax)
 call distribution_xdmf("df_xv", x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)  
 
+call distribution_tsc_gnuplot('df_tsc', x, v, w, &
+                             xmin, xmax, nx,     &
+                             vmin, vmax, nv, iplot)  
+
+call distribution_m4_gnuplot('df_m4', x, v, w, &
+                             xmin, xmax, nx,     &
+                             vmin, vmax, nv, iplot)  
 end subroutine plot_test_2d
 
 subroutine test_animation_2d()
@@ -87,9 +94,9 @@ time = 0.0
 xmin = -3; xmax = 3.
 ymin = -2; ymax = 2.
 
+print*, nstep
 do istep = 1, nstep       !loop over time
    
-
    call vitesse(nbpart, xp, yp, op, up, vp, delta, time)
 
    !call centres(nbpart, xp, yp, op, time)
@@ -99,7 +106,8 @@ do istep = 1, nstep       !loop over time
    time = time + dt
    if ( mod(istep, 10) == 0) then
       iplot = iplot + 1
-      call particles_center_gnuplot( "pic_xy", xp, yp, xmin, xmax, ymin, ymax, iplot, time )
+      call particles_center_gnuplot( "pic_xy", xp, yp, &
+           xmin, xmax, ymin, ymax, iplot, time )
       call plot_format_points3d( "pic_xy", xp, yp, op, iplot)
       call plot_format_xmdv( "pic_xy", xp, yp, iplot, xmin, xmax, ymin, ymax)
    end if

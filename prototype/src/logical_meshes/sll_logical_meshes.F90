@@ -264,7 +264,7 @@ end if
          num_cells2, &
          eta1_min, &
          eta1_max, &
-         eta1_min, &
+         eta2_min, &
          eta2_max )
 
   end function new_logical_mesh_2d
@@ -397,7 +397,7 @@ end if
   end function new_logical_mesh_3d
 
 
-  !> @brief allocates the memory space for a new 3D logical mesh on the heap,
+  !> @brief allocates the memory space for a new 4D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
   !> object.
   !> @param num_cells1 integer denoting the number of cells, direction 1.

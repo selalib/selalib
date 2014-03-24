@@ -933,7 +933,7 @@ contains
         np_x1, &
         node_positions_x2, &
         sim%num_dof_x2, &
-        'f')        
+        'f', sim%dt*istep )        
         !sim%mesh2d)
       iplot = iplot+1  
 #endif
@@ -1269,7 +1269,7 @@ contains
               np_x1, &
               node_positions_x2, &
               sim%num_dof_x2, &
-              'deltaf')                    
+              'deltaf',time)                    
         !call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
 #endif
           
@@ -1308,7 +1308,7 @@ contains
           np_x1, &
           node_positions_x2, &
           sim%num_dof_x2, &
-          'f')                    
+          'f', time)                    
         !call plot_f_cartesian(iplot,f_visu,sim%mesh2d)
 #endif
             iplot = iplot+1  
@@ -1608,7 +1608,7 @@ contains
     nnodes_x1, &
     node_positions_x2, &
     nnodes_x2, &
-    array_name)    
+    array_name, time)    
     !mesh_2d)
     use sll_xdmf
     use sll_hdf5_io
@@ -1627,6 +1627,7 @@ contains
     !sll_int32             :: nnodes_x1, nnodes_x2
     !type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: time
     !sll_real64 :: r
     !sll_real64 :: theta
     !sll_real64 ::  x1_min, x2_min
@@ -1672,6 +1673,7 @@ contains
     call int2string(iplot,cplot)
     call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
+    write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
     call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
