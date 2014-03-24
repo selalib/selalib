@@ -226,6 +226,7 @@ write(*,107) error
 if (error > 0) call exit(0)
 #endif
 
+iguess = 1
 ! attempt to improve approximation to fourth order
 call mud24sp(this%work,phi,error)
 
