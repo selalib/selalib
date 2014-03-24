@@ -2,6 +2,6 @@
 &diag fdiag=1000, fthdiag=1/
 &phys_space x0=0., x1=12.566370614359172, y0=0., y1=12.566370614359172, nx=16, ny=16/
 &vel_space vx0=-8.0, vx1=8.0, vy0=-8.0, vy1=8.0, nvx=32, nvy=32/
-&algo_charge va=2, meth=3/
+&algo_charge va=0, meth=3/
 &test_case num_case=1/ !landau sur x
 &solver_poisson mud_case=1/ !
