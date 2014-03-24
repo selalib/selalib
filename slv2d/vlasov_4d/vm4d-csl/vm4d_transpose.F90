@@ -172,18 +172,18 @@ do iter=1,nbiter
       if (mud_case==SPECTRAL) then 
          call solve(poiss2dpp,ex,ey,rho,nrj)
          call average(geomx,ex,ey)
-         do i=2,geomx%nx
-            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-         enddo
-         close(10+iter)
+!         do i=2,geomx%nx
+!            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+!         enddo
+!         close(10+iter)
 
       else
          phi=0._8
          call solve_poisson_mg(poisson_mg)
-         do i=2,geomx%nx
-            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-         enddo
-         close(10+iter)
+!         do i=2,geomx%nx
+!            write(10+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+!         enddo
+!         close(10+iter)
 !         stop
 
       endif
@@ -280,28 +280,28 @@ do iter=1,nbiter
 
 
       if (mud_case==SPECTRAL) then 
-         do i=2,geomx%nx
-            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-         enddo
-         close(11+iter)
+!         do i=2,geomx%nx
+!            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+!         enddo
+!         close(11+iter)
          call solve(poiss2dpp,ex,ey,rho,nrj)
-         do i=2,geomx%nx
-            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-         enddo
-         close(12+iter)
-         stop
+!         do i=2,geomx%nx
+!            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+!         enddo
+!         close(12+iter)
+!         stop
       else
          phi=0._8
-         do i=2,geomx%nx
-            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-         enddo
-         close(11+iter)
+!         do i=2,geomx%nx
+!            write(11+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+!         enddo
+!         close(11+iter)
          call solve_poisson_mg(poisson_mg)
-         do i=2,geomx%nx
-            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
-         enddo
-         close(12+iter)
-         stop
+!         do i=2,geomx%nx
+!            write(12+iter,*) (i-1)*vlas2d%geomx%dx,rho(i,4),phi(i,4),ex(i,4)
+!         enddo
+!         close(12+iter)
+         !stop
       endif
 
 
@@ -664,19 +664,19 @@ do i=1,geomx%nx
 enddo
 
 
-open(15+my_num,file="r_init:"//char(48+my_num))
-open(16+my_num,file="e_init:"//char(48+my_num))
+open(45+my_num,file="r_init:"//char(48+my_num))
+open(46+my_num,file="e_init:"//char(48+my_num))
 do j = jstartx, jendx
    do i = 1, geomx%nx
       x = geomx%x0+(i-1)*geomx%dx
       y = geomx%y0+(j-1)*geomx%dy
-      write(15+my_num,*) sngl(x),sngl(y),sngl(rho(i,j))
-      write(16+my_num,*) sngl(x),sngl(y),sngl(ex(i,j)),sngl(ey(i,j))
+      write(45+my_num,*) sngl(x),sngl(y),sngl(rho(i,j))
+      write(46+my_num,*) sngl(x),sngl(y),sngl(ex(i,j)),sngl(ey(i,j))
    end do
-   write(15+my_num,*); write(16+my_num,*)
+   write(45+my_num,*); write(16+my_num,*)
 end do 
-close(15+my_num)
-close(16+my_num)
+close(45+my_num)
+close(46+my_num)
 
 ! initialisation du calcul du champ magnetique
 call initialize(maxw2dfdtd,geomx,iflag, jstartx, jendx)
@@ -830,16 +830,19 @@ end subroutine verif_charge
 subroutine solve_poisson_mg(this)
 
    type(mudpack_2d) :: this
-   sll_real64 :: mass
+   sll_real64 :: mass, avg
 
-   mass=sum(jx(1:geomx%nx,1:geomx%ny))/(real(geomx%nx,8)*real(geomx%ny,8))
+   mass=sum(rho(1:geomx%nx,1:geomx%ny))/(real(geomx%nx,8)*real(geomx%ny,8))
 
-   jxp(1:geomx%nx,1:geomx%ny) = jx     -mass
-   jxp(geomx%nx+1,1:geomx%ny) = jx(1,:)-mass
-   jxp(1:geomx%nx,geomx%ny+1) = jx(:,1)-mass
-   jxp(geomx%nx+1,geomx%ny+1) = jx(1,1)-mass
+   jxp(1:geomx%nx,1:geomx%ny) = rho     -mass
+   jxp(geomx%nx+1,1:geomx%ny) = rho(1,:)-mass
+   jxp(1:geomx%nx,geomx%ny+1) = rho(:,1)-mass
+   jxp(geomx%nx+1,geomx%ny+1) = rho(1,1)-mass
    
    call solve_mudpack_cartesian(this, phi, jxp)
+
+   avg = sum(phi)
+   phi = phi - avg / (geomx%nx*geomx%ny)
    
    do j = 1, geomx%ny
       do i = 1, geomx%nx
