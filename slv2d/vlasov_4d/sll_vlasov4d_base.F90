@@ -79,13 +79,14 @@ contains
   sll_int32  :: fthdiag          ! time history frequency
   sll_int32  :: va = 0           ! algo charge type
   sll_int32  :: num_case         ! test case
+  sll_int32  :: meth = 0         ! method
 
   namelist /time/ dt, nbiter
   namelist /diag/ fdiag, fthdiag
   namelist /phys_space/ x0,x1,y0,y1,nx,ny
   namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
   namelist /test_case/ num_case
-  namelist /algo_charge/ va
+  namelist /algo_charge/ va, meth
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
@@ -120,6 +121,7 @@ contains
   call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(va,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(meth,    1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(num_case,1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
   this%dt         = dt
