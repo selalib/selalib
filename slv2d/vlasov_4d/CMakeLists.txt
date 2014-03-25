@@ -77,3 +77,5 @@ TARGET_LINK_LIBRARIES(vp4d_polar    selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral_charge selalib_vlasov4d ${LIBS})
 
 ADD_SUBDIRECTORY(vm4d-csl)
+
+FILE(COPY ${CMAKE_SOURCE_DIR}/tests DESTINATION ${CMAKE_BINARY_DIR})
