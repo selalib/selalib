@@ -295,8 +295,8 @@ if (my_num == MPI_MASTER) then
    read(idata,NML=diag)
    read(idata,NML=phys_space)
    read(idata,NML=vel_space)
-   read(idata,NML=algo_charge)
    read(idata,NML=test_case)
+   read(idata,NML=algo_charge)
    read(idata,NML=solver_poisson)
 end if
 
