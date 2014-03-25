@@ -306,6 +306,8 @@ contains
     eps = 0.001_f64
     !initial_function_case = "SLL_BEAM"
     alpha_gaussian = 0.2_f64
+    restart_file = "no_restart_file"
+    time_init_from_restart_file = .false.
     
     !time_iterations
     dt = 0.1_f64
