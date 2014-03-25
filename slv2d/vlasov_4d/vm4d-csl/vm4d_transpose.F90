@@ -333,9 +333,8 @@ subroutine initlocal()
 
 !variables locales
 sll_int32 :: ipiece_size_v, ipiece_size_x
-sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky,nrj,vth,Tr,mass,u
+sll_real64 :: xi,vx,vy,v2,x,y,eps,kx,ky,nrj,vth,Tr,u
 sll_int32 :: i,j,iv,jv,iflag
-
 
 ! cas sequentiel
 jstartv=1
@@ -467,7 +466,12 @@ if (mud_case==SPECTRAL) then
             y=geomx%y0+real(j-1,8)*geomx%dy
             do i=1,geomx%nx
                x=geomx%x0+real(i-1,8)*geomx%dx
-               f(i,j,iv,jv)=rho(i,j)/(2._wp*sll_pi)*exp(-0.5_wp*v2)
+               select case(num_case)
+               case(TSI_CASE)
+                  f(i,j,iv,jv)=rho(i,j)/(2._wp*sll_pi)*exp(-0.5_wp*v2)*vx*vx
+               case default
+                  f(i,j,iv,jv)=rho(i,j)/(2._wp*sll_pi)*exp(-0.5_wp*v2)
+               end select
                !bot 1dx
                !            f(i,j,iv,jv)=rho(i,j)*(0.9_8*exp(-0.5_8*vx*vx)+0.1_8*exp(-(vx-u)*(vx-u)/2._8))* &
                !                 (1._wp/(2._wp*sll_pi))*exp(-0.5_wp*vy*vy)
@@ -631,15 +635,15 @@ subroutine verif_charge(vlas2d,rho,ex,ey)
      enddo
   enddo
   !i=1, for all j=2,ny
-  do j=2,vlas2d%geomx%ny
-     mass=mass+abs((ex(1,j)-ex(vlas2d%geomx%nx,j))/vlas2d%geomx%dx &
-          +(ey(1,j)-ey(1,j-1))/vlas2d%geomx%dy-(rho(1,j)-1._8))
-  enddo
+!  do j=2,vlas2d%geomx%ny
+!     mass=mass+abs((ex(1,j)-ex(vlas2d%geomx%nx,j))/vlas2d%geomx%dx &
+!          +(ey(1,j)-ey(1,j-1))/vlas2d%geomx%dy-(rho(1,j)-1._8))
+!  enddo
   !j=1, for all i=2,nx
-  do i=2,vlas2d%geomx%nx
-     mass=mass+abs((ex(i,1)-ex(i-1,1))/vlas2d%geomx%dx &
-          +(ey(i,1)-ey(i,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(i,1)-1._8))
-  enddo
+!  do i=2,vlas2d%geomx%nx
+!     mass=mass+abs((ex(i,1)-ex(i-1,1))/vlas2d%geomx%dx &
+!          +(ey(i,1)-ey(i,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(i,1)-1._8))
+!  enddo
   !i=j=1
   mass=mass+abs((ex(1,1)-ex(vlas2d%geomx%nx,1))/vlas2d%geomx%dx &
        +(ey(1,1)-ey(1,vlas2d%geomx%ny))/vlas2d%geomx%dy-(rho(1,1)-1._8))
