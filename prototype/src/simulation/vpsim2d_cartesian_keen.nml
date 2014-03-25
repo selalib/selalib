@@ -24,6 +24,10 @@
   initial_function_case = "SLL_LANDAU"
   kmode = 0.26
   eps = 0.0
+  restart_file = "no_restart_file"
+  !restart_file = "init4/f_plot_0002"
+  !time_init_from_restart_file = .true.
+  time_init_from_restart_file = .false.
 /
 
 &time_iterations
