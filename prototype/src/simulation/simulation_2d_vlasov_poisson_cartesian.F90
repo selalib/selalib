@@ -70,7 +70,9 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    !initial function
    sll_real64  :: kx
    sll_real64  :: eps
-
+   character(len=256) :: restart_file
+   logical :: time_init_from_restart_file
+   
    !initial function
    procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
@@ -162,6 +164,8 @@ contains
     sll_real64 :: kmode
     sll_real64 :: eps
     sll_real64 :: alpha_gaussian
+    character(len=256) :: restart_file
+    logical :: time_init_from_restart_file
     
     !time_iterations
     sll_real64 :: dt
@@ -233,7 +237,9 @@ contains
       initial_function_case, &
       kmode, &
       eps, &
-      alpha_gaussian
+      alpha_gaussian, &
+      restart_file, &
+      time_init_from_restart_file
 
     namelist /time_iterations/ &
       dt, &
@@ -454,8 +460,9 @@ contains
         print *,'#in init_vp2d_par_cart'  
         stop
     end select
-
-
+    sim%time_init_from_restart_file = time_init_from_restart_file
+    sim%restart_file = restart_file
+    
     !time iterations
     sim%dt=dt
     sim%num_iterations=number_iterations
@@ -763,12 +770,15 @@ contains
     sll_real64,dimension(:),pointer :: f_x1_buf1d
     sll_int32 :: iplot
     character(len=4) :: cproc
+    character(len=4) :: cplot
     sll_int32 :: iproc
+    logical :: file_exists
     
     !for temporary poisson
     !sll_int32 :: N_buf_poisson
     !sll_real64, dimension(:), allocatable :: buf_poisson
 
+    iplot = 1
 
     nb_mode = sim%nb_mode
     time_init = sim%time_init
@@ -893,22 +903,38 @@ contains
 
     iproc = sll_get_collective_rank(sll_world_collective)
     call int2string(iproc, cproc)
-    call sll_binary_file_create('f_proc_'//cproc//'.rst', restart_id, ierr )
+    call int2string(iplot,cplot)    
+
+    if(sim%restart_file/="no_restart_file")then
+      INQUIRE(FILE=trim(sim%restart_file)//'_proc_'//cproc//'.rst', EXIST=file_exists)
+      if(.not.(file_exists))then
+        print *,'#file ',trim(sim%restart_file)//'_proc_'//cproc//'.rst'
+        print *,'does not exist'
+        stop
+      endif
+      open(unit=restart_id, &
+        file=trim(sim%restart_file)//'_proc_'//cproc//'.rst', ACCESS="STREAM", &
+        form='unformatted', IOStat=ierr)      
+      if( ierr .ne. 0 ) then
+        print *, 'ERROR while opening file ', &
+          trim(sim%restart_file)//'_proc_'//cproc//'.rst', &
+           '. Called from run_vp2d_cartesian().'
+       stop
+      end if
+      print *,'#read restart file '//trim(sim%restart_file)//'_proc_'//cproc//'.rst'      
+      call sll_binary_read_array_0d(restart_id,time_init,ierr)
+      call sll_binary_read_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
+      call sll_binary_file_close(restart_id,ierr)
+    endif      
+    
+    if(sim%time_init_from_restart_file .eqv. .true.) then
+      sim%time_init = time_init  
+    endif
+    time_init = sim%time_init
+
+    call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
     call sll_binary_write_array_0d(restart_id,time_init,ierr)
     call sll_binary_write_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
-    call sll_binary_file_close(restart_id,ierr)    
-
-    f_x1 = 0._f64
-    
-    open(unit=restart_id, file='f_proc_'//cproc//'.rst', ACCESS="STREAM", &
-      form='unformatted', IOStat=ierr)
-    if( ierr .ne. 0 ) then
-       print *, 'ERROR while opening file ','f_proc_'//cproc//'.rst', &
-            '. Called from run_vp2d_cartesian().'
-       stop
-    end if
-    call sll_binary_read_array_0d(restart_id,time_init,ierr)
-    call sll_binary_read_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
     call sll_binary_file_close(restart_id,ierr)    
 
 
@@ -950,7 +976,6 @@ contains
       call sll_binary_write_array_2d(file_id,f_visu(1:np_x1-1,1:np_x2-1),ierr)
       call sll_binary_file_close(file_id,ierr)
 #ifndef NOHDF5
-      iplot = 1
       call plot_f_cartesian( &
         iplot, &
         f_visu, &
@@ -959,11 +984,11 @@ contains
         node_positions_x2, &
         sim%num_dof_x2, &
         'f', time_init )        
-      iplot = iplot+1  
 #endif
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
 
     endif
+    iplot = iplot+1  
     
 
 
@@ -995,12 +1020,12 @@ contains
     istep = 0
     e_app = 0._f64
     if (sim%driven) then
-      call PFenvelope(adr, istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
+      call PFenvelope(adr, time_init+istep*sim%dt, sim%tflat, sim%tL, sim%tR, sim%twL, sim%twR, &
           sim%t0, sim%turn_drive_off)
       do i = 1, np_x1
         e_app(i) = sim%Edrmax*adr*sim%kx&
           *sin(sim%kx*real(i-1,f64)*sim%mesh2d%delta_eta1&
-          -sim%omegadr*real(istep,f64)*sim%dt)
+          -sim%omegadr*(time_init+real(istep,f64)*sim%dt))
       enddo
     endif
 
@@ -1191,6 +1216,15 @@ contains
           potential_energy = potential_energy+(efield(i)+e_app(i))**2
         enddo
         potential_energy = 0.5_f64*potential_energy* sim%mesh2d%delta_eta1
+        if (mod(istep,sim%freq_diag)==0) then          
+          call int2string(iplot,cplot) 
+          call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
+          call sll_binary_write_array_0d(restart_id,time,ierr)
+          call sll_binary_write_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
+          call sll_binary_file_close(restart_id,ierr)    
+        endif 
+
+
         if(sll_get_collective_rank(sll_world_collective)==0)then                  
           buf_fft = rho(1:np_x1-1)
           call fft_apply_plan(pfwd,buf_fft,buf_fft)
@@ -1222,13 +1256,6 @@ contains
         endif
           
         if (mod(istep,sim%freq_diag)==0) then          
-
-    call sll_binary_file_create('f_proc_'//cproc//'.rst', restart_id, ierr )
-    call sll_binary_write_array_0d(restart_id,time_init,ierr)
-    call sll_binary_write_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
-    call sll_binary_file_close(restart_id,ierr)    
-
-
           !we substract f0
           !we gather in one file
           call load_buffer_2d( layout_x1, f_x1-f_x1_init, f_x1_buf1d )
@@ -1266,6 +1293,7 @@ contains
               sim%num_dof_x2, &
               'deltaf',time)                    
 #endif
+
           
           
           endif
@@ -1303,8 +1331,8 @@ contains
           sim%num_dof_x2, &
           'f', time)                    
 #endif
-            iplot = iplot+1  
           endif
+          iplot = iplot+1  
                     
         endif
           
