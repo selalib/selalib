@@ -144,10 +144,9 @@ end if
   end function x2_node
 
 
-  function global_index(mesh, k1, k2) result(val)
+  function global_index(k1, k2) result(val)
     ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
     ! returns global index of that mesh point.
-    type(hex_logical_mesh_2d), pointer :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
     sll_int32 :: val
@@ -212,8 +211,7 @@ end if
   end function get_hex_num
 
 
-  function from_global_index_k1(mesh, index) result(k1)
-      type(hex_logical_mesh_2d), pointer :: mesh
+  function from_global_index_k1(index) result(k1)
       sll_int32 :: index
       sll_int32 :: hex_num
       sll_int32 :: first_index
@@ -250,9 +248,8 @@ end if
   end function from_global_index_k1
 
 
-  function from_global_index_k2(mesh, index) result(k2)
+  function from_global_index_k2(index) result(k2)
 
-      type(hex_logical_mesh_2d), pointer :: mesh
       sll_int32 :: index
       sll_int32 :: hex_num
       sll_int32 :: first_index
@@ -289,26 +286,66 @@ end if
   end function from_global_index_k2
 
 
-  function local_index(mesh,i,j) result(new_index)
+  function from_cart_index_k1(mesh, x1, x2) result(k1)
+      type(hex_logical_mesh_2d), pointer :: mesh
+      sll_real64 :: x1
+      sll_real64 :: x2
+      sll_int32  :: k1
+      sll_real64 :: delta
+      
+      delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+      k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/delta)
+  end function from_cart_index_k1
+
+  function from_cart_index_k2(mesh, x1, x2) result(k2)
+      type(hex_logical_mesh_2d), pointer :: mesh
+      sll_real64 :: x1
+      sll_real64 :: x2
+      sll_int32  :: k2
+      sll_real64 :: delta
+      
+      delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+      k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/delta)
+  end function from_cart_index_k2
+
+  function local_index(ref_index,j) result(new_index)
       ! returns the index of the point Pj as if the 
       ! notation had as origin Pi
-      ! ie. local_index(mesh,i,i) = 0
-      type(hex_logical_mesh_2d), pointer :: mesh
-      sll_int32 :: i, j
+      ! ie. local_index(i,i) = 0
+      sll_int32 :: ref_index, j
       sll_int32 :: k1_i, k2_i
       sll_int32 :: k1_j, k2_j
       sll_int32 :: new_index
 
-      k1_i = from_global_index_k1(mesh, i)
-      k2_i = from_global_index_k2(mesh, i)
-      k1_j = from_global_index_k1(mesh, j)
-      k2_j = from_global_index_k2(mesh, j)
+      k1_i = from_global_index_k1(ref_index)
+      k2_i = from_global_index_k2(ref_index)
+      k1_j = from_global_index_k1(j)
+      k2_j = from_global_index_k2(j)
 
-      new_index = global_index(mesh, k1_i - k1_j, k2_i - k2_j)
+      new_index = global_index(k1_i - k1_j, k2_i - k2_j)
 
   end function local_index
 
 
+  function find_neighbour(ref_index, local_index) result(global)
+      ! returns the global index of the point which has as
+      ! local index local_index in the ref_index system
+      ! ie. find_neighbour(0, i) = i
+      sll_int32 :: ref_index, local_index
+      sll_int32 :: k1_i, k2_i
+      sll_int32 :: k1_j, k2_j
+      sll_int32 :: global
+      
+      k1_i = from_global_index_k1(ref_index)
+      k2_i = from_global_index_k2(ref_index)
+      k1_j = from_global_index_k1(local_index)
+      k2_j = from_global_index_k2(local_index)
+
+      global = global_index(k1_i + k1_j, k2_i + k2_j)
+
+  end function find_neighbour
+      
+      
 
   subroutine delete_hex_logical_mesh_2d( mesh )
     type(hex_logical_mesh_2d), pointer :: mesh
