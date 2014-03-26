@@ -1,10 +1,12 @@
 ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
                                 sll_quintic_splines.F90
+				box_splines.F90
                                 sll_odd_degree_splines.F90
                                 sll_arbitrary_degree_splines.F90
                                 cubic_nonuniform_splines.F90)
 
 TARGET_LINK_LIBRARIES(sll_splines sll_utilities 
+                                  sll_logical_meshes
                                   sll_boundary_condition_descriptors
                                   ${LAPACK_LIBRARIES})
 
