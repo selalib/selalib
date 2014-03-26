@@ -39,6 +39,11 @@
   eps_perturb    = 1.0e-6
 /
 
+&sim_params_first
+  !num_mu = 4
+  num_mu = 2
+/
+
 &sim_params
   dt                = 8
   number_iterations = 2
@@ -66,7 +71,10 @@
   gyroaverage_case = "HERMITE_C1_PRECOMPUTE"
   !gyroaverage_case = "SPLINES"
   !gyroaverage_case = "PADE"
-  mu = 2.2e-0
+  !mus = 0. 0.5 1. 1.5 !0.1 !0.2
+  !mu_weights = 0.25 0.25 0.25 0.25
+  mus = 0. 1. 
+  mu_weights = 0.5 0.5
   gyroaverage_N_points = 1024
   gyroaverage_interp_degree_x1 = 3
   gyroaverage_interp_degree_x2 = 3
