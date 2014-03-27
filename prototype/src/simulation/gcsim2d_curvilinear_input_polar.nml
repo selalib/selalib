@@ -36,8 +36,8 @@
 /
     
 &poisson 
-    !poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
-    poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
     mudpack_method = 2 ! SLL_NON_SEPARABLE_WITHOUT_CROSS_TERMS = 2  SLL_NON_SEPARABLE_WITH_CROSS_TERMS = 3"    
     spline_degree_eta1 = 3
     spline_degree_eta2 = 3  
