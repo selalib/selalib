@@ -192,6 +192,8 @@ end if
 
 
   function get_hex_num(index) result(hex_num)
+      ! returns the number of nested hexagon on which the point is
+      ! = returns the number of cells from center to point
       sll_int32 :: index
       sll_int32 :: hex_num
       sll_int32 :: flag = 0
