@@ -16,6 +16,7 @@ ADD_EXECUTABLE(test_splines unit_test.F90
                             util_constants.F90
                             test_processes_module.F90 )
 
+
 TARGET_LINK_LIBRARIES(test_splines sll_splines)
 
 ADD_EXECUTABLE(test_non_unif_splines unit_test_nonuniform.F90 )
@@ -30,3 +31,5 @@ TARGET_LINK_LIBRARIES(test_quintic_splines sll_splines)
 ADD_EXECUTABLE(test_odd_degree_splines test_sll_odd_degree_splines.F90)
 TARGET_LINK_LIBRARIES(test_odd_degree_splines sll_splines)
 
+ADD_EXECUTABLE(test_box_splines test_box_splines.F90)
+TARGET_LINK_LIBRARIES(test_box_splines sll_splines)

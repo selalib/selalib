@@ -17,12 +17,12 @@
 !**************************************************************
 
 
-module hex_logical_meshes
+module hex_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   implicit none
 
-  type hex_logical_mesh_2d
+  type hex_mesh_2d
      sll_int32  :: num_cells  ! number of cells in any direction parting from origin
      sll_real64 :: radius     ! distance between origin and external vertex
      sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
@@ -35,17 +35,20 @@ module hex_logical_meshes
      sll_real64 :: r2_x2 = 0.5
      sll_real64 :: r3_x1 = 0.0
      sll_real64 :: r3_x2 = 1.0
-  end type hex_logical_mesh_2d
+  end type hex_mesh_2d
 
-  type hex_logical_mesh_2d_ptr
-     type(hex_logical_mesh_2d), pointer :: hm
-  end type hex_logical_mesh_2d_ptr
+  type hex_mesh_2d_ptr
+     type(hex_mesh_2d), pointer :: hm
+  end type hex_mesh_2d_ptr
 
   ! this should be sll_delete library-wide...
   interface delete
-     module procedure delete_hex_logical_mesh_2d
+     module procedure delete_hex_mesh_2d
   end interface delete
 
+  interface sll_display
+      module procedure display_hex_mesh_2d
+  end interface sll_display
 
 contains
 
@@ -56,13 +59,13 @@ contains
     obj%slot = default_val; \
 end if
 
-  function new_hex_logical_mesh_2d( &
+  function new_hex_mesh_2d( &
     num_cells, &
     center_x1, &
     center_x2, &
     radius ) result(m)
 
-    type(hex_logical_mesh_2d), pointer :: m
+    type(hex_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
@@ -70,24 +73,24 @@ end if
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
-    call initialize_hex_logical_mesh_2d( &
+    call initialize_hex_mesh_2d( &
          m, &
          num_cells, &
          radius, &
          center_x1, &
          center_x2)
 
-  end function new_hex_logical_mesh_2d
+  end function new_hex_mesh_2d
 
 
-  subroutine initialize_hex_logical_mesh_2d( &
+  subroutine initialize_hex_mesh_2d( &
     m, & 
     num_cells, &
     radius, &
     center_x1, &
     center_x2)
 
-    type(hex_logical_mesh_2d), pointer :: m
+    type(hex_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
@@ -98,9 +101,6 @@ end if
     TEST_PRESENCE_AND_ASSIGN_VAL( m, radius, radius, 1.0_f64 )
 
     m%num_cells = num_cells
-    m%radius    = radius
-    m%center_x1 = center_x1
-    m%center_x2 = center_x2
     m%delta = m%radius/real(num_cells,f64)
 
     ! resizing :
@@ -112,22 +112,22 @@ end if
     m%r3_x2 = m%r3_x2 * m%delta
 
     if ( m%radius <= 0.) then
-       print*,'ERROR, initialize_hex_logical_mesh_2d(): ', &
+       print*,'ERROR, initialize_hex_mesh_2d(): ', &
               'Problem to construct the mesh 2d '
        print*,'because radius <= 0.'
        STOP
     end if
     if ( m%num_cells <= 0) then
-       print*,'ERROR, initialize_hex_logical_mesh_2d(): ', &
+       print*,'ERROR, initialize_hex_mesh_2d(): ', &
             'Problem to construct the mesh 2d '
        print*,'because num_cells <= 0.'
        STOP
     end if
-  end subroutine initialize_hex_logical_mesh_2d
+  end subroutine initialize_hex_mesh_2d
 
 
   function x1_node(mesh, k1, k2) result(val)
-    type(hex_logical_mesh_2d), pointer :: mesh
+    type(hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64 :: val
@@ -136,7 +136,7 @@ end if
 
 
   function x2_node(mesh, k1, k2) result(val)
-    type(hex_logical_mesh_2d), pointer :: mesh
+    type(hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64  :: val
@@ -289,7 +289,7 @@ end if
 
 
   function from_cart_index_k1(mesh, x1, x2) result(k1)
-      type(hex_logical_mesh_2d), pointer :: mesh
+      type(hex_mesh_2d), pointer :: mesh
       sll_real64 :: x1
       sll_real64 :: x2
       sll_int32  :: k1
@@ -300,7 +300,7 @@ end if
   end function from_cart_index_k1
 
   function from_cart_index_k2(mesh, x1, x2) result(k2)
-      type(hex_logical_mesh_2d), pointer :: mesh
+      type(hex_mesh_2d), pointer :: mesh
       sll_real64 :: x1
       sll_real64 :: x2
       sll_int32  :: k2
@@ -346,22 +346,95 @@ end if
       global = global_index(k1_i + k1_j, k2_i + k2_j)
 
   end function find_neighbour
+
       
+  subroutine display_hex_mesh_2d(mesh)
+    type(hex_mesh_2d), pointer :: mesh
+
+    write(*,"(/,(a))") '2D mesh : num_cell center_x1    center_x2 &
+     & radius'
+    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells,  &
+                                         mesh%center_x1,  &
+                                         mesh%center_x2,  &
+                                         mesh%radius
+  end subroutine display_hex_mesh_2d
       
 
-  subroutine delete_hex_logical_mesh_2d( mesh )
-    type(hex_logical_mesh_2d), pointer :: mesh
+  subroutine delete_hex_mesh_2d( mesh )
+    type(hex_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
     if(.not. associated(mesh))then
-       print *, 'delete_hex_logical_mesh_2d'
+       print *, 'delete_hex_mesh_2d'
        print *, 'ERROR: passed argument is not associated'
        print *, '       Crash imminent...'
        STOP
     end if
     SLL_DEALLOCATE(mesh, ierr)
-  end subroutine delete_hex_logical_mesh_2d
+  end subroutine delete_hex_mesh_2d
+
+
+
+
+  subroutine write_hex_mesh_2d(mesh,output_format)
+    class(hex_mesh_2d) :: mesh
+    sll_int32, optional :: output_format
+    sll_int32           :: local_format
+    sll_real64, dimension(:,:), pointer :: x1mesh
+    sll_real64, dimension(:,:), pointer :: x2mesh
+    sll_int32  :: i1
+    sll_int32  :: i2
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_int32  :: ierr
+    sll_int32  :: file_id
+
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
+
+    if ( .not. mesh%written ) then
+
+       select case(local_format)
+
+       case (SLL_IO_XDMF)
+          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
+          eta1 = 0.0_f64
+          do i1=1, mesh%nc_eta1+1
+             eta2 = 0.0_f64
+             do i2=1, mesh%nc_eta2+1
+                x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
+                x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
+                eta2 = eta2 + mesh%delta_eta2
+             end do
+             eta1 = eta1 + mesh%delta_eta1
+          end do
+
+          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
+               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
+          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
+
+       case default
+          print*, 'Not recognized format to write this mesh'
+          stop
+
+       end select
+
+    else
+
+       print*,' Warning, you have already written the mesh '
+
+    end if
+
+    mesh%written = .true.
+
+  end subroutine write_mapped_mesh_2d_base
 
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
-end module hex_logical_meshes
+end module hex_meshes
