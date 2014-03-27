@@ -1,3 +1,15 @@
+! We add one constraint for a matrix in CSR format
+! form a matrix A
+! we get a matrix
+!   A   b
+!   b^T 0
+! where b in the vector of constraint (constraint_vec)
+! so that all the component of b are nonzero
+! b^T stands for the transposition of b
+! we suppose that A is square
+
+!contact: Adnane Hamiaz (hamiaz@math.unistra.fr)
+!         Michel Mehrenberger (mehrenbe@math.unistra.fr)
 module csr_one_constraint_module
 
 contains 
