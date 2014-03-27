@@ -498,19 +498,19 @@ do i=1,geomx%nx
 enddo
 
 
-open(45+my_num,file="r_init:"//char(48+my_num))
-open(46+my_num,file="e_init:"//char(48+my_num))
-do j = jstartx, jendx
-   do i = 1, geomx%nx
-      x = geomx%x0+(i-1)*geomx%dx
-      y = geomx%y0+(j-1)*geomx%dy
-      write(45+my_num,*) sngl(x),sngl(y),sngl(rho(i,j))
-      write(46+my_num,*) sngl(x),sngl(y),sngl(ex(i,j)),sngl(ey(i,j))
-   end do
-   write(45+my_num,*); write(16+my_num,*)
-end do 
-close(45+my_num)
-close(46+my_num)
+!open(45+my_num,file="r_init:"//char(48+my_num))
+!open(46+my_num,file="e_init:"//char(48+my_num))
+!do j = jstartx, jendx
+!   do i = 1, geomx%nx
+!      x = geomx%x0+(i-1)*geomx%dx
+!      y = geomx%y0+(j-1)*geomx%dy
+!      write(45+my_num,*) sngl(x),sngl(y),sngl(rho(i,j))
+!      write(46+my_num,*) sngl(x),sngl(y),sngl(ex(i,j)),sngl(ey(i,j))
+!   end do
+!   write(45+my_num,*); write(16+my_num,*)
+!end do 
+!close(45+my_num)
+!close(46+my_num)
 
 ! initialisation du calcul du champ magnetique
 call initialize(maxw2dfdtd,geomx,iflag, jstartx, jendx)
