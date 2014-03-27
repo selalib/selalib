@@ -219,8 +219,8 @@ do iter=1,nbiter
    if (mod(iter,fdiag).eq.0) then 
       ! ecriture des resultats par le processeur 0
       call flush(6)
-      call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv, &
-                          jstartx,jendx,jstartv,jendv,iter/fdiag)
+!      call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv, &
+!                          jstartx,jendx,jstartv,jendv,iter/fdiag)
       call flush(6)
    endif
 
