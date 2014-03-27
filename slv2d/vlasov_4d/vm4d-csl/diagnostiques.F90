@@ -151,7 +151,7 @@ contains
     if (IO_stat/=0) STOP "Miss argument file.nml"
     open(ithf,file="thf.dat",IOStat=IO_stat)
     if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
-    close(ithf, status='delete')
+    !close(ithf, status='delete')
   end subroutine fichinit
   
   subroutine time_history(desc,format,array)
@@ -159,7 +159,7 @@ contains
     character(14) :: format
     real(wp), dimension(:) :: array
 
-    open(ithf,file='thf.dat',position='append')
+    !open(ithf,file='thf.dat',position='append')
 
     if (desc(1:3)=="thf") then
        !print *,'array', array
@@ -168,7 +168,7 @@ contains
        write(*,*) desc," not recognized"
     endif
 
-    close(ithf)
+    !close(ithf)
     
   end subroutine time_history
 
