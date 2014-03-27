@@ -102,8 +102,8 @@ call initlocal( )
 call mpi_barrier(comm,error)
 
 iter = 0
-call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv,&
-jstartx,jendx,jstartv,jendv,iter)
+!call diagnostiquesm(f,rho,ex,ey,bz,jx,jy,geomx,geomv,&
+!jstartx,jendx,jstartv,jendv,iter)
 
 call mpi_barrier(comm,error)
 
