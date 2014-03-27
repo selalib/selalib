@@ -15,17 +15,21 @@ PROJECT(SLL)
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-SET(SLL_BUILD_PACKAGE    OFF CACHE BOOL "Build library without test programs")
-SET(MUDPACK_ENABLED      ON  CACHE BOOL "Build mudpack library")
-SET(FISHPACK_ENABLED     ON  CACHE BOOL "Build fishpack library")
-SET(FORTRANCL_ENABLED    OFF CACHE BOOL "Enable OpenCL test programs")
-SET(PASTIX_ENABLED       OFF CACHE BOOL "Build PasTiX solvers ")
-SET(PETSC_ENABLED        OFF CACHE BOOL "Enable PETSc solvers")
-SET(SUITESPARSE_ENABLED  OFF CACHE BOOL "Enable UMFpack solvers")
+SET(MPI_MODULE_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
+SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
+SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
+SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
+SET(BUILD_WITHOUT_TEST    OFF CACHE BOOL "Build library without test programs")
+SET(MUDPACK_ENABLED       ON  CACHE BOOL "Build mudpack library")
+SET(FISHPACK_ENABLED      ON  CACHE BOOL "Build fishpack library")
+SET(FORTRANCL_ENABLED     OFF CACHE BOOL "Enable OpenCL test programs")
+SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
+SET(PETSC_ENABLED         OFF CACHE BOOL "Enable PETSc solvers")
+SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 
-IF(NOT SLL_BUILD_PACKAGE)
+IF(NOT BUILD_WITHOUT_TEST)
    SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
-ENDIF(NOT SLL_BUILD_PACKAGE)
+ENDIF(NOT BUILD_WITHOUT_TEST)
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -49,6 +53,10 @@ ADD_CUSTOM_TARGET( clear
    COMMAND find . -name *.a -delete
    COMMAND find . -name *.o -delete
    COMMAND find . -name *.cmake -delete
+   COMMAND find . -name *.xmf -delete
+   COMMAND find . -name *.h5 -delete
+   COMMAND find . -name *.gnu -delete
+   COMMAND find . -name *.dat -delete
    COMMAND rm -rf bin
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
@@ -84,7 +92,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
 
-IF(NOT SLL_BUILD_PACKAGE)
+IF(NOT BUILD_WITHOUT_TEST)
 
    ENABLE_TESTING()
 
@@ -100,16 +108,23 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(splines)
    ADD_SUBDIRECTORY(logical_meshes)
    ADD_SUBDIRECTORY(lagrange_interpolation)
+   ADD_SUBDIRECTORY(hermite_interpolation)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
+   ADD_SUBDIRECTORY(pic_particle_types)
+   ADD_SUBDIRECTORY(pic_particle_initializers)
+   ADD_SUBDIRECTORY(pic_accumulators)
+   ADD_SUBDIRECTORY(field_accumulators)
+
    IF(NOT STDF95)
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
      ADD_SUBDIRECTORY(advection)
+     ADD_SUBDIRECTORY(gyroaverage)
    ENDIF(NOT STDF95)
    ADD_SUBDIRECTORY(interpolators)
 
@@ -129,7 +144,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ENDIF()
    
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(electric_field_accumulators)
+
    
    ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)
@@ -221,8 +236,8 @@ IF(NOT SLL_BUILD_PACKAGE)
 
    INCLUDE(DoxygenConfig)
 
-ENDIF(NOT SLL_BUILD_PACKAGE)
-
+ENDIF(NOT BUILD_WITHOUT_TEST)
+# why is this not dependent on the SLL_BUILD_PACKAGE configuration flag??
 ADD_SUBDIRECTORY(package)
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

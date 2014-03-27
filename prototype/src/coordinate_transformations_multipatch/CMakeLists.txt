@@ -30,7 +30,7 @@ IF(PYTHON_EXECUTABLE)
 
 ELSE(PYTHON_EXECUTABLE)
 
-   MESSAGE(SEND_WARN "Multipatch test needs python3")
+   MESSAGE(STATUS "Multipatch test needs python3")
 
 ENDIF(PYTHON_EXECUTABLE)
 
