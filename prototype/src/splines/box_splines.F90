@@ -8,13 +8,13 @@ module box_splines
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
-use hex_logical_meshes!, only:find_neighbour
+use hex_mesh!, only:find_neighbour
 
 
   implicit none
 
   !> Spline object
-  type linear_box_spline_2D
+  type linear_box_spline_2d
       sll_int32  :: num_pts    !< number of points in any direction from origin
       sll_real64 :: radius     ! distance between origin and external vertex
       sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
@@ -32,7 +32,7 @@ use hex_logical_meshes!, only:find_neighbour
       !< spline coefficients
       sll_real64, dimension(:), pointer :: coeffs
 
-  end type linear_box_spline_2D
+  end type linear_box_spline_2d
 
 
     
@@ -58,13 +58,13 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
 
-  function new_linear_box_spline_2D( &
+  function new_linear_box_spline_2d( &
     num_pts,    &
     radius,       &
     x1_bc_type,   &
     x2_bc_type)
 
-    type(linear_box_spline_2D), pointer  :: new_linear_box_spline_2D
+    type(linear_box_spline_2d), pointer  :: new_linear_box_spline_2d
     sll_int32,  intent(in)               :: num_pts
     sll_real64, intent(in)               :: radius
     sll_int32,  intent(in)               :: x1_bc_type
@@ -74,21 +74,21 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_int32                            :: num_pts_tot
 
 
-    SLL_ALLOCATE( new_linear_box_spline_2D, ierr )
-    new_linear_box_spline_2D%num_pts = num_pts
-    new_linear_box_spline_2D%radius    = radius
-    new_linear_box_spline_2D%delta     = radius/real((num_pts-1),f64)
-    new_linear_box_spline_2D%x1_bc_type = x1_bc_type
-    new_linear_box_spline_2D%x2_bc_type = x2_bc_type
+    SLL_ALLOCATE( new_linear_box_spline_2d, ierr )
+    new_linear_box_spline_2d%num_pts = num_pts
+    new_linear_box_spline_2d%radius    = radius
+    new_linear_box_spline_2d%delta     = radius/real((num_pts-1),f64)
+    new_linear_box_spline_2d%x1_bc_type = x1_bc_type
+    new_linear_box_spline_2d%x2_bc_type = x2_bc_type
 
 
 !    if (num_pts .le. NUM_TERMS) then
-!      print *, 'ERROR, new_linear_box_spline_2D: Because of the algorithm used, this ', &
+!      print *, 'ERROR, new_linear_box_spline_2d: Because of the algorithm used, this ', &
 !       'function is meant to be used with arrays that are at least of size = 28'
-!       STOP 'new_linear_box_spline_2D()'
+!       STOP 'new_linear_box_spline_2d()'
 !    end if
     if (radius .le. 0.)  then
-       print *, 'ERROR , new_linear_box_spline_2D : negative radius '
+       print *, 'ERROR , new_linear_box_spline_2d : negative radius '
        STOP
     end if
 
@@ -110,8 +110,8 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
     ! rk: num_pts-1 = number of nested hexagones
     num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
-    SLL_ALLOCATE( new_linear_box_spline_2D%coeffs(0:num_pts_tot), ierr )
-  end function new_linear_box_spline_2D
+    SLL_ALLOCATE( new_linear_box_spline_2d%coeffs(0:num_pts_tot), ierr )
+  end function new_linear_box_spline_2d
 
 
   ! Pre-filter to compute the box splines coefficients
@@ -139,9 +139,9 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
 
-  subroutine compute_linear_box_spline_2D( data, spline )
+  subroutine compute_linear_box_spline_2d( data, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(linear_box_spline_2D), pointer      :: spline
+    type(linear_box_spline_2d), pointer      :: spline
     sll_int32  :: bc1
     sll_int32  :: bc2
     sll_int32  :: bc_selector
@@ -149,7 +149,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_linear_box_spline_2D(): ', &
+       print *, 'ERROR: compute_linear_box_spline_2d(): ', &
             'uninitialized spline object passed as argument. '
        print *, "Exiting..."
        STOP
@@ -179,83 +179,105 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     select case (bc_selector)
        case ( 5 ) 
           ! both boundary condition types are neumann
-          call compute_box_spline_2D_neum_neum( data, spline )
+          call compute_box_spline_2d_neum_neum( data, spline )
        case ( 6 )
           ! periodic in x1 and neumann in x2
-          call compute_box_spline_2D_prdc_neum( data, spline )
+          call compute_box_spline_2d_prdc_neum( data, spline )
        case default
-          print *, 'ERROR: compute_linear_box_spline_2D(): ', &
+          print *, 'ERROR: compute_linear_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
        STOP
     end select
 
   
-  end subroutine compute_linear_box_spline_2D
+  end subroutine compute_linear_box_spline_2d
 
 
-  subroutine compute_box_spline_2D_neum_neum( data, spline )
+  subroutine compute_box_spline_2d_neum_neum( data, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(linear_box_spline_2D), pointer      :: spline
+    type(linear_box_spline_2d), pointer      :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i,k
     sll_int32  :: nei
     sll_int32  :: k1
     sll_int32  :: k2
     sll_int32  :: temp
+    sll_int32  :: hex_num
     sll_int32  :: num_pts
 
     num_pts = spline%num_pts
     num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
-    do i = 0, num_pts_tot
-       spline%coeffs(i) = real(0,f64)
+    do i = 0, num_pts_tot-1
+       spline%coeffs(i+1) = real(0,f64)
        do k = 0, 18
           nei = find_neighbour(i,k)
-          if (nei .le. num_pts_tot) then
-             spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
+          if (nei .lt. num_pts_tot) then
+             spline%coeffs(i+1) = spline%coeffs(i+1) + data(nei+1) * & 
                                 pre_filter_piir2(k)
           else
              k1 = from_global_index_k1(nei)
              k2 = from_global_index_k2(nei)
-             if (k1 .gt. num_pts-1) then
+             ! We compute the hexagon-ring number
+             if (k1*k2 .ge. 0.) then
+                hex_num = max( abs(k1), abs(k2))
+             else 
+                hex_num = abs(k1) + abs(k2)
+             end if
+
+             if (k1 .eq. hex_num)  then
                 ! index out on first edge
                 k1 = 2*(num_pts - 1) - k1
                 k2 = k2 + k1 - num_pts + 1
-             end if
-             if (k2 .gt. num_pts-1) then
+             elseif (k2 .eq. hex_num) then
                 ! index out on second edge
                 k2 = 2*(num_pts - 1) - k2
                 k1 = k2 + k1 - num_pts + 1
-             end if
-             if ((k1*k2<0).and.(k1 .lt. 0)) then
+             elseif (( k1 .lt. 0) .and. (k2 .gt. 0)) then
                 ! index out on third edge
                 temp = k2 - num_pts + 1
                 k2   = k1 + num_pts - 1
                 k1   = temp
-             end if
-             if (k1 .lt. -num_pts+1) then
-                ! index out on first edge
+             elseif (k1 .eq. -hex_num) then
+                ! index out on fourth edge
                 k1 = -2*(num_pts - 1) - k1
                 k2 =  k2 + k1 + num_pts - 1
-             end if
-             if (k2 .lt. -num_pts+1) then
-                ! index out on second edge
+             elseif (k2 .eq. -hex_num) then
+                ! index out on fifth edge
                 k2 = -2*(num_pts - 1) - k2
                 k1 = k2 + k1 + num_pts - 1
-             end if
-             if ((k1*k2<0).and.(k2 .lt. 0)) then
-                ! index out on third edge
+             elseif ((k1 .gt. 0).and.(k2 .lt. 0)) then
+                ! index out on sixth edge
                 temp = k2 + num_pts - 1
                 k2   = k1 - num_pts + 1
                 k1   = temp
              end if
              nei = global_index(k1,k2)
-             spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
+             spline%coeffs(i+1) = spline%coeffs(i+1) + data(nei+1) * & 
                                 pre_filter_piir2(k)             
           end if
        end do
     end do
 
-  end subroutine compute_box_spline_2D_neum_neum
+  end subroutine compute_box_spline_2d_neum_neum
+
+
+  subroutine compute_box_spline_2d_prdc_neum( data, spline )
+    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
+    type(linear_box_spline_2d), pointer      :: spline
+    sll_int32  :: num_pts_tot
+    sll_int32  :: i
+    sll_int32  :: num_pts
+
+    print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC_NEUMANN NOT &
+      & YET IMPLEMENTED'
+    num_pts = spline%num_pts
+    num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
+    do i = 0, num_pts_tot
+       spline%coeffs(i) = real(0,f64)*data(i)
+    end do
+
+  end subroutine compute_box_spline_2d_prdc_neum
+
 
 
 
@@ -266,7 +288,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_real64                          :: chi2
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(linear_box_spline_2D), pointer :: spline
+    type(linear_box_spline_2d), pointer :: spline
     sll_real64              :: u
     sll_real64              :: v
     sll_real64              :: delta
@@ -305,12 +327,12 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
   function hex_interpolate_value(mesh, x1, x2, spline) result(val)
-    type(hex_logical_mesh_2d), pointer  :: mesh
+    type(hex_mesh_2d), pointer  :: mesh
     sll_real64                          :: val
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-    type(linear_box_spline_2D), pointer :: spline
+    type(linear_box_spline_2d), pointer :: spline
     sll_real64              :: xm1
     sll_real64              :: xm2
     sll_real64              :: r1_x1, r1_x2
