@@ -52,7 +52,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_plotmtv.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
-    ${SLL_DIR}/electric_field_accumulators/sll_electric_field_2d.F90
+    ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
@@ -106,9 +106,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
-    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-    ${SLL_DIR}/fft/fftw3.F90
+#    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+#    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
+#    ${SLL_DIR}/fft/fftw3.F90
  )
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
@@ -119,13 +119,24 @@ IF(${FFT_LIB} MATCHES "FFTPACK")
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90)
+      ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90
+      ${SLL_DIR}/fft/fftw3.F90 )
 
 ELSE()
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
       ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
 
+ENDIF()
+
+# Got the impression that this maxwell solver is made to work with FFTW only,
+# thus I'm including the following. Intent needs to be made more explicit if 
+# this is not the case. ECG
+IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+  )
 ENDIF()
 
 

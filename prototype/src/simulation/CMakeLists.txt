@@ -41,6 +41,7 @@ IF(MUDPACK_ENABLED)
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
                        sll_splines
                        sll_poisson_solvers
+                       sll_gyroaverage
                        mudpack
                        sll_fft
                        sll_distribution_function
@@ -48,7 +49,8 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        deboor_splines
                        #sll_scalar_field_1d_alternative
                        sll_scalar_field_2d_alternative
-                       sll_electric_field_accumulators
+#                       sll_electric_field_accumulators
+		       sll_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
@@ -76,7 +78,8 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
                        deboor_splines
                        #sll_scalar_field_1d_alternative
                        sll_scalar_field_2d_alternative
-                       sll_electric_field_accumulators
+#                       sll_electric_field_accumulators
+		       sll_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
@@ -228,13 +231,17 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
      simulation_4d_DK_hybrid.F90
      simulation_4d_vlasov_poisson_polar.F90
      simulation_4d_drift_kinetic_polar.F90
+     simulation_4d_drift_kinetic_polar_one_mu.F90
+     simulation_4d_drift_kinetic_polar_multi_mu.F90
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
      simulation_4d_vp_eulerian_cartesian_finite_volume.F90	
+     simulation_4d_vp_pic_cartesian.F90
      simulation_6d_vlasov_poisson_cartesian.F90 )
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
    SET(SIMULATION_DEPS sll_poisson_parallel
                        sll_poisson_solvers
+                       sll_gyroaverage
                        sll_multigrid
                        sll_fft
 		       sll_distribution_function
@@ -242,7 +249,8 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 		       deboor_splines
 		       sll_scalar_field_1d_alternative
 		       sll_scalar_field_2d_alternative
-                       sll_electric_field_accumulators
+#                       sll_electric_field_accumulators
+		       sll_field_accumulators
                        sll_scalar_field
                        sll_interpolators
                        sll_advection
@@ -286,8 +294,11 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    ADD_SIMULATION(4d_DK_hybrid)
    ADD_SIMULATION(4d_vp_polar)
    ADD_SIMULATION(4d_dk_polar)
+   ADD_SIMULATION(4d_dk_polar_one_mu)
+   ADD_SIMULATION(4d_dk_polar_multi_mu)
    ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)
+   ADD_SIMULATION(4d_vp_pic_cartesian)
    ADD_SIMULATION(4d_vp_eulerian_cartesian_finite_volume)
 
    # Add postprocessing code for KEEN
