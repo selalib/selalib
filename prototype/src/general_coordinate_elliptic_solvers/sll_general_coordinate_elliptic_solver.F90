@@ -501,6 +501,7 @@ contains ! *******************************************************************
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source,ierr)
     SLL_DEALLOCATE(es%local_to_global_spline_indices_source_bis,ierr)
     call sll_delete(es%sll_csr_mat)
+    call sll_delete(es% sll_csr_mat_with_constraint)
     call sll_delete(es%sll_csr_mat_source)
     SLL_DEALLOCATE(es%rho_vec,ierr)
     SLL_DEALLOCATE(es%phi_vec,ierr)
