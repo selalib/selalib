@@ -67,7 +67,7 @@ program vm4d_spectral
      call compute_current(vlasov4d)
 
      call ampere(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, &
-                          vlasov4d%dt, vlasov4d%jx)
+                          vlasov4d%dt, vlasov4d%jx, vlasov4d%jy)
 
 !     vlasov4d%exn=vlasov4d%ex
 !     vlasov4d%eyn=vlasov4d%ey;
