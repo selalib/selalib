@@ -53,7 +53,7 @@ IF (CMAKE_PROJECT_NAME MATCHES "vlasov4d")
                  ${CMAKE_BINARY_DIR}/mudpack)
 ENDIF()
 
-SET(LIBS selalib ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
+SET(LIBS selalib ${FFTW_LIBRARY} ${HDF5_LIBRARIES})
 
 ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
                                     sll_vlasov4d_spectral_charge.F90
