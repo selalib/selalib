@@ -56,9 +56,6 @@ program test_poisson_2d_dirichlet_cartesian
      end do
   end do
 
-  call parallel_hdf5_write_array_2d( 'q_density.h5', &
-     ncx, ncy, rho,  'rho', layout_alt)
-
   call solve_poisson_2d_dirichlet_cartesian(plan, rho, phi)
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
@@ -81,10 +78,10 @@ program test_poisson_2d_dirichlet_cartesian
 
   call sll_delete(plan)
 
-  call sll_gnuplot_rect_2d(dble(offset(1)), dble(1), &
-       dble(offset(2)), dble(1), &
-       size(rho,1), size(rho,2), &
-       rho, "rho", 1, error)  
+!!$  call sll_gnuplot_rect_2d(dble(offset(1)), dble(1), &
+!!$       dble(offset(2)), dble(1), &
+!!$       size(rho,1), size(rho,2), &
+!!$       rho, "rho", 1, error)  
 
   average_err  = sum(abs(phi_an-phi))/(ncx*ncy)
 
@@ -94,7 +91,5 @@ program test_poisson_2d_dirichlet_cartesian
   call flush(6); print*, 'dx*dy =', dx*dy
   call flush(6); print*, ' ------------------'
 
-contains
-
-
+  print *, 'PASSED'
 end program test_poisson_2d_dirichlet_cartesian
