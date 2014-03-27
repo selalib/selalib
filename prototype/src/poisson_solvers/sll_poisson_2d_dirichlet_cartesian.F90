@@ -41,11 +41,12 @@ contains
     Lx, &    
     Ly ) result(plan)
 
-    type (poisson_2d_periodic_plan_cartesian_par), pointer :: plan
+    type (poisson_2d_dirichlet_cartesian), pointer :: plan
     sll_int32                        :: ncx          !< number of cells in x
     sll_int32                        :: ncy          !< number of cells in y
     sll_real64                       :: Lx           !< length x
     sll_real64                       :: Ly           !< length y
+    sll_int32     :: ierr
 
     SLL_ALLOCATE(plan, ierr)
 
@@ -64,7 +65,7 @@ contains
   !> Note that the equation that is solved is: \f$ \Delta \phi = \rho \f$
   !> Thus the user is responsible for giving the proper sign to the source term.
   subroutine solve_poisson_2d_dirichlet_cartesian(plan, rho, phi)
-    type (poisson_2d_dirichlet_cartesian_plan), pointer :: plan !< self object
+    type (poisson_2d_dirichlet_cartesian), pointer :: plan !< self object
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
@@ -83,7 +84,7 @@ contains
 
 !> Delete the Poisson solver object
   subroutine delete_poisson_2d_dirichlet_cartesian(plan)
-    type (poisson_2d_dirichlet_cartesian_plan), pointer :: plan
+    type (poisson_2d_dirichlet_cartesian), pointer :: plan
     sll_int32                                           :: ierr
 
     if( .not. associated(plan) ) then
@@ -93,7 +94,7 @@ contains
     end if
 
     SLL_DEALLOCATE(plan, ierr)
-  end subroutine delete_poisson_2d_periodic_plan_cartesian_par
+  end subroutine delete_poisson_2d_dirichlet_cartesian
 
 
 
