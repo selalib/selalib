@@ -31,39 +31,11 @@ use hex_logical_meshes!, only:find_neighbour
       sll_int32 SLL_PRIV                           :: x2_bc_type
       !< spline coefficients
       sll_real64, dimension(:), pointer :: coeffs
-      ! Boundary conditions
-      sll_real64, dimension(:), pointer SLL_PRIV   :: x1_min_slopes => null()
-      sll_real64, dimension(:), pointer SLL_PRIV   :: x1_max_slopes => null()
-      sll_real64, dimension(:), pointer SLL_PRIV   :: x2_min_slopes => null()
-      sll_real64, dimension(:), pointer SLL_PRIV   :: x2_max_slopes => null()
+
   end type linear_box_spline_2D
 
-  ! Some useful macros that should probably be put in a different file to 
-  ! make them more widely accessible. Here we use them to compute default
-  ! values for the slopes. 
-  ! Actually the proper way to factor this is with a function that takes 
-  ! an array segment of a certain length and returns the slope. Such
-  ! function(s) could be made to work in 1D or 2D by passing the right
-  ! array segment. Keep this in mind...
 
-    ! (-25/12, 4, -3, 4/3, -1/4) stencil
-#define FORWARD_FD_5PT( f, r_delta ) \
-    r_delta*(-(25.0_f64/12.0_f64)*f(1) + 4.0_f64*f(2) -3.0_f64*f(3) + (4.0_f64/3.0_f64)*f(4) - 0.25_f64*f(5))
-
-    ! (1/4, -4/3, 3, -4, 25/12) stencil
-#define BACKWARD_FD_5PT( f, r_delta, np ) \
-    r_delta*(0.25_f64*f(np-4) - (4.0_f64/3.0_f64)*f(np-3) + 3.0_f64*f(np-2) - 4.0_f64*f(np-1) + (25.0_f64/12.0_f64)*f(np) )
-
-    ! (-3/2, 2, -1/2 ) stencil
-#define FORWARD_FD_3PT( f, r_delta ) \
-    r_delta*(-1.5_f64*f(1) + 2.0_f64*f(2) - 0.5_f64*f(3))
-
-    ! ( 1/2, -2, 3/2 ) stencil
-#define BACKWARD_FD_3PT( f, r_delta, np ) \
-    r_delta*(0.5_f64*f(np-2)-2.0_f64*f(np-1) +1.5_f64*f(np))
-
-  
-  
+    
 contains  ! ****************************************************************
 
 
@@ -90,29 +62,13 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     num_pts,    &
     radius,       &
     x1_bc_type,   &
-    x2_bc_type,   &
-    const_slope_x1_min, &
-    const_slope_x1_max, &
-    const_slope_x2_min, &
-    const_slope_x2_max, &
-    x1_min_slopes, &
-    x1_max_slopes, &
-    x2_min_slopes, &
-    x2_max_slopes)
+    x2_bc_type)
 
     type(linear_box_spline_2D), pointer  :: new_linear_box_spline_2D
     sll_int32,  intent(in)               :: num_pts
     sll_real64, intent(in)               :: radius
     sll_int32,  intent(in)               :: x1_bc_type
     sll_int32,  intent(in)               :: x2_bc_type
-    sll_real64, intent(in), optional     :: const_slope_x1_min
-    sll_real64, intent(in), optional     :: const_slope_x1_max
-    sll_real64, intent(in), optional     :: const_slope_x2_min
-    sll_real64, intent(in), optional     :: const_slope_x2_max
-    sll_real64, intent(in), dimension(:), optional :: x1_min_slopes
-    sll_real64, intent(in), dimension(:), optional :: x1_max_slopes
-    sll_real64, intent(in), dimension(:), optional :: x2_min_slopes
-    sll_real64, intent(in), dimension(:), optional :: x2_max_slopes
     sll_int32                            :: bc_selector
     sll_int32                            :: ierr
     sll_int32                            :: num_pts_tot
@@ -136,22 +92,6 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
        STOP
     end if
 
-    ! Check that slope arrays are of the right size. Consider making this 
-    ! something more permanent than an assertion. Does this compile if the
-    ! assertions are turned off???
-    if( present(x1_min_slopes) ) then
-       SLL_ASSERT(size(x1_min_slopes) .ge. num_pts )
-    end if
-    if( present(x1_max_slopes) ) then
-       SLL_ASSERT(size(x1_max_slopes) .ge. num_pts )
-    end if
-    if( present(x2_min_slopes) ) then
-       SLL_ASSERT(size(x2_min_slopes) .ge. num_pts )
-    end if
-    if( present(x2_max_slopes) ) then
-       SLL_ASSERT(size(x2_max_slopes) .ge. num_pts )
-    end if
-
 
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
@@ -167,50 +107,6 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     if( x2_bc_type .eq. SLL_NEUMANN ) then 
        bc_selector = bc_selector + 4
     end if
-
-    select case (bc_selector)
-    case ( 6 ) 
-       ! Periodic on x1 and Neumann on x2
-       if( present(x1_min_slopes) .or. present(x1_max_slopes) .or. &
-           present(const_slope_x1_min) .or. present(const_slope_x1_max) )then
-
-          print *, 'new_linear_box_spline_2D(): ', &
-               'it is not allowed to specify the end slopes at x1', &
-               'in the case of periodic-neumann boundary conditions.', &
-               'Exiting program...'
-          STOP 'new_linear_box_spline_2D'
-       else
-          ! X1 slopes are not needed
-          new_linear_box_spline_2d%x1_min_slopes => null()
-          new_linear_box_spline_2d%x1_max_slopes => null()
-          ! But X2 slopes are.
-          SLL_ALLOCATE(new_linear_box_spline_2d%x2_min_slopes(num_pts),ierr)
-          SLL_ALLOCATE(new_linear_box_spline_2d%x2_max_slopes(num_pts),ierr)
-       end if
-    case ( 5 ) 
-       !  Neumann on x1 and x2 
-       if( &
-          present(x2_min_slopes) .or. present(x2_max_slopes) .or. &
-          present(const_slope_x2_min) .or. present(const_slope_x2_max) ) then
-          print *, 'new_linear_box_spline_2D(): hermite-periodic case, it is not ', &
-               'allowed to specify the end slopes in the case of periodic ', &
-               'boundary conditions.', &
-               'Exiting program...'
-          STOP 'new_linear_box_spline_2D'
-       end if
-
-       ! X1 and X2 slopes are needed
-       SLL_ALLOCATE(new_linear_box_spline_2d%x1_min_slopes(num_pts),ierr)
-       SLL_ALLOCATE(new_linear_box_spline_2d%x1_max_slopes(num_pts),ierr)
-       SLL_ALLOCATE(new_linear_box_spline_2d%x2_min_slopes(num_pts),ierr)
-       SLL_ALLOCATE(new_linear_box_spline_2d%x2_max_slopes(num_pts),ierr)
-
-
-    case default
-       print *, 'ERROR: new_linear_box_spline_2D(): ', &
-            'did not recognize given boundary conditions.'
-       STOP
-    end select
 
     ! rk: num_pts-1 = number of nested hexagones
     num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
@@ -248,10 +144,9 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     type(linear_box_spline_2D), pointer      :: spline
     sll_int32  :: bc1
     sll_int32  :: bc2
-    sll_int32  :: num_pts_tot
     sll_int32  :: bc_selector
-    sll_int32  :: i,k
-    sll_int32  :: nei
+
+
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_linear_box_spline_2D(): ', &
@@ -284,10 +179,10 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     select case (bc_selector)
        case ( 5 ) 
           ! both boundary condition types are neumann
-          call compute_spline_2D_neum_neum( data, spline )
+          call compute_box_spline_2D_neum_neum( data, spline )
        case ( 6 )
           ! periodic in x1 and neumann in x2
-          call compute_spline_2D_prdc_neum( data, spline )
+          call compute_box_spline_2D_prdc_neum( data, spline )
        case default
           print *, 'ERROR: compute_linear_box_spline_2D(): ', &
             'did not recognize given boundary condition combination.'
@@ -295,7 +190,22 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     end select
 
   
-    num_pts_tot = 6*spline%num_pts*(spline%num_pts-1)/2+1 
+  end subroutine compute_linear_box_spline_2D
+
+
+  subroutine compute_box_spline_2D_neum_neum( data, spline )
+    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
+    type(linear_box_spline_2D), pointer      :: spline
+    sll_int32  :: num_pts_tot
+    sll_int32  :: i,k
+    sll_int32  :: nei
+    sll_int32  :: k1
+    sll_int32  :: k2
+    sll_int32  :: temp
+    sll_int32  :: num_pts
+
+    num_pts = spline%num_pts
+    num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
     do i = 0, num_pts_tot
        spline%coeffs(i) = real(0,f64)
        do k = 0, 18
@@ -303,14 +213,50 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
           if (nei .le. num_pts_tot) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
                                 pre_filter_piir2(k)
-          !TODO : ELSE ??? BC here !!
+          else
+             k1 = from_global_index_k1(nei)
+             k2 = from_global_index_k2(nei)
+             if (k1 .gt. num_pts-1) then
+                ! index out on first edge
+                k1 = 2*(num_pts - 1) - k1
+                k2 = k2 + k1 - num_pts + 1
+             end if
+             if (k2 .gt. num_pts-1) then
+                ! index out on second edge
+                k2 = 2*(num_pts - 1) - k2
+                k1 = k2 + k1 - num_pts + 1
+             end if
+             if ((k1*k2<0).and.(k1 .lt. 0)) then
+                ! index out on third edge
+                temp = k2 - num_pts + 1
+                k2   = k1 + num_pts - 1
+                k1   = temp
+             end if
+             if (k1 .lt. -num_pts+1) then
+                ! index out on first edge
+                k1 = -2*(num_pts - 1) - k1
+                k2 =  k2 + k1 + num_pts - 1
+             end if
+             if (k2 .lt. -num_pts+1) then
+                ! index out on second edge
+                k2 = -2*(num_pts - 1) - k2
+                k1 = k2 + k1 + num_pts - 1
+             end if
+             if ((k1*k2<0).and.(k2 .lt. 0)) then
+                ! index out on third edge
+                temp = k2 + num_pts - 1
+                k2   = k1 - num_pts + 1
+                k1   = temp
+             end if
+             nei = global_index(k1,k2)
+             spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
+                                pre_filter_piir2(k)             
           end if
        end do
     end do
-   
-    !END DO : QUE FAIRE AVEC LES CONDITIONS LIMITES
 
-  end subroutine compute_linear_box_spline_2D
+  end subroutine compute_box_spline_2D_neum_neum
+
 
 
   function chi2(spline, x1, x2)
@@ -355,6 +301,8 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
               ((1-v/4.)*v + g*g/6.0 - 1.)*g*g
     end if
     end function chi2
+
+
 
   function hex_interpolate_value(mesh, x1, x2, spline) result(val)
     type(hex_logical_mesh_2d), pointer  :: mesh
