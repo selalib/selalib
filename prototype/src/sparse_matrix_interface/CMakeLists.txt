@@ -63,3 +63,13 @@ ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix)
 
 
+ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
+TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
+ADD_EXECUTABLE(test_csr_one_constraint unit_test_csr_one_constraint.F90)
+TARGET_LINK_LIBRARIES(test_csr_one_constraint sll_csr_one_constraint)
+
+#=======
+#set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
+#install(TARGETS spm DESTINATION lib)
+#install(FILES ${spm_mods} DESTINATION include)
+

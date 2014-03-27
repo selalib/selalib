@@ -189,7 +189,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%t%get_logical_mesh()
+    ! the following line should be changed to get_ function, but for 
+    ! compatibility with the gfortran 4.6.3 compiler we allow direct access.
+    res => mp%transfs(patch+1)%t%mesh
   end function get_logical_mesh_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)
