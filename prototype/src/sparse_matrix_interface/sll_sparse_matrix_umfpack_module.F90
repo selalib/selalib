@@ -49,10 +49,23 @@ use mod_umfpack
   interface sll_delete
      module procedure delete_csr_matrix
   end interface sll_delete
-     
+
 
 
 contains
+
+  subroutine delete_csr_matrix(csr_mat)
+    type(sll_csr_matrix),pointer :: csr_mat
+    sll_int32 :: ierr
+
+    nullify(csr_mat)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ja,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opr_a,ierr)
+   ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_i,ierr)
+    
+    
+  end subroutine delete_csr_matrix
 
 
   subroutine delete_csr_matrix(csr_mat)
@@ -601,7 +614,18 @@ contains
     end subroutine sll_init_SparseMatrix
 
 
+subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
+    implicit none
+    type(sll_csr_matrix) :: this
+    real(8), dimension(:) :: apr_U
+    real(8), dimension(:) :: apr_B
+    real(8), dimension(:), pointer :: Masse_tot
+  
+  print *,'#sll_solve_csr_matrix_perper is not implemented'
+  print *,'#in the umfpack version'
+  stop
 
+end subroutine sll_solve_csr_matrix_perper
 
 
 recursive subroutine QsortC(A)
