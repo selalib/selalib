@@ -17,13 +17,14 @@
 !**************************************************************
 
 
-module hex_meshes
+module hex_mesh
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   implicit none
 
   type hex_mesh_2d
      sll_int32  :: num_cells  ! number of cells in any direction parting from origin
+     sll_int32  :: num_pts_tot! number of total points
      sll_real64 :: radius     ! distance between origin and external vertex
      sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
      sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
@@ -102,6 +103,7 @@ end if
 
     m%num_cells = num_cells
     m%delta = m%radius/real(num_cells,f64)
+    m%num_pts_tot = 6*m%num_cells*(m%num_cells+1)/2+1
 
     ! resizing :
     m%r1_x1 = m%r1_x1 * m%delta
@@ -157,10 +159,11 @@ end if
        hex_num = max( abs(k1), abs(k2))
     else 
        hex_num = abs(k1) + abs(k2)
+    end if
 
     ! We get the index of the first point in this ring
     first_index = 1 + 3*(hex_num - 1)*hex_num
-    end if
+
 
     if ( (k1 .eq. 0) .and. (k2 .eq. 0)) then
        ! Origin :
@@ -188,6 +191,7 @@ end if
        print *, "Not recognized combination of k1,k2"
        STOP 'global_index'
     endif
+
   end function global_index
 
 
@@ -196,12 +200,20 @@ end if
       ! = returns the number of cells from center to point
       sll_int32 :: index
       sll_int32 :: hex_num
-      sll_int32 :: flag = 0
+      sll_int32 :: flag
+
       
       hex_num = 0
-      if (index .eq. 0) then
+      flag = 0
+
+      if (index .lt. 0) then
+         print *, "ERROR : in get_hex_num(index)"
+         print *, "Global index cannot be negative"
+         STOP 'get_hex_num'         
+      else if (index .eq. 0) then
          hex_num = 0
       else
+         hex_num = 1
          do while(flag .eq. 0)
              if (index .gt. 3*hex_num*(hex_num+1)) then
                 hex_num = hex_num + 1
@@ -223,8 +235,10 @@ end if
       hex_num = get_hex_num(index)
       first_index = 3*(hex_num - 1)*hex_num + 1
       last_index  = 3*(hex_num + 1)*hex_num
-      
-      if (index .le. first_index+hex_num) then
+
+      if (hex_num .eq. 0) then
+         k1 = 0
+      elseif (index .le. first_index+hex_num) then
          !index on first edge
          k1 = hex_num
       elseif (index .le. first_index+2*hex_num) then
@@ -241,7 +255,7 @@ end if
          k1 = index - first_index - 5*hex_num
       elseif (index .le. last_index) then
          !index of sixth edge
-         k1 = hex_num + first_index + 6*hex_num - index
+         k1 = hex_num -last_index + index - 1
       else
        print *, "ERROR : in from_global_index_k1(index)"
        print *, "Not recognized index"
@@ -262,7 +276,9 @@ end if
       first_index = 3*(hex_num - 1)*hex_num + 1
       last_index  = 3*(hex_num + 1)*hex_num
       
-      if (index .le. first_index+hex_num) then
+      if (hex_num .eq. 0) then
+         k2 = 0
+      elseif (index .le. first_index+hex_num) then
          !index on first edge
          k2 = index - first_index
       elseif (index .le. first_index+2*hex_num) then
@@ -279,13 +295,39 @@ end if
          k2 = -hex_num
       elseif (index .le. last_index) then
          !index of sixth edge
-         k2 = first_index + 6*hex_num - index
+         k2 = -1 + index - last_index
       else
        print *, "ERROR : in from_global_index_k2(index)"
        print *, "Not recognized index"
        STOP 'from_global_index'
     endif
   end function from_global_index_k2
+
+  function from_global_x1(mesh, index) result(x1)
+      type(hex_mesh_2d), pointer :: mesh
+      sll_int32  :: index
+      sll_int32  :: k1
+      sll_int32  :: k2
+      sll_real64 :: x1
+
+      k1 = from_global_index_k1(index)
+      k2 = from_global_index_k2(index)
+      
+      x1 = x1_node(mesh, k1, k2)
+  end function from_global_x1
+
+  function from_global_x2(mesh, index) result(x2)
+      type(hex_mesh_2d), pointer :: mesh
+      sll_int32  :: index
+      sll_int32  :: k1
+      sll_int32  :: k2
+      sll_real64 :: x2
+
+      k1 = from_global_index_k1(index)
+      k2 = from_global_index_k2(index)
+      
+      x2 = x2_node(mesh, k1, k2)
+  end function from_global_x2
 
 
   function from_cart_index_k1(mesh, x1, x2) result(k1)
@@ -351,14 +393,70 @@ end if
   subroutine display_hex_mesh_2d(mesh)
     type(hex_mesh_2d), pointer :: mesh
 
-    write(*,"(/,(a))") '2D mesh : num_cell center_x1    center_x2 &
-     & radius'
-    write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells,  &
+    write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       center_x2 &
+     &       radius'
+    write(*,"(10x,2(i4,10x),3(g13.3,1x))") mesh%num_cells,  &
+                                         mesh%num_pts_tot,&
                                          mesh%center_x1,  &
                                          mesh%center_x2,  &
                                          mesh%radius
   end subroutine display_hex_mesh_2d
-      
+
+
+  subroutine write_hex_mesh_2d(mesh, name)
+    type(hex_mesh_2d), pointer :: mesh
+    character(len=*) :: name
+    sll_int32  :: i
+    sll_int32  :: hex_num
+    sll_int32  :: num_pts_tot
+    sll_int32  :: k1, k2
+    sll_int32, parameter :: out_unit=20
+
+    open (unit=out_unit,file=name,action="write",status="replace")
+
+    num_pts_tot = mesh%num_pts_tot
+
+!    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
+
+    do i=0, num_pts_tot-1
+       hex_num = get_hex_num(i)
+       k1 = from_global_index_k1(i)
+       k2 = from_global_index_k2(i)
+       write (out_unit, "(4(i2,1x),2(g13.3,1x))") i,                &
+                                           hex_num,                 &
+                                           k1,                      &
+                                           k2,                      &
+                                           from_global_x1(mesh, i), &
+                                           from_global_x2(mesh, i)
+    end do
+
+    close(out_unit)
+  end subroutine write_hex_mesh_2d
+
+  subroutine write_field_hex_mesh(mesh, field, name)
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64,dimension(:) :: field
+    character(len=*) :: name
+    sll_int32  :: i
+    sll_int32  :: num_pts_tot
+    sll_real64 :: x1, x2
+    sll_int32, parameter :: out_unit=20
+
+    open (unit=out_unit,file=name,action="write",status="replace")
+
+    num_pts_tot = mesh%num_pts_tot
+
+    do i=0, num_pts_tot-1
+       x1 = from_global_x1(mesh, i)
+       x2 = from_global_x2(mesh, i)
+      write (out_unit, "(3(g13.3,1x))") x1, &
+                                        x2, &
+                                        field(i+1)
+    end do
+
+    close(out_unit)
+  end subroutine write_field_hex_mesh
+
 
   subroutine delete_hex_mesh_2d( mesh )
     type(hex_mesh_2d), pointer :: mesh
@@ -373,68 +471,7 @@ end if
   end subroutine delete_hex_mesh_2d
 
 
-
-
-  subroutine write_hex_mesh_2d(mesh,output_format)
-    class(hex_mesh_2d) :: mesh
-    sll_int32, optional :: output_format
-    sll_int32           :: local_format
-    sll_real64, dimension(:,:), pointer :: x1mesh
-    sll_real64, dimension(:,:), pointer :: x2mesh
-    sll_int32  :: i1
-    sll_int32  :: i2
-    sll_real64 :: eta1
-    sll_real64 :: eta2
-    sll_int32  :: ierr
-    sll_int32  :: file_id
-
-    if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
-    else
-       local_format = output_format
-    end if
-
-    if ( .not. mesh%written ) then
-
-       select case(local_format)
-
-       case (SLL_IO_XDMF)
-          SLL_ALLOCATE(x1mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-          SLL_ALLOCATE(x2mesh(mesh%nc_eta1+1,mesh%nc_eta2+1), ierr)
-          eta1 = 0.0_f64
-          do i1=1, mesh%nc_eta1+1
-             eta2 = 0.0_f64
-             do i2=1, mesh%nc_eta2+1
-                x1mesh(i1,i2) = mesh%x1_at_node(i1,i2)
-                x2mesh(i1,i2) = mesh%x2_at_node(i1,i2)
-                eta2 = eta2 + mesh%delta_eta2
-             end do
-             eta1 = eta1 + mesh%delta_eta1
-          end do
-
-          call sll_xdmf_open(trim(mesh%label)//".xmf",mesh%label, &
-               mesh%nc_eta1+1,mesh%nc_eta2+1,file_id,ierr)
-          call sll_xdmf_write_array(mesh%label,x1mesh,"x1",ierr)
-          call sll_xdmf_write_array(mesh%label,x2mesh,"x2",ierr)
-          call sll_xdmf_close(file_id,ierr)
-
-       case default
-          print*, 'Not recognized format to write this mesh'
-          stop
-
-       end select
-
-    else
-
-       print*,' Warning, you have already written the mesh '
-
-    end if
-
-    mesh%written = .true.
-
-  end subroutine write_mapped_mesh_2d_base
-
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
-end module hex_meshes
+end module hex_mesh
