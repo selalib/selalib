@@ -164,7 +164,7 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
   
   call sll_new_file_id(file_id, error)
   call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
-  write(*,*) cproc//"/"//array_name//'_'//fin//'.dat'
+  !write(*,*) cproc//"/"//array_name//'_'//fin//'.dat'
   do j = 1, npts_y
      y = y_min + (j-1)*delta_y  
      do i = 1, npts_x
