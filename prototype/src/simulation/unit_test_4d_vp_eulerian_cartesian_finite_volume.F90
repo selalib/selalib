@@ -263,6 +263,7 @@ program vp_cartesian_4d
   time = time_elapsed_since(t0)
   print *, 'time of simulation est  : ',time
   call delete(simulation)
+
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 

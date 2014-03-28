@@ -9,7 +9,7 @@ ELSEIF(Fortran_COMPILER MATCHES "INTEL")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -r8 -nowarn")
 ENDIF()
 
-aadd_library(fishpack STATIC blktri.f cblktri.f cmgnbn.f comf.f fftpack.f genbun.f gnbnaux.f hstcrt.f hstcsp.f hstcyl.f hstplr.f hstssp.f hw3crt.f hwscrt.f hwscsp.f hwscyl.f hwsplr.f hwsssp.f pois3d.f fish.F poistg.f sepaux.f sepeli.f sepx4.f)
+ADD_library(fishpack STATIC blktri.f cblktri.f cmgnbn.f comf.f fftpack.f genbun.f gnbnaux.f hstcrt.f hstcsp.f hstcyl.f hstplr.f hstssp.f hw3crt.f hwscrt.f hwscsp.f hwscyl.f hwsplr.f hwsssp.f pois3d.f fish.F poistg.f sepaux.f sepeli.f sepx4.f)
 
 #add_executable(tblktri tblktri.f)
 #add_executable(tcblktri tcblktri.f)

@@ -15,9 +15,9 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @author Pierre Navaro
+!> @brief
+!> Module that contains routines to write data in ASCII format file
 !> @details use it for GNUplot
-!> Module that contains routines to write data in file in ASCII format
 module sll_ascii_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"

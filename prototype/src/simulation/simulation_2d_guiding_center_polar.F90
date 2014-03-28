@@ -24,6 +24,7 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_fft
   use sll_reduction_module
   use sll_simulation_base
+  use sll_hermite_interpolator_2d
   use sll_cubic_spline_interpolator_2d
   use sll_cubic_spline_interpolator_1d
   use sll_coordinate_transformation_2d_base_module
@@ -34,9 +35,10 @@ module sll_simulation_2d_guiding_center_polar_module
   use sll_module_poisson_2d_elliptic_solver
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+#ifdef MUDPACK
   use sll_module_poisson_2d_mudpack_solver
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
-
+#endif
 
   
   !use sll_parallel_array_initializer_module
@@ -153,7 +155,8 @@ contains
     character(len=256) :: phi_interp2d_case
     character(len=256) ::  charac2d_case
     character(len=256) ::  A_interp_case
-
+    sll_int32 :: hermite_degree_eta1 
+    sll_int32 :: hermite_degree_eta2 
  
     !poisson
     character(len=256) :: poisson_case
@@ -218,7 +221,10 @@ contains
       f_interp2d_case, &
       phi_interp2d_case, &
       charac2d_case, &
-      A_interp_case
+      A_interp_case, &
+      hermite_degree_eta1, &
+      hermite_degree_eta2
+      
 
     namelist /poisson/ &
       poisson_case, &
@@ -257,7 +263,9 @@ contains
     phi_interp2d_case = "SLL_CUBIC_SPLINES"
     !charac2d_case = "SLL_EULER"
     charac2d_case = "SLL_VERLET"
-    A_interp_case = "SLL_CUBIC_SPLINES"
+    A_interp_case = "SLL_CUBIC_SPLINES"    
+    hermite_degree_eta1 = 9
+    hermite_degree_eta2 = 9
     
     !poisson
     poisson_case = "SLL_PHI_FROM_RHO"
@@ -333,6 +341,20 @@ contains
           x2_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
+      case ("SLL_HERMITE")
+        f_interp2d => new_hermite_2d_interpolator( &
+          Nc_x1+1, &
+          Nc_x2+1, &
+          x1_min, &
+          x1_max, &
+          x2_min, &
+          x2_max, &
+          hermite_degree_eta1, &          
+          hermite_degree_eta2, &          
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_C0, &
+          SLL_HERMITE_DIRICHLET, &
+          SLL_HERMITE_PERIODIC)
       case default
         print *,'#bad f_interp2d_case',f_interp2d_case
         print *,'#not implemented'
@@ -553,7 +575,7 @@ contains
          b1, & 
          b2, & 
          c ) 
-
+#ifdef MUDPACK
       case ("SLL_MUDPACK_CURVILINEAR")     
         transformation => new_coordinate_transformation_2d_analytic( &
           "analytic_polar_transformation", &
@@ -591,13 +613,15 @@ contains
          SLL_DIRICHLET, &
          SLL_PERIODIC, &
          SLL_PERIODIC, &
+         SLL_HERMITE, &
+         SLL_PERIODIC, &
          b11,&
          b12,&
          b21,&
          b22,&
          c)
 
-      
+#endif      
           
       case default
         print *,'#bad poisson_solver',poisson_solver
