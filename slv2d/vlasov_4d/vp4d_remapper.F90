@@ -86,7 +86,7 @@ contains
 
     sll_int32               :: i,j,k,l,error
     sll_real64              :: vx,vy,v2,x,y
-    sll_real64              :: xi, eps, kx, ky
+    sll_real64              :: xi, kx, ky
     sll_int32               :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
     sll_real64              :: dimx, dimy, factor
@@ -122,13 +122,12 @@ contains
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi   = 0.90_f64
-    eps  = 0.05_f64
     dimx = 4*sll_pi !geomx%nx*geomx%dx
     dimy = 4*sll_pi !geomx%ny*geomx%dy
     kx   = 2_f64*sll_pi/dimx
     ky   = 2_f64*sll_pi/dimy
 
-    factor = dimx*dimy*(2*sll_pi+eps*(sin(kx*vlasov4d%eta1_max)-sin(kx*vlasov4d%eta1_min)))
+    factor = dimx*dimy*(2*sll_pi+this%eps*(sin(kx*vlasov4d%eta1_max)-sin(kx*vlasov4d%eta1_min)))
     factor = 2.*sll_pi
     
     do l=1,loc_sz_l 
@@ -149,7 +148,7 @@ contains
 
        v2 = vx*vx+vy*vy
 
-       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*exp(-.5*v2)/factor
+       vlasov4d%f(i,j,k,l)=(1+this%eps*cos(kx*x))*exp(-.5*v2)/factor
 
     end do
     end do

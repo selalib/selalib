@@ -220,7 +220,7 @@ contains
     
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
-    sll_real64 :: eps, kx, ky
+    sll_real64 :: kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
     sll_int32 :: psize
@@ -242,7 +242,6 @@ contains
     call compute_local_sizes_4d(vlasov4d%layout_x, &
                                 loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-    eps = 0.05_f64
     kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
     ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
@@ -266,15 +265,15 @@ contains
 
                 select case(vlasov4d%num_case)
                 case(LANDAU_X_CASE)
-                    vlasov4d%f(i,j,k,l)= landau_1d(eps, kx, x, v2)
+                    vlasov4d%f(i,j,k,l)= landau_1d(this%eps, kx, x, v2)
                 case(LANDAU_Y_CASE)
-                    vlasov4d%f(i,j,k,l)= landau_1d(eps, ky, y, v2)
+                    vlasov4d%f(i,j,k,l)= landau_1d(this%eps, ky, y, v2)
                 case(LANDAU_COS_PROD_CASE)
-                    vlasov4d%f(i,j,k,l)= landau_cos_prod(eps, kx, ky, x, y, v2)
+                    vlasov4d%f(i,j,k,l)= landau_cos_prod(this%eps, kx, ky, x, y, v2)
                 case(LANDAU_COS_SUM_CASE)
-                    vlasov4d%f(i,j,k,l)= landau_cos_sum(eps, kx, ky, x, y, v2)
+                    vlasov4d%f(i,j,k,l)= landau_cos_sum(this%eps, kx, ky, x, y, v2)
                 case(TSI_CASE)
-                    vlasov4d%f(i,j,k,l)= tsi(eps, kx, x, vx, v2)
+                    vlasov4d%f(i,j,k,l)= tsi(this%eps, kx, x, vx, v2)
                 end select
                 
              end do
