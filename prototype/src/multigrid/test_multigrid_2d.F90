@@ -45,8 +45,8 @@ sll_int32, parameter                    :: n=2
 call sll_boot_collective()
 
 ! Number of cells is equal to number of points in this case
-ncx  = 64
-ncy  = 64
+ncx  = 512
+ncy  = 512
 xmin = 0.0_f64; xmax = 2*sll_pi
 ymin = 0.0_f64; ymax = 2*sll_pi
 
@@ -79,56 +79,57 @@ do j=1,ny_loc
    end do
 end do
 
-!call test_periodic()
+call test_periodic()
 !call test_dirichlet()
 
-call delete(layout)
-SLL_DEALLOCATE_ARRAY(phi, error)
-SLL_DEALLOCATE_ARRAY(rho, error)
-SLL_DEALLOCATE_ARRAY(cof, error)
+call sll_delete(layout)
 
-r_min       = 1.0_f64
-r_max       = 2.0_f64
-theta_min   = 0.0_f64
-theta_max   = 2.0_f64 * sll_pi
-nr          = 32
-ntheta      = 128
-delta_r     = (r_max-r_min)/nr
-delta_theta = 2*sll_pi/ntheta
-
-layout => new_layout_2D( sll_world_collective )
-call initialize_layout_with_distributed_2D_array( nr, ntheta, 2, 2, layout)
-
-if (myrank == MPI_MASTER) then
-   print*, ' polar '
-   call sll_view_lims_2D( layout )
-end if
-call flush(6)
-call compute_local_sizes_2d( layout, nr_loc, ntheta_loc )
-
-SLL_CLEAR_ALLOCATE(rho(1:nr_loc+2,1:ntheta_loc+2),error)
-SLL_CLEAR_ALLOCATE(phi(1:nr_loc+2,1:ntheta_loc+2),error)
-SLL_CLEAR_ALLOCATE(cof(1:nr_loc+2,1:ntheta_loc+2),error)
-SLL_CLEAR_ALLOCATE(r(1:nr_loc+1),error)
-SLL_CLEAR_ALLOCATE(theta(1:ntheta_loc+1),error)
-
-do i = 1, nr_loc
-   global = local_to_global_2D( layout, (/i, 1/))
-   gi = global(1)
-   r(i)=r_min+(gi-1)*delta_r
-end do
-
-do j = 1, ntheta_loc
-   global = local_to_global_2D( layout, (/1, j/))
-   gj = global(2)
-   theta(j)=(gj-1)*delta_theta
-end do
-
-call test_polar()
-
-SLL_DEALLOCATE_ARRAY(phi, error)
-SLL_DEALLOCATE_ARRAY(rho, error)
-SLL_DEALLOCATE_ARRAY(cof, error)
+!SLL_DEALLOCATE_ARRAY(phi, error)
+!SLL_DEALLOCATE_ARRAY(rho, error)
+!SLL_DEALLOCATE_ARRAY(cof, error)
+!
+!r_min       = 1.0_f64
+!r_max       = 2.0_f64
+!theta_min   = 0.0_f64
+!theta_max   = 2.0_f64 * sll_pi
+!nr          = 32
+!ntheta      = 128
+!delta_r     = (r_max-r_min)/nr
+!delta_theta = 2*sll_pi/ntheta
+!
+!layout => new_layout_2D( sll_world_collective )
+!call initialize_layout_with_distributed_2D_array( nr, ntheta, 2, 2, layout)
+!
+!if (myrank == MPI_MASTER) then
+!   print*, ' polar '
+!   call sll_view_lims_2D( layout )
+!end if
+!call flush(6)
+!call compute_local_sizes_2d( layout, nr_loc, ntheta_loc )
+!
+!SLL_CLEAR_ALLOCATE(rho(1:nr_loc+2,1:ntheta_loc+2),error)
+!SLL_CLEAR_ALLOCATE(phi(1:nr_loc+2,1:ntheta_loc+2),error)
+!SLL_CLEAR_ALLOCATE(cof(1:nr_loc+2,1:ntheta_loc+2),error)
+!SLL_CLEAR_ALLOCATE(r(1:nr_loc+1),error)
+!SLL_CLEAR_ALLOCATE(theta(1:ntheta_loc+1),error)
+!
+!do i = 1, nr_loc
+!   global = local_to_global_2D( layout, (/i, 1/))
+!   gi = global(1)
+!   r(i)=r_min+(gi-1)*delta_r
+!end do
+!
+!do j = 1, ntheta_loc
+!   global = local_to_global_2D( layout, (/1, j/))
+!   gj = global(2)
+!   theta(j)=(gj-1)*delta_theta
+!end do
+!
+!call test_polar()
+!
+!SLL_DEALLOCATE_ARRAY(phi, error)
+!SLL_DEALLOCATE_ARRAY(rho, error)
+!SLL_DEALLOCATE_ARRAY(cof, error)
 
 call flush(6)
 if (myrank==0) then
@@ -149,9 +150,9 @@ cof = 1.
 call solve(poisson_periodic, rho, phi, cof)
 
 call sll_gnuplot_curv_2d_parallel(x,y, &
-     phi(2:nx_loc+1,2:ny_loc+1), "cos", 1, error)  
+     phi(2:nx_loc+1,2:ny_loc+1), "phi", 1, error)  
 call sll_gnuplot_curv_2d_parallel(x,y, &
-     cos(x)*cos(y)             , "cos", 2, error)  
+     cos(x)*cos(y)             , "cos", 1, error)  
 
 err = sum(abs(cos(x)*cos(y)-phi(2:nx_loc+1,2:ny_loc+1)))/(ncx*ncy)
 

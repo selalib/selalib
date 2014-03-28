@@ -47,8 +47,6 @@ module sll_simulation_4d_vlasov_parallel_poisson_sequential_cartesian
   
   use sll_module_advection_1d_periodic
 
-  use sll_poisson_2d_periodic
-  
   use sll_fft
   use sll_reduction_module
   

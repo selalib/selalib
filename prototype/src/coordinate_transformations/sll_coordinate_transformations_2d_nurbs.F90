@@ -19,7 +19,7 @@ module sll_module_coordinate_transformations_2d_nurbs
   !
   ! ---------------------------------------------------------------------
   !
-  ! There are two main types of coordinate transformations: analytic and           
+  ! There are two main types of coordinate transformations: analytic and       
   ! discrete. In the first case the transformation can be
   ! specified analytically, through the two functions:
   !
@@ -57,16 +57,17 @@ module sll_module_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
      sll_real64, dimension(:,:), pointer :: x1_cell =>null()
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
-     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
      class(sll_interpolator_2d_base), pointer :: x1_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
+!     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
+!     type(sll_logical_mesh_2d), pointer :: mesh
    contains
-     procedure, pass(transf) :: initialize => initialize_coord_transf_2d_nurbs
+     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
      procedure, pass(transf) :: x2_at_node => x2_node_nurbs
-     procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_nurbs
+     procedure, pass(transf) :: jacobian_at_node =>transf_2d_jacobian_node_nurbs
      procedure, pass(transf) :: x1         => x1_nurbs
      procedure, pass(transf) :: x2         => x2_nurbs
      procedure, pass(transf) :: x1_at_cell => x1_cell_nurbs
@@ -81,6 +82,10 @@ module sll_module_coordinate_transformations_2d_nurbs
      procedure, pass(transf) :: delete => delete_transformation_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
+  type sll_coordinate_transformation_2d_nurbs_ptr
+     type(sll_coordinate_transformation_2d_nurbs), pointer :: T
+  end type sll_coordinate_transformation_2d_nurbs_ptr
+
   interface delete
      module procedure delete_transformation_2d_nurbs
   end interface
@@ -93,70 +98,30 @@ contains
   !
   !**************************************************************************
 
-  function new_coordinate_transformation_2d_nurbs( &
-       label,          &
-       x1_interpolator,&
-       x2_interpolator,&
-       x3_interpolator)
-    ! INPUT VARIABLES
-    character(len=*)         , intent(in) :: label
-    class(sll_interpolator_2d_base), target  :: x1_interpolator
-    class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target  :: x3_interpolator
-    
-    ! LOCAL VARIABLES
-    type(sll_coordinate_transformation_2d_nurbs), pointer :: &
-         new_coordinate_transformation_2d_nurbs
-    sll_int32 :: ierr
-    
-    SLL_ALLOCATE(new_coordinate_transformation_2d_nurbs, ierr)
-    call initialize_coord_transf_2d_nurbs( &
-         new_coordinate_transformation_2d_nurbs, &
-         label,           &
-         x1_interpolator, &
-         x2_interpolator, &
-         x3_interpolator)
-    
-  end function new_coordinate_transformation_2d_nurbs
-  
-  subroutine initialize_coord_transf_2d_nurbs( &
-       transf,          &
-       label,           &
-       x1_interpolator, &
-       x2_interpolator, &
-       x3_interpolator)
-    
-    class(sll_coordinate_transformation_2d_nurbs)    :: transf
-    character(len=*), intent(in)         :: label
-
-    class(sll_interpolator_2d_base), target  :: x1_interpolator
-    class(sll_interpolator_2d_base), target  :: x2_interpolator
-    class(sll_interpolator_2d_base), target  :: x3_interpolator
-   
-    transf%label = trim(label)
-    
-    transf%x1_interp => x1_interpolator
-    transf%x2_interp => x2_interpolator
-    transf%x3_interp => x3_interpolator
-    
-    
-  end subroutine initialize_coord_transf_2d_nurbs
-
 
   ! -------------------------------------------------------------------------
-  ! The nurbs-based coordinate transformation is associated with 2 logical meshes:
-  ! the 'minimal' logical mesh, which is implicit in the spline description and 
-  ! that is able to faitfully represent a given geometry. The other logical mesh,
-  ! which is the usual logical mesh on which we want to represent quantities. 
+  ! The nurbs-based coordinate transformation is associated with 2 logical 
+  ! meshes: the 'minimal' logical mesh, which is implicit in the spline 
+  ! description and  that is able to faitfully represent a given geometry. 
+  ! The other logical mesh, which is the usual logical mesh on which we want 
+  ! to represent quantities. 
   ! This needs to be present to answer questions like T%x_node(i,j). 
   ! We set this logical mesh outside of the read_from_file routine.
   ! -------------------------------------------------------------------------
+  function new_nurbs_2d_transformation_from_file( filename ) result(res)
+    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    character(len=*), intent(in) :: filename
+    sll_int32 :: ierr
+    SLL_ALLOCATE(res,ierr)
+    call read_from_file_2d_nurbs( res, filename )
+  end function new_nurbs_2d_transformation_from_file
+
   subroutine read_from_file_2d_nurbs( transf, filename )
     use sll_arbitrary_degree_spline_interpolator_2d_module
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
-    sll_int32 :: interpolator_type
+    !sll_int32 :: interpolator_type
     character(len=256) :: filename_local
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id
@@ -183,13 +148,9 @@ contains
     sll_int32  :: bc_right
     sll_int32  :: bc_bottom
     sll_int32  :: bc_top
-    sll_int32  :: sz_nodes1, sz_nodes2
     sll_int32  :: number_cells1,number_cells2
     sll_int32 :: sz_knots1,sz_knots2
     sll_int32 :: i,j
-    class(arb_deg_2d_interpolator), pointer :: interp2d_1
-    class(arb_deg_2d_interpolator), pointer :: interp2d_2
-    class(arb_deg_2d_interpolator), pointer :: interp2d_3
   
     namelist /transf_label/  label
     namelist /degree/   spline_deg1, spline_deg2
@@ -200,7 +161,7 @@ contains
     namelist /control_points/ control_pts1, control_pts2
     namelist /pt_weights/  weights
     namelist /logical_mesh_2d/ number_cells1,number_cells2
-    character(len=80) :: line_buffer
+    !character(len=80) :: line_buffer
 
     if(len(filename) >= 256) then
        print *, 'ERROR, read_coefficients_from_file => ',&
@@ -214,13 +175,13 @@ contains
     call sll_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
        print *, 'ERROR while trying to obtain an unique identifier for file ',&
-            filename, '. Called from read_coeffs_ad2d().'
+            filename, '. Called from read_from_file_2d_nurbs().'
        stop
     end if
     open(unit=input_file_id, file=filename_local, STATUS="OLD", IOStat=IO_stat)
     if( IO_Stat .ne. 0 ) then
        print *, 'ERROR while opening file ',filename, &
-            '. Called from read_coeffs_ad2d().'
+            '. Called from read_from_file_2d_nurbs().'
        stop
     end if
 
@@ -280,27 +241,34 @@ contains
 
 
     !! if the transformation is a NURBS i.e is_rational == 1
-    !! we have      sum_(i,j) P^x_(i,j) weight(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2) 
-    !!    X =       ----------------------------------------------------------------
+    !! we have  
+    !!         sum_(i,j) P^x_(i,j) weight(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2) 
+    !!  X =   ----------------------------------------------------------------
     !!              sum_(i,j) weight(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2) 
-
-    !! we have      sum_(i,j) P^y_(i,j) weight(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2) 
-    !!    Y =       ----------------------------------------------------------------
+    !!
+    !! we have      
+    !!
+    !!         sum_(i,j) P^y_(i,j) weight(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2) 
+    !!    Y =  ----------------------------------------------------------------
     !!              sum_(i,j) weight(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2) 
-
+    !!
     !! that's why we multiply each control points by their weights
-    !! to use it in the coefficients splines directly in the first and the second interpolator 
+    !! to use it in the coefficients splines directly in the first and the 
+    !! second interpolator 
     !! the third interpolator is use to define the term under the fraction
     !!
     !! if the transformation is a SPLINE i.e. is_rational == 0
-    !! we have      
+    !! we have
+    !!      
     !!    X =       sum_(i,j) P^x_(i,j)  B_i^alpha1(eta1)B_j^alpha2(eta2) 
-
-    !! we have      
+    !!
+    !! we have
+    !!      
     !!    Y =       sum_(i,j) P^y_(i,j) B_i^alpha1(eta1)B_j^alpha2(eta2)
-
+    !!
     !! that's why we don't multiply each control points by their weights
-    !! to use it in the coefficients splines directly in the first and the second interpolator 
+    !! to use it in the coefficients splines directly in the first and the 
+    !! second interpolator 
     
 
     if (transf%is_rational ==1) then
@@ -313,10 +281,13 @@ contains
        end do
     end if
 
-
+    ! Is this worth it? Is there the expectation that the extreme values
+    ! coming from CAID are anything other than 0 and 1??
     eta1_min_minimal = knots1(1)
     eta2_min_minimal = knots2(1)
-    eta1_max_minimal = knots1(num_pts1+spline_deg1+1)
+    ! Aurore: discuss, we could simply put the knots array without the 
+    ! duplicates in the .nml file
+    eta1_max_minimal = knots1(num_pts1+spline_deg1+1) 
     eta2_max_minimal = knots2(num_pts2+spline_deg2+1)
 
     ! for the moment we put the boundary condition like a dirichlet 
@@ -332,13 +303,12 @@ contains
 !!$    ! the number of points is the knots witout the multiplicity
    
     sz_knots1 = size(knots1)
-
     sz_knots2 = size(knots2)
 
     ! Initialize the first interpolator for 
     ! the first component of our change of coordinates
 
-    interp2d_1 => new_arbitrary_degree_spline_interp2d(&
+    transf%x1_interp => new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  &  
          number_cells2 + 1,  &  
          eta1_min_minimal,  &  
@@ -354,7 +324,7 @@ contains
 
     ! stock all the control points for the first interpolator 
     ! to compute the first component of our change of coordinates
-    call interp2d_1%set_coefficients( &
+    call transf%x1_interp%set_coefficients( &
          coeffs_2d     = control_pts1_2d,&
          coeff2d_size1 = num_pts1,&
          coeff2d_size2 = num_pts2,&
@@ -367,7 +337,7 @@ contains
     ! Initialize the second interpolator for 
     ! the second component of our change of coordinates
 
-    interp2d_2 => new_arbitrary_degree_spline_interp2d(&
+    transf%x2_interp => new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  & 
          number_cells2 + 2,  & 
          eta1_min_minimal,  & 
@@ -385,7 +355,7 @@ contains
     ! stock all the control points for the second interpolator 
     ! to compute the second component of our change of coordinates
 
-    call interp2d_2%set_coefficients( &
+    call transf%x2_interp%set_coefficients( &
          coeffs_2d     = control_pts2_2d,&
          coeff2d_size1 = num_pts1,&
          coeff2d_size2 = num_pts2,&
@@ -393,16 +363,14 @@ contains
          size_knots1   = sz_knots1,&
          knots2        = knots2,&
          size_knots2   = sz_knots2)
-
-
     
     ! Initialize the third interpolator for 
     ! the rational component of our change of coordinates
     ! That is useful if the transfromation is NURBS
 
-    interp2d_3 => new_arbitrary_degree_spline_interp2d(&
+    transf%x3_interp => new_arbitrary_degree_spline_interp2d(&
          number_cells1 + 1,  & 
-         number_cells2 + 2,  & 
+         number_cells2 + 1,  & 
          eta1_min_minimal,  & 
          eta1_max_minimal,  & 
          eta2_min_minimal,  & 
@@ -419,7 +387,7 @@ contains
     ! to compute the rationnal component of our change of coordinates
     ! in the case of NURBS
     
-    call interp2d_3%set_coefficients( &
+    call transf%x3_interp%set_coefficients( &
          coeffs_2d     = weights_2d,&
          coeff2d_size1 = num_pts1,&
          coeff2d_size2 = num_pts2,&
@@ -429,28 +397,35 @@ contains
          size_knots2   = sz_knots2)
 
 
-    ! initialization of minimal mesh given by file                              
-    ! must be inutile 
-    transf%mesh2d_minimal => new_logical_mesh_2d(&
+    ! initialization of minimal mesh given by file.                             
+    ! This is temporary, we have not decided if this object should take
+    ! possession of the logical mesh or not... For now we keep the minimum
+    ! information related with the number of cells to at least be able to
+    ! initialize a logical mesh outside of the object.
+    transf%mesh => new_logical_mesh_2d(&
          number_cells1,&
          number_cells2,&
          eta1_min = eta1_min_minimal,&
          eta1_max = eta1_max_minimal,&
          eta2_min = eta2_min_minimal,&
          eta2_max = eta2_max_minimal)
-
-    transf%mesh =>null()
-    call transf%initialize( &
-         label, &
-         interp2d_1, &
-         interp2d_2,&
-         interp2d_3)
-
+    ! Sooner or later we need to include an additional logical mesh, since
+    ! we need the 'minimal' mesh implicit in the nurbs transformation and the
+    ! extended logical mesh, where the data lives. For now they remain one
+    ! and the same.
+!    transf%mesh  => null()
+    transf%label =  trim(label)
   end subroutine read_from_file_2d_nurbs
 
+  function get_logical_mesh_nurbs_2d( transf ) result(res)
+    type(sll_logical_mesh_2d), pointer :: res
+    class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
+    res => transf%mesh
+  end function get_logical_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -461,10 +436,12 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
 
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -486,6 +463,7 @@ contains
 
    function x2_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -496,10 +474,12 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
 
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -520,6 +500,7 @@ contains
 
   function x1_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -530,13 +511,15 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
     
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
 
-    SLL_ASSERT( i <= transf%mesh%num_cells1)
-    SLL_ASSERT( j <= transf%mesh%num_cells2)
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
+
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
     
     eta1 = eta1_min + (i-0.5_f64) * delta1  
     eta2 = eta2_min + (j-0.5_f64) * delta2 
@@ -557,6 +540,7 @@ contains
   
    function x2_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -567,13 +551,14 @@ contains
     sll_real64  :: eta1_min
     sll_real64  :: eta2_min
 
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
-    SLL_ASSERT( i <= transf%mesh%num_cells1)
-    SLL_ASSERT( j <= transf%mesh%num_cells2)
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
     
     eta1 = eta1_min + (i-0.5_f64) * delta1 
     eta2 = eta2_min + (j-0.5_f64) * delta2 
@@ -687,6 +672,7 @@ contains
   
   function transf_2d_jacobian_node_nurbs( transf, i, j )
     class(sll_coordinate_transformation_2d_nurbs)   :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
@@ -701,10 +687,12 @@ contains
     sll_real64  :: j21
     sll_real64  :: j22
     
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -744,17 +732,16 @@ contains
             - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
             *transf%x2_interp%interpolate_value(eta1,eta2)
        
-       
        transf_2d_jacobian_node_nurbs = (j11*j22 - j12*j21)/&
             (transf%x3_interp%interpolate_value(eta1,eta2))**2
     end if
-    
     
   end function transf_2d_jacobian_node_nurbs
 
   
   function jacobian_2d_cell_nurbs( transf, i, j ) result(var)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_real64                         :: var
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
@@ -768,13 +755,16 @@ contains
     sll_real64  :: j12
     sll_real64  :: j21
     sll_real64  :: j22
-    eta1_min = transf%mesh%eta1_min
-    eta2_min = transf%mesh%eta2_min
-    delta1   = transf%mesh%delta_eta1
-    delta2   = transf%mesh%delta_eta2
+
+    lm => transf%get_logical_mesh()
+
+    eta1_min = lm%eta1_min
+    eta2_min = lm%eta2_min
+    delta1   = lm%delta_eta1
+    delta2   = lm%delta_eta2
     
-    SLL_ASSERT( i <= transf%mesh%num_cells1)
-    SLL_ASSERT( j <= transf%mesh%num_cells2)
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
     
     eta1 = eta1_min + (i-0.5_f64) * delta1 
     eta2 = eta2_min + (j-0.5_f64) * delta2 
@@ -818,7 +808,6 @@ contains
        var = (j11*j22 - j12*j21)/&
             (transf%x3_interp%interpolate_value(eta1,eta2))**2
     end if
-    
     
   end function jacobian_2d_cell_nurbs
 
@@ -879,11 +868,8 @@ contains
        jacobian_matrix_2d_nurbs(2,1) = j21/&
             (transf%x3_interp%interpolate_value(eta1,eta2))**2
        jacobian_matrix_2d_nurbs(2,2) = j22/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
-       
+            (transf%x3_interp%interpolate_value(eta1,eta2))**2   
     end if
-    
-   
     
   end function jacobian_matrix_2d_nurbs
 
@@ -959,6 +945,7 @@ contains
   subroutine write_to_file_2d_nurbs(transf,output_format)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, optional :: output_format 
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -969,8 +956,11 @@ contains
     sll_int32  :: npts_eta1
     sll_int32  :: npts_eta2
 
-    npts_eta1  = transf%mesh%num_cells1 +1
-    npts_eta2  = transf%mesh%num_cells2 +1
+    lm => transf%get_logical_mesh()
+
+    npts_eta1  = lm%num_cells1 +1
+    npts_eta2  = lm%num_cells2 +1
+
 
     if (.not. present(output_format)) then
        local_format = SLL_IO_XDMF
@@ -990,6 +980,7 @@ contains
                 x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
              end do
           end do
+
           call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
                npts_eta1,npts_eta2,file_id,ierr)
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
@@ -1043,7 +1034,7 @@ contains
     call transf%x1_interp%delete()
     call transf%x2_interp%delete()
     call transf%x3_interp%delete()
-    nullify( transf%mesh2d_minimal)
+!    nullify( transf%mesh2d_minimal)
     nullify( transf%mesh)
     
   end subroutine delete_transformation_2d_nurbs

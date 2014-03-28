@@ -194,9 +194,9 @@ module sll_simulation_4d_DK_hybrid_module
      procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
   end type sll_simulation_4d_DK_hybrid
 
-  interface delete
+  interface sll_delete
      module procedure delete_4d_DK_hybrid
-  end interface delete
+  end interface sll_delete
 
   interface initialize
      module procedure initialize_4d_DK_hybrid
@@ -1098,6 +1098,8 @@ contains
     SLL_DEALLOCATE(A12,ierr)
     SLL_DEALLOCATE(A21,ierr)
     SLL_DEALLOCATE(A22,ierr)
+    SLL_DEALLOCATE(B1,ierr)
+    SLL_DEALLOCATE(B2,ierr)
     SLL_DEALLOCATE(C,ierr)
   end subroutine initialize_QN_DK
 
@@ -1488,11 +1490,11 @@ contains
 
     !*** Initialization of the distribution function ***
     !***  i.e f4d(t=t0)                              ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     print*, 'initialize fdistribution'
     call initialize_fdistribu4d_DK(sim)
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for initialize_fdistribu4d_DK = ', elaps_time
         
@@ -1522,12 +1524,12 @@ contains
     end if
 
     !*** Computation of the rhs of QN ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call compute_charge_density(sim)
     !--> compute rho3d_seqx1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2, sim%rho3d_seqx3, sim%rho3d_seqx1x2 )
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_charge_density = ', elaps_time
 
@@ -1539,7 +1541,7 @@ contains
     end if
 
     !*** Matrix factorization for QN solver ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call factorize_mat_es( &
          sim%QNS, & 
          sim%QN_A11, &
@@ -1549,24 +1551,24 @@ contains
          sim%QN_B1,  &
          sim%QN_B2,  &
          sim%QN_C)
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for factorize_mat_es = ', elaps_time
 
     !*** Compute Phi(t=t0) by solving the QN equation ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call solve_QN(sim)
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for solve_QN = ', elaps_time
 
     !*** Compute E = -grad Phi ***
-    call set_time_mark(t0)
+    call sll_set_time_mark(t0)
     call compute_Efield( sim )
-    call set_time_mark(t1)
-    elaps_time = time_elapsed_between(t0,t1)
+    call sll_set_time_mark(t1)
+    elaps_time = sll_time_elapsed_between(t0,t1)
     if (sim%my_rank.eq.0) &
       print*, ' Time for compute_Efield = ', elaps_time
 
@@ -1768,7 +1770,7 @@ contains
       if (sim%my_rank.eq.0) &
         print*,' ===> ITERATION = ',iter
 
-      call set_time_mark(t0)
+      call sll_set_time_mark(t0)
       !--> Advection in vpar direction'
       call advec1D_vpar(sim,0.5_f64*sim%dt)
 
@@ -1793,19 +1795,19 @@ contains
       !--> Sequential to solve the quasi-neutral equation
       call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f4d_seqx3x4, sim%f4d_seqx1x2 )
       
-      call set_time_mark(t1)
+      call sll_set_time_mark(t1)
       elaps_time_advec = elaps_time_advec + &
-        time_elapsed_between(t0,t1)
+        sll_time_elapsed_between(t0,t1)
         
       !--> Solve the quasi-neutral equation
-      call set_time_mark(t0)
+      call sll_set_time_mark(t0)
       !-----> Computation of the rhs of QN 
       call compute_charge_density(sim)
       !-----> Solve QN
       call solve_QN( sim )
-      call set_time_mark(t1)
+      call sll_set_time_mark(t1)
       elaps_time_QN = elaps_time_QN + &
-        time_elapsed_between(t0,t1)
+        sll_time_elapsed_between(t0,t1)
 
       !--> Compute the new electric field
       call compute_Efield( sim )
@@ -1844,8 +1846,8 @@ contains
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    sll_int32 :: ix1_diag, ix2_diag
-    sll_int32 :: ix3_diag, ivpar_diag
+    sll_int32  :: ix1_diag, ix2_diag
+    sll_int32  :: ix3_diag, ivpar_diag
 
     !--> diagnostics norm
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_masse_result
@@ -1860,6 +1862,9 @@ contains
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_nrj_tot_result
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_heat_flux_result
     sll_real64, dimension(sim%count_save_diag + 1) :: diag_relative_error_nrj_tot_result
+
+    sll_int32  :: idum
+    sll_real64 :: dum
     
     !--> For initial profile HDF5 saving
     integer             :: file_err
@@ -1957,10 +1962,14 @@ contains
                0, &
                diag_nrj_tot_result )
 
-    diag_relative_error_nrj_tot_result(:) = &
-         (diag_nrj_tot_result(:)-diag_nrj_tot_result(1))/&
-         sqrt(0.5*( (diag_nrj_kin_result(:)-diag_nrj_kin_result(1) )**2 + &
-                    (diag_nrj_pot_result(:)-diag_nrj_pot_result(1) )**2 ) ) 
+    do idum = 1, sim%count_save_diag+1
+       dum  = sqrt(.5*((diag_nrj_kin_result(idum)-diag_nrj_kin_result(1))**2 + &
+                       (diag_nrj_pot_result(idum)-diag_nrj_pot_result(1))**2 ) ) 
+
+       if ( dum /= 0.0_f64) &
+          diag_relative_error_nrj_tot_result(idum) = &
+             (diag_nrj_tot_result(idum)-diag_nrj_tot_result(1))/dum
+    end do
 
     write(filename_HDF5,'(A,'//numfmt//',A)') &
       "DK4d_diag", sim%count_save_diag, ".h5"
@@ -2264,6 +2273,7 @@ contains
                            abs(delta_f)**2 * val_jac * &
                            delta_eta1*delta_eta2*delta_eta3*delta_vpar
                       
+                      if ( delta_f /= 0.0_f64) &
                       entropy_kin = entropy_kin - &
                         delta_f* log(abs(delta_f)) * val_jac * &
                         delta_eta1*delta_eta2*delta_eta3*delta_vpar
@@ -2312,8 +2322,8 @@ contains
     SLL_DEALLOCATE(sim%feq_xyvpar,ierr)
     SLL_DEALLOCATE(sim%f4d_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%f4d_seqx3x4,ierr)
-    call delete(sim%layout4d_seqx1x2)
-    call delete(sim%layout4d_seqx3x4)
+    call sll_delete(sim%layout4d_seqx1x2)
+    call sll_delete(sim%layout4d_seqx3x4)
     SLL_DEALLOCATE(sim%rho3d_seqx1x2,ierr)
     SLL_DEALLOCATE(sim%rho3d_seqx3,ierr)
     SLL_DEALLOCATE(sim%phi3d_seqx1x2,ierr)
@@ -2330,8 +2340,8 @@ contains
     SLL_DEALLOCATE(sim%diag_nrj_pot,ierr)
     SLL_DEALLOCATE(sim%diag_nrj_tot,ierr)
     SLL_DEALLOCATE(sim%diag_heat_flux,ierr)
-    call delete(sim%layout3d_seqx1x2)
-    call delete(sim%layout3d_seqx3)
+    call sll_delete(sim%layout3d_seqx1x2)
+    call sll_delete(sim%layout3d_seqx3)
   end subroutine delete_4d_DK_hybrid
 
 end module sll_simulation_4d_DK_hybrid_module
