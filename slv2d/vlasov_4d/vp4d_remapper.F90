@@ -127,7 +127,7 @@ contains
     kx   = 2_f64*sll_pi/dimx
     ky   = 2_f64*sll_pi/dimy
 
-    factor = dimx*dimy*(2*sll_pi+this%eps*(sin(kx*vlasov4d%eta1_max)-sin(kx*vlasov4d%eta1_min)))
+    factor = dimx*dimy*(2*sll_pi+vlasov4d%eps*(sin(kx*vlasov4d%eta1_max)-sin(kx*vlasov4d%eta1_min)))
     factor = 2.*sll_pi
     
     do l=1,loc_sz_l 
@@ -148,7 +148,7 @@ contains
 
        v2 = vx*vx+vy*vy
 
-       vlasov4d%f(i,j,k,l)=(1+this%eps*cos(kx*x))*exp(-.5*v2)/factor
+       vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x))*exp(-.5*v2)/factor
 
     end do
     end do
