@@ -272,9 +272,9 @@ subroutine run_vp_cart(sim)
  sim%phi_seq_x1_layout       => new_layout_2D( sll_world_collective )
  sim%split_rho_layout => new_layout_2D( sll_world_collective )
 
- sim%degree=sim%params(6)
- sim%nsch=sim%params(10)
- sim%test=sim%params(8)
+ sim%degree=int(sim%params(6),i32)
+ sim%nsch=int(sim%params(10),i32)
+ sim%test=int(sim%params(8),i32)
 
 
 
@@ -1188,7 +1188,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 !!$       end do
 !!$    end do
 
- global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+ global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2_layout, (/1,1,1,1/) )
  write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
  write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
  call sll_gnuplot_rect_2d_parallel( &
@@ -1248,6 +1248,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
             sim%mesh2dx%delta_eta1, &
             sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
             sim%mesh2dx%delta_eta2, &
+            size(plotrho_split,1), &
+            size(plotrho_split,2), &
             plotrho_split, &
             "plotrho_split", &
             0, &
@@ -1255,26 +1257,26 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     !end if
     write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
     write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
-         sim%mesh2dx%delta_eta1, &
-         sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
-         sim%mesh2dv%delta_eta1/sim%degree, &
-         size(plotf2d_c1,1),size(plotf2d_c1,2), &
-         plotf2d_c1, &
-         "plotf2d_c1", &
-         0, &
-         ierr)
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
-         sim%mesh2dx%delta_eta2, &
-         sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
-         sim%mesh2dv%delta_eta2/sim%degree, &
-         size(plotf2d_c2,1),size(plotf2d_c2,2), &
-         plotf2d_c2, &
-         "plotf2d_c2", &
-         0, &
-         ierr)
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+!!$         sim%mesh2dx%delta_eta1, &
+!!$         sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
+!!$         sim%mesh2dv%delta_eta1/sim%degree, &
+!!$         size(plotf2d_c1,1),size(plotf2d_c1,2), &
+!!$         plotf2d_c1, &
+!!$         "plotf2d_c1", &
+!!$         0, &
+!!$         ierr)
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+!!$         sim%mesh2dx%delta_eta2, &
+!!$         sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
+!!$         sim%mesh2dv%delta_eta2/sim%degree, &
+!!$         size(plotf2d_c2,1),size(plotf2d_c2,2), &
+!!$         plotf2d_c2, &
+!!$         "plotf2d_c2", &
+!!$         0, &
+!!$         ierr)
 
 
     if((sim%test==0) .or. (sim%test==6))then
@@ -1304,6 +1306,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
             sim%mesh2dx%delta_eta1, &
             sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
             sim%mesh2dv%delta_eta1/sim%degree, &
+            size(f_x_exact,1), &
+            size(f_x_exact,2), &
             f_x_exact, &
             "plotfxtransport", &
             0, &
@@ -1327,6 +1331,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
             sim%mesh2dx%delta_eta2, &
             sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
             sim%mesh2dv%delta_eta2/sim%degree, &
+            size(f_y_exact,1), &
+            size(f_y_exact,2), &
             f_y_exact, &
             "plotfytransport", &
             0, &
@@ -1350,6 +1356,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
             sim%mesh2dx%delta_eta1, &
             sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
             sim%mesh2dv%delta_eta1/sim%degree, &
+            size(f_vx_exact,1), &
+            size(f_vx_exact,2), &
             f_vx_exact, &
             "plotfvxtransport", &
             0, &
@@ -1373,6 +1381,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
             sim%mesh2dx%delta_eta2, &
             sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
             sim%mesh2dv%delta_eta2/sim%degree, &
+            size(f_vy_exact,1), &
+            size(f_vy_exact,2), &
             f_vy_exact, &
             "plotfvytransport", &
             0, &
@@ -2002,8 +2012,8 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
     SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
-    call delete( sim%sequential_v1v2_layout)
-    call delete( sim%phi_seq_x1_layout )
+    call sll_delete( sim%sequential_v1v2_layout)
+    call sll_delete( sim%phi_seq_x1_layout )
   end subroutine delete_vp_cart
 
   ! we put the reduction functions here for now, since we are only using
@@ -2415,7 +2425,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
 !!$    SLL_ALLOCATE(source1(sim%np_v1,sim%np_v2),ierr)
 !!$    SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
-    sim%test=sim%params(8)
+    sim%test=int(sim%params(8),i32)
     !write(*,*) 'test =', sim%test
     if((sim%test==2) .or. (sim%test==6)) then
        Ex=1.0_f64
@@ -2526,7 +2536,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
    ! sll_real64 :: time
 
-    sim%test=sim%params(8)
+    sim%test=int(sim%params(8),i32)
     wm=(wL+wR)/2
 
     flux1=0
