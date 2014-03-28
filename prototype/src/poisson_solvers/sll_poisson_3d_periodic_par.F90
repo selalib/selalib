@@ -1,24 +1,19 @@
 !> @brief 
-!> Selalib periodic 3D poisson solver
-!> Start date: Feb. 08, 2012
-!> Last modification: Sep 11, 2012
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr), 
-!> Edwin CHACON-GOLCHER (chacongolcher@math.unistra.fr)
-!                                  
-!**************************************************************************
-
+!> Periodic 3D poisson solver (parallel version)
+!> @details
+!> depends on sll_remapper
 module sll_poisson_3d_periodic_par
 
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_utilities.h"
 #include "sll_assert.h"
+#include "sll_constants.h"
+
   use sll_fft
-  use sll_constants
   use sll_collective
   use sll_remapper
+
   implicit none
 
   !> Structure to solve Poisson equation on 3d mesh with periodic boundary
@@ -55,6 +50,7 @@ contains
 
 
   !> Allocate the structure for the 3d parallel Poisson solver
+  !> @return
   function new_poisson_3d_periodic_plan_par( &
     start_layout, &
     ncx, &
@@ -80,7 +76,7 @@ contains
     sll_int32                                    :: npx, npy, npz
     sll_int32                                    :: e
     sll_int32                                    :: ierr
-    type (poisson_3d_periodic_plan_par), pointer :: plan
+    type (poisson_3d_periodic_plan_par), pointer :: plan !< Poisson solver object
     sll_int32, dimension(3,3)                    :: loc_sizes
 
     collective => get_layout_collective(start_layout)

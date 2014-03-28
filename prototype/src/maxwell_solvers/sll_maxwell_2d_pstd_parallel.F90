@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA, CNRS
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -34,8 +32,6 @@ plan%d_dy = plan%d_dy / plan%ncy
 !> @brief 
 !> Selalib periodic 2D maxwell solver for cartesian coordinates.
 !>   
-!> @author                    
-!> Pierre Navaro 
 module sll_maxwell_2d_periodic_cartesian_par
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -84,6 +80,7 @@ contains
   !> Presently, this function receives the geometric information as 
   !> individual arguments. We should consider passing the 'simple geometry'
   !> object that we have for the cartesian cases.
+  !> @return
   function new_maxwell_2d_periodic_plan_cartesian_par( &
     layout_x, layout_y, ncx, ncy, Lx, Ly ) result(plan)
 
@@ -384,10 +381,10 @@ contains
     call fftw_destroy_plan(plan%bwx)
     call fftw_destroy_plan(plan%bwy)
 
-    call delete(plan%rmp_xy)
-    call delete(plan%rmp_yx)
-    call delete(plan%layout_x)
-    call delete(plan%layout_y)
+    call sll_delete(plan%rmp_xy)
+    call sll_delete(plan%rmp_yx)
+    call sll_delete(plan%layout_x)
+    call sll_delete(plan%layout_y)
 
   end subroutine delete_maxwell_2d_periodic_plan_cartesian_par
 

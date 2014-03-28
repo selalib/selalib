@@ -42,6 +42,21 @@ ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED ON CACHE BOOL "Use fftw library " )
+SET(MPI_MODULE_ENABLED ON CACHE BOOL "Use MPI library " )
+SET(HDF5_ENABLED ON CACHE BOOL "Enable HDF5 ")
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+INCLUDE(MPIConfig)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+
+INCLUDE(HDF5Config)
+IF(HDF5_IS_PARALLEL) 
+   MESSAGE(STATUS "HDF5 parallel supported")
+ELSE()
+    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+    MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+ENDIF()
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -60,24 +75,9 @@ IF(FFTW_ENABLED AND NOT FFTW_FOUND)
    ENDIF()
 ENDIF()
 
-IF(NOT MPI_FOUND)
-   INCLUDE(MPIConfig)
-ENDIF(NOT MPI_FOUND)
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
-IF(NOT HDF5_FOUND)
-   INCLUDE(HDF5Config)
-   IF(HDF5_IS_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE()
-      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
-      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
-   ENDIF()
-ENDIF(NOT HDF5_FOUND)
-
-SET(FFT_DEFAULT_LIBRARY "FFTW")
+SET(FFT_LIB "FFTW")
 SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
@@ -229,7 +229,9 @@ ENABLE_TESTING()
 
 INCLUDE(POEConfig)
 SET(PROCS 4)
-SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml)
+FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+
+SET(ARGS "slv2d.nml")
 
 ADD_MPI_TEST(test_vp4d       vp4d_transpose       ${PROCS} ${ARGS})
 ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})

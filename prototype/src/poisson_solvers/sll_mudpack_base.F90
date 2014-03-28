@@ -1,4 +1,6 @@
+!> @brief
 !> Base module to provide interface to mudpack library
+!> @details
 !> This library contains multigrid solvers for PDE equations
 module sll_mudpack_base
 
@@ -19,7 +21,7 @@ type, public :: mudpack_2d
    sll_real64 :: fprm(6)  !< Real to set boundary conditions
    sll_int32  :: iguess   !< Initial solution or loop over time
    !class(sll_interpolator_2d_base), pointer   :: cxx_interp
-
+   sll_int32, dimension(:,:), allocatable :: iwork
 end type mudpack_2d
 
 integer, parameter :: CARTESIAN_2D = 2    !< geometry parameter

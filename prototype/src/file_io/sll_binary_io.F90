@@ -15,14 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-
-!> @author Pierre Navaro
 !> @brief
 !> Implements the functions to write binary file to store heavy data
 !> @details
+!> This functions can be used only for sequential application.
 !> one file = one dataset \n
 !> If HDF5 is not installed you can use this module. \n
 !> This is controlled by the variable <code>HDF5_ENABLE</code>.
+!>
 module sll_binary_io
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -77,6 +77,16 @@ contains
 
      end subroutine sll_binary_file_create
 
+!> Open binary file
+!subroutine sll_binary_file_open(file_id,error)
+!sll_int32, intent(in)  :: file_id !<file unit number
+!sll_int32, intent(out) :: error   !<error code
+
+!open(file_id, IOSTAT=error)
+     
+!end subroutine sll_binary_file_open
+
+
 !> Close binary file
 subroutine sll_binary_file_close(file_id,error)
 sll_int32, intent(in)  :: file_id !<file unit number
@@ -118,5 +128,24 @@ sll_int32 , intent(out)      :: error        !< error code
 sll_real64, intent(in)       :: array(:,:,:) !< data array
 write(file_id,IOSTAT=error) array
 end subroutine
+
+
+!> Read a 0D array in the binary file file_id
+subroutine sll_binary_read_array_0d(file_id,array,error)
+sll_int32 , intent(in)       :: file_id  !< file unit number
+sll_int32 , intent(out)      :: error    !< error code
+sll_real64, intent(out)       :: array !< data array
+read(file_id,IOSTAT=error) array
+end subroutine
+
+!> Read a 2D array in the binary file file_id
+subroutine sll_binary_read_array_2d(file_id,array,error)
+sll_int32 , intent(in)       :: file_id    !< file unit number
+sll_int32 , intent(out)      :: error      !< error code
+sll_real64, intent(out)       :: array(:,:) !< adata array
+read(file_id,IOSTAT=error) array
+end subroutine
+
+
 
 end module sll_binary_io

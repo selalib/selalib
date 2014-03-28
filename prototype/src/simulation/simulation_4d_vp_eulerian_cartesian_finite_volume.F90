@@ -116,9 +116,9 @@ contains
 
 end type sll_simulation_4d_vp_eulerian_cartesian_finite_volume
 
-interface delete
+interface sll_delete
   module procedure delete_vp_cart
-end interface delete
+end interface sll_delete
 
 contains
 
@@ -1184,9 +1184,51 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
 !!$    allocate (plotphi2d(loc_sz_x1,loc_sz_x2))
 !!$
-!!$    do i = 1, loc_sz_x1
-!!$       do j = 1, loc_sz_x2
-!!$          plotphi2d(i,j) = sim%phi_split(i,j)
+!!$          plotphi2d(i,j) = sim%phi_x1(i,j)
+!!$       end do
+!!$    end do
+
+ global_indices(1:4) =  local_to_global_4D(sim%sequential_v1v2x1, (/1,1,1,1/) )
+ write (*,*) 'Vxmax = ', sim%mesh2dv%eta1_max
+ write (*,*) 'Vxmin = ', sim%mesh2dv%eta1_min
+ call sll_gnuplot_rect_2d_parallel( &
+      sim%mesh2dx%eta1_min+(global_indices(3)-1)*sim%mesh2dx%delta_eta1, &
+      sim%mesh2dx%delta_eta1, &
+      sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
+      sim%mesh2dv%delta_eta1/sim%degree, &
+      size(plotf2d_c1,1), &
+      size(plotf2d_c1,2), &
+      plotf2d_c1, &
+      "plotf2d_c1", &
+      0, &
+      ierr)
+
+ call sll_gnuplot_rect_2d_parallel( &
+      sim%mesh2dx%eta2_min+(global_indices(4)-1)*sim%mesh2dx%delta_eta2, &
+      sim%mesh2dx%delta_eta2, &
+      sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
+      sim%mesh2dv%delta_eta2/sim%degree, &
+      size(plotf2d_c2,1), &
+      size(plotf2d_c2,2), &
+      plotf2d_c2, &
+      "plotf2d_c2", &
+      0, &
+      ierr)
+
+!!!!!!!!!!!!!!!!!!!simplify
+!!$    allocate (f_exact(loc_sz_x1,loc_sz_v1))
+!!$ do ix = 1, loc_sz_x1
+!!$    do jvx = 1, loc_sz_v1
+!!$       do iy = 1, loc_sz_x2
+!!$          do jvy = 1, loc_sz_v2
+!!$             x1=(ix-1)*sim%mesh2dx%delta_eta1+sim%mesh2dx%eta1_min
+!!$             v1=sim%mesh2dv%eta1_min+(jvx-1)*sim%mesh2dv%delta_eta1/sim%degree
+!!$             x2=(iy-1)*sim%mesh2dx%delta_eta2+sim%mesh2dx%eta2_min
+!!$             v2=sim%mesh2dv%eta2_min+(jvy-1)*sim%mesh2dv%delta_eta2/sim%degree
+!!$
+!!$             sim%params(11)=t
+!!$             f_exact(i,j)=sim%init_func(v1,v2,x1,x2,sim%params)
+!!$          end do
 !!$       end do
 !!$    end do
 
@@ -1218,6 +1260,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
          sim%mesh2dx%delta_eta1, &
          sim%mesh2dv%eta1_min+(global_indices(1)-1)*sim%mesh2dv%delta_eta1/sim%degree, &
          sim%mesh2dv%delta_eta1/sim%degree, &
+         size(plotf2d_c1,1),size(plotf2d_c1,2), &
          plotf2d_c1, &
          "plotf2d_c1", &
          0, &
@@ -1227,6 +1270,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
          sim%mesh2dx%delta_eta2, &
          sim%mesh2dv%eta2_min+(global_indices(2)-1)*sim%mesh2dv%delta_eta2/sim%degree, &
          sim%mesh2dv%delta_eta2/sim%degree, &
+         size(plotf2d_c2,1),size(plotf2d_c2,2), &
          plotf2d_c2, &
          "plotf2d_c2", &
          0, &

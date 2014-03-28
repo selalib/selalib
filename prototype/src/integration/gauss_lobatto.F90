@@ -90,11 +90,27 @@ contains
 
   end function gauss_lobatto_integral_1D
 
+  !> @brief Returns a 2d array of size (2,n) containing gauss-lobatto 
+  !> points and weights in the interval [a,b].
+  !> @param[in] n Number of gauss points.
+  !> @param[in] a OPTIONAL Minimum value of the interval.
+  !> @param[in] b OPTIONAL Maximun value of the interval.
 
+  function gauss_lobatto_points_and_weights(n,a,b) result(wx)
+    sll_real64, intent(in),optional    :: a
+    sll_real64, intent(in),optional    :: b
+    sll_int32,  intent(in)     :: n 
+    sll_real64, dimension(2,n) :: wx
+    
+    wx(1,1:n) = gauss_lobatto_points( n, a, b )
+    wx(2,1:n) = gauss_lobatto_weights(n, a, b)
 
+  end function gauss_lobatto_points_and_weights
+  
+  
   function gauss_lobatto_points( n, a, b ) result(xk)
-    sll_real64, intent(in)    :: a
-    sll_real64, intent(in)    :: b
+    sll_real64, intent(in),optional    :: a
+    sll_real64, intent(in),optional    :: b
     sll_int32,  intent(in)    :: n 
     sll_real64, dimension(n)  :: xk
     sll_real64, dimension(n)  :: wk
@@ -103,29 +119,34 @@ contains
     sll_int32                 :: err
     sll_real64                :: alpha(0:n-1), beta(0:n-1)
     sll_real64                :: de(n), da(n), db(n)
-
+    
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
-
+    
     alpha = 0
     do k = 0, n-1
        beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
-
+    
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
     !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
     !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
     beta(0)=2.0d0
-
+    
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
+    
+    if (present(a) .and. present(b)) then
+       c1 = 0.5_f64*(b-a)
+       c2 = 0.5_f64*(b+a)
+       xk = c1*xk + c2
+       
+    end if
+    
+    end function gauss_lobatto_points
 
-    c1 = 0.5_f64*(b-a)
-    c2 = 0.5_f64*(b+a)
-    xk = c1*xk + c2
-
-  end function gauss_lobatto_points
-
-  function gauss_lobatto_weights( n ) result(wk)
+  function gauss_lobatto_weights( n,a,b ) result(wk)
+    sll_real64, intent(in), optional :: a
+    sll_real64, intent(in), optional :: b
     sll_int32,  intent(in)    :: n 
     sll_real64, dimension(n)  :: xk
     sll_real64, dimension(n)  :: wk
@@ -133,54 +154,78 @@ contains
     sll_int32                 :: err
     sll_real64                :: alpha(0:n-1), beta(0:n-1)
     sll_real64                :: de(n), da(n), db(n)
-
+    sll_real64                :: c1
+    
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
-
+    
     alpha = 0
     do k = 0, n-1
        beta(k)=real(k,kind(n-1))**2/((2.0d0*k+1)*(2.0d0*k-1))
     end do
-
+    
     !for Gauss-Legendre and Gauss-Lobatto, beta(0)=int(dlambda)
     !see Algorithm xxx - ORTHPOL: A package of routines for  generating orthogonal
     !polynomials and Gauss-type quadrature rules by _Walter Gautschi_
     beta(0)=2.0d0
-
+    
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
-
+    
+    if (present(a) .and. present(b)) then
+       
+       c1 = 0.5_f64*(b-a)
+       wk = c1*wk
+    end if
   end function gauss_lobatto_weights
-
+  
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
   !>  der(i,j)=(Phi'_i(x_j))
   !> \f]
-  function  gauss_lobatto_derivative_matrix(n, a, b) result(der)
+  function  gauss_lobatto_derivative_matrix(n, x, w) result(d)
 
-    sll_real64 :: a, b
-    sll_int32  :: n,i,j,l,m
+    sll_int32,  intent(in) :: n
+    sll_real64, intent(in) :: x(n)
+    sll_real64, intent(in) :: w(n)
+    sll_int32  :: i,j,l,m
     sll_real64 :: prod
-    sll_real64 :: x(n), der(n,n)
+    sll_real64 :: d(n,n)
 
-    x = gauss_lobatto_points( n, a, b ) 
-    der = 0.0
-    
+    d = 0.0_f64
     do j=1,n
-    do i=1,n
-       do l=1,n
-          if ( j /= l ) then
-             prod= 1d0
-             do m=1,n 
-                if ( m /= l .and. m /= j ) prod=prod*(x(i)-x(m))/(x(j)-x(m))
-             end do
-             prod=prod/(x(j)-x(l))
-             der(i,j)=der(i,j)+prod
-          end if
-       end do
+      do i=1,n
+         do l=1,j-1
+            prod=1.0_f64
+            do m=1,l-1
+               prod=prod*(x(i)-x(m))/(x(j)-x(m))
+            end do
+            do m=l+1,j-1
+               prod=prod*(x(i)-x(m))/(x(j)-x(m))
+            end do
+            do m=j+1,n
+               prod=prod*(x(i)-x(m))/(x(j)-x(m))
+            end do
+            prod=prod/(x(j)-x(l))
+            d(i,j)=d(i,j)+prod
+         end do
+         do l=j+1,n
+            prod=1.0_f64
+            do m=1,j-1
+               prod=prod*(x(i)-x(m))/(x(j)-x(m))
+            end do
+            do m=j+1,l-1
+               prod=prod*(x(i)-x(m))/(x(j)-x(m))
+            end do
+            do m=l+1,n
+               prod=prod*(x(i)-x(m))/(x(j)-x(m))
+            end do
+            prod=prod/(x(j)-x(l))
+            d(i,j)=d(i,j)+prod
+         end do
+         d(i,j)=d(i,j)*w(i)
+      end do
     end do
-    end do
-    der = transpose(der)
 
   end function gauss_lobatto_derivative_matrix
 
