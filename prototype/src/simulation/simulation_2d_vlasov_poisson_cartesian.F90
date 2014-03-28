@@ -1090,7 +1090,7 @@ contains
     if(sll_get_collective_rank(sll_world_collective)==0) then        
       print *,'#step=',0,time_init+real(0,f64)*sim%dt
     endif
-    sim%num_iterations = 0
+    !sim%num_iterations = 0
     do istep = 1, sim%num_iterations
       if (mod(istep,sim%freq_diag)==0) then
         if(sll_get_collective_rank(sll_world_collective)==0) then        
