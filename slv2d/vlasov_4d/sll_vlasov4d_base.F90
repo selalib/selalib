@@ -46,6 +46,7 @@ module sll_vlasov4d_base
    sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
    sll_int32  :: va 
    sll_int32  :: num_case 
+   sll_real64 :: eps
  end type vlasov4d_base
 
 
@@ -79,13 +80,14 @@ contains
   sll_int32  :: fthdiag          ! time history frequency
   sll_int32  :: va = 0           ! algo charge type
   sll_int32  :: num_case         ! test case
+  sll_real64 :: eps = 0.05_f64   ! perturbation amplitude
   sll_int32  :: meth = 0         ! method
 
   namelist /time/ dt, nbiter
   namelist /diag/ fdiag, fthdiag
   namelist /phys_space/ x0,x1,y0,y1,nx,ny
   namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
-  namelist /test_case/ num_case
+  namelist /test_case/ num_case, eps
   namelist /algo_charge/ va, meth
 
   prank = sll_get_collective_rank(sll_world_collective)
@@ -123,6 +125,7 @@ contains
   call mpi_bcast(va,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(meth,    1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(num_case,1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(eps,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
 
   this%dt         = dt
   this%nbiter     = nbiter
@@ -159,6 +162,7 @@ contains
 
   this%va         = va
   this%num_case   = num_case
+  this%eps        = eps
 
   if (prank == MPI_MASTER) then
 
@@ -184,10 +188,7 @@ contains
        print*, "classic algorithm"
        end select
 
-
-  
   endif
-
 
   if (.not. is_power_of_two(int(psize,i64))) then     
      print *, 'This test needs to run in a number of processes which is ',&
