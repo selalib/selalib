@@ -130,7 +130,7 @@ contains
        vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
        v2 = vx*vx+vy*vy
-       vlasov4d%f(i,j,k,l)=(1+this%eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+       vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
 
     end do
     end do

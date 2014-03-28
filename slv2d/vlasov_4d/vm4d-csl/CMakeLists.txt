@@ -1,4 +1,4 @@
-ADD_LIBRARY(slv2d STATIC 
+ADD_LIBRARY(old_slv2d STATIC 
               diagnostiques.F90
               geometry.F90
               maxwell2dfdtd.F90
@@ -20,7 +20,7 @@ ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90
                ../../../prototype/src/poisson_solvers/sll_mudpack_base.F90
                ../../../prototype/src/poisson_solvers/sll_mudpack_cartesian.F90)
 
-TARGET_LINK_LIBRARIES(vm4d_transpose slv2d ${LIBS} 
+TARGET_LINK_LIBRARIES(vm4d_transpose old_slv2d ${LIBS} 
                                            dfftpack
                                            mudpack
                                            ${LAPACK_LIBRARIES})
