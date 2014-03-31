@@ -338,7 +338,7 @@ end if
       sll_real64 :: delta
       
       delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-      k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/delta)
+      k1 = nint((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/delta)
   end function from_cart_index_k1
 
   function from_cart_index_k2(mesh, x1, x2) result(k2)
@@ -349,7 +349,7 @@ end if
       sll_real64 :: delta
       
       delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-      k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/delta)
+      k2 = nint((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/delta)
   end function from_cart_index_k2
 
   function local_index(ref_index,j) result(new_index)
