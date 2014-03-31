@@ -75,6 +75,11 @@ ctest --verbose -R sim4d_DK_polar_one_mu
 #time mpirun -np 16 ./bin/test_4d_dk_polar_one_mu ../selalib/prototype/src/simulation/dksim4d_polar_one_mu.nml
 gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar_one_mu.gnu 
 
+#drift kinetic 4D polar one mu
+ctest --verbose -R sim4d_DK_polar_multi_mu
+#time mpirun -np 16 ./bin/test_4d_dk_polar_multi_mu ../selalib/prototype/src/simulation/dksim4d_polar_multi_mu.nml
+gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar_multi_mu.gnu 
+
 
 
 
