@@ -59,14 +59,12 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
   function new_linear_box_spline_2d( &
-    num_pts,    &
-    radius,       &
+    mesh,         &
     x1_bc_type,   &
     x2_bc_type)
 
     type(linear_box_spline_2d), pointer  :: new_linear_box_spline_2d
-    sll_int32,  intent(in)               :: num_pts
-    sll_real64, intent(in)               :: radius
+    type(hex_mesh_2d), pointer           :: mesh
     sll_int32,  intent(in)               :: x1_bc_type
     sll_int32,  intent(in)               :: x2_bc_type
     sll_int32                            :: bc_selector
@@ -75,22 +73,16 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
     SLL_ALLOCATE( new_linear_box_spline_2d, ierr )
-    new_linear_box_spline_2d%num_pts = num_pts
-    new_linear_box_spline_2d%radius    = radius
-    new_linear_box_spline_2d%delta     = radius/real((num_pts-1),f64)
+    new_linear_box_spline_2d%num_pts   = mesh%num_cells + 1
+    new_linear_box_spline_2d%radius    = mesh%radius
+    new_linear_box_spline_2d%delta     = mesh%delta
     new_linear_box_spline_2d%x1_bc_type = x1_bc_type
     new_linear_box_spline_2d%x2_bc_type = x2_bc_type
 
-
-!    if (num_pts .le. NUM_TERMS) then
-!      print *, 'ERROR, new_linear_box_spline_2d: Because of the algorithm used, this ', &
-!       'function is meant to be used with arrays that are at least of size = 28'
-!       STOP 'new_linear_box_spline_2d()'
-!    end if
-    if (radius .le. 0.)  then
-       print *, 'ERROR , new_linear_box_spline_2d : negative radius '
-       STOP
-    end if
+    new_linear_box_spline_2d%r1_x1 = mesh%r1_x1
+    new_linear_box_spline_2d%r1_x2 = mesh%r1_x2
+    new_linear_box_spline_2d%r2_x1 = mesh%r2_x1
+    new_linear_box_spline_2d%r2_x2 = mesh%r2_x2
 
 
     ! Treat the bc_selector variable essentially like a bit field, to 
@@ -109,8 +101,9 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     end if
 
     ! rk: num_pts-1 = number of nested hexagones
-    num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
-    SLL_ALLOCATE( new_linear_box_spline_2d%coeffs(0:num_pts_tot), ierr )
+    num_pts_tot = mesh%num_pts_tot
+    SLL_ALLOCATE( new_linear_box_spline_2d%coeffs(0:num_pts_tot-1), ierr )
+!    new_linear_box_spline_2d%coeffs(:) = 0._f64
   end function new_linear_box_spline_2d
 
 
@@ -123,10 +116,10 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
       sll_real64                :: weight
 
       if (local_index .eq. 0) then
-         weight = real((0),f64)
+         weight = real((1775./2304.),f64)
       else if (local_index .lt. 7) then
          weight = real((256./6912.), f64)
-      else if (local_index .lt. 13) then
+      else if (local_index .lt. 19) then
          if (modulo(local_index, 2) .eq. 1) then
             weight = real((1./13824.), f64)
          else
@@ -192,6 +185,56 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   
   end subroutine compute_linear_box_spline_2d
 
+  function twelve_fold_symmetry(out_index, num_pts) result(in_index)
+      sll_int32    :: out_index
+      sll_int32    :: num_pts
+      sll_int32    :: in_index
+      sll_int32    :: k1
+      sll_int32    :: k2
+      sll_int32    :: temp
+      sll_int32    :: hex_num
+
+
+      k1 = from_global_index_k1(out_index)
+      k2 = from_global_index_k2(out_index)
+      ! We compute the hexagon-ring number
+      if (k1*k2 .ge. 0.) then
+         hex_num = max( abs(k1), abs(k2))
+      else 
+         hex_num = abs(k1) + abs(k2)
+      end if
+
+      if (k1 .eq. hex_num)  then
+         ! index out on first edge : symmetry by r2_ext
+         k1 = 2*(num_pts - 1) - k1
+         k2 = k2 + k1 - num_pts + 1
+      elseif (k2 .eq. hex_num) then
+         ! index out on second edge : symmetry by r1_ext
+         k2 = 2*(num_pts - 1) - k2
+         k1 = k2 + k1 - num_pts + 1
+      elseif (( k1 .lt. 0) .and. (k2 .gt. 0)) then
+         ! index out on third edge : symmetry by r3_ext
+         temp = k2 - num_pts + 1
+         k2   = k1 + num_pts - 1
+         k1   = temp
+      elseif (k1 .eq. -hex_num) then
+         ! index out on fourth edge : symmetry by r2_ext
+         k1 = -2*(num_pts - 1) - k1
+         k2 =  k2 + k1 + num_pts - 1
+      elseif (k2 .eq. -hex_num) then
+         ! index out on fifth edge : symmetry by r1_ext
+         k2 = -2*(num_pts - 1) - k2
+         k1 = k2 + k1 + num_pts - 1
+      elseif ((k1 .gt. 0).and.(k2 .lt. 0)) then
+         ! index out on sixth edge : symmetry by r3_ext
+         temp = k2 + num_pts - 1
+         k2   = k1 - num_pts + 1
+         k1   = temp
+      end if
+      in_index = global_index(k1,k2)
+  end function twelve_fold_symmetry
+
+
 
   subroutine compute_box_spline_2d_neum_neum( data, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
@@ -199,65 +242,26 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_int32  :: num_pts_tot
     sll_int32  :: i,k
     sll_int32  :: nei
-    sll_int32  :: k1
-    sll_int32  :: k2
-    sll_int32  :: temp
-    sll_int32  :: hex_num
     sll_int32  :: num_pts
 
     num_pts = spline%num_pts
     num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
+    
+
     do i = 0, num_pts_tot-1
-       spline%coeffs(i+1) = real(0,f64)
+       spline%coeffs(i) = real(0,f64)
        do k = 0, 18
           nei = find_neighbour(i,k)
           if (nei .lt. num_pts_tot) then
-             spline%coeffs(i+1) = spline%coeffs(i+1) + data(nei+1) * & 
+             spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
                                 pre_filter_piir2(k)
           else
-             k1 = from_global_index_k1(nei)
-             k2 = from_global_index_k2(nei)
-             ! We compute the hexagon-ring number
-             if (k1*k2 .ge. 0.) then
-                hex_num = max( abs(k1), abs(k2))
-             else 
-                hex_num = abs(k1) + abs(k2)
-             end if
-
-             if (k1 .eq. hex_num)  then
-                ! index out on first edge
-                k1 = 2*(num_pts - 1) - k1
-                k2 = k2 + k1 - num_pts + 1
-             elseif (k2 .eq. hex_num) then
-                ! index out on second edge
-                k2 = 2*(num_pts - 1) - k2
-                k1 = k2 + k1 - num_pts + 1
-             elseif (( k1 .lt. 0) .and. (k2 .gt. 0)) then
-                ! index out on third edge
-                temp = k2 - num_pts + 1
-                k2   = k1 + num_pts - 1
-                k1   = temp
-             elseif (k1 .eq. -hex_num) then
-                ! index out on fourth edge
-                k1 = -2*(num_pts - 1) - k1
-                k2 =  k2 + k1 + num_pts - 1
-             elseif (k2 .eq. -hex_num) then
-                ! index out on fifth edge
-                k2 = -2*(num_pts - 1) - k2
-                k1 = k2 + k1 + num_pts - 1
-             elseif ((k1 .gt. 0).and.(k2 .lt. 0)) then
-                ! index out on sixth edge
-                temp = k2 + num_pts - 1
-                k2   = k1 - num_pts + 1
-                k1   = temp
-             end if
-             nei = global_index(k1,k2)
-             spline%coeffs(i+1) = spline%coeffs(i+1) + data(nei+1) * & 
+             nei = twelve_fold_symmetry(nei, num_pts)
+             spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
                                 pre_filter_piir2(k)             
           end if
        end do
     end do
-
   end subroutine compute_box_spline_2d_neum_neum
 
 
@@ -272,13 +276,154 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
       & YET IMPLEMENTED'
     num_pts = spline%num_pts
     num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
-    do i = 0, num_pts_tot
+    do i = 0, num_pts_tot-1
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
   end subroutine compute_box_spline_2d_prdc_neum
 
+  function factorial (n) result (res)
+ 
+    implicit none
+    integer, intent (in) :: n
+    integer :: res
+    integer :: i
+ 
+    res = product ((/(i, i = 1, n)/))
+ 
+  end function factorial
+ 
+  function choose (n, k) result (res)
+ 
+    implicit none
+    integer, intent (in) :: n
+    integer, intent (in) :: k
+    integer :: res
+ 
+    res = factorial (n) / (factorial (k) * factorial (n - k))
+ 
+  end function choose
 
+
+  function chi_gen(spline,x1,x2,deg) result(val)
+    ! Reference : @Condat and Van De Ville (2006)
+    !             "Three directional Box Splines:
+    !             Characterization and Efficient Evaluation."
+    sll_real64, dimension(:), allocatable   :: val
+    sll_real64, dimension(:)                :: x1
+    sll_real64, dimension(:)                :: x2
+    sll_int32, intent(in)                   :: deg
+    type(linear_box_spline_2d), pointer     :: spline
+    sll_real64, dimension(:), allocatable   :: u
+    sll_real64, dimension(:), allocatable   :: v
+    sll_real64, dimension(:), allocatable   :: aux
+    sll_real64, dimension(:), allocatable   :: aux2
+    sll_real64              :: det
+    sll_real64              :: coeff
+    sll_int32               :: num_pts_tot
+    sll_int32               :: K
+    sll_int32               :: L
+    sll_int32               :: i
+    sll_int32               :: d
+    sll_int32               :: ierr
+
+
+    num_pts_tot = 6*spline%num_pts*(spline%num_pts-1)/2+1 
+    SLL_ALLOCATE( val(num_pts_tot), ierr )
+    SLL_ALLOCATE( u(num_pts_tot), ierr )
+    SLL_ALLOCATE( v(num_pts_tot), ierr )
+    SLL_ALLOCATE( aux(num_pts_tot), ierr )
+    SLL_ALLOCATE( aux2(num_pts_tot), ierr )
+    val(:) = 0._f64
+
+
+    det = spline%r1_x1 * spline%r2_x2 - spline%r2_x1 * spline%r1_x2
+
+    x1 = -abs(x1); x2 = abs(x2);
+    u(:) = 1./det*( spline%r2_x2*x1(:) - spline%r2_x1*x2(:))
+    v(:) = 1./det*(-spline%r1_x2*x1(:) + spline%r1_x1*x2(:))
+
+    WHERE(v.gt.0) v = -v
+    WHERE(v.gt.0) u = u + v
+    WHERE(v.gt.u/2) v = u-v
+
+
+    do K = -deg, CEILING(MAXVAL(u))-1
+       do L = -deg, CEILING(MAXVAL(v))-1
+            do i = 0,min(deg+K, deg+L)
+                coeff = (-1.0_f64)**(K+L+i)*choose(deg,i-K)*choose(deg,i-L)*choose(deg,i)
+                do d = 0,deg-1
+                    aux=abs(2./sqrt(3.)*(spline%r1_x2*u+spline%r2_x2*v)+K-L)
+                    aux2=(2.*(spline%r1_x1*u+spline%r2_x1*v)-K-L-aux)/2
+                    WHERE(aux2.lt.0) aux2 = 0
+                    val(:) = val(:) + coeff*choose(deg-1+d,d)   &
+                        /factorial(2*deg-1+d)/factorial(deg-1-d)  &
+                        * aux**(deg-1-d)\
+                        * aux2**(2*deg-1+d)
+                 end do
+            end do
+         end do
+      end do
+      
+  end function chi_gen
+
+
+  function chi_gen_val(spline,x1,x2,deg) result(val)
+    ! Reference : @Condat and Van De Ville (2006)
+    !             "Three directional Box Splines:
+    !             Characterization and Efficient Evaluation."
+    sll_real64    :: val
+    sll_real64    :: x1
+    sll_real64    :: x2
+    sll_int32, intent(in)     :: deg
+    type(linear_box_spline_2d), pointer     :: spline
+    sll_real64    :: u
+    sll_real64    :: v
+    sll_real64    :: aux
+    sll_real64    :: aux2
+    sll_real64    :: det
+    sll_real64    :: coeff
+    sll_int32     :: K
+    sll_int32     :: L
+    sll_int32     :: i
+    sll_int32     :: d
+
+
+    val = 0._f64
+    det = spline%r1_x1 * spline%r2_x2 - spline%r2_x1 * spline%r1_x2
+
+    x1 = -abs(x1); x2 = abs(x2);
+    u = 1./det*( spline%r2_x2*x1 - spline%r2_x1*x2)
+    v = 1./det*(-spline%r1_x2*x1 + spline%r1_x1*x2)
+
+    if (v.gt.0) then
+      v = -v
+      u = u + v
+    end if
+    if(v.gt.u/2) then
+      v = u-v
+    end if
+
+    do K = -deg, CEILING(u)-1
+       do L = -deg, CEILING(v)-1
+            do i = 0,min(deg+K, deg+L)
+                coeff = (-1.0_f64)**(K+L+i)*choose(deg,i-K)*choose(deg,i-L)*choose(deg,i)
+                do d = 0,deg-1
+                    aux=abs(2./sqrt(3.)*(spline%r1_x2*u+spline%r2_x2*v)+K-L)
+                    aux2=(2.*(spline%r1_x1*u+spline%r2_x1*v)-K-L-aux)/2
+                    if(aux2.lt.0) then
+                       aux2 = 0
+                    end if
+                    val = val + coeff*choose(deg-1+d,d)   &
+                        /factorial(2*deg-1+d)/factorial(deg-1-d)  &
+                        * aux**(deg-1-d)\
+                        * aux2**(2*deg-1+d)
+                 end do
+            end do
+         end do
+      end do
+      
+  end function chi_gen_val
 
 
   function chi2(spline, x1, x2)
@@ -340,25 +485,36 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_int32               :: k1
     sll_int32               :: k2
     sll_int32               :: i
+    sll_int32               :: num_pts
+    sll_int32               :: num_pts_tot
 
     r1_x1 = spline%r1_x1
     r1_x2 = spline%r1_x2
     r2_x1 = spline%r2_x1
     r2_x2 = spline%r2_x2
 
+    num_pts = mesh%num_cells + 1
+    num_pts_tot = mesh%num_pts_tot
+
     !Lower left corner of encapsulating rhomboid
     k1 = from_cart_index_k1(mesh, x1, x2)
     k2 = from_cart_index_k2(mesh, x1, x2)
     i  = global_index(k1, k2) 
-
+    if (i .ge. num_pts_tot)  then 
+       i = twelve_fold_symmetry(i, num_pts)
+    end if
+    
     xm1 = x1-r1_x1*k1-r2_x1*k2
     xm2 = x2-r1_x2*k1-r2_x2*k2
-    val = spline%coeffs(i)*chi2(spline,xm1, xm2)
+    val = spline%coeffs(i)*chi_gen_val(spline,xm1, xm2,1)
 
     !Lower right corner of encapsulating rhomboid
     k1 = from_cart_index_k1(mesh, x1, x2) + 1
     k2 = from_cart_index_k2(mesh, x1, x2)
     i  = global_index(k1, k2) 
+    if (i .ge. num_pts_tot)  then 
+       i = twelve_fold_symmetry(i, num_pts)
+    end if
 
     xm1 = x1-r1_x1*k1-r2_x1*k2 - r1_x1
     xm2 = x2-r1_x2*k1-r2_x2*k2 - r1_x2
@@ -368,6 +524,9 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     k1 = from_cart_index_k1(mesh, x1, x2) 
     k2 = from_cart_index_k2(mesh, x1, x2) + 1
     i  = global_index(k1, k2) 
+    if (i .ge. num_pts_tot)  then 
+       i = twelve_fold_symmetry(i, num_pts)
+    end if
 
     xm1 = x1-r1_x1*k1-r2_x1*k2 - r2_x1
     xm2 = x2-r1_x2*k1-r2_x2*k2 - r2_x2
@@ -377,6 +536,9 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     k1 = from_cart_index_k1(mesh, x1, x2) + 1
     k2 = from_cart_index_k2(mesh, x1, x2) + 1
     i  = global_index(k1, k2) 
+    if (i .ge. num_pts_tot)  then 
+       i = twelve_fold_symmetry(i, num_pts)
+    end if
 
     xm1 = x1-r1_x1*k1-r2_x1*k2 - r1_x1 - r2_x1
     xm2 = x2-r1_x2*k1-r2_x2*k2 - r1_x2 - r2_x2
