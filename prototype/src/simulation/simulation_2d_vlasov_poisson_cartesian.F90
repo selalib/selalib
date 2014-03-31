@@ -987,9 +987,27 @@ contains
         sim%num_dof_x2, &
         'f', time_init )        
 #endif
+
+
+
       print *,'#maxf',maxval(f_visu), minval(f_visu) 
 
     endif
+
+!      call plot_f_cartesian_parallel( &
+!        iplot, &
+!        f_x1, &
+!        sim%x1_array, &
+!        np_x1, &
+!        node_positions_x2, &
+!        sim%num_dof_x2, &
+!        'fpar', &
+!        time_init, &
+!        layout_x1)
+!
+    
+    
+    
     iplot = iplot+1  
     
 
@@ -1072,7 +1090,7 @@ contains
     if(sll_get_collective_rank(sll_world_collective)==0) then        
       print *,'#step=',0,time_init+real(0,f64)*sim%dt
     endif
-    
+    !sim%num_iterations = 0
     do istep = 1, sim%num_iterations
       if (mod(istep,sim%freq_diag)==0) then
         if(sll_get_collective_rank(sll_world_collective)==0) then        
@@ -1648,7 +1666,111 @@ contains
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_cartesian
 
-#ifdef HDF5_PARALLEL
+!#ifdef HDF5_PARALLEL
+
+!  subroutine plot_f_cartesian_parallel( &
+!    iplot, &
+!    f, &
+!    node_positions_x1, &
+!    nnodes_x1, &
+!    node_positions_x2, &
+!    nnodes_x2, &
+!    array_name, &
+!    time, &
+!    layout)
+!    use hdf5
+!    use sll_hdf5_io_parallel
+!    sll_int32, intent(in) :: iplot
+!    sll_real64, dimension(:,:), intent(in) :: f
+!    integer(HID_T) :: pfile_id
+!    sll_int32 :: error
+!    sll_real64, dimension(:), intent(in) :: node_positions_x1
+!    sll_int32, intent(in) :: nnodes_x1
+!    sll_real64, dimension(:), intent(in) :: node_positions_x2    
+!    sll_int32, intent(in) :: nnodes_x2
+!    character(len=*), intent(in) :: array_name !< field name
+!    sll_real64, intent(in) :: time
+!    type(layout_2D), pointer :: layout
+!    sll_int32 :: prank
+!    sll_int32 :: loc_sz_x1
+!    sll_int32 :: loc_sz_x2
+!    integer(HSSIZE_T) :: offset(2)
+!    integer(HSIZE_T) :: global_dims(2)
+!    sll_int32 :: ierr
+!     
+!    sll_real64, dimension(:,:), allocatable :: x1
+!    sll_real64, dimension(:,:), allocatable :: x2
+!    sll_int32 :: i, j
+!    character(len=4)      :: cplot
+!    
+!    call int2string(iplot,cplot)
+!    prank = sll_get_collective_rank(sll_world_collective)
+!    call compute_local_sizes_2d(layout,loc_sz_x1,loc_sz_x2)        
+!
+!    offset(1) = get_layout_2D_i_min(layout,prank)-1
+!    offset(2) = get_layout_2D_j_min(layout,prank)-1
+!
+!    global_dims = (/nnodes_x1,nnodes_x2/)
+!    
+!    !print *,'#offset=',offset,prank,trim(array_name)//cplot//".h5"
+!    
+!    call sll_hdf5_file_create(trim(array_name)//cplot//".h5",pfile_id,ierr)
+!    
+!    if((size(f,1)<loc_sz_x1).or.(size(f,2)<loc_sz_x2)) then
+!      print *,'#problem of dimension for f'
+!      print *,'#in plot_f_cartesian_parallel'
+!      stop 
+!    endif
+!    
+!    print *,'#local_size=',loc_sz_x1,loc_sz_x2,size(f,1),size(f,2),nnodes_x1,nnodes_x2
+!    
+!    call sll_hdf5_write_array_2d( &
+!      pfile_id, &
+!      global_dims, &
+!      offset, &
+!      f(1:loc_sz_x1,1:loc_sz_x2), &
+!      "/values", &
+!      ierr)
+!
+!
+!    call sll_hdf5_file_close(pfile_id, ierr)
+!
+!
+!
+!    
+!        
+!  end subroutine plot_f_cartesian_parallel
+
+
+! subroutine write_fx2x4(this,cplot)
+! use hdf5
+! use sll_hdf5_io_parallel
+! class(vlasov4d_base),intent(in)     :: this
+! character(len=*)                    :: cplot
+! integer(HID_T)                      :: pfile_id
+! integer(HSSIZE_T)                   :: offset(2)
+! integer(HSIZE_T)                    :: global_dims(2)
+! sll_int32                           :: error
+! sll_int32                           :: prank
+! sll_real64, dimension(:,:), pointer :: fjl
+!
+! prank = sll_get_collective_rank(sll_world_collective)
+! call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+! SLL_CLEAR_ALLOCATE(fjl(1:loc_sz_j,1:loc_sz_l),error)
+! do l=1,loc_sz_l
+!    do j=1,loc_sz_j
+!       fjl(j,l) = sum(this%f(:,j,:,l))
+!    end do
+! end do
+! global_dims = (/this%geomx%num_cells2,this%geomv%num_cells2/)
+! offset(1) = get_layout_4D_j_min(this%layout_x,prank)-1
+! offset(2) = get_layout_4D_l_min(this%layout_x,prank)-1
+! call sll_hdf5_file_create('fx2x4_'//cplot//".h5",pfile_id,error)
+! call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
+! call sll_hdf5_file_close(pfile_id, error)
+!
+! end subroutine write_fx2x4
+
 
 !  subroutine plot_f_cartesian_parallel( &
 !    iplot, &
@@ -1751,7 +1873,7 @@ contains
 !
 !  end subroutine plot_f_cartesian_parallel
 
-#endif
+!#endif
 
 
 #endif

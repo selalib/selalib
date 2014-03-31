@@ -79,7 +79,7 @@ program unit_test_fields_multipatch
   print *, 'writing to file...'
   call F%write_to_file(0)
 
-  call delete_stmp2d_ptr(T)
+  call sll_delete(T)
   call sll_delete(F)
   print *, 'PASSED'
   

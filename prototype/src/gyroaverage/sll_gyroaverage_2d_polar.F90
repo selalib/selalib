@@ -361,7 +361,34 @@ contains
     SLL_DEALLOCATE_ARRAY(buf,error)
   end subroutine pre_compute_gyroaverage_polar_hermite_c1
   
-  
+  subroutine assemble_csr_from_pre_compute( &
+    pre_compute_coeff, &
+    pre_compute_index, &
+    nb, &
+    ia, &
+    ja, &
+    a, &
+    num_rows, &
+    num_nz )
+    sll_real64, dimension(:,:), intent(in) :: pre_compute_coeff
+    sll_int32, dimension(:,:), intent(in) :: pre_compute_index
+    sll_int32, intent(in) :: nb
+    sll_int32, dimension(:), pointer :: ia
+    sll_int32, dimension(:), pointer :: ja
+    sll_real64, dimension(:), pointer :: a
+    sll_int32, intent(out) :: num_rows
+    sll_int32, intent(out) :: num_nz
+    sll_int32 :: ierr
+    
+    
+    
+    SLL_ALLOCATE(ia(num_rows+1),ierr)
+    SLL_ALLOCATE(ja(num_nz),ierr)
+    SLL_ALLOCATE(a(num_nz),ierr)
+
+    
+    
+  end subroutine assemble_csr_from_pre_compute   
   
   subroutine compute_gyroaverage_pre_compute_polar_hermite_c1(gyro,f)
     type(sll_plan_gyroaverage_polar)  :: gyro
