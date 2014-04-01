@@ -70,7 +70,7 @@ def DK4Ddiag_choice(ichoice,resu):
     elif (ichoice == 32):
         DK4D_CL.energies_plot(resu)
     elif (ichoice == 2):
-        DK4D_Phi2D.Int_phisquare_plot(resu)
+        DK4D_Phi2D.log_Int_phisquare_plot(resu)
 
 #end def DK4Ddiag_choice
 

@@ -50,11 +50,11 @@ def Phi2D_xy_plot(resu):
 
 
 #------------------------------------------------------
-# int Phi(eta1,eta2,eta3)**2 jac deta1 deta2 deta3
+# log int Phi(eta1,eta2,eta3)**2 jac deta1 deta2 deta3
 # --------
 # choice 1
 #------------------------------------------------------
-def Int_phisquare_plot(resu):
+def log_Int_phisquare_plot(resu):
     """ Phi(x,y)"""
     
     #--> Ask time
@@ -65,10 +65,10 @@ def Int_phisquare_plot(resu):
 
         fig = mpp.figure(figsize=(5,5))
         ax1 = fig.add_subplot(1,1,1)
-        p1  = ax1.pcolormesh(resu.xgrid_2d[itime_diag,:,:], \
-                                 resu.ygrid_2d[itime_diag,:,:], \
-                                 resu.intphisquare[itime_diag,:,:]) 
-
+        p1  = mpp.plot(resu.time_evol,log(resu.intphisquare),'+-')
+        mpp.xlabel('time')
+        mpp.ylabel('intsquare')
+        mpp.grid(True)
         fig.show()
 
         #--> Ask time        
