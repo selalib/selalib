@@ -85,6 +85,7 @@ module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
   sll_real64,dimension(:,:),allocatable :: surfx1,surfx2
   sll_real64, dimension(:),pointer  :: p
   sll_real64, dimension(:),pointer  :: M_diag,M_low,M_sup
+  !sll_real64, dimension(:),pointer  :: vkgd,vkgs,vkgi
   sll_real64, dimension(:),pointer  :: M1_diag,M1_low,M1_sup
   sll_real64, dimension(:),pointer  :: Av1_diag,Av1_low,Av1_sup
   sll_real64, dimension(:),pointer  :: Av2_diag,Av2_low,Av2_sup
@@ -3399,6 +3400,132 @@ end do
  SLL_DEALLOCATE_ARRAY(E,ierr)
  SLL_DEALLOCATE_ARRAY(xmil,ierr)
   end subroutine solexact
+
+ subroutine poisson_dirichlet(sim)
+   class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
+   sll_int32 :: nn,n,nsky,ch
+   sll_int32 :: ii,jj,i,j,p,ier,ierr,k,l
+   sll_int32,dimension(:),pointer  :: prof,indi,indj,kld
+   sll_real64, dimension(:),pointer  :: vkgd,vkgs,vkgi
+  sll_real64, dimension(:),pointer  :: val,f,vx
+  sll_int32 :: ifac,isol,mp,nsym
+  sll_real64 ::v,void
+!!$   sll_real64,intent(in) ::t
+!!$   sll_real64, intent(out) :: E2norm_ex
+!!$   sll_real64 :: kx, eps,dx
+!!$   sll_real64, dimension(:),pointer :: E,xmil
+
+   nn=sim%nc_x1
+   n=nn*nn
+   ch=nn*nn+4*nn*(nn-1)
+    SLL_ALLOCATE(indi(ch),ierr)
+   SLL_ALLOCATE(indj(ch),ierr)
+   SLL_ALLOCATE(val(ch),ierr)
+    p=0
+    do k=1,n
+       p=p+1
+       indi(p)=k
+       indj(p)=k
+       val(p)=4
+    end do
+    do ii=1,nn-1
+       do jj=1,nn
+          p=p+1
+          i=ii+(jj-1)*nn
+          j=ii+1+(jj-1)*nn
+          val(p)=-1
+          indi(p)=i
+          indj(p)=j
+          p=p+1
+          val(p)=-1
+          indi(p)=j
+          indj(p)=i
+       end do
+    end do
+    do ii=1,nn
+       do jj=1,nn-1
+          i=ii+(jj-1)*nn
+          j=ii+jj*nn
+          p=p+1
+          val(p)=-1
+          indi(p)=i
+          indj(p)=j
+          p=p+1
+          val(p)=-1
+          indi(p)=j
+          indj(p)=i
+       end do
+    end do
+    !write(*,*) val
+    !definir prof et mkld
+    SLL_ALLOCATE(prof(n),ierr)
+    SLL_ALLOCATE(kld(n+1),ierr)
+    prof=0
+    do k=2,ch
+       i=indi(k)
+       j=indj(k)
+       prof(j)=max(prof(j),j-i)
+       prof(i)=max(prof(i),i-j)
+    end do
+    kld(1)=1
+    do i=2,n+1
+       kld(i)=kld(i-1)+prof(i-1)
+    end do
+    nsky=kld(n+1)-1
+    SLL_ALLOCATE(vkgs(nsky),ierr)
+    SLL_ALLOCATE(vkgi(nsky),ierr)
+    SLL_ALLOCATE(vkgd(n),ierr)
+    vkgs=0.d0
+    vkgi=0.d0
+    !definir vkgs,vkgi,vkgd
+    do l=1,ch
+       i=indi(l)
+       j=indj(l)
+       v=val(l)
+       if(i.eq.j)then
+          vkgd(i)=v
+       end if
+       if (i<j) then
+          k=kld(j+1)-j+i
+          vkgs(k)=v
+       end if
+       if (i>j) then
+          k=kld(i+1)-i+j
+          vkgi(k)=v
+       end if
+    end do
+    SLL_ALLOCATE(f(n),ierr)
+    SLL_ALLOCATE(vx(n),ierr)
+    ifac=1  ! we compute the LU decomposition
+    isol=1  ! we solve the linear system
+    nsym=1  ! we do not take into account the symetry of M
+    mp=6   ! write the log on screen
+    do ii=1,nn
+       do jj=1,nn
+          i=ii+(jj-1)*nn
+          f(i)=sim%rho_split(ii,jj)
+       end do
+    end do
+    call sol(vkgs,vkgd,vkgi,f,kld,vx,n,mp,ifac,isol,nsym,void,ier&
+         &,nsky)
+    do ii=1,nn
+       do jj=1,nn
+          i=ii+(jj-1)*nn
+          sim%phi_split(ii,jj)=vx(i)
+       end do
+    end do
+
+    SLL_DEALLOCATE_ARRAY(prof,ierr)
+   SLL_DEALLOCATE_ARRAY(kld,ierr)
+   SLL_DEALLOCATE_ARRAY(vkgs,ierr)
+   SLL_DEALLOCATE_ARRAY(vkgi,ierr)
+   SLL_DEALLOCATE_ARRAY(indi,ierr)
+   SLL_DEALLOCATE_ARRAY(indj,ierr)
+   SLL_DEALLOCATE_ARRAY(vkgd,ierr)
+   SLL_DEALLOCATE_ARRAY(val,ierr)
+   SLL_DEALLOCATE_ARRAY(f,ierr)
+   SLL_DEALLOCATE_ARRAY(vx,ierr)
+  end subroutine poisson_dirichlet
 
 
 end module sll_simulation_4d_vp_eulerian_cartesian_finite_volume_module
