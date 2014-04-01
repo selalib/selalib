@@ -66,10 +66,10 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 32
-#define NPTS2 32
-#define NPTS3 32
-#define NPTS4 32
+#define NPTS1 31
+#define NPTS2 31
+#define NPTS3 31
+#define NPTS4 31
 #define SPL_DEG_ETA1 3 
 #define SPL_DEG_ETA2 3
 #define SPL_DEG_VX 3 
@@ -114,16 +114,16 @@ program qns_4d_general
 
   ! identity transformation
 
-!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
-!!$       "analytic_identity_transformation", &
-!!$       mx, &
-!!$       identity_x1, &
-!!$       identity_x2, &
-!!$       identity_jac11, &
-!!$       identity_jac12, &
-!!$       identity_jac21, &
-!!$       identity_jac22, &
-!!$       (/ 0.0_f64 /) )
+  transformation_x => new_coordinate_transformation_2d_analytic( &
+       "analytic_identity_transformation", &
+       mx, &
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       (/ 0.0_f64 /) )
 
   ! colella transformation
   
@@ -139,9 +139,9 @@ program qns_4d_general
 !!$       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
 
 
-   transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n31x31p3x3_patch0.nml")
-  transformation_x%mesh => mx
-   print*, 'transformation ok'
+!!$   transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n31x31p3x3_patch0.nml")
+!!$   transformation_x%mesh => mx
+!!$   print*, 'transformation ok'
   ! ---------------------------------------------------------------------
   ! define the values of the parameters for the landau initializer
   ! ---------------------------------------------------------------------
