@@ -242,7 +242,6 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    SET(SIMULATION_DEPS sll_poisson_parallel
                        sll_poisson_solvers
                        sll_gyroaverage
-                       sll_multigrid
                        sll_fft
 		       sll_distribution_function
 		       sll_general_coordinate_elliptic_solvers
