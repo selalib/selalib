@@ -6,8 +6,7 @@ module sll_landau_2d_initializer
   implicit none
 
   type, extends(scalar_field_2d_initializer_base) :: init_landau_2d
-    !class(sll_mapped_mesh_2d_base), pointer :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+     class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64 :: eps
     sll_real64 :: kx
     sll_int32 :: is_delta_f
@@ -18,11 +17,10 @@ module sll_landau_2d_initializer
 
 contains
 
-  subroutine initialize_landau_2d( init_obj, mesh, data_position, eps_val, kx_val, &
-       is_delta_f)
+  subroutine initialize_landau_2d( init_obj, transf, data_position, eps_val, &
+       kx_val, is_delta_f)
     class(init_landau_2d), intent(inout)  :: init_obj
-    !class(sll_mapped_mesh_2d_base), intent(in), target :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
     sll_real64, intent(in), optional     :: kx_val
@@ -44,16 +42,15 @@ contains
     else
        init_obj%is_delta_f = 1 !  default value is false
     end if
-    init_obj%mesh => mesh
+    init_obj%transf => transf
     ! kx remains uninitialized because we need mesh information
   end subroutine
 
   subroutine f_x1x2_landau_2d( init_obj, data_out )
     class(init_landau_2d), intent(inout)       :: init_obj
-    !class(sll_mapped_mesh_2d_base), pointer    :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     sll_real64, dimension(:,:), intent(out)    :: data_out
-
+    type(sll_logical_mesh_2d), pointer         :: mesh
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: num_pts1
@@ -64,13 +61,15 @@ contains
     sll_real64 :: v
 
     eps = init_obj%eps
-    mesh => init_obj%mesh
+    transf => init_obj%transf
+    mesh => transf%mesh
+
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
-       num_pts1 = mesh%mesh%num_cells1+1
-       num_pts2 = mesh%mesh%num_cells2+1
+       num_pts1 = mesh%num_cells1+1
+       num_pts2 = mesh%num_cells2+1
     else if (init_obj%data_position ==  CELL_CENTERED_FIELD) then
-       num_pts1 = mesh%mesh%num_cells1
-       num_pts2 = mesh%mesh%num_cells2
+       num_pts1 = mesh%num_cells1
+       num_pts2 = mesh%num_cells2
     end if
     kx = init_obj%kx
     SLL_ASSERT( size(data_out,1) .ge. num_pts1 )
@@ -78,11 +77,11 @@ contains
     do j=1,num_pts2
        do i=1, num_pts1
           if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
-             v = mesh%x2_at_node(i,j)
-             x = mesh%x1_at_node(i,j)
+             v = transf%x2_at_node(i,j)
+             x = transf%x1_at_node(i,j)
           else if (init_obj%data_position ==  CELL_CENTERED_FIELD) then
-             v = mesh%x2_at_cell(i,j)
-             x = mesh%x1_at_cell(i,j)
+             v = transf%x2_at_cell(i,j)
+             x = transf%x1_at_cell(i,j)
           else
              print*, 'f_x1x2_landau_2d:',  init_obj%data_position, 'not defined'
           end if

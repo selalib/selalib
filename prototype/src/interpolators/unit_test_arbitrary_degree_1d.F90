@@ -47,7 +47,7 @@ program unit_test
      reference(i+1)     = sin(2.0_f64*sll_pi*eta1)
   end do
 !!$  
-!!$  call sll_gnuplot_field_1d( &
+!!$  call sll_gnuplot_1d( &
 !!$       X1MIN, &
 !!$       NPTS1, &
 !!$       reference, &
@@ -97,13 +97,13 @@ program unit_test
      !
   end do
 
-!!$  call sll_gnuplot_field_1d(X1MIN, X1MAX, NPTS1, &
+!!$  call sll_gnuplot_1d(X1MIN, X1MAX, NPTS1, &
 !!$       calculated, 'calculated_interp_arb_deg', 0, ierr)
 !!$
-!!$  call sll_gnuplot_field_1d(X1MIN, X1MAX, NPTS1, &
+!!$  call sll_gnuplot_1d(X1MIN, X1MAX, NPTS1, &
 !!$       difference, 'difference_interp_arb_deg', 0, ierr)
 !!$  
-!!$  call sll_gnuplot_field_1d(X1MIN, X1MAX, NPTS1, &
+!!$  call sll_gnuplot_1d(X1MIN, X1MAX, NPTS1, &
 !!$       ad1d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
   
   call delete(ad1d)
@@ -177,9 +177,9 @@ program unit_test
        X1MAX, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
-       SPL_DEG,&
-       3.0_f64,&
-       3.0_f64)
+       SPL_DEG)
+
+  call set_slope1d(ad1d,3.0_f64,3.0_f64)
   
   call ad1d%compute_interpolants( &
        x(1:NPTS1))
