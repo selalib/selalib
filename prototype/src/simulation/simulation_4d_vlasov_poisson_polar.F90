@@ -520,6 +520,7 @@ contains
     call sll_gnuplot_2d_parallel( &
         eta3_min+(global_indices(1)-1)*delta_eta3, delta_eta3, &
         eta4_min+(global_indices(2)-1)*delta_eta4, delta_eta4, &
+        size(sim%proj_f_x3x4,1), size(sim%proj_f_x3x4,2), &
         sim%proj_f_x3x4, "fvxvy", itime, error )
 
   end subroutine plot_f_x3x4

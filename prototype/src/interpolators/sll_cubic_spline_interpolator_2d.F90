@@ -393,8 +393,8 @@ contains
        
        do j = 1, num_points2
           do i = 1, num_points1
-             eta1 = eta1_min + (i-1)*delta_eta1
-             eta2 = eta2_min + (j-1)*delta_eta2
+             eta1 = eta1_min + (i-1)*delta_eta1 - alpha1(i,j)
+             eta2 = eta2_min + (j-1)*delta_eta2 - alpha2(i,j)
              eta1 = min(eta1,eta1_max)
              eta2 = min(eta2,eta2_max)
              eta1 = max(eta1,eta1_min)
@@ -406,6 +406,7 @@ contains
 #endif
           end do
        end do
+      
        
     else
 
