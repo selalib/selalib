@@ -60,7 +60,7 @@ module sll_module_coordinate_transformations_2d
      !ES the two following need to be in the base class
      !character(len=64) :: label
      !logical           :: written! = .false.
-     type(sll_logical_mesh_2d), pointer :: mesh
+
 #else
   type, extends(sll_coordinate_transformation_2d_base):: &
        sll_coordinate_transformation_2d_analytic
@@ -71,6 +71,7 @@ module sll_module_coordinate_transformations_2d
 #else
      !character(len=64) :: label
      !logical           :: written! = .false.
+     !type(sll_logical_mesh_2d), pointer :: mesh => null()
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
@@ -80,6 +81,7 @@ module sll_module_coordinate_transformations_2d
      sll_real64, dimension(:), pointer :: params => null() ! transf params
    contains
      procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic
+     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_analytic
      ! Functions with integer arguments
      procedure, pass(transf) :: x1_at_node => x1_node_analytic
      procedure, pass(transf) :: x2_at_node => x2_node_analytic
@@ -128,9 +130,11 @@ module sll_module_coordinate_transformations_2d
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(sll_interpolator_2d_base), pointer               :: x1_interp
      class(sll_interpolator_2d_base), pointer               :: x2_interp
+     !type(sll_logical_mesh_2d), pointer :: mesh => null()
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
+     procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_discrete
      procedure, pass(transf) :: x1_at_node => x1_node_discrete
      procedure, pass(transf) :: x2_at_node => x2_node_discrete
      procedure, pass(transf) :: jacobian_at_node => transf_2d_jacobian_node_discrete
@@ -421,7 +425,11 @@ contains
     nullify( transf%jacobian_matrix_function )
   end subroutine delete_transformation_2d_analytic
 
-
+  function get_logical_mesh_analytic( transf ) result(res)
+    class(sll_coordinate_transformation_2d_analytic), intent(in) :: transf
+    type(sll_logical_mesh_2d), pointer :: res
+    res => transf%mesh
+  end function get_logical_mesh_analytic
 
 #ifdef STDF95
 #else
@@ -713,7 +721,7 @@ contains
     nc_eta2 = transf%mesh%num_cells2
 
     if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
+       local_format = SLL_IO_GNUPLOT
     else
        local_format = output_format
     end if
@@ -738,6 +746,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_GNUPLOT) then
+
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+
+          do i1=1, nc_eta1+1
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_gnuplot_2d( nc_eta1+1, nc_eta2+1, x1mesh, x2mesh,&
+                               trim(transf%label), ierr)  
 
        else if (local_format == SLL_IO_MTV) then
 
@@ -786,6 +809,13 @@ contains
   !        Functions for the discrete general transformation
   !
   !**************************************************************************
+
+  function get_logical_mesh_discrete( transf ) result(res)
+    class(sll_coordinate_transformation_2d_discrete), intent(in) :: transf
+    type(sll_logical_mesh_2d), pointer :: res
+    res => transf%mesh
+  end function get_logical_mesh_discrete
+
 
   function x1_node_discrete( transf, i, j ) result(val)
 #ifdef STDF95
@@ -1376,7 +1406,7 @@ contains
     delta_eta2 = transf%mesh%delta_eta2
 
     if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
+       local_format = SLL_IO_GNUPLOT
     else
        local_format = output_format
     end if
@@ -1402,6 +1432,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_GNUPLOT) then
+
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_gnuplot_2d( npts_eta1, npts_eta2, x1mesh, x2mesh,&
+                               trim(transf%label), ierr)  
 
        else if (local_format == SLL_IO_MTV) then
 

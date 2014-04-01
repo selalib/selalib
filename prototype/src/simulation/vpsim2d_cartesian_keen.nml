@@ -24,6 +24,10 @@
   initial_function_case = "SLL_LANDAU"
   kmode = 0.26
   eps = 0.0
+  restart_file = "no_restart_file"
+  !restart_file = "init4/f_plot_0002"
+  !time_init_from_restart_file = .true.
+  time_init_from_restart_file = .false.
 /
 
 &time_iterations
@@ -31,6 +35,8 @@
   number_iterations = 100
   freq_diag = 20
   freq_diag_time = 1
+  nb_mode = 20
+  time_init = 0.
   !split_case = "SLL_STRANG_VTV" 
   !split_case = "SLL_STRANG_TVT" 
   split_case = "SLL_ORDER6VPnew1_VTV" 
