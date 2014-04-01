@@ -261,11 +261,11 @@ contains ! *******************************************************************
    SLL_ALLOCATE(es%knots2_rho(num_cells_eta2 + spline_degree_eta2 + 2 ),ierr)
    SLL_ALLOCATE(es%rho_vec(vec_sz),ierr)
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
-  ! if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-  !      (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-  !    
-  !    solution_size = solution_size +1
-  ! end if
+   if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
+        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
+      
+      solution_size = solution_size +1
+   end if
 
    SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
    SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
