@@ -61,7 +61,7 @@ module sll_module_coordinate_transformations_2d_nurbs
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
-     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
+!     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
 !     type(sll_logical_mesh_2d), pointer :: mesh
    contains
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
@@ -402,23 +402,25 @@ contains
     ! possession of the logical mesh or not... For now we keep the minimum
     ! information related with the number of cells to at least be able to
     ! initialize a logical mesh outside of the object.
-
-    transf%mesh2d_minimal => new_logical_mesh_2d(&
+    transf%mesh => new_logical_mesh_2d(&
          number_cells1,&
          number_cells2,&
          eta1_min = eta1_min_minimal,&
          eta1_max = eta1_max_minimal,&
          eta2_min = eta2_min_minimal,&
          eta2_max = eta2_max_minimal)
-
-    transf%mesh  => null()
+    ! Sooner or later we need to include an additional logical mesh, since
+    ! we need the 'minimal' mesh implicit in the nurbs transformation and the
+    ! extended logical mesh, where the data lives. For now they remain one
+    ! and the same.
+!    transf%mesh  => null()
     transf%label =  trim(label)
   end subroutine read_from_file_2d_nurbs
 
   function get_logical_mesh_nurbs_2d( transf ) result(res)
     type(sll_logical_mesh_2d), pointer :: res
     class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
-    res => transf%mesh2d_minimal
+    res => transf%mesh
   end function get_logical_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
@@ -1034,7 +1036,7 @@ contains
     call transf%x1_interp%delete()
     call transf%x2_interp%delete()
     call transf%x3_interp%delete()
-    nullify( transf%mesh2d_minimal)
+!    nullify( transf%mesh2d_minimal)
     nullify( transf%mesh)
     
   end subroutine delete_transformation_2d_nurbs

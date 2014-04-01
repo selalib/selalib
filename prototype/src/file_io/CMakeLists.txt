@@ -1,7 +1,7 @@
-MESSAGE(STATUS "HDF5_IS_PARALLEL:${HDF5_IS_PARALLEL}")
 IF(HDF5_IS_PARALLEL)
-   #SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-    SET(CMAKE_Fortran_COMPILER "/opt/local/bin/openmpif90")
+   MESSAGE(STATUS "HDF5_IS_PARALLEL:${HDF5_IS_PARALLEL}")
+   MESSAGE(STATUS "Switch to MPI fortran Wrapper to build sll_file_io library")
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_IS_PARALLEL)
 
 SET(IO_SRC sll_ascii_io.F90 
@@ -23,10 +23,8 @@ TARGET_LINK_LIBRARIES(test_io sll_file_io sll_constants)
 ADD_TEST(NAME file_io COMMAND test_io)
 SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-
 IF(MPI_MODULE_ENABLED)
-   #SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-   SET(CMAKE_Fortran_COMPILER "/opt/local/bin/openmpif90")
+   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    SET(IO_SRC ${IO_SRC} sll_gnuplot_parallel.F90)
 
    IF(HDF5_PARALLEL_ENABLED)

@@ -41,7 +41,6 @@ interface plot_format_points3d
    module procedure pqrs_plot_format_points3d
 end interface plot_format_points3d
 
-sll_int32, private :: i, j, k
 
 contains
 
@@ -55,6 +54,7 @@ sll_real64 :: time, xmin, xmax, vmin, vmax
 character(len=4) :: fin
 sll_int32 :: file_id
 sll_int32 :: nbpart
+sll_int32 :: k
 
 call int2string(iplot, fin)
 
@@ -72,8 +72,8 @@ close(file_id)
 nbpart = size(x)
 SLL_ASSERT(nbpart == size(v))
 open(file_id, file = plot_name//"_"//fin//'.dat' )
-do i=1,nbpart
-   write(file_id,*) sngl(x(i)),sngl(v(i)) 
+do k=1,nbpart
+   write(file_id,*) sngl(x(k)),sngl(v(k)) 
 end do
 close(file_id)
 
@@ -87,6 +87,7 @@ sll_int32, intent(in) :: nx
 sll_int32, intent(in) :: nv
 sll_real64, dimension(nx,nv) :: df
 sll_real64 :: weight
+sll_int32  :: i, j, k
 
 delta_x = (xmax-xmin)/(nx-1)
 delta_v = (vmax-vmin)/(nv-1)
@@ -151,6 +152,7 @@ sll_real64, dimension(:), intent(in) :: x, v
 sll_real64, intent(in) :: time
 sll_real64 :: xmin, xmax, ymin, ymax
 sll_int32  :: nbpart
+sll_int32  :: k
 
 print*, "set title'time=",time,"'"
 print*, 'set term x11'
@@ -177,6 +179,7 @@ sll_int32, intent(in) :: iplot
 character(len=4) :: fin
 sll_int32 :: file_id, error
 sll_int32 :: nbpart
+sll_int32  :: k
 
 call int2string(iplot, fin)
 
@@ -202,6 +205,7 @@ sll_int32, intent(in) :: iplot
 character(len=4) :: fin
 sll_int32 :: file_id, error
 sll_int32 :: nbpart
+sll_int32  :: k
 
 call int2string(iplot, fin)
 
@@ -228,6 +232,7 @@ sll_int32, intent(in) :: iplot
 character(len=4) :: fin
 sll_int32 :: file_id, error
 sll_int32 :: nbpart
+sll_int32  :: k
 
 call int2string(iplot, fin)
 
@@ -256,9 +261,10 @@ sll_real64, dimension(:), intent(in) :: x
 sll_real64, dimension(:), intent(in) :: v
 sll_int32, intent(in) :: iplot
 character(len=4) :: fin
-sll_int32 :: file_id, error
+sll_int32  :: file_id, error
 sll_real64 :: xmin, xmax, vmin, vmax
-sll_int32 :: nbpart
+sll_int32  :: nbpart
+sll_int32  :: k
 
 nbpart = size(x)
 
@@ -388,7 +394,6 @@ sll_real64, dimension(nx,ny), intent(out) :: df
 sll_real64 :: x, cx, cm1x, cm2x, cp1x, cp2x
 sll_real64 :: y, cy, cm1y, cm2y, cp1y, cp2y
 
-
 do kp = 1, size(xp)
 
    xt = (xp(kp)-xmin)/(xmax-xmin)*nx
@@ -411,37 +416,37 @@ do kp = 1, size(xp)
    cm1y = f_m4(1.+y)
    cp1y = f_m4(1.-y)
 
-   if ( i > 2 .and. j > 2 .and. i < nx-1 .and. j < ny-1 ) then
+   if ( ip > 2 .and. jp > 2 .and. ip < nx-1 .and. jp < ny-1 ) then
 	
-   df(ip-2,jp-2) = df(ip-2,jp-2) + cm2x * cm2y * wp(kp)
-   df(ip-2,jp-1) = df(ip-2,jp-1) + cm2x * cm1y * wp(kp)
-   df(ip-2,jp  ) = df(ip-2,jp  ) + cm2x * cy   * wp(kp)
-   df(ip-2,jp+1) = df(ip-2,jp+1) + cm2x * cp1y * wp(kp)
-   df(ip-2,jp+2) = df(ip-2,jp+2) + cm2x * cp2y * wp(kp)
+      df(ip-2,jp-2) = df(ip-2,jp-2) + cm2x * cm2y * wp(kp)
+      df(ip-2,jp-1) = df(ip-2,jp-1) + cm2x * cm1y * wp(kp)
+      df(ip-2,jp  ) = df(ip-2,jp  ) + cm2x * cy   * wp(kp)
+      df(ip-2,jp+1) = df(ip-2,jp+1) + cm2x * cp1y * wp(kp)
+      df(ip-2,jp+2) = df(ip-2,jp+2) + cm2x * cp2y * wp(kp)
 
-   df(ip-1,jp-2) = df(ip-1,jp-2) + cm1x * cm2y * wp(kp)
-   df(ip-1,jp-1) = df(ip-1,jp-1) + cm1x * cm1y * wp(kp)
-   df(ip-1,jp  ) = df(ip-1,jp  ) + cm1x * cy   * wp(kp)
-   df(ip-1,jp+1) = df(ip-1,jp+1) + cm1x * cp1y * wp(kp)
-   df(ip-1,jp+2) = df(ip-1,jp+2) + cm1x * cp2y * wp(kp)
+      df(ip-1,jp-2) = df(ip-1,jp-2) + cm1x * cm2y * wp(kp)
+      df(ip-1,jp-1) = df(ip-1,jp-1) + cm1x * cm1y * wp(kp)
+      df(ip-1,jp  ) = df(ip-1,jp  ) + cm1x * cy   * wp(kp)
+      df(ip-1,jp+1) = df(ip-1,jp+1) + cm1x * cp1y * wp(kp)
+      df(ip-1,jp+2) = df(ip-1,jp+2) + cm1x * cp2y * wp(kp)
 
-   df(ip  ,jp-2) = df(ip  ,jp-2) + cx   * cm2y * wp(kp)
-   df(ip  ,jp-1) = df(ip  ,jp-1) + cx   * cm1y * wp(kp)
-   df(ip  ,jp  ) = df(ip  ,jp  ) + cx   * cy   * wp(kp)
-   df(ip  ,jp+1) = df(ip  ,jp+1) + cx   * cp1y * wp(kp)
-   df(ip  ,jp+2) = df(ip  ,jp+2) + cx   * cp2y * wp(kp)
+      df(ip  ,jp-2) = df(ip  ,jp-2) + cx   * cm2y * wp(kp)
+      df(ip  ,jp-1) = df(ip  ,jp-1) + cx   * cm1y * wp(kp)
+      df(ip  ,jp  ) = df(ip  ,jp  ) + cx   * cy   * wp(kp)
+      df(ip  ,jp+1) = df(ip  ,jp+1) + cx   * cp1y * wp(kp)
+      df(ip  ,jp+2) = df(ip  ,jp+2) + cx   * cp2y * wp(kp)
 
-   df(ip+1,jp-2) = df(ip+1,jp-2) + cp1x * cm2y * wp(kp)
-   df(ip+1,jp-1) = df(ip+1,jp-1) + cp1x * cm1y * wp(kp)
-   df(ip+1,jp  ) = df(ip+1,jp  ) + cp1x * cy   * wp(kp)
-   df(ip+1,jp+1) = df(ip+1,jp+1) + cp1x * cp1y * wp(kp)
-   df(ip+1,jp+2) = df(ip+1,jp+2) + cp1x * cp2y * wp(kp)
+      df(ip+1,jp-2) = df(ip+1,jp-2) + cp1x * cm2y * wp(kp)
+      df(ip+1,jp-1) = df(ip+1,jp-1) + cp1x * cm1y * wp(kp)
+      df(ip+1,jp  ) = df(ip+1,jp  ) + cp1x * cy   * wp(kp)
+      df(ip+1,jp+1) = df(ip+1,jp+1) + cp1x * cp1y * wp(kp)
+      df(ip+1,jp+2) = df(ip+1,jp+2) + cp1x * cp2y * wp(kp)
 
-   df(ip+2,jp-2) = df(ip+2,jp-2) + cp2x * cm2y * wp(kp)
-   df(ip+2,jp-1) = df(ip+2,jp-1) + cp2x * cm1y * wp(kp)
-   df(ip+2,jp  ) = df(ip+2,jp  ) + cp2x * cy   * wp(kp)
-   df(ip+2,jp+1) = df(ip+2,jp+1) + cp2x * cp1y * wp(kp)
-   df(ip+2,jp+2) = df(ip+2,jp+2) + cp2x * cp2y * wp(kp)
+      df(ip+2,jp-2) = df(ip+2,jp-2) + cp2x * cm2y * wp(kp)
+      df(ip+2,jp-1) = df(ip+2,jp-1) + cp2x * cm1y * wp(kp)
+      df(ip+2,jp  ) = df(ip+2,jp  ) + cp2x * cy   * wp(kp)
+      df(ip+2,jp+1) = df(ip+2,jp+1) + cp2x * cp1y * wp(kp)
+      df(ip+2,jp+2) = df(ip+2,jp+2) + cp2x * cp2y * wp(kp)
 
    end if
 
@@ -451,7 +456,7 @@ end subroutine compute_df_m4
 
 
 !> M4 function from Monhagan (SPH method)
-sll_real64 pure function f_m4( x )
+sll_real64 function f_m4( x )
 sll_real64, intent(in) :: x      
 if( x .gt. 2. ) then
    f_m4 = 0.
@@ -510,6 +515,8 @@ sll_real64, dimension(nx,ny), intent(out) :: df
 sll_real64 :: x, c1x, c_1x, c2x
 sll_real64 :: y, c1y, c_1y, c2y
 
+
+df = 0.0_f64
 
 do kp = 1, size(xp)
 

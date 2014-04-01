@@ -26,6 +26,8 @@ type, public :: dg_field
    sll_real64, dimension(:,:,:,:), pointer :: array
    sll_real64, dimension(:), pointer       :: xgalo
    sll_real64, dimension(:), pointer       :: wgalo
+   sll_int32                               :: tag
+   sll_int32                               :: file_id
 
 contains
 
@@ -78,6 +80,9 @@ function new_dg_field( degree, tau, init_function ) result (this)
       call initialize_dg_field( this, init_function, 0.0_f64) 
    end if
 
+   this%tag = 0
+   this%file_id = 0
+
 end function new_dg_field
 
 subroutine initialize_dg_field( this, init_function, time) 
@@ -121,8 +126,22 @@ subroutine plot_dg_field_2d( this, field_name )
    sll_int32              :: i, j, ii, jj
    sll_int32              :: icell
    character(len=4)       :: ccell
+   character(len=4)       :: ctag
+   character(len=9)       :: label
 
-   call sll_ascii_file_create(field_name//".gnu", gnu_id, error)
+   call int2string(this%tag, ctag)
+
+   gnu_id = this%file_id
+
+   if (gnu_id == 0) then
+      call sll_ascii_file_create(field_name//".gnu", gnu_id, error)
+      rewind(gnu_id)
+   else
+      open(unit=gnu_id, file=field_name//".gnu", position="append")
+      write(gnu_id,"(a)") "unset key"
+      write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
+   end if
+
 
    icell = 0
    do i = 1, this%tau%mesh%num_cells1
@@ -131,14 +150,15 @@ subroutine plot_dg_field_2d( this, field_name )
       icell = icell+1
 
       call int2string(icell, ccell)
+      label = ccell//"-"//ctag
 
       if (icell == 1) then
-         write(gnu_id,"(a)",advance='no') "splot '"//field_name//ccell//".dat' w l"
+         write(gnu_id,"(a)",advance='no') "splot '"//field_name//label//".dat' w l"
       else
-         write(gnu_id,"(a)",advance='no') ",'"//field_name//ccell//".dat' w l "
+         write(gnu_id,"(a)",advance='no') ",'"//field_name//label//".dat' w l "
       end if
 
-      call sll_ascii_file_create(field_name//ccell//".dat", file_id, error)
+      call sll_ascii_file_create(field_name//label//".dat", file_id, error)
 
       offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
       offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
@@ -159,6 +179,9 @@ subroutine plot_dg_field_2d( this, field_name )
 
    write(gnu_id,*)
    close(gnu_id)
+
+   this%tag = this%tag+1
+   this%file_id = gnu_id
    
 end subroutine plot_dg_field_2d
 
