@@ -546,10 +546,36 @@ Unit-tested.
 
 
 
+
+\section{Boundary Condition Descriptors}
+
+\subsection{Description}
+This tiny module defines a few symbols that are meant to be used library-wide as a means to indicate various boundary condition types or their combinations. The objective is to have pre-defined symbols that will prevent the need of using numeric values explicitly to specify this information.
+
+\subsection{Exposed Interface}
+The defined symbols are:
+
+\begin{verbatim}
+     SLL_USER_DEFINED
+     SLL_PERIODIC
+     SLL_DIRICHLET
+     SLL_NEUMANN 
+     SLL_HERMITE 
+     SLL_NEUMANN_MODE_0
+     SLL_SET_TO_LIMIT 
+\end{verbatim}
+
+\subsection{Usage}
+Simply pass the parameter as an argument to any routine call which requires a \emph{boundary condition descriptor}.
+
+
+
+
+
 \section{Cubic Splines}
 
 \subsection{Description}
-The cubic splines module provides capabilities for 1D and 2D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated are stored in a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data.
+The cubic splines module provides capabilities for 1D and 2D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated are represented by a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data. To use this module, simply declare an instance of the type to be used, initialize the object with the desired parameters, use the initialized object to do interpolations and when no longer needed, release the resources through a call to the \verb+sll_delete( )+ routine. More details below.
 
 \subsection{Exposed Interface}
 Fundamental types:
@@ -557,16 +583,16 @@ Fundamental types:
      sll_cubic_spline_1d
      sll_cubic_spline_2d
 \end{verbatim}
-Like all the other fundamental types in Selalib, this type is declared as a pointer and only manipulated through the functions and subroutines described below. For more explicit examples, see the usage section.
+These types are declared as pointers and only manipulated through the functions and subroutines described below. For more explicit examples, see the usage section.
 
-Available functions:
+For the 1D case, the available routines are:
 \begin{verbatim}
      new_cubic_spline_1D( num_points, 
                           xmin, 
                           xmax, 
                           bc_type, 
-                          slope_L, 
-                          slope_R )  
+                          [slope_L], 
+                          [slope_R] )  
      compute_cubic_spline_1D( data, spline_object )
      interpolate_value( x, spline_object )
      interpolate_derivative( x, spline_object )
@@ -574,8 +600,95 @@ Available functions:
      interpolate_pointer_values( a_in, a_out, np, spline_object )
      interpolate_array_derivatives( a_in, a_out, np, spline_object )
      interpolate_pointer_derivatives( ptr_in, ptr_out, np, spline_object )
+     get_x1_min( spline_object )
+     get_x1_max( spline_object )
+     get_x1_delta( spline_object )
      sll_delete( spline_object )
-     
+\end{verbatim}
+ 
+In the above list:
+ 
+\begin{description}
+	\item \verb+new_cubic_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and initializating it. Arguments:
+
+	\begin{description}
+		\item[num\_points:] 
+32-bit integer. Number of data points for which the spline needs to be computed, including the end-points (regardless of the boundary condition used).
+		\item[xmin:]
+Double precision real. Lower bound of the domain in which the data array is defined. In other words, if we think of the data array (indexed 1:NP) as the values of a discrete function \emph{f} defined over a sequence of $x_i$'s, then $x_1 = xmin$.
+		\item[xmax:]
+Double precision real. Similarly to \verb+xmin+, \verb+xmax+ represents the maximum extent of the domain. For data indexed 1:NP: $xmax = x_{NP}$. 
+		\item[bc\_type:]
+Pre-defined parameter. Descriptor of the type of boundary condition to be imposed in the spline. Use only the symbols defined in Selalib's \emph{boundary condition descriptors} module. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+. These are really aliases to integer flags, but in Selalib we avoid the use of non-descriptive flags.
+		\item[slope\_L:]
+	Double precision real. Optional value representing the desired slope at $x = xmin$, in the hermite BC case.
+		\item[slope\_R:]
+	Double precision real. Optional value representing the desired slope at $x = xmax$, in the hermite BC case.
+	\end{description}
+
+
+	\item \verb+compute_cubic_spline_1D()+ calculates the spline coefficients needed to represent the given data and stores this information in the spline object. Arguments:
+	
+	\begin{description}
+		\item[ data:] Double precision 1D real array containing NP values.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_1d+.
+	\end{description}
+
+
+	\item \verb+interpolate_value()+ returns the value of \emph{f(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object passed. Essentially, the spline object, together with the \verb+interpolate_value()+ function create the illusion of having available a continuous function when originally using the discrete data given. Arguments:
+	
+	\begin{description}
+		\item[ x:] Double precision value representing the ordinate whose image is sought.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_1d+. A call to \verb+compute_cubic_spline_1D()+ should have been made previous to calling this function.
+	\end{description}
+
+	\item \verb+interpolate_array_values()+ has an analogous functionality than the previous interpolation function, but is capable of processing whole arrays. This is useful to avoid the overhead associated with a call to \verb+interpolate_value()+ inside a loop.
+	
+	
+	\item \verb+interpolate_derivative()+ returns the value of \emph{f'(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object passed. Same types of arguments as in \verb+interpolate_value()+.
+	
+	\item \verb+interpolate_array_values()+ is a subroutine that interpolates the results of multiple values of \emph{x}. Arguments:
+		\begin{description}
+			\item[a\_in:] [in] double precision 1D array containing the values of the ordinates to be interpolated.
+			\item[a\_out:] [out]double precision 1D array to store the results, i.e., the images of the values contained in \verb+a_in+.
+			\item[np:] [in] 32-bit integer storing the number of points meant to be interpolated.
+			\item[ spline\_object: ] [inout] Initialized object of type \verb+sll_cubic_spline_1d+.
+		\end{description}
+
+	\item \verb+interpolate_pointer_values()+ is a subroutine with analogous arguments to \verb+interpolate_array_values+ except that it receives pointers instead of arrays for its arguments.
+	
+	\item \verb+interpolate_array_derivatives()+ computes multiple first-derivative values. Its interface is identical to \verb+interpolate_array_values()+.
+	
+	\item \verb+interpolate_pointer_derivatives()+ computes multiple first-derivative values, just as \verb+interpolate_array_derivatives()+ except that its arguments are pointers.
+	
+	\item \verb+get_x1_min()+ returns the minimum value of the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+	
+	\item \verb+get_x1_max()+ returns the maximum value of the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+		
+		\item \verb+get_x1_delta()+ returns the value of the spacing between the points used to compute the spline values. This is determined from the extent of the domain and the number of cells used. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+
+	\item \verb+sll_delete()+ subroutine to free the resources of a given spline object. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+\end{description}
+
+
+
+For the 2D case, the available routines are:
+
+
+
+\begin{verbatim}     
      new_cubic_spline_2d( num_pts_x1,  
                           num_pts_x2,  
                           x1_min,      
@@ -596,41 +709,114 @@ Available functions:
        interpolate_value_2d( x1, x2, spline_object )
        interpolate_x1_derivative_2d( x1, x2, spline_object )
        interpolate_x2_derivative_2d( x1, x2, spline_object )      
-       
+       get_x1_min( spline_object )
+       get_x1_max( spline_object )
+       get_x2_min( spline_object )
+       get_x2_max( spline_object )
+       get_x1_delta( spline_object )
+       get_x2_delta( spline_object )
        sll_delete( spline_object )             
 \end{verbatim}
-\verb+new_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and doing some partial initialization of the object. Hence the full creation of a spline is a three-step process: the first one is the declaration of the spline pointer, the second is its assignment through a call to the \verb+new_spline_1D()+ function. The last step, which fully initializes the spline by computing all the coefficients is carried out by calling \verb+compute_spline_1D()+. This last call uses information inside the partially initialized spline object. For details, see the usage section below. 
 
-\verb+set_slope_left()+ and \verb+set_slope_right()+: These subroutines are offered in case that the user wants to modify the values of the slopes in a spline object before a call to any of the \verb+compute_spline_1D()+ subroutines. These subroutines would extract the boundary types and slopes (if any) from the spline object, so in case that the user wants to change these values after the initialization step, these are the subroutines to use.
-
-\verb+compute_spline_1D_xxx()+: Note the presence of redundant subroutines. For instance, the subroutine \verb+compute_spline_1D()+, which computes the spline coefficients for a given data, is just a wrapper around the other specialized subroutines that specify the type of boundary conditions in their names. We leave both options until we decide which interface is preferable. This involves a tradeoff between a uniform call that specifies the type of boundary condition through an argument, and a specific subroutine call, more efficient, but less uniform\footnote{Presently, both interfaces coexist. We may decide to ultimately leave them both. The same happens in the case of the destructor functions.}. The \verb+compute_spline_1D()+ functions have to be called again any time that the underlying data changes or if the spline object is to be used with new data. 
-
-\verb+interpolate_value()+ returns the value of \emph{f(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object used to interpolate. Essentially, the spline object, together with the \verb+interpolate_value()+ function create the illusion of having available a continuous function when originally, only discrete data were available.
-
-Finally, \verb+interpolate_array_values()+ has an analogous functionality than the previous interpolation function, but is capable of processing whole arrays. This is useful to avoid the overhead associated with a call to \verb+interpolate_value()+ inside a loop.
-
-In the functions above:
+   
+In the above list:
+ 
 \begin{description}
-\item[num\_points:] 
-Size of the array that contains the data that must be fitted with the spline. One should think of this as the full size of the array, that is, the user should not be concerned about whether the last point is to be taken into account in the periodic case or anything of the sort. Thus for a data array indexed $1:NP$, the size is simply $NP$.
-\item[xmin:]
-Lower bound of the grid in which the data array is defined. In other words, if we think of the data array (indexed 1:NP) as the values of a discrete function \emph{f} defined over a sequence of $x_i$'s, then $x_1 = xmin$.
-\item[xmax:]
-Similarly to \verb+xmin+, \verb+xmax+ represents the maximum extent of the grid. Following the same example of the data indexed $1:NP$: $xmax = x_{NP}$. 
-\item[bc\_type:]
-Descriptor of the type of boundary condition to be imposed in the spline. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+. These are really aliases to integer flags, but in Selalib we avoid the use of non-descriptive flags. The boundary conditions are enforced at the endpoints.
-\item[data:] 
-The double precision floating point data array to be fitted.
-\item[spline\_object:]
-The spline entity that is allocated and returned by the function \verb+new_spline_1D()+, initialized by the \verb+compute_spline()+ functions and deleted by the \verb+delete()+ functions.
-\item[slope\_L, slope\_R:] optional arguments, in the case of the hermitian boundary conditions, the user can define the value of the slope at either end of the domain. If not present, these values default to zero. As an example, a spline to fit the data representing the function $sin(x)$ between $0$ and $\pi$ would be called with slopes $1$ and $-1$.
-\item[a\_in:]
-Input array to be interpolated.
-\item[a\_out:]
-Array that returns the interpolated values.
-\item[np:] 
-Number of points to be interpolated.
+	\item \verb+new_cubic_spline_2D()+ is responsible for allocating all the necessary storage for the spline object and initializating it. Arguments:
+
+	\begin{description}
+		\item[num\_points\_x1:] 
+[in] 32-bit integer. Number of data points in the first (memory-contiguous) direction for which the spline needs to be fitted. Endpoints at $x_{1,j} = x1_{min}$ and $x_{NPX1,j} = x1_{max}$ must be included.
+		\item[num\_points\_x2:]
+[in] 32-bit integer. Number of data points in the second direction for which the spline needs to be fitted. Endpoints at $x_{i,1} = x2_{min}$ and $x_{i,NPX2} = x2_{max}$ must be included.
+		\item[x1\_min:]
+[in] Double precision real. Lower bound of the domain in which the data array is defined in the first (memory-contiguous) direction.
+		\item[x1\_max:]
+[in]Double precision real. Represents the maximum extent of the domain in the first (memory-contiguous) direction.
+		\item[x2\_min:]
+[in] Double precision real. Lower bound of the domain in which the data array is defined in the second direction.
+		\item[x2\_max:]
+[in]Double precision real. Represents the maximum extent of the domain in the second direction.
+		\item[x1\_bc\_type:]
+[in] Pre-defined parameter. Descriptor of the type of boundary condition to be imposed in the spline in the first direction. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+ as defined in Selalib's \emph{boundary condition descriptors} module.
+		\item[x2\_bc\_type:]
+[in] Pre-defined parameter. Descriptor of the type of boundary condition to be imposed in the spline in the second direction. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+ as defined in Selalib's \emph{boundary condition descriptors} module.
+		\item[const\_slope\_x1\_min:]
+	[optional, in]Double precision real. Optional value representing the desired slope at $x1_{min}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[const\_slope\_x1\_max:]
+		[optional, in]Double precision real. Optional value representing the desired slope at $x1_{max}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[const\_slope\_x2\_min:]
+	[optional, in]Double precision real. Optional value representing the desired slope at $x2_{min}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[const\_slope\_x2\_max:]
+		[optional, in]Double precision real. Optional value representing the desired slope at $x2_{max}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[x1\_min\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x2+ locations in the edge at $x1_{min}$. To be used with the hermite boundary condition only.
+		\item[x1\_max\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x2+ locations in the edge at $x1_{max}$. To be used with the hermite boundary condition only.
+		\item[x2\_min\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x1+ locations in the edge at $x2_{min}$. To be used with the hermite boundary condition only.
+		\item[x2\_max\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x1+ locations in the edge at $x2_{max}$. To be used with the hermite boundary condition only.
+	\end{description}
+
+	\item \verb+compute_cubic_spline_2D()+ calculates the spline coefficients needed to represent the given 2D data and stores this information in the spline object. Arguments:
+	
+	\begin{description}
+		\item[ data:] [in] Double precision 2D real array containing NPX1*NPX2 values.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_2d+.
+	\end{description}
+
+
+	\item \verb+interpolate_value_2d()+ returns the value of \emph{f(x1,x2)} where the ordered pair $(x1,x2)$ is in the domain $[x1_{min},x1_{max}] X [x2_{min},x2_{max}]$. \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object passed.  Arguments:
+	
+	\begin{description}
+		\item[ x1:] [in] Double precision value representing the value of the first coordinate.
+		\item[ x2:] [in] Double precision value representing the value of the second coordinate.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_2d+. A call to \verb+compute_cubic_spline_2D()+ should have been made previous to calling this function.
+	\end{description}
+
+	\item \verb+interpolate_x1_derivative_2d()+ returns the value of the first derivative in the $x1$ direction. Uses same types of arguments as the $interpolate_value_2d$ function.
+	
+	\item \verb+interpolate_x2_derivative_2d()+ returns the value of the first derivative in the $x2$ direction. Uses same types of arguments as the $interpolate_value_2d$ function.
+	
+	
+	\item \verb+get_x1_min()+ returns the minimum value of $x1$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+	
+	\item \verb+get_x1_max()+ returns the maximum value of $x1$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+		
+	\item \verb+get_x2_min()+ returns the minimum value of $x2$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+	
+	\item \verb+get_x2_max()+ returns the maximum value of $x2$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+		
+		\item \verb+get_x1_delta()+ returns the value of the spacing between the points used to compute the spline values in the $x1$ direction. This is determined from the extent of the domain and the number of cells used. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+		
+		\item \verb+get_x2_delta()+ returns the value of the spacing between the points used to compute the spline values in the $x2$ direction. This is determined from the extent of the domain and the number of cells used. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+
+	\item \verb+sll_delete()+ subroutine to free the resources of a given spline object. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
 \end{description}
+   
+
    
 
 \subsection{Usage}
@@ -656,7 +842,7 @@ The following example is an extract from the module's unit test.
 14      type(sll_spline_1d), pointer :: sp2
 15      sll_real64, allocatable, dimension(:) :: data
 16      sll_real64 :: accumulator1, accumulator2
-17          sll_real64 :: val
+17      sll_real64 :: val
 18
 19      accumulator1 = 0.0_f64
 20      accumulator2 = 0.0_f64
@@ -671,14 +857,14 @@ The following example is an extract from the module's unit test.
 29      sp1 =>  new_spline_1D( NP,         &
 30                             0.0_f64,    &
 31                             sll_pi,     &
-32                             PERIODIC_SPLINE )
-33      call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
+32                             SLL_PERIODIC )
+33      call compute_cubic_spline_1D( data, sp1 )
 34      sp2 =>  new_spline_1D( NP, 0.0_f64,    &
 35	                            sll_pi,         &	
-36                             HERMITE_SPLINE, 
+36                             SLL_HERMITE, 
 37                             1.0_f64, 
 38                            -1.0_f64 )
-39      call compute_spline_1D_hermite( data, sp2 )
+39      call compute_cubic_spline_1D( data, sp2 )
 40  
 41      print *, 'cumulative errors at nodes: '
 42      do i=1, NP-1
