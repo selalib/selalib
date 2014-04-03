@@ -94,7 +94,7 @@ subroutine getlinw(this,x,y,inode,jnode,w,error)
    sll_int32 :: inode, jnode  
    sll_int32 :: error
    sll_real64, dimension(4) :: w  
-   sll_real64 :: x1, y1, x2, y2, aire
+   sll_real64 :: aire
 
    error = 0
    aire = this%dx*this%dy
