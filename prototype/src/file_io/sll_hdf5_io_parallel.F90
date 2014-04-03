@@ -197,7 +197,7 @@ contains
     count  = 1
     block  = array_dims
     call h5dget_space_f(dset_id, filespace, error)
-    call h5sselect_hyperslab_f (filespace, H5S_SELECT_SET_F,           &
+    call h5sselect_hyperslab_f (filespace, H5S_SELECT_AND_F,           &
                                 offset, count, error, stride, block)
     call h5pcreate_f(H5P_DATASET_XFER_F, plist_id, error)
     call h5pset_dxpl_mpio_f(plist_id, H5FD_MPIO_COLLECTIVE_F, error)
