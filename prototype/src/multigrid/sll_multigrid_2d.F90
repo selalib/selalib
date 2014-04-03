@@ -34,8 +34,8 @@ contains
 
 !> initialize mgd2 solver
 subroutine initialize( this, &
-                       x_min, x_max, nx, bc_x, nxprocs, &
-                       y_min, y_max, ny, bc_y, nyprocs, &
+                       x_min, x_max, nx, nxprocs, bc_x,  &
+                       y_min, y_max, ny, nyprocs, bc_y,  &
                        vbc_x, vbc_y  )
 
    type(mgd2_solver) :: this
