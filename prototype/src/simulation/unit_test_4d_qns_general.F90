@@ -48,7 +48,7 @@ program qns_4d_general
   f_one_params(:) = (/0.0_f64/)
   f_minus_one_params(:) = (/0.0_f64/)
   f_epsi_params(:) = (/0.0_f64/)
-  elec_field_ext_params(:) = (/0.0_f64,0.0_f64/)
+  elec_field_ext_params(:) = (/1.25_f64,1.25_f64/)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
@@ -66,10 +66,10 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 31
-#define NPTS2 31
-#define NPTS3 31
-#define NPTS4 31
+#define NPTS1 64
+#define NPTS2 64
+#define NPTS3 64
+#define NPTS4 64
 #define SPL_DEG_ETA1 3 
 #define SPL_DEG_ETA2 3
 #define SPL_DEG_VX 3 
@@ -100,8 +100,8 @@ program qns_4d_general
   ! sll_gaussian_beam_initializer_4d
   
   mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-       eta1_min=0.0_f64, eta1_max= 1.0_f64, &
-       eta2_min=0.0_f64, eta2_max= 1.0_f64 )
+       eta1_min=-9.0_f64, eta1_max= 9.0_f64, &
+       eta2_min=-9.0_f64, eta2_max= 9.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -168,8 +168,8 @@ program qns_4d_general
 
   ! sll_gaussian_beam_initializer_4d parameters
 
-  landau_params(1) = 0.25_f64!vth
-  landau_params(2) = mx%eta1_max!xth
+  landau_params(1) = 1.0_f64!vth
+  landau_params(2) = 1.0_f64!xth
   landau_params(3) = 1.0_f64!sigma_x
   landau_params(4) = 1.0_f64!sigma_v
   landau_params(5) = 0.0_f64!vxc

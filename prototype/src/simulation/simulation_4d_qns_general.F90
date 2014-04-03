@@ -916,17 +916,17 @@ contains
 !!$    global_indices(1:2) =  &
 !!$         local_to_global_2D( sim%rho_full_layout, (/1, 1/) )
     
-    call sll_gnuplot_rect_2d_parallel( &
-         sim%mesh2d_x%eta1_min, &
-         sim%mesh2d_x%delta_eta1, &
-         sim%mesh2d_x%eta2_min, &
-         sim%mesh2d_x%delta_eta2, &
-         size(sim%rho_full,1), &
-         size(sim%rho_full,2), &
-         sim%rho_full, &
-         "rho_full", &
-         0, &
-         ierr )
+!!$    call sll_gnuplot_rect_2d_parallel( &
+!!$         sim%mesh2d_x%eta1_min, &
+!!$         sim%mesh2d_x%delta_eta1, &
+!!$         sim%mesh2d_x%eta2_min, &
+!!$         sim%mesh2d_x%delta_eta2, &
+!!$         size(sim%rho_full,1), &
+!!$         size(sim%rho_full,2), &
+!!$         sim%rho_full, &
+!!$         "rho_full", &
+!!$         0, &
+!!$         ierr )
 
     sim%seqx3x4_to_seqx1x2 => &
          NEW_REMAP_PLAN(sim%sequential_x3x4,sim%sequential_x1x2,sim%f_x3x4)
@@ -982,7 +982,7 @@ contains
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
 
-  
+     ! a remettre
     call advection_x1x2(sim,0.5*sim%dt)
 
    
