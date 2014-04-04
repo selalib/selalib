@@ -6,6 +6,10 @@ module sll_multigrid_2d
    use sll_collective
    use diagnostics
 
+   sll_real64, dimension(:),   allocatable :: work
+   sll_real64, dimension(:,:), allocatable :: p
+   sll_real64, dimension(:,:), allocatable :: f
+   sll_real64, dimension(:,:), allocatable :: r
 
 contains
 
@@ -34,7 +38,6 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
 
    sll_real64, parameter :: tolmax  = 1.0d-05
 
-   sll_real64, dimension(:),   allocatable :: work
 
    sll_int32  :: sx
    sll_int32  :: ex
@@ -42,9 +45,6 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
    sll_int32  :: ey
    sll_real64 :: wk
 
-   sll_real64, dimension(:,:), allocatable :: p
-   sll_real64, dimension(:,:), allocatable :: f
-   sll_real64, dimension(:,:), allocatable :: r
 !
 ! variables
 !
