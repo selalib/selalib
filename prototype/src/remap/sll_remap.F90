@@ -84,29 +84,51 @@ module sll_remapper
   
   ! The sll_layout types contain information on a collective and an
   ! array of boxes that describes the distribution of data among
-  ! different nodes.
+  ! different nodes. We are also adding some auxiliary fields, like the
+  ! global dimensions of a given dataset distributed as per the information
+  ! in the layout.
   type layout_2D
      type(sll_collective_t), pointer SLL_PRIV     :: collective
+     sll_int32 SLL_PRIV                           :: global_sz1
+     sll_int32 SLL_PRIV                           :: global_sz2
      type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_2D
 
   type layout_3D
      type(sll_collective_t), pointer SLL_PRIV     :: collective
+     sll_int32 SLL_PRIV                           :: global_sz1
+     sll_int32 SLL_PRIV                           :: global_sz2
+     sll_int32 SLL_PRIV                           :: global_sz3
      type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_3D
 
   type layout_4D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
+     sll_int32 SLL_PRIV                           :: global_sz1
+     sll_int32 SLL_PRIV                           :: global_sz2
+     sll_int32 SLL_PRIV                           :: global_sz3
+     sll_int32 SLL_PRIV                           :: global_sz4
      type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_4D
 
   type layout_5D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
+     sll_int32 SLL_PRIV                           :: global_sz1
+     sll_int32 SLL_PRIV                           :: global_sz2
+     sll_int32 SLL_PRIV                           :: global_sz3
+     sll_int32 SLL_PRIV                           :: global_sz4
+     sll_int32 SLL_PRIV                           :: global_sz5
      type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
   end type layout_5D
 
   type layout_6D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
+     sll_int32 SLL_PRIV                           :: global_sz1
+     sll_int32 SLL_PRIV                           :: global_sz2
+     sll_int32 SLL_PRIV                           :: global_sz3
+     sll_int32 SLL_PRIV                           :: global_sz4
+     sll_int32 SLL_PRIV                           :: global_sz5
+     sll_int32 SLL_PRIV                           :: global_sz6
      type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_6D
 
@@ -289,28 +311,88 @@ module sll_remapper
   end interface set_layout_n_max
 
   interface get_layout_num_nodes
-     module procedure get_layout_2D_num_nodes, get_layout_3D_num_nodes, &
-          get_layout_4D_num_nodes, get_layout_5D_num_nodes, get_layout_6D_num_nodes
+     module procedure &
+          get_layout_2D_num_nodes, &
+          get_layout_3D_num_nodes, &
+          get_layout_4D_num_nodes, &
+          get_layout_5D_num_nodes, &
+          get_layout_6D_num_nodes
   end interface
 
   interface get_layout_box
-     module procedure get_layout_2D_box, get_layout_3D_box, get_layout_4D_box, &
-          get_layout_5D_box, get_layout_6D_box
+     module procedure &
+          get_layout_2D_box, &
+          get_layout_3D_box, &
+          get_layout_4D_box, &
+          get_layout_5D_box, &
+          get_layout_6D_box
   end interface
 
   interface get_layout_collective
-     module procedure get_layout_2D_collective, get_layout_3D_collective, &
-          get_layout_4D_collective, get_layout_5D_collective, get_layout_6D_collective
+     module procedure &
+          get_layout_2D_collective, &
+          get_layout_3D_collective, &
+          get_layout_4D_collective, &
+          get_layout_5D_collective, &
+          get_layout_6D_collective
   end interface get_layout_collective
 
   interface sll_get_num_nodes
-     module procedure sll_get_num_nodes_2D, sll_get_num_nodes_3D, &
-          sll_get_num_nodes_4D, sll_get_num_nodes_5D, sll_get_num_nodes_6D
+     module procedure &
+          sll_get_num_nodes_2D, &
+          sll_get_num_nodes_3D, &
+          sll_get_num_nodes_4D, &
+          sll_get_num_nodes_5D, &
+          sll_get_num_nodes_6D
    end interface
+
+   interface get_layout_global_size_1
+      module procedure &
+           get_layout_2d_global_size_1, &
+           get_layout_3d_global_size_1, &
+           get_layout_4d_global_size_1, &
+           get_layout_5d_global_size_1, &
+           get_layout_6d_global_size_1
+   end interface get_layout_global_size_1
+
+   interface get_layout_global_size_2
+      module procedure &
+           get_layout_2d_global_size_2, &
+           get_layout_3d_global_size_2, &
+           get_layout_4d_global_size_2, &
+           get_layout_5d_global_size_2, &
+           get_layout_6d_global_size_2
+   end interface get_layout_global_size_2
+
+   interface get_layout_global_size_3
+      module procedure &
+           get_layout_3d_global_size_3, &
+           get_layout_4d_global_size_3, &
+           get_layout_5d_global_size_3, &
+           get_layout_6d_global_size_3
+   end interface get_layout_global_size_3
+
+   interface get_layout_global_size_4
+      module procedure &
+           get_layout_4d_global_size_4, &
+           get_layout_5d_global_size_4, &
+           get_layout_6d_global_size_4
+   end interface get_layout_global_size_4
+
+   interface get_layout_global_size_5
+      module procedure &
+           get_layout_5d_global_size_5, &
+           get_layout_6d_global_size_5
+   end interface get_layout_global_size_5
+
+   interface get_layout_global_size_6
+      module procedure get_layout_6d_global_size_6
+   end interface get_layout_global_size_6
 
   interface count_elements_in_box
      module procedure count_elements_in_box_2D, count_elements_in_box_3D, &
-          count_elements_in_box_4D, count_elements_in_box_5D, count_elements_in_box_6D
+          count_elements_in_box_4D, count_elements_in_box_5D, &
+          count_elements_in_box_6D
   end interface count_elements_in_box
 
   interface intersect_boxes
@@ -472,7 +554,7 @@ contains  !******************************************************************
   ! needed. Also, this is not a performance-critical process. On the other
   ! hand, the only thing there is to hide here is a pair of chained %'s...
   ! All these could be greatly reduced by a few one-line macros, but at least
-  ! for now we choose the conventional approach.
+  ! for now we choose the conventional approach with access functions.
 #define MAKE_NUM_NODES_FUNCTION( fname, layout_type ) \
   function fname( layout ); \
     sll_int32                  :: fname; \
@@ -509,6 +591,7 @@ contains  !******************************************************************
     fname = layout%boxes(rank)%slot;                              \
   end function fname
 
+  ! This macro is not well named, it accesses the slot of a box, not a layout.
 #define MAKE_SET_LAYOUT_SLOT_FUNCTION( fname, datatype, slot )    \
   subroutine fname( layout, rank, val );                          \
     type(datatype), pointer    :: layout;                         \
@@ -516,6 +599,15 @@ contains  !******************************************************************
     sll_int32, intent(in)      :: val;                            \
     layout%boxes(rank)%slot = val;                                \
   end subroutine fname
+
+  ! Macro to permit access to a layout slot, but only works for Fortran-native
+  ! types.
+#define MAKE_GET_LAYOUT_SLOT( fname, layout_type, result_type, slot )    \
+  function fname( layout ) result(res);                                  \
+    result_type                :: res;                                   \
+    type(layout_type), pointer :: layout;                                \
+    res = layout%slot;                                                   \
+  end function fname
 
   ! We use the macros to write the set_ get_ functions for the different 
   ! dimensions.
@@ -525,6 +617,9 @@ contains  !******************************************************************
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_i_max, layout_2D, i_max )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_j_min, layout_2D, j_min )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_2D_j_max, layout_2D, j_max )
+
+  MAKE_GET_LAYOUT_SLOT(get_layout_2d_global_size_1,layout_2d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_2d_global_size_2,layout_2d,sll_int32,global_sz2)
 
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_i_min, layout_2D, i_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_2D_i_max, layout_2D, i_max )
@@ -538,6 +633,10 @@ contains  !******************************************************************
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_j_max, layout_3D, j_max )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_k_min, layout_3D, k_min )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_3D_k_max, layout_3D, k_max )
+
+  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_1,layout_3d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_2,layout_3d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_3d_global_size_3,layout_3d,sll_int32,global_sz3)
 
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_i_min, layout_3D, i_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_3D_i_max, layout_3D, i_max )
@@ -556,6 +655,11 @@ contains  !******************************************************************
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_l_min, layout_4D, l_min )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_4D_l_max, layout_4D, l_max )
 
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_1, layout_4d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_2, layout_4d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_3, layout_4d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_4d_global_size_4, layout_4d,sll_int32,global_sz4)
+
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_i_min, layout_4D, i_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_i_max, layout_4D, i_max )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_j_min, layout_4D, j_min )
@@ -564,7 +668,6 @@ contains  !******************************************************************
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_k_max, layout_4D, k_max )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_l_min, layout_4D, l_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_4D_l_max, layout_4D, l_max )
-
 
   ! 5D case:
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_i_min, layout_5D, i_min )
@@ -578,6 +681,12 @@ contains  !******************************************************************
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_m_min, layout_5D, m_min )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_5D_m_max, layout_5D, m_max )
 
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_1, layout_5d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_2, layout_5d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_3, layout_5d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_4, layout_5d,sll_int32,global_sz4)
+  MAKE_GET_LAYOUT_SLOT(get_layout_5d_global_size_5, layout_5d,sll_int32,global_sz5)
+
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_i_min, layout_5D, i_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_i_max, layout_5D, i_max )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_j_min, layout_5D, j_min )
@@ -588,7 +697,6 @@ contains  !******************************************************************
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_l_max, layout_5D, l_max )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_m_min, layout_5D, m_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_5D_m_max, layout_5D, m_max )
-
 
   ! 6D case:
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_i_min, layout_6D, i_min )
@@ -604,6 +712,13 @@ contains  !******************************************************************
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_n_min, layout_6D, n_min )
   MAKE_GET_LAYOUT_SLOT_FUNCTION( get_layout_6D_n_max, layout_6D, n_max )
 
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_1,layout_6d,sll_int32,global_sz1)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_2,layout_6d,sll_int32,global_sz2)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_3,layout_6d,sll_int32,global_sz3)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_4,layout_6d,sll_int32,global_sz4)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_5,layout_6d,sll_int32,global_sz5)
+  MAKE_GET_LAYOUT_SLOT(get_layout_6d_global_size_6,layout_6d,sll_int32,global_sz6)
+
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_i_min, layout_6D, i_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_i_max, layout_6D, i_max )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_j_min, layout_6D, j_min )
@@ -616,7 +731,6 @@ contains  !******************************************************************
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_m_max, layout_6D, m_max )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_min, layout_6D, n_min )
   MAKE_SET_LAYOUT_SLOT_FUNCTION( set_layout_6D_n_max, layout_6D, n_max )
-
 
   ! Why should lims just give its collective nilly-willy? This is not 
   ! pretty but I have the suspicion that direct access of the collective 
@@ -763,6 +877,9 @@ contains  !******************************************************************
        STOP
     end if
 
+    layout%global_sz1 = global_npx1
+    layout%global_sz2 = global_npx2
+
     ! FIXME: add further error checking, like a minimum number of points
     ! needed given a processor number along a dimension. Also, num_proc_xi
     ! should be different than zero.
@@ -863,6 +980,10 @@ contains  !******************************************************************
             'be greater than zero.'
        STOP
     end if
+
+    layout%global_sz1 = global_npx1
+    layout%global_sz2 = global_npx2
+    layout%global_sz3 = global_npx3
 
     ! FIXME: add further error checking, like a minimum number of points
     ! needed given a processor number along a dimension. Also, num_proc_xi
@@ -982,6 +1103,11 @@ contains  !******************************************************************
             'be greater than zero.'
        STOP
     end if
+
+    layout%global_sz1 = global_npx1
+    layout%global_sz2 = global_npx2
+    layout%global_sz3 = global_npx3
+    layout%global_sz4 = global_npx4
 
     ! FIXME: add further error checking, like a minimum number of points
     ! needed given a processor number along a dimension. Also, num_proc_xi
@@ -1135,6 +1261,12 @@ contains  !******************************************************************
        STOP
     end if
 
+    layout%global_sz1 = global_npx1
+    layout%global_sz2 = global_npx2
+    layout%global_sz3 = global_npx3
+    layout%global_sz4 = global_npx4
+    layout%global_sz5 = global_npx5
+
     ! FIXME: add further error checking, like a minimum number of points
     ! needed given a processor number along a dimension. Also, num_proc_xi
     ! should be different than zero.
@@ -1228,8 +1360,6 @@ contains  !******************************************************************
 
 
 
-
-
   subroutine initialize_layout_with_distributed_6D_array( &
     global_npx1, &  
     global_npx2, &
@@ -1315,6 +1445,13 @@ contains  !******************************************************************
             global_npx2, global_npx3, global_npx4, global_npx5, global_npx6
        STOP
     end if
+
+    layout%global_sz1 = global_npx1
+    layout%global_sz2 = global_npx2
+    layout%global_sz3 = global_npx3
+    layout%global_sz4 = global_npx4
+    layout%global_sz5 = global_npx5
+    layout%global_sz6 = global_npx6
 
     ! FIXME: add further error checking, like a minimum number of points
     ! needed given a processor number along a dimension. Also, num_proc_xi
