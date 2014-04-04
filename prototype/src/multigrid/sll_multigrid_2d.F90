@@ -4,9 +4,30 @@ module sll_multigrid_2d
 #include "sll_boundary_condition_descriptors.h"
 
    use sll_collective
-   use diagnostics
 
    implicit none
+
+   type, public :: multigrid_2d
+
+      sll_int32  :: sx
+      sll_int32  :: ex
+      sll_int32  :: sy
+      sll_int32  :: ey
+      sll_int32  :: comm2d
+
+   end type multigrid_2d
+
+   interface initialize
+      module procedure initialize_multigrid_2d
+   end interface initialize
+
+   interface solve
+      module procedure solve_multigrid_2d
+   end interface solve
+
+   public :: initialize, solve
+
+   private
 
    sll_real64, dimension(:),   allocatable :: work
    sll_int32  :: bd(8)
@@ -14,31 +35,43 @@ module sll_multigrid_2d
    sll_int32  :: ny
    sll_real64 :: phibc(4,20)
    sll_real64 :: wk
-   sll_int32  :: comm2d
    sll_real64, parameter :: tolmax  = 1.0d-05
-   sll_int32  :: sx
-   sll_int32  :: ex
-   sll_int32  :: sy
-   sll_int32  :: ey
    sll_int32,  parameter :: IOUT    = 6
    sll_int32  :: myid
    sll_int32  :: neighbor(8)
    sll_int32  :: ngrid
    sll_int32  :: nerror
+   sll_real64 :: hxi
+   sll_real64 :: hyi
+   sll_real64 :: xl
+   sll_real64 :: yl
 
 contains
 
-subroutine initialize( nxprocs, nyprocs, nxdim, nydim  )
+subroutine initialize_multigrid_2d( this,            &
+                       x_min, x_max, y_min, y_max,   &
+                       nxprocs, nyprocs, nc_x, nc_y, &
+                       nxdim, nydim  )
+
+   type(multigrid_2d)     :: this
+
+   sll_real64, intent(in) :: x_min
+   sll_real64, intent(in) :: x_max
+   sll_real64, intent(in) :: y_min
+   sll_real64, intent(in) :: y_max
 
    sll_int32, intent(in)  :: nxprocs
    sll_int32, intent(in)  :: nyprocs
 
-   sll_int32,  parameter :: ixp     = 4
-   sll_int32,  parameter :: jyq     = 4
+   sll_int32, intent(in)  :: nc_x
+   sll_int32, intent(in)  :: nc_y
 
-!
-! variables
-!
+   sll_int32, intent(out)  :: nxdim
+   sll_int32, intent(out)  :: nydim
+
+   sll_int32,  parameter :: ixp = 4
+   sll_int32,  parameter :: jyq = 4
+
    logical    :: periods(2)
 
    sll_int32  :: iex, jey
@@ -53,13 +86,18 @@ subroutine initialize( nxprocs, nyprocs, nxdim, nydim  )
    sll_int32  :: nbrleft
    sll_int32  :: nbrtop
    sll_int32  :: nwork
-   sll_int32  :: nxdim
-   sll_int32  :: nydim
    sll_int32  :: ierr
 
    sll_real64 :: vbc(4)
 
+   sll_int32  :: sx
+   sll_int32  :: ex
+   sll_int32  :: sy
+   sll_int32  :: ey
+   sll_int32  :: comm2d
 
+   nx = nc_x
+   ny = nc_y
 
    iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
    jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
@@ -69,12 +107,15 @@ subroutine initialize( nxprocs, nyprocs, nxdim, nydim  )
    nxdim = int(float(nx)/float(nxprocs)+0.99)+2
    nydim = int(float(ny)/float(nyprocs)+0.99)+2
 
-   SLL_CLEAR_ALLOCATE(work(1:nwork),ierr)
+   xl = x_max - x_min
+   yl = y_max -y_min
+   
+   hxi = real(nx,f64)
+   hyi = real(ny,f64)
 
 !-----------------------------------------------------------------------
 ! initialize MPI and create a datatype for real numbers
 !
-   call MPI_INIT(ierr)
    call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
    call MPI_COMM_SIZE(MPI_COMM_WORLD,numprocs,ierr)
 
@@ -205,61 +246,71 @@ subroutine initialize( nxprocs, nyprocs, nxdim, nydim  )
                    IOUT,        &
                    nerror)
 
-end subroutine initialize
+   SLL_CLEAR_ALLOCATE(work(1:nwork),ierr)
 
-subroutine solve(p, f, r)
+   this%ex = ex
+   this%sx = sx
+   this%ey = ey
+   this%sy = sy
+   this%comm2d = comm2d
+
+end subroutine initialize_multigrid_2d
+
+subroutine solve_multigrid_2d(this, p, f, r)
+
+   type(multigrid_2d)         :: this
    sll_real64, dimension(:,:) :: p
    sll_real64, dimension(:,:) :: f
    sll_real64, dimension(:,:) :: r
 
-   sll_real64 :: hxi
-   sll_real64 :: hyi
-   sll_real64 :: xl
-   sll_real64 :: yl
-   sll_real64 :: rro
    sll_int32  :: iter
    sll_int32,  parameter :: kcycle  = 1
    sll_int32,  parameter :: iprer   = 2
    sll_int32,  parameter :: ipost   = 1
    sll_int32,  parameter :: iresw   = 1
    sll_int32,  parameter :: maxcy   = 300
-!-----------------------------------------------------------------------
-! initialize problem
-! xl,yl are the dimensions of the domain
-! wk is the wavenumber (must be an integer value)
-! rro is the average density
-! 1/hxi,1/hyi are the spatial resolutions
-!
-   xl  = 1.0d0
-   yl  = 1.0d0
-   wk  = 2.0d0
-   rro = 1.0d0
-   hxi = float(nx)/xl
-   hyi = float(ny)/yl
-   write(IOUT,*) 'hxi=',hxi,' hyi=',hyi
 
-   call ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,sll_pi)
+   sll_real64, parameter :: rro = 1.0_f64
 
 !-----------------------------------------------------------------------
 ! solve using mgd2
 !
-   call mgdsolver(2,sx,ex,sy,ey,p,f,r,ngrid,work, &
+   call mgdsolver(2,this%sx,this%ex,this%sy,this%ey,p,f,r,ngrid,work, &
   &               maxcy,tolmax,kcycle,iprer,ipost,iresw, &
-  &               xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
+  &               xl,yl,rro,nx,ny,this%comm2d,myid,neighbor, &
   &               bd,phibc,iter,.true.,IOUT,nerror)
 
    if (nerror.eq.1)  then
       write(IOUT,"(/,'ERROR in multigrid code : 261',/)")
    end if
-!-----------------------------------------------------------------------
-! compare numerical and exact solutions
-!
-   call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,sll_pi,nx,ny,IOUT)
-!-----------------------------------------------------------------------
-   return
 
+end subroutine solve_multigrid_2d
 
+subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
 
-end subroutine solve
+   use sll_working_precision
+   sll_int32 :: n, numprocs, myid, s, e
+   sll_int32 :: nlocal
+   sll_int32 :: deficit
+
+   !------------------------------------------------------------------------
+   !  From the MPE library
+   !  This file contains a routine for producing a decomposition of a 1-d 
+   !  array when given a number of processors.  It may be used in "direct" 
+   !  product decomposition.  The values returned assume a "global" domain 
+   !  in [1:n]
+   !------------------------------------------------------------------------
+
+   nlocal  = n / numprocs
+   s      = myid * nlocal + 1
+   deficit = mod(n,numprocs)
+   s      = s + min(myid,deficit)
+   if (myid .lt. deficit) then
+       nlocal = nlocal + 1
+   endif
+   e = s + nlocal - 1
+   if (e .gt. n .or. myid .eq. numprocs-1) e = n
+
+end subroutine mpe_decomp1d
 
 end module sll_multigrid_2d
