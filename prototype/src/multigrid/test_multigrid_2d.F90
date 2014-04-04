@@ -45,8 +45,6 @@ use sll_multigrid_2d
 !
    sll_int32,  parameter :: nxprocs = 4
    sll_int32,  parameter :: nyprocs = 2
-   sll_int32,  parameter :: nx      = 128
-   sll_int32,  parameter :: ny      = 64
    sll_int32,  parameter :: IOUT    = 6
 
    sll_real64 :: x_min = 0.0_f64
@@ -54,8 +52,11 @@ use sll_multigrid_2d
    sll_real64 :: y_min = 0.0_f64
    sll_real64 :: y_max = 1.0_f64
 
-   call initialize( x_min, x_max, nx, nxprocs, &
-                    y_min, y_max, ny, nyprocs  )
+   nx = 128
+   ny = 64
+
+   call initialize( x_min, x_max, nxprocs, &
+                    y_min, y_max, nyprocs  )
 
    call solve()
 
