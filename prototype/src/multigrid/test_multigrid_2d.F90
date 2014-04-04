@@ -57,6 +57,10 @@ use sll_multigrid_2d
    call initialize( x_min, x_max, nx, nxprocs, &
                     y_min, y_max, ny, nyprocs  )
 
+   call solve()
+
+   call gp_plot2d(p, hxi, hyi, sx, ex, sy, ey, wk )
+
 end program test_multigrid_2d
 
 subroutine ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi)
