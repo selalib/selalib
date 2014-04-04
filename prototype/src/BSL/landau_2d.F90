@@ -1,6 +1,6 @@
 program landau_4d
 
-#define MULTIGRID 0
+!#define MULTIGRID 0
 
 #include "sll_assert.h"
 #include "sll_working_precision.h"
@@ -13,9 +13,9 @@ use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
 
-#ifdef MULTIGRID
-use sll_mudpack_cartesian
-#endif
+!#ifdef MULTIGRID
+!use sll_mudpack_cartesian
+!#endif
 
 implicit none
   
@@ -47,11 +47,11 @@ sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
-#ifdef MULTIGRID
-type(mudpack_2d) :: poisson
-#else
+!#ifdef MULTIGRID
+!type(mudpack_2d) :: poisson
+!#else
 type(poisson_2d_periodic) :: poisson
-#endif
+!#endif
 !type(maxwell_2d_fdtd)        :: maxwell_TE
 
 class(sll_interpolator_1d_base), pointer    :: interp_1
@@ -75,11 +75,11 @@ sll_int32  :: i1, i2, i3, i4
 eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_pi
 eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_pi
 
-#ifdef MULTIGRID
-nc_eta1 = 32; nc_eta2 = 32
-#else
+!#ifdef MULTIGRID
+!nc_eta1 = 32; nc_eta2 = 32
+!#else
 nc_eta1 = 31; nc_eta2 = 31
-#endif
+!#endif
 
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
@@ -168,11 +168,11 @@ do i_step = 1, n_step !Loop over time
 
    !call faraday(maxwell_TE, ex, ey, bz, delta_t)
 
-#ifdef MULTIGRID
-   call solve(poisson,phi,rho,ex,ey,nrj(i_step))
-#else
+!#ifdef MULTIGRID
+   !call solve(poisson,phi,rho,ex,ey,nrj(i_step))
+!#else
    call solve(poisson,ex,ey,rho,nrj(i_step))
-#endif
+!#endif
 
    call online_plot() 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
