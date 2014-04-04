@@ -1,13 +1,12 @@
 program test_multigrid_2d
 
 use sll_collective
-use diagnostics
-!use sll_multigrid_2d
+use sll_multigrid_2d
 use sll_boundary_condition_descriptors
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_constants.h"
-use sll_multigrid_2d
+#include "sll_utilities.h"
 
 implicit none
 
@@ -44,206 +43,133 @@ implicit none
 !
 ! parameters
 !
-   sll_int32,  parameter :: nxprocs = 4
+   sll_int32,  parameter :: nxprocs = 2
    sll_int32,  parameter :: nyprocs = 2
 
    sll_real64, dimension(:,:), allocatable :: p
    sll_real64, dimension(:,:), allocatable :: f
    sll_real64, dimension(:,:), allocatable :: r
+   sll_real64, dimension(:,:), allocatable :: x
+   sll_real64, dimension(:,:), allocatable :: y
 
    sll_int32 :: nxdim
    sll_int32 :: nydim
 
-   sll_int32 :: ierr
+   sll_real64 :: cnst,cx,cy,wk
+   sll_real64 :: err, errloc
 
-   nx = 128
-   ny = 64
+   type(multigrid_2d) :: mgd_solver
 
-   call initialize( nxprocs, nyprocs, nxdim, nydim  )
+   sll_int32, parameter :: nx = 128
+   sll_int32, parameter :: ny = 64
 
-   SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim),ierr)
-   SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim),ierr)
-   SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim),ierr)
+   sll_int32 :: prank
+   sll_int32 :: psize
+   sll_int32 :: error
+   sll_int32 :: i, j
 
-   call solve(p, f, r)
+   call sll_boot_collective() 
 
-   call gp_plot2d(p, dble(nx), dble(ny), sx, ex, sy, ey, wk )
+   prank = sll_get_collective_rank(sll_world_collective)
+   psize = sll_get_collective_size(sll_world_collective)
 
-   call mpi_finalize(nerror)
-   stop
+   call initialize( mgd_solver,                         &
+                    0.0_f64, 1.0_f64, 0.0_f64, 1.0_f64, &
+                    nxprocs, nyprocs, nx, ny, nxdim, nydim  )
 
-end program test_multigrid_2d
+   SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim),error)
+   SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim),error)
+   SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim),error)
+   SLL_CLEAR_ALLOCATE(x(1:nxdim,1:nydim),error)
+   SLL_CLEAR_ALLOCATE(y(1:nxdim,1:nydim),error)
 
-subroutine ginit(sx,ex,sy,ey,p,r,f,wk,hxi,hyi,pi)
+   ! initialize problem
+   ! xl,yl are the dimensions of the domain
+   ! wk is the wavenumber (must be an integer value)
+   ! rro is the average density
+   ! 1/hxi,1/hyi are the spatial resolutions
 
-   use sll_working_precision
+   wk  = 2.0d0
 
-   sll_int32  :: sx,ex,sy,ey
-   sll_real64 :: p(sx-1:ex+1,sy-1:ey+1)
-   sll_real64 :: r(sx-1:ex+1,sy-1:ey+1)
-   sll_real64 :: f(sx-1:ex+1,sy-1:ey+1)
-   sll_real64 :: hxi,hyi,wk,pi
    !-----------------------------------------------------------------------
    ! Initialize the pressure, density, and right-hand side of the
    ! elliptic equation div(1/r*grad(p))=f
-   !
    !-----------------------------------------------------------------------
-   sll_int32  :: i,j
-   sll_real64 :: cnst,cx,cy,xi,yj
    !
-   do j=sy-1,ey+1
-     do i=sx-1,ex+1
-       p(i,j)=0.0d0
-       r(i,j)=1.0d0
-       f(i,j)=0.0d0
-     end do
-   end do
-   cnst=-8.0d0*(pi*wk)**2
-   cx=2.0d0*pi*wk
-   cy=2.0d0*pi*wk
-   do j=sy,ey
-     yj=(float(j)-1.5d0)/hyi
-     do i=sx,ex
-       xi=(float(i)-1.5d0)/hxi
-       f(i,j)=cnst*sin(cx*xi)*sin(cy*yj)
+   r    =  1.0_f64
+   cnst = -8.0_f64*(sll_pi*wk)**2
+
+   cx   = 2.0d0*sll_pi*wk
+   cy   = 2.0d0*sll_pi*wk
+
+   do j=1, nydim
+     do i=1, nxdim
+       x(i,j) =(float(mgd_solver%sx+i)-1.5d0)/nx
+       y(i,j) =(float(mgd_solver%sy+j)-1.5d0)/ny
      end do
    end do
 
-   return
+   f = cnst*sin(cx*x)*sin(cy*y)
 
-end
+   call solve(mgd_solver, p, f, r)
 
-subroutine gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,pi,nx,ny,IOUT)
+   call gp_plot2d()
+   ! compare numerical and exact solutions
 
-   use mpi
-   use sll_working_precision
-
-   sll_int32 :: sx,ex,sy,ey,comm2d,IOUT,nx,ny
-   sll_real64 :: p(sx-1:ex+1,sy-1:ey+1),wk,hxi,hyi,pi
    !-----------------------------------------------------------------------
    ! Calculate the error between the numerical and exact solution to
    ! the test problem.
    !
-   ! Code      : tmgd2
-   ! Called in : main
-   ! Calls     : MPI_ALLREDUCE
-   !-----------------------------------------------------------------------
-   sll_int32 :: i,j, ierr
-   sll_real64 :: errloc,err,cx,cy,exact, xi, yj
-   !
    ! calculate local error
    !
-   cx=2.0d0*pi*wk
-   cy=2.0d0*pi*wk
-   errloc=0.0d0
-   do j=sy,ey
-     yj=(float(j)-1.5d0)/hyi
-     do i=sx,ex
-       xi=(float(i)-1.5d0)/hxi
-       exact=sin(cx*xi)*sin(cy*yj)
-       errloc=errloc+abs(p(i,j)-exact)
-     end do
-   end do
+
+   errloc=sum(abs(p-sin(cx*x)*sin(cy*y)))
    
    ! calculate global error
    !
    call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-        &                   comm2d,ierr)
-   write(IOUT,100) errloc/float(nx*ny),err/float(nx*ny)
-   100   format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
-   !
+        &                   mgd_solver%comm2d,error)
+
+   write(*,100) errloc/float(nx*ny),err/float(nx*ny)
    
-   return
+   call sll_halt_collective()
 
-end
+   stop
 
-subroutine gscale(sx,ex,sy,ey,a,avo,acorr,comm2d,nx,ny)
+100 format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
 
-   use mpi
-   use sll_working_precision
+contains
 
-   sll_int32 :: sx,ex,sy,ey,nx,ny
-   sll_real64 :: a(sx-1:ex+1,sy-1:ey+1),avo,acorr
-   sll_int32 :: comm2d, ierr
-   !------------------------------------------------------------------------
-   ! Rescale the field a so that its average inside the domain
-   ! remains constant and equal to avo. For the density,avo should
-   ! be rro, this ensures conservation of mass. For the pressure,
-   ! avo should be 0 so that the average pressure does not drift
-   ! away from 0, which is the initial value.
-   !
-   ! Code      : tmgd2
-   ! Called in : mgdsolver
-   ! Calls     : MPI_ALLREDUCE
-   !------------------------------------------------------------------------
-   sll_real64 :: avloc,av
-   sll_int32 :: i,j
-#if cdebug
-   sll_real64 :: tinitial
-   tinitial=MPI_WTIME()
-#endif
-   !
-   ! determine average value
-   !
-   avloc=0.0d0
-   do j=sy,ey
-     do i=sx,ex
-       avloc=avloc+a(i,j)
-     end do
-   end do
+   subroutine gp_plot2d()
+
+   sll_int32  :: iproc
+   character(len=4) :: crank
+
+   !write domains
+   call int2string(prank, crank)
+   open( 80, file = "p"//crank//".dat" )
+      do i=1,nxdim
+         do j=1,nydim
+            write(80,"(4e15.5)") x(i,j), y(i,j), p(i,j)
+         end do
+         write(80,*) 
+      end do
+   close(80)
    
-   ! global reduce across all process
-   !
-   call MPI_ALLREDUCE(avloc,av,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
-                      comm2d,ierr)
-#if cdebug
-   nallreduce=nallreduce+1
-#endif
-   av=av/float(nx*ny)
-   !
-   ! do correction
-   !
-   acorr=avo-av
-   do j=sy,ey
-     do i=sx,ex
-       a(i,j)=a(i,j)+acorr
-     end do
-   end do
-   
-#if cdebug
-   timing(49)=timing(49)+MPI_WTIME()-tinitial
-#endif
-   
-   
-   return
+   !write master file
+   if (prank == 0) then
+      open( 90, file = 'p.gnu')
+      write(90,"(a)",advance='no')"splot 'p0000.dat' w lines"
+      do iproc = 1, psize - 1
+         call int2string(iproc, crank)
+         write(90,"(a)",advance='no') ",'p"//crank//".dat' w lines" 
+      end do
+      write(90,*)
+      close(90)
+   end if
 
-end 
+end subroutine gp_plot2d
 
-subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
+end program test_multigrid_2d
 
-   use sll_working_precision
-   sll_int32 :: n, numprocs, myid, s, e
-   sll_int32 :: nlocal
-   sll_int32 :: deficit
 
-   !------------------------------------------------------------------------
-   !  From the MPE library
-   !  This file contains a routine for producing a decomposition of a 1-d 
-   !  array when given a number of processors.  It may be used in "direct" 
-   !  product decomposition.  The values returned assume a "global" domain 
-   !  in [1:n]
-   !------------------------------------------------------------------------
-
-   nlocal  = n / numprocs
-   s      = myid * nlocal + 1
-   deficit = mod(n,numprocs)
-   s      = s + min(myid,deficit)
-   if (myid .lt. deficit) then
-       nlocal = nlocal + 1
-   endif
-   e = s + nlocal - 1
-   if (e .gt. n .or. myid .eq. numprocs-1) e = n
-
-   return
-
-end
