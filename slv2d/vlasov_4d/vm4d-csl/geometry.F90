@@ -14,8 +14,9 @@ type :: geometry
    character(5)                      :: bc            
 end type geometry
 
-interface new
-   module procedure new_geometry1, new_geometry2
+interface initialize
+   module procedure new_geometry1
+   module procedure new_geometry2
 end interface
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -59,6 +60,8 @@ subroutine new_geometry1(geom,x0,y0,nx,ny,dx,dy,error,bc)
    sll_int32 :: i    
    sll_int32 :: error 
 
+
+
    geom%x0=x0;geom%x1=x1
    geom%y0=y0;geom%y1=y1
    if ((bc.eq."perxy").or.(bc.eq."perx")) then
@@ -84,6 +87,7 @@ subroutine new_geometry1(geom,x0,y0,nx,ny,dx,dy,error,bc)
       geom%ygrid(i)=geom%y0+(i-1)*geom%dy
    enddo
 
+
 end subroutine new_geometry2      
 
 !> compute linear weights of point x,y in mesh geom
@@ -94,7 +98,7 @@ subroutine getlinw(this,x,y,inode,jnode,w,error)
    sll_int32 :: inode, jnode  
    sll_int32 :: error
    sll_real64, dimension(4) :: w  
-   sll_real64 :: aire
+   sll_real64 :: x1, y1, x2, y2, aire
 
    error = 0
    aire = this%dx*this%dy
