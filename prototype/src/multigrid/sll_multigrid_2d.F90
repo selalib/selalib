@@ -6,18 +6,23 @@ module sll_multigrid_2d
    use sll_collective
    use diagnostics
 
+   implicit none
+
    sll_real64, dimension(:),   allocatable :: work
    sll_real64, dimension(:,:), allocatable :: p
    sll_real64, dimension(:,:), allocatable :: f
    sll_real64, dimension(:,:), allocatable :: r
+   sll_int32  :: bd(8)
+   sll_int32  :: nx
+   sll_int32  :: ny
+   sll_real64 :: phibc(4,20)
+   sll_real64 :: wk
 
 contains
 
 subroutine initialize( x_min, x_max, nx, nxprocs, &
                        y_min, y_max, ny, nyprocs  )
 
-   sll_int32, intent(in)  :: nx
-   sll_int32, intent(in)  :: ny
    sll_int32, intent(in)  :: nxprocs
    sll_int32, intent(in)  :: nyprocs
 
@@ -38,13 +43,10 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
 
    sll_real64, parameter :: tolmax  = 1.0d-05
 
-
    sll_int32  :: sx
    sll_int32  :: ex
    sll_int32  :: sy
    sll_int32  :: ey
-   sll_real64 :: wk
-
 !
 ! variables
 !
@@ -56,7 +58,6 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
    sll_int32  :: myid
    sll_int32  :: comm2d
    sll_int32  :: neighbor(8)
-   sll_int32  :: bd(8)
    sll_int32  :: iter
    sll_int32  :: ibdry
    sll_int32  :: jbdry
@@ -69,17 +70,11 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
    sll_int32  :: nwork
    sll_int32  :: nxdim
    sll_int32  :: nydim
-   sll_real64 :: phibc(4,20)
-   sll_real64 :: rro
    sll_int32  :: ierr
 
    sll_real64 :: vbc(4)
 
 
-   sll_real64 :: hxi
-   sll_real64 :: hyi
-   sll_real64 :: xl
-   sll_real64 :: yl
 
    iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
    jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
@@ -180,12 +175,12 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
    if ((ex-sx+3).gt.nxdim) then
       write(IOUT,110) myid,nxdim,ex-sx+3
       nerror=1
-      goto 1000
+      write(IOUT,"(/,'ERROR in multigrid code : 178',/)")
    end if
    if ((ey-sy+3).gt.nydim) then
       write(IOUT,120) myid,nydim,ey-sy+3
       nerror=1
-      goto 1000
+      write(IOUT,"(/,'ERROR in multigrid code : 183',/)")
    end if
    write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 
@@ -228,6 +223,15 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
                    IOUT,        &
                    nerror)
 
+end subroutine initialize
+
+subroutine solve()
+
+   sll_real64 :: hxi
+   sll_real64 :: hyi
+   sll_real64 :: xl
+   sll_real64 :: yl
+   sll_real64 :: rro
 !-----------------------------------------------------------------------
 ! initialize problem
 ! xl,yl are the dimensions of the domain
@@ -253,20 +257,20 @@ subroutine initialize( x_min, x_max, nx, nxprocs, &
   &               xl,yl,rro,nx,ny,comm2d,myid,neighbor, &
   &               bd,phibc,iter,.true.,IOUT,nerror)
 
-   if (nerror.eq.1) goto 1000
+   if (nerror.eq.1)  then
+      write(IOUT,"(/,'ERROR in multigrid code : 261',/)")
+   end if
 !-----------------------------------------------------------------------
 ! compare numerical and exact solutions
 !
-   call gp_plot2d(p, hxi, hyi, sx, ex, sy, ey, wk )
    call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,sll_pi,nx,ny,IOUT)
 !-----------------------------------------------------------------------
    call mpi_finalize(nerror)
    return
 
-1000  write(IOUT,"(/,'ERROR in multigrid code',/)")
 
    stop
 
-end subroutine initialize
+end subroutine solve
 
 end module sll_multigrid_2d
