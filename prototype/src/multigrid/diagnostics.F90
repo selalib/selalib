@@ -1,4 +1,8 @@
 module diagnostics
+use mpi
+#include "sll_working_precision.h"
+#include "sll_constants.h"
+#include "sll_utilities.h"
 implicit none
 
 
@@ -6,35 +10,50 @@ contains
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine gp_plot2d(rang, nproc, f, nx, ny, hx, hy, sx, sy )
+subroutine gp_plot2d(p, hxi, hyi, sx, ex, sy, ey, wk )
 
-integer, intent(in) :: rang, nx, ny, nproc
-real(8), intent(in), dimension(:,:) :: f
-integer :: sx, sy
-real(8) :: hx, hy
-integer :: i, j
+   sll_int32,  intent(in) :: sx, ex, sy, ey
+   sll_real64, intent(in), dimension(sx-1:ex+1,sy-1:ey+1) :: p
+   sll_real64, intent(in) :: hxi, hyi
+   sll_real64, intent(in) :: wk
+   sll_int32  :: i, j
+   sll_int32  :: ierr
+   sll_real64 :: xi, yj, errloc, cx, cy, exact
+   sll_int32  :: prank, psize, iproc
+   character(len=4) :: crank
 
-print*, sx, sy
-!write domains
-open( 80, file = "p"//char(rang+48)//".dat" )
-   do i= 1, nx
-      do j= 1, ny
-         write(80,"(3e15.5)") (sx+i-1)/hx, (sy+j-1)/hy, f(i,j)
-      end do
-      write(80,*) 
-   end do
-close(80)
+   call MPI_COMM_RANK(MPI_COMM_WORLD,prank,ierr)
+   call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,ierr)
    
-!write master file
-if (rang == 0) then
-   open( 90, file = 'p.gnu', position="append" )
-   write(90,"(a)",advance='no')"splot 'p0.dat' w lines"
-   do j = 1, nproc - 1
-      write(90,"(a)",advance='no') ",'p"//char(j+48)//".dat' w lines" 
-   end do
-   write(90,*)
-   close(90)
-end if
+   cx=2.0d0*sll_pi*wk
+   cy=2.0d0*sll_pi*wk
+
+   !write domains
+   call int2string(prank, crank)
+   open( 80, file = "p"//crank//".dat" )
+      do i=sx,ex
+         xi=(float(i)-1.5d0)/hxi
+         do j=sy,ey
+            yj=(float(j)-1.5d0)/hyi
+            exact=sin(cx*xi)*sin(cy*yj)
+            errloc=abs(p(i,j)-exact)
+            write(80,"(4e15.5)") xi, yj, errloc, p(i,j)
+         end do
+         write(80,*) 
+      end do
+   close(80)
+   
+   !write master file
+   if (prank == 0) then
+      open( 90, file = 'p.gnu')
+      write(90,"(a)",advance='no')"splot 'p0000.dat' w lines"
+      do iproc = 1, psize - 1
+         call int2string(iproc, crank)
+         write(90,"(a)",advance='no') ",'p"//crank//".dat' w lines" 
+      end do
+      write(90,*)
+      close(90)
+   end if
 
 end subroutine gp_plot2d
 
