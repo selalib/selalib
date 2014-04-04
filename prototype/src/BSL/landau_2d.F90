@@ -1,6 +1,6 @@
 program landau_4d
 
-#define MULTIGRID 1
+#define MULTIGRID 0
 
 #include "sll_assert.h"
 #include "sll_working_precision.h"
