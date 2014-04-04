@@ -9,59 +9,44 @@ module sll_multigrid_2d
    implicit none
 
    sll_real64, dimension(:),   allocatable :: work
-   sll_real64, dimension(:,:), allocatable :: p
-   sll_real64, dimension(:,:), allocatable :: f
-   sll_real64, dimension(:,:), allocatable :: r
    sll_int32  :: bd(8)
    sll_int32  :: nx
    sll_int32  :: ny
    sll_real64 :: phibc(4,20)
    sll_real64 :: wk
-
-contains
-
-subroutine initialize( x_min, x_max, nxprocs, &
-                       y_min, y_max, nyprocs  )
-
-   sll_int32, intent(in)  :: nxprocs
-   sll_int32, intent(in)  :: nyprocs
-
-   sll_real64, intent(in) :: x_min
-   sll_real64, intent(in) :: x_max
-   sll_real64, intent(in) :: y_min
-   sll_real64, intent(in) :: y_max
-
-
-   sll_int32,  parameter :: ixp     = 4
-   sll_int32,  parameter :: jyq     = 4
-   sll_int32,  parameter :: maxcy   = 300
-   sll_int32,  parameter :: kcycle  = 1
-   sll_int32,  parameter :: iprer   = 2
-   sll_int32,  parameter :: ipost   = 1
-   sll_int32,  parameter :: iresw   = 1
-   sll_int32,  parameter :: IOUT    = 6
-
+   sll_int32  :: comm2d
    sll_real64, parameter :: tolmax  = 1.0d-05
-
    sll_int32  :: sx
    sll_int32  :: ex
    sll_int32  :: sy
    sll_int32  :: ey
+   sll_int32,  parameter :: IOUT    = 6
+   sll_int32  :: myid
+   sll_int32  :: neighbor(8)
+   sll_int32  :: ngrid
+   sll_int32  :: nerror
+
+contains
+
+subroutine initialize( nxprocs, nyprocs, nxdim, nydim  )
+
+   sll_int32, intent(in)  :: nxprocs
+   sll_int32, intent(in)  :: nyprocs
+
+   sll_int32,  parameter :: ixp     = 4
+   sll_int32,  parameter :: jyq     = 4
+
 !
 ! variables
 !
    logical    :: periods(2)
 
-   sll_int32  :: iex, jey, ngrid
+   sll_int32  :: iex, jey
 
    sll_int32  :: numprocs
-   sll_int32  :: myid
-   sll_int32  :: comm2d
-   sll_int32  :: neighbor(8)
-   sll_int32  :: iter
    sll_int32  :: ibdry
    sll_int32  :: jbdry
-   sll_int32  :: nerror,dims(2),coords(2),i
+   sll_int32  :: dims(2),coords(2),i
    sll_int32  :: status(MPI_STATUS_SIZE)
    sll_int32  :: nbrright
    sll_int32  :: nbrbottom
@@ -85,9 +70,6 @@ subroutine initialize( x_min, x_max, nxprocs, &
    nydim = int(float(ny)/float(nyprocs)+0.99)+2
 
    SLL_CLEAR_ALLOCATE(work(1:nwork),ierr)
-   SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim),ierr)
-   SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim),ierr)
-   SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim),ierr)
 
 !-----------------------------------------------------------------------
 ! initialize MPI and create a datatype for real numbers
@@ -225,13 +207,22 @@ subroutine initialize( x_min, x_max, nxprocs, &
 
 end subroutine initialize
 
-subroutine solve()
+subroutine solve(p, f, r)
+   sll_real64, dimension(:,:) :: p
+   sll_real64, dimension(:,:) :: f
+   sll_real64, dimension(:,:) :: r
 
    sll_real64 :: hxi
    sll_real64 :: hyi
    sll_real64 :: xl
    sll_real64 :: yl
    sll_real64 :: rro
+   sll_int32  :: iter
+   sll_int32,  parameter :: kcycle  = 1
+   sll_int32,  parameter :: iprer   = 2
+   sll_int32,  parameter :: ipost   = 1
+   sll_int32,  parameter :: iresw   = 1
+   sll_int32,  parameter :: maxcy   = 300
 !-----------------------------------------------------------------------
 ! initialize problem
 ! xl,yl are the dimensions of the domain
@@ -265,11 +256,9 @@ subroutine solve()
 !
    call gerr(sx,ex,sy,ey,p,comm2d,wk,hxi,hyi,sll_pi,nx,ny,IOUT)
 !-----------------------------------------------------------------------
-   call mpi_finalize(nerror)
    return
 
 
-   stop
 
 end subroutine solve
 

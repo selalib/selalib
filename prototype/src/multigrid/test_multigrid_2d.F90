@@ -9,6 +9,7 @@ use sll_boundary_condition_descriptors
 #include "sll_constants.h"
 use sll_multigrid_2d
 
+implicit none
 
 !-----------------------------------------------------------------------
 ! Test problem for 2D multigrid parallel code mgd2. mgd2 solves the
@@ -45,22 +46,31 @@ use sll_multigrid_2d
 !
    sll_int32,  parameter :: nxprocs = 4
    sll_int32,  parameter :: nyprocs = 2
-   sll_int32,  parameter :: IOUT    = 6
 
-   sll_real64 :: x_min = 0.0_f64
-   sll_real64 :: x_max = 1.0_f64
-   sll_real64 :: y_min = 0.0_f64
-   sll_real64 :: y_max = 1.0_f64
+   sll_real64, dimension(:,:), allocatable :: p
+   sll_real64, dimension(:,:), allocatable :: f
+   sll_real64, dimension(:,:), allocatable :: r
+
+   sll_int32 :: nxdim
+   sll_int32 :: nydim
+
+   sll_int32 :: ierr
 
    nx = 128
    ny = 64
 
-   call initialize( x_min, x_max, nxprocs, &
-                    y_min, y_max, nyprocs  )
+   call initialize( nxprocs, nyprocs, nxdim, nydim  )
 
-   call solve()
+   SLL_CLEAR_ALLOCATE(p(1:nxdim,1:nydim),ierr)
+   SLL_CLEAR_ALLOCATE(f(1:nxdim,1:nydim),ierr)
+   SLL_CLEAR_ALLOCATE(r(1:nxdim,1:nydim),ierr)
 
-   call gp_plot2d(p, hxi, hyi, sx, ex, sy, ey, wk )
+   call solve(p, f, r)
+
+   call gp_plot2d(p, dble(nx), dble(ny), sx, ex, sy, ey, wk )
+
+   call mpi_finalize(nerror)
+   stop
 
 end program test_multigrid_2d
 
