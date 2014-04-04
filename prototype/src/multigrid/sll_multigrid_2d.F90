@@ -20,8 +20,8 @@ module sll_multigrid_2d
 
 contains
 
-subroutine initialize( x_min, x_max, nx, nxprocs, &
-                       y_min, y_max, ny, nyprocs  )
+subroutine initialize( x_min, x_max, nxprocs, &
+                       y_min, y_max, nyprocs  )
 
    sll_int32, intent(in)  :: nxprocs
    sll_int32, intent(in)  :: nyprocs
