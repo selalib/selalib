@@ -2,8 +2,7 @@ module splinenn_class
   use used_precision
   use geometry_module
   implicit none
-  private
-  public :: new, interpole
+
   type, public :: splinenn
      type (geometry) :: geom
      real(wp) :: a1x, a2x, a3x, a4x ! coef de la matrice 2x2 per.
@@ -14,12 +13,13 @@ module splinenn_class
      real(wp), dimension(:), pointer :: axm1gamma1, axm1gamma2
      real(wp), dimension(:,:), pointer :: coef, bcoef ! coefficients des splines
   end type splinenn
-  interface new
+  interface initialize
      module procedure new_splinenn
   end interface
   interface interpole
      module procedure interpole_splinenn, interpole_splinenndep
   end interface
+  public :: initialize, interpole
 contains
   subroutine new_splinenn(this,geom,iflag)
     type(splinenn), intent(out) :: this
