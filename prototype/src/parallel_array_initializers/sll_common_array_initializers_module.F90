@@ -1170,18 +1170,18 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     end if
     
     vt      = 1.0_f64!params(1)
-    xt      = 1.0_f64!params(2)
+    xt      = 0.5_f64!params(2)
     sigma_x = 1.0_f64!params(3)
     sigma_v = 1.0_f64!params(4) 
     vxc     = 0.0_f64!params(5)
     vyc     = 0.0_f64!params(6)
     xc      = 0.0_f64!params(7)
     yc      = 0.0_f64!params(8)
-    n0      = 1.0_f64!params(9)
+    n0      = 120.0_f64!params(9)
+   
     
-    
-    val = (n0/(vt*vt))*exp(-0.5*((x-xc)**2+(y-yc)**2)/(xt*xt))/ (2*sll_pi*sigma_x) &
-         * exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*sigma_v)
+    val = n0 *exp(-0.5*((x-xc)**2  +(y-yc)**2)/(xt*xt)  ) / (2*sll_pi*xt**2) &
+             *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
     
   end function sll_gaussian_beam_initializer_4d
 

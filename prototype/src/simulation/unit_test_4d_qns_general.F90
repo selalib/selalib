@@ -48,7 +48,7 @@ program qns_4d_general
   f_one_params(:) = (/0.0_f64/)
   f_minus_one_params(:) = (/0.0_f64/)
   f_epsi_params(:) = (/0.0_f64/)
-  elec_field_ext_params(:) = (/1.25_f64,1.25_f64/)
+  elec_field_ext_params(:) = (/-64.0_f64,-64.0_f64/)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
@@ -100,8 +100,8 @@ program qns_4d_general
   ! sll_gaussian_beam_initializer_4d
   
   mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-       eta1_min=-9.0_f64, eta1_max= 9.0_f64, &
-       eta2_min=-9.0_f64, eta2_max= 9.0_f64 )
+       eta1_min=-6.0_f64, eta1_max= 6.0_f64, &
+       eta2_min=-6.0_f64, eta2_max= 6.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
