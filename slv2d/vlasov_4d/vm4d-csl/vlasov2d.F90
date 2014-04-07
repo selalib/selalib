@@ -83,9 +83,9 @@ contains
   this%geomx=geomx
   this%geomv=geomv
   ! initialisation des splines de l'espace des vitesses
-  call new(this%splinev,geomv,error)
+  call initialize(this%splinev,geomv,error)
   ! initialisation des splines de l'espace physique
-  call new(this%splinex,geomx,error)  
+  call initialize(this%splinex,geomx,error)  
 
   ! allocation memoire
   SLL_ALLOCATE(this%ft(geomv%nx,geomv%ny,geomx%nx,this%jstartx:this%jendx),error)

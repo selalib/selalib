@@ -14,9 +14,11 @@ type :: geometry
    character(5)                      :: bc            
 end type geometry
 
-interface new
+interface initialize
    module procedure new_geometry1, new_geometry2
 end interface
+
+public :: initialize
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 contains

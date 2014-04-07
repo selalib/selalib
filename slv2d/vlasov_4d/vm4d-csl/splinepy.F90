@@ -2,7 +2,7 @@ module splinepy_class
   use used_precision
   use geometry_module!1d_module
   implicit none
-  private
+!  private
   public :: initialize, interpole
   type, public :: splinepy
      type (geometry) :: geomx,geomv
