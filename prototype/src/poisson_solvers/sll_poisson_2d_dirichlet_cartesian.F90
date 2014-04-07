@@ -71,7 +71,7 @@ contains
     sll_int32                         :: i, j
     sll_int32                         :: ii, jj,p,k,nsky,l
     sll_real64                        :: kx, ky
-    !sll_real64, dimension(:,:)          :: vkgs
+    sll_real64, dimension(:)          :: vkgs
     !sll_int32, dimen                  :: indi,indj
 
 
