@@ -20,12 +20,15 @@ end type maxwell2dfdtd
 interface initialize
    module procedure new_maxwell2dfdtd
 end interface
+
 interface dealloc
    module procedure dealloc_maxwell2dfdtd
 end interface
+
 interface solve_ampere
    module procedure solve_ampere2dfdtd
 end interface
+
 interface solve_faraday
    module procedure solve_faraday2dfdtd
 end interface
