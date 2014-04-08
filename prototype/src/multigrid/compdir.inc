@@ -6,7 +6,7 @@
 
       integer nisend,nirecv,nreduce,nallreduce,nalltoall,nwait
       integer nwaitall
-      common/comsgr/nisend(2,3),nirecv(2,3),nreduce,nallreduce, &
+      common/comsgr/nisend(2,3),nirecv(2,3),nreduce,nallreduce,
      &              nalltoall,nwait,nwaitall
 
 #else

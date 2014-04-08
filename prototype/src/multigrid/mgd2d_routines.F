@@ -1,7 +1,10 @@
-# define WMGD 0
+# define WMGD 1
 # define REALN real(8)
 # define NBLOCKGR 1
-# define cdebug 0
+
+#ifdef DEBUG
+#define cdebug 1
+#endif
 
 
       subroutine mgdbdry(sxm,exm,sym,eym,phi,bd,phibc,IOUT)
@@ -641,7 +644,7 @@ c
         kcbgn(k)=kpbgn(k)+(exm-sxm+3)*(eym-sym+3)
         kps=kcbgn(k)+6*(exm-sxm+3)*(eym-sym+3)
       end do
-
+       
       if (kps.gt.nwork) then
         write(IOUT,200) kps,nwork,myid
         nerror=1
@@ -2025,7 +2028,7 @@ c
       else
         avo=0.0d0
       end if
-      call gscale(sx,ex,sy,ey,phif,avo,acorr,comm2d,nx,ny,IOUT)
+      !call gscale(sx,ex,sy,ey,phif,avo,acorr,comm2d,nx,ny,IOUT)
 c
 c exchange boundary data and impose periodic BCs
 c
@@ -2037,7 +2040,7 @@ c
 c
 c impose wall and Dirichlet BCs
 c
-      call mgdbdry(sx,ex,sy,ey,phif,bd,vbc,IOUT)
+      call mgdbdry(sx,ex,sy,ey,phif,bd,phibc(:,1),IOUT)
 # endif
 c
       if (isol.eq.1) then
