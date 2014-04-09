@@ -9,7 +9,7 @@ module interp_non_unif_pp_class
   !use clock
   implicit none
   private
-  public :: new, interpole
+
   type, public :: interp_non_unif_pp
      type (geometry) :: geom
      integer  :: conservative_x_case,mesh_x_case,interp_x_case(2),mesh_interp_x_case
@@ -22,13 +22,19 @@ module interp_non_unif_pp_class
      real(wp),dimension(:),allocatable :: node_pos_x,node_pos_y
      
   end type interp_non_unif_pp
+
   interface new
      module procedure new_interp_non_unif_pp
   end interface
+
   interface interpole
      module procedure interpole_non_unif_pp,interpole_non_unif_ppdep
   end interface
+
+  public :: new, interpole
+
 contains
+
   subroutine new_interp_non_unif_pp(this,geom,iflag)
     type(interp_non_unif_pp), intent(out) :: this
     type(geometry), intent(in) :: geom  ! geometry of problem
@@ -83,7 +89,7 @@ contains
     allocate(this%node_positions_x(this%geom%nx+1))
     allocate(this%node_positions_y(this%geom%ny+1))
     
-    call initialize(this)
+    call initialize_interp_non_unif_pp(this)
 
 
  end subroutine new_interp_non_unif_pp
@@ -251,7 +257,7 @@ contains
 
 
 
-  subroutine initialize(this) 
+  subroutine initialize_interp_non_unif_pp(this) 
     !----------------------------------------------------------------
     ! interpolation par spline periodique dans les deux directions.
     ! Les points d'interpolation sont definis grace a depx et depy
@@ -356,7 +362,7 @@ contains
     !   call clck_temps(l_a)
     !end if
       
-  end subroutine initialize
+  end subroutine initialize_interp_non_unif_pp
 
 
 
