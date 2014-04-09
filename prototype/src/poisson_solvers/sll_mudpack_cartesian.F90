@@ -154,9 +154,11 @@ write(*,104) intl
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
+#ifdef DEBUG
 !print error parameter and minimum work space requirement
 write (*,200) error,iprm(16)
 if (error > 0) call exit(0)
+#endif
 
 101 format(/'# integer input arguments ', &
     &/'#intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
@@ -210,7 +212,12 @@ external cofx,cofy,bndsp
 
 !set initial guess because solve should be called every time step in a
 !time dependent problem and the elliptic operator does not depend on time.
-iguess = this%iguess
+if (this%iguess == 0) then
+   iguess = 0
+else
+   this%iguess = 1
+    iguess = 1
+endif
 
 !attempt solution
 intl = 1
@@ -218,8 +225,8 @@ intl = 1
 write(*,106) intl,method,iguess
 #endif
 
-if ( nxa == 0 .and. nxb == 0 .and. nyc == 0 .and. nyd == 0 ) &
-   rhs = rhs - sum(rhs) / (nx*ny)
+if ( nxa == 0 .and. nyc == 0 ) &
+   rhs = - rhs + sum(rhs) / (nx*ny)
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
@@ -227,6 +234,9 @@ call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 write(*,107) error
 if (error > 0) call exit(0)
 #endif
+
+if ( nxa == 0 .and. nyc == 0 ) &
+   phi = phi - sum(phi) / (nx*ny)
 
 iguess = 1
 ! attempt to improve approximation to fourth order
@@ -244,17 +254,25 @@ if (error > 0) call exit(0)
 
 if (present(ex) .and. present(ey)) then
    dx = (xb-xa)/(nx-1)
-   dy = (yc-yd)/(ny-1)
-   do j = 1, nx-1
-      do i = 1, ny-1
-         ex(i,j) = (phi(i+1,j)-phi(i,j)) / dx
-         ey(i,j) = (phi(i,j+1)-phi(i,j)) / dy
-      end do
+   dy = (yd-yc)/(ny-1)
+   do i = 2, nx-1
+      ex(i,:) = (phi(i+1,:)-phi(i-1,:)) / (2*dx)
+   end do
+   do j = 2, ny-1
+      ey(:,j) = (phi(:,j+1)-phi(:,j+1)) / (2*dy)
    end do
 
+   if (nxa == 0 ) then
+      ex(nx,:) = (phi(2,:)-phi(nx-1,:))/(2*dx)
+      ex(1,:)  = ex(nx,:)
+   end if
+   if (nyc == 0 ) then
+      ey(:,ny) = (phi(:,2)-phi(:,ny-1))/(2*dy)
+      ey(:,1) = ey(:,ny)
+   end if
+
    if (present(nrj)) then 
-      nrj=sum(ex(1:nx-1,1:ny-1)*ex(1:nx-1,1:ny-1)+ &
-              ey(1:nx-1,1:ny-1)*ey(1:nx-1,1:ny-1))*dx*dy
+      nrj=sum(ex*ex+ey*ey)*dx*dy
    end if
 
 end if
