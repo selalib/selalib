@@ -388,6 +388,9 @@ subroutine ampere_te_2d_pstd(self, ex, ey, hz, dt, jx, jy)
       ey = ey - dt_e * jy 
    end if
 
+   ex(nc_x+1,:) = ex(1,:)
+   ey(:,nc_y+1) = ey(:,1)
+
 end subroutine ampere_te_2d_pstd
 
 !> delete maxwell solver object

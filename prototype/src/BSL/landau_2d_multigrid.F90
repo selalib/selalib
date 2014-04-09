@@ -1,14 +1,15 @@
-program landau_4d
+program landau_4d_multigrid
 
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_poisson_solvers.h"
+#include "sll_boundary_condition_descriptors.h"
 
 use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
+use sll_mudpack_cartesian
 
 implicit none
   
@@ -22,7 +23,7 @@ sll_int32  :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 
 !Time domain
-sll_int32  :: i_step, n_step, j_step
+sll_int32  :: i_step, n_step
 sll_real64 :: delta_t
 sll_real64 :: time
 
@@ -33,24 +34,29 @@ sll_real64, dimension(:,:,:,:), allocatable :: f
 !Electric fields and charge density
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
+sll_real64, dimension(:,:), allocatable :: bz
+sll_real64, dimension(:,:), allocatable :: jx
+sll_real64, dimension(:,:), allocatable :: jy
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
-type(poisson_2d_periodic)               :: poisson
+!Poisson solver
+type(mudpack_2d) :: poisson
 
-class(sll_interpolator_1d_base), pointer    :: interp_1
-class(sll_interpolator_1d_base), pointer    :: interp_2
-class(sll_interpolator_1d_base), pointer    :: interp_3
-class(sll_interpolator_1d_base), pointer    :: interp_4
+class(sll_interpolator_1d_base), pointer   :: interp_1
+class(sll_interpolator_1d_base), pointer   :: interp_2
+class(sll_interpolator_1d_base), pointer   :: interp_3
+class(sll_interpolator_1d_base), pointer   :: interp_4
 
-type(cubic_spline_1d_interpolator), target  :: spl_eta1
-type(cubic_spline_1d_interpolator), target  :: spl_eta2
-type(cubic_spline_1d_interpolator), target  :: spl_eta3
-type(cubic_spline_1d_interpolator), target  :: spl_eta4
+type(cubic_spline_1d_interpolator), target :: spl_eta1
+type(cubic_spline_1d_interpolator), target :: spl_eta2
+type(cubic_spline_1d_interpolator), target :: spl_eta3
+type(cubic_spline_1d_interpolator), target :: spl_eta4
 
 !Diagnostics and errors
 sll_int32                             :: error
 sll_real64, dimension(:), allocatable :: nrj
+sll_real64 :: start_time, end_time
 
 !Local indices
 sll_int32  :: i1, i2, i3, i4
@@ -59,7 +65,7 @@ sll_int32  :: i1, i2, i3, i4
 eta1_min =  0.0_f64; eta1_max =  4.0_f64 * sll_pi
 eta2_min =  0.0_f64; eta2_max =  4.0_f64 * sll_pi
 
-nc_eta1 = 31; nc_eta2 = 31
+nc_eta1 = 32; nc_eta2 = 32
 
 delta_eta1 = (eta1_max-eta1_min)/nc_eta1
 delta_eta2 = (eta2_max-eta2_min)/nc_eta2
@@ -68,7 +74,7 @@ delta_eta2 = (eta2_max-eta2_min)/nc_eta2
 eta3_min = -6.0_f64; eta3_max = 6.0_f64 
 eta4_min = -6.0_f64; eta4_max = 6.0_f64 
 
-nc_eta3 = 31; nc_eta4 = 31
+nc_eta3 = 32; nc_eta4 = 32
 
 delta_eta3 = (eta3_max-eta3_min)/nc_eta3
 delta_eta4 = (eta4_max-eta4_min)/nc_eta4
@@ -78,7 +84,9 @@ SLL_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
 SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
-
+SLL_ALLOCATE(bz(nc_eta1+1,nc_eta2+1),error)
+SLL_ALLOCATE(jx(nc_eta1+1,nc_eta2+1),error)
+SLL_ALLOCATE(jy(nc_eta1+1,nc_eta2+1),error)
 
 call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2, error)
@@ -124,34 +132,36 @@ time = 0.0_f32
 if ( delta_t > 0.5/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))) &
   stop 'Warning CFL'
 
+call cpu_time(start_time)
 
 call advection_x1(0.5_f64*delta_t)
 call advection_x2(0.5_f64*delta_t)
-
+time  = time + 0.5 * delta_t
+ 
 do i_step = 1, n_step !Loop over time
 
-   time  = time + 0.5 * delta_t
-
    call compute_rho()
-   call solve(poisson,ex,ey,rho,nrj(i_step))
+   call solve(poisson,phi,rho,ex,ey,nrj(i_step))
    call online_plot() 
-
-   call advection_v1(delta_t)
-   call advection_v2(delta_t)
 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
       call plot_field(ex,"ex",i_step/10)
       call plot_field(rho,"rho",i_step/10)
-      !call plot_field(f(:,:,1,1),"f",i_step/10)
+      call plot_field(phi,"phi",i_step/10)
    end if
 
-   time  = time + 0.5 * delta_t
+
+   call advection_v1(delta_t)
+   call advection_v2(delta_t)
 
    call advection_x1(delta_t)
    call advection_x2(delta_t)
 
+   time  = time + delta_t
 
 end do !next time step
+
+call cpu_time(end_time)
 
 
 contains
@@ -163,16 +173,13 @@ subroutine compute_rho()
          rho(i1,i2) = sum(f(i1,i2,:,:))
       end do
    end do
-   rho = rho * delta_eta3 * delta_eta4
+   rho = - rho * delta_eta3 * delta_eta4
 
 end subroutine compute_rho
 
 subroutine online_plot()
 
-   !nrj(i_step) = sum(ex*ex+ey*ey) 
-   !nrj(i_step) = nrj(i_step)*delta_eta1*delta_eta2
-   !nrj(i_step) = 0.5_f64*log(nrj(i_step))
-   
+   sll_int32 :: j_step
    open(11, file='thf_4d.dat', position='append')
    if (i_step == 1) rewind(11)
    write(11,*) time, nrj(i_step)
@@ -194,14 +201,14 @@ subroutine advection_x1(dt)
    sll_real64             :: eta3
 
    do i4 = 1, nc_eta4+1
-   eta3 = eta3_min
-   do i3 = 1, nc_eta3+1
-   do i2 = 1, nc_eta2+1
-      f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
-                      f(:,i2,i3,i4),dt*eta3)
-   end do
-   eta3 = eta3 + delta_eta3
-   end do
+      eta3 = eta3_min
+      do i3 = 1, nc_eta3+1
+         do i2 = 1, nc_eta2+1
+            f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
+                            f(:,i2,i3,i4),dt*eta3)
+         end do
+         eta3 = eta3 + delta_eta3
+      end do
    end do
 
 end subroutine advection_x1
@@ -213,13 +220,13 @@ subroutine advection_x2(dt)
 
    eta4 = eta4_min
    do i4 = 1, nc_eta4+1
-   do i3 = 1, nc_eta3+1
-   do i1 = 1, nc_eta1+1
+      do i3 = 1, nc_eta3+1
+         do i1 = 1, nc_eta1+1
             f(i1,:,i3,i4) = interp_2%interpolate_array_disp(nc_eta2+1, &
                             f(i1,:,i3,i4),dt*eta4)
-   end do
-   end do
-   eta4 = eta4 + delta_eta4
+         end do
+      end do
+      eta4 = eta4 + delta_eta4
    end do
 
 
@@ -290,4 +297,4 @@ subroutine plot_field(f, fname, iplot)
 
 end subroutine plot_field
 
-end program landau_4d
+end program landau_4d_multigrid

@@ -3,6 +3,7 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
 
 use sll_constants
@@ -33,10 +34,15 @@ sll_real64, dimension(:,:,:,:), allocatable :: f
 !Electric fields and charge density
 sll_real64, dimension(:,:), allocatable :: ex
 sll_real64, dimension(:,:), allocatable :: ey
+sll_real64, dimension(:,:), allocatable :: bz
+sll_real64, dimension(:,:), allocatable :: jx
+sll_real64, dimension(:,:), allocatable :: jy
 sll_real64, dimension(:,:), allocatable :: phi
 sll_real64, dimension(:,:), allocatable :: rho
 
-type(poisson_2d_periodic)               :: poisson
+!Poisson solver
+type(poisson_2d_periodic) :: poisson
+type(maxwell_2d_pstd)     :: maxwell
 
 class(sll_interpolator_1d_base), pointer    :: interp_1
 class(sll_interpolator_1d_base), pointer    :: interp_2
@@ -73,12 +79,18 @@ nc_eta3 = 31; nc_eta4 = 31
 delta_eta3 = (eta3_max-eta3_min)/nc_eta3
 delta_eta4 = (eta4_max-eta4_min)/nc_eta4
 
-SLL_ALLOCATE(f(nc_eta1+1,nc_eta2+1,nc_eta3+1,nc_eta4+1),error)
-SLL_ALLOCATE(phi(nc_eta1+1,nc_eta2+1),error)
-SLL_ALLOCATE(rho(nc_eta1+1,nc_eta2+1),error)
-SLL_ALLOCATE(ex(nc_eta1+1,nc_eta2+1),error)
-SLL_ALLOCATE(ey(nc_eta1+1,nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(f(1:nc_eta1+1,1:nc_eta2+1,1:nc_eta3+1,1:nc_eta4+1),error)
+SLL_CLEAR_ALLOCATE(phi(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(rho(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ex(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(ey(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(bz(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(jx(1:nc_eta1+1,1:nc_eta2+1),error)
+SLL_CLEAR_ALLOCATE(jy(1:nc_eta1+1,1:nc_eta2+1),error)
 
+call initialize(maxwell, &
+                eta1_min, eta1_max, nc_eta1, &
+                eta2_min, eta2_max, nc_eta2, TE_POLARIZATION)
 
 call initialize(poisson, eta1_min, eta1_max, nc_eta1, &
                          eta2_min, eta2_max, nc_eta2, error)
@@ -124,34 +136,37 @@ time = 0.0_f32
 if ( delta_t > 0.5/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))) &
   stop 'Warning CFL'
 
-
 call advection_x1(0.5_f64*delta_t)
 call advection_x2(0.5_f64*delta_t)
 
+time  = time + 0.5 * delta_t
+call compute_rho()
+call solve(poisson,ex,ey,rho,nrj(i_step))
+ 
 do i_step = 1, n_step !Loop over time
-
-   time  = time + 0.5 * delta_t
-
-   call compute_rho()
-   call solve(poisson,ex,ey,rho,nrj(i_step))
-   call online_plot() 
 
    call advection_v1(delta_t)
    call advection_v2(delta_t)
 
+   call compute_current()
+   bz = 0.0
+   call ampere(maxwell, ex, ey, bz, delta_t, jx, jy)
+
+   call online_plot() 
    if (i_step == 1 .or. mod(i_step, 10) == 0) then
       call plot_field(ex,"ex",i_step/10)
       call plot_field(rho,"rho",i_step/10)
-      !call plot_field(f(:,:,1,1),"f",i_step/10)
+      call plot_field(f(:,:,1,1),"f",i_step/10)
    end if
 
-   time  = time + 0.5 * delta_t
+   time  = time + delta_t
 
    call advection_x1(delta_t)
    call advection_x2(delta_t)
 
-
 end do !next time step
+
+!call delete(poisson)
 
 
 contains
@@ -167,11 +182,30 @@ subroutine compute_rho()
 
 end subroutine compute_rho
 
+subroutine compute_current()
+
+   jx = 0.
+   jy = 0.
+
+   eta4 = eta4_min
+   do i4=1, nc_eta4+1
+      eta3 = eta3_min
+      do i3=1, nc_eta3+1
+         jx = jx + f(:,:,i3,i4) * eta3 
+         jy = jy + f(:,:,i3,i4) * eta4
+         eta3 = eta3 + delta_eta3
+      end do
+      eta4 = eta4 + delta_eta4
+   end do
+
+   jx = jx * delta_eta3 * delta_eta4
+   jy = jy * delta_eta3 * delta_eta4
+
+end subroutine compute_current
+
 subroutine online_plot()
 
-   !nrj(i_step) = sum(ex*ex+ey*ey) 
-   !nrj(i_step) = nrj(i_step)*delta_eta1*delta_eta2
-   !nrj(i_step) = 0.5_f64*log(nrj(i_step))
+   nrj(i_step) = sum(ex*ex+ey*ey) *delta_eta1*delta_eta2
    
    open(11, file='thf_4d.dat', position='append')
    if (i_step == 1) rewind(11)
@@ -194,14 +228,14 @@ subroutine advection_x1(dt)
    sll_real64             :: eta3
 
    do i4 = 1, nc_eta4+1
-   eta3 = eta3_min
-   do i3 = 1, nc_eta3+1
-   do i2 = 1, nc_eta2+1
-      f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
-                      f(:,i2,i3,i4),dt*eta3)
-   end do
-   eta3 = eta3 + delta_eta3
-   end do
+      eta3 = eta3_min
+      do i3 = 1, nc_eta3+1
+         do i2 = 1, nc_eta2+1
+            f(:,i2,i3,i4) = interp_1%interpolate_array_disp(nc_eta1+1, &
+                            f(:,i2,i3,i4),dt*eta3)
+         end do
+         eta3 = eta3 + delta_eta3
+      end do
    end do
 
 end subroutine advection_x1
@@ -213,13 +247,13 @@ subroutine advection_x2(dt)
 
    eta4 = eta4_min
    do i4 = 1, nc_eta4+1
-   do i3 = 1, nc_eta3+1
-   do i1 = 1, nc_eta1+1
+      do i3 = 1, nc_eta3+1
+         do i1 = 1, nc_eta1+1
             f(i1,:,i3,i4) = interp_2%interpolate_array_disp(nc_eta2+1, &
                             f(i1,:,i3,i4),dt*eta4)
-   end do
-   end do
-   eta4 = eta4 + delta_eta4
+         end do
+      end do
+      eta4 = eta4 + delta_eta4
    end do
 
 
