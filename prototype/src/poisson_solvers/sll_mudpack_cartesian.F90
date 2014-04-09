@@ -45,7 +45,7 @@ sll_int32,  optional    :: bc_eta1_left  !< boundary condtion
 sll_int32,  optional    :: bc_eta1_right !< boundary condtion
 sll_int32,  optional    :: bc_eta2_left  !< boundary condtion
 sll_int32,  optional    :: bc_eta2_right !< boundary condtion
-sll_int32,  parameter   :: iixp = 2 , jjyq = 2
+sll_int32,  parameter   :: iixp = 4 , jjyq = 4
 sll_int32               :: iiex, jjey, llwork
 
 sll_real64 :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
@@ -218,7 +218,9 @@ intl = 1
 write(*,106) intl,method,iguess
 #endif
 
-rhs = rhs - sum(rhs) / (nx*ny)
+if ( nxa == 0 .and. nxb == 0 .and. nyc == 0 .and. nyd == 0 ) &
+   rhs = rhs - sum(rhs) / (nx*ny)
+
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
 #ifdef DEBUG
