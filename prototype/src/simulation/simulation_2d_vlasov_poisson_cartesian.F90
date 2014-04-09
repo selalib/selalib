@@ -65,7 +65,19 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    sll_int32 :: num_dof_x2
    sll_real64, dimension(:), pointer :: x1_array
    sll_real64, dimension(:), pointer :: x2_array
+   sll_real64, dimension(:), pointer :: x1_array_light
+   sll_real64, dimension(:), pointer :: x2_array_light
    sll_real64, dimension(:), pointer :: integration_weight
+   sll_int32, dimension(:), pointer :: every_x1
+   sll_int32, dimension(:), pointer :: every_x2
+   sll_int32 :: num_bloc_x1
+   sll_int32 :: num_bloc_x2
+   sll_int32, dimension(:), pointer :: bloc_index_x1
+   sll_int32, dimension(:), pointer :: bloc_index_x2
+   sll_int32 :: light_size_x1
+   sll_int32 :: light_size_x2
+   sll_int32 :: num_dof_x2_light
+   
       
    !initial function
    sll_real64  :: kx
@@ -80,8 +92,10 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    
    !time_iterations
    sll_real64 :: dt
-   sll_int32  :: num_iterations
-   sll_int32  :: freq_diag,freq_diag_time
+   sll_int32 :: num_iterations
+   sll_int32 :: freq_diag
+   sll_int32 :: freq_diag_time
+   sll_int32 :: freq_diag_restart
    sll_int32 :: nb_mode
    sll_real64 :: time_init
    !sll_int32  :: split_case
@@ -158,6 +172,12 @@ contains
     sll_real64 :: density_x2_min_to_x2_fine_min
     sll_real64 :: density_x2_fine_min_to_x2_fine_max
     sll_real64 :: density_x2_fine_max_to_x2_max
+    sll_int32 :: every_x2_min_to_x2_fine_min
+    sll_int32 :: every_x2_fine_min_to_x2_fine_max
+    sll_int32 :: every_x2_fine_max_to_x2_max
+    sll_int32 :: every_x1
+    sll_int32 :: every_x2
+    
     
     !initial_function
     character(len=256) :: initial_function_case
@@ -171,6 +191,7 @@ contains
     sll_real64 :: dt
     sll_int32 :: number_iterations
     sll_int32 :: freq_diag
+    sll_int32 :: freq_diag_restart
     sll_int32 :: freq_diag_time
     sll_int32 :: nb_mode
     sll_real64 :: time_init
@@ -230,7 +251,12 @@ contains
       x2_fine_max, &
       density_x2_min_to_x2_fine_min, &
       density_x2_fine_min_to_x2_fine_max, &
-      density_x2_fine_max_to_x2_max
+      density_x2_fine_max_to_x2_max, &
+      every_x2_min_to_x2_fine_min, &
+      every_x2_fine_min_to_x2_fine_max, &
+      every_x2_fine_max_to_x2_max, &
+      every_x1, &
+      every_x2
 
 
     namelist /initial_function/ &
@@ -246,6 +272,7 @@ contains
       number_iterations, &
       freq_diag, &
       freq_diag_time, &
+      freq_diag_restart, &
       nb_mode, &
       time_init, &
       split_case
@@ -299,6 +326,12 @@ contains
     density_x2_min_to_x2_fine_min = 1
     density_x2_fine_min_to_x2_fine_max = 1
     density_x2_fine_max_to_x2_max = 1
+    every_x2_min_to_x2_fine_min = 1
+    every_x2_fine_min_to_x2_fine_max = 1
+    every_x2_fine_max_to_x2_max = 1
+    every_x1 = 1
+    every_x2 = 1
+
         
     !initial_function
     initial_function_case = "SLL_LANDAU"
@@ -314,6 +347,7 @@ contains
     number_iterations = 600
     freq_diag = 100
     freq_diag_time = 1
+    freq_diag_restart = 5000
     nb_mode = 5
     time_init = 0._f64
     split_case = "SLL_STRANG_VTV" 
@@ -391,10 +425,52 @@ contains
         print*,'#in init_vp2d_par_cart'
         stop 
     end select
+    sim%num_bloc_x1 = 1
+    SLL_ALLOCATE(sim%every_x1(sim%num_bloc_x1),ierr)
+    SLL_ALLOCATE(sim%bloc_index_x1(sim%num_bloc_x1),ierr)
+    sim%every_x1(1) = every_x1
+    sim%bloc_index_x1(sim%num_bloc_x1) = num_cells_x1+1
+    sim%light_size_x1 = compute_light_size(num_cells_x1+1,every_x1)   
+    !sim%light_size_x1 = compute_light_size_bloc(sim%bloc_index_x1,sim%every_x1)   
+    SLL_ALLOCATE(sim%x1_array_light(sim%light_size_x1),ierr)
+    call compute_light_mesh( &
+      num_cells_x1+1, &
+      sim%x1_array, &
+      sim%x1_array_light, &
+      sim%light_size_x1, &
+      every_x1 )
+!    call compute_light_mesh_bloc( &
+!      sim%bloc_index_x1, &
+!      sim%x1_array, &
+!      sim%x1_array_light, &
+!      sim%light_size_x1, &
+!      sim%every_x1 )
+
+        
     select case (mesh_case_x2)
       case ("SLL_LOGICAL_MESH")
         mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
         call initialize_eta1_node_1d( mesh_x2, sim%x2_array )
+        sim%num_bloc_x2 = 1
+        SLL_ALLOCATE(sim%every_x2(sim%num_bloc_x2),ierr)
+        SLL_ALLOCATE(sim%bloc_index_x2(sim%num_bloc_x2),ierr)
+        sim%every_x2(1) = every_x2
+        sim%bloc_index_x2(sim%num_bloc_x2) = num_cells_x2+1
+        sim%light_size_x2 = compute_light_size(num_cells_x2+1,every_x2)   
+        !sim%light_size_x1 = compute_light_size_bloc(sim%bloc_index_x1,sim%every_x1)   
+        SLL_ALLOCATE(sim%x2_array_light(sim%light_size_x2),ierr)
+        call compute_light_mesh( &
+          num_cells_x2+1, &
+          sim%x2_array, &
+          sim%x2_array_light, &
+          sim%light_size_x2, &
+          every_x2 )
+!    call compute_light_mesh_bloc( &
+!      sim%bloc_index_x1, &
+!      sim%x1_array, &
+!      sim%x1_array_light, &
+!      sim%light_size_x1, &
+!      sim%every_x1 )
       case ("SLL_TWO_GRID_MESH")
         bloc_coord(1) = (x2_fine_min-x2_min)/(x2_max-x2_min)
         bloc_coord(2) = (x2_fine_max-x2_min)/(x2_max-x2_min)
@@ -407,6 +483,22 @@ contains
         call compute_mesh_from_bloc(bloc_coord,bloc_index,sim%x2_array)
         sim%x2_array = x2_min+sim%x2_array*(x2_max-x2_min)
         mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
+        sim%num_bloc_x2 = 3
+        SLL_ALLOCATE(sim%every_x2(sim%num_bloc_x2),ierr)
+        SLL_ALLOCATE(sim%bloc_index_x2(sim%num_bloc_x2),ierr)
+
+        sim%bloc_index_x2(1:3) = bloc_index(1:3)
+        sim%every_x2(1) = every_x2_min_to_x2_fine_min
+        sim%every_x2(2) = every_x2_fine_min_to_x2_fine_max
+        sim%every_x2(3) = every_x2_fine_max_to_x2_max
+        sim%light_size_x2 = compute_light_size_3_bloc( bloc_index, sim%every_x2 )
+        SLL_ALLOCATE(sim%x2_array_light(sim%light_size_x2),ierr)
+        call compute_light_mesh_3_bloc( &
+          bloc_index, &
+          sim%x2_array, &
+          sim%x2_array_light, &
+          sim%light_size_x2, &
+          sim%every_x2 )
       case default
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
         print*,'#in init_vp2d_par_cart'
@@ -469,6 +561,7 @@ contains
     sim%dt=dt
     sim%num_iterations=number_iterations
     sim%freq_diag=freq_diag
+    sim%freq_diag_restart=freq_diag_restart
     sim%freq_diag_time=freq_diag_time
     sim%nb_mode = nb_mode
     sim%time_init = time_init
@@ -561,9 +654,11 @@ contains
       case ("SLL_ADVECTIVE")
         sim%advection_form_x2 = SLL_ADVECTIVE
         sim%num_dof_x2 = num_cells_x2+1
+        sim%num_dof_x2_light = sim%light_size_x2
       case ("SLL_CONSERVATIVE")
         sim%advection_form_x2 = SLL_CONSERVATIVE
         sim%num_dof_x2 = num_cells_x2
+        sim%num_dof_x2_light = sim%light_size_x2-1
       case default
         print*,'#advection_form_x2', advection_form_x2, ' not implemented'
         print *,'#in init_vp2d_par_cart'
@@ -725,6 +820,7 @@ contains
     type(remap_plan_2D_real64), pointer :: remap_plan_x2_x1
     sll_real64, dimension(:), pointer     :: f1d
     sll_int32 :: np_x1,np_x2
+    sll_int32 :: np_x1_light
     sll_int32 :: nproc_x1,nproc_x2
     sll_int32 :: global_indices(2)
     sll_int32 :: ierr
@@ -743,6 +839,7 @@ contains
     sll_real64, dimension(:), allocatable :: x2_array_middle
     !sll_real64, dimension(:), allocatable :: x1_array
     sll_real64, dimension(:), allocatable :: node_positions_x2
+    sll_real64, dimension(:), allocatable :: node_positions_x2_light
     sll_real64 :: mean
     !character(len=4)           :: fin   
     sll_int32                  :: file_id
@@ -758,7 +855,8 @@ contains
     !sll_int32 :: split_x
     !sll_int32 :: split_x_init
     sll_int32 :: num_dof_x2 
-    
+    sll_int32 :: num_dof_x2_light
+     
     logical :: split_T
     !sll_int32 ::conservative_case
     
@@ -768,8 +866,11 @@ contains
     sll_int32, dimension(:), allocatable :: collective_recvcnts
     sll_int32 :: collective_size
     sll_real64,dimension(:,:),pointer :: f_visu 
+    sll_real64,dimension(:,:),pointer :: f_visu_light 
     sll_real64,dimension(:),pointer :: f_visu_buf1d
     sll_real64,dimension(:),pointer :: f_x1_buf1d
+    sll_real64,dimension(:),pointer :: f_hat_x2_loc
+    sll_real64,dimension(:),pointer :: f_hat_x2
     sll_int32 :: iplot
     character(len=4) :: cproc
     character(len=4) :: cplot
@@ -787,13 +888,17 @@ contains
     np_x1 = sim%mesh2d%num_cells1+1
     np_x2 = sim%mesh2d%num_cells2+1
     num_dof_x2 = sim%num_dof_x2
-
+    num_dof_x2_light = sim%num_dof_x2_light
+    np_x1_light = sim%light_size_x1
+    
     if(sll_get_collective_rank(sll_world_collective)==0)then
       SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
       SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
+      SLL_ALLOCATE(f_visu_light(np_x1_light,num_dof_x2_light),ierr)
     else
       SLL_ALLOCATE(f_visu(1:1,1:1),ierr)          
-      SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)          
+      SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
+      SLL_ALLOCATE(f_visu_light(1:1,1:1),ierr)          
     endif
 
     collective_size = sll_get_collective_size(sll_world_collective)
@@ -801,11 +906,11 @@ contains
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
 
         
-    if(sll_get_collective_rank(sll_world_collective)==0)then
+    !if(sll_get_collective_rank(sll_world_collective)==0)then
       SLL_ALLOCATE(buf_fft(np_x1-1),ierr)
       pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
-    endif
+    !endif
 
     ! allocate and initialize the layouts...
     layout_x1       => new_layout_2D( sll_world_collective )
@@ -851,6 +956,10 @@ contains
     SLL_ALLOCATE(x2_array_unit(np_x2),ierr)
     SLL_ALLOCATE(x2_array_middle(np_x2),ierr)
     SLL_ALLOCATE(node_positions_x2(num_dof_x2),ierr)
+    SLL_ALLOCATE(node_positions_x2_light(num_dof_x2),ierr)
+    SLL_ALLOCATE(f_hat_x2_loc(nb_mode+1),ierr)
+    SLL_ALLOCATE(f_hat_x2(nb_mode+1),ierr)
+    
 
     !temporary poisson
     !N_buf_poisson=2*(np_x1-1)+15  
@@ -934,10 +1043,10 @@ contains
     endif
     time_init = sim%time_init
 
-    call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
-    call sll_binary_write_array_0d(restart_id,time_init,ierr)
-    call sll_binary_write_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
-    call sll_binary_file_close(restart_id,ierr)    
+    !call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
+    !call sll_binary_write_array_0d(restart_id,time_init,ierr)
+    !call sll_binary_write_array_2d(restart_id,f_x1(1:local_size_x1,1:local_size_x2),ierr)
+    !call sll_binary_file_close(restart_id,ierr)    
 
 
     
@@ -986,6 +1095,14 @@ contains
         node_positions_x2, &
         sim%num_dof_x2, &
         'f', time_init )        
+      call plot_f_cartesian( &
+        iplot, &
+        f_visu_light, &
+        sim%x1_array_light, &
+        np_x1_light, &
+        node_positions_x2_light, &
+        sim%num_dof_x2_light, &
+        'light_f', time_init )        
 #endif
 
 
@@ -1008,7 +1125,6 @@ contains
     
     
     
-    iplot = iplot+1  
     
 
 
@@ -1088,13 +1204,14 @@ contains
 
 
     if(sll_get_collective_rank(sll_world_collective)==0) then        
-      print *,'#step=',0,time_init+real(0,f64)*sim%dt
+      print *,'#step=',0,time_init+real(0,f64)*sim%dt,'iplot=',iplot
     endif
+    iplot = iplot+1  
     !sim%num_iterations = 0
     do istep = 1, sim%num_iterations
       if (mod(istep,sim%freq_diag)==0) then
         if(sll_get_collective_rank(sll_world_collective)==0) then        
-          print *,'#step=',istep,time_init+real(istep,f64)*sim%dt
+          print *,'#step=',istep,time_init+real(istep,f64)*sim%dt,'iplot=',iplot
         endif
       endif  
 
@@ -1236,7 +1353,27 @@ contains
           potential_energy = potential_energy+(efield(i)+e_app(i))**2
         enddo
         potential_energy = 0.5_f64*potential_energy* sim%mesh2d%delta_eta1
-        if (mod(istep,sim%freq_diag)==0) then          
+        
+        f_hat_x2_loc(1:nb_mode+1) = 0._f64
+        do i=1,local_size_x2
+          buf_fft = f_x1(1:np_x1-1,i)
+          call fft_apply_plan(pfwd,buf_fft,buf_fft)
+          do k=0,nb_mode
+            f_hat_x2_loc(k+1) = f_hat_x2_loc(k+1) &
+              +abs(fft_get_mode(pfwd,buf_fft,k))**2 &
+              *sim%integration_weight(ig+i)
+          enddo
+        enddo
+        call sll_collective_allreduce( &
+          sll_world_collective, &
+          f_hat_x2_loc, &
+          nb_mode+1, &
+          MPI_SUM, &
+          f_hat_x2 )
+        
+        
+        
+        if (mod(istep,sim%freq_diag_restart)==0) then          
           call int2string(iplot,cplot) 
           call sll_binary_file_create('f_plot_'//cplot//'_proc_'//cproc//'.rst', restart_id, ierr )
           call sll_binary_write_array_0d(restart_id,time,ierr)
@@ -1260,12 +1397,17 @@ contains
             kinetic_energy, &
             potential_energy, &
             kinetic_energy + potential_energy
-          do k=0,nb_mode-1
+          do k=0,nb_mode
             write(th_diag_id,'(g20.12)',advance='no') &
               abs(rho_mode(k))
           enddo
+          do k=0,nb_mode-1
+            write(th_diag_id,'(g20.12)',advance='no') &
+              f_hat_x2(k+1)
+          enddo
           write(th_diag_id,'(g20.12)') &
-              abs(rho_mode(nb_mode))
+              f_hat_x2(nb_mode+1)
+
           if(sim%driven)then
             call sll_binary_write_array_1d(efield_id,efield(1:np_x1-1),ierr)
             call sll_binary_write_array_1d(rhotot_id,rho(1:np_x1-1),ierr)
@@ -1554,6 +1696,312 @@ contains
       enddo
           
   end subroutine compute_mesh_from_bloc
+
+
+  function compute_light_size( &
+    bloc_index, &
+    every ) result(light_size)
+    sll_int32, intent(in) :: bloc_index
+    sll_int32, intent(in) :: every
+    sll_int32 :: light_size
+    sll_int32 :: i
+    sll_int32 :: s
+        
+    s = 0
+    do i=1,bloc_index-1,every
+      s = s+1
+    enddo
+    s = s+1
+    light_size = s      
+  end function compute_light_size
+
+
+
+  function compute_light_size_3_bloc( &
+    bloc_index, &
+    every ) result(light_size)
+    sll_int32, intent(in) :: bloc_index(3)
+    sll_int32, intent(in) :: every(3)
+    sll_int32 :: light_size
+    sll_int32 :: i1
+    sll_int32 :: i2
+    sll_int32 :: i
+    sll_int32 :: s
+        
+    i1=bloc_index(1)
+    i2=i1+bloc_index(2)
+    s = 0
+    do i=1,bloc_index(1)-1,every(1)
+      s = s+1
+    enddo
+    s = s+1 !for bloc_index(1)
+    do i=2,bloc_index(2)-1,every(2)
+      s = s+1
+    enddo
+    s = s+1 !for bloc_index(2)
+    do i=2,bloc_index(3)-1,every(3)
+      s = s+1
+    enddo
+    s = s+1 !for bloc_index(3)
+    light_size = s      
+  end function compute_light_size_3_bloc
+
+  function compute_light_size_bloc( &
+    bloc_index, &
+    num_bloc, &
+    every ) result(light_size)
+    sll_int32, dimension(:), intent(in) :: bloc_index
+    sll_int32, intent(in) :: num_bloc 
+    sll_int32, dimension(:), intent(in) :: every
+    sll_int32 :: light_size
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: s
+    
+    if(size(bloc_index)<num_bloc)then
+      print *,'#bad size for bloc_index',size(bloc_index),num_bloc
+      print *,'#in function compute_light_size_bloc'
+      stop
+    endif
+
+    if(size(every)<num_bloc)then
+      print *,'#bad size for every',size(every),num_bloc
+      print *,'#in function compute_light_size_bloc'
+      stop
+    endif
+
+    s = 0
+    do j=1,num_bloc
+      do i=1,bloc_index(j)-1,every(j)
+        s = s+1
+      enddo    
+      s = s+1 !for bloc_index(1)
+    enddo  
+    light_size = s      
+
+  end function compute_light_size_bloc
+
+
+
+  subroutine compute_light_mesh_3_bloc( &
+    bloc_index, &
+    node_positions, &
+    light_node_positions, &
+    light_size, &
+    every )
+    sll_int32, intent(in) :: bloc_index(3)
+    sll_real64, dimension(:), intent(in) :: node_positions
+    sll_real64, dimension(:), intent(out) :: light_node_positions
+    sll_int32, intent(in) :: light_size
+    sll_int32, intent(in) :: every(3)
+    sll_int32::i,i1,i2,N,s
+    
+    if(size(light_node_positions)<light_size)then
+      print *,'#bad value of light_size',light_size
+      print *,'#or allocation of light_node_positions',size(light_node_positions)
+      print *,'#in compute_light_mesh'
+      stop
+    endif
+    i1=bloc_index(1)
+    i2=i1+bloc_index(2)
+
+    s = 0
+    do i=1,bloc_index(1)-1,every(1)
+      s = s+1
+      light_node_positions(s) = node_positions(i)
+    enddo
+    i=bloc_index(1)
+    s = s+1
+    light_node_positions(s) = node_positions(i)
+    do i=2,bloc_index(2)-1,every(2)
+      s = s+1
+      light_node_positions(s) = node_positions(i+i1)
+    enddo
+    i=bloc_index(2)
+    s = s+1
+    light_node_positions(s) = node_positions(i+i1)
+    do i=2,bloc_index(3)-1,every(3)
+      s = s+1
+      light_node_positions(s) = node_positions(i+i2)
+    enddo
+    i=bloc_index(3)
+    s = s+1 !for bloc_index(3)
+    light_node_positions(s) = node_positions(i+i2)
+
+    if(s /= light_size)then
+      print *,'#bad value of light_size',light_size,s
+      print *,'#in compute_light_mesh'
+      stop
+    endif
+    
+          
+  end subroutine compute_light_mesh_3_bloc
+
+
+  subroutine compute_light_mesh_bloc( &
+    bloc_index, &
+    num_bloc, &
+    node_positions, &
+    light_node_positions, &
+    light_size, &
+    every )
+    sll_int32, dimension(:), intent(in) :: bloc_index
+    sll_int32 :: num_bloc
+    sll_real64, dimension(:), intent(in) :: node_positions
+    sll_real64, dimension(:), intent(out) :: light_node_positions
+    sll_int32, intent(in) :: light_size
+    sll_int32, dimension(:), intent(in) :: every
+    sll_int32::i,i1,i2,N,s
+    sll_int32 :: j
+    if(size(light_node_positions)<light_size)then
+      print *,'#bad value of light_size',light_size
+      print *,'#or allocation of light_node_positions',size(light_node_positions)
+      print *,'#in compute_light_mesh'
+      stop
+    endif
+    
+    s = 0    
+    do i=1,bloc_index(1)-1,every(1)
+      s = s+1
+      light_node_positions(s) = node_positions(i)
+    enddo
+    i=bloc_index(1)
+    s = s+1
+    light_node_positions(s) = node_positions(i)
+    i1=0
+    do j=2,num_bloc
+      i1 = i1+bloc_index(j-1)
+      do i=2,bloc_index(j)-1,every(j)
+        s = s+1
+        light_node_positions(s) = node_positions(i+i1)
+      enddo
+      i=bloc_index(j)
+      s = s+1
+      light_node_positions(s) = node_positions(i+i1)
+    enddo  
+
+    if(s /= light_size)then
+      print *,'#bad value of light_size',light_size,s
+      print *,'#in compute_light_mesh'
+      stop
+    endif
+    
+          
+  end subroutine compute_light_mesh_bloc
+
+
+
+  subroutine compute_light_mesh( &
+    bloc_index, &
+    node_positions, &
+    light_node_positions, &
+    light_size, &
+    every )
+    sll_int32, intent(in) :: bloc_index
+    sll_real64, dimension(:), intent(in) :: node_positions
+    sll_real64, dimension(:), intent(out) :: light_node_positions
+    sll_int32, intent(in) :: light_size
+    sll_int32, intent(in) :: every
+    sll_int32::i,s
+    
+    if(size(light_node_positions)<light_size)then
+      print *,'#bad value of light_size',light_size
+      print *,'#or allocation of light_node_positions',size(light_node_positions)
+      print *,'#in compute_light_mesh'
+      stop
+    endif
+    s = 0
+    do i=1,bloc_index-1,every
+      s = s+1
+      light_node_positions(s) = node_positions(i)
+    enddo
+    i=bloc_index
+    s = s+1
+    light_node_positions(s) = node_positions(i)
+
+    if(s /= light_size)then
+      print *,'#bad value of light_size',light_size,s
+      print *,'#in compute_light_mesh'
+      stop
+    endif
+    
+          
+  end subroutine compute_light_mesh
+  
+  subroutine compute_full_to_light_2d( &
+    bloc_index_x1, &
+    every_x1, &
+    num_bloc_x1, &
+    bloc_index_x2, &
+    every_x2, &
+    num_bloc_x2, &
+    f_full, &
+    np_x1, &
+    np_x2, &
+    f_light, &
+    light_size_x1, &
+    light_size_x2 &    
+    )
+    sll_int32, dimension(:), intent(in) :: bloc_index_x1
+    sll_int32, dimension(:), intent(in) :: every_x1
+    sll_int32, intent(in) :: num_bloc_x1
+    sll_int32, dimension(:), intent(in) :: bloc_index_x2
+    sll_int32, dimension(:), intent(in) :: every_x2
+    sll_int32, intent(in) :: num_bloc_x2
+    sll_real64, dimension(:,:), intent(in) :: f_full
+    sll_int32, intent(in) :: np_x1
+    sll_int32, intent(in) :: np_x2
+    sll_real64, dimension(:,:), intent(out) :: f_light
+    sll_int32, intent(in) :: light_size_x1
+    sll_int32, intent(in) :: light_size_x2
+    sll_int32 :: i1 
+    sll_int32 :: i2 
+    sll_int32 :: j1 
+    sll_int32 :: j2 
+    sll_int32 :: s1 
+    sll_int32 :: s2 
+  
+  
+    if((size(f_full,1)<np_x1).or.(size(f_full,2)<np_x2))then
+      print *,'#bad size for f_full 1',size(f_full,1)<np_x1
+      print *,'f_full 2',size(f_full,1)<np_x1
+      print *,'#in compute_full_to_light_2d'
+      stop
+    endif
+    if((size(f_light,1)<light_size_x1).or.(size(f_light,2)<light_size_x2))then
+      print *,'#bad size for f_light 1',size(f_light,1)<light_size_x1
+      print *,'f_light 2',size(f_light,2)<light_size_x2
+      print *,'#in compute_full_to_light_2d'
+      stop
+    endif
+    if(size(bloc_index_x1)<num_bloc_x1)then
+      print *,'#bad size for bloc_index_x1',bloc_index_x1,num_bloc_x1
+      stop
+    endif
+    if(size(bloc_index_x2)<num_bloc_x2)then
+      print *,'#bad size for bloc_index_x2',bloc_index_x2,num_bloc_x2
+      stop
+    endif
+    if(size(every_x1)<num_bloc_x1)then
+      print *,'#bad size for every_x1',every_x1,num_bloc_x1
+      stop
+    endif
+    if(size(every_x2)<num_bloc_x2)then
+      print *,'#bad size for every_x2',every_x2,num_bloc_x2
+      stop
+    endif
+    
+    do j2 = 1,num_bloc_x2  
+      do i2 = 1, bloc_index_x2(j2), every_x2(j2)           
+        do j1 = 1,num_bloc_x1
+          do i1 = 1, bloc_index_x1(j1), every_x1(j1)
+          enddo
+        enddo
+      enddo  
+    enddo
+      
+  end subroutine compute_full_to_light_2d
+  
 
 
   elemental function f_equilibrium(v)
