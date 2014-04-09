@@ -10,7 +10,7 @@ SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_1d_periodic.F90
                  sll_poisson_2d_polar.F90
                  sll_poisson_2d_periodic_fftpack.F90
-		 sll_poisson_2d_dirichlet_cartesian.F90 )
+		     sll_poisson_2d_dirichlet_cartesian.F90 )
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
 
@@ -52,10 +52,7 @@ IF (NOT STDF95)
                                     
 ENDIF(NOT STDF95)
 
-
-
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
-
 
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
