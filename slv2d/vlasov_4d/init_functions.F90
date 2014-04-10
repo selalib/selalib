@@ -13,6 +13,7 @@ integer, parameter :: TSI_CASE  = 5
 integer, parameter :: VA_VALIS          = 0
 integer, parameter :: VA_OLD_FUNCTION   = 1
 integer, parameter :: VA_VLASOV_POISSON = 2
+integer, parameter :: VA_CLASSIC        = 3
 
 integer, parameter :: METH_BSL_CUBIC_SPLINES = 0
 integer, parameter :: METH_CSL_CUBIC_SPLINES = 1
