@@ -3,6 +3,7 @@ program vm4d_spectral
 #define MPI_MASTER 0
 #include "selalib-mpi.h"
 
+  use init_functions
   use sll_vlasov4d_base
   use sll_vlasov4d_spectral
 
@@ -128,7 +129,7 @@ contains
         vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
         v2 = vx*vx+vy*vy
-        vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x)*cos(ky*y))/(2*sll_pi)*exp(-.5*v2)
+        vlasov4d%f(i,j,k,l) = landau_cos_prod(vlasov4d%eps,kx, ky, x, y, v2)
 
     end do
     end do
@@ -154,22 +155,5 @@ contains
 
   end subroutine initlocal
 
-  subroutine solve_ampere(vlasov4d, maxwell2d, dt)
-  type(vlasov4d_spectral)   :: vlasov4d 
-  type(maxwell_2d_pstd)     :: maxwell2d
-  sll_real64, intent(in)    :: dt
-   
-  call ampere(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt, vlasov4d%jx)
-
-  end subroutine solve_ampere
-  
-  subroutine solve_faraday(vlasov4d, maxwell2d, dt)
-  type(vlasov4d_spectral)   :: vlasov4d 
-  type(maxwell_2d_pstd)     :: maxwell2d
-  sll_real64, intent(in)    :: dt
-   
-  call faraday(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
-
-  end subroutine solve_faraday
 
 end program vm4d_spectral

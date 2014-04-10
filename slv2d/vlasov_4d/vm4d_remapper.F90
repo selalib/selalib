@@ -2,6 +2,7 @@ program vm4d
 
 #include "selalib-mpi.h"
 
+  use init_functions
   use sll_vlasov4d_base
   use sll_vlasov4d_maxwell
 
@@ -36,14 +37,13 @@ program vm4d
 
   call initlocal()
 
+  call advection_x1(vlasov4d,0.5*vlasov4d%dt)
+  call advection_x2(vlasov4d,0.5*vlasov4d%dt)
+
   call transposexv(vlasov4d)
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
-  !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
-  vlasov4d%bz = 0.0_f64
-  call transposevx(vlasov4d)
-  call advection_x1(vlasov4d,0.5*vlasov4d%dt)
-  call advection_x2(vlasov4d,0.5*vlasov4d%dt)
+  !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*vlasov4d%dt)   
 
   do iter=1,vlasov4d%nbiter !Loop over time
 
@@ -51,13 +51,13 @@ program vm4d
         call write_xmf_file(vlasov4d,iter/vlasov4d%fdiag)
      end if
 
-     call transposexv(vlasov4d)
+     call advection_x3x4(vlasov4d,vlasov4d%dt)
+
      call compute_current(vlasov4d)
      call ampere(maxwell,vlasov4d%ex,vlasov4d%ey,vlasov4d%bz, &
                  vlasov4d%dt,vlasov4d%jx,vlasov4d%jy) 
-     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*vlasov4d%dt)   
-     call advection_x3x4(vlasov4d,vlasov4d%dt)
-     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*vlasov4d%dt)   
+     !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, vlasov4d%dt)   
+
      call transposevx(vlasov4d)
      call advection_x1(vlasov4d,vlasov4d%dt)
      call advection_x2(vlasov4d,vlasov4d%dt)
@@ -110,8 +110,8 @@ contains
     call compute_local_sizes_4d(vlasov4d%layout_x, &
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-    kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
-    ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
+    kx  = 2_f64*sll_pi/(vlasov4d%eta1_max-vlasov4d%eta1_min)
+    ky  = 2_f64*sll_pi/(vlasov4d%eta2_max-vlasov4d%eta2_min)
 
     do l=1,loc_sz_l 
     do k=1,loc_sz_k
@@ -130,7 +130,7 @@ contains
        vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
        v2 = vx*vx+vy*vy
-       vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x)*cos(ky*y))/(2*sll_pi)*exp(-.5*v2)
+       vlasov4d%f(i,j,k,l) = landau_cos_prod(vlasov4d%eps,kx, ky, x, y, v2)
 
     end do
     end do
