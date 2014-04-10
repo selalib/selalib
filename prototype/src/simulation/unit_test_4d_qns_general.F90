@@ -48,7 +48,7 @@ program qns_4d_general
   f_one_params(:) = (/0.0_f64/)
   f_minus_one_params(:) = (/0.0_f64/)
   f_epsi_params(:) = (/0.0_f64/)
-  elec_field_ext_params(:) = (/-64.0_f64,-64.0_f64/)
+  elec_field_ext_params(:) = (/1.5_f64,1.5_f64/)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
