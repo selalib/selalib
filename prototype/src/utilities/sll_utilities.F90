@@ -61,6 +61,8 @@ module sll_utilities
      module procedure display_vector_real
   end interface sll_display
 
+  logical, private :: flag = .true.
+
 contains
 
   function is_power_of_two( n )
@@ -276,8 +278,10 @@ subroutine initialize_file(data_file_id, thf_file_id)
   if (IO_stat/=0) STOP "Miss argument file.nml"
 
   call sll_new_file_id(thf_file_id, error)
-  open(thf_file_id,file="thf.dat",IOStat=IO_stat)
+  open(thf_file_id,file="thf.dat",IOStat=IO_stat, position='append')
   if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
+  rewind(thf_file_id)
+  close(thf_file_id)
 
 end subroutine initialize_file
   
@@ -289,8 +293,13 @@ subroutine time_history(file_id, desc, fformat, array)
    sll_real64, dimension(:) :: array !< data array
     
    if (desc(1:3)=="thf") then
-      !print *,'array', array
+      open(file_id,file="thf.dat",position='append')
+      if (flag) then
+         rewind(file_id)
+         flag = .false.
+      end if
       write(file_id,fformat) array
+      close(file_id)
    else
       write(*,*) desc," not recognized"
    endif

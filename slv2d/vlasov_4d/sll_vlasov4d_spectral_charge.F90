@@ -182,12 +182,9 @@ contains
            call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
            !calcul du flux
-           do i=1,this%nc_eta1/2+1
-              this%tmp_x(i) = this%tmp_x(i) &
-                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx(i))) &
-                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx(i))
-           enddo
-           this%tmp_x(1)=0._f64
+           this%tmp_x = this%tmp_x &
+                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx)) &
+                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx)
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
            this%f_star(1:nc_x1,j,k,l)= this%d_dx / nc_x1
         end do
@@ -211,10 +208,7 @@ contains
         do j=1,loc_sz_j
            call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
-           do i=1,this%nc_eta1/2+1
-              this%tmp_x(i) = this%tmp_x(i) &
-                 * exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*vx)
-           enddo
+           this%tmp_x = this%tmp_x * exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
            this%f(1:nc_x1,j,k,l)= this%d_dx / nc_x1
         end do
@@ -249,12 +243,9 @@ contains
      do k=1,loc_sz_k
         do i=1,loc_sz_i
            call fftw_execute_dft_r2c(this%fwy, this%f(i,1:nc_x2,k,l), this%tmp_y)
-           do j=1,this%nc_eta2/2+1
-              this%tmp_y(j) = this%tmp_y(j) &
-                * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j))) &
-                * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
-           enddo
-           this%tmp_y(1)=0._f64
+           this%tmp_y = this%tmp_y &
+                * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky)) &
+                * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky)
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
            this%f_star(i,:,k,l) = this%d_dy / nc_x2
         end do
@@ -273,10 +264,7 @@ contains
      do k=1,loc_sz_k
         do i=1,loc_sz_i
            call fftw_execute_dft_r2c(this%fwy, this%f(i,1:nc_x2,k,l), this%tmp_y)
-           do j=1,this%nc_eta2/2+1
-              this%tmp_y(j) = this%tmp_y(j) &
-                 * exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
-           enddo
+           this%tmp_y = this%tmp_y * exp(-cmplx(0.0_f64,this%ky,kind=f64)*vy)
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
            this%f(i,1:nc_x2,k,l) = this%d_dy / nc_x2
         end do
@@ -379,7 +367,7 @@ subroutine advection_x3x4(this,dt)
                gk = global_indices(3)
                gl = global_indices(4)
                vx = this%eta3_min+(gk-1)*this%delta_eta3
-               locjx(gi,gj) = locjx(gi,gj) + dxy*df(i,j,k,l) 
+               locjx(gi,gj) = locjx(gi,gj) + dxy*df(i,j,k,l)*vx
             end do
          end do
       end do
@@ -430,7 +418,7 @@ subroutine advection_x3x4(this,dt)
                gk = global_indices(3)
                gl = global_indices(4)
                vy = this%eta4_min+(gl-1)*this%delta_eta4
-               locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) 
+               locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) *vy
             end do
          end do
       end do
