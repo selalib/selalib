@@ -15,14 +15,14 @@
 
 #include "sll_fftw.h"
 
-#define D_DX(field)                                           \
-call fftw_execute_dft_r2c(self%fwx, field, self%tmp_x);       \
+#define D_DX(FIELD)                                           \
+call fftw_execute_dft_r2c(self%fwx, FIELD, self%tmp_x);       \
 self%tmp_x = -cmplx(0.0_f64,self%kx,kind=f64)*self%tmp_x;     \
 call fftw_execute_dft_c2r(self%bwx, self%tmp_x, self%d_dx);   \
 self%d_dx = self%d_dx / nc_x
 
-#define D_DY(field)                                           \
-call fftw_execute_dft_r2c(self%fwy, field, self%tmp_y);       \
+#define D_DY(FIELD)                                           \
+call fftw_execute_dft_r2c(self%fwy, FIELD, self%tmp_y);       \
 self%tmp_y = -cmplx(0.0_f64,self%ky,kind=f64)*self%tmp_y;     \
 call fftw_execute_dft_c2r(self%bwy, self%tmp_y, self%d_dy);   \
 self%d_dy = self%d_dy / nc_y
@@ -317,6 +317,9 @@ subroutine faraday_te_2d_pstd(self, ex, ey, hz, dt)
       hz(1:nc_x,j) = hz(1:nc_x,j) - dt_mu * self%d_dx
    end do
 
+   if (size(hz,1) == nc_x+1) hz(nc_x+1,:) = hz(1,:)
+   if (size(hz,2) == nc_y+1) hz(:,nc_y+1) = hz(:,1)
+
 end subroutine faraday_te_2d_pstd
 
 !> Solve ampere maxwell equation (hx,hy,ez)
@@ -383,13 +386,13 @@ subroutine ampere_te_2d_pstd(self, ex, ey, hz, dt, jx, jy)
       ex(i,1:nc_y) = ex(i,1:nc_y) + dt_e * self%d_dy
    end do
 
-   if (present(jx) .and. present(jy)) then
+   If (present(jx) .and. present(jy)) then
       ex = ex - dt_e * jx 
       ey = ey - dt_e * jy 
    end if
 
-   ex(nc_x+1,:) = ex(1,:)
-   ey(:,nc_y+1) = ey(:,1)
+   if (size(ex,1) == nc_x+1) ex(nc_x+1,:) = ex(1,:)
+   if (size(ey,2) == nc_y+1) ey(:,nc_y+1) = ey(:,1)
 
 end subroutine ampere_te_2d_pstd
 

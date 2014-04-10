@@ -40,6 +40,7 @@ program vm4d
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
   !call faraday(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, 0.5*dt)   
+  vlasov4d%bz = 0.0_f64
   call transposevx(vlasov4d)
   call advection_x1(vlasov4d,0.5*vlasov4d%dt)
   call advection_x2(vlasov4d,0.5*vlasov4d%dt)
@@ -86,20 +87,20 @@ contains
 
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
-    sll_real64 :: xi, kx, ky
+    sll_real64 :: kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
 
 
     call read_input_file(vlasov4d)
 
-    call spl_x1%initialize(vlasov4d%nc_eta1, vlasov4d%eta1_min, &
+    call spl_x1%initialize(vlasov4d%np_eta1, vlasov4d%eta1_min, &
     &                      vlasov4d%eta1_max, SLL_PERIODIC)
 
-    call spl_x2%initialize(vlasov4d%nc_eta2, vlasov4d%eta2_min, &
+    call spl_x2%initialize(vlasov4d%np_eta2, vlasov4d%eta2_min, &
     &                      vlasov4d%eta2_max, SLL_PERIODIC)
 
-    call spl_x3x4%initialize(vlasov4d%nc_eta3,  vlasov4d%nc_eta4,  &
+    call spl_x3x4%initialize(vlasov4d%np_eta3,  vlasov4d%np_eta4,  &
     &                        vlasov4d%eta3_min, vlasov4d%eta3_max, &
     &                        vlasov4d%eta4_min, vlasov4d%eta4_max, &
     &                        SLL_PERIODIC, SLL_PERIODIC)
@@ -109,7 +110,6 @@ contains
     call compute_local_sizes_4d(vlasov4d%layout_x, &
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-    xi  = 0.90_f64
     kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
     ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
@@ -130,7 +130,7 @@ contains
        vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
        v2 = vx*vx+vy*vy
-       vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+       vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x)*cos(ky*y))/(2*sll_pi)*exp(-.5*v2)
 
     end do
     end do
