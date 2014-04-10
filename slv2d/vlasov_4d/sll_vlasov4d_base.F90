@@ -121,6 +121,7 @@ contains
      read(idata,NML=vel_space)
      read(idata,NML=test_case)
      read(idata,NML=algo_charge)
+     close(idata)
 
   end if
 
