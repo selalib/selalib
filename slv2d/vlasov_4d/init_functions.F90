@@ -24,8 +24,6 @@ integer, parameter :: METH_CSL_PPM2 = 4
 integer, parameter :: SPECTRAL = 0
 integer, parameter :: MULTIGRID = 1
 
-
-
 contains
 
   function landau_1d(eps,kx, x, v2)
