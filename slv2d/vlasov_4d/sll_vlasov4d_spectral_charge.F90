@@ -40,8 +40,6 @@ use sll_constants
    type(C_PTR)                                       :: p_tmp_x, p_tmp_y
    complex(C_DOUBLE_COMPLEX), dimension(:),  pointer :: tmp_x, tmp_y
    class(sll_interpolator_2d_base), pointer          :: interp_x3x4
-   type(layout_2D), pointer                          :: layout_x1
-   type(layout_2D), pointer                          :: layout_x2
    type(remap_plan_2D_real64), pointer               :: x1_to_x2 
    type(remap_plan_2D_real64), pointer               :: x2_to_x1
 
@@ -87,23 +85,6 @@ contains
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
-  this%layout_x1 => new_layout_2D( sll_world_collective )        
-  call initialize_layout_with_distributed_2D_array( &
-             this%np_eta1,this%np_eta2,1,int(psize,4),this%layout_x1)
-
-  this%layout_x2 => new_layout_2D( sll_world_collective )
-  call initialize_layout_with_distributed_2D_array( &
-              this%np_eta1,this%np_eta2,int(psize,4),1,this%layout_x2)
-
-  if(prank == MPI_MASTER) then
-
-     print *,'Printing layout x1: '
-     call sll_view_lims_2D(this%layout_x1)
-     print *,'Printing layout x2: '
-     call sll_view_lims_2D(this%layout_x2)
-
-  end if
-
   SLL_CLEAR_ALLOCATE(this%ex(1:this%np_eta1,1:this%np_eta2),error)
   SLL_CLEAR_ALLOCATE(this%ey(1:this%np_eta1,1:this%np_eta2),error)
   SLL_CLEAR_ALLOCATE(this%exn(1:this%np_eta1,1:this%np_eta2),error)
@@ -133,8 +114,8 @@ contains
   this%fwy = fftw_plan_dft_r2c_1d(this%nc_eta2,this%d_dy, this%tmp_y,FFTW_ESTIMATE)
   this%bwy = fftw_plan_dft_c2r_1d(this%nc_eta2,this%tmp_y,this%d_dy, FFTW_ESTIMATE)
 
-  SLL_CLEAR_ALLOCATE(this%kx(1:this%np_eta1/2+1), error)
-  SLL_CLEAR_ALLOCATE(this%ky(1:this%np_eta2/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
    
   kx0 = 2._f64*sll_pi/(this%nc_eta1*this%delta_eta1)
   ky0 = 2._f64*sll_pi/(this%nc_eta2*this%delta_eta2)
@@ -148,11 +129,10 @@ contains
   end do
   this%ky(1) = 1.0_f64
 
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
-
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
   SLL_CLEAR_ALLOCATE(this%f_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
-  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
   SLL_CLEAR_ALLOCATE(this%ft_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
  end subroutine initialize_vlasov4d_spectral_charge
@@ -191,7 +171,7 @@ contains
   x3_min   = this%eta3_min
   delta_x3 = this%delta_eta3
 
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
   
   do l=1,loc_sz_l
      do k=1,loc_sz_k
@@ -209,7 +189,7 @@ contains
            enddo
            this%tmp_x(1)=0._f64
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-           this%f_star(1:nc_x1,j,k,l)= this%d_dx / loc_sz_i
+           this%f_star(1:nc_x1,j,k,l)= this%d_dx / nc_x1
         end do
      end do
   end do
@@ -236,7 +216,7 @@ contains
                  * exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*vx)
            enddo
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-           this%f(1:nc_x1,j,k,l)= this%d_dx / loc_sz_i
+           this%f(1:nc_x1,j,k,l)= this%d_dx / nc_x1
         end do
      end do
   end do
@@ -274,9 +254,9 @@ contains
                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j))) &
                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
            enddo
-           !this%tmp_y(1)=0._f64
+           this%tmp_y(1)=0._f64
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
-           this%f_star(i,:,k,l) = this%d_dy / loc_sz_j
+           this%f_star(i,:,k,l) = this%d_dy / nc_x2
         end do
      end do
   end do
@@ -298,7 +278,7 @@ contains
                  * exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
            enddo
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
-           this%f(i,1:nc_x2,k,l) = this%d_dy / loc_sz_j
+           this%f(i,1:nc_x2,k,l) = this%d_dy / nc_x2
         end do
      end do
   end do
