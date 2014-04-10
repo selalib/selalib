@@ -34,6 +34,7 @@ use sll_hdf5_io
 
 use sll_ascii_io
 use sll_xml_io
+use sll_utilities, only: errout
   
 implicit none
   
@@ -51,6 +52,22 @@ end interface
   
 contains  
   
+subroutine sll_xdmf_set_time(file_id, time)
+sll_real64, intent(in) :: time
+sll_int32, intent(in)  :: file_id    !< file unit number
+logical                :: i_opened
+
+inquire (file_id, opened=i_opened)
+
+if (i_opened) then
+   write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
+else
+   call errout(6, 'W', "sll_xdmf.F90", 65, "this xdmf is not opened" )
+end if
+
+end subroutine sll_xdmf_set_time
+
+
 !>Open a XDMF format file for a 2d plot
 subroutine sll_xdmf_open_2d(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
 
