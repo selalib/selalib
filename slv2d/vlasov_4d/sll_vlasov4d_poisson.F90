@@ -56,9 +56,9 @@ contains
 
   call initialize_vlasov4d_base(this)
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%np_eta1,1:this%np_eta2),error)
 
  end subroutine initialize_vlasov4d_poisson
 
@@ -81,7 +81,7 @@ contains
 
   SLL_ASSERT( .not. this%transposed) 
 
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
   do l=1,loc_sz_l
   do k=1,loc_sz_k
      global_indices = local_to_global_4D(this%layout_x,(/1,1,k,l/)) 
@@ -100,25 +100,23 @@ contains
 
   class(vlasov4d_poisson),intent(inout) :: this
   sll_real64, intent(in) :: dt
-  sll_real64 :: x4_min, delta_x4
   sll_real64 :: alpha
 
   SLL_ASSERT( .not. this%transposed)
 
-  x4_min   = this%geomv%eta2_min
-  delta_x4 = this%geomv%delta_eta2
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
 
   do l=1,loc_sz_l
 
     global_indices = local_to_global_4D(this%layout_x,(/1,1,1,l/)) 
     gl = global_indices(4)
-    alpha = (x4_min +(gl-1)*delta_x4)*dt
+    alpha = (this%eta4_min +(gl-1)*this%delta_eta4)*dt
 
     do k=1,loc_sz_k
     do i=1,loc_sz_i
 
-       this%f(i,:,k,l) = this%interp_x2%interpolate_array_disp(loc_sz_j,this%f(i,:,k,l),alpha)
+       this%f(i,:,k,l) = &
+          this%interp_x2%interpolate_array_disp(loc_sz_j,this%f(i,:,k,l),alpha)
 
     end do
     end do
@@ -133,7 +131,7 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: alpha
   SLL_ASSERT(this%transposed) 
-  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
 
   do l=1,loc_sz_l
   do j=1,loc_sz_j
@@ -144,7 +142,8 @@ contains
      gj = global_indices(2)
      alpha = this%ex(gi,gj)*dt
 
-     this%ft(i,j,:,l) = this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
+     this%ft(i,j,:,l) =  &
+        this%interp_x3%interpolate_array_disp(loc_sz_k,this%ft(i,j,:,l),alpha)
 
   end do
   end do
@@ -165,11 +164,12 @@ contains
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(this%layout_v,(/i,j,1,1/)) 
+     global_indices = local_to_global_4D(this%layout_v,(/i,j,k,1/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      alpha = this%ey(gi,gj)*dt
-     this%ft(i,j,k,:) = this%interp_x4%interpolate_array_disp(loc_sz_l,this%ft(i,j,k,:),alpha)
+     this%ft(i,j,k,:) =  &
+        this%interp_x4%interpolate_array_disp(loc_sz_l,this%ft(i,j,k,:),alpha)
 
   end do
   end do

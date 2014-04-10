@@ -87,23 +87,14 @@ contains
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
- this%layout_x1 => new_layout_2D( sll_world_collective )        
+  this%layout_x1 => new_layout_2D( sll_world_collective )        
   call initialize_layout_with_distributed_2D_array( &
-             this%nc_eta1,this%nc_eta2,1,int(psize,4),this%layout_x1)
-
-!  call compute_local_sizes_2d(this%layout_x1,loc_sz_i,loc_sz_j)        
-!  SLL_CLEAR_ALLOCATE(this%jx1(1:loc_sz_i,1:loc_sz_j),error)
+             this%np_eta1,this%np_eta2,1,int(psize,4),this%layout_x1)
 
   this%layout_x2 => new_layout_2D( sll_world_collective )
   call initialize_layout_with_distributed_2D_array( &
-              this%nc_eta1,this%nc_eta2,int(psize,4),1,this%layout_x2)
+              this%np_eta1,this%np_eta2,int(psize,4),1,this%layout_x2)
 
-!  call compute_local_sizes_2d(this%layout_x2,loc_sz_i,loc_sz_j)        
-!  SLL_CLEAR_ALLOCATE(this%jx2(1:loc_sz_i,1:loc_sz_j),ierr)
-
-!  this%x1_to_x2 => new_remap_plan( this%layout_x1, this%layout_x2, this%jx1)     
-!  this%x2_to_x1 => new_remap_plan( this%layout_x2, this%layout_x1, this%jx2)     
-  
   if(prank == MPI_MASTER) then
 
      print *,'Printing layout x1: '
@@ -113,24 +104,24 @@ contains
 
   end if
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%exn(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%eyn(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%bzn(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%exn(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%eyn(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%bzn(1:this%np_eta1,1:this%np_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%np_eta1,1:this%np_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:this%np_eta1,1:this%np_eta2),error)
 
-  SLL_CLEAR_ALLOCATE(this%jx1(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jx2(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jx3(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jy1(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jy2(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jy3(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx1(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx2(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jx3(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy1(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy2(1:this%np_eta1,1:this%np_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%jy3(1:this%np_eta1,1:this%np_eta2),error)
   
   FFTW_ALLOCATE(this%tmp_x,this%nc_eta1/2+1,sz_tmp_x,this%p_tmp_x)
   FFTW_ALLOCATE(this%tmp_y,this%nc_eta2/2+1,sz_tmp_y,this%p_tmp_y)
@@ -142,12 +133,11 @@ contains
   this%fwy = fftw_plan_dft_r2c_1d(this%nc_eta2,this%d_dy, this%tmp_y,FFTW_ESTIMATE)
   this%bwy = fftw_plan_dft_c2r_1d(this%nc_eta2,this%tmp_y,this%d_dy, FFTW_ESTIMATE)
 
-  SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
-  SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%kx(1:this%np_eta1/2+1), error)
+  SLL_CLEAR_ALLOCATE(this%ky(1:this%np_eta2/2+1), error)
    
   kx0 = 2._f64*sll_pi/(this%nc_eta1*this%delta_eta1)
   ky0 = 2._f64*sll_pi/(this%nc_eta2*this%delta_eta2)
-
 
   do i=1,this%nc_eta1/2+1
      this%kx(i) = (i-1)*kx0
@@ -158,12 +148,11 @@ contains
   end do
   this%ky(1) = 1.0_f64
 
-  call compute_local_sizes_4d(this%layout_x, &
-                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+
   SLL_CLEAR_ALLOCATE(this%f_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
-  call compute_local_sizes_4d(this%layout_v, &
-                              loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   SLL_CLEAR_ALLOCATE(this%ft_star(1:loc_sz_i,1:loc_sz_j,1:loc_sz_k,1:loc_sz_l),ierr)
 
  end subroutine initialize_vlasov4d_spectral_charge
@@ -193,10 +182,12 @@ contains
   sll_real64, intent(in) :: dt
   sll_real64 :: vx, x3_min, delta_x3
   sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
+  sll_int32  :: nc_x1
 
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
+  nc_x1    = this%nc_eta1
   x3_min   = this%eta3_min
   delta_x3 = this%delta_eta3
 
@@ -208,23 +199,28 @@ contains
         gk = global_indices(3)
         vx = (x3_min +(gk-1)*delta_x3)*dt
         do j=1,loc_sz_j
-           call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
+           call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
            !calcul du flux
-           do i=2,this%nc_eta1/2+1
-              this%tmp_x(i) = this%tmp_x(i)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx(i)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx(i))
+           do i=1,this%nc_eta1/2+1
+              this%tmp_x(i) = this%tmp_x(i) &
+                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vx*this%kx(i))) &
+                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%kx(i))
            enddo
            this%tmp_x(1)=0._f64
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-           this%f_star(:,j,k,l)= this%d_dx / loc_sz_i
+           this%f_star(1:nc_x1,j,k,l)= this%d_dx / loc_sz_i
         end do
      end do
   end do
 
+  this%f_star(nc_x1+1,:,:,:) = this%f_star(1,:,:,:)
+
   call apply_remap_4D( this%x_to_v, this%f_star, this%ft_star) 
 
-!calculer le courant avec la formule f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
-!jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
+!calculer le courant avec la formule 
+! f^* = f^n *exp(-ik vx dt) = f^n - vx * dt * ik f^n (1-exp(-ik vx dt))/(ik*dt*vx)
+! jx^* = int ik f^n (1-exp(-ik vx dt))/(ik*dt) dvxdvy
   call densite_courantx(this, "*")
 
   do l=1,loc_sz_l
@@ -233,16 +229,19 @@ contains
         gk = global_indices(3)
         vx = (x3_min +(gk-1)*delta_x3)*dt
         do j=1,loc_sz_j
-           call fftw_execute_dft_r2c(this%fwx, this%f(:,j,k,l),this%tmp_x)
+           call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
            !exact : f* = f^n exp(-i kx vx dt)
-           do i=2,this%nc_eta1/2+1
-              this%tmp_x(i) = this%tmp_x(i)*exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*vx)
+           do i=1,this%nc_eta1/2+1
+              this%tmp_x(i) = this%tmp_x(i) &
+                 * exp(-cmplx(0.0_f64,this%kx(i),kind=f64)*vx)
            enddo
            call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)
-           this%f(:,j,k,l)= this%d_dx / loc_sz_i
+           this%f(1:nc_x1,j,k,l)= this%d_dx / loc_sz_i
         end do
      end do
   end do
+
+  this%f(nc_x1+1,:,:,:) = this%f(1,:,:,:)
 
  end subroutine advection_x1
 
@@ -254,12 +253,14 @@ contains
   sll_real64 :: x4_min, delta_x4
   sll_real64 :: vy
   sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
+  sll_int32  :: nc_x2
 
   SLL_ASSERT( .not. this%transposed)
 
+  nc_x2    = this%nc_eta2
   x4_min   = this%eta4_min
   delta_x4 = this%delta_eta4
-  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
 
   do l=1,loc_sz_l
      global_indices = local_to_global_4D(this%layout_x,(/1,1,1,l/)) 
@@ -267,49 +268,51 @@ contains
      vy = (x4_min +(gl-1)*delta_x4)*dt
      do k=1,loc_sz_k
         do i=1,loc_sz_i
-           call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
-           do j=2,this%nc_eta2/2+1
-              this%tmp_y(j) =  &
-                 this%tmp_y(j)*(1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j)))*cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
+           call fftw_execute_dft_r2c(this%fwy, this%f(i,1:nc_x2,k,l), this%tmp_y)
+           do j=1,this%nc_eta2/2+1
+              this%tmp_y(j) = this%tmp_y(j) &
+                * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky(j))) &
+                * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky(j))
            enddo
-           this%tmp_y(1)=0._f64
+           !this%tmp_y(1)=0._f64
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
            this%f_star(i,:,k,l) = this%d_dy / loc_sz_j
         end do
      end do
   end do
 
+  this%f_star(:,nc_x2+1,:,:) = this%f_star(:,1,:,:)
+
   call apply_remap_4D( this%x_to_v, this%f_star, this%ft_star) 
   call densite_couranty(this, "*")
 
-  
   do l=1,loc_sz_l
      global_indices = local_to_global_4D(this%layout_x,(/1,1,1,l/)) 
      gl = global_indices(4)
      vy = (x4_min +(gl-1)*delta_x4)*dt
      do k=1,loc_sz_k
         do i=1,loc_sz_i
-           call fftw_execute_dft_r2c(this%fwy, this%f(i,:,k,l), this%tmp_y)
-           do j=2,this%nc_eta2/2+1
-              this%tmp_y(j) = &
-                 this%tmp_y(j)*exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
+           call fftw_execute_dft_r2c(this%fwy, this%f(i,1:nc_x2,k,l), this%tmp_y)
+           do j=1,this%nc_eta2/2+1
+              this%tmp_y(j) = this%tmp_y(j) &
+                 * exp(-cmplx(0.0_f64,this%ky(j),kind=f64)*vy)
            enddo
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
-           this%f(i,:,k,l) = this%d_dy / loc_sz_j
+           this%f(i,1:nc_x2,k,l) = this%d_dy / loc_sz_j
         end do
      end do
   end do
   
+  this%f(:,nc_x2+1,:,:) = this%f(:,1,:,:)
+
 end subroutine advection_x2
 
 subroutine advection_x3x4(this,dt)
 
   class(vlasov4d_spectral_charge),intent(inout) :: this
   sll_real64, intent(in) :: dt
-  sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_x
-  sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_y
-  !sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_x_tmp
-  !sll_real64, dimension(this%nc_eta3,this%nc_eta4) :: alpha_y_tmp
+  sll_real64, dimension(this%np_eta3,this%np_eta4) :: alpha_x
+  sll_real64, dimension(this%np_eta3,this%np_eta4) :: alpha_y
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
@@ -323,11 +326,10 @@ subroutine advection_x3x4(this,dt)
   delta_x4 = this%delta_eta4
 
   SLL_ASSERT(this%transposed) 
-  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+  call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)
 
   do i=1,loc_sz_i
      do j=1,loc_sz_j
-        
         do k=1,loc_sz_k
            do l=1,loc_sz_l
               
@@ -349,13 +351,13 @@ subroutine advection_x3x4(this,dt)
            end do
         end do
 
-        this%ft(i,j,:,:) = this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
+        this%ft(i,j,:,:) = &
+             this%interp_x3x4%interpolate_array_disp(loc_sz_k,loc_sz_l, &
              this%ft(i,j,:,:),alpha_x,alpha_y)
      end do
   end do
 
-end subroutine advection_x3x4
-
+ end subroutine advection_x3x4
 
  subroutine densite_courantx(this,star)
 
@@ -368,7 +370,7 @@ end subroutine advection_x3x4
    sll_int32  :: comm
    sll_real64 :: dxy
    sll_real64 :: vx 
-   sll_real64, dimension(this%nc_eta1,this%nc_eta2) :: locjx
+   sll_real64, dimension(this%np_eta1,this%np_eta2) :: locjx
    sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
    if( present(star)) then
@@ -405,7 +407,7 @@ end subroutine advection_x3x4
 
    this%jx1 = 0._f64
    comm = sll_world_collective%comm
-   c    = this%nc_eta1*this%nc_eta2
+   c    = this%np_eta1*this%np_eta2
    
    call mpi_barrier(comm,error)
    call mpi_allreduce(locjx,this%jx1,c,MPI_REAL8,MPI_SUM,comm,error)
@@ -422,7 +424,7 @@ end subroutine advection_x3x4
    sll_int32  :: c
    sll_int32  :: comm
    sll_real64 :: dxy
-   sll_real64, dimension(this%nc_eta1,this%nc_eta2) :: locjy
+   sll_real64, dimension(this%np_eta1,this%np_eta2) :: locjy
    sll_real64, dimension(:,:,:,:), pointer :: df
    sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
@@ -431,7 +433,6 @@ end subroutine advection_x3x4
    else
       df => this%ft
    end if
-
 
    dxy = this%delta_eta3*this%delta_eta4
    SLL_ASSERT(this%transposed)
@@ -455,10 +456,10 @@ end subroutine advection_x3x4
       end do
    end do
    
-   this%jy1(:,:) = 0._8
+   this%jy1(:,:) = 0._f64
    comm   = sll_world_collective%comm
    call mpi_barrier(comm,error)
-   c=this%nc_eta1*this%nc_eta2
+   c=this%np_eta1*this%np_eta2
    call mpi_allreduce(locjy,this%jy1,c, MPI_REAL8,MPI_SUM,comm,error)
 
  end subroutine densite_couranty
