@@ -79,12 +79,12 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     new_linear_box_spline_2d%x1_bc_type = x1_bc_type
     new_linear_box_spline_2d%x2_bc_type = x2_bc_type
 
-    new_linear_box_spline_2d%r1_x1 = mesh%r1_x1
-    new_linear_box_spline_2d%r1_x2 = mesh%r1_x2
-    new_linear_box_spline_2d%r2_x1 = mesh%r2_x1
-    new_linear_box_spline_2d%r2_x2 = mesh%r2_x2
-    new_linear_box_spline_2d%r3_x1 = mesh%r3_x1
-    new_linear_box_spline_2d%r3_x2 = mesh%r3_x2
+    new_linear_box_spline_2d%r1_x1 = real(0.5,f64)
+    new_linear_box_spline_2d%r1_x2 = -sqrt(3.)/2.
+    new_linear_box_spline_2d%r2_x1 = real(0.5,f64)
+    new_linear_box_spline_2d%r2_x2 = sqrt(3.0)/2.
+    new_linear_box_spline_2d%r3_x1 = 1.0_f64
+    new_linear_box_spline_2d%r3_x2 = 1.0_f64
 
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
@@ -117,21 +117,20 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
       sll_real64                :: weight
 
       if (local_index .eq. 0) then
-         weight = real((1775./2304.),f64)
+         weight = 1775._f64/2304._f64
       else if (local_index .lt. 7) then
-         weight = real((256./6912.), f64)
+         weight = 253._f64/6912._f64
       else if (local_index .lt. 19) then
-         if (modulo(local_index, 2) .eq. 0) then
-            weight = real((1./13824.), f64)
+         if (modulo(local_index, 2) .eq. 1) then
+            weight = 1._f64/13824._f64
          else
-            weight = real((11./6912.), f64)
+            weight = 11._f64/6912._f64
          end if
       else
          weight = 0.
       end if
       
    end function pre_filter_piir2
-
 
 
   subroutine compute_linear_box_spline_2d( data, spline )
@@ -257,11 +256,6 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
           if (nei .lt. num_pts_tot) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
                                 pre_filter_piir2(k)
-!             if ((i .eq. 0).and.(k.eq.0)) then
-!                print*,"data =",data(nei+1)
-!                print*,"res  =",spline%coeffs(i)
-!                print*,""
-!             end if
           else
              nei = twelve_fold_symmetry(nei, num_pts)
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
@@ -269,6 +263,8 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
           end if
        end do
     end do
+!   print*, " ++++++++++ WARNING :  coeffs = data +++++++++"
+!   spline%coeffs(:) = data(:)
   end subroutine compute_box_spline_2d_neum_neum
 
 
@@ -288,6 +284,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     end do
 
   end subroutine compute_box_spline_2d_prdc_neum
+
 
   function factorial (n) result (res)
  
@@ -316,14 +313,13 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   end function choose
 
 
-  function chi_gen_val(spline,x1_in,x2_in,deg) result(val)
+  function chi_gen_val(x1_in,x2_in,deg) result(val)
     ! Reference : @Condat and Van De Ville (2006)
     !             "Three directional Box Splines:
     !             Characterization and Efficient Evaluation."
     sll_real64, intent(in)               :: x1_in
     sll_real64, intent(in)               :: x2_in
     sll_int32,  intent(in)               :: deg
-    type(linear_box_spline_2d), pointer  :: spline
     sll_real64    :: x1
     sll_real64    :: x2
     sll_real64    :: val
@@ -331,7 +327,6 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_real64    :: v
     sll_real64    :: aux
     sll_real64    :: aux2
-    sll_real64    :: det
     sll_real64    :: coeff
     sll_int32     :: K
     sll_int32     :: L
@@ -340,14 +335,11 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
     val = 0._f64
-    det = spline%r1_x1 * spline%r2_x2 - spline%r2_x1 * spline%r1_x2
 
     x1 = -abs(x1_in)
     x2 =  abs(x2_in)
-    u = 1./det*( spline%r2_x2*x1 - spline%r2_x1*x2)/(real(deg+1,f64))
-      !*spline%radius/real(spline%num_pts,f64)
-    v = 1./det*(-spline%r1_x2*x1 + spline%r1_x1*x2)/(real(deg+1,f64))
-      !*spline%radius/real(spline%num_pts,f64)
+    u = x1 - x2/sqrt(3.0)
+    v = x1 + x2/sqrt(3.0)
 
     if (v.gt.0) then
       v = -v
@@ -381,128 +373,175 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   end function chi_gen_val
 
 
-
-  function hex_interpolate_value(mesh, x1, x2, spline) result(val)
+  function change_basis_x1(mesh, spline, x1, x2) result(x1_basis)
     type(hex_mesh_2d), pointer, intent(in)  :: mesh
     sll_real64, intent(in)                  :: x1
     sll_real64, intent(in)                  :: x2
     type(linear_box_spline_2d), pointer     :: spline
-    sll_real64                          :: val
-    intrinsic                           :: associated, int, real
+    sll_real64                              :: delta_q
+    sll_real64                              :: k1_basis
+    sll_real64                              :: k2_basis
+    sll_real64                              :: x1_basis
+    sll_real64              :: q11, q12
+    sll_real64              :: q21, q22
+    sll_real64              :: q31, q32
+    sll_real64              :: r11, r12
+    sll_real64              :: r21, r22
+    sll_real64              :: r31, r32
+
+
+    r11 = spline%r1_x1
+    r12 = spline%r1_x2
+    r21 = spline%r2_x1
+    r22 = spline%r2_x2
+    r31 = spline%r3_x1
+    r32 = spline%r3_x2
+
+    q11 = mesh%r1_x1
+    q12 = mesh%r1_x2
+    q21 = mesh%r2_x1
+    q22 = mesh%r2_x2
+    q31 = mesh%r3_x1
+    q32 = mesh%r3_x2
+
+    !change of basis :
+    delta_q  = q11*q22 - q12*q21
+    k1_basis = 1./delta_q*(q22*x1 - q21*x2)
+    k2_basis = 1./delta_q*(q11*x2 - q12*x1)
+    x1_basis = r11*k1_basis+r21*k2_basis
+    x1_basis = x1_basis
+  end function change_basis_x1
+
+
+  function change_basis_x2(mesh, spline, x1, x2) result(x2_basis)
+    type(hex_mesh_2d), pointer, intent(in)  :: mesh
+    sll_real64, intent(in)                  :: x1
+    sll_real64, intent(in)                  :: x2
+    type(linear_box_spline_2d), pointer     :: spline
+    sll_real64                              :: delta_q
+    sll_real64                              :: k1_basis
+    sll_real64                              :: k2_basis
+    sll_real64                              :: x2_basis
+    sll_real64              :: q11, q12
+    sll_real64              :: q21, q22
+    sll_real64              :: q31, q32
+    sll_real64              :: r11, r12
+    sll_real64              :: r21, r22
+    sll_real64              :: r31, r32
+
+    r11 = spline%r1_x1
+    r12 = spline%r1_x2
+    r21 = spline%r2_x1
+    r22 = spline%r2_x2
+    r31 = spline%r3_x1
+    r32 = spline%r3_x2
+
+    q11 = mesh%r1_x1
+    q12 = mesh%r1_x2
+    q21 = mesh%r2_x1
+    q22 = mesh%r2_x2
+    q31 = mesh%r3_x1
+    q32 = mesh%r3_x2
+
+    !change of basis :
+    delta_q  = q11*q22 - q12*q21
+    k1_basis = 1./delta_q*(q22*x1 - q21*x2)
+    k2_basis = 1./delta_q*(q11*x2 - q12*x1)
+    x2_basis = r12*k1_basis+r22*k2_basis
+    x2_basis = x2_basis
+  end function change_basis_x2
+
+  function hex_interpolate_value(mesh_geom, x1, x2, spline) result(val)
+    type(hex_mesh_2d), pointer, intent(in)  :: mesh_geom
+    sll_real64, intent(in)                  :: x1
+    sll_real64, intent(in)                  :: x2
+    type(linear_box_spline_2d), pointer     :: spline
+    sll_real64                              :: val
+    intrinsic                               :: associated, int, real
     sll_real64              :: xm1
     sll_real64              :: xm2
-    sll_real64              :: x1_center
-    sll_real64              :: x2_center
-    sll_real64              :: r1_x1, r1_x2
-    sll_real64              :: r2_x1, r2_x2
-    sll_real64              :: r3_x1, r3_x2
+    sll_real64              :: x1_basis
+    sll_real64              :: x2_basis
+    sll_real64              :: r11, r12
+    sll_real64              :: r21, r22
+    sll_real64              :: r31, r32
+    sll_int32               :: k1_asso
+    sll_int32               :: k2_asso
     sll_int32               :: k1
     sll_int32               :: k2
-    sll_int32               :: i
+    sll_int32               :: ind
+    sll_int32               :: ki, kj
     sll_int32               :: deg = 1
     sll_int32               :: num_pts
     sll_int32               :: num_pts_tot
-!    sll_int32               :: dr1,dr2
 
-    r1_x1 = spline%r1_x1
-    r1_x2 = spline%r1_x2
-    r2_x1 = spline%r2_x1
-    r2_x2 = spline%r2_x2
-    r3_x1 = spline%r3_x1
-    r3_x2 = spline%r3_x2
+    val = 0._f64
 
-    num_pts = mesh%num_cells + 1
-    num_pts_tot = mesh%num_pts_tot
-
-    !Lower left corner of encapsulating rhomboid
-    k1 = from_cart_index_k1(mesh, x1, x2)
-    k2 = from_cart_index_k2(mesh, x1, x2)
-    i  = global_index(k1, k2)        
-
-    if (i .ge. num_pts_tot)  then 
-       i = twelve_fold_symmetry(i, num_pts)
+    if ((x1.eq.0.0).and.(x2.eq.0.0)) then
+      print*," -*****************************-"
+      print*," -**** deg =", deg, " ****-"
+      print*," -*****************************-"
     end if
 
-    x1_center = x1-r1_x1*k1-r2_x1*k2
-    x2_center = x2-r1_x2*k1-r2_x2*k2
-    val = spline%coeffs(i)*chi_gen_val(spline, x1_center, x2_center, deg)*spline%delta
+    r11 = mesh_geom%r1_x1
+    r12 = mesh_geom%r1_x2
+    r21 = mesh_geom%r2_x1
+    r22 = mesh_geom%r2_x2
+    r31 = mesh_geom%r3_x1
+    r32 = mesh_geom%r3_x2
 
-    if ((x1.eq.0.).and.(x2.eq.0.)) then
-      print*, "delta =", spline%delta
-       print *, "i0 = ", i, " coeffs =",spline%coeffs(i), "chi =",chi_gen_val(spline,x1_center, x2_center, deg)
-    end if
+    num_pts = mesh_geom%num_cells + 1
+    num_pts_tot = mesh_geom%num_pts_tot
 
+    ! First we need to compute the coordinates of 
+    ! the closest mesh point associated to (x1,x2)
+    k1_asso = from_cart_index_k1(mesh_geom, x1, x2)
+    k2_asso = from_cart_index_k2(mesh_geom, x1, x2)
 
-!    if ((x1.eq.0.).and.(x2.eq.0)) then
-!       print *, "val   =", val
-!       print *, "coeff =", spline%coeffs(i)
-!       print *, "chi   =", chi_gen_val(spline,xm1, xm2, deg)
-!    end if
-!
-    !Lower right corner of encapsulating rhomboid
-    k1 = from_cart_index_k1(mesh, x1, x2) + 1
-    k2 = from_cart_index_k2(mesh, x1, x2)
-    i  = global_index(k1, k2) 
-    if (i .ge. num_pts_tot)  then 
-       i = twelve_fold_symmetry(i, num_pts)
-    end if
+    ! Then we will do a loop for all the points 
+    ! on the envelopping rhomboid of radius=deg
+    do ki= 1-deg, deg
+      do kj= 1-deg, deg
+        
+        k1  = k1_asso + ki
+        k2  = k2_asso + kj
+        ind = global_index(k1, k2)
 
-    xm1 = x1_center + r1_x1
-    xm2 = x2_center + r1_x2
-    val = val + spline%coeffs(i)*chi_gen_val(spline,xm1, xm2, deg)
-    
-    if ((x1.eq.0.).and.(x2.eq.0.)) then
-       print *, "i1 = ", i, " coeffs =",spline%coeffs(i), "chi =",chi_gen_val(spline,xm1, xm2, deg)
-    end if
+        
+        do while (ind .ge. num_pts_tot)
+          ! If point got out of the domain
+          ind = twelve_fold_symmetry(ind, num_pts)
+        end do
 
+        ! We centralize and shift the coordinates
+        ! i.e. centralize : xm = x - Rk
+        !      shifting   : xm to the associated rhomboid point
+        xm1 = x1 - r11*k1_asso - r21*k2_asso + ki*r11 + kj*r21
+        xm2 = x2 - r12*k1_asso - r22*k2_asso + ki*r12 + kj*r22
 
-    !Upper left corner of encapsulating rhomboid
-    k1 = from_cart_index_k1(mesh, x1, x2)+ 1
-    k2 = from_cart_index_k2(mesh, x1, x2)+ 1
-    i  = global_index(k1, k2) 
-    if (i .ge. num_pts_tot)  then 
-       i = twelve_fold_symmetry(i, num_pts)
-    end if
+        ! change of basis : geometrical basis => spline basis
+        x1_basis = change_basis_x1(mesh_geom, spline, xm1, xm2)
+        x2_basis = change_basis_x2(mesh_geom, spline, xm1, xm2)
 
+        val = val + spline%coeffs(ind) * &
+                    chi_gen_val(x1_basis, x2_basis, deg)
 
-    xm1 = x1_center + r3_x1
-    xm2 = x2_center + r3_x2
-    val = val + spline%coeffs(i)*chi_gen_val(spline,xm1, xm2, deg)
-
-
-    if ((x1.eq.0.).and.(x2.eq.0.)) then
-       print *, "i2 = ", i, " coeffs =",spline%coeffs(i), "chi =",chi_gen_val(spline,xm1, xm2, deg)
-    end if
-
-    !Upper right corner of encapsulating rhomboid
-    k1 = from_cart_index_k1(mesh, x1, x2) + 2
-    k2 = from_cart_index_k2(mesh, x1, x2) + 1
-    i  = global_index(k1, k2) 
-    if (i .ge. num_pts_tot)  then 
-       i = twelve_fold_symmetry(i, num_pts)
-    end if
+       if ((x1.eq.0.0).and.(x2.eq.0.0)) then
+!         if ((k1_asso.eq.0).and.(k2_asso.eq.0))then
+          print*," "
+          print*," indice =", ind
+!          print*," k1a, k2a =", k1_asso, k2_asso
+!          print*," ki, kj =", ki, kj
+!          print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
+          print*," modifi =", xm1, xm2
+          print*," basiss =", x1_basis, x2_basis
+          print*," coeffs =", spline%coeffs(ind)
+          print*," chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
+        end if
 
 
-    xm1 = x1_center + r1_x1 + r3_x1
-    xm2 = x2_center + r1_x2 + r3_x2
-    val = val + spline%coeffs(i)*chi_gen_val(spline,xm1, xm2, deg)
-
-
-
-    if ((x1.eq.0.).and.(x2.eq.0.)) then
-       print *, "i3 = ", i, " coeffs =",spline%coeffs(i), "chi =",chi_gen_val(spline,xm1, xm2, deg)
-    end if
-
-!    do dr1 = -deg+1,deg
-!       do dr2 = -deg+1,deg
-!          if ((x1.eq.0.).and.(x2.eq.0)) then
-!             print *, "dr1, dr2 =", dr1, dr2
-!
-!             ! TODO : a changer pour que cela n'arrive qu'à deg cellules plus loin
-!          end if
-!       end do
-!    end do
-
+      end do
+   end do
 
   end function hex_interpolate_value
 

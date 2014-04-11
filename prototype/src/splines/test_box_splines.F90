@@ -14,6 +14,7 @@ sll_int32    :: num_cells
 sll_int32    :: i
 sll_int32    :: nloops
 sll_int32    :: error
+sll_int32    :: where_error
 ! initial distribution
 sll_real64   :: gauss_x2
 sll_real64   :: gauss_x1
@@ -35,19 +36,20 @@ sll_real64   :: advec
 sll_real64   :: dt
 sll_real64   :: tmax
 sll_real64   :: t
-
-
+!others
+sll_real64   :: b1
+sll_real64   :: b2
 
 ! Mesh initialization 
- num_cells = 10
- mesh => new_hex_mesh_2d(num_cells)
+ num_cells = 100
+ mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
+                                    !0.5_f64, -sqrt(3.)/2._f64, &
+                                    !0.5_f64,  sqrt(3.)/2._f64, &
+                                    !1.0_f64,  0._f64, &
+                                    radius = 1._f64)
  call sll_display(mesh)
  print *,""
 
-! Distribution initialization
- gauss_x1  = 0.0
- gauss_x2  = 0.0
- gauss_sig = 0.1
  SLL_ALLOCATE(f_init(mesh%num_pts_tot),error)
  SLL_ALLOCATE(f_tn(mesh%num_pts_tot),error)
  SLL_ALLOCATE(f_fin(mesh%num_pts_tot),error)
@@ -58,19 +60,25 @@ sll_real64   :: t
  SLL_ALLOCATE(chi1(mesh%num_pts_tot),error)
  SLL_ALLOCATE(chi2(mesh%num_pts_tot),error)
 
+
+! Distribution initialization
+ gauss_x1  = 0.0
+ gauss_x2  = 0.0
+ gauss_sig = 0.1
+
  do i=0, mesh%num_pts_tot-1
       x1(i+1) = from_global_x1(mesh, i)
       x2(i+1) = from_global_x2(mesh, i)
-      f_init(i+1) = 1.5*exp(-0.5*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
-                                + (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
+      f_init(i+1) = 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
+                          + (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
+
       f_tn(i+1) = f_init(i+1)
  end do
-
  call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
 
 ! Advection initialization
- advec = 0.!1.5_f64
+ advec = 0.!1_f64
  tmax  = 0.025_f64
  dt    = 0.025_f64
  t = 0._f64
@@ -79,23 +87,11 @@ sll_real64   :: t
  x1_char(:) = x1(:) - advec*dt
  x2_char(:) = x2(:) - advec*dt
 
-
 ! Time loop
  nloops = 0
  spline => new_linear_box_spline_2d(mesh, SLL_NEUMANN, SLL_NEUMANN)
  diff_error = 0._f64
-
-! print*,"--", from_cart_index_k1(mesh,  0.00_f64,  0.00_f64), from_cart_index_k2(mesh,  0.00_f64,  0.00_f64)
-! print*,"--", from_cart_index_k1(mesh,  0.01_f64,  0.01_f64), from_cart_index_k2(mesh,  0.01_f64,  0.01_f64)
-! print*,"--", from_cart_index_k1(mesh, -0.01_f64,  0.01_f64), from_cart_index_k2(mesh, -0.01_f64,  0.01_f64)
-! print*,"--", from_cart_index_k1(mesh, -0.01_f64, -0.01_f64), from_cart_index_k2(mesh, -0.01_f64, -0.01_f64)
-! print*,"--", from_cart_index_k1(mesh, -0.05_f64,  0.05_f64), from_cart_index_k2(mesh, -0.05_f64,  0.05_f64)
-! print*,"--", from_cart_index_k1(mesh, -0.05_f64, -0.05_f64), from_cart_index_k2(mesh, -0.05_f64, -0.05_f64)
-! print*,"--", from_cart_index_k1(mesh,  0.05_f64,  0.05_f64), from_cart_index_k2(mesh,  0.05_f64,  0.05_f64)
-! print*,"--", from_cart_index_k1(mesh, -0.09_f64,  0.09_f64), from_cart_index_k2(mesh, -0.09_f64,  0.09_f64)
-! print*,"--", from_cart_index_k1(mesh, -0.09_f64, -0.09_f64), from_cart_index_k2(mesh, -0.09_f64, -0.09_f64)
-! print*,"--", from_cart_index_k1(mesh,  0.09_f64,  0.09_f64), from_cart_index_k2(mesh,  0.09_f64,  0.09_f64)
-!
+ where_error = -1
 
  print*,""
  do while (t .lt. tmax)
@@ -108,23 +104,33 @@ sll_real64   :: t
          ! Analytical value 
          x1(i) = from_global_x1(mesh, i-1) - advec*dt*nloops
          x2(i) = from_global_x2(mesh, i-1) - advec*dt*nloops
-         f_fin(i) = 1.5*exp(-0.5*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
-                                + (x2(i)-gauss_x2)**2 / gauss_sig**2))
-         chi1(i) = chi_gen_val(spline,x1(i), x2(i),1)
-         chi2(i) = chi_gen_val(spline,x1(i), x2(i),2)
+         f_fin(i) = 1._f64*exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+                    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+
+         b1 = change_basis_x1(mesh, spline, x1(i), x2(i))
+         b2 = change_basis_x2(mesh, spline, x1(i), x2(i))
+         chi1(i) = chi_gen_val(b1, b2,1)
+         chi2(i) = chi_gen_val(b1, b2,2)
          ! Relative error
          if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
             diff_error = abs(f_fin(i) - f_tn(i))
+            where_error = i
          end if
-
       end do
-      print*,"   n = ", nloops, "    | error  = ", diff_error
+      print*,"   n = ", nloops, "    | error  = ", diff_error, &
+      & "|    at ", where_error
  end do
 
  print*,""
  print*, "val at origin of f_app : ", f_tn(1)
  print*, "val at origin of f_fin : ", f_fin(1)
  print*, "val at origin of diffn : ", f_fin(1) - f_tn(1)
+ print*,""
+ print*, "val at maxerr of f_app : ", f_tn(where_error)
+ print*, "val at maxerr of f_fin : ", f_fin(where_error)
+! print*, "val at maxerr of chi1  : ", chi1(where_error)
+
+
 
  call write_field_hex_mesh(mesh, f_tn, "final_dist.txt")
  call write_field_hex_mesh(mesh, chi1, "chi1.txt")
@@ -134,6 +140,12 @@ sll_real64   :: t
  call write_field_hex_mesh(mesh, f_fin, "an_dist.txt")
  print *,""
  print*," *    Final error  = ", diff_error, " *"
+
+
+! open (unit=12,file="error_deg1_numcells.txt",action="write",&
+!      status="old", position="append")
+! write (12, "(2(g13.3,1x))") num_cells, diff_error
+
 
 
 end program test_box_splines
