@@ -30,12 +30,12 @@ module hex_mesh
      sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
      sll_real64 :: delta      ! cell spacing
      ! generator vectors (r1, r2, r3) coordinates -- need to be scaled by delta
-     sll_real64 :: r1_x1 = sqrt(real(3, f64))*0.5 
-     sll_real64 :: r1_x2 = 0.5
-     sll_real64 :: r2_x1 = -sqrt(real(3, f64))*0.5
-     sll_real64 :: r2_x2 = 0.5
-     sll_real64 :: r3_x1 = 0.0
-     sll_real64 :: r3_x2 = 1.0
+     sll_real64 :: r1_x1
+     sll_real64 :: r1_x2
+     sll_real64 :: r2_x1
+     sll_real64 :: r2_x2
+     sll_real64 :: r3_x1
+     sll_real64 :: r3_x2
   end type hex_mesh_2d
 
   type hex_mesh_2d_ptr
@@ -64,6 +64,12 @@ end if
     num_cells, &
     center_x1, &
     center_x2, &
+    r11, &
+    r12, &
+    r21, &
+    r22, &
+    r31, &
+    r32, &
     radius ) result(m)
 
     type(hex_mesh_2d), pointer :: m
@@ -71,6 +77,9 @@ end if
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
     sll_real64, optional, intent(in) :: center_x2
+    sll_real64, optional, intent(in) :: r11, r12
+    sll_real64, optional, intent(in) :: r21, r22
+    sll_real64, optional, intent(in) :: r31, r32
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
@@ -79,7 +88,13 @@ end if
          num_cells, &
          radius, &
          center_x1, &
-         center_x2)
+         center_x2, &
+         r11, &
+         r12, &
+         r21, &
+         r22, &
+         r31, &
+         r32)
 
   end function new_hex_mesh_2d
 
@@ -87,19 +102,35 @@ end if
   subroutine initialize_hex_mesh_2d( &
     m, & 
     num_cells, &
-    radius, &
+    radius,    &
     center_x1, &
-    center_x2)
+    center_x2, &
+    r1_x1,     &
+    r1_x2,     &
+    r2_x1,     &
+    r2_x2,     &
+    r3_x1,     &
+    r3_x2)
+
 
     type(hex_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
     sll_real64, optional, intent(in) :: center_x2
+    sll_real64, optional, intent(in) :: r1_x1, r1_x2
+    sll_real64, optional, intent(in) :: r2_x1, r2_x2
+    sll_real64, optional, intent(in) :: r3_x1, r3_x2
 
     TEST_PRESENCE_AND_ASSIGN_VAL( m, center_x1, center_x1, 0.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, center_x2, center_x2, 0.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, radius, radius, 1.0_f64 )
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, r1_x1, r1_x1, sqrt(real(3, f64))*0.5) 
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, r1_x2, r1_x2, 0.5)
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, r2_x1, r2_x1, -sqrt(real(3, f64))*0.5)
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, r2_x2, r2_x2, 0.5)
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, r3_x1, r3_x1, 0.0)
+    TEST_PRESENCE_AND_ASSIGN_VAL( m, r3_x2, r3_x2, 1.0)
 
     m%num_cells = num_cells
     m%delta = m%radius/real(num_cells,f64)
@@ -188,7 +219,7 @@ end if
        val = first_index + 6*hex_num - abs(k2)
     else 
        print *, "ERROR : in global_index(k1,k2)"
-       print *, "Not recognized combination of k1,k2"
+       print *, "Not recognized combination of k1,k2 ", k1, k2
        STOP 'global_index'
     endif
 
