@@ -247,7 +247,7 @@ contains
                 * (1._f64-exp(-cmplx(0.0_f64,1,kind=f64)*vy*this%ky)) &
                 * cmplx(0.0_f64,-1._f64,kind=f64)/(dt*this%ky)
            call fftw_execute_dft_c2r(this%bwy, this%tmp_y, this%d_dy)
-           this%f_star(i,:,k,l) = this%d_dy / nc_x2
+           this%f_star(i,1:nc_x2,k,l) = this%d_dy / nc_x2
         end do
      end do
   end do

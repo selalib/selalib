@@ -1,7 +1,8 @@
+#include "sll_fftw.h"
+
 module sll_vlasov4d_spectral
 
 #include "selalib-mpi.h"
-#include "sll_fftw.h"
 
  use sll_vlasov4d_base
 
@@ -53,7 +54,6 @@ contains
   sll_real64 :: kx0, ky0
   fftw_int   :: sz_tmp_x, sz_tmp_y
   sll_int32  :: psize, prank, comm
-  sll_int32  :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
   this%interp_x3x4 => interp_x3x4
 
@@ -72,7 +72,6 @@ contains
   SLL_CLEAR_ALLOCATE(this%jx(1:this%np_eta1,1:this%np_eta2),error)
   SLL_CLEAR_ALLOCATE(this%jy(1:this%np_eta1,1:this%np_eta2),error)
 
-  
   FFTW_ALLOCATE(this%tmp_x,this%nc_eta1/2+1,sz_tmp_x,this%p_tmp_x)
   FFTW_ALLOCATE(this%tmp_y,this%nc_eta2/2+1,sz_tmp_y,this%p_tmp_y)
   SLL_CLEAR_ALLOCATE(this%d_dx(1:this%nc_eta1),error)

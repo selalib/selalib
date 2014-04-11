@@ -50,7 +50,7 @@ contains
     sll_real64, intent(in) :: y, ky
     sll_real64, intent(in) :: eps, v2
 
-     landau_cos_sum = (1._f64+eps*cos(kx*(x+y)))/(2*sll_pi)*exp(-0.5_f64*v2)
+    landau_cos_sum = (1._f64+eps*cos(kx*(x+y)))/(2*sll_pi)*exp(-0.5_f64*v2)
 
   end function landau_cos_sum
 
