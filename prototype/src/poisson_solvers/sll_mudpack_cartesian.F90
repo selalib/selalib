@@ -22,6 +22,10 @@ interface solve
    module procedure  solve_mudpack_cartesian
 end interface solve
 
+interface delete
+   module procedure  delete_mudpack_cartesian
+end interface delete
+
 !class(sll_interpolator_1d_base), pointer   :: cxx_interp
 contains
 
@@ -55,7 +59,7 @@ sll_real64 :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
 !storeage for labelling in vectors iprm,fprm
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
-sll_int32  :: i,error
+sll_int32  :: error
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -63,6 +67,10 @@ common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 !sll_real64,dimension(:),allocatable :: cxx_array
+
+#ifdef DEBUG
+sll_int32 :: i
+#endif
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
@@ -158,7 +166,6 @@ call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 !print error parameter and minimum work space requirement
 write (*,200) error,iprm(16)
 if (error > 0) call exit(0)
-#endif
 
 101 format(/'# integer input arguments ', &
     &/'#intl = ',i2,' nxa = ',i2,' nxb = ',i2,' nyc = ',i2,' nyd = ',i2, &
@@ -176,6 +183,7 @@ if (error > 0) call exit(0)
 104 format(/'# discretization call to mud2sp', ' intl = ', i2)
 200 format('# error = ',i2, ' minimum work space = ',i7)
      
+#endif
 end subroutine initialize_mudpack_cartesian
 
 
@@ -195,7 +203,7 @@ sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 sll_int32  :: error
 sll_int32  :: i, j
-sll_real64 :: dx, dy, avg
+sll_real64 :: dx, dy
 
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
@@ -226,7 +234,7 @@ write(*,106) intl,method,iguess
 #endif
 
 if ( nxa == 0 .and. nyc == 0 ) &
-   rhs = - rhs + sum(rhs) / (nx*ny)
+   rhs = rhs - sum(rhs) / (nx*ny)
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
@@ -245,12 +253,13 @@ call mud24sp(this%work,phi,error)
 #ifdef DEBUG
 write (*,108) error
 if (error > 0) call exit(0)
-#endif
 
 106 format(/'#approximation call to mud2sp', &
     &/'# intl = ',i2, ' method = ',i2,' iguess = ',i2)
 107 format('#error = ',i2)
 108 format(/'# mud24sp test ', ' error = ',i2)
+
+#endif
 
 if (present(ex) .and. present(ey)) then
    dx = (xb-xa)/(nx-1)
@@ -259,7 +268,7 @@ if (present(ex) .and. present(ey)) then
       ex(i,:) = (phi(i+1,:)-phi(i-1,:)) / (2*dx)
    end do
    do j = 2, ny-1
-      ey(:,j) = (phi(:,j+1)-phi(:,j+1)) / (2*dy)
+      ey(:,j) = (phi(:,j+1)-phi(:,j-1)) / (2*dy)
    end do
 
    if (nxa == 0 ) then
@@ -279,6 +288,14 @@ end if
 
      
 end subroutine solve_mudpack_cartesian
+
+subroutine delete_mudpack_cartesian(this)
+type(mudpack_2d)        :: this          !< Data structure for solver
+
+
+   deallocate(this%work)
+
+end subroutine delete_mudpack_cartesian
 
 end module sll_mudpack_cartesian
 
