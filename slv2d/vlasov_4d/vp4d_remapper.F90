@@ -4,17 +4,21 @@ program vp4d
 
   use sll_vlasov4d_base
   use sll_vlasov4d_poisson
+  use sll_mudpack_cartesian
   use init_functions
 
   implicit none
 
   type(vlasov4d_poisson)    :: vlasov4d 
   type(poisson_2d_periodic) :: poisson 
+  type(mudpack_2d)          :: poisson_mg
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
   type(cubic_spline_1d_interpolator), target :: spl_x2
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
+
+  sll_real64, dimension(:,:), allocatable :: phi
 
   sll_int32  :: iter
   sll_int32  :: prank, comm
@@ -71,6 +75,7 @@ program vp4d
   call compute_local_sizes_4d(vlasov4d%layout_x, &
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
+
   kx  = 2_f64*sll_pi/(vlasov4d%eta1_max-vlasov4d%eta1_min)
   ky  = 2_f64*sll_pi/(vlasov4d%eta2_max-vlasov4d%eta2_min)
     
@@ -99,9 +104,17 @@ program vp4d
   end do
   end do
 
-  call initialize(poisson, &
+  if (poisson_type == SPECTRAL) then
+     call initialize(poisson, &
                   vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
                   vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2, error)
+  else
+
+     SLL_CLEAR_ALLOCATE(phi(1:loc_sz_i,1:loc_sz_j),error)
+     call initialize(poisson_mg, &
+                  vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
+                  vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2)
+  end if
 
   time = 0.0_f64
   call advection_x1(vlasov4d,0.5*vlasov4d%dt)
@@ -116,7 +129,17 @@ program vp4d
      call transposexv(vlasov4d)
 
      call compute_charge(vlasov4d)
-     call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+     
+     if (poisson_type == SPECTRAL) then
+        call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
+     else
+        call solve(poisson_mg,phi,vlasov4d%rho,vlasov4d%ex,vlasov4d%ey)
+     end if
+
+     !call plot('rho')
+     !call plot('phi')
+     !call plot('ex')
+     !call plot('ey')
 
      time = time + 0.5*vlasov4d%dt
      if (mod(iter, vlasov4d%fthdiag).eq.0) then 
@@ -140,9 +163,42 @@ program vp4d
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call delete(poisson)
+  if (poisson_type == SPECTRAL) then
+     call delete(poisson)
+  else
+     call delete(poisson_mg)
+  end if
 
   call sll_halt_collective()
 
+contains
+
+   subroutine plot(fieldname)
+   character(len=*), intent(in) :: fieldname
+
+   select case(fieldname)
+   case('rho')
+     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                                vlasov4d%rho, fieldname, iter, error)  
+   case('phi')
+     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                                phi, fieldname, iter, error)  
+   case('ex')
+     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                                vlasov4d%ex, fieldname, iter, error)  
+   case('ey')
+     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
+                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
+                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
+                                vlasov4d%ey, fieldname, iter, error)  
+   end select
+
+   end subroutine plot
 
 end program vp4d

@@ -5,3 +5,4 @@
 &test_case num_case=4/ !landau sur x
 &algo_charge va=0, meth=3/
 &solver_poisson mud_case=0/ !
+&fields_solver  / !
