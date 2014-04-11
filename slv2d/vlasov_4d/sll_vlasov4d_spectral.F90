@@ -143,6 +143,7 @@ contains
      gk = global_indices(3)
      vx = (x3_min +(gk-1)*delta_x3)*dt
      do j=1,loc_sz_j
+        print*, j
         call fftw_execute_dft_r2c(this%fwx, this%f(1:nc_x1,j,k,l),this%tmp_x)
         this%tmp_x = this%tmp_x*exp(-cmplx(0.0_f64,this%kx,kind=f64)*vx)
         call fftw_execute_dft_c2r(this%bwx, this%tmp_x, this%d_dx)

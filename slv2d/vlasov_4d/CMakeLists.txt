@@ -80,7 +80,7 @@ TARGET_LINK_LIBRARIES(vm4d_remapper        selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral        selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vp4d_polar           selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral_charge selalib_vlasov4d ${LIBS})
-TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS})
+TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS} mudpack)
 TARGET_LINK_LIBRARIES(vp4d_sequential      selalib ${FFTW_LIBRARY})
 
 ADD_SUBDIRECTORY(vm4d-csl)

@@ -37,8 +37,10 @@ IF(MUDPACK_ENABLED)
 ENDIF(MUDPACK_ENABLED)
 
 IF(FFTW_ENABLED)
+
    ADD_EXECUTABLE(bsl_2d_maxwell landau_2d_maxwell.F90)
    TARGET_LINK_LIBRARIES(bsl_2d_maxwell sll_interpolators
                                         sll_poisson_solvers
                                         sll_maxwell_solvers)
+
 ENDIF(FFTW_ENABLED)
