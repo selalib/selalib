@@ -263,19 +263,23 @@ module sll_remapper
   end interface
 
   interface get_layout_l_min
-     module procedure get_layout_4D_l_min, get_layout_5D_l_min, get_layout_6D_l_min
+     module procedure get_layout_4D_l_min, get_layout_5D_l_min, &
+          get_layout_6D_l_min
   end interface get_layout_l_min
 
   interface set_layout_l_min
-     module procedure set_layout_4D_l_min, set_layout_5D_l_min, set_layout_6D_l_min
+     module procedure set_layout_4D_l_min, set_layout_5D_l_min, &
+          set_layout_6D_l_min
   end interface set_layout_l_min
 
   interface get_layout_l_max
-     module procedure get_layout_4D_l_max, get_layout_5D_l_max, get_layout_6D_l_max 
+     module procedure get_layout_4D_l_max, get_layout_5D_l_max, &
+          get_layout_6D_l_max 
   end interface get_layout_l_max
 
   interface set_layout_l_max
-     module procedure set_layout_4D_l_max, set_layout_5D_l_max, set_layout_6D_l_max
+     module procedure set_layout_4D_l_max, set_layout_5D_l_max, &
+          set_layout_6D_l_max
   end interface set_layout_l_max
 
   interface get_layout_m_min
@@ -346,48 +350,48 @@ module sll_remapper
           sll_get_num_nodes_6D
    end interface
 
-   interface get_layout_global_size_1
+   interface get_layout_global_size_i
       module procedure &
            get_layout_2d_global_size_1, &
            get_layout_3d_global_size_1, &
            get_layout_4d_global_size_1, &
            get_layout_5d_global_size_1, &
            get_layout_6d_global_size_1
-   end interface get_layout_global_size_1
+   end interface get_layout_global_size_i
 
-   interface get_layout_global_size_2
+   interface get_layout_global_size_j
       module procedure &
            get_layout_2d_global_size_2, &
            get_layout_3d_global_size_2, &
            get_layout_4d_global_size_2, &
            get_layout_5d_global_size_2, &
            get_layout_6d_global_size_2
-   end interface get_layout_global_size_2
+   end interface get_layout_global_size_j
 
-   interface get_layout_global_size_3
+   interface get_layout_global_size_k
       module procedure &
            get_layout_3d_global_size_3, &
            get_layout_4d_global_size_3, &
            get_layout_5d_global_size_3, &
            get_layout_6d_global_size_3
-   end interface get_layout_global_size_3
+   end interface get_layout_global_size_k
 
-   interface get_layout_global_size_4
+   interface get_layout_global_size_l
       module procedure &
            get_layout_4d_global_size_4, &
            get_layout_5d_global_size_4, &
            get_layout_6d_global_size_4
-   end interface get_layout_global_size_4
+   end interface get_layout_global_size_l
 
-   interface get_layout_global_size_5
+   interface get_layout_global_size_m
       module procedure &
            get_layout_5d_global_size_5, &
            get_layout_6d_global_size_5
-   end interface get_layout_global_size_5
+   end interface get_layout_global_size_m
 
-   interface get_layout_global_size_6
+   interface get_layout_global_size_n
       module procedure get_layout_6d_global_size_6
-   end interface get_layout_global_size_6
+   end interface get_layout_global_size_n
 
   interface count_elements_in_box
      module procedure count_elements_in_box_2D, count_elements_in_box_3D, &
