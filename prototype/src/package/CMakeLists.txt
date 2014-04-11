@@ -138,6 +138,14 @@ IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
   )
 ENDIF()
 
+IF(MUDPACK_ENABLED)
+
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/poisson_solvers/sll_mudpack_base.F90
+    ${SLL_DIR}/poisson_solvers/sll_mudpack_cartesian.F90
+  )
+
+ENDIF(MUDPACK_ENABLED)
 
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 

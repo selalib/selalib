@@ -1,8 +1,3 @@
-#define FFTW_ALLOCATE(array,array_size,sz_array,p_array)  \
-sz_array = int((array_size/2+1),C_SIZE_T);                \
-p_array = fftw_alloc_complex(sz_array);                   \
-call c_f_pointer(p_array, array, [array_size/2+1])        \
-
 module sll_vlasov4d_spectral_charge
 
 #define MPI_MASTER 0
@@ -14,6 +9,7 @@ use sll_module_interpolators_2d_base
 use sll_collective
 use sll_remapper
 use sll_constants
+#include "sll_fftw.h"
 
 
  use, intrinsic :: iso_c_binding
@@ -35,17 +31,14 @@ use sll_constants
    sll_real64, dimension(:),   allocatable           :: d_dy
    sll_real64, dimension(:),   allocatable           :: kx
    sll_real64, dimension(:),   allocatable           :: ky
-   type(C_PTR)                                       :: fwx, fwy
-   type(C_PTR)                                       :: bwx, bwy
-   type(C_PTR)                                       :: p_tmp_x, p_tmp_y
-   complex(C_DOUBLE_COMPLEX), dimension(:),  pointer :: tmp_x, tmp_y
+   fftw_plan                                         :: fwx, fwy
+   fftw_plan                                         :: bwx, bwy
+   fftw_plan                                         :: p_tmp_x, p_tmp_y
+   fftw_comp, dimension(:),  pointer                 :: tmp_x, tmp_y
    class(sll_interpolator_2d_base), pointer          :: interp_x3x4
-   type(remap_plan_2D_real64), pointer               :: x1_to_x2 
-   type(remap_plan_2D_real64), pointer               :: x2_to_x1
 
    sll_real64, dimension(:,:,:,:),  pointer :: f_star
    sll_real64, dimension(:,:,:,:),  pointer :: ft_star
-
 
  end type vlasov4d_spectral_charge
 
@@ -72,10 +65,10 @@ contains
   class(sll_interpolator_2d_base), target :: interp_x3x4
   sll_int32                               :: error
 
-  sll_real64        :: kx0, ky0
-  integer(C_SIZE_T) :: sz_tmp_x, sz_tmp_y
-  sll_int32         :: psize, prank, comm
-  sll_int32         :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
+  sll_real64  :: kx0, ky0
+  fftw_int    :: sz_tmp_x, sz_tmp_y
+  sll_int32   :: psize, prank, comm
+  sll_int32   :: loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l
 
   this%interp_x3x4 => interp_x3x4
 
@@ -109,10 +102,11 @@ contains
   SLL_CLEAR_ALLOCATE(this%d_dx(1:this%nc_eta1),error)
   SLL_CLEAR_ALLOCATE(this%d_dy(1:this%nc_eta2),error)
 
-  this%fwx = fftw_plan_dft_r2c_1d(this%nc_eta1,this%d_dx, this%tmp_x,FFTW_ESTIMATE)
-  this%bwx = fftw_plan_dft_c2r_1d(this%nc_eta1,this%tmp_x,this%d_dx, FFTW_ESTIMATE)
-  this%fwy = fftw_plan_dft_r2c_1d(this%nc_eta2,this%d_dy, this%tmp_y,FFTW_ESTIMATE)
-  this%bwy = fftw_plan_dft_c2r_1d(this%nc_eta2,this%tmp_y,this%d_dy, FFTW_ESTIMATE)
+
+  NEW_FFTW_PLAN_R2C_1D(this%fwx, this%nc_eta1, this%d_dx,  this%tmp_x)
+  NEW_FFTW_PLAN_C2R_1D(this%bwx, this%nc_eta1, this%tmp_x, this%d_dx)
+  NEW_FFTW_PLAN_R2C_1D(this%fwy, this%nc_eta2, this%d_dy,  this%tmp_y)
+  NEW_FFTW_PLAN_C2R_1D(this%bwy, this%nc_eta2, this%tmp_y, this%d_dy)
 
   SLL_CLEAR_ALLOCATE(this%kx(1:this%nc_eta1/2+1), error)
   SLL_CLEAR_ALLOCATE(this%ky(1:this%nc_eta2/2+1), error)
@@ -145,8 +139,11 @@ contains
   call delete_layout_4D(this%layout_v)
   SLL_DEALLOCATE_ARRAY(this%f, ierr)
   SLL_DEALLOCATE_ARRAY(this%ft, ierr)
+
+#ifdef FFTW_F2003
   if (c_associated(this%p_tmp_x)) call fftw_free(this%p_tmp_x)
   if (c_associated(this%p_tmp_y)) call fftw_free(this%p_tmp_y)
+#endif
 
   call fftw_destroy_plan(this%fwx)
   call fftw_destroy_plan(this%fwy)
