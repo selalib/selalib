@@ -21,7 +21,7 @@ program vp4d_multigrid
   type(layout_2D), pointer                :: layout_mg
 
   sll_int32  :: iter
-  sll_int32  :: prank, comm
+  sll_int32  :: prank, comm, comm2d
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
   sll_int64  :: psize
   sll_real64 :: tcpu1, tcpu2
@@ -33,25 +33,30 @@ program vp4d_multigrid
   sll_real64 :: time
   sll_int32  :: nxprocs, nyprocs
 
+  sll_int32, dimension(8)     :: neighbor
+  sll_int32, parameter        :: N =7, S =3, W =5, E =1
+  sll_int32, parameter        :: NW=6, SW=4, NE=8, SE=2
+  sll_int32, parameter        :: ndims = 2
+  sll_int32, dimension(ndims) :: dims
+  sll_int32, dimension(ndims) :: coords
+  logical                     :: reorder
+  logical,dimension(ndims)    :: periods
+
   call sll_boot_collective()
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
+
   tcpu1 = MPI_WTIME()
-  if (.not. is_power_of_two(psize)) then     
-     print *, 'This test needs to run in a number of processes which is ',&
-          'a power of 2.'
-     stop
-  end if
+
   if (prank == MPI_MASTER) then
      print*,'MPI Version of slv2d running on ',psize, ' processors'
   end if
 
-  call read_input_file(vlasov4d)
 
-  SLL_CLEAR_ALLOCATE(phi(1:vlasov4d%nc_eta1+1,1:vlasov4d%nc_eta2+1), error)
+  call read_input_file(vlasov4d)
 
   call spl_x1%initialize(vlasov4d%nc_eta1+1,  &
                          vlasov4d%eta1_min,   &
@@ -106,22 +111,56 @@ program vp4d_multigrid
   end do
   end do
 
+
+  dims = 0
+  CALL MPI_DIMS_CREATE(int(psize,4),ndims,dims,error)
+  nxprocs = dims(1)
+  nyprocs = dims(2)
+
+  periods(1) = .true.
+  periods(2) = .true.
+  reorder    = .true.
+
+  CALL MPI_CART_CREATE(MPI_COMM_WORLD,ndims,dims,periods,reorder,comm2d,error)
+
+  neighbor(:) = MPI_PROC_NULL
+
+  CALL MPI_CART_SHIFT(comm2d,0,1,neighbor(N),neighbor(S),error)
+  CALL MPI_CART_SHIFT(comm2d,1,1,neighbor(W),neighbor(E),error)
+  CALL MPI_COMM_RANK(comm2d,prank,error)
+  CALL MPI_CART_COORDS(comm2d,prank,ndims,coords,error)
+
+  if (neighbor(N) /= MPI_PROC_NULL) then
+     CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),neighbor(NW),error)
+     CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),neighbor(NE),error)
+  end if
+
+  if (neighbor(S) /= MPI_PROC_NULL) then
+     CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(SW),error)
+     CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(SE),error)
+  end if
+
+  call flush(6)
+  print"('proc: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
+  call flush(6)
+  call MPI_BARRIER(comm,error)
+
   layout_mg => new_layout_2D( sll_world_collective )        
+
   call initialize_layout_with_distributed_2D_array(        &
              vlasov4d%np_eta1, vlasov4d%np_eta2, nxprocs, nyprocs, &
              layout_mg)
 
-  if ( prank == MPI_MASTER ) call sll_view_lims_2D( layout_mg )
+  
+  if ( prank == MPI_MASTER ) then
+    print*, "Display layout for multigrid"
+    call sll_view_lims_2D( layout_mg )
+  end if
   call flush(6)
 
   call compute_local_sizes_2d(layout_mg, loc_sz_i,loc_sz_j)        
 
   SLL_CLEAR_ALLOCATE(phi(1:loc_sz_i,1:loc_sz_j),error)
-
-
-  call initialize(poisson, &
-                  vlasov4d%eta1_min, vlasov4d%eta1_max, vlasov4d%nc_eta1, &
-                  vlasov4d%eta2_min, vlasov4d%eta2_max, vlasov4d%nc_eta2)
 
   time = 0.0_f64
   call advection_x1(vlasov4d,0.5*vlasov4d%dt)
@@ -145,11 +184,6 @@ program vp4d_multigrid
 !                                          mx, my, &
 !                                          zdata, "rect_mesh", 1, error)  
 
-     !call plot('rho')
-     call solve(poisson,phi,vlasov4d%rho,vlasov4d%ex,vlasov4d%ey)
-     !call plot('phi')
-     !call plot('ex')
-     !call plot('ey')
 
 
      time = time + 0.5*vlasov4d%dt
@@ -174,39 +208,8 @@ program vp4d_multigrid
   if (prank == MPI_MASTER) &
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
-  call delete(poisson)
-
   call sll_halt_collective()
 
 
-contains
-
-   subroutine plot(fieldname)
-   character(len=*), intent(in) :: fieldname
-
-   select case(fieldname)
-   case('rho')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                vlasov4d%rho, fieldname, iter, error)  
-   case('phi')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                phi, fieldname, iter, error)  
-   case('ex')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                vlasov4d%ex, fieldname, iter, error)  
-   case('ey')
-     call sll_gnuplot_corect_2d(vlasov4d%eta1_min, vlasov4d%eta1_max, &
-                                vlasov4d%np_eta1, vlasov4d%eta2_min, &
-                                vlasov4d%eta2_max, vlasov4d%np_eta2, &
-                                vlasov4d%ey, fieldname, iter, error)  
-   end select
-
-   end subroutine plot
 
 end program vp4d_multigrid

@@ -11,6 +11,7 @@ module sll_vlasov4d_base
  use sll_module_interpolators_2d_base
  use sll_remapper
  use sll_xml_io
+ use init_functions
 
  implicit none
  
@@ -66,6 +67,8 @@ module sll_vlasov4d_base
    sll_real64                               :: eps
  end type vlasov4d_base
 
+ sll_int32, public  :: poisson_type 
+ sll_int32, public  :: maxwell_type
 
  private
 
@@ -95,10 +98,10 @@ contains
   sll_int32  :: nbiter           ! number of loops over time
   sll_int32  :: fdiag            ! diagnostics frequency
   sll_int32  :: fthdiag          ! time history frequency
-  sll_int32  :: va = 0           ! algo charge type
+  sll_int32  :: va               ! algo charge type
   sll_int32  :: num_case         ! test case
   sll_real64 :: eps = 0.05_f64   ! perturbation amplitude
-  sll_int32  :: meth = 0         ! method
+  sll_int32  :: meth             ! method
 
 
   namelist /time/        dt, nbiter
@@ -107,10 +110,16 @@ contains
   namelist /vel_space/   vx0,vx1,vy0,vy1,nvx,nvy
   namelist /test_case/   num_case, eps
   namelist /algo_charge/ va, meth
+  namelist /field_solvers/ poisson_type, maxwell_type
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
+
+  va           = VA_VALIS
+  meth         = METH_BSL_CUBIC_SPLINES
+  poisson_type = SPECTRAL
+  maxwell_type = PSTD
 
   if (prank == MPI_MASTER) then
 
@@ -121,30 +130,33 @@ contains
      read(idata,NML=vel_space)
      read(idata,NML=test_case)
      read(idata,NML=algo_charge)
+     read(idata,NML=field_solvers)
      close(idata)
 
   end if
 
-  call mpi_bcast(dt,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(fdiag,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(fthdiag, 1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(x0,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(y0,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(x1,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(y1,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nx,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(ny,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vx0,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vy0,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vx1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vy1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(va,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(meth,    1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(num_case,1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(eps,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(dt,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nbiter,       1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(fdiag,        1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(fthdiag,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(x0,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(y0,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(x1,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(y1,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nx,           1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(ny,           1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vx0,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vy0,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vx1,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(vy1,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nvx,          1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(nvy,          1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(va,           1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(meth,         1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(num_case,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(eps,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(poisson_type, 1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+  call mpi_bcast(maxwell_type, 1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 
   this%dt         = dt
   this%nbiter     = nbiter
@@ -209,7 +221,7 @@ contains
 
   if (.not. is_power_of_two(int(psize,i64))) then     
      print *, 'This test needs to run in a number of processes which is ',&
-          'greater than 4 and a power of 2.'
+          'a power of 2.'
      call sll_halt_collective()
      stop
   end if

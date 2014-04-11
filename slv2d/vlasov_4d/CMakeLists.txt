@@ -55,7 +55,7 @@ ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/mudpack
 ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/multigrid 
                  ${CMAKE_BINARY_DIR}/multigrid)
 
-SET(LIBS selalib ${FFTW_LIBRARY} ${HDF5_LIBRARIES})
+SET(LIBS selalib mudpack ${FFTW_LIBRARY} ${HDF5_LIBRARIES})
 
 ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
                                     sll_vlasov4d_spectral_charge.F90
@@ -80,7 +80,7 @@ TARGET_LINK_LIBRARIES(vm4d_remapper        selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral        selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vp4d_polar           selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral_charge selalib_vlasov4d ${LIBS})
-TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS} mudpack)
+TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vp4d_sequential      selalib ${FFTW_LIBRARY})
 
 ADD_SUBDIRECTORY(vm4d-csl)

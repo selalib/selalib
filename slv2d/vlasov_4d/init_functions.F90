@@ -21,8 +21,10 @@ integer, parameter :: METH_CSL_LAG3 = 2
 integer, parameter :: METH_CSL_PPM1 = 3
 integer, parameter :: METH_CSL_PPM2 = 4
 
-integer, parameter :: SPECTRAL = 0
+integer, parameter :: SPECTRAL  = 0
 integer, parameter :: MULTIGRID = 1
+integer, parameter :: PSTD      = 2
+integer, parameter :: FDTD      = 3
 
 contains
 
