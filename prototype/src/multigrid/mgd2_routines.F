@@ -1,11 +1,3 @@
-# define WMGD 1
-# define REALN real(8)
-# define NBLOCKGR 1
-
-#ifdef DEBUG
-#define cdebug 1
-#endif
-
 
       subroutine mgdbdry(sxm,exm,sym,eym,phi,bd,phibc,IOUT)
 #include "compdir.inc"

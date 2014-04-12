@@ -48,8 +48,7 @@ module sll_multigrid_2d
    sll_real64 :: yl
 
    sll_int32,  parameter :: IOUT    = 6
-
-   sll_int32,  parameter :: maxcy   = 2000     !Max number of mg cycles
+   sll_int32,  parameter :: maxcy   = 5000    !Max number of mg cycles
    sll_real64, parameter :: tolmax  = 1.0d-06 !Desired accuracy
    sll_int32,  parameter :: kcycle  = 2       !1: V-cycles 2: W-cycles
    sll_int32,  parameter :: iprer   = 3       !number of relaxation sweep
@@ -59,12 +58,12 @@ module sll_multigrid_2d
 
 contains
 
-subroutine initialize_multigrid_2d( this,            &
-                       x_min, x_max, y_min, y_max,   &
-                       nxprocs, nyprocs, nc_x, nc_y, &
-                       bctype_x, bctype_y,           &
-                       bcvalue_xmin, bcvalue_xmax,   &
-                       bcvalue_ymin, bcvalue_ymax  )
+subroutine initialize_multigrid_2d( this,                         &
+                                    x_min, x_max, y_min, y_max,   &
+                                    nxprocs, nyprocs, nc_x, nc_y, &
+                                    bctype_x, bctype_y,           &
+                                    bcvalue_xmin, bcvalue_xmax,   &
+                                    bcvalue_ymin, bcvalue_ymax  )
 
    type(multigrid_2d)     :: this
 
