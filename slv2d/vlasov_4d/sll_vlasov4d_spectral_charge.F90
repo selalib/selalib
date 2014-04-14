@@ -364,7 +364,7 @@ subroutine advection_x3x4(this,dt)
                gk = global_indices(3)
                gl = global_indices(4)
                vx = this%eta3_min+(gk-1)*this%delta_eta3
-               locjx(gi,gj) = locjx(gi,gj) + dxy*df(i,j,k,l)*vx
+               locjx(gi,gj) = locjx(gi,gj) + dxy*df(i,j,k,l)
             end do
          end do
       end do
@@ -415,7 +415,7 @@ subroutine advection_x3x4(this,dt)
                gk = global_indices(3)
                gl = global_indices(4)
                vy = this%eta4_min+(gl-1)*this%delta_eta4
-               locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) *vy
+               locjy(gi,gj) = locjy(gi,gj) + dxy*df(i,j,k,l) 
             end do
          end do
       end do
