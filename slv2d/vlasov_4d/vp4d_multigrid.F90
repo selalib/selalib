@@ -48,13 +48,11 @@ program vp4d_multigrid
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
 
-
   tcpu1 = MPI_WTIME()
 
   if (prank == MPI_MASTER) then
      print*,'MPI Version of slv2d running on ',psize, ' processors'
   end if
-
 
   call read_input_file(vlasov4d)
 
@@ -185,7 +183,6 @@ program vp4d_multigrid
 !                                          zdata, "rect_mesh", 1, error)  
 
 
-
      time = time + 0.5*vlasov4d%dt
      if (mod(iter, vlasov4d%fthdiag).eq.0) then 
         call write_energy(vlasov4d,time)
@@ -209,7 +206,5 @@ program vp4d_multigrid
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
   call sll_halt_collective()
-
-
 
 end program vp4d_multigrid

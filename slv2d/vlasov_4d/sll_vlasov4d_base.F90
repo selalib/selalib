@@ -135,36 +135,36 @@ contains
 
   end if
 
-  call mpi_bcast(dt,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nbiter,       1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(fdiag,        1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(fthdiag,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(x0,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(y0,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(x1,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(y1,           1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nx,           1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(ny,           1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vx0,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vy0,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vx1,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vy1,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nvx,          1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nvy,          1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(va,           1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(meth,         1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(num_case,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(eps,          1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(poisson_type, 1,MPI_INTEGER,MPI_MASTER,comm,ierr)
-  call mpi_bcast(maxwell_type, 1,MPI_INTEGER,MPI_MASTER,comm,ierr)
+  call mpi_bcast(dt,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nbiter,       1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(fdiag,        1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(fthdiag,      1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(x0,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(y0,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(x1,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(y1,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nx,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(ny,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(vx0,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vy0,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vx1,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vy1,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nvx,          1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(nvy,          1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(va,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(meth,         1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(num_case,     1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(eps,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(poisson_type, 1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(maxwell_type, 1, MPI_INTEGER, MPI_MASTER, comm, ierr)
 
   this%dt         = dt
   this%nbiter     = nbiter
   this%fdiag      = fdiag
   this%fthdiag    = fthdiag
 
-  this%geomx => new_logical_mesh_2d(nx,ny,x0,x1,y0,y1)
-  this%geomv => new_logical_mesh_2d(nvx,nvy,vx0,vx1,vy0,vy1)
+  this%geomx      => new_logical_mesh_2d(nx,ny,x0,x1,y0,y1)
+  this%geomv      => new_logical_mesh_2d(nvx,nvy,vx0,vx1,vy0,vy1)
 
   this%nc_eta1    = this%geomx%num_cells1
   this%nc_eta2    = this%geomx%num_cells2
@@ -198,8 +198,8 @@ contains
   if (prank == MPI_MASTER) then
 
        write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-       write(*,"(2(i3,1x),6(g13.3,1x))") nx, ny, x0, x1, y0, y1, &
-                                         this%delta_eta1, this%delta_eta2
+       write(*,"(2(i3,1x),6(g13.3,1x))")nx, ny, x0, x1, y0, y1, &
+                                        this%delta_eta1, this%delta_eta2
        write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
        write(*,"(2(i3,1x),6(g13.3,1x))")nvx, nvy, vx0, vx1, vy0, vy1, &
                                         this%delta_eta3, this%delta_eta4
