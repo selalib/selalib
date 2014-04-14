@@ -5464,4 +5464,44 @@ print *, 'remap 2d complex:'
   end function layout_2D_from_layout_4D
 #endif
 
+  subroutine write_to_file( layout, fname )
+
+     type(layout_2d), pointer  :: layout
+     character(len=*)          :: fname
+     character(len=4)          :: cproc
+
+     sll_int32  :: i, sz, loc_sz_i, loc_sz_j
+
+     call compute_local_sizes_2d( layout, loc_sz_i, loc_sz_j)
+
+     open(44,file=fname//".mtv")
+     write(44,*)"$DATA=CURVE2D"
+     write(44,*)"%toplabel = 'MPI topology'" 
+     write(44,*)"%subtitle = '"//fname//"'"
+     write(44,*)"%equalscale=T"
+     write(44,*)"%linetype = 0"
+     write(44,*)"%filltype = 4" 
+     write(44,*)"%xmin=",1, " xmax=",layout%global_sz1
+     write(44,*)"%ymin=",1, " ymax=",layout%global_sz2
+     write(44,*)"0.0 0.0"
+     write(44,*)"0.0 1.0"
+     write(44,*)"1.0 1.0"
+     write(44,*)"1.0 0.0"
+     sz = sll_get_num_nodes( layout )
+     do i=0,sz-1
+        call int2string(i, cproc)
+        write(44,*)"@ rectangle x1=", get_layout_i_min(layout,i), &
+                   " y1=",  get_layout_j_min(layout,i), &
+                   " z1=0.0 \"
+        write(44,*)" x2=", get_layout_i_max(layout,i), &
+                   " y2=", get_layout_j_max(layout,i), &
+                   " z2=0.0 \"
+        write(44,*) "fillcolor="//cproc//" filltype=1 linelabel='"//cproc//"'"
+     end do
+
+     write(44,"('$END')")
+     close(44)
+
+  end subroutine write_to_file
+
 end module sll_remapper

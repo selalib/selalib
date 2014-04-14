@@ -28,6 +28,7 @@ SET(FFTW_ENABLED ON CACHE BOOL "Enable FFTW" FORCE)
 SET(HDF5_ENABLED ON CACHE BOOL "Enable HDF5" FORCE)
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel" FORCE)
 SET(MUDPACK_ENABLED ON)
+SET(MPI_MODULE_ENABLED ON)
 
 INCLUDE(HDF5Config)
 
@@ -48,14 +49,17 @@ ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package
                  ${CMAKE_BINARY_DIR}/package)
 ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
                  ${CMAKE_BINARY_DIR}/fftpack)
-
 ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/mudpack 
                  ${CMAKE_BINARY_DIR}/mudpack)
-
 ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/multigrid 
                  ${CMAKE_BINARY_DIR}/multigrid)
 
-SET(LIBS selalib mudpack ${FFTW_LIBRARY} ${HDF5_LIBRARIES})
+SET(LIBS selalib 
+         sll_multigrid
+         mgd2_periodic
+         mudpack 
+         ${FFTW_LIBRARY} 
+         ${HDF5_LIBRARIES})
 
 ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
                                     sll_vlasov4d_spectral_charge.F90
@@ -80,8 +84,8 @@ TARGET_LINK_LIBRARIES(vm4d_remapper        selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral        selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vp4d_polar           selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vm4d_spectral_charge selalib_vlasov4d ${LIBS})
-TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS})
 TARGET_LINK_LIBRARIES(vp4d_sequential      selalib ${FFTW_LIBRARY})
+TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS})
 
 ADD_SUBDIRECTORY(vm4d-csl)
 

@@ -7,19 +7,13 @@ IF (MPI_MODULE_ENABLED)
   ADD_EXECUTABLE(test_multigrid_2d_periodic test_multigrid_2d_periodic.F90)
 
   TARGET_LINK_LIBRARIES(test_multigrid_2d_periodic sll_multigrid
-                                                   mgd2_periodic 
-                                                   sll_collective 
-                                                   sll_utilities
-                                                   sll_memory
-                                                   sll_working_precision)
+                                                   mgd2_periodic
+                                                   selalib)
 
   ADD_EXECUTABLE(test_multigrid_2d_dirichlet test_multigrid_2d_dirichlet.F90)
 
   TARGET_LINK_LIBRARIES(test_multigrid_2d_dirichlet sll_multigrid
                                                     mgd2_nonperiodic 
-                                                    sll_collective 
-                                                    sll_utilities
-                                                    sll_memory
-                                                    sll_working_precision)
+                                                    selalib)
 
 ENDIF (MPI_MODULE_ENABLED)

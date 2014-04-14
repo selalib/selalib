@@ -5,22 +5,29 @@ program vp4d_multigrid
   use sll_vlasov4d_base
   use sll_vlasov4d_poisson
   use init_functions
-  use sll_mudpack_cartesian
+  use sll_multigrid_2d
 
   implicit none
 
-  type(vlasov4d_poisson)    :: vlasov4d 
-  type(mudpack_2d)          :: poisson
+  type(vlasov4d_poisson)    :: vlasov 
+  type(multigrid_2d)        :: poisson
 
   type(cubic_spline_1d_interpolator), target :: spl_x1
   type(cubic_spline_1d_interpolator), target :: spl_x2
   type(cubic_spline_1d_interpolator), target :: spl_x3
   type(cubic_spline_1d_interpolator), target :: spl_x4
 
-  sll_real64, dimension(:,:), allocatable :: phi
   type(layout_2D), pointer                :: layout_mg
 
-  sll_int32  :: iter
+  sll_real64, dimension(:,:), allocatable :: phi
+  sll_real64, dimension(:,:), allocatable :: rhs
+  sll_real64, dimension(:,:), allocatable :: den
+  sll_real64, dimension(:,:), allocatable :: ex_local
+  sll_real64, dimension(:,:), allocatable :: ey_local
+  sll_real64, dimension(:,:), allocatable :: ex_global
+  sll_real64, dimension(:,:), allocatable :: ey_global
+
+  sll_int32  :: iter = 0
   sll_int32  :: prank, comm, comm2d
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
   sll_int64  :: psize
@@ -32,6 +39,8 @@ program vp4d_multigrid
   sll_int32  :: global_indices(4)
   sll_real64 :: time
   sll_int32  :: nxprocs, nyprocs
+  sll_int32  :: sx, ex, sy, ey
+  sll_int32  :: block_size
 
   sll_int32, dimension(8)     :: neighbor
   sll_int32, parameter        :: N =7, S =3, W =5, E =1
@@ -54,55 +63,55 @@ program vp4d_multigrid
      print*,'MPI Version of slv2d running on ',psize, ' processors'
   end if
 
-  call read_input_file(vlasov4d)
+  call read_input_file(vlasov)
 
-  call spl_x1%initialize(vlasov4d%nc_eta1+1,  &
-                         vlasov4d%eta1_min,   &
-                         vlasov4d%eta1_max,   &
+  call spl_x1%initialize(vlasov%nc_eta1+1,  &
+                         vlasov%eta1_min,   &
+                         vlasov%eta1_max,   &
                          SLL_PERIODIC)
 
-  call spl_x2%initialize(vlasov4d%nc_eta2+1,  &
-                         vlasov4d%eta2_min,   &
-                         vlasov4d%eta2_max,   &
+  call spl_x2%initialize(vlasov%nc_eta2+1,  &
+                         vlasov%eta2_min,   &
+                         vlasov%eta2_max,   &
                          SLL_PERIODIC)
 
-  call spl_x3%initialize(vlasov4d%nc_eta3+1,  &
-                         vlasov4d%eta3_min,   &
-                         vlasov4d%eta3_max,   &
+  call spl_x3%initialize(vlasov%nc_eta3+1,  &
+                         vlasov%eta3_min,   &
+                         vlasov%eta3_max,   &
                          SLL_PERIODIC)
 
-  call spl_x4%initialize(vlasov4d%nc_eta4+1,  &
-                         vlasov4d%eta4_min,   &
-                         vlasov4d%eta4_max,   &
+  call spl_x4%initialize(vlasov%nc_eta4+1,  &
+                         vlasov%eta4_min,   &
+                         vlasov%eta4_max,   &
                          SLL_PERIODIC)
 
-  call initialize(vlasov4d,spl_x1,spl_x2,spl_x3,spl_x4,error)
+  call initialize(vlasov,spl_x1,spl_x2,spl_x3,spl_x4,error)
 
-  call compute_local_sizes_4d(vlasov4d%layout_x, &
+  call compute_local_sizes_4d(vlasov%layout_x, &
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
-  kx  = 2_f64*sll_pi/(vlasov4d%eta1_max-vlasov4d%eta1_min)
-  ky  = 2_f64*sll_pi/(vlasov4d%eta2_max-vlasov4d%eta2_min)
+  kx  = 2_f64*sll_pi/(vlasov%eta1_max-vlasov%eta1_min)
+  ky  = 2_f64*sll_pi/(vlasov%eta2_max-vlasov%eta2_min)
     
   do l=1,loc_sz_l 
   do k=1,loc_sz_k
   do j=1,loc_sz_j
   do i=1,loc_sz_i
 
-     global_indices = local_to_global_4D(vlasov4d%layout_x,(/i,j,k,l/)) 
+     global_indices = local_to_global_4D(vlasov%layout_x,(/i,j,k,l/)) 
      gi = global_indices(1)
      gj = global_indices(2)
      gk = global_indices(3)
      gl = global_indices(4)
 
-     x  = vlasov4d%eta1_min+(gi-1)*vlasov4d%delta_eta1
-     y  = vlasov4d%eta2_min+(gj-1)*vlasov4d%delta_eta2
-     vx = vlasov4d%eta3_min+(gk-1)*vlasov4d%delta_eta3
-     vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
+     x  = vlasov%eta1_min+(gi-1)*vlasov%delta_eta1
+     y  = vlasov%eta2_min+(gj-1)*vlasov%delta_eta2
+     vx = vlasov%eta3_min+(gk-1)*vlasov%delta_eta3
+     vy = vlasov%eta4_min+(gl-1)*vlasov%delta_eta4
 
      v2 = vx*vx+vy*vy
 
-     vlasov4d%f(i,j,k,l) = landau_cos_prod(vlasov4d%eps,kx, ky, x, y, v2)
+     vlasov%f(i,j,k,l) = landau_cos_prod(vlasov%eps,kx, ky, x, y, v2)
 
   end do
   end do
@@ -145,58 +154,116 @@ program vp4d_multigrid
 
   layout_mg => new_layout_2D( sll_world_collective )        
 
-  call initialize_layout_with_distributed_2D_array(        &
-             vlasov4d%np_eta1, vlasov4d%np_eta2, nxprocs, nyprocs, &
-             layout_mg)
-
+  call initialize_layout_with_distributed_2D_array( vlasov%nc_eta1, &
+                                                    vlasov%nc_eta2, &
+                                                    nxprocs,          &
+                                                    nyprocs,          &
+                                                    layout_mg)
   
   if ( prank == MPI_MASTER ) then
     print*, "Display layout for multigrid"
     call sll_view_lims_2D( layout_mg )
+    call write_to_file(layout_mg, 'mesh')
   end if
   call flush(6)
 
   call compute_local_sizes_2d(layout_mg, loc_sz_i,loc_sz_j)        
 
-  SLL_CLEAR_ALLOCATE(phi(1:loc_sz_i,1:loc_sz_j),error)
+  sx = get_layout_2D_i_min(layout_mg, prank)
+  ex = get_layout_2D_i_max(layout_mg, prank)
+  sy = get_layout_2D_j_min(layout_mg, prank)
+  ey = get_layout_2D_j_max(layout_mg, prank)
+  
+  call initialize( poisson, sx, ex, sy, ey,          &
+                   vlasov%nc_eta1*vlasov%delta_eta1, &
+                   vlasov%nc_eta2*vlasov%delta_eta2, &
+                   nxprocs,                          &
+                   nyprocs,                          &
+                   vlasov%nc_eta1,                   &
+                   vlasov%nc_eta2,                   &
+                   comm2d,                           &
+                   neighbor  )
+
+  SLL_CLEAR_ALLOCATE(phi(sx-1:ex+1,sy-1:ey+1), error)
+  SLL_CLEAR_ALLOCATE(rhs(sx-1:ex+1,sy-1:ey+1), error)
+  SLL_ALLOCATE(den(sx-1:ex+1,sy-1:ey+1), error); den = 1.0_f64
+  SLL_CLEAR_ALLOCATE(ex_local(sx:ex,sy:ey), error)
+  SLL_CLEAR_ALLOCATE(ey_local(sx:ex,sy:ey), error)
+
+  do j = sy-1, ey+1
+     do i = sx-1, ex+1
+        x  = vlasov%eta1_min+(i-1)*vlasov%delta_eta1
+        y  = vlasov%eta2_min+(j-1)*vlasov%delta_eta2
+        rhs(i,j) = -2.*sin(x)*sin(y)
+     end do
+  end do
+
+  call gp_plot2d(rhs, "rhs")
+
+  call solve(poisson, phi, rhs, den)
+
+  !compute Ex and Ey
+  do j = sy,ey
+     do i = sx,ex
+        ex_local(i,j) = 0.5*(phi(i+1,j)-phi(i-1,j))/vlasov%delta_eta1
+        ey_local(i,j) = 0.5*(phi(i,j+1)-phi(i,j-1))/vlasov%delta_eta2
+     end do
+  end do
+
+  SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
+  SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
+
+  block_size = (ex-sx+1)*(ex-sy+1)
+
+  call MPI_ALLGATHER(ex_local(sx:ex,sy:ey),  block_size, MPI_REAL8, &
+                     ex_global, block_size, MPI_REAL8, comm2d, error)
+
+  call MPI_ALLGATHER(ey_local(sx:ex,sy:ey),  block_size, MPI_REAL8, &
+                     ey_global, block_size, MPI_REAL8, comm2d, error)
+
+  vlasov%ex(vlasov%np_eta1,:) = vlasov%ex(1,:) 
+  vlasov%ey(:,vlasov%np_eta2) = vlasov%ey(:,1) 
+
+  call sll_gnuplot_corect_2d(vlasov%eta1_min, &
+                             vlasov%eta1_max, &
+                             vlasov%np_eta1,  &
+                             vlasov%eta2_min, &
+                             vlasov%eta2_max, &
+                             vlasov%np_eta2,  &
+                             vlasov%ex, "ex", &
+                             0, error)  
+
+  call gp_plot2d(phi, "phi")
+  call gp_plot2d(rhs, "res")
 
   time = 0.0_f64
-  call advection_x1(vlasov4d,0.5*vlasov4d%dt)
-  call advection_x2(vlasov4d,0.5*vlasov4d%dt)
+  call advection_x1(vlasov,0.5*vlasov%dt)
+  call advection_x2(vlasov,0.5*vlasov%dt)
 
-  do iter=1, vlasov4d%nbiter
+  do iter=1, vlasov%nbiter
 
-     if (iter == 1 .or. mod(iter, vlasov4d%fdiag) == 0) then 
-        call write_xmf_file(vlasov4d,iter/ vlasov4d%fdiag)
+     if (iter == 1 .or. mod(iter, vlasov%fdiag) == 0) then 
+        call write_xmf_file(vlasov,iter/ vlasov%fdiag)
      end if
 
-     call transposexv(vlasov4d)
+     call transposexv(vlasov)
 
-     call compute_charge(vlasov4d)
+     call compute_charge(vlasov)
 
-!     offset(1) =  get_layout_2D_i_min( layout, myrank ) - 1
-!     offset(2) =  get_layout_2D_j_min( layout, myrank ) - 1
-!
-!        call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
-!                                          dble(offset(2)), dble(1), &
-!                                          mx, my, &
-!                                          zdata, "rect_mesh", 1, error)  
-
-
-     time = time + 0.5*vlasov4d%dt
-     if (mod(iter, vlasov4d%fthdiag).eq.0) then 
-        call write_energy(vlasov4d,time)
+     time = time + 0.5*vlasov%dt
+     if (mod(iter, vlasov%fthdiag).eq.0) then 
+        call write_energy(vlasov,time)
      end if
 
-     call advection_x3(vlasov4d, vlasov4d%dt)
-     call advection_x4(vlasov4d, vlasov4d%dt)
+     call advection_x3(vlasov, vlasov%dt)
+     call advection_x4(vlasov, vlasov%dt)
 
-     call transposevx(vlasov4d)
+     call transposevx(vlasov)
 
-     time = time + 0.5*vlasov4d%dt
+     time = time + 0.5*vlasov%dt
 
-     call advection_x1(vlasov4d, vlasov4d%dt)
-     call advection_x2(vlasov4d, vlasov4d%dt)
+     call advection_x1(vlasov, vlasov%dt)
+     call advection_x2(vlasov, vlasov%dt)
 
 
   end do
@@ -206,5 +273,26 @@ program vp4d_multigrid
        write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
 
   call sll_halt_collective()
+
+contains
+
+
+   subroutine gp_plot2d(field, fieldname)
+
+   character(len=*) :: fieldname
+   sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
+
+   call sll_gnuplot_rect_2d_parallel((sx-2)*vlasov%delta_eta1, &
+                                     vlasov%delta_eta1,        &
+                                     (sy-2)*vlasov%delta_eta2, &
+                                     vlasov%delta_eta2,        &
+                                     ex-sx+3,                    &
+                                     ey-sy+3,                    &
+                                     field,                      &
+                                     fieldname,                  &
+                                     iter,                       &
+                                     error)  
+
+   end subroutine gp_plot2d
 
 end program vp4d_multigrid
