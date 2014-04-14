@@ -13,9 +13,12 @@ module sll_multigrid_2d
       sll_int32  :: ex
       sll_int32  :: sy
       sll_int32  :: ey
+      sll_real64 :: xl
+      sll_real64 :: yl
       sll_int32  :: comm2d
       sll_int32  :: pdims(2)
       sll_int32  :: coords(2)
+      sll_int32  :: neighbor(8)
 
       sll_real64, pointer :: work(:)
 
@@ -23,6 +26,7 @@ module sll_multigrid_2d
 
    interface initialize
       module procedure initialize_multigrid_2d
+      module procedure initialize_multigrid_2d_periodic
    end interface initialize
 
    interface solve
@@ -39,13 +43,8 @@ module sll_multigrid_2d
    sll_real64 :: phibc(4,20)
    sll_real64 :: wk
    sll_int32  :: myid
-   sll_int32  :: neighbor(8)
    sll_int32  :: ngrid
    sll_int32  :: nerror
-   sll_real64 :: hxi
-   sll_real64 :: hyi
-   sll_real64 :: xl
-   sll_real64 :: yl
 
    sll_int32,  parameter :: IOUT    = 6
    sll_int32,  parameter :: maxcy   = 5000    !Max number of mg cycles
@@ -57,6 +56,119 @@ module sll_multigrid_2d
                                               !2: half-weighted residual
 
 contains
+
+subroutine initialize_multigrid_2d_periodic( this,     &
+                                             sx,       &
+                                             ex,       &
+                                             sy,       &
+                                             ey,       &
+                                             xl,       &
+                                             yl,       &
+                                             nxprocs,  &
+                                             nyprocs,  &
+                                             nc_x,     &
+                                             nc_y,     &
+                                             comm2d,   &
+                                             neighbor  )
+
+   type(multigrid_2d)     :: this
+
+   sll_int32, intent(in)  :: sx
+   sll_int32, intent(in)  :: ex
+   sll_int32, intent(in)  :: sy
+   sll_int32, intent(in)  :: ey
+
+   sll_real64, intent(in) :: xl
+   sll_real64, intent(in) :: yl
+
+   sll_int32, intent(in)  :: nxprocs
+   sll_int32, intent(in)  :: nyprocs
+
+   sll_int32, intent(in)  :: nc_x
+   sll_int32, intent(in)  :: nc_y
+   sll_int32, intent(in)  :: comm2d
+   sll_int32, intent(in)  :: neighbor(8)
+
+   sll_int32 :: nxdim
+   sll_int32 :: nydim
+   sll_int32 :: ixp
+   sll_int32 :: jyq 
+
+   logical    :: periods(2)
+
+   sll_int32  :: iex, jey
+
+   sll_int32  :: numprocs
+   sll_int32  :: ibdry
+   sll_int32  :: jbdry
+   sll_int32  :: i
+   sll_int32  :: status(MPI_STATUS_SIZE)
+   sll_int32  :: nwork
+   sll_int32  :: ierr
+   sll_int32  :: coords(2)
+
+   sll_real64, dimension(4) :: vbc
+
+   this%xl = xl
+   this%yl = yl
+
+   nx = nc_x
+   ny = nc_y
+
+   ixp = 4*nxprocs 
+   jyq = 4*nyprocs
+
+   iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
+   jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
+   ngrid = max(iex,jey)
+
+   nwork = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
+   nxdim = int(float(nx)/float(nxprocs)+0.99)+2
+   nydim = int(float(ny)/float(nyprocs)+0.99)+2
+
+   call MPI_COMM_RANK(MPI_COMM_WORLD,myid,ierr)
+
+   vbc(1:4) = 0.0d0
+
+   ibdry    = 0
+   jbdry    = 0
+
+   bd(1:8)  = 0
+
+   this%neighbor = neighbor
+
+   call mgdinit(   vbc,         &
+                   phibc,       &
+                   ixp,         &
+                   jyq,         &
+                   iex,         &
+                   jey,         &
+                   ngrid,       &
+                   nx+2,        &
+                   ny+2,        &
+                   sx,          &
+                   ex,          &
+                   sy,          &
+                   ey,          &
+                   MPI_REAL8,   &
+                   nxprocs,     &
+                   nyprocs,     &
+                   nwork,       &
+                   ibdry,       &
+                   jbdry,       &
+                   myid,        &
+                   IOUT,        &
+                   nerror)
+
+   SLL_CLEAR_ALLOCATE(this%work(1:nwork),ierr)
+
+   this%ex     = ex
+   this%sx     = sx
+   this%ey     = ey
+   this%sy     = sy
+   this%comm2d = comm2d
+
+end subroutine initialize_multigrid_2d_periodic
 
 subroutine initialize_multigrid_2d( this,                         &
                                     x_min, x_max, y_min, y_max,   &
@@ -126,18 +238,13 @@ subroutine initialize_multigrid_2d( this,                         &
    jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
    ngrid = max(iex,jey)
 
-   write(*,*) " ngrid = ", ngrid
-
    nwork = (4*nx*ny*8)/(3*nxprocs*nyprocs)+(64*(nx+ny))/3+(32*4)/3
    nxdim = int(float(nx)/float(nxprocs)+0.99)+2
    nydim = int(float(ny)/float(nyprocs)+0.99)+2
 
-   xl = x_max - x_min
-   yl = y_max - y_min
+   this%xl = x_max - x_min
+   this%yl = y_max - y_min
    
-   hxi = real(nx,f64)
-   hyi = real(ny,f64)
-
 !-----------------------------------------------------------------------
 ! initialize MPI and create a datatype for real numbers
 !
@@ -198,7 +305,7 @@ subroutine initialize_multigrid_2d( this,                         &
    bd(1:8)  = 0
 
    ! create Cartesian topology 
-   neighbor = MPI_PROC_NULL
+   this%neighbor = MPI_PROC_NULL
    this%pdims(1) = nxprocs
    this%pdims(2) = nyprocs
    call MPI_CART_CREATE(MPI_COMM_WORLD,2,this%pdims,periods,.true.,comm2d,ierr)
@@ -238,26 +345,26 @@ subroutine initialize_multigrid_2d( this,                         &
 
    call MPI_CART_SHIFT(comm2d,0,1,nbrleft,nbrright,ierr)
    call MPI_CART_SHIFT(comm2d,1,1,nbrbottom,nbrtop,ierr)
-   neighbor(1)=nbrright
-   neighbor(3)=nbrbottom
-   neighbor(5)=nbrleft
-   neighbor(7)=nbrtop
+   this%neighbor(1)=nbrright
+   this%neighbor(3)=nbrbottom
+   this%neighbor(5)=nbrleft
+   this%neighbor(7)=nbrtop
 
-   write(*,*) myid, neighbor(1), neighbor(3), neighbor(5), neighbor(7)
+   write(*,*) myid, this%neighbor(1), this%neighbor(3), this%neighbor(5), this%neighbor(7)
    call flush(6)
 
    CALL MPI_CART_COORDS(comm2d,myid,2,coords,ierr)
    this%coords = coords
 
    if (nbrright /= MPI_PROC_NULL .and. nbrbottom /= MPI_PROC_NULL) &
-      CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(2),ierr)
+      CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),this%neighbor(2),ierr)
    if (nbrleft /= MPI_PROC_NULL .and. nbrbottom /= MPI_PROC_NULL) &
-      CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(4),ierr)
+      CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),this%neighbor(4),ierr)
  
    if (nbrleft /= MPI_PROC_NULL .and. nbrtop /= MPI_PROC_NULL) &
-      CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),neighbor(6),ierr)
+      CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),this%neighbor(6),ierr)
    if (nbrright /= MPI_PROC_NULL .and. nbrtop /= MPI_PROC_NULL) &
-      CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),neighbor(8),ierr)
+      CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),this%neighbor(8),ierr)
 
    !-----------------------------------------------------------------------
    ! find indices of subdomain and check that dimensions of arrays are
@@ -287,14 +394,14 @@ subroutine initialize_multigrid_2d( this,                         &
 
    write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 
-   where(neighbor >= 0)
+   where(this%neighbor >= 0)
       bd = 0
    elsewhere
       bd = 1
    end where
 
    do i=1,8
-      write(IOUT,*) myid, 'neighbor: ',neighbor(i),' bd: ',bd(i)
+      write(IOUT,*) myid, 'neighbor: ',this%neighbor(i),' bd: ',bd(i)
    end do
 
    call flush(6)
@@ -338,6 +445,7 @@ subroutine initialize_multigrid_2d( this,                         &
     &       ' -> put the parameter formula for nydim in main.F in ', &
     &       'comments and'/,'     assign to nydim the maximum ', &
     &       'value of ey-sy+3',/)
+
 end subroutine initialize_multigrid_2d
 
 subroutine solve_multigrid_2d(this, p, f, r)
@@ -354,10 +462,36 @@ subroutine solve_multigrid_2d(this, p, f, r)
 !-----------------------------------------------------------------------
 ! solve using mgd2
 !
-   call mgdsolver(1,this%sx,this%ex,this%sy,this%ey,p,f,r,ngrid,this%work, &
-  &               maxcy,tolmax,kcycle,iprer,ipost,iresw, &
-  &               xl,yl,rro,nx,ny,this%comm2d,myid,neighbor, &
-  &               bd,phibc,iter,.true.,IOUT,nerror)
+   call mgdsolver(1,             &
+  &               this%sx,       &
+                  this%ex,       &
+                  this%sy,       &
+                  this%ey,       &
+                  p,             &
+                  f,             &   
+                  r,             &
+                  ngrid,         &
+                  this%work,     &
+                   maxcy,        &
+                  tolmax,        &
+                  kcycle,        &
+                  iprer,         &
+                  ipost,         &
+                  iresw,         &
+                  this%xl,       &
+                  this%yl,       &
+                  rro,           &
+                  nx,            &
+                  ny,            &
+                  this%comm2d,   &
+                  myid,          &
+                  this%neighbor, &
+                  bd,            &
+                  phibc,         &
+                  iter,          &
+                  .true.,        &
+                  IOUT,          &
+                  nerror)
 
 
 end subroutine solve_multigrid_2d
@@ -404,11 +538,11 @@ subroutine write_topology( this )
    call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)
    call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
 
-   xp = real(this%coords(1),4)/this%pdims(1) * xl 
-   yp = real(this%coords(2),4)/this%pdims(2) * yl 
+   xp = real(this%coords(1),4)/this%pdims(1) * this%xl 
+   yp = real(this%coords(2),4)/this%pdims(2) * this%yl 
 
-   dx = 1. / this%pdims(1) * xl
-   dy = 1. / this%pdims(2) * yl
+   dx = 1. / this%pdims(1) * this%xl
+   dy = 1. / this%pdims(2) * this%yl
    
    if ( prank == 0) then
    
@@ -419,8 +553,8 @@ subroutine write_topology( this )
       write(4,*)"%contstyle  = 0"
       write(4,*)"%meshplot   = on" 
       write(4,*)"%hiddenline = off" 
-      write(4,*)"%xmin=",0., " xmax = ", xl
-      write(4,*)"%ymin=",0., " ymax = ", yl
+      write(4,*)"%xmin=",0., " xmax = ", this%xl
+      write(4,*)"%ymin=",0., " ymax = ", this%yl
       write(4,*)"% nx   = ", this%pdims(1)+1
       write(4,*)"% ny   = ", this%pdims(2)+1
       do jproc = 1, this%pdims(2)+1

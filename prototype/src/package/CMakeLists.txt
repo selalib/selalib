@@ -105,9 +105,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-#    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
-#    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-#    ${SLL_DIR}/fft/fftw3.F90
+    ${SLL_DIR}/collective/sll_collective.F90
+    ${SLL_DIR}/remap/sll_remap.F90
+    ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
  )
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
@@ -150,13 +152,8 @@ ENDIF(MUDPACK_ENABLED)
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-       ${SLL_DIR}/collective/sll_collective.F90
-       ${SLL_DIR}/remap/sll_remap.F90
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
-       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
-       ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
-       ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
  )
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)

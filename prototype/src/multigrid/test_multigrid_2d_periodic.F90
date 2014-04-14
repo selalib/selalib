@@ -205,7 +205,6 @@ contains
       close(90)
    end if
 
-end subroutine gp_plot2d
-
+   end subroutine gp_plot2d
 
 end program test_multigrid_2d_periodic
