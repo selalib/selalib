@@ -1,4 +1,5 @@
 #define WMGD 0
+#define double_precision 1
 #define REALN real(8)
 #define NBLOCKGR 1
 
