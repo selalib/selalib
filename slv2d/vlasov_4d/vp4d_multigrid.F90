@@ -40,7 +40,7 @@ program vp4d_multigrid
   sll_real64 :: time
   sll_int32  :: nxprocs, nyprocs
   sll_int32  :: sx, ex, sy, ey
-  sll_int32  :: block_size
+  sll_int32  :: block_sz
 
   sll_int32, dimension(8)     :: neighbor
   sll_int32, parameter        :: N =7, S =3, W =5, E =1
@@ -186,21 +186,31 @@ program vp4d_multigrid
 
   SLL_CLEAR_ALLOCATE(phi(sx-1:ex+1,sy-1:ey+1), error)
   SLL_CLEAR_ALLOCATE(rhs(sx-1:ex+1,sy-1:ey+1), error)
-  SLL_ALLOCATE(den(sx-1:ex+1,sy-1:ey+1), error); den = 1.0_f64
+  SLL_CLEAR_ALLOCATE(den(sx-1:ex+1,sy-1:ey+1), error); den = 1.0_f64
   SLL_CLEAR_ALLOCATE(ex_local(sx:ex,sy:ey), error)
   SLL_CLEAR_ALLOCATE(ey_local(sx:ex,sy:ey), error)
 
+  call transposexv(vlasov)
+  call compute_charge(vlasov)
+  call transposevx(vlasov)
+
+  call global_plot(vlasov%rho, "rho")
+
+  rhs = 0.0_f64
   do j = sy-1, ey+1
      do i = sx-1, ex+1
-        x  = vlasov%eta1_min+(i-1)*vlasov%delta_eta1
-        y  = vlasov%eta2_min+(j-1)*vlasov%delta_eta2
-        rhs(i,j) = -2.*sin(x)*sin(y)
+        x = vlasov%eta1_min + (i-1.5) * vlasov%delta_eta1
+        y = vlasov%eta2_min + (j-1.5) * vlasov%delta_eta2
+        rhs(i,j) = sin(x) * sin(y) !vlasov%rho(i,j)
      end do
   end do
 
-  call gp_plot2d(rhs, "rhs")
+  call local_plot(rhs, "rhs")
 
   call solve(poisson, phi, rhs, den)
+
+  call local_plot(phi, "phi")
+  call local_plot(rhs, "res")
 
   !compute Ex and Ey
   do j = sy,ey
@@ -213,28 +223,22 @@ program vp4d_multigrid
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
 
-  block_size = (ex-sx+1)*(ex-sy+1)
+  block_sz = (ex-sx+1)*(ey-sy+1)
 
-  call MPI_ALLGATHER(ex_local(sx:ex,sy:ey),  block_size, MPI_REAL8, &
-                     ex_global, block_size, MPI_REAL8, comm2d, error)
+  print*, prank, sx, ex, sy, ey, block_sz
+  call MPI_ALLGATHER(ex_local(sx:ex,sy:ey),  block_sz, MPI_REAL8, &
+                     ex_global, block_sz, MPI_REAL8, comm2d, error)
 
-  call MPI_ALLGATHER(ey_local(sx:ex,sy:ey),  block_size, MPI_REAL8, &
-                     ey_global, block_size, MPI_REAL8, comm2d, error)
+  call MPI_ALLGATHER(ey_local(sx:ex,sy:ey),  block_sz, MPI_REAL8, &
+                     ey_global, block_sz, MPI_REAL8, comm2d, error)
 
   vlasov%ex(vlasov%np_eta1,:) = vlasov%ex(1,:) 
+  vlasov%ex(:,vlasov%np_eta2) = vlasov%ex(:,1) 
+  vlasov%ey(vlasov%np_eta1,:) = vlasov%ey(1,:) 
   vlasov%ey(:,vlasov%np_eta2) = vlasov%ey(:,1) 
 
-  call sll_gnuplot_corect_2d(vlasov%eta1_min, &
-                             vlasov%eta1_max, &
-                             vlasov%np_eta1,  &
-                             vlasov%eta2_min, &
-                             vlasov%eta2_max, &
-                             vlasov%np_eta2,  &
-                             vlasov%ex, "ex", &
-                             0, error)  
-
-  call gp_plot2d(phi, "phi")
-  call gp_plot2d(rhs, "res")
+  call global_plot(vlasov%ex, 'ex')
+  call global_plot(vlasov%ey, 'ey')
 
   time = 0.0_f64
   call advection_x1(vlasov,0.5*vlasov%dt)
@@ -276,8 +280,7 @@ program vp4d_multigrid
 
 contains
 
-
-   subroutine gp_plot2d(field, fieldname)
+   subroutine local_plot(field, fieldname)
 
    character(len=*) :: fieldname
    sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
@@ -293,6 +296,25 @@ contains
                                      iter,                       &
                                      error)  
 
-   end subroutine gp_plot2d
+   end subroutine local_plot
+
+   subroutine global_plot(field, fieldname)
+
+   character(len=*) :: fieldname
+   sll_real64, intent(in) :: field(:,:)
+
+   if (prank == MPI_MASTER) &
+   call sll_gnuplot_2d(vlasov%eta1_min, &
+                       vlasov%eta1_max, &
+                       vlasov%np_eta1,  &
+                       vlasov%eta2_min, &
+                       vlasov%eta2_max, &
+                       vlasov%np_eta2,  &
+                       field,           &
+                       fieldname,       &
+                       iter,            &
+                       error)  
+
+   end subroutine global_plot
 
 end program vp4d_multigrid
