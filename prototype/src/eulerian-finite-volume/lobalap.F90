@@ -5,6 +5,8 @@
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
 module lobalap
+
+  use map_function_module, only : map
   implicit none
 
 private
@@ -59,17 +61,82 @@ private
 
   public :: compute_phi, assemb, computelu, init, release, plotgmsh
 
-  interface
-     subroutine map_interface( u, v, x, y ) 
-     real(8), intent(in)  :: u, v
-     real(8), intent(out) :: x, y
-     end subroutine map_interface
-  end interface
-  
-  procedure(map_interface), pointer :: map => null()
-
 contains
 
+  ! alloue et prépare les données pour le calcul
+  subroutine init(nx0,ny0,order0)
+    implicit none
+    integer,intent(in) :: nx0,ny0,order0
+    integer :: ino,iel,i,ii,j,jj
+
+    nx=nx0
+    ny=ny0
+    order=order0
+    nloc=(order+1)*(order+1)
+    is_init=.true.
+
+    ! nombre d'inconnues
+    neqx=nx*order+1
+    neqy=ny*order+1
+    neq=neqx*neqy
+    nel=nx*ny
+
+    ! construction du maillage
+    ! et des listes de conditions aux limites
+    call build_mesh()
+
+    write(*,*) 'Allocation solution et source...'
+
+    ! allocation solution et source
+    allocate(phi(neq))
+    allocate(rho(neq))
+
+    ! une solution bidon pour tester la visu
+    do ino=1,neq
+       phi(ino)=potexact(node(1,ino),node(2,ino))
+    end do
+
+    ! initialisation du second pour l'assemblage
+    rho=0
+
+    write(*,*) 'Calcul structure matrice creuse...'
+
+    ! préparation de la matrice skyline
+    allocate(prof(neq))
+    allocate(kld(neq+1))
+
+    ! construction du profil
+    prof=0
+    do iel=1,nel
+       do ii=1,nloc
+          do jj=1,nloc
+             i=connec(ii,iel)
+             j=connec(jj,iel)
+             prof(j)=max(prof(j),j-i)
+             prof(i)=max(prof(i),i-j)
+          enddo
+       enddo
+    enddo
+    ! tableau des débuts de colonnes
+    kld(1)=1
+    do i=1,neq
+       kld(i+1)=kld(i)+prof(i)
+    enddo
+    
+    nsky=kld(neq+1)-1
+
+    allocate(vdiag(neq))
+    allocate(vinf(nsky))
+    allocate(vsup(nsky))
+
+    vdiag=0
+    vinf=0
+    vsup=0
+    
+
+  end subroutine init
+
+  ! symbole de kronecker delta
   ! fonction donnant le potentiel exact (debug) et/ou les conditions aux limites
   function potexact(x,y)
     implicit none
@@ -86,33 +153,6 @@ contains
     source=-4
   end function source
 
-  ! fonction qui envoie le carré [0,1]x[0,1] sur le vrai domaine de calcul
-  ! variables de référence: (u,v)
-  ! variables physiques: (x,y)
-  ! autres données calculées:
-  ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
-  ! subroutine map(u,v,x,y,jac,invjac,det)
-  ! pour l'instant on n'utilise pas la jacobienne
-!  subroutine map(u,v,x,y)
-!    implicit none
-!    real(8),intent(in) :: u,v
-!    real(8),intent(out) :: x,y
-!    real(8) :: jac(2,2),invjac(2,2),det
-!    real(8),parameter :: pi=4*atan(1.d0)
-!
-!    x=(1+u)*(1+v)*cos(pi*v)
-!    y=(1+u)*sin(pi*v)
-!
-!    !x=u
-!    !y=v
-!    ! non utilisé
-!    jac=0
-!    jac(1,1)=1
-!    jac(2,2)=1
-!    invjac=jac
-!    det=1
-!
-!  end subroutine map
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -378,83 +418,6 @@ contains
 
   end subroutine build_mesh
 
-  ! alloue et prépare les données pour le calcul
-  subroutine init(nx0,ny0,order0,map0)
-    implicit none
-    integer,intent(in) :: nx0,ny0,order0
-    integer :: ino,iel,i,ii,j,jj
-    procedure(map_interface), pointer :: map0
-
-    map => map0
-
-    nx=nx0
-    ny=ny0
-    order=order0
-    nloc=(order+1)*(order+1)
-    is_init=.true.
-
-    ! nombre d'inconnues
-    neqx=nx*order+1
-    neqy=ny*order+1
-    neq=neqx*neqy
-    nel=nx*ny
-
-    ! construction du maillage
-    ! et des listes de conditions aux limites
-    call build_mesh()
-
-    write(*,*) 'Allocation solution et source...'
-
-    ! allocation solution et source
-    allocate(phi(neq))
-    allocate(rho(neq))
-
-    ! une solution bidon pour tester la visu
-    do ino=1,neq
-       phi(ino)=potexact(node(1,ino),node(2,ino))
-    end do
-
-    ! initialisation du second pour l'assemblage
-    rho=0
-
-    write(*,*) 'Calcul structure matrice creuse...'
-
-    ! préparation de la matrice skyline
-    allocate(prof(neq))
-    allocate(kld(neq+1))
-
-    ! construction du profil
-    prof=0
-    do iel=1,nel
-       do ii=1,nloc
-          do jj=1,nloc
-             i=connec(ii,iel)
-             j=connec(jj,iel)
-             prof(j)=max(prof(j),j-i)
-             prof(i)=max(prof(i),i-j)
-          enddo
-       enddo
-    enddo
-    ! tableau des débuts de colonnes
-    kld(1)=1
-    do i=1,neq
-       kld(i+1)=kld(i)+prof(i)
-    enddo
-    
-    nsky=kld(neq+1)-1
-
-    allocate(vdiag(neq))
-    allocate(vinf(nsky))
-    allocate(vsup(nsky))
-
-    vdiag=0
-    vinf=0
-    vsup=0
-    
-
-  end subroutine init
-
-  ! symbole de kronecker delta
   function delta(i,j)
     implicit none
     integer :: i,j,delta
