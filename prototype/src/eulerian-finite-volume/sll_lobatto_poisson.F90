@@ -7,8 +7,11 @@ module sll_lobatto_poisson
    
    private
    
+   class(sll_coordinate_transformation_2d_base),pointer :: tau
+
    type, public :: lobatto_poisson_solver
-   
+   !contains
+      !procedure :: map => map_function
    end type lobatto_poisson_solver
    
    interface initialize
@@ -22,21 +25,32 @@ module sll_lobatto_poisson
    interface delete
    module procedure delete_lobatto_poisson
    end interface delete
-   
+
 public :: initialize, solve, delete
 
 contains
 
-subroutine initialize_lobatto_poisson(this, tau)
+subroutine map_function( u, v, x, y) 
+   real(8), intent(in) :: u, v
+   real(8), intent(out) :: x, y
 
-   class(sll_coordinate_transformation_2d_base),pointer :: tau
+   x = tau%x1(u,v)
+   y = tau%x2(u,v)
+
+end subroutine map_function
+
+
+subroutine initialize_lobatto_poisson(this, tau0)
+
    type(lobatto_poisson_solver) :: this
-   procedure(map_function)      :: map0
+   class(sll_coordinate_transformation_2d_base),pointer :: tau0
+   procedure(map_interface), pointer :: map0
 
-
-  call init(30,10,2, map0)
-  call assemb()
-  call computeLU()
+   tau => tau0
+   map0 => map_function
+   call init(30,10,2, map0)
+   call assemb()
+   call computeLU()
 
 end subroutine initialize_lobatto_poisson
 
