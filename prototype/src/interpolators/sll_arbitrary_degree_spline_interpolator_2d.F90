@@ -431,10 +431,10 @@ contains
     sll_real64, dimension(:),optional :: slope_right
     sll_real64, dimension(:),optional :: slope_bottom
     sll_real64, dimension(:),optional :: slope_top
-    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_left => null()
-    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_right => null()
-    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom=> null()
-    class(arb_deg_1d_interpolator),pointer :: interp1d_slope_top => null()
+    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_slope_left => null()
+    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_slope_right => null()
+    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_slope_bottom=> null()
+    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_slope_top => null()
     sll_int32 :: sz_slope_left,sz_slope_right,sz_slope_bottom,sz_slope_top
     sll_int32 :: ierr
     sll_int64 :: bc_selector
@@ -578,7 +578,7 @@ contains
                interpolator%bc_top, &
                interpolator%spline_degree2)
 
-          call set_slope1d(&
+          call set_values_at_boundary1d(&
                interp1d_slope_left,&
                slope_left(1),&
                slope_left(sz_slope_left))
@@ -609,7 +609,7 @@ contains
                interpolator%bc_top, &
                interpolator%spline_degree2)
           
-          call set_slope1d(&
+          call set_values_at_boundary1d(&
                interp1d_slope_right,&
                slope_right(1),&
                slope_right(sz_slope_right))
@@ -641,7 +641,7 @@ contains
                interpolator%bc_right, &
                interpolator%spline_degree1)
 
-          call set_slope1d(&
+          call set_values_at_boundary1d(&
                interp1d_slope_bottom,&
                slope_bottom(1),&
                slope_bottom(sz_slope_bottom))
@@ -672,7 +672,7 @@ contains
                interpolator%bc_right, &
                interpolator%spline_degree1)
           
-          call set_slope1d(&
+          call set_values_at_boundary1d(&
                interp1d_slope_top,&
                slope_top(1),&
                slope_top(sz_slope_top))
