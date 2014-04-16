@@ -1,5 +1,26 @@
+module coordinate_transformation_data
+
+   type :: coordinate_transformation_data
+
+contains
+
+end module coordinate_transformation_data
+
+module map_function_module
+   use lobalap
+   interface set_map_function
+      subroutine set_map_function(tau,map)
+         class(sll_coordinate_transformation_2d_base),pointer :: tau
+
+      end subroutine set_map_function
+   end interface
+
+end module map_function_module
+
 module sll_lobatto_poisson
+
 #include "sll_working_precision.h"
+
    use sll_module_coordinate_transformations_2d
    use sll_common_coordinate_transformations
    use lobalap
