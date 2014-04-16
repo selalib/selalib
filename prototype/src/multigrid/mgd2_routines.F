@@ -2020,6 +2020,7 @@ c
       else
         avo=0.0d0
       end if
+
       call gscale(sx,ex,sy,ey,phif,avo,acorr,comm2d,nx,ny,IOUT)
 c
 c exchange boundary data and impose periodic BCs

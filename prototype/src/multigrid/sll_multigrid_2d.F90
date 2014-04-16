@@ -231,8 +231,8 @@ subroutine initialize_multigrid_2d( this,                         &
    nx = nc_x
    ny = nc_y
 
-   ixp = nx !2*nxprocs 
-   jyq = ny !2*nyprocs
+   ixp = 4*nxprocs 
+   jyq = 4*nyprocs
 
    iex   = ceiling(log((nx-1.)/ixp)/log(2.))+1
    jey   = ceiling(log((ny-1.)/jyq)/log(2.))+1
