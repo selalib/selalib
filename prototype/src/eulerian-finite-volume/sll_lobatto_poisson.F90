@@ -1,38 +1,19 @@
-module coordinate_transformation_data
-
-   type :: coordinate_transformation_data
-
-contains
-
-end module coordinate_transformation_data
-
-module map_function_module
-   use lobalap
-   interface set_map_function
-      subroutine set_map_function(tau,map)
-         class(sll_coordinate_transformation_2d_base),pointer :: tau
-
-      end subroutine set_map_function
-   end interface
-
-end module map_function_module
-
 module sll_lobatto_poisson
 
 #include "sll_working_precision.h"
 
    use sll_module_coordinate_transformations_2d
    use sll_common_coordinate_transformations
+   use map_function_module, only: set_map_function
    use lobalap
+
    implicit none
    
    private
    
-   class(sll_coordinate_transformation_2d_base),pointer :: tau
-
    type, public :: lobatto_poisson_solver
-   !contains
-      !procedure :: map => map_function
+      class(sll_coordinate_transformation_2d_base),pointer :: tau
+      sll_int32  :: order
    end type lobatto_poisson_solver
    
    interface initialize
@@ -51,25 +32,26 @@ public :: initialize, solve, delete
 
 contains
 
-subroutine map_function( u, v, x, y) 
-   real(8), intent(in) :: u, v
-   real(8), intent(out) :: x, y
-
-   x = tau%x1(u,v)
-   y = tau%x2(u,v)
-
-end subroutine map_function
-
-
-subroutine initialize_lobatto_poisson(this, tau0)
+subroutine initialize_lobatto_poisson(this, tau, order)
 
    type(lobatto_poisson_solver) :: this
-   class(sll_coordinate_transformation_2d_base),pointer :: tau0
-   procedure(map_interface), pointer :: map0
+   class(sll_coordinate_transformation_2d_base),pointer :: tau
+   sll_int32, optional :: order
+   sll_int32 :: nx0
+   sll_int32 :: ny0
+   sll_int32 :: order0
 
-   tau => tau0
-   map0 => map_function
-   call init(30,10,2, map0)
+   this%tau => tau
+   nx0 = tau%mesh%num_cells1+1
+   ny0 = tau%mesh%num_cells2+1
+
+   call set_map_function(tau)
+
+   if (present(order)) then
+      call init(nx0,ny0,order)
+   else
+      call init(nx0,ny0,2)
+   end if
    call assemb()
    call computeLU()
 
