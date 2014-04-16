@@ -86,7 +86,7 @@ contains
 
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
-    sll_real64 :: xi, eps, kx, ky
+    sll_real64 :: xi, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
 
@@ -110,7 +110,6 @@ contains
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
-    eps = 0.05_f64
     kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
     ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
@@ -131,7 +130,7 @@ contains
        vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
        v2 = vx*vx+vy*vy
-       vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+       vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
 
     end do
     end do
