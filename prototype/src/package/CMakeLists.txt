@@ -19,7 +19,6 @@ SET(SLL_MACROS
     ${SLL_DIR}/integration/sll_integration.h
     ${SLL_DIR}/fields/sll_field_1d.h
     ${SLL_DIR}/fields/sll_field_2d.h
-    ${SLL_DIR}/multigrid/sll_multigrid.h
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.h
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.h
     ${SLL_DIR}/fields/sll_fields.h
@@ -109,9 +108,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
-#    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
-#    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
-#    ${SLL_DIR}/fft/fftw3.F90
  )
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
