@@ -56,6 +56,7 @@ implicit none
    sll_real64, parameter :: y_min = -1.0_f64
    sll_real64, parameter :: y_max = +1.0_f64
    character(len=4)      :: buffer
+   sll_real64, parameter :: eps = 0.1
 
    sll_real64 :: delta_x
    sll_real64 :: delta_y
@@ -133,9 +134,9 @@ implicit none
      end do
    end do
 
-   q = sin(2*sll_pi*wk*x)*sin(2*sll_pi*wk*y)
+   q = eps * sin(2*sll_pi*wk*x)*sin(2*sll_pi*wk*y)
 
-   f = cnst * q
+   f =  1. + cnst * q
    
    call solve(solver, p, f, r)
 
