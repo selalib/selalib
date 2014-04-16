@@ -34,7 +34,7 @@ program unit_test_2d
 
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64
-
+(1:nloc)
   params(:) = (/RMIN, RMAX/)
 
   print *,  'filling out discrete arrays for x1 and x2 ', &
