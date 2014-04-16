@@ -19,8 +19,8 @@ program vp4d_multigrid
 
   type(layout_2D), pointer                :: layout_mg
 
-  sll_real64, dimension(:,:), allocatable :: phi
-  sll_real64, dimension(:,:), allocatable :: rhs
+  sll_real64, dimension(:,:), allocatable :: phi_local
+  sll_real64, dimension(:,:), allocatable :: rho_local
   sll_real64, dimension(:,:), allocatable :: den
   sll_real64, dimension(:,:), allocatable :: ex_local
   sll_real64, dimension(:,:), allocatable :: ey_local
@@ -50,6 +50,9 @@ program vp4d_multigrid
   sll_int32, dimension(ndims) :: coords
   logical                     :: reorder
   logical,dimension(ndims)    :: periods
+
+  sll_int32                   :: block_t
+  integer                     :: statut(MPI_STATUS_SIZE)
 
   call sll_boot_collective()
 
@@ -184,11 +187,11 @@ program vp4d_multigrid
                    comm2d,                           &
                    neighbor  )
 
-  SLL_CLEAR_ALLOCATE(phi(sx-1:ex+1,sy-1:ey+1), error)
-  SLL_CLEAR_ALLOCATE(rhs(sx-1:ex+1,sy-1:ey+1), error)
+  SLL_CLEAR_ALLOCATE(phi_local(sx-1:ex+1,sy-1:ey+1), error)
+  SLL_CLEAR_ALLOCATE(rho_local(sx-1:ex+1,sy-1:ey+1), error)
   SLL_CLEAR_ALLOCATE(den(sx-1:ex+1,sy-1:ey+1), error); den = 1.0_f64
-  SLL_CLEAR_ALLOCATE(ex_local(sx:ex,sy:ey), error)
-  SLL_CLEAR_ALLOCATE(ey_local(sx:ex,sy:ey), error)
+  SLL_CLEAR_ALLOCATE(ex_local(sx-1:ex+1,sy-1:ey+1), error)
+  SLL_CLEAR_ALLOCATE(ey_local(sx-1:ex+1,sy-1:ey+1), error)
 
   call transposexv(vlasov)
   call compute_charge(vlasov)
@@ -196,41 +199,52 @@ program vp4d_multigrid
 
   call global_plot(vlasov%rho, "rho")
 
-  rhs = 0.0_f64
-  do j = sy-1, ey+1
-     do i = sx-1, ex+1
-        x = vlasov%eta1_min + (i-1.5) * vlasov%delta_eta1
-        y = vlasov%eta2_min + (j-1.5) * vlasov%delta_eta2
-        rhs(i,j) = sin(x) * sin(y) !vlasov%rho(i,j)
+  do j = sy, ey
+     do i = sx, ex
+        x = vlasov%eta1_min + (i-1) * vlasov%delta_eta1
+        y = vlasov%eta2_min + (j-1) * vlasov%delta_eta2
+        rho_local(i,j) = vlasov%rho(i,j)
      end do
   end do
 
-  call local_plot(rhs, "rhs")
+  call global_scale( rho_local )
 
-  call solve(poisson, phi, rhs, den)
+  call local_plot(rho_local, "rhs")
 
-  call local_plot(phi, "phi")
-  call local_plot(rhs, "res")
+  call solve(poisson, phi_local, rho_local, den)
+  !call global_scale( phi )
+
+  call local_plot(phi_local, "phi")
+  call local_plot(rho_local, "res")
 
   !compute Ex and Ey
   do j = sy,ey
      do i = sx,ex
-        ex_local(i,j) = 0.5*(phi(i+1,j)-phi(i-1,j))/vlasov%delta_eta1
-        ey_local(i,j) = 0.5*(phi(i,j+1)-phi(i,j-1))/vlasov%delta_eta2
+        ex_local(i,j) = 0.5*(phi_local(i+1,j)-phi_local(i-1,j))/vlasov%delta_eta1
+        ey_local(i,j) = 0.5*(phi_local(i,j+1)-phi_local(i,j-1))/vlasov%delta_eta2
      end do
   end do
+
+  call local_plot(ex_local, "ex_local")
+  call local_plot(ex_local, "ey_local")
 
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
 
+  call MPI_TYPE_VECTOR(ey-sy+1,ex-sx+1,vlasov%nc_eta1, &
+                       MPI_REAL8, block_t, error)
+  cal
+
   block_sz = (ex-sx+1)*(ey-sy+1)
+  call MPI_ALLGATHER(ex_local,block_sz,MPI_REAL8, &
+                     ex_global,block_sz,MPI_REAL8, &
+                     MPI_SUM,comm2d,error)
+  call MPI_ALLGATHER(ey_local,block_sz,MPI_REAL8, &
+                     ey_global,block_sz,MPI_REAL8, &
+                     MPI_SUM,comm2d,error)
 
-  print*, prank, sx, ex, sy, ey, block_sz
-  call MPI_ALLGATHER(ex_local(sx:ex,sy:ey),  block_sz, MPI_REAL8, &
-                     ex_global, block_sz, MPI_REAL8, comm2d, error)
-
-  call MPI_ALLGATHER(ey_local(sx:ex,sy:ey),  block_sz, MPI_REAL8, &
-                     ey_global, block_sz, MPI_REAL8, comm2d, error)
+  vlasov%ex(1:vlasov%nc_eta1,1:vlasov%nc_eta2) = ex_global
+  vlasov%ey(1:vlasov%nc_eta1,1:vlasov%nc_eta2) = ey_global
 
   vlasov%ex(vlasov%np_eta1,:) = vlasov%ex(1,:) 
   vlasov%ex(:,vlasov%np_eta2) = vlasov%ex(:,1) 
@@ -282,39 +296,55 @@ contains
 
    subroutine local_plot(field, fieldname)
 
-   character(len=*) :: fieldname
-   sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
+      character(len=*) :: fieldname
+      sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
 
-   call sll_gnuplot_rect_2d_parallel((sx-2)*vlasov%delta_eta1, &
-                                     vlasov%delta_eta1,        &
-                                     (sy-2)*vlasov%delta_eta2, &
-                                     vlasov%delta_eta2,        &
-                                     ex-sx+3,                    &
-                                     ey-sy+3,                    &
-                                     field,                      &
-                                     fieldname,                  &
-                                     iter,                       &
-                                     error)  
+      call sll_gnuplot_rect_2d_parallel((sx-1)*vlasov%delta_eta1, &
+                                        vlasov%delta_eta1,        &
+                                        (sy-1)*vlasov%delta_eta2, &
+                                        vlasov%delta_eta2,        &
+                                        ex-sx+1,                  &
+                                        ey-sy+1,                  &
+                                        field(sx:ex,sy:ey),       &
+                                        fieldname,                &
+                                        iter,                     &
+                                        error)  
 
    end subroutine local_plot
 
    subroutine global_plot(field, fieldname)
 
-   character(len=*) :: fieldname
-   sll_real64, intent(in) :: field(:,:)
-
-   if (prank == MPI_MASTER) &
-   call sll_gnuplot_2d(vlasov%eta1_min, &
-                       vlasov%eta1_max, &
-                       vlasov%np_eta1,  &
-                       vlasov%eta2_min, &
-                       vlasov%eta2_max, &
-                       vlasov%np_eta2,  &
-                       field,           &
-                       fieldname,       &
-                       iter,            &
-                       error)  
+      character(len=*) :: fieldname
+      sll_real64, intent(in) :: field(:,:)
+   
+      if (prank == MPI_MASTER) &
+      call sll_gnuplot_2d(vlasov%eta1_min, &
+                          vlasov%eta1_max, &
+                          vlasov%np_eta1,  &
+                          vlasov%eta2_min, &
+                          vlasov%eta2_max, &
+                          vlasov%np_eta2,  &
+                          field,           &
+                          fieldname,       &
+                          iter,            &
+                          error)  
 
    end subroutine global_plot
+
+   subroutine global_scale( field )
+
+   sll_real64 :: field(sx-1:ex+1,sy-1:ey+1)
+   sll_real64 :: avloc, av
+
+   avloc = sum(field(sx:ex,sy:ey))
+
+   call MPI_ALLREDUCE(avloc,av,1,MPI_REAL8,MPI_SUM,comm2d,error)
+
+   av=av/float(vlasov%nc_eta1*vlasov%nc_eta2)
+
+   field=field-av
+
+   end subroutine global_scale
+
 
 end program vp4d_multigrid
