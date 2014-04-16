@@ -6,6 +6,7 @@ module sll_lobatto_poisson
    use sll_common_coordinate_transformations
    use map_function_module, only: set_map_function
    use lobalap
+   use sll_dg_fields
 
    implicit none
    
@@ -57,12 +58,13 @@ subroutine initialize_lobatto_poisson(this, tau, order)
 
 end subroutine initialize_lobatto_poisson
 
-subroutine solve_lobatto_poisson(this, phi, rho)
-  sll_real64, dimension(:,:) :: phi
-  sll_real64, dimension(:,:) :: rho
+subroutine solve_lobatto_poisson(this)!, rhs)
+
   type(lobatto_poisson_solver) :: this
 
   call compute_phi()
+
+
 
 end subroutine solve_lobatto_poisson
 

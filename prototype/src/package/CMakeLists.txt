@@ -155,6 +155,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
+       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
        ${SLL_DIR}/simulation/simulation_base_class.F90

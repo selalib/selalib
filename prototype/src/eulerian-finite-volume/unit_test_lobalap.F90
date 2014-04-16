@@ -10,20 +10,16 @@ program test_lobalap
   type(sll_logical_mesh_2d), pointer  :: mesh
   class(sll_coordinate_transformation_2d_base), pointer :: tau
 
-  sll_real64, dimension(:,:), allocatable :: phi
-  sll_real64, dimension(:,:), allocatable :: rho
+  !type(dg_field), pointer :: rho
   sll_int32 :: error
   
 #define NPTS1 32
 #define NPTS2 16
 
-  SLL_CLEAR_ALLOCATE(phi(1:NPTS1,1:NPTS2), error)
-  SLL_CLEAR_ALLOCATE(rho(1:NPTS1,1:NPTS2), error)
-
   ! logical mesh for space coordinates
   mesh => new_logical_mesh_2d( NPTS1, NPTS2,    & 
        eta1_min= 2.0_f64, eta1_max= 8.0_f64,         &
-       eta2_min=.0_f64, eta2_max=sll_pi)
+       eta2_min=-sll_pi, eta2_max=sll_pi)
 
   ! coordinate transformation associated with space coordinates
   tau => new_coordinate_transformation_2d_analytic( &
@@ -38,7 +34,8 @@ program test_lobalap
        (/ 0.0_f64 /) ) ! this particular transformation is not parametrizable
 
   call initialize(solver, tau)
-  call solve(solver, phi, rho)
+  !rho => new_dg_field( degree, tau) 
+  call solve(solver)!, rho)
   call delete(solver)
 
 
