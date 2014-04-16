@@ -2,6 +2,7 @@ program test_lobalap
 #include "selalib.h"
 
   use lobalap
+  use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   implicit none
 
@@ -14,7 +15,7 @@ program test_lobalap
   sll_int32 :: error
   
 #define NPTS1 32
-#define NPTS2 64
+#define NPTS2 16
 
   SLL_CLEAR_ALLOCATE(phi(1:NPTS1,1:NPTS2), error)
   SLL_CLEAR_ALLOCATE(rho(1:NPTS1,1:NPTS2), error)
