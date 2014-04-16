@@ -231,9 +231,12 @@ program vp4d_multigrid
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
 
-  call MPI_TYPE_VECTOR(ey-sy+1,ex-sx+1,vlasov%nc_eta1, &
-                       MPI_REAL8, block_t, error)
-  cal
+  call MPI_TYPE_CREATE_SUBARRAY(2, &
+                               (/vlasov%nc_eta1,vlasov%nc_eta2/), &
+                               (/ex-sx+1,ey-sy+1/), &
+                               (/sx, sy/), &
+                               MPI_ORDER_FORTRAN, &
+                               MPI_REAL8, block_t, error)
 
   block_sz = (ex-sx+1)*(ey-sy+1)
   call MPI_ALLGATHER(ex_local,block_sz,MPI_REAL8, &
