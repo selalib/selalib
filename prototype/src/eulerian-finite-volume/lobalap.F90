@@ -59,14 +59,14 @@ private
 
   public :: compute_phi, assemb, computelu, init, release, plotgmsh
 
-  abstract interface
-     subroutine map_function( u, v, x, y ) 
+  interface
+     subroutine map_interface( u, v, x, y ) 
      real(8), intent(in)  :: u, v
      real(8), intent(out) :: x, y
-     end function map_function
+     end subroutine map_interface
   end interface
   
-  procedure(map_function), pointer :: map => null()
+  procedure(map_interface), pointer :: map => null()
 
 contains
 
@@ -383,9 +383,9 @@ contains
     implicit none
     integer,intent(in) :: nx0,ny0,order0
     integer :: ino,iel,i,ii,j,jj
-    procedure(map_function), pointer :: map0
+    procedure(map_interface), pointer :: map0
 
-    map = map0
+    map => map0
 
     nx=nx0
     ny=ny0
