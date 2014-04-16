@@ -47,11 +47,8 @@ contains
     sll_real64                       :: Lx           !< length x
     sll_real64                       :: Ly           !< length y
     sll_int32     :: ierr
-
     SLL_ALLOCATE(plan, ierr)
 
-    ! We use the number of cells since due to periodicity, the last point is
-    ! not considered. 
     plan%ncx = ncx
     plan%ncy = ncy
     plan%Lx  = Lx
@@ -70,14 +67,13 @@ contains
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
     sll_int32                         :: ncy      !< global size
-    sll_int32                         :: npx_loc
-    sll_int32                         :: npy_loc
+
     sll_int32                         :: i, j
-    ! Reciprocals of domain lengths.
-    sll_real64                        :: r_Lx, r_Ly
+    sll_int32                         :: ii, jj,p,k,nsky,l
     sll_real64                        :: kx, ky
-    sll_comp64                        :: val
-    sll_real64                        :: normalization
+    !sll_real64, dimension(:,:)          :: vkgs
+    !sll_int32, dimen                  :: indi,indj
+
 
   end subroutine solve_poisson_2d_dirichlet_cartesian
 

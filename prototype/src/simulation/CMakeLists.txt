@@ -234,7 +234,6 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
      simulation_4d_drift_kinetic_polar_one_mu.F90
      simulation_4d_drift_kinetic_polar_multi_mu.F90
      simulation_4d_drift_kinetic_cartesian_finite_volume.F90
-     simulation_4d_vp_eulerian_cartesian_finite_volume.F90	
      simulation_4d_vp_pic_cartesian.F90
      simulation_6d_vlasov_poisson_cartesian.F90 )
 
@@ -254,7 +253,8 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_interpolators
                        sll_advection
                        sll_splines
-                       sll_parallel_array_initializers	
+                       sll_parallel_array_initializers
+		       sll_point_to_point_communications	
                        sll_remap
                        sll_collective
                        sll_parallel_utilities
@@ -298,7 +298,6 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
    ADD_SIMULATION(4d_dk_cartesian)
    ADD_SIMULATION(6d)
    ADD_SIMULATION(4d_vp_pic_cartesian)
-   ADD_SIMULATION(4d_vp_eulerian_cartesian_finite_volume)
 
    # Add postprocessing code for KEEN
    ADD_EXECUTABLE(VPpostprocessing_drive_KEEN VPpostprocessing_drive_KEEN.f)
