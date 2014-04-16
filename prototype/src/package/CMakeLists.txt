@@ -39,6 +39,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/assert/sll_assert.F90
     ${SLL_DIR}/constants/sll_constants.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
+    ${SLL_DIR}/utilities/sol.f
+    ${SLL_DIR}/utilities/muls.f
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
@@ -106,6 +108,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
+    ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
 #    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
 #    ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
 #    ${SLL_DIR}/fft/fftw3.F90
@@ -145,11 +148,15 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
        ${SLL_DIR}/collective/sll_collective.F90
        ${SLL_DIR}/remap/sll_remap.F90
+       ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
        ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
        ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
        ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
+       ${SLL_DIR}/simulation/simulation_base_class.F90
+       ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
+       ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
  )
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
