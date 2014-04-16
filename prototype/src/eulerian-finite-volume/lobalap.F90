@@ -6,6 +6,9 @@
 ! "potexact"
 module lobalap
   implicit none
+
+private
+
   ! ordre de l'interpolation élément fini
   integer :: order
   ! nombre de noeuds locaux dans chaque élément
@@ -54,7 +57,16 @@ module lobalap
   integer,dimension(:),allocatable :: indexbc
 
 
+  public :: compute_phi, assemb, computelu, init, release, plotgmsh
 
+  abstract interface
+     subroutine map_function( u, v, x, y ) 
+     real(8), intent(in)  :: u, v
+     real(8), intent(out) :: x, y
+     end function map_function
+  end interface
+  
+  procedure(map_function), pointer :: map => null()
 
 contains
 
@@ -81,26 +93,26 @@ contains
   ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
   ! subroutine map(u,v,x,y,jac,invjac,det)
   ! pour l'instant on n'utilise pas la jacobienne
-  subroutine map(u,v,x,y)
-    implicit none
-    real(8),intent(in) :: u,v
-    real(8),intent(out) :: x,y
-    real(8) :: jac(2,2),invjac(2,2),det
-    real(8),parameter :: pi=4*atan(1.d0)
-
-    x=(1+u)*(1+v)*cos(pi*v)
-    y=(1+u)*sin(pi*v)
-
-    !x=u
-    !y=v
-    ! non utilisé
-    jac=0
-    jac(1,1)=1
-    jac(2,2)=1
-    invjac=jac
-    det=1
-
-  end subroutine map
+!  subroutine map(u,v,x,y)
+!    implicit none
+!    real(8),intent(in) :: u,v
+!    real(8),intent(out) :: x,y
+!    real(8) :: jac(2,2),invjac(2,2),det
+!    real(8),parameter :: pi=4*atan(1.d0)
+!
+!    x=(1+u)*(1+v)*cos(pi*v)
+!    y=(1+u)*sin(pi*v)
+!
+!    !x=u
+!    !y=v
+!    ! non utilisé
+!    jac=0
+!    jac(1,1)=1
+!    jac(2,2)=1
+!    invjac=jac
+!    det=1
+!
+!  end subroutine map
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -367,10 +379,14 @@ contains
   end subroutine build_mesh
 
   ! alloue et prépare les données pour le calcul
-  subroutine init(nx0,ny0,order0)
+  subroutine init(nx0,ny0,order0,map0)
     implicit none
     integer,intent(in) :: nx0,ny0,order0
     integer :: ino,iel,i,ii,j,jj
+    procedure(map_function), pointer :: map0
+
+    map = map0
+
     nx=nx0
     ny=ny0
     order=order0
@@ -588,7 +604,7 @@ contains
 
 
   ! résout le système linéaire
-  subroutine solve()
+  subroutine compute_phi()
     implicit none
 
     integer :: nsym=1,mp=6,ifac=0,isol=1,ier
@@ -600,7 +616,7 @@ contains
          rho,kld,phi,neq,mp,ifac,isol, &
          nsym,energ,ier,nsky)  
 
-  end subroutine solve
+  end subroutine compute_phi
 
 
   ! ajoute la valeur val  à la position (i,j)
@@ -655,30 +671,3 @@ contains
 
 
 end module lobalap
-
-
-
-
-program test_lobalap
-  use lobalap
-  implicit none
-
-  write(*,*) 'Lobalap...'
-  write(*,*) 'Construction du maillage...'
-  call init(nx0=40,ny0=120,order0=3)
-  
-  call assemb()
-
-  call computeLU()
-
-  call solve()
-
-  call plotgmsh()
-
-  call release()
-
-end program test_lobalap
-
-
-
-
