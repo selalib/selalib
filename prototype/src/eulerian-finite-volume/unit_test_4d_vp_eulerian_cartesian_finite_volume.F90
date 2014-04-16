@@ -12,14 +12,16 @@ program vp_cartesian_4d
   use sll_common_array_initializers_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
+  use sll_timer
   implicit none
 
   character(len=256) :: filename
-  character(len=256) :: filename_local
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx,mv
+  type(sll_time_mark)  :: t0 
   class(sll_coordinate_transformation_2d_base),pointer      :: tx,tv
   sll_real64, dimension(1:11) :: landau_params
+  sll_real64 :: time
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else
@@ -45,11 +47,15 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 16
-#define NCELL2 16
-#define NCELL3 32
-#define NCELL4 32
-!transport
+#define NCELL1 8
+#define NCELL2 8
+#define NCELL3 16
+#define NCELL4 16
+!!$#define NCELL1 16
+!!$#define NCELL2 16
+!!$#define NCELL3 32
+!!$#define NCELL4 32
+!!$!transport
 !!$#define ETA1MIN -1.0_f64
 !!$#define ETA1MAX 1.0_f64
 !!$#define ETA2MIN -1.0_f64
@@ -58,15 +64,24 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 1.0_f64
 !!$#define ETA4MIN -1.0_f64
 !!$#define ETA4MAX 1.0_f64
-!!$!landau 1d sur xvx
+!landau 1d sur xvx or 2 streams
 !!$#define ETA1MIN -6.0_f64
 !!$#define ETA1MAX 6.0_f64
 !!$#define ETA2MIN -0.5_f64
 !!$#define ETA2MAX 0.5_f64
 !!$#define ETA3MIN 0.0_f64
-!!$#define ETA3MAX 4.0_f64*sll_pi
+!!$#define ETA3MAX 2.0_f64*sll_pi/0.2
 !!$#define ETA4MIN 0.0_f64
 !!$#define ETA4MAX 1.0_f64
+!galaxy 1d sur xvx 
+!!$#define ETA1MIN -4.0_f64
+!!$#define ETA1MAX 4.0_f64
+!!$#define ETA2MIN -4.0_f64
+!!$#define ETA2MAX 4.0_f64
+!!$#define ETA3MIN -12.0_f64
+!!$#define ETA3MAX 12.0_f64
+!!$#define ETA4MIN -12.0_f64
+!!$#define ETA4MAX 12.0_f64
 !!$!landau 1d sur yvy
 !!$#define ETA1MIN -0.5_f64
 !!$#define ETA1MAX 0.5_f64
@@ -76,11 +91,11 @@ program vp_cartesian_4d
 !!$#define ETA3MAX 1.0_f64
 !!$#define ETA4MIN 0.0_f64
 !!$#define ETA4MAX 4.0_f64*sll_pi
-!landau 2D
-#define ETA1MIN -7.5_f64
-#define ETA1MAX 7.5_f64
-#define ETA2MIN -7.5_f64
-#define ETA2MAX 7.5_f64
+!!$!landau 2D
+#define ETA1MIN -6.0_f64
+#define ETA1MAX 6.0_f64
+#define ETA2MIN -6.0_f64
+#define ETA2MAX 6.0_f64
 #define ETA3MIN 0.0_f64
 #define ETA3MAX 4.0_f64*sll_pi
 #define ETA4MIN 0.0_f64
@@ -88,19 +103,21 @@ program vp_cartesian_4d
 
 
 #define TINI 0.0_f64
-#define TMAX 0.01e0_f64
+#define TMAX 6.1_f64
 !#define TMAX 0._f64
-#define CFL 0.5_f64
-#define ELECMAX 1._f64 ! upper bound estimate for the electric field
+#define CFL 0.7_f64
+#define ELECMAX 1.0_f64 ! upper bound estimate for the electric field
 #define EPSILON 0.05
 #define TEST 5
 ! 0: x transport 1: landau damping 1d xvx  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
 !6: transport x-vx 7: transport y-vy 8: transport 2d
 !9: landau damping 1d sur y-vy
+!10: two-streams instability
+!11: galaxy 1D test case
+!12: galaxy 2D test case
 
-
-#define DEG  2 ! polynomial degree
+#define DEG  3 ! polynomial degree
 #define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
@@ -125,7 +142,8 @@ program vp_cartesian_4d
     identity_jac11,       &
     identity_jac12,       &
     identity_jac21,       &
-    identity_jac22, (/0._f64,0._f64,0._f64,0._f64/) )
+    identity_jac22, &
+    (/0.0_f64,0.0_f64/) )
 
   tv => new_coordinate_transformation_2d_analytic( &
     'mapvxvy',          &
@@ -135,7 +153,8 @@ program vp_cartesian_4d
     identity_jac11,       &
     identity_jac12,       &
     identity_jac21,       &
-    identity_jac22, (/0._f64,0._f64,0._f64,0._f64/) )
+    identity_jac22, &
+    (/0.0_f64,0.0_f64/) )
 
 
   ! define the values of the parameters for the landau initializer
@@ -214,12 +233,36 @@ program vp_cartesian_4d
             sll_landau_1d_yvy_initializer_v1v2x1x2, &
             landau_params, &
             TMAX )
-
+    else if (TEST==10) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_twostream_1d_xvx_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
+    else if (TEST==11) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_galaxy_1d_xvx_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
+  else if (TEST==12) then
+       call initialize_vp4d( &
+            simulation, &
+            mx,mv,tx,tv, &
+            sll_galaxy_2d_initializer_v1v2x1x2, &
+            landau_params, &
+            TMAX )
 
     end if
-
+  print *, 'Start time mark t0'
+  call sll_set_time_mark(t0)
   call simulation%run( )
+  time = sll_time_elapsed_since(t0)
+  print *, 'time of simulation est  : ',time
   call sll_delete(simulation)
+
   print *, 'reached end of vp4d test'
   print *, 'PASSED'
 
