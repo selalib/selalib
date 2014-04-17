@@ -61,11 +61,13 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 IF(FFTW_ENABLED AND FFTW_FOUND)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
                                              sll_assertion
+                                             sll_general_coordinate_elliptic_solvers
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion
-                                             dfftpack )
+                                             dfftpack 
+                                             sll_general_coordinate_elliptic_solvers)
 ENDIF()
 
 IF (NOT STDF95)
