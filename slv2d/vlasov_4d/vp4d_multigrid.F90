@@ -56,6 +56,7 @@ program vp4d_multigrid
   integer                     :: statut(MPI_STATUS_SIZE)
   integer                     :: tag = 1111
   integer                     :: ox, oy, iproc
+  integer                     :: pnext, plast
 
   call sll_boot_collective()
 
@@ -244,17 +245,23 @@ program vp4d_multigrid
 
   block_size = (ex-sx+1)*(ey-sy+1)
 
-  if (prank == 1) then
-     CALL MPI_SEND(sx, 1, MPI_INTEGER, 0, tag, comm2d, error)
-     CALL MPI_SEND(sy, 1, MPI_INTEGER, 0, tag, comm2d, error)
-     CALL MPI_SEND(ex_global, 1, block_type, 0, tag, comm2d, error)
-  end if
+  pnext = mod(prank+1,psize)
+  plast = mod(psize+prank-1,psize)
 
-  if (prank == 0) then
-     CALL MPI_RECV(ox, 1, MPI_INTEGER, 1, tag, comm2d, statut, error)
-     CALL MPI_RECV(oy, 1, MPI_INTEGER, 1, tag, comm2d, statut, error)
-     CALL MPI_RECV(ex_global(ox:,oy:), block_size, MPI_REAL8, 1, tag, comm2d, statut, error)
-  end if
+  do iproc = 1, psize
+     if (iproc /= prank) then
+        CALL MPI_SEND(sx, 1, MPI_INTEGER, iproc, tag, comm2d, error)
+        CALL MPI_SEND(sy, 1, MPI_INTEGER, iproc, tag, comm2d, error)
+        CALL MPI_SEND(ex_global,1,block_type, iproc, tag, comm2d, error)
+     else
+
+        CALL MPI_RECV(ox, 1, MPI_INTEGER, plast, tag, comm2d, statut, error)
+        CALL MPI_RECV(oy, 1, MPI_INTEGER, plast, tag, comm2d, statut, error)
+        CALL MPI_RECV(ex_global(ox:,oy:),block_size,MPI_REAL8, plast, &
+                   tag, comm2d, statut, error)
+     end if
+  end do
+
 
 
   call global_plot(ex_global, 'ex_global')
