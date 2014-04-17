@@ -82,6 +82,16 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 	${ARGS})
       SET_TESTS_PROPERTIES(qns2d_parallel PROPERTIES 
 	PASS_REGULAR_EXPRESSION "PASSED")
+
+      ADD_MPI_TEST(qns3d_polar_parallel_x1 test_qn_solver_3d_polar_parallel_x1 ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1 PROPERTIES 
+	    PASS_REGULAR_EXPRESSION "PASSED")
+
+      ADD_MPI_TEST(qns3d_polar_parallel_x1_abstract 
+        test_qn_solver_3d_polar_parallel_x1_abstract ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1_abstract PROPERTIES 
+	    PASS_REGULAR_EXPRESSION "PASSED")
+
       
     ENDIF()
     
@@ -109,6 +119,10 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_polar_multi_mu.nml)
     ADD_MPI_TEST(sim4d_DK_polar_multi_mu test_4d_dk_polar_multi_mu ${PROCS} ${ARGS})
     SET_TESTS_PROPERTIES(sim4d_DK_polar_multi_mu PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+
+    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_field_aligned_polar.nml)
+    ADD_MPI_TEST(sim4d_DK_field_aligned_polar test_4d_dk_field_aligned_polar ${PROCS} ${ARGS})
+    SET_TESTS_PROPERTIES(sim4d_DK_field_aligned_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
     
     SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.txt)
