@@ -94,9 +94,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
+    ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
-    ${SLL_DIR}/integration/sll_gausslobatto.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
