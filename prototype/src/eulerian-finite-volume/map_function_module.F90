@@ -32,8 +32,8 @@ contains
     !x=(1+u)*(1+v)*cos(pi*v)
     !y=(1+u)*sin(pi*v)
     
-    eta1 = tau%mesh%eta1_min + u * tau%mesh%delta_eta1
-    eta2 = tau%mesh%eta2_min + v * tau%mesh%delta_eta2
+    eta1 = tau%mesh%eta1_min + u * (tau%mesh%eta1_max -tau%mesh%eta1_min)
+    eta2 = tau%mesh%eta2_min + v * (tau%mesh%eta2_max -tau%mesh%eta2_min)
     x = tau%x1(eta1,eta2)
     y = tau%x2(eta1,eta2)
 
