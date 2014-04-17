@@ -13,6 +13,9 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                            lobalap.F90)
 
    ADD_EXECUTABLE(test_lobalap unit_test_lobalap.F90 )
-   TARGET_LINK_LIBRARIES(test_lobalap sll_lobatto selalib ${HDF5_LIBRARIES})
+   TARGET_LINK_LIBRARIES(test_lobalap sll_lobatto 
+                                      selalib 
+                                      sll_dg_fields
+                                      ${HDF5_LIBRARIES})
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
