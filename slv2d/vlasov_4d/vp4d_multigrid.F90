@@ -51,8 +51,11 @@ program vp4d_multigrid
   logical                     :: reorder
   logical,dimension(ndims)    :: periods
 
-  sll_int32                   :: block_t
+  sll_int32                   :: block_type
+  sll_int32                   :: block_size
   integer                     :: statut(MPI_STATUS_SIZE)
+  integer                     :: tag = 1111
+  integer                     :: ox, oy, iproc
 
   call sll_boot_collective()
 
@@ -140,15 +143,11 @@ program vp4d_multigrid
   CALL MPI_COMM_RANK(comm2d,prank,error)
   CALL MPI_CART_COORDS(comm2d,prank,ndims,coords,error)
 
-  if (neighbor(N) /= MPI_PROC_NULL) then
-     CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),neighbor(NW),error)
-     CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),neighbor(NE),error)
-  end if
+  CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),neighbor(NW),error)
+  CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),neighbor(NE),error)
 
-  if (neighbor(S) /= MPI_PROC_NULL) then
-     CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(SW),error)
-     CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(SE),error)
-  end if
+  CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(SW),error)
+  CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(SE),error)
 
   call flush(6)
   print"('proc: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
@@ -231,20 +230,35 @@ program vp4d_multigrid
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
 
+  ex_global(sx:ex,sy:ey) = ex_local(sx:ex,sy:ey)
+  ey_global(sx:ex,sy:ey) = ey_local(sx:ex,sy:ey)
+
   call MPI_TYPE_CREATE_SUBARRAY(2, &
                                (/vlasov%nc_eta1,vlasov%nc_eta2/), &
                                (/ex-sx+1,ey-sy+1/), &
-                               (/sx, sy/), &
+                               (/sx-1, sy-1/), &
                                MPI_ORDER_FORTRAN, &
-                               MPI_REAL8, block_t, error)
+                               MPI_REAL8, block_type, error)
 
-  block_sz = (ex-sx+1)*(ey-sy+1)
-  call MPI_ALLGATHER(ex_local,block_sz,MPI_REAL8, &
-                     ex_global,block_sz,MPI_REAL8, &
-                     MPI_SUM,comm2d,error)
-  call MPI_ALLGATHER(ey_local,block_sz,MPI_REAL8, &
-                     ey_global,block_sz,MPI_REAL8, &
-                     MPI_SUM,comm2d,error)
+  call MPI_TYPE_COMMIT(block_type, error)
+
+  block_size = (ex-sx+1)*(ey-sy+1)
+
+  if (prank == 1) then
+     CALL MPI_SEND(sx, 1, MPI_INTEGER, 0, tag, comm2d, error)
+     CALL MPI_SEND(sy, 1, MPI_INTEGER, 0, tag, comm2d, error)
+     CALL MPI_SEND(ex_global, 1, block_type, 0, tag, comm2d, error)
+  end if
+
+  if (prank == 0) then
+     CALL MPI_RECV(ox, 1, MPI_INTEGER, 1, tag, comm2d, statut, error)
+     CALL MPI_RECV(oy, 1, MPI_INTEGER, 1, tag, comm2d, statut, error)
+     CALL MPI_RECV(ex_global(ox:,oy:), block_size, MPI_REAL8, 1, tag, comm2d, statut, error)
+  end if
+
+
+  call global_plot(ex_global, 'ex_global')
+  call global_plot(ey_global, 'ey_global')
 
   vlasov%ex(1:vlasov%nc_eta1,1:vlasov%nc_eta2) = ex_global
   vlasov%ey(1:vlasov%nc_eta1,1:vlasov%nc_eta2) = ey_global
@@ -323,10 +337,10 @@ contains
       if (prank == MPI_MASTER) &
       call sll_gnuplot_2d(vlasov%eta1_min, &
                           vlasov%eta1_max, &
-                          vlasov%np_eta1,  &
+                          vlasov%nc_eta1,  &
                           vlasov%eta2_min, &
                           vlasov%eta2_max, &
-                          vlasov%np_eta2,  &
+                          vlasov%nc_eta2,  &
                           field,           &
                           fieldname,       &
                           iter,            &
