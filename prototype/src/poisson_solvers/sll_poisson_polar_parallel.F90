@@ -50,6 +50,8 @@ module sll_poisson_polar_parallel
    type(remap_plan_2D_real64), pointer :: rmp_ar   !< remap theta->r
    sll_real64, dimension(:,:), pointer :: f_r      !< array sequential in r
    sll_real64, dimension(:,:), pointer :: f_a      !< array sequential in theta
+   sll_real64, dimension(:), pointer :: dlog_density,inv_Te !<for quasi neutral solver
+
   end type sll_poisson_polar
 
   !> Initialize the Poisson solver on polar mesh
@@ -63,11 +65,57 @@ module sll_poisson_polar_parallel
   end interface solve
 
 contains
+  !> new: wrapper of initialize
+  function new_poisson_polar( &
+    layout_r, &
+    layout_a, &
+    rmin, &
+    rmax, &
+    nr, &
+    ntheta, &
+    bc_rmin, &
+    bc_rmax, &
+    dlog_density, &
+    inv_Te) &
+    result(this)
+    implicit none
+    type(sll_poisson_polar), pointer  :: this     !< Poisson solver class
+    type(layout_2D), pointer :: layout_r !< sequential in r direction
+    type(layout_2D), pointer :: layout_a !< sequential in theta direction
 
+
+    sll_real64               :: rmin    !< rmin
+    sll_real64               :: rmax    !< rmax
+    sll_int32                :: nr      !< number of cells radial
+    sll_int32                :: ntheta  !< number of cells angular
+    sll_int32, optional      :: bc_rmin !< radial boundary conditions
+    sll_int32, optional      :: bc_rmax !< radial boundary conditions
+    sll_real64,dimension(:),optional :: dlog_density !< for quasi neutral solver
+    sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
+    
+    !local variables
+    sll_int32 :: ierr
+    
+    SLL_ALLOCATE(this,ierr)
+   
+    call initialize_poisson_polar( &
+      this, &
+      layout_r, &
+      layout_a, &
+      rmin, &
+      rmax, &
+      nr, &
+      ntheta, &
+      bc_rmin, &
+      bc_rmax, &
+      dlog_density, &
+      inv_Te)
+
+  end function new_poisson_polar
 
   !> Initialize the Poisson solver in polar coordinates
   subroutine initialize_poisson_polar(this, layout_r, layout_a, &
-             rmin,rmax,nr,ntheta,bc_rmin,bc_rmax)
+             rmin,rmax,nr,ntheta,bc_rmin,bc_rmax,dlog_density,inv_Te)
 
     implicit none
     type(sll_poisson_polar)  :: this     !< Poisson solver class
@@ -81,6 +129,9 @@ contains
     sll_int32                :: ntheta  !< number of cells angular
     sll_int32, optional      :: bc_rmin !< radial boundary conditions
     sll_int32, optional      :: bc_rmax !< radial boundary conditions
+    sll_real64,dimension(:),optional :: dlog_density !< for quasi neutral solver
+    sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
+
     sll_int32                :: error
     sll_real64, dimension(:), allocatable :: buf
     sll_int32 :: nr_loc
@@ -94,6 +145,20 @@ contains
     SLL_ALLOCATE(this%mat(3*(nr-1)),error)
     SLL_ALLOCATE(this%cts(7*(nr-1)),error)
     SLL_ALLOCATE(this%ipiv(nr-1),error)
+    SLL_ALLOCATE(this%dlog_density(nr+1),error)
+    SLL_ALLOCATE(this%inv_Te(nr+1),error)
+
+    this%dlog_density = 0._f64
+    this%inv_Te = 0._f64
+    
+    if(present(dlog_density))then
+      this%dlog_density = dlog_density
+    endif
+    if(present(inv_Te))then
+      this%inv_Te = inv_Te
+    endif
+
+
 
     this%rmin=rmin
     this%rmax=rmax
@@ -198,9 +263,12 @@ contains
       do i=2,nr
 
         r = rmin + (i-1)*dr
-        this%mat(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2*dr*r)
-        this%mat(3*(i-1)-1) =  2.0_f64/dr**2+(k/r)**2
-        this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r)
+        this%mat(3*(i-1)  ) = -1.0_f64/dr**2-1.0_f64/(2._f64*dr*r) &
+          -this%dlog_density(i)/(2._f64*dr)
+        this%mat(3*(i-1)-1) =  2.0_f64/dr**2+(k/r)**2 &
+          +this%inv_Te(i)
+        this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r) &
+          +this%dlog_density(i)/(2._f64*dr)
 
         if( j == 1 ) then
            this%fk(i) = cmplx(this%f_r(i,1),0.0_f64,kind=f64)
