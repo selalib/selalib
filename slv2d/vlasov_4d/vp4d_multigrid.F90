@@ -38,7 +38,7 @@ program vp4d_multigrid
   sll_int32  :: gi, gj, gk, gl
   sll_int32  :: global_indices(4)
   sll_real64 :: time
-  sll_int32  :: nxprocs, nyprocs
+  sll_int32  :: ncols, nrows
   sll_int32  :: sx, ex, sy, ey
   sll_int32  :: block_sz
 
@@ -54,9 +54,20 @@ program vp4d_multigrid
   sll_int32                   :: block_type
   sll_int32                   :: block_size
   integer                     :: statut(MPI_STATUS_SIZE)
-  integer                     :: tag = 1111
-  integer                     :: ox, oy, iproc
-  integer                     :: pnext, plast
+  integer, parameter          :: tag = 1111
+
+  integer, parameter :: gridsize = 6    ! size of array
+  integer, parameter :: procgridsize = 2 ! size of process grid
+  character, allocatable, dimension (:,:) :: global, local
+  integer, dimension(:), allocatable   :: counts, displs
+  integer, parameter    :: root = 0
+  integer :: localsize
+  integer :: row, col, ierr, p, charsize
+  integer, dimension(2) :: sizes, subsizes, starts
+
+  integer :: newtype, resizedtype
+  integer, dimension(MPI_STATUS_SIZE) :: rstatus
+  integer(kind=MPI_ADDRESS_KIND) :: extent, begin
 
   call sll_boot_collective()
 
@@ -128,8 +139,8 @@ program vp4d_multigrid
 
   dims = 0
   CALL MPI_DIMS_CREATE(int(psize,4),ndims,dims,error)
-  nxprocs = dims(1)
-  nyprocs = dims(2)
+  ncols = dims(1)
+  nrows = dims(2)
 
   periods(1) = .true.
   periods(2) = .true.
@@ -159,8 +170,8 @@ program vp4d_multigrid
 
   call initialize_layout_with_distributed_2D_array( vlasov%nc_eta1, &
                                                     vlasov%nc_eta2, &
-                                                    nxprocs,          &
-                                                    nyprocs,          &
+                                                    ncols,          &
+                                                    nrows,          &
                                                     layout_mg)
   
   if ( prank == MPI_MASTER ) then
@@ -180,8 +191,8 @@ program vp4d_multigrid
   call initialize( poisson, sx, ex, sy, ey,          &
                    vlasov%nc_eta1*vlasov%delta_eta1, &
                    vlasov%nc_eta2*vlasov%delta_eta2, &
-                   nxprocs,                          &
-                   nyprocs,                          &
+                   ncols,                          &
+                   nrows,                          &
                    vlasov%nc_eta1,                   &
                    vlasov%nc_eta2,                   &
                    comm2d,                           &
@@ -245,24 +256,82 @@ program vp4d_multigrid
 
   block_size = (ex-sx+1)*(ey-sy+1)
 
-  pnext = mod(prank+1,psize)
-  plast = mod(psize+prank-1,psize)
+  localsize = gridsize/procgridsize
+  allocate( local(localsize, localsize) )
+  if (prank == root) then
+      allocate( global(gridsize, gridsize) )
+      forall( col=1:procgridsize, row=1:procgridsize )
+          global((row-1)*localsize+1:row*localsize, &
+                 (col-1)*localsize+1:col*localsize) = &
+                  achar(ichar('0')+(row-1)+(col-1)*procgridsize)
+      end forall
 
-  do iproc = 1, psize
-     if (iproc /= prank) then
-        CALL MPI_SEND(sx, 1, MPI_INTEGER, iproc, tag, comm2d, error)
-        CALL MPI_SEND(sy, 1, MPI_INTEGER, iproc, tag, comm2d, error)
-        CALL MPI_SEND(ex_global,1,block_type, iproc, tag, comm2d, error)
-     else
+      print *, 'global array is: '
+      do i=1,gridsize
+          print *, global(i,:)
+       enddo
+  endif
+  starts   = [0,0]
+  sizes    = [gridsize, gridsize]
+  subsizes = [localsize, localsize]
 
-        CALL MPI_RECV(ox, 1, MPI_INTEGER, plast, tag, comm2d, statut, error)
-        CALL MPI_RECV(oy, 1, MPI_INTEGER, plast, tag, comm2d, statut, error)
-        CALL MPI_RECV(ex_global(ox:,oy:),block_size,MPI_REAL8, plast, &
-                   tag, comm2d, statut, error)
-     end if
-  end do
+  call MPI_Type_create_subarray(2, sizes, subsizes, starts,        &
+                                MPI_ORDER_FORTRAN, MPI_CHARACTER,  &
+                                newtype, ierr)
+  call MPI_Type_size(MPI_CHARACTER, charsize, ierr)
+  extent = localsize*charsize
+  begin  = 0
+  call MPI_Type_create_resized(newtype, begin, extent, resizedtype, ierr)
+  call MPI_Type_commit(resizedtype, ierr)
 
+  SLL_ALLOCATE(counts(procgridsize**2),error)
+  SLL_ALLOCATE(displs(procgridsize**2),error)
+  counts = 1          ! we will send one of these new types to everyone
+  forall( col=1:procgridsize, row=1:procgridsize )
+     displs(1+(row-1)+procgridsize*(col-1)) = (row-1) + localsize*procgridsize*(col-1)
+  endforall
 
+  call MPI_Scatterv(global, counts, displs,   & ! proc i gets counts(i) types from displs(i)
+          resizedtype,                        &
+          local, localsize**2, MPI_CHARACTER, & ! I'm receiving localsize**2 chars
+          root, comm2d, ierr)           !... from (root, comm2d)
+
+  do p=1, psize
+     if (prank == p-1) then
+        print *, 'Rank ', prank, ' received: '
+        do i=1, localsize
+           print *, local(i,:)
+        enddo
+     endif
+     call MPI_Barrier(comm2d, ierr)
+  enddo
+
+  local = achar( ichar(local) + 1 )
+
+  do p=1, psize
+     if (prank == p-1) then
+        print *, 'Rank ', prank, ' sending: '
+        do i=1, localsize
+           print *, local(i,:)
+        enddo
+     endif
+     call MPI_Barrier(comm2d, ierr)
+  enddo
+
+  call MPI_Gatherv( local, localsize**2, MPI_CHARACTER, & ! I'm sending localsize**2 chars
+                    global, counts, displs, resizedtype,&
+                    root, comm2d, ierr)
+
+  if (prank == root) then
+     print *, ' Root received: '
+     do i=1,gridsize
+        print *, global(i,:)
+     enddo
+  endif
+
+  call MPI_Type_free(newtype,ierr)
+  if (prank == root) deallocate(global)
+  deallocate(local)
 
   call global_plot(ex_global, 'ex_global')
   call global_plot(ey_global, 'ey_global')
