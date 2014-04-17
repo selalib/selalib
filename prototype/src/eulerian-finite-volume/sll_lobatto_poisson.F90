@@ -43,8 +43,8 @@ subroutine initialize_lobatto_poisson(this, tau, order)
    sll_int32 :: order0
 
    this%tau => tau
-   nx0 = tau%mesh%num_cells1+1
-   ny0 = tau%mesh%num_cells2+1
+   nx0 = tau%mesh%num_cells1
+   ny0 = tau%mesh%num_cells2
 
    call set_map_function(tau)
 
@@ -58,12 +58,16 @@ subroutine initialize_lobatto_poisson(this, tau, order)
 
 end subroutine initialize_lobatto_poisson
 
-subroutine solve_lobatto_poisson(this)!, rhs)
+subroutine solve_lobatto_poisson(this, rhs, ex, ey)
 
   type(lobatto_poisson_solver) :: this
+  type(dg_field)               :: rhs
+  type(dg_field)               :: ex
+  type(dg_field)               :: ey
 
+  call assemb_rhs(rhs%array)
   call compute_phi()
-
+  call compute_electric_field(ex%array, ey%array)
 
 
 end subroutine solve_lobatto_poisson
