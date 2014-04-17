@@ -51,18 +51,19 @@ program vp4d_multigrid
   logical                     :: reorder
   logical,dimension(ndims)    :: periods
 
-  sll_int32                   :: block_type
+  sll_int32                   :: block_type, resized_block_type
   sll_int32                   :: block_size
   integer                     :: statut(MPI_STATUS_SIZE)
   integer, parameter          :: tag = 1111
 
-  integer, parameter :: gridsize = 6    ! size of array
+  integer, parameter :: gridsize_x = 6    ! size of array
+  integer, parameter :: gridsize_y = 8    ! size of array
   integer, parameter :: procgridsize = 2 ! size of process grid
   character, allocatable, dimension (:,:) :: global, local
   integer, dimension(:), allocatable   :: counts, displs
   integer, parameter    :: root = 0
-  integer :: localsize
-  integer :: row, col, ierr, p, charsize
+  integer :: localsize_x, localsize_y
+  integer :: row, col, ierr, p, charsize, doublesize
   integer, dimension(2) :: sizes, subsizes, starts
 
   integer :: newtype, resizedtype
@@ -187,6 +188,8 @@ program vp4d_multigrid
   ex = get_layout_2D_i_max(layout_mg, prank)
   sy = get_layout_2D_j_min(layout_mg, prank)
   ey = get_layout_2D_j_max(layout_mg, prank)
+
+  block_size = (ex-sx+1)*(ey-sy+1)
   
   call initialize( poisson, sx, ex, sy, ey,          &
                    vlasov%nc_eta1*vlasov%delta_eta1, &
@@ -242,96 +245,81 @@ program vp4d_multigrid
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
 
-  ex_global(sx:ex,sy:ey) = ex_local(sx:ex,sy:ey)
-  ey_global(sx:ex,sy:ey) = ey_local(sx:ex,sy:ey)
+  !ex_global(sx:ex,sy:ey) = ex_local(sx:ex,sy:ey)
+  !ey_global(sx:ex,sy:ey) = ey_local(sx:ex,sy:ey)
 
-  call MPI_TYPE_CREATE_SUBARRAY(2, &
-                               (/vlasov%nc_eta1,vlasov%nc_eta2/), &
-                               (/ex-sx+1,ey-sy+1/), &
-                               (/sx-1, sy-1/), &
-                               MPI_ORDER_FORTRAN, &
-                               MPI_REAL8, block_type, error)
+  localsize_x = gridsize_x/nrows
+  localsize_y = gridsize_y/ncols
+  allocate( local(localsize_x, localsize_y) )
+  allocate( global(gridsize_x, gridsize_y) )
+  global = char(48)
+  local  = achar( ichar('0') + prank )
 
-  call MPI_TYPE_COMMIT(block_type, error)
-
-  block_size = (ex-sx+1)*(ey-sy+1)
-
-  localsize = gridsize/procgridsize
-  allocate( local(localsize, localsize) )
-  if (prank == root) then
-      allocate( global(gridsize, gridsize) )
-      forall( col=1:procgridsize, row=1:procgridsize )
-          global((row-1)*localsize+1:row*localsize, &
-                 (col-1)*localsize+1:col*localsize) = &
-                  achar(ichar('0')+(row-1)+(col-1)*procgridsize)
-      end forall
-
-      print *, 'global array is: '
-      do i=1,gridsize
-          print *, global(i,:)
-       enddo
-  endif
   starts   = [0,0]
-  sizes    = [gridsize, gridsize]
-  subsizes = [localsize, localsize]
+  sizes    = [gridsize_x, gridsize_y]
+  subsizes = [localsize_x, localsize_y]
 
   call MPI_Type_create_subarray(2, sizes, subsizes, starts,        &
                                 MPI_ORDER_FORTRAN, MPI_CHARACTER,  &
                                 newtype, ierr)
+
+  starts   = [sx-1,sy-1]
+  sizes    = [vlasov%nc_eta1, vlasov%nc_eta2]
+  subsizes = [ex-sx+1, ey-sy+1]
+  call MPI_TYPE_CREATE_SUBARRAY(2, sizes, subsizes, starts, &
+                                MPI_ORDER_FORTRAN, &
+                                MPI_REAL8, block_type, error)
+
   call MPI_Type_size(MPI_CHARACTER, charsize, ierr)
-  extent = localsize*charsize
+  extent = localsize_x*charsize
   begin  = 0
   call MPI_Type_create_resized(newtype, begin, extent, resizedtype, ierr)
   call MPI_Type_commit(resizedtype, ierr)
 
-  SLL_ALLOCATE(counts(procgridsize**2),error)
-  SLL_ALLOCATE(displs(procgridsize**2),error)
-  counts = 1          ! we will send one of these new types to everyone
-  forall( col=1:procgridsize, row=1:procgridsize )
-     displs(1+(row-1)+procgridsize*(col-1)) = (row-1) + localsize*procgridsize*(col-1)
+  call MPI_Type_size(MPI_REAL8, doublesize, ierr)
+  extent = (ex-sx+1)*doublesize
+  begin  = 0
+  call MPI_Type_create_resized(block_type, begin, extent, resized_block_type, ierr)
+  call MPI_Type_commit(resized_block_type, ierr)
+
+  SLL_ALLOCATE(counts(ncols*nrows),error)
+  SLL_ALLOCATE(displs(ncols*nrows),error)
+
+  counts = 1          
+  forall( col=1:ncols, row=1:nrows )
+     displs(1+(row-1)+ncols*(col-1)) = (row-1) + localsize_y*ncols*(col-1)
   endforall
+ 
+  call MPI_AllGatherv( local, localsize_x*localsize_y, MPI_CHARACTER, & 
+                       global, counts, displs, resizedtype,&
+                       comm2d, ierr)
 
-  call MPI_Scatterv(global, counts, displs,   & ! proc i gets counts(i) types from displs(i)
-          resizedtype,                        &
-          local, localsize**2, MPI_CHARACTER, & ! I'm receiving localsize**2 chars
-          root, comm2d, ierr)           !... from (root, comm2d)
-
-  do p=1, psize
-     if (prank == p-1) then
-        print *, 'Rank ', prank, ' received: '
-        do i=1, localsize
-           print *, local(i,:)
-        enddo
-     endif
-     call MPI_Barrier(comm2d, ierr)
-  enddo
-
-  local = achar( ichar(local) + 1 )
-
-  do p=1, psize
-     if (prank == p-1) then
-        print *, 'Rank ', prank, ' sending: '
-        do i=1, localsize
-           print *, local(i,:)
-        enddo
-     endif
-     call MPI_Barrier(comm2d, ierr)
-  enddo
-
-  call MPI_Gatherv( local, localsize**2, MPI_CHARACTER, & ! I'm sending localsize**2 chars
-                    global, counts, displs, resizedtype,&
-                    root, comm2d, ierr)
-
-  if (prank == root) then
-     print *, ' Root received: '
-     do i=1,gridsize
+  do p=0, psize-1
+     if (p == prank) then
+     print *, ' Rank ', p, ' received: '
+     do i=1,gridsize_x
         print *, global(i,:)
      enddo
-  endif
+     end if
+     call MPI_Barrier(MPI_COMM_WORLD, ierr)
+  enddo
 
   call MPI_Type_free(newtype,ierr)
   if (prank == root) deallocate(global)
   deallocate(local)
+
+  counts = 1          
+  forall( col=1:ncols, row=1:nrows )
+     displs(1+(row-1)+ncols*(col-1)) = (row-1) + (ey-sy+1)*ncols*(col-1)
+  endforall
+ 
+  call MPI_AllGatherv( ex_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
+                       ex_global, counts, displs, resized_block_type,&
+                       comm2d, ierr)
+  call MPI_BARRIER(comm2d, error)
+  !call MPI_AllGatherv( ey_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
+  !                     ey_global, counts, displs, resized_block_type,&
+  !                     comm2d, ierr)
 
   call global_plot(ex_global, 'ex_global')
   call global_plot(ey_global, 'ey_global')
