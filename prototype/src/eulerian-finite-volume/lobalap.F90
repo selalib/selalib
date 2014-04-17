@@ -5,12 +5,8 @@
 ! conditions aux limites de Dirichlet données par la fonction
 ! "potexact"
 module lobalap
-
   use map_function_module, only : map
   implicit none
-
-private
-
   ! ordre de l'interpolation élément fini
   integer :: order
   ! nombre de noeuds locaux dans chaque élément
@@ -51,6 +47,8 @@ private
   real(8),dimension(:),allocatable :: vdiag,vsup,vinf
   ! taille de ces tableaux
   integer :: nsky
+  ! grand pivot pour les cl
+  real(8),parameter :: big=1.d20
 
   ! vecteur pour le second membre et la solution
   real(8),dimension(:),allocatable :: phi,rho
@@ -59,89 +57,16 @@ private
   integer,dimension(:),allocatable :: indexbc
 
 
-  public :: compute_phi, assemb, computelu, init, release, plotgmsh
+
 
 contains
 
-  ! alloue et prépare les données pour le calcul
-  subroutine init(nx0,ny0,order0)
-    implicit none
-    integer,intent(in) :: nx0,ny0,order0
-    integer :: ino,iel,i,ii,j,jj
-
-    nx=nx0
-    ny=ny0
-    order=order0
-    nloc=(order+1)*(order+1)
-    is_init=.true.
-
-    ! nombre d'inconnues
-    neqx=nx*order+1
-    neqy=ny*order+1
-    neq=neqx*neqy
-    nel=nx*ny
-
-    ! construction du maillage
-    ! et des listes de conditions aux limites
-    call build_mesh()
-
-    write(*,*) 'Allocation solution et source...'
-
-    ! allocation solution et source
-    allocate(phi(neq))
-    allocate(rho(neq))
-
-    ! une solution bidon pour tester la visu
-    do ino=1,neq
-       phi(ino)=potexact(node(1,ino),node(2,ino))
-    end do
-
-    ! initialisation du second pour l'assemblage
-    rho=0
-
-    write(*,*) 'Calcul structure matrice creuse...'
-
-    ! préparation de la matrice skyline
-    allocate(prof(neq))
-    allocate(kld(neq+1))
-
-    ! construction du profil
-    prof=0
-    do iel=1,nel
-       do ii=1,nloc
-          do jj=1,nloc
-             i=connec(ii,iel)
-             j=connec(jj,iel)
-             prof(j)=max(prof(j),j-i)
-             prof(i)=max(prof(i),i-j)
-          enddo
-       enddo
-    enddo
-    ! tableau des débuts de colonnes
-    kld(1)=1
-    do i=1,neq
-       kld(i+1)=kld(i)+prof(i)
-    enddo
-    
-    nsky=kld(neq+1)-1
-
-    allocate(vdiag(neq))
-    allocate(vinf(nsky))
-    allocate(vsup(nsky))
-
-    vdiag=0
-    vinf=0
-    vsup=0
-    
-
-  end subroutine init
-
-  ! symbole de kronecker delta
   ! fonction donnant le potentiel exact (debug) et/ou les conditions aux limites
   function potexact(x,y)
     implicit none
     real(8),intent(in) :: x,y
     real(8) :: potexact
+    !potexact=x*x+y*y
     potexact=0
   end function potexact
 
@@ -153,6 +78,36 @@ contains
     source=-4
   end function source
 
+  ! fonction qui envoie le carré [0,1]x[0,1] sur le vrai domaine de calcul
+  ! variables de référence: (u,v)
+  ! variables physiques: (x,y)
+  ! autres données calculées:
+  ! jac, invjac, det: jacobienne, son inverse et déterminant de la jacobienne
+!  ! subroutine map(u,v,x,y,jac,invjac,det)
+!  ! pour l'instant on n'utilise pas la jacobienne
+!  subroutine map(u,v,x,y)
+!    implicit none
+!    real(8),intent(in) :: u,v
+!    real(8),intent(out) :: x,y
+!    real(8) :: jac(2,2),invjac(2,2),det
+!    real(8),parameter :: pi=4*atan(1.d0)
+!
+!    x=(1+u)*(1+v)*cos(pi*v)
+!    y=(1+u)*sin(pi*v)
+!
+!    x=u
+!    y=v
+!
+!    !x=u
+!    !y=v
+!    ! non utilisé
+!    jac=0
+!    jac(1,1)=1
+!    jac(2,2)=1
+!    invjac=jac
+!    det=1
+!
+!  end subroutine map
 
   ! remplissage des tableaux de pg
   ! et de polynômes de Lagrange
@@ -345,7 +300,7 @@ contains
     call init_gauss()
 
     write(*,*) 'Construction du maillage...'
-
+    write(*,*) 'Elements:',nel,' Noeuds:',neq
     allocate(node(2,neq))
     allocate(connec(nloc,neq))
 
@@ -418,6 +373,79 @@ contains
 
   end subroutine build_mesh
 
+  ! alloue et prépare les données pour le calcul
+  subroutine init(nx0,ny0,order0)
+    implicit none
+    integer,intent(in) :: nx0,ny0,order0
+    integer :: ino,iel,i,ii,j,jj
+    nx=nx0
+    ny=ny0
+    order=order0
+    nloc=(order+1)*(order+1)
+    is_init=.true.
+
+    ! nombre d'inconnues
+    neqx=nx*order+1
+    neqy=ny*order+1
+    neq=neqx*neqy
+    nel=nx*ny
+
+    ! construction du maillage
+    ! et des listes de conditions aux limites
+    call build_mesh()
+
+    write(*,*) 'Allocation solution et source...'
+
+    ! allocation solution et source
+    allocate(phi(neq))
+    allocate(rho(neq))
+
+    ! une solution bidon pour tester la visu
+    do ino=1,neq
+       phi(ino)=potexact(node(1,ino),node(2,ino))
+    end do
+
+    ! initialisation du second pour l'assemblage
+    rho=0
+
+    write(*,*) 'Calcul structure matrice creuse...'
+
+    ! préparation de la matrice skyline
+    allocate(prof(neq))
+    allocate(kld(neq+1))
+
+    ! construction du profil
+    prof=0
+    do iel=1,nel
+       do ii=1,nloc
+          do jj=1,nloc
+             i=connec(ii,iel)
+             j=connec(jj,iel)
+             prof(j)=max(prof(j),j-i)
+             prof(i)=max(prof(i),i-j)
+          enddo
+       enddo
+    enddo
+    ! tableau des débuts de colonnes
+    kld(1)=1
+    do i=1,neq
+       kld(i+1)=kld(i)+prof(i)
+    enddo
+    
+    nsky=kld(neq+1)-1
+
+    allocate(vdiag(neq))
+    allocate(vinf(nsky))
+    allocate(vsup(nsky))
+
+    vdiag=0
+    vinf=0
+    vsup=0
+    
+
+  end subroutine init
+
+  ! symbole de kronecker delta
   function delta(i,j)
     implicit none
     integer :: i,j,delta
@@ -457,19 +485,97 @@ contains
 
   end subroutine gradpg
 
+
+  ! calcul du champ électrique
+  subroutine compute_electric_field(dg_ex,dg_ey)
+    implicit none
+    ! matrice locale
+    real(8) :: jac(2,2),cojac(2,2),det
+    real(8) :: gradref(2),xg,yg
+    real(8) :: grad(2),dxy(2),poids
+    integer :: iel,ipg,ii,jj,ig,ib,iib,ielx,iely
+    real(8),dimension(order+1,order+1,nx,ny) :: dg_ex,dg_ey
+    
+    ! assemblage de la matrice de rigidité
+    ! et du second membre
+
+    write(*,*) 'Calcul champ éléectrique...'
+
+    dg_ex=0
+    dg_ey=0
+
+    ! boucle sur les éléments
+    do iel=1,nel
+       ! boucle sur les pg pour le calcul du champ
+       ielx=mod(iel-1,nx)+1
+       iely=(iel-1)/nx+1
+       do ipg=1,nloc
+          ! numéros locaux du pg
+          ii=mod(ipg-1,order+1)+1
+          jj=(ipg-1)/(order+1)+1
+          ! numéro global du pg
+          ig=connec(ipg,iel)
+          xg=node(1,ig)
+          yg=node(2,ig)
+          ! calcul de la jacobienne au pg
+          ! on pourra le faire directement avec map plus tard
+          jac=0
+          ! boucle sur les fonctions de base d'interpolation
+          ! pour construire la jacobienne de la transformation
+          ! géométrique
+          do iib=1,nloc
+             ! gradient de la fonction de base au pg 
+             ! dans les variables de référence
+             ! calcul du poids de gauss
+             call gradpg(iib,ipg,dxy,poids)
+             ib=connec(iib,iel)
+             ! contribution à la jacobienne
+             jac(1,1)=jac(1,1)+node(1,ib)*dxy(1)
+             jac(1,2)=jac(1,2)+node(1,ib)*dxy(2)
+             jac(2,1)=jac(2,1)+node(2,ib)*dxy(1)
+             jac(2,2)=jac(2,2)+node(2,ib)*dxy(2)
+          end do
+          !write(*,*) ipg,jac
+          ! déterminant et transposée de l'inverse
+          det=jac(1,1)*jac(2,2)-jac(1,2)*jac(2,1)
+          cojac(1,1)=jac(2,2)/det
+          cojac(2,2)=jac(1,1)/det
+          cojac(1,2)=-jac(2,1)/det
+          cojac(2,1)=-jac(1,2)/det
+
+          ! nouvelle boucle sur les noeuds locaux de l'élément iel
+          ! pour calculer le gradient du potentiel
+          do iib=1,nloc
+             ! gradients dans les variables de référence
+             call gradpg(iib,ipg,gradref,poids)
+             ib=connec(iib,iel)
+             grad=matmul(cojac,gradref) 
+             dg_ex(ii,jj,ielx,iely)=dg_ex(ii,jj,ielx,iely)+phi(ib)*grad(1)
+             dg_ey(ii,jj,ielx,iely)=dg_ey(ii,jj,ielx,iely)+phi(ib)*grad(2)
+          end do
+       end do
+    end do
+
+       
+  end subroutine compute_electric_field
+
+
+
+
+
   ! assemblage de la matrice élément fini et des conditions aux limites
   subroutine assemb()
     implicit none
     ! matrice locale
-    real(8) :: jac(2,2),cojac(2,2),det,omega
-    real(8) :: gradref_i(2),gradref_j(2),xg,yg,big
+    real(8) :: jac(2,2),cojac(2,2),det
+    real(8) :: gradref_i(2),gradref_j(2),xg,yg
     real(8) :: grad_i(2),grad_j(2),dxy(2),v,poids,vf
     integer :: iel,ipg,i,ii,j,jj,ig,ib,iib
     
     ! assemblage de la matrice de rigidité
     ! et du second membre
 
-    write(*,*) 'Assemblage matrice et second membre...'
+    write(*,*) 'Assemblage matrice...'
 
     ! boucle sur les éléments
     do iel=1,nel
@@ -509,7 +615,7 @@ contains
           cojac(2,1)=-jac(1,2)/det
 
           ! assemblage du second membre
-          rho(ig)=rho(ig)+vf*det*poids
+          !rho(ig)=rho(ig)+vf*det*poids
 
           ! nouvelle boucle sur les noeuds locaux de l'élément iel
           ! pour calculer la matrice élémentaire
@@ -534,21 +640,98 @@ contains
        end do
     end do
 
-    write(*,*) 'Assemblage conditions aux limites...'
+    write(*,*) 'Assemblage conditions aux limites matrice...'
 
     ! assemblage des conditions aux limites de dirichlet
     ! par pénalisation
-    big=1.d20
     do ii=1,nbc
        i=indexbc(ii)
        call add(big,i,i)
-       rho(i)=potexact(node(1,i),node(2,i))*big
     end do
 
 
        
   end subroutine assemb
     
+  ! assemblage du second membre
+  subroutine assemb_rhs(dg_rho)
+    implicit none
+    ! matrice locale
+    real(8) :: jac(2,2),det
+    real(8) :: dxy(2),poids,vf
+    real(8),dimension(order+1,order+1,nx,ny) :: dg_rho
+    integer :: iel,ipg,i,ii,jj,ig,ib,iib,ielx,iely
+    
+    ! assemblage de la matrice de rigidité
+    ! et du second membre
+
+    write(*,*) 'Assemblage second membre...'
+
+    rho=0
+
+    ! boucle sur les éléments
+    do iel=1,nel
+       ielx=mod(iel-1,nx)+1
+       iely=(iel-1)/nx+1
+       ! boucle sur les pg pour intégrer
+       do ipg=1,nloc
+          ! numéro global du pg
+          ig=connec(ipg,iel)
+
+          ! on récupère la charge au point de Gauss
+          ii=mod(ipg-1,order+1)+1
+          jj=(ipg-1)/(order+1)+1
+
+          vf=dg_rho(ii,jj,ielx,iely)
+          !write(*,*) 'vf=',vf
+
+          ! calcul de la jacobienne au pg
+          ! on pourra le faire directement avec map plus tard
+          jac=0
+          ! boucle sur les fonctions de base d'interpolation
+          ! pour construire la jacobienne de la transformation
+          ! géométrique
+          do iib=1,nloc
+             ! gradient de la fonction de base au pg 
+             ! dans les variables de référence
+             ! calcul du poids de gauss
+             call gradpg(iib,ipg,dxy,poids)
+             ib=connec(iib,iel)
+             ! contribution à la jacobienne
+             jac(1,1)=jac(1,1)+node(1,ib)*dxy(1)
+             jac(1,2)=jac(1,2)+node(1,ib)*dxy(2)
+             jac(2,1)=jac(2,1)+node(2,ib)*dxy(1)
+             jac(2,2)=jac(2,2)+node(2,ib)*dxy(2)
+          end do
+          !write(*,*) ipg,jac
+          ! déterminant et transposée de l'inverse
+          det=jac(1,1)*jac(2,2)-jac(1,2)*jac(2,1)
+!!$          cojac(1,1)=jac(2,2)/det
+!!$          cojac(2,2)=jac(1,1)/det
+!!$          cojac(1,2)=-jac(2,1)/det
+!!$          cojac(2,1)=-jac(1,2)/det
+
+          ! assemblage du second membre
+          rho(ig)=rho(ig)+vf*det*poids
+       end do
+    end do
+       
+    write(*,*) 'Assemblage conditions aux limites rhs...'
+
+    ! assemblage des conditions aux limites de dirichlet
+    ! par pénalisation
+    do ii=1,nbc
+       i=indexbc(ii)
+       rho(i)=potexact(node(1,i),node(2,i))*big
+       !rho(i)=0
+    end do
+
+
+
+
+  end subroutine assemb_rhs
+
+
 
 
   ! compute (in place) the LU decomposition
@@ -634,3 +817,4 @@ contains
 
 
 end module lobalap
+
