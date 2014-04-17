@@ -27,8 +27,6 @@ contains
     implicit none
     real(8),intent(in) :: u,v
     real(8),intent(out) :: x,y
-!    real(8) :: jac(2,2),invjac(2,2),det
-    real(8),parameter :: pi=4*atan(1.d0)
     real(8) :: eta1, eta2
 
     !x=(1+u)*(1+v)*cos(pi*v)
@@ -39,15 +37,6 @@ contains
     x = tau%x1(eta1,eta2)
     y = tau%x2(eta1,eta2)
 
-!    !x=u
-!    !y=v
-!    ! non utilisé
-!    jac=0
-!    jac(1,1)=1
-!    jac(2,2)=1
-!    invjac=jac
-!    det=1
-!
   end subroutine map
 
 end module map_function_module
