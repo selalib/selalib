@@ -982,11 +982,10 @@ contains
     sll_real64:: moyenne
     
     apr_tx = 0.0_f64
-    
     apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
     apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
   
-    
+    print*,apr_taux
     if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
        apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
     else
@@ -998,40 +997,39 @@ contains
 !!$          do li_i = 2,ai_nx-1
 !!$             lpr_taux(li_i) = lpr_taux(li_i-1) + sqrt(abs(apr_g(li_i)-apr_g(li_i-1)))/moyenne
 !!$          end do
-          apr_tx ( 1 : ai_kx ) =  apr_taux ( 1 )!0.0_f64
-          apr_tx ( ai_nx+ ai_nx_der + 1 : ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )!1.0_f64
-          table(1) = (ai_kx-ai_nx_der)/(ai_kx-ai_nx_der+ 1)  
-          table(2) = 1.0/(ai_kx-ai_nx_der+ 1)
-          do li_i = ai_kx+1, ai_nx + ai_nx_der
-             do li_j=li_i - ai_kx, li_i - ai_nx_der
-
-                apr_tx(li_i) = apr_tx(li_i) + apr_taux(li_j)
-             end do
-              apr_tx(li_i) =  apr_tx(li_i)/ (ai_kx-ai_nx_der+ 1)
-          end do
+!!$          apr_tx ( 1 : ai_kx ) =  apr_taux ( 1 )!0.0_f64
+!!$          apr_tx ( ai_nx+ ai_nx_der + 1 : ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )!1.0_f64
+!!$
+!!$          do li_i = ai_kx+1, ai_nx + ai_nx_der
+!!$             do li_j=li_i - ai_kx, li_i - ai_nx_der
+!!$
+!!$                apr_tx(li_i) = apr_tx(li_i) + apr_taux(li_j)
+!!$             end do
+!!$              apr_tx(li_i) =  apr_tx(li_i)/ (ai_kx-ai_nx_der+ 1)
+!!$          end do
           
           ! redimensions
           !apr_tx = apr_tx * (apr_taux ( ai_nx )- apr_taux ( 1 )) + apr_taux ( 1 )
 
-!!$
-!!$          apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-!!$          apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
-!!$
-!!$          if ( mod(ai_kx,2) == 0 ) then
-!!$             do li_i = ai_kx + 1, ai_nx+ai_nx_der
-!!$                apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
-!!$                
-!!$             end do
-!!$          else
-!!$             
-!!$             do li_i = ai_kx + 1, ai_nx+ai_nx_der
-!!$                apr_tx ( li_i ) = &
-!!$                     0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
-!!$                     apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-!!$                
-!!$             end do
-!!$       
-!!$          end if
+
+          apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
+          apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
+
+          if ( mod(ai_kx,2) == 0 ) then
+             do li_i = ai_kx + 1, ai_nx+ai_nx_der
+                apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
+                
+             end do
+          else
+             
+             do li_i = ai_kx + 1, ai_nx+ai_nx_der
+                apr_tx ( li_i ) = &
+                     0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
+                     apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
+                
+             end do
+       
+          end if
           
        elseif (ai_nx_der==ai_nx) then
           

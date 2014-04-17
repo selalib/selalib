@@ -842,6 +842,7 @@ contains
        SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
        SLL_DEALLOCATE(data_array_derivative,ierr)
     case(18) ! Neumann - Neumann
+       sz_deriv = 2
        interpolator%size_coeffs = sz + sz_deriv
        interpolator%size_t = order + sz + sz_deriv 
 
@@ -852,7 +853,6 @@ contains
        data_array_derivative(1)       = 0.0_f64
        point_locate_eta_derivative(2) = interpolator%eta_max
        data_array_derivative(2)       = 0.0_f64
-       
        call spli1d_der(sz,sz_deriv,order,&
             point_locate_eta,&
             data_array,&
@@ -865,6 +865,7 @@ contains
        SLL_DEALLOCATE(data_array_derivative,ierr)
  
     case(20) ! Hermite - Neumann
+       sz_deriv = 2
        interpolator%size_coeffs = sz + sz_deriv
        interpolator%size_t = order + sz + sz_deriv 
 
@@ -888,6 +889,7 @@ contains
 
     case(33) ! Dirichlet - Hermite
 
+       sz_deriv = 1
        interpolator%size_coeffs = sz + sz_deriv
        interpolator%size_t = order + sz + sz_deriv 
 
@@ -910,6 +912,8 @@ contains
        SLL_DEALLOCATE(point_locate_eta_derivative,ierr)
        SLL_DEALLOCATE(data_array_derivative,ierr)
     case(34) ! Neumann - Hermite 
+
+       sz_deriv = 2
        interpolator%size_coeffs = sz + sz_deriv
        interpolator%size_t = order + sz + sz_deriv 
 
