@@ -1,7 +1,6 @@
 program test_lobalap
 #include "selalib.h"
 
-  use lobalap
   use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   use sll_dg_fields
@@ -10,48 +9,49 @@ program test_lobalap
   type(lobatto_poisson_solver)        :: solver
   type(sll_logical_mesh_2d), pointer  :: mesh
   class(sll_coordinate_transformation_2d_analytic), pointer :: tau
-  type(dg_field), pointer :: rho
+  type(dg_field), pointer :: dg_rho
+  type(dg_field), pointer :: dg_ex
+  type(dg_field), pointer :: dg_ey
 
   sll_int32, parameter :: degree = 2
-  real(8), external :: f_cos
+  real(8), external :: f_cos, f_four
   
-#define NPTS1 32
-#define NPTS2 16
-#define R_MIN  1.0_8
-#define R_MAX  2.0_8
-#define THETA_MIN  0.0_8
-#define THETA_MAX  sll_pi
-#define N 4
+#define NPTS1 8
+#define NPTS2 8
+#define R_MIN  0.0_8
+#define R_MAX  1.0_8
+#define THETA_MIN  0.00_8
+#define THETA_MAX  1.00_8
+#define N 6
 
   ! logical mesh for space coordinates
   mesh => new_logical_mesh_2d( NPTS1, NPTS2,    & 
        eta1_min= R_MIN, eta1_max= R_MAX,    &
        eta2_min= THETA_MIN, eta2_max= THETA_MAX)
 
-  ! coordinate transformation associated with space coordinates
-  tau => new_coordinate_transformation_2d_analytic( &
-       "analytic_polar_transformation", &
-       mesh, &
-       polar_x1, &
-       polar_x2, &
-       polar_jac11, &
-       polar_jac12, &
-       polar_jac21, &
-       polar_jac22, &
-       (/ 0.0_f64 /) ) 
-
+!  ! coordinate transformation associated with space coordinates
 !  tau => new_coordinate_transformation_2d_analytic( &
-!       "analytic_identity_transformation", &
+!       "analytic_polar_transformation", &
 !       mesh, &
-!       identity_x1, &
-!       identity_x2, &
-!       identity_jac11, &
-!       identity_jac12, &
-!       identity_jac21, &
-!       identity_jac22, &
-!       (/ 0.0_f64 /) )
+!       polar_x1, &
+!       polar_x2, &
+!       polar_jac11, &
+!       polar_jac12, &
+!       polar_jac21, &
+!       polar_jac22, &
+!       (/ 0.0_f64 /) ) 
 
-  call tau%write_to_file()
+  tau => new_coordinate_transformation_2d_analytic( &
+       "analytic_identity_transformation", &
+       mesh, &
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       (/ 0.0_f64 /) )
+
 
 !  tau => new_coordinate_transformation_2d_analytic( &
 !    "analytic_colela_transformation", &
@@ -62,16 +62,22 @@ program test_lobalap
 !    sinprod_jac12, &
 !    sinprod_jac21, &
 !    sinprod_jac22, &
-!    (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
-!
+!    (/ 0.5_f64,0.5_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
+
+  call tau%write_to_file()
+
+  dg_rho => new_dg_field( degree, tau, f_four ) 
+  dg_ex => new_dg_field( degree, tau ) 
+  dg_ey => new_dg_field( degree, tau ) 
+
+  call dg_rho%write_to_file('rho')
 
   call initialize(solver, tau, degree )
-  rho => new_dg_field( degree, tau, f_cos) 
-  call rho%write_to_file('rho')
-
-  call solve(solver)!, rho)
+  call solve(solver, dg_rho, dg_ex, dg_ey)
   call delete(solver)
 
+  call dg_ex%write_to_file('ex')
+  call dg_ey%write_to_file('ey')
 
 end program test_lobalap
 
@@ -83,6 +89,12 @@ real(8) function f_cos( r, theta )
    f_cos = (r-R_MIN)*(r-R_MAX)*cos(N*theta)*r
 
 end function f_cos
+
+real(8) function f_four( x, y)
+   real(8) :: x, y
+   f_four = -4._8
+
+end function f_four
 
 real(8) function f_sin( r, theta )
 
