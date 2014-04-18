@@ -90,3 +90,5 @@ TARGET_LINK_LIBRARIES(vp4d_multigrid       selalib_vlasov4d ${LIBS})
 ADD_SUBDIRECTORY(vm4d-csl)
 
 FILE(COPY ${CMAKE_CURRENT_SOURCE_DIR}/tests DESTINATION ${CMAKE_BINARY_DIR})
+
+ADD_EXECUTABLE(local_to_global local_to_global.F90)

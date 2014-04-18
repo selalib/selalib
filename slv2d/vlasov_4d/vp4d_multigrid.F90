@@ -57,8 +57,7 @@ program vp4d_multigrid
   integer, parameter          :: tag = 1111
 
   integer, parameter :: gridsize_x = 6    ! size of array
-  integer, parameter :: gridsize_y = 8    ! size of array
-  integer, parameter :: procgridsize = 2 ! size of process grid
+  integer, parameter :: gridsize_y = 16   ! size of array
   character, allocatable, dimension (:,:) :: global, local
   integer, dimension(:), allocatable   :: counts, displs
   integer, parameter    :: root = 0
@@ -155,10 +154,8 @@ program vp4d_multigrid
   CALL MPI_CART_SHIFT(comm2d,1,1,neighbor(W),neighbor(E),error)
   CALL MPI_COMM_RANK(comm2d,prank,error)
   CALL MPI_CART_COORDS(comm2d,prank,ndims,coords,error)
-
   CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),neighbor(NW),error)
   CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),neighbor(NE),error)
-
   CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(SW),error)
   CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(SE),error)
 
@@ -182,8 +179,6 @@ program vp4d_multigrid
   end if
   call flush(6)
 
-  call compute_local_sizes_2d(layout_mg, loc_sz_i,loc_sz_j)        
-
   sx = get_layout_2D_i_min(layout_mg, prank)
   ex = get_layout_2D_i_max(layout_mg, prank)
   sy = get_layout_2D_j_min(layout_mg, prank)
@@ -204,8 +199,8 @@ program vp4d_multigrid
   SLL_CLEAR_ALLOCATE(phi_local(sx-1:ex+1,sy-1:ey+1), error)
   SLL_CLEAR_ALLOCATE(rho_local(sx-1:ex+1,sy-1:ey+1), error)
   SLL_CLEAR_ALLOCATE(den(sx-1:ex+1,sy-1:ey+1), error); den = 1.0_f64
-  SLL_CLEAR_ALLOCATE(ex_local(sx-1:ex+1,sy-1:ey+1), error)
-  SLL_CLEAR_ALLOCATE(ey_local(sx-1:ex+1,sy-1:ey+1), error)
+  SLL_CLEAR_ALLOCATE(ex_local(sx:ex,sy:ey), error)
+  SLL_CLEAR_ALLOCATE(ey_local(sx:ex,sy:ey), error)
 
   call transposexv(vlasov)
   call compute_charge(vlasov)
@@ -223,13 +218,13 @@ program vp4d_multigrid
 
   call global_scale( rho_local )
 
-  call local_plot(rho_local, "rhs")
+  call local_plot(rho_local(sx:ex,sy:ey), "rhs")
 
   call solve(poisson, phi_local, rho_local, den)
   !call global_scale( phi )
 
-  call local_plot(phi_local, "phi")
-  call local_plot(rho_local, "res")
+  call local_plot(phi_local(sx:ex,sy:ey), "phi")
+  call local_plot(rho_local(sx:ex,sy:ey), "res")
 
   !compute Ex and Ey
   do j = sy,ey
@@ -239,8 +234,8 @@ program vp4d_multigrid
      end do
   end do
 
-  call local_plot(ex_local, "ex_local")
-  call local_plot(ex_local, "ey_local")
+  call local_plot(ex_local(sx:ex,sy:ey), "ex_local")
+  call local_plot(ey_local(sx:ex,sy:ey), "ey_local")
 
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
@@ -264,8 +259,8 @@ program vp4d_multigrid
                                 newtype, ierr)
 
   starts   = [sx-1,sy-1]
-  sizes    = [vlasov%nc_eta1, vlasov%nc_eta2]
-  subsizes = [ex-sx+1, ey-sy+1]
+  sizes    = [vlasov%nc_eta1,vlasov%nc_eta2]
+  subsizes = [ex-sx+1,ey-sy+1]
   call MPI_TYPE_CREATE_SUBARRAY(2, sizes, subsizes, starts, &
                                 MPI_ORDER_FORTRAN, &
                                 MPI_REAL8, block_type, error)
@@ -277,7 +272,7 @@ program vp4d_multigrid
   call MPI_Type_commit(resizedtype, ierr)
 
   call MPI_Type_size(MPI_REAL8, doublesize, ierr)
-  extent = (ex-sx+1)*doublesize
+  extent = (ey-sy+1)*doublesize
   begin  = 0
   call MPI_Type_create_resized(block_type, begin, extent, resized_block_type, ierr)
   call MPI_Type_commit(resized_block_type, ierr)
@@ -312,15 +307,27 @@ program vp4d_multigrid
   forall( col=1:ncols, row=1:nrows )
      displs(1+(row-1)+ncols*(col-1)) = (row-1) + (ey-sy+1)*ncols*(col-1)
   endforall
+  ex_local = prank+1
  
   call MPI_AllGatherv( ex_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
                        ex_global, counts, displs, resized_block_type,&
                        comm2d, ierr)
   call MPI_BARRIER(comm2d, error)
-  !call MPI_AllGatherv( ey_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
-  !                     ey_global, counts, displs, resized_block_type,&
-  !                     comm2d, ierr)
 
+  print*, prank, maxval(ex_local(sx:ex,sy:ey)-ex_global(sx:ex,sy:ey)), &
+                 minval(ex_local(sx:ex,sy:ey)-ex_global(sx:ex,sy:ey))
+
+  call MPI_FINALIZE(error)
+  stop
+
+  print*, 'hello from ', prank
+!  call MPI_AllGatherv( ey_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
+!                       ey_global, counts, displs, resized_block_type,&
+!                       comm2d, ierr)
+
+  call MPI_Type_free(resized_block_type,ierr)
+
+  print*, 'coucou de ', prank
   call global_plot(ex_global, 'ex_global')
   call global_plot(ey_global, 'ey_global')
 
@@ -332,9 +339,6 @@ program vp4d_multigrid
   vlasov%ey(vlasov%np_eta1,:) = vlasov%ey(1,:) 
   vlasov%ey(:,vlasov%np_eta2) = vlasov%ey(:,1) 
 
-  call global_plot(vlasov%ex, 'ex')
-  call global_plot(vlasov%ey, 'ey')
-
   time = 0.0_f64
   call advection_x1(vlasov,0.5*vlasov%dt)
   call advection_x2(vlasov,0.5*vlasov%dt)
@@ -342,7 +346,7 @@ program vp4d_multigrid
   do iter=1, vlasov%nbiter
 
      if (iter == 1 .or. mod(iter, vlasov%fdiag) == 0) then 
-        call write_xmf_file(vlasov,iter/ vlasov%fdiag)
+     !   call write_xmf_file(vlasov,iter/ vlasov%fdiag)
      end if
 
      call transposexv(vlasov)
@@ -378,7 +382,7 @@ contains
    subroutine local_plot(field, fieldname)
 
       character(len=*) :: fieldname
-      sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
+      sll_real64, intent(in) :: field(sx:ex,sy:ey)
 
       call sll_gnuplot_rect_2d_parallel((sx-1)*vlasov%delta_eta1, &
                                         vlasov%delta_eta1,        &
