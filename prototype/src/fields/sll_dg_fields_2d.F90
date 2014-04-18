@@ -35,9 +35,6 @@ contains
 
 end type dg_field
 
-interface plot_dg_field
-   module procedure plot_dg_field_2d
-end interface plot_dg_field
 
 !interface operator(+)
 !  module procedure dg_field_add
@@ -47,7 +44,7 @@ end interface plot_dg_field
 !  module procedure dg_field_sub
 !end interface operator(-)
 
-public :: new_dg_field, plot_dg_field!, operator(-)
+public :: new_dg_field
 
 sll_int32, private :: error
 
@@ -138,9 +135,9 @@ subroutine plot_dg_field_2d( this, field_name )
       rewind(gnu_id)
    else
       open(unit=gnu_id, file=field_name//".gnu", position="append")
-      write(gnu_id,"(a)") "unset key"
-      write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
    end if
+   write(gnu_id,"(a)") "unset key"
+   write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
 
 
    icell = 0

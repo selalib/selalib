@@ -1,14 +1,20 @@
 module sll_lobatto_poisson
+
 #include "sll_working_precision.h"
+
    use sll_module_coordinate_transformations_2d
    use sll_common_coordinate_transformations
+   use map_function_module, only: set_map_function
    use lobalap
+   use sll_dg_fields
+
    implicit none
    
    private
    
    type, public :: lobatto_poisson_solver
-   
+      class(sll_coordinate_transformation_2d_analytic),pointer :: tau
+      sll_int32  :: order
    end type lobatto_poisson_solver
    
    interface initialize
@@ -22,30 +28,47 @@ module sll_lobatto_poisson
    interface delete
    module procedure delete_lobatto_poisson
    end interface delete
-   
+
 public :: initialize, solve, delete
 
 contains
 
-subroutine initialize_lobatto_poisson(this, tau)
+subroutine initialize_lobatto_poisson(this, tau, order)
 
-   class(sll_coordinate_transformation_2d_base),pointer :: tau
    type(lobatto_poisson_solver) :: this
-   procedure(map_function)      :: map0
+   class(sll_coordinate_transformation_2d_analytic),pointer :: tau
+   sll_int32, optional :: order
+   sll_int32 :: nx0
+   sll_int32 :: ny0
+   sll_int32 :: order0
 
+   this%tau => tau
+   nx0 = tau%mesh%num_cells1
+   ny0 = tau%mesh%num_cells2
 
-  call init(30,10,2, map0)
-  call assemb()
-  call computeLU()
+   call set_map_function(tau)
+
+   if (present(order)) then
+      call init(nx0,ny0,order)
+   else
+      call init(nx0,ny0,2)
+   end if
+   call assemb()
+   call computeLU()
 
 end subroutine initialize_lobatto_poisson
 
-subroutine solve_lobatto_poisson(this, phi, rho)
-  sll_real64, dimension(:,:) :: phi
-  sll_real64, dimension(:,:) :: rho
-  type(lobatto_poisson_solver) :: this
+subroutine solve_lobatto_poisson(this, rhs, ex, ey)
 
+  type(lobatto_poisson_solver) :: this
+  type(dg_field)               :: rhs
+  type(dg_field)               :: ex
+  type(dg_field)               :: ey
+
+  call assemb_rhs(rhs%array)
   call compute_phi()
+  call compute_electric_field(ex%array, ey%array)
+
 
 end subroutine solve_lobatto_poisson
 
