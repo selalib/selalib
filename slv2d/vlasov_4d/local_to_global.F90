@@ -3,7 +3,7 @@ program local_to_global
   use mpi
   implicit none
 
-  integer  :: ncols, nrows
+  integer  :: nx, ny
 
   integer, dimension(8)     :: neighbor
   integer, parameter        :: N =7, S =3, W =5, E =1
@@ -17,21 +17,20 @@ program local_to_global
   integer                   :: statut(MPI_STATUS_SIZE)
   integer, parameter        :: tag = 1111
 
-  integer, parameter :: gridsize_x = 30   ! size of array
-  integer, parameter :: gridsize_y = 30   ! size of array
+  integer, parameter :: gridsize_x = 12   ! size of array
+  integer, parameter :: gridsize_y = 24   ! size of array
   character, allocatable, dimension (:,:) :: global
   character, allocatable, dimension (:,:) :: local
   integer, dimension(:), allocatable   :: counts, displs
   integer, parameter    :: proot = 0
   integer :: localsize_x, localsize_y
-  integer :: row, col, ierr, iproc, charsize
+  integer :: i, j, k,  ierr, iproc, charsize
   integer, dimension(ndims) :: sizes, subsizes, starts
 
   integer :: comm2d, psize, prank
   integer :: newtype, resizedtype
   integer, dimension(MPI_STATUS_SIZE) :: rstatus
   integer(kind=MPI_ADDRESS_KIND) :: extent, begin
-  integer :: i
   real(8) :: tcpu1, tcpu2
 
 
@@ -43,9 +42,9 @@ program local_to_global
 
   dims = 0
   CALL MPI_DIMS_CREATE(int(psize,4),ndims,dims,ierr)
-  ncols = dims(1)
-  nrows = dims(2)
-  print*, 'ncols, nrows =', ncols, nrows
+  nx = dims(1)
+  ny = dims(2)
+  print*, 'nx, ny =', nx, ny
   periods(1) = .true.
   periods(2) = .true.
   reorder    = .true.
@@ -68,28 +67,27 @@ program local_to_global
   call flush(6)
   call MPI_BARRIER(comm2d,ierr)
 
-  if (mod(gridsize_x,nrows) == 0) then
-     localsize_x = gridsize_x/nrows
+  if (mod(gridsize_x,nx) == 0) then
+     localsize_x = gridsize_x/nx
   else
-     print*, gridsize_x, nrows
      call MPI_FINALIZE(ierr); stop
   end if
-  if (mod(gridsize_y,ncols) == 0) then
-     localsize_y = gridsize_y/ncols
+  if (mod(gridsize_y,ny) == 0) then
+     localsize_y = gridsize_y/ny
   else
-     print*, gridsize_y, ncols
      call MPI_FINALIZE(ierr); stop
   end if
 
-  localsize_y = gridsize_y/ncols
   allocate( local(localsize_x, localsize_y) )
   allocate( global(gridsize_x, gridsize_y) )
   global = char(48)
-  local  = achar( ichar('0') + prank )
+  local  = achar( ichar('A') + prank )
 
+  print*, gridsize_x, gridsize_y
   starts   = [0,0]
   sizes    = [gridsize_x, gridsize_y]
   subsizes = [localsize_x, localsize_y]
+  stop
 
   print*, 'create the subarray type'
   call MPI_TYPE_CREATE_SUBARRAY(2, sizes, subsizes, starts,        &
@@ -103,14 +101,19 @@ program local_to_global
   call MPI_TYPE_CREATE_RESIZED(newtype, begin, extent, resizedtype, ierr)
   call MPI_TYPE_COMMIT(resizedtype, ierr)
 
-  allocate(counts(ncols*nrows))
-  allocate(displs(ncols*nrows))
+  allocate(counts(nx*ny))
+  allocate(displs(nx*ny))
 
   print*, 'compute displacements'
   counts = 1          
-  forall( col=1:ncols, row=1:nrows )
-     displs((col-1)*ncols+row) = (row-1) + localsize_y*ncols*(col-1)
-  endforall
+  k = 0
+  do j=1,ny
+     do i=1,nx
+        k = k+1
+        displs(k) = (j-1) + localsize_y*nx*(i-1)
+     end do
+  end do
+
  
   call MPI_AllGatherv( local, localsize_x*localsize_y, MPI_CHARACTER, & 
                        global, counts, displs, resizedtype,&
