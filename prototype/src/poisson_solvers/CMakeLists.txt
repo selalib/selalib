@@ -78,7 +78,7 @@ IF (NOT STDF95)
     test_poisson_2d_dirichlet_cartesian.F90 )
 
   TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian
-    sll_poisson_solvers )
+    sll_poisson_solvers sll_utilities )
 
 
   ADD_EXECUTABLE(
