@@ -47,8 +47,8 @@ program vp_cartesian_4d
 
 ! hardwired, this should be consistent with whatever is read from a file
 
-#define NCELL1 8
-#define NCELL2 8
+#define NCELL1 16
+#define NCELL2 16
 #define NCELL3 16
 #define NCELL4 16
 !!$#define NCELL1 16
@@ -107,7 +107,7 @@ program vp_cartesian_4d
 !#define TMAX 0._f64
 #define CFL 0.7_f64
 #define ELECMAX 1.0_f64 ! upper bound estimate for the electric field
-#define EPSILON 0.05
+#define EPSILON 0.005
 #define TEST 5
 ! 0: x transport 1: landau damping 1d xvx  2: vx-transport
 ! 3: vy transport 4: y transport 5: landau 2d
@@ -117,7 +117,7 @@ program vp_cartesian_4d
 !11: galaxy 1D test case
 !12: galaxy 2D test case
 
-#define DEG  3 ! polynomial degree
+#define DEG  2 ! polynomial degree
 #define SCHEME 1
 !0 Euler 1: Rung-Kutta 2 order 2:Rung-Kutta 4 order
 
