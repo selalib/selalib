@@ -14,7 +14,6 @@ program local_to_global
   logical                   :: reorder
   logical,dimension(ndims)  :: periods
 
-  integer                   :: statut(MPI_STATUS_SIZE)
   integer, parameter        :: tag = 1111
 
   integer, parameter :: gridsize_x = 12   ! size of array
@@ -29,7 +28,6 @@ program local_to_global
 
   integer :: comm2d, psize, prank
   integer :: newtype, resizedtype
-  integer, dimension(MPI_STATUS_SIZE) :: rstatus
   integer(kind=MPI_ADDRESS_KIND) :: extent, begin
   real(8) :: tcpu1, tcpu2
 
@@ -70,11 +68,13 @@ program local_to_global
   if (mod(gridsize_x,nx) == 0) then
      localsize_x = gridsize_x/nx
   else
+     print*, 'nx=', nx, 'gridsize_x', gridsize_x
      call MPI_FINALIZE(ierr); stop
   end if
   if (mod(gridsize_y,ny) == 0) then
      localsize_y = gridsize_y/ny
   else
+     print*, 'ny=', ny, 'gridsize_y', gridsize_y
      call MPI_FINALIZE(ierr); stop
   end if
 
@@ -87,7 +87,6 @@ program local_to_global
   starts   = [0,0]
   sizes    = [gridsize_x, gridsize_y]
   subsizes = [localsize_x, localsize_y]
-  stop
 
   print*, 'create the subarray type'
   call MPI_TYPE_CREATE_SUBARRAY(2, sizes, subsizes, starts,        &
@@ -106,11 +105,12 @@ program local_to_global
 
   print*, 'compute displacements'
   counts = 1          
+  displs = 0
   k = 0
   do j=1,ny
      do i=1,nx
-        k = k+1
-        displs(k) = (j-1) + localsize_y*nx*(i-1)
+        k=k+1
+        displs(k) = j-1+(i-1)*localsize_y*nx
      end do
   end do
 
