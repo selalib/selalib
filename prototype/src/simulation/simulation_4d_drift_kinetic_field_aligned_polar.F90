@@ -150,9 +150,26 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      !----> parallel in (x3) and sequential in (x1,x2,x4) 
      type(layout_4D), pointer :: layout4d_seqx3
      sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx3
+
      !----> definition of remap
      type(remap_plan_4D_real64), pointer ::remap_plan_seqx1x2x4_to_seqx3
      type(remap_plan_4D_real64), pointer ::remap_plan_seqx3_to_seqx1x2x4
+
+
+     !----> parallel in x1
+     type(layout_4D), pointer :: layout4d_parx1
+     sll_real64, dimension(:,:,:,:), pointer :: f4d_parx1
+
+     !----> parallel in (x3,x4)
+     type(layout_4D), pointer :: layout4d_parx3x4
+     sll_real64, dimension(:,:,:,:), pointer :: f4d_parx3x4
+
+     !----> definition of remap
+     type(remap_plan_4D_real64), pointer ::remap_plan_parx1_to_parx3x4
+     type(remap_plan_4D_real64), pointer ::remap_plan_parx3x4_to_parx1
+
+     
+     
      
 
      !--> 3D charge density and 3D electric potential
@@ -171,6 +188,23 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      !----> definition of remap
      type(remap_plan_3D_real64), pointer ::remap_plan_seqx1x2_to_seqx3
      type(remap_plan_3D_real64), pointer ::remap_plan_seqx3_to_seqx1x2
+
+
+     !----> parallel in x1
+     type(layout_3D), pointer :: layout3d_parx1
+     sll_real64, dimension(:,:,:), pointer :: rho3d_parx1 
+     sll_real64, dimension(:,:,:), pointer :: phi3d_parx1 
+     sll_real64, dimension(:,:,:), pointer :: A3_parx1 
+     !----> parallel in x3
+     type(layout_3D), pointer :: layout3d_parx3
+     sll_real64, dimension(:,:,:), pointer :: rho3d_parx3
+     sll_real64, dimension(:,:,:), pointer :: phi3d_parx3
+     sll_real64, dimension(:,:,:), pointer :: A1_parx3
+     sll_real64, dimension(:,:,:), pointer :: A2_parx3
+     
+     
+     
+     
 
      !--> cubic splines interpolation
     !type(sll_cubic_spline_2d), pointer :: interp_x1x2
@@ -494,6 +528,12 @@ contains
     call initialize_profiles_analytic(sim)    
     call allocate_fdistribu4d_DK(sim)
     call allocate_QN_DK( sim )
+
+    call allocate_fdistribu4d_DK_parx1(sim)
+    call allocate_QN_DK_parx1( sim )
+
+
+
     
     
     call initialize_eta1_node_1d(sim%m_x1,sim%x1_node)
@@ -1377,9 +1417,10 @@ contains
   subroutine delete_dk4d_field_aligned_polar( sim )
     class(sll_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
     !sll_int32 :: ierr
-    
-    print *,'#delete_dk4d_polar not implemented'
-    print *,sim%dt
+    if(sll_get_collective_rank(sll_world_collective)==0)then    
+      print *,'#delete_dk4d_polar not implemented'
+      print *,sim%dt
+    endif
     
   end subroutine delete_dk4d_field_aligned_polar
   
@@ -1555,6 +1596,129 @@ contains
     
     
   end subroutine allocate_fdistribu4d_DK
+
+
+
+  !----------------------------------------------------
+  ! Allocation of the distribution function for
+  !   drift-kinetic 4D simulation
+  !----------------------------------------------------
+  subroutine allocate_fdistribu4d_DK_parx1( sim )
+    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
+
+    sll_int32 :: ierr !, itemp
+    sll_int32 :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
+    sll_int32 :: power2_x3
+
+
+    sim%nproc_x1 = sim%world_size
+    sim%nproc_x2 = 1
+    sim%nproc_x3 = 1
+    sim%nproc_x4 = 1
+   
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+    
+      print *,'#num_points=',sim%m_x1%num_cells+1, &
+        sim%m_x2%num_cells+1, &
+        sim%m_x3%num_cells+1, &
+        sim%m_x4%num_cells+1
+   
+      print *,'#num_proc=',sim%world_size
+   
+      print *,'#num_proc_parx1:',sim%nproc_x1,sim%nproc_x2,sim%nproc_x3,sim%nproc_x4
+    endif
+    
+    sim%power2 = int(log(real(sim%world_size))/log(2.0))
+    power2_x3 = int(log(real(sim%m_x3%num_cells+1))/log(2.0))
+    power2_x3 = min(power2_x3,sim%power2)
+
+    !--> Initialization of parallel layout of f4d in x1 direction
+    !-->  (x2,x3,x4) : sequential
+    !-->  x1 : parallelized layout
+    sim%layout4d_parx1  => new_layout_4D( sll_world_collective )
+    call initialize_layout_with_distributed_4D_array( &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
+      sim%m_x4%num_cells+1, &
+      sim%nproc_x1, &
+      sim%nproc_x2, &
+      sim%nproc_x3, &
+      sim%nproc_x4, &
+      sim%layout4d_parx1 )
+    
+    ! Allocate the array needed to store the local chunk 
+    ! of the distribution function data. First compute the 
+    ! local sizes. Since the remap operations
+    ! are out-of-place, we will allocate two different arrays, 
+    ! one for each layout.
+    call compute_local_sizes_4d( sim%layout4d_parx1, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )
+    
+    !print *,'#locsize',sim%my_rank,loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4
+    
+    
+      
+      
+      
+    SLL_ALLOCATE(sim%f4d_parx1(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
+
+    !--> Initialization of parallel layout of f4d in (x3,x4) directions
+    !-->  (x3,x4) : parallelized layout
+    !-->  (x1,x2) : sequential
+    !--> we take the most important number of points in x3
+    
+    sim%nproc_x1 = 1
+    sim%nproc_x2 = 1
+    sim%nproc_x3 = 2**(power2_x3)
+    sim%nproc_x4 = 2**(sim%power2-power2_x3)
+     
+
+    sim%layout4d_parx3x4  => new_layout_4D( sll_world_collective )
+    call initialize_layout_with_distributed_4D_array( &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
+      sim%m_x4%num_cells+1, &
+      sim%nproc_x1, &
+      sim%nproc_x2, &
+      sim%nproc_x3, &
+      sim%nproc_x4, &
+      sim%layout4d_parx3x4 )
+        
+    call compute_local_sizes_4d( sim%layout4d_parx3x4, &
+      loc4d_sz_x1, &
+      loc4d_sz_x2, &
+      loc4d_sz_x3, &
+      loc4d_sz_x4 )    
+    SLL_ALLOCATE(sim%f4d_parx3x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
+    
+    
+    sim%remap_plan_parx1_to_parx3x4 => NEW_REMAP_PLAN( &
+      sim%layout4d_parx1, &
+      sim%layout4d_parx3x4, &
+      sim%f4d_parx1)
+    sim%remap_plan_parx3x4_to_parx1 => NEW_REMAP_PLAN( &
+      sim%layout4d_parx3x4, &
+      sim%layout4d_parx1, &
+      sim%f4d_parx3x4)
+
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      print *,'#num_proc_parx3x4:',sim%nproc_x1,sim%nproc_x2,sim%nproc_x3,sim%nproc_x4
+    endif
+    
+    
+  end subroutine allocate_fdistribu4d_DK_parx1
+
+
+
+
+
+
+
 
 
   !----------------------------------------------------
@@ -1758,6 +1922,112 @@ contains
 
     
    end subroutine allocate_QN_DK
+
+
+
+  !----------------------------------------------------
+  ! Allocation for QN solver
+  !----------------------------------------------------
+  subroutine allocate_QN_DK_parx1( sim )
+    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
+
+    !type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    sll_int32 :: ierr, itemp
+    !sll_int32 :: i1, i2, i3, i4
+    !sll_int32 :: iloc1, iloc2, iloc3, iloc4
+    sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
+    sll_int32 :: nproc3d_x3
+
+
+    ! layout for sequential operations in x3 
+    sim%power2 = int(log(real(sim%world_size))/log(2.0))
+    !--> special case N = 1, so power2 = 0
+    if(sim%power2 == 0) then
+       sim%nproc_x1 = 1
+       sim%nproc_x2 = 1
+       sim%nproc_x3 = 1
+       sim%nproc_x4 = 1
+    end if
+    
+    if(is_even(sim%power2)) then
+       sim%nproc_x1 = 1
+       sim%nproc_x2 = 1
+       sim%nproc_x3 = 2**(sim%power2/2)
+       sim%nproc_x4 = 2**(sim%power2/2)
+    else 
+       sim%nproc_x1 = 1
+       sim%nproc_x2 = 1
+       sim%nproc_x3 = 2**((sim%power2-1)/2)
+       sim%nproc_x4 = 2**((sim%power2+1)/2)
+    end if
+
+    !--> Initialization of rho3d_x1x2 and phi3d_x1x2
+    !-->  (x1,x2) : sequential
+    !-->  x3 : parallelized layout    
+    sim%layout3d_seqx1x2  => new_layout_3D( sll_world_collective )
+    nproc3d_x3 = sim%nproc_x3*sim%nproc_x4
+    call initialize_layout_with_distributed_3D_array( &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
+      sim%nproc_x1, &
+      sim%nproc_x2, &
+      nproc3d_x3, &
+      sim%layout3d_seqx1x2 )
+    call compute_local_sizes_3d( &
+      sim%layout3d_seqx1x2, &
+      loc3d_sz_x1, &
+      loc3d_sz_x2, &
+      loc3d_sz_x3)
+    SLL_ALLOCATE(sim%rho3d_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%phi3d_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%A1_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%A2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%A3_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    !--> Initialization of rho3d_x3 and phi3d_x3
+    !-->  (x1,x2) : parallelized layout
+    !-->  x3 : sequential
+    ! switch x3 and x1:
+    itemp        = sim%nproc_x1
+    sim%nproc_x1 = sim%nproc_x3
+    sim%nproc_x3 = itemp
+    ! switch x4 and x2
+    itemp        = sim%nproc_x2
+    sim%nproc_x2 = sim%nproc_x4 
+    sim%nproc_x4 = itemp
+        
+    sim%layout3d_seqx3  => new_layout_3D( sll_world_collective )
+    call initialize_layout_with_distributed_3D_array( &
+      sim%m_x1%num_cells+1, & 
+      sim%m_x2%num_cells+1, & 
+      sim%m_x3%num_cells+1, &
+      sim%nproc_x1, &
+      sim%nproc_x2, &
+      sim%nproc_x3, &
+      sim%layout3d_seqx3 )
+    call compute_local_sizes_3d( &
+      sim%layout3d_seqx3, &
+      loc3d_sz_x1, &
+      loc3d_sz_x2, &
+      loc3d_sz_x3)
+    SLL_ALLOCATE(sim%rho3d_seqx3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%phi3d_seqx3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    SLL_ALLOCATE(sim%A3_seqx3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
+    
+    
+    sim%remap_plan_seqx1x2_to_seqx3 => NEW_REMAP_PLAN( &
+      sim%layout3d_seqx1x2, &
+      sim%layout3d_seqx3, &
+      sim%rho3d_seqx1x2)
+    sim%remap_plan_seqx3_to_seqx1x2 => NEW_REMAP_PLAN( &
+      sim%layout3d_seqx3, &
+      sim%layout3d_seqx1x2, &
+      sim%rho3d_seqx3)
+
+    
+   end subroutine allocate_QN_DK_parx1
+
+
 
  
  
