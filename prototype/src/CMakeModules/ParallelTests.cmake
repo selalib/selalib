@@ -87,9 +87,9 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1 PROPERTIES 
 	    PASS_REGULAR_EXPRESSION "PASSED")
 
-      ADD_MPI_TEST(qns3d_polar_parallel_x1_abstract 
-        test_qn_solver_3d_polar_parallel_x1_abstract ${PROCS} ${ARGS})
-      SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1_abstract PROPERTIES 
+      ADD_MPI_TEST(qns3d_polar_parallel_x1_wrapper 
+        test_qn_solver_3d_polar_parallel_x1_wrapper ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1_wrapper PROPERTIES 
 	    PASS_REGULAR_EXPRESSION "PASSED")
 
       

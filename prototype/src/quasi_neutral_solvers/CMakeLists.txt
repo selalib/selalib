@@ -24,7 +24,7 @@ IF(FFT_LIB MATCHES "SLLFFT")
 
       IF (NOT STDF95)
         SET(QNS_PARALLEL_SRCS ${QNS_PARALLEL_SRCS} 
-          sll_qn_solver_3d_polar_parallel_x1_abstract.F90)
+          sll_qn_solver_3d_polar_parallel_x1_wrapper.F90)
       ENDIF()
 
 
@@ -44,10 +44,10 @@ IF(FFT_LIB MATCHES "SLLFFT")
 
       IF (NOT STDF95)
 
-        ADD_EXECUTABLE( test_qn_solver_3d_polar_parallel_x1_abstract 
-          unit_test_qn_solver_3d_polar_parallel_x1_abstract.F90)
+        ADD_EXECUTABLE( test_qn_solver_3d_polar_parallel_x1_wrapper 
+          unit_test_qn_solver_3d_polar_parallel_x1_wrapper.F90)
    
-        TARGET_LINK_LIBRARIES( test_qn_solver_3d_polar_parallel_x1_abstract 
+        TARGET_LINK_LIBRARIES( test_qn_solver_3d_polar_parallel_x1_wrapper 
           sll_qn_solvers_parallel)
         
       ENDIF()

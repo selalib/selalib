@@ -15,11 +15,11 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_qn_solver_3d_polar_parallel_x1_abstract
+program unit_test_qn_solver_3d_polar_parallel_x1_wrapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_qn_solver_3d_polar_parallel_x1_abstract_module
+use sll_qn_solver_3d_polar_parallel_x1_wrapper_module
 use sll_collective
 
 !use sll_boundary_condition_descriptors
@@ -53,7 +53,7 @@ implicit none
   
   err = 0._f64
   
-!  poisson =>new_qn_solver_3d_polar_parallel_x1_abstract( &
+!  poisson =>new_qn_solver_3d_polar_parallel_x1_wrapper( &
 !    x1_min, &
 !    x1_max, &
 !    Nc_x1, &
@@ -70,4 +70,4 @@ implicit none
     print *, '#PASSED'
   endif
 
-end program unit_test_qn_solver_3d_polar_parallel_x1_abstract
+end program unit_test_qn_solver_3d_polar_parallel_x1_wrapper
