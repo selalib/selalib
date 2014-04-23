@@ -23,7 +23,7 @@ program local_to_global
   integer, dimension(:), allocatable   :: counts, displs
   integer, parameter    :: proot = 0
   integer :: localsize_x, localsize_y
-  integer :: i, j, k,  ierr, iproc, charsize
+  integer :: i, ierr, iproc, charsize
   integer, dimension(ndims) :: sizes, subsizes, starts
 
   integer :: comm2d, psize, prank
@@ -106,7 +106,6 @@ program local_to_global
      CALL MPI_CART_COORDS(comm2d,iproc-1,ndims,coords,ierr)
      displs(iproc) = coords(1) + coords(2)*nx*localsize_y
   end do 
-  call MPI_BCAST(displs, psize, MPI_INTEGER, proot, comm2d, ierr)
   
   call MPI_AllGatherv( local, localsize_x*localsize_y, MPI_CHARACTER, & 
                        global, counts, displs, resizedtype, comm2d, ierr)
