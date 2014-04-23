@@ -19,7 +19,7 @@
 !> for abstract class flexibility purposes
 !> here it is a specification of 3d poisson solver
 
-module sll_qn_solver_3d_polar_parallel_x1_abstract_module
+module sll_qn_solver_3d_polar_parallel_x1_wrapper_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -29,7 +29,7 @@ module sll_qn_solver_3d_polar_parallel_x1_abstract_module
 implicit none
 
 
-  type,extends(sll_poisson_3d_base) :: qn_solver_3d_polar_parallel_x1_abstract     
+  type,extends(sll_poisson_3d_base) :: qn_solver_3d_polar_parallel_x1_wrapper     
   
   type(sll_qn_solver_3d_polar_parallel_x1), pointer :: poiss
 
@@ -44,10 +44,10 @@ implicit none
 !    procedure, pass(poisson) :: compute_E_from_phi => &
 !      compute_E_from_phi_2d_polar
       
-  end type qn_solver_3d_polar_parallel_x1_abstract
+  end type qn_solver_3d_polar_parallel_x1_wrapper
 
 contains
-  function new_qn_solver_3d_polar_parallel_x1_abstract( &
+  function new_qn_solver_3d_polar_parallel_x1_wrapper( &
     layout_x1, &
     layout_x2, &
     x1_min, &
@@ -60,7 +60,7 @@ contains
     dlog_density, &
     inv_Te) &
     result(poisson)
-    type(qn_solver_3d_polar_parallel_x1_abstract),pointer :: poisson
+    type(qn_solver_3d_polar_parallel_x1_wrapper),pointer :: poisson
     type(layout_2D), pointer :: layout_x1 !< sequential in x1 direction
     type(layout_2D), pointer :: layout_x2 !< sequential in x2 direction
     sll_real64               :: x1_min    !< rmin
@@ -75,7 +75,7 @@ contains
     sll_int32 :: ierr
       
     SLL_ALLOCATE(poisson,ierr)
-    call initialize_qn_solver_3d_polar_parallel_x1_abstract( &
+    call initialize_qn_solver_3d_polar_parallel_x1_wrapper( &
       poisson, &
       layout_x1, &
       layout_x2, &
@@ -89,10 +89,10 @@ contains
       dlog_density, &
       inv_Te)
     
-  end function new_qn_solver_3d_polar_parallel_x1_abstract
+  end function new_qn_solver_3d_polar_parallel_x1_wrapper
   
   
-  subroutine initialize_qn_solver_3d_polar_parallel_x1_abstract( &
+  subroutine initialize_qn_solver_3d_polar_parallel_x1_wrapper( &
     poisson, &
     layout_x1, &
     layout_x2, &
@@ -106,7 +106,7 @@ contains
     dlog_density, &
     inv_Te)
     implicit none
-    type(qn_solver_3d_polar_parallel_x1_abstract)  :: poisson     !< Poisson solver class
+    type(qn_solver_3d_polar_parallel_x1_wrapper)  :: poisson     !< Poisson solver class
     type(layout_2D), pointer :: layout_x1 !< sequential in x1 direction
     type(layout_2D), pointer :: layout_x2 !< sequential in x2 direction
     sll_real64               :: x1_min    !< rmin
@@ -139,10 +139,10 @@ contains
     
     
     
-  end subroutine initialize_qn_solver_3d_polar_parallel_x1_abstract
+  end subroutine initialize_qn_solver_3d_polar_parallel_x1_wrapper
   
   subroutine compute_phi_from_rho_3d_qns_polar_par_x1( poisson, phi, rho )
-    class(qn_solver_3d_polar_parallel_x1_abstract), target :: poisson
+    class(qn_solver_3d_polar_parallel_x1_wrapper), target :: poisson
     sll_real64,dimension(:,:,:),intent(in) :: rho
     sll_real64,dimension(:,:,:),intent(out) :: phi
     
@@ -151,7 +151,7 @@ contains
   end subroutine compute_phi_from_rho_3d_qns_polar_par_x1
     
   subroutine compute_E_from_rho_3d_qns_polar_par_x1( poisson, E1, E2, E3, rho)
-    class(qn_solver_3d_polar_parallel_x1_abstract) :: poisson
+    class(qn_solver_3d_polar_parallel_x1_wrapper) :: poisson
     sll_real64,dimension(:,:,:),intent(in) :: rho
     sll_real64,dimension(:,:,:),intent(out) :: E1
     sll_real64,dimension(:,:,:),intent(out) :: E2
@@ -182,4 +182,4 @@ contains
 
 
 
-end module sll_qn_solver_3d_polar_parallel_x1_abstract_module
+end module sll_qn_solver_3d_polar_parallel_x1_wrapper_module
