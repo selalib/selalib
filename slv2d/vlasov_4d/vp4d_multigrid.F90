@@ -78,7 +78,7 @@ program vp4d_multigrid
   tcpu1 = MPI_WTIME()
 
   if (prank == MPI_MASTER) then
-     print*,'MPI Version of slv2d running on ',psize, ' processors'
+     print*,'MPI program running on ',psize, ' processors'
   end if
 
   call read_input_file(vlasov)
@@ -240,9 +240,6 @@ program vp4d_multigrid
   SLL_CLEAR_ALLOCATE(ex_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
   SLL_CLEAR_ALLOCATE(ey_global(1:vlasov%nc_eta1,1:vlasov%nc_eta2), error)
 
-  !ex_global(sx:ex,sy:ey) = ex_local(sx:ex,sy:ey)
-  !ey_global(sx:ex,sy:ey) = ey_local(sx:ex,sy:ey)
-
   localsize_x = gridsize_x/nrows
   localsize_y = gridsize_y/ncols
   allocate( local(localsize_x, localsize_y) )
@@ -272,7 +269,7 @@ program vp4d_multigrid
   call MPI_Type_commit(resizedtype, ierr)
 
   call MPI_Type_size(MPI_REAL8, doublesize, ierr)
-  extent = (ey-sy+1)*doublesize
+  extent = (ex-sx+1)*doublesize
   begin  = 0
   call MPI_Type_create_resized(block_type, begin, extent, resized_block_type, ierr)
   call MPI_Type_commit(resized_block_type, ierr)
@@ -281,15 +278,17 @@ program vp4d_multigrid
   SLL_ALLOCATE(displs(ncols*nrows),error)
 
   counts = 1          
-  forall( col=1:ncols, row=1:nrows )
-     displs(1+(row-1)+ncols*(col-1)) = (row-1) + localsize_y*ncols*(col-1)
-  endforall
+  displs = 0
+  do p = 1, int(psize,i32)
+     CALL MPI_CART_COORDS(comm2d,p-1,ndims,coords,ierr)
+     displs(p) = coords(1) + coords(2)*nrows*localsize_y
+  end do 
  
   call MPI_AllGatherv( local, localsize_x*localsize_y, MPI_CHARACTER, & 
                        global, counts, displs, resizedtype,&
                        comm2d, ierr)
 
-  do p=0, psize-1
+  do p=0, int(psize,i32)-1
      if (p == prank) then
      print *, ' Rank ', p, ' received: '
      do i=1,gridsize_x
@@ -304,28 +303,23 @@ program vp4d_multigrid
   deallocate(local)
 
   counts = 1          
-  forall( col=1:ncols, row=1:nrows )
-     displs(1+(row-1)+ncols*(col-1)) = (row-1) + (ey-sy+1)*ncols*(col-1)
-  endforall
-  ex_local = prank+1
- 
+  displs = 0
+
+  do p = 1, int(psize,i32)
+     CALL MPI_CART_COORDS(comm2d,p-1,ndims,coords,ierr)
+     displs(p) = coords(1) + coords(2)*nrows*(ey-sy+1)
+  end do 
+
   call MPI_AllGatherv( ex_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
                        ex_global, counts, displs, resized_block_type,&
                        comm2d, ierr)
-  call MPI_BARRIER(comm2d, error)
 
-  print*, prank, maxval(ex_local(sx:ex,sy:ey)-ex_global(sx:ex,sy:ey)), &
-                 minval(ex_local(sx:ex,sy:ey)-ex_global(sx:ex,sy:ey))
-
-  call MPI_FINALIZE(error)
-  stop
-
-  print*, 'hello from ', prank
-!  call MPI_AllGatherv( ey_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
-!                       ey_global, counts, displs, resized_block_type,&
-!                       comm2d, ierr)
+  call MPI_AllGatherv( ey_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
+                       ey_global, counts, displs, resized_block_type,&
+                       comm2d, ierr)
 
   call MPI_Type_free(resized_block_type,ierr)
+  call local_plot(ey_local(sx:ex,sy:ey), "ey_local")
 
   print*, 'coucou de ', prank
   call global_plot(ex_global, 'ex_global')
