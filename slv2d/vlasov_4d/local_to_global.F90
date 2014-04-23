@@ -42,10 +42,9 @@ program local_to_global
   CALL MPI_DIMS_CREATE(int(psize,4),ndims,dims,ierr)
   nx = dims(1)
   ny = dims(2)
-  print*, 'nx, ny =', nx, ny
   periods(1) = .true.
   periods(2) = .true.
-  reorder    = .true.
+  reorder    = .false.
 
   CALL MPI_CART_CREATE(MPI_COMM_WORLD,ndims,dims,periods,reorder,comm2d,ierr)
 
@@ -83,17 +82,14 @@ program local_to_global
   global = char(48)
   local  = achar( ichar('A') + prank )
 
-  print*, gridsize_x, gridsize_y
   starts   = [0,0]
   sizes    = [gridsize_x, gridsize_y]
   subsizes = [localsize_x, localsize_y]
 
-  print*, 'create the subarray type'
   call MPI_TYPE_CREATE_SUBARRAY(2, sizes, subsizes, starts,        &
                                 MPI_ORDER_FORTRAN, MPI_CHARACTER,  &
                                 newtype, ierr)
 
-  print*, 'resize the subarray type'
   call MPI_TYPE_SIZE(MPI_CHARACTER, charsize, ierr)
   extent = localsize_x*charsize
   begin  = 0
@@ -103,21 +99,17 @@ program local_to_global
   allocate(counts(nx*ny))
   allocate(displs(nx*ny))
 
-  print*, 'compute displacements'
   counts = 1          
   displs = 0
-  k = 0
-  do j=1,ny
-     do i=1,nx
-        k=k+1
-        displs(k) = j-1+(i-1)*localsize_y*nx
-     end do
-  end do
 
- 
+  do iproc = 1, psize
+     CALL MPI_CART_COORDS(comm2d,iproc-1,ndims,coords,ierr)
+     displs(iproc) = coords(1) + coords(2)*nx*localsize_y
+  end do 
+  call MPI_BCAST(displs, psize, MPI_INTEGER, proot, comm2d, ierr)
+  
   call MPI_AllGatherv( local, localsize_x*localsize_y, MPI_CHARACTER, & 
-                       global, counts, displs, resizedtype,&
-                       comm2d, ierr)
+                       global, counts, displs, resizedtype, comm2d, ierr)
 
   do iproc=0, psize-1
      if (iproc == prank) then
@@ -133,10 +125,12 @@ program local_to_global
   deallocate(global)
   deallocate(local)
 
+  call flush(6)
 
   tcpu2 = MPI_WTIME()
-  if (prank == proot) &
-       write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
+  if (prank == proot) then
+     write(*,"(//10x,' Wall time = ', G15.3, ' sec' )") (tcpu2-tcpu1)*psize
+  end if
 
   call MPI_FINALIZE(ierr)
   stop
