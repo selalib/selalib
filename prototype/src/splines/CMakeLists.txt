@@ -1,3 +1,7 @@
+ADD_LIBRARY( hex_pre_filters STATIC hex_pre_filters.F90)
+
+TARGET_LINK_LIBRARIES(hex_pre_filters hex_mesh)
+
 ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
                                 sll_quintic_splines.F90
 				box_splines.F90
@@ -6,6 +10,7 @@ ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
                                 cubic_nonuniform_splines.F90)
 
 TARGET_LINK_LIBRARIES(sll_splines sll_utilities 
+                                  hex_pre_filters
                                   hex_mesh
                                   sll_boundary_condition_descriptors
                                   ${LAPACK_LIBRARIES})
