@@ -65,7 +65,7 @@ program vp4d_multigrid
   sll_int32 :: ierr, p, doublesize
   sll_int32, dimension(2) :: sizes, subsizes, starts
 
-  sll_int32(kind=MPI_ADDRESS_KIND) :: extent, begin
+  integer(kind=MPI_ADDRESS_KIND) :: extent, begin
 
   call sll_boot_collective()
 
@@ -157,10 +157,13 @@ program vp4d_multigrid
   CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(SW),error)
   CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(SE),error)
 
-  call flush(6)
-  print"('proc: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
-  call flush(6)
-  call MPI_BARRIER(comm,error)
+  do p=0, int(psize,i32)-1
+     if (p == prank) then
+        print"('Rank: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
+        call flush(6)
+      end if
+      call MPI_Barrier(MPI_COMM_WORLD, ierr)
+  enddo
 
   layout_mg => new_layout_2D( sll_world_collective )        
 
@@ -331,10 +334,13 @@ contains
 
       character(len=*) :: fieldname
       sll_real64, intent(in) :: field(:,:)
+      character(len=4) :: crank
 
       SLL_ASSERT(size(field,1) == vlasov%nc_eta1)
       SLL_ASSERT(size(field,2) == vlasov%nc_eta2)
-
+      
+      call int2string(prank,crank)
+ 
       call sll_gnuplot_2d(vlasov%eta1_min, &
                           vlasov%eta1_max, &
                           vlasov%nc_eta1,  &
@@ -342,7 +348,7 @@ contains
                           vlasov%eta2_max, &
                           vlasov%nc_eta2,  &
                           field,           &
-                          fieldname,       &
+                          fieldname//crank,&
                           iter,            &
                           error)  
    end subroutine global_plot
