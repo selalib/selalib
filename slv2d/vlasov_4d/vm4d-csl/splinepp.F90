@@ -3,8 +3,7 @@ module splinepp_class
   use geometry_module
   !use clock
   implicit none
-  private
-  public :: new, interpole
+
   type, public :: splinepp
      type (geometry) :: geom
      real(wp) :: a1x, a2x, a3x, a4x ! coef de la matrice 2x2 per.
@@ -14,12 +13,13 @@ module splinepp_class
      real(wp), dimension(:,:), pointer :: axm1gamma, aym1gamma 
      real(wp), dimension(:,:), pointer :: coef, bcoef ! coefficients des splines
   end type splinepp
-  interface new
+  interface initialize
      module procedure new_splinepp
   end interface
   interface interpole
      module procedure interpole_splinepp,interpole_splineppdep
   end interface
+  public :: initialize, interpole
 contains
   subroutine new_splinepp(this,geom,iflag)
     type(splinepp), intent(out) :: this
