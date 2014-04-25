@@ -5,9 +5,6 @@ program local_to_global
 
   integer  :: nx, ny
 
-  integer, dimension(8)     :: neighbor
-  integer, parameter        :: N =7, S =3, W =5, E =1
-  integer, parameter        :: NW=6, SW=4, NE=8, SE=2
   integer, parameter        :: ndims = 2
   integer, dimension(ndims) :: dims
   integer, dimension(ndims) :: coords
@@ -48,21 +45,8 @@ program local_to_global
 
   CALL MPI_CART_CREATE(MPI_COMM_WORLD,ndims,dims,periods,reorder,comm2d,ierr)
 
-  neighbor(:) = MPI_PROC_NULL
-
-  CALL MPI_CART_SHIFT(comm2d,0,1,neighbor(N),neighbor(S),ierr)
-  CALL MPI_CART_SHIFT(comm2d,1,1,neighbor(W),neighbor(E),ierr)
   CALL MPI_COMM_RANK(comm2d,prank,ierr)
   CALL MPI_CART_COORDS(comm2d,prank,ndims,coords,ierr)
-  CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)+1/),neighbor(NW),ierr)
-  CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)+1/),neighbor(NE),ierr)
-  CALL MPI_CART_RANK(comm2d,(/coords(1)-1,coords(2)-1/),neighbor(SW),ierr)
-  CALL MPI_CART_RANK(comm2d,(/coords(1)+1,coords(2)-1/),neighbor(SE),ierr)
-
-  call flush(6)
-  print"('proc: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
-  call flush(6)
-  call MPI_BARRIER(comm2d,ierr)
 
   if (mod(gridsize_x,nx) == 0) then
      localsize_x = gridsize_x/nx
