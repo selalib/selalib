@@ -26,5 +26,5 @@ TARGET_LINK_LIBRARIES(bsl_landau_1d selalib dfftpack)
 ADD_EXECUTABLE(bsl_landau_2d landau_2d.F90)
 TARGET_LINK_LIBRARIES(bsl_landau_2d sll_interpolators 
                                     sll_poisson_solvers
-                                    sll_maxwell_solvers
-                                    mudpack  )
+                                    sll_maxwell_solvers )
+#                                    mudpack  )

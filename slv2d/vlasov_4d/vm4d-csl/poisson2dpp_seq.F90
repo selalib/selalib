@@ -7,7 +7,6 @@ use fft_module
 #include "sll_working_precision.h"
 use sll_constants
 
-
 implicit none
 public :: initialize, dealloc, solve, transposexy, transposeyx
 
@@ -22,9 +21,11 @@ end type poisson2dpp
 interface initialize
    module procedure new_poisson2dpp
 end interface
+
 interface dealloc
    module procedure dealloc_poisson2dpp
 end interface
+
 interface solve
    module procedure solve_poisson2dpp
 end interface
