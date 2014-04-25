@@ -95,18 +95,12 @@ subroutine initialize_multigrid_2d_periodic( this,     &
    sll_int32 :: ixp
    sll_int32 :: jyq 
 
-   logical    :: periods(2)
-
    sll_int32  :: iex, jey
 
-   sll_int32  :: numprocs
    sll_int32  :: ibdry
    sll_int32  :: jbdry
-   sll_int32  :: i
-   sll_int32  :: status(MPI_STATUS_SIZE)
    sll_int32  :: nwork
    sll_int32  :: ierr
-   sll_int32  :: coords(2)
 
    sll_real64, dimension(4) :: vbc
 
@@ -211,8 +205,6 @@ subroutine initialize_multigrid_2d( this,                         &
    sll_int32  :: numprocs
    sll_int32  :: ibdry
    sll_int32  :: jbdry
-   sll_int32  :: i
-   sll_int32  :: status(MPI_STATUS_SIZE)
    sll_int32  :: nbrright
    sll_int32  :: nbrbottom
    sll_int32  :: nbrleft
@@ -228,6 +220,7 @@ subroutine initialize_multigrid_2d( this,                         &
    sll_int32  :: coords(2)
 
    sll_real64, dimension(4) :: vbc
+   sll_int32  :: psize, iproc, prank
 
    nx = nc_x
    ny = nc_y
@@ -391,7 +384,6 @@ subroutine initialize_multigrid_2d( this,                         &
       write(IOUT,"(/,'ERROR in multigrid code : 183',/)")
    end if
 
-   write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
 #endif
 
    where(this%neighbor >= 0)
@@ -399,6 +391,21 @@ subroutine initialize_multigrid_2d( this,                         &
    elsewhere
       bd = 1
    end where
+
+#ifdef DEBUG
+   call MPI_COMM_RANK(comm2d,prank,ierr)
+   call MPI_COMM_SIZE(comm2d,psize,ierr)
+   do iproc=0, psize-1
+      if (iproc == prank) then
+         print *, ' Rank ', iproc
+         print *, ' neighbor ', this%neighbor
+         print *, ' bd       ', bd
+         print *, ' vbc ', vbc
+         write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
+         call MPI_Barrier(MPI_COMM_WORLD, ierr)
+      end if
+   enddo
+#endif
 
    call mgdinit(   vbc,         &
                    phibc,       &
@@ -450,10 +457,8 @@ subroutine solve_multigrid_2d(this, p, f, r)
    sll_real64, dimension(:,:) :: p
    sll_real64, dimension(:,:) :: f
    sll_real64, dimension(:,:) :: r
-
-   sll_int32  :: iter
-
-   sll_real64, parameter :: rro = 0.0_f64 !Average density
+   sll_int32                  :: iter
+   sll_real64, parameter      :: rro = 0.0_f64 !Average density
 
 !-----------------------------------------------------------------------
 ! solve using mgd2
@@ -468,7 +473,7 @@ subroutine solve_multigrid_2d(this, p, f, r)
                   r,             &
                   ngrid,         &
                   this%work,     &
-                   maxcy,        &
+                  maxcy,         &
                   tolmax,        &
                   kcycle,        &
                   iprer,         &
@@ -492,7 +497,7 @@ subroutine solve_multigrid_2d(this, p, f, r)
 
 end subroutine solve_multigrid_2d
 
-subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
+subroutine mpe_decomp1d(n,numprocs,myid,s,e)
 
    sll_int32 :: n, numprocs, myid, s, e
    sll_int32 :: nlocal
@@ -507,9 +512,9 @@ subroutine MPE_DECOMP1D(n,numprocs,myid,s,e)
    !------------------------------------------------------------------------
 
    nlocal  = n / numprocs
-   s      = myid * nlocal + 1
+   s       = myid * nlocal + 1
    deficit = mod(n,numprocs)
-   s      = s + min(myid,deficit)
+   s       = s + min(myid,deficit)
    if (myid  < deficit) then
        nlocal = nlocal + 1
    endif
@@ -539,12 +544,12 @@ subroutine write_topology( this )
    xp = real(this%coords(1),4)/this%pdims(1) * this%xl 
    yp = real(this%coords(2),4)/this%pdims(2) * this%yl 
 
-   dx = 1. / this%pdims(1) * this%xl
-   dy = 1. / this%pdims(2) * this%yl
+   dx = 1.0_f64 / this%pdims(1) * this%xl
+   dy = 1.0_f64 / this%pdims(2) * this%yl
    
    if ( prank == 0) then
    
-      call sll_ascii_file_create("mpi.mtv", file_id, error)
+      call sll_ascii_file_create("mpi_topology.mtv", file_id, error)
       write(file_id,*)"$DATA=CONTOUR"
       write(file_id,*)"%equalscale=T"
       write(file_id,*)"%interp     = 0"

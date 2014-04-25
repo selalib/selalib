@@ -47,8 +47,8 @@ implicit none
 !
 ! parameters
 !
-   sll_int32 :: nxprocs = 2
-   sll_int32 :: nyprocs = 2
+   sll_int32             :: nxprocs = 2
+   sll_int32             :: nyprocs = 2
    sll_int32,  parameter :: nx = 64
    sll_int32,  parameter :: ny = 64
    sll_real64, parameter :: x_min = -1.0_f64
@@ -56,7 +56,6 @@ implicit none
    sll_real64, parameter :: y_min = -1.0_f64
    sll_real64, parameter :: y_max = +1.0_f64
    character(len=4)      :: buffer
-   sll_real64, parameter :: eps = 0.1
 
    sll_real64 :: delta_x
    sll_real64 :: delta_y
@@ -129,14 +128,15 @@ implicit none
 
    do j=sy-1, ey+1
      do i=sx-1, ex+1
-       x(i,j) = x_min + (i-1.d0)*delta_x
-       y(i,j) = y_min + (j-1.d0)*delta_y
+       x(i,j) = x_min + (i-2.d0)*delta_x
+       y(i,j) = y_min + (j-2.d0)*delta_y
      end do
    end do
 
-   q = eps * sin(2*sll_pi*wk*x)*sin(2*sll_pi*wk*y)
+   q = sin(2*sll_pi*wk*x)*sin(2*sll_pi*wk*y)
 
-   f =  1. + cnst * q
+   f = cnst * q
+   call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
    
    call solve(solver, p, f, r)
 
@@ -145,10 +145,10 @@ implicit none
    call MPI_ALLREDUCE(end_time-start_time,total_time,1,MPI_REAL8,MPI_SUM, &
                       solver%comm2d,error)
 
-   call gp_plot2d(p,   'p')
-   call gp_plot2d(q,   'q')
-   call gp_plot2d(p-q, 'e')
-   call gp_plot2d(f,   'r')
+   call gp_plot2d(p,  x,y,sx,ex,sy,ey,'p')
+   call gp_plot2d(q,  x,y,sx,ex,sy,ey,'q')
+   call gp_plot2d(p-q,x,y,sx,ex,sy,ey,'e')
+   call gp_plot2d(f,  x,y,sx,ex,sy,ey,'r')
 
    !-----------------------------------------------------------------------
    ! Calculate the error between the numerical and exact solution to
@@ -173,39 +173,5 @@ implicit none
    stop
 
 100 format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
-
-contains
-
-   subroutine gp_plot2d(field, fieldname)
-
-   sll_int32        :: iproc
-   character(len=*) :: fieldname
-   character(len=4) :: crank
-   sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
-
-   !write domains
-   call int2string(prank, crank)
-   open( 80, file = fieldname//crank//".dat" )
-      do i=sx,ex
-         do j=sy,ey
-            write(80,"(4e15.5)") x(i,j), y(i,j), field(i,j)
-         end do
-         write(80,*) 
-      end do
-   close(80)
-   
-   !write master file
-   if (prank == 0) then
-      open( 90, file = fieldname//'.gnu')
-      write(90,"(a)",advance='no')"splot '"//fieldname//"0000.dat' w lines"
-      do iproc = 1, psize - 1
-         call int2string(iproc, crank)
-         write(90,"(a)",advance='no') ",'"//fieldname//crank//".dat' w lines" 
-      end do
-      write(90,*)
-      close(90)
-   end if
-
-   end subroutine gp_plot2d
 
 end program test_multigrid_2d_periodic
