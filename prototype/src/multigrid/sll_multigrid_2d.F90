@@ -4,6 +4,7 @@ module sll_multigrid_2d
 #include "sll_boundary_condition_descriptors.h"
 
    use sll_collective
+   use sll_ascii_io
 
    implicit none
 
@@ -350,9 +351,6 @@ subroutine initialize_multigrid_2d( this,                         &
    this%neighbor(5)=nbrleft
    this%neighbor(7)=nbrtop
 
-   write(*,*) myid, this%neighbor(1), this%neighbor(3), this%neighbor(5), this%neighbor(7)
-   call flush(6)
-
    CALL MPI_CART_COORDS(comm2d,myid,2,coords,ierr)
    this%coords = coords
 
@@ -380,6 +378,7 @@ subroutine initialize_multigrid_2d( this,                         &
    sy=sy+1
    ey=ey+1
 
+#ifdef DEBUG
    if ((ex-sx+3) > nxdim) then
       write(IOUT,110) myid,nxdim,ex-sx+3
       nerror=1
@@ -393,18 +392,13 @@ subroutine initialize_multigrid_2d( this,                         &
    end if
 
    write(IOUT,*) 'sx=',sx,' ex=',ex,' sy=',sy,' ey=',ey
+#endif
 
    where(this%neighbor >= 0)
       bd = 0
    elsewhere
       bd = 1
    end where
-
-   do i=1,8
-      write(IOUT,*) myid, 'neighbor: ',this%neighbor(i),' bd: ',bd(i)
-   end do
-
-   call flush(6)
 
    call mgdinit(   vbc,         &
                    phibc,       &
@@ -437,6 +431,7 @@ subroutine initialize_multigrid_2d( this,                         &
    this%sy = sy
    this%comm2d = comm2d
 
+#ifdef DEBUG
 110 format(/,'ERROR: process:',i3,' nxdim=',i4,' < ex-sx+3=',i4,/, &
     &       ' -> put the parameter formula for nxdim in main.F in ', &
     &       'comments and',/,'    assign to nxdim the maximum ', &
@@ -445,6 +440,7 @@ subroutine initialize_multigrid_2d( this,                         &
     &       ' -> put the parameter formula for nydim in main.F in ', &
     &       'comments and'/,'     assign to nydim the maximum ', &
     &       'value of ey-sy+3',/)
+#endif
 
 end subroutine initialize_multigrid_2d
 
@@ -534,6 +530,8 @@ subroutine write_topology( this )
    sll_int32  :: iproc, jproc
    sll_int32  :: tag = 1111
    sll_int32  :: statut(MPI_STATUS_SIZE)
+   sll_int32  :: file_id
+   sll_int32  :: error
 
    call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)
    call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
@@ -546,19 +544,19 @@ subroutine write_topology( this )
    
    if ( prank == 0) then
    
-      open(4,file="mpi.mtv")
-      write(4,*)"$DATA=CONTOUR"
-      write(4,*)"%equalscale=T"
-      write(4,*)"%interp     = 0"
-      write(4,*)"%contstyle  = 0"
-      write(4,*)"%meshplot   = on" 
-      write(4,*)"%hiddenline = off" 
-      write(4,*)"%xmin=",0., " xmax = ", this%xl
-      write(4,*)"%ymin=",0., " ymax = ", this%yl
-      write(4,*)"% nx   = ", this%pdims(1)+1
-      write(4,*)"% ny   = ", this%pdims(2)+1
+      call sll_ascii_file_create("mpi.mtv", file_id, error)
+      write(file_id,*)"$DATA=CONTOUR"
+      write(file_id,*)"%equalscale=T"
+      write(file_id,*)"%interp     = 0"
+      write(file_id,*)"%contstyle  = 0"
+      write(file_id,*)"%meshplot   = on" 
+      write(file_id,*)"%hiddenline = off" 
+      write(file_id,*)"%xmin=",0., " xmax = ", this%xl
+      write(file_id,*)"%ymin=",0., " ymax = ", this%yl
+      write(file_id,*)"% nx   = ", this%pdims(1)+1
+      write(file_id,*)"% ny   = ", this%pdims(2)+1
       do jproc = 1, this%pdims(2)+1
-         write(4,*)(0., iproc=1,this%pdims(1)+1)
+         write(file_id,*)(0., iproc=1,this%pdims(1)+1)
       end do
 
       do iproc = 0, psize-1
@@ -566,11 +564,11 @@ subroutine write_topology( this )
             call MPI_RECV(xp,1,MPI_REAL8,iproc,tag,MPI_COMM_WORLD,statut,code)
             call MPI_RECV(yp,1,MPI_REAL8,iproc,tag,MPI_COMM_WORLD,statut,code)
          end if
-         write(4,111)xp+.5*dx,yp+.5*dy,iproc
+         write(file_id,111)xp+.5*dx,yp+.5*dy,iproc
       end do
    
-      write(4,"('$END')")
-      close(4)
+      write(file_id,"('$END')")
+      close(file_id)
 
    else
 
