@@ -56,14 +56,18 @@ program vp4d_multigrid
   logical                     :: reorder
   logical,dimension(ndims)    :: periods
 
-  sll_int32                   :: block_type, resized_block_type
+  sll_int32                   :: block_type
+  sll_int32                   :: resized_block_type
   sll_int32                   :: block_size
-  sll_int32, parameter        :: tag = 1111
 
-  sll_int32, dimension(:), allocatable :: counts, displs
-  sll_int32, parameter    :: proot = 0
-  sll_int32 :: ierr, p, doublesize
-  sll_int32, dimension(2) :: sizes, subsizes, starts
+  sll_int32, dimension(:), allocatable :: counts
+  sll_int32, dimension(:), allocatable :: displs
+  sll_int32, parameter                 :: proot = MPI_MASTER
+  sll_int32                            :: doublesize
+  sll_int32                            :: p
+  sll_int32, dimension(2)              :: sizes
+  sll_int32, dimension(2)              :: subsizes
+  sll_int32, dimension(2)              :: starts
 
   integer(kind=MPI_ADDRESS_KIND) :: extent, begin
 
@@ -162,7 +166,7 @@ program vp4d_multigrid
         print"('Rank: ',i2,', coords: ',2i3,', neighbors: ',8i3)",prank,coords,neighbor
         call flush(6)
       end if
-      call MPI_Barrier(MPI_COMM_WORLD, ierr)
+      call MPI_Barrier(MPI_COMM_WORLD, error)
   enddo
 
   layout_mg => new_layout_2D( sll_world_collective )        
@@ -185,15 +189,15 @@ program vp4d_multigrid
   sy = get_layout_2D_j_min(layout_mg, prank)
   ey = get_layout_2D_j_max(layout_mg, prank)
 
-  call MPI_ALLREDUCE(ex-sx,loc_sz_x_min,1,MPI_INTEGER,MPI_MIN,comm2d,ierr)
-  call MPI_ALLREDUCE(ex-sx,loc_sz_x_max,1,MPI_INTEGER,MPI_MAX,comm2d,ierr)
-  call MPI_ALLREDUCE(ey-sy,loc_sz_y_min,1,MPI_INTEGER,MPI_MIN,comm2d,ierr)
-  call MPI_ALLREDUCE(ey-sy,loc_sz_y_max,1,MPI_INTEGER,MPI_MAX,comm2d,ierr)
+  call MPI_ALLREDUCE(ex-sx,loc_sz_x_min,1,MPI_INTEGER,MPI_MIN,comm2d,error)
+  call MPI_ALLREDUCE(ex-sx,loc_sz_x_max,1,MPI_INTEGER,MPI_MAX,comm2d,error)
+  call MPI_ALLREDUCE(ey-sy,loc_sz_y_min,1,MPI_INTEGER,MPI_MIN,comm2d,error)
+  call MPI_ALLREDUCE(ey-sy,loc_sz_y_max,1,MPI_INTEGER,MPI_MAX,comm2d,error)
 
   if (loc_sz_x_min /= loc_sz_x_max .or. loc_sz_y_min /= loc_sz_y_max) then
      print*, 'Check your mesh sizes and processors number'
      print*, 'Block sizes should be equal on every processors'
-     call MPI_FINALIZE(ierr)
+     call MPI_FINALIZE(error)
   end if
 
   block_size = (ex-sx+1)*(ey-sy+1)
@@ -201,8 +205,8 @@ program vp4d_multigrid
   call initialize( poisson, sx, ex, sy, ey,          &
                    vlasov%nc_eta1*vlasov%delta_eta1, &
                    vlasov%nc_eta2*vlasov%delta_eta2, &
-                   ncols,                          &
-                   nrows,                          &
+                   ncols,                            &
+                   nrows,                            &
                    vlasov%nc_eta1,                   &
                    vlasov%nc_eta2,                   &
                    comm2d,                           &
@@ -225,11 +229,11 @@ program vp4d_multigrid
                                 MPI_ORDER_FORTRAN, &
                                 MPI_REAL8, block_type, error)
 
-  call MPI_TYPE_SIZE(MPI_REAL8,doublesize,ierr)
+  call MPI_TYPE_SIZE(MPI_REAL8,doublesize,error)
   extent = (ex-sx+1)*doublesize
   begin  = 0
-  call MPI_TYPE_CREATE_RESIZED(block_type,begin,extent,resized_block_type,ierr)
-  call MPI_TYPE_COMMIT(resized_block_type,ierr)
+  call MPI_TYPE_CREATE_RESIZED(block_type,begin,extent,resized_block_type,error)
+  call MPI_TYPE_COMMIT(resized_block_type,error)
 
   SLL_ALLOCATE(counts(ncols*nrows),error)
   SLL_ALLOCATE(displs(ncols*nrows),error)
@@ -238,7 +242,7 @@ program vp4d_multigrid
   displs = 0
 
   do p = 1, int(psize,i32)
-     CALL MPI_CART_COORDS(comm2d,p-1,ndims,coords,ierr)
+     CALL MPI_CART_COORDS(comm2d,p-1,ndims,coords,error)
      displs(p) = coords(1) + coords(2)*nrows*(ey-sy+1)
   end do 
 
@@ -268,11 +272,11 @@ program vp4d_multigrid
 
      call MPI_AllGatherv( ex_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
                           ex_global, counts, displs, resized_block_type,&
-                          comm2d, ierr)
+                          comm2d, error)
 
      call MPI_AllGatherv( ey_local(sx:ex,sy:ey), block_size, MPI_REAL8, & 
                           ey_global, counts, displs, resized_block_type,&
-                          comm2d, ierr)
+                          comm2d, error)
 
      vlasov%ex(1:vlasov%nc_eta1,1:vlasov%nc_eta2) = ex_global
      vlasov%ex(vlasov%np_eta1,:) = vlasov%ex(1,:) 
@@ -299,7 +303,7 @@ program vp4d_multigrid
 
   end do
 
-  call MPI_Type_free(resized_block_type,ierr)
+  call MPI_Type_free(resized_block_type,error)
 
   tcpu2 = MPI_WTIME()
   if (prank == MPI_MASTER) &
@@ -351,6 +355,7 @@ contains
                           fieldname//crank,&
                           iter,            &
                           error)  
+
    end subroutine global_plot
 
    subroutine global_scale( field )
@@ -370,20 +375,20 @@ contains
 
 
    subroutine display_values( field )
-   sll_real64, intent(in) :: field(:,:)
-   
 
-   do p=0, int(psize,i32)-1
-      if (p == prank) then
-         print *, ' Rank ', p, ' received: '
-         do i=1,vlasov%nc_eta1
-            print"(16f5.2)", field(i,:)
-         enddo
-      end if
-      call MPI_Barrier(MPI_COMM_WORLD, ierr)
-   enddo
+      sll_real64, intent(in) :: field(:,:)
+   
+      do p=0, int(psize,i32)-1
+         if (p == prank) then
+            print *, ' Rank ', p, ' received: '
+            do i=1,vlasov%nc_eta1
+               print"(16f5.2)", field(i,:)
+            enddo
+         end if
+         call MPI_Barrier(MPI_COMM_WORLD, error)
+      enddo
  
-   call flush(6)
+      call flush(6)
 
    end subroutine display_values
 

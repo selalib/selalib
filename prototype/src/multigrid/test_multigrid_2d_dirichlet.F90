@@ -34,13 +34,6 @@ implicit none
 ! parameters. Once this is done, mgdsolver can be called any number
 ! of times, the variables are not overwritten.
 !
-! Input     : none
-! Outputs   : messages -> out* files
-! Code      : tmgd2, 2-D parallel multigrid solver
-! Calls     : MPI_INIT, MPI_COMM_RANK, MPI_COMM_SIZE, MPI_CART_CREATE,
-!             MPI_COMM_RANK, MPI_CART_SHIFT, MPI_BARRIER, MPI_SENDRECV,
-!             MPI_CART_GET, MPE_DECOMP1D, 
-!             mgdinit, mgdsolver, gerr
 !-----------------------------------------------------------------------
 
    sll_real64, dimension(:,:), allocatable :: p
@@ -50,12 +43,12 @@ implicit none
    sll_real64, dimension(:,:), allocatable :: x
    sll_real64, dimension(:,:), allocatable :: y
 
-   sll_real64 :: cnst,cx,cy,wk
    sll_real64 :: err, errloc
 
    type(multigrid_2d) :: solver
 
    sll_int32 :: prank
+   sll_int32 :: narg
    sll_int32 :: psize
    sll_int32 :: error
    sll_int32 :: i, j, sx, ex, sy, ey
@@ -63,8 +56,8 @@ implicit none
 !
 ! parameters
 !
-   sll_int32 :: nxprocs = 2
-   sll_int32 :: nyprocs = 3
+   sll_int32             :: nxprocs
+   sll_int32             :: nyprocs 
    sll_int32,  parameter :: nx = 128
    sll_int32,  parameter :: ny = 128
    sll_real64, parameter :: x_min = -1.0_f64
@@ -80,8 +73,20 @@ implicit none
 
    call sll_boot_collective() 
 
-   call getarg( 1, buffer); read(buffer,"(i4)") nxprocs
-   call getarg( 2, buffer); read(buffer,"(i4)") nyprocs
+   narg = iargc()
+
+   if (narg /= 2) then
+      if (prank == MPI_MASTER) then
+         print*, 'give nxprocs and nyprocs'
+         print*, 'try'
+         print*, 'mpirun -np 4 test_multigrid_2d_dirichlet 2 2 '
+      end if
+      call sll_halt_collective()
+      stop
+   end if
+
+   call getarg(1, buffer); read(buffer,"(i4)") nxprocs
+   call getarg(2, buffer); read(buffer,"(i4)") nyprocs
 
    start_time = MPI_WTIME() 
 
@@ -114,18 +119,12 @@ implicit none
    ! rro is the average density
    ! 1/hxi,1/hyi are the spatial resolutions
 
-   wk  = 2.0d0
-
    !-----------------------------------------------------------------------
    ! Initialize the pressure, density, and right-hand side of the
    ! elliptic equation div(1/r*grad(p))=f
    !-----------------------------------------------------------------------
-   !
-   r    =  1.0_f64
-   cnst = -8.0_f64*(sll_pi*wk)**2
 
-   cx   = 2.0d0*sll_pi*wk
-   cy   = 2.0d0*sll_pi*wk
+   r    =  1.0_f64
 
    delta_x = (x_max - x_min) / nx
    delta_y = (y_max - y_min) / ny
@@ -137,17 +136,16 @@ implicit none
      end do
    end do
 
-   q = sin(2*sll_pi*wk*x)*sin(2*sll_pi*wk*y)
+   q = exp(-(x*x+y*y)/0.04_f64)
 
    do j=sy, ey
      do i=sx, ex
-       f(i,j) = (q(i-1,j)-2.*q(i,j)+q(i+1,j))/(delta_x*delta_x) + &
-                (q(i,j-1)-2.*q(i,j)+q(i,j+1))/(delta_y*delta_y)
+        f(i,j) = (q(i-1,j)-2.*q(i,j)+q(i+1,j))/(delta_x*delta_x) + &
+                 (q(i,j-1)-2.*q(i,j)+q(i,j-1))/(delta_y*delta_y)
      end do
    end do
+   call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
 
-   f = cnst * q
-   
    call solve(solver, p, f, r)
 
    end_time = MPI_WTIME() 
@@ -155,20 +153,19 @@ implicit none
    call MPI_ALLREDUCE(end_time-start_time,total_time,1,MPI_REAL8,MPI_SUM, &
                       solver%comm2d,error)
 
-   call gp_plot2d(p,   'p')
-   call gp_plot2d(q,   'q')
-   call gp_plot2d(p-q, 'e')
-   call gp_plot2d(f,   'r')
+   call gp_plot2d(p,  x,y,sx,ex,sy,ey,'p')
+   call gp_plot2d(q,  x,y,sx,ex,sy,ey,'q')
+   call gp_plot2d(p-q,x,y,sx,ex,sy,ey,'e')
+   call gp_plot2d(f,  x,y,sx,ex,sy,ey,'r')
 
    !-----------------------------------------------------------------------
    ! Calculate the error between the numerical and exact solution to
    ! the test problem.
-   !
+   !-----------------------------------------------------------------------
 
    errloc=sum(abs(p(sx:ex,sy:ey)-q(sx:ex,sy:ey)))
    
    ! calculate global error
-   !
    call MPI_ALLREDUCE(errloc,err,1,MPI_DOUBLE_PRECISION,MPI_SUM, &
                       solver%comm2d,error)
 
@@ -183,39 +180,5 @@ implicit none
    stop
 
 100 format(/,'Local error: ',e13.6,'  total error: ',e13.6,/)
-
-contains
-
-   subroutine gp_plot2d(field, fieldname)
-
-   sll_int32        :: iproc
-   character(len=*) :: fieldname
-   character(len=4) :: crank
-   sll_real64, intent(in) :: field(sx-1:ex+1,sy-1:ey+1)
-
-   !write domains
-   call int2string(prank, crank)
-   open( 80, file = fieldname//crank//".dat" )
-      do i=sx,ex
-         do j=sy,ey
-            write(80,"(4e15.5)") x(i,j), y(i,j), field(i,j)
-         end do
-         write(80,*) 
-      end do
-   close(80)
-   
-   !write master file
-   if (prank == 0) then
-      open( 90, file = fieldname//'.gnu')
-      write(90,"(a)",advance='no')"splot '"//fieldname//"0000.dat' w lines"
-      do iproc = 1, psize - 1
-         call int2string(iproc, crank)
-         write(90,"(a)",advance='no') ",'"//fieldname//crank//".dat' w lines" 
-      end do
-      write(90,*)
-      close(90)
-   end if
-
-end subroutine gp_plot2d
 
 end program test_multigrid_2d_dirichlet
