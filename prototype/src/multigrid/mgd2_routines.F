@@ -2464,7 +2464,6 @@ c
 # if cdebug
       nallreduce=nallreduce+1
 # endif
-      print*, nx , ny
    
       if ( abs(av) > epsilon(1d0)) av=av/float(nx*ny)
 c
