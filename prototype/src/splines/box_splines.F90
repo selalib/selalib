@@ -8,7 +8,9 @@ module box_splines
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
-use hex_mesh!, only:find_neighbour
+use hex_pre_filters
+use hex_mesh
+
 
 
   implicit none
@@ -108,34 +110,10 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   end function new_linear_box_spline_2d
 
 
-  ! Pre-filter to compute the box splines coefficients
-  ! Reference : @Condat and Van De Ville (2007)
-  !             "Quasi-interpolating spline models 
-  !             for hexagonally-sampled data."
-  function pre_filter_piir2(local_index) result(weight)
-      sll_int32, intent(in)     :: local_index
-      sll_real64                :: weight
-
-      if (local_index .eq. 0) then
-         weight = 1775._f64/2304._f64
-      else if (local_index .lt. 7) then
-         weight = 253._f64/6912._f64
-      else if (local_index .lt. 19) then
-         if (modulo(local_index, 2) .eq. 1) then
-            weight = 1._f64/13824._f64
-         else
-            weight = 11._f64/6912._f64
-         end if
-      else
-         weight = 0.
-      end if
-      
-   end function pre_filter_piir2
-
-
-  subroutine compute_linear_box_spline_2d( data, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(linear_box_spline_2d), pointer      :: spline
+  subroutine compute_linear_box_spline_2d( data, deg, spline )
+    sll_real64, dimension(:), intent(in), target    :: data  ! data to be fit
+    sll_int32, intent(in)                           :: deg
+    type(linear_box_spline_2d), pointer, intent(in) :: spline
     sll_int32  :: bc1
     sll_int32  :: bc2
     sll_int32  :: bc_selector
@@ -173,7 +151,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     select case (bc_selector)
        case ( 5 ) 
           ! both boundary condition types are neumann
-          call compute_box_spline_2d_neum_neum( data, spline )
+          call compute_box_spline_2d_neum_neum( data, deg, spline )
        case ( 6 )
           ! periodic in x1 and neumann in x2
           call compute_box_spline_2d_prdc_neum( data, spline )
@@ -237,9 +215,10 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
 
 
-  subroutine compute_box_spline_2d_neum_neum( data, spline )
-    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(linear_box_spline_2d), pointer          :: spline
+  subroutine compute_box_spline_2d_neum_neum( data, deg, spline )
+    sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
+    type(linear_box_spline_2d), pointer           :: spline
+    sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: i,k
     sll_int32  :: nei
@@ -251,15 +230,15 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
 
     do i = 0, num_pts_tot-1
        spline%coeffs(i) = real(0,f64)
-       do k = 0, 18
+       do k = 0, 3*(2*deg)*(2*deg+1)
           nei = find_neighbour(i,k)
           if (nei .lt. num_pts_tot) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
-                                pre_filter_piir2(k)
+                                pre_filter_piir2(k,deg)
           else
              nei = twelve_fold_symmetry(nei, num_pts)
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
-                                pre_filter_piir2(k)             
+                                pre_filter_piir2(k,deg)             
           end if
        end do
     end do
@@ -451,13 +430,13 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     x2_basis = x2_basis
   end function change_basis_x2
 
-  function hex_interpolate_value(mesh_geom, x1, x2, spline) result(val)
+  function hex_interpolate_value(mesh_geom, x1, x2, spline, deg) result(val)
     type(hex_mesh_2d), pointer, intent(in)  :: mesh_geom
+    type(linear_box_spline_2d), pointer     :: spline
+    sll_int32,  intent(in)                  :: deg
     sll_real64, intent(in)                  :: x1
     sll_real64, intent(in)                  :: x2
-    type(linear_box_spline_2d), pointer     :: spline
-    sll_real64                              :: val
-    intrinsic                               :: associated, int, real
+    sll_real64              :: val
     sll_real64              :: xm1
     sll_real64              :: xm2
     sll_real64              :: x1_basis
@@ -471,17 +450,10 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_int32               :: k2
     sll_int32               :: ind
     sll_int32               :: ki, kj
-    sll_int32               :: deg = 1
     sll_int32               :: num_pts
     sll_int32               :: num_pts_tot
 
     val = 0._f64
-
-    if ((x1.eq.0.0).and.(x2.eq.0.0)) then
-      print*," -*****************************-"
-      print*," -**** deg =", deg, " ****-"
-      print*," -*****************************-"
-    end if
 
     r11 = mesh_geom%r1_x1
     r12 = mesh_geom%r1_x2
@@ -526,19 +498,22 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
         val = val + spline%coeffs(ind) * &
                     chi_gen_val(x1_basis, x2_basis, deg)
 
-       if ((x1.eq.0.0).and.(x2.eq.0.0)) then
-!         if ((k1_asso.eq.0).and.(k2_asso.eq.0))then
-          print*," "
-          print*," indice =", ind
-!          print*," k1a, k2a =", k1_asso, k2_asso
-!          print*," ki, kj =", ki, kj
-!          print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
-          print*," modifi =", xm1, xm2
-          print*," basiss =", x1_basis, x2_basis
-          print*," coeffs =", spline%coeffs(ind)
-          print*," chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
-        end if
-
+      if ((x1.eq.0.0).and.(x2.eq.0.0)) then
+         if(chi_gen_val(x1_basis, x2_basis, deg).gt.0.) then
+             print*," indice =", ind
+             print*,"        chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
+             print*,"        coeffs =", spline%coeffs(ind)
+          end if
+        if ((k1_asso.eq.0).and.(k2_asso.eq.0))then
+         print*," "
+         print*," indice =", ind
+         print*," k1a, k2a =", k1_asso, k2_asso
+         print*," ki, kj =", ki, kj
+         print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
+         print*," modifi =", xm1, xm2
+         print*," basiss =", x1_basis, x2_basis
+       end if
+       end if
 
       end do
    end do
