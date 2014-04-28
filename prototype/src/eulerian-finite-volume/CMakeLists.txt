@@ -6,7 +6,8 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    TARGET_LINK_LIBRARIES(test_4d_vp_eulerian_cartesian_finite_volume 
                          selalib
-                         ${HDF5_LIBRARIES})
+                         ${HDF5_LIBRARIES}
+                         ${FFTW_LIBRARY})
 
    ADD_LIBRARY(sll_lobatto sll_lobatto_poisson.F90 
                            map_function_module.F90
