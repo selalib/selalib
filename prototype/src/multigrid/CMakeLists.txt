@@ -1,4 +1,4 @@
-IF (MPI_MODULE_ENABLED)
+IF (MPI_MODULE_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
   ADD_LIBRARY(mgd2_periodic mgd2_periodic.F)
   ADD_LIBRARY(mgd2_nonperiodic mgd2_nonperiodic.F)
@@ -14,6 +14,7 @@ IF (MPI_MODULE_ENABLED)
 
   TARGET_LINK_LIBRARIES(test_multigrid_2d_dirichlet sll_multigrid
                                                     mgd2_nonperiodic 
+                                                    sll_collective
                                                     selalib)
 
-ENDIF (MPI_MODULE_ENABLED)
+ENDIF (MPI_MODULE_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
