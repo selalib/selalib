@@ -1158,7 +1158,7 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64 :: vyc
     sll_real64 :: sigma_x
     sll_real64 :: sigma_v
-    sll_real64 :: xc,yc
+    sll_real64 :: xc,yc,rayon
     sll_real64 :: vt,xt,n0
     
     if( .not. present(params) ) then
@@ -1169,19 +1169,19 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
        stop
     end if
     
-    vt      = 1.0_f64!params(1)
-    xt      = 1.0_f64!params(2)
-    sigma_x = 1.0_f64!params(3)
-    sigma_v = 1.0_f64!params(4) 
-    vxc     = 0.0_f64!params(5)
-    vyc     = 0.0_f64!params(6)
-    xc      = 0.0_f64!params(7)
-    yc      = 0.0_f64!params(8)
-    n0      = 1.0_f64!params(9)
+    vt      = params(1)
+    xt      = params(2)
+    vxc     = params(3)
+    vyc     = params(4)
+    xc      = params(5)
+    yc      = params(6)
+    n0      = params(7)
+    rayon   = params(8)
    
     
-    val = n0 *exp(-0.5*((x-xc)**2  +(y-yc)**2)/(xt*xt)  ) / (2*sll_pi*xt**2) &
-             *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
+    val = n0 *exp(-0.5*((rayon*x-xc)**2  + (rayon*y-yc)**2)/(xt*xt)  ) &
+         / (2*sll_pi*xt**2) &
+         *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
     
   end function sll_gaussian_beam_initializer_4d
 
