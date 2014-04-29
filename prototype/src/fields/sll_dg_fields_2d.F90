@@ -31,13 +31,10 @@ type, public :: dg_field
 
 contains
 
-   procedure, pass :: write_to_file => plot_dg_field_2d
+   procedure, pass :: write_to_file => plot_dg_field_2d_with_gnuplot
 
 end type dg_field
 
-interface plot_dg_field
-   module procedure plot_dg_field_2d
-end interface plot_dg_field
 
 !interface operator(+)
 !  module procedure dg_field_add
@@ -47,7 +44,7 @@ end interface plot_dg_field
 !  module procedure dg_field_sub
 !end interface operator(-)
 
-public :: new_dg_field, plot_dg_field!, operator(-)
+public :: new_dg_field
 
 sll_int32, private :: error
 
@@ -115,7 +112,7 @@ subroutine initialize_dg_field( this, init_function, time)
 
 end subroutine initialize_dg_field
 
-subroutine plot_dg_field_2d( this, field_name )
+subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
    class(dg_field)        :: this
    character(len=*)       :: field_name
@@ -138,9 +135,9 @@ subroutine plot_dg_field_2d( this, field_name )
       rewind(gnu_id)
    else
       open(unit=gnu_id, file=field_name//".gnu", position="append")
-      write(gnu_id,"(a)") "unset key"
-      write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
    end if
+   write(gnu_id,"(a)") "unset key"
+   write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
 
 
    icell = 0
@@ -183,7 +180,7 @@ subroutine plot_dg_field_2d( this, field_name )
    this%tag = this%tag+1
    this%file_id = gnu_id
    
-end subroutine plot_dg_field_2d
+end subroutine plot_dg_field_2d_with_gnuplot
 
 !function dg_field_add( W1, W2) result(W3)
 !
@@ -212,6 +209,105 @@ end subroutine plot_dg_field_2d
 !  W3%array  = W1%array - W2%array
 !
 !end function dg_field_sub
+
+subroutine plot_dg_field_2d_with_gmsh(this, field_name)
+
+   class(dg_field)        :: this
+   character(len=*)       :: field_name
+   sll_int32              :: file_id
+
+   sll_int32, parameter :: nlocmax=16
+   sll_int32 :: typelem
+   sll_int32, dimension(4)  :: invpermut1=(/1,2,4,3/)
+   sll_int32, dimension(9)  :: invpermut2=(/1,5,2,8,9,6,4,7,3/)
+   sll_int32, dimension(16) :: invpermut3=(/1,5,6,2,12,13,14,7,11,16,15,8,4,10,9,3/)
+   sll_int32 :: invpermut(nlocmax),permut(nlocmax)
+   sll_int32 :: nloc, nel, neq
+   sll_int32 :: i, j, k, ii, jj
+
+   nel = (this%tau%mesh%num_cells1+1)*(this%tau%mesh%num_cells2+1)
+   neq = this%tau%mesh%num_cells1*this%tau%mesh%num_cells2
+
+   if (this%degree > 3) then
+      write(*,*) 'ordre non prévu'
+      stop
+   end if
+   nloc = (this%degree+1)*(this%degree+1)
+
+   select case(this%degree)
+   case(1)
+      invpermut(1:nloc)=invpermut1
+      typelem=3
+   case(2)
+      invpermut(1:nloc)=invpermut2
+      typelem=10
+   case(3)
+      invpermut(1:nloc)=invpermut3
+      typelem=36
+   case default
+      write(*,*) 'ordre non prévu'
+      stop
+   end select
+
+   do i=1,nloc
+      permut(invpermut(i))=i
+   end do
+      
+
+   call sll_ascii_file_create(field_name//".msh", file_id, error)
+   write(file_id,'(A)') '$MeshFormat'
+   write(file_id,'(A)') '2 0 8'
+   write(file_id,'(A)') '$EndMeshFormat'
+   write(file_id,'(A)') '$Nodes'
+   write(file_id,*) neq
+   k = 0
+   do i = 1, this%tau%mesh%num_cells1+1
+   do j = 1, this%tau%mesh%num_cells2+1
+      do ii = 1, this%degree+1
+      do jj = 1, this%degree+1
+         k = k+1
+         write(file_id,*) k, &
+                          this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1, &
+                          this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2, &
+                          0.0
+      end do
+      end do
+   end do
+   end do
+   write(file_id,'(A)') '$EndNodes'
+   write(file_id,'(A)') '$Elements'
+   write(file_id,*) nel
+   do i = 1, this%tau%mesh%num_cells1
+   do j = 1, this%tau%mesh%num_cells2
+      !write(file_id,*) i,typelem,0,(connec(permut(ii),i),ii=1,nloc)
+   end do
+   end do
+   write(file_id,'(A)') '$EndElements'
+   write(file_id,'(A)') '$NodeData'
+   write(file_id,*) 1
+   write(file_id,*) 'values'
+   write(file_id,*) 1
+   write(file_id,*) 0
+   write(file_id,*) 3
+   write(file_id,*) 0
+   write(file_id,*) 1
+   write(file_id,*) neq
+   k = 0
+   do i = 1, this%tau%mesh%num_cells1+1
+   do j = 1, this%tau%mesh%num_cells2+1
+      do ii = 1, this%degree+1
+      do jj = 1, this%degree+1
+         k = k + 1
+         write(file_id,*) k, sngl(this%array(ii,jj,i,j))
+      end do
+      end do
+   end do
+   end do
+   write(file_id,'(A)') '$EndNodeData'
+
+   close(file_id)
+
+end subroutine plot_dg_field_2d_with_gmsh
 
 end module sll_dg_fields
 
