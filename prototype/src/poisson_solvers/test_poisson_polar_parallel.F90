@@ -47,8 +47,8 @@ r_max   = 2.0_f64
 a_min   = 0.0_f64
 a_max   = 2.0_f64 * sll_pi
 
-nc_r    = 256
-nc_a    = 1024
+nc_r    = 32 !256
+nc_a    = 64 !1024
 nr      = nc_r+1
 na      = nc_a+1
 delta_r = (r_max-r_min)/real(nr-1,f64)
