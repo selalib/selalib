@@ -97,6 +97,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64,dimension(:,:,:,:),pointer :: values_jacobian_mat
      sll_real64,dimension(:,:),    pointer :: values_jacobian
      sll_real64,dimension(:,:,:,:),pointer :: values_jacobian_matinv
+     sll_real64,dimension(:,:),pointer     :: point_x,point_y
 
      ! ---> point mesh logical
      sll_real64,dimension(:),pointer :: pt_eta1
@@ -338,6 +339,8 @@ contains
     sim%values_jacobian(:,:) = 0.0_f64
     SLL_ALLOCATE(sim%pt_eta1(sim%mesh2d_x%num_cells1 +1),ierr)
     SLL_ALLOCATE(sim%pt_eta2(sim%mesh2d_x%num_cells2 +1),ierr)
+    SLL_ALLOCATE(sim%point_x(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
+    SLL_ALLOCATE(sim%point_y(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
   end subroutine initialize_4d_qns_general
 
 
@@ -415,6 +418,8 @@ contains
     sll_real64 :: eta2
     sll_real64 :: eta3
     sll_real64 :: eta4
+    sll_real64 :: x
+    sll_real64 :: y
     sll_real64 :: eta1_min
     sll_real64 :: eta2_min
     sll_real64 :: eta3_min
@@ -432,7 +437,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 10
+#define BUFFER_SIZE 50
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -1234,7 +1239,8 @@ contains
                 eta1 = sim%pt_eta1(global_indices(1))
                 !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 eta2 = sim%pt_eta2(global_indices(2))
-               
+                x    = sim%point_x(global_indices(1),global_indices(2))
+                y    = sim%point_y(global_indices(1),global_indices(2))
                 inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
                 !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%values_jacobian_mat(global_indices(1),global_indices(2),:,:)
@@ -1244,7 +1250,7 @@ contains
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-                alpha3 = alpha3 -sim%dt*elec_field_ext_1%value_at_point(eta1,eta2)
+                alpha3 = alpha3 -sim%dt*(inv_j(1,1)*elec_field_ext_1%value_at_point(x,y) )
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &
@@ -1276,6 +1282,8 @@ contains
                 !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 eta1 = sim%pt_eta1(global_indices(1))
                 eta2 = sim%pt_eta2(global_indices(2))
+                x    = sim%point_x(global_indices(1),global_indices(2))
+                y    = sim%point_y(global_indices(1),global_indices(2))
                 !inv_j  =  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
                 !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
@@ -1283,7 +1291,7 @@ contains
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
-                alpha4 = alpha4 -sim%dt*elec_field_ext_2%value_at_point(eta1,eta2)
+                alpha4 = alpha4 -sim%dt*(elec_field_ext_2%value_at_point(x,y))
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
                      nc_x4+1, &
                      sim%f_x3x4(i,j,k,:), &
@@ -1758,7 +1766,8 @@ contains
     SLL_DEALLOCATE(sim%values_jacobian_mat,ierr)
     SLL_DEALLOCATE(sim%values_jacobian_matinv,ierr)
     SLL_DEALLOCATE(sim%values_jacobian,ierr)
-
+    SLL_DEALLOCATE(sim%point_x,ierr)
+    SLL_DEALLOCATE(sim%point_y,ierr)
     ! ---> DEALLOCATE array 1D contains mesh points
 
     SLL_DEALLOCATE(sim%pt_eta1,ierr)
@@ -2647,7 +2656,8 @@ contains
                                                 sim%values_jacobian_mat(i,j,2,2)-&
                                                 sim%values_jacobian_mat(i,j,1,2)*&
                                                 sim%values_jacobian_mat(i,j,2,1)
-          
+          sim%point_x(i,j) = sim%transfx%x1(eta1,eta2)
+          sim%point_y(i,j) = sim%transfx%x2(eta1,eta2)
        end do
     end do
     

@@ -48,7 +48,7 @@ program qns_4d_general
   f_one_params(:) = (/0.0_f64/)
   f_minus_one_params(:) = (/0.0_f64/)
   f_epsi_params(:) = (/0.0_f64/)
-  elec_field_ext_params(:) = (/1.5_f64,1.5_f64/)
+  elec_field_ext_params(:) =  (/64.0_f64,64.0_f64/)!(/36.0_f64,36.0_f64/)
 
   ! To initialize the simulation type, there should be two options. One is to
   ! initialize from a file:
@@ -66,8 +66,8 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 64
-#define NPTS2 64
+#define NPTS1 65
+#define NPTS2 65
 #define NPTS3 64
 #define NPTS4 64
 #define SPL_DEG_ETA1 3 
@@ -99,9 +99,9 @@ program qns_4d_general
   ! mesh for the test case 
   ! sll_gaussian_beam_initializer_4d
   
-  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-       eta1_min=-6.0_f64, eta1_max= 6.0_f64, &
-       eta2_min=-6.0_f64, eta2_max= 6.0_f64 )
+!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
+!!$       eta1_min= 0.0_f64, eta1_max= 1.0_f64, &
+!!$       eta2_min= 0.0_f64, eta2_max= 1.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -114,16 +114,16 @@ program qns_4d_general
 
   ! identity transformation
 
-  transformation_x => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
-       mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       (/ 0.0_f64 /) )
+!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic_identity_transformation", &
+!!$       mx, &
+!!$       identity_x1, &
+!!$       identity_x2, &
+!!$       identity_jac11, &
+!!$       identity_jac12, &
+!!$       identity_jac21, &
+!!$       identity_jac22, &
+!!$       (/ 0.0_f64 /) )
 
   ! colella transformation
   
@@ -139,8 +139,10 @@ program qns_4d_general
 !!$       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
 
 
-!!$   transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n31x31p3x3_patch0.nml")
+  transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n63x63p3x3_patch0.nml")
 !!$   transformation_x%mesh => mx
+  mx => transformation_x%get_logical_mesh()
+  !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max
 !!$   print*, 'transformation ok'
   ! ---------------------------------------------------------------------
   ! define the values of the parameters for the landau initializer
@@ -168,15 +170,14 @@ program qns_4d_general
 
   ! sll_gaussian_beam_initializer_4d parameters
 
-  landau_params(1) = 1.0_f64!vth
-  landau_params(2) = 1.0_f64!xth
-  landau_params(3) = 1.0_f64!sigma_x
-  landau_params(4) = 1.0_f64!sigma_v
-  landau_params(5) = 0.0_f64!vxc
-  landau_params(6) = 0.0_f64!vyc
-  landau_params(7) = 0.0_f64!xc
-  landau_params(8) = 0.0_f64!yc
-  landau_params(9) = 1.0_f64!n0
+  landau_params(1) = 1.0_f64!3.0_f64/2.0_f64!vth
+  landau_params(2) = 0.5_f64!1.0_f64!xth
+  landau_params(3) = 0.0_f64!vxc
+  landau_params(4) = 0.0_f64!vyc
+  landau_params(5) = 0.0_f64!xc
+  landau_params(6) = 0.0_f64!yc
+  landau_params(7) = sll_pi*15*8!sll_pi*15*18!n0
+  landau_params(8) = 9.0_f64
   
 
   ! ---------------------------------------------------------------------
