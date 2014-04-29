@@ -4,9 +4,9 @@
 !gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar.gnu 
 
 &mesh
-  num_cells_x1 = 32
-  num_cells_x2 = 32
-  num_cells_x3 = 32
+  num_cells_x1 = 64
+  num_cells_x2 = 64
+  num_cells_x3 = 16
   num_cells_x4 = 64
   r_min        = 0.1
   r_max        = 14.5

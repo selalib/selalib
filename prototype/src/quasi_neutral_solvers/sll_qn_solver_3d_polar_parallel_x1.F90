@@ -50,10 +50,10 @@ module sll_qn_solver_3d_polar_parallel_x1_module
     sll_int32,  dimension(:), pointer :: ipiv     !< Lapack pivot indices
     type(layout_2D),  pointer :: layout_r !< layout sequential in r
     type(layout_2D),  pointer :: layout_a !< layout sequential in theta
-    type(remap_plan_2D_real64), pointer :: rmp_ra   !< remap r->theta 
-    type(remap_plan_2D_real64), pointer :: rmp_ar   !< remap theta->r
-    sll_real64, dimension(:,:), pointer :: f_r      !< array sequential in r
-    sll_real64, dimension(:,:), pointer :: f_a      !< array sequential in theta
+    type(remap_plan_2D_comp64), pointer :: rmp_ra   !< remap r->theta 
+    type(remap_plan_2D_comp64), pointer :: rmp_ar   !< remap theta->r
+    sll_comp64, dimension(:,:), pointer :: f_r      !< array sequential in r
+    sll_comp64, dimension(:,:), pointer :: f_a      !< array sequential in theta
     sll_real64, dimension(:), pointer :: dlog_density,inv_Te !<for quasi neutral solver
 
   end type sll_qn_solver_3d_polar_parallel_x1
@@ -161,7 +161,7 @@ contains
     sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
 
     sll_int32                :: error
-    sll_real64, dimension(:), allocatable :: buf
+    sll_comp64, dimension(:), allocatable :: buf
     sll_int32 :: nr_loc
     sll_int32 :: na_loc
     sll_int32 :: psize
@@ -193,6 +193,7 @@ contains
     this%dr=(rmax-rmin)/nr
     this%nr=nr
     this%nt=ntheta
+    this%num_cells_x3 = num_cells_x3
 
     if (present(bc_rmin) .and. present(bc_rmax)) then
       this%bc(1)=bc_rmin
@@ -278,10 +279,12 @@ contains
     dr     = this%dr
     bc     = this%bc
 
+    !print *,'nc_x3=',this%num_cells_x3,sll_get_collective_rank(sll_world_collective)
+
     do i_x3=1,nc_x3+1
 
       call verify_argument_sizes_par(this%layout_a, rhs(:,:,i_x3))
-      this%f_a = rhs(:,:,i_x3)
+      this%f_a = cmplx(rhs(:,:,i_x3),0,kind=f64)
 
       call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
 
@@ -295,12 +298,19 @@ contains
       call apply_remap_2D( this%rmp_ar, this%f_a, this%f_r )
       call compute_local_sizes_2d( this%layout_r, nr_loc, na_loc )
 
-      global = local_to_global_2D( this%layout_r, (/1, 1/))
-      k = global(2)/2 - 1
+      !global = local_to_global_2D( this%layout_r, (/1, 1/))
+      !k = global(2)/2 - 1
 
-      do j = 1, na_loc-1, 2
-      
-        k = k + 1
+      !do j = 1, na_loc-1, 2
+      do j=1, na_loc
+        !k = k + 1
+        global = local_to_global_2D( this%layout_r, (/1, j/))
+        k = global(2)
+        if (k<=ntheta/2) then
+          k = k-1
+        else
+          k = ntheta-(k-1)
+        endif
 
         do i=2,nr
 
@@ -312,14 +322,16 @@ contains
           this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r) &
             +this%dlog_density(i)/(2._f64*dr)
 
-          if( j == 1 ) then
-            this%fk(i) = cmplx(this%f_r(i,1),0.0_f64,kind=f64)
-          else if( j == ntheta ) then
-            this%fk(i) = cmplx(this%f_r(i,2),0.0_f64,kind=f64)
-          else
-            this%fk(i) = cmplx(this%f_r(i,j), &
-              this%f_r(i,j+1),kind=f64)
-          endif
+          this%fk(i) = this%f_r(i,j)
+
+          !if( j == 1 ) then
+          !  this%fk(i) = cmplx(this%f_r(i,1),0.0_f64,kind=f64)
+          !else if( j == ntheta ) then
+          !  this%fk(i) = cmplx(this%f_r(i,2),0.0_f64,kind=f64)
+          !else
+          !  this%fk(i) = cmplx(this%f_r(i,j), &
+          !    this%f_r(i,j+1),kind=f64)
+          !endif
 
         enddo
 
@@ -385,15 +397,16 @@ contains
         endif
 
         do i=1,nr+1
+          this%f_r(i,j) = this%phik(i)   
 
-          if( j == 1 ) then
-            this%f_r(i,1) = real(this%phik(i),kind=f64)
-          else if( j == ntheta ) then
-            this%f_r(i,2) = real(this%phik(i),kind=f64)
-          else
-            this%f_r(i,j) = real(this%phik(i),kind=f64)
-            this%f_r(i,j+1) = dimag(this%phik(i))
-          endif
+          !if( j == 1 ) then
+          !  this%f_r(i,1) = real(this%phik(i),kind=f64)
+          !else if( j == ntheta ) then
+          !  this%f_r(i,2) = real(this%phik(i),kind=f64)
+          !else
+          !  this%f_r(i,j) = real(this%phik(i),kind=f64)
+          !  this%f_r(i,j+1) = dimag(this%phik(i))
+          !endif
 
         end do
 
@@ -404,15 +417,49 @@ contains
       call apply_remap_2D( this%rmp_ra, this%f_r, this%f_a )
       call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
 
-      call verify_argument_sizes_par(this%layout_a, phi)
+      call verify_argument_sizes_par(this%layout_a, phi(:,:,i_x3))
     
       do i=1,nr_loc
-        call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta,i_x3))
+        !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta,i_x3))
+        call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+        phi(i,1:ntheta,i_x3) = real(this%f_a(i,1:ntheta))
       end do
     enddo
     
   end subroutine solve_qns3d_polar
 
+
+  !> Check if array sizes are compatble with the layout 
+  subroutine verify_argument_sizes_par(layout, array)
+
+    type(layout_2D), pointer       :: layout
+    sll_real64, dimension(:,:)     :: array
+    sll_int32,  dimension(2)       :: n ! nx_loc, ny_loc
+    sll_int32                      :: i
+
+    ! Note that this checks for strict sizes, not an array being bigger
+    ! than a certain size, but exactly a desired size... This may be a bit
+    ! too stringent.
+    call compute_local_sizes_2d( layout, n(1), n(2) )
+
+    do i=1,2
+       if ( (n(i)/=size(array,i))) then
+          print*, 'ERROR: solve_poisson_polar_parallel()', &
+               'size of either rhs or phi does not match expected size. '
+          if (i==1) then
+             print*, 'solve_poisson_polar_parallel(): ', &
+                  'mismatch in direction r'
+          else if (i==2) then
+             print*, 'solve_poisson_polar_parallel(): ', &
+                  'mismatch in direction theta'
+          endif
+          print *, 'Exiting...'
+          call sll_halt_collective()
+          stop
+       endif
+    enddo
+
+  end subroutine verify_argument_sizes_par
 
 
 
