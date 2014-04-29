@@ -364,10 +364,10 @@ subroutine initialize_multigrid_2d( this,                         &
 
    call MPI_CART_GET(comm2d,2,this%pdims,periods,coords,ierr)
 
-   call MPE_DECOMP1D(nx,this%pdims(1),coords(1),sx,ex)
+   call mpe_decomp1d(nx,this%pdims(1),coords(1),sx,ex)
    sx=sx+1
    ex=ex+1
-   call MPE_DECOMP1D(ny,this%pdims(2),coords(2),sy,ey)
+   call mpe_decomp1d(ny,this%pdims(2),coords(2),sy,ey)
    sy=sy+1
    ey=ey+1
 
@@ -383,7 +383,6 @@ subroutine initialize_multigrid_2d( this,                         &
       nerror=1
       write(IOUT,"(/,'ERROR in multigrid code : 183',/)")
    end if
-
 #endif
 
    where(this%neighbor >= 0)
@@ -527,22 +526,18 @@ subroutine write_topology( this )
 
    type(multigrid_2d) :: this
 
-   sll_real64 :: xp, dx
-   sll_real64 :: yp, dy
+   sll_int32  :: coords(2)
+   sll_real64 :: dx
+   sll_real64 :: dy
    sll_int32  :: prank
    sll_int32  :: psize
    sll_int32  :: code
    sll_int32  :: iproc, jproc
-   sll_int32  :: tag = 1111
-   sll_int32  :: statut(MPI_STATUS_SIZE)
    sll_int32  :: file_id
    sll_int32  :: error
 
    call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)
    call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
-
-   xp = real(this%coords(1),4)/this%pdims(1) * this%xl 
-   yp = real(this%coords(2),4)/this%pdims(2) * this%yl 
 
    dx = 1.0_f64 / this%pdims(1) * this%xl
    dy = 1.0_f64 / this%pdims(2) * this%yl
@@ -565,20 +560,12 @@ subroutine write_topology( this )
       end do
 
       do iproc = 0, psize-1
-         if (iproc > 0) then
-            call MPI_RECV(xp,1,MPI_REAL8,iproc,tag,MPI_COMM_WORLD,statut,code)
-            call MPI_RECV(yp,1,MPI_REAL8,iproc,tag,MPI_COMM_WORLD,statut,code)
-         end if
-         write(file_id,111)xp+.5*dx,yp+.5*dy,iproc
+         CALL MPI_CART_COORDS(MPI_COMM_WORLD,iproc,2,coords,error)
+         write(file_id,111)coords(1)+.5*dx,coords(2)+.5*dy,iproc
       end do
    
       write(file_id,"('$END')")
       close(file_id)
-
-   else
-
-      call MPI_SEND(xp, 1, MPI_REAL8, 0, tag, MPI_COMM_WORLD, code)
-      call MPI_SEND(yp, 1, MPI_REAL8, 0, tag, MPI_COMM_WORLD, code)
 
    end if
 
