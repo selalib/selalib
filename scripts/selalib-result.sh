@@ -80,6 +80,11 @@ ctest --verbose -R sim4d_DK_polar_multi_mu
 #time mpirun -np 16 ./bin/test_4d_dk_polar_multi_mu ../selalib/prototype/src/simulation/dksim4d_polar_multi_mu.nml
 gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_polar_multi_mu.gnu 
 
+#drift kinetic 4D field aligned polar
+ctest --verbose -R sim4d_DK_field_aligned_polar
+#time mpirun -np 16 ./bin/test_4d_dk_field_aligned_polar ../selalib/prototype/src/simulation/dksim4d_field_aligned_polar.nml
+gnuplot -persist ../selalib/prototype/src/simulation/dksim4d_field_aligned_polar.gnu 
+
 
 
 
