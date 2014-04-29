@@ -76,6 +76,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
 !! should be else where
   sll_int32, parameter :: SLL_TIME_LOOP_EULER = 0 
   sll_int32, parameter :: SLL_TIME_LOOP_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter :: SLL_TIME_LOOP_PREDICTOR2_CORRECTOR = 2 
 
 
 
@@ -147,17 +148,6 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64, dimension(:,:), pointer :: feq_x1x4
 
 
-     !--> 4D distribution function 
-     !----> sequential in (x1,x2,x4) and parallel in (x3)
-     type(layout_4D), pointer :: layout4d_seqx1x2x4
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx1x2x4 
-     !----> parallel in (x3) and sequential in (x1,x2,x4) 
-     type(layout_4D), pointer :: layout4d_seqx3
-     sll_real64, dimension(:,:,:,:), pointer :: f4d_seqx3
-
-     !----> definition of remap
-     type(remap_plan_4D_real64), pointer ::remap_plan_seqx1x2x4_to_seqx3
-     type(remap_plan_4D_real64), pointer ::remap_plan_seqx3_to_seqx1x2x4
 
 
      !----> parallel in x1
@@ -172,28 +162,6 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      type(remap_plan_4D_real64), pointer ::remap_plan_parx1_to_parx3x4
      type(remap_plan_4D_real64), pointer ::remap_plan_parx3x4_to_parx1
 
-     
-     
-     
-
-     !--> 3D charge density and 3D electric potential
-     !----> sequential in (x1,x2)
-     type(layout_3D), pointer :: layout3d_seqx1x2
-     sll_real64, dimension(:,:,:), pointer :: rho3d_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: phi3d_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: A1_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: A2_seqx1x2 
-     sll_real64, dimension(:,:,:), pointer :: A3_seqx1x2 
-     !----> sequential in x3
-     type(layout_3D), pointer :: layout3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: rho3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: phi3d_seqx3
-     sll_real64, dimension(:,:,:), pointer :: A3_seqx3
-     !----> definition of remap
-     type(remap_plan_3D_real64), pointer ::remap_plan_seqx1x2_to_seqx3
-     type(remap_plan_3D_real64), pointer ::remap_plan_seqx3_to_seqx1x2
-
-
      !----> parallel in x1
      type(layout_3D), pointer :: layout3d_parx1
      sll_real64, dimension(:,:,:), pointer :: rho3d_parx1 
@@ -205,10 +173,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64, dimension(:,:,:), pointer :: phi3d_parx3
      sll_real64, dimension(:,:,:), pointer :: A1_parx3
      sll_real64, dimension(:,:,:), pointer :: A2_parx3
-
-     type(remap_plan_phi), pointer :: remap_plan_phi_parx1_to_parx3
      type(remap_plan_3D_real64), pointer ::remap_plan_parx1_to_parx3
-
 
      
      !----> for Poisson 
@@ -259,29 +224,6 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      procedure, pass(sim) :: init_from_file => init_dk4d_field_aligned_polar
   end type sll_simulation_4d_drift_kinetic_field_aligned_polar
   
-  type remap_plan_phi                                             
-    type(layout_4D), pointer SLL_PRIV :: layout_f=>null()
-    type(layout_4D), pointer SLL_PRIV :: layout_f_initial=>null()
-    integer, dimension(:), pointer SLL_PRIV :: send_displs=>null()
-    integer, dimension(:), pointer SLL_PRIV :: send_counts=>null()
-    integer, dimension(:), pointer SLL_PRIV :: recv_displs=>null()
-    integer, dimension(:), pointer SLL_PRIV :: recv_counts=>null()
-    !type(box_3D), dimension(:), pointer SLL_PRIV :: send_boxes=>null()
-    !type(box_3D), dimension(:), pointer SLL_PRIV :: recv_boxes=>null()
-    type(sll_collective_t), pointer SLL_PRIV :: collective_f=>null()
-    type(sll_collective_t), pointer :: collective_phi=>null()
-    sll_real64, dimension(:), pointer SLL_PRIV :: send_buffer=>null()
-    sll_real64, dimension(:), pointer SLL_PRIV :: recv_buffer=>null()
-    logical SLL_PRIV :: is_uniform=.false.
-  end type remap_plan_phi
-
-!  type SLL_PRIV :: box_3D
-!     sll_int32 SLL_PRIV :: i_min, i_max
-!     sll_int32 SLL_PRIV :: j_min, j_max
-!     sll_int32 SLL_PRIV :: k_min, k_max
-!  end type box_3D
-
-
 
    
   interface delete
@@ -290,323 +232,8 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
 
 contains
 
-  function new_remap_plan_phi( &
-    layout_f_initial, &
-    layout_f) &
-    result(res)
-    type(layout_4D), pointer :: layout_f_initial
-    type(layout_4D), pointer :: layout_f
-    type(remap_plan_phi), pointer :: res
-    sll_int32 :: ierr
-    type(sll_collective_t), pointer :: col_f
-    sll_int32 :: my_rank_f
-    sll_int32 :: k_min
-    sll_int32 :: k_max
-    type(sll_collective_t), pointer :: col_phi
-    !type(box_3D) :: ibox, fbox, inters
-    sll_int32 :: i, f
-    sll_int32 :: my_rank_phi
-    sll_int32 :: col_size_phi
-    sll_int32 :: disp_counter
-    sll_int32 :: send_counter
-    sll_int32 :: recv_counter
-    sll_int64 :: acc
-    sll_int32 :: loc4d_sz_x1
-    sll_int32 :: loc4d_sz_x2
-    sll_int32 :: loc4d_sz_x3
-    sll_int32 :: loc4d_sz_x4
-    sll_int32 :: Npts_x1
-    sll_int32 :: Npts_x2
-    sll_int32 :: Npts_x3
-    sll_int32 :: Npts_x4
-    sll_int32 :: col_sz_f
-
-    
-    SLL_ALLOCATE(res,ierr)
-    
-    col_f => get_layout_collective( layout_f )    
-    my_rank_f  = sll_get_collective_rank( col_f )
-    col_sz_f  = sll_get_collective_size( col_f )
-    
-    k_min = get_layout_k_min( layout_f, my_rank_f )
-    k_max = get_layout_k_max( layout_f, my_rank_f )
-
-    print *,'kmin for new=',k_min,k_max,my_rank_f
-    col_phi => sll_new_collective(col_f, k_min, my_rank_f)    
 
 
-
-    my_rank_phi  = sll_get_collective_rank( col_phi )
-    col_size_phi = sll_get_collective_size( col_phi )
-    
-    !print *,'#col_size_phi=',col_size_phi
-    
-    
-    SLL_ALLOCATE( res%send_displs(0:col_size_phi-1), ierr )
-    res%send_displs(:) = 0
-    SLL_ALLOCATE( res%send_counts(0:col_size_phi-1), ierr )
-    res%send_counts(:) = 0
-    SLL_ALLOCATE( res%recv_displs(0:col_size_phi-1), ierr )
-    res%recv_displs(:) = 0
-    SLL_ALLOCATE( res%recv_counts(0:col_size_phi-1), ierr )
-    res%recv_counts(:) = 0
-    !SLL_ALLOCATE( res%send_boxes(0:col_size_phi-1), ierr )
-    !SLL_ALLOCATE( res%recv_boxes(0:col_size_phi-1), ierr )
-    send_counter = 0
-    disp_counter = 0
-
-    call compute_local_sizes_4d( &
-      layout_f_initial, &
-      loc4d_sz_x1, &
-      loc4d_sz_x2, &
-      loc4d_sz_x3, &
-      loc4d_sz_x4 )
-    
-    Npts_x1 = get_layout_global_size_1(layout_f_initial)  
-    Npts_x2 = get_layout_global_size_2(layout_f_initial)  
-    Npts_x3 = get_layout_global_size_3(layout_f_initial)  
-    Npts_x4 = get_layout_global_size_4(layout_f_initial)  
-      
-      
-    
-    !error checking
-    
-    
-    if(loc4d_sz_x2 /= Npts_x2)then
-      call sll_halt_collective()            
-      print *,'#bad layout_f in new_remap_plan_phi'
-      print *,'#loc4d_sz_x2=',loc4d_sz_x2
-      print *,'#Npts_x2=',Npts_x2
-      stop 
-    endif
-
-    if(loc4d_sz_x3 /= Npts_x3)then
-      call sll_halt_collective()            
-      print *,'#bad layout_f in new_remap_plan_phi'
-      print *,'#loc4d_sz_x3=',loc4d_sz_x3
-      print *,'#Npts_x3=',Npts_x3
-      stop 
-    endif
-
-    if(loc4d_sz_x4 /= Npts_x4)then
-      call sll_halt_collective()            
-      print *,'#bad layout_f in new_remap_plan_phi'
-      print *,'#loc4d_sz_x4=',loc4d_sz_x4
-      print *,'#Npts_x4=',Npts_x4
-      stop 
-    endif
-    
-    res%is_uniform = .true.
-    res%send_counts(:) = loc4d_sz_x1*Npts_x2*(k_max-k_min+1)
-    res%recv_counts(:) = loc4d_sz_x1*Npts_x2*Npts_x3
-    
-    
-    
-    if(loc4d_sz_x1*col_sz_f /= Npts_x1  )then
-      res%is_uniform = .false.
-      call sll_halt_collective()
-      print *,'#non uniform  remap_plan_phi not treated for the moment'
-      print *,'#in new_remap_plan_phi'
-      stop       
-    endif
-     
-    SLL_ALLOCATE(res%send_buffer(0:(loc4d_sz_x1*Npts_x2*Npts_x3-1)),ierr)
-    SLL_ALLOCATE(res%recv_buffer(0:(Npts_x1*Npts_x2*(k_max-k_min+1)-1)),ierr)
-        
-    res%collective_phi => col_phi
-    res%layout_f => layout_f
-    res%layout_f_initial => layout_f_initial
-        
-  end function new_remap_plan_phi
-
-
-  subroutine apply_remap_plan_phi( &
-    plan, &
-    data_in, &
-    data_out)
-    type(remap_plan_phi), pointer :: plan
-    sll_real64, dimension(:,:,:), intent(in)  :: data_in
-    sll_real64, dimension(:,:,:), intent(out) :: data_out
-    sll_real64, dimension(:), pointer         :: sb     ! send buffer
-    sll_real64, dimension(:), pointer         :: rb     ! receive buffer
-    sll_int32, dimension(:), pointer          :: sdisp  ! send displacements
-    sll_int32, dimension(:), pointer          :: rdisp  ! receive displacements 
-    sll_int32, dimension(:), pointer          :: scnts  ! send counts
-    sll_int32, dimension(:), pointer          :: rcnts  ! receive counts
-    type(sll_collective_t), pointer           :: col    ! collective
-    type(sll_collective_t), pointer           :: col_f    ! collective
-    !type(layout_3D), pointer                  :: init_layout  => NULL()
-    !type(layout_3D), pointer                  :: final_layout => NULL()
-    sll_int32                                 :: id, jd, kd
-    sll_int32                                 :: i
-    sll_int32                                 :: col_sz
-    sll_int32                                 :: loi, loj, lok
-    sll_int32                                 :: hii, hij, hik
-    !type(box_3D)                              :: sbox
-    sll_int32                                 :: my_rank
-    sll_int32                                 :: loc
-    sll_int32, dimension(1:3)                 :: local_lo, local_hi
-    sll_int32, dimension(1:3)                 :: tmpa
-    type(layout_4D), pointer                  :: layout_f
-    type(layout_4D), pointer                  :: layout_f_initial
-    sll_int32 :: my_rank_f
-    sll_int32 :: col_sz_f
-    sll_int32 :: k_min 
-    sll_int32 :: k_max
-    sll_int32 :: loc4d_sz_x1 
-    sll_int32 :: loc4d_sz_x2 
-    sll_int32 :: loc4d_sz_x3 
-    sll_int32 :: loc4d_sz_x4
-    sll_int32 :: n
-    sll_int32 :: Npts_x1
-    sll_real64 :: min_val
-    sll_real64 :: max_val
-
-    sdisp => plan%send_displs
-    rdisp => plan%recv_displs
-    scnts => plan%send_counts
-    rcnts => plan%recv_counts    
-    col => plan%collective_phi
-    col_sz = sll_get_collective_size(col)
-    sb => plan%send_buffer
-    rb => plan%recv_buffer
-    layout_f => plan%layout_f
-    layout_f_initial => plan%layout_f_initial
- 
-    Npts_x1 = get_layout_global_size_1(layout_f_initial)  
-   
-    
-
-    col_f => get_layout_collective( layout_f )    
-    my_rank_f  = sll_get_collective_rank( col_f )
-    col_sz_f  = sll_get_collective_size( col_f )
-    
-    k_min = get_layout_k_min( layout_f, my_rank_f )
-    k_max = get_layout_k_max( layout_f, my_rank_f )
-
-
-    call compute_local_sizes_4d( layout_f_initial, &
-      loc4d_sz_x1, &
-      loc4d_sz_x2, &
-      loc4d_sz_x3, &
-      loc4d_sz_x4 )
-
-   if(size(data_in,1)<loc4d_sz_x1)then
-     call sll_halt_collective()
-     print *,'#problem size1 in apply_remap_plan_phi'
-     stop
-   endif
-
-   if(size(data_in,2)<loc4d_sz_x2)then
-     call sll_halt_collective()
-     print *,'#problem size2 in apply_remap_plan_phi'
-     stop
-   endif
-
-   if(size(data_in,3)<loc4d_sz_x3)then
-     call sll_halt_collective()
-     print *,'#problem size2 in apply_remap_plan_phi'
-     stop
-   endif
-   if(k_max>loc4d_sz_x3)then
-     call sll_halt_collective()
-     print *,'#problem k_max in apply_remap_plan_phi'
-     stop     
-   endif
-
-
-    sb(:) = 0._f64
-    loc = 0
-    do kd= 1,loc4d_sz_x3!k_min,k_max
-      do jd=1,loc4d_sz_x2
-        do id=1,loc4d_sz_x1
-          sb(loc) = data_in(id,jd,kd)
-          loc = loc+1
-        enddo
-      enddo
-    enddo
-    
-    
-    print *,'#kmin=',k_min,k_max, &
-      sll_get_collective_rank(col_f), &
-      sll_get_collective_rank(col), &
-      loc4d_sz_x1, &
-      loc4d_sz_x2
-      
-    
-    
-    
-    if(plan%is_uniform .eqv. .true.) then
-      call sll_collective_alltoall( &
-        sb(:), &
-        scnts(0), &
-        rcnts(0), &
-        rb(:), &
-        col )
-    else 
-      print *,'#non uniform remap not implemented for the moment'
-      print *,'#in apply_remap_plan_phi'
-      call sll_halt_collective()
-      stop
-    endif
-
-    print *,'#maxval sb=',maxval(sb),minval(sb),sll_get_collective_rank(col_f), &
-     sll_get_collective_rank(col)
-    print *,'#maxval data_in=',maxval(data_in),minval(data_in),sll_get_collective_rank(col_f)
-
-
-    print *,'#maxval rb=',maxval(rb),minval(rb),sll_get_collective_rank(col_f), &
-      sll_get_collective_rank(col)
-
-
-
-    print *,'#loc4d_sz_x1=',loc4d_sz_x1,col_sz*loc4d_sz_x1
-    print *,'#data_in',size(data_in,1),size(data_in,2),size(data_in,3)
-    print *,'#data_out',size(data_out,1),size(data_out,2),size(data_out,3)
-    
-    
-    if(size(data_out,1)<loc4d_sz_x1*col_sz)then
-      print *,'#problem for size data_out 1'
-      call sll_halt_collective()
-      stop
-    endif
-    if(size(data_out,2)<loc4d_sz_x2)then
-      print *,'#problem for size data_out 2'
-      call sll_halt_collective()
-      stop
-    endif
-    if(size(data_out,3)<k_max-k_min+1)then
-      print *,'#problem for size data_out 3'
-      call sll_halt_collective()
-      stop
-    endif
-
-    
-
-    data_out(:,:,:) = 0._f64
-    loc = 0
-    do n=0,Npts_x1/loc4d_sz_x1-1
-      do kd=1,k_max-k_min+1
-        do jd=1,loc4d_sz_x2
-          do id=1,loc4d_sz_x1
-            data_out(id+n*loc4d_sz_x1,jd,kd) = rb(loc) 
-            loc = loc+1
-          enddo
-        enddo
-      enddo
-    enddo
-    
-    min_val = minval(data_out(:,:,:))
-    max_val = maxval(data_out(:,:,:))
-    
-    print *,'#min_val=',min_val
-    print *,'#max_val=',max_val
-    
-    call sll_halt_collective()
-    stop
-    
-        
-  end subroutine apply_remap_plan_phi
 
 
 
@@ -824,6 +451,8 @@ contains
         sim%time_case = SLL_TIME_LOOP_EULER
       case ("SLL_TIME_LOOP_PREDICTOR_CORRECTOR")
         sim%time_case = SLL_TIME_LOOP_PREDICTOR_CORRECTOR
+      case ("SLL_TIME_LOOP_PREDICTOR2_CORRECTOR")
+        sim%time_case = SLL_TIME_LOOP_PREDICTOR2_CORRECTOR
       case default
         print *,'#bad choice for time_loop_case', time_loop_case
         print *,'#in init_dk4d_polar'
@@ -1166,6 +795,7 @@ contains
     sll_int32 :: loc4d_sz_x2
     sll_int32 :: loc4d_sz_x3
     sll_int32 :: loc4d_sz_x4
+    sll_int32 :: loc4d(4)
     sll_int32 :: iter
     sll_int32 :: nc_x1
     sll_int32 :: nc_x2
@@ -1263,6 +893,41 @@ contains
           call advection_x3( sim, dt )
           call advection_x4( sim, dt )
           call advection_x1x2( sim, dt )
+
+        case (SLL_TIME_LOOP_PREDICTOR_CORRECTOR)
+          !prediction
+          f4d_store = sim%f4d_parx1
+          call advection_x3( sim, 0.5_f64*dt )
+          call advection_x4( sim, 0.5_f64*dt )
+          call advection_x1x2( sim, 0.5_f64*dt )
+	      call compute_rho_dk(sim)  
+          call solve_quasi_neutral_parx1( sim )
+          call compute_field_dk_parx1( sim )          
+          !correction
+          sim%f4d_parx1 = f4d_store
+          call advection_x3( sim, 0.5_f64*dt )
+          call advection_x4( sim, 0.5_f64*dt )
+          call advection_x1x2( sim, dt )
+          call advection_x4( sim, 0.5_f64*dt )
+          call advection_x3( sim, 0.5_f64*dt )
+        case (SLL_TIME_LOOP_PREDICTOR2_CORRECTOR)
+          !prediction order "2"
+          f4d_store = sim%f4d_parx1
+          call advection_x3( sim, 0.25_f64*dt )
+          call advection_x4( sim, 0.25_f64*dt )
+          call advection_x1x2( sim, 0.5_f64*dt )
+          call advection_x4( sim, 0.25_f64*dt )
+          call advection_x3( sim, 0.25_f64*dt )
+	      call compute_rho_dk(sim)  
+          call solve_quasi_neutral_parx1( sim )
+          call compute_field_dk_parx1( sim )          
+          !correction
+          sim%f4d_parx1 = f4d_store
+          call advection_x3( sim, 0.5_f64*dt )
+          call advection_x4( sim, 0.5_f64*dt )
+          call advection_x1x2( sim, dt )
+          call advection_x4( sim, 0.5_f64*dt )
+          call advection_x3( sim, 0.5_f64*dt )
         case default
           call sll_halt_collective()
           print *,'#sim%time_case=',sim%time_case
@@ -1271,114 +936,53 @@ contains
           stop
       end select          
 
+    
+
+      if(modulo(iter,sim%freq_diag)==0) then
+        call apply_remap_4D( &
+          sim%remap_plan_parx1_to_parx3x4, &
+          sim%f4d_parx1, &
+          sim%f4d_parx3x4 )
+
+        loc4d(1:4)  = global_to_local_4D( &
+          sim%layout4d_parx3x4, &
+          (/1,1,1,nc_x4/2+1/))
+        if(loc4d(3) > 0) then
+          i_plot = i_plot+1
+          call sll_gnuplot_corect_2d( &
+            sim%m_x1%eta_min, &
+            sim%m_x1%eta_max, &
+            nc_x1+1, &
+            sim%m_x2%eta_min, &
+            sim%m_x2%eta_max, &
+            nc_x2+1, &
+            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
+            'fdist', &
+            i_plot, &
+            ierr)
+#ifndef NOHDF5
+          call plot_f_polar( &
+            i_plot, &
+            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
+            sim%m_x1,sim%m_x2)
+#endif
+        endif
+
+        call apply_remap_4D( &
+          sim%remap_plan_parx3x4_to_parx1, &
+          sim%f4d_parx3x4, &
+          sim%f4d_parx1 )
+          
+                    
+      endif
+
+
 
         
 
    enddo
    
    
-      !call sll_halt_collective()
-   
-#ifdef SLL_CONTINUE
-    do iter=1,sim%num_iterations    
-
-          
-      call solve_quasi_neutral( sim )
-      call compute_field_dk( sim )
-
-
-      if(modulo(iter,sim%freq_diag_time)==0)then
-        call time_history_diagnostic_dk_polar( &
-          sim, &
-          th_diag_id, &    
-          iter-1)
-      endif            
-
-
-
-      
-      select case (sim%time_case)
-        case (SLL_TIME_LOOP_EULER)
-          call advection_x3( sim, dt )
-          call advection_x4( sim, dt )
-          call advection_x1x2( sim, dt )
-        case (SLL_TIME_LOOP_PREDICTOR_CORRECTOR)
-          !prediction
-          f4d_store = sim%f4d_seqx1x2x4
-          call advection_x3( sim, 0.5_f64*dt )
-          call advection_x4( sim, 0.5_f64*dt )
-          call advection_x1x2( sim, 0.5_f64*dt )
-          call compute_rho_dk(sim)    
-          call solve_quasi_neutral( sim )
-          call compute_field_dk( sim )
-          
-          !correction
-          sim%f4d_seqx1x2x4 = f4d_store
-          call advection_x3( sim, 0.5_f64*dt )
-          call advection_x4( sim, 0.5_f64*dt )
-          call advection_x1x2( sim, dt )
-          call advection_x4( sim, 0.5_f64*dt )
-          call advection_x3( sim, 0.5_f64*dt )
- 
-        case default
-          print *,'#sim%time_case=',sim%time_case
-          print *, '#not implemented'
-          print *,'#in run_dk4d_polar'
-          stop
-      end select          
-    
-    if(sll_get_collective_rank(sll_world_collective)==0) then
-    
-      if(modulo(iter,sim%freq_diag)==0) then
-        i_plot = i_plot+1
-        call sll_gnuplot_corect_2d( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          nc_x1+1, &
-          sim%m_x2%eta_min, &
-          sim%m_x2%eta_max, &
-          nc_x2+1, &
-          sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1), &
-          'fdist', &
-          i_plot, &
-          ierr)
-#ifndef NOHDF5
-        call plot_f_polar(i_plot,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1),sim%m_x1,sim%m_x2)
-#endif
-   
-          
-                    
-      endif
-    endif
-    !if(iter==5)then    
-
-!    if(iter==400)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',800,ierr)
-!    endif
-!    if(iter==1000)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',2000,ierr)
-!    endif
-!    if(iter==1500)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',3000,ierr)
-!    endif
-!    if(iter==2000)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',4000,ierr)
-!    endif
-!    if(iter==2500)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',5000,ierr)
-!    endif
-!    if(iter==3000)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',6000,ierr)
-!    endif
-!    if(iter==3500)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,nc_x1+1,0._f64,2._f64*sll_pi,nc_x2+1,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2),'fdist',7000,ierr)
-!    endif
-    
-!    endif
-    
-    enddo
-
-#endif    
 
   end subroutine run_dk4d_field_aligned_polar
 
@@ -1512,69 +1116,6 @@ contains
   end subroutine compute_field_from_phi_cartesian_1d
 
   
-  
-  subroutine compute_field_dk( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
-    sll_int32 :: loc_sz_x1
-    sll_int32 :: loc_sz_x2
-    sll_int32 :: loc_sz_x3
-    sll_int32 :: i1
-    sll_int32 :: i2
-    sll_int32 :: i3
-    sll_int32 :: nc_x1
-    sll_int32 :: nc_x2
-    sll_int32 :: nc_x3
-    
-    
-    nc_x1 = sim%m_x1%num_cells
-    nc_x2 = sim%m_x2%num_cells
-    nc_x3 = sim%m_x3%num_cells
-    
-    
-    call compute_local_sizes_3d( &
-      sim%layout3d_seqx1x2, &
-      loc_sz_x1, &
-      loc_sz_x2, &
-      loc_sz_x3 )
-    
-    do i3 = 1,loc_sz_x3
-      call compute_field_from_phi_polar( &
-        sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3), &
-        sim%m_x1, &
-        sim%m_x2, &
-        sim%A1_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3), &
-        sim%A2_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3), &
-        sim%phi_interp_x1x2)
-    enddo
-
-    call compute_local_sizes_3d( &
-      sim%layout3d_seqx3, &
-      loc_sz_x1, &
-      loc_sz_x2, &
-      loc_sz_x3 )
-
-    do i2=1, loc_sz_x2
-      do i1=1, loc_sz_x1
-        call compute_field_from_phi_cartesian_1d( &
-          sim%phi3d_seqx3(i1,i2,1:nc_x3+1), &
-          sim%m_x3, &
-          sim%A3_seqx3(i1,i2,1:nc_x3+1), &
-          sim%phi_interp_x3)
-        sim%A3_seqx3(i1,i2,1:nc_x3+1)=-sim%A3_seqx3(i1,i2,1:nc_x3+1)   
-      enddo
-    enddo
-
-    call apply_remap_3D( &
-      sim%remap_plan_seqx3_to_seqx1x2, &
-      sim%A3_seqx3, &
-      sim%A3_seqx1x2 )  
-
-
-
-
-  end subroutine compute_field_dk
-
-
   subroutine compute_field_dk_parx1( sim )
     class(sll_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
     sll_int32 :: loc4d_sz_x1
@@ -1673,11 +1214,6 @@ contains
       sim%m_x4%delta_eta)
 
  
- 
-!    call apply_remap_3D( &
-!      sim%remap_plan_seqx1x2_to_seqx3, &
-!      sim%rho3d_seqx1x2, &
-!      sim%rho3d_seqx3 )
 
     
     
@@ -1719,17 +1255,6 @@ contains
     SLL_ALLOCATE(f1d(nc_x3+1),ierr)  
       
       
-      
-!    call apply_remap_4D( &
-!      sim%remap_plan_seqx1x2x4_to_seqx3, &
-!      sim%f4d_seqx1x2x4, &
-!      sim%f4d_seqx3 )
-!    call compute_local_sizes_4d( sim%layout4d_seqx3, &
-!      loc_sz_x1, &
-!      loc_sz_x2, &
-!      loc_sz_x3, &
-!      loc_sz_x4 )
-
     call compute_local_sizes_4d( sim%layout4d_parx1, &
       loc_sz_x1, &
       loc_sz_x2, &
@@ -1754,10 +1279,6 @@ contains
          enddo
       enddo
     enddo    
-!    call apply_remap_4D( &
-!        sim%remap_plan_seqx3_to_seqx1x2x4, &
-!        sim%f4d_seqx3, &
-!        sim%f4d_seqx1x2x4 )
     
     SLL_DEALLOCATE_ARRAY(f1d,ierr)
     
@@ -1987,111 +1508,6 @@ contains
   end subroutine initialize_profiles_analytic
   
 
-
-
-  !----------------------------------------------------
-  ! Allocation of the distribution function for
-  !   drift-kinetic 4D simulation
-  !----------------------------------------------------
-  subroutine allocate_fdistribu4d_DK( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
-
-    sll_int32 :: ierr !, itemp
-    sll_int32 :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
-
-    ! layout for sequential operations in x3 and x4. 
-    ! Make an even split for x1 and x2, or as close as 
-    ! even if the power of 2 is odd. This should 
-    ! be packaged in some sort of routine and set up 
-    ! at initialization time.
-    sim%nproc_x1 = 1
-    sim%nproc_x2 = 1
-    sim%nproc_x3 = sim%world_size
-    sim%nproc_x4 = 1
-   
-    
-    
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-
-    !--> Initialization of parallel layout of f4d in (x3,x4) directions
-    !-->  (x1,x2) : sequential
-    !-->  (x3,x4) : parallelized layout
-    sim%layout4d_seqx1x2x4  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
-      sim%m_x1%num_cells+1, & 
-      sim%m_x2%num_cells+1, & 
-      sim%m_x3%num_cells+1, &
-      sim%m_x4%num_cells+1, &
-      sim%nproc_x1, &
-      sim%nproc_x2, &
-      sim%nproc_x3, &
-      sim%nproc_x4, &
-      sim%layout4d_seqx1x2x4 )
-    
-    ! Allocate the array needed to store the local chunk 
-    ! of the distribution function data. First compute the 
-    ! local sizes. Since the remap operations
-    ! are out-of-place, we will allocate two different arrays, 
-    ! one for each layout.
-    call compute_local_sizes_4d( sim%layout4d_seqx1x2x4, &
-      loc4d_sz_x1, &
-      loc4d_sz_x2, &
-      loc4d_sz_x3, &
-      loc4d_sz_x4 )
-    
-    !print *,'#locsize',sim%my_rank,loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4
-    
-    
-      
-      
-      
-    SLL_ALLOCATE(sim%f4d_seqx1x2x4(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
-
-    !--> Initialization of parallel layout of f4d in (x1,x2,x4) directions
-    !-->  (x1,x2,x4) : parallelized layout
-    !-->  (x3) : sequential
-    
-    sim%nproc_x1 = 2**(sim%power2/3)
-    sim%nproc_x2 = 2**(sim%power2/3)
-    sim%nproc_x3 = 1
-    sim%nproc_x4 = 2**(sim%power2-2*(sim%power2/3))
-     
-
-    sim%layout4d_seqx3  => new_layout_4D( sll_world_collective )
-    call initialize_layout_with_distributed_4D_array( &
-      sim%m_x1%num_cells+1, & 
-      sim%m_x2%num_cells+1, & 
-      sim%m_x3%num_cells+1, &
-      sim%m_x4%num_cells+1, &
-      sim%nproc_x1, &
-      sim%nproc_x2, &
-      sim%nproc_x3, &
-      sim%nproc_x4, &
-      sim%layout4d_seqx3 )
-        
-    call compute_local_sizes_4d( sim%layout4d_seqx3, &
-      loc4d_sz_x1, &
-      loc4d_sz_x2, &
-      loc4d_sz_x3, &
-      loc4d_sz_x4 )    
-    SLL_ALLOCATE(sim%f4d_seqx3(loc4d_sz_x1,loc4d_sz_x2,loc4d_sz_x3,loc4d_sz_x4),ierr)
-    
-    
-    sim%remap_plan_seqx1x2x4_to_seqx3 => NEW_REMAP_PLAN( &
-      sim%layout4d_seqx1x2x4, &
-      sim%layout4d_seqx3, &
-      sim%f4d_seqx1x2x4)
-    sim%remap_plan_seqx3_to_seqx1x2x4 => NEW_REMAP_PLAN( &
-      sim%layout4d_seqx3, &
-      sim%layout4d_seqx1x2x4, &
-      sim%f4d_seqx3)
-
-    
-    
-  end subroutine allocate_fdistribu4d_DK
-
-
-
   !----------------------------------------------------
   ! Allocation of the distribution function for
   !   drift-kinetic 4D simulation
@@ -2306,12 +1722,6 @@ contains
       sim%layout3d_parx3, &
       sim%phi3d_parx1)
 
-
-    
-    
-    !sim%remap_plan_phi_parx1_to_parx3 => new_remap_plan_phi( &
-    !  sim%layout4d_parx1, &
-    !  sim%layout4d_parx3x4)
     
   end subroutine allocate_fdistribu4d_and_QN_DK_parx1
 
@@ -2424,109 +1834,7 @@ contains
 
 
   !----------------------------------------------------
-  ! Allocation for QN solver
-  !----------------------------------------------------
-  subroutine allocate_QN_DK( sim )
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
-
-    !type(sll_logical_mesh_2d), pointer :: logical_mesh2d
-    sll_int32 :: ierr, itemp
-    !sll_int32 :: i1, i2, i3, i4
-    !sll_int32 :: iloc1, iloc2, iloc3, iloc4
-    sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
-    sll_int32 :: nproc3d_x3
-
-
-    ! layout for sequential operations in x3 
-    sim%power2 = int(log(real(sim%world_size))/log(2.0))
-    !--> special case N = 1, so power2 = 0
-    if(sim%power2 == 0) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 1
-       sim%nproc_x4 = 1
-    end if
-    
-    if(is_even(sim%power2)) then
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 2**(sim%power2/2)
-       sim%nproc_x4 = 2**(sim%power2/2)
-    else 
-       sim%nproc_x1 = 1
-       sim%nproc_x2 = 1
-       sim%nproc_x3 = 2**((sim%power2-1)/2)
-       sim%nproc_x4 = 2**((sim%power2+1)/2)
-    end if
-
-    !--> Initialization of rho3d_x1x2 and phi3d_x1x2
-    !-->  (x1,x2) : sequential
-    !-->  x3 : parallelized layout    
-    sim%layout3d_seqx1x2  => new_layout_3D( sll_world_collective )
-    nproc3d_x3 = sim%nproc_x3*sim%nproc_x4
-    call initialize_layout_with_distributed_3D_array( &
-      sim%m_x1%num_cells+1, & 
-      sim%m_x2%num_cells+1, & 
-      sim%m_x3%num_cells+1, &
-      sim%nproc_x1, &
-      sim%nproc_x2, &
-      nproc3d_x3, &
-      sim%layout3d_seqx1x2 )
-    call compute_local_sizes_3d( &
-      sim%layout3d_seqx1x2, &
-      loc3d_sz_x1, &
-      loc3d_sz_x2, &
-      loc3d_sz_x3)
-    SLL_ALLOCATE(sim%rho3d_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%phi3d_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%A1_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%A2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%A3_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    !--> Initialization of rho3d_x3 and phi3d_x3
-    !-->  (x1,x2) : parallelized layout
-    !-->  x3 : sequential
-    ! switch x3 and x1:
-    itemp        = sim%nproc_x1
-    sim%nproc_x1 = sim%nproc_x3
-    sim%nproc_x3 = itemp
-    ! switch x4 and x2
-    itemp        = sim%nproc_x2
-    sim%nproc_x2 = sim%nproc_x4 
-    sim%nproc_x4 = itemp
-        
-    sim%layout3d_seqx3  => new_layout_3D( sll_world_collective )
-    call initialize_layout_with_distributed_3D_array( &
-      sim%m_x1%num_cells+1, & 
-      sim%m_x2%num_cells+1, & 
-      sim%m_x3%num_cells+1, &
-      sim%nproc_x1, &
-      sim%nproc_x2, &
-      sim%nproc_x3, &
-      sim%layout3d_seqx3 )
-    call compute_local_sizes_3d( &
-      sim%layout3d_seqx3, &
-      loc3d_sz_x1, &
-      loc3d_sz_x2, &
-      loc3d_sz_x3)
-    SLL_ALLOCATE(sim%rho3d_seqx3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%phi3d_seqx3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    SLL_ALLOCATE(sim%A3_seqx3(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
-    
-    
-    sim%remap_plan_seqx1x2_to_seqx3 => NEW_REMAP_PLAN( &
-      sim%layout3d_seqx1x2, &
-      sim%layout3d_seqx3, &
-      sim%rho3d_seqx1x2)
-    sim%remap_plan_seqx3_to_seqx1x2 => NEW_REMAP_PLAN( &
-      sim%layout3d_seqx3, &
-      sim%layout3d_seqx1x2, &
-      sim%rho3d_seqx3)
-
-    
-   end subroutine allocate_QN_DK
-
-
-
+ 
   subroutine solve_quasi_neutral_parx1(sim)
     class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
       sll_int32 :: glob_ind(4)
@@ -2586,10 +1894,6 @@ contains
 !      call sll_halt_collective()
 !      stop
         
-      !call apply_remap_plan_phi( &
-      !  sim%remap_plan_phi_parx1_to_parx3, &
-      !  sim%phi3d_parx1, &
-      !  sim%phi3d_parx3)
 
       SLL_DEALLOCATE_ARRAY(tmp,ierr)
     
@@ -2598,81 +1902,6 @@ contains
 
  
  
-  
-  subroutine solve_quasi_neutral(sim)
-    class(sll_simulation_4d_drift_kinetic_field_aligned_polar), intent(inout) :: sim
-    sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
-    sll_int32 :: iloc1, iloc2, iloc3
-    !sll_int32 :: i1, i2
-    sll_int32 :: i3
-    sll_real64 :: tmp
-    sll_int32 :: glob_ind(3)    
-
-
-
-    
-    select case (sim%QN_case)
-      case (SLL_NO_QUASI_NEUTRAL)
-      ! no quasi neutral solver as in CRPP-CONF-2001-069
-        call compute_local_sizes_3d( &
-          sim%layout3d_seqx3, &
-          loc3d_sz_x1, &
-          loc3d_sz_x2, &
-          loc3d_sz_x3 )        
-        if((loc3d_sz_x3).ne.(sim%m_x3%num_cells+1))then
-          print *,'#Problem of parallelization dimension in solve_quasi_neutral'
-          print *,'#sll_simulation_4d_drift_kinetic_polar type simulation'
-          stop
-        endif        
-        do iloc2 = 1, loc3d_sz_x2
-          do iloc1 = 1, loc3d_sz_x1          
-            tmp = sum(sim%rho3d_seqx3(iloc1,iloc2,1:sim%m_x3%num_cells))&
-              /real(sim%m_x3%num_cells,f64)
-            SLL_ASSERT(loc3d_sz_x3==sim%m_x3%num_cells+1)
-            do i3 = 1,sim%m_x3%num_cells+1
-              glob_ind(:) = local_to_global_3D(sim%layout3d_seqx3, &
-                (/iloc1,iloc2,i3/))                        
-              sim%phi3d_seqx3(iloc1,iloc2,i3) = (sim%rho3d_seqx3(iloc1,iloc2,i3)-tmp)&
-                *sim%Te_r(glob_ind(1))/sim%n0_r(glob_ind(1))
-            enddo    
-          enddo
-        enddo  
-        call apply_remap_3D( &
-          sim%remap_plan_seqx3_to_seqx1x2, &
-          sim%phi3d_seqx3, &
-          sim%phi3d_seqx1x2 )  
-      case (SLL_QUASI_NEUTRAL_WITHOUT_ZONAL_FLOW)
-        call compute_local_sizes_3d( &
-          sim%layout3d_seqx1x2, &
-          loc3d_sz_x1, &
-          loc3d_sz_x2, &
-          loc3d_sz_x3 )
-                  
-        do iloc2=1, loc3d_sz_x2
-          do iloc1=1, loc3d_sz_x1
-            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
-          enddo
-        enddo
-        do iloc3=1, loc3d_sz_x3
-          call sim%poisson2d%compute_phi_from_rho( &
-            sim%phi3d_seqx1x2(:,:,iloc3), &
-            sim%phi3d_seqx1x2(:,:,iloc3) )
-        enddo
-        call apply_remap_3D( &
-          sim%remap_plan_seqx1x2_to_seqx3, &
-          sim%phi3d_seqx1x2, &
-          sim%phi3d_seqx3 )            
-      case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
-        print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
-        print *,'#not implemented yet '
-        stop      
-      case default
-        print *,'#bad value for sim%QN_case'
-        stop  
-    end select        
-  
-  end subroutine solve_quasi_neutral
   
 
 #ifndef NOHDF5
