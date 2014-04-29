@@ -114,7 +114,7 @@ contains
     sll_int32, intent(in), optional  :: xmffile_id     !< xml file unit number
     character(len=4), optional       :: center         !< "Node" or "Cell"
     sll_int32, intent(out)           :: error          !< error code
-    sll_int32                        :: myrank
+    sll_int32                        :: prank
 
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                               file_id,error)
@@ -122,9 +122,9 @@ contains
                               array,"/"//trim(array_name),error)
     call sll_hdf5_file_close(file_id, error)
 
-    myrank = sll_get_collective_rank(sll_world_collective)
+    prank = sll_get_collective_rank(sll_world_collective)
 
-    if ( present(xmffile_id) .and. present(center) .and. myrank==0) then
+    if ( present(xmffile_id) .and. present(center) .and. prank==0) then
        npoints_x1 = int(global_dims(1),4)
        npoints_x2 = int(global_dims(2),4)
 
@@ -162,7 +162,7 @@ contains
     sll_int32, intent(in), optional :: xmffile_id     !< xml file unit number
     character(len=4), optional      :: center         !< "Node" or "Cell"
     sll_int32, intent(out)          :: error          !< error code
-    sll_int32                       :: myrank
+    sll_int32                       :: prank
     
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                              file_id,error)
@@ -170,8 +170,8 @@ contains
                               "/"//trim(array_name),error)
     call sll_hdf5_file_close(file_id, error)
 
-    myrank = sll_get_collective_rank(sll_world_collective)
-    if ( present(xmffile_id) .and. present(center) .and. myrank==0) then
+    prank = sll_get_collective_rank(sll_world_collective)
+    if ( present(xmffile_id) .and. present(center) .and. prank==0) then
        npoints_x1 = int(global_dims(1),4)
        npoints_x2 = int(global_dims(2),4)
        npoints_x3 = int(global_dims(3),4)
@@ -199,9 +199,9 @@ contains
   subroutine sll_xdmf_close_parallel(file_id,error)
   sll_int32, intent(in) :: file_id !< file unit number
   sll_int32, intent(out) :: error  !< error code
-  sll_int32 :: myrank
-  myrank = sll_get_collective_rank(sll_world_collective)
-  if (myrank==0) then
+  sll_int32 :: prank
+  prank = sll_get_collective_rank(sll_world_collective)
+  if (prank==0) then
      call sll_xml_file_close(file_id,error)
   end if
   end subroutine sll_xdmf_close_parallel

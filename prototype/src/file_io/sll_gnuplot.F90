@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -180,7 +178,7 @@ open(gnu_id,file=array_name//".gnu", position="append")
 write(gnu_id,*)"splot '"//array_name//"_"//fin//".dat' w l"
 close(gnu_id)
 
-print*, size(array,1), size(array,2), nx, ny
+!print*, size(array,1), size(array,2), nx, ny
 call sll_ascii_file_create(array_name//'_'//fin//'.dat', file_id, error )
 dx = (xmax-xmin)/(nx-1)
 dy = (ymax-ymin)/(ny-1)
@@ -188,7 +186,7 @@ x = xmin
 do i=1,nx
    y = ymin
    do j=1,ny
-      print*, i, j, x, y, array(i,j)
+      !print*, i, j, x, y, array(i,j)
       write(file_id,*) sngl(x),sngl(y),sngl(array(i,j))
       y = y + dy
    end do

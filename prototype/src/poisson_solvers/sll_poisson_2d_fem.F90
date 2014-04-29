@@ -236,7 +236,7 @@ sll_real64, dimension(:,:) :: ey   !< y electric field
 sll_real64, dimension(:,:) :: rho  !< charge density
 sll_real64, dimension((nx-1)*(ny-1)) :: b
 
-!** Construction du second membre (rho a support compact --> projete)
+!** Construction du second membre (rho a support compact)
 k = 0
 do i=2,nx
    do j=2,ny
