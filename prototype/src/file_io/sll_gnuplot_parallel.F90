@@ -129,26 +129,26 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
                                         npts_x, npts_y, &
                                         array, array_name, iplot, error)  
 
-  sll_real64, intent(in)     :: x_min      !< Box corners
-  sll_real64, intent(in)     :: delta_x    !< step size
-  sll_real64, intent(in)     :: y_min      !< Box corners
-  sll_real64, intent(in)     :: delta_y    !< step size
-  sll_int32, intent(in)      :: npts_x     !< number of points to be written, x
-  sll_int32, intent(in)      :: npts_y     !< number of points to be written, y
-  sll_real64, dimension(:,:), intent(in) :: array      !< data
-  character(len=*), intent(in)           :: array_name !< field name
-  sll_int32                  :: error      !< error code
-  sll_int32                  :: iplot      !< plot counter
+  sll_real64, intent(in)       :: x_min      !< Box corners
+  sll_real64, intent(in)       :: delta_x    !< step size
+  sll_real64, intent(in)       :: y_min      !< Box corners
+  sll_real64, intent(in)       :: delta_y    !< step size
+  sll_int32,  intent(in)       :: npts_x     !< number of points to be written, x
+  sll_int32,  intent(in)       :: npts_y     !< number of points to be written, y
+  sll_real64, intent(in)       :: array(:,:) !< data
+  character(len=*), intent(in) :: array_name !< field name
+  sll_int32                    :: error      !< error code
+  sll_int32                    :: iplot      !< plot counter
   
-  character(len=4)           :: fin   
-  sll_int32, save            :: gnu_id
-  sll_int32                  :: file_id
-  sll_int32                  :: i, j
-  sll_real64                 :: x, y
-  character(len=4)           :: cproc 
-  sll_int32                  :: comm, iproc, nproc
-  logical                    :: dir_e
-  logical, save              :: first_call= .true.
+  character(len=4)             :: fin   
+  sll_int32, save              :: gnu_id
+  sll_int32                    :: file_id
+  sll_int32                    :: i, j
+  sll_real64                   :: x, y
+  character(len=4)             :: cproc 
+  sll_int32                    :: comm, iproc, nproc
+  logical                      :: dir_e
+  logical, save                :: first_call= .true.
   
 
   nproc = sll_get_collective_size(sll_world_collective)
@@ -164,17 +164,16 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
   
   call sll_new_file_id(file_id, error)
   call sll_ascii_file_create(cproc//"/"//array_name//'_'//fin//'.dat', file_id, error )
-  !write(*,*) cproc//"/"//array_name//'_'//fin//'.dat'
   do j = 1, npts_y
      y = y_min + (j-1)*delta_y  
      do i = 1, npts_x
         x = x_min+(i-1)*delta_x
-        write(file_id,*) x, y, sngl(array(i,j))
-        !write(*,*) x, y, sngl(array(i,j))
+        write(file_id,*) sngl(x), sngl(y), sngl(array(i,j))
      end do
      write(file_id,*)
   enddo
   close(file_id)
+
   if (iproc == MPI_MASTER) then
      
      if (first_call) then
