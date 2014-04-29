@@ -58,11 +58,13 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 IF(FFTW_ENABLED AND FFTW_FOUND)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
                                              sll_assertion
+                                             sll_general_coordinate_elliptic_solvers
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion
-                                             dfftpack )
+                                             dfftpack 
+                                             sll_general_coordinate_elliptic_solvers)
 ENDIF()
 
 IF (NOT STDF95)
@@ -168,11 +170,18 @@ ENDIF()
 # when debugging this specific module.
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND (NOT STDF95) )
 
-   ADD_LIBRARY(sll_poisson_parallel STATIC 
-               sll_poisson_polar_parallel.F90 
-               sll_poisson_3d_periodic_par.F90 
-               sll_poisson_2d_periodic_cartesian_par.F90
-               sll_quasi_neutral_3d_solver.F90)
+  SET(POISSON_PARALLEL_SRCS
+    sll_poisson_polar_parallel.F90 
+    sll_poisson_3d_periodic_par.F90 
+    sll_poisson_2d_periodic_cartesian_par.F90
+    sll_quasi_neutral_3d_solver.F90)
+
+  IF (NOT STDF95)
+    SET(POISSON_PARALLEL_SRCS ${POISSON_PARALLEL_SRCS} 
+      sll_poisson_2d_polar_parallel_solver.F90)
+  ENDIF()
+
+   ADD_LIBRARY(sll_poisson_parallel STATIC ${POISSON_PARALLEL_SRCS})
 
    ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
    TARGET_LINK_LIBRARIES(sll_poisson_parallel sll_remap 
@@ -191,6 +200,16 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND (NOT STDF95) )
    ADD_EXECUTABLE(test_poisson_polar_parallel 
                   test_poisson_polar_parallel.F90 )
    TARGET_LINK_LIBRARIES(test_poisson_polar_parallel sll_poisson_parallel)
+
+IF (NOT STDF95)
+
+   ADD_EXECUTABLE(test_poisson_polar_parallel_solver 
+                  unit_test_poisson_polar_parallel_solver.F90 )
+   TARGET_LINK_LIBRARIES(test_poisson_polar_parallel_solver sll_poisson_parallel)
+
+ENDIF()
+
+
 
    MESSAGE(STATUS "PASTIX_ENABLED:${PASTIX_ENABLED}")
    IF (PASTIX_ENABLED)
