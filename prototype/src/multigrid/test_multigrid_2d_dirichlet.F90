@@ -141,7 +141,7 @@ implicit none
    do j=sy, ey
      do i=sx, ex
         f(i,j) = (q(i-1,j)-2.*q(i,j)+q(i+1,j))/(delta_x*delta_x) + &
-                 (q(i,j-1)-2.*q(i,j)+q(i,j-1))/(delta_y*delta_y)
+                 (q(i,j-1)-2.*q(i,j)+q(i,j+1))/(delta_y*delta_y)
      end do
    end do
    call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
