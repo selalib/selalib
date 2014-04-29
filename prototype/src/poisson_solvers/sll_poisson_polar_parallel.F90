@@ -46,10 +46,10 @@ module sll_poisson_polar_parallel
    sll_int32,  dimension(:),   pointer :: ipiv     !< Lapack pivot indices
    type(layout_2D),  pointer           :: layout_r !< layout sequential in r
    type(layout_2D),  pointer           :: layout_a !< layout sequential in theta
-   type(remap_plan_2D_real64), pointer :: rmp_ra   !< remap r->theta 
-   type(remap_plan_2D_real64), pointer :: rmp_ar   !< remap theta->r
-   sll_real64, dimension(:,:), pointer :: f_r      !< array sequential in r
-   sll_real64, dimension(:,:), pointer :: f_a      !< array sequential in theta
+   type(remap_plan_2D_comp64), pointer :: rmp_ra   !< remap r->theta 
+   type(remap_plan_2D_comp64), pointer :: rmp_ar   !< remap theta->r
+   sll_comp64, dimension(:,:), pointer :: f_r      !< array sequential in r
+   sll_comp64, dimension(:,:), pointer :: f_a      !< array sequential in theta
    sll_real64, dimension(:), pointer :: dlog_density,inv_Te !<for quasi neutral solver
 
   end type sll_poisson_polar
@@ -133,7 +133,7 @@ contains
     sll_real64,dimension(:),optional :: inv_Te       !< for quasi neutral solver
 
     sll_int32                :: error
-    sll_real64, dimension(:), allocatable :: buf
+    sll_comp64, dimension(:), allocatable :: buf
     sll_int32 :: nr_loc
     sll_int32 :: na_loc
     sll_int32 :: psize
@@ -194,6 +194,7 @@ contains
     this%rmp_ar => new_remap_plan(this%layout_a, this%layout_r, this%f_a)
 
 
+
   end subroutine initialize_poisson_polar
 
   !>delete a sll_poisson_polar object
@@ -242,7 +243,7 @@ contains
     bc     = this%bc
 
     call verify_argument_sizes_par(this%layout_a, rhs)
-    this%f_a = rhs
+    this%f_a = cmplx(rhs, 0_f64, kind=f64)
 
     call compute_local_sizes_2d( this%layout_a, nr_loc, na_loc )
 
@@ -250,15 +251,31 @@ contains
       call fft_apply_plan(this%fw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
     end do
 
+    
     call apply_remap_2D( this%rmp_ar, this%f_a, this%f_r )
+    
+    
     call compute_local_sizes_2d( this%layout_r, nr_loc, na_loc )
-
-    global = local_to_global_2D( this%layout_r, (/1, 1/))
-    k = global(2)/2 - 1
-
-    do j = 1, na_loc-1, 2
+    !global = local_to_global_2D( this%layout_r, (/1, 1/))
+    !k = global(2)/2 - 1
+    
+    !print *,'#na_loc=',sll_get_collective_rank(sll_world_collective),na_loc
+    !do i=1,na_loc
+    !  print *,sll_get_collective_rank(sll_world_collective),i,this%f_r(nr_loc/2,i)
+    !enddo
+    
+    !do j = 1, na_loc-1, 2
+    do j = 1, na_loc  
+      !k = k + 1
+      global = local_to_global_2D( this%layout_r, (/1, j/))
+      k = global(2)
+      if (k<=ntheta/2) then
+        k = k-1
+      else
+        k = ntheta-(k-1)
+      endif
       
-      k = k + 1
+      !print *,'#k=',k,sll_get_collective_rank(sll_world_collective)
 
       do i=2,nr
 
@@ -270,14 +287,15 @@ contains
         this%mat(3*(i-1)-2) = -1.0_f64/dr**2+1.0_f64/(2*dr*r) &
           +this%dlog_density(i)/(2._f64*dr)
 
-        if( j == 1 ) then
-           this%fk(i) = cmplx(this%f_r(i,1),0.0_f64,kind=f64)
-        else if( j == ntheta ) then
-           this%fk(i) = cmplx(this%f_r(i,2),0.0_f64,kind=f64)
-        else
-           this%fk(i) = cmplx(this%f_r(i,j), &
-                              this%f_r(i,j+1),kind=f64)
-        endif
+        this%fk(i) = this%f_r(i,j)
+        !if( j == 1 ) then
+        !   this%fk(i) = cmplx(this%f_r(i,1),0.0_f64,kind=f64)
+        !else if( j == ntheta ) then
+        !   this%fk(i) = cmplx(this%f_r(i,2),0.0_f64,kind=f64)
+        !else
+        !   this%fk(i) = cmplx(this%f_r(i,j), &
+        !                      this%f_r(i,j+1),kind=f64)
+        !endif
 
       enddo
 
@@ -317,11 +335,11 @@ contains
       call solve_cyclic_tridiag(this%cts,this%ipiv,this%fk(2:nr),nr-1,this%phik(2:nr))
 
       !boundary condition at rmin
-      if(bc(1)==1)then !Dirichlet
+      if(bc(1)==SLL_DIRICHLET)then !Dirichlet
         this%phik(1)=0.0_f64
-      else if (bc(1)==2) then
+      else if (bc(1)==SLL_NEUMANN) then
         this%phik(1)=this%phik(2) !Neumann
-      else if (bc(1)==3) then 
+      else if (bc(1)==SLL_NEUMANN_MODE_0) then 
         if (k==0) then!Neumann for mode zero
           this%phik(1)=this%phik(2)
         else !Dirichlet for other modes
@@ -330,11 +348,11 @@ contains
       endif
 
       !boundary condition at rmax
-      if (bc(2)==1) then !Dirichlet
+      if (bc(2)==SLL_DIRICHLET) then !Dirichlet
         this%phik(nr+1)=0.0_f64
-      else if (bc(2)==2) then
+      else if (bc(2)==SLL_NEUMANN) then
         this%phik(nr+1)=this%phik(nr) !Neumann
-      else if (bc(2)==3) then 
+      else if (bc(2)==SLL_NEUMANN_MODE_0) then 
         if(k==0)then!Neumann for mode zero
           this%phik(nr+1)=this%phik(nr)
         else !Dirichlet for other modes
@@ -343,15 +361,15 @@ contains
       endif
 
       do i=1,nr+1
-
-         if( j == 1 ) then
-            this%f_r(i,1) = real(this%phik(i),kind=f64)
-         else if( j == ntheta ) then
-            this%f_r(i,2) = real(this%phik(i),kind=f64)
-         else
-            this%f_r(i,j) = real(this%phik(i),kind=f64)
-            this%f_r(i,j+1) = dimag(this%phik(i))
-         endif
+        this%f_r(i,j) = this%phik(i)   
+         !if( j == 1 ) then
+         !   this%f_r(i,1) = real(this%phik(i),kind=f64)
+         !else if( j == ntheta ) then
+         !   this%f_r(i,2) = real(this%phik(i),kind=f64)
+         !else
+         !   this%f_r(i,j) = real(this%phik(i),kind=f64)
+         !   this%f_r(i,j+1) = dimag(this%phik(i))
+         !endif
 
       end do
 
@@ -363,7 +381,9 @@ contains
     call verify_argument_sizes_par(this%layout_a, phi)
     
     do i=1,nr_loc
-      call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta))
+      !call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),phi(i,1:ntheta))
+      call fft_apply_plan(this%bw,this%f_a(i,1:ntheta),this%f_a(i,1:ntheta))
+      phi(i,1:ntheta) = real(this%f_a(i,1:ntheta))
     end do
 
   end subroutine solve_poisson_polar
