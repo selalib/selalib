@@ -5416,6 +5416,54 @@ print *, 'remap 2d complex:'
     end do
   end function layout_2D_from_layout_4D
 
+  function layout_3D_from_layout_4D( layout4d )
+    type(layout_3D), pointer :: layout_3D_from_layout_4D
+    type(layout_4D), pointer :: layout4d
+    type(sll_collective_t), pointer :: coll
+    sll_int32                :: coll_size
+    sll_int32                :: process
+    sll_int32                :: i_min
+    sll_int32                :: i_max
+    sll_int32                :: j_min
+    sll_int32                :: j_max
+    sll_int32                :: k_min
+    sll_int32                :: k_max
+    sll_int32                :: l_min
+    sll_int32                :: l_max
+
+    SLL_ASSERT( associated(layout4d) )
+    coll                     => get_layout_collective( layout4d )
+    coll_size                = sll_get_collective_size( coll )
+    layout_3D_from_layout_4D => new_layout_3d( coll )
+    ! Just copy the contents of the layout
+    do process=0, coll_size-1
+       i_min = get_layout_i_min( layout4d, process )
+       i_max = get_layout_i_max( layout4d, process )
+       j_min = get_layout_j_min( layout4d, process )
+       j_max = get_layout_j_max( layout4d, process )
+       k_min = get_layout_k_min( layout4d, process )
+       k_max = get_layout_k_max( layout4d, process )
+       call set_layout_i_min( layout_3D_from_layout_4D, process, i_min )
+       call set_layout_i_max( layout_3D_from_layout_4D, process, i_max )
+       call set_layout_j_min( layout_3D_from_layout_4D, process, j_min )
+       call set_layout_j_max( layout_3D_from_layout_4D, process, j_max )
+       call set_layout_k_min( layout_3D_from_layout_4D, process, k_min )
+       call set_layout_k_max( layout_3D_from_layout_4D, process, k_max )
+       ! For safety, check if there is any loss of information
+       l_min = get_layout_l_min( layout4d, process )
+       l_max = get_layout_l_max( layout4d, process )
+       if(  &
+           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+           !print *, 'WARNING, layout_3D_from_layout_4D(): there is loss of ',&
+           !     'information in the convertion. Printing values:'
+           !print *, 'l_min = ', l_min
+           !print *, 'l_max = ', l_max
+        end if
+    end do
+  end function layout_3D_from_layout_4D
+
+
+
 #if 0
   function layout_4D_from_layout_2D( layout2d )
     type(layout_4D), pointer :: layout_4D_from_layout_2D

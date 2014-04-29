@@ -21,7 +21,7 @@
      linpack.f90)
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers 
-  sll_sparse_matrix sll_scalar_field_2d_alternative)
+  sll_sparse_matrix sll_scalar_field_2d_alternative sll_integration)
 
    
    ADD_EXECUTABLE(test_general_coordinates_elliptic_solver unit_test.F90)

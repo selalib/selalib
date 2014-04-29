@@ -67,8 +67,8 @@ implicit none
   a_min   = 0.0_f64
   a_max   = 2.0_f64 * sll_pi
 
-  nc_r    = 256
-  nc_a    = 1024
+  nc_r    = 32 !256
+  nc_a    = 64 !1024
   nr      = nc_r+1
   na      = nc_a+1
   delta_r = (r_max-r_min)/real(nr-1,f64)
@@ -157,6 +157,7 @@ implicit none
   do i =1,nr_loc
     do j=1,na_loc
       rhs(i,j) = - f_sin(r(i), a(j))
+      !rhs(i,j) = - f_cos(r(i), a(j))
     end do
   end do
 
