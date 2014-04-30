@@ -31,7 +31,7 @@ type, public :: dg_field
 
 contains
 
-   procedure, pass :: write_to_file => plot_dg_field_2d_with_gnuplot
+   procedure, pass :: write_to_file => write_dg_field_2d_to_file
 
 end type dg_field
 
@@ -111,6 +111,19 @@ subroutine initialize_dg_field( this, init_function, time)
    end do
 
 end subroutine initialize_dg_field
+
+subroutine write_dg_field_2d_to_file( this, field_name, file_format )
+   class(dg_field)        :: this
+   character(len=*)       :: field_name
+   sll_int32, optional    :: file_format
+
+   if (present(file_format)) then
+      call plot_dg_field_2d_with_gmsh(this, field_name)
+   else
+      call plot_dg_field_2d_with_gnuplot( this, field_name )
+   endif
+
+end subroutine write_dg_field_2d_to_file
 
 subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
@@ -222,17 +235,43 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_int32, dimension(9)  :: invpermut2=(/1,5,2,8,9,6,4,7,3/)
    sll_int32, dimension(16) :: invpermut3=(/1,5,6,2,12,13,14,7,11,16,15,8,4,10,9,3/)
    sll_int32 :: invpermut(nlocmax),permut(nlocmax)
-   sll_int32 :: nloc, nel, neq
-   sll_int32 :: i, j, k, ii, jj
-
-   nel = (this%tau%mesh%num_cells1+1)*(this%tau%mesh%num_cells2+1)
-   neq = this%tau%mesh%num_cells1*this%tau%mesh%num_cells2
+   sll_int32 :: nloc, nel, neq, iel, ino, inoloc
+   sll_int32 :: i, j, k, l, ii, jj, ni, nj, ielx, iely, ig, ipg
+   sll_int32, allocatable, dimension(:,:) :: connec
+   sll_real64, allocatable, dimension(:,:) :: coords
+   sll_real64 :: offset(2)
+   character(len=32) :: my_fmt
 
    if (this%degree > 3) then
       write(*,*) 'ordre non prévu'
       stop
    end if
+
+   ni   = this%tau%mesh%num_cells1
+   nj   = this%tau%mesh%num_cells2
    nloc = (this%degree+1)*(this%degree+1)
+   nel  = ni * nj
+   neq  = (ni*this%degree+1)*(nj*this%degree+1)
+
+   SLL_ALLOCATE(connec(1:nloc,1:neq),error)
+   SLL_ALLOCATE(coords(1:2,1:neq),error)
+
+   do j=0, nj-1
+   do i=0, ni-1
+      iel=1+i+j*ni
+      do jj=0,this%degree
+      do ii=0,this%degree
+         inoloc=1+ii+(this%degree+1)*jj
+         ino=1+ii+this%degree*i+(this%degree*ni+1)*(jj+this%degree*j)
+         connec(inoloc,iel)=ino
+         offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
+         offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
+         coords(1,ino) = offset(1)+.5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
+         coords(2,ino) = offset(2)+.5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+      end do
+      end do
+   end do
+   end do
 
    select case(this%degree)
    case(1)
@@ -253,33 +292,26 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
       permut(invpermut(i))=i
    end do
       
-
    call sll_ascii_file_create(field_name//".msh", file_id, error)
    write(file_id,'(A)') '$MeshFormat'
    write(file_id,'(A)') '2 0 8'
    write(file_id,'(A)') '$EndMeshFormat'
    write(file_id,'(A)') '$Nodes'
    write(file_id,*) neq
-   k = 0
-   do i = 1, this%tau%mesh%num_cells1+1
-   do j = 1, this%tau%mesh%num_cells2+1
-      do ii = 1, this%degree+1
-      do jj = 1, this%degree+1
-         k = k+1
-         write(file_id,*) k, &
-                          this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1, &
-                          this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2, &
-                          0.0
-      end do
-      end do
-   end do
+   do k = 1, neq
+      write(file_id,'(i6,2x,3f10.5)') k, coords(1:2,k), 0.0
    end do
    write(file_id,'(A)') '$EndNodes'
    write(file_id,'(A)') '$Elements'
    write(file_id,*) nel
+
+   write(my_fmt, '(a, i0, a)') '(3i6,', nloc, 'i5)'
+
+   k = 0
    do i = 1, this%tau%mesh%num_cells1
    do j = 1, this%tau%mesh%num_cells2
-      !write(file_id,*) i,typelem,0,(connec(permut(ii),i),ii=1,nloc)
+      k = k+1
+      write(file_id,trim(my_fmt)) k,typelem,0,(connec(permut(l),k),l=1,nloc)
    end do
    end do
    write(file_id,'(A)') '$EndElements'
@@ -292,16 +324,15 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    write(file_id,*) 0
    write(file_id,*) 1
    write(file_id,*) neq
-   k = 0
-   do i = 1, this%tau%mesh%num_cells1+1
-   do j = 1, this%tau%mesh%num_cells2+1
-      do ii = 1, this%degree+1
-      do jj = 1, this%degree+1
-         k = k + 1
-         write(file_id,*) k, sngl(this%array(ii,jj,i,j))
+   do iel=1,nel
+      ielx=mod(iel-1,ni)+1
+      iely=(iel-1)/nj+1
+      do ipg=1,nloc
+          ig=connec(ipg,iel)
+          ii=mod(ipg-1,this%degree+1)+1
+          jj=(ipg-1)/(this%degree+1)+1
+          write(file_id,*) ig, sngl(this%array(ii,jj,ielx,iely))
       end do
-      end do
-   end do
    end do
    write(file_id,'(A)') '$EndNodeData'
 
