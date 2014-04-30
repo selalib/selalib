@@ -49,9 +49,9 @@ module sll_multigrid_2d
 
    sll_int32,  parameter :: IOUT    = 6
    sll_int32,  parameter :: maxcy   = 5000    !Max number of mg cycles
-   sll_real64, parameter :: tolmax  = 1.0d-06 !Desired accuracy
+   sll_real64, parameter :: tolmax  = 1.0d-07 !Desired accuracy
    sll_int32,  parameter :: kcycle  = 2       !1: V-cycles 2: W-cycles
-   sll_int32,  parameter :: iprer   = 3       !number of relaxation sweep
+   sll_int32,  parameter :: iprer   = 5       !number of relaxation sweep
    sll_int32,  parameter :: ipost   = 1
    sll_int32,  parameter :: iresw   = 1       !1: fully weighted residual
                                               !2: half-weighted residual
@@ -384,10 +384,13 @@ subroutine initialize_multigrid_2d( this,                         &
    end if
 #endif
 
+   bd(1) = ibdry
+   bd(2) = jbdry
+   bd(3) = ibdry
+   bd(4) = jbdry
+
    where(this%neighbor >= 0)
       bd = 0
-   elsewhere
-      bd = 1
    end where
 
 #ifdef DEBUG

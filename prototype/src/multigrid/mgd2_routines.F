@@ -18,9 +18,10 @@ c------------------------------------------------------------------------
       tinitial=MPI_WTIME()
 # endif
 c
+      print*, bd
       if (bd(1).eq.1) then
         do j=sym-1,eym+1
-          phi(exm+1,j)= 0.0 !phi(exm,j)
+          phi(exm+1,j)= phi(exm,j)
         end do
       else if (bd(1).eq.2) then
         do j=sym-1,eym+1
@@ -29,7 +30,7 @@ c
       end if
       if (bd(5).eq.1) then
         do j=sym-1,eym+1
-          phi(sxm-1,j)= 0.0 !phi(sxm,j)
+          phi(sxm-1,j)= phi(sxm,j)
         end do
       else if (bd(5).eq.2) then
         do j=sym-1,eym+1
@@ -38,7 +39,7 @@ c
       end if
       if (bd(3).eq.1) then
         do i=sxm-1,exm+1
-          phi(i,sym-1)= 0.0 !phi(i,sym)
+          phi(i,sym-1)= phi(i,sym)
         end do
       else if (bd(3).eq.2) then
         do i=sxm-1,exm+1
@@ -47,7 +48,7 @@ c
       end if
       if (bd(7).eq.1) then
         do i=sxm-1,exm+1
-          phi(i,eym+1)= 0.0 !phi(i,eym)
+          phi(i,eym+1)= phi(i,eym)
         end do
       else if (bd(7).eq.2) then
         do i=sxm-1,exm+1
@@ -2015,13 +2016,15 @@ c
 c
 c rescale phif
 c
+# if WMGD
+# else
       if (isol.eq.1) then
         avo=rro
       else
         avo=0.0d0
       end if
-
       call gscale(sx,ex,sy,ey,phif,avo,acorr,comm2d,nx,ny,IOUT)
+#endif
 c
 c exchange boundary data and impose periodic BCs
 c
