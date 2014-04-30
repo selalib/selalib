@@ -1,9 +1,11 @@
 program test_lobalap
 #include "selalib.h"
+#include "sll_coordinate_transformations.h"
 
   use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   use sll_dg_fields
+  use sll_logical_meshes
   implicit none
 
   type(lobatto_poisson_solver)        :: solver
