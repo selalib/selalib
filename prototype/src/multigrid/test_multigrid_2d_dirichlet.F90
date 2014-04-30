@@ -144,6 +144,8 @@ implicit none
                  (q(i,j-1)-2.*q(i,j)+q(i,j+1))/(delta_y*delta_y)
      end do
    end do
+
+   p = 0.0_f64
    call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
 
    call solve(solver, p, f, r)
