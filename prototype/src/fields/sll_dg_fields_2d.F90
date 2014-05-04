@@ -237,8 +237,9 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_int32 :: invpermut(nlocmax),permut(nlocmax)
    sll_int32 :: nloc, nel, neq, iel, ino, inoloc
    sll_int32 :: i, j, k, l, ii, jj, ni, nj, ielx, iely, ig, ipg
-   sll_int32, allocatable, dimension(:,:) :: connec
+   sll_int32,  allocatable, dimension(:,:) :: connec
    sll_real64, allocatable, dimension(:,:) :: coords
+   sll_real64, allocatable, dimension(:)   :: values
    sll_real64 :: offset(2)
    character(len=32) :: my_fmt
 
@@ -255,6 +256,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
 
    SLL_ALLOCATE(connec(1:nloc,1:neq),error)
    SLL_ALLOCATE(coords(1:2,1:neq),error)
+   SLL_ALLOCATE(values(1:neq),error)
 
    do j=0, nj-1
    do i=0, ni-1
@@ -268,6 +270,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
          offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
          coords(1,ino) = offset(1)+.5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
          coords(2,ino) = offset(2)+.5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         values(ino) = this%array(ii+1,jj+1,i+1,j+1)
       end do
       end do
    end do
@@ -324,15 +327,8 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    write(file_id,*) 0
    write(file_id,*) 1
    write(file_id,*) neq
-   do iel=1,nel
-      ielx=mod(iel-1,ni)+1
-      iely=(iel-1)/nj+1
-      do ipg=1,nloc
-          ig=connec(ipg,iel)
-          ii=mod(ipg-1,this%degree+1)+1
-          jj=(ipg-1)/(this%degree+1)+1
-          write(file_id,*) ig, sngl(this%array(ii,jj,ielx,iely))
-      end do
+   do k=1,neq
+      write(file_id,'(i6,2x,f10.5)') k, values(k)
    end do
    write(file_id,'(A)') '$EndNodeData'
 
