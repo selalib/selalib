@@ -15,8 +15,8 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 8   !
-sll_int32, parameter :: nc_eta2 = 8   !
+sll_int32, parameter :: nc_eta1 = 32   !
+sll_int32, parameter :: nc_eta2 = 32   !
 sll_int32, parameter :: degree  = 3   !
 !=====================================!
 
