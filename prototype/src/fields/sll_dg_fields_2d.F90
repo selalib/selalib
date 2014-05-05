@@ -118,7 +118,14 @@ subroutine write_dg_field_2d_to_file( this, field_name, file_format )
    sll_int32, optional    :: file_format
 
    if (present(file_format)) then
+      select case(file_format)
+      case(SLL_IO_GMSH)
       call plot_dg_field_2d_with_gmsh(this, field_name)
+      case(SLL_IO_MTV)
+      call plot_dg_field_2d_with_plotmtv(this, field_name)
+      case(SLL_IO_XDMF)
+      call plot_dg_field_2d_with_xdmf(this, field_name)
+      end select
    else
       call plot_dg_field_2d_with_gnuplot( this, field_name )
    endif
@@ -236,7 +243,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_int32, dimension(16) :: invpermut3=(/1,5,6,2,12,13,14,7,11,16,15,8,4,10,9,3/)
    sll_int32 :: invpermut(nlocmax),permut(nlocmax)
    sll_int32 :: nloc, nel, neq, iel, ino, inoloc
-   sll_int32 :: i, j, k, l, ii, jj, ni, nj, ielx, iely, ig, ipg
+   sll_int32 :: i, j, k, l, ii, jj, ni, nj
    sll_int32,  allocatable, dimension(:,:) :: connec
    sll_real64, allocatable, dimension(:,:) :: coords
    sll_real64, allocatable, dimension(:)   :: values
@@ -261,15 +268,15 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    do j=0, nj-1
    do i=0, ni-1
       iel=1+i+j*ni
+      offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
+      offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
       do jj=0,this%degree
       do ii=0,this%degree
          inoloc=1+ii+(this%degree+1)*jj
          ino=1+ii+this%degree*i+(this%degree*ni+1)*(jj+this%degree*j)
          connec(inoloc,iel)=ino
-         offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
-         offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
-         eta1 = offset(1) + 0.5 * (this%xgalo(ii+1) + 1.0) * this%tau%mesh%delta_eta1
-         eta2 = offset(2) + 0.5 * (this%xgalo(jj+1) + 1.0) * this%tau%mesh%delta_eta2
+         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
          coords(1,ino) = this%tau%x1(eta1,eta2)
          coords(2,ino) = this%tau%x2(eta1,eta2)
          values(ino) = this%array(ii+1,jj+1,i+1,j+1)
@@ -316,7 +323,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    do i = 1, this%tau%mesh%num_cells1
    do j = 1, this%tau%mesh%num_cells2
       k = k+1
-      write(file_id,trim(my_fmt)) k,typelem,0,(connec(permut(l),k),l=1,nloc)
+      write(file_id,trim(my_fmt)) k,typelem,0,(connec(l,k),l=1,nloc)
    end do
    end do
    write(file_id,'(A)') '$EndElements'
@@ -337,6 +344,188 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    close(file_id)
 
 end subroutine plot_dg_field_2d_with_gmsh
+
+subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
+
+   class(dg_field)        :: this
+   character(len=*)       :: field_name
+   sll_int32              :: file_id
+   sll_int32              :: ni, nj, ino
+   sll_int32              :: i, j, ii, jj
+   sll_real64             :: offset(2)
+   sll_real64             :: eta1, eta2
+
+   call sll_ascii_file_create(field_name//".mtv", file_id, error)
+
+   write(file_id,*)"$DATA=CONTCURVE"
+   write(file_id,*)"%equalscale=T"
+   write(file_id,*)"%contfill"
+   write(file_id,*)"%toplabel='"//field_name//"'"
+
+   do j=1,this%tau%mesh%num_cells2
+      offset(2) = this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2
+      do jj=1,merge(this%degree,this%degree+1,j<this%tau%mesh%num_cells2)
+         do i=1,this%tau%mesh%num_cells1
+            offset(1) = this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1
+            do ii=1,merge(this%degree,this%degree+1,i<this%tau%mesh%num_cells1)
+               eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+               eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+               write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
+                                sngl(this%tau%x2(eta1,eta2)), &
+                                sngl(this%array(ii,jj,i,j))
+            end do
+         end do
+      end do
+   end do
+
+   write(file_id,*)
+   
+   write(file_id,*)"$DATA=CURVE3D"
+   write(file_id,*)"%equalscale=T"
+   write(file_id,*)"%meshplot"
+   write(file_id,*)"%toplabel='"//field_name//"'"
+
+   do j=1,this%tau%mesh%num_cells2
+   do i=1,this%tau%mesh%num_cells1
+      offset(1) = this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1
+      offset(2) = this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2
+      do jj=1,this%degree
+      do ii=1,this%degree
+         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
+                          sngl(this%tau%x2(eta1,eta2)), &
+                          sngl(this%array(ii,jj,i,j))
+         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
+                          sngl(this%tau%x2(eta1,eta2)), &
+                          sngl(this%array(ii+1,jj,i,j))
+         eta1 = offset(1) + .5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
+                          sngl(this%tau%x2(eta1,eta2)), &
+                          sngl(this%array(ii+1,jj+1,i,j))
+         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
+                          sngl(this%tau%x2(eta1,eta2)), &
+                          sngl(this%array(ii,jj+1,i,j))
+         eta1 = offset(1) + .5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2) + .5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,*) sngl(this%tau%x1(eta1,eta2)), &
+                          sngl(this%tau%x2(eta1,eta2)), &
+                          sngl(this%array(ii,jj,i,j))
+         write(file_id,*)
+      end do
+      end do
+   end do
+   end do
+
+   ni   = this%tau%mesh%num_cells1
+   nj   = this%tau%mesh%num_cells2
+
+   do j=0, nj-1
+   do i=0, ni-1
+      offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
+      offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
+      do jj=0,this%degree
+      do ii=0,this%degree
+         ino=1+ii+this%degree*i+(this%degree*ni+1)*(jj+this%degree*j)
+         eta1 = offset(1)+.5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,"(a)"    ,advance="no") "@text x1="
+         write(file_id,"(g15.3)",advance="no") this%tau%x1(eta1,eta2)
+         write(file_id,"(a)"    ,advance="no")" y1="
+         write(file_id,"(g15.3)",advance="no") this%tau%x2(eta1,eta2)
+         write(file_id,"(a)"    ,advance="no")" z1=0. lc=5 ll='"
+         write(file_id,"(i4)"   ,advance="no") ino
+         write(file_id,"(a)")"'"
+      end do
+      end do
+   end do
+   end do
+
+   write(file_id,*)"$end"
+   close(file_id)
+   
+end subroutine plot_dg_field_2d_with_plotmtv
+
+subroutine plot_dg_field_2d_with_xdmf(this, field_name)
+
+   class(dg_field)   :: this
+   character(len=*)  :: field_name
+   sll_int32         :: file_id
+   sll_int32         :: i, j, k, ii, jj
+   sll_real64        :: offset(2)
+   sll_real64        :: eta1, eta2
+
+   SLL_ASSERT(this%degree < 10)
+
+   call sll_ascii_file_create(field_name//".xmf", file_id, error)
+
+   write(file_id,"(a)") "<?xml version='1.0' ?>"
+   write(file_id,"(a)") "<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []>"
+   write(file_id,"(a)") "<Xdmf Version='2.'>"
+   write(file_id,"(a)") "<Domain>"
+   write(file_id,"(a)") "<Grid Name='Mesh' GridType='Collection'>"
+   k = 0
+   do i=1,this%tau%mesh%num_cells1
+   do j=1,this%tau%mesh%num_cells2
+      offset(1) = this%tau%mesh%eta1_min+(i-1)*this%tau%mesh%delta_eta1
+      offset(2) = this%tau%mesh%eta2_min+(j-1)*this%tau%mesh%delta_eta2
+      k = k+1
+      write(file_id,"(a,i6,a)") "<Grid Name='Mesh",k,"' GridType='Uniform'>"
+      write(file_id,"(a,2i5,a)") &
+         "<Topology TopologyType='2DSMesh' NumberOfElements='", & 
+         this%degree+1,this%degree+1,"'/>"
+      write(file_id,"(a)")"<Geometry GeometryType='X_Y'>"
+      write(file_id,"(a,2i3,a)")"<DataItem Dimensions='",this%degree+1, &
+                         this%degree+1, "' NumberType='Float' Format='XML'>"
+      do jj=1,this%degree+1
+      do ii=1,this%degree+1
+         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,"(f7.3)",advance='no') sngl(this%tau%x1(eta1,eta2))
+      end do
+      write(file_id,*)
+      end do
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a,2i3,a)")"<DataItem Dimensions='",this%degree+1, &
+                         this%degree+1, "' NumberType='Float' Format='XML'>"
+      do jj=1,this%degree+1
+      do ii=1,this%degree+1
+         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,"(f7.3)", advance='no') sngl(this%tau%x2(eta1,eta2))
+      end do
+      write(file_id,*)
+      end do
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"</Geometry>"
+      write(file_id,"(a)")"<Attribute Name='"//field_name// &
+           & "' AttributeType='Scalar' Center='Node'>"
+      write(file_id,"(a,2i3,a)")"<DataItem Dimensions='", &
+           this%degree+1,this%degree+1, &
+           "' NumberType='Float' Precision='4' Format='XML'>"
+      do jj=1,this%degree+1
+      do ii=1,this%degree+1
+         eta1 = offset(1)+.5*(this%xgalo(ii)+1.)*this%tau%mesh%delta_eta1
+         eta2 = offset(2)+.5*(this%xgalo(jj)+1.)*this%tau%mesh%delta_eta2
+         write(file_id,"(f7.3)", advance='no') sngl(this%array(ii,jj,i,j))
+      end do
+      write(file_id,*)
+      end do
+      write(file_id,"(a)")"</DataItem>"
+      write(file_id,"(a)")"</Attribute>"
+      write(file_id,"(a)") "</Grid>"
+   end do
+   end do
+   write(file_id,"(a)") "</Grid>"
+   write(file_id,"(a)") "</Domain>"
+   write(file_id,"(a)") "</Xdmf>"
+   
+end subroutine plot_dg_field_2d_with_xdmf
 
 end module sll_dg_fields
 

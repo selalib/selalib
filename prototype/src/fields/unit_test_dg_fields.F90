@@ -15,8 +15,8 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 32   !
-sll_int32, parameter :: nc_eta2 = 32   !
+sll_int32, parameter :: nc_eta1 = 10  !
+sll_int32, parameter :: nc_eta2 = 20  !
 sll_int32, parameter :: degree  = 3   !
 !=====================================!
 
@@ -83,9 +83,13 @@ call tau%write_to_file(SLL_IO_MTV)
 
 ex => new_dg_field( degree, tau, fcos) 
 call ex%write_to_file('ex', SLL_IO_GMSH)
+call ex%write_to_file('ex', SLL_IO_MTV)
+call ex%write_to_file('ex', SLL_IO_XDMF)
 
 bz => new_dg_field( degree, collela, gaussian) 
 call bz%write_to_file('bz', SLL_IO_GMSH)
+call bz%write_to_file('bz', SLL_IO_MTV)
+call bz%write_to_file('bz', SLL_IO_XDMF)
 
 print*,'PASSED'
 
