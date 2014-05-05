@@ -12,7 +12,7 @@ type(hex_mesh_2d), pointer  :: mesh
 type(linear_box_spline_2D), pointer :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 2
+sll_int32    :: deg = 1
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -41,11 +41,14 @@ sll_real64   :: t
 !others
 sll_real64   :: x2_basis
 sll_real64   :: x1_basis
+! sll_real64              :: delta
+! sll_real64              :: k1_temp
+! sll_real64              :: k2_temp
 
 
 
 print*, ""
-do num_cells =50,50,10
+do num_cells = 10,250,10
 
    ! Mesh initialization    
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -75,7 +78,7 @@ do num_cells =50,50,10
    do i=0, mesh%num_pts_tot-1
       x1(i+1) = from_global_x1(mesh, i)
       x2(i+1) = from_global_x2(mesh, i)
-      f_init(i+1) = x2(i+1)**2! 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
+      f_init(i+1) = x2(i+1)! 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
            !+ (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
 
       f_tn(i+1) = f_init(i+1)
@@ -83,7 +86,7 @@ do num_cells =50,50,10
    call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
    ! Advection initialization
-   advec = 0.0!1_f64
+   advec = 0.0!01_f64
    tmax  = 0.025_f64
    dt    = 0.025_f64
    t = 0._f64
@@ -108,9 +111,9 @@ do num_cells =50,50,10
          ! Approximation
          f_tn(i) = hex_interpolate_value(mesh, x1_char(i), x2_char(i), spline, deg)
          ! Analytical value 
-         x1(i) = from_global_x1(mesh, i-1) + advec*dt*nloops
-         x2(i) = from_global_x2(mesh, i-1) + advec*dt*nloops
-         f_fin(i) = x2(i)**2! 1._f64*exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
+         x1(i) = from_global_x1(mesh, i-1) - advec*dt*nloops
+         x2(i) = from_global_x2(mesh, i-1) - advec*dt*nloops
+         f_fin(i) = x2(i)! 1._f64*exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
                     !+ (x2(i)-gauss_x2)**2 / gauss_sig**2))
          x1_basis = change_basis_x1(mesh, spline, x1(i), x2(i))
          x2_basis = change_basis_x2(mesh, spline, x1(i), x2(i))
@@ -131,9 +134,9 @@ do num_cells =50,50,10
       norm2_error = sqrt(norm2_error)
 
       ! Printing error
-      print*,"   n = ", nloops, "    | error  = ", diff_error, &
-      & "|    at hex = ", get_hex_num(where_error)
-      print*,"                        | error  = ", norm2_error
+      print*,"  nt =", nloops, "    | error_Linf  = ", diff_error
+      print*,"                       | at hex =", get_hex_num(where_error), where_error
+      print*,"                       | error_L2   = ", norm2_error
 
       ! !WRITING ERROR REGARDING TIME STEP
       ! if (t .eq. dt) then
@@ -150,13 +153,25 @@ do num_cells =50,50,10
    end do
  
 
+
+   ! print*,""
+   ! print*," equises = ", x1(1), x1(2), x1(3), x1(4)
+   ! print*," igriega = ", x1(1), x2(2), x2(3), x2(4)
+
+   ! print *, ""
+   ! print *, "x1 , x2 = ", x1(2), x2(2)
+   ! delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+   ! k1_temp = ((mesh%r2_x2 * x1(2) - mesh%r2_x1 * x2(2))/delta)
+   ! k2_temp = ((mesh%r1_x1 * x2(2) - mesh%r1_x2 * x1(2))/delta)
+   ! print*, "k1_temp =", k1_temp, nint(k1_temp), floor(k1_temp)
+   ! print*, "k2_temp =", k2_temp, nint(k2_temp), floor(k2_temp)
+
+
    print*,""
-   print*," equises = ", x1(2), x1(3), x1(4)
-   print*," igriega = ", x2(2), x2(3), x2(4)
    print*, "val at origin of f_app : ", f_tn(1)
    print*, "val at origin of f_fin : ", f_fin(1)
    print*, "val at origin of diffn : ", f_fin(1) - f_tn(1)
-   print*,""
+   ! print*,""
    ! print*, "val at maxerr of f_app : ", f_tn(where_error)
    ! print*, "val at maxerr of f_fin : ", f_fin(where_error)
    ! ! print*, "val at maxerr of chi1  : ", chi1(where_error)
@@ -189,6 +204,7 @@ do num_cells =50,50,10
       close(12)
    end if
 
+   SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
    SLL_DEALLOCATE_ARRAY(f_init,ierr)
    SLL_DEALLOCATE_ARRAY(f_tn,ierr)
    SLL_DEALLOCATE_ARRAY(f_fin,ierr)
