@@ -153,7 +153,7 @@ call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
 do istep = 1, nstep !*** Loop over time
 
-   call plot_dg_field( phi, 'phi')
+   call phi%write_to_file('phi')
    call advection(maxwell_TE, phi, dt)
 
    time = time + 0.5_f64*dt

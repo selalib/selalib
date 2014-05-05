@@ -9,16 +9,18 @@ use sll_poisson_2d_periodic_fem
 implicit none
 
 sll_int32  :: i, j
-sll_real64 :: dimx, dimy
+sll_real64 :: xmin, xmax
+sll_real64 :: ymin, ymax
 sll_real64 :: dx, dy
 sll_int32  :: nc_x, nc_y
 sll_int32  :: error
-sll_real64 :: mode
+sll_real64 :: dpi
 sll_real64, dimension(:),   pointer :: x
 sll_real64, dimension(:),   pointer :: y
 sll_real64, dimension(:,:), pointer :: ex
 sll_real64, dimension(:,:), pointer :: ey
 sll_real64, dimension(:,:), pointer :: rho
+sll_real64, dimension(:,:), pointer :: phi
 sll_real64 :: errmax
 
 nc_x = 32
@@ -27,25 +29,28 @@ nc_y = 32
 SLL_CLEAR_ALLOCATE(ex(1:nc_x+1,1:nc_y+1),error)  
 SLL_CLEAR_ALLOCATE(ey(1:nc_x+1,1:nc_y+1),error) 
 SLL_CLEAR_ALLOCATE(rho(1:nc_x+1,1:nc_y+1),error)  
+SLL_CLEAR_ALLOCATE(phi(1:nc_x+1,1:nc_y+1),error)  
 
 SLL_ALLOCATE(x(1:nc_x+1),error)  
 SLL_ALLOCATE(y(1:nc_y+1),error) 
 
-dimx = 1.0
-dimy = 1.0
+xmin = -5.0
+xmax =  5.0
+ymin = -5.0
+ymax =  5.0
 
-dx = dimx / nc_x
-dy = dimy / nc_y
+dx = (xmax-xmin) / nc_x
+dy = (ymax-ymin) / nc_y
 
 !Create an irregular mesh
 do i=1,nc_x+1
-   x(i) = (i-1)*dx !* 0.5 * ((i-1)*dx+1)
+   x(i) = xmin+(i-1)*dx !* 0.5 * ((i-1)*dx+1)
 enddo
 do j=1,nc_y+1
-   y(j) = (j-1)*dy !* 0.5 * ((j-1)*dy+1)
+   y(j) = ymin+(j-1)*dy !* 0.5 * ((j-1)*dy+1)
 enddo
 
-mode = 4*sll_pi
+dpi = 2*sll_pi
 
 call test_compact()
 call test_periodic()
@@ -55,9 +60,12 @@ contains
 subroutine test_compact()
 type( poisson_fem ) :: poisson
 
-do j = 1, nc_y+1
-   do i = 1, nc_x+1
-      rho(i,j) = 2_f64 * mode**2 * sin(mode*x(i))*sin(mode*y(j))
+phi = 0.0_f64
+do j = 2, nc_y
+   do i = 2, nc_x
+      phi(i,j) = exp(-(x(i)**2+y(j)**2))
+      rho(i,j) = (phi(i+1,j)-2*phi(i,j)+phi(i-1,j))/(x(i+1)-x(i-1))**2 &
+               + (phi(i,j-1)-2*phi(i,j)+phi(i,j+1))/(y(j+1)-y(j-1))**2
    end do
 end do
 
@@ -67,9 +75,9 @@ call solve(poisson, ex, ey, rho)
 errmax = 0.
 do j = 1, nc_y+1
    do i = 1, nc_x+1
-      errmax = errmax +abs(rho(i,j)-sin(mode*x(i))*sin(mode*y(j)))
-      write(11,*) x(i), y(j), rho(i,j), sin(mode*x(i))*sin(mode*y(j))
-      write(12,*) x(i), y(j), rho(i,j)-sin(mode*x(i))*sin(mode*y(j))
+      errmax = errmax + abs(rho(i,j)-phi(i,j))
+      write(11,*) x(i), y(j), rho(i,j)-phi(i,j)
+      write(12,*) x(i), y(j), rho(i,j),phi(i,j)
    end do
    write(12,*); write(11,*)
 end do
@@ -83,7 +91,7 @@ type( poisson_2d_periodic_fem ) :: poisson
 
 do j = 1, nc_y+1
    do i = 1, nc_x+1
-      rho(i,j) = 2_f64 * mode**2 * sin(mode*x(i))*sin(mode*y(j))
+      rho(i,j) = 2_f64 * dpi**2 * sin(dpi*x(i))*sin(dpi*y(j))
    end do
 end do
 
@@ -93,9 +101,9 @@ call solve(poisson, ex, ey, rho)
 errmax = 0.
 do j = 1, nc_y
    do i = 1, nc_x
-      errmax = errmax+abs(rho(i,j)-sin(mode*x(i))*sin(mode*y(j)))
-      write(13,*) x(i), y(j), rho(i,j),sin(mode*x(i))*sin(mode*y(j))
-      write(14,*) x(i), y(j), rho(i,j)-sin(mode*x(i))*sin(mode*y(j))
+      errmax = errmax+abs(rho(i,j)-sin(dpi*x(i))*sin(dpi*y(j)))
+      write(13,*) x(i), y(j), rho(i,j),sin(dpi*x(i))*sin(dpi*y(j))
+      write(14,*) x(i), y(j), rho(i,j)-sin(dpi*x(i))*sin(dpi*y(j))
    end do
    write(13,*) ; write(14,*) 
 end do
