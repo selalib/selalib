@@ -1095,14 +1095,14 @@ contains
         node_positions_x2, &
         sim%num_dof_x2, &
         'f', time_init )        
-      call plot_f_cartesian( &
-        iplot, &
-        f_visu_light, &
-        sim%x1_array_light, &
-        np_x1_light, &
-        node_positions_x2_light, &
-        sim%num_dof_x2_light, &
-        'light_f', time_init )        
+!      call plot_f_cartesian( &
+!        iplot, &
+!        f_visu_light, &
+!        sim%x1_array_light, &
+!        np_x1_light, &
+!        node_positions_x2_light, &
+!        sim%num_dof_x2_light, &
+!        'light_f', time_init )        
 #endif
 
 
