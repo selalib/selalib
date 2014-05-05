@@ -64,10 +64,10 @@ IF(NOT STDF95)
    ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
 
 
-   ADD_TEST(NAME poisson_2d_dirichlet_cartesian COMMAND 
-     test_poisson_2d_dirichlet_cartesian )
-   SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES 
-     PASS_REGULAR_EXPRESSION "PASSED" )
+#   ADD_TEST(NAME poisson_2d_dirichlet_cartesian COMMAND 
+#     test_poisson_2d_dirichlet_cartesian )
+#   SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES 
+#     PASS_REGULAR_EXPRESSION "PASSED" )
 
 
    ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
