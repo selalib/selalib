@@ -240,7 +240,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_int32,  allocatable, dimension(:,:) :: connec
    sll_real64, allocatable, dimension(:,:) :: coords
    sll_real64, allocatable, dimension(:)   :: values
-   sll_real64 :: offset(2)
+   sll_real64 :: offset(2), eta1, eta2
    character(len=32) :: my_fmt
 
    if (this%degree > 3) then
@@ -268,8 +268,10 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
          connec(inoloc,iel)=ino
          offset(1) = this%tau%mesh%eta1_min+i*this%tau%mesh%delta_eta1
          offset(2) = this%tau%mesh%eta2_min+j*this%tau%mesh%delta_eta2
-         coords(1,ino) = offset(1)+.5*(this%xgalo(ii+1)+1.)*this%tau%mesh%delta_eta1
-         coords(2,ino) = offset(2)+.5*(this%xgalo(jj+1)+1.)*this%tau%mesh%delta_eta2
+         eta1 = offset(1) + 0.5 * (this%xgalo(ii+1) + 1.0) * this%tau%mesh%delta_eta1
+         eta2 = offset(2) + 0.5 * (this%xgalo(jj+1) + 1.0) * this%tau%mesh%delta_eta2
+         coords(1,ino) = this%tau%x1(eta1,eta2)
+         coords(2,ino) = this%tau%x2(eta1,eta2)
          values(ino) = this%array(ii+1,jj+1,i+1,j+1)
       end do
       end do
