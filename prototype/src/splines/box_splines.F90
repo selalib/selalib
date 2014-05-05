@@ -235,6 +235,12 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
           if (nei .lt. num_pts_tot) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
                                 pre_filter_piir2(k,deg)
+             ! if (i .eq. 23) then
+             !    print *,""
+             !    print *,"nei  =", nei
+             !    print *,"data = ", data(nei+1)
+             !    print *,"filt = ", pre_filter_piir1(k,deg)
+             ! end if
           else
              nei = twelve_fold_symmetry(nei, num_pts)
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
@@ -265,20 +271,19 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   end subroutine compute_box_spline_2d_prdc_neum
 
 
-  function factorial (n) result (res)
- 
-    implicit none
+  function Factorial (n) result (res)
     sll_int32, intent (in) :: n
     sll_int32 :: res
     sll_int32 :: i
- 
-    res = product ((/(i, i = 1, n)/))
+    sll_int32 :: tab(n)
+
+    tab = (/(i, i = 1, n)/)
+    res = product (tab)
  
   end function factorial
  
   function choose (n, k) result (res)
- 
-    implicit none
+
     sll_int32, intent (in) :: n
     sll_int32, intent (in) :: k
     sll_real64 :: res
@@ -287,7 +292,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     else if (n .lt. k) then
        res = 0.
     else 
-       res = factorial (n) / (factorial (k) * factorial (n - k))
+       res = Factorial(n) / (Factorial (k) * Factorial (n - k))
     end if
   end function choose
 
@@ -452,6 +457,9 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_int32               :: ki, kj
     sll_int32               :: num_pts
     sll_int32               :: num_pts_tot
+    sll_real64              :: delta
+    sll_real64              :: k1_temp
+    sll_real64              :: k2_temp
 
     val = 0._f64
 
@@ -469,6 +477,16 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     ! the closest mesh point associated to (x1,x2)
     k1_asso = from_cart_index_k1(mesh_geom, x1, x2)
     k2_asso = from_cart_index_k2(mesh_geom, x1, x2)
+
+    if ((k1_asso.eq.2).and.(k2_asso.eq.3)) then
+       print *, ""
+       print *, "x1 , x2 = ", x1, x2
+       delta = mesh_geom%r1_x1 * mesh_geom%r2_x2 - mesh_geom%r2_x1 * mesh_geom%r1_x2
+       k1_temp = ((mesh_geom%r2_x2 * x1 - mesh_geom%r2_x1 * x2)/delta)
+       k2_temp = ((mesh_geom%r1_x1 * x2 - mesh_geom%r1_x2 * x1)/delta)
+       print*, "k1_temp =", k1_temp, nint(k1_temp), floor(k1_temp)
+   end if
+
 
     ! Then we will do a loop for all the points 
     ! on the envelopping rhomboid of radius=deg
@@ -488,8 +506,8 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
         ! We centralize and shift the coordinates
         ! i.e. centralize : xm = x - Rk
         !      shifting   : xm to the associated rhomboid point
-        xm1 = x1 - r11*k1_asso - r21*k2_asso + ki*r11 + kj*r21
-        xm2 = x2 - r12*k1_asso - r22*k2_asso + ki*r12 + kj*r22
+        xm1 = x1 - r11*k1_asso - r21*k2_asso - ki*r11 - kj*r21
+        xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
 
         ! change of basis : geometrical basis => spline basis
         x1_basis = change_basis_x1(mesh_geom, spline, xm1, xm2)
@@ -498,22 +516,29 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
         val = val + spline%coeffs(ind) * &
                     chi_gen_val(x1_basis, x2_basis, deg)
 
-      if ((x1.eq.0.0).and.(x2.eq.0.0)) then
-         if(chi_gen_val(x1_basis, x2_basis, deg).gt.0.) then
-             print*," indice =", ind
-             print*,"        chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
-             print*,"        coeffs =", spline%coeffs(ind)
-          end if
-        if ((k1_asso.eq.0).and.(k2_asso.eq.0))then
-         print*," "
-         print*," indice =", ind
-         print*," k1a, k2a =", k1_asso, k2_asso
-         print*," ki, kj =", ki, kj
-         print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
-         print*," modifi =", xm1, xm2
-         print*," basiss =", x1_basis, x2_basis
-       end if
-       end if
+      ! ! if ((x1.eq.0.0).and.(x2.eq.0.0)) then
+      !   if ((k1_asso.eq.2).and.(k2_asso.eq.3)) then
+      !      if(chi_gen_val(x1_basis, x2_basis, deg).gt.0.) then
+      !         print*," "
+      !         print*," indice =", ind
+      !         print*," chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
+      !         print*," coeffs =", spline%coeffs(ind)
+      !         ! print*," k1, k2 =", k1_asso, k2_asso
+      !         ! print*," ki, kj =", ki, kj
+      !         ! print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
+      !         ! print*," modifi =", xm1, xm2
+      !         ! print*," basiss =", x1_basis, x2_basis
+      !      else
+      !         print*,""
+      !         print*," indice =", ind
+      !         ! print*," chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
+      !         ! print*," coeffs =", spline%coeffs(ind)
+      !         ! print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
+      !         ! print*," modifi =", xm1, xm2
+      !         ! print*," basiss =", x1_basis, x2_basis
+
+      !      end if
+      !   end if
 
       end do
    end do

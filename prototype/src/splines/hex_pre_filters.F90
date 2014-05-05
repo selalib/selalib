@@ -105,30 +105,18 @@ contains
 
 
       if (deg .eq. 1) then 
-          ! prefiltre PIIR2 for box-splines chi2
+          ! prefiltre PIIR1 for box-splines chi2
           ! with coefficients h0 = 3/4 and h1 = 1/24
-          !             |h1 0  0 |   |0  0  0 |   |h1 0  0 |
-          ! prefilter = |0  h0 0 | * |h1 h0 h1| * |h0 0  0 |
-          !             |0  0  h1|   |0  0  0 |   |h1 0  0 |
-          ! where '*' symbolizes the 2d convolution operator
-
           if (local_index .eq. 0) then
-              weight = 2917._f64/6912._f64
+              weight = 3._f64/4._f64
           else if (local_index .lt. 7) then
-              weight = 19._f64/768._f64
-          else if (local_index .lt. 19) then
-              if (modulo(local_index, 2) .eq. 1) then
-                  weight = 1._f64/13824._f64
-              else
-                  weight = 1._f64/768._f64
-              end if
+              weight = 1._f64/24._f64
           else
               weight = 0.
           end if
-
       else if (deg .eq. 2) then 
        print *, 'ERROR: pre_filter_piir1(...): ', &
-            '     function not implemented for order 2 splines '
+            '     function not implemented for degree 2 splines '
        print *, "Exiting..."
        STOP
 
@@ -150,23 +138,13 @@ contains
 
 
       if (deg .eq. 1) then 
-          ! prefiltre PIIR2 for box-splines chi2
+          ! prefiltre PFIR for box-splines chi2
           ! with coefficients h0 = 5/4 and h1 = -1/24
-          !             |h1 0  0 |   |0  0  0 |   |h1 0  0 |
-          ! prefilter = |0  h0 0 | * |h1 h0 h1| * |h0 0  0 |
-          !             |0  0  h1|   |0  0  0 |   |h1 0  0 |
-          ! where '*' symbolizes the 2d convolution operator
 
           if (local_index .eq. 0) then
-              weight = 2949._f64/1510._f64
+              weight = 5._f64/4._f64
           else if (local_index .lt. 7) then
-              weight = -145._f64/2304._f64
-          else if (local_index .lt. 19) then
-              if (modulo(local_index, 2) .eq. 1) then
-                  weight = -1._f64/13824._f64
-              else
-                  weight = 5._f64/2304._f64
-              end if
+              weight = -1._f64/24._f64
           else
               weight = 0.
           end if
