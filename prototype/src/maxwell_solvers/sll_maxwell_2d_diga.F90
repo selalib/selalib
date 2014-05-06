@@ -211,7 +211,7 @@ subroutine advection( this, phi, dt )
    type(dg_field), target   :: phi  !< field
    sll_real64, intent(in)   :: dt   !< time step
 
-   sll_int32        :: left, right, node, side
+   sll_int32        :: left, right, node, side, edge_node
    sll_int32        :: i, j, k, l, ii, jj, kk
    sll_real64       :: vec_n1
    sll_real64       :: vec_n2
@@ -225,8 +225,8 @@ subroutine advection( this, phi, dt )
    x  = gauss_lobatto_points(this%degree+1)
    w  = gauss_lobatto_weights(this%degree+1)
 
-   do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
+   do i = 1, this%nc_eta1
 
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
@@ -245,18 +245,28 @@ subroutine advection( this, phi, dt )
          case(SOUTH)
             k = i
             l = 1+modulo(j-2,this%nc_eta2) 
+#ifdef DEBUG
+            print"(2i3,a2,2i3)", i, j, 'S', k, l
+#endif
          case(EAST)
             k = 1+modulo(i  ,this%nc_eta1)
             l = j
+#ifdef DEBUG
+            print"(2i3,a2,4i3)", i, j, 'E', k, l
+#endif
          case(NORTH)
             k = i
             l = 1+modulo(j  ,this%nc_eta2)
+#ifdef DEBUG
+            print"(2i3,a2,2i3)", i, j, 'N', k, l
+#endif
          case(WEST)
             k = 1+modulo(i-2,this%nc_eta1)
             l = j
+#ifdef DEBUG
+            print"(2i3,a2,2i3)", i, j, 'W', k, l
+#endif
          end select
-
-         print*, side, i, j, k, l
 
          do jj = 1, this%degree+1
          do ii = 1, this%degree+1
@@ -271,16 +281,18 @@ subroutine advection( this, phi, dt )
             left  = dof_local(side, node, this%degree)
             right = dof_neighbor(side, node, this%degree)
             
-
-            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
-            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
-   
-            flux = (0.5*(this%w_vector(left, 1)   &
-                     +   this%r_vector(right,1))) &
-                  * w(node) * this%cell(i,j)%edge(side)%length
+            edge_node = dof_edge(side, left, this%degree)
+            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
+            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
+#ifdef DEBUG
+            print"('cell ',2i3,' side ',i2,' &
+            & nodes ',2i3,' edge_node ',i2, ' vec_n ',2f7.3 )", &
+            i, j, side, left, right, edge_node, vec_n1, vec_n2
+#endif
+            flux = (0.5*(this%w_vector(left,1)+this%r_vector(right,1))) &
+                 * w(node) * this%cell(i,j)%edge(side)%length
   
-            f(node,1,i,j) = f(node,1,i,j) + vec_n1*flux + vec_n2*flux
-
+            !f(node,1,i,j) = f(node,1,i,j) + vec_n1*flux + vec_n2*flux
 
          end do
    
@@ -296,7 +308,6 @@ subroutine advection( this, phi, dt )
 #ifdef DEBUG
 
    call sll_ascii_file_create("flux.gnu", gnu_id, error)
-
 
    icell = 0
    do i = 1, this%nc_eta1
@@ -322,9 +333,9 @@ subroutine advection( this, phi, dt )
          kk = kk+1
          eta1 = offset(1) + 0.5 * (x(ii) + 1.0) * this%tau%mesh%delta_eta1
          eta2 = offset(2) + 0.5 * (x(jj) + 1.0) * this%tau%mesh%delta_eta2
-         write(file_id,*) this%tau%x1(eta1,eta2), &
-                          this%tau%x2(eta1,eta2), &
-                          f(kk,1,i,j)
+         write(file_id,"(3f8.3)") this%tau%x1(eta1,eta2), &
+                                  this%tau%x2(eta1,eta2), &
+                                  f(kk,1,i,j)
       end do
       write(file_id,*)
       end do
@@ -369,7 +380,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    type(dg_field), optional :: jy   !< y current field
    type(dg_field), optional :: rho  !< charge density
 
-   sll_int32        :: left, right, node, side
+   sll_int32        :: left, right, node, side, edge_node
    sll_int32        :: i, j, k, l, ii, jj, kk
    sll_real64       :: vec_n1
    sll_real64       :: vec_n2
@@ -435,11 +446,12 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
          !Compute the fluxes on edge points
          do node = 1, this%degree+1
    
-            left  = dof_local(side, node, this%degree)
-            right = dof_neighbor(side, node, this%degree)
+            left      = dof_local(side, node, this%degree)
+            right     = dof_neighbor(side, node, this%degree)
+            edge_node = dof_edge(side, left, this%degree)
 
-            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
-            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
+            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
+            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
    
             !flux(:) = (0.5*(this%w_vector(left, :) &
             !            +   this%r_vector(right,:))) &
@@ -580,6 +592,24 @@ function dof_neighbor(edge,dof,degree)
    end select
 
 end function dof_neighbor
+
+function dof_edge(edge,dof,degree)
+
+   sll_int32 :: dof_edge
+   sll_int32 :: edge, dof, degree
+   
+   select case(edge)
+   case(SOUTH)
+      dof_edge = dof
+   case(EAST)
+      dof_edge = dof/(degree+1)
+   case(NORTH)
+      dof_edge = dof-degree*(degree+1)
+   case(WEST)
+      dof_edge = (dof-1)/(degree+1)+1
+   end select
+
+end function dof_edge
 
 !> Compute cell normals
 subroutine compute_normals(tau, i, j, d, cell )

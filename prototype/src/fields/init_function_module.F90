@@ -40,7 +40,7 @@ real(8) function add( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   add =   x1!+x2
+   add =   x1+x2
    return
 
 end function add
