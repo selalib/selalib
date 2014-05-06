@@ -36,8 +36,8 @@ implicit none
 ! Simulation parameters               !
 !=====================================!
 sll_int32, parameter :: nstep   = 10  !
-sll_int32, parameter :: nc_eta1 = 2   !
-sll_int32, parameter :: nc_eta2 = 2   !
+sll_int32, parameter :: nc_eta1 = 20  !
+sll_int32, parameter :: nc_eta2 = 20  !
 sll_int32, parameter :: mode    = 2   !
 sll_int32, parameter :: degree  = 2   !
 !=====================================!
@@ -71,12 +71,16 @@ sll_real64  :: err_tm
 sll_real64  :: dt
 sll_real64  :: cfl = 0.5
 
+sll_int32  :: i, j, error
+sll_real64 :: x, y
+sll_real64, dimension(:,:), allocatable :: sol
+
 sll_real64, external :: fcos, gaussian, add
 
 !mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-1._f64, eta1_max=1._f64, &
-                            eta2_min=-1._f64, eta2_max=1._f64)
+                            eta1_min=-5._f64, eta1_max=5._f64, &
+                            eta2_min=-5._f64, eta2_max=5._f64)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -129,7 +133,25 @@ bx => new_dg_field( degree, tau)
 by => new_dg_field( degree, tau) 
 bz => new_dg_field( degree, tau) 
 
-phi => new_dg_field( degree, tau, add) 
+phi => new_dg_field( degree, tau, gaussian) 
+
+SLL_CLEAR_ALLOCATE(sol(1:nc_eta1*degree,1:nc_eta2*degree), error)
+
+do i = 1, nc_eta1*degree
+do j = 1, nc_eta2*degree
+   x = mesh%eta1_min + (i-1)*0.5*mesh%delta_eta1
+   y = mesh%eta2_min + (j-1)*0.5*mesh%delta_eta2
+   sol(i,j) = exp(-(x*x+y*y))
+end do
+end do
+
+do i = 2, nc_eta1*degree-1
+do j = 2, nc_eta2*degree-1
+   write(13,*) i, j, (sol(i-1,j)-2*sol(i,j)+sol(i+1,j))/(0.25*mesh%delta_eta1**2) &
+                    +(sol(i,j-1)-2*sol(i,j)+sol(i,j+1))/(0.25*mesh%delta_eta2**2)
+end do
+write(13,*)
+end do
 
 ez_exact => new_dg_field( degree, tau, fcos) 
 bz_exact => new_dg_field( degree, tau, fcos) 
