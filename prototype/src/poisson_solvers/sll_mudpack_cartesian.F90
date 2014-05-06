@@ -22,6 +22,10 @@ interface solve
    module procedure  solve_mudpack_cartesian
 end interface solve
 
+interface delete
+   module procedure  delete_mudpack_cartesian
+end interface delete
+
 !class(sll_interpolator_1d_base), pointer   :: cxx_interp
 contains
 
@@ -45,7 +49,7 @@ sll_int32,  optional    :: bc_eta1_left  !< boundary condtion
 sll_int32,  optional    :: bc_eta1_right !< boundary condtion
 sll_int32,  optional    :: bc_eta2_left  !< boundary condtion
 sll_int32,  optional    :: bc_eta2_right !< boundary condtion
-sll_int32,  parameter   :: iixp = 2 , jjyq = 2
+sll_int32,  parameter   :: iixp = 4 , jjyq = 4
 sll_int32               :: iiex, jjey, llwork
 
 sll_real64 :: phi(nc_eta1+1,nc_eta2+1) !< electric potential
@@ -55,7 +59,7 @@ sll_real64 :: rhs(nc_eta1+1,nc_eta2+1) !< charge density
 !storeage for labelling in vectors iprm,fprm
 sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
-sll_int32  :: i,error
+sll_int32  :: error
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
 common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -63,6 +67,10 @@ common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
 sll_real64 :: xa,xb,yc,yd,tolmax,relmax
 common/ftmud2sp/xa,xb,yc,yd,tolmax,relmax
 !sll_real64,dimension(:),allocatable :: cxx_array
+
+#ifdef DEBUG
+sll_int32 :: i
+#endif
 
 equivalence(intl,iprm)
 equivalence(xa,fprm)
@@ -154,6 +162,7 @@ write(*,104) intl
 
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
+#ifdef DEBUG
 !print error parameter and minimum work space requirement
 write (*,200) error,iprm(16)
 if (error > 0) call exit(0)
@@ -174,6 +183,7 @@ if (error > 0) call exit(0)
 104 format(/'# discretization call to mud2sp', ' intl = ', i2)
 200 format('# error = ',i2, ' minimum work space = ',i7)
      
+#endif
 end subroutine initialize_mudpack_cartesian
 
 
@@ -193,7 +203,7 @@ sll_int32  :: iprm(16)
 sll_real64 :: fprm(6)
 sll_int32  :: error
 sll_int32  :: i, j
-sll_real64 :: dx, dy, avg
+sll_real64 :: dx, dy
 
 sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
 sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
@@ -210,7 +220,12 @@ external cofx,cofy,bndsp
 
 !set initial guess because solve should be called every time step in a
 !time dependent problem and the elliptic operator does not depend on time.
-iguess = this%iguess
+if (this%iguess == 0) then
+   iguess = 0
+else
+   this%iguess = 1
+    iguess = 1
+endif
 
 !attempt solution
 intl = 1
@@ -218,13 +233,18 @@ intl = 1
 write(*,106) intl,method,iguess
 #endif
 
-rhs = rhs - sum(rhs) / (nx*ny)
+if ( nxa == 0 .and. nyc == 0 ) &
+   rhs = rhs - sum(rhs) / (nx*ny)
+
 call mud2sp(iprm,fprm,this%work,cofx,cofy,bndsp,rhs,phi,this%mgopt,error)
 
 #ifdef DEBUG
 write(*,107) error
 if (error > 0) call exit(0)
 #endif
+
+if ( nxa == 0 .and. nyc == 0 ) &
+   phi = phi - sum(phi) / (nx*ny)
 
 iguess = 1
 ! attempt to improve approximation to fourth order
@@ -233,32 +253,49 @@ call mud24sp(this%work,phi,error)
 #ifdef DEBUG
 write (*,108) error
 if (error > 0) call exit(0)
-#endif
 
 106 format(/'#approximation call to mud2sp', &
     &/'# intl = ',i2, ' method = ',i2,' iguess = ',i2)
 107 format('#error = ',i2)
 108 format(/'# mud24sp test ', ' error = ',i2)
 
+#endif
+
 if (present(ex) .and. present(ey)) then
    dx = (xb-xa)/(nx-1)
-   dy = (yc-yd)/(ny-1)
-   do j = 1, nx-1
-      do i = 1, ny-1
-         ex(i,j) = (phi(i+1,j)-phi(i,j)) / dx
-         ey(i,j) = (phi(i,j+1)-phi(i,j)) / dy
-      end do
+   dy = (yd-yc)/(ny-1)
+   do i = 2, nx-1
+      ex(i,:) = (phi(i+1,:)-phi(i-1,:)) / (2*dx)
+   end do
+   do j = 2, ny-1
+      ey(:,j) = (phi(:,j+1)-phi(:,j-1)) / (2*dy)
    end do
 
+   if (nxa == 0 ) then
+      ex(nx,:) = (phi(2,:)-phi(nx-1,:))/(2*dx)
+      ex(1,:)  = ex(nx,:)
+   end if
+   if (nyc == 0 ) then
+      ey(:,ny) = (phi(:,2)-phi(:,ny-1))/(2*dy)
+      ey(:,1) = ey(:,ny)
+   end if
+
    if (present(nrj)) then 
-      nrj=sum(ex(1:nx-1,1:ny-1)*ex(1:nx-1,1:ny-1)+ &
-              ey(1:nx-1,1:ny-1)*ey(1:nx-1,1:ny-1))*dx*dy
+      nrj=sum(ex*ex+ey*ey)*dx*dy
    end if
 
 end if
 
      
 end subroutine solve_mudpack_cartesian
+
+subroutine delete_mudpack_cartesian(this)
+type(mudpack_2d)        :: this          !< Data structure for solver
+
+
+   deallocate(this%work)
+
+end subroutine delete_mudpack_cartesian
 
 end module sll_mudpack_cartesian
 
