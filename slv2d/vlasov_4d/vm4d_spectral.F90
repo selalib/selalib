@@ -3,6 +3,7 @@ program vm4d_spectral
 #define MPI_MASTER 0
 #include "selalib-mpi.h"
 
+  use init_functions
   use sll_vlasov4d_base
   use sll_vlasov4d_spectral
 
@@ -35,8 +36,7 @@ program vm4d_spectral
   call transposexv(vlasov4d)
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
-
-  !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
+  vlasov4d%bz = 0.0_f64
 
   call transposevx(vlasov4d)
   call advection_x1(vlasov4d,0.5*vlasov4d%dt)
@@ -94,8 +94,8 @@ contains
 
     call read_input_file(vlasov4d)
 
-    call spl_x3x4%initialize(vlasov4d%nc_eta1,   &
-    &                        vlasov4d%nc_eta1,   &
+    call spl_x3x4%initialize(vlasov4d%np_eta1,   &
+    &                        vlasov4d%np_eta1,   &
     &                        vlasov4d%eta1_min,  &
     &                        vlasov4d%eta1_max,  &
     &                        vlasov4d%eta2_min,  &
@@ -129,7 +129,7 @@ contains
         vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
         v2 = vx*vx+vy*vy
-        vlasov4d%f(i,j,k,l)=(1+vlasov4d%eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+        vlasov4d%f(i,j,k,l) = landau_cos_prod(vlasov4d%eps,kx, ky, x, y, v2)
 
     end do
     end do
@@ -155,22 +155,5 @@ contains
 
   end subroutine initlocal
 
-  subroutine solve_ampere(vlasov4d, maxwell2d, dt)
-  type(vlasov4d_spectral)   :: vlasov4d 
-  type(maxwell_2d_pstd)     :: maxwell2d
-  sll_real64, intent(in)    :: dt
-   
-  call ampere(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt, vlasov4d%jx)
-
-  end subroutine solve_ampere
-  
-  subroutine solve_faraday(vlasov4d, maxwell2d, dt)
-  type(vlasov4d_spectral)   :: vlasov4d 
-  type(maxwell_2d_pstd)     :: maxwell2d
-  sll_real64, intent(in)    :: dt
-   
-  call faraday(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
-
-  end subroutine solve_faraday
 
 end program vm4d_spectral

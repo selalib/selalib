@@ -145,8 +145,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
       y     = gauss_lobatto_points(degree+1,ya,yb)
       wx    = gauss_lobatto_weights(degree+1,xa,xb)
       wy    = gauss_lobatto_weights(degree+1,ya,yb)
-      dlagx = gauss_lobatto_derivative_matrix(degree+1, x, wx)
-      dlagy = gauss_lobatto_derivative_matrix(degree+1, y, wy)
+      dlagx = gauss_lobatto_derivative_matrix(degree+1,x)
+      dlagy = gauss_lobatto_derivative_matrix(degree+1,y)
 
       call sll_display(wx,"f9.4")
 
@@ -183,7 +183,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    call sll_display(this%cell(2,2)%MassMatrix,"f9.4")
    call sll_display(this%cell(2,2)%DxMatrix,"f9.4")
    call sll_display(this%cell(2,2)%DyMatrix,"f9.4")
-   stop
 
    SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),4),error)
@@ -271,6 +270,7 @@ subroutine advection( this, phi, dt )
    
             left  = dof_local(side, node, this%degree)
             right = dof_neighbor(side, node, this%degree)
+            
 
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)

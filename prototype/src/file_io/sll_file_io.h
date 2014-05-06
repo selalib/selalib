@@ -22,6 +22,7 @@
 #define SLL_IO_VTK     1
 #define SLL_IO_GNUPLOT 2 
 #define SLL_IO_MTV     3 
+#define SLL_IO_GMSH    4 
 
 use sll_xml_io
 use sll_ascii_io
