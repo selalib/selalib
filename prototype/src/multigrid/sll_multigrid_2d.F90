@@ -220,6 +220,9 @@ subroutine initialize_multigrid_2d( this,                         &
    sll_int32  :: coords(2)
 
    sll_real64, dimension(4) :: vbc
+#ifdef DEBUG
+   sll_int32 :: iproc, prank, psize
+#endif
 
    nx = nc_x
    ny = nc_y
