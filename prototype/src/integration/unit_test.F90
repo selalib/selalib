@@ -63,7 +63,7 @@ program integration_tester
   write(*,"(/,a,/)") "Matrix of derivatives"
   n = 4
   allocate(d(n,n))
-  d = gauss_lobatto_derivative_matrix(n, x, w) 
+  d = gauss_lobatto_derivative_matrix(n) 
 
   write (string, '( "(",I2,"f20.15)" )' )  n
   do i = 1, n
