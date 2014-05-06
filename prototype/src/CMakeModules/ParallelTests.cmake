@@ -171,3 +171,11 @@ IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
   ADD_MPI_TEST(pastix test_pastix ${PROCS} ${ARGS})
   SET(pastix PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ENDIF()
+
+
+# linear solvers
+SET(PROCS 2)
+SET(ARGS " ")
+ADD_MPI_TEST( fml_linear_solvers1 test_fml_linear_solvers2 ${PROCS} ${ARGS} )
+SET( fml_linear_solvers1 PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" )
+
