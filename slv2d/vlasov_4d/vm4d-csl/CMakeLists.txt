@@ -21,6 +21,6 @@ ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90
                ../../../prototype/src/poisson_solvers/sll_mudpack_cartesian.F90)
 
 TARGET_LINK_LIBRARIES(vm4d_transpose old_slv2d ${LIBS} 
-                                           dfftpack
-                                           mudpack
-                                           ${LAPACK_LIBRARIES})
+                                     dfftpack
+                                     mudpack
+                                     ${LAPACK_LIBRARIES})
