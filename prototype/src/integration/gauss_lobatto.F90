@@ -109,17 +109,17 @@ contains
   
   
   function gauss_lobatto_points( n, a, b ) result(xk)
-    sll_real64, intent(in),optional    :: a
-    sll_real64, intent(in),optional    :: b
-    sll_int32,  intent(in)    :: n 
-    sll_real64, dimension(n)  :: xk
-    sll_real64, dimension(n)  :: wk
-    sll_real64                :: c1, c2
-    sll_int32                 :: k
-    sll_int32                 :: err
-    sll_real64                :: alpha(0:n-1), beta(0:n-1)
-    sll_real64                :: de(n), da(n), db(n)
-    
+    sll_int32,  intent(in)          :: n 
+    sll_real64, intent(in),optional :: a
+    sll_real64, intent(in),optional :: b
+    sll_real64, dimension(n)        :: xk
+    sll_real64, dimension(n)        :: wk
+    sll_real64                      :: c1, c2
+    sll_int32                       :: k
+    sll_int32                       :: err
+    sll_real64                      :: alpha(0:n-1), beta(0:n-1)
+    sll_real64                      :: de(n), da(n), db(n)
+   
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
     
@@ -145,16 +145,16 @@ contains
     end function gauss_lobatto_points
 
   function gauss_lobatto_weights( n,a,b ) result(wk)
+    sll_int32,  intent(in)           :: n 
     sll_real64, intent(in), optional :: a
     sll_real64, intent(in), optional :: b
-    sll_int32,  intent(in)    :: n 
-    sll_real64, dimension(n)  :: xk
-    sll_real64, dimension(n)  :: wk
-    sll_int32                 :: k
-    sll_int32                 :: err
-    sll_real64                :: alpha(0:n-1), beta(0:n-1)
-    sll_real64                :: de(n), da(n), db(n)
-    sll_real64                :: c1
+    sll_real64, dimension(n)         :: xk
+    sll_real64, dimension(n)         :: wk
+    sll_int32                        :: k
+    sll_int32                        :: err
+    sll_real64                       :: alpha(0:n-1), beta(0:n-1)
+    sll_real64                       :: de(n), da(n), db(n)
+    sll_real64                       :: c1
     
     xk(:) = 0.0_f64
     wk(:) = 0.0_f64
@@ -181,50 +181,58 @@ contains
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
-  !>  der(i,j)=(Phi'_i(x_j))
+  !>  der(i,j)=int(Phi_i.Phi'_j)_[-1;1]^2
+  !>  der(i,j)=w_i . (Phi'_i(x_j))
   !> \f]
-  function  gauss_lobatto_derivative_matrix(n, x, w) result(d)
-
+  function  gauss_lobatto_derivative_matrix(n, y) result(d)
     sll_int32,  intent(in) :: n
-    sll_real64, intent(in) :: x(n)
-    sll_real64, intent(in) :: w(n)
+    sll_real64, optional :: y(n)
+    sll_real64 :: x(n)
     sll_int32  :: i,j,l,m
     sll_real64 :: prod
     sll_real64 :: d(n,n)
 
+    if (present(y)) then
+       x = y
+    else
+       x =  gauss_lobatto_points(n)
+    end if
+
     d = 0.0_f64
+
     do j=1,n
-      do i=1,n
-         do l=1,j-1
-            prod=1.0_f64
-            do m=1,l-1
-               prod=prod*(x(i)-x(m))/(x(j)-x(m))
-            end do
-            do m=l+1,j-1
-               prod=prod*(x(i)-x(m))/(x(j)-x(m))
-            end do
-            do m=j+1,n
-               prod=prod*(x(i)-x(m))/(x(j)-x(m))
-            end do
-            prod=prod/(x(j)-x(l))
-            d(i,j)=d(i,j)+prod
-         end do
-         do l=j+1,n
-            prod=1.0_f64
-            do m=1,j-1
-               prod=prod*(x(i)-x(m))/(x(j)-x(m))
-            end do
-            do m=j+1,l-1
-               prod=prod*(x(i)-x(m))/(x(j)-x(m))
-            end do
-            do m=l+1,n
-               prod=prod*(x(i)-x(m))/(x(j)-x(m))
-            end do
-            prod=prod/(x(j)-x(l))
-            d(i,j)=d(i,j)+prod
-         end do
-         d(i,j)=d(i,j)*w(i)
-      end do
+       do i=1,n
+          do l=1,j-1
+             prod=1.0_f64
+             do m=1,l-1!min(j,l)-1
+                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+             end do
+             do m=l+1,j-1!min(j,l)+1,max(j,l)-1
+                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+             end do
+             do m=j+1,n!max(j,l)+1,n
+                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+             end do
+             prod=prod/(x(j)-x(l))
+             d(i,j)=d(i,j)+prod
+          end do
+          do l=j+1,n
+             prod=1.0_f64
+             do m=1,j-1!min(j,l)-1
+                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+             end do
+             do m=j+1,l-1!min(j,l)+1,max(j,l)-1
+                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+             end do
+             do m=l+1,n!max(j,l)+1,n
+                prod=prod*(x(i)-x(m))/(x(j)-x(m))
+             end do
+             prod=prod/(x(j)-x(l))
+             d(i,j)=d(i,j)+prod
+          end do
+          !d(i,j)=d(i,j)*w(i)
+          !d(i,j)=d(i,j)*w(i)
+       end do
     end do
 
   end function gauss_lobatto_derivative_matrix

@@ -39,7 +39,7 @@ SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # the list of directories in which to search for CMake modules.
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMakeModules ${CMAKE_MODULE_PATH} )
 
-IF(CMAKE_BUILD_TYPE MATCHES Debug)
+IF(CMAKE_BUILD_TYPE MATCHES 'Debug')
    ADD_DEFINITIONS(-DDEBUG)
 ENDIF()
 
@@ -181,6 +181,7 @@ IF(NOT BUILD_WITHOUT_TEST)
 
       ADD_SUBDIRECTORY(mesh_calculus)
       ADD_SUBDIRECTORY(simulation)
+      ADD_SUBDIRECTORY(eulerian-finite-volume)
 
    ENDIF(NOT STDF95)
 
