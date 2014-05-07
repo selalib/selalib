@@ -23,6 +23,7 @@ ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
+ADD_TEST(NAME hermite_interpolation    COMMAND test_hermite_interpolation)
 ADD_TEST(NAME pic_particles             COMMAND test_pic_particles)
 ADD_TEST(NAME pic_initializers          COMMAND test_pic_initializers)
 ADD_TEST(NAME pic_accumulator           COMMAND test_pic_accumulator)
@@ -39,6 +40,7 @@ SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASS
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(hermite_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -60,6 +62,13 @@ IF(NOT STDF95)
 
    ADD_TEST(NAME utilities COMMAND test_utilities)
    ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
+
+
+#   ADD_TEST(NAME poisson_2d_dirichlet_cartesian COMMAND 
+#     test_poisson_2d_dirichlet_cartesian )
+#   SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES 
+#     PASS_REGULAR_EXPRESSION "PASSED" )
+
 
    ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
    SET_TESTS_PROPERTIES(poisson_3d_periodic_seq 
@@ -92,7 +101,7 @@ IF(PYTHON_EXECUTABLE)
 
 ELSE()
 
-   MESSAGE(WARNING "python3 not found")
+   MESSAGE(STATUS "python3 not found")
 
 ENDIF(PYTHON_EXECUTABLE)
 

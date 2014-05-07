@@ -54,7 +54,7 @@ contains
 !    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
 !    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
 !#else
-    mesh => dist_func_2d%transf%get_logical_mesh()
+    mesh => dist_func_2d%transf%mesh
     nc_eta1    = mesh%num_cells1
     nc_eta2    = mesh%num_cells2
 
@@ -106,7 +106,7 @@ contains
 !   nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
 !   nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type )
 !#else
-   mesh => dist_func_2D%transf%get_logical_mesh()
+   mesh => dist_func_2D%transf%mesh
    nc_eta1    = mesh%num_cells1
    nc_eta2    = mesh%num_cells2
 !#endif
