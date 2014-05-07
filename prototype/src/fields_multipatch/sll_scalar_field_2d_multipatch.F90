@@ -191,7 +191,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_bottom = SLL_DIRICHLET !SLL_HERMITE
+          bc_bottom = SLL_HERMITE
        else
           bc_bottom = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -200,7 +200,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_left = SLL_DIRICHLET !SLL_HERMITE
+          bc_left = SLL_HERMITE
        else
           bc_left = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -209,7 +209,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_top = SLL_DIRICHLET !SLL_HERMITE
+          bc_top = SLL_HERMITE
        else
           bc_top = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -218,7 +218,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_right = SLL_DIRICHLET !SLL_HERMITE
+          bc_right = SLL_HERMITE
        else
           bc_right = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -836,12 +836,15 @@ contains   ! *****************************************************************
          slope_top)
     else
        
+       ! ATTENTION !
+       ! see convention above about the face numbering
+       ! 
        call set_slope2d(&
             interpolator,&
-            mp%patch_data(patch+1)%array(1,1:num_pts2),&
-            mp%patch_data(patch+1)%array(num_pts1,1:num_pts2),&
-            mp%patch_data(patch+1)%array(1:num_pts1,1),&
-            mp%patch_data(patch+1)%array(1:num_pts1,num_pts2))
+            mp%derivs1(patch+1)%array(1:num_pts2,1),&
+            mp%derivs3(patch+1)%array(1:num_pts2,1),&
+            mp%derivs0(patch+1)%array(1:num_pts1,1),&
+            mp%derivs2(patch+1)%array(1:num_pts1,1))
     end if
 
   end subroutine set_slope_mp

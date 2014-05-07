@@ -306,7 +306,6 @@ program unit_test
      eta1       = X1MIN + real(i,f64)*h1
      node_val   = ad1d%interpolate_value(eta1)
      ref        = cos(2.0_f64*sll_pi*eta1)
-     print*, 'hi',node_val, ref
      !calculated(i+1) = node_val
      !difference(i+1) = ref-node_val
      acc4        = acc4 + abs(node_val-ref)
@@ -315,7 +314,6 @@ program unit_test
      !print*, acc1
      deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
      ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
-     print*, 'ho',deriv1_val, ref
      acc4_der1  = acc4_der1 + abs(deriv1_val-ref)
      normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
   end do
@@ -364,13 +362,11 @@ program unit_test
      eta1       = X1MIN + real(i,f64)*h1
      node_val   = ad1d%interpolate_value(eta1)
      ref        = cos(2.0_f64*sll_pi*eta1)
-     print*, 'hi',node_val, ref
      acc4        = acc4 + abs(node_val-ref)
      normL2_4    = normL2_4  + (node_val-ref)**2*h1
     
      deriv1_val = ad1d%interpolate_derivative_eta1(eta1)   
      ref        = -2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)
-     print*, 'ho',deriv1_val, ref
      acc4_der1  = acc4_der1 + abs(deriv1_val-ref)
      normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
   end do
