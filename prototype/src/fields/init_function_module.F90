@@ -8,8 +8,8 @@ real(8) function sol_bz( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   sol_bz =   - cos(sll_pi*x1)    &
-              * cos(sll_pi*x2)    &
+   sol_bz =   - cos(x1)    &
+              * cos(x2)    &
               * cos(time)
    return
 
@@ -24,8 +24,8 @@ real(8) function sol_ex( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   sol_ex =   - cos(sll_pi*x1)    &
-              * sin(sll_pi*x2)    &
+   sol_ex =   - cos(x1)    &
+              * sin(x2)    &
               * sin(time)
    return
 
@@ -40,8 +40,8 @@ real(8) function sol_ey( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   sol_ey =   + sin(sll_pi*x1)    &
-              * cos(sll_pi*x2)    &
+   sol_ey =   + sin(x1)    &
+              * cos(x2)    &
               * sin(time)
    return
 

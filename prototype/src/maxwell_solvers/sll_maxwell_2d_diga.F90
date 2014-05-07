@@ -225,6 +225,11 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
    sll_int32        :: icell, gnu_id, file_id
    character(len=4) :: ccell
    sll_real64       :: x(this%degree+1)
+   sll_real64       :: flux(4)
+   sll_real64       :: w(this%degree+1)
+
+
+   w = gauss_lobatto_weights(this%degree+1)
 
 
    do i = 1, this%nc_eta1
@@ -240,16 +245,16 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
       end do
       end do
          
-      f(:,1,i,j) = - matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3)) &
-              + xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,4))
+      f(:,1,i,j) = + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3)) &
+              - xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,4))
 
-      f(:,2,i,j) =   matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
-              + xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,4))
+      f(:,2,i,j) = - matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
+              - xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,4))
 
-      f(:,3,i,j) =   matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2)) &
-                   - matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
+      f(:,3,i,j) =   matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1)) &
+                   - matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2))
 
-      f(:,4,i,j) = xi * &
+      f(:,4,i,j) = - xi * &
                    ( matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
                    + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2)))
 
@@ -290,12 +295,14 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
    
-            flux(:) = (0.5*(this%w_vector(left, :)+this%r_vector(right,:))) &
-                      * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
+            flux = (0.5*(this%w_vector(left,:)+this%r_vector(right,:))) &
+                    * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
   
-            f(node,1,i,j) = f(node,1,i,j) - vec_n2*flux(1)
-            f(node,2,i,j) = f(node,2,i,j) + vec_n1*flux(2)
-            f(node,3,i,j) = f(node,3,i,j) + (vec_n1*flux(2)-vec_n2*flux(1))
+            f(node,1,i,j) = f(node,1,i,j) - vec_n2*flux(1) + xi*vec_n1*flux(4)
+            f(node,2,i,j) = f(node,2,i,j) + vec_n1*flux(2) + xi*vec_n2*flux(4)
+            f(node,3,i,j) = f(node,3,i,j) + vec_n1*flux(2) - vec_n2*flux(1)
+            f(node,4,i,j) = f(node,4,i,j) + vec_n1*flux(1) + vec_n2*flux(2)
+
          end do
    
       end do
@@ -359,7 +366,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
          eta2 = offset(2) + 0.5 * (x(jj) + 1.0) * this%tau%mesh%delta_eta2
          write(file_id,*) this%tau%x1(eta1,eta2), &
                           this%tau%x2(eta1,eta2), &
-                          f(kk,1,i,j)
+                          f(kk,2,i,j)
       end do
       write(file_id,*)
       end do
