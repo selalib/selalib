@@ -75,12 +75,12 @@ sll_int32  :: i, j, error
 sll_real64 :: x, y
 sll_real64, dimension(:,:), allocatable :: sol
 
-sll_real64, external :: fcos, gaussian, add
+sll_real64, external :: sol_bz, sol_ex, sol_ey, gaussian, add
 
 !mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-5._f64, eta1_max=5._f64, &
-                            eta2_min=-5._f64, eta2_max=5._f64)
+                            eta1_min=-1._f64, eta1_max=1._f64, &
+                            eta2_min=-1._f64, eta2_max=1._f64)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -126,12 +126,12 @@ tau => new_coordinate_transformation_2d_analytic( &
 
 call tau%write_to_file(SLL_IO_MTV)
 
-ex => new_dg_field( degree, tau) 
-ey => new_dg_field( degree, tau) 
+ex => new_dg_field( degree, tau, sol_ex) 
+ey => new_dg_field( degree, tau, sol_ey) 
 ez => new_dg_field( degree, tau) 
 bx => new_dg_field( degree, tau) 
 by => new_dg_field( degree, tau) 
-bz => new_dg_field( degree, tau) 
+bz => new_dg_field( degree, tau, sol_bz) 
 
 phi => new_dg_field( degree, tau, gaussian) 
 
@@ -147,14 +147,17 @@ end do
 
 do i = 2, nc_eta1*degree-1
 do j = 2, nc_eta2*degree-1
-   write(13,*) i, j, (sol(i-1,j)-2*sol(i,j)+sol(i+1,j))/(0.25*mesh%delta_eta1**2) &
-                    +(sol(i,j-1)-2*sol(i,j)+sol(i,j+1))/(0.25*mesh%delta_eta2**2)
+   x = mesh%eta1_min + (i-1)*0.5*mesh%delta_eta1
+   y = mesh%eta2_min + (j-1)*0.5*mesh%delta_eta2
+   write(13,*) x, y, &
+              (sol(i-1,j)-2*sol(i,j)+sol(i+1,j))/(0.25*mesh%delta_eta1**2) &
+             +(sol(i,j-1)-2*sol(i,j)+sol(i,j+1))/(0.25*mesh%delta_eta2**2)
 end do
 write(13,*)
 end do
 
-ez_exact => new_dg_field( degree, tau, fcos) 
-bz_exact => new_dg_field( degree, tau, fcos) 
+ez_exact => new_dg_field( degree, tau) 
+bz_exact => new_dg_field( degree, tau) 
 
 bz = bz_exact
 ez%array = - bz_exact%array
@@ -174,9 +177,6 @@ call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 !call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
 
 do istep = 1, nstep !*** Loop over time
-
-   call phi%write_to_file('phi')
-   call advection(maxwell_TE, phi, dt)
 
    time = time + 0.5_f64*dt
 
@@ -198,7 +198,7 @@ do istep = 1, nstep !*** Loop over time
 
 !   end if
 !
-   !call solve(maxwell_TE, ex, ey, bz, dt)
+   call solve(maxwell_TE, ex, ey, bz, dt)
    !call plot_dg_field( ex, 'ex')
    !call plot_dg_field( ey, 'ey')
    !call solve(maxwell_TM, bx, by, ez, dt)
