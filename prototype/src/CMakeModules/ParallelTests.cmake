@@ -29,6 +29,9 @@ IF(PROCESSOR_COUNT GREATER 1)
    ADD_MPI_TEST(remap_4d test_remap_4d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(remap_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+   ADD_MPI_TEST(remap_5d test_remap_5d ${PROCS} ${ARGS})
+   SET_TESTS_PROPERTIES(remap_5d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
    ADD_MPI_TEST(remap_6d test_remap_6d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
@@ -79,6 +82,16 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
 	${ARGS})
       SET_TESTS_PROPERTIES(qns2d_parallel PROPERTIES 
 	PASS_REGULAR_EXPRESSION "PASSED")
+
+      ADD_MPI_TEST(qns3d_polar_parallel_x1 test_qn_solver_3d_polar_parallel_x1 ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1 PROPERTIES 
+	    PASS_REGULAR_EXPRESSION "PASSED")
+
+      ADD_MPI_TEST(qns3d_polar_parallel_x1_wrapper 
+        test_qn_solver_3d_polar_parallel_x1_wrapper ${PROCS} ${ARGS})
+      SET_TESTS_PROPERTIES(qns3d_polar_parallel_x1_wrapper PROPERTIES 
+	    PASS_REGULAR_EXPRESSION "PASSED")
+
       
     ENDIF()
     
@@ -102,6 +115,14 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_polar_one_mu.nml)
     ADD_MPI_TEST(sim4d_DK_polar_one_mu test_4d_dk_polar_one_mu ${PROCS} ${ARGS})
     SET_TESTS_PROPERTIES(sim4d_DK_polar_one_mu PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+
+    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_polar_multi_mu.nml)
+    ADD_MPI_TEST(sim4d_DK_polar_multi_mu test_4d_dk_polar_multi_mu ${PROCS} ${ARGS})
+    SET_TESTS_PROPERTIES(sim4d_DK_polar_multi_mu PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
+
+    SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_field_aligned_polar.nml)
+    ADD_MPI_TEST(sim4d_DK_field_aligned_polar test_4d_dk_field_aligned_polar ${PROCS} ${ARGS})
+    SET_TESTS_PROPERTIES(sim4d_DK_field_aligned_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
 
     
     SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.txt)
@@ -144,14 +165,6 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     ENDIF(PROCESSOR_COUNT GREATER 1)
     
   ENDIF(NOT STDF95)
-  
-  SET(ARGS " ")
-  IF(MUDPACK_ENABLED AND Fortran_COMPILER STREQUAL "GFORTRAN")
-    #ADD_MPI_TEST(multigrid_2d test_mgd2 ${PROCS} ${ARGS})
-    #SET(multigrid_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-    ADD_MPI_TEST(multigrid_3d test_mgd3 ${PROCS} ${ARGS})
-    SET(multigrid_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-  ENDIF()
   
   SET(PROCS 1)
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )

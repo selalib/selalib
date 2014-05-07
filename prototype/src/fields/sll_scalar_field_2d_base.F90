@@ -7,6 +7,8 @@ module sll_module_scalar_field_2d_base
 
   !> Fundamental field type
   type, abstract :: sll_scalar_field_2d_base
+     ! consider eliminating this transformation from this base class,
+     ! it is already in the derived classes and is confusing...
      class(sll_coordinate_transformation_2d_base), pointer :: coord_trans 
    contains
      procedure(function_get_mesh), deferred, pass :: get_logical_mesh
