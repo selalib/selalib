@@ -1,5 +1,5 @@
 
-real(8) function fcos( x1, x2, time)
+real(8) function sol_bz( x1, x2, time)
 
    use sll_constants
    implicit none
@@ -8,13 +8,44 @@ real(8) function fcos( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   fcos =   - cos(sll_pi*x1)    &
-            * cos(sll_pi*x2)    &
-            * cos(time)
+   sol_bz =   - cos(sll_pi*x1)    &
+              * cos(sll_pi*x2)    &
+              * cos(time)
    return
 
-end function fcos
+end function sol_bz
 
+real(8) function sol_ex( x1, x2, time)
+
+   use sll_constants
+   implicit none
+
+   real(8), intent(in) :: x1
+   real(8), intent(in) :: x2
+   real(8), intent(in) :: time
+
+   sol_ex =   - cos(sll_pi*x1)    &
+              * sin(sll_pi*x2)    &
+              * sin(time)
+   return
+
+end function sol_ex
+
+real(8) function sol_ey( x1, x2, time)
+
+   use sll_constants
+   implicit none
+
+   real(8), intent(in) :: x1
+   real(8), intent(in) :: x2
+   real(8), intent(in) :: time
+
+   sol_ey =   + sin(sll_pi*x1)    &
+              * cos(sll_pi*x2)    &
+              * sin(time)
+   return
+
+end function sol_ey
 
 real(8) function gaussian( x1, x2, time)
 
