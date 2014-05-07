@@ -4,6 +4,8 @@ module sll_sparse_matrix_module_basic
 #include "sll_assert.h"
 use sll_sparse_matrix_module
 
+contains
+
 subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
     implicit none
     type(csr_matrix) :: this
@@ -27,7 +29,7 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
     integer  :: li_iter
     integer  :: li_err
     integer  :: li_flag
-		
+
     if ( this%oi_nR /= this%oi_nC ) then
             PRINT*,'ERROR Gradient_conj: The matrix must be square'
             stop
@@ -126,3 +128,5 @@ subroutine Gradient_conj ( this, apr_B,apr_U, ai_maxIter, ar_eps )
     deallocate(lpr_r)
     deallocate(lpr_Ux)
 end subroutine Gradient_conj
+
+end module sll_sparse_matrix_module_basic
