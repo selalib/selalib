@@ -83,7 +83,7 @@ sll_real64, dimension(:,:,:,:), pointer  :: f
 sll_real64, dimension(4,4)               :: A1
 sll_real64, dimension(4,4)               :: A2
 
-public :: initialize, solve, advection
+public :: initialize, solve
 
 contains
 
@@ -204,169 +204,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 end subroutine initialize_maxwell_2d_diga
 
 !> Solve the maxwell equation
-subroutine advection( this, phi, dt )
-
-   type( maxwell_2d_diga )  :: this !< Maxwell solver object
-
-   type(dg_field), target   :: phi  !< field
-   sll_real64, intent(in)   :: dt   !< time step
-
-   sll_int32        :: left, right, node, side, edge_node
-   sll_int32        :: i, j, k, l, ii, jj, kk
-   sll_real64       :: vec_n1
-   sll_real64       :: vec_n2
-   sll_real64       :: offset(2), eta1, eta2
-   sll_int32        :: icell, gnu_id, file_id
-   character(len=4) :: ccell
-   sll_real64       :: x(this%degree+1)
-   sll_real64       :: w(this%degree+1)
-   sll_real64       :: flux
-
-   x  = gauss_lobatto_points(this%degree+1)
-   w  = gauss_lobatto_weights(this%degree+1)
-
-   do j = 1, this%nc_eta2
-   do i = 1, this%nc_eta1
-
-      do jj = 1, this%degree+1
-      do ii = 1, this%degree+1
-         k = (ii-1)*(this%degree+1)+jj
-         this%w_vector(k,1) = phi%array(ii,jj,i,j)
-      end do
-      end do
-         
-      f(:,1,i,j) =   matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
-                   + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1))
-
-      do side = 1, 4 ! Loop over edges
- 
-         !boundary conditions are periodic
-         select case(side)
-         case(SOUTH)
-            k = i
-            l = 1+modulo(j-2,this%nc_eta2) 
-#ifdef DEBUG
-            print"(2i3,a2,2i3)", i, j, 'S', k, l
-#endif
-         case(EAST)
-            k = 1+modulo(i  ,this%nc_eta1)
-            l = j
-#ifdef DEBUG
-            print"(2i3,a2,4i3)", i, j, 'E', k, l
-#endif
-         case(NORTH)
-            k = i
-            l = 1+modulo(j  ,this%nc_eta2)
-#ifdef DEBUG
-            print"(2i3,a2,2i3)", i, j, 'N', k, l
-#endif
-         case(WEST)
-            k = 1+modulo(i-2,this%nc_eta1)
-            l = j
-#ifdef DEBUG
-            print"(2i3,a2,2i3)", i, j, 'W', k, l
-#endif
-         end select
-
-         do jj = 1, this%degree+1
-         do ii = 1, this%degree+1
-            kk = (ii-1)*(this%degree+1)+jj
-            this%r_vector(kk,1) = phi%array(ii,jj,k,l)
-         end do
-         end do
-   
-         !Compute the fluxes on edge points
-         do node = 1, this%degree+1
-   
-            left  = dof_local(side, node, this%degree)
-            right = dof_neighbor(side, node, this%degree)
-            
-            edge_node = dof_edge(side, left, this%degree)
-            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
-            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
-#ifdef DEBUG
-            print"('cell ',2i3,' side ',i2,' &
-            & nodes ',2i3,' edge_node ',i2, ' vec_n ',2f7.3 )", &
-            i, j, side, left, right, edge_node, vec_n1, vec_n2
-#endif
-            flux = (0.5*(this%w_vector(left,1)+this%r_vector(right,1))) &
-                 * w(node) * this%cell(i,j)%edge(side)%length
-  
-            !f(node,1,i,j) = f(node,1,i,j) + vec_n1*flux + vec_n2*flux
-
-         end do
-   
-      end do
-   
-      f(:,1,i,j) = f(:,1,i,j) / this%cell(i,j)%MassMatrix(:)
-
-   end do
-   end do
-
-!!!!! PLOT FLUX !!!
-
-#ifdef DEBUG
-
-   call sll_ascii_file_create("flux.gnu", gnu_id, error)
-
-   icell = 0
-   do i = 1, this%nc_eta1
-   do j = 1, this%nc_eta2
- 
-      icell = icell+1
-
-      call int2string(icell, ccell)
-
-      if (icell == 1) then
-         write(gnu_id,"(a)",advance='no') "splot 'flux"//ccell//".dat' w l"
-      else
-         write(gnu_id,"(a)",advance='no') ",'flux"//ccell//".dat' w l "
-      end if
-
-      call sll_ascii_file_create("flux"//ccell//".dat", file_id, error)
-
-      offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
-      kk = 0
-      do ii = 1, this%degree+1
-      do jj = 1, this%degree+1
-         kk = kk+1
-         eta1 = offset(1) + 0.5 * (x(ii) + 1.0) * this%tau%mesh%delta_eta1
-         eta2 = offset(2) + 0.5 * (x(jj) + 1.0) * this%tau%mesh%delta_eta2
-         write(file_id,"(3f8.3)") this%tau%x1(eta1,eta2), &
-                                  this%tau%x2(eta1,eta2), &
-                                  f(kk,1,i,j)
-      end do
-      write(file_id,*)
-      end do
-      close(file_id)
-
-   end do
-   end do
-
-   write(gnu_id,*)
-   close(gnu_id)
-
-   STOP 'put by Pierre'
-
-#endif
-
-!   do j = 1, this%nc_eta2
-!   do i = 1, this%nc_eta1
-!
-!      do jj = 1, this%degree+1
-!      do ii = 1, this%degree+1
-!         kk = (ii-1)*(this%degree+1)+jj
-!         phi%array(ii,jj,i,j) = phi%array(ii,jj,i,j) - dt * f(kk,1,i,j)
-!      end do
-!      end do
-!   
-!   end do
-!   end do
-   
-end subroutine advection
-
-!> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
 
    type( maxwell_2d_diga )  :: this !< Maxwell solver object
@@ -453,13 +290,12 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
    
-            !flux(:) = (0.5*(this%w_vector(left, :) &
-            !            +   this%r_vector(right,:))) &
-            !          * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
-   
-            !f(node,:,i,j) = f(node,:,i,j) + &
-            !                     vec_n1*matmul(A1,flux) &
-            !                   + vec_n2*matmul(A2,flux)
+            flux(:) = (0.5*(this%w_vector(left, :)+this%r_vector(right,:))) &
+                      * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
+  
+            f(node,1,i,j) = f(node,1,i,j) - vec_n2*flux(1)
+            f(node,2,i,j) = f(node,2,i,j) + vec_n1*flux(2)
+            f(node,3,i,j) = f(node,3,i,j) + (vec_n1*flux(2)-vec_n2*flux(1))
          end do
    
       end do
