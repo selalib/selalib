@@ -32,6 +32,7 @@ type, public :: dg_field
 contains
 
    procedure, pass :: write_to_file => write_dg_field_2d_to_file
+   procedure, pass :: set_value => initialize_dg_field 
 
 end type dg_field
 
@@ -84,13 +85,13 @@ end function new_dg_field
 
 subroutine initialize_dg_field( this, init_function, time) 
 
-   type(dg_field)          :: this
-   sll_real64, external    :: init_function
-   sll_real64              :: time
-   sll_real64              :: offset(2)
-   sll_real64              :: eta1
-   sll_real64              :: eta2
-   sll_int32               :: i, j, ii, jj
+   class(dg_field)      :: this
+   sll_real64, external :: init_function
+   sll_real64           :: time
+   sll_real64           :: offset(2)
+   sll_real64           :: eta1
+   sll_real64           :: eta2
+   sll_int32            :: i, j, ii, jj
    
    SLL_ASSERT(associated(this%array))
 
@@ -113,6 +114,7 @@ subroutine initialize_dg_field( this, init_function, time)
 end subroutine initialize_dg_field
 
 subroutine write_dg_field_2d_to_file( this, field_name, file_format )
+
    class(dg_field)        :: this
    character(len=*)       :: field_name
    sll_int32, optional    :: file_format

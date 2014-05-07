@@ -35,7 +35,7 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nstep   = 10  !
+sll_int32, parameter :: nstep   = 1   !
 sll_int32, parameter :: nc_eta1 = 20  !
 sll_int32, parameter :: nc_eta2 = 20  !
 sll_int32, parameter :: mode    = 2   !
@@ -51,36 +51,24 @@ class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 class(sll_coordinate_transformation_2d_analytic), pointer :: colella
 
 type(maxwell_2d_diga)   :: maxwell_TE
-!type(maxwell_2d_diga)   :: maxwell_TM
 
 type(dg_field), pointer :: ex
 type(dg_field), pointer :: ey
 type(dg_field), pointer :: bz
 type(dg_field), pointer :: bz_exact
-type(dg_field), pointer :: bx
-type(dg_field), pointer :: by
-type(dg_field), pointer :: ez
-type(dg_field), pointer :: ez_exact
-type(dg_field), pointer :: phi
 
-sll_real64  :: omega
 sll_real64  :: time
 sll_int32   :: istep
-sll_real64  :: err_te
-sll_real64  :: err_tm
 sll_real64  :: dt
 sll_real64  :: cfl = 0.5
+sll_real64  :: error
 
-sll_int32  :: i, j, error
-sll_real64 :: x, y
-sll_real64, dimension(:,:), allocatable :: sol
+!init functions
+sll_real64, external :: sol_bz, sol_ex, sol_ey
 
-sll_real64, external :: sol_bz, sol_ex, sol_ey, gaussian, add
-
-!mesh => new_logical_mesh_2d(nc_eta1, nc_eta2)
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-1._f64, eta1_max=1._f64, &
-                            eta2_min=-1._f64, eta2_max=1._f64)
+                            eta1_min=0._f64, eta1_max=2.*sll_pi, &
+                            eta2_min=0._f64, eta2_max=2.*sll_pi)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -128,83 +116,38 @@ call tau%write_to_file(SLL_IO_MTV)
 
 ex => new_dg_field( degree, tau, sol_ex) 
 ey => new_dg_field( degree, tau, sol_ey) 
-ez => new_dg_field( degree, tau) 
-bx => new_dg_field( degree, tau) 
-by => new_dg_field( degree, tau) 
 bz => new_dg_field( degree, tau, sol_bz) 
+bz_exact => new_dg_field( degree, tau, sol_bz)
 
-phi => new_dg_field( degree, tau, gaussian) 
-
-SLL_CLEAR_ALLOCATE(sol(1:nc_eta1*degree,1:nc_eta2*degree), error)
-
-do i = 1, nc_eta1*degree
-do j = 1, nc_eta2*degree
-   x = mesh%eta1_min + (i-1)*0.5*mesh%delta_eta1
-   y = mesh%eta2_min + (j-1)*0.5*mesh%delta_eta2
-   sol(i,j) = exp(-(x*x+y*y))
-end do
-end do
-
-do i = 2, nc_eta1*degree-1
-do j = 2, nc_eta2*degree-1
-   x = mesh%eta1_min + (i-1)*0.5*mesh%delta_eta1
-   y = mesh%eta2_min + (j-1)*0.5*mesh%delta_eta2
-   write(13,*) x, y, &
-              (sol(i-1,j)-2*sol(i,j)+sol(i+1,j))/(0.25*mesh%delta_eta1**2) &
-             +(sol(i,j-1)-2*sol(i,j)+sol(i,j+1))/(0.25*mesh%delta_eta2**2)
-end do
-write(13,*)
-end do
-
-ez_exact => new_dg_field( degree, tau) 
-bz_exact => new_dg_field( degree, tau) 
-
-bz = bz_exact
-ez%array = - bz_exact%array
-
-!call plot_dg_field( bz, 'bz')
-!call plot_dg_field( ez, 'ez')
+call bz%write_to_file('bz')
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
-time  = 0.
-
-omega = sqrt( (mode*sll_pi/(nc_eta1*delta_eta1))**2   &
-        &    +(mode*sll_pi/(nc_eta2*delta_eta2))**2)
+time  = 0.0_f64
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
-!call initialize(maxwell_TM, tau, degree, TM_POLARIZATION)
-
 do istep = 1, nstep !*** Loop over time
 
-   time = time + 0.5_f64*dt
 
-   !ez_exact%array = - bz_exact%array
-!
-!   if (istep == 1) then
-!
-!      bz = bz_exact
-!      ez = ez_exact
-!
-!   else
-!
-!      err_te = maxval(bz%array-bz_exact%array)
-!      err_tm = maxval(ez%array-ez_exact%array)
-!   
-!      write(*,"(10x,' istep = ',I6)",advance="no") istep
-!      write(*,"(' time = ',g12.3,' sec')",advance="no") time
-!      write(*,"(' erreur L2 = ',2g15.5)") err_te, err_tm
-
-!   end if
-!
    call solve(maxwell_TE, ex, ey, bz, dt)
-   !call plot_dg_field( ex, 'ex')
-   !call plot_dg_field( ey, 'ey')
-   !call solve(maxwell_TM, bx, by, ez, dt)
 
-   time = time + 0.5_f64*dt
+   time = time + dt
+  
+   call bz_exact%set_value(sol_bz, time)
+   error = maxval(bz%array-bz_exact%array)
 
+   write(*,"(10x,' istep = ',I6)",advance="no") istep
+   write(*,"(' time = ',g12.3,' sec')",advance="no") time
+   write(*,"(' erreur = ',g15.5)") error
+   call ex%write_to_file('ex')
+   call ey%write_to_file('ey')
+
+   call ex%set_value(sol_ex, time)
+   call ey%set_value(sol_ey, time)
+
+   call ex%write_to_file('sol_ex')
+   call ey%write_to_file('sol_ey')
 
 end do ! next time step
 
