@@ -504,7 +504,7 @@ program unit_test
   deallocate(value_right)
   deallocate(value_top)
   deallocate(value_bottom)
-
+  call sll_delete(ad2d)
   print*, '--------------------------------------------'
   print*, ' Average error in nodes'
   print*, '--------------------------------------------'
