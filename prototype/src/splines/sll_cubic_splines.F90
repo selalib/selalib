@@ -1844,20 +1844,20 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
 
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): ', &
+       print *, 'ERROR: compute_spline_2D_hrmt_hrmt(): ', &
             'uninitialized spline object passed as argument. Exiting... '
        STOP
     end if
     if( (size(data,1) .lt. spline%num_pts_x1 ) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       print *, 'ERROR: compute_spline_2D_hrmt_hrmt(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
             spline%num_pts_x1, ' . Passed size: ', size(data,1)
        STOP
     end if
     if( (size(data,2) .lt. spline%num_pts_x2 ) ) then
        ! FIXME: THROW ERROR
-       print *, 'ERROR: compute_spline_2D_prdc_prdc(): '
+       print *, 'ERROR: compute_spline_2D_hrmt_hrmt(): '
        write (*,'(a, i8, a, i8)') 'spline object needs data of size >= ', &
             spline%num_pts_x2, ' . Passed size: ', size(data,2)
        STOP
