@@ -350,15 +350,15 @@ contains
     interpolator%num_pts2 = num_pts2
    
 
-    SLL_ALLOCATE(interpolator%value_left  (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%value_right (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%value_bottom(num_pts1),ierr)
-    SLL_ALLOCATE(interpolator%value_top   (num_pts1),ierr)
+    SLL_ALLOCATE(interpolator%value_left  (num_pts2+2),ierr)
+    SLL_ALLOCATE(interpolator%value_right (num_pts2+2),ierr)
+    SLL_ALLOCATE(interpolator%value_bottom(num_pts1+2),ierr)
+    SLL_ALLOCATE(interpolator%value_top   (num_pts1+2),ierr)
 
-    SLL_ALLOCATE(interpolator%slope_left  (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%slope_right (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%slope_bottom(num_pts1),ierr)
-    SLL_ALLOCATE(interpolator%slope_top   (num_pts1),ierr)
+    SLL_ALLOCATE(interpolator%slope_left  (num_pts2+2),ierr)
+    SLL_ALLOCATE(interpolator%slope_right (num_pts2+2),ierr)
+    SLL_ALLOCATE(interpolator%slope_bottom(num_pts1+2),ierr)
+    SLL_ALLOCATE(interpolator%slope_top   (num_pts1+2),ierr)
   
     ! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
     select case (bc_selector)
