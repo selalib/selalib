@@ -968,13 +968,12 @@ contains
     sll_int32  :: ai_nx, ai_kx,ai_nx_der
     sll_real64, dimension ( ai_nx) :: apr_taux
     sll_real64, dimension ( ai_nx) :: apr_g
-    sll_real64, dimension ( ai_nx_der) :: apr_taux_der
+    sll_int32, dimension ( ai_nx_der) :: apr_taux_der
     sll_real64, dimension ( ai_nx_der) :: apr_g_der
     ! OUTPUT
     sll_real64, dimension ( ai_nx + ai_nx_der) :: apr_Bcoef
     sll_real64, dimension ( ai_nx + ai_nx_der + ai_kx) :: apr_tx
     ! LOCAL VARIABLES		
-    sll_real64, dimension ( ai_nx ) :: lpr_taux
     sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work
     !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
     sll_int32 :: iflag
@@ -985,75 +984,15 @@ contains
     apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
     apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
   
-    print*,apr_taux
+    
     if (ai_nx + ai_nx_der + ai_kx == ai_nx + 2*(ai_kx-1)) then
        apr_tx (ai_kx+1: ai_nx+ ai_nx_der) = apr_taux(2:ai_nx-1)
+       
     else
-       if (ai_kx > ai_nx_der) then
-       
-!!$          moyenne = sum( sqrt(abs(apr_g(2:ai_nx)-apr_g(1:ai_nx-1))))
-!!$          lpr_taux(1) = 0.0_f64
-!!$          lpr_taux(ai_nx) = 1.0_f64
-!!$          do li_i = 2,ai_nx-1
-!!$             lpr_taux(li_i) = lpr_taux(li_i-1) + sqrt(abs(apr_g(li_i)-apr_g(li_i-1)))/moyenne
-!!$          end do
-!!$          apr_tx ( 1 : ai_kx ) =  apr_taux ( 1 )!0.0_f64
-!!$          apr_tx ( ai_nx+ ai_nx_der + 1 : ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )!1.0_f64
-!!$
-!!$          do li_i = ai_kx+1, ai_nx + ai_nx_der
-!!$             do li_j=li_i - ai_kx, li_i - ai_nx_der
-!!$
-!!$                apr_tx(li_i) = apr_tx(li_i) + apr_taux(li_j)
-!!$             end do
-!!$              apr_tx(li_i) =  apr_tx(li_i)/ (ai_kx-ai_nx_der+ 1)
-!!$          end do
-          
-          ! redimensions
-          !apr_tx = apr_tx * (apr_taux ( ai_nx )- apr_taux ( 1 )) + apr_taux ( 1 )
-
-
-          apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
-          apr_tx ( ai_nx+ ai_nx_der + 1: ai_nx + ai_nx_der + ai_kx ) = apr_taux ( ai_nx )
-
-          if ( mod(ai_kx,2) == 0 ) then
-             do li_i = ai_kx + 1, ai_nx+ai_nx_der
-                apr_tx ( li_i ) = apr_taux ( li_i - ai_kx/2 ) 
-                
-             end do
-          else
-             
-             do li_i = ai_kx + 1, ai_nx+ai_nx_der
-                apr_tx ( li_i ) = &
-                     0.5*( apr_taux ( li_i - (ai_kx-1)/2 ) + &
-                     apr_taux ( li_i -1 - (ai_kx-1)/2 ) )
-                
-             end do
-       
-          end if
-          
-       elseif (ai_nx_der==ai_nx) then
-          
-!!$          moyenne = sum( abs(apr_g(2:ai_nx)-apr_g(1:ai_nx-1)))
-!!$          lpr_taux(1) = 0.0_f64
-!!$          lpr_taux(ai_nx) = 1.0_f64
-!!$          do li_i = 2,ai_nx-1
-!!$             lpr_taux(i) = lpr_taux(i-1) + abs(apr_g(i)-apr_g(i-1))/moyenne
-!!$          end do
-!!$          apr_tx ( 1 : ai_kx ) = 0.0_f64
-!!$          apr_tx ( ai_nx+ ai_nx_der + 1 : ai_nx + ai_nx_der + ai_kx ) = 1.0_f64
-!!$          do li_i = ai_kx+1, ai_nx + ai_nx_der
-!!$             apr_tx(li_i) = sum(lpr_taux(li_i - ai_kx : li_i - ai_nx_der)/ (ai_kx-ai_nx_der+ 1)
-!!$          end do
-       else
-          print*, 'problem with construction of knots' 
-       end if
-          
-          
-       
+       print*, 'problem with construction of knots' 
     end if
 
-    print*, apr_tx
-    print*, apr_taux
+
     call splint_der ( &
          apr_taux,&
          apr_g,&
@@ -1341,8 +1280,7 @@ contains
     !    Input, real ( kind = 8 ) TAU(N), the data point abscissas.The entries in
     !    TAU should be strictly increasing.
     !
-    !    Input, real ( kind = 8 ) TAU_der(M), the data point abscissas.The entries in
-    !    TAU_der should be strictly increasing.
+    !    Input, integer ( kind = 8 ) TAU_der(M), the node index to evaluate the derivative.
     !
     !    Input, real ( kind = 8 ) GTAU(N), the data ordinates.
     !
@@ -1390,7 +1328,7 @@ contains
     sll_real64, dimension((2*k-1)*(n+m)) :: q!((2*k-1)*n)
     sll_real64,dimension(n+k+m) ::  t!(n+k)
     sll_real64,dimension(n) ::  tau!!(n)
-    sll_real64,dimension(m) ::  tau_der!!(n)
+    sll_int32,dimension(m) ::  tau_der!!(n)
     sll_real64:: taui,taui_der
     sll_real64, dimension(k,k):: a
     sll_real64,dimension(k,2) :: bcoef_der
@@ -1469,8 +1407,8 @@ contains
        end do
 
        bcoef_spline(i+ l-1) = gtau(i)
-       if ( tau_der(l)== taui ) then   
-          taui_der = tau_der(l)
+       if ( tau_der(l) == i ) then   
+          taui_der = taui
           
           call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
 
@@ -1490,8 +1428,8 @@ contains
 
     taui = tau(n)
     call interv( t, n+m+k, taui, left, mflag )
-    if ( tau_der(l)== taui ) then   
-          taui_der = tau_der(l)
+    if ( tau_der(l)== n ) then   
+          taui_der = taui
           
           call bsplvd( t, k, taui_der, left, a, bcoef_der, 2)
 
