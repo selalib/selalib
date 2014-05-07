@@ -319,10 +319,7 @@ contains !************************** Operations **************************
 
 #ifndef MPI_THREAD_MULTIPLE
 
-    !call MPI_Init(ierr)
-    call MPI_Init_Thread(MPI_THREAD_MULTIPLE, &
-                         sll_world_collective%thread_level_provided, &
-                         ierr)
+    call MPI_Init(ierr)
 #else
     
     sll_world_collective%thread_level_required = MPI_THREAD_MULTIPLE
