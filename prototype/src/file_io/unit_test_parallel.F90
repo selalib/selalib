@@ -75,8 +75,8 @@ contains
 !> the full array.
  subroutine plot_layout2d()
 
-  sll_int32 , parameter    :: nx = 32
-  sll_int32 , parameter    :: ny = 64
+  sll_int32 , parameter    :: nx = 64
+  sll_int32 , parameter    :: ny = 32
   sll_int32                :: mx, my    ! Local sizes
   sll_int32                :: npi, npj
   sll_int32                :: gi, gj
@@ -115,8 +115,8 @@ contains
         global_indices =  local_to_global_2D( layout, (/i, j/) )
         gi = global_indices(1)
         gj = global_indices(2)
-        xdata(i,j) = float(gi-1)/(nx-1)
-        ydata(i,j) = float(gj-1)/(ny-1)
+        xdata(i,j) = myrank !float(gi-1)!/(nx-1)
+        ydata(i,j) = float(gj-1)!/(ny-1)
         zdata(i,j) = (myrank+1) * xdata(i,j) * ydata(i,j)
      end do
   end do
@@ -127,22 +127,22 @@ contains
   !Gnuplot output
   call sll_gnuplot_rect_2d_parallel(dble(offset(1)), dble(1), &
                                     dble(offset(2)), dble(1), &
-                                    size(zdata,1), size(zdata,2), &
+                                    mx, my, &
                                     zdata, "rect_mesh", 1, error)  
 
   call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
 #ifdef HDF5_PARALLEL
-  !Begin high level version
-
-  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
-  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
-  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
-  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
-  call sll_xdmf_close(xml_id,error)
-
-  !End high level version
+!  !Begin high level version
+!
+!  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
+!  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
+!  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
+!  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
+!  call sll_xdmf_close(xml_id,error)
+!
+!  !End high level version
 
 !---------------------------------------------------------------------------------!
 
@@ -151,6 +151,7 @@ contains
   call sll_hdf5_file_create(xfile, file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
   call sll_hdf5_file_close(file_id,error)
+
   
   call sll_hdf5_file_create(yfile, file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
@@ -257,6 +258,16 @@ contains
   offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
 
 #ifdef HDF5_PARALLEL
+
+  !Begin high level version
+
+  call sll_xdmf_open(myrank,"3d-data.xmf","mesh3d",ni,nj,nk,xml_id,error)
+  call sll_xdmf_write_array("mesh3d",datadims,offset,xdata,'x1',error)
+  call sll_xdmf_write_array("mesh3d",datadims,offset,ydata,'x2',error)
+  call sll_xdmf_write_array("mesh3d",datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_xdmf_close(xml_id,error)
+
+  !End high level version
 
   call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
   call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)

@@ -12,6 +12,10 @@ TARGET_LINK_LIBRARIES(test_remap_3d sll_remap)
 ADD_EXECUTABLE(test_remap_4d unit_test_4d.F90)
 TARGET_LINK_LIBRARIES(test_remap_4d sll_remap)
 
+ADD_EXECUTABLE(test_remap_5d unit_test_5d.F90)
+TARGET_LINK_LIBRARIES(test_remap_5d sll_remap)
+
+
 ADD_EXECUTABLE(test_remap_6d unit_test_6d.F90)
 TARGET_LINK_LIBRARIES(test_remap_6d sll_remap)
 
