@@ -12,7 +12,7 @@ type(hex_mesh_2d), pointer  :: mesh
 type(linear_box_spline_2D), pointer :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 1
+sll_int32    :: deg = 2
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -48,7 +48,7 @@ sll_real64   :: x1_basis
 
 
 print*, ""
-do num_cells = 10,250,10
+do num_cells = 50,50,10
 
    ! Mesh initialization    
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -78,8 +78,9 @@ do num_cells = 10,250,10
    do i=0, mesh%num_pts_tot-1
       x1(i+1) = from_global_x1(mesh, i)
       x2(i+1) = from_global_x2(mesh, i)
-      f_init(i+1) = x2(i+1)! 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
-           !+ (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
+      f_init(i+1) = sin(x2(i+1)) - sin(x1(i+1))
+      !1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
+                    !+ (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
 
       f_tn(i+1) = f_init(i+1)
    end do
@@ -113,7 +114,7 @@ do num_cells = 10,250,10
          ! Analytical value 
          x1(i) = from_global_x1(mesh, i-1) - advec*dt*nloops
          x2(i) = from_global_x2(mesh, i-1) - advec*dt*nloops
-         f_fin(i) = x2(i)! 1._f64*exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
+         f_fin(i) = sin(x2(i)) - sin(x1(i))!exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
                     !+ (x2(i)-gauss_x2)**2 / gauss_sig**2))
          x1_basis = change_basis_x1(mesh, spline, x1(i), x2(i))
          x2_basis = change_basis_x2(mesh, spline, x1(i), x2(i))
