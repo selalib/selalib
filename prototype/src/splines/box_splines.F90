@@ -37,6 +37,7 @@ use hex_mesh
   end type linear_box_spline_2d
 
 
+
     
 contains  ! ****************************************************************
 
@@ -110,6 +111,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   end function new_linear_box_spline_2d
 
 
+
   subroutine compute_linear_box_spline_2d( data, deg, spline )
     sll_real64, dimension(:), intent(in), target    :: data  ! data to be fit
     sll_int32, intent(in)                           :: deg
@@ -119,6 +121,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_int32  :: bc_selector
 
 
+    
     if( .not. associated(spline) ) then
        ! FIXME: THROW ERROR
        print *, 'ERROR: compute_linear_box_spline_2d(): ', &
