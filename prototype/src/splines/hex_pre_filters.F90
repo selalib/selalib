@@ -114,11 +114,22 @@ contains
           else
               weight = 0.
           end if
-      else if (deg .eq. 2) then 
-       print *, 'ERROR: pre_filter_piir1(...): ', &
-            '     function not implemented for degree 2 splines '
-       print *, "Exiting..."
-       STOP
+       else if (deg .eq. 2) then 
+          ! prefiltre PIIR1 for box-splines of deg =2 chi4
+          ! with coefficients h0 = 29/60 h1 = 7/80 h2 = -1/720
+          if (local_index .eq. 0) then
+             weight = 29._f64/60._f64
+          else if (local_index .lt. 7) then
+             weight = 7._f64/80._f64
+          else if ((local_index.lt.19).and.(modulo(local_index, 2).eq.0)) then
+             weight = -1._f64/720._f64
+          else
+             weight = 0.
+          end if
+       ! print *, 'ERROR: pre_filter_piir1(...): ', &
+       !      '     function not implemented for degree 2 splines '
+       ! print *, "Exiting..."
+       ! STOP
 
       end if
    end function pre_filter_piir1
@@ -148,14 +159,59 @@ contains
           else
               weight = 0.
           end if
+       else if (deg .eq. 2) then 
+          ! prefiltre PFIR for box-splines of deg =2 chi4
+          ! with coefficients h0 = 37/20 h1 =-41/240 h2 = 7/240
+          if (local_index .eq. 0) then
+             weight = 37._f64/20._f64
+          else if (local_index .lt. 7) then
+             weight = -41._f64/240._f64
+          else if ((local_index.lt.19).and.(modulo(local_index, 2).eq.0)) then
+             weight = 7._f64/240._f64
+          else
+             weight = 0.
+          end if
+      ! else if (deg .eq. 2) then 
+      !  print *, 'ERROR: pre_filter_pfir(...): ', &
+      !       '     function not implemented for order 2 splines '
+      !  print *, "Exiting..."
+      !  STOP
+      end if
+   end function pre_filter_pfir
 
-      else if (deg .eq. 2) then 
-       print *, 'ERROR: pre_filter_pfir(...): ', &
-            '     function not implemented for order 2 splines '
+
+
+  ! Pre-filter to compute the box splines coefficients
+  ! Reference : @Condat and Van De Ville (2007)
+  !             "Quasi-interpolating spline models 
+  !             for hexagonally-sampled data."
+  function pre_filter_int(local_index, deg) result(weight)
+      sll_int32, intent(in)     :: local_index
+      sll_int32, intent(in)     :: deg
+      sll_real64                :: weight
+      sll_int32                 :: k1, k2
+      k1 = from_global_index_k1(local_index)
+      k2 = from_global_index_k2(local_index)
+
+
+      if (deg .eq. 2) then 
+          ! prefiltre int for box-splines chi2
+          ! with coefficients h0 = 3/4 and h1 = 1/24
+          if (local_index .eq. 0) then
+              weight = 1._f64/2._f64
+          else if (local_index .lt. 7) then
+              weight = 1._f64/12._f64
+          else
+              weight = 0.
+          end if
+      else if (deg .gt. 2) then 
+       print *, 'ERROR: pre_filter_int(...): ', &
+            '     function not implemented for degree > 2 splines '
        print *, "Exiting..."
        STOP
 
       end if
-   end function pre_filter_pfir
+   end function pre_filter_int
+
 
 end module hex_pre_filters
