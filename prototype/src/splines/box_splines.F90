@@ -234,17 +234,18 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
           nei = find_neighbour(i,k)
           if (nei .lt. num_pts_tot) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
-                                pre_filter_piir2(k,deg)
-             ! if (i .eq. 23) then
+                                pre_filter_pfir(k,deg)
+             ! if (i .eq. 35) then
              !    print *,""
              !    print *,"nei  =", nei
              !    print *,"data = ", data(nei+1)
              !    print *,"filt = ", pre_filter_piir1(k,deg)
+             !    print *,"coef = ", spline%coeffs(i)
              ! end if
           else
              nei = twelve_fold_symmetry(nei, num_pts)
              spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
-                                pre_filter_piir2(k,deg)             
+                                pre_filter_pfir(k,deg)
           end if
        end do
     end do
