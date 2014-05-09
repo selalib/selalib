@@ -1453,7 +1453,7 @@ contains
         jj = jj + kpkm2  ! kpkm2 = 2*(k-1)
         q(jj) = bcoef(j)
      end do
-     bcoef_spline(n+ l-1) = gtau(n)
+     bcoef_spline(n+l-1) = gtau(n)
 
     !
     !  Obtain factorization of A, stored again in Q.
