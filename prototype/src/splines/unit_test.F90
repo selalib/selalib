@@ -241,7 +241,7 @@ program spline_tester
   call test_error_flag( test_flag, test_passed, &
        'test_2d_spline_prdc_hrmt_no_slopes')
 
-
+  print *, 'testing hermite-hermite case, with derivatives test'
   call test_2d_spline_hrmt_hrmt( &
        plane3, &
        plane3_deriv_x, &
@@ -255,7 +255,7 @@ program spline_tester
   !print *, 'test_passed : ', test_passed
   print *, 'test default slope values, hermite-hermite case'
   call test_2d_spline_hrmt_hrmt_no_slopes( &
-       plane3, &
+       sinsin, &
        test_flag )
   call test_error_flag( test_flag, test_passed, &
        'test_2d_spline_hrmt_hrmt_no_slopes')
@@ -270,11 +270,11 @@ program spline_tester
 
   if (test_passed .eqv. .true.) then
      print *, ' '
-     print *, 'Splines unit test: PASSED'
+     print *, 'Cubic splines unit test: PASSED'
      print *, ' '
   else
      print *, ' '
-     print *, 'Splines unit test: FAILED'
+     print *, 'Cuplines unit test: FAILED'
      print *, ' '
   endif
   
