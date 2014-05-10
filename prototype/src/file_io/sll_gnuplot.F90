@@ -1,7 +1,5 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
-!     Pierre Navaro 
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
