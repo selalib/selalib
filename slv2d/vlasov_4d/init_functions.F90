@@ -13,6 +13,7 @@ integer, parameter :: TSI_CASE  = 5
 integer, parameter :: VA_VALIS          = 0
 integer, parameter :: VA_OLD_FUNCTION   = 1
 integer, parameter :: VA_VLASOV_POISSON = 2
+integer, parameter :: VA_CLASSIC        = 3
 
 integer, parameter :: METH_BSL_CUBIC_SPLINES = 0
 integer, parameter :: METH_CSL_CUBIC_SPLINES = 1
@@ -20,10 +21,10 @@ integer, parameter :: METH_CSL_LAG3 = 2
 integer, parameter :: METH_CSL_PPM1 = 3
 integer, parameter :: METH_CSL_PPM2 = 4
 
-integer, parameter :: SPECTRAL = 0
+integer, parameter :: SPECTRAL  = 0
 integer, parameter :: MULTIGRID = 1
-
-
+integer, parameter :: PSTD      = 2
+integer, parameter :: FDTD      = 3
 
 contains
 
@@ -51,7 +52,7 @@ contains
     sll_real64, intent(in) :: y, ky
     sll_real64, intent(in) :: eps, v2
 
-     landau_cos_sum = (1._f64+eps*cos(kx*(x+y)))/(2*sll_pi)*exp(-0.5_f64*v2)
+    landau_cos_sum = (1._f64+eps*cos(kx*(x+y)))/(2*sll_pi)*exp(-0.5_f64*v2)
 
   end function landau_cos_sum
 
