@@ -36,9 +36,8 @@ implicit none
 ! Simulation parameters               !
 !=====================================!
 sll_int32, parameter :: nstep   = 1   !
-sll_int32, parameter :: nc_eta1 = 20  !
-sll_int32, parameter :: nc_eta2 = 20  !
-sll_int32, parameter :: mode    = 2   !
+sll_int32, parameter :: nc_eta1 = 10  !
+sll_int32, parameter :: nc_eta2 = 10  !
 sll_int32, parameter :: degree  = 2   !
 !=====================================!
 
@@ -52,10 +51,10 @@ class(sll_coordinate_transformation_2d_analytic), pointer :: colella
 
 type(maxwell_2d_diga)   :: maxwell_TE
 
-type(dg_field), pointer :: ex
-type(dg_field), pointer :: ey
-type(dg_field), pointer :: bz
-type(dg_field), pointer :: bz_exact
+type(dg_field), pointer :: ex, ex0, dex, sex
+type(dg_field), pointer :: ey, ey0, dey, sey
+type(dg_field), pointer :: bz, bz0, dbz, sbz
+type(dg_field), pointer :: exact
 
 sll_real64  :: time
 sll_int32   :: istep
@@ -114,44 +113,155 @@ tau => new_coordinate_transformation_2d_analytic( &
 
 call tau%write_to_file(SLL_IO_MTV)
 
-ex => new_dg_field( degree, tau, sol_ex) 
-ey => new_dg_field( degree, tau, sol_ey) 
-bz => new_dg_field( degree, tau, sol_bz) 
-bz_exact => new_dg_field( degree, tau, sol_bz)
+time  = 0.0_f64
 
-call bz%write_to_file('bz')
+ex => new_dg_field(degree,tau,sol_ex) 
+ey => new_dg_field(degree,tau,sol_ey) 
+bz => new_dg_field(degree,tau,sol_bz) 
+
+ex0 => new_dg_field(degree,tau) 
+ey0 => new_dg_field(degree,tau) 
+bz0 => new_dg_field(degree,tau) 
+
+dex => new_dg_field(degree,tau) 
+dey => new_dg_field(degree,tau) 
+dbz => new_dg_field(degree,tau) 
+
+sex => new_dg_field(degree,tau) 
+sey => new_dg_field(degree,tau) 
+sbz => new_dg_field(degree,tau) 
+
+exact => new_dg_field( degree, tau)
+
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
-time  = 0.0_f64
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
 do istep = 1, nstep !*** Loop over time
 
+   !call rksetup()
+   !call solve(maxwell_TE, ex, ey, bz, dex, dey, dbz)
+   !call accumulate(1._f64/6.)
+   !call rkstage(0.5*dt)
+   !call solve(maxwell_TE, ex, ey, bz, dex, dey, dbz)
+   !call accumulate(1._f64/3.)
+   !call rkstage(0.5*dt)
+   !call solve(maxwell_TE, ex, ey, bz, dex, dey, dbz)
+   !call accumulate(1._f64/3.)
+   !call rkstage(1.0*dt)
+   !call solve(maxwell_TE, ex, ey, bz, dex, dey, dbz)
+   !call accumulate(1._f64/6.)
+   !call rkstep()
 
-   call solve(maxwell_TE, ex, ey, bz, dt)
+   ex0%array = ex%array
+   ey0%array = ey%array
+   bz0%array = bz%array 
 
-   time = time + dt
-  
-   call bz_exact%set_value(sol_bz, time)
-   error = maxval(bz%array-bz_exact%array)
+   call solve(maxwell_TE, ex, ey, bz, dex, dey, dbz)
 
-   write(*,"(10x,' istep = ',I6)",advance="no") istep
-   write(*,"(' time = ',g12.3,' sec')",advance="no") time
-   write(*,"(' erreur = ',g15.5)") error
-   call ex%write_to_file('ex')
-   call ey%write_to_file('ey')
+   ex%array = ex0%array + 0.5*dt * dex%array
+   ey%array = ey0%array + 0.5*dt * dey%array
+   bz%array = bz0%array + 0.5*dt * dbz%array
 
-   call ex%set_value(sol_ex, time)
-   call ey%set_value(sol_ey, time)
+   time = time + 0.5*dt
+   call check_error_ex()
+   call check_error_ey()
+   call check_error_bz()
 
-   call ex%write_to_file('sol_ex')
-   call ey%write_to_file('sol_ey')
+   call bz%set_value(sol_bz, time)
+
+   call solve(maxwell_TE, ex, ey, bz, dex, dey, dbz)
+
+   ex%array = ex0%array + dt * dex%array
+   ey%array = ey0%array + dt * dey%array
+   bz%array = bz0%array + dt * dbz%array
+
+   time = time + 0.5*dt
+
+   call check_error_ex()
+   call check_error_ey()
+   call check_error_bz()
 
 end do ! next time step
 
-print*,'PASSED'
+contains
+
+subroutine check_error_ex()
+
+   call exact%set_value(sol_ex, time)
+
+   error = maxval(abs(ex%array-exact%array))
+   write(*,"(10x,' istep = ',I6)",advance="no") istep
+   write(*,"(' time = ',g12.3,' sec')",advance="no") time
+   write(*,"(' EX erreur = ',g15.5)") error
+   call ex%write_to_file('ex')
+
+end subroutine check_error_ex
+
+subroutine check_error_ey()
+
+   call exact%set_value(sol_ey, time)
+
+   error = maxval(abs(ey%array-exact%array))
+   write(*,"(10x,' istep = ',I6)",advance="no") istep
+   write(*,"(' time = ',g12.3,' sec')",advance="no") time
+   write(*,"(' EY erreur = ',g15.5)") error
+   call ey%write_to_file('ey')
+
+end subroutine check_error_ey
+
+subroutine check_error_bz()
+
+   call exact%set_value(sol_bz, time)
+
+   error = maxval(abs(bz%array-exact%array))
+   write(*,"(10x,' istep = ',I6)",advance="no") istep
+   write(*,"(' time = ',g12.3,' sec')",advance="no") time
+   write(*,"(' BZ erreur = ',g15.5)") error
+   call bz%write_to_file('bz')
+
+end subroutine check_error_bz
+
+
+subroutine rksetup()
+
+sex%array = 0.0_f64
+sey%array = 0.0_f64
+sbz%array = 0.0_f64
+
+ex0%array = ex%array 
+ey0%array = ey%array 
+bz0%array = bz%array
+
+end subroutine rksetup
+
+subroutine rkstage(coef)
+sll_real64, intent(in) :: coef
+
+ex%array = ex0%array + coef * dex%array
+ey%array = ey0%array + coef * dey%array
+bz%array = bz0%array + coef * dbz%array
+
+end subroutine rkstage
+
+subroutine accumulate(coef)
+sll_real64, intent(in) :: coef
+
+sex%array = sex%array + coef * dex%array
+sey%array = sey%array + coef * dey%array
+sbz%array = sbz%array + coef * dbz%array
+
+end subroutine accumulate
+
+subroutine rkstep()
+
+ex%array = ex0%array + dt * sex%array
+ey%array = ey0%array + dt * sey%array
+bz%array = bz0%array + dt * sbz%array
+
+end subroutine rkstep
 
 end program test_maxwell_2d_diga
 

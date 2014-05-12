@@ -61,6 +61,7 @@ type, public :: maxwell_2d_diga
    sll_real64                               :: eta2_min
    sll_real64                               :: eta2_max
    sll_real64                               :: delta_eta2
+   sll_real64, dimension(:,:), pointer      :: f_vector              
    sll_real64, dimension(:,:), pointer      :: w_vector              
    sll_real64, dimension(:,:), pointer      :: r_vector              
 
@@ -79,7 +80,6 @@ end interface solve
 sll_int32                                :: error
 type(dg_field), pointer                  :: po
 sll_real64, parameter                    :: xi = 0.0_f64
-sll_real64, dimension(:,:,:,:), pointer  :: f
 sll_real64, dimension(4,4)               :: A1
 sll_real64, dimension(4,4)               :: A2
 
@@ -148,7 +148,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
       dlagx = gauss_lobatto_derivative_matrix(degree+1,x)
       dlagy = gauss_lobatto_derivative_matrix(degree+1,y)
 
-      call sll_display(wx,"f9.4")
+      call sll_display(dlagx,"f9.4")
 
       do ii = 1, degree+1
       do jj = 1, degree+1
@@ -186,8 +186,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 
    SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),4),error)
-
-   SLL_CLEAR_ALLOCATE(f(1:nddl,1:4,1:this%nc_eta1,1:this%nc_eta2),error)
+   SLL_CLEAR_ALLOCATE(this%f_vector((degree+1)*(degree+1),4),error)
 
    A1 = reshape((/ 0.0_f64, 0.0_f64, 0.0_f64, xi,       &
                    0.0_f64, 0.0_f64, 1.0_f64, 0.0_f64,  &
@@ -204,29 +203,24 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
 end subroutine initialize_maxwell_2d_diga
 
 !> Solve the maxwell equation
-subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
+subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
 
    type( maxwell_2d_diga )  :: this !< Maxwell solver object
 
-   type(dg_field), target   :: ex   !< x electric field
-   type(dg_field), target   :: ey   !< y electric field
-   type(dg_field), target   :: bz   !< z magnetic field
-   sll_real64, intent(in)   :: dt   !< time step
+   type(dg_field)  :: ex   !< x electric field
+   type(dg_field)  :: ey   !< y electric field
+   type(dg_field)  :: bz   !< z magnetic field
 
-   type(dg_field), optional :: jx   !< x current field
-   type(dg_field), optional :: jy   !< y current field
-   type(dg_field), optional :: rho  !< charge density
+   type(dg_field)  :: dex  
+   type(dg_field)  :: dey  
+   type(dg_field)  :: dbz  
 
-   sll_int32        :: left, right, node, side, edge_node
-   sll_int32        :: i, j, k, l, ii, jj, kk
-   sll_real64       :: vec_n1
-   sll_real64       :: vec_n2
-   sll_real64       :: offset(2), eta1, eta2
-   sll_int32        :: icell, gnu_id, file_id
-   character(len=4) :: ccell
-   sll_real64       :: x(this%degree+1)
-   sll_real64       :: flux(4)
-   sll_real64       :: w(this%degree+1)
+   sll_int32  :: left, right, node, side, edge_node
+   sll_int32  :: i, j, k, l, ii, jj, kk
+   sll_real64 :: vec_n1
+   sll_real64 :: vec_n2
+   sll_real64 :: flux(4)
+   sll_real64 :: w(this%degree+1)
 
 
    w = gauss_lobatto_weights(this%degree+1)
@@ -245,20 +239,9 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
       end do
       end do
          
-      f(:,1,i,j) = + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3)) &
-              - xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,4))
+      this%f_vector = 0.0_f64
 
-      f(:,2,i,j) = - matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
-              - xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,4))
-
-      f(:,3,i,j) =   matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1)) &
-                   - matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2))
-
-      f(:,4,i,j) = - xi * &
-                   ( matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
-                   + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2)))
-
-      do side = 1, 4 ! Loop over edges
+      do side = 1, 4 ! Loop over each side of the cell
  
          !boundary conditions are periodic
          select case(side)
@@ -282,6 +265,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             this%r_vector(kk,1) = ex%array(ii,jj,k,l)
             this%r_vector(kk,2) = ey%array(ii,jj,k,l)
             this%r_vector(kk,3) = bz%array(ii,jj,k,l)
+            this%r_vector(kk,4) = po%array(ii,jj,k,l)
          end do
          end do
    
@@ -295,90 +279,37 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
    
-            flux = (0.5*(this%w_vector(left,:)+this%r_vector(right,:))) &
-                    * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
+            flux = (0.5*(this%w_vector(left,:)+this%r_vector(right,:))) 
+
+            flux = flux * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
   
-            f(node,1,i,j) = f(node,1,i,j) - vec_n2*flux(1) + xi*vec_n1*flux(4)
-            f(node,2,i,j) = f(node,2,i,j) + vec_n1*flux(2) + xi*vec_n2*flux(4)
-            f(node,3,i,j) = f(node,3,i,j) + vec_n1*flux(2) - vec_n2*flux(1)
-            f(node,4,i,j) = f(node,4,i,j) + vec_n1*flux(1) + vec_n2*flux(2)
+            f(node,1,i,j) = + vec_n2*flux(3) !+ xi*vec_n1*flux(4)
+            f(node,2,i,j) = - vec_n1*flux(3) !+ xi*vec_n2*flux(4)
+            f(node,3,i,j) = - vec_n1*flux(2) + vec_n2*flux(1)
+            f(node,4,i,j) = + vec_n1*flux(1) + vec_n2*flux(2)
 
          end do
    
       end do
    
-      f(:,1,i,j) = f(:,1,i,j) / this%cell(i,j)%MassMatrix(:)
-      f(:,2,i,j) = f(:,2,i,j) / this%cell(i,j)%MassMatrix(:)
-      f(:,3,i,j) = f(:,3,i,j) / this%cell(i,j)%MassMatrix(:)
-      f(:,4,i,j) = f(:,4,i,j) / this%cell(i,j)%MassMatrix(:)
+      f(:,1,i,j) = f(:,1,i,j) / this%cell(i,j)%MassMatrix(:) &
+                   + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3)) &
+                   - xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,4))
 
-      if(present(jx) .and. present(jy)) then
-         do jj = 1, this%degree+1
-         do ii = 1, this%degree+1
-            f(:,1,i,j) = f(:,1,i,j) + jx%array(ii,jj,i,j)
-            f(:,2,i,j) = f(:,2,i,j) + jy%array(ii,jj,i,j)
-         end do
-         end do
-      end if
+      f(:,2,i,j) = f(:,2,i,j) / this%cell(i,j)%MassMatrix(:) &
+                   - matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
+                   - xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,4))
 
-      if(present(rho)) then
-         do jj = 1, this%degree+1
-         do ii = 1, this%degree+1
-            f(:,4,i,j) = f(:,4,i,j) + xi * rho%array(ii,jj,i,j)
-         end do
-         end do
-      end if
+      f(:,3,i,j) = f(:,3,i,j) / this%cell(i,j)%MassMatrix(:) &
+                   - matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1)) &
+                   + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2))
+
+      f(:,4,i,j) = f(:,4,i,j) / this%cell(i,j)%MassMatrix(:) &
+                   - xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
+                   + xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2))
 
    end do
    end do
-
-!!!!! PLOT FLUX !!!
-
-#ifdef DEBUG
-
-   call sll_ascii_file_create("flux.gnu", gnu_id, error)
-
-   x  = gauss_lobatto_points(this%degree+1)
-
-   icell = 0
-   do i = 1, this%nc_eta1
-   do j = 1, this%nc_eta2
- 
-      icell = icell+1
-
-      call int2string(icell, ccell)
-
-      if (icell == 1) then
-         write(gnu_id,"(a)",advance='no') "splot 'flux"//ccell//".dat' w l"
-      else
-         write(gnu_id,"(a)",advance='no') ",'flux"//ccell//".dat' w l "
-      end if
-
-      call sll_ascii_file_create("flux"//ccell//".dat", file_id, error)
-
-      offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
-      offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
-      kk = 0
-      do ii = 1, this%degree+1
-      do jj = 1, this%degree+1
-         kk = kk+1
-         eta1 = offset(1) + 0.5 * (x(ii) + 1.0) * this%tau%mesh%delta_eta1
-         eta2 = offset(2) + 0.5 * (x(jj) + 1.0) * this%tau%mesh%delta_eta2
-         write(file_id,*) this%tau%x1(eta1,eta2), &
-                          this%tau%x2(eta1,eta2), &
-                          f(kk,2,i,j)
-      end do
-      write(file_id,*)
-      end do
-      close(file_id)
-
-   end do
-   end do
-
-   write(gnu_id,*)
-   close(gnu_id)
-
-#endif
 
    do j = 1, this%nc_eta2
    do i = 1, this%nc_eta1
@@ -386,10 +317,9 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dt, jx, jy, rho )
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          kk = (ii-1)*(this%degree+1)+jj
-         ex%array(ii,jj,i,j) = ex%array(ii,jj,i,j) - dt * f(kk,1,i,j)
-         ey%array(ii,jj,i,j) = ey%array(ii,jj,i,j) - dt * f(kk,2,i,j)
-         bz%array(ii,jj,i,j) = bz%array(ii,jj,i,j) - dt * f(kk,3,i,j)
-         po%array(ii,jj,i,j) = po%array(ii,jj,i,j) - dt * f(kk,4,i,j)
+         dex%array(ii,jj,i,j) = f(kk,1,i,j)
+         dey%array(ii,jj,i,j) = f(kk,2,i,j)
+         dbz%array(ii,jj,i,j) = f(kk,3,i,j)
       end do
       end do
    
