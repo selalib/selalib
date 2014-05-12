@@ -58,8 +58,8 @@ implicit none
 !
    sll_int32             :: nxprocs
    sll_int32             :: nyprocs 
-   sll_int32,  parameter :: nx = 128
-   sll_int32,  parameter :: ny = 128
+   sll_int32,  parameter :: nx = 64
+   sll_int32,  parameter :: ny = 64
    sll_real64, parameter :: x_min = -1.0_f64
    sll_real64, parameter :: x_max = +1.0_f64
    sll_real64, parameter :: y_min = -1.0_f64
@@ -72,6 +72,9 @@ implicit none
    sll_real64 :: start_time, end_time, total_time
 
    call sll_boot_collective() 
+
+   prank = sll_get_collective_rank(sll_world_collective)
+   psize = sll_get_collective_size(sll_world_collective)
 
    narg = iargc()
 
@@ -89,9 +92,6 @@ implicit none
    call getarg(2, buffer); read(buffer,"(i4)") nyprocs
 
    start_time = MPI_WTIME() 
-
-   prank = sll_get_collective_rank(sll_world_collective)
-   psize = sll_get_collective_size(sll_world_collective)
 
    call initialize( solver,                               &
                     x_min, x_max, y_min, y_max,           &
@@ -141,9 +141,11 @@ implicit none
    do j=sy, ey
      do i=sx, ex
         f(i,j) = (q(i-1,j)-2.*q(i,j)+q(i+1,j))/(delta_x*delta_x) + &
-                 (q(i,j-1)-2.*q(i,j)+q(i,j-1))/(delta_y*delta_y)
+                 (q(i,j-1)-2.*q(i,j)+q(i,j+1))/(delta_y*delta_y)
      end do
    end do
+
+   p = 0.0_f64
    call gp_plot2d(f,x,y,sx,ex,sy,ey,'f')
 
    call solve(solver, p, f, r)
