@@ -61,9 +61,9 @@ type, public :: maxwell_2d_diga
    sll_real64                               :: eta2_min
    sll_real64                               :: eta2_max
    sll_real64                               :: delta_eta2
-   sll_real64, dimension(:,:), pointer      :: f_vector              
-   sll_real64, dimension(:,:), pointer      :: w_vector              
-   sll_real64, dimension(:,:), pointer      :: r_vector              
+   sll_real64, dimension(:,:), pointer      :: f
+   sll_real64, dimension(:,:), pointer      :: w
+   sll_real64, dimension(:,:), pointer      :: r
 
 end type maxwell_2d_diga
 
@@ -184,9 +184,9 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    call sll_display(this%cell(2,2)%DxMatrix,"f9.4")
    call sll_display(this%cell(2,2)%DyMatrix,"f9.4")
 
-   SLL_CLEAR_ALLOCATE(this%w_vector((degree+1)*(degree+1),4),error)
-   SLL_CLEAR_ALLOCATE(this%r_vector((degree+1)*(degree+1),4),error)
-   SLL_CLEAR_ALLOCATE(this%f_vector((degree+1)*(degree+1),4),error)
+   SLL_CLEAR_ALLOCATE(this%w((degree+1)*(degree+1),4),error)
+   SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
+   SLL_CLEAR_ALLOCATE(this%f((degree+1)*(degree+1),4),error)
 
    A1 = reshape((/ 0.0_f64, 0.0_f64, 0.0_f64, xi,       &
                    0.0_f64, 0.0_f64, 1.0_f64, 0.0_f64,  &
@@ -222,9 +222,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
    sll_real64 :: flux(4)
    sll_real64 :: w(this%degree+1)
 
-
    w = gauss_lobatto_weights(this%degree+1)
-
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -232,14 +230,24 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          k = (ii-1)*(this%degree+1)+jj
-         this%w_vector(k,1) = ex%array(ii,jj,i,j)
-         this%w_vector(k,2) = ey%array(ii,jj,i,j)
-         this%w_vector(k,3) = bz%array(ii,jj,i,j)
-         this%w_vector(k,4) = po%array(ii,jj,i,j)
+         this%w(k,1) = ex%array(ii,jj,i,j)
+         this%w(k,2) = ey%array(ii,jj,i,j)
+         this%w(k,3) = bz%array(ii,jj,i,j)
+         this%w(k,4) = po%array(ii,jj,i,j)
       end do
       end do
          
-      this%f_vector = 0.0_f64
+      this%f(:,1) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,3)) &
+               - xi * matmul(this%cell(i,j)%DxMatrix,this%w(:,4))
+
+      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3)) &
+               - xi * matmul(this%cell(i,j)%DyMatrix,this%w(:,4))
+
+      this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
+                    + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
+
+      this%f(:,4) = - xi * matmul(this%cell(i,j)%DxMatrix,this%w(:,1)) &
+                    + xi * matmul(this%cell(i,j)%DyMatrix,this%w(:,2))
 
       do side = 1, 4 ! Loop over each side of the cell
  
@@ -262,10 +270,10 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
          do jj = 1, this%degree+1
          do ii = 1, this%degree+1
             kk = (ii-1)*(this%degree+1)+jj
-            this%r_vector(kk,1) = ex%array(ii,jj,k,l)
-            this%r_vector(kk,2) = ey%array(ii,jj,k,l)
-            this%r_vector(kk,3) = bz%array(ii,jj,k,l)
-            this%r_vector(kk,4) = po%array(ii,jj,k,l)
+            this%r(kk,1) = ex%array(ii,jj,k,l)
+            this%r(kk,2) = ey%array(ii,jj,k,l)
+            this%r(kk,3) = bz%array(ii,jj,k,l)
+            this%r(kk,4) = po%array(ii,jj,k,l)
          end do
          end do
    
@@ -279,54 +287,37 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
    
-            flux = (0.5*(this%w_vector(left,:)+this%r_vector(right,:))) 
+            flux = (0.5*(this%w(left,:)+this%r(right,:))) 
 
             flux = flux * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
   
-            f(node,1,i,j) = + vec_n2*flux(3) !+ xi*vec_n1*flux(4)
-            f(node,2,i,j) = - vec_n1*flux(3) !+ xi*vec_n2*flux(4)
-            f(node,3,i,j) = - vec_n1*flux(2) + vec_n2*flux(1)
-            f(node,4,i,j) = + vec_n1*flux(1) + vec_n2*flux(2)
+            !this%f(node,1) = this%f(node,1)+vec_n2*flux(3)+xi*vec_n1*flux(4)
+            !this%f(node,2) = this%f(node,1)-vec_n1*flux(3)+xi*vec_n2*flux(4)
+            !this%f(node,3) = this%f(node,1)-vec_n1*flux(2)+vec_n2*flux(1)
+            !this%f(node,4) = this%f(node,1)+vec_n1*flux(1)+vec_n2*flux(2)
 
          end do
    
       end do
    
-      f(:,1,i,j) = f(:,1,i,j) / this%cell(i,j)%MassMatrix(:) &
-                   + matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,3)) &
-                   - xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,4))
-
-      f(:,2,i,j) = f(:,2,i,j) / this%cell(i,j)%MassMatrix(:) &
-                   - matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,3)) &
-                   - xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,4))
-
-      f(:,3,i,j) = f(:,3,i,j) / this%cell(i,j)%MassMatrix(:) &
-                   - matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,1)) &
-                   + matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,2))
-
-      f(:,4,i,j) = f(:,4,i,j) / this%cell(i,j)%MassMatrix(:) &
-                   - xi * matmul(this%cell(i,j)%DxMatrix,this%w_vector(:,1)) &
-                   + xi * matmul(this%cell(i,j)%DyMatrix,this%w_vector(:,2))
-
-   end do
-   end do
-
-   do j = 1, this%nc_eta2
-   do i = 1, this%nc_eta1
+      this%f(:,1) = this%f(:,1) / this%cell(i,j)%MassMatrix(:)
+      this%f(:,2) = this%f(:,2) / this%cell(i,j)%MassMatrix(:)
+      this%f(:,3) = this%f(:,3) / this%cell(i,j)%MassMatrix(:)
+      this%f(:,4) = this%f(:,4) / this%cell(i,j)%MassMatrix(:)
 
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          kk = (ii-1)*(this%degree+1)+jj
-         dex%array(ii,jj,i,j) = f(kk,1,i,j)
-         dey%array(ii,jj,i,j) = f(kk,2,i,j)
-         dbz%array(ii,jj,i,j) = f(kk,3,i,j)
+         dex%array(ii,jj,i,j) = - this%f(kk,1)
+         dey%array(ii,jj,i,j) = - this%f(kk,2)
+         dbz%array(ii,jj,i,j) = - this%f(kk,3)
       end do
       end do
    
    end do
    end do
    
-end  subroutine solve_maxwell_2d_diga
+end subroutine solve_maxwell_2d_diga
 
 function dof_local(edge,dof,degree)
 
