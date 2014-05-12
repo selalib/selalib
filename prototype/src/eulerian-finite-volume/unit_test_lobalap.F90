@@ -1,9 +1,11 @@
 program test_lobalap
 #include "selalib.h"
+#include "sll_coordinate_transformations.h"
 
   use map_function_module, only: set_map_function
   use sll_lobatto_poisson
   use sll_dg_fields
+  use sll_logical_meshes
   implicit none
 
   type(lobatto_poisson_solver)        :: solver
@@ -13,11 +15,11 @@ program test_lobalap
   type(dg_field), pointer :: dg_ex
   type(dg_field), pointer :: dg_ey
 
-  sll_int32, parameter :: degree = 2
+  sll_int32, parameter :: degree = 3
   real(8), external :: f_cos, f_four
   
-#define NPTS1 8
-#define NPTS2 8
+#define NPTS1 2
+#define NPTS2 2
 #define R_MIN  0.0_8
 #define R_MAX  1.0_8
 #define THETA_MIN  0.00_8

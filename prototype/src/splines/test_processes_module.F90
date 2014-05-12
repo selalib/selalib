@@ -1258,9 +1258,9 @@ contains
 #endif
     logical, intent(out) :: test_passed
 
-    sll_int32 :: i, j, ierr
+    sll_int32 :: i, j, im, jm, ierr
     sll_real64, dimension(:,:), allocatable :: data
-    sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err
+    sll_real64 :: h1, h2, eta1, eta2, acc, val, true_val, ave_err, max_err
     type(sll_cubic_spline_2D), pointer :: spline
 
     h1 = 1.0_f64/(NPX1-1)
@@ -1288,13 +1288,19 @@ contains
     call compute_cubic_spline_2D( data, spline )
 
     ! compare results
-    acc = 0.0_f64
+    max_err = 0.0_f64
+    acc     = 0.0_f64
     do j=0,NPX2-1
        eta2 = real(j,f64)*h2
        do i=0,NPX1-1
           eta1     = real(i,f64)*h1
           val      = interpolate_value_2D( eta1, eta2, spline )
           true_val = transform_func( eta1, eta2 )
+          if( abs(val - true_val) > max_err ) then
+             max_err = abs(val-true_val)
+             im = i
+             jm = j
+          end if
           acc      = acc + abs(true_val - val)
           if(abs(true_val-val).gt.1.0e-14) then
              print *, 'i,j = ',i,j, 'eta1,eta2 = ', eta1, eta2, 'true, val = ',&
@@ -1310,6 +1316,8 @@ contains
     else
        test_passed = .false.
     end if
+    print *, 'hrmt_hrmt maximum error found = ', max_err, 'at i,j = ', &
+         im+1, jm+1
     SLL_DEALLOCATE_ARRAY(data,ierr)
   end subroutine test_2d_spline_hrmt_hrmt_no_slopes
 
@@ -1430,5 +1438,11 @@ contains
     sll_real64, intent(in) :: x, y
     mcossin = -cos(x)*sin(y)
   end function mcossin
+
+  function sinsin(x,y)
+    sll_real64 :: sinsin
+    sll_real64, intent(in) :: x, y
+    sinsin = sin(2.0_f64*sll_pi*x)*sin(2.0_f64*sll_pi*y)
+  end function sinsin
 
 end module test_processes_module

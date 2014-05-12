@@ -41,15 +41,11 @@ ELSE()
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
-TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_coordinate_transformations
-                                          sll_logical_meshes 
-                                          sll_integration
-                                          sll_dg_fields
-                                          sll_utilities )
+TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_dg_fields sll_utilities )
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
 
-ADD_EXECUTABLE(test_maxwell_2d_diga init_function_module.F90 unit_test_2d_diga.F90)
+ADD_EXECUTABLE(test_maxwell_2d_diga unit_test_2d_diga.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga sll_maxwell_solvers)
 

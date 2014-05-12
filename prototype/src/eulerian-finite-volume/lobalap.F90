@@ -334,6 +334,7 @@ contains
           end do
        end do
     end do
+    write(*,*) " ino = ", ino
 
     write(*,*) 'Repérage noeuds du bord'
 
