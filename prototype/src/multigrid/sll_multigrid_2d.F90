@@ -49,9 +49,9 @@ module sll_multigrid_2d
 
    sll_int32,  parameter :: IOUT    = 6
    sll_int32,  parameter :: maxcy   = 5000    !Max number of mg cycles
-   sll_real64, parameter :: tolmax  = 1.0d-06 !Desired accuracy
+   sll_real64, parameter :: tolmax  = 1.0d-07 !Desired accuracy
    sll_int32,  parameter :: kcycle  = 2       !1: V-cycles 2: W-cycles
-   sll_int32,  parameter :: iprer   = 3       !number of relaxation sweep
+   sll_int32,  parameter :: iprer   = 5       !number of relaxation sweep
    sll_int32,  parameter :: ipost   = 1
    sll_int32,  parameter :: iresw   = 1       !1: fully weighted residual
                                               !2: half-weighted residual
@@ -220,7 +220,6 @@ subroutine initialize_multigrid_2d( this,                         &
    sll_int32  :: coords(2)
 
    sll_real64, dimension(4) :: vbc
-   sll_int32  :: psize, iproc, prank
 
    nx = nc_x
    ny = nc_y
@@ -385,10 +384,13 @@ subroutine initialize_multigrid_2d( this,                         &
    end if
 #endif
 
+   bd(1) = ibdry
+   bd(2) = jbdry
+   bd(3) = ibdry
+   bd(4) = jbdry
+
    where(this%neighbor >= 0)
       bd = 0
-   elsewhere
-      bd = 1
    end where
 
 #ifdef DEBUG
@@ -536,8 +538,8 @@ subroutine write_topology( this )
    sll_int32  :: file_id
    sll_int32  :: error
 
-   call MPI_COMM_RANK(MPI_COMM_WORLD,prank,code)
-   call MPI_COMM_SIZE(MPI_COMM_WORLD,psize,code)
+   call MPI_COMM_RANK(this%comm2d,prank,code)
+   call MPI_COMM_SIZE(this%comm2d,psize,code)
 
    dx = 1.0_f64 / this%pdims(1) * this%xl
    dy = 1.0_f64 / this%pdims(2) * this%yl
@@ -560,7 +562,7 @@ subroutine write_topology( this )
       end do
 
       do iproc = 0, psize-1
-         CALL MPI_CART_COORDS(MPI_COMM_WORLD,iproc,2,coords,error)
+         CALL MPI_CART_COORDS(this%comm2d,iproc,2,coords,error)
          write(file_id,111)coords(1)+.5*dx,coords(2)+.5*dy,iproc
       end do
    

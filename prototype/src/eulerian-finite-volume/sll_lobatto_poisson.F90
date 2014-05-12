@@ -40,7 +40,6 @@ subroutine initialize_lobatto_poisson(this, tau, order)
    sll_int32, optional :: order
    sll_int32 :: nx0
    sll_int32 :: ny0
-   sll_int32 :: order0
 
    this%tau => tau
    nx0 = tau%mesh%num_cells1
@@ -74,7 +73,7 @@ end subroutine solve_lobatto_poisson
 
 subroutine delete_lobatto_poisson(this)
 
-   type(lobatto_poisson_solver) :: this
+  type(lobatto_poisson_solver) :: this
 
   call plotgmsh()
   call release()
