@@ -35,12 +35,12 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nstep   = 10  !
 sll_int32, parameter :: nc_eta1 = 10  !
 sll_int32, parameter :: nc_eta2 = 10  !
 sll_int32, parameter :: degree  = 2   !
 !=====================================!
 
+sll_int32  :: nstep
 sll_real64 :: eta1_max, eta1_min
 sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
@@ -88,14 +88,14 @@ delta_eta2 = mesh%delta_eta2
 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 
 colella => new_coordinate_transformation_2d_analytic( &
-       "collela_transformation", &
-       mesh, &
-       sinprod_x1, &
-       sinprod_x2, &
-       sinprod_jac11, &
-       sinprod_jac12, &
-       sinprod_jac21, &
-       sinprod_jac22, & 
+       "collela_transformation",                      &
+       mesh,                                          &
+       sinprod_x1,                                    &
+       sinprod_x2,                                    &
+       sinprod_jac11,                                 &
+       sinprod_jac12,                                 &
+       sinprod_jac21,                                 &
+       sinprod_jac22,                                 &  
        (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
 
 call colella%write_to_file(SLL_IO_GNUPLOT)
@@ -135,6 +135,10 @@ exact => new_dg_field( degree, tau)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
+nstep = ceiling(2*sll_pi/dt)
+
+dt = 2 * sll_pi / nstep
+
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 
 call ex%write_to_file('ex')
@@ -144,23 +148,26 @@ call bz%write_to_file('bz')
 do istep = 1, nstep !*** Loop over time
 
    call rksetup()
-   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
-   call accumulate(1._f64/6.)
-   call rkstage(0.5*dt)
 
    call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
-   call accumulate(1._f64/3.)
-   call rkstage(0.5*dt)
+   call accumulate(1._f64/6._f64)
+   call rkstage(0.5_f64)
 
    call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
-   call accumulate(1._f64/3.)
-   call rkstage(1.0*dt)
+   call accumulate(1._f64/3._f64)
+   call rkstage(0.5_f64)
 
    call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
-   call accumulate(1._f64/6.)
+   call accumulate(1._f64/3._f64)
+   call rkstage(1.0_f64)
+
+   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call accumulate(1._f64/6._f64)
+
    call rkstep()
 
    time = time + dt
+
    call check_error_ex(time)
    call check_error_ey(time)
    call check_error_bz(time)
@@ -174,6 +181,7 @@ end do ! next time step
 contains
 
 subroutine check_error_ex(time)
+
    sll_real64, intent(in) :: time
 
    call exact%set_value(sol_ex, time)
@@ -187,6 +195,7 @@ subroutine check_error_ex(time)
 end subroutine check_error_ex
 
 subroutine check_error_ey(time)
+
    sll_real64, intent(in) :: time
 
    call exact%set_value(sol_ey, time)
@@ -200,6 +209,7 @@ subroutine check_error_ey(time)
 end subroutine check_error_ey
 
 subroutine check_error_bz(time)
+
    sll_real64, intent(in) :: time
 
    call exact%set_value(sol_bz, time)
@@ -215,43 +225,42 @@ end subroutine check_error_bz
 
 subroutine rksetup()
 
-sx%array = 0.0_f64
-sy%array = 0.0_f64
-sz%array = 0.0_f64
+   sx%array = 0.0_f64
+   sy%array = 0.0_f64
+   sz%array = 0.0_f64
 
-ex0%array = ex%array 
-ey0%array = ey%array 
-bz0%array = bz%array
+   ex0%array = ex%array 
+   ey0%array = ey%array 
+   bz0%array = bz%array
 
 end subroutine rksetup
 
 subroutine rkstage(coef)
-sll_real64, intent(in) :: coef
 
-ex%array = ex0%array + coef * dx%array
-ey%array = ey0%array + coef * dy%array
-bz%array = bz0%array + coef * dz%array
+   sll_real64, intent(in) :: coef
 
-call check_error_ex(time+coef*dt)
-call check_error_ey(time+coef*dt)
-call check_error_bz(time+coef*dt)
+   ex%array = ex0%array + coef * dt * dx%array
+   ey%array = ey0%array + coef * dt * dy%array
+   bz%array = bz0%array + coef * dt * dz%array
+
 
 end subroutine rkstage
 
 subroutine accumulate(coef)
-sll_real64, intent(in) :: coef
 
-sx%array = sx%array + coef * dx%array
-sy%array = sy%array + coef * dy%array
-sz%array = sz%array + coef * dz%array
+   sll_real64, intent(in) :: coef
+
+   sx%array = sx%array + coef * dx%array
+   sy%array = sy%array + coef * dy%array
+   sz%array = sz%array + coef * dz%array
 
 end subroutine accumulate
 
 subroutine rkstep()
 
-ex%array = ex0%array + dt * sx%array
-ey%array = ey0%array + dt * sy%array
-bz%array = bz0%array + dt * sz%array
+   ex%array = ex0%array + dt * sx%array
+   ey%array = ey0%array + dt * sy%array
+   bz%array = bz0%array + dt * sz%array
 
 
 end subroutine rkstep
