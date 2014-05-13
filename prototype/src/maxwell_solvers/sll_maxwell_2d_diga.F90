@@ -215,25 +215,28 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
    type(dg_field)  :: dey  
    type(dg_field)  :: dbz  
 
-   sll_int32  :: left, right, node, side, edge_node
+   sll_int32  :: left, right, node, side
    sll_int32  :: i, j, k, l, ii, jj, kk
    sll_real64 :: vec_n1
    sll_real64 :: vec_n2
-   sll_real64 :: flux(4)
+   sll_real64 :: flux(4), surf
    sll_real64 :: w(this%degree+1)
 
    w = gauss_lobatto_weights(this%degree+1)
 
+
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
 
+      surf = this%mesh%delta_eta1 * this%mesh%delta_eta2
+
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         k = (ii-1)*(this%degree+1)+jj
-         this%w(k,1) = ex%array(ii,jj,i,j)
-         this%w(k,2) = ey%array(ii,jj,i,j)
-         this%w(k,3) = bz%array(ii,jj,i,j)
-         this%w(k,4) = po%array(ii,jj,i,j)
+         kk = (ii-1)*(this%degree+1)+jj
+         this%w(kk,1) = ex%array(ii,jj,i,j)
+         this%w(kk,2) = ey%array(ii,jj,i,j)
+         this%w(kk,3) = bz%array(ii,jj,i,j)
+         this%w(kk,4) = po%array(ii,jj,i,j)
       end do
       end do
          
@@ -280,22 +283,22 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
          !Compute the fluxes on edge points
          do node = 1, this%degree+1
    
-            left      = dof_local(side, node, this%degree)
-            right     = dof_neighbor(side, node, this%degree)
-            edge_node = dof_edge(side, left, this%degree)
+            left   = dof_local(side, node, this%degree)
+            right  = dof_neighbor(side, node, this%degree)
 
-            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(edge_node,1)
-            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(edge_node,2)
+            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
+            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
-            flux = (0.5*(this%w(left,:)+this%r(right,:))) 
+            flux = (this%r(right,:)-this%w(left,:))
+            flux = flux * 0.5 * (this%r(right,:)+this%w(left,:))
 
             flux = flux * w(node) * 0.5_f64 * this%cell(i,j)%edge(side)%length
   
-            !this%f(node,1) = this%f(node,1)+vec_n2*flux(3)+xi*vec_n1*flux(4)
-            !this%f(node,2) = this%f(node,1)-vec_n1*flux(3)+xi*vec_n2*flux(4)
-            !this%f(node,3) = this%f(node,1)-vec_n1*flux(2)+vec_n2*flux(1)
-            !this%f(node,4) = this%f(node,1)+vec_n1*flux(1)+vec_n2*flux(2)
-
+            this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
+            this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
+            this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
+            !this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
+            
          end do
    
       end do
@@ -356,24 +359,6 @@ function dof_neighbor(edge,dof,degree)
    end select
 
 end function dof_neighbor
-
-function dof_edge(edge,dof,degree)
-
-   sll_int32 :: dof_edge
-   sll_int32 :: edge, dof, degree
-   
-   select case(edge)
-   case(SOUTH)
-      dof_edge = dof
-   case(EAST)
-      dof_edge = dof/(degree+1)
-   case(NORTH)
-      dof_edge = dof-degree*(degree+1)
-   case(WEST)
-      dof_edge = (dof-1)/(degree+1)+1
-   end select
-
-end function dof_edge
 
 !> Compute cell normals
 subroutine compute_normals(tau, i, j, d, cell )
