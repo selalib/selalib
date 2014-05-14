@@ -95,12 +95,12 @@ subroutine initialize_dg_field( this, init_function, time)
    
    SLL_ASSERT(associated(this%array))
 
-   do i = 1, this%tau%mesh%num_cells1
    do j = 1, this%tau%mesh%num_cells2
+   do i = 1, this%tau%mesh%num_cells1
       offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
       offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
-      do ii = 1, this%degree+1
       do jj = 1, this%degree+1
+      do ii = 1, this%degree+1
          eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%tau%mesh%delta_eta1
          eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
          this%array(ii,jj,i,j) = init_function(this%tau%x1(eta1,eta2), &
@@ -163,8 +163,8 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
 
    icell = 0
-   do i = 1, this%tau%mesh%num_cells1
    do j = 1, this%tau%mesh%num_cells2
+   do i = 1, this%tau%mesh%num_cells1
  
       icell = icell+1
 
@@ -181,8 +181,8 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
 
       offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
       offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
-      do ii = 1, this%degree+1
       do jj = 1, this%degree+1
+      do ii = 1, this%degree+1
          eta1 = offset(1) + 0.5 * (this%xgalo(ii) + 1.0) * this%tau%mesh%delta_eta1
          eta2 = offset(2) + 0.5 * (this%xgalo(jj) + 1.0) * this%tau%mesh%delta_eta2
          write(file_id,*) this%tau%x1(eta1,eta2), &
