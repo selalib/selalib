@@ -35,8 +35,8 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 10  !
-sll_int32, parameter :: nc_eta2 = 10  !
+sll_int32, parameter :: nc_eta1 = 2   !
+sll_int32, parameter :: nc_eta2 = 2   !
 sll_int32, parameter :: degree  = 2   !
 !=====================================!
 
@@ -66,8 +66,8 @@ sll_real64  :: error
 sll_real64, external :: sol_bz, sol_ex, sol_ey
 
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=0._f64, eta1_max=2.*sll_pi, &
-                            eta2_min=0._f64, eta2_max=2.*sll_pi)
+                            eta1_min=0._f64, eta1_max=2.0_f64, &
+                            eta2_min=0._f64, eta2_max=2.0_f64)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -135,9 +135,11 @@ exact => new_dg_field( degree, tau)
 
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
-nstep = ceiling(2*sll_pi/dt)
-
-dt = 2 * sll_pi / nstep
+print*, 'dt = ', dt
+dt = 0.1
+nstep = ceiling(sll_pi/dt)
+nstep = 10
+print*, 'dt = ', dt
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION)
 

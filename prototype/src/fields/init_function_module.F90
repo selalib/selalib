@@ -11,6 +11,7 @@ real(8) function sol_bz( x1, x2, time)
    sol_bz =     cos(x1)    &
               * cos(x2)    &
               * cos(time)
+
    return
 
 end function sol_bz

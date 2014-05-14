@@ -106,7 +106,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    sll_real64                  :: jac_mat(2,2)
    sll_real64                  :: inv_jac_mat(2,2)
    sll_real64                  :: mdiag
-   sll_int32                   :: i, j, ii, jj, kk, ll
+   sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
 
    this%tau   => tau
@@ -130,8 +130,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
 
-   do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
+   do i = 1, this%nc_eta1
 
       call compute_normals(tau,i,j,degree,this%cell(i,j))
 
@@ -148,28 +148,26 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
       dlagx = gauss_lobatto_derivative_matrix(degree+1,x)
       dlagy = gauss_lobatto_derivative_matrix(degree+1,y)
 
-      call sll_display(dlagx,"f9.4")
+      !call sll_display(dlagx,"f9.4")
 
-      do ii = 1, degree+1
+      k = 0
       do jj = 1, degree+1
+      do ii = 1, degree+1
 
          jac_mat     = tau%jacobian_matrix(x(ii),y(jj))
          inv_jac_mat = tau%inverse_jacobian_matrix(x(ii),y(jj))
          det         = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
          mdiag       = wx(ii)*wy(jj)*det
 
-         this%cell(i,j)%MassMatrix((ii-1)*(degree+1)+jj) = mdiag
+         k = k + 1
+         this%cell(i,j)%MassMatrix(k) = mdiag
 
+         l = 0
          do ll = 1, degree+1
          do kk = 1, degree+1
-
-            if (jj == ll) &
-               this%cell(i,j)%DxMatrix((ii-1)*(degree+1)+jj,(kk-1)*(degree+1)+ll) &
-                  = mdiag*dlagx(ii,kk)
-
-            if (ii == kk) &
-               this%cell(i,j)%DyMatrix((ii-1)*(degree+1)+jj,(kk-1)*(degree+1)+ll) &
-                  = mdiag*dlagy(jj,ll)
+            l = l+1
+            if (jj == ll) this%cell(i,j)%DxMatrix(k,l) = mdiag*dlagx(ii,kk)
+            if (ii == kk) this%cell(i,j)%DyMatrix(k,l) = mdiag*dlagy(jj,ll)
          end do
          end do
 
@@ -199,6 +197,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
                    0.0_f64,      xi,  0.0_f64, 0.0_f64  /), (/4,4/))
 
    po => new_dg_field( degree, tau) 
+stop
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -219,20 +218,18 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
    sll_int32  :: i, j, k, l, ii, jj, kk
    sll_real64 :: vec_n1
    sll_real64 :: vec_n2
-   sll_real64 :: flux(4), surf
+   sll_real64 :: flux(4)
    sll_real64 :: w(this%degree+1)
 
    w = gauss_lobatto_weights(this%degree+1, 0.0_f64, 1.0_f64)
 
-
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
 
-      surf = this%mesh%delta_eta1 * this%mesh%delta_eta2
-
+      kk = 0
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         kk = (ii-1)*(this%degree+1)+jj
+         kk = kk+1
          this%w(kk,1) = ex%array(ii,jj,i,j)
          this%w(kk,2) = ey%array(ii,jj,i,j)
          this%w(kk,3) = bz%array(ii,jj,i,j)
@@ -240,17 +237,10 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
       end do
       end do
          
-      this%f(:,1) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,3)) &
-               - xi * matmul(this%cell(i,j)%DxMatrix,this%w(:,4))
-
-      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3)) &
-               - xi * matmul(this%cell(i,j)%DyMatrix,this%w(:,4))
-
+      this%f(:,1) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,3))
+      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3))
       this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
-
-      this%f(:,4) = - xi * matmul(this%cell(i,j)%DxMatrix,this%w(:,1)) &
-                    + xi * matmul(this%cell(i,j)%DyMatrix,this%w(:,2))
 
       do side = 1, 4 ! Loop over each side of the cell
  
@@ -270,9 +260,10 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
             l = j
          end select
 
+         kk = 0
          do jj = 1, this%degree+1
          do ii = 1, this%degree+1
-            kk = (ii-1)*(this%degree+1)+jj
+            kk = kk+1
             this%r(kk,1) = ex%array(ii,jj,k,l)
             this%r(kk,2) = ey%array(ii,jj,k,l)
             this%r(kk,3) = bz%array(ii,jj,k,l)
@@ -289,31 +280,31 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
-            flux = (this%r(right,:)-this%w(left,:))
-            flux = flux * 0.5 * (this%r(right,:)+this%w(left,:))
-
-            flux = flux * w(node) * this%cell(i,j)%edge(side)%length
+            flux = 0.5 * (this%r(right,:)+this%w(left,:))  &
+                   * w(node) * this%cell(i,j)%edge(side)%length
   
-            this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
-            this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
-            this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
+            this%f(left,1) = this%f(left,1)!+vec_n2*flux(3)!+xi*vec_n1*flux(4)
+            this%f(left,2) = this%f(left,2)!-vec_n1*flux(3)!+xi*vec_n2*flux(4)
+            this%f(left,3) = this%f(left,3)!+vec_n2*flux(1)-vec_n1*flux(2)
             !this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
-            
+
+            print"(4i3,7f8.4)",side,node,left,right, &
+                               this%w(left,3), this%r(right,3), &
+                               vec_n1, vec_n2, &
+                               w(node) , this%cell(i,j)%edge(side)%length
+
          end do
    
       end do
    
-      this%f(:,1) = this%f(:,1) / this%cell(i,j)%MassMatrix(:)
-      this%f(:,2) = this%f(:,2) / this%cell(i,j)%MassMatrix(:)
-      this%f(:,3) = this%f(:,3) / this%cell(i,j)%MassMatrix(:)
-      this%f(:,4) = this%f(:,4) / this%cell(i,j)%MassMatrix(:)
 
+      kk = 0
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         kk = (ii-1)*(this%degree+1)+jj
-         dex%array(ii,jj,i,j) = - this%f(kk,1)
-         dey%array(ii,jj,i,j) = - this%f(kk,2)
-         dbz%array(ii,jj,i,j) = - this%f(kk,3)
+         kk = kk+1
+         dex%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
+         dey%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)
+         dbz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
       end do
       end do
    
