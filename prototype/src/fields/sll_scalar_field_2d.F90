@@ -246,7 +246,8 @@ contains   ! *****************************************************************
        end if
      
     end if
-
+    
+    print*, local_format
 
     select case(local_format)
     case (SLL_IO_XDMF)
