@@ -316,11 +316,11 @@ program unit_test_2d
 
   print *, 'Test of initialization from file for a nurbs transformation:'
 
-  inquire(file="../src/coordinate_transformations/n31x31p3x3_patch0.nml", exist=l_exists)
+  inquire(file="../src/coordinate_transformations/circle_mod12_patch0.nml", exist=l_exists)
 
   if (l_exists) then
-     call t_n%read_from_file("../src/coordinate_transformations/n31x31p3x3_patch0.nml")
-     t_n%mesh => new_logical_mesh_2d( 31, 31 )
+     call t_n%read_from_file("../src/coordinate_transformations/circle_mod12_patch0.nml")
+     !t_n%mesh => new_logical_mesh_2d(31,31 )
      call t_n%write_to_file()
 
      print*, 'label t_n', t_n%label
