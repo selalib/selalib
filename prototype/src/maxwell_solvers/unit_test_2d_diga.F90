@@ -35,9 +35,9 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 2   !
-sll_int32, parameter :: nc_eta2 = 2   !
-sll_int32, parameter :: degree  = 2   !
+sll_int32, parameter :: nc_eta1 = 10  !
+sll_int32, parameter :: nc_eta2 = 10  !
+sll_int32, parameter :: degree  = 02  !
 !=====================================!
 
 sll_int32  :: nstep
@@ -66,8 +66,8 @@ sll_real64  :: error
 sll_real64, external :: sol_bz, sol_ex, sol_ey
 
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=0._f64, eta1_max=2.0_f64, &
-                            eta2_min=0._f64, eta2_max=2.0_f64)
+                            eta1_min=0._f64, eta1_max=2.0_f64*sll_pi, &
+                            eta2_min=0._f64, eta2_max=2.0_f64*sll_pi)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -136,7 +136,7 @@ exact => new_dg_field( degree, tau)
 dt = cfl  / sqrt (1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
 
 print*, 'dt = ', dt
-dt = 0.1
+dt = 0.01
 nstep = ceiling(sll_pi/dt)
 nstep = 10
 print*, 'dt = ', dt
@@ -170,9 +170,9 @@ do istep = 1, nstep !*** Loop over time
 
    time = time + dt
 
-   call check_error_ex(time)
-   call check_error_ey(time)
-   call check_error_bz(time)
+   !call check_error_ex(time)
+   !call check_error_ey(time)
+   !call check_error_bz(time)
 
    call ex%write_to_file('ex')
    call ey%write_to_file('ey')
@@ -192,7 +192,6 @@ subroutine check_error_ex(time)
    write(*,"(10x,' istep = ',I6)",advance="no") istep
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' EX erreur = ',g15.5)") error
-   !call ex%write_to_file('ex')
 
 end subroutine check_error_ex
 
@@ -206,7 +205,6 @@ subroutine check_error_ey(time)
    write(*,"(10x,' istep = ',I6)",advance="no") istep
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' EY erreur = ',g15.5)") error
-   !call ey%write_to_file('ey')
 
 end subroutine check_error_ey
 
@@ -220,7 +218,6 @@ subroutine check_error_bz(time)
    write(*,"(10x,' istep = ',I6)",advance="no") istep
    write(*,"(' time = ',g12.3,' sec')",advance="no") time
    write(*,"(' BZ erreur = ',g15.5)") error
-   !call bz%write_to_file('bz')
 
 end subroutine check_error_bz
 
