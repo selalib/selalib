@@ -130,8 +130,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
 
-   do j = 1, this%nc_eta2
    do i = 1, this%nc_eta1
+   do j = 1, this%nc_eta2
 
       call compute_normals(tau,i,j,degree,this%cell(i,j))
 
@@ -197,7 +197,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
                    0.0_f64,      xi,  0.0_f64, 0.0_f64  /), (/4,4/))
 
    po => new_dg_field( degree, tau) 
-stop
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -283,15 +282,15 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
             flux = 0.5 * (this%r(right,:)+this%w(left,:))  &
                    * w(node) * this%cell(i,j)%edge(side)%length
   
-            this%f(left,1) = this%f(left,1)!+vec_n2*flux(3)!+xi*vec_n1*flux(4)
-            this%f(left,2) = this%f(left,2)!-vec_n1*flux(3)!+xi*vec_n2*flux(4)
-            this%f(left,3) = this%f(left,3)!+vec_n2*flux(1)-vec_n1*flux(2)
+            this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
+            this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
+            this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
             !this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
 
-            print"(4i3,7f8.4)",side,node,left,right, &
-                               this%w(left,3), this%r(right,3), &
-                               vec_n1, vec_n2, &
-                               w(node) , this%cell(i,j)%edge(side)%length
+            !print"(4i3,7f8.4)",side,node,left,right, &
+            !                   this%w(left,3), this%r(right,3), &
+            !                   vec_n1, vec_n2, &
+            !                   w(node) , this%cell(i,j)%edge(side)%length
 
          end do
    
