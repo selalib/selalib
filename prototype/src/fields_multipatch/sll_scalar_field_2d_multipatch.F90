@@ -58,14 +58,18 @@ module sll_module_scalar_field_2d_multipatch
      ! organization that we will need for the parallel case. The actual 
      ! size of these buffers depend on the degree of the spline used to 
      ! reconstruct the field data and of course the logical mesh size.
-     type(multipatch_data_2d), dimension(:), pointer :: buffers0
-     type(multipatch_data_2d), dimension(:), pointer :: buffers1
-     type(multipatch_data_2d), dimension(:), pointer :: buffers2
-     type(multipatch_data_2d), dimension(:), pointer :: buffers3
-     type(multipatch_data_2d), dimension(:), pointer :: derivs0
-     type(multipatch_data_2d), dimension(:), pointer :: derivs1
-     type(multipatch_data_2d), dimension(:), pointer :: derivs2
-     type(multipatch_data_2d), dimension(:), pointer :: derivs3
+     type(multipatch_data_2d), dimension(:), pointer :: buffers0 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: buffers1 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: buffers2 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: buffers3 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: derivs0 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: derivs1 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: derivs2 => null()
+     type(multipatch_data_2d), dimension(:), pointer :: derivs3 => null()
+     ! Element connectivity information for finite element calculations.
+     sll_int32, dimension(:), pointer :: global_indices
+      type(multipatch_data_1d), dimension(:), pointer :: local_indices
+      type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
@@ -133,6 +137,8 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer                         :: lm
     sll_int32, dimension(1:2)                                  :: connectivity
     character(len=128) :: format_string 
+    character(len=256) :: filename
+    sll_int32          :: input_file_id
     sll_int32  :: i
     sll_int32  :: num_patches
     sll_int32  :: bc_left
@@ -142,6 +148,16 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_int32  :: ierr
+    sll_int32  :: IO_stat
+    sll_int32, dimension(:), allocatable :: global_indices_array
+    sll_int32  :: num_global_indices
+    character(len=128), dimension(:), allocatable :: local_index_file_list
+    character(len=128), dimension(:), allocatable :: local_to_global_file_list
+
+    namelist /number_global_indices/ num_global_indices
+    namelist /global_indices/ global_indices_array
+    namelist /local_index_files/ local_index_file_list
+    namelist /local_to_global_files/ local_to_global_file_list
 
     fmp%field_name = field_name
     fmp%transf => transf
@@ -290,7 +306,51 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
     end do
 
+    ! Element connectivity information initialization. These data are relevant
+    ! for finite element calculations. This initialization consists of 
+    ! several steps:
+    !
+    ! 1. Find out which file to read to get the information on:
+    !    1.1 global indexing of the elements
+    !    1.2 the files which contain the local indexing information per patch.
+    !    1.3 the files which contain the local to global indexing information
+    !        by patch.
+    ! 2. Allocate the arrays which will store the local_index and 
+    !    local_to_global index information inside the multipatch.
+    ! 3. Loop over the filenames found in step 1. to initialize the arrays.
+
+    ! The following line establishes a hardwired convetion about the naming
+    ! of the diverse files that represent the multipatch. Not good but works.
+    filename = trim(transf%name_root)//"_element_connectivity_main.nml"
     
+    call sll_new_file_id(input_file_id, ierr)
+    if( ierr .ne. 0 ) then
+       print *, 'ERROR while trying to obtain an unique identifier for file ',&
+            trim(filename), '. Called from initialize_scalar_field_sfmp2d().'
+       stop
+    end if
+    open(unit=input_file_id, file=trim(filename), STATUS="OLD", IOStat=IO_stat)
+    if( IO_Stat .ne. 0 ) then
+       print *, 'ERROR while opening file ',trim(filename), &
+            '. Called from initialize_scalar_field_sfmp2d().'
+       stop
+    end if
+    SLL_ALLOCATE(local_index_file_list(num_patches),ierr)
+    SLL_ALLOCATE(local_to_global_file_list(num_patches),ierr)
+
+    read( input_file_id,number_global_indices )
+    SLL_ALLOCATE(global_indices_array(num_global_indices),ierr)
+
+    read( input_file_id, local_index_files )
+    read( input_file_id, local_to_global_file_list )
+
+    print *, local_index_file_list(:)
+
+    close(input_file_id)
+
+    SLL_DEALLOCATE_ARRAY(local_index_file_list,ierr)
+    SLL_DEALLOCATE_ARRAY(local_to_global_file_list,ierr)
+
   end subroutine initialize_scalar_field_sfmp2d
 
 
