@@ -78,6 +78,7 @@ def main ():
     global_indices = []
     num_patches = 0
     pp = pprint.PrettyPrinter(indent=4)
+    ngi = 0   # counter, number of global indices
 
     print('number of arguments passed')
     print(len(args))
@@ -108,8 +109,13 @@ def main ():
 
         linelist = readfile.readlines()
         for line in linelist:
+            ngi = ngi + 1
             linetemp = line.split() # needed to get rid of newlines
             global_indices.append(linetemp[0]) # hardwired assumption!
+
+        writefile.write("&number_global_indices" + "\n")
+        writefile.write("     num_global_indices = " + str(ngi) + "\n")
+        writefile.write("/" + "\n\n")
 
         writefile.write("&global_indices" +"\n")
         writefile.write("     global_indices_array = "+' '.join(global_indices))
