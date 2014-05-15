@@ -66,8 +66,8 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 65
-#define NPTS2 65
+#define NPTS1 64
+#define NPTS2 64
 #define NPTS3 64
 #define NPTS4 64
 #define SPL_DEG_ETA1 3 
@@ -98,10 +98,10 @@ program qns_4d_general
 
   ! mesh for the test case 
   ! sll_gaussian_beam_initializer_4d
-  
-!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-!!$       eta1_min= 0.0_f64, eta1_max= 1.0_f64, &
-!!$       eta2_min= 0.0_f64, eta2_max= 1.0_f64 )
+!!$  
+  !mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
+  !     eta1_min= -1.0_f64, eta1_max= 1.0_f64, &
+  !     eta2_min= -1.0_f64, eta2_max= 1.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -114,16 +114,16 @@ program qns_4d_general
 
   ! identity transformation
 
-!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
-!!$       "analytic_identity_transformation", &
-!!$       mx, &
-!!$       identity_x1, &
-!!$       identity_x2, &
-!!$       identity_jac11, &
-!!$       identity_jac12, &
-!!$       identity_jac21, &
-!!$       identity_jac22, &
-!!$       (/ 0.0_f64 /) )
+  transformation_x => new_coordinate_transformation_2d_analytic( &
+       "analytic_identity_transformation", &
+       mx, &
+       identity_x1, &
+       identity_x2, &
+       identity_jac11, &
+       identity_jac12, &
+       identity_jac21, &
+       identity_jac22, &
+       (/ 0.0_f64 /) )
 
   ! colella transformation
   
@@ -139,7 +139,7 @@ program qns_4d_general
 !!$       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
 
 
-  transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/n63x63p3x3_patch0.nml")
+ transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/circle_n63_rayon1_patch0.nml")
 !!$   transformation_x%mesh => mx
   mx => transformation_x%get_logical_mesh()
   !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max

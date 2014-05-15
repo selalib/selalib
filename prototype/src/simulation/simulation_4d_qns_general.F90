@@ -1250,7 +1250,7 @@ contains
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
-                alpha3 = alpha3 -sim%dt*(inv_j(1,1)*elec_field_ext_1%value_at_point(x,y) )
+                alpha3 = alpha3 -sim%dt*(elec_field_ext_1%value_at_point(x,y) )
                 sim%f_x3x4(i,j,:,l) = sim%interp_x3%interpolate_array_disp( &
                      nc_x3+1, &
                      sim%f_x3x4(i,j,:,l), &

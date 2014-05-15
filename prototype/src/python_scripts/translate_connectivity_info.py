@@ -135,7 +135,7 @@ def main ():
                                         str(i) + ".nml")
         writefile.write("&local_to_global_files" + "\n")
         writefile.write("     local_to_global_file_list = " + 
-                        ' '.join(patch_li_names) )
+                        ' '.join(patch_loc_glob_names) )
         writefile.write("\n")
         writefile.write("/" + "\n\n")
 
