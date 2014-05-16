@@ -26,6 +26,7 @@ type :: edge_type
 
    sll_real64                            :: length 
    sll_real64, dimension(:,:), pointer   :: vec_norm
+   sll_int32                             :: bc_type
 
 end type edge_type
 
@@ -64,6 +65,8 @@ type, public :: maxwell_2d_diga
    sll_real64, dimension(:,:), pointer      :: f
    sll_real64, dimension(:,:), pointer      :: w
    sll_real64, dimension(:,:), pointer      :: r
+   sll_int32                                :: bc_eta1
+   sll_int32                                :: bc_eta2
 
 end type maxwell_2d_diga
 
@@ -88,7 +91,8 @@ public :: initialize, solve
 contains
 
 !> Initialize Maxwell solver object using DG method.
-subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
+subroutine initialize_maxwell_2d_diga( this, tau, degree, &
+                                       polarization, bc_eta1, bc_eta2)
 
    type( maxwell_2d_diga )     :: this !< solver data object
    sll_transformation, pointer :: tau
@@ -108,9 +112,13 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    sll_real64                  :: mdiag
    sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
+   sll_int32                   :: bc_eta1
+   sll_int32                   :: bc_eta2
 
-   this%tau   => tau
-   this%mesh  => tau%mesh
+   this%tau        => tau
+   this%mesh       => tau%mesh
+   this%bc_eta1    =  bc_eta1
+   this%bc_eta2    =  bc_eta2
 
    this%nc_eta1    = tau%mesh%num_cells1
    this%nc_eta2    = tau%mesh%num_cells2
@@ -130,10 +138,10 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
 
-   do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
+   do i = 1, this%nc_eta1
 
-      call compute_normals(tau,i,j,degree,this%cell(i,j))
+      call compute_normals(tau,bc_eta1,bc_eta2,i,j,degree,this%cell(i,j))
 
       SLL_CLEAR_ALLOCATE(this%cell(i,j)%MassMatrix(1:nddl)     , error)
       SLL_CLEAR_ALLOCATE(this%cell(i,j)%DxMatrix(1:nddl,1:nddl), error)
@@ -174,7 +182,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
       end do
       end do
 
-
    end do
    end do
 
@@ -189,7 +196,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, polarization)
    A1 = reshape((/ 0.0_f64, 0.0_f64, 0.0_f64, xi,       &
                    0.0_f64, 0.0_f64, 1.0_f64, 0.0_f64,  &
                    0.0_f64, 1.0_f64, 0.0_f64, 0.0_f64,  &
-                             xi, 1.0_f64, 0.0_f64, 0.0_f64   /), (/4,4/))
+                        xi, 1.0_f64, 0.0_f64, 0.0_f64   /), (/4,4/))
    
    A2 = reshape((/ 0.0_f64, 0.0_f64, -1.0_f64, 0.0_f64, &
                    0.0_f64, 0.0_f64,  0.0_f64,      xi, &
@@ -218,9 +225,6 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
    sll_real64 :: vec_n1
    sll_real64 :: vec_n2
    sll_real64 :: flux(4)
-   sll_real64 :: w(this%degree+1)
-
-   w = gauss_lobatto_weights(this%degree+1, 0.0_f64, 1.0_f64)
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -243,7 +247,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
 
       do side = 1, 4 ! Loop over each side of the cell
  
-         !boundary conditions are periodic
+         !boundary conditions
          select case(side)
          case(SOUTH)
             k = i
@@ -279,13 +283,12 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
-            flux = 0.5 * (this%r(right,:)+this%w(left,:))  &
-                   * w(node) * this%cell(i,j)%edge(side)%length
+            flux = 0.5 * (this%r(right,:)+this%w(left,:)) 
   
             this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
             this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
             this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
-            !this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
+            this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
 
             !print"(4i3,7f8.4)",side,node,left,right, &
             !                   this%w(left,3), this%r(right,3), &
@@ -302,7 +305,7 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
       do ii = 1, this%degree+1
          kk = kk+1
          dex%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
-         dey%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)
+         dey%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk) + 1.
          dbz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
       end do
       end do
@@ -351,17 +354,22 @@ function dof_neighbor(edge,dof,degree)
 end function dof_neighbor
 
 !> Compute cell normals
-subroutine compute_normals(tau, i, j, d, cell )
+subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
 
    class(sll_coordinate_transformation_2d_analytic), pointer :: tau
    sll_int32       :: i, j, k, d
    sll_real64      :: x(d+1), w(d+1)
    sll_real64      :: a, b, c1, c2
-   sll_real64      :: xk, det
-   sll_real64      :: jac_mat(2,2), inv_jac_mat(2,2)
+   sll_real64      :: xk, wk
+   sll_real64      :: jac_mat(2,2)
+   sll_real64      :: co_jac_mat(2,2)
+   sll_real64      :: dtau_ij_mat(2,2)
+   sll_real64      :: jac_mat_sll(2,2)
    type(cell_type) :: cell
    sll_real64      :: length
    sll_int32       :: side
+   sll_int32       :: bc_eta1
+   sll_int32       :: bc_eta2
    
    cell%i = i
    cell%j = j
@@ -370,10 +378,21 @@ subroutine compute_normals(tau, i, j, d, cell )
    
    cell%eta1_max = cell%eta1_min + tau%mesh%delta_eta1
    cell%eta2_max = cell%eta2_min + tau%mesh%delta_eta2
-   
+
+   dtau_ij_mat(1,1) = tau%mesh%delta_eta1
+   dtau_ij_mat(1,2) = 0.0_f64
+   dtau_ij_mat(2,1) = 0.0_f64
+   dtau_ij_mat(2,2) = tau%mesh%delta_eta2
+
    do side = 1, 4
       SLL_CLEAR_ALLOCATE(cell%edge(side)%vec_norm(1:d+1,1:2),error)
+      cell%edge(side)%bc_type = SLL_INTERIOR
    end do
+
+   if (i == 1) cell%edge(1)%bc_type = bc_eta2
+   if (i == tau%mesh%num_cells2) cell%edge(3)%bc_type = bc_eta2
+   if (j == 1) cell%edge(4)%bc_type = bc_eta1
+   if (j == tau%mesh%num_cells2) cell%edge(2)%bc_type = bc_eta1
    
    x = gauss_lobatto_points(d+1)
    w = gauss_lobatto_weights(d+1)
@@ -384,13 +403,16 @@ subroutine compute_normals(tau, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      jac_mat            = tau%jacobian_matrix(xk, cell%eta2_min)
-      inv_jac_mat        = tau%inverse_jacobian_matrix(xk, cell%eta2_min)
-      det                = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-      cell%edge(SOUTH)%vec_norm(k,:) = det*matmul(inv_jac_mat,(/0._f64,-1._f64/))
-      length             = length + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
+      wk = c1*wk
+      jac_mat_sll        = tau%jacobian_matrix(xk, cell%eta2_min)
+      jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
+      co_jac_mat(1,1)    =  jac_mat(2,2)
+      co_jac_mat(1,2)    = -jac_mat(2,1)
+      co_jac_mat(2,1)    = -jac_mat(1,2)
+      co_jac_mat(2,2)    =  jac_mat(1,1)
+      length             = length + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*wk
+      cell%edge(SOUTH)%vec_norm(k,:) = matmul(co_jac_mat,(/0._f64,-1._f64/))*wk
    end do
-   cell%edge(SOUTH)%length = length * c1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -399,13 +421,16 @@ subroutine compute_normals(tau, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      jac_mat                = tau%jacobian_matrix(cell%eta1_max, xk)
-      det                    = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-      inv_jac_mat            = tau%inverse_jacobian_matrix(cell%eta1_max, xk)
-      cell%edge(EAST)%vec_norm(k,:) = det*matmul(inv_jac_mat,(/1._f64, 0._f64/))
-      length                 = length + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
+      wk = c1*wk
+      jac_mat_sll        = tau%jacobian_matrix(cell%eta1_max, xk)
+      jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
+      co_jac_mat(1,1)    =  jac_mat(2,2)
+      co_jac_mat(1,2)    = -jac_mat(2,1)
+      co_jac_mat(2,1)    = -jac_mat(1,2)
+      co_jac_mat(2,2)    =  jac_mat(1,1)
+      length             = length + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*wk
+      cell%edge(EAST)%vec_norm(k,:) = matmul(co_jac_mat,(/1._f64, 0._f64/))*wk
    end do
-   cell%edge(EAST)%length = length * c1
    
    length = 0._f64
    a  = cell%eta1_min 
@@ -414,13 +439,16 @@ subroutine compute_normals(tau, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      jac_mat                 = tau%jacobian_matrix(xk, cell%eta2_max)
-      det                     = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-      inv_jac_mat             = tau%inverse_jacobian_matrix(xk, cell%eta2_max)
-      cell%edge(NORTH)%vec_norm(k,:) = det*matmul(inv_jac_mat,(/0._f64, 1._f64/))
-      length                  = length + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*w(k)
+      wk = c1*wk
+      jac_mat_sll        = tau%jacobian_matrix(xk, cell%eta2_max)
+      jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
+      co_jac_mat(1,1)    =  jac_mat(2,2)
+      co_jac_mat(1,2)    = -jac_mat(2,1)
+      co_jac_mat(2,1)    = -jac_mat(1,2)
+      co_jac_mat(2,2)    =  jac_mat(1,1)
+      length             = length + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*wk
+      cell%edge(NORTH)%vec_norm(k,:) = matmul(co_jac_mat,(/0._f64, 1._f64/))*wk
    end do
-   cell%edge(NORTH)%length = length * c1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -429,13 +457,16 @@ subroutine compute_normals(tau, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      jac_mat                = tau%jacobian_matrix(cell%eta1_min, xk)
-      det                    = jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1) 
-      inv_jac_mat            = tau%inverse_jacobian_matrix(cell%eta2_min, xk)
-      cell%edge(WEST)%vec_norm(k,:) = det*matmul(inv_jac_mat,(/-1._f64, 0._f64/))
-      length                 = length + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*w(k)
+      wk = c1*wk
+      jac_mat_sll        = tau%jacobian_matrix(cell%eta1_min, xk)
+      jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
+      co_jac_mat(1,1)    =  jac_mat(2,2)
+      co_jac_mat(1,2)    = -jac_mat(2,1)
+      co_jac_mat(2,1)    = -jac_mat(1,2)
+      co_jac_mat(2,2)    =  jac_mat(1,1)
+      length             = length + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*wk
+      cell%edge(WEST)%vec_norm(k,:) = matmul(co_jac_mat,(/-1._f64, 0._f64/))*wk
    end do
-   cell%edge(WEST)%length = length * c1
 
 end subroutine compute_normals
 
