@@ -37,7 +37,7 @@ implicit none
 !=====================================!
 sll_int32, parameter :: nc_eta1 = 2   !
 sll_int32, parameter :: nc_eta2 = 2   !
-sll_int32, parameter :: degree  = 02  !
+sll_int32, parameter :: degree  = 1   !
 !=====================================!
 
 sll_int32  :: nstep
@@ -66,8 +66,8 @@ sll_real64  :: error
 sll_real64, external :: sol_bz, sol_ex, sol_ey, uniform_x, uniform_y
 
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=0._f64, eta1_max=1._f64, &
-                            eta2_min=0._f64, eta2_max=1._f64)
+                            eta1_min=-1._f64, eta1_max=1._f64, &
+                            eta2_min=-1._f64, eta2_max=1._f64)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -119,9 +119,6 @@ ex => new_dg_field(degree,tau,uniform_x)
 ey => new_dg_field(degree,tau,uniform_y) 
 bz => new_dg_field(degree,tau,uniform_x) 
 
-ey%array = 0.0_f64
-bz%array = 1.0_f64
-
 ex0 => new_dg_field(degree,tau) 
 ey0 => new_dg_field(degree,tau) 
 bz0 => new_dg_field(degree,tau) 
@@ -152,11 +149,15 @@ call bz%write_to_file('bz')
 
 do istep = 1, nstep !*** Loop over time
 
-   write(*,"(10x,' istep = ',I6,' time = ',g12.3,' sec')") time
+   write(*,"(10x,' istep = ',I6,' time = ',g12.3,' sec')") istep, time
 
    call rksetup()
 
    call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call dx%write_to_file('dx')
+   call dy%write_to_file('dy')
+   call dz%write_to_file('dz')
+   stop
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
@@ -179,10 +180,6 @@ do istep = 1, nstep !*** Loop over time
    !call check_error_ey(time)
    !call check_error_bz(time)
 
-   call ex%write_to_file('ex')
-   call ey%write_to_file('ey')
-   call bz%write_to_file('bz')
-   stop
 
 end do ! next time step
 

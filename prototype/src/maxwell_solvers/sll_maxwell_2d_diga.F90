@@ -167,7 +167,7 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
          det         = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
          mdiag       = wx(ii)*wy(jj)*det
 
-         k = k + 1
+         k = k+1
          this%cell(i,j)%MassMatrix(k) = mdiag
 
          l = 0
@@ -208,23 +208,23 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
 end subroutine initialize_maxwell_2d_diga
 
 !> Solve the maxwell equation
-subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
+subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
    type( maxwell_2d_diga )  :: this !< Maxwell solver object
 
-   type(dg_field)  :: ex   !< x electric field
-   type(dg_field)  :: ey   !< y electric field
-   type(dg_field)  :: bz   !< z magnetic field
+   type(dg_field)  :: fx   !< x electric field
+   type(dg_field)  :: fy   !< y electric field
+   type(dg_field)  :: fz   !< z magnetic field
 
-   type(dg_field)  :: dex  
-   type(dg_field)  :: dey  
-   type(dg_field)  :: dbz  
+   type(dg_field)  :: dx  
+   type(dg_field)  :: dy  
+   type(dg_field)  :: dz  
 
-   sll_int32  :: left, right, node, side
+   sll_int32  :: left, right, node, side, bc_type
    sll_int32  :: i, j, k, l, ii, jj, kk
    sll_real64 :: vec_n1
    sll_real64 :: vec_n2
-   sll_real64 :: flux(4)
+   sll_real64 :: flux(3)
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -233,21 +233,28 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          kk = kk+1
-         this%w(kk,1) = ex%array(ii,jj,i,j)
-         this%w(kk,2) = ey%array(ii,jj,i,j)
-         this%w(kk,3) = bz%array(ii,jj,i,j)
+         this%w(kk,1) = fx%array(ii,jj,i,j)
+         this%w(kk,2) = fy%array(ii,jj,i,j)
+         this%w(kk,3) = fz%array(ii,jj,i,j)
          this%w(kk,4) = po%array(ii,jj,i,j)
       end do
       end do
          
       this%f(:,1) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,3))
-      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3))
+      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3)) 
       this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
 
+      print*,' (i,j) ', i, j
+      print"('Ex=',4f7.3)", this%w(:,1)
+      print"('Ey=',4f7.3)", this%w(:,2)
+      print"('Bz=',4f7.3)", this%w(:,3)
+      print"(a)", 'side'//'  bc '//'left'//' right'//' w(left) ' &
+                 &//' w(right) '//'  n1 '//'       n2 '// '       flux '
       do side = 1, 4 ! Loop over each side of the cell
  
-         !boundary conditions
+         bc_type = this%cell(i,j)%edge(side)%bc_type
+         !periodic boundary conditions
          select case(side)
          case(SOUTH)
             k = i
@@ -267,14 +274,14 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
          do jj = 1, this%degree+1
          do ii = 1, this%degree+1
             kk = kk+1
-            this%r(kk,1) = ex%array(ii,jj,k,l)
-            this%r(kk,2) = ey%array(ii,jj,k,l)
-            this%r(kk,3) = bz%array(ii,jj,k,l)
+            this%r(kk,1) = fx%array(ii,jj,k,l)
+            this%r(kk,2) = fy%array(ii,jj,k,l)
+            this%r(kk,3) = fz%array(ii,jj,k,l)
             this%r(kk,4) = po%array(ii,jj,k,l)
          end do
          end do
    
-         !Compute the fluxes on edge points
+         print*,'--'
          do node = 1, this%degree+1
    
             left   = dof_local(side, node, this%degree)
@@ -283,30 +290,31 @@ subroutine solve_maxwell_2d_diga( this, ex, ey, bz, dex, dey, dbz )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
-            flux = 0.5 * (this%r(right,:)+this%w(left,:)) 
-  
+            if (bc_type == SLL_INTERIOR) then
+               flux = 0.5 * (this%w(left,1:3)+this%r(right,1:3)) 
+            else
+               flux = this%w(left,1:3)
+            end if
+
             this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
             this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
             this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
             this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
 
-            !print"(4i3,7f8.4)",side,node,left,right, &
-            !                   this%w(left,3), this%r(right,3), &
-            !                   vec_n1, vec_n2, &
-            !                   w(node) , this%cell(i,j)%edge(side)%length
-
+            print"(4i4,5f10.4)",side, bc_type, left,right, &
+                               this%w(left,3), this%r(right,3), &
+                               vec_n1, vec_n2, flux(3)
          end do
    
       end do
-   
 
       kk = 0
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          kk = kk+1
-         dex%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
-         dey%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk) + 1.
-         dbz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
+         dx%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
+         dy%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)+1.0
+         dz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
       end do
       end do
    
@@ -389,13 +397,14 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
       cell%edge(side)%bc_type = SLL_INTERIOR
    end do
 
-   if (i == 1) cell%edge(1)%bc_type = bc_eta2
-   if (i == tau%mesh%num_cells2) cell%edge(3)%bc_type = bc_eta2
-   if (j == 1) cell%edge(4)%bc_type = bc_eta1
+   if (i ==                   1) cell%edge(1)%bc_type = bc_eta2
    if (j == tau%mesh%num_cells2) cell%edge(2)%bc_type = bc_eta1
+   if (i == tau%mesh%num_cells1) cell%edge(3)%bc_type = bc_eta2
+   if (j ==                   1) cell%edge(4)%bc_type = bc_eta1
    
    x = gauss_lobatto_points(d+1)
    w = gauss_lobatto_weights(d+1)
+
    length = 0._f64
    a  = cell%eta1_min
    b  = cell%eta1_max 
@@ -403,16 +412,18 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      wk = c1*wk
+      wk = c1*w(k)
       jac_mat_sll        = tau%jacobian_matrix(xk, cell%eta2_min)
       jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
       co_jac_mat(1,1)    =  jac_mat(2,2)
       co_jac_mat(1,2)    = -jac_mat(2,1)
       co_jac_mat(2,1)    = -jac_mat(1,2)
       co_jac_mat(2,2)    =  jac_mat(1,1)
-      length             = length + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*wk
+      length             = length + sqrt(jac_mat_sll(1,1)**2+jac_mat_sll(2,1)**2)*wk
       cell%edge(SOUTH)%vec_norm(k,:) = matmul(co_jac_mat,(/0._f64,-1._f64/))*wk
    end do
+
+   cell%edge(SOUTH)%length = length
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -421,16 +432,17 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      wk = c1*wk
+      wk = c1*w(k)
       jac_mat_sll        = tau%jacobian_matrix(cell%eta1_max, xk)
       jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
       co_jac_mat(1,1)    =  jac_mat(2,2)
       co_jac_mat(1,2)    = -jac_mat(2,1)
       co_jac_mat(2,1)    = -jac_mat(1,2)
       co_jac_mat(2,2)    =  jac_mat(1,1)
-      length             = length + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*wk
+      length             = length + sqrt(jac_mat_sll(1,2)**2+jac_mat_sll(2,2)**2)*wk
       cell%edge(EAST)%vec_norm(k,:) = matmul(co_jac_mat,(/1._f64, 0._f64/))*wk
    end do
+   cell%edge(EAST)%length = length
    
    length = 0._f64
    a  = cell%eta1_min 
@@ -439,16 +451,17 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      wk = c1*wk
+      wk = c1*w(k)
       jac_mat_sll        = tau%jacobian_matrix(xk, cell%eta2_max)
       jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
       co_jac_mat(1,1)    =  jac_mat(2,2)
       co_jac_mat(1,2)    = -jac_mat(2,1)
       co_jac_mat(2,1)    = -jac_mat(1,2)
       co_jac_mat(2,2)    =  jac_mat(1,1)
-      length             = length + sqrt(jac_mat(1,1)**2+jac_mat(2,1)**2)*wk
+      length             = length + sqrt(jac_mat_sll(1,1)**2+jac_mat_sll(2,1)**2)*wk
       cell%edge(NORTH)%vec_norm(k,:) = matmul(co_jac_mat,(/0._f64, 1._f64/))*wk
    end do
+   cell%edge(NORTH)%length = length
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -457,18 +470,18 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    c2 = 0.5_f64 * (b+a)
    do k = 1, d+1
       xk = c1*x(k) + c2
-      wk = c1*wk
+      wk = c1*w(k)
       jac_mat_sll        = tau%jacobian_matrix(cell%eta1_min, xk)
       jac_mat            = matmul(jac_mat_sll, dtau_ij_mat)
       co_jac_mat(1,1)    =  jac_mat(2,2)
       co_jac_mat(1,2)    = -jac_mat(2,1)
       co_jac_mat(2,1)    = -jac_mat(1,2)
       co_jac_mat(2,2)    =  jac_mat(1,1)
-      length             = length + sqrt(jac_mat(1,2)**2+jac_mat(2,2)**2)*wk
+      length             = length + sqrt(jac_mat_sll(1,2)**2+jac_mat_sll(2,2)**2)*wk
       cell%edge(WEST)%vec_norm(k,:) = matmul(co_jac_mat,(/-1._f64, 0._f64/))*wk
    end do
+   cell%edge(WEST)%length = length
 
 end subroutine compute_normals
 
 end module sll_maxwell_2d_diga
-
