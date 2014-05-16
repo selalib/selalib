@@ -78,3 +78,33 @@ real(8) function add( x1, x2, time)
 end function add
 
 
+real(8) function uniform_x( x1, x2, time)
+
+   use sll_constants
+   implicit none
+
+   real(8), intent(in) :: x1
+   real(8), intent(in) :: x2
+   real(8), intent(in) :: time
+
+   uniform_x =   x1
+   return
+
+end function uniform_x
+
+
+real(8) function uniform_y( x1, x2, time)
+
+   use sll_constants
+   implicit none
+
+   real(8), intent(in) :: x1
+   real(8), intent(in) :: x2
+   real(8), intent(in) :: time
+
+   uniform_y =   x2
+   return
+
+end function uniform_y
+
+

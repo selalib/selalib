@@ -60,7 +60,7 @@ contains
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
-    function identity_jac12 ( eta1, eta2, params )
+  function identity_jac12 ( eta1, eta2, params )
     sll_real64  :: identity_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
