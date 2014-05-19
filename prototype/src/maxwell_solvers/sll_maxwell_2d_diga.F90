@@ -158,7 +158,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
 
       !call sll_display(dlagx,"f9.4")
 
-      k = 0
       do jj = 1, degree+1
       do ii = 1, degree+1
 
@@ -167,15 +166,14 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
          det         = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
          mdiag       = wx(ii)*wy(jj)*det
 
-         k = k+1
-         this%cell(i,j)%MassMatrix(k) = mdiag
+         this%cell(i,j)%MassMatrix((ii-1)*(degree+1)+jj) = mdiag
 
-         l = 0
          do ll = 1, degree+1
          do kk = 1, degree+1
-            l = l+1
-            if (jj == ll) this%cell(i,j)%DxMatrix(k,l) = mdiag*dlagx(ii,kk)
-            if (ii == kk) this%cell(i,j)%DyMatrix(k,l) = mdiag*dlagy(jj,ll)
+            k = (ii-1)*(degree+1)+jj
+            l = (kk-1)*(degree+1)+ll
+            if (jj == ll) this%cell(i,j)%DxMatrix(k,l) = mdiag*dlagx(kk,ii)
+            if (ii == kk) this%cell(i,j)%DyMatrix(k,l) = mdiag*dlagy(ll,jj)
          end do
          end do
 
@@ -185,9 +183,9 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    end do
    end do
 
-   call sll_display(this%cell(2,2)%MassMatrix,"f9.4")
-   call sll_display(this%cell(2,2)%DxMatrix,"f9.4")
-   call sll_display(this%cell(2,2)%DyMatrix,"f9.4")
+   call sll_display(this%cell(2,1)%MassMatrix,"f9.4")
+   call sll_display(this%cell(2,1)%DxMatrix,"f9.4")
+   call sll_display(this%cell(2,1)%DyMatrix,"f9.4")
 
    SLL_CLEAR_ALLOCATE(this%w((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
@@ -229,10 +227,9 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
 
-      kk = 0
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         kk = kk+1
+         kk = (ii-1)*(this%degree+1)+jj
          this%w(kk,1) = fx%array(ii,jj,i,j)
          this%w(kk,2) = fy%array(ii,jj,i,j)
          this%w(kk,3) = fz%array(ii,jj,i,j)
@@ -245,12 +242,19 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
       this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
 
+      print*,"####################################################"
       print*,' (i,j) ', i, j
       print"('Ex=',4f7.3)", this%w(:,1)
       print"('Ey=',4f7.3)", this%w(:,2)
       print"('Bz=',4f7.3)", this%w(:,3)
-      print"(a)", 'side'//'  bc '//'left'//' right'//' w(left) ' &
-                 &//' w(right) '//'  n1 '//'       n2 '// '       flux '
+
+      print"('dEx=',4f7.3)", this%f(:,1)
+      print"('dEy=',4f7.3)", this%f(:,2)
+      print"('dBz=',4f7.3)", this%f(:,3)
+
+      print"(a)", 'side'//'  bc '//'left'//'    w(left) ' &
+                 &//' f(left) '//'  n1 '//'       n2 '// '       flux '
+
       do side = 1, 4 ! Loop over each side of the cell
  
          bc_type = this%cell(i,j)%edge(side)%bc_type
@@ -270,10 +274,9 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
             l = j
          end select
 
-         kk = 0
          do jj = 1, this%degree+1
          do ii = 1, this%degree+1
-            kk = kk+1
+            kk = (ii-1)*(this%degree+1)+jj
             this%r(kk,1) = fx%array(ii,jj,k,l)
             this%r(kk,2) = fy%array(ii,jj,k,l)
             this%r(kk,3) = fz%array(ii,jj,k,l)
@@ -296,22 +299,27 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
                flux = this%w(left,1:3)
             end if
 
+            print"(3i4,5f10.4)",side, bc_type, left, &
+                               this%w(left,3), flux(3), &
+                               vec_n1, vec_n2, -vec_n1*this%w(left,3)
+
             this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
             this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
             this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
             this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
 
-            print"(4i4,5f10.4)",side, bc_type, left,right, &
-                               this%w(left,3), this%r(right,3), &
-                               vec_n1, vec_n2, flux(3)
          end do
+
    
       end do
+      print"('fEx=',4f7.3)", this%f(:,1)
+      print"('fEy=',4f7.3)", this%f(:,2)
+      print"('fBz=',4f7.3)", this%f(:,3)
 
       kk = 0
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
-         kk = kk+1
+         kk = (ii-1)*(this%degree+1)+jj
          dx%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
          dy%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)+1.0
          dz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
@@ -330,15 +338,13 @@ function dof_local(edge,dof,degree)
    
    select case(edge)
    case(SOUTH)
-      dof_local = dof
+      dof_local = (dof-1)*(degree+1)+1
    case(EAST)
-      dof_local = dof*(degree+1)
+      dof_local = degree*(degree+1)+dof
    case(NORTH)
-      dof_local = (degree+1)*(degree+1)-dof+1 
-      !global_ddl = degree*(degree+1)+local_ddl
+      dof_local = dof*(degree+1)
    case(WEST)
-      dof_local = degree*(degree+1)+1-(dof-1)*(degree+1)
-      !dof_local = (local_ddl-1)*(degree+1) + 1
+      dof_local = dof
    end select
 
 end function dof_local
@@ -350,13 +356,14 @@ function dof_neighbor(edge,dof,degree)
    
    select case(edge)
    case(SOUTH)
-      dof_neighbor = degree*(degree+1)+dof
+      dof_neighbor = dof*(degree+1)
    case(EAST)
-      dof_neighbor = (dof-1)*(degree+1)+1
+      dof_neighbor = dof 
    case(NORTH)
-      dof_neighbor = degree+1-dof+1
+      dof_neighbor = (dof-1)*(degree+1)+1
    case(WEST)
-      dof_neighbor = (degree+1)*(degree+1)-(dof-1)*(degree+1)
+      dof_neighbor = degree*(degree+1)+dof
+      !dof_neighbor = (degree+1)*(degree+1)-(dof-1)*(degree+1)
    end select
 
 end function dof_neighbor
