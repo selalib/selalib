@@ -37,7 +37,7 @@ implicit none
 !=====================================!
 sll_int32, parameter :: nc_eta1 = 5  !
 sll_int32, parameter :: nc_eta2 = 5  !
-sll_int32, parameter :: degree  = 4   !
+sll_int32, parameter :: degree  = 1   !
 !=====================================!
 
 sll_int32  :: nstep
