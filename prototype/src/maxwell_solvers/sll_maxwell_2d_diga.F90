@@ -75,7 +75,7 @@ interface initialize
    module procedure initialize_maxwell_2d_diga
 end interface initialize
 
-!> Solve Maxell system
+!> Solve Maxwell system
 interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
