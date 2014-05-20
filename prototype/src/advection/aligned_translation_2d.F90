@@ -86,7 +86,7 @@ implicit none
   d = 5
   
   A1_0 = 3._f64
-  A2_0 = 7._f64  ! we should assume A2>A1>0
+  A2_0 = 7._f64  ! we should assume A2>A1>=0
   
   A1 = 2.8357_f64
   A2 = 7.18459_f64

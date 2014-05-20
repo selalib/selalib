@@ -1677,9 +1677,10 @@ subroutine gyroaverage_phi_dk( sim )
   subroutine delete_dk4d_polar( sim )
     class(sll_simulation_4d_drift_kinetic_polar_multi_mu) :: sim
     !sll_int32 :: ierr
-    
-    print *,'#delete_dk4d_polar not implemented'
-    print *,sim%dt
+    if(sll_get_collective_rank(sll_world_collective)==0)then    
+      print *,'#delete_dk4d_polar not implemented'
+      print *,sim%dt
+    endif
     
   end subroutine delete_dk4d_polar
   
