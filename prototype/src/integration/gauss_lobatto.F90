@@ -231,7 +231,6 @@ contains
              d(i,j)=d(i,j)+prod
           end do
           !d(i,j)=d(i,j)*w(i)
-          !d(i,j)=d(i,j)*w(i)
        end do
     end do
 

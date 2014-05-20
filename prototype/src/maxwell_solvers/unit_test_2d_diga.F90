@@ -35,9 +35,9 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 2   !
-sll_int32, parameter :: nc_eta2 = 2   !
-sll_int32, parameter :: degree  = 1   !
+sll_int32, parameter :: nc_eta1 = 4  !
+sll_int32, parameter :: nc_eta2 = 2  !
+sll_int32, parameter :: degree  = 4   !
 !=====================================!
 
 sll_int32  :: nstep
@@ -63,11 +63,11 @@ sll_real64  :: cfl = 0.5
 sll_real64  :: error
 
 !init functions
-sll_real64, external :: sol_bz, sol_ex, sol_ey, uniform_x, uniform_y
+sll_real64, external :: sol_bz, sol_ex, sol_ey, linear_x, linear_y
 
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-0._f64, eta1_max=2._f64, &
-                            eta2_min=-0._f64, eta2_max=2._f64)
+                            eta1_min=-0._f64, eta1_max=4._f64*sll_pi, &
+                            eta2_min=-0._f64, eta2_max=2._f64*sll_pi)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -115,9 +115,9 @@ call tau%write_to_file(SLL_IO_MTV)
 
 time  = 0.0_f64
 
-ex => new_dg_field(degree,tau,uniform_x) 
-ey => new_dg_field(degree,tau,uniform_y) 
-bz => new_dg_field(degree,tau,uniform_x) 
+ex => new_dg_field(degree,tau,linear_x) 
+ey => new_dg_field(degree,tau,linear_y) 
+bz => new_dg_field(degree,tau,linear_x) 
 
 ex0 => new_dg_field(degree,tau) 
 ey0 => new_dg_field(degree,tau) 
@@ -143,21 +143,17 @@ print*, 'dt = ', dt
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION, &
                 SLL_DIRICHLET, SLL_DIRICHLET )
 
-call ex%write_to_file('ex')
-call ey%write_to_file('ey')
-call bz%write_to_file('bz')
 
 do istep = 1, nstep !*** Loop over time
 
+   call ex%write_to_file('ex')
+   call ey%write_to_file('ey')
+   call bz%write_to_file('bz')
    write(*,"(10x,' istep = ',I6,' time = ',g12.3,' sec')") istep, time
 
    call rksetup()
 
    call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
-   call dx%write_to_file('dx')
-   call dy%write_to_file('dy')
-   call dz%write_to_file('dz')
-   stop
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
@@ -176,14 +172,12 @@ do istep = 1, nstep !*** Loop over time
 
    time = time + dt
 
-   !call check_error_ex(time)
-   !call check_error_ey(time)
-   !call check_error_bz(time)
-
 
 end do ! next time step
 
-print*, maxval(bz%array)-exp(1.0_f64)
+call check_error_ex(time)
+call check_error_ey(time)
+call check_error_bz(time)
 
 contains
 
@@ -191,7 +185,7 @@ subroutine check_error_ex(time)
 
    sll_real64, intent(in) :: time
 
-   call exact%set_value(sol_ex, time)
+   call exact%set_value(linear_x, time)
 
    error = maxval(abs(ex%array-exact%array))
    write(*,"(' EX erreur = ',g15.5)",advance="no") error
@@ -202,7 +196,7 @@ subroutine check_error_ey(time)
 
    sll_real64, intent(in) :: time
 
-   call exact%set_value(sol_ey, time)
+   call exact%set_value(linear_y, time)
 
    error = maxval(abs(ey%array-exact%array))
    write(*,"(' EY erreur = ',g15.5)",advance="no") error
@@ -213,7 +207,7 @@ subroutine check_error_bz(time)
 
    sll_real64, intent(in) :: time
 
-   call exact%set_value(sol_bz, time)
+   call exact%set_value(linear_x, time)
 
    error = maxval(abs(bz%array-exact%array))
    write(*,"(' BZ erreur = ',g15.5)",advance="no") error
