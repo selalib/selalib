@@ -58,6 +58,34 @@ program cg_polar
   read(27,*)bc(2)
   close(27)
 
+
+  select case (bc(1))
+    case (1)
+      bc(1) = SLL_DIRICHLET
+    case (2)
+      bc(1) = SLL_NEUMANN
+    case (3)
+      bc(1) = SLL_NEUMANN_MODE_0
+    case default
+      print *,'#bad value of bc(1) in CG_polar'
+      stop 
+  end select
+
+  select case (bc(2))
+    case (1)
+      bc(2) = SLL_DIRICHLET
+    case (2)
+      bc(2) = SLL_NEUMANN
+    case (3)
+      bc(2) = SLL_NEUMANN_MODE_0
+    case default
+      print *,'#bad value of bc(2) in CG_polar'
+      stop 
+  end select
+
+
+
+
   mode   = real(mod,f64)
   dr     = real(rmax-rmin,f64)/real(nr,f64)
   dtheta = 2.0_f64*sll_pi/real(ntheta,f64)
@@ -94,7 +122,7 @@ program cg_polar
   else if (fcase==2) then
     do i = 1,nr+1
       r = rmin+real(i-1,f64)*dr
-      if (r>=r1 .and. r<=r2) then
+      if (r>=r1 .and. r<r2) then !! do not change to r<=r2 to have good mass computation
         do j = 1,ntheta+1
           theta  = real(j-1,f64)*dtheta
           f(i,j) = 1._f64+alpha*cos(mode*theta)
@@ -176,7 +204,10 @@ program cg_polar
   !write f in a file before calculations
   call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta, &
     visu,step,"CG")
+  
 
+  
+  
   print *,'#bc(1)=',bc(1)
   print *,'#bc(2)=',bc(2)
   print *,'#SLL_DIRICHLET=',SLL_DIRICHLET
