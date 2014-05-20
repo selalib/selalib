@@ -144,6 +144,15 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64, dimension(:)  , pointer :: Te_r
      sll_real64, dimension(:)  , pointer :: dlog_density_r
 
+     !--> Magnetic field
+     sll_real64 :: q0
+     sll_real64 :: Dr_q0
+     sll_real64, dimension(:), pointer :: B_norm_r
+     sll_real64, dimension(:), pointer :: Bstar_par_v_r
+     sll_real64, dimension(:), pointer :: c_r
+     
+
+
      !--> Equilibrium distribution function
      sll_real64, dimension(:,:), pointer :: feq_x1x4
 
@@ -279,6 +288,8 @@ contains
     sll_real64 :: deltarTi 
     sll_real64 :: kappaTe  
     sll_real64 :: deltarTe
+    sll_real64 :: q0
+    sll_real64 :: Dr_q0
     !sll_int32  :: QN_case
     !--> Pertubation
     sll_int32  :: perturb_choice
@@ -346,7 +357,9 @@ contains
       deltarTe, &
       QN_case, &
       poisson2d_BC_rmin, &
-      poisson2d_BC_rmax
+      poisson2d_BC_rmax, &
+      q0, &
+      Dr_q0
     namelist /perturbation/ &
       perturb_choice, &
       mmode, &
@@ -372,7 +385,14 @@ contains
       poisson2d_case
       
       !, spline_degree
-
+    
+    !default parameters
+    
+    q0 = 0._f64
+    Dr_q0 = 0._f64
+    
+    
+     
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
        print *, '#init_dk4d_polar() failed to open file ', filename
@@ -400,6 +420,8 @@ contains
     sim%deltarTi = deltarTi
     sim%kappaTe  = kappaTe
     sim%deltarTe = deltarTe
+    sim%q0 = q0
+    sim%Dr_q0 = Dr_q0
     
     SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
     
@@ -939,6 +961,21 @@ contains
     
 
       if(modulo(iter,sim%freq_diag)==0) then
+
+        i_plot = i_plot+1
+        loc4d(1:4)  = global_to_local_4D( &
+          sim%layout4d_parx1, &
+          (/nc_x1/2+1,1,1,nc_x4/2+1/))
+        if(loc4d(1) > 0) then
+#ifndef NOHDF5
+          call plot_f_cartesian( &
+            i_plot, &
+            sim%f4d_parx1(loc4d(1),:,:,loc4d(4)), &
+            sim%m_x2,sim%m_x3)
+#endif
+        endif    
+
+
         call apply_remap_4D( &
           sim%remap_plan_parx1_to_parx3x4, &
           sim%f4d_parx1, &
@@ -948,18 +985,17 @@ contains
           sim%layout4d_parx3x4, &
           (/1,1,1,nc_x4/2+1/))
         if(loc4d(3) > 0) then
-          i_plot = i_plot+1
-          call sll_gnuplot_corect_2d( &
-            sim%m_x1%eta_min, &
-            sim%m_x1%eta_max, &
-            nc_x1+1, &
-            sim%m_x2%eta_min, &
-            sim%m_x2%eta_max, &
-            nc_x2+1, &
-            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
-            'fdist', &
-            i_plot, &
-            ierr)
+!          call sll_gnuplot_corect_2d( &
+!            sim%m_x1%eta_min, &
+!            sim%m_x1%eta_max, &
+!            nc_x1+1, &
+!            sim%m_x2%eta_min, &
+!            sim%m_x2%eta_max, &
+!            nc_x2+1, &
+!            sim%f4d_parx3x4(:,:,loc4d(3),loc4d(4)), &
+!            'fdist', &
+!            i_plot, &
+!            ierr)
 #ifndef NOHDF5
           call plot_f_polar( &
             i_plot, &
@@ -1422,6 +1458,297 @@ contains
     
   end subroutine advection_x1x2
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!here we give some routines for the computations of the fields
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  
+!
+!  !>  compute second component of magnetic field
+  subroutine compute_B_x2( &
+    B_x2_array, &
+    x1_array, &
+    num_points_x1, &
+    R, &
+    a )
+    sll_real64, dimension(:), intent(out) :: B_x2_array
+    sll_real64, dimension(:), intent(in) :: x1_array
+    sll_int32, intent(in) :: num_points_x1
+    sll_real64, intent(in) :: R
+    sll_real64, intent(in) :: a
+    sll_real64 :: q
+    sll_int32 :: i
+    sll_real64 :: x1
+    
+    if(size(B_x2_array,1)<num_points_x1)then
+      print *,'#bad size of B_x2_array in compute_B_x2', &
+        size(B_x2_array,1), &
+        num_points_x1
+      stop
+    endif
+
+    if(size(x1_array,1)<num_points_x1)then
+      print *,'#bad size of x1_array in compute_B_x2', &
+        size(B_x2_array,1), &
+        num_points_x1
+      stop
+    endif
+    do i=1,num_points_x1    
+      x1 = x1_array(i)
+      q = 1+(x1/a)**2
+      B_x2_array(i) = 1._f64+(x1/(R*q))**2
+    enddo  
+  end subroutine compute_B_x2
+!
+!  !>  compute the norm of the magnetic field
+!  
+  subroutine compute_B_norm( &
+    B_norm_array, &
+    B_x2_array, &
+    num_points_x1)
+    sll_real64, dimension(:), intent(in) :: B_x2_array
+    sll_real64, dimension(:), intent(out) :: B_norm_array
+    sll_int32, intent(in) :: num_points_x1
+    sll_int32 :: i
+
+    if(size(B_x2_array,1)<num_points_x1)then
+      print *,'#bad size of B_x2_array in compute_B_norm', &
+        size(B_x2_array,1), &
+        num_points_x1
+      stop
+    endif
+    if(size(B_norm_array,1)<num_points_x1)then
+      print *,'#bad size of B_norm_array in compute_B_norm', &
+        size(B_norm_array,1), &
+        num_points_x1
+      stop
+    endif
+    do i=1,num_points_x1    
+      B_norm_array(i) = sqrt(1._f64+B_x2_array(i)**2)
+    enddo          
+    
+  end subroutine compute_B_norm
+!
+!  !>  compute the unit magnetic field
+!
+  subroutine compute_b_unit( &
+    b_unit_x2_array, &
+    b_unit_x3_array, &
+    B_x2_array, &
+    num_points_x1)
+    sll_real64, dimension(:), intent(in) :: B_x2_array
+    sll_real64, dimension(:), intent(out) :: b_unit_x2_array
+    sll_real64, dimension(:), intent(out) :: b_unit_x3_array
+    sll_int32, intent(in) :: num_points_x1
+    sll_int32 :: i
+
+    if(size(B_x2_array,1)<num_points_x1)then
+      print *,'#bad size of B_x2_array in compute_B_norm', &
+        size(B_x2_array,1), &
+        num_points_x1
+      stop
+    endif
+    if(size(b_unit_x2_array,1)<num_points_x1)then
+      print *,'#bad size of b_unit_x2_array in compute_b_unit', &
+        size(b_unit_x2_array,1), &
+        num_points_x1
+      stop
+    endif
+    if(size(b_unit_x3_array,1)<num_points_x1)then
+      print *,'#bad size of b_unit_x3_array in compute_b_unit', &
+        size(b_unit_x2_array,1), &
+        num_points_x1
+      stop
+    endif
+    do i=1,num_points_x1    
+      b_unit_x2_array(i) = B_x2_array(i)/sqrt(1._f64+B_x2_array(i)**2)
+      b_unit_x3_array(i) = 1._f64/sqrt(1._f64+B_x2_array(i)**2)
+    enddo          
+    
+  end subroutine compute_b_unit
+!!> orthogonal coordinate system
+!!> reference: http://en.wikipedia.org/wiki/Orthogonal_coordinates
+!!> reference: http://en.wikipedia.org/wiki/Curvilinear_coordinates
+!!> eta_1,eta_2,eta_3
+!!> stand for q_1,q_2,q_3 in the reference
+!!> x stands for r in the reference
+
+
+!!> eta = (eta_1,eta_2,eta_3)
+!!> \mathbf{x} = (x_1,x_2,x_3) = x_1e_1+x_2e_2+x_3e_3 cartesian basis
+!!> \mathbf{e_1} = \partial_{x_1} \mathbf{x}
+!!> \mathbf{e_2} = \partial_{x_2} \mathbf{x}
+!!> \mathbf{e_3} = \partial_{x_3} \mathbf{x}
+!!> the transformation is given by the change form the cartesian grid
+!!> \mathbf{x} = \mathbf{x}(\mathbf{eta})
+!!> that is
+!!> x_1(eta_1,eta_2,eta_3) = ...
+!!> x_2(eta_1,eta_2,eta_3) = ...
+!!> x_3(eta_1,eta_2,eta_3) = ...
+!!> we define
+!!> \mathbf{h_1} = \partial_{eta_1} \mathbf{x}
+!!> \mathbf{h_2} = \partial_{eta_2} \mathbf{x}
+!!> \mathbf{h_3} = \partial_{eta_3} \mathbf{x}
+!!> and (covariant normalized basis = contravariant normalized basis in orthogonal geometry)
+!!> \hat{h_1} = \mathbf{h_1}/h_1, h_1 = |\mathbf{h_1}|
+!!> \hat{h_2} = \mathbf{h_2}/h_2, h_2 = |\mathbf{h_2}|
+!!> \hat{h_3} = \mathbf{h_3}/h_3, h_3 = |\mathbf{h_3}|
+
+!!> gradient of a scalar field in orthogonal coordinate system
+!!> \nabla\phi = (\hat{h_1}/h_1) \partial_{eta_1}\phi
+!!>   +(\hat{h_2}/h_2) \partial_{eta_2}\phi
+!!>   +(\hat{h_3}/h_3) \partial_{eta_3}\phi
+
+!!> Vector field \mathbf{F}
+!!> F_1 = \mathbf{F} \cdot \hat{h_1}
+!!> F_2 = \mathbf{F} \cdot \hat{h_2}
+!!> F_3 = \mathbf{F} \cdot \hat{h_3}
+
+!!> divergence of a vector field in orthogonal coordinate system
+!!> \nabla\cdot\mathbf{F} = 1/(h1h2h3) [ \partial_{eta_1}(F_1h_2h_3)
+!!>   +\partial_{eta_2}(F_2h_3h_1)  
+!!>   +\partial_{eta_3}(F_3h_1h_2) ]  
+
+!!> curl of a vector field in orthogonal coordinate system
+!!> \nabla \times \mathbf{F} = 1/(h1h2h3) 
+!!  Det[ h_1\hat{h_1} h_2\hat{h_2} h_3\hat{h_3}
+!!>   \partial_{eta_1} \partial_{eta_2} \partial_{eta_3}  
+!!>   h_1F_1 h_2F_2 h_3F_3 ]  
+
+!!> Laplacian of a scalar field in orthogonal coordinate system
+!!> \nabla^2 \phi = 1/(h1h2h3) 
+!!  Det[ h_1\hat{h_1} h_2\hat{h_2} h_3\hat{h_3}
+!!>   \partial_{eta_1} \partial_{eta_2} \partial_{eta_3}  
+!!>   h_1F_1 h_2F_2 h_3F_3 ]  
+
+
+!!> specify domain for eta_1,eta_2,eta_3 renamed
+!!> specify change from cartesian
+!!> specify scale factors h_1,h_2,h_3
+
+
+
+
+!!> example of cylindrical coordinates
+!!> eta = (r,theta,z)
+!!> x_1 = r*cos(theta)
+!!> x_2 = r*sin(theta)
+!!> x_3 = z
+!!> h_1 = 1
+!!> h_2 = r
+!!> h_3 = 1
+
+!!> \nabla \phi(r,theta,z) = (\partial_r \phi)\hat{r}
+!!> +(\partial_theta \phi)/r\hat{theta} +\partial_z \phi\hat{z}
+
+!!> alpha = iota /R, R=L/(2pi), L = z_max-z_min
+!!> We suppose that the magnetic field writes
+!!> B = B_norm b, b=b_theta hat_theta + b_z hat_z
+!!> hat z = b/b_z - (b_theta/b_z) hat_theta
+!!> as example, we have
+!!> B_norm = (1+alpha^2*r^2)**(-1/2)
+!!> b_theta = alpha*r/(1+alpha^2*r^2)**(1/2)
+!!> b_z = 1/(1+alpha^2*r^2)**(1/2)
+!!> b_theta/b_z = alpha*r
+!!> b_theta^2+b_z^2 = 1
+!!> Db_theta = alpha/(1+alpha^2*r^2)^(3/2)
+!!> Db_z = -b_theta*Db_theta/b_z
+!!> Db_z = -alpha^2*r/(1+alpha^2*r^2)^(3/2)
+!!> curl_b_theta = -rDb_z = (alpha*r)^2/(1+alpha^2*r^2)^(3/2)
+!!>   = r*(b_theta/b_z)*Db_theta
+!!> curl_b_z = D(r*b_theta) = b_theta+r*Db_theta = alpha*r*(2+alpha^2*r^2)/(1+alpha ^2*r^2)^(3/2)
+!!> curl_b_dot_b = r*(b_theta/b_z)*Db_theta*b_theta+(b_theta+r*Db_theta)*b_z
+!!>   = b_z*(b_theta+rDb_theta*(1+(b_theta/b_z)**2)
+!!>   = 2*alpha*r/(1+alpha^2*r^2)
+!!> Bstar_par = B_norm+v*curl_b_dot_b
+!!>   = (1+alpha^2*r^2)**(-1/2) + v*(2*alpha*r)/(1+alpha^2*r^2)
+!! grad_phi_r = Dr_phi
+!! grad_phi_theta = Dtheta_phi/r
+!! grad_phi_z = Dz_phi
+
+!!> Bstar_theta = B_norm*b_theta+v*curl_b_theta
+!!>   = alpha*r/(1+alpha^2*r^2)+v*(alpha*r)^2/(1+alpha^2*r^2)^(3/2)
+!!> Bstar_z = B_norm*b_z+v*curl_b_z
+!!>   = 1/(1+alpha^2*r^2)+v*alpha*r*(2+alpha^2*r^2)/(1+alpha ^2*r^2)^(3/2)
+
+!!> Bstar = Bstar_theta hat_theta+Bstar_z hat_z
+!!>   = (Bstar_theta-(b_theta/b_z)Bstar_z)hat_theta+(Bstar_z/b_z)b
+!!>   = v*(curl_b_theta-(b_theta/b_z)*curl_b_z)hat_theta+(Bstar_z/b_z)b
+
+
+!!> bstar_dot_grad_phi = (B_norm*b_theta+v*curl_b_theta)*Dtheta_phi/r
+!!>  +(B_norm*b_z+v*curl_b_z)*Dz_phi
+
+!!> b_dot_grad_phi = b_theta*Dtheta_phi/r+b_z*Dz_phi
+
+!!> bstar_dot_grad_phi = B_norm*b_dot_grad_phi+v*(TRUC)
+!!> TRUC = curl_b_theta*Dtheta_phi/r+curl_b_z*Dz_phi
+!!>   = curl_b_theta*Dtheta_phi/r+curl_b_z*(b_dot_grad_phi-b_theta*Dtheta_phi/r)/b_z
+!!>   = (curl_b_z/b_z)*b_dot_grad_phi+(curl_b_theta-curl_b_z*b_theta/b_z)*Dtheta_phi/r
+!!>   = alpha*r*(1+1/(1+alpha^2*r^2))*b_dot_grad_phi-(alpha^2*r^2)/(1+alpha^2*r^2)^(1/2)*Dtheta_phi/r
+
+!
+!  subroutine compute_curl_b_unit_cubic_splines( &
+!    curl_b_unit_x2_array, &
+!    curl_b_unit_x3_array, &
+!    b_unit_x2_array, &
+!    b_unit_x3_array, &
+!    x1_array, &
+!    num_points_x1)
+!    sll_real64, dimension(:), intent(in) :: b_unit_x2_array
+!    sll_real64, dimension(:), intent(in) :: b_unit_x3_array
+!    sll_real64, dimension(:), intent(out) :: curl_b_unit_x2_array
+!    sll_real64, dimension(:), intent(out) :: curl_b_unit_x3_array
+!    sll_real64, dimension(:), intent(in) :: x1_array
+!    sll_int32, intent(in) :: num_points_x1
+!    sll_int32 :: i
+!    
+!    
+!    
+!  end subroutine compute_curl_b_unit_cubic_splines
+!
+!
+!
+!
+!
+!  !>  compute B star parallel in an array
+!  subroutine compute_B_star_parallel( &
+!    B_star_parallel_array, &
+!    B_x2_array, &
+!    x1_array, &
+!    num_points_x1, &
+!    R, &
+!    a ) &
+!    result(res)
+!    sll_real64, dimension(:), intent(in) :: B_x2_array
+!    sll_real64, dimension(:), intent(in) :: x1_array
+!    sll_int32, intent(in) :: num_points_x1
+!    sll_real64, intent(in) :: R
+!    sll_real64, intent(in) :: a
+!    sll_real64 :: q
+!    sll_int32 :: i
+!    sll_real64 :: x1
+!    
+!    if(size(B_x2_array,1)<num_points_x1)then
+!      print *,'#bad size of B_x2_array in compute_B', &
+!        size(B_x2_array,1), &
+!        num_points_x1
+!      print *,'#in subroutine compute_B'
+!      stop
+!    endif
+!    do i=1,num_points_x1    
+!      x1 = x1_array(i)
+!      q = 1+(x1/a)**2
+!      B_x2_array(i) = 1._f64+(x1/(R*q))**2
+!    enddo  
+!  end subroutine compute_B_star_parallel
+!
+!
+!
+!
+
+
+
+
   
   
   
@@ -1478,6 +1805,10 @@ contains
     SLL_ALLOCATE(sim%Ti_r(nc_x1+1),ierr)
     SLL_ALLOCATE(sim%Te_r(nc_x1+1),ierr)
     SLL_ALLOCATE(sim%dlog_density_r(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%B_norm_r(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%Bstar_par_v_r(nc_x1+1),ierr)
+    SLL_ALLOCATE(sim%c_r(nc_x1+1),ierr)
+    
     
     rpeak = x1_min+sim%rho_peak*(x1_max-x1_min)
     do i=1,nc_x1+1
@@ -1491,8 +1822,10 @@ contains
       sim%Ti_r(i)=exp(-inv_LTi*deltarTi*tanh((x1-rpeak)/deltarTi))    
       sim%Te_r(i)=exp(-inv_LTe*deltarTe*tanh((x1-rpeak)/deltarTe))
       sim%dlog_density_r(i) = -inv_Ln*cosh((x1-rpeak)/deltarn)**(-2)    
-
-
+      !constant q case
+      sim%c_r(i) = x1/(R0*sim%q0)
+      sim%B_norm_r(i) = 1._f64/sqrt(1._f64+sim%c_r(i)**2)
+      sim%Bstar_par_v_r = (2._f64*sim%c_r(i)-R0*sim%Dr_q0*sim%c_r(i)**2)/(1+sim%c_r(i)**2)
     enddo
     
     !we then change the normalization for n0_r
@@ -1968,12 +2301,85 @@ contains
     end if
 
     call int2string(iplot,cplot)
-    call sll_xdmf_open("f"//cplot//".xmf","polar_mesh", &
+    call sll_xdmf_open("f_x1x2_"//cplot//".xmf","polar_mesh", &
       nnodes_x1,nnodes_x2,file_id,error)
-    call sll_xdmf_write_array("f"//cplot,f,"values", &
+    call sll_xdmf_write_array("f_x1x2_"//cplot,f,"values", &
       error,file_id,"Node")
     call sll_xdmf_close(file_id,error)
   end subroutine plot_f_polar
+
+#endif
+
+#ifndef NOHDF5
+!*********************
+!*********************
+
+  !---------------------------------------------------
+  ! Save the mesh structure
+  !---------------------------------------------------
+  subroutine plot_f_cartesian(iplot,f,m_x1,m_x2)
+    use sll_xdmf
+    use sll_hdf5_io
+    sll_int32 :: file_id
+    sll_int32 :: error
+    sll_real64, dimension(:,:), allocatable :: x1
+    sll_real64, dimension(:,:), allocatable :: x2
+    sll_int32 :: i, j
+    sll_int32, intent(in) :: iplot
+    character(len=4)      :: cplot
+    sll_int32             :: nnodes_x1, nnodes_x2
+    type(sll_logical_mesh_1d), pointer :: m_x1
+    type(sll_logical_mesh_1d), pointer :: m_x2
+    sll_real64, dimension(:,:), intent(in) :: f
+    sll_real64 :: r
+    sll_real64 :: theta
+    sll_real64 :: rmin
+    sll_real64 :: rmax
+    sll_real64 :: dr
+    sll_real64 :: dtheta
+    
+    
+    nnodes_x1 = m_x1%num_cells+1
+    nnodes_x2 = m_x2%num_cells+1
+    rmin = m_x1%eta_min
+    rmax = m_x1%eta_max
+    dr = m_x1%delta_eta
+    dtheta = m_x2%delta_eta
+    
+    !print *,'#maxf=',iplot,maxval(f),minval(f)
+    
+
+    
+    if (iplot == 1) then
+
+      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+      do j = 1,nnodes_x2
+        do i = 1,nnodes_x1
+          r       = rmin+real(i-1,f32)*dr
+          theta   = real(j-1,f32)*dtheta
+          x1(i,j) = r!*cos(theta)
+          x2(i,j) = theta!*sin(theta)
+        end do
+      end do
+      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+      call sll_hdf5_file_close(file_id, error)
+      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
+      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+      call sll_hdf5_file_close(file_id, error)
+      deallocate(x1)
+      deallocate(x2)
+
+    end if
+
+    call int2string(iplot,cplot)
+    call sll_xdmf_open("f_x2x3_"//cplot//".xmf","cartesian_mesh", &
+      nnodes_x1,nnodes_x2,file_id,error)
+    call sll_xdmf_write_array("f_x2x3_"//cplot,f,"values", &
+      error,file_id,"Node")
+    call sll_xdmf_close(file_id,error)
+  end subroutine plot_f_cartesian
 
 #endif
 
