@@ -35,9 +35,9 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 2  !
-sll_int32, parameter :: nc_eta2 = 2  !
-sll_int32, parameter :: degree  = 2   !
+sll_int32, parameter :: nc_eta1 = 4  !
+sll_int32, parameter :: nc_eta2 = 4  !
+sll_int32, parameter :: degree  = 4   !
 !=====================================!
 
 sll_int32  :: nstep
@@ -50,8 +50,8 @@ class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 
 type(maxwell_2d_diga)   :: maxwell_TE
 
-type(dg_field), pointer :: ex, ex0, dx, sx
-type(dg_field), pointer :: ey, ey0, dy, sy
+type(dg_field), pointer :: ex, ex0, dx, sx, jx
+type(dg_field), pointer :: ey, ey0, dy, sy, jy
 type(dg_field), pointer :: bz, bz0, dz, sz
 type(dg_field), pointer :: exact
 
@@ -104,7 +104,7 @@ delta_eta2 = mesh%delta_eta2
 !       affine_jac12,                              &
 !       affine_jac21,                              &
 !       affine_jac22,                              &
-!       (/0.0_f64,2.0_f64,0.0_f64,1.0_f64,0.25*sll_pi/) )
+!       (/0.0_f64,2.0_f64,0.0_f64,1.0_f64,0.0_f64/) )
 
 ! "Homography transformation"
 !
@@ -122,18 +122,18 @@ delta_eta2 = mesh%delta_eta2
 !  g = proportional scale factors x1 and x2 in function of x1.
 !  h = proportional scale factors x1 and x2 in function of x2.
 !   
-!tau => new_coordinate_transformation_2d_analytic( &
-!       "homography_transformation",                   &
-!       mesh,                                      &
-!       homography_x1,                                 &
-!       homography_x2,                                 &
-!       homography_jac11,                              &
-!       homography_jac12,                              &
-!       homography_jac21,                              &
-!       homography_jac22,                              &
-!       [2.0_f64,0.0_f64,0.0_f64, &
-!        0.0_f64,2.0_f64,0.0_f64, &
-!        0.0_f64,1.0_f64] )
+tau => new_coordinate_transformation_2d_analytic( &
+       "homography_transformation",                   &
+       mesh,                                      &
+       homography_x1,                                 &
+       homography_x2,                                 &
+       homography_jac11,                              &
+       homography_jac12,                              &
+       homography_jac21,                              &
+       homography_jac22,                              &
+       [1.0_f64,1.0_f64,1.0_f64, &
+        0.0_f64,1.0_f64,0.0_f64, &
+        0.0_f64,0.0_f64] )
 
 ! "Colella transformation";
 ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
@@ -153,17 +153,15 @@ delta_eta2 = mesh%delta_eta2
 !       sinprod_jac22,                             &  
 !       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
 
-tau => new_coordinate_transformation_2d_analytic( &
-       "rubber_sheeting_transformation",                   &
-       mesh,                                      &
-       rubber_sheeting_x1,                                 &
-       rubber_sheeting_x2,                                 &
-       rubber_sheeting_jac11,                              &
-       rubber_sheeting_jac12,                              &
-       rubber_sheeting_jac21,                              &
-       rubber_sheeting_jac22,                              &
-       [ 0.0_f64,1.0_f64,0.0_f64,0.0_f64, &
-         0.0_f64,0.0_f64,1.0_f64,0.0_f64] )
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "rubber_sheeting_transformation",                   &
+!       mesh,                                      &
+!       rubber_sheeting_x1,                                 &
+!       rubber_sheeting_x2,                                 &
+!       rubber_sheeting_jac11,                              &
+!       rubber_sheeting_jac12,                              &
+!       rubber_sheeting_jac21,                              &
+!       rubber_sheeting_jac22,                              &
 !       [-1.0_f64,2.0_f64,0.0_f64,0.0_f64, &
 !         0.0_f64,0.0_f64,1.0_f64,0.0_f64] )
 
@@ -175,6 +173,8 @@ time  = 0.0_f64
 ex => new_dg_field(degree,tau,linear_x) 
 ey => new_dg_field(degree,tau,linear_y) 
 bz => new_dg_field(degree,tau,linear_x) 
+jx => new_dg_field(degree,tau,linear_x) 
+jy => new_dg_field(degree,tau,linear_x) 
 
 ex0 => new_dg_field(degree,tau) 
 ey0 => new_dg_field(degree,tau) 
@@ -210,28 +210,20 @@ do istep = 1, nstep !*** Loop over time
 
    call rksetup()
 
-   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
-   call dx%write_to_file('dx')
-   call dy%write_to_file('dy')
-   call dz%write_to_file('dz')
-
-   write(*,"('DX error:',g15.3)") maxval(abs(dx%array))
-   write(*,"('DY error:',g15.3)") maxval(abs(dy%array))
-   write(*,"('DZ error:',g15.3)") maxval(abs(dz%array))
-   stop
+   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
 
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
-   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(0.5_f64)
 
-   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(1.0_f64)
 
-   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
    call accumulate(1._f64/6._f64)
 
    call rkstep()
@@ -244,6 +236,15 @@ end do ! next time step
 call check_error_ex(time)
 call check_error_ey(time)
 call check_error_bz(time)
+
+!call dx%write_to_file('dx')
+!call dy%write_to_file('dy')
+!call dz%write_to_file('dz')
+!
+!write(*,"('DX error:',g15.3)") maxval(abs(dx%array))
+!write(*,"('DY error:',g15.3)") maxval(abs(dy%array))
+!write(*,"('DZ error:',g15.3)") maxval(abs(dz%array))
+!stop
 
 contains
 
