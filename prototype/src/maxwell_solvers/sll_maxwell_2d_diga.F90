@@ -107,7 +107,6 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    sll_real64                  :: j_mat(2,2)
    sll_real64                  :: inv_j(2,2)
    sll_real64                  :: dtau_ij_mat(2,2)
-   sll_real64                  :: mdiag
    sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
    sll_int32                   :: bc_eta1
@@ -214,9 +213,9 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    end do
    end do
 
-   call sll_display(this%cell(2,1)%MassMatrix,"f9.4")
-   call sll_display(this%cell(2,1)%DxMatrix,"f9.4")
-   call sll_display(this%cell(2,1)%DyMatrix,"f9.4")
+   call sll_display(this%cell(1,1)%MassMatrix,"f9.4")
+   call sll_display(this%cell(1,1)%DxMatrix,"f9.4")
+   call sll_display(this%cell(1,1)%DyMatrix,"f9.4")
 
    SLL_CLEAR_ALLOCATE(this%w((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
@@ -472,7 +471,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(SOUTH)%length = length
-   cell%edge(SOUTH)%vec_norm = vec_norm/(b-a)
+   cell%edge(SOUTH)%vec_norm = vec_norm/tau%mesh%delta_eta1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -493,7 +492,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(EAST)%length = length
-   cell%edge(EAST)%vec_norm = vec_norm/(b-a)
+   cell%edge(EAST)%vec_norm = vec_norm/tau%mesh%delta_eta2
    
    length = 0._f64
    a  = cell%eta1_min 
@@ -514,7 +513,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(NORTH)%length = length
-   cell%edge(NORTH)%vec_norm = vec_norm/(b-a)
+   cell%edge(NORTH)%vec_norm = vec_norm/tau%mesh%delta_eta1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -535,7 +534,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(WEST)%length = length
-   cell%edge(WEST)%vec_norm = vec_norm/(b-a)
+   cell%edge(WEST)%vec_norm = vec_norm/tau%mesh%delta_eta2
 
 end subroutine compute_normals
 
