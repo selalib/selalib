@@ -396,6 +396,152 @@ contains
 
   end function homography_jac
 
+  ! **************************************************************************
+  !
+  !        rubber_sheeting transformation 
+  !
+  !  the rubber-sheeting is similar to homography. The difference is that the 
+  !  Homography gives priority to alignments, whereas the Rubber-Sheeting gives 
+  !  priority to linear proportions.
+  !
+  !        x1 = a*eta1*eta2+b*eta1+c*eta2+d
+  !        x2 = e*eta1*eta2+f*eta1+g*eta2+h
+  !
+  !  a = scale factor in x1 direction proportional to the multiplication x1 * x2.
+  !  b = fixed scale factor in x1 direction with scale x2 unchanged.
+  !  c = scale factor in x1 direction proportional to x2 distance from origin.
+  !  d = origin translation in x1 direction.
+  !  e = scale factor in x2 direction proportional to the multiplication x1 * x2.
+  !  f = fixed scale factor in x2 direction with scale x1 unchanged.
+  !  g = scale factor in x2 direction proportional to x1 distance from origin.
+  !  h = origin translation in x2 direction.
+  !   
+  ! **************************************************************************
+
+  ! direct mapping
+  function rubber_sheeting_x1 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, d
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    d = params(4)
+
+    rubber_sheeting_x1 = a*eta1*eta2+b*eta1+c*eta2+d
+
+  end function rubber_sheeting_x1
+
+  function rubber_sheeting_x2 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    rubber_sheeting_x2 = e*eta1*eta2+f*eta1+g*eta2+h
+
+  end function rubber_sheeting_x2
+
+  ! jacobian maxtrix
+  function rubber_sheeting_jac11 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64 :: a, b
+    sll_real64, dimension(:), intent(in) :: params
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+
+    rubber_sheeting_jac11 = a*eta2+b
+
+  end function rubber_sheeting_jac11
+
+  function rubber_sheeting_jac12 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, c
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    c = params(3)
+
+    rubber_sheeting_jac12 = a*eta1+c
+
+  end function rubber_sheeting_jac12
+
+  function rubber_sheeting_jac21 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, f
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    f = params(6)
+
+    rubber_sheeting_jac21 = e*eta2+f
+
+  end function rubber_sheeting_jac21
+
+  function rubber_sheeting_jac22 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, g
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    g = params(7)
+
+    rubber_sheeting_jac22 = e*eta1+g
+
+  end function rubber_sheeting_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function rubber_sheeting_jac ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, e, f, g
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+
+    rubber_sheeting_jac = (e*eta1+g)*(a*eta2+b) - (a*eta1+c)*(e*eta2+f)
+
+  end function rubber_sheeting_jac
+
+
 
   ! **************************************************************************
   !
