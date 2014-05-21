@@ -181,8 +181,7 @@ contains
   !> Construction of the derivative matrix for Gauss-Lobatto,
   !> The matrix must be already allocated of size \f$ n^2 \f$.
   !> \f[
-  !>  der(i,j)=int(Phi_i.Phi'_j)_[-1;1]^2
-  !>  der(i,j)=w_i . (Phi'_i(x_j))
+  !>  der(i,j)=(Phi_i.Phi'_j)
   !> \f]
   function  gauss_lobatto_derivative_matrix(n, y) result(d)
     sll_int32,  intent(in) :: n
@@ -230,7 +229,6 @@ contains
              prod=prod/(x(j)-x(l))
              d(i,j)=d(i,j)+prod
           end do
-          !d(i,j)=d(i,j)*w(i)
        end do
     end do
 
