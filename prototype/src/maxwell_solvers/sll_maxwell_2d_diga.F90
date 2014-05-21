@@ -195,13 +195,13 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
             dfx = 0.0_f64
             dfy = 0.0_f64
 
-            if (jj == ll) dfx = dlag(ii,kk)
-            if (ii == kk) dfy = dlag(jj,ll)
+            if (jj == ll) dfx = dlag(kk,ii)
+            if (ii == kk) dfy = dlag(ll,jj)
 
-            this%cell(i,j)%DxMatrix(l,k) = & 
+            this%cell(i,j)%DxMatrix(k,l) = & 
                det*w(kk)*w(ll)*(inv_j(1,1)*dfx + inv_j(2,1)*dfy)
 
-            this%cell(i,j)%DyMatrix(l,k) = &
+            this%cell(i,j)%DyMatrix(k,l) = &
                det*w(kk)*w(ll)*(inv_j(1,2)*dfx + inv_j(2,2)*dfy)
 
          end do
@@ -236,13 +236,15 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
 end subroutine initialize_maxwell_2d_diga
 
 !> Solve the maxwell equation
-subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
+subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
 
    type( maxwell_2d_diga )  :: this !< Maxwell solver object
 
    type(dg_field)  :: fx   !< x electric field
    type(dg_field)  :: fy   !< y electric field
    type(dg_field)  :: fz   !< z magnetic field
+   type(dg_field)  :: gx   !< x rhs field
+   type(dg_field)  :: gy   !< y rhs field
 
    type(dg_field)  :: dx  
    type(dg_field)  :: dy  
@@ -252,7 +254,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
    sll_int32  :: i, j, k, l, ii, jj, kk
    sll_real64 :: vec_n1
    sll_real64 :: vec_n2
-   sll_real64 :: flux(3)
+   sll_real64 :: flux(4)
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -271,6 +273,8 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
       this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3)) 
       this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
+      this%f(:,4) = + matmul(this%cell(i,j)%DxMatrix,this%w(:,1)) &
+                    + matmul(this%cell(i,j)%DyMatrix,this%w(:,2))
 
 #ifdef DEBUG
 
@@ -330,9 +334,9 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
             if (bc_type == SLL_INTERIOR) then
-               flux = 0.5 * (this%w(left,1:3)+this%r(right,1:3)) 
+               flux = 0.5 * (this%w(left,:)+this%r(right,:)) 
             else
-               flux = this%w(left,1:3)
+               flux = this%w(left,:)
             end if
 
 #ifdef DEBUG
@@ -341,10 +345,10 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
                                vec_n1, vec_n2, -vec_n1*this%w(left,3)
 #endif
 
-            this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
-            this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
+            this%f(left,1) = this%f(left,1)+vec_n2*flux(3)-xi*vec_n1*flux(4)
+            this%f(left,2) = this%f(left,2)-vec_n1*flux(3)-xi*vec_n2*flux(4)
             this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
-            this%f(left,4) = this%f(left,4)+vec_n1*flux(1)+vec_n2*flux(2)
+            this%f(left,4) = this%f(left,4)-vec_n1*flux(1)-vec_n2*flux(2)
 
          end do
 
@@ -360,8 +364,8 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          kk = (ii-1)*(this%degree+1)+jj
-         dx%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
-         dy%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)+1.0
+         dx%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)+gx%array(ii,jj,i,j)
+         dy%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)+gy%array(ii,jj,i,j)
          dz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
       end do
       end do
