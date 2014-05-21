@@ -101,14 +101,12 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    sll_int32                   :: nddl
    sll_int32                   :: ncells
    sll_real64                  :: x(degree+1)
-   sll_real64                  :: y(degree+1)
-   sll_real64                  :: wx(degree+1)
-   sll_real64                  :: wy(degree+1)
-   sll_real64                  :: dlagx(degree+1,degree+1)
-   sll_real64                  :: dlagy(degree+1,degree+1)
-   sll_real64                  :: det
-   sll_real64                  :: jac_mat(2,2)
-   sll_real64                  :: inv_jac_mat(2,2)
+   sll_real64                  :: w(degree+1)
+   sll_real64                  :: dlag(degree+1,degree+1)
+   sll_real64                  :: det, dfx, dfy
+   sll_real64                  :: j_mat(2,2)
+   sll_real64                  :: inv_j(2,2)
+   sll_real64                  :: dtau_ij_mat(2,2)
    sll_real64                  :: mdiag
    sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
@@ -137,8 +135,16 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
 
    SLL_ALLOCATE(this%cell(this%nc_eta1,this%nc_eta2), error)
 
+   x    = gauss_lobatto_points(degree+1,0.0_f64,1.0_f64)
+   w    = gauss_lobatto_weights(degree+1,0.0_f64,1.0_f64)
+   dlag = gauss_lobatto_derivative_matrix(degree+1,x)
 
-   do j = 1, this%nc_eta2
+   dtau_ij_mat(1,1) = tau%mesh%delta_eta1
+   dtau_ij_mat(1,2) = 0.0_f64
+   dtau_ij_mat(2,1) = 0.0_f64
+   dtau_ij_mat(2,2) = tau%mesh%delta_eta2
+
+   do j = 1, this%nc_eta2   !Loop over cells
    do i = 1, this%nc_eta1
 
       call compute_normals(tau,bc_eta1,bc_eta2,i,j,degree,this%cell(i,j))
@@ -149,31 +155,56 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
 
       xa = this%cell(i,j)%eta1_min ; xb  = this%cell(i,j)%eta1_max 
       ya = this%cell(i,j)%eta2_min ; yb  = this%cell(i,j)%eta2_max 
-      x     = gauss_lobatto_points(degree+1,xa,xb)
-      y     = gauss_lobatto_points(degree+1,ya,yb)
-      wx    = gauss_lobatto_weights(degree+1,xa,xb)
-      wy    = gauss_lobatto_weights(degree+1,ya,yb)
-      dlagx = gauss_lobatto_derivative_matrix(degree+1,x)
-      dlagy = gauss_lobatto_derivative_matrix(degree+1,y)
-
-      !call sll_display(dlagx,"f9.4")
 
       do jj = 1, degree+1
       do ii = 1, degree+1
 
-         k = (ii-1)*(degree+1)+jj
-         jac_mat     = tau%jacobian_matrix(x(ii),y(jj))
-         inv_jac_mat = tau%inverse_jacobian_matrix(x(ii),y(jj))
-         det         = (jac_mat(1,1)*jac_mat(2,2)-jac_mat(1,2)*jac_mat(2,1))
-         mdiag       = wx(ii)*wy(jj)*det
+         j_mat = tau%jacobian_matrix(xa+x(ii)*this%delta_eta1,&
+                                     ya+x(jj)*this%delta_eta2)
+         j_mat(:,1) = j_mat(:,1) * this%delta_eta1
+         j_mat(:,2) = j_mat(:,2) * this%delta_eta2
 
-         this%cell(i,j)%MassMatrix(k) = mdiag
+         det   = (j_mat(1,1)*j_mat(2,2)-j_mat(1,2)*j_mat(2,1))
+
+         this%cell(i,j)%MassMatrix((ii-1)*(degree+1)+jj) = w(ii)*w(jj)*det
+
+      end do
+      end do
+
+      do jj = 1, degree+1
+      do ii = 1, degree+1
 
          do ll = 1, degree+1
          do kk = 1, degree+1
+
+
+            j_mat = tau%jacobian_matrix(xa+x(kk)*this%delta_eta1,&
+                                        ya+x(ll)*this%delta_eta2)
+            j_mat(:,1) = j_mat(:,1) * this%delta_eta1
+            j_mat(:,2) = j_mat(:,2) * this%delta_eta2
+
+            det   = (j_mat(1,1)*j_mat(2,2)-j_mat(1,2)*j_mat(2,1))
+
+            inv_j(1,1) =   j_mat(2,2) / det
+            inv_j(1,2) = - j_mat(1,2) / det
+            inv_j(2,1) = - j_mat(2,1) / det
+            inv_j(2,2) =   j_mat(1,1) / det
+
+            k = (ii-1)*(degree+1)+jj  
             l = (kk-1)*(degree+1)+ll
-            if (jj == ll) this%cell(i,j)%DxMatrix(k,l) = wx(kk)*wy(ll)*dlagx(kk,ii)
-            if (ii == kk) this%cell(i,j)%DyMatrix(k,l) = wx(kk)*wy(ll)*dlagy(ll,jj)
+             
+            dfx = 0.0_f64
+            dfy = 0.0_f64
+
+            if (jj == ll) dfx = dlag(ii,kk)
+            if (ii == kk) dfy = dlag(jj,ll)
+
+            this%cell(i,j)%DxMatrix(l,k) = & 
+               det*w(kk)*w(ll)*(inv_j(1,1)*dfx + inv_j(2,1)*dfy)
+
+            this%cell(i,j)%DyMatrix(l,k) = &
+               det*w(kk)*w(ll)*(inv_j(1,2)*dfx + inv_j(2,2)*dfy)
+
          end do
          end do
 
@@ -242,18 +273,22 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
       this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
 
-      !print*,"####################################################"
-      !print*,' (i,j) ', i, j
-      !print"('Ex=',9f7.3)", this%w(:,1)
-      !print"('Ey=',9f7.3)", this%w(:,2)
-      !print"('Bz=',9f7.3)", this%w(:,3)
+#ifdef DEBUG
 
-      !print"('dEx=',9f7.3)", this%f(:,1)
-      !print"('dEy=',9f7.3)", this%f(:,2)
-      !print"('dBz=',9f7.3)", this%f(:,3)
+      print*,"####################################################"
+      print*,' (i,j) ', i, j
+      print"('Ex=',9f7.3)", this%w(:,1)
+      print"('Ey=',9f7.3)", this%w(:,2)
+      print"('Bz=',9f7.3)", this%w(:,3)
 
-      !print"(a)", 'side'//'  bc '//'left'//'    w(left) ' &
-      !           &//' f(left) '//'  n1 '//'       n2 '// '       flux '
+      print"('dEx=',9f7.3)", this%f(:,1)
+      print"('dEy=',9f7.3)", this%f(:,2)
+      print"('dBz=',9f7.3)", this%f(:,3)
+
+      print"(a)", 'side'//'  bc '//'left'//'    w(left) ' &
+                 &//' f(left) '//'  n1 '//'       n2 '// '       flux '
+
+#endif
 
       do side = 1, 4 ! Loop over each side of the cell
  
@@ -284,7 +319,9 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
          end do
          end do
    
-         !print*,'--'
+#ifdef DEBUG
+         print*,'--'
+#endif
          do node = 1, this%degree+1
    
             left   = dof_local(side, node, this%degree)
@@ -299,9 +336,11 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
                flux = this%w(left,1:3)
             end if
 
-            !print"(3i4,5f10.4)",side, bc_type, left, &
-            !                   this%w(left,3), this%r(right,3), &
-            !                   vec_n1, vec_n2, -vec_n1*this%w(left,3)
+#ifdef DEBUG
+            print"(3i4,5f10.4)",side, bc_type, left, &
+                               this%w(left,3), this%r(right,3), &
+                               vec_n1, vec_n2, -vec_n1*this%w(left,3)
+#endif
 
             this%f(left,1) = this%f(left,1)+vec_n2*flux(3)!+xi*vec_n1*flux(4)
             this%f(left,2) = this%f(left,2)-vec_n1*flux(3)!+xi*vec_n2*flux(4)
@@ -312,9 +351,11 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
       end do
 
-      !print"('fEx=',9f7.3)", this%f(:,1)
-      !print"('fEy=',9f7.3)", this%f(:,2)
-      !print"('fBz=',9f7.3)", this%f(:,3)
+#ifdef DEBUG
+      print"('fEx=',9f7.3)", this%f(:,1)
+      print"('fEy=',9f7.3)", this%f(:,2)
+      print"('fBz=',9f7.3)", this%f(:,3)
+#endif
 
       kk = 0
       do jj = 1, this%degree+1
@@ -431,7 +472,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(SOUTH)%length = length
-   cell%edge(SOUTH)%vec_norm = vec_norm / length
+   cell%edge(SOUTH)%vec_norm = vec_norm/(b-a)
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -452,7 +493,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(EAST)%length = length
-   cell%edge(EAST)%vec_norm = vec_norm/length
+   cell%edge(EAST)%vec_norm = vec_norm/(b-a)
    
    length = 0._f64
    a  = cell%eta1_min 
@@ -473,7 +514,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(NORTH)%length = length
-   cell%edge(NORTH)%vec_norm = vec_norm/length
+   cell%edge(NORTH)%vec_norm = vec_norm/(b-a)
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -494,7 +535,7 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    end do
 
    cell%edge(WEST)%length = length
-   cell%edge(WEST)%vec_norm = vec_norm/length
+   cell%edge(WEST)%vec_norm = vec_norm/(b-a)
 
 end subroutine compute_normals
 

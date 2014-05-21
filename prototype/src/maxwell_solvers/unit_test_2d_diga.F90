@@ -35,8 +35,8 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 5  !
-sll_int32, parameter :: nc_eta2 = 5  !
+sll_int32, parameter :: nc_eta1 = 4  !
+sll_int32, parameter :: nc_eta2 = 4  !
 sll_int32, parameter :: degree  = 1   !
 !=====================================!
 
@@ -79,6 +79,7 @@ eta2_max = mesh%eta2_max
 delta_eta1 = mesh%delta_eta1
 delta_eta2 = mesh%delta_eta2
 
+! "Identity transformation";
 !tau => new_coordinate_transformation_2d_analytic( &
 !       "identity_transformation",                 &
 !       mesh,                                      &
@@ -90,6 +91,21 @@ delta_eta2 = mesh%delta_eta2
 !       identity_jac22,                            &
 !       SLL_NULL_REAL64 )
 
+! "Affine transformation";
+!
+! x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
+! x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
+tau => new_coordinate_transformation_2d_analytic( &
+       "affine_transformation",                   &
+       mesh,                                      &
+       affine_x1,                                 &
+       affine_x2,                                 &
+       affine_jac11,                              &
+       affine_jac12,                              &
+       affine_jac21,                              &
+       affine_jac22,                              &
+       (/0.0_f64,2.0_f64,0.0_f64,1.0_f64,0.25*sll_pi/) )
+
 
 ! "Colella transformation";
 ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
@@ -98,20 +114,19 @@ delta_eta2 = mesh%delta_eta2
 ! x1 = eta1 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 ! x2 = eta2 + 0.1 * sin(2*pi*eta1) * sin(2*pi*eta2)
 
-tau => new_coordinate_transformation_2d_analytic( &
-       "collela_transformation",                      &
-       mesh,                                          &
-       sinprod_x1,                                    &
-       sinprod_x2,                                    &
-       sinprod_jac11,                                 &
-       sinprod_jac12,                                 &
-       sinprod_jac21,                                 &
-       sinprod_jac22,                                 &  
-       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "collela_transformation",                  &
+!       mesh,                                      &
+!       sinprod_x1,                                &
+!       sinprod_x2,                                &
+!       sinprod_jac11,                             &
+!       sinprod_jac12,                             &
+!       sinprod_jac21,                             &
+!       sinprod_jac22,                             &  
+!       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
 
 call tau%write_to_file(SLL_IO_MTV)
 call tau%write_to_file(SLL_IO_GNUPLOT)
-
 
 time  = 0.0_f64
 
@@ -154,6 +169,9 @@ do istep = 1, nstep !*** Loop over time
    call rksetup()
 
    call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+   call dx%write_to_file('dx')
+   call dy%write_to_file('dy')
+   call dz%write_to_file('dz')
    stop
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
