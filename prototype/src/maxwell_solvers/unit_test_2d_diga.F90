@@ -35,9 +35,9 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 4  !
-sll_int32, parameter :: nc_eta2 = 4  !
-sll_int32, parameter :: degree  = 1   !
+sll_int32, parameter :: nc_eta1 = 2  !
+sll_int32, parameter :: nc_eta2 = 2  !
+sll_int32, parameter :: degree  = 2   !
 !=====================================!
 
 sll_int32  :: nstep
@@ -95,17 +95,45 @@ delta_eta2 = mesh%delta_eta2
 !
 ! x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
 ! x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
-tau => new_coordinate_transformation_2d_analytic( &
-       "affine_transformation",                   &
-       mesh,                                      &
-       affine_x1,                                 &
-       affine_x2,                                 &
-       affine_jac11,                              &
-       affine_jac12,                              &
-       affine_jac21,                              &
-       affine_jac22,                              &
-       (/0.0_f64,2.0_f64,0.0_f64,1.0_f64,0.25*sll_pi/) )
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "affine_transformation",                   &
+!       mesh,                                      &
+!       affine_x1,                                 &
+!       affine_x2,                                 &
+!       affine_jac11,                              &
+!       affine_jac12,                              &
+!       affine_jac21,                              &
+!       affine_jac22,                              &
+!       (/0.0_f64,2.0_f64,0.0_f64,1.0_f64,0.25*sll_pi/) )
 
+! "Homography transformation"
+!
+! We a square to a trapeze.
+!
+!        x1 = (a*eta1*b*eta2+c)/(g*eta1+h*eta2+1) 
+!        x2 = (d*eta1*e*eta2+f)/(g*eta1+h*eta2+1) 
+!
+!  a = fixed scale factor in x1 direction with scale x2 unchanged.
+!  b = scale factor in x1 direction proportional to x2 distance from origin.
+!  c = origin translation in x1 direction.
+!  d = scale factor in x2 direction proportional to x1 distance from origin.
+!  e = fixed scale factor in x2 direction with scale x1 unchanged.
+!  f = origin translation in x2 direction.
+!  g = proportional scale factors x1 and x2 in function of x1.
+!  h = proportional scale factors x1 and x2 in function of x2.
+!   
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "homography_transformation",                   &
+!       mesh,                                      &
+!       homography_x1,                                 &
+!       homography_x2,                                 &
+!       homography_jac11,                              &
+!       homography_jac12,                              &
+!       homography_jac21,                              &
+!       homography_jac22,                              &
+!       [2.0_f64,0.0_f64,0.0_f64, &
+!        0.0_f64,2.0_f64,0.0_f64, &
+!        0.0_f64,1.0_f64] )
 
 ! "Colella transformation";
 ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
@@ -124,6 +152,20 @@ tau => new_coordinate_transformation_2d_analytic( &
 !       sinprod_jac21,                             &
 !       sinprod_jac22,                             &  
 !       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
+
+tau => new_coordinate_transformation_2d_analytic( &
+       "rubber_sheeting_transformation",                   &
+       mesh,                                      &
+       rubber_sheeting_x1,                                 &
+       rubber_sheeting_x2,                                 &
+       rubber_sheeting_jac11,                              &
+       rubber_sheeting_jac12,                              &
+       rubber_sheeting_jac21,                              &
+       rubber_sheeting_jac22,                              &
+       [ 0.0_f64,1.0_f64,0.0_f64,0.0_f64, &
+         0.0_f64,0.0_f64,1.0_f64,0.0_f64] )
+!       [-1.0_f64,2.0_f64,0.0_f64,0.0_f64, &
+!         0.0_f64,0.0_f64,1.0_f64,0.0_f64] )
 
 call tau%write_to_file(SLL_IO_MTV)
 call tau%write_to_file(SLL_IO_GNUPLOT)
@@ -172,7 +214,12 @@ do istep = 1, nstep !*** Loop over time
    call dx%write_to_file('dx')
    call dy%write_to_file('dy')
    call dz%write_to_file('dz')
+
+   write(*,"('DX error:',g15.3)") maxval(abs(dx%array))
+   write(*,"('DY error:',g15.3)") maxval(abs(dy%array))
+   write(*,"('DZ error:',g15.3)") maxval(abs(dz%array))
    stop
+
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
