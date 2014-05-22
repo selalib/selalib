@@ -68,8 +68,8 @@ module sll_module_scalar_field_2d_multipatch
      type(multipatch_data_2d), dimension(:), pointer :: derivs3 => null()
      ! Element connectivity information for finite element calculations.
      sll_int32, dimension(:), pointer :: global_indices
-      type(multipatch_data_1d), dimension(:), pointer :: local_indices
-      type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
+     type(multipatch_data_1d), dimension(:), pointer :: local_indices
+     type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
@@ -79,6 +79,10 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: get_logical_mesh    => get_patch_logical_mesh_sfmp2d
      procedure, pass :: get_jacobian_matrix => get_jacobian_matrix_sfmp2d
      procedure, pass :: get_number_patches  => get_number_patches_sfmp2d
+     ! These are the functions to aid the finite element calculation  
+   !  procedure, pass :: get_spline_local_index  => get_spline_local_index_sfmp2d
+   !  procedure, pass :: get_spline_global_index  => get_spline_global_index_sfmp2d
+   !  procedure, pass :: get_spline_local_to_global_index  => get_spline_local_to_global_index_sfmp2d
      procedure, pass :: value_at_point      => value_at_pt_sfmp2d
      procedure, pass :: value_at_indices    => value_at_indices_sfmp2d
      procedure, pass :: set_value_at_indices => set_value_at_indices_sfmp2d
@@ -216,7 +220,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_bottom = SLL_DIRICHLET !SLL_HERMITE
+          bc_bottom = SLL_HERMITE
        else
           bc_bottom = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -225,7 +229,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_left = SLL_DIRICHLET !SLL_HERMITE
+          bc_left = SLL_HERMITE
        else
           bc_left = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -234,7 +238,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_top = SLL_DIRICHLET !SLL_HERMITE
+          bc_top = SLL_HERMITE
        else
           bc_top = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -243,7 +247,7 @@ contains   ! *****************************************************************
        ! just being paranoid, there is no way that one of the values could be
        ! negative and not the other...
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
-          bc_right = SLL_DIRICHLET !SLL_HERMITE
+          bc_right = SLL_HERMITE
        else
           bc_right = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
@@ -984,14 +988,33 @@ contains   ! *****************************************************************
          slope_top)
     else
        
+       ! ATTENTION !
+       ! see convention above about the face numbering
+       ! 
        call set_slope2d(&
             interpolator,&
-            mp%patch_data(patch+1)%array(1,1:num_pts2),&
-            mp%patch_data(patch+1)%array(num_pts1,1:num_pts2),&
-            mp%patch_data(patch+1)%array(1:num_pts1,1),&
-            mp%patch_data(patch+1)%array(1:num_pts1,num_pts2))
+            mp%derivs1(patch+1)%array(1:num_pts2,1),&
+            mp%derivs3(patch+1)%array(1:num_pts2,1),&
+            mp%derivs0(patch+1)%array(1:num_pts1,1),&
+            mp%derivs2(patch+1)%array(1:num_pts1,1))
     end if
 
   end subroutine set_slope_mp
+
+
+  !!!! J'ai fais la supposition que le tableau local indices est en 2D et donc que
+  !!!! j'ai fais un un reshape lors de la lecture du fichier IEN.txt
+!!$  function get_spline_local_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)
+!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    sll_int32 :: num_patches
+!!$    sll_int32 :: splines_local
+!!$    sll_int32 :: cell_i,cell_j
+!!$    sll_int32 :: num_cell
+!!$    
+!!$
+!!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
+!!$    !num_cell = mp%transf
+!!$    !mp%local_indices(patch+1)%array(splines_local,)
+!!$  end function get_spline_local_index_sfmp2d
 
 end module sll_module_scalar_field_2d_multipatch
