@@ -1076,7 +1076,7 @@ subroutine compute_gyroaverage_pre_compute_polar_spl_FFT(gyro,f)
 
 	!*** Perform FFT 1D inverse ***
 	do i=1,gyro%Nc(1)+1
-	  call dfftb(gyro%Nc(2),f(i+1,1:gyro%Nc(2)),buf)
+	  call dfftb(gyro%Nc(2),f(i,1:gyro%Nc(2)),buf)
 	enddo
          
     !*** duplicate periodic value ***
