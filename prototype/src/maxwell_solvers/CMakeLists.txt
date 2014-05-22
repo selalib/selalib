@@ -56,3 +56,5 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv " VERBATIM)
 
+ADD_TEST(NAME maxwell_2d_diga COMMAND test_maxwell_2d_diga)
+SET_TESTS_PROPERTIES(maxwell_2d_diga PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

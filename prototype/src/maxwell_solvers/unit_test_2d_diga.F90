@@ -36,9 +36,9 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 64  !
-sll_int32, parameter :: nc_eta2 = 64  !
-sll_int32, parameter :: degree  = 2   !
+sll_int32, parameter :: nc_eta1 = 10  !
+sll_int32, parameter :: nc_eta2 = 10  !
+sll_int32, parameter :: degree  = 5   !
 !=====================================!
 
 sll_int32  :: nstep
@@ -61,11 +61,6 @@ sll_int32   :: istep
 sll_real64  :: dt
 sll_real64  :: cfl = 0.5
 sll_real64  :: error
-sll_int32   :: i
-sll_int32   :: j
-sll_int32   :: info
-sll_real64, dimension(:,:), allocatable :: f1
-sll_real64, dimension(:,:), allocatable :: f2
 !init functions
 sll_real64, external :: sol_bz, sol_ex, sol_ey, linear_x, linear_y
 
@@ -170,9 +165,8 @@ tau => new_coordinate_transformation_2d_analytic( &
 !         0.0_f64,0.0_f64,1.0_f64,0.0_f64] )
 
 call tau%write_to_file(SLL_IO_MTV)
-call tau%write_to_file(SLL_IO_GNUPLOT)
 
-time  = 0.0_f64
+time = 0.0_f64
 
 ex  => new_dg_field(degree,tau,sol_ex) 
 ey  => new_dg_field(degree,tau,sol_ey) 
@@ -192,24 +186,16 @@ sz  => new_dg_field(degree,tau)
 
 exact => new_dg_field( degree, tau)
 
-dt = cfl/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
+dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
 nstep = 100
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION, &
                 SLL_DIRICHLET, SLL_DIRICHLET )
 
 
-SLL_CLEAR_ALLOCATE(f1(1:nc_eta1,1:nc_eta2),info)
-SLL_CLEAR_ALLOCATE(f2(1:nc_eta1,1:nc_eta2),info)
-
 do istep = 1, nstep !*** Loop over time
 
-   !call ex%write_to_file('ex')
-   !call ey%write_to_file('ey')
-   !call bz%set_value(sol_bz, time)
-   !call bz%write_to_file('bz')
-
-   write(*,"(/,' istep = ',I6,' time = ',g12.3,' sec')") istep, time
+   write(*,"(' istep = ',I6,' time = ',g12.3,' sec')") istep, time
 
    call rksetup()
 
@@ -233,30 +219,13 @@ do istep = 1, nstep !*** Loop over time
 
    time = time + dt
 
-   call exact%set_value(sol_bz, time)
-
-   do j = 1, nc_eta2
-   do i = 1, nc_eta1
-      f1(i,j) = bz%array(2,2,i,j)
-      f2(i,j) = exact%array(2,2,i,j)
-   end do
-   end do
-  
-   call plot_two_fields('bz',nc_eta1,nc_eta2,f1,f2,istep,time)
-
 end do ! next time step
+
 call check_error_ex(time)
 call check_error_ey(time)
 call check_error_bz(time)
 
-!call dx%write_to_file('dx')
-!call dy%write_to_file('dy')
-!call dz%write_to_file('dz')
-!
-!write(*,"('DX error:',g15.3)") maxval(abs(dx%array))
-!write(*,"('DY error:',g15.3)") maxval(abs(dy%array))
-!write(*,"('DZ error:',g15.3)") maxval(abs(dz%array))
-!stop
+print"(a)", 'PASSED'
 
 contains
 
@@ -268,6 +237,7 @@ subroutine check_error_ex(time)
 
    error = maxval(abs(ex%array-exact%array))
    write(*,"(' EX erreur = ',g15.5)") error
+   if (error > 0.001) STOP 'FAILED'
 
 end subroutine check_error_ex
 
@@ -279,6 +249,7 @@ subroutine check_error_ey(time)
 
    error = maxval(abs(ey%array-exact%array))
    write(*,"(' EY erreur = ',g15.5)") error
+   if (error > 0.001) STOP 'FAILED'
 
 end subroutine check_error_ey
 
@@ -290,6 +261,7 @@ subroutine check_error_bz(time)
 
    error = maxval(abs(bz%array-exact%array))
    write(*,"(' BZ erreur = ',g15.5)") error
+   if (error > 0.001) STOP 'FAILED'
 
 end subroutine check_error_bz
 
