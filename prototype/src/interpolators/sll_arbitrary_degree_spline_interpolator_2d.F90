@@ -3955,8 +3955,11 @@ contains
     !SLL_ALLOCATE(tmp_tx(interpolator%size_t1),ierr)
     !SLL_ALLOCATE(tmp_ty(interpolator%size_t2),ierr)
     tmp_tx => interpolator%t1(1:interpolator%size_t1)
+    !print*, 't1',tmp_tx
     tmp_ty => interpolator%t2(1:interpolator%size_t2)
+    !print*, 't2',tmp_ty
     tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+    !print*, 'coef',tmp_coeff
     !call interv( tmp_ty, interpolator%size_t2, res2, li_lefty, li_mflag )
   !  call set_time_mark(t0)
     call bvalue2d( &
@@ -4199,7 +4202,7 @@ contains
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
        if ( res1 > interpolator%eta1_max) then 
-          print*, 'problem  x > eta1_max'
+          print*,'problem  x > eta1_max'
           stop
        end if
        if ( res1 < interpolator%eta1_min) then 
