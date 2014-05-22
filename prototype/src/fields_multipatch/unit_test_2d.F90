@@ -26,7 +26,7 @@ program unit_test_fields_multipatch
   sll_real64 :: x2
   sll_int32  :: ierr
 
-  T => new_coordinate_transformation_multipatch_2d("identity_mp_info.nml")
+  T => new_coordinate_transformation_multipatch_2d("square_4p_n10")
   print *, 'initialized multipatch transformation'
   
   F => new_scalar_field_multipatch_2d("test_field_multipatch", T)
