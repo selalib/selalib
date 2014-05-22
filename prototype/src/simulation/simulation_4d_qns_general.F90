@@ -84,7 +84,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:),pointer :: diag_norm_Linf
      sll_real64, dimension(:),pointer :: diag_entropy_kin
 
-     !--> diagnostics energy
+     !--> diagnostics energydiag_nrj_kin
      sll_real64, dimension(:),pointer :: diag_nrj_kin
      sll_real64, dimension(:),pointer :: diag_nrj_pot
      sll_real64, dimension(:),pointer :: diag_nrj_tot
@@ -437,7 +437,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 5
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -2394,7 +2394,10 @@ contains
                           diag_norm_Linf_result(:),'Linf_norm',file_err)
       call sll_hdf5_write_array_1d(file_id,&
                           diag_entropy_kin_result(:),'entropy_kin',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%point_x(:,:),'X_coord',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%point_y(:,:),'Y_coord',file_err)
       call sll_hdf5_file_close(file_id,file_err)
+      
     end if
     sim%count_save_diag = sim%count_save_diag + 1
   end subroutine writeHDF5_diag_qns
@@ -2495,7 +2498,7 @@ contains
                 if (i1 .ne. Neta1) then
                    if (i2 .ne. Neta2) then 
                       
-                      val_jac = sim%values_jacobian(i1,i2)
+                      val_jac = abs(sim%values_jacobian(i1,i2))
                       !abs(sim%transfx%jacobian_at_node(i1,i2))
                       
                       delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
@@ -2591,7 +2594,7 @@ contains
                 if (i1 .ne. Neta1) then
                    if (i2 .ne. Neta2) then 
                       
-                      val_jac = sim%values_jacobian(i1,i2)
+                      val_jac = abs(sim%values_jacobian(i1,i2))
                       !abs(sim%transfx%jacobian_at_node(i1,i2))
                       
                       delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
@@ -2619,8 +2622,9 @@ contains
           end do
        end do
     end do
-    
+    !print*, 'norm_L2',norm_L2
     norm_L2   = sqrt(norm_L2)
+    !print*, 'norm_L2',norm_L2
     
     sim%diag_masse(sim%count_save_diag + 1)       = masse
     sim%diag_norm_L1(sim%count_save_diag + 1)     = norm_L1
