@@ -29,15 +29,16 @@ use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
 use sll_maxwell_2d_diga
+use sll_maxwell_solvers_base
 
 implicit none
 
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 4  !
-sll_int32, parameter :: nc_eta2 = 4  !
-sll_int32, parameter :: degree  = 4   !
+sll_int32, parameter :: nc_eta1 = 64  !
+sll_int32, parameter :: nc_eta2 = 64  !
+sll_int32, parameter :: degree  = 2   !
 !=====================================!
 
 sll_int32  :: nstep
@@ -50,8 +51,8 @@ class(sll_coordinate_transformation_2d_analytic), pointer :: tau
 
 type(maxwell_2d_diga)   :: maxwell_TE
 
-type(dg_field), pointer :: ex, ex0, dx, sx, jx
-type(dg_field), pointer :: ey, ey0, dy, sy, jy
+type(dg_field), pointer :: ex, ex0, dx, sx
+type(dg_field), pointer :: ey, ey0, dy, sy
 type(dg_field), pointer :: bz, bz0, dz, sz
 type(dg_field), pointer :: exact
 
@@ -60,13 +61,17 @@ sll_int32   :: istep
 sll_real64  :: dt
 sll_real64  :: cfl = 0.5
 sll_real64  :: error
-
+sll_int32   :: i
+sll_int32   :: j
+sll_int32   :: info
+sll_real64, dimension(:,:), allocatable :: f1
+sll_real64, dimension(:,:), allocatable :: f2
 !init functions
 sll_real64, external :: sol_bz, sol_ex, sol_ey, linear_x, linear_y
 
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
-                            eta1_min=-0._f64, eta1_max=1._f64, &
-                            eta2_min=-0._f64, eta2_max=1._f64)
+                            eta1_min=0._f64, eta1_max=1._f64, &
+                            eta2_min=0._f64, eta2_max=1._f64)
 
 write(*,"(3f8.3,i4)") mesh%eta1_min,mesh%eta1_max,mesh%delta_eta1,mesh%num_cells1
 write(*,"(3f8.3,i4)") mesh%eta2_min,mesh%eta2_max,mesh%delta_eta2,mesh%num_cells2
@@ -80,21 +85,22 @@ delta_eta1 = mesh%delta_eta1
 delta_eta2 = mesh%delta_eta2
 
 ! "Identity transformation";
-!tau => new_coordinate_transformation_2d_analytic( &
-!       "identity_transformation",                 &
-!       mesh,                                      &
-!       identity_x1,                               &
-!       identity_x2,                               &
-!       identity_jac11,                            &
-!       identity_jac12,                            &
-!       identity_jac21,                            &
-!       identity_jac22,                            &
-!       SLL_NULL_REAL64 )
+tau => new_coordinate_transformation_2d_analytic( &
+       "identity_transformation",                 &
+       mesh,                                      &
+       identity_x1,                               &
+       identity_x2,                               &
+       identity_jac11,                            &
+       identity_jac12,                            &
+       identity_jac21,                            &
+       identity_jac22,                            &
+       SLL_NULL_REAL64 )
 
 ! "Affine transformation";
 !
 ! x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
 ! x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
+!
 !tau => new_coordinate_transformation_2d_analytic( &
 !       "affine_transformation",                   &
 !       mesh,                                      &
@@ -108,8 +114,6 @@ delta_eta2 = mesh%delta_eta2
 
 ! "Homography transformation"
 !
-! We a square to a trapeze.
-!
 !        x1 = (a*eta1*b*eta2+c)/(g*eta1+h*eta2+1) 
 !        x2 = (d*eta1*e*eta2+f)/(g*eta1+h*eta2+1) 
 !
@@ -122,19 +126,19 @@ delta_eta2 = mesh%delta_eta2
 !  g = proportional scale factors x1 and x2 in function of x1.
 !  h = proportional scale factors x1 and x2 in function of x2.
 !   
-tau => new_coordinate_transformation_2d_analytic( &
-       "homography_transformation",                   &
-       mesh,                                      &
-       homography_x1,                                 &
-       homography_x2,                                 &
-       homography_jac11,                              &
-       homography_jac12,                              &
-       homography_jac21,                              &
-       homography_jac22,                              &
-       [1.0_f64,1.0_f64,1.0_f64, &
-        0.0_f64,1.0_f64,0.0_f64, &
-        0.0_f64,0.0_f64] )
-
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "homography_transformation",               &
+!       mesh,                                      &
+!       homography_x1,                             &
+!       homography_x2,                             &
+!       homography_jac11,                          &
+!       homography_jac12,                          &
+!       homography_jac21,                          &
+!       homography_jac22,                          &
+!       [1.0_f64,1.0_f64,1.0_f64, &
+!        0.0_f64,1.0_f64,0.0_f64, &
+!        0.0_f64,0.0_f64] )
+!
 ! "Colella transformation";
 ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
 ! (102) p 2968):
@@ -154,14 +158,14 @@ tau => new_coordinate_transformation_2d_analytic( &
 !       (/0.1_f64,0.1_f64,1.0_f64,1.0_f64/) )
 
 !tau => new_coordinate_transformation_2d_analytic( &
-!       "rubber_sheeting_transformation",                   &
+!       "rubber_sheeting_transformation",          &
 !       mesh,                                      &
-!       rubber_sheeting_x1,                                 &
-!       rubber_sheeting_x2,                                 &
-!       rubber_sheeting_jac11,                              &
-!       rubber_sheeting_jac12,                              &
-!       rubber_sheeting_jac21,                              &
-!       rubber_sheeting_jac22,                              &
+!       rubber_sheeting_x1,                        &
+!       rubber_sheeting_x2,                        &
+!       rubber_sheeting_jac11,                     &
+!       rubber_sheeting_jac12,                     &
+!       rubber_sheeting_jac21,                     &
+!       rubber_sheeting_jac22,                     &
 !       [-1.0_f64,2.0_f64,0.0_f64,0.0_f64, &
 !         0.0_f64,0.0_f64,1.0_f64,0.0_f64] )
 
@@ -170,69 +174,77 @@ call tau%write_to_file(SLL_IO_GNUPLOT)
 
 time  = 0.0_f64
 
-ex => new_dg_field(degree,tau,linear_x) 
-ey => new_dg_field(degree,tau,linear_y) 
-bz => new_dg_field(degree,tau,linear_x) 
-jx => new_dg_field(degree,tau,linear_x) 
-jy => new_dg_field(degree,tau,linear_x) 
+ex  => new_dg_field(degree,tau,sol_ex) 
+ey  => new_dg_field(degree,tau,sol_ey) 
+bz  => new_dg_field(degree,tau,sol_bz) 
 
 ex0 => new_dg_field(degree,tau) 
 ey0 => new_dg_field(degree,tau) 
 bz0 => new_dg_field(degree,tau) 
 
-dx => new_dg_field(degree,tau) 
-dy => new_dg_field(degree,tau) 
-dz => new_dg_field(degree,tau) 
+dx  => new_dg_field(degree,tau) 
+dy  => new_dg_field(degree,tau) 
+dz  => new_dg_field(degree,tau) 
 
-sx => new_dg_field(degree,tau) 
-sy => new_dg_field(degree,tau) 
-sz => new_dg_field(degree,tau) 
+sx  => new_dg_field(degree,tau) 
+sy  => new_dg_field(degree,tau) 
+sz  => new_dg_field(degree,tau) 
 
 exact => new_dg_field( degree, tau)
 
 dt = cfl/sqrt(1./(delta_eta1*delta_eta1)+1./(delta_eta2*delta_eta2))
-
-dt = 0.1
-nstep = ceiling(sll_pi/dt)
-nstep = 20
-print*, 'dt = ', dt
+nstep = 100
 
 call initialize(maxwell_TE, tau, degree, TE_POLARIZATION, &
                 SLL_DIRICHLET, SLL_DIRICHLET )
 
 
+SLL_CLEAR_ALLOCATE(f1(1:nc_eta1,1:nc_eta2),info)
+SLL_CLEAR_ALLOCATE(f2(1:nc_eta1,1:nc_eta2),info)
+
 do istep = 1, nstep !*** Loop over time
 
-   call ex%write_to_file('ex')
-   call ey%write_to_file('ey')
-   call bz%write_to_file('bz')
-   write(*,"(10x,' istep = ',I6,' time = ',g12.3,' sec')") istep, time
+   !call ex%write_to_file('ex')
+   !call ey%write_to_file('ey')
+   !call bz%set_value(sol_bz, time)
+   !call bz%write_to_file('bz')
+
+   write(*,"(/,' istep = ',I6,' time = ',g12.3,' sec')") istep, time
 
    call rksetup()
 
-   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
 
    call accumulate(1._f64/6._f64)
    call rkstage(0.5_f64)
 
-   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(0.5_f64)
 
-   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/3._f64)
    call rkstage(1.0_f64)
 
-   call solve(maxwell_TE, ex, ey, bz, jx, jy, dx, dy, dz)
+   call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    call accumulate(1._f64/6._f64)
 
    call rkstep()
 
    time = time + dt
 
+   call exact%set_value(sol_bz, time)
+
+   do j = 1, nc_eta2
+   do i = 1, nc_eta1
+      f1(i,j) = bz%array(2,2,i,j)
+      f2(i,j) = exact%array(2,2,i,j)
+   end do
+   end do
+  
+   call plot_two_fields('bz',nc_eta1,nc_eta2,f1,f2,istep,time)
 
 end do ! next time step
-
 call check_error_ex(time)
 call check_error_ey(time)
 call check_error_bz(time)
@@ -252,10 +264,10 @@ subroutine check_error_ex(time)
 
    sll_real64, intent(in) :: time
 
-   call exact%set_value(linear_x, time)
+   call exact%set_value(sol_ex, time)
 
    error = maxval(abs(ex%array-exact%array))
-   write(*,"(' EX erreur = ',g15.5)",advance="no") error
+   write(*,"(' EX erreur = ',g15.5)") error
 
 end subroutine check_error_ex
 
@@ -263,10 +275,10 @@ subroutine check_error_ey(time)
 
    sll_real64, intent(in) :: time
 
-   call exact%set_value(linear_y, time)
+   call exact%set_value(sol_ey, time)
 
    error = maxval(abs(ey%array-exact%array))
-   write(*,"(' EY erreur = ',g15.5)",advance="no") error
+   write(*,"(' EY erreur = ',g15.5)") error
 
 end subroutine check_error_ey
 
@@ -274,13 +286,12 @@ subroutine check_error_bz(time)
 
    sll_real64, intent(in) :: time
 
-   call exact%set_value(linear_x, time)
+   call exact%set_value(sol_bz, time)
 
    error = maxval(abs(bz%array-exact%array))
-   write(*,"(' BZ erreur = ',g15.5)",advance="no") error
+   write(*,"(' BZ erreur = ',g15.5)") error
 
 end subroutine check_error_bz
-
 
 subroutine rksetup()
 
@@ -302,7 +313,6 @@ subroutine rkstage(coef)
    ey%array = ey0%array + coef * dt * dy%array
    bz%array = bz0%array + coef * dt * dz%array
 
-
 end subroutine rkstage
 
 subroutine accumulate(coef)
@@ -320,7 +330,6 @@ subroutine rkstep()
    ex%array = ex0%array + dt * sx%array
    ey%array = ey0%array + dt * sy%array
    bz%array = bz0%array + dt * sz%array
-
 
 end subroutine rkstep
 

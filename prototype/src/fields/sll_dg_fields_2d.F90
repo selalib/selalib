@@ -197,7 +197,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    end do
 
    write(gnu_id,*)
-   write(gnu_id,'(a)') 'pause -1'
+   !write(gnu_id,'(a)') 'pause -1'
    close(gnu_id)
 
    this%tag = this%tag+1
