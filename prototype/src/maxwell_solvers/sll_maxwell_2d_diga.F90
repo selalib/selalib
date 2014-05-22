@@ -80,11 +80,9 @@ interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
 
-sll_int32                                :: error
-type(dg_field), pointer                  :: po
-sll_real64, parameter                    :: xi = 0.0_f64
-sll_real64, dimension(4,4)               :: A1
-sll_real64, dimension(4,4)               :: A2
+sll_int32               :: error
+type(dg_field), pointer :: po
+sll_real64, parameter   :: xi = 0.0_f64
 
 public :: initialize, solve
 
@@ -213,38 +211,26 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    end do
    end do
 
-   call sll_display(this%cell(1,1)%MassMatrix,"f9.4")
-   call sll_display(this%cell(1,1)%DxMatrix,"f9.4")
-   call sll_display(this%cell(1,1)%DyMatrix,"f9.4")
+   !call sll_display(this%cell(1,1)%MassMatrix,"f9.4")
+   !call sll_display(this%cell(1,1)%DxMatrix,"f9.4")
+   !call sll_display(this%cell(1,1)%DyMatrix,"f9.4")
 
    SLL_CLEAR_ALLOCATE(this%w((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%f((degree+1)*(degree+1),4),error)
-
-   A1 = reshape((/ 0.0_f64, 0.0_f64, 0.0_f64, xi,       &
-                   0.0_f64, 0.0_f64, 1.0_f64, 0.0_f64,  &
-                   0.0_f64, 1.0_f64, 0.0_f64, 0.0_f64,  &
-                        xi, 1.0_f64, 0.0_f64, 0.0_f64   /), (/4,4/))
-   
-   A2 = reshape((/ 0.0_f64, 0.0_f64, -1.0_f64, 0.0_f64, &
-                   0.0_f64, 0.0_f64,  0.0_f64,      xi, &
-                  -1.0_f64, 0.0_f64,  0.0_f64, 0.0_f64, &
-                   0.0_f64,      xi,  0.0_f64, 0.0_f64  /), (/4,4/))
 
    po => new_dg_field( degree, tau) 
 
 end subroutine initialize_maxwell_2d_diga
 
 !> Solve the maxwell equation
-subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
+subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
    type( maxwell_2d_diga )  :: this !< Maxwell solver object
 
    type(dg_field)  :: fx   !< x electric field
    type(dg_field)  :: fy   !< y electric field
    type(dg_field)  :: fz   !< z magnetic field
-   type(dg_field)  :: gx   !< x rhs field
-   type(dg_field)  :: gy   !< y rhs field
 
    type(dg_field)  :: dx  
    type(dg_field)  :: dy  
@@ -269,14 +255,16 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
       end do
       end do
          
-      this%f(:,1) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,3))
-      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3)) 
+      this%f(:,1) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,3)) &
+                 + xi*matmul(this%cell(i,j)%DxMatrix,this%w(:,4))
+      this%f(:,2) =   matmul(this%cell(i,j)%DxMatrix,this%w(:,3)) &
+                 + xi*matmul(this%cell(i,j)%DyMatrix,this%w(:,4))
       this%f(:,3) = - matmul(this%cell(i,j)%DyMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DxMatrix,this%w(:,2))
       this%f(:,4) = + matmul(this%cell(i,j)%DxMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DyMatrix,this%w(:,2))
 
-#ifdef DEBUG
+#ifdef VERBOSE
 
       print*,"####################################################"
       print*,' (i,j) ', i, j
@@ -290,7 +278,6 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
 
       print"(a)", 'side'//'  bc '//'left'//'    w(left) ' &
                  &//' f(left) '//'  n1 '//'       n2 '// '       flux '
-
 #endif
 
       do side = 1, 4 ! Loop over each side of the cell
@@ -322,7 +309,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
          end do
          end do
    
-#ifdef DEBUG
+#ifdef VERBOSE
          print*,'--'
 #endif
          do node = 1, this%degree+1
@@ -333,18 +320,17 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
             vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
    
-            if (bc_type == SLL_INTERIOR) then
+            !if (bc_type == SLL_INTERIOR) then
                flux = 0.5 * (this%w(left,:)+this%r(right,:)) 
-            else
-               flux = this%w(left,:)
-            end if
+            !else
+            !   flux = this%w(left,:)
+            !end if
 
-#ifdef DEBUG
+#ifdef VERBOSE
             print"(3i4,5f10.4)",side, bc_type, left, &
                                this%w(left,3), this%r(right,3), &
                                vec_n1, vec_n2, -vec_n1*this%w(left,3)
 #endif
-
             this%f(left,1) = this%f(left,1)+vec_n2*flux(3)-xi*vec_n1*flux(4)
             this%f(left,2) = this%f(left,2)-vec_n1*flux(3)-xi*vec_n2*flux(4)
             this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
@@ -354,7 +340,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
 
       end do
 
-#ifdef DEBUG
+#ifdef VERBOSE
       print"('fEx=',9f7.3)", this%f(:,1)
       print"('fEy=',9f7.3)", this%f(:,2)
       print"('fBz=',9f7.3)", this%f(:,3)
@@ -364,8 +350,8 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, gx, gy, dx, dy, dz )
       do jj = 1, this%degree+1
       do ii = 1, this%degree+1
          kk = (ii-1)*(this%degree+1)+jj
-         dx%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)+gx%array(ii,jj,i,j)
-         dy%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)+gy%array(ii,jj,i,j)
+         dx%array(ii,jj,i,j) = this%f(kk,1)/this%cell(i,j)%MassMatrix(kk)
+         dy%array(ii,jj,i,j) = this%f(kk,2)/this%cell(i,j)%MassMatrix(kk)
          dz%array(ii,jj,i,j) = this%f(kk,3)/this%cell(i,j)%MassMatrix(kk)
       end do
       end do
@@ -416,6 +402,7 @@ end function dof_neighbor
 subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
 
    class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+   type(cell_type) :: cell
    sll_int32       :: i, j, k, d
    sll_real64      :: x(d+1), w(d+1), vec_norm(d+1,2)
    sll_real64      :: a, b, c1, c2
@@ -424,7 +411,6 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    sll_real64      :: co_jac_mat(2,2)
    sll_real64      :: dtau_ij_mat(2,2)
    sll_real64      :: jac_mat_sll(2,2)
-   type(cell_type) :: cell
    sll_real64      :: length
    sll_int32       :: side
    sll_int32       :: bc_eta1

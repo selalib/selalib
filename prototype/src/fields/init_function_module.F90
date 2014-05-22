@@ -1,4 +1,8 @@
 
+#define MODE_X 2
+#define MODE_Y 2
+#define OMEGA sqrt((MODE_X*sll_pi)**2+(MODE_Y*sll_pi)**2)
+
 real(8) function sol_bz( x1, x2, time)
 
    use sll_constants
@@ -7,10 +11,12 @@ real(8) function sol_bz( x1, x2, time)
    real(8), intent(in) :: x1
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
+   real(8)             :: omega
 
-   sol_bz =     cos(x1)    &
-              * cos(x2)    &
-              * cos(time)
+
+   sol_bz =   - cos(MODE_X*sll_pi*x1)    &
+              * cos(MODE_Y*sll_pi*x2)    &
+              * cos(OMEGA*time)
 
    return
 
@@ -25,9 +31,9 @@ real(8) function sol_ex( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   sol_ex =   - cos(x1)    &
-              * sin(x2)    &
-              * sin(time)
+   sol_ex =   + cos(MODE_X*sll_pi*x1)    &
+              * sin(MODE_Y*sll_pi*x2)    &
+              * sin(OMEGA*time) * MODE_Y*sll_pi/OMEGA
    return
 
 end function sol_ex
@@ -41,9 +47,9 @@ real(8) function sol_ey( x1, x2, time)
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
 
-   sol_ey =   + sin(x1)    &
-              * cos(x2)    &
-              * sin(time)
+   sol_ey =   - sin(MODE_X*sll_pi*x1)    &
+              * cos(MODE_Y*sll_pi*x2)    &
+              * sin(OMEGA*time) * MODE_X*sll_pi/OMEGA
    return
 
 end function sol_ey
