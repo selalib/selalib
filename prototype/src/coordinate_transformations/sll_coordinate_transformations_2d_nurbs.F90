@@ -170,7 +170,7 @@ contains
        STOP
     end if
     filename_local = trim(filename)
-
+    
     ! get a new identifier for the file.
     call sll_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
@@ -203,6 +203,7 @@ contains
     read( input_file_id, knots_1 )
     read( input_file_id, knots_2 )
     
+    
     ! allocations of tables containing control points in each direction 
     ! here its table 1D
     SLL_ALLOCATE(control_pts1(num_pts1*num_pts2),ierr)
@@ -226,8 +227,9 @@ contains
     ! read the control points in the file
     read( input_file_id, control_points )
     ! reshape the control points to use them in the interpolator
-    control_pts1_2d = reshape(control_pts1,(/num_pts1,num_pts2/))
-    control_pts2_2d = reshape(control_pts2,(/num_pts1,num_pts2/))
+    control_pts1_2d = transpose(reshape(control_pts1,(/num_pts2,num_pts1/)))
+    control_pts2_2d = transpose(reshape(control_pts2,(/num_pts2,num_pts1/)))
+    
     ! read the weight in the file associated in each control points
     read( input_file_id, pt_weights )
     ! reshape the control points to use them in the rational interpolator
@@ -271,6 +273,7 @@ contains
     !! second interpolator 
     
 
+    
     if (transf%is_rational ==1) then
        
        do i = 1, num_pts1 
@@ -321,6 +324,7 @@ contains
          bc_top,    & 
          spline_deg1, & 
          spline_deg2 )  
+
 
     ! stock all the control points for the first interpolator 
     ! to compute the first component of our change of coordinates
@@ -442,6 +446,7 @@ contains
     eta2_min = lm%eta2_min
     delta1   = lm%delta_eta1
     delta2   = lm%delta_eta2
+
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -665,7 +670,7 @@ contains
        
        
        jac = (j11*j22 - j12*j21)/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (transf%x3_interp%interpolate_value(eta1,eta2))**4
     end if
     
   end function jacobian_2d_nurbs
@@ -868,7 +873,9 @@ contains
        jacobian_matrix_2d_nurbs(2,1) = j21/&
             (transf%x3_interp%interpolate_value(eta1,eta2))**2
        jacobian_matrix_2d_nurbs(2,2) = j22/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2   
+            (transf%x3_interp%interpolate_value(eta1,eta2))**2 
+
+      
     end if
     
   end function jacobian_matrix_2d_nurbs
@@ -978,6 +985,7 @@ contains
              do i2=1, npts_eta2
                 x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
                 x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
+                !print*, x1mesh(i1,i2),x2mesh(i1,i2)
              end do
           end do
 
