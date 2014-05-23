@@ -360,16 +360,16 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
                
                r = sqrt(n1*n1+n2*n2)
 
-               A_plus(1,1) = (n2*n2+xi*n1*n1*xi)/r
-               A_plus(1,2) = (n2*n1)*(xi-1.0_f64)/r
+               A_plus(1,1) = (n2*n2+xi*n1*n1)/r
+               A_plus(1,2) = n2*n1*(xi-1.)/r
                A_plus(1,3) = -n2 
                A_plus(1,4) = xi*n1
-               A_plus(2,1) = (n2*n1*(xi-1.0_f64))/r
+               A_plus(2,1) = n2*n1*(xi-1.)/r
                A_plus(2,2) = (n1*n1+xi*n2*n2)/r
                A_plus(2,3) = n1
                A_plus(2,4) = xi*n2
                A_plus(3,1) = -n2
-               A_plus(3,2) =  n1
+               A_plus(3,2) = n1
                A_plus(3,3) = r 
                A_plus(3,4) = 0.0_f64
                A_plus(4,1) = n1*xi
@@ -377,11 +377,11 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
                A_plus(4,3) = 0.0_f64
                A_plus(4,4) = xi*r
 
-               A_minus(1,1) = -(n2*n2+xi*n1*n1*xi)/r
-               A_minus(1,2) = -(n2*n1*(xi-1.0_f64))/r
+               A_minus(1,1) = -(n2*n2+xi*n1*n1)/r
+               A_minus(1,2) = -n2*n1*(xi-1.)/r
                A_minus(1,3) = -n2
                A_minus(1,4) = xi*n1
-               A_minus(2,1) = -(n2*n1*(xi-1.0_f64))/r
+               A_minus(2,1) = -n2*n1*(xi-1.)/r
                A_minus(2,2) = -(n1*n1+xi*n2*n2)/r
                A_minus(2,3) = n1 
                A_minus(2,4) = xi*n2
@@ -402,13 +402,42 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
                   this%f(left,3) = this%f(left,3)-n2*flux(1)+n1*flux(2)
                   this%f(left,4) = this%f(left,4)-n1*flux(1)-n2*flux(2)
                case(SLL_SILVER_MULLER)
-                  this%f(left,:) = this%f(left,:) &
-                              -0.5*matmul(A_plus,this%w(left,:)) &
-                              +0.5*matmul(A_minus,this%w(left,:)) 
+                  A_plus(1,1) = 0.0_f64
+                  A_plus(1,2) = 0.0_f64
+                  A_plus(1,3) = -n2 
+                  A_plus(1,4) = xi*n1
+                  A_plus(2,1) = 0.0_f64
+                  A_plus(2,2) = 0.0_f64
+                  A_plus(2,3) = n1
+                  A_plus(2,4) = xi*n2
+                  A_plus(3,1) = -n2
+                  A_plus(3,2) = n1
+                  A_plus(3,3) = 0.0_f64
+                  A_plus(3,4) = 0.0_f64
+                  A_plus(4,1) = n1*xi
+                  A_plus(4,2) = n2*xi
+                  A_plus(4,3) = 0.0_f64
+                  A_plus(4,4) = 0.0_f64
+                  this%f(left,:) = this%f(left,:)-matmul(A_plus,this%w(left,:))
                case default
-                  this%f(left,:) = this%f(left,:) &
-                              -0.5*matmul(A_plus,this%r(right,:)) &
-                              -0.5*matmul(A_minus,this%w(left,:))
+                  A_plus(1,1) = 0.0_f64
+                  A_plus(1,2) = 0.0_f64
+                  A_plus(1,3) = -n2 
+                  A_plus(1,4) = xi*n1
+                  A_plus(2,1) = 0.0_f64
+                  A_plus(2,2) = 0.0_f64
+                  A_plus(2,3) = n1
+                  A_plus(2,4) = xi*n2
+                  A_plus(3,1) = -n2
+                  A_plus(3,2) = n1
+                  A_plus(3,3) = 0.0_f64
+                  A_plus(3,4) = 0.0_f64
+                  A_plus(4,1) = n1*xi
+                  A_plus(4,2) = n2*xi
+                  A_plus(4,3) = 0.0_f64
+                  A_plus(4,4) = 0.0_f64
+                  flux = 0.5 * (this%w(left,:)+this%r(right,:)) 
+                  this%f(left,:) = this%f(left,:)-matmul(A_plus,flux)
                end select
 
             end if
