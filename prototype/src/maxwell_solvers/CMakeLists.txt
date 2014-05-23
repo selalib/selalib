@@ -46,15 +46,20 @@ TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_dg_fields sll_utilities )
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
 
-ADD_EXECUTABLE(test_maxwell_2d_diga unit_test_2d_diga.F90)
-TARGET_LINK_LIBRARIES(test_maxwell_2d_diga sll_maxwell_solvers)
+ADD_EXECUTABLE(test_maxwell_2d_diga_periodic unit_test_2d_diga_periodic.F90)
+TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_periodic sll_maxwell_solvers)
+
+ADD_EXECUTABLE(test_maxwell_2d_diga_wave unit_test_2d_diga_wave.F90)
+TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_wave sll_maxwell_solvers)
 
 ADD_CUSTOM_TARGET( clean_outputs
    COMMAND find . -name *.mtv -delete
    COMMAND find . -name *.gnu -delete
    COMMAND find . -name *.dat -delete
+   COMMAND find . -name *.xmf -delete
+   COMMAND find . -name *.h5  -delete
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-   COMMENT "Delete all .gnu, .dat, .mtv " VERBATIM)
+   COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
-ADD_TEST(NAME maxwell_2d_diga COMMAND test_maxwell_2d_diga)
+ADD_TEST(NAME maxwell_2d_diga COMMAND test_maxwell_2d_diga_periodic)
 SET_TESTS_PROPERTIES(maxwell_2d_diga PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
