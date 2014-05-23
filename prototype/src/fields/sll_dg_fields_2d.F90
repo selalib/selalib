@@ -131,6 +131,8 @@ subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
       else
          call plot_dg_field_2d_with_xdmf(this, field_name)
       end if
+      case default
+         print"(a)", field_name//' write_to_file : Unknown format'
       end select
    else
       call plot_dg_field_2d_with_gnuplot( this, field_name )
