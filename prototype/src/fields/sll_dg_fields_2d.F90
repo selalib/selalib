@@ -36,16 +36,15 @@ contains
 
 end type dg_field
 
+interface operator(+)
+  module procedure dg_field_add
+end interface operator(+)
 
-!interface operator(+)
-!  module procedure dg_field_add
-!end interface operator(+)
+interface operator(-)
+  module procedure dg_field_sub
+end interface operator(-)
 
-!interface operator(-)
-!  module procedure dg_field_sub
-!end interface operator(-)
-
-public :: new_dg_field
+public :: new_dg_field, operator(+), operator(-)
 
 sll_int32, private :: error
 
@@ -113,11 +112,12 @@ subroutine initialize_dg_field( this, init_function, time)
 
 end subroutine initialize_dg_field
 
-subroutine write_dg_field_2d_to_file( this, field_name, file_format )
+subroutine write_dg_field_2d_to_file( this, field_name, file_format, time )
 
    class(dg_field)        :: this
    character(len=*)       :: field_name
    sll_int32, optional    :: file_format
+   sll_real64, optional   :: time
 
    if (present(file_format)) then
       select case(file_format)
@@ -126,7 +126,11 @@ subroutine write_dg_field_2d_to_file( this, field_name, file_format )
       case(SLL_IO_MTV)
       call plot_dg_field_2d_with_plotmtv(this, field_name)
       case(SLL_IO_XDMF)
-      call plot_dg_field_2d_with_xdmf(this, field_name)
+      if (present(time)) then
+         call plot_dg_field_2d_with_xdmf(this, field_name, time)
+      else
+         call plot_dg_field_2d_with_xdmf(this, field_name)
+      end if
       end select
    else
       call plot_dg_field_2d_with_gnuplot( this, field_name )
@@ -205,33 +209,33 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    
 end subroutine plot_dg_field_2d_with_gnuplot
 
-!function dg_field_add( W1, W2) result(W3)
-!
-!  type(dg_field), intent(in) :: W1
-!  type(dg_field), intent(in) :: W2
-!  type(dg_field)             :: W3
-!
-!  SLL_ASSERT(W1%degree == W2%degree)
-!  SLL_ASSERT(associated(W1%array))
-!  SLL_ASSERT(associated(W2%array))
-!
-!  W3%array  = W1%array + W2%array
-!
-!end function dg_field_add
+function dg_field_add( W1, W2) result(W3)
 
-!function dg_field_sub( W1, W2) result(W3)
-!
-!  type(dg_field), intent(in) :: W1
-!  type(dg_field), intent(in) :: W2
-!  type(dg_field)             :: W3
-!
-!  SLL_ASSERT(W1%degree == W2%degree)
-!  SLL_ASSERT(associated(W1%array))
-!  SLL_ASSERT(associated(W2%array))
-!
-!  W3%array  = W1%array - W2%array
-!
-!end function dg_field_sub
+  type(dg_field), intent(in) :: W1
+  type(dg_field), intent(in) :: W2
+  type(dg_field)             :: W3
+
+  SLL_ASSERT(W1%degree == W2%degree)
+  SLL_ASSERT(associated(W1%array))
+  SLL_ASSERT(associated(W2%array))
+
+  W3%array  = W1%array + W2%array
+
+end function dg_field_add
+
+function dg_field_sub( W1, W2) result(W3)
+
+  type(dg_field), intent(in) :: W1
+  type(dg_field), intent(in) :: W2
+  type(dg_field)             :: W3
+
+  SLL_ASSERT(W1%degree == W2%degree)
+  SLL_ASSERT(associated(W1%array))
+  SLL_ASSERT(associated(W2%array))
+
+  W3%array  = W1%array - W2%array
+
+end function dg_field_sub
 
 subroutine plot_dg_field_2d_with_gmsh(this, field_name)
 
@@ -454,7 +458,7 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    
 end subroutine plot_dg_field_2d_with_plotmtv
 
-subroutine plot_dg_field_2d_with_xdmf(this, field_name)
+subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
 
    class(dg_field)   :: this
    character(len=*)  :: field_name
@@ -462,6 +466,10 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name)
    sll_int32         :: i, j, k, ii, jj
    sll_real64        :: offset(2)
    sll_real64        :: eta1, eta2
+   sll_int32         :: clength
+   sll_real64, optional :: time
+
+   clength = len_trim(field_name)
 
    SLL_ASSERT(this%degree < 10)
 
@@ -472,6 +480,9 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name)
    write(file_id,"(a)") "<Xdmf Version='2.'>"
    write(file_id,"(a)") "<Domain>"
    write(file_id,"(a)") "<Grid Name='Mesh' GridType='Collection'>"
+   if (present(time)) then 
+      write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
+   end if
    k = 0
    do i=1,this%tau%mesh%num_cells1
    do j=1,this%tau%mesh%num_cells2
@@ -506,8 +517,8 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name)
       end do
       write(file_id,"(a)")"</DataItem>"
       write(file_id,"(a)")"</Geometry>"
-      write(file_id,"(a)")"<Attribute Name='"//field_name// &
-           & "' AttributeType='Scalar' Center='Node'>"
+      write(file_id,"(a)")"<Attribute Name='values' &
+                           & AttributeType='Scalar' Center='Node'>"
       write(file_id,"(a,2i3,a)")"<DataItem Dimensions='", &
            this%degree+1,this%degree+1, &
            "' NumberType='Float' Precision='4' Format='XML'>"

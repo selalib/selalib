@@ -28,6 +28,12 @@ module sll_boundary_condition_descriptors
   sll_int32, parameter :: SLL_HERMITE        = 3
   sll_int32, parameter :: SLL_NEUMANN_MODE_0 = 4
   sll_int32, parameter :: SLL_SET_TO_LIMIT   = 5
-  sll_int32, parameter :: SLL_INTERIOR       = 99
+  sll_int32, parameter :: SLL_INTERIOR       = 6
+  sll_int32, parameter :: SLL_INCOMING_WAVE  = 7
+  sll_int32, parameter :: SLL_CONDUCTOR      = 8
+  sll_int32, parameter :: SLL_SILVER_MULLER  = 9
+
+  sll_int32, parameter :: SLL_CENTERED       = 20
+  sll_int32, parameter :: SLL_UNCENTERED     = 21
 
 end module sll_boundary_condition_descriptors
