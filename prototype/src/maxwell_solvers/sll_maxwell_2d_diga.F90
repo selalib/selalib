@@ -18,6 +18,7 @@ use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
+use sll_boundary_condition_descriptors
 
 implicit none
 private
@@ -65,8 +66,11 @@ type, public :: maxwell_2d_diga
    sll_real64, dimension(:,:), pointer      :: f
    sll_real64, dimension(:,:), pointer      :: w
    sll_real64, dimension(:,:), pointer      :: r
-   sll_int32                                :: bc_eta1
-   sll_int32                                :: bc_eta2
+   sll_int32                                :: bc_south
+   sll_int32                                :: bc_east
+   sll_int32                                :: bc_north
+   sll_int32                                :: bc_west
+   sll_int32                                :: flux_type
 
 end type maxwell_2d_diga
 
@@ -89,8 +93,15 @@ public :: initialize, solve
 contains
 
 !> Initialize Maxwell solver object using DG method.
-subroutine initialize_maxwell_2d_diga( this, tau, degree, &
-                                       polarization, bc_eta1, bc_eta2)
+subroutine initialize_maxwell_2d_diga( this,         &
+                                       tau,          &
+                                       degree,       &
+                                       polarization, &
+                                       bc_south,     &
+                                       bc_east,      &
+                                       bc_north,     &
+                                       bc_west,      &
+                                       flux_type)
 
    type( maxwell_2d_diga )     :: this !< solver data object
    sll_transformation, pointer :: tau
@@ -107,13 +118,18 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    sll_real64                  :: dtau_ij_mat(2,2)
    sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
-   sll_int32                   :: bc_eta1
-   sll_int32                   :: bc_eta2
+   sll_int32, intent(in)       :: bc_east
+   sll_int32, intent(in)       :: bc_west
+   sll_int32, intent(in)       :: bc_north
+   sll_int32, intent(in)       :: bc_south
+   sll_int32, optional         :: flux_type
 
    this%tau        => tau
    this%mesh       => tau%mesh
-   this%bc_eta1    =  bc_eta1
-   this%bc_eta2    =  bc_eta2
+   this%bc_south   =  bc_south
+   this%bc_east    =  bc_east
+   this%bc_north   =  bc_north
+   this%bc_west    =  bc_west
 
    this%nc_eta1    = tau%mesh%num_cells1
    this%nc_eta2    = tau%mesh%num_cells2
@@ -126,6 +142,12 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
 
    this%degree       =  degree
    this%polarization = polarization
+
+   if (present(flux_type)) then
+      this%flux_type = flux_type
+   else
+      this%flux_type = SLL_CENTERED
+   end if
 
    nddl   = (degree+1)*(degree+1)
    ncells = this%nc_eta1*this%nc_eta2
@@ -144,7 +166,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
    do j = 1, this%nc_eta2   !Loop over cells
    do i = 1, this%nc_eta1
 
-      call compute_normals(tau,bc_eta1,bc_eta2,i,j,degree,this%cell(i,j))
+      call compute_normals(tau,bc_south,bc_east,bc_north,bc_west, &
+                           i,j,degree,this%cell(i,j))
 
       SLL_CLEAR_ALLOCATE(this%cell(i,j)%MassMatrix(1:nddl)     , error)
       SLL_CLEAR_ALLOCATE(this%cell(i,j)%DxMatrix(1:nddl,1:nddl), error)
@@ -193,8 +216,8 @@ subroutine initialize_maxwell_2d_diga( this, tau, degree, &
             dfx = 0.0_f64
             dfy = 0.0_f64
 
-            if (jj == ll) dfx = dlag(kk,ii)
-            if (ii == kk) dfy = dlag(ll,jj)
+            if (jj == ll) dfx = dlag(kk,ii) !Here we use transpose
+            if (ii == kk) dfy = dlag(ll,jj) !dlag (don't know why)
 
             this%cell(i,j)%DxMatrix(k,l) = & 
                det*w(kk)*w(ll)*(inv_j(1,1)*dfx + inv_j(2,1)*dfy)
@@ -236,11 +259,12 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
    type(dg_field)  :: dy  
    type(dg_field)  :: dz  
 
-   sll_int32  :: left, right, node, side, bc_type
+   sll_int32  :: left, right, node, side, bc_type, flux_type
    sll_int32  :: i, j, k, l, ii, jj, kk
-   sll_real64 :: vec_n1
-   sll_real64 :: vec_n2
-   sll_real64 :: flux(4)
+   sll_real64 :: n1
+   sll_real64 :: n2
+   sll_real64 :: r
+   sll_real64 :: flux(4), A_plus(4,4), A_minus(4,4)
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -264,6 +288,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
       this%f(:,4) = + matmul(this%cell(i,j)%DxMatrix,this%w(:,1)) &
                     + matmul(this%cell(i,j)%DyMatrix,this%w(:,2))
 
+
 #ifdef VERBOSE
 
       print*,"####################################################"
@@ -283,6 +308,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
       do side = 1, 4 ! Loop over each side of the cell
  
          bc_type = this%cell(i,j)%edge(side)%bc_type
+         flux_type = this%flux_type
          !periodic boundary conditions
          select case(side)
          case(SOUTH)
@@ -317,25 +343,81 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
             left   = dof_local(side, node, this%degree)
             right  = dof_neighbor(side, node, this%degree)
 
-            vec_n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
-            vec_n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
-   
-            !if (bc_type == SLL_INTERIOR) then
+            n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
+            n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
+
+            bc_type = this%cell(i,j)%edge(side)%bc_type
+            
+            if (this%flux_type == SLL_CENTERED) then
+
                flux = 0.5 * (this%w(left,:)+this%r(right,:)) 
-            !else
-            !   flux = this%w(left,:)
-            !end if
+               this%f(left,1) = this%f(left,1)+n2*flux(3)-xi*n1*flux(4)
+               this%f(left,2) = this%f(left,2)-n1*flux(3)-xi*n2*flux(4)
+               this%f(left,3) = this%f(left,3)+n2*flux(1)-n1*flux(2)
+               this%f(left,4) = this%f(left,4)-n1*flux(1)-n2*flux(2)
+
+            else
+               
+               r = sqrt(n1*n1+n2*n2)
+
+               A_plus(1,1) = (n2*n2+xi*n1*n1*xi)/r
+               A_plus(1,2) = (n2*n1)*(xi-1.0_f64)/r
+               A_plus(1,3) = -n2 
+               A_plus(1,4) = xi*n1
+               A_plus(2,1) = (n2*n1*(xi-1.0_f64))/r
+               A_plus(2,2) = (n1*n1+xi*n2*n2)/r
+               A_plus(2,3) = n1
+               A_plus(2,4) = xi*n2
+               A_plus(3,1) = -n2
+               A_plus(3,2) =  n1
+               A_plus(3,3) = r 
+               A_plus(3,4) = 0.0_f64
+               A_plus(4,1) = n1*xi
+               A_plus(4,2) = n2*xi
+               A_plus(4,3) = 0.0_f64
+               A_plus(4,4) = xi*r
+
+               A_minus(1,1) = -(n2*n2+xi*n1*n1*xi)/r
+               A_minus(1,2) = -(n2*n1*(xi-1.0_f64))/r
+               A_minus(1,3) = -n2
+               A_minus(1,4) = xi*n1
+               A_minus(2,1) = -(n2*n1*(xi-1.0_f64))/r
+               A_minus(2,2) = -(n1*n1+xi*n2*n2)/r
+               A_minus(2,3) = n1 
+               A_minus(2,4) = xi*n2
+               A_minus(3,1) = -n2
+               A_minus(3,2) =  n1
+               A_minus(3,3) = -r 
+               A_minus(3,4) = 0.0_f64
+               A_minus(4,1) = n1*xi
+               A_minus(4,2) = n2*xi
+               A_minus(4,3) = 0.0_f64
+               A_minus(4,4) = -xi*r
+
+               select case (bc_type)
+               case(SLL_CONDUCTOR)
+                  flux = this%w(left,:)
+                  this%f(left,1) = this%f(left,1)+n2*flux(3)+xi*n1*flux(4)
+                  this%f(left,2) = this%f(left,2)-n1*flux(3)+xi*n2*flux(4)
+                  this%f(left,3) = this%f(left,3)-n2*flux(1)+n1*flux(2)
+                  this%f(left,4) = this%f(left,4)-n1*flux(1)-n2*flux(2)
+               case(SLL_SILVER_MULLER)
+                  this%f(left,:) = this%f(left,:) &
+                              -0.5*matmul(A_plus,this%w(left,:)) &
+                              +0.5*matmul(A_minus,this%w(left,:)) 
+               case default
+                  this%f(left,:) = this%f(left,:) &
+                              -0.5*matmul(A_plus,this%r(right,:)) &
+                              -0.5*matmul(A_minus,this%w(left,:))
+               end select
+
+            end if
 
 #ifdef VERBOSE
             print"(3i4,5f10.4)",side, bc_type, left, &
                                this%w(left,3), this%r(right,3), &
-                               vec_n1, vec_n2, -vec_n1*this%w(left,3)
+                               n1, n2, -n1*this%w(left,3)
 #endif
-            this%f(left,1) = this%f(left,1)+vec_n2*flux(3)-xi*vec_n1*flux(4)
-            this%f(left,2) = this%f(left,2)-vec_n1*flux(3)-xi*vec_n2*flux(4)
-            this%f(left,3) = this%f(left,3)+vec_n2*flux(1)-vec_n1*flux(2)
-            this%f(left,4) = this%f(left,4)-vec_n1*flux(1)-vec_n2*flux(2)
-
          end do
 
       end do
@@ -399,11 +481,12 @@ function dof_neighbor(edge,dof,degree)
 end function dof_neighbor
 
 !> Compute cell normals
-subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
+subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
+                           i, j, d, cell )
 
    class(sll_coordinate_transformation_2d_analytic), pointer :: tau
    type(cell_type) :: cell
-   sll_int32       :: i, j, k, d
+   sll_int32       :: i, j, d
    sll_real64      :: x(d+1), w(d+1), vec_norm(d+1,2)
    sll_real64      :: a, b, c1, c2
    sll_real64      :: xk, wk
@@ -413,8 +496,11 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
    sll_real64      :: jac_mat_sll(2,2)
    sll_real64      :: length
    sll_int32       :: side
-   sll_int32       :: bc_eta1
-   sll_int32       :: bc_eta2
+   sll_int32       :: bc_south
+   sll_int32       :: bc_east
+   sll_int32       :: bc_north
+   sll_int32       :: bc_west
+   sll_int32       :: k
    
    cell%i = i
    cell%j = j
@@ -434,10 +520,10 @@ subroutine compute_normals(tau, bc_eta1, bc_eta2, i, j, d, cell )
       cell%edge(side)%bc_type = SLL_INTERIOR
    end do
 
-   if (i ==                   1) cell%edge(4)%bc_type = bc_eta2
-   if (i == tau%mesh%num_cells1) cell%edge(2)%bc_type = bc_eta2
-   if (j ==                   1) cell%edge(1)%bc_type = bc_eta1
-   if (j == tau%mesh%num_cells2) cell%edge(3)%bc_type = bc_eta1
+   if (j ==                   1) cell%edge(SOUTH)%bc_type = bc_south
+   if (i == tau%mesh%num_cells1) cell%edge(EAST)%bc_type  = bc_east
+   if (j == tau%mesh%num_cells2) cell%edge(NORTH)%bc_type = bc_north
+   if (i ==                   1) cell%edge(WEST)%bc_type  = bc_west
    
    x = gauss_lobatto_points(d+1)
    w = gauss_lobatto_weights(d+1)
