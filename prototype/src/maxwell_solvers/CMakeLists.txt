@@ -61,5 +61,7 @@ ADD_CUSTOM_TARGET( clean_outputs
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
 
-ADD_TEST(NAME maxwell_2d_diga COMMAND test_maxwell_2d_diga_periodic)
-SET_TESTS_PROPERTIES(maxwell_2d_diga PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME maxwell_2d_dg_periodic COMMAND test_maxwell_2d_diga_periodic)
+SET_TESTS_PROPERTIES(maxwell_2d_dg_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ADD_TEST(NAME maxwell_2d_dg_silver_muller COMMAND test_maxwell_2d_diga_wave)
+SET_TESTS_PROPERTIES(maxwell_2d_dg_silver_muller PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
