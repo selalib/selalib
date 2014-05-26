@@ -71,6 +71,8 @@ type, public :: maxwell_2d_diga
    sll_int32                                :: bc_north
    sll_int32                                :: bc_west
    sll_int32                                :: flux_type
+   type(dg_field), pointer                  :: po
+   sll_real64                               :: xi 
 
 end type maxwell_2d_diga
 
@@ -84,9 +86,7 @@ interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
 
-sll_int32               :: error
-type(dg_field), pointer :: po
-sll_real64, parameter   :: xi = 0.0_f64
+sll_int32  :: error
 
 public :: initialize, solve
 
@@ -140,7 +140,8 @@ subroutine initialize_maxwell_2d_diga( this,         &
    this%delta_eta1 = tau%mesh%delta_eta1
    this%delta_eta2 = tau%mesh%delta_eta2
 
-   this%degree       =  degree
+   this%xi           = 0.0_f64
+   this%degree       = degree
    this%polarization = polarization
 
    if (present(flux_type)) then
@@ -242,7 +243,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
    SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%f((degree+1)*(degree+1),4),error)
 
-   po => new_dg_field( degree, tau) 
+   this%po => new_dg_field( degree, tau) 
 
 end subroutine initialize_maxwell_2d_diga
 
@@ -264,7 +265,13 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
    sll_real64 :: n1
    sll_real64 :: n2
    sll_real64 :: r
-   sll_real64 :: flux(4), A_plus(4,4), A_minus(4,4)
+   sll_real64 :: flux(4)
+   sll_real64 :: A(4,4)
+   sll_real64 :: A_p(4,4)
+   sll_real64 :: A_m(4,4)
+   sll_real64 :: xi
+
+   xi = this%xi
 
    do i = 1, this%nc_eta1
    do j = 1, this%nc_eta2
@@ -275,7 +282,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
          this%w(kk,1) = fx%array(ii,jj,i,j)
          this%w(kk,2) = fy%array(ii,jj,i,j)
          this%w(kk,3) = fz%array(ii,jj,i,j)
-         this%w(kk,4) = po%array(ii,jj,i,j)
+         this%w(kk,4) = this%po%array(ii,jj,i,j)
       end do
       end do
          
@@ -331,7 +338,7 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
             this%r(kk,1) = fx%array(ii,jj,k,l)
             this%r(kk,2) = fy%array(ii,jj,k,l)
             this%r(kk,3) = fz%array(ii,jj,k,l)
-            this%r(kk,4) = po%array(ii,jj,k,l)
+            this%r(kk,4) = this%po%array(ii,jj,k,l)
          end do
          end do
    
@@ -345,102 +352,64 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
 
             n1 = this%cell(i,j)%edge(side)%vec_norm(node,1)
             n2 = this%cell(i,j)%edge(side)%vec_norm(node,2)
+            r  = sqrt(n1*n1+n2*n2)
 
             bc_type = this%cell(i,j)%edge(side)%bc_type
-            
-            if (this%flux_type == SLL_CENTERED) then
 
-               flux = 0.5 * (this%w(left,:)+this%r(right,:)) 
-               this%f(left,1) = this%f(left,1)+n2*flux(3)-xi*n1*flux(4)
-               this%f(left,2) = this%f(left,2)-n1*flux(3)-xi*n2*flux(4)
-               this%f(left,3) = this%f(left,3)+n2*flux(1)-n1*flux(2)
-               this%f(left,4) = this%f(left,4)-n1*flux(1)-n2*flux(2)
+            A(1,:) = [0.0_f64, 0.0_f64,     -n2,   xi*n1]
+            A(2,:) = [0.0_f64, 0.0_f64,      n1,   xi*n2]
+            A(3,:) = [    -n2,      n1, 0.0_f64, 0.0_f64]
+            A(4,:) = [  xi*n1,   xi*n2, 0.0_f64, 0.0_f64]
 
-            else
-               
-               r = sqrt(n1*n1+n2*n2)
+            A_p(1,:)=[ (n2*n2+xi*n1*n1)/r,    n2*n1*(xi-1.)/r,    -n2, xi*n1]
+            A_p(2,:)=[    n2*n1*(xi-1.)/r, (n1*n1+xi*n2*n2)/r,     n1, xi*n2]
+            A_p(3,:)=[                -n2,                 n1,      r,0._f64]
+            A_p(4,:)=[              n1*xi,              n2*xi,0.0_f64,  xi*r]
+    
+            A_m(1,:)=[-(n2*n2+xi*n1*n1)/r,   -n2*n1*(xi-1.)/r,    -n2, xi*n1]
+            A_m(2,:)=[   -n2*n1*(xi-1.)/r,-(n1*n1+xi*n2*n2)/r,     n1, xi*n2]
+            A_m(3,:)=[                -n2,                 n1,     -r,0._f64]
+            A_m(4,:)=[              n1*xi,              n2*xi,0.0_f64, -xi*r]
 
-               A_plus(1,1) = (n2*n2+xi*n1*n1)/r
-               A_plus(1,2) = n2*n1*(xi-1.)/r
-               A_plus(1,3) = -n2 
-               A_plus(1,4) = xi*n1
-               A_plus(2,1) = n2*n1*(xi-1.)/r
-               A_plus(2,2) = (n1*n1+xi*n2*n2)/r
-               A_plus(2,3) = n1
-               A_plus(2,4) = xi*n2
-               A_plus(3,1) = -n2
-               A_plus(3,2) = n1
-               A_plus(3,3) = r 
-               A_plus(3,4) = 0.0_f64
-               A_plus(4,1) = n1*xi
-               A_plus(4,2) = n2*xi
-               A_plus(4,3) = 0.0_f64
-               A_plus(4,4) = xi*r
+            select case (bc_type)
 
-               A_minus(1,1) = -(n2*n2+xi*n1*n1)/r
-               A_minus(1,2) = -n2*n1*(xi-1.)/r
-               A_minus(1,3) = -n2
-               A_minus(1,4) = xi*n1
-               A_minus(2,1) = -n2*n1*(xi-1.)/r
-               A_minus(2,2) = -(n1*n1+xi*n2*n2)/r
-               A_minus(2,3) = n1 
-               A_minus(2,4) = xi*n2
-               A_minus(3,1) = -n2
-               A_minus(3,2) =  n1
-               A_minus(3,3) = -r 
-               A_minus(3,4) = 0.0_f64
-               A_minus(4,1) = n1*xi
-               A_minus(4,2) = n2*xi
-               A_minus(4,3) = 0.0_f64
-               A_minus(4,4) = -xi*r
+            case(SLL_CONDUCTOR)
 
-               select case (bc_type)
-               case(SLL_CONDUCTOR)
-                  flux = this%w(left,:)
-                  this%f(left,1) = this%f(left,1)+n2*flux(3)+xi*n1*flux(4)
-                  this%f(left,2) = this%f(left,2)-n1*flux(3)+xi*n2*flux(4)
-                  this%f(left,3) = this%f(left,3)-n2*flux(1)+n1*flux(2)
-                  this%f(left,4) = this%f(left,4)-n1*flux(1)-n2*flux(2)
-               case(SLL_SILVER_MULLER)
-                  A_plus(1,1) = 0.0_f64
-                  A_plus(1,2) = 0.0_f64
-                  A_plus(1,3) = -n2 
-                  A_plus(1,4) = xi*n1
-                  A_plus(2,1) = 0.0_f64
-                  A_plus(2,2) = 0.0_f64
-                  A_plus(2,3) = n1
-                  A_plus(2,4) = xi*n2
-                  A_plus(3,1) = -n2
-                  A_plus(3,2) = n1
-                  A_plus(3,3) = 0.0_f64
-                  A_plus(3,4) = 0.0_f64
-                  A_plus(4,1) = n1*xi
-                  A_plus(4,2) = n2*xi
-                  A_plus(4,3) = 0.0_f64
-                  A_plus(4,4) = 0.0_f64
-                  this%f(left,:) = this%f(left,:)-matmul(A_plus,this%w(left,:))
-               case default
-                  A_plus(1,1) = 0.0_f64
-                  A_plus(1,2) = 0.0_f64
-                  A_plus(1,3) = -n2 
-                  A_plus(1,4) = xi*n1
-                  A_plus(2,1) = 0.0_f64
-                  A_plus(2,2) = 0.0_f64
-                  A_plus(2,3) = n1
-                  A_plus(2,4) = xi*n2
-                  A_plus(3,1) = -n2
-                  A_plus(3,2) = n1
-                  A_plus(3,3) = 0.0_f64
-                  A_plus(3,4) = 0.0_f64
-                  A_plus(4,1) = n1*xi
-                  A_plus(4,2) = n2*xi
-                  A_plus(4,3) = 0.0_f64
-                  A_plus(4,4) = 0.0_f64
-                  flux = 0.5 * (this%w(left,:)+this%r(right,:)) 
-                  this%f(left,:) = this%f(left,:)-matmul(A_plus,flux)
-               end select
+               A(1,:) = [-1.0_f64, 0.0_f64, 0.0_f64, 0.0_f64]
+               A(2,:) = [ 0.0_f64,-1.0_f64, 0.0_f64, 0.0_f64]
+               A(3,:) = [ 0.0_f64, 0.0_f64, 1.0_f64, 0.0_f64]
+               A(4,:) = [-2*xi*n1,-2*xi*n2, 0.0_f64,-1.0_f64]
 
-            end if
+               flux = matmul(A,this%w(left,:))
+               flux = matmul(A_m, flux) + matmul(A_p,this%w(left,:))
+
+               this%f(left,:) = this%f(left,:)-flux
+
+            case(SLL_SILVER_MULLER)
+
+               A(1,:) = [(n2*n2+xi*n1*n1)/r,    n2*n1*(xi-1)/r, 0.0_f64, 0.0_f64]
+               A(2,:) = [    n2*n1*(xi-1)/r,(n1*n1+xi*n2*n2)/r, 0.0_f64, 0.0_f64]
+               A(3,:) = [           0.0_f64,           0.0_f64,       r, 0.0_f64]
+               A(4,:) = [           0.0_f64,           0.0_f64, 0.0_f64,    xi*r]
+
+               this%f(left,:) = this%f(left,:)-0.5*matmul(A,this%w(left,:)) 
+
+            case default
+
+               if (this%flux_type == SLL_UNCENTERED) then
+
+                  this%f(left,:) = this%f(left,:) &
+                                   -0.5*matmul(A_p,this%w(left,:)) &
+                                   -0.5*matmul(A_m,this%r(right,:)) 
+               else
+
+                  flux = 0.5*(this%w(left,:)+this%r(right,:))
+
+                  this%f(left,:) = this%f(left,:)-matmul(A,flux)
+
+               end if
+
+            end select
 
 #ifdef VERBOSE
             print"(3i4,5f10.4)",side, bc_type, left, &
