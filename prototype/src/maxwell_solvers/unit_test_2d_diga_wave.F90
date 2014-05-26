@@ -208,14 +208,19 @@ do istep = 1, nstep !*** Loop over time
 
    time = time + dt
    
-   call int2string(istep, cstep)
-   call bz%write_to_file('bz')
+   !call int2string(istep, cstep)
+   !call bz%write_to_file('bz')
    !call maxwell_TE%po%write_to_file('phi')
    !call bz%write_to_file('bz'//cstep, SLL_IO_XDMF, time)
 
 end do ! next time step
 
-print"(a)", 'PASSED'
+
+if (sum(bz%array*bz%array) < 0.001) then
+   print"(a)", 'PASSED'
+else
+   print"(a)", 'FAILED'
+end if
 
 contains
 
