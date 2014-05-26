@@ -100,8 +100,8 @@ program qns_4d_general
   ! sll_gaussian_beam_initializer_4d
 !!$  
   mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-       eta1_min= 0.0_f64, eta1_max= 1.0_f64, &
-       eta2_min= 0.0_f64, eta2_max= 1.0_f64 )
+       eta1_min= -1.0_f64, eta1_max= 1.0_f64, &
+       eta2_min= -1.0_f64, eta2_max= 1.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -178,7 +178,7 @@ program qns_4d_general
   landau_params(5) = 0.0_f64!xc
   landau_params(6) = 0.0_f64!yc
   landau_params(7) = sll_pi*15*8!sll_pi*15*18!n0
-  landau_params(8) = 9.0_f64
+  landau_params(8) = 6.0_f64
   
 
   ! ---------------------------------------------------------------------
