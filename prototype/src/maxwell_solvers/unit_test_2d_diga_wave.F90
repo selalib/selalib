@@ -21,8 +21,8 @@ implicit none
 !=====================================!
 ! Simulation parameters               !
 !=====================================!
-sll_int32, parameter :: nc_eta1 = 10  !
-sll_int32, parameter :: nc_eta2 = 10  !
+sll_int32, parameter :: nc_eta1 = 5   !
+sll_int32, parameter :: nc_eta2 = 5   !
 sll_int32, parameter :: degree  = 4   !
 !=====================================!
 
@@ -64,32 +64,32 @@ delta_eta1 = mesh%delta_eta1
 delta_eta2 = mesh%delta_eta2
 
 ! "Identity transformation";
-tau => new_coordinate_transformation_2d_analytic( &
-       "identity_transformation",                 &
-       mesh,                                      &
-       identity_x1,                               &
-       identity_x2,                               &
-       identity_jac11,                            &
-       identity_jac12,                            &
-       identity_jac21,                            &
-       identity_jac22,                            &
-       SLL_NULL_REAL64 )
+!tau => new_coordinate_transformation_2d_analytic( &
+!       "identity_transformation",                 &
+!       mesh,                                      &
+!       identity_x1,                               &
+!       identity_x2,                               &
+!       identity_jac11,                            &
+!       identity_jac12,                            &
+!       identity_jac21,                            &
+!       identity_jac22,                            &
+!       SLL_NULL_REAL64 )
 
 ! "Affine transformation";
 !
 ! x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
 ! x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
 !
-!tau => new_coordinate_transformation_2d_analytic( &
-!       "affine_transformation",                   &
-!       mesh,                                      &
-!       affine_x1,                                 &
-!       affine_x2,                                 &
-!       affine_jac11,                              &
-!       affine_jac12,                              &
-!       affine_jac21,                              &
-!       affine_jac22,                              &
-!       (/0.0_f64,2.0_f64,0.0_f64,1.0_f64,0.0_f64/) )
+tau => new_coordinate_transformation_2d_analytic( &
+       "affine_transformation",                   &
+       mesh,                                      &
+       affine_x1,                                 &
+       affine_x2,                                 &
+       affine_jac11,                              &
+       affine_jac12,                              &
+       affine_jac21,                              &
+       affine_jac22,                              &
+       (/0.0_f64,1.0_f64,0.0_f64,1.0_f64,0.25*sll_pi/) )
 
 ! "Homography transformation"
 !
@@ -210,6 +210,7 @@ do istep = 1, nstep !*** Loop over time
    
    call int2string(istep, cstep)
    call bz%write_to_file('bz')
+   !call maxwell_TE%po%write_to_file('phi')
    !call bz%write_to_file('bz'//cstep, SLL_IO_XDMF, time)
 
 end do ! next time step
