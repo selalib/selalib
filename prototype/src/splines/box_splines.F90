@@ -266,7 +266,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   end subroutine compute_cubic_spline_2D
 
 
-  subroutine compute_linear_box_spline_2D_neum_neum( data, spline )
+  !subroutine compute_linear_box_spline_2D_neum_neum( data, spline )
 
 
 
