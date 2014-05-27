@@ -17,3 +17,15 @@ html
 usr
 Portindex*
 *.out
+
+prototype/src/coordinate_transformations/circle_5mp_info.nml
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_info.nml
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch0.nml
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch1.nml
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch2.nml
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch3.nml

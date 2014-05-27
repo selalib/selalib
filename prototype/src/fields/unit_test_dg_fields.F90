@@ -31,7 +31,7 @@ class(sll_coordinate_transformation_2d_analytic), pointer :: collela
 type(dg_field), pointer :: ex
 type(dg_field), pointer :: bz
 
-sll_real64, external :: fcos, gaussian, add
+sll_real64, external :: gaussian, add
 
 mesh => new_logical_mesh_2d(nc_eta1, nc_eta2, &
                             eta1_min=-1._f64, eta1_max=1._f64, &
@@ -81,7 +81,7 @@ tau => new_coordinate_transformation_2d_analytic( &
 
 call tau%write_to_file(SLL_IO_MTV)
 
-ex => new_dg_field( degree, tau, fcos) 
+ex => new_dg_field( degree, tau, add) 
 call ex%write_to_file('ex', SLL_IO_GMSH)
 call ex%write_to_file('ex', SLL_IO_MTV)
 call ex%write_to_file('ex', SLL_IO_XDMF)
