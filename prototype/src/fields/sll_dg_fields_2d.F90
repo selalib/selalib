@@ -149,10 +149,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    sll_real64             :: eta1, eta2
    sll_real64             :: offset(2)
    sll_int32              :: i, j, ii, jj
-   sll_int32              :: icell
-   character(len=4)       :: ccell
    character(len=4)       :: ctag
-   character(len=9)       :: label
 
    call int2string(this%tag, ctag)
 
@@ -166,24 +163,12 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    end if
    write(gnu_id,"(a)") "unset key"
    write(gnu_id,"(a)") "set title '"//field_name//" step "//ctag//"'"
+   write(gnu_id,"(a)") "splot '"//field_name//ctag//".dat' w l"
 
+   call sll_ascii_file_create(field_name//ctag//".dat", file_id, error)
 
-   icell = 0
    do j = 1, this%tau%mesh%num_cells2
    do i = 1, this%tau%mesh%num_cells1
- 
-      icell = icell+1
-
-      call int2string(icell, ccell)
-      label = ccell//"-"//ctag
-
-      if (icell == 1) then
-         write(gnu_id,"(a)",advance='no') "splot '"//field_name//label//".dat' w l"
-      else
-         write(gnu_id,"(a)",advance='no') ",'"//field_name//label//".dat' w l "
-      end if
-
-      call sll_ascii_file_create(field_name//label//".dat", file_id, error)
 
       offset(1) = this%tau%mesh%eta1_min + (i-1)*this%tau%mesh%delta_eta1
       offset(2) = this%tau%mesh%eta2_min + (j-1)*this%tau%mesh%delta_eta2
@@ -197,13 +182,13 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
       end do
       write(file_id,*)
       end do
-      close(file_id)
+      write(file_id,*)
 
    end do
    end do
+   close(file_id)
 
    write(gnu_id,*)
-   !write(gnu_id,'(a)') 'pause -1'
    close(gnu_id)
 
    this%tag = this%tag+1
