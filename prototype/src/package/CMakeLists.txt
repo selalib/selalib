@@ -97,6 +97,21 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
+#    ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90
+    ${SLL_DIR}/sparse_matrix_interface/gauss_seidel.F90
+    ${SLL_DIR}/sparse_matrix_interface/getdia.F90
+    ${SLL_DIR}/sparse_matrix_interface/getl.F90
+    ${SLL_DIR}/sparse_matrix_interface/getu.F90
+    ${SLL_DIR}/sparse_matrix_interface/lsol.F90
+    ${SLL_DIR}/sparse_matrix_interface/remove_zeros.F90
+    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module.F90
+#    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module_basic.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_basic.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_def.F90
+#    ${SLL_DIR}/sparse_matrix_interface/spm_mkl.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
+#    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
@@ -146,6 +161,15 @@ IF(MUDPACK_ENABLED)
   )
 
 ENDIF(MUDPACK_ENABLED)
+
+
+IF(SUITESPARSE_ENABLED)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+        ${SLL_DIR}/sparse_matrix_interface/spm_umfpack.F90
+	${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_umfpack_module.F90
+  )
+ENDIF(SUITESPARSE_ENABLED)
+
 
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
