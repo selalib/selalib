@@ -16,7 +16,7 @@ ADD_TEST(NAME tridiagonal               COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange                  COMMAND test_lagrange)
 ADD_TEST(NAME toeplitz_penta_diagonal   COMMAND test_toeplitz_penta_diagonal)
 ADD_TEST(NAME newton_raphson            COMMAND test_newton_raphson)
-ADD_TEST(NAME splines                   COMMAND test_splines) 
+ADD_TEST(NAME cubic_splines             COMMAND test_splines) 
 ADD_TEST(NAME splines_arbitrary_degree  COMMAND test_arbitrary_degree_splines)
 ADD_TEST(NAME quintic_splines           COMMAND test_quintic_splines)
 ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
@@ -28,13 +28,15 @@ ADD_TEST(NAME pic_particles             COMMAND test_pic_particles)
 ADD_TEST(NAME pic_initializers          COMMAND test_pic_initializers)
 ADD_TEST(NAME pic_accumulator           COMMAND test_pic_accumulator)
 #ADD_TEST(NAME pic_simulation_4d         COMMAND test_4d_vp_pic_cartesian)
+ADD_TEST(NAME deboor_spline             COMMAND test_deboor)
 
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES 
   PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(cubic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+SET_TESTS_PROPERTIES(deboor_spline PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -64,10 +66,10 @@ IF(NOT STDF95)
    ADD_TEST(NAME poisson_solvers COMMAND test_poisson_1d)
 
 
-   ADD_TEST(NAME poisson_2d_dirichlet_cartesian COMMAND 
-     test_poisson_2d_dirichlet_cartesian )
-   SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES 
-     PASS_REGULAR_EXPRESSION "PASSED" )
+#   ADD_TEST(NAME poisson_2d_dirichlet_cartesian COMMAND 
+#     test_poisson_2d_dirichlet_cartesian )
+#   SET_TESTS_PROPERTIES( poisson_2d_dirichlet_cartesian PROPERTIES 
+#     PASS_REGULAR_EXPRESSION "PASSED" )
 
 
    ADD_TEST(NAME poisson_3d_periodic_seq COMMAND test_poisson_3d_periodic_seq)
