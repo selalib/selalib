@@ -32,8 +32,8 @@ program test_poisson_2d_dirichlet_cartesian
 
 
   ! Number of cells is equal to number of points in this case
-  ncx = 512
-  ncy = 512
+  ncx = 10
+  ncy = 10
   Lx  = 2.0*sll_pi
   Ly  = 2.0*sll_pi
 

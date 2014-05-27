@@ -25,6 +25,7 @@ module sll_gyroaverage_2d_polar
   use sll_tridiagonal
   use sll_constants
   use sll_boundary_condition_descriptors
+!  use mod_sparse
 
   implicit none
 
@@ -360,32 +361,108 @@ contains
     print *,'#min/max=',minval(gyro%pre_compute_coeff(1:4,:)),maxval(gyro%pre_compute_coeff(1:4,:))
     SLL_DEALLOCATE_ARRAY(buf,error)
   end subroutine pre_compute_gyroaverage_polar_hermite_c1
+
+  
+
+
+! example of CSR format see 
+! http://netlib.org/linalg/html_templates/node91.html#SECTION00931100000000000000
+!A= 10  0  0  0 -2  0
+!    3  9  0  0  0  3
+!    0  7  8  7  0  0
+!    3  0  8  7  5  0
+!    0  8  0  9  9 13 
+!
+!val     = 10 -2  3  9  3  7 ...
+!col_ind =  1  5  1  2  6  2 ...
+!
+!row_ptr =  1 3 6 9 13 17 20
+!
+! here ia stands for row_prt
+! ja for col_ind
+! and a for val
+
+
   
   subroutine assemble_csr_from_pre_compute( &
     pre_compute_coeff, &
+    pre_compute_N, &
     pre_compute_index, &
     nb, &
+    Nc, &
     ia, &
     ja, &
     a, &
     num_rows, &
     num_nz )
     sll_real64, dimension(:,:), intent(in) :: pre_compute_coeff
+    sll_int32, dimension(:), intent(in) :: pre_compute_N
     sll_int32, dimension(:,:), intent(in) :: pre_compute_index
     sll_int32, intent(in) :: nb
+    sll_int32, intent(in) :: Nc(2) 
     sll_int32, dimension(:), pointer :: ia
     sll_int32, dimension(:), pointer :: ja
     sll_real64, dimension(:), pointer :: a
     sll_int32, intent(out) :: num_rows
     sll_int32, intent(out) :: num_nz
     sll_int32 :: ierr
+    sll_int32 :: s
+    sll_int32 :: inum_rows
+    sll_int32 :: ell
+    sll_int32 :: i
+
+    !SLL_ALLOCATE(gyro%pre_compute_N(gyro%Nc(1)+1),error)    
+    !SLL_ALLOCATE(gyro%pre_compute_index(1:2,nb),error)
+    !SLL_ALLOCATE(gyro%pre_compute_coeff(4,nb),error)
     
+    if((size(pre_compute_coeff,1)<4).or.(size(pre_compute_coeff,2)<nb))then
+      print *,'#bad size for pre_compute_coeff'
+      print *,'#in assemble_csr_from_pre_comput'
+      stop
+    endif
+
+    if(size(pre_compute_N,1)<Nc(1)+1)then
+      print *,'#bad size for pre_compute_N'
+      print *,'#in assemble_csr_from_pre_comput'
+      stop
+    endif
+
+
+
+    if((size(pre_compute_index,1)<2).or.(size(pre_compute_index,2)<nb))then
+      print *,'#bad size for pre_compute_index'
+      print *,'#in assemble_csr_from_pre_comput'
+      stop
+    endif
+
+    num_rows = (Nc(1)+1)*Nc(2)
+    
+    
+    num_nz = Nc(2)
+    do i=1,Nc(1)+1
+      num_nz = num_nz * pre_compute_N(i)
+    enddo
     
     
     SLL_ALLOCATE(ia(num_rows+1),ierr)
     SLL_ALLOCATE(ja(num_nz),ierr)
     SLL_ALLOCATE(a(num_nz),ierr)
-
+    
+    
+ !   inum_rows = 0
+!    s = 0
+!    do j=1,Nc(2)
+!      do i=1,Nc(1)+1
+!        inum_rows = inum_rows+1
+!        do k=1,gyro%pre_compute_N(i)
+!          s = s+1
+!          do ell=1,4
+!          enddo
+!        enddo
+!      enddo      
+!    enddo
+!    
+    
     
     
   end subroutine assemble_csr_from_pre_compute   
@@ -999,7 +1076,7 @@ subroutine compute_gyroaverage_pre_compute_polar_spl_FFT(gyro,f)
 
 	!*** Perform FFT 1D inverse ***
 	do i=1,gyro%Nc(1)+1
-	  call dfftb(gyro%Nc(2),f(i+1,1:gyro%Nc(2)),buf)
+	  call dfftb(gyro%Nc(2),f(i,1:gyro%Nc(2)),buf)
 	enddo
          
     !*** duplicate periodic value ***

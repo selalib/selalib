@@ -181,6 +181,7 @@ IF(NOT BUILD_WITHOUT_TEST)
 
       ADD_SUBDIRECTORY(mesh_calculus)
       ADD_SUBDIRECTORY(simulation)
+      ADD_SUBDIRECTORY(eulerian-finite-volume)
 
    ENDIF(NOT STDF95)
 
