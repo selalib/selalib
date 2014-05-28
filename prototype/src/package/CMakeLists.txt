@@ -54,6 +54,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
+    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
+    ${SLL_DIR}/fields/sll_scalar_field_2d_alternative.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_qn.f90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
@@ -97,6 +102,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
+    ${SLL_DIR}/simulation/simulation_4d_qns_general.F90
 #    ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90
     ${SLL_DIR}/sparse_matrix_interface/gauss_seidel.F90
     ${SLL_DIR}/sparse_matrix_interface/getdia.F90
@@ -115,13 +121,14 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
-    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
+#    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
  )
 
