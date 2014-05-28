@@ -16,7 +16,7 @@ IF(PYTHON_EXECUTABLE)
    SET(PYTHON3_FOUND ON)
 	 
    SET(TRANSLATE_PYTHON_SCRIPT_CONNECTIVITY 
-      "${CMAKE_CURRENT_SOURCE_DIR}/../../python_scripts/translate_connectivity_info.py")
+      "../../python_scripts/translate_connectivity_info.py")
 
    FILE(GLOB IEN_TXT_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/IEN_*.txt")
    FILE(GLOB LM_TXT_FILES RELATIVE "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/LM_*.txt")
