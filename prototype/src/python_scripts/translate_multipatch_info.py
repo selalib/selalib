@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 SYNOPSIS
 
@@ -143,9 +143,15 @@ def main ():
         print( "user$ ./translate_multipatch_info.py filename.txt")
         sys.exit()
     else:                   # exactly one argument given
-       # inputname = process_file_name(args[0])
-        tokens = args[0].split('/')
-        inputname = tokens[len(tokens)-1]
+        #inputname = process_file_name(args[0])
+        #tokens = args[0].split('/')
+        #print('tokens',tokens)
+        inputname = args[0][:-4]#tokens[len(tokens)-1]
+        if (  args[0][-4:] != '.txt'):
+            print('Problem must be a .txt file')
+            
+        #print('test',inputname)
+        #print('tokens',tokens)
     # check whether the user has given the .txt extension or not, and create 
     # the name of the output file. Echo to screen the names of the files to be
     # read and written.
@@ -345,7 +351,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(* time.asctime())
+        if options.verbose: print(*time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)
