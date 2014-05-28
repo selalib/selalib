@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 SYNOPSIS
 
@@ -66,7 +66,7 @@ import time
 import re
 import pprint
 
-#sys.stdout = open('translate_connectivity_info.out', 'w')
+sys.stdout = open('translate_connectivity_info.out', 'w')
 
 def main ():
 
@@ -128,6 +128,7 @@ def main ():
 
         # Create a list of the filenames that will be created to store the
         # information originally contained in the IEN_i.txt files.
+        print(int(num_patches))
         for i in range(int(num_patches)):
             patch_li_syms.append(inputname + "_local_indices_patch" + 
                                   str(i) + ".nml")
@@ -266,7 +267,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(* time.asctime())
+        if options.verbose: print(*time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)

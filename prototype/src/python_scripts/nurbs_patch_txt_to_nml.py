@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 SYNOPSIS
 
@@ -129,8 +129,11 @@ def main ():
         print( "user$ ./nurbs_patch_txt_to_nml.py filename.txt")
         sys.exit()
     else:                   # exactly one argument given
-        tokens = args[0].split('/')
-        inputname = tokens[len(tokens)-1]
+        #tokens = args[0].split('/')
+        #inputname = tokens[len(tokens)-1]
+        inputname = args[0][:-4]#tokens[len(tokens)-1]
+        if (  args[0][-4:] != '.txt'):
+            print('Problem must be a .txt file')
     # check whether the user has given the .txt extension or not, and create 
     # the name of the output file. Echo to screen the names of the files to be
     # read and written.
@@ -323,7 +326,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print( time.asctime())
+        if options.verbose: print( *time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)
