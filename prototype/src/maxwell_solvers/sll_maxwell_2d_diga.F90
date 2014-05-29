@@ -87,6 +87,8 @@ interface solve
 end interface solve
 
 sll_int32  :: error
+sll_int32, parameter, public :: SLL_CENTERED       = 20
+sll_int32, parameter, public :: SLL_UNCENTERED     = 21
 
 public :: initialize, solve
 
