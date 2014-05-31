@@ -10,7 +10,6 @@ module sll_simulation_4d_qns_general_module
   use sll_remapper
   use sll_constants
   use sll_cubic_spline_interpolator_2d
-  use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
   use sll_simulation_base
   use sll_logical_meshes
