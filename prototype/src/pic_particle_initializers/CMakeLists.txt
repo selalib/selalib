@@ -8,7 +8,6 @@ IF(HDF5_IS_PARALLEL)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 ENDIF(HDF5_IS_PARALLEL)
 
-
 ADD_LIBRARY( sll_pic_initializers STATIC 
   sll_particle_init4D.F90 )
 
