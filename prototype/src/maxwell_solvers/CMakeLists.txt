@@ -41,7 +41,9 @@ ELSE()
 
 ENDIF(FFTW_FOUND AND FFTW_ENABLED)
 
-TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_dg_fields sll_utilities )
+TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_dg_fields 
+                                          sll_boundary_condition_descriptors
+                                          sll_utilities )
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
