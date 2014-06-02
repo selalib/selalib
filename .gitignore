@@ -29,3 +29,5 @@ prototype/src/coordinate_transformations_multipatch/identity_mp_patch1.nml
 prototype/src/coordinate_transformations_multipatch/identity_mp_patch2.nml
 
 prototype/src/coordinate_transformations_multipatch/identity_mp_patch3.nml
+
+prototype/src/CAID_coordinate_transformations/circle_mp5/circle_5mp_info.nml
