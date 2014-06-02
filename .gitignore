@@ -45,3 +45,7 @@ prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch1
 prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch2.nml
 prototype/src/CAID_coordinate_transformations/square_4p_n10/square_4p_n10_patch3.nml
 
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch2.nml
+
+prototype/src/coordinate_transformations_multipatch/identity_mp_patch3.nml
