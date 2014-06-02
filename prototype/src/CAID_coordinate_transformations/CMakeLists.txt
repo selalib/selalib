@@ -18,7 +18,7 @@ IF(PYTHON_EXECUTABLE)
   # connectivity information.  
   FILE(GLOB_RECURSE PATCH_FILES FOLLOW_SYMLINKS 
     "${CMAKE_CURRENT_SOURCE_DIR}/*_patch*.txt")
-  MESSAGE(${PATCH_FILES})
+#  MESSAGE(${PATCH_FILES})
    
 
    # make a call to nurbs_patch_txt_to_nml.py something_patchi.txt in each
@@ -26,7 +26,7 @@ IF(PYTHON_EXECUTABLE)
    # is prepended with its path, the output also should be written in the
    # same directory.
    FOREACH(PATCH ${PATCH_FILES})
-     MESSAGE("converting file:" ${PATCH})
+     # MESSAGE("converting file:" ${PATCH})
      EXECUTE_PROCESS(
        COMMAND ${PYTHON_EXECUTABLE} ${PATCH_SCRIPT} ${PATCH}
      )
