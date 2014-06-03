@@ -975,7 +975,7 @@ contains
        local_format = output_format
     end if
 
-
+    print*, 'label', transf%label
     if ( .not. transf%written ) then
 
        if (local_format == SLL_IO_XDMF) then
