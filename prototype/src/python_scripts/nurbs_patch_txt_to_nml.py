@@ -88,7 +88,7 @@ import time
 import re
 #from pexpect import run, spawn
 
-#sys.stdout = open('nurbs_patch_txt_to_nml.out', 'w')
+sys.stdout = open('nurbs_patch_txt_to_nml.out', 'w')
 
 def main ():
 
