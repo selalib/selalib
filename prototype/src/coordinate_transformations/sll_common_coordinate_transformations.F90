@@ -60,7 +60,7 @@ contains
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
-    function identity_jac12 ( eta1, eta2, params )
+  function identity_jac12 ( eta1, eta2, params )
     sll_real64  :: identity_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
@@ -97,8 +97,8 @@ contains
   !
   !        affine transformation (logical mesh is [0,1]x[0,1]):
   !
-  !        x1 = (b1-a1)*eta1 + a1
-  !        x2 = (b2-a2)*eta2 + a2
+  !        x1 = (b1-a1)*(cos(alpha)*eta1-sin(alpha)*eta2) + a1
+  !        x2 = (b2-a2)*(sin(alpha)*eta1+cos(alpha)*eta2) + a2
   !
   ! **************************************************************************
 
@@ -121,11 +121,13 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A1 = params(1)
     B1 = params(2)
-        affine_x1 = (B1-A1)*eta1 + A1
+    alpha = params(5)
+    affine_x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
   end function affine_x1
 
   function affine_x2 ( eta1, eta2, params )
@@ -135,11 +137,13 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A2 = params(3)
     B2 = params(4)
-    affine_x2 = (B2-A2)*eta2 + A2
+    alpha = params(5)
+    affine_x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
   end function affine_x2
 
   ! jacobian maxtrix
@@ -150,11 +154,13 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A1 = params(1)
     B1 = params(2)
-    affine_jac11 = B1-A1
+    alpha = params(5)
+    affine_jac11 = (B1-A1)*cos(alpha)
   end function affine_jac11
 
   function affine_jac12 ( eta1, eta2, params )
@@ -162,18 +168,26 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
-    SLL_ASSERT(size(params) >= 4)
-        affine_jac12 = 0.0_f64
+    sll_real64 :: alpha, a1, b1
+    SLL_ASSERT(size(params) >= 5)
+    a1 = params(1)
+    b1 = params(2)
+    alpha = params(5)
+    affine_jac12 = -(B1-A1)*sin(alpha)
   end function affine_jac12
 
   function affine_jac21 ( eta1, eta2, params )
     sll_real64  :: affine_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64 :: alpha, a2, b2
     sll_real64, dimension(:), intent(in) :: params
 
-    SLL_ASSERT(size(params) >= 4)
-    affine_jac21 = 0.0_f64
+    SLL_ASSERT(size(params) >= 5)
+    a2 = params(3)
+    b2 = params(4)
+    alpha = params(5)
+    affine_jac21 = (b2-a2)*sin(alpha)
   end function affine_jac21
 
   function affine_jac22 ( eta1, eta2, params )
@@ -183,11 +197,15 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A2 = params(3)
     B2 = params(4)
-    affine_jac22 = B2-A2
+    alpha = params(5)
+
+    affine_jac22 = (B2-A2)*cos(alpha)
+
   end function affine_jac22
 
   ! jacobian ie determinant of jacobian matrix
@@ -202,12 +220,327 @@ contains
     sll_real64 :: B2
 
     SLL_ASSERT(size(params) >= 4)
-    A1 = params(1)
-    B1 = params(2)
-    A2 = params(3)
-    B2 = params(4)
-    affine_jac = (B1-A1) * (B2-A2)
+    A1    = params(1)
+    B1    = params(2)
+    A2    = params(3)
+    B2    = params(4)
+
+    affine_jac = (B1-A1)*(B2-A2)
+
   end function affine_jac
+
+
+  ! **************************************************************************
+  !
+  !        homography transformation (logical mesh is [0,1]x[0,1]):
+  !
+  !  the homography is used to rectify a perspective image, for example to 
+  !  generate a "plan" view of a building from a "perspective" photo. 
+  !  We can also convert a square to a trapeze.
+  !
+  !        x1 = (a*eta1*b*eta2+c)/(g*eta1+h*eta2+1) 
+  !        x2 = (d*eta1*e*eta2+f)/(g*eta1+h*eta2+1) 
+  !
+  !  a = fixed scale factor in x1 direction with scale x2 unchanged.
+  !  b = scale factor in x1 direction proportional to x2 distance from origin.
+  !  c = origin translation in x1 direction.
+  !  d = scale factor in x2 direction proportional to x1 distance from origin.
+  !  e = fixed scale factor in x2 direction with scale x1 unchanged.
+  !  f = origin translation in x2 direction.
+  !  g = proportional scale factors x1 and x2 in function of x1.
+  !  h = proportional scale factors x1 and x2 in function of x2.
+  !   
+  ! **************************************************************************
+
+  ! direct mapping
+  function homography_x1 ( eta1, eta2, params )
+    sll_real64  :: homography_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    g = params(7)
+    h = params(8)
+
+    homography_x1 = (a*eta1+b*eta2+c)/(g*eta1+h*eta2+1)
+
+  end function homography_x1
+
+  function homography_x2 ( eta1, eta2, params )
+    sll_real64  :: homography_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    homography_x2 = (d*eta1+e*eta2+f)/(g*eta1+h*eta2+1)
+
+  end function homography_x2
+
+  ! jacobian maxtrix
+  function homography_jac11 ( eta1, eta2, params )
+    sll_real64  :: homography_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64 :: a, b, c, g, h
+    sll_real64, dimension(:), intent(in) :: params
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    g = params(7)
+    h = params(8)
+
+
+    homography_jac11 = a/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*g/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac11
+
+  function homography_jac12 ( eta1, eta2, params )
+    sll_real64  :: homography_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    g = params(7)
+    h = params(8)
+
+    homography_jac12 = b/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*h/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac12
+
+  function homography_jac21 ( eta1, eta2, params )
+    sll_real64  :: homography_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    homography_jac21 = d/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*g/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac21
+
+  function homography_jac22 ( eta1, eta2, params )
+    sll_real64  :: homography_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    homography_jac22 = e/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*h/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function homography_jac ( eta1, eta2, params )
+    sll_real64  :: homography_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+
+    homography_jac = -(b*d-a*e+(c*e-b*f)*g-(c*d-a*f)*h) &
+                     /(eta1**3*g**3+eta2**3*h**3+3*eta1**2*g**2 &
+                     +3*(eta1*eta2**2*g+eta2**2)*h**2+3*eta1*g &
+                     +3*(eta1**2*eta2*g**2+2*eta1*eta2*g+eta2)*h+1)
+
+  end function homography_jac
+
+  ! **************************************************************************
+  !
+  !        rubber_sheeting transformation 
+  !
+  !  the rubber-sheeting is similar to homography. The difference is that the 
+  !  Homography gives priority to alignments, whereas the Rubber-Sheeting gives 
+  !  priority to linear proportions.
+  !
+  !        x1 = a*eta1*eta2+b*eta1+c*eta2+d
+  !        x2 = e*eta1*eta2+f*eta1+g*eta2+h
+  !
+  !  a = scale factor in x1 direction proportional to the multiplication x1 * x2.
+  !  b = fixed scale factor in x1 direction with scale x2 unchanged.
+  !  c = scale factor in x1 direction proportional to x2 distance from origin.
+  !  d = origin translation in x1 direction.
+  !  e = scale factor in x2 direction proportional to the multiplication x1 * x2.
+  !  f = fixed scale factor in x2 direction with scale x1 unchanged.
+  !  g = scale factor in x2 direction proportional to x1 distance from origin.
+  !  h = origin translation in x2 direction.
+  !   
+  ! **************************************************************************
+
+  ! direct mapping
+  function rubber_sheeting_x1 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, d
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    d = params(4)
+
+    rubber_sheeting_x1 = a*eta1*eta2+b*eta1+c*eta2+d
+
+  end function rubber_sheeting_x1
+
+  function rubber_sheeting_x2 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    rubber_sheeting_x2 = e*eta1*eta2+f*eta1+g*eta2+h
+
+  end function rubber_sheeting_x2
+
+  ! jacobian maxtrix
+  function rubber_sheeting_jac11 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64 :: a, b
+    sll_real64, dimension(:), intent(in) :: params
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+
+    rubber_sheeting_jac11 = a*eta2+b
+
+  end function rubber_sheeting_jac11
+
+  function rubber_sheeting_jac12 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, c
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    c = params(3)
+
+    rubber_sheeting_jac12 = a*eta1+c
+
+  end function rubber_sheeting_jac12
+
+  function rubber_sheeting_jac21 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, f
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    f = params(6)
+
+    rubber_sheeting_jac21 = e*eta2+f
+
+  end function rubber_sheeting_jac21
+
+  function rubber_sheeting_jac22 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, g
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    g = params(7)
+
+    rubber_sheeting_jac22 = e*eta1+g
+
+  end function rubber_sheeting_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function rubber_sheeting_jac ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, e, f, g
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+
+    rubber_sheeting_jac = (e*eta1+g)*(a*eta2+b) - (a*eta1+c)*(e*eta2+f)
+
+  end function rubber_sheeting_jac
+
 
 
   ! **************************************************************************
