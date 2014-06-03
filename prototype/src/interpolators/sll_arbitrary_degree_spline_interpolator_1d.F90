@@ -1421,7 +1421,10 @@ contains
     print*, 'reconstruct_array 1d not implemented yet' 
   end function reconstruct_array
 
-
+  ! The following two functions are wrong, the stencil to compute the 
+  ! derivatives is valid only for uniform spacing between the points, the
+  ! specific coefficients chosen here using the eta coordinates is not to 
+  ! be used. ABSOLUTE FIXME!!
   function forward_fd_5pt( data,eta) result(res)
     sll_real64, dimension(:), intent(in) :: data
     sll_real64, dimension(:), intent(in) :: eta
@@ -1434,16 +1437,17 @@ contains
                       -0.25_f64*data(5)*(eta(6) - eta(5)))
   end function forward_fd_5pt
 
-  function backward_fd_5pt( data,eta,last_index)result(res)
+  function backward_fd_5pt( data,eta,li)result(res)
     sll_real64, dimension(:), intent(in) :: data
     sll_real64, dimension(:), intent(in) :: eta
+    sll_int32, intent(in)  :: li  ! last index of the array
     sll_real64 :: res
-    sll_int32  :: last_index
 
-    res = (        0.25_f64*data(last_index-4)*(eta(last_index-5) - eta(last_index-4))&
-         -(4.0_f64/3.0_f64)*data(last_index-3)*(eta(last_index-4) - eta(last_index-3))&
-         +          3.0_f64*data(last_index-2)*(eta(last_index-3) - eta(last_index-2))&
-         -          4.0_f64*data(last_index-1)*(eta(last_index-2) - eta(last_index-1))&
-         +(25.0_f64/12.0_f64)*data(last_index)*(eta(last_index-1) - eta(last_index)) )
+
+    res = (0.25_f64*data(li-4)*(eta(li-5) - eta(li-4)) -&
+         (4.0_f64/3.0_f64)*  data(li-3)*(eta(li-4) - eta(li-3)) + &
+          3.0_f64*           data(li-2)*(eta(li-3) - eta(li-2)) - &
+          4.0_f64*           data(li-1)*(eta(li-2) - eta(li-1)) + &
+         (25.0_f64/12.0_f64)*data(li)*  (eta(li-1) - eta(li)) )
   end function backward_fd_5pt
 end module sll_arbitrary_degree_spline_interpolator_1d_module
