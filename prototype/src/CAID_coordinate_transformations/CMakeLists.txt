@@ -8,26 +8,28 @@ FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
 
 IF(PYTHON_EXECUTABLE)
 
+  SET(PYTHON3_FOUND ON)
+  
+  # choose python script to translate individual patch information.
+  SET(PATCH_SCRIPT 
+    "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
+  
+  # Search through subdirectories to do the translations of the patch and
+  # connectivity information.  
+  FILE(GLOB_RECURSE PATCH_FILES FOLLOW_SYMLINKS 
+    "${CMAKE_CURRENT_SOURCE_DIR}/*_patch*.txt")
+#  MESSAGE(${PATCH_FILES})
+   
 
-   SET(PYTHON3_FOUND ON)
-
-   # choose python script to translate individual patch information.
-   SET(PATCH_SCRIPT 
-      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
-
-    # Search through subdirectories to do the translations of the patch and
-    # connectivity information.  
-   FILE(GLOB_RECURSE PATCH_FILES FOLLOW_SYMLINKS 
-     "${CMAKE_CURRENT_SOURCE_DIR}/*_patch*.txt")
-	      
    # make a call to nurbs_patch_txt_to_nml.py something_patchi.txt in each
    # patch file found in the subdirectories. Since each file found by CMake
    # is prepended with its path, the output also should be written in the
    # same directory.
    FOREACH(PATCH ${PATCH_FILES})
-      EXECUTE_PROCESS(
-         COMMAND ${PYTHON_EXECUTABLE} ${PATCH_SCRIPT} ${PATCH}
-      )
+     # MESSAGE("converting file:" ${PATCH})
+     EXECUTE_PROCESS(
+       COMMAND ${PYTHON_EXECUTABLE} ${PATCH_SCRIPT} ${PATCH}
+     )
    ENDFOREACH()
 
    SET(MP_INFO_SCRIPT 
