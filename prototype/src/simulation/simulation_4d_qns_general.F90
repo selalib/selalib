@@ -10,7 +10,6 @@ module sll_simulation_4d_qns_general_module
   use sll_remapper
   use sll_constants
   use sll_cubic_spline_interpolator_2d
-  use sll_poisson_2d_periodic_cartesian_par
   use sll_cubic_spline_interpolator_1d
   use sll_simulation_base
   use sll_logical_meshes
@@ -65,6 +64,12 @@ module sll_simulation_4d_qns_general_module
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
      type(general_coordinate_elliptic_solver), pointer      :: qns
 
+     !  number dignostics for the simulation
+      sll_int32  ::number_diags
+
+      !  type quadrature for solver in direction eta1 and eta2
+      sll_int32 :: quadrature_type1,quadrature_type2 
+
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
      ! allows sequential operations in one given direction. f_x1x2 should 
@@ -84,7 +89,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64, dimension(:),pointer :: diag_norm_Linf
      sll_real64, dimension(:),pointer :: diag_entropy_kin
 
-     !--> diagnostics energy
+     !--> diagnostics energydiag_nrj_kin
      sll_real64, dimension(:),pointer :: diag_nrj_kin
      sll_real64, dimension(:),pointer :: diag_nrj_pot
      sll_real64, dimension(:),pointer :: diag_nrj_tot
@@ -205,9 +210,12 @@ contains
    bc_vx_1,&
    bc_vy_0,&
    bc_vy_1,&
+   quadrature_type1,&
+   quadrature_type2,&
    electric_field_ext_1,&
    electric_field_ext_2,&
-   elec_field_ext_f_params)
+   elec_field_ext_f_params,&
+   number_diags)
     
     type(sll_simulation_4d_qns_general), intent(inout)     :: sim
     type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
@@ -240,6 +248,7 @@ contains
     sll_int32  :: spline_degre_eta2
     sll_int32  :: spline_degre_vx
     sll_int32  :: spline_degre_vy
+    sll_int32  :: number_diags
     sll_int32  :: bc_eta1_0
     sll_int32  :: bc_eta1_1
     sll_int32  :: bc_eta2_0
@@ -248,6 +257,7 @@ contains
     sll_int32  :: bc_vx_1
     sll_int32  :: bc_vy_0
     sll_int32  :: bc_vy_1
+    sll_int32  :: quadrature_type1,quadrature_type2
     sll_int32 :: ierr
     
     sim%mesh2d_x  => mesh2d_x
@@ -270,7 +280,9 @@ contains
     sim%spline_degree_eta2 = spline_degre_eta2
     sim%spline_degree_vx = spline_degre_vx
     sim%spline_degree_vy = spline_degre_vy
-    
+    sim%number_diags     = number_diags
+    sim%quadrature_type1 = quadrature_type1
+    sim%quadrature_type2 = quadrature_type2
     
     sim%bc_eta1_0   = bc_eta1_0
     sim%bc_eta1_1   = bc_eta1_1
@@ -372,6 +384,7 @@ contains
 
     sim%dt = dt
     sim%num_iterations = number_iterations
+    print*, 'number iterations', number_iterations
     ! In this particular simulation, since the system is periodic, the number
     ! of points is the same as the number of cells in all directions.
     sim%nc_x1 = num_cells_x1
@@ -437,7 +450,7 @@ contains
     sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE sim%number_diags
     sll_real64, dimension(BUFFER_SIZE) :: buffer
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
@@ -1019,8 +1032,8 @@ contains
          sim%spline_degree_eta2, & 
          sim%mesh2d_x%num_cells1, &
          sim%mesh2d_x%num_cells2, &
-         ES_GAUSS_LEGENDRE, &  ! put in arguments
-         ES_GAUSS_LEGENDRE, &  ! put in arguments
+         sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
+         sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%bc_eta1_0, &
          sim%bc_eta1_1, &
          sim%bc_eta2_0, &
@@ -1206,14 +1219,14 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call sll_set_time_mark(t0)  
+       !call sll_set_time_mark(t0)  
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
-       time = sll_time_elapsed_since(t0)
+       !time = sll_time_elapsed_since(t0)
      
-       print*, 'timer to solve QNS =', time
+       !print*, 'timer to solve QNS =', time
        if(sim%my_rank == 0) then
           call phi%write_to_file(itime)
        end if
@@ -1228,7 +1241,7 @@ contains
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
-       print*, 'advection vx'
+       !print*, 'advection vx'
        ! Start with dt in vx...(x3)
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
@@ -2394,7 +2407,10 @@ contains
                           diag_norm_Linf_result(:),'Linf_norm',file_err)
       call sll_hdf5_write_array_1d(file_id,&
                           diag_entropy_kin_result(:),'entropy_kin',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%point_x(:,:),'X_coord',file_err)
+      call sll_hdf5_write_array_2d(file_id,sim%point_y(:,:),'Y_coord',file_err)
       call sll_hdf5_file_close(file_id,file_err)
+      
     end if
     sim%count_save_diag = sim%count_save_diag + 1
   end subroutine writeHDF5_diag_qns
@@ -2495,7 +2511,7 @@ contains
                 if (i1 .ne. Neta1) then
                    if (i2 .ne. Neta2) then 
                       
-                      val_jac = sim%values_jacobian(i1,i2)
+                      val_jac = abs(sim%values_jacobian(i1,i2))
                       !abs(sim%transfx%jacobian_at_node(i1,i2))
                       
                       delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
@@ -2591,7 +2607,7 @@ contains
                 if (i1 .ne. Neta1) then
                    if (i2 .ne. Neta2) then 
                       
-                      val_jac = sim%values_jacobian(i1,i2)
+                      val_jac = abs(sim%values_jacobian(i1,i2))
                       !abs(sim%transfx%jacobian_at_node(i1,i2))
                       
                       delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
@@ -2619,8 +2635,9 @@ contains
           end do
        end do
     end do
-    
+    !print*, 'norm_L2',norm_L2
     norm_L2   = sqrt(norm_L2)
+    !print*, 'norm_L2',norm_L2
     
     sim%diag_masse(sim%count_save_diag + 1)       = masse
     sim%diag_norm_L1(sim%count_save_diag + 1)     = norm_L1
