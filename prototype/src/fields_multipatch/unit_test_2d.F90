@@ -25,9 +25,11 @@ program unit_test_fields_multipatch
   sll_real64 :: x1
   sll_real64 :: x2
   sll_int32  :: ierr
+  sll_int32  :: local_to_global_index, local_index, global_index
 
   T => new_coordinate_transformation_multipatch_2d("square_4p_n10")
   print *, 'initialized multipatch transformation'
+  
   
   F => new_scalar_field_multipatch_2d("test_field_multipatch", T)
   print *, 'initialized scalar field multipatch'
@@ -78,6 +80,16 @@ program unit_test_fields_multipatch
 
   print *, 'writing to file...'
   call F%write_to_file(0)
+
+  print*, 'test connectivities'
+  
+  local_to_global_index = F%get_spline_local_to_global_index(0,3,1,1)
+  global_index = F%get_spline_global_index(10)
+  local_index = F%get_spline_local_index(0,3,9,1)
+  
+  print*, 'local_to_global_index',local_to_global_index
+  print*, 'global_index',global_index
+  print*, 'local_index', local_index
 
   call sll_delete(T)
   call sll_delete(F)
