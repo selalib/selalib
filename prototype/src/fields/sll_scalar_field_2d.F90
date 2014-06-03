@@ -197,10 +197,10 @@ contains   ! *****************************************************************
     character(len=4) :: center
 
 
-    if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
-    else
+    if (present(output_format)) then
        local_format = output_format
+    else
+       local_format = SLL_IO_XDMF
     end if
 
     transf => scalar_field%transf
@@ -246,7 +246,8 @@ contains   ! *****************************************************************
        end if
      
     end if
-
+    
+    print*, local_format
 
     select case(local_format)
     case (SLL_IO_XDMF)

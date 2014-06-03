@@ -99,9 +99,9 @@ program qns_4d_general
   ! mesh for the test case 
   ! sll_gaussian_beam_initializer_4d
 !!$  
-  !mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-  !     eta1_min= -1.0_f64, eta1_max= 1.0_f64, &
-  !     eta2_min= -1.0_f64, eta2_max= 1.0_f64 )
+  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
+       eta1_min= -1.0_f64, eta1_max= 1.0_f64, &
+       eta2_min= -1.0_f64, eta2_max= 1.0_f64 )
   
   ! logical mesh for velocity coordinates
   mv => new_logical_mesh_2d( NPTS3, NPTS4, &
@@ -139,9 +139,10 @@ program qns_4d_general
 !!$       (/ 0.1_f64,0.1_f64,4.0_f64*sll_pi,4.0_f64*sll_pi /) )
 
 
- transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/circle_n63_rayon1_patch0.nml")
-!!$   transformation_x%mesh => mx
-  mx => transformation_x%get_logical_mesh()
+ !transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/circle_n63_rayon1_patch0.nml")
+ ! transformation_x => new_nurbs_2d_transformation_from_file("../src/coordinate_transformations/circle_mod6_patch0.nml")
+  !transformation_x%mesh => mx
+  !mx => transformation_x%get_logical_mesh()
   !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max
 !!$   print*, 'transformation ok'
   ! ---------------------------------------------------------------------
@@ -177,7 +178,7 @@ program qns_4d_general
   landau_params(5) = 0.0_f64!xc
   landau_params(6) = 0.0_f64!yc
   landau_params(7) = sll_pi*15*8!sll_pi*15*18!n0
-  landau_params(8) = 9.0_f64
+  landau_params(8) = 6.0_f64
   
 
   ! ---------------------------------------------------------------------
@@ -212,6 +213,8 @@ program qns_4d_general
        SPL_DEG_ETA2, & 
        SPL_DEG_VX, & 
        SPL_DEG_VY, & 
+       ES_GAUSS_LEGENDRE,&
+       ES_GAUSS_LEGENDRE,&
        SLL_DIRICHLET,&!SLL_PERIODIC, &
        SLL_DIRICHLET,&!SLL_PERIODIC, &
        SLL_DIRICHLET,&!SLL_PERIODIC, &
@@ -222,7 +225,8 @@ program qns_4d_general
        SLL_DIRICHLET,&!SLL_PERIODIC, &
        electric_field_ext_1,&
        electric_field_ext_2,&
-       elec_field_ext_params)
+       elec_field_ext_params,&
+       5)
 
 
   print *, ' f initialized '
