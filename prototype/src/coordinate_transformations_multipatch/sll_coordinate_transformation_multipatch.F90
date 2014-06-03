@@ -62,6 +62,10 @@ module sll_coordinate_transformation_multipatch_module
  !    type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
      type(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
           transfs => null()
+     ! Element connectivity information for finite element calculations.
+     sll_int32, dimension(:), pointer :: global_indices
+     type(multipatch_data_1d), dimension(:), pointer :: local_indices
+     type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
    contains
      procedure, pass :: read_from_file => read_from_file_ctmp2d
      procedure, pass :: get_number_patches => get_number_patches_ctmp2d
@@ -82,6 +86,14 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: delete => delete_ctmp2d
      procedure, pass :: write_to_file => write_to_file_ctmp2d
   end type sll_coordinate_transformation_multipatch_2d
+
+  type multipatch_data_1d
+     sll_real64, dimension(:), pointer :: array => null()
+  end type multipatch_data_1d
+
+  type multipatch_data_2d
+     sll_real64, dimension(:,:), pointer :: array => null()
+  end type multipatch_data_2d
 
   interface sll_delete
      module procedure delete_stmp2d_ptr
@@ -104,6 +116,7 @@ contains
     character(len=*), intent(in) :: name_root
     character(len=256) :: label
     character(len=256) :: filename_local
+    character(len=256) :: filename
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id
     sll_int32 :: i
@@ -114,6 +127,17 @@ contains
     sll_int32, dimension(:), pointer :: connectivities
     sll_int32, dimension(:,:), pointer :: connectivities_reshaped
     character(len=128), dimension(:), pointer :: patches
+    ! local variables for element connectivity
+    sll_int32, dimension(:), allocatable :: global_indices_array
+    sll_int32, dimension(:), allocatable :: local_spline_indices_array
+    sll_int32, dimension(:), allocatable :: local_to_global_index_array
+    sll_int32  :: num_global_indices
+    sll_int32  :: rows
+    sll_int32  :: cols
+    sll_int32  :: li_total
+    sll_int32  :: l2g_total
+    character(len=128), dimension(:), allocatable :: local_index_file_list
+    character(len=128), dimension(:), allocatable :: local_to_global_file_list
 
     namelist /multipatch_label/ label
     namelist /rd/ whatisthisrd
@@ -121,6 +145,15 @@ contains
     namelist /num_patches/ number_patches
     namelist /connectivity/ connectivities
     namelist /patch_names/ patches
+    ! namelists for the element connectivity information:
+    namelist /number_global_indices/ num_global_indices
+    namelist /global_indices/ global_indices_array
+    namelist /local_index_files/ local_index_file_list
+    namelist /local_to_global_files/ local_to_global_file_list
+    namelist /li_dimensions/ rows, cols, li_total
+    namelist /l2g_dimensions/ rows, cols, l2g_total
+    namelist /local_spline_indices/ local_spline_indices_array
+    namelist /local_to_global_indices/ local_to_global_index_array
 
     if(len(name_root) >= 128) then
        print *, 'ERROR, read_from_file_ctmp2d => ',&
@@ -181,6 +214,129 @@ contains
             new_nurbs_2d_transformation_from_file(trim(patches(i)))
     end do
 
+    ! Obtain the information regarding the local index and local to global
+    ! index information for the collection of patches. This is used for finite
+    ! element calculations. This initialization consists of 
+    ! several steps:
+    !
+    ! 1. Find out which file to read to get the information on:
+    !    1.1 global indexing of the elements
+    !    1.2 the files which contain the local indexing information per patch.
+    !    1.3 the files which contain the local to global indexing information
+    !        by patch.
+    ! 2. Allocate the arrays which will store the local_index and 
+    !    local_to_global index information inside the multipatch.
+    ! 3. Loop over the filenames found in step 1. to initialize the arrays.
+
+    ! The following line establishes a hardwired convetion about the naming
+    ! of the diverse files that represent the multipatch. Not good but works.
+
+    filename = trim(mp%name_root)//"_element_connectivity_main.nml"
+
+    SLL_ALLOCATE(mp%local_indices(number_patches),ierr)
+    SLL_ALLOCATE(mp%local_to_global_ind(number_patches),ierr)
+
+    call sll_new_file_id(input_file_id, ierr)
+    if( ierr .ne. 0 ) then
+       print *, 'ERROR while trying to obtain an unique identifier for file ',&
+            trim(filename), '. Called from read_from_file_ctmp2d().'
+       stop
+    end if
+    open(unit=input_file_id, file=trim(filename), STATUS="OLD", IOStat=IO_stat)
+    if( IO_Stat .ne. 0 ) then
+       print *, 'ERROR while opening file ',trim(filename), &
+            '. Called from read_from_file_ctmp2d().'
+       stop
+    end if
+    SLL_ALLOCATE(local_index_file_list(number_patches),ierr)
+    SLL_ALLOCATE(local_to_global_file_list(number_patches),ierr)
+
+    read( input_file_id,number_global_indices )
+    SLL_ALLOCATE(global_indices_array(num_global_indices),ierr)
+
+    read( input_file_id, local_index_files )
+    read( input_file_id, local_to_global_files )
+
+    close(input_file_id)
+
+    ! Read the individual files containing the local index and local to
+    ! global index information. 
+    print *, 'initialize_scalar_field_sfmp2d(): reading local index data. '
+
+    do i=1, number_patches
+       call sll_new_file_id(input_file_id, ierr)
+       if( ierr .ne. 0 ) then
+          print *, 'ERROR while trying to obtain an unique identifier ', &
+               'for file ', trim(local_index_file_list(i)), &
+               '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       open(unit=input_file_id, file=trim(local_index_file_list(i)), &
+            STATUS="OLD", IOStat=IO_stat)
+       if( IO_Stat .ne. 0 ) then
+          print *, 'ERROR while opening file ', &
+               trim(local_index_file_list(i)), &
+            '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       read( input_file_id, li_dimensions )
+
+       print *, 'read_from_file_ctmp2d(): reading data from file: ',&
+            trim(local_index_file_list(i))
+
+       ! For now we allocate only a linear array, but a 2D array may be 
+       ! more useful, especially since we may need to reshape & transpose.
+       ! Reshape & transpose to be done here! This is temporary!
+       ! Use the read data on number of rows/cols if useful at this point.
+       ! Discuss with Aurore.
+       SLL_ALLOCATE(mp%local_indices(i)%array(li_total), ierr)
+       SLL_ALLOCATE(local_spline_indices_array(li_total), ierr)
+       read( input_file_id, local_spline_indices )
+       mp%local_indices(i)%array(:) = local_spline_indices_array(:)
+       close(input_file_id)
+       SLL_DEALLOCATE_ARRAY(local_spline_indices_array,ierr)
+    end do
+
+
+
+    print *, 'read_from_file_ctmp2d(): reading local to global index data. '
+
+    do i=1, number_patches
+       call sll_new_file_id(input_file_id, ierr)
+       if( ierr .ne. 0 ) then
+          print *, 'ERROR while trying to obtain an unique identifier ', &
+               'for file ', trim(local_to_global_file_list(i)), &
+               '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       open(unit=input_file_id, file=trim(local_to_global_file_list(i)), &
+            STATUS="OLD", IOStat=IO_stat)
+       if( IO_Stat .ne. 0 ) then
+          print *, 'ERROR while opening file ', &
+               trim(local_to_global_file_list(i)), &
+            '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       read( input_file_id, l2g_dimensions )
+
+       print *, 'read_from_file_ctmp2d(): reading data from file: ',&
+            trim(local_to_global_file_list(i))
+
+       ! For now we allocate only a linear array, but a 2D array may be 
+       ! more useful, especially since we may need to reshape & transpose.
+       ! Reshape & transpose to be done here! This is temporary!
+       ! Use the read data on number of rows/cols if useful at this point.
+       ! Discuss with Aurore.
+       SLL_ALLOCATE(mp%local_to_global_ind(i)%array(l2g_total),ierr)
+       SLL_ALLOCATE(local_to_global_index_array(l2g_total),ierr)
+       read( input_file_id, local_to_global_indices )
+       mp%local_to_global_ind(i)%array(:) = local_to_global_index_array(:)
+       close( input_file_id )
+       SLL_DEALLOCATE_ARRAY(local_to_global_index_array,ierr)
+    end do
+
+    SLL_DEALLOCATE_ARRAY(local_index_file_list,ierr)
+    SLL_DEALLOCATE_ARRAY(local_to_global_file_list,ierr)
     SLL_DEALLOCATE(connectivities,ierr)
     SLL_DEALLOCATE(connectivities_reshaped,ierr)
   end subroutine read_from_file_ctmp2d
