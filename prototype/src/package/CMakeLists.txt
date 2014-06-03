@@ -102,7 +102,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
-    ${SLL_DIR}/simulation/simulation_4d_qns_general.F90
 #    ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90
     ${SLL_DIR}/sparse_matrix_interface/gauss_seidel.F90
     ${SLL_DIR}/sparse_matrix_interface/getdia.F90
@@ -192,6 +191,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/simulation/simulation_base_class.F90
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
+       ${SLL_DIR}/simulation/simulation_4d_qns_general.F90
  )
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
