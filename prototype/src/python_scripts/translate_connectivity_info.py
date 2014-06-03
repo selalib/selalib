@@ -127,8 +127,7 @@ def main ():
     print("translate_connectivity_info.py current path: " + os.getcwd())
 
 
-    # Open the ID.txt file to load the global index data. According to the
-    # rigid convention above, this is always the 3rd argument.
+    # Open the ID.txt file to load the global index data. 
     with open(args[0],'r') as readfile, open(outputname,'w') as writefile:
         now  = time.localtime()
         date = str(now[1]) + "/" + str(now[2]) + "/" + str(now[0])
