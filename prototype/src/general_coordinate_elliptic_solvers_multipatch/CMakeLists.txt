@@ -22,6 +22,7 @@
 
    TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch 
      sll_scalar_field_multipatch
+     sll_coordinate_transformation_multipatch
      sll_sparse_matrix 
      sll_scalar_field_2d_alternative 
      sll_integration)
