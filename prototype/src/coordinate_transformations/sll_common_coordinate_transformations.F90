@@ -659,13 +659,17 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 8)
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
+    l1 = params(5)
+    l2 = params(6)
     sinprod_x1 = eta1 + alpha1 * sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_x1 = (l2-l1) *sinprod_x1 + l1
   end function sinprod_x1
 
   function sinprod_x2 ( eta1, eta2, params )
@@ -677,13 +681,17 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 8)
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-     pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_pi
+    l1 = params(7)
+    l2 = params(8)
     sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_x2 = (l2-l1) *sinprod_x2 + l1
   end function sinprod_x2
 
   ! inverse mapping 
@@ -718,13 +726,17 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
- 
-    SLL_ASSERT(size(params) >= 4)
+    sll_real64  :: l1,l2
+
+    SLL_ASSERT(size(params) >= 8)
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
+    l1 = params(5)
+    l2 = params(6)
     sinprod_jac11 = 1.0_f64 + alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_jac11 = (l2-l1) *sinprod_jac11
   end function sinprod_jac11
 
   function sinprod_jac12 ( eta1, eta2, params )
@@ -736,13 +748,17 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2 
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 8)
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
+    l1 = params(5)
+    l2 = params(6)
     sinprod_jac12 = alpha1*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
+    sinprod_jac12 = (l2-l1) *sinprod_jac12
   end function sinprod_jac12
 
   function sinprod_jac21 ( eta1, eta2, params )
@@ -754,13 +770,17 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 8)
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
+    l1 = params(7)
+    l2 = params(8)
     sinprod_jac21 = alpha2*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_jac21 = (l2-l1) *sinprod_jac21
   end function sinprod_jac21
 
   function sinprod_jac22 ( eta1, eta2, params )
@@ -772,13 +792,17 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 8)
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
+    l1 = params(7)
+    l2 = params(8)
     sinprod_jac22 = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2)
+    sinprod_jac22 = (l2-l1) *sinprod_jac22
   end function sinprod_jac22
 
    ! jacobian ie determinant of jacobian matrix
@@ -792,16 +816,23 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1_1,l2_1
+    sll_real64  :: l1_2,l2_2
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 8)
     alpha1 = params(1)
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
     pi2 = 2.0_f64*sll_pi
+    l1_1 = params(5)
+    l2_1 = params(6)
+    l1_2 = params(7)
+    l2_2 = params(8)
     !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
     sinprod_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
                             alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+    sinprod_jac = (l2_1-l1_1)*(l2_2-l1_2)*sinprod_jac
   end function sinprod_jac
 
 #if 0
