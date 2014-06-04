@@ -22,9 +22,9 @@ ENDIF()
 ADD_LIBRARY(spm STATIC ${SPM_FILES})
 
 
-set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
-install(TARGETS spm DESTINATION lib)
-install(FILES ${spm_mods} DESTINATION include)
+#set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
+#install(TARGETS spm DESTINATION lib)
+#install(FILES ${spm_mods} DESTINATION include)
 
 IF(SUITESPARSE_FOUND)
   ADD_LIBRARY(sll_sparse_matrix STATIC sll_sparse_matrix_umfpack_module.F90)

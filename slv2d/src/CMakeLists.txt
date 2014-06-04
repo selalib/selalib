@@ -42,6 +42,21 @@ ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED ON CACHE BOOL "Use fftw library " )
+SET(MPI_MODULE_ENABLED ON CACHE BOOL "Use MPI library " )
+SET(HDF5_ENABLED ON CACHE BOOL "Enable HDF5 ")
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+INCLUDE(MPIConfig)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+
+INCLUDE(HDF5Config)
+IF(HDF5_IS_PARALLEL) 
+   MESSAGE(STATUS "HDF5 parallel supported")
+ELSE()
+    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+    MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+ENDIF()
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -60,28 +75,12 @@ IF(FFTW_ENABLED AND NOT FFTW_FOUND)
    ENDIF()
 ENDIF()
 
-IF(NOT MPI_FOUND)
-   INCLUDE(MPIConfig)
-ENDIF(NOT MPI_FOUND)
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
-SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
-
-IF(NOT HDF5_FOUND)
-   INCLUDE(HDF5Config)
-   IF(HDF5_IS_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE()
-      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
-      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
-   ENDIF()
-ENDIF(NOT HDF5_FOUND)
 
 SET(FFT_LIB "FFTW")
 SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
-
 
 IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
@@ -216,8 +215,10 @@ ADD_EXECUTABLE(vp2d_keen_non_unif_v vp2d_keen_non_unif_v.F90)
 TARGET_LINK_LIBRARIES(vp2d_keen_non_unif_v slv2d_non_unif_v ${LIBS} ${LAPACK_LIBRARIES})
 
 
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
 ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90)
 TARGET_LINK_LIBRARIES(vm4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
+ENDIF()
 
 ADD_EXECUTABLE(vp4d_transpose_cubic vp4d_cubic.F90)
 TARGET_LINK_LIBRARIES(vp4d_transpose_cubic slv2d ${LIBS})
@@ -234,10 +235,10 @@ FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml" DESTINATION ${CMAKE_C
 SET(ARGS "slv2d.nml")
 
 ADD_MPI_TEST(test_vp4d       vp4d_transpose       ${PROCS} ${ARGS})
-ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})
+#ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})
 ADD_MPI_TEST(test_vp4d_cubic vp4d_transpose_cubic ${PROCS} ${ARGS})
 
 SET_TESTS_PROPERTIES(test_vp4d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(test_vm4d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#SET_TESTS_PROPERTIES(test_vm4d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vp4d_cubic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 

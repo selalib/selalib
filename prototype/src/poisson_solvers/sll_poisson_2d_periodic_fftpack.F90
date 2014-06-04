@@ -140,6 +140,10 @@ subroutine initialize_poisson_2d_periodic_fftpack( &
    SLL_ALLOCATE(this%ky  (nc_y,nc_x/2+1), error)
    SLL_ALLOCATE(this%k2  (nc_y,nc_x/2+1), error)
 
+#ifdef DEBUG
+   print*, " FFTPACK version of poisson 2d periodic solver "
+#endif
+
    call initdfft(this%fftx, nc_x)
    call initcfft(this%ffty, nc_y)
 
@@ -186,8 +190,8 @@ subroutine solve_potential_poisson_2d_periodic_fftpack(this,sol,rhs)
 
    sol(1:nc_x,1:nc_y) = sol(1:nc_x,1:nc_y) / (nc_x*nc_y)     ! normalize FFTs
 
-   sol(nc_x+1,:) = sol(1,:)
-   sol(:,nc_y+1) = sol(:,1)
+   if (size(sol,1) == nc_x+1) sol(nc_x+1,:) = sol(1,:)
+   if (size(sol,2) == nc_y+1) sol(:,nc_y+1) = sol(:,1)
 
 end subroutine solve_potential_poisson_2d_periodic_fftpack
 
@@ -244,19 +248,14 @@ subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,n
    field_x(1:nc_x,1:nc_y) = field_x(1:nc_x,1:nc_y) / (nc_x*nc_y)
    field_y(1:nc_x,1:nc_y) = field_y(1:nc_x,1:nc_y) / (nc_x*nc_y)
 
-   field_x(nc_x+1,:) = field_x(1,:)
-   field_x(:,nc_y+1) = field_x(:,1)
-   field_y(nc_x+1,:) = field_y(1,:)
-   field_y(:,nc_y+1) = field_y(:,1)
+   if (size(field_x,1) == nc_x+1) field_x(nc_x+1,:) = field_x(1,:)
+   if (size(field_x,2) == nc_y+1) field_x(:,nc_y+1) = field_x(:,1)
+   if (size(field_y,1) == nc_x+1) field_y(nc_x+1,:) = field_y(1,:)
+   if (size(field_y,2) == nc_y+1) field_y(:,nc_y+1) = field_y(:,1)
 
    if (present(nrj)) then 
       nrj=sum(field_x(1:nc_x,1:nc_y)*field_x(1:nc_x,1:nc_y) &
         +field_y(1:nc_x,1:nc_y)*field_y(1:nc_x,1:nc_y))*this%dx*this%dy
-!      if (nrj>1.e-30) then 
-!         !nrj=0.5_f64*log(nrj)
-!      else
-!         nrj=-10**9
-!      endif
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftpack

@@ -115,17 +115,26 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
-   ADD_SUBDIRECTORY(pic_particle_types)
-   ADD_SUBDIRECTORY(pic_particle_initializers)
-   ADD_SUBDIRECTORY(pic_accumulators)
-   ADD_SUBDIRECTORY(field_accumulators)
 
    IF(NOT STDF95)
+
+     ADD_SUBDIRECTORY(pic_particle_types)
+     ADD_SUBDIRECTORY(pic_particle_initializers)
+     ADD_SUBDIRECTORY(pic_accumulators)
+     ADD_SUBDIRECTORY(field_accumulators)
+     ADD_SUBDIRECTORY(CAID_coordinate_transformations)
+     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
+     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
+     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
+     ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
+
      ADD_SUBDIRECTORY(coordinate_transformations)
      ADD_SUBDIRECTORY(characteristics)
      ADD_SUBDIRECTORY(advection)
      ADD_SUBDIRECTORY(gyroaverage)
+
    ENDIF(NOT STDF95)
+
    ADD_SUBDIRECTORY(interpolators)
 
    IF(MPI_MODULE_ENABLED)
@@ -143,7 +152,9 @@ IF(NOT BUILD_WITHOUT_TEST)
 
    ENDIF()
    
-   ADD_SUBDIRECTORY(quasi_neutral_solvers)
+   IF(NOT STDF95)
+      ADD_SUBDIRECTORY(quasi_neutral_solvers)
+   ENDIF(NOT STDF95)
 
    
    ADD_SUBDIRECTORY(mudpack)
@@ -181,6 +192,7 @@ IF(NOT BUILD_WITHOUT_TEST)
 
       ADD_SUBDIRECTORY(mesh_calculus)
       ADD_SUBDIRECTORY(simulation)
+      ADD_SUBDIRECTORY(eulerian-finite-volume)
 
    ENDIF(NOT STDF95)
 
