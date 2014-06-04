@@ -147,8 +147,8 @@ module sll_simulation_4d_DK_hybrid_module
     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
     !----> for interpolations
     type(arb_deg_2d_interpolator) :: interp2d_f_eta1eta2
-    type(arb_deg_1d_interpolator) :: interp1d_f_eta3
-    type(arb_deg_1d_interpolator) :: interp1d_f_vpar
+    type(sll_arb_deg_1d_interpolator) :: interp1d_f_eta3
+    type(sll_arb_deg_1d_interpolator) :: interp1d_f_vpar
 
     !--> 3D charge density and 3D electric potential
     !----> sequential in (x1,x2)
@@ -175,7 +175,7 @@ module sll_simulation_4d_DK_hybrid_module
     ! interpolation any arbitrary spline
     type(arb_deg_2d_interpolator) :: interp2d_rho_eta1eta2
     type(arb_deg_2d_interpolator) :: interp2d_Phi_eta1eta2
-    type(arb_deg_1d_interpolator) :: interp1d_Phi_eta3
+    type(sll_arb_deg_1d_interpolator) :: interp1d_Phi_eta3
     type(arb_deg_2d_interpolator) :: interp2d_QN_A11
     type(arb_deg_2d_interpolator) :: interp2d_QN_A12
     type(arb_deg_2d_interpolator) :: interp2d_QN_A21
@@ -200,6 +200,7 @@ module sll_simulation_4d_DK_hybrid_module
   contains
     procedure, pass(sim) :: run => run_4d_DK_hybrid
     procedure, pass(sim) :: init_from_file => init_4d_DK_hybrid
+
   end type sll_simulation_4d_DK_hybrid
 
   interface sll_delete

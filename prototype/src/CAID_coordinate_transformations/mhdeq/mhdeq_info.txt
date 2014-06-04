@@ -1,0 +1,17 @@
+# Rd
+3
+# dim
+2
+# npatchs
+1
+# external_faces
+0, 2
+# internal_faces
+0, 0
+0, 1
+0, 3
+# connectivity
+clone
+0, 3
+original
+0, 1

@@ -441,7 +441,7 @@ contains ! *******************************************************************
    double precision :: time
 
 
-   call sll_set_time_mark(t0)
+   !call sll_set_time_mark(t0)
    SLL_ALLOCATE(es,ierr)
    call initialize( &
         es, &
@@ -460,8 +460,8 @@ contains ! *******************************************************************
         eta2_min, &
         eta2_max )
    
-    time = sll_time_elapsed_since(t0)
-    print*, '#time for new_general_elliptic_solver', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, '#time for new_general_elliptic_solver', time
     
 
   end function new_general_elliptic_solver
@@ -577,7 +577,7 @@ contains ! *******************************************************************
     
     character(len=*),parameter :: as_file1='mat'
     
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     
     bc_left   = es%bc_left
     bc_right  = es%bc_right
@@ -694,8 +694,8 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
    
-    time = sll_time_elapsed_since(t0)
-    print*, '#time for factorize_mat_es', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, '#time for factorize_mat_es', time
 
   end subroutine factorize_mat_es
   
@@ -759,7 +759,7 @@ contains ! *******************************************************************
     rho_coeff_1d  = 0.0_f64
    
   
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
     ig2 = 0 
@@ -784,17 +784,18 @@ contains ! *******************************************************************
              end do
           end do
 
-          call sll_mult_csr_matrix_vector(es%sll_csr_mat_source,rho_coeff_1d,es%rho_vec)
+          call sll_mult_csr_matrix_vector(&
+               es%sll_csr_mat_source,&
+               rho_coeff_1d,es%rho_vec)
 
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
-               .and. &
-               ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+               .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
              es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
           end if
-
+          
        class DEFAULT
-
+          
           do j=1,es%num_cells2
              eta2  = es%eta2_min + (j-1)*es%delta_eta2
              do i=1,es%num_cells1
@@ -916,16 +917,17 @@ contains ! *******************************************************************
        end do
        
     end select
+    !time = sll_time_elapsed_since(t0)
 
-    time = sll_time_elapsed_since(t0)
 
-    print*, 'time to construct the rho', time
+    !print*, 'time to construct the rho', time
 
    
     call solve_linear_system(es)
 
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
+
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
