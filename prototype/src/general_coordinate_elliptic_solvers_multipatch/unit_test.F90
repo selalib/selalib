@@ -218,18 +218,6 @@ program test_general_elliptic_solver_multipatch
            call phi_field_scal%set_value_at_indices( i, j, ipatch, val_phi ) 
         end do
      end do
-  
-     print *, 'updating multipatch field coefficients in the boundary'
-     call set_slope_mp(a11_field_mat,ipatch)
-     call set_slope_mp(a12_field_mat,ipatch)
-     call set_slope_mp(a21_field_mat,ipatch)
-     call set_slope_mp(a22_field_mat,ipatch)
-     call set_slope_mp(b1_field_vect,ipatch)
-     call set_slope_mp(b2_field_vect,ipatch)
-     call set_slope_mp(c_field_scal,ipatch)
-     call set_slope_mp(rho_field_scal,ipatch)
-     call set_slope_mp(phi_field_scal,ipatch)
-
   end do
 
 
