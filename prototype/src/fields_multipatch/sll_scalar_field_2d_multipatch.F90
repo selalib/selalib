@@ -67,9 +67,9 @@ module sll_module_scalar_field_2d_multipatch
      type(multipatch_data_2d), dimension(:), pointer :: derivs2 => null()
      type(multipatch_data_2d), dimension(:), pointer :: derivs3 => null()
      ! Element connectivity information for finite element calculations.
-     sll_int32, dimension(:), pointer :: global_indices
-     type(multipatch_data_1d), dimension(:), pointer :: local_indices
-     type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
+!!$     sll_int32, dimension(:), pointer :: global_indices
+!!$     type(multipatch_data_1d), dimension(:), pointer :: local_indices
+!!$     type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
@@ -99,14 +99,6 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: delete => delete_field_sfmp2d
   end type sll_scalar_field_multipatch_2d
 
-
-  type multipatch_data_1d
-     sll_real64, dimension(:), pointer :: array => null()
-  end type multipatch_data_1d
-
-  type multipatch_data_2d
-     sll_real64, dimension(:,:), pointer :: array => null()
-  end type multipatch_data_2d
 
   interface sll_delete
      module procedure delete_field_sfmp2d_ptr
@@ -153,25 +145,7 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts2
     sll_int32  :: ierr
     sll_int32  :: IO_stat
-    sll_int32, dimension(:), allocatable :: global_indices_array
-    sll_int32, dimension(:), allocatable :: local_spline_indices_array
-    sll_int32, dimension(:), allocatable :: local_to_global_index_array
-    sll_int32  :: num_global_indices
-    sll_int32  :: rows
-    sll_int32  :: cols
-    sll_int32  :: li_total
-    sll_int32  :: l2g_total
-    character(len=128), dimension(:), allocatable :: local_index_file_list
-    character(len=128), dimension(:), allocatable :: local_to_global_file_list
 
-    namelist /number_global_indices/ num_global_indices
-    namelist /global_indices/ global_indices_array
-    namelist /local_index_files/ local_index_file_list
-    namelist /local_to_global_files/ local_to_global_file_list
-    namelist /li_dimensions/ rows, cols, li_total
-    namelist /l2g_dimensions/ rows, cols, l2g_total
-    namelist /local_spline_indices/ local_spline_indices_array
-    namelist /local_to_global_indices/ local_to_global_index_array
     fmp%field_name = field_name
     fmp%transf => transf
     
@@ -318,160 +292,6 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(fmp%derivs2(i)%array(num_pts1,NUM_DERIVS),ierr)
        SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
     end do
-
-    ! Element connectivity information initialization. These data are relevant
-    ! for finite element calculations. This initialization consists of 
-    ! several steps:
-    !
-    ! 1. Find out which file to read to get the information on:
-    !    1.1 global indexing of the elements
-    !    1.2 the files which contain the local indexing information per patch.
-    !    1.3 the files which contain the local to global indexing information
-    !        by patch.
-    ! 2. Allocate the arrays which will store the local_index and 
-    !    local_to_global index information inside the multipatch.
-    ! 3. Loop over the filenames found in step 1. to initialize the arrays.
-
-    ! The following line establishes a hardwired convetion about the naming
-    ! of the diverse files that represent the multipatch. Not good but works.
-    filename = trim(transf%name_root)//"_element_connectivity_main.nml"
-
-    SLL_ALLOCATE(fmp%local_indices(num_patches),ierr)
-    SLL_ALLOCATE(fmp%local_to_global_ind(num_patches),ierr)
-
-    call sll_new_file_id(input_file_id, ierr)
-    if( ierr .ne. 0 ) then
-       print *, 'ERROR while trying to obtain an unique identifier for file ',&
-            trim(filename), '. Called from initialize_scalar_field_sfmp2d().'
-       stop
-    end if
-    open(unit=input_file_id, file=trim(filename), STATUS="OLD", IOStat=IO_stat)
-    if( IO_Stat .ne. 0 ) then
-       print *, 'ERROR while opening file ',trim(filename), &
-            '. Called from initialize_scalar_field_sfmp2d().'
-       stop
-    end if
-    SLL_ALLOCATE(local_index_file_list(num_patches),ierr)
-    SLL_ALLOCATE(local_to_global_file_list(num_patches),ierr)
-
-    read( input_file_id,number_global_indices )
-    SLL_ALLOCATE(fmp%global_indices(num_global_indices),ierr)
-    SLL_ALLOCATE(global_indices_array(num_global_indices),ierr)
-    read( input_file_id,global_indices )
-    !read( input_file_id,fmp%global_indices )
-    !! global_indices contains the numeration of splines in all the domain
-    !! It is a 1D array with the following size
-    !!  sum_i num_splines_in_domain_patch_i 
-    !! where  num_splines_in_domain_patch_i=(number_cells_eta1_patch_i + deg_spline_eta1_patch_i)
-    !!                                   * (number_cells_eta2_patch_i + deg_spline_eta2_patch_i) 
-    
-    fmp%global_indices(:) = global_indices_array(:)
-    SLL_DEALLOCATE_ARRAY(global_indices_array,ierr)
-    read( input_file_id, local_index_files )
-    read( input_file_id, local_to_global_files )
-
-    close(input_file_id)
-
-    ! Read the individual files containing the local index and local to
-    ! global index information. 
-    print *, 'initialize_scalar_field_sfmp2d(): reading local index data. '
-
-    do i=1, num_patches
-       call sll_new_file_id(input_file_id, ierr)
-       if( ierr .ne. 0 ) then
-          print *, 'ERROR while trying to obtain an unique identifier ', &
-               'for file ', trim(local_index_file_list(i)), &
-               '. Called from initialize_scalar_field_sfmp2d().'
-          stop
-       end if
-       open(unit=input_file_id, file=trim(local_index_file_list(i)), &
-            STATUS="OLD", IOStat=IO_stat)
-       if( IO_Stat .ne. 0 ) then
-          print *, 'ERROR while opening file ', &
-               trim(local_index_file_list(i)), &
-            '. Called from initialize_scalar_field_sfmp2d().'
-          stop
-       end if
-       read( input_file_id, li_dimensions )
-
-       print *, 'initialize_scalar_field_sfmp2d(): reading data from file: ',&
-            trim(local_index_file_list(i))
-
-       ! For now we allocate only a linear array, but a 2D array may be 
-       ! more useful, especially since we may need to reshape & transpose.
-       ! Reshape & transpose to be done here! This is temporary!
-       ! Use the read data on number of rows/cols if useful at this point.
-       ! Discuss with Aurore.
-       SLL_ALLOCATE(fmp%local_indices(i)%array(li_total), ierr)
-       SLL_ALLOCATE(local_spline_indices_array(li_total), ierr)
-       read( input_file_id, local_spline_indices )
-       !! normally in the Ahmed code local_spline_indices_array
-       !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
-       !! where 
-       !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
-       !! and 
-       !! num_cell is the number of cells in the patch i
-       !! we stocke this 2D array such as a 1D array with a dimension
-       !! num_splines_loc*num_cell
-       !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
-       !! l = 1, num_splines_loc
-       fmp%local_indices(i)%array(:) = local_spline_indices_array(:)
-       close(input_file_id)
-       SLL_DEALLOCATE_ARRAY(local_spline_indices_array,ierr)
-    end do
-
-
-
-    print *, 'initialize_scalar_field_sfmp2d(): reading local to global ', &
-         'index data. '
-
-    do i=1, num_patches
-       call sll_new_file_id(input_file_id, ierr)
-       if( ierr .ne. 0 ) then
-          print *, 'ERROR while trying to obtain an unique identifier ', &
-               'for file ', trim(local_to_global_file_list(i)), &
-               '. Called from initialize_scalar_field_sfmp2d().'
-          stop
-       end if
-       open(unit=input_file_id, file=trim(local_to_global_file_list(i)), &
-            STATUS="OLD", IOStat=IO_stat)
-       if( IO_Stat .ne. 0 ) then
-          print *, 'ERROR while opening file ', &
-               trim(local_to_global_file_list(i)), &
-            '. Called from initialize_scalar_field_sfmp2d().'
-          stop
-       end if
-       read( input_file_id, l2g_dimensions )
-
-       print *, 'initialize_scalar_field_sfmp2d(): reading data from file: ',&
-            trim(local_to_global_file_list(i))
-
-       ! For now we allocate only a linear array, but a 2D array may be 
-       ! more useful, especially since we may need to reshape & transpose.
-       ! Reshape & transpose to be done here! This is temporary!
-       ! Use the read data on number of rows/cols if useful at this point.
-       ! Discuss with Aurore.
-       SLL_ALLOCATE(fmp%local_to_global_ind(i)%array(l2g_total),ierr)
-       SLL_ALLOCATE(local_to_global_index_array(l2g_total),ierr)
-       read( input_file_id, local_to_global_indices )
-       !! normally in the Ahmed code local_to_global_index_array
-       !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
-       !! where 
-       !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
-       !! and 
-       !! num_cell is the number of cells in the patch i
-       !! we stocke this 2D array such as a 1D array with a dimension
-       !! num_splines_loc*num_cell
-       !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
-       !! l = 1, num_splines_loc
-       fmp%local_to_global_ind(i)%array(:) = local_to_global_index_array(:)
-       close( input_file_id )
-       SLL_DEALLOCATE_ARRAY(local_to_global_index_array,ierr)
-    end do
-
-
-    SLL_DEALLOCATE_ARRAY(local_index_file_list,ierr)
-    SLL_DEALLOCATE_ARRAY(local_to_global_file_list,ierr)
 
   end subroutine initialize_scalar_field_sfmp2d
 
