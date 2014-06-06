@@ -18,8 +18,7 @@ module sll_pic_1d_Class
 
     use sll_arbitrary_degree_splines
     use gauss_legendre_integration
-    !use sll_bspline_fem_solver_1d
-    use sll_pic_1d_quasi_neutral_solver
+    use sll_bspline_fem_solver_1d
     use sll_visu_pic !Visualization with gnuplot
     use pic_1d_particle_loading !should be integrated here
     use sll_timer
@@ -37,7 +36,7 @@ module sll_pic_1d_Class
         sll_real64, DIMENSION(:), allocatable :: particlespeed
         sll_real64, DIMENSION(:), allocatable :: particleweight          ! cf. y_k in delta f and c_k in full f pic
 
-    endtype
+        endtype
 
 
     !1d1v data for electrostatic PIC
@@ -45,8 +44,9 @@ module sll_pic_1d_Class
     sll_real64, DIMENSION(:), allocatable :: particlespeed
     sll_real64, DIMENSION(:), allocatable :: particleweight          ! cf. y_k in delta f and c_k in full f pic
     sll_real64, DIMENSION(:), allocatable :: particleweight_constant !cf. c_k
-    sll_real64, DIMENSION(:), allocatable :: particle_qm !<mass to electron mass ratio, with the sign of the charge
     sll_real64, DIMENSION(:), allocatable:: steadyparticleposition !Steady non-moving objects aka Ions
+    !Constants
+    sll_real64 :: particle_mass=1.0_f64, particle_charge=1.0_f64
 
     !CHARACTER(LEN=255) :: particle_pusher
     sll_int32 :: particle_pusher
@@ -54,7 +54,7 @@ module sll_pic_1d_Class
     integer, private :: timestep
 
     !Data to be collected throughout a run
-    sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, thermal_velocity_estimate, particleweight_mean ,particleweight_var
+    sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, thermal_velocity_estimate
 
     !sll_real64 :: initial_fieldenergy , initial_kineticenergy , initial_total_energy
     sll_real64 :: initial_fem_inhom , fem_inhom
@@ -67,8 +67,8 @@ module sll_pic_1d_Class
     sll_int32 :: nparticles = 1000  !GLOBAL, marker particles
     sll_int32 :: particles_system= 1 !Number of the particles in the system
     LOGICAL :: gnuplot_inline_output=.FALSE. !write gnuplot output during the simulation
-    !sll_real64,parameter :: plasma_frequency = 1.0_f64 != sqrt( sll_e_charge**2/sll_e_mass/sll_epsilon_0)
-    !sll_real64 ,parameter:: thermal_velocity = 1.0_f64
+    sll_real64,parameter :: plasma_frequency = 1.0_f64 != sqrt( sll_e_charge**2/sll_e_mass/sll_epsilon_0)
+    sll_real64 ,parameter:: thermal_velocity = 1.0_f64
 
     !Mesh parameters
     sll_int32 :: mesh_cells = 2**8
@@ -79,11 +79,16 @@ module sll_pic_1d_Class
     sll_real64, dimension(:), allocatable, private   :: knots
     sll_int32                  :: num_pts
 
-    class(pic_1d_quasi_neutral_solver), pointer :: qnsolver  !<Quasi neutral solver
-
     integer, private ::  phasespace_file_id=-1
 
     CHARACTER(LEN=255) :: root_path
+    !          interface deferred
+    !            function sll_pic_1d_electric_field(x) result(E)
+    !        real, dimension(:), intent(in) :: x
+    !        real, dimension(:) :: E
+    !        endfunction
+    !              endinterface
+    procedure(sll_pic_1d_electric_field), pointer:: electric_field_external
 
     !type(sll_logical_mesh_1d), pointer :: mesh1d
     !    type(poisson_1d_periodic), pointer :: poisson1dsolver
@@ -106,23 +111,9 @@ module sll_pic_1d_Class
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_SHIFT       = 6 !Shift by velocity
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG       = 7
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V       = 8 !Variational Leapfrog
-    sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        =9     ! Runge Kutta 3
+
     sll_int32, parameter :: SLL_PIC1D_FULLF       = 1
     sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2
-
-
-    !Interface for one dimensional function for right hand side
-    abstract interface
-        function sll_pic_1d_electric_field_external(x,t) result(E)
-            use sll_working_precision
-            sll_real64, dimension(:),intent(in) :: x !<Position
-            sll_real64, intent(in)  :: t  !<Time
-            sll_real64, dimension(size(x)) :: E
-        endfunction
-    endinterface
-
-    procedure(sll_pic_1d_electric_field_external), pointer:: Eex !<External (time dependent) electric field
-
 
 contains
 
@@ -147,7 +138,7 @@ contains
         !particle_pusher=trim(particle_pusher_user)
         particle_pusher=particle_pusher_user
         !############## PARALLEL ##################
-
+        call sll_boot_collective()
 
         !really global variables
         coll_rank = sll_get_collective_rank( sll_world_collective )
@@ -177,17 +168,11 @@ contains
         call sll_collective_barrier(sll_world_collective)
 
 
-        !Set up Quasineutral solver
-        qnsolver=>new_pic_1d_quasi_neutral_solver(interval_a, interval_b, spline_degree, &
-            mesh_cells, SLL_SOLVER_FEM, sll_world_collective)
-
-        !electric_field_external=>sll_pic_1d_electric_field
-        Eex=>pic_1d_electric_field_external
+        electric_field_external=>sll_pic_1d_electric_field
     endsubroutine new_sll_pic_1d
 
     !<Destructor
     subroutine destroy_sll_pic_1d()
-        call qnsolver%delete()
         call sll_halt_collective()
 
     endsubroutine
@@ -203,17 +188,23 @@ contains
             !            endif
             !
             !            write(phasespace_file_id,*)  particleposition, particlespeed
-            ! if (phasespace_file_id==-1) then
-            SLL_ASSERT(    minval(particleposition) >=interval_a)
-            SLL_ASSERT(    maxval(particleposition) <=interval_b)
-            grid=floor(sqrt(nparticles/10.0_f64))+1
-            call distribution_xdmf("phasespace", particleposition, particlespeed, particleweight, &
-                interval_a-1.0_f64, interval_b+1.0_f64, grid, minval(particlespeed), maxval(particlespeed), grid, timestep)
-            !          phasespace_file_id=0
+           ! if (phasespace_file_id==-1) then
+                            SLL_ASSERT(    minval(particleposition) >=interval_a)
+                            SLL_ASSERT(    maxval(particleposition) <=interval_b)
+                            grid=floor(sqrt(nparticles*1.0_f64)/2.0_f64)
+                            call distribution_xdmf("phasespace", particleposition, particlespeed, particleweight, &
+                                        interval_a-1.0_f64, interval_b+1.0_f64, grid, minval(particlespeed)-1.0_f64, maxval(particlespeed)+1.0_f64, grid, timestep)
+                                  !          phasespace_file_id=0
             !endif
         endif
     endsubroutine
 
+    function ionbeam(x) result(y)
+        sll_real64, dimension(:),intent(in) :: x
+        sll_real64, dimension(size(x)) :: y
+        y=0
+        where (x>=interval_a .and. x-interval_a<=(interval_b-interval_a)/3.0_f64) y=3.0_f64
+    end function ionbeam
 
 
     !<Calculates Error estimates for different Testcases using preknown analytical
@@ -227,7 +218,7 @@ contains
                 !The first field solve is a Monte Carlo estimator
                 if (coll_rank==0) then
                     !analytical_solution=landau_alpha/((interval_b-interval_a)*landau_mode)*&
-                            if (landau_alpha/=0) then
+                    if (landau_alpha/=0) then
                         analytical_solution=landau_alpha/(landau_mode)*&
                             sin(landau_mode*(knots(1:mesh_cells)+(sll_pi/6)*(knots(2)-knots(1))))
                         num_err_noise_max= maxval(abs((eval_solution(1:mesh_cells)-analytical_solution)))/&
@@ -239,17 +230,17 @@ contains
                     endif
 
 
-                    print *, "Error in MC estimate of E-field (Max):", num_err_noise_max, "(L2):" ,num_err_noise_l2
+                    print *, "Error in MC estimate of E-field: ", num_err_noise_max, num_err_noise_l2
                 endif
 
-                !num_err_seminorm=landau_alpha**2/(2*(interval_b-interval_a)*landau_mode**2)
-                if (landau_alpha/=0) then
-                    num_err_seminorm=landau_alpha**2/(2*landau_mode**2)/2.0_f64 !*(interval_b-interval_a)/2.0_f64
-                    num_err_seminorm=(sll_pic1d_calc_fieldenergy()-num_err_seminorm)/num_err_seminorm
-                else
-                    num_err_seminorm=sll_pic1d_calc_fieldenergy()
-                endif
-                if (coll_rank==0) print *, "Error in MC estimate of E-Energy: (rel.)", num_err_seminorm
+                    !num_err_seminorm=landau_alpha**2/(2*(interval_b-interval_a)*landau_mode**2)
+                    if (landau_alpha/=0) then
+                        num_err_seminorm=landau_alpha**2/(2*landau_mode**2)*(interval_b-interval_a)
+                        num_err_seminorm=(sll_pic1d_calc_fieldenergy()-num_err_seminorm)/num_err_seminorm
+                    else
+                        num_err_seminorm=sll_pic1d_calc_fieldenergy()
+                    endif
+                    if (coll_rank==0) print *, "Error in MC estimate of E-Energy: ", num_err_seminorm
         endselect
 
     endsubroutine
@@ -260,7 +251,6 @@ contains
         logical, intent(in), optional ::gnuplot_inline_output_user
         sll_real64, dimension(size(knots)-1) :: analytical_solution
         sll_int32 :: idx,jdx
-        sll_real64 :: time
         !Timers
         type(sll_time_mark)  :: tstart, tstop
 
@@ -280,23 +270,25 @@ contains
         SLL_CLEAR_ALLOCATE(kineticenergy(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(impulse(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(thermal_velocity_estimate(1:timesteps+1), ierr)
-        SLL_CLEAR_ALLOCATE(particleweight_mean(1:timesteps+1), ierr)
-        SLL_CLEAR_ALLOCATE(particleweight_var(1:timesteps+1), ierr)
 
 
         SLL_CLEAR_ALLOCATE( steadyparticleposition(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particleposition(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particlespeed(1:nparticles),ierr)
-        SLL_CLEAR_ALLOCATE(particle_qm(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particleweight(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particleweight_constant(1:nparticles),ierr)
 
         SLL_CLEAR_ALLOCATE(eval_solution(1:size(knots)),ierr)
 
+
+
+        particle_mass=1.0_f64
+
+        particle_charge=1.0_f64
         if (coll_rank==0) write(*,*) "#PIC1D: Loading particles..."
         call load_particles (nparticles, interval_a, interval_b,&
             steadyparticleposition, particleposition, &
-            particlespeed, particleweight, particleweight_constant, particle_qm)
+            particlespeed, particleweight, particleweight_constant)
 
         call sll_collective_barrier(sll_world_collective)
         if (coll_rank==0) write(*,*) "#PIC1D: Particles loaded..."
@@ -311,13 +303,10 @@ contains
         if (coll_rank==0) print *, "#Number of FEM-Cells ", mesh_cells
         !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, knots, 1.0_f64)
         !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, 1.0_f64, sll_world_collective)
-
-        !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, (interval_b-interval_a), sll_world_collective)
-
-
+        call sll_bspline_fem_solver_1d_initialize(knots, spline_degree, steadyparticleposition, (interval_b-interval_a), sll_world_collective)
 
         !call sll_bspline_fem_solver_1d_initialize(knots, spline_degree)
-        !call sll_bspline_fem_solver_1d_set_weights(particleweight)
+        call sll_bspline_fem_solver_1d_set_weights(particleweight)
 
 
         !load Ions constant
@@ -328,58 +317,42 @@ contains
 
         selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_QUIET)
-                call qnsolver%set_ions_constant(0.0_f64)
-                particle_qm=-1.0_f64
-                !call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64 )
+                call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64 )
             case(SLL_PIC1D_TESTCASE_LANDAU)
                 !load constant ion background
-                call qnsolver%set_ions_constant(0.0_f64)
-                !call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64 )
-            case(SLL_PIC1D_TESTCASE_IONBEAM)
-                call qnsolver%set_ions_constant(0.0_f64)
-                !call qnsolver%set_ions_constant_particles(steadyparticleposition)
-            case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
-                call qnsolver%set_ions_constant_particles(steadyparticleposition)
-            case default
-            particle_qm=-1.0_f64 !By default we simulate Electrons
-                call qnsolver%set_ions_constant(0.0_f64)
+                call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64 )
         endselect
 
 
-        !Delta F Method, initialize the control variate
         if (enable_deltaf .eqv. .TRUE.) then
-            !The Control Variate, as it is constant over time gos intho the constant inhomogenity
 
+            call sll_bspline_fem_solver_1d_set_weights(particleweight_constant)
 
-            !In the constant electron case this should be normalized to zero
-            !But since the fem solver ignores the constant ion background anyway
-            !this is going to be ok.
-           call  qnsolver%set_bg_particles(particleposition, particle_qm*particleweight_constant)
+            call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64)
+            call sll_bspline_fem_solver_1d_add_inhomogenity_function(sll_pic_1d_landaudamp_PDF,10  )
 
         endif
 
 
         !Start with PIC Method
         !Do the initial solve of the field
-        !particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(particleposition, particlespeed)
-
-        call sll_pic_1d_solve_qn(particleposition)
-        !call sll_bspline_fem_solver_1d_solve(particleposition)
+        particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(particleposition)
         print *, "#Initial field solve"
 
 
         print *, "#Test initial field, and loading condition for landau damping"
-        !call sll_bspline_fem_solver_1d_eval_solution_derivative(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
-        call qnsolver%evalE(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
         call  sll_pic_1d_initial_error_estimates()
+
+
 
 
         !Information on initial field
 
-        print *, "#Initial Field average: " , sum( qnsolver%getPotential())
-        print *, "#Initial Field variance: " , sum((sum(  qnsolver%getPotential())/mesh_cells &
-            -  qnsolver%getPotential())**2)/mesh_cells
+        print *, "#Initial Field average: " , sum( sll_bspline_fem_solver_1d_get_solution())
+        print *, "#Initial Field variance: " , sum((sum( sll_bspline_fem_solver_1d_get_solution())/mesh_cells &
+            - sll_bspline_fem_solver_1d_get_solution())**2)/mesh_cells
 
         !eval_solution=sll_bspline_fem_solver_1d_get_solution()
         !initial_fem_inhom=sum(sll_bspline_fem_solver_1d_get_inhomogenity())
@@ -397,22 +370,22 @@ contains
                 !                                                  size(particlespeed), &
                 !                                                1, 1.0_f64)
 
-            !            call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), eval_solution(1:mesh_cells))
-            !
-            !            open(unit=20, file=trim(root_path)//"initial_field.txt")
-            !            write (20,*) eval_solution(1:mesh_cells)
-            !            close(20)
-            !
-            !            !Particle density
-            !            open(unit=20, file=trim(root_path)//"initial_electrondensity.txt")
-            !
-            !            write (20,*) bspline_particle_density(particleposition)
-            !            close(20)
-            !
-            !            !Particle density
-            !            open(unit=20, file=trim(root_path)//"initial_iondensity.txt")
-            !            write (20,*) bspline_particle_density(steadyparticleposition)
-            !            close(20)
+!            call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), eval_solution(1:mesh_cells))
+!
+!            open(unit=20, file=trim(root_path)//"initial_field.txt")
+!            write (20,*) eval_solution(1:mesh_cells)
+!            close(20)
+!
+!            !Particle density
+!            open(unit=20, file=trim(root_path)//"initial_electrondensity.txt")
+!
+!            write (20,*) bspline_particle_density(particleposition)
+!            close(20)
+!
+!            !Particle density
+!            open(unit=20, file=trim(root_path)//"initial_iondensity.txt")
+!            write (20,*) bspline_particle_density(steadyparticleposition)
+!            close(20)
 
             !            open(unit=20, file=trim(root_path)//"initial_phasespace.dat")
             !            do idx=1, size(particleposition)
@@ -469,10 +442,7 @@ contains
 
 
         !---------------------------### Main Loop ###----------------------------------------------------
-        time=0.0_f64
         do timestep=1, timesteps
-            time=timestepwidth*timestepwidth*(timestep-1)
-
             call sll_pic1d_write_phasespace(timestep)
 
             !print *, sum(abs((sll_bspline_fem_solver_1d_get_inhomogenity())))
@@ -486,17 +456,15 @@ contains
                 call particles_center_gnuplot_inline(particleposition, particlespeed, &
                     interval_a, interval_b,&
                     -1.1_f64*maxval(particlespeed), 1.1_f64*maxval(particlespeed),&
-                    time)
+                    timestepwidth*(timestep-1) )
 
             end if
 
 
-            particleweight_mean(timestep)=sum(particleweight)/size(particleweight)
-            particleweight_var(timestep)=sum(particleweight**2)/size(particleweight)-particleweight_mean(timestep)**2
 
-            kineticenergy(timestep)=sll_pic1d_calc_kineticenergy(abs(1/particle_qm),  particlespeed , particleweight )
+            kineticenergy(timestep)=sll_pic1d_calc_kineticenergy(particle_mass,  particlespeed , particleweight )
             fieldenergy(timestep)=sll_pic1d_calc_fieldenergy()
-            impulse(timestep)=sll_pic1d_calc_impulse(abs(1/particle_qm),  particlespeed , particleweight)
+            impulse(timestep)=sll_pic1d_calc_impulse(particle_mass,  particlespeed , particleweight)
             thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(particlespeed, particleweight)
 
             if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0  ) then
@@ -507,14 +475,8 @@ contains
 
 
             if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0 ) then
-                !call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), electricpotential_interp)
-                call qnsolver%evalPhi(knots(1:mesh_cells), electricpotential_interp)
-               !Scale potential to acutal values
-!                    electricpotential_interp=electricpotential_interp*&
-!                    (sll_mass_e/sll_e_charge)*vthermal_e**2
-                call electricpotential_gnuplot_inline( electricpotential_interp  &
-                            !+0.5_f64*knots(1:mesh_cells)&
-                ,knots(1:mesh_cells) )
+                call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), electricpotential_interp)
+                call electricpotential_gnuplot_inline( electricpotential_interp,knots(1:mesh_cells) )
 
             endif
 
@@ -522,8 +484,8 @@ contains
                 !Stop if Error ist catastrophal
                 if ( (kineticenergy(timestep)+fieldenergy(timestep) -(kineticenergy(1)+fieldenergy(1)))&
                         /(kineticenergy(1)+fieldenergy(1)) > 10000.0_f64) then
-!                    print *, "Its Over, Giving Up!"
-!                    stop
+                    print *, "Its Over, Giving Up!"
+                    stop
                 endif
             endif
 
@@ -536,17 +498,21 @@ contains
 
             !Push all particles at once
             !
+            !
+
+
+
 
             selectcase (particle_pusher)
                 case(SLL_PIC1D_PPUSHER_RK4)
                     call  sll_pic_1d_rungekutta4_step_array( particleposition, &
-                        particlespeed, timestepwidth, time)
+                        particlespeed, timestepwidth)
                 case(SLL_PIC1D_PPUSHER_VERLET)
                     call sll_pic_1d_Verlet_scheme( particleposition, &
-                        particlespeed, timestepwidth, time)
+                        particlespeed, timestepwidth)
                 case(SLL_PIC1D_PPUSHER_EULER)
                     call sll_pic_1d_explicit_euler( particleposition, &
-                        particlespeed, timestepwidth, time)
+                        particlespeed, timestepwidth)
                 case(SLL_PIC1D_PPUSHER_LEAPFROG_V)
                     call  sll_pic_1d_variational_leap_frog( particleposition, &
                         particlespeed, timestepwidth)
@@ -555,28 +521,22 @@ contains
                         particlespeed, timestepwidth)
                 case(SLL_PIC1D_PPUSHER_RK2)
                     call sll_pic_1d_rungekutta2( particleposition, &
-                        particlespeed, timestepwidth, time)
-                           case(SLL_PIC1D_PPUSHER_RK3)
-                    call sll_pic_1d_rungekutta3( particleposition, &
-                        particlespeed, timestepwidth, time)
+                        particlespeed, timestepwidth)
                 case(SLL_PIC1D_PPUSHER_HEUN)
                     call sll_pic_1d_heun( particleposition, &
-                        particlespeed, timestepwidth, time)
+                        particlespeed, timestepwidth)
                 case(SLL_PIC1D_PPUSHER_NONE)
                     print *, "No Particle pusher choosen"
                 case(SLL_PIC1D_PPUSHER_SHIFT)
                     particleposition=particleposition+timestepwidth*(interval_b-interval_a)
-                    !particleposition=sll_pic1d_ensure_periodicity( particleposition, &
-                     !   interval_a, interval_b)
-                     call sll_pic1d_ensure_boundary_conditions(particleposition, particlespeed)
+                    particleposition=sll_pic1d_ensure_periodicity( particleposition, &
+                        interval_a, interval_b)
 
-                    !call sll_bspline_fem_solver_1d_solve(particleposition)
-                    call sll_pic_1d_solve_qn(particleposition)
+                    call sll_bspline_fem_solver_1d_solve(particleposition)
 
             end select
 
-             !Collisions
-             call sll_pic1d_collision_step()
+
 
 
             if (coll_rank==0 .AND. timestep==1) then
@@ -588,17 +548,16 @@ contains
         enddo
 
         !Last update of relevant data
-        kineticenergy(timestep)=sll_pic1d_calc_kineticenergy(abs(1/particle_qm),  particlespeed , particleweight )
+        kineticenergy(timestep)=sll_pic1d_calc_kineticenergy(particle_mass,  particlespeed , particleweight )
         fieldenergy(timestep)=sll_pic1d_calc_fieldenergy()
-        impulse(timestep)=sll_pic1d_calc_impulse(abs(1/particle_qm),  particlespeed , particleweight)
+        impulse(timestep)=sll_pic1d_calc_impulse(particle_mass,  particlespeed , particleweight)
         thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(particlespeed, particleweight)
-        particleweight_mean(timestep)=sum(particleweight)/size(particleweight)
-        particleweight_var(timestep)=sum(particleweight**2)/size(particleweight)-particleweight_mean(timestep)**2
+
 
         close(25)
 
         !Save Results to file
-        call sll_pic1d_write_result("pic1dresult", kineticenergy, fieldenergy, impulse, particleweight_mean, particleweight_var )
+        call sll_pic1d_write_result("pic1dresult", kineticenergy, fieldenergy, impulse )
 
 
         if (coll_rank==0) then
@@ -608,63 +567,7 @@ contains
         endif
         if (coll_rank==0) call det_landau_damping((/ ( timestep*timestepwidth, timestep = 0, timesteps) /),fieldenergy)
 
-        !call sll_bspline_fem_solver_1d_destroy
-        call qnsolver%delete()
-
-    endsubroutine
-
-    subroutine sll_pic1d_collision_step()
-            sll_real64, dimension(size(particleweight)) :: collision_weights
-            sll_real64 :: ueq, Teq
-         !       sll_real64:: feq,v
-                sll_int32 :: idx
-        !feq(v)=1.0_f64/sqrt(sll_kx)*exp(-0.5_f64*(v-ueq)**2/Teq)
-        ueq=dot_product(particlespeed, particleweight)
-        Teq=dot_product(particlespeed**2, particleweight)-ueq**2
-
-!                collision_weights=particleweight&
-!                         /sqrt(sll_kx)*exp(-0.5_f64*(particlespeed-ueq)**2/Teq)/(interval_length)
-!                         initial_dist_xv(particleposition, particlespeed)
-!
-
-
-!        do idx=1,size(particleweight)
-!                collision_weights(idx)=particleweight(idx)*&
-!                         feq(particlespeed(idx))/&
-!                         initial_dist_xv((/particleposition(idx)/), (/particlespeed(idx)/))
-!        enddo
-
-
-
-
-    endsubroutine
-
-
-
-    subroutine sll_pic_1d_solve_qn(allparticleposition)
-        sll_real64, dimension(:),intent(in) :: allparticleposition
-
-        selectcase(pic1d_testcase)
-            !            case(SLL_PIC1D_TESTCASE_QUIET)
-            case(SLL_PIC1D_TESTCASE_LANDAU)
-                !All particles, are only electrons
-                !load constant ion background
-                SLL_ASSERT(size(allparticleposition)==size(particleweight))
-                call qnsolver%set_electrons_only_weighted(allparticleposition, particleweight)
-                call qnsolver%solve()
-            case(SLL_PIC1D_TESTCASE_IONBEAM)
-                    SLL_ASSERT(size(allparticleposition)==size(particleweight))
-                   call qnsolver%set_charged_allparticles_weighted(allparticleposition, &
-                   sign(particleweight,particle_qm) )
-                   ! call qnsolver%set_electrons_only_weighted(allparticleposition, particleweight)
-                   call qnsolver%solve()
-            case default
-                !All particles, are only electrons
-                !load constant ion background
-                SLL_ASSERT(size(allparticleposition)==size(particleweight))
-                call qnsolver%set_electrons_only_weighted(allparticleposition, particleweight)
-                call qnsolver%solve()
-        endselect
+        call sll_bspline_fem_solver_1d_destroy
 
     endsubroutine
 
@@ -715,275 +618,150 @@ contains
 
 
 
-    subroutine sll_pic_1d_rungekutta4_step_array(x_0, v_0, h, t)
+    subroutine sll_pic_1d_rungekutta4_step_array(x_0, v_0, h)
         sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
+        !procedure  (sll_pic_1d_DPhidx):: f_ode
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
-            k_x3, k_x4, k_v1, &
-            k_v2, k_v3, k_v4, stage_DPhidx,x_1,v_1
+        !sll_real64 :: x_h,v_h
+        sll_real64, dimension(:) :: k_x1(size(x_0)), k_x2(size(x_0)),&
+            k_x3(size(x_0)), k_x4(size(x_0)), k_v1(size(x_0)), &
+            k_v2(size(x_0)), k_v3(size(x_0)), k_v4(size(x_0)), stage_DPhidx(size(x_0))
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
 
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, stage_DPhidx)
         k_x1= h*v_0
-        k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
+        k_v1= h*(stage_DPhidx+electric_field_external(x_0))*plasma_frequency*thermal_velocity
         !--------------------Stage 2-------------------------------------------------
         k_x2= h*(v_0  + 0.5_f64  *k_v1)
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64*k_x2)
-        !call sll_pic_1d_solve_qn(x_0 + 0.5_f64*k_x1)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
-        k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64*k_x1, t+0.5_f64*h))*(-particle_qm)
+        !call sll_bspline_fem_solver_1d_solve(sll_pic1d_ensure_periodicity(x_0 + (k_x1 + 2.0_f64*k_x2)/6.0_f64,  interval_a, interval_b))
+        call sll_bspline_fem_solver_1d_solve(x_0 + 0.5_f64 *k_x1)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
+        k_v2= h*( stage_DPhidx+electric_field_external(sll_pic1d_ensure_periodicity(x_0 + 0.5_f64 *k_x1,  interval_a, interval_b)))&
+                                            *plasma_frequency*thermal_velocity
         !--------------------Stage 3-------------------------------------------------
         k_x3= h*(v_0+ 0.5_f64 * k_v2)
-        !call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x3)
         !call sll_bspline_fem_solver_1d_solve(sll_pic1d_ensure_periodicity(x_0 + (1*k_x1 + 2.0_f64*k_x3)/6.0_f64,  interval_a, interval_b))
-        !call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x2)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x2, stage_DPhidx)
-        k_v3= h*(stage_DPhidx+ Eex(x_0 + 0.5_f64*k_x2, t+0.5_f64*h)) *(-particle_qm)
+        call sll_bspline_fem_solver_1d_solve(x_0 + 0.5_f64 *k_x2)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0 + 0.5_f64 *k_x2, stage_DPhidx)
+        k_v3= h*(stage_DPhidx+electric_field_external(x_0 + 0.5_f64 *k_x2))*plasma_frequency*thermal_velocity
         !--------------------Stage 4-------------------------------------------------
         k_x4= h*(v_0+ k_v3)
         !call sll_bspline_fem_solver_1d_solve(sll_pic1d_ensure_periodicity(x_0 + (k_x1 + 2.0_f64*k_x2 + 2.0_f64*k_x3 +k_x4  )/6.0_f64,  interval_a, interval_b))
-        call sll_pic_1d_solve_qn(x_0 +  k_x4)
-        call sll_pic_1d_solve_qn(x_0 +  k_x3)
-        call qnsolver%evalE(x_0 +  k_x3, stage_DPhidx)
-        k_v4= h*(stage_DPhidx+ Eex(x_0 + k_x3, t+h)) *(-particle_qm)
+        call sll_bspline_fem_solver_1d_solve(x_0 +  k_x3)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0 +  k_x3, stage_DPhidx)
+        k_v4= h*(stage_DPhidx+electric_field_external(sll_pic1d_ensure_periodicity(x_0 +  k_x3,  interval_a, interval_b)))&
+                    *plasma_frequency*thermal_velocity
         !Perform step---------------------------------------------------------------
-        x_1= x_0 + (  k_x1 +  2.0_f64 *k_x2 +  2.0_f64*k_x3 + k_x4 )/6.0_f64
-        v_1= v_0 + (  k_v1 +  2.0_f64 *k_v2 +  2.0_f64*k_v3 + k_v4)/6.0_f64
+        x_0= x_0 + (  k_x1 +  2.0_f64 *k_x2 +  2.0_f64*k_x3 + k_x4 )/6.0_f64
+        v_0= v_0 + (  k_v1 +  2.0_f64 *k_v2 +  2.0_f64*k_v3 + k_v4)/6.0_f64
 
-
-
-
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
-
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        x_0=x_1
-        v_0=v_1
-
-        call sll_pic_1d_solve_qn(x_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(x_0)
 
     endsubroutine
 
-
-
-    !<Merson scheme with built in error estimate for each particle
-    subroutine sll_pic_1d_merson4(x_0, v_0, h, t)
+    subroutine sll_pic_1d_rungekutta2(x_0, v_0, h)
         sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
-            k_x3, k_x4, k_v1, &
-            k_v2, k_v3, k_v4, k_v5, k_x5, stage_DPhidx,x_1,v_1, err_x, err_v
+        sll_real64, dimension(:) :: k_x1(size(x_0)), k_x2(size(x_0)),&
+            k_x3(size(x_0)), k_x4(size(x_0)), k_v1(size(x_0)), &
+            k_v2(size(x_0)), stage_DPhidx(size(x_0))
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
 
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, stage_DPhidx)
         k_x1= h*v_0
-        k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
-        !--------------------Stage 2-------------------------------------------------
-        k_x2= h*(v_0  + (1.0_f64/3.0_f64)*k_v1)
-        call sll_pic_1d_solve_qn(x_0 + (1.0_f64/3.0_f64)*k_x1)
-        call qnsolver%evalE(x_0 + (1.0_f64/3.0_f64) *k_x1, stage_DPhidx)
-        k_v2= h*( stage_DPhidx + Eex(x_0 + (1.0_f64/3.0_f64)*k_x1, t+(1.0_f64/3.0_f64)*h))*(-particle_qm)
-        !--------------------Stage 3-------------------------------------------------
-        k_x3= h*(v_0+ (1.0_f64/3.0_f64) * k_v2)
-        call sll_pic_1d_solve_qn(x_0 +  (1.0_f64/6.0_f64)*(k_x1 + k_x2 ))
-
-        call qnsolver%evalE(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), stage_DPhidx)
-        k_v3= h*(stage_DPhidx+ Eex(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), &
-                                t+(1.0_f64/3.0_f64)*h)) *(-particle_qm)
-        !--------------------Stage 4-------------------------------------------------
-        k_x4= h*(v_0+ 0.5_f64*k_v3)
-        call sll_pic_1d_solve_qn(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  )
-        call qnsolver%evalE(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , stage_DPhidx)
-        k_v4= h*(stage_DPhidx+ Eex(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , t+0.5_f64*h)) *(-particle_qm)
-        !--------------------Stage 5-------------------------------------------------
-        k_x5= h*(v_0+ k_v4)
-        call sll_pic_1d_solve_qn(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1)
-        call qnsolver%evalE(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, stage_DPhidx)
-        k_v4= h*(stage_DPhidx+ Eex(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, t+h)) *(-particle_qm)
-
-        !Perform step of Order 4-----------------------------------------------------------
-        x_1= x_0 + (  k_x1 +  0.0_f64 *k_x2 +  0.0_f64*k_x3 + 4.0_f64*k_x4 + k_x5 )/6.0_f64
-        v_1= v_0 + (  k_v1 +  0.0_f64 *k_v2 +  0.0_f64*k_v3 + 4.0_f64*k_v4 + k_v5 )/6.0_f64
-
-        !Perform error step of Order 3 or 5 in linear case
-        err_x= x_0 + (  k_x1 +  3*k_x3 + 4*k_x4 + 2*k_x5 )/10.0_f64
-        err_v= x_0 + (  k_v1 +  3*k_v3 + 4*k_v4 + 2*k_v5 )/10.0_f64
-        err_x=x_1 - err_x
-        err_v=v_1 - err_v
-
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
-
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        x_0=x_1
-        v_0=v_1
-
-        call sll_pic_1d_solve_qn(x_0)
-
-    endsubroutine
-
-    subroutine sll_pic_1d_rungekutta2(x_0, v_0, h, t)
-        sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
-             k_v1, k_v2, stage_DPhidx
-
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
-
-        !--------------------Stage 1-------------------------------------------------
-        !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
-        k_x1= h*v_0
-        k_v1= h*(stage_DPhidx+Eex(x_0,t)) *(-particle_qm)
+        k_v1= h*(stage_DPhidx)*plasma_frequency*thermal_velocity
         !--------------------Stage 2-------------------------------------------------
         k_x2= h*(v_0  + 0.5_f64  *k_v1)
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
-        k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
-                             *(-particle_qm)
+        call sll_bspline_fem_solver_1d_solve(x_0 + 0.5_f64 *k_x1)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
+        k_v2= h*( stage_DPhidx)*plasma_frequency*thermal_velocity
         !Perform step---------------------------------------------------------------
         x_0= x_0 + k_x2
         v_0= v_0 + k_v2
 
-!        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
-        call sll_pic_1d_solve_qn(x_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(x_0)
+
     endsubroutine
 
-
-    subroutine sll_pic_1d_rungekutta3(x_0, v_0, h, t)
+    subroutine sll_pic_1d_heun(x_0, v_0, h)
         sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
-            k_x3, k_v3, k_v1,k_v2, stage_DPhidx
-
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
-
-        !--------------------Stage 1-------------------------------------------------
-        call qnsolver%evalE(x_0, stage_DPhidx)
-        k_x1= h*v_0
-        k_v1= h*(stage_DPhidx+Eex(x_0,t)) *(-particle_qm)
-        !--------------------Stage 2-------------------------------------------------
-        k_x2= h*(v_0  + 0.5_f64  *k_v1)
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
-        k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
-                            *(-particle_qm)
-        !--------------------Stage 3-------------------------------------------------
-        k_x3= h*(v_0  - k_v1 + 2.0_f64*k_v2)
-        call sll_pic_1d_solve_qn(x_0 - k_x1 + 2.0_f64*k_x2)
-        call qnsolver%evalE(x_0 - k_x1 + 2.0_f64*k_x2, stage_DPhidx)
-        k_v3= h*( stage_DPhidx + Eex(x_0 - k_x1 + 2.0_f64*k_x2,t + h))&
-                            *(-particle_qm)
-
-        !Perform step---------------------------------------------------------------
-        x_0= x_0 + (k_x1 + 4.0_f64 * k_x2 + k_x3)/6.0_f64
-        v_0= v_0 + (k_v1 + 4.0_f64 * k_v2 + k_v3)/6.0_f64
-
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
-        call sll_pic_1d_solve_qn(x_0)
-    endsubroutine
-
-
-    subroutine sll_pic_1d_heun(x_0, v_0, h, t)
-        sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
         sll_real64, dimension(:) :: k_x1(size(x_0)), k_x2(size(x_0)), &
             k_v1(size(x_0)), k_v2(size(x_0)),stage_DPhidx(size(x_0))
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, stage_DPhidx)
         k_x1= h*v_0
-        k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
+        k_v1= h*(stage_DPhidx+electric_field_external(x_0))*plasma_frequency*thermal_velocity
         !--------------------Stage 2-------------------------------------------------
-        call sll_pic_1d_solve_qn(x_0 + k_x1)
-        call qnsolver%evalE(x_0 + k_x1, stage_DPhidx)
+        call sll_bspline_fem_solver_1d_solve(x_0 + k_x1)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0 + k_x1, stage_DPhidx)
         k_x2= h*(v_0  + k_v1)
-        k_v2= h*( stage_DPhidx+Eex(x_0 +k_x1,t+h))*(-particle_qm)
+        k_v2= h*( stage_DPhidx+electric_field_external(x_0 + k_x1))*plasma_frequency*thermal_velocity
 
         !Perform step---------------------------------------------------------------
         x_0= x_0 + 0.5_f64 *(k_x1+k_x2   )
         v_0= v_0 + 0.5_f64 *(k_v1+k_v2  )
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
-        call sll_pic_1d_solve_qn(x_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(x_0)
+
     endsubroutine
 
 
 
-    subroutine sll_pic_1d_explicit_euler(x_0, v_0, h, t)
+    subroutine sll_pic_1d_explicit_euler(x_0, v_0, h)
         sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
-
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) :: stage_DPhidx,x_1,v_1
+        sll_real64, dimension(:) :: stage_DPhidx(size(x_0))
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
 
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
-        x_1=x_0 + h*v_0
-        v_1=v_0 + h*(stage_DPhidx + Eex(x_0,t) )*(-particle_qm)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, stage_DPhidx)
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        x_0=x_0 + h*v_0
+        v_0=v_0 + h*stage_DPhidx
 
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        x_0=x_1
-        v_0=v_1
-
-        call sll_pic_1d_solve_qn(x_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(x_0)
     endsubroutine
 
     !<From Erics lecture notes on Vaslov Equations
-    subroutine sll_pic_1d_Verlet_scheme(x_0, v_0, h, t)
+    subroutine sll_pic_1d_Verlet_scheme(x_0, v_0, h)
         sll_real64, intent(in):: h
-        sll_real64, intent(in):: t
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
         sll_real64, dimension(size(x_0)) ::  DPhidx, x_1, v_1, v_05
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
 
-        call qnsolver%evalE(x_0, DPhidx)
-        v_05=v_0+ 0.5_f64*h*(DPhidx+Eex(x_0,t))*(-particle_qm)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, DPhidx)
+        v_05=v_0+ 0.5_f64*h*(DPhidx+electric_field_external(x_0))*plasma_frequency*thermal_velocity
         x_1=x_0 + h*v_05
         !print *, maxval(abs(v_05))
-        !x_1=sll_pic1d_ensure_periodicity(x_1,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_05)
-        call sll_pic_1d_solve_qn(x_1)
+        x_1=sll_pic1d_ensure_periodicity(x_1,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(x_1)
 
-        call qnsolver%evalE(x_1, DPhidx)
-        v_1=v_05 + 0.5_f64*h*(DPhidx+Eex(x_1,t+h))*(-particle_qm)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_1, DPhidx)
+        v_1=v_05 + 0.5_f64*h*(DPhidx+electric_field_external(x_1))*plasma_frequency*thermal_velocity
         !Commit Push
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
         v_0=v_1
 
@@ -996,15 +774,14 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
 
 
-        call qnsolver%evalE(x_0, DPhidx_0)
-        x_1=x_0+ h*v_0 - ((h**2)/2.0_f64) *DPhidx_0*(-particle_qm)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, DPhidx_0)
+        x_1=x_0+ h*v_0 - ((h**2)/2.0_f64) *DPhidx_0
         x_1=sll_pic1d_ensure_periodicity(x_1,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_0)
 
-        call sll_pic_1d_solve_qn(x_1)
-        call qnsolver%evalE(x_1, DPhidx_1)
+        call sll_bspline_fem_solver_1d_solve(x_1)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_1, DPhidx_1)
 
-        v_1=v_0 + 0.5_f64*h* (DPhidx_0 + DPhidx_1)*(-particle_qm)
+        v_1=v_0 + 0.5_f64*h* (DPhidx_0 + DPhidx_1)
 
         !Push
         x_0=x_1
@@ -1018,10 +795,10 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
 
         x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call qnsolver%evalE(x_0, DPhidx_0)
+        call sll_bspline_fem_solver_1d_eval_solution_derivative(x_0, DPhidx_0)
         !DPhidx_0=0
 
-        v_1= v_0 - 0.5_f64 *DPhidx_0*h*(-particle_qm)
+        v_1= v_0 - 0.5_f64 *DPhidx_0*h
         v_1=v_1+  DPhidx_0*h
         !v_1=v_0+ 0.5_f64* DPhidx_0*h
         x_1=x_0+ v_1*h
@@ -1035,35 +812,31 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         x_0=x_1
         v_0=v_1
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
-
-        call sll_pic_1d_solve_qn(x_0)
+        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        call sll_bspline_fem_solver_1d_solve(x_0)
     endsubroutine
 
     !<Nonrelativistic kinetic energy 0.5*m*v^2
-    function sll_pic1d_calc_kineticenergy(relmass,  particlespeed , particleweight ) &
+    function sll_pic1d_calc_kineticenergy(particlemass,  particlespeed , particleweight ) &
             result(energy)
         sll_real64, DIMENSION(:), intent(in) :: particlespeed
         sll_real64, DIMENSION(:), intent(in):: particleweight
-        sll_real64, DIMENSION(:), intent(in) ::relmass
-
+        sll_real64 , intent(in) ::particlemass
         sll_real64 :: energy
-        SLL_ASSERT(size(particlespeed)==size(particleweight))
 
-        energy=0.5_f64*dot_product(particleweight*relmass,particlespeed**2)
+        energy=0.5_f64*particlemass*dot_product(particleweight,particlespeed**2)
         call sll_collective_globalsum(sll_world_collective, energy, 0)
     endfunction
 
     !<overall impulse 0.5*m*v
-    function sll_pic1d_calc_impulse(relmass,  particlespeed , particleweight) &
+    function sll_pic1d_calc_impulse(particlemass,  particlespeed , particleweight) &
             result(impulse)
         sll_real64, DIMENSION(:), intent(in) :: particlespeed
         sll_real64, DIMENSION(:), intent(in):: particleweight
-        sll_real64, DIMENSION(:), intent(in) ::relmass
+        sll_real64 , intent(in) ::particlemass
         sll_real64:: impulse
 
-        impulse=dot_product(particleweight,particlespeed*relmass)
+        impulse=particlemass*dot_product(particleweight,particlespeed)
         call sll_collective_globalsum(sll_world_collective, impulse, 0)
     endfunction
 
@@ -1076,7 +849,6 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         sll_real64 :: mean
         mean=dot_product(particlespeed,particleweight)
         call sll_collective_globalsum(sll_world_collective, mean, 0)
-
 
         vth=dot_product((particlespeed-mean)**2,particleweight)
         call sll_collective_globalsum(sll_world_collective, vth, 0)
@@ -1092,23 +864,20 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         sll_real64 :: energy
         energy=0.0_f64
         !Only for constant case
-        energy=dot_product(Eex(particleposition, 0.0_f64),particleposition)
-
+        energy=dot_product(electric_field_external(particleposition),particleposition)
         call sll_collective_globalsum(sll_world_collective, energy, 0)
 
-        !if (coll_rank==0)  energy=energy+0.5_f64*bspline_fem_solver_1d_H1seminorm_solution()/(interval_b-interval_a)
-        if (coll_rank==0)  energy=energy+qnsolver%fieldenergy()
 
+        if (coll_rank==0)  energy=energy+0.5_f64*bspline_fem_solver_1d_H1seminorm_solution()/(interval_b-interval_a) !/2.0_f64
 
+        !if (coll_rank==0)  energy=sqrt(bspline_fem_solver_1d_L2norm_solution())!  +bspline_fem_solver_1d_H1seminorm_solution()
     endfunction
 
 
     !Write all results of the pic simulation to file
-    subroutine sll_pic1d_write_result(filename, kinetic_energy, electrostatic_energy, impulse, &
-                                                particleweight_mean, particleweight_var)
+    subroutine sll_pic1d_write_result(filename, kinetic_energy, electrostatic_energy, impulse )
         character(len=*), intent(in) :: filename
-        sll_real64, dimension(:), intent(in) :: kinetic_energy, electrostatic_energy, impulse,&
-                                                        particleweight_mean,particleweight_var
+        sll_real64, dimension(:), intent(in) :: kinetic_energy, electrostatic_energy, impulse
         integer :: k,file_id,file_id_err
         sll_real64,  dimension(size(kinetic_energy)) :: total_energy
 
@@ -1137,11 +906,9 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
             write (file_id,*)  "#Finite Elements: 2^(", log(real(mesh_cells,i64))/log(2.0_f64),")"
             write (file_id,*)  "#Size of MPI Collective: ", coll_size
 
-            write (file_id,*)  "time  ", "kineticenergy  ", "electrostaticenergy  ", "impulse  ", &
-                                                "vthermal  ", "weightmean   ", "weightvar  "
+            write (file_id,*)  "time  ", "kineticenergy  ", "electrostaticenergy  ", "impulse  ", "vthermal"
             do k=1,timesteps+1
-                write (file_id,*)  timestepwidth*(k-1), kineticenergy(k), fieldenergy(k), impulse(k), &
-                                    thermal_velocity_estimate(k), particleweight_mean(k),particleweight_var(k)
+                write (file_id,*)  timestepwidth*(k-1), kineticenergy(k), fieldenergy(k), impulse(k),thermal_velocity_estimate(k)
             enddo
             close(file_id)
 
@@ -1236,14 +1003,7 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
             write (file_id,*)  "set ylabel 'rel. error'"
             write (file_id,*)  "plot '"//filename//"-errors.dat' using 1:2 with lines"
 
-            write (file_id, *) "set term x11 6"
-            write (file_id, *)  "set multiplot layout 2,1 rowsfirst title 'Time Development of Particle Weights'"
-            write (file_id, *) "set autoscale x; set logscale y"
-            write (file_id,*)  "set title 'Mean'"
-            write (file_id,*)  "plot '"//filename//".dat' using 1:6 with lines"
-            write (file_id,*)  "set title 'Variance'"
-            write (file_id,*)  "plot '"//filename//".dat' using 1:7 with lines\"
-            write (file_id,*) "unset multiplot"
+            close(file_id)
         endif
     endsubroutine
 
@@ -1288,47 +1048,24 @@ call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
     subroutine sll_pic1d_adjustweights(xold, xnew, vold, vnew)
         sll_real64, dimension(:),intent(in) ::vold, xold
         sll_real64, dimension(:),intent(out) ::vnew, xnew
-        sll_real64, dimension(size(particleweight)):: ratio
-        sll_int32 :: N
 
-        N=size(xold)
-        SLL_ASSERT(N==size(xnew))
-        SLL_ASSERT(N==size(vold))
-        SLL_ASSERT(N==size(vnew))
-        SLL_ASSERT(N==size(particleweight))
         !Adjust weights
         if (enable_deltaf .eqv. .TRUE.) then
-            ratio=control_variate_xv(xnew, vnew )/control_variate_xv(xold, vold )
-            !ratio=ratio/(N*coll_size)
-               !ratio=ratio
-             particleweight=particleweight_constant &
-                             -(particleweight_constant-particleweight)*ratio
-            !particleweight = sll_pic_1d_landaudamp_PDFxv(particleposition, vnew)/ sll_pic_1d_landaudamp_PDFxv(particleposition, vold)
-            !particleweight = particleweight_constant - (particleweight_constant)
+            particleweight = sll_pic_1d_landaudamp_PDFxv(particleposition, vnew)/ sll_pic_1d_landaudamp_PDFxv(particleposition, vold)
+            particleweight = particleweight_constant - (particleweight_constant)
         endif
+
 
     endsubroutine
 
 
-!    !<Dummy function for Electric field
-!    function sll_pic_1d_electric_field(x) result(E)
-!        sll_real64, dimension(:), intent(in) :: x
-!        !sll_real64, intent(in) :: t
-!        sll_real64, dimension(size(x)) :: E
-!        E=0
-!        if (pic1d_testcase == SLL_PIC1D_TESTCASE_IONBEAM)         E=1.0_f64
-!    endfunction
-
-
-
     !<Dummy function for Electric field
-    function pic_1d_electric_field_external(x,t) result(E)
+    function sll_pic_1d_electric_field(x) result(E)
         sll_real64, dimension(:), intent(in) :: x
-        sll_real64, intent(in) :: t
+        !sll_real64, intent(in) :: t
         sll_real64, dimension(size(x)) :: E
-        E=0.0_f64
-        if (pic1d_testcase == SLL_PIC1D_TESTCASE_IONBEAM)   E=1.0_f64
-
+        E=0
+        if (pic1d_testcase == SLL_PIC1D_TESTCASE_IONBEAM)         E=1.0_f64
     endfunction
 
 

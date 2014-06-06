@@ -40,19 +40,30 @@ ADD_EXECUTABLE(test_scalar_fields_1d_alternative unit_test_1d_alternative.F90)
 
 TARGET_LINK_LIBRARIES(test_scalar_fields_1d_alternative sll_scalar_field_1d_alternative)
 
+
+SET(SLL_SCALAR_FIELD_LINK_LIBRARIES sll_utilities)
 IF (MPI_MODULE_ENABLED)
    SET(SLL_SCALAR_FIELD_SRCS ${SLL_SCALAR_FIELD_SRCS}
                              distribution_function_initializer_4d.F90
                              distribution_function_initializer_6d.F90)
+   SET(SLL_SCALAR_FIELD_LINK_LIBRARIES sll_collective)
 ENDIF (MPI_MODULE_ENABLED)
 
-ADD_LIBRARY(sll_scalar_field STATIC ${SLL_SCALAR_FIELD_SRCS} )
+ADD_LIBRARY(sll_scalar_field STATIC ${SLL_SCALAR_FIELD_SRCS}  )
 
 TARGET_LINK_LIBRARIES( sll_scalar_field sll_mapped_meshes
                                         sll_coordinate_transformations
-                                        sll_utilities)
+                                        sll_utilities
+                                        sll_remap
+                                        ${SLL_SCALAR_FIELD_LINK_LIBRARIES})
 
+# IF (MPI_MODULE_ENABLED)
+#   TARGET_LINK_LIBRARIES( sll_scalar_field sll_collective)
+# ENDIF (MPI_MODULE_ENABLED)
+
+                                        
 ADD_EXECUTABLE(test_scalar_field unit_test.F90)
 
 TARGET_LINK_LIBRARIES(test_scalar_field sll_scalar_field)
+
 

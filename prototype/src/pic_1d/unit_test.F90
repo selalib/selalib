@@ -1,290 +1,148 @@
 program unit_test
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
 #include "sll_utilities.h"
-    use sll_constants
-    use sll_logical_meshes
-    !use sll_poisson_1d_periodic
-    !use sll_poisson_solvers
-    use sll_arbitrary_degree_spline_interpolator_1d_module
-    use sll_arbitrary_degree_splines
-    use gauss_legendre_integration
-    use pic_1d_particle_loading
-    use sll_bspline_fem_solver_1d
+
+  use sll_collective
+    use sll_pic_1d_Class
     implicit none
 
 
-    integer :: ierr
-    integer :: i
-    integer:: nparticles =10
-    sll_real :: interval_a=-1, interval_b=9
-    sll_real, DIMENSION(:), allocatable:: particleposition
-    sll_real, DIMENSION(:), allocatable :: particlespeed
 
 
+    !new_sll_pic_1d(mesh_cells_user, spline_degree_user, numberofparticles_user,&
+        !            timesteps_user, timestepwidth_user )
 
-    !Mesh parameters
-    sll_int32 :: mesh_cells = 20
-    sll_real :: mesh_delta_t
 
-    type(sll_logical_mesh_1d), pointer :: mesh1d
-    !    type(poisson_1d_periodic), pointer :: poisson1dsolver
 
+    CHARACTER(LEN=255) :: string  ! stores command line argument
+    CHARACTER(LEN=255) :: message           ! use for I/O error messages
+    integer :: ios
+    !---------------------------------------------------------------------------
+    !------------------DEFAULT VALUES-------------------------------------------------------
+    sll_int32 :: tsteps = 100     !Number of timesteps
+    sll_real64 :: tstepw=0.01_f64   !stepwidth
+    sll_int32 :: nmark=40000        !Number of marker particles
+    sll_int32 :: femp=7            !exponent for number of mesh cells
+    sll_int32 :: sdeg=3            !spline degree
 
-    type(arb_deg_1d_interpolator) :: ad1d
-    type(arbitrary_degree_spline_1d), pointer :: arbitrarydegree1D
+    !    LOGICAL :: gnuplot_inline_output=.TRUE. !write gnuplot output during the simulation
 
-    sll_int32                   :: degree=3
-    sll_real64, dimension(:), allocatable    :: knots
-    sll_int32                  :: num_pts
-    sll_int32                  :: spline_idx
-    sll_real64, dimension(:), allocatable    :: mass_matrix_first_line
-    sll_real64, dimension(:), allocatable    :: mass_matrix_period
-    sll_real64, dimension(:), allocatable    :: bspline_knot_values
+    !Landau damping
+    sll_real64 :: lalpha=0.1_f64
+    sll_real64 :: lmode=0.5_f64
 
-    sll_real64, dimension(:,:), allocatable    :: quadrature_point_vals
-    integer                     :: quadrature_npoints
-    sll_real64, dimension(:,:), allocatable   :: quadrature_points_weights
-    sll_real64, dimension(:,:), allocatable    :: bspline_qpoint_values
-    integer :: cell
+    !
+    sll_real64 :: boxlenpi=4.0_f64
 
 
+    !Streams
+    sll_int32 :: nstreams=1
+    logical  :: gnuplot_inline_output_user=.FALSE.
 
 
+    CHARACTER(LEN=255) :: ppusher='verlet'  !Particle pusher
+    CHARACTER(LEN=255) :: scenario='landau'  !Which testcase to use
 
+    !Choices are rk4, euler, verlet, lfrog, v_lfrog
+    sll_int32 :: ppusher_int=0
 
+    CHARACTER(LEN=255) :: path="./"
+    integer :: gpinline=0,deltaf=0
 
-    !ad1d=>new(interval_a, interval_b, SLL_PERIODIC , SLL_PERIODIC,
-    mesh1d=> new_logical_mesh_1d(mesh_cells, interval_a,interval_b)
-    call sll_display(mesh1d)
 
-    !SLL_ASSERT(mesh_cells>1)
+    !Add input variables to namelist
+    NAMELIST /cmd/ tsteps, tstepw , nmark, scenario, nstreams, femp, sdeg, lalpha, lmode,ppusher,gpinline,path,boxlenpi,deltaf
 
-    mesh_delta_t = (interval_b - interval_a)/mesh_cells
-    SLL_ALLOCATE(knots(mesh_cells+1),ierr)
+    call sll_boot_collective()
 
-    knots(1)=interval_a
-    do i=2,size(knots)
-        knots(i)=knots(i-1) + mesh_delta_t
-    enddo
+    call sll_collective_barrier(sll_world_collective)
 
-    !print *, knots
+    !---------------------------------------------------------------------------
+    CALL get_command_argument(1,string)                ! get command line arguments
+    string="&cmd "//trim(string)//" /"            ! add NAMELIST prefix and terminator
+    READ(string,NML=cmd,iostat=ios,iomsg=message) ! internal read of NAMELIST
+    WRITE(*,NML=cmd)
 
-    arbitrarydegree1D=>new_arbitrary_degree_spline_1d( degree, knots, size(knots), SLL_PERIODIC)
+    ppusher=trim(ppusher)
+    scenario=trim(scenario)
+    root_path=trim(path)
 
+    if(ios.ne.0)then
+        write(*,*)'NML-Error Message: ',ios
+        write(*,*)message
 
-    mass_matrix_period=gen_mass_matrix_period(arbitrarydegree1D, knots )
+    endif
+    if (deltaf/=0) then
+        enable_deltaf=.TRUE.
+        else
+        enable_deltaf=.FALSE.
 
+    endif
 
+    if (gpinline/=0) then
+        gnuplot_inline_output_user=.TRUE.
 
-stop
+    endif
 
-    !Get Gauss Legendre points and weights to be exact for the selected spline degree
-    !Note a Bspline is a piecewise polynom
-    !quadrature_npoints=ceiling(0.5_f64*real(degree+1))+1
-    quadrature_npoints=2*degree
 
-    SLL_ALLOCATE(quadrature_points_weights(2,1:quadrature_npoints),ierr)
-    quadrature_points_weights=gauss_legendre_points_and_weights(quadrature_npoints, knots(1), knots(degree+2))
-    !print *,quadrature_points_weights
-    !Get spline values at
-    SLL_ALLOCATE(bspline_qpoint_values(1:degree+1,1:quadrature_npoints), ierr)
+    selectcase (scenario)
+    case("landau")
+         pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
+    case("ionbeam")
+       pic1d_testcase = SLL_PIC1D_TESTCASE_IONBEAM
+    case("quiet")
+       pic1d_testcase = SLL_PIC1D_TESTCASE_QUIET
+    case("bump")
+       pic1d_testcase = SLL_PIC1D_TESTCASE_BUMPONTAIL
+        landau_alpha=0.001_f64
+        landau_mode=0.5_f64
+    end select
 
-    do i=1,quadrature_npoints
-        cell=floor((quadrature_points_weights(1,i ) - knots(1))/ mesh_delta_t )+1
-        cell=min(cell, degree+1)
-        bspline_qpoint_values(:,i)=b_splines_at_x(arbitrarydegree1D, cell, quadrature_points_weights(1,i ))
-        !reorientate to the right side
-        bspline_qpoint_values(:,i) = bspline_qpoint_values((degree+1):1:-1,i)
-        !shift in order to account for intersecting and limited support
-        bspline_qpoint_values(:,i) = eoshift(bspline_qpoint_values(:,i), (cell-1))
-    enddo
 
 
-call sll_display(knots(1:degree+2), "(F10.5)" )
-call sll_display(quadrature_points_weights(1,:), "(F10.5)" )
-call sll_display(quadrature_points_weights(2,:), "(F10.5)" )
+    call set_loading_parameters(lalpha,lmode,nstreams)
 
-call sll_display(bspline_qpoint_values, "(F10.5)" )
+    interval_a=0
+    interval_b=boxlenpi*sll_pi
 
-print *,dot_product(bspline_qpoint_values(1, :), quadrature_points_weights(2,:)  ), "##"
 
-    !Do Gauss Legendre integral for each spline combination
-    !Loop over first half of splines with intersecting support
-    !spline index corresponds to the lowest index of the support cell
- SLL_ALLOCATE(mass_matrix_period(degree+1),ierr)
-    do i=1, degree+1
-        !print *,bspline_qpoint_values(1, :)*bspline_qpoint_values(i, :),"##"
-        mass_matrix_period(i)=dot_product(bspline_qpoint_values(1, :)*bspline_qpoint_values(i,:), quadrature_points_weights(2,:)  )
-    enddo
+    selectcase (ppusher)
+        case("rk4")
+            ppusher_int=SLL_PIC1D_PPUSHER_RK4
+        case("verlet")
+            ppusher_int=SLL_PIC1D_PPUSHER_VERLET
+        case("euler")
+            ppusher_int=SLL_PIC1D_PPUSHER_EULER
+        case("lfrog_v")
+            ppusher_int=SLL_PIC1D_PPUSHER_LEAPFROG_V
+        case("lfrog")
+            ppusher_int=SLL_PIC1D_PPUSHER_LEAPFROG
+        case("rk2")
+            ppusher_int=SLL_PIC1D_PPUSHER_RK2
+        case("heun")
+            ppusher_int=SLL_PIC1D_PPUSHER_HEUN
+        case("none")
+            ppusher_int=SLL_PIC1D_PPUSHER_NONE
+        case("shift ")
+            ppusher_int=SLL_PIC1D_PPUSHER_SHIFT
+    end select
 
-write(*,*)
-call sll_display(mass_matrix_period, "(F10.5)" )
 
-SLL_CLEAR_ALLOCATE(mass_matrix_first_line(mesh_cells),ierr)
-mass_matrix_first_line(1:size(mass_matrix_period))=mass_matrix_period
-mass_matrix_first_line(mesh_cells)=1.0_f64
 
-call sll_display(mass_matrix_period(size(mass_matrix_period):2:-1), "(F10.5)" )
-!call sll_display(mass_matrix_first_line(mesh_cells- (size(mass_matrix_period) -1) +1: mesh_cells:1 ), "(F10.5)" )
-mass_matrix_first_line(mesh_cells- (size(mass_matrix_period) -1) +1: mesh_cells)=mass_matrix_period(size(mass_matrix_period):2:-1)
+    call  new_sll_pic_1d(2**femp, sdeg, nmark, tsteps , tstepw,ppusher_int )
 
-call sll_display(mass_matrix_first_line, "(F10.5)" )
 
+    !call  new_sll_pic_1d(2**, 3, 10000, 1000 , 0.001_f64 )
 
+    !Nonlinear Landau damping
+    !call  new_sll_pic_1d(2**12, 3, 20000, 1000 , 0.001_f64 )
 
+    call sll_pic_1d_run(gnuplot_inline_output_user)
 
 
-
-!firstline= mass_matrix_period +
-
-!print *, knots(1), knots(degree+2), "##"
-    !SLL_DEALLOCATE_ARRAY(bspline_knot_values, ierr)
-!print *, mass_matrix_period, "##"
-
-    !bspline_knot_values=bspline_knot_values(degree+1:1:-1)
-
-
-
-stop
-
-
-
-
-
-    !print *, knots(1),";"
-    !print *, eoshift(b_splines_at_x(arbitrarydegree1D, 1, knots(1)  ),1 ), ","
-
-    SLL_ALLOCATE(bspline_knot_values(degree+1),ierr)
-    bspline_knot_values=b_splines_at_x(arbitrarydegree1D, 1, knots(1))
-    bspline_knot_values=bspline_knot_values(degree+1:1:-1)
-
-    SLL_ALLOCATE(quadrature_point_vals( degree+1 ,degree+2),ierr )
-    !Loop over first half of splines with intersecting support
-    do i=0, degree+1
-        print *, eoshift(bspline_knot_values, -i),";"
-        quadrature_point_vals(:,i+1)= dot_product(bspline_knot_values , eoshift(bspline_knot_values, -i))
-
-    enddo
-
-
-    !eoshif(bspline_knot_values, i , bspline_knot_values)
-
-    print *, bspline_knot_values
-    quadrature_point_vals(:,1)= b_splines_at_x(arbitrarydegree1D, 1, knots(1) )
-
-
-    do i=2,degree+2
-        !Integrate with all splines
-        !get quadratur points
-        !quadrature_point_vals
-        quadrature_point_vals(:,i)=b_splines_at_x(arbitrarydegree1D, i, knots(i) )
-        !print *, knots(i),";"
-        !print *, b_splines_at_x(arbitrarydegree1D, i, knots(i) ), ","
-    enddo
-
-
-    print *,quadrature_point_vals
-
-
-    !print *, find_index( x, knots, num_pts )
-    !cell =
-
-
-
-
-
-
-    !arbitrarydegree1D=>new_arbitrary_degree_spline_1d( degree, knots, num_pts, SLL_PERIODIC)
-
-    !sll_arbitrary_degree_splines
-
-
-
-    SLL_ALLOCATE(particleposition(nparticles),ierr)
-    SLL_ALLOCATE(particlespeed(nparticles),ierr)
-
-
-    call load_particles (nparticles, interval_a, interval_b, particleposition, particlespeed )
-
-
-    !Setup mesh for quasineutrality equation
-
-
-    !poisson1dsolver=>new(interval_a,interval_b,100,ierr)
-    !poisson1dsolver=>solve(poisson1dsolver, )
-
-
-
-
-    !solve quasineutrality equation
-    !sll_poisson_1d_periodic
-
-
-    !Splines
-
-
-
-
-
-    !call random_number(  particleposition )
-
-    !CALL init_random_seed()
-    !CALL RANDOM_NUMBER(particleposition)
-    !CALL RANDOM_NUMBER(particlespeed)
-
-
-    !    print *, "Hello Wodfrld!"
-
-contains
-
-
-    subroutine  load_particles (nparticles, interval_a, interval_b, particleposition, particlespeed)
-#include "sll_working_precision.h"
-#include "sll_memory.h"
-        use sll_constants
-        implicit none
-        integer, intent(in) :: nparticles
-        sll_real, intent(in) ::interval_a
-        sll_real, intent(in) :: interval_b
-        sll_real, DIMENSION(:), allocatable, intent(inout):: particleposition
-        sll_real, DIMENSION(:), allocatable, intent(inout) :: particlespeed
-        sll_real :: mu, sigma
-        integer :: i
-
-        !uniform random
-        call random_number(particleposition)
-        particleposition=interval_a + (interval_b -interval_a)*particleposition
-
-        !Gaussian speed distribution
-        mu=interval_a + (interval_b - interval_a )/2
-        sigma=1.0
-        do i=1,size(particlespeed)
-            particlespeed(i)=gaussianrnd(mu, sigma  )
-        end do
-        !call random_number(particlespeed)
-        !particlespeed=-1 + particlespeed*2
-        return
-    end subroutine load_particles
-
-
-    sll_real function maxwellboltzmann (m ,T)
-#include "sll_working_precision.h"
-    use sll_constants
-    IMPLICIT NONE
-
-    sll_real, intent(in) :: T !< temperature in K
-    sll_real, intent(in) :: m !< particle mass in kg
-
-    !> @param Boltzmann constant (def) J/K
-    sll_real64, parameter :: sll_kb = 1.3806488D-23
-    sll_real ans
-
-    call random_number(ans)
-
-endfunction
-
-
-
+    call destroy_sll_pic_1d
 
 end program unit_test
+

@@ -127,6 +127,7 @@ contains
         sll_int, intent(in) :: spline_degree
         sll_real64, dimension(test_power_two) :: numerical_error
         sll_real64, dimension(test_power_two) :: numerical_error_deriv
+        sll_real64, dimension(test_power_two) :: mode_error
         sll_real64 :: num_error_sum
         sll_int :: idx, jdx
         sll_int64 :: test_dimension
@@ -182,7 +183,6 @@ contains
             numerical_error_deriv(test_mode+1)=maxval(abs( (solution - actual_solution)/maxval(abs(actual_solution)) ) )
 
 
-
             H1seminorm=bspline_fem_solver_1d_H1seminorm_solution()
             residual=sll_bspline_fem_solver_1d_calculate_residual()
 
@@ -203,11 +203,12 @@ contains
             close(20)
 
         enddo
-        do  test_mode=0,test_power_two-1,1
-             print*, numerical_error(test_mode+1) / (4**test_mode)
+!        do  test_mode=0,test_power_two-1,1
+!             print*, numerical_error(test_mode+1) / (4**test_mode)
+!        enddo
+        do  test_mode=1,test_power_two-1,1
+             print*, numerical_error(test_mode+1) / numerical_error(test_mode)
         enddo
-
-
         SLL_DEALLOCATE_ARRAY(knots,ierr)
         SLL_DEALLOCATE_ARRAY(knots_eval,ierr)
         SLL_DEALLOCATE_ARRAY(solution,ierr)

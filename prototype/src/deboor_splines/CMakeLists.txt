@@ -27,3 +27,6 @@ ADD_LIBRARY(deboor_splines STATIC
   banslv.f90	
   splopt.f90
   knots.f90)	
+  
+ TARGET_LINK_LIBRARIES(deboor_splines sll_memory) 
+ 
