@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 module sll_fft
@@ -23,14 +23,14 @@ module sll_fft
   use sll_constants
   use sll_fft_utils
   implicit none
-  
+
   type sll_fft_plan
      ! twiddle factors complex case
-     sll_comp64, dimension(:), pointer :: t => null()         
-     ! twiddles factors real case  
-     sll_real64, dimension(:), pointer :: twiddles => null()  
-     ! twiddles factors real case 
-     sll_real64, dimension(:), pointer :: twiddles_n => null() 
+     sll_comp64, dimension(:), pointer :: t => null()
+     ! twiddles factors real case
+     sll_real64, dimension(:), pointer :: twiddles => null()
+     ! twiddles factors real case
+     sll_real64, dimension(:), pointer :: twiddles_n => null()
      sll_int32                        :: style
      sll_int32                        :: library
      sll_int32                        :: direction
@@ -38,7 +38,7 @@ module sll_fft
      sll_int32, dimension(:), pointer :: problem_shape => null()
      sll_int32, dimension(:), pointer :: scramble_index => null()
   end type sll_fft_plan
-  
+
   interface fft_new_plan
      module procedure &
           fft_new_plan_c2c_1d, fft_new_plan_c2c_2d, &
@@ -60,11 +60,11 @@ module sll_fft
           bit_reverse_complex, bit_reverse_integer32, &
           bit_reverse_integer64
   end interface bit_reverse
- 
+
   integer, parameter :: FFT_FORWARD = -1
   integer, parameter :: FFT_INVERSE = 1
 
-  
+
   ! Flags to pass when we create a new plan
   ! We can define 31 different flags.
   ! The value assigned to the flag can only be a power of two.
@@ -75,14 +75,14 @@ module sll_fft
   integer, parameter :: FFT_ONLY_FIRST_DIRECTION  = 2**2
   integer, parameter :: FFT_ONLY_SECOND_DIRECTION = 2**3
   integer, parameter :: FFT_ONLY_THIRD_DIRECTION  = 2**4
-  
+
   ! Assign a value to the different library.
   ! these values are completly arbitrary.
   integer, parameter :: SLLFFT_MOD = 0
   !  integer, parameter :: FFTPACK_MOD = 100
   !  integer, parameter :: FFTW_MOD = 1000000000
   ! tranform in char* !!!
-  
+
 
   interface fft_get_mode
      module procedure &
@@ -161,7 +161,7 @@ contains
   subroutine fft_set_mode_complx_2d(plan,array,new_value,k,l)
     type(sll_fft_plan), pointer :: plan
 !    sll_comp64, dimension(0:,0:)  :: array
-    sll_comp64, dimension(:,:) :: array 
+    sll_comp64, dimension(:,:) :: array
    sll_int32                   :: k,l
     sll_comp64                  :: new_value
     array(k,l) = new_value
@@ -196,7 +196,7 @@ contains
         data(2*k) = real(new_value,kind=f64)
         data(2*k+1) = dimag(new_value)
       endif
-  end subroutine 
+  end subroutine
 
   ! return the index mode of ith stored mode
   function fft_ith_stored_mode(plan,i)
@@ -255,8 +255,8 @@ contains
 
     if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
        array_out = array_in
-    endif   
-    
+    endif
+
     call fft_dit_nr(array_out,plan%problem_shape(1),plan%t,plan%direction)
     call bit_reverse_complex(plan%problem_shape(1),array_out)
 
@@ -278,8 +278,8 @@ contains
     sll_int32, intent(in)                            :: direction
     sll_int32, optional,  intent(in)                 :: flags
     type(sll_fft_plan), pointer                      :: plan
-    sll_int32                                        :: ierr    
-    !true if dft in the two directions, false otherwise.    
+    sll_int32                                        :: ierr
+    !true if dft in the two directions, false otherwise.
     logical                                          :: two_direction
 
     ! This does not look good.
@@ -302,7 +302,7 @@ contains
     plan%problem_shape = (/ NX , NY /)
 
     two_direction = .false.
-    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. & 
+    if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. &
         fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
        SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
     else if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) ) then
@@ -315,7 +315,7 @@ contains
        SLL_ALLOCATE(plan%t(1:NX/2 + NY/2),ierr)
        two_direction = .true.
     endif
-    
+
     if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
         two_direction ) then
        call compute_twiddles(NX,plan%t(1:NX/2))
@@ -345,15 +345,15 @@ contains
 
     if( loc(array_in) .ne. loc(array_out)) then ! out-place transform
        array_out = array_in  ! copy source
-    endif   
+    endif
     fft_shape(1:2) = plan%problem_shape(1:2)
     nx = fft_shape(1)
     ny = fft_shape(2)
 
-    ! Review this logic, it looks bizarre and contradictory. One should 
+    ! Review this logic, it looks bizarre and contradictory. One should
     ! never have to specify SIMULTANEOUSLY FFT_ONLY_FIRST_DIRECTION *AND*
-    ! FFT_ONLY_SECOND_DIRECTION. Such thing should make no sense. 
-    ! Formatting: was trying to limit lines to 80 character length, but 
+    ! FFT_ONLY_SECOND_DIRECTION. Such thing should make no sense.
+    ! Formatting: was trying to limit lines to 80 character length, but
     ! this will have to wait for a more detailed revision. ECG 9-5-12
     if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .and. &
         fft_is_present_flag(plan%style,FFT_ONLY_SECOND_DIRECTION) ) then
@@ -364,7 +364,7 @@ contains
     else
        ! Default case: no direction flags passed means that a two-directional
        ! case is wanted.
-       two_direction = .true.  
+       two_direction = .true.
     endif
 
     if( fft_is_present_flag(plan%style,FFT_ONLY_FIRST_DIRECTION) .or. &
@@ -413,10 +413,10 @@ contains
     sll_int32                                    :: ierr, i
 
     SLL_ASSERT(size(array_in).eq.nx)
-    SLL_ASSERT(size(array_out).eq.nx) 
+    SLL_ASSERT(size(array_out).eq.nx)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
-    plan%direction = direction 
+    plan%direction = direction
     if( present(flags) )then
       plan%style = flags
     else
@@ -477,7 +477,7 @@ contains
     sll_int32                                    :: ierr
 
     SLL_ASSERT(size(array_in).eq.nx)
-    SLL_ASSERT(size(array_out).eq.nx/2+1) 
+    SLL_ASSERT(size(array_out).eq.nx/2+1)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
     plan%direction = FFT_FORWARD
@@ -506,7 +506,7 @@ contains
     sll_real64 :: factor
 
     nx = plan%problem_shape(1)
- 
+
     call real_data_fft_dit( array_in, nx , plan%twiddles, plan%twiddles_n, plan%direction )
     !mode k=0
     array_out(0) = cmplx(array_in(0),0.0_f64,kind=f64)
@@ -563,7 +563,7 @@ contains
     sll_real64 :: factor
 
     nx = plan%problem_shape(1)
- 
+
     !mode k=0
     array_out(0) = real(array_in(0),kind=f64)
     !mode k=n/2
@@ -595,7 +595,7 @@ contains
     SLL_ASSERT(size(array_in,dim=1).eq.nx)
     SLL_ASSERT(size(array_in,dim=2).eq.ny)
     SLL_ASSERT(size(array_out,dim=1).eq.nx/2+1)
-    SLL_ASSERT(size(array_out,dim=2).eq.ny) 
+    SLL_ASSERT(size(array_out,dim=2).eq.ny)
     SLL_ALLOCATE(plan,ierr)
     plan%library = SLLFFT_MOD
     plan%direction = FFT_FORWARD
@@ -630,7 +630,7 @@ contains
 
     nx = plan%problem_shape(1)
     ny = plan%problem_shape(2)
- 
+
     do k=0,ny-1
       call real_data_fft_dit( array_in(0:nx-1,k), nx , plan%twiddles, plan%twiddles_n, plan%direction )
       array_out(0,k) = cmplx(array_in(0,k),0.0_f64,kind=f64)
@@ -659,7 +659,7 @@ contains
     sll_int32, optional,  intent(in)             :: flags
     type(sll_fft_plan), pointer                  :: plan
     sll_int32                                    :: ierr
- 
+
     SLL_ASSERT(size(array_in,dim=1).eq.nx/2+1)
     SLL_ASSERT(size(array_in,dim=2).eq.ny)
     SLL_ASSERT(size(array_out,dim=1).eq.nx)
@@ -734,7 +734,7 @@ contains
     if( .not. associated(plan) ) then
       print * , '  Error in fft_delete_plan subroutine'
       print * , '  you try to delete a plan not associated'
-      stop 
+      stop
     endif
 
       if(associated(plan%t)) then
@@ -763,19 +763,19 @@ contains
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! We choose the convention in which the direction of the FFT is determined
-  ! by the conjugation of the twiddle factors. If 
+  ! by the conjugation of the twiddle factors. If
   !
   !                  omega_N = -j2*pi/N
-  ! 
+  !
   ! then we call this the FORWARD transform.
 
-  ! Compute the twiddle factors by Singleton's method. N is a factor of 2. 
-  ! N represents the full size of the transform for which the twiddles are 
+  ! Compute the twiddle factors by Singleton's method. N is a factor of 2.
+  ! N represents the full size of the transform for which the twiddles are
   ! needed, however, because of redundancies in the values of the twiddle
   ! factors, only half of them need to be stored.
   subroutine compute_twiddles( n, t )
     intrinsic                                 :: exp, real
-    sll_int32                                 :: n ! size of data for FFT 
+    sll_int32                                 :: n ! size of data for FFT
     sll_comp64, dimension(1:n/2), intent(out) :: t
     sll_int32                                 :: k
     sll_real64                                :: theta
@@ -788,7 +788,7 @@ contains
     else
        theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
        ! By whatever means we use to compute the twiddles, some sanity
-       ! checks are in order: 
+       ! checks are in order:
        ! t(1)     = (1,0)
        ! t(n/8+1) = (sqrt(2)/2, sqrt(2)/2)
        ! t(n/4+1) = (0,1)
@@ -819,10 +819,10 @@ contains
     sll_real64, dimension(0:n-1), intent(out) :: t
     sll_int32                                 :: k
     sll_real64                                :: theta
-    SLL_ASSERT(is_power_of_two(int(n,i64))) 
+    SLL_ASSERT(is_power_of_two(int(n,i64)))
     theta   = 2.0_f64*sll_pi/real(n,kind=f64)      ! basic angular interval
     ! By whatever means we use to compute the twiddles, some sanity
-    ! checks are in order: 
+    ! checks are in order:
     ! t(0)   = 1; t(1)      = 0
     ! t(n/8) = (sqrt(2)/2, sqrt(2)/2)
     ! t(n/4) = (0,1)
@@ -847,10 +847,10 @@ contains
   end subroutine compute_twiddles_real_array
 
   !***************************************************************************
-  ! The following function uses Meyer's algorithm (also known as the 
-  ! Gold-Rader algorithm according to "Rodriguez. J. IEEE Transactions on 
-  ! Acoustics, Speech and Signal Porcessing. Vol. 37. No. 8. August 1989. 
-  ! p. 1298.") to yield the in-place, bit-reversed ordering of the array 'a'. 
+  ! The following function uses Meyer's algorithm (also known as the
+  ! Gold-Rader algorithm according to "Rodriguez. J. IEEE Transactions on
+  ! Acoustics, Speech and Signal Porcessing. Vol. 37. No. 8. August 1989.
+  ! p. 1298.") to yield the in-place, bit-reversed ordering of the array 'a'.
   ! Use with n = power of 2.
   !
   !***************************************************************************
@@ -919,20 +919,20 @@ contains
 
   !Conjugate complex array that is represented by an array of reals.
   subroutine conjg_in_pairs(n,array)
-    sll_real64, dimension(1:) :: array
+    sll_real64, dimension(:) :: array
     sll_int32 :: n, i
-     
+
     SLL_ASSERT( size(array) .eq. n )
-    
+
     do i=2,n,2
       array(i) = -array(i)
     enddo
   end subroutine
 
   ! *************************************************************************
-  ! Decimation in time FFT, natural order input, bit-reversed output (=NR). 
-  ! Size of the data must be a power of 2. Twiddle array must be in 
-  ! bit-reversed order. This implementation is 'cache-oblivious'. This is 
+  ! Decimation in time FFT, natural order input, bit-reversed output (=NR).
+  ! Size of the data must be a power of 2. Twiddle array must be in
+  ! bit-reversed order. This implementation is 'cache-oblivious'. This is
   ! only a placeholder for an FFT really; it is not very efficient since it:
   ! - is just a simple radix-2
   ! - is not parallelized
@@ -956,9 +956,9 @@ contains
   ! the size-8 problems use omega_8^1, omega_8^2, omega_8^3 and omega_8^4. This
   ! is the expected progression of the twiddle indices as we move deeper into
   ! the recursions.
-  !    
+  !
   ! *************************************************************************
-  
+
   subroutine fft_dit_nr(data, n, twiddles, sign)
     sll_comp64, dimension(:), intent(inout) :: data
     sll_int32, intent(in)                   :: sign
@@ -968,7 +968,7 @@ contains
     SLL_ASSERT(size(data) .ge. n)
     call fft_dit_nr_aux(data, n, twiddles, 0, sign)
   end subroutine fft_dit_nr
-  
+
   ! Decimation-in-time, natural-order input, bit-reversed order output:
   recursive subroutine fft_dit_nr_aux( dat, size, twiddles, &
                                        twiddle_index, sign )
@@ -976,7 +976,7 @@ contains
     integer, intent(in)                             :: size
     sll_comp64, dimension(0:size-1), intent(inout)  :: dat
     ! It is more convenient when the twiddles are 0-indexed
-    sll_comp64, dimension(0:), intent(in)           :: twiddles 
+    sll_comp64, dimension(0:), intent(in)           :: twiddles
     integer, intent(in)                             :: twiddle_index
     integer, optional, intent(in)                   :: sign
     integer                                         :: half
@@ -984,7 +984,7 @@ contains
     integer                                         :: t_index_new
     sll_comp64                                      :: omega
     sll_comp64                                      :: tmp
- 
+
     half = ishft(size,-1) ! any evidence this is faster?
     !if ( sign == FFT_INVERSE ) then
     !   omega = twiddles(twiddle_index)
@@ -1028,13 +1028,13 @@ contains
     n = size(data) ! bad
     SLL_ASSERT(is_power_of_two(int(n,i64)))
     SLL_ALLOCATE(twiddles(n/2),ierr)
-    call compute_twiddles(n,twiddles) 
-    ! This algorithm uses the twiddles in natural order. The '1' 
+    call compute_twiddles(n,twiddles)
+    ! This algorithm uses the twiddles in natural order. The '1'
     ! argument is because fft_dit_rn_aux internally 1-indexes its
     ! arrays, so we are just indicating the first twiddle factor.
     call fft_dit_rn_aux(data, n, twiddles, 1, sign)
   end subroutine fft_dit_rn
-  
+
   recursive subroutine fft_dit_rn_aux( data,           &
                                        data_size,      &
                                        twiddles,       &
@@ -1108,8 +1108,8 @@ contains
     ! It is more convenient when the twiddles are 0-indexed
     ! Declaring the size of the twiddles as in the following line, gives
     ! a runtime error as the array is accessed out of bounds.
-    !    sll_real64, dimension(0:num_complex-1), intent(in)     :: twiddles 
-    sll_real64, dimension(0:), intent(in)     :: twiddles 
+    !    sll_real64, dimension(0:num_complex-1), intent(in)     :: twiddles
+    sll_real64, dimension(0:), intent(in)     :: twiddles
     integer, intent(in)                                    :: twiddle_index
     integer, intent(in)                                    :: sign
     ! half represents half of the complex problem, not half of the array
@@ -1122,9 +1122,9 @@ contains
     sll_real64                                             :: tmp_re
     sll_real64                                             :: tmp_im
     SLL_ASSERT(num_complex .le. size(samples))
-    half = ishft(num_complex,-1) ! would this be faster than a division 
+    half = ishft(num_complex,-1) ! would this be faster than a division
                                  ! in Fortran?
-    ! select the value of the twiddle factor for this stage depending on 
+    ! select the value of the twiddle factor for this stage depending on
     ! the direction of the transform
     !if ( sign == FFT_FORWARD ) then
     !   omega_re =  CREAL0(twiddles, twiddle_index)
@@ -1152,9 +1152,9 @@ contains
        CIMAG0(samples,j) = CIMAG0(samples,j) + tmp_im
     end do
     ! Spawn two recursive calls for the two new problems that have been created:
-    ! the upper and lower halves of the samples. 
+    ! the upper and lower halves of the samples.
     if( half > 1) then
-       t_index_new = ishft(twiddle_index,1) 
+       t_index_new = ishft(twiddle_index,1)
        call fft_dit_nr_real_array_aux( samples(0:2*half-1),      &
                                        half,                     &
                                        twiddles,                 &
@@ -1180,10 +1180,10 @@ contains
     integer, intent(in)                                    :: num_complex
     sll_real64, dimension(1:2*num_complex), intent(inout)  :: data
     ! For this reverse-to-natural order algorithm, it is more convenient
-    ! to use the 1-based indexing. Note that this is a num_complex-sized FFT, 
-    ! which means that we need num_complex/2 twiddles, but since they are 
+    ! to use the 1-based indexing. Note that this is a num_complex-sized FFT,
+    ! which means that we need num_complex/2 twiddles, but since they are
     ! stored as reals, we need that the twiddle array be of size num_complex.
-    sll_real64, dimension(1:num_complex), intent(in)       :: twiddles 
+    sll_real64, dimension(1:num_complex), intent(in)       :: twiddles
     sll_int32, intent(in)                                  :: twiddle_stride
     sll_int32                                              :: new_stride
     sll_int32                                              :: jtwiddle
@@ -1198,7 +1198,7 @@ contains
     jtwiddle = 1
     ! note that half represents half the complex problem size, not half
     ! the array size.
-    half = ishft(num_complex,-1) ! would this be faster than a division 
+    half = ishft(num_complex,-1) ! would this be faster than a division
                                  ! in Fortran?
     if ( half>1 ) then
        new_stride = twiddle_stride*2
@@ -1215,7 +1215,7 @@ contains
     end if
     ! Do the butterflies for this stage
     do j=1,half
-       ! select the value of the twiddle factor for this stage depending on 
+       ! select the value of the twiddle factor for this stage depending on
        ! the direction of the transform
        !if( sign == FFT_FORWARD ) then
        !   omega_re =  CREAL1(twiddles, jtwiddle)
@@ -1257,7 +1257,7 @@ contains
   !                      X_r = X_(N-r)*
   !
   !   which means that it requires storage for only N/2+1 independent modes.
-  !   Two of these modes (0 and N/2) are real-valued. The remaining N/2-1 are 
+  !   Two of these modes (0 and N/2) are real-valued. The remaining N/2-1 are
   !   complex valued. In terms of required memory:
   !
   !             2 real modes        =>   2   reals
@@ -1268,14 +1268,14 @@ contains
   !   Thus, in principle we could store all the information in the original
   !   real array. This has several inconveniences. Firstly, it would require
   !   packing the data in 'special' ways (the Numerical Recipes approach),
-  !   like putting the real modes share a single complex-valued field. This 
+  !   like putting the real modes share a single complex-valued field. This
   !   requires special packing/unpacking and 'if' statements when it comes
   !   down to reading the modes. Another way could be to require the input
   !   data to be padded to allow storage for the extra modes. This is also
-  !   very problematic, as it requires, from the moment of the allocation, 
-  !   some foresight that a given array will be the subject of an FFT 
-  !   operation. This may not be so bad... In any case, it seems that 
-  !   special logic will be required to deliver a requested Fourier mode; 
+  !   very problematic, as it requires, from the moment of the allocation,
+  !   some foresight that a given array will be the subject of an FFT
+  !   operation. This may not be so bad... In any case, it seems that
+  !   special logic will be required to deliver a requested Fourier mode;
   !   since in some cases one could read a value from an array but in other
   !   cases one needs the conjugate... For now, the present implementation
   !   chooses to pack the data in the minimum space possible, to the 'weird'
@@ -1324,7 +1324,7 @@ contains
     if( sign .eq. FFT_FORWARD ) then
        ! we use the following as the 'switch' to flip signs between
        ! FORWARD and INVERSE transforms.
-       s = -1.0_f64 
+       s = -1.0_f64
        ! The following call has to change to refer to its natural wrapper...
        call fft_dit_nr_real_array_aux( data(0:n-1), &
                                        n_2,         &
@@ -1340,8 +1340,8 @@ contains
       stop 'ERROR IN =REAL_DATA_FFT_DIT= invalid argument sign'
     end if
     do i=1,n_2/2 ! the index 'i' corresponds to indexing H
-       ! FFT_FORWARD case: We intend to mix the odd/even components that we 
-       ! have computed into complex numbers H_n. These Complex numbers will 
+       ! FFT_FORWARD case: We intend to mix the odd/even components that we
+       ! have computed into complex numbers H_n. These Complex numbers will
        ! give the modes as in:
        !
        ! F_i = 1/2*(H_i + H_(N/2-i)^*) - i/2*(H_i-H_(N/2-i)^*)*exp(-j*2*pi*i/N)
@@ -1365,11 +1365,11 @@ contains
        omega_re           =  CREAL0(twiddles_n,i)
        omega_im           =  s*CIMAG0(twiddles_n,i) ! conjugated for FORWARD
        ! Compute tmp =  1/2*(H_i + H_(N/2-i)^*)
-       tmp_re             =  0.5_f64*(hi_re + hn_2mi_re) 
+       tmp_re             =  0.5_f64*(hi_re + hn_2mi_re)
        tmp_im             =  0.5_f64*(hi_im + hn_2mi_im)
        ! Compute tmp2 = i/2*(H_n - H_(N/2-n)^*); the sign depends on the
        ! direction of the FFT.
-       tmp2_re            =  s*0.5_f64*(hi_im - hn_2mi_im) 
+       tmp2_re            =  s*0.5_f64*(hi_im - hn_2mi_im)
        tmp2_im            = -s*0.5_f64*(hi_re - hn_2mi_re)
        ! Multiply tmp2 by the twiddle factor and add to tmp.
        tmp3_re            =  tmp2_re*omega_re - tmp2_im*omega_im
@@ -1402,7 +1402,7 @@ contains
        data = data*2.0_f64
     end if
   end subroutine real_data_fft_dit
-  
+
 #undef CREAL0
 #undef CIMAG0
 #undef CREAL1

@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !> Module to solve Poisson equation on one dimensional mesh using FFT
@@ -28,6 +28,7 @@ module sll_poisson_1d_periodic
   implicit none
   private
   public :: initialize, new, solve
+
 
   !> Solver data structure
   type, public :: poisson_1d_periodic
@@ -50,7 +51,7 @@ module sll_poisson_1d_periodic
 
   !> Solve the Poisson equation on 1d mesh and compute the potential
   interface solve
-     module procedure solve_poisson_1d_periodic 
+     module procedure solve_poisson_1d_periodic
   end interface
 
 contains
@@ -68,8 +69,8 @@ contains
      SLL_ALLOCATE(this, error)
      call initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
 
-  end function new_poisson_1d_periodic 
-  
+  end function new_poisson_1d_periodic
+
   !> Initialize the solver
   subroutine initialize_poisson_1d_periodic(this,eta1_min,eta1_max,nc_eta1,error)
 
@@ -102,29 +103,29 @@ contains
     sll_int32                                 :: ik
     sll_real64                                :: kx0, kx, k2
 
-    ! Check that field and rhs are both associated to the 
-    ! same mesh with the right number of cells 
+    ! Check that field and rhs are both associated to the
+    ! same mesh with the right number of cells
     ! that has been initialized in new_poisson_1d_periodic
     SLL_ASSERT(size(field)==this%nc_eta1+1)
     SLL_ASSERT(size(rhs)==this%nc_eta1+1)
 
     ! copy rhs into auxiliary array for fftpack
     ! in order to keep rhs unchanged
-    this%work = rhs 
+    this%work = rhs
 
-    ! Forward FFT 
+    ! Forward FFT
     call dfftf( this%nc_eta1, this%work, this%wsave)
 
     this%work = this%work /this%nc_eta1      ! normalize FFT
 
     kx0  = 2_f64*sll_pi/(this%eta1_max-this%eta1_min)
 
-    ! La moyenne de Ex est nulle donc les composantes de Fourier 
+    ! La moyenne de Ex est nulle donc les composantes de Fourier
     ! correspondant a k=0 sont nulles
     field(1) = 0.
 
     ! Calcul des autres composantes de Fourier
-    do ik=1,(this%nc_eta1-2)/2 
+    do ik=1,(this%nc_eta1-2)/2
        kx= ik*kx0
        k2 = kx*kx
        field(2*ik)       = kx/k2*this%work(2*ik+1)
@@ -134,8 +135,8 @@ contains
     end do
 
     field(this%nc_eta1)= 0.          ! because Im(rhs/2)=0
- 
-    ! Backward FFT 
+
+    ! Backward FFT
 
     call dfftb( this%nc_eta1, field,  this%wsave )
 
@@ -157,7 +158,7 @@ contains
 !!$    endif
 !!$
 !!$    integrale=0
-!!$    e_field=0        
+!!$    e_field=0
 !!$
 !!$    pas=geomx%dx
 !!$    do i=2+(geomx%nx-1)/2,geomx%nx

@@ -1,22 +1,22 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !> \author Pierre Navaro
-!> \brief  
+!> \brief
 !> This module provides some routines for plotting during PIC simulations.
 module sll_visu_pic
 #include "sll_working_precision.h"
@@ -73,7 +73,7 @@ nbpart = size(x)
 SLL_ASSERT(nbpart == size(v))
 open(file_id, file = plot_name//"_"//fin//'.dat' )
 do i=1,nbpart
-   write(file_id,*) sngl(x(i)),sngl(v(i)) 
+   write(file_id,*) sngl(x(i)),sngl(v(i))
 end do
 close(file_id)
 
@@ -109,7 +109,7 @@ enddo
 end subroutine compute_df
 
 subroutine distribution_xv_gnuplot( plot_name, x, v, xmin, xmax, nx, &
-                                    vmin, vmax, nv, iplot, time)  
+                                    vmin, vmax, nv, iplot, time)
 
 character(len=*), intent(in) :: plot_name
 sll_int32, intent(in) :: nx
@@ -137,7 +137,7 @@ write(file_id,"(A18,G10.3,A1)")"set title 'Time = ",time,"'"
 write(file_id,*)"splot  '"//plot_name//"_"//fin//".dat' w l"
 close(file_id)
 
-call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)  
+call sll_gnuplot_2d(xmin, xmax, nx, vmin, vmax, nv, df, plot_name, iplot, error)
 
 end subroutine distribution_xv_gnuplot
 
@@ -150,21 +150,24 @@ sll_real64, intent(in) :: time
 sll_real64 :: xmin, xmax, ymin, ymax
 sll_int32  :: nbpart
 
-print*, "set title'time=",time,"'"
-print*, 'set term x11'
+print*, 'set term x11 2'
+print*, "set title 'time=",time,"'"
+print*, "unset logscale"
 nbpart = size(x)
 SLL_ASSERT( nbpart == size(v))
+
+100 format('plot [',f7.3,':',f7.3,'][',f7.3,':',f7.3,'] ''-'' w d')
+
 write(*,100) xmin,xmax,ymin,ymax
 do k = 1, nbpart
    print*, x(k), v(k)
 end do
 print*, 'e'
 
-100 format('p [',f7.3,':',f7.3,'][',f7.3,':',f7.3,'] ''-'' w d')
 
 end subroutine particles_center_gnuplot_inline
 
-!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data 
+!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data
 !> This format is designed to plot x,y,z particles with one weight (only four
 !> characteristics)
 !> This format is readable by VisIt
@@ -189,7 +192,7 @@ close(file_id)
 
 end subroutine pq_plot_format_points3d
 
-!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data 
+!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data
 !> This format is designed to plot x,y,z particles with one weight (only four
 !> characteristics)
 !> This format is readable by VisIt
@@ -215,7 +218,7 @@ close(file_id)
 
 end subroutine pqr_plot_format_points3d
 
-!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data 
+!> point3D format http://www.visitusers.org/index.php?title=Reading_point_data
 !> This format is designed to plot x,y,z particles with one weight (only four
 !> characteristics)
 !> This format is readable by VisIt
@@ -281,7 +284,7 @@ end subroutine plot_format_xmdv
 
 !>VisIt readable output for particles density
 !>Data file format could be XML, HDF5 or Binary (not fully implemented yet)
-subroutine distribution_xdmf(plot_name, x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)  
+subroutine distribution_xdmf(plot_name, x, v, w, xmin, xmax, nx, vmin, vmax, nv, iplot)
 character(len=*), intent(in) :: plot_name
 sll_real64, dimension(:), intent(in) :: x
 sll_real64, dimension(:), intent(in) :: v
@@ -295,16 +298,16 @@ character(len=4) :: fin
 
 call int2string(iplot, fin)
 
-call compute_df_cic(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)  
+call compute_df_cic(x, v, w, xmin, xmax, nx, vmin, vmax, nv, df)
 delta_x = (xmax-xmin)/(nx-1)
 delta_v = (vmax-vmin)/(nv-1)
-call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x, vmin, delta_v) 
+call sll_xdmf_corect2d_nodes( plot_name//'_'//fin, df, "density", xmin, delta_x, vmin, delta_v)
 
 end subroutine distribution_xdmf
 
 !>Compute grid field from particles distribution with the CIC scheme (Cloud In
 !Cell)
-subroutine compute_df_cic(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)  
+subroutine compute_df_cic(xp, yp, wp, xmin, xmax, nx, ymin, ymax, ny, df)
 sll_real64, dimension(:), intent(in) :: xp, yp, wp
 sll_real64, intent(in) :: xmin, xmax, ymin, ymax
 sll_int32 :: ip, jp, kp
@@ -325,21 +328,156 @@ do kp = 1,nbpart
 
    ip = floor(xt)
    jp = floor(yt)
+            !print *, ip, jp , xp(kp), yp(kp)
 
-   SLL_ASSERT(ip > 0 .and. ip < nx .and. jp > 0 .and. jp < ny)
 
    a1 = (ip+1 - xt) * (jp+1 - yt)
    a2 = (xt   - ip) * (jp+1 - yt)
    a3 = (ip+1 - xt) * (yt   - jp)
    a4 = (xt   - ip) * (yt   - jp)
 
-   df(ip  ,jp  )=df(ip  ,jp  )+a1*wp(kp)
-   df(ip+1,jp  )=df(ip+1,jp  )+a2*wp(kp)
-   df(ip  ,jp+1)=df(ip  ,jp+1)+a3*wp(kp)
-   df(ip+1,jp+1)=df(ip+1,jp+1)+a4*wp(kp)
+   ip=ip+1
+   jp=jp+1
+    if (ip==nx+1) ip=nx
+    if (jp==ny+1) jp=ny
+!print *,ip, xt, jp, floor(yt), nx, ny
+   SLL_ASSERT(ip > 0 .and. ip <= nx .and. jp > 0 .and. jp <= ny)
 
+!   df(ip  ,jp  )=df(ip  ,jp  )+a1*wp(kp)
+!   df(ip+1,jp  )=df(ip+1,jp  )+a2*wp(kp)
+!   df(ip  ,jp+1)=df(ip  ,jp+1)+a3*wp(kp)
+!   df(ip+1,jp+1)=df(ip+1,jp+1)+a4*wp(kp)
+
+   if (jp >0 .and. jp<=ny) then
+    if (ip>0 .and. ip<=nx)  df(ip  ,jp  )=df(ip  ,jp  )+a1*wp(kp)
+    if (ip+1>0 .and. ip+1<=nx)  df(ip+1,jp  )=df(ip+1,jp  )+a2*wp(kp)
+   endif
+   if (jp+1 >0 .and. jp+1<=ny) then
+    if (ip>0 .and. ip<=nx)  df(ip  ,jp+1)=df(ip  ,jp+1)+a3*wp(kp)
+    if (ip+1>0 .and. ip+1<=nx) df(ip+1,jp+1)=df(ip+1,jp+1)+a4*wp(kp)
+   endif
 end do
 
 end subroutine compute_df_cic
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+!> Call this function inline with | gnuplot
+!> Plots different energies for Electrostatic Particle-in-Cell
+!> Pseudo/Virtual file plot in gnuplot using plot "-"
+subroutine energies_electrostatic_gnuplot_inline( kinetic_energy, &
+                                                    electrostatic_energy, impulse, timestepwidth)
+sll_real64, dimension(:), intent(in) :: kinetic_energy, electrostatic_energy, impulse
+sll_int32  :: timesteps
+sll_real64,  dimension(size(kinetic_energy)) :: total_energy
+sll_real64, intent(in) :: timestepwidth
+
+timesteps = size(kinetic_energy)
+SLL_ASSERT( timesteps == size(electrostatic_energy))
+SLL_ASSERT( timesteps == size(total_energy))
+
+total_energy=electrostatic_energy+kinetic_energy
+
+ if (timesteps >2) then
+print*,"   "
+!!Plot Energy errors
+print*, "set term x11 3"
+print*, "set logscale y"
+print*, "set title 'Relative Energies'"
+print*, "plot '-'  title 'kinetic' with lines,\"
+if (maxval(electrostatic_energy)/=0) print*, "'-'  title 'electrostatic' with lines,\"
+print*, "'-'   title 'total' with lines;"
+do k = 2, timesteps
+   print*, (k-1)*timestepwidth, kinetic_energy(k)/maxval(kinetic_energy)
+enddo
+print*, "e"
+if (maxval(electrostatic_energy)/=0) then
+do k = 2, timesteps
+   print*, (k-1)*timestepwidth, electrostatic_energy(k)/maxval(electrostatic_energy)
+enddo
+endif
+print*, "e"
+do k = 2, timesteps
+   print*,  (k-1)*timestepwidth, total_energy(k)/maxval(total_energy)
+enddo
+print*, "e"
+print*,"   "
+
+
+!Plot Energy errors
+print*, "set term x11 4"
+print*, "set autoscale y"
+print*, "set title 'Total Energy Error'"
+print*, "set logscale y"
+
+print*, "plot  '-' using 1:2  title 'Relative Error' with lines"
+do k = 2, timesteps
+   print*,  (k-1)*timestepwidth, abs(((total_energy(k)-total_energy(1))/total_energy(1)))
+end do
+print*, "e"
+print*,"   "
+
+
+
+!!plot Impulse Error
+print*, "set term x11 6"
+print*, "set autoscale y"
+print*, "set title 'Relative Impulse Error'"
+print*, "set logscale y"
+print*, "plot '-' using 1:2 title 'Relative Impulse Error' with lines"
+do k = 2, timesteps
+    if (impulse(1)/=0) then
+    print*,  (k-1)*timestepwidth,  abs(impulse(k)-impulse(1))/abs(impulse(1))
+   else if (maxval(abs(impulse))/=0) then
+    print*,  (k-1)*timestepwidth,  abs(impulse(k)-impulse(1))/maxval(abs(impulse))
+    else
+    print*,  (k-1)*timestepwidth,  abs(impulse(k)-impulse(1))
+    endif
+end do
+print*, "e"
+
+!!!plot Electrostatic energy to see landau damping
+!print*, "set term x11 5"
+!print*, "set autoscale y"
+!print*, "set title 'Relative Electrostatic Energy'"
+!print*, "set logscale y"
+!print*, "plot  '-' using 1:2  title 'Electrostatic Energy' with lines"
+!do k = 2, timesteps
+!   print*, k,  electrostatic_energy(k)
+!end do
+!print*, "e"
+
+  endif
+end subroutine energies_electrostatic_gnuplot_inline
+
+
+
+!> Call this function inline with | gnuplot
+!> Plots different energies for Electrostatic Particle-in-Cell
+!> Pseudo/Virtual file plot in gnuplot using plot "-"
+subroutine electricpotential_gnuplot_inline( values, eval_knots)
+sll_real64, dimension(:), intent(in) :: values, eval_knots
+sll_int32  :: nknots
+
+
+nknots = size(eval_knots)
+SLL_ASSERT( nknots == size(eval_knots))
+
+!Plot Energy errors
+print*, "set term x11 7"
+print*, "set autoscale y"
+print*, "set title 'Electric Potential'"
+print*, "unset logscale y"
+print*, "plot  '-' using 1:2  title 'Potential' with lines"
+do k = 1, nknots
+   print*, eval_knots(k), values(k)
+end do
+print*, "e"
+
+
+end subroutine electricpotential_gnuplot_inline
+
+
 
 end module sll_visu_pic
