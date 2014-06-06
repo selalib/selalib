@@ -2,6 +2,7 @@ ADD_LIBRARY(sll_logical_meshes STATIC sll_logical_meshes.F90)
 
 TARGET_LINK_LIBRARIES( sll_logical_meshes sll_working_precision sll_memory)
 
+
 ADD_EXECUTABLE( test_logical_meshes unit_test.F90)
 
-TARGET_LINK_LIBRARIES( test_logical_meshes sll_logical_meshes)
+TARGET_LINK_LIBRARIES( test_logical_meshes sll_logical_meshes sll_working_precision)

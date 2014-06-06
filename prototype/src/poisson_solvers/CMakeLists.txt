@@ -4,10 +4,15 @@ SET(POISSON_LIBS sll_fft
                  sll_utilities
                  sll_timer
 		 sll_assertion
+		 sll_logical_meshes
+		 sll_constants
+		 sll_integration
                  dfftpack)
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_1d_periodic.F90
+                 sll_poisson_1d_fem.F90
+                 sll_poisson_1d_fd.F90
                  sll_poisson_2d_polar.F90
                  sll_poisson_2d_periodic_fftpack.F90)
 
@@ -60,14 +65,27 @@ ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 IF(FFTW_ENABLED)
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
                                              sll_assertion
+                                             ${POISSON_LIBS}
                                              dfftpack 
                                              ${FFTW_LIBRARIES} )
 ELSE()
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion
+   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion ${POISSON_LIBS}
                                              dfftpack )
 ENDIF()
 
 IF (NOT STDF95)
+
+
+  ADD_EXECUTABLE(
+    test_poisson_1d_fem
+    unit_test_poisson_1d_fem.F90)
+
+  TARGET_LINK_LIBRARIES(
+    test_poisson_1d_fem
+    sll_poisson_solvers
+    sll_logical_meshes
+    sll_constants  ${POISSON_LIBS})
+
   ADD_EXECUTABLE(
     test_poisson_2d_fft
     unit_test_poisson_2d_fft.F90)

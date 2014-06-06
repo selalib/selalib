@@ -36,13 +36,13 @@ mode = 4
 do i=1,nc_eta1+1
    x = (i-1)*delta_eta1
    rho(i)      =  mode**2*sin(mode*x)
-   ex_exact(i) = -mode*cos(x)
+   ex_exact(i) = -mode*cos(mode*x)
 end do
 
-call initialize(poisson, eta1_min, eta1_max, nc_eta1, error) 
+call initialize(poisson, eta1_min, eta1_max, nc_eta1, error)
 
 call solve(poisson, ex, rho)
-    
+
 print*,'mode=',mode,'   error=',maxval(abs(ex-ex_exact))
 
 end program test_poisson_1d

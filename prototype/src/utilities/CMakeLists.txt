@@ -5,7 +5,7 @@ ADD_LIBRARY(sll_utilities STATIC sll_utilities.F90
 				         sol.f
 				         muls.f )
 
-TARGET_LINK_LIBRARIES(sll_utilities sll_memory sll_assertion sll_working_precision)
+TARGET_LINK_LIBRARIES(sll_utilities sll_memory sll_assertion sll_working_precision sll_boundary_condition_descriptors)
 
 IF(NOT STDF95)
    ADD_EXECUTABLE(test_utilities unit_test.F90)

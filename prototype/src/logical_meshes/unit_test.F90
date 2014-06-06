@@ -1,7 +1,8 @@
 program unit_test_logical_meshes
+#include "sll_working_precision.h"
+#include "sll_memory.h"
   use sll_logical_meshes
   implicit none
-
 
   type(sll_logical_mesh_2d), pointer :: m2d
   type(sll_logical_mesh_3d), pointer :: m3d
@@ -14,7 +15,7 @@ program unit_test_logical_meshes
   type(sll_logical_mesh_2d), pointer :: mx
   type(sll_logical_mesh_2d), pointer :: mv
   type(sll_logical_mesh_4d), pointer :: mxv
-  
+
   m1d_x => new_logical_mesh_1d(64)
   m1d_y => new_logical_mesh_1d(32,eta_min=-1.0_f64,eta_max=+1.0_f64)
 
@@ -29,7 +30,7 @@ program unit_test_logical_meshes
 
   call delete(m1d_x)
   call delete(m1d_y)
-  
+
   m2d => new_logical_mesh_2d(100,100)
   m3d => new_logical_mesh_3d(100,100,100)
   m4d => new_logical_mesh_4d(32,32,32,32, eta1_min=-1.0_f64, eta1_max = 2.0_f64)
@@ -54,6 +55,29 @@ program unit_test_logical_meshes
   call delete(mx)
   call delete(mv)
 
+  call unit_test_logical_meshes_test_1d_functionality()
+
   print *, 'PASSED'
 
+
+
+contains
+
+subroutine unit_test_logical_meshes_test_1d_functionality()
+  type(sll_logical_mesh_1d), pointer :: mesh
+  sll_real64, dimension(9) :: nodes
+  sll_real64, dimension(9) :: celln
+  mesh=>new_logical_mesh_1d(8, 0.0_f64, 1.0_f64)
+  nodes=sll_mesh_nodes(mesh)
+  celln=sll_cell(mesh,nodes)
+print *, nodes
+!  call sll_display(nodes, "(F8.4)")
+!  call sll_display(celln, "(F8.4)")
+
+
+
+endsubroutine
+
 end program unit_test_logical_meshes
+
+
