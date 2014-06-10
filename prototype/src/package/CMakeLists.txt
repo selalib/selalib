@@ -81,6 +81,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
+    ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
     ${SLL_DIR}/deboor_splines/dvalue1d.f90
     ${SLL_DIR}/deboor_splines/bvalue2d.f90
     ${SLL_DIR}/deboor_splines/dvalue2d.f90
