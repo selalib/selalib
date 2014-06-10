@@ -29,7 +29,10 @@ program cg_polar
   sll_real64 :: c1, c2, c3, k1, k2, k3, x, y
   sll_real64 :: c1_mode, c2_mode, c3_mode, k1_mode, k2_mode, k3_mode
   sll_real64 :: mode_slope(1:8),time_mode(1:8)
-
+  sll_int32 :: conserv_rescale
+  
+  conserv_rescale = 0
+  
   !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
   open(27,file='CG_data.txt',action="read")
@@ -581,6 +584,23 @@ program cg_polar
       r = rmin+real(i-1,f64)*dr
       plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)/r
     end do
+
+    w     = 0.0_f64
+    do j = 1,ntheta
+      w  = w+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
+      do i = 2,nr
+        r  = rmin+real(i-1,f64)*dr
+        w  = w+r*f(i,j)
+      end do
+    end do
+    w     = w*dr*dtheta
+
+
+    if(conserv_rescale==1)then
+      f=(w0/w)*f 
+    endif
+
+
     w     = 0.0_f64
     l1    = 0.0_f64
     l2    = 0.0_f64
@@ -657,6 +677,7 @@ program cg_polar
       call plot_f(step/visustep)
     end if
 #endif
+  
   end do
   write(23,*)' '
   write(23,*)' '
