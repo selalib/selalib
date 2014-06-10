@@ -36,7 +36,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_memory.F90
     ${SLL_DIR}/precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
-    ${SLL_DIR}/advection/sll_advection
     ${SLL_DIR}/advection/sll_advection_1d_periodic.F90
     ${SLL_DIR}/advection/sll_advection_1d_non_uniform_cubic_splines.F90
     ${SLL_DIR}/advection/sll_advection_1d_BSL.F90
@@ -48,6 +47,14 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
     ${SLL_DIR}/constants/sll_constants.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid_conservative.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_base.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_verlet.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/sol.f
     ${SLL_DIR}/utilities/muls.f
