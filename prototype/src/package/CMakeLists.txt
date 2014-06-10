@@ -113,7 +113,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
-    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_base.F90
@@ -157,8 +156,9 @@ SET(SLL_SOURCE_FILES
 IF(${FFT_LIB} MATCHES "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
-
+      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90
+      ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
+      )
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
