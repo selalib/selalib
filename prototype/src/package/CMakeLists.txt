@@ -135,6 +135,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
 #    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
     ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
+    ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
