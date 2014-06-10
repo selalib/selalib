@@ -115,6 +115,9 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_base.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic_solver.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_polar_solver.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
