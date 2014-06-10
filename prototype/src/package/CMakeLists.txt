@@ -54,6 +54,11 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
     ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
+    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
+    ${SLL_DIR}/fields/sll_scalar_field_2d_alternative.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_qn.f90
     ${SLL_DIR}/splines/sll_cubic_splines.F90
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
@@ -97,16 +102,32 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
+#    ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90
+    ${SLL_DIR}/sparse_matrix_interface/gauss_seidel.F90
+    ${SLL_DIR}/sparse_matrix_interface/getdia.F90
+    ${SLL_DIR}/sparse_matrix_interface/getl.F90
+    ${SLL_DIR}/sparse_matrix_interface/getu.F90
+    ${SLL_DIR}/sparse_matrix_interface/lsol.F90
+    ${SLL_DIR}/sparse_matrix_interface/remove_zeros.F90
+    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module.F90
+#    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module_basic.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_basic.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_def.F90
+#    ${SLL_DIR}/sparse_matrix_interface/spm_mkl.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
+#    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
+    ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
-    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
+#    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
  )
 
@@ -147,6 +168,15 @@ IF(MUDPACK_ENABLED)
 
 ENDIF(MUDPACK_ENABLED)
 
+
+IF(SUITESPARSE_ENABLED)
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+        ${SLL_DIR}/sparse_matrix_interface/spm_umfpack.F90
+	${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_umfpack_module.F90
+  )
+ENDIF(SUITESPARSE_ENABLED)
+
+
 IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
@@ -161,11 +191,18 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/simulation/simulation_base_class.F90
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
+       ${SLL_DIR}/simulation/simulation_4d_qns_general.F90
  )
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
+#SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
+IF(BUILD_SHARED_LIBRARY)
+   ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
+ELSE()
+   ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+ENDIF()
 
 INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 

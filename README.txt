@@ -1,6 +1,16 @@
 Modular library for the gyrokinetic simulation model by a semi-Lagrangian method.
 
-As part of french action Fusion, Calvi INRIA projetct developed in collaboration with CEA Cadarache GYSELA simulation code for gyrokinetic simulation of plasma turbulence in Tokamaks. Development and testing of new numerical methods is generally done on different simplified models before its integration into GYSELA. No specification is implemented for this aim, which involves several rewriting code lines before the final integration, which is cumbersome and inefficient. SeLaLib is an API for components of basic numerical implementation also in GYSELA, a framework for parallel single streamline built in order to improve reliability and simplify the work of development.
+As part of french action Fusion, Tonus INRIA project developed in
+collaboration with CEA Cadarache GYSELA simulation code for gyrokinetic
+simulation of plasma turbulence in Tokamaks. Development and testing
+of new numerical methods is generally done on different simplified
+models before its integration into GYSELA. No specification is
+implemented for this aim, which involves several rewriting code
+lines before the final integration, which is cumbersome and
+inefficient. SeLaLib is an API for components of basic numerical
+implementation also in GYSELA, a framework for parallel single
+streamline built in order to improve reliability and simplify the
+work of development.
 
 Sign in to the INRIA GForge and Subscribe to the project selalib by sending a email
 to navaro@math.unistra.fr
