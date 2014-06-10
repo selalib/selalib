@@ -199,6 +199,10 @@ IF(SUITESPARSE_ENABLED)
         ${SLL_DIR}/sparse_matrix_interface/spm_umfpack.F90
 	${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_umfpack_module.F90
   )
+ELSE()
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+      ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90)
+
 ENDIF(SUITESPARSE_ENABLED)
 
 
@@ -227,7 +231,7 @@ SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
 #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
 IF(BUILD_SHARED_LIBRARY)
    ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
-   TARGET_LINK_LIBRARIES(selalib ${HDF5_LIBRARIES} dfftpack ${LAPACK_LIBRARIES})
+   TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
 ELSE()
    ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
    INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
