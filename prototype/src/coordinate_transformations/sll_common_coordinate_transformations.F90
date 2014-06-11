@@ -628,6 +628,360 @@ contains
     polar_jac = eta1
   end function polar_jac
 
+
+  ! **************************************************************************
+  !
+  ! "Colella transformation";
+  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+  ! (102) p 2968):
+  !
+  !        x1 = eta1 + alpha1 * sin(2*pi/L1 * eta1) * sin(2*pi/L2 * eta2)
+  !        x2 = eta2 + alpha2 * sin(2*pi/L1 * eta1) * sin(2*pi/L2 * eta2)
+  !
+  ! Domain: [0,L1] X [0,L2]
+  ! But we generalize it by taking a transformation 
+  ! Domain: [a,b] X [c,d]  -----> Domain: [a',b'] X [c',d']
+  ! so the transformation becomes 
+  ! 
+  !        x1 = (b' - a')/(b- a) * (  eta1 + alpha1 * sin(2*pi*( eta1-a)/( b-a)) * sin(2*pi*( eta2-c)/( d-c)) ) 
+  !             + ( a' b - b' a)/(b- a)
+  !        x2 = (d' - c')/(d- c) * (  eta2 + alpha2 * sin(2*pi*( eta1-a)/( b-a)) * sin(2*pi*( eta2-c)/( d-c)) ) 
+  !             + ( c' d - d' c)/(d- c)
+  ! 
+  ! The parameters are:
+  !      alpha1 = params(1)
+  !      alpha2 = params(2)
+  !      a      = params(3)
+  !      b      = params(4)
+  !      a'     = params(5)
+  !      b'     = params(6)
+  !      c      = params(7)
+  !      d      = params(8)
+  !      c'     = params(9)
+  !      d'     = params(10)
+  !
+  !
+  ! **************************************************************************
+
+  ! direct mapping
+  function sinprod_gen_x1 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    sll_real64  :: coef1, coef2
+
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
+    coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_gen_x1 = eta1 + alpha1 * sin(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_x1 = coef1 * sinprod_gen_x1 + coef2
+  end function sinprod_gen_x1
+
+  function sinprod_gen_x2 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
+    coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_gen_x2 = eta2 + alpha2 * sin(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_x2 = coef1 * sinprod_gen_x2 + coef2
+  end function sinprod_gen_x2
+
+  ! inverse mapping 
+  ! cannot be computed analytically in this case. Use fixed point iterations.
+  function sinprod_gen_eta1 ( x1, x2, params )
+    sll_real64  :: sinprod_gen_eta1
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    ! NEEDS TO BE IMPLEMENTED
+    STOP 'function not implemented'
+    sinprod_gen_eta1 = x1
+  end function sinprod_gen_eta1
+
+  function sinprod_gen_eta2 ( x1, x2, params )
+    sll_real64  :: sinprod_gen_eta2
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    ! NEEDS TO BE IMPLEMENTED
+    STOP 'function not implemented'
+    sinprod_gen_eta2 = x2
+  end function sinprod_gen_eta2
+
+  ! jacobian matrix
+  function sinprod_gen_jac11 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
+    coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+
+    sinprod_gen_jac11 = 1.0_f64 + alpha1*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_jac11 = coef1 * sinprod_gen_jac11
+  end function sinprod_gen_jac11
+
+  function sinprod_gen_jac12 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
+    coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+
+    sinprod_gen_jac12 = alpha1*pi2/ (d_1 - c_1 ) *sin(pi2*rl1)*cos(pi2*rl2)
+    sinprod_gen_jac12 = coef1 * sinprod_gen_jac12
+  end function sinprod_gen_jac12
+  
+  function sinprod_gen_jac21 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+    
+    coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
+    coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_gen_jac21 = alpha2*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_jac21 = coef1 * sinprod_gen_jac21
+  end function sinprod_gen_jac21
+
+  function sinprod_gen_jac22 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+    
+    coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
+    coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+
+    sinprod_gen_jac22 = 1.0_f64 + alpha2*pi2/ (d_1 - c_1 )*sin(pi2*rl1)*cos(pi2*rl2)
+    sinprod_gen_jac22 = coef1 * sinprod_gen_jac22
+    
+  end function sinprod_gen_jac22
+
+   ! jacobian ie determinant of jacobian matrix
+  function sinprod_gen_jac ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+
+
+    SLL_ASSERT(size(params) >= 10)
+    !alpha1 = params(1)
+    !alpha2 = params(2)
+    !rl1    = 1.0_f64/params(3)
+    !rl2    = 1.0_f64/params(4)
+    !pi2 = 2.0_f64*sll_pi
+    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    !sinprod_gen_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
+    !                        alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+
+    sinprod_gen_jac=sinprod_gen_jac22( eta1, eta2, params )*sinprod_gen_jac11( eta1, eta2, params )&
+                  - sinprod_gen_jac12( eta1, eta2, params )*sinprod_gen_jac21( eta1, eta2, params )
+  end function sinprod_gen_jac
+
   ! **************************************************************************
   !
   ! "Colella transformation";
@@ -682,7 +1036,7 @@ contains
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-     pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_pi
     sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x2
 
@@ -718,7 +1072,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
- 
+
     SLL_ASSERT(size(params) >= 4)
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
@@ -754,6 +1108,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2
 
     SLL_ASSERT(size(params) >= 4)
     alpha2 = params(2)
@@ -772,6 +1127,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+    sll_real64  :: l1,l2
 
     SLL_ASSERT(size(params) >= 4)
     alpha2 = params(2)
@@ -792,6 +1148,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+
 
     SLL_ASSERT(size(params) >= 4)
     alpha1 = params(1)
