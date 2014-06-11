@@ -36,7 +36,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_memory.F90
     ${SLL_DIR}/precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
-    ${SLL_DIR}/advection/sll_advection
     ${SLL_DIR}/advection/sll_advection_1d_periodic.F90
     ${SLL_DIR}/advection/sll_advection_1d_non_uniform_cubic_splines.F90
     ${SLL_DIR}/advection/sll_advection_1d_BSL.F90
@@ -48,6 +47,14 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
     ${SLL_DIR}/constants/sll_constants.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid_conservative.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_base.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_verlet.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
     ${SLL_DIR}/utilities/sol.f
     ${SLL_DIR}/utilities/muls.f
@@ -74,6 +81,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_quintic_splines.F90
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
+    ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
     ${SLL_DIR}/deboor_splines/dvalue1d.f90
     ${SLL_DIR}/deboor_splines/bvalue2d.f90
     ${SLL_DIR}/deboor_splines/dvalue2d.f90
@@ -104,10 +112,14 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/interpolators/sll_arbitrary_degree_spline_interpolator_2d.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_solvers_base.F90
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_fdtd.F90
+    ${SLL_DIR}/periodic_interpolation/periodic_interp.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_solvers.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftpack.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_base.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic_solver.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_1d_polar_solver.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
@@ -128,6 +140,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
 #    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
     ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
+    ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
@@ -145,8 +158,9 @@ SET(SLL_SOURCE_FILES
 IF(${FFT_LIB} MATCHES "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90)
+      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90
 
+      )
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
@@ -185,6 +199,10 @@ IF(SUITESPARSE_ENABLED)
         ${SLL_DIR}/sparse_matrix_interface/spm_umfpack.F90
 	${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_umfpack_module.F90
   )
+ELSE()
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+      ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90)
+
 ENDIF(SUITESPARSE_ENABLED)
 
 
@@ -213,11 +231,11 @@ SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
 #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
 IF(BUILD_SHARED_LIBRARY)
    ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
+   TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
 ELSE()
    ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+   INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 ENDIF()
-
-INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
 
 SET(DIST_NAME "selalib-0.5.0")
 
