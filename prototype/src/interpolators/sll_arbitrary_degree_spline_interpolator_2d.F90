@@ -3858,6 +3858,7 @@ contains
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
+    sll_int32 :: partint
     !sll_real64 :: bvalue2d
     !integer  :: li_i, li_j, li_mflag, li_lefty
     sll_real64 :: res1,res2
@@ -3892,20 +3893,25 @@ contains
 
 
        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+          partint = AINT(res2/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = AINT(res2/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
        if ( res1 > interpolator%eta1_max) then 
-          print*, 'problem  x > eta1_max'
-          stop
+          !print*, 'problem  x > eta1_max'
+          res1 =  interpolator%eta1_max
+          !stop
        end if
        if ( res1 < interpolator%eta1_min) then 
-          print*, 'problem  x < eta1_min'
-          stop
+          !print*, 'problem  x < eta1_min'
+          res1 =  interpolator%eta1_min
+          !print*, res1,interpolator%eta1_min 
+          !stop
        end if
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
@@ -3925,6 +3931,7 @@ contains
        end if
        if ( res2 < interpolator%eta2_min) then 
           print*, 'problem  y < eta2_min'
+  
           stop
        end if
        
@@ -3945,6 +3952,7 @@ contains
     end if
     if ( res2 > interpolator%eta2_max) then 
        print*, 'problem  y > eta2_max'
+       print*, res2, interpolator%eta2_min,interpolator%eta2_max
        stop
     end if
     if ( res2 < interpolator%eta2_min) then 
