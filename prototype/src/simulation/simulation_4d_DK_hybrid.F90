@@ -360,16 +360,20 @@ contains
       !--> Advection in vpar direction'
       call advec1D_vpar(sim,0.5_f64*sim%dt)
 
+      !print*, 'advection vpar' 
       ! --> Advection in eta3 direction'
       call advec1D_eta3(sim,0.5_f64*sim%dt)
 
+      !print*, 'advection eta3'
       !--> Sequential for the advection in eta1eta2
       call apply_remap_4D(sim%seqx3x4_to_seqx1x2, &
           sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
 
+
       !--> Advection in eta1,eta2 direction'
       call advec2D_eta1eta2(sim,sim%dt)
 
+      !print*, 'advection eta1eta2'
       !--> Sequential for the advection in eta3 and in vpar
       call apply_remap_4D(sim%seqx1x2_to_seqx3x4, &
           sim%f4d_seqx1x2,sim%f4d_seqx3x4 )
@@ -377,9 +381,11 @@ contains
       !--> Advection in eta3 direction'
       call advec1D_eta3(sim,0.5_f64*sim%dt)
 
+      !print*, 'advection eta3'
       !--> Advection in vpar direction'
       call advec1D_vpar(sim,0.5_f64*sim%dt)
 
+      !print*, 'advection vpar'
       !--> Sequential to solve the quasi-neutral equation
       call apply_remap_4D(sim%seqx3x4_to_seqx1x2, &
           sim%f4d_seqx3x4,sim%f4d_seqx1x2 )
