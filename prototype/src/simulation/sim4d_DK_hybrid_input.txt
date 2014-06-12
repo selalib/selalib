@@ -32,8 +32,8 @@
 /
 
 &sim_params
-  dt                = 1
-  number_iterations = 2
+  dt                = 8
+  number_iterations = 1
   spline_degree     = 3
 /
 
