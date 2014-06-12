@@ -103,6 +103,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64,dimension(:,:),    pointer :: values_jacobian
      sll_real64,dimension(:,:,:,:),pointer :: values_jacobian_matinv
      sll_real64,dimension(:,:),pointer     :: point_x,point_y
+     sll_real64,dimension(:,:), pointer    :: values_ex,values_ey
 
      ! ---> point mesh logical
      sll_real64,dimension(:),pointer :: pt_eta1
@@ -283,7 +284,7 @@ contains
     sim%number_diags     = number_diags
     sim%quadrature_type1 = quadrature_type1
     sim%quadrature_type2 = quadrature_type2
-    
+    sim%count_save_diag  = 0
     sim%bc_eta1_0   = bc_eta1_0
     sim%bc_eta1_1   = bc_eta1_1
     sim%bc_eta2_0   = bc_eta2_0
@@ -353,6 +354,10 @@ contains
     SLL_ALLOCATE(sim%pt_eta2(sim%mesh2d_x%num_cells2 +1),ierr)
     SLL_ALLOCATE(sim%point_x(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
     SLL_ALLOCATE(sim%point_y(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
+    SLL_ALLOCATE(sim%values_ex(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1 ),ierr)
+    sim%values_ex = 0.0_f64
+    SLL_ALLOCATE(sim%values_ey(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
+    sim%values_ey = 0.0_f64
   end subroutine initialize_4d_qns_general
 
 
@@ -451,8 +456,8 @@ contains
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE sim%number_diags
-    sll_real64, dimension(BUFFER_SIZE) :: buffer
-    sll_real64, dimension(BUFFER_SIZE) :: buffer_result
+    sll_real64, dimension(BUFFER_SIZE) :: buffer_energy
+    sll_real64, dimension(BUFFER_SIZE) :: buffer_energy_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
     sll_real64 :: tmp,numpart
@@ -666,7 +671,7 @@ contains
 
 
     !--> Initialization diagnostics for the norm
-    size_diag  = int(sim%num_iterations/BUFFER_SIZE) + 1
+    size_diag  =  int(sim%num_iterations/BUFFER_SIZE) + 1
     SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L1(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L2(size_diag),ierr)
@@ -1000,7 +1005,6 @@ contains
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
 
-     ! a remettre
     call advection_x1x2(sim,0.5*sim%dt)
 
    
@@ -1042,6 +1046,8 @@ contains
          sim%mesh2d_x%eta1_max, & 
          sim%mesh2d_x%eta2_min, & 
          sim%mesh2d_x%eta2_max )  
+
+    print*, 'factorise matrice qns'
     
     call factorize_mat_es(&
          sim%qns, & 
@@ -1054,12 +1060,23 @@ contains
          c_field)!, &
 
     print*, ' ... finished initialization, entering main loop.'
+    
+    !--> Compute energy kinetic, potential and total
+    !print*, 'compute nrj'
+    !call compute_energy_qns(sim,phi)
+    
+    !--> Compute L1 norm, L2 norm, L infini norm
+    !print*, 'compute  L^p'
+    !call compute_norm_L1_L2_Linf_qns(sim)
+    
+    
+    !call writeHDF5_diag_qns( sim )
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
     !
     ! ------------------------------------------------------------------------
-    !print*, sim%f_x1x2(1,1,:,:)
+    !print*, 'sim%my_rank = ',sim%my_rank, ' integral x3x4= ', sum(sim%f_x3x4(:,:,:,:))*delta1*delta2*delta3*delta4
     
     do itime=1,sim%num_iterations
        if(sim%my_rank == 0) then
@@ -1093,6 +1110,10 @@ contains
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
+
+
+
+
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        
        call compute_local_sizes_4d( &
@@ -1261,6 +1282,8 @@ contains
                 
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                sim%values_ex (global_indices(1),global_indices(2) ) = ex
+                sim%values_ey (global_indices(1),global_indices(2) ) = ey
                 
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 alpha3 = alpha3 -sim%dt*(elec_field_ext_1%value_at_point(x,y) )
@@ -1288,9 +1311,8 @@ contains
        ! dt in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
+             global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
              do k=1,sim%mesh2d_v%num_cells1+1
-                global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 !eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 eta1 = sim%pt_eta1(global_indices(1))
@@ -1301,8 +1323,10 @@ contains
                 inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
                 !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%values_jacobian_mat(global_indices(1),global_indices(2),:,:)
-                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
-                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                ex     =  sim%values_ex (global_indices(1),global_indices(2) ) 
+                !- phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                ey     =  sim%values_ey (global_indices(1),global_indices(2) ) !
+                !- phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 alpha4 = alpha4 -sim%dt*(elec_field_ext_2%value_at_point(x,y))
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
@@ -1312,8 +1336,7 @@ contains
 
                 
              end do
-             numpart = numpart + delta1*delta2*delta3*delta4 *&
-                  sum(sim%f_x3x4(i,j,:,:))*&
+             numpart = numpart + sum(sim%f_x3x4(i,j,:,:))*&
                   abs(sim%values_jacobian(global_indices(1),global_indices(2)))
 !!$             efield_energy_total = efield_energy_total + &
 !!$                  delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)) &
@@ -1323,6 +1346,8 @@ contains
           end do
        end do
 
+       !print*, 'sim%my_rank = ', sim%my_rank, 'numpart = ', numpart*delta1*delta2*delta3*delta4
+
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
        call compute_local_sizes_4d( sim%sequential_x1x2, &
@@ -1330,9 +1355,14 @@ contains
        
        ! Approximate the integral of the distribution function along all
        ! directions.
-       num_particles_local(buffer_counter) = numpart
+       num_particles_local(buffer_counter) = numpart*delta1*delta2*delta3*delta4
+       buffer_energy(buffer_counter)       = efield_energy_total
            ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
        if( buffer_counter == BUFFER_SIZE ) then
+          ! ----------------------------------
+          ! write particles buffer to disk 
+          ! ----------------------------------
+          num_particles_global = 0.0_f64
           call sll_collective_reduce_real64( &
                sll_world_collective, &
                num_particles_local, &
@@ -1351,80 +1381,50 @@ contains
              end do
              close(num_particles_file_id)
           end if
-       end if
-       
-       
-       buffer(buffer_counter) = efield_energy_total
-       ! This should be abstracted away...
-       ! Each processor keeps a local buffer, when the buffer reaches a
-       ! predetermined size, we reduce ther buffer with an addition on 
-       ! process 0, who appends it to a file. Then reset the buffer.
-       if( buffer_counter == BUFFER_SIZE ) then
-          ! While using a sequential QNS solver, each processor contains the
-          ! full information on the electric field energy, thus it is not 
-          ! necessary to add the individual contributions.
           
+          ! ----------------------------------
+          ! write electric field energy to disk 
+          ! ----------------------------------
+          buffer_energy_result = 0.0_f64
           call sll_collective_reduce_real64( &
                sll_world_collective, &
-               buffer, &
+               buffer_energy, &
                BUFFER_SIZE, &
                MPI_SUM, &
                0, &
-               buffer_result )
+               buffer_energy_result )
           
-          ! Use next line only if no communications are needed!
-          !       buffer_result(:) = buffer(:)
 
-          num_particles_local(buffer_counter) = numpart
-              ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
-          if( buffer_counter == BUFFER_SIZE ) then
-             call sll_collective_reduce_real64( &
-                  sll_world_collective, &
-                  num_particles_local, &
-                  BUFFER_SIZE, &
-                  MPI_SUM, &
-                  0, &
-                  num_particles_global )
-             if(sim%my_rank == 0) then
-                open(num_particles_file_id,file="number_particles",&
-                     position="append")
-                if(itime == BUFFER_SIZE) then
-                   rewind(num_particles_file_id)
-                end if
-                do i=1,BUFFER_SIZE
-                   write(num_particles_file_id,*) num_particles_global(i)
-                end do
-                close(num_particles_file_id)
-             end if
-          end if
-          
-          buffer_counter = 1
-          if(sim%my_rank == 0) then
+           if(sim%my_rank == 0) then
              open(efield_energy_file_id,file="electric_field_energy_qns",&
                   position="append")
              
              if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)
              end if
-             buffer_result(:) = log(sqrt(buffer_result(:)))
+             buffer_energy_result(:) = log(sqrt(buffer_energy_result(:)))
              do i=1,BUFFER_SIZE
-                write(efield_energy_file_id,*) buffer_result(i)
+                write(efield_energy_file_id,*) buffer_energy_result(i)
              end do
              close(efield_energy_file_id)
           end if
+          buffer_counter = 1
+
        else
           buffer_counter         = buffer_counter + 1
        end if
-       efield_energy_total    = 0.0_f64
+       
+       
+       
 
-       if (sim%my_rank == 0) then
-          
-          call sll_new_file_id(droite_test_pente, ierr) 
-          open(droite_test_pente,file="droite_test_pente",&
-               position="append")
-          write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
-          close(droite_test_pente)
-       end if
+!!$       if (sim%my_rank == 0) then
+!!$          
+!!$          call sll_new_file_id(droite_test_pente, ierr) 
+!!$          open(droite_test_pente,file="droite_test_pente",&
+!!$               position="append")
+!!$          write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
+!!$          close(droite_test_pente)
+!!$       end if
 
       
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
@@ -1433,7 +1433,7 @@ contains
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
 
-       call advection_x1x2(sim,sim%dt)
+       call advection_x1x2(sim,sim%dt) 
 
 !!$       do j = 1, loc_sz_x2
 !!$          do i = 1, loc_sz_x1
@@ -1449,15 +1449,17 @@ contains
 !!$           sim%rho_split,"rho_split",itime,ierr )
        
        !     call plot_fields(itime, sim)
-
-
+       
+       
+      
        !--> Save results in HDF5 files
        if ( mod(itime,BUFFER_SIZE) == 0) then
-          
           !--> Compute energy kinetic, potential and total
+          !print*, 'compute nrj'
           call compute_energy_qns(sim,phi)
           
           !--> Compute L1 norm, L2 norm, L infini norm
+          !print*, 'compute  L^p'
           call compute_norm_L1_L2_Linf_qns(sim)
           
           call writeHDF5_diag_qns( sim )
@@ -1752,6 +1754,8 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%rho_full, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
+    SLL_DEALLOCATE(sim%values_ex ,ierr)
+    SLL_DEALLOCATE(sim%values_ey ,ierr)
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
@@ -2306,6 +2310,8 @@ contains
     diag_nrj_pot_result     = 0.0_f64
     diag_nrj_tot_result     = 0.0_f64
     diag_relative_error_nrj_tot_result = 0.0_f64
+
+   ! print*, 'sim%count_save_diag = ', sim%count_save_diag
  
    call sll_collective_reduce_real64( &
                sll_world_collective, &
@@ -2413,6 +2419,7 @@ contains
       
     end if
     sim%count_save_diag = sim%count_save_diag + 1
+    
   end subroutine writeHDF5_diag_qns
 
 
@@ -2503,8 +2510,10 @@ contains
                 !eta2   =  sim%mesh2d_x%eta2_min + real(i2-1,f64)*delta_eta2
                 eta1 = sim%pt_eta1(i1)
                 eta2 = sim%pt_eta2(i2)
-                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
-                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                ex     =  sim%values_ex (i1,i2 )!
+                !- phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                ey     =  sim%values_ey(i1,i2)
+                !- phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 inv_j  =  sim%values_jacobian_matinv(i1,i2,:,:)
                 !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 

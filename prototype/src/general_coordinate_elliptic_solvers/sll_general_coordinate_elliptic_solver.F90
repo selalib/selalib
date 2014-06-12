@@ -157,6 +157,8 @@ contains ! *******************************************************************
    sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
+   sll_int32 :: quadrature_type1_tmp
+   sll_int32 :: quadrature_type2_tmp
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -190,11 +192,14 @@ contains ! *******************************************************************
    es%eta1_min   = eta1_min
    es%eta2_min   = eta2_min
 
+   quadrature_type1_tmp = ES_GAUSS_LEGENDRE
+   quadrature_type2_tmp = ES_GAUSS_LEGENDRE
    ! Allocate and fill the gauss points/weights information.
    ! First direction
-   select case(quadrature_type1)
+   select case(quadrature_type1_tmp)
    case (ES_GAUSS_LEGENDRE)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+      es%gauss_pts1(:,:) = 0.0_f64
       es%gauss_pts1(:,:) = gauss_legendre_points_and_weights(spline_degree_eta1+2)
    case (ES_GAUSS_LOBATTO)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
@@ -203,9 +208,11 @@ contains ! *******************************************************************
       print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
    end select
       
-   select case(quadrature_type2)
+   select case(quadrature_type2_tmp)
    case (ES_GAUSS_LEGENDRE)
+      !print*, 'Hello'
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+      es%gauss_pts2(:,:) = 0.0_f64
       es%gauss_pts2(:,:) = gauss_legendre_points_and_weights(spline_degree_eta2+2)
    case (ES_GAUSS_LOBATTO)
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
@@ -215,7 +222,7 @@ contains ! *******************************************************************
       
    end select
 
-
+   !print*, es%gauss_pts2(1,:), ES_GAUSS_LEGENDRE
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
@@ -630,7 +637,7 @@ contains ! *******************************************************************
                S_b1_loc,  &
                S_b2_loc,&
                Source_loc)
-          
+
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -1071,7 +1078,6 @@ contains ! *******************************************************************
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
     
-
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
@@ -1107,7 +1113,7 @@ contains ! *******************************************************************
             work2,&
             dbiatx2_rho,&
             2)
-
+      
        ! we stocke the values of spline to construct the source term
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
        obj%values_splines_gauss2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2_rho(:,1)
