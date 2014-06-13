@@ -157,6 +157,8 @@ contains ! *******************************************************************
    sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
+   sll_int32 :: quadrature_type1_tmp
+   sll_int32 :: quadrature_type2_tmp
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -190,11 +192,14 @@ contains ! *******************************************************************
    es%eta1_min   = eta1_min
    es%eta2_min   = eta2_min
 
+   quadrature_type1_tmp = ES_GAUSS_LEGENDRE
+   quadrature_type2_tmp = ES_GAUSS_LEGENDRE
    ! Allocate and fill the gauss points/weights information.
    ! First direction
-   select case(quadrature_type1)
+   select case(quadrature_type1_tmp)
    case (ES_GAUSS_LEGENDRE)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
+      es%gauss_pts1(:,:) = 0.0_f64
       es%gauss_pts1(:,:) = gauss_legendre_points_and_weights(spline_degree_eta1+2)
    case (ES_GAUSS_LOBATTO)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
@@ -203,9 +208,11 @@ contains ! *******************************************************************
       print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
    end select
       
-   select case(quadrature_type2)
+   select case(quadrature_type2_tmp)
    case (ES_GAUSS_LEGENDRE)
+      !print*, 'Hello'
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
+      es%gauss_pts2(:,:) = 0.0_f64
       es%gauss_pts2(:,:) = gauss_legendre_points_and_weights(spline_degree_eta2+2)
    case (ES_GAUSS_LOBATTO)
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
@@ -215,7 +222,7 @@ contains ! *******************************************************************
       
    end select
 
-
+   !print*, es%gauss_pts2(1,:), ES_GAUSS_LEGENDRE
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
@@ -441,7 +448,7 @@ contains ! *******************************************************************
    double precision :: time
 
 
-   call sll_set_time_mark(t0)
+   !call sll_set_time_mark(t0)
    SLL_ALLOCATE(es,ierr)
    call initialize( &
         es, &
@@ -460,8 +467,8 @@ contains ! *******************************************************************
         eta2_min, &
         eta2_max )
    
-    time = sll_time_elapsed_since(t0)
-    print*, '#time for new_general_elliptic_solver', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, '#time for new_general_elliptic_solver', time
     
 
   end function new_general_elliptic_solver
@@ -577,7 +584,7 @@ contains ! *******************************************************************
     
     character(len=*),parameter :: as_file1='mat'
     
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     
     bc_left   = es%bc_left
     bc_right  = es%bc_right
@@ -630,7 +637,7 @@ contains ! *******************************************************************
                S_b1_loc,  &
                S_b2_loc,&
                Source_loc)
-          
+
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -694,8 +701,8 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
     SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
    
-    time = sll_time_elapsed_since(t0)
-    print*, '#time for factorize_mat_es', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, '#time for factorize_mat_es', time
 
   end subroutine factorize_mat_es
   
@@ -759,7 +766,7 @@ contains ! *******************************************************************
     rho_coeff_1d  = 0.0_f64
     
   
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
     ig1 = 0 
     ig2 = 0 
@@ -784,16 +791,18 @@ contains ! *******************************************************************
              end do
           end do
 
-          call sll_mult_csr_matrix_vector(es%sll_csr_mat_source,rho_coeff_1d,es%rho_vec)
+          call sll_mult_csr_matrix_vector(&
+               es%sll_csr_mat_source,&
+               rho_coeff_1d,es%rho_vec)
 
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
-               .and. ((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+         .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
              es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
           end if
-
+          
        class DEFAULT
-
+          
           do j=1,es%num_cells2
              eta2  = es%eta2_min + (j-1)*es%delta_eta2
              do i=1,es%num_cells1
@@ -906,9 +915,9 @@ contains ! *******************************************************************
        end do
        
     end select
-    time = sll_time_elapsed_since(t0)
+    !time = sll_time_elapsed_since(t0)
 
-    print*, 'time to construct the rho', time
+    !print*, 'time to construct the rho', time
 
     
 !!$    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
@@ -921,6 +930,7 @@ contains ! *******************************************************************
     !!    end if
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
+
     SLL_DEALLOCATE_ARRAY(M_rho_loc,ierr)
     SLL_DEALLOCATE_ARRAY(rho_at_gauss,ierr)
   end subroutine solve_general_coordinates_elliptic_eq
@@ -1068,7 +1078,6 @@ contains ! *******************************************************************
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
     
-
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
@@ -1104,7 +1113,7 @@ contains ! *******************************************************************
             work2,&
             dbiatx2_rho,&
             2)
-
+      
        ! we stocke the values of spline to construct the source term
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
        obj%values_splines_gauss2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2_rho(:,1)

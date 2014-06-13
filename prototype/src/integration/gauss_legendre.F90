@@ -259,7 +259,7 @@ contains
 
 
 
-  !> @brief Returns a 2d array size(2,npoints) containing gauss-legendre 
+  !> @brief Returns a 2d array of size (2,npoints) containing gauss-legendre 
   !> points and weights in the interval [a,b].
   !> @param[in] npoints Number of gauss points.
   !> @param[in] a OPTIONAL Minimum value of the interval.
