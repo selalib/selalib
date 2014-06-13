@@ -125,6 +125,7 @@ contains ! *******************************************************************
     
     type(general_coordinate_elliptic_solver_mp), intent(out) :: es_mp
     type(sll_coordinate_transformation_multipatch_2d), pointer :: T
+    type(sll_logical_mesh_2d), pointer                         :: lm
     sll_int32, intent(in) :: spline_degree_eta1
     sll_int32, intent(in) :: spline_degree_eta2
     sll_int32, intent(in) :: bc_left
@@ -271,28 +272,34 @@ contains ! *******************************************************************
    es_mp%masse(:)   = 0.0_f64
    es_mp%stiff(:)   = 0.0_f64
    es_mp%intjac     = 0.0_f64
-   eta1_min         = es_mp%logical_mesh%eta1_min
-   eta2_min         = es_mp%logical_mesh%eta2_min
-   eta1_max         = es_mp%logical_mesh%eta1_max
-   eta2_max         = es_mp%logical_mesh%eta2_max
+
+   ! Knots to define be careful
+
+   do i = 1, es_mp%T%number_patches
+      lm => es_mp%T%get_logical_mesh(patch)
+      eta1_min         = lm%eta1_min
+      eta2_min         = lm%eta2_min
+      eta1_max         = lm%eta1_max
+      eta2_max         = lm%eta2_max
    
-   call initialize_knots( &
-        spline_degree_eta1, &
-        num_cells_eta1, &
-        eta1_min, &
-        eta1_max, &
-        bc_left, &
-        bc_right, &
-        es_mp%knots1 )
+      call initialize_knots( &
+           spline_degree_eta1, &
+           num_cells_eta1, &
+           eta1_min, &
+           eta1_max, &
+           bc_left, &
+           bc_right, &
+           es_mp%knots1(i,:) )
    
-   call initialize_knots( &
-        spline_degree_eta2, &
-        num_cells_eta2, &
-        eta2_min, &
-        eta2_max, &
-        bc_bottom, &
-        bc_top, &
-        es_mp%knots2 )
+      call initialize_knots( &
+           spline_degree_eta2, &
+           num_cells_eta2, &
+           eta2_min, &
+           eta2_max, &
+           bc_bottom, &
+           bc_top, &
+           es_mp%knots2(i,:) )
+   end do
    
 
    
