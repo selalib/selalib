@@ -1974,7 +1974,12 @@ contains
             alpha2  =  -deltat_advec*E_eta1/ (val_jac*val_B)
             eta1    = sim%eta1_grid(ieta1) - alpha1
             eta2    = sim%eta2_grid(ieta2) - alpha2
-
+            
+            if (eta1 < sim%logical_mesh4d%eta1_min) then 
+               eta1 = sim%logical_mesh4d%eta1_min
+            else if ( eta1> sim%logical_mesh4d%eta1_max) then 
+               eta1 = sim%logical_mesh4d%eta1_max
+            end if
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
               sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
 
