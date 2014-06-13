@@ -164,6 +164,7 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
   
   end subroutine compute_linear_box_spline_2d
 
+
   function twelve_fold_symmetry(out_index, num_pts) result(in_index)
       sll_int32,intent(in)    :: out_index
       sll_int32,intent(in)    :: num_pts
@@ -243,9 +244,10 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
              !    print *,"coef = ", spline%coeffs(i)
              ! end if
           else
-             nei = twelve_fold_symmetry(nei, num_pts)
-             spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
-                                pre_filter_pfir(k,deg)
+             spline%coeffs(i) = spline%coeffs(i)
+             ! nei = twelve_fold_symmetry(nei, num_pts)
+             ! spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
+             !                    pre_filter_pfir(k,deg)
           end if
        end do
     end do
@@ -479,16 +481,6 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     k1_asso = from_cart_index_k1(mesh_geom, x1, x2)
     k2_asso = from_cart_index_k2(mesh_geom, x1, x2)
 
-    if ((k1_asso.eq.2).and.(k2_asso.eq.3)) then
-       print *, ""
-       print *, "x1 , x2 = ", x1, x2
-       delta = mesh_geom%r1_x1 * mesh_geom%r2_x2 - mesh_geom%r2_x1 * mesh_geom%r1_x2
-       k1_temp = ((mesh_geom%r2_x2 * x1 - mesh_geom%r2_x1 * x2)/delta)
-       k2_temp = ((mesh_geom%r1_x1 * x2 - mesh_geom%r1_x2 * x1)/delta)
-       print*, "k1_temp =", k1_temp, nint(k1_temp), floor(k1_temp)
-   end if
-
-
     ! Then we will do a loop for all the points 
     ! on the envelopping rhomboid of radius=deg
     do ki= 1-deg, deg
@@ -518,14 +510,16 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
                     chi_gen_val(x1_basis, x2_basis, deg)
 
       ! ! if ((x1.eq.0.0).and.(x2.eq.0.0)) then
-      !   if ((k1_asso.eq.2).and.(k2_asso.eq.3)) then
+      !   if ((k1_asso.eq.-10).and.(k2_asso.eq.-2)) then
+      !   ! if (ind.eq.245) then
       !      if(chi_gen_val(x1_basis, x2_basis, deg).gt.0.) then
       !         print*," "
       !         print*," indice =", ind
       !         print*," chi_gv =", chi_gen_val(x1_basis, x2_basis, deg)
       !         print*," coeffs =", spline%coeffs(ind)
-      !         ! print*," k1, k2 =", k1_asso, k2_asso
-      !         ! print*," ki, kj =", ki, kj
+      !         print*," k1, k2 =", k1_asso, k2_asso
+      !         print*," ki, kj =", ki, kj
+      !         ! print*," x , y  =", x1, x2
       !         ! print*," shifts =", ki*r11 + kj*r21, ki*r12 + kj*r22
       !         ! print*," modifi =", xm1, xm2
       !         ! print*," basiss =", x1_basis, x2_basis
