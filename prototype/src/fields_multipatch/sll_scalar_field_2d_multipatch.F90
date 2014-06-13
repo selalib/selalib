@@ -884,7 +884,7 @@ contains   ! *****************************************************************
                          (mp%interps(patch+1)%interp%spline_degree2 +1)
     num_cell = cell_i + (cell_j-1)*lm%num_cells1
     total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
-    res = mp%local_indices(patch+1)%array(num_cell+ (splines_local-1)*total_num_cells_in_patch)
+    res = mp%transf%local_indices(patch+1)%array(num_cell+ (splines_local-1)*total_num_cells_in_patch)
   end function get_spline_local_index_sfmp2d
 
 
@@ -900,7 +900,7 @@ contains   ! *****************************************************************
     sll_int32 :: num_splines_global
     sll_int32 :: res
     
-    res = mp%global_indices(num_splines_global)
+    res = mp%transf%global_indices(num_splines_global)
   end function get_spline_global_index_sfmp2d
 
 
@@ -939,7 +939,7 @@ contains   ! *****************************************************************
     num_cell = cell_i + (cell_j-1)*lm%num_cells1
     total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
     index = num_cell+(splines_local-1)*total_num_cells_in_patch
-    res=mp%local_to_global_ind(patch+1)%array(index)
+    res=mp%transf%local_to_global_ind(patch+1)%array(index)
   end function get_spline_local_to_global_index_sfmp2d
   
 
