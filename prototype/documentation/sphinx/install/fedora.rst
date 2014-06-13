@@ -32,3 +32,5 @@ Don't forget to load the mpi module ::
 or::
 
  $ module load mpich2-x86_64
+
+In this last case change openmpi by mpich2 for hdf5 and mpi packages
