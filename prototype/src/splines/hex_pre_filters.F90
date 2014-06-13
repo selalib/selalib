@@ -43,7 +43,7 @@ contains
                   weight = 11._f64/6912._f64
               end if
           else
-              weight = 0.
+              weight = 0._f64
           end if
 
       else if (deg .eq. 2) then 
@@ -86,7 +86,7 @@ contains
                   weight = 1._f64/576000._f64
               end if
           else
-              weight = 0.
+              weight = 0._f64
           end if
       end if
    end function pre_filter_piir2
@@ -112,7 +112,7 @@ contains
           else if (local_index .lt. 7) then
               weight = 1._f64/24._f64
           else
-              weight = 0.
+              weight = 0._f64
           end if
        else if (deg .eq. 2) then 
           ! prefiltre PIIR1 for box-splines of deg =2 chi4
@@ -124,7 +124,7 @@ contains
           else if ((local_index.lt.19).and.(modulo(local_index, 2).eq.0)) then
              weight = -1._f64/720._f64
           else
-             weight = 0.
+             weight = 0._f64
           end if
        ! print *, 'ERROR: pre_filter_piir1(...): ', &
        !      '     function not implemented for degree 2 splines '
@@ -157,7 +157,7 @@ contains
           else if (local_index .lt. 7) then
               weight = -1._f64/24._f64
           else
-              weight = 0.
+              weight = 0._f64
           end if
        else if (deg .eq. 2) then 
           ! prefiltre PFIR for box-splines of deg =2 chi4
@@ -169,7 +169,7 @@ contains
           else if ((local_index.lt.19).and.(modulo(local_index, 2).eq.0)) then
              weight = 7._f64/240._f64
           else
-             weight = 0.
+             weight = 0._f64
           end if
       ! else if (deg .eq. 2) then 
       !  print *, 'ERROR: pre_filter_pfir(...): ', &
@@ -198,11 +198,11 @@ contains
           ! prefiltre int for box-splines chi2
           ! with coefficients h0 = 3/4 and h1 = 1/24
           if (local_index .eq. 0) then
-              weight = 1._f64/2._f64
+              weight = 0.5_f64
           else if (local_index .lt. 7) then
               weight = 1._f64/12._f64
           else
-              weight = 0.
+              weight = 0._f64
           end if
       else if (deg .gt. 2) then 
        print *, 'ERROR: pre_filter_int(...): ', &
