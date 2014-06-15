@@ -23,7 +23,7 @@
 ! current investigations:
 !   High order splitting in time
 !   KEEN waves with uniform and non uniform grid in velocity
-
+#define OPENMP
 
 module sll_simulation_2d_vlasov_poisson_cartesian
 
@@ -52,6 +52,9 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   use sll_time_splitting_coeff_module
   use sll_module_poisson_1d_periodic_solver
   use sll_module_poisson_1d_polar_solver
+#ifdef OPENMP
+  use omp_lib
+#endif
   implicit none
 
   integer, parameter :: SLL_ADVECTIVE = 0
@@ -60,11 +63,14 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   type, extends(sll_simulation_base_class) :: &
        sll_simulation_2d_vlasov_poisson_cart
 
+   
+   sll_int32 :: num_threads
    !geometry
    type(sll_logical_mesh_2d), pointer :: mesh2d
    sll_int32 :: num_dof_x2
    sll_real64, dimension(:), pointer :: x1_array
    sll_real64, dimension(:), pointer :: x2_array
+   sll_real64, dimension(:,:), pointer :: x2_array_omp
    sll_real64, dimension(:), pointer :: x1_array_light
    sll_real64, dimension(:), pointer :: x2_array_light
    sll_real64, dimension(:), pointer :: integration_weight
@@ -116,8 +122,10 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    logical :: turn_drive_off
 
    !advector
-   class(sll_advection_1d_base), pointer    :: advect_x1
-   class(sll_advection_1d_base), pointer    :: advect_x2
+   !class(sll_advection_1d_base), pointer    :: advect_x1
+   type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x1
+   !class(sll_advection_1d_base), pointer    :: advect_x2
+   type(sll_advection_1d_base_ptr), dimension(:), pointer :: advect_x2
    sll_int32 :: advection_form_x2
    sll_real64 :: factor_x1
    sll_real64 :: factor_x2_rho
@@ -235,7 +243,9 @@ contains
     sll_real64 :: bloc_coord(2)
     sll_int32 :: bloc_index(3)
     sll_int32 :: i
-
+    sll_int32 :: num_threads
+    sll_int32 :: tid
+  
     ! namelists for data input
     namelist /geometry/ &
       mesh_case_x1, &
@@ -304,6 +314,18 @@ contains
       keen_turn_drive_off, &
       keen_Edrmax, &
       keen_omegadr
+
+    num_threads = 1
+
+#ifdef OPENMP
+!$OMP PARALLEL SHARED(num_threads)
+    if(omp_get_thread_num()==0)then
+      num_threads =  omp_get_num_threads()      
+    endif
+!$OMP END PARALLEL
+#endif
+   sim%num_threads = num_threads
+   print *,'#num_threads=',num_threads
 
     !! set default parameters
     
@@ -451,6 +473,10 @@ contains
       case ("SLL_LOGICAL_MESH")
         mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
         call initialize_eta1_node_1d( mesh_x2, sim%x2_array )
+        SLL_ALLOCATE(sim%x2_array_omp(num_cells_x2+1,0:sim%num_threads-1),ierr)
+        do i=0,sim%num_threads-1
+          sim%x2_array_omp(:,i) = sim%x2_array(:)
+        enddo
         sim%num_bloc_x2 = 1
         SLL_ALLOCATE(sim%every_x2(sim%num_bloc_x2),ierr)
         SLL_ALLOCATE(sim%bloc_index_x2(sim%num_bloc_x2),ierr)
@@ -482,6 +508,10 @@ contains
         SLL_ALLOCATE(sim%x2_array(num_cells_x2+1),ierr)
         call compute_mesh_from_bloc(bloc_coord,bloc_index,sim%x2_array)
         sim%x2_array = x2_min+sim%x2_array*(x2_max-x2_min)
+        SLL_ALLOCATE(sim%x2_array_omp(num_cells_x2+1,0:sim%num_threads-1),ierr)
+        do i=0,sim%num_threads-1
+          sim%x2_array_omp(:,i) = sim%x2_array(:)
+        enddo
         mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
         sim%num_bloc_x2 = 3
         SLL_ALLOCATE(sim%every_x2(sim%num_bloc_x2),ierr)
@@ -604,17 +634,25 @@ contains
         stop       
     end select
 
-    !advector 
+    !advector
+    SLL_ALLOCATE(sim%advect_x1(0:num_threads-1),ierr)
+    SLL_ALLOCATE(sim%advect_x2(0:num_threads-1),ierr)
+    tid = 0
+#ifdef OPENMP
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(tid)
+    tid = omp_get_thread_num()
+#endif
     select case (advector_x1)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%advect_x1 => new_periodic_1d_advector( &
+        sim%advect_x1(tid)%ptr => new_periodic_1d_advector( &
           num_cells_x1, &
           x1_min, &
           x1_max, &
           SPLINE, & 
           order_x1) 
       case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%advect_x1 => new_periodic_1d_advector( &
+        sim%advect_x1(tid)%ptr => new_periodic_1d_advector( &
           num_cells_x1, &
           x1_min, &
           x1_max, &
@@ -626,30 +664,35 @@ contains
     end select
     select case (advector_x2)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
-        sim%advect_x2 => new_periodic_1d_advector( &
+        sim%advect_x2(tid)%ptr => new_periodic_1d_advector( &
           num_cells_x2, &
           x2_min, &
           x2_max, &
           SPLINE, & 
           order_x2) 
       case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
-        sim%advect_x2 => new_periodic_1d_advector( &
+        sim%advect_x2(tid)%ptr => new_periodic_1d_advector( &
           num_cells_x2, &
           x2_min, &
           x2_max, &
           LAGRANGE, & 
           order_x2)
       case("SLL_NON_UNIFORM_CUBIC_SPLINES") ! arbitrary order Lagrange periodic interpolation
-        sim%advect_x2 => new_non_uniform_cubic_splines_1d_advector( &
+        sim%advect_x2(tid)%ptr => new_non_uniform_cubic_splines_1d_advector( &
           num_cells_x2, &
           x2_min, &
           x2_max, &
           order_x2, &
-          sim%x2_array)           
+          sim%x2_array)
+          !sim%x2_array_omp(:,tid))           
       case default
         print*,'#advector in x2', advector_x2, ' not implemented'
         stop 
     end select
+#ifdef OPENMP
+!$OMP END PARALLEL
+#endif
+
     select case (advection_form_x2)
       case ("SLL_ADVECTIVE")
         sim%advection_form_x2 = SLL_ADVECTIVE
@@ -819,6 +862,9 @@ contains
     type(remap_plan_2D_real64), pointer :: remap_plan_x1_x2
     type(remap_plan_2D_real64), pointer :: remap_plan_x2_x1
     sll_real64, dimension(:), pointer     :: f1d
+    sll_real64, dimension(:,:), pointer     :: f1d_omp
+    sll_real64, dimension(:,:), pointer     :: f1d_omp_in
+    sll_real64, dimension(:,:), pointer     :: f1d_omp_out
     sll_int32 :: np_x1,np_x2
     sll_int32 :: np_x1_light
     sll_int32 :: nproc_x1,nproc_x2
@@ -876,10 +922,16 @@ contains
     character(len=4) :: cplot
     sll_int32 :: iproc
     logical :: file_exists
-    
+    sll_int32 :: tid
+    sll_int32 :: i_omp
+    sll_int32 :: ig_omp
+    sll_real64 :: alpha_omp
+    sll_real64 :: mean_omp
     !for temporary poisson
     !sll_int32 :: N_buf_poisson
     !sll_real64, dimension(:), allocatable :: buf_poisson
+    
+    
 
     iplot = 1
 
@@ -951,6 +1003,9 @@ contains
     SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
     SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
+    SLL_ALLOCATE(f1d_omp(max(np_x1,np_x2),0:sim%num_threads-1),ierr)
+    SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),0:sim%num_threads-1),ierr)
+    SLL_ALLOCATE(f1d_omp_out(max(np_x1,np_x2),0:sim%num_threads-1),ierr)
     !SLL_ALLOCATE(x2_array(np_x2),ierr)
     !SLL_ALLOCATE(x1_array(np_x1),ierr)
     SLL_ALLOCATE(x2_array_unit(np_x2),ierr)
@@ -1220,21 +1275,33 @@ contains
       do split_istep=1,sim%split%nb_split_step
         if(split_T) then
           !! T ADVECTION 
+          tid=0          
+print *,'#advx begin',maxval(f_x1),minval(f_x1)
+#ifdef OPENMP
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
           !advection in x
-          do i = 1, local_size_x2
-            ig = i+global_indices(2)-1
-            alpha = sim%factor_x1*node_positions_x2(ig) * sim%split%split_step(split_istep) 
-            f1d(1:np_x1) = f_x1(1:np_x1,i)
+          tid = omp_get_thread_num()
+!$OMP DO
+#endif
+          do i_omp = 1, local_size_x2
+            ig_omp = i_omp+global_indices(2)-1
+            alpha_omp = sim%factor_x1*node_positions_x2(ig_omp) * sim%split%split_step(split_istep) 
+            f1d_omp_in(1:np_x1,tid) = f_x1(1:np_x1,i_omp)
             
-            
-            call sim%advect_x1%advect_1d_constant(&
-              alpha, &
+            call sim%advect_x1(tid)%ptr%advect_1d_constant(&
+              alpha_omp, &
               sim%dt, &
-              f1d(1:np_x1), &
-              f1d(1:np_x1))
-            
-            f_x1(1:np_x1,i)=f1d(1:np_x1)
+              f1d_omp_in(1:np_x1,tid), &
+              f1d_omp_out(1:np_x1,tid))
+
+            f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
           end do
+#ifdef OPENMP
+!$OMP END DO          
+!$OMP END PARALLEL
+#endif
+print *,'#advx done',maxval(f_x1),minval(f_x1)
           t_step = t_step+sim%split%split_step(split_istep)
           !computation of electric field
           rho_loc = 0._f64
@@ -1243,7 +1310,6 @@ contains
             rho_loc(i)=rho_loc(i)&
               +sum(f_x1(i,1:local_size_x2)*sim%integration_weight(1+ig:local_size_x2+ig))
           end do
-
               
           call sll_collective_allreduce( &
             sll_world_collective, &
@@ -1264,7 +1330,6 @@ contains
               -sim%omegadr*(time_init+t_step*sim%dt))
             enddo
           endif
-        
         else
 
           !! V ADVECTION 
@@ -1272,33 +1337,43 @@ contains
           call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
           call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
+          tid = 0
+print *,'#advv begin',maxval(f_x2),minval(f_x2)
+#ifdef OPENMP
+!$OMP PARALLEL DEFAULT(SHARED) &
+!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp) 
           !advection in v
-          do i = 1,local_size_x1
-            ig=i+global_indices(1)-1
-            alpha = -(efield(ig)+e_app(ig)) * sim%split%split_step(split_istep)
-            f1d(1:num_dof_x2) = f_x2(i,1:num_dof_x2)
-            
-            
+          tid = omp_get_thread_num()
+!$OMP DO
+#endif
+          !advection in v
+          do i_omp = 1,local_size_x1
+            ig_omp=i_omp+global_indices(1)-1
+            alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) * sim%split%split_step(split_istep)
+            f1d_omp_in(1:num_dof_x2,tid) = f_x2(i_omp,1:num_dof_x2)
             if(sim%advection_form_x2==SLL_CONSERVATIVE)then
-              call function_to_primitive(f1d,x2_array_unit,np_x2-1,mean)
+              call function_to_primitive(f1d_omp_in(:,tid),x2_array_unit,np_x2-1,mean_omp)
             endif
-                        
-            
-            call sim%advect_x2%advect_1d_constant(&
-              alpha, &
+!#if 0      
+            !print *,'#before',tid,i,maxval(f1d_omp(:,tid)),minval(f1d_omp(:,tid)),alpha,sim%dt                  
+            print *,'#before',tid,i_omp!,mean_omp!,alpha !,split_istep,alpha  
+            call sim%advect_x2(tid)%ptr%advect_1d_constant(&
+              alpha_omp, &
               sim%dt, &
-              f1d(1:np_x2), &
-              f1d(1:np_x2))
-
+              f1d_omp_in(:,tid), &
+              f1d_omp_out(:,tid))
+            !print *,'#after',tid,i  
+!#endif
             if(sim%advection_form_x2==SLL_CONSERVATIVE)then
-              call primitive_to_function(f1d,x2_array_unit,np_x2-1,mean)
+              call primitive_to_function(f1d_omp_out(:,tid),x2_array_unit,np_x2-1,mean_omp)
             endif
-            
-
-            
-            f_x2(i,1:num_dof_x2) = f1d(1:num_dof_x2)
+            f_x2(i_omp,1:num_dof_x2) = f1d_omp_out(1:num_dof_x2,tid)
           end do
-
+#ifdef OPENMP
+!$OMP END DO          
+!$OMP END PARALLEL
+#endif
+print *,'#advv done',maxval(f_x2),minval(f_x2)
           !transposition
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
           call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
