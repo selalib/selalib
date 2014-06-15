@@ -33,6 +33,11 @@ implicit none
      sll_real64                           :: xmin
      sll_real64                           :: xmax
      sll_real64, dimension(:), pointer :: node_positions
+     sll_real64, dimension(:), pointer :: buf
+     sll_int32, dimension(:), pointer :: ibuf
+     sll_real64, dimension(:), pointer :: node_pos
+     sll_real64, dimension(:), pointer :: coeffs
+     sll_real64, dimension(:), pointer :: Xstar
   contains
     procedure, pass(adv) :: initialize => &
       initialize_non_uniform_cubic_splines_1d_advector
@@ -125,6 +130,13 @@ contains
         adv%node_positions(i) = real(i-1,f64)/real(num_cells,f64)
       enddo  
     endif
+
+    SLL_ALLOCATE(adv%buf(10*num_cells),ierr)
+    SLL_ALLOCATE(adv%ibuf(num_cells),ierr)
+    SLL_ALLOCATE(adv%node_pos(-2:num_cells+2),ierr)
+    SLL_ALLOCATE(adv%coeffs(-2:num_cells+2),ierr)
+    SLL_ALLOCATE(adv%Xstar(1:num_cells+1),ierr)
+
  
   
   end subroutine initialize_non_uniform_cubic_splines_1d_advector   
@@ -166,8 +178,12 @@ contains
       output, &
       alpha, &
       adv%node_positions, &
-      num_cells)
-    
+      num_cells, &
+      adv%buf, &
+      adv%Xstar, &
+      adv%node_pos, &
+      adv%coeffs, &
+      adv%ibuf)
     !print *,'#not implemented for the moment'
     !print *,'#non_uniform_cubic_splines_advect_1d_constant'
     !stop
@@ -208,7 +224,15 @@ contains
 
 
 
-  subroutine constant_advection_spl_non_unif_per(f,alpha,node_positions,N)
+  subroutine constant_advection_spl_non_unif_per(f, &
+    alpha, &
+    node_positions, &
+    N, &
+    buf, &
+    Xstar, &
+    node_pos, &
+    coeffs, &
+    ibuf)
     !alpha and node_positions are normalized to [0,1]
     !use numeric_constants
     !use cubic_non_uniform_splines
@@ -229,11 +253,11 @@ contains
     
     dx = 1._f64/real(N,f64)
     
-    allocate(buf(10*N))
-    allocate(ibuf(N))
-    allocate(node_pos(-2:N+2),coeffs(-2:N+2))
-    allocate(Xstar(1:N+1))
-    
+    !allocate(buf(10*N))
+    !allocate(ibuf(N))
+    !allocate(node_pos(-2:N+2),coeffs(-2:N+2))
+    !allocate(Xstar(1:N+1))
+    !print *,loc(buf)
     
     
     node_pos(0:N)=node_positions(1:N+1)
@@ -307,10 +331,10 @@ contains
 
     f(N+1) = f(1)
     
-    deallocate(buf)
-    deallocate(ibuf)
-    deallocate(node_pos,coeffs)
-    deallocate(Xstar)
+    !deallocate(buf)
+    !deallocate(ibuf)
+    !deallocate(node_pos,coeffs)
+    !deallocate(Xstar)
     
   end subroutine constant_advection_spl_non_unif_per
 

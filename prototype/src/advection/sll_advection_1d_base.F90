@@ -33,6 +33,10 @@ module sll_module_advection_1d_base
   
   end type sll_advection_1d_base
 
+  type :: sll_advection_1d_base_ptr 
+    class(sll_advection_1d_base), pointer :: ptr
+  end type sll_advection_1d_base_ptr
+
 
 
 
