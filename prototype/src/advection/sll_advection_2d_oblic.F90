@@ -48,7 +48,7 @@ implicit none
     sll_int32 :: Npts1
     sll_int32 :: Npts2
     sll_int32 :: shift  
-  contains
+!  contains
   !   procedure, pass(adv) :: initialize => &
   !     initialize_oblic_2d_advector
   !  procedure, pass(adv) :: advect_2d => &

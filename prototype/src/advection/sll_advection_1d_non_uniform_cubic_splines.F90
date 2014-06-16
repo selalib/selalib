@@ -45,9 +45,14 @@ implicit none
       non_uniform_cubic_splines_advect_1d_constant
     procedure, pass(adv) :: advect_1d => &
       non_uniform_cubic_splines_advect_1d
-  
+    procedure, pass(adv) :: delete => delete_non_unif_cubic_splines_1d_adv
   end type non_uniform_cubic_splines_1d_advector
    
+!!$  interface sll_delete
+!!$     module procedure delete_non_unif_cubic_splines_1d_adv
+!!$  end interface sll_delete
+
+
 contains
   
 
@@ -338,7 +343,16 @@ contains
     
   end subroutine constant_advection_spl_non_unif_per
 
-
+  subroutine delete_non_unif_cubic_splines_1d_adv( adv )
+    class(non_uniform_cubic_splines_1d_advector), intent(inout) :: adv
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(adv%node_positions,ierr)
+    SLL_DEALLOCATE(adv%buf,ierr)
+    SLL_DEALLOCATE(adv%ibuf,ierr)
+    SLL_DEALLOCATE(adv%node_pos,ierr)
+    SLL_DEALLOCATE(adv%coeffs,ierr)
+    SLL_DEALLOCATE(adv%Xstar,ierr)
+  end subroutine delete_non_unif_cubic_splines_1d_adv
 
 
 end module sll_module_advection_1d_non_uniform_cubic_splines
