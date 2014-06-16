@@ -30,6 +30,15 @@ contains
     iota_modif = real(shift,f64)/real(Nc_x1,f64)
     
   end subroutine compute_oblic_shift
+
+  subroutine compute_iota_from_shift(Nc_x1,shift, iota_modif)
+    sll_int32, intent(in) :: Nc_x1
+    sll_int32, intent(out) :: shift
+    sll_real64, intent(out) :: iota_modif
+    
+    iota_modif = real(shift,f64)/real(Nc_x1,f64)
+    
+  end subroutine compute_iota_from_shift
   
   
   subroutine compute_at_aligned( &
@@ -86,21 +95,31 @@ contains
       endif  
     enddo
   end subroutine compute_spaghetti_size_from_shift
-  
+
+
+!< compute shift and spaghetti_size
+!< from iota_guess and spaghetti_size_guess
+!< first search the existing spaghetti_size nearest of spaghetti_size_guess
+!< for a shift between -Nc_x1 to Nc_x1
+!< then looks for a shift that is near shift guess that has the same spaghetti_size   
   subroutine compute_spaghetti_and_shift_from_guess( &
     Nc_x1, &
     Nc_x2, &
-    shift_guess, &
+    iota_guess, &
     spaghetti_size_guess, &
     shift, &
     spaghetti_size)
     sll_int32, intent(in) :: Nc_x1
     sll_int32, intent(in) :: Nc_x2
-    sll_int32, intent(in) :: shift_guess
+    !sll_int32, intent(in) :: shift_guess
+    sll_real64, intent(in) :: iota_guess
     sll_int32, intent(in) :: spaghetti_size_guess
     sll_int32, intent(out) :: shift
     sll_int32, intent(out) :: spaghetti_size
     !local variables
+    sll_int32 :: shift_guess
+    sll_int32 :: shift_plus
+    sll_int32 :: shift_minus
     sll_int32 :: i
     sll_int32 :: s
     sll_int32 :: i_val    
@@ -126,8 +145,12 @@ contains
       Nc_x1, &
       i_val, &
       spaghetti_size)
+    
+    shift_guess = floor(iota_guess*Nc_x1)
 
-    shift = shift_guess
+    shift_plus = shift_guess
+    shift_minus = shift_guess
+    
     
     do i=0,Nc_x1
       call compute_spaghetti_size_from_shift( &
@@ -135,19 +158,28 @@ contains
         shift_guess+i, &
         spaghetti_size_new)
       if(spaghetti_size_new .eq. spaghetti_size) then
-        shift = shift_guess+i
+        shift_plus = shift_guess+i
         exit
-      endif        
+      endif
+    enddo
+    do i=0,Nc_x1              
       call compute_spaghetti_size_from_shift( &
         Nc_x1, &
         shift_guess-i, &
         spaghetti_size_new)      
       if(spaghetti_size_new .eq. spaghetti_size) then
-        shift = shift_guess-i
+        shift_minus = shift_guess-i
         exit
       endif        
     enddo   
+    
+    if(abs(shift_minus*Nc_x1-iota_guess)<abs(shift_plus*Nc_x1-iota_guess))then
+      shift = shift_minus
+    else
+      shift = shift_plus  
+    endif
 
+    
     call compute_spaghetti_size_from_shift( &
       Nc_x1, &
       shift, &
@@ -199,7 +231,7 @@ contains
         exit
       endif  
     enddo
-    print *,'#spaghetti_size=',shift,spaghetti_size
+    !print *,'#spaghetti_size=',shift,spaghetti_size
     !print *,'#i,i_loc=',i,i_loc
     q = Nc_x1/spaghetti_size
     do j=1,q-1
@@ -512,6 +544,32 @@ contains
     w(0)=-tmp
     
   end subroutine compute_finite_difference_init
+
+
+
+  subroutine compute_field_from_phi_cartesian_1d(phi,mesh,A,interp)
+    sll_real64, dimension(:), intent(in) :: phi
+    sll_real64, dimension(:), intent(out) :: A
+    type(sll_logical_mesh_1d), pointer :: mesh
+    class(sll_interpolator_1d_base), pointer   :: interp
+    sll_int32 :: Nc_x1
+    sll_real64 :: x1_min
+    sll_real64 :: delta_x1
+    sll_real64 :: x1
+    sll_int32 :: i1
+    
+    Nc_x1 = mesh%num_cells
+    x1_min = mesh%eta_min
+    delta_x1 = mesh%delta_eta
+
+    call interp%compute_interpolants(phi)
+
+    do i1=1,Nc_x1+1
+      x1=x1_min+real(i1-1,f64)*delta_x1
+      A(i1)=interp%interpolate_derivative_eta1(x1)
+    end do
+  end subroutine compute_field_from_phi_cartesian_1d
+
 
 
 
