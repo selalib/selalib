@@ -30,12 +30,13 @@ module sll_module_advection_1d_base
       advect_1d_constant
     procedure(signature_advect_1d), deferred, pass(adv) :: &
       advect_1d
-  
+    procedure(signature_advect_1d_delete), deferred, pass(adv) :: delete
   end type sll_advection_1d_base
 
   type :: sll_advection_1d_base_ptr 
     class(sll_advection_1d_base), pointer :: ptr
   end type sll_advection_1d_base_ptr
+
 
 
 
@@ -78,6 +79,14 @@ module sll_module_advection_1d_base
    end subroutine signature_advect_1d
  end interface
 
+
+ abstract interface
+    subroutine signature_advect_1d_delete(&
+       adv )
+      import sll_advection_1d_base       
+      class(sll_advection_1d_base), intent(inout) :: adv
+    end subroutine signature_advect_1d_delete
+ end interface
 
 
 
