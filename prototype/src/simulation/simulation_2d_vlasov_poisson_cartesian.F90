@@ -23,7 +23,7 @@
 ! current investigations:
 !   High order splitting in time
 !   KEEN waves with uniform and non uniform grid in velocity
-#define OPENMP
+#define OPENMP 1
 
 module sll_simulation_2d_vlasov_poisson_cartesian
 
@@ -635,13 +635,13 @@ contains
     end select
 
     !advector
-    SLL_ALLOCATE(sim%advect_x1(0:num_threads-1),ierr)
-    SLL_ALLOCATE(sim%advect_x2(0:num_threads-1),ierr)
-    tid = 0
+    SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
+    SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
+    tid = 1
 #ifdef OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(tid)
-    tid = omp_get_thread_num()
+    tid = omp_get_thread_num()+1
 #endif
     select case (advector_x1)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
@@ -1003,9 +1003,9 @@ contains
     SLL_ALLOCATE(efield(np_x1),ierr)
     SLL_ALLOCATE(e_app(np_x1),ierr)
     SLL_ALLOCATE(f1d(max(np_x1,np_x2)),ierr)
-    SLL_ALLOCATE(f1d_omp(max(np_x1,np_x2),0:sim%num_threads-1),ierr)
-    SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),0:sim%num_threads-1),ierr)
-    SLL_ALLOCATE(f1d_omp_out(max(np_x1,np_x2),0:sim%num_threads-1),ierr)
+    SLL_ALLOCATE(f1d_omp(max(np_x1,np_x2),sim%num_threads),ierr)
+    SLL_ALLOCATE(f1d_omp_in(max(np_x1,np_x2),sim%num_threads),ierr)
+    SLL_ALLOCATE(f1d_omp_out(max(np_x1,np_x2),sim%num_threads),ierr)
     !SLL_ALLOCATE(x2_array(np_x2),ierr)
     !SLL_ALLOCATE(x1_array(np_x1),ierr)
     SLL_ALLOCATE(x2_array_unit(np_x2),ierr)
@@ -1275,13 +1275,13 @@ contains
       do split_istep=1,sim%split%nb_split_step
         if(split_T) then
           !! T ADVECTION 
-          tid=0          
+          tid=1          
 print *,'#advx begin',maxval(f_x1),minval(f_x1)
 #ifdef OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
           !advection in x
-          tid = omp_get_thread_num()
+          tid = omp_get_thread_num()+1
 !$OMP DO
 #endif
           do i_omp = 1, local_size_x2
@@ -1337,43 +1337,60 @@ print *,'#advx done',maxval(f_x1),minval(f_x1)
           call apply_remap_2D( remap_plan_x1_x2, f_x1, f_x2 )
           call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
-          tid = 0
+          tid = 1
 print *,'#advv begin',maxval(f_x2),minval(f_x2)
 #ifdef OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
-!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp) 
+!$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
           !advection in v
-          tid = omp_get_thread_num()
+          tid = omp_get_thread_num()+1
 !$OMP DO
 #endif
           !advection in v
           do i_omp = 1,local_size_x1
             ig_omp=i_omp+global_indices(1)-1
             alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) * sim%split%split_step(split_istep)
+            print *,'#alpha_omp',alpha_omp,tid
             f1d_omp_in(1:num_dof_x2,tid) = f_x2(i_omp,1:num_dof_x2)
             if(sim%advection_form_x2==SLL_CONSERVATIVE)then
-              call function_to_primitive(f1d_omp_in(:,tid),x2_array_unit,np_x2-1,mean_omp)
+            !  call function_to_primitive(f1d_omp_in(:,tid),x2_array_unit,np_x2-1,mean_omp)
             endif
 !#if 0      
             !print *,'#before',tid,i,maxval(f1d_omp(:,tid)),minval(f1d_omp(:,tid)),alpha,sim%dt                  
-            print *,'#before',tid,i_omp!,mean_omp!,alpha !,split_istep,alpha  
+            print *,'#before f_x2',tid,i_omp,maxval(f_x2(i_omp,1:num_dof_x2)),minval(f_x2(i_omp,1:num_dof_x2))!,mean_omp!,alpha !,split_istep,alpha  
+            !f1d(1:num_dof_x2) = f1d_omp_in(1:num_dof_x2,tid)
             call sim%advect_x2(tid)%ptr%advect_1d_constant(&
               alpha_omp, &
               sim%dt, &
-              f1d_omp_in(:,tid), &
-              f1d_omp_out(:,tid))
-            !print *,'#after',tid,i  
+             ! f1d, &
+              !f1d)
+              f1d_omp_in(1:num_dof_x2,tid), &
+              f1d_omp_out(1:num_dof_x2,tid))
+            !print *,'#after',tid,i
+            !f1d_omp_out(1:num_dof_x2,tid) = f1d(1:num_dof_x2)
+            !print *,'#size f1d',size(f1d),num_dof_x2,loc(f1d),tid 
 !#endif
             if(sim%advection_form_x2==SLL_CONSERVATIVE)then
-              call primitive_to_function(f1d_omp_out(:,tid),x2_array_unit,np_x2-1,mean_omp)
+            !  call primitive_to_function(f1d_omp_out(:,tid),x2_array_unit,np_x2-1,mean_omp)
             endif
             f_x2(i_omp,1:num_dof_x2) = f1d_omp_out(1:num_dof_x2,tid)
+            print *,'#maxval f_x2',split_istep,tid,i_omp,maxval(f_x2(i_omp,1:num_dof_x2)),minval(f_x2(i_omp,1:num_dof_x2))
           end do
 #ifdef OPENMP
 !$OMP END DO          
 !$OMP END PARALLEL
 #endif
-print *,'#advv done',maxval(f_x2),minval(f_x2)
+print *,'#advv done',split_istep,maxval(f_x2(1:local_size_x1,1:num_dof_x2)),minval(f_x2(1:local_size_x1,1:num_dof_x2))
+          if(maxval(f_x2(1:local_size_x1,1:num_dof_x2))>1e12)then
+            print *,'#maxval=',maxval(f_x2(1:local_size_x1,1:num_dof_x2))
+            do i_omp=1,local_size_x1
+              print *,i_omp,maxval(f_x2(i_omp,1:num_dof_x2))
+              if(maxval(f_x2(i_omp,1:num_dof_x2))>1e12)then
+                print *,'#val=',f_x2(i_omp,1:num_dof_x2)
+              endif
+            enddo
+            stop
+          endif  
           !transposition
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
           call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
