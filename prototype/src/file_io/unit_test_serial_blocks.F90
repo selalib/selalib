@@ -1,6 +1,9 @@
 program test_serial_blocks
 #include "sll_working_precision.h"
+#include "sll_utilities.h"
 use mpi
+use hdf5
+use sll_hdf5_io
 implicit none
 
 !-----------------------------------------------------------------------
@@ -24,6 +27,19 @@ integer, parameter                 :: N =1, S =2, W =3, E =4
 real(8)                            :: tcpu1, tcpu2
 integer                            :: nxp, nyp
 logical                            :: reorder
+integer, parameter  :: xmf = 77
+character(len=72)   :: field_label, mesh_label
+character(len=72)   :: field_name, mesh_name
+character(len=4)    :: my_proc, cproc
+
+character(len=2), dimension(2) :: coordNames
+
+integer          :: iproc
+integer(hid_t)   :: file_id
+integer(hsize_t) :: data_dims(2)
+sll_int32        :: iplot = 0
+character(len=4) :: cplot
+
 
 dimx = 2.0_f64
 nx   = 128
@@ -78,11 +94,8 @@ if (prank == 0) then
    write(*,"(a,g12.3)")" nombre ny             = ", ny
 end if
 
-sx = coords(1) * nx / nxp
-ex = sx + ceiling(float(nx)/nxp+1)
-
-sy = coords(2) * ny / nyp
-ey = sy + ceiling(float(ny)/nyp+1)
+call mpe_decomp1d(nx,psize,prank,sx,ex)
+call mpe_decomp1d(ny,psize,prank,sy,ey)
 
 allocate(x(sx:ex,sy:ey))
 allocate(y(sx:ex,sy:ey))
@@ -96,45 +109,8 @@ do j=sy,ey
 end do
 
 z = prank
-call write_xdmf_2d(prank,psize,z,sx,ex,sy,ey,hx,hy,error)
 
-tcpu2 = MPI_WTIME()
-
-print*, tcpu2-tcpu1
-
-call MPI_FINALIZE(code)
-
-end program test_serial_blocks
-
-subroutine write_xdmf_2d(my_id,nproc,z,sx,ex,sy,ey,hx,hy,error)
-
-use hdf5 
-#include "sll_utilities.h"
-
-implicit none
-
-integer, intent(in) :: my_id, nproc
-integer, intent(in) :: sx,ex,sy,ey
-real                :: x(sx:ex,sy:ey)
-real                :: y(sx:ex,sy:ey)
-real(8)             :: z(sx:ex,sy:ey)
-real(8)             :: hx, hy
-integer             :: nx, ny
-integer, parameter  :: xmf = 77
-character(len=72)   :: field_label, mesh_label
-character(len=72)   :: field_name, mesh_name
-character(len=4)    :: my_proc, cproc
-
-character(len=2), dimension(2) :: coordNames
-
-integer          :: error, i, j, iproc
-integer(hid_t)   :: file_id, dataset_id, dataspace_id
-integer(hsize_t) :: data_dims(2)
-logical, save    :: mesh_writed = .false.
-integer, save    :: iplot = 0
-character(len=4) :: cplot
-
-call int2string(my_id,my_proc)
+call int2string(prank,my_proc)
 field_label = "xdmf2d"
 mesh_label  = "mesh2d"
 
@@ -152,106 +128,42 @@ call int2string(iplot,cplot)
 mesh_name  = trim(mesh_label)//my_proc//".h5"
 field_name = trim(field_label)//my_proc//"-"//cplot//".h5"
 
-!Open the file and write the XML description of the mesh..
-open(xmf,file=trim(field_label)//cplot//"-"//my_proc//".xmf")
-write(xmf,'(a)')"<?xml version=""1.0"" ?>"
-write(xmf,'(a)')"<!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
-write(xmf,'(a)')"<Xdmf Version=""2.0"">"
-write(xmf,'(a)')"<Domain>"
-write(xmf,'(a)')"<Grid Name=""mesh2D"" GridType=""Uniform"">"
-write(xmf,'(a,2i6,a)')"<Topology TopologyType=""2DSMesh"" NumberOfElements='",ny,nx,"'/>"
-write(xmf,'(a)')"<Geometry GeometryType=""X_Y"">"
-write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
-write(xmf,'(a)')trim(mesh_name)//":"//coordnames(1)
-write(xmf,'(a)')"</DataItem>"
-write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
-write(xmf,'(a)')trim(mesh_name)//":"//coordnames(2)
-write(xmf,'(a)')"</DataItem>"
-write(xmf,'(a)')"</Geometry>"
-write(xmf,'(a)')"<Attribute Name=""Z"" AttributeType=""Scalar"" Center=""Node"">"
-write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx,"' NumberType=""Float"" Precision=""8"" Format=""HDF"">"
-write(xmf,'(a)')trim(field_name)//":/Z"
-write(xmf,'(a)')"</DataItem>"
-write(xmf,'(a)')"</Attribute>"
-write(xmf,'(a)')"</Grid>"
-write(xmf,'(a)')"</Domain>"
-write(xmf,'(a)')"</Xdmf>"
-close(xmf)
+call sll_hdf5_file_create(trim(mesh_name),file_id,error)
+call sll_hdf5_write_array(file_id,x(sx:ex,sy:ey),coordnames(1),error)
+call sll_hdf5_write_array(file_id,y(sx:ex,sy:ey),coordnames(2),error)
+call sll_hdf5_file_close(file_id, error)
 
-!Initialize FORTRAN interface.
-call H5open_f (error)
-if (.not. mesh_writed) then
+call sll_hdf5_file_create(trim(field_name),file_id,error)
+call sll_hdf5_write_array(file_id,z(sx:ex,sy:ey),"/Z",error)
+call sll_hdf5_file_close(file_id, error)
 
-   print*,'Writing mesh data...'
-   do j=sy,ey
-      do i=sx,ex
-         x(i,j)=sngl(i*hx)
-         y(i,j)=sngl(j*hy)
-      end do
-   end do
-
-   !Create a new file using default properties.
-   call H5Fcreate_f(trim(mesh_name), H5F_ACC_TRUNC_F, file_id, error);
-   
-   call H5Screate_simple_f(2, data_dims, dataspace_id, error)
-   call H5Dcreate_f(file_id, coordnames(1), H5T_NATIVE_REAL, &
-                    dataspace_id, dataset_id, error)
-   call H5Dwrite_f(dataset_id, H5T_NATIVE_REAL, x(sx,sy), data_dims, error)
-   call H5Dclose_f(dataset_id,error);
-   call H5Sclose_f(dataspace_id,error);
-
-   call H5Screate_simple_f(2, data_dims, dataspace_id, error)
-   call H5Dcreate_f(file_id, coordnames(2), H5T_NATIVE_REAL, &
-                    dataspace_id, dataset_id, error)
-   call H5Dwrite_f(dataset_id, H5T_NATIVE_REAL, y(sx,sy), data_dims, error)
-   call H5Dclose_f(dataset_id,error);
-   call H5Sclose_f(dataspace_id,error);
-
-   !Terminate access to the file.
-   call H5fclose_f(file_id, error)
-
-   mesh_writed = .true.
-
-end if
-
-!Create a new file using default properties.
-call H5Fcreate_f(trim(field_name), H5F_ACC_TRUNC_F, file_id, error);
- 
-!Write the scalar data.
-call H5Screate_simple_f(2, data_dims, dataspace_id, error);
-call H5Dcreate_f(file_id, "/Z", H5T_NATIVE_DOUBLE, &
-                 dataspace_id, dataset_id, error);
-call H5Dwrite_f(dataset_id, H5T_NATIVE_DOUBLE, z(sx,sy), data_dims, error);
-call H5Dclose_f(dataset_id,error);
-call H5Sclose_f(dataspace_id,error);
-
-!Terminate access to the file.
-call H5fclose_f(file_id, error)
-
-!Close FORTRAN interface.
-call H5close_f(error) 
-
-if (my_id == 0) then
+if (prank == 0) then
    open(xmf,file="all_domains"//cplot//".xmf")
    write(xmf,'(a)')"<?xml version=""1.0"" ?>"
    write(xmf,'(a)')"<!DOCTYPE Xdmf SYSTEM ""Xdmf.dtd"" []>"
    write(xmf,'(a)')"<Xdmf Version=""2.0"">"
    write(xmf,'(a)')"<Domain Name=""mesh2d"">"
-   write(xmf,'(a)')"<Grid Name=""Domain"" GridType=""Collection"" CollectionType=""Spatial"">"
-   do iproc = 0, nproc-1
+   write(xmf,'(a)')  &
+   "<Grid Name=""Domain"" GridType=""Collection"" CollectionType=""Spatial"">"
+   do iproc = 0, psize-1
       call int2string(iproc,cproc)
       write(xmf,'(a)')"<Grid Name=""SubDomain"" GridType=""Uniform"">"
-      write(xmf,'(a,2i6,a)')"<Topology TopologyType=""2DSMesh"" NumberOfElements='",ny,nx,"'/>"
+      write(xmf,'(a,2i6,a)') &
+      "<Topology TopologyType=""2DSMesh"" NumberOfElements='",ny,nx,"'/>"
       write(xmf,'(a)')"<Geometry GeometryType=""X_Y"">"
-      write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
+      write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx, &
+      "' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
       write(xmf,'(a)')trim(mesh_label)//cproc//".h5:"//coordnames(1)
       write(xmf,'(a)')"</DataItem>"
-      write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx,"' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
+      write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx, &
+      "' NumberType=""Float"" Precision=""4"" Format=""HDF"">"
       write(xmf,'(a)')trim(mesh_label)//cproc//".h5:"//coordnames(2)
       write(xmf,'(a)')"</DataItem>"
       write(xmf,'(a)')"</Geometry>"
-      write(xmf,'(a)')"<Attribute Name=""Z"" AttributeType=""Scalar"" Center=""Node"">"
-      write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx,"' NumberType=""Float"" Precision=""8"" Format=""HDF"">"
+      write(xmf,'(a)') &
+      "<Attribute Name=""Z"" AttributeType=""Scalar"" Center=""Node"">"
+      write(xmf,'(a,2i6,a)')"<DataItem Dimensions='",ny,nx, &
+      "' NumberType=""Float"" Precision=""8"" Format=""HDF"">"
       write(xmf,'(a)')trim(field_label)//cproc//"-"//cplot//".h5:/Z"
       write(xmf,'(a)')"</DataItem>"
       write(xmf,'(a)')"</Attribute>"
@@ -263,4 +175,11 @@ if (my_id == 0) then
    close(xmf)
 end if
 
-end subroutine write_xdmf_2d 
+tcpu2 = MPI_WTIME()
+
+print*, tcpu2-tcpu1
+
+call MPI_FINALIZE(code)
+
+
+end program test_serial_blocks

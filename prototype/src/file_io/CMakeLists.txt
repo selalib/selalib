@@ -2,6 +2,7 @@ IF(HDF5_IS_PARALLEL)
    MESSAGE(STATUS "HDF5_IS_PARALLEL:${HDF5_IS_PARALLEL}")
    MESSAGE(STATUS "Switch to MPI fortran Wrapper to build sll_file_io library")
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+   ADD_DEFINITIONS(-DHDF5_PARALLEL)
 ENDIF(HDF5_IS_PARALLEL)
 
 SET(IO_SRC sll_ascii_io.F90 
@@ -43,7 +44,8 @@ IF(MPI_MODULE_ENABLED)
       TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
    ENDIF()
 
-   ADD_EXECUTABLE(test_io_serial_blocks unit_test_serial_blocks.F90)
+   ADD_EXECUTABLE(test_io_serial_blocks sll_hdf5_io.F90
+                                        unit_test_serial_blocks.F90)
    TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_utilities ${HDF5_LIBRARIES})
 
 ENDIF()

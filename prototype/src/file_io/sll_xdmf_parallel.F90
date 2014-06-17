@@ -53,11 +53,17 @@ module sll_xdmf_parallel
 contains  
   
   !>Open a XDMF format file for a 2d plot
-  subroutine sll_xdmf_open_2d_parallel(rank,file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
+  subroutine sll_xdmf_open_2d_parallel(rank,       &
+                                       file_name,  &
+                                       mesh_name,  &
+                                       nnodes_x1,  &
+                                       nnodes_x2,  &
+                                       file_id,    &
+                                       error)
 
     sll_int32, intent(in)        :: rank      !< processor number id
     character(len=*), intent(in) :: file_name !< xmf file name 
-    character(len=*), intent(in) :: mesh_name !< file name that contains mesh coordinates
+    character(len=*), intent(in) :: mesh_name !< file name that contains mesh 
     sll_int32                    :: file_id   !< file unit number
     sll_int32                    :: error     !< error code
     sll_int32                    :: nnodes_x1 !< nodes number x
