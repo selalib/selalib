@@ -4,6 +4,7 @@ SET(SRC_UTILITIES sll_utilities.F90
                   lagrange_interpolation.F90)
 
 IF(Fortran_COMPILER MATCHES IBM)
+ELSE()
    SET(SRC_UTILITIES ${SRC_UTILITIES} sol.f muls.f )
 ENDIF()
 
