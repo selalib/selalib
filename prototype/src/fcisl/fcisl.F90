@@ -547,28 +547,28 @@ contains
 
 
 
-  subroutine compute_field_from_phi_cartesian_1d(phi,mesh,A,interp)
-    sll_real64, dimension(:), intent(in) :: phi
-    sll_real64, dimension(:), intent(out) :: A
-    type(sll_logical_mesh_1d), pointer :: mesh
-    class(sll_interpolator_1d_base), pointer   :: interp
-    sll_int32 :: Nc_x1
-    sll_real64 :: x1_min
-    sll_real64 :: delta_x1
-    sll_real64 :: x1
-    sll_int32 :: i1
-    
-    Nc_x1 = mesh%num_cells
-    x1_min = mesh%eta_min
-    delta_x1 = mesh%delta_eta
-
-    call interp%compute_interpolants(phi)
-
-    do i1=1,Nc_x1+1
-      x1=x1_min+real(i1-1,f64)*delta_x1
-      A(i1)=interp%interpolate_derivative_eta1(x1)
-    end do
-  end subroutine compute_field_from_phi_cartesian_1d
+!  subroutine compute_field_from_phi_cartesian_1d(phi,mesh,A,interp)
+!    sll_real64, dimension(:), intent(in) :: phi
+!    sll_real64, dimension(:), intent(out) :: A
+!    type(sll_logical_mesh_1d), pointer :: mesh
+!    class(sll_interpolator_1d_base), pointer   :: interp
+!    sll_int32 :: Nc_x1
+!    sll_real64 :: x1_min
+!    sll_real64 :: delta_x1
+!    sll_real64 :: x1
+!    sll_int32 :: i1
+!    
+!    Nc_x1 = mesh%num_cells
+!    x1_min = mesh%eta_min
+!    delta_x1 = mesh%delta_eta
+!
+!    call interp%compute_interpolants(phi)
+!
+!    do i1=1,Nc_x1+1
+!      x1=x1_min+real(i1-1,f64)*delta_x1
+!      A(i1)=interp%interpolate_derivative_eta1(x1)
+!    end do
+!  end subroutine compute_field_from_phi_cartesian_1d
 
 
 
