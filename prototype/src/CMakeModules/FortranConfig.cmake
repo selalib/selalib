@@ -8,13 +8,17 @@ INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
 
+IF(CMAKE_SYSTEM_NAME MATCHES "BlueGene*")
 ##########################################################
 # Try to determine the compiler
+   SET(Fortran_COMPILER "IBM")
+ELSE()
 TRY_RUN( RUN_RESULT_VAR
 	 COMPILE_RESULT_VAR
          ${CMAKE_BINARY_DIR}
          ${CMAKE_CURRENT_SOURCE_DIR}/check_compiler.F90
 )
+ENDIF()
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
@@ -48,10 +52,6 @@ IF(COMPILE_RESULT_VAR)
 
    ENDIF()
 
-ELSE()
-
-   MESSAGE(STATUS "UNABLE TO DETERMINE WHICH COMPILER IS USED")
-
 ENDIF()
 
 IF (${CMAKE_Fortran_COMPILER} MATCHES "ifort")
@@ -74,10 +74,10 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
    SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -openmp")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
 
-ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
+ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
 
 ELSE()
 

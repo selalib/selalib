@@ -313,7 +313,7 @@ end subroutine interpolate_pointer_values_li1d
     print *, 'get_coefficients_li1d(): ERROR: This function has not been ', &
          'implemented yet.'
     print *,interpolator%bc_type     
-    get_coefficients_li1d = 0._f64
+    get_coefficients_li1d => null()
     stop      
   end function get_coefficients_li1d
   !DEFINE_NULL_INTERP_1D_ARRAY_SUB(lagrange_1d_interpolator, interpolate_array_values_li1d)

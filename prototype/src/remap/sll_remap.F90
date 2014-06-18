@@ -5543,11 +5543,9 @@ print *, 'remap 2d complex:'
      do i=0,sz-1
         call int2string(i, cproc)
         write(44,*)"@ rectangle x1=", get_layout_i_min(layout,i), &
-                   " y1=",  get_layout_j_min(layout,i), &
-                   " z1=0.0 \"
+        &          " y1=",  get_layout_j_min(layout,i), " z1=0.0 "
         write(44,*)" x2=", get_layout_i_max(layout,i), &
-                   " y2=", get_layout_j_max(layout,i), &
-                   " z2=0.0 \"
+        &          " y2=", get_layout_j_max(layout,i), " z2=0.0 "
         write(44,*) "fillcolor="//cproc//" filltype=1 linelabel='"//cproc//"'"
      end do
 
