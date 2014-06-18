@@ -43,7 +43,7 @@ implicit none
     sll_real64, dimension(:), pointer :: buf1d_out
     sll_int32 :: Npts
     sll_int32 :: bc_type  
-    procedure(signature_process_outside_point), pointer, nopass    :: &
+    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
 
   contains
@@ -79,7 +79,7 @@ contains
     sll_real64, intent(in), optional :: eta_max
     sll_real64, dimension(:), pointer, optional :: eta_coords
     sll_int32, intent(in), optional :: bc_type
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
     sll_int32 :: ierr
     
@@ -117,7 +117,7 @@ contains
     sll_real64, intent(in), optional :: eta_max
     sll_real64, dimension(:), pointer, optional :: eta_coords
     sll_int32, intent(in), optional :: bc_type
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
     sll_int32 :: ierr
     sll_int32 :: i

@@ -14,6 +14,8 @@ SET(POISSON_SRCS sll_poisson_solvers.F90
 IF(Fortran_COMPILER MATCHES IBM)
 ELSE()
    SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_dirichlet_cartesian.F90 )
+   ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian test_poisson_2d_dirichlet_cartesian.F90 )
+   TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian sll_poisson_solvers sll_utilities )
 ENDIF()
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
@@ -79,12 +81,6 @@ IF (NOT STDF95)
   TARGET_LINK_LIBRARIES(
     test_poisson_2d_fft
     sll_poisson_solvers)
-
-  ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian
-    test_poisson_2d_dirichlet_cartesian.F90 )
-
-  TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian
-    sll_poisson_solvers sll_utilities )
 
 
   ADD_EXECUTABLE(
