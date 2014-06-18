@@ -37,13 +37,13 @@ module gauss_legendre_integration
 
 #else
   abstract interface
-     function function_1D(x)
+     function function_1D_legendre(x)
        use sll_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
                                  ! This is very rare.
-       sll_real64             :: function_1D
+       sll_real64             :: function_1D_legendre
        sll_real64, intent(in) :: x
-     end function function_1D
+     end function function_1D_legendre
   end interface
 
 !  abstract interface
@@ -167,7 +167,7 @@ contains
 #ifdef STDF95
     sll_real64             :: f
 #else
-    procedure(function_1D) :: f
+    procedure(function_1d_legendre) :: f
 #endif
     sll_real64, intent(in)          :: a
     sll_real64, intent(in)          :: b
