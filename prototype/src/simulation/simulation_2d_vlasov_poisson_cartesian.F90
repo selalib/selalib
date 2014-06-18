@@ -661,7 +661,7 @@ contains
       case default
         print*,'#advector in x1', advector_x1, ' not implemented'
         stop 
-    end select
+    end select    
     select case (advector_x2)
       case ("SLL_SPLINES") ! arbitrary order periodic splines
         sim%advect_x2(tid)%ptr => new_periodic_1d_advector( &
@@ -692,7 +692,6 @@ contains
 #ifdef OPENMP
 !$OMP END PARALLEL
 #endif
-
     select case (advection_form_x2)
       case ("SLL_ADVECTIVE")
         sim%advection_form_x2 = SLL_ADVECTIVE
@@ -1276,7 +1275,6 @@ contains
         if(split_T) then
           !! T ADVECTION 
           tid=1          
-print *,'#advx begin',maxval(f_x1),minval(f_x1)
 #ifdef OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
@@ -1301,7 +1299,6 @@ print *,'#advx begin',maxval(f_x1),minval(f_x1)
 !$OMP END DO          
 !$OMP END PARALLEL
 #endif
-print *,'#advx done',maxval(f_x1),minval(f_x1)
           t_step = t_step+sim%split%split_step(split_istep)
           !computation of electric field
           rho_loc = 0._f64
@@ -1338,7 +1335,7 @@ print *,'#advx done',maxval(f_x1),minval(f_x1)
           call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
           global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
           tid = 1
-print *,'#advv begin',maxval(f_x2),minval(f_x2)
+
 #ifdef OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
@@ -1350,15 +1347,10 @@ print *,'#advv begin',maxval(f_x2),minval(f_x2)
           do i_omp = 1,local_size_x1
             ig_omp=i_omp+global_indices(1)-1
             alpha_omp = -(efield(ig_omp)+e_app(ig_omp)) * sim%split%split_step(split_istep)
-            print *,'#alpha_omp',alpha_omp,tid
             f1d_omp_in(1:num_dof_x2,tid) = f_x2(i_omp,1:num_dof_x2)
             if(sim%advection_form_x2==SLL_CONSERVATIVE)then
-            !  call function_to_primitive(f1d_omp_in(:,tid),x2_array_unit,np_x2-1,mean_omp)
+              call function_to_primitive(f1d_omp_in(:,tid),x2_array_unit,np_x2-1,mean_omp)
             endif
-!#if 0      
-            !print *,'#before',tid,i,maxval(f1d_omp(:,tid)),minval(f1d_omp(:,tid)),alpha,sim%dt                  
-            print *,'#before f_x2',tid,i_omp,maxval(f_x2(i_omp,1:num_dof_x2)),minval(f_x2(i_omp,1:num_dof_x2))!,mean_omp!,alpha !,split_istep,alpha  
-            !f1d(1:num_dof_x2) = f1d_omp_in(1:num_dof_x2,tid)
             call sim%advect_x2(tid)%ptr%advect_1d_constant(&
               alpha_omp, &
               sim%dt, &
@@ -1366,31 +1358,15 @@ print *,'#advv begin',maxval(f_x2),minval(f_x2)
               !f1d)
               f1d_omp_in(1:num_dof_x2,tid), &
               f1d_omp_out(1:num_dof_x2,tid))
-            !print *,'#after',tid,i
-            !f1d_omp_out(1:num_dof_x2,tid) = f1d(1:num_dof_x2)
-            !print *,'#size f1d',size(f1d),num_dof_x2,loc(f1d),tid 
-!#endif
             if(sim%advection_form_x2==SLL_CONSERVATIVE)then
-            !  call primitive_to_function(f1d_omp_out(:,tid),x2_array_unit,np_x2-1,mean_omp)
+              call primitive_to_function(f1d_omp_out(:,tid),x2_array_unit,np_x2-1,mean_omp)
             endif
             f_x2(i_omp,1:num_dof_x2) = f1d_omp_out(1:num_dof_x2,tid)
-            print *,'#maxval f_x2',split_istep,tid,i_omp,maxval(f_x2(i_omp,1:num_dof_x2)),minval(f_x2(i_omp,1:num_dof_x2))
           end do
 #ifdef OPENMP
 !$OMP END DO          
 !$OMP END PARALLEL
 #endif
-print *,'#advv done',split_istep,maxval(f_x2(1:local_size_x1,1:num_dof_x2)),minval(f_x2(1:local_size_x1,1:num_dof_x2))
-          if(maxval(f_x2(1:local_size_x1,1:num_dof_x2))>1e12)then
-            print *,'#maxval=',maxval(f_x2(1:local_size_x1,1:num_dof_x2))
-            do i_omp=1,local_size_x1
-              print *,i_omp,maxval(f_x2(i_omp,1:num_dof_x2))
-              if(maxval(f_x2(i_omp,1:num_dof_x2))>1e12)then
-                print *,'#val=',f_x2(i_omp,1:num_dof_x2)
-              endif
-            enddo
-            stop
-          endif  
           !transposition
           call apply_remap_2D( remap_plan_x2_x1, f_x2, f_x1 )
           call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
