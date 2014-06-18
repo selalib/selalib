@@ -23,7 +23,6 @@
 ! current investigations:
 !   High order splitting in time
 !   KEEN waves with uniform and non uniform grid in velocity
-#define OPENMP 1
 
 module sll_simulation_2d_vlasov_poisson_cartesian
 
@@ -52,7 +51,7 @@ module sll_simulation_2d_vlasov_poisson_cartesian
   use sll_time_splitting_coeff_module
   use sll_module_poisson_1d_periodic_solver
   use sll_module_poisson_1d_polar_solver
-#ifdef OPENMP
+#ifdef _OPENMP
   use omp_lib
 #endif
   implicit none
@@ -317,7 +316,7 @@ contains
 
     num_threads = 1
 
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP PARALLEL SHARED(num_threads)
     if(omp_get_thread_num()==0)then
       num_threads =  omp_get_num_threads()      
@@ -638,7 +637,7 @@ contains
     SLL_ALLOCATE(sim%advect_x1(num_threads),ierr)
     SLL_ALLOCATE(sim%advect_x2(num_threads),ierr)
     tid = 1
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(tid)
     tid = omp_get_thread_num()+1
@@ -689,7 +688,7 @@ contains
         print*,'#advector in x2', advector_x2, ' not implemented'
         stop 
     end select
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP END PARALLEL
 #endif
     select case (advection_form_x2)
@@ -942,7 +941,10 @@ contains
     num_dof_x2_light = sim%num_dof_x2_light
     np_x1_light = sim%light_size_x1
     
+    
+    
     if(sll_get_collective_rank(sll_world_collective)==0)then
+      print *,'#collective_size=',sll_get_collective_size(sll_world_collective)
       SLL_ALLOCATE(f_visu(np_x1,num_dof_x2),ierr)
       SLL_ALLOCATE(f_visu_buf1d(np_x1*num_dof_x2),ierr)
       SLL_ALLOCATE(f_visu_light(np_x1_light,num_dof_x2_light),ierr)
@@ -951,7 +953,8 @@ contains
       SLL_ALLOCATE(f_visu_buf1d(1:1),ierr)
       SLL_ALLOCATE(f_visu_light(1:1,1:1),ierr)          
     endif
-
+    
+ 
     collective_size = sll_get_collective_size(sll_world_collective)
     SLL_ALLOCATE(collective_displs(collective_size),ierr)
     SLL_ALLOCATE(collective_recvcnts(collective_size),ierr)
@@ -962,8 +965,8 @@ contains
       pfwd => fft_new_plan(np_x1-1,buf_fft,buf_fft,FFT_FORWARD,FFT_NORMALIZE)
       SLL_ALLOCATE(rho_mode(0:nb_mode),ierr)      
     !endif
-
     ! allocate and initialize the layouts...
+
     layout_x1       => new_layout_2D( sll_world_collective )
     layout_x2       => new_layout_2D( sll_world_collective )    
     nproc_x1 = sll_get_collective_size( sll_world_collective )
@@ -977,13 +980,16 @@ contains
     
     !allocation of distribution functions f_x1 and f_x2
     call compute_local_sizes_2d( layout_x2, local_size_x1, local_size_x2 )
+    
     SLL_ALLOCATE(f_x2(local_size_x1,local_size_x2),ierr)
 
     call compute_local_sizes_2d( layout_x1, local_size_x1, local_size_x2 )
+
     global_indices(1:2) = local_to_global_2D( layout_x1, (/1, 1/) )
     SLL_ALLOCATE(f_x1(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_init(local_size_x1,local_size_x2),ierr)    
     SLL_ALLOCATE(f_x1_buf1d(local_size_x1*local_size_x2),ierr)    
+
 
 
     !definition of remap
@@ -1013,6 +1019,8 @@ contains
     SLL_ALLOCATE(node_positions_x2_light(num_dof_x2),ierr)
     SLL_ALLOCATE(f_hat_x2_loc(nb_mode+1),ierr)
     SLL_ALLOCATE(f_hat_x2(nb_mode+1),ierr)
+
+
     
 
     !temporary poisson
@@ -1275,7 +1283,7 @@ contains
         if(split_T) then
           !! T ADVECTION 
           tid=1          
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid) 
           !advection in x
@@ -1295,7 +1303,7 @@ contains
 
             f_x1(1:np_x1,i_omp)=f1d_omp_out(1:np_x1,tid)
           end do
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP END DO          
 !$OMP END PARALLEL
 #endif
@@ -1336,7 +1344,7 @@ contains
           global_indices(1:2) = local_to_global_2D( layout_x2, (/1, 1/) )
           tid = 1
 
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP PARALLEL DEFAULT(SHARED) &
 !$OMP PRIVATE(i_omp,ig_omp,alpha_omp,tid,mean_omp,f1d) 
           !advection in v
@@ -1363,7 +1371,7 @@ contains
             endif
             f_x2(i_omp,1:num_dof_x2) = f1d_omp_out(1:num_dof_x2,tid)
           end do
-#ifdef OPENMP
+#ifdef _OPENMP
 !$OMP END DO          
 !$OMP END PARALLEL
 #endif
