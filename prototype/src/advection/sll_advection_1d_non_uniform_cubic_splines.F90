@@ -136,14 +136,16 @@ contains
       enddo  
     endif
 
-    SLL_ALLOCATE(adv%buf(10*num_cells),ierr)
-    SLL_ALLOCATE(adv%ibuf(num_cells),ierr)
-    SLL_ALLOCATE(adv%node_pos(-2:num_cells+2),ierr)
-    SLL_ALLOCATE(adv%coeffs(-2:num_cells+2),ierr)
-    SLL_ALLOCATE(adv%Xstar(1:num_cells+1),ierr)
-
- 
-  
+    SLL_CLEAR_ALLOCATE(adv%buf(10*num_cells),ierr)
+    SLL_CLEAR_ALLOCATE(adv%ibuf(num_cells),ierr)
+    SLL_CLEAR_ALLOCATE(adv%node_pos(-2:num_cells+2),ierr)
+    SLL_CLEAR_ALLOCATE(adv%coeffs(-1:num_cells+1),ierr)
+    !SLL_CLEAR_ALLOCATE(adv%coeffs(-2:num_cells+2),ierr)
+    SLL_CLEAR_ALLOCATE(adv%Xstar(1:num_cells+1),ierr)
+    
+    adv%node_pos(0:num_cells)=adv%node_positions(1:num_cells+1)
+    call setup_spline_nonunif_1D_periodic_aux( adv%node_pos, num_cells, adv%buf, adv%ibuf)
+    
   end subroutine initialize_non_uniform_cubic_splines_1d_advector   
 
 
@@ -251,7 +253,6 @@ contains
     sll_real64 :: dx
     sll_int32  :: i
     !sll_real64 :: M,tmp,tmp2
-    !temporary allocations
     sll_real64,dimension(:),pointer :: buf,Xstar,node_pos,coeffs
     sll_int32,dimension(:),pointer :: ibuf 
     
@@ -264,8 +265,9 @@ contains
     !allocate(Xstar(1:N+1))
     !print *,loc(buf)
     
+    !print *,'#loc node_pos0=',loc(node_pos(0))
     
-    node_pos(0:N)=node_positions(1:N+1)
+    !node_pos(0:N)=node_positions(1:N+1)
     
     
     !do i=1,N+1
@@ -317,10 +319,11 @@ contains
 !      tmp=tmp2
 !    enddo
     
-    call setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
+    !call setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
     call compute_spline_nonunif_1D_periodic_aux2( f, N, buf, ibuf, coeffs )
     call interpolate_array_value_nonunif_aux( Xstar, f, N, node_pos, coeffs,N)
     
+ !4312190464           4312214392   
     
 !    tmp=f(1)
 !    do i=1,N-1
