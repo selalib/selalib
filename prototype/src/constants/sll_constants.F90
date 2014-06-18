@@ -57,7 +57,10 @@ sll_real64, parameter :: sll_proton_mass = 1.672621777D-27
 !> @param standard grav. accel., sea level m/s^2
 sll_real64, parameter :: sll_g = 9.80665D0
 
-!> @param standard grav. accel., sea level m/s^2
+!> @param Boltzmann constant J/K
 sll_real64, parameter :: sll_kb = 1.3806488D-23
+
+!> @param Complex number i=sqrt(-1)
+sll_comp64, parameter :: sll_i1 = (0D0, 1D0)
 
 end module sll_constants
