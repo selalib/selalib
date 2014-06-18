@@ -45,12 +45,36 @@ program fcisl_test
   sll_int32 :: spaghetti_size
   sll_int32 :: num_spaghetti
   sll_int32 :: shift_guess
+  logical :: use_shift_guess
   sll_int32 :: spaghetti_size_guess
   sll_int32 :: i1
   sll_int32 :: i2
   sll_real64 :: tau
   sll_int32 :: i
   sll_int32 :: s
+  character(len=256) :: filename
+  sll_int32 :: IO_stat
+  sll_int32, parameter  :: input_file = 99
+
+
+  ! namelists for data input
+  namelist /params/ &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max, &
+    Nc_x1, &
+    Nc_x2, &
+    degree, &
+    iota, &
+    tau, &
+    dt, &
+    nb_step, &
+    spaghetti_size_guess, &
+    shift_guess, &
+    use_shift_guess
+
+  !set default parameters
   x1_min = 0._f64
   x1_max = 1._f64
   x2_min = 0._f64
@@ -59,9 +83,44 @@ program fcisl_test
   Nc_x2 = 32
   degree = 4
   iota = 4.8_f64
-  tau = 0.14
+  tau = 0.14_f64
   dt = 0.1_f64
   nb_step = 10  
+  spaghetti_size_guess = Nc_x1
+  shift_guess = 0
+  use_shift_guess = .false.
+
+  call get_command_argument(1, filename)
+  if (len_trim(filename) .ne. 0)then
+    print*,'#read namelist'
+    open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
+      if( IO_stat /= 0 ) then
+        print *, '#fcisl_test failed to open file ', trim(filename)//'.nml'
+        stop
+      end if
+      read(input_file, params) 
+    close(input_file)    
+  else
+    print *,'#use default parameters'  
+  endif
+  
+  print *,'#params are'
+  print *,'#x1_min=',x1_min
+  print *,'#x1_max=',x1_max
+  print *,'#x2_min=',x2_min
+  print *,'#x2_max=',x2_max
+  print *,'#Nc_x1=',Nc_x1
+  print *,'#Nc_x2=',Nc_x2
+  print *,'#degree=',degree
+  print *,'#iota=',iota
+  print *,'#tau=',tau
+  print *,'#dt=',dt
+  print *,'#nb_step=',nb_step
+  print *,'#spaghetti_size_guess=',spaghetti_size_guess
+  print *,'#shift_guess=',shift_guess
+  print *,'#use_shift_guess=',use_shift_guess
+
+
 
   
   SLL_ALLOCATE(phi(Nc_x1+1,Nc_x2+1),ierr)
@@ -97,15 +156,39 @@ program fcisl_test
     Nc_x1, &
     shift, &
     iota_modif)
-  spaghetti_size_guess = Nc_x1
-  print *,'#iota=',iota
-  print *,'#Nc_x1=',Nc_x1
-  print *,'#shift=',shift
+  !spaghetti_size_guess = Nc_x1
+  print *,'#shift from iota=',shift
   print *,'#iota_modif=',iota_modif
-  print *,'#spaghetti_size_guess=',spaghetti_size_guess
+  call compute_spaghetti_size_from_shift( &
+    Nc_x1, &
+    shift, &
+    spaghetti_size)
+  print *,'#spaghetti_size from iota modif=',spaghetti_size  
 
-  shift_guess = shift
-  
+  if(use_shift_guess .eqv. .false.)then
+    shift_guess = shift
+  endif
+  print *,'#iota_modif=',iota_modif
+
+  print *,'#iota_guess=',iota
+  print *,'#spaghetti_size_guess=',spaghetti_size_guess
+  print *,'#spaghetti_size between 1 and ',Nc_x1
+  call compute_spaghetti_and_shift_from_guess( &
+    Nc_x1, &
+    Nc_x2, &
+    iota, &
+    spaghetti_size_guess, &
+    shift, &
+    spaghetti_size)
+
+  print *,'#shift=',shift
+  print *,'#spaghetti_size=',spaghetti_size
+  call compute_iota_from_shift(Nc_x1,shift,iota_modif)
+  print *,'#iota_modif=',iota_modif
+  !stop
+
+
+
 !we should choose spaghetti_size_guess
 !and iota_guess
 
@@ -134,35 +217,29 @@ program fcisl_test
   print *,'#phi_bounds',minval(phi),maxval(phi)
   print *,'#phi_at_aligned_bounds',minval(phi_at_aligned),maxval(phi_at_aligned)
   
+  
+  
   call compute_spaghetti_size_from_shift( &
     Nc_x1, &
     shift, &
     spaghetti_size)
   print *,'#shift=',shift,spaghetti_size
-  call compute_spaghetti_and_shift_from_guess( &
-    Nc_x1, &
-    Nc_x2, &
-    shift_guess, &
-    spaghetti_size_guess, &
-    shift, &
-    spaghetti_size)
-
-  print *,'#shift=',shift,spaghetti_size
   
-  stop
-  
-  do shift=-2*Nc_x1,2*Nc_x1
+  !do shift=-2*Nc_x1,2*Nc_x1
   call compute_spaghetti( &
     Nc_x1, &
     Nc_x2, &
     shift, &
     spaghetti_index, &
     spaghetti_size)
-  enddo
+  !enddo
   num_spaghetti = Nc_x1/spaghetti_size
-    
+  
+  print *,'#num_spaghetti=',num_spaghetti
+  
+  !stop  
   call load_spaghetti( &
-    phi, &
+    phi_at_aligned, &
     buf1d_spaghetti, &
     spaghetti_index, &
     Nc_x1+1, &
@@ -172,23 +249,25 @@ program fcisl_test
     call adv%advect_1d_constant( &
         tau, &
         dt, &
-        buf1d_spaghetti(s:s+spaghetti_size), &
-        buf1d_spaghetto(1:spaghetti_size))      
+        buf1d_spaghetti(s:s+spaghetti_size*Nc_x2), &
+        buf1d_spaghetto(1:spaghetti_size*Nc_x2))      
 
-    buf1d_spaghetti(s:s+spaghetti_size)=buf1d_spaghetto(1:spaghetti_size) 
+    buf1d_spaghetti(s:s+spaghetti_size*Nc_x2)=buf1d_spaghetto(1:spaghetti_size*Nc_x2) 
     
-    s = s+spaghetti_size
+    s = s+spaghetti_size*Nc_x2
   enddo   
 
   call unload_spaghetti( &
     buf1d_spaghetti, &
-    phi, &
+    phi_at_aligned, &
     spaghetti_index, &
     Nc_x1+1, &
-    Nc_x2+1)  
+    Nc_x2+1) 
   
-  print *,maxval(phi),minval(phi)
-      
+  print *,'#maxval phi_at_aligned_shifted=',maxval(phi_at_aligned),minval(phi_at_aligned)
+  
+  
+  stop    
 
   
   deriv => new_oblic_derivative( &

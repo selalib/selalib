@@ -62,6 +62,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_module_advection_1d_periodic
   use sll_module_poisson_2d_polar_solver
   use sll_qn_solver_3d_polar_parallel_x1_wrapper_module
+  use sll_fcisl_module
 
 
   implicit none
@@ -153,6 +154,10 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64, dimension(:), pointer :: B_norm_r
      sll_real64, dimension(:), pointer :: Bstar_par_v_r
      sll_real64, dimension(:), pointer :: c_r
+     sll_real64, dimension(:), pointer :: sigma_r
+     sll_real64, dimension(:), pointer :: tau_r
+     sll_real64, dimension(:), pointer :: iota_for_sigma
+     sll_real64, dimension(:), pointer :: iota_for_tau
      
 
 
@@ -340,6 +345,13 @@ contains
     sll_int32 :: ierr
     !sll_int32  :: spline_degree
     
+    sll_int32 :: spaghetti_size_guess
+    sll_int32 :: shift
+    sll_int32 :: spaghetti_size
+    !sll_real64 :: iota_modif
+    
+    
+    
     !--> temporary variables for using cg_polar structures
     !sll_int32  :: bc_cg(2)
     !sll_int32  :: grad_cg
@@ -452,6 +464,22 @@ contains
 
     
     SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
+
+
+
+ !   call compute_spaghetti_and_shift_from_guess( &
+!      Nc_x1, &
+!      Nc_x2, &
+!      iota, &
+!      spaghetti_size_guess, &
+!      shift, &
+!      spaghetti_size)
+!
+!    print *,'#shift=',shift
+!    print *,'#spaghetti_size=',spaghetti_size
+!    call compute_iota_from_shift(Nc_x1,shift,iota_modif)
+!    print *,'#iota_modif=',iota_modif
+
     
     
     select case (poisson2d_BC_rmin)
@@ -1156,6 +1184,100 @@ contains
     
     
   end subroutine initialize_iota_profile
+  
+  subroutine initialize_c_from_iota_profile( &
+    iota, &
+    r_array, &
+    num_points_r, &
+    L, &
+    c_r)
+    sll_real64, dimension(:), intent(in) :: iota
+    sll_real64, dimension(:), intent(in) :: r_array
+    sll_int32, intent(in) :: num_points_r
+    sll_real64, intent(in) :: L
+    sll_real64, dimension(:), intent(out) :: c_r
+    !local variables
+    sll_int32 :: i
+    sll_real64 :: big_R
+
+    ! some checking
+    if(size(iota)<num_points_r)then
+      call sll_halt_collective()
+      print *,'#bad size for iota in initialize_c_from_iota_profile'
+      stop
+    endif
+
+    if(size(r_array)<num_points_r)then
+      call sll_halt_collective()
+      print *,'#bad size for r_array in initialize_c_from_iota_profile'
+      stop
+    endif
+
+    if(size(c_r)<num_points_r)then
+      call sll_halt_collective()
+      print *,'#bad size for c_r in initialize_c_from_iota_profile'
+      stop
+    endif
+    
+    big_R = L/(2._f64*sll_pi)
+    
+    do i=1,num_points_r
+      c_r(i) = r_array(i)*iota(i)/big_R
+    enddo
+    
+  end subroutine initialize_c_from_iota_profile
+
+  subroutine initialize_iota_modif( &
+    Nc_x1, &
+    Nc_x2, &
+    iota, &
+    num_points_r, &
+    spaghetti_size_guess, &
+    spaghetti_size, &
+    shift_r)
+    sll_int32, intent(in) :: Nc_x1
+    sll_int32, intent(in) :: Nc_x2
+    sll_real64, dimension(:), intent(in) :: iota
+    sll_int32, intent(in) :: num_points_r
+    sll_int32, intent(in) :: spaghetti_size_guess
+    sll_int32, intent(out) :: spaghetti_size
+    sll_int32, dimension(:), intent(out) :: shift_r
+    !local variables
+    sll_int32 :: i
+    sll_real64 :: big_R
+    sll_int32 :: spaghetti_size0
+
+    if(size(iota)<num_points_r)then
+      call sll_halt_collective()
+      print *,'#bad size for iota in initialize_iota_modif'
+      stop
+    endif
+
+    if(size(shift_r)<num_points_r)then
+      call sll_halt_collective()
+      print *,'#bad size for shift_R in initialize_iota_modif'
+      stop
+    endif
+
+    do i=1,num_points_r
+      call compute_spaghetti_and_shift_from_guess( &
+        Nc_x1, &
+        Nc_x2, &
+        iota(i), &
+        spaghetti_size_guess, &
+        shift_r(i), &
+        spaghetti_size)
+      if(i==1)then
+        spaghetti_size0 = spaghetti_size
+      endif
+      if(spaghetti_size .ne. spaghetti_size0)then
+        print *,'#bad spaghetti size in initialize_iota_modif'
+        print *,'#we want to have same spaghetti_size for all the r'
+      endif  
+    enddo
+    
+
+  end subroutine initialize_iota_modif
 
 
 
@@ -1362,149 +1484,6 @@ contains
 
   end subroutine compute_field_dk_parx1
 
-!> compute b_tau \cdot \nabla phi
-!> with b_tau = (tau/sqrt(1+tau^2))*hat_theta+ (1/sqrt(1+tau^2))*hat_z
-  subroutine compute_oblic_derivative( &
-    tau, &
-    phi, &
-    mesh_x1, &
-    mesh_x2, &    
-    d, &
-    D_phi, &
-    adv)
-    sll_real64, intent(in) :: tau
-    sll_real64, dimension(:,:), intent(in) :: phi
-    type(sll_logical_mesh_1d), pointer :: mesh_x1
-    type(sll_logical_mesh_1d), pointer :: mesh_x2
-    sll_int32, intent(in) :: d  !> derivative computation of degree 2*d
-    sll_real64, dimension(:,:), intent(out) :: D_phi
-    !sll_real64, dimension(:,:), intent(out) :: buf
-    class(sll_advection_1d_base), pointer :: adv
-    !local variables
-    sll_real64, dimension(:,:), allocatable :: buf
-    sll_int32 :: step
-    sll_int32 :: Nc_x1
-    sll_int32 :: Nc_x2
-    sll_real64 :: delta_x2
-    sll_real64, dimension(:), allocatable :: w 
-    sll_int32 :: ierr
-    sll_int32 :: i2_loc
-    
-    SLL_ALLOCATE(w(-d:d),ierr)
-    SLL_ALLOCATE(buf(-d:Nc_x2+d,1:Nc_x1+1),ierr)
-    
-    call compute_finite_difference_init(w,2*d)
-    
-    print *,w
-    
-    Nc_x1 = mesh_x1%num_cells
-    Nc_x2 = mesh_x2%num_cells
-    
-    !step 1: compute phi on a field aligned mesh from the initial field aligned mesh
-    ! we store on phi_store(-d:Nc_x2+d,1:Nc_x1+1)
-   
-    delta_x2 = mesh_x2%delta_eta
-   
-    do step = -d,Nc_x2+d
-      i2_loc = modulo(step+Nc_x2,Nc_x2)+1
-      call adv%advect_1d_constant( &
-        tau, &
-        real(step,f64)*delta_x2, &
-        phi(1:Nc_x1+1,i2_loc), &
-        buf(step,1:Nc_x1+1))      
-    enddo
-   
-   
-   
-    !step 2: compute derivative on the field aligned mesh
-   
-    !step 3: compute derivative on initial cartesian mesh from field on field aligned mesh
-   
-   
-   
-  end subroutine compute_oblic_derivative
-
-
-  subroutine compute_finite_difference_init(w,p)
-    integer,intent(in)::p    
-    real(f64),dimension(-p/2:(p+1)/2),intent(out)::w
-    integer::r,s,i,j
-    real(f64)::tmp
-
-    r=-p/2
-    s=(p+1)/2
-
-!    if(modulo(p,2)==0)then
-!      r=-p/2
-!      s=p/2
-!    else
-!      r=-(p-1)/2
-!      s=(p+1)/2
-!    endif
-        
-    
-    !maple code for generation of w
-    !for k from r to -1 do
-    !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
-    !  C[k]:=1/C[k]*product((-j),j=r..k-1)*product((-j),j=k+1..-1)*product((-j),j=1..s):
-    !od:
-    !for k from 1 to s do
-    !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
-    !  C[k]:=1/C[k]*product((-j),j=r..-1)*product((-j),j=1..k-1)*product((-j),j=k+1..s):
-    !od:
-    !C[0]:=-add(C[k],k=r..-1)-add(C[k],k=1..s):
-    
-    do i=r,-1
-      tmp=1._f64
-      do j=r,i-1
-        tmp=tmp*real(i-j,f64)
-      enddo
-      do j=i+1,s
-        tmp=tmp*real(i-j,f64)
-      enddo
-      tmp=1._f64/tmp
-      do j=r,i-1
-        tmp=tmp*real(-j,f64)
-      enddo
-      do j=i+1,-1
-        tmp=tmp*real(-j,f64)
-      enddo
-      do j=1,s
-        tmp=tmp*real(-j,f64)
-      enddo
-      w(i)=tmp      
-    enddo
-
-    do i=1,s
-      tmp=1._f64
-      do j=r,i-1
-        tmp=tmp*real(i-j,f64)
-      enddo
-      do j=i+1,s
-        tmp=tmp*real(i-j,f64)
-      enddo
-      tmp=1._f64/tmp
-      do j=r,-1
-        tmp=tmp*real(-j,f64)
-      enddo
-      do j=1,i-1
-        tmp=tmp*real(-j,f64)
-      enddo
-      do j=i+1,s
-        tmp=tmp*real(-j,f64)
-      enddo
-      w(i)=tmp      
-    enddo
-    tmp=0._f64
-    do i=r,-1
-      tmp=tmp+w(i)
-    enddo
-    do i=1,s
-      tmp=tmp+w(i)
-    enddo
-    w(0)=-tmp
-    
-  end subroutine compute_finite_difference_init
 
 
 

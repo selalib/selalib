@@ -243,6 +243,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_poisson_solvers
                        sll_qn_solvers_parallel
                        sll_gyroaverage
+                       sll_fcisl
                        sll_fft
 		       sll_distribution_function
 		       sll_general_coordinate_elliptic_solvers

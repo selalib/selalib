@@ -202,6 +202,27 @@ implicit none
   enddo  
   err = maxval(abs(f-f_exact))  
   print *,'#err for classical method=',err
+
+
+#ifndef NOHDF5
+      call plot_f_cartesian( &
+        0, &
+        f, &
+        x1_array, &
+        Nc_x1+1, &
+        x2_array, &
+        Nc_x2+1, &
+        'fold', 0._f64 )        
+!      call plot_f_cartesian( &
+!        iplot, &
+!        f_visu_light, &
+!        sim%x1_array_light, &
+!        np_x1_light, &
+!        node_positions_x2_light, &
+!        sim%num_dof_x2_light, &
+!        'light_f', time_init )        
+#endif
+
   
   
   !new method
@@ -242,7 +263,7 @@ implicit none
         Nc_x1+1, &
         x2_array, &
         Nc_x2+1, &
-        'f', 0._f64 )        
+        'fnew', 0._f64 )        
 !      call plot_f_cartesian( &
 !        iplot, &
 !        f_visu_light, &
@@ -252,6 +273,7 @@ implicit none
 !        sim%num_dof_x2_light, &
 !        'light_f', time_init )        
 #endif
+ 
   
   
   
