@@ -8,13 +8,17 @@ INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
 
+IF(CMAKE_SYSTEM_NAME MATCHES "BlueGene*")
 ##########################################################
 # Try to determine the compiler
+   SET(Fortran_COMPILER "IBM")
+ELSE()
 TRY_RUN( RUN_RESULT_VAR
 	 COMPILE_RESULT_VAR
          ${CMAKE_BINARY_DIR}
          ${CMAKE_CURRENT_SOURCE_DIR}/check_compiler.F90
 )
+ENDIF()
 
 # COMPILE_RESULT_VAR is set to true if try_run succeed
 # RUN_RESULT_VAR is a string that represent the exit status
@@ -47,10 +51,6 @@ IF(COMPILE_RESULT_VAR)
       SET(Fortran_COMPILER "INTEL")
 
    ENDIF()
-
-ELSE()
-
-   MESSAGE(STATUS "UNABLE TO DETERMINE WHICH COMPILER IS USED")
 
 ENDIF()
 
