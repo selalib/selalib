@@ -9,8 +9,12 @@ SET(POISSON_LIBS sll_fft
 SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_1d_periodic.F90
                  sll_poisson_2d_polar.F90
-                 sll_poisson_2d_periodic_fftpack.F90
-		     sll_poisson_2d_dirichlet_cartesian.F90 )
+                 sll_poisson_2d_periodic_fftpack.F90)
+
+IF(Fortran_COMPILER MATCHES IBM)
+ELSE()
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_dirichlet_cartesian.F90 )
+ENDIF()
 
 IF(FFTW_ENABLED AND FFTW_FOUND)
 
