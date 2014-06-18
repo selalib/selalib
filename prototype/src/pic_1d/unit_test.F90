@@ -86,12 +86,16 @@ program unit_test
 
     endif
 
+    interval_a=0
+    interval_b=boxlenpi*sll_pi
 
     selectcase (scenario)
     case("landau")
          pic1d_testcase = SLL_PIC1D_TESTCASE_LANDAU
     case("ionbeam")
        pic1d_testcase = SLL_PIC1D_TESTCASE_IONBEAM
+        interval_a=0
+        interval_b=200  !0.0022_f64 !20mm
     case("quiet")
        pic1d_testcase = SLL_PIC1D_TESTCASE_QUIET
     case("bump")
@@ -104,8 +108,7 @@ program unit_test
 
     call set_loading_parameters(lalpha,lmode,nstreams)
 
-    interval_a=0
-    interval_b=boxlenpi*sll_pi
+
 
 
     selectcase (ppusher)

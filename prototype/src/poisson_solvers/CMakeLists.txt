@@ -11,6 +11,7 @@ SET(POISSON_LIBS sll_fft
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_1d_periodic.F90
+		  sll_poisson_1d_fourier.F90
                  sll_poisson_1d_fem.F90
                  sll_poisson_1d_fd.F90
                  sll_poisson_2d_polar.F90
@@ -72,6 +73,9 @@ ELSE()
    TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion ${POISSON_LIBS}
                                              dfftpack )
 ENDIF()
+
+
+  TARGET_LINK_LIBRARIES(sll_poisson_solvers ${LAPACK_LIBRARIES})
 
 IF (NOT STDF95)
 

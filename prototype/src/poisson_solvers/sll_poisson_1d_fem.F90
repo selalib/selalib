@@ -76,12 +76,13 @@ module sll_poisson_1d_fem
 
 
         procedure, pass(this), public :: get_rhs_from_klimontovich_density_weighted=>&
-                                    poisson_1d_fem_get_rhs_from_klimontovich_density_weighted
+            poisson_1d_fem_get_rhs_from_klimontovich_density_weighted
         procedure, pass(this), public :: get_rhs_from_klimontovich_density=>&
-                                poisson_1d_fem_get_rhs_from_klimontovich_density
+            poisson_1d_fem_get_rhs_from_klimontovich_density
+        procedure, pass(this), public :: get_rhs_from_klimontovich_density_moment=>&
+            poisson_1d_fem_get_rhs_from_klim_dens_weight_moment
         procedure,pass(this), public :: get_rhs_from_function=>&
-                                    sll_poisson_1d_fem_get_rhs_from_function
-
+            sll_poisson_1d_fem_get_rhs_from_function
     end type poisson_1d_fem
 
     !Interface for one dimensional function for right hand side
@@ -99,9 +100,11 @@ module sll_poisson_1d_fem
     !                  module procedure solve_poisson_1d_fem_rhs_and_get
     !    end interface solve_poisson_1d_fem
     interface delete
-                module procedure sll_delete_poisson_1d_fem
+        module procedure sll_delete_poisson_1d_fem
     endinterface
-
+!    interface new
+!        module procedure new_poisson_1d_fem
+!    endinterface
 contains
 
     !>Destructor
@@ -118,25 +121,28 @@ contains
     endsubroutine
 
 
-    function  new_poisson_1d_fem(logical_mesh_1d,spline_degree, ierr) &
+    function  new_poisson_1d_fem(logical_mesh_1d,spline_degree,boundarycondition, ierr) &
             result(solver)
         type(poisson_1d_fem), pointer :: solver     !< Solver data structure
         type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: spline_degree !<Degree of the bsplines
+        sll_int32, intent(in) :: boundarycondition !<Boundary Condition Descriptor
 
         SLL_ALLOCATE(solver,ierr)
-        call sll_initialize_poisson_1d_fem(solver,  logical_mesh_1d,spline_degree,ierr)
+        call sll_initialize_poisson_1d_fem(solver,  logical_mesh_1d,spline_degree,boundarycondition,ierr)
     endfunction
 
 
-    subroutine sll_initialize_poisson_1d_fem(this, logical_mesh_1d,spline_degree, ierr)
+    subroutine sll_initialize_poisson_1d_fem(this, logical_mesh_1d,spline_degree,boundarycondition, ierr)
         class(poisson_1d_fem),intent(inout) :: this     !< Solver data structure
         type(sll_logical_mesh_1d), intent(in),pointer  :: logical_mesh_1d !< Logical mesh
         sll_int32, intent(out)                :: ierr    !< error code
         sll_int32, intent(in)                :: spline_degree !<Degree of the bsplines
+        sll_int32, intent(in) :: boundarycondition !<Boundary Condition Descriptor
         ierr=0
-        this%boundarycondition=SLL_PERIODIC !SLL_PERIODIC
+        this%boundarycondition=boundarycondition !SLL_PERIODIC
+        !this%boundarycondition=SLL_DIRICHLET !SLL_PERIODIC
 
         !scale_matrix_equation=1.0_f64
         this%logical_mesh=>logical_mesh_1d
@@ -144,14 +150,17 @@ contains
         this%spline_degree=spline_degree
         !Allocate spline
         selectcase(this%boundarycondition)
-        case(SLL_PERIODIC)
-            this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
-            sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
-            PERIODIC_ARBITRARY_DEG_SPLINE)
-        case(SLL_DIRICHLET)
-            this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
-            sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
-            PERIODIC_ARBITRARY_DEG_SPLINE)
+            case(SLL_PERIODIC)
+                this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
+                    sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
+                    PERIODIC_ARBITRARY_DEG_SPLINE)
+            case(SLL_DIRICHLET)
+                this%bspline=>new_arbitrary_degree_spline_1d( spline_degree, &
+                    sll_mesh_nodes(this%logical_mesh), sll_mesh_num_nodes(this%logical_mesh), &
+                    PERIODIC_ARBITRARY_DEG_SPLINE)
+            case default
+                print *, "This boundary condition is not supported!"
+                stop
         endselect
 
         SLL_ALLOCATE(this%fem_solution(this%num_cells),ierr)
@@ -444,15 +453,86 @@ contains
     subroutine solve_poisson_1d_fem_rhs(this, rhs)
         class(poisson_1d_fem),intent(inout) :: this
         sll_real64, dimension(:), intent(in)      :: rhs
+      !  sll_real64, dimension(size(rhs)) :: rhs_bc
 
-        SLL_ASSERT(size(rhs)==this%num_cells)
-        this%fem_solution=poisson_1d_fem_solve_circulant_matrix_equation(this, &
-            this%stiffn_matrix_first_line_fourier ,rhs )
+       ! rhs_bc=rhs
 
         if (  this%boundarycondition==SLL_DIRICHLET ) then
-        this%fem_solution(1:this%bspline%degree+2)=0
-        this%fem_solution(this%num_cells-(this%bspline%degree)-1:this%num_cells )=0
+            !rhs_bc(1:this%bspline%degree*2)=0
+            !rhs_bc(this%num_cells-(this%bspline%degree*2)-2:this%num_cells)=0
+            !this%fem_solution(1:this%bspline%degree+3)=0
+            !this%fem_solution(this%num_cells-(this%bspline%degree)-2:this%num_cells )=0
+        call solve_poisson_1d_fem_rhs_dirichlet(this, rhs)
+        else
+        SLL_ASSERT(size(rhs)==this%num_cells)
+            this%fem_solution=poisson_1d_fem_solve_circulant_matrix_equation(this, &
+            this%stiffn_matrix_first_line_fourier ,rhs )
         endif
+
+
+
+
+!        if (  this%boundarycondition==SLL_DIRICHLET ) then
+!            !         rhs_bc(1:this%bspline%degree+3)=0
+!            !         rhs_bc(this%num_cells-(this%bspline%degree)-3:this%num_cells)=0
+!            !this%fem_solution(1:this%bspline%degree+3)=0
+!            !this%fem_solution(this%num_cells-(this%bspline%degree)-3:this%num_cells )=0
+!        endif
+
+    endsubroutine
+
+    !Not efficient yet, in the future store LU decomposition
+    subroutine solve_poisson_1d_fem_rhs_dirichlet(this, rhs)
+        class(poisson_1d_fem),intent(inout) :: this
+        sll_real64, dimension(:), intent(in)      :: rhs
+        sll_real64, dimension(size(rhs)) :: rhs_bc
+        sll_real64, dimension(this%spline_degree+1) :: femperiod
+        sll_int32 :: N ,KD
+        sll_real64, dimension(this%spline_degree*3 +1, this%num_cells):: AB
+        sll_int32 :: idx,jdx ,ierr
+        sll_int32, dimension( this%num_cells ) :: IPIV
+
+       femperiod=sll_gen_fem_bspline_matrix_period ( this%bspline , &
+            sll_mesh_nodes(this%logical_mesh), b_spline_derivatives_at_x , ierr)
+        N=this%num_cells
+        KD=this%spline_degree
+        this%fem_solution =rhs
+
+        AB=0
+        !Set up the diaognal for dirichlet
+        AB(2*KD+1,1)=1.0_f64
+         this%fem_solution(1)=0
+        AB(2*KD+1,N)=1.0_f64
+         this%fem_solution(N)=0
+        AB(2*KD+1,2:N-1)=femperiod(1)
+
+
+!        !Fill up the lower diaognals
+!        do idx=2,KD+1
+!            AB(3*KD+1-(idx-1), idx:N)=femperiod(idx)
+!        enddo
+!
+
+
+        !Lower diagonals
+        do idx=1,KD
+            AB(3*KD+1-(KD-idx), 1:N-idx -1)=femperiod(idx+1)
+        enddo
+        !Upper diagonals
+        do idx=1,KD
+            AB(2*KD-(idx-1), 2+idx:N)=femperiod(idx+1)
+        enddo
+
+
+        call DGBSV( N, KD, KD, 1, AB, this%spline_degree*3 +1, IPIV,  this%fem_solution,	N, ierr )
+
+        !call DPBSV( 'U' , N , KD, 1, AB, KD+1,  this%fem_solution, N, ierr )
+
+           if (ierr/=0) then
+            print *, ierr
+
+            endif
+
     endsubroutine
 
     !> @brief Solves the poisson equation for a given right hand side function
@@ -552,39 +632,39 @@ contains
             b_contribution(:,eval_idx)=interpolfun(this%bspline,cell(eval_idx), knots_eval(eval_idx))
         enddo
 
-            do b_contrib_idx=1,this%bspline%degree+1
-                !Determine which value belongs to which spline
-                !b_idx=cell(eval_idx)  - (b_contrib_idx-1)
-                b_idx=cell -(this%bspline%degree+1)  +(b_contrib_idx)
+        do b_contrib_idx=1,this%bspline%degree+1
+            !Determine which value belongs to which spline
+            !b_idx=cell(eval_idx)  - (b_contrib_idx-1)
+            b_idx=cell -(this%bspline%degree+1)  +(b_contrib_idx)
 
-                !Periodicity
-                where (b_idx > this%num_cells)
-                    b_idx = b_idx - this%num_cells
-                elsewhere (b_idx < 1)
-                    b_idx = b_idx + this%num_cells
-                endwhere
+            !Periodicity
+            where (b_idx > this%num_cells)
+                b_idx = b_idx - this%num_cells
+            elsewhere (b_idx < 1)
+                b_idx = b_idx + this%num_cells
+            endwhere
 
-                realvals=realvals  + bspline_vector(b_idx)*b_contribution(b_contrib_idx,:)
-            enddo
+            realvals=realvals  + bspline_vector(b_idx)*b_contribution(b_contrib_idx,:)
+        enddo
 
-!
-!        do eval_idx=1,size(knots_eval)
-!
-!            !Get the values for the spline at the eval point
-!            b_contribution=interpolfun(this%bspline,cell(eval_idx), knots_eval(eval_idx))
-!
-!            do b_contrib_idx=1,this%bspline%degree+1
-!                !Determine which value belongs to which spline
-!                !b_idx=cell(eval_idx)  - (b_contrib_idx-1)
-!                b_idx=cell(eval_idx) - (this%bspline%degree+1)  +(b_contrib_idx)
-!                !Periodicity
-!                if (b_idx > this%num_cells) then
-!                    b_idx = b_idx - this%num_cells
-!                elseif (b_idx < 1) then
-!                    b_idx = b_idx + this%num_cells
-!                endif
-!                realvals(eval_idx)=realvals(eval_idx)  + bspline_vector(b_idx)*b_contribution(b_contrib_idx)
-!            enddo
+        !
+        !        do eval_idx=1,size(knots_eval)
+        !
+        !            !Get the values for the spline at the eval point
+        !            b_contribution=interpolfun(this%bspline,cell(eval_idx), knots_eval(eval_idx))
+        !
+        !            do b_contrib_idx=1,this%bspline%degree+1
+        !                !Determine which value belongs to which spline
+        !                !b_idx=cell(eval_idx)  - (b_contrib_idx-1)
+        !                b_idx=cell(eval_idx) - (this%bspline%degree+1)  +(b_contrib_idx)
+        !                !Periodicity
+        !                if (b_idx > this%num_cells) then
+        !                    b_idx = b_idx - this%num_cells
+        !                elseif (b_idx < 1) then
+        !                    b_idx = b_idx + this%num_cells
+        !                endif
+        !                realvals(eval_idx)=realvals(eval_idx)  + bspline_vector(b_idx)*b_contribution(b_contrib_idx)
+        !            enddo
 
         !enddo
 
@@ -680,13 +760,13 @@ contains
         sll_real64, dimension(1) :: pweight
         pweight=1.0_f64
 
-!        if (present(interpolfun_user)) then
-!            rhs=poisson_1d_fem_get_rhs_from_klimontovich_density_weighted(this,&
-!                ppos,pweight, interpolfun_user)
-!        else
-            rhs=poisson_1d_fem_get_rhs_from_klimontovich_density_weighted(this,&
-                ppos,pweight)
-!        endif
+        !        if (present(interpolfun_user)) then
+        !            rhs=poisson_1d_fem_get_rhs_from_klimontovich_density_weighted(this,&
+            !                ppos,pweight, interpolfun_user)
+        !        else
+        rhs=poisson_1d_fem_get_rhs_from_klimontovich_density_weighted(this,&
+            ppos,pweight)
+        !        endif
     endfunction
 
 
@@ -696,6 +776,20 @@ contains
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%num_cells) :: rhs
+
+        rhs=poisson_1d_fem_get_rhs_from_klim_dens_weight_moment( this,&
+            ppos, pweight,1)
+    endfunction
+
+
+
+    function poisson_1d_fem_get_rhs_from_klim_dens_weight_moment( this,&
+            ppos, pweight, moment) result(rhs)
+        class(poisson_1d_fem),intent(inout) :: this
+        sll_real64, dimension(:), intent(in) ::ppos
+        sll_real64, dimension(:), intent(in) ::pweight
+        sll_real64, dimension(this%num_cells) :: rhs
+        sll_int32 :: moment
         !procedure (b_splines_at_x), optional:: interpolfun_user
         procedure (b_splines_at_x), pointer :: interpolfun
         sll_int32 :: idx
@@ -706,33 +800,33 @@ contains
         rhs=0
 
         SLL_ASSERT( (size(pweight)==size(ppos) .OR. size(pweight)==1))
-!        if (present(interpolfun_user)) then
-!            interpolfun=>interpolfun_user
-!        else
-!            interpolfun=>b_splines_at_x
-!        endif
+        !        if (present(interpolfun_user)) then
+        !            interpolfun=>interpolfun_user
+        !        else
+        !            interpolfun=>b_splines_at_x
+        !        endif
 
-            interpolfun=>b_splines_at_x
+        interpolfun=>b_splines_at_x
 
         cell= sll_cell(this%logical_mesh, ppos)
 
         do idx=1,size(ppos)
 
 
-            b_contribution=interpolfun(this%bspline,cell(idx), ppos(idx))
+            b_contribution=interpolfun(this%bspline,cell(idx), ppos(idx))**moment
             !b_contribution=interpolfun(bspline,5, particleposition(idx) - (cell-1)*(knots(2)-knots(1)))
 
             !if  (this%boundarycondition==SLL_DIRICHLET) then
-!                if (cell(idx)>this%num_cells-(this%bspline%degree+1) ) then
-!                b_contribution((this%bspline%degree+1):(this%bspline%degree+1)-(this%num_cells-cell(idx)):-1)=0.0_f64
-!                endif
+            !                if (cell(idx)>this%num_cells-(this%bspline%degree+1) ) then
+            !                b_contribution((this%bspline%degree+1):(this%bspline%degree+1)-(this%num_cells-cell(idx)):-1)=0.0_f64
+            !                endif
             !endif
 
 
             if (size(pweight)==1) then
-                    b_contribution=b_contribution*pweight(1)
+                b_contribution=b_contribution*pweight(1)
             else
-                    b_contribution=b_contribution*pweight(idx)
+                b_contribution=b_contribution*pweight(idx)
             endif
 
             !Amount of splines equals the amount of
@@ -758,42 +852,42 @@ contains
         enddo
 
         if (  this%boundarycondition==SLL_DIRICHLET ) then
-        rhs(1:this%bspline%degree+1)=0
-        rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0
+            rhs(1:this%bspline%degree+1)=0
+            rhs(this%num_cells-(this%bspline%degree):this%num_cells )=0
         endif
     endfunction
 
-!    function poisson_1d_fem_calculate_residual(this) result(residuum)
-!                class(poisson_1d_fem),intent(inout) :: this
-!
-!        sll_real64 :: residuum
-!        residuum= sqrt(sum(( &
-!            poisson_1d_fem_circulant_matrix_vector_product&
-!            ( this%stiffn_matrix_first_line, this%fem_solution)&
-!            - this%fem_inhomogenity &
-!            )**2)) !/sqrt(sum(fem_inhomogenity**2 ))
-!    endfunction
-!
-!
-!
-!
-!    !<can be optimized, with a sparse first line
-!    function  poisson_1d_fem_circulant_matrix_vector_product( circulant_matrix_first_line, vector ) &
-!            result(solution)
-!        sll_real64, dimension(:), intent(in)   :: circulant_matrix_first_line
-!        sll_real64, dimension(:), intent(in)   :: vector
-!        sll_real64, dimension(size(vector)) ::solution
-!
-!        integer idx, N
-!        N=size(circulant_matrix_first_line)
-!        SLL_ASSERT(size(circulant_matrix_first_line)==size(vector))
-!        solution=0
-!        do idx=1, N
-!            solution(idx)=dot_product(cshift(circulant_matrix_first_line, -(idx-1)), vector)
-!            !print *,cshift(circulant_matrix_first_line, -(idx-1)),"#"
-!
-!        enddo
-!    endfunction
+    !    function poisson_1d_fem_calculate_residual(this) result(residuum)
+    !                class(poisson_1d_fem),intent(inout) :: this
+    !
+    !        sll_real64 :: residuum
+    !        residuum= sqrt(sum(( &
+        !            poisson_1d_fem_circulant_matrix_vector_product&
+        !            ( this%stiffn_matrix_first_line, this%fem_solution)&
+        !            - this%fem_inhomogenity &
+        !            )**2)) !/sqrt(sum(fem_inhomogenity**2 ))
+    !    endfunction
+    !
+    !
+    !
+    !
+    !    !<can be optimized, with a sparse first line
+    !    function  poisson_1d_fem_circulant_matrix_vector_product( circulant_matrix_first_line, vector ) &
+        !            result(solution)
+    !        sll_real64, dimension(:), intent(in)   :: circulant_matrix_first_line
+    !        sll_real64, dimension(:), intent(in)   :: vector
+    !        sll_real64, dimension(size(vector)) ::solution
+    !
+    !        integer idx, N
+    !        N=size(circulant_matrix_first_line)
+    !        SLL_ASSERT(size(circulant_matrix_first_line)==size(vector))
+    !        solution=0
+    !        do idx=1, N
+    !            solution(idx)=dot_product(cshift(circulant_matrix_first_line, -(idx-1)), vector)
+    !            !print *,cshift(circulant_matrix_first_line, -(idx-1)),"#"
+    !
+    !        enddo
+    !    endfunction
 
     !Interpolate right side on splines
     !In parallel the following steps will be performed:

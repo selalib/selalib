@@ -21,6 +21,8 @@ module sll_pic_1d_quasi_neutral_solver
     use sll_logical_meshes
     use sll_poisson_1d_fd !Finite difference solver
     use sll_poisson_1d_periodic
+    use sll_particle_1d_description
+    use sll_poisson_1d_fourier
     implicit none
     !initialize
     !solve
@@ -34,18 +36,27 @@ module sll_pic_1d_quasi_neutral_solver
 
     type  :: pic_1d_quasi_neutral_solver
         class(poisson_1d_fem), private , pointer ::  femsolver
-         type(poisson_1d_periodic), pointer :: spectralsolver
-         class(poisson_1d_fd), pointer :: fdsolver
+        type(poisson_1d_periodic), pointer :: spectralsolver
+        class(poisson_1d_fd), pointer :: fdsolver
+        class(poisson_1d_fourier), pointer :: fouriersolver
+
 
         !This should not be here. It belongs to the solver, we just
         !keep that here because the spectral solver can't hold in its own solution
         sll_real64, dimension(:), allocatable :: poisson_solution
+
 
         type(sll_logical_mesh_1d),pointer ::  mesh
 
         sll_real64, private :: scalar_inhomogenity
         sll_real64, dimension(:), allocatable :: inhomogenity
         sll_real64, dimension(:), allocatable :: inhomogenity_steady
+        sll_real64, dimension(:), allocatable :: inhomogenity_scndmom
+
+        sll_comp64, dimension(:), allocatable :: inhomogenity_comp
+        sll_comp64, dimension(:), allocatable :: inhomogenity_comp_steady
+
+
 
         sll_int32, private :: poisson_solver
         sll_int32, private :: boundary_type
@@ -53,6 +64,8 @@ module sll_pic_1d_quasi_neutral_solver
         sll_int32, private :: problemsize
 
         sll_int32, private :: num_fourier_modes
+
+        logical :: variance_calculation
 
         !Collective
         sll_int32, private :: coll_rank, coll_size
@@ -69,15 +82,23 @@ module sll_pic_1d_quasi_neutral_solver
         procedure, pass(this), public ::  set_ions_constant=>pic_1d_quasi_neutral_solver_set_ions_constant
         procedure, pass(this), public :: set_ions_constant_particles=>pic_1d_quasi_neutral_solver_set_ions_constant_particles
         procedure, pass(this), public :: set_ions_constant_function=>pic_1d_quasi_neutral_solver_set_ions_constant_function
-
+        procedure, pass(this), public :: calc_variance_rhs=>pic_1d_quasi_neutral_solver_calc_variance_rhs
 
         procedure,  pass(this) :: solve =>pic_1d_quasi_neutral_solver_solve
 
+        procedure, pass(this), public :: reset_particles=>pic_1d_quasi_neutral_solver_reset_particles
+        procedure, pass(this), public :: add_species=>pic_1d_quasi_neutral_solver_add_species
 
         procedure, pass(this), public :: set_electrons_only_weighted=>pic_1d_quasi_neutral_solver_set_electrons_only_weighted
 
         procedure, pass(this), public :: set_charged_allparticles_weighted=>&
             pic_1d_quasi_neutral_solver_set_charged_allparticles_weighted
+
+
+        procedure, pass(this), public :: add_particles_weighted=>&
+            pic_1d_quasi_neutral_solver_add_particles_weighted
+
+
 
         procedure, pass(this), public :: fieldenergy=>pic_1d_quasi_neutral_solver_fieldenergy
         !procedure,  pass(this) :: initialize =>pic_1d_quasi_neutral_solver_initialize
@@ -133,12 +154,13 @@ module sll_pic_1d_quasi_neutral_solver
 contains
 
     function new_pic_1d_quasi_neutral_solver(eta_min, eta_max, &
-            spline_degree, num_cells, poisson_solver_type, collective  ) &
+            spline_degree, num_cells, poisson_solver_type, collective ,boundary_type ) &
             result(qn_solver)
         sll_int32, intent(in):: spline_degree
         sll_int32, intent(in)::  poisson_solver_type
         sll_int32, intent(in)::  num_cells
         sll_real64, intent(in) :: eta_min, eta_max
+        sll_int32, intent(in) :: boundary_type
         type(sll_collective_t), pointer , intent(in):: collective
 
         class(pic_1d_quasi_neutral_solver), pointer :: qn_solver
@@ -146,16 +168,18 @@ contains
         SLL_ALLOCATE(qn_solver,ierr)
 
         call   pic_1d_quasi_neutral_solver_initialize( qn_solver, eta_min, eta_max, &
-            spline_degree, num_cells, poisson_solver_type, collective  )
+            spline_degree, num_cells, poisson_solver_type, collective,boundary_type  )
     endfunction
 
     subroutine pic_1d_quasi_neutral_solver_initialize( this, eta_min, eta_max, &
-            spline_degree, num_cells, poisson_solver_type, collective  )
+            spline_degree, num_cells, poisson_solver_type, collective ,boundary_type )
         class(pic_1d_quasi_neutral_solver), intent(inout) :: this
         sll_int32, intent(in):: spline_degree
         sll_int32, intent(in)::  poisson_solver_type
         sll_int32, intent(in)::  num_cells
         sll_real64, intent(in) :: eta_min, eta_max
+        sll_int32, intent(in) :: boundary_type
+
         type(sll_logical_mesh_1d), pointer :: mesh
         type(sll_collective_t), pointer , intent(in):: collective
 
@@ -165,35 +189,46 @@ contains
         this%coll_rank=sll_get_collective_rank( collective )
 
         !Boundary Conditions
-        this%boundary_type=SLL_PERIODIC
+        this%boundary_type=boundary_type
 
         !Scale the right side correctly
         this%scalar_inhomogenity=(eta_max -eta_min)
         this%poisson_solver=poisson_solver_type
+        this%variance_calculation=.false.
+
+
+
 
         !Generate logical mesh
         mesh=>new_logical_mesh_1d( num_cells, eta_min, eta_max )
         this%mesh=>mesh
         selectcase (poisson_solver_type)
             case(SLL_SOLVER_FEM)
-                this%femsolver=>new_poisson_1d_fem(this%mesh, spline_degree, ierr)
+                this%femsolver=>new_poisson_1d_fem(this%mesh, spline_degree,this%boundary_type, ierr)
                 this%problemsize=num_cells
+
             case(SLL_SOLVER_FD)
                 this%problemsize=num_cells
                 this%fdsolver=>new(this%mesh,1,this%boundary_type,ierr)
             case(SLL_SOLVER_FOURIER)
-               this%num_fourier_modes=6
+                this%num_fourier_modes=6
                 this%problemsize=this%num_fourier_modes
-                 SLL_CLEAR_ALLOCATE(this%poisson_solution(this%problemsize),ierr)
+                this%fouriersolver=>new_poisson_1d_fourier(this%mesh, spline_degree,this%boundary_type, ierr)
+                SLL_CLEAR_ALLOCATE(this%inhomogenity_comp(this%num_fourier_modes),ierr)
+                SLL_CLEAR_ALLOCATE(this%inhomogenity_comp_steady(this%num_fourier_modes),ierr)
             case(SLL_SOLVER_SPECTRAL)
-                 !All Knots, for boundary set first and last knot to zero
-                 this%problemsize=num_cells+1 !FIXED
-                 SLL_CLEAR_ALLOCATE(this%poisson_solution(this%problemsize),ierr)
-                 this%spectralsolver=>new(eta_min,eta_max, num_cells,ierr)
+                !All Knots, for boundary set first and last knot to zero
+                this%problemsize=num_cells+1 !FIXED
+                SLL_CLEAR_ALLOCATE(this%poisson_solution(this%problemsize),ierr)
+                this%spectralsolver=>new(eta_min,eta_max, num_cells,ierr)
         endselect
 
         SLL_CLEAR_ALLOCATE(this%inhomogenity(this%problemsize),ierr)
         SLL_CLEAR_ALLOCATE(this%inhomogenity_steady(this%problemsize),ierr)
+        !if (this%variance_calculation .eqv. .true.) then
+        SLL_CLEAR_ALLOCATE(this%inhomogenity_scndmom(this%problemsize),ierr)
+        !endif
+
 
     endsubroutine
 
@@ -218,6 +253,34 @@ contains
         class(pic_1d_quasi_neutral_solver), intent(in) :: this
         sll_int32 :: problemsize
         problemsize=this%problemsize
+    endfunction
+
+    !
+    !    function pic_1d_quasi_neutral_solver_fourier_rhs(this,  ppos, pweight  )
+    !        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    !        sll_real64, dimension(:) ,intent(in) :: ppos
+    !        sll_real64, dimension(:) ,intent(in) :: pweight
+    !        SLL_ASSERT(size(ppos)==size(pweight))
+    !
+    !
+    !
+    !
+    !    endfunction
+    function pic_1d_quasi_neutral_solver_calc_variance_rhs(this)&
+            result(variance)
+        class(pic_1d_quasi_neutral_solver), intent(in) :: this
+        sll_real64, dimension(this%problemsize) :: variance_v
+        sll_real64 :: variance
+
+        selectcase(this%poisson_solver)
+            case(SLL_SOLVER_FEM)
+                !Biased estimate
+                variance_v = this%inhomogenity_scndmom !  - this%inhomogenity**2
+
+                variance=sum(variance_v)
+            case default
+        endselect
+
     endfunction
 
 
@@ -271,6 +334,7 @@ contains
             case(SLL_SOLVER_FOURIER)
                 !Calculate fourier modes
 
+
         endselect
 
     endsubroutine
@@ -289,13 +353,18 @@ contains
             case(SLL_SOLVER_FEM)
                 this%inhomogenity=-this%femsolver%get_rhs_from_klimontovich_density_weighted( &
                     this%BC(ppos),pweight)
+                if (this%variance_calculation .eqv. .true.) then
+                    !this%inhomogenity will be overwritten later
+                    this%inhomogenity_scndmom=abs(this%femsolver%get_rhs_from_klimontovich_density_moment( &
+                        this%BC(ppos),pweight,2)) - this%inhomogenity**2
+
+                endif
             case(SLL_SOLVER_FD)
                 this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
-                   !!!Not implemented
-
+                !!!Not implemented
         endselect
 
     endsubroutine
@@ -311,21 +380,90 @@ contains
         sll_real64, dimension(:),intent(in) :: ppos
         sll_real64, dimension(:),intent(in)  :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
-
-        selectcase(this%poisson_solver)
-            case(SLL_SOLVER_FEM)
-             this%inhomogenity=this%femsolver%get_rhs_from_klimontovich_density_weighted(&
-                    this%BC(ppos),pweight)
-            case(SLL_SOLVER_FD)
-                this%inhomogenity=this%get_rhs_cic( this%BC(ppos),pweight)
-            case(SLL_SOLVER_SPECTRAL)
-                this%inhomogenity=this%get_rhs_cic( this%BC(ppos),pweight)
-            case(SLL_SOLVER_FOURIER)
-                  !!!Not implemented
-         endselect
+        this%inhomogenity=0
+        call pic_1d_quasi_neutral_solver_add_particles_weighted(this,&
+            ppos, pweight)
     endsubroutine
 
 
+    !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
+    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param ppos spatial position of the negative ion/electron
+    !>@param pweight corresponding weight of particle
+    subroutine pic_1d_quasi_neutral_solver_add_particles_weighted(this,&
+            ppos, pweight)
+        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        sll_real64, dimension(:),intent(in) :: ppos
+        sll_real64, dimension(:),intent(in)  :: pweight
+        SLL_ASSERT(size(ppos)==size(pweight))
+
+        selectcase(this%poisson_solver)
+            case(SLL_SOLVER_FEM)
+                this%inhomogenity= this%inhomogenity+ this%femsolver%get_rhs_from_klimontovich_density_weighted(&
+                    this%BC(ppos),pweight)
+                if (this%variance_calculation .eqv. .true.) then
+                    this%inhomogenity_scndmom=  this%inhomogenity_scndmom+ this%femsolver%&
+                        get_rhs_from_klimontovich_density_weighted(this%BC(ppos),pweight)
+                endif
+            case(SLL_SOLVER_FD)
+                this%inhomogenity=  this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
+            case(SLL_SOLVER_SPECTRAL)
+                this%inhomogenity=    this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
+            case(SLL_SOLVER_FOURIER)
+                this%inhomogenity_comp=    this%inhomogenity_comp +this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
+                    this%BC(ppos),pweight)
+
+        endselect
+    endsubroutine
+
+
+
+
+
+    subroutine pic_1d_quasi_neutral_solver_reset_particles(this)
+        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+
+        selectcase(this%poisson_solver)
+            case(SLL_SOLVER_FOURIER)
+                this%inhomogenity_comp=0.0_f64
+                    !!!TODO variance calculation
+            case default
+                this%inhomogenity=0.0_f64
+                if (this%variance_calculation .eqv. .true.) then
+                    this%inhomogenity_scndmom=0
+                endif
+        endselect
+    endsubroutine
+
+    !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
+    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    subroutine pic_1d_quasi_neutral_solver_add_species(this,&
+            species)
+        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        type(sll_particle_1d_group), intent(in) :: species
+
+        selectcase(this%poisson_solver)
+            case(SLL_SOLVER_FEM)
+                this%inhomogenity=this%inhomogenity + this%femsolver%get_rhs_from_klimontovich_density_weighted(&
+                    this%BC(species%particle%dx), sign(species%particle%weight,species%qm) )
+
+                if (this%variance_calculation .eqv. .true.) then
+                    this%inhomogenity_scndmom=this%inhomogenity_scndmom + &
+                        this%femsolver%get_rhs_from_klimontovich_density_weighted( &
+                        this%BC(species%particle%dx),sign(species%particle%weight,species%qm) )
+                endif
+            case(SLL_SOLVER_FD)
+                this%inhomogenity=this%inhomogenity + &
+                    this%get_rhs_cic( this%BC(species%particle%dx),sign(species%particle%weight,species%qm)  )
+            case(SLL_SOLVER_SPECTRAL)
+                this%inhomogenity=this%inhomogenity + &
+                    this%get_rhs_cic( this%BC(species%particle%dx),sign(species%particle%weight,species%qm)  )
+            case(SLL_SOLVER_FOURIER)
+                this%inhomogenity_comp=this%inhomogenity_comp+ &
+                this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
+                    this%BC(species%particle%dx), sign(species%particle%weight,species%qm) )
+        endselect
+    endsubroutine
 
     !<@brief Takes negative and positive particles with charge one and custom weights
     !>@param this pointer to a pic_1d_quasi_neutral_solver object.
@@ -353,7 +491,7 @@ contains
         pweight(1:npart)=pweight_pos
         ppos(npart+1:2*npart)=ppos_neg
         pweight(npart+1:2*npart)=-pweight_neg
-           call this%set_charged_allparticles_weighted(ppos,pweight)
+        call this%set_charged_allparticles_weighted(ppos,pweight)
 
     endsubroutine
 
@@ -375,9 +513,24 @@ contains
         sll_real64, dimension(:),intent(in)  :: pweight !< Particleweight
         SLL_ASSERT(size(ppos)==size(pweight))
 
-        this%inhomogenity_steady= this%femsolver%get_rhs_from_klimontovich_density_weighted&
+
+        selectcase(this%poisson_solver)
+        case(SLL_SOLVER_FOURIER)
+                this%inhomogenity_comp_steady=this%inhomogenity_comp_steady+ &
+                this%fouriersolver%get_rhs_from_klimontovich_density_weighted&
+                        (this%BC(ppos), pweight  )
+
+             call sll_collective_globalsum_array_comp64(this%collective,this%inhomogenity_comp_steady)
+        case(SLL_SOLVER_FEM)
+            this%inhomogenity_steady= this%femsolver%get_rhs_from_klimontovich_density_weighted&
             (this%BC(ppos), pweight  )
-        call sll_collective_globalsum_array_real64(this%collective,this%inhomogenity_steady )
+             call sll_collective_globalsum_array_real64(this%collective,this%inhomogenity_steady )
+
+        case default
+
+        endselect
+
+
 
     endsubroutine
 
@@ -407,7 +560,7 @@ contains
                 call this%femsolver%eval_solution_derivative&
                     (this%BC(eval_points) ,eval_solution)
             case(SLL_SOLVER_FD)
-                 call this%fdsolver%eval_solution_derivative&
+                call this%fdsolver%eval_solution_derivative&
                     (this%BC(eval_points) ,eval_solution)
             case(SLL_SOLVER_SPECTRAL)
                 !!!not implemented by spectral solver
@@ -427,7 +580,7 @@ contains
                 call this%femsolver%eval_solution&
                     (this%BC(eval_points) ,eval_solution)
             case(SLL_SOLVER_FD)
-                 call this%fdsolver%eval_solution&
+                call this%fdsolver%eval_solution&
                     (this%BC(eval_points) ,eval_solution)
             case(SLL_SOLVER_SPECTRAL)
                 !!!not implemented by spectral solver
@@ -435,6 +588,9 @@ contains
 
         endselect
     endsubroutine
+
+
+
 
 
     function pic_1d_quasi_neutral_solver_get_potential(this) &
@@ -487,11 +643,18 @@ contains
                     +interval_a
                 SLL_ASSERT(minval(xout)>=interval_a)
                 SLL_ASSERT(maxval(xout)<interval_b)
+            case(SLL_DIRICHLET)
+                xout=x
+                where (x<interval_a) xout=interval_a
+                where (x>interval_b) xout=interval_b
+
+
+
         endselect
 
 
         SLL_ASSERT(minval(xout)>=interval_a)
-        SLL_ASSERT(maxval(xout)<interval_b)
+        SLL_ASSERT(maxval(xout)<=interval_b)
     endfunction
 
 

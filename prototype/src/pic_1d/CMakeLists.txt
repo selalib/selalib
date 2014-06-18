@@ -3,7 +3,8 @@ ADD_SUBDIRECTORY(prob)
 ADD_LIBRARY(sll_pic_1d STATIC particle_loading.F90
 			       pic_1d.F90
                               unit_test.F90  
-                              pic_postprocessing.F90)
+                              pic_postprocessing.F90
+                              particle_description.F90)
                               
 ADD_LIBRARY(sll_pic_1d_fem_solver STATIC bspline_fem_solver_1d.F90)
 
