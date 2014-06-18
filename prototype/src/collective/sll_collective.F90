@@ -227,7 +227,9 @@ module sll_collective
   interface sll_collective_allreduce
      module procedure sll_collective_allreduce_real32, &
                       sll_collective_allreduce_real64, &
-                      sll_collective_allreduce_logical
+                      sll_collective_allreduce_logical, &
+                      sll_collective_allreduce_comp64, &
+                      sll_collective_allreduce_comp32
   end interface
 
   !> @brief Reduces values on all processes to a single value.
@@ -235,7 +237,9 @@ module sll_collective
      module procedure sll_collective_reduce_real32, &
                       sll_collective_reduce_real64, &
                       sll_collective_reduce_int, &
-                      sll_collective_reduce_logical
+                      sll_collective_reduce_logical, &
+                      sll_collective_reduce_comp64, &
+                      sll_collective_reduce_comp32
   end interface
 
   !> @brief Sends data from all to all processes.
@@ -258,7 +262,8 @@ module sll_collective
 
   interface sll_collective_globalsum
      module procedure sll_collective_globalsum_array_real64, &
-                      sll_collective_globalsum_real64
+                      sll_collective_globalsum_real64, &
+                      sll_collective_globalsum_array_comp64
   endinterface
 
 
@@ -879,7 +884,7 @@ contains !************************** Operations **************************
       'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
   end subroutine sll_collective_allreduce_real64
 
-  !> @brief Combines real values from all processes and
+  !> @brief Combines complex values from all processes and
   !!        distributes the result back to all processes
   !> @param[in] col wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
@@ -901,14 +906,38 @@ contains !************************** Operations **************************
       send_buf, &
       rec_buf, &
       count, &
-      MPI_DOUBLE_PRECISION, &
+      MPI_DOUBLE_COMPLEX , &
       op, &
       col%comm, &
       ierr )
     call sll_test_mpi_error( &
       ierr, &
-      'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
+      'sll_collective_allreduce_comp64(): MPI_ALLREDUCE()' )
   end subroutine sll_collective_allreduce_comp64
+
+  subroutine sll_collective_allreduce_comp32( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp32, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_comp32, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_COMPLEX , &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_comp32(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_comp32
 
 
   !> @brief Combines logical values from all processes and
@@ -998,8 +1027,50 @@ contains !************************** Operations **************************
     call MPI_REDUCE( send_buf, rec_buf, size, MPI_DOUBLE_PRECISION, op, &
          root_rank, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_reduce_real(): MPI_REDUCE()' )
+         'sll_collective_reduce_real64(): MPI_REDUCE()' )
   end subroutine sll_collective_reduce_real64
+
+
+  !> @brief Reduces complex values on all processes to a single value
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_bu address of send buffer
+  !> @param[in] size number of elements in send buffer
+  !> @param[in] op reduce operation
+  !> @param[in] root_rank rank of root process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_reduce_comp64( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp64, dimension(:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: size
+    sll_int32, intent(in)                 :: op
+    sll_int32, intent(in)                 :: root_rank
+    sll_comp64, dimension(:), intent(out) :: rec_buf
+    sll_int32                             :: ierr
+
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_DOUBLE_COMPLEX , op, &
+         root_rank, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_comp64(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_comp64
+
+  subroutine sll_collective_reduce_comp32( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp32, dimension(:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: size
+    sll_int32, intent(in)                 :: op
+    sll_int32, intent(in)                 :: root_rank
+    sll_comp32, dimension(:), intent(out) :: rec_buf
+    sll_int32                             :: ierr
+
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_COMPLEX , op, &
+         root_rank, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_comp32(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_comp32
 
 
   !> @brief Reduces logical values on all processes to a single value
@@ -1360,6 +1431,40 @@ contains !************************** Operations **************************
      summand=recvsum
     SLL_DEALLOCATE_ARRAY(recvsum,ierr)
  endsubroutine
+
+
+!> @brief Performs a global sum over an array and writes the result in the given node
+!> If no node in root_rank is given, perform an allreduce this means the sum is written
+!> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_comp64( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp64, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_comp64, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_comp64( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_comp64( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine
+
+
 
 !> @brief Performs a global sum and writes the result in the given node
   !> @param[in] col wrapper around the communicator
