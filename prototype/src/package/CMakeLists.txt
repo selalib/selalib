@@ -56,8 +56,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
-    ${SLL_DIR}/utilities/sol.f
-    ${SLL_DIR}/utilities/muls.f
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
@@ -154,6 +152,13 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
  )
+
+IF(Fortran_COMPILER MATCHES "IBM")
+ELSE()
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/utilities/sol.f
+    ${SLL_DIR}/utilities/muls.f)
+ENDIF()
 
 IF(${FFT_LIB} MATCHES "FFTPACK")
 

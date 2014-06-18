@@ -74,10 +74,10 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
    SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -openmp")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
 
-ELSEIF(Fortran_COMPILER_NAME STREQUAL "xlf")
+ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
 
 ELSE()
 
