@@ -187,7 +187,7 @@ contains
                     mesh_cells, SLL_SOLVER_FEM, sll_world_collective, SLL_DIRICHLET)
             case default
                 qnsolver=>new_pic_1d_quasi_neutral_solver(interval_a, interval_b, spline_degree, &
-                    mesh_cells, SLL_SOLVER_FEM, sll_world_collective,SLL_PERIODIC)
+                    mesh_cells, SLL_SOLVER_FOURIER, sll_world_collective,SLL_PERIODIC)
         endselect
 
         !electric_field_external=>sll_pic_1d_electric_field
@@ -400,11 +400,10 @@ contains
                 !                                                  size(particlespeed), &
                 !                                                1, 1.0_f64)
 
-            !            call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), eval_solution(1:mesh_cells))
-            !
-            !            open(unit=20, file=trim(root_path)//"initial_field.txt")
-            !            write (20,*) eval_solution(1:mesh_cells)
-            !            close(20)
+
+                        open(unit=20, file=trim(root_path)//"initial_field.txt")
+                        write (20,*) eval_solution(1:mesh_cells)
+                        close(20)
             !
             !            !Particle density
             !            open(unit=20, file=trim(root_path)//"initial_electrondensity.txt")
@@ -506,7 +505,7 @@ contains
             impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
 
             thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(particlespeed, particleweight)
-            inhom_var(timestep)=qnsolver%calc_variance_rhs();
+            inhom_var(timestep)=qnsolver%calc_variance_rhs()
 
 
             if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0  ) then
@@ -669,7 +668,6 @@ contains
                 numinject=floor(injectrate*timestepwidth*nparticles*1.0_f64)
                 jdx=0
                 do idx=1,size(species(3)%particle)
-
                     if (species(3)%particle(idx)%weight==0.0_f64) then
                         jdx=jdx+1
                         species(3)%particle(idx)%weight=weight
@@ -720,6 +718,9 @@ contains
                     sign(species(pushed_species)%particle%weight,species(pushed_species)%qm) )
                 call qnsolver%solve()
             case default
+
+
+
                 !All particles, are only electrons
                 !load constant ion background
                 !                SLL_ASSERT(size(allparticleposition)==size(particleweight))

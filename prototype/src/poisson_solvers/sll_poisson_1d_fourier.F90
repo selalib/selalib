@@ -219,20 +219,21 @@ contains
         class(poisson_1d_fourier),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
-        sll_int32 :: fmode
+        sll_int32, dimension(this%num_modes) :: fmode
         sll_int32 :: idx
         sll_real64 :: coeff
         coeff=2.0_f64*sll_pi/this%Ilength
 
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
-
+        do idx=1,this%num_modes
+            fmode(idx)=idx
+        enddo
 
         do idx=1, size(knots_eval)
-            do fmode=1,this%num_modes
-                eval_solution(idx)= 2.0_f64* ( &
-                    real(  -this%fourier_fmode(fmode)/(coeff*fmode)**2 )*cos(knots_eval(idx)*fmode*coeff) &
-                    - imag( -this%fourier_fmode(fmode)/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))/this%Ilength
-            enddo
+                eval_solution(idx)= -2.0_f64* sum( &
+                    real(  this%fourier_fmode/(coeff*fmode)**2 )*cos(knots_eval(idx)*fmode*coeff) &
+                    - imag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
+
         enddo
 
     endsubroutine
@@ -243,22 +244,22 @@ contains
         class(poisson_1d_fourier),intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: knots_eval
         sll_real64, dimension(:), intent(out)     :: eval_solution
-        sll_int32 :: fmode
+        sll_int32, dimension(this%num_modes) :: fmode
         sll_int32 :: idx
         sll_real64 :: coeff
         coeff=2.0_f64*sll_pi/this%Ilength
 
         SLL_ASSERT(size(knots_eval)==size(eval_solution))
 
-
-        do idx=1, size(knots_eval)
-            do fmode=1,this%num_modes
-                eval_solution(idx)= 2.0_f64* ( &
-                    real(   this%fourier_fmode(fmode)/(coeff*fmode*sll_i1) )*cos(knots_eval(idx)*fmode*coeff) &
-                    - imag( this%fourier_fmode(fmode)/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))/this%Ilength
-            enddo
+        do idx=1,this%num_modes
+            fmode(idx)=idx
         enddo
+        do idx=1, size(knots_eval)
+                eval_solution(idx)= -2.0_f64* sum( &
+                    real(   this%fourier_fmode/(coeff*fmode*sll_i1) )*cos(knots_eval(idx)*fmode*coeff) &
+                    - imag( this%fourier_fmode/(coeff*fmode*sll_i1) )*sin(knots_eval(idx)*fmode*coeff))
 
+        enddo
 
     endsubroutine
 
@@ -266,12 +267,18 @@ contains
     function  poisson_1d_fourier_H1seminorm_solution(this) result(seminorm)
         class(poisson_1d_fourier),intent(inout) :: this
         sll_real64 :: seminorm
-        sll_int32 :: fmode
+        sll_int32 :: fmode_a, fmode_b
         sll_real64 :: coeff
         coeff=2.0_f64*sll_pi/this%Ilength
 
-        do fmode=1,this%num_modes
-            seminorm=seminorm+ real((this%fourier_fmode(fmode)/coeff/fmode/sll_i1 )**2*2.0_f64)
+        seminorm=0
+        do fmode_a=1,this%num_modes
+            do fmode_b=1,this%num_modes
+            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1)&
+                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_i1))
+
+            !seminorm=seminorm+ 2.0_f64*abs((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)
+            enddo
         enddo
     endfunction
     !
