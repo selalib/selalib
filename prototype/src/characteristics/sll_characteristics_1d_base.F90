@@ -55,13 +55,13 @@ module sll_module_characteristics_1d_base
   abstract interface
     ! change the value of eta when eta<=eta_min or eta>=eta_max
     ! depending on boundary conditions
-    function signature_process_outside_point( eta, eta_min, eta_max ) result(eta_out)
+    function signature_process_outside_point_1d( eta, eta_min, eta_max ) result(eta_out)
       use sll_working_precision
       sll_real64, intent(in)  :: eta
       sll_real64, intent(in) :: eta_min
       sll_real64, intent(in) :: eta_max
       sll_real64 :: eta_out      
-    end function signature_process_outside_point
+    end function signature_process_outside_point_1d
   end interface
   
 contains
