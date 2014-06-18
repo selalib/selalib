@@ -201,6 +201,7 @@ IF(NOT BUILD_WITHOUT_TEST)
    MESSAGE(STATUS "############################################################")
    MESSAGE(STATUS "####")
    MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
+   MESSAGE(STATUS "#### Fortran_COMPILER_NAME:${Fortran_COMPILER_NAME}")
    MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
    MESSAGE(STATUS "#### Fortran FLAGS ")
    
