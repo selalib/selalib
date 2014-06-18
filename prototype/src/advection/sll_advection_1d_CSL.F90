@@ -53,7 +53,7 @@ implicit none
       CSL_advect_1d
     procedure, pass(adv) :: advect_1d_constant => &
       CSL_advect_1d_constant
-  
+    procedure, pass(adv) :: delete => delete_CSL_1d_advector
   end type CSL_1d_advector
    
 
@@ -409,13 +409,21 @@ contains
     do i=1,N
       f(i)=f(i)/(node_positions(i+1)-node_positions(i))
     enddo
-
     !f(N+1) = f(1)
-
-
-
   end subroutine primitive_to_function
 
+
+  subroutine delete_CSL_1d_advector( adv )
+    class(CSL_1d_advector), intent(inout) :: adv
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(adv%eta_coords,ierr)
+    SLL_DEALLOCATE(adv%eta_coords_unit,ierr)
+    SLL_DEALLOCATE(adv%eta_coords_unit_back,ierr)
+    SLL_DEALLOCATE(adv%charac_feet,ierr)
+    SLL_DEALLOCATE(adv%charac_feet_i,ierr)
+    SLL_DEALLOCATE(adv%buf1d,ierr)
+    SLL_DEALLOCATE(adv%buf1d_out,ierr)
+  end subroutine delete_CSL_1d_advector
 
 
 
