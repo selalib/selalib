@@ -211,9 +211,9 @@ contains
                 this%problemsize=num_cells
                 this%fdsolver=>new(this%mesh,1,this%boundary_type,ierr)
             case(SLL_SOLVER_FOURIER)
-                this%num_fourier_modes=6
+                this%num_fourier_modes=spline_degree
                 this%problemsize=this%num_fourier_modes
-                this%fouriersolver=>new_poisson_1d_fourier(this%mesh, spline_degree,this%boundary_type, ierr)
+                this%fouriersolver=>new_poisson_1d_fourier(this%mesh,   this%num_fourier_modes,this%boundary_type, ierr)
                 SLL_CLEAR_ALLOCATE(this%inhomogenity_comp(this%num_fourier_modes),ierr)
                 SLL_CLEAR_ALLOCATE(this%inhomogenity_comp_steady(this%num_fourier_modes),ierr)
             case(SLL_SOLVER_SPECTRAL)
@@ -279,6 +279,7 @@ contains
 
                 variance=sum(variance_v)
             case default
+                variance=-1.0_f64
         endselect
 
     endfunction
@@ -332,9 +333,9 @@ contains
                 this%inhomogenity=this%scalar_inhomogenity*(this%inhomogenity_steady+this%inhomogenity)
                 call solve(this%spectralsolver, this%poisson_solution, this%inhomogenity)
             case(SLL_SOLVER_FOURIER)
-                !Calculate fourier modes
-
-
+                !Distribute fourier modes on each Core
+                call sll_collective_globalsum(this%collective, this%inhomogenity_comp)
+                call this%fouriersolver%solve(this%inhomogenity_comp)
         endselect
 
     endsubroutine
@@ -364,7 +365,9 @@ contains
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=-this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
-                !!!Not implemented
+                this%inhomogenity_comp=this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
+                    this%BC(ppos),-pweight)
+
         endselect
 
     endsubroutine
@@ -410,7 +413,7 @@ contains
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=    this%inhomogenity +this%get_rhs_cic( this%BC(ppos),pweight)
             case(SLL_SOLVER_FOURIER)
-                this%inhomogenity_comp=    this%inhomogenity_comp +this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
+                this%inhomogenity_comp=this%inhomogenity_comp +this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
                     this%BC(ppos),pweight)
 
         endselect
@@ -461,7 +464,9 @@ contains
             case(SLL_SOLVER_FOURIER)
                 this%inhomogenity_comp=this%inhomogenity_comp+ &
                 this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
-                    this%BC(species%particle%dx), sign(species%particle%weight,species%qm) )
+                this%BC(species%particle%dx), sign(species%particle%weight,species%qm) )
+                print  *,  this%inhomogenity_comp
+
         endselect
     endsubroutine
 
@@ -537,7 +542,14 @@ contains
     subroutine pic_1d_quasi_neutral_solver_set_ions_constant(this, const)
         class(pic_1d_quasi_neutral_solver), intent(inout) :: this
         sll_real64, intent(in) :: const
+
+         selectcase(this%poisson_solver)
+        case(SLL_SOLVER_FOURIER)
+            this%inhomogenity_comp_steady=0.0_f64
+        case default
         this%inhomogenity_steady=const
+
+        endselect
     endsubroutine
 
     subroutine pic_1d_quasi_neutral_solver_set_ions_constant_function(this,  distribution_function)
@@ -565,6 +577,9 @@ contains
             case(SLL_SOLVER_SPECTRAL)
                 !!!not implemented by spectral solver
             case(SLL_SOLVER_FOURIER)
+                call this%fouriersolver%eval_solution_derivative&
+                    (this%BC(eval_points) ,eval_solution)
+
         endselect
     endsubroutine
 
@@ -585,7 +600,8 @@ contains
             case(SLL_SOLVER_SPECTRAL)
                 !!!not implemented by spectral solver
             case(SLL_SOLVER_FOURIER)
-
+                    call this%fouriersolver%eval_solution&
+                    (this%BC(eval_points) ,eval_solution)
         endselect
     endsubroutine
 
@@ -669,6 +685,9 @@ contains
                 energy=0.5_f64*energy/(this%mesh%eta_max-this%mesh%eta_min)
             case(SLL_SOLVER_FD)
                 energy=this%fdsolver%H1seminorm_solution()
+                energy=0.5_f64*energy/(this%mesh%eta_max-this%mesh%eta_min)
+             case(SLL_SOLVER_FOURIER)
+                energy=this%fouriersolver%H1seminorm_solution()
                 energy=0.5_f64*energy/(this%mesh%eta_max-this%mesh%eta_min)
         endselect
 
