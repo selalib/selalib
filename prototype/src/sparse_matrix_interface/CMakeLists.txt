@@ -19,6 +19,7 @@ SET(SPM_FILES getdia.F90
               sparse_matrix_basic.F90
               sparse_matrix_LM.F90  
               sparse_matrix_composed.F90
+              GC.f90
    ) 
 
 
@@ -33,7 +34,6 @@ ElSE()
 ENDIF()
 
 ADD_LIBRARY(spm STATIC ${SPM_FILES})
-
 
 #set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
 #install(TARGETS spm DESTINATION lib)
@@ -66,5 +66,3 @@ ENDIF()
 ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix)
-
-
