@@ -6,7 +6,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
      sparse_matrix.F90
      sparse_matrix_con.F90
      sparse_matrix_operations.F90 
-     connectivity.F90
+     #connectivity.F90
      sparse_matrix_composed.F90
      tracelog.F90
      connectivities_def.F90
