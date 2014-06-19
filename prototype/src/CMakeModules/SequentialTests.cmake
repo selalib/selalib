@@ -9,11 +9,8 @@ ENDIF(CMAKE_BUILD_TYPE STREQUAL DEBUG)
 
 ADD_TEST(NAME constants                 COMMAND test_constants)
 ADD_TEST(NAME timer                     COMMAND test_timer)
-SET_TESTS_PROPERTIES(timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_TEST(NAME logical_meshes            COMMAND test_logical_meshes)
-IF(NOT STDF95)
 ADD_TEST(NAME logical_meshes_multipatch COMMAND test_logical_meshes_multipatch)
-ENDIF(NOT STDF95)
 ADD_TEST(NAME tridiagonal               COMMAND test_tridiagonal)
 ADD_TEST(NAME lagrange                  COMMAND test_lagrange)
 ADD_TEST(NAME toeplitz_penta_diagonal   COMMAND test_toeplitz_penta_diagonal)
@@ -25,21 +22,17 @@ ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
-ADD_TEST(NAME hermite_interpolation    COMMAND test_hermite_interpolation)
-IF(NOT STDF95)
+ADD_TEST(NAME hermite_interpolation     COMMAND test_hermite_interpolation)
 ADD_TEST(NAME pic_particles             COMMAND test_pic_particles)
 ADD_TEST(NAME pic_initializers          COMMAND test_pic_initializers)
 ADD_TEST(NAME pic_accumulator           COMMAND test_pic_accumulator)
 ADD_TEST(NAME pic_particle_sort         COMMAND test_particle_sort_2d)
-ENDIF(NOT STDF95)
 
 ADD_TEST(NAME deboor_spline             COMMAND test_deboor)
 
+SET_TESTS_PROPERTIES(timer PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-IF(NOT STDF95)
-SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES 
-  PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF(NOT STDF95)
+SET_TESTS_PROPERTIES(logical_meshes_multipatch PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -50,13 +43,10 @@ SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSIO
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(hermite_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-IF(NOT STDF95)
 SET_TESTS_PROPERTIES(pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
- SET_TESTS_PROPERTIES(pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-ENDIF(NOT STDF95)
+SET_TESTS_PROPERTIES(pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #IF(MUDPACK_ENABLED)
 #   ADD_TEST(NAME guiding_center_2D_generalized_coords    COMMAND test_guiding_center_2D_generalized_coords)
@@ -66,8 +56,6 @@ ENDIF(NOT STDF95)
 ADD_TEST(NAME periodic_interp COMMAND test_periodic_interp)
 
 ADD_TEST(NAME fft COMMAND test_fft)
-
-IF(NOT STDF95)
 
    ADD_TEST(NAME reduction COMMAND test_reduction)
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -196,8 +184,6 @@ ENDIF(PYTHON_EXECUTABLE)
       SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ENDIF()
 
-ENDIF()
-
 ADD_TEST(NAME WENO COMMAND test_WENO_interp test_WENO_recon)
 ADD_TEST(NAME quintic_1d COMMAND test_quintic_interpolators_1d)
 SET_TESTS_PROPERTIES(quintic_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -209,7 +195,6 @@ SET_TESTS_PROPERTIES(odd_degree_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_TEST(NAME odd_degree_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
 SET_TESTS_PROPERTIES(odd_degree_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-IF(NOT STDF95)
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
 ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
@@ -225,15 +210,8 @@ ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
                           bsl_1d_quintic_nonuniform_compact)
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-
-
-ENDIF()
-
-
-IF(NOT STDF95)
 ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
 SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF()
 
 IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)
