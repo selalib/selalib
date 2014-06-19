@@ -68,11 +68,7 @@ implicit none
        eta1_max_slopes=x1_eta1_max )
   
   
-!#ifdef STDF95
-!  call cubic_spline_2d_initialize( cs2d, &
-!#else
 !  call cs2d%initialize( &
-!#endif
 !       NPTS1, &
 !       NPTS2, &
 !       0.0_f64, &
@@ -84,12 +80,7 @@ implicit none
 !       eta1_min_slopes=x1_eta1_min, &
 !       eta1_max_slopes=x1_eta1_max )
 
-#ifdef STDF95
-  call cubic_spline_2d_compute_interpolants(cs2d,x1)
-#else
   call cs2d%compute_interpolants(x1)
-#endif
-
   print *, 'Compare the values of the transformation at the nodes: '
   acc  = 0.0_f64
   acc1 = 0.0_f64
@@ -98,25 +89,13 @@ implicit none
      do i=0,NPTS1-1
         eta1       = real(i,f64)*h1
         eta2       = real(j,f64)*h2
-#ifdef STDF95
-        node_val   = cubic_spline_2d_interpolate_value(cs2d,eta1,eta2)
-#else
         node_val   = cs2d%interpolate_value(eta1,eta2)
-#endif
         ref        = x1_polar_f(eta1,eta2,params)
         acc        = acc + abs(node_val-ref)
-#ifdef STDF95
-        deriv1_val = cubic_spline_2d_interpolate_derivative_eta1(cs2d,eta1,eta2)
-#else
         deriv1_val = cs2d%interpolate_derivative_eta1(eta1,eta2)
-#endif
         ref        = deriv_x1_polar_f_eta1(eta1,eta2,params)
         acc1       = acc1 + abs(deriv1_val-ref)
-#ifdef STDF95
-        deriv2_val = cubic_spline_2d_interpolate_derivative_eta2(cs2d,eta1,eta2)
-#else
         deriv2_val = cs2d%interpolate_derivative_eta2(eta1,eta2)
-#endif
         ref        = deriv_x1_polar_f_eta2(eta1,eta2,params)
         acc2       = acc2 + abs(deriv2_val-ref)
      end do
@@ -130,26 +109,16 @@ implicit none
 contains
 
 subroutine test_interpolator_2d()
-#ifdef STDF95
-  type(cubic_spline_2d_interpolator), pointer   :: interp
-#else
   class(sll_interpolator_2d_base),    pointer   :: interp
-#endif
   type(cubic_spline_2d_interpolator), target    :: spline
   sll_real64, dimension(NPTS1,NPTS2) :: xx1
   sll_real64, dimension(NPTS1,NPTS2) :: xx2
   sll_real64, dimension(NPTS1,NPTS2) :: data_in
   sll_real64, dimension(NPTS1,NPTS2) :: data_out
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize(spline,NPTS1,NPTS2, &
-                         0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
-                         SLL_PERIODIC, SLL_PERIODIC )
-#else
   call spline%initialize(NPTS1,NPTS2, &
                          0.0_f64,2.0*sll_pi,0.0_f64,2.*sll_pi, &
                          SLL_PERIODIC, SLL_PERIODIC )
-#endif
   interp =>  spline
   do j = 1, NPTS2
   do i = 1, NPTS1
@@ -165,11 +134,7 @@ subroutine test_interpolator_2d()
      xx2(i,j) = 2.*sll_pi*float(j-1)/(NPTS2)
   end do
   end do
-#ifdef STDF95
-  data_out = cubic_spline_2d_interpolate_array(interp,NPTS1, NPTS2, data_in, xx1, xx2)
-#else
   data_out = interp%interpolate_array(NPTS1, NPTS2, data_in, xx1, xx2)
-#endif
 
   print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
 end subroutine test_interpolator_2d
