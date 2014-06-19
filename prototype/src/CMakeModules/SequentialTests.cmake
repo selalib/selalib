@@ -75,7 +75,6 @@ ADD_TEST(NAME fft COMMAND test_fft)
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #consider merging the following 2 tests
-   ADD_TEST(NAME interpolators COMMAND test_interpolators_1d test_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator_1d COMMAND test_arb_deg_spline_interpolators_1d)
    ADD_TEST(NAME fields COMMAND test_scalar_field)
