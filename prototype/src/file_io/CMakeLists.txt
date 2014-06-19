@@ -38,10 +38,8 @@ IF(MPI_MODULE_ENABLED)
 
    TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective ${HDF5_LIBRARIES} )
 
-   IF(NOT STDF95) 
-      ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
-      TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
-   ENDIF()
+   ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
+   TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
 
    ADD_EXECUTABLE(test_io_serial_blocks unit_test_serial_blocks.F90)
    TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_utilities ${HDF5_LIBRARIES})

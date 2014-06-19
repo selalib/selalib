@@ -1,5 +1,3 @@
-IF( NOT STDF95)
-
   ADD_LIBRARY (sll_fcisl STATIC
 		fcisl.F90)
 
@@ -12,5 +10,3 @@ IF( NOT STDF95)
     sll_logical_meshes 
     sll_advection
     sll_constants)
-
-ENDIF(NOT STDF95)

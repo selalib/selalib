@@ -6,7 +6,20 @@ SET(SPM_FILES getdia.F90
               basic_cg.F90 
               gauss_seidel.F90 
               spm_def.F90 
-              spm_tools.F90) 
+              spm_tools.F90
+              precision.f90
+              connectivity.F90
+              connectivities_def.F90
+              quicksort.f90
+              tracelog.F90
+              sparse_matrix_def.F90
+              sparse_matrix.F90
+              sparse_matrix_con.F90
+              sparse_matrix_operations.F90 
+              sparse_matrix_basic.F90
+              sparse_matrix_LM.F90  
+              sparse_matrix_composed.F90
+   ) 
 
 
 MESSAGE(STATUS "SUITESPARSE_FOUND:${SUITESPARSE_FOUND}")
@@ -38,9 +51,6 @@ TARGET_LINK_LIBRARIES( sll_sparse_matrix
   sll_assertion)
 
 
-
-
-
 IF(SUITESPARSE_FOUND)
   ADD_LIBRARY(sll_umfpack_wrapper STATIC
     ../discontinuous_galerkin/mod_umfpack.F90
@@ -52,11 +62,6 @@ IF(SUITESPARSE_FOUND)
     ${BLAS_LIBRARIES})
 ENDIF()
 
-
-  
-  
-  
-  
 
 ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 
