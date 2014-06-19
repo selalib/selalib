@@ -1,0 +1,19 @@
+&sim_params
+	NUM_PARTICLES       = 1000000
+	GUARD_SIZE          = 300000
+	PARTICLE_ARRAY_SIZE = 2050000
+	THERM_SPEED         = 1.0
+	dt     =  0.01
+	number_iterations   = 1500
+	QoverM = 1.0
+	ALPHA  = 0.1
+/
+
+&grid_dims
+	NC_X = 256
+	NC_Y = 64
+	XMIN   = 0.0
+	KX     = 0.5
+	YMIN   = 0.0
+	YMAX   = 1.0
+/
