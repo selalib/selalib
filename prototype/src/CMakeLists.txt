@@ -117,11 +117,14 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
 
+
    IF(NOT STDF95)
 
      ADD_SUBDIRECTORY(pic_particle_types)
+     ADD_SUBDIRECTORY(random_deviate_generators)
      ADD_SUBDIRECTORY(pic_particle_initializers)
      ADD_SUBDIRECTORY(pic_accumulators)
+     ADD_SUBDIRECTORY(pic_utilities)
      ADD_SUBDIRECTORY(field_accumulators)
      ADD_SUBDIRECTORY(CAID_coordinate_transformations)
      #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	

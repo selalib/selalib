@@ -30,8 +30,9 @@ IF(NOT STDF95)
 ADD_TEST(NAME pic_particles             COMMAND test_pic_particles)
 ADD_TEST(NAME pic_initializers          COMMAND test_pic_initializers)
 ADD_TEST(NAME pic_accumulator           COMMAND test_pic_accumulator)
-#ADD_TEST(NAME pic_simulation_4d         COMMAND test_4d_vp_pic_cartesian)
+ADD_TEST(NAME pic_particle_sort         COMMAND test_particle_sort_2d)
 ENDIF(NOT STDF95)
+
 ADD_TEST(NAME deboor_spline             COMMAND test_deboor)
 
 SET_TESTS_PROPERTIES(logical_meshes PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -53,7 +54,8 @@ IF(NOT STDF95)
 SET_TESTS_PROPERTIES(pic_particles PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_initializers PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(pic_accumulator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-#SET_TESTS_PROPERTIES(pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+ SET_TESTS_PROPERTIES(pic_particle_sort PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 ENDIF(NOT STDF95)
 
 #IF(MUDPACK_ENABLED)
