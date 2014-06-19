@@ -18,11 +18,7 @@ program unit_test_vp1d_fourier_fem
     type(sll_simulation_vp1d_fourier_fem) :: simulation
 
     print *, 'Begin of vp1d_fourier_fem test'
-#ifdef STDF95
-    call run_vp1d_fourier_fem(simulation)
-#else
     call simulation%run( )
-#endif
 
     print *, 'reached end of simulation_vp1d_fourier_fem test'
     print *, 'PASSED'

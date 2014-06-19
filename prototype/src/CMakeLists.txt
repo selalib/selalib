@@ -21,7 +21,7 @@ SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
 SET(BUILD_WITHOUT_TEST    OFF CACHE BOOL "Build library without test programs")
 SET(MUDPACK_ENABLED       ON  CACHE BOOL "Build mudpack library")
-SET(FISHPACK_ENABLED      ON  CACHE BOOL "Build fishpack library")
+SET(FISHPACK_ENABLED      OFF CACHE BOOL "Build fishpack library")
 SET(FORTRANCL_ENABLED     OFF CACHE BOOL "Enable OpenCL test programs")
 SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(PETSC_ENABLED         OFF CACHE BOOL "Enable PETSc solvers")
@@ -61,8 +61,6 @@ ADD_CUSTOM_TARGET( clear
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
-SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
-
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
@@ -91,6 +89,7 @@ ENDIF(SUITESPARSE_ENABLED)
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(package)
 
 IF(NOT BUILD_WITHOUT_TEST)
 
@@ -117,29 +116,23 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
 
-
-   IF(NOT STDF95)
-
-     ADD_SUBDIRECTORY(pic_particle_types)
-     ADD_SUBDIRECTORY(random_deviate_generators)
-     ADD_SUBDIRECTORY(pic_particle_initializers)
-     ADD_SUBDIRECTORY(pic_accumulators)
-     ADD_SUBDIRECTORY(pic_utilities)
-     ADD_SUBDIRECTORY(field_accumulators)
-     ADD_SUBDIRECTORY(CAID_coordinate_transformations)
-     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
-     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
-     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
-     ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
-
-     ADD_SUBDIRECTORY(coordinate_transformations)
-     ADD_SUBDIRECTORY(characteristics)
-     ADD_SUBDIRECTORY(advection)
-     ADD_SUBDIRECTORY(gyroaverage)
-
-   ENDIF(NOT STDF95)
+   ADD_SUBDIRECTORY(pic_particle_types)
+   ADD_SUBDIRECTORY(random_deviate_generators)
+   ADD_SUBDIRECTORY(pic_particle_initializers)
+   ADD_SUBDIRECTORY(pic_accumulators)
+   ADD_SUBDIRECTORY(pic_utilities)
+   ADD_SUBDIRECTORY(field_accumulators)
+   ADD_SUBDIRECTORY(CAID_coordinate_transformations)
+   #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
+   #ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
+   #ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
+   ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
 
    ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(coordinate_transformations)
+   ADD_SUBDIRECTORY(characteristics)
+   ADD_SUBDIRECTORY(advection)
+   ADD_SUBDIRECTORY(gyroaverage)
 
    IF(MPI_MODULE_ENABLED)
    
@@ -148,58 +141,42 @@ IF(NOT BUILD_WITHOUT_TEST)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
-
-
-      IF(NOT STDF95)
-         ADD_SUBDIRECTORY(parallel_array_initializers)
-      ENDIF(NOT STDF95)
+      ADD_SUBDIRECTORY(parallel_array_initializers)
 
    ENDIF()
    
-   IF(NOT STDF95)
-      ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ENDIF(NOT STDF95)
-
-   
+   ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)
    ADD_SUBDIRECTORY(opencl)
-
-
    ADD_SUBDIRECTORY(sparse)
    ADD_SUBDIRECTORY(pastix)
    ADD_SUBDIRECTORY(wsmp)
    ADD_SUBDIRECTORY(petsc_solvers)
    ADD_SUBDIRECTORY(linear_solvers)
+   ADD_SUBDIRECTORY(fields)
+   ADD_SUBDIRECTORY(logical_meshes_multipatch)
+   ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
+   ADD_SUBDIRECTORY(fields_multipatch)
+   ADD_SUBDIRECTORY(discontinuous_galerkin) 
+   ADD_SUBDIRECTORY(sparse_matrix_interface)
+   ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
+   ADD_SUBDIRECTORY(poisson_solvers)
+   ADD_SUBDIRECTORY(maxwell_solvers)
+   ADD_SUBDIRECTORY(multigrid)
+   ADD_SUBDIRECTORY(BSL)
+   ADD_SUBDIRECTORY(CSL)
+   ADD_SUBDIRECTORY(visu_pic)
+   ADD_SUBDIRECTORY(mapped_meshes) # deprecated
+   ADD_SUBDIRECTORY(time_solvers)
+   ADD_SUBDIRECTORY(distribution_function)
+   ADD_SUBDIRECTORY(ode_solvers)
+   ADD_SUBDIRECTORY(advection_field)
+   ADD_SUBDIRECTORY(LinRood)
 
-   IF(NOT STDF95)
-
-      ADD_SUBDIRECTORY(fields)
-      ADD_SUBDIRECTORY(logical_meshes_multipatch)
-      ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
-      ADD_SUBDIRECTORY(fields_multipatch)
-      ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ADD_SUBDIRECTORY(sparse_matrix_interface)
-      ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
-      ADD_SUBDIRECTORY(poisson_solvers)
-      ADD_SUBDIRECTORY(maxwell_solvers)
-      ADD_SUBDIRECTORY(multigrid)
-      ADD_SUBDIRECTORY(BSL)
-      ADD_SUBDIRECTORY(CSL)
-      ADD_SUBDIRECTORY(visu_pic)
-      ADD_SUBDIRECTORY(mapped_meshes) # deprecated
-      ADD_SUBDIRECTORY(time_solvers)
-      ADD_SUBDIRECTORY(distribution_function)
-      ADD_SUBDIRECTORY(ode_solvers)
-      ADD_SUBDIRECTORY(advection_field)
-      ADD_SUBDIRECTORY(LinRood)
-
-      ADD_SUBDIRECTORY(mesh_calculus)
-      ADD_SUBDIRECTORY(simulation)
-      ADD_SUBDIRECTORY(eulerian-finite-volume)
-
-   ENDIF(NOT STDF95)
-
+   ADD_SUBDIRECTORY(mesh_calculus)
+   ADD_SUBDIRECTORY(simulation)
+   ADD_SUBDIRECTORY(eulerian-finite-volume)
 
    MESSAGE(STATUS "############################################################")
    MESSAGE(STATUS "####")
@@ -217,31 +194,6 @@ IF(NOT BUILD_WITHOUT_TEST)
    MESSAGE(STATUS "####")
    MESSAGE(STATUS "############################################################")
 
-   IF(STDF95)
-
-      MESSAGE(STATUS " ")
-      MESSAGE(STATUS "####################  F95  ###################")
-      MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
-      MESSAGE(STATUS "## advection_field                          ##")
-      MESSAGE(STATUS "## Linrood                                  ##")
-      MESSAGE(STATUS "## BSL                                      ##")
-      MESSAGE(STATUS "## coordinate_transformations               ##")
-      MESSAGE(STATUS "## mapped_meshes                            ##")
-      MESSAGE(STATUS "## parallel_array_initializers              ##")
-      MESSAGE(STATUS "## CSL                                      ##")
-      MESSAGE(STATUS "## distribution_function                    ##")
-      MESSAGE(STATUS "## maxwel_solvers                           ##")
-      MESSAGE(STATUS "## ode_solvers                              ##")
-      MESSAGE(STATUS "## poisson_solvers                          ##")
-      MESSAGE(STATUS "## time_solvers                             ##")
-      MESSAGE(STATUS "## package                                  ##")
-      MESSAGE(STATUS "## simulation                               ##")
-      MESSAGE(STATUS "## visu_pic                                 ##")
-      MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
-      MESSAGE(STATUS "##############################################")
-
-   ENDIF(STDF95)
-
    INCLUDE(SequentialTests)
 
    IF(MPI_MODULE_ENABLED)
@@ -254,7 +206,6 @@ IF(NOT BUILD_WITHOUT_TEST)
    INCLUDE(DoxygenConfig)
 
 ENDIF(NOT BUILD_WITHOUT_TEST)
-# why is this not dependent on the SLL_BUILD_PACKAGE configuration flag??
-ADD_SUBDIRECTORY(package)
+
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")

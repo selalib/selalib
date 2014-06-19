@@ -8,8 +8,6 @@ SET( INTERPOLATORS_SRC_FILES
         sll_lagrange_interpolator_1d.F90 
         sll_periodic_interpolator_1d.F90)
 
-IF( NOT STDF95)
-
    SET( INTERPOLATORS_SRC_FILES ${INTERPOLATORS_SRC_FILES} 
         sll_interpolators_1d_base.F90
         sll_interpolators_2d_base.F90 
@@ -18,11 +16,8 @@ IF( NOT STDF95)
 	sll_arbitrary_degree_spline_interpolator_1d.F90
         sll_arbitrary_degree_spline_interpolator_2d.F90) 
 
-ENDIF(NOT STDF95)
-
 ADD_LIBRARY( sll_interpolators STATIC ${INTERPOLATORS_SRC_FILES} )
 
-IF (NOT STDF95)
    TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
                                             sll_periodic_interp
                                             sll_lagrange_interpolation
@@ -33,20 +28,6 @@ IF (NOT STDF95)
                                             sll_coordinate_transformations
 					    sll_timer
                                             ${LAPACK_LIBRARIES} )
-ELSE()
-   TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
-                                            sll_periodic_interp
-                                            sll_lagrange_interpolation
-                                            sll_hermite_interpolation
-                                             sll_fft
-                                            sll_utilities 
-   		                            deboor_splines 
-					    sll_file_io 
-                                            ${LAPACK_LIBRARIES} )
-ENDIF (NOT STDF95)
-
-
-IF(NOT STDF95)
 
    ADD_EXECUTABLE(test_interpolators_1d unit_test_1d.F90)
 
@@ -77,9 +58,6 @@ IF(NOT STDF95)
      sll_interpolators
      sll_utilities )
 
-ENDIF()
-
-
 ADD_EXECUTABLE(test_quintic_interpolators_1d 
                test_sll_quintic_spline_interpolator_1d.F90)
 
@@ -103,10 +81,7 @@ ADD_EXECUTABLE(test_odd_degree_interpolators_1d
 TARGET_LINK_LIBRARIES( test_odd_degree_interpolators_1d
                        sll_interpolators)
 
-IF(NOT STDF95)
-
 ADD_EXECUTABLE(test_periodic_interpolators_1d test_periodic_interpolation.F90)
 
 TARGET_LINK_LIBRARIES( test_periodic_interpolators_1d
                        sll_interpolators)
-ENDIF(NOT STDF95)
