@@ -83,5 +83,6 @@ program unit_test
 !!$  print*, '    error=',error
 
   print *, 'Successful, exiting program.'
+  print *, 'PASSED'
 
 end program unit_test
