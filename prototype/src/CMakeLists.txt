@@ -117,19 +117,16 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(reduction)
 
    ADD_SUBDIRECTORY(pic_particle_types)
+   ADD_SUBDIRECTORY(random_deviate_generators)
    ADD_SUBDIRECTORY(pic_particle_initializers)
    ADD_SUBDIRECTORY(pic_accumulators)
+   ADD_SUBDIRECTORY(pic_utilities)
    ADD_SUBDIRECTORY(field_accumulators)
    ADD_SUBDIRECTORY(CAID_coordinate_transformations)
    #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
    #ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
    #ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
    ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
-
-   ADD_SUBDIRECTORY(coordinate_transformations)
-   ADD_SUBDIRECTORY(characteristics)
-   ADD_SUBDIRECTORY(advection)
-   ADD_SUBDIRECTORY(gyroaverage)
 
    ADD_SUBDIRECTORY(interpolators)
 
