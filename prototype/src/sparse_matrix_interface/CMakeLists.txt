@@ -39,9 +39,7 @@ TARGET_LINK_LIBRARIES( sll_sparse_matrix
 
 
 IF(SUITESPARSE_FOUND)
-  ADD_LIBRARY(sll_umfpack_wrapper STATIC
-    ../discontinuous_galerkin/mod_umfpack.F90
-    ../discontinuous_galerkin/umf4_f77wrapper.c)
+  ADD_LIBRARY(sll_umfpack_wrapper STATIC mod_umfpack.F90 umf4_f77wrapper.c)
 
   TARGET_LINK_LIBRARIES( sll_sparse_matrix 
     sll_umfpack_wrapper 
