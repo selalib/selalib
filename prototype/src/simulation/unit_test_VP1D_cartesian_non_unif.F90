@@ -12,11 +12,7 @@ program unit_test_VP1D_cartesian_non_unif
   type(sll_simulation_VP1D_cartesian_non_unif) :: simulation
 
   print *, '#Begin of VP1D_cartesian_non_unif test'
-#ifdef STDF95
-  call run_VP1D_cartesian_non_unif(simulation)
-#else
   call simulation%run( )
-#endif
 
   print *, '#reached end of VP1D_cartesian_non_unif test'
   print *, '#PASSED'

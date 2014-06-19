@@ -7,9 +7,7 @@ use sll_constants
 use cubic_non_uniform_spline_interpolator_1d
 use sll_utilities, only: int2string
 
-#ifndef STDF95
 use sll_module_interpolators_1d_base
-#endif
 
 implicit none
 
@@ -25,13 +23,8 @@ sll_real64, dimension(:,:), allocatable :: df
 
 sll_real64 :: advfield_x, advfield_v
 
-#ifdef STDF95
-type(cubic_non_uniform_spline_1d_interpolator), pointer  :: interp_x
-type(cubic_non_uniform_spline_1d_interpolator), pointer  :: interp_v
-#else
 class(sll_interpolator_1d_base), pointer     :: interp_x
 class(sll_interpolator_1d_base), pointer     :: interp_v
-#endif
 
 type(cubic_non_uniform_spline_1d_interpolator), target   :: spline_x
 type(cubic_non_uniform_spline_1d_interpolator), target   :: spline_v
@@ -61,13 +54,8 @@ advfield_v = 0.0
 
 print*, 'initialize 2d distribution function f(x,v) gaussian'
 print*, 'checking advection of a Gaussian in a uniform field'
-#ifdef STDF95
-call cubic_non_uniform_spline_1d_initialize(spline_x, nc_x+1, x_min, x_max, SLL_PERIODIC )
-call cubic_non_uniform_spline_1d_initialize(spline_v, nc_v+1, v_min, v_max, SLL_PERIODIC )
-#else  
 call spline_x%initialize(nc_x+1, x_min, x_max, SLL_PERIODIC )
 call spline_v%initialize(nc_v+1, v_min, v_max, SLL_PERIODIC )
-#endif
 
 interp_x => spline_x
 interp_v => spline_v
@@ -101,38 +89,18 @@ contains
 subroutine advection_x(dt)
 sll_real64, intent(in) :: dt
 
-#ifdef STDF95
-
-do j = 1, nc_v
-   df(:,j) = cubic_non_uniform_spline_interpolate_array_at_displacement(interp_x,nc_x+1,df(:,j),dt*advfield_x)
-end do
-
-#else
-
 do j = 1, nc_v
    df(:,j) = interp_x%interpolate_array_disp(nc_x+1,df(:,j),dt*advfield_x)
 end do
-
-#endif
 
 end subroutine advection_x
 
 subroutine advection_v(dt)
 sll_real64, intent(in) :: dt
 
-#ifdef STDF95
-
-do i = 1, nc_x
-   df(i,:) = cubic_non_uniform_spline_interpolate_array_at_displacement(interp_v,nc_v+1,df(i,:),dt*advfield_v)
-end do
-
-#else
-
 do i = 1, nc_x
    df(i,:) = interp_v%interpolate_array_disp(nc_v+1,df(i,:),dt*advfield_v)
 end do
-
-#endif
 
 end subroutine advection_v
 
