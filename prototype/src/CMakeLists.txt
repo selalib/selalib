@@ -88,8 +88,9 @@ ENDIF(SUITESPARSE_ENABLED)
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
-ADD_SUBDIRECTORY(fftpack)
 ADD_SUBDIRECTORY(package)
+ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(sparse_matrix_interface)
 
 IF(NOT BUILD_WITHOUT_TEST)
 
@@ -159,7 +160,6 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
    ADD_SUBDIRECTORY(fields_multipatch)
    ADD_SUBDIRECTORY(discontinuous_galerkin) 
-   ADD_SUBDIRECTORY(sparse_matrix_interface)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
    ADD_SUBDIRECTORY(poisson_solvers)
    ADD_SUBDIRECTORY(maxwell_solvers)
