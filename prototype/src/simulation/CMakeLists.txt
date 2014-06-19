@@ -17,8 +17,8 @@ IF(MUDPACK_ENABLED)
 ENDIF(MUDPACK_ENABLED)
 
 
-#IF(MUDPACK_ENABLED)
-
+IF(Fortran_COMPILER MATCHES IBM)
+ELSE()
   ADD_LIBRARY(
     sll_simulation_1d
     STATIC
@@ -118,6 +118,8 @@ ADD_SIMULATION_1D(2d_af_curvilinear)
 ADD_SIMULATION_1D(2d_gc_cartesian)
 ADD_SIMULATION_1D(2d_gc_polar)
 ADD_SIMULATION_1D(2d_gc_curvilinear)
+
+ENDIF(Fortran_COMPILER MATCHES IBM)
 
 #ENDIF(MUDPACK_ENABLED)
 
@@ -243,6 +245,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
                        sll_poisson_solvers
                        sll_qn_solvers_parallel
                        sll_gyroaverage
+                       sll_fcisl
                        sll_fft
 		       sll_distribution_function
 		       sll_general_coordinate_elliptic_solvers

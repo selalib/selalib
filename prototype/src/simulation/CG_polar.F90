@@ -29,7 +29,10 @@ program cg_polar
   sll_real64 :: c1, c2, c3, k1, k2, k3, x, y
   sll_real64 :: c1_mode, c2_mode, c3_mode, k1_mode, k2_mode, k3_mode
   sll_real64 :: mode_slope(1:8),time_mode(1:8)
-
+  sll_int32 :: conserv_rescale
+  
+  conserv_rescale = 0
+  
   !>files 'CG_data.dat'is included in directory selalib/prototype/src/simulation
   !>copy it in the same directory as the executable
   open(27,file='CG_data.txt',action="read")
@@ -57,6 +60,34 @@ program cg_polar
   read(27,*)bc(1)
   read(27,*)bc(2)
   close(27)
+
+
+  select case (bc(1))
+    case (1)
+      bc(1) = SLL_DIRICHLET
+    case (2)
+      bc(1) = SLL_NEUMANN
+    case (3)
+      bc(1) = SLL_NEUMANN_MODE_0
+    case default
+      print *,'#bad value of bc(1) in CG_polar'
+      stop 
+  end select
+
+  select case (bc(2))
+    case (1)
+      bc(2) = SLL_DIRICHLET
+    case (2)
+      bc(2) = SLL_NEUMANN
+    case (3)
+      bc(2) = SLL_NEUMANN_MODE_0
+    case default
+      print *,'#bad value of bc(2) in CG_polar'
+      stop 
+  end select
+
+
+
 
   mode   = real(mod,f64)
   dr     = real(rmax-rmin,f64)/real(nr,f64)
@@ -94,7 +125,7 @@ program cg_polar
   else if (fcase==2) then
     do i = 1,nr+1
       r = rmin+real(i-1,f64)*dr
-      if (r>=r1 .and. r<=r2) then
+      if (r>=r1 .and. r<r2) then !! do not change to r<=r2 to have good mass computation
         do j = 1,ntheta+1
           theta  = real(j-1,f64)*dtheta
           f(i,j) = 1._f64+alpha*cos(mode*theta)
@@ -176,7 +207,10 @@ program cg_polar
   !write f in a file before calculations
   call print2d(dom,f(1:(nr+1),1:(ntheta+1)),Nr,Ntheta, &
     visu,step,"CG")
+  
 
+  
+  
   print *,'#bc(1)=',bc(1)
   print *,'#bc(2)=',bc(2)
   print *,'#SLL_DIRICHLET=',SLL_DIRICHLET
@@ -550,6 +584,23 @@ program cg_polar
       r = rmin+real(i-1,f64)*dr
       plan_sl%adv%field(2,i,:) = plan_sl%adv%field(2,i,:)/r
     end do
+
+    w     = 0.0_f64
+    do j = 1,ntheta
+      w  = w+(f(1,j)*rmin+f(nr+1,j)*rmax)/2.0_f64
+      do i = 2,nr
+        r  = rmin+real(i-1,f64)*dr
+        w  = w+r*f(i,j)
+      end do
+    end do
+    w     = w*dr*dtheta
+
+
+    if(conserv_rescale==1)then
+      f=(w0/w)*f 
+    endif
+
+
     w     = 0.0_f64
     l1    = 0.0_f64
     l2    = 0.0_f64
@@ -626,6 +677,7 @@ program cg_polar
       call plot_f(step/visustep)
     end if
 #endif
+  
   end do
   write(23,*)' '
   write(23,*)' '
