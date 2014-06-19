@@ -20,13 +20,18 @@ module sll_particle_group_2d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  use sll_particle_representations
+#include "particle_representation.h"
+
+!  use sll_particle_representations
+  use sll_logical_meshes
   implicit none
 
   type :: sll_particle_group_2d
-     sll_int64 :: number_particles! peut etre a faire en SLL_PRIV
-     sll_int64 :: active_particles
-     sll_int32 :: guard_list_size
+     sll_int32  :: number_particles! peut etre a faire en SLL_PRIV
+     sll_int32  :: active_particles! tout ça doit passer en 32
+     sll_int32  :: guard_list_size! tout ça doit passer en 32
+     sll_real64 :: qoverm 
+     type(sll_logical_mesh_2d), pointer                 :: mesh
      type(sll_particle_2d), dimension(:), pointer       :: p_list
      type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
   end type sll_particle_group_2d
@@ -38,14 +43,18 @@ module sll_particle_group_2d_module
 contains
 
   function new_particle_2d_group( &
-       num_particles, &
+       num_particles,       &
        particle_array_size, &
-       guard_list_size ) result(res)
+       guard_list_size,     &
+       qoverm,              &
+       mesh ) result(res)
 
     type(sll_particle_group_2d), pointer :: res
-    sll_int64, intent(in) :: num_particles
-    sll_int64, intent(in) :: particle_array_size
-    sll_int64, intent(in) :: guard_list_size
+    sll_int32,  intent(in) :: num_particles
+    sll_int32,  intent(in) :: particle_array_size
+    sll_int32,  intent(in) :: guard_list_size
+    sll_real64, intent(in) :: qoverm
+    type(sll_logical_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
 
     if( num_particles > particle_array_size ) then
@@ -58,8 +67,16 @@ contains
     res%number_particles = num_particles
     res%active_particles = num_particles
     res%guard_list_size  = guard_list_size
+    res%qoverm           = qoverm
+
     SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
     SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
+
+    if (.not.associated(mesh) ) then
+       print*, 'error: passed mesh not associated'
+    endif
+    res%mesh => mesh
+
   end function new_particle_2d_group
 
   subroutine delete_particle_2d_group(p_group)
@@ -75,4 +92,35 @@ contains
     SLL_DEALLOCATE(p_group, ierr)
   end subroutine delete_particle_2d_group
 
+
+!  subroutine set_group_particle_values( &
+!                    p_group,   &
+!                    p_index,   & 
+!                    x,  y,     &
+!                    vx, vy, q  )
+!
+!    sll_real64, intent(in) :: x, y, vx, vy
+!    sll_real32, intent(in) :: q
+!    sll_int64,  intent(in) :: p_index
+!    sll_real32 :: off_x, off_y
+!    sll_real64 :: tmp1, tmp2, xmin, ymin, rdx, rdy
+!    sll_int32  :: ic_x, ic_y, ncx
+!    type(sll_particle_group_2d), pointer :: p_group
+!    
+!    SLL_ASSERT( (p_index >= 1).and.(p_index <= p_group%number_particles) )
+!
+!    ncx  = group%mesh%num_cells1
+!    xmin = group%mesh%eta1_min
+!    ymin = group%mesh%eta2_min
+!    rdx = 1._f64/group%mesh%delta_eta1
+!    rdy = 1._f64/group%mesh%delta_eta2
+!
+!    SET_PARTICLE_VALUES(p_group%p_list(p_index),x,y,vx,vy,q,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
+!!!$    call set_particle_values( p_group%p_list(p_index), &
+!!!$                              x,  y,       &
+!!!$                              vx, vy, q,   &
+!!!$                              p_group%mesh )
+!
+!  end subroutine set_group_particle_values
+!  
 end module sll_particle_group_2d_module
