@@ -74,12 +74,10 @@ ELSE()
 
    ADD_SUBDIRECTORY (prototype/src)
 
-   IF(NOT STDF95)
-      #ADD_SUBDIRECTORY (slv2d/src)
-      #ADD_SUBDIRECTORY (slv2d/vlasov_4d)
-      ADD_SUBDIRECTORY (pic2d/src)
-      #ADD_SUBDIRECTORY (gysela_public/src)
-   ENDIF(NOT STDF95)
+   #ADD_SUBDIRECTORY (slv2d/src)
+   #ADD_SUBDIRECTORY (slv2d/vlasov_4d)
+   #ADD_SUBDIRECTORY (pic2d/src)
+   #ADD_SUBDIRECTORY (gysela_public/src)
    
    # Pipol rc and nightly files are installed under share/pipol
    FILE(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
