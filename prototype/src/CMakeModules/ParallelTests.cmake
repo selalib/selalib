@@ -10,19 +10,15 @@ SET_TESTS_PROPERTIES(remap_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 ADD_MPI_TEST(remap_3d test_remap_3d ${PROCS} ${ARGS})
 SET_TESTS_PROPERTIES(remap_3d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-IF(NOT STDF95)
+SET(PROCS 4)
+ADD_MPI_TEST( point_to_point_comms_1d test_p2p_comms_1d ${PROCS} ${ARGS})
+SET_TESTS_PROPERTIES( point_to_point_comms_1d PROPERTIES 
+  PASS_REGULAR_EXPRESSION  "PASSED")
 
-   SET(PROCS 4)
-   ADD_MPI_TEST( point_to_point_comms_1d test_p2p_comms_1d ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES( point_to_point_comms_1d PROPERTIES 
-     PASS_REGULAR_EXPRESSION  "PASSED")
-
-   SET(PROCS 4)
-   ADD_MPI_TEST( point_to_point_comms_2d test_p2p_comms_2d ${PROCS} ${ARGS})
-   SET_TESTS_PROPERTIES( point_to_point_comms_2d PROPERTIES 
-     PASS_REGULAR_EXPRESSION "PASSED")
-
-ENDIF(NOT STDF95)
+SET(PROCS 4)
+ADD_MPI_TEST( point_to_point_comms_2d test_p2p_comms_2d ${PROCS} ${ARGS})
+SET_TESTS_PROPERTIES( point_to_point_comms_2d PROPERTIES 
+  PASS_REGULAR_EXPRESSION "PASSED")
 
 IF(PROCESSOR_COUNT GREATER 1)
 
@@ -35,23 +31,15 @@ IF(PROCESSOR_COUNT GREATER 1)
    ADD_MPI_TEST(remap_6d test_remap_6d ${PROCS} ${ARGS})
    SET_TESTS_PROPERTIES(remap_6d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-
-   IF(NOT STDF95)
-
-      ADD_MPI_TEST(parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS})
+   ADD_MPI_TEST(parallel_array_initializers test_parallel_array_initializer ${PROCS} ${ARGS})
       SET_TESTS_PROPERTIES(parallel_array_initializers
 	PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-
-   ENDIF()
 
 ENDIF(PROCESSOR_COUNT GREATER 1)
 
 
 IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   
-  IF(NOT STDF95)
-    
     ADD_MPI_TEST(io_parallel test_io_parallel ${PROCS} ${ARGS})
     SET_TESTS_PROPERTIES(io_parallel PROPERTIES PASS_REGULAR_EXPRESSION 
       "PASSED")
@@ -164,8 +152,6 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
       
     ENDIF(PROCESSOR_COUNT GREATER 1)
     
-  ENDIF(NOT STDF95)
-  
   SET(PROCS 1)
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
   SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")

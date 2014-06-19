@@ -30,7 +30,8 @@ SET(SLL_MACROS
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 
-IF(NOT STDF95)
+
+
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
@@ -72,6 +73,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_alternative.F90
+    ${SLL_DIR}/sparse_matrix_interface/precision.F90
+    ${SLL_DIR}/sparse_matrix_interface/sparse_matrix_def.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_general_coordinate_elliptic_solver.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/sll_knots.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers/connectivity_qn.f90
@@ -232,47 +235,50 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
-#SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
-IF(BUILD_SHARED_LIBRARY)
-   ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
-   TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
-ELSE()
-   ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
-   INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
-ENDIF()
+IF(BUILD_WITHOUT_TEST)
 
-SET(DIST_NAME "selalib-0.5.0")
+   SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
+   #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
+   IF(BUILD_SHARED_LIBRARY)
+      ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
+      TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
+   ELSE()
+      ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+      INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
+   ENDIF()
+   
+   SET(DIST_NAME "selalib-0.5.0")
+   
+   ADD_CUSTOM_TARGET(release 
+   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/README ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
+   COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
+   COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
+   COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
+   COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
+   COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
+   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+   COMMENT "Generating Release for macports" VERBATIM)
+   
+   ADD_CUSTOM_TARGET(make_source_dir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+   ADD_DEPENDENCIES(release make_source_dir)
+   
+   FOREACH(_file ${SLL_SOURCE_FILES})
+      get_filename_component(_target ${_file} NAME_WE)
+      ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+      ADD_DEPENDENCIES(release ${_target}_f90)
+      ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
+   ENDFOREACH(_file)
+   
+   INSTALL( CODE
+      "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/selalib\")")
+   
+   INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
 
-ADD_CUSTOM_TARGET(release 
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/README ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
-COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
-COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
-COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
-COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
-COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
-WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-COMMENT "Generating Release for macports" VERBATIM)
-
-ADD_CUSTOM_TARGET(make_source_dir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-ADD_DEPENDENCIES(release make_source_dir)
-
-FOREACH(_file ${SLL_SOURCE_FILES})
-   get_filename_component(_target ${_file} NAME_WE)
-   ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-   ADD_DEPENDENCIES(release ${_target}_f90)
-   ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
-ENDFOREACH(_file)
-
-INSTALL( CODE
-   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/selalib\")")
-
-INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
-ENDIF(NOT STDF95)
+ENDIF(BUILD_WITHOUT_TEST)
