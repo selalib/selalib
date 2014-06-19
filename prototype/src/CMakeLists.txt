@@ -129,6 +129,10 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
 
    ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(coordinate_transformations)
+   ADD_SUBDIRECTORY(characteristics)
+   ADD_SUBDIRECTORY(advection)
+   ADD_SUBDIRECTORY(gyroaverage)
 
    IF(MPI_MODULE_ENABLED)
    
