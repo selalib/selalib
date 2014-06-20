@@ -82,20 +82,20 @@ ELSE()
    ENDIF(NOT STDF95)
    
    # Pipol rc and nightly files are installed under share/pipol
-   FILE(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
-   FOREACH(_f ${rc_files})
-     INSTALL(FILES ${_f} DESTINATION share/pipol/selalib)
-   ENDFOREACH(_f ${rc_files})
+#   FILE(GLOB rc_files  $ENV{HOME}/.pipol/rc $ENV{HOME}/rc.*)
+#   FOREACH(_f ${rc_files})
+#     INSTALL(FILES ${_f} DESTINATION share/pipol/selalib)
+#   ENDFOREACH(_f ${rc_files})
    
-   FILE(GLOB nightly_files $ENV{HOME}/.pipol/nightly/*)
-   FOREACH(_f ${nightly_files})
-     INSTALL(FILES ${_f} DESTINATION share/pipol/selalib/nightly)
-   ENDFOREACH(_f ${nightly_files})
+#   FILE(GLOB nightly_files $ENV{HOME}/.pipol/nightly/*)
+#   FOREACH(_f ${nightly_files})
+#     INSTALL(FILES ${_f} DESTINATION share/pipol/selalib/nightly)
+#   ENDFOREACH(_f ${nightly_files})
    
    SET(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-   INSTALL(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
-           DESTINATION share/doc/pipol/)
+#   INSTALL(FILES AUTHORS ChangeLog COPYING.txt INSTALL README.txt
+#           DESTINATION share/doc/pipol/)
    
    INCLUDE(DartConfig)
    INCLUDE(Dart)
