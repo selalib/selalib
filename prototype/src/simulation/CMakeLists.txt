@@ -69,9 +69,8 @@ ADD_SIMULATION_1D(2d_af_cartesian           2d_analytic_field_cartesian)
 ADD_SIMULATION_1D(2d_af_curvilinear         2d_analytic_field_curvilinear)
 
 #ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
-
-ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
-ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
+#ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
+#ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
 
 
 #OPENMP directives are activated only for release build
