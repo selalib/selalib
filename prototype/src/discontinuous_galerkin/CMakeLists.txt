@@ -3,14 +3,12 @@ IF(SUITESPARSE_FOUND)
    INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
 
    ADD_LIBRARY(sll_vp_dg mesh.F90
-                      ../integration/sll_gausslobatto.F90
-                      ../integration/lob.f
-                      ../integration/gauss.f
+                      sll_gausslobatto.F90
+                      lob.f
+                      gauss.f
                       mod_sparse.F90
                       sll_poisson_1d_periodic_dg.F90
-                      sll_timestep4dg.F90
-                      mod_umfpack.F90
-                      umf4_f77wrapper.c)
+                      sll_timestep4dg.F90)
 
    ADD_EXECUTABLE(test_vp_dg main.F90)
 
@@ -19,6 +17,7 @@ IF(SUITESPARSE_FOUND)
                                     sll_constants
                                     sll_utilities
                                     sll_boundary_condition_descriptors
+                                    sll_umfpack_wrapper
                                     ${SUITESPARSE_LIBRARIES}
                                     ${LAPACK_LIBRARIES}
                                     ${BLAS_LIBRARIES})
