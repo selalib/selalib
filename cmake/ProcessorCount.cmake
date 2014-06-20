@@ -11,9 +11,9 @@ if(NOT DEFINED PROCESSOR_COUNT)
 
   # Mac:
   if(APPLE)
-    find_program(cmd_sys_pro "system_profiler -detailLevel mini")
+    find_program(cmd_sys_pro "system_profiler")
     if(cmd_sys_pro)
-      execute_process(COMMAND ${cmd_sys_pro} OUTPUT_VARIABLE info)
+      execute_process(COMMAND "${cmd_sys_pro}  -detailLevel mini" OUTPUT_VARIABLE info)
       string(REGEX REPLACE "^.*Total Number Of Cores: ([0-9]+).*$" "\\1"
         PROCESSOR_COUNT "${info}")
     endif()
