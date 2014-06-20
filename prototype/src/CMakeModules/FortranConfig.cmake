@@ -76,8 +76,8 @@ ELSEIF(Fortran_COMPILER STREQUAL "INTEL")
 
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-qsmp=omp -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
 
 ELSE()
 
