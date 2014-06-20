@@ -156,10 +156,10 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   ADD_MPI_TEST( visu_pic test_visu_pic ${PROCS} ${ARGS} )
   SET( visu_pic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-  SET(PROCS 1)
-  SET(ARGS " ")
-  ADD_MPI_TEST( pic_simulation_4d test_4d_vp_pic_cartesian ${PROCS} ${ARGS} )
-  SET( pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+  ADD_TEST( NAME pic_simulation_4d 
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND test_4d_vp_pic_cartesian)
+  SET_TESTS_PROPERTIES( pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
 
