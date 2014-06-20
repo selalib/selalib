@@ -16,12 +16,6 @@ IF(MUDPACK_ENABLED)
 
 ENDIF(MUDPACK_ENABLED)
 
-MACRO(ADD_SIMULATION_1D TEST_NAME SIM_NAME ) 
-   ADD_EXECUTABLE(test_${TEST_NAME} simulation_${SIM_NAME}.F90
-                                    unit_test_${TEST_NAME}.F90)
-   TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulation_1d ${DEP_LIBS})
-ENDMACRO(ADD_SIMULATION_1D)
-
 ADD_LIBRARY( sll_simulation_1d STATIC simulation_1d.F90 simulation_base_class.F90 )
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
@@ -49,6 +43,17 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
 #                       sll_working_precision)
 )
 
+MACRO(ADD_SIMULATION_1D TEST_NAME SIM_NAME ) 
+   ADD_EXECUTABLE(test_${TEST_NAME} simulation_${SIM_NAME}.F90
+                                    unit_test_${TEST_NAME}.F90)
+   IF(MUDPACK_ENABLED)
+      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulation_1d)
+   ELSE()
+      TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulation_1d mudpack)
+   ENDIF(MUDPACK_ENABLED)
+
+ENDMACRO(ADD_SIMULATION_1D)
+
 #######################################################################
 # Define executables here. 
 # Please add your new test_MYMETHOD executable, built on 
@@ -63,10 +68,7 @@ ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
 ADD_SIMULATION_1D(2d_af_cartesian           2d_analytic_field_cartesian)
 ADD_SIMULATION_1D(2d_af_curvilinear         2d_analytic_field_curvilinear)
 
-IF(MUDPACK_ENABLED)
-   SET(DEP_LIBS mudpack)
-   ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
-ENDIF(MUDPACK_ENABLED)
+#ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
 
 ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
 ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
