@@ -24,7 +24,7 @@ TARGET_LINK_LIBRARIES( sll_interpolators sll_splines
                                          sll_utilities 
    		                             deboor_splines 
 					           sll_timer
-                                         ${LAPACK_LIBRARIES} )
+                                         ${LAPACK_LIBRARIES})
 
 ADD_EXECUTABLE(test_interpolators_1d unit_test_1d.F90)
 
