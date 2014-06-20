@@ -75,8 +75,8 @@ ADD_TEST(NAME fft COMMAND test_fft)
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #consider merging the following 2 tests
-   ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator_1d COMMAND test_arb_deg_spline_interpolators_1d)
+   ADD_TEST(NAME arb_deg_spline_interpolator_2d COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME fields COMMAND test_scalar_field)
    ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
@@ -175,8 +175,8 @@ ENDIF(PYTHON_EXECUTABLE)
    SET_TESTS_PROPERTIES(gyroaverage_polar_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(gyroaverage_polar_pade PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    IF(FFTW_ENABLED AND FFTW_FOUND)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
