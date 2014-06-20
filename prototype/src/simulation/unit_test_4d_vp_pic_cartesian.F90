@@ -14,6 +14,7 @@ program pic_4d_cartesian
 
   call sim%run()
 
+  print*, 'PASSED'
 
   ! call sim%init_from_file("some_name")
   ! call sim%run()
