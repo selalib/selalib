@@ -48,9 +48,7 @@ program memory_tester
   print *, huge(0_8)
 
 !  call TEST_MACRO(a, 1,90000000000_8 )
-#ifndef STDF95
   SLL_ALLOCATE(a(90000000000_8), err)
-#endif
  
 
 

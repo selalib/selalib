@@ -1,4 +1,3 @@
-IF( NOT STDF95)
 IF(HDF5_ENABLED)
 #hdf5 is parallel and inside aligned_translation_2d.F90
 #hdf5 is used
@@ -141,4 +140,3 @@ IF(HDF5_ENABLED)
 
 
 ENDIF(HDF5_ENABLED)
-ENDIF(NOT STDF95)
