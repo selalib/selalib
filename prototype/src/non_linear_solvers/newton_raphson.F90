@@ -49,8 +49,6 @@ module newton_raphson
 #include "sll_working_precision.h"
 implicit none
 
-#ifdef STDF95
-#else
   abstract interface
      function function_1D(x)
        use sll_working_precision ! can't pass a header file because the
@@ -60,7 +58,6 @@ implicit none
        sll_real64, intent(in) :: x
      end function function_1D
   end interface
-#endif
 
   interface newton_raphson_1D
      module procedure newton_raphson_1D_real
@@ -85,12 +82,8 @@ contains
   subroutine newton_raphson_1D_real(y, f, jac, x, error, x0, tolx, tolf)
   
     sll_real64, intent(in)            :: y
-#ifdef STDF95
-    sll_real64                        :: f, jac
-#else
     procedure(function_1D)            :: f
     procedure(function_1D)            :: jac
-#endif
     sll_real64, intent(out)           :: x
     sll_real64, intent(out)           :: error
     sll_real64, optional              :: x0
