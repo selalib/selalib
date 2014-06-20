@@ -56,8 +56,25 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    type(sll_logical_mesh_2d), pointer :: mesh_2d
   
    !transformation 
-    class(sll_coordinate_transformation_2d_base), pointer :: transformation
+   class(sll_coordinate_transformation_2d_base), pointer :: transformation
   
+   ! Simulation should carry the pointers to the heap-allocated objects itself
+    class(sll_interpolator_2d_base), pointer :: f_interp2d => null()
+    class(sll_interpolator_2d_base), pointer :: phi_interp2d => null()
+    class(sll_characteristics_2d_base), pointer :: charac2d => null()
+    class(sll_characteristics_1d_base), pointer :: charac1d_x1 => null()
+    class(sll_characteristics_1d_base), pointer :: charac1d_x2 => null()
+    class(sll_interpolator_2d_base), pointer   :: A1_interp2d => null()
+    class(sll_interpolator_2d_base), pointer   :: A2_interp2d => null()
+    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1 => null()
+    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1 => null()
+    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2 => null()
+    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2 => null()
+    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1 => null()
+    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2 => null()
+    class(sll_advection_1d_base), pointer    :: advect_1d_x1 => null()
+    class(sll_advection_1d_base), pointer    :: advect_1d_x2 => null()
+   
    !initial function
    procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
@@ -66,7 +83,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
    class(sll_advection_2d_base), pointer    :: advect_2d
    
    !interpolator for derivatives
-   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
+!   class(sll_interpolator_2d_base), pointer   :: phi_interp2d
    !coef
    sll_real64, dimension(:,:), pointer :: b11
    sll_real64, dimension(:,:), pointer :: b12
@@ -208,21 +225,21 @@ contains
     sll_real64 :: r_minus
     sll_real64 :: r_plus
     sll_int32 :: visu_step
-    class(sll_interpolator_2d_base), pointer :: f_interp2d
-    class(sll_interpolator_2d_base), pointer :: phi_interp2d
-    class(sll_characteristics_2d_base), pointer :: charac2d
-    class(sll_characteristics_1d_base), pointer :: charac1d_x1
-    class(sll_characteristics_1d_base), pointer :: charac1d_x2
-    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
-    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
-    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
-    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
-    class(sll_advection_1d_base), pointer    :: advect_1d_x1
-    class(sll_advection_1d_base), pointer    :: advect_1d_x2
+!!$    class(sll_interpolator_2d_base), pointer :: f_interp2d
+!!$    class(sll_interpolator_2d_base), pointer :: phi_interp2d
+!!$    class(sll_characteristics_2d_base), pointer :: charac2d
+!!$    class(sll_characteristics_1d_base), pointer :: charac1d_x1
+!!$    class(sll_characteristics_1d_base), pointer :: charac1d_x2
+!!$    class(sll_interpolator_2d_base), pointer   :: A1_interp2d
+!!$    class(sll_interpolator_2d_base), pointer   :: A2_interp2d
+!!$    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
+!!$    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
+!!$    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
+!!$    class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
+!!$    class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
+!!$    class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
+!!$    class(sll_advection_1d_base), pointer    :: advect_1d_x1
+!!$    class(sll_advection_1d_base), pointer    :: advect_1d_x2
     sll_int32 :: ierr
     sll_real64, dimension(4) :: params_mesh
     sll_real64 :: eta1_min_bis
@@ -657,7 +674,7 @@ contains
     select case (f_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
         print*,"#f interpolation SLL_CUBIC_SPLINES"
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%f_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -679,7 +696,7 @@ contains
     select case (A_interp_case)
       case ("SLL_CUBIC_SPLINES")
        print*,"#A1_2d interpolation SLL_CUBIC_SPLINES"
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%A1_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -689,7 +706,7 @@ contains
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)
        print*,"#A2_2d interpolation SLL_CUBIC_SPLINES"   
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%A2_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -699,23 +716,23 @@ contains
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)  
        print*,"#A1_1d interpolation SLL_CUBIC_SPLINES"   
-        A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
-        A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta2)
        print*,"#A2_1d interpolation SLL_CUBIC_SPLINES"     
-        A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
-        A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
@@ -730,7 +747,7 @@ contains
     select case (phi_interp2d_case)
       case ("SLL_CUBIC_SPLINES")
       print*,"#phi interpolation SLL_CUBIC_SPLINES"  
-        phi_interp2d => new_cubic_spline_2d_interpolator( &
+        sim%phi_interp2d => new_cubic_spline_2d_interpolator( &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min, &
@@ -748,7 +765,7 @@ contains
 
      select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           Nc_eta1_bis+1, &
           eta1_min_bis, &
           eta1_max_bis, &
@@ -763,7 +780,7 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        f_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%f_interp1d_x2 => new_cubic_spline_1d_interpolator( &
           Nc_eta2_bis+1, &
           eta2_min_bis, &
           eta2_max_bis, &
@@ -778,29 +795,29 @@ contains
 
     select case(charac1d_x1_case)
       case ("SLL_EULER")
-        charac1d_x1 => new_explicit_euler_1d_charac(&
+        sim%charac1d_x1 => new_explicit_euler_1d_charac(&
           Nc_eta1_bis+1, &
           eta_min=eta1_min_bis, &
           eta_max=eta1_max_bis, &
           bc_type= sim%bc_charac2d_eta1)    
       case ("SLL_TRAPEZOID")
-        charac1d_x1 => &
+        sim%charac1d_x1 => &
           new_trapezoid_1d_charac(&
           Nc_eta1_bis+1, &
-          A1_interp1d_x1, &
+          sim%A1_interp1d_x1, &
           bc_type= sim%bc_charac2d_eta1, &
           eta_min=eta1_min_bis, &
           eta_max=eta1_max_bis)
       case ("SLL_TRAPEZOID_CONSERVATIVE")
-        charac1d_x1 => &
+        sim%charac1d_x1 => &
           new_trapezoid_conservative_1d_charac(&
           Nc_eta1_bis+1, &
-          A1_interp1d_x1, &
+          sim%A1_interp1d_x1, &
           bc_type=SLL_PERIODIC, &
           eta_min=eta1_min_bis, &
           eta_max=eta1_max_bis)
       case ("SLL_EULER_CONSERVATIVE")
-        charac1d_x1 => new_explicit_euler_conservative_1d_charac(&
+        sim%charac1d_x1 => new_explicit_euler_conservative_1d_charac(&
           Nc_eta1_bis+1, &
           eta_min=eta1_min_bis, &
           eta_max=eta1_max_bis, &
@@ -814,30 +831,30 @@ contains
 
     select case(charac1d_x2_case)
       case ("SLL_EULER")
-        charac1d_x2 => new_explicit_euler_1d_charac(&
+        sim%charac1d_x2 => new_explicit_euler_1d_charac(&
           Nc_eta2_bis+1, &
           eta_min=eta2_min_bis, &
           eta_max=eta2_max_bis, &
           bc_type= sim%bc_charac2d_eta2)    
       case ("SLL_TRAPEZOID")
-        charac1d_x2 => &
+        sim%charac1d_x2 => &
           new_trapezoid_1d_charac(&
           Nc_eta2_bis+1, &
-          A2_interp1d_x2, &
+          sim%A2_interp1d_x2, &
           bc_type= sim%bc_charac2d_eta2, &
           eta_min=eta2_min_bis, &
           eta_max=eta2_max_bis)
       case ("SLL_EULER_CONSERVATIVE")
-        charac1d_x2 => new_explicit_euler_conservative_1d_charac(&
+        sim%charac1d_x2 => new_explicit_euler_conservative_1d_charac(&
           Nc_eta2_bis+1, &
           eta_min=eta2_min_bis, &
           eta_max=eta2_max_bis, &
           bc_type= sim%bc_charac2d_eta2)    
       case ("SLL_TRAPEZOID_CONSERVATIVE")
-        charac1d_x2 => &
+        sim%charac1d_x2 => &
           new_trapezoid_conservative_1d_charac(&
           Nc_eta2_bis+1, &
-          A2_interp1d_x2, &
+          sim%A2_interp1d_x2, &
           bc_type=SLL_PERIODIC, &
           eta_min=eta2_min_bis, &
           eta_max=eta2_max_bis)
@@ -850,22 +867,22 @@ contains
 
     select case(advect1d_x1_case)
       case ("SLL_BSL")
-        advect_1d_x1 => new_BSL_1d_advector(&
-          f_interp1d_x1, &
-          charac1d_x1, &
+        sim%advect_1d_x1 => new_BSL_1d_advector(&
+          sim%f_interp1d_x1, &
+          sim%charac1d_x1, &
           Nc_eta1_bis+1, &
           eta_min = eta1_min_bis, &
           eta_max = eta1_max_bis)
       case ("SLL_CSL")
-        advect_1d_x1 => new_CSL_1d_advector(&
-          f_interp1d_x1, &
-          charac1d_x1, &
+        sim%advect_1d_x1 => new_CSL_1d_advector(&
+          sim%f_interp1d_x1, &
+          sim%charac1d_x1, &
           Nc_eta1_bis+1, &
           eta_min = eta1_min_bis, &
           eta_max = eta1_max_bis, &
           bc_type = sim%bc_charac2d_eta1)
       case ("SLL_PSM")
-        advect_1d_x1 => new_PSM_1d_advector(&
+        sim%advect_1d_x1 => new_PSM_1d_advector(&
           Nc_eta1+1, &
           eta_min = eta1_min, &
           eta_max = eta1_max)
@@ -878,22 +895,22 @@ contains
 
     select case(advect1d_x2_case)
       case ("SLL_BSL")
-        advect_1d_x2 => new_BSL_1d_advector(&
-          f_interp1d_x2, &
-          charac1d_x2, &
+        sim%advect_1d_x2 => new_BSL_1d_advector(&
+          sim%f_interp1d_x2, &
+          sim%charac1d_x2, &
           Nc_eta2_bis+1, &
           eta_min = eta2_min_bis, &
           eta_max = eta2_max_bis)
       case ("SLL_CSL")
-        advect_1d_x2 => new_CSL_1d_advector(&
-          f_interp1d_x2, &
-          charac1d_x2, &
+        sim%advect_1d_x2 => new_CSL_1d_advector(&
+          sim%f_interp1d_x2, &
+          sim%charac1d_x2, &
           Nc_eta2_bis+1, &
           eta_min = eta2_min_bis, &
           eta_max = eta2_max_bis, &
           bc_type = sim%bc_charac2d_eta2)
       case ("SLL_PSM")
-        advect_1d_x2 => new_PSM_1d_advector(&
+        sim%advect_1d_x2 => new_PSM_1d_advector(&
           Nc_eta2+1, &
           eta_min = eta2_min, &
           eta_max = eta2_max)
@@ -907,7 +924,7 @@ contains
     select case(charac2d_case)
       case ("SLL_EULER")
          print*,"#charac = SLL_EULER"  
-        charac2d => new_explicit_euler_2d_charac(&
+        sim%charac2d => new_explicit_euler_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min=eta1_min, &
@@ -918,13 +935,13 @@ contains
           bc_type_2=sim%bc_charac2d_eta2)    
       case ("SLL_VERLET")    
           print*,"#charac =SLL_VERLET"   
-        charac2d => new_verlet_2d_charac(&
+        sim%charac2d => new_verlet_2d_charac(&
           Nc_eta1+1, &
           Nc_eta2+1, &
-          A1_interp2d, &
-          A2_interp2d, &
-          A1_interp1d_x1, &
-          A2_interp1d_x1, &
+          sim%A1_interp2d, &
+          sim%A2_interp2d, &
+          sim%A1_interp1d_x1, &
+          sim%A2_interp1d_x1, &
           bc_type_1=sim%bc_charac2d_eta1, & !SLL_SET_TO_LIMIT, &
           bc_type_2=sim%bc_charac2d_eta2, &
           eta1_min=eta1_min, &
@@ -939,14 +956,12 @@ contains
     end select
 
   
-    sim%phi_interp2d => phi_interp2d
-
     select case(advect2d_case)
       case ("SLL_BSL")
        print*,"#advect2d = SLL_BSL "  
         sim%advect_2d => new_BSL_2d_advector(&
-          f_interp2d, &
-          charac2d, &
+          sim%f_interp2d, &
+          sim%charac2d, &
           Nc_eta1+1, &
           Nc_eta2+1, &
           eta1_min = eta1_min, &
@@ -956,8 +971,8 @@ contains
       case ("SLL_TENSOR_PRODUCT")
        print*,"#advect2d = SLL_SPLITING " 
         sim%advect_2d => new_tensor_product_2d_advector(&
-          advect_1d_x1, &
-          advect_1d_x2, &
+          sim%advect_1d_x1, &
+          sim%advect_1d_x2, &
           Nc_eta1+1, &
           Nc_eta2+1)        
       case default
