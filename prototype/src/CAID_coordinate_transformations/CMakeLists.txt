@@ -30,7 +30,7 @@ IF(PYTHON3_FOUND)
    ENDFOREACH()
 
    SET(MP_INFO_SCRIPT 
-      "${CMAKE_SOURCE_DIR}/python_scripts/translate_multipatch_info.py")
+      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/translate_multipatch_info.py")
      
    FILE(GLOB_RECURSE INFO_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*_info.txt")
 
