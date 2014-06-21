@@ -22,10 +22,11 @@ IF(PYTHON3_FOUND)
    # is prepended with its path, the output also should be written in the
    # same directory.
    FOREACH(PATCH ${PATCH_FILES})
-     # MESSAGE("converting file:" ${PATCH})
+     #MESSAGE(STATUS "converting file:" ${PATCH})
      EXECUTE_PROCESS(
        COMMAND ${PYTHON_EXECUTABLE} ${PATCH_SCRIPT} ${PATCH}
      )
+      UNSET(PATCH)
    ENDFOREACH()
 
    SET(MP_INFO_SCRIPT 
@@ -35,8 +36,9 @@ IF(PYTHON3_FOUND)
 
    FOREACH(PATCH ${INFO_FILES})	
       EXECUTE_PROCESS(
-	COMMAND ${PYTHON_EXECUTABLE}  ${MP_INFO_SCRIPT} ${PATCH}
+	COMMAND ${PYTHON_EXECUTABLE} ${MP_INFO_SCRIPT} ${PATCH}
 	)
+      UNSET(PATCH)
    ENDFOREACH()
 	  
    # Algorithm to generate the files needed for a multipatch representation:
@@ -64,7 +66,7 @@ IF(PYTHON3_FOUND)
 #   MESSAGE("Processing a multipatch with ${NUM_PATCHES} patches.")
 
    EXECUTE_PROCESS(
-    	COMMAND ${CONNECTIVITY_SCRIPT} ${ID_TXT_FILES}
+    	COMMAND ${PYTHON_EXECUTABLE} ${CONNECTIVITY_SCRIPT} ${ID_TXT_FILES}
         )
 
 ELSE(PYTHON3_FOUND)
