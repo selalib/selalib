@@ -26,11 +26,12 @@ SET(SLL_MACROS
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
     ${SLL_DIR}/pastix/sll_pastix.h
     ${SLL_DIR}/linear_solvers/sll_linear_solvers.h
+    ${SLL_DIR}/pic_accumulators/sll_accumulators.h
+    ${SLL_DIR}/pic_particle_types/particle_representation.h
 )
 
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 
-IF(NOT STDF95)
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
@@ -56,8 +57,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/characteristics/sll_characteristics_2d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_2d_base.F90
     ${SLL_DIR}/utilities/sll_utilities.F90
-    ${SLL_DIR}/utilities/sol.f
-    ${SLL_DIR}/utilities/muls.f
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
@@ -155,6 +154,13 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
  )
 
+IF(Fortran_COMPILER MATCHES "IBM")
+ELSE()
+  SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
+    ${SLL_DIR}/utilities/sol.f
+    ${SLL_DIR}/utilities/muls.f)
+ENDIF()
+
 IF(${FFT_LIB} MATCHES "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
@@ -227,47 +233,73 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
-#SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
-IF(BUILD_SHARED_LIBRARY)
-   ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
-   TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
-ELSE()
-   ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
-   INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
-ENDIF()
+IF(SLL_BUILD_PACKAGE)
 
-SET(DIST_NAME "selalib-0.5.0")
+   SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" 
+       CACHE PATH "Installation directory of the library" FORCE)
 
-ADD_CUSTOM_TARGET(release 
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/README ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png ${CMAKE_BINARY_DIR}/${DIST_NAME}/
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
-COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/examples ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
-COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
-COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
-COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz ${CMAKE_BINARY_DIR}/${DIST_NAME}
-COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
-COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
-WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-COMMENT "Generating Release for macports" VERBATIM)
+   SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
+   #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")
+   IF(BUILD_SHARED_LIBRARY)
+      ADD_LIBRARY(selalib SHARED ${SLL_SOURCE_FILES})
+      TARGET_LINK_LIBRARIES(selalib dfftpack mudpack ${HDF5_LIBRARIES} ${LAPACK_LIBRARIES})
+   ELSE()
+      ADD_LIBRARY(selalib STATIC ${SLL_SOURCE_FILES})
+      INSTALL(TARGETS selalib ARCHIVE DESTINATION lib COMPONENT libraries)
+   ENDIF()
+   
+   SET(DIST_NAME "selalib-0.5.0")
+   
+   ADD_CUSTOM_TARGET(release 
+   COMMAND ${CMAKE_COMMAND} -E copy_directory 
+           ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/${DIST_NAME}/include
+   COMMAND ${CMAKE_COMMAND} -E copy 
+           ${CMAKE_CURRENT_SOURCE_DIR}/macports/README 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy 
+           ${CMAKE_CURRENT_SOURCE_DIR}/macports/CMakeLists.txt 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy 
+           ${CMAKE_CURRENT_SOURCE_DIR}/macports/Doxyfile.in 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/Doxyfile
+   COMMAND ${CMAKE_COMMAND} -E copy 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../documentation.f90 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../../documentation/sphinx/_static/logo2.png 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/
+   COMMAND ${CMAKE_COMMAND} -E copy_directory 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+   COMMAND ${CMAKE_COMMAND} -E copy_directory 
+           ${CMAKE_CURRENT_SOURCE_DIR}/examples 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples
+   COMMAND ${CMAKE_COMMAND} -E remove_directory 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeFiles
+   COMMAND ${CMAKE_COMMAND} -E remove 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/CMakeCache.txt
+   COMMAND ${CMAKE_COMMAND} -E tar zcf ${DIST_NAME}.tar.gz 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}
+   COMMAND ${CMAKE_COMMAND} -E md5sum ${DIST_NAME}.tar.gz
+   COMMAND ${CMAKE_COMMAND} -E remove_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}
+           WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+           COMMENT "Generating Release for macports" VERBATIM)
+   
+   ADD_CUSTOM_TARGET(make_source_dir 
+   COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+   ADD_DEPENDENCIES(release make_source_dir)
+   
+   FOREACH(_file ${SLL_SOURCE_FILES})
+      get_filename_component(_target ${_file} NAME_WE)
+      ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} 
+      -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
+      ADD_DEPENDENCIES(release ${_target}_f90)
+      ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
+   ENDFOREACH(_file)
+   
+   INSTALL( CODE
+      "EXECUTE_PROCESS(COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/selalib\")")
+   
+   INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
 
-ADD_CUSTOM_TARGET(make_source_dir COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-ADD_DEPENDENCIES(release make_source_dir)
-
-FOREACH(_file ${SLL_SOURCE_FILES})
-   get_filename_component(_target ${_file} NAME_WE)
-   ADD_CUSTOM_TARGET(${_target}_f90 ${CMAKE_COMMAND} -E copy ${_file} ${CMAKE_BINARY_DIR}/${DIST_NAME}/src)
-   ADD_DEPENDENCIES(release ${_target}_f90)
-   ADD_DEPENDENCIES(${_target}_f90 make_source_dir)
-ENDFOREACH(_file)
-
-INSTALL( CODE
-   "EXECUTE_PROCESS (COMMAND \"${CMAKE_COMMAND}\" -E copy_directory \"${CMAKE_Fortran_MODULE_DIRECTORY}\" \"${CMAKE_INSTALL_PREFIX}/include/selalib\")")
-
-INSTALL(FILES ${SLL_MACROS}  DESTINATION include/selalib  )
-ENDIF(NOT STDF95)
+ENDIF(SLL_BUILD_PACKAGE)

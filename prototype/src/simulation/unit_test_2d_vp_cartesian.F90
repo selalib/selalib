@@ -26,6 +26,9 @@ program vlasov_poisson_2d
 
 
   call get_command_argument(1, filename)
+  
+  print *,'#filename=',filename
+  
   if (len_trim(filename) == 0)then
     sim => new_vp2d_par_cart( )
   else
