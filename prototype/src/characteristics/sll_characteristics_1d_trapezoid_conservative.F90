@@ -31,7 +31,7 @@ implicit none
     sll_int32                               :: Npts
     sll_real64                              :: eta_min   
     sll_real64                              :: eta_max  
-    procedure(signature_process_outside_point), pointer, nopass    :: &
+    procedure(signature_process_outside_point_1d), pointer, nopass    :: &
       process_outside_point
     class(sll_interpolator_1d_base), pointer               :: A_interp
     sll_int32 :: maxiter
@@ -61,7 +61,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
     class(sll_interpolator_1d_base), target :: A_interp
     sll_int32, intent(in), optional :: maxiter
@@ -98,7 +98,7 @@ contains
     sll_int32, intent(in), optional :: bc_type
     sll_real64, intent(in), optional  :: eta_min
     sll_real64, intent(in), optional  :: eta_max
-    procedure(signature_process_outside_point), optional    :: &
+    procedure(signature_process_outside_point_1d), optional    :: &
       process_outside_point
     class(sll_interpolator_1d_base), target :: A_interp
     sll_int32, intent(in), optional :: maxiter

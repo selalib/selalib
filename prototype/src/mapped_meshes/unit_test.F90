@@ -71,11 +71,7 @@ program unit_test
 !  map_a => new_mapped_mesh_2D_general( ANALYTIC_MAP )
 
   print *, x1_polar_f(1.0_f64,1.0_f64,params)
-#ifdef STDF95
-  call initialize( map_a,&
-#else
   call map_a%initialize( &
-#endif
        "map_a", &
        NPTS1, &
        NPTS2, &
@@ -102,15 +98,7 @@ program unit_test
        deriv_x2_polar_f_eta2, &
        params )
 
-#ifdef STDF95
-  print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', &
-       deriv_x1_polar_f_eta1(0.5_f64,0.5_f64,params)*&
-       deriv_x2_polar_f_eta2(0.5_f64,0.5_f64,params)-&
-       deriv_x1_polar_f_eta2(0.5_f64,0.5_f64,params)*&
-       deriv_x2_polar_f_eta1(0.5_f64,0.5_f64,params)
-#else
   print *, 'jacobian_2d(map_a, 0.5, 0.5) = ', map_a%jacobian(0.5_f64,0.5_f64)
-#endif
 
   acc  = 0.0_f64
   acc1 = 0.0_f64
@@ -118,33 +106,18 @@ program unit_test
      do i=0,NPTS1-1
         eta1    = real(i,f64)*h1
         eta2    = real(j,f64)*h2
-#ifdef STDF95
-        node_a  = x1_at_node(map_a,i+1,j+1)
-        val_a   = x1_polar_f(eta1,eta2,params)
-#else
         node_a  = map_a%x1_at_node(i+1,j+1)
         val_a   = map_a%x1(eta1,eta2)
-#endif
         acc     = acc + abs(node_a-val_a)
-#ifdef STDF95
-        node_a  = x2_at_node(map_a,i+1,j+1)
-        val_a   = x2_polar_f(eta1,eta2,params)
-#else
         node_a  = map_a%x2_at_node(i+1,j+1)
         val_a   = map_a%x2(eta1,eta2)
-#endif
         acc1    = acc1 + abs(node_a-val_a)
      end do
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
 
-#ifdef STDF95
-  call write_to_file(map_a)
-#else
   call map_a%write_to_file()
-#endif
-
 
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE MAP                    '
@@ -152,11 +125,7 @@ program unit_test
 
   print *, 'initializing the interpolator: '
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( x1_interp,&
-#else
   call x1_interp%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -168,11 +137,7 @@ program unit_test
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( x2_interp,&
-#else
   call x2_interp%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -184,11 +149,7 @@ program unit_test
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
-#ifdef STDF95
-  call cubic_spline_2d_initialize( j_interp,&
-#else
   call j_interp%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -200,11 +161,7 @@ program unit_test
        const_eta1_min_slope=deriv1_jacobian_polar_f(0.0_f64,0.0_f64,params), &
        const_eta1_max_slope=deriv1_jacobian_polar_f(0.0_f64,0.0_f64,params) )
 
-#ifdef STDF95
-  call initialize( map_d,&
-#else
   call map_d%initialize( &
-#endif
        "map_d", &
        NPTS1, &
        NPTS2, &
@@ -223,21 +180,11 @@ program unit_test
   acc1 = 0.0_f64
   do j=1,NPTS2
      do i=1,NPTS1
-#ifdef STDF95
-        node_a   = x1_at_node(map_a,i,j)
-        node_d   = x1_at_node(map_d,i,j)
-#else
         node_a   = map_a%x1_at_node(i,j)
         node_d   = map_d%x1_at_node(i,j)
-#endif
         acc      = acc + abs(node_a-node_d)
-#ifdef STDF95
-        node_a   = x2_at_node(map_a,i,j)
-        node_d   = x2_at_node(map_d,i,j)
-#else
         node_a   = map_a%x2_at_node(i,j)
         node_d   = map_d%x2_at_node(i,j)
-#endif
         acc1     = acc1 + abs(node_a-node_d)
      end do
   end do
@@ -251,20 +198,12 @@ program unit_test
      do i=0,NPTS1-1
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
-#ifdef STDF95
-        node   =  deriv_x1_polar_f_eta1(eta1,eta2,params)*&
-                  deriv_x2_polar_f_eta2(eta1,eta2,params)-&
-                  deriv_x1_polar_f_eta2(eta1,eta2,params)*&
-                  deriv_x2_polar_f_eta1(eta1,eta2,params)
-        interp = jacobian(map_d,eta1,eta2) 
-#else
 !        print *, 'values: ', i, j, eta1, eta2
 !        print *, 'about to call map_a%jacobian(eta1,eta2)'
         node   = map_a%jacobian(eta1,eta2)
 !        node   = map_2d_jacobian_node(map_d,i+1,j+1)
 !        print *, 'about to call map_d%jacobian(eta1,eta2)'
         interp = map_d%jacobian(eta1,eta2)
-#endif
         delta  =  node - interp
         print *, 'eta1 = ', eta1, 'eta2 = ', eta2
         print *, '(',i+1,j+1,'): ANALYT = ', node, ', DISCR = ', interp, &
@@ -275,13 +214,8 @@ program unit_test
      end do
   end do
 
-#ifdef STDF95
-  call write_to_file(map_d)
-  call write_to_file(map_d)
-#else
   call map_d%write_to_file()
   call map_d%write_to_file()
-#endif
 
   print *, 'Average error = ', acc/real(NPTS1*NPTS2,f64)
 !  call delete(map_a)

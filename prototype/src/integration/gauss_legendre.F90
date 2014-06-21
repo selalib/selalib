@@ -33,17 +33,14 @@ module gauss_legendre_integration
   ! example, to specialize the integrator on the 'interpolated_function_1D'
   ! requires use of the spline module. 
 
-#ifdef STDF95
-
-#else
   abstract interface
-     function function_1D(x)
+     function function_1D_legendre(x)
        use sll_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
                                  ! This is very rare.
-       sll_real64             :: function_1D
+       sll_real64             :: function_1D_legendre
        sll_real64, intent(in) :: x
-     end function function_1D
+     end function function_1D_legendre
   end interface
 
 !  abstract interface
@@ -55,7 +52,6 @@ module gauss_legendre_integration
 !       type(sll_spline_1D), pointer :: spline_obj
 !     end function interpolated_function_1D
 !  end interface
-#endif
 
   interface gauss_legendre_integrate_1D
      module procedure gauss_legendre_integral_1D !,gauss_legendre_integral_interpolated_1D
@@ -164,11 +160,7 @@ contains
   function gauss_legendre_integral_1D( f, a, b, n )
     intrinsic                       :: sqrt
     sll_real64                      :: gauss_legendre_integral_1D
-#ifdef STDF95
-    sll_real64             :: f
-#else
-    procedure(function_1D) :: f
-#endif
+    procedure(function_1d_legendre) :: f
     sll_real64, intent(in)          :: a
     sll_real64, intent(in)          :: b
     sll_int32,  intent(in)          :: n ! needs better name
@@ -225,11 +217,7 @@ contains
 !!$  function gauss_legendre_integral_interpolated_1D( f, spline, a, b, n )
 !!$    intrinsic                        :: sqrt
 !!$    sll_real64                       :: gauss_legendre_integral_interpolated_1D
-!!$#ifdef STDF95
-!!$    sll_real64                          :: f
-!!$#else
 !!$    procedure(interpolated_function_1D) :: f
-!!$#endif
 !!$    type(sll_spline_1D), pointer        :: spline
 !!$    sll_real64, intent(in)              :: a
 !!$    sll_real64, intent(in)              :: b
