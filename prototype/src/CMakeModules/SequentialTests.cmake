@@ -85,8 +85,7 @@ ADD_TEST(NAME fft COMMAND test_fft)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
 
-FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
-IF(PYTHON_EXECUTABLE)
+IF(PYTHON3_FOUND)
 
    ADD_TEST(NAME coordinate_transformation_multipatch_2d 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -102,7 +101,7 @@ ELSE()
 
    MESSAGE(STATUS "python3 not found")
 
-ENDIF(PYTHON_EXECUTABLE)
+ENDIF(PYTHON3_FOUND)
 
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
