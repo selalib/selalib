@@ -22,21 +22,23 @@ IF(PYTHON3_FOUND)
    # is prepended with its path, the output also should be written in the
    # same directory.
    FOREACH(PATCH ${PATCH_FILES})
-     # MESSAGE("converting file:" ${PATCH})
+     #MESSAGE(STATUS "converting file:" ${PATCH})
      EXECUTE_PROCESS(
        COMMAND ${PYTHON_EXECUTABLE} ${PATCH_SCRIPT} ${PATCH}
      )
+      UNSET(PATCH)
    ENDFOREACH()
 
    SET(MP_INFO_SCRIPT 
-      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/translate_multipatch_info.py")
+      "${CMAKE_SOURCE_DIR}/python_scripts/translate_multipatch_info.py")
      
    FILE(GLOB_RECURSE INFO_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*_info.txt")
 
    FOREACH(PATCH ${INFO_FILES})	
       EXECUTE_PROCESS(
-	COMMAND ${PYTHON_EXECUTABLE}  ${MP_INFO_SCRIPT} ${PATCH}
+	COMMAND ${PYTHON_EXECUTABLE} ${MP_INFO_SCRIPT} ${PATCH}
 	)
+      UNSET(PATCH)
    ENDFOREACH()
 	  
    # Algorithm to generate the files needed for a multipatch representation:
@@ -64,7 +66,7 @@ IF(PYTHON3_FOUND)
 #   MESSAGE("Processing a multipatch with ${NUM_PATCHES} patches.")
 
    EXECUTE_PROCESS(
-    	COMMAND ${CONNECTIVITY_SCRIPT} ${ID_TXT_FILES}
+    	COMMAND ${PYTHON_EXECUTABLE} ${CONNECTIVITY_SCRIPT} ${ID_TXT_FILES}
         )
 
 ELSE(PYTHON3_FOUND)
