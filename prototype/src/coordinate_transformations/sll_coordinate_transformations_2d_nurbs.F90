@@ -61,6 +61,8 @@ module sll_module_coordinate_transformations_2d_nurbs
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
+     sll_int32 :: spline_deg1
+     sll_int32 :: spline_deg2
 !     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
 !     type(sll_logical_mesh_2d), pointer :: mesh
    contains
@@ -272,7 +274,8 @@ contains
     !! to use it in the coefficients splines directly in the first and the 
     !! second interpolator 
     
-
+    transf%spline_deg1 = spline_deg1
+    transf%spline_deg2 = spline_deg2
     
     if (transf%is_rational ==1) then
        
