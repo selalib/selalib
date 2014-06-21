@@ -72,6 +72,7 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: get_transformation => get_transformation_ctmp2d
      procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
      procedure, pass :: get_connectivity => get_connectivity_ctmp2d
+     procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_Tmp2d
      procedure, pass :: x1_node => x1_node_ctmp2d
      procedure, pass :: x2_node => x2_node_ctmp2d
      procedure, pass :: jacobian_at_node => jacobian_at_node_ctmp2d
@@ -252,8 +253,12 @@ contains
     SLL_ALLOCATE(local_to_global_file_list(number_patches),ierr)
 
     read( input_file_id,number_global_indices )
+    SLL_ALLOCATE(mp%global_indices(num_global_indices), ierr)
     SLL_ALLOCATE(global_indices_array(num_global_indices),ierr)
 
+    read( input_file_id, global_indices)
+    mp%global_indices(:) = global_indices_array(:)
+    SLL_DEALLOCATE_ARRAY(global_indices_array,ierr)
     read( input_file_id, local_index_files )
     read( input_file_id, local_to_global_files )
 
@@ -513,5 +518,99 @@ contains
     call mp%delete()
     SLL_DEALLOCATE(mp,ierr)
   end subroutine delete_stmp2d_ptr
+
+
+!!$    !! normally in the Ahmed code local_index_array
+!!$  !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
+!!$  !! where 
+!!$  !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
+!!$  !! and 
+!!$  !! num_cell is the number of cells in the patch i
+!!$  !! we stocke this 2D array such as a 1D array with a dimension
+!!$  !! num_splines_loc*num_cell
+!!$  !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
+!!$  !! l = 1, num_splines_loc
+!!$  function get_spline_local_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)result(res)
+!!$    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+!!$    sll_int32 :: patch
+!!$    sll_int32 :: splines_local
+!!$    sll_int32 :: cell_i,cell_j
+!!$    sll_int32 :: num_cell
+!!$    sll_int32 :: res
+!!$    sll_int32 :: num_spline_loc_max
+!!$    sll_int32 :: total_num_cells_in_patch
+!!$    type(sll_logical_mesh_2d), pointer                         :: lm
+!!$    
+!!$   
+!!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
+!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
+!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
+!!$    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
+!!$
+!!$    lm=>mp%transf%get_logical_mesh(patch)
+!!$    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
+!!$                         (mp%interps(patch+1)%interp%spline_degree2 +1)
+!!$    num_cell = cell_i + (cell_j-1)*lm%num_cells1
+!!$    total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
+!!$    res = mp%transf%local_indices(patch+1)%array(num_cell+ (splines_local-1)*total_num_cells_in_patch)
+!!$  end function get_spline_local_index_sfmp2d
+!!$
+!!$
+!!$
+!!$  !! global_indices contains the numeration of splines in all the domain
+!!$  !! It is a 1D array with the following size
+!!$  !!  sum_i num_splines_in_domain_patch_i 
+!!$  !! where  num_splines_in_domain_patch_i=(number_cells_eta1_patch_i + deg_spline_eta1_patch_i)
+!!$  !!                                   * (number_cells_eta2_patch_i + deg_spline_eta2_patch_i) 
+!!$  
+!!$  function get_spline_global_index_sfmp2d(mp,num_splines_global)result(res)
+!!$    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+!!$    sll_int32 :: num_splines_global
+!!$    sll_int32 :: res
+!!$    
+!!$    res = mp%transf%global_indices(num_splines_global)
+!!$  end function get_spline_global_index_sfmp2d
+!!$
+!!$
+  !! normally in the Ahmed code local_to_global_index_array
+  !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
+  !! where 
+  !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
+  !! and 
+  !! num_cell is the number of cells in the patch i
+  !! we stocke this 2D array such as a 1D array with a dimension
+  !! num_splines_loc*num_cell
+  !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
+  !! l = 1, num_splines_loc
+  function get_spline_local_to_global_index_Tmp2d(mp,patch,splines_local,cell_i,cell_j)&
+       result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+    sll_int32 :: patch
+    sll_int32 :: splines_local
+    sll_int32 :: cell_i,cell_j
+    sll_int32 :: num_cell
+    sll_int32 :: res
+    sll_int32 :: num_spline_loc_max
+    sll_int32 :: index
+    sll_int32 :: total_num_cells_in_patch
+    type(sll_logical_mesh_2d), pointer                         :: lm
+    
+    lm=>mp%get_logical_mesh(patch)
+    
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
+    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < lm%num_cells1) )
+    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < lm%num_cells2) )
+    
+    
+    
+    num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
+         (mp%transfs(patch+1)%T%spline_deg2 +1)
+    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
+    
+    num_cell = cell_i + (cell_j-1)*lm%num_cells1
+    total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
+    index = num_cell+(splines_local-1)*total_num_cells_in_patch
+    res=mp%local_to_global_ind(patch+1)%array(index)
+  end function get_spline_local_to_global_index_Tmp2d
 
 end module sll_coordinate_transformation_multipatch_module
