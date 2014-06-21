@@ -35,16 +35,16 @@ program test_general_elliptic_solver_multipatch
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
   type(sll_logical_mesh_2d), pointer                         :: m
   type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
-   type(general_coordinate_elliptic_solver_mp)               :: es_mp
-  type(sll_scalar_field_multipatch_2d), pointer              :: a11_field_mat
-  type(sll_scalar_field_multipatch_2d), pointer              :: a12_field_mat
-  type(sll_scalar_field_multipatch_2d), pointer              :: a21_field_mat
-  type(sll_scalar_field_multipatch_2d), pointer              :: a22_field_mat
-  type(sll_scalar_field_multipatch_2d), pointer              :: b1_field_vect
-  type(sll_scalar_field_multipatch_2d), pointer              :: b2_field_vect
-  type(sll_scalar_field_multipatch_2d), pointer              :: c_field_scal
-  type(sll_scalar_field_multipatch_2d), pointer              :: rho_field_scal
-  type(sll_scalar_field_multipatch_2d), pointer              :: phi_field_scal
+  type(general_coordinate_elliptic_solver_mp)               :: es_mp
+  class(sll_scalar_field_multipatch_2d), pointer              :: a11_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer              :: a12_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer              :: a21_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer              :: a22_field_mat
+  class(sll_scalar_field_multipatch_2d), pointer              :: b1_field_vect
+  class(sll_scalar_field_multipatch_2d), pointer              :: b2_field_vect
+  class(sll_scalar_field_multipatch_2d), pointer              :: c_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer              :: rho_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_scal
   sll_int32 :: num_patches
   sll_int32  :: ipatch
   sll_int32  :: i
@@ -249,11 +249,25 @@ program test_general_elliptic_solver_multipatch
        SPLINE_DEG2, &
        ES_GAUSS_LEGENDRE, &
        ES_GAUSS_LEGENDRE, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       SLL_DIRICHLET, &
-       m) ! m must be a table of logical mesh
+       T)
+
+  print*, ' factorise matrix to solve the elleptic solver'
+  call factorize_mat_es_mp(&
+       es_mp, &
+       a11_field_mat, &
+       a12_field_mat,&
+       a21_field_mat,&
+       a22_field_mat,&
+       b1_field_vect,&
+       b2_field_vect,&
+       c_field_scal)
+
+  print*, 'solve the elliptic solver'
+
+  call solve_general_coordinates_elliptic_eq_mp(&
+       es_mp,&
+       rho_field_scal,&
+       phi_field_scal)
 
   
   print*, 'delete object'

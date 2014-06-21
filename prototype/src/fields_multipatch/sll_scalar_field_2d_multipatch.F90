@@ -931,11 +931,13 @@ contains   ! *****************************************************************
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
     SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
     SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
-    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
+   
     
     lm=>mp%transf%get_logical_mesh(patch)
     num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
          (mp%interps(patch+1)%interp%spline_degree2 +1)
+
+    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
     num_cell = cell_i + (cell_j-1)*lm%num_cells1
     total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
     index = num_cell+(splines_local-1)*total_num_cells_in_patch
