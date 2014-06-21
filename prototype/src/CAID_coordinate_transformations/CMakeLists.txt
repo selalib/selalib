@@ -1,15 +1,11 @@
-FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
-
 # This step is only necessary when we want the .txt files to be available
 # in the build directory for use by the unit tests. Geometric files aren't
 # needed, only their .nml translations. Hence this is commented out.
 #FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
 #FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
-IF(PYTHON_EXECUTABLE)
+IF(PYTHON3_FOUND)
 
-  SET(PYTHON3_FOUND ON)
-  
   # choose python script to translate individual patch information.
   SET(PATCH_SCRIPT 
     "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
@@ -71,10 +67,9 @@ IF(PYTHON_EXECUTABLE)
     	COMMAND ${CONNECTIVITY_SCRIPT} ${ID_TXT_FILES}
         )
 
-ELSE(PYTHON_EXECUTABLE)
+ELSE(PYTHON3_FOUND)
    MESSAGE(STATUS "Multipatch test needs python3")
-   SET(PYTHON3_FOUND OFF)
-ENDIF(PYTHON_EXECUTABLE)
+ENDIF(PYTHON3_FOUND)
 
 # .nml files usually need to be accessed by the unit tests, so copy them to
 # the build directory.
