@@ -1,5 +1,5 @@
 
-   ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
+ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
      connectivity_qn.f90
      sll_general_coordinate_elliptic_solver.F90
      profilmat.f90
