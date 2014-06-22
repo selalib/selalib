@@ -136,7 +136,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_interface/spm_basic.F90
     ${SLL_DIR}/sparse_matrix_interface/spm_def.F90
 #    ${SLL_DIR}/sparse_matrix_interface/spm_mkl.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
+#    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
 #    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
     ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
