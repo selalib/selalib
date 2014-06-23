@@ -16,7 +16,6 @@ ELSE()
 ENDIF()
 MESSAGE(STATUS "Fortran compiler : ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 
-
 IF(CMAKE_Fortran_COMPILER MATCHES "gfortran*")
    ADD_DEFINITIONS(-DGFORTRAN)
    SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fopenmp")
@@ -29,8 +28,8 @@ ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
 
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-qsmp=omp -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-qsmp=omp -qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
 

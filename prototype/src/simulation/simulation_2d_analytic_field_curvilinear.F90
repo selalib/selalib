@@ -35,12 +35,12 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 #ifdef MUDPACK
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_timer
-  use sll_fft
-  use sll_module_poisson_2d_periodic_solver
+!  use sll_module_poisson_2d_elliptic_solver
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_timer
+!  use sll_fft
+!  use sll_module_poisson_2d_periodic_solver
   
   implicit none
   
