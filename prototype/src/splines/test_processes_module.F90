@@ -8,9 +8,6 @@ module test_processes_module
   use test_func_module
   implicit none
 
-#ifdef STDF95
-
-#else
   abstract interface 
      function fx(x)
        use sll_working_precision
@@ -49,7 +46,6 @@ module test_processes_module
        type(sll_cubic_spline_2D), pointer :: spline
      end function spline_interpolator_2d
   end interface
-#endif
 
 contains
 
@@ -376,15 +372,9 @@ contains
     npts, &
     test_passed, &
     criterion )
-#ifdef STDF95
-    sll_real64, external              :: func
-    sll_real64, external              :: result_f
-    sll_real64, external              :: interpolator_f
-#else
     procedure(fx)                     :: func
     procedure(fx)                     :: result_f
     procedure(spline_interpolator_1d) :: interpolator_f
-#endif
     sll_real64, intent(in)            :: xmin
     sll_real64, intent(in)            :: xmax
     sll_int32, intent(in)             :: npts
@@ -454,15 +444,9 @@ contains
     xmax, &
     test_passed, &
     criterion )
-#ifdef STDF95
-    sll_real64, external              :: func
-    sll_real64, external              :: result_f
-    sll_real64, external              :: interpolator_f
-#else
     procedure(fx)                     :: func
     procedure(fx)                     :: result_f
     procedure(spline_interpolator_1d) :: interpolator_f
-#endif
     sll_real64, intent(in)            :: xmin
     sll_real64, intent(in)            :: xmax
     logical, intent(out)              :: test_passed
@@ -546,11 +530,7 @@ contains
     test_passed )
     ! This function does not explicitly specifies the slopes since these are
     ! computed by default inside the splines.
-#ifdef STDF95
-    sll_real64             :: func_1d
-#else
     procedure(fx)          :: func_1d
-#endif
     logical, intent(out)   :: test_passed
     logical    :: local_test_passed
     sll_real64, allocatable, dimension(:) :: data_in
@@ -618,15 +598,9 @@ contains
     interpolation_func, & ! function to test
     test_passed )
 
-#ifdef STDF95
-    sll_real64, external                    :: func_2d   
-    sll_real64, external                    :: partial_x1 
-    sll_real64, external                    :: interpolation_func
-#else    
     procedure(fxy)                          :: func_2d   
     procedure(fxy)                          :: partial_x1 
     procedure(spline_interpolator_2d)       :: interpolation_func
-#endif
     logical, intent(out)                    :: test_passed
     sll_real64, allocatable, dimension(:,:) :: data_in
     sll_real64, allocatable, dimension(:,:) :: correct_data_out
@@ -691,19 +665,11 @@ contains
     slope_max_func, &
     test_passed )
 
-#ifdef STDF95
-    sll_real64                              :: func_2d   
-    sll_real64                              :: transformed_func
-    sll_real64                              :: interpolation_func
-    sll_real64                              :: slope_min_func
-    sll_real64                              :: slope_max_func
-#else 
     procedure(fxy)                          :: func_2d   
     procedure(fxy)                          :: transformed_func
     procedure(spline_interpolator_2d)          :: interpolation_func
     procedure(fxy)                          :: slope_min_func
     procedure(fxy)                          :: slope_max_func
-#endif
     logical, intent(out)                    :: test_passed
     sll_real64, allocatable, dimension(:,:) :: data_in
     sll_real64, allocatable, dimension(:,:) :: correct_data_out
@@ -792,15 +758,9 @@ contains
     eta1_max_slope_func, &
     test_passed )
 
-#ifdef STDF95
-    sll_real64     :: transform_func
-    sll_real64     :: eta1_min_slope_func
-    sll_real64     :: eta1_max_slope_func
-#else
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta1_min_slope_func
     procedure(fxy) :: eta1_max_slope_func
-#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -881,15 +841,9 @@ contains
     eta1_max_slope_func, &
     test_passed )
 
-#ifdef STDF95
-    sll_real64     :: transform_func
-    sll_real64     :: eta1_min_slope_func
-    sll_real64     :: eta1_max_slope_func
-#else
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta1_min_slope_func
     procedure(fxy) :: eta1_max_slope_func
-#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -970,15 +924,9 @@ contains
     eta2_max_slope_func, &
     test_passed )
 
-#ifdef STDF95
-    sll_real64     :: transform_func
-    sll_real64     :: eta2_min_slope_func
-    sll_real64     :: eta2_max_slope_func
-#else 
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta2_min_slope_func
     procedure(fxy) :: eta2_max_slope_func
-#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -1059,15 +1007,9 @@ contains
     eta2_max_slope_func, &
     test_passed )
 
-#ifdef STDF95
-    sll_real64     :: transform_func
-    sll_real64     :: eta2_min_slope_func
-    sll_real64     :: eta2_max_slope_func
-#else 
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta2_min_slope_func
     procedure(fxy) :: eta2_max_slope_func
-#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -1150,19 +1092,11 @@ contains
     eta2_max_slope_func, &
     test_passed )
  
-#ifdef STDF95
-    sll_real64     :: transform_func
-    sll_real64     :: eta1_min_slope_func
-    sll_real64     :: eta1_max_slope_func
-    sll_real64     :: eta2_min_slope_func
-    sll_real64     :: eta2_max_slope_func
-#else
     procedure(fxy) :: transform_func
     procedure(fxy) :: eta1_min_slope_func
     procedure(fxy) :: eta1_max_slope_func
     procedure(fxy) :: eta2_min_slope_func
     procedure(fxy) :: eta2_max_slope_func
-#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, ierr
@@ -1251,11 +1185,7 @@ contains
   end subroutine test_2d_spline_hrmt_hrmt
 
   subroutine test_2d_spline_hrmt_hrmt_no_slopes( transform_func, test_passed )
-#ifdef STDF95
-    sll_real64     :: transform_func
-#else
     procedure(fxy) :: transform_func
-#endif
     logical, intent(out) :: test_passed
 
     sll_int32 :: i, j, im, jm, ierr

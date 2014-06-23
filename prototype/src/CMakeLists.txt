@@ -19,17 +19,19 @@ SET(MPI_MODULE_ENABLED    ON  CACHE BOOL "Enable use of MPI library")
 SET(HDF5_ENABLED          ON  CACHE BOOL "Use HDF5 library for data output")
 SET(HDF5_PARALLEL_ENABLED OFF CACHE BOOL "Use Parallel HDF5")
 SET(FFTW_ENABLED          ON  CACHE BOOL "Enable use of FFTW library")
-SET(BUILD_WITHOUT_TEST    OFF CACHE BOOL "Build library without test programs")
+SET(BUILD_TESTS           ON  CACHE BOOL "Build library with test programs")
 SET(MUDPACK_ENABLED       ON  CACHE BOOL "Build mudpack library")
-SET(FISHPACK_ENABLED      ON  CACHE BOOL "Build fishpack library")
+SET(FISHPACK_ENABLED      OFF CACHE BOOL "Build fishpack library")
 SET(FORTRANCL_ENABLED     OFF CACHE BOOL "Enable OpenCL test programs")
 SET(PASTIX_ENABLED        OFF CACHE BOOL "Build PasTiX solvers ")
 SET(PETSC_ENABLED         OFF CACHE BOOL "Enable PETSc solvers")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
+SET(SLL_BUILD_PACKAGE     OFF CACHE BOOL "Build selalib package")
 
-IF(NOT BUILD_WITHOUT_TEST)
-   SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" CACHE PATH "Installation directory of the library" FORCE)
-ENDIF(NOT BUILD_WITHOUT_TEST)
+FIND_PACKAGE(PythonInterp)
+IF(PYTHON_EXECUTABLE AND PYTHON_VERSION_STRING MATCHES "3.*")
+   SET(PYTHON3_FOUND ON)
+ENDIF()
 
 # Specify the output for binary
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -61,13 +63,12 @@ ADD_CUSTOM_TARGET( clear
    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
-SET(STDF95_ENABLED OFF CACHE BOOL "Use F95 norm")
-
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
 INCLUDE(MPIConfig)
 INCLUDE(HDF5Config)
+INCLUDE(DoxygenConfig)
 
 IF(MPI_MODULE_ENABLED)
    INCLUDE(ProcessorCount)
@@ -90,12 +91,13 @@ ENDIF(SUITESPARSE_ENABLED)
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
+ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
 
-IF(NOT BUILD_WITHOUT_TEST)
+IF(NOT SLL_BUILD_PACKAGE)
 
    ENABLE_TESTING()
-
+   
    ADD_SUBDIRECTORY(memory)
    ADD_SUBDIRECTORY(precision)
    ADD_SUBDIRECTORY(assert)
@@ -109,147 +111,95 @@ IF(NOT BUILD_WITHOUT_TEST)
    ADD_SUBDIRECTORY(logical_meshes)
    ADD_SUBDIRECTORY(lagrange_interpolation)
    ADD_SUBDIRECTORY(hermite_interpolation)
+   ADD_SUBDIRECTORY(fcisl)
    ADD_SUBDIRECTORY(WENO)
    ADD_SUBDIRECTORY(integration)
    ADD_SUBDIRECTORY(fft)
    ADD_SUBDIRECTORY(periodic_interpolation)
    ADD_SUBDIRECTORY(deboor_splines)
    ADD_SUBDIRECTORY(reduction)
-
-   IF(NOT STDF95)
-
-     ADD_SUBDIRECTORY(pic_particle_types)
-     ADD_SUBDIRECTORY(pic_particle_initializers)
-     ADD_SUBDIRECTORY(pic_accumulators)
-     ADD_SUBDIRECTORY(field_accumulators)
-     ADD_SUBDIRECTORY(CAID_coordinate_transformations)
-     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
-     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
-     #ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
-     ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
-
-     ADD_SUBDIRECTORY(coordinate_transformations)
-     ADD_SUBDIRECTORY(characteristics)
-     ADD_SUBDIRECTORY(advection)
-     ADD_SUBDIRECTORY(gyroaverage)
-
-   ENDIF(NOT STDF95)
-
-   ADD_SUBDIRECTORY(interpolators)
-
-   IF(MPI_MODULE_ENABLED)
    
+   ADD_SUBDIRECTORY(pic_particle_types)
+   ADD_SUBDIRECTORY(random_deviate_generators)
+   ADD_SUBDIRECTORY(pic_particle_initializers)
+   ADD_SUBDIRECTORY(pic_accumulators)
+   ADD_SUBDIRECTORY(pic_utilities)
+   ADD_SUBDIRECTORY(field_accumulators)
+   ADD_SUBDIRECTORY(CAID_coordinate_transformations)
+   #ADD_SUBDIRECTORY(CAID_coordinate_transformations/circle_mp5)	
+   #ADD_SUBDIRECTORY(CAID_coordinate_transformations/mhdeq)
+   #ADD_SUBDIRECTORY(CAID_coordinate_transformations/identity)
+   ADD_SUBDIRECTORY(CAID_coordinate_transformations/square_4p_n10)
+   
+   ADD_SUBDIRECTORY(interpolators)
+   ADD_SUBDIRECTORY(coordinate_transformations)
+   ADD_SUBDIRECTORY(characteristics)
+   ADD_SUBDIRECTORY(advection)
+   ADD_SUBDIRECTORY(gyroaverage)
+   
+   IF(MPI_MODULE_ENABLED)
+      
       SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
       ADD_SUBDIRECTORY(collective)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
-
-
-      IF(NOT STDF95)
-         ADD_SUBDIRECTORY(parallel_array_initializers)
-      ENDIF(NOT STDF95)
-
+      ADD_SUBDIRECTORY(parallel_array_initializers)
+   
    ENDIF()
-   
-   IF(NOT STDF95)
-      ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ENDIF(NOT STDF95)
-
-   
+      
+   ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)
    ADD_SUBDIRECTORY(opencl)
-
-
    ADD_SUBDIRECTORY(sparse)
    ADD_SUBDIRECTORY(pastix)
    ADD_SUBDIRECTORY(wsmp)
    ADD_SUBDIRECTORY(petsc_solvers)
    ADD_SUBDIRECTORY(linear_solvers)
-
-   IF(NOT STDF95)
-
-      ADD_SUBDIRECTORY(fields)
-      ADD_SUBDIRECTORY(logical_meshes_multipatch)
-      ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
-      ADD_SUBDIRECTORY(fields_multipatch)
-      ADD_SUBDIRECTORY(discontinuous_galerkin) 
-      ADD_SUBDIRECTORY(sparse_matrix_interface)
-      ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
-      ADD_SUBDIRECTORY(poisson_solvers)
-      ADD_SUBDIRECTORY(maxwell_solvers)
-      ADD_SUBDIRECTORY(multigrid)
-      ADD_SUBDIRECTORY(BSL)
-      ADD_SUBDIRECTORY(CSL)
-      ADD_SUBDIRECTORY(visu_pic)
-      ADD_SUBDIRECTORY(mapped_meshes) # deprecated
-      ADD_SUBDIRECTORY(time_solvers)
-      ADD_SUBDIRECTORY(distribution_function)
-      ADD_SUBDIRECTORY(ode_solvers)
-      ADD_SUBDIRECTORY(advection_field)
-      ADD_SUBDIRECTORY(LinRood)
-
-      ADD_SUBDIRECTORY(mesh_calculus)
-      ADD_SUBDIRECTORY(simulation)
-      ADD_SUBDIRECTORY(eulerian-finite-volume)
-
-   ENDIF(NOT STDF95)
-
-
-   MESSAGE(STATUS "############################################################")
-   MESSAGE(STATUS "####")
-   MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
-   MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
-   MESSAGE(STATUS "#### Fortran FLAGS ")
-   
-   IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
-      MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
-   ELSE()
-      MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
-   ENDIF()
-
-   MESSAGE(STATUS "####")
-   MESSAGE(STATUS "############################################################")
-
-   IF(STDF95)
-
-      MESSAGE(STATUS " ")
-      MESSAGE(STATUS "####################  F95  ###################")
-      MESSAGE(STATUS "## Directories not compiled in Fortran 95 : ##")
-      MESSAGE(STATUS "## advection_field                          ##")
-      MESSAGE(STATUS "## Linrood                                  ##")
-      MESSAGE(STATUS "## BSL                                      ##")
-      MESSAGE(STATUS "## coordinate_transformations               ##")
-      MESSAGE(STATUS "## mapped_meshes                            ##")
-      MESSAGE(STATUS "## parallel_array_initializers              ##")
-      MESSAGE(STATUS "## CSL                                      ##")
-      MESSAGE(STATUS "## distribution_function                    ##")
-      MESSAGE(STATUS "## maxwel_solvers                           ##")
-      MESSAGE(STATUS "## ode_solvers                              ##")
-      MESSAGE(STATUS "## poisson_solvers                          ##")
-      MESSAGE(STATUS "## time_solvers                             ##")
-      MESSAGE(STATUS "## package                                  ##")
-      MESSAGE(STATUS "## simulation                               ##")
-      MESSAGE(STATUS "## visu_pic                                 ##")
-      MESSAGE(STATUS "## fields (except geometry_functions.F90)   ##")
-      MESSAGE(STATUS "##############################################")
-
-   ENDIF(STDF95)
+   ADD_SUBDIRECTORY(fields)
+   ADD_SUBDIRECTORY(logical_meshes_multipatch)
+   ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
+   ADD_SUBDIRECTORY(fields_multipatch)
+   ADD_SUBDIRECTORY(sparse_matrix_interface)
+   ADD_SUBDIRECTORY(discontinuous_galerkin) 
+   ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
+   ADD_SUBDIRECTORY(poisson_solvers)
+   ADD_SUBDIRECTORY(maxwell_solvers)
+   ADD_SUBDIRECTORY(multigrid)
+   ADD_SUBDIRECTORY(BSL)
+   ADD_SUBDIRECTORY(CSL)
+   ADD_SUBDIRECTORY(visu_pic)
+   ADD_SUBDIRECTORY(mapped_meshes) # deprecated
+   ADD_SUBDIRECTORY(time_solvers)
+   ADD_SUBDIRECTORY(distribution_function)
+   ADD_SUBDIRECTORY(ode_solvers)
+   ADD_SUBDIRECTORY(advection_field)
+   ADD_SUBDIRECTORY(LinRood)
+   ADD_SUBDIRECTORY(mesh_calculus)
+   ADD_SUBDIRECTORY(simulation)
+   ADD_SUBDIRECTORY(eulerian-finite-volume)
 
    INCLUDE(SequentialTests)
 
    IF(MPI_MODULE_ENABLED)
-
       INCLUDE(ParallelTests)
-
    ENDIF()
 
+ENDIF(NOT SLL_BUILD_PACKAGE)
 
-   INCLUDE(DoxygenConfig)
-
-ENDIF(NOT BUILD_WITHOUT_TEST)
-# why is this not dependent on the SLL_BUILD_PACKAGE configuration flag??
-ADD_SUBDIRECTORY(package)
+MESSAGE(STATUS "############################################################")
+MESSAGE(STATUS "####")
+MESSAGE(STATUS "#### CMAKE_BUILD_TYPE:${CMAKE_BUILD_TYPE}")
+MESSAGE(STATUS "#### Fortran_COMPILER_NAME:${Fortran_COMPILER_NAME}")
+MESSAGE(STATUS "#### CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
+MESSAGE(STATUS "#### Fortran FLAGS ")
+IF(CMAKE_BUILD_TYPE MATCHES "Debug") 
+MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_DEBUG}")
+ELSE()
+MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
+ENDIF()
+MESSAGE(STATUS "####")
+MESSAGE(STATUS "############################################################")
 
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
