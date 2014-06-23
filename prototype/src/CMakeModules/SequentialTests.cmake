@@ -75,8 +75,8 @@ ADD_TEST(NAME fft COMMAND test_fft)
                      PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 #consider merging the following 2 tests
-   ADD_TEST(NAME arb_deg_spline_interpolator COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME arb_deg_spline_interpolator_1d COMMAND test_arb_deg_spline_interpolators_1d)
+   ADD_TEST(NAME arb_deg_spline_interpolator_2d COMMAND test_arb_deg_spline_interpolators_2d)
    ADD_TEST(NAME fields COMMAND test_scalar_field)
    ADD_TEST(NAME time_splitting COMMAND test_time_splitting)
    ADD_TEST(NAME distribution_function COMMAND test_distribution_function)
@@ -85,8 +85,7 @@ ADD_TEST(NAME fft COMMAND test_fft)
    ADD_TEST(NAME fields_2d_alternative COMMAND test_scalar_field_alternative)
    ADD_TEST(NAME fields_1d_alternative COMMAND test_scalar_fields_1d_alternative)	
 
-FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
-IF(PYTHON_EXECUTABLE)
+IF(PYTHON3_FOUND)
 
    ADD_TEST(NAME coordinate_transformation_multipatch_2d 
             WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
@@ -94,15 +93,15 @@ IF(PYTHON_EXECUTABLE)
    SET_TESTS_PROPERTIES(coordinate_transformation_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    ADD_TEST(NAME scalar_field_multipatch_2d
-     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-     COMMAND test_scalar_field_multipatch_2d)
+            WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+            COMMAND test_scalar_field_multipatch_2d)
    SET_TESTS_PROPERTIES(scalar_field_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ELSE()
 
    MESSAGE(STATUS "python3 not found")
 
-ENDIF(PYTHON_EXECUTABLE)
+ENDIF(PYTHON3_FOUND)
 
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
@@ -175,8 +174,8 @@ ENDIF(PYTHON_EXECUTABLE)
    SET_TESTS_PROPERTIES(gyroaverage_polar_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(gyroaverage_polar_pade PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   SET_TESTS_PROPERTIES(arb_deg_spline_interpolator_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
    IF(FFTW_ENABLED AND FFTW_FOUND)
       ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
