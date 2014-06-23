@@ -7,12 +7,15 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+!#include "sll_field_2d.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_constants
-  use sll_logical_meshes  
-  use sll_module_advection_1d_periodic
+!  use sll_constants
+!  use sll_logical_meshes  
+!  use sll_module_advection_1d_periodic
+!  use sll_module_interpolators_1d_base
+  use sll_module_advection_2d_base
+  use sll_module_characteristics_1d_explicit_euler
   use sll_module_advection_2d_BSL
   use sll_module_advection_2d_tensor_product
   use sll_module_characteristics_2d_explicit_euler
@@ -20,27 +23,29 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_advection_1d_BSL
   use sll_module_advection_1d_CSL
   use sll_module_advection_1d_PSM
-  use sll_module_characteristics_1d_explicit_euler
+!  use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
   use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
+ 
   use sll_cubic_spline_interpolator_1d
-  use sll_coordinate_transformation_2d_base_module
+  use sll_cubic_spline_interpolator_2d
+!  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  !use sll_mudpack_curvilinear
+  
 #ifdef MUDPACK
+ !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
   use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_timer
-  use sll_fft
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_timer
+!  use sll_fft
   implicit none
   
   
@@ -992,7 +997,7 @@ contains
     
     
     !time_loop
-    select case(time_loop_case)
+    select case(trim(time_loop_case))
       case ("SLL_EULER")
         print*,"#time_loop = SLL_EULER " 
         sim%time_loop_case = SLL_EULER
