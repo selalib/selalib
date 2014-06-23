@@ -332,7 +332,7 @@ contains  ! ****************************************************************
     
     print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &
          'implemented yet.'
-    get_coefficients_qs1d = 0._f64
+    get_coefficients_qs1d => null()
     print *,interpolator%num_points     
     stop      
   end function get_coefficients_qs1d

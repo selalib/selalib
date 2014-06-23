@@ -1,4 +1,5 @@
 program unit_test
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
@@ -52,23 +53,23 @@ program unit_test
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
   
-  allocate(x(NPTS1,NPTS2))
-  allocate(reference(NPTS1,NPTS2))
-  allocate(calculated(NPTS1,NPTS2))
-  allocate(difference(NPTS1,NPTS2))
-  allocate(eta1_pos(NPTS1))
-  allocate(eta2_pos(NPTS2))
+  SLL_CLEAR_ALLOCATE(x(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(reference(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(calculated(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(difference(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(eta1_pos(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(eta2_pos(1:NPTS2),ierr)
 
-  allocate(slope_left(NPTS2))
-  allocate(slope_right(NPTS2))
-  allocate(slope_top(NPTS1))
-  allocate(slope_bottom(NPTS1))
-  allocate(value_left(NPTS2))
-  allocate(value_right(NPTS2))
-  allocate(value_top(NPTS1))
-  allocate(value_bottom(NPTS1))
-!  allocate(x1_eta1_min(NPTS2))
- ! allocate(x1_eta1_max(NPTS2))
+  SLL_CLEAR_ALLOCATE(slope_left(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(slope_right(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(slope_top(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(slope_bottom(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(value_left(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(value_right(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(value_top(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(value_bottom(1:NPTS1),ierr)
+!  SLL_CLEAR_ALLOCATE(x1_eta1_min(1:NPTS2),ierr)
+ ! SLL_CLEAR_ALLOCATE(x1_eta1_max(1:NPTS2),ierr)
   print *, '***********************************************************'
   print *, '              periodic-periodic case'
   print *, '***********************************************************'

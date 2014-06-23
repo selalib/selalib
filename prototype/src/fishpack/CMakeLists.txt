@@ -1,10 +1,10 @@
 IF (FISHPACK_ENABLED)
 
 
-IF(Fortran_COMPILER MATCHES "GFORTRAN")
+IF(Fortran_COMPILER_NAME MATCHES "gfortran")
    set(CMAKE_Fortran_FLAGS_DEBUG "-g -w -cpp -fdefault-real-8 ")
    set(CMAKE_Fortran_FLAGS_RELEASE "-O3 -w -cpp -fdefault-real-8 ")
-ELSEIF(Fortran_COMPILER MATCHES "INTEL")
+ELSEIF(Fortran_COMPILER_NAME MATCHES "ifort")
    SET(CMAKE_Fortran_FLAGS_RELEASE "-r8 -nowarn -O3 -xHost -ip -openmp")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -r8 -nowarn")
 ENDIF()

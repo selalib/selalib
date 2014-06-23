@@ -12,12 +12,12 @@ program particles_tester
 #define GUARD_SIZE    100000_i64
 #define PARTICLE_ARRAY_SIZE 1500000_i64
 
-  p_group => new_particle_2d_group( &
-       NUM_PARTICLES, &
-       PARTICLE_ARRAY_SIZE, &
-       GUARD_SIZE )
-
-  call sll_delete( p_group )
+!!$  p_group => new_particle_2d_group( &
+!!$       NUM_PARTICLES, &
+!!$       PARTICLE_ARRAY_SIZE, &
+!!$       GUARD_SIZE )
+!!$
+!!$  call sll_delete( p_group )
 
   print *, 'PASSED'
 

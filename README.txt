@@ -13,7 +13,7 @@ streamline built in order to improve reliability and simplify the
 work of development.
 
 Sign in to the INRIA GForge and Subscribe to the project selalib by sending a email
-to navaro@math.unistra.fr
+to navaro@unistra.fr
 
 To develop in Selalib please read :
    - GitQuickstart.txt
@@ -23,12 +23,9 @@ To develop in Selalib please read :
 The selalib-build script runs 
 ------------------------------------------
 
-     1. architecture reservation, OS deployement, OS configuration on pipol platform
-     2. git pull of the sources from gforge 
-     3. compilation
-     4. test and visualisation on a dashboard
-     5. packages generation
-     6. packages upload on the gforge
+     1. git pull of the sources from gforge 
+     2. compilation
+     3. test and visualisation on a dashboard
 
 selalib compilation, installation
 ------------------------------------------
@@ -53,21 +50,3 @@ To display results from outside of IRMA network you need to connect your VPN cli
 
 For package generation
 cpack -G <the cpack generator for your system : DEB, RPM, ... >
-
-AUTHORS
-
- - Aurore Back
- - Morgane Bergot
- - Raphael Blanchard
- - Edwin Chacon-Golcher
- - Samuel Desantis
- - Aliou Diouf
- - Emmanuel Frenod
- - Adnane Hamiaz
- - Philippe Helluy
- - Sever Hirstoaga
- - Eric Madaule
- - Michel Mehrenberger
- - Pierre Navaro
- - Laurent Navoret
- - Eric Sonnendrucker
