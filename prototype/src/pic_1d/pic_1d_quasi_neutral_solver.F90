@@ -335,7 +335,7 @@ contains
             case(SLL_SOLVER_FOURIER)
                 !Distribute fourier modes on each Core
                 call sll_collective_globalsum(this%collective, this%inhomogenity_comp)
-                call this%fouriersolver%solve(this%inhomogenity_comp)
+                call this%fouriersolver%solve(this%inhomogenity_comp+this%inhomogenity_comp_steady)
         endselect
 
     endsubroutine
