@@ -1,11 +1,11 @@
 SET(SRC_UTILITIES sll_utilities.F90 
                   tridiagonal.F90
                   sll_toeplitz_penta_diagonal.F90
-                  lagrange_interpolation.F90)
+                  lagrange_interpolation.F90 sol.f muls.f )
 
 IF(Fortran_COMPILER MATCHES IBM)
-ELSE()
-   SET(SRC_UTILITIES ${SRC_UTILITIES} sol.f muls.f )
+   SET_SOURCE_FILES_PROPERTIES(sol.f muls.f 
+                               PROPERTIES COMPILE_FLAGS '-qfixed')
 ENDIF()
 
 ADD_LIBRARY(sll_utilities STATIC ${SRC_UTILITIES})
