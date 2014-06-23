@@ -7,3 +7,5 @@ CMakeLists.txt.save
 particle_loading.F90.save
 pic_1d.F90.save
 unit_test_bspline_fem_solver_1d.F90.save
+*F90.save
+*f90.save

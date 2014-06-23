@@ -43,7 +43,7 @@ module sll_poisson_1d_fem
         sll_comp64, dimension(:), allocatable, private :: stiffn_matrix_first_line_fourier
         sll_comp64, dimension(:), allocatable, private :: mass_matrix_first_line_fourier
         !sll_comp64 , dimension(:),allocatable, private :: circulant_first_line_fourier
-
+        sll_real64, private :: seminorm
 
         !FFT Plans
         type(sll_fft_plan), pointer, private :: forward_fftplan => null()
@@ -60,6 +60,8 @@ module sll_poisson_1d_fem
         procedure,  pass(this) :: eval_solution=>poisson_1d_fem_eval_solution
         procedure,  pass(this) :: eval_solution_derivative=>poisson_1d_fem_eval_solution_derivative
         procedure, pass(this) :: H1seminorm_solution=>poisson_1d_fem_H1seminorm_solution
+        procedure, pass(this) :: calc_H1seminorm_solution=>poisson_1d_fem_calc_H1seminorm_solution
+
         procedure, pass(this) :: L2norm_solution=>poisson_1d_fem_L2norm_solution
         procedure, pass(this) :: set_solution=>poisson_1d_fem_set_solution
 
@@ -200,6 +202,8 @@ contains
         SLL_ASSERT(size(solution_vector)==this%num_cells)
 
         this%fem_solution=solution_vector
+        !Since the solution has been set we have to reset the seminorm
+        this%seminorm=-1
     endsubroutine
 
     !<Calculates the inhomogenity b={<f, \phi_i>, i =1, ... N} with given function f
@@ -463,13 +467,15 @@ contains
             !this%fem_solution(1:this%bspline%degree+3)=0
             !this%fem_solution(this%num_cells-(this%bspline%degree)-2:this%num_cells )=0
         call solve_poisson_1d_fem_rhs_dirichlet(this, rhs)
+
         else
         SLL_ASSERT(size(rhs)==this%num_cells)
             this%fem_solution=poisson_1d_fem_solve_circulant_matrix_equation(this, &
             this%stiffn_matrix_first_line_fourier ,rhs )
         endif
 
-
+        !Set the seminorm
+        this%seminorm=dot_product(this%fem_solution, rhs)
 
 
 !        if (  this%boundarycondition==SLL_DIRICHLET ) then
@@ -524,7 +530,7 @@ contains
         enddo
 
 
-        call DGBSV( N, KD, KD, 1, AB, this%spline_degree*3 +1, IPIV,  this%fem_solution,	N, ierr )
+        call DGBSV( N, KD, KD, 1, AB, this%spline_degree*3 +1, IPIV,  this%fem_solution, N, ierr )
 
         !call DPBSV( 'U' , N , KD, 1, AB, KD+1,  this%fem_solution, N, ierr )
 
@@ -693,8 +699,17 @@ contains
             knots_eval, b_spline_derivatives_at_x)
     endsubroutine
 
-    !<Gives the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
-    function  poisson_1d_fem_H1seminorm_solution(this) result(seminorm)
+
+        !<Returns the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
+        function  poisson_1d_fem_H1seminorm_solution(this) result(seminorm)
+            class(poisson_1d_fem),intent(inout) :: this
+            sll_real64 :: seminorm
+
+            seminorm=this%seminorm
+        endfunction
+
+    !<Sets the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
+    subroutine poisson_1d_fem_calc_H1seminorm_solution(this)
         class(poisson_1d_fem),intent(inout) :: this
         sll_real64 :: seminorm
         sll_int32 :: N
@@ -726,7 +741,8 @@ contains
         !seminorm=sqrt(dot_product(fem_solution, fem_solution ))
         !        matrix_product=bspline_fem_solver_1d_circulant_matrix_vector_product&
             !            (stiffn_matrix_first_line,fem_solution)
-    endfunction
+            this%seminorm=seminorm
+    endsubroutine
 
     !<Gives the squared L2-norm of the solution $\Phi$: $|\Phi|^2$
     function  poisson_1d_fem_L2norm_solution(this) result(l2norm)

@@ -232,7 +232,7 @@ contains
         do idx=1, size(knots_eval)
                 eval_solution(idx)= -2.0_f64* sum( &
                     real(  this%fourier_fmode/(coeff*fmode)**2 )*cos(knots_eval(idx)*fmode*coeff) &
-                    - imag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
+                     -imag( this%fourier_fmode/(coeff*fmode)**2 )*sin(knots_eval(idx)*fmode*coeff))
 
         enddo
 
@@ -273,12 +273,13 @@ contains
 
         seminorm=0
         do fmode_a=1,this%num_modes
-            do fmode_b=1,this%num_modes
-            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1)&
-                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_i1))
+!            do fmode_b=1,this%num_modes
+!            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1)&
+!                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_i1))
 
-            !seminorm=seminorm+ 2.0_f64*abs((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)
-            enddo
+            !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)/this%Ilength
+            seminorm=seminorm+ 2.0_f64*abs(this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2
+!            enddo
         enddo
     endfunction
     !
@@ -318,7 +319,10 @@ contains
 
         SLL_ASSERT(size(ppos)==size(pweight))
         do fmode=1,this%num_modes
-            rhs(fmode)=dot_product(exp(-sll_i1*  fmode*ppos*2.0_f64*sll_pi/this%Ilength), pweight );
+            !Be careful here, the dot_product tends to complex conjugate stuff
+            !which we don't want in this case
+            !rhs(fmode)=dot_product(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength), pweight )
+            rhs(fmode)=sum(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength)*pweight)
 
         enddo
     endfunction
