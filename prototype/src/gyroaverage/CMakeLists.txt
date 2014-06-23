@@ -1,5 +1,3 @@
-IF( NOT STDF95)
-
   SET( GYROAVERAGE_SRC_FILES 
 	sll_gyroaverage_2d_base.F90
 	sll_gyroaverage_2d_polar.F90
@@ -43,6 +41,3 @@ IF( NOT STDF95)
   TARGET_LINK_LIBRARIES(
     test_gyroaverage_2d_polar_pade
     sll_gyroaverage)
-
-
-ENDIF(NOT STDF95)
