@@ -48,14 +48,14 @@ module sll_pic_1d_Class
     sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
     sll_real64, DIMENSION(:), allocatable:: steadyparticleposition !Steady non-moving objects aka Ions
 
-    !CHARACTER(LEN=255) :: particle_pusher
-    sll_int32 :: particle_pusher
+    sll_int32 :: particle_pusher, poisson_solver
 
     integer, private :: timestep
 
     !Data to be collected throughout a run
     sll_real64, dimension(:), allocatable :: fieldenergy, kineticenergy, impulse, &
-        thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var
+        thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
+        push_error_mean, push_error_var
 
     !sll_real64 :: initial_fieldenergy , initial_kineticenergy , initial_total_energy
     sll_real64 :: initial_fem_inhom , fem_inhom
@@ -110,6 +110,7 @@ module sll_pic_1d_Class
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG       = 7
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_LEAPFROG_V       = 8 !Variational Leapfrog
     sll_int32, parameter :: SLL_PIC1D_PPUSHER_RK3        =9     ! Runge Kutta 3
+    sll_int32, parameter ::  SLL_PIC1D_PPUSHER_MERSON =10 !Merson 3-5 with integrated Err estimate
     sll_int32, parameter :: SLL_PIC1D_FULLF       = 1
     sll_int32, parameter :: SLL_PIC1D_DELTAF       = 2
 
@@ -131,7 +132,7 @@ contains
 
     !<
     subroutine new_sll_pic_1d(mesh_cells_user, spline_degree_user, numberofparticles_user,&
-            timesteps_user, timestepwidth_user,particle_pusher_user )
+            timesteps_user, timestepwidth_user,particle_pusher_user, psolver_user )
         implicit none
         sll_int32, intent(in) :: mesh_cells_user
         sll_int32 , intent(in):: spline_degree_user
@@ -140,7 +141,7 @@ contains
         sll_real64 , intent(in):: timestepwidth_user
         sll_int32 :: idx
         !character(len=255), intent(in):: particle_pusher_user
-        sll_int32:: particle_pusher_user
+        sll_int32, intent(in):: particle_pusher_user , psolver_user
         SLL_ASSERT( is_power_of_two( int( mesh_cells,i64)))
         mesh_cells=mesh_cells_user
         spline_degree=spline_degree_user
@@ -149,6 +150,7 @@ contains
         timestepwidth=timestepwidth_user
         !particle_pusher=trim(particle_pusher_user)
         particle_pusher=particle_pusher_user
+        poisson_solver=psolver_user
         !############## PARALLEL ##################
 
 
@@ -184,10 +186,10 @@ contains
         selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_IONBEAM)
                 qnsolver=>new_pic_1d_quasi_neutral_solver(interval_a, interval_b, spline_degree, &
-                    mesh_cells, SLL_SOLVER_FEM, sll_world_collective, SLL_DIRICHLET)
+                    mesh_cells, poisson_solver, sll_world_collective, SLL_DIRICHLET)
             case default
                 qnsolver=>new_pic_1d_quasi_neutral_solver(interval_a, interval_b, spline_degree, &
-                    mesh_cells, SLL_SOLVER_FOURIER, sll_world_collective,SLL_PERIODIC)
+                    mesh_cells, poisson_solver, sll_world_collective,SLL_PERIODIC)
         endselect
 
         !electric_field_external=>sll_pic_1d_electric_field
@@ -201,9 +203,11 @@ contains
 
     endsubroutine
 
-
-    subroutine sll_pic1d_write_phasespace(timestep)
+    !TODO fix for delta f
+    subroutine sll_pic1d_write_phasespace(timestep, p_species)
         sll_int32, intent(in) :: timestep
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+
         sll_int32:: grid=100
         if (coll_rank==0) then
             !            if (phasespace_file_id==-1) then
@@ -216,8 +220,10 @@ contains
             SLL_ASSERT(    minval(particleposition) >=interval_a)
             SLL_ASSERT(    maxval(particleposition) <=interval_b)
             grid=floor(sqrt(nparticles/10.0_f64))+1
-            call distribution_xdmf("phasespace", particleposition, particlespeed, particleweight, &
-                interval_a-1.0_f64, interval_b+1.0_f64, grid, minval(particlespeed), maxval(particlespeed), grid, timestep)
+            call distribution_xdmf("phasespace", p_species(1)%particle%dx, p_species(1)%particle%vx, &
+                p_species(1)%particle%weight,  &
+                interval_a-1.0_f64, interval_b+1.0_f64, grid, &
+                minval(p_species(1)%particle%vx), maxval(p_species(1)%particle%vx), grid, timestep)
             !          phasespace_file_id=0
             !endif
         endif
@@ -289,6 +295,8 @@ contains
         SLL_CLEAR_ALLOCATE(thermal_velocity_estimate(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(particleweight_mean(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(particleweight_var(1:timesteps+1), ierr)
+        SLL_CLEAR_ALLOCATE(push_error_mean(1:timesteps+1), ierr)
+        SLL_CLEAR_ALLOCATE(push_error_var(1:timesteps+1), ierr)
         SLL_CLEAR_ALLOCATE(inhom_var(1:timesteps+1), ierr)
 
 
@@ -401,9 +409,9 @@ contains
                 !                                                1, 1.0_f64)
 
 
-                        open(unit=20, file=trim(root_path)//"initial_field.txt")
-                        write (20,*) eval_solution(1:mesh_cells)
-                        close(20)
+            open(unit=20, file=trim(root_path)//"initial_field.txt")
+            write (20,*) eval_solution(1:mesh_cells)
+            close(20)
             !
             !            !Particle density
             !            open(unit=20, file=trim(root_path)//"initial_electrondensity.txt")
@@ -475,7 +483,7 @@ contains
         do timestep=1, timesteps
             time=timestepwidth*timestepwidth*(timestep-1)
 
-            call sll_pic1d_write_phasespace(timestep)
+            call sll_pic1d_write_phasespace(timestep,species(1:num_species))
 
             !print *, sum(abs((sll_bspline_fem_solver_1d_get_inhomogenity())))
             !            call xv_particles_center_gnuplot('/tmp/phasedensity', particleposition, particlespeed, &
@@ -495,8 +503,8 @@ contains
             end if
 
 
-            particleweight_mean(timestep)=sum(particleweight)/size(particleweight)
-            particleweight_var(timestep)=sum(particleweight**2)/size(particleweight)-particleweight_mean(timestep)**2
+            particleweight_mean(timestep)=sum(species(1)%particle%weight)/size(species(1)%particle%weight)
+            particleweight_var(timestep)=sum(species(1)%particle%weight**2)/size(species(1)%particle)-particleweight_mean(timestep)**2
 
 
             !kineticenergy(timestep)=sll_pic1d_calc_kineticenergy(abs(1/particle_qm),  particlespeed , particleweight )
@@ -504,7 +512,7 @@ contains
             fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(species(1:num_species))
             impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
 
-            thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(particlespeed, particleweight)
+            thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(species(1)%particle%vx,species(1)%particle%weight)
             inhom_var(timestep)=qnsolver%calc_variance_rhs()
 
 
@@ -573,6 +581,12 @@ contains
                     case(SLL_PIC1D_PPUSHER_HEUN)
                         call sll_pic_1d_heun( species(pushed_species)%particle%dx, &
                             species(pushed_species)%particle%vx ,timestepwidth, time)
+                    case(SLL_PIC1D_PPUSHER_MERSON)
+                        call sll_pic_1d_merson4( species(pushed_species)%particle%dx, &
+                            species(pushed_species)%particle%vx ,timestepwidth, time, &
+                                  species(pushed_species)%particle%weight      )
+
+
                     case(SLL_PIC1D_PPUSHER_NONE)
                         print *, "No Particle pusher choosen"
                         !                case(SLL_PIC1D_PPUSHER_SHIFT)
@@ -607,20 +621,22 @@ contains
         kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( species(1:num_species) )
         fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(species(1:num_species))
         impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
-        thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(particlespeed, particleweight)
-        particleweight_mean(timestep)=sum(particleweight)/size(particleweight)
-        particleweight_var(timestep)=sum(particleweight**2)/size(particleweight)-particleweight_mean(timestep)**2
+        thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(species(1)%particle%vx,species(1)%particle%weight)
+        particleweight_mean(timestep)=sum(species(1)%particle%weight)/size(species(1)%particle)
+        particleweight_var(timestep)=sum(species(1)%particle%weight**2)/size(species(1)%particle)-particleweight_mean(timestep)**2
 
         close(25)
 
         !Save Results to file
-        call sll_pic1d_write_result("pic1dresult", kineticenergy, fieldenergy, impulse, particleweight_mean, particleweight_var )
+        call sll_pic1d_write_result("pic1dresult", kineticenergy, fieldenergy, impulse, &
+        particleweight_mean, particleweight_var, push_error_mean, push_error_var )
 
 
         if (coll_rank==0) then
             call sll_set_time_mark(tstop)
             !Calculate remaining Time
             print *, "Overall Time: " , sll_time_elapsed_between(tstart,tstop)
+            print *, "Particles Pushed/s: " , (nparticles*coll_size*timesteps)/sll_time_elapsed_between(tstart,tstop)
         endif
         if (coll_rank==0) call det_landau_damping((/ ( timestep*timestepwidth, timestep = 0, timesteps) /),fieldenergy)
 
@@ -692,13 +708,13 @@ contains
         !allparticleposition( particle_mask)=particleposition_selected
         sll_int32 ::jdx
         !Add all the other species as constant
-                call qnsolver%reset_particles()
+        call qnsolver%reset_particles()
 
-                do jdx=1,num_species
-                    if (jdx/=pushed_species) then
-                        call qnsolver%add_species(species(jdx))
-                    endif
-                enddo
+        do jdx=1,num_species
+            if (jdx/=pushed_species) then
+                call qnsolver%add_species(species(jdx))
+            endif
+        enddo
 
         selectcase(pic1d_testcase)
             !            case(SLL_PIC1D_TESTCASE_QUIET)
@@ -710,18 +726,18 @@ contains
                 call qnsolver%set_electrons_only_weighted(particleposition_selected, species(pushed_species)%particle%weight)
                 call qnsolver%solve()
             case(SLL_PIC1D_TESTCASE_IONBEAM)
-
-
                 SLL_ASSERT(size(particleposition_selected)==size(species(pushed_species)%particle))
 
                 call qnsolver%add_particles_weighted(particleposition_selected, &
                     sign(species(pushed_species)%particle%weight,species(pushed_species)%qm) )
                 call qnsolver%solve()
             case default
-
-
-
+                SLL_ASSERT(num_species==1)
                 !All particles, are only electrons
+                SLL_ASSERT(size(particleposition_selected)==size(species(pushed_species)%particle))
+                call qnsolver%set_electrons_only_weighted(particleposition_selected, species(pushed_species)%particle%weight)
+                call qnsolver%solve()
+
                 !load constant ion background
                 !                SLL_ASSERT(size(allparticleposition)==size(particleweight))
                 !                call qnsolver%set_electrons_only_weighted(allparticleposition, particleweight)
@@ -835,11 +851,13 @@ contains
 
 
     !<Merson scheme with built in error estimate for each particle
-    subroutine sll_pic_1d_merson4(x_0, v_0, h, t)
+    subroutine sll_pic_1d_merson4(x_0, v_0, h, t, weight)
         sll_real64, intent(in):: h
         sll_real64, intent(in):: t
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
+        sll_real64, dimension(:) ,intent(in) :: weight
+
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
             k_x3, k_x4, k_v1, &
             k_v2, k_v3, k_v4, k_v5, k_x5, stage_DPhidx,x_1,v_1, err_x, err_v
@@ -884,6 +902,8 @@ contains
         err_v= x_0 + (  k_v1 +  3*k_v3 + 4*k_v4 + 2*k_v5 )/10.0_f64
         err_x=x_1 - err_x
         err_v=v_1 - err_v
+
+        call sll_pic_1d_calc_push_error(err_x,weight)
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
@@ -1103,6 +1123,17 @@ contains
         call sll_pic_1d_solve_qn(x_0)
     endsubroutine
 
+
+    subroutine sll_pic_1d_calc_push_error(perror, pweight)
+        sll_real64, dimension(:), intent(in) :: perror
+        sll_real64, dimension(:), intent(in) :: pweight
+
+        push_error_mean(timestep)=dot_product(perror, pweight)
+        push_error_var(timestep)=dot_product(perror**2, pweight)&
+            - push_error_mean(timestep)
+
+push_error_mean=maxval(perror)
+    endsubroutine
     !    !<Nonrelativistic kinetic energy 0.5*m*v^2
     !    function sll_pic1d_calc_kineticenergy(relmass,  particlespeed , particleweight ) &
         !            result(energy)
@@ -1197,12 +1228,14 @@ contains
     endfunction
 
 
+
+
     !Write all results of the pic simulation to file
     subroutine sll_pic1d_write_result(filename, kinetic_energy, electrostatic_energy, impulse, &
-            particleweight_mean, particleweight_var)
+            particleweight_mean, particleweight_var, perror_mean  , perror_var)
         character(len=*), intent(in) :: filename
         sll_real64, dimension(:), intent(in) :: kinetic_energy, electrostatic_energy, impulse,&
-            particleweight_mean,particleweight_var
+            particleweight_mean,particleweight_var, perror_mean  , perror_var
         integer :: k,file_id,file_id_err
         sll_real64,  dimension(size(kinetic_energy)) :: total_energy
 
@@ -1232,10 +1265,11 @@ contains
             write (file_id,*)  "#Size of MPI Collective: ", coll_size
 
             write (file_id,*)  "time  ", "kineticenergy  ", "electrostaticenergy  ", "impulse  ", &
-                "vthermal  ", "weightmean   ", "weightvar  "
+                "vthermal  ", "weightmean   ", "weightvar  ", "perrormean  ", "perrorvar   "
             do k=1,timesteps+1
                 write (file_id,*)  timestepwidth*(k-1), kineticenergy(k), fieldenergy(k), impulse(k), &
-                    thermal_velocity_estimate(k), particleweight_mean(k),particleweight_var(k)
+                    thermal_velocity_estimate(k), particleweight_mean(k),particleweight_var(k),&
+                    perror_mean(k), perror_var(k)
             enddo
             close(file_id)
 
@@ -1336,9 +1370,18 @@ contains
             write (file_id,*)  "set title 'Mean'"
             write (file_id,*)  "plot '"//filename//".dat' using 1:6 with lines"
             write (file_id,*)  "set title 'Variance'"
-            write (file_id,*)  "plot '"//filename//".dat' using 1:7 with lines\"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:7 with lines"
             write (file_id,*) "unset multiplot"
-        endif
+
+            write (file_id, *) "set term x11 7"
+            write (file_id, *)  "set multiplot layout 2,1 rowsfirst title 'Time Development of local Pusher Error in x'"
+            write (file_id, *) "set autoscale x; set logscale y"
+            write (file_id,*)  "set title 'Mean'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:8 with lines"
+            write (file_id,*)  "set title 'Variance'"
+            write (file_id,*)  "plot '"//filename//".dat' using 1:9 with lines"
+            write (file_id,*) "unset multiplot"
+                    endif
     endsubroutine
 
     !    !This function should not have any side-effects
