@@ -6,21 +6,21 @@ module sll_simulation_4d_qns_general_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_collective
-  use sll_remapper
-  use sll_constants
-  use sll_cubic_spline_interpolator_2d
+!  use sll_collective
+!  use sll_remapper
+!  use sll_constants
   use sll_cubic_spline_interpolator_1d
+!  use sll_cubic_spline_interpolator_2d
   use sll_simulation_base
-  use sll_logical_meshes
+!  use sll_logical_meshes
   use sll_parallel_array_initializer_module
-  use sll_coordinate_transformation_2d_base_module
+!  use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
   use sll_general_coordinate_elliptic_solver_module
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_1d_module
-  use sll_timer
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_arbitrary_degree_spline_interpolator_1d_module
+!  use sll_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general
@@ -131,8 +131,8 @@ module sll_simulation_4d_qns_general_module
      !type(arb_deg_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! interpolation any arbitrary spline
-      type(arb_deg_2d_interpolator)     :: interp_rho
-      type(arb_deg_2d_interpolator)     :: interp_phi
+     type(arb_deg_2d_interpolator)     :: interp_rho
+     type(arb_deg_2d_interpolator)     :: interp_phi
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
@@ -218,7 +218,7 @@ contains
    elec_field_ext_f_params,&
    number_diags)
     
-    type(sll_simulation_4d_qns_general), intent(inout)     :: sim
+    type(sll_simulation_4d_qns_general), intent(inout)    :: sim
     type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
     type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
     class(sll_coordinate_transformation_2d_base), pointer :: transformation_x

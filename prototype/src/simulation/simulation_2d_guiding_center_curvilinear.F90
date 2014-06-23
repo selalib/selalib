@@ -41,7 +41,10 @@ module sll_simulation_2d_guiding_center_curvilinear_module
  !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_module_poisson_2d_elliptic_solver
+  use sll_module_poisson_2d_base
+  use sll_module_poisson_2d_elliptic_solver, &
+     only: new_poisson_2d_elliptic_solver, &
+           es_gauss_legendre
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
 !  use sll_timer
