@@ -227,7 +227,7 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
        ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
-       ${SLL_DIR}/simulation/simulation_4d_qns_general.F90
+       #${SLL_DIR}/simulation/simulation_4d_qns_general.F90  !not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
  )
 
