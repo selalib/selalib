@@ -211,22 +211,25 @@ ELSE()
 
 ENDIF(SUITESPARSE_ENABLED)
 
-
-IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
-
+IF(MPI_MODULE_ENABLED)
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
        ${SLL_DIR}/collective/sll_collective.F90
        ${SLL_DIR}/remap/sll_remap.F90
        ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
-       ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
-       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
-       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
        ${SLL_DIR}/simulation/simulation_base_class.F90
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
        ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
+       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90)
+ENDIF(MPI_MODULE_ENABLED)
+
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+
+   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+       ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
+       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
  )
