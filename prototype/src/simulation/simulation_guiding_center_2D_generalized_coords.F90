@@ -17,21 +17,8 @@ module sll_simulation_2d_guiding_center_generalized_coords_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
+
   implicit none
-
-
-
-  abstract interface
-     function sll_scalar_initializer_2d( x1, x2, params )
-       use sll_working_precision
-       sll_real64                                     :: sll_scalar_initializer_2d
-       sll_real64, intent(in)                         :: x1
-       sll_real64, intent(in)                         :: x2
-       sll_real64, dimension(:), intent(in), optional :: params
-     end function sll_scalar_initializer_2d
-   end interface
-
-
 
   type, extends(sll_simulation_base_class) :: sll_simulation_2d_guiding_center_generalized
      
