@@ -1,5 +1,6 @@
-  ADD_LIBRARY (sll_fcisl STATIC
-		fcisl.F90)
+IF(HDF5_ENABLED)
+
+  ADD_LIBRARY (sll_fcisl STATIC fcisl.F90)
 
   TARGET_LINK_LIBRARIES(sll_fcisl sll_advection sll_utilities)
 
@@ -10,3 +11,5 @@
     sll_logical_meshes 
     sll_advection
     sll_constants)
+
+ENDIF(HDF5_ENABLED)
