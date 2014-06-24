@@ -144,9 +144,10 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
-      ADD_SUBDIRECTORY(parallel_array_initializers)
    
    ENDIF()
+
+   ADD_SUBDIRECTORY(parallel_array_initializers)
       
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
    ADD_SUBDIRECTORY(mudpack)
