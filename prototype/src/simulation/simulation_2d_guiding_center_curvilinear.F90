@@ -36,6 +36,7 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
+  use sll_parallel_array_initializer_module
   
 #ifdef MUDPACK
  !use sll_mudpack_curvilinear
