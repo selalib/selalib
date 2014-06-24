@@ -112,7 +112,7 @@ ENDIF(CMAKE_BUILD_TYPE MATCHES "Release")
 ###      Parallel simulations
 #############################################################################
 # ATTENTION: From here below, the simulations/tests are parallel
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    #Here is defined the library containing the parallel simulations. 
    #Please add there your new simulation_MYMETHOD.F90 
