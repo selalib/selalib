@@ -19,12 +19,11 @@ ENDIF(MUDPACK_ENABLED)
 ADD_LIBRARY( sll_simulation_1d STATIC simulation_1d.F90 simulation_base_class.F90 )
 
 TARGET_LINK_LIBRARIES( sll_simulation_1d 
-                       sll_common_array_initializers
-                       sll_advection
                        sll_interpolators
                        sll_scalar_field
                        sll_poisson_solvers
                        sll_reduction
+                       sll_common_array_initializers
 #                       sll_splines
 #                       sll_fft
 #                       sll_distribution_function
@@ -46,7 +45,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
 MACRO(ADD_SIMULATION_1D TEST_NAME SIM_NAME ) 
    ADD_EXECUTABLE(test_${TEST_NAME} simulation_${SIM_NAME}.F90
                                     unit_test_${TEST_NAME}.F90)
-   TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulation_1d)
+   TARGET_LINK_LIBRARIES(test_${TEST_NAME} sll_simulation_1d ${SIM_LIBS})
 
 ENDMACRO(ADD_SIMULATION_1D)
 
@@ -57,16 +56,19 @@ ENDMACRO(ADD_SIMULATION_1D)
 # Optionally add special dependencies by setting the DEP_LIBS variable
 #######################################################################
 
-ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
 ADD_SIMULATION_1D(VP1D_curvilinear_analytic VP1D_curvilinear_analytic)
 ADD_SIMULATION_1D(vp1d_fourier_fem          vp1d_fourier_fem)
-ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
-ADD_SIMULATION_1D(2d_af_cartesian           2d_analytic_field_cartesian)
-ADD_SIMULATION_1D(2d_af_curvilinear         2d_analytic_field_curvilinear)
+ADD_SIMULATION_1D(VP1D_cartesian_non_unif   VP1D_cartesian_non_unif)
+IF(HDF5_ENABLED)
+   SET(SIM_LIBS sll_advection)
+   ADD_SIMULATION_1D(2d_vp_no_split            2d_vlasov_poisson_no_splitting)
+   ADD_SIMULATION_1D(2d_af_cartesian           2d_analytic_field_cartesian)
+   ADD_SIMULATION_1D(2d_af_curvilinear         2d_analytic_field_curvilinear)
+   ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
+   ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
+   ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
+ENDIF(HDF5_ENABLED)
 
-ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
-ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
-ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
 
 
 #OPENMP directives are activated only for release build
