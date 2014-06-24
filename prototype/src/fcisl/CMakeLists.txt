@@ -11,10 +11,9 @@ IF(HDF5_ENABLED)
 
    ENDIF()
 
-  ADD_LIBRARY (sll_fcisl STATIC
-		fcisl.F90)
+  ADD_LIBRARY (sll_fcisl STATIC fcisl.F90)
 
-  TARGET_LINK_LIBRARIES(sll_fcisl sll_utilities sll_advection)
+  TARGET_LINK_LIBRARIES(sll_fcisl sll_advection sll_utilities)
 
   ADD_EXECUTABLE(test_fcisl unit_test.F90)
   ADD_EXECUTABLE(test_aligned_derivative_2d aligned_derivative_2d.F90)

@@ -1,8 +1,8 @@
-IF(HDF5_IS_PARALLEL)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
    MESSAGE(STATUS "HDF5_IS_PARALLEL:${HDF5_IS_PARALLEL}")
    MESSAGE(STATUS "Switch to MPI fortran Wrapper to build sll_file_io library")
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 SET(IO_SRC sll_ascii_io.F90 
            sll_binary_io.F90 
@@ -28,7 +28,7 @@ IF(MPI_MODULE_ENABLED)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
    SET(IO_SRC ${IO_SRC} sll_gnuplot_parallel.F90)
 
-   IF(HDF5_PARALLEL_ENABLED)
+   IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED)
       ADD_DEFINITIONS(-DHDF5_PARALLEL)
       SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
                            sll_xdmf_parallel.F90 )
@@ -38,12 +38,12 @@ IF(MPI_MODULE_ENABLED)
 
    TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective ${HDF5_LIBRARIES} )
 
-   IF(NOT STDF95) 
-      ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
-      TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
-   ENDIF()
+   ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
+   TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
 
-   ADD_EXECUTABLE(test_io_serial_blocks unit_test_serial_blocks.F90)
-   TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_utilities ${HDF5_LIBRARIES})
+   IF(HDF5_ENABLED)
+      ADD_EXECUTABLE(test_io_serial_blocks unit_test_serial_blocks.F90)
+      TARGET_LINK_LIBRARIES(test_io_serial_blocks sll_utilities ${HDF5_LIBRARIES})
+   ENDIF(HDF5_ENABLED)
 
 ENDIF()

@@ -1,4 +1,3 @@
-IF( NOT STDF95)
 IF(HDF5_ENABLED)
 #hdf5 is parallel and inside aligned_translation_2d.F90
 #hdf5 is used
@@ -82,9 +81,6 @@ IF(HDF5_ENABLED)
     test_advection_1d_PSM
     sll_advection)
 
-
-
-
   ADD_EXECUTABLE(
     test_advection_2d_BSL
     unit_test_advection_2d_BSL.F90)
@@ -110,7 +106,6 @@ IF(HDF5_ENABLED)
     test_advection_2d_tensor_product
     sll_advection)
 
-
   ADD_EXECUTABLE(
     test_advection_2d_CSL
     unit_test_advection_2d_CSL.F90)
@@ -119,16 +114,19 @@ IF(HDF5_ENABLED)
     test_advection_2d_CSL
     sll_advection)
 
-    
-  ADD_EXECUTABLE(
-    test_aligned_translation_2d
-    aligned_translation_2d.F90)
+  IF(MPI_MODULE_ENABLED)
 
-  TARGET_LINK_LIBRARIES(
-    test_aligned_translation_2d
-    sll_file_io_parallel
-    sll_advection
-    sll_utilities)
+     ADD_EXECUTABLE(
+       test_aligned_translation_2d
+       aligned_translation_2d.F90)
+
+     TARGET_LINK_LIBRARIES(
+       test_aligned_translation_2d
+       sll_file_io_parallel
+       sll_advection
+       sll_utilities)
+
+  ENDIF(MPI_MODULE_ENABLED)
 
   ADD_EXECUTABLE(
     test_rotation_2d
@@ -138,7 +136,4 @@ IF(HDF5_ENABLED)
     test_rotation_2d
     sll_advection)
 
-
-
 ENDIF(HDF5_ENABLED)
-ENDIF(NOT STDF95)

@@ -295,11 +295,7 @@ contains
   subroutine test_2d_cubic_splines_periodic( func, lims, npts1, npts2, &
     test_flag )
 
-#ifdef STDF95
-    sll_real64 :: func
-#else
     procedure(fxy) :: func
-#endif
     sll_real64, dimension(:), intent(in) :: lims
     sll_int32, intent(in) :: npts1, npts2
     logical, intent(out) :: test_flag

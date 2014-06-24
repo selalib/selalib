@@ -516,17 +516,10 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     sll_int32, intent(in)             :: num_pts
     sll_real64, dimension(:), pointer :: d
     sll_real64, dimension(:), pointer :: coeffs
-#ifdef STDF95
-    sll_real64, parameter             :: a = 0.78867513459481287_f64
-    sll_real64, parameter             :: r_a = 1.2679491924311228_f64
-    sll_real64, parameter             :: b = 0.21132486540518716_f64
-    sll_real64, parameter             :: b_a = 0.26794919243112275_f64
-#else
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
-#endif
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_int32                         :: i
@@ -588,19 +581,11 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     sll_real64, dimension(:), pointer :: coeffs
     sll_int32                         :: i
     sll_int32                         :: np
-#ifdef STDF95
-    sll_real64, parameter             :: a = 0.78867513459481287_f64
-    sll_real64, parameter             :: r_a = 1.2679491924311228_f64
-    sll_real64, parameter             :: b = 0.21132486540518716_f64
-    sll_real64, parameter             :: b_a = 0.26794919243112275_f64
-    sll_real64, parameter             :: ralpha = 1.8612097182041993_f64 
-#else
     sll_real64, parameter             :: a=sqrt((2.0_f64+sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: r_a = 1.0_f64/a
     sll_real64, parameter             :: b=sqrt((2.0_f64-sqrt(3.0_f64))/6.0_f64)
     sll_real64, parameter             :: b_a = b/a
     sll_real64, parameter             :: ralpha = sqrt(6.0_f64/sqrt(3.0_f64))
-#endif
     sll_real64                        :: coeff_tmp
     sll_real64                        :: d1
     sll_real64                        :: f1   ! to store modified value of f(1)
@@ -885,13 +870,8 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
   function interpolate_value( x, spline )
     sll_real64                        :: interpolate_value
     intrinsic                         :: associated, int, real
-#ifdef STDF95
-    sll_real64               :: x
-    type(sll_cubic_spline_1D)      :: spline
-#else
     sll_real64, intent(in)            :: x
     type(sll_cubic_spline_1D), pointer      :: spline
-#endif
     sll_real64, dimension(:), pointer :: coeffs
     sll_real64                        :: xmin
     sll_real64                        :: rh   ! reciprocal of cell spacing
@@ -899,10 +879,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-#ifdef STDF95
-#else
     SLL_ASSERT( associated(spline) )
-#endif
     xmin = spline%xmin
     rh   = spline%rdelta
     coeffs => spline%coeffs(0:spline%n_points+2)
@@ -1087,19 +1064,12 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     intrinsic                         :: associated
     sll_real64, intent(in)            :: x
     sll_real64, dimension(:), pointer :: coeffs
-#ifdef STDF95
-    type(sll_cubic_spline_1D)               :: spline
-#else
     type(sll_cubic_spline_1D), pointer      :: spline
-#endif
 
     ! We set these as assertions since we want the flexibility of turning
     ! them off.
     SLL_ASSERT( (x .ge. spline%xmin) .and. (x .le. spline%xmax) )
-#ifdef STDF95
-#else
     SLL_ASSERT( associated(spline) )
-#endif
     coeffs => spline%coeffs(0:spline%n_points+2)
     interpolate_derivative = interpolate_derivative_aux( &
          x, &
@@ -2439,11 +2409,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-#ifdef STDF95
-    type(sll_cubic_spline_2D)                 :: spline
-#else
     type(sll_cubic_spline_2D), pointer        :: spline
-#endif
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -2470,10 +2436,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
-#ifdef STDF95
-#else
     SLL_ASSERT( associated(spline) )
-#endif
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
@@ -2529,11 +2492,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     intrinsic                           :: associated, int, real
     sll_real64, intent(in)              :: x1
     sll_real64, intent(in)              :: x2
-#ifdef STDF95
-    type(sll_cubic_spline_2D)                 :: spline
-#else
     type(sll_cubic_spline_2D), pointer        :: spline
-#endif
     sll_real64                          :: rh1   ! reciprocal of cell spacing
     sll_real64                          :: rh2   ! reciprocal of cell spacing
     sll_int32                           :: cell
@@ -2559,10 +2518,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
     ! them off.
     SLL_ASSERT( (x1 .ge. spline%x1_min) .and. (x1 .le. spline%x1_max) )
     SLL_ASSERT( (x2 .ge. spline%x2_min) .and. (x2 .le. spline%x2_max) )
-#ifdef STDF95
-#else
     SLL_ASSERT( associated(spline) )
-#endif
     x1_min     = spline%x1_min
     x2_min     = spline%x2_min
     num_pts_x1 = spline%num_pts_x1
