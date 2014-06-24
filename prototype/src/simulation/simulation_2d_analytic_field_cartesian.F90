@@ -33,6 +33,7 @@ module sll_simulation_2d_analytic_field_cartesian_module
 !  use sll_module_coordinate_transformations_2d
 !  use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
+  use sll_parallel_array_initializer_module
   
 #ifdef MUDPACK
 !  use sll_mudpack_curvilinear
@@ -93,27 +94,6 @@ module sll_simulation_2d_analytic_field_cartesian_module
     procedure, pass(sim) :: init_from_file => init_fake
      
   end type sll_simulation_2d_analytic_field_cartesian
-
-
-  abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-  abstract interface
-    function sll_scalar_initializer_1d( x1,  params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_1d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_1d
-  end interface
-
-
 
 contains
 

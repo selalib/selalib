@@ -50,6 +50,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
 !  use sll_timer
 !  use sll_fft
   use sll_module_poisson_2d_periodic_solver
+  use sll_parallel_array_initializer_module
 
   implicit none
 
@@ -60,17 +61,6 @@ module sll_simulation_2d_guiding_center_cartesian_module
   sll_int32, parameter, private :: SLL_PHI_FROM_RHO = 0
   sll_int32, parameter, private :: SLL_E_FROM_RHO = 1
 
-  abstract interface
-    function sll_scalar_initializer_gc_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_gc_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_gc_2d
-  end interface
-
-
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_guiding_center_cartesian
 
@@ -79,7 +69,7 @@ module sll_simulation_2d_guiding_center_cartesian_module
 
 
    !initial function
-   procedure(sll_scalar_initializer_gc_2d), nopass, pointer :: init_func
+   procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
       
    !advector
