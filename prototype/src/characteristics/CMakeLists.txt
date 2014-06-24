@@ -46,9 +46,6 @@
     test_characteristics_1d_trapezoid_conservative
     sll_characteristics)
 
-
-
-
   ADD_EXECUTABLE(
     test_characteristics_2d_explicit_euler
     unit_test_characteristics_2d_explicit_euler.F90)
@@ -62,7 +59,6 @@
   TARGET_LINK_LIBRARIES(
     test_characteristics_2d_verlet
     sll_characteristics)
-
 
   ADD_EXECUTABLE(
     test_characteristics_2d_explicit_euler_conservative
