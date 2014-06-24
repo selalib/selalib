@@ -154,11 +154,14 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
      sll_real64, dimension(:), pointer :: B_norm_r
      sll_real64, dimension(:), pointer :: Bstar_par_v_r
      sll_real64, dimension(:), pointer :: c_r
-     sll_real64, dimension(:), pointer :: sigma_r
-     sll_real64, dimension(:), pointer :: tau_r
+     sll_int32, dimension(:), pointer :: shift_for_sigma
+     sll_int32, dimension(:), pointer :: shift_for_tau
      sll_real64, dimension(:), pointer :: iota_for_sigma
      sll_real64, dimension(:), pointer :: iota_for_tau
-     
+     sll_real64, dimension(:), pointer :: sigma_r
+     sll_real64, dimension(:), pointer :: tau_r
+     sll_int32 :: spaghetti_size_sigma
+     sll_int32 :: spaghetti_size_tau
 
 
      !--> Equilibrium distribution function
@@ -231,6 +234,8 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
     !for computing advection field from phi
     class(sll_interpolator_2d_base), pointer   :: phi_interp_x1x2
     class(sll_interpolator_1d_base), pointer   :: phi_interp_x3
+    class(sll_interpolator_1d_base), pointer   :: phi_interp_fa !for field aligned interp.
+    !should replace phi_interp_x3 in future
 
 
      !--> temporary structures that are used in CG_polar
@@ -345,18 +350,12 @@ contains
     sll_int32 :: ierr
     !sll_int32  :: spline_degree
     
-    sll_int32 :: spaghetti_size_guess
+    sll_int32 :: spaghetti_size_guess_sigma
+    sll_int32 :: spaghetti_size_guess_tau
     sll_int32 :: shift
-    sll_int32 :: spaghetti_size
+    !sll_int32 :: spaghetti_size
     !sll_real64 :: iota_modif
-    
-    
-    
-    !--> temporary variables for using cg_polar structures
-    !sll_int32  :: bc_cg(2)
-    !sll_int32  :: grad_cg
-    !sll_int32  :: carac_cg
-    
+        
 
     namelist /mesh/ &
       num_cells_x1, &
@@ -389,7 +388,10 @@ contains
       size_Diota_file, &
       is_iota_file, &
       is_Diota_file, &
-      B_norm_exponent      
+      B_norm_exponent, &
+      spaghetti_size_guess_sigma, &
+      spaghetti_size_guess_tau
+            
     namelist /perturbation/ &
       perturb_choice, &
       mmode, &
@@ -426,7 +428,9 @@ contains
     is_Diota_file = .false.
     size_iota_file = 0
     size_Diota_file = 0
-    
+    num_cells_x2 = 32
+    spaghetti_size_guess_sigma = num_cells_x2
+    spaghetti_size_guess_tau = num_cells_x2
     
     B_norm_exponent = -0.5_f64
     
@@ -464,21 +468,6 @@ contains
 
     
     SLL_ALLOCATE(tmp_r(num_cells_x1+1,2),ierr)
-
-
-
- !   call compute_spaghetti_and_shift_from_guess( &
-!      Nc_x1, &
-!      Nc_x2, &
-!      iota, &
-!      spaghetti_size_guess, &
-!      shift, &
-!      spaghetti_size)
-!
-!    print *,'#shift=',shift
-!    print *,'#spaghetti_size=',spaghetti_size
-!    call compute_iota_from_shift(Nc_x1,shift,iota_modif)
-!    print *,'#iota_modif=',iota_modif
 
     
     
@@ -613,11 +602,88 @@ contains
       sim%iota_r, &
       sim%Diota_r )
 
+!    call initialize_c_from_iota_profile( &
+!      sim%iota, &
+!      sim%m_x1, &
+!      num_cells_x1+1, &
+!      r_max-r_min, &
+!      sim%c_r)
 
-    
     call initialize_profiles_analytic(sim)    
     !call allocate_fdistribu4d_DK(sim)
     !call allocate_QN_DK( sim )
+
+    SLL_ALLOCATE(sim%shift_for_sigma(num_cells_x1+1),ierr)
+    call initialize_iota_modif( &
+      num_cells_x2, &
+      num_cells_x3, &
+      sim%iota_r, &
+      num_cells_x1+1, &
+      spaghetti_size_guess_sigma, &
+      sim%spaghetti_size_sigma, &
+      sim%shift_for_sigma)
+    SLL_ALLOCATE(sim%iota_for_sigma(num_cells_x1+1),ierr)
+
+    do i=1,num_cells_x1+1
+      call compute_iota_from_shift( &
+        num_cells_x2, &
+        sim%shift_for_sigma(i), & 
+        sim%iota_for_sigma(i))
+    enddo
+
+    SLL_ALLOCATE(sim%sigma_r(num_cells_x1+1),ierr)
+    call initialize_c_from_iota_profile( &
+      sim%iota_for_sigma, &
+      sim%x1_node, &
+      num_cells_x1+1, &
+      r_max-r_min, &
+      sim%sigma_r)
+
+
+
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      print *,'#spaghetti_size_guess_sigma=',spaghetti_size_guess_sigma
+      print *,'#spaghetti_size_sigma=',sim%spaghetti_size_sigma
+      print *,'#shift_for_sigma=',sim%shift_for_sigma
+    endif
+
+
+    SLL_ALLOCATE(sim%shift_for_tau(num_cells_x1+1),ierr)
+    call initialize_iota_modif( &
+      num_cells_x2, &
+      num_cells_x3, &
+      sim%iota_r, &
+      num_cells_x1+1, &
+      spaghetti_size_guess_tau, &
+      sim%spaghetti_size_tau, &
+      sim%shift_for_tau)
+    SLL_ALLOCATE(sim%iota_for_tau(num_cells_x1+1),ierr)
+
+    do i=1,num_cells_x1+1
+      call compute_iota_from_shift( &
+        num_cells_x2, &
+        sim%shift_for_tau(i), & 
+        sim%iota_for_tau(i))
+    enddo
+
+
+    SLL_ALLOCATE(sim%tau_r(num_cells_x1+1),ierr)
+    call initialize_c_from_iota_profile( &
+      sim%iota_for_tau, &
+      sim%x1_node, &
+      num_cells_x1+1, &
+      r_max-r_min, &
+      sim%tau_r)
+
+
+
+    if(sll_get_collective_rank(sll_world_collective)==0)then
+      print *,'#spaghetti_size_guess_tau=',spaghetti_size_guess_tau
+      print *,'#spaghetti_size_tau=',sim%spaghetti_size_tau
+      print *,'#shift_for_tau=',sim%shift_for_tau
+    endif
+
+
 
     call allocate_fdistribu4d_and_QN_DK_parx1(sim)
 
@@ -768,6 +834,11 @@ contains
       case ("SLL_CUBIC_SPLINES")
         sim%phi_interp_x3 => new_cubic_spline_1d_interpolator( &
           sim%m_x3%num_cells+1, &
+          sim%m_x3%eta_min, &
+          sim%m_x3%eta_max, &
+          SLL_PERIODIC)
+        sim%phi_interp_fa => new_cubic_spline_1d_interpolator( &
+          sim%m_x3%num_cells*sim%spaghetti_size_tau+1, &
           sim%m_x3%eta_min, &
           sim%m_x3%eta_max, &
           SLL_PERIODIC)
@@ -930,6 +1001,7 @@ contains
       call sll_gnuplot_write(sim%Te_r,'Te_r_init',ierr)
       call sll_gnuplot_write(sim%iota_r,'iota_r_init',ierr)
       call sll_gnuplot_write(sim%c_r,'c_r_init',ierr)
+      call sll_gnuplot_write(sim%iota_for_sigma,'iota_for_sigma',ierr)
       call sll_gnuplot_write(sim%B_norm_r,'B_norm_r_init',ierr)
       call sll_gnuplot_write(sim%Bstar_par_v_r,'Bstar_par_v_r_init',ierr)
     end if

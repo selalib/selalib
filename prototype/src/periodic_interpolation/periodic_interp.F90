@@ -11,12 +11,12 @@ use sll_constants
   sll_real64, parameter    :: pi = 3.1415926535897932385_8
   sll_real64, parameter    :: twopi = 6.2831853071795864769_8
 
-  integer, parameter  ::  TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
+  integer, parameter  :: TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
   integer, parameter   :: TRIGO_REAL = 4
 #ifdef STDF95
-  complex(8), parameter :: ii =(0.0, 1.0)
+  complex(8), parameter :: ii_64 =(0.0, 1.0)
 #else
-  complex(8), parameter :: ii = dcmplx(0.0_8, 1.0_8)
+  complex(8), parameter :: ii_64 = dcmplx(0.0_8, 1.0_8)
 #endif
 
   type :: periodic_interp_work
@@ -94,7 +94,7 @@ contains
        this%buf=>NULL()
        biatx = uniform_b_splines_at_x(p, 0.0_8 )
        do i=1, N
-          this%modes(i-1) = exp(ii*twopi*(i-1)/N)
+          this%modes(i-1) = exp(ii_64*twopi*(i-1)/N)
           this%eigenvalues_Minv(i) = biatx((p+1)/2)
           do j = 1,(p+1)/2
              this%eigenvalues_Minv(i) = this%eigenvalues_Minv(i) &
@@ -171,15 +171,15 @@ contains
        end do
        call zfftf(this%N, this%ufft, this%wsave)
        this%eigenvalues_S(1) = 1.0_8
-       this%eigenvalues_S(this%N/2+1) = exp(-ii*pi*alpha)
+       this%eigenvalues_S(this%N/2+1) = exp(-ii_64*pi*alpha)
        do k=1, this%N/2-1
           !filter = 0.5_8*(1+tanh(100*(.35_8*this%N/2-k)/(this%N/2))) !F1
           !filter = 0.5_8*(1+tanh(100*(.25_8*this%N/2-k)/(this%N/2))) !F2
           !filter = 0.5_8*(1+tanh(50*(.25_8*this%N/2-k)/(this%N/2))) !F3
           filter = 1.0_8
 
-          this%eigenvalues_S(k+1) = exp(-ii*twopi*k*alpha/this%N) * filter
-          this%eigenvalues_S(this%N-k+1) = exp(ii*twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(k+1) = exp(-ii_64*twopi*k*alpha/this%N) * filter
+          this%eigenvalues_S(this%N-k+1) = exp(ii_64*twopi*k*alpha/this%N) * filter
        end do
        this%ufft = this%ufft*this%eigenvalues_S
        ! Perform inverse FFT and normalized
@@ -230,7 +230,7 @@ contains
        u_out = u
        call fft_apply_plan(this%pfwd,u_out,u_out)
        n=this%N
-       tmp2=-ii*2._f64*sll_pi/n*alpha
+       tmp2=-ii_64*2._f64*sll_pi/n*alpha
 
          GET_MODE0(tmp,u_out)
          tmp=tmp*exp(tmp2*real(0,f64))
