@@ -1,9 +1,11 @@
 !> Unit test for parallel output
 program test_io_parallel
 
+#ifndef NOHDF5
 use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
+#endif
 use sll_collective
-#ifdef HDF5_PARALLEL
+#ifndef NOHDF5
 use sll_hdf5_io_parallel
 use sll_xdmf_parallel
 #endif
@@ -86,9 +88,13 @@ contains
   
   real(8), dimension(:,:), allocatable :: xdata, ydata, zdata
   sll_int32      :: xml_id
+#ifndef NOHDF5
   integer(HID_T) :: file_id
   integer(HSIZE_T), dimension(2) :: datadims = (/nx,ny/)
   integer(HSSIZE_T), dimension(2) :: offset 
+#else
+  sll_int32, dimension(2) :: offset 
+#endif
   character(len=4) :: prefix = "mesh"
   
   layout => new_layout_2D( sll_world_collective )        
@@ -133,7 +139,7 @@ contains
   call sll_gnuplot_curv_2d_parallel(xdata, ydata, zdata, "curv_mesh", 1, error)  
   
   
-#ifdef HDF5_PARALLEL
+#ifndef NOHDF5
 !  !Begin high level version
 !
 !  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
@@ -207,13 +213,16 @@ contains
   sll_int32, dimension(3)                   :: global_indices
 
   sll_int32      :: xml_id
-  integer(HID_T) :: file_id       ! File identifier 
-
-  integer(HSIZE_T), dimension(3) :: datadims = (/ni,nj,nk/) ! Dataset dimensions.
-
   sll_int32, PARAMETER :: rank = 3
-
+#ifndef NOHDF5
+  integer(HID_T) :: file_id       ! File identifier 
+  integer(HSIZE_T), dimension(3) :: datadims = (/ni,nj,nk/) ! Dataset dimensions.
   integer(HSSIZE_T), dimension(rank) :: offset 
+#else
+  sll_int32, dimension(rank) :: offset 
+#endif
+
+
 
   real(8), dimension(:,:,:), allocatable :: xdata, ydata, zdata
 
@@ -257,7 +266,7 @@ contains
   offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
   offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
 
-#ifdef HDF5_PARALLEL
+#ifndef NOHDF5
 
   !Begin high level version
 

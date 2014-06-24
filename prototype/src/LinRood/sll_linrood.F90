@@ -50,10 +50,6 @@ contains
     sll_int32  :: nc_eta2
     
     ! get dimensions
-!#ifdef STDF95
-!    nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
-!    nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type ) 
-!#else
     mesh => dist_func_2d%transf%mesh
     nc_eta1    = mesh%num_cells1
     nc_eta2    = mesh%num_cells2
@@ -61,7 +57,6 @@ contains
     ! save dimensions in plan
     this%nc_eta1 = nc_eta1  
     this%nc_eta2 = nc_eta2
-!#endif
 
     ! allocate arrays
     SLL_ALLOCATE(this%dist_func_2d(nc_eta1,nc_eta1),ierr)
@@ -102,14 +97,9 @@ contains
    sll_real64, dimension(max(plan%nc_eta1, plan%nc_eta2)) :: aux_in, aux_out
     
    ! get dimensions
-!#ifdef STDF95
-!   nc_eta1    = GET_FIELD_NC_ETA1( dist_func_2D%extend_type ) 
-!   nc_eta2    = GET_FIELD_NC_ETA2( dist_func_2D%extend_type )
-!#else
    mesh => dist_func_2D%transf%mesh
    nc_eta1    = mesh%num_cells1
    nc_eta2    = mesh%num_cells2
-!#endif
    delta_eta1 = 1.0_8 / nc_eta1
    delta_eta2 = 1.0_8 / nc_eta2
 
@@ -118,11 +108,7 @@ contains
    ! First component: a_1 = d H/ d eta_2
    do i1 = 1, nc_eta1
       do i2 = 1, nc_eta2
-!#ifdef STDF95
-!         aux_in(i2) =  FIELD_2D_AT_I( advfield%extend_type, i1, i2 )
-!#else
          aux_in(i2) =  FIELD_2D_AT_I( advfield, i1, i2 )
-!#endif
       end do
       call FD_WENO_recon_1D(plan%recon_eta2, nc_eta2, aux_in, aux_out)
       do i2 = 1, nc_eta2
@@ -132,11 +118,7 @@ contains
    ! Second component: a_2 = - d H/ d eta_1
    do i2 = 1, nc_eta2
       do i1 = 1, nc_eta1
-!#ifdef STDF95
-!         aux_in(i1) =  FIELD_2D_AT_I( advfield%extend_type, i1, i2 )
-!#else
          aux_in(i1) =  FIELD_2D_AT_I( advfield, i1, i2 )
-!#endif
       end do
       call FD_WENO_recon_1D(plan%recon_eta1, nc_eta1, aux_in, aux_out)
       do i1 = 1, nc_eta1

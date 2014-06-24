@@ -9,7 +9,7 @@ module sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
   use sll_arbitrary_degree_spline_interpolator_2d_module
-  use sparsematrix_module
+  !use sparsematrix_module
   use connectivity_module
   use sll_knots
   use gauss_legendre_integration

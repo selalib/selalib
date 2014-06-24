@@ -1210,15 +1210,6 @@ contains !************************** Operations **************************
   ! This toutine is a simpler version of the sll_collective_alltoallV_int subroutine
   subroutine sll_collective_alltoallV_int_simple( send_buf, send_cnts, &
        recv_buf,col )
-    !#ifdef STDF95
-    !    sll_int32, dimension(:), intent(in) :: send_buf
-    !    sll_int32, dimension(:), intent(in) :: send_cnts
-    !    sll_int32, dimension(:), intent(out) :: recv_buf
-    !    type(sll_collective_t), pointer     :: col
-    !
-    !    PRINT*,'ATTENTION sll_collective_alltoallV_int_simple IN COLLECTIVE MODULE'
-    !    PRINT*,'NO IMPLEMENTED FOR FORTRAN 95'
-    !#else
     sll_int32, dimension(:), intent(in) :: send_buf
     sll_int32, dimension(:), intent(in) :: send_cnts
     !sll_int32, ,allocatable dimension(:) :: recv_buf
