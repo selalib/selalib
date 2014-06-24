@@ -66,11 +66,11 @@ ADD_CUSTOM_TARGET( clear
 INCLUDE(FortranConfig)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
-INCLUDE(MPIConfig)
 INCLUDE(HDF5Config)
 INCLUDE(DoxygenConfig)
 
 IF(MPI_MODULE_ENABLED)
+   INCLUDE(MPIConfig)
    INCLUDE(ProcessorCount)
    INCLUDE(POEConfig)
 ENDIF()
