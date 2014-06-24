@@ -51,7 +51,6 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 !  use sll_fft
   implicit none
   
-  
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
   sll_int32, parameter :: SLL_ADVECTIVE = 0 
@@ -137,19 +136,6 @@ module sll_simulation_2d_guiding_center_curvilinear_module
     procedure, pass(sim) :: init_from_file => init_fake
      
   end type sll_simulation_2d_guiding_center_curvilinear
-
-
-  abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-
-
 
 contains
 

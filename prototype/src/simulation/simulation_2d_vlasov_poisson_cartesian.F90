@@ -91,7 +91,7 @@ module sll_simulation_2d_vlasov_poisson_cartesian
    logical :: time_init_from_restart_file
    
    !initial function
-   procedure(sll_parallel_scalar_initializer_2d), nopass, pointer :: init_func
+   procedure(sll_scalar_initializer_2d), nopass, pointer :: init_func
    sll_real64, dimension(:), pointer :: params
    sll_real64 :: nrj0
    
