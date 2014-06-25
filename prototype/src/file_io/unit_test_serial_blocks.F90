@@ -178,7 +178,12 @@ if (prank == 0) then
    close(xmf)
 end if
 
-call sll_xdmf_open_serial_blocks(file_name, xmf_id, error)
+!call sll_xdmf_open_serial_blocks(file_name, xmf_id, error)
+!call sll_xdmf_array_2d_serial_blocks(trim(mesh_label), &
+!                                     array,            &
+!                                     trim(array_name),error,&
+!                                     xmf_id,center)
+
 tcpu2 = MPI_WTIME()
 
 print*, tcpu2-tcpu1
