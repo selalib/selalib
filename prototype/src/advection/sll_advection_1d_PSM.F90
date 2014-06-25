@@ -31,16 +31,16 @@ use sll_constants
 implicit none
 
   type,extends(sll_advection_1d_base) :: PSM_1d_advector
-    sll_real64, dimension(:), pointer :: buf1d
+    sll_real64, dimension(:), pointer :: buf1d    
     sll_real64, dimension(:), pointer :: buf1d_out
-    sll_real64, dimension(:), pointer :: dtab
-    sll_real64, dimension(:), pointer :: ltab
-    sll_real64, dimension(:), pointer :: mtab
-    sll_real64, dimension(:), pointer :: alphax
-    sll_real64, dimension(:), pointer :: prim
-    sll_real64, dimension(:), pointer :: bufout0
-    sll_real64, dimension(:), pointer :: bufout
-    sll_real64, dimension(:), pointer :: p
+    sll_real64, dimension(:), pointer :: dtab     
+    sll_real64, dimension(:), pointer :: ltab     
+    sll_real64, dimension(:), pointer :: mtab     
+    sll_real64, dimension(:), pointer :: alphax   
+    sll_real64, dimension(:), pointer :: prim     
+    sll_real64, dimension(:), pointer :: bufout0  
+    sll_real64, dimension(:), pointer :: bufout   
+    sll_real64, dimension(:), pointer :: p        
     sll_real64 :: eta_min
     sll_real64 :: eta_max
     sll_int32 :: Npts
@@ -52,7 +52,7 @@ implicit none
       PSM_advect_1d
     procedure, pass(adv) :: advect_1d_constant => &
       PSM_advect_1d_constant
-  
+    procedure, pass(adv) :: delete => delete_PSM_1d_advector
   end type PSM_1d_advector
    
 
@@ -386,8 +386,20 @@ contains
           
   end subroutine PSM_advect_1d_constant
 
-
-
+  subroutine delete_PSM_1d_advector( adv )
+    class(PSM_1d_advector), intent(inout) :: adv
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(adv%buf1d,ierr)    
+    SLL_DEALLOCATE(adv%buf1d_out,ierr)    
+    SLL_DEALLOCATE(adv%dtab,ierr)         
+    SLL_DEALLOCATE(adv%ltab,ierr)         
+    SLL_DEALLOCATE(adv%mtab,ierr)         
+    SLL_DEALLOCATE(adv%alphax,ierr)       
+    SLL_DEALLOCATE(adv%prim,ierr)         
+    SLL_DEALLOCATE(adv%bufout0,ierr)      
+    SLL_DEALLOCATE(adv%bufout,ierr)       
+    SLL_DEALLOCATE(adv%p,ierr)    
+  end subroutine delete_PSM_1d_advector
 
 
 

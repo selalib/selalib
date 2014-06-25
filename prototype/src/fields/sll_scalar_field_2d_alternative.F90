@@ -145,12 +145,12 @@ module sll_module_scalar_field_2d_alternative
   end interface
 
   abstract interface
-     function scalar_function_2D( eta1, eta2 )
+     function scalar_function_2d_alternative( eta1, eta2 )
        use sll_working_precision
-       sll_real64 :: scalar_function_2D
+       sll_real64 :: scalar_function_2d_alternative
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
-     end function scalar_function_2D
+     end function scalar_function_2d_alternative
   end interface
 
   interface sll_delete

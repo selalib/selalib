@@ -3,7 +3,7 @@ program integration_tester
 #include "sll_constants.h"
   use gauss_legendre_integration
   use gauss_lobatto_integration
-  use test_function_module
+  use test_function_module, only: one, test_func
   implicit none
   intrinsic :: dsin
   integer :: i,j,n
