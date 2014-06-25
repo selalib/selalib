@@ -256,7 +256,7 @@ def main ():
                             writefile.write("column-")
                             writefile.write("major convention used by \n! ")
                             writefile.write("Fortran.\n\n")
-                            writefile.write("&connectivity\n")
+                            #writefile.write("&connectivity\n")
                             continue
                         else:
                             print('It seems there is an input file problem: ')
@@ -324,6 +324,7 @@ def main ():
                         continue
         flattened = [item for sublist in connectivities for item in sublist]
 
+        writefile.write("&connectivity\n")
         writefile.write("    connectivities = " + 
                         " ".join([str(item) for item in  flattened]) + "\n")
         writefile.write("/" + "\n\n")

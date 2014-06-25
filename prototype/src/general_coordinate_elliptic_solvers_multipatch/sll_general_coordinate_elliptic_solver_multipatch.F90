@@ -27,14 +27,14 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
      type(sll_coordinate_transformation_multipatch_2d), pointer :: T
      sll_real64, dimension(:,:), pointer :: knots1
      sll_real64, dimension(:,:), pointer :: knots2
-!!$     sll_real64, dimension(:,:), pointer :: knots1_rho
-!!$     sll_real64, dimension(:,:), pointer :: knots2_rho
+     sll_real64, dimension(:,:), pointer :: knots1_rho
+     sll_real64, dimension(:,:), pointer :: knots2_rho
      sll_real64, dimension(:,:,:), pointer :: gauss_pts1
      sll_real64, dimension(:,:,:), pointer :: gauss_pts2
 !!$     sll_int32 :: bc_left
 !!$     sll_int32 :: bc_right
 !!$     sll_int32 :: bc_bottom
-!!$     sll_int32 :: bc_top
+!!$     sll_int32 :: bc_top 
      sll_int32,dimension(:),pointer :: spline_degree1
      sll_int32,dimension(:),pointer :: spline_degree2
      sll_int32 :: solution_size
@@ -55,8 +55,8 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
      ! local_to_global_spline_indices(i,j) = 
      !   global_spline_indices(local_spline_indices(i,j))
      !sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
-!!$     sll_int32, dimension(:,:,:), pointer :: local_to_global_spline_indices_source
-!!$     sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
+     sll_int32, dimension(:,:,:), pointer :: local_to_global_spline_indices_source_col
+     sll_int32, dimension(:,:,:), pointer :: local_to_global_spline_indices_source_row
      
      ! contains the values of all splines in all gauss points
      sll_real64, dimension(:,:,:), pointer :: values_splines_eta1
@@ -269,14 +269,14 @@ contains ! *******************************************************************
 
     lm => es_mp%T%get_logical_mesh(0)
     es_mp%solution_size = size(es_mp%T%global_indices)!num_global_indices!es_mp%total_num_splines_eta1*es_mp%total_num_splines_eta2
-    knots1_size = 2*max_degspline1 + lm%num_cells1+1
-    knots2_size = 2*max_degspline2 + lm%num_cells2+1
+    knots1_size = size(es_mp%T%transfs(1)%T%knots1)!2*max_degspline1 + lm%num_cells1+1
+    knots2_size = size(es_mp%T%transfs(1)%T%knots2)!2*max_degspline2 + lm%num_cells2+1
     !SLL_ALLOCATE(es_mp%knots1(knots1_size),ierr1)
     !SLL_ALLOCATE(es_mp%knots2(knots2_size),ierr)
     SLL_ALLOCATE(es_mp%knots1(es_mp%T%number_patches,knots1_size),ierr1)
     SLL_ALLOCATE(es_mp%knots2(es_mp%T%number_patches,knots2_size),ierr)
-    !SLL_ALLOCATE(es_mp%knots1_rho(num_cells_eta1 + spline_degree_eta1 + 2),ierr1)
-    !SLL_ALLOCATE(es_mp%knots2_rho(num_cells_eta2 + spline_degree_eta2 + 2 ),ierr)
+    SLL_ALLOCATE(es_mp%knots1_rho(es_mp%T%number_patches,lm%num_cells1 + es_mp%spline_degree1(1) + 2),ierr1)
+    SLL_ALLOCATE(es_mp%knots2_rho(es_mp%T%number_patches,lm%num_cells2 + es_mp%spline_degree2(1) + 2 ),ierr)
     !SLL_ALLOCATE(es_mp%rho_vec(vec_sz),ierr)
     SLL_ALLOCATE(es_mp%rho_vec(es_mp%solution_size),ierr)
     SLL_ALLOCATE(es_mp%phi_vec(es_mp%solution_size),ierr)
@@ -302,29 +302,9 @@ contains ! *******************************************************************
    ! Knots to define be careful
 
    do i = 1, es_mp%T%number_patches
-      lm => es_mp%T%get_logical_mesh(i-1)
-      eta1_min         = lm%eta1_min
-      eta2_min         = lm%eta2_min
-      eta1_max         = lm%eta1_max
-      eta2_max         = lm%eta2_max
-   
-      call initialize_knots( &
-           es_mp%spline_degree1(i), &
-           lm%num_cells1, &
-           eta1_min, &
-           eta1_max, &
-           SLL_DIRICHLET, &
-           SLL_DIRICHLET, &
-           es_mp%knots1(i,:) )
-   
-      call initialize_knots( &
-           es_mp%spline_degree2(i), &
-           lm%num_cells2, &
-           eta2_min, &
-           eta2_max, &
-           SLL_DIRICHLET, &
-           SLL_DIRICHLET, &
-           es_mp%knots2(i,:) )
+
+      es_mp%knots1(i,:) = es_mp%T%transfs(i)%T%knots1
+      es_mp%knots2(i,:) = es_mp%T%transfs(i)%T%knots2
    end do
    
 
@@ -369,6 +349,11 @@ contains ! *******************************************************************
    max_total_num_splines_loc   = MAXVAL(es_mp%total_num_splines_loc)
    SLL_ALLOCATE(es_mp%local_to_global_row(es_mp%T%number_patches,max_total_num_splines_loc,max_num_elts_no_null_patchs),ierr)
    SLL_ALLOCATE(es_mp%local_to_global_col(es_mp%T%number_patches,max_total_num_splines_loc,max_num_elts_no_null_patchs),ierr)
+   SLL_ALLOCATE(es_mp%local_to_global_spline_indices_source_row(es_mp%T%number_patches,max_total_num_splines_loc,max_num_elts_no_null_patchs),ierr)
+   SLL_ALLOCATE(es_mp%local_to_global_spline_indices_source_col(es_mp%T%number_patches,max_total_num_splines_loc,max_num_elts_no_null_patchs),ierr)
+   
+   es_mp%local_to_global_spline_indices_source_row = 0.0_f64
+   es_mp%local_to_global_spline_indices_source_col = 0.0_f64
 
    do i = 1, es_mp%T%number_patches
       lm => es_mp%T%get_logical_mesh(i-1)
@@ -395,46 +380,51 @@ contains ! *******************************************************************
         es_mp%local_to_global_col, &
         es_mp%total_num_splines_loc ) 
    
-!!$   es_mp%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
-!!$   es_mp%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
-!!$   
-!!$   
-!!$   if ( mod(spline_degree_eta1 +1,2) == 0 ) then
-!!$      do i = spline_degree_eta1 +1 + 1, num_cells_eta1 + 1
-!!$         es_mp%knots1_rho ( i ) = eta1_min +  ( i - (spline_degree_eta1 +1)/2-1 )*es_mp%logical_mesh%delta_eta1 
-!!$         
-!!$      end do
-!!$   else
-!!$      
-!!$        do i = spline_degree_eta1 +1 + 1, num_cells_eta1 + 1
-!!$           es_mp%knots1_rho ( i ) = &
-!!$                0.5*( eta1_min + ( i - (spline_degree_eta1)/2 -1)*es_mp%logical_mesh%delta_eta1 + &
-!!$                eta1_min +  ( i -1 - (spline_degree_eta1)/2 -1)*es_mp%logical_mesh%delta_eta1 )
-!!$           
-!!$        end do
-!!$        
-!!$     end if
-!!$
-!!$     es_mp%knots2_rho ( 1 : spline_degree_eta2 +1 ) = eta2_min
-!!$     es_mp%knots2_rho ( num_cells_eta2 + 2 : num_cells_eta2 + 1 + spline_degree_eta2 +1 ) = eta2_max
-!!$     
-!!$     
-!!$     if ( mod(spline_degree_eta2 +1,2) == 0 ) then
-!!$        do i = spline_degree_eta2 +1 + 1, num_cells_eta2 + 1
-!!$           es_mp%knots2_rho ( i ) = eta2_min +  ( i - (spline_degree_eta2 +1)/2-1 )*es_mp%logical_mesh%delta_eta2 
-!!$           
-!!$        end do
-!!$     else
-!!$        
-!!$        do i = spline_degree_eta2 +1 + 1, num_cells_eta2 + 1
-!!$           es_mp%knots2_rho ( i ) = &
-!!$                0.5*( eta2_min + ( i - (spline_degree_eta2)/2 -1)*es_mp%logical_mesh%delta_eta2 + &
-!!$                eta2_min +  ( i -1 - (spline_degree_eta2)/2 -1)*es_mp%logical_mesh%delta_eta2 )
-!!$           
-!!$        end do
-!!$        
-!!$     end if
-!!$     
+
+   do i = 1, es_mp%T%number_patches
+      lm => es_mp%T%get_logical_mesh(i-1)
+      es_mp%knots1_rho (i, 1 : es_mp%spline_degree1(i) +1 ) = lm%eta1_min
+      es_mp%knots1_rho (i,lm%num_cells1+2:lm%num_cells1+2+es_mp%spline_degree1(i) ) = lm%eta1_max
+   
+   
+      if ( mod(es_mp%spline_degree1(i) +1,2) == 0 ) then
+         do j = es_mp%spline_degree1(i) +1 + 1, lm%num_cells1 + 1
+            es_mp%knots1_rho ( i,j ) = lm%eta1_min +  ( j - (es_mp%spline_degree1(i) +1)/2-1 )*lm%delta_eta1 
+         
+         end do
+      else
+      
+         do j = es_mp%spline_degree1(i) +1 + 1, lm%num_cells1 + 1
+            es_mp%knots1_rho ( i,j ) = &
+                0.5*( lm%eta1_min + ( j - (es_mp%spline_degree1(i))/2 -1)*lm%delta_eta1 + &
+                lm%eta1_min +  ( j -1 - (es_mp%spline_degree1(i))/2 -1)*lm%delta_eta1 )
+           
+         end do
+        
+      end if
+
+      es_mp%knots2_rho (i, 1 : es_mp%spline_degree2(i) +1 ) = lm%eta2_min
+      es_mp%knots2_rho (i,lm%num_cells2 + 2 : lm%num_cells2 + 2 + es_mp%spline_degree2(i) ) = lm%eta2_max
+     
+     
+      if ( mod(es_mp%spline_degree2(i) +1,2) == 0 ) then
+         do j = es_mp%spline_degree2(i) +1 + 1, lm%num_cells2 + 1
+            es_mp%knots2_rho ( i,j ) = lm%eta2_min +  ( j - (es_mp%spline_degree2(i) +1)/2-1 )*lm%delta_eta2 
+           
+         end do
+      else
+        
+        do j = es_mp%spline_degree2(i) +1 + 1, lm%num_cells2 + 1
+           es_mp%knots2_rho ( i,j ) = &
+                0.5*( lm%eta2_min + ( j - (es_mp%spline_degree2(i))/2 -1)*lm%delta_eta2 + &
+                lm%eta2_min +  ( j -1 - (es_mp%spline_degree2(i))/2 -1)*lm%delta_eta2 )
+           
+        end do
+        
+     end if
+
+  enddo
+     
      
      
    !! allocation of the table containning all values of splines in each direction 
@@ -543,8 +533,8 @@ contains ! *******************************************************************
    !SLL_DEALLOCATE(es_mp%global_spline_indices,ierr)
    !SLL_DEALLOCATE(es_mp%local_spline_indices,ierr)
    !SLL_DEALLOCATE(es_mp%local_to_global_spline_indices,ierr)
-!!$    SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source,ierr)
-!!$    SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_bis,ierr)
+    SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_row,ierr)
+    SLL_DEALLOCATE(es_mp%local_to_global_spline_indices_source_col,ierr)
    call sll_delete(es_mp%sll_csr_mat)
    call sll_delete(es_mp%sll_csr_mat_source)
    SLL_DEALLOCATE(es_mp%rho_vec,ierr)
@@ -553,8 +543,8 @@ contains ! *******************************************************************
    SLL_DEALLOCATE(es_mp%tmp_phi_vec,ierr)
    SLL_DEALLOCATE(es_mp%masse,ierr)
    SLL_DEALLOCATE(es_mp%stiff,ierr)
-!!$    SLL_DEALLOCATE(es_mp%knots1_rho,ierr)
-!!$    SLL_DEALLOCATE(es_mp%knots2_rho,ierr)
+   SLL_DEALLOCATE(es_mp%knots1_rho,ierr)
+   SLL_DEALLOCATE(es_mp%knots2_rho,ierr)
    SLL_DEALLOCATE(es_mp%values_splines_eta1,ierr)
    SLL_DEALLOCATE(es_mp%values_splines_eta2,ierr)
    SLL_DEALLOCATE(es_mp%values_jacobian,ierr)
@@ -616,11 +606,11 @@ contains ! *******************************************************************
    sll_real64, dimension(:,:), allocatable :: S_b2_loc  
    sll_real64, dimension(:), allocatable :: Masse_loc
    sll_real64, dimension(:), allocatable :: Stiff_loc
-   sll_real64, dimension(:,:,:), pointer :: Source_loc
+   sll_real64, dimension(:,:,:,:), pointer :: Source_loc
    sll_int32 :: total_num_splines_loc
    sll_int32 :: ierr,ierr1
-   sll_int32 :: i
-   sll_int32 :: j
+   sll_int32 :: ibuild_local_matrices_mp
+   sll_int32 :: j,i
    sll_int32 :: nb_patch
    sll_int32 :: cell_index
    sll_int32 :: patch
@@ -646,10 +636,10 @@ contains ! *******************************************************************
    SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
 
    lm => es_mp%T%get_logical_mesh(0)
-   SLL_ALLOCATE(Source_loc(lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
+   SLL_ALLOCATE(Source_loc(es_mp%T%number_patches,lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
    Masse_loc(:) = 0.0_f64
    Stiff_loc(:) = 0.0_f64
-   Source_loc(:,:,:) = 0.0_f64
+   Source_loc(:,:,:,:) = 0.0_f64
 
    
    
@@ -736,9 +726,9 @@ contains ! *******************************************************************
         es_mp%solution_size, &
         es_mp%T%number_patches,&
         es_mp%num_elts_no_null_patchs, &
-        es_mp%local_to_global_row, &
+        es_mp%local_to_global_spline_indices_source_row, &
         es_mp%total_num_splines_loc, &
-        es_mp%local_to_global_col, &
+        es_mp%local_to_global_spline_indices_source_col, &
         es_mp%total_num_splines_loc ) 
 
    print*, 'ok rho'
@@ -864,6 +854,7 @@ contains ! *******************************************************************
           do j=1,lm%num_cells2+1
              do i=1,lm%num_cells1+1
              
+                print*, patch + (i+(lm%num_cells1+1)*(j-1)-1)*es_mp%T%number_patches
                 rho_coeff_1d(patch + (i+(lm%num_cells1+1)*(j-1)-1)*es_mp%T%number_patches) = coeff_rho(i,j)
              end do
           end do
@@ -954,10 +945,11 @@ contains ! *******************************************************************
 !!$       call solve_linear_system_perper(es,es_mp%masse)
 !!$       
 !!$    else 
+    print*, 'heho',es_mp%rho_vec
     call solve_linear_system_mp(es_mp)
     !!    end if
 
-    print*, size(es_mp%phi_vec)
+    print*, size(es_mp%phi_vec),es_mp%phi_vec(:)
     
     
     do patch = 1, es_mp%T%number_patches
@@ -1034,7 +1026,7 @@ contains ! *******************************************************************
     class(sll_scalar_field_multipatch_2d), pointer :: b1_field_vect
     class(sll_scalar_field_multipatch_2d), pointer :: b2_field_vect
     class(sll_scalar_field_multipatch_2d), pointer :: c_field
-    sll_real64, dimension(:,:,:), intent(inout) :: Source_loc
+    sll_real64, dimension(:,:,:,:), intent(inout) :: Source_loc
     sll_real64, dimension(:,:), intent(out) :: M_c_loc
     sll_real64, dimension(:,:), intent(out) :: K_a11_loc
     sll_real64, dimension(:,:), intent(out) :: K_a12_loc
@@ -1166,19 +1158,20 @@ contains ! *******************************************************************
             2)
 
 !!$       call interv(es_mp%knots2_rho,num_cells2 + es_mp%spline_degree2(patch)+ 2, gpt2, left_y, mflag_y )
-       call interv(es_mp%knots2(patch,:),num_cells2 + es_mp%spline_degree2(patch)+ 2, gpt2, left_y, mflag_y )
-!!$       call bsplvd( &
-!!$            es_mp%knots2_rho, &
-!!$            es_mp%spline_degree2+1,&
-!!$            gpt2,&
-!!$            left_y,&
-!!$            work2,&
-!!$            dbiatx2_rho,&
-!!$            2)
+       call interv(es_mp%knots2_rho(patch,:),num_cells2 + es_mp%spline_degree2(patch)+ 2, gpt2, left_y, mflag_y )
+       call bsplvd( &
+            es_mp%knots2_rho(patch,:), &
+            es_mp%spline_degree2(patch)+1,&
+            gpt2,&
+            left_y,&
+            work2,&
+            dbiatx2_rho,&
+            2)
+
 
        ! we stocke the values of spline to construct the source term
        es_mp%values_splines_eta2(patch,cell_j + num_cells2*(j-1),:) = dbiatx2(:,1)
-       es_mp%values_splines_gauss2(patch,cell_j + num_cells2*(j-1),:) = dbiatx2(:,1)!dbiatx2_rho(:,1)
+       es_mp%values_splines_gauss2(patch,cell_j + num_cells2*(j-1),:) = dbiatx2_rho(:,1)
        es_mp%tab_index_coeff2(patch,cell_j + num_cells2*(j-1)) = left_y
 
        
@@ -1214,20 +1207,20 @@ contains ! *******************************************************************
 !!$          call interv ( es_mp%knots1_rho, num_cells1 + es_mp%spline_degree1+ 2, gpt1, &
 !!$               left_x, mflag_x )
 !!$
-          call interv ( es_mp%knots1(patch,:), num_cells1 + es_mp%spline_degree1(patch)+ 2, gpt1, &
+      
+          call interv ( es_mp%knots1_rho(patch,:), num_cells1 + es_mp%spline_degree1(patch)+ 2, gpt1,&
                left_x, mflag_x )
-!!$          
-!!$          call bsplvd(&
-!!$               es_mp%knots1_rho,&
-!!$               es_mp%spline_degree1+1,&
-!!$               gpt1,&
-!!$               left_x,&
-!!$               work1,&
-!!$               dbiatx1_rho,&
-!!$               2 )
+          call bsplvd(&
+               es_mp%knots1_rho(patch,:),&
+               es_mp%spline_degree1(patch)+1,&
+               gpt1,&
+               left_x,&
+               work1,&
+               dbiatx1_rho,&
+               2 )
 
           es_mp%values_splines_eta1(patch,cell_i + num_cells1*(i-1),:) = dbiatx1(:,1)
-          es_mp%values_splines_gauss1(patch,cell_i + num_cells1*(i-1),:) = dbiatx1(:,1)!dbiatx1_rho(:,1)
+          es_mp%values_splines_gauss1(patch,cell_i + num_cells1*(i-1),:) = dbiatx1_rho(:,1)
           es_mp%tab_index_coeff1(patch,cell_i + num_cells1*(i-1)) = left_x
 
           val_c        = c_field%fields(patch)%f%value_at_point(gpt1,gpt2)
@@ -1311,8 +1304,8 @@ contains ! *******************************************************************
                       
                       index2 =  jjj*(es_mp%spline_degree1(patch) + 1) + iii + 1
                 
-                      Source_loc(cell_index,index1, index2) = &
-                           Source_loc(cell_index,index1, index2) + &
+                      Source_loc(patch,cell_index,index1, index2) = &
+                           Source_loc(patch,cell_index,index1, index2) + &
                            val_jac*wgpt1*wgpt2* &
                            dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
@@ -1530,7 +1523,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: M_b_vect_loc
     sll_real64, dimension(:,:), intent(in) :: S_b1_loc
     sll_real64, dimension(:,:), intent(in) :: S_b2_loc
-    sll_real64, dimension(:,:,:), intent(in) :: Source_loc
+    sll_real64, dimension(:,:,:,:), intent(in) :: Source_loc
     
     !  Correspond to the full Matrix of linear system 
     !  It is not necessary to keep it  
@@ -1639,9 +1632,9 @@ contains ! *******************************************************************
                 index_coef1 = es_mp%tab_index_coeff1(patch,cell_i)- es_mp%spline_degree1(patch) + i
                 index_coef2 = es_mp%tab_index_coeff2(patch,cell_j)- es_mp%spline_degree2(patch) + mm
                 index = index_coef1 + (index_coef2-1)*(num_cells1+1)
-!!$                es_mp%local_to_global_spline_indices_source(patch,b,cell_index)= index
+                es_mp%local_to_global_spline_indices_source_row(patch,b,cell_index)= index
 !!$                
-!!$                es_mp%local_to_global_spline_indices_source_bis(patch,bprime,cell_index)= y!index_phi
+                es_mp%local_to_global_spline_indices_source_col(patch,bprime,cell_index)= y!index_phi
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    
@@ -1808,6 +1801,7 @@ contains ! *******************************************************************
     ar_eps = 1.d-13
     ai_maxIter = 100000
   
+    print*, size(apr_B), size(apr_U)
     call sll_solve_csr_matrix(es_mp%sll_csr_mat, apr_B, apr_U)
    
   end subroutine solve_gen_elliptic_eq_mp
@@ -1849,7 +1843,7 @@ contains ! *******************************************************************
   subroutine compute_Source_matrice_mp(es_mp,Source_loc)
     type(general_coordinate_elliptic_solver_mp),intent(inout) :: es_mp
     type(sll_logical_mesh_2d), pointer           :: lm
-    sll_real64, dimension(:,:,:), pointer :: Source_loc
+    sll_real64, dimension(:,:,:,:), pointer :: Source_loc
     sll_int32 :: cell_j,cell_i
     sll_int32 :: cell_index
     sll_int32 :: ideg2,ideg1
@@ -1877,18 +1871,16 @@ contains ! *******************************************************************
              do ideg1 = 0,es_mp%spline_degree1(patch)
                 
                 b          =  ideg2 * ( es_mp%spline_degree1(patch) + 1 ) + ideg1 + 1
-                li_A       =  es_mp%local_to_global_row(patch,b, cell_index)
-                !es_mp%local_to_global_spline_indices_source_bis(patch,b, cell_index)
+                li_A       = es_mp%local_to_global_spline_indices_source_row(patch,b, cell_index)
                 
                 do jdeg2 = 0,es_mp%spline_degree2(patch)
                    
                    do jdeg1 = 0,es_mp%spline_degree1(patch)
                       
                       bprime    =  jdeg2 * ( es_mp%spline_degree1(patch) + 1 ) + jdeg1 + 1
-                      li_Aprime = es_mp%local_to_global_col(patch,bprime,cell_index)
-                      !es_mp%local_to_global_spline_indices_source(patch,bprime,cell_index)
+                      li_Aprime = es_mp%local_to_global_spline_indices_source_col(patch,bprime,cell_index)
                       
-                      elt_mat_global = Source_loc(cell_index,bprime,b)
+                      elt_mat_global = Source_loc(patch,cell_index,bprime,b)
                       
                       if ( (li_A > 0) .and. (li_Aprime > 0)) then
                          
