@@ -26,12 +26,10 @@ SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 IF(MPI_MODULE_ENABLED)
 
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-   SET(IO_SRC ${IO_SRC} sll_gnuplot_parallel.F90)
-
+   SET(IO_SRC ${IO_SRC} sll_gnuplot_parallel.F90
+                        sll_xdmf_parallel.F90 )
    IF(HDF5_ENABLED AND HDF5_PARALLEL_ENABLED)
-      ADD_DEFINITIONS(-DHDF5_PARALLEL)
-      SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90
-                           sll_xdmf_parallel.F90 )
+      SET(IO_SRC ${IO_SRC} sll_hdf5_io_parallel.F90)
    ENDIF()
 
    ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
