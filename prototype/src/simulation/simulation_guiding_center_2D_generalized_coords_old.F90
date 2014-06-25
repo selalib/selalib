@@ -1013,7 +1013,7 @@ subroutine calcul_integral(rho_n,phi,&
 subroutine plot_f1(rho,sim,itime)!
 
   use sll_xdmf
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   sll_int32 :: file_id, hfile_id
   sll_int32 :: error

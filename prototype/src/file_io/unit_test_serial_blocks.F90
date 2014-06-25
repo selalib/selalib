@@ -3,42 +3,45 @@ program test_serial_blocks
 #include "sll_utilities.h"
 use mpi
 use hdf5
-use sll_hdf5_io
+use sll_hdf5_io_serial
+use sll_xdmf_serial_blocks
 implicit none
 
-!-----------------------------------------------------------------------
+sll_int32 :: i, j
+sll_int32 :: nx, ny, sx, ex, sy, ey
+sll_int32 :: error
+sll_real64 :: dimx, dimy
+sll_real64 :: hx, hy
+sll_real64, dimension(:,:), allocatable :: x 
+sll_real64, dimension(:,:), allocatable :: y
+sll_real64, dimension(:,:), allocatable :: z
 
-integer :: i, j
-integer :: nx, ny, sx, ex, sy, ey
-integer :: error
-real(8) :: dimx, dimy
-real(8) :: hx, hy
-real(8), dimension(:,:), allocatable :: x 
-real(8), dimension(:,:), allocatable :: y
-real(8), dimension(:,:), allocatable :: z
-
-integer                            :: prank,psize,code,comm2D
-integer, parameter                 :: tag = 1111
-integer, parameter                 :: ndims=2
-integer, dimension(ndims)          :: dims,coords
-logical, dimension(ndims)          :: periods
-integer, dimension(8)              :: voisin
-integer, parameter                 :: N =1, S =2, W =3, E =4
-real(8)                            :: tcpu1, tcpu2
-integer                            :: nxp, nyp
-logical                            :: reorder
-integer, parameter  :: xmf = 77
-character(len=72)   :: field_label, mesh_label
-character(len=72)   :: field_name, mesh_name
-character(len=4)    :: my_proc, cproc
-
+sll_int32                      :: prank
+sll_int32                      :: psize
+sll_int32                      :: code
+sll_int32                      :: comm2D
+sll_int32, parameter           :: tag = 1111
+sll_int32, parameter           :: ndims=2
+sll_int32, dimension(ndims)    :: dims,coords
+logical, dimension(ndims)      :: periods
+sll_int32, dimension(8)        :: voisin
+sll_int32, parameter           :: N =1, S =2, W =3, E =4
+sll_real64                     :: tcpu1, tcpu2
+sll_int32                      :: nxp, nyp
+logical                        :: reorder
+sll_int32, parameter           :: xmf = 77
+character(len=72)              :: field_label, mesh_label
+character(len=72)              :: field_name, mesh_name
+character(len=4)               :: my_proc, cproc
 character(len=2), dimension(2) :: coordNames
 
-integer          :: iproc
-integer(hid_t)   :: file_id
-integer(hsize_t) :: data_dims(2)
-sll_int32        :: iplot = 0
-character(len=4) :: cplot
+sll_int32         :: iproc
+integer(hid_t)    :: file_id
+integer(hsize_t)  :: data_dims(2)
+sll_int32         :: iplot = 0
+character(len=4)  :: cplot
+character(len=22) :: file_name = "test_serial_blocks.xmf"
+sll_int32         :: xmf_id
 
 
 dimx = 2.0_f64
@@ -175,11 +178,11 @@ if (prank == 0) then
    close(xmf)
 end if
 
+call sll_xdmf_open_serial_blocks(file_name, xmf_id, error)
 tcpu2 = MPI_WTIME()
 
 print*, tcpu2-tcpu1
 
 call MPI_FINALIZE(code)
-
 
 end program test_serial_blocks
