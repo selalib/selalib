@@ -27,10 +27,16 @@ module sll_xdmf_parallel
 #include "sll_assert.h"
   
   use sll_collective
+#ifndef NOHDF5
+  use hdf5
+#ifdef HDF5_PARALLEL
   use sll_hdf5_io_parallel
+#else
+  use sll_hdf5_io
+#endif
+#endif
   use sll_ascii_io
   use sll_xml_io
-  use hdf5
   
   implicit none
   
@@ -122,11 +128,17 @@ contains
     sll_int32, intent(out)           :: error          !< error code
     sll_int32                        :: prank
 
+#ifndef NOHDF5
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                               file_id,error)
+#ifdef HDF5_PARALLEL
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               array,"/"//trim(array_name),error)
+#else
+    call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
+#endif
     call sll_hdf5_file_close(file_id, error)
+#endif
 
     prank = sll_get_collective_rank(sll_world_collective)
 
@@ -170,11 +182,16 @@ contains
     sll_int32, intent(out)          :: error          !< error code
     sll_int32                       :: prank
     
+#ifndef NOHDF5
+#ifdef HDF5_PARALLEL
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
                              file_id,error)
     call sll_hdf5_write_array(file_id,global_dims,offset,array, &
                               "/"//trim(array_name),error)
+#else
+#endif
     call sll_hdf5_file_close(file_id, error)
+#endif
 
     prank = sll_get_collective_rank(sll_world_collective)
     if ( present(xmffile_id) .and. present(center) .and. prank==0) then

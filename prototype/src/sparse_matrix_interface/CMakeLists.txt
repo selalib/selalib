@@ -6,13 +6,14 @@ SET(SPM_FILES getdia.F90
               basic_cg.F90 
               gauss_seidel.F90 
               spm_def.F90 
-              spm_tools.F90) 
+              spm_tools.F90
+   ) 
 
 
 MESSAGE(STATUS "SUITESPARSE_FOUND:${SUITESPARSE_FOUND}")
 
 IF(PASTIX_FOUND)
-   LIST(APPEND SPM_FILES spm_murge.F90)
+#   LIST(APPEND SPM_FILES spm_murge.F90)
 ELSEIF(SUITESPARSE_FOUND)
    LIST(APPEND SPM_FILES spm_umfpack.F90)
 ElSE()
@@ -20,7 +21,6 @@ ElSE()
 ENDIF()
 
 ADD_LIBRARY(spm STATIC ${SPM_FILES})
-
 
 #set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
 #install(TARGETS spm DESTINATION lib)
@@ -38,13 +38,8 @@ TARGET_LINK_LIBRARIES( sll_sparse_matrix
   sll_assertion)
 
 
-
-
-
 IF(SUITESPARSE_FOUND)
-  ADD_LIBRARY(sll_umfpack_wrapper STATIC
-    ../discontinuous_galerkin/mod_umfpack.F90
-    ../discontinuous_galerkin/umf4_f77wrapper.c)
+  ADD_LIBRARY(sll_umfpack_wrapper STATIC mod_umfpack.F90 umf4_f77wrapper.c)
 
   TARGET_LINK_LIBRARIES( sll_sparse_matrix 
     sll_umfpack_wrapper 
@@ -52,14 +47,6 @@ IF(SUITESPARSE_FOUND)
     ${BLAS_LIBRARIES})
 ENDIF()
 
-
-  
-  
-  
-  
-
 ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix)
-
-
