@@ -52,7 +52,7 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
   use sll_simulation_base
   use sll_module_poisson_1d_periodic_solver
   use sll_module_poisson_1d_polar_solver
-
+  use sll_parallel_array_initializer_module
 
 
 
@@ -121,17 +121,6 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
   interface delete
      module procedure delete_vp2d_no_split
   end interface delete
-
-  abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-
 
 contains
 
