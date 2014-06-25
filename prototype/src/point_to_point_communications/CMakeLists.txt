@@ -1,5 +1,3 @@
-IF(NOT STDF95)
-
    ADD_LIBRARY(sll_point_to_point_communications 
      STATIC sll_point_to_point_comms.F90)
 
@@ -17,5 +15,3 @@ IF(NOT STDF95)
      sll_point_to_point_communications 
      sll_collective 
      sll_timer)
-
-ENDIF(NOT STDF95)

@@ -13,11 +13,7 @@ use sll_constants
 
   integer, parameter  ::  TRIGO = 0, SPLINE = 1, LAGRANGE = 2, TRIGO_FFT_SELALIB = 3
   integer, parameter   :: TRIGO_REAL = 4
-#ifdef STDF95
-  complex(8), parameter :: ii =(0.0, 1.0)
-#else
   complex(8), parameter :: ii = dcmplx(0.0_8, 1.0_8)
-#endif
 
   type :: periodic_interp_work
      sll_int32          :: N ! number of cells

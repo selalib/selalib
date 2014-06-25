@@ -1,9 +1,8 @@
-IF( NOT STDF95)
+IF(HDF5_ENABLED)
 
-  ADD_LIBRARY (sll_fcisl STATIC
-		fcisl.F90)
+  ADD_LIBRARY (sll_fcisl STATIC fcisl.F90)
 
-  TARGET_LINK_LIBRARIES(sll_fcisl sll_utilities sll_advection)
+  TARGET_LINK_LIBRARIES(sll_fcisl sll_advection sll_utilities)
 
   ADD_EXECUTABLE(test_fcisl unit_test.F90)
 
@@ -13,4 +12,4 @@ IF( NOT STDF95)
     sll_advection
     sll_constants)
 
-ENDIF(NOT STDF95)
+ENDIF(HDF5_ENABLED)
