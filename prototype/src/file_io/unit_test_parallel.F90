@@ -6,7 +6,11 @@ use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 #endif
 use sll_collective
 #ifndef NOHDF5
+#ifdef HDF5_PARALLEL
 use sll_hdf5_io_parallel
+#else
+use sll_hdf5_io
+#endif
 use sll_xdmf_parallel
 #endif
 use sll_xml_io
@@ -155,16 +159,28 @@ contains
   !Begin low level version
 
   call sll_hdf5_file_create(xfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,xdata,xdset,error)
+#else
+  call sll_hdf5_write_array(file_id,xdata,xdset,error)
+#endif
   call sll_hdf5_file_close(file_id,error)
 
   
   call sll_hdf5_file_create(yfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,ydata,ydset,error)
+#else
+  call sll_hdf5_write_array(file_id,ydata,ydset,error)
+#endif
   call sll_hdf5_file_close(file_id,error)
   
   call sll_hdf5_file_create(zfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,zdata,zdset,error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,zdata,zdset,error)
+#else
+  call sll_hdf5_write_array(file_id,zdata,zdset,error)
+#endif
   call sll_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
@@ -279,20 +295,36 @@ contains
   !End high level version
 
   call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,xdata,'x',error)
+#else
+  call sll_hdf5_write_array(file_id,xdata,'x',error)
+#endif
   call sll_hdf5_file_close(file_id, error)
 
   call sll_hdf5_file_create('layout3d-y.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,ydata,'y',error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,ydata,'y',error)
+#else
+  call sll_hdf5_write_array(file_id,xdata,'x',error)
+#endif
   call sll_hdf5_file_close(file_id, error)
 
   call sll_hdf5_file_create('layout3d-z.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,zdata,'z',error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,zdata,'z',error)
+#else
+  call sll_hdf5_write_array(file_id,ydata,'y',error)
+#endif
   call sll_hdf5_file_close(file_id, error)
 
   call sll_hdf5_file_create('layout3d.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,local_array,'array',error)
-  call sll_hdf5_file_close(file_id, error)
+#ifdef HDF5_PARALLEL
+  call sll_hdf5_write_array(file_id,datadims,offset,local_array,'array',error)
+#else
+  call sll_hdf5_write_array(file_id,zdata,'z',error)
+#endif
+  call sll_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
      call sll_xml_file_create("layout3d.xmf",xml_id,error)
