@@ -29,7 +29,7 @@ module sll_xdmf
 #ifdef NOHDF5
 use sll_binary_io
 #else
-use sll_hdf5_io
+use sll_hdf5_io_serial
 #endif
 
 use sll_ascii_io
@@ -79,7 +79,8 @@ sll_int32, intent(out)       :: file_id    !< file unit number
 sll_int32, intent(out)       :: error      !< error code
     
 call sll_xml_file_create(trim(file_name),file_id,error)
-call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2)
+call sll_xml_grid_geometry(file_id, trim(mesh_name), &
+                           nnodes_x1, nnodes_x2)
 
 end subroutine sll_xdmf_open_2d
 
@@ -101,7 +102,8 @@ sll_int32, intent(in)        :: nnodes_x2  !< y nodes number
 sll_int32, intent(in)        :: nnodes_x3  !< z nodes number
 
 call sll_xml_file_create(trim(file_name),file_id,error)
-call sll_xml_grid_geometry(file_id,trim(mesh_name),nnodes_x1,nnodes_x2,nnodes_x3)
+call sll_xml_grid_geometry(file_id,trim(mesh_name), &
+                           nnodes_x1,nnodes_x2,nnodes_x3)
 
 end subroutine sll_xdmf_open_3d
   
