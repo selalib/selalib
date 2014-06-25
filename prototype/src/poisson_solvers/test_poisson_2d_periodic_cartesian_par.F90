@@ -221,6 +221,7 @@ contains
     integer(HSIZE_T), dimension(1:2)       :: offset
     type(sll_collective_t), pointer        :: col
     sll_int32                              :: myrank
+    sll_int32                              :: comm
 
     SLL_ASSERT( associated(layout) )
     col => get_layout_collective( layout )
@@ -230,7 +231,8 @@ contains
     offset(1) = get_layout_i_min( layout, myrank ) - 1
     offset(2) = get_layout_j_min( layout, myrank ) - 1
 
-    call sll_hdf5_file_create(filename,file_id,error)
+    comm   = sll_world_collective%comm
+    call sll_hdf5_file_create(filename,comm,file_id,error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               array,dataset_name,error)
     call sll_hdf5_file_close(file_id,error)

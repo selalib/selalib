@@ -2144,7 +2144,7 @@ contains
     array_name, time)    
     !mesh_2d)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:), intent(in) :: node_positions_x1

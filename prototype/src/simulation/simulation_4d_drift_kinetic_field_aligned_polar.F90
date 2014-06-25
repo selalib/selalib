@@ -2218,7 +2218,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,m_x1,m_x2)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
@@ -2291,7 +2291,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_cartesian(iplot,f,m_x1,m_x2)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
