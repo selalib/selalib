@@ -136,7 +136,7 @@ program test_general_elliptic_solver_multipatch
   ! Initialization coordinate transformation multipatch square_4p_n10
 
 
-  T => new_coordinate_transformation_multipatch_2d("square_4p_n10")
+  T => new_coordinate_transformation_multipatch_2d("identity_mp1")
 
   ! Initialisation and allocation memory for each field multipatch using in the solver qns
 
@@ -205,7 +205,7 @@ program test_general_elliptic_solver_multipatch
            val_b1   = func_zero( x1, x2)
            val_b2   = func_zero( x1, x2)
            val_c    = func_zero( x1, x2)
-           val_rho  = source_term_perdir( x1, x2)
+           val_rho  = 1.0!source_term_perdir( x1, x2)
            val_phi  = 0.0_f64
            call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 
            call a12_field_mat%set_value_at_indices ( i, j, ipatch, val_a12 ) 

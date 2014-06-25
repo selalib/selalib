@@ -63,6 +63,8 @@ module sll_module_coordinate_transformations_2d_nurbs
      sll_int32 :: is_rational
      sll_int32 :: spline_deg1
      sll_int32 :: spline_deg2
+     sll_real64, dimension(:),pointer :: knots1
+     sll_real64, dimension(:),pointer :: knots2
 !     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
 !     type(sll_logical_mesh_2d), pointer :: mesh
    contains
@@ -201,10 +203,14 @@ contains
     ! Allocations of knots to construct the splines
     SLL_ALLOCATE(knots1(num_pts1+spline_deg1+1),ierr)
     SLL_ALLOCATE(knots2(num_pts2+spline_deg2+1),ierr)
+    SLL_ALLOCATE(transf%knots1(num_pts1+spline_deg1+1),ierr)
+    SLL_ALLOCATE(transf%knots2(num_pts2+spline_deg2+1),ierr)
     ! read the knots associated to each direction 
     read( input_file_id, knots_1 )
     read( input_file_id, knots_2 )
     
+    transf%knots1 = knots1
+    transf%knots2 = knots2
     
     ! allocations of tables containing control points in each direction 
     ! here its table 1D
@@ -422,6 +428,14 @@ contains
     ! and the same.
 !    transf%mesh  => null()
     transf%label =  trim(label)
+    SLL_DEALLOCATE_ARRAY(knots1,ierr)
+    SLL_DEALLOCATE_ARRAY(knots2,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts1,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts2,ierr)
+    SLL_DEALLOCATE_ARRAY(weights,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts1_2d,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts2_2d,ierr)
+    SLL_DEALLOCATE_ARRAY(weights_2d,ierr)
   end subroutine read_from_file_2d_nurbs
 
   function get_logical_mesh_nurbs_2d( transf ) result(res)
@@ -1039,9 +1053,12 @@ contains
 
   subroutine delete_transformation_2d_nurbs( transf )
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
+    sll_int32 :: ierr
 
     transf%label = ""
     transf%written = .false.
+    SLL_DEALLOCATE_ARRAY(transf%knots1,ierr)
+    SLL_DEALLOCATE_ARRAY(transf%knots2,ierr)
     call transf%x1_interp%delete()
     call transf%x2_interp%delete()
     call transf%x3_interp%delete()
