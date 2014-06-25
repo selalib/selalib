@@ -24,13 +24,9 @@ module sll_leap_frog_2nd_flow_2d
   end type leap_frog_2nd_flow_2d
 
 
-#ifdef STDF95
-   integer, parameter :: PERIODIC_E_FLOW = 0, OPEN_DOMAIN_E_FLOW = 1
-#else
   enum, bind(C)
      enumerator :: PERIODIC_E_FLOW = 0, OPEN_DOMAIN_E_FLOW = 1
   end enum
-#endif
 
 contains
 

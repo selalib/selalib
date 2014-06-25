@@ -44,8 +44,6 @@
 #FILE(COPY ${NML_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
 
-IF(NOT STDF95)
-
    ADD_LIBRARY(sll_coordinate_transformation_multipatch
      STATIC sll_coordinate_transformation_multipatch.F90)
 
@@ -59,5 +57,3 @@ IF(NOT STDF95)
      sll_coordinate_transformation_multipatch
      sll_file_io
      sll_memory)
-
-ENDIF(NOT STDF95)
