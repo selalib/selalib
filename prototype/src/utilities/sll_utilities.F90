@@ -306,4 +306,30 @@ subroutine time_history(file_id, desc, fformat, array)
     
 end subroutine time_history
 
+subroutine mpe_decomp1d(n,numprocs,myid,s,e)
+
+   sll_int32 :: n, numprocs, myid, s, e
+   sll_int32 :: nlocal
+   sll_int32 :: deficit
+
+   !------------------------------------------------------------------------
+   !  From the MPE library
+   !  This file contains a routine for producing a decomposition of a 1-d 
+   !  array when given a number of processors.  It may be used in "direct" 
+   !  product decomposition.  The values returned assume a "global" domain 
+   !  in [1:n]
+   !------------------------------------------------------------------------
+
+   nlocal  = n / numprocs
+   s       = myid * nlocal + 1
+   deficit = mod(n,numprocs)
+   s       = s + min(myid,deficit)
+   if (myid  < deficit) then
+       nlocal = nlocal + 1
+   endif
+   e = s + nlocal - 1
+   if (e  >  n .or. myid == numprocs-1) e = n
+
+end subroutine mpe_decomp1d
+
 end module sll_utilities
