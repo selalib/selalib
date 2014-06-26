@@ -63,7 +63,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_file_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
-    ${SLL_DIR}/file_io/sll_hdf5_io.F90
+    ${SLL_DIR}/file_io/sll_hdf5_io_serial.F90
     ${SLL_DIR}/file_io/sll_xdmf.F90
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
