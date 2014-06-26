@@ -12,19 +12,33 @@ IF(HDF5_ENABLED)
    ENDIF()
 
   ADD_LIBRARY (sll_fcisl STATIC fcisl.F90)
-
   TARGET_LINK_LIBRARIES(sll_fcisl sll_advection sll_utilities)
-
   ADD_EXECUTABLE(test_fcisl unit_test.F90)
-  ADD_EXECUTABLE(test_aligned_derivative_2d aligned_derivative_2d.F90)
-
   TARGET_LINK_LIBRARIES(test_fcisl 
     sll_fcisl
     sll_logical_meshes 
     sll_advection
     sll_constants)
 
+
+  ADD_LIBRARY (sll_derivative STATIC sll_derivative_2d_oblic.F90)
+  TARGET_LINK_LIBRARIES(sll_derivative 
+    sll_fcisl
+    sll_advection
+    sll_utilities)
+  ADD_EXECUTABLE(test_derivative_2d_oblic unit_test_derivative_2d_oblic.F90)
+  TARGET_LINK_LIBRARIES(test_derivative_2d_oblic 
+    sll_derivative
+    sll_fcisl
+    sll_logical_meshes 
+    sll_advection
+    sll_constants)
+
+
+
+  ADD_EXECUTABLE(test_aligned_derivative_2d aligned_derivative_2d.F90)
   TARGET_LINK_LIBRARIES(test_aligned_derivative_2d 
+    sll_derivative
     sll_fcisl
     sll_logical_meshes 
     sll_advection

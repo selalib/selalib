@@ -5,9 +5,11 @@ program aligned_derivative_2d
   use sll_fcisl_module
   use sll_constants
   use sll_module_advection_1d_periodic
+  use sll_module_derivative_2d_oblic
   
   implicit none
   
+  type(oblic_2d_derivative), pointer :: deriv
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
@@ -362,7 +364,44 @@ program aligned_derivative_2d
   !  print *,x2_min+real(i-1,f64)*delta_x2,Da_phi(Nc_x1/2,i),Dx2_phi(Nc_x1/2,i), &
   !    Dx2_phi_exact(Nc_x1/2,i)
   !enddo
+  
+  
+  !new method without spaghetti and with abstract interface 
+  ! more in the spirit of Ottaviani 
+  
+  deriv => new_oblic_2d_derivative( &
+    Nc_x1, &
+    adv_x1, &
+    Nc_x2, &
+    x2_min, &
+    x2_max, &
+    r, &
+    s )
 
+  call compute_oblic_derivative_2d( &
+    deriv, &
+    A1, &
+    A2, &
+    phi, &
+    Da_phi)
+
+  Dx2_phi = Da_phi/A2 - (A1/A2)*Dx1_phi
+  err = maxval(abs(Dx2_phi-Dx2_phi_exact))  
+  print *,'#err for new method without spaghetti=',err
+
+!do i=1,Nc_x1+1
+!  print *,'#err',i,maxval(abs(Dx2_phi(i,:)-Dx2_phi_exact(i,:))) 
+!enddo
+!do i=1,Nc_x2+1
+!  print *,'#err2',i,maxval(abs(Dx2_phi(:,i)-Dx2_phi_exact(:,i))) 
+!enddo
+!  
+!do i=1,Nc_x2+1
+!  print *,x2_min+real(i-1,f64)*delta_x2,Da_phi(Nc_x1/2,i),Dx2_phi(Nc_x1/2,i), &
+!    Dx2_phi_exact(Nc_x1/2,i)
+!enddo
+  
+  
 
 
 !#ifndef NOHDF5
