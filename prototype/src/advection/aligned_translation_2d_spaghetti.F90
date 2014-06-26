@@ -216,25 +216,25 @@ implicit none
   err = maxval(abs(f-f_exact))  
   print *,'#err for classical method=',err
 
-
-#ifndef NOHDF5
-      call plot_f_cartesian( &
-        0, &
-        f, &
-        x1_array, &
-        Nc_x1+1, &
-        x2_array, &
-        Nc_x2+1, &
-        'fold', 0._f64 )        
+!
+!#ifndef NOHDF5
 !      call plot_f_cartesian( &
-!        iplot, &
-!        f_visu_light, &
-!        sim%x1_array_light, &
-!        np_x1_light, &
-!        node_positions_x2_light, &
-!        sim%num_dof_x2_light, &
-!        'light_f', time_init )        
-#endif
+!        0, &
+!        f, &
+!        x1_array, &
+!        Nc_x1+1, &
+!        x2_array, &
+!        Nc_x2+1, &
+!        'fold', 0._f64 )        
+!!      call plot_f_cartesian( &
+!!        iplot, &
+!!        f_visu_light, &
+!!        sim%x1_array_light, &
+!!        np_x1_light, &
+!!        node_positions_x2_light, &
+!!        sim%num_dof_x2_light, &
+!!        'light_f', time_init )        
+!#endif
 
 
   !new method
@@ -272,96 +272,96 @@ implicit none
   enddo
   err = maxval(abs(f-f_exact))
   print *,'#err with new method=',err
-
-#ifndef NOHDF5
-      call plot_f_cartesian( &
-        0, &
-        f, &
-        x1_array, &
-        Nc_x1+1, &
-        x2_array, &
-        Nc_x2+1, &
-        'fnew', 0._f64 )        
+!
+!#ifndef NOHDF5
 !      call plot_f_cartesian( &
-!        iplot, &
-!        f_visu_light, &
-!        sim%x1_array_light, &
-!        np_x1_light, &
-!        node_positions_x2_light, &
-!        sim%num_dof_x2_light, &
-!        'light_f', time_init )        
-#endif
+!        0, &
+!        f, &
+!        x1_array, &
+!        Nc_x1+1, &
+!        x2_array, &
+!        Nc_x2+1, &
+!        'fnew', 0._f64 )        
+!!      call plot_f_cartesian( &
+!!        iplot, &
+!!        f_visu_light, &
+!!        sim%x1_array_light, &
+!!        np_x1_light, &
+!!        node_positions_x2_light, &
+!!        sim%num_dof_x2_light, &
+!!        'light_f', time_init )        
+!#endif
  
   
   
   
-
-
-contains
-
-#ifndef NOHDF5
-!*********************
-!*********************
-
-  !---------------------------------------------------
-  ! Save the mesh structure
-  !---------------------------------------------------
-  subroutine plot_f_cartesian( &
-    iplot, &
-    f, &
-    node_positions_x1, &
-    nnodes_x1, &
-    node_positions_x2, &
-    nnodes_x2, &
-    array_name, time)    
-    !mesh_2d)
-    use sll_xdmf
-    use sll_hdf5_io
-    sll_int32 :: file_id
-    sll_int32 :: error
-    sll_real64, dimension(:), intent(in) :: node_positions_x1
-    sll_real64, dimension(:), intent(in) :: node_positions_x2    
-     character(len=*), intent(in) :: array_name !< field name
-    sll_real64, dimension(:,:), allocatable :: x1
-    sll_real64, dimension(:,:), allocatable :: x2
-    sll_int32, intent(in) :: nnodes_x1
-    sll_int32, intent(in) :: nnodes_x2
-    sll_int32 :: i, j
-    sll_int32, intent(in) :: iplot
-    character(len=4)      :: cplot
-    sll_real64, dimension(:,:), intent(in) :: f
-    sll_real64 :: time
-    
-    if (iplot == 1) then
-
-      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
-      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
-      do j = 1,nnodes_x2
-        do i = 1,nnodes_x1
-          x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
-          x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
-        end do
-      end do
-      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x1,"/x1",error)
-      call sll_hdf5_file_close(file_id, error)
-      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
-      call sll_hdf5_write_array(file_id,x2,"/x2",error)
-      call sll_hdf5_file_close(file_id, error)
-      deallocate(x1)
-      deallocate(x2)
-
-    end if
-
-    call int2string(iplot,cplot)
-    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
-      nnodes_x1,nnodes_x2,file_id,error)
-    write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
-    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
-      error,file_id,"Node")
-    call sll_xdmf_close(file_id,error)
-  end subroutine plot_f_cartesian
-
-#endif
+!
+!
+!contains
+!
+!#ifndef NOHDF5
+!!*********************
+!!*********************
+!
+!  !---------------------------------------------------
+!  ! Save the mesh structure
+!  !---------------------------------------------------
+!  subroutine plot_f_cartesian( &
+!    iplot, &
+!    f, &
+!    node_positions_x1, &
+!    nnodes_x1, &
+!    node_positions_x2, &
+!    nnodes_x2, &
+!    array_name, time)    
+!    !mesh_2d)
+!    use sll_xdmf
+!    use sll_hdf5_io
+!    sll_int32 :: file_id
+!    sll_int32 :: error
+!    sll_real64, dimension(:), intent(in) :: node_positions_x1
+!    sll_real64, dimension(:), intent(in) :: node_positions_x2    
+!     character(len=*), intent(in) :: array_name !< field name
+!    sll_real64, dimension(:,:), allocatable :: x1
+!    sll_real64, dimension(:,:), allocatable :: x2
+!    sll_int32, intent(in) :: nnodes_x1
+!    sll_int32, intent(in) :: nnodes_x2
+!    sll_int32 :: i, j
+!    sll_int32, intent(in) :: iplot
+!    character(len=4)      :: cplot
+!    sll_real64, dimension(:,:), intent(in) :: f
+!    sll_real64 :: time
+!    
+!    if (iplot == 1) then
+!
+!      SLL_ALLOCATE(x1(nnodes_x1,nnodes_x2), error)
+!      SLL_ALLOCATE(x2(nnodes_x1,nnodes_x2), error)
+!      do j = 1,nnodes_x2
+!        do i = 1,nnodes_x1
+!          x1(i,j) = node_positions_x1(i) !x1_min+real(i-1,f32)*dx1
+!          x2(i,j) = node_positions_x2(j) !x2_min+real(j-1,f32)*dx2
+!        end do
+!      end do
+!      call sll_hdf5_file_create("cartesian_mesh-x1.h5",file_id,error)
+!      call sll_hdf5_write_array(file_id,x1,"/x1",error)
+!      call sll_hdf5_file_close(file_id, error)
+!      call sll_hdf5_file_create("cartesian_mesh-x2.h5",file_id,error)
+!      call sll_hdf5_write_array(file_id,x2,"/x2",error)
+!      call sll_hdf5_file_close(file_id, error)
+!      deallocate(x1)
+!      deallocate(x2)
+!
+!    end if
+!
+!    call int2string(iplot,cplot)
+!    call sll_xdmf_open(trim(array_name)//cplot//".xmf","cartesian_mesh", &
+!      nnodes_x1,nnodes_x2,file_id,error)
+!    write(file_id,"(a,f8.3,a)") "<Time Value='",time,"'/>"
+!    call sll_xdmf_write_array(trim(array_name)//cplot,f,"values", &
+!      error,file_id,"Node")
+!    call sll_xdmf_close(file_id,error)
+!  end subroutine plot_f_cartesian
+!
+!#endif
 
 end program
