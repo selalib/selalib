@@ -117,8 +117,9 @@ contains
     
   end subroutine initialize_oblic_2d_derivative
   
-! compute sqrt(1+(A1/A2)**2) lim_{h->0} (f(x1_i+A1h,x2_j+A2h)-f(x1,x2))/h
-! for i=1,..,Nc_x1+1, j=1,..,Nc_x2+1  
+!< compute (1/A2)lim_{h->0} (f(x1_i+A1h,x2_j+A2h)-f(x1,x2))/h 
+!< = Dx2_f(i,j)+(A1/A2)*Dx1_f(i,j)
+!< for i=1,..,Nc_x1+1, j=1,..,Nc_x2+1  
   subroutine compute_oblic_derivative_2d(&
     deriv, &
     A1, &
@@ -164,8 +165,8 @@ contains
     do i2=1,Nc_x2+1
       !choose several dt_loc so that advection in x2 is exact
       do ell=r,s
-        dt_loc = real(ell,f64)*delta_x2/A2         
-        i2_loc = modulo(i2-ell-1,Nc_x2)+1
+        dt_loc = -real(ell,f64)*delta_x2/A2         
+        i2_loc = modulo(i2+ell-1,Nc_x2)+1
         call adv_x1%advect_1d_constant( &
           A1, &
           dt_loc, &

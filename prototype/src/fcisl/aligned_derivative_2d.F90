@@ -71,6 +71,10 @@ program aligned_derivative_2d
   sll_int32 :: shift
   sll_int32 :: num_spaghetti
   sll_real64 :: A
+  character(len=256) :: advector_x1
+  sll_int32 :: order_x1
+  character(len=256) :: advector_x2
+  sll_int32 :: order_x2
   
   
   ! namelists for data input
@@ -83,7 +87,11 @@ program aligned_derivative_2d
     A2_0, &
     A1, &
     A2, &
-    spaghetti_size_guess
+    spaghetti_size_guess, &
+    advector_x1, &
+    order_x1
+!    advector_x2, &
+!    order_x2
   
   !initialization
   k_mode = 3
@@ -97,6 +105,14 @@ program aligned_derivative_2d
   
   A1 = 2.8357_f64
   A2 = 7.18459_f64
+
+  !advector
+  advector_x1 = "SLL_SPLINES"
+  order_x1 = 4
+!  advector_x2 = "SLL_SPLINES"
+!  order_x2 = 4
+
+
 
   call get_command_argument(1, filename)
   if (len_trim(filename) .ne. 0)then
@@ -119,6 +135,8 @@ program aligned_derivative_2d
   print *,'#A2_0',A2_0
   print *,'#A1=',A1
   print *,'#A2=',A2
+  print *,'#advector_x1=', trim(advector_x1)
+  print *,'#order_x1',order_x1
   
   delta_x1 = (x1_max-x1_min)/real(Nc_x1,f64)
   delta_x2 = (x2_max-x2_min)/real(Nc_x2,f64)  
@@ -143,9 +161,9 @@ program aligned_derivative_2d
   SLL_ALLOCATE(x2_array(Nc_x2+1),ierr)
   
   
-  print *,'#(r,s)=',r,s
+  !print *,'#(r,s)=',r,s
   call compute_w_hermite(w,r,s)
-  print *,'#w=',w(r:s)
+  !print *,'#w=',w(r:s)
   
   do i=1,Nc_x1+1
     x1_array(i) = x1_min+real(i-1,f64)*delta_x1
@@ -158,22 +176,49 @@ program aligned_derivative_2d
     xx(i1) = real(i1,f64)
   enddo
   
-  
-  adv_x1 => new_periodic_1d_advector( &
-    Nc_x1, &
-    x1_min, &
-    x1_max, &
-!    LAGRANGE, & 
-    SPLINE, & 
-    4) 
-  adv_x2 => new_periodic_1d_advector( &
-    Nc_x2, &
-    x2_min, &
-    x2_max, &
-!    LAGRANGE, & 
-    SPLINE, & 
-    4) 
-  
+
+  select case (advector_x1)
+    case ("SLL_SPLINES") ! arbitrary order periodic splines
+      adv_x1 => new_periodic_1d_advector( &
+        Nc_x1, &
+        x1_min, &
+        x1_max, &
+        SPLINE, & 
+        order_x1) 
+    case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+      adv_x1 => new_periodic_1d_advector( &
+        Nc_x1, &
+        x1_min, &
+        x1_max, &
+        LAGRANGE, & 
+        order_x1)
+    case default
+      print*,'#advector in x1', advector_x1, ' not implemented'
+      stop 
+  end select    
+!  select case (advector_x2)
+!    case ("SLL_SPLINES") ! arbitrary order periodic splines
+!      adv_x2 => new_periodic_1d_advector( &
+!        Nc_x2, &
+!        x2_min, &
+!        x2_max, &
+!        SPLINE, & 
+!        order_x2) 
+!    case("SLL_LAGRANGE") ! arbitrary order Lagrange periodic interpolation
+!      adv_x2 => new_periodic_1d_advector( &
+!        Nc_x2, &
+!        x2_min, &
+!        x2_max, &
+!        LAGRANGE, & 
+!        order_x2)
+!    case default
+!      print*,'#advector in x2', advector_x2, ' not implemented'
+!      stop 
+!  end select    
+
+
+
+ 
   do i2=1,Nc_x2+1
     x2 = x2_min+real(i2-1,f64)*delta_x2
     do i1=1,Nc_x1+1
@@ -201,7 +246,8 @@ program aligned_derivative_2d
     x2_max-x2_min)!call compute_derivative(phi(),Dx2_phi,Nc_x2)
   enddo   
   err = maxval(abs(Dx2_phi-Dx2_phi_exact))  
-  print *,'#err for classical method=',err
+  print *,'#err for classical method=', &
+    err,err/maxval(abs(Dx2_phi_exact))
   
   !new method: derivative along iota_modif
   iota = A1/A2
@@ -239,15 +285,15 @@ program aligned_derivative_2d
       phi_at_aligned(1:Nc_x1+1,i))      
   enddo
   
-  print *,'#diff phi-phi_at_aligned',maxval(abs(phi-phi_at_aligned))
-  print *,'#diff phi-phi_at_aligned at x2_min', &
-    maxval(abs(phi(1:Nc_x1,1)-phi_at_aligned(1:Nc_x1,1)))
-  err = 0._f64
-  do i=1,Nc_x1+1
-    err=max(err, &
-      abs(phi(modulo(i+shift-1,Nc_x1)+1,Nc_x2+1)-phi_at_aligned(i,Nc_x2+1)))
-  enddo
-  print *,'#diff phi-phi_at_aligned at x2_max',err
+  !print *,'#diff phi-phi_at_aligned',maxval(abs(phi-phi_at_aligned))
+  !print *,'#diff phi-phi_at_aligned at x2_min', &
+  !  maxval(abs(phi(1:Nc_x1,1)-phi_at_aligned(1:Nc_x1,1)))
+  !err = 0._f64
+  !do i=1,Nc_x1+1
+  !  err=max(err, &
+  !    abs(phi(modulo(i+shift-1,Nc_x1)+1,Nc_x2+1)-phi_at_aligned(i,Nc_x2+1)))
+  !enddo
+  !print *,'#diff phi-phi_at_aligned at x2_max',err
 
   !  maxval(abs(phi(1:Nc_x1,Nc_x2+1)-phi_at_aligned(1:Nc_x1,Nc_x2+1)))
 
@@ -347,12 +393,13 @@ program aligned_derivative_2d
     x1_max-x1_min)!call compute_derivative(phi(),Dx2_phi,Nc_x2)
   enddo   
   
-  print *,'#x1_min,x1_max=',x1_min,x1_max
-  print *,'#x2_min,x2_max=',x2_min,x2_max
+  !print *,'#x1_min,x1_max=',x1_min,x1_max
+  !print *,'#x2_min,x2_max=',x2_min,x2_max
   
   Dx2_phi = Da_phi - iota_tau*(x1_max-x1_min)/(x2_max-x2_min)*Dx1_phi
   err = maxval(abs(Dx2_phi-Dx2_phi_exact))  
-  print *,'#err for new method=',err
+  print *,'#err for new method=', &
+    err,err/maxval(abs(Dx2_phi_exact))
   !do i=1,Nc_x1+1
   !  print *,'#err',i,maxval(abs(Dx2_phi(i,:)-Dx2_phi_exact(i,:))) 
   !enddo
@@ -385,9 +432,10 @@ program aligned_derivative_2d
     phi, &
     Da_phi)
 
-  Dx2_phi = Da_phi/A2 - (A1/A2)*Dx1_phi
+  Dx2_phi = Da_phi - (A1/A2)*Dx1_phi
   err = maxval(abs(Dx2_phi-Dx2_phi_exact))  
-  print *,'#err for new method without spaghetti=',err
+  print *,'#err for new method without spaghetti=', &
+    err,err/maxval(abs(Dx2_phi_exact))
 
 !do i=1,Nc_x1+1
 !  print *,'#err',i,maxval(abs(Dx2_phi(i,:)-Dx2_phi_exact(i,:))) 
@@ -424,7 +472,6 @@ program aligned_derivative_2d
 !#endif
 !
   
-  print *,'#hello'
   
   print *,'#PASSED'
   
