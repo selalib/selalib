@@ -206,5 +206,13 @@ MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
 ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
-
 MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
+
+#CDash configuration
+SET(CTEST_PROJECT_NAME "Selalib")
+SET(NIGHTLY_START_TIME "00:00:00 EST")
+SET(DROP_METHOD "http")
+SET(DROP_SITE "cdash.inria.fr")
+SET(DROP_LOCATION "/CDash/submit.php?project=Selalib")
+SET(DROP_SITE_CDASH TRUE)
+INCLUDE(Dart)
