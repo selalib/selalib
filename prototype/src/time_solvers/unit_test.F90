@@ -7,7 +7,7 @@ program test_time_splitting
   use sll_cubic_spline_interpolator_1d
   use sll_module_interpolators_1d_base
   use sll_time_splitting
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
   implicit none
 #define N1 50
 #define N2 60

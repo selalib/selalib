@@ -3,7 +3,7 @@ module test_io
 #include "sll_working_precision.h"
 use sll_xdmf
 #ifndef NOHDF5
-use sll_hdf5_io
+use sll_hdf5_io_serial
 #endif
 use sll_constants
 use sll_utilities, only: int2string
