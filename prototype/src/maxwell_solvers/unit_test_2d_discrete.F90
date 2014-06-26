@@ -54,6 +54,8 @@ implicit none
   allocate(x2_eta1_max(NPTS2))
   allocate(jacs(NPTS1,NPTS2))
 
+  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+
   do j=0,NPTS2-1
      do i=0,NPTS1-1
         eta1            = real(i,f64)*h1
@@ -74,10 +76,6 @@ implicit none
      x1_eta1_max(j+1) = deriv_x1_polar_f_eta1(eta1,eta2,params)
      x2_eta1_max(j+1) = deriv_x2_polar_f_eta1(eta1,eta2,params)
   end do
-
-  print *, '**********************************************************'
-  print *, '              TESTING THE DISCRETE TRANSFORMATION         '
-  print *, '**********************************************************'
 
   print *, 'initializing the interpolators: '
 
