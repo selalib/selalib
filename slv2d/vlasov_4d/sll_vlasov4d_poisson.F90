@@ -40,7 +40,7 @@ contains
                                         interp_x4,  &
                                         error)
 
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   class(vlasov4d_poisson),intent(inout)   :: this
   class(sll_interpolator_1d_base), target :: interp_x1

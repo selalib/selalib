@@ -936,7 +936,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,mesh_2d)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1

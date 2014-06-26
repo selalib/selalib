@@ -5,10 +5,8 @@ program test_io_parallel
 use hdf5, only: HID_T,HSIZE_T,HSSIZE_T
 #endif
 use sll_collective
-#ifndef NOHDF5
 use sll_hdf5_io_parallel
 use sll_xdmf_parallel
-#endif
 use sll_xml_io
 use sll_gnuplot_parallel
 use sll_remapper
@@ -140,37 +138,38 @@ contains
   
   
 #ifndef NOHDF5
-!  !Begin high level version
-!
-!  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
-!  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
-!  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
-!  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
-!  call sll_xdmf_close(xml_id,error)
-!
-!  !End high level version
+  !Begin high level version
+
+  call sll_xdmf_open(myrank,"zdata.xmf",prefix,nx,ny,xml_id,error)
+  call sll_xdmf_write_array(prefix,datadims,offset,xdata,'x1',error)
+  call sll_xdmf_write_array(prefix,datadims,offset,ydata,'x2',error)
+  call sll_xdmf_write_array(prefix,datadims,offset,zdata,"x3",error,xml_id,"Node")
+  call sll_xdmf_close(xml_id,error)
+
+  !End high level version
 
 !---------------------------------------------------------------------------------!
 
   !Begin low level version
 
-  call sll_hdf5_file_create(xfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,xdata,xdset,error)
+  call sll_hdf5_file_create(xfile,comm,file_id, error)
+  call sll_hdf5_write_array(file_id,datadims,offset,xdata,xdset,error)
   call sll_hdf5_file_close(file_id,error)
 
   
-  call sll_hdf5_file_create(yfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,ydata,ydset,error)
+  call sll_hdf5_file_create(yfile,comm,file_id,error)
+  call sll_hdf5_write_array(file_id,datadims,offset,ydata,ydset,error)
   call sll_hdf5_file_close(file_id,error)
   
-  call sll_hdf5_file_create(zfile, file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,zdata,zdset,error)
+  call sll_hdf5_file_create(zfile,comm,file_id,error)
+  call sll_hdf5_write_array(file_id,datadims,offset,zdata,zdset,error)
   call sll_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
   
      call sll_xml_file_create("layout2d.xmf",xml_id,error)
-     call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, xdset, ydset )
+     call sll_xml_grid_geometry(xml_id, xfile, nx, yfile, ny, &
+                                xdset, ydset, 'Uniform' )
      call sll_xml_field(xml_id,'values', "zdata.h5:/zdataset",nx,ny,'HDF','Node')
      call sll_xml_file_close(xml_id,error)
      print *, 'Printing 2D layout: '
@@ -278,28 +277,29 @@ contains
 
   !End high level version
 
-  call sll_hdf5_file_create('layout3d-x.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,xdata,'x',error)
+  call sll_hdf5_file_create('layout3d-x.h5',comm,file_id,error)
+  call sll_hdf5_write_array(file_id,datadims,offset,xdata,'x',error)
   call sll_hdf5_file_close(file_id, error)
 
-  call sll_hdf5_file_create('layout3d-y.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,ydata,'y',error)
+  call sll_hdf5_file_create('layout3d-y.h5',comm,file_id, error)
+  call sll_hdf5_write_array(file_id,datadims,offset,ydata,'y',error)
   call sll_hdf5_file_close(file_id, error)
 
-  call sll_hdf5_file_create('layout3d-z.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,zdata,'z',error)
+  call sll_hdf5_file_create('layout3d-z.h5',comm,file_id, error)
+  call sll_hdf5_write_array(file_id,datadims,offset,zdata,'z',error)
   call sll_hdf5_file_close(file_id, error)
 
-  call sll_hdf5_file_create('layout3d.h5',file_id, error)
-  call sll_hdf5_write_array(file_id, datadims,offset,local_array,'array',error)
-  call sll_hdf5_file_close(file_id, error)
+  call sll_hdf5_file_create('layout3d.h5',comm,file_id, error)
+  call sll_hdf5_write_array(file_id,datadims,offset,local_array,'array',error)
+  call sll_hdf5_file_close(file_id,error)
 
   if (myrank == 0) then
      call sll_xml_file_create("layout3d.xmf",xml_id,error)
      call sll_xml_grid_geometry(xml_id, 'layout3d-x.h5', ni, &
-                                         'layout3d-y.h5', nj, &
-                                         'layout3d-z.h5', nk, &
-                                         'x', 'y', 'z' )
+                                        'layout3d-y.h5', nj, &
+                                        'layout3d-z.h5', nk, &
+                                        'x', 'y', 'z', &
+                                        'Uniform' )
      call sll_xml_field(xml_id,'values', "layout3d.h5:/array", &
                         ni,nj,nk,'HDF','Node')
      call sll_xml_file_close(xml_id,error)
