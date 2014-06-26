@@ -25,7 +25,7 @@ module sll_gnuplot_parallel
 #include "sll_assert.h"
 use sll_ascii_io, only: sll_ascii_file_create
 use sll_utilities, only: sll_new_file_id, int2string
-use sll_collective
+use mpi
 
 implicit none
 
@@ -57,10 +57,10 @@ sll_int32                  :: comm, iproc, nproc
 logical                    :: dir_e
 logical, save              :: first_call = .true.
 
-nproc = sll_get_collective_size(sll_world_collective)
-iproc = sll_get_collective_rank(sll_world_collective)
+call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,error)
+call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,error)
+comm  = MPI_COMM_WORLD
 call int2string(iproc, cproc)
-comm  = sll_world_collective%comm
 call int2string(iplot, fin)
 
 inquire(file=cproc//"/"".", exist=dir_e)
@@ -151,10 +151,10 @@ subroutine sll_gnuplot_rect_2d_parallel(x_min, delta_x, &
   logical, save                :: first_call= .true.
   
 
-  nproc = sll_get_collective_size(sll_world_collective)
-  iproc = sll_get_collective_rank(sll_world_collective)
+  call MPI_COMM_SIZE(MPI_COMM_WORLD,nproc,error)
+  call MPI_COMM_RANK(MPI_COMM_WORLD,iproc,error)
+  comm  = MPI_COMM_WORLD
   call int2string(iproc, cproc)
-  comm  = sll_world_collective%comm
   call int2string(iplot, fin)
   
   inquire(file=cproc//"/"".", exist=dir_e)
