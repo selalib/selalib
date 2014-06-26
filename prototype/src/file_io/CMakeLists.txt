@@ -36,10 +36,10 @@ IF(MPI_MODULE_ENABLED)
 
    ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
 
-   TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective ${HDF5_LIBRARIES} )
+   TARGET_LINK_LIBRARIES(sll_file_io_parallel ${HDF5_LIBRARIES} )
 
    ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
-   TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
+   TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel)
 
    IF(HDF5_ENABLED)
       ADD_EXECUTABLE(test_io_serial_blocks unit_test_serial_blocks.F90)
