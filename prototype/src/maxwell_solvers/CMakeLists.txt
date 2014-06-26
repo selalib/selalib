@@ -54,6 +54,9 @@ TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_periodic sll_maxwell_solvers)
 ADD_EXECUTABLE(test_maxwell_2d_diga_wave unit_test_2d_diga_wave.F90)
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_wave sll_maxwell_solvers)
 
+ADD_EXECUTABLE(test_maxwell_2d_diga_discrete unit_test_2d_discrete.F90)
+TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_discrete sll_maxwell_solvers)
+
 ADD_CUSTOM_TARGET( clean_outputs
    COMMAND find . -name *.mtv -delete
    COMMAND find . -name *.gnu -delete
