@@ -122,7 +122,7 @@ IF(HDF5_ENABLED)
 
      TARGET_LINK_LIBRARIES(
        test_aligned_translation_2d
-       sll_file_io_parallel
+       sll_file_io
        sll_advection
        sll_utilities)
 
