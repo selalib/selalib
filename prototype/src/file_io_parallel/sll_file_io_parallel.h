@@ -9,7 +9,10 @@ use sll_xml_io
 use sll_ascii_io
 use sll_binary_io
 use sll_gnuplot
+#ifdef HDF5_PARALLEL
 use sll_hdf5_io_parallel
+#endif
+use sll_hdf5_io_serial
 use sll_xdmf_parallel
 
 #endif
