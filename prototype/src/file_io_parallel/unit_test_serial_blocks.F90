@@ -40,12 +40,10 @@ integer(hid_t)    :: file_id
 integer(hsize_t)  :: data_dims(2)
 sll_int32         :: iplot = 0
 character(len=4)  :: cplot
-character(len=22) :: file_name = "test_serial_blocks.xmf"
 sll_int32         :: xmf_id
 
-
 dimx = 2.0_f64
-nx   = 128
+nx   = 127
 dimy = 1.0_f64
 ny   = 64
 
@@ -67,9 +65,7 @@ CALL MPI_DIMS_CREATE(psize,ndims,dims,code)
 nxp = dims(1)
 nyp = dims(2)
 if (prank == 0) then
-
    print*," nxp, nyp = ", nxp, nyp
-
 end if
 
 !Creation de la grille 2D periodique en x et y
@@ -97,8 +93,16 @@ if (prank == 0) then
    write(*,"(a,g12.3)")" nombre ny             = ", ny
 end if
 
-call mpe_decomp1d(nx,psize,prank,sx,ex)
-call mpe_decomp1d(ny,psize,prank,sy,ey)
+call mpe_decomp1d(nx,dims(1),coords(1),sx,ex)
+call mpe_decomp1d(ny,dims(2),coords(2),sy,ey)
+
+do iproc=1, psize
+   if (prank == iproc-1) then
+      print"('Rank ',i3,'[',2i5,'][',2i5,']')",prank,sx,ex,sy,ey
+   endif
+   call MPI_Barrier(MPI_COMM_WORLD, error)
+enddo
+
 
 allocate(x(sx:ex,sy:ey))
 allocate(y(sx:ex,sy:ey))
@@ -178,11 +182,9 @@ if (prank == 0) then
    close(xmf)
 end if
 
-!call sll_xdmf_open_serial_blocks(file_name, xmf_id, error)
-!call sll_xdmf_array_2d_serial_blocks(trim(mesh_label), &
-!                                     array,            &
-!                                     trim(array_name),error,&
-!                                     xmf_id,center)
+call sll_xdmf_open_serial_blocks("data_serial_blocks", x, y, xmf_id, error)
+call sll_xdmf_array_2d_serial_blocks(xmf_id,"data_serial_blocks",z,"z_values",error)
+call sll_xdmf_close_serial_blocks(xmf_id,error)
 
 tcpu2 = MPI_WTIME()
 

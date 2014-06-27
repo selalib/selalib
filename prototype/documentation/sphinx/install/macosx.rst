@@ -18,6 +18,7 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew tap homebrew/science
 	$ brew install git
 	$ brew install cmake
+	$ brew install gcc
 	$ brew install hdf5 --enable-fortran --enable-parallel
 	$ brew install pastix
 	$ brew install fftw
