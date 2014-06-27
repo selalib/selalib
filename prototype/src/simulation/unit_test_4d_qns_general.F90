@@ -7,7 +7,9 @@
 
 program qns_4d_general
 #include "sll_working_precision.h"
-  use sll_simulation_4d_qns_general_module
+  use sll_simulation_4d_qns_general_module, only: &
+     sll_simulation_4d_qns_general, initialize_4d_qns_general, &
+     run_4d_qns_general
   use sll_collective
   use sll_constants
   use sll_logical_meshes
@@ -15,11 +17,13 @@ program qns_4d_general
   use sll_common_coordinate_transformations
   use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
+  use sll_module_poisson_2d_elliptic_solver, &
+     only: es_gauss_legendre
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_qns_general)      :: simulation
+  type(sll_simulation_4d_qns_general)     :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
