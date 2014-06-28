@@ -22,13 +22,13 @@ use vlasov1d_module
 
 implicit none
 
-type (geometry)      :: geomx      ! geometrie dans l'espace physique
-type (geometry)      :: geomv      ! geometrie dans l'espace des vitesses
-type (maxwell2dfdtd) :: maxw2dfdtd ! champ electromagnetique
-type (poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
-type (vlasov2d)      :: vlas2d     ! vlasov
-type (splinepx)      :: splx       ! vlasov1d
-type (splinepy)      :: sply       ! vlasov1d
+type(geometry)      :: geomx      ! geometrie dans l'espace physique
+type(geometry)      :: geomv      ! geometrie dans l'espace des vitesses
+type(maxwell2dfdtd) :: maxw2dfdtd ! champ electromagnetique
+type(poisson2dpp)   :: poiss2dpp  ! potentiel pour la correction
+type(vlasov2d)      :: vlas2d     ! vlasov
+type(splinepx)      :: splx       ! vlasov1d
+type(splinepy)      :: sply       ! vlasov1d
 
 sll_real64, dimension(:,:,:,:), pointer :: f,f1     ! fonc de distribution
 sll_real64, dimension(:,:),     pointer :: ex,ey ! champ electrique
@@ -287,9 +287,8 @@ call mpi_bcast(vy1,1,MPI_REAL8,MPI_MASTER,comm,ierr)
 call mpi_bcast(nvx,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 call mpi_bcast(nvy,1,MPI_INTEGER,MPI_MASTER,comm,ierr)
 
-call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-
-call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
+geomx = geometry(x0,  y0,  x1,  y1,  nx,  ny,  "perxy")
+geomv = geometry(vx0, vy0, vx1, vy1, nvx, nvy, "natxy")
 
 end subroutine initglobal
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 SYNOPSIS
 
@@ -125,6 +125,9 @@ def main ():
     oface = 0  # other face
     flattened = []
     tokens = []
+    slash_pos = 0
+    txt_pos = 0
+    path=""
     pp = pprint.PrettyPrinter(indent=4)
     # patch numbering starts at 0, so is the numbering of the faces.
     connectivities = [] # single array, size number_patchesX8
@@ -143,34 +146,31 @@ def main ():
         print( "user$ ./translate_multipatch_info.py filename.txt")
         sys.exit()
     else:                   # exactly one argument given
-       # inputname = process_file_name(args[0])
-        tokens = args[0].split('/')
-        inputname = tokens[len(tokens)-1]
-    # check whether the user has given the .txt extension or not, and create 
-    # the name of the output file. Echo to screen the names of the files to be
-    # read and written.
-    numdots = inputname.count('.')
-    if numdots == 0: # no extension, thus just add the extension to files
-        outputname   = inputname + ".nml"   # output file name
-        readfilename = inputname + ".txt" 
-    elif numdots == 1: # there is an extension
-        dotposition  = inputname.find('.')
-        #   print inputname[dotposition:]
-        if inputname[dotposition:] == ".txt": # it has the right extension
-            readfilename = inputname           # open file with name as given
-            outputname   = inputname[:dotposition] + ".nml" # create output name
-        else:
-            print( "Wrong extension. Only .txt files are allowed.")
-            sys.exit()
-    else:
-        print( "That is a very weird-looking filename!")
-        outputname   = inputname + ".nml"   # just add the extension
-        readfilename = inputname + ".txt"  
+        #inputname = process_file_name(args[0])
+        #tokens = args[0].split('/')
+        #print('tokens',tokens)
+        slash_pos = args[0].rfind('/')
+        path = args[0][:slash_pos+1]
+        inputname = args[0][slash_pos+1:]#tokens[len(tokens)-1]
+#        if (  args[0][-4:] != '.txt'):
+#            print('Problem must be a .txt file')
+            
+        #print('test',inputname)
+        #print('tokens',tokens)
+    # check whether the user has given the .txt extension or not.
+    txt_pos = inputname.rfind('.txt')
+    if txt_pos == -1: # no .txt extension, signal error.
+        print( "Wrong extension. Only .txt files are allowed.")
+        sys.exit()
+    else: # .txt was found (FIXME: not necessarily at the end!)
+        readfilename = path + inputname           # open file with name as given
+        outputname   = inputname[:txt_pos] + ".nml" # create output name
 
     print( "The file to be processed is: {0} ".format(readfilename))
-    print( "Converting {0} to {1}".format(readfilename, outputname))
+    print( "Converting {0} to {1}".format(readfilename, path+outputname))
 
-    with open(readfilename,'r') as readfile, open(outputname,'w') as writefile:
+    with open(readfilename,'r') as readfile, open(path+outputname,'w') as \
+            writefile:
         now  = time.localtime()
         date = str(now[1]) + "/" + str(now[2]) + "/" + str(now[0])
         mytime = str(now[3]) + ":" + str(now[4]) + ":" + str(now[5]) + "\n"
@@ -187,7 +187,7 @@ def main ():
         # the name of the file as the label.
         writefile.write("&multipatch_label\n")
         dotposition = outputname.find('.')
-        label = outputname[:dotposition]
+        label = inputname[:txt_pos]
         writefile.write("    label = "+"\"" + label + "\""+"\n")
         writefile.write("/" + "\n\n")
         
@@ -345,7 +345,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(* time.asctime())
+        if options.verbose: print(*time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)

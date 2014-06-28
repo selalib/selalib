@@ -3,6 +3,7 @@ program vm4d_spectral
 #define MPI_MASTER 0
 #include "selalib-mpi.h"
 
+  use init_functions
   use sll_vlasov4d_base
   use sll_vlasov4d_spectral
 
@@ -16,7 +17,8 @@ program vm4d_spectral
 
   sll_real64 :: tcpu1, tcpu2
   sll_int32  :: iter
-  sll_int32  :: prank, comm, psize
+  sll_int32  :: prank, comm
+  sll_int64  :: psize
   sll_int32  :: loc_sz_i, loc_sz_j, loc_sz_k, loc_sz_l
 
   call sll_boot_collective()
@@ -32,13 +34,13 @@ program vm4d_spectral
   call initlocal()
 
   call transposexv(vlasov4d)
-
   call compute_charge(vlasov4d)
   call solve(poisson,vlasov4d%ex,vlasov4d%ey,vlasov4d%rho)
-
-  !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
+  vlasov4d%bz = 0.0_f64
 
   call transposevx(vlasov4d)
+  call advection_x1(vlasov4d,0.5*vlasov4d%dt)
+  call advection_x2(vlasov4d,0.5*vlasov4d%dt)
 
   do iter=1, vlasov4d%nbiter
 
@@ -46,63 +48,19 @@ program vm4d_spectral
         call write_xmf_file(vlasov4d,iter/vlasov4d%fdiag)
      end if
 
-!modif NC
-!     call transposexv(vlasov4d)
-!     call densite_courantx(vlasov4d)
-!     call transposevx(vlasov4d)
-!fin
-
-     call advection_x1(vlasov4d,vlasov4d%dt)
-
-!modif NC
-!     call transposexv(vlasov4d)
-!     call densite_couranty(vlasov4d)
-!     call transposevx(vlasov4d)
-!fin
-
-     call advection_x2(vlasov4d,vlasov4d%dt)
-
      call transposexv(vlasov4d)
 
      call compute_current(vlasov4d)
 
      call ampere(maxwell, vlasov4d%ex, vlasov4d%ey, vlasov4d%bz, &
-                          vlasov4d%dt, vlasov4d%jx)
-
-!     vlasov4d%exn=vlasov4d%ex
-!     vlasov4d%eyn=vlasov4d%ey;
-!
-!     call solve_ampere(vlasov4d, maxwell, vlasov4d%dt) 
-
-     !call solve_faraday(vlasov4d, maxwell, 0.5*vlasov4d%dt)   
+                          vlasov4d%dt, vlasov4d%jx, vlasov4d%jy)
 
      call advection_x3x4(vlasov4d,vlasov4d%dt)
 
-!modif NC
-!     call compute_current(vlasov4d)
-!     vlasov4d%jy=0.5_f64*(vlasov4d%jy+vlasov4d%jy1)
-!fin
-!     !call solve_faraday(vlasov4d, maxwell, 0.5*dt)   
-!
-!     call transposevx(vlasov4d)
-!
-!!     call advection_x2(vlasov4d,0.5*vlasov4d%dt)
-!
-!modif NC
-!     call transposexv(vlasov4d)
-!     call compute_current(vlasov4d)
-!     vlasov4d%jx=0.5_f64*(vlasov4d%jx+vlasov4d%jx1)
-!     call transposevx(vlasov4d)
-!!fin
-!
-!     call advection_x1(vlasov4d,0.5*vlasov4d%dt)
-!
-!!modif NC
-!     call solve_ampere(vlasov4d, maxwell, vlasov4d%dt) 
-!
-!     vlasov4d%ex=vlasov4d%exn
-!     vlasov4d%ey=vlasov4d%eyn
-!!fin
+     call transposevx(vlasov4d)
+
+     call advection_x1(vlasov4d,vlasov4d%dt)
+     call advection_x2(vlasov4d,vlasov4d%dt)
 
      if (mod(iter,vlasov4d%fthdiag).eq.0) then 
         call write_energy(vlasov4d, iter*vlasov4d%dt)
@@ -130,14 +88,14 @@ contains
 
     sll_real64 :: vx,vy,v2,x,y
     sll_int32  :: i,j,k,l,error
-    sll_real64 :: xi, eps, kx, ky
+    sll_real64 :: xi, kx, ky
     sll_int32  :: gi, gj, gk, gl
     sll_int32, dimension(4) :: global_indices
 
     call read_input_file(vlasov4d)
 
-    call spl_x3x4%initialize(vlasov4d%nc_eta1,   &
-    &                        vlasov4d%nc_eta1,   &
+    call spl_x3x4%initialize(vlasov4d%np_eta1,   &
+    &                        vlasov4d%np_eta1,   &
     &                        vlasov4d%eta1_min,  &
     &                        vlasov4d%eta1_max,  &
     &                        vlasov4d%eta2_min,  &
@@ -151,7 +109,6 @@ contains
          loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
     xi  = 0.90_f64
-    eps = 0.05_f64
     kx  = 2_f64*sll_pi/(vlasov4d%nc_eta1*vlasov4d%delta_eta1)
     ky  = 2_f64*sll_pi/(vlasov4d%nc_eta2*vlasov4d%delta_eta2)
 
@@ -172,7 +129,7 @@ contains
         vy = vlasov4d%eta4_min+(gl-1)*vlasov4d%delta_eta4
 
         v2 = vx*vx+vy*vy
-        vlasov4d%f(i,j,k,l)=(1+eps*cos(kx*x))*1/(2*sll_pi)*exp(-.5*v2)
+        vlasov4d%f(i,j,k,l) = landau_cos_prod(vlasov4d%eps,kx, ky, x, y, v2)
 
     end do
     end do
@@ -198,22 +155,5 @@ contains
 
   end subroutine initlocal
 
-  subroutine solve_ampere(vlasov4d, maxwell2d, dt)
-  type(vlasov4d_spectral)   :: vlasov4d 
-  type(maxwell_2d_pstd)     :: maxwell2d
-  sll_real64, intent(in)    :: dt
-   
-  call ampere(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt, vlasov4d%jx)
-
-  end subroutine solve_ampere
-  
-  subroutine solve_faraday(vlasov4d, maxwell2d, dt)
-  type(vlasov4d_spectral)   :: vlasov4d 
-  type(maxwell_2d_pstd)     :: maxwell2d
-  sll_real64, intent(in)    :: dt
-   
-  call faraday(maxwell2d, vlasov4d%exn, vlasov4d%eyn, vlasov4d%bz, dt)
-
-  end subroutine solve_faraday
 
 end program vm4d_spectral

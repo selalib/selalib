@@ -145,12 +145,12 @@ module sll_module_scalar_field_2d_alternative
   end interface
 
   abstract interface
-     function scalar_function_2D( eta1, eta2 )
+     function scalar_function_2d_alternative( eta1, eta2 )
        use sll_working_precision
-       sll_real64 :: scalar_function_2D
+       sll_real64 :: scalar_function_2d_alternative
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
-     end function scalar_function_2D
+     end function scalar_function_2d_alternative
   end interface
 
   interface sll_delete
@@ -186,7 +186,7 @@ contains   ! *****************************************************************
     sll_real64            :: eta1
     sll_real64            :: eta2
     sll_real64            :: value_at_index_analytic
-    lm => field%T%get_logical_mesh()
+    lm => field%T%mesh
     eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
     eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
     value_at_index_analytic = field%func(eta1,eta2,field%params)
@@ -237,7 +237,7 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta1_value_at_index_analytic
     
-    lm => field%T%get_logical_mesh()
+    lm => field%T%mesh
     eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
     eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
     
@@ -262,7 +262,7 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta2_value_at_index_analytic
 
-     lm => field%T%get_logical_mesh()
+    lm => field%T%mesh
     eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
     eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
     
@@ -410,7 +410,7 @@ contains   ! *****************************************************************
   function get_logical_mesh_2d_analytic_alt( field ) result(res)
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     type(sll_logical_mesh_2d), pointer :: res
-    res => field%T%get_logical_mesh()
+    res => field%T%mesh
   end function get_logical_mesh_2d_analytic_alt
 
   function get_jacobian_matrix_analytic_alt( field, eta1, eta2 ) result(res)
@@ -510,7 +510,7 @@ contains   ! *****************************************************************
     sll_int32, optional :: sz_point2
     ! sll_real64, dimension(:,:), optional :: point2d
     sll_int32  :: ierr
-    
+
     SLL_ALLOCATE(obj,ierr)
     call obj%initialize( &
          field_name, &
@@ -556,7 +556,7 @@ contains   ! *****************************************************************
     !sll_int32 :: i
     sll_int32 :: ierr   
 
-    m2d => transformation%get_logical_mesh()
+    m2d => transformation%mesh
     field%T => transformation
     field%interp_2d => interpolator_2d
     !    field%mesh%written = .false.
@@ -596,12 +596,14 @@ contains   ! *****************************************************************
     sll_real64, dimension(:,:), intent(in) :: values
     type(sll_logical_mesh_2d), pointer :: m
 
-    m => field%get_logical_mesh()
+    m => field%T%mesh
     if( (size(values,1) < m%num_cells1 ) .or. &
         (size(values,2) < m%num_cells2 ) ) then
        print *, 'WARNING, set_field_data_discrete_2d(), passed array ', &
             'is smaller than the size of data originally declared for ', &
-            'this field.'
+            'this field. Size of values in first dimension:', size(values,1),&
+            ' Size of mesh: ', m%num_cells1, ' Size of values in second ', &
+            'dimension:', size(values,2), 'Size of mesh: ', m%num_cells2
     end if
     field%values(:,:) = values(:,:)
   end subroutine set_field_data_discrete_2d
@@ -620,7 +622,7 @@ contains   ! *****************************************************************
   function get_logical_mesh_2d_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
     type(sll_logical_mesh_2d), pointer :: res
-    res => field%T%get_logical_mesh()
+    res => field%T%mesh
   end function get_logical_mesh_2d_discrete_alt
 
   function get_jacobian_matrix_discrete_alt( field, eta1, eta2 ) result(res)
@@ -649,7 +651,7 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: value_at_index_discrete
 
-    lm => field%T%get_logical_mesh()
+    lm => field%T%mesh
     eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
     eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
     value_at_index_discrete = field%interp_2d%interpolate_value(eta1,eta2)
@@ -684,7 +686,7 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta1_value_at_index_discrete
 
-    lm => field%T%get_logical_mesh()
+    lm => field%T%mesh
     eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
     eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
     first_deriv_eta1_value_at_index_discrete = &
@@ -700,7 +702,7 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta2_value_at_index_discrete
 
-    lm => field%T%get_logical_mesh()
+    lm => field%T%mesh
     eta1 = lm%eta1_min + real(i-1,f64)*lm%delta_eta1
     eta2 = lm%eta2_min + real(j-1,f64)*lm%delta_eta2
     first_deriv_eta2_value_at_index_discrete = &
