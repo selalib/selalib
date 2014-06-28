@@ -33,6 +33,11 @@ implicit none
      sll_real64                           :: xmin
      sll_real64                           :: xmax
      sll_real64, dimension(:), pointer :: node_positions
+     sll_real64, dimension(:), pointer :: buf
+     sll_int32, dimension(:), pointer :: ibuf
+     sll_real64, dimension(:), pointer :: node_pos
+     sll_real64, dimension(:), pointer :: coeffs
+     sll_real64, dimension(:), pointer :: Xstar
   contains
     procedure, pass(adv) :: initialize => &
       initialize_non_uniform_cubic_splines_1d_advector
@@ -40,9 +45,14 @@ implicit none
       non_uniform_cubic_splines_advect_1d_constant
     procedure, pass(adv) :: advect_1d => &
       non_uniform_cubic_splines_advect_1d
-  
+    procedure, pass(adv) :: delete => delete_non_unif_cubic_splines_1d_adv
   end type non_uniform_cubic_splines_1d_advector
    
+!!$  interface sll_delete
+!!$     module procedure delete_non_unif_cubic_splines_1d_adv
+!!$  end interface sll_delete
+
+
 contains
   
 
@@ -125,8 +135,17 @@ contains
         adv%node_positions(i) = real(i-1,f64)/real(num_cells,f64)
       enddo  
     endif
- 
-  
+
+    SLL_CLEAR_ALLOCATE(adv%buf(10*num_cells),ierr)
+    SLL_CLEAR_ALLOCATE(adv%ibuf(num_cells),ierr)
+    SLL_CLEAR_ALLOCATE(adv%node_pos(-2:num_cells+2),ierr)
+    SLL_CLEAR_ALLOCATE(adv%coeffs(-1:num_cells+1),ierr)
+    !SLL_CLEAR_ALLOCATE(adv%coeffs(-2:num_cells+2),ierr)
+    SLL_CLEAR_ALLOCATE(adv%Xstar(1:num_cells+1),ierr)
+    
+    adv%node_pos(0:num_cells)=adv%node_positions(1:num_cells+1)
+    call setup_spline_nonunif_1D_periodic_aux( adv%node_pos, num_cells, adv%buf, adv%ibuf)
+    
   end subroutine initialize_non_uniform_cubic_splines_1d_advector   
 
 
@@ -166,8 +185,12 @@ contains
       output, &
       alpha, &
       adv%node_positions, &
-      num_cells)
-    
+      num_cells, &
+      adv%buf, &
+      adv%Xstar, &
+      adv%node_pos, &
+      adv%coeffs, &
+      adv%ibuf)
     !print *,'#not implemented for the moment'
     !print *,'#non_uniform_cubic_splines_advect_1d_constant'
     !stop
@@ -208,7 +231,15 @@ contains
 
 
 
-  subroutine constant_advection_spl_non_unif_per(f,alpha,node_positions,N)
+  subroutine constant_advection_spl_non_unif_per(f, &
+    alpha, &
+    node_positions, &
+    N, &
+    buf, &
+    Xstar, &
+    node_pos, &
+    coeffs, &
+    ibuf)
     !alpha and node_positions are normalized to [0,1]
     !use numeric_constants
     !use cubic_non_uniform_splines
@@ -222,21 +253,21 @@ contains
     sll_real64 :: dx
     sll_int32  :: i
     !sll_real64 :: M,tmp,tmp2
-    !temporary allocations
     sll_real64,dimension(:),pointer :: buf,Xstar,node_pos,coeffs
     sll_int32,dimension(:),pointer :: ibuf 
     
     
     dx = 1._f64/real(N,f64)
     
-    allocate(buf(10*N))
-    allocate(ibuf(N))
-    allocate(node_pos(-2:N+2),coeffs(-2:N+2))
-    allocate(Xstar(1:N+1))
+    !allocate(buf(10*N))
+    !allocate(ibuf(N))
+    !allocate(node_pos(-2:N+2),coeffs(-2:N+2))
+    !allocate(Xstar(1:N+1))
+    !print *,loc(buf)
     
+    !print *,'#loc node_pos0=',loc(node_pos(0))
     
-    
-    node_pos(0:N)=node_positions(1:N+1)
+    !node_pos(0:N)=node_positions(1:N+1)
     
     
     !do i=1,N+1
@@ -288,10 +319,11 @@ contains
 !      tmp=tmp2
 !    enddo
     
-    call setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
+    !call setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
     call compute_spline_nonunif_1D_periodic_aux2( f, N, buf, ibuf, coeffs )
     call interpolate_array_value_nonunif_aux( Xstar, f, N, node_pos, coeffs,N)
     
+ !4312190464           4312214392   
     
 !    tmp=f(1)
 !    do i=1,N-1
@@ -307,14 +339,23 @@ contains
 
     f(N+1) = f(1)
     
-    deallocate(buf)
-    deallocate(ibuf)
-    deallocate(node_pos,coeffs)
-    deallocate(Xstar)
+    !deallocate(buf)
+    !deallocate(ibuf)
+    !deallocate(node_pos,coeffs)
+    !deallocate(Xstar)
     
   end subroutine constant_advection_spl_non_unif_per
 
-
+  subroutine delete_non_unif_cubic_splines_1d_adv( adv )
+    class(non_uniform_cubic_splines_1d_advector), intent(inout) :: adv
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(adv%node_positions,ierr)
+    SLL_DEALLOCATE(adv%buf,ierr)
+    SLL_DEALLOCATE(adv%ibuf,ierr)
+    SLL_DEALLOCATE(adv%node_pos,ierr)
+    SLL_DEALLOCATE(adv%coeffs,ierr)
+    SLL_DEALLOCATE(adv%Xstar,ierr)
+  end subroutine delete_non_unif_cubic_splines_1d_adv
 
 
 end module sll_module_advection_1d_non_uniform_cubic_splines

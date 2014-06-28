@@ -3,7 +3,7 @@ program integration_tester
 #include "sll_constants.h"
   use gauss_legendre_integration
   use gauss_lobatto_integration
-  use test_function_module
+  use test_function_module, only: one, test_func
   implicit none
   intrinsic :: dsin
   integer :: i,j,n
@@ -63,7 +63,7 @@ program integration_tester
   write(*,"(/,a,/)") "Matrix of derivatives"
   n = 4
   allocate(d(n,n))
-  d = gauss_lobatto_derivative_matrix(n, -1._f64, 1._f64) 
+  d = gauss_lobatto_derivative_matrix(n) 
 
   write (string, '( "(",I2,"f20.15)" )' )  n
   do i = 1, n

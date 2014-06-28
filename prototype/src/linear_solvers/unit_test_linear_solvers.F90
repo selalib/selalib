@@ -23,7 +23,8 @@ sll_int32   :: n, nnzeros
 sll_real64  :: delta
 sll_real64  :: x
 sll_int32   :: error
-sll_int32   :: i, j
+sll_int32   :: i
+sll_int32   :: j
 
 #ifdef PASTIX
 call sll_boot_collective()

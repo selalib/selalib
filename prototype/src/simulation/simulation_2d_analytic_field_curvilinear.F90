@@ -35,12 +35,13 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 #ifdef MUDPACK
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_timer
-  use sll_fft
-  use sll_module_poisson_2d_periodic_solver
+!  use sll_module_poisson_2d_elliptic_solver
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_timer
+!  use sll_fft
+!  use sll_module_poisson_2d_periodic_solver
+  use sll_parallel_array_initializer_module
   
   implicit none
   
@@ -100,23 +101,6 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   end type sll_simulation_2d_analytic_field_curvilinear
 
 
- abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-  abstract interface
-    function sll_scalar_initializer_1d( x1,  params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_1d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_1d
-  end interface
 
 
 
@@ -1101,7 +1085,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1

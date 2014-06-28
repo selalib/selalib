@@ -3,17 +3,8 @@ module sll_module_mapped_meshes_1d
 #include "sll_memory.h"
 #include "sll_assert.h"
 use sll_cubic_splines
-#ifdef STDF95
-  ! We need sll_file_io because the function write_mesh is write
-  ! in the subclass in the F95 case
-  ! (it's define in the abstract class in the 2003 case)
-!  use sll_file_io
-  use sll_xdmf
-  use sll_gnuplot
-#else 
   use sll_module_interpolators_1d_base
   use sll_module_mapped_meshes_1d_base
-#endif
   use sll_cubic_spline_interpolator_1d
   implicit none
 
@@ -33,22 +24,12 @@ use sll_cubic_splines
   ! For convenience, we can have this pre-evaluated at a collection of 
   ! locations.
 
-#ifdef STDF95
-  type                                   :: sll_mapped_mesh_1d_analytic
-     sll_int32   :: nc_eta1
-     sll_real64  :: delta_eta1
-     character(len=64) :: label
-     logical           :: written = .false.
-#else
   type, extends(sll_mapped_mesh_1d_base) :: sll_mapped_mesh_1d_analytic
-#endif
      sll_real64, dimension(:), pointer :: x1_node   ! x1(i) 
      sll_real64, dimension(:), pointer :: x1_cell
      sll_real64, dimension(:), pointer :: jacobians_n
      sll_real64, dimension(:), pointer :: jacobians_c
      sll_real64, dimension(:), pointer :: params
-#ifdef STDF95
-#else
      procedure(one_arg_scalar_function_nopass), pointer, nopass :: x1_func !user
      procedure(one_arg_scalar_function_nopass), pointer, nopass :: jacobian_func
    contains
@@ -59,25 +40,13 @@ use sll_cubic_splines
      procedure, pass(mesh) :: jacobian_at_cell => mesh_1d_jacobian_cell_analytic
      procedure, pass(mesh) :: x1         => x1_analytic_1d
      procedure, pass(mesh) :: jacobian   => jacobian_1d_analytic
-#endif
   end type sll_mapped_mesh_1d_analytic
 
-#ifdef STDF95
-  type                                  ::sll_mapped_mesh_1d_discrete
-     sll_int32   :: nc_eta1
-     sll_real64  :: delta_eta1
-     character(len=64) :: label
-     logical           :: written = .false.
-#else
   type, extends(sll_mapped_mesh_1d_base)::sll_mapped_mesh_1d_discrete
-#endif
      sll_real64, dimension(:), pointer                    :: x1_node   ! x1(i)
      sll_real64, dimension(:), pointer                    :: x1_cell
      sll_real64, dimension(:), pointer                    :: jacobians_n
      sll_real64, dimension(:), pointer                    :: jacobians_c
-#ifdef STDF95
-     type(cubic_spline_1d_interpolator), pointer          :: x1_interp
-#else
      class(sll_interpolator_1d_base), pointer             :: x1_interp
 !     procedure(one_arg_scalar_function), pointer, nopass  :: x1_func
     ! Samuel : this functions seems never initialize, see jacobian
@@ -90,38 +59,8 @@ use sll_cubic_splines
      procedure, pass(mesh) :: jacobian_at_cell => mesh_1d_jacobian_cell_discrete
      procedure, pass(mesh) :: x1         => x1_discrete_1d
      procedure, pass(mesh) :: jacobian   => jacobian_1d_discrete
-#endif
   end type sll_mapped_mesh_1d_discrete
 
-#ifdef STDF95
- interface initialize
-    module procedure initialize_mesh_1d_analytic, initialize_mesh_1d_discrete
-  end interface
-
-  interface write_to_file
-    module procedure mma_write_to_file, mmd_write_to_file
-  end interface
-
-  interface x1_at_node
-    module procedure x1_node_discrete_1d, x1_node_analytic_1d
-  end interface
-
-  interface x1_at_cell
-    module procedure x1_cell_discrete_1d, x1_cell_analytic_1d
-  end interface
-
-  interface jacobian_at_node
-    module procedure mesh_1d_jacobian_node_discrete
-  end interface
-
-  interface jacobian_at_cell
-    module procedure mesh_1d_jacobian_cell_discrete
-  end interface
-
-  interface jacobian
-    module procedure jacobian_1d_discrete
-  end interface
-#else
   abstract interface
      function one_arg_message_passing_func_analyt( map, eta1 )
        use sll_working_precision
@@ -142,7 +81,6 @@ use sll_cubic_splines
        sll_real64, intent(in)              :: eta1
      end function one_arg_message_passing_func_discr
   end interface
-#endif 
 
 contains
 
@@ -164,21 +102,12 @@ contains
     jacobian_func,  &
     params )
 
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_analytic), intent(inout)  :: mesh
-#else
     class(sll_mapped_mesh_1d_analytic), intent(inout) :: mesh
-#endif
     character(len=*), intent(in)                  :: label
     sll_int32, intent(in)                         :: npts
 
-#ifdef STDF95
-    sll_real64                                    :: x1_func
-    sll_real64                                    :: jacobian_func
-#else
     procedure(one_arg_scalar_function_nopass)     :: x1_func
     procedure(one_arg_scalar_function_nopass)     :: jacobian_func
-#endif
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: delta_1  ! cell spacing in eta1 
     sll_real64 :: eta_1
@@ -206,11 +135,8 @@ contains
     SLL_ALLOCATE(mesh%x1_cell(npts1-1), ierr)
 
     ! Assign the transformation functions
-#ifdef STDF95
-#else
     mesh%x1_func       => x1_func
     mesh%jacobian_func => jacobian_func
-#endif
     
     ! Allocate the arrays for precomputed jacobians.
     SLL_ALLOCATE(mesh%jacobians_n(npts1), ierr)
@@ -236,43 +162,28 @@ contains
   end subroutine initialize_mesh_1d_analytic
 
   function x1_node_analytic_1d( mesh, i ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_analytic) :: mesh
-#else
     class(sll_mapped_mesh_1d_analytic) :: mesh
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     val = mesh%x1_node(i)
   end function x1_node_analytic_1d
 
   function x1_cell_analytic_1d( mesh, i ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_analytic) :: mesh
-#else
     class(sll_mapped_mesh_1d_analytic) :: mesh
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     val = mesh%x1_cell(i)
   end function x1_cell_analytic_1d
 
-#ifdef STDF95
-#else
   function x1_analytic_1d( mesh, eta1 ) result(val)
     class(sll_mapped_mesh_1d_analytic) :: mesh
     sll_real64                         :: val
     sll_real64, intent(in) :: eta1
     val = mesh%x1_func(eta1,mesh%params)
   end function x1_analytic_1d
-#endif
 
   function mesh_1d_jacobian_node_analytic( mesh, i ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_analytic)    :: mesh
-#else
     class(sll_mapped_mesh_1d_analytic)   :: mesh
-#endif
     sll_real64              :: val
     sll_int32, intent(in)   :: i
     sll_int32 :: num_pts_1
@@ -282,11 +193,7 @@ contains
   end function mesh_1d_jacobian_node_analytic
 
   function mesh_1d_jacobian_cell_analytic( mesh, i ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_analytic)    :: mesh
-#else
     class(sll_mapped_mesh_1d_analytic)   :: mesh
-#endif
     sll_real64              :: val
     sll_int32, intent(in)   :: i
     sll_int32 :: num_pts_1
@@ -295,39 +202,12 @@ contains
     val = mesh%jacobians_c(i)
   end function mesh_1d_jacobian_cell_analytic
 
-#ifdef STDF95
-#else
   function jacobian_1d_analytic( mesh, eta1 ) result(val)
     sll_real64                         :: val
     class(sll_mapped_mesh_1d_analytic) :: mesh
     sll_real64, intent(in) :: eta1
     val = mesh%jacobian_func(eta1,mesh%params)
   end function jacobian_1d_analytic
-#endif
-
-#ifdef STDF95
-  subroutine mma_write_to_file(mesh,output_format)
-    type(sll_mapped_mesh_1d_analytic)  :: mesh
-    sll_int32, optional            :: output_format
-    sll_int32                      :: error
-    sll_real64, dimension(:), allocatable  :: x1_array
-    sll_int32                      :: num_pts1  
-    sll_int32                      :: i
-
-    if(present(output_format))then
-      print*,'There is just gnuplot format available'
-    endif
-    
-
-    num_pts1 = mesh%nc_eta1+1
-    SLL_ALLOCATE(x1_array(num_pts1),error)
-    do i=1,num_pts1
-       x1_array(i) = x1_at_node(mesh,i)
-    end do
-    call sll_gnuplot_write(x1_array,mesh%label,error)
-    SLL_DEALLOCATE_ARRAY(x1_array,error)
-  end subroutine
-#endif
 
   ! Discrete case:
 
@@ -342,21 +222,12 @@ contains
     x1_cell, &
     jacobians_cell )
 
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete)     :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete)    :: mesh
-#endif
     character(len=*), intent(in)          :: label
     sll_int32, intent(in)                 :: npts1
     sll_real64, dimension(:)              :: x1_node
-#ifdef STDF95
-    type(cubic_spline_1d_interpolator), target  :: x1_interpolator
-    type(cubic_spline_1d_interpolator), target  :: jacobians_n_interpolator
-#else
     class(sll_interpolator_1d_base), target  :: x1_interpolator
     class(sll_interpolator_1d_base), target  :: jacobians_n_interpolator
-#endif
     sll_real64, dimension(:), optional :: jacobians_node
     sll_real64, dimension(:), optional :: jacobians_cell
     sll_real64, dimension(:), optional :: x1_cell
@@ -438,11 +309,7 @@ contains
     end do
     
     ! Compute the spline coefficients
-#ifdef STDF95 
-    call cubic_spline_compute_interpolants( x1_interpolator , mesh%x1_node )
-#else
     call x1_interpolator%compute_interpolants( mesh%x1_node )
-#endif
 
     ! The splines contain all the information to compute the
     ! jacobians everywhere; however, here we explore assigning
@@ -464,11 +331,7 @@ contains
           ! Samuel : I replace the line
           !jacobian_val = mesh%jacobian_func(eta_1)
           ! by the next
-#ifdef STDF95
-          jacobian_val = jacobian(mesh,eta_1)
-#else
           jacobian_val = mesh%jacobian(eta_1)
-#endif
           mesh%jacobians_n(i+1) = jacobian_val
        end do
     end if
@@ -489,33 +352,21 @@ contains
   end subroutine initialize_mesh_1d_discrete
 
   function x1_node_discrete_1d( mesh, i ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete) :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete) :: mesh
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     val = mesh%x1_node(i)
   end function x1_node_discrete_1d
 
   function x1_cell_discrete_1d( mesh, i ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete) :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete) :: mesh
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     val = mesh%x1_cell(i)
   end function x1_cell_discrete_1d
 
   function mesh_1d_jacobian_node_discrete( mesh, i ) result(var)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete)   :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete)   :: mesh
-#endif
     sll_real64              :: var
     sll_int32, intent(in)   :: i
     sll_int32 :: num_pts_1
@@ -525,11 +376,7 @@ contains
   end function mesh_1d_jacobian_node_discrete
 
   function mesh_1d_jacobian_cell_discrete( mesh, i ) result(var)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete)   :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete)   :: mesh
-#endif
     sll_real64              :: var
     sll_int32, intent(in)   :: i
     sll_int32 :: num_pts_1
@@ -539,58 +386,18 @@ contains
   end function mesh_1d_jacobian_cell_discrete
 
   function jacobian_1d_discrete( mesh, eta1 ) result(jac)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete) :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete) :: mesh
-#endif
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1
-#ifdef STDF95
-    jac = cubic_spline_interpolate_derivative_eta1( mesh%x1_interp , eta1 )
-#else
     jac = mesh%x1_interp%interpolate_derivative_eta1( eta1 )
-#endif
   end function jacobian_1d_discrete
 
   function x1_discrete_1d( mesh, eta1 ) result(val)
-#ifdef STDF95
-    type(sll_mapped_mesh_1d_discrete) :: mesh
-#else
     class(sll_mapped_mesh_1d_discrete) :: mesh
-#endif
     sll_real64                         :: val
     sll_real64, intent(in) :: eta1
-#ifdef STDF95
-    val = cubic_spline_interpolate_value(mesh%x1_interp,eta1)
-#else
     val = mesh%x1_interp%interpolate_value(eta1)
-#endif
   end function x1_discrete_1d
-
-#ifdef STDF95
-  subroutine mmd_write_to_file(mesh,output_format)
-    type(sll_mapped_mesh_1d_discrete)  :: mesh
-    sll_int32, optional            :: output_format
-    sll_int32                      :: error
-    sll_real64, dimension(:), allocatable  :: x1_array
-    sll_int32                      :: num_pts1  
-    sll_int32                      :: i
-
-    if(present(output_format))then
-      print*,'There is just gnuplot format available'
-    endif
-    
-
-    num_pts1 = mesh%nc_eta1+1
-    SLL_ALLOCATE(x1_array(num_pts1),error)
-    do i=1,num_pts1
-       x1_array(i) = x1_node_discrete_1d(mesh,i)
-    end do
-    call sll_gnuplot_write(x1_array,mesh%label,error)
-    SLL_DEALLOCATE_ARRAY(x1_array,error)
-  end subroutine
-#endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
