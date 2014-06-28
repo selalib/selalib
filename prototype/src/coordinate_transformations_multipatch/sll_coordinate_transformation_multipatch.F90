@@ -56,6 +56,7 @@ module sll_coordinate_transformation_multipatch_module
   !> entity and dealt with only through the methods in this module.
   type :: sll_coordinate_transformation_multipatch_2d
      sll_int32 :: number_patches
+     character(len=128) :: name_root  ! file names should share this string
 !     character(len=128), dimension(:), pointer :: patch_names => null()
      sll_int32, dimension(:,:),pointer :: connectivities => null()
  !    type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
@@ -98,9 +99,9 @@ contains
 
   end function new_coordinate_transformation_multipatch_2d
 
-  subroutine read_from_file_ctmp2d( mp, filename )
+  subroutine read_from_file_ctmp2d( mp, name_root )
     class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
-    character(len=*), intent(in) :: filename
+    character(len=*), intent(in) :: name_root
     character(len=256) :: label
     character(len=256) :: filename_local
     sll_int32 :: IO_stat
@@ -121,23 +122,29 @@ contains
     namelist /connectivity/ connectivities
     namelist /patch_names/ patches
 
-    if(len(filename) >= 256) then
+    if(len(name_root) >= 128) then
        print *, 'ERROR, read_from_file_ctmp2d => ',&
-            'filenames longer than 256 characters are not allowed.'
+            'root names longer than 128 characters are not allowed.'
        STOP
     end if
-    filename_local = trim(filename)
+
+    mp%name_root = trim(name_root)
+
+    ! We explore the idea that a multipatch geometry is described by multiple
+    ! files, all sharing a 'root name'. By passing the root name, each 
+    ! subroutine is then able to build the proper filename to open.
+    filename_local = trim(mp%name_root)//"_info.nml"
 
     ! get a new identifier for the file.
     call sll_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
        print *, 'ERROR while trying to obtain an unique identifier for file ',&
-            filename, '. Called from read_from_file_ctmp2d().'
+            filename_local, '. Called from read_from_file_ctmp2d().'
        stop
     end if
     open(unit=input_file_id, file=filename_local, STATUS="OLD", IOStat=IO_stat)
     if( IO_Stat .ne. 0 ) then
-       print *, 'ERROR while opening file ',filename, &
+       print *, 'ERROR while opening file ',filename_local, &
             '. Called from read_from_file_ctmp2d().'
        stop
     end if
@@ -189,7 +196,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%t%get_logical_mesh()
+    ! the following line should be changed to get_ function, but for 
+    ! compatibility with the gfortran 4.6.3 compiler we allow direct access.
+    res => mp%transfs(patch+1)%t%mesh
   end function get_logical_mesh_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)

@@ -623,7 +623,7 @@ subroutine correction_BC(bc1_type,bc2_type,eta1_min,eta1_max,eta2_min,eta2_max,e
 subroutine plot_f1(f,x1,x2,iplot,N_eta1,N_eta2,delta_eta1,delta_eta2,eta1_min,eta2_min)!
 
   use sll_xdmf
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
   sll_int32 :: file_id
   sll_int32 :: error
   sll_real64, dimension (:,:), allocatable :: f
