@@ -32,7 +32,7 @@ sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
 type(sll_logical_mesh_2d), pointer :: mesh
-class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+class(sll_coordinate_transformation_2d_base), pointer :: tau
 
 type(maxwell_2d_diga)   :: maxwell_TE
 
