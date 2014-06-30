@@ -14,26 +14,31 @@ use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_cubic_spline_interpolator_2d
+use sll_maxwell_2d_diga
 
 implicit none
   
 #define NPTS1 33
 #define NPTS2 33 
-  type(sll_logical_mesh_2d), pointer :: mesh
-  type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
-  ! for the discrete case...
-  type(cubic_spline_2d_interpolator)   :: x1_interp
-  type(cubic_spline_2d_interpolator)   :: x2_interp
-  type(cubic_spline_2d_interpolator)   :: j_interp
-  sll_real64, dimension(:,:), allocatable :: x1_tab
-  sll_real64, dimension(:,:), allocatable :: x2_tab
-  sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
-  sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
-  sll_real64, dimension(:,:), allocatable :: jacs
-  sll_int32  :: i, j
-  sll_real64 :: eta1, eta2, h1, h2
-  sll_real64, dimension(2) :: params   ! for the polar transformation
 
+type(sll_logical_mesh_2d), pointer :: mesh
+class(sll_coordinate_transformation_2d_base), pointer :: tau    ! discrete transf
+! for the discrete case...
+type(cubic_spline_2d_interpolator)      :: x1_interp
+type(cubic_spline_2d_interpolator)      :: x2_interp
+type(cubic_spline_2d_interpolator)      :: j_interp
+sll_real64, dimension(:,:), allocatable :: x1_tab
+sll_real64, dimension(:,:), allocatable :: x2_tab
+sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
+sll_real64, dimension(:), allocatable   :: x2_eta1_min, x2_eta1_max
+sll_real64, dimension(:,:), allocatable :: jacs
+sll_int32  :: i, j
+sll_real64 :: eta1, eta2, h1, h2
+sll_real64, dimension(2) :: params   ! for the polar transformation
+
+type(maxwell_2d_diga), pointer   :: maxwell
+sll_int32, parameter             :: degree = 2
+  
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64
 
@@ -117,7 +122,7 @@ implicit none
 
   print *, 'Initialized interpolators...'
 
-  call t_d%initialize( &
+  tau => new_coordinate_transformation_2d_discrete( &
        mesh, &
        "transf_d", &
        x1_interp, &
@@ -127,9 +132,13 @@ implicit none
        x2_tab, &
        jacobians_node=jacs )
 
-  call t_d%write_to_file()
+  call tau%write_to_file()
 
-  call delete(t_d)
+  maxwell => new_maxwell_2d_diga( tau, degree, TE_POLARIZATION, &
+                                  SLL_PERIODIC, SLL_PERIODIC,   &
+                                  SLL_PERIODIC, SLL_PERIODIC,   &
+                                  SLL_UNCENTERED )
+
 
   deallocate(x1_eta1_min)
   deallocate(x1_eta1_max)

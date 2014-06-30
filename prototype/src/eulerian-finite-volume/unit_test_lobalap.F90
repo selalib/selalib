@@ -10,7 +10,7 @@ program test_lobalap
 
   type(lobatto_poisson_solver)        :: solver
   type(sll_logical_mesh_2d), pointer  :: mesh
-  class(sll_coordinate_transformation_2d_analytic), pointer :: tau
+  class(sll_coordinate_transformation_2d_base), pointer :: tau
   type(dg_field), pointer :: dg_rho
   type(dg_field), pointer :: dg_ex
   type(dg_field), pointer :: dg_ey

@@ -1,4 +1,4 @@
-#define sll_transformation class(sll_coordinate_transformation_2d_analytic)
+#define sll_transformation class(sll_coordinate_transformation_2d_base)
 
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
