@@ -32,4 +32,13 @@ IF(FFTW_LIBRARY AND HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED 
                                       sll_file_io
                                       ${HDF5_LIBRARIES})
 
+#    IF (FFT_LIB MATCHES "SLLFFT")
+#      SET(PROCS 4)
+#      #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
+#      ADD_MPI_TEST(vp_4d_eulerian test_4d_vp_eulerian_cartesian_finite_volume 
+#	${PROCS} ${ARGS})
+#      SET_TESTS_PROPERTIES(vp_4d_eulerian PROPERTIES TIMEOUT 30 
+#	PASS_REGULAR_EXPRESSION "PASSED")
+#    ENDIF()
+
 ENDIF()
