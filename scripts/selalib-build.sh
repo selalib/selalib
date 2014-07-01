@@ -141,7 +141,10 @@ fi
 
 mkdir build
 cd build; {
-${CMAKE} ${HOMEDIR}/selalib/prototype/src -DCMAKE_BUILD_TYPE=Release
+${CMAKE} \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DHDF5_PARALLEL_ENABLED=ON \
+	${HOMEDIR}/selalib/prototype/src 
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
