@@ -96,7 +96,6 @@ sll_int32, parameter, public :: SLL_UNCENTERED     = 21
 
 contains
 
-
 function new_maxwell_2d_diga( tau,          &
                               degree,       &
                               polarization, &
@@ -107,6 +106,41 @@ function new_maxwell_2d_diga( tau,          &
                               flux_type) result(this)
 
    type( maxwell_2d_diga ), pointer :: this !< solver data object
+   sll_transformation, pointer      :: tau
+   sll_int32                        :: polarization
+   sll_int32                        :: degree
+   sll_int32, intent(in)            :: bc_east
+   sll_int32, intent(in)            :: bc_west
+   sll_int32, intent(in)            :: bc_north
+   sll_int32, intent(in)            :: bc_south
+   sll_int32, optional              :: flux_type
+
+   SLL_ALLOCATE(this,error)
+
+   call initialize_maxwell_2d_diga( this,         &
+                                    tau,          &
+                                    degree,       &
+                                    polarization, &
+                                    bc_south,     &
+                                    bc_east,      &
+                                    bc_north,     &
+                                    bc_west,      &
+                                    flux_type)
+
+end function new_maxwell_2d_diga
+
+!> Initialize Maxwell solver object using DG method.
+subroutine initialize_maxwell_2d_diga( this,         &
+                                       tau,          &
+                                       degree,       &
+                                       polarization, &
+                                       bc_south,     &
+                                       bc_east,      &
+                                       bc_north,     &
+                                       bc_west,      &
+                                       flux_type)
+
+   type(maxwell_2d_diga)       :: this !< solver data object
    sll_transformation, pointer :: tau
    sll_int32                   :: polarization
    sll_int32                   :: degree
@@ -248,38 +282,6 @@ function new_maxwell_2d_diga( tau,          &
    SLL_CLEAR_ALLOCATE(this%f((degree+1)*(degree+1),4),error)
 
    this%po => new_dg_field( degree, tau) 
-
-end function new_maxwell_2d_diga
-
-!> Initialize Maxwell solver object using DG method.
-subroutine initialize_maxwell_2d_diga( this,         &
-                                       tau,          &
-                                       degree,       &
-                                       polarization, &
-                                       bc_south,     &
-                                       bc_east,      &
-                                       bc_north,     &
-                                       bc_west,      &
-                                       flux_type)
-
-   type( maxwell_2d_diga )     :: this !< solver data object
-   sll_transformation, pointer :: tau
-   sll_int32                   :: polarization
-   sll_int32                   :: degree
-   sll_int32, intent(in)       :: bc_east
-   sll_int32, intent(in)       :: bc_west
-   sll_int32, intent(in)       :: bc_north
-   sll_int32, intent(in)       :: bc_south
-   sll_int32, optional         :: flux_type
-
-   this = new_maxwell_2d_diga( tau,          &
-                               degree,       &
-                               polarization, &
-                               bc_south,     &
-                               bc_east,      &
-                               bc_north,     &
-                               bc_west,      &
-                               flux_type)
 
 end subroutine initialize_maxwell_2d_diga
 
