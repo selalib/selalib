@@ -150,14 +150,14 @@ sll_real64, external :: sol_ex, sol_ey, sol_bz
                                   SLL_PERIODIC, SLL_PERIODIC,   &
                                   SLL_UNCENTERED )
 
-  ex_d  => dg_field(degree,tau_d) 
-  ey_d  => dg_field(degree,tau_d) 
-  bz_d  => dg_field(degree,tau_d,sol_bz) 
+  ex_d  => new_dg_field(degree,tau_d) 
+  ey_d  => new_dg_field(degree,tau_d) 
+  bz_d  => new_dg_field(degree,tau_d,sol_bz) 
   call bz_d%write_to_file('bz_d')
   
-  dx_d  => dg_field(degree,tau_d) 
-  dy_d  => dg_field(degree,tau_d) 
-  dz_d  => dg_field(degree,tau_d) 
+  dx_d  => new_dg_field(degree,tau_d) 
+  dy_d  => new_dg_field(degree,tau_d) 
+  dz_d  => new_dg_field(degree,tau_d) 
   
   call solve(maxwell_d, ex_d, ey_d, bz_d, dx_d, dy_d, dz_d)
   call dx_d%write_to_file('dx_d')
@@ -182,16 +182,16 @@ sll_real64, external :: sol_ex, sol_ey, sol_bz
                                   SLL_PERIODIC, SLL_PERIODIC,   &
                                   SLL_UNCENTERED )
   
-  ex_a  => dg_field(degree,tau_a) 
+  ex_a  => new_dg_field(degree,tau_a) 
   call ex_a%write_to_file('ex_a')
-  ey_a  => dg_field(degree,tau_a) 
+  ey_a  => new_dg_field(degree,tau_a) 
   call ey_a%write_to_file('ey_a')
-  bz_a  => dg_field(degree,tau_a,sol_bz) 
+  bz_a  => new_dg_field(degree,tau_a,sol_bz) 
   call bz_a%write_to_file('bz_a')
   
-  dx_a  => dg_field(degree,tau_a) 
-  dy_a  => dg_field(degree,tau_a) 
-  dz_a  => dg_field(degree,tau_a) 
+  dx_a  => new_dg_field(degree,tau_a) 
+  dy_a  => new_dg_field(degree,tau_a) 
+  dz_a  => new_dg_field(degree,tau_a) 
 
   call solve(maxwell_a, ex_a, ey_a, bz_a, dx_a, dy_a, dz_a)
   call dx_a%write_to_file('dx_a')
