@@ -36,6 +36,10 @@ contains
 
 end type dg_field
 
+interface dg_field
+  module procedure new_dg_field
+end interface dg_field
+
 interface operator(+)
   module procedure dg_field_add
 end interface operator(+)
@@ -72,6 +76,7 @@ function new_dg_field( degree, tau, init_function ) result (this)
    nc_eta1 = tau%mesh%num_cells1
    nc_eta2 = tau%mesh%num_cells2
    SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
+
 
    if (present(init_function)) then
       call initialize_dg_field( this, init_function, 0.0_f64) 
