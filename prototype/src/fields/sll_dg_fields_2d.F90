@@ -77,7 +77,7 @@ function new_dg_field( degree, tau, init_function ) result (this)
    nc_eta2 = tau%mesh%num_cells2
    SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
 
-
+   this%array = 0.0_f64
    if (present(init_function)) then
       call initialize_dg_field( this, init_function, 0.0_f64) 
    end if
