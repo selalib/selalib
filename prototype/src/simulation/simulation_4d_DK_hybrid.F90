@@ -1475,7 +1475,7 @@ contains
   !----------------------------------------------------
   subroutine first_step_4d_DK_hybrid( sim )
     use sll_timer
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
@@ -1842,7 +1842,7 @@ contains
   !----------------------------------------------------
   subroutine writeHDF5_diag( sim )
    ! use sll_collective
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 

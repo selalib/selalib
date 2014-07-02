@@ -14,6 +14,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/interpolators/sll_interpolators.h
     ${SLL_DIR}/splines/sll_splines.h
     ${SLL_DIR}/file_io/sll_file_io.h
+    ${SLL_DIR}/file_io_parallel/sll_file_io_parallel.h
     ${SLL_DIR}/fft/sll_fft.h
     ${SLL_DIR}/fft/sll_fftw.h
     ${SLL_DIR}/integration/sll_integration.h
@@ -63,7 +64,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_file_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
-    ${SLL_DIR}/file_io/sll_hdf5_io.F90
+    ${SLL_DIR}/file_io/sll_hdf5_io_serial.F90
     ${SLL_DIR}/file_io/sll_xdmf.F90
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
@@ -222,14 +223,14 @@ IF(MPI_MODULE_ENABLED)
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
        ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
-       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90)
+       ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
 ENDIF(MPI_MODULE_ENABLED)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-       ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
-       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
+       ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
+       ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
  )
@@ -237,9 +238,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 IF(SLL_BUILD_PACKAGE)
-
-   SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" 
-       CACHE PATH "Installation directory of the library" FORCE)
 
    SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
    #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")

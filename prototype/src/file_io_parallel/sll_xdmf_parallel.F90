@@ -29,11 +29,7 @@ module sll_xdmf_parallel
   use sll_collective
 #ifndef NOHDF5
   use hdf5
-#ifdef HDF5_PARALLEL
   use sll_hdf5_io_parallel
-#else
-  use sll_hdf5_io
-#endif
 #endif
   use sll_ascii_io
   use sll_xml_io
@@ -59,11 +55,17 @@ module sll_xdmf_parallel
 contains  
   
   !>Open a XDMF format file for a 2d plot
-  subroutine sll_xdmf_open_2d_parallel(rank,file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
+  subroutine sll_xdmf_open_2d_parallel(rank,       &
+                                       file_name,  &
+                                       mesh_name,  &
+                                       nnodes_x1,  &
+                                       nnodes_x2,  &
+                                       file_id,    &
+                                       error)
 
     sll_int32, intent(in)        :: rank      !< processor number id
     character(len=*), intent(in) :: file_name !< xmf file name 
-    character(len=*), intent(in) :: mesh_name !< file name that contains mesh coordinates
+    character(len=*), intent(in) :: mesh_name !< file name that contains mesh 
     sll_int32                    :: file_id   !< file unit number
     sll_int32                    :: error     !< error code
     sll_int32                    :: nnodes_x1 !< nodes number x
@@ -71,7 +73,8 @@ contains
     
     if (rank == 0) then
        call sll_xml_file_create(trim(file_name),file_id,error)
-       call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2)
+       call sll_xml_grid_geometry(file_id, trim(mesh_name), &
+                                  nnodes_x1, nnodes_x2, 'Uniform')
     end if
 
   end subroutine sll_xdmf_open_2d_parallel
@@ -99,7 +102,8 @@ contains
     if (rank == 0) then
        call sll_xml_file_create(trim(file_name),file_id,error)
        call sll_xml_grid_geometry(file_id, trim(mesh_name),  &
-                                  nnodes_x1, nnodes_x2, nnodes_x3)
+                                  nnodes_x1, nnodes_x2, nnodes_x3, &
+                                  'Uniform')
     end if
 
   end subroutine sll_xdmf_open_3d_parallel
@@ -121,16 +125,14 @@ contains
     character(len=4), optional       :: center         !< "Node" or "Cell"
     sll_int32, intent(out)           :: error          !< error code
     sll_int32                        :: prank
+    sll_int32                        :: comm
 
 #ifndef NOHDF5
+    comm   = sll_world_collective%comm
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                              file_id,error)
-#ifdef HDF5_PARALLEL
+                              comm,file_id,error)
     call sll_hdf5_write_array(file_id,global_dims,offset, &
                               array,"/"//trim(array_name),error)
-#else
-    call sll_hdf5_write_array(file_id,array,"/"//trim(array_name),error)
-#endif
     call sll_hdf5_file_close(file_id, error)
 #endif
 
@@ -175,15 +177,14 @@ contains
     character(len=4), optional      :: center         !< "Node" or "Cell"
     sll_int32, intent(out)          :: error          !< error code
     sll_int32                       :: prank
+    sll_int32                       :: comm
     
+    comm   = sll_world_collective%comm
 #ifndef NOHDF5
-#ifdef HDF5_PARALLEL
     call sll_hdf5_file_create(trim(mesh_name)//"-"//trim(array_name)//".h5", &
-                             file_id,error)
+                             comm,file_id,error)
     call sll_hdf5_write_array(file_id,global_dims,offset,array, &
                               "/"//trim(array_name),error)
-#else
-#endif
     call sll_hdf5_file_close(file_id, error)
 #endif
 

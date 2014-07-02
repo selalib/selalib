@@ -56,9 +56,6 @@ module lobalap
   ! liste des noeuds du bord
   integer,dimension(:),allocatable :: indexbc
 
-
-
-
 contains
 
   ! fonction donnant le potentiel exact (debug) et/ou les conditions aux limites

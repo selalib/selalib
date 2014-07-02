@@ -157,8 +157,35 @@ contains
       filename)
        
   end function new_vp2d_par_cart
-
-
+  
+  
+  subroutine change_initial_function_vp2d_par_cart( sim, init_func, params, num_params)
+    class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
+    procedure(sll_scalar_initializer_2d), pointer :: init_func
+    sll_real64, dimension(:), pointer :: params
+    sll_int32, intent(in) :: num_params
+    !local variables
+    sll_int32 :: ierr
+    sll_int32 :: i
+    
+    sim%init_func => init_func
+    if(associated(sim%params))then
+      SLL_DEALLOCATE(sim%params,ierr)
+    endif
+    if(num_params<1)then
+      print *,'#num_params should be >=1 in change_initial_function_vp2d_par_cart'
+      stop
+    endif
+    SLL_ALLOCATE(sim%params(num_params),ierr)
+    if(size(params)<num_params)then
+      print *,'#size of params is not good in change_initial_function_vp2d_par_cart'
+      stop
+    endif
+    do i=1,num_params
+      sim%params(i) = params(i)
+    enddo
+    
+  end subroutine change_initial_function_vp2d_par_cart
 
   subroutine init_vp2d_par_cart( sim, filename )
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
@@ -2144,7 +2171,7 @@ contains
     array_name, time)    
     !mesh_2d)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:), intent(in) :: node_positions_x1
