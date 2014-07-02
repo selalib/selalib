@@ -45,13 +45,14 @@ program test_general_elliptic_solver_multipatch
   class(sll_scalar_field_multipatch_2d), pointer              :: c_field_scal
   class(sll_scalar_field_multipatch_2d), pointer              :: rho_field_scal
   class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_scal
+  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_ex
   sll_int32 :: num_patches
   sll_int32  :: ipatch
   sll_int32  :: i
   sll_int32  :: j
   sll_int32  :: num_pts1
   sll_int32  :: num_pts2
-  sll_real64 :: val_a11,val_a12,val_a21,val_a22,val_b1,val_b2,val_c,val_rho,val_phi
+  sll_real64 :: val_a11,val_a12,val_a21,val_a22,val_b1,val_b2,val_c,val_rho,val_phi,val_phi_exacte
   sll_real64 :: eta1,eta1min
   sll_real64 :: eta2,eta2min
   sll_real64 :: delta1
@@ -69,6 +70,7 @@ program test_general_elliptic_solver_multipatch
 !!$  real(8), external :: source_term_perper
   real(8), external :: source_term_perdir
   real(8), external :: source_term_dirper
+  sll_real64, external :: sol_exacte_perdir
 !!$  real(8), external :: source_term_chgt_perper
 !!$  real(8), external :: source_term_chgt_perdir
 !!$  real(8), external :: source_term_chgt_dirper
@@ -136,7 +138,7 @@ program test_general_elliptic_solver_multipatch
   ! Initialization coordinate transformation multipatch square_4p_n10
 
 
-  T => new_coordinate_transformation_multipatch_2d("identity_mp1")
+  T => new_coordinate_transformation_multipatch_2d("circle_mp5_pts12")
 
   ! Initialisation and allocation memory for each field multipatch using in the solver qns
 
@@ -176,6 +178,10 @@ program test_general_elliptic_solver_multipatch
 
   call phi_field_scal%allocate_memory()
 
+  phi_field_ex => new_scalar_field_multipatch_2d("phi_field_ex_multipatch", T)
+  
+  call phi_field_ex%allocate_memory()
+
 
   num_patches = phi_field_scal%get_number_patches()
 
@@ -205,8 +211,9 @@ program test_general_elliptic_solver_multipatch
            val_b1   = func_zero( x1, x2)
            val_b2   = func_zero( x1, x2)
            val_c    = func_zero( x1, x2)
-           val_rho  = 1.0!source_term_perdir( x1, x2)
+           val_rho  = source_term_perdir( x1, x2)
            val_phi  = 0.0_f64
+           val_phi_exacte = sol_exacte_perdir(x1,x2)
            call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 
            call a12_field_mat%set_value_at_indices ( i, j, ipatch, val_a12 ) 
            call a21_field_mat%set_value_at_indices ( i, j, ipatch, val_a21 ) 
@@ -216,6 +223,7 @@ program test_general_elliptic_solver_multipatch
            call c_field_scal%set_value_at_indices  ( i, j, ipatch, val_c ) 
            call rho_field_scal%set_value_at_indices( i, j, ipatch, val_rho ) 
            call phi_field_scal%set_value_at_indices( i, j, ipatch, val_phi ) 
+           call phi_field_ex%set_value_at_indices( i, j, ipatch, val_phi_exacte ) 
         end do
      end do
   end do
@@ -235,18 +243,17 @@ program test_general_elliptic_solver_multipatch
   call b2_field_vect%update_interpolation_coefficients()
   print *, 'updating multipatch field interpolation coefficients...'
   call c_field_scal%update_interpolation_coefficients()
-  print *, 'updating multipatch field interpolation coefficients...'
+  print *, 'updating multipatch field interpolation coefficients rho...'
   call rho_field_scal%update_interpolation_coefficients()
   print *, 'updating multipatch field interpolation coefficients...'
   call phi_field_scal%update_interpolation_coefficients()
-
+  print *, 'updating multipatch field interpolation coefficients...'
+  call phi_field_ex%update_interpolation_coefficients()
 
   print*, 'Initialization solver elliptic multipacth '
 
   call initialize_general_elliptic_solver_mp( &
        es_mp, &
-       SPLINE_DEG1, &
-       SPLINE_DEG2, &
        ES_GAUSS_LEGENDRE, &
        ES_GAUSS_LEGENDRE, &
        T)
@@ -269,6 +276,12 @@ program test_general_elliptic_solver_multipatch
        rho_field_scal,&
        phi_field_scal)
 
+
+  print *, 'writing to file...'
+  call phi_field_scal%write_to_file(0)
+
+  print *, 'writing to file...'
+  call phi_field_ex%write_to_file(0)
   
   print*, 'delete object'
   call sll_delete(T)
@@ -281,6 +294,7 @@ program test_general_elliptic_solver_multipatch
   call sll_delete(c_field_scal)
   call sll_delete(rho_field_scal)
   call sll_delete(phi_field_scal)
+  call sll_delete(phi_field_ex)
   print *, "PASSED"
 
 !!$  !*******************************************************************
@@ -4157,7 +4171,7 @@ real(8) function source_term_perdir(eta1,eta2) ! in the path
   real(8),intent(in) :: eta1,eta2
 
   
-  source_term_perdir = -2*(2*sll_pi)**2* sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
+  source_term_perdir = -2*(0.5*sll_pi)**2* sin(0.5*sll_pi*eta1)*sin(0.5*sll_pi*eta2)
       ! -(16.0*sll_pi**2*eta2**4 &
       ! - 16.0*sll_pi**2*eta2**2 &
       ! - 12.0*eta2**2 + 2.0)*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
@@ -4171,7 +4185,7 @@ real(8) function sol_exacte_perdir(eta1,eta2)
   intrinsic :: cos
   intrinsic :: sin
   !real(8), dimension(:), intent(in), optional :: params
-  sol_exacte_perdir = sin(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)!eta2 ** 2 * (eta2**2-1)&
+  sol_exacte_perdir = sin(0.5*sll_pi*eta1)*sin(0.5*sll_pi*eta2)!eta2 ** 2 * (eta2**2-1)&
       ! * cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta1)
   
   !print*, 'heho'

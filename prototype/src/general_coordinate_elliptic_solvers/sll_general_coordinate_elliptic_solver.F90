@@ -797,6 +797,8 @@ contains ! *******************************************************************
                es%sll_csr_mat_source,&
                rho_coeff_1d,es%rho_vec)
 
+          print*, es%rho_vec
+
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
          .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
