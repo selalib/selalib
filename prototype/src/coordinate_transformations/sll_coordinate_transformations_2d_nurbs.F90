@@ -193,6 +193,8 @@ contains
     read( input_file_id, transf_label )
     ! read the degree of spline
     read( input_file_id, degree )
+    transf%spline_deg1 = spline_deg1
+    transf%spline_deg2 = spline_deg2
     ! read ....?
     read( input_file_id, shape )
     ! read if we use NURBS or not
