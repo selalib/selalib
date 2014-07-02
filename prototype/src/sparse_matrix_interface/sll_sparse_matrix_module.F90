@@ -301,6 +301,7 @@ contains
     !================!
     ! initialisation !
     !================!
+    
     apr_U(:)  = 0.0_8
     lpr_Ux(:) = apr_U(:)
     li_iter = 0
@@ -315,7 +316,7 @@ contains
     lpr_d = lpr_r
     !================!
 
-!    print *,'%%%%'
+ 
     ll_continue=.true.
     do while(ll_continue)
             li_iter = li_iter + 1
@@ -324,7 +325,6 @@ contains
             !--------------------------------------!
 
             call sll_mult_csr_matrix_vector( mat , lpr_d , lpr_Ad )
-            
             lr_ps = DOT_PRODUCT( lpr_Ad , lpr_d )
             lr_alpha = lr_Norm2r0 / lr_ps
             
@@ -347,7 +347,6 @@ contains
             !-------------------------------------------------------!
             lr_NormInfr = maxval(dabs( lpr_r ))
             lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
-            
             !==================================================!
             ! calcul de la nouvelle direction de descente dk+1 !
             !==================================================!
@@ -363,7 +362,6 @@ contains
             
     end do
     apr_U = lpr_Ux
-    
     if ( li_iter == ai_maxIter ) then
             print*,'Warning Gradient_conj : li_iter == ai_maxIter'
             print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
