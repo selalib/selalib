@@ -28,7 +28,7 @@ use sll_xml_io
 use sll_ascii_io
 use sll_binary_io
 use sll_gnuplot
-use sll_hdf5_io
+use sll_hdf5_io_serial
 use sll_xdmf
 use sll_plotmtv
 

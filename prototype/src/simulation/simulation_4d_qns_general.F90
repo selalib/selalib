@@ -2270,7 +2270,7 @@ contains
  !----------------------------------------------------
   subroutine writeHDF5_diag_qns( sim )
    ! use sll_collective
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_qns_general), intent(inout) :: sim
 
