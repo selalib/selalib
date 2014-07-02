@@ -196,6 +196,7 @@ IF(NOT SLL_BUILD_PACKAGE)
 ELSE() # Packages generation
 
    INCLUDE(CPackConfig) 
+   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
@@ -212,5 +213,4 @@ MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
 ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
-MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 
