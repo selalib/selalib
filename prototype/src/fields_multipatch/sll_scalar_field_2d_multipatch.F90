@@ -53,19 +53,19 @@ module sll_module_scalar_field_2d_multipatch
      ! it would be responsible for deleting it too. Else, it is just a pointer
      ! that needs to be set with the proper access function.
      logical                                         :: owns_memory = .false.
-     type(multipatch_data_2d), dimension(:), pointer :: patch_data => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: patch_data => null()
      ! The following memory buffers are meant to mimic the type of 
      ! organization that we will need for the parallel case. The actual 
      ! size of these buffers depend on the degree of the spline used to 
      ! reconstruct the field data and of course the logical mesh size.
-     type(multipatch_data_2d), dimension(:), pointer :: buffers0 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: buffers1 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: buffers2 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: buffers3 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: derivs0 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: derivs1 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: derivs2 => null()
-     type(multipatch_data_2d), dimension(:), pointer :: derivs3 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: buffers0 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: buffers1 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: buffers2 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: buffers3 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: derivs0 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: derivs1 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: derivs2 => null()
+     type(multipatch_data_2d_real), dimension(:), pointer :: derivs3 => null()
      ! Element connectivity information for finite element calculations.
 !!$     sll_int32, dimension(:), pointer :: global_indices
 !!$     type(multipatch_data_1d), dimension(:), pointer :: local_indices
@@ -80,9 +80,9 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: get_jacobian_matrix => get_jacobian_matrix_sfmp2d
      procedure, pass :: get_number_patches  => get_number_patches_sfmp2d
      ! These are the functions to aid the finite element calculation  
-     procedure, pass :: get_spline_local_index=> get_spline_local_index_sfmp2d
-     procedure, pass :: get_spline_global_index=> get_spline_global_index_sfmp2d
-     procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_sfmp2d
+     !procedure, pass :: get_spline_local_index=> get_spline_local_index_sfmp2d
+     !procedure, pass :: get_spline_global_index=> get_spline_global_index_sfmp2d
+     !procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_sfmp2d
      procedure, pass :: value_at_point      => value_at_pt_sfmp2d
      procedure, pass :: value_at_indices    => value_at_indices_sfmp2d
      procedure, pass :: set_value_at_indices => set_value_at_indices_sfmp2d
@@ -196,7 +196,7 @@ contains   ! *****************************************************************
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
           bc_bottom = SLL_HERMITE
        else
-          bc_bottom = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_bottom = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        connectivity(:) = fmp%transf%get_connectivity(i,1)
@@ -205,7 +205,7 @@ contains   ! *****************************************************************
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
           bc_left = SLL_HERMITE
        else
-          bc_left = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_left = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        connectivity(:) = fmp%transf%get_connectivity(i,2)
@@ -214,7 +214,7 @@ contains   ! *****************************************************************
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
           bc_top = SLL_HERMITE
        else
-          bc_top = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_top = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        connectivity(:) = fmp%transf%get_connectivity(i,3)
@@ -223,7 +223,7 @@ contains   ! *****************************************************************
        if( (connectivity(1) >= 0) .and. (connectivity(2) >= 0) ) then
           bc_right = SLL_HERMITE
        else
-          bc_right = SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
+          bc_right = SLL_HERMITE!SLL_DIRICHLET ! THIS IS TEMPORARY, MORE OPTIONS ARE NEEDED
        end if
 
        ! NOTE THAT THE SPLINE DEGREE 3 WAS HARDWIRED HERE. NEED A DECISION
@@ -231,6 +231,7 @@ contains   ! *****************************************************************
        write(patch_name, format_string) trim(field_name), "_patch", i
        print *, 'building patch named ', patch_name
 
+       
        fmp%interps(i+1)%interp => new_arbitrary_degree_spline_interp2d( &
             lm%num_cells1+1, &
             lm%num_cells2+1, &
@@ -862,87 +863,87 @@ contains   ! *****************************************************************
   !! num_splines_loc*num_cell
   !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
   !! l = 1, num_splines_loc
-  function get_spline_local_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)result(res)
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
-    sll_int32 :: patch
-    sll_int32 :: splines_local
-    sll_int32 :: cell_i,cell_j
-    sll_int32 :: num_cell
-    sll_int32 :: res
-    sll_int32 :: num_spline_loc_max
-    sll_int32 :: total_num_cells_in_patch
-    type(sll_logical_mesh_2d), pointer                         :: lm
-    
-   
-    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
-    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
-    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
-
-    lm=>mp%transf%get_logical_mesh(patch)
-    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
-                         (mp%interps(patch+1)%interp%spline_degree2 +1)
-    num_cell = cell_i + (cell_j-1)*lm%num_cells1
-    total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
-    res = mp%transf%local_indices(patch+1)%array(num_cell+ (splines_local-1)*total_num_cells_in_patch)
-  end function get_spline_local_index_sfmp2d
-
-
-
-  !! global_indices contains the numeration of splines in all the domain
-  !! It is a 1D array with the following size
-  !!  sum_i num_splines_in_domain_patch_i 
-  !! where  num_splines_in_domain_patch_i=(number_cells_eta1_patch_i + deg_spline_eta1_patch_i)
-  !!                                   * (number_cells_eta2_patch_i + deg_spline_eta2_patch_i) 
-  
-  function get_spline_global_index_sfmp2d(mp,num_splines_global)result(res)
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
-    sll_int32 :: num_splines_global
-    sll_int32 :: res
-    
-    res = mp%transf%global_indices(num_splines_global)
-  end function get_spline_global_index_sfmp2d
-
-
-  !! normally in the Ahmed code local_to_global_index_array
-  !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
-  !! where 
-  !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
-  !! and 
-  !! num_cell is the number of cells in the patch i
-  !! we stocke this 2D array such as a 1D array with a dimension
-  !! num_splines_loc*num_cell
-  !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
-  !! l = 1, num_splines_loc
-  function get_spline_local_to_global_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)&
-       result(res)
-    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
-    sll_int32 :: patch
-    sll_int32 :: splines_local
-    sll_int32 :: cell_i,cell_j
-    sll_int32 :: num_cell
-    sll_int32 :: res
-    sll_int32 :: num_spline_loc_max
-    sll_int32 :: index
-    sll_int32 :: total_num_cells_in_patch
-    type(sll_logical_mesh_2d), pointer                         :: lm
-    
-    
-    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
-    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
-   
-    
-    lm=>mp%transf%get_logical_mesh(patch)
-    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
-         (mp%interps(patch+1)%interp%spline_degree2 +1)
-
-    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
-    num_cell = cell_i + (cell_j-1)*lm%num_cells1
-    total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
-    index = num_cell+(splines_local-1)*total_num_cells_in_patch
-    res=mp%transf%local_to_global_ind(patch+1)%array(index)
-  end function get_spline_local_to_global_index_sfmp2d
+!!$  function get_spline_local_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)result(res)
+!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    sll_int32 :: patch
+!!$    sll_int32 :: splines_local
+!!$    sll_int32 :: cell_i,cell_j
+!!$    sll_int32 :: num_cell
+!!$    sll_int32 :: res
+!!$    sll_int32 :: num_spline_loc_max
+!!$    sll_int32 :: total_num_cells_in_patch
+!!$    type(sll_logical_mesh_2d), pointer                         :: lm
+!!$    
+!!$   
+!!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
+!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
+!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
+!!$    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
+!!$
+!!$    lm=>mp%transf%get_logical_mesh(patch)
+!!$    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
+!!$                         (mp%interps(patch+1)%interp%spline_degree2 +1)
+!!$    num_cell = cell_i + (cell_j-1)*lm%num_cells1
+!!$    total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
+!!$    res = mp%transf%local_indices(patch+1)%array(num_cell+ (splines_local-1)*total_num_cells_in_patch)
+!!$  end function get_spline_local_index_sfmp2d
+!!$
+!!$
+!!$
+!!$  !! global_indices contains the numeration of splines in all the domain
+!!$  !! It is a 1D array with the following size
+!!$  !!  sum_i num_splines_in_domain_patch_i 
+!!$  !! where  num_splines_in_domain_patch_i=(number_cells_eta1_patch_i + deg_spline_eta1_patch_i)
+!!$  !!                                   * (number_cells_eta2_patch_i + deg_spline_eta2_patch_i) 
+!!$  
+!!$  function get_spline_global_index_sfmp2d(mp,num_splines_global)result(res)
+!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    sll_int32 :: num_splines_global
+!!$    sll_int32 :: res
+!!$    
+!!$    res = mp%transf%global_indices(num_splines_global)
+!!$  end function get_spline_global_index_sfmp2d
+!!$
+!!$
+!!$  !! normally in the Ahmed code local_to_global_index_array
+!!$  !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
+!!$  !! where 
+!!$  !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
+!!$  !! and 
+!!$  !! num_cell is the number of cells in the patch i
+!!$  !! we stocke this 2D array such as a 1D array with a dimension
+!!$  !! num_splines_loc*num_cell
+!!$  !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
+!!$  !! l = 1, num_splines_loc
+!!$  function get_spline_local_to_global_index_sfmp2d(mp,patch,splines_local,cell_i,cell_j)&
+!!$       result(res)
+!!$    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+!!$    sll_int32 :: patch
+!!$    sll_int32 :: splines_local
+!!$    sll_int32 :: cell_i,cell_j
+!!$    sll_int32 :: num_cell
+!!$    sll_int32 :: res
+!!$    sll_int32 :: num_spline_loc_max
+!!$    sll_int32 :: index
+!!$    sll_int32 :: total_num_cells_in_patch
+!!$    type(sll_logical_mesh_2d), pointer                         :: lm
+!!$    
+!!$    
+!!$    SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
+!!$    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
+!!$    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < mp%fields(patch+1)%f%mesh%num_cells2) )
+!!$   
+!!$    
+!!$    lm=>mp%transf%get_logical_mesh(patch)
+!!$    num_spline_loc_max = (mp%interps(patch+1)%interp%spline_degree1 +1)*&
+!!$         (mp%interps(patch+1)%interp%spline_degree2 +1)
+!!$
+!!$    SLL_ASSERT( (splines_local >= 1) .and. (splines_local < num_spline_loc_max) )
+!!$    num_cell = cell_i + (cell_j-1)*lm%num_cells1
+!!$    total_num_cells_in_patch = lm%num_cells1*lm%num_cells2
+!!$    index = num_cell+(splines_local-1)*total_num_cells_in_patch
+!!$    res=mp%transf%local_to_global_ind(patch+1)%array(index)
+!!$  end function get_spline_local_to_global_index_sfmp2d
   
 
 end module sll_module_scalar_field_2d_multipatch
