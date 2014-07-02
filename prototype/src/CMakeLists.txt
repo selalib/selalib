@@ -10,7 +10,7 @@ IF(OPTIONS_FILE)
 INCLUDE(${OPTIONS_FILE})
 ENDIF()
 
-PROJECT(SLL)
+PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -193,6 +193,11 @@ IF(NOT SLL_BUILD_PACKAGE)
       ENDIF()
    ENDIF()
 
+ELSE() # Packages generation
+
+   INCLUDE(CPackConfig) 
+   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
+
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
 MESSAGE(STATUS "############################################################")
@@ -208,5 +213,4 @@ MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
 ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
-MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 
