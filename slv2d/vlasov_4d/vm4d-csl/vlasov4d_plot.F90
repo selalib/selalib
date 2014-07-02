@@ -25,7 +25,7 @@ contains
 
  subroutine plot_mesh4d(geomx, geomv, jstartx,jendx,jstartv,jendv)
 
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
   type(geometry)        :: geomx, geomv
   sll_int32             :: file_id
   sll_int32, intent(in) :: jstartx, jendx, jstartv, jendv
@@ -55,7 +55,7 @@ contains
 
 subroutine plot_df(f4d,iplot,geomx,geomv,jstartx,jendx,jstartv,jendv,choice)
   
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
   type(geometry), intent(in) :: geomx, geomv
   sll_real64, intent(in) :: f4d(:,:,:,jstartv:)
   sll_int32, intent(in)  :: jstartx, jendx, jstartv, jendv
@@ -152,7 +152,7 @@ end subroutine plot_df
 
  global_dims = (/ny,nvy/)
  offset      = (/0, jstartv-1/)
- call sll_hdf5_file_create('fyvy'//cplot//".h5",pfile_id,error)
+ call sll_hdf5_file_create('fyvy'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fyvy,"/fyvy",error)
  call sll_hdf5_file_close(pfile_id, error)
 
@@ -172,7 +172,7 @@ end subroutine plot_df
 
  global_dims = (/nvx,nvy/)
  offset      = (/0, jstartv-1/)
- call sll_hdf5_file_create('fvxvy'//cplot//".h5",pfile_id,error)
+ call sll_hdf5_file_create('fvxvy'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fvxvy,"/fvxvy",error)
  call sll_hdf5_file_close(pfile_id, error)
 

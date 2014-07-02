@@ -21,7 +21,8 @@
 !> With HDF5 you can store several datasets in a single file.
 !> @note 
 !> link with sll_file_io
-module sll_hdf5_io
+module sll_hdf5_io_serial
+#include "sll_assert.h"
 #include "sll_working_precision.h"
   
 #ifndef NOHDF5
@@ -53,7 +54,9 @@ contains
     integer,           intent(out) :: error     !< error code
     
     call H5open_f(error)
+    SLL_ASSERT(error==0)
     call H5Fcreate_f(filename,H5F_ACC_TRUNC_F,file_id,error)
+    SLL_ASSERT(error==0)
   end subroutine sll_hdf5_file_create
 
   !> Open HDF5 file
@@ -63,7 +66,9 @@ contains
     integer,           intent(out) :: error     !< error code
     
     call H5open_f(error)
+    SLL_ASSERT(error==0)
     call H5Fopen_f(filename,H5F_ACC_RDONLY_F,file_id,error)
+    SLL_ASSERT(error==0)
   end subroutine sll_hdf5_file_open
 
   !> Close HDF5 file 
@@ -72,6 +77,7 @@ contains
     integer, intent(out) :: error          !< error code
 
     call H5Fclose_f(file_id,error)
+    SLL_ASSERT(error==0)
   end subroutine sll_hdf5_file_close
 
   !> Write a 1d array in hdf5 file
@@ -89,15 +95,20 @@ contains
       array_dims(i) = size(array,i)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    SLL_ASSERT(error==0)
     call H5Dcreate_f(file_id,                                            &
                      dsetname,                                           &
                      H5T_NATIVE_DOUBLE,                                  &
                      dataspace_id,                                       &
                      dataset_id,                                         &
                      error)
+    SLL_ASSERT(error==0)
     call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+    SLL_ASSERT(error==0)
     call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
     call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
   end subroutine sll_hdf5_write_array_1d
 
   !> Write a 2d array in hdf5 file
@@ -115,15 +126,20 @@ contains
       array_dims(i) = size(array,i)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    SLL_ASSERT(error==0)
     call H5Dcreate_f(file_id,                                            &
                      dsetname,                                           &
                      H5T_NATIVE_DOUBLE,                                  &
                      dataspace_id,                                       &
                      dataset_id,                                         &
                      error)
+    SLL_ASSERT(error==0)
     call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+    SLL_ASSERT(error==0)
     call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
     call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
   end subroutine sll_hdf5_write_array_2d
 
   !> Write a 3d array in hdf5 file
@@ -141,15 +157,20 @@ contains
       array_dims(i) = size(array,i)
     end do
     call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    SLL_ASSERT(error==0)
     call H5Dcreate_f(file_id,                                            &
                      dsetname,                                           &
                      H5T_NATIVE_DOUBLE,                                  &
                      dataspace_id,                                       &
                      dataset_id,                                         &
                      error)
+    SLL_ASSERT(error==0)
     call H5Dwrite_f(dataset_id,H5T_NATIVE_DOUBLE,array,array_dims,error)
+    SLL_ASSERT(error==0)
     call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
     call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
   end subroutine sll_hdf5_write_array_3d
 
 !Gysela functions that can be useful for future
@@ -189,5 +210,4 @@ contains
 
 #endif
 
-end module sll_hdf5_io
-
+end module sll_hdf5_io_serial
