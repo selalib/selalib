@@ -74,7 +74,6 @@ PROGRAM main
   INTEGER(KIND=MURGE_INTS_KIND)                         :: one=1
   INTEGER(KIND=MURGE_INTS_KIND)                         :: two=2
   INTEGER(KIND=MURGE_INTS_KIND)                         :: nb_threads
-  logical :: flag
   NArgs = command_argument_count()
   root = -1
   base = 1
@@ -234,9 +233,8 @@ PROGRAM main
 	k = k + 1
      END DO
   END DO
-  flag = MURGE_BOOLEAN_FALSE
   CALL MURGE_ASSEMBLYBEGIN(id, n, nnzeros, MURGE_ASSEMBLY_OVW, MURGE_ASSEMBLY_OVW, &
-       MURGE_ASSEMBLY_FOOL, ierr)
+       MURGE_ASSEMBLY_FOOL, MURGE_BOOLEAN_FALSE, ierr)
   !$OMP PARALLEL default(none)&
   !$OMP private(m, i, val, ierr, k) &
   !$OMP shared(expand, localnodenbr, n, xmin, xmax, nodelist, id)
