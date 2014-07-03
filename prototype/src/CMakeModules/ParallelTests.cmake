@@ -117,7 +117,15 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
     SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES 
       PASS_REGULAR_EXPRESSION "PASSED")
+
+    SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
+    ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch
+      ${PROCS} ${ARGS})
+    SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES 
+      PASS_REGULAR_EXPRESSION "PASSED")
    
+
+
     # SET(PROCS 1)
     # SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/sim4d_qns_mixed_input.txt)
     # ADD_MPI_TEST(vp4d_sim_mixed_qns_cartesian test_4d_mixed_qns_cartesian 
