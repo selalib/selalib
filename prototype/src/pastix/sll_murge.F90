@@ -203,7 +203,7 @@ subroutine initialize_murge()
      END DO
   END DO
 
-  CALL MURGE_ASSEMBLYBEGIN(id, nnzeros, MURGE_ASSEMBLY_OVW, MURGE_ASSEMBLY_OVW, &
+  CALL MURGE_ASSEMBLYBEGIN(id, n, nnzeros, MURGE_ASSEMBLY_OVW, MURGE_ASSEMBLY_OVW, &
        MURGE_ASSEMBLY_FOOL, MURGE_BOOLEAN_FALSE, ierr)
 
   DO m = 1, localnodenbr
