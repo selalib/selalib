@@ -1,5 +1,4 @@
-
-  IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
+IF(PASTIX_FOUND)
 
      INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
      SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
@@ -15,18 +14,23 @@
      TARGET_LINK_LIBRARIES(fmurge  ${MURGE_LIBRARIES}
                                    ${PASTIX_LIBRARIES}
                                    ${PTSCOTCH_LIBRARIES}
+                                   ${SCOTCH_LIBRARIES}
                                    ${BLAS_LIBRARIES})
 
+     MESSAGE(STATUS "BLAS_LIBRARIES:${BLAS_LIBRARIES}")
      TARGET_LINK_LIBRARIES(fsimple ${PASTIX_LIBRARIES} 
                                    ${PTSCOTCH_LIBRARIES}
+                                   ${SCOTCH_LIBRARIES}
                                    ${BLAS_LIBRARIES})
 
      TARGET_LINK_LIBRARIES(pastix ${PASTIX_LIBRARIES} 
                                   ${PTSCOTCH_LIBRARIES}
+                                  ${SCOTCH_LIBRARIES}
                                   ${BLAS_LIBRARIES})
 
      TARGET_LINK_LIBRARIES(fstep-by-step ${PASTIX_LIBRARIES} 
                                          ${PTSCOTCH_LIBRARIES}
+                                         ${SCOTCH_LIBRARIES}
                                          ${BLAS_LIBRARIES})
 
      ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 )
@@ -35,6 +39,7 @@
                                        ${MURGE_LIBRARIES} 
                                        ${PASTIX_LIBRARIES} 
                                        ${PTSCOTCH_LIBRARIES}
+                                       ${SCOTCH_LIBRARIES}
                                        ${BLAS_LIBRARIES})
 
      IF(UNIX AND NOT APPLE)
@@ -50,5 +55,4 @@
      TARGET_LINK_LIBRARIES(test_pastix sll_pastix)
 
 
-   ENDIF()
-
+ENDIF()
