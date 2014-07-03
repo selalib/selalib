@@ -8,7 +8,7 @@ program test_general_elliptic_solver_multipatch
   use sll_common_coordinate_transformations
   use sll_coordinate_transformation_multipatch_module
   use sll_module_scalar_field_2d_alternative
-  use sll_module_scalar_field_2d_multipatch
+  use sll_module_scalar_field_2d_multipatch, only: sll_delete
   use sll_constants
   use sll_arbitrary_degree_spline_interpolator_2d_module
   use sll_timer
