@@ -301,7 +301,7 @@ contains   ! *****************************************************************
 
 
   subroutine delete_field_sfmp2d_ptr( field )
-    type(sll_scalar_field_multipatch_2d), pointer :: field
+    class(sll_scalar_field_multipatch_2d), pointer :: field
     sll_int32 :: ierr
 
     call field%delete()
