@@ -81,8 +81,9 @@ program unit_test_fields_multipatch
   print *, 'writing to file...'
   call F%write_to_file(0)
 
-  call sll_delete(T)
+  call sll_delete(T) 
   call sll_delete(F)
+!  call delete_field_sfmp2d_ptr(F)
   print *, 'PASSED'
   
 

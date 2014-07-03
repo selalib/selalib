@@ -66,10 +66,6 @@ module sll_module_scalar_field_2d_multipatch
      type(multipatch_data_2d_real), dimension(:), pointer :: derivs1 => null()
      type(multipatch_data_2d_real), dimension(:), pointer :: derivs2 => null()
      type(multipatch_data_2d_real), dimension(:), pointer :: derivs3 => null()
-     ! Element connectivity information for finite element calculations.
-!!$     sll_int32, dimension(:), pointer :: global_indices
-!!$     type(multipatch_data_1d), dimension(:), pointer :: local_indices
-!!$     type(multipatch_data_1d), dimension(:), pointer :: local_to_global_ind
    contains
      procedure, pass :: initialize => initialize_scalar_field_sfmp2d
      procedure, pass :: allocate_memory => allocate_memory_sfmp2d
@@ -309,8 +305,7 @@ contains   ! *****************************************************************
     sll_int32 :: ierr
 
     call field%delete()
-    SLL_DEALLOCATE(field,ierr)
-    field => null()
+    SLL_DEALLOCATE(field, ierr)
   end subroutine delete_field_sfmp2d_ptr
 
 
@@ -324,6 +319,14 @@ contains   ! *****************************************************************
     do i=0,num_patches-1
        call sll_delete(field%fields(i+1)%f)
        call sll_delete(field%interps(i+1)%interp)
+       SLL_DEALLOCATE_ARRAY(field%buffers0(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%buffers1(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%buffers2(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%buffers3(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%derivs0(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%derivs1(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%derivs2(i+1)%array,ierr)
+       SLL_DEALLOCATE_ARRAY(field%derivs3(i+1)%array,ierr)
     end do
 
     SLL_DEALLOCATE( field%fields, ierr )
@@ -334,6 +337,15 @@ contains   ! *****************************************************************
           SLL_DEALLOCATE(field%patch_data(i+1)%array,ierr)
        end do
     end if
+
+       SLL_DEALLOCATE(field%buffers0,ierr)
+       SLL_DEALLOCATE(field%buffers1,ierr)
+       SLL_DEALLOCATE(field%buffers2,ierr)
+       SLL_DEALLOCATE(field%buffers3,ierr)
+       SLL_DEALLOCATE(field%derivs0,ierr)
+       SLL_DEALLOCATE(field%derivs1,ierr)
+       SLL_DEALLOCATE(field%derivs2,ierr)
+       SLL_DEALLOCATE(field%derivs3,ierr)
   end subroutine delete_field_sfmp2d
 
   subroutine allocate_memory_sfmp2d( field )
