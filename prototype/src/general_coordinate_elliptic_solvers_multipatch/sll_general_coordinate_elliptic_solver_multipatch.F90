@@ -41,10 +41,6 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
      sll_int32, dimension(:,:,:), pointer :: local_to_global_spline_indices_source_col
      sll_int32, dimension(:,:,:), pointer :: local_to_global_spline_indices_source_row
      ! contains the values of all splines in all gauss points
-     sll_real64, dimension(:,:,:), pointer :: values_splines_eta1
-     sll_real64, dimension(:,:,:), pointer :: values_splines_eta2
-     sll_real64, dimension(:,:,:), pointer :: values_splines_gauss1
-     sll_real64, dimension(:,:,:), pointer :: values_splines_gauss2
      sll_real64, dimension(:,:,:), pointer :: values_jacobian
      sll_int32 , dimension(:,:)  , pointer :: tab_index_coeff1
      sll_int32 , dimension(:,:)  , pointer :: tab_index_coeff2
@@ -52,8 +48,6 @@ module sll_general_coordinate_elliptic_solver_multipatch_module
      type(sll_csr_matrix), pointer :: sll_csr_mat_source
      sll_real64, dimension(:), pointer :: rho_vec
      sll_real64, dimension(:), pointer :: phi_vec
-     sll_real64, dimension(:), pointer :: masse
-     sll_real64, dimension(:), pointer :: stiff
   end type general_coordinate_elliptic_solver_mp
  
   
@@ -203,14 +197,8 @@ contains ! *******************************************************************
     ! ------------------------------------------------------------------
 
 
-
-   SLL_ALLOCATE(es_mp%masse(es_mp%solution_size),ierr)
-   SLL_ALLOCATE(es_mp%stiff(es_mp%solution_size),ierr)
-
    es_mp%rho_vec(:) = 0.0_f64
    es_mp%phi_vec(:) = 0.0_f64
-   es_mp%masse(:)   = 0.0_f64
-   es_mp%stiff(:)   = 0.0_f64
    es_mp%intjac     = 0.0_f64
    ! Knots to define be careful
 
@@ -327,16 +315,8 @@ contains ! *******************************************************************
    max_num_cells_eta1 = lm%num_cells1
    max_num_cells_eta2 = lm%num_cells2
 
-   SLL_ALLOCATE(es_mp%values_splines_eta1(num_patches,max_num_cells_eta1*(max_degspline1+2), max_degspline1+1),ierr)
-   es_mp%values_splines_eta1 = 0.0_f64
-   SLL_ALLOCATE(es_mp%values_splines_eta2(num_patches,max_num_cells_eta2*(max_degspline2+2), max_degspline2+1),ierr)
-   es_mp%values_splines_eta2 = 0.0_f64
    SLL_ALLOCATE(es_mp%values_jacobian(num_patches,max_num_cells_eta1*(max_degspline1+2),max_num_cells_eta2*(max_degspline2+2)),ierr)
    es_mp%values_jacobian = 0.0_f64
-   SLL_ALLOCATE(es_mp%values_splines_gauss1(num_patches,max_num_cells_eta1*(max_degspline1+2), max_degspline2+1),ierr)
-   es_mp%values_splines_gauss1 = 0.0_f64
-   SLL_ALLOCATE(es_mp%values_splines_gauss2(num_patches,max_num_cells_eta2*(max_degspline2+2), max_degspline2+1),ierr)
-   es_mp%values_splines_gauss2 = 0.0_f64
    
    SLL_ALLOCATE(es_mp%tab_index_coeff1(num_patches,max_num_cells_eta1*(max_degspline1+2)),ierr)
    SLL_ALLOCATE(es_mp%tab_index_coeff2(num_patches,max_num_cells_eta2*(max_degspline2+2)),ierr)
@@ -424,15 +404,9 @@ contains ! *******************************************************************
    call sll_delete(es_mp%sll_csr_mat_source)
    SLL_DEALLOCATE(es_mp%rho_vec,ierr)
    SLL_DEALLOCATE(es_mp%phi_vec,ierr)
-   SLL_DEALLOCATE(es_mp%masse,ierr)
-   SLL_DEALLOCATE(es_mp%stiff,ierr)
    SLL_DEALLOCATE(es_mp%knots1_rho,ierr)
    SLL_DEALLOCATE(es_mp%knots2_rho,ierr)
-   SLL_DEALLOCATE(es_mp%values_splines_eta1,ierr)
-   SLL_DEALLOCATE(es_mp%values_splines_eta2,ierr)
    SLL_DEALLOCATE(es_mp%values_jacobian,ierr)
-   SLL_DEALLOCATE(es_mp%values_splines_gauss1,ierr)
-   SLL_DEALLOCATE(es_mp%values_splines_gauss2,ierr)
    SLL_DEALLOCATE(es_mp%tab_index_coeff1,ierr)
    SLL_DEALLOCATE(es_mp%tab_index_coeff2,ierr)
    SLL_DEALLOCATE(es_mp%total_num_splines_loc,ierr)
@@ -486,9 +460,7 @@ contains ! *******************************************************************
    sll_real64, dimension(:,:), allocatable :: K_a22_loc
    sll_real64, dimension(:,:), allocatable :: M_b_vect_loc
    sll_real64, dimension(:,:), allocatable :: S_b1_loc
-   sll_real64, dimension(:,:), allocatable :: S_b2_loc  
-   sll_real64, dimension(:), allocatable :: Masse_loc
-   sll_real64, dimension(:), allocatable :: Stiff_loc
+   sll_real64, dimension(:,:), allocatable :: S_b2_loc 
    sll_real64, dimension(:,:,:,:), pointer :: Source_loc
    sll_int32 :: total_num_splines_loc
    sll_int32 :: ierr
@@ -512,13 +484,9 @@ contains ! *******************************************************************
    SLL_ALLOCATE(S_b1_loc(total_num_splines_loc,total_num_splines_loc),ierr)
    SLL_ALLOCATE(S_b2_loc(total_num_splines_loc,total_num_splines_loc),ierr)
    SLL_ALLOCATE(M_b_vect_loc(total_num_splines_loc,total_num_splines_loc),ierr)
-   SLL_ALLOCATE(Masse_loc(total_num_splines_loc),ierr)
-   SLL_ALLOCATE(Stiff_loc(total_num_splines_loc),ierr)
 
    lm => es_mp%T%get_logical_mesh(0)
    SLL_ALLOCATE(Source_loc(es_mp%T%number_patches,lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
-   Masse_loc(:) = 0.0_f64
-   Stiff_loc(:) = 0.0_f64
    Source_loc(:,:,:,:) = 0.0_f64
 
    
@@ -553,8 +521,6 @@ contains ! *******************************************************************
                  b1_field_vect,&
                  b2_field_vect,&
                  c_field, &
-                 Masse_loc,&
-                 Stiff_loc,&
                  M_c_loc, &
                  K_a11_loc, &
                  K_a12_loc, &
@@ -571,8 +537,6 @@ contains ! *******************************************************************
                  i, &
                  j, &
                  patch,&
-                 Masse_loc,&
-                 Stiff_loc,&
                  M_c_loc, &
                  K_a11_loc, &
                  K_a12_loc, &
@@ -580,9 +544,7 @@ contains ! *******************************************************************
                  K_a22_loc,&
                  M_b_vect_loc, &
                  S_b1_loc, &
-                 S_b2_loc, &
-                 es_mp%masse,&
-                 es_mp%stiff)
+                 S_b2_loc)
             
          end do
       end do
@@ -616,8 +578,6 @@ contains ! *******************************************************************
     SLL_DEALLOCATE_ARRAY(M_b_vect_loc,ierr)
     SLL_DEALLOCATE_ARRAY(S_b1_loc,ierr)
     SLL_DEALLOCATE_ARRAY(S_b2_loc,ierr)
-    SLL_DEALLOCATE_ARRAY(Stiff_loc,ierr) 
-    SLL_DEALLOCATE_ARRAY(Masse_loc,ierr) 
    
     time = sll_time_elapsed_since(t0)
     print*, '#time for factorize_mat_es', time
@@ -776,8 +736,6 @@ contains ! *******************************************************************
        b1_field_vect, &
        b2_field_vect, &
        c_field, &
-       Masse_loc,&
-       Stiff_loc,&
        M_c_loc, &
        K_a11_loc, &
        K_a12_loc, &
@@ -811,8 +769,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(out) :: M_b_vect_loc
     sll_real64, dimension(:,:), intent(out) :: S_b1_loc
     sll_real64, dimension(:,:), intent(out) :: S_b2_loc
-    sll_real64, dimension(:), intent(out) :: Masse_loc
-    sll_real64, dimension(:), intent(out) :: Stiff_loc
 
 !!$    sll_int32 :: bc_left    
 !!$    sll_int32 :: bc_right
@@ -844,8 +800,6 @@ contains ! *******************************************************************
     sll_real64, dimension(es_mp%spline_degree2(patch)+1,es_mp%spline_degree2(patch)+1) :: work2
     sll_real64, dimension(es_mp%spline_degree1(patch)+1,2) :: dbiatx1
     sll_real64, dimension(es_mp%spline_degree2(patch)+1,2) :: dbiatx2
-    sll_real64, dimension(es_mp%spline_degree1(patch)+1,2) :: dbiatx1_rho
-    sll_real64, dimension(es_mp%spline_degree2(patch)+1,2) :: dbiatx2_rho
     sll_real64 :: val_c
     sll_real64 :: val_a11
     sll_real64 :: val_a12
@@ -870,8 +824,6 @@ contains ! *******************************************************************
     sll_int32 :: mflag_x, mflag_y
     sll_int32 :: num_cells2,num_cells1
     
-    Masse_loc(:)      = 0.0_f64
-    Stiff_loc(:)      = 0.0_f64
     M_c_loc(:,:)      = 0.0_f64
     K_a11_loc(:,:)    = 0.0_f64
     K_a12_loc(:,:)    = 0.0_f64
@@ -911,27 +863,9 @@ contains ! *******************************************************************
        
           gtmp2 = gpt2
           local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
-!!$       end if
-       
-!!$       call bsplvd( &
-!!$            es_mp%knots2(patch,:), &
-!!$            es_mp%spline_degree2(patch)+1,&
-!!$            gtmp2,&
-!!$            local_spline_index2,&
-!!$            work2,&
-!!$            dbiatx2,&
-!!$            2)
 
-!!$       call interv(es_mp%knots2_rho,num_cells2 + es_mp%spline_degree2(patch)+ 2, gpt2, left_y, mflag_y )
        call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
-       call bsplvd( &
-            es_mp%knots2(patch,:), &
-            es_mp%spline_degree2(patch)+1,&
-            gpt2,&
-            left_y,&
-            work2,&
-            dbiatx2_rho,&
-            2)
+
 
        call bsplvd( &
             es_mp%knots2(patch,:), &
@@ -943,8 +877,6 @@ contains ! *******************************************************************
             2)
 
        ! we stocke the values of spline to construct the source term
-       es_mp%values_splines_eta2(patch,cell_j + num_cells2*(j-1),:) = dbiatx2(:,1)
-       es_mp%values_splines_gauss2(patch,cell_j + num_cells2*(j-1),:) = dbiatx2_rho(:,1)
        es_mp%tab_index_coeff2(patch,cell_j + num_cells2*(j-1)) = left_y
 
        
@@ -956,33 +888,10 @@ contains ! *******************************************************************
              gtmp1   = gpt1
              local_spline_index1 = es_mp%spline_degree1(patch) + cell_i
              
-!!$          end if
-    
-          
-          
-!!$          call bsplvd(&
-!!$               es_mp%knots1(patch,:),&
-!!$               es_mp%spline_degree1(patch)+1,&
-!!$               gtmp1,&
-!!$               local_spline_index1,&
-!!$               work1,&
-!!$               dbiatx1,&
-!!$               2 )
-
-!!$          call interv ( es_mp%knots1_rho, num_cells1 + es_mp%spline_degree1+ 2, gpt1, &
-!!$               left_x, mflag_x )
-!!$
       
           call interv ( es_mp%knots1(patch,:), size(es_mp%T%transfs(1)%T%knots1), gpt1,&
                left_x, mflag_x )
-          call bsplvd(&
-               es_mp%knots1(patch,:),&
-               es_mp%spline_degree1(patch)+1,&
-               gpt1,&
-               left_x,&
-               work1,&
-               dbiatx1_rho,&
-               2 )
+
           call bsplvd(&
                es_mp%knots1(patch,:),&
                es_mp%spline_degree1(patch)+1,&
@@ -992,8 +901,6 @@ contains ! *******************************************************************
                dbiatx1,&
                2 )
 
-          es_mp%values_splines_eta1(patch,cell_i + num_cells1*(i-1),:) = dbiatx1(:,1)
-          es_mp%values_splines_gauss1(patch,cell_i + num_cells1*(i-1),:) = dbiatx1_rho(:,1)
           es_mp%tab_index_coeff1(patch,cell_i + num_cells1*(i-1)) = left_x
 
           val_c        = c_field%fields(patch)%f%value_at_point(gpt1,gpt2)
@@ -1058,20 +965,6 @@ contains ! *******************************************************************
                 index1  =  jj * ( es_mp%spline_degree1(patch) + 1 ) + ii + 1
                 
                 
-                
-                Masse_loc(index1) = &
-                     Masse_loc(index1) + &
-                     val_jac*wgpt1*wgpt2* &
-                     (dbiatx1(ii+1,1)*dbiatx2(jj+1,1))
-
-                Stiff_loc(index1) = &
-                     Stiff_loc(index1) + &
-                     val_jac*wgpt1*wgpt2* &
-                     (dbiatx1(ii+1,2)*dbiatx2(jj+1,1)+dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
-                
-                
-         
-                
                 do iii = 0,es_mp%spline_degree1(patch)
                    do jjj = 0,es_mp%spline_degree2(patch)
                       
@@ -1080,8 +973,8 @@ contains ! *******************************************************************
                       Source_loc(patch,cell_index,index1, index2) = &
                            Source_loc(patch,cell_index,index1, index2) + &
                            val_jac*wgpt1*wgpt2* &
-                           dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
-                           dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
+                           dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
+                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
                       
                       
                       
@@ -1147,118 +1040,6 @@ contains ! *******************************************************************
   end subroutine build_local_matrices_mp
   
   
-
-  
-!!$  subroutine build_local_matrices_rho_mp( &
-!!$       es_mp, &
-!!$       cell_i, &
-!!$       cell_j, &
-!!$       patch,&
-!!$       rho, &
-!!$       rho_at_gauss, &
-!!$       int_rho,&
-!!$       M_rho_loc)
-!!$
-!!$    class(general_coordinate_elliptic_solver_mp) :: es_mp
-!!$    type(sll_logical_mesh_2d), pointer           :: lm
-!!$    sll_int32, intent(in) :: cell_i
-!!$    sll_int32, intent(in) :: cell_j
-!!$    class(sll_scalar_field_multipatch_2d), intent(in)     :: rho
-!!$    sll_real64, dimension(:,:,:), intent(in)   :: rho_at_gauss
-!!$
-!!$    sll_real64, dimension(1:16), intent(out)   :: M_rho_loc
-!!$    sll_int32 :: bc_left    
-!!$    sll_int32 :: bc_right
-!!$    sll_int32 :: bc_bottom    
-!!$    sll_int32 :: bc_top  
-!!$    sll_int32 :: patch
-!!$    sll_real64 :: delta1
-!!$    sll_real64 :: delta2
-!!$    sll_real64 :: eta1_min
-!!$    sll_real64 :: eta2_min
-!!$    sll_real64 :: eta1
-!!$    sll_real64 :: eta2
-!!$    sll_int32  :: num_cells1,num_cells2
-!!$    sll_real64 :: int_rho
-!!$    sll_int32  :: tmp1
-!!$    sll_int32  :: tmp2
-!!$    sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
-!!$    sll_int32  :: num_pts_g2 ! number of gauss points in second direction
-!!$    sll_int32  :: i,ii!,iii
-!!$    sll_int32  :: j,jj!,jjj
-!!$    sll_real64 :: gpt1
-!!$    sll_real64 :: gpt2
-!!$    sll_real64 :: wgpt1
-!!$    sll_real64 :: wgpt2
-!!$    sll_int32  :: index1
-!!$    sll_real64, dimension(es_mp%spline_degree1(patch)+1,es_mp%spline_degree1(patch)+1) :: work1
-!!$    sll_real64, dimension(es_mp%spline_degree2(patch)+1,es_mp%spline_degree2(patch)+1) :: work2
-!!$    sll_real64, dimension(es_mp%spline_degree1(patch)+1,2) :: dbiatx1
-!!$    sll_real64, dimension(es_mp%spline_degree2(patch)+1,2) :: dbiatx2
-!!$    sll_real64 :: val_f
-!!$    sll_real64 :: val_jac,spline1,spline2
-!!$    
-!!$    M_rho_loc(1:16)  = 0.0_f64
-!!$    dbiatx1(:,:)  = 0.0_f64
-!!$    dbiatx2(:,:)  = 0.0_f64
-!!$    work1(:,:)    = 0.0_f64
-!!$    work2(:,:)    = 0.0_f64
-!!$    lm => es_mp%T%get_logical_mesh(patch-1)
-!!$    ! The supposition is that all fields use the same logical mesh
-!!$    delta1    = lm%delta_eta1
-!!$    delta2    = lm%delta_eta2
-!!$    eta1_min  = lm%eta1_min
-!!$    eta2_min  = lm%eta2_min
-!!$    num_cells1 = lm%num_cells1
-!!$    num_cells2 = lm%num_cells2
-!!$    tmp1      = (es_mp%spline_degree1(patch) + 1)/2
-!!$    tmp2      = (es_mp%spline_degree2(patch) + 1)/2
-!!$    num_pts_g1 = size(es_mp%gauss_pts1,2)
-!!$    num_pts_g2 = size(es_mp%gauss_pts2,2)
-!!$    
-!!$    
-!!$    eta1  = eta1_min + (cell_i-1)*delta1
-!!$    eta2  = eta2_min + (cell_j-1)*delta2
-!!$    
-!!$    print*,' test'
-!!$    do j=1,num_pts_g2
-!!$       ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
-!!$       ! the bottom edge of the cell.
-!!$       gpt2  = eta2  + 0.5_f64*delta2 * ( es_mp%gauss_pts2(patch,1,j) + 1.0_f64 )
-!!$       wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
-!!$
-!!$       do i=1,num_pts_g1
-!!$          ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-!!$          gpt1  = eta1  + 0.5_f64*delta1 * ( es_mp%gauss_pts1(patch,1,i) + 1.0_f64 )
-!!$          wgpt1 = 0.5_f64*delta1*es_mp%gauss_pts1(patch,2,i)
-!!$ 
-!!$   
-!!$          val_f = rho_at_gauss(patch,i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
-!!$          
-!!$          val_jac = &
-!!$               es_mp%values_jacobian(patch,cell_i + num_cells1*(i-1),cell_j + num_cells2*(j-1))
-!!$          
-!!$          ! loop over the splines supported in the cell that are different than
-!!$          ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
-!!$          ! each direction.
-!!$          do ii = 0,es_mp%spline_degree1(patch)
-!!$             do jj = 0,es_mp%spline_degree2(patch)
-!!$                
-!!$                spline1 = es_mp%values_splines_eta1(patch,cell_i + num_cells1*(i-1),ii+1)
-!!$                spline2 = es_mp%values_splines_eta2(patch,cell_j + num_cells2*(j-1),jj+1)
-!!$   
-!!$                index1  =  jj * ( es_mp%spline_degree1(patch) + 1 ) + ii + 1
-!!$
-!!$                M_rho_loc(index1)= M_rho_loc(index1) + &
-!!$                     val_f*val_jac*wgpt1*wgpt2* &
-!!$                     spline1*spline2
-!!$                print*, M_rho_loc(index1)
-!!$             end do
-!!$          end do
-!!$       end do
-!!$    end do
-!!$    
-!!$  end subroutine build_local_matrices_rho_mp
   
   subroutine local_to_global_matrices_mp( &
        es_mp,&
@@ -1266,8 +1047,6 @@ contains ! *******************************************************************
        cell_i, &
        cell_j, &
        patch,&
-       Masse_loc,&
-       Stiff_loc,&
        M_c_loc, &
        K_a11_loc, &
        K_a12_loc, &
@@ -1275,9 +1054,7 @@ contains ! *******************************************************************
        K_a22_loc,&
        M_b_vect_loc, &
        S_b1_loc, &
-       S_b2_loc, &
-       Masse_tot,&
-       Stiff_tot)
+       S_b2_loc)
     
     class(general_coordinate_elliptic_solver_mp)  :: es_mp
     type(sll_logical_mesh_2d), pointer           :: lm
@@ -1293,12 +1070,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: S_b1_loc
     sll_real64, dimension(:,:), intent(in) :: S_b2_loc
     
-    !  Correspond to the full Matrix of linear system 
-    !  It is not necessary to keep it  
-    sll_real64, dimension(:), intent(in) :: Masse_loc
-    sll_real64, dimension(:), intent(in) :: Stiff_loc
-    sll_real64, dimension(:), intent(inout) :: Masse_tot
-    sll_real64, dimension(:), intent(inout) :: Stiff_tot
+  
     sll_int32 :: index1, index2, index3, index4
     sll_int32 :: index_coef1,index_coef2,index
     !sll_int32 :: index_coef1_phi,index_coef2_phi,index_phi
@@ -1329,9 +1101,7 @@ contains ! *******************************************************************
           b          =  mm * ( es_mp%spline_degree1(patch) + 1 ) + i + 1
           li_A       =  es_mp%local_to_global_row(patch,b, cell_index)
           !li_AA= es_mp%local_to_global_spline_indices_test(b, cell_index)
-          
-          Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
-          Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
+         
           
           do nn = 0,es_mp%spline_degree2(patch)
              

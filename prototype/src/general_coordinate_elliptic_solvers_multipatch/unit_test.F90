@@ -211,9 +211,9 @@ program test_general_elliptic_solver_multipatch
            val_b1   = func_zero( x1, x2)
            val_b2   = func_zero( x1, x2)
            val_c    = func_zero( x1, x2)
-           val_rho  = source_term_perdir( x1, x2)
+           val_rho  = -4*36*exp(-36*(x1**2+x2**2))+ (2*36)**2*(x1**2+x2**2)*exp(-36*(x1**2+x2**2))!source_term_perdir( x1, x2)
            val_phi  = 0.0_f64
-           val_phi_exacte = sol_exacte_perdir(x1,x2)
+           val_phi_exacte = exp(-36*(eta1**2+eta2**2))!sol_exacte_perdir(x1,x2)
            call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 
            call a12_field_mat%set_value_at_indices ( i, j, ipatch, val_a12 ) 
            call a21_field_mat%set_value_at_indices ( i, j, ipatch, val_a21 ) 
