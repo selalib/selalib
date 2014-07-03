@@ -14,18 +14,23 @@ IF(PASTIX_FOUND)
      TARGET_LINK_LIBRARIES(fmurge  ${MURGE_LIBRARIES}
                                    ${PASTIX_LIBRARIES}
                                    ${PTSCOTCH_LIBRARIES}
+                                   ${SCOTCH_LIBRARIES}
                                    ${BLAS_LIBRARIES})
 
+     MESSAGE(STATUS "BLAS_LIBRARIES:${BLAS_LIBRARIES}")
      TARGET_LINK_LIBRARIES(fsimple ${PASTIX_LIBRARIES} 
                                    ${PTSCOTCH_LIBRARIES}
+                                   ${SCOTCH_LIBRARIES}
                                    ${BLAS_LIBRARIES})
 
      TARGET_LINK_LIBRARIES(pastix ${PASTIX_LIBRARIES} 
                                   ${PTSCOTCH_LIBRARIES}
+                                  ${SCOTCH_LIBRARIES}
                                   ${BLAS_LIBRARIES})
 
      TARGET_LINK_LIBRARIES(fstep-by-step ${PASTIX_LIBRARIES} 
                                          ${PTSCOTCH_LIBRARIES}
+                                         ${SCOTCH_LIBRARIES}
                                          ${BLAS_LIBRARIES})
 
      ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 )
@@ -34,6 +39,7 @@ IF(PASTIX_FOUND)
                                        ${MURGE_LIBRARIES} 
                                        ${PASTIX_LIBRARIES} 
                                        ${PTSCOTCH_LIBRARIES}
+                                       ${SCOTCH_LIBRARIES}
                                        ${BLAS_LIBRARIES})
 
      IF(UNIX AND NOT APPLE)
