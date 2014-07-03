@@ -7,7 +7,7 @@ program unit_test_fields_multipatch
 
   
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-  type(sll_scalar_field_multipatch_2d), pointer              :: F
+  class(sll_scalar_field_multipatch_2d), pointer              :: F
   type(sll_logical_mesh_2d), pointer                         :: m
   type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
   class(arb_deg_2d_interpolator),pointer:: interpolator
