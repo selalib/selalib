@@ -23,8 +23,8 @@ IF(HDF5_ENABLED)
 
   ADD_LIBRARY (sll_derivative STATIC sll_derivative_2d_oblic.F90)
   TARGET_LINK_LIBRARIES(sll_derivative 
-    sll_fcisl
     sll_advection
+    sll_fcisl
     sll_utilities)
   ADD_EXECUTABLE(test_derivative_2d_oblic unit_test_derivative_2d_oblic.F90)
   TARGET_LINK_LIBRARIES(test_derivative_2d_oblic 
