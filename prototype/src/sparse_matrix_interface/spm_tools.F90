@@ -4,18 +4,24 @@ IMPLICIT NONE
 
 CONTAINS
 ! .............................................
-SUBROUTINE CSC_ADD_TO_MATRIX(api_indices, api_indptr, apr_a, ar_value, ai_A, ai_Aprime, IERROR)
+SUBROUTINE CSC_ADD_TO_MATRIX(&
+     api_indices,&
+     api_indptr,&
+     apr_a,&
+     ar_value,&
+     ai_A,&
+     ai_Aprime,&
+     IERROR)
 IMPLICIT NONE
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indices
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indptr
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(INOUT)  :: apr_a
-REAL(KIND=SPM_COEF_KIND)                          ,      INTENT(IN)  :: ar_value
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(IN)  :: ai_A
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(IN)  :: ai_Aprime
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indices
+INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indptr
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(INOUT)  :: apr_a
+REAL(KIND=SPM_COEF_KIND)                          ,INTENT(IN)  :: ar_value
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(IN)  :: ai_A
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(IN)  :: ai_Aprime
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(OUT) :: IERROR
 ! LOCAL
 INTEGER:: li_i
-INTEGER:: li_j
 INTEGER:: li_k
 PRINT *, 'CSC_ADD_TO_MATRIX: not yet implemented'
 DO li_k = api_indptr ( ai_Aprime ), api_indptr ( ai_Aprime + 1 ) - 1
@@ -31,19 +37,24 @@ IERROR = SPM_SUCCESS
 
 END SUBROUTINE CSC_ADD_TO_MATRIX
 ! .............................................
-SUBROUTINE CSR_ADD_TO_MATRIX(api_indices, api_indptr, apr_a, ar_value, ai_A, ai_Aprime, IERROR)
+SUBROUTINE CSR_ADD_TO_MATRIX(&
+     api_indices,&
+     api_indptr,&
+     apr_a,&
+     ar_value,&
+     ai_A,&
+     ai_Aprime,&
+     IERROR)
 IMPLICIT NONE
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indices
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indptr
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(INOUT)  :: apr_a
-REAL(KIND=SPM_COEF_KIND)                          ,      INTENT(IN)  :: ar_value
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(IN)  :: ai_A
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(IN)  :: ai_Aprime
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indices
+INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indptr
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(INOUT)  :: apr_a
+REAL(KIND=SPM_COEF_KIND)                          ,INTENT(IN)  :: ar_value
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(IN)  :: ai_A
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(IN)  :: ai_Aprime
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(OUT) :: IERROR
 ! LOCAL
-INTEGER:: li_i
-INTEGER:: li_j
-INTEGER:: li_k
+INTEGER:: li_k,li_j
 
 ! THE CURRENT LINE IS api_indptr(ai_A)
 DO li_k = api_indptr ( ai_A ), api_indptr ( ai_A + 1 ) - 1
@@ -59,15 +70,22 @@ IERROR = SPM_SUCCESS
 
 END SUBROUTINE CSR_ADD_TO_MATRIX
 ! .............................................
-SUBROUTINE IJV_ADD_TO_MATRIX(api_i, api_j, apr_v, ar_value, ai_A, ai_Aprime, IERROR)
+SUBROUTINE IJV_ADD_TO_MATRIX(&
+     api_i,&
+     api_j,&
+     apr_v,&
+     ar_value,&
+     ai_A,&
+     ai_Aprime,&
+     IERROR)
 IMPLICIT NONE
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(INOUT)  :: api_i
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(INOUT)  :: api_j
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(INOUT)  :: apr_v
-REAL(KIND=SPM_COEF_KIND)                          ,      INTENT(IN)     :: ar_value
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(IN)     :: ai_A
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(IN)     :: ai_Aprime
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT)    :: IERROR
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(INOUT)  :: api_i
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(INOUT)  :: api_j
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(INOUT)  :: apr_v
+REAL(KIND=SPM_COEF_KIND)                          ,INTENT(IN)     :: ar_value
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(IN)     :: ai_A
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(IN)     :: ai_Aprime
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(OUT)    :: IERROR
 ! LOCAL
 INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: lpi_i
 INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER :: lpi_j
@@ -107,16 +125,15 @@ END SUBROUTINE IJV_ADD_TO_MATRIX
 SUBROUTINE CSC_GEMV(ai_transa, ai_nC, apr_a, api_indices, api_indptr, apr_x, apr_y, IERROR)
 ! implments y := A*x or y := A'*x
 IMPLICIT NONE
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_transa
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_nC
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(IN)     :: apr_a
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indices
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indptr
+INTEGER(KIND=SPM_INTS_KIND),   INTENT(IN)     :: ai_transa
+INTEGER(KIND=SPM_INTS_KIND),   INTENT(IN)     :: ai_nC
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(IN)     :: apr_a
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indices
+INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indptr
 REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(IN)     :: apr_x
 REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(INOUT)  :: apr_y
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
-!local var
-INTEGER :: li_j, li_k_1, li_k_2
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(OUT) :: IERROR
+
 
 !IF (ai_transa==1) THEN
 !PRINT *, 'CSC_GEMV: not yet implemented'
@@ -136,20 +153,26 @@ PRINT *, 'CSC_GEMV: not yet implemented'
 IERROR = SPM_SUCCESS
 END SUBROUTINE CSC_GEMV
 ! .............................................
-SUBROUTINE CSR_GEMV(ai_transa, ai_nR, apr_a, api_indices, api_indptr, apr_x, apr_y, IERROR)
+SUBROUTINE CSR_GEMV(&
+     ai_transa,&
+     ai_nR,&
+     apr_a,&
+     api_indices,&
+     api_indptr,&
+     apr_x,&
+     apr_y,&
+     IERROR)
 ! implments y := A*x or y := A'*x
 IMPLICIT NONE
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_transa
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_nR
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(IN)     :: apr_a
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indices
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indptr
+INTEGER(KIND=SPM_INTS_KIND),                       INTENT(IN)     :: ai_transa
+INTEGER(KIND=SPM_INTS_KIND),                       INTENT(IN)     :: ai_nR
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(IN)     :: apr_a
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indices
+INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,INTENT(IN)     :: api_indptr
 REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(IN)     :: apr_x
 REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(INOUT)  :: apr_y
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
-!local var
-INTEGER :: li_i, li_k_1, li_k_2
-INTEGER, DIMENSION(3) :: lpi_param
+INTEGER(KIND=SPM_INTS_KIND)                       ,INTENT(OUT) :: IERROR
+INTEGER(KIND=SPM_INTS_KIND) :: li_i,li_k_1,li_k_2
 
 IF (ai_transa==1) THEN
 PRINT *, 'CSR_GEMV: not yet implemented'
@@ -197,18 +220,16 @@ SUBROUTINE CSC_MV(ai_transa, ai_nR, ai_nC, ar_alpha, apr_a, api_indices, api_ind
 ! or y := alpha*A'*x + beta*y,
 IMPLICIT NONE
 INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_transa
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_nR
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_nC
-REAL(KIND=SPM_COEF_KIND)   ,                             INTENT(IN)     :: ar_alpha
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(IN)     :: apr_a
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indices
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indptr
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(IN)     :: apr_x
-REAL(KIND=SPM_COEF_KIND)   ,                             INTENT(IN)     :: ar_beta
+INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN):: ai_nR
+INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN):: ai_nC
+REAL(KIND=SPM_COEF_KIND)   ,                             INTENT(IN):: ar_alpha
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(IN):: apr_a
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(IN):: api_indices
+INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,INTENT(IN):: api_indptr
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(IN):: apr_x
+REAL(KIND=SPM_COEF_KIND)   ,                    INTENT(IN)     :: ar_beta
 REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(INOUT)  :: apr_y
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
-!local var
-INTEGER :: li_i, li_k_1, li_k_2
+INTEGER(KIND=SPM_INTS_KIND)              ,      INTENT(OUT) :: IERROR
 
 IF (ai_transa==1) THEN
 PRINT *, 'CSC_MV: not yet implemented'
@@ -232,17 +253,17 @@ SUBROUTINE CSR_MV(ai_transa, ai_nR, ai_nC, ar_alpha, apr_a, api_indices, api_ind
 ! implments y := alpha*A*x + beta*y
 ! or y := alpha*A'*x + beta*y,
 IMPLICIT NONE
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_transa
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_nR
-INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN)     :: ai_nC
-REAL(KIND=SPM_COEF_KIND)   ,                             INTENT(IN)     :: ar_alpha
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(IN)     :: apr_a
-INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indices
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,      INTENT(IN)     :: api_indptr
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(IN)     :: apr_x
-REAL(KIND=SPM_COEF_KIND)   ,                             INTENT(IN)     :: ar_beta
-REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),      INTENT(INOUT)  :: apr_y
-INTEGER(KIND=SPM_INTS_KIND)                       ,      INTENT(OUT) :: IERROR
+INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN):: ai_transa
+INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN):: ai_nR
+INTEGER(KIND=SPM_INTS_KIND),                             INTENT(IN):: ai_nC
+REAL(KIND=SPM_COEF_KIND)   ,                             INTENT(IN):: ar_alpha
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,INTENT(IN):: apr_a
+INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER,INTENT(IN):: api_indices
+INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER,INTENT(IN):: api_indptr
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),INTENT(IN) :: apr_x
+REAL(KIND=SPM_COEF_KIND)   ,              INTENT(IN)     :: ar_beta
+REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:),INTENT(INOUT)  :: apr_y
+INTEGER(KIND=SPM_INTS_KIND)        ,      INTENT(OUT) :: IERROR
 !local var
 INTEGER :: li_i, li_k_1, li_k_2
 

@@ -24,7 +24,8 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
    ADD_EXECUTABLE(test_layout_output unit_test_output.F90)
    TARGET_LINK_LIBRARIES(test_layout_output sll_remap sll_file_io_parallel)
 
+   ADD_EXECUTABLE(test_io_parallel unit_test_parallel.F90)
+   TARGET_LINK_LIBRARIES(test_io_parallel sll_file_io_parallel sll_remap)
+
 ENDIF()
-
-
 

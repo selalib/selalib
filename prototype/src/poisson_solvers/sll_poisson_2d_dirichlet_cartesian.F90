@@ -60,7 +60,7 @@ contains
     sll_real64                       :: Ly           !< length y
     !sll_real64, dimension(:,:)          :: vkgs
     sll_int32                        :: nn,n,ch
-    sll_int32 :: ii,jj,i,j,p,ier,k,l
+    sll_int32 :: ii,jj,i,j,p,k,l
     sll_int32     :: ierr
     sll_real64    ::v
     SLL_ALLOCATE(plan, ierr)
@@ -162,11 +162,9 @@ contains
     sll_real64, dimension(:,:)        :: rho      !< charge density
     sll_real64, dimension(:,:)        :: phi      !< electric potential
     sll_int32                         :: ncx      !< global size
-    sll_int32                         :: ncy      !< global size
-
-    sll_int32                         :: i, j
-    sll_int32                         :: ii, jj,p,k,l
-    sll_real64                        :: kx, ky,void
+    sll_int32                         :: i
+    sll_int32                         :: ii, jj
+    sll_real64                        :: void
     sll_int32                         :: nn,n,ier
     sll_int32                         :: ifac,isol,mp,nsym
     !sll_real64, dimension(:,:)          :: vkgs

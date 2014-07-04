@@ -50,7 +50,7 @@ module sll_fdistribu4d_DK
     sll_real64, dimension(:), intent(in)    :: r_grid
     sll_real64, dimension(:), intent(inout) :: n0_1d
 
-    sll_int32  :: ierr, ir, Nr
+    sll_int32  :: ir, Nr
     sll_real64 :: dr, Lr
     sll_real64 :: etai, etai_mid
     sll_real64 :: tmp
@@ -165,7 +165,7 @@ module sll_fdistribu4d_DK
     sll_real64, dimension(:), intent(in)    :: r_grid
     sll_real64, dimension(:), intent(inout) :: T_1d
     
-    sll_int32  :: ierr, ir, Nr
+    sll_int32  ::  ir, Nr
     sll_real64 :: dr, Lr
     sll_real64 :: etai, etai_mid
     sll_real64 :: tmp
