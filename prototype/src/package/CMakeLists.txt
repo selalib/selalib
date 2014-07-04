@@ -152,6 +152,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
+    ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
+    ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
+
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
  )
 
@@ -233,6 +237,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
+       ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
  )
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
