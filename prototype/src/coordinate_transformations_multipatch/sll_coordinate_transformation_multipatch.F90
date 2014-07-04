@@ -688,7 +688,7 @@ contains
     
     num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
          (mp%transfs(patch+1)%T%spline_deg2 +1)
-    SLL_ASSERT((splines_local >= 1) .and. (splines_local < num_spline_loc_max))
+    SLL_ASSERT((splines_local >= 1) .and. (splines_local <= num_spline_loc_max))
     
     num_cell = cell_i + (cell_j-1)*lm%num_cells1
 
