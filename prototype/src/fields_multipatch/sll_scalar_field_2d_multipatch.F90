@@ -158,7 +158,11 @@ contains   ! *****************************************************************
     print *, 'proceeding to create the patches...'
     do i=0, num_patches-1
        ! create the patch-dedicated interpolator.
-       lm=>fmp%transf%get_logical_mesh(i)
+       ! The following 'fix' is just designed to support gfortran 4.6.3, once
+       ! this is not an issue, this should be changed when it is decided not to
+       ! support this compiler anymore.
+       !       lm=>fmp%transf%get_logical_mesh(i)
+       lm => fmp%transf%transfs(i+1)%t%mesh
        print *, 'extracted logical mesh from patch ', i
        !------------------------------------------------------------------
        !                      WARNING!!!!!!!!
@@ -271,7 +275,10 @@ contains   ! *****************************************************************
 #define NUM_DERIVS 1
 
     do i=1,num_patches
-       lm => fmp%transf%get_logical_mesh(i-1)
+       ! Get rid of the following fix once it is concluded that gfortran 4.6
+       ! should not be supported.
+       !       lm => fmp%transf%get_logical_mesh(i-1)
+       lm => fmp%transf%transfs(i)%t%mesh
        num_pts1 = lm%num_cells1 + 1
        num_pts2 = lm%num_cells2 + 1
        SLL_ALLOCATE(fmp%buffers0(i)%array(num_pts1,NUM_DERIVS),ierr)
@@ -364,7 +371,10 @@ contains   ! *****************************************************************
     SLL_ALLOCATE(field%patch_data(num_patches),ierr)
 
     do i=0,num_patches-1
-       lm => field%transf%get_logical_mesh(i)
+       ! get rid of the following 'fix'whenever gfortran 4.6 is not supported
+       ! by Selalib
+       !       lm => field%transf%get_logical_mesh(i)
+       lm => field%transf%transfs(i+1)%t%mesh
        numpts1 = lm%num_cells1+1
        numpts2 = lm%num_cells2+1
        SLL_ALLOCATE(field%patch_data(i+1)%array(numpts1,numpts2),ierr)
@@ -391,7 +401,10 @@ contains   ! *****************************************************************
     sll_int32                                           :: numpts2
 
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    lm => mp%transf%get_logical_mesh(patch)
+    ! Get rid of the following 'fix' whenever it is decided that gfortran 4.6
+    ! is not supported.
+    !    lm => mp%transf%get_logical_mesh(patch)
+    lm => mp%transf%transfs(patch+1)%t%mesh
     numpts1 = lm%num_cells1+1
     numpts2 = lm%num_cells2+1
 
@@ -446,7 +459,10 @@ contains   ! *****************************************************************
     num_patches = fmp%num_patches
 
     do ip=1,num_patches
-       m => fmp%transf%get_logical_mesh(ip-1)
+       ! Please get rid of this awful 'fix' whenever it is decided that 
+       ! gfortran 4.6 should not be supported by Selalib
+       !       m => fmp%transf%get_logical_mesh(ip-1)
+       m => fmp%transf%transfs(ip)%t%mesh
        num_pts1 = m%num_cells1 + 1
        num_pts2 = m%num_cells2 + 1
        rdelta1  = 1.0_f64/m%delta_eta1
