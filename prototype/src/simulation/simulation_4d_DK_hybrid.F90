@@ -324,7 +324,7 @@ contains
     sll_real64 :: theta_min, Ltheta, dtheta
     sll_real64 :: r_peak, n0_rmin
     sll_real64 :: inv_Ln, inv_LTi, inv_LTe
-    sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
+    sll_real64 :: Ti_rmin, Ti_scal
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
 

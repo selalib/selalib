@@ -175,7 +175,6 @@ subroutine initialize_vp4d( &
  procedure(sll_scalar_initializer_4d)                  :: init_func
  sll_real64, dimension(:), target                      :: params
  sll_real64 :: tmax
- sll_int32 :: ierr
 !!$   sll_real64,dimension(:),pointer :: vx_mil
 !!$   sll_real64,dimension(:),pointer :: vy_mil
 !!$   sll_real64,dimension(:),pointer :: x_mil
@@ -203,11 +202,6 @@ end subroutine initialize_vp4d
 ! directly, but this should be cleaned up.
 subroutine run_vp_cart(sim)
  class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
- logical :: exist
-  type(sll_time_mark)  :: t0,t1
- sll_int32  :: file_id_1
- sll_int32  :: file_id_2
- sll_int32  :: file_id_3
  sll_int32  :: file_id_4
  sll_int32  :: loc_sz_v1
  sll_int32  :: loc_sz_v2
@@ -216,54 +210,37 @@ subroutine run_vp_cart(sim)
  sll_int32  :: i
  sll_int32  :: j
  sll_int32  :: k
- sll_int32  :: l
  sll_int32 :: count1, count2, count3, count4
- sll_real64 :: vmin,E2norm_ex
- sll_real64 :: vmax,time,time1
- sll_real64 :: dv
  sll_int32  :: ierr
  sll_int32  :: itime
- sll_int32  :: istat
  sll_int32  :: ic
- sll_int32  :: jc
- sll_real64 :: df,x
- sll_real64 ::erreurL2
- sll_real64 ::erreurL2_G
- sll_real64,dimension(:),pointer :: node,xmil 
+ sll_int32  :: jc 
  sll_real64,dimension(:,:),allocatable :: plotf2d_c1
  sll_real64,dimension(:,:),allocatable :: plotf2d_c2
  sll_real64,dimension(:,:),allocatable :: plotrho_split
- sll_real64,dimension(:,:),allocatable :: plotphi2d
  sll_real64,dimension(:,:),allocatable :: f_x_exact,f_vx_exact
  sll_real64,dimension(:,:),allocatable :: f_y_exact,f_vy_exact
- sll_real64,dimension(:,:),allocatable :: f_x_exact2,f_x_num
  sll_real64,dimension(:),pointer :: ww,w1
  sll_real64,dimension(:,:),pointer :: energ
  sll_real64,dimension(:),pointer :: vx_mil
  sll_real64,dimension(:),pointer :: vy_mil
  sll_real64,dimension(:),pointer :: x_mil
  sll_real64,dimension(:),pointer :: y_mil
- sll_real64,dimension(:,:),allocatable :: err
  sll_int32 :: ix
  sll_int32 :: iy
  sll_int32 :: ivx
  sll_int32 :: ivy
  sll_int32 :: ii,jj,mm
  sll_real64 :: t,v1,v2
- sll_real64 :: xref, yref,vxref,phi1
- sll_real64,dimension(2,2) :: jacob,invjacob
- sll_int32 :: iploc,ib1
  sll_int32,dimension(4)  :: global_indices
  sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
  sll_real64 :: det
  sll_real64 :: deltav,emax
  sll_real64 :: x1, x2,Ex,Ey
- sll_int32 :: icL,icR,jcL,jcR
+ sll_int32 :: icL,icR
 #define BUFFER_SIZE 2
  sll_real64, dimension (BUFFER_SIZE) :: buffer
  sll_real64, dimension (BUFFER_SIZE) :: buffer_result
- sll_real64, dimension (BUFFER_SIZE) :: num_particles_local
- sll_real64, dimension (BUFFER_SIZE) :: num_particles_global
  sll_int32 :: buffer_counter
  sim%world_size = sll_get_collective_size(sll_world_collective)  
  sim%my_rank    = sll_get_collective_rank(sll_world_collective)  
@@ -2422,7 +2399,6 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     sll_real64,dimension(sim%np_v1*sim%np_v2),intent(out) :: source
     !sll_real64,dimension(:,:),allocatable :: source1,source2
     sll_real64,dimension(sim%np_v1*sim%np_v2) ::  source1,source2
-    sll_int32 :: ierr,i
 
 !!$    SLL_ALLOCATE(source1(sim%np_v1,sim%np_v2),ierr)
 !!$    SLL_ALLOCATE(source2(sim%np_v1,sim%np_v2),ierr)
@@ -2534,7 +2510,6 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: flux1,flux2
     sll_real64,dimension(sim%np_v1*sim%np_v2) :: wm
-    sll_real64,dimension(sim%np_v1*sim%np_v2) :: temp
    ! sll_real64 :: time
 
     sim%test=int(sim%params(8),i32)
@@ -2560,7 +2535,6 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
   ! time derivative of f
   subroutine dtf(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim 
-  type(sll_time_mark)  :: t0,t2  
     sll_int32 :: i,j,k,beg
     sll_int32 :: count1,count2,count3,count4
     sll_int32  :: loc_sz_v1
@@ -2570,7 +2544,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
     sll_int32  :: ierr,ifac,isol,nsym,mp
     sll_real64 :: void,Ex,Ey,vn(2)
     sll_int32 :: ic,jc,icL,icR,jcL,jcR
-    sll_real64 :: x1,x2,time,time2
+    sll_real64 :: x1,x2
     sll_real64,dimension(1:2,1:2) :: jac_m,inv_jac
     sll_int32,dimension(4)  :: global_indices
 
@@ -3041,10 +3015,7 @@ plotf2d_c1(i,j) = sim%fn_v1v2(j,1,i,1)
 
   subroutine euler(sim)
     class(sll_simulation_4d_vp_eulerian_cartesian_finite_volume), intent(inout) :: sim
-  type(sll_time_mark)  :: t0 
-    sll_int32 :: jc
     sll_int32  :: loc_sz_x2,loc_sz_x1
-    sll_real64 :: time
     call compute_local_sizes_2d( sim%phi_seq_x1_layout, loc_sz_x1, loc_sz_x2)
     ! mpi communications
     !write(*,*) 'sim%dtfn_v1v2= ', sim%dtfn_v1v2

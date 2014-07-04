@@ -6,7 +6,6 @@ program hermite_test
   use sll_constants
   implicit none
   
-  sll_int32 :: N
   
 
   print *,'#hello'

@@ -13,7 +13,7 @@ module sll_lobatto_poisson
    private
    
    type, public :: lobatto_poisson_solver
-      class(sll_coordinate_transformation_2d_analytic),pointer :: tau
+      class(sll_coordinate_transformation_2d_base),pointer :: tau
       sll_int32  :: order
    end type lobatto_poisson_solver
    
@@ -36,7 +36,7 @@ contains
 subroutine initialize_lobatto_poisson(this, tau, order)
 
    type(lobatto_poisson_solver) :: this
-   class(sll_coordinate_transformation_2d_analytic),pointer :: tau
+   class(sll_coordinate_transformation_2d_base),pointer :: tau
    sll_int32, optional :: order
    sll_int32 :: nx0
    sll_int32 :: ny0
