@@ -37,7 +37,6 @@ REAL(KIND=SPM_COEF_KIND) :: lr_alpha
 LOGICAL  :: ll_continue
 INTEGER(KIND=SPM_INTS_KIND)  :: li_iter
 INTEGER(KIND=SPM_INTS_KIND)  :: li_err
-INTEGER(KIND=SPM_INTS_KIND)  :: li_flag
 
 apr_err  = 0.0
 ai_niter = 0

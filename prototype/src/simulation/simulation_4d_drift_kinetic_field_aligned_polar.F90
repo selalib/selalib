@@ -1098,7 +1098,6 @@ contains
     sll_int32 :: nc_x2
     sll_int32 :: nc_x3
     sll_int32 :: nc_x4
-    sll_int32 :: i1
     !sll_int32 :: i2
     !sll_int32 :: i3
     !sll_int32 :: i4
@@ -1202,7 +1201,7 @@ contains
           call advection_x3( sim, 0.5_f64*dt )
           call advection_x4( sim, 0.5_f64*dt )
           call advection_x1x2( sim, 0.5_f64*dt )
-	      call compute_rho_dk(sim)  
+          call compute_rho_dk(sim)  
           call solve_quasi_neutral_parx1( sim )
           call compute_field_dk_parx1( sim )          
           !correction
@@ -1220,7 +1219,7 @@ contains
           call advection_x1x2( sim, 0.5_f64*dt )
           call advection_x4( sim, 0.25_f64*dt )
           call advection_x3( sim, 0.25_f64*dt )
-	      call compute_rho_dk(sim)  
+          call compute_rho_dk(sim)  
           call solve_quasi_neutral_parx1( sim )
           call compute_field_dk_parx1( sim )          
           !correction
@@ -2150,12 +2149,6 @@ contains
     sll_int32 :: power2_x3
     sll_int32 :: k_min
     sll_int32 :: nproc3d_x1_parx1
-    sll_int32 :: nproc3d_x2_parx1
-    sll_int32 :: nproc3d_x3_parx1
-    sll_int32 :: nproc3d_x1_parx3
-    sll_int32 :: nproc3d_x2_parx3
-    sll_int32 :: nproc3d_x3_parx3
-    sll_int32 :: i
     
 
 

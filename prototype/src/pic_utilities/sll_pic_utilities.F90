@@ -29,7 +29,6 @@ contains
     type(sll_charge_accumulator_2d), pointer     :: q_accum
     type(sll_particle_2d), dimension(:), pointer :: p
     sll_int64  :: i
-    sll_int32  :: num_cells
     sll_int64  :: num_particles
     sll_real64 :: tmp1
     sll_real64 :: tmp2
@@ -48,7 +47,6 @@ contains
     type(sll_charge_accumulator_2d_CS), pointer     :: q_accum
     type(sll_particle_2d), dimension(:), pointer :: p
     sll_int64  :: i
-    sll_int32  :: num_cells
     sll_int64  :: num_particles
     sll_real64 :: tmp(1:4,1:2), temp
 

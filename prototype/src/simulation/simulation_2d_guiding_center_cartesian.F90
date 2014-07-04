@@ -108,13 +108,8 @@ contains
     type(sll_simulation_2d_guiding_center_cartesian), pointer :: sim    
     character(len=*), intent(in), optional :: filename
     sll_int32 :: ierr
-    
     SLL_ALLOCATE(sim,ierr)
-    
-    call initialize_guiding_center_2d_cartesian(sim,filename)
-    
-  
-  
+    call initialize_guiding_center_2d_cartesian(sim,filename)  
   end function new_guiding_center_2d_cartesian
   
   subroutine initialize_guiding_center_2d_cartesian(sim, filename)

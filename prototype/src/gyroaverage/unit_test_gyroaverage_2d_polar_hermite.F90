@@ -66,10 +66,10 @@ implicit none
     larmor_rad, &
     hermite_case)
 
-    do i = 1,10
-  call gyroaverage%compute_gyroaverage( larmor_rad, f)
-    print *,minval(f),maxval(f)
-	enddo
+  do i = 1,10
+     call gyroaverage%compute_gyroaverage( larmor_rad, f)
+     print *,minval(f),maxval(f)
+  enddo
 
 
 

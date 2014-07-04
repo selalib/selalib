@@ -419,8 +419,6 @@ contains
     sll_real64 :: delta2
     sll_real64 :: delta3
     sll_real64 :: delta4
-    sll_real64 :: alpha1
-    sll_real64 :: alpha2
     sll_real64 :: alpha3
     sll_real64 :: alpha4
     sll_int32  :: itemp
@@ -434,8 +432,6 @@ contains
     sll_real64 :: ey
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: eta3
-    sll_real64 :: eta4
     sll_real64 :: x
     sll_real64 :: y
     sll_real64 :: eta1_min
@@ -446,13 +442,8 @@ contains
     sll_real64 :: eta2_max
     sll_real64 :: eta3_max
     sll_real64 :: eta4_max
-    sll_real64 :: eta1_new
-    sll_real64 :: eta2_new
-    sll_real64 :: diff
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_real64, dimension(1:2,1:2) :: jac_m
-    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
-    sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE sim%number_diags
@@ -460,14 +451,11 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_energy_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
-    sll_real64 :: tmp,numpart
-    sll_real64, dimension(1) :: tmp1
+    sll_real64 :: numpart
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
     sll_int32 :: num_particles_file_id
     sll_int32 :: global_indices(4)
-    sll_int32 :: iplot
-    character(len=4) :: cplot
     class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
@@ -483,17 +471,12 @@ contains
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
     sll_real64, dimension(:,:), pointer :: phi_values
-    sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
-    sll_int32 :: droite_test_pente
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
     ! time variables
-    type(sll_time_mark)  :: t0 
-    type(sll_time_mark)  :: t1
-    sll_real64 :: time 
     sll_int32 :: size_diag
     
     
@@ -1475,10 +1458,10 @@ contains
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
     sll_int32 :: gi, gj, gk, gl
-    sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha1, alpha2
+    sll_real64,dimension(2,2) :: inv_j
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32 :: i, j, k, l
 
@@ -1621,13 +1604,12 @@ contains
   subroutine advection_x3(sim,phi,deltat,efield_energy_total)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
-    sll_int32 :: gi, gj, gk, gl
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha3
-    sll_real64 :: eta1, eta2, eta3, eta4
-    sll_int32  :: i, j, k, l
+    sll_real64 :: eta1, eta2
+    sll_int32  :: i, j, l
     sll_real64, intent(out) :: efield_energy_total
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
@@ -1690,13 +1672,12 @@ contains
   subroutine advection_x4(sim,phi,deltat,efield_energy_total)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
-    sll_int32 :: gi, gj, gk, gl
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha4
-    sll_real64 :: eta1, eta2, eta3, eta4
-    sll_int32  :: i, j, k, l
+    sll_real64 :: eta1, eta2
+    sll_int32  :: i, j, k
     sll_real64, intent(out) :: efield_energy_total
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
@@ -1936,7 +1917,6 @@ contains
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
     sll_int32 :: size_i, size_j
-    sll_int32 :: i,j
     sll_int32 :: counter
     sll_int32 :: rank
 
@@ -1960,7 +1940,6 @@ contains
     sll_real64, dimension(:),  intent(out) :: buffer
     sll_int32 :: myrank
     sll_int32 :: data_size
-    sll_int32 :: send_size
     type(sll_collective_t), pointer :: col
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
@@ -2020,7 +1999,6 @@ contains
     sll_int32 :: box
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
-    sll_int32 :: size_i, size_j
     sll_int32 :: pos            ! position in buffer
     col => get_layout_collective( layout )
     col_sz = sll_get_collective_size( col )

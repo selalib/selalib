@@ -183,8 +183,6 @@ contains
     sll_real64 :: delta2
     sll_real64 :: delta3
     sll_real64 :: delta4
-    sll_real64 :: alpha1
-    sll_real64 :: alpha2
     sll_real64 :: alpha3
     sll_real64 :: alpha4
     sll_int32  :: itemp
@@ -198,8 +196,6 @@ contains
     sll_real64 :: ey
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: eta3
-    sll_real64 :: eta4
     sll_real64 :: eta1_min
     sll_real64 :: eta2_min
     sll_real64 :: eta3_min
@@ -208,13 +204,8 @@ contains
     sll_real64 :: eta2_max
     sll_real64 :: eta3_max
     sll_real64 :: eta4_max
-    sll_real64 :: eta1_new
-    sll_real64 :: eta2_new
-    sll_real64 :: diff
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_real64, dimension(1:2,1:2) :: jac_m
-    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
-    sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE 10
@@ -222,14 +213,10 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
-    sll_real64 :: tmp
-    sll_real64, dimension(1) :: tmp1
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
     sll_int32 :: num_particles_file_id
     sll_int32 :: global_indices(4)
-    sll_int32 :: iplot
-    character(len=4) :: cplot
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
