@@ -20,15 +20,7 @@ program test_poisson_2d_dirichlet_cartesian
   sll_real64, dimension(:,:), allocatable :: phi
   sll_int32                               :: i, j
   sll_real64                              :: average_err
-  sll_int32, dimension(1:2)               :: global
-  sll_int32                               :: gi, gj
   sll_int32                               :: myrank
-  sll_int64                               :: colsz ! collective size
-  sll_int32                               :: nprocx, nprocy
-  sll_int32                               :: e
-  sll_real32                              :: ok 
-  sll_real32, dimension(1)                :: prod4test
-  sll_int32                               :: offset(2)
 
 
   ! Number of cells is equal to number of points in this case

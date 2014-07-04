@@ -33,9 +33,9 @@ contains
     sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
     sll_real64, dimension(:), pointer :: apr_tx !  ai_nx + ai_kx 
     sll_real64, dimension(:), pointer :: apr_ty !  ai_ny + ai_ky	
-    sll_real64, dimension(:,:),pointer :: apr_Bcoef!( ai_nx,ai_ny)			
+    sll_real64, dimension(:,:),pointer :: apr_Bcoef!( ai_nx,ai_ny)
     ! LOCAL VARIABLES
-    sll_int32  :: li_i, li_j, li_mflag, li_lefty
+    sll_int32  :: li_j, li_mflag, li_lefty
     sll_real64, dimension(:),pointer :: lpr_coef ! ai_ky
     sll_real64, dimension(:),pointer :: tmp_tab
     sll_real64, dimension(:),pointer :: tmp_ty
@@ -105,7 +105,7 @@ contains
     sll_real64, dimension ( : ),pointer :: apr_ty ! ai_ny + ai_ky
     sll_real64, dimension ( : , : ),pointer :: apr_Bcoef !(ai_nx,ai_ny)
     ! LOCAL VARIABLES
-    sll_int32  :: li_i, li_j, li_mflag, li_lefty
+    sll_int32  :: li_j, li_mflag, li_lefty
     sll_real64, dimension ( :),pointer :: lpr_coef ! ai_ky
     sll_real64, dimension ( :),pointer :: tmp_coef,tmp_ty
     sll_int32:: ierr
@@ -405,7 +405,7 @@ contains
     ! INPUT
     sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
     sll_real64, dimension (:),pointer :: apr_taux !!ai_nx
-    sll_real64, dimension (:),pointer :: apr_tauy	!! ai_ny	
+    sll_real64, dimension (:),pointer :: apr_tauy !! ai_ny	
     sll_real64, dimension (:,:),pointer :: apr_g    ! ai_nx,ai_ny	
     ! OUTPUT
     sll_real64, dimension (:,:),pointer :: apr_Bcoef !ai_nx , ai_ny 
@@ -419,12 +419,9 @@ contains
     sll_real64, dimension (( 2*ai_ky-1) * ai_ny ) :: lpr_work32
     sll_real64, dimension ( ai_ny         ) :: lpr_work4
     sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
-    sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_real64, dimension ( (ai_ny-ai_ky)*(2*ai_ky+3)+5*ai_ky+3 ) :: scrtch1
-    sll_real64, dimension ( ai_nx + ai_kx ) :: t 
     sll_real64, dimension ( : ),pointer :: apr_ty_bis
-    sll_int32  :: li_i, li_j, li_iflag,iflag,iflag1
-    sll_int32 :: o,ierr
+    sll_int32  :: li_i, li_j, li_iflag
+    sll_int32 :: ierr
     
     SLL_ALLOCATE(apr_ty_bis( ai_ny),ierr)
     SLL_ALLOCATE(lpr_work5(ai_ny , ai_nx ),ierr)
@@ -460,7 +457,7 @@ contains
      end do
      !  *** construct b-coefficients of interpolant
      !
-     apr_ty = 0.0_8		
+     apr_ty = 0.0_f64
      
      if ( mod(ai_ky,2) == 0 ) then
         do li_i = ai_ky + 1, ai_ny
@@ -540,9 +537,9 @@ contains
      sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
      sll_int32  :: ai_nx_der,ai_ny_der
      sll_real64, dimension(:),pointer :: apr_taux !!ai_nx
-     sll_real64, dimension(:),pointer :: apr_tauy	!! ai_ny
+     sll_real64, dimension(:),pointer :: apr_tauy !! ai_ny
      sll_int32,  dimension(:),pointer :: apr_taux_der !!ai_nx_der
-     sll_int32,  dimension(:),pointer :: apr_tauy_der	!!ai_ny_der
+     sll_int32,  dimension(:),pointer :: apr_tauy_der !!ai_ny_der
      sll_real64, dimension(:,:),pointer :: apr_g    ! ai_nx,ai_ny
      sll_real64, dimension(:,:),pointer :: apr_g_der1 ! ai_nx_der,ai_ny
      sll_real64, dimension(:,:),pointer :: apr_g_der2 !ai_ny_der,ai_nx + ai_nx_der
@@ -557,13 +554,9 @@ contains
     sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work31
     sll_real64, dimension (( 2*ai_ky-1) * (ai_ny+ai_ny_der) ) :: lpr_work32
     sll_real64, dimension ( ai_ny +ai_ny_der) :: lpr_work4
-    sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
-    sll_real64, dimension ( (ai_nx+ai_nx_der-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_real64, dimension ((ai_ny+ai_ny_der-ai_ky)*(2*ai_ky+3)+5*ai_ky+3 ) :: scrtch1
-    sll_real64, dimension ( ai_nx + ai_nx_der + ai_kx ) :: t 
-    sll_real64, dimension ( : ),pointer :: apr_ty_bis
-    sll_int32  :: li_i, li_j, li_iflag,iflag,iflag1
-    sll_int32 :: o,ierr
+    sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx
+    sll_int32  :: li_iflag
+    sll_int32  :: ierr
     
 
     SLL_ALLOCATE(lpr_work5(ai_ny, ai_nx + ai_nx_der ),ierr)
@@ -658,7 +651,7 @@ contains
      sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
      sll_int32  :: ai_nx_der
      sll_real64, dimension(:),pointer :: apr_taux !!ai_nx
-     sll_real64, dimension(:),pointer :: apr_tauy	!! ai_ny
+     sll_real64, dimension(:),pointer :: apr_tauy !! ai_ny
      sll_int32,  dimension(:),pointer :: apr_taux_der !!ai_nx_der
      sll_real64, dimension(:,:),pointer :: apr_g    ! ai_nx,ai_ny
      sll_real64, dimension(:,:),pointer :: apr_g_der1 ! ai_nx_der,ai_ny
@@ -675,12 +668,8 @@ contains
     sll_real64, dimension (( 2*ai_ky-1) * (ai_ny) ) :: lpr_work32
     sll_real64, dimension ( ai_ny) :: lpr_work4
     sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
-    sll_real64, dimension ( (ai_nx+ai_nx_der-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_real64, dimension ((ai_ny-ai_ky)*(2*ai_ky+3)+5*ai_ky+3 ) :: scrtch1
-    sll_real64, dimension ( ai_nx + ai_nx_der + ai_kx ) :: t 
-    sll_real64, dimension ( : ),pointer :: apr_ty_bis
-    sll_int32  :: li_i, li_j, li_iflag,iflag,iflag1
-    sll_int32 :: o,ierr
+    sll_int32  :: li_i, li_iflag
+    sll_int32 :: ierr
     
 
     SLL_ALLOCATE(lpr_work5(ai_ny, ai_nx + ai_nx_der ),ierr)
@@ -703,28 +692,28 @@ contains
        print*, 'problem with construction of knots' 
     end if
     
-    apr_ty = 0.0_8		
+    apr_ty = 0.0_f64
     
-     if ( mod(ai_ky,2) == 0 ) then
-        do li_i = ai_ky + 1, ai_ny
-           apr_ty ( li_i ) = apr_tauy ( li_i - ai_ky/2 ) 
-           
-        end do
-     else
-        
-        do li_i = ai_ky + 1, ai_ny
-           apr_ty ( li_i ) = &
+    if ( mod(ai_ky,2) == 0 ) then
+       do li_i = ai_ky + 1, ai_ny
+          apr_ty ( li_i ) = apr_tauy ( li_i - ai_ky/2 ) 
+          
+       end do
+    else
+       
+       do li_i = ai_ky + 1, ai_ny
+          apr_ty ( li_i ) = &
                 0.5*( apr_tauy ( li_i - (ai_ky-1)/2 ) + &
                 apr_tauy ( li_i -1 - (ai_ky-1)/2 ) )
-           
-        end do
-        
-     end if
-     apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
-     apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )
+          
+       end do
+       
+    end if
+    apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
+    apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )
+    
      
-     
-     call spli2d_der ( &
+    call spli2d_der ( &
           apr_taux,&
           apr_g,&
           apr_taux_der,&
@@ -779,28 +768,24 @@ contains
      sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
      sll_int32  :: ai_ny_der
      sll_real64, dimension(:),pointer :: apr_taux !!ai_nx
-     sll_real64, dimension(:),pointer :: apr_tauy	!! ai_ny
-     sll_int32,  dimension(:),pointer :: apr_tauy_der	!!ai_ny_der
-     sll_real64, dimension(:,:),pointer :: apr_g    ! ai_nx,ai_ny
+     sll_real64, dimension(:),pointer :: apr_tauy !! ai_ny
+     sll_int32,  dimension(:),pointer :: apr_tauy_der !!ai_ny_der
+     sll_real64, dimension(:,:),pointer :: apr_g ! ai_nx,ai_ny
      sll_real64, dimension(:,:),pointer :: apr_g_der2 !ai_ny_der,ai_nx
      ! OUTPUT
      sll_real64, dimension(:,:),pointer::apr_Bcoef!ai_nx ,ai_ny+ ai_ny_der 
-    sll_real64, dimension( : ),pointer:: apr_tx ! ai_nx + ai_kx 
-    sll_real64, dimension( : ),pointer:: apr_ty ! ai_ny + ai_ky + ai_ny_der
-    ! LOCAL VARIABLES		
-    sll_real64, dimension ( ai_nx , ai_ny + ai_ny_der) :: lpr_work1
+     sll_real64, dimension( : ),pointer:: apr_tx ! ai_nx + ai_kx 
+     sll_real64, dimension( : ),pointer:: apr_ty ! ai_ny + ai_ky + ai_ny_der
+     ! LOCAL VARIABLES		
+     sll_real64, dimension ( ai_nx , ai_ny + ai_ny_der) :: lpr_work1
     sll_real64, dimension ( ai_nx ) :: lpr_work2
     sll_real64, dimension ( (ai_nx )* (ai_ny+ai_ny_der) ) :: lpr_work3
     sll_real64, dimension ( (ai_nx) *( 2*ai_kx-1) ) :: lpr_work31
     sll_real64, dimension (( 2*ai_ky-1) * (ai_ny+ai_ny_der) ) :: lpr_work32
     sll_real64, dimension ( ai_ny +ai_ny_der) :: lpr_work4
     sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
-    sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
-    sll_real64, dimension ((ai_ny+ai_ny_der-ai_ky)*(2*ai_ky+3)+5*ai_ky+3 ) :: scrtch1
-    sll_real64, dimension ( ai_nx  + ai_kx ) :: t 
-    sll_real64, dimension ( : ),pointer :: apr_ty_bis
-    sll_int32  :: li_i, li_j, li_iflag,iflag,iflag1
-    sll_int32 :: o,ierr
+    sll_int32  :: li_i,li_iflag
+    sll_int32 :: ierr
     
 
     SLL_ALLOCATE(lpr_work5(ai_ny, ai_nx),ierr)
@@ -900,7 +885,7 @@ contains
      sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
      sll_real64, dimension ( :),pointer :: apr_taux ! ai_nx- 1
      sll_real64, dimension ( :),pointer :: apr_tauy ! ai_ny		
-     sll_real64, dimension ( :,:) :: apr_g	!ai_nx - 1, ai_ny
+     sll_real64, dimension ( :,:) :: apr_g !ai_nx - 1, ai_ny
      ! OUTPUT
      sll_real64, dimension (:,:),pointer :: apr_Bcoef !  ai_nx , ai_ny	
      sll_real64, dimension (:),pointer :: apr_tx !  ai_nx + ai_kx
@@ -918,12 +903,12 @@ contains
      end if
      
     
-     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx - 1 )		
-     lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_L				
-     
+     lpr_taux ( 1 : ai_nx - 1 ) = apr_taux ( 1 : ai_nx-1)
+     lpr_taux ( ai_nx ) = apr_taux ( 1 ) + ar_L
+
      lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny ) = apr_g ( 1 : ai_nx - 1 , 1 : ai_ny )
-     lpr_g ( ai_nx , 1 : ai_ny ) = apr_g ( 1 , 1 : ai_ny )		
-     
+     lpr_g ( ai_nx , 1 : ai_ny ) = apr_g ( 1 , 1 : ai_ny )
+
      
      call spli2d_custom ( &
           ai_nx, &
@@ -1143,18 +1128,13 @@ subroutine spli2d_der(&
     sll_real64,dimension(:,:),pointer:: bcoef !(m,n+np)
     sll_real64,dimension(:,:),pointer:: gtau  !(n,m)
     sll_real64,dimension(:,:),pointer:: gtau_der!(np,n)
-    sll_int32 :: i
     sll_int32 :: iflag
-    sll_int32 :: ilp1mx
     sll_int32 :: j
-    sll_int32 :: jj
     sll_int32 :: k
-    sll_int32 :: left
     sll_real64,dimension((2*k-1)*n):: q!((2*k-1)*n)
     sll_real64,dimension(:),pointer:: t!(n+np+k)
     sll_real64,dimension(:),pointer:: tau!(n)
     sll_int32,dimension(:),pointer:: tau_der!np
-    sll_real64:: taui
     sll_real64,dimension(n):: work!(n)
     sll_real64,dimension(np):: work_der
     sll_real64,dimension(n+np):: work_result

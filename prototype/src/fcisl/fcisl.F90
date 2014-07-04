@@ -408,8 +408,6 @@ contains
     sll_int32 :: Nc_x1
     sll_int32 :: Nc_x2
     sll_real64 :: delta_x2
-    sll_real64, dimension(:), allocatable :: w 
-    sll_int32 :: ierr
     sll_int32 :: i2_loc
     sll_int32 :: d
     

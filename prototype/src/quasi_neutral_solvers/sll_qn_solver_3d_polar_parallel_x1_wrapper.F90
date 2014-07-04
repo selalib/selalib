@@ -119,7 +119,6 @@ contains
     sll_real64,dimension(:), optional :: dlog_density !< for quasi neutral solver
     sll_real64,dimension(:), optional :: inv_Te       !< for quasi neutral solver
     !local variables
-    sll_int32 :: ierr
     
     poisson%poiss => new( &
       layout_x1, &
