@@ -27,7 +27,8 @@ use sll_boundary_condition_descriptors
 use sll_module_advection_1d_base
 use sll_module_characteristics_2d_base
 use sll_module_interpolators_2d_base
-use sll_fcisl_module
+!use sll_fcisl_module
+
 implicit none
 
   type  :: integer_oblic_2d_advector
@@ -268,19 +269,19 @@ contains
         adv%phi_at_aligned(1:Npts1,i))      
     enddo
 
-    call compute_spaghetti( &
-      Npts1-1, &
-      Npts2-1, &
-      shift, &
-      adv%spaghetti_index, &
-      adv%spaghetti_size)
-    
-    call load_spaghetti( &
-      adv%phi_at_aligned, &
-      adv%phi_at_aligned_1d, &
-      adv%spaghetti_index, &
-      Npts1, &
-      Npts2) 
+!    call compute_spaghetti( &
+!      Npts1-1, &
+!      Npts2-1, &
+!      shift, &
+!      adv%spaghetti_index, &
+!      adv%spaghetti_size)
+!    
+!    call load_spaghetti( &
+!      adv%phi_at_aligned, &
+!      adv%phi_at_aligned_1d, &
+!      adv%spaghetti_index, &
+!      Npts1, &
+!      Npts2) 
 
 !  do i=1,num_spaghetti
 !    call adv%advect_1d_constant( &
