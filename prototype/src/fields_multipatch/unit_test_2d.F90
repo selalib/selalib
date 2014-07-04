@@ -7,7 +7,7 @@ program unit_test_fields_multipatch
 
   
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-  type(sll_scalar_field_multipatch_2d), pointer              :: F
+  class(sll_scalar_field_multipatch_2d), pointer              :: F
   type(sll_logical_mesh_2d), pointer                         :: m
   type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
   sll_int32  :: ipatch
@@ -77,8 +77,9 @@ program unit_test_fields_multipatch
   print *, 'writing to file...'
   call F%write_to_file(0)
 
-  call sll_delete(T)
+  call sll_delete(T) 
   call sll_delete(F)
+!  call delete_field_sfmp2d_ptr(F)
   print *, 'PASSED'
   
 

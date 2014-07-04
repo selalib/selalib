@@ -311,23 +311,21 @@ contains !************************** Operations **************************
   ! sll_world_collective and boots the MPI environment.
 
   !> @brief Starts the paralell environment 
-  subroutine sll_boot_collective( )
+  subroutine sll_boot_collective(required)
+    sll_int32, optional :: required
     sll_int32 :: ierr
 
     SLL_ALLOCATE( sll_world_collective, ierr )
 
-
-#ifndef MPI_THREAD_MULTIPLE
-
-    call MPI_Init(ierr)
-#else
-    
-    sll_world_collective%thread_level_required = MPI_THREAD_MULTIPLE
+    if(present(required)) then
+       sll_world_collective%thread_level_required = required
+    else
+       sll_world_collective%thread_level_required = MPI_THREAD_SINGLE
+    end if
     
     call MPI_Init_Thread(sll_world_collective%thread_level_required, &
                          sll_world_collective%thread_level_provided, &
                          ierr)
-#endif
     sll_world_collective%comm     = MPI_COMM_WORLD
     sll_world_collective%color    = 0
     sll_world_collective%key      = 0
@@ -658,15 +656,15 @@ contains !************************** Operations **************************
     sll_real64, dimension(:), intent(in)    :: send_buf 
     sll_int32, intent(in)                   :: send_sz
     sll_real64, dimension(:), intent(out)   :: recv_buf ! would change
-    sll_int32, dimension(:), intent(in)     :: recv_sz  
+    sll_int32, intent(in)                   :: recv_sz  
     sll_int32                               :: ierr
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
     call MPI_BARRIER( col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_allgather_int(): MPI_BARRIER()' )
-    call MPI_ALLGATHER( send_buf(:), send_sz, MPI_DOUBLE_PRECISION, &
-                        recv_buf(:), recv_sz, MPI_DOUBLE_PRECISION, &
+    call MPI_ALLGATHER( send_buf(:), send_sz, MPI_REAL8, &
+                        recv_buf(:), recv_sz, MPI_REAL8, &
                         col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_allgather_int(): MPI_ALLGATHER()' )
