@@ -36,8 +36,8 @@ IF(PASTIX_FOUND)
      ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 )
 
      TARGET_LINK_LIBRARIES(sll_pastix  sll_collective
-                                       ${MURGE_LIBRARIES} 
                                        ${PASTIX_LIBRARIES} 
+                                       ${MURGE_LIBRARIES} 
                                        ${PTSCOTCH_LIBRARIES}
                                        ${SCOTCH_LIBRARIES}
                                        ${BLAS_LIBRARIES})
@@ -52,7 +52,11 @@ IF(PASTIX_FOUND)
      ENDIF()
 
      ADD_EXECUTABLE(test_pastix unit_test.F90)
-     TARGET_LINK_LIBRARIES(test_pastix sll_pastix)
+     IF(USE_MKL)
+        TARGET_LINK_LIBRARIES(test_pastix sll_pastix) 
+     ELSE()
+        TARGET_LINK_LIBRARIES(test_pastix sll_pastix ${LAPACK_LIBRARIES}) 
+     ENDIF(USE_MKL)
 
 
 ENDIF()
