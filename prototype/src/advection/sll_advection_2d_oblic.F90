@@ -24,6 +24,7 @@ module sll_module_advection_2d_oblic
 #include "sll_assert.h"
 use sll_boundary_condition_descriptors
 !use sll_module_advection_2d_base
+use sll_module_advection_1d_base
 use sll_module_characteristics_2d_base
 use sll_module_interpolators_2d_base
 use sll_fcisl_module
