@@ -488,7 +488,7 @@ program aligned_derivative_2d
   
 
 
-contains
+!contains
 !
 !#ifndef NOHDF5
 !!*********************

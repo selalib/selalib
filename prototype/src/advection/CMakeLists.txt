@@ -34,7 +34,7 @@ IF(HDF5_ENABLED)
 
   TARGET_LINK_LIBRARIES( 
     sll_advection
-    sll_fcisl
+    #sll_fcisl
     sll_logical_meshes
     sll_characteristics
     sll_interpolators
@@ -127,16 +127,16 @@ IF(HDF5_ENABLED)
 
   IF(MPI_MODULE_ENABLED)
 
-     ADD_EXECUTABLE(
-       test_aligned_translation_2d_spaghetti
-       aligned_translation_2d_spaghetti.F90)
+     #ADD_EXECUTABLE(
+     #  test_aligned_translation_2d_spaghetti
+     #  aligned_translation_2d_spaghetti.F90)
 
-     TARGET_LINK_LIBRARIES(
-       test_aligned_translation_2d_spaghetti
-       sll_file_io_parallel
-       sll_advection
-       sll_fcisl
-       sll_utilities)
+     #TARGET_LINK_LIBRARIES(
+     #  test_aligned_translation_2d_spaghetti
+     #  sll_file_io_parallel
+     #  sll_advection
+       #sll_fcisl
+     #  sll_utilities)
 
      ADD_EXECUTABLE(
        test_aligned_translation_2d
