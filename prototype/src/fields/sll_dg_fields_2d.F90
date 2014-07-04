@@ -36,9 +36,9 @@ contains
 
 end type dg_field
 
-interface dg_field
+interface new
   module procedure new_dg_field
-end interface dg_field
+end interface new
 
 interface operator(+)
   module procedure dg_field_add
