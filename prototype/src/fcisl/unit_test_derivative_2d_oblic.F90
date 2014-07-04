@@ -15,14 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-program unit_test_advection_2d_oblic
+program unit_test_derivative_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use sll_module_advection_2d_oblic
+use sll_module_derivative_2d_oblic
 use sll_module_advection_1d_periodic
-
 implicit none
-  type(oblic_2d_advector), pointer :: adv
+
+  type(oblic_2d_derivative), pointer :: deriv
   sll_int32 :: Nc_x1
   sll_real64 :: x1_min
   sll_real64 :: x1_max
@@ -63,7 +63,7 @@ implicit none
     SPLINE, & 
     4) 
     
-  adv => new_oblic_2d_advector( &
+  deriv => new_oblic_2d_derivative( &
     Nc_x1, &
     adv_x1, &
     Nc_x2, &
@@ -72,7 +72,7 @@ implicit none
     stencil_r, &
     stencil_s )
   
-  print *,'#oblic advector is initialized'
+  print *,'#oblic derivative is initialized'
   
   SLL_ALLOCATE(input(Nc_x1+1,Nc_x2+1),ierr)
   SLL_ALLOCATE(output(Nc_x1+1,Nc_x2+1),ierr)
@@ -80,20 +80,19 @@ implicit none
   err = 0._f64
   
   input = 1._f64
-  call oblic_advect_2d_constant( &
-    adv, &
-    !iota, &
+  call compute_oblic_derivative_2d( &
+    deriv, &
     A1, &
     A2, &
-    dt, &
     input, &
     output)
   
-  err = maxval(abs(input-output))
-  
+  err = maxval(abs(output))
+
   print *,'#err=',err
   if(err<1.e-15_f64)then  
     print *,'#PASSED' 
   endif
+
 
 end program
