@@ -98,7 +98,6 @@ contains
     sll_int32, intent(in), optional :: Nbdr
     sll_int32 :: ierr
     sll_int32 :: i
-    sll_real64 :: delta_eta
     sll_int32 :: Nx
     
     
@@ -377,8 +376,7 @@ contains
     sll_real64, intent(in) :: A
     sll_real64, intent(in) :: dt 
     sll_real64, dimension(:), intent(in) :: input
-    sll_real64, dimension(:), intent(out) :: output      
-    sll_int32 :: ierr
+    sll_real64, dimension(:), intent(out) :: output
     
     !this version is not optimized
     

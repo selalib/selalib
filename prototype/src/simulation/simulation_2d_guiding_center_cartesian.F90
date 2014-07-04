@@ -202,12 +202,6 @@ contains
     sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
-    sll_real64, dimension(:,:), allocatable :: cxx_2d
-    sll_real64, dimension(:,:), allocatable :: cxy_2d
-    sll_real64, dimension(:,:), allocatable :: cyy_2d
-    sll_real64, dimension(:,:), allocatable :: cx_2d
-    sll_real64, dimension(:,:), allocatable :: cy_2d
-    sll_real64, dimension(:,:), allocatable :: ce_2d
     sll_int32 :: ierr
 
     namelist /geometry/ &

@@ -19,7 +19,7 @@ sll_real64, dimension(:), pointer :: matrices
 sll_real64, dimension(:), pointer :: bcoef
 sll_int32 :: iflag,ierr
 sll_real64 :: d,res
-sll_int32 :: i,j
+sll_int32 :: i
 
 
 

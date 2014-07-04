@@ -125,8 +125,6 @@ contains
     integer, intent(in)   :: bc_left
     integer, intent(in)   :: bc_right
     real(8), dimension(:) :: knots
-    integer               :: i, k 
-    real(8)               :: eta
     real(8)               :: delta
     
     ! This routine needs some error-checking...

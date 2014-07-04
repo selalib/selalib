@@ -977,8 +977,6 @@ contains
     sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work
     !sll_real64, dimension ( (ai_nx-ai_kx)*(2*ai_kx+3)+5*ai_kx+3 ) :: scrtch
     sll_int32 :: iflag
-    sll_int32 :: li_i,li_j
-    sll_real64:: moyenne
     
     apr_tx = 0.0_f64
     apr_tx ( 1 : ai_kx ) = apr_taux ( 1 )
@@ -1319,7 +1317,6 @@ contains
     sll_real64,dimension(m)::  gtau_der ! (n)
     sll_int32 :: i
     sll_int32 :: iflag,mflag
-    sll_int32 :: ilp1mx
     sll_int32 :: j,l
     sll_int32 :: jj
     sll_int32 :: k

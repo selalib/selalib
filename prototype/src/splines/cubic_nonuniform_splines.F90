@@ -359,11 +359,9 @@ contains  ! ****************************************************************
     sll_int32, intent(in) :: N
     sll_real64, dimension(:), pointer :: cts!, a
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
-    sll_int32 :: i
     sll_real64, dimension(:), pointer :: a
     sll_real64, dimension(:), allocatable :: b
     sll_real64, dimension(:), pointer :: x
-    sll_real64 :: resid
     sll_int32 :: ierr
 
     !sll_real64 :: linf_err,tmp
@@ -588,7 +586,6 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), pointer :: Xj
     sll_real64, dimension(:), pointer :: coef,coeffs,node_pos
     sll_real64 :: w(4)
-    sll_int32 :: ii
     
     !do i=-1,n_cells+1
     !  print *,i,node_pos(i)

@@ -446,9 +446,7 @@ subroutine schdc ( a, lda, p, work, ipvt, job, info )
   integer info
   integer j
   integer job
-  integer jp
   integer ipvt(p)
-  integer jt
   integer k
   integer l
   real(8) maxdia
@@ -1822,7 +1820,6 @@ subroutine sgbfa ( abd, lda, n, ml, mu, ipvt, info )
   integer n
 !
   real(8) abd(lda,n)
-  integer i
   integer i0
   integer info
   integer ipvt(n)
@@ -2364,7 +2361,6 @@ subroutine sgedi ( a, lda, n, ipvt, det, work, job )
   integer j
   integer job
   integer k
-  integer kp1
   integer l
   real(8) t
   real(8), parameter :: ten = 10.0E+00
@@ -2966,7 +2962,6 @@ subroutine spbco ( abd, lda, n, m, rcond, z, info )
   integer mu
   real(8) rcond
   real(8) s
-  real(8) sdot
   real(8) sm
   real(8) t
   real(8) wk
@@ -4670,9 +4665,7 @@ subroutine sqrdc ( a, lda, n, p, qraux, jpvt, work, job )
   real(8) qraux(p)
   real(8) work(p)
   integer j
-  integer jj
   integer job
-  integer jp
   integer l
   integer lup
   integer maxj
@@ -4971,8 +4964,6 @@ subroutine sqrsl ( a, lda, n, k, qraux, y, qy, qty, b, rsd, ab, job, info )
   logical cqty
   logical cqy
   logical cr
-  logical cxb
-  integer i
   integer info
   integer j
   integer jj
@@ -5468,7 +5459,6 @@ subroutine ssico ( a, lda, n, kpvt, rcond, z )
   real(8) rcond
   real(8) s
   real(8) sdot
-  real(8) t
   real(8) ynorm
   real(8) z(n)
 !
@@ -5783,7 +5773,6 @@ subroutine ssidi ( a, lda, n, kpvt, det, inert, work, job )
   integer kstep
   real(8) sdot
   real(8) t
-  real(8) temp
   real(8), parameter :: ten = 10.0E+00
   real(8) work(n)
 !
@@ -6273,7 +6262,6 @@ subroutine ssisl ( a, lda, n, kpvt, b )
   integer kp
   integer kpvt(n)
   real(8) sdot
-  real(8) temp
 !
 !  Loop backward applying the transformations and D inverse to B.
 !
@@ -6863,7 +6851,6 @@ subroutine sspdi ( ap, n, kpvt, det, inert, work, job )
   integer kstep
   real(8) sdot
   real(8) t
-  real(8) temp
   real(8), parameter :: ten = 10.0E+00
   real(8) work(n)
 !
@@ -7446,7 +7433,6 @@ subroutine sspsl ( ap, n, kpvt, b )
   integer kp
   integer kpvt(n)
   real(8) sdot
-  real(8) temp
 !
 !  Loop backward applying the transformations and D inverse to B.
 !
@@ -7678,7 +7664,6 @@ subroutine ssvdc ( x, ldx, n, p, s, e, u, ldu, v, ldv, work, job, info )
   real(8) emm1
   real(8) f
   real(8) g
-  integer i
   integer info
   integer iter
   integer j
@@ -7690,7 +7675,6 @@ subroutine ssvdc ( x, ldx, n, p, s, e, u, ldu, v, ldv, work, job, info )
   integer l
   integer ll
   integer lls
-  integer lm1
   integer ls
   integer lu
   integer m
