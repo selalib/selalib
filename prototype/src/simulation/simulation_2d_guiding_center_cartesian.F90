@@ -108,13 +108,8 @@ contains
     type(sll_simulation_2d_guiding_center_cartesian), pointer :: sim    
     character(len=*), intent(in), optional :: filename
     sll_int32 :: ierr
-    
     SLL_ALLOCATE(sim,ierr)
-    
-    call initialize_guiding_center_2d_cartesian(sim,filename)
-    
-  
-  
+    call initialize_guiding_center_2d_cartesian(sim,filename)  
   end function new_guiding_center_2d_cartesian
   
   subroutine initialize_guiding_center_2d_cartesian(sim, filename)
@@ -202,6 +197,12 @@ contains
     sll_real64, dimension(:,:), pointer :: b2
     sll_real64, dimension(:,:), pointer :: c
     class(sll_coordinate_transformation_2d_base), pointer :: transformation
+    sll_real64, dimension(:,:), allocatable :: cxx_2d
+    sll_real64, dimension(:,:), allocatable :: cxy_2d
+    sll_real64, dimension(:,:), allocatable :: cyy_2d
+    sll_real64, dimension(:,:), allocatable :: cx_2d
+    sll_real64, dimension(:,:), allocatable :: cy_2d
+    sll_real64, dimension(:,:), allocatable :: ce_2d
     sll_int32 :: ierr
 
     namelist /geometry/ &
