@@ -82,7 +82,6 @@ implicit none
   input = 1._f64
   call compute_oblic_derivative_2d( &
     deriv, &
-    !iota, &
     A1, &
     A2, &
     input, &
