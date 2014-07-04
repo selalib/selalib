@@ -46,7 +46,7 @@ contains
     sll_int32, intent(in)  :: num_particles
     type(sll_particle_group_2d), pointer, intent(inout) :: p_group
     sll_int32  :: j
-    sll_int32  :: ierr, ncx, ic_x,ic_y
+    sll_int32  :: ncx, ic_x,ic_y
     sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy
     sll_real32 :: weight, off_x,off_y
     sll_real64 :: tmp1, tmp2

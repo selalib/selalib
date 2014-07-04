@@ -228,35 +228,21 @@ def main ():
                             # writefile.write("&external_faces\n")
                             continue
                         elif linetemp[1] == "internal_faces":
-                            num_slots += 1
+                            # currently_reading = internal faces is set inside
+                            # the loop which processes the external faces, so
+                            # this part of the code will never be executed.
+                            print("translate_multipatch_info.py warning:")
+                            print("this should never be seen. Debug!!!")
                             currently_reading = "internal_faces"
                             # writefile.write("&internal_faces\n")
                             continue
                         elif linetemp[1] == "connectivity":
-                            num_slots += 1
+                            print("translate_multipatch_info.py warning:")
+                            print("this message should never be seen. Debug!")
+
                             currently_reading = "connectivity"
-                            writefile.write("! The connectivities array in ")
-                            writefile.write("this file is an array ")
-                            writefile.write("of dimensions \n! number_patches ")
-                            writefile.write("X 8. The i-th row ")
-                            writefile.write("contains the connectivity ")
-                            writefile.write("information for \n")
-                            writefile.write("! the i-th ")
-                            writefile.write("face. The connectivity of each ")
-                            writefile.write("face is described by ")
-                            writefile.write("a pair. The \n! first value is ")
-                            writefile.write("the other patch and ")
-                            writefile.write("the second is the connecting ")
-                            writefile.write("face in \n")
-                            writefile.write("! such patch. The ")
-                            writefile.write("reader of this function should ")
-                            writefile.write("properly dimension ")
-                            writefile.write("the \n! receiving array and ")
-                            writefile.write("transpose, given the ")
-                            writefile.write("column-")
-                            writefile.write("major convention used by \n! ")
-                            writefile.write("Fortran.\n\n")
-                            writefile.write("&connectivity\n")
+
+                            #writefile.write("&connectivity\n")
                             continue
                         else:
                             print('It seems there is an input file problem: ')
@@ -281,11 +267,33 @@ def main ():
                     print( connectivities )
                     continue
                 elif currently_reading == "external_faces":
-                    currently_reading = ""
-                    continue
+                    # We choose to ignore the 'external faces' listing
+                    # from the files that come from CAID since in the
+                    # connectivity array all faces are declared as
+                    # external by default and is later that other
+                    # information is used to change this.
+                    # Intention: keep reading "external_faces" but find the next
+                    # hash mark. This way we ignore this data and can set the
+                    # next value of 'currently reading'.
+                    if linetemp[0] == "#":
+                        currently_reading = "internal_faces"
+                        num_slots += 1
+                        continue
+                    else:
+                        # ignore the data contained in internal faces. It is
+                        # redundant with respect to the data present in 
+                        # connectivity.
+                        continue
                 elif currently_reading == "internal_faces":
-                    currently_reading = ""
-                    continue
+                    if linetemp[0] == "#":
+                        currently_reading = "connectivity"
+                        num_slots += 1
+                        continue
+                    else:
+                        # ignore the data contained in internal faces. It is
+                        # redundant with respect to the data present in 
+                        # connectivity.
+                        continue
                 elif currently_reading == "connectivity":
                     # We store the connectivity information in a 2D
                     # array. Each row of the array represents the 
@@ -324,6 +332,29 @@ def main ():
                         continue
         flattened = [item for sublist in connectivities for item in sublist]
 
+        writefile.write("! The connectivities array in ")
+        writefile.write("this file is an array ")
+        writefile.write("of dimensions \n! number_patches ")
+        writefile.write("X 8. The i-th row ")
+        writefile.write("contains the connectivity ")
+        writefile.write("information for \n")
+        writefile.write("! the i-th ")
+        writefile.write("face. The connectivity of each ")
+        writefile.write("face is described by ")
+        writefile.write("a pair. The \n! first value is ")
+        writefile.write("the other patch and ")
+        writefile.write("the second is the connecting ")
+        writefile.write("face in \n")
+        writefile.write("! such patch. The ")
+        writefile.write("reader of this function should ")
+        writefile.write("properly dimension ")
+        writefile.write("the \n! receiving array and ")
+        writefile.write("transpose, given the ")
+        writefile.write("column-")
+        writefile.write("major convention used by \n! ")
+        writefile.write("Fortran.\n\n")
+
+        writefile.write("&connectivity\n")
         writefile.write("    connectivities = " + 
                         " ".join([str(item) for item in  flattened]) + "\n")
         writefile.write("/" + "\n\n")

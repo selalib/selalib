@@ -33,7 +33,7 @@ character(len=8), parameter :: zdset = "zdataset" !< z dataset name
 
 
 ! Boot parallel environment
-call sll_boot_collective()
+call sll_boot_collective(MPI_THREAD_SINGLE)
 
 colsz  = sll_get_collective_size(sll_world_collective)
 myrank = sll_get_collective_rank(sll_world_collective)
@@ -65,7 +65,7 @@ if (myrank == 0) &
    write(*,"(//10x,' Temps CPU = ', G15.3, ' sec' )") (tcpu2-tcpu1)*colsz
 
 
-if( myrank .eq. 0) print *, 'PASSED'
+print *, myrank, 'PASSED'
 
 call sll_halt_collective()
   

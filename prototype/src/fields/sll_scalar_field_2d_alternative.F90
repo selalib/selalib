@@ -534,8 +534,8 @@ contains   ! *****************************************************************
     bc_left, &
     bc_right, &
     bc_bottom, &
-    bc_top,& 
-    point1_1d, &
+    bc_top,&
+    point1_1d,&
     sz_point1,&
     point2_1d,&
     sz_point2)
@@ -551,8 +551,8 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: bc_top
     sll_real64, dimension(:), optional :: point1_1d
     sll_real64, dimension(:), optional :: point2_1d
-    sll_int32,optional :: sz_point1
-    sll_int32,optional :: sz_point2
+    sll_int32, optional :: sz_point1
+    sll_int32, optional :: sz_point2
     !sll_int32 :: i
     sll_int32 :: ierr   
 
@@ -568,14 +568,7 @@ contains   ! *****************************************************************
 
     ! Allocate internal array to store locally a copy of the data.
     SLL_ALLOCATE(field%values(m2d%num_cells1+1,m2d%num_cells2+1),ierr)    
-    !print*,'first line',  field%values(1,:)
-    !print*, 'second line', field%values(2,:)
-!!$    call field%interp_2d%compute_interpolants( &
-!!$         field%values, & !array_2d, &
-!!$         point1_1d, &
-!!$         sz_point1, &
-!!$         point2_1d, &
-!!$         sz_point2 )
+
 
   end subroutine initialize_scalar_field_2d_discrete_alt
   

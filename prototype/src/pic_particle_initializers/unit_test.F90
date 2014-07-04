@@ -29,7 +29,7 @@ program initialize_tester
   type(sll_logical_mesh_2d),   pointer :: m2d
   sll_int32 :: j
   character(5) :: ncx_name, ncy_name
-  sll_real64 :: x, y, tt1, tt2
+  sll_real64 :: x, y
 
   m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
