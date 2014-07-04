@@ -554,9 +554,9 @@ contains
     sll_real64, dimension(:), intent(in) :: input
     sll_real64, dimension(:), intent(out) :: output
     sll_int32, intent(in) :: Nc
-    sll_real64, dimension(r:s), intent(in) :: w
     sll_int32, intent(in) :: r
     sll_int32, intent(in) :: s
+    sll_real64, dimension(r:s), intent(in) :: w
     sll_real64, intent(in) :: length
     !local variables
     sll_int32 :: i
