@@ -46,8 +46,13 @@ program unit_test_fields_multipatch
   ! coming from CAID, we could also assume that the initial data also comes
   ! from outside...
   do ipatch=0, num_patches-1
-     m        => F%get_logical_mesh(ipatch)
-     transf   => F%get_transformation(ipatch)
+     ! Get rid of this 'fix' whenever it is decided that gfortran 4.6 is not
+     ! supported by Selalib anymore
+     !     m        => F%get_logical_mesh(ipatch)
+     m => F%transf%transfs(ipatch+1)%t%mesh
+     ! this 'fix' also is just for gfortran 4.6
+     !     transf   => F%get_transformation(ipatch)
+     transf => F%transf%transfs(ipatch+1)%t
      num_pts1 = m%num_cells1+1
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1
