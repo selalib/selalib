@@ -345,10 +345,6 @@ contains
     sll_int32 :: ierr
     !sll_int32  :: spline_degree
     
-    sll_int32 :: spaghetti_size_guess
-    sll_int32 :: shift
-    sll_int32 :: spaghetti_size
-    !sll_real64 :: iota_modif
     
     
     
@@ -899,7 +895,6 @@ contains
     sll_int32 :: nc_x2
     sll_int32 :: nc_x3
     sll_int32 :: nc_x4
-    sll_int32 :: i1
     !sll_int32 :: i2
     !sll_int32 :: i3
     !sll_int32 :: i4
@@ -1000,7 +995,7 @@ contains
           call advection_x3( sim, 0.5_f64*dt )
           call advection_x4( sim, 0.5_f64*dt )
           call advection_x1x2( sim, 0.5_f64*dt )
-	      call compute_rho_dk(sim)  
+          call compute_rho_dk(sim)  
           call solve_quasi_neutral_parx1( sim )
           call compute_field_dk_parx1( sim )          
           !correction
@@ -1018,7 +1013,7 @@ contains
           call advection_x1x2( sim, 0.5_f64*dt )
           call advection_x4( sim, 0.25_f64*dt )
           call advection_x3( sim, 0.25_f64*dt )
-	      call compute_rho_dk(sim)  
+          call compute_rho_dk(sim)  
           call solve_quasi_neutral_parx1( sim )
           call compute_field_dk_parx1( sim )          
           !correction
@@ -1244,7 +1239,6 @@ contains
     sll_int32, dimension(:), intent(out) :: shift_r
     !local variables
     sll_int32 :: i
-    sll_real64 :: big_R
     sll_int32 :: spaghetti_size0
 
     if(size(iota)<num_points_r)then
@@ -1651,8 +1645,6 @@ contains
     class(sll_simulation_4d_drift_kinetic_field_aligned_polar) :: sim
     sll_real64,dimension(:,:), allocatable ::  f2d
     sll_real64,dimension(:,:), allocatable ::  f2d_new
-    sll_real64,dimension(:,:), allocatable ::  A1
-    sll_real64,dimension(:,:), allocatable ::  A2
     sll_real64, intent(in) :: dt
     sll_int32 :: nc_x1
     sll_int32 :: nc_x2
@@ -1826,12 +1818,6 @@ contains
     sll_int32 :: power2_x3
     sll_int32 :: k_min
     sll_int32 :: nproc3d_x1_parx1
-    sll_int32 :: nproc3d_x2_parx1
-    sll_int32 :: nproc3d_x3_parx1
-    sll_int32 :: nproc3d_x1_parx3
-    sll_int32 :: nproc3d_x2_parx3
-    sll_int32 :: nproc3d_x3_parx3
-    sll_int32 :: i
     
 
 

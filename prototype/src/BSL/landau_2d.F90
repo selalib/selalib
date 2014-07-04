@@ -22,7 +22,7 @@ sll_int32  :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
 sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
 
 !Time domain
-sll_int32  :: i_step, n_step, j_step
+sll_int32  :: i_step, n_step
 sll_real64 :: delta_t
 sll_real64 :: time
 

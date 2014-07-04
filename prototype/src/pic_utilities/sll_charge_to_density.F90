@@ -46,7 +46,6 @@ contains
     sll_real64, dimension(:,:), intent(out)  :: rho
     sll_int32  :: i
     sll_int32  :: j
-    sll_int32  :: k
     sll_int32  :: ncx
     sll_int32  :: ncy
     sll_real64 :: deltax
