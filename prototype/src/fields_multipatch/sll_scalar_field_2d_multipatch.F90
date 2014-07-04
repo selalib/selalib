@@ -133,8 +133,6 @@ contains   ! *****************************************************************
     type(sll_logical_mesh_2d), pointer                         :: lm
     sll_int32, dimension(1:2)                                  :: connectivity
     character(len=128) :: format_string 
-    character(len=256) :: filename
-    sll_int32          :: input_file_id
     sll_int32  :: i
     sll_int32  :: num_patches
     sll_int32  :: bc_left
@@ -144,7 +142,6 @@ contains   ! *****************************************************************
     sll_int32  :: num_pts1
     sll_int32  :: num_pts2
     sll_int32  :: ierr
-    sll_int32  :: IO_stat
 
     fmp%field_name = field_name
     fmp%transf => transf

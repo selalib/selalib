@@ -578,9 +578,6 @@ contains
     sll_int32 :: num_cell
     sll_int32 :: res
     sll_int32 :: num_spline_loc_max
-    sll_int32 :: total_num_cells_in_patch
-    
-    
    
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
     SLL_ASSERT( (cell_i >= 1) .and. (cell_i < mp%fields(patch+1)%f%mesh%num_cells1) )
@@ -675,15 +672,13 @@ contains
   function get_spline_local_to_global_index_Tmp2d(mp,patch,splines_local,cell_i,cell_j)&
        result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+    type(sll_logical_mesh_2d), pointer                         :: lm
     sll_int32 :: patch
     sll_int32 :: splines_local
     sll_int32 :: cell_i,cell_j
     sll_int32 :: num_cell
     sll_int32 :: res
     sll_int32 :: num_spline_loc_max
-    sll_int32 :: index
-    sll_int32 :: total_num_cells_in_patch
-    type(sll_logical_mesh_2d), pointer                         :: lm
     
     lm=>mp%get_logical_mesh(patch)
     

@@ -10,7 +10,6 @@ program unit_test_fields_multipatch
   type(sll_scalar_field_multipatch_2d), pointer              :: F
   type(sll_logical_mesh_2d), pointer                         :: m
   type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
-  class(arb_deg_2d_interpolator),pointer:: interpolator
   sll_int32  :: ipatch
   sll_int32  :: i
   sll_int32  :: j
@@ -22,10 +21,7 @@ program unit_test_fields_multipatch
   sll_real64 :: eta2
   sll_real64 :: delta1
   sll_real64 :: delta2
-  sll_real64 :: x1
-  sll_real64 :: x2
-  sll_int32  :: ierr
-  sll_int32  :: local_to_global_index, local_index, global_index
+  sll_real64 :: x1,x2
 
   T => new_coordinate_transformation_multipatch_2d("square_4p_n10")
   print *, 'initialized multipatch transformation'

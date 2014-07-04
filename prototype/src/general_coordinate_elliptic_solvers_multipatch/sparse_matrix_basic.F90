@@ -23,7 +23,6 @@ contains
         !> param[in] ai_nel : NUMBER OF NON ZERO ELEMENTS
         integer :: ai_nel
         !local var
-        integer :: li_err, li_flag
 
         print*, 'tet'
         self % ol_use_mm_format = .FALSE.
@@ -49,8 +48,7 @@ contains
         !> param[in] ao_A : CSR MATRIX STRUCTURE
         type(csr_matrix) :: ao_A
         !local var
-        integer :: li_err, li_flag
-        integer :: li_i, li_k, li_j, li_count, li_i_tmp, li_j_tmp, li_index
+        integer :: li_i, li_k,li_count, li_i_tmp, li_index
         integer, dimension(ao_A % oi_nR + 1) :: lpi_occ
 
         lpi_occ(:) = 0

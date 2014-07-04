@@ -295,8 +295,6 @@ contains
     sll_int32               :: gyroaverage_N_points
     sll_int32               :: gyroaverage_interp_degree_x1
     sll_int32               :: gyroaverage_interp_degree_x2
-    sll_real64,dimension(:,:), allocatable :: gyro_tmp
-    sll_int32 :: i1,i2
     !--> Algorithm
     sll_real64 :: dt
     sll_int32  :: number_iterations
@@ -988,8 +986,6 @@ contains
     sll_int32 :: nc_x2
     sll_int32 :: nc_x3
     sll_int32 :: nc_x4
-    sll_int32 :: i1
-    sll_int32 :: i2
     sll_int32 :: ierr
     sll_real64 :: dt
     sll_int32 :: th_diag_id 
@@ -1100,10 +1096,10 @@ contains
           call advection_x3( sim, 0.5_f64*dt )
           call advection_x4( sim, 0.5_f64*dt )
           call advection_x1x2( sim, 0.5_f64*dt )
-!          call compute_rho_dk(sim)    
-!          call solve_quasi_neutral( sim )
-!          call compute_field_dk( sim )
-	      call compute_rho_dk(sim)  
+          !          call compute_rho_dk(sim)    
+          !          call solve_quasi_neutral( sim )
+          !          call compute_field_dk( sim )
+          call compute_rho_dk(sim)  
           call solve_quasi_neutral_with_gyroaverage( sim )
           call gyroaverage_phi_dk( sim )
           call compute_field_dk( sim )
@@ -2201,109 +2197,110 @@ subroutine gyroaverage_phi_dk( sim )
           
           
       select case (sim%delta_f_method)     
-      	case (0)
-      	
-        do iloc3 = 1,loc3d_sz_x3    
-          call sim%gyroaverage%compute_gyroaverage( &
-          sqrt(2*sim%mu), &
-          sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
-        enddo    
-                  
-        do iloc2=1, loc3d_sz_x2
-          do iloc1=1, loc3d_sz_x1
-            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
-          enddo
-        enddo
-        
-        case (1)
-               
-        do iloc1 = 1,loc3d_sz_x1  
-          sim%rho3d_seqx1x2(iloc1,:,:)=sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
-        enddo
-               
-        do iloc3 = 1,loc3d_sz_x3    
-          call sim%gyroaverage%compute_gyroaverage( &
-          sqrt(2*sim%mu), &
-          sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
-        enddo    
-                  
-        do iloc2=1, loc3d_sz_x2
-          do iloc1=1, loc3d_sz_x1
-            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
-          enddo
-        enddo
+      case (0)
          
-      case default
-        print *,'#bad value for sim%delta_n_method'
-        stop  
-    end select  
-        
-        
-        
-        
-        
-        do iloc3=1, loc3d_sz_x3
-          call sim%poisson2d%compute_phi_from_rho( &
-            sim%phi3d_seqx1x2(:,:,iloc3), &
-            sim%phi3d_seqx1x2(:,:,iloc3) )
-        enddo
-        call apply_remap_3D( &
-          sim%remap_plan_seqx1x2_to_seqx3, &
-          sim%phi3d_seqx1x2, &
-          sim%phi3d_seqx3 )            
-      case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
-        print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
-        print *,'#not implemented yet '
-        stop      
-      case default
-        print *,'#bad value for sim%QN_case'
-        stop  
-    end select        
-  
-  end subroutine solve_quasi_neutral_with_gyroaverage
-  
+         do iloc3 = 1,loc3d_sz_x3    
+            call sim%gyroaverage%compute_gyroaverage( &
+                 sqrt(2*sim%mu), &
+                 sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+         enddo
+         
+         do iloc2=1, loc3d_sz_x2
+            do iloc1=1, loc3d_sz_x1
+               sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+                    sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
+            enddo
+         enddo
+         
+      case (1)
+         
+         do iloc1 = 1,loc3d_sz_x1  
+            sim%rho3d_seqx1x2(iloc1,:,:)=&
+                 sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
+         enddo
+         
+         do iloc3 = 1,loc3d_sz_x3    
+            call sim%gyroaverage%compute_gyroaverage( &
+                 sqrt(2*sim%mu), &
+                 sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+         enddo
+         
+         do iloc2=1, loc3d_sz_x2
+            do iloc1=1, loc3d_sz_x1
+            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+                 sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
+         enddo
+      enddo
+      
+   case default
+      print *,'#bad value for sim%delta_n_method'
+      stop  
+   end select
+   
+   
+   
+   
+   
+   do iloc3=1, loc3d_sz_x3
+      call sim%poisson2d%compute_phi_from_rho( &
+           sim%phi3d_seqx1x2(:,:,iloc3), &
+           sim%phi3d_seqx1x2(:,:,iloc3) )
+   enddo
+   call apply_remap_3D( &
+        sim%remap_plan_seqx1x2_to_seqx3, &
+        sim%phi3d_seqx1x2, &
+        sim%phi3d_seqx3 )            
+case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
+   print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
+   print *,'#not implemented yet '
+   stop      
+case default
+   print *,'#bad value for sim%QN_case'
+   stop  
+end select
+
+end subroutine solve_quasi_neutral_with_gyroaverage
+
 
 
 
 subroutine gyroaverage_field_dk(sim)
-    class(sll_simulation_4d_drift_kinetic_polar_multi_mu), intent(inout) :: sim
-    sll_int32 :: loc_sz_x1
-    sll_int32 :: loc_sz_x2
-    sll_int32 :: loc_sz_x3
-    sll_int32 :: i3
-    sll_int32 :: nc_x1, nc_x2
+  class(sll_simulation_4d_drift_kinetic_polar_multi_mu), intent(inout) :: sim
+  sll_int32 :: loc_sz_x1
+  sll_int32 :: loc_sz_x2
+  sll_int32 :: loc_sz_x3
+  sll_int32 :: i3
+  sll_int32 :: nc_x1, nc_x2
             
-    nc_x1 = sim%m_x1%num_cells
-    nc_x2 = sim%m_x2%num_cells
-
-    call compute_local_sizes_3d( &
-      sim%layout3d_seqx1x2, &
-      loc_sz_x1, &
-      loc_sz_x2, &
-      loc_sz_x3 )
-
+  nc_x1 = sim%m_x1%num_cells
+  nc_x2 = sim%m_x2%num_cells
+  
+  call compute_local_sizes_3d( &
+       sim%layout3d_seqx1x2, &
+       loc_sz_x1, &
+       loc_sz_x2, &
+       loc_sz_x3 )
+  
     do i3 = 1,loc_sz_x3
-      call sim%gyroaverage%compute_gyroaverage( &
-        sqrt(2*sim%mu), &
-        sim%A1_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
-      call sim%gyroaverage%compute_gyroaverage( &
-        sqrt(2*sim%mu), &
-        sim%A2_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
-      call sim%gyroaverage%compute_gyroaverage( &
-        sqrt(2*sim%mu), &
-        sim%A3_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+       call sim%gyroaverage%compute_gyroaverage( &
+            sqrt(2*sim%mu), &
+            sim%A1_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+       call sim%gyroaverage%compute_gyroaverage( &
+            sqrt(2*sim%mu), &
+            sim%A2_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
+       call sim%gyroaverage%compute_gyroaverage( &
+            sqrt(2*sim%mu), &
+            sim%A3_seqx1x2(1:nc_x1+1,1:nc_x2+1,i3))
     enddo          
-
-
+    
+    
   end subroutine gyroaverage_field_dk
-
+  
 
 #ifndef NOHDF5
-!*********************
-!*********************
-
+  !*********************
+  !*********************
+  
   !---------------------------------------------------
   ! Save the mesh structure
   !---------------------------------------------------

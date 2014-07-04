@@ -106,16 +106,11 @@ contains
     num_cells2, &
     spline_degree1, &
     spline_degree2, &
-    bc_left, &
-    bc_right, &
-    bc_bottom, &
-    bc_top, &
     local_spline_indices, &
     global_spline_indices, &
     local_to_global_spline_indices )
     
     integer :: num_cells1, num_cells2, spline_degree1, spline_degree2
-    integer :: bc_left, bc_right, bc_bottom, bc_top
     integer :: nb_spl_x,nb_spl_y
     integer, dimension(:,:) :: local_spline_indices
     integer, dimension(:)   :: global_spline_indices

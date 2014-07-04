@@ -293,7 +293,6 @@ contains
     type(sll_p2p_comm_real64), pointer  :: comm
     sll_int32                       :: ierr
     sll_int32                       :: i
-    sll_int32                       :: padding
     sll_int32                       :: max_num_ports
     
     if(.not.associated(collective) ) then
@@ -426,7 +425,6 @@ contains
     sll_int32, intent(in)          :: port
     sll_int32, intent(out)         :: count
     sll_int32, dimension(MPI_STATUS_SIZE) :: stat
-    sll_int32 :: request
     sll_int32 :: bit
     sll_int32 :: tag
     sll_int32 :: local_count ! remember: there is a padding
@@ -492,7 +490,6 @@ contains
   subroutine delete_comm_real64( comm )
     type(sll_p2p_comm_real64), pointer :: comm
     sll_int32 :: i
-    sll_int32 :: request
     sll_int32 :: num_ports
     sll_int32 :: ierr
 
