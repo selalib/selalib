@@ -683,8 +683,8 @@ contains
     lm=>mp%get_logical_mesh(patch)
     
     SLL_ASSERT( (patch >= 0)  .and. (patch < mp%number_patches) )
-    SLL_ASSERT( (cell_i >= 1) .and. (cell_i < lm%num_cells1) )
-    SLL_ASSERT( (cell_j >= 1) .and. (cell_j < lm%num_cells2) )
+    SLL_ASSERT( (cell_i >= 1) .and. (cell_i <= lm%num_cells1) )
+    SLL_ASSERT( (cell_j >= 1) .and. (cell_j <= lm%num_cells2) )
     
     num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
          (mp%transfs(patch+1)%T%spline_deg2 +1)
