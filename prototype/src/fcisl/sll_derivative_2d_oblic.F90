@@ -117,9 +117,10 @@ contains
     
   end subroutine initialize_oblic_2d_derivative
   
-!< compute (1/A2)lim_{h->0} (f(x1_i+A1h,x2_j+A2h)-f(x1,x2))/h 
-!< = Dx2_f(i,j)+(A1/A2)*Dx1_f(i,j)
-!< for i=1,..,Nc_x1+1, j=1,..,Nc_x2+1  
+!< compute lim_{h->0} (f(x1_i+A1h,x2_j+A2h)-f(x1,x2))/h 
+!< = A1*Dx1_f(i,j)+A2*Dx2_f(i,j)
+!< for i=1,..,Nc_x1+1, j=1,..,Nc_x2+1 
+!< note that iota= (A1/(x1_max-x1_min))/(A2/(x2_max-x2_min)) 
   subroutine compute_oblic_derivative_2d(&
     deriv, &
     A1, &
@@ -179,7 +180,7 @@ contains
         do ell=r,s
           tmp=tmp+w(ell)*buf(ell,i1)
         enddo
-        output(i1,i2) = tmp/delta_x2
+        output(i1,i2) = tmp*A2/delta_x2
       enddo
     enddo    
 

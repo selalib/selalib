@@ -37,10 +37,10 @@ program aligned_derivative_2d
   sll_int32 :: ierr
   sll_real64 :: x1
   sll_real64 :: x2
-  sll_real64 :: x1_min = 0._f64
-  sll_real64 :: x1_max = 1._f64
-  sll_real64 :: x2_min = 0._f64
-  sll_real64 :: x2_max = 1._f64
+  sll_real64 :: x1_min
+  sll_real64 :: x1_max
+  sll_real64 :: x2_min
+  sll_real64 :: x2_max
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
   sll_int32 :: step
@@ -89,7 +89,11 @@ program aligned_derivative_2d
     A2, &
     spaghetti_size_guess, &
     advector_x1, &
-    order_x1
+    order_x1, &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max
 !    advector_x2, &
 !    order_x2
   
@@ -111,6 +115,11 @@ program aligned_derivative_2d
   order_x1 = 4
 !  advector_x2 = "SLL_SPLINES"
 !  order_x2 = 4
+
+  x1_min = 0._f64
+  x1_max = 1._f64
+  x2_min = 0._f64
+  x2_max = 1._f64
 
 
 
@@ -224,10 +233,10 @@ program aligned_derivative_2d
     do i1=1,Nc_x1+1
       x1 = x1_min+real(i1-1,f64)*delta_x1
       x2 = x2_min+real(i2-1,f64)*delta_x2
-      phi_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+      phi_exact(i1,i2) = sin(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1/(x1_max-x1_min)+A1_0*x2/(x2_max-x2_min)))
       Dx2_phi_exact(i1,i2) = &
-        A1_0*2._f64*sll_pi*real(k_mode,f64) &
-        *cos(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1+A1_0*x2))
+        A1_0*2._f64*sll_pi*real(k_mode,f64)/(x2_max-x2_min) &
+        *cos(2._f64*sll_pi*real(k_mode,f64)*(-A2_0*x1/(x1_max-x1_min)+A1_0*x2/(x2_max-x2_min)))
     enddo
   enddo
   
@@ -396,7 +405,8 @@ program aligned_derivative_2d
   !print *,'#x1_min,x1_max=',x1_min,x1_max
   !print *,'#x2_min,x2_max=',x2_min,x2_max
   
-  Dx2_phi = Da_phi - iota_tau*(x1_max-x1_min)/(x2_max-x2_min)*Dx1_phi
+  !Dx2_phi = Da_phi - iota_tau*(x1_max-x1_min)/(x2_max-x2_min)*Dx1_phi
+  Dx2_phi = Da_phi - iota_tau*Dx1_phi
   err = maxval(abs(Dx2_phi-Dx2_phi_exact))  
   print *,'#err for new method=', &
     err,err/maxval(abs(Dx2_phi_exact))
@@ -432,7 +442,7 @@ program aligned_derivative_2d
     phi, &
     Da_phi)
 
-  Dx2_phi = Da_phi - (A1/A2)*Dx1_phi
+  Dx2_phi = (1._f64/A2)*Da_phi - (A1/A2)*Dx1_phi
   err = maxval(abs(Dx2_phi-Dx2_phi_exact))  
   print *,'#err for new method without spaghetti=', &
     err,err/maxval(abs(Dx2_phi_exact))

@@ -131,6 +131,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_poisson_parallel
                          sll_scalar_field_1d_alternative
                          sll_fcisl
+                         sll_derivative
                          sll_qn_solvers_parallel
                          sll_reduction
                          sll_gyroaverage
