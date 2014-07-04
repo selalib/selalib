@@ -219,7 +219,6 @@ contains
     sll_int32 :: Nc_eta2
     sll_real64 :: r_minus
     sll_real64 :: r_plus
-    sll_int32 :: visu_step
 !!$    class(sll_interpolator_2d_base), pointer :: f_interp2d
 !!$    class(sll_interpolator_2d_base), pointer :: phi_interp2d
 !!$    class(sll_characteristics_2d_base), pointer :: charac2d

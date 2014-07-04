@@ -213,7 +213,6 @@ contains
     sll_real64, dimension(:), intent(out) :: output      
     sll_int32 :: Npts
     sll_real64 :: mean
-    sll_real64 :: x1
     sll_int32 :: i
     sll_real64 :: eta_min
     sll_real64 :: eta_max

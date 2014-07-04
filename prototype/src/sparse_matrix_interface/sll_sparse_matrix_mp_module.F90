@@ -114,7 +114,6 @@ contains
     sll_int32, dimension(:,:,:), intent(in) :: local_to_global_col
     sll_int32, dimension(:), intent(in)     :: num_local_dof_col
     !local variables
-    sll_int32 :: li_err, li_flag
     sll_int32 :: num_nz
     sll_int32, dimension(:,:), pointer :: lpi_columns
     sll_int32, dimension(:), pointer :: lpi_occ

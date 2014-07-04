@@ -219,7 +219,6 @@ contains
         type(csr_matrix) :: ao_D
         integer, dimension(:,:) :: api_id
         !local var
-        integer :: li_err, li_flag
         integer :: li_i
         integer :: li_j
         integer :: li_index

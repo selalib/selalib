@@ -37,7 +37,6 @@ contains
         !>
         integer, optional :: ai_COEF
         !local var
-        integer :: li_err, li_flag
         integer :: li_nnz
         integer, dimension(:,:), pointer :: lpi_columns
         integer, dimension(:), pointer :: lpi_occ
@@ -83,7 +82,15 @@ contains
         deallocate(lpi_occ)
     end subroutine create_SparseMatrix_with_LM
     !---------------------------------------------------------------------------------
-    subroutine init_SparseMatrix(self, ai_nel, api_LM_1, ai_nen_1, api_LM_2, ai_nen_2, api_columns, api_occ)
+    subroutine init_SparseMatrix(&
+         self,&
+         ai_nel,&
+         api_LM_1,&
+         ai_nen_1,&
+         api_LM_2,&
+         ai_nen_2,&
+         api_columns,&
+         api_occ)
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
@@ -93,7 +100,7 @@ contains
         integer, dimension(:,:), pointer :: api_columns
         integer, dimension(:), pointer :: api_occ
         !local var
-        integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_index, li_i, li_size
+        integer :: li_e, li_b_1, li_A_1, li_i, li_size
         integer :: li_err, li_flag
         real(wp), dimension(:), pointer :: lpr_tmp
 
@@ -156,8 +163,6 @@ contains
         integer, dimension(:), pointer :: api_occ
         !local var
         integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_i
-        integer :: li_err, li_flag
-        real(wp), dimension(:), pointer :: lpr_tmp
         integer :: li_result
         integer, dimension(2) :: lpi_size
         logical :: ll_done

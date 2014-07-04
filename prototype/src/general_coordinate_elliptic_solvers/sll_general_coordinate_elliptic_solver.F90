@@ -446,8 +446,6 @@ contains ! *******************************************************************
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
    sll_int32 :: ierr
-   type(sll_time_mark)  :: t0 
-   double precision :: time
 
 
    !call sll_set_time_mark(t0)
@@ -573,7 +571,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:), allocatable :: Stiff_loc
     sll_real64, dimension(:,:,:), pointer :: Source_loc
     sll_int32 :: total_num_splines_loc
-    sll_int32 :: ierr,ierr1
+    sll_int32 :: ierr
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: cell_index
@@ -581,9 +579,6 @@ contains ! *******************************************************************
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
-    type(sll_time_mark)  :: t0 
-    double precision :: time
-    
     character(len=*),parameter :: as_file1='mat'
     
     !call sll_set_time_mark(t0)
@@ -656,8 +651,7 @@ contains ! *******************************************************************
                S_b1_loc, &
                S_b2_loc, &
                es%masse,&
-               es%stiff,&
-               Source_loc)
+               es%stiff)
           
        end do
     end do
@@ -738,20 +732,14 @@ contains ! *******************************************************************
     sll_int32 :: total_num_splines_loc
     sll_real64 :: int_rho,int_jac
     sll_real64, dimension(:), allocatable   :: M_rho_loc
-    type(sll_time_mark)  :: t0 
-    double precision :: time
     sll_real64, dimension(:,:), allocatable   :: rho_at_gauss
     sll_int32 :: num_pts_g1, num_pts_g2, ig1, ig2, ig, jg
     sll_real64 :: wgpt1, wgpt2, gpt1, gpt2, eta1, eta2
-    sll_int32  :: index_coef1, index_coef2
-    sll_int32  :: ideg1,ideg2
-    sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
     class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
     class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
     sll_real64, dimension(:,:), pointer :: coeff_rho
     sll_real64, dimension(:), pointer :: rho_coeff_1d
-    sll_real64, dimension(:), pointer :: resul_rho_1d
     
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
@@ -845,14 +833,11 @@ contains ! *******************************************************************
                      es, &
                      i, &
                      j, &
-                     rho, &
                      rho_at_gauss, &
-                     int_rho,&
                      M_rho_loc)
                 
                 call local_to_global_matrices_rho( &
                      es, &
-                     cell_index, &
                      i, &
                      j, &
                      M_rho_loc)
@@ -902,14 +887,11 @@ contains ! *******************************************************************
                   es, &
                   i, &
                   j, &
-                  rho, &
                   rho_at_gauss, &
-                  int_rho,&
                   M_rho_loc)
              
              call local_to_global_matrices_rho( &
                   es, &
-                  cell_index, &
                   i, &
                   j, &
                   M_rho_loc)
@@ -1024,7 +1006,6 @@ contains ! *******************************************************************
     sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2
     sll_real64, dimension(obj%spline_degree1+1,2) :: dbiatx1_rho
     sll_real64, dimension(obj%spline_degree2+1,2) :: dbiatx2_rho
-    sll_real64 :: val_f
     sll_real64 :: val_c
     sll_real64 :: val_a11
     sll_real64 :: val_a12
@@ -1324,15 +1305,12 @@ contains ! *******************************************************************
        obj, &
        cell_i, &
        cell_j, &
-       rho, &
        rho_at_gauss, &
-       int_rho,&
        M_rho_loc)
 
     class(general_coordinate_elliptic_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
-    class(sll_scalar_field_2d_base), intent(in)     :: rho
     sll_real64, dimension(:,:), intent(in)   :: rho_at_gauss
 
     sll_real64, dimension(:), intent(out)   :: M_rho_loc
@@ -1346,7 +1324,6 @@ contains ! *******************************************************************
     sll_real64 :: eta2_min
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: int_rho
     sll_int32  :: tmp1
     sll_int32  :: tmp2
     sll_int32  :: num_pts_g1 ! number of gauss points in first direction 
@@ -1443,8 +1420,7 @@ contains ! *******************************************************************
        S_b1_loc, &
        S_b2_loc, &
        Masse_tot,&
-       Stiff_tot,&
-       Source_loc)
+       Stiff_tot)
     
     class(general_coordinate_elliptic_solver)  :: es
     sll_int32 :: cell_index
@@ -1458,7 +1434,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), intent(in) :: M_b_vect_loc
     sll_real64, dimension(:,:), intent(in) :: S_b1_loc
     sll_real64, dimension(:,:), intent(in) :: S_b2_loc
-    sll_real64, dimension(:,:,:), intent(in) :: Source_loc
     
     !  Correspond to the full Matrix of linear system 
     !  It is not necessary to keep it  
@@ -1468,7 +1443,6 @@ contains ! *******************************************************************
     sll_real64, dimension(:), intent(inout) :: Stiff_tot
     sll_int32 :: index1, index2, index3, index4
     sll_int32 :: index_coef1,index_coef2,index
-    sll_int32 :: index_coef1_phi,index_coef2_phi,index_phi
     sll_int32 :: i,j,mm, nn, b, bprime,x,y
     sll_int32 :: li_A, li_Aprime
     sll_real64 :: elt_mat_global
@@ -1590,13 +1564,11 @@ contains ! *******************************************************************
   
   subroutine local_to_global_matrices_rho( &
        es,&
-       cell_index, &
        cell_i, &
        cell_j, &
        M_rho_loc)
     
      class(general_coordinate_elliptic_solver)  :: es
-     sll_int32 :: cell_index
      sll_int32 :: cell_i
      sll_int32 :: cell_j
      sll_real64, dimension(:), intent(in)   :: M_rho_loc
@@ -1660,7 +1632,6 @@ contains ! *******************************************************************
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
-    sll_int32 :: ierr
     
     bc_left   = es%bc_left
     bc_right  = es%bc_right
@@ -1718,7 +1689,7 @@ contains ! *******************************************************************
     end if
 
   
-    call solve_gen_elliptic_eq(es,es%sll_csr_mat,es%tmp_rho_vec,es%tmp_phi_vec)
+    call solve_gen_elliptic_eq(es%sll_csr_mat,es%tmp_rho_vec,es%tmp_phi_vec)
     
     
     es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
@@ -1726,8 +1697,7 @@ contains ! *******************************************************************
 
   end subroutine solve_linear_system
   
-  subroutine solve_gen_elliptic_eq(es,csr_mat,apr_B,apr_U)
-    class(general_coordinate_elliptic_solver) :: es
+  subroutine solve_gen_elliptic_eq(csr_mat,apr_B,apr_U)
     type(sll_csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 
@@ -1737,7 +1707,7 @@ contains ! *******************************************************************
     ar_eps = 1.d-13
     ai_maxIter = 100000
   
-    call sll_solve_csr_matrix(es%sll_csr_mat, apr_B, apr_U)
+    call sll_solve_csr_matrix(csr_mat, apr_B, apr_U)
    
   end subroutine solve_gen_elliptic_eq
   
@@ -1753,14 +1723,13 @@ contains ! *******************************************************************
     es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
          es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
  
-    call solve_general_es_perper(es,es%sll_csr_mat,es%tmp_rho_vec,es%phi_vec, &
+    call solve_general_es_perper(es%sll_csr_mat,es%tmp_rho_vec,es%phi_vec, &
          Masse_tot) 
  
   end subroutine solve_linear_system_perper
 
 
-  subroutine solve_general_es_perper(es,csr_mat,apr_B,apr_U,Masse_tot)
-    class(general_coordinate_elliptic_solver) :: es
+  subroutine solve_general_es_perper(csr_mat,apr_B,apr_U,Masse_tot)
     type(sll_csr_matrix) :: csr_mat
     sll_real64, dimension(:) :: apr_U
     sll_real64, dimension(:) :: apr_B 

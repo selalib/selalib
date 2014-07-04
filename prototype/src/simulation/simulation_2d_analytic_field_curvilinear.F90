@@ -187,9 +187,6 @@ contains
     !local variables
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
-    sll_real64 :: r_minus
-    sll_real64 :: r_plus
-    sll_int32 :: visu_step
     type(sll_logical_mesh_1d), pointer :: mesh_x1
     type(sll_logical_mesh_1d), pointer :: mesh_x2
     class(sll_interpolator_2d_base), pointer :: f_interp2d
@@ -201,7 +198,6 @@ contains
     class(sll_interpolator_2d_base), pointer   :: A2_interp2d
     class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
     class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
     class(sll_interpolator_1d_base), pointer :: f_interp1d_x2

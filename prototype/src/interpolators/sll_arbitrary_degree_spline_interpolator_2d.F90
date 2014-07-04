@@ -699,8 +699,7 @@ contains
     sll_real64, dimension(:),optional :: slope_top
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_bottom=> null()
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_top => null()
-    sll_int32 :: sz_slope_left,sz_slope_right,sz_slope_bottom,sz_slope_top
-    sll_int32 :: ierr
+    sll_int32 :: sz_slope_bottom,sz_slope_top
     sll_int64 :: bc_selector
     sll_int32 :: num_pts1
     sll_int32 :: num_pts2
@@ -769,6 +768,9 @@ contains
           interpolator%slope_left = slope_left
           interpolator%compute_slope_left= .FALSE.
        end if
+       
+       
+       sz_slope_bottom = size(slope_bottom)
        interpolator%slope_right = 0.0_f64
        interpolator%compute_slope_right= .FALSE.
        
@@ -1012,6 +1014,7 @@ contains
           interpolator%compute_slope_right= .FALSE.
        end if
        
+       sz_slope_top= size(slope_top)
        interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
        interpolator%compute_slope_top = .FALSE.
 
@@ -1077,7 +1080,7 @@ contains
        interpolator%slope_left = 0.0_f64
        interpolator%compute_slope_left= .FALSE.
        
-       
+       sz_slope_top = size(slope_top)
        interpolator%compute_slope_top= .FALSE.
        interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
 
@@ -1115,10 +1118,11 @@ contains
        interpolator%slope_left = 0.0_f64
        interpolator%compute_slope_left= .FALSE.
        
-       
+       sz_slope_top = size(slope_top)
        interpolator%compute_slope_top= .FALSE.
        interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
           
+       sz_slope_bottom = size(slope_bottom)
        interpolator%slope_bottom(1:sz_slope_bottom+2) = 0.0_f64
        interpolator%compute_slope_bottom = .FALSE.
 
@@ -1613,7 +1617,6 @@ contains
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_bottom=> null()
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_top => null()
     sll_int32 :: sz_value_left,sz_value_right,sz_value_bottom,sz_value_top
-    sll_int32 :: ierr
     sll_int64 :: bc_selector
     sll_int32 :: num_pts1
     sll_int32 :: num_pts2
