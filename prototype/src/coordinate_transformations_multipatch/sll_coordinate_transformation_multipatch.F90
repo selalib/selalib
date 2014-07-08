@@ -71,6 +71,7 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: get_number_patches => get_number_patches_ctmp2d
      procedure, pass :: get_transformation => get_transformation_ctmp2d
      procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
+     ! Laura: agregar aqui get_num_cells_eta1(patch), get_num_cells_eta2(patch)
      procedure, pass :: get_connectivity => get_connectivity_ctmp2d
      procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_Tmp2d
      procedure, pass :: get_spline_local_index=>get_spline_local_index_Tmp2d
