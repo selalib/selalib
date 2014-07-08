@@ -148,7 +148,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(remap)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
-   
+      ADD_SUBDIRECTORY(distribution_function_multipatch)
    ENDIF()
 
    ADD_SUBDIRECTORY(parallel_array_initializers)
@@ -166,6 +166,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(logical_meshes_multipatch)
    ADD_SUBDIRECTORY(coordinate_transformations_multipatch)
    ADD_SUBDIRECTORY(fields_multipatch)
+
    ADD_SUBDIRECTORY(sparse_matrix_interface)
    ADD_SUBDIRECTORY(discontinuous_galerkin) 
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
