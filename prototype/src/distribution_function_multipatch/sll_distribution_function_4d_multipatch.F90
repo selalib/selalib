@@ -88,13 +88,8 @@ contains
     SLL_ALLOCATE( df%distributions(df%num_patches), ierr )
 
     do i=1,df%num_patches
-       ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-       ! longer supported by Selalib
-       !       lm => df%transf%get_logical_mesh(i)
-       ! Laura: usar nuevas funciones de acceso:
-       lm => df%transf%transfs(i)%t%mesh
-       np_x1 = lm%num_cells1
-       np_x2 = lm%num_cells2
+       np_x1 = df%transf%get_num_cells_eta1(i)
+       np_x2 = df%transf%get_num_cells_eta2(i)
        SLL_ALLOCATE(df%distributions(i)%f(np_x1,np_x2,np_x3,np_x4),ierr)
     end do
   end subroutine allocate_memory_df_4d_mp
