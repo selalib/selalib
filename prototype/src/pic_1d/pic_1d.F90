@@ -43,8 +43,8 @@ module sll_pic_1d_Class
     !1d1v data for electrostatic PIC
     sll_real64, DIMENSION(:), allocatable:: particleposition
     sll_real64, DIMENSION(:), allocatable :: particlespeed
-    sll_real64, DIMENSION(:), allocatable :: particleweight          ! cf. y_k in delta f and c_k in full f pic
-    sll_real64, DIMENSION(:), allocatable :: particleweight_constant !cf. c_k
+    !sll_real64, DIMENSION(:), allocatable :: particleweight          ! cf. y_k in delta f and c_k in full f pic
+    !sll_real64, DIMENSION(:), allocatable :: particleweight_constant !cf. c_k
     sll_real64 ::  particle_qm !<mass to electron mass ratio, with the sign of the charge
     sll_real64, DIMENSION(:), allocatable:: steadyparticleposition !Steady non-moving objects aka Ions
 
@@ -194,6 +194,15 @@ contains
 
         !electric_field_external=>sll_pic_1d_electric_field
         Eex=>pic_1d_electric_field_external
+
+
+        !Check Marker distribution on Cores
+        if ( coll_rank==0 .and. mod(nparticles, coll_size)/=0) then
+            print *, "Number of Markers per core: ", nparticles/(coll_size*1.0_f64)
+            print *, "Choose appropriate number of markers!"
+            stop
+        endif
+
     endsubroutine new_sll_pic_1d
 
     !<Destructor
@@ -220,7 +229,7 @@ contains
             SLL_ASSERT(    minval(particleposition) >=interval_a)
             SLL_ASSERT(    maxval(particleposition) <=interval_b)
             grid=floor(sqrt(nparticles/10.0_f64))+1
-            call distribution_xdmf("phasespace", p_species(1)%particle%dx, p_species(1)%particle%vx, &
+            call distribution_xdmf(trim(root_path)//"phasespace", p_species(1)%particle%dx, p_species(1)%particle%vx, &
                 p_species(1)%particle%weight,  &
                 interval_a-1.0_f64, interval_b+1.0_f64, grid, &
                 minval(p_species(1)%particle%vx), maxval(p_species(1)%particle%vx), grid, timestep)
@@ -272,7 +281,7 @@ contains
     subroutine sll_pic_1d_run(gnuplot_inline_output_user)
         logical, intent(in), optional ::gnuplot_inline_output_user
         sll_real64, dimension(size(knots)-1) :: analytical_solution
-        sll_int32 :: idx,jdx
+        sll_int32 :: idx,jdx,kdx
         sll_real64 :: time
         !Timers
         type(sll_time_mark)  :: tstart, tstop
@@ -304,8 +313,8 @@ contains
         SLL_CLEAR_ALLOCATE(particleposition(1:nparticles),ierr)
         SLL_CLEAR_ALLOCATE(particlespeed(1:nparticles),ierr)
 
-        SLL_CLEAR_ALLOCATE(particleweight(1:nparticles),ierr)
-        SLL_CLEAR_ALLOCATE(particleweight_constant(1:nparticles),ierr)
+        !SLL_CLEAR_ALLOCATE(particleweight(1:nparticles),ierr)
+        !SLL_CLEAR_ALLOCATE(particleweight_constant(1:nparticles),ierr)
 
         SLL_CLEAR_ALLOCATE(eval_solution(1:size(knots)),ierr)
 
@@ -318,10 +327,10 @@ contains
         !        call load_particles (nparticles, interval_a, interval_b,&
             !            steadyparticleposition, particleposition, &
             !            particlespeed, particleweight, particleweight_constant, particle_qm)
-        particleposition=species(1)%particle%dx
-        particlespeed=species(1)%particle%vx
-        particleweight=species(1)%particle%weight
-        particleweight_constant =species(1)%particle%weight_const
+!        particleposition=species(1)%particle%dx
+!        particlespeed=species(1)%particle%vx
+!        particleweight=species(1)%particle%weight
+!        particleweight_constant =species(1)%particle%weight_const
         particle_qm=species(1)%qm
 
         call sll_collective_barrier(sll_world_collective)
@@ -358,12 +367,13 @@ contains
 
         !Delta F Method, initialize the control variate
         if (enable_deltaf .eqv. .TRUE.) then
-            !The Control Variate, as it is constant over time gos intho the constant inhomogenity
+            !The Control Variate, as it is constant over time gos into the constant inhomogenity
             !In the constant electron case this should be normalized to zero
             !But since the fem solver ignores the constant ion background anyway
             !this is going to be ok.
             !Also this should be done analytically and not like that as an Monte Carlo estimate
-            call  qnsolver%set_bg_particles(particleposition, particle_qm*particleweight_constant)
+            !Here suppose the control variate is the initial state by default
+           call  qnsolver%set_bg_particles(species(1)%particle%dx, sign(species(1)%particle%weight_const, species(1)%qm))
 
         endif
 
@@ -375,9 +385,7 @@ contains
 
         !Initial Solve
         call qnsolver%reset_particles()
-        do idx=1,num_species
-            call qnsolver%add_species(species(idx))
-        enddo
+        call qnsolver%set_species(species(1:num_species))
         call qnsolver%solve()
 
         print *, "#Initial field solve"
@@ -400,13 +408,6 @@ contains
         !---------------------------Initial Plots------------------------------------------------------------
         if (coll_rank==0) then
 
-
-            !            call distribution_xv_gnuplot( "phasespace", particleposition, particlespeed, &
-                !                                                 minval(particleposition), maxval(particleposition),&
-                !                                                  size(particleposition), &
-                !                                                  minval(particlespeed), maxval(particlespeed),&
-                !                                                  size(particlespeed), &
-                !                                                1, 1.0_f64)
 
 
             open(unit=20, file=trim(root_path)//"initial_field.txt")
@@ -451,10 +452,11 @@ contains
 
 
             print *, "#Field Energy                  " , &
-                "Kinetic Energy                  ", "Total Energy                      "
+                "Kinetic Energy                  ", "Inhom. Variance       "
         endif
 
         !Write initial phasespace
+
         do jdx=0, coll_size
             call sll_collective_barrier(sll_world_collective)
             if( coll_rank==jdx) then
@@ -463,8 +465,10 @@ contains
                 else
                     open(unit=20, file=trim(root_path)//"initial_phasespace.dat",position="append")
                 endif
-                do idx=1, size(particleposition)
-                    write (20,*) particleposition(idx), particlespeed(idx), particleweight(idx)
+                do kdx=1, num_species
+                do idx=1, size(species(kdx)%particle)
+                    write (20,*) species(kdx)%particle(idx)%dx, species(kdx)%particle(idx)%vx, species(kdx)%particle(idx)%weight
+                enddo
                 enddo
                 close(20)
             endif
@@ -507,7 +511,6 @@ contains
             particleweight_var(timestep)=sum(species(1)%particle%weight**2)/size(species(1)%particle)-particleweight_mean(timestep)**2
 
 
-            !kineticenergy(timestep)=sll_pic1d_calc_kineticenergy(abs(1/particle_qm),  particlespeed , particleweight )
             kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( species(1:num_species) )
             fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(species(1:num_species))
             impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
@@ -553,19 +556,19 @@ contains
 
             !Push particles by species
             ! particle_mask=(/I,(I=1,nparticles)/)
-            do pushed_species=1,num_species
+            !do pushed_species=1,num_species
 
-                particle_qm=species(pushed_species)%qm
+             !   particle_qm=species(pushed_species)%qm
+
+                pushed_species=1
                 selectcase (particle_pusher)
                     case(SLL_PIC1D_PPUSHER_RK4)
-                        call  sll_pic_1d_rungekutta4_step_array( species(pushed_species)%particle%dx, &
-                            species(pushed_species)%particle%vx ,timestepwidth, time)
+                        call  sll_pic_1d_rungekutta4_step_array( species(1)%particle%dx, &
+                            species(1)%particle%vx ,timestepwidth, time)
                     case(SLL_PIC1D_PPUSHER_VERLET)
-                        call sll_pic_1d_Verlet_scheme( species(pushed_species)%particle%dx, &
-                            species(pushed_species)%particle%vx ,timestepwidth, time)
+                        call sll_pic_1d_Verlet_scheme(  species(1:num_species) ,timestepwidth, time)
                     case(SLL_PIC1D_PPUSHER_EULER)
-                        call sll_pic_1d_explicit_euler( species(pushed_species)%particle%dx, &
-                            species(pushed_species)%particle%vx ,timestepwidth, time)
+                        call sll_pic_1d_explicit_euler( species(1:num_species),timestepwidth, time)
                     case(SLL_PIC1D_PPUSHER_LEAPFROG_V)
                         call  sll_pic_1d_variational_leap_frog( species(pushed_species)%particle%dx, &
                             species(pushed_species)%particle%vx ,timestepwidth)
@@ -600,9 +603,9 @@ contains
 
                 end select
 
-            enddo
+           ! enddo
             !Collisions
-            call sll_pic1d_collision_step()
+            !call sll_pic1d_collision_step()
 
             !Inject and remove particles
             call sll_pic1d_injection_removing()
@@ -645,31 +648,31 @@ contains
 
     endsubroutine
 
-    subroutine sll_pic1d_collision_step()
-        sll_real64, dimension(size(particleweight)) :: collision_weights
-        sll_real64 :: ueq, Teq
-        !       sll_real64:: feq,v
-        sll_int32 :: idx
-        !feq(v)=1.0_f64/sqrt(sll_kx)*exp(-0.5_f64*(v-ueq)**2/Teq)
-        ueq=dot_product(particlespeed, particleweight)
-        Teq=dot_product(particlespeed**2, particleweight)-ueq**2
-
-        !                collision_weights=particleweight&
-            !                         /sqrt(sll_kx)*exp(-0.5_f64*(particlespeed-ueq)**2/Teq)/(interval_length)
-        !                         initial_dist_xv(particleposition, particlespeed)
-        !
-
-
-        !        do idx=1,size(particleweight)
-        !                collision_weights(idx)=particleweight(idx)*&
-            !                         feq(particlespeed(idx))/&
-            !                         initial_dist_xv((/particleposition(idx)/), (/particlespeed(idx)/))
-        !        enddo
-
-
-
-
-    endsubroutine
+!    subroutine sll_pic1d_collision_step()
+!      !  sll_real64, dimension(size(particleweight)) :: collision_weights
+!        sll_real64 :: ueq, Teq
+!        !       sll_real64:: feq,v
+!        sll_int32 :: idx
+!        !feq(v)=1.0_f64/sqrt(sll_kx)*exp(-0.5_f64*(v-ueq)**2/Teq)
+!        ueq=dot_product(particlespeed, particleweight)
+!        Teq=dot_product(particlespeed**2, particleweight)-ueq**2
+!
+!        !                collision_weights=particleweight&
+!            !                         /sqrt(sll_kx)*exp(-0.5_f64*(particlespeed-ueq)**2/Teq)/(interval_length)
+!        !                         initial_dist_xv(particleposition, particlespeed)
+!        !
+!
+!
+!        !        do idx=1,size(particleweight)
+!        !                collision_weights(idx)=particleweight(idx)*&
+!            !                         feq(particlespeed(idx))/&
+!            !                         initial_dist_xv((/particleposition(idx)/), (/particlespeed(idx)/))
+!        !        enddo
+!
+!
+!
+!
+!    endsubroutine
 
 
     subroutine sll_pic1d_injection_removing()
@@ -696,6 +699,17 @@ contains
         endselect
 
     endsubroutine
+
+!    !<Wrapper for the field solver, here particle destruction and injection can be made
+!    !<during the push
+!    subroutine sll_pic_1d_solve_field(p_species)
+!        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+!
+!
+!
+!
+!
+!    endsubroutine
 
 
 
@@ -922,7 +936,7 @@ contains
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
         sll_real64, dimension(size(x_0)) :: k_x1, k_x2,&
-            k_v1, k_v2, stage_DPhidx
+            k_v1, k_v2, stage_DPhidx,x_1,v_1
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
@@ -939,11 +953,16 @@ contains
         k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
             *(-particle_qm)
         !Perform step---------------------------------------------------------------
-        x_0= x_0 + k_x2
-        v_0= v_0 + k_v2
+        x_1= x_0 + k_x2
+        v_1= v_0 + k_v2
 
         !        x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+
+        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        x_0=x_1
+        v_0=v_1
+
         call sll_pic_1d_solve_qn(x_0)
     endsubroutine
 
@@ -980,8 +999,8 @@ contains
         x_0= x_0 + (k_x1 + 4.0_f64 * k_x2 + k_x3)/6.0_f64
         v_0= v_0 + (k_v1 + 4.0_f64 * k_v2 + k_v3)/6.0_f64
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+
         call sll_pic_1d_solve_qn(x_0)
     endsubroutine
 
@@ -1016,58 +1035,173 @@ contains
         call sll_pic_1d_solve_qn(x_0)
     endsubroutine
 
-
-
-    subroutine sll_pic_1d_explicit_euler(x_0, v_0, h, t)
+    subroutine sll_pic_1d_explicit_euler(species_0, h, t)
+        type(sll_particle_1d_group), dimension(:), intent(inout) :: species_0
+        sll_int32 :: jdx, num_part
         sll_real64, intent(in):: h
         sll_real64, intent(in):: t
+        type(sll_particle_1d_group), dimension(size(species_0)) :: species_1
 
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) :: stage_DPhidx,x_1,v_1
+        sll_real64 , dimension(:),allocatable :: stage_DPhidx
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        !----ALLOCATE STAGES-----------------------------------------------
+        call sll_pic_1d_copy_species(species_0, species_1)
+
 
         !--------------------Stage 1-------------------------------------------------
-        !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
-        x_1=x_0 + h*v_0
-        v_1=v_0 + h*(stage_DPhidx + Eex(x_0,t) )*(-particle_qm)
+        do jdx=1,size(species_0)
+                num_part=size(species_0(jdx)%particle)
+                SLL_ALLOCATE(stage_DPhidx(num_part),ierr)
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+                call qnsolver%evalE(species_0(jdx)%particle%dx, stage_DPhidx)
 
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        x_0=x_1
-        v_0=v_1
+                species_1(jdx)%particle%dx=species_0(jdx)%particle%dx + h*species_0(jdx)%particle%vx
+                species_1(jdx)%particle%vx=species_0(jdx)%particle%vx + h*(stage_DPhidx + &
+                        Eex( species_0(jdx)%particle%dx,t) )*(-species_0(jdx)%qm)
 
-        call sll_pic_1d_solve_qn(x_0)
+                SLL_DEALLOCATE_ARRAY(stage_DPhidx,ierr)
+
+        enddo
+
+        call sll_pic1d_ensure_boundary_conditions_species(species_1)
+
+        call sll_pic1d_adjustweights_advection_species(species_0, species_1)
+
+
+
+        call sll_pic_1d_copy_species(species_1, species_0)
+
+        call qnsolver%set_species(species_0)
+        call qnsolver%solve()
+
     endsubroutine
 
+
+    subroutine sll_pic_1d_copy_species(original_species, species )
+        type(sll_particle_1d_group), dimension(:), intent(in) :: original_species
+        type(sll_particle_1d_group), dimension(:), intent(inout) :: species
+        sll_int32 :: num_species, numpart, jdx
+
+        num_species=size(original_species)
+        SLL_ASSERT(num_species==size(species))
+
+        do jdx=1,num_species
+                numpart= size(original_species(jdx)%particle)
+                if (allocated(species(jdx)%particle)) then
+                    if (size(species(jdx)%particle)==numpart) then
+                        else
+                        SLL_DEALLOCATE_ARRAY(species(jdx)%particle,ierr)
+                        SLL_ALLOCATE(species(jdx)%particle(1:numpart),ierr)
+                        endif
+                        else
+                            SLL_ALLOCATE(species(jdx)%particle(1:numpart),ierr)
+                endif
+                species(jdx)%particle=original_species(jdx)%particle
+                species(jdx)%qm=original_species(jdx)%qm
+        enddo
+    endsubroutine
+
+
+!    subroutine sll_pic_1d_explicit_euler(x_0, v_0, h, t, particle_qm)
+!        sll_real64, intent(in):: h
+!        sll_real64, intent(in):: t
+!
+!        sll_real64, dimension(:) ,intent(inout) :: x_0
+!        sll_real64, dimension(:) ,intent(inout) :: v_0
+!        sll_real64.  dimension(:) ,intent(in), pointer :: particle_qm
+!        sll_real64, dimension(size(x_0)) :: stage_DPhidx,x_1,v_1
+!
+!        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+!
+!        !--------------------Stage 1-------------------------------------------------
+!        !call sll_bspline_fem_solver_1d_solve(x_0)
+!        call qnsolver%evalE(x_0, stage_DPhidx)
+!        x_1=x_0 + h*v_0
+!        v_1=v_0 + h*(stage_DPhidx + Eex(x_0,t) )*(-particle_qm)
+!
+!        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+!
+!        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+!        x_0=x_1
+!        v_0=v_1
+!
+!        call sll_pic_1d_solve_qn(x_0)
+!    endsubroutine
+
     !<From Erics lecture notes on Vaslov Equations
-    subroutine sll_pic_1d_Verlet_scheme(x_0, v_0, h, t)
+    subroutine sll_pic_1d_Verlet_scheme(species_0, h, t)
+        type(sll_particle_1d_group), dimension(:), intent(inout) :: species_0
+        sll_int32 :: jdx, num_part
         sll_real64, intent(in):: h
         sll_real64, intent(in):: t
-        sll_real64, dimension(:) ,intent(inout) :: x_0
-        sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(size(x_0)) ::  DPhidx, x_1, v_1, v_05
+        type(sll_particle_1d_group), dimension(size(species_0)) :: species_1, species_05
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+        sll_real64 , dimension(:),allocatable :: DPhidx
 
-        call qnsolver%evalE(x_0, DPhidx)
-        v_05=v_0+ 0.5_f64*h*(DPhidx+Eex(x_0,t))*(-particle_qm)
-        x_1=x_0 + h*v_05
-        !print *, maxval(abs(v_05))
-        !x_1=sll_pic1d_ensure_periodicity(x_1,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_1, v_05)
-        call sll_pic_1d_solve_qn(x_1)
+        !----ALLOCATE STAGES-----------------------------------------------
+        call sll_pic_1d_copy_species(species_0, species_1)
+        call sll_pic_1d_copy_species(species_0, species_05)
 
-        call qnsolver%evalE(x_1, DPhidx)
-        v_1=v_05 + 0.5_f64*h*(DPhidx+Eex(x_1,t+h))*(-particle_qm)
-        !Commit Push
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
-        x_0=x_1
-        v_0=v_1
+
+        !--------------------Stage 1-------------------------------------------------
+        do jdx=1,size(species_0)
+                num_part=size(species_0(jdx)%particle)
+                SLL_ALLOCATE(DPhidx(num_part),ierr)
+
+                call qnsolver%evalE(species_0(jdx)%particle%dx, DPhidx)
+
+                species_05(jdx)%particle%vx=species_0(jdx)%particle%vx+ &
+                            0.5_f64*h*(DPhidx+Eex(species_0(jdx)%particle%dx,t))*(-species_0(jdx)%qm)
+
+                species_05(jdx)%particle%dx=species_0(jdx)%particle%dx  + h*species_05(jdx)%particle%vx
+
+                SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
+         enddo
+
+        call sll_pic1d_ensure_boundary_conditions_species(species_05)
+        call qnsolver%set_species(species_05)
+        call qnsolver%solve()
+
+        do jdx=1,size(species_0)
+                num_part=size(species_0(jdx)%particle)
+                SLL_ALLOCATE(DPhidx(num_part),ierr)
+
+                call qnsolver%evalE(species_05(jdx)%particle%dx, DPhidx)
+
+                species_1(jdx)%particle%dx=species_05(jdx)%particle%dx
+                species_1(jdx)%particle%vx=species_05(jdx)%particle%vx + &
+                                             0.5_f64*h*(DPhidx+Eex( &
+                                    species_1(jdx)%particle%dx,t+h))*(-species_1(jdx)%qm)
+
+                SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
+         enddo
+
+        call sll_pic1d_ensure_boundary_conditions_species(species_1)
+
+        call sll_pic1d_adjustweights_advection_species(species_0, species_1)
+
+        call sll_pic_1d_copy_species(species_1, species_0)
+       !sll_real64, intent(in):: h
+!        sll_real64, intent(in):: t
+!        sll_real64, dimension(:) ,intent(inout) :: x_0
+!        sll_real64, dimension(:) ,intent(inout) :: v_0
+!        sll_real64, dimension(size(x_0)) ::  DPhidx, x_1, v_1, v_05
+!
+!        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
+!
+!        call qnsolver%evalE(x_0, DPhidx)
+!        v_05=v_0+ 0.5_f64*h*(DPhidx+Eex(x_0,t))*(-particle_qm)
+!        x_1=x_0 + h*v_05
+!
+!        call sll_pic1d_ensure_boundary_conditions(x_1, v_05)
+!        call sll_pic_1d_solve_qn(x_1)
+!
+!        call qnsolver%evalE(x_1, DPhidx)
+!        v_1=v_05 + 0.5_f64*h*(DPhidx+Eex(x_1,t+h))*(-particle_qm)
+!        !Commit Push
+!        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+!        x_0=x_1
+!        v_0=v_1
 
     endsubroutine
 
@@ -1132,7 +1266,7 @@ contains
         push_error_var(timestep)=dot_product(perror**2, pweight)&
             - push_error_mean(timestep)
 
-push_error_mean=maxval(perror)
+            push_error_mean=maxval(perror)
     endsubroutine
     !    !<Nonrelativistic kinetic energy 0.5*m*v^2
     !    function sll_pic1d_calc_kineticenergy(relmass,  particlespeed , particleweight ) &
@@ -1422,6 +1556,45 @@ push_error_mean=maxval(perror)
     endsubroutine
 
 
+
+
+    !> \brief Adjust the weights after advection step
+    subroutine sll_pic1d_adjustweights_advection_species(species_old, species_new)
+        type(sll_particle_1d_group), dimension(:), intent(inout) :: species_old
+        type(sll_particle_1d_group), dimension(:), intent(inout) :: species_new
+        sll_real64, dimension(:), allocatable:: ratio
+        sll_int32 :: num_species, numpart, jdx
+
+        num_species=size(species_old)
+        SLL_ASSERT(num_species==size(species_new))
+
+        !Adjust weights
+        if (enable_deltaf .eqv. .TRUE.) then
+              do jdx=1, num_species
+                    numpart=size(species_old(jdx)%particle)
+
+                    SLL_CLEAR_ALLOCATE(ratio(1:numpart),ierr)
+                    SLL_ASSERT(size(species_new(jdx)%particle)==numpart)
+
+                ratio=control_variate_xv(species_new(jdx)%particle%dx, species_new(jdx)%particle%vx)&
+                                    /control_variate_xv(species_old(jdx)%particle%dx, species_old(jdx)%particle%vx)
+
+            species_new(jdx)%particle%weight=species_new(jdx)%particle%weight_const  - &
+            ( species_new(jdx)%particle%weight_const  - species_new(jdx)%particle%weight )*ratio
+
+            !species_new(jdx)%particle%weight_const= species_old(jdx)%particle%weight_const
+
+           ! species_old(jdx)%particle%weight=species_new(jdx)%particle%weight
+
+                    SLL_DEALLOCATE_ARRAY(ratio,ierr)
+               enddo
+        endif
+
+    endsubroutine
+
+
+
+
     subroutine sll_pic1d_adjustweights(xold, xnew, vold, vnew)
         sll_real64, dimension(:),intent(in) ::vold, xold
         sll_real64, dimension(:),intent(out) ::vnew, xnew
@@ -1487,18 +1660,32 @@ push_error_mean=maxval(perror)
         enddo
     endfunction
 
-    function pic_1d_allparticlev(p_species) result( ppos)
+    function pic_1d_allparticlev(p_species) result( pv)
         type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
         sll_int32 :: idx, num, npart
         sll_int32 :: off
-        sll_real64, dimension(nparticles) :: ppos
+        sll_real64, dimension(nparticles) :: pv
         num=size(p_species)
 
         off=0
 
         do idx=1,num
             npart=size(p_species(idx)%particle)
-            ppos(1+off:npart+off)=p_species(idx)%particle%vx
+            pv(1+off:npart+off)=p_species(idx)%particle%vx
+            off=npart
+        enddo
+    endfunction
+
+    function pic_1d_allparticleqm(p_species) result( qm)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        sll_int32 :: idx, num, npart
+        sll_int32 :: off
+        sll_real64, dimension(nparticles) :: qm
+        num=size(p_species)
+        off=0
+        do idx=1,num
+            npart=size(p_species(idx)%particle)
+            qm(1+off:npart+off)=p_species(idx)%qm
             off=npart
         enddo
     endfunction
