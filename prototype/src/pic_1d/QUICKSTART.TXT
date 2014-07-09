@@ -1,0 +1,18 @@
+In the build directory run
+
+make all
+make test_pic_1d
+
+Run with 2**7 mesh cells, and spline degree sdeg
+Output is saved in path
+
+Landau damping with delta-f and Runge Kutta 2
+mpirun -np 2   ./bin/test_pic_1d nmark=10000,femp=7,sdeg=3,tstepw=0.1,tsteps=100,ppusher=\"rk2\",psolver=\"fem\",lalpha=0.1,path=\'/tmp/\',scenario=\'landau\',deltaf=1
+
+Error estimates with mersons pusher
+mpirun -np 2   ./bin/test_pic_1d nmark=10000,femp=7,sdeg=3,tstepw=0.1,tsteps=100,ppusher=\"merson\",psolver=\"fem\",lalpha=0.1,path=\'/tmp/\',scenario=\'landau\',deltaf=1
+
+
+To view results go to output directory and type
+
+gnuplot -persistent ./pic1dresult.gnu
