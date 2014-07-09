@@ -42,7 +42,7 @@ program unit_test
     logical  :: gnuplot_inline_output_user=.FALSE.
 
 
-    CHARACTER(LEN=255) :: ppusher='verlet'  !Particle pusher
+    CHARACTER(LEN=255) :: ppusher='euler'  !Particle pusher
     CHARACTER(LEN=255) :: psolver='fem'  !Poisson solver
     CHARACTER(LEN=255) :: scenario='landau'  !Which testcase to use
 

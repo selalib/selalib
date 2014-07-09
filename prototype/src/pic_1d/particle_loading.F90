@@ -1284,7 +1284,18 @@ endsubroutine
 
 
 
+subroutine sll_pic1d_ensure_boundary_conditions_species(particle_species )
+        type(sll_particle_1d_group), dimension(:), intent(inout)::   particle_species
+        sll_int32 :: num_species, numpart, jdx
 
+        num_species=size(particle_species)
+        SLL_ASSERT(num_species==size(particle_species))
+
+        do jdx=1,num_species
+            call sll_pic1d_ensure_boundary_conditions(particle_species(jdx)%particle%dx,&
+                                particle_species(jdx)%particle%vx )
+        enddo
+endsubroutine
 
 
 subroutine sll_pic1d_ensure_boundary_conditions( particle_position, particlespeed)

@@ -271,15 +271,18 @@ contains
         sll_real64 :: coeff
         coeff=2.0_f64*sll_pi/this%Ilength
 
-        seminorm=0
+        seminorm=0.0_f64
         do fmode_a=1,this%num_modes
 !            do fmode_b=1,this%num_modes
 !            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1)&
 !                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_i1))
 
             !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)/this%Ilength
-            seminorm=seminorm+ 2.0_f64*abs(this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2
-!            enddo
+!            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -imag(this%fourier_fmode(fmode_a))**2) &
+!                                  *(1.0_f64/fmode_a)**2/coeff**2/this%Ilength*2
+!
+  seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +imag(this%fourier_fmode(fmode_a))**2)
+            !seminorm=seminorm+  2.0_f64*real(this%fourier_fmode(fmode_a)*conjg(this%fourier_fmode(fmode_a)))
         enddo
     endfunction
     !
@@ -303,7 +306,7 @@ contains
         sll_comp64, dimension(this%num_modes) :: rhs
         sll_int32 ::fmode
         do fmode=1,this%num_modes
-            rhs(fmode)=sum(exp(-sll_i1 * fmode*ppos*2.0_f64*sll_pi/this%Ilength));
+            rhs(fmode)=sum(exp(-sll_i1 * fmode*ppos*sll_kx/this%Ilength));
         enddo
     endfunction
 
@@ -322,7 +325,7 @@ contains
             !Be careful here, the dot_product tends to complex conjugate stuff
             !which we don't want in this case
             !rhs(fmode)=dot_product(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength), pweight )
-            rhs(fmode)=sum(exp(-sll_i1*fmode*ppos*2.0_f64*sll_pi/this%Ilength)*pweight)
+            rhs(fmode)=sum(exp(-sll_i1*fmode*ppos*sll_kx/this%Ilength)*pweight)
 
         enddo
     endfunction

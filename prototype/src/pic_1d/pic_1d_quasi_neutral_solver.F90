@@ -88,6 +88,7 @@ module sll_pic_1d_quasi_neutral_solver
 
         procedure, pass(this), public :: reset_particles=>pic_1d_quasi_neutral_solver_reset_particles
         procedure, pass(this), public :: add_species=>pic_1d_quasi_neutral_solver_add_species
+        procedure, pass(this), public :: set_species=>pic_1d_quasi_neutral_solver_set_species
 
         procedure, pass(this), public :: set_electrons_only_weighted=>pic_1d_quasi_neutral_solver_set_electrons_only_weighted
 
@@ -468,6 +469,25 @@ contains
                 print  *,  this%inhomogenity_comp
 
         endselect
+    endsubroutine
+
+
+    !<@brief Takes an array of all species and sets them as the foreground for the field solve
+    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param species array of particle species containing ions and electrons
+    subroutine pic_1d_quasi_neutral_solver_set_species(this,&
+            species)
+        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        type(sll_particle_1d_group), dimension(:), intent(in) :: species
+        sll_int32 :: num_species,jdx
+        num_species=size(species)
+
+        call this%reset_particles()
+
+        do jdx=1,num_species
+                call this%add_species(species(jdx))
+        enddo
+
     endsubroutine
 
     !<@brief Takes negative and positive particles with charge one and custom weights
