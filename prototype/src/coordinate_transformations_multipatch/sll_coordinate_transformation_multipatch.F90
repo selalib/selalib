@@ -71,7 +71,8 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: get_number_patches => get_number_patches_ctmp2d
      procedure, pass :: get_transformation => get_transformation_ctmp2d
      procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
-     ! Laura: agregar aqui get_num_cells_eta1(patch), get_num_cells_eta2(patch)
+     procedure, pass :: get_num_cells_eta1 => get_num_cells_eta1_ctmp2d
+     procedure, pass :: get_num_cells_eta2 => get_num_cells_eta2_ctmp2d
      procedure, pass :: get_connectivity => get_connectivity_ctmp2d
      procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_Tmp2d
      procedure, pass :: get_spline_local_index=>get_spline_local_index_Tmp2d
@@ -374,6 +375,28 @@ contains
     ! compatibility with the gfortran 4.6.3 compiler we allow direct access.
     res => mp%transfs(patch+1)%t%mesh
   end function get_logical_mesh_ctmp2d
+
+  function get_num_cells_eta1_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_int32 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells1
+    res = mp%transfs(patch+1)%t%mesh%num_cells1
+  end function get_num_cells_eta1_ctmp2d
+
+  function get_num_cells_eta2_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_int32 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%num_cells2
+  end function get_num_cells_eta2_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)
     type(sll_coordinate_transformation_2d_nurbs), pointer :: res
