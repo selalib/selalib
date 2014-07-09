@@ -33,7 +33,7 @@ program test_general_elliptic_solver_multipatch
 
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
   type(sll_logical_mesh_2d), pointer                         :: m
-  type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
+  class(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
   type(general_coordinate_elliptic_solver_mp)               :: es_mp
   class(sll_scalar_field_multipatch_2d), pointer              :: a11_field_mat
   class(sll_scalar_field_multipatch_2d), pointer              :: a12_field_mat

@@ -399,7 +399,7 @@ contains
   end function get_num_cells_eta2_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)
-    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
