@@ -440,7 +440,7 @@ contains
     type(sll_scalar_field_multipatch_2d), pointer      :: rho
     type(sll_scalar_field_multipatch_2d), pointer      :: phi
     type(sll_logical_mesh_2d), pointer                         :: logical_m
-    type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
+    class(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32,  dimension(:), allocatable :: recv_sz
@@ -650,7 +650,8 @@ contains
     SLL_ALLOCATE(send_buf(loc_sz_x1*loc_sz_x2), ierr)
     !    SLL_ALLOCATE(sim%efield_split(loc_sz_x1,loc_sz_x2),ierr)
 
-!!$    call initialize_layout_with_distributed_2D_array( &
+!!$    call initialize_layout_with_distributed
+_2D_array( &
 !!$         nc_x1+1, &
 !!$         nc_x2+1, &
 !!$         1, &

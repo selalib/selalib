@@ -87,7 +87,7 @@ module sll_module_coordinate_transformations_2d_nurbs
   end type sll_coordinate_transformation_2d_nurbs
 
   type sll_coordinate_transformation_2d_nurbs_ptr
-     type(sll_coordinate_transformation_2d_nurbs), pointer :: T
+     class(sll_coordinate_transformation_2d_nurbs), pointer :: T
   end type sll_coordinate_transformation_2d_nurbs_ptr
 
   interface delete

@@ -697,7 +697,7 @@ contains   ! *****************************************************************
   end subroutine compute_compatible_derivatives_in_borders
 
   function get_patch_transformation_sfmp2d( mp, patch ) result(res)
-    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
     class(sll_scalar_field_multipatch_2d), intent(in)      :: mp
     sll_int32, intent(in)                                 :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
