@@ -169,8 +169,6 @@ module sll_simulation_4d_qns_general_multipatch_module
 
 contains
 
-
-
   ! Tentative function to initialize the simulation object 'manually'.
   subroutine initialize_4d_qns_gen_mp(&
    sim, &
@@ -213,11 +211,11 @@ contains
    elec_field_ext_f_params,&
    number_diags)
     
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout)    :: sim
-    type(sll_coordinate_transformation_multipatch_2d), intent(in), target       :: transformation_x
-    type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
-    procedure(sll_scalar_initializer_4d)                  :: init_func
-    sll_real64, dimension(:), target                      :: params
+    class(sll_simulation_4d_qns_general_multipatch),   intent(inout)      :: sim
+    type(sll_coordinate_transformation_multipatch_2d), intent(in), target :: transformation_x
+    type(sll_logical_mesh_2d), pointer         :: mesh2d_v
+    procedure(sll_scalar_initializer_4d)       :: init_func
+    sll_real64, dimension(:), target           :: params
     procedure(two_var_parametrizable_function) :: a11_f
     procedure(two_var_parametrizable_function) :: a12_f
     procedure(two_var_parametrizable_function) :: a21_f
@@ -413,8 +411,8 @@ contains
     sll_real64 :: diff
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_real64, dimension(1:2,1:2) :: jac_m
-    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
-    sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
+    sll_int32,  dimension(1:2)     :: gi     ! for storing global indices
+    sll_int32,  dimension(1:4)     :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
 #define BUFFER_SIZE sim%number_diags
@@ -422,13 +420,13 @@ contains
     sll_real64, dimension(BUFFER_SIZE) :: buffer_energy_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
-    sll_real64 :: tmp,numpart
     sll_real64, dimension(1) :: tmp1
-    sll_int32 :: buffer_counter
-    sll_int32 :: efield_energy_file_id
-    sll_int32 :: num_particles_file_id
-    sll_int32 :: global_indices(4)
-    sll_int32 :: iplot
+    sll_real64 :: tmp,numpart
+    sll_int32  :: buffer_counter
+    sll_int32  :: efield_energy_file_id
+    sll_int32  :: num_particles_file_id
+    sll_int32  :: global_indices(4)
+    sll_int32  :: iplot
     character(len=4) :: cplot
     type(sll_scalar_field_multipatch_2d), pointer      :: a11_field_mat
     type(sll_scalar_field_multipatch_2d), pointer      :: a21_field_mat
@@ -445,19 +443,21 @@ contains
     type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
-    sll_int32, dimension(:), allocatable  :: recv_sz
-    sll_real64, dimension(:,:), pointer :: phi_values
-    sll_real64 :: val_a11,val_a12,val_a21,val_a22,val_b1,val_b2,val_c,val_rho,val_phi,val_phi_exacte
+    sll_int32,  dimension(:), allocatable :: recv_sz
+    sll_int32,  dimension(:), allocatable :: disps ! for allgatherv operation
+    sll_real64, dimension(:,:), pointer   :: phi_values
+    sll_real64 :: val_a11, val_a12, val_a21, val_a22
+    sll_real64 :: val_b1,  val_b2,  val_c
+    sll_real64 :: val_rho, val_phi, val_phi_exacte
     sll_real64 :: density_tot
-    sll_int32  :: send_size   ! for allgatherv operation
-    sll_int32 :: droite_test_pente
-    sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
-    sll_int32 :: num_patches
-    sll_int32 :: ipatch
-    sll_int32  :: num_pts1
-    sll_int32  :: num_pts2
     sll_real64 :: x1
     sll_real64 :: x2
+    sll_int32  :: send_size   ! for allgatherv operation
+    sll_int32 :: droite_test_pente
+    sll_int32 :: num_patches
+    sll_int32 :: ipatch
+    sll_int32 :: num_pts1
+    sll_int32 :: num_pts2
 
 
     ! only for debugging...
@@ -467,8 +467,7 @@ contains
     type(sll_time_mark)  :: t0 
     type(sll_time_mark)  :: t1
     sll_real64 :: time 
-    sll_int32 :: size_diag
-    
+    sll_int32 :: size_diag    
     
     ! compute Jacobian and logical mesh points
     call compute_values_jacobian_and_mesh_points(sim)
@@ -502,10 +501,7 @@ contains
     ! call elec_field_ext_2_field_mat%allocate_memory()
     call phi%allocate_memory()
 
-
-
   num_patches = sim%transfx%get_number_patches()
-
 
   do ipatch= 0,num_patches-1
      ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
@@ -555,8 +551,6 @@ contains
   call b2_field_vect%update_interpolation_coefficients()
   call c_field%update_interpolation_coefficients()
 
-
-
     !!!!
     STOP
 
@@ -595,7 +589,6 @@ contains
     sim%rho_seq_x2       => new_layout_2D( sll_world_collective )
     sim%split_rho_layout => new_layout_2D( sll_world_collective )
 
-
     !--> Initialization diagnostics for the norm
     size_diag  =  int(sim%num_iterations/BUFFER_SIZE) + 1
     SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
@@ -609,7 +602,6 @@ contains
     SLL_ALLOCATE(sim%diag_nrj_pot(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_nrj_tot(size_diag),ierr)
     
-
     ! layout for sequential operations in x3 and x4. Make an even split for
     ! x1 and x2, or as close as even if the power of 2 is odd. This should 
     ! be packaged in some sort of routine and set up at initialization time.
