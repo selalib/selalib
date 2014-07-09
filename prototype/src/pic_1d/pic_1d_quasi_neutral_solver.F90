@@ -442,30 +442,32 @@ contains
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
     !>@param this pointer to a pic_1d_quasi_neutral_solver object.
     subroutine pic_1d_quasi_neutral_solver_add_species(this,&
-            species)
+            pspecies)
         class(pic_1d_quasi_neutral_solver), intent(inout) :: this
-        type(sll_particle_1d_group), intent(in) :: species
+        type(sll_particle_1d_group), intent(in) :: pspecies
 
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FEM)
-                this%inhomogenity=this%inhomogenity + this%femsolver%get_rhs_from_klimontovich_density_weighted(&
-                    this%BC(species%particle%dx), sign(species%particle%weight,species%qm) )
+                this%inhomogenity=this%inhomogenity + sign(1.0_f64, pspecies%qm)*&
+                            this%femsolver%get_rhs_from_klimontovich_density_weighted(&
+                    this%BC(pspecies%particle%dx), pspecies%particle%weight )
 
                 if (this%variance_calculation .eqv. .true.) then
                     this%inhomogenity_scndmom=this%inhomogenity_scndmom + &
-                        this%femsolver%get_rhs_from_klimontovich_density_weighted( &
-                        this%BC(species%particle%dx),sign(species%particle%weight,species%qm) )
+                        sign(1.0_f64, pspecies%qm)*this%femsolver%get_rhs_from_klimontovich_density_weighted( &
+                        this%BC(pspecies%particle%dx), pspecies%particle%weight)
                 endif
             case(SLL_SOLVER_FD)
                 this%inhomogenity=this%inhomogenity + &
-                    this%get_rhs_cic( this%BC(species%particle%dx),sign(species%particle%weight,species%qm)  )
+                    sign(1.0_f64, pspecies%qm)*&
+                    this%get_rhs_cic( this%BC(pspecies%particle%dx), pspecies%particle%weight)
             case(SLL_SOLVER_SPECTRAL)
                 this%inhomogenity=this%inhomogenity + &
-                    this%get_rhs_cic( this%BC(species%particle%dx),sign(species%particle%weight,species%qm)  )
+                    sign(1.0_f64, pspecies%qm)*this%get_rhs_cic( this%BC(pspecies%particle%dx),pspecies%particle%weight)
             case(SLL_SOLVER_FOURIER)
                 this%inhomogenity_comp=this%inhomogenity_comp+ &
-                this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
-                this%BC(species%particle%dx), sign(species%particle%weight,species%qm) )
+                sign(1.0_f64, pspecies%qm)*this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
+                this%BC(pspecies%particle%dx), pspecies%particle%weight )
                 print  *,  this%inhomogenity_comp
 
         endselect

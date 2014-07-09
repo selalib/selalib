@@ -373,15 +373,17 @@ contains
             !this is going to be ok.
             !Also this should be done analytically and not like that as an Monte Carlo estimate
             !Here suppose the control variate is the initial state by default
-           call  qnsolver%set_bg_particles(species(1)%particle%dx, sign(species(1)%particle%weight_const, species(1)%qm))
-
+           call  qnsolver%set_bg_particles(species(1)%particle%dx, &
+            sign(1.0_f64, species(1)%qm)*species(1)%particle%weight_const)
         endif
 
 
         !Start with PIC Method
         !Do the initial solve of the field
         !particleposition=sll_pic1d_ensure_periodicity(particleposition,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(species(1)%particle%dx, species(1)%particle%vx)
+        !call sll_pic1d_ensure_boundary_conditions(species(1)%particle%dx, species(1)%particle%vx)
+        call sll_pic1d_ensure_boundary_conditions_species(species(1:num_species)  )
+
 
         !Initial Solve
         call qnsolver%reset_particles()
@@ -608,7 +610,7 @@ contains
             !call sll_pic1d_collision_step()
 
             !Inject and remove particles
-            call sll_pic1d_injection_removing()
+            !call sll_pic1d_injection_removing()
 
 
 
@@ -1047,7 +1049,6 @@ contains
         !----ALLOCATE STAGES-----------------------------------------------
         call sll_pic_1d_copy_species(species_0, species_1)
 
-
         !--------------------Stage 1-------------------------------------------------
         do jdx=1,size(species_0)
                 num_part=size(species_0(jdx)%particle)
@@ -1066,8 +1067,6 @@ contains
         call sll_pic1d_ensure_boundary_conditions_species(species_1)
 
         call sll_pic1d_adjustweights_advection_species(species_0, species_1)
-
-
 
         call sll_pic_1d_copy_species(species_1, species_0)
 
@@ -1171,7 +1170,7 @@ contains
                 species_1(jdx)%particle%dx=species_05(jdx)%particle%dx
                 species_1(jdx)%particle%vx=species_05(jdx)%particle%vx + &
                                              0.5_f64*h*(DPhidx+Eex( &
-                                    species_1(jdx)%particle%dx,t+h))*(-species_1(jdx)%qm)
+                                    species_1(jdx)%particle%dx,t+h))*(species_1(jdx)%qm)
 
                 SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
          enddo
@@ -1560,7 +1559,7 @@ contains
 
     !> \brief Adjust the weights after advection step
     subroutine sll_pic1d_adjustweights_advection_species(species_old, species_new)
-        type(sll_particle_1d_group), dimension(:), intent(inout) :: species_old
+        type(sll_particle_1d_group), dimension(:), intent(in) :: species_old
         type(sll_particle_1d_group), dimension(:), intent(inout) :: species_new
         sll_real64, dimension(:), allocatable:: ratio
         sll_int32 :: num_species, numpart, jdx
@@ -1573,9 +1572,9 @@ contains
               do jdx=1, num_species
                     numpart=size(species_old(jdx)%particle)
 
-                    SLL_CLEAR_ALLOCATE(ratio(1:numpart),ierr)
+                    SLL_ALLOCATE(ratio(1:numpart),ierr)
                     SLL_ASSERT(size(species_new(jdx)%particle)==numpart)
-
+                ratio=1.0_f64
                 ratio=control_variate_xv(species_new(jdx)%particle%dx, species_new(jdx)%particle%vx)&
                                     /control_variate_xv(species_old(jdx)%particle%dx, species_old(jdx)%particle%vx)
 
