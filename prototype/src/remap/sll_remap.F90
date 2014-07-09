@@ -132,6 +132,17 @@ module sll_remapper
      type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_6D
 
+#define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
+  type name; \
+    type(layout_type), pointer :: l; \
+  end type name
+
+MAKE_LAYOUT_POINTER_CONTAINER( layout_2d_ptr, layout_2D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_3d_ptr, layout_3D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_4d_ptr, layout_4D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_5d_ptr, layout_5D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, layout_6D )
+
 
   ! Since the plan stores the information on box intersections, now
   ! we need a different type of plan for every dimension. It is also
