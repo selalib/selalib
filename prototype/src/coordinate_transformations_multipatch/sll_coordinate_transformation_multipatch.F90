@@ -56,17 +56,25 @@ module sll_coordinate_transformation_multipatch_module
   !> entity and dealt with only through the methods in this module.
   type :: sll_coordinate_transformation_multipatch_2d
      sll_int32 :: number_patches
+     character(len=128) :: name_root  ! file names should share this string
 !     character(len=128), dimension(:), pointer :: patch_names => null()
      sll_int32, dimension(:,:),pointer :: connectivities => null()
  !    type(sll_logical_mesh_multipatch_2d), pointer :: logical_mesh_mp => null()
      type(sll_coordinate_transformation_2d_nurbs_ptr), dimension(:), pointer::&
           transfs => null()
+     ! Element connectivity information for finite element calculations.
+     sll_int32, dimension(:), pointer :: global_indices
+     type(multipatch_data_2d_int), dimension(:), pointer :: local_indices
+     type(multipatch_data_2d_int), dimension(:), pointer :: local_to_global_ind
    contains
      procedure, pass :: read_from_file => read_from_file_ctmp2d
      procedure, pass :: get_number_patches => get_number_patches_ctmp2d
      procedure, pass :: get_transformation => get_transformation_ctmp2d
      procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
      procedure, pass :: get_connectivity => get_connectivity_ctmp2d
+     procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_Tmp2d
+     procedure, pass :: get_spline_local_index=>get_spline_local_index_Tmp2d
+     procedure, pass :: get_spline_global_index=>get_spline_global_index_Tmp2d
      procedure, pass :: x1_node => x1_node_ctmp2d
      procedure, pass :: x2_node => x2_node_ctmp2d
      procedure, pass :: jacobian_at_node => jacobian_at_node_ctmp2d
@@ -82,6 +90,22 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: write_to_file => write_to_file_ctmp2d
   end type sll_coordinate_transformation_multipatch_2d
 
+  type multipatch_data_1d_real
+     sll_real64, dimension(:), pointer :: array => null()
+  end type multipatch_data_1d_real
+  
+  type multipatch_data_2d_real
+     sll_real64, dimension(:,:), pointer :: array => null()
+  end type multipatch_data_2d_real
+
+  type multipatch_data_1d_int
+     sll_int32, dimension(:), pointer :: array => null()
+  end type multipatch_data_1d_int
+  
+  type multipatch_data_2d_int
+     sll_int32, dimension(:,:), pointer :: array => null()
+  end type multipatch_data_2d_int
+  
   interface sll_delete
      module procedure delete_stmp2d_ptr
   end interface sll_delete
@@ -98,11 +122,12 @@ contains
 
   end function new_coordinate_transformation_multipatch_2d
 
-  subroutine read_from_file_ctmp2d( mp, filename )
+  subroutine read_from_file_ctmp2d( mp, name_root )
     class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
-    character(len=*), intent(in) :: filename
+    character(len=*), intent(in) :: name_root
     character(len=256) :: label
     character(len=256) :: filename_local
+    character(len=256) :: filename
     sll_int32 :: IO_stat
     sll_int32 :: input_file_id
     sll_int32 :: i
@@ -113,6 +138,17 @@ contains
     sll_int32, dimension(:), pointer :: connectivities
     sll_int32, dimension(:,:), pointer :: connectivities_reshaped
     character(len=128), dimension(:), pointer :: patches
+    ! local variables for element connectivity
+    sll_int32, dimension(:), allocatable :: global_indices_array
+    sll_int32, dimension(:), allocatable :: local_spline_indices_array
+    sll_int32, dimension(:), allocatable :: local_to_global_index_array
+    sll_int32  :: num_global_indices
+    sll_int32  :: rows
+    sll_int32  :: cols
+    sll_int32  :: li_total
+    sll_int32  :: l2g_total
+    character(len=128), dimension(:), allocatable :: local_index_file_list
+    character(len=128), dimension(:), allocatable :: local_to_global_file_list
 
     namelist /multipatch_label/ label
     namelist /rd/ whatisthisrd
@@ -120,24 +156,39 @@ contains
     namelist /num_patches/ number_patches
     namelist /connectivity/ connectivities
     namelist /patch_names/ patches
+    ! namelists for the element connectivity information:
+    namelist /number_global_indices/ num_global_indices
+    namelist /global_indices/ global_indices_array
+    namelist /local_index_files/ local_index_file_list
+    namelist /local_to_global_files/ local_to_global_file_list
+    namelist /li_dimensions/ rows, cols, li_total
+    namelist /l2g_dimensions/ rows, cols, l2g_total
+    namelist /local_spline_indices/ local_spline_indices_array
+    namelist /local_to_global_indices/ local_to_global_index_array
 
-    if(len(filename) >= 256) then
+    if(len(name_root) >= 128) then
        print *, 'ERROR, read_from_file_ctmp2d => ',&
-            'filenames longer than 256 characters are not allowed.'
+            'root names longer than 128 characters are not allowed.'
        STOP
     end if
-    filename_local = trim(filename)
+
+    mp%name_root = trim(name_root)
+
+    ! We explore the idea that a multipatch geometry is described by multiple
+    ! files, all sharing a 'root name'. By passing the root name, each 
+    ! subroutine is then able to build the proper filename to open.
+    filename_local = trim(mp%name_root)//"_info.nml"
 
     ! get a new identifier for the file.
     call sll_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
        print *, 'ERROR while trying to obtain an unique identifier for file ',&
-            filename, '. Called from read_from_file_ctmp2d().'
+            filename_local, '. Called from read_from_file_ctmp2d().'
        stop
     end if
     open(unit=input_file_id, file=filename_local, STATUS="OLD", IOStat=IO_stat)
     if( IO_Stat .ne. 0 ) then
-       print *, 'ERROR while opening file ',filename, &
+       print *, 'ERROR while opening file ',filename_local, &
             '. Called from read_from_file_ctmp2d().'
        stop
     end if
@@ -174,6 +225,135 @@ contains
             new_nurbs_2d_transformation_from_file(trim(patches(i)))
     end do
 
+    ! Obtain the information regarding the local index and local to global
+    ! index information for the collection of patches. This is used for finite
+    ! element calculations. This initialization consists of 
+    ! several steps:
+    !
+    ! 1. Find out which file to read to get the information on:
+    !    1.1 global indexing of the elements
+    !    1.2 the files which contain the local indexing information per patch.
+    !    1.3 the files which contain the local to global indexing information
+    !        by patch.
+    ! 2. Allocate the arrays which will store the local_index and 
+    !    local_to_global index information inside the multipatch.
+    ! 3. Loop over the filenames found in step 1. to initialize the arrays.
+
+    ! The following line establishes a hardwired convetion about the naming
+    ! of the diverse files that represent the multipatch. Not good but works.
+
+    filename = trim(mp%name_root)//"_element_connectivity_main.nml"
+
+    SLL_ALLOCATE(mp%local_indices(number_patches),ierr)
+    SLL_ALLOCATE(mp%local_to_global_ind(number_patches),ierr)
+
+    call sll_new_file_id(input_file_id, ierr)
+    if( ierr .ne. 0 ) then
+       print *, 'ERROR while trying to obtain an unique identifier for file ',&
+            trim(filename), '. Called from read_from_file_ctmp2d().'
+       stop
+    end if
+    open(unit=input_file_id, file=trim(filename), STATUS="OLD", IOStat=IO_stat)
+    if( IO_Stat .ne. 0 ) then
+       print *, 'ERROR while opening file ',trim(filename), &
+            '. Called from read_from_file_ctmp2d().'
+       stop
+    end if
+    SLL_ALLOCATE(local_index_file_list(number_patches),ierr)
+    SLL_ALLOCATE(local_to_global_file_list(number_patches),ierr)
+
+    read( input_file_id,number_global_indices )
+    SLL_ALLOCATE(mp%global_indices(num_global_indices), ierr)
+    SLL_ALLOCATE(global_indices_array(num_global_indices),ierr)
+
+    read( input_file_id, global_indices)
+    mp%global_indices(:) = global_indices_array(:)
+    SLL_DEALLOCATE_ARRAY(global_indices_array,ierr)
+    read( input_file_id, local_index_files )
+    read( input_file_id, local_to_global_files )
+
+    close(input_file_id)
+
+    ! Read the individual files containing the local index and local to
+    ! global index information. 
+    print *, 'initialize_scalar_field_sfmp2d(): reading local index data. '
+
+    do i=1, number_patches
+       call sll_new_file_id(input_file_id, ierr)
+       if( ierr .ne. 0 ) then
+          print *, 'ERROR while trying to obtain an unique identifier ', &
+               'for file ', trim(local_index_file_list(i)), &
+               '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       open(unit=input_file_id, file=trim(local_index_file_list(i)), &
+            STATUS="OLD", IOStat=IO_stat)
+       if( IO_Stat .ne. 0 ) then
+          print *, 'ERROR while opening file ', &
+               trim(local_index_file_list(i)), &
+            '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       read( input_file_id, li_dimensions )
+
+       print *, 'read_from_file_ctmp2d(): reading data from file: ',&
+            trim(local_index_file_list(i))
+
+       ! For now we allocate only a linear array, but a 2D array may be 
+       ! more useful, especially since we may need to reshape & transpose.
+       ! Reshape & transpose to be done here! This is temporary!
+       ! Use the read data on number of rows/cols if useful at this point.
+       ! Discuss with Aurore.
+       SLL_ALLOCATE(mp%local_indices(i)%array(rows,cols), ierr)
+       SLL_ALLOCATE(local_spline_indices_array(li_total), ierr)
+       read( input_file_id, local_spline_indices )
+       mp%local_indices(i)%array(:,:) = &
+            transpose(reshape(local_spline_indices_array(:),(/cols,rows/)))
+       close(input_file_id)
+       SLL_DEALLOCATE_ARRAY(local_spline_indices_array,ierr)
+    end do
+
+
+
+    print *, 'read_from_file_ctmp2d(): reading local to global index data. '
+
+    do i=1, number_patches
+       call sll_new_file_id(input_file_id, ierr)
+       if( ierr .ne. 0 ) then
+          print *, 'ERROR while trying to obtain an unique identifier ', &
+               'for file ', trim(local_to_global_file_list(i)), &
+               '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       open(unit=input_file_id, file=trim(local_to_global_file_list(i)), &
+            STATUS="OLD", IOStat=IO_stat)
+       if( IO_Stat .ne. 0 ) then
+          print *, 'ERROR while opening file ', &
+               trim(local_to_global_file_list(i)), &
+            '. Called from read_from_file_ctmp2d().'
+          stop
+       end if
+       read( input_file_id, l2g_dimensions )
+
+       print *, 'read_from_file_ctmp2d(): reading data from file: ',&
+            trim(local_to_global_file_list(i))
+
+       ! For now we allocate only a linear array, but a 2D array may be 
+       ! more useful, especially since we may need to reshape & transpose.
+       ! Reshape & transpose to be done here! This is temporary!
+       ! Use the read data on number of rows/cols if useful at this point.
+       ! Discuss with Aurore.
+       SLL_ALLOCATE(mp%local_to_global_ind(i)%array(rows,cols),ierr)
+       SLL_ALLOCATE(local_to_global_index_array(l2g_total),ierr)
+       read( input_file_id, local_to_global_indices )
+       mp%local_to_global_ind(i)%array(:,:) = &
+            transpose(reshape(local_to_global_index_array(:),(/cols,rows/)))
+       close( input_file_id )
+       SLL_DEALLOCATE_ARRAY(local_to_global_index_array,ierr)
+    end do
+
+    SLL_DEALLOCATE_ARRAY(local_index_file_list,ierr)
+    SLL_DEALLOCATE_ARRAY(local_to_global_file_list,ierr)
     SLL_DEALLOCATE(connectivities,ierr)
     SLL_DEALLOCATE(connectivities_reshaped,ierr)
   end subroutine read_from_file_ctmp2d
@@ -189,7 +369,9 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%t%get_logical_mesh()
+    ! the following line should be changed to get_ function, but for 
+    ! compatibility with the gfortran 4.6.3 compiler we allow direct access.
+    res => mp%transfs(patch+1)%t%mesh
   end function get_logical_mesh_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)
@@ -348,5 +530,169 @@ contains
     call mp%delete()
     SLL_DEALLOCATE(mp,ierr)
   end subroutine delete_stmp2d_ptr
+
+
+  !! normally in the Ahmed code local_index_array
+  !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
+  !! where 
+  !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
+  !! and 
+  !! num_cell is the number of cells in the patch i
+  !! 
+  !!          + --------------------------------- +
+  !!            7        8       9
+  !!           +--------+-------+
+  !!           |                |
+  !!           |                |
+  !!           |                |
+  !!           +4       +5      +6
+  !!           |                |
+  !!           |                |
+  !!           |                |
+  !!           +--------+-------+
+  !!            1        2       3
+  !!
+  !! Reference for the numerotation on an individual cell. Example for splines of
+  !! degree = 2. The points do not represent the actual placement inside the cell
+  !! but serve as a way to represent the fact that multiple splines are supported
+  !! on a given cell. A 3-th degree spline would for example look like:
+  !!
+  !!
+  !!            13   14   15   16
+  !!           +----+----+----+
+  !!           |              |
+  !!           +9   +10  +11  +12
+  !!           |              |
+  !!           +5   +6   +7   +8
+  !!           |              |
+  !!           +----+----+----+
+  !!            1    2    3    4
+
+  function get_spline_local_index_tmp2d(mp,patch,splines_local,cell_i,cell_j)&
+       result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+    type(sll_logical_mesh_2d), pointer                                :: lm
+    sll_int32 :: patch
+    sll_int32 :: splines_local
+    sll_int32 :: cell_i,cell_j
+    sll_int32 :: num_cell
+    sll_int32 :: res
+    sll_int32 :: num_spline_loc_max
+   
+    SLL_ASSERT((patch >=0).and.(patch <mp%number_patches))
+    SLL_ASSERT((cell_i>=1).and.(cell_i<mp%transfs(patch+1)%t%mesh%num_cells1))
+    SLL_ASSERT((cell_j>=1).and.(cell_j<mp%transfs(patch+1)%t%mesh%num_cells2))
+    
+
+    lm=>mp%get_logical_mesh(patch)
+    num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
+                         (mp%transfs(patch+1)%T%spline_deg2 +1)
+
+    SLL_ASSERT((splines_local >= 1).and.(splines_local < num_spline_loc_max))
+
+    num_cell = cell_i + (cell_j-1)*lm%num_cells1
+
+    res = mp%local_indices(patch+1)%array(splines_local,num_cell)
+  end function get_spline_local_index_Tmp2d
+  
+
+  
+  !! Global_indices contains the numeration of splines in all the domain
+  !! It is a 1D array with the following size
+  !!  sum_i num_splines_in_domain_patch_i 
+  !! where  num_splines_in_domain_patch_i=(number_cells_eta1_patch_i + deg_spline_eta1_patch_i)
+  !!                                   * (number_cells_eta2_patch_i + deg_spline_eta2_patch_i) 
+  !!            7        8      9         14       15
+  !!           +--------+-------+ +--------+-------+
+  !!           |                | |                |
+  !!           |                | |                |
+  !!           |                | |                |
+  !!           +4       +5     6+ +        +       + 13
+  !!           |                | |        12      |
+  !!           |                | |                |
+  !!           |                | |                |
+  !!           +--------+-------+ +--------+-------+
+  !!           1        2       3         10      11
+  !! Here we have two patch side by side with one cell. Example for splines of
+  !! degree = 2. The points do not represent the actual placement inside the cell
+  !! but serve as a way to represent the fact that multiple splines are supported
+  !! on a given cell.
+  !! The numerotation is 
+  !! 1 2 3 4 5 6 7 8 9 3 10 11 6 12 13 9 14 15
+
+  function get_spline_global_index_Tmp2d(mp,num_splines_global)result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+    sll_int32, intent(in) :: num_splines_global
+    sll_int32 :: res
+    
+    res = mp%global_indices(num_splines_global)
+  end function get_spline_global_index_Tmp2d
+
+  
+  !! normally in the Ahmed code local_to_global_index_array
+  !! is a 2D array with a dimension ( num_splines_loc, num_cell) in a patch
+  !! where 
+  !! num_splines_loc = (spline_degre_eta1 +1)*(spline_degre_eta2 +1)
+  !! and 
+  !! num_cell is the number of cells in the patch i
+  !! we stocke this 2D array such as a 1D array with a dimension
+  !! num_splines_loc*num_cell
+  !! i.e. k + (l-1)* num_cell for k = 1,num_cell and 
+  !! l = 1, num_splines_loc
+  !! 
+  !!          + --------------------------------- +
+  !!            7        8       9
+  !!           +--------+-------+
+  !!           |                |
+  !!           |                |
+  !!           |                |
+  !!           +4       +5      +6
+  !!           |                |
+  !!           |                |
+  !!           |                |
+  !!           +--------+-------+
+  !!            1        2       3
+  !!
+  !! Reference for the numerotation on an individual cell. Example for splines of
+  !! degree = 2. The points do not represent the actual placement inside the cell
+  !! but serve as a way to represent the fact that multiple splines are supported
+  !! on a given cell. A 3-th degree spline would for example look like:
+  !!
+  !!
+  !!            13   14   15   16
+  !!           +----+----+----+
+  !!           |              |
+  !!           +9   +10  +11  +12
+  !!           |              |
+  !!           +5   +6   +7   +8
+  !!           |              |
+  !!           +----+----+----+
+  !!            1    2    3    4
+
+  function get_spline_local_to_global_index_Tmp2d(mp,patch,splines_local,cell_i,cell_j)&
+       result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
+    type(sll_logical_mesh_2d), pointer                         :: lm
+    sll_int32 :: patch
+    sll_int32 :: splines_local
+    sll_int32 :: cell_i,cell_j
+    sll_int32 :: num_cell
+    sll_int32 :: res
+    sll_int32 :: num_spline_loc_max
+    
+    lm=>mp%get_logical_mesh(patch)
+    
+    SLL_ASSERT( (patch >= 0)  .and. (patch < mp%number_patches) )
+    SLL_ASSERT( (cell_i >= 1) .and. (cell_i <= lm%num_cells1) )
+    SLL_ASSERT( (cell_j >= 1) .and. (cell_j <= lm%num_cells2) )
+    
+    num_spline_loc_max = (mp%transfs(patch+1)%T%spline_deg1 +1)*&
+         (mp%transfs(patch+1)%T%spline_deg2 +1)
+    SLL_ASSERT((splines_local >= 1) .and. (splines_local <= num_spline_loc_max))
+    
+    num_cell = cell_i + (cell_j-1)*lm%num_cells1
+
+    res=mp%local_to_global_ind(patch+1)%array(splines_local,num_cell)
+  end function get_spline_local_to_global_index_Tmp2d
 
 end module sll_coordinate_transformation_multipatch_module

@@ -56,7 +56,7 @@ Create a new directory, build the libraries within ::
  cd build
  cmake ../src/
  make
- make test
+ make Experimental
 
 CMake is a system for managing the build process of software. It writes in a CMakeCache.txt file all parameters that it has detected on your system. CMake can to not detect libraries installed for several reasons. So we need to edit the CMake cache.
 If you have already performed cmake you can run ::
@@ -75,13 +75,13 @@ Details about principle parameters
 +------------------------+----------------+--------------------------------------+
 |          KEY           | POSSIBLE VALUE |                DESCRIPTION           |
 +========================+================+======================================+
-| DISABLED_MPI_MODULE    | ON/OFF         | When set to ON disable all reference |
+| MPI_MODULE_ENABLED     | ON/OFF         | When set to ON disable all reference |
 |                        |                | to mpi and run SeLaLib in sequential.|
 +------------------------+----------------+--------------------------------------+
 |  FFT_LIB               | SLLFFT         | By default SLLFFT. SeLaLib provide   |
 |                        | FFTPACK        | a fast fourier transform module      |
 |                        | FFTW           | around 3 libraries, fftpack, fftw and|
-|                        |                | his own implementation (see XXX)     |
+|                        |                | his own implementation.              |
 +------------------------+----------------+--------------------------------------+
 |  HDF5_ROOT             | /usr/local     | For output we need to link the lib   |
 |  FFTW_ROOT             | /opt/local     | with HDF5 and FFTW3. Parallel is     |

@@ -1,7 +1,7 @@
 !**************************************************************
 !  Copyright INRIA
 !  Authors : 
-!     Pierre Navaro 
+!     TONUS project team
 !  
 !  This code SeLaLib (for Semi-Lagrangian-Library) 
 !  is a parallel library for simulating the plasma turbulence 
@@ -47,7 +47,7 @@ sll_real64, dimension(nx,ny) :: ycoord !< y coordiantes
 character(len=*)             :: label  !< field name
 sll_int32                    :: file_id
 sll_int32                    :: error                         !< error code
-sll_int32                    :: i, j, k
+sll_int32                    :: i, j
 sll_real64                   :: x1, y1
 
 call sll_new_file_id(file_id, error)
@@ -76,10 +76,8 @@ do j=1,ny
 end do
 
 !Numeros des elements
-k = 0
 do i=1,nx-1
    do j=1,ny-1
-      k = k+1
       x1 = 0.25*(xcoord(i,j)+xcoord(i+1,j)+xcoord(i,j+1)+xcoord(i+1,j+1))
       y1 = 0.25*(ycoord(i,j)+ycoord(i+1,j)+ycoord(i,j+1)+ycoord(i+1,j+1))
       write(file_id,"(a)"   ,  advance="no")"@text x1="
@@ -87,7 +85,7 @@ do i=1,nx-1
       write(file_id,"(a)"   ,  advance="no")" y1="
       write(file_id,"(g15.3)", advance="no") y1
       write(file_id,"(a)"   ,  advance="no")" z1=0. lc=4 ll='"
-      write(file_id,"(i4)"  ,  advance="no") k
+      write(file_id,"(2i3)"  ,  advance="no") i,j
       write(file_id,"(a)")"'"
    end do
 end do

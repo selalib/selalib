@@ -1,38 +1,35 @@
-FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 DOC "python")
+#FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
+#FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
-FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
-FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
+#IF(PYTHON3_FOUND)
 
-IF(PYTHON_EXECUTABLE)
+#   SET(TRANSLATE_PYTHON_SCRIPT 
+#      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/translate_multipatch_info.py")
 
-   SET(TRANSLATE_PYTHON_SCRIPT 
-      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/translate_multipatch_info.py")
+#   SET(TRANSLATE_NML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/circle_5mp_info.txt")
 
-   SET(TRANSLATE_NML_FILE "${CMAKE_CURRENT_SOURCE_DIR}/circle_5mp_info.txt")
+#   SET(NURBS_PATCH_PYTHON_SCRIPT 
+#         "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
 
-   SET(NURBS_PATCH_PYTHON_SCRIPT 
-         "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
+#   FILE(GLOB CIRCLE_TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/circle_5mp_patch*.txt")
 
-   FILE(GLOB CIRCLE_TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/circle_5mp_patch*.txt")
+#   FOREACH(_TXT_CIRCLE_FILE ${CIRCLE_TXT_FILES})
+#      EXECUTE_PROCESS(
+#         COMMAND ${PYTHON_EXECUTABLE} ${NURBS_PATCH_PYTHON_SCRIPT} ${_TXT_CIRCLE_FILE}
+#      )
+#   ENDFOREACH()
 
-   FOREACH(_TXT_CIRCLE_FILE ${CIRCLE_TXT_FILES})
-      EXECUTE_PROCESS(
-         COMMAND ${PYTHON_EXECUTABLE} ${NURBS_PATCH_PYTHON_SCRIPT} ${_TXT_CIRCLE_FILE}
-         OUTPUT_FILE "nurbs_patch.out"
-      )
-   ENDFOREACH()
+#   EXECUTE_PROCESS(
+#      COMMAND ${PYTHON_EXECUTABLE}  ${TRANSLATE_PYTHON_SCRIPT} ${TRANSLATE_NML_FILE}
+#      WORKING_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}
+#      OUTPUT_FILE "circle_patch_info.out")
 
-   EXECUTE_PROCESS(
-      COMMAND ${PYTHON_EXECUTABLE}  ${TRANSLATE_PYTHON_SCRIPT} ${TRANSLATE_NML_FILE}
-      WORKING_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}
-      OUTPUT_FILE "circle_patch_info.out")
+#ELSE(PYTHON3_FOUND)
 
-ELSE(PYTHON_EXECUTABLE)
+#   MESSAGE(STATUS "Multipatch test needs python3")
+#   SET(PYTHON3_FOUND OFF)
 
-   MESSAGE(SEND_WARN "Multipatch test needs python3")
-
-ENDIF(PYTHON_EXECUTABLE)
-
+#ENDIF(PYTHON3_FOUND)
 
 #MESSAGE(STATUS "Coordinate transformation")
 #MESSAGE(STATUS ${CMAKE_CURRENT_SOURCE_DIR})
@@ -48,13 +45,12 @@ ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_coordinate_transformations_2d_nurbs.F90
             sll_common_coordinate_transformations.F90)
 
-TARGET_LINK_LIBRARIES(sll_coordinate_transformations sll_interpolators
-	                                               sll_file_io
-	                                               sll_logical_meshes)
+TARGET_LINK_LIBRARIES(sll_coordinate_transformations 
+                      sll_interpolators sll_file_io sll_logical_meshes)
 
-IF(HDF5_IS_PARALLEL)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 ADD_EXECUTABLE(test_coordinate_transformations_2d unit_test_2d.F90)
 

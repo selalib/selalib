@@ -42,21 +42,6 @@ module distribution_function
   use sll_scalar_field_initializers_base
   implicit none
 
-!#ifdef STDF95
-!  type  :: sll_distribution_function_2D
-   !  type(sll_mapped_mesh_2d_discrete), pointer  :: mesh
-   !  type(cubic_spline_1d_interpolator), pointer :: eta1_interpolator
-   !  type(cubic_spline_1d_interpolator), pointer :: eta2_interpolator
-   !  sll_real64, dimension(:,:), pointer      :: data
-   !  sll_int32                                :: data_position
-   !  character(len=64)                        :: name
-   !  sll_int32                                :: plot_counter
-!     type(scalar_field_2d) :: extend_type
-!     sll_real64        :: pmass
-!     sll_real64        :: pcharge           
-!     sll_real64        :: average 
-!  end type  sll_distribution_function_2D
-!#else  
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
   type, extends(extended_type) :: new_df_type;                       \
      sll_real64      :: pmass;                                       \
@@ -76,54 +61,54 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 !!$  end interface
 
 #undef NEW_TYPE_FOR_DF
-!#endif
 
 contains
 
 #if 1
   subroutine sll_new_distribution_function_2d( &
     this, &
-    mesh, &
+    transf, &
     data_position, &
     name, &
     data_func ) 
     
     class(sll_distribution_function_2D)   :: this
-    !class(sll_mapped_mesh_2d_base), target  :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     procedure(scalar_function_2D)           :: data_func
     sll_int32, intent(in)                   :: data_position
     character(len=*), intent(in)            :: name
-    ! local variables
     sll_int32                         :: ierr
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
+    type(sll_logical_mesh_2d), pointer :: mesh
 
-    this%mesh => mesh
+    this%transf => transf
     this%plot_counter = 0
     this%name = name
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
+    mesh => transf%mesh
+
     if (data_position == NODE_CENTERED_FIELD) then
-       SLL_ALLOCATE(this%data(mesh%mesh%num_cells1+1,mesh%mesh%num_cells2+1), ierr)
-       do i2 = 1, mesh%mesh%num_cells2+1
-          do i1 = 1, mesh%mesh%num_cells1+1
-             this%data(i1,i2) = data_func(mesh%x1_at_node(i1,i2), &
-                  mesh%x2_at_node(i1,i2))
+       SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
+       do i2 = 1, mesh%num_cells2+1
+          do i1 = 1, mesh%num_cells1+1
+             this%data(i1,i2) = data_func(transf%x1_at_node(i1,i2), &
+                  transf%x2_at_node(i1,i2))
           end do
        end do
     else if (data_position == CELL_CENTERED_FIELD) then
-       SLL_ALLOCATE(this%data(mesh%mesh%num_cells1+1,mesh%mesh%num_cells2+1), ierr)
-       delta1 = 1.0_f64/mesh%mesh%num_cells1
-       delta2 = 1.0_f64/mesh%mesh%num_cells2
+       SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)
+       delta1 = 1.0_f64/mesh%num_cells1
+       delta2 = 1.0_f64/mesh%num_cells2
        eta2 = 0.5_f64 * delta2
-       do i2 = 1, mesh%mesh%num_cells2
+       do i2 = 1, mesh%num_cells2
           eta1 = 0.5_f64 * delta1
-          do i1 = 1, mesh%mesh%num_cells1
-             this%data(i1,i2) = data_func(mesh%x1(eta1,eta2), &
-                  mesh%x2(eta1,eta2)) * mesh%jacobian(eta1,eta2)
+          do i1 = 1, mesh%num_cells1
+             this%data(i1,i2) = data_func(transf%x1(eta1,eta2), &
+                  transf%x2(eta1,eta2)) * transf%jacobian(eta1,eta2)
              eta1 = eta1 + delta1
           end do
           eta2 = eta2 + delta2
@@ -136,14 +121,13 @@ contains
     mass, &
     charge, &
     field_name, &
-    mesh, &
+    transf, &
     data_position, &
     eta1_interpolator, &
     eta2_interpolator, &
     initializer )
 
-    !class(sll_mapped_mesh_2d_base), pointer             :: mesh
-    class(sll_coordinate_transformation_2d_base), pointer :: mesh
+    class(sll_coordinate_transformation_2d_base), pointer :: transf
     class(sll_interpolator_1d_base), pointer            :: eta1_interpolator
     class(sll_interpolator_1d_base), pointer            :: eta2_interpolator
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
@@ -159,7 +143,7 @@ contains
     call initialize_scalar_field_2d( &
          this, &
          field_name, &
-         mesh, &
+         transf, &
          data_position, &
          eta1_interpolator, &
          eta2_interpolator, &

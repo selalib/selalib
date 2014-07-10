@@ -36,7 +36,6 @@ module sll_fft
 
   interface fft_new_plan
     module procedure fftpack_new_plan_c2c_1d, fftpack_new_plan_r2r_1d, &
-                    ! à implémenter
                      fftpack_new_plan_r2c_1d, fftpack_new_plan_c2r_1d , &
                      fftpack_new_plan_c2r_2d, fftpack_new_plan_r2c_2d, &
                      fftpack_new_plan_c2c_2d
@@ -76,8 +75,6 @@ module sll_fft
   end interface
 
 contains
-
-
 
   subroutine print_defaultfftlib()
     print *, 'The library used is FFTPACK'
@@ -183,11 +180,7 @@ contains
   end function
 
   subroutine fftpack_apply_plan_c2c_1d(plan,array_in,array_out)
-#ifdef STDF95
-    type(sll_fft_plan), pointer                   :: plan
-#else
     type(sll_fft_plan), pointer, intent(in)       :: plan
-#endif
     sll_comp64, dimension(:), intent(inout)       :: array_in, array_out
     sll_int32  :: nx
     sll_real64 :: factor
@@ -237,11 +230,7 @@ contains
   end function
 
   subroutine fftpack_apply_plan_r2r_1d(plan,array_in,array_out)
-#ifdef STDF95
-    type(sll_fft_plan), pointer                     :: plan
-#else
     type(sll_fft_plan), pointer, intent(in)         :: plan
-#endif
     sll_real64, dimension(:), intent(inout)         :: array_in, array_out
     sll_int32  :: nx
     sll_real64 :: factor

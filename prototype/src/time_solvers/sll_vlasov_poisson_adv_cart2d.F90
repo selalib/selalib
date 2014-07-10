@@ -3,12 +3,8 @@ module sll_vp_cartesian_2d
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_field_2d.h"
-#ifdef STDF95
-  use sll_cubic_spline_interpolator_1d
-#else
   use sll_module_interpolators_1d_base
   use sll_time_splitting
-#endif
   use distribution_function
   use sll_poisson_1d_periodic
   implicit none
@@ -19,23 +15,15 @@ module sll_vp_cartesian_2d
      logical    :: turn_drive_off, driven
   end type app_field_params
 
-#ifdef STDF95
-  type  :: vp_cartesian_2d
-    sll_real64 :: current_time = 0.0_f64
-    type(cubic_spline_1d_interpolator), pointer    :: interpx, interpv
-#else
   type, extends(time_splitting) :: vp_cartesian_2d
      class(sll_interpolator_1d_base), pointer    :: interpx, interpv
-#endif
      type(sll_distribution_function_2d), pointer   :: dist_func
      type(poisson_1d_periodic), pointer            :: poisson_1d
      sll_int32 :: Ncx, Ncv
      type(app_field_params)  :: params
-#ifndef STDF95
    contains
      procedure, pass(this) :: operator1 => advection_x
      procedure, pass(this) :: operator2 => advection_v
-#endif
   end type vp_cartesian_2d
 
 contains
@@ -45,11 +33,7 @@ contains
     type(sll_distribution_function_2d), target   :: dist_func
     type(poisson_1d_periodic), target            :: poisson_1d
     sll_int32 :: Ncx, Ncv
-#ifdef STDF95
-    type(cubic_spline_1d_interpolator), pointer    :: interpx, interpv
-#else
     class(sll_interpolator_1d_base), pointer    :: interpx, interpv
-#endif
     type(app_field_params)  :: params
     this%dist_func  => dist_func
     this%poisson_1d => poisson_1d
@@ -60,48 +44,30 @@ contains
     this%params = params
   end subroutine vp_cartesian_2d_initialize
 
-#ifdef STDF95
-  subroutine vp_cartesian_2d_operator1(this, dt)
-    type(vp_cartesian_2d) :: this 
-#else
   subroutine advection_x(this, dt)
     class(vp_cartesian_2d) :: this 
-#endif
     sll_real64, intent(in) :: dt
     ! local variables
     sll_real64, dimension(:), pointer :: f1d
     sll_real64 :: displacement
     sll_int32 :: j
     sll_real64 :: vmin, vmax, delta_v
+    type(sll_logical_mesh_2d), pointer :: mesh
 
-#ifdef STDF95
-    vmin = x2_node_discrete(this%dist_func%extend_type%mesh, 1,1)
-    vmax = x2_node_discrete(this%dist_func%extend_type%mesh, 1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%extend_type%mesh%mesh%num_cells2
-    do j = 1, this%Ncv+1
-       displacement = (vmin + (j-1) * delta_v) * dt
-       f1d => FIELD_DATA(this%dist_func%extend_type) (:,j)
-       f1d = cubic_spline_interpolate_array_at_displacement( this%interpx, this%Ncx+1, f1d, displacement)
-    end do
-#else    
-    vmin = this%dist_func%mesh%x2_at_node(1,1)
-    vmax = this%dist_func%mesh%x2_at_node(1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%mesh%mesh%num_cells2
+    mesh => this%dist_func%transf%mesh
+
+    vmin = this%dist_func%transf%x2_at_node(1,1)
+    vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
+    delta_v = (vmax - vmin) /  mesh%num_cells2
     do j = 1, this%Ncv+1
        displacement = (vmin + (j-1) * delta_v) * dt
        f1d => FIELD_DATA(this%dist_func) (:,j)
        f1d = this%interpx%interpolate_array_disp(this%Ncx+1, f1d, displacement)
     end do
-#endif
   end subroutine 
 
-#ifdef STDF95
-  subroutine vp_cartesian_2d_operator2(this, dt)
-    type(vp_cartesian_2d) :: this 
-#else
   subroutine advection_v(this, dt)
     class(vp_cartesian_2d) :: this 
-#endif
     sll_real64, intent(in) :: dt
     ! local variables
     sll_real64 :: time
@@ -113,32 +79,23 @@ contains
     sll_int32 :: i
     sll_real64 :: xmin, xmax, delta_x
     sll_real64 :: vmin, vmax, delta_v
-
+    type(sll_logical_mesh_2d), pointer :: mesh
     
     time = this%current_time
-#ifdef STDF95
-    xmin = x1_node_discrete(this%dist_func%extend_type%mesh, 1,1)
-    xmax = x1_node_discrete(this%dist_func%extend_type%mesh, this%Ncx+1,1)
-    delta_x = (xmax - xmin) /  this%dist_func%extend_type%mesh%mesh%num_cells1
-    vmin = x2_node_discrete(this%dist_func%extend_type%mesh, 1,1)
-    vmax = x2_node_discrete(this%dist_func%extend_type%mesh, 1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%extend_type%mesh%mesh%num_cells2
-#else
-    xmin = this%dist_func%mesh%x1_at_node(1,1)
-    xmax = this%dist_func%mesh%x1_at_node(this%Ncx+1,1)
-    delta_x = (xmax - xmin) /  this%dist_func%mesh%mesh%num_cells1
-    vmin = this%dist_func%mesh%x2_at_node(1,1)
-    vmax = this%dist_func%mesh%x2_at_node(1,this%Ncv+1)
-    delta_v = (vmax - vmin) /  this%dist_func%mesh%mesh%num_cells2
-#endif
+
+    mesh => this%dist_func%transf%mesh
+
+    xmin = this%dist_func%transf%x1_at_node(1,1)
+    xmax = this%dist_func%transf%x1_at_node(this%Ncx+1,1)
+    delta_x = (xmax - xmin) / mesh%num_cells1
+    vmin = this%dist_func%transf%x2_at_node(1,1)
+    vmax = this%dist_func%transf%x2_at_node(1,this%Ncv+1)
+    delta_v = (vmax - vmin) /  mesh%num_cells2
     
     ! compute electric field
     !-----------------------
-#ifdef STDF95
-    rho = 1.0_f64 - delta_v * sum(FIELD_DATA(this%dist_func%extend_type), DIM = 2)
-#else
+
     rho = 1.0_f64 - delta_v * sum(FIELD_DATA(this%dist_func), DIM = 2)
-#endif
     call solve(this%poisson_1d, efield, rho)
     if (this%params%driven) then
        call PFenvelope(adr, time, this%params)
@@ -150,13 +107,8 @@ contains
     ! do advection for given electric field
     do i = 1, this%Ncx+1
         displacement = -(efield(i)+e_app(i)) * 0.5_f64 * dt
-#ifdef STDF95
-        f1d => FIELD_DATA(this%dist_func%extend_type) (i,:) 
-        f1d = cubic_spline_interpolate_array_at_displacement(this%interpv, this%Ncv+1, f1d, displacement)
-#else
         f1d => FIELD_DATA(this%dist_func) (i,:) 
         f1d = this%interpv%interpolate_array_disp(this%Ncv+1, f1d, displacement)
-#endif
      end do
   end subroutine
 

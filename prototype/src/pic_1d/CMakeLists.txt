@@ -21,7 +21,8 @@ TARGET_LINK_LIBRARIES(sll_pic_1d_fem_solver  sll_constants
 					    sll_poisson_solvers)
 
 					    
-ADD_LIBRARY(sll_pic_1d_quasi_neutral_solver STATIC pic_1d_quasi_neutral_solver.F90)
+ADD_LIBRARY(sll_pic_1d_quasi_neutral_solver STATIC pic_1d_quasi_neutral_solver.F90
+						         particle_description.F90)
 
 TARGET_LINK_LIBRARIES(sll_pic_1d_quasi_neutral_solver  sll_constants
 					    sll_working_precision

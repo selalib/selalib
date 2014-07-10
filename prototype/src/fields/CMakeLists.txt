@@ -38,7 +38,8 @@ TARGET_LINK_LIBRARIES(sll_scalar_field_1d_alternative
 
 ADD_EXECUTABLE(test_scalar_fields_1d_alternative unit_test_1d_alternative.F90)
 
-TARGET_LINK_LIBRARIES(test_scalar_fields_1d_alternative sll_scalar_field_1d_alternative)
+TARGET_LINK_LIBRARIES(test_scalar_fields_1d_alternative 
+                      sll_scalar_field_1d_alternative)
 
 
 SET(SLL_SCALAR_FIELD_LINK_LIBRARIES sll_utilities)
@@ -67,3 +68,13 @@ ADD_EXECUTABLE(test_scalar_field unit_test.F90)
 TARGET_LINK_LIBRARIES(test_scalar_field sll_scalar_field)
 
 
+ADD_LIBRARY(sll_dg_fields STATIC sll_dg_fields_2d.F90 
+                                 init_function_module.F90)		
+
+TARGET_LINK_LIBRARIES(sll_dg_fields sll_coordinate_transformations 
+                                    sll_integration)
+
+
+ADD_EXECUTABLE(test_dg_fields unit_test_dg_fields.F90)
+
+TARGET_LINK_LIBRARIES(test_dg_fields sll_dg_fields)

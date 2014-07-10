@@ -61,6 +61,8 @@ module sll_utilities
      module procedure display_vector_real
   end interface sll_display
 
+  logical, private :: flag = .true.
+
 contains
 
   function is_power_of_two( n )
@@ -276,8 +278,10 @@ subroutine initialize_file(data_file_id, thf_file_id)
   if (IO_stat/=0) STOP "Miss argument file.nml"
 
   call sll_new_file_id(thf_file_id, error)
-  open(thf_file_id,file="thf.dat",IOStat=IO_stat)
+  open(thf_file_id,file="thf.dat",IOStat=IO_stat, position='append')
   if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
+  rewind(thf_file_id)
+  close(thf_file_id)
 
 end subroutine initialize_file
   
@@ -289,12 +293,43 @@ subroutine time_history(file_id, desc, fformat, array)
    sll_real64, dimension(:) :: array !< data array
     
    if (desc(1:3)=="thf") then
-      !print *,'array', array
+      open(file_id,file="thf.dat",position='append')
+      if (flag) then
+         rewind(file_id)
+         flag = .false.
+      end if
       write(file_id,fformat) array
+      close(file_id)
    else
       write(*,*) desc," not recognized"
    endif
     
 end subroutine time_history
+
+subroutine mpe_decomp1d(n,numprocs,myid,s,e)
+
+   sll_int32 :: n, numprocs, myid, s, e
+   sll_int32 :: nlocal
+   sll_int32 :: deficit
+
+   !------------------------------------------------------------------------
+   !  From the MPE library
+   !  This file contains a routine for producing a decomposition of a 1-d 
+   !  array when given a number of processors.  It may be used in "direct" 
+   !  product decomposition.  The values returned assume a "global" domain 
+   !  in [1:n]
+   !------------------------------------------------------------------------
+
+   nlocal  = n / numprocs
+   s       = myid * nlocal + 1
+   deficit = mod(n,numprocs)
+   s       = s + min(myid,deficit)
+   if (myid  < deficit) then
+       nlocal = nlocal + 1
+   endif
+   e = s + nlocal - 1
+   if (e  >  n .or. myid == numprocs-1) e = n
+
+end subroutine mpe_decomp1d
 
 end module sll_utilities

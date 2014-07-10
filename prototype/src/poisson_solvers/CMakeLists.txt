@@ -1,13 +1,3 @@
-SET(POISSON_LIBS sll_fft
-                 sll_interpolators
-                 sll_file_io
-                 sll_utilities
-                 sll_timer
-		 sll_assertion
-		 sll_logical_meshes
-		 sll_constants
-		 sll_integration
-                 dfftpack)
 
 SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_1d_periodic.F90
@@ -17,19 +7,19 @@ SET(POISSON_SRCS sll_poisson_solvers.F90
                  sll_poisson_2d_polar.F90
                  sll_poisson_2d_periodic_fftpack.F90)
 
-IF(FFTW_ENABLED)
+
+IF(FFTW_ENABLED AND FFTW_FOUND)
 
    SET(POISSON_SRCS "${POISSON_SRCS};../fft/fftw3.F90;sll_poisson_2d_periodic_fftw.F90")
 
 ENDIF()
 
 IF(MUDPACK_ENABLED)
- ADD_DEFINITIONS(-DMUDPACK)
- SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
+   ADD_DEFINITIONS(-DMUDPACK)
+   SET(POISSON_SRCS ${POISSON_SRCS} sll_mudpack_base.F90
                                     sll_mudpack_cartesian.F90
                                     sll_mudpack_polar.F90
                                     sll_mudpack_curvilinear.F90)
-
 ENDIF(MUDPACK_ENABLED)
    
 IF(FISHPACK_ENABLED)
@@ -38,46 +28,48 @@ IF(FISHPACK_ENABLED)
 
 ENDIF(FISHPACK_ENABLED)
 
+SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_1d_base.F90
+                                 sll_poisson_1d_periodic_solver.F90
+                                 sll_poisson_1d_polar_solver.F90
+                                 sll_poisson_2d_base.F90
+                                 sll_poisson_2d_fft.F90
+                                 sll_poisson_2d_polar_solver.F90
+                                 sll_poisson_2d_periodic_solver.F90
+                                 sll_poisson_2d_elliptic_solver.F90
+                                 sll_poisson_3d_base.F90)
 
-IF (NOT STDF95)
-   SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_1d_base.F90
-                                    sll_poisson_1d_periodic_solver.F90
-                                    sll_poisson_1d_polar_solver.F90
-                                    sll_poisson_2d_base.F90
-                                    sll_poisson_2d_fft.F90
-                                    sll_poisson_2d_polar_solver.F90
-                                    sll_poisson_2d_periodic_solver.F90
-                                    sll_poisson_2d_elliptic_solver.F90
-                                    sll_poisson_3d_base.F90)
+SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_dirichlet_cartesian.F90 )
                                     
-  IF(MUDPACK_ENABLED)                                    
+IF(MUDPACK_ENABLED)                                    
     SET(POISSON_SRCS ${POISSON_SRCS} sll_poisson_2d_mudpack_solver.F90
                                      sll_poisson_2d_mudpack_curvilinear_solver_old.F90)
-  ENDIF(MUDPACK_ENABLED)                                    
+ENDIF(MUDPACK_ENABLED)                                    
                                     
-ENDIF(NOT STDF95)
-
-
-
 ADD_LIBRARY(sll_poisson_solvers STATIC ${POISSON_SRCS})
 
+SET(POISSON_DEPS_LIBRARIES sll_general_coordinate_elliptic_solvers)
 
+IF(MUDPACK_ENABLED)                                    
+   SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} mudpack) 
+ENDIF(MUDPACK_ENABLED)                                    
 
-IF(FFTW_ENABLED)
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory 
-                                             sll_assertion
-                                             ${POISSON_LIBS}
-                                             dfftpack 
-                                             ${FFTW_LIBRARIES} )
-ELSE()
-   TARGET_LINK_LIBRARIES(sll_poisson_solvers sll_memory sll_assertion ${POISSON_LIBS}
-                                             dfftpack )
+IF(FFTW_ENABLED AND FFTW_FOUND)
+   SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} ${FFTW_LIBRARIES} )
 ENDIF()
+
+SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} sll_memory sll_assertion dfftpack )
+
+TARGET_LINK_LIBRARIES(sll_poisson_solvers ${POISSON_DEPS_LIBRARIES})
+
+ADD_EXECUTABLE( test_poisson_2d_dirichlet_cartesian 
+                test_poisson_2d_dirichlet_cartesian.F90 )
+
+TARGET_LINK_LIBRARIES( test_poisson_2d_dirichlet_cartesian 
+                       sll_poisson_solvers sll_utilities )
 
 
   TARGET_LINK_LIBRARIES(sll_poisson_solvers ${LAPACK_LIBRARIES})
 
-IF (NOT STDF95)
 
 
   ADD_EXECUTABLE(
@@ -90,34 +82,41 @@ IF (NOT STDF95)
     sll_logical_meshes
     sll_constants  ${POISSON_LIBS})
 
-  ADD_EXECUTABLE(
+ADD_EXECUTABLE(
     test_poisson_2d_fft
     unit_test_poisson_2d_fft.F90)
 
-  TARGET_LINK_LIBRARIES(
+TARGET_LINK_LIBRARIES(
     test_poisson_2d_fft
     sll_poisson_solvers)
 
-
-  ADD_EXECUTABLE(
+ADD_EXECUTABLE(
     test_poisson_2d_polar_solver
     unit_test_poisson_2d_polar_solver.F90)
 
-  TARGET_LINK_LIBRARIES(
+TARGET_LINK_LIBRARIES(
     test_poisson_2d_polar_solver
     sll_poisson_solvers
     sll_poisson_2d_polar)
 
-  ADD_EXECUTABLE(
+ADD_EXECUTABLE(
     test_poisson_1d_polar_solver
     unit_test_poisson_1d_polar_solver.F90)
 
-  TARGET_LINK_LIBRARIES(
+TARGET_LINK_LIBRARIES(
     test_poisson_1d_polar_solver
     sll_poisson_solvers)
 
-ENDIF(NOT STDF95)
-
+SET(POISSON_LIBS sll_fft
+                 sll_interpolators
+                 sll_file_io
+                 sll_utilities
+                 sll_timer
+	      sll_assertion
+		 sll_logical_meshes
+		 sll_constants
+		 sll_integration
+                 dfftpack)
 
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
 TARGET_LINK_LIBRARIES(test_poisson_1d ${POISSON_LIBS})
@@ -174,7 +173,6 @@ IF(MUDPACK_ENABLED)
    ADD_MUDPACK_PROGRAM(cartesian)
    ADD_MUDPACK_PROGRAM(polar)
 
-
 ENDIF()
 # ****************************************************************************
 #
@@ -184,18 +182,23 @@ ENDIF()
 
 # This test has parallel diagnostics. Maybe these should only be turned on
 # when debugging this specific module.
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND (NOT STDF95) )
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
-   ADD_LIBRARY(sll_poisson_parallel STATIC 
-               sll_poisson_polar_parallel.F90 
-               sll_poisson_3d_periodic_par.F90 
-               sll_poisson_2d_periodic_cartesian_par.F90
-               sll_quasi_neutral_3d_solver.F90)
+  SET(POISSON_PARALLEL_SRCS
+    sll_poisson_polar_parallel.F90 
+    sll_poisson_3d_periodic_par.F90 
+    sll_poisson_2d_periodic_cartesian_par.F90
+    sll_quasi_neutral_3d_solver.F90)
 
-   ADD_DEPENDENCIES(sll_poisson_parallel sll_remap sll_collective)
+    SET(POISSON_PARALLEL_SRCS ${POISSON_PARALLEL_SRCS} 
+      sll_poisson_2d_polar_parallel_solver.F90)
+
+   ADD_LIBRARY(sll_poisson_parallel STATIC ${POISSON_PARALLEL_SRCS})
+
    TARGET_LINK_LIBRARIES(sll_poisson_parallel sll_remap 
                                               sll_fft
                                               sll_file_io_parallel
+                                              sll_collective
                                               sll_utilities
                                               sll_poisson_solvers)
   
@@ -209,6 +212,10 @@ IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND (NOT STDF95) )
    ADD_EXECUTABLE(test_poisson_polar_parallel 
                   test_poisson_polar_parallel.F90 )
    TARGET_LINK_LIBRARIES(test_poisson_polar_parallel sll_poisson_parallel)
+
+   ADD_EXECUTABLE(test_poisson_polar_parallel_solver 
+                  unit_test_poisson_polar_parallel_solver.F90 )
+   TARGET_LINK_LIBRARIES(test_poisson_polar_parallel_solver sll_poisson_parallel)
 
    MESSAGE(STATUS "PASTIX_ENABLED:${PASTIX_ENABLED}")
    IF (PASTIX_ENABLED)
