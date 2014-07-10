@@ -57,6 +57,9 @@ module sll_pic_1d_Class
         thermal_velocity_estimate, particleweight_mean ,particleweight_var, inhom_var ,&
         push_error_mean, push_error_var
 
+    !Initial offets
+    sll_real64 :: kineticenergy_offset, impulse_offset
+
     !sll_real64 :: initial_fieldenergy , initial_kineticenergy , initial_total_energy
     sll_real64 :: initial_fem_inhom , fem_inhom
     sll_int64    ::  fastest_particle_idx
@@ -375,7 +378,17 @@ contains
             !Here suppose the control variate is the initial state by default
            call  qnsolver%set_bg_particles(species(1)%particle%dx, &
             sign(1.0_f64, species(1)%qm)*species(1)%particle%weight_const)
+
+            kineticenergy_offset=sll_pic1d_calc_kineticenergy_offset(species(1:num_species))
+
+        else
+            kineticenergy_offset=0.0_f64
+
+
+
         endif
+
+
 
 
         !Start with PIC Method
@@ -921,7 +934,6 @@ contains
 
         call sll_pic_1d_calc_push_error(err_x,weight)
 
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
         call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
@@ -1157,6 +1169,8 @@ contains
                 SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
          enddo
 
+        !call sll_pic1d_adjustweights_advection_species(species_0, species_05)
+
         call sll_pic1d_ensure_boundary_conditions_species(species_05)
         call qnsolver%set_species(species_05)
         call qnsolver%solve()
@@ -1170,15 +1184,15 @@ contains
                 species_1(jdx)%particle%dx=species_05(jdx)%particle%dx
                 species_1(jdx)%particle%vx=species_05(jdx)%particle%vx + &
                                              0.5_f64*h*(DPhidx+Eex( &
-                                    species_1(jdx)%particle%dx,t+h))*(species_1(jdx)%qm)
+                                    species_0(jdx)%particle%dx,t+h))*(-species_1(jdx)%qm)
 
                 SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
          enddo
 
         call sll_pic1d_ensure_boundary_conditions_species(species_1)
 
-        call sll_pic1d_adjustweights_advection_species(species_0, species_1)
 
+        call sll_pic1d_adjustweights_advection_species(species_0, species_1)
         call sll_pic_1d_copy_species(species_1, species_0)
        !sll_real64, intent(in):: h
 !        sll_real64, intent(in):: t
@@ -1297,8 +1311,29 @@ contains
                 p_species(idx)%particle%vx**2)&
                 /abs(p_species(idx)%qm)
         enddo
+
+        call sll_collective_globalsum(sll_world_collective, energy, 0)
+        energy=energy+kineticenergy_offset
+    endfunction
+
+  function sll_pic1d_calc_kineticenergy_offset(p_species ) &
+            result(energy)
+        type( sll_particle_1d_group), dimension(:), intent(in) :: p_species
+        sll_int32 :: idx
+        sll_int32 :: num_sp
+        sll_real64 :: energy
+        num_sp=size(p_species)
+        energy=0
+        do idx=1,num_sp
+            energy=energy+ 0.5_f64* &
+                dot_product(p_species(idx)%particle%weight_const, &
+                p_species(idx)%particle%vx**2)&
+                /abs(p_species(idx)%qm)
+        enddo
+
         call sll_collective_globalsum(sll_world_collective, energy, 0)
     endfunction
+
 
 
     !<overall impulse 0.5*m*v
@@ -1577,6 +1612,8 @@ contains
                 ratio=1.0_f64
                 ratio=control_variate_xv(species_new(jdx)%particle%dx, species_new(jdx)%particle%vx)&
                                     /control_variate_xv(species_old(jdx)%particle%dx, species_old(jdx)%particle%vx)
+!                ratio=control_variate_x(species_new(jdx)%particle%dx)&
+!                                    /control_variate_x(species_old(jdx)%particle%dx)
 
             species_new(jdx)%particle%weight=species_new(jdx)%particle%weight_const  - &
             ( species_new(jdx)%particle%weight_const  - species_new(jdx)%particle%weight )*ratio

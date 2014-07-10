@@ -468,7 +468,6 @@ contains
                 this%inhomogenity_comp=this%inhomogenity_comp+ &
                 sign(1.0_f64, pspecies%qm)*this%fouriersolver%get_rhs_from_klimontovich_density_weighted(&
                 this%BC(pspecies%particle%dx), pspecies%particle%weight )
-                print  *,  this%inhomogenity_comp
 
         endselect
     endsubroutine
