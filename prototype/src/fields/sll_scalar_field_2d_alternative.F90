@@ -125,6 +125,7 @@ module sll_module_scalar_field_2d_alternative
      procedure, pass(field) :: first_deriv_eta2_value_at_indices => &
           first_deriv_eta2_value_at_index_discrete
      procedure, pass(field) :: set_field_data => set_field_data_discrete_2d
+     procedure, pass(field) :: get_data_pointer => get_data_ptr_discrete_2d
      procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
      procedure, pass(field) :: delete => delete_field_2d_discrete_alt
   end type sll_scalar_field_2d_discrete_alt
@@ -600,6 +601,14 @@ contains   ! *****************************************************************
     end if
     field%values(:,:) = values(:,:)
   end subroutine set_field_data_discrete_2d
+
+  function get_data_ptr_discrete_2d( field ) result(ptr)
+    sll_real64, dimension(:,:), pointer :: ptr
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
+    SLL_ASSERT(associated(field%values))
+    ptr => field%values
+  end function get_data_ptr_discrete_2d
+
 
   subroutine update_interp_coeffs_2d_discrete( field )
     class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
