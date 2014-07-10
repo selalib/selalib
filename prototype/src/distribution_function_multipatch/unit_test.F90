@@ -61,7 +61,7 @@ program unit_test_2d
 
   call f_mp%initialize( sll_landau_initializer_4d, landau_params )
 
-
+  call f_mp%delete()
 !  call mp%delete()
 
   print *, "PASSED"

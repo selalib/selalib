@@ -1,5 +1,8 @@
 *.[oa]
 *.mod
+*.nml
+*.pyc
+*.so
 *~
 .sconsign.dblite
 unit_test
