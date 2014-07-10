@@ -30,7 +30,13 @@ program unit_test_2d
   sll_real64 :: eta1, eta2, h1, h2, delta, acc, acc1
   sll_real64 :: node, node_a, node_d, interp, val_a
   sll_real64, dimension(2) :: params   ! for the polar transformation
+  sll_real64 :: val_approx1,val_approx2,val_exacte1,val_exacte2,val_exacte1_bis,val_exacte2_bis
   logical    :: l_exists
+  sll_real64, dimension(2,2) :: val_approx_jac
+  sll_real64 :: j11,j12,j21,j22,val_jac_approx
+  sll_real64 :: j11_bis,j12_bis,j21_bis,j22_bis,jac,jac_bis
+  sll_real64, dimension(4) :: param1
+  sll_real64, dimension(10):: param2
 
 #define RMIN 0.1_f64
 #define RMAX 1.0_f64
@@ -81,11 +87,7 @@ program unit_test_2d
   ! Need to do something about these variables being always on the stack...
 
   print *, x1_polar_f(1.0_f64,1.0_f64,params)
-#ifdef STDF95
-  call initialize( t_a,&
-#else
   call t_a%initialize( &
-#endif
        "map_a", &
        mesh, &
        x1_polar_f, &
@@ -110,17 +112,7 @@ program unit_test_2d
        deriv_x2_polar_f_eta2, &
        params )
 
-#ifdef STDF95
-  ! The following std95 test does not make snse because it is not really using
-  ! the information in the transformation to generate the value of the jacobian.
-  print *, 'jacobian_2d(t_a, 0.5, 0.5) = ', &
-      deriv_x1_polar_f_eta1(0.5_f64,0.5_f64,params)*&
-      deriv_x2_polar_f_eta2(0.5_f64,0.5_f64,params) &
-    - deriv_x1_polar_f_eta2(0.5_f64,0.5_f64,params)*&
-      deriv_x2_polar_f_eta1(0.5_f64,0.5_f64,params)
-#else
   print *, 'jacobian_2d(t_a, 0.5, 0.5) = ', t_a%jacobian(0.5_f64,0.5_f64)
-#endif
 
   acc  = 0.0_f64
   acc1 = 0.0_f64
@@ -128,34 +120,19 @@ program unit_test_2d
      do i=0,NPTS1-1
         eta1    = real(i,f64)*h1
         eta2    = real(j,f64)*h2
-#ifdef STDF95
-        node_a  = x1_at_node(t_a,i+1,j+1)
-        val_a   = x1_polar_f(eta1,eta2)
-#else
         node_a  = t_a%x1_at_node(i+1,j+1)
         val_a   = t_a%x1(eta1,eta2)
-#endif
         acc     = acc + abs(node_a-val_a)
-#ifdef STDF95
-        node_a  = x2_at_node(map_a,i+1,j+1)
-        val_a   = x2_polar_f(eta1,eta2)
-#else
         node_a  = t_a%x2_at_node(i+1,j+1)
         val_a   = t_a%x2(eta1,eta2)
-#endif
         acc1    = acc1 + abs(node_a-val_a)
      end do
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1*NPTS2)
   print *, 'Average error in nodes, x2 transformation = ', acc1/(NPTS1*NPTS2)
 
-#ifdef STDF95
-  call write_to_file(t_a)
-#else
   call t_a%write_to_file()
-#endif
-
-
+  !call t_a%write_to_file(SLL_IO_MTV)
 
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE TRANSFORMATION         '
@@ -163,11 +140,7 @@ program unit_test_2d
 
   print *, 'initializing the interpolators: '
 
-#ifdef STDF95
-  call cubic_spline_initialize( x1_interp,&
-#else
   call x1_interp%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -179,11 +152,7 @@ program unit_test_2d
        eta1_min_slopes=x1_eta1_min, &
        eta1_max_slopes=x1_eta1_max )
 
-#ifdef STDF95
-  call cubic_spline_initialize( x2_interp,&
-#else
   call x2_interp%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -195,11 +164,7 @@ program unit_test_2d
        eta1_min_slopes=x2_eta1_min, &
        eta1_max_slopes=x2_eta1_max )
 
-#ifdef STDF95
-  call cubic_spline_initialize( j_interp,&
-#else
   call j_interp%initialize( &
-#endif
        NPTS1, &
        NPTS2, &
        0.0_f64, &
@@ -213,11 +178,7 @@ program unit_test_2d
 
   print *, 'Initialized interpolators...'
 
-#ifdef STDF95
-  call initialize( t_d,&
-#else
   call t_d%initialize( &
-#endif
        mesh, &
        "transf_d", &
        x1_interp, &
@@ -236,23 +197,11 @@ program unit_test_2d
 
   do j=1,NPTS2
      do i=1,NPTS1
-#ifdef STDF95
-        node_a   = x1_at_node(t_a,i,j)
-        node_d   = x1_at_node(t_d,i,j)
-#else
-
         node_a   = t_a%x1_at_node(i,j)
         node_d   = t_d%x1_at_node(i,j)
-#endif
         acc      = acc + abs(node_a-node_d)
-#ifdef STDF95
-        node_a   = x2_at_node(t_a,i,j)
-        node_d   = x2_at_node(t_d,i,j)
-#else
-
         node_a   = t_a%x2_at_node(i,j)
         node_d   = t_d%x2_at_node(i,j)
-#endif
         acc1     = acc1 + abs(node_a-node_d)
      end do
   end do
@@ -266,21 +215,12 @@ program unit_test_2d
      do i=0,NPTS1-1
         eta1   = real(i,f64)*h1
         eta2   = real(j,f64)*h2
-#ifdef STDF95
-        node = &
-             deriv_x1_polar_f_eta1(eta1,eta2,params)*&
-             deriv_x2_polar_f_eta2(eta1,eta2,params)-&
-             deriv_x1_polar_f_eta2(eta1,eta2,params)*&
-             deriv_x2_polar_f_eta1(eta1,eta2,params)
-        interp = jacobian(map_d,eta1,eta2) 
-#else
 !        print *, 'values: ', i, j, eta1, eta2
 !        print *, 'about to call map_a%jacobian(eta1,eta2)'
         node   = t_a%jacobian(eta1,eta2)
 !        node   = map_2d_jacobian_node(map_d,i+1,j+1)
 !        print *, 'about to call map_d%jacobian(eta1,eta2)'
         interp = t_d%jacobian(eta1,eta2)
-#endif
         delta  =  node - interp
         ! for inspecting/debugging:
 !!$        print *, 'eta1 = ', eta1, 'eta2 = ', eta2
@@ -292,13 +232,8 @@ program unit_test_2d
      end do
   end do
 
-#ifdef STDF95
-  call write_to_file(t_d)
- 
-#else
   call t_d%write_to_file()
- 
-#endif
+  !call t_d%write_to_file(SLL_IO_MTV)
 
   print *, 'Average error in jacobian = ', acc/real(NPTS1*NPTS2,f64)
   call delete(t_a)
@@ -314,12 +249,49 @@ program unit_test_2d
 
   print *, 'Test of initialization from file for a nurbs transformation:'
 
-  inquire(file="circle_5mp_patch4.nml", exist=l_exists)
+  inquire(file="domain_patch0.nml", exist=l_exists)
 
   if (l_exists) then
-     call t_n%read_from_file("circle_5mp_patch4.nml")
-     t_n%mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+     call t_n%read_from_file("domain_patch0.nml")
+     !t_n%mesh => new_logical_mesh_2d(64,64 )
      call t_n%write_to_file()
+
+     param1 = (/ 0.05_f64,0.05_f64,1.0_f64,1.0_f64 /)
+     param2 = (/ 0.05_f64,0.05_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64 /)
+     do i = 1,t_n%mesh%num_cells1+1
+        do j = 1,t_n%mesh%num_cells2+1
+
+           eta1 = t_n%mesh%eta1_min + (i-1) * t_n%mesh%delta_eta1 
+           eta2 = t_n%mesh%eta2_min + (j-1) * t_n%mesh%delta_eta2
+           val_approx1 = t_n%x1(eta1,eta2)
+           val_approx2 = t_n%x2(eta1,eta2)
+           val_exacte1 = 2*sinprod_x1(eta1,eta2,param1)-1
+           val_exacte2 = 2*sinprod_x2(eta1,eta2,param1)-1
+           val_exacte1_bis = sinprod_gen_x1(eta1,eta2,param2)
+           val_exacte2_bis = sinprod_gen_x2(eta1,eta2,param2)
+
+          ! print*, 'diff values composante eta1 ', abs(val_approx1-val_exacte1) , val_exacte1, val_exacte1_bis,val_approx1
+          ! print*, 'diff values composante eta2 ', abs(val_approx2-val_exacte2) , val_exacte2, val_exacte2_bis,val_approx2 
+
+           val_approx_jac = t_n%jacobian_matrix(eta1,eta2)
+           val_jac_approx = t_n%jacobian(eta1,eta2)
+           j11 = 2*sinprod_jac11(eta1,eta2,param1)
+           j12 = 2*sinprod_jac12(eta1,eta2,param1)
+           j21 = 2*sinprod_jac21(eta1,eta2,param1)
+           j22 = 2*sinprod_jac22(eta1,eta2,param1)
+           jac = 2*2*sinprod_jac(eta1,eta2,param1)
+           j11_bis = sinprod_gen_jac11(eta1,eta2,param2)
+           j12_bis = sinprod_gen_jac12(eta1,eta2,param2)
+           j21_bis = sinprod_gen_jac21(eta1,eta2,param2)
+           j22_bis = sinprod_gen_jac22(eta1,eta2,param2)
+           jac_bis = sinprod_gen_jac  (eta1,eta2,param2)
+          ! print*, 'Jacobian values composante j11 ', abs(val_approx_jac(1,1)-j11),j11,j11_bis, val_approx_jac(1,1) 
+          ! print*, 'Jacobian values composante j12 ', abs(val_approx_jac(1,2)-j12),j12,j12_bis, val_approx_jac(1,2) 
+          ! print*, 'Jacobian values composante j21 ', abs(val_approx_jac(2,1)-j21),j21,j21_bis, val_approx_jac(2,1) 
+          ! print*, 'Jacobian values composante j22 ', abs(val_approx_jac(2,2)-j22),j22,j22_bis, val_approx_jac(2,2)
+          ! print*, 'Jacobian values', abs(jac- val_jac_approx),jac, jac_bis, val_jac_approx
+        end do
+     end do
 
      print*, 'label t_n', t_n%label
 

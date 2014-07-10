@@ -6,16 +6,9 @@ module sll_module_coordinate_transformations_2d
   use sll_cubic_splines
   use sll_xdmf
   use sll_logical_meshes
-#ifdef STDF95
-  use sll_cubic_spline_interpolator_2d
-  use sll_gnuplot
-#else
   use sll_module_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
   use sll_module_deboor_splines_2d
-
-
-#endif
   implicit none
   
   ! ---------------------------------------------------------------------
@@ -50,27 +43,13 @@ module sll_module_coordinate_transformations_2d
   !
 
 !> Analytic transformation
-#ifdef STDF95
-  type  :: sll_coordinate_transformation_2d_analytic
-     ! for pre-computing values. Not clear how advantageous this is.
-!!$     sll_real64, dimension(:,:), pointer :: x1_cell
-!!$     sll_real64, dimension(:,:), pointer :: x2_cell
-!!$     sll_real64, dimension(:,:), pointer :: jacobians_n
-!!$     sll_real64, dimension(:,:), pointer :: jacobians_c
-     !ES the two following need to be in the base class
-     !character(len=64) :: label
-     !logical           :: written! = .false.
-     type(sll_logical_mesh_2d), pointer :: mesh
-#else
   type, extends(sll_coordinate_transformation_2d_base):: &
        sll_coordinate_transformation_2d_analytic
-#endif
 !!$     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
-#ifdef STDF95
-#else
      !character(len=64) :: label
      !logical           :: written! = .false.
+     !type(sll_logical_mesh_2d), pointer :: mesh => null()
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
@@ -98,7 +77,6 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: write_to_file => write_to_file_2d_analytic
      procedure, pass(transf) :: read_from_file => read_from_file_2d_analytic
      procedure, pass(transf) :: delete => delete_transformation_2d_analytic
-#endif
   end type sll_coordinate_transformation_2d_analytic
 
 
@@ -108,27 +86,18 @@ module sll_module_coordinate_transformations_2d
   !
   ! -----------------------------------------------------------------------
 
-#ifdef STDF95
-  type                      ::sll_coordinate_transformation_2d_discrete
-#else
   type, extends(sll_coordinate_transformation_2d_base) :: &
        sll_coordinate_transformation_2d_discrete
-#endif
      sll_real64, dimension(:,:), pointer :: x1_node =>null()   ! x1(i,j) 
      sll_real64, dimension(:,:), pointer :: x2_node =>null()  ! x2(i,j) 
      sll_real64, dimension(:,:), pointer :: x1_cell =>null()
      sll_real64, dimension(:,:), pointer :: x2_cell =>null()
      sll_real64, dimension(:,:), pointer :: jacobians_n =>null()
      sll_real64, dimension(:,:), pointer :: jacobians_c =>null()
-#ifdef STDF95
-     ! so the choice is to have only cubic splines in f95 mode... 
-     ! more generality would be obtained with arbitrary degree splines...
-     type(cubic_spline_2d_interpolator), pointer            :: x1_interp
-     type(cubic_spline_2d_interpolator), pointer            :: x2_interp
-#else
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(sll_interpolator_2d_base), pointer               :: x1_interp
      class(sll_interpolator_2d_base), pointer               :: x2_interp
+     !type(sll_logical_mesh_2d), pointer :: mesh => null()
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
@@ -148,39 +117,8 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: write_to_file => write_to_file_2d_discrete
      procedure, pass(transf) :: read_from_file => read_from_file_2d_discrete
      procedure, pass(transf) :: delete => delete_transformation_2d_discrete
-#endif
   end type sll_coordinate_transformation_2d_discrete
 
-#ifdef STDF95
-  interface initialize 
-     module procedure initialize_coord_transf_2d_discrete, &
-                      initialize_coord_transf_2d_analytic
-  end interface
-
-  interface x1_at_node 
-     module procedure x1_node_analytic, x1_node_discrete
-  end interface
-
-  interface x2_at_node 
-     module procedure x2_node_analytic, x2_node_discrete
-  end interface
-
-  interface x1 
-     module procedure x1_discrete
-  end interface
-
-  interface x2
-     module procedure x2_discrete
-  end interface
-
-  interface jacobian
-     module procedure jacobian_2d_discrete 
-  end interface
-
-  interface write_to_file
-     module procedure mma_write_to_file_2d_analytic, write_to_file_2d_discrete 
-  end interface
-#else
   abstract interface
      function j_matrix_f_nopass ( eta1, eta2, params ) result(val)
        use sll_working_precision
@@ -219,8 +157,6 @@ module sll_module_coordinate_transformations_2d
   type jacobian_matrix_element
      procedure(transformation_func_nopass), pointer, nopass :: f
   end type jacobian_matrix_element
-#endif
-  
 
   interface delete
      module procedure &
@@ -252,21 +188,12 @@ contains
          new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
     type(sll_logical_mesh_2d), pointer :: mesh_2d
-#ifdef STDF95
-    sll_real64            :: x1_func
-    sll_real64            :: x2_func
-    sll_real64            :: j11_func
-    sll_real64            :: j12_func
-    sll_real64            :: j21_func
-    sll_real64            :: j22_func
-#else
     procedure(transformation_func_nopass)            :: x1_func
     procedure(transformation_func_nopass)            :: x2_func
     procedure(transformation_func_nopass)            :: j11_func
     procedure(transformation_func_nopass)            :: j12_func
     procedure(transformation_func_nopass)            :: j21_func
     procedure(transformation_func_nopass)            :: j22_func
-#endif
     sll_real64, dimension(:), intent(in) :: params
     sll_int32 :: ierr
 
@@ -296,29 +223,15 @@ contains
     j22_func,       &
     params )
 
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic), intent(inout) :: &
-         transf
-#else
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: &
          transf
-#endif
     character(len=*), intent(in)                  :: label
-#ifdef STDF95
-    sll_real64            :: x1_func
-    sll_real64            :: x2_func
-    sll_real64            :: j11_func
-    sll_real64            :: j12_func
-    sll_real64            :: j21_func
-    sll_real64            :: j22_func
-#else
     procedure(transformation_func_nopass)            :: x1_func
     procedure(transformation_func_nopass)            :: x2_func
     procedure(transformation_func_nopass)            :: j11_func
     procedure(transformation_func_nopass)            :: j12_func
     procedure(transformation_func_nopass)            :: j21_func
     procedure(transformation_func_nopass)            :: j22_func
-#endif
     type(sll_logical_mesh_2d), pointer :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: npts1
@@ -348,8 +261,6 @@ contains
 !!$    SLL_ALLOCATE(transformation%x1_cell(npts1-1, npts2-1), ierr)
 !!$    SLL_ALLOCATE(transformation%x2_cell(npts1-1, npts2-1), ierr)
 
-#ifdef STDF95
-#else
     ! Assign the transformation functions and parameters
     transf%x1_func => x1_func
     transf%x2_func => x2_func
@@ -364,7 +275,6 @@ contains
     transf%j_matrix(2,1)%f => j21_func
     transf%j_matrix(2,2)%f => j22_func
     transf%jacobian_func   => jacobian_2d_analytic
-#endif
     
     ! Allocate the arrays for precomputed jacobians.
 !!$    SLL_ALLOCATE(transformation%jacobians_n(npts1,   npts2), ierr)
@@ -380,14 +290,7 @@ contains
 !!$          ! for some compiler reason, the following intermediate 
 !!$          ! variable is required, else the jacobians_n array will not
 !!$          ! be filled out properly.
-!!$#ifdef STDF95
-!!$          ! We can't define jacobian_2d_analytic because it use procedure pointer
-!!$          ! So we compute directly the jacobian with their components
-!!$          jacobian_val          = j11_func(eta_1,eta_2)*j22_func(eta_1,eta_2) &
-!!$                                - j12_func(eta_1,eta_2)*j21_func(eta_1,eta_2)
-!!$#else
 !!$          jacobian_val          = transformation%jacobian_func(eta_1,eta_2)
-!!$#endif
 !!$          transformation%jacobians_n(i+1,j+1) = jacobian_val
 !!$       end do
 !!$    end do
@@ -399,14 +302,8 @@ contains
 !!$          eta_1 = delta_1*(real(i,f64) + 0.5_f64)
 !!$          transformation%x1_cell(i+1,j+1)     = x1_func(eta_1, eta_2)
 !!$          transformation%x2_cell(i+1,j+1)     = x2_func(eta_1, eta_2)
-!!$#ifdef STDF95
-!!$          transformation%jacobians_c(i+1,j+1) = &
-!!$               j11_func(eta_1,eta_2)*j22_func(eta_1,eta_2) &
-!!$             - j12_func(eta_1,eta_2)*j21_func(eta_1,eta_2)
-!!$#else
 !!$          transformation%jacobians_c(i+1,j+1) = &
 !!$               transformation%jacobian_func(eta_1,eta_2)
-!!$#endif
 !!$       end do
 !!$    end do
   end subroutine initialize_coord_transf_2d_analytic
@@ -429,8 +326,6 @@ contains
     res => transf%mesh
   end function get_logical_mesh_analytic
 
-#ifdef STDF95
-#else
   function jacobian_2d_analytic( transf, eta1, eta2 ) result(val)
     sll_real64                        :: val
     class(sll_coordinate_transformation_2d_analytic) :: transf
@@ -518,14 +413,9 @@ contains
     sll_real64, intent(in) :: eta2
     val = transf%x2_func(eta1, eta2, transf%params)
   end function x2_analytic
-#endif
 
   function x1_node_analytic( transf, i, j ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic) :: transf
-#else
     class(sll_coordinate_transformation_2d_analytic) :: transf
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -545,11 +435,7 @@ contains
   end function x1_node_analytic
 
   function x2_node_analytic( transf, i, j ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic) :: transf
-#else
     class(sll_coordinate_transformation_2d_analytic) :: transf
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -569,11 +455,7 @@ contains
   end function x2_node_analytic
 
   function x1_cell_analytic( transf, i, j ) result(var)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic) :: transf
-#else
     class(sll_coordinate_transformation_2d_analytic) :: transf
-#endif
     sll_real64            :: var
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -594,11 +476,7 @@ contains
   end function x1_cell_analytic
 
   function x2_cell_analytic( transf, i, j ) result(var)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic) :: transf
-#else
     class(sll_coordinate_transformation_2d_analytic) :: transf
-#endif
     sll_real64            :: var
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -619,11 +497,7 @@ contains
   end function x2_cell_analytic
 
   function jacobian_2d_cell_analytic( transf, i, j ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic) :: transf
-#else
     class(sll_coordinate_transformation_2d_analytic) :: transf
-#endif
     sll_real64            :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -656,11 +530,7 @@ contains
   end function jacobian_2d_cell_analytic
 
   function jacobian_node_analytic( transf, i, j )
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_analytic)   :: transf
-#else
     class(sll_coordinate_transformation_2d_analytic)   :: transf
-#endif
     sll_real64              :: jacobian_node_analytic
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
@@ -719,7 +589,7 @@ contains
     nc_eta2 = transf%mesh%num_cells2
 
     if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
+       local_format = SLL_IO_GNUPLOT
     else
        local_format = output_format
     end if
@@ -744,6 +614,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_GNUPLOT) then
+
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+
+          do i1=1, nc_eta1+1
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_gnuplot_2d( nc_eta1+1, nc_eta2+1, x1mesh, x2mesh,&
+                               trim(transf%label), ierr)  
 
        else if (local_format == SLL_IO_MTV) then
 
@@ -801,11 +686,7 @@ contains
 
 
   function x1_node_discrete( transf, i, j ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -813,11 +694,7 @@ contains
   end function x1_node_discrete
 
   function x2_node_discrete( transf, i, j ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -825,11 +702,7 @@ contains
   end function x2_node_discrete
 
   function x1_cell_discrete( transf, i, j ) result(var)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64                         :: var
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
@@ -837,11 +710,7 @@ contains
   end function x1_cell_discrete
 
   function x2_cell_discrete( transf, i, j ) result(var)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64                         :: var
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
@@ -849,43 +718,23 @@ contains
   end function x2_cell_discrete
 
   function x1_discrete( transf, eta1, eta2 ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-#ifdef STDF95
-    val = cubic_spline_interpolate_value(transf%x1_interp,eta1, eta2)
-#else
     val = transf%x1_interp%interpolate_value(eta1, eta2)
-#endif
   end function x1_discrete
 
   function x2_discrete( transf, eta1, eta2 ) result(val)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-#ifdef STDF95
-    val = cubic_spline_interpolate_value(transf%x2_interp, eta1, eta2)
-#else
     val = transf%x2_interp%interpolate_value(eta1, eta2)
-#endif
   end function x2_discrete
 
   function jacobian_2d_discrete( transf, eta1, eta2 ) result(jac)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64             :: jac
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -893,17 +742,10 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-#ifdef STDF95
-    j11 = cubic_spline_interpolate_derivative_eta1( transf%x1_interp, eta1, eta2 )
-    j12 = cubic_spline_interpolate_derivative_eta2( transf%x1_interp, eta1, eta2 )
-    j21 = cubic_spline_interpolate_derivative_eta1( transf%x1_interp, eta1, eta2 )
-    j22 = cubic_spline_interpolate_derivative_eta2( transf%x1_interp, eta1, eta2 )
-#else
     j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
     j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
     j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-#endif
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -912,11 +754,7 @@ contains
   end function jacobian_2d_discrete
 
   function jacobian_2d_cell_discrete( transf, i, j ) result(var)
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete)  :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64                         :: var
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
@@ -924,11 +762,7 @@ contains
   end function jacobian_2d_cell_discrete
 
   function jacobian_matrix_2d_discrete( transf, eta1, eta2 )
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete) :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_discrete
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -936,17 +770,10 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-#ifdef STDF95
-    j11 = cubic_spline_interpolate_derivative_eta1( transf%x1_interp, eta1, eta2 )
-    j12 = cubic_spline_interpolate_derivative_eta2( transf%x1_interp, eta1, eta2 )
-    j21 = cubic_spline_interpolate_derivative_eta1( transf%x2_interp, eta1, eta2 )
-    j22 = cubic_spline_interpolate_derivative_eta2( transf%x2_interp, eta1, eta2 )
-#else
     j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
     j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
     j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-#endif
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -958,11 +785,7 @@ contains
   end function jacobian_matrix_2d_discrete
 
   function inverse_jacobian_matrix_2d_discrete( transf, eta1, eta2 )
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete)  :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete) :: transf
-#endif
     sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_discrete
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -971,23 +794,11 @@ contains
     sll_real64             :: inv_j21
     sll_real64             :: inv_j22
     sll_real64             :: r_jac ! reciprocal of the jacobian
-#ifdef STDF95
-    r_jac = jacobian_2d_discrete( transf, eta1, eta2 )
-    inv_j11 = &
-         cubic_spline_interpolate_derivative_eta1( transf%x1_interp, eta1, eta2 )
-    inv_j12 = &
-         cubic_spline_interpolate_derivative_eta2( transf%x1_interp, eta1, eta2 )
-    inv_j21 = &
-         cubic_spline_interpolate_derivative_eta1( transf%x2_interp, eta1, eta2 )
-    inv_j22 = &
-         cubic_spline_interpolate_derivative_eta2( transf%x2_interp, eta1, eta2 )
-#else
     r_jac = 1.0_f64/transf%jacobian( eta1, eta2 )
     inv_j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
     inv_j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
     inv_j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
     inv_j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-#endif
     ! For debugging:
     !    print *, 'jacobian_2D_discrete: '
     !    print *, j11, j12
@@ -1015,18 +826,9 @@ contains
     type(sll_logical_mesh_2d), pointer    :: mesh_2d
     character(len=*)         , intent(in) :: label
 
-#ifdef STDF95
-    ! no this should not be compiled under f95, the object would not have
-    ! the same functionality
-    type(cubic_spline_2d_interpolator), target  :: x1_interpolator
-    type(cubic_spline_2d_interpolator), target  :: x2_interpolator
-    type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
-
-#else
     class(sll_interpolator_2d_base), target  :: x1_interpolator
     class(sll_interpolator_2d_base), target  :: x2_interpolator
     class(sll_interpolator_2d_base), target  :: jacobians_n_interpolator
-#endif 
     sll_real64, dimension(:,:), intent(in), optional :: x1_node
     sll_real64, dimension(:,:), intent(in), optional :: x2_node
     sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
@@ -1069,25 +871,13 @@ contains
     x2_cell, &
     jacobians_cell )
 
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete)     :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete)    :: transf
-#endif
     type(sll_logical_mesh_2d), pointer   :: mesh_2d
     character(len=*), intent(in)         :: label
 
-#ifdef STDF95
-    ! no this should not be compiled under f95, the object would not have
-    ! the same functionality
-    type(cubic_spline_2d_interpolator), target  :: x1_interpolator
-    type(cubic_spline_2d_interpolator), target  :: x2_interpolator
-    type(cubic_spline_2d_interpolator), target  :: jacobians_n_interpolator
-#else
     class(sll_interpolator_2d_base), target  :: x1_interpolator
     class(sll_interpolator_2d_base), target  :: x2_interpolator
     class(sll_interpolator_2d_base), target :: jacobians_n_interpolator
-#endif 
     sll_real64, dimension(:,:), intent(in), optional :: x1_node
     sll_real64, dimension(:,:), intent(in), optional :: x2_node
     sll_real64, dimension(:,:), intent(in), optional :: jacobians_node
@@ -1260,18 +1050,12 @@ contains
     end if
 
     ! Compute the spline coefficients
-!!$#ifdef STDF95
-!!$    call cubic_spline_compute_interpolants( x1_interpolator, transf%x1_node )
-!!$    call cubic_spline_compute_interpolants( x2_interpolator, transf%x2_node )
-!!$#else
     if( x1n .and. (x1_interpolator%coefficients_are_set() .eqv. .false.) ) then
        call x1_interpolator%compute_interpolants( transf%x1_node )
     end if
     if( x2n .and. (x2_interpolator%coefficients_are_set() .eqv. .false.) ) then
        call x2_interpolator%compute_interpolants( transf%x2_node )
     end if
-!!$#endif
-
 
     ! The splines contain all the information to compute the
     ! jacobians everywhere; however, here we explore assigning
@@ -1293,11 +1077,7 @@ contains
           eta_2 = eta_2_min + real(j,f64)*delta_eta_2          
           do i=0, npts1 - 1
              eta_1 = eta_1_min + real(i,f64)*delta_eta_1
-#ifdef STDF95
-             jacobian_val = jacobian_2d_discrete(transf,eta_1,eta_2)
-#else
              jacobian_val = transf%jacobian(eta_1,eta_2)
-#endif
              transf%jacobians_n(i+1,j+1) = jacobian_val
           end do
        end do
@@ -1329,15 +1109,9 @@ contains
              ! it is very bad practice to invoke the mesh methods while
              ! we are not even done initializing the mesh object...
              eta_1 = eta_1_min + delta_eta_1*(real(i,f64) + 0.5_f64)
-#ifdef STDF95
-             transf%x1_cell(i+1,j+1)     = x1_discrete(transf, eta_1, eta_2)
-             transf%x2_cell(i+1,j+1)     = x2_discrete(transf, eta_1, eta_2)
-             transf%jacobians_c(i+1,j+1) = jacobian_2d_discrete(transf, eta_1,eta_2)
-#else
              transf%x1_cell(i+1,j+1)     = transf%x1(eta_1, eta_2)
              transf%x2_cell(i+1,j+1)     = transf%x2(eta_1, eta_2)
              transf%jacobians_c(i+1,j+1) = transf%jacobian(eta_1,eta_2)
-#endif
           end do
        end do
     end if
@@ -1345,11 +1119,7 @@ contains
 
 
   function transf_2d_jacobian_node_discrete( transf, i, j )
-#ifdef STDF95
-    type(sll_coordinate_transformation_2d_discrete)   :: transf
-#else
     class(sll_coordinate_transformation_2d_discrete)   :: transf
-#endif
     sll_real64              :: transf_2d_jacobian_node_discrete
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
@@ -1389,7 +1159,7 @@ contains
     delta_eta2 = transf%mesh%delta_eta2
 
     if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
+       local_format = SLL_IO_GNUPLOT
     else
        local_format = output_format
     end if
@@ -1415,6 +1185,21 @@ contains
           call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
           call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
           call sll_xdmf_close(file_id,ierr)
+
+       else if (local_format == SLL_IO_GNUPLOT) then
+
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+             end do
+          end do
+       
+          call sll_gnuplot_2d( npts_eta1, npts_eta2, x1mesh, x2mesh,&
+                               trim(transf%label), ierr)  
 
        else if (local_format == SLL_IO_MTV) then
 

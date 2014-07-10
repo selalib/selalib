@@ -29,11 +29,12 @@ module sll_xdmf
 #ifdef NOHDF5
 use sll_binary_io
 #else
-use sll_hdf5_io
+use sll_hdf5_io_serial
 #endif
 
 use sll_ascii_io
 use sll_xml_io
+use sll_utilities, only: errout
   
 implicit none
   
@@ -51,6 +52,22 @@ end interface
   
 contains  
   
+subroutine sll_xdmf_set_time(file_id, time)
+sll_real64, intent(in) :: time
+sll_int32, intent(in)  :: file_id    !< file unit number
+logical                :: i_opened
+
+inquire (file_id, opened=i_opened)
+
+if (i_opened) then
+   write(file_id,"(a13,g15.3,a3)") "<Time Value='",time,"'/>"
+else
+   call errout(6, 'W', "sll_xdmf.F90", 65, "this xdmf is not opened" )
+end if
+
+end subroutine sll_xdmf_set_time
+
+
 !>Open a XDMF format file for a 2d plot
 subroutine sll_xdmf_open_2d(file_name,mesh_name,nnodes_x1,nnodes_x2,file_id,error)
 
@@ -62,7 +79,8 @@ sll_int32, intent(out)       :: file_id    !< file unit number
 sll_int32, intent(out)       :: error      !< error code
     
 call sll_xml_file_create(trim(file_name),file_id,error)
-call sll_xml_grid_geometry(file_id, trim(mesh_name), nnodes_x1, nnodes_x2)
+call sll_xml_grid_geometry(file_id, trim(mesh_name), &
+                           nnodes_x1, nnodes_x2)
 
 end subroutine sll_xdmf_open_2d
 
@@ -84,7 +102,8 @@ sll_int32, intent(in)        :: nnodes_x2  !< y nodes number
 sll_int32, intent(in)        :: nnodes_x3  !< z nodes number
 
 call sll_xml_file_create(trim(file_name),file_id,error)
-call sll_xml_grid_geometry(file_id,trim(mesh_name),nnodes_x1,nnodes_x2,nnodes_x3)
+call sll_xml_grid_geometry(file_id,trim(mesh_name), &
+                           nnodes_x1,nnodes_x2,nnodes_x3)
 
 end subroutine sll_xdmf_open_3d
   
@@ -224,15 +243,18 @@ write(file_id,"(2f12.5)") delta_eta1, delta_eta2
 write(file_id,"(a)")"</DataItem>"
 write(file_id,"(a)")"</Geometry>"
 write(file_id,"(a)")"<Attribute Name='"//array_name//"' AttributeType='Scalar' Center='Node'>"
-if(present(file_format) .and. file_format == "HDF5") then
-   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
-                             "' NumberType='Float' Precision='8' Format='HDF'>"
-   write(file_id,"(a)")array_name//".h5:/node_values"
+
+if(present(file_format)) then
+   if( file_format == "HDF5") then
+      write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
+                                "' NumberType='Float' Precision='8' Format='HDF'>"
+      write(file_id,"(a)")array_name//".h5:/node_values"
 #ifndef NOHDF5
-   call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
-   call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
-   call sll_hdf5_file_close(hfile_id, error)
+      call sll_hdf5_file_create(array_name//".h5",hfile_id,error)
+      call sll_hdf5_write_array(hfile_id,array,"/node_values",error)
+      call sll_hdf5_file_close(hfile_id, error)
 #endif
+   end if
 else
    write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",nx2,nx1, &
                              "' NumberType='Float' Precision='8' Format='XML'>"

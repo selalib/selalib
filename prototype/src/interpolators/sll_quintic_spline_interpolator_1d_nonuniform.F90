@@ -319,7 +319,7 @@ contains  ! ****************************************************************
     
     print *, 'get_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
          'implemented yet.'
-    get_coefficients_qs1d_nonuniform = 0._f64
+    get_coefficients_qs1d_nonuniform => null()
     print *,interpolator%num_points
     stop      
   end function get_coefficients_qs1d_nonuniform

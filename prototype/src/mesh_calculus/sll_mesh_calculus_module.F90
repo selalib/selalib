@@ -39,19 +39,21 @@ contains
     !sll_real64 :: factor2
     sll_int32  :: i
     sll_int32  :: j
+    type(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
 
     vol = 0.0_f64
 
-    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    eta1_min = m%eta1_min
+    delta1   = m%delta_eta1
+    eta2_min = m%eta2_min
+    delta2   = m%delta_eta2
 
     ! This function carries out the integral of the jacobian evaluated on
     ! gauss-legendre points within the cell.
@@ -62,9 +64,11 @@ contains
     max2    = eta2_min + jc*delta2
     !factor1 = 0.5_f64*(max1-min1)
     !factor2 = 0.5_f64*(max2-min2) 
-    pts_g1(:,:) = gauss_legendre_points_and_weights(integration_degree, min1, max1)
+    pts_g1(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
-    pts_g2(:,:) = gauss_legendre_points_and_weights(integration_degree, min2, max2)
+    pts_g2(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min2, max2)
     ! gauss_points(integration_degree, min2, max2)
 
     do j=1,integration_degree
@@ -102,31 +106,28 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
+    type(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
 
     len = 0.0_f64
 
 !    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    delta1   = m%delta_eta1
+    eta2_min = m%eta2_min
+    delta2   = m%delta_eta2
 
     ! The limits of integration are the limits of the cell in eta-space
-!    min1    = eta1_min + (ic-1)*delta1
-!    max1    = eta1_min + ic*delta1
     eta1    = ic*delta1 ! only difference with edge_length_eta1_minus function
     min2    = eta2_min + (jc-1)*delta2
     max2    = eta2_min + jc*delta2
-!    factor1 = 0.5_f64*(max1-min1)
-!    factor2 = 0.5_f64*(max2-min2) 
-!    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
-    pts_g2(:,:) = gauss_legendre_points_and_weights(integration_degree, min2, max2)
-    !gauss_points(integration_degree, min2, max2)
+    pts_g2(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min2, max2)
     
     do j=1,integration_degree
        ! this can be made more efficient if we could access directly each
@@ -164,30 +165,32 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
+    type(sll_logical_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
+
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
 
     len = 0.0_f64
     
     !    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    delta1   = m%delta_eta1
+    eta2_min = m%eta2_min
+    delta2   = m%delta_eta2
 
     ! The limits of integration are the limits of the cell in eta-space
-    !    min1    = eta1_min + (ic-1)*delta1
-    !    max1    = eta1_min + ic*delta1
     eta1    = (ic-1)*delta1
     min2    = eta2_min + (jc-1)*delta2
     max2    = eta2_min + jc*delta2
     !    factor1 = 0.5_f64*(max1-min1)
     !    factor2 = 0.5_f64*(max2-min2) 
     !    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
-    pts_g2(:,:) = gauss_legendre_points_and_weights(integration_degree, min2, max2)
+    pts_g2(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min2, max2)
     !gauss_points(integration_degree, min2, max2)
     
     do j=1,integration_degree
@@ -219,36 +222,31 @@ contains
     sll_real64 :: delta2
     sll_real64 :: max1
     sll_real64 :: min1
-    !sll_real64 :: max2
-    !sll_real64 :: min2
-    !    sll_real64 :: factor1
-    !    sll_real64 :: factor2
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
+    type(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
+
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
 
     len = 0.0_f64
 
-    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-!    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2  ! is this used?
+    eta1_min = m%eta1_min
+    delta1   = m%delta_eta1
+    delta2   = m%delta_eta2  ! is this used?
 
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
     max1    = eta1_min + ic*delta1
     eta2    = jc*delta2 ! only difference with edge_length_eta2_minus function
-    !    min2    = eta2_min + (jc-1)*delta2
-    !    max2    = eta2_min + jc*delta2
-    !    factor1 = 0.5_f64*(max1-min1)
-    !    factor2 = 0.5_f64*(max2-min2) 
-    pts_g1(:,:) = gauss_legendre_points_and_weights(integration_degree, min1, max1)
+    pts_g1(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     !    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
     
@@ -288,19 +286,21 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
+    type(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
+
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
     
     len = 0.0_f64
     
-    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-!    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2  ! is this used?
+    eta1_min = m%eta1_min
+    delta1   = m%delta_eta1
+    delta2   = m%delta_eta2  ! is this used?
 
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
@@ -310,7 +310,8 @@ contains
     !    max2    = eta2_min + jc*delta2
     !factor1 = 0.5_f64*(max1-min1)
     !    factor2 = 0.5_f64*(max2-min2) 
-    pts_g1(:,:) = gauss_legendre_points_and_weights(integration_degree, min1, max1)
+    pts_g1(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min1, max1)
     !gauss_points(integration_degree, min1, max1)
     !    pts_g2(:,:) = gauss_points(integration_degree, min2, max2)
     
@@ -351,17 +352,20 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    
+    type(sll_logical_mesh_2d), pointer :: m
+
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
+
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
     
     !    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    delta1   = m%delta_eta1
+    eta2_min = m%eta2_min
+    delta2   = m%delta_eta2
 
     ! The limits of integration are the limits of the cell in eta-space
     !    min1    = eta1_min + (ic-1)*delta1
@@ -372,7 +376,8 @@ contains
     !    factor1 = 0.5_f64*(max1-min1)
     !factor2 = 0.5_f64*(max2-min2) 
     !    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
-    pts_g2(:,:) = gauss_legendre_points_and_weights(integration_degree, min2, max2)
+    pts_g2(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min2, max2)
     !gauss_points(integration_degree, min2, max2)
     
     ! For efficiency, this code should be refactored. Consider:
@@ -407,7 +412,6 @@ contains
     sll_real64, dimension(2) :: res
     
     sll_real64, dimension(2,2) :: inv_jac_mat ! inverse jacobian matrix
-    !    sll_real64, dimension(2,integration_degree) :: pts_g1 ! gauss-legendre pts.
     sll_real64, dimension(2,integration_degree) :: pts_g2 ! gauss-legendre pts.
     sll_real64 :: eta1
     !sll_real64 :: eta1_min
@@ -424,17 +428,19 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
+    type(sll_logical_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    m => T%mesh
 
-    !    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    ! verify that the indices requested are within the logical mesh.
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
+
+    delta1   = m%delta_eta1
+    eta2_min = m%eta2_min
+    delta2   = m%delta_eta2
     
     ! The limits of integration are the limits of the cell in eta-space
     !    min1    = eta1_min + (ic-1)*delta1
@@ -445,7 +451,8 @@ contains
     !    factor1 = 0.5_f64*(max1-min1)
     !factor2 = 0.5_f64*(max2-min2) 
     !    pts_g1(:,:) = gauss_points(integration_degree, min1, max1)
-    pts_g2(:,:) = gauss_legendre_points_and_weights(integration_degree, min2, max2)
+    pts_g2(:,:) = &
+         gauss_legendre_points_and_weights(integration_degree, min2, max2)
     !gauss_points(integration_degree, min2, max2)
     
     ! For efficiency, this code should be refactored. Consider:
@@ -499,17 +506,19 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
+    type(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
+
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
     
-    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-    !    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    eta1_min = m%eta1_min
+    delta1   = m%delta_eta1
+    delta2   = m%delta_eta2
     
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1
@@ -574,17 +583,19 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
+    type(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
+    m => T%mesh
+
     ! verify that the indices requested are within the logical mesh.
-    SLL_ASSERT(ic <= T%mesh%num_cells1)
-    SLL_ASSERT(jc <= T%mesh%num_cells2)
+    SLL_ASSERT(ic <= m%num_cells1)
+    SLL_ASSERT(jc <= m%num_cells2)
     
-    eta1_min = T%mesh%eta1_min
-    delta1   = T%mesh%delta_eta1
-!    eta2_min = T%mesh%eta2_min
-    delta2   = T%mesh%delta_eta2
+    eta1_min = m%eta1_min
+    delta1   = m%delta_eta1
+    delta2   = m%delta_eta2
     
     ! The limits of integration are the limits of the cell in eta-space
     min1    = eta1_min + (ic-1)*delta1

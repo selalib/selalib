@@ -24,7 +24,6 @@ implicit none
   sll_real64 :: eta1, eta2
   sll_real64 :: delta_x, delta_y, delta_vx, delta_vy
   sll_real64 :: dx, dy
-  sll_real64 :: dvx, dvy
 
   sll_real64, dimension(:),       allocatable :: x, y
   sll_real64, dimension(:),       allocatable :: vx, vy

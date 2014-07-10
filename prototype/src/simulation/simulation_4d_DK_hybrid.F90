@@ -141,8 +141,8 @@ module sll_simulation_4d_DK_hybrid_module
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      !----> for interpolations
      type(arb_deg_2d_interpolator) :: interp2d_f_eta1eta2
-     type(arb_deg_1d_interpolator) :: interp1d_f_eta3
-     type(arb_deg_1d_interpolator) :: interp1d_f_vpar
+     type(sll_arb_deg_1d_interpolator) :: interp1d_f_eta3
+     type(sll_arb_deg_1d_interpolator) :: interp1d_f_vpar
 
      !--> 3D charge density and 3D electric potential
      !----> sequential in (x1,x2)
@@ -167,7 +167,7 @@ module sll_simulation_4d_DK_hybrid_module
      ! interpolation any arbitrary spline
      type(arb_deg_2d_interpolator) :: interp2d_rho_eta1eta2
      type(arb_deg_2d_interpolator) :: interp2d_Phi_eta1eta2
-     type(arb_deg_1d_interpolator) :: interp1d_Phi_eta3
+     type(sll_arb_deg_1d_interpolator) :: interp1d_Phi_eta3
      type(arb_deg_2d_interpolator) :: interp2d_QN_A11
      type(arb_deg_2d_interpolator) :: interp2d_QN_A12
      type(arb_deg_2d_interpolator) :: interp2d_QN_A21
@@ -324,7 +324,7 @@ contains
     sll_real64 :: theta_min, Ltheta, dtheta
     sll_real64 :: r_peak, n0_rmin
     sll_real64 :: inv_Ln, inv_LTi, inv_LTe
-    sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
+    sll_real64 :: Ti_rmin, Ti_scal
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
 
@@ -1475,7 +1475,7 @@ contains
   !----------------------------------------------------
   subroutine first_step_4d_DK_hybrid( sim )
     use sll_timer
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
@@ -1842,7 +1842,7 @@ contains
   !----------------------------------------------------
   subroutine writeHDF5_diag( sim )
    ! use sll_collective
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 

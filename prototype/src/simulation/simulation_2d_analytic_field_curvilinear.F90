@@ -35,12 +35,13 @@ module sll_simulation_2d_analytic_field_curvilinear_module
 #ifdef MUDPACK
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_timer
-  use sll_fft
-  use sll_module_poisson_2d_periodic_solver
+!  use sll_module_poisson_2d_elliptic_solver
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_timer
+!  use sll_fft
+!  use sll_module_poisson_2d_periodic_solver
+  use sll_parallel_array_initializer_module
   
   implicit none
   
@@ -100,23 +101,6 @@ module sll_simulation_2d_analytic_field_curvilinear_module
   end type sll_simulation_2d_analytic_field_curvilinear
 
 
- abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-  abstract interface
-    function sll_scalar_initializer_1d( x1,  params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_1d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_1d
-  end interface
 
 
 
@@ -203,9 +187,6 @@ contains
     !local variables
     sll_int32 :: Nc_eta1
     sll_int32 :: Nc_eta2
-    sll_real64 :: r_minus
-    sll_real64 :: r_plus
-    sll_int32 :: visu_step
     type(sll_logical_mesh_1d), pointer :: mesh_x1
     type(sll_logical_mesh_1d), pointer :: mesh_x2
     class(sll_interpolator_2d_base), pointer :: f_interp2d
@@ -217,7 +198,6 @@ contains
     class(sll_interpolator_2d_base), pointer   :: A2_interp2d
     class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x1
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x1
-    class(sll_interpolator_1d_base), pointer   :: A1_interp1d_x2
     class(sll_interpolator_1d_base), pointer   :: A2_interp1d_x2
     class(sll_interpolator_1d_base), pointer :: f_interp1d_x1
     class(sll_interpolator_1d_base), pointer :: f_interp1d_x2
@@ -1101,7 +1081,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1

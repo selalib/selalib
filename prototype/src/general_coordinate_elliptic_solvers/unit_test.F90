@@ -117,16 +117,15 @@ program test_general_elliptic_solver
  ! epsi  =  0.000_f64
  ! epsi1 =  0.000_f64 ! penalization method
   sll_real64, dimension(1) :: whatever  ! dummy params array
+
+  !*******************************************************************
+  !        WHITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA
+  !*******************************************************************
+  !--------------------------------------------------------------------
+  !     1 test case without change of coordinates 
+  !      periodic-periodic boundary conditions
+  !--------------------------------------------------------------------
   
-  
-!!$  !*******************************************************************
-!!$  !        WHITHOUT CHANGE OF COORDINATES AND ANALYTIC DATA
-!!$  !*******************************************************************
-!!$  !--------------------------------------------------------------------
-!!$  !     1 test case without change of coordinates 
-!!$  !      periodic-periodic boundary conditions
-!!$  !--------------------------------------------------------------------
-!!$  
   print*, "-------------------------------------------------------------"
   print*, "1 test case witout change of coordinates"
   print*, "-------------------------------------------------------------"
@@ -144,7 +143,8 @@ program test_general_elliptic_solver
   SLL_ALLOCATE(reference(npts1,npts2),ierr)
   values(:,:) = 0.0_f64
 
-  ! First thing, initialize the logical mesh associated with this problem.        
+  ! First thing, initialize the logical mesh associated with this problem. 
+
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
        ETA1MIN, ETA1MAX, ETA2MIN,ETA2MAX )
 
@@ -391,7 +391,7 @@ program test_general_elliptic_solver
   SLL_DEALLOCATE_ARRAY(calculated,ierr)
   SLL_DEALLOCATE_ARRAY(difference,ierr)
   SLL_DEALLOCATE_ARRAY(reference,ierr)
-  
+!!$  
 !!$  !--------------------------------------------------------------------
 !!$  
 !!$  !     2 test case without chane of coordinates 
@@ -2870,13 +2870,13 @@ program test_general_elliptic_solver
   
   
   
-   !--------------------------------------------------------------------
+  !--------------------------------------------------------------------
   
   !     10  test case with colella change of coordinates 
   !      periodic-dirichlet boundary conditions
   !     and non analytic source term
   !--------------------------------------------------------------------
-!!$  
+  
   
   
   print*, "---------------------"
