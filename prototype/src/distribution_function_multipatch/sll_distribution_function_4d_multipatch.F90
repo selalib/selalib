@@ -206,10 +206,28 @@ call sll_2d_times_2d_parallel_array_initializer(&
 
   subroutine delete_df_4d_mp( df )
     class(sll_distribution_function_4d_multipatch), intent(inout) :: df
+    sll_int32 :: i
+    sll_int32 :: num_patches
+    sll_int32 :: ierr
+
+    num_patches = df%num_patches
+    do i = 0,num_patches-1
+       SLL_DEALLOCATE(df%f_x1x2(i+1)%f, ierr)
+       SLL_DEALLOCATE(df%f_x3x4(i+1)%f, ierr)
+    end do
+    
+    SLL_DEALLOCATE(df%f_x1x2, ierr)
+    SLL_DEALLOCATE(df%f_x3x4, ierr)
+    SLL_DEALLOCATE(df%layouts_x1x2, ierr)
+    SLL_DEALLOCATE(df%layouts_x3x4, ierr)
+    
   end subroutine delete_df_4d_mp
 
   subroutine delete_df_4d_mp_ptr( df )
     type(sll_distribution_function_4d_multipatch), pointer :: df
+    sll_int32 :: ierr
+    call df%delete()
+    SLL_DEALLOCATE(df, ierr)
   end subroutine delete_df_4d_mp_ptr
 
 end module sll_distribution_function_4d_multipatch_module
