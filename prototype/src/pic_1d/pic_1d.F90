@@ -1534,8 +1534,6 @@ contains
             write (file_id,*) "set autoscale x; unset logscale;unset xlabel;unset ylabel;unset xrange;unset yrange;"
 
 
-
-
             !Plot Kernel density estimates for initial distribution
             !!!Enter v_thermal and two stream here
             write (file_id, *) "set term x11 2"
@@ -1565,7 +1563,6 @@ contains
             write (file_id,*)  "title 'total (kinetic+electrostatic)',\"
             write (file_id,*)  "'"//filename//".dat' using 1:2 with lines \"
             write (file_id,*)  "title 'kinetic'"
-
 
             write (file_id, *) "set term x11 5"
             write (file_id, *) "set autoscale x; set logscale y"
