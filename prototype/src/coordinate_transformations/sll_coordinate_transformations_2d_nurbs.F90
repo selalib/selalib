@@ -61,7 +61,12 @@ module sll_module_coordinate_transformations_2d_nurbs
      class(sll_interpolator_2d_base), pointer :: x2_interp =>null()
      class(sll_interpolator_2d_base), pointer :: x3_interp =>null()
      sll_int32 :: is_rational
-     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
+     sll_int32 :: spline_deg1
+     sll_int32 :: spline_deg2
+     sll_real64, dimension(:),pointer :: knots1
+     sll_real64, dimension(:),pointer :: knots2
+!     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
+!     type(sll_logical_mesh_2d), pointer :: mesh
    contains
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
@@ -169,7 +174,7 @@ contains
        STOP
     end if
     filename_local = trim(filename)
-
+    
     ! get a new identifier for the file.
     call sll_new_file_id( input_file_id, ierr )
     if( ierr .ne. 0 ) then
@@ -188,6 +193,8 @@ contains
     read( input_file_id, transf_label )
     ! read the degree of spline
     read( input_file_id, degree )
+    transf%spline_deg1 = spline_deg1
+    transf%spline_deg2 = spline_deg2
     ! read ....?
     read( input_file_id, shape )
     ! read if we use NURBS or not
@@ -198,9 +205,14 @@ contains
     ! Allocations of knots to construct the splines
     SLL_ALLOCATE(knots1(num_pts1+spline_deg1+1),ierr)
     SLL_ALLOCATE(knots2(num_pts2+spline_deg2+1),ierr)
+    SLL_ALLOCATE(transf%knots1(num_pts1+spline_deg1+1),ierr)
+    SLL_ALLOCATE(transf%knots2(num_pts2+spline_deg2+1),ierr)
     ! read the knots associated to each direction 
     read( input_file_id, knots_1 )
     read( input_file_id, knots_2 )
+    
+    transf%knots1 = knots1
+    transf%knots2 = knots2
     
     ! allocations of tables containing control points in each direction 
     ! here its table 1D
@@ -225,8 +237,9 @@ contains
     ! read the control points in the file
     read( input_file_id, control_points )
     ! reshape the control points to use them in the interpolator
-    control_pts1_2d = reshape(control_pts1,(/num_pts1,num_pts2/))
-    control_pts2_2d = reshape(control_pts2,(/num_pts1,num_pts2/))
+    control_pts1_2d = transpose(reshape(control_pts1,(/num_pts2,num_pts1/)))
+    control_pts2_2d = transpose(reshape(control_pts2,(/num_pts2,num_pts1/)))
+    
     ! read the weight in the file associated in each control points
     read( input_file_id, pt_weights )
     ! reshape the control points to use them in the rational interpolator
@@ -269,7 +282,9 @@ contains
     !! to use it in the coefficients splines directly in the first and the 
     !! second interpolator 
     
-
+    transf%spline_deg1 = spline_deg1
+    transf%spline_deg2 = spline_deg2
+    
     if (transf%is_rational ==1) then
        
        do i = 1, num_pts1 
@@ -320,6 +335,7 @@ contains
          bc_top,    & 
          spline_deg1, & 
          spline_deg2 )  
+
 
     ! stock all the control points for the first interpolator 
     ! to compute the first component of our change of coordinates
@@ -401,23 +417,33 @@ contains
     ! possession of the logical mesh or not... For now we keep the minimum
     ! information related with the number of cells to at least be able to
     ! initialize a logical mesh outside of the object.
-
-    transf%mesh2d_minimal => new_logical_mesh_2d(&
+    transf%mesh => new_logical_mesh_2d(&
          number_cells1,&
          number_cells2,&
          eta1_min = eta1_min_minimal,&
          eta1_max = eta1_max_minimal,&
          eta2_min = eta2_min_minimal,&
          eta2_max = eta2_max_minimal)
-
-    transf%mesh  => null()
+    ! Sooner or later we need to include an additional logical mesh, since
+    ! we need the 'minimal' mesh implicit in the nurbs transformation and the
+    ! extended logical mesh, where the data lives. For now they remain one
+    ! and the same.
+!    transf%mesh  => null()
     transf%label =  trim(label)
+    SLL_DEALLOCATE_ARRAY(knots1,ierr)
+    SLL_DEALLOCATE_ARRAY(knots2,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts1,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts2,ierr)
+    SLL_DEALLOCATE_ARRAY(weights,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts1_2d,ierr)
+    SLL_DEALLOCATE_ARRAY(control_pts2_2d,ierr)
+    SLL_DEALLOCATE_ARRAY(weights_2d,ierr)
   end subroutine read_from_file_2d_nurbs
 
   function get_logical_mesh_nurbs_2d( transf ) result(res)
     type(sll_logical_mesh_2d), pointer :: res
     class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
-    res => transf%mesh2d_minimal
+    res => transf%mesh
   end function get_logical_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
@@ -439,6 +465,7 @@ contains
     eta2_min = lm%eta2_min
     delta1   = lm%delta_eta1
     delta2   = lm%delta_eta2
+
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
@@ -662,7 +689,7 @@ contains
        
        
        jac = (j11*j22 - j12*j21)/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (transf%x3_interp%interpolate_value(eta1,eta2))**4
     end if
     
   end function jacobian_2d_nurbs
@@ -865,7 +892,9 @@ contains
        jacobian_matrix_2d_nurbs(2,1) = j21/&
             (transf%x3_interp%interpolate_value(eta1,eta2))**2
        jacobian_matrix_2d_nurbs(2,2) = j22/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2   
+            (transf%x3_interp%interpolate_value(eta1,eta2))**2 
+
+      
     end if
     
   end function jacobian_matrix_2d_nurbs
@@ -965,7 +994,7 @@ contains
        local_format = output_format
     end if
 
-
+    print*, 'label', transf%label
     if ( .not. transf%written ) then
 
        if (local_format == SLL_IO_XDMF) then
@@ -975,6 +1004,7 @@ contains
              do i2=1, npts_eta2
                 x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
                 x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
+                !print*, x1mesh(i1,i2),x2mesh(i1,i2)
              end do
           end do
 
@@ -1025,13 +1055,16 @@ contains
 
   subroutine delete_transformation_2d_nurbs( transf )
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
+    sll_int32 :: ierr
 
     transf%label = ""
     transf%written = .false.
+    SLL_DEALLOCATE_ARRAY(transf%knots1,ierr)
+    SLL_DEALLOCATE_ARRAY(transf%knots2,ierr)
     call transf%x1_interp%delete()
     call transf%x2_interp%delete()
     call transf%x3_interp%delete()
-    nullify( transf%mesh2d_minimal)
+!    nullify( transf%mesh2d_minimal)
     nullify( transf%mesh)
     
   end subroutine delete_transformation_2d_nurbs

@@ -6,9 +6,7 @@ program bsl_1d_cubic_periodic
   use sll_utilities, only: int2string
   use sll_constants
   use sll_cubic_spline_interpolator_1d
-#ifndef STDF95
   use sll_module_interpolators_1d_base
-#endif
 
   implicit none
 
@@ -23,13 +21,8 @@ program bsl_1d_cubic_periodic
 
   sll_real64 :: advfield_x, advfield_v
 
-#ifdef STDF95
-  type(cubic_spline_1d_interpolator), pointer  :: interp_x
-  type(cubic_spline_1d_interpolator), pointer  :: interp_v
-#else
   class(sll_interpolator_1d_base), pointer    :: interp_x
   class(sll_interpolator_1d_base), pointer    :: interp_v
-#endif
 
   type(cubic_spline_1d_interpolator), target  :: spline_x
   type(cubic_spline_1d_interpolator), target  :: spline_v
@@ -60,13 +53,8 @@ program bsl_1d_cubic_periodic
   print*, 'initialize 2d distribution function f(x,v) gaussian'
 
   Print*, 'checking advection of a Gaussian in a uniform field'
-#ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, SLL_PERIODIC )
-  call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, SLL_PERIODIC )
-#else  
   call spline_x%initialize(nc_x+1, x_min, x_max, SLL_PERIODIC )
   call spline_v%initialize(nc_v+1, v_min, v_max, SLL_PERIODIC )
-#endif
 
   interp_x => spline_x
   interp_v => spline_v
@@ -105,11 +93,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do j = 1, nc_v
-#ifdef STDF95
-        df(:,j) = cubic_spline_interpolate_array_at_displacement(interp_x,nc_x+1,df(:,j),dt*advfield_x)
-#else
         df(:,j) = interp_x%interpolate_array_disp(nc_x+1,df(:,j),dt*advfield_x)
-#endif
      end do
 
    end subroutine advection_x
@@ -118,11 +102,7 @@ contains
    sll_real64, intent(in) :: dt
 
      do i = 1, nc_x
-#ifdef STDF95
-        df(i,:) = cubic_spline_interpolate_array_at_displacement(interp_v,nc_v+1,df(i,:),dt*advfield_v)
-#else
         df(i,:) = interp_v%interpolate_array_disp(nc_v+1,df(i,:),dt*advfield_v)
-#endif
      end do
 
    end subroutine advection_v

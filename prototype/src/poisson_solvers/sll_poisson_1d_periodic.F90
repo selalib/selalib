@@ -98,10 +98,10 @@ contains
   subroutine solve_poisson_1d_periodic(this, field, rhs)
 
     type(poisson_1d_periodic),intent(inout) :: this
-    sll_real64, dimension(:), intent(out)     :: field
-    sll_real64, dimension(:), intent(in)      :: rhs
-    sll_int32                                 :: ik
-    sll_real64                                :: kx0, kx, k2
+    sll_real64, dimension(:), intent(out)   :: field
+    sll_real64, dimension(:), intent(in)    :: rhs
+    sll_int32                               :: ik
+    sll_real64                              :: kx0, kx, k2
 
     ! Check that field and rhs are both associated to the
     ! same mesh with the right number of cells

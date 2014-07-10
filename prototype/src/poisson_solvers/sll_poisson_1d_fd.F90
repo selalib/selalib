@@ -34,7 +34,7 @@ module sll_poisson_1d_fd
         sll_int32 , private :: fd_degree !<Degree of the Bsplines
 
         type(arbitrary_degree_spline_1d), pointer, private :: bspline  !<Bspline object
-        class(arb_deg_1d_interpolator), pointer, private :: interpolator
+        class(sll_arb_deg_1d_interpolator), pointer, private :: interpolator
 
         sll_real64, dimension(:), allocatable :: fd_solution
         sll_real64, dimension(:), allocatable,private :: fd_solution_deriv
@@ -156,7 +156,7 @@ contains
                     this%logical_mesh%eta_max, &
                     SLL_PERIODIC, &
                     SLL_PERIODIC, &
-                    1,0.0_f64,0.0_f64)
+                    1)
 
             case(SLL_DIRICHLET)
                 this%problem_size=this%num_cells
@@ -165,7 +165,7 @@ contains
                     this%logical_mesh%eta_max, &
                     SLL_DIRICHLET, &
                     SLL_DIRICHLET, &
-                    1,0.0_f64,0.0_f64)
+                    1)
         endselect
 
         SLL_ALLOCATE(this%fd_solution(this%problem_size),ierr)

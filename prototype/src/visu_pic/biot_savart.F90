@@ -136,7 +136,7 @@ real(8) :: amach, delta, dt
 integer  :: k
 integer  :: error, file_id
 
-nstep = 2000
+nstep = 200
 dt    = 0.02
 imov  = 1
 amach = 0.1 !0.56

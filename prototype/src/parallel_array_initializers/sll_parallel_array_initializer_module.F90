@@ -18,9 +18,18 @@ module sll_parallel_array_initializer_module
   ! the following abstract type.
 
   abstract interface
+    function sll_scalar_initializer_1d( x1,  params )
+      use sll_working_precision
+      sll_real64                                     :: sll_scalar_initializer_1d
+      sll_real64, intent(in)                         :: x1
+      sll_real64, dimension(:), intent(in), optional :: params
+    end function sll_scalar_initializer_1d
+  end interface
+
+  abstract interface
      function sll_scalar_initializer_2d( x1, x2, params )
        use sll_working_precision
-       sll_real64                                  :: sll_scalar_initializer_2d
+       sll_real64               :: sll_scalar_initializer_2d
        sll_real64, intent(in)                         :: x1
        sll_real64, intent(in)                         :: x2
        sll_real64, dimension(:), intent(in), optional :: params
@@ -491,7 +500,14 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       if( .not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) ) then 
+       ! needed to change the following call from 
+       ! transf_x1_x2%get_logical_mesh() because the 4.6 version of gfortran
+       ! breaks at this point. Hence the double interface (access function and
+       ! direct access of the mesh). But this should be fixed once the decision
+       ! to not support that compiler version is made.
+       if(.not. associated(transf_x1_x2%mesh,mesh2d_eta1_eta2) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x1_x2 transformation ', &
                'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
@@ -501,7 +517,9 @@ contains
     end if
 
     if(present( transf_x3_x4 ) ) then
-       if( .not. associated(transf_x3_x4%mesh, mesh2d_eta3_eta4) ) then 
+       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x3_x4 transformation ', &
                'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
@@ -661,7 +679,7 @@ contains
 !    end if
 !
 !    if( .not. associated(mesh2d_eta1_eta2) ) then
-!       print *, 'sll_4d_parallelsll_parallel_array_initializer_module.F90_array_initializer error: ', &
+!       print *, 'sll_parallel_array_initializer_module.F90_array_initializer error: ', &
 !            'passed mesh2d_eta1_eta2 argument is uninitialized.'
 !    end if
 !
@@ -813,7 +831,7 @@ contains
 !  end subroutine sll_4d_parallel_array_initializer
 
 !in case of interpolation in the vx, vy, x, y direction
- subroutine sll_4d_parallel_array_initializer_finite_volume( &
+  subroutine sll_4d_parallel_array_initializer_finite_volume( &
        layout, &
        mesh2d_eta1_eta2, &
        mesh2d_eta3_eta4, &
@@ -822,12 +840,12 @@ contains
        func_params, &
        transf_x1_x2, &
        transf_x3_x4, &
-! in case of a mesh with cell subdivisions
+       ! in case of a mesh with cell subdivisions
        subcells1, &
        subcells2, &
        subcells3, &
        subcells4)
-
+    
     type(layout_4D), pointer                    :: layout
     type(sll_logical_mesh_2d), pointer          :: mesh2d_eta1_eta2
     type(sll_logical_mesh_2d), pointer          :: mesh2d_eta3_eta4
@@ -842,10 +860,10 @@ contains
 
     class(sll_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x1_x2
-
+    
     class(sll_coordinate_transformation_2d_base), pointer, optional :: &
          transf_x3_x4
-
+    
     sll_int32  :: i
     sll_int32  :: j
     sll_int32  :: k
@@ -878,17 +896,17 @@ contains
        print *, 'sll_4d_parallel_array_initializer error: ', &
             'passed layout is uninitialized.'
     end if
-
+    
     if( .not. associated(mesh2d_eta1_eta2) ) then
        print *, 'sll_4d_parallel_array_initializer error: ', &
             'passed mesh2d_eta1_eta2 argument is uninitialized.'
     end if
-
+    
     if( .not. associated(mesh2d_eta3_eta4) ) then
        print *, 'sll_4d_parallel_array_initializer error: ', &
             'passed mesh2d_eta3_eta4 argument is uninitialized.'
     end if
-
+    
     call compute_local_sizes( layout, loc_size_x1, loc_size_x2, loc_size_x3, &
          loc_size_x4 ) 
 
@@ -917,7 +935,9 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       if( .not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) ) then 
+       if(.not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x1_x2 transformation ', &
                'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
@@ -927,7 +947,9 @@ contains
     end if
 
     if(present( transf_x3_x4 ) ) then
-       if( .not. associated(transf_x3_x4%mesh, mesh2d_eta3_eta4) ) then 
+       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
+          then 
+
           print *, 'sll_4d_parallel_array_initializer warning: ', &
                'the mesh associated to the transf_x3_x4 transformation ', &
                'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
@@ -937,33 +959,33 @@ contains
     end if
 
 
-   if(.not.present(subcells1  ) ) then
-     sub1=1
-  else
-     sub1=subcells1
-  end if
-
-   if(.not.present(subcells2  ) ) then
-     sub2=1
-  else
-     sub2=subcells2
-  end if
-
-   if(.not.present(subcells3  ) ) then
-     sub3=1
-  else
-     sub3=subcells3
-  end if
+    if(.not.present(subcells1  ) ) then
+       sub1=1
+    else
+       sub1=subcells1
+    end if
     
-   if(.not.present(subcells3  ) ) then
-     sub4=1
-  else
-     sub4=subcells4
-  end if
-
-
+    if(.not.present(subcells2  ) ) then
+       sub2=1
+    else
+       sub2=subcells2
+    end if
+    
+    if(.not.present(subcells3  ) ) then
+       sub3=1
+    else
+       sub3=subcells3
+    end if
+    
+    if(.not.present(subcells3  ) ) then
+       sub4=1
+    else
+       sub4=subcells4
+    end if
+    
+    
     case_selector = 0
-
+    
     if( present(transf_x1_x2) ) then
        case_selector = case_selector + 1
     end if
@@ -971,6 +993,7 @@ contains
     if( present(transf_x3_x4) ) then
        case_selector = case_selector + 2
     end if
+
     eta1_min = mesh2d_eta1_eta2%eta1_min
     eta2_min = mesh2d_eta1_eta2%eta2_min
     eta3_min = mesh2d_eta3_eta4%eta1_min

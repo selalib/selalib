@@ -74,6 +74,7 @@ MODULE Function_Input_Module
   REAL(KIND=DP) :: kpar, ktheta
   integer       :: NNr
   REAL(KIND=DP) :: dr
+  REAL(KIND=DP) :: B0
 
   REAL(KIND=DP), dimension(:), allocatable :: Ti
   REAL(KIND=DP), dimension(:), allocatable :: dlogTi
@@ -82,6 +83,9 @@ MODULE Function_Input_Module
   REAL(KIND=DP), dimension(:), allocatable :: dlogn0
   REAL(KIND=DP), dimension(:), allocatable :: ddlogn0
   REAL(KIND=DP), dimension(:), allocatable :: rmesh
+
+  REAL(KIND=DP), dimension(:), allocatable :: btheta
+  REAL(KIND=DP), dimension(:), allocatable :: bz
 
   ! matrix of operator
   COMPLEX (KIND=DP), dimension(:,:), allocatable :: A 
@@ -121,16 +125,21 @@ CONTAINS
     COMPLEX(KIND=DP), intent(in) :: omega
     integer i, j
     COMPLEX(KIND=DP) :: zeta, dzeta, rho
+    REAL(KIND=DP) :: kpar_modif
+    !REAL(KIND=DP) :: kpar_modif
     
+    !B0 =1._dp
     do i = 1, NNr 
-       rho = omega/(kpar*sqrt(2.0_dp*Ti(i)))
+       kpar_modif = (kpar*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i)) !+
+       rho = omega/(kpar_modif)
        call FriedConte(rho,zeta,dzeta)
-       A(2,i) = 2+ dr*dr*( (ktheta**2-0.25_dp)/rmesh(i)**2 &
-         + 1/(Zi*Te(i)) + 0.5_dp*(0.5_dp*dlogn0(i)**2 &
+       A(2,i) = 2._dp+ dr*dr*( (ktheta**2-0.25_dp)/rmesh(i)**2 &
+         + 1._dp/(Zi*Te(i)) + 0.5_dp*(0.5_dp*dlogn0(i)**2 &
          + dlogn0(i)/rmesh(i) + ddlogn0(i)) &
-         + (1+rho*zeta)/Ti(i) - ktheta/(rmesh(i)*kpar*sqrt(2*Ti(i))) &
+         + BESJN(0,0._dp)**2*( (1+rho*zeta)/Ti(i) &
+         - ktheta/(rmesh(i)*B0*kpar_modif) &
          *((dlogn0(i)-0.5_DP*dlogTi(i))*zeta &
-         + dlogTi(i)*rho*(1+rho*zeta)))
+         + dlogTi(i)*rho*(1+rho*zeta))))
        A(1,i) = -1.0_dp
        A(3,i) = -1.0_dp
     end do
@@ -146,15 +155,22 @@ CONTAINS
 
     integer  i, j
     COMPLEX(KIND=DP) :: zeta, dzeta, rho
-
+    REAL(KIND=DP) :: kpar_modif
+    !B0 =1._dp
     do i = 1, NNr  
-       rho = omega/(kpar*sqrt(2.0_dp*Ti(i)))
+       !print *,'val=',i,btheta(i)*ktheta/(kpar*bz(i)*rmesh(i))
+       !rho = omega/((ktheta*btheta(i)/rmesh(i)+kpar*bz(i))*sqrt(2.0_dp*Ti(i)))
+       !kpar_modif = (ktheta*btheta(i)/rmesh(i)+kpar*bz(i))
+       !rho = omega/(kpar_modif*sqrt(2.0_dp*Ti(i)))
+       kpar_modif = (kpar*bz(i)+(ktheta*btheta(i)/rmesh(i)))*sqrt(2.0_dp*Ti(i)) !+
+       rho = omega/(kpar_modif)
        call FriedConte(rho,zeta,dzeta)
-       Ap(i) = dr*dr*((zeta+rho*dzeta)/Ti(i) - &
-         ktheta/(rmesh(i)*kpar*sqrt(2*Ti(i))) * &
+       Ap(i) = BESJN(0,0._dp)**2*dr*dr* &
+         ((zeta+rho*dzeta)/Ti(i) - &
+         ktheta/(B0*rmesh(i)*kpar_modif) * &
          (dlogn0(i)*dzeta + dlogTi(i) * &
-         (1+2*rho*zeta+(rho**2-0.5_dp)*dzeta))) / &
-         (kpar*sqrt(2.0_dp*Ti(i)))
+         (1._dp+2._dp*rho*zeta+(rho**2-0.5_dp)*dzeta))) / &
+         (kpar_modif)
     end do
   end subroutine Dmatrice
 
