@@ -15,7 +15,6 @@ program vp_cartesian_4d
   use sll_timer
   implicit none
 
-  character(len=256) :: filename
   type(sll_simulation_4d_vp_eulerian_cartesian_finite_volume)      :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx,mv
   type(sll_time_mark)  :: t0 
@@ -270,5 +269,3 @@ program vp_cartesian_4d
 
 
 end program vp_cartesian_4d
-
-

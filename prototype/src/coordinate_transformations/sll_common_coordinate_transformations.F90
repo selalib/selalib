@@ -23,6 +23,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_x1 = eta2
     identity_x1 = eta1
   end function identity_x1
 
@@ -31,6 +32,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_x2 = eta1
     identity_x2 = eta2
   end function identity_x2
 
@@ -40,6 +42,7 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+    identity_eta1 = x2
     identity_eta1 = x1
   end function identity_eta1
 
@@ -48,6 +51,7 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+    identity_eta2 = x1
     identity_eta2 = x2
   end function identity_eta2
 
@@ -57,6 +61,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac11 = eta1 + eta2
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
@@ -65,6 +70,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac12 = eta1 + eta2
     identity_jac12 = 0.0_f64
   end function identity_jac12
 
@@ -73,6 +79,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac21 = eta1 + eta2
     identity_jac21 = 0.0_f64
   end function identity_jac21
 
@@ -81,6 +88,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac22 = eta1 + eta2
     identity_jac22 = 1.0_f64
   end function identity_jac22
 
@@ -90,6 +98,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac = eta1 + eta2
     identity_jac = 1.0_f64
   end function identity_jac
 
@@ -160,6 +169,7 @@ contains
     A1 = params(1)
     B1 = params(2)
     alpha = params(5)
+    affine_jac11 = eta1+eta2
     affine_jac11 = (B1-A1)*cos(alpha)
   end function affine_jac11
 
@@ -173,6 +183,7 @@ contains
     a1 = params(1)
     b1 = params(2)
     alpha = params(5)
+    affine_jac12 = eta1+eta2
     affine_jac12 = -(B1-A1)*sin(alpha)
   end function affine_jac12
 
@@ -187,6 +198,7 @@ contains
     a2 = params(3)
     b2 = params(4)
     alpha = params(5)
+    affine_jac21 = eta1+eta2
     affine_jac21 = (b2-a2)*sin(alpha)
   end function affine_jac21
 
@@ -203,7 +215,7 @@ contains
     A2 = params(3)
     B2 = params(4)
     alpha = params(5)
-
+    affine_jac22 = eta1+eta2
     affine_jac22 = (B2-A2)*cos(alpha)
 
   end function affine_jac22
@@ -224,7 +236,7 @@ contains
     B1    = params(2)
     A2    = params(3)
     B2    = params(4)
-
+    affine_jac = eta1+eta2
     affine_jac = (B1-A1)*(B2-A2)
 
   end function affine_jac
@@ -467,7 +479,7 @@ contains
 
     a = params(1)
     b = params(2)
-
+    rubber_sheeting_jac11 = eta1
     rubber_sheeting_jac11 = a*eta2+b
 
   end function rubber_sheeting_jac11
@@ -483,7 +495,7 @@ contains
 
     a = params(1)
     c = params(3)
-
+    rubber_sheeting_jac12 = eta2
     rubber_sheeting_jac12 = a*eta1+c
 
   end function rubber_sheeting_jac12
@@ -499,7 +511,7 @@ contains
 
     e = params(5)
     f = params(6)
-
+    rubber_sheeting_jac21 = eta1
     rubber_sheeting_jac21 = e*eta2+f
 
   end function rubber_sheeting_jac21
@@ -515,7 +527,7 @@ contains
 
     e = params(5)
     g = params(7)
-
+    rubber_sheeting_jac22 = eta2
     rubber_sheeting_jac22 = e*eta1+g
 
   end function rubber_sheeting_jac22
@@ -592,6 +604,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    polar_jac11 = eta1
     polar_jac11 = cos ( eta2 ) 
   end function polar_jac11
 
@@ -608,6 +621,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    polar_jac21 = eta1
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
 
@@ -625,6 +639,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    polar_jac = eta2
     polar_jac = eta1
   end function polar_jac
 
@@ -762,6 +777,7 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
+    sinprod_gen_eta1 = x2
     sinprod_gen_eta1 = x1
   end function sinprod_gen_eta1
 
@@ -772,6 +788,7 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
+    sinprod_gen_eta2 = x1
     sinprod_gen_eta2 = x2
   end function sinprod_gen_eta2
 
@@ -961,11 +978,6 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
-    sll_real64  :: alpha1
-    sll_real64  :: alpha2
-    sll_real64  :: rl1 ! reciprocal of the length of the domain
-    sll_real64  :: rl2
-    sll_real64  :: pi2
 
 
     SLL_ASSERT(size(params) >= 10)
@@ -1049,6 +1061,7 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
+    sinprod_eta1 = x2
     sinprod_eta1 = x1
   end function sinprod_eta1
 
@@ -1059,6 +1072,7 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
+    sinprod_eta2 = x1
     sinprod_eta2 = x2
   end function sinprod_eta2
 
@@ -1108,7 +1122,6 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
-    sll_real64  :: l1,l2
 
     SLL_ASSERT(size(params) >= 4)
     alpha2 = params(2)
@@ -1127,7 +1140,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
-    sll_real64  :: l1,l2
+
 
     SLL_ASSERT(size(params) >= 4)
     alpha2 = params(2)
@@ -1493,6 +1506,7 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
+    deriv_x1_polar_f_eta1 = eta1
     deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
@@ -1503,7 +1517,7 @@ contains
     sll_real64 :: k
     sll_real64 :: r1
     sll_real64 :: r2
-
+    deriv_x1_polar_f_eta2  = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -1521,6 +1535,7 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
+    deriv_x2_polar_f_eta1 = eta1
     deriv_x2_polar_f_eta1 = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
@@ -1531,7 +1546,7 @@ contains
     sll_real64 :: k
     sll_real64 :: r1
     sll_real64 :: r2
-
+    deriv_x2_polar_f_eta2 = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -1546,6 +1561,7 @@ contains
     sll_real64 :: r1
     sll_real64 :: r2
 
+    jac = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -1562,6 +1578,7 @@ contains
     sll_real64 :: r1
     sll_real64 :: r2
 
+    deriv= eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -1611,10 +1628,11 @@ contains
     sll_real64 :: a
     sll_real64 :: b
 
+    val = eta
     SLL_ASSERT(size(params) >= 2)
     a = params(1)
     b = params(2)
-        val = (b-a)
+    val = (b-a)
   end function linear_map_jac_f
 
 

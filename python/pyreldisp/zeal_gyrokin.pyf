@@ -12,6 +12,7 @@ python module zealpy_gyrokin_ ! in
          integer :: Zi
          integer :: NNr
          real*8  :: dr
+         real*8  :: B0
          real*8 allocatable, dimension(:) :: Ti
          real*8 allocatable, dimension(:) :: Te
          real*8 allocatable, dimension(:) :: dlogTi
@@ -19,6 +20,8 @@ python module zealpy_gyrokin_ ! in
          real*8 allocatable, dimension(:) :: ddlogn0
          real*8 allocatable, dimension(:) :: n0
          real*8 allocatable, dimension(:) :: rmesh
+         real*8 allocatable, dimension(:) :: btheta
+         real*8 allocatable, dimension(:) :: bz
 
          !--> Arrays required for all cases
          double complex allocatable, dimension(:,:) :: vecteur

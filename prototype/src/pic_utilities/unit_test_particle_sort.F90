@@ -31,7 +31,7 @@ program particle_sorter
   sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy
   sll_int32  :: j
   sll_real32 :: weight, off_x,off_y
-  sll_int32  :: ierr, ncx, ic_x,ic_y
+  sll_int32  :: ncx, ic_x,ic_y
   sll_real64 :: tmp1, tmp2
 
   m => new_logical_mesh_2d( NC_X, NC_Y, XMIN, XMAX, YMIN, YMAX )

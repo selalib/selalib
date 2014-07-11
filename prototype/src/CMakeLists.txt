@@ -10,7 +10,7 @@ IF(OPTIONS_FILE)
 INCLUDE(${OPTIONS_FILE})
 ENDIF()
 
-PROJECT(SLL)
+PROJECT(SeLaLib)
 
 ENABLE_LANGUAGE(Fortran)
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
@@ -27,7 +27,7 @@ SET(PETSC_ENABLED         OFF CACHE BOOL "Enable PETSc solvers")
 SET(SUITESPARSE_ENABLED   OFF CACHE BOOL "Enable UMFpack solvers")
 SET(SLL_BUILD_PACKAGE     OFF CACHE BOOL "Build selalib package")
 
-FIND_PACKAGE(PythonInterp)
+FIND_PACKAGE(PythonInterp 3)
 SET(PYTHON3_FOUND FALSE)
 MESSAGE(STATUS "PYTHON_EXECUTABLE:${PYTHON_EXECUTABLE}")
 MESSAGE(STATUS "PYTHON_VERSION_STRING:${PYTHON_VERSION_STRING}")
@@ -80,9 +80,8 @@ IF(MPI_MODULE_ENABLED)
 ENDIF()
 
 IF(PASTIX_ENABLED)
-  FIND_PACKAGE(RT QUIET)
-  FIND_PACKAGE(SCOTCH QUIET)
-  FIND_PACKAGE(PASTIX QUIET)
+   FIND_PACKAGE(SCOTCH)
+   FIND_PACKAGE(PASTIX)
 ENDIF(PASTIX_ENABLED)
 
 IF(SUITESPARSE_ENABLED)
@@ -170,6 +169,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(sparse_matrix_interface)
    ADD_SUBDIRECTORY(discontinuous_galerkin) 
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
+   ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers)
    ADD_SUBDIRECTORY(maxwell_solvers)
    ADD_SUBDIRECTORY(multigrid)
@@ -193,6 +193,11 @@ IF(NOT SLL_BUILD_PACKAGE)
       ENDIF()
    ENDIF()
 
+ELSE() # Packages generation
+
+   INCLUDE(CPackConfig) 
+   MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
+
 ENDIF(NOT SLL_BUILD_PACKAGE)
 
 MESSAGE(STATUS "############################################################")
@@ -208,5 +213,4 @@ MESSAGE(STATUS "#### ${CMAKE_Fortran_FLAGS_RELEASE}")
 ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
-MESSAGE(STATUS "SeLaLib will be installed in directory ${CMAKE_INSTALL_PREFIX}")
 

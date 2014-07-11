@@ -11,7 +11,7 @@ real(8) function sol_bz( x1, x2, time)
    real(8), intent(in) :: x1
    real(8), intent(in) :: x2
    real(8), intent(in) :: time
-   real(8)             :: omega
+
 
 
    sol_bz =   - cos(MODE_X*sll_pi*x1)    &
