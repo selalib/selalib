@@ -149,7 +149,7 @@ MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, layout_6D )
   end type name
 
 MAKE_REMAP_POINTER_CONTAINER( remap_plan_2d_real64_ptr, remap_plan_2d_real64 )
- 
+MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 ) 
 
   ! Since the plan stores the information on box intersections, now
   ! we need a different type of plan for every dimension. It is also
