@@ -38,6 +38,32 @@ module sll_particle_representations
      type(sll_particle_2d), pointer :: p
   end type sll_particle_2d_guard
 
+  
+   type :: sll_particle_1d1v
+     sll_real64 :: dx
+     sll_real64 :: vx
+     sll_real64 :: w            !\gamma_k , weight
+     sll_real64 :: wc      !c_k , constant weight
+  end type sll_particle_1d1v
+
+
+
+  type :: sll_particle_1d1v_guard
+     type(sll_particle_1d1v), pointer :: p
+
+  end type sll_particle_1d1v_guard
+
+
+  type :: sll_particle_1d1v_group
+    type(sll_particle_1d1v), allocatable, dimension(:) :: particle
+    sll_real64 :: qm
+  !contains
+  !remove
+  !add
+  !
+  end type sll_particle_1d1v_group
+  
+  
 !contains
 
 !!$  subroutine initialize_particle_2d( &

@@ -32,6 +32,16 @@ module sll_quadtree
      type (sll_quadtree_box), pointer :: south_east
   end type  sll_quadtree_box
 
+  type sll_quadtree_data
+        !First dimension
+        sll_real64, dimension(:), pointer :: x
+        !Second dimension
+        sll_real64,dimension(:) ,pointer :: y
+        !Value, mostly weights
+        sll_real64,dimension(:), pointer :: f
+  end type
+
+
   contains
 
 !> @brief Initialize sll_quadtree_box
@@ -302,6 +312,7 @@ end subroutine quadtree_traversal
 
     !   traverse quadtree to smooth particle weights in same box
      call quadtree_traversal(root, part, hv)
+     species%particle%w=part(:,WEIGHT)
 
      ! deallocate quadtree
      call deallocate_quadtree(root)
