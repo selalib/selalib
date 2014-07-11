@@ -35,6 +35,7 @@ module sll_distribution_function_4d_multipatch_module
   use sll_boundary_condition_descriptors
   use sll_gnuplot
   use sll_parallel_array_initializer_module
+  use sll_module_scalar_field_2d_multipatch
   implicit none
 
 
@@ -47,8 +48,12 @@ module sll_distribution_function_4d_multipatch_module
      type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x1x2
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x3x4
+     type(layout_2d_ptr), dimension(:), pointer :: layouts_split
+     type(layout_2d_ptr), dimension(:), pointer :: layouts_full
      type(data_4d_ptr), dimension(:), pointer :: f_x1x2
      type(data_4d_ptr), dimension(:), pointer :: f_x3x4
+     type(multipatch_data_2d_real), dimension(:), pointer :: rho_split
+     type(remap_plan_2d_real64_ptr), dimension(:), pointer :: remap_split2full
    contains
      procedure, pass(df) :: allocate_memory => allocate_memory_df_4d_mp
      procedure, pass(df) :: initialize => initialize_df_4d_mp 
@@ -102,7 +107,10 @@ contains
     SLL_ALLOCATE( df%f_x3x4(df%num_patches), ierr )
     SLL_ALLOCATE( df%layouts_x1x2(df%num_patches), ierr )
     SLL_ALLOCATE( df%layouts_x3x4(df%num_patches), ierr )
-
+    SLL_ALLOCATE( df%layouts_split(df%num_patches), ierr )
+    SLL_ALLOCATE( df%layouts_full(df%num_patches), ierr )
+    SLL_ALLOCATE( df%rho_split(df%num_patches), ierr )
+    SLL_ALLOCATE( df%remap_split2full(df%num_patches), ierr )
     call df%allocate_memory()
 
   end function sll_new_distribution_function_4d_multipatch
@@ -111,6 +119,8 @@ contains
     class(sll_distribution_function_4d_multipatch), intent(inout) :: df
     sll_int32 :: ierr
     sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ip
     sll_int32 :: np_x1
     sll_int32 :: np_x2
     sll_int32 :: np_x3
@@ -119,16 +129,22 @@ contains
     sll_int32 :: locsz2
     sll_int32 :: locsz3
     sll_int32 :: locsz4
+    sll_int32 :: myrank
+    sll_int32 :: col_size
+    sll_int32 :: imax
+    sll_int32 :: jmax
     type(sll_logical_mesh_2d), pointer :: lm
 
     np_x3 = df%mesh_v%num_cells1+1
     np_x4 = df%mesh_v%num_cells2+1
+    myrank = sll_get_collective_rank(df%collective)
+    col_size = sll_get_collective_size(df%collective)
 
-    do i=0,df%num_patches-1
+    do ip=0,df%num_patches-1
        ! obtain global dimensions for each array associated with each patch.
-       np_x1 = df%transf%get_num_cells_eta1(i) + 1
-       np_x2 = df%transf%get_num_cells_eta2(i) + 1
-       df%layouts_x1x2(i+1)%l => new_layout_4D(df%collective)
+       np_x1 = df%transf%get_num_cells_eta1(ip) + 1
+       np_x2 = df%transf%get_num_cells_eta2(ip) + 1
+       df%layouts_x1x2(ip+1)%l => new_layout_4D(df%collective)
        call initialize_layout_with_distributed_4D_array( &
             np_x1, &
             np_x2, &
@@ -138,16 +154,16 @@ contains
             1, &
             df%nproc_factor1, &
             df%nproc_factor2, &
-            df%layouts_x1x2(i+1)%l )
+            df%layouts_x1x2(ip+1)%l )
        call compute_local_sizes_4d( &
-            df%layouts_x1x2(i+1)%l, &
+            df%layouts_x1x2(ip+1)%l, &
             locsz1, &
             locsz2, &
             locsz3, &
             locsz4)
-       SLL_ALLOCATE(df%f_x1x2(i+1)%f(locsz1,locsz2,locsz3,locsz4),ierr)
+       SLL_ALLOCATE(df%f_x1x2(ip+1)%f(locsz1,locsz2,locsz3,locsz4),ierr)
 
-       df%layouts_x3x4(i+1)%l => new_layout_4D(df%collective)
+       df%layouts_x3x4(ip+1)%l => new_layout_4D(df%collective)
        call initialize_layout_with_distributed_4D_array( &
             np_x1, &
             np_x2, &
@@ -157,16 +173,42 @@ contains
             df%nproc_factor2, &
             1, &
             1, &
-            df%layouts_x3x4(i+1)%l )
+            df%layouts_x3x4(ip+1)%l )
        call compute_local_sizes_4d( &
-            df%layouts_x3x4(i+1)%l, &
+            df%layouts_x3x4(ip+1)%l, &
             locsz1, &
             locsz2, &
             locsz3, &
             locsz4)
-       SLL_ALLOCATE(df%f_x3x4(i+1)%f(locsz1,locsz2,locsz3,locsz4),ierr)
+       SLL_ALLOCATE(df%f_x3x4(ip+1)%f(locsz1,locsz2,locsz3,locsz4),ierr)
+       SLL_ALLOCATE(df%rho_split(ip+1)%array(locsz1,locsz2),ierr)
 
+       df%layouts_split(ip+1)%l => &
+            new_layout_2D_from_layout_4D( df%layouts_x3x4(ip+1)%l )
 
+       df%layouts_full(ip+1)%l => new_layout_2d(df%collective)
+       ! The layouts_full are used to execute an all to all operation. The rho
+       ! data which after the reduction are split in the x1 and x2 dimensions
+       ! are to be collected into each processor redundantly. Solving for the 
+       ! potential will therefore be redundantly done. For lack of something
+       ! better, we fill the layout manually.
+       imax = df%transf%get_num_cells_eta1(ip) + 1
+       jmax = df%transf%get_num_cells_eta2(ip) + 1
+
+       do j=0,col_size-1
+          call set_layout_i_min( df%layouts_full(ip+1)%l, j, 1)
+          call set_layout_j_min( df%layouts_full(ip+1)%l, j, 1)
+          call set_layout_i_max( df%layouts_full(ip+1)%l, j, imax)
+          call set_layout_j_max( df%layouts_full(ip+1)%l, j, jmax)
+       end do
+
+       ! call sll_view_lims_2d(df%layouts_split(ip+1)%l)
+       ! call sll_view_lims_2d(df%layouts_full(ip+1)%l)
+
+       df%remap_split2full(ip+1)%r => &
+            new_remap_plan( df%layouts_split(ip+1)%l, &
+                            df%layouts_full(ip+1)%l, &
+                            df%rho_split(ip+1)%array )
     end do
   end subroutine allocate_memory_df_4d_mp
 
@@ -191,8 +233,7 @@ contains
        ! whenever gfortan 4.6 is no longer supported by Selalib.
        lm => df%transf%transfs(i+1)%t%mesh
        t => df%transf%transfs(i+1)%t
-!       call sll_4d_parallel_array_initializer( &
-call sll_2d_times_2d_parallel_array_initializer(&
+       call sll_4d_parallel_array_initializer( &
             layout, &
             lm, &
             df%mesh_v, &
@@ -203,6 +244,43 @@ call sll_2d_times_2d_parallel_array_initializer(&
     end do
   end subroutine initialize_df_4d_mp
 
+  ! This assumes that df is configured for sequential operations in x3 and x4.
+  subroutine compute_charge_density_multipatch( df, rho )
+    type(sll_distribution_function_4d_multipatch), intent(in) :: df
+    type(sll_scalar_field_multipatch_2d), intent(inout) :: rho
+    sll_real64 :: delta3
+    sll_real64 :: delta4
+    sll_int32  :: ipatch
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: num_patches
+    sll_int32  :: locsz1
+    sll_int32  :: locsz2
+    sll_real64, dimension(:,:), pointer :: remap_out
+
+    num_patches =  df%num_patches
+    delta3  = df%mesh_v%delta_eta1
+    delta4  = df%mesh_v%delta_eta2
+
+    do ipatch=0, num_patches - 1
+       call compute_local_sizes( df%layouts_split(ipatch+1)%l, locsz1, locsz2 )
+       do j=1, locsz2
+          do i=1, locsz1
+             df%rho_split(ipatch+1)%array(i,j) = &
+                  delta3*delta4*sum(df%f_x3x4(ipatch+1)%f(i,j,:,:))
+          end do
+       end do
+
+       ! Reconfigure the data to store redundantly all the values of rho.
+       remap_out => rho%get_patch_data_pointer(ipatch)
+       call apply_remap_2D_double( &
+            df%remap_split2full(ipatch+1)%r, &
+            df%rho_split(ipatch+1)%array, &
+            remap_out )
+    end do
+
+  end subroutine compute_charge_density_multipatch
+
 
   subroutine delete_df_4d_mp( df )
     class(sll_distribution_function_4d_multipatch), intent(inout) :: df
@@ -212,6 +290,8 @@ call sll_2d_times_2d_parallel_array_initializer(&
 
     num_patches = df%num_patches
     do i = 0,num_patches-1
+       call sll_delete( df%layouts_x1x2(i+1)%l )
+       call sll_delete( df%layouts_x3x4(i+1)%l )
        SLL_DEALLOCATE(df%f_x1x2(i+1)%f, ierr)
        SLL_DEALLOCATE(df%f_x3x4(i+1)%f, ierr)
     end do
