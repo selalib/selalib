@@ -3,7 +3,9 @@ add_library( sll_pic_utilities STATIC
              sll_pic_utilities.F90
              sll_representation_conversion.F90 
              sll_charge_to_density.F90
-             sll_pic_particle_sort.F90 )
+             sll_pic_particle_sort.F90 
+             sll_quadtree.F90
+             )
 
 add_dependencies( sll_pic_utilities
                   sll_pic_accumulators
@@ -29,3 +31,10 @@ target_link_libraries( test_particle_sort_2d
 		       sll_pic_utilities
 		       sll_pic_particles
 		       sll_logical_meshes      )
+
+add_executable( test_quadtree
+		    sll_unit_test_quadtree.F90 )
+
+target_link_libraries(test_quadtree
+			  sll_pic_utilities)
+		    

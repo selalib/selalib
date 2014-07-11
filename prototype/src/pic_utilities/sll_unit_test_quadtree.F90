@@ -1,15 +1,20 @@
 program unit_test_sll_quadtree
- #include "sll_working_precision.h"
- #include "sll_memory.h"
+#include "sll_working_precision.h"
+#include "sll_memory.h"
+#include "sll_assert.h"
 
-  use quadtree_mod
+  use sll_quadtree
+
+
+ implicit none
 
   sll_real64 :: xmin, xmax, ymin, ymax, sigma
-  integer, parameter :: max_num_el = 10
-  integer, parameter :: npart = 5000
-  type(quadtree_box), pointer :: root
+  sll_int32, parameter :: max_num_el = 10
+  sll_int32, parameter :: npart = 5000
+  type(sll_quadtree_box), pointer :: root
   sll_real64, dimension(npart,3) :: part
-  integer :: i
+  type(sll_particle_1d1v_group) :: particlespecies
+  sll_int32 :: i,ierr
 
   ! Define outer bounding box
   xmin = -1.
@@ -41,6 +46,19 @@ program unit_test_sll_quadtree
 
   ! deallocate quadtree
   call deallocate_quadtree(root)
+
+  !-----------------------------------------------------------------------------
+  !Generate random weights for second test
+  call random_number(part(:,3))
+
+  allocate(particlespecies%particle(1:npart))
+  particlespecies%particle%dx=part(:,1)
+  particlespecies%particle%vx=part(:,2)
+  particlespecies%particle%w=part(:,3)
+
+  call quadtree_smoothing_1d1v( particlespecies, xmin, xmax, ymin, ymax,sigma,max_num_el)
+
+
 
   print*, 'test_quadtree has exited normally'
 

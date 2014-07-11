@@ -19,7 +19,7 @@ module sll_pic_1d_Class
     use sll_arbitrary_degree_splines
     use gauss_legendre_integration
     !use sll_bspline_fem_solver_1d
-    use sll_pic_1d_quasi_neutral_solver
+    use sll_pic_1d_field_solver
     use sll_visu_pic !Visualization with gnuplot
     use pic_1d_particle_loading !should be integrated here
     use sll_timer
@@ -85,7 +85,7 @@ module sll_pic_1d_Class
 
     sll_int32 :: pushed_species
 
-    class(pic_1d_quasi_neutral_solver), pointer :: qnsolver  !<Quasi neutral solver
+    class(pic_1d_field_solver), pointer :: fsolver  !<Quasi neutral solver
 
     integer, private ::  phasespace_file_id=-1
 
@@ -188,10 +188,10 @@ contains
         !Set up Quasineutral solver
         selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_IONBEAM)
-                qnsolver=>new_pic_1d_quasi_neutral_solver(interval_a, interval_b, spline_degree, &
+                fsolver=>new_pic_1d_field_solver(interval_a, interval_b, spline_degree, &
                     mesh_cells, poisson_solver, sll_world_collective, SLL_DIRICHLET)
             case default
-                qnsolver=>new_pic_1d_quasi_neutral_solver(interval_a, interval_b, spline_degree, &
+                fsolver=>new_pic_1d_field_solver(interval_a, interval_b, spline_degree, &
                     mesh_cells, poisson_solver, sll_world_collective,SLL_PERIODIC)
         endselect
 
@@ -210,7 +210,7 @@ contains
 
     !<Destructor
     subroutine destroy_sll_pic_1d()
-        call qnsolver%delete()
+        call fsolver%delete()
         call sll_halt_collective()
 
     endsubroutine
@@ -350,21 +350,21 @@ contains
 
         selectcase(pic1d_testcase)
             case(SLL_PIC1D_TESTCASE_QUIET)
-                call qnsolver%set_ions_constant(0.0_f64)
+                call fsolver%set_ions_constant(0.0_f64)
                 particle_qm=-1.0_f64
                 !call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64 )
             case(SLL_PIC1D_TESTCASE_LANDAU)
                 !load constant ion background
-                call qnsolver%set_ions_constant(0.0_f64)
+                call fsolver%set_ions_constant(0.0_f64)
                 !call sll_bspline_fem_solver_1d_set_inhomogenity_constant(0.0_f64 )
             case(SLL_PIC1D_TESTCASE_IONBEAM)
-                call qnsolver%set_ions_constant(0.0_f64)
-                !call qnsolver%set_ions_constant_particles(steadyparticleposition)
+                call fsolver%set_ions_constant(0.0_f64)
+                !call fsolver%set_ions_constant_particles(steadyparticleposition)
             case(SLL_PIC1D_TESTCASE_IONBEAM_ELECTRONS)
-                call qnsolver%set_ions_constant_particles(steadyparticleposition)
+                call fsolver%set_ions_constant_particles(steadyparticleposition)
             case default
                 particle_qm=-1.0_f64 !By default we simulate Electrons
-                call qnsolver%set_ions_constant(0.0_f64)
+                call fsolver%set_ions_constant(0.0_f64)
         endselect
 
 
@@ -376,7 +376,7 @@ contains
             !this is going to be ok.
             !Also this should be done analytically and not like that as an Monte Carlo estimate
             !Here suppose the control variate is the initial state by default
-            call  qnsolver%set_bg_particles(species(1)%particle%dx, &
+            call  fsolver%set_bg_particles(species(1)%particle%dx, &
                 sign(1.0_f64, species(1)%qm)*species(1)%particle%weight_const)
 
             kineticenergy_offset=sll_pic1d_calc_kineticenergy_offset(species(1:num_species))
@@ -398,24 +398,24 @@ contains
 
 
         !Initial Solve
-        call qnsolver%reset_particles()
-        call qnsolver%set_species(species(1:num_species))
-        call qnsolver%solve()
+        call fsolver%reset_particles()
+        call fsolver%set_species(species(1:num_species))
+        call fsolver%solve()
 
         print *, "#Initial field solve"
 
 
         print *, "#Test initial field, and loading condition for landau damping"
         !call sll_bspline_fem_solver_1d_eval_solution_derivative(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
-        call qnsolver%evalE(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
+        call fsolver%evalE(knots(1:mesh_cells)+ (sll_pi/6)*(knots(2)-knots(1)), eval_solution(1:mesh_cells))
         call  sll_pic_1d_initial_error_estimates()
 
 
         !Information on initial field
 
-        print *, "#Initial Field average: " , sum( qnsolver%getPotential())
-        print *, "#Initial Field variance: " , sum((sum(  qnsolver%getPotential())/mesh_cells &
-            -  qnsolver%getPotential())**2)/mesh_cells
+        print *, "#Initial Field average: " , sum( fsolver%getPotential())
+        print *, "#Initial Field variance: " , sum((sum(  fsolver%getPotential())/mesh_cells &
+            -  fsolver%getPotential())**2)/mesh_cells
 
 
 
@@ -530,7 +530,7 @@ contains
             impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
 
             thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(species(1)%particle%vx,species(1)%particle%weight)
-            inhom_var(timestep)=qnsolver%calc_variance_rhs()
+            inhom_var(timestep)=fsolver%calc_variance_rhs()
 
 
             if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0  ) then
@@ -542,7 +542,7 @@ contains
 
             if ( (gnuplot_inline_output.eqv. .true.) .AND. coll_rank==0 .AND. mod(timestep-1,timesteps/100)==0 ) then
                 !call sll_bspline_fem_solver_1d_eval_solution(knots(1:mesh_cells), electricpotential_interp)
-                call qnsolver%evalPhi(knots(1:mesh_cells), electricpotential_interp)
+                call fsolver%evalPhi(knots(1:mesh_cells), electricpotential_interp)
                 !Scale potential to acutal values
                 !                    electricpotential_interp=electricpotential_interp*&
                     !                    (sll_mass_e/sll_e_charge)*vthermal_e**2
@@ -658,7 +658,7 @@ contains
         if (coll_rank==0) call det_landau_damping((/ ( timestep*timestepwidth, timestep = 0, timesteps) /),fieldenergy)
 
         !call sll_bspline_fem_solver_1d_destroy
-        call qnsolver%delete()
+        call fsolver%delete()
 
     endsubroutine
 
@@ -736,11 +736,11 @@ contains
         !allparticleposition( particle_mask)=particleposition_selected
         sll_int32 ::jdx
         !Add all the other species as constant
-        call qnsolver%reset_particles()
+        call fsolver%reset_particles()
 
         do jdx=1,num_species
             if (jdx/=pushed_species) then
-                call qnsolver%add_species(species(jdx))
+                call fsolver%add_species(species(jdx))
             endif
         enddo
 
@@ -751,25 +751,25 @@ contains
                 !load constant ion background
                 SLL_ASSERT(size(particleposition_selected)==size(species(pushed_species)%particle))
 
-                call qnsolver%set_electrons_only_weighted(particleposition_selected, species(pushed_species)%particle%weight)
-                call qnsolver%solve()
+                call fsolver%set_electrons_only_weighted(particleposition_selected, species(pushed_species)%particle%weight)
+                call fsolver%solve()
             case(SLL_PIC1D_TESTCASE_IONBEAM)
                 SLL_ASSERT(size(particleposition_selected)==size(species(pushed_species)%particle))
 
-                call qnsolver%add_particles_weighted(particleposition_selected, &
+                call fsolver%add_particles_weighted(particleposition_selected, &
                     sign(species(pushed_species)%particle%weight,species(pushed_species)%qm) )
-                call qnsolver%solve()
+                call fsolver%solve()
             case default
                 SLL_ASSERT(num_species==1)
                 !All particles, are only electrons
                 SLL_ASSERT(size(particleposition_selected)==size(species(pushed_species)%particle))
-                call qnsolver%set_electrons_only_weighted(particleposition_selected, species(pushed_species)%particle%weight)
-                call qnsolver%solve()
+                call fsolver%set_electrons_only_weighted(particleposition_selected, species(pushed_species)%particle%weight)
+                call fsolver%solve()
 
                 !load constant ion background
                 !                SLL_ASSERT(size(allparticleposition)==size(particleweight))
-                !                call qnsolver%set_electrons_only_weighted(allparticleposition, particleweight)
-                !                call qnsolver%solve()
+                !                call fsolver%set_electrons_only_weighted(allparticleposition, particleweight)
+                !                call fsolver%solve()
         endselect
 
     endsubroutine
@@ -819,6 +819,16 @@ contains
     !    endfunction
 
 
+!    subroutine sll_pic_1d_rungekutta( species, h, t  )
+!
+!
+!
+!
+!
+!
+!    endsubroutine
+
+
 
 
     subroutine sll_pic_1d_rungekutta4_step_array(x_0, v_0, h, t)
@@ -834,38 +844,35 @@ contains
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
         !--------------------Stage 1-------------------------------------------------
-        !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call fsolver%evalE(x_0, stage_DPhidx)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
         !--------------------Stage 2-------------------------------------------------
-        k_x2= h*(v_0  + 0.5_f64  *k_v1)
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64*k_x2)
-        !call sll_pic_1d_solve_qn(x_0 + 0.5_f64*k_x1)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
-        k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64*k_x1, t+0.5_f64*h))*(-particle_qm)
+        x_1=x_0 + 0.5_f64*k_x1
+        v_1=v_0 + 0.5_f64*k_v1
+        call sll_pic_1d_solve_qn(x_1)
+        call fsolver%evalE( x_1, stage_DPhidx)
+        k_x2= h*(v_1)
+        k_v2= h*( stage_DPhidx + Eex(x_1, t+0.5_f64*h))*(-particle_qm)
+
         !--------------------Stage 3-------------------------------------------------
-        k_x3= h*(v_0+ 0.5_f64 * k_v2)
-        call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x3)
-        !call sll_bspline_fem_solver_1d_solve(sll_pic1d_ensure_periodicity(x_0 + (1*k_x1 + 2.0_f64*k_x3)/6.0_f64,  interval_a, interval_b))
-        !call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x2)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x2, stage_DPhidx)
-        k_v3= h*(stage_DPhidx+ Eex(x_0 + 0.5_f64*k_x2, t+0.5_f64*h)) *(-particle_qm)
+        x_1=x_0 + 0.5_f64*k_x2
+        v_1=v_0 + 0.5_f64*k_v2
+        call sll_pic_1d_solve_qn(x_1)
+        call fsolver%evalE(x_1, stage_DPhidx)
+        k_x3= h*(v_1)
+        k_v3= h*(stage_DPhidx+ Eex(x_1, t+0.5_f64*h)) *(-particle_qm)
         !--------------------Stage 4-------------------------------------------------
-        k_x4= h*(v_0+ k_v3)
-        !call sll_bspline_fem_solver_1d_solve(sll_pic1d_ensure_periodicity(x_0 + (k_x1 + 2.0_f64*k_x2 + 2.0_f64*k_x3 +k_x4  )/6.0_f64,  interval_a, interval_b))
-        call sll_pic_1d_solve_qn(x_0 +  k_x4)
-        !call sll_pic_1d_solve_qn(x_0 +  k_x3)
-        call qnsolver%evalE(x_0 +  k_x3, stage_DPhidx)
-        k_v4= h*(stage_DPhidx+ Eex(x_0 + k_x3, t+h)) *(-particle_qm)
+        x_1=x_0 + k_x3
+        v_1=v_0 + k_v3
+        call sll_pic_1d_solve_qn(x_0 +  k_x3)
+        call fsolver%evalE(x_1, stage_DPhidx)
+        k_x4= h*(v_1)
+        k_v4= h*(stage_DPhidx+ Eex(x_1, t+h)) *(-particle_qm)
         !Perform step---------------------------------------------------------------
         x_1= x_0 + (  k_x1 +  2.0_f64 *k_x2 +  2.0_f64*k_x3 + k_x4 )/6.0_f64
         v_1= v_0 + (  k_v1 +  2.0_f64 *k_v2 +  2.0_f64*k_v3 + k_v4)/6.0_f64
 
-
-
-
-        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
         call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
@@ -894,31 +901,31 @@ contains
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
         !--------------------Stage 1-------------------------------------------------
-        !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call fsolver%evalE(x_0, stage_DPhidx)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
         !--------------------Stage 2-------------------------------------------------
-        k_x2= h*(v_0  + (1.0_f64/3.0_f64)*k_v1)
         call sll_pic_1d_solve_qn(x_0 + (1.0_f64/3.0_f64)*k_x1)
-        call qnsolver%evalE(x_0 + (1.0_f64/3.0_f64) *k_x1, stage_DPhidx)
+        call fsolver%evalE(x_0 + (1.0_f64/3.0_f64) *k_x1, stage_DPhidx)
+
+        k_x2= h*(v_0  + (1.0_f64/3.0_f64)*k_v1)
         k_v2= h*( stage_DPhidx + Eex(x_0 + (1.0_f64/3.0_f64)*k_x1, t+(1.0_f64/3.0_f64)*h))*(-particle_qm)
         !--------------------Stage 3-------------------------------------------------
         k_x3= h*(v_0+ (1.0_f64/3.0_f64) * k_v2)
         call sll_pic_1d_solve_qn(x_0 +  (1.0_f64/6.0_f64)*(k_x1 + k_x2 ))
 
-        call qnsolver%evalE(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), stage_DPhidx)
+        call fsolver%evalE(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), stage_DPhidx)
         k_v3= h*(stage_DPhidx+ Eex(x_0 + (1.0_f64/6.0_f64)*(k_x1 + k_x2 ), &
             t+(1.0_f64/3.0_f64)*h)) *(-particle_qm)
         !--------------------Stage 4-------------------------------------------------
         k_x4= h*(v_0+ 0.5_f64*k_v3)
         call sll_pic_1d_solve_qn(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  )
-        call qnsolver%evalE(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , stage_DPhidx)
+        call fsolver%evalE(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , stage_DPhidx)
         k_v4= h*(stage_DPhidx+ Eex(x_0 +  (k_x1 + 3*k_x3)/8.0_f64  , t+0.5_f64*h)) *(-particle_qm)
         !--------------------Stage 5-------------------------------------------------
         k_x5= h*(v_0+ k_v4)
         call sll_pic_1d_solve_qn(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1)
-        call qnsolver%evalE(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, stage_DPhidx)
+        call fsolver%evalE(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, stage_DPhidx)
         k_v4= h*(stage_DPhidx+ Eex(x_0 +  0.5_f64*k_x1  -1.5_f64*k_x3 + 2.0_f64*k_x1, t+h)) *(-particle_qm)
 
         !Perform step of Order 4-----------------------------------------------------------
@@ -956,13 +963,13 @@ contains
 
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call fsolver%evalE(x_0, stage_DPhidx)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+Eex(x_0,t)) *(-particle_qm)
         !--------------------Stage 2-------------------------------------------------
-        k_x2= h*(v_0  + 0.5_f64  *k_v1)
         call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
+        call fsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
+        k_x2= h*(v_0  + 0.5_f64  *k_v1)
         k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
             *(-particle_qm)
         !Perform step---------------------------------------------------------------
@@ -992,19 +999,19 @@ contains
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
         !--------------------Stage 1-------------------------------------------------
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call fsolver%evalE(x_0, stage_DPhidx)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+Eex(x_0,t)) *(-particle_qm)
         !--------------------Stage 2-------------------------------------------------
         k_x2= h*(v_0  + 0.5_f64  *k_v1)
         call sll_pic_1d_solve_qn(x_0 + 0.5_f64 *k_x1)
-        call qnsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
+        call fsolver%evalE(x_0 + 0.5_f64 *k_x1, stage_DPhidx)
         k_v2= h*( stage_DPhidx + Eex(x_0 + 0.5_f64 *k_x1,t + 0.5_f64*h))&
             *(-particle_qm)
         !--------------------Stage 3-------------------------------------------------
         k_x3= h*(v_0  - k_v1 + 2.0_f64*k_v2)
         call sll_pic_1d_solve_qn(x_0 - k_x1 + 2.0_f64*k_x2)
-        call qnsolver%evalE(x_0 - k_x1 + 2.0_f64*k_x2, stage_DPhidx)
+        call fsolver%evalE(x_0 - k_x1 + 2.0_f64*k_x2, stage_DPhidx)
         k_v3= h*( stage_DPhidx + Eex(x_0 - k_x1 + 2.0_f64*k_x2,t + h))&
             *(-particle_qm)
 
@@ -1030,12 +1037,12 @@ contains
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
         !--------------------Stage 1-------------------------------------------------
         !call sll_bspline_fem_solver_1d_solve(x_0)
-        call qnsolver%evalE(x_0, stage_DPhidx)
+        call fsolver%evalE(x_0, stage_DPhidx)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
         !--------------------Stage 2-------------------------------------------------
         call sll_pic_1d_solve_qn(x_0 + k_x1)
-        call qnsolver%evalE(x_0 + k_x1, stage_DPhidx)
+        call fsolver%evalE(x_0 + k_x1, stage_DPhidx)
         k_x2= h*(v_0  + k_v1)
         k_v2= h*( stage_DPhidx+Eex(x_0 +k_x1,t+h))*(-particle_qm)
 
@@ -1065,7 +1072,7 @@ contains
             num_part=size(species_0(jdx)%particle)
             SLL_ALLOCATE(stage_DPhidx(num_part),ierr)
 
-            call qnsolver%evalE(species_0(jdx)%particle%dx, stage_DPhidx)
+            call fsolver%evalE(species_0(jdx)%particle%dx, stage_DPhidx)
 
             species_1(jdx)%particle%dx=species_0(jdx)%particle%dx + h*species_0(jdx)%particle%vx
             species_1(jdx)%particle%vx=species_0(jdx)%particle%vx + h*(stage_DPhidx + &
@@ -1081,8 +1088,8 @@ contains
 
         call sll_pic_1d_copy_species(species_1, species_0)
 
-        call qnsolver%set_species(species_0)
-        call qnsolver%solve()
+        call fsolver%set_species(species_0)
+        call fsolver%solve()
 
     endsubroutine
 
@@ -1125,7 +1132,7 @@ contains
     !
     !        !--------------------Stage 1-------------------------------------------------
     !        !call sll_bspline_fem_solver_1d_solve(x_0)
-    !        call qnsolver%evalE(x_0, stage_DPhidx)
+    !        call fsolver%evalE(x_0, stage_DPhidx)
     !        x_1=x_0 + h*v_0
     !        v_1=v_0 + h*(stage_DPhidx + Eex(x_0,t) )*(-particle_qm)
     !
@@ -1158,7 +1165,7 @@ contains
             num_part=size(species_0(jdx)%particle)
             SLL_ALLOCATE(DPhidx(num_part),ierr)
 
-            call qnsolver%evalE(species_0(jdx)%particle%dx, DPhidx)
+            call fsolver%evalE(species_0(jdx)%particle%dx, DPhidx)
 
             species_05(jdx)%particle%vx=species_0(jdx)%particle%vx+ &
                 0.5_f64*h*(DPhidx+Eex(species_0(jdx)%particle%dx,t))*(-species_0(jdx)%qm)
@@ -1171,8 +1178,8 @@ contains
         !call sll_pic1d_adjustweights_advection_species(species_0, species_05)
 
         !call sll_pic1d_ensure_boundary_conditions_species(species_05)
-        call qnsolver%set_species(species_05)
-        call qnsolver%solve()
+        call fsolver%set_species(species_05)
+        call fsolver%solve()
 
         do jdx=1,size(species_0)
             num_part=size(species_0(jdx)%particle)
@@ -1180,7 +1187,7 @@ contains
 
             species_1(jdx)%particle%dx=species_05(jdx)%particle%dx
 
-            call qnsolver%evalE(species_1(jdx)%particle%dx, DPhidx)
+            call fsolver%evalE(species_1(jdx)%particle%dx, DPhidx)
 
             species_1(jdx)%particle%vx=species_05(jdx)%particle%vx + &
                 0.5_f64*h*(DPhidx+Eex( &
@@ -1202,14 +1209,14 @@ contains
         !
         !        !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         !
-        !        call qnsolver%evalE(x_0, DPhidx)
+        !        call fsolver%evalE(x_0, DPhidx)
         !        v_05=v_0+ 0.5_f64*h*(DPhidx+Eex(x_0,t))*(-particle_qm)
         !        x_1=x_0 + h*v_05
         !
         !        call sll_pic1d_ensure_boundary_conditions(x_1, v_05)
         !        call sll_pic_1d_solve_qn(x_1)
         !
-        !        call qnsolver%evalE(x_1, DPhidx)
+        !        call fsolver%evalE(x_1, DPhidx)
         !        v_1=v_05 + 0.5_f64*h*(DPhidx+Eex(x_1,t+h))*(-particle_qm)
         !        !Commit Push
         !        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
@@ -1225,13 +1232,13 @@ contains
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
 
 
-        call qnsolver%evalE(x_0, DPhidx_0)
+        call fsolver%evalE(x_0, DPhidx_0)
         x_1=x_0+ h*v_0 - ((h**2)/2.0_f64) *DPhidx_0*(-particle_qm)
         x_1=sll_pic1d_ensure_periodicity(x_1,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_1, v_0)
 
         call sll_pic_1d_solve_qn(x_1)
-        call qnsolver%evalE(x_1, DPhidx_1)
+        call fsolver%evalE(x_1, DPhidx_1)
 
         v_1=v_0 + 0.5_f64*h* (DPhidx_0 + DPhidx_1)*(-particle_qm)
 
@@ -1247,7 +1254,7 @@ contains
         sll_real64, dimension(size(x_0)) ::  DPhidx_0, DPhidx_1, x_1, v_1
 
         x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call qnsolver%evalE(x_0, DPhidx_0)
+        call fsolver%evalE(x_0, DPhidx_0)
         !DPhidx_0=0
 
         v_1= v_0 - 0.5_f64 *DPhidx_0*h*(-particle_qm)
@@ -1433,7 +1440,7 @@ contains
         call sll_collective_globalsum(sll_world_collective, energy, 0)
 
         !if (coll_rank==0)  energy=energy+0.5_f64*bspline_fem_solver_1d_H1seminorm_solution()/(interval_b-interval_a)
-        if (coll_rank==0)  energy=energy+qnsolver%fieldenergy()
+        if (coll_rank==0)  energy=energy+fsolver%fieldenergy()
 
 
     endfunction
