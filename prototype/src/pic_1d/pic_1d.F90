@@ -1170,7 +1170,7 @@ contains
 
         !call sll_pic1d_adjustweights_advection_species(species_0, species_05)
 
-        call sll_pic1d_ensure_boundary_conditions_species(species_05)
+        !call sll_pic1d_ensure_boundary_conditions_species(species_05)
         call qnsolver%set_species(species_05)
         call qnsolver%solve()
 
@@ -1178,12 +1178,13 @@ contains
             num_part=size(species_0(jdx)%particle)
             SLL_ALLOCATE(DPhidx(num_part),ierr)
 
-            call qnsolver%evalE(species_05(jdx)%particle%dx, DPhidx)
-
             species_1(jdx)%particle%dx=species_05(jdx)%particle%dx
+
+            call qnsolver%evalE(species_1(jdx)%particle%dx, DPhidx)
+
             species_1(jdx)%particle%vx=species_05(jdx)%particle%vx + &
                 0.5_f64*h*(DPhidx+Eex( &
-                species_0(jdx)%particle%dx,t+h))*(-species_1(jdx)%qm)
+                species_1(jdx)%particle%dx,t+h))*(-species_1(jdx)%qm)
 
             SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
         enddo

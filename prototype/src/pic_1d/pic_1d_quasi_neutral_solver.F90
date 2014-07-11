@@ -709,7 +709,7 @@ contains
                 energy=0.5_f64*energy/(this%mesh%eta_max-this%mesh%eta_min)
              case(SLL_SOLVER_FOURIER)
                 energy=this%fouriersolver%H1seminorm_solution()
-                energy=0.5_f64*energy/(this%mesh%eta_max-this%mesh%eta_min)
+               ! energy=0.5_f64*energy/(this%mesh%eta_max-this%mesh%eta_min)
         endselect
 
     endfunction
