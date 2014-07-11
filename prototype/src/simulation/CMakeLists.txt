@@ -131,34 +131,35 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_poisson_parallel
                          sll_scalar_field_1d_alternative
                          sll_fcisl
+                         sll_derivative
                          sll_qn_solvers_parallel
                          sll_reduction
                          sll_gyroaverage
                          sll_pic_accumulators
                          sll_pic_utilities
                          sll_pic_initializers
-#                         sll_fft
-#                         sll_distribution_function
-#                         sll_general_coordinate_elliptic_solvers
-#                         sll_scalar_field_2d_alternative
-#                         sll_pic_particles
-#                         sll_random_deviate_generators
-#                         sll_field_accumulators
-#                         sll_scalar_field
-#                         sll_interpolators
-#                         sll_point_to_point_communications	
-#                         sll_splines
-#                         sll_remap
-#                         sll_mesh_calculus
-#                         sll_integration
-#                         sll_constants
-#                         sll_coordinate_transformations
-#                         sll_logical_meshes
-#                         sll_utilities
-#                         sll_timer
-#                         sll_memory
-#                         sll_assertion 	
-#                         sll_working_precision
+                         sll_fft
+                         sll_distribution_function
+                         sll_general_coordinate_elliptic_solvers
+                         sll_scalar_field_2d_alternative
+                         sll_pic_particles
+                         sll_random_deviate_generators
+                         sll_field_accumulators
+                         sll_scalar_field
+                         sll_interpolators
+                         sll_point_to_point_communications	
+                         sll_splines
+                         sll_remap
+                         sll_mesh_calculus
+                         sll_integration
+                         sll_constants
+                         sll_coordinate_transformations
+                         sll_logical_meshes
+                         sll_utilities
+                         sll_timer
+                         sll_memory
+                         sll_assertion 	
+                         sll_working_precision
 )
 
 
@@ -178,6 +179,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    ADD_SIMULATION(4d_vp_cartesian   4d_vlasov_parallel_poisson_sequential_cartesian)
    ADD_SIMULATION(4d_vp_general     4d_vlasov_poisson_general)
    ADD_SIMULATION(4d_qns_general    4d_qns_general)
+   ADD_SIMULATION(4d_qns_general_multipatch    4d_qns_general_multipatch)
    ADD_SIMULATION(4d_vp_polar       4d_vlasov_poisson_polar)
 
    ADD_SIMULATION(4d_DK_hybrid              4d_DK_hybrid)

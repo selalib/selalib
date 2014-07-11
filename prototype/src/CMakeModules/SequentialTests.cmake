@@ -97,6 +97,12 @@ IF(PYTHON3_FOUND)
             COMMAND test_scalar_field_multipatch_2d)
    SET_TESTS_PROPERTIES(scalar_field_multipatch_2d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
+   ADD_TEST(NAME general_coordinate_elliptic_solver_multipatch 
+     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+     COMMAND test_general_coordinate_elliptic_solver_multipatch )
+   SET_TESTS_PROPERTIES( general_coordinate_elliptic_solver_multipatch
+     PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
 ELSE()
 
    MESSAGE(STATUS "python3 not found")

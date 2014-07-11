@@ -689,7 +689,6 @@ contains
    sll_int32  :: order
    sll_int32  :: ierr
    sll_int32  :: i
-   sll_real64 :: delta
    logical    :: user_coords
    
    if(present(eta_coords) .and. (.not. present(size_eta_coords))) then

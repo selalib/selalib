@@ -67,7 +67,9 @@ contains
     sll_int32                    :: error   !< error code
     sll_int32                    :: prank   !< processor number id
     character(len=4)             :: crank
+#ifndef NOHDF5
     integer(HID_T)               :: h5file_id
+#endif
     
     call MPI_COMM_RANK(MPI_COMM_WORLD,prank,error)
     call int2string(prank,crank)
@@ -92,7 +94,9 @@ contains
    character(len=*), intent(in)    :: prefix     !< file with mesh coordinates
    sll_real64, intent(in)          :: array(:,:) !< data array
    character(len=*), intent(in)    :: array_name !< name of the field
+#ifndef NOHDF5
    integer(HID_T)                  :: file_id    !< data file unit number
+#endif
    sll_int32                       :: npts_x1    !< nodes number x
    sll_int32                       :: npts_x2    !< nodes number y
    sll_int32, intent(out)          :: error      !< error code
