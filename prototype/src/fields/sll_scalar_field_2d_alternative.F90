@@ -86,9 +86,11 @@ module sll_module_scalar_field_2d_alternative
      procedure, pass(field) :: delete => delete_field_2d_analytic_alt
   end type sll_scalar_field_2d_analytic_alt
 
+
   type, extends(sll_scalar_field_2d_base) :: sll_scalar_field_2d_discrete_alt
      type(sll_logical_mesh_2d), pointer :: mesh
      sll_real64, dimension(:,:), pointer  :: values => null()
+     logical                              :: owns_memory = .true. 
      !sll_real64, dimension(:,:), pointer  :: coeff_spline
      !sll_int32                            :: sz_coeff1
      !sll_int32                            :: sz_coeff2
@@ -125,6 +127,8 @@ module sll_module_scalar_field_2d_alternative
      procedure, pass(field) :: first_deriv_eta2_value_at_indices => &
           first_deriv_eta2_value_at_index_discrete
      procedure, pass(field) :: set_field_data => set_field_data_discrete_2d
+     procedure, pass(field) :: free_internal_data_copy => free_data_discrete_2d
+     procedure, pass(field) :: reset_data_pointer => reset_ptr_discrete_2d
      procedure, pass(field) :: get_data_pointer => get_data_ptr_discrete_2d
      procedure, pass(field) :: write_to_file => write_to_file_discrete_2d
      procedure, pass(field) :: delete => delete_field_2d_discrete_alt
@@ -569,16 +573,17 @@ contains   ! *****************************************************************
 
     ! Allocate internal array to store locally a copy of the data.
     SLL_ALLOCATE(field%values(m2d%num_cells1+1,m2d%num_cells2+1),ierr)    
-
-
   end subroutine initialize_scalar_field_2d_discrete_alt
   
+
   ! need to do something about deallocating the field proper, when allocated
   ! in the heap...
   subroutine delete_field_2d_discrete_alt( field )
     class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
     sll_int32 :: ierr
-    if(associated(field%values))    SLL_DEALLOCATE(field%values,ierr)
+    if(field%owns_memory .eqv. .true.) then
+       if(associated(field%values))    SLL_DEALLOCATE(field%values,ierr)
+    end if
     if(associated(field%T))         nullify(field%T)
     if(associated(field%interp_2d)) nullify(field%interp_2d)
     if(associated(field%point1_1d)) nullify(field%point1_1d)
@@ -601,6 +606,41 @@ contains   ! *****************************************************************
     end if
     field%values(:,:) = values(:,:)
   end subroutine set_field_data_discrete_2d
+
+  ! There is a bit of background history to the existence of the 
+  ! free_data_discrete_2d() and reset_ptr_discrete_2d() routines. By request
+  ! of a user, the default behavior of the field is to manage its own copy
+  ! of the data. Thus upon creation, the object allocates the necessary
+  ! memory to store nodal values. However, it may be desired that the object
+  ! DOES NOT manage its own memory, but rather that it only points to some
+  ! external block of memory. To permit the change of the behavior of the 
+  ! field from its default, is the role of these functions. The first
+  ! deallocates the memory and sets the flag which indicates that the field
+  ! no longer owns its memory. The second permits to reset the data pointer
+  ! to whatever is desired.
+  subroutine free_data_discrete_2d( field )
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
+    sll_int32 :: ierr
+
+    if( .not. associated(field%values) ) then
+       print *, 'ERROR, free_data_discrete_2d(): the internal copy of the ', &
+            'data has been already freed or never allocated.'
+    end if
+    SLL_DEALLOCATE(field%values,ierr)
+    field%owns_memory = .false.
+  end subroutine free_data_discrete_2d
+
+  subroutine reset_ptr_discrete_2d( field, values )
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
+    sll_real64, dimension(:,:), target :: values
+    if( field%owns_memory .eqv. .true. ) then
+       print *, 'ERROR, reset_ptr_discrete_2d(): the data pointer can not ', &
+            'be reset without a previous call to free_internal_data_copy().',&
+            'This object is not being used properly. A memory leak has ', &
+            'occurred. Continue at your peril.'
+    end if
+    field%values => values
+  end subroutine reset_ptr_discrete_2d
 
   function get_data_ptr_discrete_2d( field ) result(ptr)
     sll_real64, dimension(:,:), pointer :: ptr
