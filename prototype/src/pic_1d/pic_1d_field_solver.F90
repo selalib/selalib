@@ -5,7 +5,7 @@
 
 
 
-module sll_pic_1d_quasi_neutral_solver
+module sll_pic_1d_field_solver
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -34,7 +34,7 @@ module sll_pic_1d_quasi_neutral_solver
     sll_int32, parameter :: SLL_SOLVER_FOURIER = 4
 
 
-    type  :: pic_1d_quasi_neutral_solver
+    type  :: pic_1d_field_solver
         class(poisson_1d_fem), private , pointer ::  femsolver
         type(poisson_1d_periodic), pointer :: spectralsolver
         class(poisson_1d_fd), pointer :: fdsolver
@@ -71,51 +71,51 @@ module sll_pic_1d_quasi_neutral_solver
         sll_int32, private :: coll_rank, coll_size
         type(sll_collective_t), pointer, private :: collective
     contains
-        procedure,  pass(this) :: initialize =>pic_1d_quasi_neutral_solver_initialize
-        procedure, pass(this), public ::  delete=>pic_1d_quasi_neutral_solver_delete
+        procedure,  pass(this) :: initialize =>pic_1d_field_solver_initialize
+        procedure, pass(this), public ::  delete=>pic_1d_field_solver_delete
 
 
         !Solving
-        procedure, pass(this), public ::  BC=>pic_1d_quasi_neutral_solver_boundary_conditions
+        procedure, pass(this), public ::  BC=>pic_1d_field_solver_boundary_conditions
 
         !Setting up solve
-        procedure, pass(this), public ::  set_ions_constant=>pic_1d_quasi_neutral_solver_set_ions_constant
-        procedure, pass(this), public :: set_ions_constant_particles=>pic_1d_quasi_neutral_solver_set_ions_constant_particles
-        procedure, pass(this), public :: set_ions_constant_function=>pic_1d_quasi_neutral_solver_set_ions_constant_function
-        procedure, pass(this), public :: calc_variance_rhs=>pic_1d_quasi_neutral_solver_calc_variance_rhs
+        procedure, pass(this), public ::  set_ions_constant=>pic_1d_field_solver_set_ions_constant
+        procedure, pass(this), public :: set_ions_constant_particles=>pic_1d_field_solver_set_ions_constant_particles
+        procedure, pass(this), public :: set_ions_constant_function=>pic_1d_field_solver_set_ions_constant_function
+        procedure, pass(this), public :: calc_variance_rhs=>pic_1d_field_solver_calc_variance_rhs
 
-        procedure,  pass(this) :: solve =>pic_1d_quasi_neutral_solver_solve
+        procedure,  pass(this) :: solve =>pic_1d_field_solver_solve
 
-        procedure, pass(this), public :: reset_particles=>pic_1d_quasi_neutral_solver_reset_particles
-        procedure, pass(this), public :: add_species=>pic_1d_quasi_neutral_solver_add_species
-        procedure, pass(this), public :: set_species=>pic_1d_quasi_neutral_solver_set_species
+        procedure, pass(this), public :: reset_particles=>pic_1d_field_solver_reset_particles
+        procedure, pass(this), public :: add_species=>pic_1d_field_solver_add_species
+        procedure, pass(this), public :: set_species=>pic_1d_field_solver_set_species
 
-        procedure, pass(this), public :: set_electrons_only_weighted=>pic_1d_quasi_neutral_solver_set_electrons_only_weighted
+        procedure, pass(this), public :: set_electrons_only_weighted=>pic_1d_field_solver_set_electrons_only_weighted
 
         procedure, pass(this), public :: set_charged_allparticles_weighted=>&
-            pic_1d_quasi_neutral_solver_set_charged_allparticles_weighted
+            pic_1d_field_solver_set_charged_allparticles_weighted
 
 
         procedure, pass(this), public :: add_particles_weighted=>&
-            pic_1d_quasi_neutral_solver_add_particles_weighted
+            pic_1d_field_solver_add_particles_weighted
 
 
 
-        procedure, pass(this), public :: fieldenergy=>pic_1d_quasi_neutral_solver_fieldenergy
-        !procedure,  pass(this) :: initialize =>pic_1d_quasi_neutral_solver_initialize
+        procedure, pass(this), public :: fieldenergy=>pic_1d_field_solver_fieldenergy
+        !procedure,  pass(this) :: initialize =>pic_1d_field_solver_initialize
 
-        procedure, pass(this), public :: get_problemsize=>pic_1d_quasi_neutral_solver_get_problemsize
+        procedure, pass(this), public :: get_problemsize=>pic_1d_field_solver_get_problemsize
 
-        procedure, pass(this), public :: set_bg_particles=>pic_1d_quasi_neutral_solver_set_background_particles
+        procedure, pass(this), public :: set_bg_particles=>pic_1d_field_solver_set_background_particles
 
-        procedure, pass(this), public :: evalE=>pic_1d_quasi_neutral_solver_eval_electricfield
-        procedure, pass(this), public :: evalPhi=>pic_1d_quasi_neutral_solver_eval_potential
+        procedure, pass(this), public :: evalE=>pic_1d_field_solver_eval_electricfield
+        procedure, pass(this), public :: evalPhi=>pic_1d_field_solver_eval_potential
 
-        procedure, pass(this), public :: getPotential=>pic_1d_quasi_neutral_solver_get_potential
+        procedure, pass(this), public :: getPotential=>pic_1d_field_solver_get_potential
 
         !Interpolatin schemes
-        procedure, pass(this), private :: get_rhs_cic=>pic_1d_quasi_neutral_solver_get_rhs_cic
-    end type pic_1d_quasi_neutral_solver
+        procedure, pass(this), private :: get_rhs_cic=>pic_1d_field_solver_get_rhs_cic
+    end type pic_1d_field_solver
 
 
     integer, private :: ierr !!!FIX THIS , DECIDE THIS
@@ -154,7 +154,7 @@ module sll_pic_1d_quasi_neutral_solver
 
 contains
 
-    function new_pic_1d_quasi_neutral_solver(eta_min, eta_max, &
+    function new_pic_1d_field_solver(eta_min, eta_max, &
             spline_degree, num_cells, poisson_solver_type, collective ,boundary_type ) &
             result(qn_solver)
         sll_int32, intent(in):: spline_degree
@@ -164,17 +164,17 @@ contains
         sll_int32, intent(in) :: boundary_type
         type(sll_collective_t), pointer , intent(in):: collective
 
-        class(pic_1d_quasi_neutral_solver), pointer :: qn_solver
+        class(pic_1d_field_solver), pointer :: qn_solver
 
         SLL_ALLOCATE(qn_solver,ierr)
 
-        call   pic_1d_quasi_neutral_solver_initialize( qn_solver, eta_min, eta_max, &
+        call   pic_1d_field_solver_initialize( qn_solver, eta_min, eta_max, &
             spline_degree, num_cells, poisson_solver_type, collective,boundary_type  )
     endfunction
 
-    subroutine pic_1d_quasi_neutral_solver_initialize( this, eta_min, eta_max, &
+    subroutine pic_1d_field_solver_initialize( this, eta_min, eta_max, &
             spline_degree, num_cells, poisson_solver_type, collective ,boundary_type )
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_int32, intent(in):: spline_degree
         sll_int32, intent(in)::  poisson_solver_type
         sll_int32, intent(in)::  num_cells
@@ -233,8 +233,8 @@ contains
 
     endsubroutine
 
-    subroutine pic_1d_quasi_neutral_solver_delete(this)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_delete(this)
+        class(pic_1d_field_solver), intent(inout) :: this
         !        print *, this%inhomogenity
         !!SLL_DEALLOCATE_ARRAY(this%inhomogenity_steady, ierr  )
         !!SLL_DEALLOCATE_ARRAY(this%inhomogenity, ierr  )
@@ -249,16 +249,16 @@ contains
 
     endsubroutine
 
-    function pic_1d_quasi_neutral_solver_get_problemsize(this) &
+    function pic_1d_field_solver_get_problemsize(this) &
             result(problemsize)
-        class(pic_1d_quasi_neutral_solver), intent(in) :: this
+        class(pic_1d_field_solver), intent(in) :: this
         sll_int32 :: problemsize
         problemsize=this%problemsize
     endfunction
 
     !
-    !    function pic_1d_quasi_neutral_solver_fourier_rhs(this,  ppos, pweight  )
-    !        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    !    function pic_1d_field_solver_fourier_rhs(this,  ppos, pweight  )
+    !        class(pic_1d_field_solver), intent(inout) :: this
     !        sll_real64, dimension(:) ,intent(in) :: ppos
     !        sll_real64, dimension(:) ,intent(in) :: pweight
     !        SLL_ASSERT(size(ppos)==size(pweight))
@@ -267,9 +267,9 @@ contains
     !
     !
     !    endfunction
-    function pic_1d_quasi_neutral_solver_calc_variance_rhs(this)&
+    function pic_1d_field_solver_calc_variance_rhs(this)&
             result(variance)
-        class(pic_1d_quasi_neutral_solver), intent(in) :: this
+        class(pic_1d_field_solver), intent(in) :: this
         sll_real64, dimension(this%problemsize) :: variance_v
         sll_real64 :: variance
 
@@ -287,8 +287,8 @@ contains
 
 
 
-    subroutine pic_1d_quasi_neutral_solver_solve(this)
-        class(pic_1d_quasi_neutral_solver) , intent(inout) :: this
+    subroutine pic_1d_field_solver_solve(this)
+        class(pic_1d_field_solver) , intent(inout) :: this
 
         !        if  (.NOT. allocated(this%inhomogenity))  then
         !            SLL_CLEAR_ALLOCATE(this%inhomogenity(this%problemsize),ierr)
@@ -342,11 +342,11 @@ contains
     endsubroutine
 
     !<@brief Takes negative particles with charge one and custom weights
-    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param this pointer to a pic_1d_field_solver object.
     !>@param ppos spatial position of the negative ion/electron
     !>@param pweight corresponding weight of the negative ion/electron
-    subroutine pic_1d_quasi_neutral_solver_set_electrons_only_weighted(this,  ppos, pweight  )
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_set_electrons_only_weighted(this,  ppos, pweight  )
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:) ,intent(in) :: ppos
         sll_real64, dimension(:) ,intent(in) :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -375,28 +375,28 @@ contains
 
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
-    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param this pointer to a pic_1d_field_solver object.
     !>@param ppos spatial position of the negative ion/electron
     !>@param pweight corresponding weight of particle
-    subroutine pic_1d_quasi_neutral_solver_set_charged_allparticles_weighted(this,&
+    subroutine pic_1d_field_solver_set_charged_allparticles_weighted(this,&
             ppos, pweight)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in) :: ppos
         sll_real64, dimension(:),intent(in)  :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
         this%inhomogenity=0
-        call pic_1d_quasi_neutral_solver_add_particles_weighted(this,&
+        call pic_1d_field_solver_add_particles_weighted(this,&
             ppos, pweight)
     endsubroutine
 
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
-    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param this pointer to a pic_1d_field_solver object.
     !>@param ppos spatial position of the negative ion/electron
     !>@param pweight corresponding weight of particle
-    subroutine pic_1d_quasi_neutral_solver_add_particles_weighted(this,&
+    subroutine pic_1d_field_solver_add_particles_weighted(this,&
             ppos, pweight)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in) :: ppos
         sll_real64, dimension(:),intent(in)  :: pweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -424,8 +424,8 @@ contains
 
 
 
-    subroutine pic_1d_quasi_neutral_solver_reset_particles(this)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_reset_particles(this)
+        class(pic_1d_field_solver), intent(inout) :: this
 
         selectcase(this%poisson_solver)
             case(SLL_SOLVER_FOURIER)
@@ -440,10 +440,10 @@ contains
     endsubroutine
 
     !<@brief Takes negative and positive particles in one array, charge has to be put in weights by user
-    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
-    subroutine pic_1d_quasi_neutral_solver_add_species(this,&
+    !>@param this pointer to a pic_1d_field_solver object.
+    subroutine pic_1d_field_solver_add_species(this,&
             pspecies)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         type(sll_particle_1d_group), intent(in) :: pspecies
 
         selectcase(this%poisson_solver)
@@ -474,11 +474,11 @@ contains
 
 
     !<@brief Takes an array of all species and sets them as the foreground for the field solve
-    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param this pointer to a pic_1d_field_solver object.
     !>@param species array of particle species containing ions and electrons
-    subroutine pic_1d_quasi_neutral_solver_set_species(this,&
+    subroutine pic_1d_field_solver_set_species(this,&
             species)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         type(sll_particle_1d_group), dimension(:), intent(in) :: species
         sll_int32 :: num_species,jdx
         num_species=size(species)
@@ -492,14 +492,14 @@ contains
     endsubroutine
 
     !<@brief Takes negative and positive particles with charge one and custom weights
-    !>@param this pointer to a pic_1d_quasi_neutral_solver object.
+    !>@param this pointer to a pic_1d_field_solver object.
     !>@param ppos_neg spatial position of the negative ion/electron
     !>@param pweight_neg corresponding weight of the negative ion/electron
     !>@param ppos_pos spatial position of the positive ion
     !>@param pweight_pos corresponding weight of the positive ion
-    subroutine pic_1d_quasi_neutral_solver_set_posneg_particles_weighted(this,&
+    subroutine pic_1d_field_solver_set_posneg_particles_weighted(this,&
             ppos_pos, pweight_pos,  ppos_neg, pweight_neg )
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in) :: ppos_pos
         sll_real64, dimension(:),intent(in)  :: pweight_pos
         sll_real64, dimension(:) ,intent(in) :: ppos_neg
@@ -521,8 +521,8 @@ contains
 
     endsubroutine
 
-    subroutine pic_1d_quasi_neutral_solver_set_ions_constant_particles(this,  ppos)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_set_ions_constant_particles(this,  ppos)
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in)  :: ppos
         sll_int32 :: np
         np=size(ppos)
@@ -533,8 +533,8 @@ contains
     endsubroutine
 
     !<Set the constant background, that will be added to each poisson solve
-    subroutine pic_1d_quasi_neutral_solver_set_background_particles(this, ppos, pweight)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_set_background_particles(this, ppos, pweight)
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:),intent(in)  :: ppos  !< Particle Position
         sll_real64, dimension(:),intent(in)  :: pweight !< Particleweight
         SLL_ASSERT(size(ppos)==size(pweight))
@@ -560,8 +560,8 @@ contains
 
     endsubroutine
 
-    subroutine pic_1d_quasi_neutral_solver_set_ions_constant(this, const)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_set_ions_constant(this, const)
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, intent(in) :: const
 
          selectcase(this%poisson_solver)
@@ -573,16 +573,16 @@ contains
         endselect
     endsubroutine
 
-    subroutine pic_1d_quasi_neutral_solver_set_ions_constant_function(this,  distribution_function)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_set_ions_constant_function(this,  distribution_function)
+        class(pic_1d_field_solver), intent(inout) :: this
         procedure (poisson_1d_fem_rhs_function) :: distribution_function
         this%inhomogenity_steady=&
             this%femsolver%get_rhs_from_function( distribution_function,10)
     endsubroutine
 
-    subroutine pic_1d_quasi_neutral_solver_eval_electricfield(this,eval_points,eval_solution)
+    subroutine pic_1d_field_solver_eval_electricfield(this,eval_points,eval_solution)
 
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: eval_points
         sll_real64, dimension(:), intent(out)     :: eval_solution
 
@@ -604,8 +604,8 @@ contains
         endselect
     endsubroutine
 
-    subroutine pic_1d_quasi_neutral_solver_eval_potential(this,eval_points,eval_solution)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+    subroutine pic_1d_field_solver_eval_potential(this,eval_points,eval_solution)
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(:), intent(in)     :: eval_points
         sll_real64, dimension(:), intent(out)     :: eval_solution
 
@@ -630,9 +630,9 @@ contains
 
 
 
-    function pic_1d_quasi_neutral_solver_get_potential(this) &
+    function pic_1d_field_solver_get_potential(this) &
             result(potential)
-        class(pic_1d_quasi_neutral_solver), intent(inout) :: this
+        class(pic_1d_field_solver), intent(inout) :: this
         sll_real64, dimension(this%problemsize) :: potential
 
         selectcase (this%poisson_solver)
@@ -643,23 +643,23 @@ contains
         endselect
     endfunction
 
-    function  pic_1d_quasi_neutral_solver_get_solution(this) result(solution)
-        class(pic_1d_quasi_neutral_solver), intent(in) :: this
+    function  pic_1d_field_solver_get_solution(this) result(solution)
+        class(pic_1d_field_solver), intent(in) :: this
 
         sll_real64, dimension(this%problemsize) :: solution
 
         solution=this%femsolver%fem_solution
     endfunction
 
-    function  pic_1d_quasi_neutral_solver_get_inhomogenity(this) result(inhomogenity)
-        class(pic_1d_quasi_neutral_solver), intent(in) :: this
+    function  pic_1d_field_solver_get_inhomogenity(this) result(inhomogenity)
+        class(pic_1d_field_solver), intent(in) :: this
         sll_real64, dimension(this%problemsize) :: inhomogenity
 
         inhomogenity=this%inhomogenity
     endfunction
 
-    function pic_1d_quasi_neutral_solver_boundary_conditions(this, x)  result(xout)
-        class(pic_1d_quasi_neutral_solver) , intent(in) :: this
+    function pic_1d_field_solver_boundary_conditions(this, x)  result(xout)
+        class(pic_1d_field_solver) , intent(in) :: this
         sll_real64, dimension(:), intent(in) ::x
         sll_real64, dimension(size(x))  :: xout
         sll_real64 :: interval_a, interval_b,interval_length
@@ -695,9 +695,9 @@ contains
     endfunction
 
 
-    function  pic_1d_quasi_neutral_solver_fieldenergy(this) &
+    function  pic_1d_field_solver_fieldenergy(this) &
             result(energy)
-        class(pic_1d_quasi_neutral_solver) , intent(inout) :: this
+        class(pic_1d_field_solver) , intent(inout) :: this
         sll_real64 :: energy
         energy=0
         selectcase(this%poisson_solver)
@@ -717,8 +717,8 @@ contains
 
 
     !< Cloud in Cell scheme for logical mesh
-    function  pic_1d_quasi_neutral_solver_get_rhs_cic( this, ppos, pweight) result(rhs)
-        class(pic_1d_quasi_neutral_solver),intent(inout) :: this
+    function  pic_1d_field_solver_get_rhs_cic( this, ppos, pweight) result(rhs)
+        class(pic_1d_field_solver),intent(inout) :: this
         sll_real64, dimension(:), intent(in) ::ppos
         sll_real64, dimension(:), intent(in) ::pweight
         sll_real64, dimension(this%problemsize) :: rhs
