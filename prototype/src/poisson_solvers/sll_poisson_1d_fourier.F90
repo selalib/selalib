@@ -273,15 +273,17 @@ contains
 
         seminorm=0.0_f64
         do fmode_a=1,this%num_modes
-!            do fmode_b=1,this%num_modes
+!!            do fmode_b=1,this%num_modes
 !            seminorm=seminorm+ 2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1)&
 !                                *(this%fourier_fmode(fmode_b)/coeff/fmode_b/sll_i1))
+            seminorm=seminorm +  2.0_f64*abs( (this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1))**2
+
 
             !seminorm=seminorm+ 2.0_f64*real((this%fourier_fmode(fmode_a)/coeff/fmode_a/sll_i1 )**2)/this%Ilength
 !            seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 -imag(this%fourier_fmode(fmode_a))**2) &
 !                                  *(1.0_f64/fmode_a)**2/coeff**2/this%Ilength*2
-!
-  seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +imag(this%fourier_fmode(fmode_a))**2)
+!            seminorm=seminorm=
+            !seminorm=seminorm+  (real(this%fourier_fmode(fmode_a))**2 +imag(this%fourier_fmode(fmode_a))**2)
             !seminorm=seminorm+  2.0_f64*real(this%fourier_fmode(fmode_a)*conjg(this%fourier_fmode(fmode_a)))
         enddo
     endfunction
