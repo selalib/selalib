@@ -507,15 +507,23 @@ contains
      ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
      ! is no longer supported by Selalib.
      !     m        => sim%transfx%get_logical_mesh(ipatch)
-     logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
+     ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
      !     transf   => sim%transfx%get_transformation(ipatch)
      transf => sim%transfx%transfs(ipatch+1)%t
-     num_pts1 = logical_m%num_cells1+1
-     num_pts2 = logical_m%num_cells2+1
-     delta1   = logical_m%delta_eta1
-     delta2   = logical_m%delta_eta2
-     eta1_min = logical_m%eta1_min
-     eta2_min = logical_m%eta2_min
+
+     num_pts1 = sim%transfx%get_num_cells_eta1(ipatch+1) + 1! logical_m%num_cells1+1
+     num_pts2 = sim%transfx%get_num_cells_eta2(ipatch+1) + 1!logical_m%num_cells2+1
+     delta1   = sim%transfx%get_delta_eta1(ipatch+1)!logical_m%delta_eta1
+     delta2   = sim%transfx%get_delta_eta2(ipatch+1)!logical_m%delta_eta2
+     eta1_min = sim%transfx%get_eta1_min(ipatch+1)!logical_m%eta1_min
+     eta2_min = sim%transfx%get_eta2_min(ipatch+1)!logical_m%eta2_min
+
+     print *, "num_pts = ", num_pts1
+     print *, "num_pts2 = ", num_pts2
+     print *, "num_pts = ", delta1
+     print *, "num_pts = ", delta2
+     print *, "num_pts = ", eta1_min
+     print *, "num_pts = ", eta2_min
 
      do j=1,num_pts1
         eta2 = eta2_min + (j-1)*delta2
