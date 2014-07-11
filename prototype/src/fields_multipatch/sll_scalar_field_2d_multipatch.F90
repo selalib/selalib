@@ -387,9 +387,14 @@ contains   ! *****************************************************************
        call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
     end do
 
-    ! And link each patch with the newly allocated memory.
+    ! Link each patch with the newly allocated memory. There is a problem here:
+    ! Each upon the call to 'set_field_data()', each field COPIES the data into
+    ! a local memory managed by the field. The more desirable behavior would
+    ! simply be to reset the pointer of the field so that it knows instantly
+    ! if the data is altered.
     do i=0,num_patches-1
-       call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
+       call field%fields(i+1)%f%free_internal_data_copy()
+       call field%fields(i+1)%f%reset_data_pointer(field%patch_data(i+1)%array)
     end do
   end subroutine allocate_memory_sfmp2d
 
