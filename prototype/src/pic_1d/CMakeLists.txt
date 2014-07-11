@@ -21,10 +21,10 @@ TARGET_LINK_LIBRARIES(sll_pic_1d_fem_solver  sll_constants
 					    sll_poisson_solvers)
 
 					    
-ADD_LIBRARY(sll_pic_1d_quasi_neutral_solver STATIC pic_1d_quasi_neutral_solver.F90
+ADD_LIBRARY(sll_pic_1d_field_solver STATIC pic_1d_field_solver.F90
 						         particle_description.F90)
 
-TARGET_LINK_LIBRARIES(sll_pic_1d_quasi_neutral_solver  sll_constants
+TARGET_LINK_LIBRARIES(sll_pic_1d_field_solver  sll_constants
 					    sll_working_precision
 					sll_memory
 					sll_logical_meshes
@@ -51,7 +51,7 @@ TARGET_LINK_LIBRARIES(test_bspline_fem_solver_1d  sll_pic_1d_fem_solver sll_file
 
 ##IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 					   
-      TARGET_LINK_LIBRARIES(sll_pic_1d   sll_pic_1d_quasi_neutral_solver
+      TARGET_LINK_LIBRARIES(sll_pic_1d   sll_pic_1d_field_solver
 				      sll_constants
 					sll_working_precision
 					sll_memory
