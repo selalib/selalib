@@ -1,4 +1,4 @@
-#define sll_transformation class(sll_coordinate_transformation_2d_analytic)
+#define sll_transformation class(sll_coordinate_transformation_2d_base)
 
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
@@ -35,6 +35,10 @@ contains
    procedure, pass :: set_value => initialize_dg_field 
 
 end type dg_field
+
+interface new
+  module procedure new_dg_field
+end interface new
 
 interface operator(+)
   module procedure dg_field_add
@@ -73,6 +77,7 @@ function new_dg_field( degree, tau, init_function ) result (this)
    nc_eta2 = tau%mesh%num_cells2
    SLL_CLEAR_ALLOCATE(this%array(1:degree+1,1:degree+1,1:nc_eta1,1:nc_eta2),error)
 
+   this%array = 0.0_f64
    if (present(init_function)) then
       call initialize_dg_field( this, init_function, 0.0_f64) 
    end if

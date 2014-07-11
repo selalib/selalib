@@ -137,33 +137,28 @@ contains
   subroutine run_4d_pic_cartesian( sim )
 
     class(sll_pic_simulation_4d_cartesian), intent(inout)  :: sim
-    sll_int32  :: ierr, j, it, jj, counter
+    sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i
-    sll_real64 :: xx, yy, tmp1, tmp2, tmp3, tmp4, valeur
-    sll_real64 :: tmp5, tmp6, tmp7, tmp8, tmp10, tmp9
+    sll_real64 :: tmp1, tmp2, tmp3, tmp4, valeur
     sll_real64 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
-    sll_real64 :: ttmp3(1:4,1:2), ttmp4(1:4,1:2)
     sll_real64, dimension(:,:), pointer :: phi
-    sll_int32  :: cell, ncx, ncy, ic_x,ic_y
-    sll_int32  :: ic_x1,ic_y1, ic_x2,ic_y2, ic_x3,ic_y3
-    sll_real32 :: off_x, off_y,off_x1,off_y1,off_x2,off_y2,off_x3,off_y3
+    sll_int32  :: ncx, ncy, ic_x,ic_y
+    sll_int32  :: ic_x1,ic_y1
+    sll_real32 :: off_x, off_y,off_x1,off_y1
     sll_real64 :: xmin, ymin, rdx, rdy
     sll_int32  :: gi ! counter index for guard list
-    sll_real64 :: Ex, Ey, Ex1, Ey1, Ex2, Ey2, Ex3, Ey3, Ex_CS, Ey_CS
+    sll_real64 :: Ex, Ey, Ex1, Ey1,Ex_CS, Ey_CS
     sll_real64 :: qoverm
-    sll_real64 :: x, x1, x2, x3  ! for global position
-    sll_real64 :: y, y1, y2, y3  ! for global position
-    sll_real32 :: dx ! for local position! sll_real64 :: dx ! for local position !
-    sll_real32 :: dy ! for local position! sll_real64 :: dy ! for local position !
+    sll_real64 :: x, x1  ! for global position
+    sll_real64 :: y, y1  ! for global position
     sll_real64 :: dt, time, ttime, pp_vx, pp_vy, temp
     type(sll_particle_2d), dimension(:), pointer :: p
-    type(sll_particle_2d), pointer :: particle
 !!$    type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
     type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable :: diag_energy! a memory buffer
     sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-    type(sll_time_mark)  :: t1, t2, t3
+    type(sll_time_mark)  :: t2, t3
 
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
@@ -359,7 +354,6 @@ contains
 
   subroutine delete_4d_pic_cart( sim )
     type(sll_pic_simulation_4d_cartesian) :: sim
-    sll_int32 :: ierr
   end subroutine delete_4d_pic_cart
 
 

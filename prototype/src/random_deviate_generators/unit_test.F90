@@ -11,16 +11,11 @@ program unit_test
 #define the_spatial_variance  4._f64
 
 
-  sll_int32 :: loop_index
-!
   sll_int32 :: j, incr_index
   sll_real64 :: pseudo_ran_Hamm_zero_one, pseudo_ran_Hamm_zero_five
-  sll_real64 :: pseudo_ran_Hamm_modif_zero_one, z, yy
+  sll_real64 :: pseudo_ran_Hamm_modif_zero_one, z
   sll_real64 :: shift
-  sll_real64 :: mean, mean_estim
-  logical :: is_passed = .TRUE., flag
-  character(29) :: file_name_trace
-  integer :: eec
+  logical :: is_passed = .TRUE.
 
 
   open(152,file='test_Hamm_Gauss.dat')

@@ -29,7 +29,6 @@ program qns_4d_general
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   !class(sll_coordinate_transformation_2d_nurbs), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
-  sll_real64, dimension(1:6) :: gaussian_params
   sll_real64, dimension(1:2) :: elec_field_ext_params
   sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
   sll_real64, dimension(1) :: f_zero_params

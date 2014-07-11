@@ -27,11 +27,6 @@ use sll_gnuplot_parallel
 implicit none
   
   class(sll_poisson_2d_base), pointer :: poisson 
-  sll_real64 :: x1_min
-  sll_real64 :: x1_max
-  sll_int32 :: Nc_x1
-  sll_int32 :: Nc_x2
-  sll_int32 :: ierr
   sll_int32 :: psize
   sll_int32 :: prank
   type(layout_2D), pointer :: layout_r ! sequential in r direction

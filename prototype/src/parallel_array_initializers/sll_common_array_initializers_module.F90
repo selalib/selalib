@@ -790,7 +790,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, intent(in) :: y
     sll_real64, intent(in) :: vx
     sll_real64, intent(in) :: vy
-    sll_real64  :: t,v0
+    sll_real64  :: v0
 
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: eta1_min
@@ -872,7 +872,6 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, intent(in) :: vy
     sll_real64 :: v0x
     sll_real64 :: v0y
-    sll_real64 :: lmin,lmax,lmil
     !sll_real64  :: t
 
     sll_real64, dimension(:), intent(in), optional :: params
@@ -1346,8 +1345,6 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: vxc
     sll_real64 :: vyc
-    sll_real64 :: sigma_x
-    sll_real64 :: sigma_v
     sll_real64 :: xc,yc,rayon
     sll_real64 :: vt,xt,n0
     
