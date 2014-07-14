@@ -44,6 +44,7 @@ module sll_distribution_function_4d_multipatch_module
      sll_int32 :: num_patches
      sll_int32 :: nproc_factor1
      sll_int32 :: nproc_factor2
+     logical   :: ready_for_sequential_ops_in_x1x2 = .false.
      type(sll_logical_mesh_2d), pointer :: mesh_v ! same for all patches
      type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
      type(layout_4d_ptr), dimension(:), pointer :: layouts_x1x2
@@ -54,9 +55,13 @@ module sll_distribution_function_4d_multipatch_module
      type(data_4d_ptr), dimension(:), pointer :: f_x3x4
      type(multipatch_data_2d_real), dimension(:), pointer :: rho_split
      type(remap_plan_2d_real64_ptr), dimension(:), pointer :: remap_split2full
+     type(remap_plan_4d_real64_ptr), dimension(:), pointer :: remap_x1x2tox3x4
+     type(remap_plan_4d_real64_ptr), dimension(:), pointer :: remap_x3x4tox1x2
    contains
      procedure, pass(df) :: allocate_memory => allocate_memory_df_4d_mp
      procedure, pass(df) :: initialize => initialize_df_4d_mp 
+     procedure, pass(df) :: set_to_sequential_x1x2 => x3x4_to_x1x2
+     procedure, pass(df) :: set_to_sequential_x3x4 => x1x2_to_x3x4
      procedure, pass(df) :: delete => delete_df_4d_mp
   end type sll_distribution_function_4d_multipatch
 
@@ -111,6 +116,8 @@ contains
     SLL_ALLOCATE( df%layouts_full(df%num_patches), ierr )
     SLL_ALLOCATE( df%rho_split(df%num_patches), ierr )
     SLL_ALLOCATE( df%remap_split2full(df%num_patches), ierr )
+    SLL_ALLOCATE( df%remap_x1x2tox3x4(df%num_patches), ierr )
+    SLL_ALLOCATE( df%remap_x3x4tox1x2(df%num_patches), ierr )
     call df%allocate_memory()
 
   end function sll_new_distribution_function_4d_multipatch
@@ -209,6 +216,17 @@ contains
             new_remap_plan( df%layouts_split(ip+1)%l, &
                             df%layouts_full(ip+1)%l, &
                             df%rho_split(ip+1)%array )
+
+       df%remap_x1x2tox3x4(ip+1)%r => &
+            new_remap_plan( df%layouts_x1x2(ip+1)%l, &
+                            df%layouts_x3x4(ip+1)%l, &
+                            df%f_x1x2(ip+1)%f )
+
+       df%remap_x3x4tox1x2(ip+1)%r => &
+            new_remap_plan( df%layouts_x3x4(ip+1)%l, &
+                            df%layouts_x1x2(ip+1)%l, &
+                            df%f_x3x4(ip+1)%f )
+
     end do
   end subroutine allocate_memory_df_4d_mp
 
@@ -243,6 +261,55 @@ contains
             t )
     end do
   end subroutine initialize_df_4d_mp
+
+  ! Note that to carry out multiple remap operations is expensive. The
+  ! latency would be multiplied by the number of patches... Other means
+  ! of parallelization are more interesting, like setting each patch in its
+  ! own process, if the advections can be properly made to work.
+  subroutine x3x4_to_x1x2( df )
+    class(sll_distribution_function_4d_multipatch), intent(inout) :: df
+    sll_int32 :: num_patches
+    sll_int32 :: i
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
+       print *, 'ERROR, x3x4_to_x1x2(): the distribution function multipatch ',&
+            'is already configured for x1x2 operations.'
+    end if
+
+    num_patches = df%num_patches
+    do i=0, num_patches-1
+       call apply_remap_4D_double( &
+            df%remap_x3x4tox1x2(i+1)%r, &
+            df%f_x3x4(i+1)%f, &
+            df%f_x1x2(i+1)%f )
+    end do
+
+    df%ready_for_sequential_ops_in_x1x2 = .true.
+
+  end subroutine x3x4_to_x1x2
+
+  subroutine x1x2_to_x3x4( df )
+    class(sll_distribution_function_4d_multipatch), intent(inout) :: df
+    sll_int32 :: num_patches
+    sll_int32 :: i
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
+       print *, 'ERROR, x1x2_to_x3x4(): the distribution function multipatch ',&
+            'is already configured for x3x4 operations.'
+    end if
+
+    num_patches = df%num_patches
+    do i=0, num_patches-1
+       call apply_remap_4D_double( &
+            df%remap_x1x2tox3x4(i+1)%r, &
+            df%f_x1x2(i+1)%f, &
+            df%f_x3x4(i+1)%f )
+    end do
+
+    df%ready_for_sequential_ops_in_x1x2 = .false.
+
+  end subroutine x1x2_to_x3x4
+
 
   ! This assumes that df is configured for sequential operations in x3 and x4.
   subroutine compute_charge_density_multipatch( df, rho )
