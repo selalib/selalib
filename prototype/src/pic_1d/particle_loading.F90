@@ -1012,8 +1012,6 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
                 endif
                 particle_species(1)%particle%dx=sll_pic1d_ensure_periodicity(particle_species(1)%particle%dx,  interval_a, interval_b)
 
-
-
                 particle_species(1)%particle%weight=initial_dist_x(particle_species(1)%particle%dx)/sampling_dist_x(particle_species(1)%particle%dx)
 
                 particle_species(1)%particle%weight_const=initial_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)/sampling_dist_xv(particle_species(1)%particle%dx,   particle_species(1)%particle%vx)

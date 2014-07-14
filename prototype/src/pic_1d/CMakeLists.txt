@@ -8,22 +8,23 @@ ADD_LIBRARY(sll_pic_1d STATIC particle_loading.F90
                               
 
 
-TARGET_LINK_LIBRARIES(sll_pic_1d_fem_solver  sll_constants
-					    sll_working_precision
-					sll_memory
-					sll_logical_meshes
-					sll_boundary_condition_descriptors
-					sll_fft
-					 sll_splines
-					  sll_integration
-					   sll_utilities
-					   sll_collective
-					    sll_poisson_solvers)
+# TARGET_LINK_LIBRARIES(sll_pic_1d_fem_solver  sll_constants
+# 					    sll_working_precision
+# 					sll_memory
+# 					sll_logical_meshes
+# 					sll_boundary_condition_descriptors
+# 					sll_fft
+# 					 sll_splines
+# 					  sll_integration
+# 					   sll_utilities
+# 					   sll_collective
+# 					    sll_poisson_solvers)
 
 					    
 ADD_LIBRARY(sll_pic_1d_field_solver STATIC pic_1d_field_solver.F90
 						         particle_description.F90)
 
+						         
 TARGET_LINK_LIBRARIES(sll_pic_1d_field_solver  sll_constants
 					    sll_working_precision
 					sll_memory
@@ -40,8 +41,8 @@ TARGET_LINK_LIBRARIES(sll_pic_1d_field_solver  sll_constants
 
 					    
 					    
-# ADD_LIBRARY(sll_pic_1d_fem_solver STATIC bspline_fem_solver_1d.F90)					    
-# ADD_EXECUTABLE(test_bspline_fem_solver_1d  unit_test_bspline_fem_solver_1d.F90)
+ 
+ #ADD_EXECUTABLE(test_bspline_fem_solver_1d  unit_test_bspline_fem_solver_1d.F90)
 # ADD_DEPENDENCIES(   test_bspline_fem_solver_1d  sll_utilities  sll_memory  sll_working_precision sll_pic_1d_fem_solver)
 # TARGET_LINK_LIBRARIES(test_bspline_fem_solver_1d  sll_pic_1d_fem_solver sll_file_io)
 					   
