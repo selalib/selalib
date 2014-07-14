@@ -841,7 +841,7 @@ contains
             k_v2, k_v3, k_v4, stage_DPhidx,x_1,v_1
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+       call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
 
         !--------------------Stage 1-------------------------------------------------
         call fsolver%evalE(x_0, stage_DPhidx)
@@ -850,6 +850,8 @@ contains
         !--------------------Stage 2-------------------------------------------------
         x_1=x_0 + 0.5_f64*k_x1
         v_1=v_0 + 0.5_f64*k_v1
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
         call sll_pic_1d_solve_qn(x_1)
         call fsolver%evalE( x_1, stage_DPhidx)
         k_x2= h*(v_1)
@@ -858,6 +860,8 @@ contains
         !--------------------Stage 3-------------------------------------------------
         x_1=x_0 + 0.5_f64*k_x2
         v_1=v_0 + 0.5_f64*k_v2
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_adjustweights(x_0 + 0.5_f64*k_x1,x_1,v_0 + 0.5_f64*k_v1,v_1)
         call sll_pic_1d_solve_qn(x_1)
         call fsolver%evalE(x_1, stage_DPhidx)
         k_x3= h*(v_1)
@@ -865,6 +869,8 @@ contains
         !--------------------Stage 4-------------------------------------------------
         x_1=x_0 + k_x3
         v_1=v_0 + k_v3
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+        call sll_pic1d_adjustweights(x_0 + 0.5_f64*k_x2,x_1,v_0 + 0.5_f64*k_v2,v_1)
         call sll_pic_1d_solve_qn(x_0 +  k_x3)
         call fsolver%evalE(x_1, stage_DPhidx)
         k_x4= h*(v_1)
@@ -872,10 +878,11 @@ contains
         !Perform step---------------------------------------------------------------
         x_1= x_0 + (  k_x1 +  2.0_f64 *k_x2 +  2.0_f64*k_x3 + k_x4 )/6.0_f64
         v_1= v_0 + (  k_v1 +  2.0_f64 *k_v2 +  2.0_f64*k_v3 + k_v4)/6.0_f64
-
         call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
 
-        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        call sll_pic1d_adjustweights(x_0 + 0.5_f64*k_x3,x_1,v_0 + 0.5_f64*k_v3,v_1)
+
+        !call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
         x_0=x_1
         v_0=v_1
 
@@ -1175,7 +1182,7 @@ contains
             SLL_DEALLOCATE_ARRAY(DPhidx,ierr)
         enddo
 
-        !call sll_pic1d_adjustweights_advection_species(species_0, species_05)
+        call sll_pic1d_adjustweights_advection_species(species_0, species_05)
 
         !call sll_pic1d_ensure_boundary_conditions_species(species_05)
         call fsolver%set_species(species_05)
