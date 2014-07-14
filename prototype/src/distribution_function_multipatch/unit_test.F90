@@ -70,12 +70,17 @@ program unit_test_2d
 
   call rho_mp%update_interpolation_coefficients()
 
+  call f_mp%set_to_sequential_x1x2()
+  call f_mp%set_to_sequential_x3x4()
+
   if(rank == 0) then
      call rho_mp%write_to_file(0)
   end if
 
-  call f_mp%delete()
-!  call mp%delete()
+  call sll_delete(f_mp)
+  call sll_delete(rho_mp)
+  call t_mp%delete()
+
 
   print *, "PASSED"
   call sll_halt_collective()
