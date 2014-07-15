@@ -91,7 +91,7 @@ program qns_4d_general_multipatch
   ! coordinate transformation associated with space coordinates
   ! ---------------------------------------------------------------------
 
-  call mp%read_from_file("identity_mp")
+  call mp%read_from_file("identity_mp1")
 
   ! ---------------------------------------------------------------------
   ! define the values of the parameters for the landau initializer
