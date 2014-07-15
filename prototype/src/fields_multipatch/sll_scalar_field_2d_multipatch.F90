@@ -422,9 +422,9 @@ contains   ! *****************************************************************
   end subroutine set_field_data_sfmp2d
 
   function get_patch_data_ptr_sfmp2d( mp, patch ) result(ptr)
-    sll_real64, dimension(:,:), pointer               :: ptr
-    class(sll_scalar_field_multipatch_2d), intent(in) :: mp
-    sll_int32, intent(in)                             :: patch
+    sll_real64, dimension(:,:), pointer                  :: ptr
+    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    sll_int32, intent(in)                                :: patch
     ptr => mp%fields(patch+1)%f%get_data_pointer()
   end function get_patch_data_ptr_sfmp2d
 

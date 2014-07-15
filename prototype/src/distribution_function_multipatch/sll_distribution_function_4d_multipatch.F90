@@ -314,7 +314,7 @@ contains
   ! This assumes that df is configured for sequential operations in x3 and x4.
   subroutine compute_charge_density_multipatch( df, rho )
     type(sll_distribution_function_4d_multipatch), intent(in) :: df
-    type(sll_scalar_field_multipatch_2d), intent(inout) :: rho
+    class(sll_scalar_field_multipatch_2d), intent(inout)      :: rho
     sll_real64 :: delta3
     sll_real64 :: delta4
     sll_int32  :: ipatch
@@ -357,17 +357,29 @@ contains
 
     num_patches = df%num_patches
     do i = 0,num_patches-1
+       SLL_DEALLOCATE( df%f_x1x2(i+1)%f, ierr )
+       SLL_DEALLOCATE( df%f_x3x4(i+1)%f, ierr )
+       SLL_DEALLOCATE( df%rho_split(i+1)%array, ierr )
        call sll_delete( df%layouts_x1x2(i+1)%l )
        call sll_delete( df%layouts_x3x4(i+1)%l )
-       SLL_DEALLOCATE(df%f_x1x2(i+1)%f, ierr)
-       SLL_DEALLOCATE(df%f_x3x4(i+1)%f, ierr)
+       call sll_delete( df%layouts_split(i+1)%l )
+       call sll_delete( df%layouts_full(i+1)%l )
+       call sll_delete( df%remap_split2full(i+1)%r )
+       call sll_delete( df%remap_x1x2tox3x4(i+1)%r )
+       call sll_delete( df%remap_x3x4tox1x2(i+1)%r )
     end do
     
-    SLL_DEALLOCATE(df%f_x1x2, ierr)
-    SLL_DEALLOCATE(df%f_x3x4, ierr)
-    SLL_DEALLOCATE(df%layouts_x1x2, ierr)
-    SLL_DEALLOCATE(df%layouts_x3x4, ierr)
-    
+    SLL_DEALLOCATE( df%f_x1x2, ierr )
+    SLL_DEALLOCATE( df%f_x3x4, ierr )
+    SLL_DEALLOCATE( df%layouts_x1x2, ierr )
+    SLL_DEALLOCATE( df%layouts_x3x4, ierr )
+    SLL_DEALLOCATE( df%layouts_split, ierr )
+    SLL_DEALLOCATE( df%layouts_full, ierr )
+    SLL_DEALLOCATE( df%rho_split, ierr )
+    SLL_DEALLOCATE( df%remap_split2full, ierr )
+    SLL_DEALLOCATE( df%remap_x1x2tox3x4, ierr )
+    SLL_DEALLOCATE( df%remap_x3x4tox1x2, ierr )
+
   end subroutine delete_df_4d_mp
 
   subroutine delete_df_4d_mp_ptr( df )
