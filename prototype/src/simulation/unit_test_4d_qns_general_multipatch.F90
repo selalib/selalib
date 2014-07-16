@@ -33,8 +33,7 @@ program qns_4d_general_multipatch
   type(sll_logical_mesh_2d), pointer      :: mv ! delete
   type(sll_coordinate_transformation_multipatch_2d) :: mp
 
-  sll_real64, dimension(1:8) :: landau_params
-  sll_real64, dimension(1:6) :: gaussian_params
+  sll_real64, dimension(1:8) :: gaussian_beam_params
   sll_real64, dimension(1:2) :: elec_field_ext_params
   sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
   sll_real64, dimension(1) :: f_zero_params
@@ -91,42 +90,23 @@ program qns_4d_general_multipatch
   ! coordinate transformation associated with space coordinates
   ! ---------------------------------------------------------------------
 
-  call mp%read_from_file("identity_mp1")
+  call mp%read_from_file("identity_mp2")
 
   ! ---------------------------------------------------------------------
-  ! define the values of the parameters for the landau initializer
+  ! define the values of the parameters for the gaussian beam initializer
   ! ---------------------------------------------------------------------
-
-!!$  ! sll_landau_initializer_4d
-!!$  landau_params(1) = mx%eta1_min      !eta1_min
-!!$  landau_params(2) = mx%eta1_max
-!!$  landau_params(3) = mx%eta2_min      !eta2_min
-!!$  landau_params(4) = mx%eta2_max
-!!$  landau_params(5) = 0.05     !eps
-
-
-!!$  ! 2002 et 2009 sll_periodic_periodic_gaussian2009_initializer_4d   
-!!$  !  sll_periodic_periodic_gaussian2002_initializer_4d
-!!$  landau_params(1) = mx%eta1_min      !eta1_min
-!!$  landau_params(2) = mx%eta1_max
-!!$  landau_params(3) = mx%eta2_min      !eta2_min
-!!$  landau_params(4) = mx%eta2_max
-!!$  landau_params(5) = 0.0_f64     !eps
-!!$  landau_params(6) = 0.0_f64     !eps
-!!$  landau_params(7) = 0.05_f64     !eps
-!!$  landau_params(8) = 1._f64     !eps
-
 
   ! sll_gaussian_beam_initializer_4d parameters
+  !TODO : fix parameteres
 
-  landau_params(1) = 1.0_f64!3.0_f64/2.0_f64!vth
-  landau_params(2) = 0.5_f64!1.0_f64!xth
-  landau_params(3) = 0.0_f64!vxc
-  landau_params(4) = 0.0_f64!vyc
-  landau_params(5) = 0.0_f64!xc
-  landau_params(6) = 0.0_f64!yc
-  landau_params(7) = sll_pi*15*8!sll_pi*15*18!n0
-  landau_params(8) = 6.0_f64
+  gaussian_beam_params(1) = 1.0_f64!3.0_f64/2.0_f64!vth
+  gaussian_beam_params(2) = 0.05_f64!1.0_f64!xth
+  gaussian_beam_params(3) = 0.0_f64!vxc
+  gaussian_beam_params(4) = 0.0_f64!vyc
+  gaussian_beam_params(5) = 0.5_f64!xc
+  gaussian_beam_params(6) = 0.5_f64!yc
+  gaussian_beam_params(7) = sll_pi*15*8!sll_pi*15*18!n0
+  gaussian_beam_params(8) = 1.0_f64 !radius
   
 
   ! ---------------------------------------------------------------------
@@ -136,7 +116,7 @@ program qns_4d_general_multipatch
        mv, &
        mp, &
        sll_gaussian_beam_initializer_4d, &
-       landau_params, &
+       gaussian_beam_params, &
        func_one,  &  ! a11
        f_one_params, &
        func_zero, &   !a12
