@@ -294,7 +294,7 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(fmp%derivs2(i)%array(num_pts1,NUM_DERIVS),ierr)
        SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
     end do
-
+    print *, 'initialize_scalar_field_sfmp2d(): finished initialization.'
   end subroutine initialize_scalar_field_sfmp2d
 
 
