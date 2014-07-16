@@ -122,6 +122,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
 
    #Add new dependencies concerning simulation_MYMETHOD.F90
    TARGET_LINK_LIBRARIES(sll_simulations 
+                         sll_distribution_function_multipatch
                          sll_scalar_field_multipatch
                          sll_parallel_array_initializers
                          sll_advection
