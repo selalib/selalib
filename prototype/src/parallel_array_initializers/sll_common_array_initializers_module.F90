@@ -1324,18 +1324,22 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
   ! convention for the params array:
   ! params(1) = vth
   ! params(2) = xth
-  ! params(3) = sigma_x
-  ! params(4) = sigma_v
-  ! params(5) = vxc
-  ! params(6) = vyc
-  ! params(7) = xc
-  ! params(8) = yc
-  ! params(9) = n0
+  ! params(3) = vxc
+  ! params(4) = vyc
+  ! params(5) = xc
+  ! params(6) = yc
+  ! params(7) = n0
+  ! params(8) = radius
   !---------------------------------------------------------------------------
   
   function sll_gaussian_beam_initializer_4d( x, y, vx, vy, params ) &
        result(val)
     
+    ! TODO : FIX THIS FUNCTION
+    !        FIX COMMENTS
+    !        GET IT TO MATCH ARTICLE FUNCTION
+    !        DEFINE VARIABLES
+    ! @LM + @AB
     sll_real64 :: val
     sll_real64, intent(in) :: x
     sll_real64, intent(in) :: y
@@ -1345,14 +1349,15 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: vxc
     sll_real64 :: vyc
-    sll_real64 :: xc,yc,rayon
+    sll_real64 :: xc,yc,radius
     sll_real64 :: vt,xt,n0
     
     if( .not. present(params) ) then
        print *, 'sll_gaussian_initializer_4d, error: the params array must ', &
             'be passed: ', &
-            'params(1) = vt, params(2) = xt, params(3) = sigma_x, params(4) = sigma_v',&
-            ' params(5) = vxc, params(6) = vyc, params(7) = xc, params(8) = yc, params(9) = n0'
+            'params(1) = vt, params(2) = xt, params(3) = vxc, params(4) = vyc,', &
+            'params(5) = xc, params(6) = yc, params(7) = n0, params(8) = radius'
+
        stop
     end if
     
@@ -1363,12 +1368,16 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     xc      = params(5)
     yc      = params(6)
     n0      = params(7)
-    rayon   = params(8)
+    radius   = params(8)
    
     
-    val = n0 *exp(-0.5*((rayon*x-xc)**2  + (rayon*y-yc)**2)/(xt*xt)  ) &
-         / (2*sll_pi*xt**2) &
-         *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
+    ! val = n0 *exp(-0.5*((radius*x-xc)**2  + (radius*y-yc)**2)/(xt*xt)  ) &
+    !      / (2*sll_pi*xt**2) &
+    !      *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
+
+    val = n0 *exp(-0.5*((radius*x-xc)**2  + (radius*y-yc)**2)/(xt*xt)  ) &
+         *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))
+
     
   end function sll_gaussian_beam_initializer_4d
 
