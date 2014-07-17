@@ -63,6 +63,12 @@ procedure, pass :: get_coefficients => get_coefficients_cs1d
 
 end type cubic_spline_1d_interpolator
 
+
+type :: cubic_spline_1d_interpolator_ptr
+   type(cubic_spline_1d_interpolator), pointer :: interp
+end type cubic_spline_1d_interpolator_ptr
+
+
 #endif
 
   interface delete
