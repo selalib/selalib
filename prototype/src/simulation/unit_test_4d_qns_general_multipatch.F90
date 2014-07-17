@@ -90,7 +90,7 @@ program qns_4d_general_multipatch
   ! coordinate transformation associated with space coordinates
   ! ---------------------------------------------------------------------
 
-  call mp%read_from_file("identity_mp2")
+  call mp%read_from_file("circle_mp5_pts12")
 
   ! ---------------------------------------------------------------------
   ! define the values of the parameters for the gaussian beam initializer
