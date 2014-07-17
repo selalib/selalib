@@ -1366,7 +1366,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     rayon   = params(8)
    
     
-    val = n0 *exp(-0.5*((rayon*x-xc)**2  + (rayon*y-yc)**2)/(xt*xt)  ) &
+    val = n0 *exp(-0.5*(rayon**2*(x-xc)**2  + rayon**2*(y-yc)**2)/(xt*xt)  ) &
          / (2*sll_pi*xt**2) &
          *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
     
