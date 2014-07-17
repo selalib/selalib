@@ -57,6 +57,7 @@ module sll_distribution_function_4d_multipatch_module
      type(remap_plan_2d_real64_ptr), dimension(:), pointer :: remap_split2full
      type(remap_plan_4d_real64_ptr), dimension(:), pointer :: remap_x1x2tox3x4
      type(remap_plan_4d_real64_ptr), dimension(:), pointer :: remap_x3x4tox1x2
+
    contains
      procedure, pass(df) :: allocate_memory => allocate_memory_df_4d_mp
      procedure, pass(df) :: initialize => initialize_df_4d_mp 
@@ -118,6 +119,7 @@ contains
     SLL_ALLOCATE( df%remap_split2full(df%num_patches), ierr )
     SLL_ALLOCATE( df%remap_x1x2tox3x4(df%num_patches), ierr )
     SLL_ALLOCATE( df%remap_x3x4tox1x2(df%num_patches), ierr )
+
     call df%allocate_memory()
 
   end function sll_new_distribution_function_4d_multipatch

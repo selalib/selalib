@@ -68,6 +68,7 @@ module sll_simulation_4d_qns_general_multipatch_module
      type(sll_coordinate_transformation_multipatch_2d), pointer :: transfx
      type(general_coordinate_elliptic_solver_mp), pointer      :: qns
 
+
      !  number dignostics for the simulation
       sll_int32  ::number_diags
 
@@ -126,9 +127,8 @@ module sll_simulation_4d_qns_general_multipatch_module
      type(remap_plan_2D_comp64), pointer :: efld_seqx2_to_split
      type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
-     ! interpolators and their pointers
+     ! interpolators
      type(cubic_spline_1d_interpolator) :: interp_x3
-     !type(arb_deg_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
@@ -430,20 +430,22 @@ contains
     sll_int32  :: global_indices(4)
     sll_int32  :: iplot
     character(len=4) :: cplot
-    type(sll_scalar_field_multipatch_2d), pointer      :: a11_field_mat
-    type(sll_scalar_field_multipatch_2d), pointer      :: a21_field_mat
-    type(sll_scalar_field_multipatch_2d), pointer      :: a12_field_mat
-    type(sll_scalar_field_multipatch_2d), pointer      :: a22_field_mat
-    type(sll_scalar_field_multipatch_2d), pointer      :: b1_field_vect
-    type(sll_scalar_field_multipatch_2d), pointer      :: b2_field_vect
-    type(sll_scalar_field_multipatch_2d), pointer      :: c_field
+    class(sll_scalar_field_multipatch_2d), pointer      :: a11_field_mat
+    class(sll_scalar_field_multipatch_2d), pointer      :: a21_field_mat
+    class(sll_scalar_field_multipatch_2d), pointer      :: a12_field_mat
+    class(sll_scalar_field_multipatch_2d), pointer      :: a22_field_mat
+    class(sll_scalar_field_multipatch_2d), pointer      :: b1_field_vect
+    class(sll_scalar_field_multipatch_2d), pointer      :: b2_field_vect
+    class(sll_scalar_field_multipatch_2d), pointer      :: c_field
     type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_1
     type(sll_scalar_field_multipatch_2d), pointer      :: elec_field_ext_2
     type(sll_scalar_field_multipatch_2d), pointer      :: rho
     type(sll_scalar_field_multipatch_2d), pointer      :: phi
+    type(sll_scalar_field_multipatch_2d), pointer      :: layer_x1x2
     type(sll_logical_mesh_2d), pointer                         :: logical_m
     class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
     type(sll_distribution_function_4d_multipatch), pointer     :: f_mp
+
     sll_real64, dimension(:), allocatable :: send_buf
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32,  dimension(:), allocatable :: recv_sz
@@ -482,8 +484,10 @@ contains
     b1_field_vect => new_scalar_field_multipatch_2d("b1", sim%transfx)
     b2_field_vect => new_scalar_field_multipatch_2d("b2", sim%transfx)
     c_field       => new_scalar_field_multipatch_2d("c", sim%transfx)
-    phi => new_scalar_field_multipatch_2d("phi_check", sim%transfx)
+    layer_x1x2    => new_scalar_field_multipatch_2d("layer_x1x2", sim%transfx)
+    phi => new_scalar_field_multipatch_2d("potential_field_phi", sim%transfx)
     rho => new_scalar_field_multipatch_2d("rho_field_check", sim%transfx)
+
 
     ! elec_field_ext_1 => new_scalar_field_multipatch_2d("E1_ext", sim%transfx)    
     ! elec_field_ext_2 => new_scalar_field_multipatch_2d("E2_ext", sim%transfx)    
@@ -654,13 +658,43 @@ contains
     if(sim%my_rank == 0) then
        call rho%write_to_file(0)
     end if
+          
+    ! call f_mp%set_to_sequential_x1x2()
+    ! call f_mp%set_to_sequential_x3x4()
+
+    print*, 'initialize qns'
+    ! Initialize the poisson plan before going into the main loop.
+    sim%qns => new_general_elliptic_solver_mp( &
+         sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
+         sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
+         sim%transfx)
+
+    print*, 'factorise matrice qns'
     
+    call factorize_mat_es_mp(&
+         sim%qns, & 
+         a11_field_mat, &
+         a12_field_mat, &
+         a21_field_mat, &
+         a22_field_mat, &
+         b1_field_vect, &
+         b2_field_vect, &
+         c_field)
 
-#if(0)   
-      
-    call f_mp%set_to_sequential_x1x2()
-    call f_mp%set_to_sequential_x3x4()
+    print*, '--- end factorise matrice qns'
 
+    call solve_general_coordinates_elliptic_eq_mp(&
+       sim%qns,&
+       rho,&
+       phi)
+
+    print*, '--- end solve'
+
+    if(sim%my_rank == 0) then
+       call phi%write_to_file(0)
+    end if
+
+#if 0
 
     ! First dt/2 advection for eta1-eta2:
     
@@ -715,25 +749,6 @@ contains
         SLL_HERMITE)! sim%bc_vy_0)
  
 
-
-    print*, 'initialize qns'
-    ! Initialize the poisson plan before going into the main loop.
-    sim%qns => new_general_elliptic_solver_mp( &
-         sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
-         sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
-         sim%transfx)
-
-    print*, 'factorise matrice qns'
-    
-    call factorize_mat_es_mp(&
-         sim%qns, & 
-         a11_field_mat, &
-         a12_field_mat, &
-         a21_field_mat, &
-         a22_field_mat, &
-         b1_field_vect, &
-         b2_field_vect, &
-         c_field)
 
     print*, ' ... finished initialization, entering main loop.'
     

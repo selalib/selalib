@@ -91,7 +91,7 @@ module sll_module_scalar_field_2d_multipatch
      procedure, pass :: first_deriv_eta2_value_at_indices => &
           first_deriv_eta2_value_at_indices_sfmp2d
      procedure, pass :: get_patch_data_pointer => get_patch_data_ptr_sfmp2d
-     ! procedure, pass :: set_patch_data_pointer => set_patch_data_ptr_sfmp2d
+     procedure, pass :: set_patch_data_pointer => set_patch_data_ptr_sfmp2d
      procedure, pass :: set_field_data => set_field_data_sfmp2d
      procedure, pass :: write_to_file => write_to_file_sfmp2d
      procedure, pass :: delete => delete_field_sfmp2d
@@ -150,6 +150,7 @@ contains   ! *****************************************************************
     num_patches = transf%get_number_patches()
 
     fmp%num_patches = num_patches
+    SLL_ALLOCATE(fmp%patch_data(num_patches),ierr)
     SLL_ALLOCATE(fmp%fields(num_patches), ierr)
     SLL_ALLOCATE(fmp%interps(num_patches),ierr)
 
@@ -370,7 +371,6 @@ contains   ! *****************************************************************
     end if
     
     num_patches = field%num_patches
-    SLL_ALLOCATE(field%patch_data(num_patches),ierr)
 
     do i=0,num_patches-1
        ! get rid of the following 'fix'whenever gfortran 4.6 is not supported
@@ -429,12 +429,12 @@ contains   ! *****************************************************************
     ptr => mp%fields(patch+1)%f%get_data_pointer()
   end function get_patch_data_ptr_sfmp2d
 
-  ! function set_patch_data_ptr_sfmp2d( mp, patch, ptr )
-  !   sll_real64, dimension(:,:), pointer                  :: ptr
-  !   class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
-  !   sll_int32, intent(in)                                :: patch
-  !   mp%fields(patch+1)%f%set_data_pointer() => ptr
-  ! end function set_patch_data_ptr_sfmp2d
+  subroutine set_patch_data_ptr_sfmp2d( mp, patch, ptr )
+    sll_real64, dimension(:,:), pointer                  :: ptr
+    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    sll_int32, intent(in)                                :: patch
+    mp%patch_data(patch+1)%array => ptr
+  end subroutine set_patch_data_ptr_sfmp2d
 
   subroutine update_interp_coeffs_sfmp2d( mp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
