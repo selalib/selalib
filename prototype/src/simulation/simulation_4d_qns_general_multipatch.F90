@@ -199,14 +199,6 @@ contains
        c_f_params, &
        spline_degre_vx,&
        spline_degre_vy,&
-       bc_eta1_0,&
-       bc_eta1_1,&
-       bc_eta2_0,&
-       bc_eta2_1,&
-       bc_vx_0,&
-       bc_vx_1,&
-       bc_vy_0,&
-       bc_vy_1,&
        quadrature_type1,&
        quadrature_type2,&
        electric_field_ext_1,&
@@ -243,14 +235,6 @@ contains
     sll_int32  :: spline_degre_vx
     sll_int32  :: spline_degre_vy
     sll_int32  :: number_diags
-    sll_int32  :: bc_eta1_0
-    sll_int32  :: bc_eta1_1
-    sll_int32  :: bc_eta2_0
-    sll_int32  :: bc_eta2_1
-    sll_int32  :: bc_vx_0
-    sll_int32  :: bc_vx_1
-    sll_int32  :: bc_vy_0
-    sll_int32  :: bc_vy_1
     sll_int32  :: quadrature_type1,quadrature_type2
     sll_int32 :: ierr
     
@@ -276,15 +260,6 @@ contains
     sim%quadrature_type1 = quadrature_type1
     sim%quadrature_type2 = quadrature_type2
     sim%count_save_diag  = 0
-    sim%bc_eta1_0   = bc_eta1_0
-    sim%bc_eta1_1   = bc_eta1_1
-    sim%bc_eta2_0   = bc_eta2_0
-    sim%bc_eta2_1   = bc_eta2_1
-
-    sim%bc_vx_0     = bc_vx_0
-    sim%bc_vx_1     = bc_vx_1
-    sim%bc_vy_0     = bc_vy_0
-    sim%bc_vy_1     = bc_vy_1
 
     sim%elec_field_ext_1 => electric_field_ext_1
     sim%elec_field_ext_2 => electric_field_ext_2
