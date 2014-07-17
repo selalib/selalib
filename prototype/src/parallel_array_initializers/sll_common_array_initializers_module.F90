@@ -1304,23 +1304,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
  !---------------------------------------------------------------------------
   !
   !                         Gaussian beam 4d initializer
-  !
-  ! 4D distribution in S^1(r=6)X[-9,9]X[-9,9]  with the property of being 
-  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
-  !
-  ! f(x,y,vx,vy) = n0/ vth^2  exp(-0.5*((6x-xc)^2+(6y-yc)^2)/xth^2)/ (2*sll_pi*sigma_x)
-  !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2)/vth^2)/ (2*sll_pi*sigma_v)
-  !                          
-  !  This function is described in the article of Besse and Sonnendrucker 2005
-  ! 'Semi‐Lagrangian Schemes for the Two‐Dimensional Vlasov‐Poisson System on
-  !   Unstructured Meshes'
-  !
-  ! It is meant to be used in the intervals:
-  ! x:  [ 0,1]
-  ! y:  [ 0,1]
-  ! vx: [-9,9]
-  ! vy: [-9,9]
-  
+  !  
   ! convention for the params array:
   ! params(1) = vth
   ! params(2) = xth
@@ -1371,12 +1355,12 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     radius   = params(8)
    
     
-    ! val = n0 *exp(-0.5*((radius*x-xc)**2  + (radius*y-yc)**2)/(xt*xt)  ) &
-    !      / (2*sll_pi*xt**2) &
-    !      *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
-
     val = n0 *exp(-0.5*((radius*x-xc)**2  + (radius*y-yc)**2)/(xt*xt)  ) &
-         *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))
+         / (2*sll_pi*xt**2) &
+         *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
+
+    ! val = n0 *exp(-0.5*((radius*x-xc)**2  + (radius*y-yc)**2)/(xt*xt)  ) &
+    !      *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))
 
     
   end function sll_gaussian_beam_initializer_4d
