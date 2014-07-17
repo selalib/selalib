@@ -19,10 +19,11 @@ program qns_4d_general_multipatch
   use sll_common_coordinate_transformations
 !  use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
-  use sll_module_poisson_2d_elliptic_solver, &
-     only: es_gauss_legendre
+  ! use sll_module_poisson_2d_elliptic_solver, &
+  !    only: es_gauss_legendre
   use sll_coordinate_transformation_multipatch_module, only: &
      sll_coordinate_transformation_multipatch_2d
+  use sll_general_coordinate_elliptic_solver_module
 !  use sll_module_scalar_field_2d_multipatch
   implicit none
 
@@ -103,15 +104,16 @@ program qns_4d_general_multipatch
   gaussian_beam_params(2) = 0.05_f64!1.0_f64!xth
   gaussian_beam_params(3) = 0.0_f64!vxc
   gaussian_beam_params(4) = 0.0_f64!vyc
-  gaussian_beam_params(5) = 0.5_f64!xc
-  gaussian_beam_params(6) = 0.5_f64!yc
+  gaussian_beam_params(5) = 0.0_f64!xc
+  gaussian_beam_params(6) = 0.0_f64!yc
   gaussian_beam_params(7) = sll_pi*15*8!sll_pi*15*18!n0
-  gaussian_beam_params(8) = 1.0_f64 !radius
+  gaussian_beam_params(8) = 6.0_f64 !radius
   
 
   ! ---------------------------------------------------------------------
   ! initialize simulation object with the above parameters
   ! ---------------------------------------------------------------------
+
   call simulation%initialize( &
        mv, &
        mp, &
@@ -139,16 +141,8 @@ program qns_4d_general_multipatch
        SPL_DEG_VY, & 
        ES_GAUSS_LEGENDRE,&
        ES_GAUSS_LEGENDRE,&
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       electric_field_ext_1,&
-       electric_field_ext_2,&
+       func_zero, &
+       func_zero, &
        elec_field_ext_params,&
        100)
 
