@@ -489,7 +489,7 @@ contains ! *******************************************************************
    SLL_ALLOCATE(Source_loc(es_mp%T%number_patches,lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
    Source_loc(:,:,:,:) = 0.0_f64
 
-   
+   print *," -- before patch loop"
    
    do patch = 1,es_mp%T%number_patches
 
@@ -508,6 +508,8 @@ contains ! *******************************************************************
 
             cell_index = i+lm%num_cells1*(j-1)
             
+
+            print *," -- before build local matrices ", patch, i, j
             call build_local_matrices_mp( &
                  es_mp, &
                  cell_index,&
@@ -530,7 +532,7 @@ contains ! *******************************************************************
                  S_b1_loc,  &
                  S_b2_loc,&
                  Source_loc)
- 
+            print *," -- before local to global matrices ", patch, i, j
             call local_to_global_matrices_mp( &
                  es_mp, &
                  cell_index, &
@@ -550,7 +552,7 @@ contains ! *******************************************************************
       end do
    end do
 
-   
+   print *," -- before factorize matrices ", patch, i, j
    call sll_factorize_csr_matrix(es_mp%sll_csr_mat)
 
 
@@ -854,18 +856,37 @@ contains ! *******************************************************************
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
     
-
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
        gpt2  = eta2  + 0.5_f64*delta2 * ( es_mp%gauss_pts2(patch,1,j) + 1.0_f64 )
+       
+       print *, "eta2 = ", eta2
+       print *, "delta2 = ", delta2
+       print *, "gauss  = ", es_mp%gauss_pts2(patch,1,j)
+       print *, "gtp2   =", gpt2
+       
        wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
        
-          gtmp2 = gpt2
-          local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
+       gtmp2 = gpt2
+       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
+
+       print *, "gtmp2   =", gtmp2
 
        call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
 
+       if (mflag_y .eq. -1) then
+          print * "Problem : interv2 returned flag = -1"
+       end if
+       
+       print *, " --- before bsplvd"
+       print *, "mflag_y",mflag_y
+!       print *, "knots2",es_mp%knots2(patch,:)
+       print *, "spline degree ", es_mp%spline_degree2(patch)+1
+       print *, "gtmp2", gtmp2
+       print *, "lefty", left_y
+       print*, "work2", work2
+       print*, "dbiatx2", dbiatx2
 
        call bsplvd( &
             es_mp%knots2(patch,:), &
@@ -875,6 +896,8 @@ contains ! *******************************************************************
             work2,&
             dbiatx2,&
             2)
+
+       print *, " --- after bsplvd"
 
        ! we stocke the values of spline to construct the source term
        es_mp%tab_index_coeff2(patch,cell_j + num_cells2*(j-1)) = left_y
