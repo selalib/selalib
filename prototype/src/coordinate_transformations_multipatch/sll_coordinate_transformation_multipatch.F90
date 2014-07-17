@@ -405,7 +405,7 @@ contains
   function get_delta_eta1_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
-    sll_int32 :: res
+    sll_real64 :: res
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
     ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
     ! longer supported by Selalib
@@ -416,7 +416,7 @@ contains
   function get_delta_eta2_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
-    sll_int32 :: res
+    sll_real64 :: res
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
     ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
     ! longer supported by Selalib
@@ -427,7 +427,7 @@ contains
   function get_eta1_min_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
-    sll_int32 :: res
+    sll_real64 :: res
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
     ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
     ! longer supported by Selalib
@@ -438,7 +438,7 @@ contains
   function get_eta2_min_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
-    sll_int32 :: res
+    sll_real64 :: res
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
     ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
     ! longer supported by Selalib

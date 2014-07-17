@@ -6,6 +6,7 @@ module sll_simulation_4d_qns_general_multipatch_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
+  use sll_logical_meshes
   use sll_module_scalar_field_2d_multipatch
   use sll_general_coordinate_elliptic_solver_multipatch_module
   use sll_coordinate_transformation_multipatch_module
@@ -500,6 +501,7 @@ contains
     call b2_field_vect%allocate_memory()
     call c_field%allocate_memory()
     call phi%allocate_memory()
+    call rho%allocate_memory()
 
     ! call elec_field_ext_1_field_mat%allocate_memory()
     ! call elec_field_ext_2_field_mat%allocate_memory()
@@ -516,7 +518,8 @@ contains
        ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
        !     transf   => sim%transfx%get_transformation(ipatch)
        transf => sim%transfx%transfs(ipatch+1)%t
-
+       call sll_display(transf%mesh)
+       
        num_pts1 = sim%transfx%get_num_cells_eta1(ipatch) + 1! logical_m%num_cells1+1
        num_pts2 = sim%transfx%get_num_cells_eta2(ipatch) + 1!logical_m%num_cells2+1
        delta1   = sim%transfx%get_delta_eta1(ipatch)!logical_m%delta_eta1
@@ -524,12 +527,14 @@ contains
        eta1_min = sim%transfx%get_eta1_min(ipatch)!logical_m%eta1_min
        eta2_min = sim%transfx%get_eta2_min(ipatch)!logical_m%eta2_min
 
-       print *, "num_pts = ", num_pts1
+       print *, "num_patches = ", num_patches
+       print *, "ipatch = ", ipatch
+       print *, "num_pts1 = ", num_pts1
        print *, "num_pts2 = ", num_pts2
-       print *, "num_pts = ", delta1
-       print *, "num_pts = ", delta2
-       print *, "num_pts = ", eta1_min
-       print *, "num_pts = ", eta2_min
+       print *, "delta1 = ", delta1
+       print *, "delta2 = ", delta2
+       print *, "eta1_min = ", eta1_min
+       print *, "eta2_min = ", eta2_min
 
        do j=1,num_pts1
           eta2 = eta2_min + (j-1)*delta2
@@ -547,6 +552,7 @@ contains
              val_b2  = sim%b2_f(x1, x2, sim%b2_f_params)
              val_c   = sim%c_f(x1, x2, sim%c_f_params)
              val_phi = 0.0_f64
+             val_rho = 0.0_f64
              call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 
              call a12_field_mat%set_value_at_indices ( i, j, ipatch, val_a12 ) 
              call a21_field_mat%set_value_at_indices ( i, j, ipatch, val_a21 ) 
@@ -555,6 +561,7 @@ contains
              call b2_field_vect%set_value_at_indices ( i, j, ipatch, val_b2 ) 
              call c_field%set_value_at_indices  ( i, j, ipatch, val_c ) 
              call phi%set_value_at_indices( i, j, ipatch, val_phi)
+             call rho%set_value_at_indices( i, j, ipatch, val_rho)
           end do
        end do
     end do
@@ -567,6 +574,7 @@ contains
     call b2_field_vect%update_interpolation_coefficients()
     call c_field%update_interpolation_coefficients()
     call phi%update_interpolation_coefficients()
+    call rho%update_interpolation_coefficients()
 
     buffer_counter = 1
     sim%world_size = sll_get_collective_size(sll_world_collective)
@@ -650,8 +658,6 @@ contains
     
     print *, 'sequential x1x2 mode...'
   
-
-    call rho%allocate_memory()
     call compute_charge_density_multipatch(f_mp, rho)
     call rho%update_interpolation_coefficients( )
   
@@ -669,7 +675,7 @@ contains
          sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%transfx)
 
-    print*, 'factorise matrice qns'
+    print*, 'factorize matrice qns'
     
     call factorize_mat_es_mp(&
          sim%qns, & 
@@ -681,7 +687,7 @@ contains
          b2_field_vect, &
          c_field)
 
-    print*, '--- end factorise matrice qns'
+    print*, '--- end factorize matrice qns'
 
     call solve_general_coordinates_elliptic_eq_mp(&
        sim%qns,&
