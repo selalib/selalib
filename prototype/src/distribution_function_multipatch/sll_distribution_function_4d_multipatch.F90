@@ -61,8 +61,11 @@ module sll_distribution_function_4d_multipatch_module
    contains
      procedure, pass(df) :: allocate_memory => allocate_memory_df_4d_mp
      procedure, pass(df) :: initialize => initialize_df_4d_mp 
+     procedure, pass(df) :: get_x1x2_data_slice_pointer => get_x1x2_slice_4d
      procedure, pass(df) :: set_to_sequential_x1x2 => x3x4_to_x1x2
      procedure, pass(df) :: set_to_sequential_x3x4 => x1x2_to_x3x4
+     procedure, pass(df) :: get_local_data_sizes => get_locsz_df4d
+     procedure, pass(df) :: get_eta_coordinates => get_eta_coords_df4d
      procedure, pass(df) :: delete => delete_df_4d_mp
   end type sll_distribution_function_4d_multipatch
 
@@ -264,6 +267,20 @@ contains
     end do
   end subroutine initialize_df_4d_mp
 
+
+  function get_x1x2_slice_4d( df, patch, k, l ) result(ptr)
+    sll_real64, dimension(:,:), pointer :: ptr
+    class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32, intent(in) :: patch
+    sll_int32, intent(in) :: k  ! third index in 4D array
+    sll_int32, intent(in) :: l  ! fourth index in 4D array
+
+    SLL_ASSERT( (patch >= 0) .and. (patch <= df%num_patches - 1) )
+
+    ptr => df%f_x1x2(patch+1)%f(:,:,k,l)
+  end function get_x1x2_slice_4d
+
+
   ! Note that to carry out multiple remap operations is expensive. The
   ! latency would be multiplied by the number of patches... Other means
   ! of parallelization are more interesting, like setting each patch in its
@@ -312,6 +329,84 @@ contains
 
   end subroutine x1x2_to_x3x4
 
+  subroutine get_locsz_df4d( &
+       df, &
+       patch, &
+       loc_sz_x1, &
+       loc_sz_x2, &
+       loc_sz_x3, &
+       loc_sz_x4 )
+ 
+    class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32, intent(out) :: loc_sz_x1
+    sll_int32, intent(out) :: loc_sz_x2
+    sll_int32, intent(out) :: loc_sz_x3
+    sll_int32, intent(out) :: loc_sz_x4
+
+    SLL_ASSERT( (patch >=0) .and. (patch <= df%num_patches - 1) )
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
+       call compute_local_sizes_4d( &
+            df%layouts_x1x2(patch+1)%l, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            loc_sz_x3, &
+            loc_sz_x4)
+    end if
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
+       call compute_local_sizes_4d( &
+            df%layouts_x3x4(patch+1)%l, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            loc_sz_x3, &
+            loc_sz_x4)
+    end if
+  end subroutine get_locsz_df4d
+
+  function get_eta_coords_df4d( df, patch, ijkl ) result(etas)
+    sll_real64, dimension(4) :: etas
+    class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32,  intent(in)   :: patch
+    sll_int32, dimension(4), intent(in) :: ijkl
+    sll_int32, dimension(4)  :: gi  ! global indices
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: eta3_min
+    sll_real64 :: eta4_min
+    sll_real64 :: delta1
+    sll_real64 :: delta2
+    sll_real64 :: delta3
+    sll_real64 :: delta4
+
+    SLL_ASSERT( (patch >=0) .and. (patch <= df%num_patches - 1) )
+
+    eta1_min = df%transf%get_eta1_min( patch )
+    eta2_min = df%transf%get_eta2_min( patch )
+    eta3_min = df%mesh_v%eta1_min
+    eta4_min = df%mesh_v%eta2_min
+
+    delta1 = df%transf%get_delta_eta1( patch )
+    delta2 = df%transf%get_delta_eta2( patch )
+    delta3 = df%mesh_v%delta_eta1
+    delta4 = df%mesh_v%delta_eta2
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
+       gi = local_to_global_4D(df%layouts_x1x2(patch+1)%l, ijkl)
+       etas(1) = eta1_min + (gi(1)-1)*delta1
+       etas(2) = eta2_min + (gi(2)-1)*delta2
+       etas(3) = eta3_min + (gi(3)-1)*delta3
+       etas(4) = eta4_min + (gi(4)-1)*delta4
+    end if
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .false.) then
+       gi = local_to_global_4D(df%layouts_x3x4(patch+1)%l, ijkl)
+       etas(1) = eta1_min + (gi(1)-1)*delta1
+       etas(2) = eta2_min + (gi(2)-1)*delta2
+       etas(3) = eta3_min + (gi(3)-1)*delta3
+       etas(4) = eta4_min + (gi(4)-1)*delta4
+    end if
+  end function get_eta_coords_df4d
 
   ! This assumes that df is configured for sequential operations in x3 and x4.
   subroutine compute_charge_density_multipatch( df, rho )

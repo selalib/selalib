@@ -134,7 +134,7 @@ module sll_simulation_4d_qns_general_multipatch_module
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
-     ! for general coordinate QNS, analytical fields
+     ! for general coordinate QNS
      procedure(two_var_parametrizable_function),nopass,pointer :: a11_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a12_f
      procedure(two_var_parametrizable_function),nopass,pointer :: a21_f
@@ -156,6 +156,7 @@ module sll_simulation_4d_qns_general_multipatch_module
      sll_real64, dimension(:), pointer :: b2_f_params
      sll_real64, dimension(:), pointer :: c_f_params
      sll_real64, dimension(:), pointer :: elec_field_ext_f_params
+
    contains
      procedure, pass(sim) :: run => run_4d_qns_general_mp
      procedure, pass(sim) :: init_from_file => init_4d_qns_gen_mp
@@ -336,9 +337,7 @@ contains
     sim%nc_x4 = num_cells_x4
   end subroutine init_4d_qns_gen_mp
 
-  ! Note that the following function has no local variables, which is silly...
-  ! This just happened since the guts of the unit test were transplanted here
-  ! directly, but this should be cleaned up.
+
   subroutine run_4d_qns_general_mp(sim)
     class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
     sll_int32  :: loc_sz_x1
@@ -453,42 +452,56 @@ contains
     call compute_values_jacobian_and_mesh_points(sim)
 
     ! Start with the fields
-    a11_field_mat => new_scalar_field_multipatch_2d("a11", sim%transfx)
-    a12_field_mat => new_scalar_field_multipatch_2d("a12", sim%transfx)
-    a21_field_mat => new_scalar_field_multipatch_2d("a21", sim%transfx)
-    a22_field_mat => new_scalar_field_multipatch_2d("a22", sim%transfx)
-    b1_field_vect => new_scalar_field_multipatch_2d("b1", sim%transfx)
-    b2_field_vect => new_scalar_field_multipatch_2d("b2", sim%transfx)
-    c_field       => new_scalar_field_multipatch_2d("c", sim%transfx)
-    layer_x1x2    => new_scalar_field_multipatch_2d("layer_x1x2", sim%transfx)
-    phi => new_scalar_field_multipatch_2d("potential_field_phi", sim%transfx)
-    rho => new_scalar_field_multipatch_2d("rho_field_check", sim%transfx)
+    a11_field_mat => &
+         new_scalar_field_multipatch_2d("a11", sim%transfx, owns_memory=.true.)
 
+    a12_field_mat => &
+         new_scalar_field_multipatch_2d("a12", sim%transfx, owns_memory=.true.)
+
+    a21_field_mat => &
+         new_scalar_field_multipatch_2d("a21", sim%transfx, owns_memory=.true.)
+
+    a22_field_mat => &
+         new_scalar_field_multipatch_2d("a22", sim%transfx, owns_memory=.true.)
+
+    b1_field_vect => &
+         new_scalar_field_multipatch_2d("b1", sim%transfx, owns_memory=.true.)
+    
+    b2_field_vect => &
+         new_scalar_field_multipatch_2d("b2", sim%transfx, owns_memory=.true.)
+    
+    c_field       => &
+         new_scalar_field_multipatch_2d("c", sim%transfx, owns_memory=.true.)
+    
+    layer_x1x2    => &
+         new_scalar_field_multipatch_2d("layer_x1x2", &
+                                        sim%transfx, &
+                                        owns_memory=.false.)
+    
+    phi => &
+         new_scalar_field_multipatch_2d("potential_field_phi", &
+                                        sim%transfx, &
+                                        owns_memory=.true.)
+    
+    rho => &
+         new_scalar_field_multipatch_2d("rho_field_check", &
+                                        sim%transfx, &
+                                        owns_memory=.true.)
+    
 
     ! elec_field_ext_1 => new_scalar_field_multipatch_2d("E1_ext", sim%transfx)    
     ! elec_field_ext_2 => new_scalar_field_multipatch_2d("E2_ext", sim%transfx)    
 
-    call a11_field_mat%allocate_memory()
-    call a12_field_mat%allocate_memory()
-    call a21_field_mat%allocate_memory()
-    call a22_field_mat%allocate_memory()
-    call b1_field_vect%allocate_memory()
-    call b2_field_vect%allocate_memory()
-    call c_field%allocate_memory()
-    call phi%allocate_memory()
-    call rho%allocate_memory()
 
     ! call elec_field_ext_1_field_mat%allocate_memory()
     ! call elec_field_ext_2_field_mat%allocate_memory()
     
     
-
-
     num_patches = sim%transfx%get_number_patches()
 
     do ipatch= 0,num_patches-1
-       ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
-       ! is no longer supported by Selalib.
+       ! Please get rid of these 'fixes' whenever it is decided that gfortran 
+       ! 4.6 is no longer supported by Selalib.
        !     m        => sim%transfx%get_logical_mesh(ipatch)
        ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
        !     transf   => sim%transfx%get_transformation(ipatch)
@@ -618,8 +631,7 @@ contains
     f_mp => sll_new_distribution_function_4d_multipatch( sll_world_collective, &
          sim%transfx, sim%mesh2d_v, sim%nproc_x1, sim%nproc_x2 )
 
-    call f_mp%initialize( sim%init_func, sim%params )
- 
+    call f_mp%initialize( sim%init_func, sim%params ) 
 
     print *, 'sequential_x3x4 mode...'
 
@@ -650,7 +662,7 @@ contains
          sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%transfx)
 
-    print*, 'factorize matrice qns'
+    print*, 'factorize matrix qns'
     
     call factorize_mat_es_mp(&
          sim%qns, & 
@@ -662,7 +674,7 @@ contains
          b2_field_vect, &
          c_field)
 
-    print*, '--- end factorize matrice qns'
+    print*, '--- end factorize matrix qns'
 
     call solve_general_coordinates_elliptic_eq_mp(&
        sim%qns,&
@@ -1146,9 +1158,17 @@ contains
   end subroutine run_4d_qns_general_mp
   
 
-  subroutine advection_x1x2(sim,deltat)
-    class(sll_simulation_4d_qns_general_multipatch) :: sim
-    sll_real64, intent(in) :: deltat
+  subroutine advection_x1x2( &
+       sim, &
+       field_x1x2, &
+       f_mp, &
+       deltat)
+
+    class(sll_simulation_4d_qns_general_multipatch)        :: sim
+    type(sll_scalar_field_multipatch_2d), pointer          :: field_x1x2
+    type(sll_distribution_function_4d_multipatch), pointer :: f_mp
+    sll_real64, intent(in)                                 :: deltat
+
     sll_int32 :: gi, gj, gk, gl
     sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
@@ -1156,17 +1176,32 @@ contains
     sll_real64 :: alpha1, alpha2
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32 :: i, j, k, l
+    sll_int32 :: ipatch
 
-    call compute_local_sizes_4d( sim%sequential_x1x2, &
-         loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
+    do ipatch=0,num_patches-1
 
-    do l=1,loc_sz_x4
-       do k=1,loc_sz_x3
+       call f_mp%get_local_data_sizes( &
+            ipatch, &
+            loc_sz_x1, &
+            loc_sz_x2, &
+            loc_sz_x3, &
+            loc_sz_x4 )
+
+       do l=1,loc_sz_x4
+          do k=1,loc_sz_x3
+          ! Make the 'recyclable' field point to the right data on the
+          ! distribution function.
+
+             call field_x1x2%set_patch_data_pointer(&
+                  ipatch, &
+                  f_mp%get_x1x2_data_slice_pointer(ipatch,k,l) )
+
+             call field_x1x2%update_interpolation_coefficients()
           ! call sim%interp_x1x2%compute_interpolants(sim%f_x1x2(:,:,k,l))
           
-          do j=1,loc_sz_x2
-             do i=1,loc_sz_x1
-                global_indices = &
+             do j=1,loc_sz_x2
+                do i=1,loc_sz_x1
+                   global_indices = &
                      local_to_global_4D(sim%sequential_x1x2,(/i,j,k,l/))
                 gi = global_indices(1)
                 gj = global_indices(2)
