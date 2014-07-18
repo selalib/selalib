@@ -108,28 +108,32 @@ contains   ! *****************************************************************
 
   function new_scalar_field_multipatch_2d( &
     field_name, &
-    transformation ) result(obj)
+    transformation, &
+    owns_data ) result(obj)
 
-    type(sll_scalar_field_multipatch_2d), pointer              :: obj
-    character(len=*), intent(in)                               :: field_name
+    type(sll_scalar_field_multipatch_2d), pointer             :: obj
+    character(len=*), intent(in)                              :: field_name
     type(sll_coordinate_transformation_multipatch_2d), target :: transformation
+    logical, intent(in), optional                             :: owns_data
     sll_int32  :: ierr
 
     SLL_ALLOCATE(obj,ierr)
-    call obj%initialize( field_name, transformation )
+    call obj%initialize( field_name, transformation, owns_data )
   end function new_scalar_field_multipatch_2d
   
   subroutine initialize_scalar_field_sfmp2d( &
     fmp, &
     field_name, &
-    transf )
+    transf, &
+    owns_data )
     
-    class(sll_scalar_field_multipatch_2d)                      :: fmp
-    character(len=*), intent(in)                               :: field_name
+    class(sll_scalar_field_multipatch_2d)                     :: fmp
+    character(len=*), intent(in)                              :: field_name
     type(sll_coordinate_transformation_multipatch_2d), target :: transf
-    character(len=256)                                         :: patch_name
-    type(sll_logical_mesh_2d), pointer                         :: lm
-    sll_int32, dimension(1:2)                                  :: connectivity
+    logical, intent(in), optional                             :: owns_data
+    character(len=256)                                        :: patch_name
+    type(sll_logical_mesh_2d), pointer                        :: lm
+    sll_int32, dimension(1:2)                                 :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
     sll_int32  :: num_patches
@@ -296,6 +300,16 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(fmp%derivs2(i)%array(num_pts1,NUM_DERIVS),ierr)
        SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
     end do
+
+    ! If owns_data was not given or it is equal to FALSE, then the default
+    ! behavior is applied: the field does not own its node data and will thus 
+    ! not allocate the memory.
+    if(present(owns_data)) then
+       if(owns_data .eqv. .true.) then
+          call fmp%allocate_memory()
+       end if
+    end if
+
     print *, 'initialize_scalar_field_sfmp2d(): finished initialization.'
   end subroutine initialize_scalar_field_sfmp2d
 
@@ -355,6 +369,11 @@ contains   ! *****************************************************************
        SLL_DEALLOCATE(field%derivs3,ierr)
   end subroutine delete_field_sfmp2d
 
+  ! When a multipatch field is created, it creates the interpolators and any
+  ! necessary data for its calculations, but it DOES NOT allocate the memory
+  ! for the node data that it will use. This allows the possibility to change
+  ! the data associated with a multipatch field by resetting pointers only and
+  ! thus avoiding unnecessary memory copying.
   subroutine allocate_memory_sfmp2d( field )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: field
     type(sll_logical_mesh_2d), pointer :: lm
