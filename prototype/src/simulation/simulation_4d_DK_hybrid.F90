@@ -617,7 +617,7 @@ contains
     sll_real64 :: theta_min, Ltheta, dtheta
     sll_real64 :: r_peak, n0_rmin
     sll_real64 :: inv_Ln, inv_LTi, inv_LTe
-    sll_real64 :: Ti_rmin, Te_rmin, Ti_scal, Te_scal
+    sll_real64 :: Ti_rmin, Ti_scal
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
 
@@ -2003,7 +2003,7 @@ contains
   !------------------------------------------------------------
   subroutine writeHDF5_equilibrium_state( sim )
 
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
         sll_hdf5_write_array_1d, sll_hdf5_file_close
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
@@ -2046,9 +2046,10 @@ contains
   !
   ! Rk: One file 'DK4d_diag_d<num_diag>.h5' per diagnostic
   !--------------------------------------------------------------
-  subroutine writeHDF5_cross_section_diag( sim, diag_num )
 
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+  subroutine writeHDF5_cross_section_diag( sim,diag_num )
+   ! use sll_collective
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
     sll_int32                         , intent(in)    :: diag_num
@@ -2123,7 +2124,7 @@ contains
   !----------------------------------------------------
   subroutine writeHDF5_conservation_laws( sim )
 
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
 
     class(sll_simulation_4d_DK_hybrid), intent(inout) :: sim

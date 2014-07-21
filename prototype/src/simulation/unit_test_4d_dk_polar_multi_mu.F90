@@ -5,16 +5,22 @@
 ! - parallel
 
 program drift_kinetic_polar_multi_mu
+#include "sll_working_precision.h"
   use sll_simulation_4d_drift_kinetic_polar_multi_mu_module
   use sll_collective
+  use sll_timer
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_drift_kinetic_polar_multi_mu) :: simulation
+  type(sll_time_mark)  :: t0
+  sll_real64 :: time 
   call sll_boot_collective()
   if(sll_get_collective_rank(sll_world_collective)==0)then
     print *, '#Booting parallel environment...'
+    print *, '#Start time mark t0'
+    call sll_set_time_mark(t0)
   endif
 
   ! In this test, the name of the file to open is provided as a command line
@@ -25,7 +31,9 @@ program drift_kinetic_polar_multi_mu
   call simulation%run( )
   call delete_dk4d_polar(simulation)
   if(sll_get_collective_rank(sll_world_collective)==0)then
-    print *, '#reached end of dk4d_polar test'
+    print *, '#reached end of dk4d_polar_multi_mu test'
+    time = sll_time_elapsed_since(t0)
+    print *, '#time elapsed since t0 : ',time
     print *, '#PASSED'
   endif
   call sll_halt_collective()

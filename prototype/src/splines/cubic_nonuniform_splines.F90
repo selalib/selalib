@@ -46,7 +46,7 @@ contains  ! ****************************************************************
     SLL_ALLOCATE( new_cubic_nonunif_spline_1D%node_positions(-2:n_cells+2),   ierr )
     
     size_buf = 10*(n_cells+1)
-    size_ibuf = n_cells+1
+    size_ibuf = n_cells+1 
     new_cubic_nonunif_spline_1D%size_buf = size_buf
     SLL_ALLOCATE( new_cubic_nonunif_spline_1D%buf(size_buf),   ierr )
     new_cubic_nonunif_spline_1D%size_ibuf = size_ibuf
@@ -227,6 +227,16 @@ contains  ! ****************************************************************
 
 
 
+!0.95165885066842626      -0.66689806247771388
+!      0.16666666666666666       0.59333333333333371       0.23999999999999971
+!    3.07692307692324215E-003  0.20571428571428574       0.79120879120879106
+!    3.57142857142822359E-002  0.79761904761903923       0.16666666666667851 
+!
+!      0.16666666666667851       0.79761904761903923       3.57142857142822359E-002  
+!      0.79120879120879106       0.20571428571428568       3.07692307692324129E-003  
+!      0.23999999999999971       0.59333333333333360       0.16666666666666666 
+
+
   subroutine setup_spline_nonunif_1D_periodic_aux( node_pos, N, buf, ibuf)
     sll_real64, dimension(:), pointer :: node_pos,buf
     sll_int32, intent(in) :: N
@@ -254,10 +264,11 @@ contains  ! ****************************************************************
       !diagonal terms
       a(3*i+2)=1.0_f64-a(3*i+1)-a(3*i+3)
     enddo
-
+    !print *,'#a=',a
     !initialize the tridiagonal solver
     call setup_cyclic_tridiag (a, N, cts, ipiv)
-        
+    !print *,'#cts=',maxval(cts),minval(cts)
+    !print *,'#ipiv=',ipiv    
   end subroutine setup_spline_nonunif_1D_periodic_aux
 
   subroutine setup_spline_nonunif_1D_hermite_aux( node_pos, N, buf, ibuf)
@@ -348,16 +359,44 @@ contains  ! ****************************************************************
     sll_int32, intent(in) :: N
     sll_real64, dimension(:), pointer :: cts!, a
     sll_int32, dimension(:), pointer  :: ipiv,ibuf
+    sll_real64, dimension(:), pointer :: a
+    sll_real64, dimension(:), allocatable :: b
+    sll_real64, dimension(:), pointer :: x
+    sll_int32 :: ierr
+
     !sll_real64 :: linf_err,tmp
     !a    => buf(1:3*N) 
     cts  => buf(3*N+1:10*N)
     ipiv => ibuf(1:N)
-
+    
+    
+    a => buf(1:3*N)
+    !b => f(1:N)
+    x => coeffs(0:N-1)
+    
+    SLL_ALLOCATE(b(N),ierr)
+    b(1:N) = f(1:N)
+    
     !compute the spline coefficients
-    call solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
+    !call solve_cyclic_tridiag( cts, ipiv, f, N, coeffs(0:N-1) )
+    coeffs(0:N-1) = 0._f64
+    !do i=0,N-1
+    !  if(coeffs(i) .ne. 0._f64)then
+    !    print *,'#coeffs=',coeffs
+    !    stop
+    !  endif
+    !enddo
+    
+
+    
+    call solve_cyclic_tridiag( cts, ipiv, f(1:N), N, coeffs(0:N-1) )
+    
+    
+    
     coeffs(-1) = coeffs(N-1)
     coeffs(N)  = coeffs(0)
     coeffs(N+1) = coeffs(1)
+    
     
     !linf_err=0._f64
     !do i=1,N    
@@ -635,7 +674,6 @@ contains  ! ****************************************************************
       a_out(i) = w(1)*coef(1)+w(2)*coef(2)+w(3)*coef(3)+w(4)*coef(4)
       !print *,i,xx,j,w(1),w(2),w(3),w(4),coef(1:4),a_out(i)
       !print *,Xj(shift-2:shift+3)
-      !stop
     enddo
     !do i=1,n
     !  print *,i,a_in(i),a_out(i)
