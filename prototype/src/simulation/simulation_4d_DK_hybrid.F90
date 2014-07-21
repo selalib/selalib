@@ -304,6 +304,14 @@ contains
     !--> Initialization diagnostics for the norm
     nb_diag  = int(sim%nb_iter*sim%dt/sim%diag2D_step) + 1
 
+    if ( mod( sim%diag2D_step , sim%dt) .ne. 0) then 
+       print*, ' Problem with diag2D_step'
+       print*, ' must be equal to a multiple of dt'
+       print*, ' here diag2D_step= ', sim%diag2D_step
+       print*, ' and dt =', sim%dt
+    end if
+
+
     SLL_ALLOCATE(sim%time_evol(nb_diag),ierr)
 
     SLL_ALLOCATE(sim%diag_mass(nb_diag),ierr)
@@ -2114,6 +2122,7 @@ contains
         sim%f4d_seqx1x2(:,:,ix3_diag,ivpar_diag),'f2d_xy',file_err)
       call sll_hdf5_write_array_2d(file_id, &
         sim%f4d_seqx3x4(ix1_diag,ix2_diag,:,:),'f2d_zvpar',file_err)
+      call sll_hdf5_file_close(file_id,file_err)
     end if
 
   end subroutine writeHDF5_cross_section_diag
@@ -2154,6 +2163,7 @@ contains
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
 
     nb_diag = size(sim%diag_mass)
+
 
     SLL_ALLOCATE(diag_mass_tmp(nb_diag),ierr)
     SLL_ALLOCATE(diag_norm_L1_tmp(nb_diag),ierr)
