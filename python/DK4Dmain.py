@@ -20,6 +20,7 @@ Lresu_read = True
 if (Lresu_read):
     #--> Ask DK4D result directory
     DK4Ddir = DK4D.Ask_directory()
+    print "DK4Ddir = " + str(DK4Ddir)
     if (DK4Ddir == -1):
         # There are NO DK4D results HDF5 files !
         STOP = 1
@@ -32,7 +33,8 @@ if (STOP != 1):
         resu.read_conservation_laws()
         resu.read_diag()
     #end if
+
+    #--> DK4D diagnostics
+    DK4Dd.DK4Ddiag(resu)
 #end if
 
-#--> DK4D diagnostics
-DK4Dd.DK4Ddiag(resu)
