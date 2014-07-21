@@ -142,7 +142,7 @@ def Ask_directory():
     directory = raw_input(str_ask);
     if (directory==''):
         directory = str(os.getcwd())
-    nb_DK4D = np.size(glob.glob('DK4d_*.h5'))
+    nb_DK4D = np.size(glob.glob(directory+'/DK4d_*.h5'))
     if ( (nb_DK4D==0) ):
         print '\033[0;31m',\
             ' ==> There are NO DK4D results HDF5 files in :',\
