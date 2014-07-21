@@ -5,19 +5,19 @@
       integer sxm,exm,sym,eym,bd(8),IOUT
       REALN phi(sxm-1:exm+1,sym-1:eym+1),phibc(4)
 c------------------------------------------------------------------------
-c Enforce the Neumann and Dirichlet boundary conditions
-c
-c Code      : mgd2, 2-D parallel multigrid solver
-c Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
-c Called in : mgdrelax, mgdsolver
-c Calls     : --
+c     Enforce the Neumann and Dirichlet boundary conditions
+c     
+c     Code      : mgd2, 2-D parallel multigrid solver
+c     Author    : Bernard Bunner (bunner@engin.umich.edu), January 1998
+c     Called in : mgdrelax, mgdsolver
+c     Calls     : --
 c------------------------------------------------------------------------
       integer i,j
 # if cdebug
       double precision tinitial
       tinitial=MPI_WTIME()
 # endif
-c
+c     
       print*, bd
       if (bd(1).eq.1) then
         do j=sym-1,eym+1

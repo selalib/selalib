@@ -198,7 +198,8 @@ contains
 
     global_dims(:) = (/ ncx,ncy /)
 
-    call sll_hdf5_file_create(file_name//'.h5',file_id,error)
+    call sll_hdf5_file_create(file_name//'.h5',sll_world_collective%comm, &
+                              file_id,error)
     offset(1) = get_layout_i_min(layout_y,prank) - 1
     offset(2) = get_layout_j_min(layout_y,prank) - 1
     call sll_hdf5_write_array(file_id,global_dims,offset, &

@@ -133,13 +133,7 @@ contains
     sll_int32  :: loc_sz_x3
     sll_int32  :: i
     sll_int32  :: j
-    sll_int32  :: k
-    sll_int32  :: l
-    sll_real64 :: vmin
-    sll_real64 :: vmax
-    sll_real64 :: dv
     sll_int32  :: ierr
-    sll_int32  :: itime
     sll_int32  :: nc_v3
     sll_int32  :: nc_x1
     sll_int32  :: nc_x2
@@ -148,7 +142,6 @@ contains
     sll_int32  :: rankbottom
     sll_int32  :: message_id
     sll_int32  :: datasize
-    sll_int32  :: istat
     sll_int32  :: tagtop,tagbottom
 
     
