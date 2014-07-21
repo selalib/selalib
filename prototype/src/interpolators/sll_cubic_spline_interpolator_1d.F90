@@ -47,16 +47,16 @@ type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
 contains
 
 procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
-procedure :: compute_interpolants => compute_interpolants_cs1d
-procedure :: interpolate_value => interpolate_value_cs1d
-procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
-procedure :: interpolate_array_values => interpolate_values_cs1d
-procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
-procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
-procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
+procedure, pass :: compute_interpolants => compute_interpolants_cs1d
+procedure, pass :: interpolate_value => interpolate_value_cs1d
+procedure, pass :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+procedure, pass :: interpolate_array_values => interpolate_values_cs1d
+procedure, pass :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+procedure, pass :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+procedure, pass :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
 procedure, pass:: interpolate_array => spline_interpolate1d
 procedure, pass:: interpolate_array_disp => spline_interpolate1d_disp
-procedure, pass:: reconstruct_array
+procedure, pass:: reconstruct_array => reconstruct_array ! this is suspicious...
 procedure, pass :: set_coefficients => set_coefficients_cs1d
 procedure, pass :: get_coefficients => get_coefficients_cs1d
 !generic :: initialize => initialize_cs1d_interpolator
@@ -454,7 +454,7 @@ contains  ! ****************************************************************
     
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
-    get_coefficients_cs1d = 0._f64      
+    get_coefficients_cs1d => null()
     print *,  interpolator%num_points
     stop    
   end function get_coefficients_cs1d

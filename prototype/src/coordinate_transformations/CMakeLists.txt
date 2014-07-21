@@ -1,11 +1,8 @@
-#FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
-
 #FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
 #FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
-#IF(PYTHON_EXECUTABLE)
+#IF(PYTHON3_FOUND)
 
-#   SET(PYTHON3_FOUND ON)
 #   SET(TRANSLATE_PYTHON_SCRIPT 
 #      "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/translate_multipatch_info.py")
 
@@ -27,13 +24,12 @@
 #      WORKING_DIRECTORY  ${CMAKE_CURRENT_SOURCE_DIR}
 #      OUTPUT_FILE "circle_patch_info.out")
 
-#ELSE(PYTHON_EXECUTABLE)
+#ELSE(PYTHON3_FOUND)
 
 #   MESSAGE(STATUS "Multipatch test needs python3")
 #   SET(PYTHON3_FOUND OFF)
 
-#ENDIF(PYTHON_EXECUTABLE)
-
+#ENDIF(PYTHON3_FOUND)
 
 #MESSAGE(STATUS "Coordinate transformation")
 #MESSAGE(STATUS ${CMAKE_CURRENT_SOURCE_DIR})
@@ -49,13 +45,12 @@ ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_coordinate_transformations_2d_nurbs.F90
             sll_common_coordinate_transformations.F90)
 
-TARGET_LINK_LIBRARIES(sll_coordinate_transformations sll_interpolators
-	                                               sll_file_io
-	                                               sll_logical_meshes)
+TARGET_LINK_LIBRARIES(sll_coordinate_transformations 
+                      sll_interpolators sll_file_io sll_logical_meshes)
 
-IF(HDF5_IS_PARALLEL)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 ADD_EXECUTABLE(test_coordinate_transformations_2d unit_test_2d.F90)
 

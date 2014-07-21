@@ -405,6 +405,7 @@ contains
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
+
        ! Allocate the coefficients spline
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
@@ -698,8 +699,7 @@ contains
     sll_real64, dimension(:),optional :: slope_top
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_bottom=> null()
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_top => null()
-    sll_int32 :: sz_slope_left,sz_slope_right,sz_slope_bottom,sz_slope_top
-    sll_int32 :: ierr
+    sll_int32 :: sz_slope_bottom,sz_slope_top
     sll_int64 :: bc_selector
     sll_int32 :: num_pts1
     sll_int32 :: num_pts2
@@ -768,6 +768,9 @@ contains
           interpolator%slope_left = slope_left
           interpolator%compute_slope_left= .FALSE.
        end if
+       
+       
+       sz_slope_bottom = size(slope_bottom)
        interpolator%slope_right = 0.0_f64
        interpolator%compute_slope_right= .FALSE.
        
@@ -1011,6 +1014,7 @@ contains
           interpolator%compute_slope_right= .FALSE.
        end if
        
+       sz_slope_top= size(slope_top)
        interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
        interpolator%compute_slope_top = .FALSE.
 
@@ -1076,7 +1080,7 @@ contains
        interpolator%slope_left = 0.0_f64
        interpolator%compute_slope_left= .FALSE.
        
-       
+       sz_slope_top = size(slope_top)
        interpolator%compute_slope_top= .FALSE.
        interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
 
@@ -1114,10 +1118,11 @@ contains
        interpolator%slope_left = 0.0_f64
        interpolator%compute_slope_left= .FALSE.
        
-       
+       sz_slope_top = size(slope_top)
        interpolator%compute_slope_top= .FALSE.
        interpolator%slope_top(1:sz_slope_top+2) = 0.0_f64
           
+       sz_slope_bottom = size(slope_bottom)
        interpolator%slope_bottom(1:sz_slope_bottom+2) = 0.0_f64
        interpolator%compute_slope_bottom = .FALSE.
 
@@ -1612,7 +1617,6 @@ contains
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_bottom=> null()
     class(sll_arb_deg_1d_interpolator),pointer :: interp1d_top => null()
     sll_int32 :: sz_value_left,sz_value_right,sz_value_bottom,sz_value_top
-    sll_int32 :: ierr
     sll_int64 :: bc_selector
     sll_int32 :: num_pts1
     sll_int32 :: num_pts2
@@ -2636,18 +2640,20 @@ contains
          ! ------------------------------------------------------------
         case(2340) ! Hermite in al sides
            
-         interpolator%size_coeffs1=  num_cells1 + sp_deg1+1
-         interpolator%size_coeffs2=  num_cells2 + sp_deg2+1
+         interpolator%size_coeffs1=  num_cells1 + sp_deg1
+         interpolator%size_coeffs2=  num_cells2 + sp_deg2
          interpolator%size_t1 = 2*sp_deg1 + num_cells1 + 1
          interpolator%size_t2 = 2*sp_deg2 + num_cells2 + 1
-         nb_spline_eta1 = num_cells1 + sp_deg1 +1
-         nb_spline_eta2 = num_cells2 + sp_deg2 +1
+         nb_spline_eta1 = num_cells1 + sp_deg1
+         nb_spline_eta2 = num_cells2 + sp_deg2
          
-         if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1+1)*(num_cells2+sp_deg2+1))then
+         if(size(coeffs_1d,1).ne.(num_cells1 + sp_deg1)*(num_cells2+sp_deg2))then
             print*, 'Problem in set_coefficients in arbitrary_degree_spline_2d'
             print*, ' Problem with the size coeffs_1d must have the size equal to '
-            print*, ' (num_cells1 + sp_deg1+1)*( num_cells2 + sp_deg2+1)=',&
-                 (num_cells1 + sp_deg1+1)*( num_cells2 + sp_deg2 +1)
+            print*, ' (num_cells1 + sp_deg1)*( num_cells2 + sp_deg2)=',&
+                 (num_cells1 + sp_deg1)*( num_cells2 + sp_deg2)
+
+            print*, 'but it is equal to =', size(coeffs_1d,1)
             stop
          end if
          ! ------------------------------------------------------------
@@ -2688,7 +2694,7 @@ contains
          do i = 1,nb_spline_eta1
             do j = 1,nb_spline_eta2
                
-               interpolator%coeff_splines(i+1,j+1) = &
+               interpolator%coeff_splines(i,j) = &
                     coeffs_1d( i + nb_spline_eta1 *(j-1))
             end do
          end do

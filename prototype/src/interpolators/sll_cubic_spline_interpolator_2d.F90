@@ -526,7 +526,7 @@ contains
     
     print *, 'get_coefficients_cs2d(): ERROR: This function has not been ', &
          'implemented yet.'
-    get_coefficients_cs2d = 0._f64
+    get_coefficients_cs2d => null()
     print *,interpolator%npts1    
     stop      
   end function get_coefficients_cs2d

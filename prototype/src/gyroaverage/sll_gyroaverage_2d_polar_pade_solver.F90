@@ -69,7 +69,6 @@ contains
     sll_real64, intent(in) :: eta_min(2)
     sll_real64, intent(in) :: eta_max(2)
     sll_int32, intent(in)  :: Nc(2)
-    sll_int32 :: ierr
     
     gyroaverage%gyro => new_plan_gyroaverage_polar_pade( &
     eta_min, &

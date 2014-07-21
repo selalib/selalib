@@ -4,21 +4,24 @@
 # sequential modules. Or, maybe this should be handled at the highest possible
 # level: once the parallel hdf5 is found, all the library should be compiled 
 # with the mpi wrapper compiler.
-IF(HDF5_IS_PARALLEL)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 ADD_LIBRARY( sll_pic_initializers STATIC 
   sll_particle_init4D.F90 )
 
 TARGET_LINK_LIBRARIES( sll_pic_initializers
+  sll_pic_utilities
   sll_pic_particles
-  sll_visu_pic
+#  sll_visu_pic
   sll_logical_meshes
   sll_working_precision
   sll_assertion
-  sll_memory )
+  sll_memory
+  sll_random_deviate_generators )
 
+IF(MPI_MODULE_ENABLED)
 ADD_EXECUTABLE(test_pic_initializers unit_test.F90  )
 
 TARGET_LINK_LIBRARIES(test_pic_initializers
@@ -27,3 +30,4 @@ TARGET_LINK_LIBRARIES(test_pic_initializers
  sll_collective
  # sll_file_io )
 )
+ENDIF(MPI_MODULE_ENABLED)

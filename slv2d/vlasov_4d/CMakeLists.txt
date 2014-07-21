@@ -48,6 +48,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/package)
 
+SET(SLL_BUILD_PACKAGE ON)
 ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
                  ${CMAKE_BINARY_DIR}/package)
 ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
@@ -72,7 +73,7 @@ ADD_LIBRARY(selalib_vlasov4d STATIC sll_vlasov4d_spectral.F90
                                     sll_vlasov4d_base.F90
                                     init_functions.F90)
 
-ADD_DEPENDENCIES(selalib_vlasov4d selalib)
+TARGET_LINK_LIBRARIES(selalib_vlasov4d selalib)
 
 ADD_EXECUTABLE(vp4d_remapper        vp4d_remapper.F90)
 ADD_EXECUTABLE(vm4d_remapper        vm4d_remapper.F90)

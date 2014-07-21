@@ -285,8 +285,6 @@ contains
     sll_int32               :: gyroaverage_N_points
     sll_int32               :: gyroaverage_interp_degree_x1
     sll_int32               :: gyroaverage_interp_degree_x2
-    sll_real64,dimension(:,:), allocatable :: gyro_tmp
-    sll_int32 :: i1,i2
     !--> Algorithm
     sll_real64 :: dt
     sll_int32  :: number_iterations
@@ -945,8 +943,6 @@ contains
     sll_int32 :: nc_x2
     sll_int32 :: nc_x3
     sll_int32 :: nc_x4
-    sll_int32 :: i1
-    sll_int32 :: i2
     sll_int32 :: ierr
     sll_real64 :: dt
     sll_int32 :: th_diag_id 
@@ -1060,7 +1056,7 @@ contains
 !          call compute_rho_dk(sim)    
 !          call solve_quasi_neutral( sim )
 !          call compute_field_dk( sim )
-	      call compute_rho_dk(sim)  
+          call compute_rho_dk(sim)  
           call solve_quasi_neutral_with_gyroaverage( sim )
           call gyroaverage_phi_dk( sim )
           call compute_field_dk( sim )
@@ -1073,61 +1069,61 @@ contains
           call advection_x1x2( sim, dt )
           call advection_x4( sim, 0.5_f64*dt )
           call advection_x3( sim, 0.5_f64*dt )
- 
-        case default
+          
+       case default
           print *,'#sim%time_case=',sim%time_case
           print *, '#not implemented'
           print *,'#in run_dk4d_polar'
           stop
-      end select          
-
-    if(sll_get_collective_rank(sll_world_collective)==0) then
-    
-      if(modulo(iter,sim%freq_diag)==0) then
-        i_plot = i_plot+1
-        call sll_gnuplot_corect_2d( &
-          sim%m_x1%eta_min, &
-          sim%m_x1%eta_max, &
-          nc_x1+1, &
-          sim%m_x2%eta_min, &
-          sim%m_x2%eta_max, &
-          nc_x2+1, &
-          sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1), &
-          'fdist', &
-          i_plot, &
-          ierr)
+       end select
+       
+       if(sll_get_collective_rank(sll_world_collective)==0) then
+          
+          if(modulo(iter,sim%freq_diag)==0) then
+             i_plot = i_plot+1
+             call sll_gnuplot_corect_2d( &
+                  sim%m_x1%eta_min, &
+                  sim%m_x1%eta_max, &
+                  nc_x1+1, &
+                  sim%m_x2%eta_min, &
+                  sim%m_x2%eta_max, &
+                  nc_x2+1, &
+                  sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1), &
+                  'fdist', &
+                  i_plot, &
+                  ierr)
 #ifndef NOHDF5
-        call plot_f_polar(i_plot,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1),sim%m_x1,sim%m_x2)
+             call plot_f_polar(i_plot,sim%f4d_seqx1x2x4(:,:,1,nc_x4/2+1),sim%m_x1,sim%m_x2)
 #endif
    
-          
-                    
-      endif
-    endif
-
-    
-!    if(iter==5)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
+             
+             
+          endif
+       endif
+       
+       
+       !    if(iter==5)then    
+       !        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',10,ierr)
+       !    endif
+       !    if(iter==400)then    
+       !        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
 !    endif
-!    if(iter==400)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',800,ierr)
-!    endif
-!    if(iter==1000)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
-!    endif
-!    if(iter==3500)then    
-!        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
-!    endif
-
+       !    if(iter==1000)then    
+       !        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',2000,ierr)
+       !    endif
+       !    if(iter==3500)then    
+       !        call sll_gnuplot_corect_2d(0.1_f64,14.5_f64,32,0._f64,2._f64*sll_pi,32,sim%f4d_seqx1x2x4(:,:,10,30),'fdist',7000,ierr)
+       !    endif
+       
     enddo
     
-
+    
   end subroutine run_dk4d_polar
-
+  
   subroutine time_history_diagnostic_dk_polar( &
-    sim, &
-    file_id, &    
-    step)
+       sim, &
+       file_id, &    
+       step)
     class(sll_simulation_4d_drift_kinetic_polar_one_mu) :: sim
     sll_int32, intent(in) :: file_id
     sll_int32, intent(in) :: step
@@ -2130,71 +2126,71 @@ subroutine gyroaverage_phi_dk( sim )
           
           
       select case (sim%delta_f_method)     
-      	case (0)
-      	
-        do iloc3 = 1,loc3d_sz_x3    
-          call sim%gyroaverage%compute_gyroaverage( &
-          sqrt(2*sim%mu), &
-          sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
-        enddo    
-                  
-        do iloc2=1, loc3d_sz_x2
-          do iloc1=1, loc3d_sz_x1
-            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
-          enddo
-        enddo
-        
-        case (1)
-               
-        do iloc1 = 1,loc3d_sz_x1  
-          sim%rho3d_seqx1x2(iloc1,:,:)=sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
-        enddo
-               
-        do iloc3 = 1,loc3d_sz_x3    
-          call sim%gyroaverage%compute_gyroaverage( &
-          sqrt(2*sim%mu), &
-          sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
-        enddo    
-                  
-        do iloc2=1, loc3d_sz_x2
-          do iloc1=1, loc3d_sz_x1
-            sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-              sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
-          enddo
-        enddo
+      case (0)
          
-      case default
-        print *,'#bad value for sim%delta_n_method'
-        stop  
-    end select  
+         do iloc3 = 1,loc3d_sz_x3    
+            call sim%gyroaverage%compute_gyroaverage( &
+                 sqrt(2*sim%mu), &
+                 sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+         enddo
+         
+         do iloc2=1, loc3d_sz_x2
+            do iloc1=1, loc3d_sz_x1
+               sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+                    sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)-1._f64
+            enddo
+         enddo
+         
+      case (1)
+         
+        do iloc1 = 1,loc3d_sz_x1  
+           sim%rho3d_seqx1x2(iloc1,:,:)=sim%rho3d_seqx1x2(iloc1,:,:)-sim%n0_r(iloc1)
+        enddo
         
+        do iloc3 = 1,loc3d_sz_x3    
+           call sim%gyroaverage%compute_gyroaverage( &
+                sqrt(2*sim%mu), &
+                sim%rho3d_seqx1x2(1:nc_x1+1,1:nc_x2+1,iloc3))   
+        enddo
         
-        
-        
-        
-        do iloc3=1, loc3d_sz_x3
-          call sim%poisson2d%compute_phi_from_rho( &
+        do iloc2=1, loc3d_sz_x2
+          do iloc1=1, loc3d_sz_x1
+             sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
+                  sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1)
+          enddo
+       enddo
+       
+    case default
+       print *,'#bad value for sim%delta_n_method'
+       stop  
+    end select
+    
+    
+    
+    
+    
+    do iloc3=1, loc3d_sz_x3
+       call sim%poisson2d%compute_phi_from_rho( &
             sim%phi3d_seqx1x2(:,:,iloc3), &
             sim%phi3d_seqx1x2(:,:,iloc3) )
-        enddo
-        call apply_remap_3D( &
+    enddo
+    call apply_remap_3D( &
           sim%remap_plan_seqx1x2_to_seqx3, &
           sim%phi3d_seqx1x2, &
           sim%phi3d_seqx3 )            
-      case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
-        print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
-        print *,'#not implemented yet '
-        stop      
-      case default
-        print *,'#bad value for sim%QN_case'
-        stop  
-    end select        
-  
-  end subroutine solve_quasi_neutral_with_gyroaverage
-  
-
-
+ case (SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW)
+    print *,'#SLL_QUASI_NEUTRAL_WITH_ZONAL_FLOW'
+    print *,'#not implemented yet '
+    stop      
+ case default
+    print *,'#bad value for sim%QN_case'
+    stop  
+ end select
+ 
+end subroutine solve_quasi_neutral_with_gyroaverage
+   
+   
+   
 
 subroutine gyroaverage_field_dk(sim)
     class(sll_simulation_4d_drift_kinetic_polar_one_mu), intent(inout) :: sim
@@ -2238,7 +2234,7 @@ subroutine gyroaverage_field_dk(sim)
   !---------------------------------------------------
   subroutine plot_f_polar(iplot,f,m_x1,m_x2)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1
