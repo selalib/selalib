@@ -76,7 +76,7 @@ implicit none
    prank = sll_get_collective_rank(sll_world_collective)
    psize = sll_get_collective_size(sll_world_collective)
 
-   narg = iargc()
+   narg = command_argument_count()
 
    if (narg /= 2) then
       if (prank == MPI_MASTER) then
@@ -88,8 +88,8 @@ implicit none
       stop
    end if
 
-   call getarg(1, buffer); read(buffer,"(i4)") nxprocs
-   call getarg(2, buffer); read(buffer,"(i4)") nyprocs
+   call get_command_argument(1, buffer); read(buffer,"(i4)") nxprocs
+   call get_command_argument(2, buffer); read(buffer,"(i4)") nyprocs
 
    start_time = MPI_WTIME() 
 

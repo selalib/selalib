@@ -299,7 +299,7 @@ subroutine hermite_coef_nat_per(f,buf3d,N,d)
     sll_real64 ::w_left_1(-d(1)/2:(d(1)+1)/2),w_right_1((-d(1)+1)/2:d(1)/2+1)
     sll_real64 ::w_left_2(-d(2)/2:(d(2)+1)/2),w_right_2((-d(2)+1)/2:d(2)/2+1)
     sll_real64 ::tmp
-    sll_int32  ::i,j,r,s,ii,r_left(2),r_right(2),s_left(2),s_right(2),ind 
+    sll_int32  ::i,j,ii,r_left(2),r_right(2),s_left(2),s_right(2),ind 
     r_left=-d/2
     s_left=(d+1)/2
     r_right=(-d+1)/2

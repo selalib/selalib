@@ -52,10 +52,8 @@ module sll_module_interpolators_1d_base
      ! implementations for them.
      ! procedure(interpolate_1d_array), pass, deferred :: interpolate_array
      ! procedure(reconstruct_1d_array), pass, deferred :: reconstruct_array
-      procedure(get_coeffs_1d), &
-           pass,deferred :: get_coefficients
-      procedure(interpolator_1d_set_coeffs), &
-           pass, deferred :: set_coefficients
+      procedure(interpolator_1d_set_coeffs), pass, deferred :: set_coefficients
+      procedure(get_coeffs_1d), pass, deferred :: get_coefficients
    end type sll_interpolator_1d_base
 
   sll_int32, parameter :: INTERP_PERIODIC_BC  = 0

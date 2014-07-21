@@ -58,7 +58,6 @@ subroutine knots ( break, l, kpm, m, t, n )
   integer ( kind = 4 ) n
 
   real ( kind = 8 ) break(l+1)
-  integer ( kind = 4 ) iside
   integer ( kind = 4 ) j
   integer ( kind = 4 ) jj
   integer ( kind = 4 ) jjj
@@ -66,7 +65,6 @@ subroutine knots ( break, l, kpm, m, t, n )
   integer ( kind = 4 ) ll
   integer ( kind = 4 ) m
   real ( kind = 8 ) t(n+kpm)
-  real ( kind = 8 ) xside
 
   k = kpm - m
   n = l * k + m

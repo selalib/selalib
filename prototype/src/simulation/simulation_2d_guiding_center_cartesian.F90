@@ -14,8 +14,8 @@ module sll_simulation_2d_guiding_center_cartesian_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
-#include "sll_utilities.h"
+!#include "sll_field_2d.h"
+!#include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
   use sll_constants
   use sll_logical_meshes  
@@ -33,8 +33,8 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
   use sll_cubic_spline_interpolator_1d
+  use sll_cubic_spline_interpolator_2d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -44,47 +44,22 @@ module sll_simulation_2d_guiding_center_cartesian_module
   use sll_module_poisson_2d_mudpack_solver
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_timer
-  use sll_fft
+  use sll_module_poisson_2d_elliptic_solver, only:new_poisson_2d_elliptic_solver, es_gauss_legendre
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_timer
+!  use sll_fft
   use sll_module_poisson_2d_periodic_solver
-
-!#include "sll_working_precision.h"
-!#include "sll_assert.h"
-!#include "sll_memory.h"
-!#include "sll_field_2d.h"
-!#include "sll_utilities.h"
-!#include "sll_poisson_solvers.h"
-!  use sll_constants
-!  use sll_logical_meshes  
-!  use sll_module_advection_1d_periodic
-!  use sll_module_advection_2d_BSL
-!  use sll_module_characteristics_2d_explicit_euler
-!  use sll_module_characteristics_2d_verlet
-!  use sll_reduction_module
-!  use sll_simulation_base
-!  use sll_cubic_spline_interpolator_2d
-!  use sll_cubic_spline_interpolator_1d
-!  use sll_coordinate_transformation_2d_base_module
-!  use sll_module_coordinate_transformations_2d
-!  use sll_common_coordinate_transformations
-!  use sll_common_array_initializers_module
-!  use sll_mudpack_cartesian
-!  use sll_module_poisson_2d_mudpack_solver
-!  use sll_module_poisson_2d_periodic_solver
-  !use sll_parallel_array_initializer_module
+  use sll_parallel_array_initializer_module
 
   implicit none
 
   
-  sll_int32, parameter :: SLL_EULER = 0 
-  sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
-  sll_int32, parameter :: SLL_LEAP_FROG = 2 
-  sll_int32, parameter :: SLL_PHI_FROM_RHO = 0
-  sll_int32, parameter :: SLL_E_FROM_RHO = 1
-
+  sll_int32, parameter, private :: SLL_EULER = 0 
+  sll_int32, parameter, private :: SLL_PREDICTOR_CORRECTOR = 1 
+  sll_int32, parameter, private :: SLL_LEAP_FROG = 2 
+  sll_int32, parameter, private :: SLL_PHI_FROM_RHO = 0
+  sll_int32, parameter, private :: SLL_E_FROM_RHO = 1
 
   type, extends(sll_simulation_base_class) :: &
     sll_simulation_2d_guiding_center_cartesian
@@ -125,16 +100,6 @@ module sll_simulation_2d_guiding_center_cartesian_module
   end type sll_simulation_2d_guiding_center_cartesian
 
 
-  abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-
 
 
 contains
@@ -143,13 +108,8 @@ contains
     type(sll_simulation_2d_guiding_center_cartesian), pointer :: sim    
     character(len=*), intent(in), optional :: filename
     sll_int32 :: ierr
-    
     SLL_ALLOCATE(sim,ierr)
-    
-    call initialize_guiding_center_2d_cartesian(sim,filename)
-    
-  
-  
+    call initialize_guiding_center_2d_cartesian(sim,filename)  
   end function new_guiding_center_2d_cartesian
   
   subroutine initialize_guiding_center_2d_cartesian(sim, filename)
@@ -407,8 +367,6 @@ contains
         print *,'#in initialize_guiding_center_2d_polar'
         stop
     end select
-
-
 
 
     select case (A_interp_case)
@@ -1342,7 +1300,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_cartesian(iplot,f,mesh_2d)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1

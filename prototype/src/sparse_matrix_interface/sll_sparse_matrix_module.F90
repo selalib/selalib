@@ -50,7 +50,6 @@ contains
 
   subroutine delete_csr_matrix(csr_mat)
     type(sll_csr_matrix),pointer :: csr_mat
-    sll_int32 :: ierr
 
     nullify(csr_mat)
    ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
@@ -135,12 +134,10 @@ contains
     sll_int32, dimension(:,:), intent(in) :: local_to_global_col
     sll_int32, intent(in) :: num_local_dof_col
     !local variables
-    sll_int32 :: li_err, li_flag
-    sll_int32 :: num_nz
+    sll_int32 :: num_nz,ierr
     sll_int32, dimension(:,:), pointer :: lpi_columns
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
-    sll_int32 :: ierr
 
     !print *,'#num_rows=',num_rows
     !print *,'#num_nz=',num_nz
@@ -301,6 +298,7 @@ contains
     !================!
     ! initialisation !
     !================!
+    
     apr_U(:)  = 0.0_8
     lpr_Ux(:) = apr_U(:)
     li_iter = 0
@@ -315,7 +313,7 @@ contains
     lpr_d = lpr_r
     !================!
 
-!    print *,'%%%%'
+ 
     ll_continue=.true.
     do while(ll_continue)
             li_iter = li_iter + 1
@@ -324,7 +322,6 @@ contains
             !--------------------------------------!
 
             call sll_mult_csr_matrix_vector( mat , lpr_d , lpr_Ad )
-            
             lr_ps = DOT_PRODUCT( lpr_Ad , lpr_d )
             lr_alpha = lr_Norm2r0 / lr_ps
             
@@ -347,7 +344,6 @@ contains
             !-------------------------------------------------------!
             lr_NormInfr = maxval(dabs( lpr_r ))
             lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
-            
             !==================================================!
             ! calcul de la nouvelle direction de descente dk+1 !
             !==================================================!
@@ -363,7 +359,6 @@ contains
             
     end do
     apr_U = lpr_Ux
-    
     if ( li_iter == ai_maxIter ) then
             print*,'Warning Gradient_conj : li_iter == ai_maxIter'
             print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
@@ -380,7 +375,15 @@ contains
 
 
     integer function sll_count_non_zero_elts( &
-      ai_nR, ai_nC, ai_nel, api_LM_1, ai_nen_1, api_LM_2, ai_nen_2, api_columns, api_occ)
+      ai_nR,&
+      ai_nC,&
+      ai_nel,&
+      api_LM_1,&
+      ai_nen_1,&
+      api_LM_2,&
+      ai_nen_2,&
+      api_columns,&
+      api_occ)
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
@@ -391,8 +394,6 @@ contains
         integer, dimension(:), pointer :: api_occ
         !local var
         integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_i
-        integer :: li_err, li_flag
-        real(f64), dimension(:), pointer :: lpr_tmp
         integer :: li_result
         integer, dimension(2) :: lpi_size
         logical :: ll_done
@@ -467,8 +468,15 @@ contains
         sll_count_non_zero_elts = li_result
     end function sll_count_non_zero_elts
 
-    subroutine sll_init_SparseMatrix(self, ai_nel, api_LM_1, ai_nen_1, api_LM_2, &
-      ai_nen_2, api_columns, api_occ)
+    subroutine sll_init_SparseMatrix(&
+         self,&
+         ai_nel,&
+         api_LM_1,&
+         ai_nen_1,&
+         api_LM_2, &
+         ai_nen_2,&
+         api_columns,&
+         api_occ)
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
@@ -479,7 +487,7 @@ contains
         integer, dimension(:,:), pointer :: api_columns
         integer, dimension(:), pointer :: api_occ
         !local var
-        integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_index, li_i, li_size
+        integer :: li_e, li_b_1, li_A_1,li_i, li_size
         integer :: li_err, li_flag
         real(f64), dimension(:), pointer :: lpr_tmp
 
