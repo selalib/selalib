@@ -344,7 +344,7 @@ contains  ! ****************************************************************
     print *, 'get_coefficients_qs1d(): ERROR: This function has not been ', &
          'implemented yet.'
     print *,interpolator%num_points
-    get_coefficients_qs1d = 0._f64
+    get_coefficients_qs1d => null()
     stop      
   end function get_coefficients_qs1d
 end module sll_odd_degree_spline_interpolator_1d

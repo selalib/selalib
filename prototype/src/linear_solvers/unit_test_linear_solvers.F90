@@ -16,6 +16,7 @@ type(sll_csc_matrix)                  :: csc_matrix
 
 #ifdef PASTIX
 type(pastix_solver)                   :: pastix
+sll_int32                             :: j
 #endif
 
 sll_int32   :: ncells

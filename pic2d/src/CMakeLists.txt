@@ -22,7 +22,6 @@ SET (CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/../../cmake
 SET(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 SET(CMAKE_Fortran_MODULE_DIRECTORY "${CMAKE_BINARY_DIR}/modules")
 
-INCLUDE_DIRECTORIES(${SLL_SOURCE_DIR}/package)
 
 MESSAGE(STATUS "PIC2D:CMAKE_Fortran_COMPILER:${CMAKE_Fortran_COMPILER}")
 INCLUDE(F90FLAGS)
@@ -50,35 +49,36 @@ ENDIF()
 
 SET(FFT_LIB "FFTPACK")
 SET(FFTPACK_LIBRARIES "dfftpack")
+ADD_DEFINITIONS(-DFFTPACK)
 
 IF(FFTW_ENABLED AND NOT FFTW_FOUND)
    FIND_PACKAGE(FFTW)
    IF(FFTW_FOUND)
-      ADD_DEFINITIONS(-D_FFTW)
+      ADD_DEFINITIONS(-DFFTW)
       INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
    ENDIF()
    MESSAGE(STATUS "FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 ENDIF()
 
+FIND_PACKAGE(MPI)
 IF(NOT MPI_FOUND)
    INCLUDE(MPIConfig)
 ENDIF(NOT MPI_FOUND)
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
 
 SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
 
-IF(NOT HDF5_FOUND)
-   INCLUDE(HDF5Config)
-   IF(HDF5_IS_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE()
-      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
-      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
-   ENDIF()
-ENDIF(NOT HDF5_FOUND)
+INCLUDE(HDF5Config)
+IF(HDF5_IS_PARALLEL) 
+   MESSAGE(STATUS "HDF5 parallel supported")
+ELSE()
+   MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+   MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+ENDIF()
+SET(CMAKE_Fortran_COMPILER h5pfc)
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 IF (CMAKE_PROJECT_NAME MATCHES "PIC2D")
+   SET(SLL_BUILD_PACKAGE ON)
    ADD_SUBDIRECTORY(${CMAKE_CURRENT_SOURCE_DIR}/../../prototype/src/package 
                     ${CMAKE_BINARY_DIR}/package)
 ENDIF()
@@ -89,17 +89,16 @@ SET(PIC2D_SRC zone.F90
               kiss.F90 
               quietstart.F90 
               particules.F90
-	      poisson.F90 
+	        poisson.F90 
               villasenor.F90 
               maxwell.F90 
               diagno.F90 )
 
 ADD_LIBRARY(pic2d STATIC ${PIC2D_SRC})
 
-ADD_DEPENDENCIES(pic2d selalib)
+TARGET_LINK_LIBRARIES(pic2d selalib)
 
-SET(LIBS selalib ${SILO_LIBRARIES} ${LAPACK_LIBRARIES} 
-                 ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
+SET(LIBS selalib ${SILO_LIBRARIES} ${FFTW_LIBRARIES} ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(test_pic2d main.F90)
 TARGET_LINK_LIBRARIES(test_pic2d pic2d ${LIBS})
