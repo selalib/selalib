@@ -65,7 +65,7 @@ def log_Int_phisquare_plot(resu):
 
         fig = mpp.figure(figsize=(5,5))
         ax1 = fig.add_subplot(1,1,1)
-        p1  = mpp.semilogy(resu.time_evol,resu.phisquare,'+-')
+        p1  = mpp.semilogy(resu.time_evol[0:itime_diag + 1],resu.phisquare[0:itime_diag + 1],'+-')
         mpp.xlabel('time')
         mpp.ylabel('intsquare')
         mpp.grid(True)
