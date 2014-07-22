@@ -62,6 +62,9 @@ module sll_distribution_function_4d_multipatch_module
      procedure, pass(df) :: allocate_memory => allocate_memory_df_4d_mp
      procedure, pass(df) :: initialize => initialize_df_4d_mp 
      procedure, pass(df) :: get_x1x2_data_slice_pointer => get_x1x2_slice_4d
+     procedure, pass(df) :: get_x3_line_pointer => get_x3_line_df4d
+     procedure, pass(df) :: get_x4_line_pointer => get_x4_line_df4d
+     procedure, pass(df) :: get_full_patch_data_pointer => get_full_patch_df4d
      procedure, pass(df) :: set_to_sequential_x1x2 => x3x4_to_x1x2
      procedure, pass(df) :: set_to_sequential_x3x4 => x1x2_to_x3x4
      procedure, pass(df) :: get_local_data_sizes => get_locsz_df4d
@@ -280,6 +283,53 @@ contains
     ptr => df%f_x1x2(patch+1)%f(:,:,k,l)
   end function get_x1x2_slice_4d
 
+  function get_x3_line_df4d( df, patch, i, j, l ) result(ptr)
+    sll_real64, dimension(:), pointer :: ptr
+    class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32, intent(in) :: patch
+    sll_int32, intent(in) :: i  ! first index in 4D array
+    sll_int32, intent(in) :: j  ! second index in 4D array
+    sll_int32, intent(in) :: l  ! fourth index in 4D array
+
+    SLL_ASSERT( (patch >= 0) .and. (patch <= df%num_patches - 1) )
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
+       print *, 'ERROR, get_x3_line_df4d(): data is configured for ', &
+            'sequential operations in x1 and x2. Need to reconfigure the ', &
+            'distribution function before making this call.'
+    end if
+    ptr => df%f_x3x4(patch+1)%f(i,j,:,l)
+  end function get_x3_line_df4d
+
+  function get_x4_line_df4d( df, patch, i, j, k ) result(ptr)
+    sll_real64, dimension(:), pointer :: ptr
+    class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32, intent(in) :: patch
+    sll_int32, intent(in) :: i  ! first index in 4D array
+    sll_int32, intent(in) :: j  ! second index in 4D array
+    sll_int32, intent(in) :: k  ! third index in 4D array
+
+    SLL_ASSERT( (patch >= 0) .and. (patch <= df%num_patches - 1) )
+
+    if(df%ready_for_sequential_ops_in_x1x2 .eqv. .true.) then
+       print *, 'ERROR, get_x3_line_df4d(): data is configured for ', &
+            'sequential operations in x1 and x2. Need to reconfigure the ', &
+            'distribution function before making this call.'
+    end if
+    ptr => df%f_x3x4(patch+1)%f(i,j,k,:)
+  end function get_x4_line_df4d
+
+  function get_full_patch_df4d( df, patch ) result(ptr)
+    sll_real64, dimension(:,:,:,:), pointer :: ptr
+    class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32, intent(in) :: patch
+
+    SLL_ASSERT( (patch >= 0) .and. (patch <= df%num_patches - 1) )
+
+    ptr => df%f_x3x4(patch+1)%f
+  end function get_full_patch_df4d
+
+
 
   ! Note that to carry out multiple remap operations is expensive. The
   ! latency would be multiplied by the number of patches... Other means
@@ -338,6 +388,7 @@ contains
        loc_sz_x4 )
  
     class(sll_distribution_function_4d_multipatch), intent(in) :: df
+    sll_int32, intent(in)  :: patch
     sll_int32, intent(out) :: loc_sz_x1
     sll_int32, intent(out) :: loc_sz_x2
     sll_int32, intent(out) :: loc_sz_x3
@@ -364,6 +415,10 @@ contains
     end if
   end subroutine get_locsz_df4d
 
+  ! The purpose of this function is to return the eta-coordinates of a given
+  ! 4-tuple of local indices (i,j,k,l). Since the distribution function has
+  ! multiple arrays corresponding to the different patches and furthermore it
+  ! can be parallel, this work should be centralized.
   function get_eta_coords_df4d( df, patch, ijkl ) result(etas)
     sll_real64, dimension(4) :: etas
     class(sll_distribution_function_4d_multipatch), intent(in) :: df
