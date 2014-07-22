@@ -128,14 +128,11 @@ contains ! *******************************************************************
 
     select case(quadrature_type1)
     case (ES_GAUSS_LEGENDRE)
-       
-       
        do i = 1, es_mp%T%number_patches
           es_mp%gauss_pts1(i,:,1:es_mp%spline_degree1(i)+2) = gauss_legendre_points_and_weights(es_mp%spline_degree1(i)+2)
        end do
 
     case (ES_GAUSS_LOBATTO)
-
        do i = 1, es_mp%T%number_patches
           es_mp%gauss_pts1(i,:,1:es_mp%spline_degree1(i)+2) = gauss_lobatto_points_and_weights(es_mp%spline_degree1(i)+2)
        end do
@@ -146,13 +143,11 @@ contains ! *******************************************************************
     
     select case(quadrature_type2)
     case (ES_GAUSS_LEGENDRE)
-       
        do i = 1, es_mp%T%number_patches
           es_mp%gauss_pts2(i,:,1:es_mp%spline_degree2(i)+2) = gauss_legendre_points_and_weights(es_mp%spline_degree2(i)+2)
        end do
        
     case (ES_GAUSS_LOBATTO)
-       
        do i = 1, es_mp%T%number_patches
           es_mp%gauss_pts2(i,:,1:es_mp%spline_degree2(i)+2) = gauss_lobatto_points_and_weights(es_mp%spline_degree2(i)+2)
        end do
@@ -162,6 +157,7 @@ contains ! *******************************************************************
        
     end select
    
+ 
     ! ------------------------------------------------------------------
 
 
@@ -489,8 +485,6 @@ contains ! *******************************************************************
    SLL_ALLOCATE(Source_loc(es_mp%T%number_patches,lm%num_cells1*lm%num_cells2,total_num_splines_loc,total_num_splines_loc),ierr)
    Source_loc(:,:,:,:) = 0.0_f64
 
-   
-   
    do patch = 1,es_mp%T%number_patches
 
       lm => es_mp%T%get_logical_mesh(patch-1)
@@ -530,7 +524,7 @@ contains ! *******************************************************************
                  S_b1_loc,  &
                  S_b2_loc,&
                  Source_loc)
- 
+
             call local_to_global_matrices_mp( &
                  es_mp, &
                  cell_index, &
@@ -550,7 +544,6 @@ contains ! *******************************************************************
       end do
    end do
 
-   
    call sll_factorize_csr_matrix(es_mp%sll_csr_mat)
 
 
@@ -565,9 +558,7 @@ contains ! *******************************************************************
         es_mp%local_to_global_col, &
         es_mp%total_num_splines_loc ) 
 
-
     call compute_Source_matrice_mp(es_mp,Source_loc)
-    print*,' ok'
 
     SLL_DEALLOCATE_ARRAY(Source_loc,ierr)
     SLL_DEALLOCATE_ARRAY(M_c_loc,ierr)
@@ -854,19 +845,21 @@ contains ! *******************************************************************
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
     
-
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
        gpt2  = eta2  + 0.5_f64*delta2 * ( es_mp%gauss_pts2(patch,1,j) + 1.0_f64 )
        wgpt2 = 0.5_f64*delta2*es_mp%gauss_pts2(patch,2,j) !ATTENTION 0.5
        
-          gtmp2 = gpt2
-          local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
+       gtmp2 = gpt2
+       local_spline_index2 = es_mp%spline_degree2(patch) + cell_j
 
        call interv(es_mp%knots2(patch,:),size(es_mp%T%transfs(1)%T%knots2), gpt2, left_y, mflag_y )
 
-
+       if (mflag_y .eq. -1) then
+          print *, "Problem : interv2 returned flag = -1"
+       end if
+      
        call bsplvd( &
             es_mp%knots2(patch,:), &
             es_mp%spline_degree2(patch)+1,&
@@ -919,6 +912,10 @@ contains ! *******************************************************************
    
           jac_mat(:,:) = c_field%fields(patch)%f%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
+
+          if (val_jac .eq. 0.) then
+             print *, " ATTENTION : the value of the jacobian is zero !!"
+          end if
 
           es_mp%values_jacobian(patch,cell_i + num_cells1*(i-1),cell_j + num_cells2*(j-1)) = val_jac
         
@@ -976,14 +973,11 @@ contains ! *******************************************************************
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
                       
-                      
-                      
                       M_c_loc(index1, index2) = &
                            M_c_loc(index1, index2) + &
                            val_c*val_jac*wgpt1*wgpt2* &
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                      
                       
                       K_a11_loc(index1, index2) = &
                            K_a11_loc(index1, index2) + &
