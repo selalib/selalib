@@ -3014,8 +3014,9 @@ contains
        SLL_DEALLOCATE( data_array_tmp,ierr)
       ! print*, 'oulala'
        ! boundary condition non homogene  a revoir !!!!! 
-       interpolator%coeff_splines(1,1:sz2)   = interpolator%value_left(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = interpolator%value_right(1:sz2)
+       !print*,'zarrrr', interpolator%value_left(1:sz2)
+       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_left(1:sz2)
+       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_right(1:sz2)
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = sz1!+1
@@ -3035,8 +3036,8 @@ contains
 
        SLL_DEALLOCATE( data_array_tmp,ierr)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-       interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
+       interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
        
     case (585) ! 4. dirichlet in all sides
        !print*, 'her'
@@ -3058,11 +3059,11 @@ contains
 
        SLL_DEALLOCATE( data_array_tmp,ierr)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1,1:sz2)   = interpolator%value_left(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = interpolator%value_right(1:sz2)
+       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)
+       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-       interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
+       interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
 
     case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
        sz_derivative_eta1 = 2
@@ -3818,7 +3819,7 @@ contains
 
     end select
     interpolator%coefficients_set = .true.
-    
+   
     SLL_DEALLOCATE(point_location_eta2,ierr)
     SLL_DEALLOCATE(point_location_eta1,ierr)
     SLL_DEALLOCATE(point_location_eta1_tmp,ierr)
