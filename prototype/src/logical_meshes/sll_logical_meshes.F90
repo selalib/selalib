@@ -22,6 +22,7 @@
 module sll_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+#include "sll_assert.h"
   implicit none
 
   !> @brief 1D logical mesh
@@ -122,7 +123,12 @@ module sll_logical_meshes
      module procedure cell_margin_logical_mesh_1d
   end interface sll_cell_margin
 
-
+  interface sll_mesh_area
+     module procedure length_logical_mesh_1d
+     module procedure area_logical_mesh_2d
+     module procedure area_logical_mesh_3d
+     module procedure area_logical_mesh_4d
+  end interface
 
 contains
 
@@ -683,8 +689,52 @@ end if
     type(sll_logical_mesh_1d), intent(in), pointer :: mesh
     sll_int32 :: num_nodes
     num_nodes=mesh%num_cells+1
-  endfunction
+  endfunction num_nodes_logical_mesh_1d
 
+  !> @brief Returns the interval length for a 1D logical mesh
+  !> @param mesh pointer to a sll_logical_mesh_1d object.
+  function length_logical_mesh_1d(mesh) result(length)
+    type(sll_logical_mesh_1d), intent(in), pointer :: mesh
+    sll_real64 :: length
+    length=mesh%eta_max-mesh%eta_min
+    SLL_ASSERT(length >=0)
+  endfunction length_logical_mesh_1d
+
+  !> @brief Returns the area size for a 2D logical mesh
+  !> @param mesh pointer to a sll_logical_mesh_2d object.
+  function area_logical_mesh_2d( mesh) result(area)
+    type(sll_logical_mesh_2d), intent(in), pointer :: mesh
+    sll_real64 :: area
+    area=(mesh%eta1_max-mesh%eta1_min)*&
+                (mesh%eta2_max-mesh%eta2_min)
+
+    SLL_ASSERT(area >=0)
+  endfunction area_logical_mesh_2d
+
+  !> @brief Returns the area size for a 3D logical mesh
+  !> @param mesh pointer to a sll_logical_mesh_3d object.
+  function area_logical_mesh_3d( mesh) result(area)
+    type(sll_logical_mesh_3d), intent(in), pointer :: mesh
+    sll_real64 :: area
+    area=(mesh%eta1_max-mesh%eta1_min)*&
+                (mesh%eta2_max-mesh%eta2_min)*&
+                (mesh%eta3_max-mesh%eta3_min)
+
+    SLL_ASSERT(area >=0)
+  endfunction area_logical_mesh_3d
+
+  !> @brief Returns the area size for a 3D logical mesh
+  !> @param mesh pointer to a sll_logical_mesh_3d object.
+  function area_logical_mesh_4d( mesh) result(area)
+    type(sll_logical_mesh_4d), intent(in), pointer :: mesh
+    sll_real64 :: area
+    area=(mesh%eta1_max-mesh%eta1_min)*&
+                (mesh%eta2_max-mesh%eta2_min)*&
+                (mesh%eta3_max-mesh%eta3_min)*&
+                (mesh%eta4_max-mesh%eta4_min)
+
+    SLL_ASSERT(area >=0)
+  endfunction area_logical_mesh_4d
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
