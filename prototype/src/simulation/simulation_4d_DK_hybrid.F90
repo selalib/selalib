@@ -1967,6 +1967,8 @@ contains
           end do
         end do
 
+        !print*, 'hehehe',f2d_eta1eta2_tmp(1,:)
+        !print*, 'hhoohoh',f2d_eta1eta2_tmp(sim%Neta1,:)
         call sim%interp2d_f_eta1eta2%compute_interpolants(f2d_eta1eta2_tmp)   
 
         do ieta2 = 1,sim%Neta2
@@ -1983,10 +1985,14 @@ contains
             eta1    = sim%eta1_grid(ieta1) - alpha1
             eta2    = sim%eta2_grid(ieta2) - alpha2
             
-            if (eta1 < sim%logical_mesh4d%eta1_min) then 
+            if (eta1 <= sim%logical_mesh4d%eta1_min) then 
+               !print*, 'value point', eta1
                eta1 = sim%logical_mesh4d%eta1_min
-            else if ( eta1> sim%logical_mesh4d%eta1_max) then 
+               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
+            else if ( eta1>= sim%logical_mesh4d%eta1_max) then 
+               !print*, 'value point', eta1
                eta1 = sim%logical_mesh4d%eta1_max
+               !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
             end if
             sim%f4d_seqx1x2(ieta1,ieta2,iloc3,iloc4) = &
               sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
@@ -2432,12 +2438,12 @@ contains
                end if
             end do
             
-            if (i1 .ne. Neta1) then
-               if (i2 .ne. Neta2) then 
+            !if (i1 .ne. Neta1) then
+            !   if (i2 .ne. Neta2) then 
                   phisquare = phisquare + val_elec_pot**2 *val_jac &
                        *delta_eta1*delta_eta2*delta_eta3
-               end if
-            end if
+             !  end if
+            !end if
          end do
       end do
     end do
