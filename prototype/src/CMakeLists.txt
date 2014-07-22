@@ -214,3 +214,11 @@ ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
+ADD_CUSTOM_TARGET( clean_outputs
+    COMMAND find . -name *.mtv -delete
+    COMMAND find . -name *.gnu -delete
+    COMMAND find . -name *.dat -delete
+    COMMAND find . -name *.xmf -delete
+    COMMAND find . -name *.h5  -delete
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
