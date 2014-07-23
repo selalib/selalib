@@ -797,8 +797,7 @@ contains
         print *,'#in initialize_guiding_center_2d_curvilinear'
         stop
     end select
-    sim%phi_interp2d => phi_interp2d 
-    
+
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
         sim%f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
@@ -1911,9 +1910,12 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     sll_real64, intent(in)   :: eta1_min,eta1_max
     sll_real64, intent(in)   :: eta2_min,eta2_max  
     sll_int32, intent(in)    :: n_eta1,n_eta2  
-    type(arb_deg_2d_interpolator)   :: a11_interp
-    type(arb_deg_2d_interpolator)   :: a22_interp
-    type(arb_deg_2d_interpolator)   :: a12_interp
+    !type(arb_deg_2d_interpolator)   :: a11_interp
+    !type(arb_deg_2d_interpolator)   :: a22_interp
+    !type(arb_deg_2d_interpolator)   :: a12_interp
+    type(cubic_spline_2d_interpolator)   :: a11_interp
+    type(cubic_spline_2d_interpolator)   :: a22_interp
+    type(cubic_spline_2d_interpolator)   :: a12_interp
     sll_real64,dimension(:,:),allocatable :: cxx_array
     sll_real64,dimension(:,:),allocatable :: cyy_array
     sll_real64,dimension(:,:),allocatable :: cxy_array
@@ -1981,11 +1983,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          eta2_min, &
          eta2_max, &
          SLL_DIRICHLET, &
-         SLL_DIRICHLET, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC,&
-         spline_degree_eta1, &
-         spline_degree_eta2)            
+         SLL_PERIODIC )            
    call a22_interp%initialize( &
          n_eta1+1, &
          n_eta2+1, &
@@ -1994,11 +1992,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          eta2_min, &
          eta2_max, &
          SLL_DIRICHLET, &
-         SLL_DIRICHLET, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC,&
-         spline_degree_eta1, &
-         spline_degree_eta2)    
+         SLL_PERIODIC )    
            
           
     call a12_interp%initialize( &
@@ -2009,11 +2003,7 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
          eta2_min, &
          eta2_max, &
          SLL_DIRICHLET, &
-         SLL_DIRICHLET, &
-         SLL_PERIODIC, &
-         SLL_PERIODIC,&
-         spline_degree_eta1, &
-         spline_degree_eta2)   
+         SLL_PERIODIC )   
     call a11_interp%compute_interpolants(cxx_array, &
        eta1_pos,&
        n_eta1+1,&
