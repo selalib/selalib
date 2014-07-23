@@ -4,7 +4,7 @@
 	PARTICLE_ARRAY_SIZE = 2050000
 	THERM_SPEED         = 1.0
 	dt     =  0.01
-	number_iterations   = 20
+	number_iterations   = 1500
 	QoverM = 1.0
 	ALPHA  = 0.1
 /
