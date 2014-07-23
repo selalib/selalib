@@ -704,9 +704,10 @@ contains
     select case(initial_function_case)
       case ("SLL_KHP1")
         sim%init_func => sll_KHP1_2d
-        SLL_ALLOCATE(sim%params(2),ierr)
+        SLL_ALLOCATE(sim%params(3),ierr)
         sim%params(1) = eps
         sim%params(2) = kmode_x1
+        sim%params(3) = kmode_x2
       case ("SLL_GAUSSIAN")
         sim%init_func => sll_gaussian_initializer_2d
         SLL_ALLOCATE(sim%params(4),ierr)
