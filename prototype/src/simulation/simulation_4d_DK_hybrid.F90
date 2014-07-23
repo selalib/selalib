@@ -432,11 +432,14 @@ contains
 
         !--> Save diagnostics in HDF5 format
         call writeHDF5_cross_section_diag(sim,diag_num)
+        
+        !--> Save 'conservation_laws.h5' HDF5 file
+        call writeHDF5_conservation_laws( sim,diag_num )
+
       end if
     end do
 
-    !--> Save 'conservation_laws.h5' HDF5 file
-    call writeHDF5_conservation_laws( sim )
+    
 
     if (sim%my_rank.eq.0) then
       print*, ' Time for advec in run_4d_DK_hybrid  = ', elaps_time_advec
@@ -2137,7 +2140,7 @@ contains
   !----------------------------------------------------
   ! 
   !----------------------------------------------------
-  subroutine writeHDF5_conservation_laws( sim )
+  subroutine writeHDF5_conservation_laws( sim,diag_num )
 
     use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
@@ -2160,7 +2163,7 @@ contains
     sll_real64, dimension(:), pointer :: diag_relative_error_nrj_tot_tmp
 
     sll_int32  :: ierr
-    sll_int32  :: idiag, nb_diag
+    sll_int32  :: idiag, diag_num
     sll_real64 :: dum
     
     !--> For conservation law HDF5 saving
@@ -2168,20 +2171,20 @@ contains
     sll_int32           :: file_id
     character(len=20), parameter :: filename_CL = "conservation_laws.h5"
 
-    nb_diag = size(sim%diag_mass)
+    !nb_diag = size(sim%diag_mass)
 
 
-    SLL_ALLOCATE(diag_mass_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_norm_L1_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_norm_L2_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_norm_Linf_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_entropy_kin_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_nrj_kin_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_nrj_pot_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_nrj_tot_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_heat_flux_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_relative_error_nrj_tot_tmp(nb_diag),ierr)
-    SLL_ALLOCATE(diag_phisquare_tmp(nb_diag),ierr)
+    SLL_ALLOCATE(diag_mass_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_norm_L1_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_norm_L2_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_norm_Linf_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_entropy_kin_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_nrj_kin_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_nrj_pot_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_nrj_tot_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_heat_flux_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_relative_error_nrj_tot_tmp(diag_num),ierr)
+    SLL_ALLOCATE(diag_phisquare_tmp(diag_num),ierr)
 
     diag_mass_tmp        = 0.0_f64
     diag_norm_L1_tmp     = 0.0_f64
@@ -2198,7 +2201,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_mass, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_mass_tmp )
@@ -2206,7 +2209,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_norm_L1, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_norm_L1_tmp )
@@ -2214,7 +2217,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_norm_L2, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_norm_L2_tmp )
@@ -2222,7 +2225,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_norm_Linf, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_norm_Linf_tmp )
@@ -2230,7 +2233,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_entropy_kin, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_entropy_kin_tmp )
@@ -2238,7 +2241,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_nrj_kin, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_nrj_kin_tmp )
@@ -2246,7 +2249,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_heat_flux, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_heat_flux_tmp )
@@ -2254,7 +2257,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_nrj_pot, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_nrj_pot_tmp )
@@ -2262,7 +2265,7 @@ contains
     call sll_collective_reduce_real64( &
         sll_world_collective, &
         sim%diag_nrj_tot, &
-        nb_diag, &
+        diag_num, &
         MPI_SUM, &
         0, &
         diag_nrj_tot_tmp )
@@ -2270,12 +2273,12 @@ contains
     call sll_collective_reduce_real64( &
          sll_world_collective, &
          sim%diag_phisquare, &
-         nb_diag, &
+         diag_num, &
          MPI_SUM, &
          0, &
          diag_phisquare_tmp )
 
-    do idiag = 1,nb_diag
+    do idiag = 1,diag_num
        dum  = sqrt(.5*((diag_nrj_kin_tmp(idiag)-diag_nrj_kin_tmp(1))**2 + &
             (diag_nrj_pot_tmp(idiag)-diag_nrj_pot_tmp(1))**2)) 
        
@@ -2288,7 +2291,7 @@ contains
        print*,'--> Save HDF5 file: ',filename_CL
        call sll_hdf5_file_create(filename_CL,file_id,file_err)
        call sll_hdf5_write_array_1d(file_id,&
-            sim%time_evol(:),'time_evol',file_err)
+            sim%time_evol(1:diag_num),'time_evol',file_err)
        call sll_hdf5_write_array_1d(file_id,&
             diag_nrj_kin_tmp(:),'nrj_kin',file_err)
        call sll_hdf5_write_array_1d(file_id,&
@@ -2438,12 +2441,12 @@ contains
                end if
             end do
             
-            !if (i1 .ne. Neta1) then
-            !   if (i2 .ne. Neta2) then 
+            if (i1 .ne. Neta1) then
+               if (i2 .ne. Neta2) then 
                   phisquare = phisquare + val_elec_pot**2 *val_jac &
                        *delta_eta1*delta_eta2*delta_eta3
-             !  end if
-            !end if
+               end if
+            end if
          end do
       end do
     end do
@@ -2526,6 +2529,7 @@ contains
               if (i2 .ne. Neta2) then 
 
                 val_jac = abs(sim%transf_xy%jacobian_at_node(i1,i2))
+
 
                 delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4)
 

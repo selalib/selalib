@@ -1,7 +1,7 @@
 &mesh
-  num_cells_x1 = 29
-  num_cells_x2 = 63
-  num_cells_x3 = 10
+  num_cells_x1 = 29 !128
+  num_cells_x2 = 63 !128
+  num_cells_x3 = 10 !32
   num_cells_x4 = 64
   r_min        = 0.1
   r_max        = 14.5
@@ -33,10 +33,10 @@
 
 &sim_params
   dt                = 8
-  number_iterations = 100
+  number_iterations = 10
   spline_degree     = 3
 /
 
 &diagnostics
-   diag2D_step = 8.0 
+   diag2D_step = 32.0 
 /
