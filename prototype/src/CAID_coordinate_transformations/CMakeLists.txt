@@ -1,15 +1,11 @@
-FIND_PROGRAM(PYTHON_EXECUTABLE NAMES python3 python3.3 DOC "python")
-
 # This step is only necessary when we want the .txt files to be available
 # in the build directory for use by the unit tests. Geometric files aren't
 # needed, only their .nml translations. Hence this is commented out.
 #FILE(GLOB TXT_FILES "${CMAKE_CURRENT_SOURCE_DIR}/*.txt")
 #FILE(COPY ${TXT_FILES} DESTINATION ${CMAKE_BINARY_DIR})
 
-IF(PYTHON_EXECUTABLE)
+IF(PYTHON3_FOUND)
 
-  SET(PYTHON3_FOUND ON)
-  
   # choose python script to translate individual patch information.
   SET(PATCH_SCRIPT 
     "${CMAKE_CURRENT_SOURCE_DIR}/../python_scripts/nurbs_patch_txt_to_nml.py")
@@ -26,10 +22,11 @@ IF(PYTHON_EXECUTABLE)
    # is prepended with its path, the output also should be written in the
    # same directory.
    FOREACH(PATCH ${PATCH_FILES})
-     # MESSAGE("converting file:" ${PATCH})
+     #MESSAGE(STATUS "converting file:" ${PATCH})
      EXECUTE_PROCESS(
        COMMAND ${PYTHON_EXECUTABLE} ${PATCH_SCRIPT} ${PATCH}
      )
+      UNSET(PATCH)
    ENDFOREACH()
 
    SET(MP_INFO_SCRIPT 
@@ -39,8 +36,9 @@ IF(PYTHON_EXECUTABLE)
 
    FOREACH(PATCH ${INFO_FILES})	
       EXECUTE_PROCESS(
-	COMMAND ${PYTHON_EXECUTABLE}  ${MP_INFO_SCRIPT} ${PATCH}
+	COMMAND ${PYTHON_EXECUTABLE} ${MP_INFO_SCRIPT} ${PATCH}
 	)
+      UNSET(PATCH)
    ENDFOREACH()
 	  
    # Algorithm to generate the files needed for a multipatch representation:
@@ -60,21 +58,24 @@ IF(PYTHON_EXECUTABLE)
 #     "${CMAKE_CURRENT_SOURCE_DIR}/IEN_*.txt")
 #   FILE(GLOB_RECURSE LM_TXT_FILES FOLLOW_SYMLINKS 
 #     "${CMAKE_CURRENT_SOURCE_DIR}/LM_*.txt")
+      
    FILE(GLOB_RECURSE ID_TXT_FILES FOLLOW_SYMLINKS 
      "${CMAKE_CURRENT_SOURCE_DIR}/ID.txt")
+
 
 #   list(LENGTH IEN_TXT_FILES NUM_PATCHES)
 #   MESSAGE("${IEN_TXT_FILES}")
 #   MESSAGE("Processing a multipatch with ${NUM_PATCHES} patches.")
 
-   EXECUTE_PROCESS(
-    	COMMAND ${CONNECTIVITY_SCRIPT} ${ID_TXT_FILES}
-        )
+   FOREACH(ID_FILE ${ID_TXT_FILES})	
+   	EXECUTE_PROCESS(
+		COMMAND ${PYTHON_EXECUTABLE} ${CONNECTIVITY_SCRIPT} ${ID_FILE}
+        	)
+   ENDFOREACH()
 
-ELSE(PYTHON_EXECUTABLE)
+ELSE(PYTHON3_FOUND)
    MESSAGE(STATUS "Multipatch test needs python3")
-   SET(PYTHON3_FOUND OFF)
-ENDIF(PYTHON_EXECUTABLE)
+ENDIF(PYTHON3_FOUND)
 
 # .nml files usually need to be accessed by the unit tests, so copy them to
 # the build directory.

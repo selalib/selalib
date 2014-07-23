@@ -7,15 +7,15 @@ INCLUDE_DIRECTORIES(${CMAKE_Fortran_MODULE_DIRECTORY})
 
 GET_FILENAME_COMPONENT(Fortran_COMPILER_NAME "${CMAKE_Fortran_COMPILER}" NAME)
 
-IF (CMAKE_Fortran_COMPILER MATCHES "ifort")
+IF (Fortran_COMPILER_NAME MATCHES ifort)
    EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "-v" OUTPUT_VARIABLE source_path)
+   MESSAGE(STATUS "${source_path}")
    STRING(REGEX MATCH "1[0-9]\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ELSE()
    EXEC_PROGRAM(${CMAKE_Fortran_COMPILER} ARGS "--version" OUTPUT_VARIABLE source_path)
    STRING(REGEX MATCH "4\\.[0-9]\\.[0-9]" Fortran_COMPILER_VERSION ${source_path})
 ENDIF()
 MESSAGE(STATUS "Fortran compiler : ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
-
 
 IF(CMAKE_Fortran_COMPILER MATCHES "gfortran*")
    ADD_DEFINITIONS(-DGFORTRAN)
@@ -29,8 +29,8 @@ ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
 
 ELSEIF(Fortran_COMPILER MATCHES "IBM")
 
-   SET(CMAKE_Fortran_FLAGS_RELEASE "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
-   SET(CMAKE_Fortran_FLAGS_DEBUG "-WF,-qnotrigraph -qextname=flush -qthreaded -qhalt=e -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_DEBUG "-qextname=flush -qxlf2003=polymorphic")
+   SET(CMAKE_Fortran_FLAGS_RELEASE "-qsmp=omp -qextname=flush -qxlf2003=polymorphic")
 
 ELSE()
 
@@ -39,3 +39,6 @@ ELSE()
 ENDIF()
 
 MARK_AS_ADVANCED(CLEAR CMAKE_Fortran_COMPILER)
+
+
+SET(BUILDNAME "${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}-${CMAKE_SYSTEM_NAME}-${CMAKE_SYSTEM_PROCESSOR}")

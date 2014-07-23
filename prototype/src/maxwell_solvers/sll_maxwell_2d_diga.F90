@@ -1,5 +1,5 @@
 
-#define sll_transformation class(sll_coordinate_transformation_2d_analytic)
+#define sll_transformation class(sll_coordinate_transformation_2d_base)
 
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
@@ -21,7 +21,6 @@ use sll_dg_fields
 use sll_boundary_condition_descriptors
 
 implicit none
-private
 
 type :: edge_type
 
@@ -76,23 +75,59 @@ type, public :: maxwell_2d_diga
 
 end type maxwell_2d_diga
 
+interface new_maxwell_2d_diga
+   module procedure new_maxwell_2d_digal
+end interface new_maxwell_2d_diga
+
 !> Create a Maxwell solver object using Discontinuous Galerkine 
 interface initialize
    module procedure initialize_maxwell_2d_diga
 end interface initialize
+
 
 !> Solve Maxwell system
 interface solve
    module procedure solve_maxwell_2d_diga
 end interface solve
 
-sll_int32  :: error
+sll_int32, private  :: error
 sll_int32, parameter, public :: SLL_CENTERED       = 20
 sll_int32, parameter, public :: SLL_UNCENTERED     = 21
 
-public :: initialize, solve
-
 contains
+
+function new_maxwell_2d_digal( tau,          &
+                               degree,       &
+                               polarization, &
+                               bc_south,     &
+                               bc_east,      &
+                               bc_north,     &
+                               bc_west,      &
+                               flux_type) result(this)
+
+   type( maxwell_2d_diga ), pointer :: this !< solver data object
+   sll_transformation, pointer      :: tau
+   sll_int32                        :: polarization
+   sll_int32                        :: degree
+   sll_int32, intent(in)            :: bc_east
+   sll_int32, intent(in)            :: bc_west
+   sll_int32, intent(in)            :: bc_north
+   sll_int32, intent(in)            :: bc_south
+   sll_int32, optional              :: flux_type
+
+   SLL_ALLOCATE(this,error)
+
+   call initialize_maxwell_2d_diga( this,         &
+                                    tau,          &
+                                    degree,       &
+                                    polarization, &
+                                    bc_south,     &
+                                    bc_east,      &
+                                    bc_north,     &
+                                    bc_west,      &
+                                    flux_type)
+
+ end function new_maxwell_2d_digal
 
 !> Initialize Maxwell solver object using DG method.
 subroutine initialize_maxwell_2d_diga( this,         &
@@ -105,10 +140,16 @@ subroutine initialize_maxwell_2d_diga( this,         &
                                        bc_west,      &
                                        flux_type)
 
-   type( maxwell_2d_diga )     :: this !< solver data object
+   type(maxwell_2d_diga)       :: this !< solver data object
    sll_transformation, pointer :: tau
    sll_int32                   :: polarization
    sll_int32                   :: degree
+   sll_int32, intent(in)       :: bc_east
+   sll_int32, intent(in)       :: bc_west
+   sll_int32, intent(in)       :: bc_north
+   sll_int32, intent(in)       :: bc_south
+   sll_int32, optional         :: flux_type
+
    sll_int32                   :: nddl
    sll_int32                   :: ncells
    sll_real64                  :: x(degree+1)
@@ -120,14 +161,12 @@ subroutine initialize_maxwell_2d_diga( this,         &
    sll_real64                  :: dtau_ij_mat(2,2)
    sll_int32                   :: i, j, k, l, ii, jj, kk, ll
    sll_real64                  :: xa, xb, ya, yb
-   sll_int32, intent(in)       :: bc_east
-   sll_int32, intent(in)       :: bc_west
-   sll_int32, intent(in)       :: bc_north
-   sll_int32, intent(in)       :: bc_south
-   sll_int32, optional         :: flux_type
 
    this%tau        => tau
-   this%mesh       => tau%mesh
+   ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
+   ! longer supported.
+   !   this%mesh       => tau%get_logical_mesh()
+   this%mesh => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
    this%bc_north   =  bc_north
@@ -248,6 +287,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
    this%po => new_dg_field( degree, tau) 
 
 end subroutine initialize_maxwell_2d_diga
+
 
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
@@ -484,23 +524,25 @@ end function dof_neighbor
 subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
                            i, j, d, cell )
 
-   class(sll_coordinate_transformation_2d_analytic), pointer :: tau
-   type(cell_type) :: cell
-   sll_int32       :: i, j, d
-   sll_real64      :: x(d+1), w(d+1), vec_norm(d+1,2)
-   sll_real64      :: a, b, c1, c2
-   sll_real64      :: xk, wk
-   sll_real64      :: jac_mat(2,2)
-   sll_real64      :: co_jac_mat(2,2)
-   sll_real64      :: dtau_ij_mat(2,2)
-   sll_real64      :: jac_mat_sll(2,2)
-   sll_real64      :: length
-   sll_int32       :: side
-   sll_int32       :: bc_south
-   sll_int32       :: bc_east
-   sll_int32       :: bc_north
-   sll_int32       :: bc_west
-   sll_int32       :: k
+   sll_transformation, pointer :: tau
+   type(cell_type)             :: cell
+   sll_int32                   :: i, j, d
+   sll_real64                  :: x(d+1)
+   sll_real64                  :: w(d+1)
+   sll_real64                  :: vec_norm(d+1,2)
+   sll_real64                  :: a, b, c1, c2
+   sll_real64                  :: xk, wk
+   sll_real64                  :: jac_mat(2,2)
+   sll_real64                  :: co_jac_mat(2,2)
+   sll_real64                  :: dtau_ij_mat(2,2)
+   sll_real64                  :: jac_mat_sll(2,2)
+   sll_real64                  :: length
+   sll_int32                   :: side
+   sll_int32                   :: bc_south
+   sll_int32                   :: bc_east
+   sll_int32                   :: bc_north
+   sll_int32                   :: bc_west
+   sll_int32                   :: k
    
    cell%i = i
    cell%j = j

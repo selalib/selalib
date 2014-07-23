@@ -3,6 +3,10 @@
 
 IF(MUDPACK_ENABLED)
 
+   IF(Fortran_COMPILER MATCHES IBM)
+      SET(CMAKE_Fortran_COMPILER xlf)
+   ENDIF(Fortran_COMPILER MATCHES IBM)
+
    ADD_LIBRARY(mudpack STATIC mudcom.f mud2.f mud24.f 
                                     muh2.f muh24.f 
                                     mud24sp.f mud2sp.f

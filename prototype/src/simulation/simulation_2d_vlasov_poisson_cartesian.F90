@@ -157,8 +157,35 @@ contains
       filename)
        
   end function new_vp2d_par_cart
-
-
+  
+  
+  subroutine change_initial_function_vp2d_par_cart( sim, init_func, params, num_params)
+    class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
+    procedure(sll_scalar_initializer_2d), pointer :: init_func
+    sll_real64, dimension(:), pointer :: params
+    sll_int32, intent(in) :: num_params
+    !local variables
+    sll_int32 :: ierr
+    sll_int32 :: i
+    
+    sim%init_func => init_func
+    if(associated(sim%params))then
+      SLL_DEALLOCATE(sim%params,ierr)
+    endif
+    if(num_params<1)then
+      print *,'#num_params should be >=1 in change_initial_function_vp2d_par_cart'
+      stop
+    endif
+    SLL_ALLOCATE(sim%params(num_params),ierr)
+    if(size(params)<num_params)then
+      print *,'#size of params is not good in change_initial_function_vp2d_par_cart'
+      stop
+    endif
+    do i=1,num_params
+      sim%params(i) = params(i)
+    enddo
+    
+  end subroutine change_initial_function_vp2d_par_cart
 
   subroutine init_vp2d_par_cart( sim, filename )
     class(sll_simulation_2d_vlasov_poisson_cart), intent(inout) :: sim
@@ -871,7 +898,6 @@ contains
     sll_int32 :: local_size_x1,local_size_x2
     type(poisson_1d_periodic)  :: poisson_1d
     sll_real64 :: adr
-    sll_real64::alpha
     sll_real64 ::tmp_loc(5),tmp(5)
     sll_int32  ::i,istep,ig,k
     
@@ -884,7 +910,6 @@ contains
     !sll_real64, dimension(:), allocatable :: x1_array
     sll_real64, dimension(:), allocatable :: node_positions_x2
     sll_real64, dimension(:), allocatable :: node_positions_x2_light
-    sll_real64 :: mean
     !character(len=4)           :: fin   
     sll_int32                  :: file_id
     
@@ -1870,7 +1895,7 @@ contains
     sll_real64, dimension(:), intent(out) :: light_node_positions
     sll_int32, intent(in) :: light_size
     sll_int32, intent(in) :: every(3)
-    sll_int32::i,i1,i2,N,s
+    sll_int32::i,i1,i2,s
     
     if(size(light_node_positions)<light_size)then
       print *,'#bad value of light_size',light_size
@@ -1927,7 +1952,7 @@ contains
     sll_real64, dimension(:), intent(out) :: light_node_positions
     sll_int32, intent(in) :: light_size
     sll_int32, dimension(:), intent(in) :: every
-    sll_int32::i,i1,i2,N,s
+    sll_int32::i,i1,s
     sll_int32 :: j
     if(size(light_node_positions)<light_size)then
       print *,'#bad value of light_size',light_size
@@ -2034,8 +2059,6 @@ contains
     sll_int32 :: i2 
     sll_int32 :: j1 
     sll_int32 :: j2 
-    sll_int32 :: s1 
-    sll_int32 :: s2 
   
   
     if((size(f_full,1)<np_x1).or.(size(f_full,2)<np_x2))then
@@ -2144,7 +2167,7 @@ contains
     array_name, time)    
     !mesh_2d)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:), intent(in) :: node_positions_x1
