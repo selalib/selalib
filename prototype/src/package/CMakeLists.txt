@@ -152,8 +152,10 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
+    ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
     ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
+    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
 
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
