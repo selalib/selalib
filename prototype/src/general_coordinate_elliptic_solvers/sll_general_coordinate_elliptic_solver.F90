@@ -159,8 +159,8 @@ contains ! *******************************************************************
    sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
-   sll_int32 :: quadrature_type1_tmp
-   sll_int32 :: quadrature_type2_tmp
+   !sll_int32 :: quadrature_type1_tmp
+   !sll_int32 :: quadrature_type2_tmp
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -194,11 +194,11 @@ contains ! *******************************************************************
    es%eta1_min   = eta1_min
    es%eta2_min   = eta2_min
 
-   quadrature_type1_tmp = ES_GAUSS_LEGENDRE
-   quadrature_type2_tmp = ES_GAUSS_LEGENDRE
+   !quadrature_type1_tmp = ES_GAUSS_LEGENDRE
+   !quadrature_type2_tmp = ES_GAUSS_LEGENDRE
    ! Allocate and fill the gauss points/weights information.
    ! First direction
-   select case(quadrature_type1_tmp)
+   select case(quadrature_type1)
    case (ES_GAUSS_LEGENDRE)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
       es%gauss_pts1(:,:) = 0.0_f64
@@ -210,7 +210,7 @@ contains ! *******************************************************************
       print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
    end select
       
-   select case(quadrature_type2_tmp)
+   select case(quadrature_type2)
    case (ES_GAUSS_LEGENDRE)
       !print*, 'Hello'
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
