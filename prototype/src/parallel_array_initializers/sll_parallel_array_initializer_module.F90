@@ -18,9 +18,18 @@ module sll_parallel_array_initializer_module
   ! the following abstract type.
 
   abstract interface
+    function sll_scalar_initializer_1d( x1,  params )
+      use sll_working_precision
+      sll_real64                                     :: sll_scalar_initializer_1d
+      sll_real64, intent(in)                         :: x1
+      sll_real64, dimension(:), intent(in), optional :: params
+    end function sll_scalar_initializer_1d
+  end interface
+
+  abstract interface
      function sll_scalar_initializer_2d( x1, x2, params )
        use sll_working_precision
-       sll_real64                                  :: sll_scalar_initializer_2d
+       sll_real64               :: sll_scalar_initializer_2d
        sll_real64, intent(in)                         :: x1
        sll_real64, intent(in)                         :: x2
        sll_real64, dimension(:), intent(in), optional :: params
@@ -670,7 +679,7 @@ contains
 !    end if
 !
 !    if( .not. associated(mesh2d_eta1_eta2) ) then
-!       print *, 'sll_4d_parallelsll_parallel_array_initializer_module.F90_array_initializer error: ', &
+!       print *, 'sll_parallel_array_initializer_module.F90_array_initializer error: ', &
 !            'passed mesh2d_eta1_eta2 argument is uninitialized.'
 !    end if
 !

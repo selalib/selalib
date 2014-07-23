@@ -73,8 +73,6 @@ program unit_test
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 
-  
-
   do iplot = 1, 10
      do i=1, nc1+1
         do j=1,nc2+1
@@ -82,7 +80,7 @@ program unit_test
         end do
      end do
      call write_scalar_field_2d( field, multiply_by_jacobian=.true. )
-     call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
+     !call write_scalar_field_2d( field, multiply_by_jacobian=.true., output_file_name="field" )
   end do
 
   call transf%write_to_file()

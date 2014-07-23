@@ -56,7 +56,7 @@ Create a new directory, build the libraries within ::
  cd build
  cmake ../src/
  make
- make test
+ make Experimental
 
 CMake is a system for managing the build process of software. It writes in a CMakeCache.txt file all parameters that it has detected on your system. CMake can to not detect libraries installed for several reasons. So we need to edit the CMake cache.
 If you have already performed cmake you can run ::
