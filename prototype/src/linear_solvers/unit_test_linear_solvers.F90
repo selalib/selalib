@@ -16,6 +16,7 @@ type(sll_csc_matrix)                  :: csc_matrix
 
 #ifdef PASTIX
 type(pastix_solver)                   :: pastix
+sll_int32                             :: j
 #endif
 
 sll_int32   :: ncells
@@ -23,7 +24,7 @@ sll_int32   :: n, nnzeros
 sll_real64  :: delta
 sll_real64  :: x
 sll_int32   :: error
-sll_int32   :: i, j
+sll_int32   :: i
 
 #ifdef PASTIX
 call sll_boot_collective()
