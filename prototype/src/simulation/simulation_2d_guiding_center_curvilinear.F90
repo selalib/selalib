@@ -7,12 +7,15 @@ module sll_simulation_2d_guiding_center_curvilinear_module
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
-#include "sll_field_2d.h"
+!#include "sll_field_2d.h"
 #include "sll_utilities.h"
 #include "sll_poisson_solvers.h"
-  use sll_constants
-  use sll_logical_meshes  
-  use sll_module_advection_1d_periodic
+!  use sll_constants
+!  use sll_logical_meshes  
+!  use sll_module_advection_1d_periodic
+!  use sll_module_interpolators_1d_base
+  use sll_module_advection_2d_base
+  use sll_module_characteristics_1d_explicit_euler
   use sll_module_advection_2d_BSL
   use sll_module_advection_2d_tensor_product
   use sll_module_characteristics_2d_explicit_euler
@@ -20,29 +23,34 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_module_advection_1d_BSL
   use sll_module_advection_1d_CSL
   use sll_module_advection_1d_PSM
-  use sll_module_characteristics_1d_explicit_euler
+!  use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
   use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
+ 
   use sll_cubic_spline_interpolator_1d
-  use sll_coordinate_transformation_2d_base_module
+  use sll_cubic_spline_interpolator_2d
+!  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
   use sll_common_array_initializers_module
-  !use sll_mudpack_curvilinear
+  use sll_parallel_array_initializer_module
+  
 #ifdef MUDPACK
+ !use sll_mudpack_curvilinear
   use sll_module_poisson_2d_mudpack_curvilinear_solver_old
 #endif
-  use sll_module_poisson_2d_elliptic_solver
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_timer
-  use sll_fft
+  use sll_module_poisson_2d_base
+  use sll_module_poisson_2d_elliptic_solver, &
+     only: new_poisson_2d_elliptic_solver, &
+           es_gauss_legendre
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_timer
+!  use sll_fft
   implicit none
-  
   
   sll_int32, parameter :: SLL_EULER = 0 
   sll_int32, parameter :: SLL_PREDICTOR_CORRECTOR = 1 
@@ -130,19 +138,6 @@ module sll_simulation_2d_guiding_center_curvilinear_module
      
   end type sll_simulation_2d_guiding_center_curvilinear
 
-
-  abstract interface
-    function sll_scalar_initializer_2d( x1, x2, params )
-      use sll_working_precision
-      sll_real64                                     :: sll_scalar_initializer_2d
-      sll_real64, intent(in)                         :: x1
-      sll_real64, intent(in)                         :: x2
-      sll_real64, dimension(:), intent(in), optional :: params
-    end function sll_scalar_initializer_2d
-  end interface
-
-
-
 contains
 
   function new_guiding_center_2d_curvilinear(filename) result(sim)
@@ -224,7 +219,6 @@ contains
     sll_int32 :: Nc_eta2
     sll_real64 :: r_minus
     sll_real64 :: r_plus
-    sll_int32 :: visu_step
 !!$    class(sll_interpolator_2d_base), pointer :: f_interp2d
 !!$    class(sll_interpolator_2d_base), pointer :: phi_interp2d
 !!$    class(sll_characteristics_2d_base), pointer :: charac2d
@@ -1007,7 +1001,7 @@ contains
     
     
     !time_loop
-    select case(time_loop_case)
+    select case(trim(time_loop_case))
       case ("SLL_EULER")
         print*,"#time_loop = SLL_EULER " 
         sim%time_loop_case = SLL_EULER
@@ -1615,7 +1609,7 @@ contains
   !---------------------------------------------------
   subroutine plot_f_curvilinear(iplot,f,mesh_2d,transf)
     use sll_xdmf
-    use sll_hdf5_io
+    use sll_hdf5_io_serial
     sll_int32 :: file_id
     sll_int32 :: error
     sll_real64, dimension(:,:), allocatable :: x1

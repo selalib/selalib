@@ -4,9 +4,9 @@
 # sequential modules. Or, maybe this should be handled at the highest possible
 # level: once the parallel hdf5 is found, all the library should be compiled 
 # with the mpi wrapper compiler.
-IF(HDF5_IS_PARALLEL)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
   SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-ENDIF(HDF5_IS_PARALLEL)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
 
 
 

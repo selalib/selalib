@@ -13,7 +13,7 @@ SET(SPM_FILES getdia.F90
 MESSAGE(STATUS "SUITESPARSE_FOUND:${SUITESPARSE_FOUND}")
 
 IF(PASTIX_FOUND)
-   LIST(APPEND SPM_FILES spm_murge.F90)
+#   LIST(APPEND SPM_FILES spm_murge.F90)
 ELSEIF(SUITESPARSE_FOUND)
    LIST(APPEND SPM_FILES spm_umfpack.F90)
 ElSE()
@@ -27,9 +27,13 @@ ADD_LIBRARY(spm STATIC ${SPM_FILES})
 #install(FILES ${spm_mods} DESTINATION include)
 
 IF(SUITESPARSE_FOUND)
-  ADD_LIBRARY(sll_sparse_matrix STATIC sll_sparse_matrix_umfpack_module.F90)
+  ADD_LIBRARY(sll_sparse_matrix STATIC 
+  	      sll_sparse_matrix_umfpack_module.F90
+	      sll_sparse_matrix_mp_module.F90)
 ElSE()
-  ADD_LIBRARY(sll_sparse_matrix STATIC sll_sparse_matrix_module.F90)
+  ADD_LIBRARY(sll_sparse_matrix STATIC 
+  	      sll_sparse_matrix_module.F90
+	      sll_sparse_matrix_mp_module.F90 )
 ENDIF()
 
 TARGET_LINK_LIBRARIES( sll_sparse_matrix 
@@ -46,7 +50,6 @@ IF(SUITESPARSE_FOUND)
     ${SUITESPARSE_LIBRARIES}
     ${BLAS_LIBRARIES})
 ENDIF()
-
 
 ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 

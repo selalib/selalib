@@ -63,6 +63,7 @@ ADD_LIBRARY(sll_dg_fields STATIC sll_dg_fields_2d.F90
 TARGET_LINK_LIBRARIES(sll_dg_fields sll_coordinate_transformations 
                                     sll_integration)
 
+
 ADD_EXECUTABLE(test_dg_fields unit_test_dg_fields.F90)
 
 TARGET_LINK_LIBRARIES(test_dg_fields sll_dg_fields)
