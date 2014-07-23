@@ -1,4 +1,5 @@
 program unit_test
+#include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
@@ -8,7 +9,7 @@ program unit_test
 
 #define NPTS1 64
 #define NPTS2 64 
-#define SPL_DEG 9
+#define SPL_DEG 3
 #define X1MIN 0.0_f64
 #define X1MAX 1.0_f64
 #define X2MIN 0.0_f64
@@ -23,17 +24,25 @@ program unit_test
   sll_real64, dimension(:,:), allocatable    :: reference
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
+  sll_real64, dimension(:),allocatable :: slope_left
+  sll_real64, dimension(:),allocatable :: slope_right
+  sll_real64, dimension(:),allocatable :: slope_top
+  sll_real64, dimension(:),allocatable :: slope_bottom
+  sll_real64, dimension(:),allocatable :: value_left
+  sll_real64, dimension(:),allocatable :: value_right
+  sll_real64, dimension(:),allocatable :: value_top
+  sll_real64, dimension(:),allocatable :: value_bottom
 !!$  sll_real64, dimension(:), allocatable      :: x1_eta1_min
 !!$  sll_real64, dimension(:), allocatable      :: x1_eta1_max
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: eta1, eta2, h1, h2
-  sll_real64 :: acc, acc1, acc2, acc3, node_val, ref, deriv1_val 
+  sll_real64 :: acc, acc1, acc2, acc3,acc4,acc5,acc6,acc7,acc8, node_val, ref, deriv1_val 
   sll_real64 :: deriv2_val
-  sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1
-  sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2
-  sll_real64 :: normL2_0, normL2_1, normL2_2, normL2_3
-  sll_real64 :: normH1_0, normH1_1, normH1_2, normH1_3
+  sll_real64 :: acc_der1, acc1_der1, acc2_der1, acc3_der1,acc4_der1,acc5_der1,acc6_der1,acc7_der1,acc8_der1
+  sll_real64 :: acc_der2, acc1_der2, acc2_der2, acc3_der2,acc4_der2,acc5_der2,acc6_der2,acc7_der2,acc8_der2
+  sll_real64 :: normL2_0, normL2_1, normL2_2, normL2_3,normL2_4,normL2_5,normL2_6,normL2_7,normL2_8
+  sll_real64 :: normH1_0, normH1_1, normH1_2, normH1_3,normH1_4,normH1_5,normH1_6,normH1_7,normH1_8
   logical :: result
 
   
@@ -44,14 +53,23 @@ program unit_test
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
   
-  allocate(x(NPTS1,NPTS2))
-  allocate(reference(NPTS1,NPTS2))
-  allocate(calculated(NPTS1,NPTS2))
-  allocate(difference(NPTS1,NPTS2))
-  allocate(eta1_pos(NPTS1))
-  allocate(eta2_pos(NPTS2))
-!  allocate(x1_eta1_min(NPTS2))
- ! allocate(x1_eta1_max(NPTS2))
+  SLL_CLEAR_ALLOCATE(x(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(reference(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(calculated(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(difference(1:NPTS1,1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(eta1_pos(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(eta2_pos(1:NPTS2),ierr)
+
+  SLL_CLEAR_ALLOCATE(slope_left(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(slope_right(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(slope_top(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(slope_bottom(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(value_left(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(value_right(1:NPTS2),ierr)
+  SLL_CLEAR_ALLOCATE(value_top(1:NPTS1),ierr)
+  SLL_CLEAR_ALLOCATE(value_bottom(1:NPTS1),ierr)
+!  SLL_CLEAR_ALLOCATE(x1_eta1_min(1:NPTS2),ierr)
+ ! SLL_CLEAR_ALLOCATE(x1_eta1_max(1:NPTS2),ierr)
   print *, '***********************************************************'
   print *, '              periodic-periodic case'
   print *, '***********************************************************'
@@ -380,8 +398,521 @@ program unit_test
      end do
   end do
 
+  print *, '***********************************************************'
+  print *, '              Hermite-dirichlet-dirichlet-hermite case'
+  print *, '***********************************************************'
+  
+  call sll_delete(ad2d)
+  
+  !reinitialize data
+  
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta1_pos(i+1)      = eta1
+        eta2_pos(j+1)      = eta2
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
+        slope_right(j+1)   = cos(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi
+        slope_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MAX) *2.0_f64*sll_pi
+        slope_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MIN) *2.0_f64*sll_pi
+        value_left(j+1)    = sin(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2)   
+        value_right(j+1)   = sin(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) 
+        value_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MAX) 
+        value_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MIN) 
+     end do
+  end do
+  
+  call ad2d%initialize( &
+       NPTS1, &
+       NPTS2, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_HERMITE, &
+       SLL_DIRICHLET, &
+       SLL_DIRICHLET, &
+       SLL_HERMITE, &
+       SPL_DEG, &
+       SPL_DEG )
+
+
+  call ad2d%set_values_at_boundary(&
+       value_left,&
+       value_right,&
+       value_bottom,&
+       value_top)
+
+
+  call ad2d%set_slopes_at_boundary(&
+       slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+  
+  call ad2d%compute_interpolants( &
+       x,&
+       eta1_pos,&
+       NPTS1,&
+       eta2_pos,&
+       NPTS2)
 
   
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
+  print *, 'Compare the values of the transformation at the nodes: '
+
+  acc4 = 0.0_f64
+  acc4_der1 = 0.0_f64
+  acc4_der2 = 0.0_f64
+  normL2_4  = 0.0_F64
+  normH1_4  = 0.0_f64
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
+        node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
+        ref                 = reference(i+1,j+1)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        normL2_4 = normL2_4 + (node_val-ref)**2 *h1*h2
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
+        acc4        = acc4 + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc4_der1 = acc4_der1 + abs(deriv1_val-ref)
+        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
+        normH1_4 = normH1_4 + (deriv1_val-ref)**2 *h1*h2
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc4_der2 = acc4_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+        normH1_4 = normH1_4 + (deriv2_val-ref)**2 *h1*h2
+     end do
+  end do
+
+
+
+
+  print *, '***********************************************************'
+  print *, '              Hermite-dirichlet-hermite-dirichlet case'
+  print *, '***********************************************************'
+  
+  call sll_delete(ad2d)
+  
+  !reinitialize data
+  
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta1_pos(i+1)      = eta1
+        eta2_pos(j+1)      = eta2
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
+        slope_right(j+1)   = cos(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi
+        slope_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MAX) *2.0_f64*sll_pi
+        slope_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MIN) *2.0_f64*sll_pi
+        value_left(j+1)    = sin(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2)   
+        value_right(j+1)   = sin(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) 
+        value_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MAX) 
+        value_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MIN) 
+     end do
+  end do
+  
+  call ad2d%initialize( &
+       NPTS1, &
+       NPTS2, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_HERMITE, &
+       SLL_DIRICHLET, &
+       SLL_HERMITE, &
+       SLL_DIRICHLET, &
+       SPL_DEG, &
+       SPL_DEG )
+
+
+  call ad2d%set_values_at_boundary(&
+       value_left,&
+       value_right,&
+       value_bottom,&
+       value_top)
+
+
+  call ad2d%set_slopes_at_boundary(&
+       slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+  
+  call ad2d%compute_interpolants( &
+       x,&
+       eta1_pos,&
+       NPTS1,&
+       eta2_pos,&
+       NPTS2)
+
+  
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
+  print *, 'Compare the values of the transformation at the nodes: '
+
+  acc5 = 0.0_f64
+  acc5_der1 = 0.0_f64
+  acc5_der2 = 0.0_f64
+  normL2_5  = 0.0_F64
+  normH1_5  = 0.0_f64
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
+        node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
+        ref                 = reference(i+1,j+1)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        normL2_5 = normL2_5 + (node_val-ref)**2 *h1*h2
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
+        acc5        = acc5 + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc5_der1 = acc5_der1 + abs(deriv1_val-ref)
+        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
+        normH1_5 = normH1_5 + (deriv1_val-ref)**2 *h1*h2
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc5_der2 = acc5_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+        normH1_5 = normH1_5 + (deriv2_val-ref)**2 *h1*h2
+     end do
+  end do
+
+
+  print *, '***********************************************************'
+  print *, '              dirichlet-Hermite-hermite-dirichlet case'
+  print *, '***********************************************************'
+  
+  call sll_delete(ad2d)
+  
+  !reinitialize data
+  
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta1_pos(i+1)      = eta1
+        eta2_pos(j+1)      = eta2
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
+        slope_right(j+1)   = cos(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi
+        slope_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MAX) *2.0_f64*sll_pi
+        slope_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MIN) *2.0_f64*sll_pi
+        value_left(j+1)    = sin(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2)   
+        value_right(j+1)   = sin(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) 
+        value_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MAX) 
+        value_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MIN) 
+     end do
+  end do
+  
+  call ad2d%initialize( &
+       NPTS1, &
+       NPTS2, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_DIRICHLET, &
+       SLL_HERMITE, &
+       SLL_HERMITE, &
+       SLL_DIRICHLET, &
+       SPL_DEG, &
+       SPL_DEG )
+
+
+  call ad2d%set_values_at_boundary(&
+       value_left,&
+       value_right,&
+       value_bottom,&
+       value_top)
+
+
+  call ad2d%set_slopes_at_boundary(&
+       slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+  
+  call ad2d%compute_interpolants( &
+       x,&
+       eta1_pos,&
+       NPTS1,&
+       eta2_pos,&
+       NPTS2)
+
+  
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
+  print *, 'Compare the values of the transformation at the nodes: '
+
+  acc6 = 0.0_f64
+  acc6_der1 = 0.0_f64
+  acc6_der2 = 0.0_f64
+  normL2_6  = 0.0_F64
+  normH1_6  = 0.0_f64
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
+        node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
+        ref                 = reference(i+1,j+1)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        normL2_6 = normL2_6 + (node_val-ref)**2 *h1*h2
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
+        acc6        = acc6 + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc6_der1 = acc6_der1 + abs(deriv1_val-ref)
+        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
+        normH1_6 = normH1_6 + (deriv1_val-ref)**2 *h1*h2
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc6_der2 = acc6_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+        normH1_6 = normH1_6 + (deriv2_val-ref)**2 *h1*h2
+     end do
+  end do
+
+
+
+  print *, '***********************************************************'
+  print *, '              dirichlet-Hermite-dirichlet-hermite case'
+  print *, '***********************************************************'
+  
+  call sll_delete(ad2d)
+  
+  !reinitialize data
+  
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta1_pos(i+1)      = eta1
+        eta2_pos(j+1)      = eta2
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
+        slope_right(j+1)   = cos(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi
+        slope_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MAX) *2.0_f64*sll_pi
+        slope_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MIN) *2.0_f64*sll_pi
+        value_left(j+1)    = sin(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2)   
+        value_right(j+1)   = sin(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) 
+        value_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MAX) 
+        value_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MIN) 
+     end do
+  end do
+  
+  call ad2d%initialize( &
+       NPTS1, &
+       NPTS2, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_DIRICHLET, &
+       SLL_HERMITE, &
+       SLL_DIRICHLET, &
+       SLL_HERMITE, &
+       SPL_DEG, &
+       SPL_DEG )
+
+
+  call ad2d%set_values_at_boundary(&
+       value_left,&
+       value_right,&
+       value_bottom,&
+       value_top)
+
+
+  call ad2d%set_slopes_at_boundary(&
+       slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+  
+  call ad2d%compute_interpolants( &
+       x,&
+       eta1_pos,&
+       NPTS1,&
+       eta2_pos,&
+       NPTS2)
+
+  
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
+  print *, 'Compare the values of the transformation at the nodes: '
+
+  acc7 = 0.0_f64
+  acc7_der1 = 0.0_f64
+  acc7_der2 = 0.0_f64
+  normL2_7  = 0.0_F64
+  normH1_7  = 0.0_f64
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
+        node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
+        ref                 = reference(i+1,j+1)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        normL2_7 = normL2_7 + (node_val-ref)**2 *h1*h2
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
+        acc7        = acc7 + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc7_der1 = acc7_der1 + abs(deriv1_val-ref)
+        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
+        normH1_7 = normH1_7 + (deriv1_val-ref)**2 *h1*h2
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc7_der2 = acc7_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+        normH1_7 = normH1_7 + (deriv2_val-ref)**2 *h1*h2
+     end do
+  end do
+
+
+
+  print *, '***********************************************************'
+  print *, '              Hermite-Hermite-Hermite-hermite case'
+  print *, '***********************************************************'
+  
+  call sll_delete(ad2d)
+  
+  !reinitialize data
+  
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1               = X1MIN + real(i,f64)*h1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta1_pos(i+1)      = eta1
+        eta2_pos(j+1)      = eta2
+        x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
+        reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
+        slope_right(j+1)   = cos(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi
+        slope_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MAX) *2.0_f64*sll_pi
+        slope_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*X2MIN) *2.0_f64*sll_pi
+        value_left(j+1)    = sin(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2)   
+        value_right(j+1)   = sin(2.0_f64*sll_pi*X1MAX)*sin(2.0_f64*sll_pi*eta2) 
+        value_top(i+1)     = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MAX) 
+        value_bottom(i+1)  = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*X2MIN) 
+     end do
+  end do
+  
+  call ad2d%initialize( &
+       NPTS1, &
+       NPTS2, &
+       X1MIN, &
+       X1MAX, &
+       X2MIN, &
+       X2MAX, &
+       SLL_HERMITE, &
+       SLL_HERMITE, &
+       SLL_HERMITE, &
+       SLL_HERMITE, &
+       SPL_DEG, &
+       SPL_DEG )
+
+
+  call ad2d%set_values_at_boundary(&
+       value_left,&
+       value_right,&
+       value_bottom,&
+       value_top)
+
+
+  call ad2d%set_slopes_at_boundary(&
+       slope_left,&
+       slope_right,&
+       slope_bottom,&
+       slope_top)
+  
+  call ad2d%compute_interpolants( &
+       x,&
+       eta1_pos,&
+       NPTS1,&
+       eta2_pos,&
+       NPTS2)
+
+  
+  !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
+  print *, 'Compare the values of the transformation at the nodes: '
+
+  acc8 = 0.0_f64
+  acc8_der1 = 0.0_f64
+  acc8_der2 = 0.0_f64
+  normL2_8  = 0.0_F64
+  normH1_8  = 0.0_f64
+  do j=0,NPTS2-1
+     do i=0,NPTS1-1
+        eta1       = X1MIN + real(i,f64)*h1
+        eta2       = X2MIN + real(j,f64)*h2
+        !print*, "hehe"
+        node_val   = ad2d%interpolate_value(eta1,eta2)
+        !print*, "hehe"
+        ref                 = reference(i+1,j+1)
+        calculated(i+1,j+1) = node_val
+        difference(i+1,j+1) = ref-node_val
+        normL2_8 = normL2_8 + (node_val-ref)**2 *h1*h2
+        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
+        !     'theoretical = ', ref
+        acc8        = acc8 + abs(node_val-ref)
+
+        deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)        
+        ref = 2.0_f64*sll_pi*cos(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
+        acc8_der1 = acc8_der1 + abs(deriv1_val-ref)
+        !print*, eta1,eta2,ref,deriv1_val,abs(deriv1_val-ref)
+        normH1_8 = normH1_8 + (deriv1_val-ref)**2 *h1*h2
+        deriv2_val = ad2d%interpolate_derivative_eta2(eta1,eta2)
+        ref  = 2.0_f64*sll_pi*sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
+        acc8_der2 = acc8_der2 + abs(deriv2_val-ref)
+        !print*, ref,deriv2_val
+        normH1_8 = normH1_8 + (deriv2_val-ref)**2 *h1*h2
+     end do
+  end do
+
+
+  
+  deallocate(slope_left)
+  deallocate(slope_right)
+  deallocate(slope_top)
+  deallocate(slope_bottom)
+  deallocate(value_left)
+  deallocate(value_right)
+  deallocate(value_top)
+  deallocate(value_bottom)
+  call sll_delete(ad2d)
+
   print*, '--------------------------------------------'
   print*, ' Average error in nodes'
   print*, '--------------------------------------------'
@@ -396,6 +927,21 @@ program unit_test
        result)
   print *, 'Average error in nodes (periodic-periodic) = ', acc/(NPTS1*NPTS2)
   call test_value_for_acceptable_error( acc/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
+  print *, 'Average error in nodes (hermite-dirichlet-dirichlet-hermite) = ', acc4/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc4/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
+  print *, 'Average error in nodes (hermite-dirichlet-hermite-dirichlet) = ', acc5/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc5/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
+  print *, 'Average error in nodes (dirichlet-hermite-hermite-dirichlet) = ', acc6/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc6/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
+  print *, 'Average error in nodes (dirichlet-hermite-dirichlet-hermite) = ', acc7/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc7/(NPTS1*NPTS2), TOLERANCE_NODE, &
+       result)
+  print *, 'Average error in nodes (hermite-hermite-hermite-hermite) = ', acc8/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc8/(NPTS1*NPTS2), TOLERANCE_NODE, &
        result)
 
   print*, '--------------------------------------------'
@@ -417,6 +963,26 @@ program unit_test
        acc_der1/(NPTS1*NPTS2)
   call test_value_for_acceptable_error( acc_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
        result)
+  print *,'Average error in nodes first derivative eta1(hermite-dirichlet-dirichlet-hermite)=',&
+       acc4_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc4_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta1(hermite-dirichlet-hermite-dirichlet)=',&
+       acc5_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc5_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta1(dirichlet-hermite-hermite-dirichlet)=',&
+       acc6_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc6_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta1(dirichlet-hermite-dirichlet-hermite)=',&
+       acc7_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc7_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta1(hermite-hermite-hermite-hermite)=',&
+       acc8_der1/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc8_der1/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
 
   print*, '--------------------------------------------'
   print*, ' Average error in nodes first derivative eta2'
@@ -435,6 +1001,29 @@ program unit_test
        result)
   print *,'Average error in nodes first derivative eta2(periodic-periodic)=',&
        acc_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta2(hermite-dirichlet-dirichlet-hermite)=',&
+       acc4_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc4_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta2(hermite-dirichlet-hermite-dirichlet)=',&
+       acc5_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc5_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+  print *,'Average error in nodes first derivative eta2(dirichlet-hermite-hermite-dirichlet)=',&
+        acc6_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc6_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+ print *,'Average error in nodes first derivative eta2(dirichlet-hermite-dirichlet-hermite)=',&
+        acc7_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc7_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+ print *,'Average error in nodes first derivative eta2(hermite-hermite-hermite-hermite)=',&
+        acc8_der2/(NPTS1*NPTS2)
+  call test_value_for_acceptable_error( acc8_der2/(NPTS1*NPTS2),TOLERANCE_DER,&
+       result)
+
 
   print*, '--------------------------------------------'
   print*, ' Error norm L2'
@@ -443,7 +1032,11 @@ program unit_test
   print *,'Error norm L2 (dirichlet-periodic)=', sqrt(normL2_2), h1**(SPL_DEG)*(2.0_f64*sll_pi)
   print *,'Error norm L2 (periodic-dirichlet)=', sqrt(normL2_1), h1**(SPL_DEG)*(2.0_f64*sll_pi)
   print *,'Error norm L2 (periodic-periodic)=',  sqrt(normL2_0), h1**(SPL_DEG)*(2.0_f64*sll_pi)
-
+  print *,'Error norm L2 (hermite-dirichlet-dirichlet-hermite)=',  sqrt(normL2_4), h1**(SPL_DEG)*(2.0_f64*sll_pi)
+  print *,'Error norm L2 (hermite-dirichlet-hermite-dirichlet)=',  sqrt(normL2_5), h1**(SPL_DEG)*(2.0_f64*sll_pi)
+  print *,'Error norm L2 (dirichlet-hermite-hermite-dirichlet)=',  sqrt(normL2_6), h1**(SPL_DEG)*(2.0_f64*sll_pi)
+  print *,'Error norm L2 (dirichlet-hermite-dirichlet-hermite)=',  sqrt(normL2_7), h1**(SPL_DEG)*(2.0_f64*sll_pi)
+  print *,'Error norm L2 (hermite-hermite-hermite-hermite)=',  sqrt(normL2_8), h1**(SPL_DEG)*(2.0_f64*sll_pi)
   print*, '--------------------------------------------'
   print*, ' Error norm H1'
   print*, '--------------------------------------------'
@@ -451,14 +1044,28 @@ program unit_test
   print *,'Error norm H1 (dirichlet-periodic)=', sqrt(normH1_2), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
   print *,'Error norm H1 (periodic-dirichlet)=', sqrt(normH1_1), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
   print *,'Error norm H1 (periodic-periodic)=',  sqrt(normH1_0), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
+  print *,'Error norm H1 (hermite-dirichlet-dirichlet-hermite)=',  sqrt(normH1_4), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
+  print *,'Error norm H1 (hermite-dirichlet-hermite-dirichlet)=',  sqrt(normH1_5), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
+  print *,'Error norm H1 (dirichlet-hermite-hermite-dirichlet)=',  sqrt(normH1_6), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
+  print *,'Error norm H1 (dirichlet-hermite-dirichlet-hermite)=',  sqrt(normH1_7), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
+  print *,'Error norm H1 (hermite-hermite-hermite-hermite)=',      sqrt(normH1_8), h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2
 
   if (  ( sqrt(normL2_0) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
         ( sqrt(normL2_1) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
         ( sqrt(normL2_2) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
         ( sqrt(normL2_3) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
+        ( sqrt(normL2_4) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
+        ( sqrt(normL2_5) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
+        ( sqrt(normL2_6) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
+        ( sqrt(normL2_7) <= h1**(SPL_DEG)*(2.0_f64*sll_pi))   .AND. &
         ( sqrt(normH1_0) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
         ( sqrt(normH1_1) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
         ( sqrt(normH1_2) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
+        ( sqrt(normH1_4) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
+        ( sqrt(normH1_5) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
+        ( sqrt(normH1_6) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
+        ( sqrt(normH1_7) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
+        ( sqrt(normH1_8) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2) .AND. &
         ( sqrt(normH1_3) <= h1**(SPL_DEG-3)*(2.0_f64*sll_pi)**2)) then
      
      print *, 'PASSED'

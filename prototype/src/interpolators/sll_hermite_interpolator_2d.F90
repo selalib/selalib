@@ -322,6 +322,7 @@ contains
     sll_real64, dimension(num_points1,num_points2) :: data_out
     print *,'#wrap_interpolate2d_disp_hermite_2d'
     print *,'#not implemented for the moment'
+    data_out = 0.0_f64
     stop
   end function wrap_interpolate2d_disp_hermite_2d
 
@@ -381,7 +382,7 @@ contains
     
     print *, 'wrap_get_coefficients_hermite_2d: ERROR: This function has not been ', &
          'implemented yet.'
-    res = 0._f64
+    res => null()
     print *,interpolator%npts1    
     stop      
   end function wrap_get_coefficients_hermite_2d
