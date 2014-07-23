@@ -7,7 +7,9 @@
 
 program qns_4d_general
 #include "sll_working_precision.h"
-  use sll_simulation_4d_qns_general_module
+  use sll_simulation_4d_qns_general_module, only: &
+     sll_simulation_4d_qns_general, initialize_4d_qns_general, &
+     run_4d_qns_general
   use sll_collective
   use sll_constants
   use sll_logical_meshes
@@ -15,17 +17,18 @@ program qns_4d_general
   use sll_common_coordinate_transformations
   use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
+  use sll_module_poisson_2d_elliptic_solver, &
+     only: es_gauss_legendre
   implicit none
 
   character(len=256) :: filename
   character(len=256) :: filename_local
-  type(sll_simulation_4d_qns_general)      :: simulation
+  type(sll_simulation_4d_qns_general)     :: simulation
   type(sll_logical_mesh_2d), pointer      :: mx
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   !class(sll_coordinate_transformation_2d_nurbs), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
-  sll_real64, dimension(1:6) :: gaussian_params
   sll_real64, dimension(1:2) :: elec_field_ext_params
   sll_real64, external :: func_zero, func_one, func_minus_one,func_epsi
   sll_real64, dimension(1) :: f_zero_params
@@ -227,16 +230,16 @@ program qns_4d_general
        SPL_DEG_ETA2, & 
        SPL_DEG_VX, & 
        SPL_DEG_VY, & 
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
        ES_GAUSS_LEGENDRE,&
        ES_GAUSS_LEGENDRE,&
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
        electric_field_ext_1,&
        electric_field_ext_2,&
        elec_field_ext_params,&

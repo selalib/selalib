@@ -14,6 +14,7 @@ SET(SLL_MACROS
     ${SLL_DIR}/interpolators/sll_interpolators.h
     ${SLL_DIR}/splines/sll_splines.h
     ${SLL_DIR}/file_io/sll_file_io.h
+    ${SLL_DIR}/file_io_parallel/sll_file_io_parallel.h
     ${SLL_DIR}/fft/sll_fft.h
     ${SLL_DIR}/fft/sll_fftw.h
     ${SLL_DIR}/integration/sll_integration.h
@@ -63,7 +64,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_file_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
-    ${SLL_DIR}/file_io/sll_hdf5_io.F90
+    ${SLL_DIR}/file_io/sll_hdf5_io_serial.F90
     ${SLL_DIR}/file_io/sll_xdmf.F90
     ${SLL_DIR}/file_io/sll_ascii_io.F90
     ${SLL_DIR}/file_io/sll_xml_io.F90
@@ -136,7 +137,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/sparse_matrix_interface/spm_basic.F90
     ${SLL_DIR}/sparse_matrix_interface/spm_def.F90
 #    ${SLL_DIR}/sparse_matrix_interface/spm_mkl.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
+#    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
 #    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
     ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
@@ -151,6 +152,12 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
+    ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
+    ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
+    ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
+    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_mp_module.F90
+    ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
+
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
  )
 
@@ -211,32 +218,33 @@ ELSE()
 
 ENDIF(SUITESPARSE_ENABLED)
 
-
-IF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
-
+IF(MPI_MODULE_ENABLED)
    SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
        ${SLL_DIR}/collective/sll_collective.F90
        ${SLL_DIR}/remap/sll_remap.F90
        ${SLL_DIR}/point_to_point_communications/sll_point_to_point_comms.F90
-       ${SLL_DIR}/file_io/sll_hdf5_io_parallel.F90
-       ${SLL_DIR}/file_io/sll_xdmf_parallel.F90
-       ${SLL_DIR}/file_io/sll_gnuplot_parallel.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_cartesian_par.F90
        ${SLL_DIR}/poisson_solvers/sll_poisson_polar_parallel.F90
        ${SLL_DIR}/simulation/simulation_base_class.F90
        ${SLL_DIR}/parallel_array_initializers/sll_common_array_initializers_module.F90
        ${SLL_DIR}/parallel_array_initializers/sll_parallel_array_initializer_module.F90
        ${SLL_DIR}/parallel_utilities/buffer_loader_utilities.F90
-       ${SLL_DIR}/simulation/simulation_4d_qns_general.F90
+       ${SLL_DIR}/file_io_parallel/sll_gnuplot_parallel.F90)
+ENDIF(MPI_MODULE_ENABLED)
+
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+
+   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
+       ${SLL_DIR}/file_io_parallel/sll_hdf5_io_parallel.F90
+       ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
+       ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
+       ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
  )
 
-ENDIF(HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
+ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
 
 IF(SLL_BUILD_PACKAGE)
-
-   SET(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/../../usr" 
-       CACHE PATH "Installation directory of the library" FORCE)
 
    SET(BUILD_SHARED_LIBRARY  OFF CACHE BOOL "build shared library")
    #SET(CMAKE_SHARED_LINKER_FLAGS "-fpic")

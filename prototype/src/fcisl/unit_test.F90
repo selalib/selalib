@@ -10,11 +10,11 @@ program fcisl_test
   
   sll_int32 :: Nc_x1
   sll_int32 :: Nc_x2
-  sll_real64 :: A1
-  sll_real64 :: A2
-  sll_real64 :: A1_0
-  sll_real64 :: A2_0
-  sll_int32 :: k_mode
+  sll_real64 :: A1   = 0.0_f64
+  sll_real64 :: A2   = 0.0_f64
+  sll_real64 :: A1_0 = 0.0_f64
+  sll_real64 :: A2_0 = 0.0_f64
+  sll_int32 :: k_mode = 1
   sll_real64 :: x1
   sll_real64 :: x2
   sll_real64 :: dt

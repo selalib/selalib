@@ -31,7 +31,6 @@ implicit none
   sll_int32 :: i
   sll_real64 :: dt
   sll_real64 :: err
-  sll_real64 :: tmp
 
   
   
