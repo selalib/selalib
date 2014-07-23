@@ -139,7 +139,6 @@ contains
     sll_int32, dimension(:,:), pointer :: lpi_columns
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
-    sll_int32 :: ierr
     !print *,'#num_rows=',num_rows
     !print *,'#num_nz=',num_nz
 
