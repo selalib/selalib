@@ -71,6 +71,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/file_io/sll_plotmtv.F90
     ${SLL_DIR}/visu_pic/sll_visu_pic.F90
     ${SLL_DIR}/timer/sll_timer.F90
+    ${SLL_DIR}/fields/sll_scalar_field_1d_base_alternative.F90
+    ${SLL_DIR}/fields/sll_scalar_field_1d_alternative.F90
     ${SLL_DIR}/field_accumulators/sll_field_accumulators_2d.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d_alternative.F90
@@ -148,15 +150,17 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
-    ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90	
+    ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
+    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformation_2d_base.F90	
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d.F90
-    ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations_2d_nurbs.F90
+    ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
     ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
+    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
-
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
+    ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
  )
 
 IF(Fortran_COMPILER MATCHES "IBM")
@@ -238,6 +242,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
+       ${SLL_DIR}/simulation/simulation_4d_DK_hybrid.F90
  )
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
