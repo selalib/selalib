@@ -93,6 +93,10 @@ ENDIF(SUITESPARSE_ENABLED)
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+IF(SLL_BUILD_PACKAGE)
+   SET(CMAKE_BUILD_TYPE Release
+       CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+ENDIF(SLL_BUILD_PACKAGE)
 
 ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
