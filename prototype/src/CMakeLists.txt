@@ -139,6 +139,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(advection)
    ADD_SUBDIRECTORY(fcisl)
    ADD_SUBDIRECTORY(gyroaverage)
+   ADD_SUBDIRECTORY(maxwell_solvers)
    
    IF(MPI_MODULE_ENABLED)
       
@@ -149,6 +150,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
       ADD_SUBDIRECTORY(linear_solvers)
+      ADD_SUBDIRECTORY(maxwell_solvers_parallel)
    
    ENDIF()
 
@@ -171,7 +173,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers)
-   ADD_SUBDIRECTORY(maxwell_solvers)
    ADD_SUBDIRECTORY(multigrid)
    ADD_SUBDIRECTORY(BSL)
    ADD_SUBDIRECTORY(CSL)
