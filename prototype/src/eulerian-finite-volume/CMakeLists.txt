@@ -1,4 +1,4 @@
-IF(FFTW_LIBRARY AND HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
+IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_ENABLED)
 
    ADD_EXECUTABLE(test_4d_vp_eulerian_cartesian_finite_volume 
                   simulation_4d_vp_eulerian_cartesian_finite_volume.F90
@@ -16,9 +16,7 @@ IF(FFTW_LIBRARY AND HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED 
                          sll_integration
                          sll_file_io_parallel
                          sll_timer
-                         sll_collective
-                         ${FFTW_LIBRARY}
-                         ${HDF5_LIBRARIES})
+                         sll_collective)
 
    ADD_LIBRARY(sll_lobatto sll_lobatto_poisson.F90 
                            map_function_module.F90
