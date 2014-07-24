@@ -3,8 +3,8 @@
 PortSystem          1.0
 
 name                pastix
-version             5.2.1
-revision            4694
+version             5.2.2.12
+revision            93185ac
 
 set v_version_wo_char {}
 set v_char            {}
@@ -12,7 +12,7 @@ set v_regexp          {(5\.\d+\.\d+)([a-zA-Z]+)}
 regexp $v_regexp ${version} -> v_version_wo_char v_char
 
 # this is specific to this port and *version* for downloading it:
-set release         33110
+set release         33841
 
 categories          math
 maintainers         nomaintener
@@ -24,12 +24,12 @@ description         PaStiX is a high performance parallel solver for very large 
 long_description    ${description}
 
 homepage            http://gforge.inria.fr/projects/pastix
-master_sites        https://gforge.inria.fr/frs/download.php/${release}
-distname            pastix_release_${revision}
+master_sites        https://gforge.inria.fr/frs/download.php/file/${release}
+distname            pastix_${version}
 
 livecheck.type      regex
 livecheck.url       https://gforge.inria.fr/frs/?group_id=186
-livecheck.regex     "pastix_release_(5\\.\\d+\\.\\d+\[a-zA-Z\]+)\\.tar\\.bz2"
+#livecheck.regex     "pastix_release_(5\\.\\d+\\.\\d+\[a-zA-Z\]+)\\.tar\\.bz2"
 
 use_bzip2           yes
 
@@ -88,7 +88,7 @@ foreach ver ${gcc_versions} {
 
 set archflags       [get_canonical_archflags]
 
-depends_lib-append  port:scotch port:hwloc port:ctags port:git-core
+depends_lib-append  port:scotch port:hwloc
 
 build.env-append    CC=${configure.cc} \
                     CXX=${configure.cxx} \
