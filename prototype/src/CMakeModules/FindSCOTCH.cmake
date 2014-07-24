@@ -3,9 +3,9 @@
 # Pastix requires SCOTCH 
 
 IF( DEFINED ENV{SCOTCH_ROOT} )
-
    SET(SCOTCH_ROOT $ENV{SCOTCH_ROOT} CACHE PATH "scotch library location")
-
+ELSE()
+   SET(SCOTCH_ROOT /usr/local CACHE PATH "scotch library location")
 ENDIF()
 
 FIND_PATH(SCOTCH_INCLUDE_DIRS
