@@ -42,11 +42,6 @@ module sll_simulation_4d_qns_general_multipatch_module
      ! Physics/numerical parameters
      sll_real64 :: dt
      sll_int32  :: num_iterations
-     ! Mesh parameters
-     sll_int32  :: nc_x1
-     sll_int32  :: nc_x2
-     sll_int32  :: nc_x3
-     sll_int32  :: nc_x4
      ! for QNS spline_degre in each direction
      sll_int32  :: spline_degree_eta1
      sll_int32  :: spline_degree_eta2
@@ -283,20 +278,6 @@ contains
     sim%c_f_params(:)   = c_f_params
     sim%elec_field_ext_f_params(:) = elec_field_ext_f_params
     
-    ! SLL_ALLOCATE(sim%values_jacobian_mat(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1,2,2),ierr)
-    ! sim%values_jacobian_mat(:,:,:,:) = 0.0_f64
-    ! SLL_ALLOCATE(sim%values_jacobian_matinv(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1,2,2),ierr)
-    ! sim%values_jacobian_matinv(:,:,:,:) = 0.0_f64
-    ! SLL_ALLOCATE(sim%values_jacobian(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
-    ! sim%values_jacobian(:,:) = 0.0_f64
-    ! SLL_ALLOCATE(sim%pt_eta1(sim%mesh2d_x%num_cells1 +1),ierr)
-    ! SLL_ALLOCATE(sim%pt_eta2(sim%mesh2d_x%num_cells2 +1),ierr)
-    ! SLL_ALLOCATE(sim%point_x(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
-    ! SLL_ALLOCATE(sim%point_y(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
-    ! SLL_ALLOCATE(sim%values_ex(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1 ),ierr)
-    ! sim%values_ex = 0.0_f64
-    ! SLL_ALLOCATE(sim%values_ey(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
-    ! sim%values_ey = 0.0_f64
   end subroutine initialize_4d_qns_gen_mp
 
 
@@ -307,14 +288,9 @@ contains
     sll_int32             :: IO_stat
     sll_real64            :: dt
     sll_int32             :: number_iterations
-    sll_int32             :: num_cells_x1
-    sll_int32             :: num_cells_x2
-    sll_int32             :: num_cells_x3
-    sll_int32             :: num_cells_x4
     sll_int32, parameter  :: input_file = 99
 
     namelist /sim_params/ dt, number_iterations
-    namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3, num_cells_x4
     ! Try to add here other parameters to initialize the mesh values like
     ! xmin, xmax and also for the distribution function initializer.
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
@@ -323,18 +299,12 @@ contains
        STOP
     end if
     read(input_file, sim_params)
-    read(input_file,grid_dims)
+!    read(input_file,grid_dims)
     close(input_file)
 
     sim%dt = dt
     sim%num_iterations = number_iterations
     print*, 'number iterations', number_iterations
-    ! In this particular simulation, since the system is periodic, the number
-    ! of points is the same as the number of cells in all directions.
-    sim%nc_x1 = num_cells_x1
-    sim%nc_x2 = num_cells_x2
-    sim%nc_x3 = num_cells_x3
-    sim%nc_x4 = num_cells_x4
   end subroutine init_4d_qns_gen_mp
 
 
@@ -449,7 +419,7 @@ contains
     sll_int32 :: size_diag    
     
     ! compute Jacobian and logical mesh points
-    call compute_values_jacobian_and_mesh_points(sim)
+!    call compute_values_jacobian_and_mesh_points(sim)
 
     ! Start with the fields
     a11_field_mat => &
@@ -1294,10 +1264,10 @@ contains
     character(len=80)   :: filename_HDF5
     character(20), save :: numfmt = "'_d',i5.5"
     
-    ix1_diag   = int(sim%nc_x1/2)
-    ix2_diag   = int(sim%nc_x2/3)
-    iv1_diag   = int(sim%nc_x3/4)
-    iv2_diag   = int(sim%nc_x4/3)
+!!$    ix1_diag   = int(sim%nc_x1/2)
+!!$    ix2_diag   = int(sim%nc_x2/3)
+!!$    iv1_diag   = int(sim%nc_x3/4)
+!!$    iv2_diag   = int(sim%nc_x4/3)
 
     diag_masse_result       = 0.0_f64
     diag_norm_L1_result     = 0.0_f64
@@ -1455,97 +1425,11 @@ contains
   !
   !-----------------------------------------------------------
   
-  subroutine compute_energy_qns(sim,phi)
-
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
-    type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
-
-    ! local variables
-    sll_int32  :: Neta1_loc,Neta2_loc,Nv2,Nv1,Neta1,Neta2
-    sll_real64 :: delta_eta1,delta_eta2,delta_v1,delta_v2
-    sll_real64, dimension(1:2,1:2) :: inv_j
-    sll_real64 :: val_jac
-    sll_real64 :: v1,v2
-    sll_real64 :: ex,ey
-    sll_real64 :: eta1,eta2
-    sll_real64 :: delta_f
-    sll_int32  :: iloc1, iloc2
-    sll_int32  :: i1,i2,iv1,iv2
-    sll_int32, dimension(1:4) :: glob_ind4d
-    sll_real64 :: nrj_kin,nrj_pot,nrj_tot
-    
-    Neta1_loc  = size(sim%f_x3x4,1)
-    Neta2_loc  = size(sim%f_x3x4,2)
-    Neta1      = sim%nc_x1 + 1
-    Neta2      = sim%nc_x2 + 1
-    Nv1        = size(sim%f_x3x4,3)
-    Nv2        = size(sim%f_x3x4,4)
-    ! delta_eta1 = sim%mesh2d_x%delta_eta1
-    ! delta_eta2 = sim%mesh2d_x%delta_eta2
-    delta_v1   = sim%mesh2d_v%delta_eta1
-    delta_v2   = sim%mesh2d_v%delta_eta2
-    
-    
-    nrj_kin   = 0.0
-    nrj_pot   = 0.0
-    nrj_tot   = 0.0
-    
-    !-> Computation of the energy kinetic locally in (x1,x2) directions
-    do iloc2 = 1,Neta2_loc
-       do iloc1 = 1,Neta1_loc
-          do iv1 = 1,Nv1-1
-             v1 = sim%mesh2d_v%eta1_min + (iv1-1)*delta_eta1
-                
-             do iv2 = 1,Nv2-1
-                v2 = sim%mesh2d_v%eta2_min + (iv2-1)*delta_eta2
-                
-                glob_ind4d(:) = local_to_global_4D(sim%sequential_x3x4, &
-                     (/iloc1,iloc2,iv1,iv2/))
-                i1 = glob_ind4d(1)
-                i2 = glob_ind4d(2)
-
-                !eta1   =  sim%mesh2d_x%eta1_min + real(i1-1,f64)*delta_eta1
-                !eta2   =  sim%mesh2d_x%eta2_min + real(i2-1,f64)*delta_eta2
-                eta1 = sim%pt_eta1(i1)
-                eta2 = sim%pt_eta2(i2)
-                ! ex     =  sim%values_ex (i1,i2 )!
-                !- phi%first_deriv_eta1_value_at_point(eta1,eta2)
-                ! ey     =  sim%values_ey(i1,i2)
-                !- phi%first_deriv_eta2_value_at_point(eta1,eta2)
-                ! inv_j  =  sim%values_jacobian_matinv(i1,i2,:,:)
-                !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-                
-                if (i1 .ne. Neta1) then
-                   if (i2 .ne. Neta2) then 
-                      
-                      ! val_jac = abs(sim%values_jacobian(i1,i2))
-                      !abs(sim%transfx%jacobian_at_node(i1,i2))
-                      
-                      delta_f = sim%f_x3x4(iloc1,iloc2,iv1,iv2)
-                      
-                      
-                      nrj_kin = nrj_kin + &
-                           delta_f * (v1**2 + v2**2) * 0.5 * val_jac * &
-                           delta_eta1*delta_eta2*delta_v1*delta_v2
-                      
-                   end if
-                end if
-             end do
-          end do
-          
-          nrj_pot = nrj_pot + &
-               ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ &
-               (inv_j(1,2)*ex + inv_j(2,2)*ey)**2) * 0.5 * val_jac * &
-               delta_eta1*delta_eta2
-       end do
-    end do
-    
-    nrj_tot = nrj_kin + nrj_pot
-    
-    sim%diag_nrj_kin(sim%count_save_diag + 1)   = nrj_kin
-    sim%diag_nrj_pot(sim%count_save_diag + 1)   = nrj_pot
-    sim%diag_nrj_tot(sim%count_save_diag + 1)   = nrj_tot
-  end subroutine compute_energy_qns
+! Save this for now as a reference for the potential energy.          
+!!$          nrj_pot = nrj_pot + &
+!!$               ((inv_j(1,1)*ex + inv_j(2,1)*ey)**2+ &
+!!$               (inv_j(1,2)*ex + inv_j(2,2)*ey)**2) * 0.5 * val_jac * &
+!!$               delta_eta1*delta_eta2
   
   !-----------------------------------------------------------
   ! Computation of the L1 norm , i.e   
@@ -1566,7 +1450,7 @@ contains
   !
   ! Computation of the L infini = max( abs( delta f) )
   !-----------------------------------------------------------
-  
+#if 0  
   subroutine compute_norm_L1_L2_Linf_qns(sim)
     
     class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
@@ -1652,38 +1536,6 @@ contains
     sim%diag_norm_Linf(sim%count_save_diag + 1)   = norm_Linf
     sim%diag_entropy_kin(sim%count_save_diag + 1) = entropy_kin
   end subroutine compute_norm_L1_L2_Linf_qns
-
-  subroutine compute_values_jacobian_and_mesh_points(sim)
-    class(sll_simulation_4d_qns_general_multipatch), intent(inout) :: sim
-    sll_real64 :: delta1,delta2
-    sll_int32  :: i,j
-    sll_real64 :: eta1_min
-    sll_real64 :: eta2_min
-    sll_real64 :: eta1,eta2
-    
-    ! delta1 = sim%mesh2d_x%delta_eta1
-    ! delta2 = sim%mesh2d_x%delta_eta2
-    
-    ! eta1_min = sim%mesh2d_x%eta1_min
-    ! eta2_min = sim%mesh2d_x%eta2_min
-    
-    ! do j=1,sim%mesh2d_x%num_cells2 +1
-    !    eta2   =  eta2_min + real(j-1,f64)*delta2
-    !    sim%pt_eta2(j) = eta2
-    !    do i=1,sim%mesh2d_x%num_cells1 +1
-    !       eta1   =  eta1_min + real(i-1,f64)*delta1
-    !       sim%pt_eta1(i) = eta1
-          
-    !       sim%values_jacobian_matinv(i,j,:,:)=  sim%transfx%inverse_jacobian_matrix(eta1,eta2)
-    !       sim%values_jacobian_mat(i,j,:,:)   =  sim%transfx%jacobian_matrix(eta1,eta2)
-    !       sim%values_jacobian(i,j)           =  sim%values_jacobian_mat(i,j,1,1)*&
-    !                                             sim%values_jacobian_mat(i,j,2,2)-&
-    !                                             sim%values_jacobian_mat(i,j,1,2)*&
-    !                                             sim%values_jacobian_mat(i,j,2,1)
-    !       sim%point_x(i,j) = sim%transfx%x1(eta1,eta2)
-    !       sim%point_y(i,j) = sim%transfx%x2(eta1,eta2)
-    !    end do
-    ! end do
-    
-  end subroutine compute_values_jacobian_and_mesh_points
+#endif
+ 
 end module sll_simulation_4d_qns_general_multipatch_module
