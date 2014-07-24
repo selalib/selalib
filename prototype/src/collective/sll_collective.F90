@@ -182,6 +182,8 @@ module sll_collective
      !>        rank "root" to all other processes of the communicator.
      module procedure sll_collective_bcast_real32
      module procedure sll_collective_bcast_real64
+     module procedure sll_collective_bcast_comp32
+     module procedure sll_collective_bcast_comp64
   end interface
 
   !> @brief Gathers together values from a group of processes.
@@ -215,6 +217,7 @@ module sll_collective
   !!        in a communicator.
   interface sll_collective_scatter
      module procedure sll_collective_scatter_real
+     module procedure sll_collective_scatter_real64
   end interface
 
   !> @brief Scatters a buffer in parts to all processes in a communicator.
@@ -229,7 +232,8 @@ module sll_collective
                       sll_collective_allreduce_real64, &
                       sll_collective_allreduce_logical, &
                       sll_collective_allreduce_comp64, &
-                      sll_collective_allreduce_comp32
+                      sll_collective_allreduce_comp32, &
+                      sll_collective_allreduce_int32
   end interface
 
   !> @brief Reduces values on all processes to a single value.
@@ -260,10 +264,18 @@ module sll_collective
   end interface
 
 
+  !> @brief Performs a global sum and writes the result in the optional given node
   interface sll_collective_globalsum
      module procedure sll_collective_globalsum_array_real64, &
-                      sll_collective_globalsum_real64, &
-                      sll_collective_globalsum_array_comp64
+                        sll_collective_globalsum_array_real32, &
+                        sll_collective_globalsum_real64, &
+                        sll_collective_globalsum_array_comp64,&
+                        sll_collective_globalsum_array_comp32,&
+                        sll_collective_globalsum_comp64,&
+                        sll_collective_globalsum_array_int32,&
+                        sll_collective_globalsum_int32,&
+                        sll_collective_globalsum_comp32, &
+                        sll_collective_globalsum_real32
   endinterface
 
 
@@ -491,7 +503,7 @@ contains !************************** Operations **************************
     sll_int32                            :: ierr
     call MPI_BCAST( buffer, size, MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_bcast_real(): MPI_BCAST()' )
+         'sll_collective_bcast_real32(): MPI_BCAST()' )
   end subroutine sll_collective_bcast_real32
 
   ! Start with something simple, like a buffer of 'real's...
@@ -509,8 +521,43 @@ contains !************************** Operations **************************
     sll_int32                            :: ierr
     call MPI_BCAST( buffer, size, MPI_REAL8, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_bcast_real(): MPI_BCAST()' )
+         'sll_collective_bcast_real64(): MPI_BCAST()' )
   end subroutine sll_collective_bcast_real64
+
+  !> @brief Broadcasts a message from the process with rank "root"
+  !>        to all other processes of the communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] buffer starting address of buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
+  subroutine sll_collective_bcast_comp64( col, buffer, size, root )
+    type(sll_collective_t), pointer      :: col
+    sll_comp64, dimension(:), intent(in) :: buffer ! what would change...
+    sll_int32, intent(in)                :: size
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    call MPI_BCAST( buffer, size, MPI_DOUBLE_COMPLEX, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_bcast_comp64(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_comp64
+
+  !> @brief Broadcasts a message from the process with rank "root"
+  !>        to all other processes of the communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] buffer starting address of buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
+  subroutine sll_collective_bcast_comp32( col, buffer, size, root )
+    type(sll_collective_t), pointer      :: col
+    sll_comp32, dimension(:), intent(in) :: buffer ! what would change...
+    sll_int32, intent(in)                :: size
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    call MPI_BCAST( buffer, size, MPI_COMPLEX, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_bcast_comp32(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_comp32
+
 
   ! Consider joining the next 'gather' interfaces into a single one.
   !> @brief Gathers together real values from a group of processes
@@ -683,7 +730,7 @@ contains !************************** Operations **************************
     sll_real64, dimension(:), intent(in)    :: send_buf
     sll_int32, intent(in)                   :: send_sz
     sll_real64, dimension(:), intent(out)   :: recv_buf ! would change
-    sll_int32, intent(in)                   :: recv_sz  
+    sll_int32, intent(in)                   :: recv_sz
     sll_int32                               :: ierr
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
@@ -788,6 +835,37 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, &
          'sll_collective_scatter_real(): MPI_SCATTER()' )
   end subroutine sll_collective_scatter_real
+
+
+
+  !> @brief Sends data from one process to all other processes
+  !>        in a communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] send_buf address of send buffer
+  !> @param[in] send_count number of elements sent to each process
+  !> @param[in] root rank of sending process
+  !> @param[in] rec_buf address of receive buffer
+  subroutine sll_collective_scatter_real64( col, send_buf, send_count, root, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    sll_real64, dimension(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)                :: send_count
+    sll_int32, intent(in)                :: root
+    sll_real64, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_int32                            :: ierr
+    !sll_int32                            :: recvcount
+    ! FIXME: argument checking
+    ! recvcount = size/col%size
+    !send_buf and send_count significant only at root
+    if(col%rank .eq. root) then
+      SLL_ASSERT( SIZE(send_buf) .eq. (send_count*(col%size)) )
+    endif
+    call MPI_SCATTER( send_buf, send_count, MPI_DOUBLE_PRECISION, rec_buf, send_count, &
+         MPI_DOUBLE_PRECISION, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_scatter_real64(): MPI_SCATTER()' )
+  end subroutine sll_collective_scatter_real64
+
 
   !> @brief Scatters a buffer in parts to all processes in a communicator
   !> @param[in] col wrapper around the communicator
@@ -937,6 +1015,37 @@ contains !************************** Operations **************************
       'sll_collective_allreduce_comp32(): MPI_ALLREDUCE()' )
   end subroutine sll_collective_allreduce_comp32
 
+
+  !> @brief Combines complex values from all processes and
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+   subroutine sll_collective_allreduce_int32( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_int32, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_int32, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_INTEGER  , &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_int32(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_int32
 
   !> @brief Combines logical values from all processes and
   !!        distributes the result back to all processes
@@ -1390,9 +1499,9 @@ contains !************************** Operations **************************
   !  subroutine sll_collective_Irecv( )
 
 
-!> @brief Performs a global sum over an array and writes the result in the given node
-!> If no node in root_rank is given, perform an allreduce this means the sum is written
-!> to all nodes
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
   !> @param[in] col wrapper around the communicator
   !> @param[in] root_rank rank of root process, where the sum will be stored
   !> @param[inout] summand summands of the sum, the result will be written
@@ -1419,12 +1528,12 @@ contains !************************** Operations **************************
     endif
      summand=recvsum
     SLL_DEALLOCATE_ARRAY(recvsum,ierr)
- endsubroutine
+ endsubroutine sll_collective_globalsum_array_real64
 
 
-!> @brief Performs a global sum over an array and writes the result in the given node
-!> If no node in root_rank is given, perform an allreduce this means the sum is written
-!> to all nodes
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
   !> @param[in] col wrapper around the communicator
   !> @param[in] root_rank rank of root process, where the sum will be stored
   !> @param[inout] summand summands of the sum, the result will be written
@@ -1451,11 +1560,11 @@ contains !************************** Operations **************************
     endif
      summand=recvsum
     SLL_DEALLOCATE_ARRAY(recvsum,ierr)
- endsubroutine
+ endsubroutine sll_collective_globalsum_array_comp64
 
 
 
-!> @brief Performs a global sum and writes the result in the given node
+  !> @brief Performs a global sum and writes the result in the given node
   !> @param[in] col wrapper around the communicator
   !> @param[in] root_rank rank of root process, where the sum will be stored
   !> @param[inout] summand summands of the sum, the result will be written
@@ -1463,15 +1572,206 @@ contains !************************** Operations **************************
   subroutine sll_collective_globalsum_real64( col, summand, root_rank)
     type(sll_collective_t), pointer      :: col
     sll_real64, intent(inout) :: summand
-    sll_int32, intent(in)                :: root_rank
+    sll_int32, optional, intent(in)    :: root_rank
     sll_real64, dimension(1) :: summand_tmp
 
+    !Promote the scalar to an array
     summand_tmp(1)=summand
-    call sll_collective_globalsum_array_real64( col, summand_tmp, root_rank)
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_real64( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_real64( col, summand_tmp)
+    endif
+
     summand=summand_tmp(1)
  endsubroutine sll_collective_globalsum_real64
 
 
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_real32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_real32, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_real32, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_real32( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_real32( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_real32
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_comp32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp32, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_comp32, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_comp32( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_comp32( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_comp32
+
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_int32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_int32, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_int32, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_int( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_int32( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_int32
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_comp64( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp64, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_comp64, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_comp64( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_comp64( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_comp64
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_int32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_int32, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_int32, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_int32( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_int32( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_int32
+
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_comp32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp32, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_comp32, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_comp32( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_comp32( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_comp32
+
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_real32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_real32, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_real32, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_real32( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_real32( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_real32
 
 
 end module sll_collective
