@@ -630,7 +630,7 @@ subroutine test_sll_collective_globalsum
   call sll_collective_globalsum( sll_world_collective, summand_real32, 0)
 
   summand_int32=1
-  call sll_collective_globalsum( sll_world_collective, summand_comp32, 0)
+  call sll_collective_globalsum( sll_world_collective, summand_int32, 0)
 
 
 
@@ -643,6 +643,7 @@ subroutine test_sll_collective_globalsum
         summand_int32==size) then
        print *, '(GLOBALSUM) PASS'
         else
+            !print *, summand_real32, summand_real64, summand_comp32 , summand_comp64 , summand_int32
        stop '(GLOBALSUM) NOT PASS'
    endif
 
