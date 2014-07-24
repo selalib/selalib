@@ -115,6 +115,8 @@ module sll_pic_1d_field_solver
 
         !Interpolatin schemes
         procedure, pass(this), private :: get_rhs_cic=>pic_1d_field_solver_get_rhs_cic
+        procedure, pass(this), public :: set_num_sample=>pic_1d_field_solver_set_num_sample
+
     end type pic_1d_field_solver
 
 
@@ -285,6 +287,18 @@ contains
 
     endfunction
 
+
+    subroutine pic_1d_field_solver_set_num_sample(this, num_sample)
+        class(pic_1d_field_solver) , intent(inout) :: this
+        sll_int32, intent(in) :: num_sample
+        selectcase(this%poisson_solver)
+            case(SLL_SOLVER_FEM)
+                this%femsolver%num_sample=num_sample
+            case(SLL_SOLVER_FOURIER)
+
+        endselect
+
+    endsubroutine
 
 
     subroutine pic_1d_field_solver_solve(this)
