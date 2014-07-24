@@ -159,8 +159,8 @@ contains ! *******************************************************************
    sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
-   sll_int32 :: quadrature_type1_tmp
-   sll_int32 :: quadrature_type2_tmp
+   !sll_int32 :: quadrature_type1_tmp
+   !sll_int32 :: quadrature_type2_tmp
    
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
    ! The total number of splines in a single direction is given by
@@ -194,11 +194,11 @@ contains ! *******************************************************************
    es%eta1_min   = eta1_min
    es%eta2_min   = eta2_min
 
-   quadrature_type1_tmp = ES_GAUSS_LEGENDRE
-   quadrature_type2_tmp = ES_GAUSS_LEGENDRE
+   !quadrature_type1_tmp = ES_GAUSS_LEGENDRE
+   !quadrature_type2_tmp = ES_GAUSS_LEGENDRE
    ! Allocate and fill the gauss points/weights information.
    ! First direction
-   select case(quadrature_type1_tmp)
+   select case(quadrature_type1)
    case (ES_GAUSS_LEGENDRE)
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
       es%gauss_pts1(:,:) = 0.0_f64
@@ -210,7 +210,7 @@ contains ! *******************************************************************
       print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
    end select
       
-   select case(quadrature_type2_tmp)
+   select case(quadrature_type2)
    case (ES_GAUSS_LEGENDRE)
       !print*, 'Hello'
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
@@ -754,7 +754,7 @@ contains ! *******************************************************************
     M_rho_loc     = 0.0_f64
     es%rho_vec(:) = 0.0_f64
     rho_coeff_1d  = 0.0_f64
-    
+   
   
     !call sll_set_time_mark(t0)
     !ES Compute rho at all Gauss points
@@ -786,7 +786,7 @@ contains ! *******************************************************************
                rho_coeff_1d,es%rho_vec)
 
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
-         .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
+               .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
              es%rho_vec = es%rho_vec - sum(es%rho_vec)/es%intjac*es%masse
           end if
@@ -800,18 +800,23 @@ contains ! *******************************************************************
                 do jg=1,num_pts_g2
                    ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
                    ! the bottom edge of the cell.
-                   gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
+                   gpt2  = eta2  + 0.5_f64*es%delta_eta2 * &
+                        ( es%gauss_pts2(1,jg) + 1.0_f64 )
                    wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
                 
                    ig2 = jg + (j-1)*num_pts_g2
                    do ig=1,num_pts_g1
                       ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-                      gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
+                      gpt1  = eta1  + &
+                           0.5_f64*es%delta_eta1 * &
+                           ( es%gauss_pts1(1,ig) + 1.0_f64 )
                       wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
                       ig1 = ig + (i-1)*num_pts_g1
                       rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-                      val_jac = es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
-                      int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
+                      val_jac = &
+                           es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
+                      int_rho = int_rho + &
+                           rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                       int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
                    
@@ -854,18 +859,22 @@ contains ! *******************************************************************
              do jg=1,num_pts_g2
                 ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
                 ! the bottom edge of the cell.
-                gpt2  = eta2  + 0.5_f64*es%delta_eta2 * ( es%gauss_pts2(1,jg) + 1.0_f64 )
+                gpt2  = eta2  + 0.5_f64*es%delta_eta2 * &
+                     ( es%gauss_pts2(1,jg) + 1.0_f64 )
                 wgpt2 = 0.5_f64*es%delta_eta2*es%gauss_pts2(2,jg) !ATTENTION 0.5
                 
                 ig2 = jg + (j-1)*num_pts_g2
                 do ig=1,num_pts_g1
                    ! rescale Gauss points to be in interval [eta1,eta1+delta1]
-                   gpt1  = eta1  + 0.5_f64*es%delta_eta1 * ( es%gauss_pts1(1,ig) + 1.0_f64 )
+                   gpt1  = eta1  + 0.5_f64*es%delta_eta1 * &
+                        ( es%gauss_pts1(1,ig) + 1.0_f64 )
                    wgpt1 = 0.5_f64*es%delta_eta1*es%gauss_pts1(2,ig)
                    ig1 = ig + (i-1)*num_pts_g1
                    rho_at_gauss(ig1,ig2)   = rho%value_at_point(gpt1,gpt2)
-                   val_jac = es%values_jacobian(i+es%num_cells1*(ig-1),j + es%num_cells2*(jg-1))
-                   int_rho = int_rho + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
+                   val_jac = &
+                        es%values_jacobian(i+es%num_cells1*(ig-1),j+es%num_cells2*(jg-1))
+                   int_rho = int_rho &
+                        + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                    int_jac = int_jac + wgpt2*wgpt1*val_jac
                    
                    
@@ -901,17 +910,12 @@ contains ! *******************************************************************
     end select
     !time = sll_time_elapsed_since(t0)
 
+
     !print*, 'time to construct the rho', time
 
-    
-!!$    if ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC) &
-!!$         .and. (es%bc_right==SLL_PERIODIC).and.(es%bc_left==SLL_PERIODIC)) then
-!!$       
-!!$       call solve_linear_system_perper(es,es%masse)
-!!$       
-!!$    else 
+   
     call solve_linear_system(es)
-    !!    end if
+
     
     call  phi%interp_2d%set_coefficients( es%phi_vec)
 
@@ -1087,7 +1091,11 @@ contains ! *******************************************************************
             dbiatx2,&
             2)
 
-       call interv(obj%knots2_rho,obj%num_cells2 + obj%spline_degree2+ 2, gpt2, left_y, mflag_y )
+       call interv(&
+            obj%knots2_rho,&
+            obj%num_cells2 + obj%spline_degree2+ 2,&
+            gpt2, left_y, mflag_y )
+
        call bsplvd( &
             obj%knots2_rho, &
             obj%spline_degree2+1,&
@@ -1099,7 +1107,7 @@ contains ! *******************************************************************
       
        ! we stocke the values of spline to construct the source term
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
-       obj%values_splines_gauss2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2_rho(:,1)
+       obj%values_splines_gauss2(cell_j+obj%num_cells2*(j-1),:)=dbiatx2_rho(:,1)
        obj%tab_index_coeff2(cell_j + obj%num_cells2*(j-1)) = left_y
 
        
@@ -1219,7 +1227,8 @@ contains ! *******************************************************************
                 Stiff_loc(index1) = &
                      Stiff_loc(index1) + &
                      val_jac*wgpt1*wgpt2* &
-                     (dbiatx1(ii+1,2)*dbiatx2(jj+1,1)+dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
+                     (dbiatx1(ii+1,2)*dbiatx2(jj+1,1)+&
+                     dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
                 
                 
          
@@ -1376,11 +1385,10 @@ contains ! *******************************************************************
           ! rescale Gauss points to be in interval [eta1,eta1+delta1]
           gpt1  = eta1  + 0.5_f64*delta1 * ( obj%gauss_pts1(1,i) + 1.0_f64 )
           wgpt1 = 0.5_f64*delta1*obj%gauss_pts1(2,i)
- 
    
           val_f = rho_at_gauss(i+(cell_i-1)*num_pts_g1, j + (cell_j-1)*num_pts_g2)
           val_jac = &
-               obj%values_jacobian(cell_i + obj%num_cells1*(i-1),cell_j + obj%num_cells2*(j-1))
+               obj%values_jacobian(cell_i+obj%num_cells1*(i-1),cell_j+obj%num_cells2*(j-1))
 
           ! loop over the splines supported in the cell that are different than
           ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
@@ -1390,7 +1398,6 @@ contains ! *******************************************************************
                 
                 spline1 = obj%values_splines_eta1(cell_i + obj%num_cells1*(i-1),ii+1)
                 spline2 = obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),jj+1)
-   
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
                 M_rho_loc(index1)= M_rho_loc(index1) + &
@@ -1532,11 +1539,9 @@ contains ! *******************************************************************
                      M_b_vect_loc(b,bprime) - &
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
-                
-    
-                
+
                 index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
-                index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2 + mm
+                index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2+ mm
                 index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
                 es%local_to_global_spline_indices_source(b,cell_index)= index
                 
