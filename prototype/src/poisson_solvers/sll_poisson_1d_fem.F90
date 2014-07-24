@@ -51,7 +51,11 @@ module sll_poisson_1d_fem
         sll_int32,private ::num_cells
 
         sll_int32,private :: boundarycondition
+
+        sll_real64, private :: tr_stiffinv_massm
+        sll_int32 :: num_sample     !number of samples for the rhs, for statistic reasons
     contains
+
         procedure,  pass(this) :: initialize =>sll_initialize_poisson_1d_fem
         !procedure,  pass(poisson) :: new =>initialize_poisson_1d_fem
         !procedure,  pass(poisson) :: initialize =>initialize_poisson_1d_fem
@@ -65,6 +69,8 @@ module sll_poisson_1d_fem
         procedure, pass(this) :: L2norm_solution=>poisson_1d_fem_L2norm_solution
         procedure, pass(this) :: set_solution=>poisson_1d_fem_set_solution
 
+        procedure, pass(this) :: H1seminorm_solution_stoch_approx=>&
+                                            poisson_1d_fem_H1seminorm_solution_stoch_approx
         !        module interface solve
         !        procedure,  pass(this) :: solve_poisson_1d_fem
         !        end interface
@@ -76,6 +82,7 @@ module sll_poisson_1d_fem
         procedure,pass(this),  public ::  solve_poisson_1d_fem_functionrhs
         procedure,pass(this),  private ::  solve_poisson_1d_fem_rhs_and_get
 
+        procedure, pass(this), private :: set_tr_stiffinv_massm=>poisson_1d_fem_tr_stiffinv_massm
 
         procedure, pass(this), public :: get_rhs_from_klimontovich_density_weighted=>&
             poisson_1d_fem_get_rhs_from_klimontovich_density_weighted
@@ -193,7 +200,7 @@ contains
         call sll_poisson_1d_fft_precomputation(this,this%mass_matrix_first_line, &
             this%mass_matrix_first_line_fourier, ierr)
 
-
+        call this%set_tr_stiffinv_massm()
     endsubroutine
 
     subroutine poisson_1d_fem_set_solution(this, solution_vector)
@@ -475,8 +482,10 @@ contains
         endif
 
         !Set the seminorm
-        this%seminorm=dot_product(this%fem_solution, rhs)
 
+        !STOCHASTIC APPROX
+        call this%H1seminorm_solution_stoch_approx(rhs, this%num_sample)
+        !this%seminorm=dot_product(this%fem_solution, rhs)
 
 !        if (  this%boundarycondition==SLL_DIRICHLET ) then
 !            !         rhs_bc(1:this%bspline%degree+3)=0
@@ -713,7 +722,7 @@ contains
         class(poisson_1d_fem),intent(inout) :: this
         sll_real64 :: seminorm
         sll_int32 :: N
-        sll_real64 , dimension(:) :: solution(this%num_cells)
+        sll_real64 , dimension(:) :: rhs(this%num_cells)
         !Since the input data is real, the data in fourier space satisfies
         !X_{N-k}=X_k^* (complex conjugate) which can be stored more efficiently,
         !so for the complex data there will be only allocated space for N/2 +1 values
@@ -721,28 +730,104 @@ contains
 
         !!type(sll_fft_plan), pointer :: forward_fftplan => null()
         !!type(sll_fft_plan), pointer :: backward_fftplan => null()
-        solution=this%fem_solution
+        rhs=this%fem_solution
 
         !Determine dimension of problem
         N=size(this%fem_solution)
         SLL_ASSERT(N==this%num_cells)
         SLL_ASSERT(is_power_of_two(int(N,i64)))
 
-        call fft_apply_plan(this%forward_fftplan,solution,data_complex)
+        call fft_apply_plan(this%forward_fftplan,rhs,data_complex)
         data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
         data_complex(1)=0.0_f64
-        call fft_apply_plan(this%backward_fftplan,data_complex,solution)
+        call fft_apply_plan(this%backward_fftplan,data_complex,rhs)
 
         !!!
         !Somehow the normalization does not do what it should do:
-        solution=solution/(N)
+        rhs=rhs/(N)
 
-        seminorm=dot_product(this%fem_solution, solution )
+        seminorm=dot_product(this%fem_solution, rhs )
         !seminorm=sqrt(dot_product(fem_solution, fem_solution ))
         !        matrix_product=bspline_fem_solver_1d_circulant_matrix_vector_product&
             !            (stiffn_matrix_first_line,fem_solution)
             this%seminorm=seminorm
     endsubroutine
+
+!    !<Sets the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
+!    !<This function uses stochastic approximates for the covariances
+!    !<matrix of the rhs as
+!    subroutine poisson_1d_fem_calc_H1seminorm_solution_stochastic(this)
+!        class(poisson_1d_fem),intent(inout) :: this
+!        sll_real64 :: seminorm
+!        sll_int32 :: N
+!        sll_int32 :: Nmark !Number of markers
+!        sll_real64 , dimension(:) :: rhs(this%num_cells)
+!        !Since the input data is real, the data in fourier space satisfies
+!        !X_{N-k}=X_k^* (complex conjugate) which can be stored more efficiently,
+!        !so for the complex data there will be only allocated space for N/2 +1 values
+!        sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
+!
+!        !Reconstruct the rhs
+!        rhs=this%fem_solution
+!
+!        !Determine dimension of problem
+!        N=size(this%fem_solution)
+!        SLL_ASSERT(N==this%num_cells)
+!        SLL_ASSERT(is_power_of_two(int(N,i64)))
+!
+!        !Ge
+!        call fft_apply_plan(this%forward_fftplan,rhs,data_complex)
+!        data_complex=data_complex*(this%stiffn_matrix_first_line_fourier)
+!        data_complex(1)=0.0_f64
+!        call fft_apply_plan(this%backward_fftplan,data_complex,rhs)
+!
+!        !Somehow the normalization does not do what it should do:
+!        rhs=rhs/(N)
+!
+!        seminorm=dot_product(this%fem_solution, rhs )
+!        !seminorm=sqrt(dot_product(fem_solution, fem_solution ))
+!        !        matrix_product=bspline_fem_solver_1d_circulant_matrix_vector_product&
+!            !            (stiffn_matrix_first_line,fem_solution)
+!            this%seminorm=seminorm
+!    endsubroutine
+
+    !<Sets the squared H1-seminorm of the solution $\Phi$: $|\nabla \Phi|^2$
+    !<This function uses stochastic approximates for the covariances
+    !<matrix of the rhs as
+    subroutine poisson_1d_fem_H1seminorm_solution_stoch_approx &
+                    (this, rhs, num_sample)
+              class(poisson_1d_fem),intent(inout) :: this
+              sll_real64, dimension(:) :: rhs
+              sll_int32,  intent(in) :: num_sample
+                sll_int32 :: N
+            sll_real64 :: bias
+        !Determine dimension of problem
+        N=size(this%fem_solution)
+        SLL_ASSERT(N==size(rhs))
+        SLL_ASSERT(is_power_of_two(int(N,i64)))
+
+        bias= this%tr_stiffinv_massm - dot_product(this%fem_solution, rhs )
+        !Covariance matrix under the CLT
+        !Independent from weights
+        bias=bias/num_sample
+
+        this%seminorm=dot_product(this%fem_solution, rhs )-bias
+    endsubroutine
+
+    !Calculates  trace(K^{-1} M)
+    subroutine poisson_1d_fem_tr_stiffinv_massm(this)
+              class(poisson_1d_fem),intent(inout) :: this
+        sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
+        data_complex=this%mass_matrix_first_line_fourier/this%stiffn_matrix_first_line_fourier
+        !Remove the offset
+        data_complex(1)=0
+
+        this%tr_stiffinv_massm=real(sum(data_complex))
+
+        !Scale
+        !this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_mesh_area(this%logical_mesh)
+    endsubroutine
+
 
     !<Gives the squared L2-norm of the solution $\Phi$: $|\Phi|^2$
     function  poisson_1d_fem_L2norm_solution(this) result(l2norm)

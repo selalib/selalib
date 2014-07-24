@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 
@@ -28,7 +28,7 @@ module sll_particle_representations
   type :: sll_particle_2d
      sll_int32  :: ic   ! cell index, linearly arranged
      sll_real32 :: dx!     sll_real64 :: dx
-     sll_real32 :: dy!     sll_real64 :: dy!    
+     sll_real32 :: dy!     sll_real64 :: dy!
      sll_real64 :: vx
      sll_real64 :: vy
      sll_real32 :: q
@@ -38,32 +38,33 @@ module sll_particle_representations
      type(sll_particle_2d), pointer :: p
   end type sll_particle_2d_guard
 
-  
+
+
+
    type :: sll_particle_1d1v
-     sll_real64 :: dx
+     sll_real64 :: x      ! This is not necessarily an offset
      sll_real64 :: vx
      sll_real64 :: w            !\gamma_k , weight
-     sll_real64 :: wc      !c_k , constant weight
   end type sll_particle_1d1v
 
 
+  type :: sll_particle_1d1v_idxx, extends(sll_particle_1d1v)
+    sll_int32  :: icx !cell index
+    sll_real32 :: dx
+  end type  sll_particle_1d1v_idxx
+
+  type :: sll_particle_1d1v_twoweight, extends(sll_particle_1d1v)
+     sll_real64 :: wc      !c_k , constant weight
+  endtype
 
   type :: sll_particle_1d1v_guard
-     type(sll_particle_1d1v), pointer :: p
+     class(sll_particle_1d1v), pointer :: p
 
   end type sll_particle_1d1v_guard
 
 
-  type :: sll_particle_1d1v_group
-    type(sll_particle_1d1v), allocatable, dimension(:) :: particle
-    sll_real64 :: qm
-  !contains
-  !remove
-  !add
-  !
-  end type sll_particle_1d1v_group
-  
-  
+
+
 !contains
 
 !!$  subroutine initialize_particle_2d( &
@@ -90,7 +91,7 @@ module sll_particle_representations
 !!$    p%vy = vy
 !!$    p%q  = q
 !!$  end subroutine initialize_particle_2d
-  
+
 !!$  subroutine compute_cell_and_offset( &
 !!$                                     x, &
 !!$                                     xmin, &

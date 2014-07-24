@@ -81,8 +81,8 @@ module pic_1d_particle_loading
     sll_real64 :: landau_alpha=0.01_f64
     sll_real64 :: landau_mode=0.4_f64
 
+    sll_real64 :: bumpontail_a=0.4_f64
     !sll_real64 :: bumpontail_a=0.04_f64
-    sll_real64 :: bumpontail_a=0.04_f64
     sll_real64 :: bumpontail_v0=4.0_f64
     sll_real64 :: bumpontail_sigma=0.5_f64
     sll_real64 :: plasma_size=0.25_f64 !Relative size of plasma
@@ -160,28 +160,38 @@ contains
         !enable_deltaf=enable_deltaf_user
     endsubroutine
 
-    sll_real function gaussianrnd( mu , sigma  ) RESULT(ans)
+    function gaussianrnd( mu , sigma  ) RESULT(X)
 #include "sll_working_precision.h"
     use sll_constants
     IMPLICIT NONE
-    sll_real :: mu    !< mean
-    sll_real :: sigma !< standard deviation
+    sll_real64 :: mu    !< mean
+    sll_real64 :: sigma !< standard deviation
+    sll_real64 :: U1, U2,R,PHI,X ,Y
+
+    call random_number(U1)
+    call random_number(U2)
+
+    R=sqrt(-2.0_f64*log(U1))
+    PHI=sll_kx*U2
+
+    X=R*cos(PHI)
+    Y=R*sin(PHI)
     ! Box Muller Wiener
-    sll_real :: R1, R2, X ,Y
+!    sll_real :: R1, R2, X ,Y
+!
+!
+!    CALL random_number(R1)
+!    CALL random_number(R2)
+!
+!    R1= 1.0-R1
+!    R1 = -ALOG(real(R1))
+!    R1 = SQRT(2.0*R1)
+!    R2 = 2.0*sll_pi*R2
+!
+!    X  = R1*COS(R2)- mu
+!    Y  = R1*SIN(R2) -mu
+!
 
-
-    CALL random_number(R1)
-    CALL random_number(R2)
-
-    R1= 1.0-R1
-    R1 = -ALOG(real(R1))
-    R1 = SQRT(2.0*R1)
-    R2 = 2.0*sll_pi*R2
-
-    X  = R1*COS(R2)- mu
-    Y  = R1*SIN(R2) -mu
-
-    ans=X
 endfunction
 
 
@@ -399,7 +409,6 @@ subroutine sll_pic1d_load_stream(uniform_random_numbers, particlespeed, numberof
             do i=1, numberofstreams
                 stream_offsets(i)= (i-1.0_f64)/(numberofstreams-1) -0.5_f64
             enddo
-
             !stream_offsets=stream_offsets*1.0_f64
             stream_widths=(1.0_f64)/(numberofstreams**2)
         else
