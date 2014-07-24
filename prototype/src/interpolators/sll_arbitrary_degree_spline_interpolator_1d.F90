@@ -1377,10 +1377,17 @@ contains
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
+    sll_int32 :: idx
 
-    print*, 'interpolate_pointer_values_ad1d NOT iMPLEMENTED YET'
-    output = -1000000._f64*num_pts&
-         *vals_to_interpolate*interpolator%spline_degree
+    SLL_ASSERT(num_pts==size(vals_to_interpolate))
+    do idx=1,num_pts
+          output(idx)=interpolate_value_ad1d( &
+                                interpolator, &
+                                vals_to_interpolate(idx))
+    enddo
+!    print*, 'interpolate_pointer_values_ad1d NOT iMPLEMENTED YET'
+!    output = -1000000._f64*num_pts&
+!         *vals_to_interpolate*interpolator%spline_degree
   end subroutine interpolate_pointer_values_ad1d
 
   subroutine interpolate_derivatives_ad1d( &
@@ -1419,9 +1426,17 @@ contains
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
-    output = -1000000.0_f64*num_pts&
-         *vals_to_interpolate*interpolator%spline_degree
-    print*, 'interpolate_pointer_derivatives_ad1d NOT iMPLEMENTED YET'
+    sll_int32 :: idx
+
+    SLL_ASSERT(num_pts==size(vals_to_interpolate))
+    do idx=1,num_pts
+          output(idx)=interpolate_derivative_ad1d( &
+                                interpolator, &
+                                vals_to_interpolate(idx))
+    enddo
+!    output = -1000000.0_f64*num_pts&
+!         *vals_to_interpolate*interpolator%spline_degree
+!    print*, 'interpolate_pointer_derivatives_ad1d NOT iMPLEMENTED YET'
   end subroutine interpolate_pointer_derivatives_ad1d
 
   function reconstruct_array(this, num_points, data) result(res)
