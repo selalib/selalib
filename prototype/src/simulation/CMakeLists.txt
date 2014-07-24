@@ -65,7 +65,7 @@ IF(HDF5_ENABLED)
    ADD_SIMULATION_1D(2d_af_cartesian           2d_analytic_field_cartesian)
    ADD_SIMULATION_1D(2d_af_curvilinear         2d_analytic_field_curvilinear)
    ADD_SIMULATION_1D(2d_gc_cartesian 2d_guiding_center_cartesian)
-   ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
+   #ADD_SIMULATION_1D(2d_gc_curvilinear 2d_guiding_center_curvilinear)
    ADD_SIMULATION_1D(2d_gc_polar 2d_guiding_center_polar)
 ENDIF(HDF5_ENABLED)
 
@@ -175,6 +175,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
    #ADD_SIMULATION(MYMETHOD MYSIM)
 
    ADD_SIMULATION(2d_vp_cartesian   2d_vlasov_poisson_cartesian)
+   ADD_SIMULATION(2d_gc_curvilinear 2d_guiding_center_curvilinear)
    ADD_SIMULATION(4d                4d_vlasov_poisson_cartesian)
    ADD_SIMULATION(4d_vp_cartesian   4d_vlasov_parallel_poisson_sequential_cartesian)
    ADD_SIMULATION(4d_vp_general     4d_vlasov_poisson_general)
