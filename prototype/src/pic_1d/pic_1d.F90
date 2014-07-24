@@ -277,6 +277,7 @@ contains
                     num_err_seminorm=sll_pic1d_calc_fieldenergy(species(1:num_species))
                 endif
                 if (coll_rank==0) print *, "Error in MC estimate of E-Energy: (rel.)", num_err_seminorm
+
         endselect
 
     endsubroutine
@@ -324,6 +325,8 @@ contains
 
         if (coll_rank==0) write(*,*) "#PIC1D: Loading particles..."
 
+
+        call fsolver%set_num_sample(nparticles*coll_size)
 
         call load_particle_species (nparticles, interval_a, interval_b, species)
 
@@ -527,6 +530,8 @@ contains
 
             kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( species(1:num_species) )
             fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(species(1:num_species))
+            fieldenergy(1)=landau_alpha**2/(2*landau_mode**2)/2.0_f64
+
             impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
 
             thermal_velocity_estimate(timestep)=sll_pic1d_calc_thermal_velocity(species(1)%particle%vx,species(1)%particle%weight)
@@ -1037,8 +1042,8 @@ contains
         sll_real64, intent(in):: t
         sll_real64, dimension(:) ,intent(inout) :: x_0
         sll_real64, dimension(:) ,intent(inout) :: v_0
-        sll_real64, dimension(:) :: k_x1(size(x_0)), k_x2(size(x_0)), &
-            k_v1(size(x_0)), k_v2(size(x_0)),stage_DPhidx(size(x_0))
+        sll_real64, dimension(size(x_0)) :: k_x1, k_x2 , &
+            k_v1 , k_v2 ,stage_DPhidx,x_1,v_1
 
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
         call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
@@ -1047,6 +1052,7 @@ contains
         call fsolver%evalE(x_0, stage_DPhidx)
         k_x1= h*v_0
         k_v1= h*(stage_DPhidx+Eex(x_0,t))*(-particle_qm)
+        !call sll_pic1d_adjustweights(x_0,x_0+ k_x1,v_0,v_0 + k_v1)
         !--------------------Stage 2-------------------------------------------------
         call sll_pic_1d_solve_qn(x_0 + k_x1)
         call fsolver%evalE(x_0 + k_x1, stage_DPhidx)
@@ -1054,11 +1060,16 @@ contains
         k_v2= h*( stage_DPhidx+Eex(x_0 +k_x1,t+h))*(-particle_qm)
 
         !Perform step---------------------------------------------------------------
-        x_0= x_0 + 0.5_f64 *(k_x1+k_x2   )
-        v_0= v_0 + 0.5_f64 *(k_v1+k_v2  )
-
+        x_1= x_0 + 0.5_f64 *(k_x1+k_x2   )
+        v_1= v_0 + 0.5_f64 *(k_v1+k_v2  )
         !x_0=sll_pic1d_ensure_periodicity(x_0,  interval_a, interval_b)
-        call sll_pic1d_ensure_boundary_conditions(x_0, v_0)
+        call sll_pic1d_ensure_boundary_conditions(x_1, v_1)
+
+        !call sll_pic1d_adjustweights(x_0+ k_x1,x_1,v_0 + k_v1,v_1)
+        call sll_pic1d_adjustweights(x_0,x_1,v_0,v_1)
+        x_0=x_1
+        v_0=v_1
+
         call sll_pic_1d_solve_qn(x_0)
     endsubroutine
 
@@ -1673,8 +1684,10 @@ contains
                 SLL_ALLOCATE(ratio(1:numpart),ierr)
                 SLL_ASSERT(size(species_new(jdx)%particle)==numpart)
                 ratio=1.0_f64
-                ratio=control_variate_xv(species_new(jdx)%particle%dx, species_new(jdx)%particle%vx)&
-                    /control_variate_xv(species_old(jdx)%particle%dx, species_old(jdx)%particle%vx)
+                ratio=control_variate_xv(fsolver%BC(species_new(jdx)%particle%dx), &
+                                        species_new(jdx)%particle%vx) &
+                        /control_variate_xv(fsolver%BC(species_old(jdx)%particle%dx), &
+                                        species_old(jdx)%particle%vx)
                 !                ratio=control_variate_x(species_new(jdx)%particle%dx)&
                     !                                    /control_variate_x(species_old(jdx)%particle%dx)
 
@@ -1696,7 +1709,7 @@ contains
 
     subroutine sll_pic1d_adjustweights(xold, xnew, vold, vnew)
         sll_real64, dimension(:),intent(in) ::vold, xold
-        sll_real64, dimension(:),intent(out) ::vnew, xnew
+        sll_real64, dimension(:),intent(in) ::vnew, xnew
         sll_real64, dimension(size(species(pushed_species)%particle)):: ratio
         sll_int32 :: N
 
@@ -1708,7 +1721,8 @@ contains
         SLL_ASSERT(N==size( species(pushed_species)%particle))
         !Adjust weights
         if (enable_deltaf .eqv. .TRUE.) then
-            ratio=control_variate_xv(xnew, vnew )/control_variate_xv(xold, vold )
+            ratio=control_variate_xv(fsolver%BC(xnew), vnew )/&
+                                control_variate_xv(fsolver%BC(xold), vold )
             !ratio=ratio/(N*coll_size)
             !ratio=ratio
             species(pushed_species)%particle%weight=species(pushed_species)%particle%weight_const &
