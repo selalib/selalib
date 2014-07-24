@@ -34,6 +34,7 @@ module sll_sparse_matrix_module
     sll_int32, dimension(:), pointer :: opi_ia
     sll_int32, dimension(:), pointer :: opi_ja
     sll_real64, dimension(:), pointer :: opr_a
+    
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
@@ -80,7 +81,7 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col ) &
+    num_local_dof_col) &
     result(mat)
     type(sll_csr_matrix), pointer :: mat
     sll_int32, intent(in) :: num_rows
@@ -100,7 +101,7 @@ contains
       local_to_global_row, &
       num_local_dof_row, &
       local_to_global_col, &
-      num_local_dof_col )
+      num_local_dof_col)
       
   end function new_csr_matrix
 
@@ -124,7 +125,7 @@ contains
     local_to_global_row, &
     num_local_dof_row, &
     local_to_global_col, &
-    num_local_dof_col )
+    num_local_dof_col)
     type(sll_csr_matrix), intent(inout) :: mat
     sll_int32, intent(in) :: num_rows
     sll_int32, intent(in) :: num_cols
@@ -138,7 +139,6 @@ contains
     sll_int32, dimension(:,:), pointer :: lpi_columns
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
-
     !print *,'#num_rows=',num_rows
     !print *,'#num_nz=',num_nz
 
@@ -158,11 +158,10 @@ contains
       local_to_global_col, &
       num_local_dof_col, &
       lpi_columns, &
-      lpi_occ)
-
+      lpi_occ)      
     mat%num_rows = num_rows
     mat%num_cols = num_cols
-    mat%num_nz = num_nz
+    mat%num_nz = num_nz   
     SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
     SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
     SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
@@ -186,6 +185,7 @@ contains
 
   end subroutine initialize_csr_matrix
 
+
   subroutine sll_factorize_csr_matrix(mat)
     type(sll_csr_matrix), intent(inout) :: mat
     
@@ -193,7 +193,121 @@ contains
     
   end subroutine sll_factorize_csr_matrix
 
+  subroutine initialize_csr_matrix_with_constraint( &
+    mat, &
+    mat_a)
+    type(sll_csr_matrix), intent(inout) :: mat
+    type(sll_csr_matrix), intent(in) :: mat_a
+    sll_int32 :: ierr
+    !print*,' COUNTING NON ZERO ELEMENTS'
+    mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
+    print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
+    mat%num_rows = mat_a%num_rows  +  1
+    print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
+    mat%num_cols = mat_a%num_cols  +  1
+    print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
+    
+    SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
+    SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
+    mat%opr_a(:) = 0.0_f64
+
+  end subroutine initialize_csr_matrix_with_constraint
+
+  function new_csr_matrix_with_constraint(mat_a) result(mat)
+    type(sll_csr_matrix), pointer :: mat
+    type(sll_csr_matrix) :: mat_a
+    sll_int32 :: ierr
+    SLL_ALLOCATE(mat, ierr)
+    call initialize_csr_matrix_with_constraint( &
+         mat, &
+         mat_a)
+  end function new_csr_matrix_with_constraint
+  subroutine csr_add_one_constraint( &
+    ia_in, &
+    ja_in, &
+    a_in, &
+    num_rows_in, &
+    num_nz_in, &
+    constraint_vec, &
+    ia_out, &
+    ja_out, &
+    a_out)
+    integer, dimension(:), intent(in) :: ia_in  
+    integer, dimension(:), intent(in) :: ja_in  
+    real(8), dimension(:), intent(in) :: a_in
+    integer, intent(in) :: num_rows_in
+    integer, intent(in) :: num_nz_in
+    real(8), dimension(:), intent(in) :: constraint_vec
+    integer, dimension(:), intent(out) :: ia_out
+    integer, dimension(:), intent(out) :: ja_out
+    real(8), dimension(:), intent(out) :: a_out
+    integer :: num_rows_out
+    integer :: num_nz_out
+    integer :: i
+    integer :: s
+    integer :: k
+    
+    num_rows_out = num_rows_in+1
+    num_nz_out = num_nz_in+2*num_rows_in
+    
+    if(size(ia_in)<num_rows_in+1) then
+      print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
+      stop
+    endif
+    if(size(ja_in)<num_nz_in) then
+      print *, '#problem of size of ja_in', size(ja_in),num_nz_in
+      stop
+    endif
+    if(size(a_in)<num_nz_in) then
+      print *, '#problem of size of a_in', size(a_in),num_nz_in
+      stop
+    endif
+    if(size(ia_out)<num_rows_out+1) then
+      print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
+      stop
+    endif
+    if(size(ja_out)<num_nz_out) then
+      print *, '#problem of size of ja_out', size(ja_out),num_nz_out
+      stop
+    endif
+    if(size(a_out)<num_nz_out) then
+      print *, '#problem of size of a_out', size(a_out),num_nz_out
+      stop
+    endif
+    if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
+      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
+      stop
+    endif
+    
+    s = 1
+    do i=1,num_rows_in
+      ia_out(i) = s
+      do k = ia_in(i), ia_in(i+1)-1
+        a_out(s) = a_in(k)
+        ja_out(s) = ja_in(k)
+        s = s+1
+      enddo
+      a_out(s) = constraint_vec(i)
+      ja_out(s) = num_rows_out
+      s = s+1
+    enddo
+    ia_out(num_rows_in+1) = s
+    do i=1,num_rows_in
+      a_out(s) = constraint_vec(i)
+      ja_out(s) = i
+      s = s+1      
+    enddo
+    ia_out(num_rows_in+2) = s
+     
+    if(ia_out(num_rows_out+1).ne.num_nz_out+1)then
+      print *,'#bad value of ia_out(num_rows_out+1)',ia_out(num_rows_out+1),num_nz_out+1
+      stop
+    endif
+    
+  end subroutine csr_add_one_constraint
+  
   subroutine sll_mult_csr_matrix_vector(mat, input, output)
     implicit none
     type(sll_csr_matrix), intent(in) :: mat
@@ -238,6 +352,8 @@ contains
     end do
 
   end subroutine sll_add_to_csr_matrix
+  
+
 
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
@@ -604,7 +720,7 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     real(8), dimension(:), pointer :: lpr_Ad
     real(8), dimension(:), pointer :: lpr_r
     real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux
+    real(8), dimension(:), pointer :: lpr_Ux,one
     real(8), dimension(:), pointer :: Masse_tot
     real(8) :: lr_Norm2r1
     real(8) :: lr_Norm2r0
@@ -639,16 +755,21 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     if (li_err.ne.0) li_flag=30
     allocate(lpr_Ux(this%num_rows),stat=li_err)
     if (li_err.ne.0) li_flag=40
+    allocate(one(this%num_rows),stat=li_err)
+    if (li_err.ne.0) li_flag=50
     !================!
     ! initialisation !
     !================!
+    !apr_U(3:this%num_rows)  = 0.0_8
+    !apr_U(1)  = 1.0_8
+    !apr_U(2)  = -1.0_8
     apr_U(:)  = 0.0_8
+    one(:) = 1.
     lpr_Ux(:) = apr_U(:)
     li_iter = 0
     call sll_mult_csr_matrix_vector( this , lpr_Ux , lpr_Ad )
-
     lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-    !print*, dot_product(Masse_tot, lpr_Ux)
+    !print*, 'calcul des normes',dot_product(lpr_Ad, one),maxval(lpr_Ad)
     !-----------------
     !-------------------!
     ! calcul des normes !
@@ -719,6 +840,7 @@ subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
     deallocate(lpr_d)
     deallocate(lpr_r)
     deallocate(lpr_Ux)
+    deallocate(one)
   end subroutine sll_solve_csr_matrix_perper
 
 
