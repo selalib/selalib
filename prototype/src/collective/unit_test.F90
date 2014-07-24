@@ -595,6 +595,63 @@ program collective_test
   SLL_DEALLOCATE_ARRAY(sendcounts,ierr)
   SLL_DEALLOCATE_ARRAY(recvcounts,ierr)
 
+  call test_sll_collective_globalsum()
 
   call sll_halt_collective()
+
+
+contains
+
+
+!> @brief tests sll_collective_globalsum interface
+!> If this test passes, the reduce and allreduce are also working
+subroutine test_sll_collective_globalsum
+  sll_real64 :: summand_real64
+  sll_real32 :: summand_real32
+  sll_comp64 :: summand_comp64
+  sll_comp32 :: summand_comp32
+  sll_int32 ::  summand_int32
+
+
+
+  if(rank==0) print *,'-----------------------------'
+  call sll_collective_barrier(sll_world_collective)
+
+  summand_real64=1.0_f64 !or better sll_pi
+  call sll_collective_globalsum( sll_world_collective, summand_real64, 0)
+
+  summand_comp64=(1.0, 0.0)
+  call sll_collective_globalsum( sll_world_collective, summand_comp64, 0)
+
+  summand_comp32=(1.0, 0.0)
+  call sll_collective_globalsum( sll_world_collective, summand_comp32, 0)
+
+  summand_real32=1.0_f32
+  call sll_collective_globalsum( sll_world_collective, summand_real32, 0)
+
+  summand_int32=1
+  call sll_collective_globalsum( sll_world_collective, summand_comp32, 0)
+
+
+
+  if (rank==0) then
+
+    if(summand_real64==1.0_f64*size .and. &
+        summand_real32==1.0_f64*size .and. &
+        summand_comp32==1.0_f64*size .and. &
+        summand_comp64==1.0_f64*size .and. &
+        summand_int32==size) then
+       print *, '(GLOBALSUM) PASS'
+        else
+       stop '(GLOBALSUM) NOT PASS'
+   endif
+
+  endif
+
+
+endsubroutine
+
+
+
+
 end program collective_test
