@@ -10,7 +10,7 @@
 ! DESCRIPTION: 
 !
 !> @brief
-!> Initialisation of the distribution function for the
+!> Initialisation of the distribution functioinit_fequilibrium_xyn for the
 !>  drift-kinetic 4D simulation
 !>
 !>@details
@@ -123,7 +123,7 @@ module sll_fdistribu4d_DK
   end function profil_xy_exacte
 
 
-    !---------------------------------------- -----------------------
+  !---------------------------------------- -----------------------
   ! Initialization of the profiles
   ! solution of the following equation
   !
@@ -134,11 +134,12 @@ module sll_fdistribu4d_DK
   !  delta = params(2)
   !  rx    = params(3)
   !---------------------------------------- -----------------------
-  function profil_r_exacte(r,params_profil) 
+  function init_exact_profile_r(r,params_profil) 
     
     sll_real64, intent(in) :: r
-    sll_real64, dimension(:), intent(in) ::params_profil
-    sll_real64 :: profil_r_exacte
+    sll_real64, dimension(:), intent(in) :: params_profil
+
+    sll_real64 :: init_exact_profile_r
     sll_real64 :: kappa
     sll_real64 :: delta
     sll_real64 :: rx
@@ -146,9 +147,9 @@ module sll_fdistribu4d_DK
     kappa = params_profil(1)
     delta = params_profil(2)
     rx    = params_profil(3)
-    profil_r_exacte = exp(-kappa*delta*tanh((r-rx)/delta))
+    init_exact_profile_r = exp(-kappa*delta*tanh((r-rx)/delta))
     
-  end function profil_r_exacte
+  end function init_exact_profile_r
 
   
   
