@@ -70,7 +70,7 @@ module sll_distribution_function_4d_multipatch_module
      procedure, pass(df) :: get_local_data_sizes => get_locsz_df4d
      procedure, pass(df) :: get_eta_coordinates => get_eta_coords_df4d
      procedure, pass(df) :: compute_moment => moments_df4d
-     procedure, pass(df) :: compute_Lp => Lp_norm_df4d
+     procedure, pass(df) :: compute_Lp_norms => Lp_norms_df4d
      procedure, pass(df) :: delete => delete_df_4d_mp
   end type sll_distribution_function_4d_multipatch
 
@@ -701,35 +701,18 @@ contains
     ke = recv_b(1)
   end function kinetic_energy_df4d
 
-  function Lp_norm_df4d( df, p ) result(Lp)
-    sll_real64 :: Lp
+  function Lp_norms_df4d( df ) result(Lp_norms)
+    sll_real64, dimension(3) :: Lp_norms
     class(sll_distribution_function_4d_multipatch), intent(inout) :: df    
-    sll_int32, intent(in) :: p
-
-    select case ( p )
-    case (SLL_NORM_L1)
-       Lp = lp_norm1_df4d(df)
-
-    case (SLL_NORM_L2)
-       Lp = lp_norm2_df4d(df)
-
-    case (SLL_NORM_INFINITY)
-       Lp = lp_norm_inf_df4d(df)
-
-    end select
-
-  end function Lp_norm_df4d
-
-  function lp_norm1_df4d( df ) result(l1)
-    sll_real64 :: l1
-    class(sll_distribution_function_4d_multipatch), intent(inout) :: df    
-    sll_int32 :: num_patches
-    sll_int32 :: ip
-    sll_int32 :: i
-    sll_int32 :: j
-    sll_int32 :: k
-    sll_int32 :: l
-    sll_real64 :: accumulator
+    sll_int32  :: num_patches
+    sll_int32  :: ip
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: k
+    sll_int32  :: l
+    sll_real64 :: accumulator1
+    sll_real64 :: accumulator2
+    sll_real64 :: accumulator3
     sll_real64, dimension(:,:,:,:), pointer :: f
     type(sll_coordinate_transformation_multipatch_2d), pointer :: t
     type(sll_logical_mesh_2d), pointer :: mv
@@ -737,21 +720,23 @@ contains
     sll_real64 :: delta2
     sll_real64 :: delta3
     sll_real64 :: delta4
-    sll_real64, dimension(1) :: send_b  ! send buffer
-    sll_real64, dimension(1) :: recv_b  ! receive buffer
-    sll_int32 :: loc_sz1
-    sll_int32 :: loc_sz2
-    sll_int32 :: loc_sz3
-    sll_int32 :: loc_sz4
+    sll_real64, dimension(3) :: send_b  ! send buffer
+    sll_real64, dimension(3) :: recv_b  ! receive buffer
+    sll_int32  :: loc_sz1
+    sll_int32  :: loc_sz2
+    sll_int32  :: loc_sz3
+    sll_int32  :: loc_sz4
     sll_real64, dimension(4) :: eta
     sll_real64 :: jacobian
     sll_real64 :: metric
-    sll_int32 :: ierr
+    sll_int32  :: ierr
 
-    num_patches =  df%num_patches
-    accumulator =  0.0_f64
-    t           => df%transf
-    mv          => df%mesh_v
+    num_patches  =  df%num_patches
+    accumulator1 =  0.0_f64
+    accumulator2 =  0.0_f64
+    accumulator3 =  0.0_f64
+    t            => df%transf
+    mv           => df%mesh_v
 
     delta3 = mv%delta_eta1
     delta4 = mv%delta_eta2
@@ -765,140 +750,24 @@ contains
           do k=1, loc_sz3
              do j=1,loc_sz2
                 do i=1, loc_sz1
-                   eta(:)      = df%get_eta_coordinates(ip, (/i,j,k,l/) )
-                   jacobian    = t%jacobian(eta(1),eta(2),ip)
-                   metric      = jacobian*delta1*delta2*delta3*delta4
-                   accumulator = accumulator + abs(f(i,j,k,l))*metric
+                   eta(:)       = df%get_eta_coordinates(ip, (/i,j,k,l/) )
+                   jacobian     = t%jacobian(eta(1),eta(2),ip)
+                   metric       = jacobian*delta1*delta2*delta3*delta4
+                   accumulator1 = accumulator1 + abs(f(i,j,k,l))*metric
+                   accumulator2 = accumulator2  +     f(i,j,k,l)**2*metric
+                   accumulator3 = max(abs(f(i,j,k,l)),accumulator3)
                 end do
              end do
           end do
        end do
     end do
     ! Finally, reduce the result so that all processes have the same answer.
-    send_b(1) = accumulator
-    call sll_collective_allreduce(df%collective, send_b, 1, MPI_SUM, recv_b)
-    l1 = recv_b(1)
-  end function lp_norm1_df4d
-
-  function lp_norm2_df4d( df ) result(l2)
-    sll_real64 :: l2
-    class(sll_distribution_function_4d_multipatch), intent(inout) :: df    
-    sll_int32 :: num_patches
-    sll_int32 :: ip
-    sll_int32 :: i
-    sll_int32 :: j
-    sll_int32 :: k
-    sll_int32 :: l
-    sll_real64 :: accumulator
-    sll_real64, dimension(:,:,:,:), pointer :: f
-    type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
-    sll_real64 :: delta1
-    sll_real64 :: delta2
-    sll_real64 :: delta3
-    sll_real64 :: delta4
-    sll_real64, dimension(1) :: send_b  ! send buffer
-    sll_real64, dimension(1) :: recv_b  ! receive buffer
-    sll_int32 :: loc_sz1
-    sll_int32 :: loc_sz2
-    sll_int32 :: loc_sz3
-    sll_int32 :: loc_sz4
-    sll_real64, dimension(4) :: eta
-    sll_real64 :: jacobian
-    sll_real64 :: metric
-    sll_int32 :: ierr
-
-    num_patches =  df%num_patches
-    accumulator =  0.0_f64
-    t           => df%transf
-    mv          => df%mesh_v
-
-    delta3 = mv%delta_eta1
-    delta4 = mv%delta_eta2
-
-    do ip=0,num_patches - 1
-       f => df%get_full_patch_data_pointer(ip)
-       call df%get_local_data_sizes(ip, loc_sz1, loc_sz2, loc_sz3, loc_sz4)
-       delta1 = t%get_delta_eta1(ip)
-       delta2 = t%get_delta_eta2(ip)
-       do l=1, loc_sz4
-          do k=1, loc_sz3
-             do j=1,loc_sz2
-                do i=1, loc_sz1
-                   eta(:)      = df%get_eta_coordinates(ip, (/i,j,k,l/) )
-                   jacobian    = t%jacobian(eta(1),eta(2),ip)
-                   metric      = jacobian*delta1*delta2*delta3*delta4
-                   accumulator = accumulator + f(i,j,k,l)**2*metric
-                end do
-             end do
-          end do
-       end do
-    end do
-    ! Finally, reduce the result so that all processes have the same answer.
-    send_b(1) = accumulator
-    call sll_collective_allreduce(df%collective, send_b, 1, MPI_SUM, recv_b)
-    l2 = recv_b(1)
-  end function lp_norm2_df4d
-
-  function lp_norm_inf_df4d( df ) result(linf)
-    sll_real64 :: linf
-    class(sll_distribution_function_4d_multipatch), intent(inout) :: df    
-    sll_int32 :: num_patches
-    sll_int32 :: ip
-    sll_int32 :: i
-    sll_int32 :: j
-    sll_int32 :: k
-    sll_int32 :: l
-    sll_real64 :: accumulator
-    sll_real64, dimension(:,:,:,:), pointer :: f
-    type(sll_coordinate_transformation_multipatch_2d), pointer :: t
-    type(sll_logical_mesh_2d), pointer :: mv
-    sll_real64 :: delta1
-    sll_real64 :: delta2
-    sll_real64 :: delta3
-    sll_real64 :: delta4
-    sll_real64, dimension(1) :: send_b  ! send buffer
-    sll_real64, dimension(1) :: recv_b  ! receive buffer
-    sll_int32 :: loc_sz1
-    sll_int32 :: loc_sz2
-    sll_int32 :: loc_sz3
-    sll_int32 :: loc_sz4
-    sll_real64, dimension(4) :: eta
-    sll_real64 :: jacobian
-    sll_real64 :: metric
-    sll_int32 :: ierr
-
-    num_patches =  df%num_patches
-    accumulator =  0.0_f64
-    t           => df%transf
-    mv          => df%mesh_v
-
-    delta3 = mv%delta_eta1
-    delta4 = mv%delta_eta2
-
-    do ip=0,num_patches - 1
-       f => df%get_full_patch_data_pointer(ip)
-       call df%get_local_data_sizes(ip, loc_sz1, loc_sz2, loc_sz3, loc_sz4)
-       delta1 = t%get_delta_eta1(ip)
-       delta2 = t%get_delta_eta2(ip)
-       do l=1, loc_sz4
-          do k=1, loc_sz3
-             do j=1,loc_sz2
-                do i=1, loc_sz1
-                   eta(:)      = df%get_eta_coordinates(ip, (/i,j,k,l/) )
-                   jacobian    = t%jacobian(eta(1),eta(2),ip)
-                   metric      = jacobian*delta1*delta2*delta3*delta4
-                   accumulator = max(abs(f(i,j,k,l)), accumulator*metric)
-                end do
-             end do
-          end do
-       end do
-    end do
-    ! Finally, reduce the result so that all processes have the same answer.
-    send_b(1) = accumulator
-    call sll_collective_allreduce(df%collective, send_b, 1, MPI_SUM, recv_b)
-    linf = recv_b(1)
-  end function lp_norm_inf_df4d  
+    send_b(1) = accumulator1
+    send_b(2) = accumulator2
+    send_b(3) = accumulator3
+    call sll_collective_allreduce(df%collective, send_b, 3, MPI_SUM, recv_b)
+    Lp_norms(:) = recv_b(:)
+  end function Lp_norms_df4d
 
 
 
