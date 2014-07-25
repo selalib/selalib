@@ -419,7 +419,8 @@ contains
     sll_int32 :: size_diag    
     
     ! compute Jacobian and logical mesh points
-!    call compute_values_jacobian_and_mesh_points(sim)
+
+    print *, '******************** ENTERED THE RUN ROUTINE **************'
 
     ! Start with the fields
     a11_field_mat => &
@@ -476,7 +477,7 @@ contains
        ! logical_m => sim%transfx%transfs(ipatch+1)%t%mesh
        !     transf   => sim%transfx%get_transformation(ipatch)
        transf => sim%transfx%transfs(ipatch+1)%t
-       call sll_display(transf%mesh)
+       !       call sll_display(transf%mesh)
        
        num_pts1 = sim%transfx%get_num_cells_eta1(ipatch) + 1! logical_m%num_cells1+1
        num_pts2 = sim%transfx%get_num_cells_eta2(ipatch) + 1!logical_m%num_cells2+1
@@ -534,6 +535,7 @@ contains
     call phi%update_interpolation_coefficients()
     call rho%update_interpolation_coefficients()
 
+print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     buffer_counter = 1
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -607,6 +609,8 @@ contains
 
     ! First dt/2 advection for eta1-eta2:
     call advection_x1x2( sim, layer_x1x2, f_mp, 0.5*sim%dt)    
+
+    print *, '********** COMPLETED X1X2 ADVECTION ***********'
 
     ! Initialize the poisson plan before going into the main loop.
     sim%qns => new_general_elliptic_solver_mp( &
@@ -886,6 +890,7 @@ contains
     sll_real64 :: f_interpolated
     sll_int32 :: num_patches
     
+    print *, '********inside advection x1x2 *************'
     ! Here we do something ugly, which is to call the 'get_local_sizes()'
     ! method just to obtain the local sizes in the x3 and x4 directions, which
     ! are 'cut' (parallelized), as we are carrying out a sequential x1x2
@@ -902,6 +907,7 @@ contains
          loc_sz_x3, &
          loc_sz_x4 )
 
+    print *, 'got local sizes ******'
     num_patches = f_mp%num_patches
        
     do l=1,loc_sz_x4
@@ -909,15 +915,18 @@ contains
           ! Make the 'recyclable' field point to the right data on the
           ! distribution function.
           do ip=0, num_patches-1
+             print *, 'patch ', ip, 'getting data *********'
              call field_x1x2%set_patch_data_pointer(&
                   ip, &
                   f_mp%get_x1x2_data_slice_pointer(ip,k,l) )
+             print *, 'patch ', ip, ' got data!!!!!!!!'
           end do
 
           ! update_interpolation_coefficients() already implies a loop around
           ! the patches.
           call field_x1x2%update_interpolation_coefficients()
-            
+            print *, 'patch ', ip, 'got interpolation coeffs*****'
+
           do ip=0, num_patches-1
 
              call f_mp%get_local_data_sizes( &
@@ -926,7 +935,7 @@ contains
                   loc_sz_x2, &
                   loc_sz_x3, &
                   loc_sz_x4 )
-
+             print *, '***** local sizes, patch:  ', ip
              do j=1,loc_sz_x2
                 do i=1,loc_sz_x1
                    eta(:) = f_mp%get_eta_coordinates( ip, (/i,j,k,l/) )
