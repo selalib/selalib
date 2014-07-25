@@ -78,9 +78,6 @@ module sll_distribution_function_4d_multipatch_module
      sll_real64, dimension(:,:,:,:), pointer :: f
   end type data_4d_ptr
 
-  sll_int32, parameter :: SLL_NORM_L1 = 1
-  sll_int32, parameter :: SLL_NORM_L2 = 2
-  sll_int32, parameter :: SLL_NORM_INFINITY = 10
 
   interface sll_delete
      module procedure delete_df_4d_mp_ptr
