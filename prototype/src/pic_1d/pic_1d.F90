@@ -530,7 +530,8 @@ contains
 
             kineticenergy(timestep)=sll_pic1d_calc_kineticenergy( species(1:num_species) )
             fieldenergy(timestep)=sll_pic1d_calc_fieldenergy(species(1:num_species))
-            fieldenergy(1)=landau_alpha**2/(2*landau_mode**2)/2.0_f64
+!            fieldenergy(1)=landau_alpha**2/(2*landau_mode**2)/2.0_f64
+!            kineticenergy(1)=0.5_f64
 
             impulse(timestep)=sll_pic1d_calc_impulse(species(1:num_species))
 
