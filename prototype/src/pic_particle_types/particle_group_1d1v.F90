@@ -43,67 +43,119 @@ module sll_particle_group_1d1v_module
 !            sll_particle_1d1v_getX_mesh_pointer
     endinterface
 
+    interface setX
+!            sll_particle_1d1v_idxx_setX_pointer
+!            sll_particle_1d1v_idxx_setX_pidx
+!            sll_particle_1d1v_setX_mesh_pointer
+    endinterface
 
 
   end type sll_particle_group_1d1v
+
+
+  type :: sll_particle_group_1d1v_stochastic, extends( sll_particle_group_1d1v  )
+      procedure(sll_pdf_1d1v) :: ctrl_var !control_variate
+      procedure(sll_pdf_1d) :: init_x !initial distribution in x
+      procedure(sll_pdf_1d) :: init_v !initial distribution in v
+      procedure(sll_pdf_1d) :: samp_x !sampling distribution in x
+      procedure(sll_pdf_1d) :: samp_v !sampling distribution in v
+  endtype
+
 
   interface sll_delete
      module procedure delete_particle_2d_group
   end interface sll_delete
 
 
+    !Probability
+    abstract interface
+        function sll_pdf_1d(x) result(p)
+            use sll_working_precision
+            sll_real64, dimension(:),intent(in) :: x
+            sll_real64, dimension(size(x)) :: p
+        endfunction
+    endinterface
+
+
+    abstract interface
+        function sll_pdf_1d1t(x,t) result(p)
+            use sll_working_precision
+            sll_real64, dimension(:),intent(in) :: x
+            sll_real64, dimension(:),intent(in) :: t
+            sll_real64, dimension(size(x),size(t)) :: p
+        endfunction
+    endinterface
+
+    abstract interface
+        function sll_pdf_1d1v(x,v) result(p)
+            use sll_working_precision
+            sll_real64, dimension(:),intent(in) :: x
+            sll_real64, dimension(:) ,intent(in):: v
+            sll_real64, dimension(size(x)) :: p
+        endfunction
+    endinterface
+
+    abstract interface
+        function sll_pdf_1d1v1t(x,v,t) result(p)
+            use sll_working_precision
+            sll_real64, dimension(:),intent(in) :: x
+            sll_real64, dimension(:),intent(in) :: v
+            sll_real64, dimension(:),intent(in) :: t
+            sll_real64, dimension(size(x),size(t)) :: p
+        endfunction
+    endinterface
 
 contains
 
-  function new_particle_1d1v_group( &
-       num_particles,       &
-       particle_array_size, &
-       guard_list_size,     &
-       qoverm,              &
-       mesh ) result(res)
-
-    type(sll_particle_group_2d), pointer :: res
-    sll_int32,  intent(in) :: num_particles
-    sll_int32,  intent(in) :: particle_array_size
-    sll_int32,  intent(in) :: guard_list_size
-    sll_real64, intent(in) :: qoverm
-    type(sll_logical_mesh_2d), pointer :: mesh
-    sll_int32 :: ierr
-
-    if( num_particles > particle_array_size ) then
-       print *, 'new_particle_2d_group(): ERROR,  num_particles should not ', &
-            'be greater than the memory size requested, particle_array_size.'
-       STOP
-    end if
-
-    SLL_ALLOCATE( res, ierr )
-    res%number_particles = num_particles
-    res%active_particles = num_particles
-    res%guard_list_size  = guard_list_size
-    res%qoverm           = qoverm
-
-    SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
-    SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
-
-    if (.not.associated(mesh) ) then
-       print*, 'error: passed mesh not associated'
-    endif
-    res%mesh => mesh
-
-  end function new_particle_2d_group
-
-  subroutine delete_particle_2d_group(p_group)
-    type(sll_particle_group_2d), pointer :: p_group
-    sll_int32 :: ierr
-
-    if(.not. associated(p_group) ) then
-       print *, 'delete_particle_group_2d(): ERROR, passed group was not ', &
-            'associated.'
-    end if
-    SLL_DEALLOCATE(p_group%p_list, ierr)
-    SLL_DEALLOCATE(p_group%p_guard, ierr)
-    SLL_DEALLOCATE(p_group, ierr)
-  end subroutine delete_particle_2d_group
+!  function new_particle_1d1v_group( &
+!       num_particles,       &
+!       particle_array_size, &
+!       guard_list_size,     &
+!       qoverm,              &
+!       mesh ) result(res)
+!
+!    type(sll_particle_group_2d), pointer :: res
+!    sll_int32,  intent(in) :: num_particles
+!    sll_int32,  intent(in) :: particle_array_size
+!    sll_int32,  intent(in) :: guard_list_size
+!    sll_real64, intent(in) :: qoverm
+!    type(sll_logical_mesh_2d), pointer :: mesh
+!    sll_int32 :: ierr
+!
+!    if( num_particles > particle_array_size ) then
+!       print *, 'new_particle_2d_group(): ERROR,  num_particles should not ', &
+!            'be greater than the memory size requested, particle_array_size.'
+!       STOP
+!    end if
+!
+!    SLL_ALLOCATE( res, ierr )
+!    res%number_particles = num_particles
+!    res%active_particles = num_particles
+!    res%guard_list_size  = guard_list_size
+!    res%qoverm           = qoverm
+!
+!    SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
+!    SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
+!
+!    if (.not.associated(mesh) ) then
+!       print*, 'error: passed mesh not associated'
+!    endif
+!    res%mesh => mesh
+!
+!  end function new_particle_2d_group
+!
+!  subroutine delete_particle_2d_group(p_group)
+!    type(sll_particle_group_2d), pointer :: p_group
+!    sll_int32 :: ierr
+!
+!    if(.not. associated(p_group) ) then
+!       print *, 'delete_particle_group_2d(): ERROR, passed group was not ', &
+!            'associated.'
+!    end if
+!    SLL_DEALLOCATE(p_group%p_list, ierr)
+!    SLL_DEALLOCATE(p_group%p_guard, ierr)
+!    SLL_DEALLOCATE(p_group, ierr)
+!  end subroutine delete_particle_2d_group
 
 
 !  subroutine set_group_particle_values( &
