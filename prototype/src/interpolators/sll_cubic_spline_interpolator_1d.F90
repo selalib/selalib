@@ -137,7 +137,6 @@ contains  ! ****************************************************************
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
-
     if (this%bc_type == SLL_PERIODIC) then
        ! The case alpha = 0.0 is problematic. We need to further try to make
        ! this computation in general m re efficient, minimize the use of modulo

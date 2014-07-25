@@ -608,6 +608,8 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     print *, 'sequential_x3x4 mode...'
 
     ! First dt/2 advection for eta1-eta2:
+    call f_mp%set_to_sequential_x1x2()
+    print *, 'sequential_x1x2 mode...'       
     call advection_x1x2( sim, layer_x1x2, f_mp, 0.5*sim%dt)    
 
     print *, '********** COMPLETED X1X2 ADVECTION ***********'
@@ -618,7 +620,7 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
          sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%transfx)
 
-    print*, 'factorize matrix qns'
+    print*, 'about to factorize matrix qns'
     
     call factorize_mat_es_mp(&
          sim%qns, & 
@@ -630,7 +632,7 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
          b2_field_vect, &
          c_field)
 
-    print*, '--- end factorize matrix qns'
+    print*, '--- ended factorization matrix qns'
 
     call sim%interp_x3%initialize( &
          sim%mesh2d_v%num_cells1+1, &
@@ -641,7 +643,7 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     call sim%interp_x4%initialize( &
          sim%mesh2d_v%num_cells2+1, &
          sim%mesh2d_v%eta2_min, &
-         sim%mesh2d_v%eta2_min, &
+         sim%mesh2d_v%eta2_max, &
          SLL_HERMITE)! sim%bc_vy_0)
     
     
@@ -738,23 +740,17 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
        
        numpart = 0.0_f64
        ! dt in vy...(x4)
+       print *, 'advection vy (x4)'
        call advection_x4(sim, f_mp, phi, sim%dt, numpart )
-       
-       !print*, 'sim%my_rank = ', sim%my_rank, 'numpart = ', numpart*delta1*delta2*delta3*delta4
-       
+       print *, 'finished advection in vy (x4)'
        call f_mp%set_to_sequential_x1x2()
+       print *, 'reconfigured parallelization of f'
 
-! por aqui
-    end do ! delete this, just to compile!
-#if 0       
-       call compute_local_sizes_4d( sim%sequential_x1x2, &
-            loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
-       
        ! Approximate the integral of the distribution function along all
        ! directions.
-       num_particles_local(buffer_counter) = numpart*delta1*delta2*delta3*delta4
+       num_particles_local(buffer_counter) = f_mp%compute_moment(0)
        buffer_energy(buffer_counter)       = efield_energy_total
-           ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
+
        if( buffer_counter == BUFFER_SIZE ) then
           ! ----------------------------------
           ! write particles buffer to disk 
@@ -830,7 +826,8 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
 
-       call advection_x1x2(sim,sim%dt) 
+       print *, 'advection in xy'
+       call advection_x1x2(sim, layer_x1x2, f_mp, sim%dt) 
 
 !!$       do j = 1, loc_sz_x2
 !!$          do i = 1, loc_sz_x1
@@ -848,24 +845,24 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
        !     call plot_fields(itime, sim)
        
        
-      
+      print *, 'writing some diagnostics...'
        !--> Save results in HDF5 files
        if ( mod(itime,BUFFER_SIZE) == 0) then
           !--> Compute energy kinetic, potential and total
           !print*, 'compute nrj'
-          call compute_energy_qns(sim,phi)
+!          call compute_energy_qns(sim,phi)
           
           !--> Compute L1 norm, L2 norm, L infini norm
           !print*, 'compute  L^p'
-          call compute_norm_L1_L2_Linf_qns(sim)
+!          call compute_norm_L1_L2_Linf_qns(sim)
           
           call writeHDF5_diag_qns( sim )
           
        end if
-       
+       print *, 'finished iteration.'
     end do ! main loop
 #undef BUFFER_SIZE
-#endif
+
   end subroutine run_4d_qns_general_mp
   
 
@@ -881,16 +878,25 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     sll_real64, intent(in)                                 :: deltat
     
     sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
-    sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
+    sll_int32  :: loc_sz_x1
+    sll_int32  :: loc_sz_x2
+    sll_int32  :: loc_sz_x3
+    sll_int32  :: loc_sz_x4
     sll_real64, dimension(1:4) :: eta
     sll_real64 :: alpha1, alpha2
     sll_real64 :: eta1, eta2 !, eta3, eta4
-    sll_int32 :: i, j, k, l
-    sll_int32 :: ip
+    sll_real64 :: eta1_min    
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min    
+    sll_real64 :: eta2_max
+    sll_int32  :: i 
+    sll_int32  :: j
+    sll_int32  :: k
+    sll_int32  :: l
+    sll_int32  :: ip
     sll_real64 :: f_interpolated
-    sll_int32 :: num_patches
+    sll_int32  :: num_patches
     
-    print *, '********inside advection x1x2 *************'
     ! Here we do something ugly, which is to call the 'get_local_sizes()'
     ! method just to obtain the local sizes in the x3 and x4 directions, which
     ! are 'cut' (parallelized), as we are carrying out a sequential x1x2
@@ -907,7 +913,6 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
          loc_sz_x3, &
          loc_sz_x4 )
 
-    print *, 'got local sizes ******'
     num_patches = f_mp%num_patches
        
     do l=1,loc_sz_x4
@@ -915,17 +920,14 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
           ! Make the 'recyclable' field point to the right data on the
           ! distribution function.
           do ip=0, num_patches-1
-             print *, 'patch ', ip, 'getting data *********'
              call field_x1x2%set_patch_data_pointer(&
                   ip, &
                   f_mp%get_x1x2_data_slice_pointer(ip,k,l) )
-             print *, 'patch ', ip, ' got data!!!!!!!!'
           end do
 
           ! update_interpolation_coefficients() already implies a loop around
           ! the patches.
           call field_x1x2%update_interpolation_coefficients()
-            print *, 'patch ', ip, 'got interpolation coeffs*****'
 
           do ip=0, num_patches-1
 
@@ -935,11 +937,16 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
                   loc_sz_x2, &
                   loc_sz_x3, &
                   loc_sz_x4 )
-             print *, '***** local sizes, patch:  ', ip
+
+             eta1_min = f_mp%transf%get_eta1_min(ip)
+             eta1_max = f_mp%transf%get_eta1_max(ip)
+             eta2_min = f_mp%transf%get_eta2_min(ip)
+             eta2_max = f_mp%transf%get_eta2_max(ip)
+
              do j=1,loc_sz_x2
                 do i=1,loc_sz_x1
                    eta(:) = f_mp%get_eta_coordinates( ip, (/i,j,k,l/) )
-                   inv_j  = &
+                   inv_j(:,:)  = &
                      field_x1x2%transf%inverse_jacobian_matrix(eta(1),eta(2),ip)
                    alpha1 = -deltat*(inv_j(1,1)*eta(3) + inv_j(1,2)*eta(4))
                    alpha2 = -deltat*(inv_j(2,1)*eta(3) + inv_j(2,2)*eta(4))
@@ -959,11 +966,13 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
                    !    WORK NEEDED HERE!!!!!
                    !
                    ! ***************************
-                   
-                   f_interpolated = field_x1x2%value_at_point(eta1, eta2, ip)
+                   if( eta1 >= eta1_min .and. eta1 <= eta1_max .and. &
+                       eta2 >= eta2_min .and. eta2 <= eta2_max ) then
+                      f_interpolated = field_x1x2%value_at_point(eta1, eta2, ip)
                    ! Eatch x1x2 slice is entirely contained in the process, so
                    ! no local to global or anything else should be needed.
-                   call field_x1x2%set_value_at_indices(i,j,ip,f_interpolated)
+                      call field_x1x2%set_value_at_indices(i,j,ip,f_interpolated)
+                   end if
                    
                 end do
              end do
@@ -1001,6 +1010,7 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     num_patches         = f_mp%num_patches
     transf              => f_mp%transf
 
+    print *, 'inside advection x3'
     ! Start with dt in vx...(x3)
     do ip=0,num_patches-1
 
@@ -1086,7 +1096,6 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     nc_x4               = sim%mesh2d_v%num_cells2
     num_patches         = f_mp%num_patches
     transf              => f_mp%transf
-
     ! dt in vy...(x4)
     do ip=0,num_patches-1
        
@@ -1096,15 +1105,13 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
             loc_sz_x2, &
             loc_sz_x3, &
             loc_sz_x4 )
-       
+
        delta1 = transf%get_delta_eta1(ip)
        delta2 = transf%get_delta_eta2(ip)
-
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
 
              eta(:)  = f_mp%get_eta_coordinates( ip, (/i,j,1,1/) )
-
              do k=1, loc_sz_x3 !sim%mesh2d_v%num_cells1+1
 
                 x       = transf%x1( eta(1), eta(2), ip )
