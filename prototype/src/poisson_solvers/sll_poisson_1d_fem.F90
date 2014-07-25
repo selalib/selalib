@@ -345,7 +345,7 @@ contains
         SLL_CLEAR_ALLOCATE(this%mass_matrix_first_line(1:this%num_cells),ierr)
         !First line of stiffness matrix
         this%mass_matrix_first_line=0.0_f64
-        this%mass_matrix_first_line(this%num_cells-1 -1- (size(mass_matrix_period) -1) +1: this%num_cells-1-1)=&
+        this%mass_matrix_first_line(this%num_cells- (size(mass_matrix_period) -1) +1: this%num_cells)=&
             mass_matrix_period(size(mass_matrix_period):2:-1)
         this%mass_matrix_first_line(1:size(mass_matrix_period))=mass_matrix_period
     endsubroutine
@@ -806,26 +806,47 @@ contains
         SLL_ASSERT(N==size(rhs))
         SLL_ASSERT(is_power_of_two(int(N,i64)))
 
-        bias= this%tr_stiffinv_massm - dot_product(this%fem_solution, rhs )
+        bias= this%tr_stiffinv_massm&
+                 - dot_product(this%fem_solution, rhs )
         !Covariance matrix under the CLT
         !Independent from weights
         bias=bias/num_sample
+                ! print *,this%tr_stiffinv_massm
 
-        this%seminorm=dot_product(this%fem_solution, rhs )-bias
+        this%seminorm=dot_product(this%fem_solution, rhs )
+                   !bias=0
+!  write (*, "(F8.4,A,F8.4)")  bias/ this%seminorm, "   ",  this%tr_stiffinv_massm/ this%seminorm
+        this%seminorm=this%seminorm-bias
     endsubroutine
 
     !Calculates  trace(K^{-1} M)
     subroutine poisson_1d_fem_tr_stiffinv_massm(this)
               class(poisson_1d_fem),intent(inout) :: this
         sll_comp64 , dimension(:) :: data_complex(this%num_cells/2+1)
+         sll_int32 :: ierr
+
+
+!        call sll_poisson_1d_fft_precomputation&
+!                    (this,this%mass_matrix_first_line/, &
+!                                    data_complex, ierr)
+             !print *,this%mass_matrix_first_line_fourier
+             !print *, this%mass_matrix_first_line, "#"
+!             print *, this%stiffn_matrix_first_line
+!
+!             stop
         data_complex=this%mass_matrix_first_line_fourier/this%stiffn_matrix_first_line_fourier
         !Remove the offset
         data_complex(1)=0
 
-        this%tr_stiffinv_massm=real(sum(data_complex))
+
+        !The factor two comes from the real to complex fourier transform and
+        !the symmmetry we introduce
+        !We have double Eigenvalues therefore we must multiply with two
+        !We also know that sum(image(data_complex))==0
+        this%tr_stiffinv_massm=2.0_f64*real(sum(data_complex))
 
         !Scale
-        !this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_mesh_area(this%logical_mesh)
+        this%tr_stiffinv_massm=this%tr_stiffinv_massm/sll_mesh_area(this%logical_mesh)
     endsubroutine
 
 

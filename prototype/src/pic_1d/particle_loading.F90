@@ -924,7 +924,8 @@ subroutine  load_particle_species (nparticles, interval_a_user, interval_b_user,
 
             !Generate random numbers
             SLL_CLEAR_ALLOCATE(phasespace(1:3,1:nparticles),ierr)
-            call i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
+            !call i8_sobol_generate ( 3_f64, nparticles, coll_rank*nparticles, phasespace )
+            call random_number(phasespace(1:3,1:nparticles))
             particle_species(1)%qm=-1.0_f64 !Electrons
             particle_species(2)%qm=1.0_f64 !Ions
 
