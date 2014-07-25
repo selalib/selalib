@@ -3,8 +3,8 @@
   num_cells_x2 = 63 !128
   num_cells_x3 = 10 !32
   num_cells_x4 = 64
-  r_min        = 0.1
-  r_max        = 14.5
+  r_min        = 0.45
+  r_max        = 13.05
   phi_min      = 0.
   !--> Lphi = Lz = 2*pi*R0 where R0 = minor_radius*aspect_ratio
   !-->  ex: Lphi = 1503.2521 with minor_radius = 14.5 and aspect_ratio = 16.5
@@ -32,8 +32,8 @@
 /
 
 &sim_params
-  dt                = 8
-  number_iterations = 10
+  dt                = 16
+  number_iterations = 580
   spline_degree     = 3
 /
 

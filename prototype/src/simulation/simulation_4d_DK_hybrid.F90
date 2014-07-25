@@ -629,6 +629,7 @@ contains
     sll_real64 :: r_peak, n0_rmin
     sll_real64 :: inv_Ln, inv_LTi, inv_LTe
     sll_real64 :: Ti_rmin, Ti_scal
+    sll_real64 :: accumul
     sll_real64, dimension(:), pointer   :: theta_grid_tmp
     sll_real64, dimension(:,:), pointer :: B_rtheta_tmp
 
@@ -711,7 +712,15 @@ contains
       sim%Te_r(ir) =  init_exact_profile_r(r_point,params_Te)
       sim%Ti_r(ir) =  init_exact_profile_r(r_point,params_Ti)        
     end do
-
+!!$
+!!$    !---> Normalization for n0_r 
+!!$    accumul = 0.5_f64*(sim%n0_r(1)*sim%r_grid(1)+sim%n0_r(Nr)*sim%r_grid(Nr))
+!!$    do ir = 2,Nr-1
+!!$       accumul = accumul + sim%n0_r(ir)*sim%r_grid(ir)
+!!$    end do
+!!$    accumul = accumul/(Nr-1)
+!!$    sim%n0_r = sim%n0_r/accumul
+!!$ 
     do ieta1 = 1,Nx
       do ieta2 = 1,Ny 
         x = sim%xgrid_2d(ieta1,ieta2)
@@ -722,6 +731,8 @@ contains
         sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
       end do
     end do
+
+    !sim%n0_xy = sim%n0_xy/accumul
 
     !--> Initialization of B(x,y)
     SLL_ALLOCATE(sim%B_xy(Nx,Ny),ierr)
@@ -919,7 +930,7 @@ contains
     sll_real64 :: theta_j, phi_k
     sll_int32, dimension(1:4) :: glob_ind4d
 
-    sll_real64 :: dphi, Lphi, dvpar, Lvpar
+    sll_real64 :: dphi, Lphi, dvpar, Lvpar,Ltheta
     sll_real64, dimension(:), pointer :: phi_grid_tmp
     sll_real64, dimension(:), pointer :: vpar_grid_tmp
     sll_real64 :: tmp,r_peak
@@ -946,6 +957,8 @@ contains
         float(i4-1)*dvpar
     end do
 
+    !--> Length in the second direction
+    Ltheta = abs(sim%logical_mesh4d%eta2_max-sim%logical_mesh4d%eta2_min) 
     !--> Initialization of the equilibrium distribution function
     SLL_ALLOCATE(sim%feq_xyvpar(Nx,Ny,Nvpar),ierr)
     call init_fequilibrium_xy(sim%xgrid_2d,sim%ygrid_2d, &
@@ -982,7 +995,7 @@ contains
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
                 sim%feq_xyvpar(i1,i2,i4) * &
                 (1._f64 + sim%eps_perturb*&
-                cos(2*sll_pi*real(sim%mmode)*theta_j + &
+                cos(2._f64*sll_pi*real(sim%mmode)*theta_j + &
                 2._f64*sll_pi*real(sim%nmode)*phi_k/Lphi) * tmp)
           end do
         end do
