@@ -681,6 +681,7 @@ contains
     !--> Initialization of n0(x,y), Ti(x,y) and Te(x,y)
     Nx = sim%Neta1
     Ny = sim%Neta2
+    print*,  sim%nc_x1+1,Nx,Ny,Nx*Ny
     SLL_ALLOCATE(sim%n0_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Ti_xy(Nx,Ny),ierr)
     SLL_ALLOCATE(sim%Te_xy(Nx,Ny),ierr)
@@ -714,25 +715,27 @@ contains
     end do
 !!$
 !!$    !---> Normalization for n0_r 
-!!$    accumul = 0.5_f64*(sim%n0_r(1)*sim%r_grid(1)+sim%n0_r(Nr)*sim%r_grid(Nr))
-!!$    do ir = 2,Nr-1
-!!$       accumul = accumul + sim%n0_r(ir)*sim%r_grid(ir)
-!!$    end do
-!!$    accumul = accumul/(Nr-1)
-!!$    sim%n0_r = sim%n0_r/accumul
+    accumul = 0.5_f64*(sim%n0_r(1)*sim%r_grid(1)+sim%n0_r(Nr)*sim%r_grid(Nr))
+    do ir = 2,Nr-1
+       accumul = accumul + sim%n0_r(ir)*sim%r_grid(ir)
+    end do
+    accumul = accumul/(Nr-1)
+    sim%n0_r = sim%n0_r/accumul
 !!$ 
     do ieta1 = 1,Nx
       do ieta2 = 1,Ny 
         x = sim%xgrid_2d(ieta1,ieta2)
         y = sim%ygrid_2d(ieta1,ieta2)
 
+        print*, sqrt(x**2+y**2), sim%r_grid(1),sim%r_grid(Nr)
         sim%n0_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_n0)
         sim%Ti_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Ti) 
         sim%Te_xy(ieta1,ieta2) = profil_xy_exacte(x,y,params_Te)
       end do
     end do
 
-    !sim%n0_xy = sim%n0_xy/accumul
+    !
+    sim%n0_xy = sim%n0_xy/accumul
 
     !--> Initialization of B(x,y)
     SLL_ALLOCATE(sim%B_xy(Nx,Ny),ierr)
@@ -927,7 +930,7 @@ contains
     sll_int32  :: iloc1, iloc2, iloc3, iloc4
     sll_int32  :: loc4d_sz_x1, loc4d_sz_x2, loc4d_sz_x3, loc4d_sz_x4
     sll_int32  :: Nx, Ny, Nphi, Nvpar
-    sll_real64 :: theta_j, phi_k
+    sll_real64 :: theta_j, phi_k,r_i
     sll_int32, dimension(1:4) :: glob_ind4d
 
     sll_real64 :: dphi, Lphi, dvpar, Lvpar,Ltheta
@@ -942,7 +945,7 @@ contains
     !--> Initialization of the grid in phi direction
     SLL_ALLOCATE(phi_grid_tmp(Nphi),ierr)
     Lphi = abs(sim%phi_max-sim%phi_min)
-    dphi = Lphi/float(Nphi)
+    dphi = Lphi/float(Nphi-1)
     do i3 = 1,Nphi
       phi_grid_tmp(i3) = sim%phi_min + &
         float(i3-1)*dphi
@@ -951,7 +954,7 @@ contains
     !--> Initialization of the grid in vpar direction
     SLL_ALLOCATE(vpar_grid_tmp(Nvpar),ierr)
     Lvpar = abs(sim%vpar_max-sim%vpar_min)
-    dvpar = Lvpar/float(Nvpar)
+    dvpar = Lvpar/float(Nvpar-1)
     do i4 = 1,Nvpar
       vpar_grid_tmp(i4) = sim%vpar_min + &
         float(i4-1)*dvpar
@@ -989,8 +992,10 @@ contains
             !      sim%xgrid_2d(i1,i2), &
             !      sim%ygrid_2d(i1,i2), &
             !      (/0.0_f64/)) ! irrelevant for polar_eta2
-            phi_k   = phi_grid_tmp(i3) 
-            tmp = exp(-(sim%r_grid(i1)-r_peak)**2/&
+            phi_k   = sim%eta3_grid(i3)!phi_grid_tmp(i3) 
+            !print*, sqrt(sim%xgrid_2d(i1,i2)**2 + sim%ygrid_2d(i1,i2)**2), sim%r_grid(i1)
+            r_i     =  sqrt(sim%xgrid_2d(i1,i2)**2 + sim%ygrid_2d(i1,i2)**2)
+            tmp = exp(-(r_i-r_peak)**2/&
                 (4._f64*sim%deltarn/sim%deltarTi)) 
             sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) = &
                 sim%feq_xyvpar(i1,i2,i4) * &
@@ -1617,16 +1622,17 @@ contains
                   (/iloc1,iloc2,i3,i4/))
             i1 = glob_ind4d(1)
             i2 = glob_ind4d(2)
-            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) - &
-                sim%feq_xyvpar(i1,i2,i4)
+            delta_f = sim%f4d_seqx3x4(iloc1,iloc2,i3,i4) !- &
+                !sim%feq_xyvpar(i1,i2,i4)
             intf_dvpar = intf_dvpar + delta_f*delta_vpar           
           end do
 
-          sim%rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar
-
+          sim%rho3d_seqx3(iloc1,iloc2,i3) = intf_dvpar-sim%n0_xy(i1,i2)
+          !print*, intf_dvpar-sim%n0_xy(i1,i2)
         end do
       end do
     end do
+   
     !--> compute rho3d_seqx1x2
     call apply_remap_3D(sim%seqx3_to_seqx1x2,sim%rho3d_seqx3,sim%rho3d_seqx1x2)
 
@@ -1996,16 +2002,16 @@ contains
             val_jac = sim%transf_xy%jacobian(eta1,eta2)
             !print*, val_jac
             val_B   = sim%B_xy(ieta1,ieta2)
-            alpha1  =  deltat_advec*E_eta2/ (val_jac*val_B)
-            alpha2  =  -deltat_advec*E_eta1/ (val_jac*val_B)
+            alpha1  =  -deltat_advec*E_eta2/ (val_jac)
+            alpha2  =  deltat_advec*E_eta1/ (val_jac)
             eta1    = sim%eta1_grid(ieta1) - alpha1
             eta2    = sim%eta2_grid(ieta2) - alpha2
             
-            if (eta1 <= sim%logical_mesh4d%eta1_min) then 
+            if (eta1 < sim%logical_mesh4d%eta1_min) then 
                !print*, 'value point', eta1
                eta1 = sim%logical_mesh4d%eta1_min
                !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
-            else if ( eta1>= sim%logical_mesh4d%eta1_max) then 
+            else if ( eta1> sim%logical_mesh4d%eta1_max) then 
                !print*, 'value point', eta1
                eta1 = sim%logical_mesh4d%eta1_max
                !print*, 'value f', sim%interp2d_f_eta1eta2%interpolate_value(eta1,eta2)
