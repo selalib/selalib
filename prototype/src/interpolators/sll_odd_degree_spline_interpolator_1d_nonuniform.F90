@@ -10,10 +10,10 @@ use sll_odd_degree_splines
 
 #ifdef STDF95
   type                                    :: odd_degree_spline_1d_interpolator_nonuniform
-#else  
+#else
   type, extends(sll_interpolator_1d_base) :: odd_degree_spline_1d_interpolator_nonuniform
 #endif
-     sll_real64, dimension(:), pointer            :: interpolation_points 
+     sll_real64, dimension(:), pointer            :: interpolation_points
      sll_int32                                    :: num_points ! size
      sll_int32                                    :: bc_type
      type(odd_degree_splines_nonuniform_plan), pointer  :: spline
@@ -41,13 +41,13 @@ use sll_odd_degree_splines
   interface delete_nonuniform
      module procedure delete_qs1d_nonuniform
   end interface delete_nonuniform
-  
+
 contains  ! ****************************************************************
 
 
-  ! the following provides an implementation for the abstract interface 
+  ! the following provides an implementation for the abstract interface
   !interpolate1d
-  !> Define spline interpolation of values in data define on original grid at 
+  !> Define spline interpolation of values in data define on original grid at
   !> points coordinates
   ! Issues with the following function:
   ! - entities referenced through "this" are modified, violating the declared
@@ -75,7 +75,7 @@ contains  ! ****************************************************************
     call compute_odd_degree_coeffs_nonuniform( data, this%spline )
     data_out =  odd_degree_splines_interpolator_nonuniform_array( &
                        coordinates, num_points, this%spline )
-  end function 
+  end function
 
 #ifdef STDF95
   function odd_degree_spline_interpolate_array_at_displacement_nonuniform(this, num_points, &
@@ -100,7 +100,7 @@ contains  ! ****************************************************************
     ! local variables
     sll_real64, dimension(num_points)      :: coordinates
     sll_real64 :: length, delta
-    sll_real64 :: xmin, xmax 
+    sll_real64 :: xmin, xmax
     sll_int32 :: i
     ! compute_odd_degree the interpolating spline coefficients
     call compute_odd_degree_coeffs_nonuniform( data, this%spline )
@@ -111,7 +111,7 @@ contains  ! ****************************************************************
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
 
-    if (alpha > 0 ) then 
+    if (alpha > 0 ) then
        do i = 1, num_points
           coordinates(i) = max(this%interpolation_points(i) - alpha, xmin)
           SLL_ASSERT((xmin <=coordinates(i)).and.(coordinates(i) <= xmax))
@@ -131,7 +131,7 @@ contains  ! ****************************************************************
   ! same name. In the F95 we should add a generic interface around this
   ! subroutine, selecting on the type of interpolator. In the F03 case the
   ! interface is the compute_odd_degree_interpolants routine which gets assigned to
-  ! the qs1d at initialization time.  
+  ! the qs1d at initialization time.
 #ifdef STDF95
   subroutine odd_degree_spline_compute_interpolants_nonuniform( interpolator, data_array,&
        eta_coords, &
@@ -152,7 +152,7 @@ contains  ! ****************************************************************
     if(present(size_eta_coords))then
       !print *,'#Warning size_eta_coords present but not used'
     endif
-    
+
     call compute_odd_degree_coeffs_nonuniform( data_array, interpolator%spline )
 #ifdef STDF95
   end subroutine odd_degree_spline_compute_interpolants_nonuniform
@@ -163,7 +163,7 @@ contains  ! ****************************************************************
   ! Alternative implementation for the function meant to interpolate a
   ! whole array. This implementation fixes some problems in the previous
   ! function. Furthermore, it separates the operation into the more
-  ! elementary steps: one is supposed to first compute the interpolants, 
+  ! elementary steps: one is supposed to first compute the interpolants,
   ! then request to interpolate array values.
   subroutine interpolate_values_qs1d_nonuniform( &
     interpolator, &
@@ -202,9 +202,9 @@ contains  ! ****************************************************************
 
   function interpolate_value_qs1d_nonuniform( interpolator, eta1 ) result(val)
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
+    type(odd_degree_spline_1d_interpolator_nonuniform), intent(in) :: interpolator
 #else
-    class(odd_degree_spline_1d_interpolator_nonuniform), intent(inout) :: interpolator
+    class(odd_degree_spline_1d_interpolator_nonuniform), intent(in) :: interpolator
 #endif
 
     sll_real64 :: val
@@ -232,9 +232,9 @@ contains  ! ****************************************************************
     slope_right )
 
 #ifdef STDF95
-    type(odd_degree_spline_1d_interpolator_nonuniform),  intent(inout)  :: interpolator 
+    type(odd_degree_spline_1d_interpolator_nonuniform),  intent(inout)  :: interpolator
 #else
-    class(odd_degree_spline_1d_interpolator_nonuniform),  intent(inout) :: interpolator 
+    class(odd_degree_spline_1d_interpolator_nonuniform),  intent(inout) :: interpolator
 #endif
     sll_int32,  intent(in)           :: num_points
     sll_real64, intent(in)           :: xmin
@@ -243,9 +243,9 @@ contains  ! ****************************************************************
     sll_real64, intent(in), optional :: slope_left
     sll_real64, intent(in), optional :: slope_right
     sll_int32                        :: ierr, degree
-    sll_int32  :: i  
+    sll_int32  :: i
     sll_real64, intent(in), dimension(:) :: knots
-    
+
     if(present(slope_left))then
       print *,'#Warning slope_left present but not used'
     endif
@@ -271,16 +271,16 @@ contains  ! ****************************************************************
     class(odd_degree_spline_1d_interpolator_nonuniform), intent(in)     :: this
 #endif
        sll_int32, intent(in)                :: num_points! size of output array
-       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
+       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
        sll_real64, dimension(num_points)    :: res
        res(:) = 0.0_f64
-       
+
        print *,'#warning dummy procedure'
        print *,'#',num_points
        print *,'#',maxval(data)
        print *,'#',this%num_points
   end function reconstruct_array
-  
+
   subroutine delete_qs1d_nonuniform( obj )
 #ifdef STDF95
     type(odd_degree_spline_1d_interpolator_nonuniform) :: obj
@@ -313,13 +313,13 @@ contains  ! ****************************************************************
 #else
     class(odd_degree_spline_1d_interpolator_nonuniform), intent(in)     :: interpolator
 #endif
-    sll_real64, dimension(:), pointer            :: get_coefficients_qs1d_nonuniform     
-    
+    sll_real64, dimension(:), pointer            :: get_coefficients_qs1d_nonuniform
+
     print *, 'get_coefficients_qs1d_nonuniform(): ERROR: This function has not been ', &
          'implemented yet.'
     get_coefficients_qs1d_nonuniform => null()
     print *,interpolator%num_points
-    stop      
+    stop
   end function get_coefficients_qs1d_nonuniform
 
 end module sll_odd_degree_spline_interpolator_1d_nonuniform
