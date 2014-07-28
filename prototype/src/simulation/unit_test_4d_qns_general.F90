@@ -243,7 +243,7 @@ program qns_4d_general
        electric_field_ext_1,&
        electric_field_ext_2,&
        elec_field_ext_params,&
-       100)
+       5)
 
 
   print *, ' f initialized '

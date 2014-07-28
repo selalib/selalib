@@ -198,7 +198,8 @@ end subroutine solve_potential_poisson_2d_periodic_fftpack
 !> Solve Poisson equation on 2D mesh with periodic boundary conditions. 
 !> return electric fields.
 subroutine solve_e_fields_poisson_2d_periodic_fftpack(this,field_x,field_y,rhs,nrj)
-
+! THIS routine changes the RHS despite its declaration as intent(in)
+! this should be fixed !!!
    type(poisson_2d_periodic_fftpack)       :: this    !< self object
    sll_real64, dimension(:,:), intent(in)  :: rhs     !< charge density
    sll_real64, dimension(:,:), intent(out) :: field_x !< electric field direction x
