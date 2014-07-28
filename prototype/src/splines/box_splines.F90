@@ -1,7 +1,8 @@
 !> @brief  
-!> Box-Splines of degree 2 using formula from : 
-!> @Condat2006 :Three-directional box splines
-!> 
+!> Box-Splines of degree n using formula from : 
+!> Condat2006 : Three-directional box splines
+!> @author : Laura Mendoza (mela@ipp.mpg.de)
+
 module box_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -12,31 +13,30 @@ use hex_pre_filters
 use hex_mesh
 
 
+implicit none
 
-  implicit none
-
-  !> Spline object
-  type linear_box_spline_2d
-      sll_int32  :: num_pts    !< number of points in any direction from origin
-      sll_real64 :: radius     ! distance between origin and external vertex
-      sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
-      sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
-      sll_real64 :: delta      ! cell spacing
-      !generator vectors (r1, r2, r3) coordinates
-      sll_real64 :: r1_x1 
-      sll_real64 :: r1_x2 
-      sll_real64 :: r2_x1 
-      sll_real64 :: r2_x2 
-      sll_real64 :: r3_x1 
-      sll_real64 :: r3_x2 
-      sll_int32 SLL_PRIV                           :: x1_bc_type
-      sll_int32 SLL_PRIV                           :: x2_bc_type
-      !< spline coefficients
-      sll_real64, dimension(:), pointer :: coeffs
+!> Spline object
+type linear_box_spline_2d
+   sll_int32  :: num_pts    !< number of points in any direction from origin
+   sll_real64 :: radius     ! distance between origin and external vertex
+   sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
+   sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
+   sll_real64 :: delta      ! cell spacing
+   !generator vectors (r1, r2, r3) coordinates
+   sll_real64 :: r1_x1 
+   sll_real64 :: r1_x2 
+   sll_real64 :: r2_x1 
+   sll_real64 :: r2_x2 
+   sll_real64 :: r3_x1 
+   sll_real64 :: r3_x2 
+   sll_int32 SLL_PRIV  :: x1_bc_type
+   sll_int32 SLL_PRIV  :: x2_bc_type
+   !< spline coefficients
+   sll_real64, dimension(:), pointer :: coeffs
 
   end type linear_box_spline_2d
 
-
+  
     
 contains  ! ****************************************************************
 
@@ -48,23 +48,21 @@ contains  ! ****************************************************************
     val = spline_obj%slot;                                 \
   end function fname
 
-MAKE_GET_SLOT_FUNCTION(get_radius_lbs2d, linear_box_spline_2d, radius, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_center_x1_lbs2d, linear_box_spline_2d, center_x1, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_center_x2_lbs2d, linear_box_spline_2d, center_x2, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_r1_x1_lbs2d, linear_box_spline_2d, r1_x1, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_r1_x2_lbs2d, linear_box_spline_2d, r1_x2, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_r2_x1_lbs2d, linear_box_spline_2d, r2_x1, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_r2_x2_lbs2d, linear_box_spline_2d, r2_x2, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_r3_x1_lbs2d, linear_box_spline_2d, r3_x1, sll_real64 )
-MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 )
-
-
+  MAKE_GET_SLOT_FUNCTION(get_radius_lbs2d, linear_box_spline_2d, radius, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_center_x1_lbs2d, linear_box_spline_2d, center_x1, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_center_x2_lbs2d, linear_box_spline_2d, center_x2, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_r1_x1_lbs2d, linear_box_spline_2d, r1_x1, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_r1_x2_lbs2d, linear_box_spline_2d, r1_x2, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_r2_x1_lbs2d, linear_box_spline_2d, r2_x1, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_r2_x2_lbs2d, linear_box_spline_2d, r2_x2, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_r3_x1_lbs2d, linear_box_spline_2d, r3_x1, sll_real64 )
+  MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 )
 
   function new_linear_box_spline_2d( &
-    mesh,         &
-    x1_bc_type,   &
-    x2_bc_type)
-
+       mesh,         &
+       x1_bc_type,   &
+       x2_bc_type)
+    
     type(linear_box_spline_2d), pointer  :: new_linear_box_spline_2d
     type(hex_mesh_2d), pointer           :: mesh
     sll_int32,  intent(in)               :: x1_bc_type
@@ -315,48 +313,91 @@ MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, linear_box_spline_2d, r3_x2, sll_real64 
     sll_real64    :: aux
     sll_real64    :: aux2
     sll_real64    :: coeff
+    sll_real64    :: g
     sll_int32     :: K
     sll_int32     :: L
     sll_int32     :: i
     sll_int32     :: d
 
 
-    val = 0._f64
 
-    x1 = -abs(x1_in)
-    x2 =  abs(x2_in)
-    u = x1 - x2/sqrt(3.0)
-    v = x1 + x2/sqrt(3.0)
+    if (deg.ne.2) then
 
-    if (v.gt.0) then
-      v = -v
-      u = u + v
-    end if
-    if(v.gt.u/2) then
-      v = u-v
-    end if
-
-    do K = -deg, CEILING(u)-1
-       do L = -deg, CEILING(v)-1
-            do i = 0,min(deg+K, deg+L)
+       ! ----------------
+       !We take advantage of the fact that the mesh is symetrical
+       !So we constrain the points to the first triangles by
+       !using the symmetry properties
+       ! ----------------
+       ! Vertical symmetry:
+       x1 = -abs(x1_in)
+       x2 =  abs(x2_in)
+       u = x1 - x2/sqrt(3.0)
+       v = x1 + x2/sqrt(3.0)
+       ! First generating vector (r1') symmetry
+       if (v.gt.0) then
+          v = -v
+          u = u + v
+       end if
+       ! First triangle axe (r2'+r3') symmetry
+       if(v.gt.u/2) then
+          v = u-v
+       end if
+       
+       val = 0._f64
+       do K = -deg, CEILING(u)-1
+          do L = -deg, CEILING(v)-1
+             do i = 0,min(deg+K, deg+L)
                 coeff = (-1.0_f64)**(K+L+i)* &
-                        choose(deg,i-K)*     &
-                        choose(deg,i-L)*     &
-                        choose(deg,i)
+                     choose(deg,i-K)*     &
+                     choose(deg,i-L)*     &
+                     choose(deg,i)
                 do d = 0,deg-1
-                    aux=abs(v-L-u+K)  
-                    aux2=(u-K+v-L-aux)/2._f64
-                    if(aux2.lt.0.) then
-                       aux2 = 0._f64
-                    end if
-                    val = val + coeff*choose(deg-1+d,d)   &
+                   aux=abs(v-L-u+K)  
+                   aux2=(u-K+v-L-aux)/2._f64
+                   if(aux2.lt.0.) then
+                      aux2 = 0._f64
+                   end if
+                   val = val + coeff*choose(deg-1+d,d)   &
                         /factorial(2*deg-1+d)/factorial(deg-1-d)  &
-                        * aux**(deg-1-d)\
+                        * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
-                 end do
-            end do
-         end do
-      end do
+                end do
+             end do
+          end do
+       end do
+
+    else
+!        print *, "************************"
+!        print *, "USING THE NEW ALGORITHM"
+!        print *, "************************"
+       !Optimized algorithm for order two method :
+       x1 = abs(x1_in)
+       x2 = abs(x2_in)
+       u = x1 - x2/sqrt(3.0)
+       v = x1 + x2/sqrt(3.0)
+       if (u.lt.0) then
+          !Symmetry r2
+          u = -u
+          v = v+u
+       end if
+       if (2*u.lt.v) then
+          !Symmetry r2+r3
+          u = v-u
+       end if
+       g = u - v/2.0
+       if (v.gt.0) then
+          val = 0.0_f64
+       else if (v.lt.1.0) then
+          val = 0.5 + ((5._f64/3._f64 - v/8.0_f64)*v-3.0_f64)*v*v/4.0_f64 + &
+               ((1._f64-v/4._f64)*v+g*g/6.0_f64-1._f64)*g*g
+       else if (u.gt.1.0) then
+          val = (v-2._f64)*(v-2._f64)*(v-2._f64)*(g-1._f64)/6.0_f64
+       else
+          val = 5._f64/6._f64 + ((1._f64 + (1._f64/3._f64 -v/8._f64)*v)*v/4._f64-1._f64)*v + &
+               ((1._f64-v/4._f64)*v+g*g/6.0_f64 - 1._f64)*g*g
+       end if
+    end if
+
   end function chi_gen_val
 
 
