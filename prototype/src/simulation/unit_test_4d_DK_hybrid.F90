@@ -70,11 +70,11 @@ program DK_hybrid_4d
     call transf_xy%write_to_file()
 
   !*** Fisrt step ***
+  simulation%iter_time = 0._f64
   if (simulation%my_rank.eq.0) &
     print*,': ---> First step'
   call first_step_4d_DK_hybrid(simulation)
 
-  print*, 'first step ok'
   !*** Global loop ***
   if (simulation%my_rank.eq.0) &
     print*,': ---> Run'
