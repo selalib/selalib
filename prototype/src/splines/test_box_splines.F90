@@ -56,7 +56,7 @@ character(len = 4) :: filenum
 
 
 print*, ""
-do num_cells = 75,75,1
+do num_cells = 70,70,1
 
 !   t_init = getRealTimer()
 
@@ -248,20 +248,20 @@ do num_cells = 75,75,1
    ! end if
 
 
-   ! !WRITING CPU TIME
-   ! if (num_cells .eq. 10) then 
-   !    !NEW FILE :
-   !    open (unit=12,file="cpu_time.txt",action="write",&
-   !         status="replace")
-   !    write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-   !    close(12)
-   ! else
-   !    !WRITE
-   !    open (unit=12,file="cpu_time.txt",action="write",&
-   !         status="old", position="append") 
-   !    write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-   !    close(12)
-   ! end if
+   !WRITING CPU TIME
+   if (num_cells .eq. 10 ) then 
+      !NEW FILE :
+      open (unit=12,file="cpu_time.txt",action="write",&
+           status="replace")
+      write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+      close(12)
+   else
+      !WRITE
+      open (unit=12,file="cpu_time.txt",action="write",&
+           status="old", position="append") 
+      write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+      close(12)
+   end if
 
 
 
