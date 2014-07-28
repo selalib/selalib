@@ -915,7 +915,6 @@ contains
     type(sll_scalar_field_multipatch_2d), pointer          :: field_x1x2
     type(sll_distribution_function_4d_multipatch), pointer :: f_mp
     sll_real64, intent(in)                                 :: deltat
-    
     sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
     sll_int32  :: loc_sz_x1
     sll_int32  :: loc_sz_x2
@@ -935,7 +934,8 @@ contains
     sll_int32  :: ip
     sll_real64 :: f_interpolated
     sll_int32  :: num_patches
-    
+    type(sll_time_mark) :: t0 !delete this
+    sll_real64 :: time     ! delete this
     ! Here we do something ugly, which is to call the 'get_local_sizes()'
     ! method just to obtain the local sizes in the x3 and x4 directions, which
     ! are 'cut' (parallelized), as we are carrying out a sequential x1x2
@@ -963,7 +963,6 @@ contains
                   ip, &
                   f_mp%get_x1x2_data_slice_pointer(ip,k,l) )
           end do
-
           ! update_interpolation_coefficients() already implies a loop around
           ! the patches.
           call field_x1x2%update_interpolation_coefficients()
@@ -985,8 +984,11 @@ contains
              do j=1,loc_sz_x2
                 do i=1,loc_sz_x1
                    eta(:) = f_mp%get_eta_coordinates( ip, (/i,j,k,l/) )
+                   call sll_set_time_mark(t0) ! delete this
                    inv_j(:,:)  = &
                      field_x1x2%transf%inverse_jacobian_matrix(eta(1),eta(2),ip)
+                   time = sll_time_elapsed_since(t0) ! delete
+                   print *, 'time for inverse jacobian: ', time
                    alpha1 = -deltat*(inv_j(1,1)*eta(3) + inv_j(1,2)*eta(4))
                    alpha2 = -deltat*(inv_j(2,1)*eta(3) + inv_j(2,2)*eta(4))
                    eta1   = eta1+alpha1

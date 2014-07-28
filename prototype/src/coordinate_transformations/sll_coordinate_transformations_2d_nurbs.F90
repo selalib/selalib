@@ -917,20 +917,21 @@ contains
     SLL_ASSERT( eta2 <= 1.0_f64)
     SLL_ASSERT( eta2 >= 0.0_f64)
 
-    r_jac = 1.0_f64/transf%jacobian( eta1, eta2 )
+!    r_jac = 1.0_f64/transf%jacobian( eta1, eta2 )
 
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
        
-       inv_j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       inv_j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       inv_j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       inv_j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       
-       inverse_jacobian_matrix_2d_nurbs(1,1) =  inv_j22*r_jac
-       inverse_jacobian_matrix_2d_nurbs(1,2) = -inv_j12*r_jac
-       inverse_jacobian_matrix_2d_nurbs(2,1) = -inv_j21*r_jac
-       inverse_jacobian_matrix_2d_nurbs(2,2) =  inv_j11*r_jac
+       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       jac   = inv_j11*inv_j22 - inv_j12*inv_j21   
+       r_jac = 1.0_f64/jac   
+       inverse_jacobian_matrix_2d_nurbs(1,1) =  j22*r_jac
+       inverse_jacobian_matrix_2d_nurbs(1,2) = -j12*r_jac
+       inverse_jacobian_matrix_2d_nurbs(2,1) = -j21*r_jac
+       inverse_jacobian_matrix_2d_nurbs(2,2) =  j11*r_jac
     
     else 
 
