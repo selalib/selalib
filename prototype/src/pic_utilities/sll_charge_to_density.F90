@@ -57,7 +57,8 @@ contains
     deltax = charge%mesh%delta_eta1
     deltay = charge%mesh%delta_eta2
     factor = 1.0_f64/(deltax*deltay)
-
+! REMEMBER : charge is just the charge MASS and not the charge DENSITY
+! this explains the *factor.
     ! loop over the node indices of rho. Edges might need special treatment,
     ! thus do the non-edge nodes first.
     do j=2,ncy
@@ -110,9 +111,8 @@ contains
   subroutine sll_convert_charge_to_rho_2d_per_per_CS( charge, rho )
     type(sll_charge_accumulator_2d_CS), pointer :: charge
     sll_real64, dimension(:,:), intent(out)  :: rho
-    sll_int32  :: i, im1, ip2
-    sll_int32  :: j, jm1, jp2
-    sll_int32  :: k
+    sll_int32  :: i, im1, im2, ip1
+    sll_int32  :: j, jm1, jm2, jp1!   k
     sll_int32  :: ncx
     sll_int32  :: ncy
     sll_real64 :: deltax
@@ -124,49 +124,59 @@ contains
     deltax = charge%mesh%delta_eta1
     deltay = charge%mesh%delta_eta2
     factor = 1.0_f64/(deltax*deltay)
-
-    rho = 0.0_f64
+! REMEMBER : charge is just the charge MASS and not the charge DENSITY
+! this explains the *factor.
     do j = 1, ncy
+       jp1 = j + 1
        jm1 = j - 1
-       jp2 = j + 2
+       jm2 = j - 2
        if (j==1) then
           jm1 = ncy
+          jm2 = ncy-1
+       endif
+       if (j==2) then
+          jm2 = ncy
        endif
        if (j==ncy) then
-          jp2 = 2
+          jp1 = 1
        endif
-       do i = 1, ncx
-          k = i+(j-1)*ncx
+       do i = 1, ncx!     k = i+(j-1)*ncx
+          ip1 = i + 1
           im1 = i - 1
-          ip2 = i + 2
+          im2 = i - 2
           if (i==1) then
              im1 = ncx
+             im2 = ncx-1
+          endif
+          if (i==2) then
+             im2 = ncx
           endif
           if (i==ncx) then
-             ip2 = 2
+             ip1 = 1
           endif
-          rho(im1, j) = rho(im1, j) + charge%q_acc(k)%q_im1j * factor
-          rho(i  , j) = rho(i,   j) + charge%q_acc(k)%q_ij * factor
-          rho(i+1, j) = rho(i+1, j) + charge%q_acc(k)%q_ip1j * factor
-          rho(ip2, j) = rho(ip2, j) + charge%q_acc(k)%q_ip2j * factor
-
-          rho(im1, jm1) = rho(im1, jm1) + charge%q_acc(k)%q_im1jm1 * factor
-          rho(i  , jm1) = rho(i  , jm1) + charge%q_acc(k)%q_ijm1 * factor
-          rho(i+1, jm1) = rho(i+1, jm1) + charge%q_acc(k)%q_ip1jm1 * factor
-          rho(ip2, jm1) = rho(ip2, jm1) + charge%q_acc(k)%q_ip2jm1 * factor
-
-          rho(im1, j+1) = rho(im1, j+1) + charge%q_acc(k)%q_im1jp1 * factor
-          rho(i  , j+1) = rho(i  , j+1) + charge%q_acc(k)%q_ijp1 * factor
-          rho(i+1, j+1) = rho(i+1, j+1) + charge%q_acc(k)%q_ip1jp1 * factor
-          rho(ip2, j+1) = rho(ip2, j+1) + charge%q_acc(k)%q_ip2jp1 * factor
-
-          rho(im1, jp2) = rho(im1, jp2) + charge%q_acc(k)%q_im1jp2 * factor
-          rho(i  , jp2) = rho(i  , jp2) + charge%q_acc(k)%q_ijp2 * factor
-          rho(i+1, jp2) = rho(i+1, jp2) + charge%q_acc(k)%q_ip1jp2 * factor
-          rho(ip2, jp2) = rho(ip2, jp2) + charge%q_acc(k)%q_ip2jp2 * factor
+          rho(i,j) = charge%q_acc( im1+ (jm1-1)*ncx )%q_ip1jp1 + &
+                     charge%q_acc( i  + (jm1-1)*ncx )%q_ijp1   + &
+                     charge%q_acc( i  + (j-1)  *ncx )%q_ij     + &
+                     charge%q_acc( im1+ (j-1)  *ncx )%q_ip1j   + &
+                     charge%q_acc( im2+ (jm2-1)*ncx )%q_ip2jp2 + &
+                     charge%q_acc( im1+ (jm2-1)*ncx )%q_ip1jp2 + &
+                     charge%q_acc( i  + (jm2-1)*ncx )%q_ijp2   + &
+                     charge%q_acc( ip1+ (jm2-1)*ncx )%q_im1jp2 + &
+                     charge%q_acc( ip1+ (jm1-1)*ncx )%q_im1jp1 + &
+                     charge%q_acc( ip1+ (j-1)  *ncx )%q_im1j   + &
+                     charge%q_acc( ip1+ (jp1-1)*ncx )%q_im1jm1 + &
+                     charge%q_acc( i  + (jp1-1)*ncx )%q_ijm1   + &
+                     charge%q_acc( im1+ (jp1-1)*ncx )%q_ip1jm1 + &
+                     charge%q_acc( im2+ (jp1-1)*ncx )%q_ip2jm1 + &
+                     charge%q_acc( im2+ (j-1)  *ncx )%q_ip2j   + &
+                     charge%q_acc( im2+ (jm1-1)*ncx )%q_ip2jp1
+          rho(i,j) = rho(i,j)*factor
+          rho(i,ncy+1) = rho(i,1)
        enddo
+       rho(ncx+1,j) = rho(1,j)
     enddo
-
+    rho(ncx+1,ncy+1) = rho(1,1)
+    
   end subroutine sll_convert_charge_to_rho_2d_per_per_CS
 
 
