@@ -26,7 +26,7 @@ module sll_simulation_4d_qns_general_multipatch_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
 !  use sll_arbitrary_degree_spline_interpolator_1d_module
-!  use sll_timer
+  use sll_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general_multipatch
@@ -423,6 +423,7 @@ contains
     print *, '******************** ENTERED THE RUN ROUTINE **************'
 
     ! Start with the fields
+    call sll_set_time_mark(t0) 
     a11_field_mat => &
          new_scalar_field_multipatch_2d("a11", sim%transfx, owns_data=.true.)
 
@@ -458,7 +459,8 @@ contains
          new_scalar_field_multipatch_2d("rho_field_multipatch", &
                                         sim%transfx, &
                                         owns_data=.true.)
-    
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time to create multipatch fields =', time
 
     ! elec_field_ext_1 => new_scalar_field_multipatch_2d("E1_ext", sim%transfx)    
     ! elec_field_ext_2 => new_scalar_field_multipatch_2d("E2_ext", sim%transfx)    
@@ -470,6 +472,8 @@ contains
     
     num_patches = sim%transfx%get_number_patches()
 
+    print *, 'rank:', sim%my_rank, 'initializing patches.'
+    call sll_set_time_mark(t0)
     do ipatch= 0,num_patches-1
        ! Please get rid of these 'fixes' whenever it is decided that gfortran 
        ! 4.6 is no longer supported by Selalib.
@@ -525,6 +529,13 @@ contains
        end do
     end do
 
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time to initialize MP fields =', time
+       
+    print *, 'rank: ', sim%my_rank, 'updating interpolation coefficients.'
+
+    call sll_set_time_mark(t0)
+
     call a11_field_mat%update_interpolation_coefficients()
     call a12_field_mat%update_interpolation_coefficients()
     call a21_field_mat%update_interpolation_coefficients()
@@ -535,7 +546,10 @@ contains
     call phi%update_interpolation_coefficients()
     call rho%update_interpolation_coefficients()
 
-print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time to update coefficients =', time
+
+    print *, '********** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     buffer_counter = 1
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -600,28 +614,51 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
        sim%nproc_x4 = 1
     end if
 
+
+    ! Creating and intializing distribution function.
+
+    print *, 'creating and initializing distribution function MP.'
+    call sll_set_time_mark(t0)
     f_mp => sll_new_distribution_function_4d_multipatch( sll_world_collective, &
          sim%transfx, sim%mesh2d_v, sim%nproc_x1, sim%nproc_x2 )
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time to create MP F =', time
 
+    call sll_set_time_mark(t0)
     call f_mp%initialize( sim%init_func, sim%params ) 
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time to initialize MP F =', time
 
-    print *, 'sequential_x3x4 mode...'
+    print *, 'reconfiguring to sequential_x1x2 mode...'
 
     ! First dt/2 advection for eta1-eta2:
+    call sll_set_time_mark(t0)
     call f_mp%set_to_sequential_x1x2()
-    print *, 'sequential_x1x2 mode...'       
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time to reconfigure F =', time
+
+    print *, 'First-time advection in x1x2.'
+    call sll_set_time_mark(t0)
     call advection_x1x2( sim, layer_x1x2, f_mp, 0.5*sim%dt)    
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time for advection x1x2 =', time
 
     print *, '********** COMPLETED X1X2 ADVECTION ***********'
 
     ! Initialize the poisson plan before going into the main loop.
+    print *, 'Creating and initializing elliptic solver.'
+    call sll_set_time_mark(t0)
     sim%qns => new_general_elliptic_solver_mp( &
          sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%transfx)
-
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time for creating field solver', time
     print*, 'about to factorize matrix qns'
     
+
+    print *, 'factorizing solver matrices.'
+    call sll_set_time_mark(t0)
     call factorize_mat_es_mp(&
          sim%qns, & 
          a11_field_mat, &
@@ -631,6 +668,8 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
          b1_field_vect, &
          b2_field_vect, &
          c_field)
+    time = sll_time_elapsed_since(t0)
+    print*, 'rank: ', sim%my_rank, 'time for factorizing matrices', time
 
     print*, '--- ended factorization matrix qns'
 
@@ -698,13 +737,13 @@ print *, '************** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
           call rho%write_to_file(0)
        end if
        
-       !call sll_set_time_mark(t0)         
+       call sll_set_time_mark(t0)         
        call solve_general_coordinates_elliptic_eq_mp(&
             sim%qns,&
             rho,&
             phi)
-       !time = sll_time_elapsed_since(t0)
-       !print*, 'timer to solve QNS =', time
+       time = sll_time_elapsed_since(t0)
+       print*, 'rank: ', sim%my_rank, 'time to solve QNS =', time
        
        print*, '--- end solve qns'
        
