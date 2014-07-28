@@ -32,10 +32,11 @@ program aligned_translation_2d
 use sll_module_advection_1d_base
 use sll_module_advection_1d_periodic
 use lagrange_interpolation
+use sll_module_advection_2d_oblic
 
 
 implicit none
-  
+  type(oblic_2d_advector), pointer :: adv  
   class(sll_advection_1d_base), pointer :: adv_x1
   class(sll_advection_1d_base), pointer :: adv_x2
   sll_int32 :: i1
@@ -55,10 +56,10 @@ implicit none
   sll_int32 :: ierr
   sll_real64 :: x1
   sll_real64 :: x2
-  sll_real64 :: x1_min = 0._f64
-  sll_real64 :: x1_max = 1._f64
-  sll_real64 :: x2_min = 0._f64
-  sll_real64 :: x2_max = 1._f64
+  sll_real64 :: x1_min
+  sll_real64 :: x1_max
+  sll_real64 :: x2_min
+  sll_real64 :: x2_max
   sll_real64 :: delta_x1
   sll_real64 :: delta_x2
   sll_real64 :: dt
@@ -88,6 +89,10 @@ implicit none
     k_mode, &
     Nc_x1, &
     Nc_x2, &
+    x1_min, &
+    x1_max, &
+    x2_min, &
+    x2_max, &
     dt, &
     nb_step, &
     d, &
@@ -126,6 +131,8 @@ implicit none
   print *,'#k_mode=',k_mode
   print *,'#Nc_x1=',Nc_x1
   print *,'#Nc_x2=',Nc_x2
+  print *,'#x1_min x1_max=',x1_min,x1_max
+  print *,'#x2_min x2_max=',x2_min,x2_max
   print *,'#nb_step=',nb_step
   print *,'#dt=',dt
   print *,'#d=',d
@@ -254,6 +261,34 @@ implicit none
   enddo
   err = maxval(abs(f-f_exact))
   print *,'#err with new method=',err
+
+  !new method using oblic advector
+  f = f_init  
+
+  adv => new_oblic_2d_advector( &
+    Nc_x1, &
+    adv_x1, &
+    Nc_x2, &
+    x2_min, &
+    x2_max, &
+    r, &
+    s )
+  
+  err = 0._f64  
+  do step =1,nb_step
+    call oblic_advect_2d_constant( &
+      adv, &
+      A1, &
+      A2, &
+      dt, &
+      f, &
+      f_new)
+    f = f_new      
+  enddo  
+  err = maxval(abs(f-f_exact))
+  print *,'#err with new method using oblic advector=',err
+  
+  
 
 #ifndef NOHDF5
       call plot_f_cartesian( &

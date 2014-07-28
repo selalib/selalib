@@ -19,114 +19,77 @@ program unit_test_advection_2d_oblic
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 use sll_module_advection_2d_oblic
-use sll_module_characteristics_2d_explicit_euler
-use sll_cubic_spline_interpolator_2d
 use sll_module_advection_1d_periodic
 
 implicit none
-  
   type(oblic_2d_advector), pointer :: adv
-  class(sll_advection_1d_base), pointer :: adv_x1
-  class(sll_advection_1d_base), pointer :: adv_aligned
-  class(sll_interpolator_2d_base), pointer :: interp
-  class(sll_characteristics_2d_base), pointer :: charac
+  sll_int32 :: Nc_x1
   sll_real64 :: x1_min
   sll_real64 :: x1_max
+  class(sll_advection_1d_base), pointer :: adv_x1
+  sll_int32 :: Nc_x2
   sll_real64 :: x2_min
   sll_real64 :: x2_max
-  sll_int32 :: num_cells_x1
-  sll_int32 :: num_cells_x2
+  sll_int32 :: stencil_r
+  sll_int32 :: stencil_s
   sll_real64, dimension(:,:), allocatable :: input
   sll_real64, dimension(:,:), allocatable :: output
-  sll_real64, dimension(:), pointer :: x1_mesh
-  sll_real64, dimension(:), pointer :: x2_mesh
-  sll_real64 :: dt
-  sll_real64,dimension(:,:), allocatable :: phi
-  sll_real64 :: err
   sll_int32 :: ierr
-  sll_int32 :: i
-  sll_real64 :: delta_x1
-  sll_real64 :: delta_x2
-  sll_int32 :: shift
+  sll_real64 :: err
+  sll_real64 :: iota
+  sll_real64 :: A1  
+  sll_real64 :: A2
+  sll_real64 :: dt  
   
+  Nc_x1 = 256
   x1_min = 0._f64
   x1_max = 1._f64
+  !(r,s) = (-1,2) for LAG3 interpolation
+  Nc_x2 = 32
   x2_min = 0._f64
   x2_max = 1._f64
-  num_cells_x1 = 32
-  num_cells_x2 = 32
-  dt = 0.1_f64
-  shift = 0
+  stencil_r = -1
+  stencil_s = 2
   
-  delta_x1 = (x1_max-x1_min)/real(num_cells_x1,f64)
-  delta_x2 = (x2_max-x2_min)/real(num_cells_x2,f64)
-  SLL_ALLOCATE(x1_mesh(num_cells_x1+1),ierr)
-  SLL_ALLOCATE(x2_mesh(num_cells_x2+1),ierr)
-  SLL_ALLOCATE(input(num_cells_x1+1,num_cells_x2+1),ierr)
-  SLL_ALLOCATE(output(num_cells_x1+1,num_cells_x2+1),ierr)
-  SLL_ALLOCATE(phi(num_cells_x1+1,num_cells_x2+1),ierr)
-
-  do i=1,num_cells_x1+1
-    x1_mesh(i) = x1_min+real(i-1,f64)*delta_x1
-  enddo
-
-  do i=1,num_cells_x2+1
-    x2_mesh(i) = x2_min+real(i-1,f64)*delta_x2
-  enddo
-
+  !iota = 0.43 ! !A1/A2
+  dt = 0.1
+  A1 = 1._f64
+  A2 = 2._f64
   
-  input = 1._f64
-
-  phi = 1._f64
-
-  err=0._f64
-
   adv_x1 => new_periodic_1d_advector( &
-    num_cells_x1, &
+    Nc_x1, &
     x1_min, &
     x1_max, &
     SPLINE, & 
     4) 
-
-  adv_aligned => new_periodic_1d_advector( &
-    num_cells_x1, &
-    x1_min, &
-    x1_max, &
-    SPLINE, & 
-    4) 
-
-
-  interp => new_cubic_spline_2d_interpolator( &
-    num_cells_x1+1, &
-    num_cells_x2+1, &
-    x1_min, &
-    x1_max, &
+    
+  adv => new_oblic_2d_advector( &
+    Nc_x1, &
+    adv_x1, &
+    Nc_x2, &
     x2_min, &
     x2_max, &
-    SLL_PERIODIC, &
-    SLL_PERIODIC)
-
-
-  charac => new_explicit_euler_2d_charac(&
-      num_cells_x1+1, &
-      num_cells_x2+1, &
-      SLL_PERIODIC, &
-      SLL_PERIODIC)
+    stencil_r, &
+    stencil_s )
   
-  adv => new_oblic_2d_advector(&
-    adv_x1, &
-    adv_aligned, &
-    interp, &
-    charac, &
-    num_cells_x1+1, &
-    num_cells_x2+1, &
-    eta1_coords = x1_mesh, &
-    eta2_coords = x2_mesh)
+  print *,'#oblic advector is initialized'
   
+  SLL_ALLOCATE(input(Nc_x1+1,Nc_x2+1),ierr)
+  SLL_ALLOCATE(output(Nc_x1+1,Nc_x2+1),ierr)
   
-  call oblic_advect_2d(adv, phi, shift, dt, input, output)
+  err = 0._f64
   
-  err=maxval(abs(input-output))
+  input = 1._f64
+  call oblic_advect_2d_constant( &
+    adv, &
+    !iota, &
+    A1, &
+    A2, &
+    dt, &
+    input, &
+    output)
+  
+  err = maxval(abs(input-output))
   
   print *,'#err=',err
   if(err<1.e-15_f64)then  
