@@ -825,20 +825,21 @@ contains
     sll_real64             :: r_jac,jac ! reciprocal of the jacobian
     
     jacobian_matrix = jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-
-    
     j11 = jacobian_matrix(1,1)
     j12 = jacobian_matrix(1,2)
     j21 = jacobian_matrix(2,1)
     j22 = jacobian_matrix(2,2)
     jac   = j11*j22 - j12*j21   
+    if(jac == 0.0_f64) then
+       print *, 'ERROR: inverse_jacobian_matrix_2d_nurbs(): 0-valued ', &
+            'jacobian found. NaNs expected. Values of eta1 and eta2 = ', &
+            eta1, eta2, 'Jacobian matrix: ', jacobian_matrix(:,:)
+    end if
     r_jac = 1.0_f64/jac   
     inverse_jacobian_matrix_2d_nurbs(1,1) =  j22*r_jac
     inverse_jacobian_matrix_2d_nurbs(1,2) = -j12*r_jac
     inverse_jacobian_matrix_2d_nurbs(2,1) = -j21*r_jac
-    inverse_jacobian_matrix_2d_nurbs(2,2) =  j11*r_jac
-    
-    
+    inverse_jacobian_matrix_2d_nurbs(2,2) =  j11*r_jac    
   end function inverse_jacobian_matrix_2d_nurbs
     
 
