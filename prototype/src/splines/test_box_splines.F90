@@ -56,7 +56,7 @@ character(len = 4) :: filenum
 
 
 print*, ""
-do num_cells = 70,70,1
+do num_cells = 40,40,1
 
 !   t_init = getRealTimer()
 
