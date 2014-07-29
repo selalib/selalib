@@ -418,12 +418,8 @@ contains
     sll_real64 :: time 
     sll_int32 :: size_diag    
     
-    ! compute Jacobian and logical mesh points
-
-    print *, '******************** ENTERED THE RUN ROUTINE **************'
-
     ! Start with the fields
-    call sll_set_time_mark(t0) 
+    !    call sll_set_time_mark(t0) 
     a11_field_mat => &
          new_scalar_field_multipatch_2d("a11", sim%transfx, owns_data=.true.)
 
@@ -459,21 +455,19 @@ contains
          new_scalar_field_multipatch_2d("rho_field_multipatch", &
                                         sim%transfx, &
                                         owns_data=.true.)
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time to create multipatch fields =', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time to create multipatch fields =', time
 
-    ! elec_field_ext_1 => new_scalar_field_multipatch_2d("E1_ext", sim%transfx)    
-    ! elec_field_ext_2 => new_scalar_field_multipatch_2d("E2_ext", sim%transfx)    
-
+    ! elec_field_ext_1 => new_scalar_field_multipatch_2d("E1_ext", sim%transfx)
+    ! elec_field_ext_2 => new_scalar_field_multipatch_2d("E2_ext", sim%transfx)
 
     ! call elec_field_ext_1_field_mat%allocate_memory()
     ! call elec_field_ext_2_field_mat%allocate_memory()
     
-    
     num_patches = sim%transfx%get_number_patches()
 
-    print *, 'rank:', sim%my_rank, 'initializing patches.'
-    call sll_set_time_mark(t0)
+    !    print *, 'rank:', sim%my_rank, 'initializing patches.'
+    !call sll_set_time_mark(t0)
     do ipatch= 0,num_patches-1
        ! Please get rid of these 'fixes' whenever it is decided that gfortran 
        ! 4.6 is no longer supported by Selalib.
@@ -529,12 +523,12 @@ contains
        end do
     end do
 
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time to initialize MP fields =', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time to initialize MP fields =', time
        
-    print *, 'rank: ', sim%my_rank, 'updating interpolation coefficients.'
+    !print *, 'rank: ', sim%my_rank, 'updating interpolation coefficients.'
 
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
 
     call a11_field_mat%update_interpolation_coefficients()
     call a12_field_mat%update_interpolation_coefficients()
@@ -546,10 +540,10 @@ contains
     call phi%update_interpolation_coefficients()
     call rho%update_interpolation_coefficients()
 
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time to update coefficients =', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time to update coefficients =', time
 
-    print *, '********** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
+    !print *, '********** INITIALIZED MULTIPATCH FIELDS & INTERPOLANTS *******'
     buffer_counter = 1
     sim%world_size = sll_get_collective_size(sll_world_collective)
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
@@ -618,47 +612,43 @@ contains
     ! Creating and intializing distribution function.
 
     print *, 'creating and initializing distribution function MP.'
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     f_mp => sll_new_distribution_function_4d_multipatch( sll_world_collective, &
          sim%transfx, sim%mesh2d_v, sim%nproc_x1, sim%nproc_x2 )
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time to create MP F =', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time to create MP F =', time
 
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     call f_mp%initialize( sim%init_func, sim%params ) 
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time to initialize MP F =', time
-
-    print *, 'reconfiguring to sequential_x1x2 mode...'
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time to initialize MP F =', time
 
     ! First dt/2 advection for eta1-eta2:
-    call sll_set_time_mark(t0)
+    !call sll_set_time_mark(t0)
     call f_mp%set_to_sequential_x1x2()
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time to reconfigure F =', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time to reconfigure F =', time
 
-    print *, 'First-time advection in x1x2.'
-    call sll_set_time_mark(t0)
+    !print *, 'First-time advection in x1x2.'
+    !call sll_set_time_mark(t0)
     call advection_x1x2( sim, layer_x1x2, f_mp, 0.5*sim%dt)    
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time for advection x1x2 =', time
-
-    print *, '********** COMPLETED X1X2 ADVECTION ***********'
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time for advection x1x2 =', time
 
     ! Initialize the poisson plan before going into the main loop.
-    print *, 'Creating and initializing elliptic solver.'
-    call sll_set_time_mark(t0)
+    !print *, 'Creating and initializing elliptic solver.'
+    !call sll_set_time_mark(t0)
     sim%qns => new_general_elliptic_solver_mp( &
          sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%transfx)
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time for creating field solver', time
-    print*, 'about to factorize matrix qns'
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time for creating field solver', time
+    !print*, 'about to factorize matrix qns'
     
 
-    print *, 'factorizing solver matrices.'
-    call sll_set_time_mark(t0)
+    !print *, 'factorizing solver matrices.'
+    !call sll_set_time_mark(t0)
     call factorize_mat_es_mp(&
          sim%qns, & 
          a11_field_mat, &
@@ -668,22 +658,22 @@ contains
          b1_field_vect, &
          b2_field_vect, &
          c_field)
-    time = sll_time_elapsed_since(t0)
-    print*, 'rank: ', sim%my_rank, 'time for factorizing matrices', time
+    !time = sll_time_elapsed_since(t0)
+    !print*, 'rank: ', sim%my_rank, 'time for factorizing matrices', time
 
-    print*, '--- ended factorization matrix qns'
+    !print*, '--- ended factorization matrix qns'
 
     call sim%interp_x3%initialize( &
          sim%mesh2d_v%num_cells1+1, &
          sim%mesh2d_v%eta1_min, &
          sim%mesh2d_v%eta1_max, &
-         SLL_HERMITE)!sim%bc_vx_0)
+         SLL_HERMITE)
     
     call sim%interp_x4%initialize( &
          sim%mesh2d_v%num_cells2+1, &
          sim%mesh2d_v%eta2_min, &
          sim%mesh2d_v%eta2_max, &
-         SLL_HERMITE)! sim%bc_vy_0)
+         SLL_HERMITE)
     
     
     ! ------------------------------------------------------------------------
@@ -737,15 +727,15 @@ contains
           call rho%write_to_file(0)
        end if
        
-       call sll_set_time_mark(t0)         
+       !call sll_set_time_mark(t0)         
        call solve_general_coordinates_elliptic_eq_mp(&
             sim%qns,&
             rho,&
             phi)
-       time = sll_time_elapsed_since(t0)
-       print*, 'rank: ', sim%my_rank, 'time to solve QNS =', time
+       !time = sll_time_elapsed_since(t0)
+       !print*, 'rank: ', sim%my_rank, 'time to solve QNS =', time
        
-       print*, '--- end solve qns'
+       !print*, '--- end solve qns'
        
        if(sim%my_rank == 0) then
           call phi%write_to_file(0)
@@ -771,7 +761,7 @@ contains
        
        efield_energy_total = 0.0_f64
 
-       print*, 'advection vx'
+       !print*, 'advection vx'
        call advection_x3(sim, f_mp, phi, sim%dt, efield_energy_total)
 
        !print*, 'energy total', efield_energy_total
@@ -781,9 +771,9 @@ contains
        ! dt in vy...(x4)
        print *, 'advection vy (x4)'
        call advection_x4(sim, f_mp, phi, sim%dt, numpart )
-       print *, 'finished advection in vy (x4)'
+       !print *, 'finished advection in vy (x4)'
        call f_mp%set_to_sequential_x1x2()
-       print *, 'reconfigured parallelization of f'
+       !print *, 'reconfigured parallelization of f'
 
        ! Approximate the integral of the distribution function along all
        ! directions.
@@ -846,45 +836,17 @@ contains
           buffer_counter         = buffer_counter + 1
        end if
        
-       
-       
-
-!!$       if (sim%my_rank == 0) then
-!!$          
-!!$          call sll_new_file_id(droite_test_pente, ierr) 
-!!$          open(droite_test_pente,file="droite_test_pente",&
-!!$               position="append")
-!!$          write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
-!!$          close(droite_test_pente)
-!!$       end if
-
-      
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
        ! Reconfigure data. 
        
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
 
-       print *, 'advection in xy'
+       !print *, 'advection in xy'
        call advection_x1x2(sim, layer_x1x2, f_mp, sim%dt) 
-
-!!$       do j = 1, loc_sz_x2
-!!$          do i = 1, loc_sz_x1
-!!$             sim%rho_split(i,j) = sum(sim%f_x3x4(i,j,:,:))
-!!$          end do
-!!$       end do
-!!$
-!!$      global_indices(1:2) =  local_to_global_2D( sim%split_rho_layout, (/1, 1/) )
-!!$
-!!$      call sll_gnuplot_rect_2d_parallel( &
-!!$           sim%mesh2d_x%eta1_min+(global_indices(1)-1)*delta1,delta1, &
-!!$           sim%mesh2d_x%eta2_min+(global_indices(2)-1)*delta2,delta2, &
-!!$           sim%rho_split,"rho_split",itime,ierr )
-       
-       !     call plot_fields(itime, sim)
        
        
-      print *, 'writing some diagnostics...'
+       print *, 'writing some diagnostics...'
        !--> Save results in HDF5 files
        if ( mod(itime,BUFFER_SIZE) == 0) then
           !--> Compute energy kinetic, potential and total
@@ -898,7 +860,7 @@ contains
           call writeHDF5_diag_qns( sim )
           
        end if
-       print *, 'finished iteration.'
+       !print *, 'finished iteration.'
     end do ! main loop
 #undef BUFFER_SIZE
 
@@ -984,11 +946,11 @@ contains
              do j=1,loc_sz_x2
                 do i=1,loc_sz_x1
                    eta(:) = f_mp%get_eta_coordinates( ip, (/i,j,k,l/) )
-                   call sll_set_time_mark(t0) ! delete this
+!                   call sll_set_time_mark(t0) ! delete this
                    inv_j(:,:)  = &
                      field_x1x2%transf%inverse_jacobian_matrix(eta(1),eta(2),ip)
-                   time = sll_time_elapsed_since(t0) ! delete
-                   print *, 'time for inverse jacobian: ', time
+!                   time = sll_time_elapsed_since(t0) ! delete
+ !                  print *, 'time for inverse jacobian: ', time
                    alpha1 = -deltat*(inv_j(1,1)*eta(3) + inv_j(1,2)*eta(4))
                    alpha2 = -deltat*(inv_j(2,1)*eta(3) + inv_j(2,2)*eta(4))
                    eta1   = eta1+alpha1
