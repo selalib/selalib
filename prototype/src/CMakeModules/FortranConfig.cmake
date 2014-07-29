@@ -17,12 +17,12 @@ ELSE()
 ENDIF()
 MESSAGE(STATUS "Fortran compiler : ${Fortran_COMPILER_NAME}-${Fortran_COMPILER_VERSION}")
 
-IF(CMAKE_Fortran_COMPILER MATCHES "gfortran*")
+IF(Fortran_COMPILER_NAME MATCHES gfortran)
    ADD_DEFINITIONS(-DGFORTRAN)
    SET(CMAKE_Fortran_FLAGS_RELEASE "-w -ffree-line-length-none -fall-intrinsics -O3 -fopenmp")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -Wall -cpp -pedantic -ffree-line-length-none -std=f2003 -fall-intrinsics -fbounds-check -fbacktrace -ffpe-trap=zero,overflow -O0")
 
-ELSEIF(CMAKE_Fortran_COMPILER MATCHES "ifort")
+ELSEIF(Fortran_COMPILER_NAME MATCHES ifort)
 
    SET(CMAKE_Fortran_FLAGS_RELEASE "-nowarn -O3 -xHost -ip -openmp")
    SET(CMAKE_Fortran_FLAGS_DEBUG "-g -O0 -check all,noarg_temp_created -fpe0 -traceback -ftrapuv -fpic")
