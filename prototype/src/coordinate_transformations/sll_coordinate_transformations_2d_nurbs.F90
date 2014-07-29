@@ -643,62 +643,32 @@ contains
   
   function jacobian_2d_nurbs( transf, eta1, eta2 ) result(jac)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    sll_real64             :: jac
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
+    sll_real64             :: jac
     sll_real64             :: j11
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
-    sll_real64             :: value_1,value_2,value_3
-    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
+    sll_real64, dimension(1:2,1:2) :: jacobian_matrix
 
-    SLL_ASSERT( eta1 <= 1.0_f64)
-    SLL_ASSERT( eta1 >= 0.0_f64)
-    SLL_ASSERT( eta2 <= 1.0_f64)
-    SLL_ASSERT( eta2 >= 0.0_f64)
+    jacobian_matrix = jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
+
     
-    if (transf%is_rational == 0) then ! IN the case of SPLINE
-       
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       jac = j11*j22 - j12*j21
-       
-    else 
+    j11 = jacobian_matrix(1,1)
+    j12 = jacobian_matrix(1,2)
+    j21 = jacobian_matrix(2,1)
+    j22 = jacobian_matrix(2,2)
+    jac = j11*j22 - j12*j21
 
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
-       
-       j11 = value_11*value_3- value_31*value_1
-
-       j12 = value_12*value_3- value_32*value_1
-       
-       j21 = value_21*value_3- value_31*value_2
-
-       j22 = value_22*value_3 - value_32*value_2
-       
-       
-       jac = (j11*j22 - j12*j21)/&
-            (value_3)**4
-    end if
-    
   end function jacobian_2d_nurbs
   
   function transf_2d_jacobian_node_nurbs( transf, i, j )
     class(sll_coordinate_transformation_2d_nurbs)   :: transf
-    type(sll_logical_mesh_2d), pointer :: lm
-    sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
+    type(sll_logical_mesh_2d), pointer :: lm
+    sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_real64  :: eta1
     sll_real64  :: eta2
     sll_real64  :: delta1
@@ -709,8 +679,7 @@ contains
     sll_real64  :: j12
     sll_real64  :: j21
     sll_real64  :: j22
-    sll_real64             :: value_1,value_2,value_3
-    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
+    sll_real64, dimension(1:2,1:2) :: jacobian_matrix
     
     lm => transf%get_logical_mesh()
 
@@ -721,55 +690,26 @@ contains
     
     eta1 = eta1_min + (i-1) * delta1 
     eta2 = eta2_min + (j-1) * delta2 
+
+    jacobian_matrix = jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
+
     
-    SLL_ASSERT( eta1 <= 1.0_f64)
-    SLL_ASSERT( eta1 >= 0.0_f64)
-    SLL_ASSERT( eta2 <= 1.0_f64)
-    SLL_ASSERT( eta2 >= 0.0_f64)
+    j11 = jacobian_matrix(1,1)
+    j12 = jacobian_matrix(1,2)
+    j21 = jacobian_matrix(2,1)
+    j22 = jacobian_matrix(2,2)
+    transf_2d_jacobian_node_nurbs   = j11*j22 - j12*j21 
 
-    if (transf%is_rational == 0) then ! IN the case of SPLINE
-       
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       transf_2d_jacobian_node_nurbs = j11*j22 - j12*j21
-       
-    else 
-       
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
-
-
-       j11 = value_11*value_3- value_31*value_1
-
-       j12 = value_12*value_3- value_32*value_1
-       
-       j21 = value_21*value_3- value_31*value_2
-
-       j22 = value_22*value_3 - value_32*value_2
-       
-       
-       transf_2d_jacobian_node_nurbs = (j11*j22 - j12*j21)/&
-            (value_3)**4
-    end if
     
   end function transf_2d_jacobian_node_nurbs
 
   
   function jacobian_2d_cell_nurbs( transf, i, j ) result(var)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    type(sll_logical_mesh_2d), pointer :: lm
-    sll_real64                         :: var
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
+    type(sll_logical_mesh_2d), pointer :: lm
+    sll_real64                         :: var
     sll_real64  :: eta1
     sll_real64  :: eta2
     sll_real64  :: delta1
@@ -780,8 +720,7 @@ contains
     sll_real64  :: j12
     sll_real64  :: j21
     sll_real64  :: j22
-    sll_real64             :: value_1,value_2,value_3
-    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
+    sll_real64, dimension(1:2,1:2) :: jacobian_matrix
 
     lm => transf%get_logical_mesh()
 
@@ -795,51 +734,21 @@ contains
     
     eta1 = eta1_min + (i-0.5_f64) * delta1 
     eta2 = eta2_min + (j-0.5_f64) * delta2 
+
+    jacobian_matrix = jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
+
     
-    SLL_ASSERT( eta1 <= 1.0_f64)
-    SLL_ASSERT( eta1 >= 0.0_f64)
-    SLL_ASSERT( eta2 <= 1.0_f64)
-    SLL_ASSERT( eta2 >= 0.0_f64)
-    
-    if (transf%is_rational == 0) then ! IN the case of SPLINE
-       
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       var = j11*j22 - j12*j21
-       
-    else 
+    j11 = jacobian_matrix(1,1)
+    j12 = jacobian_matrix(1,2)
+    j21 = jacobian_matrix(2,1)
+    j22 = jacobian_matrix(2,2)
+    var   = j11*j22 - j12*j21 
 
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
-
-       
-       j11 = value_11*value_3- value_31*value_1
-
-       j12 = value_12*value_3- value_32*value_1
-       
-       j21 = value_21*value_3- value_31*value_2
-
-       j22 = value_22*value_3 - value_32*value_2
-       
-       
-       var = (j11*j22 - j12*j21)/&
-            (value_3)**4
-    end if
-    
   end function jacobian_2d_cell_nurbs
 
   
   function jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
+    class(sll_coordinate_transformation_2d_nurbs), intent(in):: transf
     sll_real64, dimension(1:2,1:2)     :: jacobian_matrix_2d_nurbs
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -849,6 +758,8 @@ contains
     sll_real64             :: j22
     sll_real64             :: value_1,value_2,value_3
     sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
+    sll_real64             :: ratio_value_3_square
+    sll_real64, dimension(1:2,1:2):: jacobian_matrix
 
     SLL_ASSERT( eta1 <= 1.0_f64)
     SLL_ASSERT( eta1 >= 0.0_f64)
@@ -862,10 +773,10 @@ contains
        j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
        j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
 
-       jacobian_matrix_2d_nurbs(1,1) = j11
-       jacobian_matrix_2d_nurbs(1,2) = j12
-       jacobian_matrix_2d_nurbs(2,1) = j21
-       jacobian_matrix_2d_nurbs(2,2) = j22
+       jacobian_matrix(1,1) = j11
+       jacobian_matrix(1,2) = j12
+       jacobian_matrix(2,1) = j21
+       jacobian_matrix(2,2) = j22
        
     else 
 
@@ -878,7 +789,7 @@ contains
        value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
        value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
        value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
-
+       ratio_value_3_square = 1.0_f64/(value_3)**2
        
        j11 = value_11*value_3- value_31*value_1
 
@@ -886,84 +797,47 @@ contains
        
        j21 = value_21*value_3- value_31*value_2
 
-       j22 = value_22*value_3 - value_32*value_2
+       j22 = value_22*value_3 -value_32*value_2
 
-       jacobian_matrix_2d_nurbs(1,1) = j11/(value_3)**2
-       jacobian_matrix_2d_nurbs(1,2) = j12/(value_3)**2
-       jacobian_matrix_2d_nurbs(2,1) = j21/(value_3)**2
-       jacobian_matrix_2d_nurbs(2,2) = j22/(value_3)**2 
+       jacobian_matrix(1,1) = j11*ratio_value_3_square
+       jacobian_matrix(1,2) = j12*ratio_value_3_square
+       jacobian_matrix(2,1) = j21*ratio_value_3_square
+       jacobian_matrix(2,2) = j22*ratio_value_3_square
 
       
     end if
+
+    jacobian_matrix_2d_nurbs = jacobian_matrix
     
   end function jacobian_matrix_2d_nurbs
 
   
   function inverse_jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
-    class(sll_coordinate_transformation_2d_nurbs) :: transf
-    sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_nurbs
+    class(sll_coordinate_transformation_2d_nurbs),intent(in) :: transf
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
-    sll_real64             :: inv_j11
-    sll_real64             :: inv_j12
-    sll_real64             :: inv_j21
-    sll_real64             :: inv_j22
-    sll_real64             :: r_jac ! reciprocal of the jacobian
-    sll_real64             :: value_1,value_2,value_3
-    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
+    sll_real64, dimension(1:2,1:2)     :: inverse_jacobian_matrix_2d_nurbs
+    sll_real64, dimension(1:2,1:2)     :: jacobian_matrix
+    sll_real64             :: j11
+    sll_real64             :: j12
+    sll_real64             :: j21
+    sll_real64             :: j22
+    sll_real64             :: r_jac,jac ! reciprocal of the jacobian
     
-    SLL_ASSERT( eta1 <= 1.0_f64)
-    SLL_ASSERT( eta1 >= 0.0_f64)
-    SLL_ASSERT( eta2 <= 1.0_f64)
-    SLL_ASSERT( eta2 >= 0.0_f64)
+    jacobian_matrix = jacobian_matrix_2d_nurbs( transf, eta1, eta2 )
 
-!    r_jac = 1.0_f64/transf%jacobian( eta1, eta2 )
-
-
-    if (transf%is_rational == 0) then ! IN the case of SPLINE
-       
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       jac   = inv_j11*inv_j22 - inv_j12*inv_j21   
-       r_jac = 1.0_f64/jac   
-       inverse_jacobian_matrix_2d_nurbs(1,1) =  j22*r_jac
-       inverse_jacobian_matrix_2d_nurbs(1,2) = -j12*r_jac
-       inverse_jacobian_matrix_2d_nurbs(2,1) = -j21*r_jac
-       inverse_jacobian_matrix_2d_nurbs(2,2) =  j11*r_jac
     
-    else 
-
-       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
-       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
-       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
-       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
-       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
-       
-       inv_j11 = value_11*value_3 - value_31*value_1
-       
-       inv_j12 = value_12*value_3 - value_32*value_1
-       
-       inv_j21 = value_21*value_3 - value_31*value_2
-       
-       inv_j22 = value_22*value_3 - value_32*value_2
-       
-       
-       inverse_jacobian_matrix_2d_nurbs(1,1) =  inv_j22*r_jac/&
-            (value_3)**2
-       inverse_jacobian_matrix_2d_nurbs(1,2) = -inv_j12*r_jac/&
-            (value_3)**2
-       inverse_jacobian_matrix_2d_nurbs(2,1) = -inv_j21*r_jac/&
-            (value_3)**2
-       inverse_jacobian_matrix_2d_nurbs(2,2) =  inv_j11*r_jac/&
-            (value_3)**2
-    end if
-
+    j11 = jacobian_matrix(1,1)
+    j12 = jacobian_matrix(1,2)
+    j21 = jacobian_matrix(2,1)
+    j22 = jacobian_matrix(2,2)
+    jac   = j11*j22 - j12*j21   
+    r_jac = 1.0_f64/jac   
+    inverse_jacobian_matrix_2d_nurbs(1,1) =  j22*r_jac
+    inverse_jacobian_matrix_2d_nurbs(1,2) = -j12*r_jac
+    inverse_jacobian_matrix_2d_nurbs(2,1) = -j21*r_jac
+    inverse_jacobian_matrix_2d_nurbs(2,2) =  j11*r_jac
+    
     
   end function inverse_jacobian_matrix_2d_nurbs
     
