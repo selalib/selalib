@@ -5426,17 +5426,17 @@ print *, 'remap 2d complex:'
        k_max = get_layout_k_max( layout4d, process )
        l_min = get_layout_l_min( layout4d, process )
        l_max = get_layout_l_max( layout4d, process )
-       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
-           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
-           print *, 'WARNING, new_layout_2D_from_layout_4D(): there is loss ',&
-                'of information in the convertion. This may be the intention',&
-                ' if you are essentially projecting one layout onto another.',&
-                ' Printing values:'
-           print *, 'k_min = ', k_min
-           print *, 'k_max = ', k_max
-           print *, 'l_min = ', l_min
-           print *, 'l_max = ', l_max
-        end if
+!!$       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
+!!$           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+!!$           print *, 'WARNING, new_layout_2D_from_layout_4D(): there is loss ',&
+!!$                'of information in the convertion. This may be the intention',&
+!!$                ' if you are essentially projecting one layout onto another.',&
+!!$                ' Printing values:'
+!!$           print *, 'k_min = ', k_min
+!!$           print *, 'k_max = ', k_max
+!!$           print *, 'l_min = ', l_min
+!!$           print *, 'l_max = ', l_max
+!!$        end if
     end do
   end function new_layout_2D_from_layout_4D
 
