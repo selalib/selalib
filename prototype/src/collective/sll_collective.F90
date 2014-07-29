@@ -1,18 +1,18 @@
 !**************************************************************
 !  Copyright INRIA
-!  Authors : 
+!  Authors :
 !     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
+!
+!  This code SeLaLib (for Semi-Lagrangian-Library)
+!  is a parallel library for simulating the plasma turbulence
 !  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
+!
+!  This software is governed by the CeCILL-B license
+!  under French law and abiding by the rules of distribution
+!  of free software.  You can  use, modify and redistribute
+!  the software under the terms of the CeCILL-B license as
 !  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  "http://www.cecill.info".
 !**************************************************************
 
 !------------------------------------------------------------------------------
@@ -25,13 +25,13 @@
 !> @namespace sll_collective
 !> @author Module Author Name and Affiliation
 !> @brief Parallelizing facility.
-!> @details Selalib applies the principle of modularization throughout all 
-!> levels of abstraction of the library and aims at keeping third-party 
-!> library modules as what they are: separate library modules. Therefore, 
-!> in its current design, even a library like MPI has a single point of entry 
-!> to Selalib. The collective communications module is such point of entry. We 
-!> focus thus on the functionality offered by MPI, assign wrappers to its 
-!> most desirable functionalities and write wrappers around them. These are 
+!> @details Selalib applies the principle of modularization throughout all
+!> levels of abstraction of the library and aims at keeping third-party
+!> library modules as what they are: separate library modules. Therefore,
+!> in its current design, even a library like MPI has a single point of entry
+!> to Selalib. The collective communications module is such point of entry. We
+!> focus thus on the functionality offered by MPI, assign wrappers to its
+!> most desirable functionalities and write wrappers around them. These are
 !> the functions that are actually used throughout
 !> the program.  This allows to adjust the exposed interfaces, do additional
 !> error-checking and would even permit to completely change the means to
@@ -54,7 +54,7 @@
 !> \code call sll_boot_collective() \endcode
 !> and to "turn off" the parallel capabilities, one should finish by a call to:
 !> \code call sll_halt_collective() \endcode
-!> \warning This \a booting of the parallel environment needs to be done 
+!> \warning This \a booting of the parallel environment needs to be done
 !> <b> ONLY ONCE </b> in a program.
 !>
 !> \n
@@ -110,14 +110,14 @@
 
 ! ***************************************************************************
 ! sll_collective is a module that encapsulates our calls to the MPI library.
-! Any module that wants to access distributed multiprocessing capabilities 
+! Any module that wants to access distributed multiprocessing capabilities
 ! must use sll_collective instead of MPI directly. If one were to desire
 ! some MPI capability that is not included here, such capability should not
 ! be plugged in directly but rather this module should be expanded.
 !
 ! By centralizing the interaction with the MPI library we achieve several
 ! things:
-! - obtain an explicitely reduced 'parallel' vocabulary to build our 
+! - obtain an explicitely reduced 'parallel' vocabulary to build our
 !   application,
 ! - centralize argument checking and some error handling, and
 ! - adjust the interface to our wishes.
@@ -141,10 +141,10 @@ module sll_collective
   ! communicator. We store some of the most frequently accessed values
   ! to save a little on the overhead of the corresponding function calls.
   !
-  ! The original idea was to have this as an opaque type. But how to 
+  ! The original idea was to have this as an opaque type. But how to
   ! do this in Fortran without forward declarations? Any help would be
-  ! appreciated... In any case, the only means allowed to interact with 
-  ! this type, outside of this module, are the functions/subroutines 
+  ! appreciated... In any case, the only means allowed to interact with
+  ! this type, outside of this module, are the functions/subroutines
   ! defined herein.
   !
   !***********************************************************************
@@ -153,9 +153,9 @@ module sll_collective
   type sll_collective_t
      type(sll_collective_t), pointer :: parent=>null() !< Pointer to parent communicator
      sll_int32                       :: comm   !< Communicator
-     !> Control of subset assignment. Processes with the same color 
+     !> Control of subset assignment. Processes with the same color
      !! are in the same new communicator
-     sll_int32                       :: color 
+     sll_int32                       :: color
      sll_int32                       :: key !< Control of rank assigment
      sll_int32                       :: rank !< Rank of the process
      sll_int32                       :: size !< Communicator size
@@ -172,25 +172,28 @@ module sll_collective
   ! **********************************************************************
 
   !> The Communicator (The same role as MPI_COMM_WORLD)
-  type(sll_collective_t), pointer    :: sll_world_collective 
+  type(sll_collective_t), pointer    :: sll_world_collective
 
 
   !> @brief Broadcasts a message from the process with rank
   !>        "root" to all other processes of the communicator.
   interface sll_collective_bcast
-     !> @brief Broadcasts a message of real type from the process with 
+     !> @brief Broadcasts a message of real type from the process with
      !>        rank "root" to all other processes of the communicator.
-     module procedure sll_collective_bcast_real
+     module procedure sll_collective_bcast_real32
+     module procedure sll_collective_bcast_real64
+     module procedure sll_collective_bcast_comp32
+     module procedure sll_collective_bcast_comp64
   end interface
-  
+
   !> @brief Gathers together values from a group of processes.
   interface sll_collective_gather
      !> @brief Gathers together values of real type from a group of processes.
      module procedure sll_collective_gather_real32, &
           sll_collective_gather_real64
   end interface
-  
-  !> @brief Gathers data from all tasks and distribute the combined 
+
+  !> @brief Gathers data from all tasks and distribute the combined
   !!        data to all tasks.
   interface sll_collective_allgather
      module procedure sll_collective_allgather_int, &
@@ -198,7 +201,7 @@ module sll_collective
   end interface
 
   !> @brief Gathers data from all tasks and deliver the combined
-  !!        data to all tasks 
+  !!        data to all tasks
   interface sll_collective_allgatherv
      module procedure sll_collective_allgatherv_real32, &
           sll_collective_allgatherv_real64
@@ -209,32 +212,38 @@ module sll_collective
      module procedure sll_collective_gatherv_real, &
           sll_collective_gatherv_real64
   end interface
-  
+
   !> @brief Sends data from one process to all other processes
   !!        in a communicator.
   interface sll_collective_scatter
      module procedure sll_collective_scatter_real
+     module procedure sll_collective_scatter_real64
   end interface
 
   !> @brief Scatters a buffer in parts to all processes in a communicator.
   interface sll_collective_scatterv
      module procedure sll_collective_scatterv_real
   end interface
-  
+
   !> @brief Combines values from all processes and distributes
-  !!        the result back to all processes. 
+  !!        the result back to all processes.
   interface sll_collective_allreduce
      module procedure sll_collective_allreduce_real32, &
                       sll_collective_allreduce_real64, &
-                      sll_collective_allreduce_logical
+                      sll_collective_allreduce_logical, &
+                      sll_collective_allreduce_comp64, &
+                      sll_collective_allreduce_comp32, &
+                      sll_collective_allreduce_int32
   end interface
-  
+
   !> @brief Reduces values on all processes to a single value.
   interface sll_collective_reduce
      module procedure sll_collective_reduce_real32, &
                       sll_collective_reduce_real64, &
                       sll_collective_reduce_int, &
-                      sll_collective_reduce_logical
+                      sll_collective_reduce_logical, &
+                      sll_collective_reduce_comp64, &
+                      sll_collective_reduce_comp32
   end interface
 
   !> @brief Sends data from all to all processes.
@@ -255,6 +264,19 @@ module sll_collective
   end interface
 
 
+  !> @brief Performs a global sum and writes the result in the optional given node
+  interface sll_collective_globalsum
+     module procedure sll_collective_globalsum_array_real64, &
+                        sll_collective_globalsum_array_real32, &
+                        sll_collective_globalsum_real64, &
+                        sll_collective_globalsum_array_comp64,&
+                        sll_collective_globalsum_array_comp32,&
+                        sll_collective_globalsum_comp64,&
+                        sll_collective_globalsum_array_int32,&
+                        sll_collective_globalsum_int32,&
+                        sll_collective_globalsum_comp32, &
+                        sll_collective_globalsum_real32
+  endinterface
 
 
 contains !************************** Operations **************************
@@ -278,7 +300,7 @@ contains !************************** Operations **************************
   !>          for verify the good execution.
   !>          With this function you can check the code and print the
   !>          message \a descriptor if you encountered an error.
-  !> @param[in] ierr error's code 
+  !> @param[in] ierr error's code
   !> @param[in] descriptor message to print in error case
   subroutine sll_test_mpi_error( ierr, descriptor )
     sll_int32, intent(in)        :: ierr
@@ -307,10 +329,10 @@ contains !************************** Operations **************************
     end if
   end function collectives_are_same
 
-  ! sll_boot_collective allocates and initializes the global variable 
+  ! sll_boot_collective allocates and initializes the global variable
   ! sll_world_collective and boots the MPI environment.
 
-  !> @brief Starts the paralell environment 
+  !> @brief Starts the paralell environment
   subroutine sll_boot_collective(required)
     sll_int32, optional :: required
     sll_int32 :: ierr
@@ -322,7 +344,7 @@ contains !************************** Operations **************************
     else
        sll_world_collective%thread_level_required = MPI_THREAD_SINGLE
     end if
-    
+
     call MPI_Init_Thread(sll_world_collective%thread_level_required, &
                          sll_world_collective%thread_level_provided, &
                          ierr)
@@ -335,7 +357,7 @@ contains !************************** Operations **************************
     call sll_test_mpi_error( ierr, 'sll_boot_collective(): MPI_COMM_SIZE()')
   end subroutine sll_boot_collective
 
-  !> @brief Ends the paralell environment 
+  !> @brief Ends the paralell environment
   subroutine sll_halt_collective( )
     sll_int32 :: ierr
     call MPI_BARRIER( MPI_COMM_WORLD, ierr )
@@ -344,9 +366,9 @@ contains !************************** Operations **************************
     call MPI_Finalize(ierr)
   end subroutine sll_halt_collective
 
-  ! sll_new_collective follows a somewhat similar calling convention as 
+  ! sll_new_collective follows a somewhat similar calling convention as
   ! MPI_COMM_SPLIT() and is a wrapper around it. Error checking
-  ! is done internally. The departure from the standard syntax is to permit 
+  ! is done internally. The departure from the standard syntax is to permit
   ! a call like:
   !
   ! type(sll_collective_t), pointer :: new_col
@@ -433,7 +455,7 @@ contains !************************** Operations **************************
     sll_get_collective_color = col%color
   end function sll_get_collective_color
 
- !> @brief Determines the size of the group associated with a communicator 
+ !> @brief Determines the size of the group associated with a communicator
  !> @param col Communicator
  !> @return size of the group associated with \a col
   function sll_get_collective_size( col )
@@ -442,8 +464,8 @@ contains !************************** Operations **************************
     call sll_check_collective_ptr( col )
     sll_get_collective_size = col%size
   end function sll_get_collective_size
- 
- !> @brief Gets collective parent 
+
+ !> @brief Gets collective parent
  !> @param col Wrapper around the communicator
  !> @return pointer to collective parent
   function sll_get_collective_parent( col )
@@ -473,7 +495,7 @@ contains !************************** Operations **************************
   !> @param[in] buffer starting address of buffer
   !> @param[in] size number of entries in buffer
   !> @param[in] root rank of broadcast root
-  subroutine sll_collective_bcast_real( col, buffer, size, root )
+  subroutine sll_collective_bcast_real32( col, buffer, size, root )
     type(sll_collective_t), pointer      :: col
     sll_real32, dimension(:), intent(in) :: buffer ! what would change...
     sll_int32, intent(in)                :: size
@@ -481,8 +503,60 @@ contains !************************** Operations **************************
     sll_int32                            :: ierr
     call MPI_BCAST( buffer, size, MPI_REAL, root, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_bcast_real(): MPI_BCAST()' )
-  end subroutine sll_collective_bcast_real
+         'sll_collective_bcast_real32(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_real32
+
+  ! Start with something simple, like a buffer of 'real's...
+  !> @brief Broadcasts a message from the process with rank "root"
+  !>        to all other processes of the communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] buffer starting address of buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
+  subroutine sll_collective_bcast_real64( col, buffer, size, root )
+    type(sll_collective_t), pointer      :: col
+    sll_real64, dimension(:), intent(in) :: buffer ! what would change...
+    sll_int32, intent(in)                :: size
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    call MPI_BCAST( buffer, size, MPI_REAL8, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_bcast_real64(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_real64
+
+  !> @brief Broadcasts a message from the process with rank "root"
+  !>        to all other processes of the communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] buffer starting address of buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
+  subroutine sll_collective_bcast_comp64( col, buffer, size, root )
+    type(sll_collective_t), pointer      :: col
+    sll_comp64, dimension(:), intent(in) :: buffer ! what would change...
+    sll_int32, intent(in)                :: size
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    call MPI_BCAST( buffer, size, MPI_DOUBLE_COMPLEX, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_bcast_comp64(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_comp64
+
+  !> @brief Broadcasts a message from the process with rank "root"
+  !>        to all other processes of the communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] buffer starting address of buffer
+  !> @param[in] size number of entries in buffer
+  !> @param[in] root rank of broadcast root
+  subroutine sll_collective_bcast_comp32( col, buffer, size, root )
+    type(sll_collective_t), pointer      :: col
+    sll_comp32, dimension(:), intent(in) :: buffer ! what would change...
+    sll_int32, intent(in)                :: size
+    sll_int32, intent(in)                :: root
+    sll_int32                            :: ierr
+    call MPI_BCAST( buffer, size, MPI_COMPLEX, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_bcast_comp32(): MPI_BCAST()' )
+  end subroutine sll_collective_bcast_comp32
 
 
   ! Consider joining the next 'gather' interfaces into a single one.
@@ -534,9 +608,9 @@ contains !************************** Operations **************************
   !> @param[in] col Wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_count number of elements in send buffer
-  !> @param[in] recvcnts integer array (of length group size) containing 
-  !!            the number of elements that are received from each process 
-  !> @param[in] displs integer array. Entry i specifies the displacement 
+  !> @param[in] recvcnts integer array (of length group size) containing
+  !!            the number of elements that are received from each process
+  !> @param[in] displs integer array. Entry i specifies the displacement
   !!            relative to rec_buf at which to place the incoming data from process i
   !> @param[in] root rank of receiving process
   !> @param[out] rec_buf address of receive buffer
@@ -553,7 +627,7 @@ contains !************************** Operations **************************
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
     ! displs, rec_buf and recvcnts significant only for root
-    if (col%rank .eq. root) then 
+    if (col%rank .eq. root) then
       SLL_ASSERT( SIZE(recvcnts) .eq. col%size )
       SLL_ASSERT( SIZE(displs) .eq. col%size )
       SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
@@ -579,9 +653,9 @@ contains !************************** Operations **************************
   !> @param[in] col Wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_count number of elements in send buffer
-  !> @param[in] recvcnts integer array (of length group size) containing 
-  !!            the number of elements that are received from each process 
-  !> @param[in] displs integer array. Entry i specifies the displacement 
+  !> @param[in] recvcnts integer array (of length group size) containing
+  !!            the number of elements that are received from each process
+  !> @param[in] displs integer array. Entry i specifies the displacement
   !!            relative to rec_buf at which to place the incoming data from process i
   !> @param[in] root rank of receiving process
   !> @param[out] rec_buf address of receive buffer
@@ -598,7 +672,7 @@ contains !************************** Operations **************************
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
     ! displs, rec_buf and recvcnts significant only for root
-    if (col%rank .eq. root) then 
+    if (col%rank .eq. root) then
       SLL_ASSERT( SIZE(recvcnts) .eq. col%size )
       SLL_ASSERT( SIZE(displs) .eq. col%size )
       SLL_ASSERT( SIZE(rec_buf) .eq. SUM(recvcnts) )
@@ -616,7 +690,7 @@ contains !************************** Operations **************************
 
 
 
-  !> @brief Gathers integer data from all tasks and 
+  !> @brief Gathers integer data from all tasks and
   !!        distribute the combined data to all tasks
   !> @param[in] col Wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
@@ -629,7 +703,7 @@ contains !************************** Operations **************************
     sll_int32, dimension(:), intent(in)    :: send_buf ! what would change...
     sll_int32, intent(in)                  :: send_sz
     sll_int32, dimension(:), intent(inout) :: recv_buf ! would also change
-    sll_int32, intent(in)                  :: recv_sz  
+    sll_int32, intent(in)                  :: recv_sz
     sll_int32                              :: ierr
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
@@ -653,10 +727,10 @@ contains !************************** Operations **************************
     recv_sz )
 
     type(sll_collective_t), pointer         :: col
-    sll_real64, dimension(:), intent(in)    :: send_buf 
+    sll_real64, dimension(:), intent(in)    :: send_buf
     sll_int32, intent(in)                   :: send_sz
     sll_real64, dimension(:), intent(out)   :: recv_buf ! would change
-    sll_int32, intent(in)                   :: recv_sz  
+    sll_int32, intent(in)                   :: recv_sz
     sll_int32                               :: ierr
     ! FIXME: Argument checking
     call sll_check_collective_ptr( col )
@@ -674,13 +748,13 @@ contains !************************** Operations **************************
   end subroutine sll_collective_allgather_real64
 
 
-  !> @brief Gathers real data from all tasks and 
+  !> @brief Gathers real data from all tasks and
   !!        deliver the combined data to all tasks
   !> @param[in] col Wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_cnt number of elements in send buffer
   !> @param[in] displs integer array. Entry i specifies the displacement
-  !> @param[in] rec_cnt integer array containing the number of elements 
+  !> @param[in] rec_cnt integer array containing the number of elements
   !!            that are to be received from each process
   !> @param[out] rec_buf address of receive buffer
   subroutine sll_collective_allgatherv_real32( col, send_buf, send_cnt, &
@@ -735,7 +809,7 @@ contains !************************** Operations **************************
   end subroutine sll_collective_allgatherv_real64
 
   !> @brief Sends data from one process to all other processes
-  !>        in a communicator 
+  !>        in a communicator
   !> @param col Wrapper around the communicator
   !> @param[in] send_buf address of send buffer
   !> @param[in] send_count number of elements sent to each process
@@ -762,13 +836,44 @@ contains !************************** Operations **************************
          'sll_collective_scatter_real(): MPI_SCATTER()' )
   end subroutine sll_collective_scatter_real
 
+
+
+  !> @brief Sends data from one process to all other processes
+  !>        in a communicator
+  !> @param col Wrapper around the communicator
+  !> @param[in] send_buf address of send buffer
+  !> @param[in] send_count number of elements sent to each process
+  !> @param[in] root rank of sending process
+  !> @param[in] rec_buf address of receive buffer
+  subroutine sll_collective_scatter_real64( col, send_buf, send_count, root, &
+       rec_buf )
+    type(sll_collective_t), pointer      :: col
+    sll_real64, dimension(:), intent(in) :: send_buf ! what would change...
+    sll_int32, intent(in)                :: send_count
+    sll_int32, intent(in)                :: root
+    sll_real64, dimension(:), intent(in) :: rec_buf  ! would also change
+    sll_int32                            :: ierr
+    !sll_int32                            :: recvcount
+    ! FIXME: argument checking
+    ! recvcount = size/col%size
+    !send_buf and send_count significant only at root
+    if(col%rank .eq. root) then
+      SLL_ASSERT( SIZE(send_buf) .eq. (send_count*(col%size)) )
+    endif
+    call MPI_SCATTER( send_buf, send_count, MPI_DOUBLE_PRECISION, rec_buf, send_count, &
+         MPI_DOUBLE_PRECISION, root, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_scatter_real64(): MPI_SCATTER()' )
+  end subroutine sll_collective_scatter_real64
+
+
   !> @brief Scatters a buffer in parts to all processes in a communicator
   !> @param[in] col wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_count integer array (of length group size) specifying
   !>            the number of elements to send to each processor
-  !> @param[in] displs integer array (of length group size). Entry i 
-  !>            specifies the displacement (relative to sendbuf) from 
+  !> @param[in] displs integer array (of length group size). Entry i
+  !>            specifies the displacement (relative to sendbuf) from
   !>            which to take the outgoing data to process i
   !> @param[in] recv_count number of elements in receive buffer
   !> @param[in] root rank of sending process
@@ -792,7 +897,7 @@ contains !************************** Operations **************************
          'sll_collective_scatterv_real(): MPI_SCATTERV()' )
   end subroutine sll_collective_scatterv_real
 
-  !> @brief Combines real values from all processes and 
+  !> @brief Combines real values from all processes and
   !!        distributes the result back to all processes
   !> @param[in] col wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
@@ -809,7 +914,7 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -824,7 +929,7 @@ contains !************************** Operations **************************
   end subroutine sll_collective_allreduce_real32
 
 
-  !> @brief Combines real values from all processes and 
+  !> @brief Combines real values from all processes and
   !!        distributes the result back to all processes
   !> @param[in] col wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
@@ -841,7 +946,7 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( &
       send_buf, &
       rec_buf, &
@@ -855,9 +960,94 @@ contains !************************** Operations **************************
       'sll_collective_allreduce_real64(): MPI_ALLREDUCE()' )
   end subroutine sll_collective_allreduce_real64
 
+  !> @brief Combines complex values from all processes and
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+  subroutine sll_collective_allreduce_comp64( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp64, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_comp64, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_DOUBLE_COMPLEX , &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_comp64(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_comp64
+
+  subroutine sll_collective_allreduce_comp32( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp32, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_comp32, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_COMPLEX , &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_comp32(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_comp32
 
 
-  !> @brief Combines logical values from all processes and 
+  !> @brief Combines complex values from all processes and
+  !!        distributes the result back to all processes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_buf starting address of send buffer
+  !> @param[in] count number of elements in send buffer
+  !> @param[in] op operation
+  !> @param[out] rec_buf starting address of receive buffer
+   subroutine sll_collective_allreduce_int32( col, send_buf, count, op, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_int32, dimension(:), intent(in)  :: send_buf ! what would change...
+    sll_int32, intent(in)                 :: count
+    sll_int32, intent(in)                :: op
+    sll_int32, dimension(:), intent(out) :: rec_buf  ! would also change
+    sll_int32                             :: ierr
+    ! FIXME: ARG CHECKING!
+    call sll_check_collective_ptr( col )
+    call MPI_BARRIER( col%comm, ierr )
+    call MPI_ALLREDUCE( &
+      send_buf, &
+      rec_buf, &
+      count, &
+      MPI_INTEGER  , &
+      op, &
+      col%comm, &
+      ierr )
+    call sll_test_mpi_error( &
+      ierr, &
+      'sll_collective_allreduce_int32(): MPI_ALLREDUCE()' )
+  end subroutine sll_collective_allreduce_int32
+
+  !> @brief Combines logical values from all processes and
   !!        distributes the result back to all processes
   !> @param[in] col wrapper around the communicator
   !> @param[in] send_buf starting address of send buffer
@@ -874,7 +1064,7 @@ contains !************************** Operations **************************
     sll_int32                             :: ierr
     ! FIXME: MORE ARG CHECKING!
     call sll_check_collective_ptr( col )
-    call MPI_BARRIER( col%comm, ierr ) 
+    call MPI_BARRIER( col%comm, ierr )
     call MPI_ALLREDUCE( send_buf, rec_buf, count, MPI_LOGICAL, op, &
          col%comm, ierr )
     call sll_test_mpi_error( ierr, &
@@ -897,7 +1087,7 @@ contains !************************** Operations **************************
     sll_int32, intent(in)               :: op
     sll_int32, intent(in)                :: root_rank
     sll_int32, dimension(:), intent(in) :: rec_buf  ! would also change
-    
+
     sll_int32                            :: ierr
     ! FIXME: ARG CHECKING!
     call MPI_REDUCE( send_buf, rec_buf, size, MPI_INTEGER, op, root_rank, &
@@ -921,7 +1111,7 @@ contains !************************** Operations **************************
     sll_int32, intent(in)               :: op
     sll_int32, intent(in)                :: root_rank
     sll_real32, dimension(:), intent(in) :: rec_buf  ! would also change
-    
+
     sll_int32                            :: ierr
     ! FIXME: ARG CHECKING!
     call MPI_REDUCE( send_buf, rec_buf, size, MPI_REAL, op, root_rank, &
@@ -933,21 +1123,63 @@ contains !************************** Operations **************************
   subroutine sll_collective_reduce_real64( col, send_buf, size, op, root_rank, &
        rec_buf )
     type(sll_collective_t), pointer       :: col
-    sll_real64, dimension(:), intent(in)  :: send_buf 
+    sll_real64, dimension(:), intent(in)  :: send_buf
     sll_int32, intent(in)                 :: size
     sll_int32, intent(in)                 :: op
     sll_int32, intent(in)                 :: root_rank
-    sll_real64, dimension(:), intent(out) :: rec_buf 
+    sll_real64, dimension(:), intent(out) :: rec_buf
     sll_int32                             :: ierr
 
     ! FIXME: ARG CHECKING!
     call MPI_REDUCE( send_buf, rec_buf, size, MPI_DOUBLE_PRECISION, op, &
          root_rank, col%comm, ierr )
     call sll_test_mpi_error( ierr, &
-         'sll_collective_reduce_real(): MPI_REDUCE()' )
+         'sll_collective_reduce_real64(): MPI_REDUCE()' )
   end subroutine sll_collective_reduce_real64
 
-  
+
+  !> @brief Reduces complex values on all processes to a single value
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] send_bu address of send buffer
+  !> @param[in] size number of elements in send buffer
+  !> @param[in] op reduce operation
+  !> @param[in] root_rank rank of root process
+  !> @param[out] rec_buf address of receive buffer
+  subroutine sll_collective_reduce_comp64( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp64, dimension(:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: size
+    sll_int32, intent(in)                 :: op
+    sll_int32, intent(in)                 :: root_rank
+    sll_comp64, dimension(:), intent(out) :: rec_buf
+    sll_int32                             :: ierr
+
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_DOUBLE_COMPLEX , op, &
+         root_rank, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_comp64(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_comp64
+
+  subroutine sll_collective_reduce_comp32( col, send_buf, size, op, root_rank, &
+       rec_buf )
+    type(sll_collective_t), pointer       :: col
+    sll_comp32, dimension(:), intent(in)  :: send_buf
+    sll_int32, intent(in)                 :: size
+    sll_int32, intent(in)                 :: op
+    sll_int32, intent(in)                 :: root_rank
+    sll_comp32, dimension(:), intent(out) :: rec_buf
+    sll_int32                             :: ierr
+
+    ! FIXME: ARG CHECKING!
+    call MPI_REDUCE( send_buf, rec_buf, size, MPI_COMPLEX , op, &
+         root_rank, col%comm, ierr )
+    call sll_test_mpi_error( ierr, &
+         'sll_collective_reduce_comp32(): MPI_REDUCE()' )
+  end subroutine sll_collective_reduce_comp32
+
+
   !> @brief Reduces logical values on all processes to a single value
   !> @param[in] col wrapper around the communicator
   !> @param[in] send_bu address of send buffer
@@ -963,7 +1195,7 @@ contains !************************** Operations **************************
     sll_int32, intent(in)               :: op
     sll_int32, intent(in)                :: root_rank
     LOGICAL, DIMENSION(:), intent(in) :: rec_buf  ! would also change
-    
+
     sll_int32                            :: ierr
     ! FIXME: ARG CHECKING!
     call MPI_REDUCE( send_buf, rec_buf, size, MPI_LOGICAL, op, root_rank, &
@@ -1054,18 +1286,18 @@ contains !************************** Operations **************************
   !!         input and output data.
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_cnts integer array equal to the group size
-  !!                      specifying the number of elements to 
+  !!                      specifying the number of elements to
   !!                      send to each processor
-  !> @param[in] send_displs integer array (of length group size). Entry j 
+  !> @param[in] send_displs integer array (of length group size). Entry j
   !!                        specifies the displacement (relative to send_buf)
-  !!                        from which to take the outgoing data destined for 
+  !!                        from which to take the outgoing data destined for
   !!                        process j
   !> @param[out] recv_buf address of receive buffer
-  !> @param[in] recv_cnts integer array equal to the group size specifying the 
+  !> @param[in] recv_cnts integer array equal to the group size specifying the
   !!                      maximum number of elements that can be received from
   !!                      each processor
-  !> @param[in] recv_displs integer array (of length group size). Entry i 
-  !!                      specifies the displacement (relative to recvbuf 
+  !> @param[in] recv_displs integer array (of length group size). Entry i
+  !!                      specifies the displacement (relative to recvbuf
   !!                      at which to place the incoming data from process i
   !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoallV_real( send_buf, send_cnts, &
@@ -1155,23 +1387,23 @@ contains !************************** Operations **************************
 
 
 
-  !> @brief Sends integer data from all to all processes; each process may 
+  !> @brief Sends integer data from all to all processes; each process may
   !!         send a different amount of data and provide displacements for the
   !!         input and output data.
   !> @param[in] send_buf starting address of send buffer
   !> @param[in] send_cnts integer array equal to the group size
-  !!                      specifying the number of elements to 
+  !!                      specifying the number of elements to
   !!                      send to each processor
-  !> @param[in] send_displs integer array (of length group size). Entry j 
+  !> @param[in] send_displs integer array (of length group size). Entry j
   !!                        specifies the displacement (relative to send_buf)
-  !!                        from which to take the outgoing data destined for 
+  !!                        from which to take the outgoing data destined for
   !!                        process j
   !> @param[out] recv_buf address of receive buffer
-  !> @param[in] recv_cnts integer array equal to the group size specifying the 
+  !> @param[in] recv_cnts integer array equal to the group size specifying the
   !!                      maximum number of elements that can be received from
   !!                      each processor
-  !> @param[in] recv_displs integer array (of length group size). Entry i 
-  !!                      specifies the displacement (relative to recvbuf 
+  !> @param[in] recv_displs integer array (of length group size). Entry i
+  !!                      specifies the displacement (relative to recvbuf
   !!                      at which to place the incoming data from process i
   !> @param[in] col wrapper around the communicator
   subroutine sll_collective_alltoallV_int( send_buf, send_cnts, &
@@ -1200,7 +1432,7 @@ contains !************************** Operations **************************
  end subroutine sll_collective_alltoallV_int
 
 !
-!FOR SOME REASON THIS ARGUMENT OF THIS FUNCTION IS DECLARED ALLOCATBLE AND 
+!FOR SOME REASON THIS ARGUMENT OF THIS FUNCTION IS DECLARED ALLOCATBLE AND
 !POSING PROBLEM WITH F95 STANDARD. WE SHOULD COME BACK TO THIS
 !
 !warning sll_collective_alltoallV_int_simple is not fixed
@@ -1219,39 +1451,39 @@ contains !************************** Operations **************************
     sll_int32                          :: ierr,size_comm,i,sendcnts_size
     sll_int32                          :: dum
     sendcnts_size = size(send_cnts)
-    
+
     ! FIXME: ARG CHECKING!
     call sll_check_collective_ptr( col )
     call MPI_BARRIER( col%comm, ierr )
     call sll_test_mpi_error( ierr, &
          'sll_collective_alltoallV_int(): MPI_BARRIER()' )
-    
+
     size_comm = sll_get_collective_size(col)
     SLL_ASSERT( sendcnts_size .eq. size_comm )
-    
+
     ! Define RECV_CNTS
     SLL_ALLOCATE(recv_cnts(size_comm),ierr)
     call sll_collective_alltoall_int( send_cnts ,1 ,1, &
          recv_cnts, col)
-    
+
     ! Define RECV_BUF
     dum = SUM(recv_cnts)
     SLL_ALLOCATE(recv_buf(dum),ierr)
-    
+
     ! Define SEND_DISPLS
     SLL_ALLOCATE(send_displs(size_comm),ierr)
     send_displs(1)=0
     do i=2,size_comm
        send_displs(i)=send_displs(i-1)+send_cnts(i-1)
     enddo
-    
+
     ! Define RECV_DISPLS
     SLL_ALLOCATE(recv_displs(size_comm),ierr)
     recv_displs(1)=0
     do i=2,size_comm
        recv_displs(i)=recv_displs(i-1)+recv_cnts(i-1)
     enddo
-    
+
     call MPI_ALLTOALLV( send_buf(:), send_cnts(:), send_displs(:), MPI_INTEGER,&
                        recv_buf(:), recv_cnts(:), recv_displs(:), MPI_INTEGER,&
                        col%comm, ierr )
@@ -1265,5 +1497,281 @@ contains !************************** Operations **************************
 
   ! Explore if the Irecv calls can be made into collective calls in this module
   !  subroutine sll_collective_Irecv( )
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_real64( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_real64, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_real64, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_real64( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_real64( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_real64
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_comp64( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp64, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_comp64, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_comp64( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_comp64( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_comp64
+
+
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_real64( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_real64, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_real64, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_real64( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_real64( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_real64
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_real32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_real32, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_real32, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_real32( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_real32( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_real32
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_comp32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp32, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_comp32, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_comp32( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_comp32( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_comp32
+
+
+
+  !> @brief Performs a global sum over an array and writes the result in the given node
+  !> If no node in root_rank is given, perform an allreduce this means the sum is written
+  !> to all nodes
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_array_int32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_int32, dimension(:), intent(inout) :: summand
+    sll_int32, intent(in), optional                :: root_rank
+    sll_int32, dimension(:), allocatable        :: recvsum
+    sll_int32:: summand_size
+    sll_int32     :: ierr
+
+    summand_size=size(summand)
+     SLL_ALLOCATE(recvsum(1:summand_size),ierr)
+
+    if (present(root_rank)) then
+        !Write the result only to node with root_rank
+        call sll_collective_reduce_int( col, summand, summand_size, MPI_SUM, root_rank, &
+        recvsum )
+    else
+       !Write the result to all nodes
+        call sll_collective_allreduce_int32( col, summand, summand_size, MPI_SUM, &
+        recvsum )
+    endif
+     summand=recvsum
+    SLL_DEALLOCATE_ARRAY(recvsum,ierr)
+ endsubroutine sll_collective_globalsum_array_int32
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_comp64( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp64, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_comp64, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_comp64( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_comp64( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_comp64
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_int32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_int32, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_int32, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_int32( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_int32( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_int32
+
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_comp32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_comp32, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_comp32, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_comp32( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_comp32( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_comp32
+
+
+  !> @brief Performs a global sum and writes the result in the given node
+  !> @param[in] col wrapper around the communicator
+  !> @param[in] root_rank rank of root process, where the sum will be stored
+  !> @param[inout] summand summands of the sum, the result will be written
+  !> @param[inout] in the variable summand with rank root_rank
+  subroutine sll_collective_globalsum_real32( col, summand, root_rank)
+    type(sll_collective_t), pointer      :: col
+    sll_real32, intent(inout) :: summand
+    sll_int32, optional, intent(in)    :: root_rank
+    sll_real32, dimension(1) :: summand_tmp
+
+    !Promote the scalar to an array
+    summand_tmp(1)=summand
+    if (present(root_rank)) then
+        call sll_collective_globalsum_array_real32( col, summand_tmp, root_rank)
+    else
+        call sll_collective_globalsum_array_real32( col, summand_tmp)
+    endif
+
+    summand=summand_tmp(1)
+ endsubroutine sll_collective_globalsum_real32
+
 
 end module sll_collective
