@@ -252,8 +252,8 @@ contains
     type(layout_4d), pointer :: layout
     type(sll_logical_mesh_2d), pointer :: lm
     class(sll_coordinate_transformation_2d_base), pointer :: t
-    type(sll_time_mark)  :: t0 ! delete this when done timing/debugging
-    sll_real64 :: time ! delete
+    !type(sll_time_mark)  :: t0 ! delete this when done timing/debugging
+    !sll_real64 :: time ! delete
 
     num_patches = df%num_patches
 
@@ -264,7 +264,7 @@ contains
        ! whenever gfortan 4.6 is no longer supported by Selalib.
        lm => df%transf%transfs(i+1)%t%mesh
        t => df%transf%transfs(i+1)%t
-       call sll_set_time_mark(t0) ! delete this
+       !call sll_set_time_mark(t0) ! delete this
        call sll_4d_parallel_array_initializer( &
             layout, &
             lm, &
@@ -273,8 +273,8 @@ contains
             init_func, &
             init_func_params, &
             transf_x1_x2=t )
-       time =  sll_time_elapsed_since(t0)
-print *, 'inside initialize_df_4d_mp: time to initialize array:', time
+       !time =  sll_time_elapsed_since(t0)
+       !print *, 'inside initialize_df_4d_mp: time to initialize array:', time
     end do
   end subroutine initialize_df_4d_mp
 
