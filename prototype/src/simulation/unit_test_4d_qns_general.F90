@@ -230,20 +230,20 @@ program qns_4d_general
        SPL_DEG_ETA2, & 
        SPL_DEG_VX, & 
        SPL_DEG_VY, & 
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
        ES_GAUSS_LEGENDRE,&
        ES_GAUSS_LEGENDRE,&
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
        electric_field_ext_1,&
        electric_field_ext_2,&
        elec_field_ext_params,&
-       100)
+       5)
 
 
   print *, ' f initialized '

@@ -651,6 +651,8 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
+    sll_real64             :: value_1,value_2,value_3
+    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
 
     SLL_ASSERT( eta1 <= 1.0_f64)
     SLL_ASSERT( eta1 >= 0.0_f64)
@@ -667,29 +669,27 @@ contains
        
     else 
 
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
-
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
        
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       j11 = value_11*value_3- value_31*value_1
 
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       j12 = value_12*value_3- value_32*value_1
+       
+       j21 = value_21*value_3- value_31*value_2
+
+       j22 = value_22*value_3 - value_32*value_2
        
        
        jac = (j11*j22 - j12*j21)/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**4
+            (value_3)**4
     end if
     
   end function jacobian_2d_nurbs
@@ -710,6 +710,8 @@ contains
     sll_real64  :: j12
     sll_real64  :: j21
     sll_real64  :: j22
+    sll_real64             :: value_1,value_2,value_3
+    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
     
     lm => transf%get_logical_mesh()
 
@@ -736,28 +738,28 @@ contains
        
     else 
        
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
+
+
+       j11 = value_11*value_3- value_31*value_1
+
+       j12 = value_12*value_3- value_32*value_1
        
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       j21 = value_21*value_3- value_31*value_2
+
+       j22 = value_22*value_3 - value_32*value_2
        
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
-       
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
        
        transf_2d_jacobian_node_nurbs = (j11*j22 - j12*j21)/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (value_3)**4
     end if
     
   end function transf_2d_jacobian_node_nurbs
@@ -779,6 +781,8 @@ contains
     sll_real64  :: j12
     sll_real64  :: j21
     sll_real64  :: j22
+    sll_real64             :: value_1,value_2,value_3
+    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
 
     lm => transf%get_logical_mesh()
 
@@ -807,30 +811,29 @@ contains
        var = j11*j22 - j12*j21
        
     else 
+
+       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
+
        
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       j11 = value_11*value_3- value_31*value_1
+
+       j12 = value_12*value_3- value_32*value_1
        
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
-       
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
-       
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       j21 = value_21*value_3- value_31*value_2
+
+       j22 = value_22*value_3 - value_32*value_2
        
        
        var = (j11*j22 - j12*j21)/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (value_3)**4
     end if
     
   end function jacobian_2d_cell_nurbs
@@ -845,6 +848,8 @@ contains
     sll_real64             :: j12
     sll_real64             :: j21
     sll_real64             :: j22
+    sll_real64             :: value_1,value_2,value_3
+    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
 
     SLL_ASSERT( eta1 <= 1.0_f64)
     SLL_ASSERT( eta1 >= 0.0_f64)
@@ -865,34 +870,29 @@ contains
        
     else 
 
-       j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
 
-       j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
        
-       j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       j11 = value_11*value_3- value_31*value_1
 
-       j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       j12 = value_12*value_3- value_32*value_1
+       
+       j21 = value_21*value_3- value_31*value_2
 
-       jacobian_matrix_2d_nurbs(1,1) = j11/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
-       jacobian_matrix_2d_nurbs(1,2) = j12/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
-       jacobian_matrix_2d_nurbs(2,1) = j21/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
-       jacobian_matrix_2d_nurbs(2,2) = j22/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2 
+       j22 = value_22*value_3 - value_32*value_2
+
+       jacobian_matrix_2d_nurbs(1,1) = j11/(value_3)**2
+       jacobian_matrix_2d_nurbs(1,2) = j12/(value_3)**2
+       jacobian_matrix_2d_nurbs(2,1) = j21/(value_3)**2
+       jacobian_matrix_2d_nurbs(2,2) = j22/(value_3)**2 
 
       
     end if
@@ -910,6 +910,8 @@ contains
     sll_real64             :: inv_j21
     sll_real64             :: inv_j22
     sll_real64             :: r_jac ! reciprocal of the jacobian
+    sll_real64             :: value_1,value_2,value_3
+    sll_real64             :: value_11,value_12,value_21,value_22,value_31,value_32
     
     SLL_ASSERT( eta1 <= 1.0_f64)
     SLL_ASSERT( eta1 >= 0.0_f64)
@@ -932,36 +934,34 @@ contains
        inverse_jacobian_matrix_2d_nurbs(2,2) =  inv_j11*r_jac
     
     else 
+
+       value_11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_31 = transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )
+       value_32 = transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )
+       value_3  = transf%x3_interp%interpolate_value(eta1,eta2)
+       value_2  = transf%x2_interp%interpolate_value(eta1,eta2)
+       value_1  = transf%x1_interp%interpolate_value(eta1,eta2)
        
-       inv_j11 = transf%x1_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       inv_j11 = value_11*value_3 - value_31*value_1
        
-       inv_j12 = transf%x1_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x1_interp%interpolate_value(eta1,eta2)
+       inv_j12 = value_12*value_3 - value_32*value_1
        
-       inv_j21 = transf%x2_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta1( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       inv_j21 = value_21*value_3 - value_31*value_2
        
-       inv_j22 = transf%x2_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x3_interp%interpolate_value(eta1,eta2) &
-            - transf%x3_interp%interpolate_derivative_eta2( eta1, eta2 )&
-            *transf%x2_interp%interpolate_value(eta1,eta2)
+       inv_j22 = value_22*value_3 - value_32*value_2
        
        
        inverse_jacobian_matrix_2d_nurbs(1,1) =  inv_j22*r_jac/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (value_3)**2
        inverse_jacobian_matrix_2d_nurbs(1,2) = -inv_j12*r_jac/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (value_3)**2
        inverse_jacobian_matrix_2d_nurbs(2,1) = -inv_j21*r_jac/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (value_3)**2
        inverse_jacobian_matrix_2d_nurbs(2,2) =  inv_j11*r_jac/&
-            (transf%x3_interp%interpolate_value(eta1,eta2))**2
+            (value_3)**2
     end if
 
     

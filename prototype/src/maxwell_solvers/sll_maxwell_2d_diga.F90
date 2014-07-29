@@ -75,9 +75,9 @@ type, public :: maxwell_2d_diga
 
 end type maxwell_2d_diga
 
-interface maxwell_2d_diga
-   module procedure new_maxwell_2d_diga
-end interface maxwell_2d_diga
+interface new_maxwell_2d_diga
+   module procedure new_maxwell_2d_digal
+end interface new_maxwell_2d_diga
 
 !> Create a Maxwell solver object using Discontinuous Galerkine 
 interface initialize
@@ -96,14 +96,14 @@ sll_int32, parameter, public :: SLL_UNCENTERED     = 21
 
 contains
 
-function new_maxwell_2d_diga( tau,          &
-                              degree,       &
-                              polarization, &
-                              bc_south,     &
-                              bc_east,      &
-                              bc_north,     &
-                              bc_west,      &
-                              flux_type) result(this)
+function new_maxwell_2d_digal( tau,          &
+                               degree,       &
+                               polarization, &
+                               bc_south,     &
+                               bc_east,      &
+                               bc_north,     &
+                               bc_west,      &
+                               flux_type) result(this)
 
    type( maxwell_2d_diga ), pointer :: this !< solver data object
    sll_transformation, pointer      :: tau
@@ -127,7 +127,7 @@ function new_maxwell_2d_diga( tau,          &
                                     bc_west,      &
                                     flux_type)
 
-end function new_maxwell_2d_diga
+ end function new_maxwell_2d_digal
 
 !> Initialize Maxwell solver object using DG method.
 subroutine initialize_maxwell_2d_diga( this,         &
@@ -163,7 +163,10 @@ subroutine initialize_maxwell_2d_diga( this,         &
    sll_real64                  :: xa, xb, ya, yb
 
    this%tau        => tau
-   this%mesh       => tau%get_logical_mesh()
+   ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
+   ! longer supported.
+   !   this%mesh       => tau%get_logical_mesh()
+   this%mesh => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
    this%bc_north   =  bc_north
