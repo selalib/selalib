@@ -322,17 +322,17 @@ contains  ! ****************************************************************
 
 
     if (deg.ne.2) then
-
-       ! ----------------
-       !We take advantage of the fact that the mesh is symetrical
-       !So we constrain the points to the first triangles by
-       !using the symmetry properties
-       ! ----------------
-       ! Vertical symmetry:
+       ! ------------------------------------------------
+       ! FOR ARBITRARY ORDER SPLINES :
+       ! We take advantage of the fact that the mesh is symetrical
+       ! So we constrain the points to the first triangles by
+       ! using the symmetry properties
+       ! ------------------------------------------------
+       ! Transformation to hexagonal coordinates :
        x1 = -abs(x1_in)
        x2 =  abs(x2_in)
-       u = x1 - x2/sqrt(3.0)
-       v = x1 + x2/sqrt(3.0)
+       u = x1 - x2/sqrt(3._f64)
+       v = x1 + x2/sqrt(3._f64)
        ! First generating vector (r1') symmetry
        if (v.gt.0) then
           v = -v
@@ -367,14 +367,17 @@ contains  ! ****************************************************************
        end do
 
     else
-!        print *, "************************"
-!        print *, "USING THE NEW ALGORITHM"
-!        print *, "************************"
-       !Optimized algorithm for order two method :
+       ! ------------------------------------------------
+       ! OPTIMIZED ALGORITHM FOR DEGREE TWO SPLINES :
+       ! We take advantage of the fact that the mesh is symetrical
+       ! So we constrain the points to the first triangles by
+       ! using the symmetry properties
+       ! ------------------------------------------------
+       ! Transformation to hexagonal coordinates :
        x1 = abs(x1_in)
        x2 = abs(x2_in)
-       u = x1 - x2/sqrt(3.0)
-       v = x1 + x2/sqrt(3.0)
+       u = x1 - x2/sqrt(3._f64)
+       v = x1 + x2/sqrt(3._f64)
        if (u.lt.0) then
           !Symmetry r2
           u = -u
@@ -384,17 +387,17 @@ contains  ! ****************************************************************
           !Symmetry r2+r3
           u = v-u
        end if
-       g = u - v/2.0
-       if (v.gt.0) then
+       g = u - v/2._f64
+       if (v.gt.2.0) then
           val = 0.0_f64
        else if (v.lt.1.0) then
           val = 0.5 + ((5._f64/3._f64 - v/8.0_f64)*v-3.0_f64)*v*v/4.0_f64 + &
-               ((1._f64-v/4._f64)*v+g*g/6.0_f64-1._f64)*g*g
+               ((1._f64 - v/4._f64)*v + g*g/6._f64 - 1._f64)*g*g
        else if (u.gt.1.0) then
-          val = (v-2._f64)*(v-2._f64)*(v-2._f64)*(g-1._f64)/6.0_f64
+          val = (v - 2._f64)*(v - 2._f64)*(v - 2._f64)*(g - 1._f64)/6.0_f64
        else
-          val = 5._f64/6._f64 + ((1._f64 + (1._f64/3._f64 -v/8._f64)*v)*v/4._f64-1._f64)*v + &
-               ((1._f64-v/4._f64)*v+g*g/6.0_f64 - 1._f64)*g*g
+          val = 5._f64/6._f64 + ((1._f64 + (1._f64/3._f64 - v/8._f64)*v)*v/4._f64-1._f64)*v + &
+               ((1._f64 - v/4._f64)*v + g*g/6.0_f64 - 1._f64)*g*g
        end if
     end if
 
