@@ -12,16 +12,17 @@ program qns_4d_general_multipatch
      initialize_4d_qns_general_multipatch, &
      run_4d_qns_general_mp
   use sll_collective
-  use sll_constants
+!  use sll_constants
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
-  use sll_module_coordinate_transformations_2d_nurbs
+!  use sll_module_coordinate_transformations_2d_nurbs
   use sll_common_array_initializers_module
   use sll_module_poisson_2d_elliptic_solver, &
      only: es_gauss_legendre
-  use sll_coordinate_transformation_multipatch_module
-  use sll_module_scalar_field_2d_multipatch
+  use sll_coordinate_transformation_multipatch_module, only: &
+     sll_coordinate_transformation_multipatch_2d
+!  use sll_module_scalar_field_2d_multipatch
   implicit none
 
   character(len=256) :: filename
