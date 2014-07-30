@@ -6,7 +6,7 @@
 
 \begin{document}
 
-\title{Selalib Notes - DRAFT -}   
+\title{Selalib Manual - DRAFT -}
 \author{Edwin Chacon-Golcher}        
 \date{\today}    
 \maketitle
@@ -18,7 +18,7 @@
 \tableofcontents
 
 \chapter{Introduction}             % chapter 1
-Selalib is the \emph{Se}mi\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semilagrangian approach. However, most of the modules contained in the library are not intrinsically related with the semilagrangian method, but are more general utilities which could be used in different contexts. A principle in the development of the library has been to continually identify specific functionalities and to attempt to promote them into their own standalone module, with a sufficiently general interface which may still be reasonably efficient.
+Selalib is the \emph{Se}mi\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use the semilagrangian methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semilagrangian approach. However, most of the modules contained in the library are not intrinsically related with the semilagrangian method, but are more general utilities which could be used in different contexts. A principle in the development of the library has been to continually identify specific functionalities and to attempt to promote them into their own standalone module, with a sufficiently general interface which may still permit a reasonably efficient implementation.
 
 Selalib is structured in layers. One can think about these layers as libraries in their own right. A given layer can use the capabilities offered by a lower layer through the exposed interface, but never from a higher level. The layer with the lowest level of abstraction presently contains basic utilities like memory allocators, assertions and basic numeric types. The second layer is composed of numerical and parallel utilities. The third and highest level of the library contains the semi-lagrangian methodology tools, types and methods. This manual will ultimately describe each of these layers.
 
