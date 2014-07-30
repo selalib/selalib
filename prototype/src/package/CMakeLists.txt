@@ -122,6 +122,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_base.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_periodic_solver.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_1d_polar_solver.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_polar_solver.F90
+    ${SLL_DIR}/poisson_solvers/sll_poisson_2d_base.F90
     ${SLL_DIR}/fft/sll_fft_utils.F90
     ${SLL_DIR}/integration/gauss_legendre.F90
     ${SLL_DIR}/integration/gauss_lobatto.F90
@@ -148,6 +150,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/fields/scalar_field_initializer_base.F90
 #    ${SLL_DIR}/fields/sll_scalar_field_2d_base.F90
     ${SLL_DIR}/fields/sll_scalar_field_2d.F90
+    ${SLL_DIR}/fields/distribution_function_initializer_4d.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d_base.F90
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes_2d.F90
     ${SLL_DIR}/coordinate_transformations/sll_common_coordinate_transformations.F90
@@ -161,6 +164,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
+    ${SLL_DIR}/reduction/sll_reduction.F90
+
  )
 
 IF(Fortran_COMPILER MATCHES "IBM")
@@ -243,6 +248,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
        ${SLL_DIR}/simulation/simulation_4d_DK_hybrid.F90
+       ${SLL_DIR}/simulation/simulation_4d_drift_kinetic_polar.F90
  )
 
 ENDIF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)

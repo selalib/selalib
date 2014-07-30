@@ -44,7 +44,7 @@ contains
 
   subroutine sll_first_charge_accumulation_2d_CS( p_group, q_accum )
     type(sll_particle_group_2d), pointer         :: p_group
-    type(sll_charge_accumulator_2d_CS), pointer     :: q_accum
+    type(sll_charge_accumulator_2d_CS), pointer  :: q_accum
     type(sll_particle_2d), dimension(:), pointer :: p
     sll_int64  :: i
     sll_int64  :: num_particles

@@ -154,7 +154,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
       ADD_SUBDIRECTORY(linear_solvers)
-      ADD_SUBDIRECTORY(maxwell_solvers_parallel)
+      ADD_SUBDIRECTORY(distribution_function_multipatch)
    
    ENDIF()
 
