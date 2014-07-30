@@ -4,7 +4,13 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
      sll_general_coordinate_elliptic_solver.F90
      sll_knots.F90)
 
-TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers 
+ADD_LIBRARY( finite_differences_solver STATIC
+     connectivity_qn.f90
+     finite_differences_solver.F90
+     sll_knots.F90)
+
+TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
+		       finite_differences_solver 
                        sll_sparse_matrix 
                        sll_scalar_field_2d_alternative 
                        sll_interpolators
