@@ -65,7 +65,6 @@ contains
   function new_logical_mesh_multipatch_2d( num_patches ) result(m)
     type(sll_logical_mesh_multipatch_2d), pointer :: m
     sll_int32, intent(in) :: num_patches
-    sll_int32 :: i
     sll_int32 :: ierr
     SLL_ALLOCATE(m,ierr)
     SLL_ALLOCATE(m%meshes(num_patches),ierr)

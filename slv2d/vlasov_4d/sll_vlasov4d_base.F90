@@ -230,7 +230,7 @@ contains
 
  subroutine initialize_vlasov4d_base(this)
 
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   class(vlasov4d_base),intent(inout)    :: this
   sll_int32                             :: error
@@ -477,7 +477,7 @@ contains
  subroutine write_xmf_file(this, iplot)
 
   use hdf5
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   class(vlasov4d_base),intent(in) :: this
   sll_int32, intent(in)           :: iplot
@@ -609,7 +609,7 @@ contains
  end subroutine write_attribute
 
  subroutine write_fx1x2(this,cplot)
- use sll_hdf5_io
+ use sll_hdf5_io_serial
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
@@ -637,7 +637,7 @@ contains
  end subroutine write_fx1x2
 
  subroutine write_fx1x3(this,cplot)
- use sll_hdf5_io
+ use sll_hdf5_io_serial
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
@@ -687,7 +687,7 @@ contains
  global_dims = (/this%nc_eta2,this%nc_eta4/)
  offset(1) = get_layout_4D_j_min(this%layout_p,prank)-1
  offset(2) = get_layout_4D_l_min(this%layout_p,prank)-1
- call sll_hdf5_file_create('fx2x4_'//cplot//".h5",pfile_id,error)
+ call sll_hdf5_file_create('fx2x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
  call sll_hdf5_file_close(pfile_id, error)
 
@@ -716,7 +716,7 @@ contains
  global_dims = (/this%nc_eta3,this%nc_eta4/)
  offset(1) = get_layout_4D_k_min(this%layout_p,prank)-1
  offset(2) = get_layout_4D_l_min(this%layout_p,prank)-1
- call sll_hdf5_file_create('fx3x4_'//cplot//".h5",pfile_id,error)
+ call sll_hdf5_file_create('fx3x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/values",error)
  call sll_hdf5_file_close(pfile_id, error)
 

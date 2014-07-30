@@ -22,12 +22,8 @@
         sll_qn_solver_2d_parallel.F90
         sll_qn_solver_3d_polar_parallel_x1.F90)
 
-      IF (NOT STDF95)
         SET(QNS_PARALLEL_SRCS ${QNS_PARALLEL_SRCS} 
           sll_qn_solver_3d_polar_parallel_x1_wrapper.F90)
-      ENDIF()
-
-
 
       ADD_LIBRARY(sll_qn_solvers_parallel STATIC ${QNS_PARALLEL_SRCS})
 
@@ -42,19 +38,12 @@
    
       TARGET_LINK_LIBRARIES( test_qn_solver_3d_polar_parallel_x1 sll_qn_solvers_parallel)
 
-      IF (NOT STDF95)
-
-        ADD_EXECUTABLE( test_qn_solver_3d_polar_parallel_x1_wrapper 
+      ADD_EXECUTABLE( test_qn_solver_3d_polar_parallel_x1_wrapper 
           unit_test_qn_solver_3d_polar_parallel_x1_wrapper.F90)
    
-        TARGET_LINK_LIBRARIES( test_qn_solver_3d_polar_parallel_x1_wrapper 
+      TARGET_LINK_LIBRARIES( test_qn_solver_3d_polar_parallel_x1_wrapper 
           sll_qn_solvers_parallel)
         
-      ENDIF()
-
-
-
-
    ENDIF (MPI_MODULE_ENABLED)
 
 #ENDIF()
