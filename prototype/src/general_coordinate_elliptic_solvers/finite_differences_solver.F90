@@ -16,7 +16,7 @@ module finite_differences_solver_module
 
   implicit none
 
-  type :: general_coordinate_elliptic_solver
+  type :: finite_differences_solver
      sll_int32 :: total_num_splines_loc
      sll_int32 :: total_num_splines_eta1
      sll_int32 :: total_num_splines_eta2
@@ -72,7 +72,7 @@ module finite_differences_solver_module
      sll_real64, dimension(:), pointer :: tmp_phi_vec
      sll_real64, dimension(:), pointer :: masse
      sll_real64, dimension(:), pointer :: stiff
-  end type general_coordinate_elliptic_solver
+  end type finite_differences_solver
 
   ! For the integration mode.  
   sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
@@ -82,7 +82,7 @@ module finite_differences_solver_module
   end interface delete
 
   interface initialize
-     module procedure initialize_general_elliptic_solver
+     module procedure initialize_finite_differences_solver
   end interface initialize
   
   
@@ -98,7 +98,7 @@ contains ! *******************************************************************
   !>  phi is given with a B-spline interpolator  
   !> 
   !> The parameters are
-  !> @param es the type general_coordinate_elliptic_solver
+  !> @param es the type finite_differences_solver
   !> @param[in] spline_degree_eta1 the degre of B-spline in the direction eta1
   !> @param[in] spline_degree_eta2 the degre of B-spline in the direction eta2
   !> @param[in] num_cells_eta1 the number of cells in the direction eta1
@@ -113,9 +113,9 @@ contains ! *******************************************************************
   !> @param[in] eta1_max the maximun in the direction eta1
   !> @param[in] eta2_min the minimun in the direction eta2
   !> @param[in] eta2_max the maximun in the direction eta2
-  !> @return the type general_coordinate_elliptic_solver
+  !> @return the type finite_differences_solver
 
-  subroutine initialize_general_elliptic_solver( &
+  subroutine initialize_finite_differences_solver( &
        es, &
        spline_degree_eta1, &
        spline_degree_eta2, &
@@ -132,7 +132,7 @@ contains ! *******************************************************************
        eta2_min, &
        eta2_max)
     
-   type(general_coordinate_elliptic_solver), intent(out) :: es
+   type(finite_differences_solver), intent(out) :: es
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
    sll_int32, intent(in) :: num_cells_eta1
@@ -203,7 +203,7 @@ contains ! *******************************************************************
       SLL_ALLOCATE(es%gauss_pts1(2,spline_degree_eta1+2),ierr)
       es%gauss_pts1(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta1+2)
    case DEFAULT
-      print *, 'new_general_qn_solver(): have not type of gauss points in the first direction'
+      print *, 'new_finite_differences_solver(): have not type of gauss points in the first direction'
    end select
       
    select case(quadrature_type2)
@@ -216,7 +216,7 @@ contains ! *******************************************************************
       SLL_ALLOCATE(es%gauss_pts2(2,spline_degree_eta2+2),ierr)
       es%gauss_pts2(:,:) = gauss_lobatto_points_and_weights(spline_degree_eta2+2)
    case DEFAULT
-      print *, 'new_general_qn_solver(): have not type of gauss points in the second direction'
+      print *, 'new_finite_differences_solver(): have not type of gauss points in the second direction'
       
    end select
 
@@ -386,7 +386,7 @@ contains ! *******************************************************************
     SLL_ALLOCATE(es%tab_index_coeff1(num_cells_eta1*(spline_degree_eta1+2)),ierr)
     SLL_ALLOCATE(es%tab_index_coeff2(num_cells_eta2*(spline_degree_eta2+2)),ierr)
 !
-  end subroutine initialize_general_elliptic_solver
+  end subroutine initialize_finite_differences_solver
   
 
 
@@ -413,8 +413,8 @@ contains ! *******************************************************************
   !> @param[in] eta1_max the maximun in the direction eta1
   !> @param[in] eta2_min the minimun in the direction eta2
   !> @param[in] eta2_max the maximun in the direction eta2
-  !> @return the type general_coordinate_elliptic_solver such that a pointer
-  function new_general_elliptic_solver( &
+  !> @return the type finite_differences_solver such that a pointer
+  function new_finite_differences_solver( &
    spline_degree_eta1, &
    spline_degree_eta2, &
    num_cells_eta1, &
@@ -430,7 +430,7 @@ contains ! *******************************************************************
    eta2_min, &
    eta2_max ) result(es)
 
-   type(general_coordinate_elliptic_solver), pointer :: es
+   type(finite_differences_solver), pointer :: es
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
    sll_int32, intent(in) :: num_cells_eta1
@@ -468,20 +468,20 @@ contains ! *******************************************************************
         eta2_max )
    
     !time = sll_time_elapsed_since(t0)
-    !print*, '#time for new_general_elliptic_solver', time
+    !print*, '#time for new_finite_differences_solver', time
     
 
-  end function new_general_elliptic_solver
+  end function new_finite_differences_solver
 
   
-  !> @brief Deallocate the type general_coordinate_elliptic_solver
+  !> @brief Deallocate the type finite_differences_solver
   !> 
   !> 
   !> The parameters are
-  !> @param[in] es the type general_coordinate_elliptic_solver
+  !> @param[in] es the type finite_differences_solver
   
   subroutine delete_elliptic( es )
-   type(general_coordinate_elliptic_solver) :: es
+   type(finite_differences_solver) :: es
    sll_int32 :: ierr
    ! it is not good to check some cases and not others, fix...
    if(associated(es%knots1)) then
@@ -492,7 +492,7 @@ contains ! *******************************************************************
     if(associated(es%knots2)) then
        SLL_DEALLOCATE(es%knots2,ierr)
     else
-       print *, 'delete es general coords, ', &
+       print *, 'delete es finite differences, ', &
             'WARNING: knots2 array was not allocated.'
     end if
     SLL_DEALLOCATE(es%gauss_pts1,ierr)
@@ -532,7 +532,7 @@ contains ! *******************************************************************
   !>  phi is given with a B-spline interpolator  
   !> 
   !> The parameters are
-  !> @param es the type general_coordinate_elliptic_solver
+  !> @param es the type finite_differences_solver
   !> @param[in] a11_field_mat the field corresponding to the coefficient A(1,1) of the matrix A  
   !> @param[in] a12_field_mat the field corresponding to the coefficient A(1,2) of the matrix A 
   !> @param[in] a21_field_mat the field corresponding to the coefficient A(2,1) of the matrix A  
@@ -540,7 +540,7 @@ contains ! *******************************************************************
   !> @param[in] b1_field_vect the field corresponding to the coefficient B(1) of the vector B  
   !> @param[in] b2_field_vect the field corresponding to the coefficient B(2) of the vector B
   !> @param[in] c_field the field corresponding to the coefficient B(1) of the scalar C
-  !> @return the type general_coordinate_elliptic_solver contains the matrix to solve the equation
+  !> @return the type finite_differences_solver contains the matrix to solve the equation
   subroutine factorize_mat_es(&
        es, &
        a11_field_mat, &
@@ -552,7 +552,7 @@ contains ! *******************************************************************
        c_field)!, &
     ! rho)
     use sll_timer
-    type(general_coordinate_elliptic_solver),intent(inout) :: es
+    type(finite_differences_solver),intent(inout) :: es
     class(sll_scalar_field_2d_base), pointer :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer :: a21_field_mat
@@ -720,7 +720,7 @@ if (sll_perper == 0) then
   !>  phi is given with a B-spline interpolator  
   !> 
   !> The parameters are
-  !> @param es the type general_coordinate_elliptic_solver
+  !> @param es the type finite_differences_solver
   !> @param[in] rho the field corresponding to the source term   
   !> @param[out] phi the field corresponding to the solution of the equation
   !> @return phi the field solution of the equation
@@ -730,7 +730,7 @@ if (sll_perper == 0) then
        rho,&
        phi)
     use sll_timer
-    class(general_coordinate_elliptic_solver) :: es
+    class(finite_differences_solver) :: es
     class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     class(sll_scalar_field_2d_base), intent(in),target  :: rho
     sll_int32 :: i
@@ -958,7 +958,7 @@ if (sll_perper == 0) then
        Source_loc)
 
     
-    class(general_coordinate_elliptic_solver) :: obj
+    class(finite_differences_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     sll_int32, intent(in) :: cell_index
@@ -1321,7 +1321,7 @@ if (sll_perper == 0) then
        rho_at_gauss, &
        M_rho_loc)
 
-    class(general_coordinate_elliptic_solver) :: obj
+    class(finite_differences_solver) :: obj
     sll_int32, intent(in) :: cell_i
     sll_int32, intent(in) :: cell_j
     sll_real64, dimension(:,:), intent(in)   :: rho_at_gauss
@@ -1433,7 +1433,7 @@ if (sll_perper == 0) then
        Masse_tot,&
        Stiff_tot)
     
-    class(general_coordinate_elliptic_solver)  :: es
+    class(finite_differences_solver)  :: es
     sll_int32 :: cell_index
     sll_int32 :: cell_i
     sll_int32 :: cell_j
@@ -1576,7 +1576,7 @@ if (sll_perper == 0) then
        cell_j, &
        M_rho_loc)
     
-     class(general_coordinate_elliptic_solver)  :: es
+     class(finite_differences_solver)  :: es
      sll_int32 :: cell_i
      sll_int32 :: cell_j
      sll_real64, dimension(:), intent(in)   :: M_rho_loc
@@ -1631,7 +1631,7 @@ if (sll_perper == 0) then
   subroutine solve_linear_system( es )
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    class(general_coordinate_elliptic_solver) :: es
+    class(finite_differences_solver) :: es
     !type(csr_matrix)  :: csr_masse
     integer :: elt, elt1
     integer :: i,j
@@ -1721,7 +1721,7 @@ if (sll_perper == 0) then
   subroutine solve_linear_system_perper( es)
     ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
     ! is given in terms of the spline coefficients that represent phi.
-    class(general_coordinate_elliptic_solver) :: es
+    class(finite_differences_solver) :: es
     sll_int32 :: ierr
     
     es%tmp_rho_vec(:) = 0.0_f64
@@ -1753,7 +1753,7 @@ if (sll_perper == 0) then
   end subroutine solve_general_es_perper
 
   subroutine compute_Source_matrice(es,Source_loc)
-    type(general_coordinate_elliptic_solver),intent(inout) :: es
+    type(finite_differences_solver),intent(inout) :: es
     sll_real64, dimension(:,:,:), pointer :: Source_loc
     sll_int32 :: cell_j,cell_i
     sll_int32 :: cell_index
