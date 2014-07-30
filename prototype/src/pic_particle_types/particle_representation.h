@@ -3,6 +3,8 @@
 
   use sll_particle_representations
 
+!  the 'real' offset (i.e. x - x_j where x_j is the closer node, at left of x)
+!  of a particle is  offset*dx.
 #define COMPUTE_CELL_OFFSET(x,xmin,rdelta,icell,offset,tmp) \
   do; \
     tmp = (x - xmin)*rdelta; \

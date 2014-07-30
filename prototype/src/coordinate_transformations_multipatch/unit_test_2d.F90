@@ -6,7 +6,7 @@ program unit_test_2d
   type(sll_coordinate_transformation_multipatch_2d) :: mp
 
 !  call mp%read_from_file("identity_mp_info.nml")
-  call mp%read_from_file("square_4p_n10")
+  call mp%read_from_file("circle_mp5_pts12")
 
   print *, 'connectivity patch 1, face 3', mp%get_connectivity(1, 3)
   print *, 'connectivity patch 3, face 1', mp%get_connectivity(3, 1)

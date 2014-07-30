@@ -583,6 +583,7 @@ contains
              end do
           end do
        end do
+
     case(2) ! Only the x3,x4 transformation was provided
        do l=1,loc_size_x4
           do k=1,loc_size_x3
