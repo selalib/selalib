@@ -33,7 +33,7 @@ program test_general_elliptic_solver_multipatch
 
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
   type(sll_logical_mesh_2d), pointer                         :: m
-  type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
+  class(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
   type(general_coordinate_elliptic_solver_mp)               :: es_mp
   class(sll_scalar_field_multipatch_2d), pointer              :: a11_field_mat
   class(sll_scalar_field_multipatch_2d), pointer              :: a12_field_mat
@@ -45,6 +45,7 @@ program test_general_elliptic_solver_multipatch
   class(sll_scalar_field_multipatch_2d), pointer              :: rho_field_scal
   class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_scal
   class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_ex
+  class(sll_scalar_field_multipatch_2d), pointer              :: phi_field_diff
   sll_int32 :: num_patches
   sll_int32  :: ipatch
   sll_int32  :: i
@@ -181,6 +182,10 @@ program test_general_elliptic_solver_multipatch
   
   call phi_field_ex%allocate_memory()
 
+  phi_field_diff => new_scalar_field_multipatch_2d("phi_field_diff_multipatch", T)
+  
+  call phi_field_diff%allocate_memory()
+
 
   num_patches = phi_field_scal%get_number_patches()
 
@@ -214,9 +219,9 @@ program test_general_elliptic_solver_multipatch
            val_b1   = func_zero( x1, x2)
            val_b2   = func_zero( x1, x2)
            val_c    = func_zero( x1, x2)
-           val_rho  = -4*36*exp(-36*(x1**2+x2**2))+ (2*36)**2*(x1**2+x2**2)*exp(-36*(x1**2+x2**2))!source_term_perdir( x1, x2)
+           val_rho  = -4*9*exp(-9*(x1**2+x2**2))+ (2*9)**2*(x1**2+x2**2)*exp(-9*(x1**2+x2**2))!source_term_perdir( x1, x2)
            val_phi  = 0.0_f64
-           val_phi_exacte = exp(-36*(eta1**2+eta2**2))!sol_exacte_perdir(x1,x2)
+           val_phi_exacte = exp(-9*(x1**2+x2**2))!sol_exacte_perdir(x1,x2)
            call a11_field_mat%set_value_at_indices ( i, j, ipatch, val_a11 ) 
            call a12_field_mat%set_value_at_indices ( i, j, ipatch, val_a12 ) 
            call a21_field_mat%set_value_at_indices ( i, j, ipatch, val_a21 ) 
@@ -279,6 +284,38 @@ program test_general_elliptic_solver_multipatch
        rho_field_scal,&
        phi_field_scal)
 
+  do ipatch= 0,num_patches-1
+     ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
+     ! is no longer supported by Selalib.
+     !     m        => rho_field_scal%get_logical_mesh(ipatch)
+     m => rho_field_scal%transf%transfs(ipatch+1)%t%mesh
+     !     transf   => rho_field_scal%get_transformation(ipatch)
+     transf => rho_field_scal%transf%transfs(ipatch+1)%t
+     num_pts1 = m%num_cells1+1
+     num_pts2 = m%num_cells2+1
+     delta1   = m%delta_eta1
+     delta2   = m%delta_eta2
+     eta1min  = m%eta1_min
+     eta2min  = m%eta2_min
+     
+     do j=1,num_pts1
+        eta2 = eta2min + (j-1)*delta2
+        do i=1,num_pts2
+        ! here it is assumed that the eta_min's are = 0. This is supposed
+           ! to be the case for NURBS transformations.
+           eta1 = eta1min + (i-1)*delta1
+           x1 = transf%x1(eta1,eta2)
+           x2 = transf%x2(eta1,eta2)
+           
+           val_phi  = phi_field_scal%value_at_point(eta1,eta2,ipatch)
+           val_phi_exacte = exp(-9*(x1**2+x2**2))!sol_exacte_perdir(x1,x2)
+           call phi_field_diff%set_value_at_indices( i, j, ipatch, abs(val_phi-val_phi_exacte) ) 
+        end do
+     end do
+  end do
+  
+  print *, 'updating multipatch field interpolation coefficients...'
+  call phi_field_diff%update_interpolation_coefficients()
 
   print *, 'writing to file...'
   call phi_field_scal%write_to_file(0)
@@ -286,6 +323,9 @@ program test_general_elliptic_solver_multipatch
   print *, 'writing to file...'
   call phi_field_ex%write_to_file(0)
   
+  print *, 'writing to file...'
+  call phi_field_diff%write_to_file(0)
+
   print*, 'delete object'
   call sll_delete(T)
   call sll_delete(a11_field_mat)
@@ -298,6 +338,7 @@ program test_general_elliptic_solver_multipatch
   call sll_delete(rho_field_scal)
   call sll_delete(phi_field_scal)
   call sll_delete(phi_field_ex)
+  call sll_delete(phi_field_diff)
   print *, "PASSED"
 
 !!$  !*******************************************************************
