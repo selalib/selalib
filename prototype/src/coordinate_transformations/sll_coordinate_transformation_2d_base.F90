@@ -107,7 +107,7 @@ module sll_coordinate_transformation_2d_base_module
      function matrix_geometry_function_ct( transf, eta1, eta2 )
        use sll_working_precision       
        import sll_coordinate_transformation_2d_base
-       class(sll_coordinate_transformation_2d_base) :: transf
+       class(sll_coordinate_transformation_2d_base),intent(in) :: transf
        sll_real64, intent(in)         :: eta1
        sll_real64, intent(in)         :: eta2
        sll_real64                     :: matrix_geometry_function_ct(2,2)
