@@ -87,7 +87,6 @@ contains
     sll_int32, intent(in)  :: Nc(2)
     sll_int32, intent(in)  :: N_points  
     sll_int32, optional    :: splines_case
-    sll_int32 :: ierr
 
     
     if(.not.(present(splines_case)))then

@@ -28,10 +28,10 @@ program vlasov_poisson_4d_polar
 
   call sll_boot_collective() ! Wrap this up somewhere else
 
-  nargs = iargc()
+  nargs = command_argument_count()
   if ( nargs > 0 ) then
 
-     call getarg(1, filename)
+     call get_command_argument(1, filename)
      call simulation%init_from_file(trim(filename))
 
   else

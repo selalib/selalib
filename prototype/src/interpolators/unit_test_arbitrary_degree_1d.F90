@@ -65,7 +65,7 @@ program unit_test
        SLL_PERIODIC, &
        SPL_DEG)
   call ad1d%compute_interpolants( &
-       x(1:NPTS1-1))!,&
+       x(1:NPTS1))!,&
        !eta1_pos(1:NPTS1-1),&
        !NPTS1-1)
   
