@@ -1,19 +1,8 @@
 !**************************************************************
-!  Copyright INRIA
-!  Authors : 
-!     Laura Mendoza
-!     CALVI project team
-!  
-!  This code SeLaLib (for Semi-Lagrangian-Library) 
-!  is a parallel library for simulating the plasma turbulence 
-!  in a tokamak.
-!  
-!  This software is governed by the CeCILL-B license 
-!  under French law and abiding by the rules of distribution 
-!  of free software.  You can  use, modify and redistribute 
-!  the software under the terms of the CeCILL-B license as 
-!  circulated by CEA, CNRS and INRIA at the following URL
-!  "http://www.cecill.info". 
+!  This module defines a hexagonal mesh subdivided in
+!  equilateral triangles
+!  Author : 
+!     Laura Mendoza (mela@ipp.mpg.de)
 !**************************************************************
 
 
@@ -23,13 +12,16 @@ module hex_mesh
   implicit none
 
   type hex_mesh_2d
-     sll_int32  :: num_cells  ! number of cells in any direction parting from origin
-     sll_int32  :: num_pts_tot! number of total points
-     sll_real64 :: radius     ! distance between origin and external vertex
-     sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
-     sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
-     sll_real64 :: delta      ! cell spacing
-     ! generator vectors (r1, r2, r3) coordinates -- need to be scaled by delta
+     ! A hexagonal mesh (composed by equilateral triangles)
+     ! is defined by three directional vectors (r1, r2, r3)
+     ! the number of cells, the radius, and the coordinates of the center  
+     sll_int32  :: num_cells   ! number of cells in any direction parting from origin
+     sll_int32  :: num_pts_tot ! number of total points
+     sll_real64 :: radius      ! distance between origin and external vertex
+     sll_real64 :: center_x1   ! x1 cartesian coordinate of the origin
+     sll_real64 :: center_x2   ! x2 cartesian coordinate of the origin
+     sll_real64 :: delta       ! cell spacing
+     ! generator vectors (r1, r2, r3) coordinates (they need to be scaled by delta)
      sll_real64 :: r1_x1
      sll_real64 :: r1_x2
      sll_real64 :: r2_x1
@@ -42,7 +34,6 @@ module hex_mesh
      type(hex_mesh_2d), pointer :: hm
   end type hex_mesh_2d_ptr
 
-  ! this should be sll_delete library-wide...
   interface delete
      module procedure delete_hex_mesh_2d
   end interface delete
@@ -53,6 +44,9 @@ module hex_mesh
 
 contains
 
+! Definition of a fonction to test if an argument is present
+! if it is it will asign it to the object at the slot,
+! else it will take a default value
 #define TEST_PRESENCE_AND_ASSIGN_VAL( obj, arg, slot, default_val ) \
   if( present(arg) ) then ; \
     obj%slot = arg; \
@@ -122,9 +116,15 @@ end if
     sll_real64, optional, intent(in) :: r2_x1, r2_x2
     sll_real64, optional, intent(in) :: r3_x1, r3_x2
 
+    ! By default the hexagonal mesh is centered at the (0,0) point
     TEST_PRESENCE_AND_ASSIGN_VAL( m, center_x1, center_x1, 0.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, center_x2, center_x2, 0.0_f64 )
+    ! By default the hexagonal mesh has a radius of 1.
     TEST_PRESENCE_AND_ASSIGN_VAL( m, radius, radius, 1.0_f64 )
+    ! By default the hexagonal mesh has for generator vectors :
+    ! r1 = (r11, r12) = ( sqrt(3)/2, 1/2 )
+    ! r2 = (r21, r22) = (-sqrt(3)/2, 1/2 )
+    ! r3 = (r31, r32) = ( 0, 1 )
     TEST_PRESENCE_AND_ASSIGN_VAL( m, r1_x1, r1_x1, sqrt(real(3, f64))*0.5) 
     TEST_PRESENCE_AND_ASSIGN_VAL( m, r1_x2, r1_x2, 0.5)
     TEST_PRESENCE_AND_ASSIGN_VAL( m, r2_x1, r2_x1, -sqrt(real(3, f64))*0.5)
@@ -160,6 +160,8 @@ end if
 
 
   function x1_node(mesh, k1, k2) result(val)
+    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
+    ! This function returns the 1st coordinate on the cartesian system
     type(hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
@@ -167,8 +169,9 @@ end if
     val = mesh%r1_x1*k1 + mesh%r2_x1*k2 + mesh%center_x1
   end function x1_node
 
-
   function x2_node(mesh, k1, k2) result(val)
+    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
+    ! This function the 2nd coordinate on the cartesian system
     type(hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
@@ -180,6 +183,9 @@ end if
   function global_index(k1, k2) result(val)
     ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
     ! returns global index of that mesh point.
+    ! By default the index of the center of the mesh is 0
+    ! Then following the r1 direction and a counter-clockwise motion
+    ! we assing an index to every point of the mesh.
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
     sll_int32 :: val
@@ -194,7 +200,6 @@ end if
 
     ! We get the index of the first point in this ring
     first_index = 1 + 3*(hex_num - 1)*hex_num
-
 
     if ( (k1 .eq. 0) .and. (k2 .eq. 0)) then
        ! Origin :
@@ -222,112 +227,116 @@ end if
        print *, "Not recognized combination of k1,k2 ", k1, k2
        STOP 'global_index'
     endif
-
+    
   end function global_index
 
 
   function get_hex_num(index) result(hex_num)
-      ! returns the number of nested hexagon on which the point is
-      ! = returns the number of cells from center to point
-      sll_int32 :: index
-      sll_int32 :: hex_num
-      sll_int32 :: flag
-
-      
-      hex_num = 0
-      flag = 0
-
-      if (index .lt. 0) then
-         print *, "ERROR : in get_hex_num(index)"
-         print *, "Global index cannot be negative"
-         STOP 'get_hex_num'         
-      else if (index .eq. 0) then
-         hex_num = 0
-      else
-         hex_num = 1
-         do while(flag .eq. 0)
-             if (index .gt. 3*hex_num*(hex_num+1)) then
-                hex_num = hex_num + 1
-             else
-                flag = 1
-             endif
-         enddo
-      endif
+    ! returns the number of nested hexagon on which the point is
+    ! <=> returns the number of cells from center to point
+    ! Warning : even if the index is beyond the mesh 
+    ! this function will return a result
+    sll_int32 :: index
+    sll_int32 :: hex_num
+    sll_int32 :: flag
+    
+    hex_num = 0
+    flag = 0
+    
+    if (index .lt. 0) then
+       print *, "ERROR : in get_hex_num(index)"
+       print *, "Global index cannot be negative"
+       STOP 'get_hex_num'         
+    else if (index .eq. 0) then
+       hex_num = 0
+    else
+       hex_num = 1
+       do while(flag .eq. 0)
+          if (index .gt. 3*hex_num*(hex_num+1)) then
+             hex_num = hex_num + 1
+          else
+             flag = 1
+          endif
+       enddo
+    endif
   end function get_hex_num
 
 
   function from_global_index_k1(index) result(k1)
-      sll_int32 :: index
-      sll_int32 :: hex_num
-      sll_int32 :: first_index
-      sll_int32 :: last_index
-      sll_int32 :: k1
-
-      hex_num = get_hex_num(index)
-      first_index = 3*(hex_num - 1)*hex_num + 1
-      last_index  = 3*(hex_num + 1)*hex_num
-
-      if (hex_num .eq. 0) then
-         k1 = 0
-      elseif (index .le. first_index+hex_num) then
-         !index on first edge
-         k1 = hex_num
-      elseif (index .le. first_index+2*hex_num) then
-         !index on second edge
-         k1 = first_index + 2*hex_num - index
-      elseif (index .le. first_index+3*hex_num-1) then
-         !index on third edge
-         k1 = first_index + 2*hex_num - index 
-      elseif (index .le. first_index+4*hex_num) then
-         !index on forth edge
-         k1 = - hex_num
-      elseif (index .le.  first_index+5*hex_num) then
-         !index on fifth edge
-         k1 = index - first_index - 5*hex_num
-      elseif (index .le. last_index) then
-         !index of sixth edge
-         k1 = hex_num -last_index + index - 1
-      else
+    ! Takes the global index of the point (see global_index(...) for conventions)
+    ! returns the first coordinate (k1) on the (r1,r2) basis 
+    sll_int32 :: index
+    sll_int32 :: hex_num
+    sll_int32 :: first_index
+    sll_int32 :: last_index
+    sll_int32 :: k1
+    
+    hex_num = get_hex_num(index)
+    first_index = 3*(hex_num - 1)*hex_num + 1
+    last_index  = 3*(hex_num + 1)*hex_num
+    
+    if (hex_num .eq. 0) then
+       k1 = 0
+    elseif (index .le. first_index+hex_num) then
+       !index on first edge
+       k1 = hex_num
+    elseif (index .le. first_index+2*hex_num) then
+       !index on second edge
+       k1 = first_index + 2*hex_num - index
+    elseif (index .le. first_index+3*hex_num-1) then
+       !index on third edge
+       k1 = first_index + 2*hex_num - index 
+    elseif (index .le. first_index+4*hex_num) then
+       !index on forth edge
+       k1 = - hex_num
+    elseif (index .le.  first_index+5*hex_num) then
+       !index on fifth edge
+       k1 = index - first_index - 5*hex_num
+    elseif (index .le. last_index) then
+       !index of sixth edge
+       k1 = hex_num -last_index + index - 1
+    else
        print *, "ERROR : in from_global_index_k1(index)"
        print *, "Not recognized index"
        STOP 'from_global_index'
     endif
   end function from_global_index_k1
 
-
+  
   function from_global_index_k2(index) result(k2)
-
-      sll_int32 :: index
-      sll_int32 :: hex_num
-      sll_int32 :: first_index
-      sll_int32 :: last_index
-      sll_int32 :: k2
-
-      hex_num = get_hex_num(index)
-      first_index = 3*(hex_num - 1)*hex_num + 1
-      last_index  = 3*(hex_num + 1)*hex_num
-      
-      if (hex_num .eq. 0) then
-         k2 = 0
-      elseif (index .le. first_index+hex_num) then
-         !index on first edge
-         k2 = index - first_index
-      elseif (index .le. first_index+2*hex_num) then
-         !index on second edge
-         k2 = hex_num
-      elseif (index .le. first_index+3*hex_num-1) then
-         !index on third edge
-         k2 = first_index + 3*hex_num - index 
-      elseif (index .le. first_index+4*hex_num) then
-         !index on forth edge
-         k2 = first_index + 3*hex_num - index
-      elseif (index .le.  first_index+5*hex_num) then
-         !index on fifth edge
-         k2 = -hex_num
-      elseif (index .le. last_index) then
-         !index of sixth edge
-         k2 = -1 + index - last_index
-      else
+    ! Takes the global index of the point (see global_index(...) for conventions)
+    ! returns the second coordinate (k2) on the (r1,r2) basis 
+    sll_int32 :: index
+    sll_int32 :: hex_num
+    sll_int32 :: first_index
+    sll_int32 :: last_index
+    sll_int32 :: k2
+    
+    hex_num = get_hex_num(index)
+    first_index = 3*(hex_num - 1)*hex_num + 1
+    last_index  = 3*(hex_num + 1)*hex_num
+    
+    if (hex_num .eq. 0) then
+       k2 = 0
+    elseif (index .le. first_index+hex_num) then
+       !index on first edge
+       k2 = index - first_index
+    elseif (index .le. first_index+2*hex_num) then
+       !index on second edge
+       k2 = hex_num
+    elseif (index .le. first_index+3*hex_num-1) then
+       !index on third edge
+       k2 = first_index + 3*hex_num - index 
+    elseif (index .le. first_index+4*hex_num) then
+       !index on forth edge
+       k2 = first_index + 3*hex_num - index
+    elseif (index .le.  first_index+5*hex_num) then
+       !index on fifth edge
+       k2 = -hex_num
+    elseif (index .le. last_index) then
+       !index of sixth edge
+       k2 = -1 + index - last_index
+    else
        print *, "ERROR : in from_global_index_k2(index)"
        print *, "Not recognized index"
        STOP 'from_global_index'
@@ -335,19 +344,22 @@ end if
   end function from_global_index_k2
 
   function from_global_x1(mesh, index) result(x1)
-      type(hex_mesh_2d), pointer :: mesh
-      sll_int32  :: index
-      sll_int32  :: k1
-      sll_int32  :: k2
-      sll_real64 :: x1
-
-      k1 = from_global_index_k1(index)
-      k2 = from_global_index_k2(index)
-      
-      x1 = x1_node(mesh, k1, k2)
+    ! Takes the global index of the point (see global_index(...) for conventions)
+    ! returns the first coordinate (x1) on the cartesian basis 
+    type(hex_mesh_2d), pointer :: mesh
+    sll_int32  :: index
+    sll_int32  :: k1
+    sll_int32  :: k2
+    sll_real64 :: x1
+    
+    k1 = from_global_index_k1(index)
+    k2 = from_global_index_k2(index)
+    x1 = x1_node(mesh, k1, k2)
   end function from_global_x1
 
   function from_global_x2(mesh, index) result(x2)
+    ! Takes the global index of the point (see global_index(...) for conventions)
+    ! returns the second coordinate (x2) on the cartesian basis 
       type(hex_mesh_2d), pointer :: mesh
       sll_int32  :: index
       sll_int32  :: k1
@@ -356,72 +368,76 @@ end if
 
       k1 = from_global_index_k1(index)
       k2 = from_global_index_k2(index)
-      
       x2 = x2_node(mesh, k1, k2)
   end function from_global_x2
 
 
   function from_cart_index_k1(mesh, x1, x2) result(k1)
-      type(hex_mesh_2d), pointer :: mesh
-      sll_real64 :: x1
-      sll_real64 :: x2
-      sll_int32  :: k1
-      sll_real64 :: delta
-      
-      delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-      k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/delta)
+    ! Takes the coordinates (x1,x2) on the cartesian basis and 
+    ! returns the first coordinate (k1) on the (r1, r2) basis
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64 :: x1
+    sll_real64 :: x2
+    sll_int32  :: k1
+    sll_real64 :: delta
+    
+    delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+    k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/delta)
   end function from_cart_index_k1
 
   function from_cart_index_k2(mesh, x1, x2) result(k2)
-      type(hex_mesh_2d), pointer :: mesh
-      sll_real64 :: x1
-      sll_real64 :: x2
-      sll_int32  :: k2
-      sll_real64 :: delta
-      
-      delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-      k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/delta)
+    ! Takes the coordinates (x1,x2) on the cartesian basis and 
+    ! returns the second coordinate (k2) on the (r1, r2) basis
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64 :: x1
+    sll_real64 :: x2
+    sll_int32  :: k2
+    sll_real64 :: delta
+    
+    delta = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+    k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/delta)
   end function from_cart_index_k2
 
-  function local_index(ref_index,j) result(new_index)
-      ! returns the index of the point Pj as if the 
-      ! notation had as origin Pi
-      ! ie. local_index(i,i) = 0
-      sll_int32 :: ref_index, j
-      sll_int32 :: k1_i, k2_i
-      sll_int32 :: k1_j, k2_j
-      sll_int32 :: new_index
+  function global_to_local(ref_index,j) result(new_index)
+    ! In the same manner we assign global indices (see global_index(...))
+    ! we assign local indices, but this time the initial point is 
+    ! the point which index is ref_index
+    ! ie. local_index(i,i) = 0
+    sll_int32 :: ref_index, j
+    sll_int32 :: k1_i, k2_i
+    sll_int32 :: k1_j, k2_j
+    sll_int32 :: new_index
+    
+    k1_i = from_global_index_k1(ref_index)
+    k2_i = from_global_index_k2(ref_index)
+    k1_j = from_global_index_k1(j)
+    k2_j = from_global_index_k2(j)
+    
+    new_index = global_index(k1_i - k1_j, k2_i - k2_j)
+  end function global_to_local
 
-      k1_i = from_global_index_k1(ref_index)
-      k2_i = from_global_index_k2(ref_index)
-      k1_j = from_global_index_k1(j)
-      k2_j = from_global_index_k2(j)
 
-      new_index = global_index(k1_i - k1_j, k2_i - k2_j)
-
-  end function local_index
-
-
-  function find_neighbour(ref_index, local_index) result(global)
-      ! returns the global index of the point which has as
-      ! local index local_index in the ref_index system
-      ! ie. find_neighbour(0, i) = i
-      sll_int32 :: ref_index, local_index
-      sll_int32 :: k1_i, k2_i
-      sll_int32 :: k1_j, k2_j
-      sll_int32 :: global
-      
-      k1_i = from_global_index_k1(ref_index)
-      k2_i = from_global_index_k2(ref_index)
-      k1_j = from_global_index_k1(local_index)
-      k2_j = from_global_index_k2(local_index)
-
-      global = global_index(k1_i + k1_j, k2_i + k2_j)
-
-  end function find_neighbour
+  function local_to_global(ref_index, local_index) result(global)
+    ! returns the global index of the point which has as
+    ! local index local_index in the ref_index system
+    ! (see gloval_index(...) and global_to_local(...) for conventions) 
+    ! ie. local_to_global(0, i) = i
+    sll_int32 :: ref_index, local_index
+    sll_int32 :: k1_i, k2_i
+    sll_int32 :: k1_j, k2_j
+    sll_int32 :: global
+    
+    k1_i = from_global_index_k1(ref_index)
+    k2_i = from_global_index_k2(ref_index)
+    k1_j = from_global_index_k1(local_index)
+    k2_j = from_global_index_k2(local_index)
+    
+    global = global_index(k1_i + k1_j, k2_i + k2_j)
+  end function local_to_global
 
       
   subroutine display_hex_mesh_2d(mesh)
+    ! Displays mesh information on the terminal
     type(hex_mesh_2d), pointer :: mesh
 
     write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       center_x2 &
@@ -435,6 +451,7 @@ end if
 
 
   subroutine write_hex_mesh_2d(mesh, name)
+    ! Writes the mesh information in a file named "name"
     type(hex_mesh_2d), pointer :: mesh
     character(len=*) :: name
     sll_int32  :: i
@@ -447,6 +464,7 @@ end if
 
     num_pts_tot = mesh%num_pts_tot
 
+    ! Optional writing every mesh point and its cartesian coordinates :
 !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
 
     do i=0, num_pts_tot-1
@@ -465,6 +483,8 @@ end if
   end subroutine write_hex_mesh_2d
 
   subroutine write_field_hex_mesh(mesh, field, name)
+    ! Writes the points cartesian coordinates and
+    ! field(vector) values in a file named "name"
     type(hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:) :: field
     character(len=*) :: name
@@ -476,7 +496,6 @@ end if
     open (unit=out_unit,file=name,action="write",status="replace")
 
     num_pts_tot = mesh%num_pts_tot
-
     do i=0, num_pts_tot-1
        x1 = from_global_x1(mesh, i)
        x2 = from_global_x2(mesh, i)
@@ -500,7 +519,6 @@ end if
     end if
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_hex_mesh_2d
-
 
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
