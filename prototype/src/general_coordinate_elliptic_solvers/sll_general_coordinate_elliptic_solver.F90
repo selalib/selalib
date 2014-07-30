@@ -332,6 +332,7 @@ contains ! *******************************************************************
       es%total_num_splines_loc, &
       es%local_to_global_spline_indices, &
       es%total_num_splines_loc)
+! num_cells_eta1*num_cells_eta2 => nombre de cellules
 
     es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
     es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max

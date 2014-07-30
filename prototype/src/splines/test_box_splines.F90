@@ -8,8 +8,8 @@ use hex_mesh
 use box_splines
 implicit none
 
-type(hex_mesh_2d), pointer  :: mesh
-type(linear_box_spline_2D), pointer :: spline
+type(hex_mesh_2d),   pointer  :: mesh
+type(box_spline_2D), pointer :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
 sll_int32    :: deg = 2
@@ -121,7 +121,7 @@ do num_cells = 40,40,1
 
    ! Time loop
    nloops = 0
-   spline => new_linear_box_spline_2d(mesh, SLL_NEUMANN, SLL_NEUMANN)
+   spline => new_box_spline_2d(mesh, SLL_NEUMANN, SLL_NEUMANN)
 
    call cpu_time(t_init)
    print*,""
@@ -132,7 +132,7 @@ do num_cells = 40,40,1
       where_error = -1
 
       nloops = nloops + 1
-      call compute_linear_box_spline_2d( f_tn, deg, spline )
+      call compute_box_spline_2d( f_tn, deg, spline )
       t      = t + dt
       do i=1, mesh%num_pts_tot
 
