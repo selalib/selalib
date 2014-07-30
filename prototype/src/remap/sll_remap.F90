@@ -132,6 +132,24 @@ module sll_remapper
      type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_6D
 
+#define MAKE_LAYOUT_POINTER_CONTAINER( name, layout_type ) \
+  type name; \
+    type(layout_type), pointer :: l; \
+  end type name
+
+MAKE_LAYOUT_POINTER_CONTAINER( layout_2d_ptr, layout_2D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_3d_ptr, layout_3D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_4d_ptr, layout_4D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_5d_ptr, layout_5D )
+MAKE_LAYOUT_POINTER_CONTAINER( layout_6d_ptr, layout_6D )
+
+#define MAKE_REMAP_POINTER_CONTAINER( name, plan_type ) \
+  type name; \
+    type(plan_type), pointer :: r; \
+  end type name
+
+MAKE_REMAP_POINTER_CONTAINER( remap_plan_2d_real64_ptr, remap_plan_2d_real64 )
+MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 ) 
 
   ! Since the plan stores the information on box intersections, now
   ! we need a different type of plan for every dimension. It is also
@@ -5374,8 +5392,8 @@ print *, 'remap 2d complex:'
   ! then initializing is not followed. This irregularity is itself a bit of
   ! a problem, but may be a sign that the usual way to allocate and initialize
   ! layouts might need to be merged.
-  function layout_2D_from_layout_4D( layout4d )
-    type(layout_2D), pointer :: layout_2D_from_layout_4D
+  function new_layout_2D_from_layout_4D( layout4d )
+    type(layout_2D), pointer :: new_layout_2D_from_layout_4D
     type(layout_4D), pointer :: layout4d
     type(sll_collective_t), pointer :: coll
     sll_int32                :: coll_size
@@ -5392,33 +5410,35 @@ print *, 'remap 2d complex:'
     SLL_ASSERT( associated(layout4d) )
     coll                     => get_layout_collective( layout4d )
     coll_size                = sll_get_collective_size( coll )
-    layout_2D_from_layout_4D => new_layout_2d( coll )
+    new_layout_2D_from_layout_4D => new_layout_2d( coll )
     ! Just copy the contents of the layout
     do process=0, coll_size-1
        i_min = get_layout_i_min( layout4d, process )
        i_max = get_layout_i_max( layout4d, process )
        j_min = get_layout_j_min( layout4d, process )
        j_max = get_layout_j_max( layout4d, process )
-       call set_layout_i_min( layout_2D_from_layout_4D, process, i_min )
-       call set_layout_i_max( layout_2D_from_layout_4D, process, i_max )
-       call set_layout_j_min( layout_2D_from_layout_4D, process, j_min )
-       call set_layout_j_max( layout_2D_from_layout_4D, process, j_max )
+       call set_layout_i_min( new_layout_2D_from_layout_4D, process, i_min )
+       call set_layout_i_max( new_layout_2D_from_layout_4D, process, i_max )
+       call set_layout_j_min( new_layout_2D_from_layout_4D, process, j_min )
+       call set_layout_j_max( new_layout_2D_from_layout_4D, process, j_max )
        ! For safety, check if there is any loss of information
        k_min = get_layout_k_min( layout4d, process )
        k_max = get_layout_k_max( layout4d, process )
        l_min = get_layout_l_min( layout4d, process )
        l_max = get_layout_l_max( layout4d, process )
-       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
-           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
-           print *, 'WARNING, layout_2D_from_layout_4D(): there is loss of ',&
-                'information in the convertion. Printing values:'
-           print *, 'k_min = ', k_min
-           print *, 'k_max = ', k_max
-           print *, 'l_min = ', l_min
-           print *, 'l_max = ', l_max
-        end if
+!!$       if( (k_min .ne. 1) .or. (k_max .ne. 1) .or. &
+!!$           (l_min .ne. 1) .or. (l_max .ne. 1) ) then
+!!$           print *, 'WARNING, new_layout_2D_from_layout_4D(): there is loss ',&
+!!$                'of information in the convertion. This may be the intention',&
+!!$                ' if you are essentially projecting one layout onto another.',&
+!!$                ' Printing values:'
+!!$           print *, 'k_min = ', k_min
+!!$           print *, 'k_max = ', k_max
+!!$           print *, 'l_min = ', l_min
+!!$           print *, 'l_max = ', l_max
+!!$        end if
     end do
-  end function layout_2D_from_layout_4D
+  end function new_layout_2D_from_layout_4D
 
   function layout_3D_from_layout_4D( layout4d )
     type(layout_3D), pointer :: layout_3D_from_layout_4D
@@ -5543,11 +5563,9 @@ print *, 'remap 2d complex:'
      do i=0,sz-1
         call int2string(i, cproc)
         write(44,*)"@ rectangle x1=", get_layout_i_min(layout,i), &
-                   " y1=",  get_layout_j_min(layout,i), &
-                   " z1=0.0 \"
+        &          " y1=",  get_layout_j_min(layout,i), " z1=0.0 "
         write(44,*)" x2=", get_layout_i_max(layout,i), &
-                   " y2=", get_layout_j_max(layout,i), &
-                   " z2=0.0 \"
+        &          " y2=", get_layout_j_max(layout,i), " z2=0.0 "
         write(44,*) "fillcolor="//cproc//" filltype=1 linelabel='"//cproc//"'"
      end do
 

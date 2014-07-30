@@ -45,7 +45,7 @@ contains
 
  subroutine initialize_vlasov4d_spectral(this,interp_x3x4,error)
 
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   class(vlasov4d_spectral),intent(inout)  :: this
   class(sll_interpolator_2d_base), target :: interp_x3x4

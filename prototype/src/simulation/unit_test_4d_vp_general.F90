@@ -23,7 +23,6 @@ program vlasov_poisson_4d_general
   type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   sll_real64, dimension(1:5) :: landau_params
-  sll_real64, dimension(1:6) :: gaussian_params
 
   print *, 'Booting parallel environment...'
   call sll_boot_collective() ! Wrap this up somewhere else

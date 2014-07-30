@@ -94,15 +94,20 @@ contains
     character(len=1) :: aa,bb,cc,dd
     integer :: kk1, kk2, kk3, kk4
 
-    kk1 = istep/1000
-    aa  = char(kk1 + 48)
-    kk2 = (istep - kk1*1000)/100
-    bb  = char(kk2 + 48)
-    kk3 = (istep - (kk1*1000) - (kk2*100))/10
-    cc  = char(kk3 + 48)
-    kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
-    dd  = char(kk4 + 48)
-    cstep = aa//bb//cc//dd
+    if ( istep < 10000) then
+       kk1 = istep/1000
+       aa  = char(kk1 + 48)
+       kk2 = (istep - kk1*1000)/100
+       bb  = char(kk2 + 48)
+       kk3 = (istep - (kk1*1000) - (kk2*100))/10
+       cc  = char(kk3 + 48)
+       kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
+       dd  = char(kk4 + 48)
+       cstep = aa//bb//cc//dd
+    else
+       call errout( 6, 'W', 'int2string', 108, 'index is greater than 9999' )
+       cstep = 'xxxx'
+    end if
 
   end subroutine int2string
 
@@ -305,5 +310,31 @@ subroutine time_history(file_id, desc, fformat, array)
    endif
     
 end subroutine time_history
+
+subroutine mpe_decomp1d(n,numprocs,myid,s,e)
+
+   sll_int32 :: n, numprocs, myid, s, e
+   sll_int32 :: nlocal
+   sll_int32 :: deficit
+
+   !------------------------------------------------------------------------
+   !  From the MPE library
+   !  This file contains a routine for producing a decomposition of a 1-d 
+   !  array when given a number of processors.  It may be used in "direct" 
+   !  product decomposition.  The values returned assume a "global" domain 
+   !  in [1:n]
+   !------------------------------------------------------------------------
+
+   nlocal  = n / numprocs
+   s       = myid * nlocal + 1
+   deficit = mod(n,numprocs)
+   s       = s + min(myid,deficit)
+   if (myid  < deficit) then
+       nlocal = nlocal + 1
+   endif
+   e = s + nlocal - 1
+   if (e  >  n .or. myid == numprocs-1) e = n
+
+end subroutine mpe_decomp1d
 
 end module sll_utilities

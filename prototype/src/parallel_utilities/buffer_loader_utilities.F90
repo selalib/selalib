@@ -244,7 +244,6 @@ contains
     sll_int32 :: col_sz
     type(sll_collective_t), pointer :: col
     sll_int32 :: i, j, k
-    sll_int32 :: box
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
     sll_int32 :: kmin, kmax

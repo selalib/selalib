@@ -10,7 +10,7 @@ use periodic_interp_module
 
 #ifdef STDF95
   type                                    ::  per_1d_interpolator
-#else  
+#else
   type, extends(sll_interpolator_1d_base) ::  per_1d_interpolator
 #endif
     ! Be careful here. For consistency with the other interpolators
@@ -38,19 +38,19 @@ use periodic_interp_module
      procedure, pass :: set_coefficients => set_coefficients_per1d
      procedure, pass :: get_coefficients => get_coefficients_per1d
 #endif
-     
+
   end type per_1d_interpolator
 
   interface delete
      module procedure delete_per1d
   end interface delete
-  
+
 contains  ! ****************************************************************
 
 
-  ! the following provides an implementation for the abstract interface 
+  ! the following provides an implementation for the abstract interface
   ! interpolate1d
-  !> Define periodic interpolation of values in data define on original grid at 
+  !> Define periodic interpolation of values in data define on original grid at
   !> points coordinates
   ! Issues with the following function:
   ! - entities referenced through "this" are modified, violating the declared
@@ -66,7 +66,7 @@ contains  ! ****************************************************************
     xmax, &
     type, &
     order)  result(res)
-    
+
     type(per_1d_interpolator),  pointer :: res
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
@@ -114,7 +114,7 @@ contains  ! ****************************************************************
     print *,maxval(data_out)
     print *,this%num_points
     stop
-  end function 
+  end function
 
 #ifdef STDF95
   function per_interpolate_array_at_displacement(this, num_points, &
@@ -147,7 +147,7 @@ contains  ! ****************************************************************
   ! same name. In the F95 we should add a generic interface around this
   ! subroutine, selecting on the type of interpolator. In the F03 case the
   ! interface is the compute_interpolants routine which gets assigned to
-  ! the per1d at initialization time.  
+  ! the per1d at initialization time.
 #ifdef STDF95
   subroutine periodic_compute_interpolants( interpolator, data_array,&
        eta_coords, &
@@ -157,7 +157,7 @@ contains  ! ****************************************************************
   subroutine compute_interpolants_per1d( interpolator, data_array,&
        eta_coords, &
        size_eta_coords)
-       
+
     class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in)               :: data_array
@@ -183,7 +183,7 @@ contains  ! ****************************************************************
   ! Alternative implementation for the function meant to interpolate a
   ! whole array. This implementation fixes some problems in the previous
   ! function. Furthermore, it separates the operation into the more
-  ! elementary steps: one is supposed to first compute the interpolants, 
+  ! elementary steps: one is supposed to first compute the interpolants,
   ! then request to interpolate array values.
   subroutine interpolate_values_per1d( &
     interpolator, &
@@ -204,7 +204,7 @@ contains  ! ****************************************************************
          ' not implemented for periodic interpolation'
     print *,interpolator%num_points
     print *,num_pts
-    print *,maxval(vals_to_interpolate)         
+    print *,maxval(vals_to_interpolate)
     stop
   end subroutine interpolate_values_per1d
 
@@ -284,10 +284,10 @@ contains  ! ****************************************************************
 
 #ifdef STDF95
   function periodic_interpolate_value( interpolator, eta1 ) result(val)
-    type(per_1d_interpolator), intent(inout) :: interpolator
+    type(per_1d_interpolator), intent(in) :: interpolator
 #else
   function interpolate_value_per1d( interpolator, eta1 ) result(val)
-    class(per_1d_interpolator), intent(inout) :: interpolator
+    class(per_1d_interpolator), intent(in) :: interpolator
 #endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
@@ -298,14 +298,14 @@ contains  ! ****************************************************************
     print *,interpolator%num_points
     stop
   end function
-  
+
 #ifdef STDF95
   function periodic_interpolate_derivative_eta1( interpolator, eta1 ) &
        result(val)
-    type(per_1d_interpolator), intent(inout)  :: interpolator
+    type(per_1d_interpolator), intent(in)  :: interpolator
 #else
   function interpolate_deriv1_per1d( interpolator, eta1 ) result(val)
-    class(per_1d_interpolator), intent(inout) :: interpolator
+    class(per_1d_interpolator), intent(in) :: interpolator
 #endif
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
@@ -360,9 +360,9 @@ contains  ! ****************************************************************
     order)
 
 #ifdef STDF95
-    type(per_1d_interpolator),  intent(inout)  :: interpolator 
+    type(per_1d_interpolator),  intent(inout)  :: interpolator
 #else
-    class(per_1d_interpolator),  intent(inout) :: interpolator 
+    class(per_1d_interpolator),  intent(inout) :: interpolator
 #endif
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
@@ -370,9 +370,9 @@ contains  ! ****************************************************************
     sll_int32,  intent(in)               :: type
     sll_int32,  intent(in)               :: order
     !sll_int32                            :: ierr
-    !sll_int32  :: i  
+    !sll_int32  :: i
     !sll_real64 :: delta
-    
+
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
@@ -392,7 +392,7 @@ contains  ! ****************************************************************
     class(per_1d_interpolator), intent(in)     :: this
 #endif
        sll_int32, intent(in)                :: num_points! size of output array
-       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated 
+       sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
        sll_real64, dimension(num_points)    :: res
        res(:) = 0.0_f64
        print *,'#Warning reconstruct_array dummy function'
@@ -404,7 +404,7 @@ contains  ! ****************************************************************
   subroutine delete_per1d( obj )
 #ifdef STDF95
     type(per_1d_interpolator) :: obj
-#else  
+#else
     class(per_1d_interpolator) :: obj
 #endif
     call delete(obj%per_interp)
@@ -413,7 +413,7 @@ contains  ! ****************************************************************
   subroutine set_coefficients_per1d( interpolator, coeffs )
 #ifdef STDF95
     type(per_1d_interpolator), intent(inout)  :: interpolator
-#else  
+#else
     class(per_1d_interpolator), intent(inout) :: interpolator
 #endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
@@ -421,8 +421,8 @@ contains  ! ****************************************************************
          'implemented yet.'
     if(present(coeffs))then
       print *,'#coeffs present but not used'
-    endif     
-    print *,interpolator%num_points    
+    endif
+    print *,interpolator%num_points
     stop
   end subroutine set_coefficients_per1d
 
@@ -430,16 +430,16 @@ contains  ! ****************************************************************
   function get_coefficients_per1d(interpolator)
 #ifdef STDF95
     type(per_1d_interpolator), intent(in)  :: interpolator
-#else  
+#else
     class(per_1d_interpolator), intent(in) :: interpolator
 #endif
-    sll_real64, dimension(:), pointer            :: get_coefficients_per1d     
-    
+    sll_real64, dimension(:), pointer            :: get_coefficients_per1d
+
     print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &
          'implemented yet.'
     print *,interpolator%num_points
-    get_coefficients_per1d = 0._f64
-    stop      
+    get_coefficients_per1d => null()
+    stop
   end function get_coefficients_per1d
 
 end module sll_periodic_interpolator_1d

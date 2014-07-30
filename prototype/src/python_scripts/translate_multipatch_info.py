@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+
 """
 SYNOPSIS
 
@@ -125,6 +125,9 @@ def main ():
     oface = 0  # other face
     flattened = []
     tokens = []
+    slash_pos = 0
+    txt_pos = 0
+    path=""
     pp = pprint.PrettyPrinter(indent=4)
     # patch numbering starts at 0, so is the numbering of the faces.
     connectivities = [] # single array, size number_patchesX8
@@ -143,34 +146,31 @@ def main ():
         print( "user$ ./translate_multipatch_info.py filename.txt")
         sys.exit()
     else:                   # exactly one argument given
-       # inputname = process_file_name(args[0])
-        tokens = args[0].split('/')
-        inputname = tokens[len(tokens)-1]
-    # check whether the user has given the .txt extension or not, and create 
-    # the name of the output file. Echo to screen the names of the files to be
-    # read and written.
-    numdots = inputname.count('.')
-    if numdots == 0: # no extension, thus just add the extension to files
-        outputname   = inputname + ".nml"   # output file name
-        readfilename = inputname + ".txt" 
-    elif numdots == 1: # there is an extension
-        dotposition  = inputname.find('.')
-        #   print inputname[dotposition:]
-        if inputname[dotposition:] == ".txt": # it has the right extension
-            readfilename = inputname           # open file with name as given
-            outputname   = inputname[:dotposition] + ".nml" # create output name
-        else:
-            print( "Wrong extension. Only .txt files are allowed.")
-            sys.exit()
-    else:
-        print( "That is a very weird-looking filename!")
-        outputname   = inputname + ".nml"   # just add the extension
-        readfilename = inputname + ".txt"  
+        #inputname = process_file_name(args[0])
+        #tokens = args[0].split('/')
+        #print('tokens',tokens)
+        slash_pos = args[0].rfind('/')
+        path = args[0][:slash_pos+1]
+        inputname = args[0][slash_pos+1:]#tokens[len(tokens)-1]
+#        if (  args[0][-4:] != '.txt'):
+#            print('Problem must be a .txt file')
+            
+        #print('test',inputname)
+        #print('tokens',tokens)
+    # check whether the user has given the .txt extension or not.
+    txt_pos = inputname.rfind('.txt')
+    if txt_pos == -1: # no .txt extension, signal error.
+        print( "Wrong extension. Only .txt files are allowed.")
+        sys.exit()
+    else: # .txt was found (FIXME: not necessarily at the end!)
+        readfilename = path + inputname           # open file with name as given
+        outputname   = inputname[:txt_pos] + ".nml" # create output name
 
     print( "The file to be processed is: {0} ".format(readfilename))
-    print( "Converting {0} to {1}".format(readfilename, outputname))
+    print( "Converting {0} to {1}".format(readfilename, path+outputname))
 
-    with open(readfilename,'r') as readfile, open(outputname,'w') as writefile:
+    with open(readfilename,'r') as readfile, open(path+outputname,'w') as \
+            writefile:
         now  = time.localtime()
         date = str(now[1]) + "/" + str(now[2]) + "/" + str(now[0])
         mytime = str(now[3]) + ":" + str(now[4]) + ":" + str(now[5]) + "\n"
@@ -187,7 +187,7 @@ def main ():
         # the name of the file as the label.
         writefile.write("&multipatch_label\n")
         dotposition = outputname.find('.')
-        label = outputname[:dotposition]
+        label = inputname[:txt_pos]
         writefile.write("    label = "+"\"" + label + "\""+"\n")
         writefile.write("/" + "\n\n")
         
@@ -228,35 +228,21 @@ def main ():
                             # writefile.write("&external_faces\n")
                             continue
                         elif linetemp[1] == "internal_faces":
-                            num_slots += 1
+                            # currently_reading = internal faces is set inside
+                            # the loop which processes the external faces, so
+                            # this part of the code will never be executed.
+                            print("translate_multipatch_info.py warning:")
+                            print("this should never be seen. Debug!!!")
                             currently_reading = "internal_faces"
                             # writefile.write("&internal_faces\n")
                             continue
                         elif linetemp[1] == "connectivity":
-                            num_slots += 1
+                            print("translate_multipatch_info.py warning:")
+                            print("this message should never be seen. Debug!")
+
                             currently_reading = "connectivity"
-                            writefile.write("! The connectivities array in ")
-                            writefile.write("this file is an array ")
-                            writefile.write("of dimensions \n! number_patches ")
-                            writefile.write("X 8. The i-th row ")
-                            writefile.write("contains the connectivity ")
-                            writefile.write("information for \n")
-                            writefile.write("! the i-th ")
-                            writefile.write("face. The connectivity of each ")
-                            writefile.write("face is described by ")
-                            writefile.write("a pair. The \n! first value is ")
-                            writefile.write("the other patch and ")
-                            writefile.write("the second is the connecting ")
-                            writefile.write("face in \n")
-                            writefile.write("! such patch. The ")
-                            writefile.write("reader of this function should ")
-                            writefile.write("properly dimension ")
-                            writefile.write("the \n! receiving array and ")
-                            writefile.write("transpose, given the ")
-                            writefile.write("column-")
-                            writefile.write("major convention used by \n! ")
-                            writefile.write("Fortran.\n\n")
-                            writefile.write("&connectivity\n")
+
+                            #writefile.write("&connectivity\n")
                             continue
                         else:
                             print('It seems there is an input file problem: ')
@@ -281,11 +267,33 @@ def main ():
                     print( connectivities )
                     continue
                 elif currently_reading == "external_faces":
-                    currently_reading = ""
-                    continue
+                    # We choose to ignore the 'external faces' listing
+                    # from the files that come from CAID since in the
+                    # connectivity array all faces are declared as
+                    # external by default and is later that other
+                    # information is used to change this.
+                    # Intention: keep reading "external_faces" but find the next
+                    # hash mark. This way we ignore this data and can set the
+                    # next value of 'currently reading'.
+                    if linetemp[0] == "#":
+                        currently_reading = "internal_faces"
+                        num_slots += 1
+                        continue
+                    else:
+                        # ignore the data contained in internal faces. It is
+                        # redundant with respect to the data present in 
+                        # connectivity.
+                        continue
                 elif currently_reading == "internal_faces":
-                    currently_reading = ""
-                    continue
+                    if linetemp[0] == "#":
+                        currently_reading = "connectivity"
+                        num_slots += 1
+                        continue
+                    else:
+                        # ignore the data contained in internal faces. It is
+                        # redundant with respect to the data present in 
+                        # connectivity.
+                        continue
                 elif currently_reading == "connectivity":
                     # We store the connectivity information in a 2D
                     # array. Each row of the array represents the 
@@ -324,6 +332,29 @@ def main ():
                         continue
         flattened = [item for sublist in connectivities for item in sublist]
 
+        writefile.write("! The connectivities array in ")
+        writefile.write("this file is an array ")
+        writefile.write("of dimensions \n! number_patches ")
+        writefile.write("X 8. The i-th row ")
+        writefile.write("contains the connectivity ")
+        writefile.write("information for \n")
+        writefile.write("! the i-th ")
+        writefile.write("face. The connectivity of each ")
+        writefile.write("face is described by ")
+        writefile.write("a pair. The \n! first value is ")
+        writefile.write("the other patch and ")
+        writefile.write("the second is the connecting ")
+        writefile.write("face in \n")
+        writefile.write("! such patch. The ")
+        writefile.write("reader of this function should ")
+        writefile.write("properly dimension ")
+        writefile.write("the \n! receiving array and ")
+        writefile.write("transpose, given the ")
+        writefile.write("column-")
+        writefile.write("major convention used by \n! ")
+        writefile.write("Fortran.\n\n")
+
+        writefile.write("&connectivity\n")
         writefile.write("    connectivities = " + 
                         " ".join([str(item) for item in  flattened]) + "\n")
         writefile.write("/" + "\n\n")
@@ -345,7 +376,7 @@ if __name__ == '__main__':
         #    parser.error ('missing argument')
         if options.verbose: print( time.asctime())
         main()
-        if options.verbose: print(* time.asctime())
+        if options.verbose: print(*time.asctime())
         if options.verbose: print( 'execution time in seconds:')
         if options.verbose: print( (time.time() - start_time))
         sys.exit(0)

@@ -6,21 +6,20 @@ module sll_simulation_4d_qns_general_module
 #include "sll_field_2d.h"
 #include "sll_utilities.h"
 
-  use sll_collective
-  use sll_remapper
-  use sll_constants
-  use sll_cubic_spline_interpolator_2d
-  use sll_poisson_2d_periodic_cartesian_par
+!  use sll_collective
+!  use sll_remapper
+!  use sll_constants
   use sll_cubic_spline_interpolator_1d
+!  use sll_cubic_spline_interpolator_2d
   use sll_simulation_base
-  use sll_logical_meshes
+!  use sll_logical_meshes
   use sll_parallel_array_initializer_module
-  use sll_coordinate_transformation_2d_base_module
+!  use sll_coordinate_transformation_2d_base_module
   use sll_gnuplot_parallel
   use sll_general_coordinate_elliptic_solver_module
-  use sll_module_scalar_field_2d_base
-  use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_1d_module
+!  use sll_module_scalar_field_2d_base
+!  use sll_module_scalar_field_2d_alternative
+!  use sll_arbitrary_degree_spline_interpolator_1d_module
   use sll_timer
   implicit none
 
@@ -65,6 +64,12 @@ module sll_simulation_4d_qns_general_module
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
      type(general_coordinate_elliptic_solver), pointer      :: qns
 
+     !  number dignostics for the simulation
+      sll_int32  ::number_diags
+
+      !  type quadrature for solver in direction eta1 and eta2
+      sll_int32 :: quadrature_type1,quadrature_type2 
+
      ! distribution functions. There are several because each array represents
      ! a differently shaped chunk of memory. In this example, each chunk 
      ! allows sequential operations in one given direction. f_x1x2 should 
@@ -98,6 +103,7 @@ module sll_simulation_4d_qns_general_module
      sll_real64,dimension(:,:),    pointer :: values_jacobian
      sll_real64,dimension(:,:,:,:),pointer :: values_jacobian_matinv
      sll_real64,dimension(:,:),pointer     :: point_x,point_y
+     sll_real64,dimension(:,:), pointer    :: values_ex,values_ey
 
      ! ---> point mesh logical
      sll_real64,dimension(:),pointer :: pt_eta1
@@ -125,8 +131,8 @@ module sll_simulation_4d_qns_general_module
      !type(arb_deg_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! interpolation any arbitrary spline
-      type(arb_deg_2d_interpolator)     :: interp_rho
-      type(arb_deg_2d_interpolator)     :: interp_phi
+     type(arb_deg_2d_interpolator)     :: interp_rho
+     type(arb_deg_2d_interpolator)     :: interp_phi
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params
@@ -205,11 +211,14 @@ contains
    bc_vx_1,&
    bc_vy_0,&
    bc_vy_1,&
+   quadrature_type1,&
+   quadrature_type2,&
    electric_field_ext_1,&
    electric_field_ext_2,&
-   elec_field_ext_f_params)
+   elec_field_ext_f_params,&
+   number_diags)
     
-    type(sll_simulation_4d_qns_general), intent(inout)     :: sim
+    type(sll_simulation_4d_qns_general), intent(inout)    :: sim
     type(sll_logical_mesh_2d), pointer                    :: mesh2d_x
     type(sll_logical_mesh_2d), pointer                    :: mesh2d_v
     class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
@@ -240,6 +249,7 @@ contains
     sll_int32  :: spline_degre_eta2
     sll_int32  :: spline_degre_vx
     sll_int32  :: spline_degre_vy
+    sll_int32  :: number_diags
     sll_int32  :: bc_eta1_0
     sll_int32  :: bc_eta1_1
     sll_int32  :: bc_eta2_0
@@ -248,6 +258,7 @@ contains
     sll_int32  :: bc_vx_1
     sll_int32  :: bc_vy_0
     sll_int32  :: bc_vy_1
+    sll_int32  :: quadrature_type1,quadrature_type2
     sll_int32 :: ierr
     
     sim%mesh2d_x  => mesh2d_x
@@ -270,8 +281,10 @@ contains
     sim%spline_degree_eta2 = spline_degre_eta2
     sim%spline_degree_vx = spline_degre_vx
     sim%spline_degree_vy = spline_degre_vy
-    
-    
+    sim%number_diags     = number_diags
+    sim%quadrature_type1 = quadrature_type1
+    sim%quadrature_type2 = quadrature_type2
+    sim%count_save_diag  = 0
     sim%bc_eta1_0   = bc_eta1_0
     sim%bc_eta1_1   = bc_eta1_1
     sim%bc_eta2_0   = bc_eta2_0
@@ -341,6 +354,10 @@ contains
     SLL_ALLOCATE(sim%pt_eta2(sim%mesh2d_x%num_cells2 +1),ierr)
     SLL_ALLOCATE(sim%point_x(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
     SLL_ALLOCATE(sim%point_y(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
+    SLL_ALLOCATE(sim%values_ex(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1 ),ierr)
+    sim%values_ex = 0.0_f64
+    SLL_ALLOCATE(sim%values_ey(sim%mesh2d_x%num_cells1 +1,sim%mesh2d_x%num_cells2 +1),ierr)
+    sim%values_ey = 0.0_f64
   end subroutine initialize_4d_qns_general
 
 
@@ -372,6 +389,7 @@ contains
 
     sim%dt = dt
     sim%num_iterations = number_iterations
+    print*, 'number iterations', number_iterations
     ! In this particular simulation, since the system is periodic, the number
     ! of points is the same as the number of cells in all directions.
     sim%nc_x1 = num_cells_x1
@@ -401,8 +419,6 @@ contains
     sll_real64 :: delta2
     sll_real64 :: delta3
     sll_real64 :: delta4
-    sll_real64 :: alpha1
-    sll_real64 :: alpha2
     sll_real64 :: alpha3
     sll_real64 :: alpha4
     sll_int32  :: itemp
@@ -416,8 +432,6 @@ contains
     sll_real64 :: ey
     sll_real64 :: eta1
     sll_real64 :: eta2
-    sll_real64 :: eta3
-    sll_real64 :: eta4
     sll_real64 :: x
     sll_real64 :: y
     sll_real64 :: eta1_min
@@ -428,28 +442,20 @@ contains
     sll_real64 :: eta2_max
     sll_real64 :: eta3_max
     sll_real64 :: eta4_max
-    sll_real64 :: eta1_new
-    sll_real64 :: eta2_new
-    sll_real64 :: diff
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_real64, dimension(1:2,1:2) :: jac_m
-    sll_int32, dimension(1:2)      :: gi     ! for storing global indices
-    sll_int32, dimension(1:4)      :: gi4d   ! for storing global indices
     sll_real64 :: efield_energy_total
     ! The following could probably be abstracted for convenience
-#define BUFFER_SIZE 5
-    sll_real64, dimension(BUFFER_SIZE) :: buffer
-    sll_real64, dimension(BUFFER_SIZE) :: buffer_result
+#define BUFFER_SIZE sim%number_diags
+    sll_real64, dimension(BUFFER_SIZE) :: buffer_energy
+    sll_real64, dimension(BUFFER_SIZE) :: buffer_energy_result
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_local
     sll_real64, dimension(BUFFER_SIZE) :: num_particles_global
-    sll_real64 :: tmp,numpart
-    sll_real64, dimension(1) :: tmp1
+    sll_real64 :: numpart
     sll_int32 :: buffer_counter
     sll_int32 :: efield_energy_file_id
     sll_int32 :: num_particles_file_id
     sll_int32 :: global_indices(4)
-    sll_int32 :: iplot
-    character(len=4) :: cplot
     class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
@@ -465,19 +471,15 @@ contains
     sll_real64, dimension(:), allocatable :: recv_buf
     sll_int32, dimension(:), allocatable  :: recv_sz
     sll_real64, dimension(:,:), pointer :: phi_values
-    sll_real64 :: density_tot
     sll_int32  :: send_size   ! for allgatherv operation
-    sll_int32 :: droite_test_pente
     sll_int32, dimension(:), allocatable :: disps ! for allgatherv operation
     ! only for debugging...
 !!$    sll_real64, dimension(:,:), allocatable :: ex_field
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
     ! time variables
-    type(sll_time_mark)  :: t0 
-    type(sll_time_mark)  :: t1
-    sll_real64 :: time 
     sll_int32 :: size_diag
-    
+    sll_real64 :: time
+    type(sll_time_mark) :: t0    
     
     nc_x1 = sim%mesh2d_x%num_cells1
     nc_x2 = sim%mesh2d_x%num_cells2
@@ -653,7 +655,7 @@ contains
 
 
     !--> Initialization diagnostics for the norm
-    size_diag  = int(sim%num_iterations/BUFFER_SIZE) + 1
+    size_diag  =  int(sim%num_iterations/BUFFER_SIZE) + 1
     SLL_ALLOCATE(sim%diag_masse(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L1(size_diag),ierr)
     SLL_ALLOCATE(sim%diag_norm_L2(size_diag),ierr)
@@ -812,7 +814,8 @@ contains
          loc_sz_x4 )
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     !    SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
-    
+
+    call sll_set_time_mark(t0)  
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
          sim%mesh2d_x, &
@@ -821,8 +824,10 @@ contains
          sim%init_func, &
          sim%params, &
          transf_x1_x2=sim%transfx )
-
-
+    time =  sll_time_elapsed_since(t0)
+    print *, 'time to initialize distribution function: ', time
+    call sll_display(sim%mesh2d_x)
+    call sll_display(sim%mesh2d_v)
 
     sim%rho_split(:,:) = 0.0_f64
     ! this only works because there is no transformation applied in the
@@ -987,8 +992,7 @@ contains
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
 
-     ! a remettre
-    call advection_x1x2(sim,0.5*sim%dt)
+    call advection_x1x2(sim,0.5*sim%dt,1)
 
    
     ! other test cases use periodic bc's here...        
@@ -1019,8 +1023,8 @@ contains
          sim%spline_degree_eta2, & 
          sim%mesh2d_x%num_cells1, &
          sim%mesh2d_x%num_cells2, &
-         ES_GAUSS_LEGENDRE, &  ! put in arguments
-         ES_GAUSS_LEGENDRE, &  ! put in arguments
+         sim%quadrature_type1,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
+         sim%quadrature_type2,& !ES_GAUSS_LEGENDRE, &  ! put in arguments
          sim%bc_eta1_0, &
          sim%bc_eta1_1, &
          sim%bc_eta2_0, &
@@ -1029,6 +1033,8 @@ contains
          sim%mesh2d_x%eta1_max, & 
          sim%mesh2d_x%eta2_min, & 
          sim%mesh2d_x%eta2_max )  
+
+    print*, 'factorise matrice qns'
     
     call factorize_mat_es(&
          sim%qns, & 
@@ -1041,12 +1047,23 @@ contains
          c_field)!, &
 
     print*, ' ... finished initialization, entering main loop.'
+    
+    !--> Compute energy kinetic, potential and total
+    !print*, 'compute nrj'
+    !call compute_energy_qns(sim,phi)
+    
+    !--> Compute L1 norm, L2 norm, L infini norm
+    !print*, 'compute  L^p'
+    !call compute_norm_L1_L2_Linf_qns(sim)
+    
+    
+    !call writeHDF5_diag_qns( sim )
     ! ------------------------------------------------------------------------
     !
     !                                MAIN LOOP
     !
     ! ------------------------------------------------------------------------
-    !print*, sim%f_x1x2(1,1,:,:)
+    !print*, 'sim%my_rank = ',sim%my_rank, ' integral x3x4= ', sum(sim%f_x3x4(:,:,:,:))*delta1*delta2*delta3*delta4
     
     do itime=1,sim%num_iterations
        if(sim%my_rank == 0) then
@@ -1080,6 +1097,10 @@ contains
        ! Note: Since the Ex and Ey values are used separately, the proposed
        ! data structure is actually not good. These field values should be kept
        ! separate.
+
+
+
+
        call apply_remap_4D( sim%seqx1x2_to_seqx3x4, sim%f_x1x2, sim%f_x3x4 )
        
        call compute_local_sizes_4d( &
@@ -1206,14 +1227,14 @@ contains
 !!$          ierr )
        !       if(sim%my_rank == 0) call rho%write_to_file(itime)
        
-       call sll_set_time_mark(t0)  
+       !call sll_set_time_mark(t0)  
        call solve_general_coordinates_elliptic_eq( &
             sim%qns, &
             rho, &
             phi )
-       time = sll_time_elapsed_since(t0)
+       !time = sll_time_elapsed_since(t0)
      
-       print*, 'timer to solve QNS =', time
+       !print*, 'timer to solve QNS =', time
        if(sim%my_rank == 0) then
           call phi%write_to_file(itime)
        end if
@@ -1228,7 +1249,7 @@ contains
             loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 ) 
        
        efield_energy_total = 0.0_f64
-       print*, 'advection vx'
+       !print*, 'advection vx'
        ! Start with dt in vx...(x3)
        do l=1,loc_sz_x4 !sim%mesh2d_v%num_cells2+1
           do j=1,loc_sz_x2
@@ -1248,6 +1269,8 @@ contains
                 
                 ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
                 ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                sim%values_ex (global_indices(1),global_indices(2) ) = ex
+                sim%values_ey (global_indices(1),global_indices(2) ) = ey
                 
                 alpha3 = -sim%dt*(inv_j(1,1)*ex + inv_j(2,1)*ey)
                 alpha3 = alpha3 -sim%dt*(elec_field_ext_1%value_at_point(x,y) )
@@ -1275,9 +1298,8 @@ contains
        ! dt in vy...(x4)
        do j=1,loc_sz_x2
           do i=1,loc_sz_x1
+             global_indices(1:2) = local_to_global_2D( sim%split_rho_layout, (/i,j/))
              do k=1,sim%mesh2d_v%num_cells1+1
-                global_indices(1:2) = &
-                     local_to_global_2D( sim%split_rho_layout, (/i,j/))
                 !eta1   =  eta1_min + real(global_indices(1)-1,f64)*delta1
                 !eta2   =  eta2_min + real(global_indices(2)-1,f64)*delta2
                 eta1 = sim%pt_eta1(global_indices(1))
@@ -1288,8 +1310,10 @@ contains
                 inv_j  =  sim%values_jacobian_matinv(global_indices(1),global_indices(2),:,:)
                 !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
                 jac_m  =  sim%values_jacobian_mat(global_indices(1),global_indices(2),:,:)
-                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
-                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                ex     =  sim%values_ex (global_indices(1),global_indices(2) ) 
+                !- phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                ey     =  sim%values_ey (global_indices(1),global_indices(2) ) !
+                !- phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 alpha4 = -sim%dt*(inv_j(1,2)*ex + inv_j(2,2)*ey)
                 alpha4 = alpha4 -sim%dt*(elec_field_ext_2%value_at_point(x,y))
                 sim%f_x3x4(i,j,k,:) = sim%interp_x4%interpolate_array_disp( &
@@ -1299,8 +1323,7 @@ contains
 
                 
              end do
-             numpart = numpart + delta1*delta2*delta3*delta4 *&
-                  sum(sim%f_x3x4(i,j,:,:))*&
+             numpart = numpart + sum(sim%f_x3x4(i,j,:,:))*&
                   abs(sim%values_jacobian(global_indices(1),global_indices(2)))
 !!$             efield_energy_total = efield_energy_total + &
 !!$                  delta1*delta2 *abs(jac_m(1,1)*jac_m(2,2)-jac_m(1,2)*jac_m(2,1)) &
@@ -1310,6 +1333,8 @@ contains
           end do
        end do
 
+       !print*, 'sim%my_rank = ', sim%my_rank, 'numpart = ', numpart*delta1*delta2*delta3*delta4
+
        call apply_remap_4D( sim%seqx3x4_to_seqx1x2, sim%f_x3x4, sim%f_x1x2 )
        
        call compute_local_sizes_4d( sim%sequential_x1x2, &
@@ -1317,9 +1342,14 @@ contains
        
        ! Approximate the integral of the distribution function along all
        ! directions.
-       num_particles_local(buffer_counter) = numpart
+       num_particles_local(buffer_counter) = numpart*delta1*delta2*delta3*delta4
+       buffer_energy(buffer_counter)       = efield_energy_total
            ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
        if( buffer_counter == BUFFER_SIZE ) then
+          ! ----------------------------------
+          ! write particles buffer to disk 
+          ! ----------------------------------
+          num_particles_global = 0.0_f64
           call sll_collective_reduce_real64( &
                sll_world_collective, &
                num_particles_local, &
@@ -1338,80 +1368,50 @@ contains
              end do
              close(num_particles_file_id)
           end if
-       end if
-       
-       
-       buffer(buffer_counter) = efield_energy_total
-       ! This should be abstracted away...
-       ! Each processor keeps a local buffer, when the buffer reaches a
-       ! predetermined size, we reduce ther buffer with an addition on 
-       ! process 0, who appends it to a file. Then reset the buffer.
-       if( buffer_counter == BUFFER_SIZE ) then
-          ! While using a sequential QNS solver, each processor contains the
-          ! full information on the electric field energy, thus it is not 
-          ! necessary to add the individual contributions.
           
+          ! ----------------------------------
+          ! write electric field energy to disk 
+          ! ----------------------------------
+          buffer_energy_result = 0.0_f64
           call sll_collective_reduce_real64( &
                sll_world_collective, &
-               buffer, &
+               buffer_energy, &
                BUFFER_SIZE, &
                MPI_SUM, &
                0, &
-               buffer_result )
+               buffer_energy_result )
           
-          ! Use next line only if no communications are needed!
-          !       buffer_result(:) = buffer(:)
 
-          num_particles_local(buffer_counter) = numpart
-              ! sum(sim%f_x3x4)*delta1*delta2*delta3*delta4
-          if( buffer_counter == BUFFER_SIZE ) then
-             call sll_collective_reduce_real64( &
-                  sll_world_collective, &
-                  num_particles_local, &
-                  BUFFER_SIZE, &
-                  MPI_SUM, &
-                  0, &
-                  num_particles_global )
-             if(sim%my_rank == 0) then
-                open(num_particles_file_id,file="number_particles",&
-                     position="append")
-                if(itime == BUFFER_SIZE) then
-                   rewind(num_particles_file_id)
-                end if
-                do i=1,BUFFER_SIZE
-                   write(num_particles_file_id,*) num_particles_global(i)
-                end do
-                close(num_particles_file_id)
-             end if
-          end if
-          
-          buffer_counter = 1
-          if(sim%my_rank == 0) then
+           if(sim%my_rank == 0) then
              open(efield_energy_file_id,file="electric_field_energy_qns",&
                   position="append")
              
              if(itime == BUFFER_SIZE) then
                 rewind(efield_energy_file_id)
              end if
-             buffer_result(:) = log(sqrt(buffer_result(:)))
+             buffer_energy_result(:) = log(sqrt(buffer_energy_result(:)))
              do i=1,BUFFER_SIZE
-                write(efield_energy_file_id,*) buffer_result(i)
+                write(efield_energy_file_id,*) buffer_energy_result(i)
              end do
              close(efield_energy_file_id)
           end if
+          buffer_counter = 1
+
        else
           buffer_counter         = buffer_counter + 1
        end if
-       efield_energy_total    = 0.0_f64
+       
+       
+       
 
-       if (sim%my_rank == 0) then
-          
-          call sll_new_file_id(droite_test_pente, ierr) 
-          open(droite_test_pente,file="droite_test_pente",&
-               position="append")
-          write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
-          close(droite_test_pente)
-       end if
+!!$       if (sim%my_rank == 0) then
+!!$          
+!!$          call sll_new_file_id(droite_test_pente, ierr) 
+!!$          open(droite_test_pente,file="droite_test_pente",&
+!!$               position="append")
+!!$          write(droite_test_pente,*) -0.1533*(itime-1)*sim%dt + 0.676!1.676 ! the test case 2002
+!!$          close(droite_test_pente)
+!!$       end if
 
       
        ! Proceed to the advections in the spatial directions, 'x' and 'y'
@@ -1420,7 +1420,7 @@ contains
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
 
-       call advection_x1x2(sim,sim%dt)
+       call advection_x1x2(sim,sim%dt,1) 
 
 !!$       do j = 1, loc_sz_x2
 !!$          do i = 1, loc_sz_x1
@@ -1436,15 +1436,17 @@ contains
 !!$           sim%rho_split,"rho_split",itime,ierr )
        
        !     call plot_fields(itime, sim)
-
-
+       
+       
+      
        !--> Save results in HDF5 files
        if ( mod(itime,BUFFER_SIZE) == 0) then
-          
           !--> Compute energy kinetic, potential and total
+          !print*, 'compute nrj'
           call compute_energy_qns(sim,phi)
           
           !--> Compute L1 norm, L2 norm, L infini norm
+          !print*, 'compute  L^p'
           call compute_norm_L1_L2_Linf_qns(sim)
           
           call writeHDF5_diag_qns( sim )
@@ -1456,16 +1458,18 @@ contains
   end subroutine run_4d_qns_general
   
 
-  subroutine advection_x1x2(sim,deltat)
+  subroutine advection_x1x2(sim,deltat,opt)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
     sll_int32 :: gi, gj, gk, gl
-    sll_real64, dimension(1:2,1:2) :: inv_j,jac_m
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha1, alpha2
+    sll_real64,dimension(2,2) :: inv_j,inv_j_tmp
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32 :: i, j, k, l
+    sll_int32,intent(in) :: opt
+    sll_real64:: alpha1_tmp,alpha2_tmp,eta1_tmp,eta2_tmp
 
     call compute_local_sizes_4d( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
@@ -1491,9 +1495,21 @@ contains
                 inv_j  =  sim%values_jacobian_matinv(gi,gj,:,:) 
                 !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-                alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
-                alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+                if (opt .eq. 1) then !! euler explicit
+                   alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                   alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
                 
+                elseif ( opt .eq. 2) then! RK2
+                   alpha1_tmp = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                   alpha2_tmp = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+                   eta1_tmp = eta1+alpha1_tmp
+                   eta2_tmp = eta2+alpha2_tmp
+                   inv_j_tmp(:,:) = sim%transfx%inverse_jacobian_matrix(eta1_tmp,eta2_tmp)
+                   alpha1 = -deltat/2.*( ( inv_j(1,1) + inv_j_tmp(1,1) ) *eta3 &
+                                       + ( inv_j(1,2) + inv_j_tmp(1,2) ) *eta4 )
+                   alpha2 = -deltat/2.*( ( inv_j(2,1) + inv_j_tmp(2,1) ) *eta3 &
+                                       + ( inv_j(2,2) + inv_j_tmp(2,2) ) *eta4 )
+                end if
                 eta1 = eta1+alpha1
                 eta2 = eta2+alpha2
                 ! This is hardwiring the periodic BC, please improve this..
@@ -1606,13 +1622,12 @@ contains
   subroutine advection_x3(sim,phi,deltat,efield_energy_total)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
-    sll_int32 :: gi, gj, gk, gl
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha3
-    sll_real64 :: eta1, eta2, eta3, eta4
-    sll_int32  :: i, j, k, l
+    sll_real64 :: eta1, eta2
+    sll_int32  :: i, j, l
     sll_real64, intent(out) :: efield_energy_total
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
@@ -1675,13 +1690,12 @@ contains
   subroutine advection_x4(sim,phi,deltat,efield_energy_total)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
-    sll_int32 :: gi, gj, gk, gl
     sll_real64, dimension(1:2,1:2) :: inv_j
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha4
-    sll_real64 :: eta1, eta2, eta3, eta4
-    sll_int32  :: i, j, k, l
+    sll_real64 :: eta1, eta2
+    sll_int32  :: i, j, k
     sll_real64, intent(out) :: efield_energy_total
     type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
     sll_real64, dimension(1:2,1:2) :: jac_m
@@ -1739,6 +1753,8 @@ contains
     SLL_DEALLOCATE_ARRAY( sim%rho_full, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%rho_split, ierr )
+    SLL_DEALLOCATE(sim%values_ex ,ierr)
+    SLL_DEALLOCATE(sim%values_ey ,ierr)
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x1, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_x2, ierr )
    ! SLL_DEALLOCATE_ARRAY( sim%phi_split, ierr )
@@ -1919,7 +1935,6 @@ contains
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
     sll_int32 :: size_i, size_j
-    sll_int32 :: i,j
     sll_int32 :: counter
     sll_int32 :: rank
 
@@ -1943,7 +1958,6 @@ contains
     sll_real64, dimension(:),  intent(out) :: buffer
     sll_int32 :: myrank
     sll_int32 :: data_size
-    sll_int32 :: send_size
     type(sll_collective_t), pointer :: col
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
@@ -2003,7 +2017,6 @@ contains
     sll_int32 :: box
     sll_int32 :: imin, imax
     sll_int32 :: jmin, jmax
-    sll_int32 :: size_i, size_j
     sll_int32 :: pos            ! position in buffer
     col => get_layout_collective( layout )
     col_sz = sll_get_collective_size( col )
@@ -2253,7 +2266,7 @@ contains
  !----------------------------------------------------
   subroutine writeHDF5_diag_qns( sim )
    ! use sll_collective
-    use sll_hdf5_io, only: sll_hdf5_file_create, &
+    use sll_hdf5_io_serial, only: sll_hdf5_file_create, &
       sll_hdf5_write_array_1d, sll_hdf5_file_close
     class(sll_simulation_4d_qns_general), intent(inout) :: sim
 
@@ -2293,6 +2306,8 @@ contains
     diag_nrj_pot_result     = 0.0_f64
     diag_nrj_tot_result     = 0.0_f64
     diag_relative_error_nrj_tot_result = 0.0_f64
+
+   ! print*, 'sim%count_save_diag = ', sim%count_save_diag
  
    call sll_collective_reduce_real64( &
                sll_world_collective, &
@@ -2400,6 +2415,7 @@ contains
       
     end if
     sim%count_save_diag = sim%count_save_diag + 1
+    
   end subroutine writeHDF5_diag_qns
 
 
@@ -2490,8 +2506,10 @@ contains
                 !eta2   =  sim%mesh2d_x%eta2_min + real(i2-1,f64)*delta_eta2
                 eta1 = sim%pt_eta1(i1)
                 eta2 = sim%pt_eta2(i2)
-                ex     =  - phi%first_deriv_eta1_value_at_point(eta1,eta2)
-                ey     =  - phi%first_deriv_eta2_value_at_point(eta1,eta2)
+                ex     =  sim%values_ex (i1,i2 )!
+                !- phi%first_deriv_eta1_value_at_point(eta1,eta2)
+                ey     =  sim%values_ey(i1,i2)
+                !- phi%first_deriv_eta2_value_at_point(eta1,eta2)
                 inv_j  =  sim%values_jacobian_matinv(i1,i2,:,:)
                 !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 

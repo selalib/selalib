@@ -18,6 +18,7 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 	$ brew tap homebrew/science
 	$ brew install git
 	$ brew install cmake
+	$ brew install gcc
 	$ brew install hdf5 --enable-fortran --enable-parallel
 	$ brew install pastix
 	$ brew install fftw
@@ -38,11 +39,12 @@ Install dependencies with macports
 Install macports (http://www.macports.org/install.php) and ::
 
 	$ sudo port install gcc48 
-	$ sudo port select --set gcc mp-gcc48
-	$ sudo port install hdf5-18 +fortran+gfortran+openmpi_devel
+	$ sudo port select gcc mp-gcc48
+	$ sudo port install openmpi-default +threads
+	$ sudo port select mpi openmpi-gcc48-fortran
+	$ sudo port install hdf5-18 +fortran+gfortran+openmpi
 	$ sudo port install fftw-3
-	$ sudo port install cmake git-core 
-	$ sudo port select --set mpi openmpi-devel-mp-fortran
+	$ sudo port install cmake git
 
 If you want to run tests that use nurbs ::
 

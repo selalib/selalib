@@ -25,8 +25,8 @@ sll_real64 :: eta2_max, eta2_min
 sll_real64 :: delta_eta1, delta_eta2
 
 type(sll_logical_mesh_2d), pointer :: mesh
-class(sll_coordinate_transformation_2d_analytic), pointer :: tau
-class(sll_coordinate_transformation_2d_analytic), pointer :: collela
+class(sll_coordinate_transformation_2d_base), pointer :: tau
+class(sll_coordinate_transformation_2d_base), pointer :: collela
 
 type(dg_field), pointer :: ex
 type(dg_field), pointer :: bz

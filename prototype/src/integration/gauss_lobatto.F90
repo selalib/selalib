@@ -4,7 +4,6 @@ module gauss_lobatto_integration
   
 implicit none
 
-#ifndef STDF95
 abstract interface
    function function_1D(x)
       use sll_working_precision ! can't pass a header file because the
@@ -14,7 +13,6 @@ abstract interface
       sll_real64, intent(in) :: x
    end function function_1D
 end interface
-#endif
 
 interface gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
@@ -44,11 +42,7 @@ contains
   !> @return The value of the integral
   function gauss_lobatto_integral_1D( f, a, b, n )
     sll_real64                :: gauss_lobatto_integral_1D
-#ifdef STDF95
-    sll_real64, external      :: f
-#else
     procedure(function_1D)    :: f
-#endif
     sll_real64, intent(in)    :: a
     sll_real64, intent(in)    :: b
     sll_int32,  intent(in)    :: n 
@@ -77,6 +71,13 @@ contains
     beta(0)=2.0d0
 
     call dlob(n-1,alpha,beta,-1.0_f64,1._f64,xk,wk,err,de,da,db)
+
+    ! The results of this call can yield values that are beyond
+    ! the [-1;1] interval. Therefore we try to correct it
+    ! by forcing the boundary values.
+    ! FIXME : IT NEEDS TO BE CORRECTED. (TODO)
+    xk(1) = -1.0_f64
+    xk(n) =  1.0_f64
 
     ans = 0.0
     ! need to map the interval [-1,1] into the interval [a,b]
@@ -134,6 +135,13 @@ contains
     beta(0)=2.0d0
     
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
+    ! The results of this call can yield values that are beyond
+    ! the [-1;1] interval. Therefore we try to correct it
+    ! by forcing the boundary values.
+    ! FIXME : IT NEEDS TO BE CORRECTED. (TODO)
+    xk(1) = -1.0_f64
+    xk(n) =  1.0_f64
+
     
     if (present(a) .and. present(b)) then
        c1 = 0.5_f64*(b-a)

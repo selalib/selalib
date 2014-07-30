@@ -1,0 +1,74 @@
+!./bin/test_2d_gc_curvilinear ../selalib/prototype/src/simulation/gcsim2d_curvilinear_input
+!gnuplot -persist ../selalib/prototype/src/simulation/gcsim2d_curvilinear.gnu
+
+&geometry
+    mesh_case ="SLL_D_SHAPED_MESH"
+    num_cells_eta1 = 128
+    num_cells_eta2 = 128
+    eta1_min = 0.
+    eta1_max = 1.
+    eta2_min = 0.
+    eta2_max = 1.
+    alpha1  = 1.7
+    alpha2  = 0.074
+    alpha3  = 0.536
+    alpha4  = 0.4290421957
+    alpha5  = 1.66
+
+/    
+&initial_function
+    type_var = "SLL_ETA1_ETA2"
+    initial_function_case="SLL_DSG_2D"
+/    
+&time_iterations
+    dt = 0.1
+    number_iterations  = 400
+    freq_diag = 50
+    freq_diag_time = 1
+    !time_loop_case = "SLL_EULER"
+    time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
+/
+&advector
+    advection_form = "SLL_ADVECTIVE"
+    advect2d_case = "SLL_BSL"    
+    !charac2d_case = "SLL_EULER"
+    charac2d_case = "SLL_VERLET"
+    !advect2d_case = "SLL_TENSOR_PRODUCT"
+    advect1d_x1_case = "SLL_BSL"
+    advect1d_x2_case = "SLL_BSL"
+    !charac1d_x1_case = "SLL_EULER"    
+    !charac1d_x2_case = "SLL_EULER"    
+    !charac1d_x1_case = "SLL_TRAPEZOID"    
+    !charac1d_x2_case = "SLL_TRAPEZOID"    
+    !advect1d_x1_case = "SLL_CSL"
+    !advect1d_x2_case = "SLL_CSL"
+      !charac1d_x1_case = "SLL_EULER_CONSERVATIVE"    
+      !charac1d_x2_case = "SLL_EULER_CONSERVATIVE"    
+      !charac1d_x1_case = "SLL_TRAPEZOID_CONSERVATIVE"    
+      !charac1d_x2_case = "SLL_TRAPEZOID_CONSERVATIVE"      
+    f_interp2d_case = "SLL_CUBIC_SPLINES"
+    phi_interp2d_case = "SLL_CUBIC_SPLINES"
+    !charac2d_case = "SLL_EULER"
+    !charac2d_case = "SLL_VERLET"
+    A_interp_case = "SLL_CUBIC_SPLINES"
+/
+&poisson 
+    poisson_solver = "SLL_ELLIPTIC_FINITE_ELEMENT_SOLVER" !use with "SLL_PHI_FROM_RHO"
+    !poisson_solver = "SLL_MUDPACK_CURVILINEAR"   !use with "SLL_PHI_FROM_RHO"    
+    mudpack_method =  3 !"SLL_NON_SEPARABLE_WITH_CROSS_TERMS"    
+    spline_degree_eta1 = 3
+    spline_degree_eta2 = 3  
+/    
+&boundaries
+    bc_interp2d_eta1 =  "SLL_HERMITE"
+    bc_interp2d_eta2 =  "SLL_PERIODIC"
+    bc_charac2d_eta1 =  "SLL_SET_TO_LIMIT"
+    bc_charac2d_eta2 =  "SLL_PERIODIC"
+    bc_eta1_left     =  "SLL_DIRICHLET"
+    bc_eta1_right    =  "SLL_DIRICHLET"
+    bc_eta2_left     =  "SLL_PERIODIC"
+    bc_eta2_right    =  "SLL_PERIODIC"
+/   
+
+!! SLL_PERIODIC    = 0 SLL_DIRICHLET      = 1  SLL_NEUMANN        = 2
+!! SLL_HERMITE     = 3 SLL_NEUMANN_MODE_0 = 4  SLL_SET_TO_LIMIT   = 5 
