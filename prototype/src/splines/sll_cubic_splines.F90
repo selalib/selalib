@@ -937,7 +937,7 @@ MAKE_GET_SLOT_FUNCTION(get_x2_delta_cs2d,sll_cubic_spline_2d,x2_delta,sll_real64
        cell     = int(t0) + 1
        dx       = t0 - real(cell-1)
        cdx      = 1.0_f64 - dx
-       !  write (*,'(a,i8, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
+       !  write (*,'(a,i15, a, f20.12)') 'cell = ', cell, ',   dx = ', dx
        cim1     = coeffs(cell-1)
        ci       = coeffs(cell)
        cip1     = coeffs(cell+1)
