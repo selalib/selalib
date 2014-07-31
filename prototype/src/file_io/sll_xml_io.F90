@@ -252,7 +252,7 @@ contains
      character(len=*), intent(in) :: filename
      sll_int32, intent(in) :: nnodes_x1
      sll_int32, intent(in) :: nnodes_x2
-     character(len=*), optional   :: gridtype
+     character(len=7), optional   :: gridtype
 
      if(.not. present(gridtype)) gridtype = 'Uniform'
      
@@ -295,11 +295,10 @@ contains
      character(len=*), intent(in) :: x2filename
      sll_int32, intent(in)        :: nnodes_x1
      sll_int32, intent(in)        :: nnodes_x2
-     character(len=*), optional   :: x1dsetname
-     character(len=*), optional   :: x2dsetname
-     character(len=*), optional   :: gridtype
+     character(len=*), intent(in) :: x1dsetname
+     character(len=*), intent(in) :: x2dsetname
+     character(len=*), intent(in) :: gridtype
      
-     if(.not. present(gridtype)) gridtype = 'Uniform'
      write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
      write(file_id, &
           "(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
@@ -388,9 +387,8 @@ contains
        sll_int32, intent(in)                  :: nnodes_x1  !< x nodes number
        sll_int32, intent(in)                  :: nnodes_x2  !< y nodes number
        sll_int32, intent(in)                  :: nnodes_x3  !< z nodes number
-       character(len=*), optional             :: gridtype
+       character(len=*), intent(in)           :: gridtype
        
-       if(.not. present(gridtype)) gridtype = 'Uniform'
        write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
        write(file_id,"(a,3i5,a)") &
           "<Topology TopologyType='3DSMesh' NumberOfElements='", &
