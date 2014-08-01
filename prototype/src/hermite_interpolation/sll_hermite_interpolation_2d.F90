@@ -132,7 +132,9 @@ contains  !*********************************************************************
     eta1_max_slopes, &
     eta2_min_slopes, &
     eta2_max_slopes )
+
     type(sll_hermite_interpolation_2d) :: interp
+
     sll_int32, intent(in) :: npts1
     sll_int32, intent(in) :: npts2
     sll_real64, intent(in) :: eta1_min
