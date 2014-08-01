@@ -44,7 +44,7 @@ Install macports (http://www.macports.org/install.php) and ::
 	$ sudo port select mpi openmpi-gcc48-fortran
 	$ sudo port install hdf5-18 +fortran+gfortran+openmpi
 	$ sudo port install fftw-3
-	$ sudo port install cmake git-core 
+	$ sudo port install cmake git
 
 If you want to run tests that use nurbs ::
 

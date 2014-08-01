@@ -245,25 +245,21 @@ contains
      file_id,   &
      filename,  &
      nnodes_x1, &
-     nnodes_x2, &
-     gridtype )
+     nnodes_x2)
 
      sll_int32, intent(in) :: file_id
      character(len=*), intent(in) :: filename
      sll_int32, intent(in) :: nnodes_x1
      sll_int32, intent(in) :: nnodes_x2
-     character(len=*), optional   :: gridtype
-
-     if(.not. present(gridtype)) gridtype = 'Uniform'
      
 #ifdef NOHDF5
      call sll_xml_grid_geometry_2d_low_level( file_id, &
           trim(filename)//"-x1.bin", nnodes_x1, &
-          trim(filename)//"-x2.bin", nnodes_x2, gridtype )
+          trim(filename)//"-x2.bin", nnodes_x2, 'Uniform' )
 #else
      call sll_xml_grid_geometry_2d_low_level( file_id, &
           trim(filename)//"-x1.h5", nnodes_x1, &
-          trim(filename)//"-x2.h5", nnodes_x2, "x1", "x2", gridtype )
+          trim(filename)//"-x2.h5", nnodes_x2, "x1", "x2", 'Uniform' )
 #endif
        
    end subroutine sll_xml_grid_geometry_2d_high_level
@@ -295,11 +291,10 @@ contains
      character(len=*), intent(in) :: x2filename
      sll_int32, intent(in)        :: nnodes_x1
      sll_int32, intent(in)        :: nnodes_x2
-     character(len=*), optional   :: x1dsetname
-     character(len=*), optional   :: x2dsetname
-     character(len=*), optional   :: gridtype
+     character(len=*), intent(in) :: x1dsetname
+     character(len=*), intent(in) :: x2dsetname
+     character(len=*), intent(in) :: gridtype
      
-     if(.not. present(gridtype)) gridtype = 'Uniform'
      write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
      write(file_id, &
           "(a,2i5,a)")"<Topology TopologyType='2DSMesh' NumberOfElements='", &
@@ -330,17 +325,15 @@ contains
    !> mesh with its nodes coordinates contains in filename-x1 and filename-x2.
    !> High level version where dataset names in hdf5 files are set automatically
    subroutine sll_xml_grid_geometry_3d_high_level(file_id, filename,  &
-      nnodes_x1, nnodes_x2, nnodes_x3, gridtype)
+      nnodes_x1, nnodes_x2, nnodes_x3)
        
       sll_int32, intent(in)        :: file_id    !< xmf file unit number
       character(len=*), intent(in) :: filename   !< xmf file name
       sll_int32, intent(in)        :: nnodes_x1  !< x nodes number
       sll_int32, intent(in)        :: nnodes_x2  !< y nodes number
       sll_int32, intent(in)        :: nnodes_x3  !< z nodes number
-      character(len=*), optional   :: gridtype
        
-      if(.not. present(gridtype)) gridtype = 'Uniform'
-      write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
+      write(file_id,"(a)")"<Grid Name='mesh' GridType='Uniform'>"
       write(file_id,"(a,3i5,a)")"<Topology TopologyType='3DSMesh' NumberOfElements='", &
             nnodes_x3,nnodes_x2,nnodes_x1,"'/>"
       write(file_id,"(a)")"<Geometry GeometryType='X_Y_Z'>"
@@ -388,9 +381,8 @@ contains
        sll_int32, intent(in)                  :: nnodes_x1  !< x nodes number
        sll_int32, intent(in)                  :: nnodes_x2  !< y nodes number
        sll_int32, intent(in)                  :: nnodes_x3  !< z nodes number
-       character(len=*), optional             :: gridtype
+       character(len=*), intent(in)           :: gridtype
        
-       if(.not. present(gridtype)) gridtype = 'Uniform'
        write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
        write(file_id,"(a,3i5,a)") &
           "<Topology TopologyType='3DSMesh' NumberOfElements='", &
