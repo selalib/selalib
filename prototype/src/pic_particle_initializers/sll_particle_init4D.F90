@@ -79,6 +79,7 @@ contains
 
     write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
     j=1
+    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     do while ( j <= num_particles )
        call random_number(x)
        x = (m2d%eta1_max - xmin)*x + xmin
