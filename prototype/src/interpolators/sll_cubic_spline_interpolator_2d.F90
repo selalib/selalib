@@ -59,6 +59,11 @@ module sll_cubic_spline_interpolator_2d
     ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
 #endif
   end type cubic_spline_2d_interpolator
+
+  type :: cubic_spline_2d_interpolator_ptr
+     type(cubic_spline_2d_interpolator), pointer :: interp
+  end type cubic_spline_2d_interpolator_ptr
+
   
   interface delete
      module procedure delete_cubic_spline_2d_interpolator
