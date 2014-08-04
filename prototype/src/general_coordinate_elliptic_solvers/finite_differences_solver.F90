@@ -3,6 +3,14 @@ module finite_differences_solver_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
+  ! ******************************
+  ! ON GOING WORK  !!!!!!!!!!!!!!!!
+  ! FOR THE MOMENT I WILL BE COMENTING EVERYTHING I THINK
+  ! IS UNNECESSARY OR OBSOLETE. ONCE THE DOCUMENT IS STABLE
+  ! ALL THIS COMMENTS SHOULD BE ELEMINATED
+  ! ******************************
+
+  ! TODO @LM : see if all of these libraries are actually being used in stabilized version
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -18,34 +26,47 @@ module finite_differences_solver_module
 
   type :: finite_differences_solver
      sll_int32 :: total_num_splines_loc
-     sll_int32 :: total_num_splines_eta1
-     sll_int32 :: total_num_splines_eta2
-     sll_int32 :: num_cells1
-     sll_int32 :: num_cells2
-     sll_real64:: delta_eta1
-     sll_real64:: delta_eta2
-     sll_real64:: eta1_min
-     sll_real64:: eta2_min   
-     sll_real64, dimension(:), pointer :: knots1
-     sll_real64, dimension(:), pointer :: knots2
-     sll_real64, dimension(:), pointer :: knots1_rho
-     sll_real64, dimension(:), pointer :: knots2_rho
-     sll_real64, dimension(:,:), pointer :: gauss_pts1
-     sll_real64, dimension(:,:), pointer :: gauss_pts2
-     sll_int32 :: bc_left
-     sll_int32 :: bc_right
-     sll_int32 :: bc_bottom
-     sll_int32 :: bc_top
-     sll_int32 :: spline_degree1
-     sll_int32 :: spline_degree2
+     sll_int32 :: total_num_splines_eta
+!      sll_int32 :: total_num_splines_eta1
+!      sll_int32 :: total_num_splines_eta2
+     ! warning this number of cells is not the usual num_cells. Meaning num_pts <> num_cells + 1
+     sll_int32 :: num_cells 
+!     sll_int32 :: num_cells1
+!     sll_int32 :: num_cells2
+!     sll_real64:: delta_eta
+    sll_real64:: delta_eta1
+    sll_real64:: delta_eta2
+!      sll_real64:: eta1_min
+!      sll_real64:: eta2_min   
+     sll_real64, dimension(:), pointer :: knots
+!      sll_real64, dimension(:), pointer :: knots1
+!      sll_real64, dimension(:), pointer :: knots2
+     sll_real64, dimension(:), pointer :: knots_rho
+!      sll_real64, dimension(:), pointer :: knots1_rho
+!      sll_real64, dimension(:), pointer :: knots2_rho
+     ! Quadrature points, they can be gaussian, fekete
+     sll_real64, dimension(:), pointer :: quad_pts1
+     sll_real64, dimension(:), pointer :: quad_pts2
+!      sll_real64, dimension(:,:), pointer :: gauss_pts1
+!      sll_real64, dimension(:,:), pointer :: gauss_pts2
+!      sll_int32 :: bc
+       sll_int32 :: bc_left
+       sll_int32 :: bc_right
+       sll_int32 :: bc_bottom
+       sll_int32 :: bc_top
+!     sll_int32 :: spline_degree
+      sll_int32 :: spline_degree1
+      sll_int32 :: spline_degree2
      sll_real64 :: epsi
      sll_real64 :: intjac
+
      ! the following is otherwise known as "ID" in Aurore Back's original
      ! nomenclature. The indexing of the
      ! splines in this array depends on the boundary conditions.
      sll_int32, dimension(:), pointer :: global_spline_indices 
      ! the following is otherwise known as "IEN"
-     sll_int32, dimension(:,:), pointer :: local_spline_indices
+     sll_int32, dimension(:), pointer :: local_spline_indices
+     ! sll_int32, dimension(:,:), pointer :: local_spline_indices
      ! the following is otherwise known as "LM". Same as global_spline_indices
      ! but including the changes resulting from the boundary conditions.
      ! This is:
@@ -56,11 +77,16 @@ module finite_differences_solver_module
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
 
      !!! contains the values of all splines in all gauss points
-     sll_real64, dimension(:,:), pointer :: values_splines_eta1
-     sll_real64, dimension(:,:), pointer :: values_splines_eta2
-     sll_real64, dimension(:,:), pointer :: values_splines_gauss1
-     sll_real64, dimension(:,:), pointer :: values_splines_gauss2
-     sll_real64, dimension(:,:), pointer :: values_jacobian
+     ! basis functions (splines) should already be the convolution of eta1 and eta2, 
+     !one dimension as it should be independent of all geometries
+     sll_real64, dimension(:), pointer :: values_splines_eta 
+!      sll_real64, dimension(:,:), pointer :: values_splines_eta1
+!      sll_real64, dimension(:,:), pointer :: values_splines_eta2
+     sll_real64, dimension(:), pointer :: values_splines_quad
+!     sll_real64, dimension(:,:), pointer :: values_splines_gauss1
+!     sll_real64, dimension(:,:), pointer :: values_splines_gauss2
+     sll_real64, dimension(:), pointer :: values_jacobian
+!     sll_real64, dimension(:,:), pointer :: values_jacobian
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff1
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff2
      type(sll_csr_matrix), pointer :: sll_csr_mat
@@ -119,10 +145,12 @@ contains ! *******************************************************************
        es, &
        spline_degree_eta1, &
        spline_degree_eta2, &
-       num_cells_eta1, &
-       num_cells_eta2, &
-       quadrature_type1, &
-       quadrature_type2, &
+       num_cells, &
+!       num_cells_eta1, &
+!       num_cells_eta2, &
+!       quadrature_type, &
+        quadrature_type1, &
+        quadrature_type2, &
        bc_left, &
        bc_right, &
        bc_bottom, &
@@ -135,8 +163,9 @@ contains ! *******************************************************************
    type(finite_differences_solver), intent(out) :: es
    sll_int32, intent(in) :: spline_degree_eta1
    sll_int32, intent(in) :: spline_degree_eta2
-   sll_int32, intent(in) :: num_cells_eta1
-   sll_int32, intent(in) :: num_cells_eta2
+   sll_int32, intent(in) :: num_cells
+!    sll_int32, intent(in) :: num_cells_eta1
+!    sll_int32, intent(in) :: num_cells_eta2
    sll_int32, intent(in) :: bc_left
    sll_int32, intent(in) :: bc_right
    sll_int32, intent(in) :: bc_bottom
@@ -147,10 +176,12 @@ contains ! *******************************************************************
    sll_real64, intent(in) :: eta1_max
    sll_real64, intent(in) :: eta2_min
    sll_real64, intent(in) :: eta2_max
-   sll_int32 :: knots1_size
-   sll_int32 :: knots2_size
-   sll_int32 :: num_splines1
-   sll_int32 :: num_splines2
+   sll_int32 :: knots_size
+!    sll_int32 :: knots1_size
+!    sll_int32 :: knots2_size
+   sll_int32 :: num_splines
+!   sll_int32 :: num_splines1
+!    sll_int32 :: num_splines2
    sll_int32 :: vec_sz ! for rho_vec and phi_vec allocations
    sll_int32 :: ierr,ierr1
    sll_int32 :: solution_size,i
@@ -158,16 +189,26 @@ contains ! *******************************************************************
    !sll_int32 :: quadrature_type1_tmp
    !sll_int32 :: quadrature_type2_tmp
    
+
+   !!! TODO @LM : this here should change for a hexagonal mesh as the mesh is not "squared"
    es%total_num_splines_loc = (spline_degree_eta1+1)*(spline_degree_eta2+1)
+   
+   num_splines = num_cells * es%total_num_splines_loc
+   SLL_ALLOCATE(es%global_spline_indices(num_splines),ierr)
    ! The total number of splines in a single direction is given by
    ! num_cells + spline_degree
-   num_splines1 = num_cells_eta1 + spline_degree_eta1
-   num_splines2 = num_cells_eta2 + spline_degree_eta2
-   SLL_ALLOCATE(es%global_spline_indices(num_splines1*num_splines2),ierr)
+!    num_splines1 = num_cells_eta1 + spline_degree_eta1
+!    num_splines2 = num_cells_eta2 + spline_degree_eta2
+!    SLL_ALLOCATE(es%global_spline_indices(num_splines1*num_splines2),ierr)
    es%global_spline_indices(:) = 0
    
+
+
    SLL_ALLOCATE(es%local_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
+   SLL_ALLOCATE(es%local_spline_indices(es%total_num_splines_loc,num_cells),ierr)
    es%local_spline_indices(:,:) = 0
+
+!! @LM : continue here
 
    SLL_ALLOCATE(es%local_to_global_spline_indices((spline_degree_eta1+1)*(spline_degree_eta2+1),(num_cells_eta1*num_cells_eta2)),ierr)
    es%local_to_global_spline_indices = 0

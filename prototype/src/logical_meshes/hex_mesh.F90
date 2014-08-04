@@ -176,7 +176,7 @@ end if
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64  :: val
-    val = mesh%r1_x2*k1 + mesh%r2_x2*k2 + mesh%center_x1
+    val = mesh%r1_x2*k1 + mesh%r2_x2*k2 + mesh%center_x2
   end function x2_node
 
 
@@ -232,7 +232,7 @@ end if
 
 
   function get_hex_num(index) result(hex_num)
-    ! returns the number of nested hexagon on which the point is
+    ! returns the number of nested hexagons on which the point is
     ! <=> returns the number of cells from center to point
     ! Warning : even if the index is beyond the mesh 
     ! this function will return a result
