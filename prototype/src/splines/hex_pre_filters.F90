@@ -1,12 +1,16 @@
-!> @brief  
-!> Pre filters for quasi-interpolqtion for box splines
-!> @Condat2006 :Three-directional box splines
-!> 
+!**************************************************************
+!  This module defines pre-filters for quasi-interpolation for 
+!  box splines on a hexagonal mesh subdivided in equilateral triangles
+!  Reference :
+!     @Condat2006 "Three-directional box splines"
+!  Author : 
+!     Laura Mendoza (mela@ipp.mpg.de)
+!************************************************************** 
+
 
 module hex_pre_filters
 #include "sll_working_precision.h"
-!#include "sll_splines.h"
-use hex_mesh!, only:find_neighbour
+use hex_mesh
 
 implicit none
 

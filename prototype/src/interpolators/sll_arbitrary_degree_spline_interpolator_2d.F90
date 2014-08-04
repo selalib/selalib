@@ -3014,8 +3014,9 @@ contains
        SLL_DEALLOCATE( data_array_tmp,ierr)
       ! print*, 'oulala'
        ! boundary condition non homogene  a revoir !!!!! 
-       interpolator%coeff_splines(1,1:sz2)   = interpolator%value_left(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = interpolator%value_right(1:sz2)
+       !print*,'zarrrr', interpolator%value_left(1:sz2)
+       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)!interpolator%value_left(1:sz2)
+       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)!interpolator%value_right(1:sz2)
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        interpolator%size_coeffs1 = sz1!+1
@@ -3035,8 +3036,8 @@ contains
 
        SLL_DEALLOCATE( data_array_tmp,ierr)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-       interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
+       interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
        
     case (585) ! 4. dirichlet in all sides
        !print*, 'her'
@@ -3058,11 +3059,11 @@ contains
 
        SLL_DEALLOCATE( data_array_tmp,ierr)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1,1:sz2)   = interpolator%value_left(1:sz2)
-       interpolator%coeff_splines(sz1,1:sz2) = interpolator%value_right(1:sz2)
+       interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)
+       interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)
        ! boundary condition non homogene
-       interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
-       interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
+       interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
+       interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
 
     case (650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet
        sz_derivative_eta1 = 2
@@ -3818,7 +3819,7 @@ contains
 
     end select
     interpolator%coefficients_set = .true.
-    
+   
     SLL_DEALLOCATE(point_location_eta2,ierr)
     SLL_DEALLOCATE(point_location_eta1,ierr)
     SLL_DEALLOCATE(point_location_eta1_tmp,ierr)
@@ -3864,6 +3865,7 @@ contains
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
+    sll_int32 :: partint
     !sll_real64 :: bvalue2d
     !integer  :: li_i, li_j, li_mflag, li_lefty
     sll_real64 :: res1,res2
@@ -3883,14 +3885,24 @@ contains
     case (0) ! periodic-periodic
 
        if( res1 < interpolator%eta1_min ) then
-          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+          partint = &
+               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1 + &
+               (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
+          partint = &
+               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
-        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       if( res2 < interpolator%eta2_min ) then
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + &
+               (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        
 
@@ -3898,30 +3910,44 @@ contains
 
 
        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + &
+               (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
        if ( res1 > interpolator%eta1_max) then 
           print*, 'problem  x > eta1_max'
+          !res1 =  interpolator%eta1_max
           stop
        end if
        if ( res1 < interpolator%eta1_min) then 
           print*, 'problem  x < eta1_min'
+          !res1 =  interpolator%eta1_min
+          !print*, res1,interpolator%eta1_min 
           stop
        end if
+      
   
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
 
 
        if( res1 < interpolator%eta1_min ) then
-          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+          partint = &
+               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1 + &
+               (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
+          partint = &
+               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
@@ -3931,6 +3957,7 @@ contains
        end if
        if ( res2 < interpolator%eta2_min) then 
           print*, 'problem  y < eta2_min'
+  
           stop
        end if
        
@@ -3942,24 +3969,20 @@ contains
     SLL_ASSERT( res2 >= interpolator%eta2_min )
     SLL_ASSERT( res2 <= interpolator%eta2_max )
     if ( res1 > interpolator%eta1_max) then 
-       print*, 'problem  x > eta1_max'
+       print*, 'ERROR, interpolate_value_ad2d(): problem  x > eta1_max'
        stop
     end if
     if ( res1 < interpolator%eta1_min) then 
-       print*, 'problem  x < eta1_min'
-       stop
+       print*, 'ERROR, interpolate_value_ad2d(): problem  x < eta1_min'
     end if
     if ( res2 > interpolator%eta2_max) then 
-       print*, 'problem  y > eta2_max'
-       stop
+       print*, 'ERROR, interpolate_value_ad2d(): problem  y > eta2_max'
+       print*, res2, interpolator%eta2_min,interpolator%eta2_max
     end if
     if ( res2 < interpolator%eta2_min) then 
-       print*, 'problem  y < eta2_min'
-       stop
+       print*, 'ERROR, interpolate_value_ad2d(): problem  y < eta2_min'
     end if
 
-    !SLL_ALLOCATE(tmp_tx(interpolator%size_t1),ierr)
-    !SLL_ALLOCATE(tmp_ty(interpolator%size_t2),ierr)
     tmp_tx => interpolator%t1(1:interpolator%size_t1)
     !print*, 't1',tmp_tx
     tmp_ty => interpolator%t2(1:interpolator%size_t2)
@@ -3981,8 +4004,6 @@ contains
          val)
     ! time = time_elapsed_since(t0)
    !  print *, 'time elapsed since t0 : ',time
-    !SLL_DEALLOCATE(tmp_tx,ierr)
-    !SLL_DEALLOCATE(tmp_ty,ierr)
   end function interpolate_value_ad2d
 
 
@@ -4021,6 +4042,7 @@ contains
     sll_real64, dimension(:),pointer :: knot2_tmp
     sll_real64, dimension(:,:),pointer :: tmp_coeff
     !sll_int32 :: ierr
+    sll_int32 :: partint
 
     SLL_ASSERT( eta1 .ge. interpolator%eta1_min )
     SLL_ASSERT( eta1 .le. interpolator%eta1_max )
@@ -4037,29 +4059,30 @@ contains
     case (0) ! periodic-periodic
 
        if( res1 < interpolator%eta1_min ) then
-          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
+          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
-        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+       if( res2 < interpolator%eta2_min ) then
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        
-       if ( res1 < interpolator%eta1_min ) then 
-          res1 = res1 + (interpolator%eta1_max-interpolator%eta1_min)
-       end if
-       if ( res2 < interpolator%eta2_min ) then 
-          res2 = res2 +(interpolator%eta2_max-interpolator%eta2_min)
-       end if
 
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
 
+      
        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
        SLL_ASSERT( res1 >= interpolator%eta1_min )
@@ -4076,10 +4099,13 @@ contains
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
 
        if( res1 < interpolator%eta1_min ) then
-          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
+          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
+
 
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
@@ -4118,8 +4144,8 @@ contains
     !SLL_ALLOCATE(knot2_tmp(interpolator%size_t2),ierr)
     knot1_tmp => interpolator%t1(1:interpolator%size_t1)
     knot2_tmp => interpolator%t2(1:interpolator%size_t2)
-    tmp_coeff =>interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
-    
+    tmp_coeff => interpolator%coeff_splines(1:size_coeffs1,1:size_coeffs2)
+
     val = dvalue2d( &
          res1, &
          res2, &
@@ -4167,6 +4193,7 @@ contains
     sll_real64                     :: val
     sll_int32 :: size_coeffs1
     sll_int32 :: size_coeffs2
+    sll_int32 :: partint
     !sll_real64 :: dvalue2d
     sll_real64 :: res1,res2
     !sll_int32 :: ierr
@@ -4188,22 +4215,29 @@ contains
     case (0) ! periodic-periodic
        
        if( res1 < interpolator%eta1_min ) then
-          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
+          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
           
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        
+      
        if( res2 < interpolator%eta2_min ) then
-          res2 = res2+interpolator%eta2_max-interpolator%eta2_min
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          res2 = res2+interpolator%eta2_min-interpolator%eta2_max
+          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res1 >= interpolator%eta1_min )
        SLL_ASSERT( res1 <= interpolator%eta1_max )
@@ -4219,10 +4253,13 @@ contains
     case(576) !  3. periodic, dirichlet-bottom, dirichlet-top
        
        if( res1 < interpolator%eta1_min ) then
-          res1 = res1+interpolator%eta1_max-interpolator%eta1_min
+          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          res1 = res1+interpolator%eta1_min-interpolator%eta1_max
+          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
+
        
        SLL_ASSERT( res2 >= interpolator%eta2_min )
        SLL_ASSERT( res2 <= interpolator%eta2_max )
