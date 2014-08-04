@@ -35,7 +35,6 @@ type box_spline_2d
    sll_int32 SLL_PRIV  :: x2_bc_type
    !< spline coefficients
    sll_real64, dimension(:), pointer :: coeffs
-
 end type box_spline_2d
 
   
