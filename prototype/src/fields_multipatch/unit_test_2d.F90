@@ -7,9 +7,9 @@ program unit_test_fields_multipatch
 
   
   type(sll_coordinate_transformation_multipatch_2d), pointer :: T
-  class(sll_scalar_field_multipatch_2d), pointer              :: F
+  class(sll_scalar_field_multipatch_2d), pointer             :: F
   type(sll_logical_mesh_2d), pointer                         :: m
-  type(sll_coordinate_transformation_2d_nurbs), pointer      :: transf
+  class(sll_coordinate_transformation_2d_nurbs), pointer     :: transf
   sll_int32  :: ipatch
   sll_int32  :: i
   sll_int32  :: j
@@ -50,7 +50,9 @@ program unit_test_fields_multipatch
      ! supported by Selalib anymore
      !     m        => F%get_logical_mesh(ipatch)
      m => F%transf%transfs(ipatch+1)%t%mesh
-     transf   => F%get_transformation(ipatch)
+     ! this 'fix' also is just for gfortran 4.6
+     !     transf   => F%get_transformation(ipatch)
+     transf => F%transf%transfs(ipatch+1)%t
      num_pts1 = m%num_cells1+1
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1

@@ -90,6 +90,8 @@ module sll_module_scalar_field_2d_multipatch
           first_deriv_eta1_value_at_indices_sfmp2d
      procedure, pass :: first_deriv_eta2_value_at_indices => &
           first_deriv_eta2_value_at_indices_sfmp2d
+     procedure, pass :: get_patch_data_pointer => get_patch_data_ptr_sfmp2d
+     procedure, pass :: set_patch_data_pointer => set_patch_data_ptr_sfmp2d
      procedure, pass :: set_field_data => set_field_data_sfmp2d
      procedure, pass :: write_to_file => write_to_file_sfmp2d
      procedure, pass :: delete => delete_field_sfmp2d
@@ -106,28 +108,32 @@ contains   ! *****************************************************************
 
   function new_scalar_field_multipatch_2d( &
     field_name, &
-    transformation ) result(obj)
+    transformation, &
+    owns_data ) result(obj)
 
-    type(sll_scalar_field_multipatch_2d), pointer              :: obj
-    character(len=*), intent(in)                               :: field_name
-    type(sll_coordinate_transformation_multipatch_2d), pointer :: transformation
+    type(sll_scalar_field_multipatch_2d), pointer             :: obj
+    character(len=*), intent(in)                              :: field_name
+    type(sll_coordinate_transformation_multipatch_2d), target :: transformation
+    logical, intent(in), optional                             :: owns_data
     sll_int32  :: ierr
 
     SLL_ALLOCATE(obj,ierr)
-    call obj%initialize( field_name, transformation )
+    call obj%initialize( field_name, transformation, owns_data )
   end function new_scalar_field_multipatch_2d
   
   subroutine initialize_scalar_field_sfmp2d( &
     fmp, &
     field_name, &
-    transf )
+    transf, &
+    owns_data )
     
-    class(sll_scalar_field_multipatch_2d)                      :: fmp
-    character(len=*), intent(in)                               :: field_name
-    type(sll_coordinate_transformation_multipatch_2d), pointer :: transf
-    character(len=256)                                         :: patch_name
-    type(sll_logical_mesh_2d), pointer                         :: lm
-    sll_int32, dimension(1:2)                                  :: connectivity
+    class(sll_scalar_field_multipatch_2d)                     :: fmp
+    character(len=*), intent(in)                              :: field_name
+    type(sll_coordinate_transformation_multipatch_2d), target :: transf
+    logical, intent(in), optional                             :: owns_data
+    character(len=256)                                        :: patch_name
+    type(sll_logical_mesh_2d), pointer                        :: lm
+    sll_int32, dimension(1:2)                                 :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
     sll_int32  :: num_patches
@@ -148,6 +154,7 @@ contains   ! *****************************************************************
     num_patches = transf%get_number_patches()
 
     fmp%num_patches = num_patches
+    SLL_ALLOCATE(fmp%patch_data(num_patches),ierr)
     SLL_ALLOCATE(fmp%fields(num_patches), ierr)
     SLL_ALLOCATE(fmp%interps(num_patches),ierr)
 
@@ -294,6 +301,16 @@ contains   ! *****************************************************************
        SLL_ALLOCATE(fmp%derivs3(i)%array(num_pts2,NUM_DERIVS),ierr)
     end do
 
+    ! If owns_data was not given or it is equal to FALSE, then the default
+    ! behavior is applied: the field does not own its node data and will thus 
+    ! not allocate the memory.
+    if(present(owns_data)) then
+       if(owns_data .eqv. .true.) then
+          call fmp%allocate_memory()
+       end if
+    end if
+
+    print *, 'initialize_scalar_field_sfmp2d(): finished initialization.'
   end subroutine initialize_scalar_field_sfmp2d
 
 
@@ -352,6 +369,11 @@ contains   ! *****************************************************************
        SLL_DEALLOCATE(field%derivs3,ierr)
   end subroutine delete_field_sfmp2d
 
+  ! When a multipatch field is created, it creates the interpolators and any
+  ! necessary data for its calculations, but it DOES NOT allocate the memory
+  ! for the node data that it will use. This allows the possibility to change
+  ! the data associated with a multipatch field by resetting pointers only and
+  ! thus avoiding unnecessary memory copying.
   subroutine allocate_memory_sfmp2d( field )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: field
     type(sll_logical_mesh_2d), pointer :: lm
@@ -368,7 +390,6 @@ contains   ! *****************************************************************
     end if
     
     num_patches = field%num_patches
-    SLL_ALLOCATE(field%patch_data(num_patches),ierr)
 
     do i=0,num_patches-1
        ! get rid of the following 'fix'whenever gfortran 4.6 is not supported
@@ -386,9 +407,14 @@ contains   ! *****************************************************************
        call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
     end do
 
-    ! And link each patch with the newly allocated memory.
+    ! Link each patch with the newly allocated memory. There is a problem here:
+    ! Each upon the call to 'set_field_data()', each field COPIES the data into
+    ! a local memory managed by the field. The more desirable behavior would
+    ! simply be to reset the pointer of the field so that it knows instantly
+    ! if the data is altered.
     do i=0,num_patches-1
-       call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
+       call field%fields(i+1)%f%free_internal_data_copy()
+       call field%fields(i+1)%f%reset_data_pointer(field%patch_data(i+1)%array)
     end do
   end subroutine allocate_memory_sfmp2d
 
@@ -414,6 +440,20 @@ contains   ! *****************************************************************
     SLL_ASSERT( size(values,2) >= numpts2 )
     call mp%fields(patch+1)%f%set_field_data(values)
   end subroutine set_field_data_sfmp2d
+
+  function get_patch_data_ptr_sfmp2d( mp, patch ) result(ptr)
+    sll_real64, dimension(:,:), pointer                  :: ptr
+    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    sll_int32, intent(in)                                :: patch
+    ptr => mp%fields(patch+1)%f%get_data_pointer()
+  end function get_patch_data_ptr_sfmp2d
+
+  subroutine set_patch_data_ptr_sfmp2d( mp, patch, ptr )
+    sll_real64, dimension(:,:), pointer                  :: ptr
+    class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
+    sll_int32, intent(in)                                :: patch
+    mp%patch_data(patch+1)%array => ptr
+  end subroutine set_patch_data_ptr_sfmp2d
 
   subroutine update_interp_coeffs_sfmp2d( mp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
@@ -697,7 +737,7 @@ contains   ! *****************************************************************
   end subroutine compute_compatible_derivatives_in_borders
 
   function get_patch_transformation_sfmp2d( mp, patch ) result(res)
-    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
     class(sll_scalar_field_multipatch_2d), intent(in)      :: mp
     sll_int32, intent(in)                                 :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )

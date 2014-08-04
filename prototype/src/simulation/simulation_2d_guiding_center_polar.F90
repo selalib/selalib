@@ -271,7 +271,7 @@ contains
     if(present(filename))then
       open(unit = input_file, file=trim(filename)//'.nml',IOStat=IO_stat)
         if( IO_stat /= 0 ) then
-          print *, '#initialize_guiding_center_2d_cartesian() failed to open file ', &
+          print *, '#initialize_guiding_center_2d_polar() failed to open file ', &
           trim(filename)//'.nml'
           STOP
         end if

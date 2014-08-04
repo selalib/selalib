@@ -40,7 +40,7 @@ contains
     
   end subroutine compute_iota_from_shift
   
-  
+  !warning: normalization to correct/choose  
   subroutine compute_at_aligned( &
     f_input, &
     f_output, &
@@ -461,6 +461,118 @@ contains
    
   end subroutine compute_oblic_derivative
 
+
+
+  subroutine compute_w_hermite(w,r,s)
+    sll_int32,intent(in)::r,s
+    sll_real64,dimension(r:s),intent(out)::w
+    sll_int32 ::i,j
+    sll_real64::tmp
+
+    !maple code for generation of w
+    !for k from r to -1 do
+    !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
+    !  C[k]:=1/C[k]*product((-j),j=r..k-1)*product((-j),j=k+1..-1)*product((-j),j=1..s):
+    !od:
+    !for k from 1 to s do
+    !  C[k]:=product((k-j),j=r..k-1)*product((k-j),j=k+1..s):
+    !  C[k]:=1/C[k]*product((-j),j=r..-1)*product((-j),j=1..k-1)*product((-j),j=k+1..s):
+    !od:
+    !C[0]:=-add(C[k],k=r..-1)-add(C[k],k=1..s):
+    
+    do i=r,-1
+      tmp=1._f64
+      do j=r,i-1
+        tmp=tmp*real(i-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(i-j,f64)
+      enddo
+      tmp=1._f64/tmp
+      do j=r,i-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=i+1,-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=1,s
+        tmp=tmp*real(-j,f64)
+      enddo
+      w(i)=tmp      
+    enddo
+
+
+    do i=1,s
+      tmp=1._f64
+      do j=r,i-1
+        tmp=tmp*real(i-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(i-j,f64)
+      enddo
+      tmp=1._f64/tmp
+      do j=r,-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=1,i-1
+        tmp=tmp*real(-j,f64)
+      enddo
+      do j=i+1,s
+        tmp=tmp*real(-j,f64)
+      enddo
+      w(i)=tmp      
+    enddo
+    tmp=0._f64
+    do i=r,-1
+      tmp=tmp+w(i)
+    enddo
+    do i=1,s
+      tmp=tmp+w(i)
+    enddo
+    w(0)=-tmp
+
+    !print *,'w',w
+    !do ii=r,s
+    !  print *,ii,w(r+s-ii)
+    !enddo
+    !
+
+  
+  end subroutine compute_w_hermite
+  
+  
+  subroutine compute_derivative_periodic( &
+    input, &
+    output, &
+    Nc, &
+    w, &
+    r, &
+    s, &
+    length)
+    sll_real64, dimension(:), intent(in) :: input
+    sll_real64, dimension(:), intent(out) :: output
+    sll_int32, intent(in) :: Nc
+    sll_int32, intent(in) :: r
+    sll_int32, intent(in) :: s
+    sll_real64, dimension(r:s), intent(in) :: w
+    sll_real64, intent(in) :: length
+    !local variables
+    sll_int32 :: i
+    sll_int32 :: ii
+    sll_real64 :: tmp
+    sll_int32 :: ind
+    sll_real64 :: dx
+    dx = length/real(Nc,f64)
+    do i=1,Nc+1
+      tmp=0._f64
+      do ii=r,s
+        ind=modulo(i+ii-1+Nc,Nc)+1
+        tmp=tmp+w(ii)*input(ind)
+      enddo
+      output(i) = tmp/dx
+    enddo
+        
+  end subroutine compute_derivative_periodic
 
   subroutine compute_finite_difference_init(w,p)
     integer,intent(in)::p    
