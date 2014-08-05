@@ -94,7 +94,7 @@ contains
     character(len=1) :: aa,bb,cc,dd
     integer :: kk1, kk2, kk3, kk4
 
-    if ( istep < 10000) then
+    if ( istep >= 0 .and. istep < 10000) then
        kk1 = istep/1000
        aa  = char(kk1 + 48)
        kk2 = (istep - kk1*1000)/100
