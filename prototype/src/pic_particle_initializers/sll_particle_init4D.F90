@@ -70,9 +70,11 @@ contains
     ymin = m2d%eta2_min
     ncx  = m2d%num_cells1
 
-    print*, 'the rank is ', rank
-
-    write(rank_name,'(i2)') rank
+    if(present(rank)) then
+       write(rank_name,'(i8)') rank
+    else
+       rank_name = '00000000'
+    end if
     nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
     open(90, file=nomfile)
 !    open(90,file='initialparticles.dat')

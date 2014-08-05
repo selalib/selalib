@@ -1,7 +1,7 @@
 SET(SRC_UTILITIES sll_utilities.F90 
                   tridiagonal.F90
                   sll_toeplitz_penta_diagonal.F90
-                  lagrange_interpolation.F90 sol.f muls.f )
+                  sol.f muls.f )
 
 IF(Fortran_COMPILER MATCHES IBM)
    SET_SOURCE_FILES_PROPERTIES(sol.f muls.f 
@@ -26,7 +26,3 @@ TARGET_LINK_LIBRARIES(test_tridiagonal sll_utilities)
 #  tridiagonal example
 ADD_EXECUTABLE(example_tridiagonal example.F90)
 TARGET_LINK_LIBRARIES(example_tridiagonal sll_utilities)
-
-# lagrange interpolator
-ADD_EXECUTABLE( test_lagrange unit_test_lagrange.F90 )
-TARGET_LINK_LIBRARIES( test_lagrange sll_utilities )
