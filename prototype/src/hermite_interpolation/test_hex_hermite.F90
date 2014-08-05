@@ -5,16 +5,15 @@ program test_hex_hermite
 #include "sll_assert.h"
 
   use sll_constants
-  use hex_mesh
+  use mesh_hex_alt
   use sll_hermite_interpolation_2d_module
 
   implicit none
 
-  type(deriv), pointer        :: deriv 
-  type(hex_mesh_2d), pointer  :: mesh
+  sll_real64, dimension(:,:), allocatable :: mesh_num, deriv 
+  sll_int32 , dimension(:,:), allocatable :: mesh_numh, mesh_coor
 
-
-  sll_int32    :: num_cells
+  sll_int32    :: num_cells, n_points
   sll_int32    :: i
   sll_int32    :: nloops
   sll_int32    :: ierr
@@ -25,15 +24,14 @@ program test_hex_hermite
   sll_real64,dimension(:),allocatable :: x1
   sll_real64,dimension(:),allocatable :: x2
   sll_real64,dimension(:),allocatable :: f_init
-  sll_real64,dimension(:),allocatable :: chi1
-  sll_real64,dimension(:),allocatable :: chi2
   ! distribution at time n
   sll_real64,dimension(:),allocatable :: x1_char
   sll_real64,dimension(:),allocatable :: x2_char
   sll_real64,dimension(:),allocatable :: f_tn
+  ! distribution at time n + 1
+  sll_real64,dimension(:),allocatable :: f_tn1
   ! distribution at end time
   sll_real64,dimension(:),allocatable :: f_fin
-  sll_int32    :: where_error
   sll_real64   :: diff_error
   sll_real64   :: norm2_error
   ! advection
@@ -42,56 +40,52 @@ program test_hex_hermite
   sll_real64   :: dt
   sll_real64   :: tmax
   sll_real64   :: t
-  ! timer variables
-  sll_real64   :: tcpu, t_init, t_end
-  !others
-  sll_real64   :: x2_basis
-  sll_real64   :: x1_basis
-  sll_real64   :: x1_temp
-  character(len = 50) :: filename
-  character(len = 50) :: filename2
-  character(len = 4)  :: filenum
-  sll_real64   :: p = 6 !-> degree of the approximation for the derivative 
+
+  sll_real64   :: t_init, t_end
+  !character(len = 50) :: filename
+  sll_int32    :: p = 6 !-> degree of the approximation for the derivative 
+  sll_real64   :: step , aire, radius, x0, y0, x1_temp
+  
+  x0 = 0._f64
+  y0 = 0._f64
+  radius = 1._f64
 
 
 
-  do num_cells = 75,75,1 ! -> boucle sur la taille du maillage  
-
-     !   t_init = getRealTimer()
+  do num_cells = 3,3,1 ! -> loop on the size of the mesh 
   
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                       ! Mesh initialization   
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     
+     n_points = 1 + 3 * num_cells * (num_cells + 1)  
 
-     mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
-                                !0.5_f64, -sqrt(3.)/2._f64, &
-                                !0.5_f64,  sqrt(3.)/2._f64, &
-                                !1.0_f64,  0._f64, &
-          radius = 1._f64)
+     allocate( mesh_num(1:2,1:n_points) )
+     allocate( mesh_numh(1:2,1:n_points) )
+     allocate( mesh_coor(-num_cells:num_cells,-num_cells:num_cells) )
+     allocate( deriv(1:6,n_points) )
 
-     call sll_display(mesh) !  -> décrit sur le terminal le mesh
+     call create_hex_mesh(mesh_num, mesh_numh, mesh_coor, num_cells, radius, x0, y0)
 
-     print*,"num_pts : ", mesh%num_pts_tot
 
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !             allocation
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
-     SLL_ALLOCATE(f_init(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(f_tn(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(f_fin(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(x1(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(x2(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(x1_char(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(x2_char(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(chi1(mesh%num_pts_tot),ierr)
-     SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
+     SLL_ALLOCATE(f_init( n_points),ierr)
+     SLL_ALLOCATE(f_tn( n_points),ierr)
+     SLL_ALLOCATE(f_tn1( n_points),ierr)
+     SLL_ALLOCATE(f_fin( n_points),ierr)
+     SLL_ALLOCATE(x1( n_points),ierr)
+     SLL_ALLOCATE(x2( n_points),ierr)
+     SLL_ALLOCATE(x1_char( n_points),ierr)
+     SLL_ALLOCATE(x2_char( n_points),ierr)
 
-     SLL_ALLOCATE(deriv(mesh%num_pts_tot),ierr)
 
-     
-     a    = radius / real( num_cells )
-     aire = a**2/sqrt(3_f64)
+
++     
+     step = radius / real( num_cells )
+     aire = step**2*sqrt(3.0_f64)*0.25_f64
 
      ! Distribution initialization
 
@@ -99,50 +93,54 @@ program test_hex_hermite
      gauss_x2  = -0.25_f64
      gauss_sig = 0.05_f64
 
-     do i=0, mesh%num_pts_tot-1
-        x1(i+1) = from_global_x1(mesh, i)
-        x2(i+1) = from_global_x2(mesh, i)
-        f_init(i+1) = 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
-             + (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
-        if (exponent(f_init(i+1)) .lt. -17) then
-           f_init(i+1) = 0._f64
+     do i = 1, n_points
+
+        !(/x1(i), x2(i)/) = (/mesh_num(1,i),mesh_num(2,i)/)!mesh_num( 1:2 , i)
+
+        x1(i) = mesh_num(1,i)
+        x2(i) = mesh_num(2,i)
+
+        f_init(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2 + (x2(i)-gauss_x2)**2) / gauss_sig**2 )
+        if (exponent(f_init(i)) .lt. -17) then
+           f_init(i) = 0._f64
         end if
-        f_tn(i+1) = f_init(i+1)
+        f_tn(i) = f_init(i)
+
      end do
 
-     call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
      ! Advection initialization
-     which_advec = 1
+     which_advec = 1  ! 0 : linear advection ; 1 : circular advection
      advec = 0.025_f64!5_f64
      tmax  = 2.5_f64
      dt    = 0.025_f64
      t     = 0._f64
 
-     ! Computing characteristics
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !              Computing characteristics
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
      if (which_advec .eq. 0) then
         ! linear advection
         x1_char(:) = x1(:) - advec*dt
         x2_char(:) = x2(:) - advec*dt
      else
         ! Circular advection
-        x1_char(1) = 0._f64
-        x2_char(1) = 0._f64
         x1_char(2:) = sqrt(x1(2:)**2 + x2(2:)**2) * cos(2*sll_pi*dt + atan2(x2(2:),x1(2:)))
         x2_char(2:) = sqrt(x1(2:)**2 + x2(2:)**2) * sin(2*sll_pi*dt + atan2(x2(2:),x1(2:)))
      end if
 
-     ! Time loop
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !                          Time loop
+     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      nloops = 0
 
-
      call cpu_time(t_init)
-     print*,""
+
      do while (t .lt. tmax)
         !Error variables
         norm2_error = 0._f64
         diff_error  = 0._f64
-        where_error = -1
 
         nloops = nloops + 1
 
@@ -151,13 +149,13 @@ program test_hex_hermite
         ! let us compute the derivatives in every hexaedric direction with p the degree of the approximation
         ! then let us compute the derivatives in the x1 and x2 direction
 
-        ! call der_finite_difference( f_tn, deriv, p, mesh ) -> CALCUL DE TOUTES LES DÉRIVÉES DANS LES DIRECTIONS H1, H2 et H3
+        call  der_finite_difference( f_tn, p, mesh_numh, mesh_coor, deriv, num_cells )  !-> CALCUL DE TOUTES LES DÉRIVÉES DANS LES DIRECTIONS H1, H2 et H3
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-        t      = t + dt
+        t = t + dt
 
-        do i=1, mesh%num_pts_tot   ! interpolation en chaque point
+        do i=1, n_points   ! interpolation en chaque point
 
            ! ******************
            ! Approximation
@@ -165,11 +163,7 @@ program test_hex_hermite
 
            ! computation of the interpolation   F( t_(n+1) , x_i , v_j ) = F ( t_n , X(t_n) , V(t_n) ) 
 
-           !hermite_interpolation( x, y, f_tn, mesh, deriv, a, aire) 
-
-           ! hermite_interpolation( f_tn , mesh, deriv, x1_char(i), x2_char(i) )  
-           !-> contient toute l'interpolation à partir des 10 degrés de libertés
-
+           call hermite_interpolation(i, x1(i), x2(i), f_tn, f_tn1, mesh_num, mesh_coor, deriv, step, aire, num_cells ,radius)  
 
            ! if (f_tn(i) < 0.) then
            !    ! print *, "Negative value at"
@@ -190,8 +184,8 @@ program test_hex_hermite
 
            if (which_advec .eq. 0) then
               ! linear advection
-              x1(i) = from_global_x1(mesh, i-1) - advec*dt*nloops
-              x2(i) = from_global_x2(mesh, i-1) - advec*dt*nloops
+              x1(i) = mesh_num( 1, i) - advec*dt*nloops
+              x2(i) = mesh_num( 2, i) - advec*dt*nloops
            else
               ! Circular advection
               x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
@@ -201,142 +195,74 @@ program test_hex_hermite
 
            f_fin(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
                 + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+
            if (exponent(f_fin(i)) .lt. -17) then
               f_fin(i) = 0._f64
            end if
 
-
-
-           !x1_basis = change_basis_x1(mesh, spline, x1(i), x2(i))
-           !x2_basis = change_basis_x2(mesh, spline, x1(i), x2(i))   -> subroutine ne marche plus
-
-           !chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-           !chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)   -> subroutine ne marche plus - > tte des splines -> faire la meme chose pour mes éléments finis
-
-
-           if (get_hex_num(i) .lt. get_hex_num(mesh%num_pts_tot) - deg*2 - 1) then
               ! Relative error
               if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
                  diff_error = abs(f_fin(i) - f_tn(i))
-                 where_error = i
               end if
               ! Norm2 error :
               norm2_error = norm2_error + abs(f_fin(i) - f_tn(i))**2
-           end if
-        end do
+
+           end do
 
         ! Norm2 error :
         norm2_error = sqrt(norm2_error)
 
         call cpu_time(t_end)
-        ! Printing error
         print*,"  nt =", nloops, "     | error_Linf = ", diff_error
-        print*,"                       | at hex =", get_hex_num(where_error), where_error
         print*,"                       | error_L2   = ", norm2_error
-        ! print*," Center error = ", f_fin(1)-f_tn(1)
 
-
-
-
-        !WRITING ERROR REGARDING TIME STEP
-        if (t .eq. dt) then
-           open (unit=12,file="err_chi2_gauss_cstadv.txt", &
-                action="write",status="replace")
-           write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
-           close(12)
-        else 
-           open (unit=12,file="err_chi2_gauss_cstadv.txt", &
-                action="write",status="old", position="append")
-           write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
-           close(12)
-        end if
-
-        call int2string(nloops,filenum)
-        filename2 = "./time_files/analytical/ana_dist"//trim(filenum)//".txt"
-        filename  = "./time_files/numerical/num_dist"//trim(filenum)//".txt"
-        print*,filename
-        print*,filename2
-        call write_field_hex_mesh(mesh, f_tn, filename)
-        call write_field_hex_mesh(mesh, f_fin,filename2)
+        f_tn = f_tn1
 
      end do
 
-
-     call write_field_hex_mesh(mesh, f_tn, "final_dist.txt")
-     call write_field_hex_mesh(mesh, chi1, "chi1.txt")
-     call write_field_hex_mesh(mesh, chi2, "chi2.txt")
-     call write_field_hex_mesh(mesh, f_fin, "an_dist.txt")
-     print *,""
      print*," *    Final error  = ", diff_error, " *"
-
-
-     ! !WRITING ERROR REGARDING NUMBER OF POINTS
-     ! if (num_cells .eq. 10) then 
-     !    !NEW FILE :
-     !    open (unit=12,file="error_file.txt",action="write",&
-     !         status="replace")
-     !    write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-     !    close(12)
-     ! else
-     !    !WRITE
-     !    open (unit=12,file="error_file.txt",action="write",&
-     !         status="old", position="append") 
-     !    write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-     !    close(12)
-     ! end if
-
-
-     ! !WRITING CPU TIME
-     ! if (num_cells .eq. 10) then 
-     !    !NEW FILE :
-     !    open (unit=12,file="cpu_time.txt",action="write",&
-     !         status="replace")
-     !    write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-     !    close(12)
-     ! else
-     !    !WRITE
-     !    open (unit=12,file="cpu_time.txt",action="write",&
-     !         status="old", position="append") 
-     !    write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-     !    close(12)
-     ! end if
 
 
      SLL_DEALLOCATE_ARRAY(f_init,ierr)
      SLL_DEALLOCATE_ARRAY(f_tn,ierr)
+     SLL_DEALLOCATE_ARRAY(f_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(f_fin,ierr)
      SLL_DEALLOCATE_ARRAY(x1,ierr)
      SLL_DEALLOCATE_ARRAY(x2,ierr)
-     SLL_DEALLOCATE_ARRAY(chi1,ierr)
-     SLL_DEALLOCATE_ARRAY(chi2,ierr)
      SLL_DEALLOCATE_ARRAY(x1_char,ierr)
      SLL_DEALLOCATE_ARRAY(x2_char,ierr)
-     SLL_DEALLOCATE(mesh,ierr)
+     deallocate( mesh_num, mesh_numh, mesh_coor, deriv) 
 
 
   end do
 
 
   contains
-    
-    
-    type :: deriv
-       sll_real64 :: dh1, dh2, dh3                     
-    end type deriv
 
     
-    subroutine der_finite_difference( f_tn, deriv, p, mesh) !-> CALCUL DE TOUTES LES DÉRIVÉES DANS LES DIRECTIONS H1, H2 ET H3
+    subroutine der_finite_difference( f_tn, p, mesh_numh, mesh_coor, deriv, n_cell ) 
+      !-> computation of the partial derivatives in the directions H1, H2 and H3
       implicit none
-      type(hex_mesh_2d), pointer           :: mesh
-      type(derive)     , pointer           :: deriv
-      sll_int32                            :: i, j, r, s, n, n1, n2, n3
-      sll_real64, dimension(:),allocatable :: w, ff, fff  
-      sll_real64, intent(in)               :: p   
-      sll_real64                           :: h1 ,h2
+      sll_int32 , dimension(:,:)           :: mesh_coor, mesh_numh
+      sll_real64, dimension(:,:)           :: deriv 
+      sll_real64, dimension(:), intent(in) :: f_tn 
+      sll_int32, intent(in)                :: n_cell, p
+      sll_int32                            :: i, j, r, s, n_points
+      sll_int32                            :: n1, n2, n3, n4, n5, n6
+      sll_real64                           :: dh1, dh2, dh3, dh4, dh5, dh6
+      sll_real64, dimension(:),allocatable :: w
+      sll_real64, dimension(:,:),allocatable :: f
+      sll_int32                            :: h1 ,h2, h1t ,h2t
+      sll_int32                            :: h1n ,h2n, h1tn ,h2tn
+      logical                              :: opsign
 
-      !****************************************************************************************
-      !computation of the coefficients in fonction of the degree p of the approximation required
-      !****************************************************************************************
+      
+      n_points = size(f_tn)
+
+      !*********************************************************************
+      !computation of the coefficients in fonction of the degree p 
+      !of the approximation required
+      !*********************************************************************
       if ( (p/2)*2 == p ) then !if p is even
          r = -p/2       
          s = p/2
@@ -345,42 +271,90 @@ program test_hex_hermite
          s = p/2 !+ 1 ! de-centered to the right
       endif
 
-      n = p + 1
+      SLL_ALLOCATE( w(r:s),ierr )
+      allocate( f(1:6,r:s) )
 
-      SLL_ALLOCATE( w(r,s), ff(r,s), fff(r,s), ffff(r,s),ierr )
+      call compute_w_hermite(w,r,s) 
 
-      compute_w_hermite(w,r,s) 
-
-      !************************************************************************
-      ! Computation of the derivatives in both hexaedric directions h1 and h2,
+      !***********************************************************************
+      ! Computation of the derivatives in both hexa directions h1 and h2,
       ! then for both x and y directions for every points of the mesh
-      !************************************************************************
+      !***********************************************************************
       
-      do i = 1, mesh%num_pts_tot 
+      do i = 1, n_points 
 
-         
-         !find the required points in the h1, h2 and h3 directions 
+         h1 = mesh_numh(1,i) 
+         h2 = mesh_numh(2,i)  
+         h1n = h1 + n_cell + 1
+         h2n = h2 + n_cell + 1
 
-         ! find the hexa coordinate from the numerotation
-
-         !->  voir la fonction de laura find-machin (...)  ???
-
-         h1 = 
-         h2 = 
-
-         do j = r,s
+         do j = r,s !find the required points in the h1, h2 and h3 directions 
             
-            ! faire attention que le point est toujours dans le mesh -> sinon on applique la condition de bords
+            opsign = .false.
 
-            ! trouver le numéro n1 du point correspondant à ( h1 + j , h2     )
-            ! trouver le numéro n2 du point correspondant à ( h1     , h2 + j )
-            ! trouver le numéro n3 du point correspondant à ( h1 + j , h2 + j )
+            h1t = h1 + j 
+            h2t = h2 + j
+            h1tn = h1n + j 
+            h2tn = h2n + j
 
-            ff(j)   = f_tn( n1 ) 
+            if ( h2t > 0 .and. h1t < 0 .or.  h1t > 0 .and. h2t < 0 ) opsign = .true.
 
-            fff(j)  = f_tn( n2 ) 
+            !test if outside mesh 
 
-            ffff(j) = f_tn( n3 ) 
+            if (  abs(h1t) > n_cell .or. opsign .and. ( abs(h1t) + abs(h2) > n_cell) ) then
+               f(1,j) = 0.0_f64 ! dirichlet boundary condition
+            else
+               n1 = mesh_coor(h1tn,h2n)
+               f(1,j) = f_tn(n1) 
+            endif
+
+            if (  abs(h2t) > n_cell .or. opsign .and. ( abs(h1) + abs(h2t) > n_cell) ) then
+               f(2,j) = 0.0_f64 ! dirichlet boundary condition
+            else
+               n2 = mesh_coor(h1n,h2tn)
+               f(2,j) = f_tn(n2) 
+            endif
+
+            if ( abs(h1t) > n_cell .or. abs(h2t) > n_cell .or. opsign .and. ( abs(h1t) + abs(h2t) > n_cell) ) then
+               f(3,j) = 0.0_f64 ! dirichlet boundary condition
+            else
+               n3 = mesh_coor(h1tn,h2tn)
+               f(3,j) = f_tn(n1) 
+            endif
+
+            !find the required points in the -h1, -h2 and -h3 directions 
+            
+            opsign = .false.
+
+            h1t = h1 - j
+            h2t = h2 - j
+            h1tn = h1n + j 
+            h2tn = h2n + j
+
+            if ( h2t > 0 .and. h1t < 0 .or.  h1t > 0 .and. h2t < 0 ) opsign = .true.
+
+            !test if outside mesh 
+
+            if (  abs(h1t) > n_cell .or. opsign .and. ( abs(h1t) + abs(h2) > n_cell) ) then
+               f(4,j) = 0.0_f64 ! dirichlet boundary condition
+            else
+               n4 = mesh_coor(h1tn,h2n)
+               f(4,j) = f_tn(n4) 
+            endif
+
+            if (  abs(h2t) > n_cell .or. opsign .and. ( abs(h1) + abs(h2t) > n_cell) ) then
+               f(5,j) = 0.0_f64 ! dirichlet boundary condition
+            else
+               n5 = mesh_coor(h1n,h2tn)
+               f(5,j) = f_tn(n5) 
+            endif
+
+            if ( abs(h1t) > n_cell .or. abs(h2t) > n_cell .or. opsign .and. ( abs(h1t) + abs(h2t) > n_cell) ) then
+               f(6,j) = 0.0_f64 ! dirichlet boundary condition
+            else
+               n6 = mesh_coor(h1tn,h2tn)
+               f(6,j) = f_tn(n6) 
+            endif
 
          enddo
 
@@ -388,90 +362,93 @@ program test_hex_hermite
          dh1 = 0._f64
          dh2 = 0._f64
          dh3 = 0._f64
+         dh4 = 0._f64
+         dh5 = 0._f64
+         dh6 = 0._f64
 
          do j = r,s
-            dh1 = dh1 + w(j) * ff(j)  
-            dh2 = dh2 + w(j) * fff(j)
-            dh3 = dh3 + w(j) * ffff(j)
+            dh1 = dh1 + w(j) * f(1,j)  
+            dh2 = dh2 + w(j) * f(2,j)
+            dh3 = dh3 + w(j) * f(3,j)
+            dh4 = dh4 + w(j) * f(4,j)  
+            dh5 = dh5 + w(j) * f(5,j)
+            dh6 = dh6 + w(j) * f(6,j)
          enddo
          
-         deriv(i)%dfh1 = dh1
-         deriv(i)%dfh2 = dh2
-         deriv(i)%dfh3 = dh3 
+         deriv(1,i) = dh1
+         deriv(2,i) = dh2
+         deriv(3,i) = dh3 
+         deriv(4,i) = dh4
+         deriv(5,i) = dh5
+         deriv(6,i) = dh6 
 
       enddo
 
 
-     SLL_DEALLOCATE_ARRAY deallocate( w, ff, fff, ffff )
+     deallocate(f)
+     SLL_DEALLOCATE_ARRAY(w,ierr)
 
     end subroutine der_finite_difference
 
 
     
 
-    subroutine hermite_interpolation( x, y, f_tn, mesh, deriv, a, aire) 
+    subroutine hermite_interpolation(num, x, y, f_tn, f_tn1, mesh_num, mesh_coor, deriv, step, aire, num_cells ,radius) 
 
       implicit none
-
-      type(derivative)           :: deriv
-      type(hex_mesh_2d)          :: mesh
-      sll_real64,intent(in)      :: x, y, a, aire
-      sll_real64                 :: x1, x2, x3, y1, y2, y3
-      sll_real64                 :: phi, ksi1, ksi2, ksi3, l1, l2, l3
+      sll_int32 , dimension(:,:) :: mesh_coor
+      sll_real64, dimension(:,:) :: mesh_num, deriv 
+      sll_real64,intent(in)      :: x, y, step, aire, radius
+      sll_int32,intent(in)       :: num_cells, num
+      sll_real64                 :: x1, x2, x3, y1, y2, y3, f
+      sll_real64                 :: phi, ksi1, ksi2, ksi3, l1, l2, l3, eps = 1.d-12
       sll_real64                 :: ksi12, ksi13, ksi21, ksi23, ksi31, ksi32
-      sll_real64,dimension(:)    :: f_tn
+      sll_real64,dimension(:), intent(in)    :: f_tn
+      sll_real64,dimension(:), intent(out)   :: f_tn1
       sll_real64,dimension(1:10) :: freedom, base
-      sll_int32                  :: i
+      sll_int32                  :: i, i1, i2, i3
 
+      ! find the triangle where (x,y) belongs to
+      ! i1, i2, i3 are the indices for the S1, S2 and S3 vertexes of the triangle
 
-      ! find the triangle where (x,y) belong to
-
-      call find_tri(x,y,i)
+      call search_tri( x, y, mesh_coor,step, num_cells, radius, i1, i2, i3 )
 
       ! get the ten degrees of freedom
 
       ! values at the vertexes of the triangle
 
-      freedom(1) = f_tn( mesh(i)%point(1) )
-      freedom(2) = f_tn( mesh(i)%point(2) )
-      freedom(3) = f_tn( mesh(i)%point(3) )
+      freedom(1) = f_tn(i1)
+      freedom(2) = f_tn(i2)
+      freedom(3) = f_tn(i3)
+
+      x1 = mesh_num(1,i1) !(/x1,y1/) = mesh_num(1:2,i1)
+      x2 = mesh_num(1,i2)
+      x3 = mesh_num(1,i3)
+      y1 = mesh_num(2,i1)
+      y2 = mesh_num(2,i2)
+      y3 = mesh_num(2,i3)
 
       ! value at the center of the triangle
 
-      freedom(4) = 1.0_f64 / 3.0_f64 * ( freedom(1) + freedom(2) + freedom(3) )
+      freedom(4) =  ( freedom(1) + freedom(2) + freedom(3) ) / 3.0_f64
 
       ! values of the derivatives
 
-      !dans le calcul précédents des dérivées on a arrangé l'ordre 
-
-      !find_point()
-
-      ! i1 is the indice for the point S1 of the triangle
-      ! i2 is the indice for the point S2 of the triangle
-      ! i3 is the indice for the point S3 of the triangle
-
-      ! il faut calculer les dérivées suivant les sommets -> (h1,h2) ou (h1,h3) ou (h2,h3)
-
-      ! cas (h1,h2) -> inutile en fin de compte
-      ! dfx = ( deriv(i1)%dfh1 - deriv(i1)%dfh2 ) * sqrt(3_f64) * 0.5_f64
-      ! dfy = ( deriv(i1)%dfh1 + deriv(i1)%dfh2 ) * 0.5_f64
-
-      freedom(5)  = deriv(i1)%dfh1
-      freedom(6)  = deriv(i1)%dfh2
-
-      ! cas (h1,h3) 
-      ! dfx = deriv(i2)%dfh1 * sqrt(3_f64) * 0.5_f64
-      ! dfy = deriv(i2)%dfh1 * 0.5_f64 + deriv(i2)%dfh3 
-
-      freedom(7)  = deriv(i2)%dfh1 
-      freedom(8)  = deriv(i2)%dfh3
-
-      ! cas (h2,h3) 
-      ! dfx = deriv(i3)%dfh2 * (-sqrt(3_f64)) * 0.5_f64
-      ! dfy = deriv(i3)%dfh2 * 0.5_f64 + deriv(i3)%dfh3 
-
-      freedom(9)   = deriv(i3)%dfh2 
-      freedom(10)  = deriv(i3)%dfh3
+      freedom(5) = deriv(5,i1) ! derivative from S1 to S3
+      freedom(9) = deriv(2,i3) ! derivative from S3 to S1
+      
+      !if ( (/x2-x1,y2-y1/) == h1 )then      ! if S2 S1 = h1 then we are in the first case )
+      if ( ((x2-x1) - sqrt(3.0_f64)*0.5_f64)**2 + (y2-y1 - 0.5_f64)**2 <= eps ) then 
+         freedom(6) = deriv(4,i1) ! derivative from S1 to S2
+         freedom(7) = deriv(1,i2) ! derivative from S2 to S1
+         freedom(8) = deriv(6,i2) ! derivative from S2 to S3
+         freedom(10)= deriv(3,i3) ! derivative from S3 to S2
+      else !if ( (/x2-x1,y2-y1/) == -h2 )! if S2 S1 = -h2 then we are in the 2nd case )
+         freedom(6) = deriv(6,i1) ! derivative from S1 to S2 
+         freedom(7) = deriv(3,i2) ! derivative from S2 to S1
+         freedom(8) = deriv(4,i2) ! derivative from S2 to S3
+         freedom(10)= deriv(1,i3) ! derivative from S3 to S2
+      endif
 
       l1   = 0.5_f64 * abs( (x2 - x)*(y3 - y) - (x3 - x)*(y2 - y) ) / aire 
       l2   = 0.5_f64 * abs( (x1 - x)*(y3 - y) - (x3 - x)*(y1 - y) ) / aire 
@@ -494,12 +471,12 @@ program test_hex_hermite
       base(2) = 3.0_f64 * l2**2 - 2.0_f64*ksi2 - 9.0_f64*phi
       base(3) = 3.0_f64 * l3**2 - 2.0_f64*ksi3 - 9.0_f64*phi
       base(4) = 27.0_f64 * phi
-      base(5) = a * ( ksi12 - 1.5_f64*phi )
-      base(6) = a * ( ksi13 - 1.5_f64*phi )
-      base(7) = a * ( ksi21 - 1.5_f64*phi )
-      base(8) = a * ( ksi23 - 1.5_f64*phi )
-      base(9) = a * ( ksi31 - 1.5_f64*phi )
-      base(10)= a * ( ksi32 - 1.5_f64*phi )
+      base(5) = step * ( ksi12 - 1.5_f64*phi )
+      base(6) = step * ( ksi13 - 1.5_f64*phi )
+      base(7) = step * ( ksi21 - 1.5_f64*phi )
+      base(8) = step * ( ksi23 - 1.5_f64*phi )
+      base(9) = step * ( ksi31 - 1.5_f64*phi )
+      base(10)= step * ( ksi32 - 1.5_f64*phi )
 
       f = 0.0_f64
 
@@ -507,6 +484,7 @@ program test_hex_hermite
          f = f + freedom(i)*base(i)
       enddo
 
+      f_tn1(num) = f
 
     end subroutine hermite_interpolation
 
