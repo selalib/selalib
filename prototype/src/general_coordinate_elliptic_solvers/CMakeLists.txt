@@ -11,6 +11,7 @@ ADD_LIBRARY( finite_differences_solver STATIC
 
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
 		       finite_differences_solver 
+		       sll_logical_meshes
                        sll_sparse_matrix 
                        sll_scalar_field_2d_alternative 
                        sll_interpolators
