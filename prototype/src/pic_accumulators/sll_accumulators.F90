@@ -29,6 +29,7 @@ module sll_accumulators
      sll_real64 :: q_nw
      sll_real64 :: q_ne
   end type charge_accumulator_cell_2d
+
   type sll_charge_accumulator_2d
      type(sll_logical_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
@@ -55,6 +56,7 @@ module sll_accumulators
      sll_real64 :: q_ip1jp2
      sll_real64 :: q_ip2jp2
   end type charge_accumulator_cell_2d_CS
+
   type sll_charge_accumulator_2d_CS
      type(sll_logical_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d_CS), dimension(:), pointer :: q_acc
@@ -108,6 +110,10 @@ module sll_accumulators
      module procedure delete_charge_accumulator_2d
   end interface sll_delete
 
+  interface operator(+)
+     module procedure q_acc_add
+  end interface operator(+)
+
 contains
   
   function new_charge_accumulator_2d( mesh_2d ) result(acc)
@@ -134,7 +140,16 @@ contains
 
   end function new_charge_accumulator_2d
   
+  function q_acc_add( q1, q2 ) result(res)
+    type(sll_charge_accumulator_cell_2d), intent(in) :: res
+    type(sll_charge_accumulator_cell_2d), intent(in) :: q1
+    type(sll_charge_accumulator_cell_2d), intent(in) :: q2
 
+    res%q_sw = q1%q_sw + q2%q_sw
+    res%q_se = q1%q_se + q2%q_se
+    res%q_nw = q1%q_nw + q2%q_nw
+    res%q_ne = q1%q_ne + q2%q_ne
+  end function q_acc_add
 
   subroutine reset_charge_accumulator_to_zero( acc )
     type(sll_charge_accumulator_2d), pointer :: acc
