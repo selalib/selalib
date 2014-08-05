@@ -72,7 +72,7 @@ contains
 
     print*, 'the rank is ', rank
 
-    write(rank_name,'(i2)') rank
+    write(rank_name,'(i8)') rank
     nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
     open(90, file=nomfile)
 !    open(90,file='initialparticles.dat')
