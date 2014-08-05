@@ -105,7 +105,8 @@ contains
        dd  = char(kk4 + 48)
        cstep = aa//bb//cc//dd
     else
-       call errout( 6, 'W', 'int2string', 108, 'index is greater than 9999' )
+       call errout( 6, 'W', 'int2string', 108, 'index is negative or greater than 9999' )
+       print*, 'index =', istep
        cstep = 'xxxx'
     end if
 
