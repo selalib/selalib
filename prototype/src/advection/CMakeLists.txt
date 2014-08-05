@@ -10,9 +10,8 @@ IF(HDF5_ENABLED)
 
    ENDIF()
 
-
-
   SET( ADVECTION_SRC_FILES 
+        lagrange_interpolation.F90 
 	sll_advection_1d_periodic.F90
 	sll_advection_1d_non_uniform_cubic_splines.F90
 	sll_advection_1d_BSL.F90
@@ -25,7 +24,6 @@ IF(HDF5_ENABLED)
 	sll_advection_2d_tensor_product.F90
 	sll_advection_2d_CSL.F90
 	sll_advection_2d_base.F90)
-
 
   ADD_LIBRARY(
     sll_advection
@@ -40,6 +38,7 @@ IF(HDF5_ENABLED)
     sll_interpolators
     sll_periodic_interp
     sll_splines
+    sll_boundary_condition_descriptors
     sll_utilities
   )
 
@@ -107,7 +106,8 @@ IF(HDF5_ENABLED)
     test_advection_2d_oblic
     sll_advection)
 
-
+  ADD_EXECUTABLE( test_lagrange unit_test_lagrange.F90 )
+  TARGET_LINK_LIBRARIES( test_lagrange sll_advection )
 
   ADD_EXECUTABLE(
     test_advection_2d_tensor_product
