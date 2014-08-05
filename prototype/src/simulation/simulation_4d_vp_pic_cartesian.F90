@@ -228,6 +228,7 @@ contains
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator, sim%rho ) 
     endif
 
+    it = 0
     call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
             sim%m2d%eta2_max, ncy+1, &
             sim%rho, 'rho_init', it, ierr )
@@ -275,6 +276,8 @@ contains
 !!$    call sll_set_time_mark(t2)    
 #ifdef _OPENMP
     t_init = omp_get_wtime()
+#else
+    call cpu_time(t_init)
 #endif
 !  ----  TIME LOOP  ----
     do it = 0, sim%num_iterations-1
@@ -420,6 +423,8 @@ contains
     enddo ! END TIME LOOP
 #ifdef _OPENMP
     t_fin = omp_get_wtime()
+#else
+    call cpu_time(t_fin)
 #endif
     close(65)
     print*, 'time is', t_fin-t_init, 'sec; and', int(sim%num_iterations,i64)*&
