@@ -97,7 +97,6 @@ module finite_elements_solver_module
      sll_real64, dimension(:), pointer :: stiff
   
      ! TODO : what are this variables for ??
-     sll_real64 :: epsi
      sll_real64 :: intjac
 
   end type finite_elements_solver
@@ -105,9 +104,9 @@ module finite_elements_solver_module
   ! For the integration mode.  
   sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
   
-  interface delete
+  interface sll_delete
      module procedure delete_solver
-  end interface delete
+  end interface sll_delete
 
   interface initialize
      module procedure initialize_finite_elements_solver
