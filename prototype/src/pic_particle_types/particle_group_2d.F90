@@ -84,22 +84,26 @@ contains
     n_thread  = 1
     thread_id = 0
 
-!$omp parallel default(SHARED) PRIVATE(thread_id)
+    !$omp parallel default(SHARED) PRIVATE(thread_id)
 #ifdef _OPENMP
     thread_id = OMP_GET_THREAD_NUM()
     if (thread_id ==0) then
        n_thread  = OMP_GET_NUM_THREADS()
     endif
 #endif
-    if (thread_id ==0) then
-       nn = guard_list_size/n_thread
-       SLL_ALLOCATE( res%p_guard(1:n_thread), ierr)
-       SLL_ALLOCATE( res%num_postprocess_particles(1:n_thread), ierr)
-    endif
+    !$omp end parallel
+
+    nn = guard_list_size/n_thread
+    SLL_ALLOCATE( res%p_guard(1:n_thread), ierr)
+    SLL_ALLOCATE( res%num_postprocess_particles(1:n_thread), ierr)
+
+    !$omp parallel default(SHARED) PRIVATE(thread_id)
+#ifdef _OPENMP
+    thread_id = OMP_GET_THREAD_NUM()
+#endif
     SLL_ALLOCATE( res%p_guard(thread_id+1)%g_list(1:nn),ierr)
-!$omp end parallel
-
-
+    !$omp end parallel
+    
     if (.not.associated(mesh) ) then
        print*, 'error: passed mesh not associated'
     endif
