@@ -50,6 +50,7 @@ module sll_pic_simulation_4d_cartesian_module
      sll_real64, dimension(:,:), pointer :: E1, E2
      sll_int32 :: my_rank
      sll_int32 :: world_size
+     sll_int32 :: n_threads
    contains
      procedure, pass(sim) :: init_from_file => init_4d_pic_cartesian
      procedure, pass(sim) :: run => run_4d_pic_cartesian
@@ -77,19 +78,18 @@ contains
     sll_int32   :: NUM_PARTICLES, GUARD_SIZE, PARTICLE_ARRAY_SIZE
     sll_real64  :: THERM_SPEED
     sll_real64  :: QoverM, ALPHA
-    logical     :: CubicSplines
+    logical     :: UseCubicSplines
     sll_int32   :: NC_X,  NC_Y
     sll_real64  :: XMIN, KX, XMAX, YMIN, YMAX
     sll_int32, parameter  :: input_file = 99
     sll_int32, dimension(:), allocatable  :: rand_seed
     sll_int32   :: rand_seed_size
-    sll_inte 32 :: thread_id
-    sll_inte 32 :: n_thread
+    sll_int 32  :: thread_id
 
     namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
                           PARTICLE_ARRAY_SIZE, &
                           THERM_SPEED, dt, number_iterations, &
-                          QoverM, ALPHA, CubicSplines
+                          QoverM, ALPHA, UseCubicSplines
     namelist /grid_dims/  NC_X, NC_Y, XMIN, KX, YMIN, YMAX
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
     if( IO_stat /= 0 ) then
@@ -104,7 +104,7 @@ contains
     sim%my_rank    = sll_get_collective_rank(sll_world_collective)
 
     XMAX = (2._f64*sll_pi/KX)
-    sim%use_cubic_splines = CubicSplines
+    sim%use_cubic_splines = UseCubicSplines
     sim%thermal_speed_ions = THERM_SPEED
     sim%ions_number = NUM_PARTICLES
     sim%guard_size = GUARD_SIZE  
@@ -147,15 +147,15 @@ contains
 
     call sll_sort_particles_2d( sim%sorter, sim%part_group )
 
-    n_thread =  1
+    sim%n_threads =  1
     !$omp parallel default(SHARED)
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
-       n_thread =  OMP_GET_NUM_THREADS()
+       sim%n_threads =  OMP_GET_NUM_THREADS()
     endif
 #endif
     !$omp end parallel
-    SLL_ALLOCATE(sim%q_accumulator(1:n_thread), ierr)
+    SLL_ALLOCATE(sim%q_accumulator(1:sim%n_threads), ierr)
 
     if (sim%use_cubic_splines) then
        sim%q_accumulator_CS => new_charge_accumulator_2d_CS( sim%m2d )       
@@ -208,16 +208,17 @@ contains
     type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
     sll_real64, dimension(:,:), allocatable :: diag_energy! a memory buffer
 !!$    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
-    type(sll_time_mark)  :: t2, t3
+    type(sll_time_mark)  :: t2, t3, t8
     sll_real64, dimension(:), allocatable :: rho1d_send
     sll_real64, dimension(:), allocatable :: rho1d_receive
-    sll_real64   :: t_init, t_fin
-    sll_int32 :: n_thread
+    sll_real64   :: t_init, t_fin, time
     sll_int32 :: thread_id
+    sll_int32 :: n_threads
     type(charge_accumulator_cell_2d), dimension(:), pointer :: q_accum
 
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
+    n_threads = sim%n_threads
 
     SLL_ALLOCATE( rho1d_send(1:(ncx+1)*(ncy+1)),    ierr)
     SLL_ALLOCATE( rho1d_receive(1:(ncx+1)*(ncy+1)), ierr)
@@ -424,9 +425,11 @@ contains
        !$omp end parallel do
 !       ! reset any counters
        gi = 0
-       
-!       SUM of all the q_accum(thread_id)
 
+       call sll_set_time_mark(t8)
+       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
+       time = sll_time_elapsed_since(t8)
+       print*, "time for the accumulators sum", time
 
        if (sim%use_cubic_splines) then
           call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS, sim%rho )
