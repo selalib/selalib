@@ -1,18 +1,18 @@
 &sim_params
-	NUM_PARTICLES       = 100000
-	GUARD_SIZE          = 60000
-	PARTICLE_ARRAY_SIZE = 150000
+	NUM_PARTICLES       = 8000000
+	GUARD_SIZE          = 600000
+	PARTICLE_ARRAY_SIZE = 8500000
 	THERM_SPEED         = 1.0
 	dt     =  0.01
-	number_iterations   = 2500
+	number_iterations   = 5
 	QoverM = 1.0
 	ALPHA  = 0.1
-	CubicSplines = .false.
+	CubicSplines = .true.
 /
 
 &grid_dims
-	NC_X = 64
-	NC_Y = 16
+	NC_X = 512
+	NC_Y = 128
 	XMIN   = 0.0
 	KX     = 0.5
 	YMIN   = 0.0
