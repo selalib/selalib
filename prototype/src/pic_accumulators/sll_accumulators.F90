@@ -347,7 +347,19 @@ contains
     end do
   end subroutine reset_field_accumulator_CS_to_zero
 
-  
+  subroutine sum_accumulators( tab, n_threads, n_cells )
+    sll_int32, intent(in)  :: n_threads, n_cells
+    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer, intent(inout) :: tab
+    sll_int32  :: i, j   
+    
+    do i = 1, n_cells  
+       do j = 2, n_threads
+          tab(1)%q%q_acc(i) = tab(1)%q%q_acc(i) + tab(j)%q%q_acc(i)
+       enddo
+    enddo
+    
+  end subroutine sum_accumulators
+
    ! The above are the only routines that should live here. Something like taking
    ! a list of particules and accumulating the charge, will change the charge but
    ! not the particles so it could legitimately live here. This would introduce
