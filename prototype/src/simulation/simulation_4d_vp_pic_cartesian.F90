@@ -152,10 +152,12 @@ contains
     !$omp parallel default(SHARED)
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
+
        sim%n_threads =  OMP_GET_NUM_THREADS()
     endif
 #endif
     !$omp end parallel
+
     SLL_ALLOCATE(sim%q_accumulator(1:sim%n_threads), ierr)
 
     if (sim%use_cubic_splines) then
@@ -237,7 +239,6 @@ contains
 !!!    p_guard => sim%part_group%p_guard
 
     dt = sim%dt
-    gi = 0
     xmin = sim%m2d%eta1_min
     ymin = sim%m2d%eta2_min
     rdx = 1._f64/sim%m2d%delta_eta1
@@ -344,71 +345,93 @@ contains
        endif
 
 !!$       call sll_set_time_mark(t3)
-       ! ---- PUSH PARTICLES ----
 
-       !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum)
+       ! *******************************************************************
+       !
+       !                   ---- PUSH PARTICLES ----
+       !
+       ! *******************************************************************
+
+       !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum,p)
        !$&omp FIRSTPRIVATE(qoverm,dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)
-
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
 #endif
+!#define DBT 25
        q_accum => sim%q_accumulator(thread_id+1)%q
        p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-       print*, 'avant le do', thread_id
+       p => sim%part_group%p_list ! redundant but ... if openmp doesn't know...
+       gi = 0
        !$omp do
        do i = 1, sim%ions_number,2
-       print*, 'dans le do', thread_id
+!       if(thread_id == DBT) print*, '#1: thread ', thread_id, 'i = ', i
           if (sim%use_cubic_splines) then 
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp1)
              SLL_INTERPOLATE_FIELD_CS(Ex1,Ey1,accumE_CS,p(i+1),ttmp2)
           else
+!             if(thread_id == DBT) print*, '#2: thread ', thread_id, 'i = ', i
              SLL_INTERPOLATE_FIELD(Ex,Ey,accumE,p(i),tmp3,tmp4)
+!             if(thread_id == DBT) print*, '#3: thread ', thread_id, 'i = ', i
              SLL_INTERPOLATE_FIELD(Ex1,Ey1,accumE,p(i+1),tmp5,tmp6)
           endif
+!          if(thread_id == DBT) print*, '#4: thread ', thread_id, 'i = ', i
           p(i)%vx = p(i)%vx + dt * Ex* qoverm
           p(i)%vy = p(i)%vy + dt * Ey* qoverm
+!          if(thread_id == DBT) print*, '#5: thread ', thread_id, 'i = ', i
           p(i+1)%vx = p(i+1)%vx + dt * Ex1* qoverm
           p(i+1)%vy = p(i+1)%vy + dt * Ey1* qoverm
+!          if(thread_id == DBT) print*, '#6: thread ', thread_id, 'i = ', i
           GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
           GET_PARTICLE_POSITION(p(i+1),sim%m2d,x1,y1)
           x = x + dt * p(i)%vx
           y = y + dt * p(i)%vy
           x1 = x1 + dt * p(i+1)%vx
           y1 = y1 + dt * p(i+1)%vy
-          print*, 'juste apres le push'
+!          if(thread_id == DBT) print*, '#7: thread ', thread_id, 'i = ', i
           if(in_bounds( x, y, sim%m2d )) then ! finish push
+!             if(thread_id == DBT) print*, '#8: thread ', thread_id, 'i = ', i
              SET_PARTICLE_POSITION(p(i),xmin,ymin,ncx,x,y,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
-             print*, 'avant i= ', i,  thread_id
+!             if(thread_id == DBT) print*, '#9: thread ', thread_id, 'i = ', i
              if (sim%use_cubic_splines) then 
+!                if(thread_id == DBT) print*, '#10: thread ', thread_id, 'i = ', i
                 SLL_ACCUMULATE_PARTICLE_CHARGE_CS(sim%q_accumulator_CS,p(i),ttmp1,temp)
              else
+!                if(thread_id == DBT) print*, '#11: thread ', thread_id, 'i = ', i
                 SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
-                print*, 'apres i= ', i,  thread_id
+!                if(thread_id == DBT) print*, '#12: thread ', thread_id, 'i = ', i
              endif
           else ! store reference for later processing
+!                if(thread_id == DBT) print*, '#13: thread ', thread_id, 'i = ', i, 'gi = ', gi
              gi = gi + 1
              p_guard(gi)%p => p(i)
+!                if(thread_id == DBT) print*, '#14: thread ', thread_id, 'i = ', i
           end if
 
           if(in_bounds( x1, y1, sim%m2d )) then ! finish push
+!                if(thread_id == DBT) print*, '#15: thread ', thread_id, 'i = ', i
              SET_PARTICLE_POSITION(p(i+1),xmin,ymin,ncx,x1,y1,ic_x1,ic_y1,off_x1,off_y1,rdx,rdy,tmp3,tmp4)
-             print*, 'avant i+1= ', i+1,  thread_id
              if (sim%use_cubic_splines) then 
                 SLL_ACCUMULATE_PARTICLE_CHARGE_CS(sim%q_accumulator_CS,p(i+1),ttmp2,temp)
              else
-                SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i+1),tmp3,tmp4)                
-                print*, 'apres i+1= ', i+1,  thread_id
+!                if(thread_id == DBT) print*, '#16: thread ', thread_id, 'i = ', i
+                SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i+1),tmp3,tmp4) 
+!                if(thread_id == DBT) print*, '#17: thread ', thread_id, 'i = ', i
              endif
           else ! store reference for later processing
+!                  if(thread_id == DBT) print*, '#18: thread ', thread_id, 'i = ', i
              gi = gi + 1
              p_guard(gi)%p => p(i+1)
+!              if(thread_id == DBT) print*, '#19: thread ', thread_id, 'i = ', i
           end if
-          print*, 'apres in bounds, i=',i,thread_id
+!              if(thread_id == DBT) print*, '#20: thread ', thread_id, 'i = ', i
        enddo
        !$omp end do
+!       if(thread_id == DBT) print*, '#21: thread ', thread_id, 'i = ', i
        sim%part_group%num_postprocess_particles(thread_id+1) = gi
+!       if(thread_id == DBT) print*, '#22: thread ', thread_id, 'i = ', i
        !$omp end parallel
-    print*, 'APRES POUSSE parts'
+
+    print*, 'FINISHED FIRST CYCLE OF PARTICLE PUSH'
          
        ! ---- END PUSH PARTICLES ----
 
@@ -426,14 +449,15 @@ contains
        ! Process the particles in the guard list. In the periodic case, no
        ! destruction of particles is needed, so this is simple.
 
-       !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,ttmp,temp,p_guard,q_accum)
+       !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,ttmp,temp,p_guard,q_accum,p,thread_id,i)
        !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
 #endif
        q_accum => sim%q_accumulator(thread_id+1)%q
        p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-       !$omp do
+       p => sim%part_group%p_list
+!!!!       !$omp do
        do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
           GET_PARTICLE_POSITION(p_guard(i)%p,sim%m2d,x,y)
           x = x + dt * p_guard(i)%p%vx
@@ -446,7 +470,7 @@ contains
              SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp1,tmp2)
           endif
        end do
-       !$omp end do 
+!!!!       !$omp end do 
        !$omp end parallel
 !       ! reset any counters
        gi = 0
