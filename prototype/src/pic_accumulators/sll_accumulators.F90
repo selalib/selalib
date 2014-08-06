@@ -29,10 +29,16 @@ module sll_accumulators
      sll_real64 :: q_nw
      sll_real64 :: q_ne
   end type charge_accumulator_cell_2d
+
   type sll_charge_accumulator_2d
      type(sll_logical_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
   end type sll_charge_accumulator_2d
+
+  type sll_charge_accumulator_2d_ptr
+     type(sll_charge_accumulator_2d), pointer :: q
+  end type sll_charge_accumulator_2d_ptr
+
 
   type charge_accumulator_cell_2d_CS
      sll_real64 :: q_im1j
@@ -327,6 +333,7 @@ contains
     end do
   end subroutine reset_field_accumulator_CS_to_zero
 
+  
    ! The above are the only routines that should live here. Something like taking
    ! a list of particules and accumulating the charge, will change the charge but
    ! not the particles so it could legitimately live here. This would introduce

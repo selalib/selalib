@@ -100,8 +100,13 @@ contains
     end do
 !    print*, 'nb d essais', j-1
     close(90)
-    
+
   end subroutine sll_initial_particles_4d
+
+!!$  subroutine sll_initial_one_particle
+!!$
+!!$  end subroutine sll_initial_one_particle
+
   
 !!$  subroutine sll_initialize_some4Dfunction( &
 !!$              thermal_speed, alpha, k, &
