@@ -45,11 +45,11 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
-    !$omp parallel do PRIVATE (tmp1,tmp2)
+!!    !$omp parallel do PRIVATE (tmp1,tmp2)
     do i=1,num_particles
        SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
     end do
-    !$omp end parallel do
+!!    !$omp end parallel do
 
   end subroutine sll_first_charge_accumulation_2d
 
