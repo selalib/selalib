@@ -141,9 +141,9 @@ contains
   end function new_charge_accumulator_2d
   
   function q_acc_add( q1, q2 ) result(res)
-    type(sll_charge_accumulator_cell_2d), intent(in) :: res
-    type(sll_charge_accumulator_cell_2d), intent(in) :: q1
-    type(sll_charge_accumulator_cell_2d), intent(in) :: q2
+    type(charge_accumulator_cell_2d) :: res
+    type(charge_accumulator_cell_2d), intent(in) :: q1
+    type(charge_accumulator_cell_2d), intent(in) :: q2
 
     res%q_sw = q1%q_sw + q2%q_sw
     res%q_se = q1%q_se + q2%q_se
