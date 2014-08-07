@@ -38,7 +38,6 @@ module hex_mesh
      ! Matrix containg global indices from hexagonal coordinates
      sll_int32, pointer, dimension(:,:) :: hex_to_global ! (1:2*num_cells+1,1:2*num_cells+1)
    contains
-     procedure, pass(mesh) :: get_hex_num => get_hex_num
      procedure, pass(mesh) :: global_index => global_index
      procedure, pass(mesh) :: from_global_index_k1 => from_global_index_k1
      procedure, pass(mesh) :: from_global_index_k2 => from_global_index_k2
@@ -298,7 +297,7 @@ end if
           
   end subroutine initialize_hex_mesh_2d
 
-
+  !!! TODO : make them "as procedures"
   function x1_node(mesh, k1, k2) result(val)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
@@ -336,40 +335,7 @@ end if
   end function global_index
 
 
-  function get_hex_num(mesh, index) result(hex_num)
-    ! returns the number of nested hexagon on which the point is
-    ! <=> returns the number of cells from center to point
-    ! Warning : even if the index is beyond the mesh 
-    ! this function will return a result
-    class(hex_mesh_2d) :: mesh
-    sll_int32 :: index
-    sll_int32 :: hex_num
-    sll_int32 :: flag
-    
-    hex_num = 0
-    flag = 0
-
-    if (index .lt. 0) then
-       print *, "ERROR : in get_hex_num(index)"
-       print *, "Global index cannot be negative"
-       STOP 'get_hex_num'         
-    else if (index .eq. 0) then
-       hex_num = 0
-!     else if (index .le. num_pts_tot) then
-!        hex_num =
-    else
-       hex_num = 1
-       do while(flag .eq. 0)
-          if (index .gt. 3*hex_num*(hex_num+1)) then
-             hex_num = hex_num + 1
-          else
-             flag = 1
-          endif
-       enddo
-    endif
-  end function get_hex_num
-
-
+  !! TODO rename : global_to_hex1
   function from_global_index_k1(mesh, index) result(k1)
     ! Takes the global index of the point (see global_index(...) for conventions)
     ! returns the first coordinate (k1) on the (r1,r2) basis 
@@ -380,7 +346,7 @@ end if
     k1 = mesh%hex_coord(1,index)
   end function from_global_index_k1
 
-  
+  !! TODO rename : global_to_hex1
   function from_global_index_k2(mesh, index) result(k2)
     ! Takes the global index of the point (see global_index(...) for conventions)
     ! returns the second coordinate (k2) on the (r1,r2) basis 
@@ -391,6 +357,7 @@ end if
     k2 = mesh%hex_coord(2,index)
   end function from_global_index_k2
 
+    !! TODO rename : global_to_cart
   function from_global_x1(mesh, index) result(x1)
     ! Takes the global index of the point (see global_index(...) for conventions)
     ! returns the first coordinate (x1) on the cartesian basis 
@@ -401,6 +368,7 @@ end if
     x1 = mesh%cartesian_coord(1, index)
   end function from_global_x1
 
+    !! TODO rename : global_to_cart
   function from_global_x2(mesh, index) result(x2)
     ! Takes the global index of the point (see global_index(...) for conventions)
     ! returns the second coordinate (x2) on the cartesian basis 
@@ -438,7 +406,7 @@ end if
     k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob)
   end function from_cart_index_k2
 
-  function global_to_local(mesh, ref_index,j) result(new_index)
+  function global_to_local(mesh, ref_index, j) result(new_index)
     ! In the same manner we assign global indices (see global_index(...))
     ! we assign local indices, but this time the initial point is 
     ! the point which index is ref_index
@@ -497,7 +465,6 @@ end if
     type(hex_mesh_2d), pointer :: mesh
     character(len=*) :: name
     sll_int32  :: i
-    sll_int32  :: hex_num
     sll_int32  :: num_pts_tot
     sll_int32  :: k1, k2
     sll_int32, parameter :: out_unit=20
@@ -510,11 +477,9 @@ end if
 !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
 
     do i=0, num_pts_tot-1
-       hex_num = mesh%get_hex_num(i)
        k1 = mesh%from_global_index_k1(i)
        k2 = mesh%from_global_index_k2(i)
        write (out_unit, "(4(i2,1x),2(g13.3,1x))") i,                &
-                                           hex_num,                 &
                                            k1,                      &
                                            k2,                      &
                                            mesh%from_global_x1(i), &
