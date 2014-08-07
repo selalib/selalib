@@ -36,11 +36,13 @@ module sll_particle_initializers
 
 
 contains
+
   subroutine sll_initial_particles_4d( &
               thermal_speed, alpha, k, &
-              m2d, &
-              num_particles, &
-              p_group )
+              m2d,                     &
+              num_particles,           &
+              p_group,                 &
+              rand_seed, rank )
     sll_real64, intent(in) :: thermal_speed, alpha, k
     type(sll_logical_mesh_2d), intent(in) :: m2d
     sll_int32, intent(in)  :: num_particles
@@ -50,24 +52,41 @@ contains
     sll_real64 :: x, y, vx, vy, nu, xmin, ymin, rdx, rdy
     sll_real32 :: weight, off_x,off_y
     sll_real64 :: tmp1, tmp2
+    sll_int32, dimension(:), intent(in), optional  :: rand_seed
+    sll_int32, optional  :: rank
+    character(len=8)  :: rank_name
+    character(len=40) :: nomfile
+
+    if ( present(rand_seed) ) then
+       call random_seed (put=rand_seed)
+    endif
 
     weight = (m2d%eta1_max - m2d%eta1_min) * &
            (m2d%eta2_max - m2d%eta2_min)/real(num_particles,f32)
- 
+
     rdx = 1._f64/m2d%delta_eta1
     rdy = 1._f64/m2d%delta_eta2
     xmin = m2d%eta1_min
     ymin = m2d%eta2_min
     ncx  = m2d%num_cells1
 
-    open(90,file='initialparticles.dat')
+    if(present(rank)) then
+       write(rank_name,'(i8)') rank
+    else
+       rank_name = '00000000'
+    end if
+    nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
+    open(90, file=nomfile)
+!    open(90,file='initialparticles.dat')
+
     write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
     j=1
+    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     do while ( j <= num_particles )
        call random_number(x)
        x = (m2d%eta1_max - xmin)*x + xmin
        call random_number(y)
-       y = 2._f64 * y! (2._f64*alpha)*y + 1._f64 - alpha
+       y = 2._f64 * y !(2._f64*alpha)*y + 1._f64 - alpha!  
        if (eval_landau(alpha, k, x) >= y ) then
           y = (m2d%eta2_max - ymin)*suite_hamm(j,3) + ymin
           !
@@ -81,10 +100,15 @@ contains
           j = j + 1          
        endif
     end do
-    print*, 'nb d essais', j
+!    print*, 'nb d essais', j-1
     close(90)
-    
+
   end subroutine sll_initial_particles_4d
+
+!!$  subroutine sll_initial_one_particle
+!!$
+!!$  end subroutine sll_initial_one_particle
+
   
 !!$  subroutine sll_initialize_some4Dfunction( &
 !!$              thermal_speed, alpha, k, &

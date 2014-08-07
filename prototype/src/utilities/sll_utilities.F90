@@ -94,15 +94,21 @@ contains
     character(len=1) :: aa,bb,cc,dd
     integer :: kk1, kk2, kk3, kk4
 
-    kk1 = istep/1000
-    aa  = char(kk1 + 48)
-    kk2 = (istep - kk1*1000)/100
-    bb  = char(kk2 + 48)
-    kk3 = (istep - (kk1*1000) - (kk2*100))/10
-    cc  = char(kk3 + 48)
-    kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
-    dd  = char(kk4 + 48)
-    cstep = aa//bb//cc//dd
+    if ( istep >= 0 .and. istep < 10000) then
+       kk1 = istep/1000
+       aa  = char(kk1 + 48)
+       kk2 = (istep - kk1*1000)/100
+       bb  = char(kk2 + 48)
+       kk3 = (istep - (kk1*1000) - (kk2*100))/10
+       cc  = char(kk3 + 48)
+       kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
+       dd  = char(kk4 + 48)
+       cstep = aa//bb//cc//dd
+    else
+       call errout( 6, 'W', 'int2string', 108, 'index is negative or greater than 9999' )
+       print*, 'index =', istep
+       cstep = 'xxxx'
+    end if
 
   end subroutine int2string
 
