@@ -3885,17 +3885,23 @@ contains
     case (0) ! periodic-periodic
 
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          partint = &
+               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1 + &
+               (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = &
+               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + &
+               (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        
@@ -3904,10 +3910,13 @@ contains
 
 
        if( res2 < interpolator%eta2_min ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
-          res2 = res2 + (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          res2 = res2 + &
+               (partint+1) *(interpolator%eta2_max-interpolator%eta2_min)
        else if( res2 >  interpolator%eta2_max ) then
-          partint = AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = &
+               AINT(abs(res2)/(interpolator%eta2_max-interpolator%eta2_min))
           res2 = res2 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
 
@@ -3931,10 +3940,13 @@ contains
 
 
        if( res1 < interpolator%eta1_min ) then
-          partint = AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
-          res1 = res1+ (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
+          partint = &
+               AINT(abs(res1)/(interpolator%eta1_max-interpolator%eta1_min))
+          res1 = res1 + &
+               (partint+1) *( interpolator%eta1_max-interpolator%eta1_min)
        else if( res1 >  interpolator%eta1_max ) then
-          partint = AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
+          partint = &
+               AINT(abs(res1)/(interpolator%eta2_max-interpolator%eta2_min))
           res1 = res1 + partint*(interpolator%eta2_min-interpolator%eta2_max)
        end if
        SLL_ASSERT( res2 >= interpolator%eta2_min )
@@ -3957,25 +3969,20 @@ contains
     SLL_ASSERT( res2 >= interpolator%eta2_min )
     SLL_ASSERT( res2 <= interpolator%eta2_max )
     if ( res1 > interpolator%eta1_max) then 
-       print*, 'problem  x > eta1_max'
+       print*, 'ERROR, interpolate_value_ad2d(): problem  x > eta1_max'
        stop
     end if
     if ( res1 < interpolator%eta1_min) then 
-       print*, 'problem  x < eta1_min'
-       stop
+       print*, 'ERROR, interpolate_value_ad2d(): problem  x < eta1_min'
     end if
     if ( res2 > interpolator%eta2_max) then 
-       print*, 'problem  y > eta2_max'
+       print*, 'ERROR, interpolate_value_ad2d(): problem  y > eta2_max'
        print*, res2, interpolator%eta2_min,interpolator%eta2_max
-       stop
     end if
     if ( res2 < interpolator%eta2_min) then 
-       print*, 'problem  y < eta2_min'
-       stop
+       print*, 'ERROR, interpolate_value_ad2d(): problem  y < eta2_min'
     end if
 
-    !SLL_ALLOCATE(tmp_tx(interpolator%size_t1),ierr)
-    !SLL_ALLOCATE(tmp_ty(interpolator%size_t2),ierr)
     tmp_tx => interpolator%t1(1:interpolator%size_t1)
     !print*, 't1',tmp_tx
     tmp_ty => interpolator%t2(1:interpolator%size_t2)
@@ -3997,8 +4004,6 @@ contains
          val)
     ! time = time_elapsed_since(t0)
    !  print *, 'time elapsed since t0 : ',time
-    !SLL_DEALLOCATE(tmp_tx,ierr)
-    !SLL_DEALLOCATE(tmp_ty,ierr)
   end function interpolate_value_ad2d
 
 
