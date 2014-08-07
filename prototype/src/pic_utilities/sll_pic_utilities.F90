@@ -22,6 +22,14 @@ module sll_pic_utilities
 #include "sll_accumulators.h" 
   use sll_particle_group_2d_module
 
+#ifdef _OPENMP
+   use omp_lib
+   logical :: openmp_st
+#endif
+!!    !$ openmp_st = OMP_IN_PARALLEL()
+!!    print*, 'USE of omp', openmp_st
+!!    !$omp end parallel
+
 contains
 
   subroutine sll_first_charge_accumulation_2d( p_group, q_accum )
@@ -37,14 +45,17 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
+!!    !$omp parallel do PRIVATE (tmp1,tmp2)
     do i=1,num_particles
        SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
     end do
+!!    !$omp end parallel do
+
   end subroutine sll_first_charge_accumulation_2d
 
   subroutine sll_first_charge_accumulation_2d_CS( p_group, q_accum )
     type(sll_particle_group_2d), pointer         :: p_group
-    type(sll_charge_accumulator_2d_CS), pointer     :: q_accum
+    type(sll_charge_accumulator_2d_CS), pointer  :: q_accum
     type(sll_particle_2d), dimension(:), pointer :: p
     sll_int64  :: i
     sll_int64  :: num_particles
@@ -54,9 +65,12 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
+    !$omp parallel do PRIVATE (tmp,temp)
     do i=1,num_particles
        SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum,p(i),tmp,temp)
     end do
+    !$omp end parallel do
+    
   end subroutine sll_first_charge_accumulation_2d_CS
 
 
