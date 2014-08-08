@@ -145,6 +145,8 @@ end if
     ! variables for optmizing computing time :
     sll_int32  :: num_cells_plus1
     sll_int32  :: num_cells_plus2
+    sll_int32  :: n0
+    sll_int32  :: k1, k2, nk1k2
 
 
     ! By default the hexagonal mesh is centered at the (0,0) point
@@ -209,6 +211,7 @@ end if
     
     num_cells_plus1 = num_cells + 1
     num_cells_plus2 = num_cells + 2
+    n0 = num_cells**2 + num_cells*num_cells_plus1*0.5
     
 
     do i = 1, num_cells ! variable following r1
@@ -304,31 +307,40 @@ end if
        end do
     end do
 
-    ! Filling the global_indices matrix
-    tab_index = 1
-    do k1 = -m%num_cells,m%num_cells
-       do k2 = -m%num_cells,m%num_cells
-          ! We compute the number of cells from point to center 
-          ! which is equivalent to the hexagonal ring number
-          if (k1*k2 .gt. 0) then
-             hex_ring_number = max(abs(k1),abs(k2))
-          else
-             hex_ring_number = abs(k1) + abs(k2)
-          end if
-          ! Test if we are in domain
-          if (hex_ring_number .le. m%num_cells) then
-             global_index = 
-             global_indices(tab_index) = global_index
-             tab_index = tab_index + 1
-          end if
-       end do
-    end do
+    
+    do global = 1,n_points 
+
+       k1 = m%hex_coord(1, global)
+       k2 = m%hex_coord(2, global)
+       
+       call index_hex_to_global(k1, k2, nk1k2, num_cells, n0, num_cells_plus1)
+       
+       m%global_indices(nk1k2) = global
+       
+    enddo
 
 
     ! ----------------------------------------- END MATRICES INITIALIZATION 
     ! ---------------------------------------------------------------------
           
   end subroutine initialize_hex_mesh_2d
+
+  subroutine index_hex_to_global(k1, k2, nk1k2, num_cells, n0, num_cells_plus1)
+    implicit none
+    sll_int32, intent(in)  :: k1, k2, num_cells, n0, num_cells_plus1
+    sll_int32, intent(out) :: nk1k2
+    sll_int32              :: kk, nk1
+
+    if (k1 <= 0) then
+       kk    = num_cells + k1
+       nk1   = num_cells*kk + kk*(kk+1)*0.5 + 1 
+       nk1k2 = nk1 + k2 + num_cells_plus1
+    elseif (k1 > 0) 
+       nk1   = n0 + k1*(2*num_cells + 1) - k1*(k1-1)*0.5 + 1 
+       nk1k2 = nk1 + k2 + num_cells_plus1
+
+  endsubroutine index_hex_to_global(k1,k2,nk1k2)
+
 
 
   function x1_node(mesh, k1, k2) result(val)
