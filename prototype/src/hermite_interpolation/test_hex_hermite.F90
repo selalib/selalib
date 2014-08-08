@@ -40,10 +40,11 @@ program test_hex_hermite
   sll_real64   :: tmax
   sll_real64   :: t
 
-  sll_real64   :: t_init, t_end, t1,t2,t3,t4
+  sll_real64   :: t_init, t_end!, t1,t2,t3,t4
   character(len = 4) :: number
   sll_int32    :: p = 6 !-> degree of the approximation for the derivative 
-  sll_real64   :: step , aire, radius, x0, y0, x1_temp, h1, h2, f_min, x ,y
+  sll_real64   :: step , aire, radius, x0, y0, h1, h2, f_min, x ,y! , x1_temp
+  sll_real64   :: erl11, erl12, erl13
   logical      :: inside
   x0 = 0._f64
   y0 = 0._f64
@@ -165,6 +166,31 @@ program test_hex_hermite
         call  der_finite_difference( f_tn, p,step, mesh_numh, mesh_coor, deriv, num_cells, dbc  )
         !call cpu_time(t2)
         !print*, "temps der : ", t2-t1
+        
+        erl11 = 0._f64
+        erl12 = 0._f64
+        erl13 = 0._f64
+        
+
+        do i = 1, n_points
+           x = mesh_num(1,i)
+           y = mesh_num(2,i)  
+           erl11 = erl11 + abs(deriv(1,i)+sqrt(3.0)*0.5*2.0*(x-gauss_x1)*exp(-((x-gauss_x1)**2+& 
+           (y-gauss_x2)**2 ) ) +  0.5*2.0*(y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
+           (y-gauss_x2)**2 ) ) )
+           erl12 = erl12 + abs(deriv(2,i)-sqrt(3.0)*0.5*2.0*(x-gauss_x1)*exp(-((x-gauss_x1)**2 +&
+           (y-gauss_x2)**2 ) ) +  0.5*2.0*(y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
+           (y-gauss_x2)**2 ) ) )
+           erl13 = erl13 + abs( deriv(3,i) + 2.0*(y-gauss_x2)*exp( -( (x-gauss_x1)**2 + (y-gauss_x2)**2 )  ) )
+        enddo
+
+        erl11 = erl11/real(n_points,f64)
+        erl12 = erl12/real(n_points,f64)
+        erl13 = erl13/real(n_points,f64)
+
+        print*,"norme L1 des dérivées partielles dans les trois directions hex: "
+        print*, erl11, erl12, erl13
+
         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         t = t + dt
@@ -224,7 +250,7 @@ program test_hex_hermite
           ! end if
            
            !f_sol(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
-           !     + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+           !    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
 
            f_sol(i) = exp(-(x-gauss_x1)**2-(y-gauss_x2)**2) 
 
@@ -232,7 +258,7 @@ program test_hex_hermite
            !   diff_error = abs(f_sol(i) - f_tn1(i))
            !end if
 
-           !norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
+           norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
 
            !write(11,*) mesh_num(1,i),mesh_num(2,i) ,f_sol(i),f_tn1(i)
 
@@ -249,9 +275,11 @@ program test_hex_hermite
 
         ! Norm2 error :
 
-        !norm2_error = sqrt(norm2_error)*radius**2/real(num_cells,f64)**2
+        norm2_error = sqrt(norm2_error)*radius**2/real(num_cells,f64)**2
 
-        !print*,"error_L2 = ", norm2_error, "min =",f_min
+        print*,"error_L2 = ", norm2_error!, "min =",f_min
+
+        !write(12,*) t,  norm2_error
 
         f_tn = f_tn1
 
