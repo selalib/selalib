@@ -10,14 +10,14 @@ contains
 
     implicit none
 
-    sll_real64, dimension(:,:),intent(out)     :: mesh_num
+    sll_real64, dimension(:,:),intent(out) :: mesh_num
     sll_int32, dimension(:,:),intent(out)  :: mesh_numh, mesh_coor
-    sll_real64, intent(in)                     :: radius, x0, y0
+    sll_real64, intent(in)                 :: radius, x0, y0
     sll_int32, intent(in)                  :: n_cell 
     sll_int32                              :: i, j, k, nc1, nc2
-    sll_real64, dimension(2)                   :: h1, h2, h3, position
-    sll_real64, dimension(2)                   :: h1n, h2n, h3n
-    sll_real64                                 :: pas
+    sll_real64, dimension(2)               :: h1, h2, h3, position
+    sll_real64, dimension(2)               :: h1n, h2n, h3n
+    sll_real64                             :: pas
 
     pas = radius / real(n_cell,f64)
 
@@ -119,25 +119,19 @@ contains
 
   subroutine search_tri( x, y, mesh_coor, step, n_cell, radius, s1, s2, s3 )
     implicit none  
-    sll_int32, intent(in) :: n_cell 
-    sll_real64, intent(in)    :: x, y, radius, step
+    sll_int32 , intent(in)                :: n_cell 
+    sll_real64, intent(in)                :: x, y, radius, step
     sll_int32, dimension(:,:),intent(out) :: mesh_coor
-    sll_real64    :: h1, h2, xi
-    sll_int32 :: i, j, n1, n2
-    sll_int32, intent(out) :: s1, s2, s3
-    sll_int32, dimension(2) :: a, b, c, d
+    sll_real64                            :: h1, h2, xi
+    sll_int32                             :: i, j, n1, n2
+    sll_int32, intent(out)                :: s1, s2, s3
+    sll_int32, dimension(2)               :: a, b, c, d
 
     n1 = n_cell + 1
     n2 = n_cell + 2
 
-    !h1 =  x*sqrt(3.0_f64)/2.0_f64 + y*0.5_f64 ! x/sqrt(3.0_f64) + y*0.5_f64 
-    !h2 = -x*sqrt(3.0_f64)/2.0_f64 + y*0.5_f64 ! x/sqrt(3.0_f64) + y*0.5_f64 
     h1 =  x/sqrt(3.0_f64) + y 
     h2 = -x/sqrt(3.0_f64) + y  
-
-    !print*, x, y, sqrt(3.0_f64)*0.5_f64*(h1-h2), h1 + h2, h1, h2
-    
-!print*, x, y, (h1-h2)/sqrt(3.0_f64), h1 + h2, h1, h2
     
     i = floor( (h1+radius) / step ) - n_cell
     j = floor( (h2+radius) / step ) - n_cell 
@@ -148,17 +142,29 @@ contains
     d = (/i+1,j/)
 
     xi = (real(i,f64) - real(j,f64))*step*sqrt(3.0_f64)*0.5_f64
+    
+    !print *, x,y,xi,i,j
 
-    if ( x >= xi ) then
+    if ( x > xi ) then
        s1 = mesh_coor(n1+i,n1+j)
        s2 = mesh_coor(n2+i,n1+j) 
        s3 = mesh_coor(n2+i,n2+j)
-    else 
+    else if ( x < xi ) then
        s1 = mesh_coor(n1+i,n1+j)
        s2 = mesh_coor(n1+i,n2+j)
        s3 = mesh_coor(n2+i,n2+j)
+    else if ( x == xi ) then
+       if (x < 0) then
+          s1 = mesh_coor(n1+i,n1+j)
+          s2 = mesh_coor(n2+i,n1+j) 
+          s3 = mesh_coor(n2+i,n2+j)
+       elseif (x >= 0) then
+          s1 = mesh_coor(n1+i,n1+j)
+          s2 = mesh_coor(n1+i,n2+j)
+          s3 = mesh_coor(n2+i,n2+j)
+       endif
     endif
-    
+
 
   end subroutine search_tri
 
