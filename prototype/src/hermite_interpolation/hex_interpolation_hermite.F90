@@ -13,18 +13,18 @@ contains
   subroutine der_finite_difference( f_tn, p,step, mesh_numh, mesh_coor, deriv, n_cell, dbc ) 
     !-> computation of the partial derivatives in the directions H1, H2 and H3
     implicit none
-    sll_int32 , dimension(:,:)         :: mesh_coor, mesh_numh
+    sll_int32 , dimension(:,:)             :: mesh_coor, mesh_numh
     sll_real64, dimension(:,:)             :: deriv 
     sll_real64, dimension(:), intent(in)   :: f_tn 
     sll_real64, dimension(:,:), intent(in) :: dbc
     sll_real64, intent(in)                 :: step
-    sll_int32, intent(in)              :: n_cell, p
-    sll_int32                          :: i, j, r, s, n_points
-    sll_int32                          :: n1, n2, n3, n4, n5, n6
+    sll_int32, intent(in)                  :: n_cell, p
+    sll_int32                              :: i, j, r, s, n_points, nc1
+    sll_int32                              :: n1, n2, n3, n4, n5, n6
     sll_real64                             :: dh1, dh2, dh3, dh4, dh5, dh6
-    sll_int32                          :: h1 ,h2, h1t ,h2t
-    sll_int32                          :: h1n ,h2n, h1tn ,h2tn
-    logical                          :: opsign1, opsign2, opsign3
+    sll_int32                              :: h1 ,h2, h1t ,h2t, p2
+    sll_int32                              :: h1n ,h2n, h1tn ,h2tn
+    logical                                :: opsign1, opsign2, opsign3
     sll_real64, dimension(:),allocatable   :: w
     sll_real64, dimension(:,:),allocatable :: f
 
@@ -35,12 +35,15 @@ contains
     !computation of the coefficients in fonction of the degree p 
     !of the approximation required
     !*********************************************************************
-    if ( (p/2)*2 == p ) then !if p is even
-       r = -p/2       
-       s = p/2
+
+    p2 = p/2
+
+    if ( (p2)*2 == p ) then !if p is even
+       r = -p2       
+       s = p2
     else  !if p is odd
-       r = -p/2 - 1 ! de-centered to the left      
-       s = p/2 !+ 1 ! de-centered to the right
+       r = -p2 - 1 ! de-centered to the left      
+       s = p2 !+ 1 ! de-centered to the right
     endif
 
     allocate( w(r:s),f(1:6,r:s) )
@@ -52,17 +55,15 @@ contains
     ! then for both x and y directions for every points of the mesh
     !***********************************************************************
 
+    nc1 = n_cell + 1
 
     do i = 1, n_points 
 
        h1 = mesh_numh(1,i) 
        h2 = mesh_numh(2,i)  
-       h1n = h1 + n_cell + 1
-       h2n = h2 + n_cell + 1
+       h1n = h1 + nc1
+       h2n = h2 + nc1
 
-       ! print*," "
-       ! print*,"point de recherche i = ", i, " h1,h2 =" ,  h1, h2
-       ! print*," "
 
        do j = r,s !find the required points in the h1, h2 and h3 directions 
 
@@ -75,7 +76,8 @@ contains
           h1tn = h1n + j 
           h2tn = h2n + j
           
-          !print*, "i= ",i,"j= ",j
+          ! if (le point est sur la frontière) on retient ses coordonnées hex
+          ! 
 
           if ( h2  > 0 .and. h1t < 0 .or.  h1t > 0 .and. h2  < 0 ) opsign1 = .true.
           if ( h2t > 0 .and. h1  < 0 .or.  h1  > 0 .and. h2t < 0 ) opsign2 = .true.
@@ -84,38 +86,24 @@ contains
           !test if outside mesh 
 
           if (  abs(h1t) > n_cell .or. opsign1 .and. ( abs(h1t) + abs(h2) > n_cell) ) then
-
-             ! to be finished if un-homogeneous drichlet boundary condition 
-
-             ! if ( h1t > n_cell) then
-             !    n1 = 
-             ! else if ( h1t < -n_cell) then 
-             !    n1 = mesh_coor(
-
-             f(1,j) = dbc(1,1) ! dirichlet boundary condition
-             !print*,"point en dehors du mesh"
+             f(1,j) = dbc(1,1)!f_tn(nf) ! dirichlet boundary condition
           else
              n1 = mesh_coor(h1tn,h2n)
-             !print*, "point suivant +h1",h1tn,h2n ,n1
              f(1,j) = f_tn(n1) 
           endif
 
 
           if (  abs(h2t) > n_cell .or. opsign2 .and. ( abs(h1) + abs(h2t) > n_cell) ) then 
              f(2,j) = dbc(2,1) 
-             !print*,"point en dehors du mesh"
           else
              n2 = mesh_coor(h1n,h2tn)
-             !print*, "point suivant +h2",h1n,h2tn , n2
              f(2,j) = f_tn(n2) 
           endif
 
           if ( abs(h1t) > n_cell .or. abs(h2t) > n_cell .or. opsign3 .and. ( abs(h1t) + abs(h2t) > n_cell) ) then
              f(3,j) = dbc(3,1) 
-             !print*,"point en dehors du mesh"
           else
              n3 = mesh_coor(h1tn,h2tn)
-             !print*, "point suivant +h3",h1tn,h2tn , n3
              f(3,j) = f_tn(n3) 
           endif
 
@@ -127,7 +115,7 @@ contains
 
           h1t = h1 - j
           h2t = h2 - j
-          h1tn = h1n - j 
+          h1tn = h1n - j
           h2tn = h2n - j
 
           if ( h2  > 0 .and. h1t < 0 .or.  h1t > 0 .and. h2  < 0 ) opsign1 = .true.
@@ -138,40 +126,34 @@ contains
 
           if (  abs(h1t) > n_cell .or. opsign1 .and. ( abs(h1t) + abs(h2) > n_cell) ) then
              f(4,j) = dbc(4,1) ! dirichlet boundary condition
-             !print*,"point en dehors du mesh"
           else
              n4 = mesh_coor(h1tn,h2n)
-             !print*, "point suivant -h1", h1tn,h2n, n4
              f(4,j) = f_tn(n4) 
           endif
 
           if (  abs(h2t) > n_cell .or. opsign2 .and. ( abs(h1) + abs(h2t) > n_cell) ) then
              f(5,j) = dbc(5,1) 
-             !print*,"point en dehors du mesh"
           else
              n5 = mesh_coor(h1n,h2tn) 
-             !print*, "point suivant -h2",h1n,h2tn, n5
              f(5,j) = f_tn(n5) 
           endif
 
           if ( abs(h1t) > n_cell .or. abs(h2t) > n_cell .or. opsign3 .and. ( abs(h1t) + abs(h2t) > n_cell) ) then
              f(6,j) = dbc(6,1) 
-             !print*,"point en dehors du mesh"
           else
              n6 = mesh_coor(h1tn,h2tn)
-             !print*, "point suivant -h3",h1tn,h2tn, n6
              f(6,j) = f_tn(n6) 
           endif
 
        enddo
 
 
-       dh1 = 0.0_f64
-       dh2 = 0.0_f64
-       dh3 = 0.0_f64
-       dh4 = 0.0_f64
-       dh5 = 0.0_f64
-       dh6 = 0.0_f64
+       dh1 = 0._f64
+       dh2 = 0._f64
+       dh3 = 0._f64
+       dh4 = 0._f64
+       dh5 = 0._f64
+       dh6 = 0._f64
 
        do j = r,s
           dh1 = dh1 + w(j) * f(1,j)  
@@ -190,7 +172,6 @@ contains
        deriv(6,i) = dh6/step
 
     enddo
-
 
     deallocate(f,w)
 
@@ -213,6 +194,7 @@ contains
     sll_real64,dimension(:), intent(out)   :: f_tn1
     sll_real64,dimension(1:10) :: freedom, base
     sll_int32                  :: i, i1, i2, i3
+    sll_real64                :: a2, p05, p15, p9, l12, l22, l32               
 
     ! find the triangle where (x,y) belongs to
     ! i1, i2, i3 are the indices for the S1, S2 and S3 vertexes of the triangle
@@ -259,9 +241,11 @@ contains
        freedom(10)= deriv(5,i3) ! derivative from S3 to S2
     endif
 
-    l1   = 0.5_f64 * abs( (x2 - x)*(y3 - y) - (x3 - x)*(y2 - y) ) / aire 
-    l2   = 0.5_f64 * abs( (x1 - x)*(y3 - y) - (x3 - x)*(y1 - y) ) / aire 
-    l3   = 0.5_f64 * abs( (x1 - x)*(y2 - y) - (x2 - x)*(y1 - y) ) / aire 
+    a2 = 0.5_f64/aire
+
+    l1   = a2 * abs( (x2 - x)*(y3 - y) - (x3 - x)*(y2 - y) ) 
+    l2   = a2 * abs( (x1 - x)*(y3 - y) - (x3 - x)*(y1 - y) )  
+    l3   = a2 * abs( (x1 - x)*(y2 - y) - (x2 - x)*(y1 - y) )  
 
     phi = l1*l2*l3
 
@@ -269,23 +253,31 @@ contains
     ksi2 = l2**3 - phi
     ksi3 = l3**3 - phi
 
-    ksi12 = l1**2*l2 + phi*0.5_f64
-    ksi13 = l1**2*l3 + phi*0.5_f64
-    ksi21 = l2**2*l1 + phi*0.5_f64
-    ksi23 = l2**2*l3 + phi*0.5_f64
-    ksi31 = l3**2*l1 + phi*0.5_f64
-    ksi32 = l3**2*l2 + phi*0.5_f64
+    ! optimization variable
+    p05 = phi*0.5_f64
+    p9  = 9.0_f64*phi
+    p15 = 1.5_f64*phi
+    l12 = l1**2
+    l22 = l2**2
+    l32 = l3**2
 
-    base(1) = 3.0_f64 * l1**2 - 2.0_f64*ksi1 - 9.0_f64*phi
-    base(2) = 3.0_f64 * l2**2 - 2.0_f64*ksi2 - 9.0_f64*phi
-    base(3) = 3.0_f64 * l3**2 - 2.0_f64*ksi3 - 9.0_f64*phi
+    ksi12 = l12*l2 + p05
+    ksi13 = l12*l3 + p05
+    ksi21 = l22*l1 + p05
+    ksi23 = l22*l3 + p05
+    ksi31 = l32*l1 + p05
+    ksi32 = l32*l2 + p05
+
+    base(1) = 3.0_f64 * l12 - 2.0_f64*ksi1 - p9
+    base(2) = 3.0_f64 * l22 - 2.0_f64*ksi2 - p9
+    base(3) = 3.0_f64 * l32 - 2.0_f64*ksi3 - p9
     base(4) = 27.0_f64 * phi
-    base(5) = step * ( ksi12 - 1.5_f64*phi )
-    base(6) = step * ( ksi13 - 1.5_f64*phi )
-    base(7) = step * ( ksi21 - 1.5_f64*phi )
-    base(8) = step * ( ksi23 - 1.5_f64*phi )
-    base(9) = step * ( ksi31 - 1.5_f64*phi )
-    base(10)= step * ( ksi32 - 1.5_f64*phi )
+    base(5) = step * ( ksi12 - p15 )
+    base(6) = step * ( ksi13 - p15 )
+    base(7) = step * ( ksi21 - p15 )
+    base(8) = step * ( ksi23 - p15 )
+    base(9) = step * ( ksi31 - p15 )
+    base(10)= step * ( ksi32 - p15 )
 
     f = 0.0_f64
 
