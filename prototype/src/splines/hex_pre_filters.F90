@@ -19,13 +19,14 @@ contains
   ! Reference : @Condat and Van De Ville (2007)
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
-  function pre_filter_piir2(local_index, deg) result(weight)
-      sll_int32, intent(in)     :: local_index
-      sll_int32, intent(in)     :: deg
-      sll_real64                :: weight
-      sll_int32                 :: k1, k2
-      k1 = from_global_index_k1(local_index)
-      k2 = from_global_index_k2(local_index)
+  function pre_filter_piir2(mesh, local_index, deg) result(weight)
+      type(hex_mesh_2d) :: mesh 
+      sll_int32, intent(in)      :: local_index
+      sll_int32, intent(in)      :: deg
+      sll_real64                 :: weight
+      sll_int32                  :: k1, k2
+      k1 = mesh%global_to_hex1(local_index)
+      k2 = mesh%global_to_hex2(local_index)
 
 
       if (deg .eq. 1) then 
@@ -99,13 +100,14 @@ contains
   ! Reference : @Condat and Van De Ville (2007)
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
-  function pre_filter_piir1(local_index, deg) result(weight)
+  function pre_filter_piir1(mesh, local_index, deg) result(weight)
+    type(hex_mesh_2d) :: mesh 
       sll_int32, intent(in)     :: local_index
       sll_int32, intent(in)     :: deg
       sll_real64                :: weight
       sll_int32                 :: k1, k2
-      k1 = from_global_index_k1(local_index)
-      k2 = from_global_index_k2(local_index)
+      k1 = mesh%global_to_hex1(local_index)
+      k2 = mesh%global_to_hex2(local_index)
 
 
       if (deg .eq. 1) then 
@@ -143,14 +145,15 @@ contains
   ! Reference : @Condat and Van De Ville (2007)
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
-  function pre_filter_pfir(local_index, deg) result(weight)
-      sll_int32, intent(in)     :: local_index
-      sll_int32, intent(in)     :: deg
-      sll_real64                :: weight
-      sll_int32                 :: k1, k2
-      k1 = from_global_index_k1(local_index)
-      k2 = from_global_index_k2(local_index)
-
+   function pre_filter_pfir(mesh, local_index, deg) result(weight)
+     type(hex_mesh_2d) :: mesh 
+     sll_int32, intent(in)     :: local_index
+     sll_int32, intent(in)     :: deg
+     sll_real64                :: weight
+     sll_int32                 :: k1, k2
+     k1 = mesh%global_to_hex1(local_index)
+     k2 = mesh%global_to_hex2(local_index)
+     
 
       if (deg .eq. 1) then 
           ! prefiltre PFIR for box-splines chi2
@@ -189,13 +192,14 @@ contains
   ! Reference : @Condat and Van De Ville (2007)
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
-  function pre_filter_int(local_index, deg) result(weight)
+  function pre_filter_int(mesh, local_index, deg) result(weight)
+      type(hex_mesh_2d) :: mesh
       sll_int32, intent(in)     :: local_index
       sll_int32, intent(in)     :: deg
       sll_real64                :: weight
       sll_int32                 :: k1, k2
-      k1 = from_global_index_k1(local_index)
-      k2 = from_global_index_k2(local_index)
+      k1 = mesh%global_to_hex1(local_index)
+      k2 = mesh%global_to_hex2(local_index)
 
 
       if (deg .eq. 2) then 

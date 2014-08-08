@@ -35,16 +35,19 @@ module hex_mesh
      sll_real64, pointer, dimension(:,:) :: cartesian_coord ! (1:2,1:num_pts_tot)
      ! Matrix containing mesh points coordinates in hexagonal coordinates (integers) :
      sll_int32, pointer, dimension(:,:)  :: hex_coord ! (1:2,1:num_pts_tot)
-     ! Matrix containg global indices from hexagonal coordinates
-     sll_int32, pointer, dimension(:,:) :: hex_to_global ! (1:2*num_cells+1,1:2*num_cells+1)
+     ! Matrix containg global indices arranged from lower corner of hexagon 
+     ! and following the r2, then r1 direction
+     sll_int32, pointer, dimension(:) :: global_indices ! (1:num_pts_tot)
    contains
-     procedure, pass(mesh) :: global_index => global_index
-     procedure, pass(mesh) :: from_global_index_k1 => from_global_index_k1
-     procedure, pass(mesh) :: from_global_index_k2 => from_global_index_k2
-     procedure, pass(mesh) :: from_global_x1 => from_global_x1
-     procedure, pass(mesh) :: from_global_x2 => from_global_x2
-     procedure, pass(mesh) :: from_cart_index_k1 => from_cart_index_k1
-     procedure, pass(mesh) :: from_cart_index_k2 => from_cart_index_k2
+     procedure, pass(mesh) :: x1_node => x1_node
+     procedure, pass(mesh) :: x2_node => x2_node
+     procedure, pass(mesh) :: hex_to_global   => hex_to_global
+     procedure, pass(mesh) :: global_to_hex1  => global_to_hex1
+     procedure, pass(mesh) :: global_to_hex2  => global_to_hex2
+     procedure, pass(mesh) :: global_to_x1    => global_to_x1
+     procedure, pass(mesh) :: global_to_x2    => global_to_x2
+     procedure, pass(mesh) :: cart_to_hex1    => cart_to_hex1
+     procedure, pass(mesh) :: cart_to_hex2    => cart_to_hex2
      procedure, pass(mesh) :: global_to_local => global_to_local
      procedure, pass(mesh) :: local_to_global => local_to_global
   end type hex_mesh_2d
@@ -96,6 +99,7 @@ end if
     sll_int32 :: ierr
 
     SLL_ALLOCATE(m, ierr)
+
     call initialize_hex_mesh_2d( &
          m, &
          num_cells, &
@@ -188,120 +192,149 @@ end if
     ! and conectivity matrix
     SLL_ALLOCATE(m%cartesian_coord(2, m%num_pts_tot), ierr)
     SLL_ALLOCATE(m%hex_coord(2, m%num_pts_tot), ierr)
-    SLL_ALLOCATE(m%hex_to_global(num_cells*2 + 1, num_cells*2 + 1), ierr)
-    m%cartesian_coord(:,:) = 0._f64
-    m%hex_coord(:,:)       = 0
-    m%hex_to_global(:,:)   = -1
+    SLL_ALLOCATE(m%global_indices(m%num_pts_tot), ierr)
+    m%cartesian_coord(:,:)   = 0._f64
+    m%hex_coord(:,:)         = 0
+    m%global_indices(:) = -1
 
-    ! Initializing coordinates of first mesh point
+    ! Initializing coordinates of first mesh point (ie. center of hexagon)
     m%cartesian_coord(1,1) = m%center_x1
     m%cartesian_coord(2,1) = m%center_x2
 
     ! ---------------------------------------------------------------------
     ! BEGIN MATRICES INITIALIZATION ---------------------------------------
-
-    global = 1
+    global = 0
     position_x1 = m%center_x1
     position_x2 = m%center_x2 ! variable containing current position
     
     num_cells_plus1 = num_cells + 1
     num_cells_plus2 = num_cells + 2
+    
 
     do i = 1, num_cells ! variable following r1
+    
        ! Incrementation on r1 direction as we are going to the next hexagon
-       position_x1 = position_x1 + r1_x1
-       position_x2 = position_x2 + r1_x2
+       position_x1 = position_x1 + m%r1_x1
+       position_x2 = position_x2 + m%r1_x2
        
+      
        ! We follow each hexagon edge :
        ! First edge
        do j = 1, i ! following r2, the number of points on edge = i
           global = global + 1
+          
           m%cartesian_coord(1, global) = position_x1
           m%cartesian_coord(2, global) = position_x2
+      
           m%hex_coord(1, global) = i
           m%hex_coord(2, global) = j-1
-          m%hex_to_global(num_cells_plus1 + i, num_cells + j) = global
-          
-          position_x1 = position_x1 + r2_x1
-          position_x2 = position_x2 + r2_x2
+      
+          position_x1 = position_x1 + m%r2_x1
+          position_x2 = position_x2 + m%r2_x2
        end do
 
        ! Second edge
        do j = 1, i ! following -r1
           global = global + 1
+          
           m%cartesian_coord(1, global) = position_x1
           m%cartesian_coord(2, global) = position_x2
+
           m%hex_coord(1, global) = i-j+1
           m%hex_coord(2, global) = i
-          m%hex_to_global(num_cells_plus2 + i - j, num_cells_plus1 + i) = global
           
-          position_x1 = position_x1 - r1_x1
-          position_x2 = position_x2 - r1_x2
+          position_x1 = position_x1 - m%r1_x1
+          position_x2 = position_x2 - m%r1_x2
        end do
 
        ! Third edge
        do j = 1, i ! following -r3
           global = global + 1
+          
           m%cartesian_coord(1, global) = position_x1
           m%cartesian_coord(2, global) = position_x2
+          
           m%hex_coord(1, global) = -j+1
           m%hex_coord(2, global) = i-j+1
-          m%hex_to_global(num_cells_plus2 - j, num_cells_plus2 + i - j) = global
           
-          position_x1 = position_x1 - r3_x1
-          position_x2 = position_x2 - r3_x2
+          position_x1 = position_x1 - m%r3_x1
+          position_x2 = position_x2 - m%r3_x2
        end do
 
        ! Fourth edge
        do j = 1, i ! following -r2
           global = global + 1
+          
           m%cartesian_coord(1, global) = position_x1
           m%cartesian_coord(2, global) = position_x2
+          
           m%hex_coord(1, global) = -i
           m%hex_coord(2, global) = -j+1
-          m%hex_to_global(num_cells_plus1 - i, num_cells_plus2 - j) = global
-          
-          position_x1 = position_x1 - r2_x1
-          position_x2 = position_x2 - r2_x2
+                    
+          position_x1 = position_x1 - m%r2_x1
+          position_x2 = position_x2 - m%r2_x2
        end do
 
        ! Fifth edge
        do j = 1, i ! following r1
           global = global + 1
+          
           m%cartesian_coord(1, global) = position_x1
           m%cartesian_coord(2, global) = position_x2
+          
           m%hex_coord(1, global) = -i+j-1
           m%hex_coord(2, global) = -i
-          m%hex_to_global(num_cells + i - j, num_cells_plus1 - i) = global
           
-          position_x1 = position_x1 + r1_x1
-          position_x2 = position_x2 + r1_x2
+          position_x1 = position_x1 + m%r1_x1
+          position_x2 = position_x2 + m%r1_x2
        end do
 
        ! Sixth edge
        do j = 1, i ! following r2
           global = global + 1
+          
           m%cartesian_coord(1, global) = position_x1
           m%cartesian_coord(2, global) = position_x2
+          
           m%hex_coord(1, global) = -j-1
           m%hex_coord(2, global) = -i+j-1
-          m%hex_to_global(num_cells - j, num_cells - i + j) = global
-          
-          position_x1 = position_x1 + r2_x1
-          position_x2 = position_x2 + r2_x2
+                    
+          position_x1 = position_x1 + m%r2_x1
+          position_x2 = position_x2 + m%r2_x2
        end do
     end do
+
+    ! Filling the global_indices matrix
+    tab_index = 1
+    do k1 = -m%num_cells,m%num_cells
+       do k2 = -m%num_cells,m%num_cells
+          ! We compute the number of cells from point to center 
+          ! which is equivalent to the hexagonal ring number
+          if (k1*k2 .gt. 0) then
+             hex_ring_number = max(abs(k1),abs(k2))
+          else
+             hex_ring_number = abs(k1) + abs(k2)
+          end if
+          ! Test if we are in domain
+          if (hex_ring_number .le. m%num_cells) then
+             global_index = 
+             global_indices(tab_index) = global_index
+             tab_index = tab_index + 1
+          end if
+       end do
+    end do
+
 
     ! ----------------------------------------- END MATRICES INITIALIZATION 
     ! ---------------------------------------------------------------------
           
   end subroutine initialize_hex_mesh_2d
 
-  !!! TODO : make them "as procedures"
+
   function x1_node(mesh, k1, k2) result(val)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
-    type(hex_mesh_2d), pointer :: mesh
+    class(hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64 :: val
@@ -312,7 +345,7 @@ end if
   function x2_node(mesh, k1, k2) result(val)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function the 2nd coordinate on the cartesian system
-    type(hex_mesh_2d), pointer :: mesh
+    class(hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64  :: val
@@ -320,7 +353,8 @@ end if
     val = mesh%r1_x2*k1 + mesh%r2_x2*k2 + mesh%center_x1
   end function x2_node
 
-  function global_index(mesh, k1, k2) result(val)
+
+  function hex_to_global(mesh, k1, k2) result(val)
     ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
     ! returns global index of that mesh point.
     ! By default the index of the center of the mesh is 0
@@ -331,56 +365,70 @@ end if
     sll_int32, intent(in)   :: k2
     sll_int32 :: val
     
-    val = mesh%hex_to_global(k1+ mesh%num_cells +1, k2 + mesh%num_cells + 1)
-  end function global_index
+    val = mesh%hex_to_global_mat(k1+ mesh%num_cells +1, k2 + mesh%num_cells + 1)
+
+!     ! We compute the number of cells from point to center 
+!           ! which is equivalent to the hexagonal ring number
+!           if (k1*k2 .gt. 0) then
+!              hex_ring_number = max(abs(k1),abs(k2))
+!           else
+!              hex_ring_number = abs(k1) + abs(k2)
+!           end if
+!           ! Test if we are in domain
+!           if (hex_ring_number .le. m%num_cells) then
+!              global_indices(tab_index) = (2*m%num_cells + 1)*(k1 + m%num_cells)
+!              do i = -m%num_cells, k1-1
+!                 global_indices(tab_index) = global_indices(tab_index) - abs(i)
+!              end do
+!              global_indices(tab_index) = global_indices(tab_index) + k2 + m%num_cells + 1
+!              tab_index = tab_index + 1
+!           end if
+
+  end function hex_to_global
 
 
-  !! TODO rename : global_to_hex1
-  function from_global_index_k1(mesh, index) result(k1)
-    ! Takes the global index of the point (see global_index(...) for conventions)
+  function global_to_hex1(mesh, index) result(k1)
+    ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (k1) on the (r1,r2) basis 
     class(hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k1
     
-    k1 = mesh%hex_coord(1,index)
-  end function from_global_index_k1
+    k1 = mesh%hex_coord(1,index+1)
+  end function global_to_hex1
 
-  !! TODO rename : global_to_hex1
-  function from_global_index_k2(mesh, index) result(k2)
-    ! Takes the global index of the point (see global_index(...) for conventions)
+  function global_to_hex2(mesh, index) result(k2)
+    ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (k2) on the (r1,r2) basis 
     class(hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k2
     
-    k2 = mesh%hex_coord(2,index)
-  end function from_global_index_k2
+    k2 = mesh%hex_coord(2,index+1)
+  end function global_to_hex2
 
-    !! TODO rename : global_to_cart
-  function from_global_x1(mesh, index) result(x1)
-    ! Takes the global index of the point (see global_index(...) for conventions)
+  function global_to_x1(mesh, index) result(x1)
+    ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (x1) on the cartesian basis 
     class(hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x1
     
-    x1 = mesh%cartesian_coord(1, index)
-  end function from_global_x1
+    x1 = mesh%cartesian_coord(1, index+1)
+  end function global_to_x1
 
-    !! TODO rename : global_to_cart
-  function from_global_x2(mesh, index) result(x2)
-    ! Takes the global index of the point (see global_index(...) for conventions)
+  function global_to_x2(mesh, index) result(x2)
+    ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (x2) on the cartesian basis 
       class(hex_mesh_2d) :: mesh
       sll_int32  :: index
       sll_real64 :: x2
 
-    x2 = mesh%cartesian_coord(2, index)
-  end function from_global_x2
+    x2 = mesh%cartesian_coord(2, index+1)
+  end function global_to_x2
 
 
-  function from_cart_index_k1(mesh, x1, x2) result(k1)
+  function cart_to_hex1(mesh, x1, x2) result(k1)
     ! Takes the coordinates (x1,x2) on the cartesian basis and 
     ! returns the first coordinate (k1) on the (r1, r2) basis
     class(hex_mesh_2d) :: mesh
@@ -391,9 +439,9 @@ end if
     
     jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
     k1 = floor((mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob)
-  end function from_cart_index_k1
+  end function cart_to_hex1
 
-  function from_cart_index_k2(mesh, x1, x2) result(k2)
+  function cart_to_hex2(mesh, x1, x2) result(k2)
     ! Takes the coordinates (x1,x2) on the cartesian basis and 
     ! returns the second coordinate (k2) on the (r1, r2) basis
     class(hex_mesh_2d) :: mesh
@@ -404,25 +452,29 @@ end if
     
     jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
     k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob)
-  end function from_cart_index_k2
+  end function cart_to_hex2
 
   function global_to_local(mesh, ref_index, j) result(new_index)
-    ! In the same manner we assign global indices (see global_index(...))
+    ! In the same manner we assign global indices (see hex_to_global(...))
     ! we assign local indices, but this time the initial point is 
     ! the point which index is ref_index
     ! ie. local_index(i,i) = 0
     class(hex_mesh_2d) :: mesh
     sll_int32 :: ref_index, j
+    sll_int32 :: k1, k2
     sll_int32 :: k1_i, k2_i
     sll_int32 :: k1_j, k2_j
     sll_int32 :: new_index
     
-    k1_i = mesh%from_global_index_k1(ref_index)
-    k2_i = mesh%from_global_index_k2(ref_index)
-    k1_j = mesh%from_global_index_k1(j)
-    k2_j = mesh%from_global_index_k2(j)
-    
-    new_index = mesh%global_index(k1_i - k1_j, k2_i - k2_j)
+    k1_i = mesh%global_to_hex1(ref_index)
+    k2_i = mesh%global_to_hex2(ref_index)
+    k1_j = mesh%global_to_hex1(j)
+    k2_j = mesh%global_to_hex2(j)
+
+    k1 = k1_i - k1_j + mesh%num_cells + 1 
+    k2 = k2_i - k2_j + mesh%num_cells + 1
+
+    new_index = mesh%hex_to_global(k1, k2)
   end function global_to_local
 
 
@@ -433,16 +485,25 @@ end if
     ! ie. local_to_global(0, i) = i
     class(hex_mesh_2d) :: mesh
     sll_int32 :: ref_index, local_index
+    sll_int32 :: k1, k2
     sll_int32 :: k1_i, k2_i
     sll_int32 :: k1_j, k2_j
     sll_int32 :: global
     
-    k1_i = mesh%from_global_index_k1(ref_index)
-    k2_i = mesh%from_global_index_k2(ref_index)
-    k1_j = mesh%from_global_index_k1(local_index)
-    k2_j = mesh%from_global_index_k2(local_index)
+    print *,"global to hex1 ", mesh%num_pts_tot
+    k1_i = mesh%global_to_hex1(ref_index)
+    print *, " for ref = ", k1_i
+    k2_i = mesh%global_to_hex2(ref_index)
+    print *, " for ref = ", k2_i
+    k1_j = mesh%global_to_hex1(local_index)
+    k2_j = mesh%global_to_hex2(local_index)
+    print *, " for local = ", k1_j, k2_j
+
+
+    k1 = k1_i + k1_j + mesh%num_cells + 1
+    k2 = k2_i + k2_j + mesh%num_cells + 1
     
-    global = mesh%global_index(k1_i + k1_j, k2_i + k2_j)
+    global = mesh%hex_to_global(k1,k2)
   end function local_to_global
 
       
@@ -477,13 +538,13 @@ end if
 !    write(*,"(/,(a))") 'hex mesh : num_pnt    x1     x2'
 
     do i=0, num_pts_tot-1
-       k1 = mesh%from_global_index_k1(i)
-       k2 = mesh%from_global_index_k2(i)
-       write (out_unit, "(4(i2,1x),2(g13.3,1x))") i,                &
+       k1 = mesh%global_to_hex1(i)
+       k2 = mesh%global_to_hex2(i)
+       write (out_unit, "(2(i2,1x),2(g13.3,1x))") i,                &
                                            k1,                      &
                                            k2,                      &
-                                           mesh%from_global_x1(i), &
-                                           mesh%from_global_x2(i)
+                                           mesh%global_to_x1(i), &
+                                           mesh%global_to_x2(i)
     end do
 
     close(out_unit)
@@ -504,8 +565,8 @@ end if
 
     num_pts_tot = mesh%num_pts_tot
     do i=0, num_pts_tot-1
-       x1 = mesh%from_global_x1(i)
-       x2 = mesh%from_global_x2(i)
+       x1 = mesh%global_to_x1(i)
+       x2 = mesh%global_to_x2(i)
       write (out_unit, "(3(g13.3,1x))") x1, &
                                         x2, &
                                         field(i+1)
@@ -518,12 +579,18 @@ end if
   subroutine delete_hex_mesh_2d( mesh )
     type(hex_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
+
     if(.not. associated(mesh))then
        print *, 'delete_hex_mesh_2d'
        print *, 'ERROR: passed argument is not associated'
        print *, '       Crash imminent...'
        STOP
     end if
+
+
+    SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
+    SLL_DEALLOCATE(mesh%hex_coord, ierr)
+    SLL_DEALLOCATE(mesh%hex_to_global_mat, ierr)
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_hex_mesh_2d
 
