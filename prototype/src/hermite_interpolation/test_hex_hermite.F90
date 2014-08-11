@@ -13,7 +13,7 @@ program test_hex_hermite
   sll_int32 , dimension(:,:), allocatable :: mesh_numh, mesh_coor
 
   sll_int32    :: num_cells, n_points
-  sll_int32    :: i
+  sll_int32    :: i, j
   sll_int32    :: nloops
   sll_int32    :: ierr
   ! initial distribution
@@ -43,7 +43,7 @@ program test_hex_hermite
   sll_real64   :: t_init, t_end!, t1,t2,t3,t4
   character(len = 4) :: number
   sll_int32    :: p = 6 !-> degree of the approximation for the derivative 
-  sll_real64   :: step , aire, radius, x0, y0, h1, h2, f_min, x ,y! , x1_temp
+  sll_real64   :: step , aire, radius, x0, y0, h1, h2, f_min, x ,y, z! , x1_temp
   sll_real64   :: erl11, erl12, erl13
   logical      :: inside
   x0 = 0._f64
@@ -126,9 +126,9 @@ program test_hex_hermite
      dt    = 0.1_f64
      t     = 0._f64
 
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !              Computing characteristics
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 
      if (which_advec .eq. 0) then
@@ -142,9 +142,9 @@ program test_hex_hermite
      end if
 
 
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !                          Time loop
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
      nloops = 0
 
@@ -157,16 +157,16 @@ program test_hex_hermite
 
         nloops = nloops + 1
 
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         ! let us compute the derivatives in every hexagonal direction 
         ! with p the degree of the approximation
 
-        
+
         !call cpu_time(t1)
         call  der_finite_difference( f_tn, p,step, mesh_numh, mesh_coor, deriv, num_cells, dbc  )
         !call cpu_time(t2)
         !print*, "temps der : ", t2-t1
-        
+
         erl11 = 0._f64
         erl12 = 0._f64
         erl13 = 0._f64
@@ -191,25 +191,57 @@ program test_hex_hermite
         print*,"norme L1 des dérivées partielles dans les trois directions hex: "
         print*, erl11, erl12, erl13
 
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         t = t + dt
 
         f_min = 0._f64
-
+        
         !write(number,"(4I4)")   nloops
-
+        
         !open(unit = 11, file="hex_hermite"//number//".txt", action="write", status="replace")
-
         
         !call cpu_time(t3)
+        
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !              VALIDATION INTERPOLATION
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        norm2_error = 0
+        
+        do i = 1,num_cells
+           do j = 1,num_cells
+              x = -sqrt(3.0)*0.5*step + real(i-1,f64)*sqrt(3.0)/(num_cells + 1)*step
+              y = -sqrt(3.0)*0.5*step + real(j-1,f64)*sqrt(3.0)/(num_cells + 1)*step
+              z = 0
+              
+              if ( sqrt(x**2+y**2) >= radius*sqrt(3.0)*0.5 ) then
+                 z = -1
+              endif
+              
+              
+              if ( z>-1) then
+                 call hermite_interpolation(i, x1_char(i), x2_char(i), f_tn, &
+                      f_tn1, mesh_num, mesh_coor, deriv, step, aire, num_cells ,radius)  
+              endif
+              
+              norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
+              f_sol(i) = exp(-(x-gauss_x1)**2-(y-gauss_x2)**2) 
+           enddo
+        enddo
+
+        print*, "error regular interpolation : ",   norm2_error*step**2
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !                 INTERPOLATION for the characteristic
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
         do i=1, n_points   ! interpolation at each point
 
-           ! computation of the interpolation   F( t_(n+1) , x_i , v_j ) = F ( t_n , X(t_n) , V(t_n) ) 
+           ! computation of the interpolation F(t_(n+1),x_i,v_j) = F (t_n,X(t_n),V(t_n))
 
            inside = .true.
-          
+
            h1 =  x1_char(i)/sqrt(3.0_f64) + x2_char(i)
            h2 = -x1_char(i)/sqrt(3.0_f64) + x2_char(i) 
 
@@ -222,7 +254,7 @@ program test_hex_hermite
               call hermite_interpolation(i, x1_char(i), x2_char(i), f_tn, &
                    f_tn1, mesh_num, mesh_coor, deriv, step, aire, num_cells ,radius)  
            else 
-
+              
               f_tn1(i) = 0._f64
 
            endif
@@ -234,21 +266,21 @@ program test_hex_hermite
            ! Computing characteristics
 
            !if (which_advec .eq. 0) then
-              ! linear advection
-            !  x1(i) = mesh_num( 1, i) - advec*dt*nloops
-            !  x2(i) = mesh_num( 2, i) - advec*dt*nloops
+           ! linear advection
+           !  x1(i) = mesh_num( 1, i) - advec*dt*nloops
+           !  x2(i) = mesh_num( 2, i) - advec*dt*nloops
            !else
-              ! Circular advection
+           ! Circular advection
 
-              
-              x = x1(i)*cos(t) - x2(i)*sin(t);
-              y = x1(i)*sin(t) + x2(i)*cos(t);
 
-              !x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
-              !x2(i)   = sqrt(x1(i)**2 + x2(i)**2) * sin(2*sll_pi*dt + atan2(x2(i),x1(i)))
-              !x1(i)   = x1_temp
-          ! end if
-           
+           x = x1(i)*cos(t) - x2(i)*sin(t);
+           y = x1(i)*sin(t) + x2(i)*cos(t);
+
+           !x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
+           !x2(i)   = sqrt(x1(i)**2 + x2(i)**2) * sin(2*sll_pi*dt + atan2(x2(i),x1(i)))
+           !x1(i)   = x1_temp
+           ! end if
+
            !f_sol(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
            !    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
 
@@ -257,6 +289,8 @@ program test_hex_hermite
            !if (diff_error .lt. abs(f_sol(i) - f_tn1(i)) ) then
            !   diff_error = abs(f_sol(i) - f_tn1(i))
            !end if
+
+
 
            norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
 
@@ -268,7 +302,7 @@ program test_hex_hermite
 
         !close(11)
 
-        
+
         !call cpu_time(t4)
 
         !print*, "temps interpolation + diag", t4-t3
