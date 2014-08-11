@@ -24,7 +24,7 @@ module hex_mesh
      sll_real64 :: center_x1   ! x1 cartesian coordinate of the origin
      sll_real64 :: center_x2   ! x2 cartesian coordinate of the origin
      sll_real64 :: delta       ! cell spacing
-     ! generator vectors' (r1, r2, r3) coordinates (they need to be scaled by delta)
+     ! generator vectors' (r1, r2, r3) coordinates (they need to be scaled by delta) 
      sll_real64 :: r1_x1
      sll_real64 :: r1_x2
      sll_real64 :: r2_x1
@@ -41,6 +41,7 @@ module hex_mesh
    contains
      procedure, pass(mesh) :: x1_node => x1_node
      procedure, pass(mesh) :: x2_node => x2_node
+     procedure, pass(mesh) :: index_hex_to_global => index_hex_to_global
      procedure, pass(mesh) :: hex_to_global   => hex_to_global
      procedure, pass(mesh) :: global_to_hex1  => global_to_hex1
      procedure, pass(mesh) :: global_to_hex2  => global_to_hex2
@@ -145,7 +146,6 @@ end if
     ! variables for optmizing computing time :
     sll_int32  :: num_cells_plus1
     sll_int32  :: num_cells_plus2
-    sll_int32  :: n0
     sll_int32  :: k1, k2, nk1k2
 
 
@@ -211,8 +211,6 @@ end if
     
     num_cells_plus1 = num_cells + 1
     num_cells_plus2 = num_cells + 2
-    n0 = num_cells**2 + num_cells*num_cells_plus1*0.5
-    
 
     do i = 1, num_cells ! variable following r1
     
@@ -308,12 +306,12 @@ end if
     end do
 
     
-    do global = 1,n_points 
+    do global = 1,m%num_pts_tot
 
        k1 = m%hex_coord(1, global)
        k2 = m%hex_coord(2, global)
        
-       call index_hex_to_global(k1, k2, nk1k2, num_cells, n0, num_cells_plus1)
+       nk1k2 = m%index_hex_to_global(k1, k2)
        
        m%global_indices(nk1k2) = global
        
@@ -325,21 +323,26 @@ end if
           
   end subroutine initialize_hex_mesh_2d
 
-  subroutine index_hex_to_global(k1, k2, nk1k2, num_cells, n0, num_cells_plus1)
-    implicit none
-    sll_int32, intent(in)  :: k1, k2, num_cells, n0, num_cells_plus1
-    sll_int32, intent(out) :: nk1k2
-    sll_int32              :: kk, nk1
-
+  function index_hex_to_global(mesh, k1, k2) result(index_tab)
+    class(hex_mesh_2d)     :: mesh
+    sll_int32, intent(in)  :: k1, k2
+    sll_int32              :: kk
+    sll_int32              :: nk1
+    sll_int32              :: n1
+    sll_int32              :: num_cells_plus1
+    sll_int32              :: index_tab
+    
+    num_cells_plus1 = mesh%num_cells + 1
     if (k1 .le. 0) then
-       kk    = num_cells + k1
-       nk1   = num_cells*kk + kk*(kk+1)*0.5 + 1 
-       nk1k2 = nk1 + k2 + num_cells_plus1
-    elseif (k1 .gt. 0) then 
-       nk1   = n0 + k1*(2*num_cells + 1) - k1*(k1-1)*0.5 + 1 
-       nk1k2 = nk1 + k2 + num_cells_plus1
+       kk    = mesh%num_cells + k1
+       nk1   = floor(mesh%num_cells*kk + kk*(kk+1)*0.5 + 1)
+    elseif (k1 .gt. 0) then
+       n1    = floor(mesh%num_cells**2 + mesh%num_cells*num_cells_plus1*0.5)
+       nk1   = floor(n1 + k1*(2*mesh%num_cells + 1) - k1*(k1-1)*0.5 + 1) 
     end if
-  end subroutine index_hex_to_global
+
+    index_tab   = nk1 + k2 + num_cells_plus1
+  end function index_hex_to_global
 
 
 
@@ -372,23 +375,25 @@ end if
     ! By default the index of the center of the mesh is 0
     ! Then following the r1 direction and a counter-clockwise motion
     ! we assing an index to every point of the mesh.
-    class(hex_mesh_2d)       :: mesh
+    class(hex_mesh_2d)      :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
-    sll_int32 :: val = -1
+    sll_int32               :: cells_to_origin
+    sll_int32               :: tab_index
+    sll_int32 :: val
     
     ! We compute the number of cells from point to center 
-    ! which is equivalent to the hexagonal ring number
     if (k1*k2 .gt. 0) then
-       hex_ring_number = max(abs(k1),abs(k2))
+       cells_to_origin = max(abs(k1),abs(k2))
     else
-       hex_ring_number = abs(k1) + abs(k2)
+       cells_to_origin = abs(k1) + abs(k2)
     end if
     ! Test if we are in domain
-    if (hex_ring_number .le. m%num_cells) then
-       tab_index = index_hex_to_global(k1, k2)
-       val = global_indices(tab_index)
+    if (cells_to_origin .le. mesh%num_cells) then
+       tab_index = mesh%index_hex_to_global(k1, k2)
+       val = mesh%global_indices(tab_index)
     else
+       val = -1
        print *, "WARNING: in hex_to_global, the hexagonal coordinates passed k1, k2 are not in the domain"
     end if
 
@@ -598,7 +603,7 @@ end if
 
     SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
     SLL_DEALLOCATE(mesh%hex_coord, ierr)
-    SLL_DEALLOCATE(mesh%hex_to_global_mat, ierr)
+    SLL_DEALLOCATE(mesh%global_indices, ierr)
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_hex_mesh_2d
 
