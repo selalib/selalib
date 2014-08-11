@@ -331,15 +331,15 @@ end if
     sll_int32, intent(out) :: nk1k2
     sll_int32              :: kk, nk1
 
-    if (k1 <= 0) then
+    if (k1 .le. 0) then
        kk    = num_cells + k1
        nk1   = num_cells*kk + kk*(kk+1)*0.5 + 1 
        nk1k2 = nk1 + k2 + num_cells_plus1
-    elseif (k1 > 0) 
+    elseif (k1 .gt. 0) then 
        nk1   = n0 + k1*(2*num_cells + 1) - k1*(k1-1)*0.5 + 1 
        nk1k2 = nk1 + k2 + num_cells_plus1
-
-  endsubroutine index_hex_to_global(k1,k2,nk1k2)
+    end if
+  end subroutine index_hex_to_global
 
 
 
@@ -375,26 +375,22 @@ end if
     class(hex_mesh_2d)       :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
-    sll_int32 :: val
+    sll_int32 :: val = -1
     
-    val = mesh%hex_to_global_mat(k1+ mesh%num_cells +1, k2 + mesh%num_cells + 1)
-
-!     ! We compute the number of cells from point to center 
-!           ! which is equivalent to the hexagonal ring number
-!           if (k1*k2 .gt. 0) then
-!              hex_ring_number = max(abs(k1),abs(k2))
-!           else
-!              hex_ring_number = abs(k1) + abs(k2)
-!           end if
-!           ! Test if we are in domain
-!           if (hex_ring_number .le. m%num_cells) then
-!              global_indices(tab_index) = (2*m%num_cells + 1)*(k1 + m%num_cells)
-!              do i = -m%num_cells, k1-1
-!                 global_indices(tab_index) = global_indices(tab_index) - abs(i)
-!              end do
-!              global_indices(tab_index) = global_indices(tab_index) + k2 + m%num_cells + 1
-!              tab_index = tab_index + 1
-!           end if
+    ! We compute the number of cells from point to center 
+    ! which is equivalent to the hexagonal ring number
+    if (k1*k2 .gt. 0) then
+       hex_ring_number = max(abs(k1),abs(k2))
+    else
+       hex_ring_number = abs(k1) + abs(k2)
+    end if
+    ! Test if we are in domain
+    if (hex_ring_number .le. m%num_cells) then
+       tab_index = index_hex_to_global(k1, k2)
+       val = global_indices(tab_index)
+    else
+       print *, "WARNING: in hex_to_global, the hexagonal coordinates passed k1, k2 are not in the domain"
+    end if
 
   end function hex_to_global
 
