@@ -493,9 +493,6 @@ contains  ! ****************************************************************
     sll_int32               :: ki, kj
     sll_int32               :: num_pts
     sll_int32               :: num_pts_tot
-    sll_real64              :: delta
-    sll_real64              :: k1_temp
-    sll_real64              :: k2_temp
 
     val = 0._f64
 
