@@ -9,8 +9,7 @@ program test_hex_hermite
 
   implicit none
 
-  sll_real64, dimension(:,:), allocatable :: deriv, dbc, mesh_num
-  sll_int32 , dimension(:,:), allocatable :: mesh_numh, mesh_coor
+  sll_real64, dimension(:,:), allocatable :: deriv
 
   sll_int32    :: num_cells, n_points
   sll_int32    :: i, j
@@ -31,8 +30,7 @@ program test_hex_hermite
   sll_real64,dimension(:),allocatable :: f_tn1
   ! distribution at end time
   sll_real64,dimension(:),allocatable :: f_sol
-  sll_real64   :: diff_error
-  sll_real64   :: norm2_error
+  sll_real64   :: norm2_error, norm2_errorn
   ! advection
   sll_int32    :: which_advec
   sll_real64   :: advec
@@ -40,37 +38,39 @@ program test_hex_hermite
   sll_real64   :: tmax
   sll_real64   :: t
 
-  sll_real64   :: t_init, t_end!, t1,t2,t3,t4
-  character(len = 4) :: number
+  sll_real64   :: t_init, t_end
   sll_int32    :: p = 6 !-> degree of the approximation for the derivative 
-  sll_real64   :: step , aire, radius, x0, y0, h1, h2, f_min, x ,y, z! , x1_temp
-  sll_real64   :: erl11, erl12, erl13
+  sll_real64   :: step , aire, radius, center_x1, center_x2, h1, h2, f_min, x ,y
+  ! sll_real64   :: erl11, erl12, erl13,erl14, erl15, erl16
+   sll_real64   :: z!, x1_temp,t1,t2,t3,t4 
+  ! character(len = 4) :: number
   logical      :: inside
-  x0 = 0._f64
-  y0 = 0._f64
-  radius = 6._f64
+  type(hex_mesh_2d), pointer :: mesh
 
 
-  do num_cells = 80,80,10 ! -> loop on the size of the mesh 
+  center_x1 = 0._f64
+  center_x2 = 0._f64
+
+  radius = 8._f64
+
+  open(unit = 33, file="hex_errors.txt", action="write", position = "append")! status="replace")!,position = "append")! 
+
+  write(33,*) 
+
+  do num_cells = 20,160,20 ! -> loop on the size of the mesh 
   
-
-
+     
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      !             allocation
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
      
      n_points = 1 + 3 * num_cells * (num_cells + 1)  
 
-     step = radius / real( num_cells )
-     aire = step**2*sqrt(3.0_f64)*0.25_f64
+     step = radius / real(num_cells,f64)
+     aire = step**2*sqrt(3._f64)*0.25_f64
 
-     allocate( mesh_num(1:2,1:n_points) )
-     allocate( mesh_numh(1:2,1:n_points) )
-     allocate( mesh_coor(-num_cells:num_cells,-num_cells:num_cells) )
-     allocate( dbc(1:6,num_cells) )
      allocate( deriv(1:6,n_points) )
-
-     dbc  = 0._f64
+     
 
      SLL_ALLOCATE(f_init( n_points),ierr)
      SLL_ALLOCATE(f_tn( n_points),ierr)
@@ -85,10 +85,14 @@ program test_hex_hermite
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                       ! Mesh initialization   
      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-     
 
-     call create_hex_mesh(mesh_num, mesh_numh, mesh_coor, num_cells, radius, x0, y0)
+     mesh => new_hex_mesh_2d( num_cells, center_x1, center_x2, radius=radius ) 
 
+     print*, "yo2"
+
+     !call creation_mesh( mesh, num_cells, radius, center_x1, &
+     !     center_x2, sqrt(3._f64)*0.5_f64, 0.5_f64, -sqrt(3.0_f64)*0.5_f64,&
+     !     0.5_f64, 0._f64, 1._f64)
 
      ! Distribution initialization
 
@@ -99,15 +103,8 @@ program test_hex_hermite
      open(unit = 11, file="hex_hermite_init.txt", action="write", status="replace")
 
      do i = 1, n_points
-
-        x1(i) = mesh_num(1,i)
-        x2(i) = mesh_num(2,i)
-
-        ! f_init(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2 + (x2(i)-gauss_x2)**2) / gauss_sig**2 )
-
-        ! if (exponent(f_init(i)) .lt. -17) then
-        !    f_init(i) = 0._f64
-        ! end if
+        x1(i) = mesh%cartesian_coord(1,i)
+        x2(i) = mesh%cartesian_coord(2,i)
 
         f_init(i) = exp( -(x1(i)-gauss_x1)**2 - (x2(i)-gauss_x2)**2 )
 
@@ -121,9 +118,9 @@ program test_hex_hermite
 
      ! Advection initialization
      which_advec = 1  ! 0 : linear advection ; 1 : circular advection
-     advec = 0.025_f64!5_f64
-     tmax  = 6.3_f64
-     dt    = 0.1_f64
+     advec = 0.025_f64!5._f64
+     tmax  = 1._f64
+     dt    = 0.1_f64 *20._f64 / real(num_cells,f64)  
      t     = 0._f64
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -150,10 +147,9 @@ program test_hex_hermite
 
      call cpu_time(t_init)
 
-     do while (t .lt. tmax)
+     do while (t .lt.  tmax)
         !Error variables
         norm2_error = 0._f64
-        diff_error  = 0._f64
 
         nloops = nloops + 1
 
@@ -161,80 +157,110 @@ program test_hex_hermite
         ! let us compute the derivatives in every hexagonal direction 
         ! with p the degree of the approximation
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !              VALIDATION DERIVATIVE
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         !call cpu_time(t1)
-        call  der_finite_difference( f_tn, p,step, mesh_numh, mesh_coor, deriv, num_cells, dbc  )
+
+        call  der_finite_difference( f_tn, p,step, mesh, deriv )
+
         !call cpu_time(t2)
         !print*, "temps der : ", t2-t1
 
-        erl11 = 0._f64
-        erl12 = 0._f64
-        erl13 = 0._f64
+        ! erl11 = 0._f64
+        ! erl12 = 0._f64
+        ! erl13 = 0._f64
+        ! erl14 = 0._f64
+        ! erl15 = 0._f64
+        ! erl16 = 0._f64
         
 
-        do i = 1, n_points
-           x = mesh_num(1,i)
-           y = mesh_num(2,i)  
-           erl11 = erl11 + abs(deriv(1,i)+sqrt(3.0)*0.5*2.0*(x-gauss_x1)*exp(-((x-gauss_x1)**2+& 
-           (y-gauss_x2)**2 ) ) +  0.5*2.0*(y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
-           (y-gauss_x2)**2 ) ) )
-           erl12 = erl12 + abs(deriv(2,i)-sqrt(3.0)*0.5*2.0*(x-gauss_x1)*exp(-((x-gauss_x1)**2 +&
-           (y-gauss_x2)**2 ) ) +  0.5*2.0*(y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
-           (y-gauss_x2)**2 ) ) )
-           erl13 = erl13 + abs( deriv(3,i) + 2.0*(y-gauss_x2)*exp( -( (x-gauss_x1)**2 + (y-gauss_x2)**2 )  ) )
-        enddo
+        ! do i = 1, n_points
 
-        erl11 = erl11/real(n_points,f64)
-        erl12 = erl12/real(n_points,f64)
-        erl13 = erl13/real(n_points,f64)
+        ! x = mesh%cartesian_coord(1,i)
+        ! y = mesh%cartesian_coord(2,i)
+  
+        !    erl11 = erl11 + abs(deriv(1,i)+sqrt(3._f64)*(x-gauss_x1)*exp(-((x-gauss_x1)**2+& 
+        !    (y-gauss_x2)**2 ) ) + (y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
+        !    (y-gauss_x2)**2 ) ) )
+        !    erl12 = erl12 + abs(deriv(2,i)-sqrt(3._f64)*(x-gauss_x1)*exp(-((x-gauss_x1)**2 +&
+        !    (y-gauss_x2)**2 ) ) + (y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
+        !    (y-gauss_x2)**2 ) ) )
+        !    erl13 = erl13 + abs( deriv(3,i) + 2._f64*(y-gauss_x2)*&
+        !         exp( -( (x-gauss_x1)**2 + (y-gauss_x2)**2 )  ) )
 
-        print*,"norme L1 des dérivées partielles dans les trois directions hex: "
-        print*, erl11, erl12, erl13
+        !    erl14 = erl14 + abs(deriv(4,i) - sqrt(3._f64)*(x-gauss_x1)*exp(-((x-gauss_x1)**2+& 
+        !    (y-gauss_x2)**2 ) ) - (y-gauss_x2) * exp( -( (x-gauss_x1)**2 + &
+        !    (y-gauss_x2)**2 ) ) )
+        !    erl15 = erl15 + abs(deriv(5,i) + sqrt(3._f64)*(x-gauss_x1)*exp(-((x-gauss_x1)**2&
+        !         + (y-gauss_x2)**2 ) ) - (y-gauss_x2) * exp( -( (x-gauss_x1)**2&
+        !         + (y-gauss_x2)**2 ) ) )
+        !    erl16 = erl16 + abs( deriv(6,i) - 2._f64*(y-gauss_x2)*&
+        !         exp( -( (x-gauss_x1)**2 + (y-gauss_x2)**2 )  ) )
+        ! enddo
+
+        ! erl11 = erl11*step**2!real(n_points,f64)
+        ! erl12 = erl12*step**2!real(n_points,f64)
+        ! erl13 = erl13*step**2!real(n_points,f64)
+        ! erl14 = erl14*step**2!real(n_points,f64)
+        ! erl15 = erl15*step**2!real(n_points,f64)
+        ! erl16 = erl16*step**2!real(n_points,f64)
+
+        ! print*,"norme L1 des dérivées partielles dans les trois directions hex: "
+        ! print*, erl11, erl12, erl13
+        ! print*, erl14, erl15, erl16
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+        
         t = t + dt
 
         f_min = 0._f64
-        
-        !write(number,"(4I4)")   nloops
-        
+
         !open(unit = 11, file="hex_hermite"//number//".txt", action="write", status="replace")
-        
+
         !call cpu_time(t3)
-        
+
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !              VALIDATION INTERPOLATION
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        norm2_error = 0
-        
-        do i = 1,num_cells
-           do j = 1,num_cells
-              x = -sqrt(3.0)*0.5*step + real(i-1,f64)*sqrt(3.0)/(num_cells + 1)*step
-              y = -sqrt(3.0)*0.5*step + real(j-1,f64)*sqrt(3.0)/(num_cells + 1)*step
-              z = 0
-              
-              if ( sqrt(x**2+y**2) >= radius*sqrt(3.0)*0.5 ) then
-                 z = -1
-              endif
-              
-              
-              if ( z>-1) then
-                 call hermite_interpolation(i, x1_char(i), x2_char(i), f_tn, &
-                      f_tn1, mesh_num, mesh_coor, deriv, step, aire, num_cells ,radius)  
-              endif
-              
-              norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
-              f_sol(i) = exp(-(x-gauss_x1)**2-(y-gauss_x2)**2) 
-           enddo
-        enddo
 
-        print*, "error regular interpolation : ",   norm2_error*step**2
+        if (t == dt ) then
+
+           norm2_errorn = 0.0_f64
+
+           ! do i = 1,num_cells
+           !    do j = 1,num_cells
+           !       x = -sqrt(3.0)*0.5*step + real(i-1,f64)*sqrt(3.0)/(num_cells + 1)*step
+           !       y = -sqrt(3.0)*0.5*step + real(j-1,f64)*sqrt(3.0)/(num_cells + 1)*step
+           !       z = 0
+
+           !       if ( sqrt(x**2+y**2) >= radius*sqrt(3._f64)*0.5 ) then
+           !          z = -1
+           !       endif
+
+
+           !       if ( z>-1) then
+           !          call hermite_interpolation(i+(j-1)*num_cells, x, y, f_init, &
+           !               f_tn1, mesh, deriv, aire,t)  
+           !       endif
+
+           !       f_sol(i+(j-1)*num_cells) = exp(-(x-gauss_x1)**2-(y-gauss_x2)**2) 
+
+           !       norm2_errorn = norm2_errorn + abs(f_sol(i+(j-1)*num_cells) - f_tn1(i+(j-1)*num_cells))**2
+
+           !    enddo
+           ! enddo
+
+           print*, "error regular interpolation : ",   norm2_errorn*step**2
+
+        endif
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         !                 INTERPOLATION for the characteristic
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+        norm2_error = 0._f64
 
         do i=1, n_points   ! interpolation at each point
 
@@ -252,10 +278,10 @@ program test_hex_hermite
 
            if ( inside ) then
               call hermite_interpolation(i, x1_char(i), x2_char(i), f_tn, &
-                   f_tn1, mesh_num, mesh_coor, deriv, step, aire, num_cells ,radius)  
+                   f_tn1, mesh, deriv, aire,t-dt)
            else 
               
-              f_tn1(i) = 0._f64
+              f_tn1(i) = 0._f64 ! dirichlet boundary condition
 
            endif
 
@@ -264,39 +290,30 @@ program test_hex_hermite
            ! ******************
 
            ! Computing characteristics
+           
+           if (which_advec .eq. 0) then
 
-           !if (which_advec .eq. 0) then
-           ! linear advection
-           !  x1(i) = mesh_num( 1, i) - advec*dt*nloops
-           !  x2(i) = mesh_num( 2, i) - advec*dt*nloops
-           !else
-           ! Circular advection
+              !linear advection
 
+              x1(i) = mesh%cartesian_coord(1,i) - advec*dt*nloops
+              x2(i) = mesh%cartesian_coord(2,i) - advec*dt*nloops
 
-           x = x1(i)*cos(t) - x2(i)*sin(t);
-           y = x1(i)*sin(t) + x2(i)*cos(t);
+           else
 
-           !x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
-           !x2(i)   = sqrt(x1(i)**2 + x2(i)**2) * sin(2*sll_pi*dt + atan2(x2(i),x1(i)))
-           !x1(i)   = x1_temp
-           ! end if
+              ! Circular advection
 
-           !f_sol(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
-           !    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+              x = x1(i)*cos(t) - x2(i)*sin(t);
+              y = x1(i)*sin(t) + x2(i)*cos(t);
+
+           end if
 
            f_sol(i) = exp(-(x-gauss_x1)**2-(y-gauss_x2)**2) 
 
-           !if (diff_error .lt. abs(f_sol(i) - f_tn1(i)) ) then
-           !   diff_error = abs(f_sol(i) - f_tn1(i))
-           !end if
-
-
-
            norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
 
-           !write(11,*) mesh_num(1,i),mesh_num(2,i) ,f_sol(i),f_tn1(i)
+           !write(11,*) , mesh%cartesian_coord(1:2,i) ,f_sol(i),f_tn1(i)
 
-           !if ( f_tn1(i) < f_min ) f_min = f_tn1(i)
+           if ( f_tn1(i) < f_min ) f_min = f_tn1(i)
 
         end do
 
@@ -331,13 +348,17 @@ program test_hex_hermite
      SLL_DEALLOCATE_ARRAY(x1_char,ierr)
      SLL_DEALLOCATE_ARRAY(x2_char,ierr)
 
-
-     deallocate( mesh_num, mesh_numh, mesh_coor, deriv) 
+     deallocate(deriv)
+ 
+     call delete_hex_mesh_2d( mesh )
 
      print*, "time used =", t_end - t_init
 
+     write(33,*) dt, step, num_cells,  norm2_error,norm2_errorn*step**2 !, erl11
+
   end do
 
+  close(33)
 
 end program test_hex_hermite
 
