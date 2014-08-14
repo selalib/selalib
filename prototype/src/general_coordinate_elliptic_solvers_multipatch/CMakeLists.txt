@@ -22,9 +22,9 @@
 
    TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers_multipatch 
      sll_scalar_field_multipatch
+     sll_scalar_field_2d_alternative 
      sll_coordinate_transformation_multipatch
      sll_sparse_matrix 
-     sll_scalar_field_2d_alternative 
      sll_integration)
 
    
@@ -33,15 +33,11 @@
 
    TARGET_LINK_LIBRARIES( test_general_coordinate_elliptic_solver_multipatch
      sll_general_coordinate_elliptic_solvers_multipatch
-     sll_scalar_field_multipatch
-     sll_coordinate_transformation_multipatch
-     sll_scalar_field_2d_alternative
      sll_interpolators
      sll_coordinate_transformations
      sll_logical_meshes
      sll_boundary_condition_descriptors
      sll_file_io
-     sll_integration
      sll_constants
      sll_utilities
      sll_timer
