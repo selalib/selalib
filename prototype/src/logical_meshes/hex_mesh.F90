@@ -86,7 +86,7 @@ contains
        r22, &
        r31, &
        r32, &
-       radius ) result(mesh)
+       radius) result(mesh)
 
     type(hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: num_cells
@@ -112,6 +112,7 @@ contains
          r22, &
          r31, &
          r32)
+
 
   end function new_hex_mesh_2d
 
@@ -166,7 +167,7 @@ contains
 
     mesh%num_cells = num_cells
     mesh%delta = mesh%radius/real(num_cells,f64)
-    mesh%num_pts_tot = 6*mesh%num_cells*(mesh%num_cells+1)/2+1
+    mesh%num_pts_tot = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
 
     ! resizing :
     mesh%r1_x1 = mesh%r1_x1 * mesh%delta
@@ -197,12 +198,11 @@ contains
     mesh%cartesian_coord(:,:)   = 0._f64
     mesh%hex_coord(:,:)         = 0
     mesh%global_indices(:) = -1
-
     ! Initializing coordinates of first mesh point (ie. center of hexagon)
     mesh%cartesian_coord(1,1) = mesh%center_x1
     mesh%cartesian_coord(2,1) = mesh%center_x2
 
-    ! ---------------------------------------------------------------------
+    ! --------------------------------------------------------------------
     ! BEGIN MATRICES INITIALIZATION ---------------------------------------
     global = 1
     position_x1 = mesh%center_x1
@@ -211,9 +211,7 @@ contains
     num_cells_plus1 = num_cells + 1
     num_cells_plus2 = num_cells + 2
 
-
     do i = 1, num_cells ! variable following r1
-
        ! Incrementation on r1 direction as we are going to the next hexagon
        position_x1 = position_x1 + mesh%r1_x1
        position_x2 = position_x2 + mesh%r1_x2
@@ -305,7 +303,6 @@ contains
        end do
     end do
 
-
     do global = 1, mesh%num_pts_tot 
 
        k1 = mesh%hex_coord(1, global)
@@ -320,10 +317,7 @@ contains
 
        mesh%global_indices(index_tab)= global
 
-
     enddo
-
-
     ! ----------------------------------------- END MATRICES INITIALIZATION 
     ! ---------------------------------------------------------------------
 
@@ -403,16 +397,17 @@ contains
 
     ! We compute the number of cells from point to center 
     ! which is equivalent to the hexagonal ring number
+
     if (k1*k2 .gt. 0) then
        hex_ring_number = max(abs(k1),abs(k2))
     else
        hex_ring_number = abs(k1) + abs(k2)
     end if
+
     ! Test if we are in domain
     if (hex_ring_number .le. mesh%num_cells) then
 
        call index_hex_to_global(mesh, k1, k2,index_tab)
-
        val = mesh%global_indices(index_tab)
 
     else 
@@ -543,6 +538,63 @@ contains
 
     global = mesh%hex_to_global(k1,k2) 
   end function local_to_global
+
+
+
+  subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
+    type(hex_mesh_2d), pointer            :: mesh
+    sll_real64, intent(in)                :: x, y
+    sll_int32, intent(out)                :: s1, s2, s3
+    sll_real64                            :: h1, h2, xi, radius, step
+    sll_int32                             :: num_cells 
+    sll_int32                             :: i, j
+
+    num_cells = mesh%num_cells
+    radius    = mesh%radius
+    step      = mesh%delta
+
+    ! converting (x,y) to hexagonal coordinates
+    h1 =  x/sqrt(3.0_f64) + y 
+    h2 = -x/sqrt(3.0_f64) + y  
+
+    ! find the lowest point in the lozenge that contains (x,y)
+    i = floor( (h1+radius) / step ) - num_cells
+    j = floor( (h2+radius) / step ) - num_cells 
+
+    ! coordinates of the vertices of the lozenge : 
+    !(/i,j/),(/i,j+1/),(/i+1,j/), (/i+1,j+1/)
+
+    ! coordinate of the abscisse that parts the lozenge
+    ! in two equilateral triangle
+
+    xi = ( real(i,f64) - real(j,f64) ) * step*sqrt(3.0_f64)*0.5_f64
+
+    ! testing which triangle (x,y) is in, which gives us its vertices'
+    ! coordinates
+
+    if ( x > xi ) then
+       s1 = hex_to_global(mesh,i,j) 
+       s2 = hex_to_global(mesh,i+1,j) 
+       s3 = hex_to_global(mesh,i+1,j+1) 
+    else if ( x < xi ) then
+       s1 = hex_to_global(mesh,i,j) 
+       s2 = hex_to_global(mesh,i,j+1)
+       s3 = hex_to_global(mesh,i+1,j+1)
+    else if ( x == xi ) then
+       if (x < 0) then
+          s1 = hex_to_global(mesh,i,j) 
+          s2 = hex_to_global(mesh,i+1,j) 
+          s3 = hex_to_global(mesh,i+1,j+1) 
+       elseif (x >= 0) then
+          s1 = hex_to_global(mesh,i,j)
+          s2 = hex_to_global(mesh,i,j+1) 
+          s3 = hex_to_global(mesh,i+1,j+1) 
+       endif
+    endif
+
+
+  end subroutine get_cell_vertices_index
+
 
 
   subroutine display_hex_mesh_2d(mesh)
