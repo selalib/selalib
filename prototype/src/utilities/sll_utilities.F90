@@ -63,6 +63,10 @@ module sll_utilities
 
   logical, private :: flag = .true.
 
+  interface sll_factorial
+     module procedure factorial_int32, factorial_int64
+  end interface sll_factorial
+
 contains
 
   function is_power_of_two( n )
@@ -86,6 +90,52 @@ contains
        is_even = .false.
     end if
   end function is_even
+
+  ! It would have been nice to declare the next functions as 'pure' functions,
+  ! but it is safer to be able to indicate when their arguments have fallen
+  ! out of range as this number is so limited anyway.
+  function factorial_int32(n) result(fac)
+    sll_int64 :: fac
+    sll_int32, intent(in) :: n
+    sll_int64 :: acc
+    sll_int64 :: i
+
+    if(n < 0) then
+       print *, 'ERROR, factorial_int32(): n < 0 or n > 20, if latter, ', &
+            'function will overflow a 64-bit integer. n =  ', n
+    end if
+
+    acc = 1
+    if( n >= 1 ) then
+       do i=n,1,-1
+          acc = acc*i
+       end do
+    end if
+    ! case n == 0 is already taken care of. No protection for negative input.
+    fac = acc
+  end function factorial_int32
+
+  function factorial_int64(n) result(fac)
+    sll_int64 :: fac
+    sll_int64, intent(in) :: n
+    sll_int64 :: acc
+    sll_int64 :: i
+
+    if( (n < 0) .or. (n > 20) ) then
+       print *, 'ERROR, factorial_int64(): either a negative n was passed: ', &
+            'or n > 20, which will overflow a 64-bit integer. n = ', n
+    end if
+
+    acc = 1
+    if( n >= 1 ) then
+       do i=n,1,-1
+          acc = acc*i
+       end do
+    end if
+    ! case n == 0 is already taken care of. 
+    fac = acc
+  end function factorial_int64
+
 
 !> Convert an integer < 9999 to a 4 characters string
   subroutine int2string( istep, cstep )
