@@ -536,34 +536,6 @@ contains
 
     ! freedom(4) = exp( - ( (xx-1.0_f64)**2+(yy-1.0_f64)**2) ) 
 
- 
-
-    ! freedom(6) = - 2.0_f64*(y1-1.0_f64)*exp( -( (x1-1.0_f64)**2 + (y1-1.0_f64)**2 )  )! derivative from S1 to S3
-    ! freedom(9) =   2.0_f64*(y3-1.0_f64)*exp( -( (x3-1.0_f64)**2 + (y3-1.0_f64)**2 )  )! derivative from S3 to S1
-
-    ! if ( (x3-x2 - sqrt(3.0_f64)*0.5_f64*step)**2 + (y3-y2 - 0.5_f64*step)**2 <= eps ) then! if S2 S3 = h1, s1s2=h2
-    !    freedom(5) = - ( +sqrt(3._f64)*(x1-1._f64)*exp(-((x1-1._f64)**2 +&
-    !         (y1-1._f64)**2 ) ) + (y1-1._f64) * exp( -( (x1-1._f64)**2 + (y1-1._f64)**2 ) ) ) ! derivative from S1 to S2
-    !    freedom(7) = - ( -sqrt(3._f64)*(x2-1._f64)*exp(-((x2-1._f64)**2 +&
-    !         (y2-1._f64)**2 ) ) - (y2-1._f64) * exp( -( (x2-1._f64)**2 + (y2-1._f64)**2 ) ) )! derivative from S2 to S1
-    !    freedom(8) = - ( -sqrt(3._f64)*(x2-1._f64)*exp(-((x2-1._f64)**2+& 
-    !         (y2-1._f64)**2 ) ) + (y2-1._f64) * exp( -( (x2-1._f64)**2 + (y2-1._f64)**2 ) ) )! derivative from S2 to S3
-    !    freedom(10)= - ( +sqrt(3._f64)*(x3-1._f64)*exp(-((x3-1._f64)**2 +&
-    !         (y3-1._f64)**2 ) ) - (y3-1._f64) * exp( -( (x3-1._f64)**2 + (y3-1._f64)**2 ) ) )! derivative from S3 to S2
-
-    !    !print*,  freedom(6), deriv(2,i1), freedom(7), deriv(5,i2)
-
-    ! else if ( (x3-x2 + sqrt(3._f64)*0.5_f64*step)**2 + (y3-y2 - 0.5_f64*step)**2 <= eps ) then  ! if S2 S3 = h2, s1s2= h1
-    !    freedom(5) = - ( sqrt(3._f64)*(x1-1._f64)*exp(-((x1-1._f64)**2 +&
-    !        (y1-1.0_f64)**2 ) ) +  (y1-1._f64) * exp( -( (x1-1._f64)**2 + (y1-1._f64)**2 ) ) )! derivative from S1 to S2 
-    !    freedom(7) = sqrt(3._f64)*(x2-1._f64)*exp(-((x2-1._f64)**2 +&
-    !        (y2-1._f64)**2 ) ) + (y2-1._f64) * exp( -( (x2-1._f64)**2 + (y2-1._f64)**2 ) )! derivative from S2 to S1
-    !    freedom(8) = -(-sqrt(3._f64)*(x2-1._f64)*exp(-((x2-1._f64)**2 +&
-    !        (y2-1._f64)**2 ) ) + (y2-1._f64) * exp( -( (x2-1._f64)**2 + (y2-1._f64)**2 ) ) )! derivative from S2 to S3
-    !    freedom(10)= -sqrt(3._f64)*(x3-1._f64)*exp(-((x3-1._f64)**2 +&
-    !        (y3-1._f64)**2 ) ) + (y3-1._f64) * exp( -( (x3-1._f64)**2 + (y3-1._f64)**2 ) )! derivative from S3 to S2
-
-    ! endif
 
     ! values of the derivatives
 
@@ -578,10 +550,10 @@ contains
        freedom(7) = deriv(5,i2) ! derivative from S2 to S1 (-h2)
        freedom(8) = deriv(1,i2) ! derivative from S2 to S3 (+h1)
        freedom(10)= deriv(4,i3) ! derivative from S3 to S2 (-h1)
-       
+
        test = .true.
 
-     ! if S2 S3 = h2 then we are in the 2nd case )
+       ! if S2 S3 = h2 then we are in the 2nd case )
     else if ( (x3-x2 + sqrt(3._f64)*0.5_f64*step)**2 + (y3-y2 - 0.5_f64*step)**2 <= eps ) then 
        freedom(5) = deriv(1,i1) ! derivative from S1 to S2 (+h1)
        freedom(7) = deriv(4,i2) ! derivative from S2 to S1 (-h1)
@@ -606,7 +578,7 @@ contains
     l2   = a2 * abs( x1x*y3y - x3x*y1y ) 
     l3   = 1._f64 - l1 - l2
 
-    phi = l1*l2*l3
+    phi = l1*l2*l3  ! "bubble function"
 
     ksi1 = l1**3 - phi
     ksi2 = l2**3 - phi
@@ -621,12 +593,15 @@ contains
     l22 = l2**2
     l32 = l3**2
 
+
     ksi12 = l12*l2 + p05
     ksi13 = l12*l3 + p05
     ksi21 = l22*l1 + p05
     ksi23 = l22*l3 + p05
     ksi31 = l32*l1 + p05
     ksi32 = l32*l2 + p05
+
+    ! Computing the ten canonical basis functions 
 
     base(1) = 3._f64 * l12 - 2._f64*ksi1 - p9
     base(2) = 3._f64 * l22 - 2._f64*ksi2 - p9
@@ -638,6 +613,21 @@ contains
     base(8) = step * ( ksi23 - p15 )
     base(9) = step * ( ksi31 - p15 )
     base(10)= step * ( ksi32 - p15 )
+
+
+    ! Computing the nine canonical basis functions 
+
+    ! base(1) = 3._f64 * l12 - 2._f64*ksi1 
+    ! base(2) = 3._f64 * l22 - 2._f64*ksi2 
+    ! base(3) = 3._f64 * l32 - 2._f64*ksi3 
+    ! base(4) = 0._f64
+    ! base(5) = step * ksi12 
+    ! base(6) = step * ksi13
+    ! base(7) = step * ksi21
+    ! base(8) = step * ksi23
+    ! base(9) = step * ksi31
+    ! base(10)= step * ksi32
+
 
     f = 0._f64
 
