@@ -88,12 +88,6 @@ program test_hex_hermite
 
      mesh => new_hex_mesh_2d( num_cells, center_x1, center_x2, radius=radius ) 
 
-     print*, "yo2"
-
-     !call creation_mesh( mesh, num_cells, radius, center_x1, &
-     !     center_x2, sqrt(3._f64)*0.5_f64, 0.5_f64, -sqrt(3.0_f64)*0.5_f64,&
-     !     0.5_f64, 0._f64, 1._f64)
-
      ! Distribution initialization
 
      gauss_x1  = 1._f64
