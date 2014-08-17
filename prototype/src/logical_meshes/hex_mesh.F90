@@ -147,11 +147,7 @@ contains
     ! variables for optmizing computing time :
     sll_int32  :: num_cells_plus1
     sll_int32  :: num_cells_plus2
-<<<<<<< HEAD
-    sll_int32  :: k1, k2, nk1k2
-=======
     sll_int32  :: k1, k2, index_tab
->>>>>>> origin/hex-mesh-hermite
 
 
     ! By default the hexagonal mesh is centered at the (0,0) point
@@ -172,6 +168,7 @@ contains
 
     mesh%num_cells = num_cells
     mesh%delta = mesh%radius/real(num_cells,f64)
+	! The formula is = 6*sum(num_cells)+1 which simplifies to :
     mesh%num_pts_tot = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
 
     ! resizing :
@@ -308,7 +305,6 @@ contains
        end do
     end do
 
-<<<<<<< HEAD
     
     do global = 1,m%num_pts_tot
 
@@ -320,7 +316,7 @@ contains
        m%global_indices(nk1k2) = global
        
     enddo
-=======
+
     do global = 1, mesh%num_pts_tot 
 
        k1 = mesh%hex_coord(1, global)
@@ -332,7 +328,6 @@ contains
        ! global_indices which contains the numerotation
 
        call index_hex_to_global(mesh, k1, k2, index_tab)
->>>>>>> origin/hex-mesh-hermite
 
        mesh%global_indices(index_tab)= global
 
@@ -342,7 +337,6 @@ contains
 
   end subroutine initialize_hex_mesh_2d
 
-<<<<<<< HEAD
   function index_hex_to_global(mesh, k1, k2) result(index_tab)
     class(hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1, k2
@@ -363,7 +357,6 @@ contains
 
     index_tab   = nk1 + k2 + num_cells_plus1
   end function index_hex_to_global
-=======
 
   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
 
@@ -432,7 +425,6 @@ contains
     class(hex_mesh_2d)      :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
-<<<<<<< HEAD
     sll_int32               :: cells_to_origin
     sll_int32               :: tab_index
     sll_int32 :: val
@@ -450,7 +442,6 @@ contains
     else
        val = -1
        print *, "WARNING: in hex_to_global, the hexagonal coordinates passed k1, k2 are not in the domain"
-=======
     sll_int32               :: val
     sll_int32               :: index_tab, hex_ring_number
 
@@ -476,7 +467,6 @@ contains
 
        print *, "problem in hex_to_global with the coordinates / indices "
 
->>>>>>> origin/hex-mesh-hermite
     end if
 
   end function hex_to_global
@@ -569,7 +559,7 @@ contains
     k1 = k1_i - k1_j + mesh%num_cells + 1 
     k2 = k2_i - k2_j + mesh%num_cells + 1
 
-    new_index = mesh%hex_to_global(k1, k2) 
+    new_index = mesh%hex_to_global(k1, k2)
   end function global_to_local
 
 
