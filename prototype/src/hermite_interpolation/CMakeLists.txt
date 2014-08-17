@@ -7,10 +7,12 @@ TARGET_LINK_LIBRARIES(sll_hermite_interpolation sll_utilities
 )
 
 ADD_LIBRARY ( hex_hermite STATIC
-               hex_mesh_alt.F90 hex_interpolation_hermite.F90
+                hex_interpolation_hermite.F90
 			     	)
 
-TARGET_LINK_LIBRARIES( hex_hermite  sll_hermite_interpolation)
+TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation)
+
+TARGET_LINK_LIBRARIES( hex_mesh )
 
 
 
@@ -25,5 +27,6 @@ TARGET_LINK_LIBRARIES(test_hermite_interpolation sll_hermite_interpolation
 
 ADD_EXECUTABLE(test_hex_hermite test_hex_hermite.F90)
 
-TARGET_LINK_LIBRARIES(test_hex_hermite sll_hermite_interpolation hex_hermite
-				sll_constants)
+TARGET_LINK_LIBRARIES(test_hex_hermite sll_hermite_interpolation 
+                           hex_hermite hex_mesh 
+	      		   sll_constants)
