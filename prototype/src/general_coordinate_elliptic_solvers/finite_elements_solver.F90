@@ -509,15 +509,17 @@ contains ! =============================================================
     ! Intermediate variables
     sll_real64, dimension(solv%spline_degree1+1,solv%spline_degree1+1) :: work1
     sll_real64, dimension(solv%spline_degree2+1,solv%spline_degree2+1) :: work2
-    ! Variables containing the index of the begining of the local spline
-    sll_int32  :: local_spline_index1
-    sll_int32  :: local_spline_index2
     ! Counters variables
     sll_int32  :: num_ele
     sll_int32  :: local_index
     sll_int32  :: global_index
     sll_int32  :: cell_i
     sll_int32  :: cell_j
+    sll_int32  :: local_spline_index
+    ! Quadrature points coordinates and associated weight
+    sll_real64 :: qpt1
+    sll_real64 :: qpt2
+    sll_real64 :: wqpt
     ! Index of point to the left of the support of the spline 
     sll_int32 :: left_x,left_y
     sll_int32 :: mflag_x, mflag_y ! error flags
@@ -605,29 +607,28 @@ contains ! =============================================================
                left_x,&
                work1,&
                basis_deriv_x1_source,&
-               2 )
-          
+               2 )          
           
           ! If we note N1 and N2 the basis functions
           ! we stock the values of : N1N2, N1'N2, N1N2', N1'N2'
           solv%values_splines(global_index, 1) = &
-               basis_deriv_x1(i,1) * basis_deriv_x2(j,1)
+               basis_deriv_x1(local_index,1) * basis_deriv_x2(local_index,1)
           solv%values_splines(global_index, 2) = &
-               basis_deriv_x1(i,2) * basis_deriv_x2(j,1)
+               basis_deriv_x1(local_index,2) * basis_deriv_x2(local_index,1)
           solv%values_splines(global_index, 3) = &
-               basis_deriv_x1(i,1) * basis_deriv_x2(j,2)
+               basis_deriv_x1(local_index,1) * basis_deriv_x2(local_index,2)
           solv%values_splines(global_index, 4) = &
-               basis_deriv_x1(i,2) * basis_deriv_x2(j,2)
+               basis_deriv_x1(local_index,2) * basis_deriv_x2(local_index,2)
              
           ! IDEM for source distribution
           solv%values_splines_source(global_index, 1) = &
-               basis_deriv_x1_source(i,1) * basis_deriv_x2_source(j,1)
+               basis_deriv_x1_source(local_index,1) * basis_deriv_x2_source(local_index,1)
           solv%values_splines_source(global_index, 2) = &
-               basis_deriv_x1_source(i,2) * basis_deriv_x2_source(j,1)
+               basis_deriv_x1_source(local_index,2) * basis_deriv_x2_source(local_index,1)
           solv%values_splines_source(global_index, 3) = &
-               basis_deriv_x1_source(i,1) * basis_deriv_x2_source(j,2)
+               basis_deriv_x1_source(local_index,1) * basis_deriv_x2_source(local_index,2)
           solv%values_splines_source(global_index, 4) = &
-               basis_deriv_x1_source(i,2) * basis_deriv_x2_source(j,2)
+               basis_deriv_x1_source(local_index,2) * basis_deriv_x2_source(local_index,2)
           
           ! Keeping the index of coefficients
           solv%tab_index_coeff(global_index) = left_x + left_y * solv%mesh%num_cells2
@@ -831,7 +832,7 @@ contains ! =============================================================
     SLL_ALLOCATE(M_source_loc(num_splines_loc),ierr)
     
 
-    SLL_ALLOCATE(source_at_quad(num_quad_pts),ierr)
+    SLL_ALLOCATE(source_at_quad(solv%num_quad_pts),ierr)
     source_at_quad(:) = 0.0_f64
     SLL_ALLOCATE(source_coeff_1d(solv%num_cells_plus1),ierr)
     
@@ -1021,10 +1022,9 @@ contains ! =============================================================
     sll_real64 :: MC
     sll_real64 :: C1
     sll_real64 :: C2
-    ! Variables for splines index
-    sll_int32 :: left_x,left_y
-    sll_int32 :: mflag_x, mflag_y
     ! Loop variables
+    sll_int32  :: global_index
+    sll_int32  :: local_index
     sll_int32  :: index1
     sll_int32  :: index2    
 
@@ -1191,21 +1191,14 @@ contains ! =============================================================
     sll_int32, intent(in)         :: cell_index
     sll_real64, dimension(:), intent(in)   :: source_at_quad
     sll_real64, dimension(:), intent(out)  :: M_source_loc
-    ! Boundary conditions
-    sll_int32 :: bc_left    
-    sll_int32 :: bc_right
-    sll_int32 :: bc_bottom    
-    sll_int32 :: bc_top
-    sll_int32  :: tmp1
-    sll_int32  :: tmp2
-    sll_int32  :: quad_index
-    sll_int32  :: ii
-    sll_int32  :: jj
+    sll_int32  :: local_index
+    sll_int32  :: global_index
     sll_int32  :: index1
     sll_real64 :: val_src
     sll_real64 :: val_jac
-    sll_real64 :: spline1,spline2
+    sll_real64 :: weight
     
+    ! TODO @LM : weighted jacobian
     M_source_loc(:) = 0.0_f64
 
     do local_index = 1, solv%num_splines_loc
@@ -1216,7 +1209,7 @@ contains ! =============================================================
        weight = solv%quad_weight(global_index)
        
        val_src = source_at_quad(global_index)
-       val_jac = solv%values_jacobian(quad_index)
+       val_jac = solv%values_jacobian(global_index)
 
        ! loop over the splines supported in the cell that are different than
        ! zero at the point (qpt1,qpt2) (there are spline_degree+1 splines in
@@ -1569,7 +1562,6 @@ contains ! =============================================================
   subroutine compute_Source_matrice(solv,Source_loc)
     type(finite_elements_solver),intent(inout) :: solv
     sll_real64, dimension(:,:,:), pointer :: Source_loc
-    sll_int32 :: cell_j,cell_i
     sll_int32 :: cell_index
     sll_int32 :: ideg2,ideg1
     sll_int32 :: jdeg2,jdeg1
@@ -1577,45 +1569,39 @@ contains ! =============================================================
     sll_int32 :: li_A,li_Aprime
     sll_real64:: elt_mat_global
     
-    do cell_j=1,solv%num_cells2
-       do cell_i=1,solv%num_cells1
+    do cell_index = 1, solv%num_cells
           
-          cell_index = cell_i+solv%num_cells1*(cell_j-1)
-          
-          do ideg2 = 0,solv%spline_degree2
+       do ideg2 = 0,solv%spline_degree2
              
-             do ideg1 = 0,solv%spline_degree1
+          do ideg1 = 0,solv%spline_degree1
                 
-                b          =  ideg2 * ( solv%spline_degree1 + 1 ) + ideg1 + 1
-                li_A       =  solv%local_to_global_spline_indices_source_bis(b, cell_index)
-                
-                do jdeg2 = 0,solv%spline_degree2
+             b          =  ideg2 * ( solv%spline_degree1 + 1 ) + ideg1 + 1
+             li_A       =  solv%local_to_global_spline_indices_source_bis(b, cell_index)
+             
+             do jdeg2 = 0,solv%spline_degree2
                    
-                   do jdeg1 = 0,solv%spline_degree1
+                do jdeg1 = 0,solv%spline_degree1
+                   
+                   bprime    =  jdeg2 * ( solv%spline_degree1 + 1 ) + jdeg1 + 1
+                   li_Aprime = solv%local_to_global_spline_indices_source(bprime,cell_index)
+                   
+                   elt_mat_global = Source_loc(cell_index,bprime,b)
+                   
+                   if ( (li_A > 0) .and. (li_Aprime > 0)) then
                       
-                      bprime    =  jdeg2 * ( solv%spline_degree1 + 1 ) + jdeg1 + 1
-                      li_Aprime = solv%local_to_global_spline_indices_source(bprime,cell_index)
-                      
-                      elt_mat_global = Source_loc(cell_index,bprime,b)
-
-                      if ( (li_A > 0) .and. (li_Aprime > 0)) then
-
-                         call sll_add_to_csr_matrix( &
+                      call sll_add_to_csr_matrix( &
                            solv%sll_csr_mat_source, &
                            elt_mat_global, &
                            li_A, &
                            li_Aprime)
 
-                      end if
-                      
-                   end do
+                   end if
+                   
                 end do
              end do
           end do
        end do
     end do
-
-
   end subroutine compute_Source_matrice
 
 
