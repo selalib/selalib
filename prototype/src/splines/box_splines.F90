@@ -19,21 +19,11 @@ use hex_mesh
 implicit none
 
 type box_spline_2d
-   sll_int32  :: num_pts    !< number of points in any direction from origin
-   sll_real64 :: radius     ! distance between origin and external vertex
-   sll_real64 :: center_x1  ! x1 cartesian coordinate of the origin
-   sll_real64 :: center_x2  ! x2 cartesian coordinate of the origin
-   sll_real64 :: delta      ! cell spacing
-   !generator vectors (r1, r2, r3) coordinates
-   sll_real64 :: r1_x1 
-   sll_real64 :: r1_x2 
-   sll_real64 :: r2_x1 
-   sll_real64 :: r2_x2 
-   sll_real64 :: r3_x1 
-   sll_real64 :: r3_x2 
-   sll_int32 SLL_PRIV  :: x1_bc_type
-   sll_int32 SLL_PRIV  :: x2_bc_type
-   !< spline coefficients
+   type(hex_mesh_2d), pointer  :: mesh
+   ! Boundary conditions definition
+   sll_int32 SLL_PRIV :: x1_bc_type
+   sll_int32 SLL_PRIV :: x2_bc_type
+   ! Spline coefficients
    sll_real64, dimension(:), pointer :: coeffs
 end type box_spline_2d
 
@@ -49,15 +39,6 @@ contains  ! ****************************************************************
     val = spline_obj%slot;                                 \
   end function fname
 
-  MAKE_GET_SLOT_FUNCTION(get_radius_lbs2d, box_spline_2d, radius, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_center_x1_lbs2d, box_spline_2d, center_x1, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_center_x2_lbs2d, box_spline_2d, center_x2, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_r1_x1_lbs2d, box_spline_2d, r1_x1, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_r1_x2_lbs2d, box_spline_2d, r1_x2, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_r2_x1_lbs2d, box_spline_2d, r2_x1, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_r2_x2_lbs2d, box_spline_2d, r2_x2, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_r3_x1_lbs2d, box_spline_2d, r3_x1, sll_real64 )
-  MAKE_GET_SLOT_FUNCTION(get_r3_x2_lbs2d, box_spline_2d, r3_x2, sll_real64 )
 
   function new_box_spline_2d( &
        mesh,         &
@@ -65,27 +46,19 @@ contains  ! ****************************************************************
        x2_bc_type)
     
     type(box_spline_2d), pointer  :: new_box_spline_2d
-    type(hex_mesh_2d), pointer           :: mesh
-    sll_int32,  intent(in)               :: x1_bc_type
-    sll_int32,  intent(in)               :: x2_bc_type
-    sll_int32                            :: bc_selector
-    sll_int32                            :: ierr
-    sll_int32                            :: num_pts_tot
+    type(hex_mesh_2d), pointer    :: mesh
+    sll_int32,  intent(in)        :: x1_bc_type
+    sll_int32,  intent(in)        :: x2_bc_type
+    sll_int32                     :: bc_selector
+    sll_int32                     :: ierr
 
 
     SLL_ALLOCATE( new_box_spline_2d, ierr )
-    new_box_spline_2d%num_pts   = mesh%num_cells + 1
-    new_box_spline_2d%radius    = mesh%radius
-    new_box_spline_2d%delta     = mesh%delta
+    
+    new_box_spline_2d%mesh => mesh
+
     new_box_spline_2d%x1_bc_type = x1_bc_type
     new_box_spline_2d%x2_bc_type = x2_bc_type
-
-    new_box_spline_2d%r1_x1 = real(0.5,f64)
-    new_box_spline_2d%r1_x2 = -sqrt(3.)/2.
-    new_box_spline_2d%r2_x1 = real(0.5,f64)
-    new_box_spline_2d%r2_x2 = sqrt(3.0)/2.
-    new_box_spline_2d%r3_x1 = 1.0_f64
-    new_box_spline_2d%r3_x2 = 1.0_f64
 
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
@@ -102,17 +75,15 @@ contains  ! ****************************************************************
        bc_selector = bc_selector + 4
     end if
 
-    ! rk: num_pts-1 = number of nested hexagones
-    num_pts_tot = mesh%num_pts_tot
-    SLL_ALLOCATE( new_box_spline_2d%coeffs(0:num_pts_tot-1), ierr )
-!    new_box_spline_2d%coeffs(:) = 0._f64
+    SLL_ALLOCATE( new_box_spline_2d%coeffs(1:mesh%num_pts_tot), ierr )
+    new_box_spline_2d%coeffs(:) = 0._f64
   end function new_box_spline_2d
 
 
   subroutine compute_box_spline_2d( data, deg, spline )
-    sll_real64, dimension(:), intent(in), target    :: data  ! data to be fit
-    sll_int32, intent(in)                           :: deg
-    type(box_spline_2d), pointer, intent(in) :: spline
+    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
+    sll_int32, intent(in)                        :: deg
+    type(box_spline_2d), pointer, intent(in)     :: spline
     sll_int32  :: bc1
     sll_int32  :: bc2
     sll_int32  :: bc_selector
@@ -164,90 +135,92 @@ contains  ! ****************************************************************
   end subroutine compute_box_spline_2d
 
 
-  function twelve_fold_symmetry(out_index, num_pts) result(in_index)
-    ! This function is used when a point of global index out_index
-    ! is out of the domain.
-    ! It uses the property of the twelve fold symmetry of the hexagonal mesh
-    ! to find an in_index of a point in the domain
-    sll_int32,intent(in)    :: out_index
-    sll_int32,intent(in)    :: num_pts
-    sll_int32    :: in_index
-    sll_int32    :: k1
-    sll_int32    :: k2
-    sll_int32    :: temp
-    sll_int32    :: hex_num
+!   function twelve_fold_symmetry(out_index, num_pts) result(in_index)
+!     ! This function is used when a point of global index out_index
+!     ! is out of the domain.
+!     ! It uses the property of the twelve fold symmetry of the hexagonal mesh
+!     ! to find an in_index of a point in the domain
+!     sll_int32,intent(in)    :: out_index
+!     sll_int32,intent(in)    :: num_pts
+!     sll_int32    :: in_index
+!     sll_int32    :: k1
+!     sll_int32    :: k2
+!     sll_int32    :: temp
+!     sll_int32    :: hex_num
 
-    k1 = from_global_index_k1(out_index)
-    k2 = from_global_index_k2(out_index)
-    ! We compute the hexagon-ring number
-    if (k1*k2 .ge. 0.) then
-       hex_num = max( abs(k1), abs(k2))
-    else 
-       hex_num = abs(k1) + abs(k2)
-    end if
+!     k1 = from_global_index_k1(out_index)
+!     k2 = from_global_index_k2(out_index)
+!     ! We compute the hexagon-ring number
+!     if (k1*k2 .ge. 0.) then
+!        hex_num = max( abs(k1), abs(k2))
+!     else 
+!        hex_num = abs(k1) + abs(k2)
+!     end if
 
-    ! We first need to find the hexagonal coordinates (k1, k2)
-    if (k1 .eq. hex_num)  then
-       ! if index out on first edge : symmetry by r2_ext
-       k1 = 2*(num_pts - 1) - k1
-       k2 = k2 + k1 - num_pts + 1
-    elseif (k2 .eq. hex_num) then
-       ! if index out on second edge : symmetry by r1_ext
-       k2 = 2*(num_pts - 1) - k2
-       k1 = k2 + k1 - num_pts + 1
-    elseif (( k1 .lt. 0) .and. (k2 .gt. 0)) then
-       ! if index out on third edge : symmetry by r3_ext
-       temp = k2 - num_pts + 1
-       k2   = k1 + num_pts - 1
-       k1   = temp
-    elseif (k1 .eq. -hex_num) then
-       ! if index out on fourth edge : symmetry by r2_ext
-       k1 = -2*(num_pts - 1) - k1
-       k2 =  k2 + k1 + num_pts - 1
-    elseif (k2 .eq. -hex_num) then
-       ! if index out on fifth edge : symmetry by r1_ext
-       k2 = -2*(num_pts - 1) - k2
-       k1 = k2 + k1 + num_pts - 1
-    elseif ((k1 .gt. 0).and.(k2 .lt. 0)) then
-       ! if index out on sixth edge : symmetry by r3_ext
-       temp = k2 + num_pts - 1
-       k2   = k1 - num_pts + 1
-       k1   = temp
-    end if
+!     ! We first need to find the hexagonal coordinates (k1, k2)
+!     if (k1 .eq. hex_num)  then
+!        ! if index out on first edge : symmetry by r2_ext
+!        k1 = 2*(num_pts - 1) - k1
+!        k2 = k2 + k1 - num_pts + 1
+!     elseif (k2 .eq. hex_num) then
+!        ! if index out on second edge : symmetry by r1_ext
+!        k2 = 2*(num_pts - 1) - k2
+!        k1 = k2 + k1 - num_pts + 1
+!     elseif (( k1 .lt. 0) .and. (k2 .gt. 0)) then
+!        ! if index out on third edge : symmetry by r3_ext
+!        temp = k2 - num_pts + 1
+!        k2   = k1 + num_pts - 1
+!        k1   = temp
+!     elseif (k1 .eq. -hex_num) then
+!        ! if index out on fourth edge : symmetry by r2_ext
+!        k1 = -2*(num_pts - 1) - k1
+!        k2 =  k2 + k1 + num_pts - 1
+!     elseif (k2 .eq. -hex_num) then
+!        ! if index out on fifth edge : symmetry by r1_ext
+!        k2 = -2*(num_pts - 1) - k2
+!        k1 = k2 + k1 + num_pts - 1
+!     elseif ((k1 .gt. 0).and.(k2 .lt. 0)) then
+!        ! if index out on sixth edge : symmetry by r3_ext
+!        temp = k2 + num_pts - 1
+!        k2   = k1 - num_pts + 1
+!        k1   = temp
+!     end if
 
-    in_index = global_index(k1,k2)
-  end function twelve_fold_symmetry
+!     in_index = global_index(k1,k2)
+!   end function twelve_fold_symmetry
 
 
 
   subroutine compute_box_spline_2d_neum_neum( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
-    type(box_spline_2d), pointer           :: spline
+    type(box_spline_2d), pointer                  :: spline
     sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: i,k
     sll_int32  :: nei
-    sll_int32  :: num_pts
 
-    num_pts = spline%num_pts
-    num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
+    num_pts_tot = spline%mesh%num_pts_tot
     
-    do i = 0, num_pts_tot-1
+    print *, "starting computing box spline neum neum", spline%mesh%num_cells, spline%mesh%num_pts_tot
+    do i = 1, num_pts_tot
        spline%coeffs(i) = real(0,f64)
        do k = 0, 3*(2*deg)*(2*deg+1)
-          nei = local_to_global(i,k)
+          print *, "i, k, nei = ", i, k
+          nei = spline%mesh%local_to_global(i-1,k)
+          print *, "nei", nei
           if (nei .lt. num_pts_tot) then
-             spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
-                                pre_filter_pfir(k,deg)
+             spline%coeffs(i-1) = spline%coeffs(i-1) + data(nei+1) * & 
+                                pre_filter_pfir(spline%mesh, k, deg)
           else
              ! TODO : Boundary conditions to be treated here :
-             spline%coeffs(i) = spline%coeffs(i)
+             spline%coeffs(i-1) = spline%coeffs(i-1)
              ! nei = twelve_fold_symmetry(nei, num_pts)
              ! spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
              !                    pre_filter_pfir(k,deg)
           end if
        end do
     end do
+    print *, "finished computing box spline neum neum"
   end subroutine compute_box_spline_2d_neum_neum
 
 
@@ -256,13 +229,11 @@ contains  ! ****************************************************************
     type(box_spline_2d), pointer      :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
-    sll_int32  :: num_pts
 
     print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC_NEUMANN NOT &
       & YET IMPLEMENTED'
-    num_pts = spline%num_pts
-    num_pts_tot = 6*num_pts*(num_pts-1)/2+1 
-    do i = 0, num_pts_tot-1
+    num_pts_tot = spline%mesh%num_pts_tot
+    do i = 1, num_pts_tot
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
@@ -399,10 +370,9 @@ contains  ! ****************************************************************
   end function chi_gen_val
 
 
-  function change_basis_x1(mesh, spline, x1, x2) result(x1_basis)
+  function change_basis_x1(spline, x1, x2) result(x1_basis)
     ! This function allows to change a point of coordinates (x1, x2)
     ! on the spline basis to the mesh basis
-    type(hex_mesh_2d), pointer, intent(in) :: mesh
     type(box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2 
@@ -415,17 +385,17 @@ contains  ! ****************************************************************
     sll_real64             :: r11, r12
     sll_real64             :: r21, r22
 
-    ! Getting spline generator vectors coordinates
-    r11 = spline%r1_x1
-    r12 = spline%r1_x2
-    r21 = spline%r2_x1
-    r22 = spline%r2_x2
+    ! Algorithms basis
+    r11 = 0.5_f64
+    r12 = -sqrt(3._f64)*0.5_f64
+    r21 = 0.5_f64
+    r22 =  sqrt(3._f64)*0.5_f64
 
     ! Getting mesh generator vectors coordinates
-    q11 = mesh%r1_x1
-    q12 = mesh%r1_x2
-    q21 = mesh%r2_x1
-    q22 = mesh%r2_x2
+    q11 = spline%mesh%r1_x1
+    q12 = spline%mesh%r1_x2
+    q21 = spline%mesh%r2_x1
+    q22 = spline%mesh%r2_x2
 
     !change of basis :
     delta_q  = q11*q22 - q12*q21
@@ -435,11 +405,10 @@ contains  ! ****************************************************************
   end function change_basis_x1
 
 
-  function change_basis_x2(mesh, spline, x1, x2) result(x2_basis)
+  function change_basis_x2(spline, x1, x2) result(x2_basis)
     ! This function allows to change a point of coordinates (x1, x2)
     ! on the spline basis to the mesh basis
-    type(hex_mesh_2d), pointer, intent(in) :: mesh
-    type(box_spline_2d), pointer    :: spline
+    type(box_spline_2d), pointer           :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2 
     sll_real64             :: delta_q
@@ -452,16 +421,17 @@ contains  ! ****************************************************************
     sll_real64             :: r21, r22
 
     ! Getting spline generator vectors coordinates
-    r11 = spline%r1_x1
-    r12 = spline%r1_x2
-    r21 = spline%r2_x1
-    r22 = spline%r2_x2
+    ! Algorithms basis
+    r11 = 0.5_f64
+    r12 = -sqrt(3._f64)*0.5_f64
+    r21 = 0.5_f64
+    r22 =  sqrt(3._f64)*0.5_f64
 
     ! Getting mesh generator vectors coordinates
-    q11 = mesh%r1_x1
-    q12 = mesh%r1_x2
-    q21 = mesh%r2_x1
-    q22 = mesh%r2_x2
+    q11 = spline%mesh%r1_x1
+    q12 = spline%mesh%r1_x2
+    q21 = spline%mesh%r2_x1
+    q22 = spline%mesh%r2_x2
 
     !change of basis :
     delta_q  = q11*q22 - q12*q21
@@ -469,6 +439,7 @@ contains  ! ****************************************************************
     k2_basis = 1./delta_q*(q11*x2 - q12*x1)
     x2_basis = r12*k1_basis+r22*k2_basis
   end function change_basis_x2
+
 
   function hex_interpolate_value(mesh_geom, x1, x2, spline, deg) result(val)
     ! Interpolates point of cartesian coordinates x1, x2)
@@ -508,8 +479,8 @@ contains  ! ****************************************************************
 
     ! First we need to compute the coordinates of 
     ! the closest mesh point associated to (x1,x2)
-    k1_asso = from_cart_index_k1(mesh_geom, x1, x2)
-    k2_asso = from_cart_index_k2(mesh_geom, x1, x2)
+    k1_asso = cart_to_hex1(mesh_geom, x1, x2)
+    k2_asso = cart_to_hex2(mesh_geom, x1, x2)
 
     ! Then we will do a loop for all the points 
     ! on the envelopping rhomboid of radius=deg
@@ -518,28 +489,36 @@ contains  ! ****************************************************************
         
         k1  = k1_asso + ki
         k2  = k2_asso + kj
-        ind = global_index(k1, k2)
-
+        if ((abs(k1).lt.spline%mesh%num_cells).and.(abs(k2).lt.spline%mesh%num_cells)) then
+           print *, "in interpolate value : if in domain"
+           ind = spline%mesh%hex_to_global(k1, k2)
         
-        do while (ind .ge. num_pts_tot)
-          ! If point got out of the domain
-          ind = twelve_fold_symmetry(ind, num_pts)
+        
+!         do while (ind .ge. num_pts_tot)
+!           ! If point got out of the domain
+!           ind = twelve_fold_symmetry(ind, num_pts)
+!         end do
+
+           ! We centralize and shift the coordinates
+           ! i.e. centralize : xm = x - Rk
+           !      shifting   : xm to the associated rhomboid point
+           xm1 = x1 - r11*k1_asso - r21*k2_asso - ki*r11 - kj*r21
+           xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
+           
+           ! change of basis : geometrical basis => spline basis
+           x1_basis = change_basis_x1(spline, xm1, xm2)
+           x2_basis = change_basis_x2(spline, xm1, xm2)
+
+           val = val + spline%coeffs(ind+1) * &
+                chi_gen_val(x1_basis, x2_basis, deg)
+           else
+              !! TREAT HERE BC
+              ! TODO @LM
+              val = val
+           end if
+           print *, "in interpolate value : FINISHED !"
+
         end do
-
-        ! We centralize and shift the coordinates
-        ! i.e. centralize : xm = x - Rk
-        !      shifting   : xm to the associated rhomboid point
-        xm1 = x1 - r11*k1_asso - r21*k2_asso - ki*r11 - kj*r21
-        xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
-
-        ! change of basis : geometrical basis => spline basis
-        x1_basis = change_basis_x1(mesh_geom, spline, xm1, xm2)
-        x2_basis = change_basis_x2(mesh_geom, spline, xm1, xm2)
-
-        val = val + spline%coeffs(ind) * &
-                    chi_gen_val(x1_basis, x2_basis, deg)
-
-      end do
    end do
 
   end function hex_interpolate_value

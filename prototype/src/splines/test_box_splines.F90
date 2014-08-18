@@ -55,21 +55,24 @@ character(len = 4) :: filenum
 
 
 
+print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
 do num_cells = 40,40,1
 
 !   t_init = getRealTimer()
 
-   ! Mesh initialization    
+   ! Mesh initialization
+   print *, "   Begin Mesh Initialization "
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
                                     !0.5_f64, -sqrt(3.)/2._f64, &
                                     !0.5_f64,  sqrt(3.)/2._f64, &
                                     !1.0_f64,  0._f64, &
                                     radius = 1._f64)
-  call sll_display(mesh)
-  print*,"num_pts : ", mesh%num_pts_tot
-  print*,"spl deg : ", deg
-  print*,""
+   print *, "   END Mesh Initialization "
+   call sll_display(mesh)
+   print*,"num_pts : ", mesh%num_pts_tot
+   print*,"spl deg : ", deg
+   print*,""
 
    SLL_ALLOCATE(f_init(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(f_tn(mesh%num_pts_tot),ierr)
@@ -86,9 +89,10 @@ do num_cells = 40,40,1
    gauss_x2  = -0.25_f64
    gauss_sig = 0.05_f64
 
+   print *, " Entering loop ---------------"
    do i=0, mesh%num_pts_tot-1
-      x1(i+1) = from_global_x1(mesh, i)
-      x2(i+1) = from_global_x2(mesh, i)
+      x1(i+1) = mesh%global_to_x1(i)
+      x2(i+1) = mesh%global_to_x2(i)
       f_init(i+1) = 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
                     + (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
       if (exponent(f_init(i+1)) .lt. -17) then
@@ -96,6 +100,7 @@ do num_cells = 40,40,1
       end if
       f_tn(i+1) = f_init(i+1)
    end do
+   print *, " Exiting loop  ---------------"
 
 !   call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
@@ -121,21 +126,26 @@ do num_cells = 40,40,1
 
    ! Time loop
    nloops = 0
+   print *, " ***** num pts tot *****", mesh%num_pts_tot, spline%mesh%num_pts_tot
    spline => new_box_spline_2d(mesh, SLL_NEUMANN, SLL_NEUMANN)
 
    call cpu_time(t_init)
    print*,""
    do while (t .lt. tmax)
+      print *, " --> Time loop t =", t
       !Error variables
       norm2_error = 0._f64
       diff_error  = 0._f64
       where_error = -1
 
       nloops = nloops + 1
+
+      print *, " ----> Computing box spline = ", spline%mesh%num_pts_tot
       call compute_box_spline_2d( f_tn, deg, spline )
+      print *, " ----> Done "
       t      = t + dt
       do i=1, mesh%num_pts_tot
-
+      print *, " ----> Global index = ", i
          ! ******************
          ! Approximation
          ! ******************
@@ -157,8 +167,8 @@ do num_cells = 40,40,1
          ! Computing characteristics
          if (which_advec .eq. 0) then
             ! linear advection
-            x1(i) = from_global_x1(mesh, i-1) - advec*dt*nloops
-            x2(i) = from_global_x2(mesh, i-1) - advec*dt*nloops
+            x1(i) = mesh%global_to_x1(i-1) - advec*dt*nloops
+            x2(i) = mesh%global_to_x2(i-1) - advec*dt*nloops
          else
             ! Circular advection
             x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
@@ -172,11 +182,11 @@ do num_cells = 40,40,1
             f_fin(i) = 0._f64
          end if
 
-         x1_basis = change_basis_x1(mesh, spline, x1(i), x2(i))
-         x2_basis = change_basis_x2(mesh, spline, x1(i), x2(i))
+         x1_basis = change_basis_x1(spline, x1(i), x2(i))
+         x2_basis = change_basis_x2(spline, x1(i), x2(i))
          chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
          chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
-         if (get_hex_num(i) .lt. get_hex_num(mesh%num_pts_tot) - deg*2 - 1) then
+         
             ! Relative error
             if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
                diff_error = abs(f_fin(i) - f_tn(i))
@@ -184,7 +194,7 @@ do num_cells = 40,40,1
             end if
             ! Norm2 error :
             norm2_error = norm2_error + abs(f_fin(i) - f_tn(i))**2
-         end if
+         
       end do
 
       ! Norm2 error :
@@ -193,7 +203,7 @@ do num_cells = 40,40,1
       call cpu_time(t_end)
       ! Printing error
       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
-      print*,"                       | at hex =", get_hex_num(where_error), where_error
+      print*,"                       | at hex =", where_error
       print*,"                       | error_L2   = ", norm2_error
       ! print*," Center error = ", f_fin(1)-f_tn(1)
 
