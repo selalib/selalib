@@ -46,7 +46,7 @@ contains  ! ****************************************************************
        x2_bc_type)
     
     type(box_spline_2d), pointer  :: new_box_spline_2d
-    type(hex_mesh_2d), pointer    :: mesh
+    type(hex_mesh_2d),   pointer  :: mesh
     sll_int32,  intent(in)        :: x1_bc_type
     sll_int32,  intent(in)        :: x2_bc_type
     sll_int32                     :: bc_selector
@@ -238,17 +238,6 @@ contains  ! ****************************************************************
     end do
 
   end subroutine compute_box_spline_2d_prdc_neum
-
-
-  function factorial (n) result (res)
-    sll_int32, intent (in) :: n
-    sll_int32 :: res
-    sll_int32 :: i
-    sll_int32 :: tab(n)
-
-    tab = (/(i, i = 1, n)/)
-    res = product (tab)
-  end function factorial
  
   function choose (n, k) result (res)
     sll_int32, intent (in) :: n
@@ -259,7 +248,7 @@ contains  ! ****************************************************************
     else if (n .lt. k) then
        res = 0.
     else 
-       res = factorial(n) / (factorial(k) * factorial(n - k))
+       res = sll_factorial(n) / (sll_factorial(k) * sll_factorial(n - k))
     end if
   end function choose
 
@@ -324,7 +313,7 @@ contains  ! ****************************************************************
                       aux2 = 0._f64
                    end if
                    val = val + coeff*choose(deg-1+d,d)   &
-                        /factorial(2*deg-1+d)/factorial(deg-1-d)  &
+                        /sll_factorial(2*deg-1+d)/sll_factorial(deg-1-d)  &
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
                 end do
