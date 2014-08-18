@@ -144,7 +144,7 @@ contains
     sll_real64 :: position_x1
     sll_real64 :: position_x2
     sll_int32  :: k1, k2
-	sll_int32  :: index_tab
+    sll_int32  :: index_tab
     ! variables for optmizing computing time :
     sll_int32  :: num_cells_plus1
     sll_int32  :: num_cells_plus2
@@ -390,6 +390,24 @@ contains
   end function x2_node
 
 
+  function cells_to_origin(k1, k2) result(val)
+    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
+    ! returns the number of cells between that point and
+    ! the origin. If (k1, k2) = 0, val = 0
+    sll_int32, intent(in)   :: k1
+    sll_int32, intent(in)   :: k2
+    sll_int32               :: val
+
+    ! We compute the number of cells from point to center 
+    if (k1*k2 .gt. 0) then
+       val = max(abs(k1),abs(k2))
+    else
+       val = abs(k1) + abs(k2)
+    end if
+
+  end function cells_to_origin
+
+
   function hex_to_global(mesh, k1, k2) result(val)
     ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
     ! returns global index of that mesh point.
@@ -399,23 +417,17 @@ contains
     class(hex_mesh_2d)      :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
-    sll_int32               :: cells_to_origin
+    sll_int32               :: distance
     sll_int32               :: index_tab
     sll_int32               :: val
     
-    ! We compute the number of cells from point to center 
-    if (k1*k2 .gt. 0) then
-       cells_to_origin = max(abs(k1),abs(k2))
-    else
-       cells_to_origin = abs(k1) + abs(k2)
-    end if
+    distance = cells_to_origin(k1,k2)
 
     ! Test if we are in domain
-    if (cells_to_origin .le. mesh%num_cells) then
+    if (distance .le. mesh%num_cells) then
 
        call index_hex_to_global(mesh, k1, k2,index_tab)
        val = mesh%global_indices(index_tab)
-
     else
        val = -1
        print *, "WARNING: in hex_to_global, the hexagonal coordinates passed k1, k2 are not in the domain"

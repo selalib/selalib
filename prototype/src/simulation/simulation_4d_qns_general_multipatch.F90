@@ -966,7 +966,7 @@ contains
 
                    ! ***************************
                    !
-                   !    WORK NEEDED HERE!!!!!
+                   !    LAURA : WORK NEEDED HERE!!!!!
                    !
                    ! ***************************
                    if( eta1 >= eta1_min .and. eta1 <= eta1_max .and. &
