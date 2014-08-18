@@ -12,6 +12,7 @@ unit_test
 *.h5
 *.xmf
 *.exe
+*.nml
 .DS_Store
 ChangeLog
 .AppleDouble
