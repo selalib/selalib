@@ -266,11 +266,14 @@ contains ! =============================================================
                 solv%quad_weight(global_index) = &
                      0.5_f64 * 0.5_f64 * delta1 * delta2 * &
                      temp_pts_wgh_1(2, i) * temp_pts_wgh_2(2, j)
-             
+    
+                print *, "global = ", global_index, "x1, x2 = ", solv%quad_pts1(global_index), solv%quad_pts2(global_index)
              end do
           end do
        end do
     end do
+
+    
 
     !  ---------------------------------------------- END QUADRATURE POINTS INIT
     ! --------------------------------------------------------------------------
@@ -521,6 +524,9 @@ contains ! =============================================================
     sll_int32 :: left_x,left_y
     sll_int32 :: left_x_source,left_y_source
     sll_int32 :: mflag_x, mflag_y ! error flags
+    ! TODO : erase
+    sll_int32  :: itemp
+    sll_real64 :: valtemp
 
     ! Initialization
     work1(:,:)                 = 0.0_f64
@@ -559,6 +565,7 @@ contains ! =============================================================
                work1,&
                basis_deriv_x1,&
                2 )
+
 
           !TODO @LM : Add test on mflag_x
 
@@ -624,6 +631,8 @@ contains ! =============================================================
                2)
           
 
+
+
           ! We loop over non zeros basis (on quadrature point)
           do basis_index1 = 1, solv%spline_degree + 1
              do basis_index2 = 1, solv%spline_degree + 1
@@ -652,11 +661,21 @@ contains ! =============================================================
 
              end do
           end do
+
+          valtemp = 0._f64
+!          if (global_index.le.solv%num_quad_pts_loc) then
+             do itemp = 1, solv%num_quad_pts_loc
+                valtemp = valtemp + solv%values_basis_val_val(itemp, global_index)
+             end do
+             print *, "global =",global_index, valtemp, solv%values_basis_val_val(:, global_index)
+!          end if
+
           ! Keeping the index of coefficients
           solv%tab_index_coeff(global_index) = &
                left_x + (left_y - 1) * (solv%mesh%num_cells1 + solv%spline_degree)
        end do
     end do
+
   end subroutine initialize_basis_functions
 
 
@@ -1500,7 +1519,7 @@ contains ! =============================================================
           do j = 1, solv%mesh%num_cells2 + solv%spline_degree - 2
              
              elt  = i + (solv%mesh%num_cells1 + solv%spline_degree - 2) * (  j - 1)
-             elt1 = i + 1 + ( solv%mesh%num_cells1 + solv%spline_degree -2 +2 ) * j 
+             elt1 = i + 1 + ( solv%mesh%num_cells1 + solv%spline_degree ) * j 
              solv%tmp_source_vec( elt ) = solv%source_vec( elt1 )
           end do
        end do
@@ -1518,8 +1537,8 @@ contains ! =============================================================
        do i = 1, solv%mesh%num_cells1 + solv%spline_degree - 2
           do j = 1, solv%mesh%num_cells2
 
-             elt1 = i + 1 + ( solv%mesh%num_cells1 + solv%spline_degree - 2 + 2 ) * (  j - 1)
-             elt  = i + (solv%mesh%num_cells1 + solv%spline_degree - 2) * (  j - 1)
+             elt1 = i + 1 + ( solv%mesh%num_cells1 + solv%spline_degree) * (j - 1)
+             elt  = i + (solv%mesh%num_cells1 + solv%spline_degree - 2) * (j - 1)
              solv%tmp_source_vec( elt ) = solv%source_vec( elt1 )
           end do
        end do
