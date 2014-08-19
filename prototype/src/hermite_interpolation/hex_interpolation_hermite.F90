@@ -478,20 +478,21 @@ contains
 
 
 
-  subroutine hermite_interpolation(num, x, y, f_tn, f_tn1, mesh, deriv, aire,t) 
+  subroutine hermite_interpolation(num, x, y, f_tn, center_value, f_tn1, mesh, deriv, aire,t, num_degree_freedom) 
 
     implicit none
     type(hex_mesh_2d), pointer             :: mesh
     sll_real64,dimension(:), intent(in)    :: f_tn
+    sll_real64,dimension(:), intent(in)    :: center_value
     sll_real64, dimension(:,:), intent(in) :: deriv 
     sll_real64,dimension(:), intent(out)   :: f_tn1 
     sll_real64,intent(in)      :: x, y, aire,t
-    sll_int32,intent(in)       :: num
+    sll_int32,intent(in)       :: num, num_degree_freedom
     sll_real64                 :: x1, x2, x3, y1, y2, y3, f, step
     sll_real64                 :: phi, ksi1, ksi2, ksi3, l1, l2, l3, eps = 1.d-8
     sll_real64                 :: ksi12, ksi13, ksi21, ksi23, ksi31, ksi32
     sll_real64,dimension(1:10) :: freedom, base
-    sll_int32                  :: i, i1, i2, i3
+    sll_int32                  :: i, i1, i2, i3, k11, k12, center_index
     sll_real64                 :: a2, p05, p15, p9, l12, l22, l32  
     sll_real64                 :: x1x,x2x,x3x,y1y,y2y,y3y, xx,yy
     logical                    :: test
@@ -512,6 +513,11 @@ contains
     y2 = mesh%cartesian_coord(2,i2) 
     y3 = mesh%cartesian_coord(2,i3) 
 
+    k11 = mesh%hex_coord(1,i1) 
+    k12 = mesh%hex_coord(2,i1) 
+    
+    call get_triangle_index(k11,k12,mesh,x,center_index)
+
     ! get the ten degrees of freedom
 
     ! values at the vertexes of the triangle
@@ -522,19 +528,27 @@ contains
 
     ! value at the center of the triangle
 
-    freedom(4) =  ( freedom(1) + freedom(2) + freedom(3) ) / 3._f64
+    ! Value given as an average of the vertices' respective value  
+    !freedom(4) =  ( freedom(1) + freedom(2) + freedom(3) ) / 3._f64
 
-    !exact values : 
+    ! value computed
+    ! if (center_index == -1) then
+    !    print *, "problem index center l 536 interpolation hermite"
+    ! else
+    !    freedom(4) = center_value(center_index)
+    ! endif
 
-    ! xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
-    ! yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
+    ! exact value : 
 
-    ! xx = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * cos(t) &
-    !      - (y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * sin(t)
-    ! yy = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * sin(t) &
-    !      + ( y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * cos(t)
+    xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
+    yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
 
-    ! freedom(4) = exp( - ( (xx-1.0_f64)**2+(yy-1.0_f64)**2) ) 
+    xx = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * cos(t) &
+         - (y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * sin(t)
+    yy = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * sin(t) &
+         + ( y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * cos(t)
+
+    freedom(4) = exp( - ( (xx-1.0_f64)**2+(yy-1.0_f64)**2) ) 
 
 
     ! values of the derivatives
@@ -601,33 +615,41 @@ contains
     ksi31 = l32*l1 + p05
     ksi32 = l32*l2 + p05
 
-    ! Computing the ten canonical basis functions 
+    if (num_degree_freedom == 10 ) then
 
-    base(1) = 3._f64 * l12 - 2._f64*ksi1 - p9
-    base(2) = 3._f64 * l22 - 2._f64*ksi2 - p9
-    base(3) = 3._f64 * l32 - 2._f64*ksi3 - p9
-    base(4) = 27._f64 * phi
-    base(5) = step * ( ksi12 - p15 )
-    base(6) = step * ( ksi13 - p15 )
-    base(7) = step * ( ksi21 - p15 )
-    base(8) = step * ( ksi23 - p15 )
-    base(9) = step * ( ksi31 - p15 )
-    base(10)= step * ( ksi32 - p15 )
+       ! Computing the ten canonical basis functions 
 
+       base(1) = 3._f64 * l12 - 2._f64*ksi1 - p9
+       base(2) = 3._f64 * l22 - 2._f64*ksi2 - p9
+       base(3) = 3._f64 * l32 - 2._f64*ksi3 - p9
+       base(4) = 27._f64 * phi
+       base(5) = step * ( ksi12 - p15 )
+       base(6) = step * ( ksi13 - p15 )
+       base(7) = step * ( ksi21 - p15 )
+       base(8) = step * ( ksi23 - p15 )
+       base(9) = step * ( ksi31 - p15 )
+       base(10)= step * ( ksi32 - p15 )
 
-    ! Computing the nine canonical basis functions 
+    else if (num_degree_freedom == 9 ) then
 
-    ! base(1) = 3._f64 * l12 - 2._f64*ksi1 
-    ! base(2) = 3._f64 * l22 - 2._f64*ksi2 
-    ! base(3) = 3._f64 * l32 - 2._f64*ksi3 
-    ! base(4) = 0._f64
-    ! base(5) = step * ksi12 
-    ! base(6) = step * ksi13
-    ! base(7) = step * ksi21
-    ! base(8) = step * ksi23
-    ! base(9) = step * ksi31
-    ! base(10)= step * ksi32
+       ! Computing the nine canonical basis functions 
 
+       base(1) = 3._f64 * l12 - 2._f64*ksi1 
+       base(2) = 3._f64 * l22 - 2._f64*ksi2 
+       base(3) = 3._f64 * l32 - 2._f64*ksi3 
+       base(4) = 0._f64
+       base(5) = step * ksi12 
+       base(6) = step * ksi13
+       base(7) = step * ksi21
+       base(8) = step * ksi23
+       base(9) = step * ksi31
+       base(10)= step * ksi32
+
+    else
+
+       print*, "specify another degree of freedom : 9 or 10"
+
+    endif
 
     f = 0._f64
 
