@@ -1721,41 +1721,7 @@ if (sll_perper == 0) then
    
   end subroutine solve_gen_elliptic_eq
   
-  
-  
-  subroutine solve_linear_system_perper( es)
-    ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-    ! is given in terms of the spline coefficients that represent phi.
-    class(general_coordinate_elliptic_solver) :: es
-    sll_int32 :: ierr
-    
-    es%tmp_rho_vec(:) = 0.0_f64
-    es%tmp_phi_vec(:) = 0.0_f64
-    es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
-         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
-    call solve_general_es_perper(es%sll_csr_mat_with_constraint,es%tmp_rho_vec,es%tmp_phi_vec) 
-    es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) = &
-       es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)    
 
-  end subroutine solve_linear_system_perper
-
-
-  subroutine solve_general_es_perper(csr_mat,apr_B,apr_U)
-    type(sll_csr_matrix) :: csr_mat
-    sll_real64, dimension(:) :: apr_U
-    sll_real64, dimension(:) :: apr_B 
-    ! We use a simple conjugate gradient on the new matrice csr_mat_with_constraint (with constraint)
-    call sll_solve_csr_matrix(&
-         csr_mat,&
-         apr_B,&
-         apr_U)
-    ! We use a modified conjugate gradient on the matrice csr_mat (without constraint)     
-    !call sll_solve_csr_matrix_perper(&
-    !     csr_mat,&
-    !     apr_B,&
-    !     apr_U,&
-    !     es%masse)
-  end subroutine solve_general_es_perper
 
   subroutine compute_Source_matrice(es,Source_loc)
     type(general_coordinate_elliptic_solver),intent(inout) :: es
