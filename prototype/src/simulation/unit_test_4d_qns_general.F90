@@ -118,16 +118,16 @@ program qns_4d_general
 
   ! identity transformation
 
-  transformation_x => new_coordinate_transformation_2d_analytic( &
-       "analytic_identity_transformation", &
-       mx, &
-       identity_x1, &
-       identity_x2, &
-       identity_jac11, &
-       identity_jac12, &
-       identity_jac21, &
-       identity_jac22, &
-       (/ 0.0_f64 /) )
+!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic_identity_transformation", &
+!!$       mx, &
+!!$       identity_x1, &
+!!$       identity_x2, &
+!!$       identity_jac11, &
+!!$       identity_jac12, &
+!!$       identity_jac21, &
+!!$       identity_jac22, &
+!!$       (/ 0.0_f64 /) )
 
   ! colella transformation
   
@@ -144,22 +144,24 @@ program qns_4d_general
 
   ! colella transformation
   
-  transformation_x => new_coordinate_transformation_2d_analytic( &
-       "analytic_colela_transformation", &
-       mx, &
-       sinprod_gen_x1, &
-       sinprod_gen_x2, &
-       sinprod_gen_jac11, &
-       sinprod_gen_jac12, &
-       sinprod_gen_jac21, &
-       sinprod_gen_jac22, &
-       (/ 0.05_f64,0.05_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64 /))
+!!$  transformation_x => new_coordinate_transformation_2d_analytic( &
+!!$       "analytic_colela_transformation", &
+!!$       mx, &
+!!$       sinprod_gen_x1, &
+!!$       sinprod_gen_x2, &
+!!$       sinprod_gen_jac11, &
+!!$       sinprod_gen_jac12, &
+!!$       sinprod_gen_jac21, &
+!!$       sinprod_gen_jac22, &
+!!$       (/ 0.05_f64,0.05_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64 /))
 
 
-! transformation_x => new_nurbs_2d_transformation_from_file("circle_n63_rayon1_patch0.nml")
+  transformation_x => new_nurbs_2d_transformation_from_file("circle_n63_rayon1_patch0.nml")
   !transformation_x => new_nurbs_2d_transformation_from_file("domain_patch0.nml")
   !transformation_x%mesh => mx
-  mx => transformation_x%mesh !transformation_x%get_logical_mesh()
+  ! Get rid of this 'fix' whenever gfortran 4.6 is no longer supported.
+   mx => transformation_x%mesh
+  !mx => transformation_x%get_logical_mesh()
   !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max
 !!$   print*, 'transformation ok'
   ! ---------------------------------------------------------------------
@@ -230,20 +232,20 @@ program qns_4d_general
        SPL_DEG_ETA2, & 
        SPL_DEG_VX, & 
        SPL_DEG_VY, & 
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
+       SLL_DIRICHLET,&!SLL_PERIODIC, &
        ES_GAUSS_LEGENDRE,&
        ES_GAUSS_LEGENDRE,&
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
        electric_field_ext_1,&
        electric_field_ext_2,&
        elec_field_ext_params,&
-       100)
+       5)
 
 
   print *, ' f initialized '

@@ -6,9 +6,9 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
-IF(OPTIONS_FILE)
-INCLUDE(${OPTIONS_FILE})
-ENDIF()
+#IF(OPTIONS_FILE)
+#INCLUDE(${OPTIONS_FILE})
+#ENDIF()
 
 PROJECT(SeLaLib)
 
@@ -149,6 +149,7 @@ IF(NOT SLL_BUILD_PACKAGE)
       ADD_SUBDIRECTORY(parallel_utilities)
       ADD_SUBDIRECTORY(point_to_point_communications)
       ADD_SUBDIRECTORY(linear_solvers)
+      ADD_SUBDIRECTORY(distribution_function_multipatch)
    
    ENDIF()
 
