@@ -57,12 +57,12 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 10,10,10 ! -> loop on the size of the mesh 
+  do num_cells = 20,160,20 ! -> loop on the size of the mesh 
   
      
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !*********************************************************
      !             allocation
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !*********************************************************
      
      n_points = 1 + 3 * num_cells * (num_cells + 1)  
      n_triangle = 6 * num_cells * num_cells
@@ -83,10 +83,10 @@ program test_hex_hermite
      SLL_ALLOCATE(x1_char( n_points),ierr)
      SLL_ALLOCATE(x2_char( n_points),ierr)
 
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-                      ! Mesh initialization   
-     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+     !*********************************************************
+     !                  Mesh initialization   
+     !*********************************************************
+     
      mesh => new_hex_mesh_2d( num_cells, center_x1, center_x2, radius=radius ) 
 
      ! Distribution initialization
@@ -125,9 +125,9 @@ program test_hex_hermite
      dt    = 0.1_f64 *20._f64 / real(num_cells,f64)  
      t     = 0._f64
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !*********************************************************
      !              Computing characteristics
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !*********************************************************
 
 
      if (which_advec .eq. 0) then
@@ -141,15 +141,15 @@ program test_hex_hermite
      end if
 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !*********************************************************
      !                          Time loop
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+     !*********************************************************
 
      nloops = 0
 
      call cpu_time(t_init)
 
-     do while (t .lt. dt)! tmax)
+     do while (t .lt. tmax)
 
         norm2_error = 0._f64 !Error variables
 
@@ -157,27 +157,30 @@ program test_hex_hermite
 
         nloops = nloops + 1
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
         !              VALIDATION DERIVATIVE
         ! let us compute the derivatives in every hexagonal direction 
         ! with p the degree of the approximation
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
 
         call  der_finite_difference( f_tn, p,step, mesh, deriv )
-        
+
         t = t + dt
+        !*********************************************************
+        ! computation of the velue at the centers of the triangles
+        !*********************************************************
 
         do i=1, n_triangle  ! computation of the value at the center of the triangles
 
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
         !  computation of the root of the characteristics
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
            
            x = mesh%center_cartesian_coord(1,i)
            y = mesh%center_cartesian_coord(2,i)
            
-           xx = x*cos(t) - y*sin(t);
-           yy = x*sin(t) + y*cos(t);
+           xx = x*cos(dt) - y*sin(dt);
+           yy = x*sin(dt) + y*cos(dt);
            ! call slb_compute_characteristic_leapfrog( &
            !  x,y,E_x,E_v,xx,yy )
 
@@ -200,22 +203,33 @@ program test_hex_hermite
              center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
 
            endif
+           
+           if (which_advec .eq. 0) then ! linear advection
+              xx = x - advec*dt*nloops
+              yy = y - advec*dt*nloops
+           else                         ! Circular advection
+              xx = x*cos(t) - y*sin(t);
+              yy = x*sin(t) + y*cos(t);
+           end if 
 
+           norm2_error = norm2_error + &
+                abs( exp(-(xx-gauss_x1)**2-(yy-gauss_x2)**2) - center_values_tn1(i) )**2
 
         enddo
 
+
         do i=1, n_points  
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
         !  computation of the root of the characteristics
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
 
         ! call slb_compute_characteristic_leapfrog( &
         !   x1(i),x2(i),E_x,E_v,x1_char(i),x2_char(i) )
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
         !                INTERPOLATION
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        !*********************************************************
            ! computation of the interpolation at each point
            ! F(t_(n+1),x_i,v_j) = F (t_n,X(t_n),V(t_n))
 
@@ -238,11 +252,9 @@ program test_hex_hermite
 
            endif
 
-           ! ******************
-           ! Analytical value    (-> in order to compute the error )
-           ! ******************
-
-! -> ajouter l'erreur aux centres des triangles
+           ! ******************************************************
+           ! Analytical value    (-> in order to compute the error)
+           ! ******************************************************
 
            ! Computing the characteristics' root for the exact solution
            ! in order to compute the l2 norm of the error
@@ -265,9 +277,10 @@ program test_hex_hermite
 
         norm2_error = sqrt(norm2_error)*radius**2/real(num_cells,f64)**2
 
-        print*,"error_L2 = ", norm2_error!, "min =",f_min
+        !print*,"error_L2 = ", norm2_error!, "min =",f_min
 
         f_tn = f_tn1
+        center_values_tn = center_values_tn1
 
      end do
 
@@ -289,7 +302,7 @@ program test_hex_hermite
  
      call delete_hex_mesh_2d( mesh )
 
-     print*, "time used =", t_end - t_init
+     print*, "time used =", t_end - t_init," error_L2 = ", norm2_error
 
      write(33,*) dt, step, num_cells,  norm2_error
   end do
