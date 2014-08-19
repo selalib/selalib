@@ -46,6 +46,7 @@ module hex_mesh
    contains
      procedure, pass(mesh) :: x1_node => x1_node
      procedure, pass(mesh) :: x2_node => x2_node
+     procedure, pass(mesh) :: index_hex_to_global => index_hex_to_global
      procedure, pass(mesh) :: hex_to_global   => hex_to_global
      procedure, pass(mesh) :: global_to_hex1  => global_to_hex1
      procedure, pass(mesh) :: global_to_hex2  => global_to_hex2
@@ -118,7 +119,6 @@ contains
          r31, &
          r32)
 
-
   end function new_hex_mesh_2d
 
 
@@ -176,6 +176,7 @@ contains
 
     mesh%num_cells = num_cells
     mesh%delta = mesh%radius/real(num_cells,f64)
+    ! The formula is = 6*sum(num_cells)+1 which simplifies to :
     mesh%num_pts_tot = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
     mesh%num_triangles = 6 * num_cells * num_cells
 
@@ -216,20 +217,24 @@ contains
     mesh%cartesian_coord(1,1) = mesh%center_x1
     mesh%cartesian_coord(2,1) = mesh%center_x2
 
-    ! --------------------------------------------------------------------
+    !Useful variables
+    num_cells_plus1 = num_cells + 1
+    num_cells_plus2 = num_cells + 2
+
+    ! ---------------------------------------------------------------------
     ! BEGIN MATRICES INITIALIZATION ---------------------------------------
+
+    ! Initializing coordinates of first mesh point (ie. center of hexagon)
     global = 1
     position_x1 = mesh%center_x1
     position_x2 = mesh%center_x2 ! variable containing current position
-
-    num_cells_plus1 = num_cells + 1
-    num_cells_plus2 = num_cells + 2
+    mesh%cartesian_coord(1,global) = position_x1
+    mesh%cartesian_coord(2,global) = position_x2
 
     do i = 1, num_cells ! variable following r1
        ! Incrementation on r1 direction as we are going to the next hexagon
        position_x1 = position_x1 + mesh%r1_x1
        position_x2 = position_x2 + mesh%r1_x2
-
 
        ! We follow each hexagon edge :
        ! First edge
@@ -317,6 +322,7 @@ contains
        end do
     end do
 
+    ! Filling the global_indices table.
     do global = 1, mesh%num_pts_tot 
 
        k1 = mesh%hex_coord(1, global)
@@ -424,7 +430,11 @@ contains
     class(hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1, k2
     sll_int32, intent(out) :: index_tab
-    sll_int32              :: k, nk1, nk2, n0, num_cells_plus1, num_cells
+    sll_int32              :: k
+    sll_int32              :: nk1, nk2
+    sll_int32              :: n0
+    sll_int32              :: num_cells
+    sll_int32              :: num_cells_plus1
 
     num_cells = mesh%num_cells
     num_cells_plus1 = num_cells + 1
@@ -434,22 +444,21 @@ contains
     ! if k1<=0 the points are in [-num_cells,k2] 
     ! if k1>0  ...               [-num_cells+k1,k2]
 
-    if (k1 <= 0) then
+    if (k1.le.0) then
        k   = num_cells + k1
-       nk1  = floor(num_cells*k + k*(k+1)*0.5 )
+       nk1  = floor( num_cells*k + k*(k+1)*0.5 ) !this value is always an integer, floor avoids the transformation
        nk2  = k2 + num_cells_plus1
-    elseif (k1 > 0) then 
+    elseif (k1.gt.0) then 
        ! n0 is the total number of points from (-num_cells,-num_cells) to 
        ! ( 0,numcells)
-       n0 = floor(num_cells**2 + num_cells*num_cells_plus1*0.5 )
-       nk1 = floor(n0 + k1*(2*num_cells + 1) - k1*(k1-1)*0.5 )
+       n0  = floor( num_cells**2 + num_cells*num_cells_plus1*0.5 )
+       nk1 = n0 + k1*(2*num_cells + 1) - floor( k1*(k1-1)*0.5 )
        nk2 = k2 + num_cells_plus1 - k1
     endif
 
     index_tab = nk1 + nk2
 
   end subroutine index_hex_to_global
-
 
 
   function x1_node(mesh, k1, k2) result(val)
@@ -484,29 +493,27 @@ contains
     class(hex_mesh_2d)      :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
+    sll_int32               :: cells_to_origin
+    sll_int32               :: index_tab
     sll_int32               :: val
-    sll_int32               :: index_tab, hex_ring_number
-
+    
     ! We compute the number of cells from point to center 
-    ! which is equivalent to the hexagonal ring number
 
     if (k1*k2 .gt. 0) then
-       hex_ring_number = max(abs(k1),abs(k2))
+       cells_to_origin = max(abs(k1),abs(k2))
     else
-       hex_ring_number = abs(k1) + abs(k2)
+       cells_to_origin = abs(k1) + abs(k2)
     end if
 
     ! Test if we are in domain
-    if (hex_ring_number .le. mesh%num_cells) then
+    if (cells_to_origin .le. mesh%num_cells) then
 
        call index_hex_to_global(mesh, k1, k2,index_tab)
        val = mesh%global_indices(index_tab)
 
-    else 
+    else
        val = -1
-
-       print *, "problem in hex_to_global with the coordinates / indices "
-
+       print *, "WARNING: in hex_to_global, the hexagonal coordinates passed k1, k2 are not in the domain"
     end if
 
   end function hex_to_global
@@ -631,8 +638,6 @@ contains
     global = mesh%hex_to_global(k1,k2) 
   end function local_to_global
 
-
-
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
     type(hex_mesh_2d), pointer            :: mesh
     sll_real64, intent(in)                :: x, y
@@ -646,13 +651,7 @@ contains
     step      = mesh%delta
 
     ! converting (x,y) to hexagonal coordinates
-    ! h1 =  x/sqrt(3.0_f64) + y 
-    ! h2 = -x/sqrt(3.0_f64) + y  
-
-    ! ! find the lowest point in the lozenge that contains (x,y)
-    ! i = floor( (h1+radius) / step ) - num_cells
-    ! j = floor( (h2+radius) / step ) - num_cells
-
+    ! find the lowest point in the lozenge that contains (x,y)
     i = cart_to_hex1(mesh, x, y)
     j = cart_to_hex2(mesh, x, y)
 
