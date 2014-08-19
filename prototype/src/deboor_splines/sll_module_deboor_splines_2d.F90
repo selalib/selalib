@@ -28,30 +28,28 @@ contains
        val )
     implicit none
     ! INPUT
-    sll_real64 :: ar_x, ar_y
-    sll_real64 ::val
-    sll_int32  :: ai_nx, ai_kx, ai_ny, ai_ky
+    sll_real64,intent(in) :: ar_x, ar_y
+    sll_int32,intent(in)  :: ai_nx, ai_kx, ai_ny, ai_ky
     sll_real64, dimension(:), pointer :: apr_tx !  ai_nx + ai_kx 
     sll_real64, dimension(:), pointer :: apr_ty !  ai_ny + ai_ky	
     sll_real64, dimension(:,:),pointer :: apr_Bcoef!( ai_nx,ai_ny)
+    !OUTPUT
+    sll_real64,intent(out) ::val
     ! LOCAL VARIABLES
     sll_int32  :: li_j, li_mflag, li_lefty
-    sll_real64, dimension(:),pointer :: lpr_coef ! ai_ky
-    sll_real64, dimension(:),pointer :: tmp_tab
-    sll_real64, dimension(:),pointer :: tmp_ty
+    sll_real64, dimension(1:ai_ky),target :: lpr_coef ! ai_ky
+    sll_real64, dimension(:),pointer :: lpr_coef_ptr ! ai_ky
+    sll_real64, dimension(1:ai_nx),target :: tmp_tab
+    sll_real64, dimension(:),pointer :: tmp_tab_ptr
+    sll_real64, dimension(1:2*ai_ky),target :: tmp_ty
+    sll_real64, dimension(:),pointer :: tmp_ty_ptr
     sll_int32 :: ierr
-    
-    SLL_ALLOCATE(lpr_coef(ai_ky),ierr)
-    SLL_ALLOCATE(tmp_tab(ai_nx),ierr)
-    SLL_ALLOCATE(tmp_ty( 2*ai_ky ),ierr)
    
+
     call interv ( apr_ty,ai_ny + ai_ky, ar_y, li_lefty, li_mflag )
 
     if ( li_mflag .NE. 0 ) then
        val = 0.0_8
-       SLL_DEALLOCATE(lpr_coef,ierr)
-       SLL_DEALLOCATE(tmp_tab,ierr)
-       SLL_DEALLOCATE(tmp_ty,ierr)
        return 
     end if
     
@@ -59,10 +57,10 @@ contains
        
        
        tmp_tab = apr_bcoef ( 1:ai_nx , li_lefty - ai_ky + li_j )
-       
+       tmp_tab_ptr => tmp_tab
        lpr_coef ( li_j ) = bvalue(&
             apr_tx,&
-            tmp_tab,&
+            tmp_tab_ptr,&
             ai_nx,&
             ai_kx,&
             ar_x,&
@@ -71,18 +69,17 @@ contains
        
     end do
    
+    lpr_coef_ptr => lpr_coef
     tmp_ty =  apr_ty ( li_lefty - ai_ky + 1 : li_lefty + ai_ky)
+    tmp_ty_ptr => tmp_ty
     val = bvalue(&
-         tmp_ty,&
-         lpr_coef,&
+         tmp_ty_ptr,&
+         lpr_coef_ptr,&
          ai_ky,&
          ai_ky,&
          ar_y,&
          0 )
-    SLL_DEALLOCATE(lpr_coef,ierr)
-    SLL_DEALLOCATE(tmp_tab,ierr)
-    SLL_DEALLOCATE(tmp_ty,ierr)
-  end subroutine bvalue2d
+    end subroutine bvalue2d
 
 
   function dvalue2d(&
@@ -106,50 +103,45 @@ contains
     sll_real64, dimension ( : , : ),pointer :: apr_Bcoef !(ai_nx,ai_ny)
     ! LOCAL VARIABLES
     sll_int32  :: li_j, li_mflag, li_lefty
-    sll_real64, dimension ( :),pointer :: lpr_coef ! ai_ky
-    sll_real64, dimension ( :),pointer :: tmp_coef,tmp_ty
+    sll_real64, dimension (1:ai_ky),target:: lpr_coef ! ai_ky
+    sll_real64, dimension (:),pointer:: lpr_coef_ptr
+    sll_real64, dimension (1:ai_nx),target :: tmp_coef
+    sll_real64,dimension(:),pointer::  tmp_coef_ptr
+    sll_real64, dimension (1:2*ai_ky),target :: tmp_ty
+    sll_real64, dimension (:),pointer :: tmp_ty_ptr
     sll_int32:: ierr
-    
-    
-    SLL_ALLOCATE(lpr_coef(ai_ky),ierr)
-    SLL_ALLOCATE(tmp_coef(ai_nx),ierr)
-    SLL_ALLOCATE(tmp_ty(2*ai_ky),ierr)
     
     call interv ( apr_ty, ai_ny + ai_ky, ar_y, li_lefty, li_mflag )
     
     if ( li_mflag .NE. 0 ) then
        res = 0.0_8
-       SLL_DEALLOCATE(lpr_coef,ierr)
-       SLL_DEALLOCATE(tmp_coef,ierr)
-       SLL_DEALLOCATE(tmp_ty,ierr)
        return 
     end if
     
     do li_j = 1, ai_ky
        
        tmp_coef = apr_bcoef ( 1:ai_nx , li_lefty - ai_ky + li_j )
+       tmp_coef_ptr => tmp_coef
        lpr_coef ( li_j ) = bvalue(&
             apr_tx,&
-            tmp_coef,&
+            tmp_coef_ptr,&
             ai_nx,&
             ai_kx,&
             ar_x,&
             deriv1 )
        
     end do
+    lpr_coef_ptr => lpr_coef
     tmp_ty =  apr_ty ( li_lefty - ai_ky + 1 : li_lefty + ai_ky)
+    tmp_ty_ptr => tmp_ty
     res = bvalue(&
-         tmp_ty,&
-         lpr_coef,&
+         tmp_ty_ptr,&
+         lpr_coef_ptr,&
          ai_ky,&
          ai_ky,&
          ar_y,&
          deriv2 )
 
-    SLL_DEALLOCATE(lpr_coef,ierr)
-    SLL_DEALLOCATE(tmp_coef,ierr)
-    SLL_DEALLOCATE(tmp_ty,ierr)
-    
   end function dvalue2d
   
 
@@ -418,13 +410,13 @@ contains
     sll_real64, dimension ( ai_nx *( 2*ai_kx-1) ) :: lpr_work31
     sll_real64, dimension (( 2*ai_ky-1) * ai_ny ) :: lpr_work32
     sll_real64, dimension ( ai_ny         ) :: lpr_work4
-    sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
-    sll_real64, dimension ( : ),pointer :: apr_ty_bis
+    sll_real64, dimension (1:ai_ny,1:ai_nx),target :: lpr_work5 !  ai_ny , ai_nx 
+    sll_real64, dimension (:,:),pointer :: lpr_work5_ptr !  ai_ny , ai_nx 
+    sll_real64, dimension (1:ai_ny),target:: apr_ty_bis
+    sll_real64, dimension (:),pointer:: apr_ty_bis_ptr
     sll_int32  :: li_i, li_j, li_iflag
     sll_int32 :: ierr
     
-    SLL_ALLOCATE(apr_ty_bis( ai_ny),ierr)
-    SLL_ALLOCATE(lpr_work5(ai_ny , ai_nx ),ierr)
     
     lpr_work1(:,:) = 0.0
     
@@ -479,6 +471,7 @@ contains
      
      apr_ty_bis = apr_tauy(1:ai_ny)
      
+     lpr_work5_ptr => lpr_work5
      call spli2d ( &
           apr_taux,&
           apr_Bcoef,&
@@ -488,7 +481,7 @@ contains
           ai_ny, &
           lpr_work2,&
           lpr_work31,&
-          lpr_work5, &
+          lpr_work5_ptr, &
           li_iflag )
     
      apr_bcoef(:,:) =0.0_8
@@ -496,9 +489,10 @@ contains
      lpr_work3 = 0.0_8
      lpr_work32= 0.0_8
      
+     apr_ty_bis_ptr => apr_ty_bis
      call spli2d ( &
-          apr_ty_bis,&
-          lpr_work5,&
+          apr_ty_bis_ptr,&
+          lpr_work5_ptr,&
           apr_ty,&
           ai_ny, &
           ai_ky, &
@@ -508,8 +502,6 @@ contains
           apr_bcoef, &
           li_iflag )
      
-     SLL_DEALLOCATE(apr_ty_bis,ierr)
-     SLL_DEALLOCATE(lpr_work5,ierr)
    end subroutine spli2d_custom
    
 
@@ -554,12 +546,11 @@ contains
     sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work31
     sll_real64, dimension (( 2*ai_ky-1) * (ai_ny+ai_ny_der) ) :: lpr_work32
     sll_real64, dimension ( ai_ny +ai_ny_der) :: lpr_work4
-    sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx
+    sll_real64, dimension (1:ai_ny,1:ai_nx+ai_nx_der),target:: lpr_work5 !  ai_ny , ai_nx
+    sll_real64, dimension (:,:),pointer :: lpr_work5_ptr 
     sll_int32  :: li_iflag
     sll_int32  :: ierr
-    
-
-    SLL_ALLOCATE(lpr_work5(ai_ny, ai_nx + ai_nx_der ),ierr)
+   
     
     lpr_work1(:,:) = 0.0
     lpr_work5(:,:) = 0.0
@@ -593,6 +584,7 @@ contains
        print*, 'problem with construction of knots' 
     end if
     
+    lpr_work5_ptr => lpr_work5
     call spli2d_der ( &
          apr_taux,&
          apr_g,&
@@ -605,7 +597,7 @@ contains
          ai_ny, &
          lpr_work2,&
          lpr_work31,&
-         lpr_work5, &
+         lpr_work5_ptr, &
          li_iflag )
     
      apr_bcoef(:,:) =0.0_8
@@ -616,7 +608,7 @@ contains
 
      call spli2d_der ( &
           apr_tauy,&
-          lpr_work5,&
+          lpr_work5_ptr,&
           apr_tauy_der,&
           apr_g_der2,&
           apr_ty,&
@@ -629,7 +621,6 @@ contains
           apr_bcoef, &
           li_iflag )
 
-     SLL_DEALLOCATE(lpr_work5,ierr)
    end subroutine spli2d_custom_derder
 
    subroutine spli2d_custom_der1 ( &
@@ -667,12 +658,11 @@ contains
     sll_real64, dimension ( (ai_nx+ai_nx_der) *( 2*ai_kx-1) ) :: lpr_work31
     sll_real64, dimension (( 2*ai_ky-1) * (ai_ny) ) :: lpr_work32
     sll_real64, dimension ( ai_ny) :: lpr_work4
-    sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
+    sll_real64, dimension (1:ai_ny,1:ai_nx +ai_nx_der),target :: lpr_work5 !  ai_ny , ai_nx 
+    sll_real64, dimension (:,:),pointer :: lpr_work5_ptr
     sll_int32  :: li_i, li_iflag
     sll_int32 :: ierr
     
-
-    SLL_ALLOCATE(lpr_work5(ai_ny, ai_nx + ai_nx_der ),ierr)
     
     lpr_work1(:,:) = 0.0
     lpr_work5(:,:) = 0.0
@@ -712,7 +702,7 @@ contains
     apr_ty ( 1 : ai_ky ) = apr_tauy ( 1 )
     apr_ty ( ai_ny + 1 : ai_ny + ai_ky ) = apr_tauy ( ai_ny )
     
-     
+    lpr_work5_ptr => lpr_work5 
     call spli2d_der ( &
           apr_taux,&
           apr_g,&
@@ -725,7 +715,7 @@ contains
           ai_ny, &
           lpr_work2,&
           lpr_work31,&
-          lpr_work5, &
+          lpr_work5_ptr, &
           li_iflag )
     
      apr_bcoef(:,:) =0.0_8
@@ -736,7 +726,7 @@ contains
 
      call spli2d ( &
           apr_tauy,&
-          lpr_work5,&
+          lpr_work5_ptr,&
           apr_ty,&
           ai_ny, &
           ai_ky, &
@@ -746,7 +736,6 @@ contains
           apr_bcoef, &
           li_iflag )
 
-     SLL_DEALLOCATE(lpr_work5,ierr)
    end subroutine spli2d_custom_der1
    
 
@@ -783,12 +772,11 @@ contains
     sll_real64, dimension ( (ai_nx) *( 2*ai_kx-1) ) :: lpr_work31
     sll_real64, dimension (( 2*ai_ky-1) * (ai_ny+ai_ny_der) ) :: lpr_work32
     sll_real64, dimension ( ai_ny +ai_ny_der) :: lpr_work4
-    sll_real64, dimension (:,:),pointer :: lpr_work5 !  ai_ny , ai_nx 
+    sll_real64, dimension (1:ai_ny,1:ai_nx),target :: lpr_work5 !  ai_ny , ai_nx 
+    sll_real64, dimension (:,:),pointer :: lpr_work5_ptr
     sll_int32  :: li_i,li_iflag
     sll_int32 :: ierr
     
-
-    SLL_ALLOCATE(lpr_work5(ai_ny, ai_nx),ierr)
     
     lpr_work1(:,:) = 0.0
     lpr_work5(:,:) = 0.0
@@ -830,6 +818,7 @@ contains
        print*, 'problem with construction of knots' 
     end if
     
+    lpr_work5_ptr = lpr_work5
     call spli2d( &
          apr_taux,&
          apr_g,&
@@ -839,7 +828,7 @@ contains
          ai_ny, &
          lpr_work2,&
          lpr_work31,&
-         lpr_work5, &
+         lpr_work5_ptr, &
          li_iflag )
     
      apr_bcoef(:,:) =0.0_8
@@ -850,7 +839,7 @@ contains
 
      call spli2d_der ( &
           apr_tauy,&
-          lpr_work5,&
+          lpr_work5_ptr,&
           apr_tauy_der,&
           apr_g_der2,&
           apr_ty,&
@@ -863,7 +852,6 @@ contains
           apr_bcoef, &
           li_iflag )
 
-     SLL_DEALLOCATE(lpr_work5,ierr)
    end subroutine spli2d_custom_der2
 
    subroutine spli2d_perdir (&
@@ -891,12 +879,12 @@ contains
      sll_real64, dimension (:),pointer :: apr_tx !  ai_nx + ai_kx
      sll_real64, dimension (:),pointer :: apr_ty ! ai_ny + ai_ky
      ! LOCAL VARIABLES		
-     sll_real64, dimension (:),pointer :: lpr_taux !  ai_nx		
-     sll_real64, dimension (:,:),pointer :: lpr_g !  ai_nx ,ai_ny
+     sll_real64, dimension (1:ai_nx),target :: lpr_taux !  ai_nx
+     sll_real64, dimension (:),pointer :: lpr_taux_ptr
+     sll_real64, dimension (1:ai_nx,1:ai_ny),target :: lpr_g !  ai_nx ,ai_ny
+     sll_real64, dimension (:,:),pointer :: lpr_g_ptr
      sll_int32 :: ierr
-     
-     SLL_ALLOCATE(lpr_taux(ai_nx), ierr)
-     SLL_ALLOCATE(lpr_g(ai_nx ,ai_ny),ierr)
+
      if ( ar_L == 0.0_8 ) then
         print*,'Error spli2d_per : called with a period = 0 '
         stop
@@ -909,21 +897,21 @@ contains
      lpr_g ( 1 : ai_nx - 1 , 1 : ai_ny ) = apr_g ( 1 : ai_nx - 1 , 1 : ai_ny )
      lpr_g ( ai_nx , 1 : ai_ny ) = apr_g ( 1 , 1 : ai_ny )
 
+     lpr_taux_ptr => lpr_taux
+     lpr_g_ptr => lpr_g
      
      call spli2d_custom ( &
           ai_nx, &
           ai_kx, &
-          lpr_taux,&
+          lpr_taux_ptr,&
           ai_ny,&
           ai_ky, &
           apr_tauy, &
-          lpr_g,&
+          lpr_g_ptr,&
           apr_Bcoef,&
           apr_tx,&
           apr_ty )
 
-     SLL_DEALLOCATE(lpr_taux, ierr)
-     SLL_DEALLOCATE(lpr_g,ierr)
      
    end subroutine spli2d_perdir
    
@@ -952,12 +940,12 @@ contains
      sll_real64, dimension ( :),pointer :: apr_tx ! ai_nx + ai_kx	
      sll_real64, dimension (:),pointer :: apr_ty ! ai_ny + ai_ky 
      ! LOCAL VARIABLES
-     sll_real64, dimension ( :),pointer :: lpr_tauy ! ai_ny	
-     sll_real64, dimension (:,:),pointer :: lpr_g  !  ai_nx ,ai_ny
+     sll_real64, dimension (1:ai_ny),target :: lpr_tauy ! ai_ny	
+     sll_real64, dimension (1:ai_nx,1:ai_ny),target :: lpr_g  !  ai_nx ,ai_ny
+     sll_real64, dimension (:),pointer :: lpr_tauy_ptr ! ai_ny	
+     sll_real64, dimension (:,:),pointer :: lpr_g_ptr
      sll_int32 :: ierr
      
-     SLL_ALLOCATE(lpr_tauy(ai_ny), ierr)
-     SLL_ALLOCATE(lpr_g(ai_nx ,ai_ny),ierr)
      
      if ( ar_L == 0.0_8 ) then
         print*,'Error spli2d_per : called with a period = 0 '
@@ -971,20 +959,20 @@ contains
      lpr_g ( 1 : ai_nx , 1 : ai_ny -1 ) = apr_g ( 1 : ai_nx , 1 : ai_ny -1)
      lpr_g (1: ai_nx , ai_ny ) = apr_g ( 1 : ai_nx, 1 )
      
+     lpr_tauy_ptr => lpr_tauy
+     lpr_g_ptr => lpr_g
      call spli2d_custom (&
           ai_nx,&
           ai_kx,&
           apr_taux,&
           ai_ny, &
           ai_ky,&
-          lpr_tauy, &
-          lpr_g, &
+          lpr_tauy_ptr, &
+          lpr_g_ptr, &
           apr_Bcoef,&
           apr_tx,&
           apr_ty )
 
-     SLL_DEALLOCATE(lpr_tauy, ierr)
-     SLL_DEALLOCATE(lpr_g,ierr)
   
    end subroutine spli2d_dirper
    
@@ -1017,14 +1005,14 @@ contains
      sll_real64, dimension (:),pointer :: apr_tx !  ai_nx + ai_kx
      sll_real64, dimension ( :),pointer :: apr_ty ! ai_ny + ai_ky
      ! LOCAL VARIABLES
-     sll_real64, dimension ( :),pointer :: lpr_taux ! tmp_ty
-     sll_real64, dimension ( :),pointer :: lpr_tauy
-     sll_real64, dimension(:,:),pointer :: lpr_g !  ( ai_nx ,ai_ny)
+     sll_real64, dimension (1:ai_nx),target :: lpr_taux ! tmp_ty
+     sll_real64, dimension (1:ai_ny),target :: lpr_tauy
+     sll_real64, dimension(1:ai_nx,1:ai_ny),target :: lpr_g !  ( ai_nx ,ai_ny)
+     sll_real64, dimension (:),pointer :: lpr_taux_ptr ! tmp_ty
+     sll_real64, dimension (:),pointer :: lpr_tauy_ptr
+     sll_real64, dimension(:,:),pointer :: lpr_g_ptr
      sll_int32 :: ierr
      
-     SLL_ALLOCATE(lpr_taux(ai_nx),ierr)
-     SLL_ALLOCATE(lpr_tauy(ai_ny),ierr)
-     SLL_ALLOCATE( lpr_g( ai_nx ,ai_ny),ierr)
      if ( ar_Lx == 0.0_8 ) then
         print*,'Error spli2d_perper : called with a period = 0 '
         stop
@@ -1048,23 +1036,21 @@ contains
      lpr_g ( 1 : ai_nx -1 , ai_ny ) = apr_g ( 1 : ai_nx -1, 1 )
      lpr_g ( ai_nx , ai_ny ) = apr_g ( 1 , 1 )
 
-     
+     lpr_taux_ptr => lpr_taux
+     lpr_tauy_ptr => lpr_tauy
+     lpr_g_ptr => lpr_g
      call spli2d_custom ( &
           ai_nx,&
           ai_kx,&
-          lpr_taux,&
+          lpr_taux_ptr,&
           ai_ny,&
           ai_ky,&
-          lpr_tauy,&
-          lpr_g,&
+          lpr_tauy_ptr,&
+          lpr_g_ptr,&
           apr_Bcoef,&
           apr_tx,&
           apr_ty )
      
-
-     SLL_DEALLOCATE(lpr_taux,ierr)
-     SLL_DEALLOCATE(lpr_tauy,ierr)
-     SLL_DEALLOCATE( lpr_g,ierr)
    end subroutine spli2d_perper
    
 

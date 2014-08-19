@@ -32,18 +32,16 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 Install dependencies with macports
 ==============================
 
-
 .. warning::
- Since 2014 update of macports, some changes in openmpi could cause troubles.
+ Don't forget to set aliases for openmpi and python with 'port select'
 
 Install macports (http://www.macports.org/install.php) and ::
 
-	$ sudo port install gcc48 
-	$ sudo port select --set gcc mp-gcc48
-	$ sudo port install hdf5-18 +fortran+gfortran+openmpi_devel
+	$ sudo port install gcc49 
+	$ sudo port install openmpi
+	$ sudo port install hdf5 +gfortran+openmpi
 	$ sudo port install fftw-3
-	$ sudo port install cmake git-core 
-	$ sudo port select --set mpi openmpi-devel-mp-fortran
+	$ sudo port install cmake git
 
 If you want to run tests that use nurbs ::
 

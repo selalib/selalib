@@ -72,6 +72,13 @@ contains
 
     call dlob(n-1,alpha,beta,-1.0_f64,1._f64,xk,wk,err,de,da,db)
 
+    ! The results of this call can yield values that are beyond
+    ! the [-1;1] interval. Therefore we try to correct it
+    ! by forcing the boundary values.
+    ! FIXME : IT NEEDS TO BE CORRECTED. (TODO)
+    xk(1) = -1.0_f64
+    xk(n) =  1.0_f64
+
     ans = 0.0
     ! need to map the interval [-1,1] into the interval [a,b]
     c1 = 0.5_f64*(b-a)
@@ -128,6 +135,13 @@ contains
     beta(0)=2.0d0
     
     call dlob(n-2,alpha,beta,-1._f64,1._f64,xk,wk,err,de,da,db)
+    ! The results of this call can yield values that are beyond
+    ! the [-1;1] interval. Therefore we try to correct it
+    ! by forcing the boundary values.
+    ! FIXME : IT NEEDS TO BE CORRECTED. (TODO)
+    xk(1) = -1.0_f64
+    xk(n) =  1.0_f64
+
     
     if (present(a) .and. present(b)) then
        c1 = 0.5_f64*(b-a)
