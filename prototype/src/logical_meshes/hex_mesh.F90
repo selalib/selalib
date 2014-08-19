@@ -18,13 +18,14 @@ module hex_mesh
      ! A hexagonal mesh (composed by equilateral triangles)
      ! is defined by three directional vectors (r1, r2, r3)
      ! the number of cells, the radius, and the coordinates of the center  
-     sll_int32  :: num_cells   ! number of cells in any direction parting from origin
-     sll_int32  :: num_pts_tot ! number of total points
-     sll_real64 :: radius      ! distance between origin and border of the domain
-     sll_real64 :: center_x1   ! x1 cartesian coordinate of the origin
-     sll_real64 :: center_x2   ! x2 cartesian coordinate of the origin
-     sll_real64 :: delta       ! cell spacing
-     ! generator vectors' (r1, r2, r3) coordinates (they need to be scaled by delta) 
+     sll_int32  :: num_cells     ! number of cells in any direction parting from origin
+     sll_int32  :: num_pts_tot   ! number of total points
+     sll_int32  :: num_triangles ! number of triangles
+     sll_real64 :: radius        ! distance between origin and external vertex
+     sll_real64 :: center_x1     ! x1 cartesian coordinate of the origin
+     sll_real64 :: center_x2     ! x2 cartesian coordinate of the origin
+     sll_real64 :: delta         ! cell spacing
+     ! generator vectors' (r1, r2, r3) coordinates (they need to be scaled by delta)
      sll_real64 :: r1_x1
      sll_real64 :: r1_x2
      sll_real64 :: r2_x1
@@ -33,6 +34,10 @@ module hex_mesh
      sll_real64 :: r3_x2
      ! Matrix containing mesh points coordinates in cartesian coordinates :
      sll_real64, pointer, dimension(:,:) :: cartesian_coord ! (1:2,1:num_pts_tot)
+     ! matrix containing the cartesian coordinates of the centers of tthe triangles
+     sll_real64, pointer, dimension(:,:) :: center_cartesian_coord ! (1:2,1:num_triangles)     
+     ! matrix containing the index of the respective center of the 2 triangles at the top of most points
+     sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
      ! Matrix containing mesh points coordinates in hexagonal coordinates (integers) :
      sll_int32, pointer, dimension(:,:)  :: hex_coord ! (1:2,1:num_pts_tot)
      ! Matrix containg global indices arranged from lower corner of hexagon 
@@ -149,6 +154,11 @@ contains
     sll_int32  :: num_cells_plus1
     sll_int32  :: num_cells_plus2
 
+    sll_int32  :: center_index
+    sll_real64 :: x1, x2, x3, y1, y2, y3, xx, yy, r1x1
+    sll_real64 :: jacob, k1c, k2c
+    logical    :: inside
+
 
     ! By default the hexagonal mesh is centered at the (0,0) point
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, center_x1, center_x1, 0.0_f64 )
@@ -170,6 +180,7 @@ contains
     mesh%delta = mesh%radius/real(num_cells,f64)
     ! The formula is = 6*sum(num_cells)+1 which simplifies to :
     mesh%num_pts_tot = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
+    mesh%num_triangles = 6 * num_cells * num_cells
 
     ! resizing :
     mesh%r1_x1 = mesh%r1_x1 * mesh%delta
@@ -197,10 +208,16 @@ contains
     SLL_ALLOCATE(mesh%cartesian_coord(2, mesh%num_pts_tot), ierr)
     SLL_ALLOCATE(mesh%hex_coord(2, mesh%num_pts_tot), ierr)
     SLL_ALLOCATE(mesh%global_indices(mesh%num_pts_tot), ierr)
-    mesh%cartesian_coord(:,:)   = 0._f64
-    mesh%hex_coord(:,:)         = 0
-    mesh%global_indices(:) = -1
-    
+    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
+    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+    mesh%cartesian_coord(:,:)          = 0._f64
+    mesh%center_cartesian_coord(:,:)   = 0._f64
+    mesh%hex_coord(:,:)                = 0
+    mesh%global_indices(:)             = -1
+    mesh%center_index(:,:)             = -1
+    ! Initializing coordinates of first mesh point (ie. center of hexagon)
+    mesh%cartesian_coord(1,1) = mesh%center_x1
+    mesh%cartesian_coord(2,1) = mesh%center_x2
 
     !Useful variables
     num_cells_plus1 = num_cells + 1
@@ -317,17 +334,96 @@ contains
        ! we need a routine that will compute a unique number index_tab
        ! from the hexa coordinates. this unique number will index the array
        ! global_indices which contains the numerotation
-
+       
        call index_hex_to_global(mesh, k1, k2, index_tab)
 
        mesh%global_indices(index_tab)= global
 
     enddo
+
+    center_index = 0
+    r1x1 =  mesh%r1_x1*real(mesh%num_cells,f64)
+
+    do global = 1, mesh%num_pts_tot
+       ! almost each point is the base of a lozenge , thus two triangle
+       ! from which we get two center points
+
+       k1 = mesh%hex_coord(1, global)
+       k2 = mesh%hex_coord(2, global)
+      
+       ! center point in the left triangle
+       
+       x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
+       x2 = k1*mesh%r1_x1 + (k2+1)*mesh%r2_x1
+       x3 = (k1+1)*mesh%r1_x1 + (k2+1)*mesh%r2_x1
+       y1 = k1*mesh%r1_x2 + k2*mesh%r2_x2
+       y2 = k1*mesh%r1_x2 + (k2+1)*mesh%r2_x2
+       y3 = (k1+1)*mesh%r1_x2 + (k2+1)*mesh%r2_x2
+
+       xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
+       yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
+
+       !test to check if the triangle on the left is inside
+       
+       inside = .true.
+       
+       jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+       k1c = (mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob
+       k2c = (mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob
+
+       if ( abs(k1c) >  mesh%radius ) inside = .false.
+       if ( abs(k2c) <  mesh%radius ) inside = .false.
+       if ( abs(xx) > r1x1 ) inside = .false.
+
+       print*, k1,k2,xx,yy,r1x1, inside
+       print*, k1c,k2c, inside
+
+       if ( inside ) then
+          center_index = center_index + 1
+          mesh%center_cartesian_coord(1,center_index) = xx
+          mesh%center_cartesian_coord(2,center_index) = yy
+          mesh%center_index(1, global) = center_index
+       endif
+       
+       ! center point in the right triangle
+       x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
+       x2 = (k1+1)*mesh%r1_x1 + k2*mesh%r2_x1
+       x3 = (k1+1)*mesh%r1_x1 + (k2+1)*mesh%r2_x1
+       y1 = k1*mesh%r1_x2 + k2*mesh%r2_x2
+       y2 = (k1+1)*mesh%r1_x2 + k2*mesh%r2_x2
+       y3 = (k1+1)*mesh%r1_x2 + (k2+1)*mesh%r2_x2
+
+       xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
+       yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
+
+       ! test to check if the triangle on the left is inside
+
+       inside = .true.
+
+       jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
+       k1c = (mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob
+       k2c = (mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob
+
+       if ( abs(k1c) >  mesh%radius ) inside = .false.
+       if ( abs(k2c) <  mesh%radius ) inside = .false.
+       if ( abs(xx) > r1x1 ) inside = .false.
+
+       print*, k1,k2,xx,yy,r1x1, inside
+       print*, k1c,k2c, inside
+
+       if ( inside ) then
+          center_index = center_index + 1
+          mesh%center_cartesian_coord(1,center_index) = xx
+          mesh%center_cartesian_coord(2,center_index) = yy
+          mesh%center_index(2, global) = center_index
+       endif
+       
+    enddo
+
     ! ----------------------------------------- END MATRICES INITIALIZATION 
     ! ---------------------------------------------------------------------
 
   end subroutine initialize_hex_mesh_2d
-
 
 
   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
@@ -428,6 +524,7 @@ contains
 
        call index_hex_to_global(mesh, k1, k2,index_tab)
        val = mesh%global_indices(index_tab)
+
     else
        val = -1
     end if
@@ -557,12 +654,6 @@ contains
 
   end function local_to_global
 
-
-! TODO in this function : x,y   => x1, x2
-!                         h1,h2 => k1, k2
-!                         computing of h1, h2 depends on ONE mesh. use cart_to_hex ?
-!                         change if ( > ) => if (  .gt.  ) (ask Pierre)
-! @Charles
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
     type(hex_mesh_2d), pointer            :: mesh
     sll_real64, intent(in)                :: x, y
@@ -576,12 +667,9 @@ contains
     step      = mesh%delta
 
     ! converting (x,y) to hexagonal coordinates
-    h1 =  x/sqrt(3.0_f64) + y 
-    h2 = -x/sqrt(3.0_f64) + y  
-
     ! find the lowest point in the lozenge that contains (x,y)
-    i = floor( (h1+radius) / step ) - num_cells
-    j = floor( (h2+radius) / step ) - num_cells 
+    i = cart_to_hex1(mesh, x, y)
+    j = cart_to_hex2(mesh, x, y)
 
     ! coordinates of the vertices of the lozenge : 
     !(/i,j/),(/i,j+1/),(/i+1,j/), (/i+1,j+1/)
@@ -617,6 +705,29 @@ contains
 
   end subroutine get_cell_vertices_index
 
+
+  subroutine get_triangle_index(k1,k2,mesh,x,triangle_index)
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
+    sll_int32, intent(in)      :: k1, k2
+    sll_int32, intent(out)     :: triangle_index
+    sll_int32                  :: global
+
+    ! almost every point is the lowest point of a lozenge , i.e. 2 triangles
+    ! we get therefore 2 indices per points
+    ! in order to have the correct one we test in which triangle we are 
+
+    global = hex_to_global(mesh,k1,k2)
+
+    if ( x < mesh%cartesian_coord(1,global) ) then
+       triangle_index = mesh%center_index(1,global) !left triangle
+    else
+       triangle_index = mesh%center_index(2,global) !right triangle
+    endif
+
+    !if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
+
+  end subroutine get_triangle_index
 
 
   subroutine display_hex_mesh_2d(mesh)
