@@ -430,7 +430,6 @@ contains
        val = mesh%global_indices(index_tab)
     else
        val = -1
-       print *, "WARNING: in hex_to_global, the hexagonal coordinates passed k1, k2 are not in the domain"
     end if
 
   end function hex_to_global
@@ -503,56 +502,59 @@ contains
     k2 = floor((mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob)
   end function cart_to_hex2
 
-  function global_to_local(mesh, ref_index, j) result(new_index)
+  function global_to_local(mesh, ref_index, global) result(local)
     ! In the same manner we assign global indices (see hex_to_global(...))
     ! we assign local indices, but this time the initial point is 
     ! the point which index is ref_index
     ! ie. local_index(i,i) = 1
     class(hex_mesh_2d) :: mesh
-    sll_int32 :: ref_index, j
-    sll_int32 :: k1, k2
-    sll_int32 :: k1_i, k2_i
-    sll_int32 :: k1_j, k2_j
-    sll_int32 :: new_index
+    sll_int32 :: ref_index
+    sll_int32 :: global
+    sll_int32 :: k1_ref,  k2_ref
+    sll_int32 :: k1_glob, k2_glob
+    sll_int32 :: local
 
-    k1_i = mesh%global_to_hex1(ref_index)
-    k2_i = mesh%global_to_hex2(ref_index)
-    k1_j = mesh%global_to_hex1(j)
-    k2_j = mesh%global_to_hex2(j)
+    if ((ref_index.le.mesh%num_pts_tot).and.(ref_index.gt.0) &
+         .and.(global.le.mesh%num_pts_tot).and.(global.gt.0)) then
 
-    k1 = k1_i - k1_j + mesh%num_cells + 1 
-    k2 = k2_i - k2_j + mesh%num_cells + 1
+       k1_ref = mesh%global_to_hex1(ref_index)
+       k2_ref = mesh%global_to_hex2(ref_index)
+       k1_glob = mesh%global_to_hex1(global)
+       k2_glob = mesh%global_to_hex2(global)
 
-    new_index = mesh%hex_to_global(k1, k2)
+       local = mesh%hex_to_global(k1_ref - k1_glob, k2_ref - k2_glob)
+    else
+       ! Out of domain
+       local = -1
+    end if
+
   end function global_to_local
 
 
-  function local_to_global(mesh, ref_index, local_index) result(global)
+  function local_to_global(mesh, ref_index, local) result(global)
     ! returns the global index of the point which has as
     ! local index local_index in the ref_index system
     ! (see gloval_index(...) and global_to_local(...) for conventions) 
     ! ie. local_to_global(1, i) = i
     class(hex_mesh_2d) :: mesh
-    sll_int32 :: ref_index, local_index
-    sll_int32 :: k1, k2
-    sll_int32 :: k1_i, k2_i
-    sll_int32 :: k1_j, k2_j
+    sll_int32 :: ref_index, local
+    sll_int32 :: k1_ref, k2_ref
+    sll_int32 :: k1_loc, k2_loc
     sll_int32 :: global
 
-    print *,"global to hex1 ", mesh%num_pts_tot
-    k1_i = mesh%global_to_hex1(ref_index)
-    print *, " for ref = ", k1_i
-    k2_i = mesh%global_to_hex2(ref_index)
-    print *, " for ref = ", k2_i
-    k1_j = mesh%global_to_hex1(local_index)
-    k2_j = mesh%global_to_hex2(local_index)
-    print *, " for local = ", k1_j, k2_j
+    if ((ref_index.le.mesh%num_pts_tot).and.(ref_index.gt.0) &
+         .and.(local.le.mesh%num_pts_tot).and.(local.gt.0)) then
+       k1_ref = mesh%global_to_hex1(ref_index)
+       k2_ref = mesh%global_to_hex2(ref_index)
+       k1_loc = mesh%global_to_hex1(local)
+       k2_loc = mesh%global_to_hex2(local)
 
+       global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc) 
+    else
+       ! Out of domain
+       global = -1
+    end if
 
-    k1 = k1_i + k1_j + mesh%num_cells + 1
-    k2 = k2_i + k2_j + mesh%num_cells + 1
-
-    global = mesh%hex_to_global(k1,k2) 
   end function local_to_global
 
 
@@ -679,7 +681,7 @@ contains
        x2 = mesh%global_to_x2(i)
        write (out_unit, "(3(g13.3,1x))") x1, &
             x2, &
-            field(i+1)
+            field(i)
     end do
 
     close(out_unit)
