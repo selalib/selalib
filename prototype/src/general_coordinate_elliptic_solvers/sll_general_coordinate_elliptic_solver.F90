@@ -278,13 +278,15 @@ contains ! *******************************************************************
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
    SLL_ALLOCATE(es%masse(vec_sz),ierr)
    SLL_ALLOCATE(es%stiff(vec_sz),ierr)
+   ! -------------------------------------------
+   ! We must add plus 1 for the dimension of the solution 
+   ! in the case periodic periodic to include the periodicity in the last point.  
+   !  -----------------------------------------
    if(sll_perper == 0) then
-     SLL_ALLOCATE(es%tmp_rho_vec(solution_size + 1),ierr)
-     SLL_ALLOCATE(es%tmp_phi_vec(solution_size + 1),ierr)
-   else
-     SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
-     SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
-   endif  
+      solution_size = solution_size + 1
+   endif
+   SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
+   SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
    es%rho_vec(:) = 0.0_f64
    es%phi_vec(:) = 0.0_f64
    es%masse(:)   = 0.0_f64
@@ -1701,7 +1703,7 @@ if (sll_perper == 0) then
        
     end if
 
-    call solve_gen_elliptic_eq(es%sll_csr_mat,es%tmp_rho_vec,es%tmp_phi_vec)
+    call solve_gen_elliptic_eq(es%sll_csr_mat,es%tmp_rho_vec,es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2))
     es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
          es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)
 
