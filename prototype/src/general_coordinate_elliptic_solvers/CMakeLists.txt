@@ -33,3 +33,7 @@ ADD_EXECUTABLE(test_general_coordinates_elliptic_solver unit_test.F90)
 TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
                        sll_general_coordinate_elliptic_solvers)
 
+ADD_EXECUTABLE(test_finite_elements_solver unit_test_finite_elements.F90)
+
+TARGET_LINK_LIBRARIES( test_finite_elements_solver
+                       sll_general_coordinate_elliptic_solvers)
