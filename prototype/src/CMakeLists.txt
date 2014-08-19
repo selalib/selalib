@@ -6,9 +6,9 @@ ELSE()
        CACHE STRING "Choose the type of build, options are: Debug Release.")
 ENDIF()
 
-#IF(OPTIONS_FILE)
-#INCLUDE(${OPTIONS_FILE})
-#ENDIF()
+IF(OPTIONS_FILE)
+INCLUDE(${OPTIONS_FILE})
+ENDIF()
 
 PROJECT(SeLaLib)
 
