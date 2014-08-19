@@ -21,8 +21,7 @@ implicit none
 type box_spline_2d
    type(hex_mesh_2d), pointer  :: mesh
    ! Boundary conditions definition
-   sll_int32 SLL_PRIV :: x1_bc_type
-   sll_int32 SLL_PRIV :: x2_bc_type
+   sll_int32 SLL_PRIV :: bc_type
    ! Spline coefficients
    sll_real64, dimension(:), pointer :: coeffs
 end type box_spline_2d
@@ -42,13 +41,11 @@ contains  ! ****************************************************************
 
   function new_box_spline_2d( &
        mesh,         &
-       x1_bc_type,   &
-       x2_bc_type)
+       bc_type)
     
     type(box_spline_2d), pointer  :: new_box_spline_2d
     type(hex_mesh_2d),   pointer  :: mesh
-    sll_int32,  intent(in)        :: x1_bc_type
-    sll_int32,  intent(in)        :: x2_bc_type
+    sll_int32,  intent(in)        :: bc_type
     sll_int32                     :: bc_selector
     sll_int32                     :: ierr
 
@@ -57,21 +54,20 @@ contains  ! ****************************************************************
     
     new_box_spline_2d%mesh => mesh
 
-    new_box_spline_2d%x1_bc_type = x1_bc_type
-    new_box_spline_2d%x2_bc_type = x2_bc_type
+    new_box_spline_2d%bc_type = bc_type
 
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
     ! given. This scheme allows to add more types of boundary conditions
     ! if necessary.
     bc_selector = 0
-    if( x1_bc_type .eq. SLL_NEUMANN ) then 
+    if( bc_type .eq. SLL_DIRICHLET ) then 
        bc_selector = bc_selector + 1
     end if
-    if( x1_bc_type .eq. SLL_PERIODIC ) then
+    if( bc_type .eq. SLL_PERIODIC ) then
        bc_selector = bc_selector + 2
     end if
-    if( x2_bc_type .eq. SLL_NEUMANN ) then 
+    if( bc_type .eq. SLL_NEUMANN ) then 
        bc_selector = bc_selector + 4
     end if
 
@@ -84,8 +80,7 @@ contains  ! ****************************************************************
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     sll_int32, intent(in)                        :: deg
     type(box_spline_2d), pointer, intent(in)     :: spline
-    sll_int32  :: bc1
-    sll_int32  :: bc2
+    sll_int32  :: bc
     sll_int32  :: bc_selector
 
 
@@ -97,9 +92,8 @@ contains  ! ****************************************************************
        STOP
     end if
  
-    bc1 = spline%x1_bc_type
-    bc2 = spline%x2_bc_type
-
+    bc = spline%bc_type
+    
     ! Treat the bc_selector variable essentially like a bit field, to 
     ! accumulate the information on the different boundary conditions
     ! given. This scheme allows to add more types of boundary conditions
@@ -108,23 +102,26 @@ contains  ! ****************************************************************
 
     ! We make every case explicit to facilitate adding more BC types in
     ! the future.
-    if( spline%x1_bc_type .eq. SLL_NEUMANN ) then 
+    if( spline%bc_type .eq. SLL_DIRICHLET ) then 
        bc_selector = bc_selector + 1
     end if
-    if( spline%x1_bc_type .eq. SLL_PERIODIC ) then
+    if( spline%bc_type .eq. SLL_PERIODIC ) then
        bc_selector = bc_selector + 2
     end if
-    if( spline%x2_bc_type .eq. SLL_NEUMANN ) then 
+    if( spline%bc_type .eq. SLL_NEUMANN ) then 
        bc_selector = bc_selector + 4
     end if
 
     select case (bc_selector)
-       case ( 5 ) 
-          ! both boundary condition types are neumann
-          call compute_box_spline_2d_neum_neum( data, deg, spline )
-       case ( 6 )
-          ! periodic in x1 and neumann in x2
-          call compute_box_spline_2d_prdc_neum( data, spline )
+       case ( 1 ) 
+          ! boundary condition type is dirichlet
+          call compute_box_spline_2d_diri( data, deg, spline )
+       case ( 2 )
+          ! boundary condition type is periodic
+          call compute_box_spline_2d_prdc( data, spline )
+       case ( 4 )
+          ! boundary condition type is neumann
+          call compute_box_spline_2d_neum( data, spline )
        case default
           print *, 'ERROR: compute_box_spline_2d(): ', &
             'did not recognize given boundary condition combination.'
@@ -191,7 +188,7 @@ contains  ! ****************************************************************
 
 
 
-  subroutine compute_box_spline_2d_neum_neum( data, deg, spline )
+  subroutine compute_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     type(box_spline_2d), pointer                  :: spline
     sll_int32, intent(in)                         :: deg
@@ -201,43 +198,59 @@ contains  ! ****************************************************************
 
     num_pts_tot = spline%mesh%num_pts_tot
     
-    print *, "starting computing box spline neum neum", spline%mesh%num_cells, spline%mesh%num_pts_tot
     do i = 1, num_pts_tot
        spline%coeffs(i) = real(0,f64)
-       do k = 0, 3*(2*deg)*(2*deg+1)
-          print *, "i, k, nei = ", i, k
-          nei = spline%mesh%local_to_global(i-1,k)
-          print *, "nei", nei
-          if (nei .lt. num_pts_tot) then
-             spline%coeffs(i-1) = spline%coeffs(i-1) + data(nei+1) * & 
+       ! We don't need to fo through all points, just till a certain radius
+       ! which depends on the degree of the spline we are evaluating
+       do k = 1, 3*(2*deg)*(2*deg+1) + 1 
+          nei = spline%mesh%local_to_global(i,k)
+          if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
+             spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
                                 pre_filter_pfir(spline%mesh, k, deg)
           else
              ! TODO : Boundary conditions to be treated here :
-             spline%coeffs(i-1) = spline%coeffs(i-1)
+             spline%coeffs(i) = spline%coeffs(i)
              ! nei = twelve_fold_symmetry(nei, num_pts)
-             ! spline%coeffs(i) = spline%coeffs(i) + data(nei+1) * & 
+             ! spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
              !                    pre_filter_pfir(k,deg)
           end if
        end do
     end do
-    print *, "finished computing box spline neum neum"
-  end subroutine compute_box_spline_2d_neum_neum
+    
+  end subroutine compute_box_spline_2d_diri
 
 
-  subroutine compute_box_spline_2d_prdc_neum( data, spline )
+  subroutine compute_box_spline_2d_prdc( data, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     type(box_spline_2d), pointer      :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
-    print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC_NEUMANN NOT &
+    print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC NOT &
       & YET IMPLEMENTED'
     num_pts_tot = spline%mesh%num_pts_tot
     do i = 1, num_pts_tot
        spline%coeffs(i) = real(0,f64)*data(i)
     end do
 
-  end subroutine compute_box_spline_2d_prdc_neum
+  end subroutine compute_box_spline_2d_prdc
+
+
+  subroutine compute_box_spline_2d_neum( data, spline )
+    sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
+    type(box_spline_2d), pointer      :: spline
+    sll_int32  :: num_pts_tot
+    sll_int32  :: i
+
+    print *, ' WARNING : BOUNDARY CONDITIONS PERIODIC NOT &
+      & YET IMPLEMENTED'
+    num_pts_tot = spline%mesh%num_pts_tot
+    do i = 1, num_pts_tot
+       spline%coeffs(i) = real(0,f64)*data(i)
+    end do
+
+  end subroutine compute_box_spline_2d_neum
+
  
   function choose (n, k) result (res)
     sll_int32, intent (in) :: n
@@ -435,24 +448,23 @@ contains  ! ****************************************************************
     type(hex_mesh_2d), pointer, intent(in) :: mesh_geom
     type(box_spline_2d), pointer           :: spline
     sll_int32,  intent(in)  :: deg
-    sll_real64, intent(in)  :: x1
-    sll_real64, intent(in)  :: x2
+    sll_real64, intent(in)  :: x1, x2
     sll_real64              :: val
-    sll_real64              :: xm1
-    sll_real64              :: xm2
-    sll_real64              :: x1_basis
-    sll_real64              :: x2_basis
+    sll_real64              :: xm1, xm2
+    sll_real64              :: x1_basis, x2_basis
     sll_real64              :: r11, r12
     sll_real64              :: r21, r22
     sll_real64              :: r31, r32
-    sll_int32               :: k1_asso
-    sll_int32               :: k2_asso
-    sll_int32               :: k1
-    sll_int32               :: k2
-    sll_int32               :: ind
+    sll_int32               :: k1_asso, k2_asso
+    sll_int32               :: k1, k2
     sll_int32               :: ki, kj
     sll_int32               :: num_pts
     sll_int32               :: num_pts_tot
+    sll_int32               :: num_cells
+    sll_int32               :: distance
+    sll_int32               :: ind
+
+
 
     val = 0._f64
 
@@ -465,6 +477,7 @@ contains  ! ****************************************************************
 
     num_pts = mesh_geom%num_cells + 1
     num_pts_tot = mesh_geom%num_pts_tot
+    num_cells = spline%mesh%num_cells
 
     ! First we need to compute the coordinates of 
     ! the closest mesh point associated to (x1,x2)
@@ -478,11 +491,12 @@ contains  ! ****************************************************************
         
         k1  = k1_asso + ki
         k2  = k2_asso + kj
-        if ((abs(k1).lt.spline%mesh%num_cells).and.(abs(k2).lt.spline%mesh%num_cells)) then
-           print *, "in interpolate value : if in domain"
+        distance = cells_to_origin(k1, k2)
+
+        if (distance.le.num_cells) then
+           
            ind = spline%mesh%hex_to_global(k1, k2)
-        
-        
+                   
 !         do while (ind .ge. num_pts_tot)
 !           ! If point got out of the domain
 !           ind = twelve_fold_symmetry(ind, num_pts)
@@ -498,15 +512,13 @@ contains  ! ****************************************************************
            x1_basis = change_basis_x1(spline, xm1, xm2)
            x2_basis = change_basis_x2(spline, xm1, xm2)
 
-           val = val + spline%coeffs(ind+1) * &
+           val = val + spline%coeffs(ind) * &
                 chi_gen_val(x1_basis, x2_basis, deg)
            else
               !! TREAT HERE BC
               ! TODO @LM
               val = val
            end if
-           print *, "in interpolate value : FINISHED !"
-
         end do
    end do
 

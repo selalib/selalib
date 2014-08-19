@@ -57,7 +57,7 @@ character(len = 4) :: filenum
 
 print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
-do num_cells = 40,40,1
+do num_cells = 10,10,1
 
 !   t_init = getRealTimer()
 
@@ -89,18 +89,18 @@ do num_cells = 40,40,1
    gauss_x2  = -0.25_f64
    gauss_sig = 0.05_f64
 
-   print *, " Entering loop ---------------"
-   do i=0, mesh%num_pts_tot-1
-      x1(i+1) = mesh%global_to_x1(i)
-      x2(i+1) = mesh%global_to_x2(i)
-      f_init(i+1) = 1._f64*exp(-0.5_f64*((x1(i+1)-gauss_x1)**2 / gauss_sig**2 &
-                    + (x2(i+1)-gauss_x2)**2 / gauss_sig**2))
-      if (exponent(f_init(i+1)) .lt. -17) then
-         f_init(i+1) = 0._f64
+   print *, " Entering init loop ---------------"
+   do i=1, mesh%num_pts_tot
+      x1(i) = mesh%global_to_x1(i)
+      x2(i) = mesh%global_to_x2(i)
+      f_init(i) = 1._f64*exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+                    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      if (exponent(f_init(i)) .lt. -17) then
+         f_init(i) = 0._f64
       end if
-      f_tn(i+1) = f_init(i+1)
+      f_tn(i) = f_init(i)
    end do
-   print *, " Exiting loop  ---------------"
+   print *, " Exiting init loop  ---------------"
 
 !   call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
@@ -127,7 +127,7 @@ do num_cells = 40,40,1
    ! Time loop
    nloops = 0
    print *, " ***** num pts tot *****", mesh%num_pts_tot, spline%mesh%num_pts_tot
-   spline => new_box_spline_2d(mesh, SLL_NEUMANN, SLL_NEUMANN)
+   spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
    call cpu_time(t_init)
    print*,""
@@ -140,12 +140,11 @@ do num_cells = 40,40,1
 
       nloops = nloops + 1
 
-      print *, " ----> Computing box spline = ", spline%mesh%num_pts_tot
       call compute_box_spline_2d( f_tn, deg, spline )
-      print *, " ----> Done "
       t      = t + dt
+
       do i=1, mesh%num_pts_tot
-      print *, " ----> Global index = ", i
+
          ! ******************
          ! Approximation
          ! ******************
@@ -167,8 +166,8 @@ do num_cells = 40,40,1
          ! Computing characteristics
          if (which_advec .eq. 0) then
             ! linear advection
-            x1(i) = mesh%global_to_x1(i-1) - advec*dt*nloops
-            x2(i) = mesh%global_to_x2(i-1) - advec*dt*nloops
+            x1(i) = mesh%global_to_x1(i) - advec*dt*nloops
+            x2(i) = mesh%global_to_x2(i) - advec*dt*nloops
          else
             ! Circular advection
             x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
