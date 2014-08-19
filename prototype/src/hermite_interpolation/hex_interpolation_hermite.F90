@@ -532,23 +532,23 @@ contains
     !freedom(4) =  ( freedom(1) + freedom(2) + freedom(3) ) / 3._f64
 
     ! value computed
-    ! if (center_index == -1) then
-    !    print *, "problem index center l 536 interpolation hermite"
-    ! else
-    !    freedom(4) = center_value(center_index)
-    ! endif
+    if (center_index == -1) then
+       print *, "problem index center l 536 interpolation hermite"
+    else
+       freedom(4) = center_value(center_index)
+    endif
 
     ! exact value : 
 
-    xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
-    yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
+    ! xx = x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64
+    ! yy = y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64
 
-    xx = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * cos(t) &
-         - (y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * sin(t)
-    yy = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * sin(t) &
-         + ( y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * cos(t)
+    ! xx = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * cos(t) &
+    !      - (y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * sin(t)
+    ! yy = (x2 + ( (x3+x1)*0.5_f64 - x2 )* 2.0_f64 / 3.0_f64) * sin(t) &
+    !      + ( y2 + ( (y3+y1)*0.5_f64 - y2 )* 2.0_f64 / 3.0_f64 ) * cos(t)
 
-    freedom(4) = exp( - ( (xx-1.0_f64)**2+(yy-1.0_f64)**2) ) 
+    ! freedom(4) = exp( - ( (xx-1.0_f64)**2+(yy-1.0_f64)**2) ) 
 
 
     ! values of the derivatives

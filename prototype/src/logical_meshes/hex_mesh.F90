@@ -350,7 +350,7 @@ contains
 
        k1 = mesh%hex_coord(1, global)
        k2 = mesh%hex_coord(2, global)
-      
+
        ! center point in the left triangle
        
        x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
@@ -368,15 +368,12 @@ contains
        inside = .true.
        
        jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-       k1c = (mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob
-       k2c = (mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob
+       k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
+       k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
-       if ( abs(k1c) >  mesh%radius ) inside = .false.
-       if ( abs(k2c) <  mesh%radius ) inside = .false.
+       if ( abs(k1c) >  mesh%num_cells ) inside = .false.
+       if ( abs(k2c) >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
-
-       print*, k1,k2,xx,yy,r1x1, inside
-       print*, k1c,k2c, inside
 
        if ( inside ) then
           center_index = center_index + 1
@@ -385,6 +382,7 @@ contains
           mesh%center_index(1, global) = center_index
        endif
        
+
        ! center point in the right triangle
        x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
        x2 = (k1+1)*mesh%r1_x1 + k2*mesh%r2_x1
@@ -401,15 +399,12 @@ contains
        inside = .true.
 
        jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-       k1c = (mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob
-       k2c = (mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob
+       k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
+       k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
-       if ( abs(k1c) >  mesh%radius ) inside = .false.
-       if ( abs(k2c) <  mesh%radius ) inside = .false.
+       if ( abs(k1c) >  mesh%num_cells ) inside = .false.
+       if ( abs(k2c) >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
-
-       print*, k1,k2,xx,yy,r1x1, inside
-       print*, k1c,k2c, inside
 
        if ( inside ) then
           center_index = center_index + 1
@@ -725,7 +720,7 @@ contains
        triangle_index = mesh%center_index(2,global) !right triangle
     endif
 
-    !if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
+    if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
 
   end subroutine get_triangle_index
 
