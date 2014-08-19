@@ -1139,8 +1139,6 @@ if (sll_perper == 0) then
              
           end if
     
-          
-          
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -1241,8 +1239,6 @@ if (sll_perper == 0) then
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
                 
                 
-         
-                
                 do iii = 0,obj%spline_degree1
                    do jjj = 0,obj%spline_degree2
                       
@@ -1253,8 +1249,6 @@ if (sll_perper == 0) then
                            val_jac*wgpt1*wgpt2* &
                            dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
-                      
-                      
                       
                       M_c_loc(index1, index2) = &
                            M_c_loc(index1, index2) + &
