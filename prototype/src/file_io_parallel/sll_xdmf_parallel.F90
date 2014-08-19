@@ -74,7 +74,7 @@ contains
     if (rank == 0) then
        call sll_xml_file_create(trim(file_name),file_id,error)
        call sll_xml_grid_geometry(file_id, trim(mesh_name), &
-                                  nnodes_x1, nnodes_x2, 'Uniform')
+                                  nnodes_x1, nnodes_x2)
     end if
 
   end subroutine sll_xdmf_open_2d_parallel
@@ -102,8 +102,7 @@ contains
     if (rank == 0) then
        call sll_xml_file_create(trim(file_name),file_id,error)
        call sll_xml_grid_geometry(file_id, trim(mesh_name),  &
-                                  nnodes_x1, nnodes_x2, nnodes_x3, &
-                                  'Uniform')
+                                  nnodes_x1, nnodes_x2, nnodes_x3)
     end if
 
   end subroutine sll_xdmf_open_3d_parallel

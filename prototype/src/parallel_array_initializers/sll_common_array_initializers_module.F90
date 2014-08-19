@@ -249,6 +249,7 @@ contains
        
   end function sll_diocotron_initializer_2d
   
+  
   function sll_diocotron_initializer_2d2( x, y, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -288,11 +289,7 @@ contains
     endif 
   
   end function sll_diocotron_initializer_2d2
-
-
-  !
-  
-
+ 
   function sll_beam_initializer_2d( x, vx, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -334,7 +331,8 @@ contains
 
    sll_real64, dimension(:), intent(in), optional :: params
    sll_real64 :: eps
-   sll_real64 :: k_mode
+   sll_real64 :: k_mode_x
+   sll_real64 :: k_mode_y
 
    if( .not. present(params) ) then
       print *, '#sll_KHP1_2d, error: the params array must ', &
@@ -342,16 +340,43 @@ contains
       print *,'#params(1)= eps  param(2)=k_mode'
       stop
    end if
-   SLL_ASSERT(size(params)>=2)
+   SLL_ASSERT(size(params)>=3)
    eps = params(1)
-   k_mode = params(2)
+   k_mode_x = params(2)
+   k_mode_y = params(3)
 
-   res = sin(y)+eps*cos(k_mode*x)
+   res = sin(k_mode_y*y)+eps*cos(k_mode_x*x)
 
   end function sll_KHP1_2d
 
 
-
+  function sll_DSG_2d( eta1, eta2, params ) result(res)
+    sll_real64  :: res
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in), optional :: params    
+    
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    if( .not. present(params) ) then
+       print *, '#sll_sll_D_sharped_Geo_2d, error: the params array must ', &
+            'be passed. params(1) = eta1_min, params(2) = eta2_min', &
+            'be passed. params(3) = eta1_max, params(4) = eta2_max'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=4)
+    eta1_min =params(1)
+    eta2_min =params(2)
+    eta1_max =params(3)
+    eta2_max =params(4)
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    res =  4._f64*eta1n*(1._f64 - eta1n)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2n))
+  end function sll_DSG_2d
 
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution
@@ -1304,33 +1329,16 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
  !---------------------------------------------------------------------------
   !
   !                         Gaussian beam 4d initializer
-  !
-  ! 4D distribution in S^1(r=6)X[-9,9]X[-9,9]  with the property of being 
-  ! periodic in the spatial directions (x1,x2) and gaussian in velocity space.
-  !
-  ! f(x,y,vx,vy) = n0/ vth^2  exp(-0.5*((6x-xc)^2+(6y-yc)^2)/xth^2)/ (2*sll_pi*sigma_x)
-  !                * exp(-0.5*((vx-vxc)^2+(vy-vyc)^2)/vth^2)/ (2*sll_pi*sigma_v)
-  !                          
-  !  This function is described in the article of Besse and Sonnendrucker 2005
-  ! 'Semi‐Lagrangian Schemes for the Two‐Dimensional Vlasov‐Poisson System on
-  !   Unstructured Meshes'
-  !
-  ! It is meant to be used in the intervals:
-  ! x:  [ 0,1]
-  ! y:  [ 0,1]
-  ! vx: [-9,9]
-  ! vy: [-9,9]
-  
+  !  
   ! convention for the params array:
   ! params(1) = vth
   ! params(2) = xth
-  ! params(3) = sigma_x
-  ! params(4) = sigma_v
-  ! params(5) = vxc
-  ! params(6) = vyc
-  ! params(7) = xc
-  ! params(8) = yc
-  ! params(9) = n0
+  ! params(3) = vxc
+  ! params(4) = vyc
+  ! params(5) = xc
+  ! params(6) = yc
+  ! params(7) = n0
+  ! params(8) = radius
   !---------------------------------------------------------------------------
   
   function sll_gaussian_beam_initializer_4d( x, y, vx, vy, params ) &
@@ -1345,7 +1353,7 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     sll_real64, dimension(:), intent(in), optional :: params
     sll_real64 :: vxc
     sll_real64 :: vyc
-    sll_real64 :: xc,yc,rayon
+    sll_real64 :: xc,yc,radius
     sll_real64 :: vt,xt,n0
     
     if( .not. present(params) ) then
@@ -1363,10 +1371,10 @@ function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params )
     xc      = params(5)
     yc      = params(6)
     n0      = params(7)
-    rayon   = params(8)
+    radius   = params(8)
    
     
-    val = n0 *exp(-0.5*(rayon**2*(x-xc)**2  + rayon**2*(y-yc)**2)/(xt*xt)  ) &
+    val = n0 *exp(-0.5*(radius**2*(x-xc)**2  + radius**2*(y-yc)**2)/(xt*xt)  ) &
          / (2*sll_pi*xt**2) &
          *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
     

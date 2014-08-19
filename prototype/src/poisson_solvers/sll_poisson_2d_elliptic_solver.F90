@@ -489,6 +489,7 @@ contains
    
   end function new_poisson_2d_elliptic_solver
   
+  ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_elliptic_solver(poisson,phi,rho )
     ! input variables 
     class(poisson_2d_elliptic_solver), target   :: poisson
@@ -517,7 +518,7 @@ contains
     nc_eta1   = poisson%elliptic_solver%num_cells1 !+ 1    
     nc_eta2   = poisson%elliptic_solver%num_cells2 !+ 1
     
-    call poisson%rho_field%set_field_data(rho)
+    call poisson%rho_field%set_field_data(-rho)
     call poisson%rho_field%update_interpolation_coefficients( )
             
     call solve_general_coordinates_elliptic_eq(&
