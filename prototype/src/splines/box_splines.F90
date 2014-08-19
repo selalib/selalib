@@ -208,11 +208,9 @@ contains  ! ****************************************************************
              spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
                                 pre_filter_pfir(spline%mesh, k, deg)
           else
-             ! TODO : Boundary conditions to be treated here :
+             ! Boundary conditions (BC) to be treated here :
+             ! With dirichlet boundary conditions data(out_of_domain) = 0
              spline%coeffs(i) = spline%coeffs(i)
-             ! nei = twelve_fold_symmetry(nei, num_pts)
-             ! spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
-             !                    pre_filter_pfir(k,deg)
           end if
        end do
     end do
@@ -448,22 +446,20 @@ contains  ! ****************************************************************
     type(hex_mesh_2d), pointer, intent(in) :: mesh_geom
     type(box_spline_2d), pointer           :: spline
     sll_int32,  intent(in)  :: deg
-    sll_real64, intent(in)  :: x1, x2
-    sll_real64              :: val
-    sll_real64              :: xm1, xm2
-    sll_real64              :: x1_basis, x2_basis
-    sll_real64              :: r11, r12
-    sll_real64              :: r21, r22
-    sll_real64              :: r31, r32
+    sll_real64, intent(in)  :: x1,      x2
+    sll_real64              :: xm1,     xm2
+    sll_real64              :: x1_spl,  x2_spl
+    sll_real64              :: r11,     r12
+    sll_real64              :: r21,     r22
+    sll_real64              :: r31,     r32
     sll_int32               :: k1_asso, k2_asso
-    sll_int32               :: k1, k2
-    sll_int32               :: ki, kj
-    sll_int32               :: num_pts
+    sll_int32               :: k1,      k2
+    sll_int32               :: ki,      kj
     sll_int32               :: num_pts_tot
     sll_int32               :: num_cells
     sll_int32               :: distance
     sll_int32               :: ind
-
+    sll_real64              :: val
 
 
     val = 0._f64
@@ -475,7 +471,6 @@ contains  ! ****************************************************************
     r31 = mesh_geom%r3_x1
     r32 = mesh_geom%r3_x2
 
-    num_pts = mesh_geom%num_cells + 1
     num_pts_tot = mesh_geom%num_pts_tot
     num_cells = spline%mesh%num_cells
 
@@ -493,15 +488,11 @@ contains  ! ****************************************************************
         k2  = k2_asso + kj
         distance = cells_to_origin(k1, k2)
 
+        ! We test if we are in the domain
         if (distance.le.num_cells) then
            
            ind = spline%mesh%hex_to_global(k1, k2)
-                   
-!         do while (ind .ge. num_pts_tot)
-!           ! If point got out of the domain
-!           ind = twelve_fold_symmetry(ind, num_pts)
-!         end do
-
+           
            ! We centralize and shift the coordinates
            ! i.e. centralize : xm = x - Rk
            !      shifting   : xm to the associated rhomboid point
@@ -509,11 +500,11 @@ contains  ! ****************************************************************
            xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
            
            ! change of basis : geometrical basis => spline basis
-           x1_basis = change_basis_x1(spline, xm1, xm2)
-           x2_basis = change_basis_x2(spline, xm1, xm2)
+           x1_spl = change_basis_x1(spline, xm1, xm2)
+           x2_spl = change_basis_x2(spline, xm1, xm2)
 
            val = val + spline%coeffs(ind) * &
-                chi_gen_val(x1_basis, x2_basis, deg)
+                chi_gen_val(x1_spl, x2_spl, deg)
            else
               !! TREAT HERE BC
               ! TODO @LM
