@@ -358,8 +358,8 @@ contains
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
     type(sll_csr_matrix), intent(in) :: mat
-    sll_real64, dimension(:) :: apr_U
-    sll_real64, dimension(:) :: apr_B
+    sll_real64, dimension(:),intent(in) :: apr_B
+    sll_real64, dimension(:),intent(out) :: apr_U
     !local var
     !sll_int32  :: sys
     !sll_real64, dimension(umfpack_info) :: info
