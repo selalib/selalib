@@ -1717,37 +1717,37 @@ contains ! *******************************************************************
   end subroutine solve_gen_elliptic_eq
   
   
-  
-  subroutine solve_linear_system_perper( es,Masse_tot )
-    ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-    ! is given in terms of the spline coefficients that represent phi.
-    class(general_coordinate_elliptic_solver) :: es
-    sll_real64, dimension(:),pointer :: Masse_tot
-    
-    es%tmp_rho_vec(:) = 0.0_f64
-    es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
-         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
- 
-    call solve_general_es_perper(es%sll_csr_mat,es%tmp_rho_vec,es%phi_vec, &
-         Masse_tot) 
- 
-  end subroutine solve_linear_system_perper
-
-
-  subroutine solve_general_es_perper(csr_mat,apr_B,apr_U,Masse_tot)
-    type(sll_csr_matrix) :: csr_mat
-    sll_real64, dimension(:) :: apr_U
-    sll_real64, dimension(:) :: apr_B 
-    sll_real64, dimension(:),pointer :: Masse_tot
-    
-    
-    call sll_solve_csr_matrix_perper(&
-         csr_mat,&
-         apr_B,&
-         apr_U,&
-         Masse_tot)
-    
-  end subroutine solve_general_es_perper
+!!$  
+!!$  subroutine solve_linear_system_perper( es,Masse_tot )
+!!$    ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
+!!$    ! is given in terms of the spline coefficients that represent phi.
+!!$    class(general_coordinate_elliptic_solver) :: es
+!!$    sll_real64, dimension(:),pointer :: Masse_tot
+!!$    
+!!$    es%tmp_rho_vec(:) = 0.0_f64
+!!$    es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
+!!$         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
+!!$ 
+!!$    call solve_general_es_perper(es%sll_csr_mat,es%tmp_rho_vec,es%phi_vec, &
+!!$         Masse_tot) 
+!!$ 
+!!$  end subroutine solve_linear_system_perper
+!!$
+!!$
+!!$  subroutine solve_general_es_perper(csr_mat,apr_B,apr_U,Masse_tot)
+!!$    type(sll_csr_matrix) :: csr_mat
+!!$    sll_real64, dimension(:) :: apr_U
+!!$    sll_real64, dimension(:) :: apr_B 
+!!$    sll_real64, dimension(:),pointer :: Masse_tot
+!!$    
+!!$    
+!!$    call sll_solve_csr_matrix_perper(&
+!!$         csr_mat,&
+!!$         apr_B,&
+!!$         apr_U,&
+!!$         Masse_tot)
+!!$    
+!!$  end subroutine solve_general_es_perper
 
   subroutine compute_Source_matrice(es,Source_loc)
     type(general_coordinate_elliptic_solver),intent(inout) :: es
