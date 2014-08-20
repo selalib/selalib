@@ -54,7 +54,7 @@ module sll_general_coordinate_elliptic_solver_module
      ! the following is otherwise known as "LM". Same as global_spline_indices
      ! but including the changes resulting from the boundary conditions.
      ! This is:
-     ! local_to_global_spline_indices(i,j) = 
+     ! local_to_lobal_spline_indices(i,j) = 
      !   global_spline_indices(local_spline_indices(i,j))
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
@@ -1201,6 +1201,8 @@ if (sll_perper == 0) then
           obj%values_splines_gauss1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
           obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
 
+          print*,'point quad glob', cell_i + obj%num_cells1*(i-1)+ (obj%num_cells1 *num_pts_g1)*(cell_j + obj%num_cells2*(j-1)-1 )
+
           val_c        = c_field%value_at_point(gpt1,gpt2)
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
           val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
@@ -1543,10 +1545,11 @@ if (sll_perper == 0) then
 
 
           index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
+          print*, ' test coeff1',  es%tab_index_coeff1(cell_i) 
           index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2+ mm
+          print*, ' test coeff2',  es%tab_index_coeff2(cell_j)
           index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
-          print *, index, index_coef1, index_coef2, &
-               es%tab_index_coeff1(cell_i), es%tab_index_coeff2(cell_j)
+
           es%local_to_global_spline_indices_source(b,cell_index)= index
 
           

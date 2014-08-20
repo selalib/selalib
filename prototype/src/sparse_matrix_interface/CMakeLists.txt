@@ -26,20 +26,22 @@ ADD_LIBRARY(spm STATIC ${SPM_FILES})
 #install(TARGETS spm DESTINATION lib)
 #install(FILES ${spm_mods} DESTINATION include)
 
-IF(PASTIX_FOUND)
-  ADD_LIBRARY(sll_sparse_matrix STATIC 
-  	      sll_sparse_matrix_pastix_module.F90
-	      sll_sparse_matrix_mp_module.F90)
-ELSEIF(SUITESPARSE_FOUND)
-  INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
-  ADD_LIBRARY(sll_sparse_matrix STATIC 
-  	      sll_sparse_matrix_umfpack_module.F90
-	      sll_sparse_matrix_mp_module.F90)
-ElSE()
+#IF(PASTIX_FOUND)
+#  ADD_LIBRARY(sll_sparse_matrix STATIC 
+#  	      sll_sparse_matrix_pastix_module.F90#
+#	      sll_sparse_matrix_mp_module.F90)
+#ELSEIF(SUITESPARSE_FOUND)
+#  INCLUDE_DIRECTORIES(${SUITESPARSE_INCLUDE_DIRS})
+#  ADD_LIBRARY(sll_sparse_matrix STATIC 
+#  	      sll_sparse_matrix_umfpack_module.F90
+#	      sll_sparse_matrix_mp_module.F90)
+#ElSE()
   ADD_LIBRARY(sll_sparse_matrix STATIC 
   	      sll_sparse_matrix_module.F90
 	      sll_sparse_matrix_mp_module.F90 )
-ENDIF()
+#ENDIF()
+
+
 
 TARGET_LINK_LIBRARIES( sll_sparse_matrix 
   sll_working_precision 
