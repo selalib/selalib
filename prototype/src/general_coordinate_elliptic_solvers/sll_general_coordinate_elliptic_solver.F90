@@ -677,18 +677,28 @@ contains ! *******************************************************************
     print *, "------"
 
 if (sll_perper == 0) then
-   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
-   call csr_add_one_constraint( &
-    es%sll_csr_mat%opi_ia, & 
-    es%sll_csr_mat%opi_ja, &
-    es%sll_csr_mat%opr_a, &
-    es%sll_csr_mat%num_rows, &
-    es%sll_csr_mat%num_nz, &
-    es%masse, &
-    es%sll_csr_mat_with_constraint%opi_ia, &
-    es%sll_csr_mat_with_constraint%opi_ja, &
-    es%sll_csr_mat_with_constraint%opr_a)  
-   call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+   es%sll_csr_mat_with_constraint => es%sll_csr_mat
+   do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2    
+      call sll_add_to_csr_matrix( &
+           es%sll_csr_mat_with_constraint, &
+           es%masse(i), &
+           es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
+           i)
+          
+   end do
+!!$   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)
+!!$
+!!$   call csr_add_one_constraint( &
+!!$    es%sll_csr_mat%opi_ia, & 
+!!$    es%sll_csr_mat%opi_ja, &
+!!$    es%sll_csr_mat%opr_a, &
+!!$    es%sll_csr_mat%num_rows-1, &
+!!$    es%sll_csr_mat%num_nz, &
+!!$    es%masse(1:es%total_num_splines_eta1*es%total_num_splines_eta2), &
+!!$    es%sll_csr_mat_with_constraint%opi_ia, &
+!!$    es%sll_csr_mat_with_constraint%opi_ja, &
+!!$    es%sll_csr_mat_with_constraint%opr_a)  
+       call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
  else
    call sll_factorize_csr_matrix(es%sll_csr_mat)      
  end if 
@@ -1726,7 +1736,7 @@ if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
        
     end if
 
-    call solve_gen_elliptic_eq(es%sll_csr_mat,es%tmp_rho_vec,es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2))
+    call solve_gen_elliptic_eq(es%sll_csr_mat,es%tmp_rho_vec,es%tmp_phi_vec)
     es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
          es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)
 
