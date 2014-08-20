@@ -216,7 +216,7 @@ contains ! =============================================================
         
     ! Allocate and fill the quadrature points/weights information --------------
     ! in both directions ------------------------------------------------- BEGIN
-    num_quad = spline_degree+1 
+    num_quad = spline_degree+2
     solv%num_quad_pts_loc = num_quad * num_quad
     solv%num_quad_pts     = num_quad * num_quad * solv%num_cells
     SLL_ALLOCATE(solv%quad_pts1  (solv%num_quad_pts),ierr)
@@ -266,8 +266,7 @@ contains ! =============================================================
                 solv%quad_weight(global_index) = &
                      0.5_f64 * 0.5_f64 * delta1 * delta2 * &
                      temp_pts_wgh_1(2, i) * temp_pts_wgh_2(2, j)
-    
-                print *, "global = ", global_index, "x1, x2 = ", solv%quad_pts1(global_index), solv%quad_pts2(global_index)
+
              end do
           end do
        end do
@@ -384,8 +383,8 @@ contains ! =============================================================
     ! of basis splines in each direction in each quadrature point ------------------
 
     ! Number of local splines :
-    solv%num_splines_loc = (spline_degree+1)*(spline_degree+1)
-    
+    solv%num_splines_loc = (spline_degree+1)*(spline_degree+1)!num_quad*num_quad !>(degree+1)*(degree+1)
+   
     ! The third dimension contains the combination of the product between
     ! the derivatives of the basis functions
     
@@ -395,8 +394,8 @@ contains ! =============================================================
     SLL_ALLOCATE(solv%values_basis_source_val_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
-    SLL_ALLOCATE(solv%values_jacobian(solv%num_cells * solv%num_splines_loc), ierr)
-    SLL_ALLOCATE(solv%tab_index_coeff(solv%num_cells * solv%num_splines_loc),ierr)
+    SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)
+    SLL_ALLOCATE(solv%tab_index_coeff(solv%num_quad_pts),ierr)
     
     solv%values_basis_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
@@ -404,8 +403,8 @@ contains ! =============================================================
     solv%values_basis_source_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_source_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_source_val_der(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
-    solv%values_jacobian(solv%num_cells * solv%num_splines_loc) = 0.0_f64
-    solv%tab_index_coeff(solv%num_cells * solv%num_splines_loc)  = -1
+    solv%values_jacobian(1:solv%num_quad_pts) = 0.0_f64
+    solv%tab_index_coeff(1:solv%num_quad_pts)  = -1
    
     ! ------------------------------------------------ END ALLOCATION SPLINES TABLES
     ! ------------------------------------------------------------------------------
@@ -484,8 +483,6 @@ contains ! =============================================================
          solv%num_splines_loc, &
          solv%local_to_global_spline_indices, &
          solv%num_splines_loc)
-    
-    !! ----------------------------------
     
  
     SLL_DEALLOCATE(temp_pts_wgh_1,ierr)
@@ -662,17 +659,19 @@ contains ! =============================================================
              end do
           end do
 
-          valtemp = 0._f64
-!          if (global_index.le.solv%num_quad_pts_loc) then
-             do itemp = 1, solv%num_quad_pts_loc
-                valtemp = valtemp + solv%values_basis_val_val(itemp, global_index)
-             end do
-             print *, "global =",global_index, valtemp, solv%values_basis_val_val(:, global_index)
-!          end if
+!           valtemp = 0._f64
+! !          if (global_index.le.solv%num_quad_pts_loc) then
+!              do itemp = 1, solv%num_quad_pts_loc
+!                 valtemp = valtemp + solv%values_basis_val_val(itemp, global_index)
+!              end do
+!              print *, "global =",global_index, valtemp, solv%values_basis_val_val(:, global_index)
+! !          end if
 
           ! Keeping the index of coefficients
           solv%tab_index_coeff(global_index) = &
-               left_x + (left_y - 1) * (solv%mesh%num_cells1 + solv%spline_degree)
+               (num_ele - 1) * solv%num_quad_pts_loc + &
+               left_x + (left_y - 1) * (solv%spline_degree + 2)
+         
        end do
     end do
 
@@ -750,7 +749,7 @@ contains ! =============================================================
     Source_loc(:,:,:) = 0.0_f64
 
     do cell_index=1,solv%num_cells
-
+       
        call build_local_matrices( &
             solv, &
             cell_index,&
@@ -805,9 +804,32 @@ contains ! =============================================================
             solv%sll_csr_mat_with_constraint%opr_a)  
        call sll_factorize_csr_matrix(solv%sll_csr_mat_with_constraint)
     else
-       call sll_factorize_csr_matrix(solv%sll_csr_mat)      
+       call sll_factorize_csr_matrix(solv%sll_csr_mat)
     end if
     
+
+
+    print *, "new csr"
+
+    print *, ""
+    print *, ""
+!    print *, size(solv%masse,1)
+!    print *, (solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1)
+!    print *, solv%num_cells
+!    print *, solv%local_to_global_spline_indices_source_bis
+!    print *, solv%num_splines_loc
+    do cell_index = 1, solv%num_cells
+       print *, solv%local_to_global_spline_indices_source(:,cell_index)
+    end do
+!     do cell_index = 1, solv%num_cells
+!         print *, solv%local_to_global_spline_indices_source_bis(:,cell_index)
+!     end do
+
+!    print *, solv%num_splines_loc
+    print *, ""
+    print *, ""
+
+
     solv%sll_csr_mat_source => new_csr_matrix( &
          size(solv%masse,1), &
          (solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1),& !num_pts_tot dans hex_mesh
@@ -816,7 +838,7 @@ contains ! =============================================================
          solv%num_splines_loc, &
          solv%local_to_global_spline_indices_source, &
          solv%num_splines_loc )
-
+    
     
     call compute_Source_matrice(solv,Source_loc)
     
@@ -929,6 +951,8 @@ contains ! =============================================================
           source_at_quad = source_at_quad - int_source/int_jac
        end if
           
+
+       print *, "before build_local_matrices_source"
        do cell_index=1,solv%num_cells ! Loop over elements
           call build_local_matrices_source( &
                solv, &
@@ -960,6 +984,7 @@ contains ! =============================================================
     end if
           
     do cell_index = 1, solv%num_cells
+   
        call build_local_matrices_source( &
             solv, &
             cell_index, &
@@ -970,6 +995,7 @@ contains ! =============================================================
             solv, &
             cell_index, &
             M_source_loc)
+   
     end do
     end select
     !time = sll_time_elapsed_since(t0)
@@ -1213,6 +1239,7 @@ contains ! =============================================================
           end do
        end do
     end do
+
   end subroutine build_local_matrices
   
   
@@ -1263,6 +1290,7 @@ contains ! =============================================================
   
 
 
+
   subroutine local_to_global_matrices( &
        solv,&
        cell_index, &
@@ -1307,42 +1335,42 @@ contains ! =============================================================
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
+
     
     bc_left   = solv%bc_left
     bc_right  = solv%bc_right
     bc_bottom = solv%bc_bottom
     bc_top    = solv%bc_top
     
-    cell_j = mod(cell_index, solv%mesh%num_cells1)
+    cell_j = (cell_index-1)/solv%mesh%num_cells1 + 1
     cell_i = cell_index - (cell_j-1)*solv%mesh%num_cells1
 
     do mm = 0,solv%spline_degree
        index3 = cell_j + mm
        
-!        if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
+       if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then 
+
+          if ( index3 > solv%mesh%num_cells2) then
+             index3 = index3 - solv%mesh%num_cells2
+          end if
           
-!           if ( index3 > solv%total_num_splines_eta2) then
-!              index3 = index3 - solv%total_num_splines_eta2
-!           end if
-          
-!        end if
+       end if
        
        do i = 0,solv%spline_degree
           
           index1 = cell_i + i
-!           if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
-!              if ( index1 > solv%total_num_splines_eta1) then
+          if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
+             if ( index1 > solv%mesh%num_cells1) then
                 
-!                 index1 = index1 - solv%total_num_splines_eta1
+                index1 = index1 - solv%mesh%num_cells1
                 
-!              end if
-         
-!              nbsp = solv%total_num_splines_eta1
+             end if
+             nbsp = solv%mesh%num_cells1
              
-!           else if ( (bc_left  == SLL_DIRICHLET).and.&
-!                (bc_right == SLL_DIRICHLET) ) then
+          else if ( (bc_left  == SLL_DIRICHLET).and.&
+               (bc_right == SLL_DIRICHLET) ) then
              nbsp = solv%mesh%num_cells1 + solv%spline_degree
-!          end if
+          end if
           x          =  index1 + (index3-1)*nbsp
           b          =  mm * ( solv%spline_degree + 1 ) + i + 1
           li_A       =  solv%local_to_global_spline_indices(b, cell_index)
@@ -1350,33 +1378,40 @@ contains ! =============================================================
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
           
+          
+          ! index = cell_i + i + &
+          !     ( cell_j + mm - 1) * ( solv%mesh%num_cells1 + solv%spline_degree)
+          index = solv%tab_index_coeff(cell_i + (cell_j -1)*solv%mesh%num_cells2)
+          solv%local_to_global_spline_indices_source(b,cell_index)= index
+
+
           do nn = 0,solv%spline_degree
              
              index4 = cell_j + nn
              
- !             if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
-!                 if ( index4 > solv%total_num_splines_eta2) then
+             if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
+                 if ( index4 > solv%mesh%num_cells2) then
                    
-!                    index4 = index4 - solv%total_num_splines_eta2
-!                 end if
-!              end if
+                    index4 = index4 - solv%mesh%num_cells2
+                 end if
+              end if
              
              do j = 0,solv%spline_degree
                 
                 index2 = cell_i + j
- !                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
+                if((bc_left==SLL_PERIODIC).and.(bc_right==SLL_PERIODIC))then
                    
-!                    if ( index2 > solv%total_num_splines_eta1) then
+                   if ( index2 > solv%mesh%num_cells1) then
                       
-!                       index2 = index2 - solv%total_num_splines_eta1
-!                    end if
-!                    nbsp1 = solv%total_num_splines_eta1
+                       index2 = index2 - solv%mesh%num_cells1
+                    end if
+                    nbsp1 = solv%mesh%num_cells1
                    
-!                 else if ( (bc_left  == SLL_DIRICHLET) .and.&
-!                      (bc_right == SLL_DIRICHLET) ) then
+                 else if ( (bc_left  == SLL_DIRICHLET) .and.&
+                      (bc_right == SLL_DIRICHLET) ) then
                    
                    nbsp1 = solv%mesh%num_cells1 + solv%spline_degree
- !               end if
+               end if
                 
                 y         = index2 + (index4-1)*nbsp1
                 bprime    =  nn * ( solv%spline_degree + 1 ) + j + 1
@@ -1390,11 +1425,7 @@ contains ! =============================================================
                      M_b_vect_loc(b,bprime) - &
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
-                ! index_coef1 = solv%tab_index_coeff1(cell_i)- solv%spline_degree + i
-!                 index_coef2 = solv%tab_index_coeff2(cell_j)- solv%spline_degree+ mm
-                index = solv%tab_index_coeff(cell_index)!index_coef1 + (index_coef2-1)*(solv%num_cells1+1)
-                solv%local_to_global_spline_indices_source(b,cell_index)= index
-                
+
                 solv%local_to_global_spline_indices_source_bis(bprime,cell_index)= y
                 
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then

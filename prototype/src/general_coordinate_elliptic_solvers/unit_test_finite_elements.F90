@@ -17,10 +17,10 @@ program test_finite_elements_solver
 
   implicit none
 
-#define SPLINE_DEG1 1
-#define SPLINE_DEG2 1
-#define NUM_CELLS1  2
-#define NUM_CELLS2  2
+#define SPLINE_DEG1 2
+#define SPLINE_DEG2 2
+#define NUM_CELLS1  3
+#define NUM_CELLS2  3
 #define ETA1MIN  0.0_f64
 #define ETA1MAX  1.0_f64
 #define ETA2MIN  0.0_f64
@@ -290,6 +290,8 @@ program test_finite_elements_solver
        c_field)!, &
       ! rho)
 
+  print *, "Assembly matrices done"
+
   ! solve the field
   call solve_general_coordinates_elliptic_eq(&
        es,&
@@ -351,6 +353,7 @@ program test_finite_elements_solver
   SLL_DEALLOCATE_ARRAY(calculated,ierr)
   SLL_DEALLOCATE_ARRAY(difference,ierr)
   SLL_DEALLOCATE_ARRAY(reference,ierr)
+
 
 end program test_finite_elements_solver
 
@@ -446,15 +449,6 @@ real(8) function source_term_perdir(eta1,eta2,params) ! in the path
       ! - 12.0*eta2**2 + 2.0)*cos(2*sll_pi*eta1)*sin(2*sll_pi*eta1)
   
 end function source_term_perdir
-
-
-!----------------------------------------------------------
-!  Solution for a colella change of coordinates 
-!   and dirchlet-dirichlet conditions
-!   the matrix A is equal to identity 
-!   the scalar c is equal to zero 
-!-------------------------------------------------------------
-
 
 
 real(8) function source_term_chgt_dirdir(eta1,eta2) ! in the path
