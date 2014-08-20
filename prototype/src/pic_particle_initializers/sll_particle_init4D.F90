@@ -70,15 +70,18 @@ contains
     ymin = m2d%eta2_min
     ncx  = m2d%num_cells1
 
-    print*, 'the rank is ', rank
-
-    write(rank_name,'(i2)') rank
+    if(present(rank)) then
+       write(rank_name,'(i8)') rank
+    else
+       rank_name = '00000000'
+    end if
     nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
     open(90, file=nomfile)
 !    open(90,file='initialparticles.dat')
 
     write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
     j=1
+    !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     do while ( j <= num_particles )
        call random_number(x)
        x = (m2d%eta1_max - xmin)*x + xmin
@@ -99,8 +102,13 @@ contains
     end do
 !    print*, 'nb d essais', j-1
     close(90)
-    
+
   end subroutine sll_initial_particles_4d
+
+!!$  subroutine sll_initial_one_particle
+!!$
+!!$  end subroutine sll_initial_one_particle
+
   
 !!$  subroutine sll_initialize_some4Dfunction( &
 !!$              thermal_speed, alpha, k, &
