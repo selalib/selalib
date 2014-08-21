@@ -21,6 +21,7 @@ module finite_elements_solver_module
   use gauss_lobatto_integration
   use sll_timer 
   use sll_sparse_matrix_module
+  !use sll_sparse_matrix
   use sll_logical_meshes
 
   implicit none
@@ -668,9 +669,9 @@ contains ! =============================================================
 ! !          end if
 
           ! Keeping the index of coefficients
+          print*, 'quad glob', global_index
           solv%tab_index_coeff(global_index) = &
-               (num_ele - 1) * solv%num_quad_pts_loc + &
-               left_x + (left_y - 1) * (solv%spline_degree + 2)
+               left_x + (left_y - 1) * (solv%spline_degree +solv%mesh%num_cells1)
          
        end do
     end do
@@ -687,7 +688,6 @@ contains ! =============================================================
        b1_field_vect,&
        b2_field_vect,&
        c_field)
-
     type(finite_elements_solver),intent(inout) :: solv
     class(sll_scalar_field_2d_base), pointer   :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer   :: a12_field_mat
@@ -715,6 +715,8 @@ contains ! =============================================================
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
     sll_int32 :: sll_perper
+    sll_int32 :: i
+    
     character(len=*),parameter :: as_file1='mat'
     
     !call sll_set_time_mark(t0)
@@ -791,17 +793,26 @@ contains ! =============================================================
     end do
     
     if (sll_perper == 0) then
-       solv%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(solv%sll_csr_mat)  
-       call csr_add_one_constraint( &
-            solv%sll_csr_mat%opi_ia, & 
-            solv%sll_csr_mat%opi_ja, &
-            solv%sll_csr_mat%opr_a, &
-            solv%sll_csr_mat%num_rows, &
-            solv%sll_csr_mat%num_nz, &
-            solv%masse, &
-            solv%sll_csr_mat_with_constraint%opi_ia, &
-            solv%sll_csr_mat_with_constraint%opi_ja, &
-            solv%sll_csr_mat_with_constraint%opr_a)  
+       solv%sll_csr_mat_with_constraint => solv%sll_csr_mat
+       do i = 1, solv%num_splines_tot    
+          call sll_add_to_csr_matrix( &
+               solv%sll_csr_mat_with_constraint, &
+               solv%masse(i), &
+               solv%num_splines_tot+1, &
+               i)
+          
+       end do
+!!$       solv%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(solv%sll_csr_mat)  
+!!$       call csr_add_one_constraint( &
+!!$            solv%sll_csr_mat%opi_ia, & 
+!!$            solv%sll_csr_mat%opi_ja, &
+!!$            solv%sll_csr_mat%opr_a, &
+!!$            solv%sll_csr_mat%num_rows, &
+!!$            solv%sll_csr_mat%num_nz, &
+!!$            solv%masse, &
+!!$            solv%sll_csr_mat_with_constraint%opi_ia, &
+!!$            solv%sll_csr_mat_with_constraint%opi_ja, &
+!!$            solv%sll_csr_mat_with_constraint%opr_a)  
        call sll_factorize_csr_matrix(solv%sll_csr_mat_with_constraint)
     else
        call sll_factorize_csr_matrix(solv%sll_csr_mat)
@@ -1381,7 +1392,14 @@ contains ! =============================================================
           
           ! index = cell_i + i + &
           !     ( cell_j + mm - 1) * ( solv%mesh%num_cells1 + solv%spline_degree)
-          index = solv%tab_index_coeff(cell_i + (cell_j -1)*solv%mesh%num_cells2)
+          
+          index = solv%tab_index_coeff(cell_i + (cell_j -1)*solv%mesh%num_cells1)
+          index2 = (index-1) /(solv%spline_degree +solv%mesh%num_cells1) + 1
+          
+          index1 = index - ( index2-1)*(solv%spline_degree +solv%mesh%num_cells1)
+          print*, 'index', index
+          print*, 'coef1',index1
+          print*, 'coef2',index2
           solv%local_to_global_spline_indices_source(b,cell_index)= index
 
 
