@@ -524,7 +524,7 @@ contains ! =============================================================
     sll_int32 :: mflag_x, mflag_y ! error flags
     ! TODO : erase
     sll_int32  :: itemp
-    sll_real64 :: valtemp
+    sll_real64 :: valtemp, valtemp2
 
     ! Initialization
     work1(:,:)                 = 0.0_f64
@@ -537,9 +537,9 @@ contains ! =============================================================
 
     do num_ele = 1,solv%num_cells
        do local_index = 1, solv%num_quad_pts_loc
-          
-          cell_j = mod(num_ele, solv%mesh%num_cells1)
-          cell_i = num_ele - (cell_j-1)*solv%mesh%num_cells1
+
+!           cell_j = (num_ele-1)/solv%mesh%num_cells1 + 1
+!           cell_i = num_ele - (cell_j-1)*solv%mesh%num_cells1
 
           ! TODO @LM add function local to global here !
           global_index = (num_ele - 1) * solv%num_quad_pts_loc + local_index
@@ -629,8 +629,6 @@ contains ! =============================================================
                2)
           
 
-
-
           ! We loop over non zeros basis (on quadrature point)
           do basis_index1 = 1, solv%spline_degree + 1
              do basis_index2 = 1, solv%spline_degree + 1
@@ -660,22 +658,12 @@ contains ! =============================================================
              end do
           end do
 
-!           valtemp = 0._f64
-! !          if (global_index.le.solv%num_quad_pts_loc) then
-!              do itemp = 1, solv%num_quad_pts_loc
-!                 valtemp = valtemp + solv%values_basis_val_val(itemp, global_index)
-!              end do
-!              print *, "global =",global_index, valtemp, solv%values_basis_val_val(:, global_index)
-! !          end if
 
-          ! Keeping the index of coefficients
-          print*, 'quad glob', global_index
           solv%tab_index_coeff(global_index) = &
-               left_x + (left_y - 1) * (solv%spline_degree +solv%mesh%num_cells1)
-         
+               left_x_source + (left_y_source - 1) * &
+               (solv%spline_degree +solv%mesh%num_cells1 + 1)
        end do
     end do
-
   end subroutine initialize_basis_functions
 
 
@@ -802,45 +790,11 @@ contains ! =============================================================
                i)
           
        end do
-!!$       solv%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(solv%sll_csr_mat)  
-!!$       call csr_add_one_constraint( &
-!!$            solv%sll_csr_mat%opi_ia, & 
-!!$            solv%sll_csr_mat%opi_ja, &
-!!$            solv%sll_csr_mat%opr_a, &
-!!$            solv%sll_csr_mat%num_rows, &
-!!$            solv%sll_csr_mat%num_nz, &
-!!$            solv%masse, &
-!!$            solv%sll_csr_mat_with_constraint%opi_ia, &
-!!$            solv%sll_csr_mat_with_constraint%opi_ja, &
-!!$            solv%sll_csr_mat_with_constraint%opr_a)  
        call sll_factorize_csr_matrix(solv%sll_csr_mat_with_constraint)
     else
        call sll_factorize_csr_matrix(solv%sll_csr_mat)
     end if
     
-
-
-    print *, "new csr"
-
-    print *, ""
-    print *, ""
-!    print *, size(solv%masse,1)
-!    print *, (solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1)
-!    print *, solv%num_cells
-!    print *, solv%local_to_global_spline_indices_source_bis
-!    print *, solv%num_splines_loc
-    do cell_index = 1, solv%num_cells
-       print *, solv%local_to_global_spline_indices_source(:,cell_index)
-    end do
-!     do cell_index = 1, solv%num_cells
-!         print *, solv%local_to_global_spline_indices_source_bis(:,cell_index)
-!     end do
-
-!    print *, solv%num_splines_loc
-    print *, ""
-    print *, ""
-
-
     solv%sll_csr_mat_source => new_csr_matrix( &
          size(solv%masse,1), &
          (solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1),& !num_pts_tot dans hex_mesh
@@ -850,6 +804,11 @@ contains ! =============================================================
          solv%local_to_global_spline_indices_source, &
          solv%num_splines_loc )
     
+!     print *, " local_to_global_spline_indices_source"
+!     do i = 1, solv%num_cells
+!        print *, solv%local_to_global_spline_indices_source(:, i)
+!     end do
+
     
     call compute_Source_matrice(solv,Source_loc)
     
@@ -963,7 +922,6 @@ contains ! =============================================================
        end if
           
 
-       print *, "before build_local_matrices_source"
        do cell_index=1,solv%num_cells ! Loop over elements
           call build_local_matrices_source( &
                solv, &
@@ -1346,6 +1304,8 @@ contains ! =============================================================
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
+    sll_int32 :: left_xy, left_x, left_y
+    sll_int32 :: index_coef1, index_coef2
 
     
     bc_left   = solv%bc_left
@@ -1355,6 +1315,12 @@ contains ! =============================================================
     
     cell_j = (cell_index-1)/solv%mesh%num_cells1 + 1
     cell_i = cell_index - (cell_j-1)*solv%mesh%num_cells1
+
+    left_xy = solv%tab_index_coeff((cell_index - 1) * solv%num_quad_pts_loc + 1)
+    left_y  = left_xy / (solv%spline_degree + solv%mesh%num_cells1 + 1) + 1
+    left_x  = left_xy - &
+         (left_y - 1) * (solv%spline_degree + solv%mesh%num_cells1 + 1)
+
 
     do mm = 0,solv%spline_degree
        index3 = cell_j + mm
@@ -1390,16 +1356,10 @@ contains ! =============================================================
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
           
           
-          ! index = cell_i + i + &
-          !     ( cell_j + mm - 1) * ( solv%mesh%num_cells1 + solv%spline_degree)
-          
-          index = solv%tab_index_coeff(cell_i + (cell_j -1)*solv%mesh%num_cells1)
-          index2 = (index-1) /(solv%spline_degree +solv%mesh%num_cells1) + 1
-          
-          index1 = index - ( index2-1)*(solv%spline_degree +solv%mesh%num_cells1)
-          print*, 'index', index
-          print*, 'coef1',index1
-          print*, 'coef2',index2
+          index_coef1  = left_x - solv%spline_degree + i 
+          index_coef2  = left_y - solv%spline_degree + mm 
+          index = index_coef1 + (index_coef2-1)*(solv%mesh%num_cells1 + 1)
+
           solv%local_to_global_spline_indices_source(b,cell_index)= index
 
 
@@ -1490,8 +1450,8 @@ contains ! =============================================================
      bc_top    = solv%bc_top
      
      
-    cell_j = mod(cell_index, solv%mesh%num_cells1)
-    cell_i = cell_index - (cell_j-1)*solv%mesh%num_cells1
+     cell_j = (cell_index-1)/solv%mesh%num_cells1 + 1
+     cell_i = cell_index - (cell_j-1)*solv%mesh%num_cells1
      
     do mm = 0,solv%spline_degree
        index3 = cell_j + mm

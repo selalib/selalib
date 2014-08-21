@@ -671,58 +671,24 @@ contains ! *******************************************************************
           
        end do
     end do
-    print *, "------"
-    print *, "coeffs1 : ",es%tab_index_coeff1 
-    print *, "coeffs2 : ",es%tab_index_coeff2
-    print *, "------"
 
-if (sll_perper == 0) then
-   es%sll_csr_mat_with_constraint => es%sll_csr_mat
-   do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2    
-      call sll_add_to_csr_matrix( &
-           es%sll_csr_mat_with_constraint, &
-           es%masse(i), &
-           es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
-           i)
+    if (sll_perper == 0) then
+       es%sll_csr_mat_with_constraint => es%sll_csr_mat
+       do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2    
+          call sll_add_to_csr_matrix( &
+               es%sll_csr_mat_with_constraint, &
+               es%masse(i), &
+               es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
+               i)
           
-   end do
-!!$   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)
-!!$
-!!$   call csr_add_one_constraint( &
-!!$    es%sll_csr_mat%opi_ia, & 
-!!$    es%sll_csr_mat%opi_ja, &
-!!$    es%sll_csr_mat%opr_a, &
-!!$    es%sll_csr_mat%num_rows-1, &
-!!$    es%sll_csr_mat%num_nz, &
-!!$    es%masse(1:es%total_num_splines_eta1*es%total_num_splines_eta2), &
-!!$    es%sll_csr_mat_with_constraint%opi_ia, &
-!!$    es%sll_csr_mat_with_constraint%opi_ja, &
-!!$    es%sll_csr_mat_with_constraint%opr_a)  
+       end do
        call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
- else
-   call sll_factorize_csr_matrix(es%sll_csr_mat)      
- end if 
+    else
+       call sll_factorize_csr_matrix(es%sll_csr_mat)      
+    end if
 
 
 
-    print *, ""
-    print *, ""
-!    print *, size(es%masse,1)
-!    print *, (es%num_cells1+1)*(es%num_cells2+1)
-!    print *, es%num_cells1*es%num_cells2
-!    print *, es%local_to_global_spline_indices_source_bis
-!    print *, es%total_num_splines_loc
-    do i = 1, es%num_cells1*es%num_cells2
-        print *, es%local_to_global_spline_indices_source(:,i)
-    end do
-!    do i = 1, es%num_cells1*es%num_cells2
-!        print *, es%local_to_global_spline_indices_source_bis(:,i)
-!    end do
-!    print *, es%total_num_splines_loc
-!!    print *, "nz csr mat source = ", es%sll_csr_mat_source%num_nz
-    print *, ""
-    print *, ""
- 
     es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
          (es%num_cells1+1)*(es%num_cells2+1),&
@@ -732,7 +698,10 @@ if (sll_perper == 0) then
          es%local_to_global_spline_indices_source, &
          es%total_num_splines_loc )
 
-
+!     print *, " local_to_global_spline_indices_source"
+!     do i = 1, es%num_cells1*es%num_cells2
+!        print *, es%local_to_global_spline_indices_source(:, i)
+!     end do
     
     call compute_Source_matrice(es,Source_loc)
     
@@ -1112,7 +1081,6 @@ if (sll_perper == 0) then
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
 
-    
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
@@ -1187,7 +1155,8 @@ if (sll_perper == 0) then
 
           call interv ( obj%knots1_rho, obj%num_cells1 + obj%spline_degree1+ 2, gpt1, &
                left_x, mflag_x )
-     
+
+
           call bsplvd(&
                obj%knots1_rho,&
                obj%spline_degree1+1,&
@@ -1199,9 +1168,11 @@ if (sll_perper == 0) then
 
           obj%values_splines_eta1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1(:,1)
           obj%values_splines_gauss1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
+          
           obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
 
-          print*,'point quad glob', cell_i + obj%num_cells1*(i-1)+ (obj%num_cells1 *num_pts_g1)*(cell_j + obj%num_cells2*(j-1)-1 )
+!            print*,'point quad glob', i + (j-1)*num_pts_g1 + &
+!                 (cell_index - 1)*num_pts_g1*num_pts_g2
 
           val_c        = c_field%value_at_point(gpt1,gpt2)
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
@@ -1347,7 +1318,7 @@ if (sll_perper == 0) then
           end do
        end do
     end do
-    
+
   end subroutine build_local_matrices
   
   
@@ -1508,8 +1479,7 @@ if (sll_perper == 0) then
     bc_bottom = es%bc_bottom
     bc_top    = es%bc_top
     
-    
-    
+
     do mm = 0,es%spline_degree2
        index3 = cell_j + mm
        
@@ -1545,9 +1515,7 @@ if (sll_perper == 0) then
 
 
           index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
-          print*, ' test coeff1',  es%tab_index_coeff1(cell_i) 
           index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2+ mm
-          print*, ' test coeff2',  es%tab_index_coeff2(cell_j)
           index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
 
           es%local_to_global_spline_indices_source(b,cell_index)= index
