@@ -9,8 +9,8 @@ ADD_LIBRARY( finite_elements_solver STATIC
      finite_elements_solver.F90
      sll_knots.F90)
 
-TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
-		       finite_elements_solver 
+TARGET_LINK_LIBRARIES( finite_elements_solver 
+		       sll_general_coordinate_elliptic_solver
 		       sll_logical_meshes
                        sll_sparse_matrix 
                        sll_scalar_field_2d_alternative 
@@ -42,4 +42,4 @@ TARGET_LINK_LIBRARIES( second_test_general_coordinates_elliptic_solver
 ADD_EXECUTABLE(test_finite_elements_solver unit_test_finite_elements.F90)
 
 TARGET_LINK_LIBRARIES( test_finite_elements_solver
-                       sll_general_coordinate_elliptic_solvers)
+                       finite_elements_solver)
