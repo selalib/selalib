@@ -3,14 +3,20 @@ module finite_elements_solver_module
 #include "sll_memory.h"
 #include "sll_assert.h"
 
-  ! ******************************
-  ! ON GOING WORK  !!!!!!!!!!!!!!!!
-  ! FOR THE MOMENT I WILL BE COMENTING EVERYTHING I THINK
-  ! IS UNNECESSARY OR OBSOLETE. ONCE THE DOCUMENT IS STABLE
-  ! ALL THIS COMMENTS SHOULD BE ELEMINATED
-  ! ******************************
+  !------------------------------------------------
+  ! This file originated from Aurore Back's file :
+  !     sll_general_coordinate_elliptic_solver.F90
+  ! which was modified to be able to take any type
+  ! of 2D domain (and not only bi-directional)
+  ! doing so we lost a couple of properties :
+  !      - only one type of quadrature possible
+  !      - for bidirectional : same number of cells
+  !                            in each direction
+  !      - probably only workign on dirichlet BC
+  ! 
+  ! Contact : Laura S. Mendoza (mela@ipp.mpg.de)
+  !------------------------------------------------
 
-  ! TODO @LM : see if all of these libraries are actually being used in stabilized version
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
@@ -21,7 +27,6 @@ module finite_elements_solver_module
   use gauss_lobatto_integration
   use sll_timer 
   use sll_sparse_matrix_module
-  !use sll_sparse_matrix
   use sll_logical_meshes
 
   implicit none
@@ -68,7 +73,6 @@ module finite_elements_solver_module
      ! the changes resulting from the boundary conditions.
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
-     ! TODO : what is this one for ? 
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source_bis
      ! The following tables contain the values of all non zero splines 
      ! in all quadrature points for the test function and source
@@ -86,7 +90,7 @@ module finite_elements_solver_module
 
      ! Table with the values of the jacobian of the transformation
      ! in all quadrature points
-     sll_real64, dimension(:), pointer :: values_jacobian 
+     sll_real64, dimension(:), pointer :: values_jacobian
 
      ! Table with index of point to the left of the support
      sll_int32 , dimension(:)  , pointer :: tab_index_coeff
@@ -124,7 +128,6 @@ module finite_elements_solver_module
 contains ! =============================================================
 
 
-
   function new_finite_elements_solver( &
        mesh, &
        spline_degree, &
@@ -158,7 +161,6 @@ contains ! =============================================================
   end function new_finite_elements_solver
 
 
-
   subroutine initialize_finite_elements_solver( &
        solv, &
        mesh, &
@@ -186,7 +188,7 @@ contains ! =============================================================
     sll_int32 :: i, j
     sll_int32 :: nc1, nc2
     sll_int32 :: num_ele
-    sll_int32 :: num_quad
+    sll_int32 :: num_quad_loc_1d
     sll_int32 :: global_index
     sll_real64:: eta1
     sll_real64:: eta2
@@ -195,8 +197,8 @@ contains ! =============================================================
     ! Flag to notify is all boundary conditions are periodic
     sll_int32 :: sll_perper = 0 
     ! Temporary variables just as vehicule to store quadrature points/weights 
-    sll_real64, pointer, dimension(:,:) :: temp_pts_wgh_1
-    sll_real64, pointer, dimension(:,:) :: temp_pts_wgh_2
+    sll_real64, pointer, dimension(:,:) :: temp_pts_wgh
+
 
     ! Logical mesh : contains information as : eta1min, eta1max, delta1, ...
     solv%mesh => mesh
@@ -217,27 +219,23 @@ contains ! =============================================================
         
     ! Allocate and fill the quadrature points/weights information --------------
     ! in both directions ------------------------------------------------- BEGIN
-    num_quad = spline_degree+2
-    solv%num_quad_pts_loc = num_quad * num_quad
-    solv%num_quad_pts     = num_quad * num_quad * solv%num_cells
+    num_quad_loc_1d = spline_degree+2
+    solv%num_quad_pts_loc = num_quad_loc_1d * num_quad_loc_1d
+    solv%num_quad_pts     = num_quad_loc_1d * num_quad_loc_1d * solv%num_cells
     SLL_ALLOCATE(solv%quad_pts1  (solv%num_quad_pts),ierr)
     SLL_ALLOCATE(solv%quad_pts2  (solv%num_quad_pts),ierr)
     SLL_ALLOCATE(solv%quad_weight(solv%num_quad_pts),ierr)
-    SLL_ALLOCATE(temp_pts_wgh_1(2,solv%num_quad_pts),ierr)
-    SLL_ALLOCATE(temp_pts_wgh_2(2,solv%num_quad_pts),ierr)
+    SLL_ALLOCATE(temp_pts_wgh(2,solv%num_quad_pts),ierr)
     ! Initialization :
     solv%quad_pts1(:)   = 0.0_f64
     solv%quad_pts2(:)   = 0.0_f64
     solv%quad_weight(:) = 0.0_f64
    
-    ! TODO @LM avoir un seul num_quad et temp_pts_wgh
     select case(quadrature_type)
     case (ES_GAUSS_LEGENDRE)
-       temp_pts_wgh_1(:,:) = gauss_legendre_points_and_weights(num_quad)
-       temp_pts_wgh_2(:,:) = gauss_legendre_points_and_weights(num_quad) 
+       temp_pts_wgh(:,:) = gauss_legendre_points_and_weights(num_quad_loc_1d)
    case (ES_GAUSS_LOBATTO)
-       temp_pts_wgh_1(:,:) = gauss_lobatto_points_and_weights(num_quad)
-       temp_pts_wgh_2(:,:) = gauss_lobatto_points_and_weights(num_quad)
+       temp_pts_wgh(:,:) = gauss_lobatto_points_and_weights(num_quad_loc_1d)
     case DEFAULT
        print *, 'new_finite_elements_solver(): have not type of gauss points in the first direction'
     end select
@@ -251,29 +249,27 @@ contains ! =============================================================
           eta1 = mesh%eta1_min + delta1 * (nc1-1) ! eta1 at lower-left cell corner
           eta2 = mesh%eta2_min + delta2 * (nc2-1) ! eta2 at lower-left cell corner
           ! Loop over quadrature points of every cells
-          do j=1, num_quad
-             do i=1, num_quad
+          do j=1, num_quad_loc_1d
+             do i=1, num_quad_loc_1d
 
                 ! We compute the global index for quadrature point at cell num_ele
-                global_index = i+(j-1)*num_quad + (num_ele-1)*num_quad*num_quad
+                global_index = global_index_quad(solv, num_ele, i+(j-1)*num_quad_loc_1d)
 
                 ! Rescaling of quadrature point to [eta1,eta1+delta1]x[eta2,eta2+delta2]
                 solv%quad_pts1(global_index)    = &
-                     eta1 + 0.5_f64 * delta1 * (1._f64 + temp_pts_wgh_1(1, i))
+                     eta1 + 0.5_f64 * delta1 * (1._f64 + temp_pts_wgh(1, i))
                 solv%quad_pts2(global_index)    = &
-                     eta2 + 0.5_f64 * delta2 * (1._f64 + temp_pts_wgh_1(1, j))
+                     eta2 + 0.5_f64 * delta2 * (1._f64 + temp_pts_wgh(1, j))
 
                 ! We get the quadrature weight and scale it
                 solv%quad_weight(global_index) = &
                      0.5_f64 * 0.5_f64 * delta1 * delta2 * &
-                     temp_pts_wgh_1(2, i) * temp_pts_wgh_2(2, j)
+                     temp_pts_wgh(2, i) * temp_pts_wgh(2, j)
 
              end do
           end do
        end do
     end do
-
-    
 
     !  ---------------------------------------------- END QUADRATURE POINTS INIT
     ! --------------------------------------------------------------------------
@@ -334,48 +330,26 @@ contains ! =============================================================
          bc_top, &
          solv%knots2 )
 
-    ! Knots for source term : 
+    ! Now the same but for the source term (unknown boundary conditions) :
     SLL_ALLOCATE(solv%knots1_source(mesh%num_cells1 + spline_degree + 2),ierr)
     SLL_ALLOCATE(solv%knots2_source(mesh%num_cells2 + spline_degree + 2),ierr)
 
+    call initialize_knots_source( &
+         spline_degree, &
+         mesh%num_cells1, &
+         mesh%eta1_min, &
+         mesh%eta1_max, &
+         solv%knots1_source )
+
+    call initialize_knots_source( &
+         spline_degree, &
+         mesh%num_cells2, &
+         mesh%eta2_min, &
+         mesh%eta2_max, &
+         solv%knots2_source )
+
     ! ----------------------- END ALLOCATION AND INITIALIZATION OF SPLINES KNOTS
     ! --------------------------------------------------------------------------
-
-
-    !! TODO @LM : add this bit in sll_knots, create a initialize_knots_source
-    
-    solv%knots1_source(1:spline_degree+1) = mesh%eta1_min
-    solv%knots1_source(mesh%num_cells1+2:mesh%num_cells1+1+spline_degree+1) = &
-         mesh%eta1_max
-    
-    if (mod(spline_degree + 1, 2) == 0) then
-       do i = spline_degree +2, mesh%num_cells1 + 1
-          solv%knots1_source(i) = solv%mesh%eta1_min +  &
-               (i - (spline_degree +1)/2 - 1) * solv%mesh%delta_eta1  
-       end do
-    else
-       do i = spline_degree + 2, mesh%num_cells1 + 1
-          solv%knots1_source ( i ) = &
-               0.5_f64*(solv%mesh%eta1_min + (i - (spline_degree)/2 - 1) * solv%mesh%delta_eta1 + &
-               solv%mesh%eta1_min +  ( i -1 - (spline_degree)/2 -1) * solv%mesh%delta_eta1 )
-       end do
-    end if
-    
-    solv%knots2_source(1:spline_degree+1) = solv%mesh%eta2_min
-    solv%knots2_source(mesh%num_cells2+2:mesh%num_cells2+1+spline_degree+1) = solv%mesh%eta2_max
-    
-    if ( mod(spline_degree +1,2) == 0 ) then
-       do i = spline_degree +1 + 1, mesh%num_cells2 + 1
-          solv%knots2_source( i ) = solv%mesh%eta2_min + &
-               ( i - (spline_degree +1)/2-1 )*solv%mesh%delta_eta2 
-       end do
-    else     
-       do i = spline_degree +1 + 1, mesh%num_cells2 + 1
-          solv%knots2_source ( i ) = &
-               0.5*( solv%mesh%eta2_min + ( i - (spline_degree)/2 -1)*solv%mesh%delta_eta2 + &
-               solv%mesh%eta2_min +  ( i -1 - (spline_degree)/2 -1)*solv%mesh%delta_eta2 )  
-       end do
-    end if
 
 
     ! ------------------------------------------------------------------------------
@@ -384,18 +358,17 @@ contains ! =============================================================
     ! of basis splines in each direction in each quadrature point ------------------
 
     ! Number of local splines :
-    solv%num_splines_loc = (spline_degree+1)*(spline_degree+1)!num_quad*num_quad !>(degree+1)*(degree+1)
+    solv%num_splines_loc = (spline_degree+1)*(spline_degree+1)
    
     ! The third dimension contains the combination of the product between
     ! the derivatives of the basis functions
-    
     SLL_ALLOCATE(solv%values_basis_val_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_val_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
-    SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)
+    SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)    
     SLL_ALLOCATE(solv%tab_index_coeff(solv%num_quad_pts),ierr)
     
     solv%values_basis_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
@@ -435,10 +408,8 @@ contains ! =============================================================
     SLL_ALLOCATE(solv%local_to_global_spline_indices_source_bis(solv%num_splines_loc, solv%num_cells),ierr)
     solv%local_to_global_spline_indices_source_bis = 0
 
-    print*, "calling initialize basis function"
-    ! TODO @LM : spline initialization here
+
     call initialize_basis_functions(solv)
-    print*, "dono initalize basis function"
 
     ! --------------------- END ALLOCATION AND INITIALIZATION OF BASIS FUNCTIONS
     ! --------------------------------------------------------------------------
@@ -485,13 +456,21 @@ contains ! =============================================================
          solv%local_to_global_spline_indices, &
          solv%num_splines_loc)
     
- 
-    SLL_DEALLOCATE(temp_pts_wgh_1,ierr)
-    SLL_DEALLOCATE(temp_pts_wgh_2,ierr)
+    SLL_DEALLOCATE(temp_pts_wgh,ierr)
 
   end subroutine initialize_finite_elements_solver
   
+  function global_index_quad(solv, num_ele, local_index) result(global)
+    ! Return the global index of the quadrature point 
+    ! at local_index at the element num_ele
+    
+    type(finite_elements_solver), intent(in) :: solv
+    sll_int32, intent(in) :: num_ele
+    sll_int32, intent(in) :: local_index
+    sll_int32             :: global
 
+    global = (num_ele - 1) * solv%num_quad_pts_loc + local_index
+  end function global_index_quad
 
   subroutine initialize_basis_functions(solv)
 
@@ -512,19 +491,13 @@ contains ! =============================================================
     sll_int32  :: basis_index1
     sll_int32  :: basis_index2
     sll_int32  :: non_zero_index
-    sll_int32  :: cell_i
-    sll_int32  :: cell_j
-    ! Quadrature points coordinates and associated weight
+    ! Quadrature points coordinates
     sll_real64 :: qpt1
     sll_real64 :: qpt2
-    sll_real64 :: wqpt
     ! Index of point to the left of the support of the spline 
     sll_int32 :: left_x,left_y
     sll_int32 :: left_x_source,left_y_source
     sll_int32 :: mflag_x, mflag_y ! error flags
-    ! TODO : erase
-    sll_int32  :: itemp
-    sll_real64 :: valtemp, valtemp2
 
     ! Initialization
     work1(:,:)                 = 0.0_f64
@@ -538,23 +511,26 @@ contains ! =============================================================
     do num_ele = 1,solv%num_cells
        do local_index = 1, solv%num_quad_pts_loc
 
-!           cell_j = (num_ele-1)/solv%mesh%num_cells1 + 1
-!           cell_i = num_ele - (cell_j-1)*solv%mesh%num_cells1
-
-          ! TODO @LM add function local to global here !
-          global_index = (num_ele - 1) * solv%num_quad_pts_loc + local_index
+          global_index = global_index_quad(solv, num_ele, local_index)
           
           qpt1  = solv%quad_pts1(global_index)
           qpt2  = solv%quad_pts2(global_index)
-          wqpt  = solv%quad_weight(global_index)
           
-          ! And again, we do the same work for the other direction (x1)
+          ! We compute the index of the first non zero spline on quadrature point
           call interv ( solv%knots1, &
                solv%mesh%num_cells1 + solv%spline_degree + 2, &
                qpt1, &
                left_x, &
                mflag_x )
           
+          ! We verify the particle is in the domain
+          if (mflag_x.ne.0) then
+             print *, " WARNING : in initialize_basis_functions(...) flagx = ", mflag_x
+             print *, "           quadrature point not in interval,  qpt1  = ", qpt1
+          end if
+
+          ! We compute the values of all the non zero splines basis
+          ! functions and their derivatives on quadrature point
           call bsplvd(&
                solv%knots1,&
                solv%spline_degree+1,&
@@ -563,10 +539,8 @@ contains ! =============================================================
                work1,&
                basis_deriv_x1,&
                2 )
-
-
-          !TODO @LM : Add test on mflag_x
-
+          
+          ! Idem for the second direction
           call interv(&
                solv%knots2,&
                solv%mesh%num_cells2 + solv%spline_degree+ 2,& !TODO @LM
@@ -574,10 +548,11 @@ contains ! =============================================================
                left_y, &
                mflag_y )
 
+          if (mflag_y.ne.0) then
+             print *, " WARNING : in initialize_basis_functions(...) flagy = ", mflag_y
+             print *, "           quadrature point not in interval,  qpt2  = ", qpt2
+          end if
 
-          ! Computing the values of the first 2 derivatives on the point qpt2
-          ! Result is saved on basis_deriv_x2
-          
           call bsplvd( &
                solv%knots2, &
                solv%spline_degree+1,&
@@ -587,15 +562,18 @@ contains ! =============================================================
                basis_deriv_x2,&
                2)
           
-
+          ! We do the same work for the source
           call interv ( solv%knots1_source, &
                solv%mesh%num_cells1 + solv%spline_degree + 2, &
                qpt1, &
                left_x_source, &
                mflag_x )
-
-          ! And the source term in the direction x1
           
+          if (mflag_x.ne.0) then
+             print *, " WARNING : in initialize_basis_functions(...) flagx = ", mflag_x
+             print *, "           quadrature point not in interval,  qpt1  = ", qpt1
+          end if
+         
           call bsplvd(&
                solv%knots1_source,&
                solv%spline_degree+1,&
@@ -605,20 +583,18 @@ contains ! =============================================================
                basis_deriv_x1_source,&
                2 )          
           
-             
-          ! Computing the spline interval, returns left_y, inex of the 
-          ! knot point to the left of the basis function's support
           call interv(&
                solv%knots2_source,&
                solv%mesh%num_cells2 + solv%spline_degree+ 2,& !TODO @LM
                qpt2, &
                left_y_source, &
                mflag_y )
-             
-          !TODO @LM : Add test on mflag_y
-          
-          
-          ! We do the same work for the source
+         
+          if (mflag_y.ne.0) then
+             print *, " WARNING : in initialize_basis_functions(...) flagy = ", mflag_y
+             print *, "           quadrature point not in interval,  qpt2  = ", qpt2
+          end if
+                    
           call bsplvd( &
                solv%knots2_source, &
                solv%spline_degree+1,&
@@ -628,8 +604,7 @@ contains ! =============================================================
                basis_deriv_x2_source,&
                2)
           
-
-          ! We loop over non zeros basis (on quadrature point)
+          ! We stock the values of the basis functions
           do basis_index1 = 1, solv%spline_degree + 1
              do basis_index2 = 1, solv%spline_degree + 1
 
@@ -657,7 +632,6 @@ contains ! =============================================================
 
              end do
           end do
-
 
           solv%tab_index_coeff(global_index) = &
                left_x_source + (left_y_source - 1) * &
@@ -847,7 +821,6 @@ contains ! =============================================================
     sll_real64 :: int_source,int_jac
     sll_real64, dimension(:), allocatable   :: M_source_loc
     sll_real64, dimension(:), allocatable   :: source_at_quad
-    sll_real64 :: val_jac
     class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
     class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
     sll_real64, dimension(:,:), pointer :: coeff_source
@@ -856,6 +829,9 @@ contains ! =============================================================
     sll_real64 :: qpt1
     sll_real64 :: qpt2
     sll_real64 :: weight
+    ! Variables for the jacobian and the weighted jacobian
+    sll_real64 :: val_jac
+    sll_real64 :: weight_jac
     ! Loop variables
     sll_int32  :: quad_index
 
@@ -877,8 +853,8 @@ contains ! =============================================================
     int_source = 0.0_f64
     int_jac = 0.0_f64
     
-    ! afin d'optimiser la construction de la matrice source
-    ! on va proceder de la facon qui suit 
+    ! To optimize the construction of the source matrix we 
+    ! have to proceed in the following manner
     base_field_pointer => source
     select type( type_field => base_field_pointer)
     class is (sll_scalar_field_2d_discrete_alt)
@@ -886,7 +862,7 @@ contains ! =============================================================
        select type( type_interpolator => base_interpolator_pointer)
        class is (arb_deg_2d_interpolator)
           coeff_source => type_interpolator%get_coefficients()
-          ! TODO @LM : this whole part should be re written, quick fix though:
+          ! TODO : this whole part should be re written, quick fix though:
           ! put the spline coefficients in a 1d array
           do j=1,size(coeff_source, 2)
              do i=1,size(coeff_source, 1)
@@ -912,8 +888,9 @@ contains ! =============================================================
           weight = solv%quad_weight(quad_index)
           source_at_quad(quad_index) = source%value_at_point(qpt1,qpt2)
           val_jac = solv%values_jacobian(quad_index)
-          int_source = int_source + source%value_at_point(qpt1,qpt2)*weight*val_jac 
-          int_jac = int_jac + weight*val_jac
+          weight_jac = val_jac * weight
+          int_source = int_source + source%value_at_point(qpt1,qpt2)*weight_jac
+          int_jac = int_jac + weight_jac
        end do
 
        if( ((solv%bc_bottom==SLL_PERIODIC).and.(solv%bc_top==SLL_PERIODIC)) &
@@ -944,8 +921,9 @@ contains ! =============================================================
        weight = solv%quad_weight(quad_index)
        source_at_quad(quad_index) = source%value_at_point(qpt1,qpt2)
        val_jac = solv%values_jacobian(quad_index)
-       int_source = int_source + source%value_at_point(qpt1,qpt2) * weight * val_jac 
-       int_jac = int_jac + weight * val_jac
+       weight_jac = val_jac * weight
+       int_source = int_source + source%value_at_point(qpt1,qpt2) * weight_jac 
+       int_jac = int_jac + weight_jac
     end do
     if( ((solv%bc_bottom==SLL_PERIODIC).and.(solv%bc_top==SLL_PERIODIC)) &
          .and. ((solv%bc_left==SLL_PERIODIC).and.(solv%bc_right==SLL_PERIODIC)) )then
@@ -978,7 +956,7 @@ contains ! =============================================================
   end subroutine solve_general_coordinates_elliptic_eq
   
   ! This is based on the assumption that all the input fields have the same
-  ! boundary conditions. TO DO: put all the boundary condition parameters in
+  ! boundary conditions. TODO: put all the boundary condition parameters in
   ! a single module called 'boundary_condition_convention' or something, which
   ! can be used library-wide, this way we could extract this information 
   ! directly from the fields without any difficulties. 
@@ -1046,6 +1024,7 @@ contains ! =============================================================
     ! Jacobian variables
     sll_real64, dimension(2,2) :: jac_mat
     sll_real64 :: val_jac
+    sll_real64 :: weight_jac
     ! Matrices
     sll_real64 :: B11
     sll_real64 :: B12
@@ -1074,8 +1053,7 @@ contains ! =============================================================
 
     do local_index = 1, solv%num_quad_pts_loc
       
-       ! TODO ... add function local_to_global
-       global_index = (cell_index - 1) * solv%num_quad_pts_loc + local_index
+       global_index = global_index_quad(solv, cell_index, local_index)
        
        ! Getting coordinates of quadrature points and quadrature weights
        qpt1  = solv%quad_pts1(global_index)
@@ -1098,8 +1076,9 @@ contains ! =============================================================
        ! Computing jacobian matrix, jacobian and integral of the jacobian
        jac_mat(:,:) = c_field%get_jacobian_matrix(qpt1,qpt2)
        val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)
-       solv%values_jacobian(global_index) = val_jac 
-       solv%intjac = solv%intjac + wqpt*val_jac
+       solv%values_jacobian(global_index) = val_jac
+       weight_jac = wqpt*val_jac
+       solv%intjac = solv%intjac + weight_jac
        
        ! TODO : modify this part so that the jacobian intervenes only after
        ! this part, computed in the physical.
@@ -1136,17 +1115,16 @@ contains ! =============================================================
        ! loop over the splines supported in the cell that are different than
        ! zero at the point (qpt1,qpt2) (there are spline_degree+1 splines in
        ! each direction.
-       ! TODO : creer une variable pour weigthed volume jac
        do index1 = 1, solv%num_splines_loc
              
           Masse_loc(index1) = &
                Masse_loc(index1) + &
-               val_jac * wqpt * &
+               weight_jac * &
                solv%values_basis_val_val(index1, global_index)
           
           Stiff_loc(index1) = & 
                Stiff_loc(index1) + &
-               val_jac * wqpt * &
+               weight_jac * &
                solv%values_basis_val_der(index1, global_index)* &
                solv%values_basis_der_val(index1, global_index)
           
@@ -1154,13 +1132,13 @@ contains ! =============================================================
              
              Source_loc(cell_index, index1, index2) = &
                   Source_loc(cell_index, index1, index2) + &
-                  val_jac * wqpt * &
+                  weight_jac * &
                   solv%values_basis_source_val_val(index1, global_index)* &
                   solv%values_basis_source_val_val(index2, global_index)
              
              M_c_loc(index1, index2) = &
                   M_c_loc(index1, index2) + &
-                  val_c * val_jac * wqpt * &
+                  val_c * weight_jac * &
                   solv%values_basis_val_val(index1, global_index)* &
                   solv%values_basis_val_val(index2, global_index)
              
@@ -1228,21 +1206,18 @@ contains ! =============================================================
     sll_int32  :: global_index
     sll_int32  :: index1
     sll_real64 :: val_src
-    sll_real64 :: val_jac
-    sll_real64 :: weight
+    sll_real64 :: weight_jac
     
-    ! TODO @LM : weighted jacobian
     M_source_loc(:) = 0.0_f64
 
     do local_index = 1, solv%num_quad_pts_loc
        
-       global_index = (cell_index - 1) * solv%num_quad_pts_loc + local_index
+       global_index = global_index_quad(solv, cell_index, local_index)
        
        ! Getting weights associated to point at global_index
-       weight = solv%quad_weight(global_index)
-       
+       weight_jac = solv%quad_weight(global_index)*solv%values_jacobian(global_index)
+       ! Getting value of source at quadrature point
        val_src = source_at_quad(global_index)
-       val_jac = solv%values_jacobian(global_index)
 
        ! loop over the splines supported in the cell that are different than
        ! zero at the point (qpt1,qpt2) (there are spline_degree+1 splines in
@@ -1250,7 +1225,7 @@ contains ! =============================================================
        do index1 = 1, solv%num_splines_loc
 
           M_source_loc(index1)= M_source_loc(index1) + &
-               val_src * val_jac * weight * &
+               val_src * weight_jac * &
                solv%values_basis_val_val(index1, global_index)
           
        end do
