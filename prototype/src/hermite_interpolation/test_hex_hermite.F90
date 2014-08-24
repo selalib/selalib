@@ -13,7 +13,7 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle
   sll_int32    :: i, j
-  sll_int32    :: nloops, num_degree_freedom = 10
+  sll_int32    :: nloops, num_method = 9
   sll_int32    :: ierr
   ! initial distribution
   sll_real64   :: gauss_x2
@@ -47,11 +47,39 @@ program test_hex_hermite
   logical      :: inside
   type(hex_mesh_2d), pointer :: mesh
 
-
+  
   center_x1 = 0._f64
   center_x2 = 0._f64
 
   radius = 8._f64
+
+  if (num_method == 9 ) then
+     print*, 
+     print*, "*********************************"
+     print*, " Zienkiewicz_9_degree_of_freedom "
+     print*, "*********************************"
+     print*, 
+  else if (num_method == 10 ) then
+     print*, 
+     print*, "*********************************"
+     print*," Zienkiewicz_10_degree_of_freedom"
+     print*, "*********************************"
+     print*, 
+  else if (num_method == 11 ) then 
+     print*, 
+     print*, "*********************************"
+     print*, "   Hsieh_Clough_Tocher_reduced   "
+     print*, "*********************************"
+     print*, 
+  else if (num_method == 12 ) then 
+     print*, 
+     print*, "*********************************"
+     print*, "   Hsieh_Clough_Tocher_complete   "
+     print*, "*********************************"
+     print*, 
+  else
+     print*, "specify another number correspoonding to a existing implemented method 9, 10, 11 or 12"
+  endif
 
   open(unit = 33, file="hex_errors.txt", action="write", status="replace")!,position = "append")! 
 
@@ -149,7 +177,7 @@ program test_hex_hermite
 
      call cpu_time(t_init)
 
-     do while (t .lt. tmax)
+     do while (t .lt. tmax)!dt)!
 
         norm2_error = 0._f64 !Error variables
 
@@ -163,60 +191,61 @@ program test_hex_hermite
         ! with p the degree of the approximation
         !*********************************************************
 
-        call  der_finite_difference( f_tn, p,step, mesh, deriv )
+        call  der_finite_difference( f_tn, p, step, mesh, deriv )
 
         t = t + dt
         !*********************************************************
-        ! computation of the velue at the centers of the triangles
+        ! computation of the value at the center of the triangles
         !*********************************************************
 
-        do i=1, n_triangle  ! computation of the value at the center of the triangles
-
-        !*********************************************************
-        !  computation of the root of the characteristics
-        !*********************************************************
+        if ( num_method == 10 ) then 
            
-           x = mesh%center_cartesian_coord(1,i)
-           y = mesh%center_cartesian_coord(2,i)
-           
-           xx = x*cos(dt) - y*sin(dt);
-           yy = x*sin(dt) + y*cos(dt);
-           ! call slb_compute_characteristic_leapfrog( &
-           !  x,y,E_x,E_v,xx,yy )
+           do i=1, n_triangle  ! computation of the value at the center of the triangles
 
-          !             INTERPOLATION
-           inside = .true.
+              !*********************************************************
+              !  computation of the root of the characteristics
+              !*********************************************************
 
-           h1 =  xx/sqrt(3.0_f64) + yy
-           h2 = -xx/sqrt(3.0_f64) + yy 
+              x = mesh%center_cartesian_coord(1,i)
+              y = mesh%center_cartesian_coord(2,i)
 
-           if ( h1 >  radius .or. h2 >  radius ) inside = .false.
-           if ( h1 < -radius .or. h2 < -radius ) inside = .false.
-           if ( xx  < -radius*sqrt(3._f64)*0.5_f64 .or. xx &
-                > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
+              xx = x*cos(dt) - y*sin(dt);
+              yy = x*sin(dt) + y*cos(dt);
+              ! call slb_compute_characteristic_leapfrog( &
+              !  x,y,E_x,E_v,xx,yy )
 
-           if ( inside ) then
-              call hermite_interpolation(i, xx, yy, f_tn, center_values_tn, &
-                  center_values_tn1, mesh, deriv, aire,t-dt, num_degree_freedom)
-           else 
+              !             INTERPOLATION
+              inside = .true.
 
-             center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
+              h1 =  xx/sqrt(3.0_f64) + yy
+              h2 = -xx/sqrt(3.0_f64) + yy 
 
-           endif
-           
-           if (which_advec .eq. 0) then ! linear advection
-              xx = x - advec*dt*nloops
-              yy = y - advec*dt*nloops
-           else                         ! Circular advection
-              xx = x*cos(t) - y*sin(t);
-              yy = x*sin(t) + y*cos(t);
-           end if 
+              if ( h1 >  radius .or. h2 >  radius ) inside = .false.
+              if ( h1 < -radius .or. h2 < -radius ) inside = .false.
+              if ( xx  < -radius*sqrt(3._f64)*0.5_f64 .or. xx &
+                   > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
-           norm2_error = norm2_error + &
-                abs( exp(-(xx-gauss_x1)**2-(yy-gauss_x2)**2) - center_values_tn1(i) )**2
+              if ( inside ) then
+                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn, &
+                      center_values_tn1, mesh, deriv, aire,t-dt, num_method)
+              else 
+                 center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
+              endif
 
-        enddo
+              if (which_advec .eq. 0) then ! linear advection
+                 xx = x - advec*dt*nloops
+                 yy = y - advec*dt*nloops
+              else                         ! Circular advection
+                 xx = x*cos(t) - y*sin(t);
+                 yy = x*sin(t) + y*cos(t);
+              end if
 
+              norm2_error = norm2_error + &
+                   abs( exp(-(xx-gauss_x1)**2-(yy-gauss_x2)**2) - center_values_tn1(i) )**2
+
+           enddo
+
+        endif
 
         do i=1, n_points  
 
@@ -245,7 +274,7 @@ program test_hex_hermite
 
            if ( inside ) then
               call hermite_interpolation(i, x1_char(i), x2_char(i), f_tn, &
-                   center_values_tn, f_tn1, mesh, deriv, aire,t-dt, num_degree_freedom)
+                   center_values_tn, f_tn1, mesh, deriv, aire,t-dt, num_method)
            else 
               
               f_tn1(i) = 0._f64 ! dirichlet boundary condition
