@@ -21,7 +21,6 @@ contains
     sll_real64, intent(in)   :: eta_max
     sll_real64, dimension(:) :: knots
     sll_int32                :: i
-    sll_real64               :: eta
     sll_real64               :: delta
 
     delta = (eta_max - eta_min)/num_cells

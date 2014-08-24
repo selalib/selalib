@@ -29,10 +29,8 @@ program test_finite_elements_solver
 
   type(sll_logical_mesh_2d), pointer                    :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
-  type(finite_elements_solver)              :: es
+  type(finite_elements_solver)                          :: es
   type(arb_deg_2d_interpolator), target                 :: interp_2d
-  type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
-  class(sll_interpolator_2d_base), pointer              :: terme_source_interp
   class(sll_scalar_field_2d_base), pointer              :: a11_field_mat
   class(sll_scalar_field_2d_base), pointer              :: a12_field_mat
   class(sll_scalar_field_2d_base), pointer              :: a21_field_mat
@@ -43,30 +41,19 @@ program test_finite_elements_solver
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
-  sll_real64 :: t1i, t1e, t2i, t2e, t3i, t3e, t4i, t4e, t5i, t5e, t6i, t6e, &
-       t7i, t7e, t8i, t8e, t9i,t9e,t10i,t10e,t11i,t11e,t12i,t12e,t95e,t95i
-  ! sll_real64 :: t105e,t105i,t115e,t115i,t125i,t125e
+  sll_real64 :: t3i, t3e
   real(8), external :: func_zero
   real(8), external :: func_one
   real(8), external :: func_epsi
   real(8), external :: source_term_perdir
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), pointer :: values
-  sll_real64 :: acc1,acc2,acc3,acc4,acc5,acc6,acc7,acc8,acc9
-  sll_real64 :: acc10,acc11,acc12,acc95
-  sll_real64 :: normL2_1,normL2_2,normL2_3,normL2_4,normL2_5,normL2_6
-  sll_real64 :: normL2_7,normL2_8,normL2_9,normL2_95,normL2_10,normL2_11,normL2_12
-  sll_real64 :: normH1_1,normH1_2,normH1_3,normH1_4,normH1_5,normH1_6
-  sll_real64 :: normH1_7,normH1_8,normH1_9,normH1_95,normH1_10,normH1_11,normH1_12
- ! sll_real64 :: acc105,acc115,acc125
+  sll_real64 :: acc3
+  sll_real64 :: normH1_3
+  sll_real64 :: normL2_3
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
   sll_real64, dimension(:,:), allocatable    :: reference
-  sll_real64, dimension(:,:), allocatable    :: tab_rho
-  sll_real64, dimension(:),   allocatable    :: point1
-  sll_real64, dimension(:),   allocatable    :: point2
-!  sll_real64, dimension(:,:), pointer        :: test_coeff
-  sll_real64 :: val_jac
   sll_int32 :: ierr
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
@@ -86,11 +73,6 @@ program test_finite_elements_solver
   real(8), external :: jac22_adimension_chgt
   real(8), external :: sol_exacte_chgt_adim
   real(8), external :: source_term_chgt_adim
-  real(8) :: integrale_solution
-  real(8) :: integrale_solution_exacte
- ! sll_real64 :: node_val1
-  !sll_real64 :: epsi
-  !sll_real64 :: epsi1
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
  ! epsi  =  0.000_f64
  ! epsi1 =  0.000_f64 ! penalization method
