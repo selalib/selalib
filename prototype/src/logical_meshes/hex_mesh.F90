@@ -12,6 +12,9 @@
 module hex_mesh
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+
+use sll_constants
+
   implicit none
 
   type hex_mesh_2d
@@ -169,12 +172,12 @@ contains
     ! r1 = (r11, r12) = ( sqrt(3)/2, 1/2 )
     ! r2 = (r21, r22) = (-sqrt(3)/2, 1/2 )
     ! r3 = (r31, r32) = ( 0, 1 )
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, r1_x1, r1_x1, sqrt(real(3, f64))*0.5) 
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, r1_x2, r1_x2, 0.5)
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, r2_x1, r2_x1, -sqrt(real(3, f64))*0.5)
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, r2_x2, r2_x2, 0.5)
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, r3_x1, r3_x1, 0.0)
-    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, r3_x2, r3_x2, 1.0)
+    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r1_x1, r1_x1, sll_sqrt3 * 0.5_f64)
+    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r1_x2, r1_x2, 0.5_f64)
+    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r2_x1, r2_x1, -sll_sqrt3 * 0.5_f64)
+    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r2_x2, r2_x2, 0.5_f64)
+    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r3_x1, r3_x1, 0.0_f64)
+    TEST_PRESENCE_AND_ASSIGN_VAL(mesh, r3_x2, r3_x2, 1.0_f64)
 
     mesh%num_cells = num_cells
     mesh%delta = mesh%radius/real(num_cells,f64)
@@ -374,9 +377,6 @@ contains
        if ( abs(k1c) >  mesh%radius ) inside = .false.
        if ( abs(k2c) <  mesh%radius ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
-
-       print*, k1,k2,xx,yy,r1x1, inside
-       print*, k1c,k2c, inside
 
        if ( inside ) then
           center_index = center_index + 1
@@ -677,7 +677,7 @@ contains
     ! coordinate of the abscisse that parts the lozenge
     ! in two equilateral triangle
 
-    xi = ( real(i,f64) - real(j,f64) ) * step*sqrt(3.0_f64)*0.5_f64
+    xi = ( real(i,f64) - real(j,f64) ) * step * sll_sqrt3 * 0.5_f64
 
     ! testing which triangle (x,y) is in, which gives us its vertices'
     ! coordinates
