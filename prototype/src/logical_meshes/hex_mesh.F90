@@ -37,15 +37,16 @@ use sll_constants
      sll_real64 :: r3_x2
      ! Matrix containing mesh points coordinates in cartesian coordinates :
      sll_real64, pointer, dimension(:,:) :: cartesian_coord ! (1:2,1:num_pts_tot)
-     ! matrix containing the cartesian coordinates of the centers of tthe triangles
-     sll_real64, pointer, dimension(:,:) :: center_cartesian_coord ! (1:2,1:num_triangles)     
-     ! matrix containing the index of the respective center of the 2 triangles at the top of most points
-     sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
      ! Matrix containing mesh points coordinates in hexagonal coordinates (integers) :
      sll_int32, pointer, dimension(:,:)  :: hex_coord ! (1:2,1:num_pts_tot)
      ! Matrix containg global indices arranged from lower corner of hexagon 
      ! and following the r2, then r1 direction
      sll_int32, pointer, dimension(:) :: global_indices ! (1:num_pts_tot)
+     ! matrix containing the cartesian coordinates of the centers of the triangles
+     sll_real64, pointer, dimension(:,:) :: center_cartesian_coord ! (1:2,1:num_triangles)     
+     ! matrix containing the index of the respective center of the 2 triangles at the top of most points
+     sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
+
    contains
      procedure, pass(mesh) :: x1_node => x1_node
      procedure, pass(mesh) :: x2_node => x2_node
@@ -338,6 +339,9 @@ contains
     ! if needed we can compute the cartesian coordiantes and the indices 
     ! of the centers of the triangles of the mesh
 
+    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
+    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+
     call init_center_points_triangle(mesh)
 
     ! ----------------------------------------- END MATRICES INITIALIZATION 
@@ -349,15 +353,12 @@ contains
   subroutine init_center_points_triangle(mesh)
     class(hex_mesh_2d) :: mesh
     sll_int32          :: center_index, global
-    sll_int32          :: ierr
     sll_int32          :: k1, k2
     sll_real64         :: x1, x2, x3, y1, y2, y3, xx, yy, r1x1
     sll_real64         :: jacob, k1c, k2c
     logical            :: inside
 
 
-    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
-    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
     mesh%center_cartesian_coord(:,:)   = 0._f64
     mesh%center_index(:,:)             = -1
 
@@ -825,6 +826,8 @@ contains
     SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
     SLL_DEALLOCATE(mesh%hex_coord, ierr)
     SLL_DEALLOCATE(mesh%global_indices, ierr)
+    SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
+    SLL_DEALLOCATE(mesh%center_index, ierr)
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_hex_mesh_2d
 
