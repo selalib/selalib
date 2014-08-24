@@ -297,8 +297,8 @@ contains  ! ****************************************************************
        ! Transformation to hexagonal coordinates :
        x1 = -abs(x1_in)
        x2 =  abs(x2_in)
-       u = x1 - x2/sqrt(3._f64)
-       v = x1 + x2/sqrt(3._f64)
+       u = x1 - x2/sll_sqrt3
+       v = x1 + x2/sll_sqrt3
        ! First generating vector (r1') symmetry
        if (v.gt.0) then
           v = -v
@@ -342,8 +342,8 @@ contains  ! ****************************************************************
        ! Transformation to hexagonal coordinates :
        x1 = abs(x1_in)
        x2 = abs(x2_in)
-       u = x1 - x2/sqrt(3._f64)
-       v = x1 + x2/sqrt(3._f64)
+       u = x1 - x2/sll_sqrt3
+       v = x1 + x2/sll_sqrt3
        if (u.lt.0) then
           !Symmetry r2
           u = -u
@@ -387,9 +387,9 @@ contains  ! ****************************************************************
 
     ! Algorithms basis
     r11 = 0.5_f64
-    r12 = -sqrt(3._f64)*0.5_f64
+    r12 = -sll_sqrt3 * 0.5_f64
     r21 = 0.5_f64
-    r22 =  sqrt(3._f64)*0.5_f64
+    r22 =  sll_sqrt3 * 0.5_f64
 
     ! Getting mesh generator vectors coordinates
     q11 = spline%mesh%r1_x1
@@ -423,9 +423,9 @@ contains  ! ****************************************************************
     ! Getting spline generator vectors coordinates
     ! Algorithms basis
     r11 = 0.5_f64
-    r12 = -sqrt(3._f64)*0.5_f64
+    r12 = -sll_sqrt3 * 0.5_f64
     r21 = 0.5_f64
-    r22 =  sqrt(3._f64)*0.5_f64
+    r22 =  sll_sqrt3 * 0.5_f64
 
     ! Getting mesh generator vectors coordinates
     q11 = spline%mesh%r1_x1

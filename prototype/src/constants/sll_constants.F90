@@ -57,4 +57,8 @@ sll_real64, parameter :: sll_proton_mass = 1.672621777D-27
 !> @param standard grav. accel., sea level m/s^2 
 sll_real64, parameter :: sll_g = 9.80665D0             
 
+sll_real64, parameter :: sll_sqrt3 = 1.7320508075688771931766041_f64
+
+
+
 end module sll_constants
