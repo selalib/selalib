@@ -157,11 +157,6 @@ contains
     sll_int32  :: num_cells_plus1
     sll_int32  :: num_cells_plus2
 
-    sll_int32  :: center_index
-    sll_real64 :: x1, x2, x3, y1, y2, y3, xx, yy, r1x1
-    sll_real64 :: jacob, k1c, k2c
-    logical    :: inside
-
 
     ! By default the hexagonal mesh is centered at the (0,0) point
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, center_x1, center_x1, 0.0_f64 )
@@ -211,13 +206,9 @@ contains
     SLL_ALLOCATE(mesh%cartesian_coord(2, mesh%num_pts_tot), ierr)
     SLL_ALLOCATE(mesh%hex_coord(2, mesh%num_pts_tot), ierr)
     SLL_ALLOCATE(mesh%global_indices(mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
-    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
     mesh%cartesian_coord(:,:)          = 0._f64
-    mesh%center_cartesian_coord(:,:)   = 0._f64
     mesh%hex_coord(:,:)                = 0
     mesh%global_indices(:)             = -1
-    mesh%center_index(:,:)             = -1
     ! Initializing coordinates of first mesh point (ie. center of hexagon)
     mesh%cartesian_coord(1,1) = mesh%center_x1
     mesh%cartesian_coord(2,1) = mesh%center_x2
@@ -344,16 +335,41 @@ contains
 
     enddo
 
+    ! if needed we can compute the cartesian coordiantes and the indices 
+    ! of the centers of the triangles of the mesh
+
+    call init_center_points_triangle(mesh)
+
+    ! ----------------------------------------- END MATRICES INITIALIZATION 
+    ! ---------------------------------------------------------------------
+
+  end subroutine initialize_hex_mesh_2d
+
+
+  subroutine init_center_points_triangle(mesh)
+    class(hex_mesh_2d) :: mesh
+    sll_int32          :: center_index, global
+    sll_int32          :: ierr
+    sll_int32          :: k1, k2
+    sll_real64         :: x1, x2, x3, y1, y2, y3, xx, yy, r1x1
+    sll_real64         :: jacob, k1c, k2c
+    logical            :: inside
+
+
+    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
+    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+    mesh%center_cartesian_coord(:,:)   = 0._f64
+    mesh%center_index(:,:)             = -1
+
     center_index = 0
     r1x1 =  mesh%r1_x1*real(mesh%num_cells,f64)
-
     do global = 1, mesh%num_pts_tot
        ! almost each point is the base of a lozenge , thus two triangle
        ! from which we get two center points
 
        k1 = mesh%hex_coord(1, global)
        k2 = mesh%hex_coord(2, global)
-      
+
        ! center point in the left triangle
        
        x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
@@ -371,11 +387,11 @@ contains
        inside = .true.
        
        jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-       k1c = (mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob
-       k2c = (mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob
+       k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
+       k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
-       if ( abs(k1c) >  mesh%radius ) inside = .false.
-       if ( abs(k2c) <  mesh%radius ) inside = .false.
+       if ( abs(k1c) >  mesh%num_cells ) inside = .false.
+       if ( abs(k2c) >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
 
        if ( inside ) then
@@ -385,11 +401,12 @@ contains
           mesh%center_index(1, global) = center_index
        endif
        
+
        ! center point in the right triangle
-       x1 = k1*mesh%r1_x1 + k2*mesh%r2_x1
+       x1 = k1*mesh%r1_x1     + k2*mesh%r2_x1
        x2 = (k1+1)*mesh%r1_x1 + k2*mesh%r2_x1
        x3 = (k1+1)*mesh%r1_x1 + (k2+1)*mesh%r2_x1
-       y1 = k1*mesh%r1_x2 + k2*mesh%r2_x2
+       y1 = k1*mesh%r1_x2     + k2*mesh%r2_x2
        y2 = (k1+1)*mesh%r1_x2 + k2*mesh%r2_x2
        y3 = (k1+1)*mesh%r1_x2 + (k2+1)*mesh%r2_x2
 
@@ -401,15 +418,13 @@ contains
        inside = .true.
 
        jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-       k1c = (mesh%r2_x2 * x1 - mesh%r2_x1 * x2)/jacob
-       k2c = (mesh%r1_x1 * x2 - mesh%r1_x2 * x1)/jacob
 
-       if ( abs(k1c) >  mesh%radius ) inside = .false.
-       if ( abs(k2c) <  mesh%radius ) inside = .false.
+       k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
+       k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
+
+       if ( abs(k1c) >  mesh%num_cells ) inside = .false.
+       if ( abs(k2c) >  mesh%num_cells ) inside = .false.
        if ( abs(xx) > r1x1 ) inside = .false.
-
-       print*, k1,k2,xx,yy,r1x1, inside
-       print*, k1c,k2c, inside
 
        if ( inside ) then
           center_index = center_index + 1
@@ -420,15 +435,11 @@ contains
        
     enddo
 
-    ! ----------------------------------------- END MATRICES INITIALIZATION 
-    ! ---------------------------------------------------------------------
+  end subroutine init_center_points_triangle
 
-  end subroutine initialize_hex_mesh_2d
 
 
   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
-
-    implicit none
     class(hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1, k2
     sll_int32, intent(out) :: index_tab
@@ -658,7 +669,7 @@ contains
     type(hex_mesh_2d), pointer            :: mesh
     sll_real64, intent(in)                :: x, y
     sll_int32, intent(out)                :: s1, s2, s3
-    sll_real64                            :: h1, h2, xi, radius, step
+    sll_real64                            :: xi, radius, step
     sll_int32                             :: num_cells 
     sll_int32                             :: i, j
 
@@ -725,7 +736,7 @@ contains
        triangle_index = mesh%center_index(2,global) !right triangle
     endif
 
-    !if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
+    if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
 
   end subroutine get_triangle_index
 
