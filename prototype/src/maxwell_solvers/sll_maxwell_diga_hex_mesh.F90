@@ -334,8 +334,8 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
    this%Ro(:,iel) = matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
                   + matmul(this%DyP(:,:,iel),this%Ey(:,iel))
 
-   x1      = mesh%center_cartesian_coord(1, i)
-   x2      = mesh%center_cartesian_coord(2, i)
+   x1      = mesh%center_cartesian_coord(1,iel)
+   x2      = mesh%center_cartesian_coord(2,iel)
 
    call get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
 
