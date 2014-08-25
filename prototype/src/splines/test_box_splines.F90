@@ -48,9 +48,15 @@ sll_real64   :: x1_basis
 sll_real64   :: x1_temp
 sll_int32    :: k1_error
 sll_int32    :: k2_error
+! Output variables
+sll_int32    :: WRITE_TIME_ERROR = 0
+sll_int32    :: WRITE_TIME_DIST = 0
+sll_int32    :: WRITE_SPLINES = 0
+sll_int32    :: WRITE_CELLS_ERROR = 1
+sll_int32    :: WRITE_TIME_EFF = 0
 character(len = 50) :: filename
 character(len = 50) :: filename2
-character(len = 4) :: filenum
+character(len = 4)  :: filenum
 
 ! sll_real64              :: delta
 ! sll_real64              :: k1_temp
@@ -60,7 +66,7 @@ character(len = 4) :: filenum
 
 print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
-do num_cells = 80,80,20
+do num_cells = 20,160,20
 
 !   t_init = getRealTimer()
 
@@ -86,8 +92,8 @@ do num_cells = 80,80,20
    SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
 
    ! Distribution initialization
-   gauss_x1  = 0.5_f64
-   gauss_x2  = 0.5_f64
+   gauss_x1  = 2._f64
+   gauss_x2  = 2._f64
    gauss_sig = 1.0_f64/sqrt(2._f64)/2._f64
    gauss_amp = 1.0_f64
 
@@ -109,9 +115,9 @@ do num_cells = 80,80,20
    ! if : which_advec = 0 => linear advection
    ! if : which_advec = 1 => circular advection
    which_advec = 1
-   advec = 0.0!25_f64!5_f64
-   tmax  = 1.0_f64!1.0_f64
-   dt    =  0.1_f64 * 20._f64/num_cells
+   advec = 0.0_f64!25_f64!5_f64
+   tmax  = 1.0_f64
+   dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
    ! Computing characteristics
@@ -186,10 +192,10 @@ do num_cells = 80,80,20
             f_fin(i) = 0._f64
          end if
 
-         x1_basis = change_basis_x1(spline, x1(i), x2(i))
-         x2_basis = change_basis_x2(spline, x1(i), x2(i))
-         chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-         chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+         ! x1_basis = change_basis_x1(spline, x1(i), x2(i))
+!          x2_basis = change_basis_x2(spline, x1(i), x2(i))
+!          chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
+!          chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
          
             ! Relative error
             if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
@@ -211,73 +217,82 @@ do num_cells = 80,80,20
       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
       print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
       print*,"                       | error_L2   = ", norm2_error
-      print*," Center error = ", f_fin(1)-f_tn(1)
+      !print*," Center error = ", f_fin(1)-f_tn(1)
 
 
 
 
       !WRITING ERROR REGARDING TIME STEP
-      if (t .eq. dt) then
-         open (unit=12,file="err_chi2_gauss_cstadv.txt", &
-              action="write",status="replace")
-         write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
-         close(12)
-      else 
-         open (unit=12,file="err_chi2_gauss_cstadv.txt", &
-              action="write",status="old", position="append")
-         write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
-         close(12)
-      end if
+!       if (WRITE_TIME_ERROR.eq.1) then 
+!          if (t .eq. dt) then
+!             open (unit=12,file="err_chi2_gauss_cstadv.txt", &
+!                  action="write",status="replace")
+!             write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
+!             close(12)
+!          else 
+!             open (unit=12,file="err_chi2_gauss_cstadv.txt", &
+!                  action="write",status="old", position="append")
+!             write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
+!             close(12)
+!          end if
+!       end if
        
 
-      call int2string(nloops,filenum)
-      filename2 = "./time_files/analytical/ana_dist"//trim(filenum)//".txt"
-      filename  = "./time_files/numerical/num_dist"//trim(filenum)//".txt"
-      print*,filename
-      print*,filename2
-      call write_field_hex_mesh(mesh, f_tn, filename)
-      call write_field_hex_mesh(mesh, f_fin,filename2)
+!       if (WRITE_TIME_DIST.eq.1) then 
+!          call int2string(nloops,filenum)
+!          filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+!          filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+!          print*,filename
+!          print*,filename2
+!          call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+!          call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+!       end if
 
-   end do
+    end do
 
 
-!    call write_field_hex_mesh(mesh, f_tn, "final_dist.txt")
-!    call write_field_hex_mesh(mesh, chi1, "chi1.txt")
-!    call write_field_hex_mesh(mesh, chi2, "chi2.txt")
-!    call write_field_hex_mesh(mesh, f_fin, "an_dist.txt")
-!    print *,""
-    print*," *    Final error  = ", diff_error, " *"
+!    if (WRITE_SPLINES.eq.1) then 
+!       call write_field_hex_mesh(mesh, chi1, "chi1.txt")
+!       call write_field_hex_mesh(mesh, chi2, "chi2.txt")
+!    end if
+
+   print*," *    Final error  = ", diff_error, " *"
 
 
    !WRITING ERROR REGARDING NUMBER OF POINTS
-   if (num_cells .eq. 20) then 
-      !NEW FILE :
-      open (unit=12,file="error_file.txt",action="write",&
-           status="replace")
-      write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-      close(12)
-   else
-      !WRITE
-      open (unit=12,file="error_file.txt",action="write",&
-           status="old", position="append") 
-      write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-      close(12)
+   if (WRITE_CELLS_ERROR.eq.1) then
+      if (num_cells .eq. 20) then 
+         !NEW FILE :
+         open (unit=12,file="error_file.txt",action="write",&
+              status="replace")
+         write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
+         close(12)
+      else
+         !WRITE
+         open (unit=12,file="error_file.txt",action="write",&
+              status="old", position="append") 
+         write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
+         close(12)
+      end if
    end if
 
 
-!    !WRITING CPU TIME
-!    if (num_cells .eq. 10 ) then 
-!       !NEW FILE :
-!       open (unit=12,file="cpu_time.txt",action="write",&
-!            status="replace")
-!       write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-!       close(12)
-!    else
-!       !WRITE
-!       open (unit=12,file="cpu_time.txt",action="write",&
-!            status="old", position="append") 
-!       write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
-!       close(12)
+!    if (WRITE_TIME_EFF.eq.1) then
+
+!       !WRITING CPU TIME
+!       if (num_cells .eq. 10 ) then 
+!          !NEW FILE :
+!          open (unit=12,file="cpu_time.txt",action="write",&
+!               status="replace")
+!          write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+!          close(12)
+!       else
+!          !WRITE
+!          open (unit=12,file="cpu_time.txt",action="write",&
+!               status="old", position="append") 
+!          write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+!          close(12)
+!       end if
 !    end if
 
 
