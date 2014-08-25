@@ -183,7 +183,8 @@ contains
         endif
 
         call sll_collective_barrier(sll_world_collective)
-
+        call sll_initialize_intrinsic_mpi_random(sll_world_collective)
+        call sll_collective_barrier(sll_world_collective)
 
         !Set up Quasineutral solver
         selectcase(pic1d_testcase)
@@ -668,7 +669,7 @@ contains
 
     endsubroutine
 
-    !    subroutine sll_pic1d_collision_step()
+    !subroutine sll_pic1d_collision_step()
     !      !  sll_real64, dimension(size(particleweight)) :: collision_weights
     !        sll_real64 :: ueq, Teq
     !        !       sll_real64:: feq,v
@@ -693,6 +694,67 @@ contains
     !
     !
     !    endsubroutine
+    subroutine sll_pic1d_collision_step_species( spec, timestepwidth )
+        type( sll_particle_1d_group), intent(inout) :: spec
+       sll_real64 :: temp
+       sll_real64 :: mean_v
+       sll_real64 :: timestepwidth
+       sll_int32 :: N
+       sll_real64:: D,mu
+        sll_real64, dimension(size(spec%particle%vx)) :: normalrnd
+
+        D=1
+        mu=1
+        N=size(spec%particle)
+       !Use the local maxwellian as control variate in v
+       !The thermal velocity is the mean velocity
+       !The temperature is the varianz of the velocity
+
+       !Estimate mean and variance
+       mean_v=dot_product(spec%particle%vx, spec%particle%weight)
+       temp=dot_product((spec%particle%vx-mean_v)**2, spec%particle%weight)
+
+       !Correct variance estimator
+       temp= temp*N/(N-1)
+
+       !Scale weight, and set control variate in the kernel of the collision operator
+       spec%particle%weight=spec%particle%weight*&
+                    sll_local_maxwellian(spec%particle%vx,mean_v, temp)&
+                                /control_variate_v(spec%particle%vx)
+
+      !sigma=sqrt(temp(1-exp(-2.0_f64*mu)
+
+        call random_number(normalrnd)
+        normalrnd=sll_normal_rnd( 0.0_f64 , 1.0_f64, normalrnd)
+
+        spec%particle%vx=&
+        mean_v +(spec%particle%vx -mean_v)*exp(-2.0_f64*mu*timestepwidth) +&
+        temp*(1.0_f64-exp(-2.0_f64*mu*timestepwidth))*normalrnd
+
+       !Scale back
+       spec%particle%weight=spec%particle%weight*&
+                   control_variate_v(spec%particle%vx)&
+                   /sll_local_maxwellian(spec%particle%vx,mean_v, temp)
+
+
+       !Average weights to zero
+       !This is nothing else than using a control variate for the mass conservation
+       spec%particle%weight= spec%particle%weight - sum(spec%particle%weight)/size(spec%particle%weight)
+
+    endsubroutine
+
+!    subroutine sll_pic1d_collision_step_1d( v, weight, weight_const  )
+!       sll_real64, dimension(:), intent(inout):: v !particle velocity 1D
+!       sll_real64, dimension(:), intent(in) :: weight, weight_const
+!       sll_real64, dimension(size(weight)) :: w_kern
+!
+!
+!       SLL_ASSERT(size(weight)==size(v))
+!
+!
+!
+!    endsubroutine
+
 
 
     subroutine sll_pic1d_injection_removing()
