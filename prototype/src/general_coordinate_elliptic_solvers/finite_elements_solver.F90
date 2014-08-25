@@ -856,9 +856,11 @@ contains ! =============================================================
     ! To optimize the construction of the source matrix we 
     ! have to proceed in the following manner
     base_field_pointer => source
+
     select type( type_field => base_field_pointer)
     class is (sll_scalar_field_2d_discrete_alt)
        base_interpolator_pointer => type_field%interp_2d
+
        select type( type_interpolator => base_interpolator_pointer)
        class is (arb_deg_2d_interpolator)
           coeff_source => type_interpolator%get_coefficients()
@@ -882,6 +884,39 @@ contains ! =============================================================
           
        class DEFAULT
           
+          do quad_index=1,solv%num_quad_pts ! Loop over quadrature points
+             qpt1   = solv%quad_pts1  (quad_index)
+             qpt2   = solv%quad_pts2  (quad_index)
+             weight = solv%quad_weight(quad_index)
+             source_at_quad(quad_index) = source%value_at_point(qpt1,qpt2)
+             val_jac = solv%values_jacobian(quad_index)
+             weight_jac = val_jac * weight
+             int_source = int_source + source%value_at_point(qpt1,qpt2)*weight_jac
+             int_jac = int_jac + weight_jac
+          end do
+
+          if( ((solv%bc_bottom==SLL_PERIODIC).and.(solv%bc_top==SLL_PERIODIC)) &
+               .and. ((solv%bc_left==SLL_PERIODIC).and.(solv%bc_right==SLL_PERIODIC)) )then   
+             source_at_quad = source_at_quad - int_source/int_jac
+          end if
+          
+
+          do cell_index=1,solv%num_cells ! Loop over elements
+             call build_local_matrices_source( &
+                  solv, &
+                  cell_index, &
+               source_at_quad, &
+               M_source_loc)
+                
+             call local_to_global_matrices_source( &
+                  solv, &
+                  cell_index, &
+                  M_source_loc)
+          end do
+       end select
+       
+    class is (sll_scalar_field_2d_analytic_alt)
+       
        do quad_index=1,solv%num_quad_pts ! Loop over quadrature points
           qpt1   = solv%quad_pts1  (quad_index)
           qpt2   = solv%quad_pts2  (quad_index)
@@ -889,61 +924,29 @@ contains ! =============================================================
           source_at_quad(quad_index) = source%value_at_point(qpt1,qpt2)
           val_jac = solv%values_jacobian(quad_index)
           weight_jac = val_jac * weight
-          int_source = int_source + source%value_at_point(qpt1,qpt2)*weight_jac
+          int_source = int_source + source%value_at_point(qpt1,qpt2) * weight_jac 
           int_jac = int_jac + weight_jac
        end do
-
+       
        if( ((solv%bc_bottom==SLL_PERIODIC).and.(solv%bc_top==SLL_PERIODIC)) &
-            .and. ((solv%bc_left==SLL_PERIODIC).and.(solv%bc_right==SLL_PERIODIC)) )then   
+            .and. ((solv%bc_left==SLL_PERIODIC).and.(solv%bc_right==SLL_PERIODIC)) )then
           source_at_quad = source_at_quad - int_source/int_jac
        end if
           
-
-       do cell_index=1,solv%num_cells ! Loop over elements
+       do cell_index = 1, solv%num_cells
+          
           call build_local_matrices_source( &
                solv, &
                cell_index, &
                source_at_quad, &
                M_source_loc)
-                
+          
           call local_to_global_matrices_source( &
                solv, &
                cell_index, &
                M_source_loc)
+   
        end do
-    end select
-       
-    class is (sll_scalar_field_2d_analytic_alt)
-       
-    do quad_index=1,solv%num_quad_pts ! Loop over quadrature points
-       qpt1   = solv%quad_pts1  (quad_index)
-       qpt2   = solv%quad_pts2  (quad_index)
-       weight = solv%quad_weight(quad_index)
-       source_at_quad(quad_index) = source%value_at_point(qpt1,qpt2)
-       val_jac = solv%values_jacobian(quad_index)
-       weight_jac = val_jac * weight
-       int_source = int_source + source%value_at_point(qpt1,qpt2) * weight_jac 
-       int_jac = int_jac + weight_jac
-    end do
-    if( ((solv%bc_bottom==SLL_PERIODIC).and.(solv%bc_top==SLL_PERIODIC)) &
-         .and. ((solv%bc_left==SLL_PERIODIC).and.(solv%bc_right==SLL_PERIODIC)) )then
-       source_at_quad = source_at_quad - int_source/int_jac
-    end if
-          
-    do cell_index = 1, solv%num_cells
-   
-       call build_local_matrices_source( &
-            solv, &
-            cell_index, &
-            source_at_quad, &
-            M_source_loc)
-             
-       call local_to_global_matrices_source( &
-            solv, &
-            cell_index, &
-            M_source_loc)
-   
-    end do
     end select
     !time = sll_time_elapsed_since(t0)
 
@@ -1430,28 +1433,29 @@ contains ! =============================================================
      
     do mm = 0,solv%spline_degree
        index3 = cell_j + mm
-       ! if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then    
-!           if ( index3 > solv%total_num_splines_eta2) then
-!              index3 = index3 - solv%total_num_splines_eta2
-!           end if
-!        end if
+       
+       if (  (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC) ) then    
+          if ( index3 > solv%mesh%num_cells2) then
+             index3 = index3 - solv%mesh%num_cells2
+          end if
+       end if
 !other option for above:      index3 = mod(index3 - 1, solv%total_num_splines_eta2) + 1
        
        do i = 0,solv%spline_degree
           
           index1 = cell_i + i
-         !  if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
-!              if ( index1 > solv%total_num_splines_eta1) then
+          if ( (bc_left==SLL_PERIODIC).and.(bc_right== SLL_PERIODIC)) then 
+             if ( index1 > solv%mesh%num_cells1) then
                 
-!                 index1 = index1 - solv%total_num_splines_eta1
+                index1 = index1 - solv%mesh%num_cells1
                 
-!              end if
-!              nbsp = solv%total_num_splines_eta1
+             end if
+             nbsp = solv%mesh%num_cells1
              
-!           else if ( (bc_left  == SLL_DIRICHLET).and.&
-!                (bc_right == SLL_DIRICHLET) ) then
+          else if ( (bc_left  == SLL_DIRICHLET).and.&
+               (bc_right == SLL_DIRICHLET) ) then
              nbsp = solv%mesh%num_cells1 + solv%spline_degree
-!          end if
+          end if
           x          =  index1 + (index3-1)*nbsp
           b          =  mm * ( solv%spline_degree + 1 ) + i + 1
           solv%source_vec(x)  =  solv%source_vec(x)  + M_source_loc(b)

@@ -19,6 +19,7 @@ sll_int32    :: ierr
 sll_real64   :: gauss_x2
 sll_real64   :: gauss_x1
 sll_real64   :: gauss_sig
+sll_real64   :: gauss_amp
 sll_real64,dimension(:),allocatable :: x1
 sll_real64,dimension(:),allocatable :: x2
 sll_real64,dimension(:),allocatable :: f_init
@@ -45,6 +46,8 @@ sll_real64   :: tcpu, t_init, t_end
 sll_real64   :: x2_basis
 sll_real64   :: x1_basis
 sll_real64   :: x1_temp
+sll_int32    :: k1_error
+sll_int32    :: k2_error
 character(len = 50) :: filename
 character(len = 50) :: filename2
 character(len = 4) :: filenum
@@ -57,18 +60,16 @@ character(len = 4) :: filenum
 
 print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
-do num_cells = 10,10,1
+do num_cells = 80,80,20
 
 !   t_init = getRealTimer()
 
    ! Mesh initialization
-   print *, "   Begin Mesh Initialization "
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
                                     !0.5_f64, -sqrt(3.)/2._f64, &
                                     !0.5_f64,  sqrt(3.)/2._f64, &
                                     !1.0_f64,  0._f64, &
-                                    radius = 1._f64)
-   print *, "   END Mesh Initialization "
+                                    radius = 8._f64)
    call sll_display(mesh)
    print*,"num_pts : ", mesh%num_pts_tot
    print*,"spl deg : ", deg
@@ -85,30 +86,32 @@ do num_cells = 10,10,1
    SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
 
    ! Distribution initialization
-   gauss_x1  = -0.25_f64
-   gauss_x2  = -0.25_f64
-   gauss_sig = 0.05_f64
+   gauss_x1  = 2.0_f64
+   gauss_x2  = 2.0_f64
+   gauss_sig = 1.0_f64/sqrt(2._f64)/2._f64
+   gauss_amp = 1.0_f64
 
-   print *, " Entering init loop ---------------"
    do i=1, mesh%num_pts_tot
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
-      f_init(i) = 1._f64*exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
-                    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      f_init(i) = gauss_amp * &
+           exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+           + (x2(i)-gauss_x2)**2 / gauss_sig**2))
       if (exponent(f_init(i)) .lt. -17) then
          f_init(i) = 0._f64
       end if
       f_tn(i) = f_init(i)
    end do
-   print *, " Exiting init loop  ---------------"
 
 !   call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
    ! Advection initialization
-   which_advec = 0
-   advec = 0.025_f64!5_f64
-   tmax  = 2.5_f64
-   dt    = 0.025_f64
+   ! if : which_advec = 0 => linear advection
+   ! if : which_advec = 1 => circular advection
+   which_advec = 1
+   advec = 0.0!25_f64!5_f64
+   tmax  = 1.0_f64!1.0_f64
+   dt    =  0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
    ! Computing characteristics
@@ -126,13 +129,13 @@ do num_cells = 10,10,1
 
    ! Time loop
    nloops = 0
-   print *, " ***** num pts tot *****", mesh%num_pts_tot, spline%mesh%num_pts_tot
+
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
    call cpu_time(t_init)
-   print*,""
+   !print*,""
    do while (t .lt. tmax)
-      print *, " --> Time loop t =", t
+      !print *, " --> Time loop t =", t
       !Error variables
       norm2_error = 0._f64
       diff_error  = 0._f64
@@ -150,16 +153,17 @@ do num_cells = 10,10,1
          ! ******************
          f_tn(i) = hex_interpolate_value(mesh, x1_char(i), x2_char(i), spline, deg)
          ! if (f_tn(i) < 0.) then
-         !    ! print *, "Negative value at"
-         !    ! print *, "      Time  :", t
-         !    ! print *, "      Loop  :", nloops
-         !    ! print *, "      Point :", i
-         !    ! print *, "      X1char:", x1_char(i)
-         !    ! print *, "      X2char:", x2_char(i)
-         !    ! STOP
-         !    f_tn(i) = 0._f64
+!             print *, "Negative value at"
+!             print *, "      Value :", f_tn(i)
+!             print *, "      Time  :", t
+!             print *, "      Loop  :", nloops
+!             print *, "      Point :", i
+!             print *, "      X1char:", x1_char(i)
+!             print *, "      X2char:", x2_char(i)
+!          !   STOP
+!          !   f_tn(i) = 0._f64
          ! end if
-
+         
          ! ******************
          ! Analytical value 
          ! ******************
@@ -175,8 +179,9 @@ do num_cells = 10,10,1
             x1(i)   = x1_temp
          end if
 
-         f_fin(i) = exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
-                    + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+         f_fin(i) = gauss_amp * &
+              exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
+              + (x2(i)-gauss_x2)**2 / gauss_sig**2))
          if (exponent(f_fin(i)) .lt. -17) then
             f_fin(i) = 0._f64
          end if
@@ -201,10 +206,12 @@ do num_cells = 10,10,1
       
       call cpu_time(t_end)
       ! Printing error
+      k1_error = mesh%global_to_hex1(where_error)
+      k2_error = mesh%global_to_hex2(where_error)
       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
-      print*,"                       | at hex =", where_error
+      print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
       print*,"                       | error_L2   = ", norm2_error
-      ! print*," Center error = ", f_fin(1)-f_tn(1)
+      print*," Center error = ", f_fin(1)-f_tn(1)
 
 
 
@@ -221,7 +228,8 @@ do num_cells = 10,10,1
          write (12, "(3(g13.3,1x))") t, diff_error, norm2_error
          close(12)
       end if
-          
+       
+
       call int2string(nloops,filenum)
       filename2 = "./time_files/analytical/ana_dist"//trim(filenum)//".txt"
       filename  = "./time_files/numerical/num_dist"//trim(filenum)//".txt"
@@ -233,44 +241,44 @@ do num_cells = 10,10,1
    end do
 
 
-   call write_field_hex_mesh(mesh, f_tn, "final_dist.txt")
-   call write_field_hex_mesh(mesh, chi1, "chi1.txt")
-   call write_field_hex_mesh(mesh, chi2, "chi2.txt")
-   call write_field_hex_mesh(mesh, f_fin, "an_dist.txt")
-   print *,""
-   print*," *    Final error  = ", diff_error, " *"
+!    call write_field_hex_mesh(mesh, f_tn, "final_dist.txt")
+!    call write_field_hex_mesh(mesh, chi1, "chi1.txt")
+!    call write_field_hex_mesh(mesh, chi2, "chi2.txt")
+!    call write_field_hex_mesh(mesh, f_fin, "an_dist.txt")
+!    print *,""
+    print*," *    Final error  = ", diff_error, " *"
 
 
-   ! !WRITING ERROR REGARDING NUMBER OF POINTS
-   ! if (num_cells .eq. 10) then 
-   !    !NEW FILE :
-   !    open (unit=12,file="error_file.txt",action="write",&
-   !         status="replace")
-   !    write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-   !    close(12)
-   ! else
-   !    !WRITE
-   !    open (unit=12,file="error_file.txt",action="write",&
-   !         status="old", position="append") 
-   !    write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-   !    close(12)
-   ! end if
-
-
-   !WRITING CPU TIME
-   if (num_cells .eq. 10 ) then 
+   !WRITING ERROR REGARDING NUMBER OF POINTS
+   if (num_cells .eq. 20) then 
       !NEW FILE :
-      open (unit=12,file="cpu_time.txt",action="write",&
+      open (unit=12,file="error_file.txt",action="write",&
            status="replace")
-      write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+      write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
       close(12)
    else
       !WRITE
-      open (unit=12,file="cpu_time.txt",action="write",&
+      open (unit=12,file="error_file.txt",action="write",&
            status="old", position="append") 
-      write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+      write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
       close(12)
    end if
+
+
+!    !WRITING CPU TIME
+!    if (num_cells .eq. 10 ) then 
+!       !NEW FILE :
+!       open (unit=12,file="cpu_time.txt",action="write",&
+!            status="replace")
+!       write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+!       close(12)
+!    else
+!       !WRITE
+!       open (unit=12,file="cpu_time.txt",action="write",&
+!            status="old", position="append") 
+!       write (12, "(3(G15.3,1x))") num_cells, mesh%num_pts_tot, t_end-t_init
+!       close(12)
+!    end if
 
 
 
