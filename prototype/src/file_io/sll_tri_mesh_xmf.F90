@@ -8,9 +8,10 @@ implicit none
 contains
 
 
-subroutine write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field)
+subroutine write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field, label)
 
 character(len=*), intent(in) :: filename
+character(len=*), intent(in) :: label
 integer, intent(in)          :: nbs
 integer, intent(in)          :: nbt
 real(8), intent(in)          :: coor(2,nbs)
@@ -41,7 +42,7 @@ do  i=1, nbs
 end do
 write(xmf,"(a)") "</DataItem>"
 write(xmf,"(a)") "</Geometry>"
-write(xmf,"(a)") "<Attribute Name='Node_centered_field' Center='Node'>"
+write(xmf,"(a)") "<Attribute Name='"//label//"' Center='Node'>"
 write(xmf,"(a,i6,a)") "<DataItem Format='XML' Datatype='Float' Dimensions='", nbs, "'>"
 do  i=1, nbs
    write(xmf,"(f12.6)") field(i)
