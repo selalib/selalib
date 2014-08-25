@@ -24,7 +24,8 @@ module sll_sparse_matrix_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-  implicit none
+use sll_pastix
+implicit none
 
   !> @brief type for CSR format
   type sll_csr_matrix
@@ -34,23 +35,22 @@ module sll_sparse_matrix_module
     sll_int32, dimension(:), pointer :: opi_ia
     sll_int32, dimension(:), pointer :: opi_ja
     sll_real64, dimension(:), pointer :: opr_a
-    
         !................
     !logical :: ol_use_mm_format
     sll_int32, dimension(:), pointer :: opi_i
+    type(pastix_solver), pointer :: linear_solver
         !................
   end type sll_csr_matrix
 
   interface sll_delete
      module procedure delete_csr_matrix
   end interface sll_delete
-     
 
 contains
 
-
   subroutine delete_csr_matrix(csr_mat)
     type(sll_csr_matrix),pointer :: csr_mat
+    sll_int32 :: ierr
 
     nullify(csr_mat)
    ! SLL_DEALLOCATE_ARRAY(csr_mat%opi_ia,ierr)
@@ -60,6 +60,12 @@ contains
     
     
   end subroutine delete_csr_matrix
+
+
+
+
+!contains
+
 
   !> @brief allocates the memory space for a new CSR type on the heap,
   !> initializes it with the given arguments and returns a pointer to the
@@ -135,20 +141,23 @@ contains
     sll_int32, dimension(:,:), intent(in) :: local_to_global_col
     sll_int32, intent(in) :: num_local_dof_col
     !local variables
-    sll_int32 :: num_nz,ierr
+    sll_int32 :: li_err, li_flag
+    sll_int32 :: num_nz
     sll_int32, dimension(:,:), pointer :: lpi_columns
     sll_int32, dimension(:), pointer :: lpi_occ
     sll_int32 :: li_COEF
-    !print *,'#num_rows=',num_rows
-    !print *,'#num_nz=',num_nz
-
-    print *,'#initialize_csr_matrix'
+    sll_int32 :: ierr
+    !sll_real64, dimension(umfpack_info) :: info
+    
+    
     li_COEF = 10
     SLL_ALLOCATE(lpi_columns(num_rows, 0:li_COEF * num_local_dof_col),ierr)
     SLL_ALLOCATE(lpi_occ(num_rows + 1),ierr)
+  
     lpi_columns(:,:) = 0
     lpi_occ(:) = 0
     ! COUNTING NON ZERO ELEMENTS
+
     num_nz = sll_count_non_zero_elts( &
       num_rows, &
       num_cols, &
@@ -158,60 +167,74 @@ contains
       local_to_global_col, &
       num_local_dof_col, &
       lpi_columns, &
-      lpi_occ)      
+      lpi_occ)
     mat%num_rows = num_rows
     mat%num_cols = num_cols
-    mat%num_nz = num_nz   
-    print *,'#num_rows=',num_rows
-    print *,'#num_nz=',num_nz
-    SLL_ALLOCATE(mat%opi_ia(num_rows + 1),ierr)
-    SLL_ALLOCATE(mat%opi_ja(num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(num_nz),ierr)
+    mat%num_nz = num_nz
+    SLL_ALLOCATE(mat%linear_solver, ierr)
+    call initialize(mat%linear_solver,num_rows,num_nz)
+    !mat%linear_solver%iparm(IPARM_TRANSPOSE_SOLVE) = API_YES
     
     
     call sll_init_SparseMatrix( &
-      mat, &
       num_elements, &
       local_to_global_row, &
       num_local_dof_row, &
       local_to_global_col, &
       num_local_dof_col, &
       lpi_columns, &
-      lpi_occ)
+      lpi_occ, &
+      mat%linear_solver%colptr, &
+      mat%linear_solver%row, &
+      num_rows &
+      )
+    mat%linear_solver%avals = 0._f64   
     
-    mat%opr_a(:) = 0.0_f64
     SLL_DEALLOCATE_ARRAY(lpi_columns,ierr)
     SLL_DEALLOCATE_ARRAY(lpi_occ,ierr)
-
+    
+   
   end subroutine initialize_csr_matrix
 
+!  function new_csr_matrix_basic( mat, &
+!    num_rows, &
+!    num_nz, &
+!    opi_ia, &
+!    opi_ja, &
+!    opr_a)
+!    type(sll_csr_matrix), pointer :: mat
+!    sll_int32, intent(in) :: num_rows
+!    sll_int32, intent(in) :: num_nz
+!    !local variables    
+!    sll_int32 :: ierr
+!    SLL_ALLOCATE(mat,ierr)
+!    call initialize()
+!    
+!    
+!  end function new_csr_matrix_basic    
 
-  subroutine sll_factorize_csr_matrix(mat)
-    type(sll_csr_matrix), intent(inout) :: mat
-    
-    print *,'#sll_factorize_csr_matrix does nothing here'
-    
-  end subroutine sll_factorize_csr_matrix
 
+ 
   subroutine initialize_csr_matrix_with_constraint( &
     mat, &
     mat_a)
     type(sll_csr_matrix), intent(inout) :: mat
     type(sll_csr_matrix), intent(in) :: mat_a
     sll_int32 :: ierr
+
     !print*,' COUNTING NON ZERO ELEMENTS'
     mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
     print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
-    mat%num_rows = mat_a%num_rows  !+  1
+    mat%num_rows = mat_a%num_rows  +  1
     print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
-    mat%num_cols = mat_a%num_cols  !+  1
+    mat%num_cols = mat_a%num_cols  +  1
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%opi_ia(mat%num_rows),ierr)
-    SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
-    SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
-    mat%opr_a(:) = 0.0_f64
+    
+    mat%linear_solver%avals = 0._f64
+    
+    ! get the default configuration
 
   end subroutine initialize_csr_matrix_with_constraint
 
@@ -224,6 +247,7 @@ contains
          mat, &
          mat_a)
   end function new_csr_matrix_with_constraint
+   
   subroutine csr_add_one_constraint( &
     ia_in, &
     ja_in, &
@@ -249,11 +273,12 @@ contains
     integer :: s
     integer :: k
     
-    num_rows_out = num_rows_in!+1
+    
+    num_rows_out = num_rows_in+1
     num_nz_out = num_nz_in+2*num_rows_in
     
-    if(size(ia_in)<num_rows_in) then
-      print *, '#problem of size of ia_in', size(ia_in),num_rows_in!+1
+    if(size(ia_in)<num_rows_in+1) then
+      print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
       stop
     endif
     if(size(ja_in)<num_nz_in) then
@@ -264,8 +289,8 @@ contains
       print *, '#problem of size of a_in', size(a_in),num_nz_in
       stop
     endif
-    if(size(ia_out)<num_rows_out) then
-      print *, '#problem of size of ia_out', size(ia_out),num_rows_out!+1
+    if(size(ia_out)<num_rows_out+1) then
+      print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
       stop
     endif
     if(size(ja_out)<num_nz_out) then
@@ -276,8 +301,8 @@ contains
       print *, '#problem of size of a_out', size(a_out),num_nz_out
       stop
     endif
-    if(ia_in(num_rows_in).ne.num_nz_in)then
-      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in),num_nz_in!+1
+    if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
+      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
       stop
     endif
     
@@ -308,9 +333,18 @@ contains
     
   end subroutine csr_add_one_constraint
   
+  subroutine sll_factorize_csr_matrix(mat)
+    type(sll_csr_matrix), intent(inout) :: mat
+    sll_int32 :: ierr
+    
+    call factorize(mat%linear_solver)
+    
+  end subroutine sll_factorize_csr_matrix
+  
+
   subroutine sll_mult_csr_matrix_vector(mat, input, output)
     implicit none
-    type(sll_csr_matrix), intent(in) :: mat
+    type(sll_csr_matrix) :: mat
     sll_real64, dimension(:), intent(in) :: input
     sll_real64, dimension(:), intent(out) :: output
     !local var
@@ -320,10 +354,11 @@ contains
 
     do li_i = 1, mat % num_rows
 
-      li_k_1 = mat % opi_ia(li_i)
-      li_k_2 = mat % opi_ia(li_i + 1) - 1
+      li_k_1 = mat%linear_solver%colptr(li_i)
+      li_k_2 = mat%linear_solver%colptr(li_i + 1) - 1
       output(li_i) = &
-        DOT_PRODUCT(mat % opr_a(li_k_1: li_k_2), input(mat % opi_ja(li_k_1: li_k_2)))
+        DOT_PRODUCT(mat%linear_solver%avals(li_k_1: li_k_2), &
+          input(mat%linear_solver%row(li_k_1: li_k_2)))
             
     end do
 
@@ -333,7 +368,7 @@ contains
 
   subroutine sll_add_to_csr_matrix(mat, val, ai_A, ai_Aprime)
     implicit none
-    type(sll_csr_matrix), intent(inout) :: mat
+    type(sll_csr_matrix) :: mat
     sll_real64, intent(in) :: val
     sll_int32, intent(in) :: ai_A
     sll_int32, intent(in) :: ai_Aprime
@@ -343,163 +378,76 @@ contains
 
 
     ! THE CURRENT LINE IS self%opi_ia(ai_A)
-    do li_k = mat % opi_ia(ai_A), mat % opi_ia(ai_A + 1) - 1
-      li_j = mat % opi_ja(li_k)
+    do li_k = mat%linear_solver%colptr(ai_A), mat%linear_solver%colptr(ai_A + 1) - 1
+      li_j = mat%linear_solver%row(li_k)
       if (li_j == ai_Aprime) then
-        mat % opr_a(li_k) = mat % opr_a(li_k) + val
+        mat%linear_solver%avals(li_k) = mat%linear_solver%avals(li_k) + val 
         exit
       end if
     end do
 
   end subroutine sll_add_to_csr_matrix
-  
+ 
 
+  subroutine set_values_csr_matrix(mat, val)
+    implicit none
+    type(sll_csr_matrix) :: mat
+    sll_real64, dimension(:), intent(in) :: val
+    !local variables
+    sll_int32 :: i
+    
+    if(size(val)<mat%num_nz)then
+      print *,'#Problem of size of val',size(val),mat%num_nz
+      print *,'#at line',__LINE__
+      print *,'#in file',__FILE__
+      print *,'#in subroutine set_values_csr_matrix'
+      stop
+    endif
+    
+    mat%linear_solver%avals(1:mat%num_nz) = val(1:mat%num_nz)
+        
+  end subroutine set_values_csr_matrix
+
+  
 
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
-    type(sll_csr_matrix), intent(in) :: mat
-    sll_real64, dimension(:),intent(in) :: apr_B
-    sll_real64, dimension(:),intent(out) :: apr_U
+    type(sll_csr_matrix) :: mat
+    sll_real64, dimension(:) :: apr_U
+    sll_real64, dimension(:) :: apr_B
     !local var
-    !sll_int32  :: sys
-    !sll_real64, dimension(umfpack_info) :: info
-    !sys = 0
-    !call umf4sol(sys,apr_U,apr_B,mat%umf_numeric,mat%umf_control,info)
-    !use SparseMatrix_Module
-    !implicit none
-    !type(csr_matrix) :: this
-    !real(8), dimension(:) :: apr_U
-    !real(8), dimension(:) :: apr_B
-    integer  :: ai_maxIter
-    real(8) :: ar_eps
-    !local var
-    real(8), dimension(:), pointer :: lpr_Ad
-    real(8), dimension(:), pointer :: lpr_r
-    real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux
-    real(8) :: lr_Norm2r1
-    real(8) :: lr_Norm2r0
-    real(8) :: lr_NormInfb
-    real(8) :: lr_NormInfr
-    real(8) :: lr_ps
-    real(8) :: lr_beta
-    real(8) :: lr_alpha
-    logical  :: ll_continue
-    integer  :: li_iter
-    integer  :: li_err
-    integer  :: li_flag
-	
-    ar_eps = 1.d-13
-    ai_maxIter = 100000
-	
-		
-    if ( mat%num_rows /= mat%num_cols ) then
-            PRINT*,'#ERROR Gradient_conj: The matrix must be square'
-            stop
-    end if
-
-    if ( ( dabs ( MAXVAL ( apr_B ) ) < ar_eps ) .AND. ( dabs ( MINVAL ( apr_B ) ) < ar_eps ) ) then
-            apr_U = 0.0_8
-            return
-    end if
-
-    allocate(lpr_Ad(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=10
-    allocate(lpr_r(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=20
-    allocate(lpr_d(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=30
-    allocate(lpr_Ux(mat%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=40
-    !================!
-    ! initialisation !
-    !================!
+    sll_int32  :: sys
+    sys = 0
+    apr_U = apr_B
+    call solve(mat%linear_solver,apr_U)
     
-    apr_U(:)  = 0.0_8
-    lpr_Ux(:) = apr_U(:)
-    li_iter = 0
-    call sll_mult_csr_matrix_vector( mat , lpr_Ux , lpr_Ad )
-    !-------------------!
-    ! calcul des normes !
-    !-------------------!
-    lpr_r       = apr_B - lpr_Ad
-    lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
-    lr_NormInfb = maxval( dabs( apr_B ) )
-
-    lpr_d = lpr_r
-    !================!
-
- 
-    ll_continue=.true.
-    do while(ll_continue)
-            li_iter = li_iter + 1
-            !--------------------------------------!
-            ! calcul du ak parametre optimal local !
-            !--------------------------------------!
-
-            call sll_mult_csr_matrix_vector( mat , lpr_d , lpr_Ad )
-            lr_ps = DOT_PRODUCT( lpr_Ad , lpr_d )
-            lr_alpha = lr_Norm2r0 / lr_ps
-            
-            !==================================================!
-            ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-            !==================================================!
-            ! calcul des composantes residuelles
-            !-----------------------------------
-            lpr_r = lpr_r - lr_alpha * lpr_Ad
-            
-            !----------------------------------------!
-            ! approximations ponctuelles au rang k+1 !
-            !----------------------------------------!
-            lpr_Ux = lpr_Ux + lr_alpha * lpr_d
-            
-            !-------------------------------------------------------!
-            ! (a) extraction de la norme infinie du residu          !
-            !     pour le test d'arret                              !
-            ! (b) extraction de la norme euclidienne du residu rk+1 !
-            !-------------------------------------------------------!
-            lr_NormInfr = maxval(dabs( lpr_r ))
-            lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
-            !==================================================!
-            ! calcul de la nouvelle direction de descente dk+1 !
-            !==================================================!
-            lr_beta = lr_Norm2r1 / lr_Norm2r0
-            lr_Norm2r0 = lr_Norm2r1
-            lpr_d = lpr_r + lr_beta * lpr_d
-            
-            !-------------------!
-            ! boucle suivante ? !
-            !-------------------!
-            ll_continue=( ( lr_NormInfr / lr_NormInfb ) >= ar_eps ) .AND. ( li_iter < ai_maxIter )
-            !print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
-            
-    end do
-    apr_U = lpr_Ux
-    if ( li_iter == ai_maxIter ) then
-            print*,'Warning Gradient_conj : li_iter == ai_maxIter'
-            print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-    end if
-
-    
-    deallocate(lpr_Ad)
-    deallocate(lpr_d)
-    deallocate(lpr_r)
-    deallocate(lpr_Ux)
-
   end subroutine sll_solve_csr_matrix
+
+
+!    sll_int32  :: sys
+!    sll_real64, dimension(umfpack_info) :: info
+!      call umf4sol(sys,apr_U,apr_B,es%umf_numeric,es%umf_control,info)
+!       call Gradient_conj(&
+!            csr_mat,&
+!            apr_B,&
+!            apr_U,&
+!            ai_maxIter,&
+!            ar_eps )
+
 
 
 
     integer function sll_count_non_zero_elts( &
-      ai_nR,&
-      ai_nC,&
-      ai_nel,&
-      api_LM_1,&
-      ai_nen_1,&
-      api_LM_2,&
-      ai_nen_2,&
-      api_columns,&
-      api_occ)
+      ai_nR, ai_nC, ai_nel, api_LM_1, ai_nen_1, api_LM_2, ai_nen_2, api_columns, api_occ)
+!      ai_nR=num_rows, &
+!      ai_nC=num_cols, &
+!      ai_nel=num_elements, &
+!      api_LM_1=local_to_global_row, &
+!      ai_nen_1=num_local_dof_row, &
+!      api_LM_2=local_to_global_col, &
+!      ai_nen_2=num_local_dof_col, &
+!      api_columns=lpi_columns, &
+!      api_occ=lpi_occ)
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
@@ -510,6 +458,8 @@ contains
         integer, dimension(:), pointer :: api_occ
         !local var
         integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_i
+        integer :: li_err, li_flag
+        real(f64), dimension(:), pointer :: lpr_tmp
         integer :: li_result
         integer, dimension(2) :: lpi_size
         logical :: ll_done
@@ -584,15 +534,12 @@ contains
         sll_count_non_zero_elts = li_result
     end function sll_count_non_zero_elts
 
-    subroutine sll_init_SparseMatrix(&
-         self,&
-         ai_nel,&
-         api_LM_1,&
-         ai_nen_1,&
-         api_LM_2, &
-         ai_nen_2,&
-         api_columns,&
-         api_occ)
+    subroutine sll_init_SparseMatrix( &
+      ai_nel, &
+      api_LM_1, &
+      ai_nen_1, &
+      api_LM_2, &
+      ai_nen_2, api_columns, api_occ, opi_ia, opi_ja, num_rows)
         ! _1 FOR ROWS
         ! _2 FOR COLUMNS
         implicit none
@@ -602,17 +549,20 @@ contains
         integer :: ai_nel, ai_nen_1, ai_nen_2
         integer, dimension(:,:), pointer :: api_columns
         integer, dimension(:), pointer :: api_occ
+        integer, dimension(:), intent(out) :: opi_ia
+        integer, dimension(:), intent(out) :: opi_ja
+        integer, intent(in) :: num_rows
         !local var
-        integer :: li_e, li_b_1, li_A_1,li_i, li_size
+        integer :: li_e, li_b_1, li_A_1, li_b_2, li_A_2, li_index, li_i, li_size
         integer :: li_err, li_flag
         real(f64), dimension(:), pointer :: lpr_tmp
 
         ! INITIALIZING ia
-        self % opi_ia(1) = 1
+        opi_ia(1) = 1
 
-        do li_i = 1, self % num_rows
+        do li_i = 1, num_rows
 
-            self % opi_ia(li_i + 1) = self % opi_ia(1) + SUM(api_occ(1: li_i))
+            opi_ia(li_i + 1) = opi_ia(1) + SUM(api_occ(1: li_i))
 
         end do
 
@@ -642,7 +592,7 @@ contains
 
                 do li_i = 1, li_size
 
-                    self % opi_ja(self % opi_ia(li_A_1) + li_i - 1) = int ( lpr_tmp(li_i))
+                    opi_ja(opi_ia(li_A_1) + li_i - 1) = int ( lpr_tmp(li_i))
 
                 end do
 
@@ -654,9 +604,6 @@ contains
         end do
 
     end subroutine sll_init_SparseMatrix
-
-
-
 
 
 recursive subroutine QsortC(A)
@@ -709,141 +656,20 @@ end subroutine Partition
 
 
 
-subroutine sll_solve_csr_matrix_perper ( this, apr_B,apr_U,Masse_tot )
+
+
+
+  subroutine sll_solve_csr_matrix_perper(mat, apr_B, apr_U,Masse_tot)
     implicit none
-    type(sll_csr_matrix) :: this
-    real(8), dimension(:) :: apr_U
-    real(8), dimension(:) :: apr_B
-    integer  :: ai_maxIter
-    real(8) :: ar_eps
+    type(sll_csr_matrix) :: mat
+    sll_real64, dimension(:) :: apr_U
+    sll_real64, dimension(:) :: apr_B
+    sll_real64, dimension(:), pointer :: Masse_tot
     !local var
-    real(8), dimension(:), pointer :: lpr_Ad
-    real(8), dimension(:), pointer :: lpr_r
-    real(8), dimension(:), pointer :: lpr_d
-    real(8), dimension(:), pointer :: lpr_Ux,one
-    real(8), dimension(:), pointer :: Masse_tot
-    real(8) :: lr_Norm2r1
-    real(8) :: lr_Norm2r0
-    real(8) :: lr_NormInfb
-    real(8) :: lr_NormInfr
-    real(8) :: lr_ps
-    real(8) :: lr_beta
-    real(8) :: lr_alpha
-    logical  :: ll_continue
-    integer  :: li_iter
-    integer  :: li_err
-    integer  :: li_flag
-
-    ai_maxIter = 100000
-    ar_eps = 1.d-13
-		
-    if ( this%num_rows /= this%num_cols ) then
-            PRINT*,'ERROR Gradient_conj: The matrix must be square'
-            stop
-    end if
-
-    if ( ( dabs ( MAXVAL ( apr_B ) ) < ar_eps ) .AND. ( dabs ( MINVAL ( apr_B ) ) < ar_eps ) ) then
-            apr_U = 0.0_8
-            return
-    end if
-
-    allocate(lpr_Ad(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=10
-    allocate(lpr_r(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=20
-    allocate(lpr_d(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=30
-    allocate(lpr_Ux(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=40
-    allocate(one(this%num_rows),stat=li_err)
-    if (li_err.ne.0) li_flag=50
-    !================!
-    ! initialisation !
-    !================!
-    !apr_U(3:this%num_rows)  = 0.0_8
-    !apr_U(1)  = 1.0_8
-    !apr_U(2)  = -1.0_8
-    apr_U(:)  = 0.0_8
-    one(:) = 1.
-    lpr_Ux(:) = apr_U(:)
-    li_iter = 0
-    call sll_mult_csr_matrix_vector( this , lpr_Ux , lpr_Ad )
-    lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_Ux)
-    !print*, 'calcul des normes',dot_product(lpr_Ad, one),maxval(lpr_Ad)
-    !-----------------
-    !-------------------!
-    ! calcul des normes !
-    !-------------------!
-    lpr_r       = apr_B - lpr_Ad
-    lr_Norm2r0  = DOT_PRODUCT( lpr_r , lpr_r )
-    lr_NormInfb = maxval( dabs( apr_B ) )
-
-    lpr_d = lpr_r
-    !================!
-
-!    print *,'%%%%'
-    ll_continue=.true.
-    do while(ll_continue)
-            li_iter = li_iter + 1
-            !--------------------------------------!
-            ! calcul du ak parametre optimal local !
-            !--------------------------------------!
-
-            call sll_mult_csr_matrix_vector( this , lpr_d , lpr_Ad )
-            
-            lpr_Ad = lpr_Ad - dot_product(Masse_tot, lpr_d)
-            lr_ps = DOT_PRODUCT( lpr_Ad , lpr_d )
-            lr_alpha = lr_Norm2r0 / lr_ps
-            
-            !==================================================!
-            ! calcul de l'approximation Xk+1 et du residu Rk+1 !
-            !==================================================!
-            ! calcul des composantes residuelles
-            !-----------------------------------
-            lpr_r = lpr_r - lr_alpha * lpr_Ad
-            
-            !----------------------------------------!
-            ! approximations ponctuelles au rang k+1 !
-            !----------------------------------------!
-            lpr_Ux = lpr_Ux + lr_alpha * lpr_d
-            
-            !-------------------------------------------------------!
-            ! (a) extraction de la norme infinie du residu          !
-            !     pour le test d'arret                              !
-            ! (b) extraction de la norme euclidienne du residu rk+1 !
-            !-------------------------------------------------------!
-            lr_NormInfr = maxval(dabs( lpr_r ))
-            lr_Norm2r1 = DOT_PRODUCT( lpr_r , lpr_r )
-            
-            !==================================================!
-            ! calcul de la nouvelle direction de descente dk+1 !
-            !==================================================!
-            lr_beta = lr_Norm2r1 / lr_Norm2r0
-            lr_Norm2r0 = lr_Norm2r1
-            lpr_d = lpr_r + lr_beta * lpr_d
-            !lpr_d(1) =  apr_B(1)
-            !-------------------!
-            ! boucle suivante ? !
-            !-------------------!
-            ll_continue=( ( lr_NormInfr / lr_NormInfb ) >= ar_eps ) .AND. ( li_iter < ai_maxIter )
-            !print*, 'norme infr = ',lr_NormInfr, 'norme infb=',  lr_NormInfb
-            
-    end do
-    apr_U = lpr_Ux
+    sll_int32  :: sys
+    sys = 0
     
-    if ( li_iter == ai_maxIter ) then
-            print*,'Warning Gradient_conj : li_iter == ai_maxIter'
-            print*,'Error after CG =',( lr_NormInfr / lr_NormInfb )
-    end if
-    
-    deallocate(lpr_Ad)
-    deallocate(lpr_d)
-    deallocate(lpr_r)
-    deallocate(lpr_Ux)
-    deallocate(one)
   end subroutine sll_solve_csr_matrix_perper
-
-
 !    call create_CSR( &
 !        es%csr_mat, &
 !        solution_size, &
