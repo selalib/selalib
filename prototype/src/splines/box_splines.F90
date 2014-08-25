@@ -46,7 +46,6 @@ contains  ! ****************************************************************
     type(box_spline_2d), pointer  :: new_box_spline_2d
     type(hex_mesh_2d),   pointer  :: mesh
     sll_int32,  intent(in)        :: bc_type
-    sll_int32                     :: bc_selector
     sll_int32                     :: ierr
 
 
@@ -55,21 +54,6 @@ contains  ! ****************************************************************
     new_box_spline_2d%mesh => mesh
 
     new_box_spline_2d%bc_type = bc_type
-
-    ! Treat the bc_selector variable essentially like a bit field, to 
-    ! accumulate the information on the different boundary conditions
-    ! given. This scheme allows to add more types of boundary conditions
-    ! if necessary.
-    bc_selector = 0
-    if( bc_type .eq. SLL_DIRICHLET ) then 
-       bc_selector = bc_selector + 1
-    end if
-    if( bc_type .eq. SLL_PERIODIC ) then
-       bc_selector = bc_selector + 2
-    end if
-    if( bc_type .eq. SLL_NEUMANN ) then 
-       bc_selector = bc_selector + 4
-    end if
 
     SLL_ALLOCATE( new_box_spline_2d%coeffs(1:mesh%num_pts_tot), ierr )
     new_box_spline_2d%coeffs(:) = 0._f64
@@ -482,37 +466,43 @@ contains  ! ****************************************************************
     ! Then we will do a loop for all the points 
     ! on the envelopping rhomboid of radius=deg
     do ki= 1-deg, deg
-      do kj= 1-deg, deg
+       do kj= 1-deg, deg
         
-        k1  = k1_asso + ki
-        k2  = k2_asso + kj
-        distance = cells_to_origin(k1, k2)
-
-        ! We test if we are in the domain
-        if (distance.le.num_cells) then
-           
-           ind = spline%mesh%hex_to_global(k1, k2)
-           
-           ! We centralize and shift the coordinates
-           ! i.e. centralize : xm = x - Rk
-           !      shifting   : xm to the associated rhomboid point
-           xm1 = x1 - r11*k1_asso - r21*k2_asso - ki*r11 - kj*r21
-           xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
-           
-           ! change of basis : geometrical basis => spline basis
-           x1_spl = change_basis_x1(spline, xm1, xm2)
-           x2_spl = change_basis_x2(spline, xm1, xm2)
-
-           val = val + spline%coeffs(ind) * &
-                chi_gen_val(x1_spl, x2_spl, deg)
-           else
-              !! TREAT HERE BC
-              ! TODO @LM
-              val = val
-           end if
-        end do
-   end do
-
+          k1  = k1_asso + ki
+          k2  = k2_asso + kj
+          distance = cells_to_origin(k1, k2)
+          
+          ! We test if we are in the domain
+          if (distance.le.num_cells) then
+             
+             ind = spline%mesh%hex_to_global(k1, k2)
+             
+             ! We centralize and shift the coordinates
+             ! i.e. centralize : xm = x - Rk
+             !      shifting   : xm to the associated rhomboid point
+             xm1 = x1 - r11*k1_asso - r21*k2_asso - ki*r11 - kj*r21
+             xm2 = x2 - r12*k1_asso - r22*k2_asso - ki*r12 - kj*r22
+             
+             ! change of basis : geometrical basis => spline basis
+             x1_spl = change_basis_x1(spline, xm1, xm2)
+             x2_spl = change_basis_x2(spline, xm1, xm2)
+             
+             val = val + spline%coeffs(ind) * &
+                  chi_gen_val(x1_spl, x2_spl, deg)
+          else
+             !! TREAT HERE BC
+             ! TODO @LM
+             if (spline%bc_type .eq. SLL_DIRICHLET) then
+                val = val
+                ind = spline%mesh%hex_to_global(k1_asso, k2_asso)
+                ! print *, "For i : ", ind, "k1, k2 =", k1, k2, " val = ", val
+             else
+                print *, "Error : Boundary condition type not yet implemented"
+                STOP
+             end if
+          end if
+       end do
+    end do
   end function hex_interpolate_value
 
 end module box_splines
