@@ -71,8 +71,17 @@ module sll_coordinate_transformation_multipatch_module
      procedure, pass :: get_number_patches => get_number_patches_ctmp2d
      procedure, pass :: get_transformation => get_transformation_ctmp2d
      procedure, pass :: get_logical_mesh => get_logical_mesh_ctmp2d
+     procedure, pass :: get_num_cells_eta1 => get_num_cells_eta1_ctmp2d
+     procedure, pass :: get_num_cells_eta2 => get_num_cells_eta2_ctmp2d
+     procedure, pass :: get_delta_eta1 => get_delta_eta1_ctmp2d
+     procedure, pass :: get_delta_eta2 => get_delta_eta2_ctmp2d
+     procedure, pass :: get_eta1_min => get_eta1_min_ctmp2d
+     procedure, pass :: get_eta2_min => get_eta2_min_ctmp2d
+     procedure, pass :: get_eta1_max => get_eta1_max_ctmp2d
+     procedure, pass :: get_eta2_max => get_eta2_max_ctmp2d
      procedure, pass :: get_connectivity => get_connectivity_ctmp2d
-     procedure, pass :: get_spline_local_to_global_index=>get_spline_local_to_global_index_Tmp2d
+     procedure, pass :: get_spline_local_to_global_index => &
+          get_spline_local_to_global_index_Tmp2d
      procedure, pass :: get_spline_local_index=>get_spline_local_index_Tmp2d
      procedure, pass :: get_spline_global_index=>get_spline_global_index_Tmp2d
      procedure, pass :: x1_node => x1_node_ctmp2d
@@ -374,8 +383,96 @@ contains
     res => mp%transfs(patch+1)%t%mesh
   end function get_logical_mesh_ctmp2d
 
+  function get_num_cells_eta1_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_int32 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells1
+    res = mp%transfs(patch+1)%t%mesh%num_cells1
+  end function get_num_cells_eta1_ctmp2d
+
+  function get_num_cells_eta2_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_int32 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%num_cells2
+  end function get_num_cells_eta2_ctmp2d
+
+  function get_delta_eta1_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_real64 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%delta_eta1
+  end function get_delta_eta1_ctmp2d
+
+  function get_delta_eta2_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_real64 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%delta_eta2
+  end function get_delta_eta2_ctmp2d
+
+  function get_eta1_min_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_real64 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%eta1_min
+  end function get_eta1_min_ctmp2d
+
+  function get_eta1_max_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_real64 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%eta1_max
+  end function get_eta1_max_ctmp2d
+
+  function get_eta2_min_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_real64 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%eta2_min
+  end function get_eta2_min_ctmp2d
+
+  function get_eta2_max_ctmp2d ( mp, patch ) result(res)
+    class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
+    sll_int32, intent(in) :: patch
+    sll_real64 :: res
+    SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
+    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
+    ! longer supported by Selalib
+    ! res = mp%get_logical_mesh%num_cells2
+    res = mp%transfs(patch+1)%t%mesh%eta2_max
+  end function get_eta2_max_ctmp2d
+
   function get_transformation_ctmp2d( mp, patch ) result(res)
-    type(sll_coordinate_transformation_2d_nurbs), pointer :: res
+    class(sll_coordinate_transformation_2d_nurbs), pointer :: res
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
@@ -400,7 +497,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%x1_at_node(i,j)
+    val = mp%transfs(patch+1)%T%x1_at_node(i,j)
   end function x1_node_ctmp2d
 
   function x2_node_ctmp2d( mp, i, j, patch ) result(val)
@@ -410,7 +507,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%x2_at_node(i,j)
+    val = mp%transfs(patch+1)%T%x2_at_node(i,j)
   end function x2_node_ctmp2d
 
   function jacobian_at_node_ctmp2d( mp, i, j, patch ) result(val)
@@ -420,7 +517,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%jacobian_at_node(i,j)
+    val = mp%transfs(patch+1)%T%jacobian_at_node(i,j)
   end function jacobian_at_node_ctmp2d
 
   function x1_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -430,7 +527,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%x1(eta1,eta2)
+    val = mp%transfs(patch+1)%T%x1(eta1,eta2)
   end function x1_ctmp2d
 
   function x2_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -440,7 +537,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%x2(eta1,eta2)
+    val = mp%transfs(patch+1)%T%x2(eta1,eta2)
   end function x2_ctmp2d
 
   function x1_at_cell_ctmp2d( mp, i, j, patch ) result(val)
@@ -450,7 +547,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%x1_at_cell(i,j)
+    val = mp%transfs(patch+1)%T%x1_at_cell(i,j)
   end function x1_at_cell_ctmp2d
 
   function x2_at_cell_ctmp2d( mp, i, j, patch ) result(val)
@@ -460,7 +557,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%x2_at_cell(i,j)
+    val = mp%transfs(patch+1)%T%x2_at_cell(i,j)
   end function x2_at_cell_ctmp2d
 
   function jacobian_at_cell_ctmp2d( mp, i, j, patch ) result(val)
@@ -470,7 +567,7 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%jacobian_at_cell(i,j)
+    val = mp%transfs(patch+1)%T%jacobian_at_cell(i,j)
   end function jacobian_at_cell_ctmp2d
 
   function jacobian_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -480,7 +577,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%jacobian(eta1,eta2)
+    val = mp%transfs(patch+1)%T%jacobian(eta1,eta2)
   end function jacobian_ctmp2d
 
   function jacobian_matrix_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -490,7 +587,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%jacobian_matrix(eta1,eta2)
+    val = mp%transfs(patch+1)%T%jacobian_matrix(eta1,eta2)
   end function jacobian_matrix_ctmp2d
 
   function inverse_jm_ctmp2d( mp, eta1, eta2, patch ) result(val)
@@ -500,7 +597,7 @@ contains
     sll_real64, intent(in)   :: eta2
     sll_int32, intent(in)   :: patch
     SLL_ASSERT(patch >= 0 .and. patch < mp%number_patches )
-    val = mp%transfs(patch)%T%inverse_jacobian_matrix(eta1,eta2)
+    val = mp%transfs(patch+1)%T%inverse_jacobian_matrix(eta1,eta2)
   end function inverse_jm_ctmp2d
 
   subroutine write_to_file_ctmp2d( mp, output_format )
