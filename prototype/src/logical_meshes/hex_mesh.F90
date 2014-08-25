@@ -180,7 +180,7 @@ contains
     mesh%num_cells = num_cells
     mesh%delta = mesh%radius/real(num_cells,f64)
     ! The formula is = 6*sum(num_cells)+1 which simplifies to :
-    mesh%num_pts_tot = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
+    mesh%num_pts_tot   = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
     mesh%num_triangles = 6 * num_cells * num_cells
 
     ! resizing :
@@ -461,10 +461,10 @@ contains
     ! if k1>0  ...               [-num_cells+k1,k2]
 
     if (k1.le.0) then
-       k   = num_cells + k1
+       k    = num_cells + k1
        nk1  = floor( num_cells*k + k*(k+1)*0.5 ) !this value is always an integer, floor avoids the transformation
        nk2  = k2 + num_cells_plus1
-    elseif (k1.gt.0) then 
+    else
        ! n0 is the total number of points from (-num_cells,-num_cells) to 
        ! ( 0,numcells)
        n0  = floor( num_cells**2 + num_cells*num_cells_plus1*0.5 )
@@ -851,6 +851,7 @@ contains
 
   end subroutine write_field_hex_mesh_xmf
 
+
   subroutine delete_hex_mesh_2d( mesh )
     type(hex_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
@@ -861,7 +862,6 @@ contains
        print *, '       Crash imminent...'
        STOP
     end if
-
 
     SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
     SLL_DEALLOCATE(mesh%hex_coord, ierr)
