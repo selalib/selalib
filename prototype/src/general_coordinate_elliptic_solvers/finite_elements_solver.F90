@@ -788,13 +788,7 @@ contains ! =============================================================
          solv%num_splines_loc, &
          solv%local_to_global_spline_indices_source, &
          solv%num_splines_loc )
-    
-!     print *, " local_to_global_spline_indices_source"
-!     do i = 1, solv%num_cells
-!        print *, solv%local_to_global_spline_indices_source(:, i)
-!     end do
-
-    
+        
     call compute_Source_matrice(solv,Source_loc)
     
     SLL_DEALLOCATE_ARRAY(Source_loc,ierr)
