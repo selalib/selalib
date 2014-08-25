@@ -56,7 +56,7 @@ contains  ! ****************************************************************
     new_box_spline_2d%bc_type = bc_type
 
     SLL_ALLOCATE( new_box_spline_2d%coeffs(1:mesh%num_pts_tot), ierr )
-    new_box_spline_2d%coeffs(:) = 0._f64
+
   end function new_box_spline_2d
 
 
@@ -116,62 +116,6 @@ contains  ! ****************************************************************
   end subroutine compute_box_spline_2d
 
 
-!   function twelve_fold_symmetry(out_index, num_pts) result(in_index)
-!     ! This function is used when a point of global index out_index
-!     ! is out of the domain.
-!     ! It uses the property of the twelve fold symmetry of the hexagonal mesh
-!     ! to find an in_index of a point in the domain
-!     sll_int32,intent(in)    :: out_index
-!     sll_int32,intent(in)    :: num_pts
-!     sll_int32    :: in_index
-!     sll_int32    :: k1
-!     sll_int32    :: k2
-!     sll_int32    :: temp
-!     sll_int32    :: hex_num
-
-!     k1 = from_global_index_k1(out_index)
-!     k2 = from_global_index_k2(out_index)
-!     ! We compute the hexagon-ring number
-!     if (k1*k2 .ge. 0.) then
-!        hex_num = max( abs(k1), abs(k2))
-!     else 
-!        hex_num = abs(k1) + abs(k2)
-!     end if
-
-!     ! We first need to find the hexagonal coordinates (k1, k2)
-!     if (k1 .eq. hex_num)  then
-!        ! if index out on first edge : symmetry by r2_ext
-!        k1 = 2*(num_pts - 1) - k1
-!        k2 = k2 + k1 - num_pts + 1
-!     elseif (k2 .eq. hex_num) then
-!        ! if index out on second edge : symmetry by r1_ext
-!        k2 = 2*(num_pts - 1) - k2
-!        k1 = k2 + k1 - num_pts + 1
-!     elseif (( k1 .lt. 0) .and. (k2 .gt. 0)) then
-!        ! if index out on third edge : symmetry by r3_ext
-!        temp = k2 - num_pts + 1
-!        k2   = k1 + num_pts - 1
-!        k1   = temp
-!     elseif (k1 .eq. -hex_num) then
-!        ! if index out on fourth edge : symmetry by r2_ext
-!        k1 = -2*(num_pts - 1) - k1
-!        k2 =  k2 + k1 + num_pts - 1
-!     elseif (k2 .eq. -hex_num) then
-!        ! if index out on fifth edge : symmetry by r1_ext
-!        k2 = -2*(num_pts - 1) - k2
-!        k1 = k2 + k1 + num_pts - 1
-!     elseif ((k1 .gt. 0).and.(k2 .lt. 0)) then
-!        ! if index out on sixth edge : symmetry by r3_ext
-!        temp = k2 + num_pts - 1
-!        k2   = k1 - num_pts + 1
-!        k1   = temp
-!     end if
-
-!     in_index = global_index(k1,k2)
-!   end function twelve_fold_symmetry
-
-
-
   subroutine compute_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
     type(box_spline_2d), pointer                  :: spline
@@ -183,7 +127,9 @@ contains  ! ****************************************************************
     num_pts_tot = spline%mesh%num_pts_tot
     
     do i = 1, num_pts_tot
+
        spline%coeffs(i) = real(0,f64)
+
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
        do k = 1, 3*(2*deg)*(2*deg+1) + 1 
@@ -239,11 +185,11 @@ contains  ! ****************************************************************
     sll_int32, intent (in) :: k
     sll_real64 :: res
     if (k.lt.0) then
-       res = 0.
+       res = 0._f64
     else if (n .lt. k) then
-       res = 0.
+       res = 0._f64
     else 
-       res = sll_factorial(n) / (sll_factorial(k) * sll_factorial(n - k))
+       res = real(sll_factorial(n),f64) / real((sll_factorial(k) * sll_factorial(n - k)), f64)
     end if
   end function choose
 
@@ -308,7 +254,8 @@ contains  ! ****************************************************************
                       aux2 = 0._f64
                    end if
                    val = val + coeff*choose(deg-1+d,d)   &
-                        /sll_factorial(2*deg-1+d)/sll_factorial(deg-1-d)  &
+                        /real(sll_factorial(2*deg-1+d), f64) &
+                        /real(sll_factorial(deg -1 -d), f64) &
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
                 end do
@@ -331,22 +278,24 @@ contains  ! ****************************************************************
        if (u.lt.0) then
           !Symmetry r2
           u = -u
-          v = v+u
+          v = v + u
        end if
-       if (2*u.lt.v) then
+       if (u.lt.v/2) then
           !Symmetry r2+r3
-          u = v-u
+          u = v - u
        end if
        g = u - v/2._f64
-       if (v.gt.2.0) then
-          val = 0.0_f64
-       else if (v.lt.1.0) then
-          val = 0.5 + ((5._f64/3._f64 - v/8.0_f64)*v-3.0_f64)*v*v/4.0_f64 + &
+       if (v.gt.2._f64) then
+          val = 0._f64
+       else if (v.lt.1._f64) then
+          val = 0.5_f64 + &
+               ((5._f64/3._f64 - v/8.0_f64)*v - 3.0_f64)*v*v/4.0_f64 + &
                ((1._f64 - v/4._f64)*v + g*g/6._f64 - 1._f64)*g*g
-       else if (u.gt.1.0) then
+       else if (u.gt.1._f64) then
           val = (v - 2._f64)*(v - 2._f64)*(v - 2._f64)*(g - 1._f64)/6.0_f64
        else
-          val = 5._f64/6._f64 + ((1._f64 + (1._f64/3._f64 - v/8._f64)*v)*v/4._f64-1._f64)*v + &
+          val = 5._f64/6._f64 + &
+               ((1._f64 + (1._f64/3._f64 - v/8._f64)*v)*v/4._f64 - 1._f64)*v + &
                ((1._f64 - v/4._f64)*v + g*g/6.0_f64 - 1._f64)*g*g
        end if
     end if
@@ -386,6 +335,7 @@ contains  ! ****************************************************************
     k1_basis = 1./delta_q*(q22*x1 - q21*x2)
     k2_basis = 1./delta_q*(q11*x2 - q12*x1)
     x1_basis = r11*k1_basis+r21*k2_basis
+    
   end function change_basis_x1
 
 
@@ -422,6 +372,7 @@ contains  ! ****************************************************************
     k1_basis = 1./delta_q*(q22*x1 - q21*x2)
     k2_basis = 1./delta_q*(q11*x2 - q12*x1)
     x2_basis = r12*k1_basis+r22*k2_basis
+    
   end function change_basis_x2
 
 
@@ -495,7 +446,6 @@ contains  ! ****************************************************************
              if (spline%bc_type .eq. SLL_DIRICHLET) then
                 val = val
                 ind = spline%mesh%hex_to_global(k1_asso, k2_asso)
-                ! print *, "For i : ", ind, "k1, k2 =", k1, k2, " val = ", val
              else
                 print *, "Error : Boundary condition type not yet implemented"
                 STOP
