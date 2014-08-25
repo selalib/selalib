@@ -46,16 +46,35 @@ TARGET_LINK_LIBRARIES(sll_maxwell_solvers sll_dg_fields
                                           sll_utilities )
 
 ADD_EXECUTABLE(test_maxwell_2d_fdtd unit_test_2d_fdtd.F90)
+
 TARGET_LINK_LIBRARIES(test_maxwell_2d_fdtd sll_maxwell_solvers)
 
 ADD_EXECUTABLE(test_maxwell_2d_diga_periodic unit_test_2d_diga_periodic.F90)
+
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_periodic sll_maxwell_solvers)
 
 ADD_EXECUTABLE(test_maxwell_2d_diga_wave unit_test_2d_diga_wave.F90)
+
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_wave sll_maxwell_solvers)
 
 ADD_EXECUTABLE(test_maxwell_2d_diga_discrete unit_test_2d_discrete.F90)
+
 TARGET_LINK_LIBRARIES(test_maxwell_2d_diga_discrete sll_maxwell_solvers)
+
+ADD_EXECUTABLE(test_maxwell_diga_hex_mesh unit_test_diga_hex_mesh.F90
+                                          triangle_dg_matrices.F90
+                                          sll_maxwell_diga_hex_mesh.F90)
+
+TARGET_LINK_LIBRARIES(test_maxwell_diga_hex_mesh hex_mesh ${LAPACK_LIBRARIES})
+
+IF(BUILD_TESTING)
+
+   ADD_TEST(NAME maxwell_2d_dg_periodic COMMAND test_maxwell_2d_diga_periodic)
+   SET_TESTS_PROPERTIES(maxwell_2d_dg_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+   ADD_TEST(NAME maxwell_2d_dg_silver_muller COMMAND test_maxwell_2d_diga_wave)
+   SET_TESTS_PROPERTIES(maxwell_2d_dg_silver_muller PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ENDIF(BUILD_TESTING)
 
 ADD_CUSTOM_TARGET( clean_outputs
    COMMAND find . -name *.mtv -delete
@@ -65,10 +84,3 @@ ADD_CUSTOM_TARGET( clean_outputs
    COMMAND find . -name *.h5  -delete
    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)
-
-IF(BUILD_TESTING)
-ADD_TEST(NAME maxwell_2d_dg_periodic COMMAND test_maxwell_2d_diga_periodic)
-SET_TESTS_PROPERTIES(maxwell_2d_dg_periodic PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME maxwell_2d_dg_silver_muller COMMAND test_maxwell_2d_diga_wave)
-SET_TESTS_PROPERTIES(maxwell_2d_dg_silver_muller PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF(BUILD_TESTING)
