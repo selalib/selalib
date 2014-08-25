@@ -435,9 +435,6 @@ contains
     endsubroutine
 
 
-
-
-
     subroutine pic_1d_field_solver_reset_particles(this)
         class(pic_1d_field_solver), intent(inout) :: this
 

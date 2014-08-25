@@ -865,6 +865,29 @@ end function ionbeam
 
 
 
+subroutine sll_initialize_intrinsic_mpi_random(collective)
+sll_int32 :: seed_size,idx
+sll_int32, dimension(:), allocatable :: seed
+    type(sll_collective_t), pointer      :: collective
+
+sll_int32 :: coll_rank
+
+    coll_rank = sll_get_collective_rank( collective )
+
+
+call random_seed(size=seed_size)  ! output: the size of the seed array
+allocate(seed(seed_size))
+do idx=1, seed_size
+  seed(idx) = 1e9*coll_rank
+end do
+call random_seed(put=seed)
+
+call sll_collective_barrier(collective)
+
+
+
+
+endsubroutine
 
 
 
@@ -1571,6 +1594,14 @@ function control_variate_xv(x,v) result(p)
     p=control_variate_x(x)*control_variate_v(v)
 endfunction
 
+
+elemental sll_real64 function sll_local_maxwellian(v, vtherm, temperature)
+   sll_real64,intent(in) :: v
+   sll_real64, intent(in) :: vtherm, temperature
+
+   sll_local_maxwellian=exp(-0.5_f64*(v-vtherm)**2/temperature)
+
+endfunction
 
 
 !>Note that this cannot be done in parallel
