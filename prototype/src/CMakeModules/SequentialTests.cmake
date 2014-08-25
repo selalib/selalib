@@ -111,6 +111,7 @@ ENDIF(PYTHON3_FOUND)
 
    SET_TESTS_PROPERTIES(reduction PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ADD_TEST(NAME general_coordinate_elliptic_solver COMMAND test_general_coordinates_elliptic_solver)
+   ADD_TEST(NAME finite_elements_solver COMMAND test_finite_elements_solver)
    ADD_TEST(NAME characteristics_1d_explicit_euler COMMAND test_characteristics_1d_explicit_euler)
    ADD_TEST(NAME characteristics_1d_explicit_euler_conservative
      COMMAND test_characteristics_1d_explicit_euler_conservative)

@@ -20,7 +20,7 @@ module sll_simulation_4d_qns_general_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
 !  use sll_arbitrary_degree_spline_interpolator_1d_module
-!  use sll_timer
+  use sll_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general
@@ -478,7 +478,8 @@ contains
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
     ! time variables
     sll_int32 :: size_diag
-    
+    sll_real64 :: time
+    type(sll_time_mark) :: t0    
     
     nc_x1 = sim%mesh2d_x%num_cells1
     nc_x2 = sim%mesh2d_x%num_cells2
@@ -813,7 +814,8 @@ contains
          loc_sz_x4 )
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     !    SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
-    
+
+    call sll_set_time_mark(t0)  
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
          sim%mesh2d_x, &
@@ -822,8 +824,10 @@ contains
          sim%init_func, &
          sim%params, &
          transf_x1_x2=sim%transfx )
-
-
+    time =  sll_time_elapsed_since(t0)
+    print *, 'time to initialize distribution function: ', time
+    call sll_display(sim%mesh2d_x)
+    call sll_display(sim%mesh2d_v)
 
     sim%rho_split(:,:) = 0.0_f64
     ! this only works because there is no transformation applied in the
