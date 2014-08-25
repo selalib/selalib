@@ -22,7 +22,7 @@ program unit_test
     !---------------------------------------------------------------------------
     !------------------DEFAULT VALUES-------------------------------------------------------
     sll_int32 :: tsteps = 100     !Number of timesteps
-    sll_real64 :: tstepw=0.01_f64   !stepwidth
+    sll_real64 :: tstepw=0.1_f64   !stepwidth
     sll_int32 :: nmark=40000        !Number of marker particles
     sll_int32 :: femp=7            !exponent for number of mesh cells
     sll_int32 :: sdeg=3            !spline degree
