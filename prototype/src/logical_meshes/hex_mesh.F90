@@ -14,6 +14,8 @@ module hex_mesh
 #include "sll_memory.h"
 
 use sll_constants
+use sll_utilities
+use sll_tri_mesh_xmf
 
   implicit none
 
@@ -48,18 +50,18 @@ use sll_constants
      sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
 
    contains
-     procedure, pass(mesh) :: x1_node => x1_node
-     procedure, pass(mesh) :: x2_node => x2_node
-     procedure, pass(mesh) :: index_hex_to_global => index_hex_to_global
-     procedure, pass(mesh) :: hex_to_global   => hex_to_global
-     procedure, pass(mesh) :: global_to_hex1  => global_to_hex1
-     procedure, pass(mesh) :: global_to_hex2  => global_to_hex2
-     procedure, pass(mesh) :: global_to_x1    => global_to_x1
-     procedure, pass(mesh) :: global_to_x2    => global_to_x2
-     procedure, pass(mesh) :: cart_to_hex1    => cart_to_hex1
-     procedure, pass(mesh) :: cart_to_hex2    => cart_to_hex2
-     procedure, pass(mesh) :: global_to_local => global_to_local
-     procedure, pass(mesh) :: local_to_global => local_to_global
+     procedure, pass(mesh) :: x1_node 
+     procedure, pass(mesh) :: x2_node 
+     procedure, pass(mesh) :: index_hex_to_global
+     procedure, pass(mesh) :: hex_to_global
+     procedure, pass(mesh) :: global_to_hex1
+     procedure, pass(mesh) :: global_to_hex2
+     procedure, pass(mesh) :: global_to_x1
+     procedure, pass(mesh) :: global_to_x2
+     procedure, pass(mesh) :: cart_to_hex1
+     procedure, pass(mesh) :: cart_to_hex2
+     procedure, pass(mesh) :: global_to_local
+     procedure, pass(mesh) :: local_to_global
   end type hex_mesh_2d
 
   type hex_mesh_2d_ptr
@@ -810,6 +812,44 @@ contains
     close(out_unit)
   end subroutine write_field_hex_mesh
 
+  subroutine write_field_hex_mesh_xmf(mesh, field, name)
+    ! Writes the points cartesian coordinates and
+    ! field(vector) values in a file named "name"
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64,dimension(:) :: field
+    character(len=*) :: name
+    sll_int32  :: i
+    sll_int32  :: num_triangles
+    sll_int32  :: num_pts_tot
+    sll_int32  :: out_unit
+    sll_real64, allocatable :: coor(:,:)
+    sll_int32,  allocatable :: ntri(:,:)
+    sll_int32  :: error
+    sll_real64 :: x1, x2
+
+    call sll_new_file_id(out_unit, error)
+
+    num_pts_tot = mesh%num_pts_tot
+    num_triangles = mesh%num_triangles
+    SLL_ALLOCATE(coor(2,num_pts_tot),error)
+    SLL_ALLOCATE(ntri(3,num_triangles),error)
+
+    do i=1, num_pts_tot
+       coor(1,i) = mesh%global_to_x1(i)
+       coor(2,i) = mesh%global_to_x2(i)
+    end do
+
+    do i=1, num_triangles
+       x1      = mesh%center_cartesian_coord(1, i)
+       x2      = mesh%center_cartesian_coord(2, i)
+       call get_cell_vertices_index( x1, x2, mesh, ntri(1,i), ntri(2,i), ntri(3,i))
+    end do
+
+    call write_tri_mesh_xmf(name, coor, ntri, num_pts_tot, num_triangles, field, 'values')
+
+    close(out_unit)
+
+  end subroutine write_field_hex_mesh_xmf
 
   subroutine delete_hex_mesh_2d( mesh )
     type(hex_mesh_2d), pointer :: mesh

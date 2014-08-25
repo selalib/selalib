@@ -12,9 +12,8 @@ integer, dimension(:,:), pointer :: ntri1, ntri2
 integer :: nbt1, nbt2
 integer :: nbs1, nbs2
 real(8) :: x_min, x_max, y_min, y_max
-real(8), dimension(:), pointer :: field
-integer :: i
-
+real(8), dimension(:), pointer :: field1
+real(8), dimension(:), pointer :: field2
 
 write(6,*) '-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-'
 write(6,*)
@@ -27,16 +26,20 @@ y_min = 0.; y_max = 1.0
 
 nbox = 33; nboy = 33
 
-!call plaqx( x_min, x_max, nbox, &
-!            y_min, y_max, nboy, &
-!            coor1, ntri1, nbs1, nbt1)
+call plaqx( x_min, x_max, nbox, &
+            y_min, y_max, nboy, &
+            coor1, ntri1, nbs1, nbt1)
+
+allocate(field1(nbs2))
+field1  = cos(2*sll_pi*coor1(1,:))*sin(2*sll_pi*coor1(2,:))
+call write_tri_mesh_xmf("tri_mesh_1", coor1, ntri1, nbs1, nbt1, field1, 'field_1')
 
 call plaqy( x_min, x_max, nbox, &
             y_min, y_max, nboy, &
             coor2, ntri2, nbs2, nbt2)
 
-allocate(field(nbs2))
-field  = cos(2*sll_pi*coor2(1,:))*sin(2*sll_pi*coor2(2,:))
-call write_tri_mesh_xmf("plaqy", coor2, ntri2, nbs2, nbt2, field)
+allocate(field2(nbs2))
+field2  = cos(2*sll_pi*coor2(1,:))*sin(2*sll_pi*coor2(2,:))
+call write_tri_mesh_xmf("tri_mesh_2", coor2, ntri2, nbs2, nbt2, field2, 'field_2')
 
 end program test_tri_mesh
