@@ -54,7 +54,7 @@ module sll_general_coordinate_elliptic_solver_module
      ! the following is otherwise known as "LM". Same as global_spline_indices
      ! but including the changes resulting from the boundary conditions.
      ! This is:
-     ! local_to_global_spline_indices(i,j) = 
+     ! local_to_lobal_spline_indices(i,j) = 
      !   global_spline_indices(local_spline_indices(i,j))
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices
      sll_int32, dimension(:,:), pointer :: local_to_global_spline_indices_source
@@ -80,7 +80,7 @@ module sll_general_coordinate_elliptic_solver_module
   end type general_coordinate_elliptic_solver
 
   ! For the integration mode.  
-  integer, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
+  sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
   
   interface delete
      module procedure delete_elliptic
@@ -278,13 +278,15 @@ contains ! *******************************************************************
    SLL_ALLOCATE(es%phi_vec(solution_size),ierr)
    SLL_ALLOCATE(es%masse(vec_sz),ierr)
    SLL_ALLOCATE(es%stiff(vec_sz),ierr)
+   ! -------------------------------------------
+   ! We must add plus 1 for the dimension of the solution 
+   ! in the case periodic periodic to include the periodicity in the last point.  
+   !  -----------------------------------------
    if(sll_perper == 0) then
-     SLL_ALLOCATE(es%tmp_rho_vec(solution_size + 1),ierr)
-     SLL_ALLOCATE(es%tmp_phi_vec(solution_size + 1),ierr)
-   else
-     SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
-     SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
-   endif  
+      solution_size = solution_size + 1
+   endif
+   SLL_ALLOCATE(es%tmp_rho_vec(solution_size),ierr)
+   SLL_ALLOCATE(es%tmp_phi_vec(solution_size),ierr)
    es%rho_vec(:) = 0.0_f64
    es%phi_vec(:) = 0.0_f64
    es%masse(:)   = 0.0_f64
@@ -308,9 +310,7 @@ contains ! *******************************************************************
         bc_bottom, &
         bc_top, &
         es%knots2 )
-
-
- 
+    
    call initconnectivity( &
         num_cells_eta1, &
         num_cells_eta2, &
@@ -324,6 +324,7 @@ contains ! *******************************************************************
         es%global_spline_indices, &
         es%local_to_global_spline_indices )
    
+   
    es%sll_csr_mat => new_csr_matrix( &
       solution_size, &
       solution_size, &
@@ -332,6 +333,8 @@ contains ! *******************************************************************
       es%total_num_splines_loc, &
       es%local_to_global_spline_indices, &
       es%total_num_splines_loc)
+! num_cells_eta1*num_cells_eta2 => nombre de cellules
+
 
     es%knots1_rho ( 1 : spline_degree_eta1 +1 ) = eta1_min
     es%knots1_rho ( num_cells_eta1 + 2 : num_cells_eta1 + 1 + spline_degree_eta1 +1 ) = eta1_max
@@ -372,8 +375,7 @@ contains ! *******************************************************************
         end do
         
      end if
-     
-     
+          
 
     !! allocation of the table containning all values of splines in each direction 
     !! in each gauss points
@@ -390,6 +392,8 @@ contains ! *******************************************************************
     es%values_splines_gauss2 = 0.0_f64
     SLL_ALLOCATE(es%tab_index_coeff1(num_cells_eta1*(spline_degree_eta1+2)),ierr)
     SLL_ALLOCATE(es%tab_index_coeff2(num_cells_eta2*(spline_degree_eta2+2)),ierr)
+    es%tab_index_coeff1(:) = -1
+    es%tab_index_coeff2(:) = -1
 !
   end subroutine initialize_general_elliptic_solver
   
@@ -667,24 +671,24 @@ contains ! *******************************************************************
           
        end do
     end do
- 
-if (sll_perper == 0) then
-   es%sll_csr_mat_with_constraint => new_csr_matrix_with_constraint(es%sll_csr_mat)  
-   call csr_add_one_constraint( &
-    es%sll_csr_mat%opi_ia, & 
-    es%sll_csr_mat%opi_ja, &
-    es%sll_csr_mat%opr_a, &
-    es%sll_csr_mat%num_rows, &
-    es%sll_csr_mat%num_nz, &
-    es%masse, &
-    es%sll_csr_mat_with_constraint%opi_ia, &
-    es%sll_csr_mat_with_constraint%opi_ja, &
-    es%sll_csr_mat_with_constraint%opr_a)  
-   call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
- else
-   call sll_factorize_csr_matrix(es%sll_csr_mat)      
- end if 
- 
+
+    if (sll_perper == 0) then
+       es%sll_csr_mat_with_constraint => es%sll_csr_mat
+       do i = 1, es%total_num_splines_eta1*es%total_num_splines_eta2    
+          call sll_add_to_csr_matrix( &
+               es%sll_csr_mat_with_constraint, &
+               es%masse(i), &
+               es%total_num_splines_eta1*es%total_num_splines_eta2+1, &
+               i)
+          
+       end do
+       call sll_factorize_csr_matrix(es%sll_csr_mat_with_constraint)
+    else
+       call sll_factorize_csr_matrix(es%sll_csr_mat)      
+    end if
+
+
+
     es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
          (es%num_cells1+1)*(es%num_cells2+1),&
@@ -694,6 +698,10 @@ if (sll_perper == 0) then
          es%local_to_global_spline_indices_source, &
          es%total_num_splines_loc )
 
+!     print *, " local_to_global_spline_indices_source"
+!     do i = 1, es%num_cells1*es%num_cells2
+!        print *, es%local_to_global_spline_indices_source(:, i)
+!     end do
     
     call compute_Source_matrice(es,Source_loc)
     
@@ -863,7 +871,7 @@ if (sll_perper == 0) then
        end select
        
     class is (sll_scalar_field_2d_analytic_alt)
-       
+    
        do j=1,es%num_cells2
           eta2  = es%eta2_min + (j-1)*es%delta_eta2
           do i=1,es%num_cells1
@@ -888,7 +896,6 @@ if (sll_perper == 0) then
                    int_rho = int_rho &
                         + rho%value_at_point(gpt1,gpt2)*wgpt2*wgpt1*val_jac 
                    int_jac = int_jac + wgpt2*wgpt1*val_jac
-                   
                    
                 end do
              end do
@@ -1073,7 +1080,7 @@ if (sll_perper == 0) then
     
     eta1  = eta1_min + (cell_i-1)*delta1
     eta2  = eta2_min + (cell_j-1)*delta2
-    
+
     do j=1,num_pts_g2
        ! rescale Gauss points to be in interval [eta2 ,eta2 +delta_eta2]
        ! the bottom edge of the cell.
@@ -1118,7 +1125,6 @@ if (sll_perper == 0) then
        obj%values_splines_eta2(cell_j + obj%num_cells2*(j-1),:) = dbiatx2(:,1)
        obj%values_splines_gauss2(cell_j+obj%num_cells2*(j-1),:)=dbiatx2_rho(:,1)
        obj%tab_index_coeff2(cell_j + obj%num_cells2*(j-1)) = left_y
-
        
        do i=1,num_pts_g1
           ! rescale Gauss points to be in interval [eta1,eta1+delta1]
@@ -1138,8 +1144,6 @@ if (sll_perper == 0) then
              
           end if
     
-          
-          
           call bsplvd(&
                obj%knots1,&
                obj%spline_degree1+1,&
@@ -1151,7 +1155,8 @@ if (sll_perper == 0) then
 
           call interv ( obj%knots1_rho, obj%num_cells1 + obj%spline_degree1+ 2, gpt1, &
                left_x, mflag_x )
-     
+
+
           call bsplvd(&
                obj%knots1_rho,&
                obj%spline_degree1+1,&
@@ -1163,7 +1168,11 @@ if (sll_perper == 0) then
 
           obj%values_splines_eta1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1(:,1)
           obj%values_splines_gauss1(cell_i + obj%num_cells1*(i-1),:) = dbiatx1_rho(:,1)
+          
           obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
+
+!            print*,'point quad glob', i + (j-1)*num_pts_g1 + &
+!                 (cell_index - 1)*num_pts_g1*num_pts_g2
 
           val_c        = c_field%value_at_point(gpt1,gpt2)
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
@@ -1240,8 +1249,6 @@ if (sll_perper == 0) then
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
                 
                 
-         
-                
                 do iii = 0,obj%spline_degree1
                    do jjj = 0,obj%spline_degree2
                       
@@ -1252,8 +1259,6 @@ if (sll_perper == 0) then
                            val_jac*wgpt1*wgpt2* &
                            dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
-                      
-                      
                       
                       M_c_loc(index1, index2) = &
                            M_c_loc(index1, index2) + &
@@ -1313,7 +1318,7 @@ if (sll_perper == 0) then
           end do
        end do
     end do
-    
+
   end subroutine build_local_matrices
   
   
@@ -1420,7 +1425,9 @@ if (sll_perper == 0) then
     
   end subroutine build_local_matrices_rho
   
-  subroutine local_to_global_matrices( &
+
+
+ subroutine local_to_global_matrices( &
        es,&
        cell_index, &
        cell_i, &
@@ -1467,14 +1474,12 @@ if (sll_perper == 0) then
     sll_int32 :: bc_right
     sll_int32 :: bc_bottom
     sll_int32 :: bc_top
-    
-    bc_left   = es%bc_left
+ bc_left   = es%bc_left
     bc_right  = es%bc_right
     bc_bottom = es%bc_bottom
     bc_top    = es%bc_top
     
-    
-    
+
     do mm = 0,es%spline_degree2
        index3 = cell_j + mm
        
@@ -1507,12 +1512,19 @@ if (sll_perper == 0) then
           
           Masse_tot(x)    = Masse_tot(x) + Masse_loc(b)
           Stiff_tot(x)    = Stiff_tot(x) + Stiff_loc(b)
+
+
+          index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
+          index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2+ mm
+          index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
+
+          es%local_to_global_spline_indices_source(b,cell_index)= index
+
           
           do nn = 0,es%spline_degree2
              
              index4 = cell_j + nn
-             
-             if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
+if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
                 if ( index4 > es%total_num_splines_eta2) then
                    
                    index4 = index4 - es%total_num_splines_eta2
@@ -1548,13 +1560,7 @@ if (sll_perper == 0) then
                      M_b_vect_loc(b,bprime) - &
                      S_b1_loc( b, bprime)   - &
                      S_b2_loc( b, bprime)
-                index_coef1 = es%tab_index_coeff1(cell_i)- es%spline_degree1 + i
-                index_coef2 = es%tab_index_coeff2(cell_j)- es%spline_degree2+ mm
-                index = index_coef1 + (index_coef2-1)*(es%num_cells1+1)
-                es%local_to_global_spline_indices_source(b,cell_index)= index
-                
                 es%local_to_global_spline_indices_source_bis(bprime,cell_index)= y!index_phi
-                
                 if ( (li_A > 0) .and. (li_Aprime > 0) ) then
                    
                    call sll_add_to_csr_matrix( &
@@ -1573,7 +1579,7 @@ if (sll_perper == 0) then
     end do
     
   end subroutine local_to_global_matrices
-  
+
   
   subroutine local_to_global_matrices_rho( &
        es,&
@@ -1721,41 +1727,7 @@ if (sll_perper == 0) then
    
   end subroutine solve_gen_elliptic_eq
   
-  
-  
-  subroutine solve_linear_system_perper( es)
-    ! CSR_MAT*phi = rho_vec is the linear system to be solved. The solution
-    ! is given in terms of the spline coefficients that represent phi.
-    class(general_coordinate_elliptic_solver) :: es
-    sll_int32 :: ierr
-    
-    es%tmp_rho_vec(:) = 0.0_f64
-    es%tmp_phi_vec(:) = 0.0_f64
-    es%tmp_rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)=&
-         es%rho_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) 
-    call solve_general_es_perper(es%sll_csr_mat_with_constraint,es%tmp_rho_vec,es%tmp_phi_vec) 
-    es%phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2) = &
-       es%tmp_phi_vec(1:es%total_num_splines_eta1*es%total_num_splines_eta2)    
 
-  end subroutine solve_linear_system_perper
-
-
-  subroutine solve_general_es_perper(csr_mat,apr_B,apr_U)
-    type(sll_csr_matrix) :: csr_mat
-    sll_real64, dimension(:) :: apr_U
-    sll_real64, dimension(:) :: apr_B 
-    ! We use a simple conjugate gradient on the new matrice csr_mat_with_constraint (with constraint)
-    call sll_solve_csr_matrix(&
-         csr_mat,&
-         apr_B,&
-         apr_U)
-    ! We use a modified conjugate gradient on the matrice csr_mat (without constraint)     
-    !call sll_solve_csr_matrix_perper(&
-    !     csr_mat,&
-    !     apr_B,&
-    !     apr_U,&
-    !     es%masse)
-  end subroutine solve_general_es_perper
 
   subroutine compute_Source_matrice(es,Source_loc)
     type(general_coordinate_elliptic_solver),intent(inout) :: es

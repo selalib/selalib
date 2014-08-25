@@ -38,6 +38,11 @@ module sll_particle_representations
      type(sll_particle_2d), pointer :: p
   end type sll_particle_2d_guard
 
+  type :: sll_particle_2d_guard_ptr
+     type(sll_particle_2d_guard), dimension(:), pointer :: g_list
+  end type sll_particle_2d_guard_ptr
+
+
 !contains
 
 !!$  subroutine initialize_particle_2d( &
