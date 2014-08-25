@@ -20,7 +20,7 @@ module sll_simulation_4d_qns_general_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
 !  use sll_arbitrary_degree_spline_interpolator_1d_module
-!  use sll_timer
+  use sll_timer
   implicit none
 
   type, extends(sll_simulation_base_class) :: sll_simulation_4d_qns_general
@@ -478,7 +478,8 @@ contains
 !!$    sll_real64, dimension(:,:), allocatable :: ey_field
     ! time variables
     sll_int32 :: size_diag
-    
+    sll_real64 :: time
+    type(sll_time_mark) :: t0    
     
     nc_x1 = sim%mesh2d_x%num_cells1
     nc_x2 = sim%mesh2d_x%num_cells2
@@ -813,7 +814,8 @@ contains
          loc_sz_x4 )
     SLL_ALLOCATE(sim%f_x1x2(loc_sz_x1,loc_sz_x2,loc_sz_x3,loc_sz_x4),ierr)
     !    SLL_ALLOCATE(sim%phi_split(loc_sz_x3,loc_sz_x4),ierr)
-    
+
+    call sll_set_time_mark(t0)  
     call sll_4d_parallel_array_initializer( &
          sim%sequential_x3x4, &
          sim%mesh2d_x, &
@@ -822,8 +824,10 @@ contains
          sim%init_func, &
          sim%params, &
          transf_x1_x2=sim%transfx )
-
-
+    time =  sll_time_elapsed_since(t0)
+    print *, 'time to initialize distribution function: ', time
+    call sll_display(sim%mesh2d_x)
+    call sll_display(sim%mesh2d_v)
 
     sim%rho_split(:,:) = 0.0_f64
     ! this only works because there is no transformation applied in the
@@ -988,7 +992,7 @@ contains
          sim%spline_degree_eta1, &
          sim%spline_degree_eta2)
 
-    call advection_x1x2(sim,0.5*sim%dt)
+    call advection_x1x2(sim,0.5*sim%dt,1)
 
    
     ! other test cases use periodic bc's here...        
@@ -1416,7 +1420,7 @@ contains
        ! what are the new local limits on x3 and x4? It is bothersome to have
        ! to make these calls...
 
-       call advection_x1x2(sim,sim%dt) 
+       call advection_x1x2(sim,sim%dt,1) 
 
 !!$       do j = 1, loc_sz_x2
 !!$          do i = 1, loc_sz_x1
@@ -1454,16 +1458,18 @@ contains
   end subroutine run_4d_qns_general
   
 
-  subroutine advection_x1x2(sim,deltat)
+  subroutine advection_x1x2(sim,deltat,opt)
     class(sll_simulation_4d_qns_general) :: sim
     sll_real64, intent(in) :: deltat
     sll_int32 :: gi, gj, gk, gl
     sll_int32 :: loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 
     sll_int32, dimension(4) :: global_indices
     sll_real64 :: alpha1, alpha2
-    sll_real64,dimension(2,2) :: inv_j
+    sll_real64,dimension(2,2) :: inv_j,inv_j_tmp
     sll_real64 :: eta1, eta2, eta3, eta4
     sll_int32 :: i, j, k, l
+    sll_int32,intent(in) :: opt
+    sll_real64:: alpha1_tmp,alpha2_tmp,eta1_tmp,eta2_tmp
 
     call compute_local_sizes_4d( sim%sequential_x1x2, &
          loc_sz_x1, loc_sz_x2, loc_sz_x3, loc_sz_x4 )
@@ -1489,9 +1495,21 @@ contains
                 inv_j  =  sim%values_jacobian_matinv(gi,gj,:,:) 
                 !sim%transfx%inverse_jacobian_matrix(eta1,eta2)
                 !jac_m  =  sim%transfx%jacobian_matrix(eta1,eta2)
-                alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
-                alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+                if (opt .eq. 1) then !! euler explicit
+                   alpha1 = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                   alpha2 = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
                 
+                elseif ( opt .eq. 2) then! RK2
+                   alpha1_tmp = -deltat*(inv_j(1,1)*eta3 + inv_j(1,2)*eta4)
+                   alpha2_tmp = -deltat*(inv_j(2,1)*eta3 + inv_j(2,2)*eta4)
+                   eta1_tmp = eta1+alpha1_tmp
+                   eta2_tmp = eta2+alpha2_tmp
+                   inv_j_tmp(:,:) = sim%transfx%inverse_jacobian_matrix(eta1_tmp,eta2_tmp)
+                   alpha1 = -deltat/2.*( ( inv_j(1,1) + inv_j_tmp(1,1) ) *eta3 &
+                                       + ( inv_j(1,2) + inv_j_tmp(1,2) ) *eta4 )
+                   alpha2 = -deltat/2.*( ( inv_j(2,1) + inv_j_tmp(2,1) ) *eta3 &
+                                       + ( inv_j(2,2) + inv_j_tmp(2,2) ) *eta4 )
+                end if
                 eta1 = eta1+alpha1
                 eta2 = eta2+alpha2
                 ! This is hardwiring the periodic BC, please improve this..

@@ -63,6 +63,12 @@ procedure, pass :: get_coefficients => get_coefficients_cs1d
 
 end type cubic_spline_1d_interpolator
 
+
+type :: cubic_spline_1d_interpolator_ptr
+   type(cubic_spline_1d_interpolator), pointer :: interp
+end type cubic_spline_1d_interpolator_ptr
+
+
 #endif
 
   interface delete
@@ -131,7 +137,6 @@ contains  ! ****************************************************************
     delta = this%interpolation_points(2) - this%interpolation_points(1)
     xmin = this%interpolation_points(1)
     xmax = this%interpolation_points(num_points)
-
     if (this%bc_type == SLL_PERIODIC) then
        ! The case alpha = 0.0 is problematic. We need to further try to make
        ! this computation in general m re efficient, minimize the use of modulo

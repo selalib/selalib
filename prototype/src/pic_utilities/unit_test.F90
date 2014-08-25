@@ -52,16 +52,17 @@ program utilities_tester
                      all_charge( part_group%p_list(j)%ic ) )
   enddo
 
-  call sll_charge_meshdensity( all_charge, m2d, rho )
-  open(23,file='meshdensity.dat')
-  do l = 1, 1+m2d%num_cells1
-     do c = 1, 1+m2d%num_cells2
-        write(23,*)  XMIN + real(l-1,f64)*m2d%delta_eta1, &
-                     YMIN + real(c-1,f64)*m2d%delta_eta2, & 
-                     rho(l,c)
-     enddo
-     write(23,*) ' '
-  enddo
+!!$  call sll_charge_meshdensity( all_charge, m2d, rho )
+!!$  open(23,file='meshdensity.dat')
+!!$  do l = 1, 1+m2d%num_cells1
+!!$     do c = 1, 1+m2d%num_cells2
+!!$        write(23,*)  XMIN + real(l-1,f64)*m2d%delta_eta1, &
+!!$                     YMIN + real(c-1,f64)*m2d%delta_eta2, & 
+!!$                     rho(l,c)
+!!$     enddo
+!!$     write(23,*) ' '
+!!$  enddo
+
   call sll_delete( part_group )
   call delete( m2d )
   call sll_delete( all_charge )
