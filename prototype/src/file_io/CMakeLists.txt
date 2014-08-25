@@ -23,3 +23,7 @@ TARGET_LINK_LIBRARIES(test_io sll_file_io sll_constants)
 ADD_TEST(NAME file_io COMMAND test_io)
 
 SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+
+ADD_EXECUTABLE(test_io_tri_mesh unit_test_tri_mesh.F90 
+                                sll_tri_mesh_xmf.F90
+                                sll_generate_tri_mesh.F90)
