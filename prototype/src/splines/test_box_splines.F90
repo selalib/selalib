@@ -86,8 +86,8 @@ do num_cells = 80,80,20
    SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
 
    ! Distribution initialization
-   gauss_x1  = 2.0_f64
-   gauss_x2  = 2.0_f64
+   gauss_x1  = 0.5_f64
+   gauss_x2  = 0.5_f64
    gauss_sig = 1.0_f64/sqrt(2._f64)/2._f64
    gauss_amp = 1.0_f64
 
