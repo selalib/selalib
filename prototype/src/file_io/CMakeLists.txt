@@ -10,6 +10,7 @@ SET(IO_SRC sll_ascii_io.F90
            sll_hdf5_io_serial.F90
            sll_xml_io.F90
            sll_plotmtv.F90
+           sll_tri_mesh_xmf.F90
            sll_xdmf.F90 )
 
 ADD_LIBRARY(sll_file_io STATIC ${IO_SRC})
@@ -25,5 +26,6 @@ ADD_TEST(NAME file_io COMMAND test_io)
 SET_TESTS_PROPERTIES(file_io PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_EXECUTABLE(test_io_tri_mesh unit_test_tri_mesh.F90 
-                                sll_tri_mesh_xmf.F90
                                 sll_generate_tri_mesh.F90)
+
+TARGET_LINK_LIBRARIES(test_io_tri_mesh sll_file_io)
