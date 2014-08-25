@@ -1,88 +1,57 @@
-#ifndef SORTIE_RESXDMF_HPP
-#define SORTIE_RESXDMF_HPP
-#include "RNM.hpp"
-#include "typedef.hpp"
-#include "ishNS.hpp"
-#include "state2D.hpp"
-#include <string>
+module sll_tri_mesh_xmf
+implicit none
 
-/**
-   sortie fichier format XDMF pour VisIt
-*/
+!*****************************************
+!   XDMF output for VisIt and paraview
+!*****************************************
+
+contains
 
 
-template<class D>
-void sortie_resXDMF(const char* path, const SVU<D>& X, const R t,const int n, const Rn_name* valNode=0)
-{
+subroutine write_tri_mesh_xmf(filename, coor, ntri, nbs, nbt, field)
 
-  char name[256];
-  sprintf(name,"%s.%s",path,"xmf");
-  std::ofstream file(name);
-  file.precision(15);
-  file << "<?xml version=\"1.0\"?>" << endl;
-  file <<"<!DOCTYPE Xdmf SYSTEM \"Xdmf.dtd\" []> "<< endl;
-  file << "<Xdmf Version=\"2.0\">" << endl;
-  file << "<Domain>" << endl;
-  file << "<Grid Name=\"Mesh\" GridType=\"Uniform\" >" << endl;
-  file << "<Topology Type=\"Quadrilateral\" NumberOfElements=\""<<X.mesh()->nm()<<"\">" << endl;
-  file << "<DataItem Name=\"Connections\" Format=\"XML\" DataType=\"Int\" Dimensions=\"";
-  file << X.mesh()->nm()<<" 4\">" << endl;
-  for (int i=0; i<X.mesh()->nm(); ++i)
-  {
-     for (int j=0; j<X.mesh()->ncote(i); ++j)
-        file << X.mesh()->elementConnect(i).inode()[j] << ' ';
-     file << endl;
-  }
-  file << "</DataItem>"<< endl;
-  file << "</Topology>"<< endl;
-  file << "<Geometry GeometryType=\"XY\">" << endl;
-  file << "<DataItem Format=\"XML\" Dimensions=\"";
-  file << X.mesh()->ns() << " 2\">" << endl;
-  for (int i=0; i<X.mesh()->ns(); ++i)
-     file << X.mesh()->sommet()[i].x() << ' ' 
-          << X.mesh()->sommet()[i].y() << endl;
-  file << "</DataItem>"<< endl;
-  file << "</Geometry>"<< endl;
+character(len=*), intent(in) :: filename
+integer, intent(in)          :: nbs
+integer, intent(in)          :: nbt
+real(8), intent(in)          :: coor(2,nbs)
+integer, intent(in)          :: ntri(3,nbt)
+integer, parameter           :: xmf = 99
+real(8), intent(in)          :: field(:)
+integer                      :: i, j
 
-  // Variable contenue dans le vecteur
-  if (X.Values().N()>1)
-  {
-     int ii=0;
-     while(ii<X.Values().N())
-     {
-        file << "<Attribute Name=\"Cell centered "
-             << X.name(ii) << "\" Center=\"Cell\">" << endl;
-        file << "<DataItem Format=\"XML\" Dimensions=\""
-             << X.mesh()->nm() << "\">" << endl;
-        for (int i=0; i<X.mesh()->nm(); ++i)
-           file << X.Values()(ii,i) <<  " ";
-        ii++;
-        file << endl;
-        file << "</DataItem>" << endl;
-        file << "</Attribute>" << endl;
-     }
-  }
+open(xmf, file=filename//".xmf")
 
+write(xmf,"(a)") "<?xml version='1.0'?>"
+write(xmf,"(a)") "<!DOCTYPE Xdmf SYSTEM 'Xdmf.dtd' []> "
+write(xmf,"(a)") "<Xdmf Version='2.0'>"
+write(xmf,"(a)") "<Domain>"
+write(xmf,"(a)") "<Grid Name='Mesh' GridType='Uniform' >"
+write(xmf,"(a,i6,a)") "<Topology Type='Triangle' NumberOfElements='",nbt,"'>"
+write(xmf,"(a,i6,a)") "<DataItem Name='Connections' Format='XML' DataType='Int' Dimensions='", &
+                      nbt, " 3'>" 
+do i=1, nbt
+   write(xmf,"(3i6)") (ntri(j,i)-1,j=1,3)
+end do
+write(xmf,"(a)") "</DataItem>"
+write(xmf,"(a)") "</Topology>"
+write(xmf,"(a)") "<Geometry GeometryType='XY'>"
+write(xmf,"(a,i6,a)") "<DataItem Format='XML' Dimensions='", nbs, " 2'>"
+do  i=1, nbs
+   write(xmf,"(2f12.6)") coor(:,i)
+end do
+write(xmf,"(a)") "</DataItem>"
+write(xmf,"(a)") "</Geometry>"
+write(xmf,"(a)") "<Attribute Name='Node_centered_field' Center='Node'>"
+write(xmf,"(a,i6,a)") "<DataItem Format='XML' Datatype='Float' Dimensions='", nbs, "'>"
+do  i=1, nbs
+   write(xmf,"(f12.6)") field(i)
+end do
+write(xmf,"(a)") "</DataItem>"
+write(xmf,"(a)") "</Attribute>"
+write(xmf,"(a)") "</Grid>"
+write(xmf,"(a)") "</Domain>"
+write(xmf,"(a)") "</Xdmf>" 
 
-  // Variable aux sommets
-  if (valNode!=0)
-  {
-      //cerr << " valNode " << valNode->N() << " ns " << X.mesh()->ns() << endl;
-      if (valNode->N()==X.mesh()->ns())
-      {
-          file << "<Attribute Name\"Node centered "<< valNode->name()
-               << " Center=\"Nodes\">" << endl;
-          file << "<DataItem Format=\"XML\" Dimensions=\"" << X.mesh()->ns() 
-               << "\">" << endl;
-          for (int i=0; i<X.mesh()->ns(); ++i) file << (*valNode)(i) << " ";
-          file << "</DataItem>" << endl;
-          file << "</Attribute>" << endl;
-      }
-  }
+end subroutine write_tri_mesh_xmf
 
-  file << "</Grid>" << endl;
-  file << "</Domain>" << endl;
-  file << "</Xdmf>" << endl;
-
-}
-#endif // SORTIE_RESXDMF_HPP
+end module sll_tri_mesh_xmf
