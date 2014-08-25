@@ -114,7 +114,7 @@ module finite_elements_solver_module
   end type finite_elements_solver
 
   ! For the integration mode.  
-  sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
+  sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1, ES_USER = 2
   
   interface sll_delete
      module procedure delete_solver
@@ -169,31 +169,33 @@ contains ! =============================================================
        bc_left, &
        bc_right, &
        bc_bottom, &
-       bc_top)
+       bc_top, &
+       user_qpts_weights)
     
     type(finite_elements_solver), intent(out)         :: solv
     type(sll_logical_mesh_2d),    intent(in), pointer :: mesh
-    sll_int32, intent(in) :: spline_degree
-    sll_int32, intent(in) :: bc_left
-    sll_int32, intent(in) :: bc_right
-    sll_int32, intent(in) :: bc_bottom
-    sll_int32, intent(in) :: bc_top
-    sll_int32, intent(in) :: quadrature_type
-    sll_int32 :: knots1_size
-    sll_int32 :: knots2_size
-    sll_int32 :: num_splines1
-    sll_int32 :: num_splines2
-    sll_int32 :: vec_sz ! for source_vec and phi_vec allocations
-    sll_int32 :: ierr
-    sll_int32 :: i, j
-    sll_int32 :: nc1, nc2
-    sll_int32 :: num_ele
-    sll_int32 :: num_quad_loc_1d
-    sll_int32 :: global_index
-    sll_real64:: eta1
-    sll_real64:: eta2
-    sll_real64:: delta1
-    sll_real64:: delta2
+    sll_int32,  intent(in) :: spline_degree
+    sll_int32,  intent(in) :: bc_left
+    sll_int32,  intent(in) :: bc_right
+    sll_int32,  intent(in) :: bc_bottom
+    sll_int32,  intent(in) :: bc_top
+    sll_int32,  intent(in) :: quadrature_type
+    sll_real64, dimension (:,:), intent(in), optional :: user_qpts_weights
+    sll_int32  :: knots1_size
+    sll_int32  :: knots2_size
+    sll_int32  :: num_splines1
+    sll_int32  :: num_splines2
+    sll_int32  :: vec_sz ! for source_vec and phi_vec allocations
+    sll_int32  :: ierr
+    sll_int32  :: i, j
+    sll_int32  :: nc1, nc2
+    sll_int32  :: num_ele
+    sll_int32  :: num_quad_loc_1d
+    sll_int32  :: global_index
+    sll_real64 :: eta1
+    sll_real64 :: eta2
+    sll_real64 :: delta1
+    sll_real64 :: delta2
     ! Flag to notify is all boundary conditions are periodic
     sll_int32 :: sll_perper = 0 
     ! Temporary variables just as vehicule to store quadrature points/weights 
@@ -234,10 +236,19 @@ contains ! =============================================================
     select case(quadrature_type)
     case (ES_GAUSS_LEGENDRE)
        temp_pts_wgh(:,:) = gauss_legendre_points_and_weights(num_quad_loc_1d)
-   case (ES_GAUSS_LOBATTO)
+    case (ES_GAUSS_LOBATTO)
        temp_pts_wgh(:,:) = gauss_lobatto_points_and_weights(num_quad_loc_1d)
+    case (ES_USER)
+       if (present(user_qpts_weights )) then
+          temp_pts_wgh(:,:) = user_qpts_weights
+       else
+          print *, "Error in initialize_finite_elements_solver : ", &
+               " Quadrature type indicates that they will be user defined ", &
+               " but they were not sent in input of function."
+       end if
     case DEFAULT
-       print *, 'new_finite_elements_solver(): have not type of gauss points in the first direction'
+       print *, "new_finite_elements_solver():", & 
+            " have not type of gauss points in the first direction"
     end select
     
     delta1 = mesh%delta_eta1
