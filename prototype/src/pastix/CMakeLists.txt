@@ -36,6 +36,7 @@ IF(PASTIX_FOUND)
      ADD_LIBRARY(sll_pastix sll_pastix.F90 sll_murge.F90 )
 
      TARGET_LINK_LIBRARIES(sll_pastix  sll_collective
+                                       sll_sparse
                                        ${PASTIX_LIBRARIES} 
                                        ${MURGE_LIBRARIES} 
                                        ${PTSCOTCH_LIBRARIES}
