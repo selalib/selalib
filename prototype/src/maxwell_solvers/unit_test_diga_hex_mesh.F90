@@ -1,4 +1,4 @@
-program test_box_splines
+program test_maxwell_dg_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -13,12 +13,17 @@ type(hex_mesh_2d), pointer  :: mesh
 sll_int32                   :: num_cells
 sll_real64, pointer         :: field(:)
 sll_int32                   :: error
-sll_real64                  :: x1
-sll_real64                  :: x2
-sll_int32                   :: i
+sll_int32                   :: i, k
 sll_int32                   :: degree
+sll_real64                  :: A(5)
+sll_real64                  :: B(5)
+sll_real64                  :: C(5)
+sll_int32                   :: istep
+sll_int32                   :: nstep = 100
+sll_real64                  :: dt = 0.01
+sll_real64                  :: time
 
-num_cells = 40
+num_cells = 20
 
 print *, ""
 print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
@@ -30,5 +35,87 @@ print *, ""
 degree = 1
 call initialize(maxwell, mesh, degree)
 
-end program test_box_splines
+!Low storage Runge Kutta order 4
 
+A(1) = 0
+A(2) = - 567301805773D0/1357537059087D0
+A(3) = - 2404267990393D0/2016746695238D0
+A(4) = - 3550918686646D0/2091501179385D0
+A(5) = - 1275806237668D0/842570457699D0
+
+B(1) = 1432997174477D0/9575080441755D0
+B(2) = 5161836677717D0/13612068292357D0
+B(3) = 1720146321549D0/2090206949498D0
+B(4) = 3134564353537D0/4481467310338D0
+B(5) = 2277821191437D0/14882151754819D0
+
+C(1) = 0D0
+C(2) = 1432997174477D0/9575080441755D0
+C(3) = 2526269341429D0/6820363962896D0
+C(4) = 2006345519317D0/3224310063776D0
+C(5) = 2802321613138D0/2924317926251D0
+
+do i = 1, 5
+   print*, C(i)
+end do
+time = 0.0
+
+maxwell%Ex = 0d0
+do istep = 1, nstep
+
+
+   !maxwell%Ex = sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)
+   !maxwell%Ey = sin(time)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)
+   !maxwell%Bz = (cos(time)-1)*(sll_pi*maxwell%y*cos(sll_pi*maxwell%x_ddl) &
+   !            -sll_pi*maxwell%x_ddl*cos(sll_pi*maxwell%y_ddl))
+
+      
+   do k = 1, 5
+
+      !call solve(maxwell, mesh)
+
+      !call set_charge_and_currents(time+C(k)*dt)
+
+      !maxwell%D_Ex = A(k)*maxwell%D_Ex + dt * maxwell%x_ddl
+
+      !maxwell%D_Ex = A(k)*maxwell%D_Ex + dt * (maxwell%D_Ex - maxwell%Jx)
+      !maxwell%D_Ey = A(k)*maxwell%D_Ey + dt * (maxwell%D_Ey - maxwell%Jy)
+      !maxwell%D_Bz = A(k)*maxwell%D_Bz + dt * (maxwell%D_Bz)
+      !maxwell%D_Po = A(k)*maxwell%D_Po + dt * (maxwell%D_Po + maxwell%Ro)  ! xi=1
+
+      !maxwell%Ex = maxwell%Ex + B(k) * maxwell%D_Ex 
+
+      !maxwell%Ey = maxwell%Ey + B(k) * maxwell%D_Ey 
+      !maxwell%Bz = maxwell%Bz + B(k) * maxwell%D_Bz
+      !maxwell%Po = maxwell%Po + B(k) * maxwell%D_Po
+
+   end do
+
+   maxwell%Ex = maxwell%Ex + dt * maxwell%x_ddl
+   time = time + dt
+
+   !error = maxval(abs(maxwell%Ex - sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)))
+
+   write(*,"(10x,' istep = ',I6)",advance="no") istep
+   write(*,"(' time = ',g15.3,' s, ')",advance="no") time
+   write(*,"(' Ex error = ',2g15.3)") maxval(maxwell%Ex), minval(maxwell%Ex)
+
+end do
+
+contains
+
+subroutine set_charge_and_currents(t)
+
+   sll_real64, intent(in) :: t
+
+   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
+               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
+               -cos(t)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl))
+   maxwell%Jy = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%y_ddl) &
+               +sll_pi*sll_pi*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)) &
+               -cos(t)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl))
+   maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
+
+end subroutine set_charge_and_currents
+
+end program test_maxwell_dg_hex_mesh
