@@ -23,7 +23,10 @@ sll_real64                  :: dt = 0.01
 sll_real64                  :: time
 sll_real64, pointer         :: S_Ex(:,:)
 sll_real64, pointer         :: X_Ex(:,:)
-sll_real64, pointer         :: tmp(:,:)
+sll_real64, pointer         :: tmp_Ex(:,:)
+sll_real64, pointer         :: tmp_Ey(:,:)
+sll_real64, pointer         :: tmp_Bz(:,:)
+sll_real64, pointer         :: tmp_Po(:,:)
 
 num_cells = 20
 
@@ -62,11 +65,10 @@ do i = 1, 5
 end do
 time = 0.0
 
-SLL_CLEAR_ALLOCATE(tmp(maxwell%n_ddl,mesh%num_triangles), error)
-!SLL_CLEAR_ALLOCATE(S_Ex(maxwell%n_ddl,mesh%num_triangles), error)
-!SLL_CLEAR_ALLOCATE(X_Ex(maxwell%n_ddl,mesh%num_triangles), error)
-maxwell%Ex = 1d0
-maxwell%D_Ex = 1d0
+SLL_CLEAR_ALLOCATE(tmp_Ex(maxwell%n_ddl,mesh%num_triangles), error)
+SLL_CLEAR_ALLOCATE(tmp_Ey(maxwell%n_ddl,mesh%num_triangles), error)
+SLL_CLEAR_ALLOCATE(tmp_Bz(maxwell%n_ddl,mesh%num_triangles), error)
+SLL_CLEAR_ALLOCATE(tmp_Po(maxwell%n_ddl,mesh%num_triangles), error)
 
 do istep = 1, nstep
 
@@ -90,14 +92,14 @@ do istep = 1, nstep
 !   maxwell%D_Ex = maxwell%Ex
 !   call accumulate(1._f64/6._f64)
 !   call rkstep()
+   call set_charge_and_currents(time)
 
    do k = 1, 5
 
-      !call solve(maxwell, mesh)
+      tmp = maxwell%D_Ex - maxwell%Jx
+      call solve(maxwell, mesh)
+      call set_charge_and_currents(time+C(k)*dt)
 
-      !call set_charge_and_currents(time+C(k)*dt)
-
-      tmp = maxwell%D_Ex
       maxwell%D_Ex = maxwell%Ex
       maxwell%D_Ex = A(k)*tmp + dt * maxwell%D_Ex
 
