@@ -30,3 +30,9 @@ ADD_EXECUTABLE(test_hex_hermite test_hex_hermite.F90)
 TARGET_LINK_LIBRARIES(test_hex_hermite sll_hermite_interpolation 
                            hex_hermite hex_mesh 
 	      		   sll_constants)
+
+# third executable
+
+ADD_EXECUTABLE(test_hctc test_hctc.F90)
+
+TARGET_LINK_LIBRARIES(test_hctc sll_constants)
