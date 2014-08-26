@@ -559,35 +559,60 @@ contains
 
           ! exact normal derivatives
 
-          ! coordinates of I1
+          ! ! coordinates of I1
           xx = ( x2 + x3 ) * 0.5_f64 * cos(t) - ( y2 + y3 ) * 0.5_f64 * sin(t)
           yy = ( x2 + x3 ) * 0.5_f64 * sin(t) + ( y2 + y3 ) * 0.5_f64 * cos(t)
-
           !grad(I1).n1
-          freedom(10) =  - ( (xx-1.0_f64) - sqrt(3._f64)*(yy-1.0_f64) )*&
-               exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
-          !print*, freedom(10) - (  (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
+          freedom(10) =  ( - (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64) )*&
+             exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+
+
+          ! if (abs(freedom(10) - ( - (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
+          !     exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2)) ) > 1e-2 ) print*, freedom(10) , (  -(xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
           !     exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+          
+             ! freedom(10) = 0.5_f64 *( + ( deriv(1,i2)+deriv(1,i3) ) &
+             !      *0.5_f64  - (deriv(2,i2)+ deriv(2,i3))*sqrt(3._f64)/2._f64)
+             ! freedom(11) = - 0.5_f64 *( deriv(1,i2)+deriv(1,i3) )  
+             ! freedom(12) = 0.5_f64 *( + ( deriv(1,i2)+deriv(1,i3) ) &
+             !      *0.5_f64  + (deriv(2,i2)+ deriv(2,i3))*sqrt(3._f64)/2._f64)
 
-          ! coordinates of I2
-          xx = ( x1 + x3 ) * 0.5_f64 * cos(t) - ( y1 + y3 ) * 0.5_f64 * sin(t)
-          yy = ( x1 + x3 ) * 0.5_f64 * sin(t) + ( y1 + y3 ) * 0.5_f64 * cos(t)
+          
+          ! if ( x2 < x1 ) then ! cas 1
+             ! freedom(10) = 0.5_f64 *( - ( deriv(1,i2)+deriv(1,i3) ) &
+             !      - 2._f64*(deriv(2,i2)+ deriv(2,i3)))/sqrt(3._f64)
+             ! freedom(11) = 0.5_f64/sqrt(3._f64)*(-deriv(1,i2)-deriv(1,i3) &
+             !     + deriv(2,i2) + deriv(2,i3) )  
+             ! freedom(12) = 0.5_f64 *( + 2._f64*( deriv(1,i2)+deriv(1,i3) ) &
+             !      + (deriv(2,i2)+ deriv(2,i3)))/sqrt(3._f64)
+          ! else !(cas 2)
+             ! freedom(10) = 0.5_f64 *( -2.-f64*( deriv(1,i2)+deriv(1,i3) ) &
+             !       - (deriv(2,i2)+ deriv(2,i3)))/sqrt(3._f64)
+             ! freedom(11) =  0.5_f64/sqrt(3._f64)*(deriv(1,i2)+deriv(1,i3) &
+             !     - deriv(2,i2) - deriv(2,i3) )   
+             ! freedom(12) = 0.5_f64 *( ( deriv(1,i2)+deriv(1,i3) ) &
+             !      + 2._f64*(deriv(2,i2)+ deriv(2,i3)))*sqrt(3._f64)
+          ! endif
 
-          !grad(I2).n2
-          freedom(11) = ( + 2.0_f64*(xx-1.0_f64) )*&
-               exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
-          ! print*, freedom(11) - ( - (xx-1.0_f64) )*&
-          !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+          ! ! coordinates of I2
+          ! xx = ( x1 + x3 ) * 0.5_f64 * cos(t) - ( y1 + y3 ) * 0.5_f64 * sin(t)
+          ! yy = ( x1 + x3 ) * 0.5_f64 * sin(t) + ( y1 + y3 ) * 0.5_f64 * cos(t)
 
-          ! coordinates of I3
-          xx = ( x2 + x1 ) * 0.5_f64 * cos(t) - ( y2 + y1 ) * 0.5_f64 * sin(t)
-          yy = ( x2 + x1 ) * 0.5_f64 * sin(t) + ( y2 + y1 ) * 0.5_f64 * cos(t)
+          ! !grad(I2).n2
+          ! freedom(11) = ( + 2.0_f64*(xx-1.0_f64) )*&
+          !     exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+          ! ! print*, freedom(11) - ( - (xx-1.0_f64) )*&
+          ! !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
 
-          !grad(I3).n3
-          freedom(12) = - ( (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
-               exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
-          ! print*, freedom(12) - ( + (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
-          !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+          ! ! coordinates of I3
+          ! xx = ( x2 + x1 ) * 0.5_f64 * cos(t) - ( y2 + y1 ) * 0.5_f64 * sin(t)
+          ! yy = ( x2 + x1 ) * 0.5_f64 * sin(t) + ( y2 + y1 ) * 0.5_f64 * cos(t)
+
+          ! !grad(I3).n3
+          ! freedom(12) = - ( (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
+          !     exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+          ! ! print*, freedom(12) - ( + (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
+          ! !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
 
 
        endif
@@ -604,34 +629,35 @@ contains
           
           call get_normal_der(deriv,i1,i2,i3,mesh,freedom(10:12))
           
+
           ! exact normal derivatives
           
           ! coordinates of I1
-          xx = ( x2 + x3 ) * 0.5_f64 * cos(t) - ( y2 + y3 ) * 0.5_f64 * sin(t)
-          yy = ( x2 + x3 ) * 0.5_f64 * sin(t) + ( y2 + y3 ) * 0.5_f64 * cos(t)
+         !  xx = ( x2 + x3 ) * 0.5_f64 * cos(t) - ( y2 + y3 ) * 0.5_f64 * sin(t)
+         ! yy = ( x2 + x3 ) * 0.5_f64 * sin(t) + ( y2 + y3 ) * 0.5_f64 * cos(t)
 
-          !grad(I1).n1
-          freedom(10) = ( + (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
-               exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
-          ! print*, freedom(10) - ( - (xx-1.0_f64) - sqrt(3._f64)*(yy-1.0_f64))*&
-          !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+         !  !grad(I1).n1
+         !  !freedom(10) = ( + (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
+         !  !   exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+         !   print*, freedom(10) - ( + (xx-1.0_f64) + sqrt(3._f64)*(yy-1.0_f64))*&
+         !        exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
 
-          ! coordinates of I2
-          xx = ( x1 + x3 ) * 0.5_f64 * cos(t) - ( y1 + y3 ) * 0.5_f64 * sin(t)
-          yy = ( x1 + x3 ) * 0.5_f64 * sin(t) + ( y1 + y3 ) * 0.5_f64 * cos(t)
+         !  ! coordinates of I2
+         ! xx = ( x1 + x3 ) * 0.5_f64 * cos(t) - ( y1 + y3 ) * 0.5_f64 * sin(t)
+         !  yy = ( x1 + x3 ) * 0.5_f64 * sin(t) + ( y1 + y3 ) * 0.5_f64 * cos(t)
 
-          !grad(I2).n2
-          freedom(11) = ( - 2._f64*(xx-1.0_f64) )*&
-               exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+         !  !grad(I2).n2
+         !  freedom(11) = ( - 2._f64*(xx-1.0_f64) )*&
+         !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
           ! print*,freedom(11) - ( + 2._f64*(xx-1.0_f64) )*&
           !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
           ! coordinates of I3
-          xx = ( x2 + x1 ) * 0.5_f64 * cos(t) - ( y2 + y1 ) * 0.5_f64 * sin(t)
-          yy = ( x2 + x1 ) * 0.5_f64 * sin(t) + ( y2 + y1 ) * 0.5_f64 * cos(t)
+         !  xx = ( x2 + x1 ) * 0.5_f64 * cos(t) - ( y2 + y1 ) * 0.5_f64 * sin(t)
+         ! yy = ( x2 + x1 ) * 0.5_f64 * sin(t) + ( y2 + y1 ) * 0.5_f64 * cos(t)
 
-          !grad(I3).n3
-          freedom(12) = ( + (xx-1.0_f64) - sqrt(3._f64)*(yy-1.0_f64))*&
-               exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
+         !  !grad(I3).n3
+         !  freedom(12) = ( + (xx-1.0_f64) - sqrt(3._f64)*(yy-1.0_f64))*&
+         !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
           
           ! if (freedom(12) - ( + (xx-1.0_f64) - sqrt(3._f64)*(yy-1.0_f64))*&
           !      exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2)) > 1.d-3 ) then 
@@ -639,7 +665,12 @@ contains
           !    print*,freedom(12) , ( + (xx-1.0_f64) - sqrt(3._f64)*(yy-1.0_f64))*&
           !         exp(-((xx-1.0_f64)**2+(yy-1.0_f64)**2))
           ! endif
-
+          
+          ! freedom(10) = 0.5_f64 *( - ( deriv(1,i2)+deriv(1,i3) ) &
+          !      *0.5_f64  - (deriv(2,i2)+ deriv(2,i3))*sqrt(3._f64)/2._f64)
+          ! freedom(11) = 0.5_f64 *( deriv(1,i2)+deriv(1,i3) )  
+          ! freedom(12) = 0.5_f64 *( - ( deriv(1,i2)+deriv(1,i3) ) &
+          !      *0.5_f64  + (deriv(2,i2)+ deriv(2,i3))*sqrt(3._f64)/2._f64)
        endif
 
        test = .true.
@@ -985,8 +1016,8 @@ contains
     lijk = li*lj*lk
 
     xi(1) = 4.5_f64 * ( li2k + li2j ) 
-    xi(2) = 0.5_f64*li3 + lj3 - 1.5_f64*li2k + 3.0_f64*(lj2i + lj2k + 3.0_f64*lijk )
-    xi(3) = 0.5_f64*li3 + lk3 - 1.5_f64*li2j + 3.0_f64*(lk2j + lk2i + 3.0_f64*lijk )
+    xi(2) = 0.5_f64*li3 + lj3 - 1.5_f64*li2k + 3.0_f64*(lj2i + lj2k + lijk )
+    xi(3) = 0.5_f64*li3 + lk3 - 1.5_f64*li2j + 3.0_f64*(lk2j + lk2i + lijk )
     xi(4) = - 1._f64/12._f64*li3 + 1.75_f64 * li2k - 0.5_f64*li2j
     xi(5) = - 1._f64/12._f64*li3 - 0.5_f64 * li2k + 1.75_f64*li2j
     xi(6) = - 7._f64/12._f64*li3 + 0.5_f64 * li2k + 1.25_f64*li2j + lj2i - lijk 
@@ -1122,6 +1153,21 @@ contains
     sll_int32                              :: h1, h2, num_cells
     sll_int32                              :: h11,h12,h13,h21,h22,h23,h14,h24
     sll_int32                              :: h1_1,h1_3,h2_1,h2_3, h1_2, h2_2
+    sll_real64,dimension(2)                ::n1_l,n2_l,n3_l,n1_r,n2_r,n3_r
+    logical :: bool
+    
+
+    ! à généraliser
+
+    n1_l = (/-1._f64/sqrt(3._f64) , -2._f64/sqrt(3._f64)/)
+    n2_l = (/-1._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
+    n3_l = (/+2._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
+
+    n1_r = (/-2._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
+    n2_r = (/+1._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
+    n3_r = (/+1._f64/sqrt(3._f64) , +2._f64/sqrt(3._f64)/)
+
+
 
     num_cells = mesh%num_cells   
 
@@ -1145,7 +1191,7 @@ contains
     h21  = h2 + 1
     h22  = h2 + 2
     h23  = h2 + 3
-    h23  = h2 + 4
+    h24  = h2 + 4
 
     ! let us determine the configuration : is the triangle oriented left or right ?   
 
@@ -1153,258 +1199,223 @@ contains
        
        ! the first normal derivative is oriented normal to r1 and m1 is in [S2;S3]
        
-       if ( abs(h12) > num_cells .or. abs(h24) > num_cells .or. &
-            (h12)*(h24)< 0 .and. ( abs(h12) + abs(h24) > num_cells) ) then
+       if ( test_in(h12,h24,num_cells) ) then
           fi_1 = 0._f64 
        else
           ni_1 = hex_to_global(mesh,h12,h24)
-          fi_1 = -( deriv(1,ni_1) + 2._f64*deriv(2,ni_1) ) *sqrt(3._f64)/3._f64
-          !fi_1 = ( - deriv(1,ni_1) + sqrt(3._f64)*deriv(2,ni_1) ) *0.5_f64
+          !fi_1 = f(ni_1)
+          fi_1 = deriv(1,ni_1) * n1_l(1) + deriv(2,ni_1)* n1_l(2)
        endif
 
-       if ( abs(h11) > num_cells .or. abs(h22) > num_cells .or. &
-            (h11)*(h22)< 0 .and. ( abs(h11) + abs(h22) > num_cells) ) then
+       if ( test_in(h11,h22,num_cells) ) then
           fi = 0._f64  
        else
           ni = hex_to_global(mesh,h11,h22)
-          fi =  -( deriv(1,ni) + 2._f64*deriv(2,ni) ) *sqrt(3._f64)/3._f64
-          !fi = ( - deriv(1,ni) + sqrt(3._f64)*deriv(2,ni) ) *0.5_f64
+          !fi = f(ni)
+          fi = deriv(1,ni) * n1_l(1) + deriv(2,ni)* n1_l(2)
        endif
 
-       if ( abs(h1) > num_cells .or. abs(h2) > num_cells .or. &
-            (h1)*(h2)< 0 .and. ( abs(h1) + abs(h2) > num_cells) ) then
+       if ( test_in(h1,h2,num_cells) ) then
           fi1 = 0._f64  
        else
           ni1 = hex_to_global(mesh,h1,h2)
-          fi1 =  -( deriv(1,ni1) + 2._f64*deriv(2,ni1) ) *sqrt(3._f64)/3._f64
-          !fi1 = ( - deriv(1,ni1) + sqrt(3._f64)*deriv(2,ni1) ) *0.5_f64
+          !fi1 = f(ni1)
+          fi1 = deriv(1,ni1) * n1_l(1) + deriv(2,ni1)* n1_l(2)
        endif
 
-       if ( abs(h1_1) > num_cells .or. abs(h2_2) > num_cells .or. &
-            (h1_1)*(h2_2)< 0 .and. ( abs(h1_1) + abs(h2_2) > num_cells) ) then
+       if ( test_in(h1_1,h2_2,num_cells) ) then
           fi2 = 0._f64  
        else
           ni2 = hex_to_global(mesh,h1_1,h2_2)
-          fi2 =  -( deriv(1,ni2) + 2._f64*deriv(2,ni2) ) *sqrt(3._f64)/3._f64
-          !fi2 = ( - deriv(1,ni2) + sqrt(3._f64)*deriv(2,ni2) ) *0.5_f64
+          !fi2 = f(ni2)
+          fi2 = deriv(1,ni2) * n1_l(1) + deriv(2,ni2)* n1_l(2)
        endif
 
-       freedom(1) = ( 5._f64 * fi_1 - 3._f64 * fi + 15._f64*fi1 - fi2 ) *0.0625
-       !freedom(1) = 0.5_f64 * (fi + fi1)
+       freedom(1) = ( -fi_1 + 9._f64*(fi + fi1) - fi2 )/16._f64
+       !freedom(1) = ( + 1._f64 * fi_1 - 27._f64 * fi + 27._f64*fi1 - fi2 )/24._f64
+       !freedom(1) = fi1-fi
 
        ! the second normal derivative is oriented normal to r3 and m2 is in [S1;S3]
        
-       if ( abs(h12) > num_cells .or. abs(h2_1) > num_cells .or. &
-            (h12)*(h2_1)< 0 .and. ( abs(h12) + abs(h2_1) > num_cells) ) then
+       if ( test_in(h12,h2_1,num_cells) ) then
           fi_1 = 0._f64 
        else
           ni_1 = hex_to_global(mesh,h12,h2_1)
-          fi_1 = -( deriv(1,ni_1) - deriv(2,ni_1) )/sqrt(3._f64)
-          !fi_1 = ( deriv(1,ni_1) )
+          !fi_1 = f(ni_1)
+          fi_1 = deriv(1,ni_1) * n2_l(1) + deriv(2,ni_1)* n2_l(2)
        endif
 
-       if ( abs(h11) > num_cells .or. abs(h2) > num_cells .or. &
-            (h11)*(h2)< 0 .and. ( abs(h11) + abs(h2) > num_cells) ) then
+       if ( test_in(h11,h2,num_cells) ) then
           fi = 0._f64  
        else
           ni = hex_to_global(mesh,h11,h2)
-          fi = -( deriv(1,ni) - deriv(2,ni) )/sqrt(3._f64)
-          !fi = ( deriv(1,ni) )
+          !fi = f(ni)
+          fi = deriv(1,ni) * n2_l(1) + deriv(2,ni)* n2_l(2)
        endif
 
-       if ( abs(h1) > num_cells .or. abs(h21) > num_cells .or. &
-            (h1)*(h21)< 0 .and. ( abs(h1) + abs(h21) > num_cells) ) then
+       if ( test_in(h1,h2,num_cells) ) then
           fi1 = 0._f64  
        else
           ni1 = hex_to_global(mesh,h1,h21)
-          fi1 = -( deriv(1,ni1) - deriv(2,ni1) )/sqrt(3._f64)
-          !fi1 = ( deriv(1,ni1) )
+          !fi1 = f(ni1)
+          fi1 = deriv(1,ni1) * n2_l(1) + deriv(2,ni1)* n2_l(2)
        endif
 
-       if ( abs(h1_1) > num_cells .or. abs(h22) > num_cells .or. &
-            (h1_1)*(h22)< 0 .and. ( abs(h1_1) + abs(h22) > num_cells) ) then
+       if ( test_in(h1_1,h22,num_cells) ) then
           fi2 = 0._f64  
        else
           ni2 = hex_to_global(mesh,h1_1,h22)
-          fi2 = -( deriv(1,ni2) - deriv(2,ni2) )/sqrt(3._f64)
-          !fi2 = ( deriv(1,ni2) )
+          !fi2 = f(ni2)
+          fi2 = deriv(1,ni2) * n2_l(1) + deriv(2,ni2)* n2_l(2)
        endif
 
-
-       freedom(2) = ( 5._f64 * fi_1 - 3._f64 * fi + 15._f64*fi1 - fi2 ) *0.0625
-       !freedom(2) = 0.5_f64 * (fi + fi1)
+       freedom(2) = ( -fi_1 + 9._f64*(fi + fi1) - fi2 )/16._f64
+       !freedom(2) = ( + 1._f64 * fi_1 - 27._f64 * fi + 27._f64*fi1 - fi2 )/24._f64
+       !freedom(2) = fi1-fi
 
        ! the third normal derivative is oriented normal to r2 and m3 is in [S1;S2]
        
-       if ( abs(h1_3) > num_cells .or. abs(h2_1) > num_cells .or. &
-            (h1_3)*(h2_1)< 0 .and. ( abs(h1_3) + abs(h2_1) > num_cells) ) then
+       if ( test_in(h1_3,h2_1,num_cells) ) then
           fi_1 = 0._f64 
        else
           ni_1 = hex_to_global(mesh,h1_3,h2_1)
-          fi_1 =  sqrt(3._f64)/3._f64* ( 2._f64*deriv(1,ni_1) + deriv(2,ni_1) )
-          !fi_1 = - ( deriv(1,ni_1) + sqrt(3._f64)*deriv(2,ni_1) )*0.5_f64
+          fi_1 = deriv(1,ni_1) * n3_l(1) + deriv(2,ni_1)* n3_l(2)
        endif
 
-       if ( abs(h1_1) > num_cells .or. abs(h2) > num_cells .or. &
-            (h1_1)*(h2)< 0 .and. ( abs(h1_1) + abs(h2) > num_cells) ) then
+       if ( test_in(h1_1,h2,num_cells) ) then
           fi = 0._f64  
        else
           ni = hex_to_global(mesh,h1_1,h2)
-          fi = sqrt(3._f64)/3._f64* ( 2._f64*deriv(1,ni) + deriv(2,ni) )
-          !fi = - ( deriv(1,ni) + sqrt(3._f64)*deriv(2,ni) )*0.5_f64
+          fi = deriv(1,ni) * n3_l(1) + deriv(2,ni)* n3_l(2)
        endif
 
-       if ( abs(h11) > num_cells .or. abs(h21) > num_cells .or. &
-            (h11)*(h21)< 0 .and. ( abs(h11) + abs(h21) > num_cells) ) then
+       if ( test_in(h11,h21,num_cells) ) then
           fi1 = 0._f64  
        else
           ni1 = hex_to_global(mesh,h11,h21)
-          fi1 = sqrt(3._f64)/3._f64* ( 2._f64*deriv(1,ni1) + deriv(2,ni1) )
-          !fi1 = - ( deriv(1,ni1) + sqrt(3._f64)*deriv(2,ni1) )*0.5_f64
+          fi1 = deriv(1,ni1) * n3_l(1) + deriv(2,ni1)* n3_l(2)
        endif
 
-       if ( abs(h13) > num_cells .or. abs(h22) > num_cells .or. &
-            (h13)*(h22)< 0 .and. ( abs(h13) + abs(h22) > num_cells) ) then
+       if ( test_in(h13,h22,num_cells) ) then
           fi2 = 0._f64  
        else
           ni2 = hex_to_global(mesh,h13,h22)
-          fi2 = sqrt(3._f64)/3._f64* ( 2._f64*deriv(1,ni2) + deriv(2,ni2) )
-          !fi2 = - ( deriv(1,ni2) + sqrt(3._f64)*deriv(2,ni2) )*0.5_f64
+          fi2 = deriv(1,ni2) * n3_l(1) + deriv(2,ni2)* n3_l(2)
        endif
 
-       freedom(3) = ( 5._f64 * fi_1 - 3._f64 * fi + 15._f64*fi1 - fi2 ) *0.0625
-       !freedom(3) = 0.5_f64 * (fi + fi1)
+       freedom(3) = ( -fi_1 + 9._f64*(fi + fi1) - fi2 )/16._f64
 
     else  ! oriented right
        
        ! the first normal derivative is oriented normal to r2 and m1 is in [S2;S3]
        
-       if ( abs(h14) > num_cells .or. abs(h22) > num_cells .or. &
-            (h14)*(h22)< 0 .and. ( abs(h14) + abs(h22) > num_cells) ) then
+       if ( test_in(h14,h22,num_cells) ) then
           fi_1 = 0._f64 
        else
           ni_1 = hex_to_global(mesh,h14,h22)
-          fi_1 = - sqrt(3._f64)/3._f64*( 2._f64*deriv(1,ni_1) + deriv(2,ni_1) )
-          !fi_1 = 0.5_f64*( deriv(1,ni_1) + sqrt(3._f64)*deriv(2,ni_1) )
+          fi_1 = deriv(1,ni_1) * n1_r(1) + deriv(2,ni_1)* n1_r(2)
        endif
 
-       if ( abs(h12) > num_cells .or. abs(h21) > num_cells .or. &
-            (h12)*(h21)< 0 .and. ( abs(h12) + abs(h21) > num_cells) ) then
+       if ( test_in(h12,h21,num_cells) ) then
           fi = 0._f64  
        else
           ni = hex_to_global(mesh,h12,h21)
-          fi = - sqrt(3._f64)/3._f64*( 2._f64*deriv(1,ni) + deriv(2,ni) )
-          !fi = 0.5_f64*( deriv(1,ni) + sqrt(3._f64)*deriv(2,ni) )
+          fi = deriv(1,ni) * n1_r(1) + deriv(2,ni)* n1_r(2)
        endif
 
-       if ( abs(h1) > num_cells .or. abs(h2) > num_cells .or. &
-            (h1)*(h2)< 0 .and. ( abs(h1) + abs(h2) > num_cells) ) then
+       if ( test_in(h1,h2,num_cells) ) then
           fi1 = 0._f64  
        else
           ni1 = hex_to_global(mesh,h1,h2)
-          fi1 = -sqrt(3._f64)/3._f64*( 2._f64*deriv(1,ni1) + deriv(2,ni1) )
-          !fi1 = 0.5_f64*( deriv(1,ni1) + sqrt(3._f64)*deriv(2,ni1) )
+          fi1 = deriv(1,ni1) * n1_r(1) + deriv(2,ni1) * n1_r(2)
        endif
 
-       if ( abs(h1_2) > num_cells .or. abs(h2_1) > num_cells .or. &
-            (h1_2)*(h2_1)< 0 .and. ( abs(h1_2) + abs(h2_1) > num_cells) ) then
+       if ( test_in(h1_2,h2_1,num_cells) ) then
           fi2 = 0._f64  
        else
           ni2 = hex_to_global(mesh,h1_2,h2_1)
-          fi2 = -sqrt(3._f64)/3._f64*( 2._f64*deriv(1,ni2) + deriv(2,ni2) )
-          !fi2 = 0.5_f64*( deriv(1,ni2) + sqrt(3._f64)*deriv(2,ni2) )
+          fi2 = deriv(1,ni2) * n1_r(1) + deriv(2,ni2) * n1_r(2)
        endif
 
-       freedom(1) = ( 5._f64 * fi_1 - 3._f64 * fi + 15._f64*fi1 - fi2 ) *0.0625
-       !freedom(1) = 0.5_f64 * (fi + fi1)
+       freedom(1) = ( -fi_1 + 9._f64*(fi + fi1) - fi2 )/16._f64
 
 
        ! the second normal derivative is oriented normal to r3 and m2 is in [S1;S3]
        
-       if ( abs(h1_1) > num_cells .or. abs(h22) > num_cells .or. &
-            (h1_1)*(h22)< 0 .and. ( abs(h1_1) + abs(h22) > num_cells) ) then
+       if ( test_in(h1_1,h22,num_cells) ) then
           fi_1 = 0._f64 
        else
           ni_1 = hex_to_global(mesh,h1_1,h22)
-          fi_1 = -( - deriv(1,ni_1) + deriv(2,ni_1) ) /sqrt(3._f64)
-          !fi_1 = - deriv(1,ni_1)
+          fi_1 = deriv(1,ni_1) * n2_r(1) + deriv(2,ni_1) * n2_r(2)
        endif
 
-       if ( abs(h1) > num_cells .or. abs(h21) > num_cells .or. &
-            (h1)*(h21)< 0 .and. ( abs(h1) + abs(h21) > num_cells) ) then
+       if ( test_in(h1,h21,num_cells) ) then
           fi = 0._f64  
        else
           ni = hex_to_global(mesh,h1,h21)
-          fi = -( - deriv(1,ni) + deriv(2,ni) ) /sqrt(3._f64)
-          !fi = - deriv(1,ni)
+          fi = deriv(1,ni) * n2_r(1) + deriv(2,ni) * n2_r(2)
        endif
 
-       if ( abs(h11) > num_cells .or. abs(h2) > num_cells .or. &
-            (h11)*(h2)< 0 .and. ( abs(h11) + abs(h2) > num_cells) ) then
+       if ( test_in(h11,h2,num_cells) ) then
           fi1 = 0._f64  
        else
           ni1 = hex_to_global(mesh,h11,h2)
-          fi1 = -( - deriv(1,ni1) + deriv(2,ni1) ) /sqrt(3._f64)
-          !fi1 = - deriv(1,ni1)
+          fi1 = deriv(1,ni1) * n2_r(1) + deriv(2,ni1) * n2_r(2)
        endif
 
-       if ( abs(h12) > num_cells .or. abs(h2_1) > num_cells .or. &
-            (h12)*(h2_1)< 0 .and. ( abs(h12) + abs(h2_1) > num_cells) ) then
+       if ( test_in(h12,h2_1,num_cells) ) then
           fi2 = 0._f64  
        else
           ni2 = hex_to_global(mesh,h12,h2_1)
-          fi2 = -( - deriv(1,ni2) + deriv(2,ni2) ) /sqrt(3._f64)
-          !fi2 = - deriv(1,ni2)
+          fi2 = deriv(1,ni2) * n2_r(1) + deriv(2,ni2) * n2_r(2)
        endif
 
 
-       freedom(2) = ( 5._f64 * fi_1 - 3._f64 * fi + 15._f64*fi1 - fi2 ) *0.0625
-       !freedom(2) = 0.5_f64 * (fi + fi1)
+       freedom(2) = ( -fi_1 + 9._f64*(fi + fi1) - fi2 )/16._f64! interpolation
 
        ! the third normal derivative is oriented normal to r2 and m3 is in [S1;S2]
        
-       if ( abs(h1_1) > num_cells .or. abs(h2_3) > num_cells .or. &
-            (h1_1)*(h2_3)< 0 .and. ( abs(h1_1) + abs(h2_3) > num_cells) ) then
+       if ( test_in(h1_1,h2_3,num_cells) ) then
           fi_1 = 0._f64 
        else
           ni_1 = hex_to_global(mesh,h1_1,h2_3)
-          fi_1 = sqrt(3._f64)/3._f64 * ( deriv(1,ni_1) + 2._f64*deriv(2,ni_1) )
-          !fi_1 = - 0.5_f64 * ( deriv(1,ni_1) + sqrt(3._f64)*deriv(2,ni_1) )
+          fi_1 = deriv(1,ni_1) * n3_r(1) + deriv(2,ni_1) * n3_r(2)
        endif
 
-       if ( abs(h1) > num_cells .or. abs(h2_1) > num_cells .or. &
-            (h1)*(h2_1)< 0 .and. ( abs(h1) + abs(h2_1) > num_cells) ) then
+       if ( test_in(h1,h2_1,num_cells) ) then
           fi = 0._f64  
        else
           ni = hex_to_global(mesh,h1,h2_1)
-          fi = sqrt(3._f64)/3._f64 * ( deriv(1,ni) + 2._f64*deriv(2,ni) )
-          !fi = - 0.5_f64 * ( deriv(1,ni) + sqrt(3._f64)*deriv(2,ni) )
+          fi = deriv(1,ni) * n3_r(1) + deriv(2,ni) * n3_r(2)
        endif
 
-       if ( abs(h11) > num_cells .or. abs(h21) > num_cells .or. &
-            (h11)*(h21)< 0 .and. ( abs(h11) + abs(h21) > num_cells) ) then
+       if ( test_in(h11,h21,num_cells) ) then
           fi1 = 0._f64  
        else
           ni1 = hex_to_global(mesh,h11,h21)
-          fi1 = sqrt(3._f64)/3._f64 * ( deriv(1,ni1) + 2._f64*deriv(2,ni1) )
-          !fi = - 0.5_f64 * ( deriv(1,ni) + sqrt(3._f64)*deriv(2,ni1) )
+          fi1 = deriv(1,ni1) * n3_r(1) + deriv(2,ni1) * n3_r(2)
        endif
 
-       if ( abs(h12) > num_cells .or. abs(h23) > num_cells .or. &
-            (h12)*(h23)< 0 .and. ( abs(h12) + abs(h23) > num_cells) ) then
+       if ( test_in(h12,h23,num_cells) ) then
           fi2 = 0._f64  
        else
           ni2 = hex_to_global(mesh,h12,h23)
-          fi2 = sqrt(3._f64)/3._f64 * ( deriv(1,ni2) + 2._f64*deriv(2,ni2) )
-          !fi2 = - 0.5_f64 * ( deriv(1,ni2) + sqrt(3._f64)*deriv(2,ni2) )
+          fi2 = deriv(1,ni2) * n3_r(1) + deriv(2,ni2) * n3_r(2)
        endif
 
-       freedom(3) = ( 5._f64 * fi_1 - 3._f64 * fi + 15._f64*fi1 - fi2 ) *0.0625
-       !freedom(3) = 0.5_f64 * (fi + fi1)
-
+       freedom(3) = ( -fi_1 + 9._f64*(fi + fi1) - fi2 )/16._f64! interpolation
     endif
 
-  end subroutine get_normal_der
 
+  end subroutine get_normal_der
+  
+  function  test_in(h1,h2,num_cells) result(bool)  
+    sll_int32  :: h1, h2,num_cells
+    logical    :: bool
+
+    bool =  abs(h1) > num_cells .or. abs(h2) > num_cells .or. &
+         (h1)*(h2)< 0 .and. ( abs(h1) + abs(h2) > num_cells) 
+
+  endfunction  test_in
 
 end module interpolation_hex_hermite

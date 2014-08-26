@@ -13,7 +13,7 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle
   sll_int32    :: i
-  sll_int32    :: nloops, num_method = 12
+  sll_int32    :: nloops, num_method = 10
   sll_int32    :: ierr
   ! initial distribution
   sll_real64   :: gauss_x2
@@ -78,15 +78,21 @@ program test_hex_hermite
      print*, "   Hsieh_Clough_Tocher_complete   "
      print*, "*********************************"
      print*, 
+  else if (num_method == 13 ) then 
+     print*, 
+     print*, "*********************************"
+     print*, "  quartic element of Ganev_Dimitrov "
+     print*, "*********************************"
+     print*, 
   else
-     print*, "specify another number correspoonding to a existing implemented method 9, 10, 11 or 12"
+     print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 13"
   endif
 
   open(unit = 33, file="hex_errors.txt", action="write", status="replace")!,position = "append")! 
 
   write(33,*) 
 
-  do num_cells = 20,160,20 ! -> loop on the size of the mesh 
+  do num_cells = 20,340,40 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
