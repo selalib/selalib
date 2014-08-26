@@ -232,6 +232,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
+       ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
        ${SLL_DIR}/simulation/simulation_4d_DK_hybrid.F90
        ${SLL_DIR}/simulation/simulation_4d_drift_kinetic_polar.F90
