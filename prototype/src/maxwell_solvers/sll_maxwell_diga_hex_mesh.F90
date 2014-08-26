@@ -14,7 +14,10 @@ sll_real64, parameter :: c  = 1d0
 type, public :: maxwell_dg_hex_mesh
 
    sll_int32 :: degree
+   sll_int32 :: n_ddl
+
    type(ElementRef) :: Elem
+
    sll_real64, dimension(:,:,:), pointer :: DxP
    sll_real64, dimension(:,:,:), pointer :: DyP
 
@@ -75,6 +78,7 @@ sll_int32 :: i, j
 
 this%degree  = degree
 n_ddl = (degree+1)*(degree+2)/2
+this%n_ddl = n_ddl
 SLL_ALLOCATE(xref(n_ddl), error)
 SLL_ALLOCATE(yref(n_ddl), error)
 
