@@ -15,7 +15,7 @@ type(hex_mesh_2d),   pointer  :: mesh
 type(box_spline_2D), pointer :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 3
+sll_int32    :: deg = 2
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -64,15 +64,15 @@ character(len = 50) :: filename
 character(len = 50) :: filename2
 character(len = 4)  :: filenum
 
-! sll_real64              :: delta
-! sll_real64              :: k1_temp
-! sll_real64              :: k2_temp
+sll_real64              :: sum_chi
+sll_int32               :: k1
+sll_int32               :: k2
 
 
-
+sum_chi = 0._f64
 print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
-do num_cells = 80,80,20
+do num_cells = 20,20,20
 
 
    ! Mesh initialization
@@ -108,9 +108,9 @@ do num_cells = 80,80,20
    do i=1, mesh%num_pts_tot
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
-      f_init(i) = gauss_amp * &
-           exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
-           + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      f_init(i) = 1._f64!x1(i) !gauss_amp * &
+           !exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+           !+ (x2(i)-gauss_x2)**2 / gauss_sig**2))
       if (exponent(f_init(i)) .lt. -17) then
          f_init(i) = 0._f64
       end if
@@ -197,9 +197,9 @@ do num_cells = 80,80,20
             x1(i)   = x1_temp
          ! end if
 
-         f_fin(i) = gauss_amp * &
-              exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
-              + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+         f_fin(i) = 1._f64!x1(i)!gauss_amp * &
+              !exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
+              !+ (x2(i)-gauss_x2)**2 / gauss_sig**2))
          if (exponent(f_fin(i)) .lt. -17) then
             f_fin(i) = 0._f64
          end if
@@ -210,20 +210,23 @@ do num_cells = 80,80,20
          chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
          chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
          
-            ! Relative error
+         ! Relative error
+         k1 = mesh%global_to_hex1(i)
+         k2 = mesh%global_to_hex2(i)
+         if (cells_to_origin(k1, k2).lt.num_cells-deg-1) then
             if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
                diff_error = abs(f_fin(i) - f_tn(i))
                where_error = i
             end if
             ! Norm2 error :
             norm2_error = norm2_error + abs(f_fin(i) - f_tn(i))**2
-         
-         end do
+         end if
+      end do
 
 !    if (WRITE_SPLINES.eq.1) then 
-         call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
-         call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
-         call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
+      call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
+      call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
+      call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
 !    end if
 
       ! Norm2 error :
@@ -315,6 +318,13 @@ do num_cells = 80,80,20
 !    end if
 
 
+   sum_chi = sum(chi1)
+   print*, "sum_chi1 = ", sum_chi
+   sum_chi = sum(chi2)
+   print*, "sum_chi2 = ", sum_chi
+   sum_chi = sum(chi3)
+   print*, "sum_chi3 = ", sum_chi
+   
 
    SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
    SLL_DEALLOCATE_ARRAY(f_init,ierr)
@@ -322,13 +332,16 @@ do num_cells = 80,80,20
    SLL_DEALLOCATE_ARRAY(f_fin,ierr)
    SLL_DEALLOCATE_ARRAY(x1,ierr)
    SLL_DEALLOCATE_ARRAY(x2,ierr)
-   SLL_DEALLOCATE_ARRAY(chi1,ierr)
-   SLL_DEALLOCATE_ARRAY(chi2,ierr)
    SLL_DEALLOCATE_ARRAY(x1_char,ierr)
    SLL_DEALLOCATE_ARRAY(x2_char,ierr)
    SLL_DEALLOCATE(mesh,ierr)
    SLL_DEALLOCATE(spline,ierr)
+   SLL_DEALLOCATE_ARRAY(chi1,ierr)
+   SLL_DEALLOCATE_ARRAY(chi2,ierr)
+   SLL_DEALLOCATE_ARRAY(chi3,ierr)
 
 end do
+
+
 end program test_box_splines
 
