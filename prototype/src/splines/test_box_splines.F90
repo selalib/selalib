@@ -28,6 +28,7 @@ sll_real64,dimension(:),allocatable :: x2
 sll_real64,dimension(:),allocatable :: f_init
 sll_real64,dimension(:),allocatable :: chi1
 sll_real64,dimension(:),allocatable :: chi2
+sll_real64,dimension(:),allocatable :: chi3
 ! distribution at time n
 sll_real64,dimension(:),allocatable :: x1_char
 sll_real64,dimension(:),allocatable :: x2_char
@@ -95,6 +96,7 @@ do num_cells = 80,80,20
    SLL_ALLOCATE(x2_char(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(chi1(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
+   SLL_ALLOCATE(chi3(mesh%num_pts_tot),ierr)
 
 
    ! Distribution initialization
@@ -202,10 +204,11 @@ do num_cells = 80,80,20
             f_fin(i) = 0._f64
          end if
 
-         ! x1_basis = change_basis_x1(spline, x1(i), x2(i))
-!          x2_basis = change_basis_x2(spline, x1(i), x2(i))
-!          chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-!          chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+         x1_basis = change_basis_x1(spline, x1(i), x2(i))
+         x2_basis = change_basis_x2(spline, x1(i), x2(i))
+         chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
+         chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+         chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
          
             ! Relative error
             if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
@@ -217,16 +220,22 @@ do num_cells = 80,80,20
          
          end do
 
+!    if (WRITE_SPLINES.eq.1) then 
+         call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
+         call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
+         call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
+!    end if
+
       ! Norm2 error :
       norm2_error = sqrt(norm2_error)
       
       ! Printing error
-!       k1_error = mesh%global_to_hex1(where_error)
-!       k2_error = mesh%global_to_hex2(where_error)
-!       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
-!       print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
-!       print*,"                       | error_L2   = ", norm2_error
-      !print*," Center error = ", f_fin(1)-f_tn(1)
+      k1_error = mesh%global_to_hex1(where_error)
+      k2_error = mesh%global_to_hex2(where_error)
+      print*,"  nt =", nloops, "    | error_Linf = ", diff_error
+      print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
+      print*,"                       | error_L2   = ", norm2_error
+      print*," Center error = ", f_fin(1)-f_tn(1)
 
 
 
@@ -259,11 +268,6 @@ do num_cells = 80,80,20
 
    end do
 
-
-!    if (WRITE_SPLINES.eq.1) then 
-!       call write_field_hex_mesh(mesh, chi1, "chi1.txt")
-!       call write_field_hex_mesh(mesh, chi2, "chi2.txt")
-!    end if
 
    call cpu_time(t_end)
    print*," *    Final error  = ", diff_error, " *"
