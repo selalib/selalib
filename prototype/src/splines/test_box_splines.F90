@@ -1,8 +1,11 @@
 program test_box_splines
 
+#include "sll_constants.h"
 #include "sll_memory.h"
 #include "sll_working_precision.h"
+#include "sll_assert.h"
 
+use sll_utilities
 use sll_constants
 use hex_mesh
 use box_splines
@@ -43,6 +46,8 @@ sll_real64   :: t
 ! timer variables
 sll_real64   :: tcpu, t_init, t_end
 !others
+sll_real64    :: cfl
+sll_real64   :: f_min
 sll_real64   :: x2_basis
 sll_real64   :: x1_basis
 sll_real64   :: x1_temp
@@ -66,9 +71,8 @@ character(len = 4)  :: filenum
 
 print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
-do num_cells = 20,160,20
+do num_cells = 160,160,20
 
-!   t_init = getRealTimer()
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -76,6 +80,7 @@ do num_cells = 20,160,20
                                     !0.5_f64,  sqrt(3.)/2._f64, &
                                     !1.0_f64,  0._f64, &
                                     radius = 8._f64)
+  
    call sll_display(mesh)
    print*,"num_pts : ", mesh%num_pts_tot
    print*,"spl deg : ", deg
@@ -90,6 +95,7 @@ do num_cells = 20,160,20
    SLL_ALLOCATE(x2_char(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(chi1(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
+
 
    ! Distribution initialization
    gauss_x1  = 2._f64
@@ -133,12 +139,16 @@ do num_cells = 20,160,20
       x2_char(2:) = sqrt(x1(2:)**2 + x2(2:)**2) * sin(2*sll_pi*dt + atan2(x2(2:),x1(2:)))
    end if
 
+
+
+
    ! Time loop
    nloops = 0
 
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
    call cpu_time(t_init)
+
    !print*,""
    do while (t .lt. tmax)
       !print *, " --> Time loop t =", t
@@ -174,16 +184,16 @@ do num_cells = 20,160,20
          ! Analytical value 
          ! ******************
          ! Computing characteristics
-         if (which_advec .eq. 0) then
-            ! linear advection
-            x1(i) = mesh%global_to_x1(i) - advec*dt*nloops
-            x2(i) = mesh%global_to_x2(i) - advec*dt*nloops
-         else
+         ! if (which_advec .eq. 0) then
+!             ! linear advection
+!             x1(i) = mesh%global_to_x1(i) - advec*dt*nloops
+!             x2(i) = mesh%global_to_x2(i) - advec*dt*nloops
+!          else
             ! Circular advection
             x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
             x2(i)   = sqrt(x1(i)**2 + x2(i)**2) * sin(2*sll_pi*dt + atan2(x2(i),x1(i)))
             x1(i)   = x1_temp
-         end if
+         ! end if
 
          f_fin(i) = gauss_amp * &
               exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
@@ -205,18 +215,17 @@ do num_cells = 20,160,20
             ! Norm2 error :
             norm2_error = norm2_error + abs(f_fin(i) - f_tn(i))**2
          
-      end do
+         end do
 
       ! Norm2 error :
       norm2_error = sqrt(norm2_error)
       
-      call cpu_time(t_end)
       ! Printing error
-      k1_error = mesh%global_to_hex1(where_error)
-      k2_error = mesh%global_to_hex2(where_error)
-      print*,"  nt =", nloops, "    | error_Linf = ", diff_error
-      print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
-      print*,"                       | error_L2   = ", norm2_error
+!       k1_error = mesh%global_to_hex1(where_error)
+!       k2_error = mesh%global_to_hex2(where_error)
+!       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
+!       print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
+!       print*,"                       | error_L2   = ", norm2_error
       !print*," Center error = ", f_fin(1)-f_tn(1)
 
 
@@ -248,7 +257,7 @@ do num_cells = 20,160,20
 !          call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
 !       end if
 
-    end do
+   end do
 
 
 !    if (WRITE_SPLINES.eq.1) then 
@@ -256,22 +265,28 @@ do num_cells = 20,160,20
 !       call write_field_hex_mesh(mesh, chi2, "chi2.txt")
 !    end if
 
+   call cpu_time(t_end)
    print*," *    Final error  = ", diff_error, " *"
 
-
+   cfl = dt * num_cells
+   f_min = minval(f_tn)
    !WRITING ERROR REGARDING NUMBER OF POINTS
    if (WRITE_CELLS_ERROR.eq.1) then
       if (num_cells .eq. 20) then 
          !NEW FILE :
          open (unit=12,file="error_file.txt",action="write",&
               status="replace")
-         write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
-         close(12)
+         !write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
+         write(12,*) num_cells, mesh%num_pts_tot, dt, cfl,  norm2_error, diff_error, f_min, t_end - t_init,&
+                nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64   
+      close(12)
       else
          !WRITE
          open (unit=12,file="error_file.txt",action="write",&
               status="old", position="append") 
-         write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
+!         write (12, "(3(g13.3,1x))") num_cells, diff_error, norm2_error
+         write(12,*) num_cells, mesh%num_pts_tot, dt, cfl,  norm2_error, diff_error, f_min, t_end - t_init,&
+                nloops * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
          close(12)
       end if
    end if
@@ -310,6 +325,6 @@ do num_cells = 20,160,20
    SLL_DEALLOCATE(mesh,ierr)
    SLL_DEALLOCATE(spline,ierr)
 
-
 end do
 end program test_box_splines
+
