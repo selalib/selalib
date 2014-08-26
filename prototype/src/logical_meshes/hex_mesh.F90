@@ -62,6 +62,7 @@ use sll_tri_mesh_xmf
      procedure, pass(mesh) :: cart_to_hex2
      procedure, pass(mesh) :: global_to_local
      procedure, pass(mesh) :: local_to_global
+     procedure, pass(mesh) :: local_hex_to_global
   end type hex_mesh_2d
 
   type hex_mesh_2d_ptr
@@ -667,6 +668,31 @@ contains
     end if
 
   end function local_to_global
+
+  function local_hex_to_global(mesh, k1_ref, k2_ref, local) result(global)
+    ! returns the global index of the point which has as
+    ! local index local_index in the ref_index system
+    ! (see gloval_index(...) and global_to_local(...) for conventions) 
+    ! ie. local_to_global(1, i) = i
+    class(hex_mesh_2d) :: mesh
+    sll_int32 :: ref_index, local
+    sll_int32 :: k1_ref, k2_ref
+    sll_int32 :: k1_loc, k2_loc
+    sll_int32 :: global
+
+
+    k1_loc = mesh%global_to_hex1(local)
+    k2_loc = mesh%global_to_hex2(local)
+    
+    if (cells_to_origin(k1_ref + k1_loc, k2_ref + k2_loc).lt.mesh%num_cells) then
+       global = mesh%hex_to_global(k1_ref + k1_loc, k2_ref + k2_loc)
+    else
+       ! Out of domain
+       global = -1
+    end if
+
+  end function local_hex_to_global
+
 
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
     type(hex_mesh_2d), pointer            :: mesh

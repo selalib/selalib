@@ -121,6 +121,7 @@ contains  ! ****************************************************************
     type(box_spline_2d), pointer                  :: spline
     sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
+    sll_int32  :: k1_ref, k2_ref
     sll_int32  :: i,k
     sll_int32  :: nei
 
@@ -129,11 +130,13 @@ contains  ! ****************************************************************
     do i = 1, num_pts_tot
 
        spline%coeffs(i) = real(0,f64)
+       k1_ref = spline%mesh%global_to_hex1(i)
+       k2_ref = spline%mesh%global_to_hex2(i)
 
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
        do k = 1, 3*(2*deg)*(2*deg+1) + 1 
-          nei = spline%mesh%local_to_global(i,k)
+          nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
           if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
                                 pre_filter_pfir(spline%mesh, k, deg)
@@ -454,6 +457,7 @@ contains  ! ****************************************************************
        end do
     end do
   end function hex_interpolate_value
+
 
 end module box_splines
 
