@@ -142,7 +142,7 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_DK_hybrid_input.txt)
     ADD_MPI_TEST(sim4d_DK_hybrid test_4d_DK_hybrid ${PROCS} ${ARGS})
     SET_TESTS_PROPERTIES(sim4d_DK_hybrid PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+      PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
     
     #SET(ARGS ${CMAKE_CURRENT_SOURCE_DIR}/simulation/dksim4d_general_input.txt)
     ADD_MPI_TEST(dk4d_sim_cartesian test_4d_dk_cartesian ${PROCS} ${ARGS})
