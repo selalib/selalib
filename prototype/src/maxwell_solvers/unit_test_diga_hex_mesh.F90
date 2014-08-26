@@ -11,7 +11,6 @@ implicit none
 type(maxwell_dg_hex_mesh)   :: maxwell
 type(hex_mesh_2d), pointer  :: mesh
 sll_int32                   :: num_cells
-sll_real64, pointer         :: field(:)
 sll_int32                   :: error
 sll_int32                   :: i, k
 sll_int32                   :: degree
@@ -22,6 +21,9 @@ sll_int32                   :: istep
 sll_int32                   :: nstep = 100
 sll_real64                  :: dt = 0.01
 sll_real64                  :: time
+sll_real64, pointer         :: S_Ex(:,:)
+sll_real64, pointer         :: X_Ex(:,:)
+sll_real64, pointer         :: tmp(:,:)
 
 num_cells = 20
 
@@ -60,7 +62,12 @@ do i = 1, 5
 end do
 time = 0.0
 
-maxwell%Ex = 0d0
+SLL_CLEAR_ALLOCATE(tmp(maxwell%n_ddl,mesh%num_triangles), error)
+!SLL_CLEAR_ALLOCATE(S_Ex(maxwell%n_ddl,mesh%num_triangles), error)
+!SLL_CLEAR_ALLOCATE(X_Ex(maxwell%n_ddl,mesh%num_triangles), error)
+maxwell%Ex = 1d0
+maxwell%D_Ex = 1d0
+
 do istep = 1, nstep
 
 
@@ -70,20 +77,36 @@ do istep = 1, nstep
    !            -sll_pi*maxwell%x_ddl*cos(sll_pi*maxwell%y_ddl))
 
       
+!   call rksetup()
+!   maxwell%D_Ex = maxwell%Ex
+!   call accumulate(1._f64/6._f64)
+!   call rkstage(0.5_f64)
+!   maxwell%D_Ex = maxwell%Ex
+!   call accumulate(1._f64/3._f64)
+!   call rkstage(0.5_f64)
+!   maxwell%D_Ex = maxwell%Ex
+!   call accumulate(1._f64/3._f64)
+!   call rkstage(1.0_f64)
+!   maxwell%D_Ex = maxwell%Ex
+!   call accumulate(1._f64/6._f64)
+!   call rkstep()
+
    do k = 1, 5
 
       !call solve(maxwell, mesh)
 
       !call set_charge_and_currents(time+C(k)*dt)
 
-      !maxwell%D_Ex = A(k)*maxwell%D_Ex + dt * maxwell%x_ddl
+      tmp = maxwell%D_Ex
+      maxwell%D_Ex = maxwell%Ex
+      maxwell%D_Ex = A(k)*tmp + dt * maxwell%D_Ex
 
       !maxwell%D_Ex = A(k)*maxwell%D_Ex + dt * (maxwell%D_Ex - maxwell%Jx)
       !maxwell%D_Ey = A(k)*maxwell%D_Ey + dt * (maxwell%D_Ey - maxwell%Jy)
       !maxwell%D_Bz = A(k)*maxwell%D_Bz + dt * (maxwell%D_Bz)
       !maxwell%D_Po = A(k)*maxwell%D_Po + dt * (maxwell%D_Po + maxwell%Ro)  ! xi=1
 
-      !maxwell%Ex = maxwell%Ex + B(k) * maxwell%D_Ex 
+      maxwell%Ex = maxwell%Ex + B(k) * maxwell%D_Ex 
 
       !maxwell%Ey = maxwell%Ey + B(k) * maxwell%D_Ey 
       !maxwell%Bz = maxwell%Bz + B(k) * maxwell%D_Bz
@@ -91,14 +114,13 @@ do istep = 1, nstep
 
    end do
 
-   maxwell%Ex = maxwell%Ex + dt * maxwell%x_ddl
    time = time + dt
 
    !error = maxval(abs(maxwell%Ex - sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)))
 
    write(*,"(10x,' istep = ',I6)",advance="no") istep
    write(*,"(' time = ',g15.3,' s, ')",advance="no") time
-   write(*,"(' Ex error = ',2g15.3)") maxval(maxwell%Ex), minval(maxwell%Ex)
+   write(*,"(' Ex error = ',g25.15)") maxval(maxwell%Ex)- exp(1d0)
 
 end do
 
@@ -117,5 +139,37 @@ subroutine set_charge_and_currents(t)
    maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
 
 end subroutine set_charge_and_currents
+
+
+
+subroutine rksetup()
+
+   S_Ex = 0.0_f64
+
+   X_Ex = maxwell%Ex 
+
+end subroutine rksetup
+
+subroutine rkstage(coef)
+
+   sll_real64, intent(in) :: coef
+
+   maxwell%Ex = X_Ex + coef * dt * maxwell%D_Ex
+
+end subroutine rkstage
+
+subroutine accumulate(coef)
+
+   sll_real64, intent(in) :: coef
+
+   S_Ex =  S_Ex + coef * maxwell%D_Ex
+
+end subroutine accumulate
+
+subroutine rkstep()
+
+   maxwell%Ex = X_Ex + dt * S_Ex
+
+end subroutine rkstep
 
 end program test_maxwell_dg_hex_mesh
