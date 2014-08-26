@@ -19,7 +19,7 @@ sll_real64                  :: B(5)
 sll_real64                  :: C(5)
 sll_int32                   :: istep
 sll_int32                   :: nstep = 100
-sll_real64                  :: dt = 0.01
+sll_real64                  :: dt = 0.001
 sll_real64                  :: time
 sll_real64, pointer         :: S_Ex(:,:)
 sll_real64, pointer         :: X_Ex(:,:)
@@ -28,16 +28,18 @@ sll_real64, pointer         :: tmp_Ey(:,:)
 sll_real64, pointer         :: tmp_Bz(:,:)
 sll_real64, pointer         :: tmp_Po(:,:)
 
-num_cells = 20
+num_cells = 3
 
 print *, ""
 print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
 mesh => new_hex_mesh_2d(num_cells)
 call sll_display(mesh)
 call write_hex_mesh_2d(mesh,"hex_mesh_coo.txt")
+call write_mtv(mesh)
 print *, ""
 
-degree = 1
+degree = 2
+
 call initialize(maxwell, mesh, degree)
 
 !Low storage Runge Kutta order 4
@@ -60,15 +62,16 @@ C(3) = 2526269341429D0/6820363962896D0
 C(4) = 2006345519317D0/3224310063776D0
 C(5) = 2802321613138D0/2924317926251D0
 
-do i = 1, 5
-   print*, C(i)
-end do
 time = 0.0
 
 SLL_CLEAR_ALLOCATE(tmp_Ex(maxwell%n_ddl,mesh%num_triangles), error)
 SLL_CLEAR_ALLOCATE(tmp_Ey(maxwell%n_ddl,mesh%num_triangles), error)
 SLL_CLEAR_ALLOCATE(tmp_Bz(maxwell%n_ddl,mesh%num_triangles), error)
 SLL_CLEAR_ALLOCATE(tmp_Po(maxwell%n_ddl,mesh%num_triangles), error)
+
+maxwell%Ex = 0d0
+maxwell%Ey = 0d0
+maxwell%Bz = 0.01*exp(-(maxwell%x_ddl*maxwell%x_ddl+maxwell%y_ddl*maxwell%y_ddl)/0.04)
 
 do istep = 1, nstep
 
@@ -92,37 +95,40 @@ do istep = 1, nstep
 !   maxwell%D_Ex = maxwell%Ex
 !   call accumulate(1._f64/6._f64)
 !   call rkstep()
-   call set_charge_and_currents(time)
+!   call set_charge_and_currents(time)
+
 
    do k = 1, 5
 
-      tmp = maxwell%D_Ex - maxwell%Jx
+      tmp_Ex = maxwell%D_Ex !- maxwell%Jx
+      tmp_Ey = maxwell%D_Ey !- maxwell%Jy
+      tmp_Bz = maxwell%D_Bz 
+      tmp_Po = maxwell%D_Po !+ maxwell%Ro
+
+      ! Compute D_Ex, D_Ey, D_Bz, D_Po
       call solve(maxwell, mesh)
-      call set_charge_and_currents(time+C(k)*dt)
+      !call set_charge_and_currents(time+C(k)*dt)
 
-      maxwell%D_Ex = maxwell%Ex
-      maxwell%D_Ex = A(k)*tmp + dt * maxwell%D_Ex
-
-      !maxwell%D_Ex = A(k)*maxwell%D_Ex + dt * (maxwell%D_Ex - maxwell%Jx)
-      !maxwell%D_Ey = A(k)*maxwell%D_Ey + dt * (maxwell%D_Ey - maxwell%Jy)
-      !maxwell%D_Bz = A(k)*maxwell%D_Bz + dt * (maxwell%D_Bz)
-      !maxwell%D_Po = A(k)*maxwell%D_Po + dt * (maxwell%D_Po + maxwell%Ro)  ! xi=1
+      maxwell%D_Ex = A(k)*tmp_Ex + dt * maxwell%D_Ex !- maxwell%Jx)
+      maxwell%D_Ey = A(k)*tmp_Ey + dt * maxwell%D_Ey !- maxwell%Jy)
+      maxwell%D_Bz = A(k)*tmp_Bz + dt * maxwell%D_Bz !
+      maxwell%D_Po = A(k)*tmp_Po + dt * maxwell%D_Po !+ maxwell%Ro)  ! xi=1
 
       maxwell%Ex = maxwell%Ex + B(k) * maxwell%D_Ex 
-
-      !maxwell%Ey = maxwell%Ey + B(k) * maxwell%D_Ey 
-      !maxwell%Bz = maxwell%Bz + B(k) * maxwell%D_Bz
-      !maxwell%Po = maxwell%Po + B(k) * maxwell%D_Po
+      maxwell%Ey = maxwell%Ey + B(k) * maxwell%D_Ey 
+      maxwell%Bz = maxwell%Bz + B(k) * maxwell%D_Bz
+      maxwell%Po = maxwell%Po + B(k) * maxwell%D_Po
 
    end do
 
    time = time + dt
-
-   !error = maxval(abs(maxwell%Ex - sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)))
+   call plot_simple(maxwell, mesh)
+   !call plot_double(maxwell, mesh)
 
    write(*,"(10x,' istep = ',I6)",advance="no") istep
    write(*,"(' time = ',g15.3,' s, ')",advance="no") time
-   write(*,"(' Ex error = ',g25.15)") maxval(maxwell%Ex)- exp(1d0)
+   write(*,*)
+   !write(*,"(' Ex error = ',g25.15)") maxval(abs(maxwell%Ex-sin(time)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)))
 
 end do
 
@@ -141,8 +147,6 @@ subroutine set_charge_and_currents(t)
    maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
 
 end subroutine set_charge_and_currents
-
-
 
 subroutine rksetup()
 
@@ -173,5 +177,263 @@ subroutine rkstep()
    maxwell%Ex = X_Ex + dt * S_Ex
 
 end subroutine rkstep
+
+subroutine plot_simple( this, mesh )
+
+   type(maxwell_dg_hex_mesh), intent(in) :: this
+   type(hex_mesh_2d),         intent(in) :: mesh
+   sll_int32, save :: iplot = 0
+   sll_int32       :: idl, iel
+   character(len=4) :: cplot
+   character(len=11) :: dat_file
+   character(len=15) :: gnu_file
+
+   iplot = iplot+1
+   call int2string(iplot, cplot)
+
+   dat_file = "fields_"//cplot
+   write(*,"(10x, 'Fichier de sortie GNUplot ', a)") dat_file//".dat"
+
+   gnu_file = "Ex_hex_mesh.gnu"
+   open(83, file = gnu_file, position="append")
+   if ( iplot == 1 ) rewind(83)
+   write(83,"(a,g15.3,a)")"set title 'Time = ",time, "'"
+   write(83,"(a)")"splot '"//dat_file//"' w lp "
+   close(83)
+   gnu_file = "Ey_hex_mesh.gnu"
+   open(83, file = gnu_file, position="append")
+   if ( iplot == 1 ) rewind(83)
+   write(83,"(a,g15.3,a)")"set title 'Time = ",time, "'"
+   write(83,"(a)")"splot '"//dat_file//"' u 1:2:4 w lp "
+   close(83)
+   gnu_file = "Bz_hex_mesh.gnu"
+   open(83, file = gnu_file, position="append")
+   if ( iplot == 1 ) rewind(83)
+   write(83,"(a,g15.3,a)")"set title 'Time = ",time, "'"
+   write(83,"(a)")"splot '"//dat_file//"' u 1:2:5 w lp "
+   close(83)
+
+   open(94, file = dat_file)
+
+   do iel = 1, mesh%num_triangles
+
+      do idl = 1, this%n_ddl
+         write(94,*) sngl(this%x_ddl(idl,iel)), &
+                     sngl(this%y_ddl(idl,iel)), &
+                     sngl(this%Ex(idl,iel)),    &
+                     sngl(this%Ey(idl,iel)),    &
+                     sngl(this%Bz(idl,iel))
+      end do
+
+      idl = 1
+      write(94,*) sngl(this%x_ddl(idl,iel)), &
+                  sngl(this%y_ddl(idl,iel)), &
+                  sngl(this%Ex(idl,iel)),    &
+                  sngl(this%Ey(idl,iel)),    &
+                  sngl(this%Bz(idl,iel))
+      write(94,*)
+      write(94,*)
+   
+   end do
+
+   close(94)
+
+end subroutine plot_simple
+
+subroutine plot_double( this, mesh )
+
+   type(maxwell_dg_hex_mesh), intent(in) :: this
+   type(hex_mesh_2d),         intent(in) :: mesh
+   sll_int32, save :: iplot = 0
+   sll_int32       :: idl, iel
+   character(len=4) :: cplot
+   character(len=07) :: dat_file
+   character(len=15) :: gnu_file
+
+   iplot = iplot+1
+   call int2string(iplot, cplot)
+
+   dat_file = "Ex_"//cplot
+   gnu_file = "Ex_hex_mesh.gnu"
+
+   write(*,"(10x, 'Fichier de sortie GNUplot ', a)") dat_file//".dat"
+
+   open(83, file = gnu_file, position="append")
+   if ( iplot == 1 ) rewind(83)
+   write(83,"(a,g15.3,a)")"set title 'Time = ",time, "'"
+   write(83,"(a)")"splot '"//dat_file//"' w lp, '"//dat_file//"' u 1:2:4 w l"
+   close(83)
+
+   open(94, file = dat_file)
+
+   do iel = 1, mesh%num_triangles
+
+      do idl = 1, this%n_ddl
+         write(94,*) sngl(this%x_ddl(idl,iel)), &
+                     sngl(this%y_ddl(idl,iel)), &
+                     sngl(this%Ex(idl,iel)),    &
+                     sngl(-sin(time)*this%x_ddl(idl,iel)*sin(sll_pi*this%y_ddl(idl,iel)))
+      end do
+
+      idl = 1
+      write(94,*) sngl(this%x_ddl(idl,iel)), &
+                  sngl(this%y_ddl(idl,iel)), &
+                  sngl(this%Ex(idl,iel)),    &
+                  sngl(-sin(time)*this%x_ddl(idl,iel)*sin(sll_pi*this%y_ddl(idl,iel)))
+      write(94,*)
+      write(94,*)
+   
+   end do
+
+   close(94)
+
+end subroutine plot_double
+
+
+subroutine write_mtv(mesh)
+
+type(hex_mesh_2d), pointer :: mesh
+real(8) :: coor(2,mesh%num_pts_tot)
+integer :: ntri(3,mesh%num_triangles)
+real(8) :: x1
+real(8) :: y1
+integer :: is1, is2, is3
+
+open( 10, file="hex_mesh.mtv")
+
+!--- Trace du maillage ---
+
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Maillage' "
+
+do i = 1, mesh%num_triangles
+
+   x1 = mesh%center_cartesian_coord(1, i)
+   y1 = mesh%center_cartesian_coord(2, i)
+
+   call get_cell_vertices_index( x1, y1, mesh, is1, is2, is3)
+
+   ntri(1,i) = is1
+   ntri(2,i) = is2
+   ntri(3,i) = is3
+
+   coor(1,is1) = mesh%global_to_x1(is1)
+   coor(2,is1) = mesh%global_to_x2(is1)
+   coor(1,is2) = mesh%global_to_x1(is2)
+   coor(2,is2) = mesh%global_to_x2(is2)
+   coor(1,is3) = mesh%global_to_x1(is3)
+   coor(2,is3) = mesh%global_to_x2(is3)
+
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)coor(1,ntri(2,i)),coor(2,ntri(2,i)),0.
+   write(10,*)coor(1,ntri(3,i)),coor(2,ntri(3,i)),0.
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)
+
+end do
+
+!--- Numeros des noeuds et des triangles
+
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Numeros des noeuds et des triangles' "
+
+do i = 1, mesh%num_triangles
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)coor(1,ntri(2,i)),coor(2,ntri(2,i)),0.
+   write(10,*)coor(1,ntri(3,i)),coor(2,ntri(3,i)),0.
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)
+end do
+
+do i = 1, mesh%num_triangles
+   x1 = (  coor(1,ntri(1,i))  &
+         + coor(1,ntri(2,i))  &
+     + coor(1,ntri(3,i))    )/3.
+   y1 = (  coor(2,ntri(1,i))  &
+         + coor(2,ntri(2,i))  &
+     + coor(2,ntri(3,i))    )/3.
+   write(10,"(a)"   , advance="no")"@text x1="
+   write(10,"(f8.5)", advance="no") x1
+   write(10,"(a)"   , advance="no")" y1="
+   write(10,"(f8.5)", advance="no") y1
+   write(10,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+   write(10,"(i4)"  , advance="no") i
+   write(10,"(a)")"'"
+end do
+
+do i = 1, mesh%num_pts_tot
+   x1 = coor(1,i)
+   y1 = coor(2,i)
+   write(10,"(a)"   , advance="no")"@text x1="
+   write(10,"(g15.3)", advance="no") x1
+   write(10,"(a)"   , advance="no")" y1="
+   write(10,"(g15.3)", advance="no") y1
+   write(10,"(a)"   , advance="no")" z1=0. lc=5 ll='"
+   write(10,"(i4)"  , advance="no") i
+   write(10,"(a)")"'"
+end do
+
+!--- Numeros des noeuds 
+
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Numeros des noeuds' "
+
+do i = 1, mesh%num_triangles
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)coor(1,ntri(2,i)),coor(2,ntri(2,i)),0.
+   write(10,*)coor(1,ntri(3,i)),coor(2,ntri(3,i)),0.
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)
+end do
+
+do i = 1, mesh%num_pts_tot
+   x1 = coor(1,i)
+   y1 = coor(2,i)
+   write(10,"(a)"   , advance="no")"@text x1="
+   write(10,"(g15.3)", advance="no") x1
+   write(10,"(a)"   , advance="no")" y1="
+   write(10,"(g15.3)", advance="no") y1
+   write(10,"(a)"   , advance="no")" z1=0. lc=5 ll='"
+   write(10,"(i4)"  , advance="no") i
+   write(10,"(a)")"'"
+end do
+
+!--- Numeros des triangles
+
+write(10,*)"$DATA=CURVE3D"
+write(10,*)"%equalscale=T"
+write(10,*)"%toplabel='Numeros des triangles' "
+
+do i = 1, mesh%num_triangles
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)coor(1,ntri(2,i)),coor(2,ntri(2,i)),0.
+   write(10,*)coor(1,ntri(3,i)),coor(2,ntri(3,i)),0.
+   write(10,*)coor(1,ntri(1,i)),coor(2,ntri(1,i)),0.
+   write(10,*)
+end do
+
+do i = 1, mesh%num_triangles
+   x1 = (  coor(1,ntri(1,i))  &
+         + coor(1,ntri(2,i))  &
+     + coor(1,ntri(3,i))    )/3.
+   y1 = (  coor(2,ntri(1,i))  &
+         + coor(2,ntri(2,i))  &
+     + coor(2,ntri(3,i))    )/3.
+   write(10,"(a)"   , advance="no")"@text x1="
+   write(10,"(g15.3)", advance="no") x1
+   write(10,"(a)"   , advance="no")" y1="
+   write(10,"(g15.3)", advance="no") y1
+   write(10,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+   write(10,"(i4)"  , advance="no") i
+   write(10,"(a)")"'"
+end do
+
+write(10,*)"$END"
+close(10)
+   
+end subroutine write_mtv
 
 end program test_maxwell_dg_hex_mesh
