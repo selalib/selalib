@@ -400,7 +400,7 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
       else      !Cote frontiere
 
-         ief = - iev
+         ief = 3 !- iev
 
          do idl = 1, this%degree+1
 
