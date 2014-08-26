@@ -268,9 +268,9 @@ contains
 
    print*,'Product Matrix = Identity'
    if (k==1) then
-      write(*,"(3e12.3)") matmul(Elem%MassMatInv(:,:),Elem%MassMat(:,:))
+      write(*,"(3f12.5)") matmul(Elem%MassMatInv(:,:),Elem%MassMat(:,:))
    else if (k==2) then
-      write(*,"(6e12.3)") matmul(Elem%MassMatInv(:,:),Elem%MassMat(:,:))
+      write(*,"(6f12.5)") matmul(Elem%MassMatInv(:,:),Elem%MassMat(:,:))
    end if
 
    print*,'Dx Matrix'

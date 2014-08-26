@@ -8,7 +8,7 @@ use triangle_dg_matrices,     only: ElementRef, AssMatElem
 implicit none
 private
 
-sll_real64, parameter :: xi = 1d0
+sll_real64, parameter :: xi = 0d0
 sll_real64, parameter :: c  = 1d0
 
 type, public :: maxwell_dg_hex_mesh
@@ -38,8 +38,9 @@ type, public :: maxwell_dg_hex_mesh
    sll_real64, dimension(:,:), pointer :: x_ddl
    sll_real64, dimension(:,:), pointer :: y_ddl
 
-   sll_int32, dimension(:,:), allocatable :: nvois
-   sll_int32, dimension(:,:), allocatable :: nvoif
+   sll_int32,  dimension(:,:), pointer :: ntri
+   sll_int32,  dimension(:,:), pointer :: nvois
+   sll_int32,  dimension(:,:), pointer :: nvoif
 
 end type maxwell_dg_hex_mesh
 
@@ -72,7 +73,6 @@ sll_int32, dimension(:),   allocatable :: npoel2
 sll_int32, dimension (:),  allocatable :: indc
 sll_int32 :: i1, i2, i3, is, is1, is2, is3
 sll_int32 :: jel1, jel2, jel3, nel1, nel2, nel3
-sll_int32 :: ntri(3)
 sll_real64 :: x1, x2
 sll_int32 :: i, j
 
@@ -121,10 +121,12 @@ SLL_CLEAR_ALLOCATE(this%DyP(1:n_ddl,n_ddl,1:mesh%num_triangles), error)
 SLL_ALLOCATE(this%x_ddl(n_ddl,mesh%num_triangles),error)
 SLL_ALLOCATE(this%y_ddl(n_ddl,mesh%num_triangles),error)
 
+SLL_ALLOCATE(this%ntri(3,mesh%num_triangles),error)
+
 do iel = 1, mesh%num_triangles    !Boucle sur les elements
 
-   x1      = mesh%center_cartesian_coord(1, iel)
-   x2      = mesh%center_cartesian_coord(2, iel)
+   x1 = mesh%center_cartesian_coord(1, iel)
+   x2 = mesh%center_cartesian_coord(2, iel)
 
    call get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
 
@@ -138,6 +140,21 @@ do iel = 1, mesh%num_triangles    !Boucle sur les elements
 
    !Les triangles sont tous identiques det = delta*delta*sqrt(3)/2
    !Calcul du determinant = aire du triangle
+   det = (xs2-xs1)*(ys3-ys1)-(xs3-xs1)*(ys2-ys1)
+
+   if (det > 0) then
+      this%ntri(:,iel) = [is1,is2,is3]
+   else
+      this%ntri(:,iel) = [is1,is3,is2]
+   end if
+
+   xs1 = mesh%global_to_x1(this%ntri(1,iel))
+   ys1 = mesh%global_to_x2(this%ntri(1,iel))
+   xs2 = mesh%global_to_x1(this%ntri(2,iel))
+   ys2 = mesh%global_to_x2(this%ntri(2,iel))
+   xs3 = mesh%global_to_x1(this%ntri(3,iel))
+   ys3 = mesh%global_to_x2(this%ntri(3,iel))
+
    det = (xs2-xs1)*(ys3-ys1)-(xs3-xs1)*(ys2-ys1)
 
    !Positions absolues des D.D.L
@@ -160,14 +177,9 @@ SLL_ALLOCATE(npoel1(mesh%num_pts_tot+1),error)
 npoel1 = 0
 do iel = 1,mesh%num_triangles
 
-   x1 = mesh%center_cartesian_coord(1, iel)
-   x2 = mesh%center_cartesian_coord(2, iel)
-
-   call get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
-   
-   npoel1(is1+1) = npoel1(is1+1)+1
-   npoel1(is2+1) = npoel1(is2+1)+1
-   npoel1(is3+1) = npoel1(is3+1)+1
+   npoel1(this%ntri(1,iel)+1) = npoel1(this%ntri(1,iel)+1)+1
+   npoel1(this%ntri(2,iel)+1) = npoel1(this%ntri(2,iel)+1)+1
+   npoel1(this%ntri(3,iel)+1) = npoel1(this%ntri(3,iel)+1)+1
 
 end do
 
@@ -195,13 +207,8 @@ indc   = 1  !Le tableau temporaire indc doit etre initialise a 1
 
 do iel = 1,mesh%num_triangles
 
-   x1      = mesh%center_cartesian_coord(1, iel)
-   x2      = mesh%center_cartesian_coord(2, iel)
-
-   call get_cell_vertices_index( x1, x2, mesh, ntri(1), ntri(2), ntri(3))
-
    do k = 1,3
-      is = ntri(k)
+      is = this%ntri(k,iel)
       npoel2(npoel1(is)+indc(is)) = iel
       indc(is) = indc(is)+1
    end do
@@ -212,16 +219,15 @@ end do
 
 write(*,*)"*** Compute neighbors ***"
 
-SLL_ALLOCATE(this%nvois(3,mesh%num_triangles),error)
-SLL_ALLOCATE(this%nvoif(3,mesh%num_triangles),error)
+SLL_ALLOCATE(this%nvois(3,mesh%num_triangles),error); this%nvois = -1
+SLL_ALLOCATE(this%nvoif(3,mesh%num_triangles),error); this%nvoif = -1
 
 do iel=1,mesh%num_triangles
 
    ! ... numeros des 3 sommets du triangle
-   x1      = mesh%center_cartesian_coord(1, iel)
-   x2      = mesh%center_cartesian_coord(2, iel)
-
-   call get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
+   is1 = this%ntri(1,iel)
+   is2 = this%ntri(2,iel)
+   is3 = this%ntri(3,iel)
 
    ! ... boucles imbriquees sur les elements pointant vers
    !     les 2 noeuds extremites de l'arete consideree
@@ -280,6 +286,7 @@ do iel=1,mesh%num_triangles
            end do
             end if
      end do loop3
+
 end do
 
 !Calcul de nvoif : Numero local dans le voisin de la face j commune a l'elt i
@@ -310,7 +317,6 @@ type(hex_mesh_2d), pointer, intent(in)    :: mesh
 
 sll_int32 :: idl, jdl, i, j, l, jdv, i1, i2
 sll_int32 :: iel, ifl, iev, ifv, ief
-sll_int32 :: is1, is2, is3
 sll_int32 :: n_ddl
 
 sll_real64 :: n1, n2
@@ -320,7 +326,6 @@ sll_real64 :: det
 sll_real64 :: flux(this%degree+1,4)
 sll_real64 :: xs(3), ys(3)
 sll_real64 :: Esn(this%degree+1)
-sll_real64 :: x1, x2
 
 n_ddl = (this%degree+1)*(this%degree+2)/2
 
@@ -335,20 +340,15 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
    this%D_Po(:,iel) = xi*xi * matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
                     + xi*xi * matmul(this%DyP(:,:,iel),this%Ey(:,iel))
 
-   this%Ro(:,iel) = matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
-                  + matmul(this%DyP(:,:,iel),this%Ey(:,iel))
+   this%Ro(:,iel)   = matmul(this%DxP(:,:,iel),this%Ex(:,iel)) &
+                    + matmul(this%DyP(:,:,iel),this%Ey(:,iel))
 
-   x1      = mesh%center_cartesian_coord(1,iel)
-   x2      = mesh%center_cartesian_coord(2,iel)
-
-   call get_cell_vertices_index( x1, x2, mesh, is1, is2, is3)
-
-   xs(1) = mesh%global_to_x1(is1)
-   ys(1) = mesh%global_to_x2(is1)
-   xs(2) = mesh%global_to_x1(is2)
-   ys(2) = mesh%global_to_x2(is2)
-   xs(3) = mesh%global_to_x1(is3)
-   ys(3) = mesh%global_to_x2(is3)
+   xs(1) = mesh%global_to_x1(this%ntri(1,iel))
+   ys(1) = mesh%global_to_x2(this%ntri(1,iel))
+   xs(2) = mesh%global_to_x1(this%ntri(2,iel))
+   ys(2) = mesh%global_to_x2(this%ntri(2,iel))
+   xs(3) = mesh%global_to_x1(this%ntri(3,iel))
+   ys(3) = mesh%global_to_x2(this%ntri(3,iel))
 
    do ifl = 1, 3   !Boucle sur les faces
 
@@ -400,7 +400,7 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
       else      !Cote frontiere
 
-         ief = 1
+         ief = - iev
 
          do idl = 1, this%degree+1
 
