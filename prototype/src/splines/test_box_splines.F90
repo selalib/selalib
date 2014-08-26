@@ -15,7 +15,7 @@ type(hex_mesh_2d),   pointer  :: mesh
 type(box_spline_2D), pointer :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 2
+sll_int32    :: deg = 3
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -71,7 +71,7 @@ character(len = 4)  :: filenum
 
 print*, " ---- BEGIN test_box_splines.F90 -----"
 print*, ""
-do num_cells = 160,160,20
+do num_cells = 80,80,20
 
 
    ! Mesh initialization
