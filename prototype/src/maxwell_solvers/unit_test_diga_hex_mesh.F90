@@ -18,7 +18,7 @@ sll_real64                  :: A(5)
 sll_real64                  :: B(5)
 sll_real64                  :: C(5)
 sll_int32                   :: istep
-sll_int32                   :: nstep = 100
+sll_int32                   :: nstep = 1000
 sll_real64                  :: cfl, dt 
 sll_real64                  :: time
 sll_real64, pointer         :: S_Ex(:,:)
@@ -41,7 +41,7 @@ mesh => new_hex_mesh_2d(num_cells,             &
                         0.5_f64,               &
                         0.0_f64,               &
                         1.0_f64,               &
-                        5.0_f64 )
+                        10.0_f64 )
 
 call sll_display(mesh)
 call write_hex_mesh_2d(mesh,"hex_mesh_coo.txt")
@@ -52,7 +52,7 @@ degree = 2
 
 call initialize(maxwell, mesh, degree)
 
-cfl = 0.05
+cfl = 0.2
 dt = cfl/sqrt(2./(mesh%delta/(degree+1))**2)
 
 !Low storage Runge Kutta order 4
@@ -137,7 +137,7 @@ do istep = 1, nstep
    end do
 
    time = time + dt
-   call plot_simple(maxwell, mesh)
+   if (mod(istep, 10) == 0) call plot_simple(maxwell, mesh)
    !call plot_double(maxwell, mesh)
 
    write(*,"(10x,' istep = ',I6)",advance="no") istep
@@ -152,7 +152,6 @@ contains
 subroutine set_charge_and_currents(t)
 
    sll_real64, intent(in) :: t
-
 
 !   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
 !               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
@@ -201,14 +200,14 @@ subroutine plot_simple( this, mesh )
    sll_int32, save :: iplot = 0
    sll_int32       :: idl, iel
    character(len=4) :: cplot
-   character(len=11) :: dat_file
+   character(len=15) :: dat_file
    character(len=15) :: gnu_file
 
    iplot = iplot+1
    call int2string(iplot, cplot)
 
-   dat_file = "fields_"//cplot
-   write(*,"(10x, 'Fichier de sortie GNUplot ', a)") dat_file//".dat"
+   dat_file = "fields_"//cplot//".dat"
+   write(*,"(10x, 'Fichier de sortie GNUplot ', a)") dat_file
 
    gnu_file = "Ex_hex_mesh.gnu"
    open(83, file = gnu_file, position="append")
