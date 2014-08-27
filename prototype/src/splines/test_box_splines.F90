@@ -15,7 +15,7 @@ type(hex_mesh_2d),   pointer  :: mesh
 type(box_spline_2D), pointer :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
-sll_int32    :: deg = 3
+sll_int32    :: deg = 2
 sll_int32    :: nloops
 sll_int32    :: ierr
 ! initial distribution
@@ -56,7 +56,7 @@ sll_int32    :: k1_error
 sll_int32    :: k2_error
 ! Output variables
 sll_int32    :: WRITE_TIME_ERROR = 0
-sll_int32    :: WRITE_TIME_DIST = 0
+sll_int32    :: WRITE_TIME_DIST = 1
 sll_int32    :: WRITE_SPLINES = 0
 sll_int32    :: WRITE_CELLS_ERROR = 1
 sll_int32    :: WRITE_TIME_EFF = 0
@@ -64,16 +64,14 @@ character(len = 50) :: filename
 character(len = 50) :: filename2
 character(len = 4)  :: filenum
 
-! sll_real64              :: delta
-! sll_real64              :: k1_temp
-! sll_real64              :: k2_temp
+sll_real64              :: sum_chi
+sll_int32               :: k1
+sll_int32               :: k2
 
 
+sum_chi = 0._f64
 
-print*, " ---- BEGIN test_box_splines.F90 -----"
-print*, ""
-do num_cells = 80,80,20
-
+do num_cells = 80,80,10
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -98,7 +96,6 @@ do num_cells = 80,80,20
    SLL_ALLOCATE(chi2(mesh%num_pts_tot),ierr)
    SLL_ALLOCATE(chi3(mesh%num_pts_tot),ierr)
 
-
    ! Distribution initialization
    gauss_x1  = 2._f64
    gauss_x2  = 2._f64
@@ -115,7 +112,10 @@ do num_cells = 80,80,20
          f_init(i) = 0._f64
       end if
       f_tn(i) = f_init(i)
+
    end do
+
+
 
 !   call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
 
@@ -124,7 +124,7 @@ do num_cells = 80,80,20
    ! if : which_advec = 1 => circular advection
    which_advec = 1
    advec = 0.0_f64!25_f64!5_f64
-   tmax  = 1.0_f64
+   tmax  = 10.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
@@ -137,17 +137,28 @@ do num_cells = 80,80,20
       ! Circular advection
       x1_char(1) = 0._f64
       x2_char(1) = 0._f64
-      x1_char(2:) = sqrt(x1(2:)**2 + x2(2:)**2) * cos(2*sll_pi*dt + atan2(x2(2:),x1(2:)))
-      x2_char(2:) = sqrt(x1(2:)**2 + x2(2:)**2) * sin(2*sll_pi*dt + atan2(x2(2:),x1(2:)))
+      x1_char(2:) = x1(2:)*cos(2._f64*sll_pi*dt) - x2(2:)*sin(2._f64*sll_pi*dt)
+      x2_char(2:) = x1(2:)*sin(2._f64*sll_pi*dt) + x2(2:)*cos(2._f64*sll_pi*dt)
    end if
-
-
 
 
    ! Time loop
    nloops = 0
 
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
+
+
+   do i=1, mesh%num_pts_tot
+      x1_basis = change_basis_x1(spline, x1(i), x2(i))
+      x2_basis = change_basis_x2(spline, x1(i), x2(i))
+      chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
+      chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+      chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
+      
+   end do
+
+
+
 
    call cpu_time(t_init)
 
@@ -204,38 +215,40 @@ do num_cells = 80,80,20
             f_fin(i) = 0._f64
          end if
 
-         x1_basis = change_basis_x1(spline, x1(i), x2(i))
-         x2_basis = change_basis_x2(spline, x1(i), x2(i))
-         chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-         chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
-         chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
          
-            ! Relative error
+         ! Relative error
+         k1 = mesh%global_to_hex1(i)
+         k2 = mesh%global_to_hex2(i)
+         if (cells_to_origin(k1, k2).lt.num_cells-deg-1) then
             if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
                diff_error = abs(f_fin(i) - f_tn(i))
                where_error = i
             end if
             ! Norm2 error :
-            norm2_error = norm2_error + abs(f_fin(i) - f_tn(i))**2
-         
-         end do
+            norm2_error = norm2_error + &
+                 sll_sqrt3*0.5*mesh%delta*(f_fin(i) - f_tn(i))**2
+         end if
+      end do
 
 !    if (WRITE_SPLINES.eq.1) then 
-         call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
-         call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
-         call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
+!       call write_field_hex_mesh_xmf(mesh, chi1, "chi1")
+!       call write_field_hex_mesh_xmf(mesh, chi2, "chi2")
+!       call write_field_hex_mesh_xmf(mesh, chi3, "chi3")
+!       call write_field_hex_mesh(mesh, chi1, "chi1.txt")
+!       call write_field_hex_mesh(mesh, chi2, "chi2.txt")
+!       call write_field_hex_mesh(mesh, chi3, "chi3.txt")
 !    end if
 
       ! Norm2 error :
       norm2_error = sqrt(norm2_error)
       
       ! Printing error
-      k1_error = mesh%global_to_hex1(where_error)
-      k2_error = mesh%global_to_hex2(where_error)
-      print*,"  nt =", nloops, "    | error_Linf = ", diff_error
-      print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
-      print*,"                       | error_L2   = ", norm2_error
-      print*," Center error = ", f_fin(1)-f_tn(1)
+!       k1_error = mesh%global_to_hex1(where_error)
+!       k2_error = mesh%global_to_hex2(where_error)
+!       print*,"  nt =", nloops, "    | error_Linf = ", diff_error
+!       print*,"                       | at hex =", cells_to_origin(k1_error, k2_error), where_error
+!       print*,"                       | error_L2   = ", norm2_error
+!       print*," Center error = ", f_fin(1)-f_tn(1)
 
 
 
@@ -256,15 +269,15 @@ do num_cells = 80,80,20
 !       end if
        
 
-!       if (WRITE_TIME_DIST.eq.1) then 
-!          call int2string(nloops,filenum)
-!          filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
-!          filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
-!          print*,filename
-!          print*,filename2
-!          call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
-!          call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
-!       end if
+      if (WRITE_TIME_DIST.eq.1) then 
+         call int2string(nloops,filenum)
+         filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+         filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+         print*,filename
+         print*,filename2
+         call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+         call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+      end if
 
    end do
 
@@ -274,9 +287,10 @@ do num_cells = 80,80,20
 
    cfl = dt * num_cells
    f_min = minval(f_tn)
+
    !WRITING ERROR REGARDING NUMBER OF POINTS
    if (WRITE_CELLS_ERROR.eq.1) then
-      if (num_cells .eq. 20) then 
+      if (num_cells .eq. 10) then 
          !NEW FILE :
          open (unit=12,file="error_file.txt",action="write",&
               status="replace")
@@ -315,6 +329,13 @@ do num_cells = 80,80,20
 !    end if
 
 
+   sum_chi = sum(chi1)
+   print*, "sum_chi1 = ", sum_chi
+   sum_chi = sum(chi2)
+   print*, "sum_chi2 = ", sum_chi
+   sum_chi = sum(chi3)
+   print*, "sum_chi3 = ", sum_chi
+   
 
    SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
    SLL_DEALLOCATE_ARRAY(f_init,ierr)
@@ -322,13 +343,16 @@ do num_cells = 80,80,20
    SLL_DEALLOCATE_ARRAY(f_fin,ierr)
    SLL_DEALLOCATE_ARRAY(x1,ierr)
    SLL_DEALLOCATE_ARRAY(x2,ierr)
-   SLL_DEALLOCATE_ARRAY(chi1,ierr)
-   SLL_DEALLOCATE_ARRAY(chi2,ierr)
    SLL_DEALLOCATE_ARRAY(x1_char,ierr)
    SLL_DEALLOCATE_ARRAY(x2_char,ierr)
    SLL_DEALLOCATE(mesh,ierr)
    SLL_DEALLOCATE(spline,ierr)
+   SLL_DEALLOCATE_ARRAY(chi1,ierr)
+   SLL_DEALLOCATE_ARRAY(chi2,ierr)
+   SLL_DEALLOCATE_ARRAY(chi3,ierr)
 
 end do
+
+
 end program test_box_splines
 
