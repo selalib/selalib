@@ -1,3 +1,7 @@
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 

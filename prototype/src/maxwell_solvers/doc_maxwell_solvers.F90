@@ -12,3 +12,7 @@
 !>
 !> @todo
 !> - sll_maxwell_3d_fdtd
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!

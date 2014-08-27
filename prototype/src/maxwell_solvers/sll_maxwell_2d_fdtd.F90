@@ -11,6 +11,10 @@
 !  the software under the terms of the CeCILL-B license as 
 !  circulated by CEA, CNRS and INRIA at the following URL
 !  "http://www.cecill.info". 
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 !**************************************************************
 !> @brief
 !> Implements the Maxwell solver in 2D with FDTD method

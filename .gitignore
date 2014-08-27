@@ -98,3 +98,5 @@ prototype/src/CAID_coordinate_transformations/square_mp1/square_mp1_element_conn
 prototype/src/CAID_coordinate_transformations/square_mp1/square_mp1_info.nml
 prototype/src/CAID_coordinate_transformations/square_mp1/square_mp1_local_indices_patch0.nml
 prototype/src/CAID_coordinate_transformations/square_mp1/square_mp1_local_to_global_patch0.nml
+
+prototype/release/*
