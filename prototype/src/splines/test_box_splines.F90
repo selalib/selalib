@@ -122,7 +122,7 @@ do num_cells = 60,60,10
    ! if : which_advec = 1 => circular advection
    which_advec = 1
    advec = 0.0_f64!25_f64!5_f64
-   tmax  = 10.0_f64
+   tmax  = 3.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
@@ -188,8 +188,10 @@ do num_cells = 60,60,10
 !             x2(i) = mesh%global_to_x2(i) - advec*dt*nloops
 !          else
             ! Circular advection
-         x1_temp = mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt) - mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt)
-         x2(i)   = mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt) - mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt)
+         x1_temp = mesh%global_to_x1(i)*cos(2._f64*sll_pi*dt*nloops) - & 
+              mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt*nloops)
+         x2(i)   = mesh%global_to_x1(i)*sin(2._f64*sll_pi*dt*nloops) + &
+              mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt*nloops)
          x1(i)   = x1_temp
          ! end if
 
