@@ -22,6 +22,7 @@ print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_
 mesh => new_hex_mesh_2d(num_cells)
 call sll_display(mesh)
 call write_hex_mesh_2d(mesh,"hex_mesh_coo.txt")
+call write_hex_mesh_mtv(mesh,"hex_mesh_coo.mtv")
 print *, ""
 
 SLL_ALLOCATE(field(mesh%num_pts_tot), error)
