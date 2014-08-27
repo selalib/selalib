@@ -6,6 +6,7 @@
 *~
 *.so
 *.pyc
+*.F90#
 .sconsign.dblite
 unit_test
 *.swp
