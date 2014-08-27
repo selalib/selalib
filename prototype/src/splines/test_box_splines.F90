@@ -71,7 +71,7 @@ character(len = 4)  :: filenum
 
 ! sum_chi = 0._f64
 
-do num_cells = 60,60,10
+do num_cells = 20,160,20
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -122,7 +122,7 @@ do num_cells = 60,60,10
    ! if : which_advec = 1 => circular advection
    which_advec = 1
    advec = 0.0_f64!25_f64!5_f64
-   tmax  = 3.0_f64
+   tmax  = 10.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
@@ -256,28 +256,28 @@ do num_cells = 60,60,10
 !       end if
        
 
-      if (WRITE_TIME_DIST.eq.1) then 
-         call int2string(nloops,filenum)
-         filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
-         filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
-         print*,filename
-         print*,filename2
-         call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
-         call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
-      end if
+      ! if (WRITE_TIME_DIST.eq.1) then 
+      !    call int2string(nloops,filenum)
+      !    filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+      !    filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+      !    print*,filename
+      !    print*,filename2
+      !    call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+      !    call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+      ! end if
 
    end do
 
 
    call cpu_time(t_end)
-   print*," *    Final error  = ", diff_error, " *"
+   print*," *    Final error  = ", diff_error, " * in = ", where_error
 
    cfl = dt * num_cells
    f_min = minval(f_tn)
 
    !WRITING ERROR REGARDING NUMBER OF POINTS
    if (WRITE_CELLS_ERROR.eq.1) then
-      if (num_cells .eq. 10) then 
+      if (num_cells .eq. 20) then 
          !NEW FILE :
          open (unit=12,file="error_file.txt",action="write",&
               status="replace")
