@@ -71,7 +71,7 @@ character(len = 4)  :: filenum
 
 ! sum_chi = 0._f64
 
-do num_cells = 20,160,20
+do num_cells = 40,40,20
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -256,15 +256,16 @@ do num_cells = 20,160,20
 !       end if
        
 
-      ! if (WRITE_TIME_DIST.eq.1) then 
-      !    call int2string(nloops,filenum)
-      !    filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
-      !    filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
-      !    print*,filename
-      !    print*,filename2
-      !    call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
-      !    call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
-      ! end if
+!       if (WRITE_TIME_DIST.eq.1) then 
+!          call int2string(nloops,filenum)
+!          filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+!          filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+!          print*,filename
+!          print*,filename2
+!          call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+!          call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+!       end if
+
 
    end do
 
