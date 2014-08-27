@@ -23,6 +23,12 @@ sll_real64   :: gauss_x2
 sll_real64   :: gauss_x1
 sll_real64   :: gauss_sig
 sll_real64   :: gauss_amp
+sll_real64   :: dioco_rminus
+sll_real64   :: dioco_rplus
+sll_real64   :: dioco_eps
+sll_real64   :: dioco_kmode
+sll_real64   :: dioco_r
+sll_real64   :: dioco_theta
 sll_real64,dimension(:),allocatable :: x1
 sll_real64,dimension(:),allocatable :: x2
 sll_real64,dimension(:),allocatable :: f_init
@@ -97,18 +103,38 @@ do num_cells = 40,40,20
    SLL_ALLOCATE(chi3(mesh%num_pts_tot),ierr)
 
    ! Distribution initialization
+   ! Gaussian parameters :
    gauss_x1  = 2._f64
    gauss_x2  = 2._f64
    gauss_sig = 1.0_f64/sqrt(2._f64)/2._f64
    gauss_amp = 1.0_f64
+   ! Diocotron parameters :
+   dioco_rminus = 2._f64
+   dioco_rplus  = 3._f64
+   dioco_eps    = 0.0001_f64
+   dioco_kmode  = 3._f64
 
    do i=1, mesh%num_pts_tot
       
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
-      f_init(i) = gauss_amp * &
-           exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
-           + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      !--------- GAUSSIAN PULSE : 
+!       f_init(i) = gauss_amp * &
+!            exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+!            + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      !--------- DIOCOTRON : 
+      dioco_r= sqrt(x1(i)**2+x2(i)**2)
+      if (x2(i)>=0) then
+         dioco_theta = acos(x1(i)/dioco_r)
+      else
+         dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
+      endif
+      if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
+         f_init(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+      else
+         f_init(i) = 0._f64  
+      endif
+
       if (exponent(f_init(i)) .lt. -17) then
          f_init(i) = 0._f64
       end if
@@ -122,7 +148,7 @@ do num_cells = 40,40,20
    ! if : which_advec = 1 => circular advection
    which_advec = 1
    advec = 0.0_f64!25_f64!5_f64
-   tmax  = 10.0_f64
+   tmax  = 3.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
@@ -195,12 +221,26 @@ do num_cells = 40,40,20
          x1(i)   = x1_temp
          ! end if
 
-         f_fin(i) = gauss_amp * &
-              exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
-              + (x2(i)-gauss_x2)**2 / gauss_sig**2))
-         if (exponent(f_fin(i)) .lt. -17) then
-            f_fin(i) = 0._f64
-         end if
+         !--------- GAUSSIAN PULSE : 
+!          f_fin(i) = gauss_amp * &
+!               exp(-0.5_f64*((x1(i)-gauss_x1)**2/gauss_sig**2 &
+!               + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+!          if (exponent(f_fin(i)) .lt. -17) then
+!             f_fin(i) = 0._f64
+!          end if
+
+         !--------- DIOCOTRON : 
+         dioco_r= sqrt(x1(i)**2+x2(i)**2)
+         if (x2(i)>=0) then
+            dioco_theta = acos(x1(i)/dioco_r)
+         else
+            dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
+         endif
+         if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
+            f_fin(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+         else
+            f_fin(i) = 0._f64  
+         endif
 
          
          ! Relative error
@@ -256,15 +296,15 @@ do num_cells = 40,40,20
 !       end if
        
 
-!       if (WRITE_TIME_DIST.eq.1) then 
-!          call int2string(nloops,filenum)
-!          filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
-!          filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
-!          print*,filename
-!          print*,filename2
-!          call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
-!          call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
-!       end if
+      if (WRITE_TIME_DIST.eq.1) then 
+         call int2string(nloops,filenum)
+         filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+         filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+         print*,filename
+         print*,filename2
+         call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+         call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+      end if
 
 
    end do
