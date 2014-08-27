@@ -64,14 +64,14 @@ character(len = 50) :: filename
 character(len = 50) :: filename2
 character(len = 4)  :: filenum
 
-sll_real64              :: sum_chi
-sll_int32               :: k1
-sll_int32               :: k2
+! sll_real64              :: sum_chi
+! sll_int32               :: k1
+! sll_int32               :: k2
 
 
-sum_chi = 0._f64
+! sum_chi = 0._f64
 
-do num_cells = 80,80,10
+do num_cells = 60,60,10
 
    ! Mesh initialization
    mesh => new_hex_mesh_2d(num_cells, 0._f64, 0._f64, &
@@ -103,6 +103,7 @@ do num_cells = 80,80,10
    gauss_amp = 1.0_f64
 
    do i=1, mesh%num_pts_tot
+      
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
       f_init(i) = gauss_amp * &
@@ -116,9 +117,6 @@ do num_cells = 80,80,10
    end do
 
 
-
-!   call write_field_hex_mesh(mesh, f_init, "init_dist.txt")
-
    ! Advection initialization
    ! if : which_advec = 0 => linear advection
    ! if : which_advec = 1 => circular advection
@@ -128,18 +126,18 @@ do num_cells = 80,80,10
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
 
-   ! Computing characteristics
-   if (which_advec .eq. 0) then
-      ! linear advection
-      x1_char(:) = x1(:) - advec*dt
-      x2_char(:) = x2(:) - advec*dt
-   else
+   ! ! Computing characteristics
+   ! if (which_advec .eq. 0) then
+   !    ! linear advection
+   !    x1_char(:) = x1(:) - advec*dt
+   !    x2_char(:) = x2(:) - advec*dt
+   ! else
       ! Circular advection
       x1_char(1) = 0._f64
       x2_char(1) = 0._f64
       x1_char(2:) = x1(2:)*cos(2._f64*sll_pi*dt) - x2(2:)*sin(2._f64*sll_pi*dt)
       x2_char(2:) = x1(2:)*sin(2._f64*sll_pi*dt) + x2(2:)*cos(2._f64*sll_pi*dt)
-   end if
+   ! end if
 
 
    ! Time loop
@@ -148,23 +146,21 @@ do num_cells = 80,80,10
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
 
 
-   do i=1, mesh%num_pts_tot
-      x1_basis = change_basis_x1(spline, x1(i), x2(i))
-      x2_basis = change_basis_x2(spline, x1(i), x2(i))
-      chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
-      chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
-      chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
+   ! do i=1, mesh%num_pts_tot
+   !    x1_basis = change_basis_x1(spline, x1(i), x2(i))
+   !    x2_basis = change_basis_x2(spline, x1(i), x2(i))
+   !    chi1(i) = chi_gen_val(x1_basis, x2_basis, 1)
+   !    chi2(i) = chi_gen_val(x1_basis, x2_basis, 2)
+   !    chi3(i) = chi_gen_val(x1_basis, x2_basis, 3)
       
-   end do
-
-
+   ! end do
 
 
    call cpu_time(t_init)
 
-   !print*,""
+
    do while (t .lt. tmax)
-      !print *, " --> Time loop t =", t
+
       !Error variables
       norm2_error = 0._f64
       diff_error  = 0._f64
@@ -181,17 +177,6 @@ do num_cells = 80,80,10
          ! Approximation
          ! ******************
          f_tn(i) = hex_interpolate_value(mesh, x1_char(i), x2_char(i), spline, deg)
-         ! if (f_tn(i) < 0.) then
-!             print *, "Negative value at"
-!             print *, "      Value :", f_tn(i)
-!             print *, "      Time  :", t
-!             print *, "      Loop  :", nloops
-!             print *, "      Point :", i
-!             print *, "      X1char:", x1_char(i)
-!             print *, "      X2char:", x2_char(i)
-!          !   STOP
-!          !   f_tn(i) = 0._f64
-         ! end if
          
          ! ******************
          ! Analytical value 
@@ -203,9 +188,9 @@ do num_cells = 80,80,10
 !             x2(i) = mesh%global_to_x2(i) - advec*dt*nloops
 !          else
             ! Circular advection
-            x1_temp = sqrt(x1(i)**2 + x2(i)**2) * cos(2*sll_pi*dt + atan2(x2(i),x1(i)))
-            x2(i)   = sqrt(x1(i)**2 + x2(i)**2) * sin(2*sll_pi*dt + atan2(x2(i),x1(i)))
-            x1(i)   = x1_temp
+         x1_temp = mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt) - mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt)
+         x2(i)   = mesh%global_to_x2(i)*cos(2._f64*sll_pi*dt) - mesh%global_to_x2(i)*sin(2._f64*sll_pi*dt)
+         x1(i)   = x1_temp
          ! end if
 
          f_fin(i) = gauss_amp * &
@@ -217,17 +202,17 @@ do num_cells = 80,80,10
 
          
          ! Relative error
-         k1 = mesh%global_to_hex1(i)
-         k2 = mesh%global_to_hex2(i)
-         if (cells_to_origin(k1, k2).lt.num_cells-deg-1) then
+         ! k1 = mesh%global_to_hex1(i)
+         ! k2 = mesh%global_to_hex2(i)
+         ! if (cells_to_origin(k1, k2).lt.num_cells-deg-1) then
             if (diff_error .lt. abs(f_fin(i) - f_tn(i)) ) then
                diff_error = abs(f_fin(i) - f_tn(i))
                where_error = i
             end if
             ! Norm2 error :
             norm2_error = norm2_error + &
-                 sll_sqrt3*0.5*mesh%delta*(f_fin(i) - f_tn(i))**2
-         end if
+                 sll_sqrt3*0.5_f64*mesh%delta**2 * (f_fin(i) - f_tn(i))**2
+         ! end if
       end do
 
 !    if (WRITE_SPLINES.eq.1) then 
@@ -329,12 +314,12 @@ do num_cells = 80,80,10
 !    end if
 
 
-   sum_chi = sum(chi1)
-   print*, "sum_chi1 = ", sum_chi
-   sum_chi = sum(chi2)
-   print*, "sum_chi2 = ", sum_chi
-   sum_chi = sum(chi3)
-   print*, "sum_chi3 = ", sum_chi
+   ! sum_chi = sum(chi1)
+   ! print*, "sum_chi1 = ", sum_chi
+   ! sum_chi = sum(chi2)
+   ! print*, "sum_chi2 = ", sum_chi
+   ! sum_chi = sum(chi3)
+   ! print*, "sum_chi3 = ", sum_chi
    
 
    SLL_DEALLOCATE_ARRAY(spline%coeffs,ierr)
