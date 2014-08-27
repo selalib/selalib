@@ -124,9 +124,13 @@ contains  ! ****************************************************************
     sll_int32  :: k1_ref, k2_ref
     sll_int32  :: i,k
     sll_int32  :: nei
+    sll_int32  :: num_pts_radius
 
     num_pts_tot = spline%mesh%num_pts_tot
-    
+    ! we will work on a radius of 'deg' cells
+    ! we compute the number of total points on that radius
+    num_pts_radius = 3*(2*deg)*(2*deg+1) + 1 
+
     do i = 1, num_pts_tot
 
        spline%coeffs(i) = real(0,f64)
@@ -135,7 +139,7 @@ contains  ! ****************************************************************
 
        ! We don't need to fo through all points, just till a certain radius
        ! which depends on the degree of the spline we are evaluating
-       do k = 1, 3*(2*deg)*(2*deg+1) + 1 
+       do k = 1, num_pts_radius
           nei = spline%mesh%local_hex_to_global(k1_ref, k2_ref, k)
           if ((nei .lt. num_pts_tot).and.(nei .gt. 0)) then
              spline%coeffs(i) = spline%coeffs(i) + data(nei) * & 
@@ -244,13 +248,28 @@ contains  ! ****************************************************************
        
        val = 0._f64
        do K = -deg, CEILING(u)-1
+          if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+             print *, " K = ", K
+          end if
           do L = -deg, CEILING(v)-1
+             if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                print *, "    L = ", L
+             end if
              do i = 0,min(deg+K, deg+L)
+                if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                   print *, "      i = ", i
+                end if
                 coeff = (-1.0_f64)**(K+L+i)* &
                      choose(deg,i-K)*     &
                      choose(deg,i-L)*     &
                      choose(deg,i)
+                if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                   print *, "      coeff = ", coeff
+                end if
                 do d = 0,deg-1
+                   if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                      print *, "          d = ", d
+                   end if
                    aux=abs(v-L-u+K)  
                    aux2=(u-K+v-L-aux)/2._f64
                    if(aux2.lt.0.) then
@@ -261,6 +280,9 @@ contains  ! ****************************************************************
                         /real(sll_factorial(deg -1 -d), f64) &
                         * aux**(deg-1-d) &
                         * aux2**(2*deg-1+d)
+                   if ((x1_in.eq.0.).and.(x2_in.eq.0.8)) then
+                      print *, "            aux, aux2, val = ", aux, aux2, val
+                   end if
                 end do
              end do
           end do
