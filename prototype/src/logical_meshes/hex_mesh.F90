@@ -24,6 +24,7 @@ use sll_constants
      sll_int32  :: num_cells     ! number of cells in any direction parting from origin
      sll_int32  :: num_pts_tot   ! number of total points
      sll_int32  :: num_triangles ! number of triangles
+     sll_int32  :: num_edges     ! number of edges
      sll_real64 :: radius        ! distance between origin and external vertex
      sll_real64 :: center_x1     ! x1 cartesian coordinate of the origin
      sll_real64 :: center_x2     ! x2 cartesian coordinate of the origin
@@ -46,6 +47,10 @@ use sll_constants
      sll_real64, pointer, dimension(:,:) :: center_cartesian_coord ! (1:2,1:num_triangles)     
      ! matrix containing the index of the respective center of the 2 triangles at the top of most points
      sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
+
+     sll_real64, pointer, dimension(:,:) :: edge_center_cartesian_coord ! (1:2,1:num_edges)     
+     ! matrix containing the index of the respective center of the 2 triangles at the top of most points
+     sll_int32, pointer, dimension(:,:) :: edge_center_index! (1:3,1:num_pts_tot)
 
    contains
      procedure, pass(mesh) :: x1_node => x1_node
@@ -180,6 +185,7 @@ contains
     ! The formula is = 6*sum(num_cells)+1 which simplifies to :
     mesh%num_pts_tot = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
     mesh%num_triangles = 6 * num_cells * num_cells
+    mesh%num_edges = 3 * num_cells * ( 3 * num_cells + 1 ) 
 
     ! resizing :
     mesh%r1_x1 = mesh%r1_x1 * mesh%delta
@@ -341,8 +347,11 @@ contains
 
     SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
     SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+    SLL_ALLOCATE(mesh%edge_center_cartesian_coord(2, mesh%num_edges), ierr)
+    SLL_ALLOCATE(mesh%edge_center_index(3, mesh%num_pts_tot), ierr)
 
     call init_center_points_triangle(mesh)
+    call init_edge_center_triangle(mesh)
 
     ! ----------------------------------------- END MATRICES INITIALIZATION 
     ! ---------------------------------------------------------------------
@@ -358,12 +367,15 @@ contains
     sll_real64         :: jacob, k1c, k2c
     logical            :: inside
 
+    jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
 
     mesh%center_cartesian_coord(:,:)   = 0._f64
     mesh%center_index(:,:)             = -1
 
     center_index = 0
+
     r1x1 =  mesh%r1_x1*real(mesh%num_cells,f64)
+
     do global = 1, mesh%num_pts_tot
        ! almost each point is the base of a lozenge , thus two triangle
        ! from which we get two center points
@@ -387,7 +399,6 @@ contains
        
        inside = .true.
        
-       jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
        k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
        k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
@@ -418,8 +429,6 @@ contains
 
        inside = .true.
 
-       jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
-
        k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
        k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
@@ -439,6 +448,103 @@ contains
   end subroutine init_center_points_triangle
 
 
+
+  subroutine init_edge_center_triangle(mesh)
+    class(hex_mesh_2d) :: mesh
+    sll_int32          :: edge_index
+    sll_int32          :: global, num_cells
+    sll_int32          :: k1, k2, k1c, k2c
+    sll_real64         :: x1, x2_l,x2_r, x3, y1, y2_l, y2_r, y3, xx, yy
+    logical            :: inside
+
+    num_cells = mesh%num_cells
+
+    mesh%edge_center_cartesian_coord(:,:)   = 0._f64
+    mesh%edge_center_index(:,:)             = -1
+    edge_index = 0
+
+    do global = 1, mesh%num_pts_tot
+       ! almost each point is the base of a lozenge , thus two triangle
+       ! from which we get two center points
+
+       k1 = mesh%hex_coord(1, global)
+       k2 = mesh%hex_coord(2, global)
+
+       x1   = real(k1,f64)*mesh%r1_x1 + real(k2,f64)*mesh%r2_x1
+       x2_l = real(k1,f64)*mesh%r1_x1 + real((k2+1),f64)*mesh%r2_x1
+       x2_r = real((k1+1),f64)*mesh%r1_x1 + real(k2,f64)*mesh%r2_x1
+       x3   = real((k1+1),f64)*mesh%r1_x1 + real((k2+1),f64)*mesh%r2_x1
+       y1   = real(k1,f64)*mesh%r1_x2 + real(k2,f64)*mesh%r2_x2
+       y2_l = real(k1,f64)*mesh%r1_x2 + real((k2+1),f64)*mesh%r2_x2
+       y2_r = real((k1+1),f64)*mesh%r1_x2 + real(k2,f64)*mesh%r2_x2
+       y3   = real((k1+1),f64)*mesh%r1_x2 + real((k2+1),f64)*mesh%r2_x2
+
+       !test to check if the left edge is inside
+
+       inside = .true.
+       
+       k1c = k1
+       k2c = k2 + 1
+
+       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+            (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
+
+       if ( inside ) then
+          ! center point of the left edge
+          xx = (x1+x2_l)*0.5_f64
+          yy = (y1+y2_l)*0.5_f64
+          edge_index = edge_index + 1
+          mesh%edge_center_cartesian_coord(1,edge_index) = xx
+          mesh%edge_center_cartesian_coord(2,edge_index) = yy
+          mesh%edge_center_index(1, global) = edge_index
+       endif
+
+
+       !test to check if the middle edge is inside
+       
+       inside = .true.
+
+       k1c = k1 + 1
+       k2c = k2 + 1
+
+       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+           (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
+
+       if ( inside ) then
+          ! center point of the middle edge
+          xx = (x1+x3)*0.5_f64
+          yy = (y1+y3)*0.5_f64
+          edge_index = edge_index + 1
+          mesh%edge_center_cartesian_coord(1,edge_index) = xx
+          mesh%edge_center_cartesian_coord(2,edge_index) = yy
+          mesh%edge_center_index(2, global) = edge_index
+       endif
+
+
+       !test to check if the right edge is inside
+
+       inside = .true.
+
+       k1c = k1 + 1
+       k2c = k2
+
+       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+            (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
+
+       if ( inside ) then
+          ! center point of the right edge
+          xx = (x1+x2_r)*0.5_f64
+          yy = (y1+y2_r)*0.5_f64
+          edge_index = edge_index + 1
+          mesh%edge_center_cartesian_coord(1,edge_index) = xx
+          mesh%edge_center_cartesian_coord(2,edge_index) = yy
+          mesh%edge_center_index(3, global) = edge_index
+       endif
+       
+    enddo
+
+
+  end subroutine init_edge_center_triangle
 
   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
     class(hex_mesh_2d)     :: mesh
@@ -737,9 +843,53 @@ contains
        triangle_index = mesh%center_index(2,global) !right triangle
     endif
 
-    if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
+    if (triangle_index == -1 ) print*, "problem in get_triangle_index at line",&
+         __LINE__
 
   end subroutine get_triangle_index
+
+
+
+  subroutine get_edge_index(k1,k2,mesh,x,edge_index1,edge_index2,edge_index3)
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
+    sll_int32, intent(in)      :: k1, k2
+    sll_int32, intent(out)     :: edge_index1,edge_index2,edge_index3
+    sll_int32                  :: global, global2
+
+    ! in short :
+    ! returns the three indices of the edge  of the triangle which contains
+    ! a point of abscisse x and which lowest vertex is of hexa. coordinate
+    ! k1, k2
+ 
+    ! almost every point is the lowest point of a lozenge , i.e. 3 edges
+    ! we get therefore 3 indices per points
+    ! but we want the three indices of the triangle which contains a point
+    ! of abscisse x 
+    ! we therefore test in which kind of triangle we are 
+    ! ( oriented left or right ) then we get directly the indices of the first 
+    ! two edges then we deduce from the kind of triangle which point is to the 
+    ! left ( respectively to the right ) and get the index of the third edge
+
+    global = hex_to_global(mesh,k1,k2)
+
+    if ( x < mesh%cartesian_coord(1,global) ) then
+       edge_index1 = mesh%edge_center_index(1,global)
+       edge_index2 = mesh%edge_center_index(2,global)
+       global2 = hex_to_global(mesh,k1,k2+1)
+       edge_index3 = mesh%edge_center_index(3,global2)
+    else
+       edge_index1 = mesh%edge_center_index(3,global)
+       edge_index2 = mesh%edge_center_index(2,global)
+       global2 = hex_to_global(mesh,k1+1,k2)
+       edge_index3 = mesh%edge_center_index(1,global2)
+    endif
+
+    if (edge_index1 == -1 ) print*, "problem in get_edge_index  l", __LINE__
+    if (edge_index2 == -1 ) print*, "problem in get_edge_index  l", __LINE__
+    if (edge_index3 == -1 ) print*, "problem in get_edge_index  l", __LINE__
+
+  end subroutine get_edge_index
 
 
   subroutine display_hex_mesh_2d(mesh)
