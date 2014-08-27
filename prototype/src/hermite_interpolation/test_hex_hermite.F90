@@ -13,7 +13,7 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
-  sll_int32    :: nloops, num_method = 9
+  sll_int32    :: nloops, num_method = 10
   sll_int32    :: ierr
   ! initial distribution
   sll_real64   :: gauss_x2
@@ -33,7 +33,9 @@ program test_hex_hermite
   sll_real64,dimension(:),allocatable :: f_tn1,center_values_tn1
   ! distribution at end time
   sll_real64,dimension(:),allocatable :: f_sol
-  sll_real64   :: norm2_error
+  sll_real64   :: norm2_error, norm2_sol
+  sll_real64   :: norm2_error_center, norm2_error_edge, norm2_error_pt
+  sll_real64   :: norm2_sol_center, norm2_sol_edge, norm2_sol_pt
   ! advection
   sll_int32    :: which_advec
   sll_real64   :: advec
@@ -172,15 +174,14 @@ program test_hex_hermite
      ! Advection initialization
      which_advec = 1  ! 0 : linear advection ; 1 : circular advection
      advec = 0.025_f64!5._f64
-     tmax  = 10._f64
-     dt    = 1._f64*20._f64 / real(num_cells,f64)  
+     tmax  = 3._f64
+     dt    = 0.1_f64*20._f64 / real(num_cells,f64)  
      t     = 0._f64
      cfl   = radius * dt / ( radius / real(num_cells,f64)  )
 
      !*********************************************************
      !              Computing characteristics
      !*********************************************************
-
 
      if (which_advec .eq. 0) then
         ! linear advection
@@ -204,6 +205,7 @@ program test_hex_hermite
      do while (t .lt. tmax)!dt)!
 
         norm2_error = 0._f64 !Error variables
+        norm2_sol   = 0._f64 !Error variables
         norm_infinite = 0._f64
         f_min = 0._f64
 
@@ -229,6 +231,8 @@ program test_hex_hermite
            ! computation of the value at the center of the triangles
            !*********************************************************
            
+           norm2_error_center = 0._f64
+           norm2_sol_center = 0._f64
            
            do i=1, n_triangle  ! computation of the value at the center of the triangles
 
@@ -272,11 +276,15 @@ program test_hex_hermite
                  yy = x*sin(t) + y*cos(t);
               end if
 
-              
-             if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
 
-              norm2_error = norm2_error + &
-                  abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
+              if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
+
+              norm2_sol_center = 0._f64
+
+              norm2_sol_center = norm2_sol_center + &
+                   abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+              norm2_error_center = norm2_error_center + &
+                   abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
               if ( abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
                   norm_infinite = abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
               if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
@@ -293,6 +301,9 @@ program test_hex_hermite
            !        computation of the value at the center
            !            of the edge of the triangles
            !*********************************************************
+
+           norm2_error_edge = 0._f64
+           norm2_sol_edge = 0._f64
 
            do i=1, n_edge ! computation of the value at the middle of the edges
 
@@ -337,7 +348,10 @@ program test_hex_hermite
               end if
 
 
-              norm2_error = norm2_error + &
+              norm2_sol_edge = norm2_sol_edge + &
+                  abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+
+              norm2_error_edge = norm2_error_edge + &
                   abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i) )**2
               if ( abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i)) >  norm_infinite )&
                   norm_infinite = abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i))
@@ -352,8 +366,10 @@ program test_hex_hermite
         !       computation of the value at the mesh points
         !*********************************************************
 
-        do i=1, n_points  
+        norm2_error_pt = 0._f64
+        norm2_sol_pt = 0._f64
 
+        do i=1, n_points  
 
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
@@ -411,20 +427,40 @@ program test_hex_hermite
            end if
 
            f_sol(i) = exp(-((x-gauss_x1)**2+(y-gauss_x2)**2)/gauss_sig**2/2._f64) 
-           norm2_error = norm2_error + abs(f_sol(i) - f_tn1(i))**2
+           norm2_sol_pt = norm2_sol_pt + abs(f_sol(i))**2
+           norm2_error_pt = norm2_error_pt + abs(f_sol(i) - f_tn1(i))**2
 
            if ( abs(f_sol(i) - f_tn1(i)) >  norm_infinite ) norm_infinite = abs(f_sol(i) - f_tn1(i))
            if ( f_tn1(i) < f_min ) f_min = f_tn1(i)
 
         end do
-
+        
+        
         if ( num_method == 10 ) then
-           norm2_error = sqrt(norm2_error/(3._f64*real(num_cells+1,f64)*real(num_cells,f64) )) !+ 6._f64*real(num_cells,f64)**2))
+           norm2_error = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_error_pt + &
+                norm2_error_center*sqrt(3._f64)/6._f64 )*radius**2/&
+                real(num_cells,f64)**2) 
+           norm2_sol = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_sol_pt + &
+                norm2_sol_center*sqrt(3._f64)/6._f64 )*radius**2/&
+                real(num_cells,f64)**2) 
         else if ( num_method == 15 ) then
-           norm2_error = sqrt(norm2_error/(3._f64*real(num_cells+1,f64)*real(num_cells,f64) ))!+ 9._f64*real(num_cells,f64)**2 + 3._f64 * real(num_cells,f64) ) )
+           norm2_error = sqrt( ( sqrt(3._f64)*0.5_f64*norm2_error_pt + norm2_error_edge*sqrt(3._f64)*0.125_f64 )*radius**2/real(num_cells,f64)**2)
+           norm2_sol = sqrt( ( sqrt(3._f64)*0.5_f64*norm2_sol_pt + norm2_sol_edge*sqrt(3._f64)*0.125_f64 )*radius**2/real(num_cells,f64)**2)
         else
-           norm2_error = sqrt(norm2_error/(3._f64*real(num_cells,f64)*real(num_cells+1,f64) ))
+           norm2_error = sqrt(sqrt(3._f64)*0.5_f64*norm2_error_pt*radius**2/ &
+                real(num_cells,f64)**2)
+           norm2_sol =  sqrt(sqrt(3._f64)*0.5_f64*norm2_sol_pt*radius**2/ &
+                real(num_cells,f64)**2)
         endif
+
+
+        ! if ( num_method == 10 ) then
+        !    norm2_error = sqrt(norm2_error/(3._f64*real(num_cells+1,f64)*real(num_cells,f64) )) !+ 6._f64*real(num_cells,f64)**2))
+        ! else if ( num_method == 15 ) then
+        !    norm2_error = sqrt(norm2_error/(3._f64*real(num_cells+1,f64)*real(num_cells,f64) ))!+ 9._f64*real(num_cells,f64)**2 + 3._f64 * real(num_cells,f64) ) )
+        ! else
+        !    norm2_error = sqrt(norm2_error/(3._f64*real(num_cells,f64)*real(num_cells+1,f64) ))
+        ! endif
 
         center_values_tn = center_values_tn1
 
@@ -461,16 +497,16 @@ program test_hex_hermite
 
         if ( num_method == 15 ) then
            
-           write(33,*) num_cells, n_points + n_edge,  dt, cfl,  norm2_error, norm_infinite, f_min, t_end - t_init,&
+           write(33,*) num_cells, n_points + n_edge,  dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
                 tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
                 9._f64*real(num_cells,f64)**2 + 3._f64*real(num_cells,f64))/(t_end - t_init)/ 1e6_f64
         elseif ( num_method == 10 ) then
 
-           write(33,*) num_cells, n_points+n_triangle,  dt, cfl,  norm2_error, norm_infinite, f_min, t_end - t_init,&
+           write(33,*) num_cells, n_points+n_triangle,  dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
                 tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
                 6._f64*real(num_cells,f64)**2)/(t_end - t_init)/ 1e6_f64
         else
-           write(33,*) num_cells, n_points, dt, cfl,  norm2_error, norm_infinite, f_min, t_end - t_init,&
+           write(33,*) num_cells, n_points, dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
                 tmax/dt * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
         endif
 
