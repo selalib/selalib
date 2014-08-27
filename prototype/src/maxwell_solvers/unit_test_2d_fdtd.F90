@@ -12,6 +12,9 @@
 !>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
 !>$
 !>
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_2d_fdtd
 !------------------------------------------------------------------------
 !  test 2D Maxwell solver based on finite differences on a staggered grid
