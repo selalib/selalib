@@ -39,7 +39,7 @@ use sll_tri_mesh_xmf
      sll_real64 :: r3_x2
      ! Matrix containing mesh points coordinates in cartesian coordinates :
      sll_real64, pointer, dimension(:,:) :: cartesian_coord ! (1:2,1:num_pts_tot)
-     ! Matrix containing mesh points coordinates in hexagonal coordinates (integers) :
+     ! Matrix containing mesh points coordinates in hexagonal coordinates (sll_int32s) :
      sll_int32, pointer, dimension(:,:)  :: hex_coord ! (1:2,1:num_pts_tot)
      ! Matrix containg global indices arranged from lower corner of hexagon 
      ! and following the r2, then r1 direction
@@ -463,7 +463,7 @@ contains
 
     if (k1.le.0) then
        k    = num_cells + k1
-       nk1  = floor( num_cells*k + k*(k+1)*0.5 ) !this value is always an integer, floor avoids the transformation
+       nk1  = floor( num_cells*k + k*(k+1)*0.5 ) !this value is always an sll_int32, floor avoids the transformation
        nk2  = k2 + num_cells_plus1
     else
        ! n0 is the total number of points from (-num_cells,-num_cells) to 
@@ -897,6 +897,159 @@ contains
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_hex_mesh_2d
 
+  subroutine write_hex_mesh_mtv(mesh, mtv_file)
+
+    type(hex_mesh_2d), pointer :: mesh
+    sll_real64                 :: coor(2,mesh%num_pts_tot)
+    sll_int32                  :: ntri(3,mesh%num_triangles)
+    sll_real64                 :: x1
+    sll_real64                 :: y1
+    sll_int32                  :: is1
+    sll_int32                  :: is2
+    sll_int32                  :: is3
+    character(len=*)           :: mtv_file
+    sll_int32                  :: out_unit
+    sll_int32                  :: error
+    sll_int32                  :: i
+    
+    call sll_new_file_id(out_unit, error)
+
+    open( out_unit, file=mtv_file)
+    
+    !--- Trace du maillage ---
+    
+    write(out_unit,"(a)")"$DATA=CURVE3D"
+    write(out_unit,"(a)")"%equalscale=T"
+    write(out_unit,"(a)")"%toplabel='Maillage' "
+    
+    do i = 1, mesh%num_triangles
+    
+       x1 = mesh%center_cartesian_coord(1, i)
+       y1 = mesh%center_cartesian_coord(2, i)
+    
+       call get_cell_vertices_index( x1, y1, mesh, is1, is2, is3)
+    
+       ntri(1,i) = is1
+       ntri(2,i) = is2
+       ntri(3,i) = is3
+    
+       coor(1,is1) = mesh%global_to_x1(is1)
+       coor(2,is1) = mesh%global_to_x2(is1)
+       coor(1,is2) = mesh%global_to_x1(is2)
+       coor(2,is2) = mesh%global_to_x2(is2)
+       coor(1,is3) = mesh%global_to_x1(is3)
+       coor(2,is3) = mesh%global_to_x2(is3)
+    
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,*)
+    
+    end do
+    
+    !--- Numeros des noeuds et des triangles
+    
+    write(out_unit,"(a)")"$DATA=CURVE3D"
+    write(out_unit,"(a)")"%equalscale=T"
+    write(out_unit,"(a)")"%toplabel='Numeros des noeuds et des triangles' "
+    
+    do i = 1, mesh%num_triangles
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,*)
+    end do
+    
+    do i = 1, mesh%num_triangles
+       x1 = (  coor(1,ntri(1,i))  &
+             + coor(1,ntri(2,i))  &
+         + coor(1,ntri(3,i))    )/3.
+       y1 = (  coor(2,ntri(1,i))  &
+             + coor(2,ntri(2,i))  &
+         + coor(2,ntri(3,i))    )/3.
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(f8.5)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(f8.5)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    do i = 1, mesh%num_pts_tot
+       x1 = coor(1,i)
+       y1 = coor(2,i)
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(g15.3)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(g15.3)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    !--- Numeros des noeuds 
+    
+    write(out_unit,*)"$DATA=CURVE3D"
+    write(out_unit,*)"%equalscale=T"
+    write(out_unit,*)"%toplabel='Numeros des noeuds' "
+    
+    do i = 1, mesh%num_triangles
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,*)
+    end do
+    
+    do i = 1, mesh%num_pts_tot
+       x1 = coor(1,i)
+       y1 = coor(2,i)
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(g15.3)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(g15.3)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=5 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    !--- Numeros des triangles
+    
+    write(out_unit,*)"$DATA=CURVE3D"
+    write(out_unit,*)"%equalscale=T"
+    write(out_unit,*)"%toplabel='Numeros des triangles' "
+    
+    do i = 1, mesh%num_triangles
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(2,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(3,i)),0.
+       write(out_unit,"(3f10.5)")coor(:,ntri(1,i)),0.
+       write(out_unit,*)
+    end do
+    
+    do i = 1, mesh%num_triangles
+       x1 = (  coor(1,ntri(1,i))  &
+             + coor(1,ntri(2,i))  &
+         + coor(1,ntri(3,i))    )/3.
+       y1 = (  coor(2,ntri(1,i))  &
+             + coor(2,ntri(2,i))  &
+         + coor(2,ntri(3,i))    )/3.
+       write(out_unit,"(a)"   , advance="no")"@text x1="
+       write(out_unit,"(g15.3)", advance="no") x1
+       write(out_unit,"(a)"   , advance="no")" y1="
+       write(out_unit,"(g15.3)", advance="no") y1
+       write(out_unit,"(a)"   , advance="no")" z1=0. lc=4 ll='"
+       write(out_unit,"(i4)"  , advance="no") i
+       write(out_unit,"(a)")"'"
+    end do
+    
+    write(out_unit,*)"$END"
+    close(out_unit)
+   
+end subroutine write_hex_mesh_mtv
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 

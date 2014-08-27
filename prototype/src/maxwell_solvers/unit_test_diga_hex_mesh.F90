@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_dg_hex_mesh
 
 #include "sll_working_precision.h"
@@ -18,8 +21,8 @@ sll_real64                  :: A(5)
 sll_real64                  :: B(5)
 sll_real64                  :: C(5)
 sll_int32                   :: istep
-sll_int32                   :: nstep = 100
-sll_real64                  :: dt = 0.001
+sll_int32                   :: nstep = 1000
+sll_real64                  :: cfl, dt 
 sll_real64                  :: time
 sll_real64, pointer         :: S_Ex(:,:)
 sll_real64, pointer         :: X_Ex(:,:)
@@ -28,11 +31,21 @@ sll_real64, pointer         :: tmp_Ey(:,:)
 sll_real64, pointer         :: tmp_Bz(:,:)
 sll_real64, pointer         :: tmp_Po(:,:)
 
-num_cells = 3
+num_cells = 20
 
 print *, ""
 print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
-mesh => new_hex_mesh_2d(num_cells)
+mesh => new_hex_mesh_2d(num_cells,             &
+                        0.0_f64,               &
+                        0.0_f64,               &
+                        0.5_f64*sqrt(3.0_f64), &
+                        0.5_f64,               &
+                       -0.5_f64*sqrt(3.0_f64), &
+                        0.5_f64,               &
+                        0.0_f64,               &
+                        1.0_f64,               &
+                        10.0_f64 )
+
 call sll_display(mesh)
 call write_hex_mesh_2d(mesh,"hex_mesh_coo.txt")
 call write_mtv(mesh)
@@ -41,6 +54,9 @@ print *, ""
 degree = 2
 
 call initialize(maxwell, mesh, degree)
+
+cfl = 0.2
+dt = cfl/sqrt(2./(mesh%delta/(degree+1))**2)
 
 !Low storage Runge Kutta order 4
 
@@ -71,7 +87,9 @@ SLL_CLEAR_ALLOCATE(tmp_Po(maxwell%n_ddl,mesh%num_triangles), error)
 
 maxwell%Ex = 0d0
 maxwell%Ey = 0d0
-maxwell%Bz = 0.01*exp(-(maxwell%x_ddl*maxwell%x_ddl+maxwell%y_ddl*maxwell%y_ddl)/0.04)
+maxwell%Bz = exp(-(maxwell%x_ddl**2+maxwell%y_ddl**2))
+maxwell%Jx = 0d0
+maxwell%Jy = 0d0
 
 do istep = 1, nstep
 
@@ -100,29 +118,29 @@ do istep = 1, nstep
 
    do k = 1, 5
 
-      tmp_Ex = maxwell%D_Ex !- maxwell%Jx
-      tmp_Ey = maxwell%D_Ey !- maxwell%Jy
+      tmp_Ex = maxwell%D_Ex - maxwell%Jx
+      tmp_Ey = maxwell%D_Ey - maxwell%Jy
       tmp_Bz = maxwell%D_Bz 
-      tmp_Po = maxwell%D_Po !+ maxwell%Ro
+      !tmp_Po = maxwell%D_Po !+ maxwell%Ro
 
       ! Compute D_Ex, D_Ey, D_Bz, D_Po
       call solve(maxwell, mesh)
       !call set_charge_and_currents(time+C(k)*dt)
 
-      maxwell%D_Ex = A(k)*tmp_Ex + dt * maxwell%D_Ex !- maxwell%Jx)
-      maxwell%D_Ey = A(k)*tmp_Ey + dt * maxwell%D_Ey !- maxwell%Jy)
-      maxwell%D_Bz = A(k)*tmp_Bz + dt * maxwell%D_Bz !
-      maxwell%D_Po = A(k)*tmp_Po + dt * maxwell%D_Po !+ maxwell%Ro)  ! xi=1
+      maxwell%D_Ex = A(k)*tmp_Ex + dt * (maxwell%D_Ex - maxwell%Jx)
+      maxwell%D_Ey = A(k)*tmp_Ey + dt * (maxwell%D_Ey - maxwell%Jy)
+      maxwell%D_Bz = A(k)*tmp_Bz + dt * maxwell%D_Bz 
+      !maxwell%D_Po = A(k)*tmp_Po + dt * maxwell%D_Po !+ maxwell%Ro)  ! xi=0
 
       maxwell%Ex = maxwell%Ex + B(k) * maxwell%D_Ex 
       maxwell%Ey = maxwell%Ey + B(k) * maxwell%D_Ey 
       maxwell%Bz = maxwell%Bz + B(k) * maxwell%D_Bz
-      maxwell%Po = maxwell%Po + B(k) * maxwell%D_Po
+      !maxwell%Po = maxwell%Po + B(k) * maxwell%D_Po
 
    end do
 
    time = time + dt
-   call plot_simple(maxwell, mesh)
+   if (mod(istep, 10) == 0) call plot_simple(maxwell, mesh)
    !call plot_double(maxwell, mesh)
 
    write(*,"(10x,' istep = ',I6)",advance="no") istep
@@ -138,13 +156,13 @@ subroutine set_charge_and_currents(t)
 
    sll_real64, intent(in) :: t
 
-   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
-               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
-               -cos(t)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl))
-   maxwell%Jy = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%y_ddl) &
-               +sll_pi*sll_pi*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)) &
-               -cos(t)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl))
-   maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
+!   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
+!               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
+!               -cos(t)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl))
+!   maxwell%Jy = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%y_ddl) &
+!               +sll_pi*sll_pi*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)) &
+!               -cos(t)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl))
+!   maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
 
 end subroutine set_charge_and_currents
 
@@ -185,14 +203,14 @@ subroutine plot_simple( this, mesh )
    sll_int32, save :: iplot = 0
    sll_int32       :: idl, iel
    character(len=4) :: cplot
-   character(len=11) :: dat_file
+   character(len=15) :: dat_file
    character(len=15) :: gnu_file
 
    iplot = iplot+1
    call int2string(iplot, cplot)
 
-   dat_file = "fields_"//cplot
-   write(*,"(10x, 'Fichier de sortie GNUplot ', a)") dat_file//".dat"
+   dat_file = "fields_"//cplot//".dat"
+   write(*,"(10x, 'Fichier de sortie GNUplot ', a)") dat_file
 
    gnu_file = "Ex_hex_mesh.gnu"
    open(83, file = gnu_file, position="append")

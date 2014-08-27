@@ -3,6 +3,9 @@
 ! sur l'element de reference (0,0), (1,0), (0,1)
 ! en utilisant une base orthonormale de polynomes calculee a partir
 ! des polynomes de Jacobi
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 module triangle_dg_matrices 
 
 implicit none

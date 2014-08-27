@@ -1,3 +1,6 @@
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 program test_maxwell_2d_diga_wave
     !--------------------------------------------------------------------------
     !  test 2D Maxwell solver based on discontinuous galerkine on a mapped mesh

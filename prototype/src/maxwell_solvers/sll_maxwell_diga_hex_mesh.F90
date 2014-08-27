@@ -1,3 +1,7 @@
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 module sll_maxwell_diga_hex_mesh 
 
 #include "sll_working_precision.h"
@@ -400,7 +404,7 @@ do iel = 1, mesh%num_triangles   !Boucle sur les elements
 
       else      !Cote frontiere
 
-         ief = - iev
+         ief = 1 !- iev
 
          do idl = 1, this%degree+1
 

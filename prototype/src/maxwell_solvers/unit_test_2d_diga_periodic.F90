@@ -1,3 +1,7 @@
+!
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
 !>$L_x,L_y$ domain dimensions and M,N are integers.
 !>$
 !>\omega = \sqrt{(\frac{M\pi}{L_x})^2+(\frac{N\pi}{L_y})^2}
@@ -12,6 +16,11 @@
 !>E_y(x,y,t) = - \frac{c^2 M \pi }{\omega Lx} \sin (M \pi \frac{x}{L_x}) \cos (N \pi  \frac{y}{L_y}) \sin(\omega t) 
 !>$
 !>
+!
+!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
+!
+!
+!
 
 program test_maxwell_2d_diga_periodic
 !--------------------------------------------------------------------------
