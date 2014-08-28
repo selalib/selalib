@@ -1,7 +1,8 @@
-!
-!
-!  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
+! Here we solve Maxwell system without sources using 
+! discontnuous Galerkin numerical method on cartesian mesh
+! Initiallly, Bz is set to cos product and boundary conditions are periodic.
+! Ex and Ey are equals to analytic solutions.
+! For time scheme we use classic RK4 
 !>$L_x,L_y$ domain dimensions and M,N are integers.
 !>$
 !>\omega = \sqrt{(\frac{M\pi}{L_x})^2+(\frac{N\pi}{L_y})^2}
@@ -18,8 +19,6 @@
 !>
 !
 !  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
-!
-!
 !
 
 program test_maxwell_2d_diga_periodic
