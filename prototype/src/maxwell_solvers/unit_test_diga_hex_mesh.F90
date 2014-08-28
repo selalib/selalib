@@ -1,3 +1,8 @@
+! Solve Maxwell System without sources using discontinuous
+! Galerkin numerical method on hexagonal mesh.
+! At t=0 we initialize Bz as a gaussian in the center of the domain
+! and see what happens.
+! We still need to find an analytic solution to check precision order.
 !
 !  Contact : Pierre Navaro http://wwww-irma.u-strasbg.fr/~navaro
 !
@@ -31,7 +36,7 @@ sll_real64, pointer         :: tmp_Ey(:,:)
 sll_real64, pointer         :: tmp_Bz(:,:)
 sll_real64, pointer         :: tmp_Po(:,:)
 
-num_cells = 20
+num_cells = 10
 
 print *, ""
 print *, "Creating a mesh with 40 cells, mesh coordinates written in ./hex_mesh_coo.txt"
@@ -140,7 +145,7 @@ do istep = 1, nstep
    end do
 
    time = time + dt
-   if (mod(istep, 10) == 0) call plot_simple(maxwell, mesh)
+   if (mod(istep, 2) == 0) call plot_simple(maxwell, mesh)
    !call plot_double(maxwell, mesh)
 
    write(*,"(10x,' istep = ',I6)",advance="no") istep
@@ -156,13 +161,13 @@ subroutine set_charge_and_currents(t)
 
    sll_real64, intent(in) :: t
 
-!   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
-!               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
-!               -cos(t)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl))
-!   maxwell%Jy = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%y_ddl) &
-!               +sll_pi*sll_pi*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)) &
-!               -cos(t)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl))
-!   maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
+   maxwell%Jx = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%x_ddl) &
+               +sll_pi*sll_pi*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl)) &
+               -cos(t)*maxwell%x_ddl*sin(sll_pi*maxwell%y_ddl))
+   maxwell%Jy = ((cos(t)-1)*(sll_pi*cos(sll_pi*maxwell%y_ddl) &
+               +sll_pi*sll_pi*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl)) &
+               -cos(t)*maxwell%y_ddl*sin(sll_pi*maxwell%x_ddl))
+   maxwell%Ro = sin(t)*(sin(sll_pi*maxwell%y_ddl)+sin(sll_pi*maxwell%x_ddl))
 
 end subroutine set_charge_and_currents
 
@@ -200,11 +205,12 @@ subroutine plot_simple( this, mesh )
 
    type(maxwell_dg_hex_mesh), intent(in) :: this
    type(hex_mesh_2d),         intent(in) :: mesh
-   sll_int32, save :: iplot = 0
-   sll_int32       :: idl, iel
-   character(len=4) :: cplot
-   character(len=15) :: dat_file
-   character(len=15) :: gnu_file
+   sll_int32, save                       :: iplot = 0
+   sll_int32                             :: idl
+   sll_int32                             :: iel
+   character(len=4)                      :: cplot
+   character(len=15)                     :: dat_file
+   character(len=15)                     :: gnu_file
 
    iplot = iplot+1
    call int2string(iplot, cplot)
