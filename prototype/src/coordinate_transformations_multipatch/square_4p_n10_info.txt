@@ -1,0 +1,9 @@
+# Rd
+3
+# dim
+2
+# npatchs
+4
+# external_faces
+# internal_faces
+# connectivity

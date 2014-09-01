@@ -6,9 +6,7 @@ program bsl_1d_cubic_compact
 use sll_utilities, only: int2string
 use sll_constants
 use sll_cubic_spline_interpolator_1d
-#ifndef STDF95
 use sll_module_interpolators_1d_base
-#endif
 
 implicit none
 
@@ -25,13 +23,8 @@ sll_real64, dimension(:,:), allocatable :: df
 sll_real64, dimension(:,:), allocatable :: advfield_x
 sll_real64, dimension(:,:), allocatable :: advfield_v
 
-#ifdef STDF95
-type(cubic_spline_1d_interpolator), pointer  :: interp_x
-type(cubic_spline_1d_interpolator), pointer  :: interp_v
-#else
 class(sll_interpolator_1d_base), pointer     :: interp_x
 class(sll_interpolator_1d_base), pointer     :: interp_v
-#endif
 
 type(cubic_spline_1d_interpolator), target   :: spline_x
 type(cubic_spline_1d_interpolator), target   :: spline_v
@@ -70,13 +63,8 @@ end do
 
 print*, 'initialize 2d distribution function f(x,v) gaussian'
 Print*, 'checking advection of a Gaussian in a uniform field'
-#ifdef STDF95
-call cubic_spline_1d_interpolator_initialize(spline_x, nc_x+1, x_min, x_max, SLL_HERMITE)
-call cubic_spline_1d_interpolator_initialize(spline_v, nc_v+1, v_min, v_max, SLL_HERMITE)
-#else  
 call spline_x%initialize(nc_x+1, x_min, x_max, SLL_HERMITE )
 call spline_v%initialize(nc_v+1, v_min, v_max, SLL_HERMITE )
-#endif
 
 interp_x => spline_x
 interp_v => spline_v
@@ -120,20 +108,12 @@ contains
    sll_real64 :: eta
 
    do j = 1, nc_v
-#ifdef STDF95
-     call cubic_spline_compute_interpolants(interp_x, df(:,j) )
-#else
      call interp_x%compute_interpolants( df(:,j) )
-#endif
      do i = 1, nc_x
         eta = x_min + (i-1)*delta_x - dt*advfield_x(i,j)
         eta = max(eta, x_min)
         eta = min(eta, x_max)
-#ifdef STDF95
-        df(i,j) = cubic_spline_interpolate_value(interp_x,eta)
-#else
         df(i,j) = interp_x%interpolate_value(eta)
-#endif
      end do
    end do
 
@@ -144,20 +124,12 @@ contains
    sll_real64 :: eta
 
    do i = 1, nc_x
-#ifdef STDF95
-      call cubic_spline_compute_interpolants(interp_v, df(i,:) )
-#else
       call interp_v%compute_interpolants( df(i,:) )
-#endif
       do j = 1, nc_v
         eta = v_min + (j-1)*delta_v - dt*advfield_v(i,j)
         eta = max(eta, v_min)
         eta = min(eta, v_max)
-#ifdef STDF95
-        df(i,j) = cubic_spline_interpolate_value(interp_v,eta)
-#else
         df(i,j) = interp_v%interpolate_value(eta)
-#endif
      end do
    end do
 

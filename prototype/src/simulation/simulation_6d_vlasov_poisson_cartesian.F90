@@ -1448,7 +1448,8 @@ contains
              end do
           end do
        
-          call sll_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",hdf_file_id,error)
+          call sll_hdf5_file_create("mesh_x"//c_layout//"_seq.h5",&
+               sll_world_collective%comm, hdf_file_id,error)
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x1,"x1",error)
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x2,"x2",error)
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,x3,"x3",error)
@@ -1463,7 +1464,7 @@ contains
        c_layout = char(i_layout+48)
 
        call sll_hdf5_file_create("fields_x"//c_layout//"-"//ctime//".h5", &
-                                 hdf_file_id,error)
+               sll_world_collective%comm, hdf_file_id,error)
 
        if (i_layout == 1) then
           call sll_hdf5_write_array(hdf_file_id,array_dims,offset,sim%rho_x1, &
@@ -1491,7 +1492,7 @@ contains
           call sll_xml_grid_geometry(xml_file_id,          &
                                   "mesh_x"//c_layout//"_seq.h5",global_nx1, &
                                   "mesh_x"//c_layout//"_seq.h5",global_nx2, &
-                                  "x1", "x2" )
+                                  "x1", "x2", "Uniform" )
           call sll_xml_field(xml_file_id,'rho_x'//c_layout,  &
                              "fields_x"//c_layout//"-"//ctime//".h5:/rho_x"//c_layout, &
                              global_nx1, global_nx2,'HDF','Node')

@@ -18,6 +18,7 @@
   nbiter = 400
   freqdiag_time = 1
   freqdiag = 20
+  nb_mode = 20
 /
 &landau
   kmode = 0.26

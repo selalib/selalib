@@ -24,13 +24,8 @@
 
 module sll_scalar_field_initializers_base
 #include "sll_working_precision.h"
-#ifdef STDF95
-  !use sll_module_mapped_meshes_2d
-  use sll_module_coordinate_transformations_2d
-#else
   use sll_coordinate_transformation_2d_base_module
   !use sll_module_mapped_meshes_2d_base
-#endif
 
   implicit none
   integer, parameter :: NODE_CENTERED_FIELD = 0, CELL_CENTERED_FIELD = 1
@@ -42,11 +37,6 @@ module sll_scalar_field_initializers_base
   !
   ! **************************************************************************
 
-#ifdef STDF95
-  type :: scalar_field_2d_initializer_base
-     sll_int32   :: data_position
-  end type scalar_field_2d_initializer_base
-#else
   type, abstract :: scalar_field_2d_initializer_base
      sll_int32   :: data_position
    contains
@@ -62,21 +52,12 @@ module sll_scalar_field_initializers_base
        sll_real64, dimension(:,:), intent(out)                :: data_out
      end subroutine scalar_field_2d_initializer
   end interface
-#endif
 
   ! **************************************************************************
   !
   !                              4D cases
   !
   ! **************************************************************************
-
-#ifdef STDF95
-
-  type :: scalar_field_4d_initializer_base
-     sll_int32 :: data_position
-  end type scalar_field_4d_initializer_base
-
-#else
 
   type, abstract :: scalar_field_4d_initializer_base
      sll_int32 :: data_position
@@ -94,21 +75,11 @@ module sll_scalar_field_initializers_base
      end subroutine scalar_field_4d_initializer
   end interface
 
-#endif
-
-
   ! **************************************************************************
   !
   !                              6D cases
   !
   ! **************************************************************************
-#ifdef STDF95
-
-  type :: scalar_field_6d_initializer_base
-     sll_int32 :: data_position
-  end type scalar_field_6d_initializer_base
-
-#else
 
   type, abstract :: scalar_field_6d_initializer_base
      sll_int32 :: data_position
@@ -126,6 +97,4 @@ module sll_scalar_field_initializers_base
      end subroutine scalar_field_6d_initializer
   end interface
 
-#endif
-  
 end module sll_scalar_field_initializers_base

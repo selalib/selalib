@@ -1,3 +1,7 @@
+IF(Fortran_COMPILER MATCHES IBM)
+   SET(CMAKE_Fortran_COMPILER xlf)
+ENDIF(Fortran_COMPILER MATCHES IBM)
+
 SET(DFFTPACK_SRCS zfftb.f cfftb1.f zfftf.f cfftf1.f zffti.f cffti1.f
                   dcosqb.f cosqb1.f dcosqf.f cosqf1.f dcosqi.f dcost.f
                   dcosti.f ezfft1.f dzfftb.f dzfftf.f dzffti.f passb.f

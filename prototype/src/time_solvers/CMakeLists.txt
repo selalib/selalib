@@ -10,9 +10,12 @@ TARGET_LINK_LIBRARIES(sll_time_splitting
 	                sll_file_io
                       sll_poisson_solvers)
 
-ADD_EXECUTABLE(test_time_splitting unit_test.F90)
+IF(HDF5_ENABLED)
 
-TARGET_LINK_LIBRARIES(test_time_splitting sll_time_splitting)
+   ADD_EXECUTABLE(test_time_splitting unit_test.F90)
+   TARGET_LINK_LIBRARIES(test_time_splitting sll_time_splitting)
+
+ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(vp1d_bsl_time_split vp1d_bsl_time_split.F90)
 

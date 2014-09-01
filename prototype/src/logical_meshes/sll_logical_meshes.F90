@@ -93,12 +93,10 @@ module sll_logical_meshes
      module procedure delete_logical_mesh_4d
   end interface delete
 
-#ifndef STDF95
   interface operator(*)
      module procedure tensor_product_1d_1d
      module procedure tensor_product_2d_2d
   end interface operator(*)
-#endif
 
   interface sll_display
      module procedure display_logical_mesh_1d
@@ -168,7 +166,6 @@ end if
   end subroutine initialize_logical_mesh_1d
 
 
-#ifndef STDF95
   function tensor_product_1d_1d( m_a, m_b) result(m_c)
     type(sll_logical_mesh_1d), intent(in),  pointer :: m_a
     type(sll_logical_mesh_1d), intent(in),  pointer :: m_b
@@ -204,7 +201,6 @@ end if
     m_b%eta2_max ) 
 
   end function tensor_product_2d_2d
-#endif
 
   subroutine initialize_eta1_node_1d( m, eta1_node )
     type(sll_logical_mesh_1d), pointer :: m

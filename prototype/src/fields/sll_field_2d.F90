@@ -68,12 +68,12 @@ module sll_field_2d
   end type vector_field_2d
 
   abstract interface
-     function scalar_function_2D( eta1, eta2 )
+     function scalar_function_field_2d( eta1, eta2 )
        use sll_working_precision
-       sll_real64 :: scalar_function_2D
+       sll_real64 :: scalar_function_field_2d
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
-     end function scalar_function_2D
+     end function scalar_function_field_2d
   end interface
 
 contains   ! *****************************************************************  
@@ -83,7 +83,7 @@ contains   ! *****************************************************************
     !class(sll_mapped_mesh_2d_base), pointer, intent(in) :: mesh
     class(sll_coordinate_transformation_2d_base), pointer   :: mesh
     sll_int32 :: data_position
-    procedure(scalar_function_2D), pointer :: data_func
+    procedure(scalar_function_field_2d), pointer :: data_func
     ! local variables
     sll_int32                :: ierr
     sll_int32  :: i1, i2

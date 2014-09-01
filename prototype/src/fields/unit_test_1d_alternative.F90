@@ -23,7 +23,7 @@ program unit_test_1d_alternative
   sll_int32                                :: nc1!, iplot
   sll_real64                               :: grad1_node_val,grad1ref
   sll_real64, dimension(:), allocatable    :: tab_values
-  type(arb_deg_1d_interpolator), target    :: interp_1d
+  type(sll_arb_deg_1d_interpolator), target    :: interp_1d
   sll_real64                               :: node_val,ref
   sll_real64, dimension(:),   allocatable  :: point1
   sll_real64                               :: eta1

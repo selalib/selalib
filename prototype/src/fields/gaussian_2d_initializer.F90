@@ -62,7 +62,7 @@ contains
     sll_real64 :: y
     sll_real64 :: jac
 
-    mesh => init_obj%transf%get_logical_mesh()
+    mesh => init_obj%transf%mesh
 
     if (init_obj%data_position == CELL_CENTERED_FIELD) then
        num_pts1 = mesh%num_cells1

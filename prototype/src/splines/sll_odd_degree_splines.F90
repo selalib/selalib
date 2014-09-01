@@ -84,7 +84,7 @@ contains
     sll_int32                                      :: ierr, num_pts, degree
     sll_real64                                     :: xmin, xmax
     sll_real64, dimension(:), allocatable          :: matrix_elements
-    sll_real64, dimension(:,:), allocatable        :: A
+!    sll_real64, dimension(:,:), allocatable        :: A
     sll_int32                                      :: KD, i, j, m, LDAB
 
     if (mod(degree,2) == 0) then
@@ -98,8 +98,12 @@ contains
 
     SLL_ALLOCATE(plan, ierr)
     SLL_ALLOCATE(matrix_elements(degree+1), ierr)
-    SLL_ALLOCATE(A(m,m), ierr)
-    SLL_ALLOCATE(plan%matrix(m,m), ierr)
+!    SLL_ALLOCATE(A(m,m), ierr)
+    !SLL_ALLOCATE(plan%matrix(m,m), ierr)
+!  print *,'#before allocation',KD+1,m
+    SLL_ALLOCATE(plan%matrix(KD+1,m), ierr) 
+    !please allocate no full matrix, when not necessary...
+!  print *,'#after allocation',KD+1,m
     SLL_ALLOCATE(plan%coeffs(-degree:num_pts-1), ierr)
 
     plan%num_pts = num_pts
@@ -109,20 +113,20 @@ contains
 
     matrix_elements = uniform_b_splines_at_x( degree, 0.d0 ) 
 
-    A = 0.d0
-    do i=1,m
-       do j= -KD, KD
-          if ( (i+j>0) .and. (i+j<=m) ) then
-             A(i,i+j) = matrix_elements(j+KD+1) 
-          endif
-       enddo
-    enddo
+!    A = 0.d0
+!    do i=1,m
+!       do j= -KD, KD
+!          if ( (i+j>0) .and. (i+j<=m) ) then
+!             A(i,i+j) = matrix_elements(j+KD+1) !i+j=k -> j=k-i if(k>0 and k<=m)
+!          endif
+!       enddo
+!    enddo
 
     ! For Lapack use
 
     do j=1,m
        do i=j,min(m,j+KD)
-          plan%matrix(1+i-j,j) = A(i,j)
+          plan%matrix(1+i-j,j) = matrix_elements(j-i+KD+1)!A(i,j)
        enddo
     enddo
 
@@ -131,7 +135,7 @@ contains
     call DPBTRF( 'L', m, KD, plan%matrix, LDAB, ierr )
 
     SLL_DEALLOCATE_ARRAY(matrix_elements, ierr)
-    SLL_DEALLOCATE_ARRAY(A, ierr)
+!    SLL_DEALLOCATE_ARRAY(A, ierr)
 
   end function new_odd_degree_splines_uniform
 
@@ -289,7 +293,8 @@ contains
     ! adding 1 point beyond xmax would be not enough
     ! So instead of 1 point beyond xmax, we add 2 points, for degree 1
     SLL_ALLOCATE(A(m,m), ierr)
-    SLL_ALLOCATE(plan%matrix(m,m), ierr)
+    SLL_ALLOCATE(plan%matrix(m,m), ierr) !A and plan%matrix(m,m) 
+    ! should not be full matrix...
     SLL_ALLOCATE(plan%b_spline(degree+1), ierr)
 
     do i=-degree,-1
@@ -316,7 +321,7 @@ contains
        ii = i + degree - degree/2
        do j= -KL, KU
           if ( (ii+j>0) .and. (ii+j<=m) ) then
-             A(ii,ii+j) = plan%b_spline(j+KL+1) 
+             A(ii,ii+j) = plan%b_spline(j+KL+1) !
           endif
        enddo
     enddo    

@@ -50,11 +50,11 @@ program comm_unit_test
      array_right(i) = mod(rank+size+1,size)*PROBLEM_SIZE+i
   end do
 
-!  print *, 'rank: ', rank, 'problem size: ', PROBLEM_SIZE, 'array = ', &
-!  array1(:)
+  print *, 'rank: ', rank, 'problem size: ', PROBLEM_SIZE, 'array = ', &
+  array1(:)
 
-!  call sll_view_port(comm,1)
-!  call sll_view_port(comm,2)
+  call sll_view_port(comm,1)
+  call sll_view_port(comm,2)
 
   ! Load the buffer on port 1 with the data and send
   buf1 => get_buffer(comm,1)

@@ -23,7 +23,7 @@ program VP1d_deltaf
   use sll_poisson_1d_periodic
   use sll_timer
   use omp_lib
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
   implicit none
 
 !  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x

@@ -6,8 +6,8 @@
 !	Copyright 2010 __MyCompanyName__. All rights reserved.
 !
 module SparseMatrix_Module
-    use sparse_matrix_def
-    use SparseMatrix_Basic_Module
+!    use sparse_matrix_def
+!    use SparseMatrix_Basic_Module
     use SparseMatrix_LM_Module
     use SparseMatrix_con_Module
     use SparseMatrix_Composed_Module

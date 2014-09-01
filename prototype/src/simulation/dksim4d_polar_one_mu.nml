@@ -41,7 +41,7 @@
 
 &sim_params
   dt                = 8
-  number_iterations = 400
+  number_iterations = 2
   !number_iterations = 1
   freq_diag_time = 1
   freq_diag = 100
@@ -53,6 +53,9 @@
   charac2d_maxiter = 1000
   advect2d_case = "SLL_BSL"
   interp_x1x2 = "SLL_CUBIC_SPLINES"
+  interp_x1x2 = "SLL_HERMITE"
+  hermite_degree_eta1 = 6
+  hermite_degree_eta2 = 6  
   phi_interp_x1x2 = "SLL_CUBIC_SPLINES"
   phi_interp_x3 = "SLL_CUBIC_SPLINES"
   advector_x3 = "SLL_SPLINES"

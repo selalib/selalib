@@ -95,7 +95,7 @@ contains   ! *****************************************************************
     this%transf => transf
     this%transf%written = .false.
     
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
     SLL_ASSERT(associated(mesh))
 
     this%name  = trim(field_name)
@@ -197,14 +197,14 @@ contains   ! *****************************************************************
     character(len=4) :: center
 
 
-    if (.not. present(output_format)) then
-       local_format = SLL_IO_XDMF
-    else
+    if (present(output_format)) then
        local_format = output_format
+    else
+       local_format = SLL_IO_XDMF
     end if
 
     transf => scalar_field%transf
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
 
     SLL_ASSERT(associated(mesh))  
     if (.not. transf%written) then
@@ -246,7 +246,8 @@ contains   ! *****************************************************************
        end if
      
     end if
-
+    
+    print*, local_format
 
     select case(local_format)
     case (SLL_IO_XDMF)

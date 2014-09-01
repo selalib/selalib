@@ -48,6 +48,7 @@ program test_layout_output
   integer                                   :: npk
   integer                                   :: error
   integer                                   :: myrank
+  integer                                   :: comm
   sll_int64                                 :: colsz        ! collective size
 
   type(layout_3D), pointer                  :: layout
@@ -112,7 +113,8 @@ program test_layout_output
   offset(2) = get_layout_3D_j_min( layout, myrank ) - 1
   offset(3) = get_layout_3D_k_min( layout, myrank ) - 1
 
-  call sll_hdf5_file_create('layout3d.h5',file_id,error)
+  comm   = sll_world_collective%comm
+  call sll_hdf5_file_create('layout3d.h5',comm,file_id,error)
   call sll_hdf5_write_array(file_id,dims,offset,dble(array),'array',error)
   call sll_hdf5_file_close(file_id,error)
 

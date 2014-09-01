@@ -45,15 +45,15 @@ To offer this fine-grained control, we are presently configured the build
 process to use shell variables. Thus the user is responsible for going into
 .bashrc (or .tcshrc or some other) and define a few variables. Presently:
 
-HDF5INCPATH: directory where hdf5.h is located, 
-HDF5LIBPATH: directory where libhdf5.a is located, 
-HDF5MODPATH: directory where hdf5.mod is located
+HDF5_ROOT/include: directory where hdf5.h is located, 
+HDF5_ROOT/lib: directory where libhdf5.a is located, 
+HDF5_ROOT/include: directory where hdf5.mod is located
 
 In .bashrc, this would be something like:
-export HDF5INCPATH=/usr/local/include
+export HDF5_ROOT=/usr/local
 
 In .tcshrc, this would be something like:
-setenv HDF5LIBPATH /usr/local/lib
+setenv HDF5_ROOT /usr/local
 
 Our intent is to make the collection of SConstruct files and their auxiliary
 files as machine-independent as possible. The user would thus be responsible 

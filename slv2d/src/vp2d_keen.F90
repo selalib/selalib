@@ -251,8 +251,8 @@ contains
     dr_param%omegadr = omegadr
     dr_param%kdr = kdr
 
-    call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-    call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
+    call initialize(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
+    call initialize(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
 !print*, 'bcast ',my_num, t0, twL, twR, tstart, tflat, tL, tR, turn_drive_off, Edrmax, omegadr, kdr
   end subroutine initglobal

@@ -64,6 +64,8 @@ implicit none
   
   
   err = maxval(abs(input-output))
+
+  call adv%delete( )
   
   print *,'#err=',err
   if(err<1.e-15)then  

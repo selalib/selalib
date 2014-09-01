@@ -103,7 +103,6 @@ subroutine splopt ( tau, n, k, scrtch, t, iflag )
   integer ( kind = 4 ) kp1
   integer ( kind = 4 ) kpkm1
   integer ( kind = 4 ) kpn
-  integer ( kind = 4 ) l
   integer ( kind = 4 ) left
   integer ( kind = 4 ) leftmk
   integer ( kind = 4 ) lenw
@@ -123,7 +122,6 @@ subroutine splopt ( tau, n, k, scrtch, t, iflag )
   real ( kind = 8 ) tau(n)
   real ( kind = 8 ) sign
   real ( kind = 8 ) signst
-  real ( kind = 8 ) sum1
   real ( kind = 8 ) tol
   real ( kind = 8 ), parameter :: tolrte = 0.000001D+00
   real ( kind = 8 ) xij

@@ -42,7 +42,7 @@ implicit none
       periodic_advect_1d_constant
     procedure, pass(adv) :: advect_1d => &
       periodic_advect_1d_fake
-  
+    procedure, pass(adv) :: delete => delete_periodic_1d_advector
   end type periodic_1d_advector
    
 contains
@@ -165,7 +165,9 @@ contains
            
   end subroutine periodic_advect_1d_fake
 
-
+  subroutine delete_periodic_1d_advector( adv )
+    class(periodic_1d_advector), intent(inout) :: adv
+  end subroutine delete_periodic_1d_advector
 
 
 

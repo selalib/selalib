@@ -18,13 +18,17 @@ class zealpy_gyrokin_anal(zealpy_gyrokin):
                          'deltarTe': float,
                          'invLn0'  : float,
                          'deltarn0': float,
+                         'iota'    : float,
+                         'B0'    : float
                         }
         self.param_anal = params(required_params,anal_arg)
         Zi   = self.param_anal.get_value('Zi')
         NNr  = self.param_anal.get_value('NNr')
         rmin = self.param_anal.get_value('rmin')
         Lr   = self.param_anal.get_value('Lr')
-        super(zealpy_gyrokin_anal,self).__init__(Zi,NNr,rmin,Lr)    
+        iota   = self.param_anal.get_value('iota')
+        B0   = self.param_anal.get_value('B0')
+        super(zealpy_gyrokin_anal,self).__init__(Zi,NNr,rmin,Lr,B0)    
 
         #--> Compute the analytic profiles
         dr    = self.params.get_value('dr')
@@ -45,6 +49,8 @@ class zealpy_gyrokin_anal(zealpy_gyrokin):
             rmesh,rpeak,invLTe,deltarTe)
         [n0,dlogn0,ddlogn0] = compute_n0_dlogn0_anal(
             rmesh,rpeak,invLn0,deltarn0)
+        [btheta,bz] = compute_b_anal(
+            rmesh,iota)
         self.eta = dlogTi/dlogn0
 
         Zi = self.param_anal.get_value('Zi')
@@ -55,7 +61,10 @@ class zealpy_gyrokin_anal(zealpy_gyrokin):
         self.params.set_value('n0',n0)
         self.params.set_value('dlogn0',dlogn0)
         self.params.set_value('ddlogn0',ddlogn0)
-        
+        self.params.set_value('btheta',btheta)
+        self.params.set_value('bz',bz)
+        B0 = self.param_anal.get_value('B0')
+        self.params.set_value('B0',B0)
         if (not self.param_anal.check_validity()):
             raise pyreldisp_exception("zealpy_gyrkin_anal: Parameters not valid")
 #end class zealpy_gyrokin_anal    
@@ -108,3 +117,20 @@ def compute_n0_dlogn0_anal(rmesh,rpeak,invLn0,deltarn0):
     
     return [n0,dlogn0,ddlogn0]
 #end def compute_n0_dlogn0_anal
+
+#-------------------------------------------------
+# Compute c,btheta,bz
+#   c  = iota*r  normally iota*r/R0 
+#-------------------------------------------------
+def compute_b_anal(rmesh,iota):
+  #c = iota*rmesh
+  #iota = 0.8/239.8
+  btheta = iota*rmesh/(1.0+(iota*rmesh)**2)**(0.5)
+  bz = 1.0/(1.0+(iota*rmesh)**2)**(0.5)   
+  #bz = 1.
+  
+  return [btheta,bz]
+#end def compute_b_anal
+
+
+

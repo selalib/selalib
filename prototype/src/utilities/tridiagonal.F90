@@ -75,7 +75,7 @@ implicit none
 contains
 
 ! careful with side-effects here
-#define SWP(a,b) swp=(a); a=(b); b=swp
+#define SWP(aval,bval) swp=(aval); aval=(bval); bval=swp
 
   
   !---------------------------------------------------------------------------  
@@ -168,9 +168,9 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
 
   ! The following variables represent a scratch space where the local
   ! computations are made.
-  sll_real64 :: s11=0.0, s12=0.0, s13=0.0, s14=0.0, s15=0.0
-  sll_real64 :: s21=0.0, s22=0.0, s23=0.0, s24=0.0, s25=0.0
-  sll_real64 :: s31=0.0, s32=0.0, s33=0.0, s34=0.0, s35=0.0
+  sll_real64 :: s11, s12, s13, s14, s15
+  sll_real64 :: s21, s22, s23, s24, s25
+  sll_real64 :: s31, s32, s33, s34, s35
   sll_real64 :: t1, t2, t3, swp
 
   sll_real64, pointer :: d(:)
@@ -181,7 +181,27 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
   sll_real64, pointer :: l(:)
   sll_real64, pointer :: m(:)
   sll_int32 :: i
+  
+  s11 = 0._f64
+  s12 = 0._f64
+  s13 = 0._f64
+  s14 = 0._f64
+  s15 = 0._f64
 
+  s21 = 0._f64
+  s22 = 0._f64
+  s23 = 0._f64
+  s24 = 0._f64
+  s25 = 0._f64
+
+  s31 = 0._f64
+  s32 = 0._f64
+  s33 = 0._f64
+  s34 = 0._f64
+  s35 = 0._f64
+  
+  
+  cts(1:7*n) = 0._f64
   d => cts(    1:n  )
   u => cts(  n+1:2*n)
   v => cts(2*n+1:3*n)
@@ -194,7 +214,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
   ! were a rank-2 array. Note that a(1,0) = a(1), i.e.: the cyclic term 
   ! in the first equation and that a(n,n+1) = a(n), i.e.: the cyclic term
   ! in the last equation.
-#define aa(i,j) a(2*((i)-1)+(j)+1)
+#define aa(ii,jj) a(2*((ii)-1)+(jj)+1)
   select case (n)
      case (3) ! we just reproduce the input array on the scratch space
         s11 = aa(1,1); s12 = aa(1,2); s13 = aa(1,0)
@@ -273,7 +293,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            d(i) = s11; u(i) = s12; v(i) = s13; q(i) = s14; r(i) = s15
            l(i) = s21
            m(i) = s31
-
+           
            ! Advance the scratch space for the next iteration
 
            if( i<(n-4) ) then
@@ -481,6 +501,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
            m(i) = 0.0
         end if
      end do
+
    end subroutine setup_cyclic_tridiag
 #undef aa
 
@@ -523,6 +544,7 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      sll_real64, pointer, dimension(:)                    :: xptr  
      sll_real64                             :: swp
      sll_int32                              :: i
+     sll_int32                              :: inew
      sll_real64, pointer                    :: d(:)
      sll_real64, pointer                    :: u(:)
      sll_real64, pointer                    :: v(:)
@@ -538,6 +560,10 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      r => cts(4*n+1:5*n)
      l => cts(5*n+1:6*n)
      m => cts(6*n+1:7*n)
+
+     !do i=1,n
+     !  print *,'duvqrlm=',i,d(i),u(i),v(i),q(i),r(i),l(i),m(i) 
+     !enddo     
 
      bptr =>b(1:n)
      xptr =>x(1:n)
@@ -562,8 +588,10 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      x(i) = x(i)/d(i)
      i    = i-1
      x(i) = (x(i) - u(i)*x(i+1))/d(i)
-     i    = i-1
-     do i=i,1,-1
+     !i    = i-1
+     inew    = i-1
+     do i=inew,1,-1
+     !do i=i,1,-1
         x(i) = (x(i)-(u(i)*x(i+1) + v(i)*x(i+2) + &
                       q(i)*x(n-1) + r(i)*x(n) ))/d(i)
      end do

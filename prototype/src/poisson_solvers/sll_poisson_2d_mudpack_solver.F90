@@ -1023,7 +1023,7 @@ contains
         
   end subroutine initialize_poisson_2d_mudpack_solver
   
-  ! solves -\Delta phi = rho in 2d
+  ! solves \Delta phi = -rho in 2d
   subroutine compute_phi_from_rho_2d_mudpack( poisson, phi, rho )
     class(poisson_2d_mudpack_solver), target :: poisson
     sll_real64,dimension(:,:),intent(in) :: rho
@@ -1035,6 +1035,8 @@ contains
     sll_int32  :: iprm(16)
     sll_real64 :: fprm(6)
     sll_int32  :: error
+    sll_int32  :: i1
+    sll_int32  :: i2
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
@@ -1055,8 +1057,27 @@ contains
     !attempt solution
     intl = 1
     !write(*,106) intl,method,iguess
-
-
+        
+    if(nxa == SLL_DIRICHLET) then
+       do i2=1,ny
+          phi(1,i2) = 0._f64
+       end do
+    endif
+    if(nxb == SLL_DIRICHLET) then
+       do i2=1,ny
+          phi(nx,i2) = 0._f64
+       end do
+    endif
+    if(nyc == SLL_DIRICHLET) then
+       do i1=1,nx
+          phi(i1,1) = 0._f64
+       end do
+    endif
+    if(nyd == SLL_DIRICHLET) then
+       do i1=1,nx
+          phi(i1,ny) = 0._f64
+       end do
+    endif 
     select case (poisson%mudpack_case)
       case (SLL_SEPARABLE)
         if(associated(mudpack_wrapper))then
@@ -1072,7 +1093,7 @@ contains
           mudpack_cofx, &
           mudpack_cofy, &
           mudpack_bndsp, &
-          rho, &
+          -rho, &
           phi, &
           poisson%mgopt, &
           error)
@@ -1097,7 +1118,7 @@ contains
           poisson%work, &
           mudpack_cof, &
           mudpack_bndsp, &
-          rho, &
+          -rho, &
           phi, &
           poisson%mgopt, &
           error)
@@ -1122,7 +1143,7 @@ contains
           poisson%work, &
           mudpack_cofcr, &
           mudpack_bndsp, &
-          rho, &
+          -rho, &
           phi, &
           poisson%mgopt, &
           error)

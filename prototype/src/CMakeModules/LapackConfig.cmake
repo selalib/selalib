@@ -5,20 +5,27 @@ SET(USE_MKL OFF CACHE BOOL "Using Intel Math Kernel Library")
 
 
 IF(Fortran_COMPILER_NAME MATCHES "ifort")
-   SET(USE_MKL ON)
+   IF(DEFINED ENV{MKLROOT})
+      SET(USE_MKL ON)
+   ELSE()
+      MESSAGE(STATUS "Environment variable is not set, please load mkl vars")
+   ENDIF()
 ENDIF()
 
 IF(USE_MKL)
 
    SET(BLA_VENDOR "Intel")
 
-
    STRING(REGEX REPLACE "^([^:]*):" " " MKLROOT $ENV{MKLROOT})
    MESSAGE(STATUS "MKLROOT:${MKLROOT}")
    INCLUDE_DIRECTORIES(${MKLROOT}/include/intel64/lp64 ${MKLROOT}/include)
-   SET(BLAS_LIBRARIES " ")
    SET(BLAS_FOUND TRUE)
-   SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lm")
+   IF(APPLE)
+      SET(LAPACK_LIBRARIES "-mkl")
+   ELSE()
+      SET(LAPACK_LIBRARIES "-Wl,--start-group ${MKLROOT}/lib/intel64/libmkl_intel_lp64.a ${MKLROOT}/lib/intel64/libmkl_core.a ${MKLROOT}/lib/intel64/libmkl_sequential.a -Wl,--end-group -lm")
+   ENDIF(APPLE)
+   SET(BLAS_LIBRARIES ${LAPACK_LIBRARIES})
    SET(LAPACK_FOUND TRUE)
 
 ELSE()

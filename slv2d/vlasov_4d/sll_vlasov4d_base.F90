@@ -11,6 +11,7 @@ module sll_vlasov4d_base
  use sll_module_interpolators_2d_base
  use sll_remapper
  use sll_xml_io
+ use init_functions
 
  implicit none
  
@@ -22,10 +23,13 @@ module sll_vlasov4d_base
 
  type, public :: vlasov4d_base
    logical                                  :: transposed      
+   type(sll_logical_mesh_2d), pointer       :: geomx
+   type(sll_logical_mesh_2d), pointer       :: geomv
    sll_real64, dimension(:,:,:,:),  pointer :: f
    sll_real64, dimension(:,:,:,:),  pointer :: ft
    type(layout_4D), pointer                 :: layout_x
    type(layout_4D), pointer                 :: layout_v
+   type(layout_4D), pointer                 :: layout_p
    type(remap_plan_4D_real64), pointer      :: x_to_v 
    type(remap_plan_4D_real64), pointer      :: v_to_x
    sll_real64, dimension(:,:), pointer      :: ex
@@ -34,18 +38,37 @@ module sll_vlasov4d_base
    sll_real64, dimension(:,:), pointer      :: jy
    sll_real64, dimension(:,:), pointer      :: bz
    sll_real64, dimension(:,:), pointer      :: rho
-   type(sll_logical_mesh_2d), pointer       :: geomx
-   type(sll_logical_mesh_2d), pointer       :: geomv
    sll_real64                               :: dt     
    sll_int32                                :: nbiter 
    sll_int32                                :: fdiag  
    sll_int32                                :: fthdiag
-   sll_int32  :: nc_eta1, nc_eta2, nc_eta3, nc_eta4
-   sll_real64 :: eta1_min, eta2_min, eta3_min, eta4_min
-   sll_real64 :: eta1_max, eta2_max, eta3_max, eta4_max
-   sll_real64 :: delta_eta1, delta_eta2, delta_eta3, delta_eta4
+   sll_int32                                :: nc_eta1
+   sll_int32                                :: nc_eta2
+   sll_int32                                :: nc_eta3
+   sll_int32                                :: nc_eta4
+   sll_int32                                :: np_eta1
+   sll_int32                                :: np_eta2
+   sll_int32                                :: np_eta3
+   sll_int32                                :: np_eta4
+   sll_real64                               :: eta1_min
+   sll_real64                               :: eta2_min
+   sll_real64                               :: eta3_min
+   sll_real64                               :: eta4_min
+   sll_real64                               :: eta1_max
+   sll_real64                               :: eta2_max
+   sll_real64                               :: eta3_max
+   sll_real64                               :: eta4_max
+   sll_real64                               :: delta_eta1
+   sll_real64                               :: delta_eta2
+   sll_real64                               :: delta_eta3
+   sll_real64                               :: delta_eta4
+   sll_int32                                :: va 
+   sll_int32                                :: num_case 
+   sll_real64                               :: eps
  end type vlasov4d_base
 
+ sll_int32, public  :: poisson_type 
+ sll_int32, public  :: maxwell_type
 
  private
 
@@ -65,25 +88,38 @@ contains
   sll_int32                             :: comm
   sll_int32  :: idata !< file unit for namelist
 
-  sll_int32  :: nx, ny      ! dimensions de l'espace physique
-  sll_int32  :: nvx, nvy    ! dimensions de l'espace des vitesses
-  sll_real64 :: x0, y0      ! coordonnees debut du maillage espace physique
-  sll_real64 :: vx0, vy0    ! coordonnees debut du maillage espace vitesses
-  sll_real64 :: x1, y1      ! coordonnees fin du maillage espace physique
-  sll_real64 :: vx1, vy1    ! coordonnees fin du maillage espace vitesses
-  sll_real64 :: dt          ! time step
-  sll_int32  :: nbiter      ! number of loops over time
-  sll_int32  :: fdiag       ! diagnostics frequency
-  sll_int32  :: fthdiag     ! time history frequency
+  sll_int32  :: nx, ny           ! dimensions de l'espace physique
+  sll_int32  :: nvx, nvy         ! dimensions de l'espace des vitesses
+  sll_real64 :: x0, y0           ! coordonnees debut du maillage espace physique
+  sll_real64 :: vx0, vy0         ! coordonnees debut du maillage espace vitesses
+  sll_real64 :: x1, y1           ! coordonnees fin du maillage espace physique
+  sll_real64 :: vx1, vy1         ! coordonnees fin du maillage espace vitesses
+  sll_real64 :: dt               ! time step
+  sll_int32  :: nbiter           ! number of loops over time
+  sll_int32  :: fdiag            ! diagnostics frequency
+  sll_int32  :: fthdiag          ! time history frequency
+  sll_int32  :: va               ! algo charge type
+  sll_int32  :: num_case         ! test case
+  sll_real64 :: eps = 0.05_f64   ! perturbation amplitude
+  sll_int32  :: meth             ! method
 
-  namelist /time/ dt, nbiter
-  namelist /diag/ fdiag, fthdiag
-  namelist /phys_space/ x0,x1,y0,y1,nx,ny
-  namelist /vel_space/ vx0,vx1,vy0,vy1,nvx,nvy
+
+  namelist /time/        dt, nbiter
+  namelist /diag/        fdiag, fthdiag
+  namelist /phys_space/  x0,x1,y0,y1,nx,ny
+  namelist /vel_space/   vx0,vx1,vy0,vy1,nvx,nvy
+  namelist /test_case/   num_case, eps
+  namelist /algo_charge/ va, meth
+  namelist /field_solvers/ poisson_type, maxwell_type
 
   prank = sll_get_collective_rank(sll_world_collective)
   psize = sll_get_collective_size(sll_world_collective)
   comm  = sll_world_collective%comm
+
+  va           = VA_VALIS
+  meth         = METH_BSL_CUBIC_SPLINES
+  poisson_type = SPECTRAL
+  maxwell_type = PSTD
 
   if (prank == MPI_MASTER) then
 
@@ -92,43 +128,53 @@ contains
      read(idata,NML=diag)
      read(idata,NML=phys_space)
      read(idata,NML=vel_space)
+     read(idata,NML=test_case)
+     read(idata,NML=algo_charge)
+     read(idata,NML=field_solvers)
+     close(idata)
 
   end if
 
-  call mpi_bcast(dt,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nbiter,  1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(fdiag,   1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(fthdiag, 1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(x0,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(y0,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(x1,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(y1,      1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nx,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(ny,      1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vx0,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vy0,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vx1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(vy1,     1,MPI_REAL8   ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
-  call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
+  call mpi_bcast(dt,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nbiter,       1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(fdiag,        1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(fthdiag,      1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(x0,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(y0,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(x1,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(y1,           1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nx,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(ny,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(vx0,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vy0,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vx1,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(vy1,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(nvx,          1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(nvy,          1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(va,           1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(meth,         1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(num_case,     1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(eps,          1, MPI_REAL8  , MPI_MASTER, comm, ierr)
+  call mpi_bcast(poisson_type, 1, MPI_INTEGER, MPI_MASTER, comm, ierr)
+  call mpi_bcast(maxwell_type, 1, MPI_INTEGER, MPI_MASTER, comm, ierr)
 
   this%dt         = dt
   this%nbiter     = nbiter
   this%fdiag      = fdiag
   this%fthdiag    = fthdiag
 
-  this%geomx      => new_logical_mesh_2d(nx,ny,       &
-                                         eta1_min=x0, &
-                                         eta1_max=x1, & 
-                                         eta2_min=y0, &
-                                         eta2_max=y1)
-
+  this%geomx      => new_logical_mesh_2d(nx,ny,x0,x1,y0,y1)
   this%geomv      => new_logical_mesh_2d(nvx,nvy,vx0,vx1,vy0,vy1)
 
   this%nc_eta1    = this%geomx%num_cells1
   this%nc_eta2    = this%geomx%num_cells2
   this%nc_eta3    = this%geomv%num_cells1
   this%nc_eta4    = this%geomv%num_cells2
+
+  this%np_eta1    = this%geomx%num_cells1+1
+  this%np_eta2    = this%geomx%num_cells2+1
+  this%np_eta3    = this%geomv%num_cells1+1
+  this%np_eta4    = this%geomv%num_cells2+1
 
   this%eta1_min   = this%geomx%eta1_min
   this%eta2_min   = this%geomx%eta2_min
@@ -145,25 +191,37 @@ contains
   this%delta_eta3 = this%geomv%delta_eta1
   this%delta_eta4 = this%geomv%delta_eta2
 
+  this%va         = va
+  this%num_case   = num_case
+  this%eps        = eps
+
   if (prank == MPI_MASTER) then
 
        write(*,*) 'physical space: nx, ny, x0, x1, y0, y1, dx, dy'
-       write(*,"(2(i3,1x),6(g13.3,1x))") &
-        this%nc_eta1, this%nc_eta2, this%eta1_min, this%eta1_max, &
-        this%eta2_min, this%eta2_max, this%delta_eta1, this%delta_eta2
+       write(*,"(2(i3,1x),6(g13.3,1x))")nx, ny, x0, x1, y0, y1, &
+                                        this%delta_eta1, this%delta_eta2
        write(*,*) 'velocity space: nvx, nvy, vx0, vx1, vy0, vy1, dvx, dvy'
-       write(*,"(2(i3,1x),6(g13.3,1x))") &
-          this%nc_eta3, this%nc_eta4, this%eta3_min, this%eta3_max, &
-          this%eta4_min, this%eta4_max, this%delta_eta3, this%delta_eta4
+       write(*,"(2(i3,1x),6(g13.3,1x))")nvx, nvy, vx0, vx1, vy0, vy1, &
+                                        this%delta_eta3, this%delta_eta4
        write(*,*) 'dt,nbiter,fdiag,fthdiag'
        write(*,"(g13.3,1x,3i5)") dt,nbiter,fdiag,fthdiag
-  
-  endif
+       write(*,*) " Algo charge "
+       select case(va) 
+       case(0)
+          print*, 'Valis' 
+       case(1)
+          print*, 'Vlasov-Poisson'
+       case(2)
+          print*, " diag charge "
+       case(3)
+          print*, "classic algorithm"
+       end select
 
+  endif
 
   if (.not. is_power_of_two(int(psize,i64))) then     
      print *, 'This test needs to run in a number of processes which is ',&
-          'greater than 4 and a power of 2.'
+          'a power of 2.'
      call sll_halt_collective()
      stop
   end if
@@ -172,7 +230,7 @@ contains
 
  subroutine initialize_vlasov4d_base(this)
 
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   class(vlasov4d_base),intent(inout)    :: this
   sll_int32                             :: error
@@ -195,7 +253,7 @@ contains
 
   this%layout_x => new_layout_4D( sll_world_collective )        
   call initialize_layout_with_distributed_4D_array( &
-             this%nc_eta1, this%nc_eta2, this%nc_eta3, this%nc_eta4,    &
+             this%np_eta1, this%np_eta2, this%np_eta3, this%np_eta4,    &
              1,1,1,int(psize,4),this%layout_x)
 
   if ( prank == MPI_MASTER ) call sll_view_lims_4D( this%layout_x )
@@ -207,8 +265,14 @@ contains
 
   this%layout_v => new_layout_4D( sll_world_collective )
   call initialize_layout_with_distributed_4D_array( &
-              this%nc_eta1, this%nc_eta2, this%nc_eta3, this%nc_eta4,    &
+              this%np_eta1, this%np_eta2, this%np_eta3, this%np_eta4,    &
               1,int(psize,4),1,1,this%layout_v)
+
+  !Layout for plotting
+  this%layout_p => new_layout_4D( sll_world_collective )
+  call initialize_layout_with_distributed_4D_array( &
+              this%nc_eta1, this%nc_eta2, this%nc_eta3, this%nc_eta4,    &
+              1,1,1,int(psize,4),this%layout_p)
 
   if ( prank == MPI_MASTER ) call sll_view_lims_4D( this%layout_v )
   call flush(6)
@@ -222,24 +286,24 @@ contains
   
   if(prank == MPI_MASTER) then
 
-     SLL_ALLOCATE(eta1(this%nc_eta1),error)
-     SLL_ALLOCATE(eta2(this%nc_eta2),error)
-     SLL_ALLOCATE(eta3(this%nc_eta3),error)
-     SLL_ALLOCATE(eta4(this%nc_eta4),error)
+     SLL_ALLOCATE(eta1(this%np_eta1),error)
+     SLL_ALLOCATE(eta2(this%np_eta2),error)
+     SLL_ALLOCATE(eta3(this%np_eta3),error)
+     SLL_ALLOCATE(eta4(this%np_eta4),error)
 
-     do i = 1, this%nc_eta1
+     do i = 1, this%np_eta1
         eta1(i) = this%eta1_min + (i-1)*this%delta_eta1
      end do
 
-     do j = 1, this%nc_eta2
+     do j = 1, this%np_eta2
         eta2(j) = this%eta2_min + (j-1)*this%delta_eta2
      end do
 
-     do k = 1, this%nc_eta3
+     do k = 1, this%np_eta3
         eta3(k) = this%eta1_min + (k-1)*this%delta_eta1
      end do
 
-     do l = 1, this%nc_eta4
+     do l = 1, this%np_eta4
         eta4(l) = this%eta2_min + (l-1)*this%delta_eta2
      end do
 
@@ -247,6 +311,8 @@ contains
      call sll_view_lims_4D(this%layout_x)
      print *,'Printing layout v: '
      call sll_view_lims_4D(this%layout_v)
+     print *,'Printing layout p (for plotting): '
+     call sll_view_lims_4D(this%layout_p)
 
      call sll_hdf5_file_create("mesh4d.h5",file_id,error)
      call sll_hdf5_write_array(file_id,eta1,"/x1",error)
@@ -272,6 +338,7 @@ contains
 
   call delete_layout_4D(this%layout_x)
   call delete_layout_4D(this%layout_v)
+  call delete_layout_4D(this%layout_p)
   SLL_DEALLOCATE_ARRAY(this%f, ierr)
   SLL_DEALLOCATE_ARRAY(this%ft, ierr)
 
@@ -285,9 +352,9 @@ contains
    sll_int32                          :: comm
    sll_real64                         :: dvxvy
 
-   sll_real64, dimension(this%geomx%num_cells1,this%geomx%num_cells2) :: locrho
+   sll_real64, dimension(this%np_eta1,this%np_eta2) :: locrho
 
-   dvxvy = this%geomv%delta_eta1*this%geomv%delta_eta2
+   dvxvy = this%delta_eta3*this%delta_eta4
 
    SLL_ASSERT(this%transposed)
    call compute_local_sizes_4d(this%layout_v, &
@@ -305,24 +372,24 @@ contains
    this%rho(:,:) = 0.
    comm  = sll_world_collective%comm
    call mpi_barrier(comm,error)
-   c=this%geomx%num_cells1*this%geomx%num_cells2
+   c=(this%np_eta1)*(this%np_eta2)
    call mpi_allreduce(locrho,this%rho,c,MPI_REAL8,MPI_SUM,comm,error)
 
  end subroutine compute_charge
 
  subroutine compute_current(this)
 
-   class(vlasov4d_base),intent(inout)                 :: this
-   sll_int32                                          :: error
-   sll_real64                                         :: vx
-   sll_real64                                         :: vy 
-   sll_real64, dimension(this%geomx%num_cells1,this%geomx%num_cells2) :: locjx
-   sll_real64, dimension(this%geomx%num_cells1,this%geomx%num_cells2) :: locjy
-   sll_int32                                          :: c
-   sll_int32                                          :: comm
-   sll_real64                                         :: dvxvy
+   class(vlasov4d_base),intent(inout)                  :: this
+   sll_int32                                           :: error
+   sll_real64                                          :: vx
+   sll_real64                                          :: vy 
+   sll_real64, dimension(this%np_eta1,this%np_eta2):: locjx
+   sll_real64, dimension(this%np_eta1,this%np_eta2):: locjy
+   sll_int32                                           :: c
+   sll_int32                                           :: comm
+   sll_real64                                          :: dvxvy
 
-   dvxvy = this%geomv%delta_eta1*this%geomv%delta_eta2
+   dvxvy = this%delta_eta3*this%delta_eta4
    SLL_ASSERT(this%transposed)
    call compute_local_sizes_4d(this%layout_v,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
 
@@ -336,8 +403,8 @@ contains
       gj = global_indices(2)
       gk = global_indices(3)
       gl = global_indices(4)
-      vx = this%geomv%eta1_min+(gk-1)*this%geomv%delta_eta1
-      vy = this%geomv%eta2_min+(gl-1)*this%geomv%delta_eta2
+      vx = this%eta3_min+(gk-1)*this%delta_eta3
+      vy = this%eta4_min+(gl-1)*this%delta_eta4
       locjx(gi,gj) = locjx(gi,gj) + dvxvy*this%ft(i,j,k,l) * vx
       locjy(gi,gj) = locjy(gi,gj) + dvxvy*this%ft(i,j,k,l) * vy
    end do
@@ -348,7 +415,7 @@ contains
    this%jx(:,:) = 0.; this%jy(:,:) = 0.
    comm   = sll_world_collective%comm
    call mpi_barrier(comm,error)
-   c=this%geomx%num_cells1*this%geomx%num_cells2
+   c=(this%np_eta1)*(this%np_eta2)
    call mpi_allreduce(locjx,this%jx,c, MPI_REAL8,MPI_SUM,comm,error)
    call mpi_allreduce(locjy,this%jy,c, MPI_REAL8,MPI_SUM,comm,error)
 
@@ -361,7 +428,6 @@ contains
    sll_real64,dimension(11) :: auxloc
    sll_int32 :: prank, psize
    sll_real64,dimension(13) :: aux
-   sll_real64,dimension(0:9) :: diag
    sll_int32 :: comm, error
    sll_real64 :: cell_volume
 
@@ -369,9 +435,10 @@ contains
    prank = sll_get_collective_rank(sll_world_collective)
    psize = sll_get_collective_size(sll_world_collective)
 
+   aux    = 0.0
    auxloc = 0.0
-   cell_volume = this%geomx%delta_eta1 * this%geomx%delta_eta2 &
-               * this%geomv%delta_eta1 * this%geomv%delta_eta2
+   cell_volume = this%delta_eta1 * this%delta_eta2 &
+               * this%delta_eta3 * this%delta_eta4
    auxloc(1) = cell_volume * sum(this%f) ! avg(f)
    auxloc(2) = cell_volume * sum(abs(this%f)) ! L1 norm
    auxloc(3) = cell_volume * sum(this%f*this%f) ! L2 norm
@@ -379,11 +446,9 @@ contains
    call mpi_reduce(auxloc,aux(1:11),11,MPI_REAL8,MPI_SUM,MPI_MASTER,comm, error)
 
    if (prank == MPI_MASTER) then
-      diag=0.
-      aux=0.
       aux(13)=t
       aux(12)=nrj
-      write(*,"('time ', g12.3,' test nrj',f10.5)") t, nrj
+      write(*,"('time ', g12.3,' test nrj', 4f10.5)") t, nrj, aux(1:3)
       call time_history(ithf, "thf","(13(1x,e15.6))",aux(1:13))
    end if
 
@@ -412,7 +477,7 @@ contains
  subroutine write_xmf_file(this, iplot)
 
   use hdf5
-  use sll_hdf5_io
+  use sll_hdf5_io_serial
 
   class(vlasov4d_base),intent(in) :: this
   sll_int32, intent(in)           :: iplot
@@ -463,10 +528,10 @@ contains
         call sll_hdf5_file_close(file_id, error)
      end if
 
-     nx1 = this%geomx%num_cells1
-     nx2 = this%geomv%num_cells1
-     nx3 = this%geomx%num_cells2
-     nx4 = this%geomv%num_cells2
+     nx1 = this%np_eta1
+     nx2 = this%np_eta2
+     nx3 = this%np_eta3
+     nx4 = this%np_eta4
 
      call sll_xml_file_create("fvalues_"//cplot//".xmf",file_id,error)
      call write_grid(this,file_id,nx1,nx2,"x1","x2",cplot)
@@ -529,7 +594,8 @@ contains
   character(len=*), optional   :: xname
   character(len=*), optional   :: yname
 
-  write(file_id,"(a)")"<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
+  write(file_id,"(a)") &
+     "<Attribute Name='"//fname//"' AttributeType='Scalar' Center='Node'>"
   write(file_id,"(a,2i5,a)")"<DataItem Dimensions='",ny,nx, &
                             "' NumberType='Float' Precision='8' Format='HDF'>"
   if( present(xname) .and. present(yname)) then
@@ -543,7 +609,7 @@ contains
  end subroutine write_attribute
 
  subroutine write_fx1x2(this,cplot)
- use sll_hdf5_io
+ use sll_hdf5_io_serial
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
@@ -555,7 +621,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
- call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ call compute_local_sizes_4d(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fij(1:loc_sz_i,1:loc_sz_j),error)
  do j=1,loc_sz_j
     do i=1,loc_sz_i
@@ -571,7 +637,7 @@ contains
  end subroutine write_fx1x2
 
  subroutine write_fx1x3(this,cplot)
- use sll_hdf5_io
+ use sll_hdf5_io_serial
  class(vlasov4d_base),intent(in)     :: this
  character(len=*)                    :: cplot
  sll_int32                           :: error
@@ -583,7 +649,7 @@ contains
 
  prank = sll_get_collective_rank(sll_world_collective)
  comm  = sll_world_collective%comm
- call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ call compute_local_sizes_4d(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fik(1:loc_sz_i,1:loc_sz_k),error)
  do k=1,loc_sz_k
     do i=1,loc_sz_i
@@ -611,17 +677,17 @@ contains
  sll_real64, dimension(:,:), pointer :: fjl
 
  prank = sll_get_collective_rank(sll_world_collective)
- call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ call compute_local_sizes_4d(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fjl(1:loc_sz_j,1:loc_sz_l),error)
  do l=1,loc_sz_l
     do j=1,loc_sz_j
        fjl(j,l) = sum(this%f(:,j,:,l))
     end do
  end do
- global_dims = (/this%geomx%num_cells2,this%geomv%num_cells2/)
- offset(1) = get_layout_4D_j_min(this%layout_x,prank)-1
- offset(2) = get_layout_4D_l_min(this%layout_x,prank)-1
- call sll_hdf5_file_create('fx2x4_'//cplot//".h5",pfile_id,error)
+ global_dims = (/this%nc_eta2,this%nc_eta4/)
+ offset(1) = get_layout_4D_j_min(this%layout_p,prank)-1
+ offset(2) = get_layout_4D_l_min(this%layout_p,prank)-1
+ call sll_hdf5_file_create('fx2x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fjl,"/values",error)
  call sll_hdf5_file_close(pfile_id, error)
 
@@ -640,30 +706,29 @@ contains
  sll_real64, dimension(:,:), pointer :: fkl
 
  prank = sll_get_collective_rank(sll_world_collective)
- call compute_local_sizes_4d(this%layout_x,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
+ call compute_local_sizes_4d(this%layout_p,loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
  SLL_CLEAR_ALLOCATE(fkl(1:loc_sz_k,1:loc_sz_l),error)
  do l=1,loc_sz_l
     do k=1,loc_sz_k
        fkl(k,l) = sum(this%f(:,:,k,l))
     end do
  end do
- global_dims = (/this%geomv%num_cells1,this%geomv%num_cells2/)
- offset(1) = get_layout_4D_k_min(this%layout_x,prank)-1
- offset(2) = get_layout_4D_l_min(this%layout_x,prank)-1
- call sll_hdf5_file_create('fx3x4_'//cplot//".h5",pfile_id,error)
+ global_dims = (/this%nc_eta3,this%nc_eta4/)
+ offset(1) = get_layout_4D_k_min(this%layout_p,prank)-1
+ offset(2) = get_layout_4D_l_min(this%layout_p,prank)-1
+ call sll_hdf5_file_create('fx3x4_'//cplot//".h5",MPI_COMM_WORLD,pfile_id,error)
  call sll_hdf5_write_array_2d(pfile_id,global_dims,offset,fkl,"/values",error)
  call sll_hdf5_file_close(pfile_id, error)
 
  end subroutine write_fx3x4
 
  subroutine write_energy(this, time)
- class(vlasov4d_base) :: this
- sll_real64 :: time, nrj
-
- nrj=sum(this%ex*this%ex+this%ey*this%ey)*this%delta_eta1*this%delta_eta2
- nrj=0.5_f64*log(nrj)
- call thdiag(this,nrj,time)
-
+   class(vlasov4d_base) :: this
+   sll_real64 :: time, nrj
+   
+   nrj=sum(this%ex*this%ex+this%ey*this%ey)*this%delta_eta1*this%delta_eta2
+   call thdiag(this,nrj,time)
+   
  end subroutine write_energy
 
 end module sll_vlasov4d_base

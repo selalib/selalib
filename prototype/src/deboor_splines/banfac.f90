@@ -184,6 +184,10 @@ subroutine banfac ( w, nroww, nrow, nbandl, nbandu, iflag )
 !  W(MIDDLE,I) is the pivot for the I-th step.
 !
     if ( w(middle,i) == 0.0D+00 ) then
+       !do j = 1, nrow
+       !   print*, 'col',j, 'values', w(:,j)
+       !end do
+       !print*, middle
       iflag = 2
       write ( *, '(a)' ) ' '
       write ( *, '(a)' ) 'BANFAC - Fatal error!'

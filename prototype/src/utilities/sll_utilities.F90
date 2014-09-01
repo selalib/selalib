@@ -61,6 +61,12 @@ module sll_utilities
      module procedure display_vector_real
   end interface sll_display
 
+  logical, private :: flag = .true.
+
+  interface sll_factorial
+     module procedure factorial_int32, factorial_int64
+  end interface sll_factorial
+
 contains
 
   function is_power_of_two( n )
@@ -85,6 +91,52 @@ contains
     end if
   end function is_even
 
+  ! It would have been nice to declare the next functions as 'pure' functions,
+  ! but it is safer to be able to indicate when their arguments have fallen
+  ! out of range as this number is so limited anyway.
+  function factorial_int32(n) result(fac)
+    sll_int64 :: fac
+    sll_int32, intent(in) :: n
+    sll_int64 :: acc
+    sll_int64 :: i
+
+    if(n < 0) then
+       print *, 'ERROR, factorial_int32(): n < 0 or n > 20, if latter, ', &
+            'function will overflow a 64-bit integer. n =  ', n
+    end if
+
+    acc = 1
+    if( n >= 1 ) then
+       do i=n,1,-1
+          acc = acc*i
+       end do
+    end if
+    ! case n == 0 is already taken care of. No protection for negative input.
+    fac = acc
+  end function factorial_int32
+
+  function factorial_int64(n) result(fac)
+    sll_int64 :: fac
+    sll_int64, intent(in) :: n
+    sll_int64 :: acc
+    sll_int64 :: i
+
+    if( (n < 0) .or. (n > 20) ) then
+       print *, 'ERROR, factorial_int64(): either a negative n was passed: ', &
+            'or n > 20, which will overflow a 64-bit integer. n = ', n
+    end if
+
+    acc = 1
+    if( n >= 1 ) then
+       do i=n,1,-1
+          acc = acc*i
+       end do
+    end if
+    ! case n == 0 is already taken care of. 
+    fac = acc
+  end function factorial_int64
+
+
 !> Convert an integer < 9999 to a 4 characters string
   subroutine int2string( istep, cstep )
     integer, intent(in) :: istep             !< input integer
@@ -92,15 +144,21 @@ contains
     character(len=1) :: aa,bb,cc,dd
     integer :: kk1, kk2, kk3, kk4
 
-    kk1 = istep/1000
-    aa  = char(kk1 + 48)
-    kk2 = (istep - kk1*1000)/100
-    bb  = char(kk2 + 48)
-    kk3 = (istep - (kk1*1000) - (kk2*100))/10
-    cc  = char(kk3 + 48)
-    kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
-    dd  = char(kk4 + 48)
-    cstep = aa//bb//cc//dd
+    if ( istep >= 0 .and. istep < 10000) then
+       kk1 = istep/1000
+       aa  = char(kk1 + 48)
+       kk2 = (istep - kk1*1000)/100
+       bb  = char(kk2 + 48)
+       kk3 = (istep - (kk1*1000) - (kk2*100))/10
+       cc  = char(kk3 + 48)
+       kk4 = (istep - (kk1*1000) - (kk2*100) - (kk3*10))/1
+       dd  = char(kk4 + 48)
+       cstep = aa//bb//cc//dd
+    else
+       call errout( 6, 'W', 'int2string', 108, 'index is negative or greater than 9999' )
+       print*, 'index =', istep
+       cstep = 'xxxx'
+    end if
 
   end subroutine int2string
 
@@ -276,8 +334,10 @@ subroutine initialize_file(data_file_id, thf_file_id)
   if (IO_stat/=0) STOP "Miss argument file.nml"
 
   call sll_new_file_id(thf_file_id, error)
-  open(thf_file_id,file="thf.dat",IOStat=IO_stat)
+  open(thf_file_id,file="thf.dat",IOStat=IO_stat, position='append')
   if (IO_stat/=0) STOP "erreur d'ouverture du fichier thf.dat"
+  rewind(thf_file_id)
+  close(thf_file_id)
 
 end subroutine initialize_file
   
@@ -289,12 +349,43 @@ subroutine time_history(file_id, desc, fformat, array)
    sll_real64, dimension(:) :: array !< data array
     
    if (desc(1:3)=="thf") then
-      !print *,'array', array
+      open(file_id,file="thf.dat",position='append')
+      if (flag) then
+         rewind(file_id)
+         flag = .false.
+      end if
       write(file_id,fformat) array
+      close(file_id)
    else
       write(*,*) desc," not recognized"
    endif
     
 end subroutine time_history
+
+subroutine mpe_decomp1d(n,numprocs,myid,s,e)
+
+   sll_int32 :: n, numprocs, myid, s, e
+   sll_int32 :: nlocal
+   sll_int32 :: deficit
+
+   !------------------------------------------------------------------------
+   !  From the MPE library
+   !  This file contains a routine for producing a decomposition of a 1-d 
+   !  array when given a number of processors.  It may be used in "direct" 
+   !  product decomposition.  The values returned assume a "global" domain 
+   !  in [1:n]
+   !------------------------------------------------------------------------
+
+   nlocal  = n / numprocs
+   s       = myid * nlocal + 1
+   deficit = mod(n,numprocs)
+   s       = s + min(myid,deficit)
+   if (myid  < deficit) then
+       nlocal = nlocal + 1
+   endif
+   e = s + nlocal - 1
+   if (e  >  n .or. myid == numprocs-1) e = n
+
+end subroutine mpe_decomp1d
 
 end module sll_utilities

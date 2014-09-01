@@ -434,7 +434,8 @@ F) Installing
 (*) Setting the install prefix at configure time
 
     $ ./do-configure \
-      -D CMAKE_INSTALL_PREFIX:PATH=$HOME/local
+      -D CMAKE_INSTALL_PREFIX:PATH=$HOME/local \
+      -D SLL_BUILD_PACKAGE:BOOL=ON
 
   NOTE: The script 'do-configure' is just a simple shell script that calls
   CMake as shown above.
