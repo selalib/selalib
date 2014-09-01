@@ -35,5 +35,7 @@ end do
 
 call write_field_hex_mesh_xmf(mesh, field, 'field')
 
+call delete(mesh)
+
 end program test_hex_mesh
 
