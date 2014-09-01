@@ -44,10 +44,16 @@ use sll_tri_mesh_xmf
      ! Matrix containg global indices arranged from lower corner of hexagon 
      ! and following the r2, then r1 direction
      sll_int32, pointer, dimension(:) :: global_indices ! (1:num_pts_tot)
+
+     ! The following two tables are not always needed, to avoid useless allocation
+     ! and initialization we define a flag to know if they are required
+     sll_int32 :: EXTRA_TABLES
      ! matrix containing the cartesian coordinates of the centers of the triangles
      sll_real64, pointer, dimension(:,:) :: center_cartesian_coord ! (1:2,1:num_triangles)     
-     ! matrix containing the index of the respective center of the 2 triangles at the top of most points
+     ! matrix containing the index of the respective center 
+     ! of the 2 triangles at the top of most points
      sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
+
 
    contains
      procedure, pass(mesh) :: x1_node 
@@ -99,7 +105,8 @@ contains
        r22, &
        r31, &
        r32, &
-       radius) result(mesh)
+       radius, &
+       EXTRA_TABLES) result(mesh)
 
     type(hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: num_cells
@@ -109,6 +116,7 @@ contains
     sll_real64, optional, intent(in) :: r11, r12
     sll_real64, optional, intent(in) :: r21, r22
     sll_real64, optional, intent(in) :: r31, r32
+    sll_int32,  optional, intent(in) :: EXTRA_TABLES
     sll_int32 :: ierr
 
     SLL_ALLOCATE(mesh, ierr)
@@ -124,7 +132,8 @@ contains
          r21, &
          r22, &
          r31, &
-         r32)
+         r32, &
+         EXTRA_TABLES)
 
   end function new_hex_mesh_2d
 
@@ -140,7 +149,8 @@ contains
        r2_x1,     &
        r2_x2,     &
        r3_x1,     &
-       r3_x2)
+       r3_x2,     &
+       EXTRA_TABLES)
 
 
     type(hex_mesh_2d), pointer :: mesh
@@ -151,6 +161,7 @@ contains
     sll_real64, optional, intent(in) :: r1_x1, r1_x2
     sll_real64, optional, intent(in) :: r2_x1, r2_x2
     sll_real64, optional, intent(in) :: r3_x1, r3_x2
+    sll_int32,  optional, intent(in) :: EXTRA_TABLES
     sll_int32  :: ierr
     sll_int32  :: i, j, global
     sll_real64 :: position_x1
@@ -165,8 +176,10 @@ contains
     ! By default the hexagonal mesh is centered at the (0,0) point
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, center_x1, center_x1, 0.0_f64 )
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, center_x2, center_x2, 0.0_f64 )
+
     ! By default the hexagonal mesh has a radius of 1.
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, radius, radius, 1.0_f64 )
+
     ! By default the hexagonal mesh has for generator vectors :
     ! r1 = (r11, r12) = ( sqrt(3)/2, 1/2 )
     ! r2 = (r21, r22) = (-sqrt(3)/2, 1/2 )
@@ -180,10 +193,10 @@ contains
 
     mesh%num_cells = num_cells
     mesh%delta = mesh%radius/real(num_cells,f64)
+    
     ! The formula is = 6*sum(num_cells)+1 which simplifies to :
     mesh%num_pts_tot   = 3 * mesh%num_cells * (mesh%num_cells + 1) + 1
-    mesh%num_triangles = 6 * num_cells * num_cells
-
+    
     ! resizing :
     mesh%r1_x1 = mesh%r1_x1 * mesh%delta
     mesh%r1_x2 = mesh%r1_x2 * mesh%delta
@@ -208,11 +221,12 @@ contains
     ! Allocation and initialization of coordinate matrices
     ! and conectivity matrix
     SLL_ALLOCATE(mesh%cartesian_coord(2, mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%hex_coord(2, mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%global_indices(mesh%num_pts_tot), ierr)
+    SLL_ALLOCATE(mesh%hex_coord      (2, mesh%num_pts_tot), ierr)
+    SLL_ALLOCATE(mesh%global_indices    (mesh%num_pts_tot), ierr)
     mesh%cartesian_coord(:,:)          = 0._f64
     mesh%hex_coord(:,:)                = 0
     mesh%global_indices(:)             = -1
+    
     ! Initializing coordinates of first mesh point (ie. center of hexagon)
     mesh%cartesian_coord(1,1) = mesh%center_x1
     mesh%cartesian_coord(2,1) = mesh%center_x2
@@ -337,15 +351,20 @@ contains
 
        mesh%global_indices(index_tab)= global
 
-    enddo
+    end do
 
     ! if needed we can compute the cartesian coordiantes and the indices 
     ! of the centers of the triangles of the mesh
+    TEST_PRESENCE_AND_ASSIGN_VAL( mesh, EXTRA_TABLES, EXTRA_TABLES, 0 )
+    if (mesh%EXTRA_TABLES.eq.1) then 
+       mesh%num_triangles = 6 * num_cells * num_cells
+       SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
+       SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+       call init_center_points_triangle(mesh)
+    else
+       mesh%num_triangles = -1
+    end if
 
-    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
-    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
-
-    call init_center_points_triangle(mesh)
 
     ! ----------------------------------------- END MATRICES INITIALIZATION 
     ! ---------------------------------------------------------------------
@@ -353,11 +372,14 @@ contains
   end subroutine initialize_hex_mesh_2d
 
 
+
   subroutine init_center_points_triangle(mesh)
     class(hex_mesh_2d) :: mesh
     sll_int32          :: center_index, global
     sll_int32          :: k1, k2
-    sll_real64         :: x1, x2, x3, y1, y2, y3, xx, yy, r1x1
+    sll_real64         :: x1, x2, x3
+    sll_real64         :: y1, y2, y3
+    sll_real64         :: xx, yy, r1x1
     sll_real64         :: jacob, k1c, k2c
     logical            :: inside
 
@@ -463,11 +485,12 @@ contains
 
     if (k1.le.0) then
        k    = num_cells + k1
-       nk1  = floor( num_cells*k + k*(k+1)*0.5 ) !this value is always an sll_int32, floor avoids the transformation
+       !this value is always an integer, floor avoids the transformation
+       nk1  = floor( num_cells*k + k*(k+1)*0.5 ) 
        nk2  = k2 + num_cells_plus1
     else
        ! n0 is the total number of points from (-num_cells,-num_cells) to 
-       ! ( 0,numcells)
+       ! ( 0, numcells)
        n0  = floor( num_cells**2 + num_cells*num_cells_plus1*0.5 )
        nk1 = n0 + k1*(2*num_cells + 1) - floor( k1*(k1-1)*0.5 )
        nk2 = k2 + num_cells_plus1 - k1
@@ -675,9 +698,9 @@ contains
     ! (see gloval_index(...) and global_to_local(...) for conventions) 
     ! ie. local_to_global(1, i) = i
     class(hex_mesh_2d) :: mesh
-    sll_int32 :: ref_index, local
     sll_int32 :: k1_ref, k2_ref
     sll_int32 :: k1_loc, k2_loc
+    sll_int32 :: local
     sll_int32 :: global
 
 

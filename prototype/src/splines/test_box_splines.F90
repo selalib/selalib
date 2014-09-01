@@ -119,9 +119,9 @@ do num_cells = 40,40,20
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
       !--------- GAUSSIAN PULSE : 
-!       f_init(i) = gauss_amp * &
-!            exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
-!            + (x2(i)-gauss_x2)**2 / gauss_sig**2))
+      !       f_init(i) = gauss_amp * &
+      !            exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
+      !            + (x2(i)-gauss_x2)**2 / gauss_sig**2))
       !--------- DIOCOTRON : 
       dioco_r= sqrt(x1(i)**2+x2(i)**2)
       if (x2(i)>=0) then
