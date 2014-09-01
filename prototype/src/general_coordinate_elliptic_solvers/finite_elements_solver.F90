@@ -815,7 +815,7 @@ contains ! =============================================================
        source,&
        phi)
     use sll_timer
-    class(finite_elements_solver) :: solv
+    type(finite_elements_solver) :: solv
     class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
     class(sll_scalar_field_2d_base), intent(in),target  :: source
     sll_int32 :: i
@@ -992,7 +992,7 @@ contains ! =============================================================
        Source_loc)
 
     
-    class(finite_elements_solver) :: solv
+    type(finite_elements_solver) :: solv
     sll_int32, intent(in)         :: cell_index
     class(sll_scalar_field_2d_base), pointer :: a11_field_mat
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
@@ -1206,7 +1206,7 @@ contains ! =============================================================
        source_at_quad, &
        M_source_loc)
 
-    class(finite_elements_solver) :: solv
+    type(finite_elements_solver) :: solv
     sll_int32, intent(in)         :: cell_index
     sll_real64, dimension(:), intent(in)   :: source_at_quad
     sll_real64, dimension(:), intent(out)  :: M_source_loc
