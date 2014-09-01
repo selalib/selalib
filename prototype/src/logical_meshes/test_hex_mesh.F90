@@ -1,4 +1,4 @@
-program test_box_splines
+program test_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -35,5 +35,5 @@ end do
 
 call write_field_hex_mesh_xmf(mesh, field, 'field')
 
-end program test_box_splines
+end program test_hex_mesh
 
