@@ -5,7 +5,7 @@
 import numpy as np
 from   zealpy_gyrokin_anal import zealpy_gyrokin_anal
 import matplotlib.pyplot as mpp
-import pyreldisp_plot as pyp
+#import pyreldisp_plot as pyp
 
 #------------------------------------
 # INPUT DATAS (defined as GYSELA)
@@ -27,7 +27,7 @@ deltarn      = 0.2
 #--> Set of considered modes (m,n) 
 #-->  for (mm_min < m < mm_max , nn_min < n < nn_max)
 mm_min       = 1
-mm_max       = 32
+mm_max       = 10 #32
 nn_min       = 1
 nn_max       = 4
 #--> Choice of the box where zeros will be search
@@ -35,6 +35,7 @@ xmin         = -1.
 xmax         = 1.
 ymin         = 0.0001
 ymax         = 0.1
+iota = 0.001
 
 #------------------------------------------------------------
 # Normalization to obtain the same profiles than in GYSELA
@@ -64,7 +65,7 @@ zp = zealpy_gyrokin_anal(
     NNr=NNr,rmin=rmin,Lr=Lr,
     invLTi=invLTi,deltarTi=deltarTi,
     invLTe=invLTe,deltarTe=deltarTe,
-    invLn0=invLn,deltarn0=deltarn)
+    invLn0=invLn,deltarn0=deltarn,iota=iota)
 
 nb_mm = mm_max - mm_min + 1
 nb_nn = nn_max - nn_min + 1
@@ -85,7 +86,7 @@ for nn in np.arange(nn_min,nn_max+1,1):
         #---> Find all the zeros contained is the box defined before
         zp.get_zeros(xmin,xmax,ymin,ymax)
 
-        if (size(zp.zeros)!=0):
+        if (np.size(zp.zeros)!=0):
             #---> Select the most unstable modes
             mostunstable[indx_mm,indx_nn] = \
                 zp.zeros[np.argmax(np.imag(zp.zeros))]

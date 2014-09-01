@@ -383,8 +383,8 @@ contains
   call mpi_bcast(nvx,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
   call mpi_bcast(nvy,     1,MPI_INTEGER ,MPI_MASTER,comm,ierr)
 
-  call new(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
-  call new(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
+  call initialize(geomx,x0,y0,x1,y1,nx,ny,iflag,"perxy")
+  call initialize(geomv,vx0,vy0,vx1,vy1,nvx,nvy,iflag,"natxy")
 
  end subroutine initglobal
 
@@ -445,9 +445,9 @@ contains
 
   
 
-  call new(geomx,a*rhomin,0._f64,a*rhomax,2._f64*sll_pi,Nr+1,Ntheta,iflag,"pery")  
+  call initialize(geomx,a*rhomin,0._f64,a*rhomax,2._f64*sll_pi,Nr+1,Ntheta,iflag,"pery")  
   !call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perxy")
-  call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perx")
+  call initialize(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perx")
   R0 = a*aspect_ratio
   
  end subroutine initglobal_dk
@@ -577,9 +577,9 @@ contains
 
   
 
-  call new(geomx,a*rhomin,0._f64,a*rhomax,2._f64*sll_pi,Nr+1,Ntheta,iflag,"pery")  
-  !call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perxy")
-  call new(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perx")
+  call initialize(geomx,a*rhomin,0._f64,a*rhomax,2._f64*sll_pi,Nr+1,Ntheta,iflag,"pery")  
+  !call initialize(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perxy")
+  call initialize(geomv,0._f64,-vmax,Lz,vmax,Nphi,Nvpar,iflag,"perx")
   
   R0 = a*aspect_ratio
 

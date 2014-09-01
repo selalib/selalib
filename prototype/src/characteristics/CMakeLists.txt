@@ -1,5 +1,3 @@
-IF( NOT STDF95)
-
   SET( CHARACTERISTICS_SRC_FILES 
 	sll_characteristics_1d_explicit_euler.F90
 	sll_characteristics_1d_explicit_euler_conservative.F90
@@ -48,9 +46,6 @@ IF( NOT STDF95)
     test_characteristics_1d_trapezoid_conservative
     sll_characteristics)
 
-
-
-
   ADD_EXECUTABLE(
     test_characteristics_2d_explicit_euler
     unit_test_characteristics_2d_explicit_euler.F90)
@@ -65,14 +60,9 @@ IF( NOT STDF95)
     test_characteristics_2d_verlet
     sll_characteristics)
 
-
   ADD_EXECUTABLE(
     test_characteristics_2d_explicit_euler_conservative
     unit_test_characteristics_2d_explicit_euler_conservative.F90)
   TARGET_LINK_LIBRARIES(
     test_characteristics_2d_explicit_euler_conservative
     sll_characteristics)
-
-
-
-ENDIF(NOT STDF95)

@@ -42,6 +42,21 @@ ENDIF(NOT LAPACK_FOUND)
 
 SET(SILO_ENABLED OFF CACHE BOOL "Use SILO Library from LLNL ")
 SET(FFTW_ENABLED ON CACHE BOOL "Use fftw library " )
+SET(MPI_MODULE_ENABLED ON CACHE BOOL "Use MPI library " )
+SET(HDF5_ENABLED ON CACHE BOOL "Enable HDF5 ")
+SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
+
+INCLUDE(MPIConfig)
+SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
+
+
+INCLUDE(HDF5Config)
+IF(HDF5_IS_PARALLEL) 
+   MESSAGE(STATUS "HDF5 parallel supported")
+ELSE()
+    MESSAGE(SEND_ERROR "HDF5 parallel not supported")
+    MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
+ENDIF()
 
 IF(SILO_ENABLED) 
    FIND_PACKAGE(SILO  REQUIRED)
@@ -55,37 +70,20 @@ ENDIF()
 IF(FFTW_ENABLED AND NOT FFTW_FOUND)
    FIND_PACKAGE(FFTW)
    IF(FFTW_FOUND)
-      ADD_DEFINITIONS(-D_FFTW)
+      ADD_DEFINITIONS(-DFFTW)
       INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
    ENDIF()
 ENDIF()
-
-IF(NOT MPI_FOUND)
-   INCLUDE(MPIConfig)
-ENDIF(NOT MPI_FOUND)
-SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
-
-SET(HDF5_PARALLEL_ENABLED ON CACHE BOOL "Enable HDF5 parallel")
-
-IF(NOT HDF5_FOUND)
-   INCLUDE(HDF5Config)
-   IF(HDF5_IS_PARALLEL) 
-      MESSAGE(STATUS "HDF5 parallel supported")
-   ELSE()
-      MESSAGE(SEND_ERROR "HDF5 parallel not supported")
-      MESSAGE(SEND_ERROR "./configure --enable-fortran --enable-parallel CC=mpicc FC=mpif90")
-   ENDIF()
-ENDIF(NOT HDF5_FOUND)
 
 SET(FFT_LIB "FFTW")
 SET(FFTPACK_LIBRARIES "dfftpack")
 
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
-
 IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/fftpack 
                     ${CMAKE_BINARY_DIR}/dfftpack)
+   SET(SLL_BUILD_PACKAGE ON)
    ADD_SUBDIRECTORY(${CMAKE_SOURCE_DIR}/../../prototype/src/package 
                     ${CMAKE_BINARY_DIR}/package)
 ENDIF()
@@ -109,12 +107,13 @@ SET(SLV2D_SRC silo_module.F90
               vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d STATIC ${SLV2D_SRC})
-ADD_DEPENDENCIES(slv2d fftpack selalib)
+TARGET_LINK_LIBRARIES(slv2d selalib dfftpack ${LAPACK_LIBRARIES} ${HDF5_LIBRARIES})
 
 MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:SILO_LIBRARIES:${SILO_LIBRARIES}")
 MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
 MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
 MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
+MESSAGE(STATUS "${CMAKE_PROJECT_NAME}:LAPACK_LIBRARIES:${LAPACK_LIBRARIES}")
 
 SET(SLV2D_CSL2D_SRC silo_module.F90
               diagnostiques.F90
@@ -136,9 +135,10 @@ SET(SLV2D_CSL2D_SRC silo_module.F90
               vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d_csl2d STATIC ${SLV2D_CSL2D_SRC})
-
-ADD_DEPENDENCIES(slv2d_csl2d selalib-mpi dfftpack)
-
+TARGET_LINK_LIBRARIES(slv2d_csl2d selalib
+                                  ${FFTPACK_LIBRARIES} 
+                                  ${HDF5_LIBRARIES}
+                                  ${LAPACK_LIBRARIES})
 
 SET(SLV2D_NON_UNIF_V_SRC silo_module.F90
               diagnostiques.F90
@@ -160,9 +160,10 @@ SET(SLV2D_NON_UNIF_V_SRC silo_module.F90
               vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d_non_unif_v STATIC ${SLV2D_NON_UNIF_V_SRC})
-
-ADD_DEPENDENCIES(slv2d_non_unif_v selalib-mpi dfftpack)
-
+TARGET_LINK_LIBRARIES(slv2d_non_unif_v selalib
+                                       ${FFTPACK_LIBRARIES} 
+                                       ${LAPACK_LIBRARIES}
+                                       ${HDF5_LIBRARIES})
 
 SET(SLV2D_DK_SRC silo_module.F90
               diagnostiques.F90
@@ -183,47 +184,37 @@ SET(SLV2D_DK_SRC silo_module.F90
               vlasov4d_plot.F90)
 
 ADD_LIBRARY(slv2d_dk STATIC ${SLV2D_DK_SRC})
+TARGET_LINK_LIBRARIES(slv2d_dk selalib
+                               ${FFTW_LIBRARIES} 
+                               ${LAPACK_LIBRARIES}
+                               ${HDF5_LIBRARIES})
 
-ADD_DEPENDENCIES(slv2d_dk selalib-mpi dfftpack)
-
-
-
-
-
-MESSAGE(STATUS "SLV2D:SILO_LIBRARIES:${SILO_LIBRARIES}")
-MESSAGE(STATUS "SLV2D:FFTPACK_LIBRARIES:${FFTPACK_LIBRARIES}")
-MESSAGE(STATUS "SLV2D:FFTW_LIBRARIES:${FFTW_LIBRARIES}")
-MESSAGE(STATUS "SLV2D:HDF5_LIBRARIES:${HDF5_LIBRARIES}")
-
-SET(LIBS selalib 
-         ${SILO_LIBRARIES} 
-         ${FFTPACK_LIBRARIES} 
-         ${FFTW_LIBRARIES} 
-         ${HDF5_LIBRARIES})
 
 ADD_EXECUTABLE(vp4d_transpose vp4d_transpose.F90)
-TARGET_LINK_LIBRARIES(vp4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(vp4d_transpose slv2d)
 
 ADD_EXECUTABLE(vp4d_csl2d vp4d_csl2d.F90)
-TARGET_LINK_LIBRARIES(vp4d_csl2d slv2d_csl2d ${LIBS} ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(vp4d_csl2d slv2d_csl2d)
 
 
 ADD_EXECUTABLE(vp4d_dk vp4d_dk.F90)
-TARGET_LINK_LIBRARIES(vp4d_dk slv2d_dk ${LIBS} ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(vp4d_dk slv2d_dk)
 
 
 ADD_EXECUTABLE(vp2d_keen_non_unif_v vp2d_keen_non_unif_v.F90)
-TARGET_LINK_LIBRARIES(vp2d_keen_non_unif_v slv2d_non_unif_v ${LIBS} ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(vp2d_keen_non_unif_v slv2d_non_unif_v)
 
 
+IF (CMAKE_PROJECT_NAME MATCHES "SLV2D")
 ADD_EXECUTABLE(vm4d_transpose vm4d_transpose.F90)
-TARGET_LINK_LIBRARIES(vm4d_transpose slv2d ${LIBS} ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(vm4d_transpose slv2d)
+ENDIF()
 
 ADD_EXECUTABLE(vp4d_transpose_cubic vp4d_cubic.F90)
-TARGET_LINK_LIBRARIES(vp4d_transpose_cubic slv2d ${LIBS})
+TARGET_LINK_LIBRARIES(vp4d_transpose_cubic slv2d)
 
 ADD_EXECUTABLE(vp2d_keen vp2d_keen.F90)
-TARGET_LINK_LIBRARIES(vp2d_keen slv2d ${LIBS} ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(vp2d_keen slv2d)
 
 ENABLE_TESTING()
 
@@ -234,10 +225,10 @@ FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../input/slv2d.nml" DESTINATION ${CMAKE_C
 SET(ARGS "slv2d.nml")
 
 ADD_MPI_TEST(test_vp4d       vp4d_transpose       ${PROCS} ${ARGS})
-ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})
+#ADD_MPI_TEST(test_vm4d       vm4d_transpose       ${PROCS} ${ARGS})
 ADD_MPI_TEST(test_vp4d_cubic vp4d_transpose_cubic ${PROCS} ${ARGS})
 
 SET_TESTS_PROPERTIES(test_vp4d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(test_vm4d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+#SET_TESTS_PROPERTIES(test_vm4d          PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(test_vp4d_cubic    PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 

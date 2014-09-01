@@ -47,18 +47,18 @@ module sll_mesh_2d
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
      end function real_function_2D_real
-     function scalar_function_2D( eta1, eta2 )
+     function scalar_function_mesh_2d( eta1, eta2 )
        use sll_working_precision
-       sll_real64 :: scalar_function_2D
+       sll_real64 :: scalar_function_mesh_2d
        sll_real64, intent(in)  :: eta1
        sll_real64, intent(in)  :: eta2
-     end function scalar_function_2D
+     end function scalar_function_mesh_2d
   end interface
 
   type, extends(mesh_2d) :: mesh_2d_analytic
-     procedure(scalar_function_2D), pointer, nopass :: x1_func
-     procedure(scalar_function_2D), pointer, nopass :: x2_func
-     procedure(scalar_function_2D), pointer, nopass :: Jacobian_func
+     procedure(scalar_function_mesh_2d), pointer, nopass :: x1_func
+     procedure(scalar_function_mesh_2d), pointer, nopass :: x2_func
+     procedure(scalar_function_mesh_2d), pointer, nopass :: Jacobian_func
    contains
      procedure, pass :: x1_at_node => x1_int
      procedure, pass :: x2_at_node => x2_int
@@ -76,7 +76,7 @@ contains   ! *****************************************************************
     class(mesh_2d_analytic)  :: this 
     sll_int32 :: nc1
     sll_int32 :: nc2
-    procedure(scalar_function_2D), pointer :: x1, x2, jac
+    procedure(scalar_function_mesh_2d), pointer :: x1, x2, jac
     sll_int32, optional :: bt1
     sll_int32, optional :: bt2
     ! local variables

@@ -65,7 +65,9 @@ tolmax   = 1.0e-4_f64
 call initialize_poisson_polar_mudpack(poisson,  &
                                       r_min, r_max, nr, &
                                       theta_min, theta_max, ntheta, &
-                                      DIRICHLET, DIRICHLET, PERIODIC, PERIODIC )
+                                      SLL_DIRICHLET, SLL_DIRICHLET, &
+                                      SLL_PERIODIC, &
+                                      SLL_PERIODIC )
 do i =1,nr
    do j=1,ntheta
       rhs(i,j) = f_cos(r(i), theta(j))

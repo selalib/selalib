@@ -64,16 +64,16 @@ Add module
 A module is a library. To add library to the current CMakeList.txt just add the lines ::
 
  add_library(<LIBRARY_NAME> STATIC <SOURCE.F90>)
- add_dependencies(<LIBRARY_NAME> <LIST_OF_DEPENDENCIES>)
+ target_link_libraries(<LIBRARY_NAME> <LIST_OF_DEPENDENCIES>)
 
-The <LIST_OF_DEPENDENCIES> is a collection of library that is required to build sll_fft.
+The <LIST_OF_DEPENDENCIES> is a collection of library that is required to link with build sll_fft.
 
 Example :
 
 # src/fft/CMakeList.txt ::
 
  add_library(sll_fft STATIC sll_fft.F90)
- add_dependencies(sll_fft sll_working_precision sll_memory sll_assertion)
+ target_link_libraries(sll_fft sll_working_precision sll_memory sll_assertion)
 
 Add program
 ^^^^^^^^^^^
@@ -82,9 +82,7 @@ A program is an executable. In SeLaLib the executable are in build/bin/.
 To add executable to the cmake tree add this lines in the current CMakeList ::
 
  add_executable(<EXECUTABLE_NAME> <FILE_NAME.F90>)
- target_link_libraries(test_fft <LIST_OF_MODULE_USE_WHEN_LINKINK>)
-
-.. note :: It's recommanded to use an order from the more high-level to the more low-level when you describle the list of module use when linking.
+ target_link_libraries(test_fft <LIBRARY_NAME>)
 
 Example :
 
@@ -92,7 +90,7 @@ Example :
 
  ...
  add_executable(test_fft unit_test.F90)
- target_link_libraries(test_fft sll_fft sll_assertion sll_memory sll_working_precision)
+ target_link_libraries(test_fft sll_fft) 
  ... 
 
 

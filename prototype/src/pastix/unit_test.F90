@@ -102,16 +102,23 @@ write(*,"(a10,6i4)")   "ia    : ", linear_solver%colptr(1:6)
 write(*,"(a10,9i3)")   "ja    : ", linear_solver%row(1:9)
 write(*,"(a10,9f6.1)") "avals : ", linear_solver%avals(1:9)
 
+print *,'#enter factorize'
 call factorize(linear_solver)
+print *,'#end of factorize'
 X = B
+print *,'#enter solve'
 call solve(linear_solver,X)
+print *,'#end of solve'
 write(*,100) X
 call delete(linear_solver)
+print *,'#end of delete'
 
 
-call initialize_murge()
-call delete_murge()
+!call initialize_murge()
+!call delete_murge()
 
 call sll_halt_collective()
+
+print *,'#PASSED'
 
 end program test_pastix

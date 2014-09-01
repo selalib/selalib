@@ -30,7 +30,10 @@
 
 &advector
   advect2d_case = "SLL_BSL"    
-  f_interp2d_case = "SLL_CUBIC_SPLINES"
+  !f_interp2d_case = "SLL_CUBIC_SPLINES"
+  f_interp2d_case = "SLL_HERMITE"
+  hermite_degree_eta1 = 6
+  hermite_degree_eta2 = 6
   phi_interp2d_case = "SLL_CUBIC_SPLINES"
   !charac2d_case = "SLL_EULER"
   charac2d_case = "SLL_VERLET"

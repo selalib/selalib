@@ -55,11 +55,7 @@ program unit_test_1d
 !  map_a => new_mapped_mesh_2D_general( ANALYTIC_MAP )
 
   !print *, x1_polar_f(1.0_f64,1.0_f64)
-#ifdef STDF95
-  call initialize( map_a, &
-#else
   call map_a%initialize( &
-#endif
        "map_a", &
        NPTS1, &
        linear_map_f, &
@@ -67,33 +63,19 @@ program unit_test_1d
        params )
   print *, 'initialized analytic map in 1D'
 
-#ifdef STDF95
-  print *, 'jacobian_1d(map_a, 0.5) = ', linear_map_jac_f(0.5_f64)
-#else
   print *, 'jacobian_1d(map_a, 0.5) = ', map_a%jacobian(0.5_f64)
-#endif
 
   acc  = 0.0_f64
   acc1 = 0.0_f64
   do i=0,NPTS1-1
      eta1    = real(i,f64)*h1
-#ifdef STDF95
-     node_a  = x1_at_node(map_a,i+1)
-     val_a   = linear_map_f(eta1)
-#else
      node_a  = map_a%x1_at_node(i+1)
      val_a   = map_a%x1(eta1)
-#endif
      acc     = acc + abs(node_a-val_a)
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1)
 
-#ifdef STDF95
-  call write_to_file(map_a)
-#else
   call map_a%write_to_file()
-#endif
-
 
   print *, '**********************************************************'
   print *, '              TESTING THE DISCRETE MAP                    '
@@ -101,11 +83,7 @@ program unit_test_1d
 
   print *, 'initializing the interpolator: '
 
-#ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize( x1_interp,&
-#else
   call x1_interp%initialize( &
-#endif
        NPTS1, &
        0.0_f64, &
        1.0_f64, &
@@ -113,11 +91,7 @@ program unit_test_1d
        slope_left=x1_eta1_min, &
        slope_right=x1_eta1_max )
 
-#ifdef STDF95
-  call cubic_spline_1d_interpolator_initialize( j_interp,&
-#else
   call j_interp%initialize( &
-#endif
        NPTS1, &
        0.0_f64, &
        1.0_f64, &
@@ -125,11 +99,7 @@ program unit_test_1d
        slope_left=linear_map_jac_f(0.0_f64,params), &
        slope_right=linear_map_jac_f(1.0_f64,params) )
 
-#ifdef STDF95
-  call initialize( map_d,&
-#else
   call map_d%initialize( &
-#endif
        "map_d", &
        NPTS1, &
        x1, &
@@ -144,13 +114,8 @@ program unit_test_1d
   acc  = 0.0_f64
   acc1 = 0.0_f64
   do i=1,NPTS1
-#ifdef STDF95
-     node_a   = x1_at_node(map_a,i)
-     node_d   = x1_at_node(map_d,i)
-#else
      node_a   = map_a%x1_at_node(i)
      node_d   = map_d%x1_at_node(i)
-#endif
      acc      = acc + abs(node_a-node_d)
   end do
   print *, 'Average error in nodes, x1 transformation = ', acc/(NPTS1)
@@ -162,21 +127,12 @@ program unit_test_1d
   do i=0,NPTS1-1
      PRINT*,'i=',i
      eta1   = real(i,f64)*h1
-#ifdef STDF95
-     ! For analytic meshe the user give directly the jacobian
-     ! In F95 standart qui can't write 
-     !node   = mapped_meshes_jacobian(map_a,eta1)
-     ! So call simply the user function
-     node   = linear_map_jac_f(eta1)
-     interp = jacobian(map_d,eta1)
-#else
      !        print *, 'values: ', i, j, eta1, eta2
      !        print *, 'about to call map_a%jacobian(eta1,eta2)'
      node   = map_a%jacobian(eta1)
      !        node   = map_2d_jacobian_node(map_d,i+1,j+1)
      !        print *, 'about to call map_d%jacobian(eta1,eta2)'
      interp = map_d%jacobian(eta1)
-#endif
      delta  =  node - interp
      print *, 'eta1 = ', eta1
      print *, '(',i+1,'): ANALYT = ', node, ', DISCR = ', interp, &
@@ -186,13 +142,8 @@ program unit_test_1d
      acc = acc + abs(delta)
   end do
 
-#ifdef STDF95
-  call write_to_file(map_d)
-  call write_to_file(map_d)
-#else
   call map_d%write_to_file()
   call map_d%write_to_file()
-#endif
   print *, 'Average error = ', acc/real(NPTS1,f64)
   !  call delete(map_a)
   !  call delete(map_d)

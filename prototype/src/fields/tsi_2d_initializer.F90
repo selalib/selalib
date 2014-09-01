@@ -5,42 +5,25 @@ module sll_tsi_2d_initializer
   use sll_scalar_field_initializers_base
   implicit none
 
-#ifdef STDF95
-  type :: init_tsi_2d
-    !type(sll_mapped_mesh_2d_discrete), pointer :: mesh
-    type(sll_coordinate_transformation_2d_discrete), pointer :: transf
-    sll_int32   :: data_position
-#else
   type, extends(scalar_field_2d_initializer_base) :: init_tsi_2d
     !class(sll_mapped_mesh_2d_base), pointer :: mesh
     class(sll_coordinate_transformation_2d_base), pointer :: transf
-#endif
     sll_real64 :: eps
     sll_real64 :: kx
     sll_real64 :: xi
     sll_real64 :: v0
     sll_int32 :: is_delta_f
-#ifndef STDF95
   contains
     procedure, pass(init_obj) :: initialize => initialize_tsi_2d
     procedure, pass(init_obj) :: f_of_x1x2  => f_x1x2_tsi_2d
-#endif
   end type init_tsi_2d
 
 contains
 
-#ifdef STDF95
-  subroutine init_tsi_2d_initialize( init_obj, mesh, data_position, eps_val, &
-       kx_val, v0_val, is_delta_f )
-    type(init_tsi_2d), intent(inout)  :: init_obj
-    !type(sll_mapped_mesh_2d_discrete), intent(in), target :: mesh
-    type(sll_coordinate_transformation_2d_discrete), pointer :: mesh
-#else
   subroutine initialize_tsi_2d( init_obj, transf, data_position, eps_val, &
        kx_val, v0_val, is_delta_f )
     class(init_tsi_2d), intent(inout)  :: init_obj
     class(sll_coordinate_transformation_2d_base), pointer :: transf
-#endif
     sll_int32 :: data_position
     sll_real64, intent(in), optional     :: eps_val
     sll_real64, intent(in), optional     :: kx_val
@@ -71,17 +54,10 @@ contains
     init_obj%transf => transf
   end subroutine 
 
-#ifdef STDF95
-  subroutine init_tsi_2d_f_of_x1x2( init_obj, data_out )
-    type(init_tsi_2d), intent(inout)       :: init_obj
-    !type(sll_mapped_mesh_2d_discrete), pointer    :: mesh
-    type(sll_coordinate_transformation_2d_discrete), pointer :: mesh
-#else
   subroutine f_x1x2_tsi_2d( init_obj, data_out )
     class(init_tsi_2d), intent(inout)       :: init_obj
     class(sll_coordinate_transformation_2d_base), pointer :: transf
     type(sll_logical_mesh_2d), pointer                    :: mesh
-#endif
     sll_real64, dimension(:,:), intent(out)    :: data_out
     sll_int32  :: i
     sll_int32  :: j
@@ -97,7 +73,7 @@ contains
     eps = init_obj%eps
     v0 = init_obj%v0
     transf => init_obj%transf
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
 
     if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
        num_pts1 = mesh%num_cells1+1
@@ -112,21 +88,11 @@ contains
     do j=1,num_pts2
        do i=1, num_pts1
           if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
-#ifdef STDF95
-             v = x2_at_node(transf, i,j)
-             x = x1_at_node(transf, i,j)
-#else
              v = transf%x2_at_node(i,j)
              x = transf%x1_at_node(i,j)
-#endif
           else if (init_obj%data_position ==  NODE_CENTERED_FIELD) then
-#ifdef STDF95
-             v = x2_cell_discrete(transf, i,j)
-             x = x1_cell_discrete(transf, i,j)
-#else
              v = transf%x2_at_cell(i,j)
              x = transf%x1_at_cell(i,j)
-#endif
           else
              print*, 'f_x1x2_tsi_2d:',  init_obj%data_position, 'not defined'
           end if

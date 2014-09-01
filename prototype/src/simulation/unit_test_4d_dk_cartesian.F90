@@ -12,8 +12,6 @@ program dk_cartesian_4d
   use sll_common_array_initializers_module
   implicit none
 
-  character(len=256) :: filename
-  character(len=256) :: filename_local
   type(sll_simulation_4d_drift_kinetic_cart_finite_volume)      :: simulation
   type(sll_logical_mesh_4d), pointer      :: mx
   sll_real64, dimension(1:2) :: landau_params

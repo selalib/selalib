@@ -43,7 +43,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
     SLL_ASSERT(jc <= m%num_cells2)
@@ -110,7 +110,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
     SLL_ASSERT(jc <= m%num_cells2)
@@ -169,7 +169,7 @@ contains
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -229,7 +229,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -290,7 +290,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -356,7 +356,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -432,7 +432,7 @@ contains
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -510,7 +510,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)
@@ -587,7 +587,7 @@ contains
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
-    m => T%get_logical_mesh()
+    m => T%mesh
 
     ! verify that the indices requested are within the logical mesh.
     SLL_ASSERT(ic <= m%num_cells1)

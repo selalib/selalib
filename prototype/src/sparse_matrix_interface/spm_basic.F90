@@ -14,16 +14,12 @@ IMPLICIT NONE
         INTEGER(KIND=SPM_INTS_KIND) :: oi_nC !NUMBER OF COLUMNS
         INTEGER(KIND=SPM_INTL_KIND) :: oi_nnz !NUMBER OF NON ZERO ELTS
         INTEGER(KIND=SPM_INTL_KIND) :: oi_iassembly !Current index for the assembling process
-
-        INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER :: opi_indptr   !CSC/CSR format
-        INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: opi_indices !CSC/CSR format
-
-        REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER :: opr_a !values, for CSC/CSR
-
-        INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: opi_I !IJV format, unsorted
-        INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: opi_J !IJV format, unsorted
-        REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER :: opr_V !values IJV format, unsorted
-
+        INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:), POINTER :: opi_indptr 
+        INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: opi_indices
+        REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER :: opr_a 
+        INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: opi_I
+        INTEGER(KIND=SPM_INTL_KIND), DIMENSION(:), POINTER :: opi_J
+        REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER :: opr_V
         LOGICAL :: ol_assolver ! true if we use the current matrix to solve a linear system
 
         ! ... 
@@ -81,7 +77,6 @@ SUBROUTINE SPM_FINALIZE(IERROR)
 IMPLICIT NONE
 INTEGER(KIND=SPM_INTS_KIND),      INTENT(OUT) :: IERROR
 ! LOCAL
-INTEGER(KIND=SPM_INTS_KIND) :: ID
 
 DEALLOCATE ( mpo_M )
 IERROR = SPM_SUCCESS 
@@ -209,7 +204,6 @@ INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:),      INTENT(IN)  :: INDPTR
 INTEGER(KIND=SPM_INTS_KIND),                    INTENT(IN)  :: ROOT 
 INTEGER(KIND=SPM_INTS_KIND),                    INTENT(OUT) :: IERROR
 ! LOCAL
-TYPE(MATRIX), POINTER :: M
 INTEGER :: NR, NC, NNZ
 PRINT *, 'SPM_GraphGlobalCSC: not yet implemented'
 !M => mpo_M ( ID )
@@ -245,7 +239,6 @@ INTEGER(KIND=SPM_INTS_KIND), DIMENSION(:),      INTENT(IN)  :: INDPTR
 INTEGER(KIND=SPM_INTS_KIND),                    INTENT(IN)  :: ROOT 
 INTEGER(KIND=SPM_INTS_KIND),                    INTENT(OUT) :: IERROR
 ! LOCAL
-TYPE(MATRIX), POINTER :: M
 INTEGER :: NR, NC, NNZ
 
 !M => mpo_M ( ID )
@@ -772,8 +765,6 @@ REAL(KIND=SPM_COEF_KIND)   , DIMENSION(:), POINTER,      INTENT(INOUT)  :: Y
 INTEGER(KIND=SPM_INTS_KIND),                             INTENT(OUT)    :: IERROR
 ! LOCAL
 TYPE(MATRIX), POINTER :: M
-INTEGER(KIND=SPM_INTS_KIND), DIMENSION(10) :: lpi_param
-REAL(KIND=SPM_COEF_KIND), DIMENSION(1) :: lpr_param
 REAL(KIND=SPM_COEF_KIND) :: lr_tol
 REAL(KIND=SPM_COEF_KIND) :: lr_resnorm
 INTEGER(KIND=SPM_INTS_KIND) :: li_maxiter

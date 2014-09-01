@@ -8,11 +8,11 @@ from pylab import *
 #------------------------------------
 Zi           = 1
 #--> For geometry definition
-NNr          = 100
-rhomin       = 0.00001
+NNr          = 200
+rhomin       = 0.006896551724 #0.00001
 rhomax       = 1.
 minor_radius = 14.5
-aspect_ratio = 16.5
+aspect_ratio = 16.53849335 #16.5
 #--> For analytical density and temperature profiles definition 
 kappaTi      = 66.
 kappaTe      = 66.
@@ -24,8 +24,9 @@ deltarn      = 0.2
 xmin         = -1.
 xmax         = 1.
 ymin         = 0.0001
-ymax         = 0.1
-
+ymax         = 0.01 #0.1
+iota = 0.
+B0 = -1.
 #------------------------------------------------------------
 # Normalization to obtain the same profiles than in GYSELA
 #------------------------------------------------------------
@@ -42,7 +43,7 @@ deltarn  = deltarn*Lr
 invLTi   = kappaTi/R0
 invLTe   = kappaTe/R0
 invLn    = kappan/R0
-
+iota     = iota/R0
 
 #------------------------------------------------------------
 # Dispersion relation solving
@@ -53,9 +54,10 @@ zp     = zealpy_gyrokin_anal(Zi=Zi,
                     NNr=NNr,rmin=rmin,Lr=Lr,
                     invLTi=invLTi,deltarTi=deltarTi,
                     invLTe=invLTe,deltarTe=deltarTe,
-                    invLn0=invLn,deltarn0=deltarn)
+                    invLn0=invLn,deltarn0=deltarn,iota=iota,B0=B0)
 
 #--> Choice of the mode (m,n)
+print 'B0=',B0
 mm_choice = raw_input('Poloidal mode m ?: ')
 nn_choice = raw_input('Toroidal mode n ?: ')
 ifig = 1

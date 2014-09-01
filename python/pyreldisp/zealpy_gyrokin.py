@@ -9,7 +9,7 @@ from pyreldisp_params import params, pyreldisp_exception
 # Class 'zealpy_gyrokin'  
 #-------------------------------------------------------------
 class zealpy_gyrokin(zealpy):
-    def __init__(self,Zi,NNr,rmin,Lr):
+    def __init__(self,Zi,NNr,rmin,Lr,B0):
         super(zealpy_gyrokin,self).__init__()
         self.setup_pymodule(zealpy_gyrokin_)
 
@@ -25,14 +25,18 @@ class zealpy_gyrokin(zealpy):
                          'n0'      : np.ndarray,
                          'dlogn0'  : np.ndarray,
                          'ddlogn0' : np.ndarray,
-                         'ordre_grandeur' : int
-                        }
+                         'btheta'  : np.ndarray,
+                         'bz'      : np.ndarray,
+                         'ordre_grandeur' : int,
+                         'B0' : float
+                       }
 
         self.params = params(required_params)
         self.params.set_value('ordre_grandeur',1)
 
         #--> Initialize the charge
         self.params.set_value('Zi',Zi)
+        self.params.set_value('B0',B0)
 
         #--> Initialize the mesh
         [dr,rmesh] = init_mesh(NNr,rmin,Lr)

@@ -95,7 +95,6 @@ contains
     sll_real64, intent(in) :: larmor_rad
     sll_int32              :: deriv_size
     sll_int32, optional    :: hermite_case
-    sll_int32 :: ierr
     
     if(.not.(present(hermite_case)))then
       gyroaverage%hermite_case = 2
@@ -103,11 +102,11 @@ contains
       gyroaverage%hermite_case = hermite_case  
     endif
 
-	deriv_size=9
-	select case(gyroaverage%hermite_case)
-       case (2,3,4)
-			deriv_size=4
-	end select		
+    deriv_size=9
+    select case(gyroaverage%hermite_case)
+    case (2,3,4)
+       deriv_size=4
+    end select
     
     select case(gyroaverage%hermite_case)
        case (1,2,3,4)

@@ -18,7 +18,7 @@ module sll_module_poisson_3d_base
     subroutine signature_compute_phi_from_rho_3d( poisson, phi, rho )
       use sll_working_precision
       import sll_poisson_3d_base      
-      class(sll_poisson_3d_base) :: poisson
+      class(sll_poisson_3d_base), target :: poisson
       sll_real64,dimension(:,:,:),intent(in) :: rho
       sll_real64,dimension(:,:,:),intent(out) :: phi
     end subroutine signature_compute_phi_from_rho_3d
@@ -38,7 +38,7 @@ module sll_module_poisson_3d_base
   
   abstract interface    
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
-    subroutine signature_compute_E_from_rho_3d( poisson, rho, E1, E2, E3 )
+    subroutine signature_compute_E_from_rho_3d( poisson, E1, E2, E3, rho )
       use sll_working_precision
       import sll_poisson_3d_base       
       class(sll_poisson_3d_base) :: poisson

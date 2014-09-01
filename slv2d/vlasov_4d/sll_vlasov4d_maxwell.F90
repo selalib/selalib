@@ -52,13 +52,13 @@ contains
   this%interp_x2   => interp_x2
   this%interp_x3x4 => interp_x3x4
 
-  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1,1:this%nc_eta2),error)
-  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%ex(1:this%nc_eta1+1,1:this%nc_eta2+1),error)
+  SLL_CLEAR_ALLOCATE(this%ey(1:this%nc_eta1+1,1:this%nc_eta2+1),error)
+  SLL_CLEAR_ALLOCATE(this%jx(1:this%nc_eta1+1,1:this%nc_eta2+1),error)
+  SLL_CLEAR_ALLOCATE(this%jy(1:this%nc_eta1+1,1:this%nc_eta2+1),error)
+  SLL_CLEAR_ALLOCATE(this%bz(1:this%nc_eta1+1,1:this%nc_eta2+1),error)
 
-  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1,1:this%nc_eta2),error)
+  SLL_CLEAR_ALLOCATE(this%rho(1:this%nc_eta1+1,1:this%nc_eta2+1),error)
 
  end subroutine initialize_vlasov4d_maxwell
 
@@ -81,8 +81,8 @@ contains
   ! verifier que la transposition est a jours
   SLL_ASSERT( .not. this%transposed) 
 
-  x3_min   = this%geomv%eta1_min
-  delta_x3 = this%geomv%delta_eta1
+  x3_min   = this%eta3_min
+  delta_x3 = this%delta_eta3
 
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
@@ -110,8 +110,8 @@ contains
 
   SLL_ASSERT( .not. this%transposed)
 
-  x4_min   = this%geomv%eta2_min
-  delta_x4 = this%geomv%delta_eta2
+  x4_min   = this%eta4_min
+  delta_x4 = this%delta_eta4
   call compute_local_sizes_4d(this%layout_x, &
                               loc_sz_i,loc_sz_j,loc_sz_k,loc_sz_l)        
   do l=1,loc_sz_l
@@ -138,18 +138,18 @@ contains
 
   class(vlasov4d_maxwell),intent(inout) :: this
   sll_real64, intent(in) :: dt
-  sll_real64, dimension(this%geomv%num_cells1,this%geomv%num_cells2) :: alpha_x
-  sll_real64, dimension(this%geomv%num_cells1,this%geomv%num_cells2) :: alpha_y
+  sll_real64, dimension(this%np_eta3,this%np_eta4) :: alpha_x
+  sll_real64, dimension(this%np_eta3,this%np_eta4) :: alpha_y
   sll_real64 :: px, py, ctheta, stheta, depvx, depvy
   sll_real64 :: x3_min, x3_max, x4_min, x4_max
   sll_real64 :: delta_x3, delta_x4
 
-  x3_min   = this%geomv%eta1_min
-  x3_max   = this%geomv%eta1_max
-  delta_x3 = this%geomv%delta_eta1
-  x4_min   = this%geomv%eta2_min 
-  x4_max   = this%geomv%eta2_max
-  delta_x4 = this%geomv%delta_eta2
+  x3_min   = this%eta3_min
+  x3_max   = this%eta3_max
+  delta_x3 = this%delta_eta3
+  x4_min   = this%eta4_min 
+  x4_max   = this%eta4_max
+  delta_x4 = this%delta_eta4
 
   SLL_ASSERT(this%transposed) 
   call compute_local_sizes_4d(this%layout_v, &

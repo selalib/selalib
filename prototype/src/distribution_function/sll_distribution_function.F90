@@ -42,21 +42,6 @@ module distribution_function
   use sll_scalar_field_initializers_base
   implicit none
 
-!#ifdef STDF95
-!  type  :: sll_distribution_function_2D
-   !  type(sll_mapped_mesh_2d_discrete), pointer  :: mesh
-   !  type(cubic_spline_1d_interpolator), pointer :: eta1_interpolator
-   !  type(cubic_spline_1d_interpolator), pointer :: eta2_interpolator
-   !  sll_real64, dimension(:,:), pointer      :: data
-   !  sll_int32                                :: data_position
-   !  character(len=64)                        :: name
-   !  sll_int32                                :: plot_counter
-!     type(scalar_field_2d) :: extend_type
-!     sll_real64        :: pmass
-!     sll_real64        :: pcharge           
-!     sll_real64        :: average 
-!  end type  sll_distribution_function_2D
-!#else  
 #define NEW_TYPE_FOR_DF( new_df_type, extended_type)                 \
   type, extends(extended_type) :: new_df_type;                       \
      sll_real64      :: pmass;                                       \
@@ -76,7 +61,6 @@ NEW_TYPE_FOR_DF( sll_distribution_function_2d, scalar_field_2d )
 !!$  end interface
 
 #undef NEW_TYPE_FOR_DF
-!#endif
 
 contains
 
@@ -105,7 +89,7 @@ contains
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
-    mesh => transf%get_logical_mesh()
+    mesh => transf%mesh
 
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)

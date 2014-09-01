@@ -100,11 +100,15 @@ subroutine initialize_pastix(this,n,nnzeros)
    this%iparm(IPARM_THREAD_NBR) = this%nbthread  
    this%iparm(IPARM_VERBOSE)    = this%verbose
 
-   this%iparm(IPARM_SYM)           = API_SYM_YES   ! API_SYM_NO
-   this%iparm(IPARM_FACTORIZATION) = API_FACT_LDLT ! API_FACT_LU
+   this%iparm(IPARM_SYM)           = API_SYM_NO !API_SYM_YES   ! API_SYM_NO
+   this%iparm(IPARM_FACTORIZATION) = API_FACT_LU !API_FACT_LDLT ! API_FACT_LU
 
    this%iparm(IPARM_MATRIX_VERIFICATION) = API_YES
-
+   
+   this%iparm(IPARM_TRANSPOSE_SOLVE) = API_YES
+   
+   print *,'#initialize pastix is done'
+    
 end subroutine initialize_pastix
 
 subroutine initialize_pastix_with_csc_matrix(this, csc_matrix)

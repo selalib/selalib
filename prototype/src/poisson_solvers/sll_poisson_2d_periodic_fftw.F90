@@ -107,9 +107,6 @@ contains
   end function new_poisson_2d_periodic_fftw 
 
 
-
-
-
 !> Initialize the Poisson solver
 subroutine initialize_poisson_2d_periodic_fftw(self, &
                       x_min, x_max, nc_x, &
@@ -134,6 +131,9 @@ subroutine initialize_poisson_2d_periodic_fftw(self, &
    self%dx   = (x_max-x_min) / nc_x
    self%dy   = (y_max-y_min) / nc_y
 
+#ifdef DEBUG
+   print*, " FFTW version of poisson 2d periodic solver "
+#endif
 
    SLL_ALLOCATE(tmp(1:nc_x,1:nc_y),error)
 
@@ -266,11 +266,6 @@ subroutine solve_e_fields_poisson_2d_periodic_fftw(self,e_x,e_y,rho,nrj)
       dy = self%dy
       nrj=sum(e_x(1:nc_x,1:nc_y)*e_x(1:nc_x,1:nc_y) &
         +e_y(1:nc_x,1:nc_y)*e_y(1:nc_x,1:nc_y))*dx*dy
-      !if (nrj>1.e-30) then 
-      !   nrj=0.5_f64*log(nrj)
-      !else
-      !   nrj=-10**9
-      !endif
    end if
 
 end subroutine solve_e_fields_poisson_2d_periodic_fftw

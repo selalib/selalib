@@ -36,7 +36,7 @@
     pastix_float_t ,dimension(:), allocatable :: rhssaved    ! Copy of Right hand side 
     pastix_int_t                              :: nrhs        ! right hand side number (only one possible)
     pastix_int_t                              :: iparm(IPARM_SIZE) ! Integer parameters
-    double precision                          :: dparm(DPARM_SIZE) ! Floating poin parameters
+    double precision                          :: dparm(DPARM_SIZE) ! Floating point parameters
     Integer                                   :: driver_num  ! Driver number
     Character(len=64)                         :: filename    ! Path to the matrix
     Character(len=4)                          :: type        ! type of the matrix

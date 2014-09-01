@@ -3,8 +3,8 @@
 
 &geometry
     mesh_case ="SLL_COLLELA_MESH"
-    num_cells_eta1 = 64
-    num_cells_eta2 = 64
+    num_cells_eta1 = 128
+    num_cells_eta2 = 128
     eta1_min = 0.
     eta1_max = 6.28
     eta2_min = 0.
@@ -27,18 +27,18 @@
     time_loop_case = "SLL_PREDICTOR_CORRECTOR" 
 /
 &advector
-   advection_form = "SLL_CONSERVATIVE"
+   !advection_form = "SLL_CONSERVATIVE"
    advection_form = "SLL_ADVECTIVE"
-  !advect2d_case = "SLL_BSL"    
+   advect2d_case = "SLL_BSL"    
     !charac2d_case = "SLL_EULER"
     charac2d_case = "SLL_VERLET"
-    advect2d_case = "SLL_TENSOR_PRODUCT"
-    advect1d_x1_case = "SLL_BSL"
-    advect1d_x2_case = "SLL_BSL"
+   ! advect2d_case = "SLL_TENSOR_PRODUCT"
+   ! advect1d_x1_case = "SLL_BSL"
+   ! advect1d_x2_case = "SLL_BSL"
       !charac1d_x1_case = "SLL_EULER"    
       !charac1d_x2_case = "SLL_EULER"    
-      charac1d_x1_case = "SLL_TRAPEZOID"    
-      charac1d_x2_case = "SLL_TRAPEZOID"    
+      !charac1d_x1_case = "SLL_TRAPEZOID"    
+      !charac1d_x2_case = "SLL_TRAPEZOID"    
     !advect1d_x1_case = "SLL_CSL"
     !advect1d_x2_case = "SLL_CSL"
       !charac1d_x1_case = "SLL_EULER_CONSERVATIVE"    

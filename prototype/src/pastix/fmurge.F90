@@ -34,10 +34,10 @@
 
 PROGRAM main
   !$ use omp_lib, only : omp_get_num_threads
-  use mpi
   IMPLICIT NONE
 ! will be replaced during compilation by replaceCOEF.sh
 
+  INCLUDE "mpif.h"
   INCLUDE "murge.inc"
   ! MPI Data
   INTEGER(KIND=MURGE_INTS_KIND)          :: ierr
@@ -49,26 +49,23 @@ PROGRAM main
   ! CSC Data
   INTEGER(KIND=MURGE_INTS_KIND)                         :: n, dof
   INTEGER(KIND=MURGE_INTL_KIND)                         :: nnzeros, edgenbr
-  ! REAL(KIND=MURGE_COEF_KIND) will be replaced during compilation by replaceCOEF.sh
   REAL(KIND=MURGE_COEF_KIND)                                                  :: val
   ! Local Data
   INTEGER(KIND=MURGE_INTS_KIND)                         :: localnodenbr,interior,taille
   INTEGER(KIND=MURGE_INTS_KIND), DIMENSION(:) , POINTER :: nodelist
   INTEGER(KIND=MURGE_INTS_KIND)                         :: root
   INTEGER(KIND=MURGE_INTS_KIND)                         :: base
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: lrhs
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globrhs
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globrhs_recv
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globx
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: globprod
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: lrhs
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globrhs
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globrhs_recv
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globx
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: globprod
   ! Other data
-  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER    :: expand
-  REAL(KIND=MURGE_COEF_KIND)                            :: val2
+  REAL(KIND=MURGE_COEF_KIND), DIMENSION(:) , POINTER                          :: expand
+  REAL(KIND=MURGE_COEF_KIND)                                                  :: val2
   REAL(KIND=MURGE_REAL_KIND)                            :: prec
   REAL(KIND=8)                                          :: xmin, xmax
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: NArgs
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: i, j, k, l
-  INTEGER(KIND=MURGE_INTS_KIND)                         :: myfirstrow, mylastrow
+  INTEGER(KIND=MURGE_INTS_KIND)                         :: NArgs, i, j, k, myfirstrow, mylastrow, l
   CHARACTER(LEN=100)                                    :: args
   CHARACTER(LEN=20)                                     :: atester
   INTEGER(KIND=MURGE_INTS_KIND)                         :: solver
@@ -77,7 +74,6 @@ PROGRAM main
   INTEGER(KIND=MURGE_INTS_KIND)                         :: one=1
   INTEGER(KIND=MURGE_INTS_KIND)                         :: two=2
   INTEGER(KIND=MURGE_INTS_KIND)                         :: nb_threads
-
   NArgs = command_argument_count()
   root = -1
   base = 1
@@ -96,7 +92,7 @@ PROGRAM main
      READ(args,*) dof
   ELSE
      IF (me == 0) THEN
-      PRINT *, "Usage: ./fmurge <size> <DofNumber>"
+	PRINT *, "Usage: ./fmurge <size> <DofNumber>"
      END IF
      CALL Abort()
   END IF
@@ -128,17 +124,17 @@ PROGRAM main
      !$ nb_threads = omp_get_num_threads()
      !$OMP END PARALLEL
      if (Me .eq. 0) then
-      print *, "Running on", nb_threads,"threads and", NTasks, "MPI Tasks"
+	print *, "Running on", nb_threads,"threads and", NTasks, "MPI Tasks"
      end if
      CALL MURGE_SetOptionINT(id, IPARM_THREAD_NBR, nb_threads, ierr)
   ELSE IF (solver == MURGE_SOLVER_HIPS) THEN
 #ifdef HIPS
      IF (method == 1) THEN
-      CALL MURGE_SetDefaultOptions(id, HIPS_ITERATIVE, ierr)
+	CALL MURGE_SetDefaultOptions(id, HIPS_ITERATIVE, ierr)
      ELSE
-      CALL MURGE_SetDefaultOptions(id, HIPS_HYBRID, ierr )
-      CALL MURGE_SetOptionINT(id, HIPS_PARTITION_TYPE, zero, ierr)
-      CALL MURGE_SetOptionINT(id, HIPS_DOMSIZE, domsize, ierr)
+	CALL MURGE_SetDefaultOptions(id, HIPS_HYBRID, ierr )
+	CALL MURGE_SetOptionINT(id, HIPS_PARTITION_TYPE, zero, ierr)
+	CALL MURGE_SetOptionINT(id, HIPS_DOMSIZE, domsize, ierr)
      END IF
      CALL MURGE_SetOptionINT(id, HIPS_SYMMETRIC, zero, ierr)
      CALL MURGE_SetOptionINT(id, HIPS_LOCALLY, zero, ierr)
@@ -177,12 +173,12 @@ PROGRAM main
 
      ! Interior
      DO i = 2, n-1
-      DO j = -1,1
-         CALL MURGE_GRAPHEDGE(id, i, i+j, ierr)
-         !IF (j /= 0) THEN
-         !CALL MURGE_GRAPHEDGE(id, j+i, i, ierr)
-         !END IF
-      END DO
+	DO j = -1,1
+	   CALL MURGE_GRAPHEDGE(id, i, i+j, ierr)
+	   !IF (j /= 0) THEN
+	   !CALL MURGE_GRAPHEDGE(id, j+i, i, ierr)
+	   !END IF
+	END DO
      END DO
   ELSE
      edgenbr = 0
@@ -207,13 +203,13 @@ PROGRAM main
   DO m = 1, localnodenbr
      i = nodelist(m)
      IF (i == 1 .OR. i == n) THEN
-      ! Boundaries
-      nnzeros = nnzeros + 1
+	! Boundaries
+	nnzeros = nnzeros + 1
      ELSE
-      ! Interior
-      DO k = -1, 1
-         nnzeros = nnzeros + 1
-      END DO
+	! Interior
+	DO k = -1, 1
+	   nnzeros = nnzeros + 1
+	END DO
      END IF
   END DO
 
@@ -232,12 +228,11 @@ PROGRAM main
   expand = 0.
   DO i = 1,dof
      DO j = 1,dof
-      IF (i == j) expand(k) = 1.
+	IF (i == j) expand(k) = 1.
 !        expand(k)= k
-      k = k + 1
+	k = k + 1
      END DO
   END DO
-
   CALL MURGE_ASSEMBLYBEGIN(id, n, nnzeros, MURGE_ASSEMBLY_OVW, MURGE_ASSEMBLY_OVW, &
        MURGE_ASSEMBLY_FOOL, MURGE_BOOLEAN_FALSE, ierr)
   !$OMP PARALLEL default(none)&
@@ -247,16 +242,16 @@ PROGRAM main
   DO m = 1, localnodenbr
      i = nodelist(m)
      IF (i == 1 .OR. i == n) THEN
-      ! Boundaries
-      CALL GetCoef(val,i,i,xmin,xmax,n)
-      CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i, val*expand, ierr)
-      !print *, i, i, val*expand
+	! Boundaries
+	CALL GetCoef(val,i,i,xmin,xmax,n)
+	CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i, val*expand, ierr)
+	!print *, i, i, val*expand
      ELSE
-      DO k = -1,1
-         CALL GetCoef(val,i+k,i,xmin,xmax,n)
-         CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i+k, val*expand, ierr)
-         !print *, i, i+k, val*expand
-      END DO
+	DO k = -1,1
+	   CALL GetCoef(val,i+k,i,xmin,xmax,n)
+	   CALL MURGE_ASSEMBLYSETNODEVALUES(id, i, i+k, val*expand, ierr)
+	   !print *, i, i+k, val*expand
+	END DO
      END IF
   END DO
   !$OMP END DO
@@ -274,22 +269,22 @@ PROGRAM main
      globrhs((nodelist(m)-1)*dof+1:(nodelist(m)-1)*dof+dof) = val
      lrhs(k:k+dof-1) = val
      DO l = 1, dof
-      !print *, "rhs", (nodelist(m)-1)*dof+l, lrhs((m-1)*dof+l)
+	!print *, "rhs", (nodelist(m)-1)*dof+l, lrhs((m-1)*dof+l)
      END DO
      k = k + dof
   END DO
   ALLOCATE(globrhs_recv(n*dof))
   if (.false.) then ! .false.will be replaced during compilation by replaceCOEF.sh
      if (MURGE_COEF_KIND==4) then
-      CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
+	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
      else
-      CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
+	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_COMPLEX, MPI_SUM, MPI_COMM_WORLD, ierr)
      end if
   else
      if (MURGE_COEF_KIND==4) then
-      CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_REAL, MPI_SUM, MPI_COMM_WORLD, ierr)
+	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_REAL, MPI_SUM, MPI_COMM_WORLD, ierr)
      else
-      CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
+	CAll MPI_Allreduce(globrhs, globrhs_recv, n*dof, MPI_DOUBLE_PRECISION, MPI_SUM, MPI_COMM_WORLD, ierr)
      end if
   end if
   DEALLOCATE(globrhs)
@@ -345,11 +340,11 @@ CONTAINS
 
     IF (i==j) THEN
        IF (i==1 .OR. i == n) THEN
-        ! Boundary Condition (Dirichlet)
-        val = 1
+	  ! Boundary Condition (Dirichlet)
+	  val = 1
        ELSE
-        ! Interior diagonnal part
-        val = -2 * dx_1
+	  ! Interior diagonnal part
+	  val = -2 * dx_1
        END IF
     ELSE
        val = dx_1

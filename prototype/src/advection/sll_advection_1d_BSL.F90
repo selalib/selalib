@@ -43,7 +43,7 @@ implicit none
       BSL_advect_1d
     procedure, pass(adv) :: advect_1d_constant => &
       BSL_advect_1d_constant
-  
+    procedure, pass(adv) :: delete => delete_BSL_1d_adv  
   end type BSL_1d_advector
    
 
@@ -215,7 +215,12 @@ contains
   end subroutine BSL_advect_1d_constant
 
 
-
+  subroutine delete_BSL_1d_adv(adv)
+    class(BSL_1d_advector), intent(inout) :: adv
+    sll_int32 :: ierr
+    SLL_DEALLOCATE(adv%eta_coords,ierr)
+    SLL_DEALLOCATE(adv%charac_feet,ierr)
+  end subroutine delete_BSL_1d_adv
 
 
 

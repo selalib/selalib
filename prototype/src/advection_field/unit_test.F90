@@ -28,7 +28,7 @@ program unit_test
 
   type(cubic_spline_1d_interpolator), target   :: interp_eta1
   type(cubic_spline_1d_interpolator), target   :: interp_eta2
-  sll_real64, dimension(4)                     :: affine_map_params
+  sll_real64, dimension(5)                     :: affine_map_params
   sll_real64, dimension(2)                     :: linear_map_params
   sll_int32                                    :: ix
   sll_int32, parameter                         :: NODE_CENTERED_FIELD_COPY = 0
@@ -36,7 +36,7 @@ program unit_test
   nc_eta1 = 100
   nc_eta2 = 100
 
-  affine_map_params(:) = (/-1.0_f64, 1.0_f64, -1.0_f64, 1.0_f64/)
+  affine_map_params(:) = (/-1.0_f64, 1.0_f64, -1.0_f64, 1.0_f64, 0.0_f64/)
 
   print*, 'initialization of mesh'
   mesh2d => new_logical_mesh_2d( &

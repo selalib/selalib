@@ -162,7 +162,7 @@ contains
   
   ! solves -\Delta phi = rho in 2d
   subroutine compute_phi_from_rho_3d_quasi_neutral( poisson, phi, rho )
-    class(quasi_neutral_3d_solver) :: poisson
+    class(quasi_neutral_3d_solver), target :: poisson
     sll_real64,dimension(:,:,:),intent(in) :: rho
     sll_real64,dimension(:,:,:),intent(out) :: phi
 
@@ -187,7 +187,7 @@ contains
 !    end subroutine compute_E_from_phi_2d_fft
 
     ! solves E = -\nabla Phi with -\Delta phi = rho in 2d 
-    subroutine compute_E_from_rho_3d_quasi_neutral( poisson, rho, E1, E2, E3 )
+    subroutine compute_E_from_rho_3d_quasi_neutral( poisson, E1, E2, E3, rho )
       class(quasi_neutral_3d_solver) :: poisson
       sll_real64,dimension(:,:,:),intent(in) :: rho
       sll_real64,dimension(:,:,:),intent(out) :: E1
