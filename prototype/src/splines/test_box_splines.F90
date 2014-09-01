@@ -373,13 +373,15 @@ do num_cells = 40,40,20
    SLL_DEALLOCATE_ARRAY(x2,ierr)
    SLL_DEALLOCATE_ARRAY(x1_char,ierr)
    SLL_DEALLOCATE_ARRAY(x2_char,ierr)
-   SLL_DEALLOCATE(mesh,ierr)
    SLL_DEALLOCATE(spline,ierr)
    SLL_DEALLOCATE_ARRAY(chi1,ierr)
    SLL_DEALLOCATE_ARRAY(chi2,ierr)
    SLL_DEALLOCATE_ARRAY(chi3,ierr)
 
+   call delete(mesh)
+
 end do
+
 
 
 end program test_box_splines

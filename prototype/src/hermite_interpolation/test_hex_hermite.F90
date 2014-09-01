@@ -329,7 +329,7 @@ program test_hex_hermite
 
      deallocate(deriv)
  
-     call delete_hex_mesh_2d( mesh )
+     call delete( mesh )
 
      print*, "time used =", t_end - t_init," error_L2 = ", norm2_error
 

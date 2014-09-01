@@ -901,25 +901,6 @@ contains
   end subroutine write_field_hex_mesh_xmf
 
 
-  subroutine delete_hex_mesh_2d( mesh )
-    type(hex_mesh_2d), pointer :: mesh
-    sll_int32 :: ierr
-
-    if(.not. associated(mesh))then
-       print *, 'delete_hex_mesh_2d'
-       print *, 'ERROR: passed argument is not associated'
-       print *, '       Crash imminent...'
-       STOP
-    end if
-
-    SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
-    SLL_DEALLOCATE(mesh%hex_coord, ierr)
-    SLL_DEALLOCATE(mesh%global_indices, ierr)
-    SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
-    SLL_DEALLOCATE(mesh%center_index, ierr)
-    SLL_DEALLOCATE(mesh, ierr)
-  end subroutine delete_hex_mesh_2d
-
   subroutine write_hex_mesh_mtv(mesh, mtv_file)
 
     type(hex_mesh_2d), pointer :: mesh
@@ -1073,6 +1054,29 @@ contains
     close(out_unit)
    
 end subroutine write_hex_mesh_mtv
+
+
+  subroutine delete_hex_mesh_2d( mesh )
+    type(hex_mesh_2d), pointer :: mesh
+    sll_int32 :: ierr
+
+    if(.not. associated(mesh))then
+       print *, 'delete_hex_mesh_2d'
+       print *, 'ERROR: passed argument is not associated'
+       print *, '       Crash imminent...'
+       STOP
+    end if
+
+    SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
+    SLL_DEALLOCATE(mesh%hex_coord, ierr)
+    SLL_DEALLOCATE(mesh%global_indices, ierr)
+    if ( mesh%EXTRA_TABLES.eq.1) then
+       SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
+       SLL_DEALLOCATE(mesh%center_index, ierr)
+    end if
+    SLL_DEALLOCATE(mesh, ierr)
+  end subroutine delete_hex_mesh_2d
+
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
