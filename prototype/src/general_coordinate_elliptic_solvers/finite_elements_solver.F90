@@ -14,7 +14,9 @@ module finite_elements_solver_module
   !                            in each direction
   !      - probably only workign on dirichlet BC
   ! 
-  ! Contact : Laura S. Mendoza (mela@ipp.mpg.de)
+  ! Contact :  Aurore Back
+  !            Laura S. Mendoza (mela@ipp.mpg.de)
+  !           
   !------------------------------------------------
 
   use sll_boundary_condition_descriptors
@@ -51,14 +53,16 @@ module finite_elements_solver_module
      sll_real64, dimension(:),   pointer :: knots1_source
      sll_real64, dimension(:),   pointer :: knots2_source
 
-     ! Quadrature points/weights (gaussian, fekete, ...) of all the domain, by elements
-     sll_int32 :: num_quad_pts ! global total number of points
-     sll_int32 :: num_quad_pts_loc ! number of quadrature points by elements
-     sll_real64, dimension(:),   pointer :: quad_pts1
-     sll_real64, dimension(:),   pointer :: quad_pts2
+     ! Number of quadrature points globally
+     sll_int32 :: num_quad_pts 
+     ! Number of quadrature points locally (in one element)
+     sll_int32 :: num_quad_pts_loc 
+     ! Quadrature points/weights (gaussian, fekete, ...) of all the domain
+     sll_real64, dimension(:),   pointer :: quad_pts1 ! first coordinate
+     sll_real64, dimension(:),   pointer :: quad_pts2 ! second coordinate
      sll_real64, dimension(:),   pointer :: quad_weight
 
-     ! Degree of splines in each direction
+     ! Splines' degree in each direction
      sll_int32 :: spline_degree
      ! Number of local splines and total number of splines
      sll_int32 :: num_splines_loc
