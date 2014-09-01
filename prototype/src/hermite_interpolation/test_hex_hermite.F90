@@ -115,7 +115,7 @@ program test_hex_hermite
      !                  Mesh initialization   
      !*********************************************************
      
-     mesh => new_hex_mesh_2d( num_cells, center_x1, center_x2, radius=radius ) 
+     mesh => new_hex_mesh_2d( num_cells, center_x1, center_x2, radius=radius, EXTRA_TABLES = 1 ) 
 
      ! Distribution initialization
 
