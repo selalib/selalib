@@ -23,6 +23,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_x1 = eta2
     identity_x1 = eta1
   end function identity_x1
 
@@ -31,6 +32,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_x2 = eta1
     identity_x2 = eta2
   end function identity_x2
 
@@ -40,6 +42,7 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+    identity_eta1 = x2
     identity_eta1 = x1
   end function identity_eta1
 
@@ -48,6 +51,7 @@ contains
     sll_real64, intent(in)   :: x1
     sll_real64, intent(in)   :: x2
     sll_real64, dimension(:), intent(in) :: params
+    identity_eta2 = x1
     identity_eta2 = x2
   end function identity_eta2
 
@@ -57,14 +61,16 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac11 = eta1 + eta2
     identity_jac11 = 1.0_f64
   end function identity_jac11
 
-    function identity_jac12 ( eta1, eta2, params )
+  function identity_jac12 ( eta1, eta2, params )
     sll_real64  :: identity_jac12
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac12 = eta1 + eta2
     identity_jac12 = 0.0_f64
   end function identity_jac12
 
@@ -73,6 +79,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac21 = eta1 + eta2
     identity_jac21 = 0.0_f64
   end function identity_jac21
 
@@ -81,6 +88,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac22 = eta1 + eta2
     identity_jac22 = 1.0_f64
   end function identity_jac22
 
@@ -90,6 +98,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    identity_jac = eta1 + eta2
     identity_jac = 1.0_f64
   end function identity_jac
 
@@ -97,8 +106,8 @@ contains
   !
   !        affine transformation (logical mesh is [0,1]x[0,1]):
   !
-  !        x1 = (b1-a1)*eta1 + a1
-  !        x2 = (b2-a2)*eta2 + a2
+  !        x1 = (b1-a1)*(cos(alpha)*eta1-sin(alpha)*eta2) + a1
+  !        x2 = (b2-a2)*(sin(alpha)*eta1+cos(alpha)*eta2) + a2
   !
   ! **************************************************************************
 
@@ -121,11 +130,13 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A1 = params(1)
     B1 = params(2)
-        affine_x1 = (B1-A1)*eta1 + A1
+    alpha = params(5)
+    affine_x1 = (B1-A1)*(cos(alpha)*eta1-sin(alpha)*eta2) + A1
   end function affine_x1
 
   function affine_x2 ( eta1, eta2, params )
@@ -135,11 +146,13 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A2 = params(3)
     B2 = params(4)
-    affine_x2 = (B2-A2)*eta2 + A2
+    alpha = params(5)
+    affine_x2 = (B2-A2)*(sin(alpha)*eta1+cos(alpha)*eta2) + A2
   end function affine_x2
 
   ! jacobian maxtrix
@@ -150,11 +163,14 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A1
     sll_real64 :: B1
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A1 = params(1)
     B1 = params(2)
-    affine_jac11 = B1-A1
+    alpha = params(5)
+    affine_jac11 = eta1+eta2
+    affine_jac11 = (B1-A1)*cos(alpha)
   end function affine_jac11
 
   function affine_jac12 ( eta1, eta2, params )
@@ -162,18 +178,28 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
-    SLL_ASSERT(size(params) >= 4)
-        affine_jac12 = 0.0_f64
+    sll_real64 :: alpha, a1, b1
+    SLL_ASSERT(size(params) >= 5)
+    a1 = params(1)
+    b1 = params(2)
+    alpha = params(5)
+    affine_jac12 = eta1+eta2
+    affine_jac12 = -(B1-A1)*sin(alpha)
   end function affine_jac12
 
   function affine_jac21 ( eta1, eta2, params )
     sll_real64  :: affine_jac21
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
+    sll_real64 :: alpha, a2, b2
     sll_real64, dimension(:), intent(in) :: params
 
-    SLL_ASSERT(size(params) >= 4)
-    affine_jac21 = 0.0_f64
+    SLL_ASSERT(size(params) >= 5)
+    a2 = params(3)
+    b2 = params(4)
+    alpha = params(5)
+    affine_jac21 = eta1+eta2
+    affine_jac21 = (b2-a2)*sin(alpha)
   end function affine_jac21
 
   function affine_jac22 ( eta1, eta2, params )
@@ -183,11 +209,15 @@ contains
     sll_real64, dimension(:), intent(in) :: params
     sll_real64 :: A2
     sll_real64 :: B2
+    sll_real64 :: alpha
 
-    SLL_ASSERT(size(params) >= 4)
+    SLL_ASSERT(size(params) >= 5)
     A2 = params(3)
     B2 = params(4)
-    affine_jac22 = B2-A2
+    alpha = params(5)
+    affine_jac22 = eta1+eta2
+    affine_jac22 = (B2-A2)*cos(alpha)
+
   end function affine_jac22
 
   ! jacobian ie determinant of jacobian matrix
@@ -202,12 +232,327 @@ contains
     sll_real64 :: B2
 
     SLL_ASSERT(size(params) >= 4)
-    A1 = params(1)
-    B1 = params(2)
-    A2 = params(3)
-    B2 = params(4)
-    affine_jac = (B1-A1) * (B2-A2)
+    A1    = params(1)
+    B1    = params(2)
+    A2    = params(3)
+    B2    = params(4)
+    affine_jac = eta1+eta2
+    affine_jac = (B1-A1)*(B2-A2)
+
   end function affine_jac
+
+
+  ! **************************************************************************
+  !
+  !        homography transformation (logical mesh is [0,1]x[0,1]):
+  !
+  !  the homography is used to rectify a perspective image, for example to 
+  !  generate a "plan" view of a building from a "perspective" photo. 
+  !  We can also convert a square to a trapeze.
+  !
+  !        x1 = (a*eta1*b*eta2+c)/(g*eta1+h*eta2+1) 
+  !        x2 = (d*eta1*e*eta2+f)/(g*eta1+h*eta2+1) 
+  !
+  !  a = fixed scale factor in x1 direction with scale x2 unchanged.
+  !  b = scale factor in x1 direction proportional to x2 distance from origin.
+  !  c = origin translation in x1 direction.
+  !  d = scale factor in x2 direction proportional to x1 distance from origin.
+  !  e = fixed scale factor in x2 direction with scale x1 unchanged.
+  !  f = origin translation in x2 direction.
+  !  g = proportional scale factors x1 and x2 in function of x1.
+  !  h = proportional scale factors x1 and x2 in function of x2.
+  !   
+  ! **************************************************************************
+
+  ! direct mapping
+  function homography_x1 ( eta1, eta2, params )
+    sll_real64  :: homography_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    g = params(7)
+    h = params(8)
+
+    homography_x1 = (a*eta1+b*eta2+c)/(g*eta1+h*eta2+1)
+
+  end function homography_x1
+
+  function homography_x2 ( eta1, eta2, params )
+    sll_real64  :: homography_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    homography_x2 = (d*eta1+e*eta2+f)/(g*eta1+h*eta2+1)
+
+  end function homography_x2
+
+  ! jacobian maxtrix
+  function homography_jac11 ( eta1, eta2, params )
+    sll_real64  :: homography_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64 :: a, b, c, g, h
+    sll_real64, dimension(:), intent(in) :: params
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    g = params(7)
+    h = params(8)
+
+
+    homography_jac11 = a/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*g/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac11
+
+  function homography_jac12 ( eta1, eta2, params )
+    sll_real64  :: homography_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    g = params(7)
+    h = params(8)
+
+    homography_jac12 = b/(eta1*g+eta2*h+1)-(a*eta1+b*eta2+c)*h/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac12
+
+  function homography_jac21 ( eta1, eta2, params )
+    sll_real64  :: homography_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    homography_jac21 = d/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*g/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac21
+
+  function homography_jac22 ( eta1, eta2, params )
+    sll_real64  :: homography_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    homography_jac22 = e/(eta1*g+eta2*h+1)-(d*eta1+e*eta2+f)*h/(eta1*g+eta2*h+1)**2
+
+  end function homography_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function homography_jac ( eta1, eta2, params )
+    sll_real64  :: homography_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, d, e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    d = params(4)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+
+    homography_jac = -(b*d-a*e+(c*e-b*f)*g-(c*d-a*f)*h) &
+                     /(eta1**3*g**3+eta2**3*h**3+3*eta1**2*g**2 &
+                     +3*(eta1*eta2**2*g+eta2**2)*h**2+3*eta1*g &
+                     +3*(eta1**2*eta2*g**2+2*eta1*eta2*g+eta2)*h+1)
+
+  end function homography_jac
+
+  ! **************************************************************************
+  !
+  !        rubber_sheeting transformation 
+  !
+  !  the rubber-sheeting is similar to homography. The difference is that the 
+  !  Homography gives priority to alignments, whereas the Rubber-Sheeting gives 
+  !  priority to linear proportions.
+  !
+  !        x1 = a*eta1*eta2+b*eta1+c*eta2+d
+  !        x2 = e*eta1*eta2+f*eta1+g*eta2+h
+  !
+  !  a = scale factor in x1 direction proportional to the multiplication x1 * x2.
+  !  b = fixed scale factor in x1 direction with scale x2 unchanged.
+  !  c = scale factor in x1 direction proportional to x2 distance from origin.
+  !  d = origin translation in x1 direction.
+  !  e = scale factor in x2 direction proportional to the multiplication x1 * x2.
+  !  f = fixed scale factor in x2 direction with scale x1 unchanged.
+  !  g = scale factor in x2 direction proportional to x1 distance from origin.
+  !  h = origin translation in x2 direction.
+  !   
+  ! **************************************************************************
+
+  ! direct mapping
+  function rubber_sheeting_x1 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, d
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    d = params(4)
+
+    rubber_sheeting_x1 = a*eta1*eta2+b*eta1+c*eta2+d
+
+  end function rubber_sheeting_x1
+
+  function rubber_sheeting_x2 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, f, g, h
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    f = params(6)
+    g = params(7)
+    h = params(8)
+
+    rubber_sheeting_x2 = e*eta1*eta2+f*eta1+g*eta2+h
+
+  end function rubber_sheeting_x2
+
+  ! jacobian maxtrix
+  function rubber_sheeting_jac11 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64 :: a, b
+    sll_real64, dimension(:), intent(in) :: params
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    rubber_sheeting_jac11 = eta1
+    rubber_sheeting_jac11 = a*eta2+b
+
+  end function rubber_sheeting_jac11
+
+  function rubber_sheeting_jac12 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, c
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    c = params(3)
+    rubber_sheeting_jac12 = eta2
+    rubber_sheeting_jac12 = a*eta1+c
+
+  end function rubber_sheeting_jac12
+
+  function rubber_sheeting_jac21 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, f
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    f = params(6)
+    rubber_sheeting_jac21 = eta1
+    rubber_sheeting_jac21 = e*eta2+f
+
+  end function rubber_sheeting_jac21
+
+  function rubber_sheeting_jac22 ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: e, g
+
+    SLL_ASSERT(size(params) >= 8)
+
+    e = params(5)
+    g = params(7)
+    rubber_sheeting_jac22 = eta2
+    rubber_sheeting_jac22 = e*eta1+g
+
+  end function rubber_sheeting_jac22
+
+  ! jacobian ie determinant of jacobian matrix
+  function rubber_sheeting_jac ( eta1, eta2, params )
+    sll_real64  :: rubber_sheeting_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: a, b, c, e, f, g
+
+    SLL_ASSERT(size(params) >= 8)
+
+    a = params(1)
+    b = params(2)
+    c = params(3)
+    e = params(5)
+    f = params(6)
+    g = params(7)
+
+    rubber_sheeting_jac = (e*eta1+g)*(a*eta2+b) - (a*eta1+c)*(e*eta2+f)
+
+  end function rubber_sheeting_jac
+
 
 
   ! **************************************************************************
@@ -259,6 +604,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    polar_jac11 = eta1
     polar_jac11 = cos ( eta2 ) 
   end function polar_jac11
 
@@ -275,6 +621,7 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    polar_jac21 = eta1
     polar_jac21 = sin ( eta2 )
   end function polar_jac21
 
@@ -292,8 +639,360 @@ contains
     sll_real64, intent(in)   :: eta1
     sll_real64, intent(in)   :: eta2
     sll_real64, dimension(:), intent(in) :: params
+    polar_jac = eta2
     polar_jac = eta1
   end function polar_jac
+
+
+  ! **************************************************************************
+  !
+  ! "Colella transformation";
+  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+  ! (102) p 2968):
+  !
+  !        x1 = eta1 + alpha1 * sin(2*pi/L1 * eta1) * sin(2*pi/L2 * eta2)
+  !        x2 = eta2 + alpha2 * sin(2*pi/L1 * eta1) * sin(2*pi/L2 * eta2)
+  !
+  ! Domain: [0,L1] X [0,L2]
+  ! But we generalize it by taking a transformation 
+  ! Domain: [a,b] X [c,d]  -----> Domain: [a',b'] X [c',d']
+  ! so the transformation becomes 
+  ! 
+  !        x1 = (b' - a')/(b- a) * (  eta1 + alpha1 * sin(2*pi*( eta1-a)/( b-a)) * sin(2*pi*( eta2-c)/( d-c)) ) 
+  !             + ( a' b - b' a)/(b- a)
+  !        x2 = (d' - c')/(d- c) * (  eta2 + alpha2 * sin(2*pi*( eta1-a)/( b-a)) * sin(2*pi*( eta2-c)/( d-c)) ) 
+  !             + ( c' d - d' c)/(d- c)
+  ! 
+  ! The parameters are:
+  !      alpha1 = params(1)
+  !      alpha2 = params(2)
+  !      a      = params(3)
+  !      b      = params(4)
+  !      a'     = params(5)
+  !      b'     = params(6)
+  !      c      = params(7)
+  !      d      = params(8)
+  !      c'     = params(9)
+  !      d'     = params(10)
+  !
+  !
+  ! **************************************************************************
+
+  ! direct mapping
+  function sinprod_gen_x1 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    sll_real64  :: coef1, coef2
+
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
+    coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_gen_x1 = eta1 + alpha1 * sin(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_x1 = coef1 * sinprod_gen_x1 + coef2
+  end function sinprod_gen_x1
+
+  function sinprod_gen_x2 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
+    coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_gen_x2 = eta2 + alpha2 * sin(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_x2 = coef1 * sinprod_gen_x2 + coef2
+  end function sinprod_gen_x2
+
+  ! inverse mapping 
+  ! cannot be computed analytically in this case. Use fixed point iterations.
+  function sinprod_gen_eta1 ( x1, x2, params )
+    sll_real64  :: sinprod_gen_eta1
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    ! NEEDS TO BE IMPLEMENTED
+    STOP 'function not implemented'
+    sinprod_gen_eta1 = x2
+    sinprod_gen_eta1 = x1
+  end function sinprod_gen_eta1
+
+  function sinprod_gen_eta2 ( x1, x2, params )
+    sll_real64  :: sinprod_gen_eta2
+    sll_real64, intent(in)   :: x1
+    sll_real64, intent(in)   :: x2
+    sll_real64, dimension(:), optional, intent(in) :: params
+    ! NEEDS TO BE IMPLEMENTED
+    STOP 'function not implemented'
+    sinprod_gen_eta2 = x1
+    sinprod_gen_eta2 = x2
+  end function sinprod_gen_eta2
+
+  ! jacobian matrix
+  function sinprod_gen_jac11 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
+    coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+
+    sinprod_gen_jac11 = 1.0_f64 + alpha1*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_jac11 = coef1 * sinprod_gen_jac11
+  end function sinprod_gen_jac11
+
+  function sinprod_gen_jac12 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+
+    coef1 = ( b_2 - a_2 )/ (b_1 - a_1 )
+    coef2 = ( a_2*b_1 - b_2*a_1 )/ (b_1 - a_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+
+    sinprod_gen_jac12 = alpha1*pi2/ (d_1 - c_1 ) *sin(pi2*rl1)*cos(pi2*rl2)
+    sinprod_gen_jac12 = coef1 * sinprod_gen_jac12
+  end function sinprod_gen_jac12
+  
+  function sinprod_gen_jac21 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+    
+    coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
+    coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+    sinprod_gen_jac21 = alpha2*pi2/ (b_1 - a_1 ) *cos(pi2*rl1)*sin(pi2*rl2)
+    sinprod_gen_jac21 = coef1 * sinprod_gen_jac21
+  end function sinprod_gen_jac21
+
+  function sinprod_gen_jac22 ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2
+    sll_real64  :: a_1 
+    sll_real64  :: b_1
+    sll_real64  :: a_2
+    sll_real64  :: b_2
+    sll_real64  :: c_1 
+    sll_real64  :: d_1
+    sll_real64  :: c_2
+    sll_real64  :: d_2
+    sll_real64  :: coef1, coef2
+    sll_real64  :: rl1 ! reciprocal of the length of the domain
+    sll_real64  :: rl2
+    sll_real64  :: pi2
+    
+    SLL_ASSERT(size(params) >= 10)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    a_1    = params(3)
+    b_1    = params(4)
+    a_2    = params(5)
+    b_2    = params(6)
+    c_1    = params(7)
+    d_1    = params(8)
+    c_2    = params(9)
+    d_2    = params(10)
+
+    
+    rl1    = ( eta1 - a_1 )/ (b_1 - a_1 ) 
+    rl2    = ( eta2 - c_1 )/ (d_1 - c_1 )
+    
+    coef1 = ( d_2 - c_2 )/ (d_1 - c_1 )
+    coef2 = ( c_2*d_1 - d_2*c_1 )/ (d_1 - c_1 )
+ 
+    pi2 = 2.0_f64*sll_pi
+
+    sinprod_gen_jac22 = 1.0_f64 + alpha2*pi2/ (d_1 - c_1 )*sin(pi2*rl1)*cos(pi2*rl2)
+    sinprod_gen_jac22 = coef1 * sinprod_gen_jac22
+    
+  end function sinprod_gen_jac22
+
+   ! jacobian ie determinant of jacobian matrix
+  function sinprod_gen_jac ( eta1, eta2, params )
+    sll_real64  :: sinprod_gen_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+
+
+    SLL_ASSERT(size(params) >= 10)
+    !alpha1 = params(1)
+    !alpha2 = params(2)
+    !rl1    = 1.0_f64/params(3)
+    !rl2    = 1.0_f64/params(4)
+    !pi2 = 2.0_f64*sll_pi
+    !sinprod_jac = 1.0_f64 + 0.2_f64 *sll_pi * sin (2*sll_pi**(eta1+eta2)) 
+    !sinprod_gen_jac = 1.0_f64 + alpha2*pi2*rl2*sin(pi2*rl1*eta1)*cos(pi2*rl2*eta2) + &
+    !                        alpha1*pi2*rl1*cos(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
+
+    sinprod_gen_jac=sinprod_gen_jac22( eta1, eta2, params )*sinprod_gen_jac11( eta1, eta2, params )&
+                  - sinprod_gen_jac12( eta1, eta2, params )*sinprod_gen_jac21( eta1, eta2, params )
+  end function sinprod_gen_jac
 
   ! **************************************************************************
   !
@@ -349,7 +1048,7 @@ contains
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
     rl2    = 1.0_f64/params(4)
-     pi2 = 2.0_f64*sll_pi
+    pi2 = 2.0_f64*sll_pi
     sinprod_x2 = eta2 + alpha2*sin(pi2*rl1*eta1)*sin(pi2*rl2*eta2)
   end function sinprod_x2
 
@@ -362,6 +1061,7 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
+    sinprod_eta1 = x2
     sinprod_eta1 = x1
   end function sinprod_eta1
 
@@ -372,6 +1072,7 @@ contains
     sll_real64, dimension(:), optional, intent(in) :: params
     ! NEEDS TO BE IMPLEMENTED
     STOP 'function not implemented'
+    sinprod_eta2 = x1
     sinprod_eta2 = x2
   end function sinprod_eta2
 
@@ -385,7 +1086,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
- 
+
     SLL_ASSERT(size(params) >= 4)
     alpha1 = params(1)
     rl1    = 1.0_f64/params(3)
@@ -440,6 +1141,7 @@ contains
     sll_real64  :: rl2
     sll_real64  :: pi2
 
+
     SLL_ASSERT(size(params) >= 4)
     alpha2 = params(2)
     rl1    = 1.0_f64/params(3)
@@ -459,6 +1161,7 @@ contains
     sll_real64  :: rl1 ! reciprocal of the length of the domain
     sll_real64  :: rl2
     sll_real64  :: pi2
+
 
     SLL_ASSERT(size(params) >= 4)
     alpha1 = params(1)
@@ -803,6 +1506,7 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
+    deriv_x1_polar_f_eta1 = eta1
     deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
   end function deriv_x1_polar_f_eta1
 
@@ -813,7 +1517,7 @@ contains
     sll_real64 :: k
     sll_real64 :: r1
     sll_real64 :: r2
-
+    deriv_x1_polar_f_eta2  = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -831,6 +1535,7 @@ contains
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
+    deriv_x2_polar_f_eta1 = eta1
     deriv_x2_polar_f_eta1 = (r2-r1)*sin(2.0_f64*sll_pi*eta2)
   end function deriv_x2_polar_f_eta1
 
@@ -841,7 +1546,7 @@ contains
     sll_real64 :: k
     sll_real64 :: r1
     sll_real64 :: r2
-
+    deriv_x2_polar_f_eta2 = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -856,6 +1561,7 @@ contains
     sll_real64 :: r1
     sll_real64 :: r2
 
+    jac = eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -872,6 +1578,7 @@ contains
     sll_real64 :: r1
     sll_real64 :: r2
 
+    deriv= eta1+eta2
     SLL_ASSERT(size(params) >= 2)
     r1 = params(1)
     r2 = params(2)
@@ -921,10 +1628,11 @@ contains
     sll_real64 :: a
     sll_real64 :: b
 
+    val = eta
     SLL_ASSERT(size(params) >= 2)
     a = params(1)
     b = params(2)
-        val = (b-a)
+    val = (b-a)
   end function linear_map_jac_f
 
 
@@ -945,7 +1653,292 @@ contains
 !!$
 !!$#undef A
 !!$#undef B
-  
+
+
+  ! **************************************************************************
+  !
+  ! "D-shaped annular geometry";
+  ! sinusoidal product (see P. Colella et al. JCP 230 (2011) formula 
+  ! (102) p 2968):
+  !        eta1 = eta1-eta1_min/eta1_max-eta1_min
+  !        eta2 = eta2-eta2_min/eta2_max-eta2_min
+  !        x1 = alpha1+(alpha2*(2*eta1-1)+alpha3)*cos(2*pi*eta2+alpha4*sin(2*pi*eta2))
+  !        x2 = alpha5*(alpha2*(2*eta1-1)+alpha3)*sin(2*pi*eta2)
+  ! 
+  ! By default the values of the alpha parameters are:
+  !    alpha1 =1.7_f64
+  !    alpha2 =0.074_f64
+  !    alpha3 =0.536_f64
+  !    alpha4 =0.4290421957_f64
+  !    alpha5 =1.66_f64
+  !
+  ! These parameters are stored in the params array as: 
+  !     ( alpha1, alpha2, alpha3, alpha4,alpha5 )
+  ! Domain: [eta1_min,eta1_max] X [eta2_min,eta2_max]
+  !
+  ! **************************************************************************
+
+  ! direct mapping
+  function D_sharped_Geo_x1 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_x1
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_x1= alpha1+(alpha2*(2._f64*eta1n-1._f64)+alpha3)* &
+                      cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
+  end function D_sharped_Geo_x1
+
+  function D_sharped_Geo_x2 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_x2
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:),intent(in) :: params
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_x2 = alpha5*(alpha2*(2._f64*eta1n-1._f64)+alpha3)*sin(pi2*eta2n)
+  end function D_sharped_Geo_x2
+
+  ! jacobian matrix
+  function D_sharped_Geo_jac11 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac11
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac11 = alpha2*2._f64*cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
+    D_sharped_Geo_jac11 = D_sharped_Geo_jac11 /(eta1_max - eta1_min) 
+  end function D_sharped_Geo_jac11
+
+  function D_sharped_Geo_jac12 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac12
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac12 = -(alpha2*(2._f64*eta1n-1._f64)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2n))*&
+                          sin(pi2*eta2n+alpha4*sin(pi2*eta2n)) 
+    D_sharped_Geo_jac12 = D_sharped_Geo_jac12/(eta2_max - eta2_min)                        
+  end function D_sharped_Geo_jac12
+
+  function D_sharped_Geo_jac21 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac21
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac21 = 2._f64*alpha5*alpha2*sin(pi2*eta2n)
+    D_sharped_Geo_jac21 = D_sharped_Geo_jac21/(eta1_max - eta1_min)
+  end function D_sharped_Geo_jac21
+
+  function D_sharped_Geo_jac22 ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac22
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    pi2 = 2.0_f64*sll_pi
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    D_sharped_Geo_jac22 = alpha5*(alpha2*(2._f64*eta1n - 1._f64)+alpha3)*cos(pi2*eta2n)*pi2
+    D_sharped_Geo_jac22 =  D_sharped_Geo_jac22/(eta2_max - eta2_min) 
+  end function D_sharped_Geo_jac22
+
+   ! jacobian ie determinant of jacobian matrix
+  function D_sharped_Geo_jac ( eta1, eta2, params )
+    sll_real64  :: D_sharped_Geo_jac
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64  :: jac_11,jac_12,jac_21,jac_22
+    sll_real64  :: pi2
+    sll_real64  :: alpha1
+    sll_real64  :: alpha2 
+    sll_real64  :: alpha3
+    sll_real64  :: alpha4
+    sll_real64  :: alpha5
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    
+    SLL_ASSERT(size(params) >= 9)
+    alpha1 = params(1)
+    alpha2 = params(2)
+    alpha3 = params(3)
+    alpha4 = params(4)
+    alpha5 = params(5)
+    eta1_min =params(6)
+    eta2_min =params(7)
+    eta1_max =params(8)
+    eta2_max =params(9)
+    pi2 = 2.0_f64*sll_pi
+    
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    
+    jac_11 = alpha2*2._f64*cos(pi2*eta2n+alpha4*sin(pi2*eta2n))
+    jac_12 =  -(alpha2*(2._f64*eta1n-1._f64)+alpha3)*(pi2+pi2*alpha4*cos(pi2*eta2n))*&
+               sin(pi2*eta2n+alpha4*sin(pi2*eta2n))   
+    jac_21 = 2._f64*alpha5*alpha2*sin(pi2*eta2n) 
+    jac_22 = alpha5*(alpha2*(2._f64*eta1n - 1._f64)+alpha3)*cos(pi2*eta2n)*pi2
+    D_sharped_Geo_jac = jac_11*jac_22 - jac_12*jac_21
+    
+    D_sharped_Geo_jac = D_sharped_Geo_jac/((eta1_max - eta1_min)*(eta2_max - eta2_min))
+  end function D_sharped_Geo_jac
+        
 
 end module sll_common_coordinate_transformations
 

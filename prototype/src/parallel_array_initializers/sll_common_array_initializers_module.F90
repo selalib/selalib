@@ -249,6 +249,7 @@ contains
        
   end function sll_diocotron_initializer_2d
   
+  
   function sll_diocotron_initializer_2d2( x, y, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -288,11 +289,7 @@ contains
     endif 
   
   end function sll_diocotron_initializer_2d2
-
-
-  !
-  
-
+ 
   function sll_beam_initializer_2d( x, vx, params ) result(res)
     sll_real64 :: res
     sll_real64, intent(in) :: x
@@ -334,7 +331,8 @@ contains
 
    sll_real64, dimension(:), intent(in), optional :: params
    sll_real64 :: eps
-   sll_real64 :: k_mode
+   sll_real64 :: k_mode_x
+   sll_real64 :: k_mode_y
 
    if( .not. present(params) ) then
       print *, '#sll_KHP1_2d, error: the params array must ', &
@@ -342,16 +340,43 @@ contains
       print *,'#params(1)= eps  param(2)=k_mode'
       stop
    end if
-   SLL_ASSERT(size(params)>=2)
+   SLL_ASSERT(size(params)>=3)
    eps = params(1)
-   k_mode = params(2)
+   k_mode_x = params(2)
+   k_mode_y = params(3)
 
-   res = sin(y)+eps*cos(k_mode*x)
+   res = sin(k_mode_y*y)+eps*cos(k_mode_x*x)
 
   end function sll_KHP1_2d
 
 
-
+  function sll_DSG_2d( eta1, eta2, params ) result(res)
+    sll_real64  :: res
+    sll_real64, intent(in)   :: eta1
+    sll_real64, intent(in)   :: eta2
+    sll_real64, dimension(:), intent(in), optional :: params    
+    
+    sll_real64  :: eta1n
+    sll_real64  :: eta2n
+    sll_real64  :: eta1_min
+    sll_real64  :: eta2_min
+    sll_real64  :: eta1_max
+    sll_real64  :: eta2_max
+    if( .not. present(params) ) then
+       print *, '#sll_sll_D_sharped_Geo_2d, error: the params array must ', &
+            'be passed. params(1) = eta1_min, params(2) = eta2_min', &
+            'be passed. params(3) = eta1_max, params(4) = eta2_max'
+       stop
+    end if
+    SLL_ASSERT(size(params)>=4)
+    eta1_min =params(1)
+    eta2_min =params(2)
+    eta1_max =params(3)
+    eta2_max =params(4)
+    eta1n = (eta1 - eta1_min)/(eta1_max - eta1_min)
+    eta2n = (eta2 - eta2_min)/(eta2_max - eta2_min)
+    res =  4._f64*eta1n*(1._f64 - eta1n)* (1._f64 + 0.1_f64*sin(8.*sll_pi*eta2n))
+  end function sll_DSG_2d
 
 
   ! This is a simplistic initializer aimed at a 4d cartesian distribution
@@ -784,6 +809,195 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
          (1.0_f64+eps*cos(kx*x))*exp(-0.5_f64*(vx**2))
   end function sll_landau_1d_xvx_initializer_v1v2x1x2
 
+function sll_twostream_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_twostream_1d_xvx_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64  :: v0
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_twostream_1d_initializer_v1v2x1x2, error: the params array', &
+            'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    v0=3.0_f64
+    !kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx=0.2_f64
+    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+
+    sll_twostream_1d_xvx_initializer_v1v2x1x2 = factor1/2 * &
+         (1.0_f64+eps*cos(kx*x))*(exp(-0.5_f64*((vx-v0)**2))+ &
+         exp(-0.5_f64*((vx+v0)**2)))
+  end function sll_twostream_1d_xvx_initializer_v1v2x1x2
+
+ function sll_galaxy_1d_xvx_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_galaxy_1d_xvx_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    !sll_real64  :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_1d_initializer_v1v2x1x2, error: the params array', &
+            'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       print *,'does not depend on y and vy',y,vy
+       stop
+    end if
+
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+
+    eps = params(5)
+    !kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx=0.2_f64
+    factor1 = 1.0_f64/sqrt((2.0*sll_pi))
+    sll_galaxy_1d_xvx_initializer_v1v2x1x2=0.0_f64
+    if ((x.lt.1.0_f64).and.(x.gt.-1.0_f64)) then
+       sll_galaxy_1d_xvx_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*(vx**2))
+    end if
+  end function sll_galaxy_1d_xvx_initializer_v1v2x1x2
+
+ function sll_galaxy_2d_initializer_v1v2x1x2( vx, vy, x, y, params ) 
+    sll_real64 :: sll_galaxy_2d_initializer_v1v2x1x2
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    sll_real64 :: v0x
+    sll_real64 :: v0y
+    !sll_real64  :: t
+
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: eta1_min
+    sll_real64 :: eta1_max
+    sll_real64 :: eta2_min
+    sll_real64 :: eta2_max
+    sll_real64 :: a1_xmin,a1_xmax,a1_ymin,a1_ymax,x1mil
+    sll_real64 :: a2_xmin,a2_xmax,a2_ymin,a2_ymax,x2mil
+    sll_real64 :: eps
+    sll_real64 :: kx
+    sll_real64 :: factor1
+
+    if( .not. present(params) ) then
+       print *, 'sll_landau_1d_initializer_v1v2x1x2, error: the params array', &
+            'must be passed params(1)= epsilon, params(2) = kx, params(3) = ky.'
+       print *,'does not depend on y and vy',y,vy
+       stop
+    end if
+    !lmin=0.0_f64
+    eta1_min = params(1)
+    eta1_max = params(2)
+    eta2_min = params(3)
+    eta2_max = params(4)
+    !amas 1
+    a1_xmin = -2.0_f64
+    a1_xmax = 2.0_f64
+    x1mil = 0.0_f64
+    a1_ymin = -a1_xmax
+    a1_ymax = -a1_xmin
+    !amas 2
+    a2_xmin = -6.0_f64
+    a2_xmax = -2.0_f64
+    x2mil=-4.0_f64
+    a2_ymin = -a2_xmax
+    a2_ymax = -a2_xmin
+    
+    eps = params(5)
+    !kx  =  2. * sll_pi / (eta1_max - eta1_min)
+    kx=0.2_f64
+    factor1 = 1.0_f64 /sqrt((2.0*sll_pi))**2
+    sll_galaxy_2d_initializer_v1v2x1x2=0.0_f64
+    !un bloc de particles
+!!$    if ((x.le.1.0_f64).and.(x.ge.-1.0_f64).and.(y.le.1.0_f64).and.(y.ge.-1.0_f64)) then
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*(vx**2+vy**2))
+!!$    end if
+    !2 blocs de particles
+    !amas 1
+    if ((x.le.a1_xmax).and.(x.ge.a1_xmin).and.(y.le.a1_ymax).and.(y.ge.a1_ymin)) then
+       v0x=0.0_f64
+       v0y=0.0_f64
+    sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-0.5_f64*((x-x1mil)**2+(y+x1mil)**2)*16)
+    end if
+    !amas 2
+     if ((x.le.a2_xmax).and.(x.ge.a2_xmin).and.(y.le.a2_ymax).and.(y.ge.a2_ymin)) then
+       v0x=0 ! 1.0_f64 !0.3109793990   !0.2433894805
+       v0y=-0 !.5
+        sll_galaxy_2d_initializer_v1v2x1x2 =factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-0.5_f64*((x-x2mil)**2+(y+x2mil)**2)*16)
+    end if
+!!$ if ((x.le.lmax).and.(x.ge.lmin).and.(y.le.-lmin).and.(y.ge.-lmax)) then
+!!$       v0x=-1.0
+!!$       v0y=0
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x-lmil)**2+(y+lmil)**2))
+!!$    end if
+!!$    if ((y.le.lmax).and.(y.ge.lmin).and.(x.le.-lmin).and.(x.ge.-lmax)) then
+!!$       v0x=1.0
+!!$       v0y=0
+!!$        sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x+lmil)**2+(y-lmil)**2))
+!!$     end if
+  !  end if
+!!$    if ((x.le.lmax).and.(x.ge.lmin).and.(y.le.-lmin).and.(y.ge.-lmax)) then
+!!$       v0x=-1.0
+!!$       v0y=0
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp(-((x-lmil)**2+(y+lmil)**2))
+!!$    end if
+!!$ if ((y.le.lmax).and.(y.ge.lmin).and.(x.le.-lmin).and.(x.ge.-lmax)) then
+!!$       v0x=1.0
+!!$       v0y=0
+!!$        sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))*exp((x+lmil)**2+(y-lmil)**2)
+!!$    end if
+!!$  
+!!$    if ((x.le.3.0_f64).and.(x.ge.1.5_f64).and.(y.le.-1.5_f64).and.(y.ge.-3.0_f64)) then
+!!$       v0x=-1.0_f64
+!!$       v0y=0.0
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))
+!!$    end if
+!!$ if ((y.le.3.0_f64).and.(y.ge.1.5_f64).and.(x.le.-1.5_f64).and.(x.ge.-3.0_f64)) then
+!!$       v0x=1.0_f64
+!!$       v0y=-0.0
+!!$        sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*((vx-v0x)**2+(vy-v0y)**2))
+!!$    end if
+
+!!$    if ((x.le.2.5_f64).and.(x.ge.0.5_f64).and.(y.le.-0.5_f64).and.(y.ge.-2.5_f64)) then
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*(vx**2+vy**2))
+!!$    end if
+!!$ if ((y.le.2.5_f64).and.(y.ge.0.5_f64).and.(x.le.-0.5_f64).and.(x.ge.-2.5_f64)) then
+!!$       sll_galaxy_2d_initializer_v1v2x1x2 = factor1*exp(-0.5_f64*(vx**2+vy**2))
+!!$    end if
+  end function sll_galaxy_2d_initializer_v1v2x1x2
+
+
   function sll_landau_1d_yvy_initializer_v1v2x1x2( vx, vy, x, y, params ) 
     sll_real64 :: sll_landau_1d_yvy_initializer_v1v2x1x2
     sll_real64, intent(in) :: x
@@ -1109,5 +1323,61 @@ function sll_test_yvy_transport_initializer_v1v2x1x2( vx, vy, x, y, params )
          / (2*sll_pi)
     
   end function sll_periodic_periodic_gaussian2002_initializer_4d
+
+
+
+ !---------------------------------------------------------------------------
+  !
+  !                         Gaussian beam 4d initializer
+  !  
+  ! convention for the params array:
+  ! params(1) = vth
+  ! params(2) = xth
+  ! params(3) = vxc
+  ! params(4) = vyc
+  ! params(5) = xc
+  ! params(6) = yc
+  ! params(7) = n0
+  ! params(8) = radius
+  !---------------------------------------------------------------------------
+  
+  function sll_gaussian_beam_initializer_4d( x, y, vx, vy, params ) &
+       result(val)
+    
+    sll_real64 :: val
+    sll_real64, intent(in) :: x
+    sll_real64, intent(in) :: y
+    sll_real64, intent(in) :: vx
+    sll_real64, intent(in) :: vy
+    
+    sll_real64, dimension(:), intent(in), optional :: params
+    sll_real64 :: vxc
+    sll_real64 :: vyc
+    sll_real64 :: xc,yc,radius
+    sll_real64 :: vt,xt,n0
+    
+    if( .not. present(params) ) then
+       print *, 'sll_gaussian_initializer_4d, error: the params array must ', &
+            'be passed: ', &
+            'params(1) = vt, params(2) = xt, params(3) = sigma_x, params(4) = sigma_v',&
+            ' params(5) = vxc, params(6) = vyc, params(7) = xc, params(8) = yc, params(9) = n0'
+       stop
+    end if
+    
+    vt      = params(1)
+    xt      = params(2)
+    vxc     = params(3)
+    vyc     = params(4)
+    xc      = params(5)
+    yc      = params(6)
+    n0      = params(7)
+    radius   = params(8)
+   
+    
+    val = n0 *exp(-0.5*(radius**2*(x-xc)**2  + radius**2*(y-yc)**2)/(xt*xt)  ) &
+         / (2*sll_pi*xt**2) &
+         *exp(-0.5*((vx-vxc)**2+(vy-vyc)**2)/(vt*vt))/ (2*sll_pi*vt**2)
+    
+  end function sll_gaussian_beam_initializer_4d
 
 end module sll_common_array_initializers_module

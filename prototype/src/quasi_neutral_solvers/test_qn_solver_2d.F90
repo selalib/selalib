@@ -30,9 +30,9 @@ program test_qn_solver_2d
      else
         BC = SLL_DIRICHLET
      endif
-     print*, ' '
-     print*, 'Testing sll_qns2d_angular_spect_method_seq with ', BC
-     print*, ' '
+
+     print*, 'Testing sequential qns2d', BC
+
      SLL_ALLOCATE(Te(NP_r), ierr)
      Te = 1.d0
      call test_process(BC, NP_r, NP_theta, rmin, rmax, Te, Zi)
@@ -41,10 +41,8 @@ program test_qn_solver_2d
   enddo
 
   print*, 'test_sll_qns2d_angular_spect_method_seq: PASSED'
-  print*, ' '
 
 contains
-
 
   subroutine test_process(BC, NP_r, NP_theta, rmin, rmax, Te, Zi)
 
@@ -142,9 +140,10 @@ contains
        print*, ' '
 
        if ( average_err > average_err_bound ) then
+          print*, average_err 
+          print*, average_err_bound 
           print*, 'test_sll_qns2d_angular_spect_method_seq: FAILED'
           print*, ' '
-          stop
        endif
     
     enddo

@@ -6,7 +6,7 @@
 
 \begin{document}
 
-\title{Selalib Notes - DRAFT -}   
+\title{Selalib Manual - DRAFT -}
 \author{Edwin Chacon-Golcher}        
 \date{\today}    
 \maketitle
@@ -18,25 +18,19 @@
 \tableofcontents
 
 \chapter{Introduction}             % chapter 1
-Selalib is the \emph{Se}mi\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use this specific methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semilagrangian approach. However, most of the modules contained in the library are not intrinsically related with the semilagrangian method, but are more general utilities which could be used in different contexts. A principle in the development of the library has been to continually identify specific functionalities and to attempt to promote them into their own standalone module, with a sufficiently general interface which may still be reasonably efficient.
+Selalib is the \emph{Se}mi\emph{La}grangian \emph{Lib}rary, a collection of types and its associated methods that are useful for creating parallel plasma physics simulations that use the semilagrangian methodology for the solution of the \emph{Vlasov} equation. In its design, we have attempted to expose to the users an interface that expresses as naturally as possible the problems that arise when using the semilagrangian approach. However, most of the modules contained in the library are not intrinsically related with the semilagrangian method, but are more general utilities which could be used in different contexts. A principle in the development of the library has been to continually identify specific functionalities and to attempt to promote them into their own standalone module, with a sufficiently general interface which may still permit a reasonably efficient implementation.
 
-Selalib is structured in layers. One can think about these layers as libraries in their own right. A given layer can use the capabilities offered by a lower layer through the exposed interface, but never from a higher level. The layer with the lowest level of abstraction presently contains basic utilities like memory allocators, assertions and basic numeric types. The second layer is composed of numerical and parallel utilities. The third and highest level of the library contains the semi-lagrangian methodology tools, types and methods. This manual will ultimately describe each of these layers.
+Selalib is structured in (loosely defined) layers. One can think about these layers as libraries in their own right. A given layer can use the capabilities offered by a lower layer through the exposed interface, but never from a higher level. The layer with the lowest level of abstraction presently contains basic utilities like memory allocators, assertions and basic numeric types. The second layer is composed of numerical and parallel utilities. The third and highest level of the library contains the semi-lagrangian methodology tools, types and methods. This manual will ultimately describe each of these layers and the modules therein.
 
-Most of the native types and operations provided by Selalib are prefixed by \verb+sll_+. In this way you can at least have an expectation of finding documentation (if a user) and a starting point of where to start looking if you wish to dive into some particular aspect of an implementation (if a developer). 
+Most of the native types and operations provided by Selalib are prefixed by \verb+sll_+. In this way you can at least have an expectation of finding documentation (if a user) and a starting point of where to start looking if you wish to dive into some particular aspect of an implementation (if a developer). This convention has not been always followed, so it would be advantageous to slowly but surely include this prefix throughout as a first means to create a Selalib namespace.
 
 Selalib is written in Fortran 2003. We have deviated from the original intent to make Selalib fully f95-compatible for multiple reasons: the newer standard permits a separation of interface and implementation which is desirable in a development like this, the reduction in coding that is obtained with the use of abstract classes is appealing for a project with quite limited manpower as this one, and finally, the desire to make this product as forward-looking as possible.
 
-There are some aspects of the library's implementation that may warrant some commentary as these have an impact on how the library is used. For instance, the full library can be imported by the declaration \textcolor{red}{(Pierre, is this true presently?)}:
-\begin{verbatim}
-#include "selalib.h"
-\end{verbatim}
-instead of the more Fortran-natural form:
-\begin{verbatim}
-use selalib
-\end{verbatim}
-The reason for this is that some features of the library are implemented as \emph{macros}. To the user of the library, it makes no difference whether some functionality is implemented in the form of a procedure or a macro, with the exception that presently, macro names are written in \verb+ALL-CAPS+. The use of the macro is required to offer certain capabilities, like informative error messages. For a developer, the use of the macros is needed in many cases to reduce code redundancy. The need for the use of macros will hopefully be more understandable when the reader sees the behavior of calls to simple macros like \verb+SLL_ALLOCATE()+ or \verb+SLL_ASSERT()+.
+Some features of the library are implemented as \emph{macros}. To the user of the library, it makes no difference whether some functionality is implemented in the form of a procedure or a macro, with the exception that presently, macro names are written in \verb+ALL-CAPS+. The use of the macro is required to offer certain capabilities, like informative error messages. For a developer, the use of the macros is needed in many cases to reduce code redundancy. The need for the use of macros will hopefully be more understandable when the reader sees the behavior of calls to simple macros like \verb+SLL_ALLOCATE()+ or \verb+SLL_ASSERT()+.
 
 A macro is a pre-processor directive. Selalib uses only very simple macros that are handled by \emph{fpp}, the Fortran Pre-Processor. \emph{fpp}'s capabilities are very limited and one peculiarity of its output is that macros are expanded into a single long line, which can easily surpass the 132 character limit that Fortran systems have. For this reason alone, the compilation of Selalib requires the use of a compilation flag: \verb+-ffree-line-length-none+ (in \textbf{gfortran}) or its equivalent in another compiler. On a similar vein, some compilers require the extension \verb+.F90+ (as opposed to \verb+.f90+) in order to apply a preprocessing step. Thus, all files in Selalib use the \verb+.F90+ extension. Clients of the library which want to use the macro facilities should thus also use this extension as well.
+
+INCLUDE EXAMPLE HERE OF THE EXTERNAL USE OF THE LIBRARY
 
 
 %\section{Introduction}     % section 1.1
@@ -546,10 +540,36 @@ Unit-tested.
 
 
 
+
+\section{Boundary Condition Descriptors}
+
+\subsection{Description}
+This tiny module defines a few symbols that are meant to be used library-wide as a means to indicate various boundary condition types or their combinations. The objective is to have pre-defined symbols that will prevent the need of using numeric values explicitly to specify this information.
+
+\subsection{Exposed Interface}
+The defined symbols are:
+
+\begin{verbatim}
+     SLL_USER_DEFINED
+     SLL_PERIODIC
+     SLL_DIRICHLET
+     SLL_NEUMANN 
+     SLL_HERMITE 
+     SLL_NEUMANN_MODE_0
+     SLL_SET_TO_LIMIT 
+\end{verbatim}
+
+\subsection{Usage}
+Simply pass the parameter as an argument to any routine call which requires a \emph{boundary condition descriptor}.
+
+
+
+
+
 \section{Cubic Splines}
 
 \subsection{Description}
-The cubic splines module provides capabilities for 1D and 2D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated are stored in a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data.
+The cubic splines module provides capabilities for 1D and 2D data interpolation with cubic B-splines and different boundary conditions (at the time of this writing: periodic, hermite). The data to be interpolated are represented by a simple array.  The spline coefficients and other information are stored in a spline object, which is also used to interpolate the fitted data. To use this module, simply declare an instance of the type to be used, initialize the object with the desired parameters, use the initialized object to do interpolations and when no longer needed, release the resources through a call to the \verb+sll_delete( )+ routine. More details below.
 
 \subsection{Exposed Interface}
 Fundamental types:
@@ -557,16 +577,16 @@ Fundamental types:
      sll_cubic_spline_1d
      sll_cubic_spline_2d
 \end{verbatim}
-Like all the other fundamental types in Selalib, this type is declared as a pointer and only manipulated through the functions and subroutines described below. For more explicit examples, see the usage section.
+These types are declared as pointers and only manipulated through the functions and subroutines described below. For more explicit examples, see the usage section.
 
-Available functions:
+For the 1D case, the available routines are:
 \begin{verbatim}
      new_cubic_spline_1D( num_points, 
                           xmin, 
                           xmax, 
                           bc_type, 
-                          slope_L, 
-                          slope_R )  
+                          [slope_L], 
+                          [slope_R] )  
      compute_cubic_spline_1D( data, spline_object )
      interpolate_value( x, spline_object )
      interpolate_derivative( x, spline_object )
@@ -574,8 +594,95 @@ Available functions:
      interpolate_pointer_values( a_in, a_out, np, spline_object )
      interpolate_array_derivatives( a_in, a_out, np, spline_object )
      interpolate_pointer_derivatives( ptr_in, ptr_out, np, spline_object )
+     get_x1_min( spline_object )
+     get_x1_max( spline_object )
+     get_x1_delta( spline_object )
      sll_delete( spline_object )
-     
+\end{verbatim}
+ 
+In the above list:
+ 
+\begin{description}
+	\item \verb+new_cubic_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and initializating it. Arguments:
+
+	\begin{description}
+		\item[num\_points:] 
+32-bit integer. Number of data points for which the spline needs to be computed, including the end-points (regardless of the boundary condition used).
+		\item[xmin:]
+Double precision real. Lower bound of the domain in which the data array is defined. In other words, if we think of the data array (indexed 1:NP) as the values of a discrete function \emph{f} defined over a sequence of $x_i$'s, then $x_1 = xmin$.
+		\item[xmax:]
+Double precision real. Similarly to \verb+xmin+, \verb+xmax+ represents the maximum extent of the domain. For data indexed 1:NP: $xmax = x_{NP}$. 
+		\item[bc\_type:]
+Pre-defined parameter. Descriptor of the type of boundary condition to be imposed in the spline. Use only the symbols defined in Selalib's \emph{boundary condition descriptors} module. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+. These are really aliases to integer flags, but in Selalib we avoid the use of non-descriptive flags.
+		\item[slope\_L:]
+	Double precision real. Optional value representing the desired slope at $x = xmin$, in the hermite BC case.
+		\item[slope\_R:]
+	Double precision real. Optional value representing the desired slope at $x = xmax$, in the hermite BC case.
+	\end{description}
+
+
+	\item \verb+compute_cubic_spline_1D()+ calculates the spline coefficients needed to represent the given data and stores this information in the spline object. Arguments:
+	
+	\begin{description}
+		\item[ data:] Double precision 1D real array containing NP values.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_1d+.
+	\end{description}
+
+
+	\item \verb+interpolate_value()+ returns the value of \emph{f(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object passed. Essentially, the spline object, together with the \verb+interpolate_value()+ function create the illusion of having available a continuous function when originally using the discrete data given. Arguments:
+	
+	\begin{description}
+		\item[ x:] Double precision value representing the ordinate whose image is sought.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_1d+. A call to \verb+compute_cubic_spline_1D()+ should have been made previous to calling this function.
+	\end{description}
+
+	\item \verb+interpolate_array_values()+ has an analogous functionality than the previous interpolation function, but is capable of processing whole arrays. This is useful to avoid the overhead associated with a call to \verb+interpolate_value()+ inside a loop.
+	
+	
+	\item \verb+interpolate_derivative()+ returns the value of \emph{f'(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object passed. Same types of arguments as in \verb+interpolate_value()+.
+	
+	\item \verb+interpolate_array_values()+ is a subroutine that interpolates the results of multiple values of \emph{x}. Arguments:
+		\begin{description}
+			\item[a\_in:] [in] double precision 1D array containing the values of the ordinates to be interpolated.
+			\item[a\_out:] [out]double precision 1D array to store the results, i.e., the images of the values contained in \verb+a_in+.
+			\item[np:] [in] 32-bit integer storing the number of points meant to be interpolated.
+			\item[ spline\_object: ] [inout] Initialized object of type \verb+sll_cubic_spline_1d+.
+		\end{description}
+
+	\item \verb+interpolate_pointer_values()+ is a subroutine with analogous arguments to \verb+interpolate_array_values+ except that it receives pointers instead of arrays for its arguments.
+	
+	\item \verb+interpolate_array_derivatives()+ computes multiple first-derivative values. Its interface is identical to \verb+interpolate_array_values()+.
+	
+	\item \verb+interpolate_pointer_derivatives()+ computes multiple first-derivative values, just as \verb+interpolate_array_derivatives()+ except that its arguments are pointers.
+	
+	\item \verb+get_x1_min()+ returns the minimum value of the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+	
+	\item \verb+get_x1_max()+ returns the maximum value of the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+		
+		\item \verb+get_x1_delta()+ returns the value of the spacing between the points used to compute the spline values. This is determined from the extent of the domain and the number of cells used. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+
+	\item \verb+sll_delete()+ subroutine to free the resources of a given spline object. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_1D+
+		\end{description}
+\end{description}
+
+
+
+For the 2D case, the available routines are:
+
+
+
+\begin{verbatim}     
      new_cubic_spline_2d( num_pts_x1,  
                           num_pts_x2,  
                           x1_min,      
@@ -596,41 +703,114 @@ Available functions:
        interpolate_value_2d( x1, x2, spline_object )
        interpolate_x1_derivative_2d( x1, x2, spline_object )
        interpolate_x2_derivative_2d( x1, x2, spline_object )      
-       
+       get_x1_min( spline_object )
+       get_x1_max( spline_object )
+       get_x2_min( spline_object )
+       get_x2_max( spline_object )
+       get_x1_delta( spline_object )
+       get_x2_delta( spline_object )
        sll_delete( spline_object )             
 \end{verbatim}
-\verb+new_spline_1D()+ is responsible for allocating all the necessary storage for the spline object and doing some partial initialization of the object. Hence the full creation of a spline is a three-step process: the first one is the declaration of the spline pointer, the second is its assignment through a call to the \verb+new_spline_1D()+ function. The last step, which fully initializes the spline by computing all the coefficients is carried out by calling \verb+compute_spline_1D()+. This last call uses information inside the partially initialized spline object. For details, see the usage section below. 
 
-\verb+set_slope_left()+ and \verb+set_slope_right()+: These subroutines are offered in case that the user wants to modify the values of the slopes in a spline object before a call to any of the \verb+compute_spline_1D()+ subroutines. These subroutines would extract the boundary types and slopes (if any) from the spline object, so in case that the user wants to change these values after the initialization step, these are the subroutines to use.
-
-\verb+compute_spline_1D_xxx()+: Note the presence of redundant subroutines. For instance, the subroutine \verb+compute_spline_1D()+, which computes the spline coefficients for a given data, is just a wrapper around the other specialized subroutines that specify the type of boundary conditions in their names. We leave both options until we decide which interface is preferable. This involves a tradeoff between a uniform call that specifies the type of boundary condition through an argument, and a specific subroutine call, more efficient, but less uniform\footnote{Presently, both interfaces coexist. We may decide to ultimately leave them both. The same happens in the case of the destructor functions.}. The \verb+compute_spline_1D()+ functions have to be called again any time that the underlying data changes or if the spline object is to be used with new data. 
-
-\verb+interpolate_value()+ returns the value of \emph{f(x)} where \emph{x} is a floating-point value between \verb+xmin+ and \verb+xmax+, and \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object used to interpolate. Essentially, the spline object, together with the \verb+interpolate_value()+ function create the illusion of having available a continuous function when originally, only discrete data were available.
-
-Finally, \verb+interpolate_array_values()+ has an analogous functionality than the previous interpolation function, but is capable of processing whole arrays. This is useful to avoid the overhead associated with a call to \verb+interpolate_value()+ inside a loop.
-
-In the functions above:
+   
+In the above list:
+ 
 \begin{description}
-\item[num\_points:] 
-Size of the array that contains the data that must be fitted with the spline. One should think of this as the full size of the array, that is, the user should not be concerned about whether the last point is to be taken into account in the periodic case or anything of the sort. Thus for a data array indexed $1:NP$, the size is simply $NP$.
-\item[xmin:]
-Lower bound of the grid in which the data array is defined. In other words, if we think of the data array (indexed 1:NP) as the values of a discrete function \emph{f} defined over a sequence of $x_i$'s, then $x_1 = xmin$.
-\item[xmax:]
-Similarly to \verb+xmin+, \verb+xmax+ represents the maximum extent of the grid. Following the same example of the data indexed $1:NP$: $xmax = x_{NP}$. 
-\item[bc\_type:]
-Descriptor of the type of boundary condition to be imposed in the spline. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+. These are really aliases to integer flags, but in Selalib we avoid the use of non-descriptive flags. The boundary conditions are enforced at the endpoints.
-\item[data:] 
-The double precision floating point data array to be fitted.
-\item[spline\_object:]
-The spline entity that is allocated and returned by the function \verb+new_spline_1D()+, initialized by the \verb+compute_spline()+ functions and deleted by the \verb+delete()+ functions.
-\item[slope\_L, slope\_R:] optional arguments, in the case of the hermitian boundary conditions, the user can define the value of the slope at either end of the domain. If not present, these values default to zero. As an example, a spline to fit the data representing the function $sin(x)$ between $0$ and $\pi$ would be called with slopes $1$ and $-1$.
-\item[a\_in:]
-Input array to be interpolated.
-\item[a\_out:]
-Array that returns the interpolated values.
-\item[np:] 
-Number of points to be interpolated.
+	\item \verb+new_cubic_spline_2D()+ is responsible for allocating all the necessary storage for the spline object and initializating it. Arguments:
+
+	\begin{description}
+		\item[num\_points\_x1:] 
+[in] 32-bit integer. Number of data points in the first (memory-contiguous) direction for which the spline needs to be fitted. Endpoints at $x_{1,j} = x1_{min}$ and $x_{NPX1,j} = x1_{max}$ must be included.
+		\item[num\_points\_x2:]
+[in] 32-bit integer. Number of data points in the second direction for which the spline needs to be fitted. Endpoints at $x_{i,1} = x2_{min}$ and $x_{i,NPX2} = x2_{max}$ must be included.
+		\item[x1\_min:]
+[in] Double precision real. Lower bound of the domain in which the data array is defined in the first (memory-contiguous) direction.
+		\item[x1\_max:]
+[in]Double precision real. Represents the maximum extent of the domain in the first (memory-contiguous) direction.
+		\item[x2\_min:]
+[in] Double precision real. Lower bound of the domain in which the data array is defined in the second direction.
+		\item[x2\_max:]
+[in]Double precision real. Represents the maximum extent of the domain in the second direction.
+		\item[x1\_bc\_type:]
+[in] Pre-defined parameter. Descriptor of the type of boundary condition to be imposed in the spline in the first direction. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+ as defined in Selalib's \emph{boundary condition descriptors} module.
+		\item[x2\_bc\_type:]
+[in] Pre-defined parameter. Descriptor of the type of boundary condition to be imposed in the spline in the second direction. Presently, one of \verb+PERIODIC_SPLINE+ or \verb+HERMITE_SPLINE+ as defined in Selalib's \emph{boundary condition descriptors} module.
+		\item[const\_slope\_x1\_min:]
+	[optional, in]Double precision real. Optional value representing the desired slope at $x1_{min}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[const\_slope\_x1\_max:]
+		[optional, in]Double precision real. Optional value representing the desired slope at $x1_{max}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[const\_slope\_x2\_min:]
+	[optional, in]Double precision real. Optional value representing the desired slope at $x2_{min}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[const\_slope\_x2\_max:]
+		[optional, in]Double precision real. Optional value representing the desired slope at $x2_{max}$, in the hermite BC case if a constant value for the whole edge is to be specified.
+		\item[x1\_min\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x2+ locations in the edge at $x1_{min}$. To be used with the hermite boundary condition only.
+		\item[x1\_max\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x2+ locations in the edge at $x1_{max}$. To be used with the hermite boundary condition only.
+		\item[x2\_min\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x1+ locations in the edge at $x2_{min}$. To be used with the hermite boundary condition only.
+		\item[x2\_max\_slopes:]
+		[optional, in] Array with the values of the slopes at each of the \verb+num_points_x1+ locations in the edge at $x2_{max}$. To be used with the hermite boundary condition only.
+	\end{description}
+
+	\item \verb+compute_cubic_spline_2D()+ calculates the spline coefficients needed to represent the given 2D data and stores this information in the spline object. Arguments:
+	
+	\begin{description}
+		\item[ data:] [in] Double precision 2D real array containing NPX1*NPX2 values.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_2d+.
+	\end{description}
+
+
+	\item \verb+interpolate_value_2d()+ returns the value of \emph{f(x1,x2)} where the ordered pair $(x1,x2)$ is in the domain $[x1_{min},x1_{max}] X [x2_{min},x2_{max}]$. \emph{f} is a continuous function built with cubic B-splines and the user-defined boundary conditions contained in the spline object passed.  Arguments:
+	
+	\begin{description}
+		\item[ x1:] [in] Double precision value representing the value of the first coordinate.
+		\item[ x2:] [in] Double precision value representing the value of the second coordinate.
+		\item[ spline\_object: ] Initialized object of type \verb+sll_cubic_spline_2d+. A call to \verb+compute_cubic_spline_2D()+ should have been made previous to calling this function.
+	\end{description}
+
+	\item \verb+interpolate_x1_derivative_2d()+ returns the value of the first derivative in the $x1$ direction. Uses same types of arguments as the $interpolate_value_2d$ function.
+	
+	\item \verb+interpolate_x2_derivative_2d()+ returns the value of the first derivative in the $x2$ direction. Uses same types of arguments as the $interpolate_value_2d$ function.
+	
+	
+	\item \verb+get_x1_min()+ returns the minimum value of $x1$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+	
+	\item \verb+get_x1_max()+ returns the maximum value of $x1$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+		
+	\item \verb+get_x2_min()+ returns the minimum value of $x2$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+	
+	\item \verb+get_x2_max()+ returns the maximum value of $x2$ in the domain in which the spline object is defined. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+		
+		\item \verb+get_x1_delta()+ returns the value of the spacing between the points used to compute the spline values in the $x1$ direction. This is determined from the extent of the domain and the number of cells used. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+		
+		\item \verb+get_x2_delta()+ returns the value of the spacing between the points used to compute the spline values in the $x2$ direction. This is determined from the extent of the domain and the number of cells used. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
+
+	\item \verb+sll_delete()+ subroutine to free the resources of a given spline object. Arguments:
+		\begin{description}
+			\item[spline\_object:] a pointer to a previously initialized object of type \verb+sll_cubic_spline_2D+
+		\end{description}
 \end{description}
+   
+
    
 
 \subsection{Usage}
@@ -656,7 +836,7 @@ The following example is an extract from the module's unit test.
 14      type(sll_spline_1d), pointer :: sp2
 15      sll_real64, allocatable, dimension(:) :: data
 16      sll_real64 :: accumulator1, accumulator2
-17          sll_real64 :: val
+17      sll_real64 :: val
 18
 19      accumulator1 = 0.0_f64
 20      accumulator2 = 0.0_f64
@@ -671,14 +851,14 @@ The following example is an extract from the module's unit test.
 29      sp1 =>  new_spline_1D( NP,         &
 30                             0.0_f64,    &
 31                             sll_pi,     &
-32                             PERIODIC_SPLINE )
-33      call compute_spline_1D( data, PERIODIC_SPLINE, sp1 )
+32                             SLL_PERIODIC )
+33      call compute_cubic_spline_1D( data, sp1 )
 34      sp2 =>  new_spline_1D( NP, 0.0_f64,    &
 35	                            sll_pi,         &	
-36                             HERMITE_SPLINE, 
+36                             SLL_HERMITE, 
 37                             1.0_f64, 
 38                            -1.0_f64 )
-39      call compute_spline_1D_hermite( data, sp2 )
+39      call compute_cubic_spline_1D( data, sp2 )
 40  
 41      print *, 'cumulative errors at nodes: '
 42      do i=1, NP-1
@@ -897,11 +1077,228 @@ Some more specific examples are needed here...
 \subsection{Status}
 Several core functionalities tested, but no comprehensive unit test done yet
 
+
 \section{Remapper}
 
 \subsection{Description}
-Written on top of \verb+sll_collective+, the remapper is a powerful facility that is capable of rearranging data in flexible and convenient ways in a parallel machine. It is meant to be a generalization of the `transposition', which users/developers of \emph{CALVI} team codes know and love. The main difference is is generality, as here we extend the idea to encompass something beyond a data transposition in 2D, to an operation that can be carried out in any number of dimensions. For instance, suppose that you start with a multidimensional array that has been domain decomposed and distributed among $N_p$ processors. The  layout of the data (that is, the description of what ranges of the data are contained in each processor) is specified by an instance of the type \verb+layout_XD_t+, (where \verb+X+ is the dimension of the data). The layout contains a notion of an $N_p$-sized collection of boxes, each box representing a contiguous chunk of the multidimensional array stored in each  node. If in the course of a computation, you wish to reconfigure the layout of the data (for example, if you wished to re-arrange data in a way that would permit launching serial algorithms locally in each node), then you would create and initialize a new layout descriptor with the target configuration (i.e.: you to define the box to be stored in each node). This is a conceptually simple but perhaps slightly verbose task. Then a call to the appropriate choice among:
+Written on top of \verb+sll_collective+, the remapper is a powerful module capable of rearranging non-overlapping data in a parallel machine. This module also implements the concept of a \emph{layout}, which is a data structure that stores the index ranges of a given array to be found in each processor. In other words, the layout contains a description of the distribution of the data. Layouts are needed to specify remap operations.
 
+
+The use of the remapper module can be broken down in several stages: 
+
+\begin{enumerate}
+	\item Declare the layouts and the remap plan object, as well as the arrays to be used.
+	\item Initialize the layouts,
+	\item use the layouts and the arrays to create the remapper plan and,
+	\item apply the remapper plan using the input and output arrays as arguments.
+	\item As a final step, the resources in the layouts and remap plan should be deallocated wtih \verb+sll_delete()+
+\end{enumerate}
+
+The remap operation is an out-of-place operation. Remap is designed to consider only non-overlapping data configurations, that is, an \emph{all\_gather}-type operation should not be attempted with a remap.
+
+
+
+
+
+
+
+\subsection{Exposed Interface}
+Since the layouts are a pre-requisite for dealing with the remapper, we start with these. Presently, Selalib offers the following layout types:
+
+\begin{verbatim}
+     layout_2D
+     layout_3D
+     layout_4D
+     layout_5D
+     layout_6D
+\end{verbatim}
+
+
+
+These types are each accompanied by their own constructors, destructors and accessors. A comprehensive list of the procedures that operate with the layouts is:
+
+\begin{verbatim}
+     new_layout_2D( collective )
+     new_layout_3D( collective )
+     new_layout_4D( collective )
+     new_layout_5D( collective )
+     new_layout_6D( collective )
+     
+     get_layout_collective( layout )
+     get_layout_num_nodes( layout )
+     
+     get_layout_global_size_i( layout )
+     get_layout_global_size_j( layout )
+     get_layout_global_size_k( layout )
+     get_layout_global_size_l( layout )
+     get_layout_global_size_m( layout )
+     get_layout_global_size_n( layout )
+     
+     get_layout_i_min( layout, rank )
+     get_layout_i_max( layout, rank )
+     get_layout_j_min( layout, rank )
+     get_layout_j_max( layout, rank )
+     get_layout_k_min( layout, rank )
+     get_layout_k_max( layout, rank )
+     get_layout_l_min( layout, rank )
+     get_layout_l_max( layout, rank )
+     get_layout_m_min( layout, rank )
+     get_layout_m_max( layout, rank )
+     get_layout_n_min( layout, rank )
+     get_layout_n_max( layout, rank )
+     
+     set_layout_i_min( layout, rank, val )
+     set_layout_i_max( layout, rank, val )
+     set_layout_j_min( layout, rank, val )
+     set_layout_j_max( layout, rank, val )
+     set_layout_k_min( layout, rank, val )
+     set_layout_k_max( layout, rank, val )
+     set_layout_l_min( layout, rank, val )
+     set_layout_l_max( layout, rank, val )
+     set_layout_m_min( layout, rank, val )
+     set_layout_m_max( layout, rank, val )
+     set_layout_n_min( layout, rank, val )
+     set_layout_n_max( layout, rank, val )
+
+     initialize_layout_with_distributed_2d_array( 
+          global_npx1, 
+          global_npx2, 
+          num_proc_x1, 
+          num_proc_x2, 
+          layout)
+          
+     initialize_layout_with_distributed_3d_array( 
+          global_npx1, 
+          global_npx2, 
+          global_npx3, 
+          num_proc_x1, 
+          num_proc_x2, 
+          num_proc_x3, 
+          layout)
+          
+     initialize_layout_with_distributed_4d_array( 
+          global_npx1, 
+          global_npx2, 
+          global_npx3, 
+          global_npx4, 
+          num_proc_x1, 
+          num_proc_x2, 
+          num_proc_x3, 
+          num_proc_x4, 
+          layout)
+          
+     initialize_layout_with_distributed_5d_array( 
+          global_npx1, 
+          global_npx2, 
+          global_npx3, 
+          global_npx4, 
+          global_npx5, 
+          num_proc_x1, 
+          num_proc_x2, 
+          num_proc_x3, 
+          num_proc_x4, 
+          num_proc_x5, 
+          layout)
+          
+     initialize_layout_with_distributed_6d_array( 
+          global_npx1, 
+          global_npx2, 
+          global_npx3, 
+          global_npx4, 
+          global_npx5, 
+          global_npx6, 
+          num_proc_x1, 
+          num_proc_x2, 
+          num_proc_x3, 
+          num_proc_x4, 
+          num_proc_x5, 
+          num_proc_x6, 
+          layout)
+
+     compute_local_sizes( 
+          layout_Nd, 
+          loc_sz_1, 
+          loc_sz_2, 
+          ..., 
+          loc_sz_N )
+
+     sll_delete( layout )
+
+\end{verbatim}
+
+In brief:
+
+\begin{description}
+
+	\item \verb+new_layout_ND()+ function, is responsible for allocating all the necessary storage for the layout. Returns a pointer to a layout\_ND object, ready for initialization. Arguments:
+
+	\begin{description}
+		\item[collective:] 
+[pointer] sll\_collective type to be associated with the layout.
+          \end{description}
+          
+          \item \verb+get_layout_collective+ returns a pointer to the sll\_collective object associated with a given layout. Arguments:
+          \begin{description}
+                    \item[layout:]
+                    [pointer] layout whose collective is requested.
+          \end{description}
+          
+          \item \verb+get_layout_num_nodes+ returns a 32-bit integer with the number of processors in the collective associated with the given layout. Arguments:
+          \begin{description}
+               \item[layout:]
+               [pointer] layout whose size (in number of processes) is being requested.
+          \end{description}
+          
+          \item \verb+get_layout_global_size_X+ returns a 32-bit integer with the size of the global array (in an abstract sense, i.e. the array that is distributed) in the direction X. Arguments:
+          \begin{description}
+               \item[layout:]
+               [pointer] layout whose size (in number of processes) is being requested.
+          \end{description}
+          
+          \item \verb+get_layout_X_min+ returns a 32-bit integer with the minimum index in direction X contained in the given process rank. Arguments:
+          \begin{description}
+               \item[layout:]
+               [pointer] layout whose size (in number of processes) is being requested.
+               [in] 32-bit integer, rank of the process under inquiry.
+          \end{description}
+
+          \item \verb+get_layout_X_max+ returns a 32-bit integer with the maximum index in direction X contained in the given process rank. Arguments:
+          \begin{description}
+               \item[layout:]
+               [pointer] layout whose size (in number of processes) is being requested.
+               [in] 32-bit integer, rank of the process under inquiry.
+          \end{description}
+
+          
+\end{description}
+
+
+Specifically, the constructors are:
+
+
+
+Note that each layout descriptor needs to be allocated by providing an instance of \verb+sll_collective+. This can be understood by reasoning about the data layout as a group of processors (the collective) and a specification of the data boxes contained in each one. More concretely, a layout for an N-dimensional array associated with a collective of size $N_p$ can be thought of as a collection of $N_p$ N-dimensional boxes, each representing the intervals of the array indices contained in a given processor (rank: 0 ... $N_p-1$). After calling any of the \verb+new_layout+ functions, the returned instance becomes associated to the given collective and enough memory is allocated (size of the collective) to hold the boxes specification. While the memory has been allocated, the layout itself still needs to be initialized.
+
+There are at least two ways to accomplish the initialization. The manual way is through the individual access functions defined for the layouts. The second method involves helper routines. 
+
+The following is a list of the access functions defined for the layouts:
+
+
+In the above list, all the routines are generic, thus they will accept layouts of any dimension as long as the field to be accessed is defined in the layout. The array dimensions are labeled \verb+i, j, k, l, m, n+ (although in the arguments we use the numbers 1, 2, ... , 6). Thus, for example, a \verb+layout_2D+ contains information on the indices \verb+i+, \verb+j+ only. Accessing the \verb+k+ index would yield a compilation error. The \verb+get_+ routines are functions. Except for \verb+get_layout_collective( )+ which returns a pointer to the collective associated with a given layout, all the other \verb+get_+-functions return the value of a 32-bit integer value, representing the minimum or maximum value of an index contained in a given rank, or in the case of the \verb+get_layout_global_size_X+ functions, the global size of the (abstract) array that is split among the different processors in the way described by the layout.
+
+The \verb+set_+ procedures are subroutines. These can be used to set a given minimum/maximum index value in a given layout to a desired value. These are the accessors that may be used when initializing a layout manually. However this is not encouraged. In general, it is recommended to initialize layout with the provided helper functions, as shown next.
+
+
+The above procedures are subroutines. Except for the layout to be initialized, all the arguments are 32-bit integers. The \verb+global_npxX+ arguments denote the global size of the array (its total size in the $X$-th direction) that is to be divided amongst multiple processors in accordance with the partition determined by the \verb+num_proc_xX+ arguments. To understand the role of the \verb+num_proc_xX+ parameters it is necessary to imagine the domain represented by the N-dimensional array as being divided in a number of blocks in each dimension, just as if the processors themselves were arranged in a \emph{processor mesh} of dimensions \verb+num_proc_x1+ * \verb+num_proc_x2+ * ...  * \verb+num_proc_xN+ = number of processes in the collective. Thus, if distributing a 2D array of sizes \verb+global_npx1+ $ = 1024$, \verb+global_npx2+ $= 512$, in a process mesh of dimensions \verb+num_proc_x1+ $= 2$ and \verb+num_proc_x2+ $= 1$, this would yield a partition of the original array in one block, of dimensions $512 * 512$ in each of the two processors. Note again that the number of processors corresponds to the product of the \verb+nproc_xX+ arguments.
+
+The information in the initialized layouts can be used to inquire about the size of the data distributed as per a given layout. The procedures for this are hidden behind the generic interface:
+
+
+
+
+
+
+Once a layout is declared and initialized it can be used as an aid to allocate the memory of the array(s) whose distribution it represents. For instance, suppose that you start with a multidimensional array that needs to be distributed among $N_p$ processors. The  layout of the data (that is, the description of what ranges of the data are contained in each processor) is specified by an instance of the type \verb+layout_XD+, (where \verb+X+ is the dimension of the data). The layout contains a notion of an $N_p$-sized collection of boxes, each box representing a contiguous chunk of the multidimensional array stored in each processor. If in the course of a computation, you wish to reconfigure the layout of the data (for example, if you wished to re-arrange data in a way that would permit launching serial algorithms locally in each processor), then you would create and initialize a new layout descriptor with the target configuration (i.e.: you to define the box to be stored in each node). Armed with the layout descriptions for the initial and target configurations, one can execute a remap operation to reconfigure the data. This is an out-of-place operation. 
 \begin{verbatim}
      NEW_REMAPPER_PLAN_3D( initial_layout, 
                            target_layout, 
@@ -920,8 +1317,8 @@ will yield an instance of the type \verb+remap_plan_3D_t+, or \verb+remap_plan_4
      apply_remap_4D( plan, data_in, data_out )
      apply_remap_5D( plan, data_in, data_out )
 \end{verbatim}
-will actually redistribute \verb+data+ (as an out-of-place operation) according to \verb+plan+ in an optimized way\footnote{This is a very loaded comment. Some of the optimizations are carried out by the remapper, like the identification of the minimally-sized communicators to launch the exchanges, or the selection of the lower-level
-communications functions (alltoall vs. alltoallv, for instance). Other optimizations would need to be triggered externally, by passing proper compilation flags to the MPI facilities. This would be problem-dependent.}. 
+will actually redistribute \verb+data+ (as an out-of-place operation) according to \verb+plan+ in an optimized way\footnote{The optimizations carried out by the remapper are related with finding out the minimally-sized communicators to launch the exchanges and the selection of the lower-level
+communications functions (alltoall vs. alltoallv, for instance). Other optimizations depend on how the local MPI is tuned.}. 
 
 To appreciate the power of such facility, note that in principle, the construction of a (communications latency-limited) parallel quasi-neutral solver can be based exclusively on remapping operations. This is an important tool in any problem that would require global rearrangements of data. The remapper thus is able to present a single powerful abstraction that is general, reusable and completely hides most of the complications introduced by the data distribution. 
 
@@ -934,106 +1331,15 @@ Each of these boxes is simply described by several pairs of limits:
 \end{comment}
 
 
-\subsection{Exposed Interface}
-The remapper offers the following descriptor types for parallel data layout, differing from one another only in the dimensionality of the data described:
 
-\begin{verbatim}
-     layout_3D_t
-     layout_4D_t
-     layout_5D_t
-\end{verbatim}
 
-(Note that for the remapper, we have forgone the use of the \verb+sll_+ prefix. This is as an example of the likely policy that the low- and mid-level reusable utilities should not be prefixed, thus being instantly available for any other development. Eventually a decision needs to be made and the choice implemented uniformly throughout the library.) These types are each accompanied by their own constructors, destructors and accessors. Specifically, the constructors are:
 
-\begin{verbatim}
-     new_layout_3D( collective )
-     new_layout_4D( collective )
-     new_layout_5D( collective )
-\end{verbatim}
 
-Note that each layout descriptor needs to be allocated by providing an instance of \verb+sll_collective_t+. This can be understood by thinking of the data layout as being associated with a given group of processors (the collective) and a specification of the data boxes contained in each one. After calling any of the \verb+new_layout+ functions, the returned instance becomes associated to the given collective and enough memory is allocated (size of the collective) to hold the boxes specification.
 
-The destructors are:
-\begin{verbatim}
-     delete_layout_3D( layout )
-     delete_layout_4D( layout )
-     delete_layout_5D( layout )
-\end{verbatim}
 
 The access functions for the \verb+layout+ types are are always prefixed with the corresponding \verb+get_layout_XD+/\verb+set_layout_XD+ (where the '\verb+X+' denotes the dimensionality of the data), and they presuppose knowledge of the convention for ordering the indices as in \verb+i, j, k, l, m+, for the dimensions. Specifically, to get/set values inside the \verb+layout+ types we have available for 3D layouts:
 
-\begin{verbatim}
-     get_layout_3D_num_nodes( layout )
-     get_layout_3D_box( layout, rank )
-     
-     get_layout_3D_i_min( layout, rank )
-     get_layout_3D_i_max( layout, rank )
-     get_layout_3D_j_min( layout, rank )
-     get_layout_3D_j_max( layout, rank )
-     get_layout_3D_k_min( layout, rank )
-     get_layout_3D_k_max( layout, rank )
-     
-     set_layout_3D_i_min( layout, rank, val )
-     set_layout_3D_i_max( layout, rank, val )
-     set_layout_3D_j_min( layout, rank, val )
-     set_layout_3D_j_max( layout, rank, val )
-     set_layout_3D_k_min( layout, rank, val )
-     set_layout_3D_k_max( layout, rank, val )
-\end{verbatim}
 As a very inelegant convenience, the layout type allows direct access to its collective reference.     
-For 4D layouts:
-
-\begin{verbatim}
-     get_layout_4D_num_nodes( layout )
-     get_layout_4D_box( layout, rank )
-     
-     get_layout_4D_i_min( layout, rank )
-     get_layout_4D_i_max( layout, rank )
-     get_layout_4D_j_min( layout, rank )
-     get_layout_4D_j_max( layout, rank )
-     get_layout_4D_k_min( layout, rank )
-     get_layout_4D_k_max( layout, rank )
-     get_layout_4D_l_min( layout, rank )
-     get_layout_4D_l_max( layout, rank )
-     
-     set_layout_4D_i_min( layout, rank, val )
-     set_layout_4D_i_max( layout, rank, val )
-     set_layout_4D_j_min( layout, rank, val )
-     set_layout_4D_j_max( layout, rank, val )
-     set_layout_4D_k_min( layout, rank, val )
-     set_layout_4D_k_max( layout, rank, val )
-     set_layout_4D_l_min( layout, rank, val )
-     set_layout_4D_l_max( layout, rank, val )
-\end{verbatim}
-
-And for 5D layouts:
-
-\begin{verbatim}
-     get_layout_5D_num_nodes( layout )
-     get_layout_5D_box( layout, rank )
-     
-     get_layout_5D_i_min( layout, rank )
-     get_layout_5D_i_max( layout, rank )
-     get_layout_5D_j_min( layout, rank )
-     get_layout_5D_j_max( layout, rank )
-     get_layout_5D_k_min( layout, rank )
-     get_layout_5D_k_max( layout, rank )
-     get_layout_5D_l_min( layout, rank )
-     get_layout_5D_l_max( layout, rank )
-     get_layout_5D_m_min( layout, rank )
-     get_layout_5D_m_max( layout, rank )
-          
-     set_layout_5D_i_min( layout, rank, val )
-     set_layout_5D_i_max( layout, rank, val )
-     set_layout_5D_j_min( layout, rank, val )
-     set_layout_5D_j_max( layout, rank, val )
-     set_layout_5D_k_min( layout, rank, val )
-     set_layout_5D_k_max( layout, rank, val )
-     set_layout_5D_l_min( layout, rank, val )
-     set_layout_5D_l_max( layout, rank, val )
-     set_layout_5D_m_min( layout, rank, val )
-     set_layout_5D_m_max( layout, rank, val )
-\end{verbatim}
 
 The above functions define the interface that will allow you to declare and initialize the \verb+layout+ types as desired. This is where the work lies when using this module. Note that all the above functions could be coalesced into a set of functions of the type \verb+set_layout_X_XXX(layout, rank, val)+ if we choose to hide all the above functions behind a generic interface. The selection would be done automatically depending on the type of layout passed as an argument. 
 

@@ -26,8 +26,8 @@ module sll_coordinate_transformation_2d_base_module
      ! as error checking, test the association of this pointer within the
      ! functions that receive an argument of 
      ! class(sll_coordinate_transformation_2d_base)
-
      type(sll_logical_mesh_2d), pointer :: mesh => null()
+!     type(sll_logical_mesh_2d), pointer :: mesh2d_minimal => null()
      !logical to remember when the mesh has already been written to file
      character(len=64) :: label
      logical           :: written = .false.
@@ -107,7 +107,7 @@ module sll_coordinate_transformation_2d_base_module
      function matrix_geometry_function_ct( transf, eta1, eta2 )
        use sll_working_precision       
        import sll_coordinate_transformation_2d_base
-       class(sll_coordinate_transformation_2d_base) :: transf
+       class(sll_coordinate_transformation_2d_base),intent(in) :: transf
        sll_real64, intent(in)         :: eta1
        sll_real64, intent(in)         :: eta2
        sll_real64                     :: matrix_geometry_function_ct(2,2)

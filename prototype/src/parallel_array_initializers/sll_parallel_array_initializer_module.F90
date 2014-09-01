@@ -18,9 +18,18 @@ module sll_parallel_array_initializer_module
   ! the following abstract type.
 
   abstract interface
+    function sll_scalar_initializer_1d( x1,  params )
+      use sll_working_precision
+      sll_real64                                     :: sll_scalar_initializer_1d
+      sll_real64, intent(in)                         :: x1
+      sll_real64, dimension(:), intent(in), optional :: params
+    end function sll_scalar_initializer_1d
+  end interface
+
+  abstract interface
      function sll_scalar_initializer_2d( x1, x2, params )
        use sll_working_precision
-       sll_real64                                  :: sll_scalar_initializer_2d
+       sll_real64               :: sll_scalar_initializer_2d
        sll_real64, intent(in)                         :: x1
        sll_real64, intent(in)                         :: x2
        sll_real64, dimension(:), intent(in), optional :: params
@@ -491,7 +500,12 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       if(.not. associated(transf_x1_x2%get_logical_mesh(),mesh2d_eta1_eta2) )&
+       ! needed to change the following call from 
+       ! transf_x1_x2%get_logical_mesh() because the 4.6 version of gfortran
+       ! breaks at this point. Hence the double interface (access function and
+       ! direct access of the mesh). But this should be fixed once the decision
+       ! to not support that compiler version is made.
+       if(.not. associated(transf_x1_x2%mesh,mesh2d_eta1_eta2) )&
           then 
 
           print *, 'sll_4d_parallel_array_initializer warning: ', &
@@ -503,7 +517,7 @@ contains
     end if
 
     if(present( transf_x3_x4 ) ) then
-       if(.not. associated(transf_x3_x4%get_logical_mesh(),mesh2d_eta3_eta4) )&
+       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
           then 
 
           print *, 'sll_4d_parallel_array_initializer warning: ', &
@@ -569,6 +583,7 @@ contains
              end do
           end do
        end do
+
     case(2) ! Only the x3,x4 transformation was provided
        do l=1,loc_size_x4
           do k=1,loc_size_x3
@@ -665,7 +680,7 @@ contains
 !    end if
 !
 !    if( .not. associated(mesh2d_eta1_eta2) ) then
-!       print *, 'sll_4d_parallelsll_parallel_array_initializer_module.F90_array_initializer error: ', &
+!       print *, 'sll_parallel_array_initializer_module.F90_array_initializer error: ', &
 !            'passed mesh2d_eta1_eta2 argument is uninitialized.'
 !    end if
 !
