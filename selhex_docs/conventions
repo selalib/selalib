@@ -1,0 +1,40 @@
+num_cell, dt, cfl, norme l2, L_infini, f_min
+
+rayon = 8 
+gaussienne : sigma = 1/sqrt(2)/2 , centrée en 2,2 , amplitude max à 1
+
+3 tests : advection circulaire 
+
+distribution de fnction : gaussienne , diocotron
+
+cas 1 :  dt = 0.1 fixé , nc = 20,160,20
+cas 2 : nc = 80 fixé , dt in [0.1,1/80]
+cas 3 : cfl fixe avec nc in [20,160] et dt  in [0.1,1/80]
+	cf l v dt / dx = 8 * 0.1/ ( 8/20) = 0.1*20= 2  
+
+
+efficacité ( nombre de pts traité parr microseconde ) : 
+eff = nb_pts * nb_ité / (1e6 * time (s) ) 
+
+
+           write(33,*) num_cells, n_points, dt, cfl,  norm2_error, norm_infinite, f_min, t_end - t_init,&
+                tmax/dt * 3._f64*real(num_cells + 1, f64)*real(num_cells, f64)/(t_end - t_init)/ 1e6_f64
+
+
+
+
+Nouvelles conventions :
+
+	tmax = 10
+	dt   = 0.1* (...)   - > inchangé
+	sigma = 1/ (2sqrt(2))	 - > inchangé
+	x1_gauss = 2    - > inchangé
+	x2_gauss = 2    - > inchangé
+
+        x1_char(:) = x1(:)*cos(2*pi*dt) - x2(:)*sin(2*pi*dt)
+        x2_char(:) = x1(:)*sin(2*pi*dt) + x2(:)*cos(2*pi*dt)
+
+                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
+                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+
+

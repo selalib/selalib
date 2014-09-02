@@ -1,0 +1,17 @@
+TO-DO-LIST :
+
+
+1. Interpolators :
+    1.1 Splines
+    1.2 FE
+
+2. Fields :
+   1.1 Splines
+   1.2 FE
+
+3. Coordinate transformation
+   3.1 Hexagonal mesh
+
+4. Fekete quadrature points
+
+5. Transform general coordinate elliptic solver => hexagonal
