@@ -9,7 +9,7 @@
 !**************************************************************
 
 
-module hex_mesh
+module sll_hex_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
@@ -19,7 +19,7 @@ use sll_tri_mesh_xmf
 
   implicit none
 
-  type hex_mesh_2d
+  type sll_hex_mesh_2d
      ! A hexagonal mesh (composed by equilateral triangles)
      ! is defined by three directional vectors (r1, r2, r3)
      ! the number of cells, the radius, and the coordinates of the center  
@@ -73,10 +73,10 @@ use sll_tri_mesh_xmf
      procedure, pass(mesh) :: global_to_local
      procedure, pass(mesh) :: local_to_global
      procedure, pass(mesh) :: local_hex_to_global
-  end type hex_mesh_2d
+  end type sll_hex_mesh_2d
 
   type hex_mesh_2d_ptr
-     type(hex_mesh_2d), pointer :: hm
+     type(sll_hex_mesh_2d), pointer :: hm
   end type hex_mesh_2d_ptr
 
   interface delete
@@ -112,7 +112,7 @@ contains
        radius, &
        EXTRA_TABLES) result(mesh)
 
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
@@ -157,7 +157,7 @@ contains
        EXTRA_TABLES)
 
 
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
@@ -384,7 +384,7 @@ contains
 
 
   subroutine init_center_points_triangle(mesh)
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32          :: center_index, global
     sll_int32          :: k1, k2
     sll_real64         :: x1, x2, x3
@@ -477,7 +477,7 @@ contains
 
 
   subroutine init_edge_center_triangle(mesh)
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32          :: edge_index
     sll_int32          :: global, num_cells
     sll_int32          :: k1, k2, k1c, k2c
@@ -574,7 +574,7 @@ contains
   end subroutine init_edge_center_triangle
 
   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
-    class(hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1, k2
     sll_int32, intent(out) :: index_tab
     sll_int32              :: k
@@ -612,7 +612,7 @@ contains
   function x1_node(mesh, k1, k2) result(val)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
-    class(hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64 :: val
@@ -623,7 +623,7 @@ contains
   function x2_node(mesh, k1, k2) result(val)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function the 2nd coordinate on the cartesian system
-    class(hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1
     sll_int32, intent(in)  :: k2
     sll_real64  :: val
@@ -656,7 +656,7 @@ contains
     ! By default the index of the center of the mesh is 0
     ! Then following the r1 direction and a counter-clockwise motion
     ! we assing an index to every point of the mesh.
-    class(hex_mesh_2d)      :: mesh
+    class(sll_hex_mesh_2d)      :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
     sll_int32               :: distance
@@ -681,7 +681,7 @@ contains
   function global_to_hex1(mesh, index) result(k1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (k1) on the (r1,r2) basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k1
 
@@ -691,7 +691,7 @@ contains
   function global_to_hex2(mesh, index) result(k2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (k2) on the (r1,r2) basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k2
 
@@ -701,7 +701,7 @@ contains
   function global_to_x1(mesh, index) result(x1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (x1) on the cartesian basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x1
 
@@ -711,7 +711,7 @@ contains
   function global_to_x2(mesh, index) result(x2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (x2) on the cartesian basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x2
 
@@ -722,7 +722,7 @@ contains
   function cart_to_hex1(mesh, x1, x2) result(k1)
     ! Takes the coordinates (x1,x2) on the cartesian basis and 
     ! returns the first coordinate (k1) on the (r1, r2) basis
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32  :: k1
@@ -735,7 +735,7 @@ contains
   function cart_to_hex2(mesh, x1, x2) result(k2)
     ! Takes the coordinates (x1,x2) on the cartesian basis and 
     ! returns the second coordinate (k2) on the (r1, r2) basis
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32  :: k2
@@ -750,7 +750,7 @@ contains
     ! we assign local indices, but this time the initial point is 
     ! the point which index is ref_index
     ! ie. local_index(i,i) = 1
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: ref_index
     sll_int32 :: global
     sll_int32 :: k1_ref,  k2_ref
@@ -779,7 +779,7 @@ contains
     ! local index local_index in the ref_index system
     ! (see gloval_index(...) and global_to_local(...) for conventions) 
     ! ie. local_to_global(1, i) = i
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: ref_index, local
     sll_int32 :: k1_ref, k2_ref
     sll_int32 :: k1_loc, k2_loc
@@ -805,7 +805,7 @@ contains
     ! local index local_index in the ref_index system
     ! (see gloval_index(...) and global_to_local(...) for conventions) 
     ! ie. local_to_global(1, i) = i
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: k1_ref, k2_ref
     sll_int32 :: k1_loc, k2_loc
     sll_int32 :: local
@@ -826,7 +826,7 @@ contains
 
 
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
-    type(hex_mesh_2d), pointer            :: mesh
+    type(sll_hex_mesh_2d), pointer            :: mesh
     sll_real64, intent(in)                :: x, y
     sll_int32, intent(out)                :: s1, s2, s3
     sll_real64                            :: xi, radius, step
@@ -878,7 +878,7 @@ contains
 
 
   subroutine get_triangle_index(k1,k2,mesh,x,triangle_index)
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
     sll_int32, intent(in)      :: k1, k2
     sll_int32, intent(out)     :: triangle_index
@@ -904,7 +904,7 @@ contains
 
 
   subroutine get_edge_index(k1,k2,mesh,x,edge_index1,edge_index2,edge_index3)
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
     sll_int32, intent(in)      :: k1, k2
     sll_int32, intent(out)     :: edge_index1,edge_index2,edge_index3
@@ -947,7 +947,7 @@ contains
 
   subroutine display_hex_mesh_2d(mesh)
     ! Displays mesh information on the terminal
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
 
     write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       center_x2 &
          &       radius'
@@ -961,7 +961,7 @@ contains
 
   subroutine write_hex_mesh_2d(mesh, name)
     ! Writes the mesh information in a file named "name"
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     character(len=*) :: name
     sll_int32  :: i
     sll_int32  :: num_pts_tot
@@ -991,7 +991,7 @@ contains
   subroutine write_field_hex_mesh(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:) :: field
     character(len=*) :: name
     sll_int32  :: i
@@ -1016,7 +1016,7 @@ contains
   subroutine write_field_hex_mesh_xmf(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:) :: field
     character(len=*) :: name
     sll_int32  :: i
@@ -1055,7 +1055,7 @@ contains
 
   subroutine write_hex_mesh_mtv(mesh, mtv_file)
 
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64                 :: coor(2,mesh%num_pts_tot)
     sll_int32                  :: ntri(3,mesh%num_triangles)
     sll_real64                 :: x1
@@ -1209,7 +1209,7 @@ end subroutine write_hex_mesh_mtv
 
 
   subroutine delete_hex_mesh_2d( mesh )
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
 
     if(.not. associated(mesh))then
@@ -1234,4 +1234,4 @@ end subroutine write_hex_mesh_mtv
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
-end module hex_mesh
+end module sll_hex_meshes

@@ -5,7 +5,7 @@ program test_hex_hermite
 #include "sll_assert.h"
 
   use sll_constants
-  use interpolation_hex_hermite
+  use sll_interpolation_hex_hermite
 
   implicit none
 
@@ -50,7 +50,7 @@ program test_hex_hermite
   sll_real64   :: cfl, norm_infinite
   ! character(len = 4) :: number
   logical      :: inside
-  type(hex_mesh_2d), pointer :: mesh
+  type(sll_hex_mesh_2d), pointer :: mesh
 
   
   center_x1 = 0._f64

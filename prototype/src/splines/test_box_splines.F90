@@ -7,12 +7,12 @@ program test_box_splines
 
 use sll_utilities
 use sll_constants
-use hex_mesh
-use box_splines
+use sll_hex_meshes
+use sll_box_splines
 implicit none
 
-type(hex_mesh_2d),   pointer  :: mesh
-type(box_spline_2D), pointer :: spline
+type(sll_hex_mesh_2d), pointer  :: mesh
+type(sll_box_spline_2d),   pointer  :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
 sll_int32    :: deg = 2
