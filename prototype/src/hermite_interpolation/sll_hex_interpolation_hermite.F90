@@ -1,9 +1,9 @@
-module interpolation_hex_hermite
+module sll_interpolation_hex_hermite
 #include "sll_memory.h"
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 
-  use hex_mesh
+  use sll_hex_meshes
   use sll_hermite_interpolation_2d_module
   implicit none
 
@@ -13,7 +13,7 @@ contains
   subroutine der_finite_difference( f_tn, p, step, mesh, deriv ) 
     !-> computation of the partial derivatives in the directions H1, H2 and H3
     ! with dirichlet boundary condition
-    type(hex_mesh_2d), pointer             :: mesh
+    type(sll_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(out):: deriv 
     sll_real64, dimension(:), intent(in)   :: f_tn 
     sll_real64, intent(in)                 :: step
@@ -480,7 +480,7 @@ contains
 
   subroutine hermite_interpolation(num, x, y, f_tn, center_value, edge_value, output_tn1, mesh, deriv, aire, num_method)
 
-    type(hex_mesh_2d), pointer             :: mesh
+    type(sll_hex_mesh_2d), pointer             :: mesh
     sll_real64,dimension(:), intent(in)    :: f_tn
     sll_real64,dimension(:), intent(in)    :: edge_value
     sll_real64,dimension(:), intent(in)    :: center_value
@@ -1049,7 +1049,7 @@ contains
   !*******************************************************************************
 
   subroutine get_normal_der(deriv,i1,i2,mesh,freedom)
-    type(hex_mesh_2d), pointer             :: mesh
+    type(sll_hex_mesh_2d), pointer             :: mesh
     sll_real64, dimension(:,:), intent(in) :: deriv 
     sll_real64, dimension(3) , intent(out) :: freedom
     sll_real64                             :: x1, x2
@@ -1505,4 +1505,4 @@ contains
   end subroutine base_ganev_dimitrov
 
 
-end module interpolation_hex_hermite
+end module sll_interpolation_hex_hermite

@@ -4,18 +4,18 @@ ADD_LIBRARY(sll_logical_meshes STATIC
 TARGET_LINK_LIBRARIES( sll_logical_meshes sll_working_precision sll_memory)
 
 
-ADD_LIBRARY(hex_mesh STATIC hex_mesh.F90)
+ADD_LIBRARY(sll_hex_meshes STATIC sll_hex_meshes.F90)
 
-TARGET_LINK_LIBRARIES( hex_mesh sll_file_io
-                                sll_utilities
-                                sll_working_precision 
-		                sll_memory
-				sll_constants)
+TARGET_LINK_LIBRARIES(sll_hex_meshes sll_file_io
+                                     sll_utilities
+                                     sll_working_precision 
+		                     sll_memory
+			 	     sll_constants)
 
 ADD_EXECUTABLE( test_logical_meshes unit_test.F90)
 
 TARGET_LINK_LIBRARIES( test_logical_meshes sll_logical_meshes)
 
-ADD_EXECUTABLE( test_hex_mesh test_hex_mesh.F90)
+ADD_EXECUTABLE( test_hex_meshes test_hex_meshes.F90)
 
-TARGET_LINK_LIBRARIES( test_hex_mesh hex_mesh)
+TARGET_LINK_LIBRARIES( test_hex_meshes sll_hex_meshes)

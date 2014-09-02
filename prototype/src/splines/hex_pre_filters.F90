@@ -10,7 +10,7 @@
 
 module hex_pre_filters
 #include "sll_working_precision.h"
-use hex_mesh
+use sll_hex_meshes
 
 implicit none
 
@@ -20,7 +20,7 @@ contains
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
   function pre_filter_piir2(mesh, local_index, deg) result(weight)
-      type(hex_mesh_2d)          :: mesh 
+      type(sll_hex_mesh_2d)          :: mesh 
       sll_int32, intent(in)      :: local_index
       sll_int32, intent(in)      :: deg
       sll_real64                 :: weight
@@ -102,7 +102,7 @@ contains
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
   function pre_filter_piir1(mesh, local_index, deg) result(weight)
-    type(hex_mesh_2d) :: mesh 
+    type(sll_hex_mesh_2d) :: mesh 
       sll_int32, intent(in)     :: local_index
       sll_int32, intent(in)     :: deg
       sll_real64                :: weight
@@ -147,7 +147,7 @@ contains
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
    function pre_filter_pfir(mesh, local_index, deg) result(weight)
-     type(hex_mesh_2d) :: mesh 
+     type(sll_hex_mesh_2d) :: mesh 
      sll_int32, intent(in)     :: local_index
      sll_int32, intent(in)     :: deg
      sll_real64                :: weight
@@ -194,7 +194,7 @@ contains
   !             "Quasi-interpolating spline models 
   !             for hexagonally-sampled data."
   function pre_filter_int(mesh, local_index, deg) result(weight)
-      type(hex_mesh_2d) :: mesh
+      type(sll_hex_mesh_2d) :: mesh
       sll_int32, intent(in)     :: local_index
       sll_int32, intent(in)     :: deg
       sll_real64                :: weight

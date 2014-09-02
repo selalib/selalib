@@ -10,14 +10,14 @@ program test_maxwell_dg_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use hex_mesh
+use sll_hex_meshes
 use sll_constants
 use sll_maxwell_diga_hex_mesh
 
 implicit none
 
 type(maxwell_dg_hex_mesh)   :: maxwell
-type(hex_mesh_2d), pointer  :: mesh
+type(sll_hex_mesh_2d), pointer  :: mesh
 sll_int32                   :: num_cells
 sll_int32                   :: error
 sll_int32                   :: i, k
@@ -204,7 +204,7 @@ end subroutine rkstep
 subroutine plot_simple( this, mesh )
 
    type(maxwell_dg_hex_mesh), intent(in) :: this
-   type(hex_mesh_2d),         intent(in) :: mesh
+   type(sll_hex_mesh_2d),         intent(in) :: mesh
    sll_int32, save                       :: iplot = 0
    sll_int32                             :: idl
    sll_int32                             :: iel
@@ -267,7 +267,7 @@ end subroutine plot_simple
 subroutine plot_double( this, mesh )
 
    type(maxwell_dg_hex_mesh), intent(in) :: this
-   type(hex_mesh_2d),         intent(in) :: mesh
+   type(sll_hex_mesh_2d),         intent(in) :: mesh
    sll_int32, save :: iplot = 0
    sll_int32       :: idl, iel
    character(len=4) :: cplot
@@ -316,7 +316,7 @@ end subroutine plot_double
 
 subroutine write_mtv(mesh)
 
-type(hex_mesh_2d), pointer :: mesh
+type(sll_hex_mesh_2d), pointer :: mesh
 real(8) :: coor(2,mesh%num_pts_tot)
 integer :: ntri(3,mesh%num_triangles)
 real(8) :: x1
