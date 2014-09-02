@@ -7,24 +7,24 @@
 !     Laura Mendoza (mela@ipp.mpg.de)
 !************************************************************** 
 
-module box_splines
+module sll_box_splines
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_splines.h"
 #include "sll_utilities.h"
 use hex_pre_filters
-use hex_mesh
+use sll_hex_meshes
 
 implicit none
 
-type box_spline_2d
-   type(hex_mesh_2d), pointer  :: mesh
+type sll_box_spline_2d
+   type(sll_hex_mesh_2d), pointer  :: mesh
    ! Boundary conditions definition
    sll_int32 SLL_PRIV :: bc_type
    ! Spline coefficients
    sll_real64, dimension(:), pointer :: coeffs
-end type box_spline_2d
+end type sll_box_spline_2d
 
   
     
@@ -43,8 +43,8 @@ contains  ! ****************************************************************
        mesh,         &
        bc_type)
     
-    type(box_spline_2d), pointer  :: new_box_spline_2d
-    type(hex_mesh_2d),   pointer  :: mesh
+    type(sll_box_spline_2d), pointer  :: new_box_spline_2d
+    type(sll_hex_mesh_2d),   pointer  :: mesh
     sll_int32,  intent(in)        :: bc_type
     sll_int32                     :: ierr
 
@@ -63,7 +63,7 @@ contains  ! ****************************************************************
   subroutine compute_box_spline_2d( data, deg, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
     sll_int32, intent(in)                        :: deg
-    type(box_spline_2d), pointer, intent(in)     :: spline
+    type(sll_box_spline_2d), pointer, intent(in)     :: spline
     sll_int32  :: bc
     sll_int32  :: bc_selector
 
@@ -118,7 +118,7 @@ contains  ! ****************************************************************
 
   subroutine compute_box_spline_2d_diri( data, deg, spline )
     sll_real64, dimension(:), intent(in), target  :: data  ! data to be fit
-    type(box_spline_2d), pointer                  :: spline
+    type(sll_box_spline_2d), pointer                  :: spline
     sll_int32, intent(in)                         :: deg
     sll_int32  :: num_pts_tot
     sll_int32  :: k1_ref, k2_ref
@@ -157,7 +157,7 @@ contains  ! ****************************************************************
 
   subroutine compute_box_spline_2d_prdc( data, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(box_spline_2d), pointer      :: spline
+    type(sll_box_spline_2d), pointer      :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -173,7 +173,7 @@ contains  ! ****************************************************************
 
   subroutine compute_box_spline_2d_neum( data, spline )
     sll_real64, dimension(:), intent(in), target :: data  ! data to be fit
-    type(box_spline_2d), pointer      :: spline
+    type(sll_box_spline_2d), pointer      :: spline
     sll_int32  :: num_pts_tot
     sll_int32  :: i
 
@@ -331,7 +331,7 @@ contains  ! ****************************************************************
   function change_basis_x1(spline, x1, x2) result(x1_basis)
     ! This function allows to change a point of coordinates (x1, x2)
     ! on the spline basis to the mesh basis
-    type(box_spline_2d), pointer    :: spline
+    type(sll_box_spline_2d), pointer    :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2 
     sll_real64             :: delta_q
@@ -367,7 +367,7 @@ contains  ! ****************************************************************
   function change_basis_x2(spline, x1, x2) result(x2_basis)
     ! This function allows to change a point of coordinates (x1, x2)
     ! on the spline basis to the mesh basis
-    type(box_spline_2d), pointer           :: spline
+    type(sll_box_spline_2d), pointer           :: spline
     sll_real64, intent(in) :: x1
     sll_real64, intent(in) :: x2 
     sll_real64             :: delta_q
@@ -403,8 +403,8 @@ contains  ! ****************************************************************
 
   function hex_interpolate_value(mesh_geom, x1, x2, spline, deg) result(val)
     ! Interpolates point of cartesian coordinates x1, x2)
-    type(hex_mesh_2d), pointer, intent(in) :: mesh_geom
-    type(box_spline_2d), pointer           :: spline
+    type(sll_hex_mesh_2d), pointer, intent(in) :: mesh_geom
+    type(sll_box_spline_2d), pointer           :: spline
     sll_int32,  intent(in)  :: deg
     sll_real64, intent(in)  :: x1,      x2
     sll_real64              :: xm1,     xm2
@@ -481,5 +481,5 @@ contains  ! ****************************************************************
   end function hex_interpolate_value
 
 
-end module box_splines
+end module sll_box_splines
 
