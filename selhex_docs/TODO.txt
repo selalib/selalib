@@ -15,3 +15,7 @@ TO-DO-LIST :
 4. Fekete quadrature points
 
 5. Transform general coordinate elliptic solver => hexagonal
+
+6. Characteristic solver
+   6.1 leapfrog  
+   6.2 higher order 
