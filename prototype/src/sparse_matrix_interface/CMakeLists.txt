@@ -48,9 +48,7 @@ TARGET_LINK_LIBRARIES( sll_sparse_matrix
 
 IF(PASTIX_FOUND)
 
-  TARGET_LINK_LIBRARIES( sll_sparse_matrix 
-    sll_pastix 
-    ${BLAS_LIBRARIES})
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix ${BLAS_LIBRARIES})
     
 ELSEIF(SUITESPARSE_FOUND)
 
@@ -62,9 +60,6 @@ ELSEIF(SUITESPARSE_FOUND)
     ${BLAS_LIBRARIES})
 
 ENDIF()
-
-
-
 
 ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
 
