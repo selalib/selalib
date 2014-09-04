@@ -15,12 +15,12 @@ module sll_hex_meshes
 
 use sll_constants
 use sll_utilities
-use sll_logical_meshes_base
+use sll_meshes_base
 use sll_tri_mesh_xmf
 
   implicit none
 
-  type,extends(sll_logical_mesh_2d_base) ::  sll_hex_mesh_2d
+  type,extends(sll_mesh_2d_base) ::  sll_hex_mesh_2d
      ! A hexagonal mesh (composed by equilateral triangles)
      ! is defined by three directional vectors (r1, r2, r3)
      ! the number of cells, the radius, and the coordinates of the center  
@@ -64,8 +64,10 @@ use sll_tri_mesh_xmf
    contains
      procedure, pass(mesh) :: eta1_node => eta1_node_hex
      procedure, pass(mesh) :: eta2_node => eta2_node_hex
-     procedure, pass(mesh) :: eta1_cell => eta1_cell_hex
-     procedure, pass(mesh) :: eta2_cell => eta2_cell_hex
+     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
+     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_hex_two_arg
+     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
+     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_hex_two_arg
      procedure, pass(mesh) :: index_hex_to_global
      procedure, pass(mesh) :: hex_to_global
      procedure, pass(mesh) :: global_to_hex1
@@ -79,6 +81,10 @@ use sll_tri_mesh_xmf
      procedure, pass(mesh) :: local_hex_to_global
      procedure, pass(mesh) :: display => display_hex_mesh_2d
      procedure, pass(mesh) :: delete => delete_hex_mesh_2d
+     generic, public :: eta1_cell => eta1_cell_one_arg, &
+          eta1_cell_two_arg
+     generic, public :: eta2_cell => eta2_cell_one_arg, &
+          eta2_cell_two_arg
   end type sll_hex_mesh_2d
 
   type hex_mesh_2d_ptr
@@ -92,6 +98,15 @@ use sll_tri_mesh_xmf
   interface sll_display
      module procedure display_hex_mesh_2d
   end interface sll_display
+
+  ! interface eta1_cell
+  !    module procedure eta1_cell_one_arg, eta1_cell_two_arg
+  ! end interface eta1_cell
+
+  ! interface eta2_cell
+  !    module procedure eta2_cell_one_arg, eta2_cell_two_arg
+  ! end interface eta2_cell
+
 
 contains
 
@@ -616,50 +631,69 @@ contains
   end subroutine index_hex_to_global
 
 
-  function eta1_node_hex(mesh, k1, k2) result(val)
-    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
+  function eta1_node_hex(mesh, i, j) result(val)
+    ! The coordinates (i, j) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
     class(sll_hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)  :: k1
-    sll_int32, intent(in)  :: k2
+    sll_int32, intent(in)  :: i
+    sll_int32, intent(in)  :: j
     sll_real64 :: val
 
-    val = mesh%r1_x1*k1 + mesh%r2_x1*k2 + mesh%center_x1
+    val = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
   end function eta1_node_hex
 
-  function eta2_node_hex(mesh, k1, k2) result(val)
+  function eta2_node_hex(mesh, i, j) result(val)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function the 2nd coordinate on the cartesian system
     class(sll_hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)  :: k1
-    sll_int32, intent(in)  :: k2
+    sll_int32, intent(in)  :: i
+    sll_int32, intent(in)  :: j
     sll_real64  :: val
 
-    val = mesh%r1_x2*k1 + mesh%r2_x2*k2 + mesh%center_x1
+    val = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
   end function eta2_node_hex
 
 
-  function eta1_cell_hex(mesh, num_ele) result(val)
+  function eta1_cell_hex(mesh, cell_num) result(val)
     ! The index num_ele corresponds to the index of triangle
     ! This function returns the 1st coordinate on the cartesian system
     ! of the center of the triangle at num_ele
     class(sll_hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)      :: num_ele
+    sll_int32, intent(in)      :: cell_num
     sll_real64 :: val
 
-    val = mesh%center_cartesian_coord(1, num_ele)
+    val = mesh%center_cartesian_coord(1, cell_num)
   end function eta1_cell_hex
 
-  function eta2_cell_hex(mesh, num_ele) result(val)
+  function eta2_cell_hex(mesh, cell_num) result(val)
     ! The index num_ele corresponds to the index of triangle
     ! This function returns the 2nd coordinate on the cartesian system
     ! of the center of the triangle at num_ele
     class(sll_hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)      :: num_ele
+    sll_int32, intent(in)      :: cell_num
     sll_real64 :: val
 
-    val = mesh%center_cartesian_coord(2, num_ele)
+    val = mesh%center_cartesian_coord(2, cell_num)
   end function eta2_cell_hex
+
+
+  function eta1_cell_hex_two_arg(mesh, i, j) result(val)
+    class(sll_hex_mesh_2d)     :: mesh
+    sll_int32, intent(in)      :: i, j
+    sll_real64 :: val
+
+    print *, "Error : eta1_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
+    STOP
+  end function eta1_cell_hex_two_arg
+
+  function eta2_cell_hex_two_arg(mesh, i, j) result(val)
+    class(sll_hex_mesh_2d)     :: mesh
+    sll_int32, intent(in)      :: i, j
+    sll_real64 :: val
+
+    print *, "Error : eta2_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
+    STOP
+  end function eta2_cell_hex_two_arg
 
 
   function cells_to_origin(k1, k2) result(val)
@@ -1241,13 +1275,6 @@ end subroutine write_hex_mesh_mtv
   subroutine delete_hex_mesh_2d( mesh )
     class(sll_hex_mesh_2d), intent(inout) :: mesh
     sll_int32 :: ierr
-
-    if(.not. associated(mesh))then
-       print *, 'delete_hex_mesh_2d'
-       print *, 'ERROR: passed argument is not associated'
-       print *, '       Crash imminent...'
-       STOP
-    end if
 
     SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
     SLL_DEALLOCATE(mesh%hex_coord, ierr)
