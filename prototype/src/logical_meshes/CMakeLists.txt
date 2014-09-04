@@ -1,7 +1,7 @@
-ADD_LIBRARY(sll_logical_meshes_base STATIC 
-  sll_logical_meshes_base.F90)
+ADD_LIBRARY(sll_meshes_base STATIC 
+  sll_meshes_base.F90)
 
-TARGET_LINK_LIBRARIES( sll_logical_meshes_base sll_working_precision 
+TARGET_LINK_LIBRARIES( sll_meshes_base sll_working_precision 
                                                sll_memory)
 
 ADD_LIBRARY(sll_logical_meshes STATIC 
@@ -12,7 +12,7 @@ TARGET_LINK_LIBRARIES( sll_logical_meshes sll_working_precision sll_memory)
 
 ADD_LIBRARY(sll_hex_meshes STATIC sll_hex_meshes.F90)
 
-TARGET_LINK_LIBRARIES(sll_hex_meshes sll_logical_meshes_base
+TARGET_LINK_LIBRARIES(sll_hex_meshes sll_meshes_base
                                      sll_file_io
                                      sll_utilities
                                      sll_working_precision 
