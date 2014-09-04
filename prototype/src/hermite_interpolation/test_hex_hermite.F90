@@ -58,7 +58,7 @@ program test_hex_hermite
   ! character(len = 4) :: number
   logical      :: inside
   type(hex_mesh_2d), pointer :: mesh
-
+  character(len = 5) ::name_test = "dio  "
   
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
@@ -71,7 +71,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 20,160,20 ! -> loop on the size of the mesh 
+  do num_cells = 40,40,20 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
@@ -121,35 +121,86 @@ program test_hex_hermite
      dioco_rplus  = 3._f64
      dioco_eps    = 0.0001_f64
      dioco_kmode  = 3._f64
-
+     
      do i = 1, n_points
+
         x1(i) = mesh%cartesian_coord(1,i)
         x2(i) = mesh%cartesian_coord(2,i)
 
-        f_init(i) = gauss_amp*exp(-0.5_f64* &
-             ((x1(i)-gauss_x1)**2 + (x2(i)-gauss_x2)**2)/ gauss_sig**2 )
-        f_tn(i) = f_init(i)
+        if ( name_test == "gauss" ) then 
 
-        write(11,*) x1(i),x2(i),f_tn(i)
+           f_init(i) = gauss_amp*exp(-0.5_f64* &
+                ((x1(i)-gauss_x1)**2 + (x2(i)-gauss_x2)**2)/ gauss_sig**2 )
+           f_tn(i) = f_init(i)
+
+        elseif ( name_test == "dio  " ) then 
+
+           dioco_r = sqrt( x1(i)**2 + x2(i)**2 )
+           if ( x2(i) >= 0 ) then
+              dioco_theta = acos( x1(i) / dioco_r )
+           else
+              dioco_theta = 2._f64 * sll_pi-acos( x1(i) / dioco_r )
+           endif
+           if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
+              f_init(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
+           else
+              f_init(i) = 0._f64  
+           endif
+
+        endif
 
      end do
 
-
+     
      if ( num_method == 10 ) then
+
         do i = 1, n_triangle
+
            x = mesh%center_cartesian_coord(1,i)
            y = mesh%center_cartesian_coord(2,i)
-           center_values_tn(i) = exp( -((x-gauss_x1)**2 + (y-gauss_x2)**2)/gauss_sig**2/2._f64 )
-           write(11,*) x,y,center_values_tn(i)
+
+           if ( name_test == "gauss" ) then 
+              center_values_tn(i) = gauss_amp*exp( -((x-gauss_x1)**2 + (y-gauss_x2)**2)/gauss_sig**2/2._f64 )
+
+           elseif ( name_test == "dio  " ) then 
+
+              dioco_r = sqrt( x**2 + y**2 )
+              if ( y >= 0 ) then
+                 dioco_theta = acos( x / dioco_r )
+              else
+                 dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
+              endif
+              if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
+                 center_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
+              else
+                 center_values_tn(i) = 0._f64  
+              endif
+           endif
         enddo
      endif
-
+     
      if ( num_method == 15 ) then
         do i = 1, n_edge
            x = mesh%edge_center_cartesian_coord(1,i)
            y = mesh%edge_center_cartesian_coord(2,i)
-           edge_values_tn(i) = exp( -((x-gauss_x1)**2 + (y-gauss_x2)**2)/gauss_sig**2/2._f64 )
-           write(11,*) x,y,edge_values_tn(i)
+           if ( name_test == "gauss" ) then 
+
+              edge_values_tn(i) = gauss_amp*exp( -((x-gauss_x1)**2 + (y-gauss_x2)**2)/gauss_sig**2/2._f64 )
+
+           elseif ( name_test == "dio  " ) then 
+
+              dioco_r = sqrt( x**2 + y**2 )
+              if ( y >= 0 ) then
+                 dioco_theta = acos( x / dioco_r )
+              else
+                 dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
+              endif
+              if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
+                 edge_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
+              else
+                 edge_values_tn(i) = 0._f64  
+              endif
+           endif
         enddo
      endif
 
@@ -173,8 +224,8 @@ program test_hex_hermite
         x2_char(:) = x2(:) - advec*dt
      else
         ! Circular advection
-        x1_char(:) = x1(:)*cos(dt) - x2(:)*sin(dt)
-        x2_char(:) = x1(:)*sin(dt) + x2(:)*cos(dt)
+        x1_char(:) = x1(:)*cos(2._f64*sll_pi*dt) - x2(:)*sin(2._f64*sll_pi*dt)
+        x2_char(:) = x1(:)*sin(2._f64*sll_pi*dt) + x2(:)*cos(2._f64*sll_pi*dt)
      end if
 
 
@@ -227,8 +278,8 @@ program test_hex_hermite
               x = mesh%center_cartesian_coord(1,i)
               y = mesh%center_cartesian_coord(2,i)
 
-              xx = x*cos(dt) - y*sin(dt);
-              yy = x*sin(dt) + y*cos(dt);
+              xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+              yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
               ! call slb_compute_characteristic_leapfrog( &
               !  x,y,E_x,E_v,xx,yy )
 
@@ -256,8 +307,8 @@ program test_hex_hermite
                  xx = x - advec*dt*nloops
                  yy = y - advec*dt*nloops
               else                         ! Circular advection
-                 xx = x*cos(t) - y*sin(t);
-                 yy = x*sin(t) + y*cos(t);
+                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
+                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
               end if
 
 
@@ -265,12 +316,13 @@ program test_hex_hermite
 
               norm2_sol_center = 0._f64
 
+              if ( name_test == "gauss" ) then 
               norm2_sol_center = norm2_sol_center + &
-                   abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+                   abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
               norm2_error_center = norm2_error_center + &
-                   abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
-              if ( abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
-                  norm_infinite = abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
+                   abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
+              if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
+                  norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
               if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
 
            enddo
@@ -298,8 +350,8 @@ program test_hex_hermite
               x = mesh%edge_center_cartesian_coord(1,i)
               y = mesh%edge_center_cartesian_coord(2,i)
 
-              xx = x*cos(dt) - y*sin(dt);
-              yy = x*sin(dt) + y*cos(dt);
+              xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+              yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
 
               ! call slb_compute_characteristic_leapfrog( &
               !  x,y,E_x,E_v,xx,yy )
@@ -327,18 +379,18 @@ program test_hex_hermite
                  xx = x - advec*dt*nloops
                  yy = y - advec*dt*nloops
               else                         ! Circular advection
-                 xx = x*cos(t) - y*sin(t);
-                 yy = x*sin(t) + y*cos(t);
+                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
+                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
               end if
 
 
               norm2_sol_edge = norm2_sol_edge + &
-                  abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+                  abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
 
               norm2_error_edge = norm2_error_edge + &
-                  abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i) )**2
-              if ( abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i)) >  norm_infinite )&
-                  norm_infinite = abs( exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i))
+                  abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i) )**2
+              if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i)) >  norm_infinite )&
+                  norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i))
               if ( edge_values_tn1(i) < f_min ) f_min = edge_values_tn1(i)
               
            enddo
@@ -358,8 +410,8 @@ program test_hex_hermite
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
 
-           xx = x*cos(dt) - y*sin(dt);
-           yy = x*sin(dt) + y*cos(dt);
+           xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+           yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
 
         !*********************************************************
         !  computation of the root of the characteristics
@@ -406,11 +458,31 @@ program test_hex_hermite
               x1(i) = mesh%cartesian_coord(1,i) - advec*dt*nloops
               x2(i) = mesh%cartesian_coord(2,i) - advec*dt*nloops
            else                         ! Circular advection
-              x = x1(i)*cos(t) - x2(i)*sin(t);
-              y = x1(i)*sin(t) + x2(i)*cos(t);
+              x = x1(i)*cos(2._f64*sll_pi*t) - x2(i)*sin(2._f64*sll_pi*t);
+              y = x1(i)*sin(2._f64*sll_pi*t) + x2(i)*cos(2._f64*sll_pi*t);
            end if
+           
+           
+           if ( name_test == "gauss" ) then 
 
-           f_sol(i) = exp(-((x-gauss_x1)**2+(y-gauss_x2)**2)/gauss_sig**2/2._f64) 
+              f_sol(i) = gauss_amp*exp(-((x-gauss_x1)**2+(y-gauss_x2)**2)/gauss_sig**2/2._f64) 
+           elseif  ( name_test == "dio  " ) then 
+              dioco_r= sqrt(x1(i)**2+x2(i)**2)
+              if (x2(i)>=0) then
+                 dioco_theta = acos(x1(i)/dioco_r)
+              else
+                 dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
+              endif
+              if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
+                 f_fin(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+              else
+                 f_fin(i) = 0._f64  
+              endif
+           endif
+
+
+
+
            norm2_sol_pt = norm2_sol_pt + abs(f_sol(i))**2
            norm2_error_pt = norm2_error_pt + abs(f_sol(i) - f_tn1(i))**2
 
@@ -444,11 +516,8 @@ program test_hex_hermite
         f_tn = f_tn1
 
      end do
-
      
      !call write_field_hex_mesh(mesh, f_tn, "result_hex.txt")
-
-     call cpu_time(t_end)
 
      SLL_DEALLOCATE_ARRAY(f_init,ierr)
      SLL_DEALLOCATE_ARRAY(f_tn,ierr)
@@ -466,6 +535,8 @@ program test_hex_hermite
      deallocate(deriv)
  
      call delete_hex_mesh_2d( mesh )
+
+     call cpu_time(t_end)
 
      print*, "time used =", t_end - t_init," error_L2 = ", norm2_error
 
