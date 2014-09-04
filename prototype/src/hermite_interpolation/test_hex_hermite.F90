@@ -96,7 +96,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 20,160,20 ! -> loop on the size of the mesh 
+  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
