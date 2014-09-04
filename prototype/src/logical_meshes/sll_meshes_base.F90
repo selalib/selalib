@@ -8,8 +8,8 @@ module sll_meshes_base
    contains
      procedure(get_geometry_1d), deferred, pass(mesh) :: eta1_node
      procedure(get_geometry_1d), deferred, pass(mesh) :: eta1_cell
-     procedure(display_logical_mesh_1d), deferred, pass :: display
-     procedure(delete_logical_mesh_1d),  deferred, pass :: delete
+     procedure(display_mesh_1d), deferred, pass :: display
+     procedure(delete_mesh_1d),  deferred, pass :: delete
   end type sll_mesh_1d_base
 
   !> @brief 2D logical mesh
@@ -21,8 +21,8 @@ module sll_meshes_base
      procedure(get_geometry_2d), deferred, pass(mesh) :: eta1_cell_two_arg
      procedure(get_geometry_2d_one_arg), deferred, pass(mesh) :: eta2_cell_one_arg
      procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_cell_two_arg
-     procedure(display_logical_mesh_2d), deferred, pass :: display
-     procedure(delete_logical_mesh_2d),  deferred, pass :: delete
+     procedure(display_mesh_2d), deferred, pass :: display
+     procedure(delete_mesh_2d),  deferred, pass :: delete
   end type sll_mesh_2d_base
 
   !> @brief 3D logical mesh
@@ -34,8 +34,8 @@ module sll_meshes_base
      procedure(get_geometry_3d), deferred, pass(mesh) :: eta1_cell
      procedure(get_geometry_3d), deferred, pass(mesh) :: eta2_cell
      procedure(get_geometry_3d), deferred, pass(mesh) :: eta3_cell
-     procedure(display_logical_mesh_3d), deferred, pass :: display
-     procedure(delete_logical_mesh_3d),  deferred, pass :: delete
+     procedure(display_mesh_3d), deferred, pass :: display
+     procedure(delete_mesh_3d),  deferred, pass :: delete
   end type sll_mesh_3d_base
 
   !> @brief 4D logical mesh
@@ -49,35 +49,35 @@ module sll_meshes_base
      procedure(get_geometry_4d), deferred, pass(mesh) :: eta2_cell
      procedure(get_geometry_4d), deferred, pass(mesh) :: eta3_cell
      procedure(get_geometry_4d), deferred, pass(mesh) :: eta4_cell
-     procedure(display_logical_mesh_4d), deferred, pass :: display
-     procedure(delete_logical_mesh_4d),  deferred, pass  :: delete
+     procedure(display_mesh_4d), deferred, pass :: display
+     procedure(delete_mesh_4d),  deferred, pass  :: delete
   end type sll_mesh_4d_base
 
 
 
   !Abstract functions for 1d
   abstract interface
-     function get_geometry_1d(mesh, k) result(res)
+     function get_geometry_1d(mesh, i) result(res)
        use sll_working_precision
        import sll_mesh_1d_base
        class(sll_mesh_1d_base), intent(in) :: mesh
-       sll_int32, intent(in)  :: k
+       sll_int32, intent(in)  :: i
        sll_real64 :: res
      end function get_geometry_1d
   end interface
 
   abstract interface
-     subroutine delete_logical_mesh_1d(mesh)
+     subroutine delete_mesh_1d(mesh)
        import sll_mesh_1d_base
        class(sll_mesh_1d_base), intent(inout) :: mesh
-     end subroutine delete_logical_mesh_1d
+     end subroutine delete_mesh_1d
   end interface
 
   abstract interface
-     subroutine display_logical_mesh_1d(mesh)
+     subroutine display_mesh_1d(mesh)
        import sll_mesh_1d_base
        class(sll_mesh_1d_base), intent(in) :: mesh
-     end subroutine display_logical_mesh_1d
+     end subroutine display_mesh_1d
   end interface
 
   !Abstract functions for 2d
@@ -103,17 +103,17 @@ module sll_meshes_base
   end interface
 
   abstract interface
-     subroutine display_logical_mesh_2d(mesh)
+     subroutine display_mesh_2d(mesh)
        import sll_mesh_2d_base
-       class(sll_mesh_2d_base), intent(inout) :: mesh
-     end subroutine display_logical_mesh_2d
+       class(sll_mesh_2d_base), intent(in) :: mesh
+     end subroutine display_mesh_2d
   end interface
   
   abstract interface
-     subroutine delete_logical_mesh_2d(mesh)
+     subroutine delete_mesh_2d(mesh)
        import sll_mesh_2d_base
        class(sll_mesh_2d_base), intent(inout) :: mesh
-     end subroutine delete_logical_mesh_2d
+     end subroutine delete_mesh_2d
   end interface
 
   !Abstract functions for 3d
@@ -130,17 +130,17 @@ module sll_meshes_base
   end interface
 
   abstract interface
-     subroutine display_logical_mesh_3d(mesh)
+     subroutine display_mesh_3d(mesh)
        import sll_mesh_3d_base
        class(sll_mesh_3d_base), intent(inout) :: mesh
-     end subroutine display_logical_mesh_3d
+     end subroutine display_mesh_3d
   end interface
 
   abstract interface
-     subroutine delete_logical_mesh_3d(mesh)
+     subroutine delete_mesh_3d(mesh)
        import sll_mesh_3d_base
        class(sll_mesh_3d_base), intent(inout) :: mesh
-     end subroutine delete_logical_mesh_3d
+     end subroutine delete_mesh_3d
   end interface
 
   !Abstract functions for 4d
@@ -158,17 +158,17 @@ module sll_meshes_base
   end interface
 
   abstract interface
-     subroutine display_logical_mesh_4d(mesh)
+     subroutine display_mesh_4d(mesh)
        import sll_mesh_4d_base
        class(sll_mesh_4d_base), intent(inout) :: mesh
-     end subroutine display_logical_mesh_4d
+     end subroutine display_mesh_4d
   end interface
 
   abstract interface
-     subroutine delete_logical_mesh_4d(mesh)
+     subroutine delete_mesh_4d(mesh)
        import sll_mesh_4d_base
        class(sll_mesh_4d_base), intent(inout) :: mesh
-     end subroutine delete_logical_mesh_4d
+     end subroutine delete_mesh_4d
   end interface
 
 end module sll_meshes_base
