@@ -631,65 +631,65 @@ contains
   end subroutine index_hex_to_global
 
 
-  function eta1_node_hex(mesh, i, j) result(val)
+  function eta1_node_hex(mesh, i, j) result(res)
     ! The coordinates (i, j) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
-    class(sll_hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d), intent(in) :: mesh
     sll_int32, intent(in)  :: i
     sll_int32, intent(in)  :: j
-    sll_real64 :: val
+    sll_real64 :: res
 
-    val = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
+    res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
   end function eta1_node_hex
 
-  function eta2_node_hex(mesh, i, j) result(val)
+  function eta2_node_hex(mesh, i, j) result(res)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function the 2nd coordinate on the cartesian system
-    class(sll_hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d), intent(in)     :: mesh
     sll_int32, intent(in)  :: i
     sll_int32, intent(in)  :: j
-    sll_real64  :: val
+    sll_real64  :: res
 
-    val = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
+    res = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
   end function eta2_node_hex
 
 
-  function eta1_cell_hex(mesh, cell_num) result(val)
+  function eta1_cell_hex(mesh, cell_num) result(res)
     ! The index num_ele corresponds to the index of triangle
     ! This function returns the 1st coordinate on the cartesian system
     ! of the center of the triangle at num_ele
-    class(sll_hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
     sll_int32, intent(in)      :: cell_num
-    sll_real64 :: val
+    sll_real64 :: res
 
-    val = mesh%center_cartesian_coord(1, cell_num)
+    res = mesh%center_cartesian_coord(1, cell_num)
   end function eta1_cell_hex
 
-  function eta2_cell_hex(mesh, cell_num) result(val)
+  function eta2_cell_hex(mesh, cell_num) result(res)
     ! The index num_ele corresponds to the index of triangle
     ! This function returns the 2nd coordinate on the cartesian system
     ! of the center of the triangle at num_ele
-    class(sll_hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
     sll_int32, intent(in)      :: cell_num
-    sll_real64 :: val
+    sll_real64 :: res
 
-    val = mesh%center_cartesian_coord(2, cell_num)
+    res = mesh%center_cartesian_coord(2, cell_num)
   end function eta2_cell_hex
 
 
-  function eta1_cell_hex_two_arg(mesh, i, j) result(val)
-    class(sll_hex_mesh_2d)     :: mesh
+  function eta1_cell_hex_two_arg(mesh, i, j) result(res)
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
     sll_int32, intent(in)      :: i, j
-    sll_real64 :: val
+    sll_real64 :: res
 
     print *, "Error : eta1_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
     STOP
   end function eta1_cell_hex_two_arg
 
-  function eta2_cell_hex_two_arg(mesh, i, j) result(val)
-    class(sll_hex_mesh_2d)     :: mesh
+  function eta2_cell_hex_two_arg(mesh, i, j) result(res)
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
     sll_int32, intent(in)      :: i, j
-    sll_real64 :: val
+    sll_real64 :: res
 
     print *, "Error : eta2_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
     STOP
@@ -1011,7 +1011,7 @@ contains
 
   subroutine display_hex_mesh_2d(mesh)
     ! Displays mesh information on the terminal
-    class(sll_hex_mesh_2d), intent(inout) :: mesh
+    class(sll_hex_mesh_2d), intent(in) :: mesh
 
     write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       center_x2 &
          &       radius'
