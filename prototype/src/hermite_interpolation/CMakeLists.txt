@@ -14,7 +14,6 @@ TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation)
 
 
 
-
 # first executable
 
 ADD_EXECUTABLE(test_hermite_interpolation unit_test.F90)
