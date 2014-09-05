@@ -536,8 +536,6 @@ contains
     
     call get_triangle_index(k11,k12,mesh,x,center_index)
 
-    call get_edge_index(k11,k12,mesh,x,edge_index1,edge_index2,edge_index3)
-
     ! get the first 9 degrees of freedom
 
     ! values at the vertices of the triangle
@@ -549,6 +547,7 @@ contains
     ! values at the middle of the edges
     
     if (num_method == 15 ) then 
+       call get_edge_index(k11,k12,mesh,x,edge_index1,edge_index2,edge_index3)
        freedom(12) = edge_value(edge_index1)
        freedom(11) = edge_value(edge_index2)
        freedom(10) = edge_value(edge_index3)
@@ -606,6 +605,7 @@ contains
     l2   = a2 * abs( x1x*y3y - x3x*y1y ) 
     l3   = 1._f64 - l1 - l2
     
+
     if (num_method == 9 ) then
 
        ! Computing the nine canonical basis functions 

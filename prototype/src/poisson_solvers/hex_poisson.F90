@@ -39,13 +39,13 @@ contains
 
        index_tabij     = index_tab
 
-       index_tabi_1j_1 = index_tabi_1j_1 - index_tab + 2*num_cells + 2
-       index_tabi_1j   = index_tabi_1j   - index_tab + 2*num_cells + 2
-       index_tabij_1   = index_tabij_1   - index_tab + 2*num_cells + 2
-       index_tabij     = index_tabij     - index_tab + 2*num_cells + 2
-       index_tabij1    = index_tabij1    - index_tab + 2*num_cells + 2
-       index_tabi1j    = index_tabi1j    - index_tab + 2*num_cells + 2
-       index_tabi1j1   = index_tabi1j1   - index_tab + 2*num_cells + 2
+       ! index_tabi_1j_1 = index_tabi_1j_1 - index_tab + 2*num_cells + 2
+       ! index_tabi_1j   = index_tabi_1j   - index_tab + 2*num_cells + 2
+       ! index_tabij_1   = index_tabij_1   - index_tab + 2*num_cells + 2
+       ! index_tabij     = index_tabij     - index_tab + 2*num_cells + 2
+       ! index_tabij1    = index_tabij1    - index_tab + 2*num_cells + 2
+       ! index_tabi1j    = index_tabi1j    - index_tab + 2*num_cells + 2
+       ! index_tabi1j1   = index_tabi1j1   - index_tab + 2*num_cells + 2
 
        if ( abs(k1) == num_cells .and. abs(k2) == num_cells .or.&
             abs(k1) == num_cells .and. k2 == 0 .or.&
