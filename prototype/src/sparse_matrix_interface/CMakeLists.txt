@@ -20,6 +20,7 @@ ADD_LIBRARY(spm STATIC ${SPM_FILES})
 
 IF(PASTIX_FOUND)
 
+  INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
   ADD_LIBRARY(sll_sparse_matrix STATIC 
               sll_sparse.F90
               sll_pastix.F90
