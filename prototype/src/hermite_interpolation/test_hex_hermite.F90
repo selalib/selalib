@@ -5,7 +5,7 @@ program test_hex_hermite
 #include "sll_assert.h"
 
   use sll_constants
-  use interpolation_hex_hermite
+  use sll_interpolation_hex_hermite
 
   implicit none
 
@@ -57,7 +57,7 @@ program test_hex_hermite
   sll_real64   :: cfl
   ! character(len = 4) :: number
   logical      :: inside
-  type(hex_mesh_2d), pointer :: mesh
+  type(sll_hex_mesh_2d), pointer :: mesh
   character(len = 5) ::name_test = "dio  "
   
   center_mesh_x1 = 0._f64
@@ -71,7 +71,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 40,40,20 ! -> loop on the size of the mesh 
+  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
@@ -315,15 +315,20 @@ program test_hex_hermite
               if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
 
               norm2_sol_center = 0._f64
-
+              
               if ( name_test == "gauss" ) then 
-              norm2_sol_center = norm2_sol_center + &
-                   abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
-              norm2_error_center = norm2_error_center + &
-                   abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
-              if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
-                  norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
-              if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
+                 norm2_sol_center = norm2_sol_center + &
+                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+                 norm2_error_center = norm2_error_center + &
+                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
+                 if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
+                      norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
+                 if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
+
+              elseif ( name_test == "dio  " ) then 
+
+
+              endif
 
            enddo
 
@@ -473,10 +478,10 @@ program test_hex_hermite
               else
                  dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
               endif
-              if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
-                 f_fin(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+              if(dioco_r>=dioco_rminus.and.dioco_r<=dioco_rplus)then
+                 f_sol(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
               else
-                 f_fin(i) = 0._f64  
+                 f_sol(i) = 0._f64  
               endif
            endif
 

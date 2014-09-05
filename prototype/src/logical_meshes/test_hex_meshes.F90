@@ -1,13 +1,13 @@
-program test_hex_mesh
+program test_hex_meshes
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use hex_mesh
+use sll_hex_meshes
 use sll_constants
 
 implicit none
 
-type(hex_mesh_2d), pointer  :: mesh
+type(sll_hex_mesh_2d), pointer  :: mesh
 sll_int32                   :: num_cells
 sll_real64, pointer         :: field(:)
 sll_int32                   :: error
@@ -37,5 +37,5 @@ call write_field_hex_mesh_xmf(mesh, field, 'field')
 
 call delete(mesh)
 
-end program test_hex_mesh
+end program test_hex_meshes
 

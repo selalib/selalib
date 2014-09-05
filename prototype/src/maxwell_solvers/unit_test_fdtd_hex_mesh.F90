@@ -5,14 +5,14 @@ program test_maxwell_fdtd_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use hex_mesh
+use sll_hex_meshes
 use sll_constants
 use sll_maxwell_diga_hex_mesh
 
 implicit none
 
 type(maxwell_dg_hex_mesh)   :: maxwell
-type(hex_mesh_2d), pointer  :: mesh
+type(sll_hex_mesh_2d), pointer  :: mesh
 sll_int32                   :: num_cells
 sll_int32                   :: error
 sll_int32                   :: istep

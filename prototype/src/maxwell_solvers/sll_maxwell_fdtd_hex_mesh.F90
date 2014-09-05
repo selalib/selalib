@@ -26,7 +26,7 @@ module sll_maxwell_fdtd_hex_mesh
 #include "sll_assert.h"
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
-use hex_mesh
+use sll_hex_meshes
 
 implicit none
 !private
@@ -50,7 +50,7 @@ public :: initialize, ampere, faraday
 !> Maxwell in TE mode: (Ex,Ey,Bz)
 type, public :: maxwell_hex_mesh_fdtd
 
-  type(hex_mesh_2d), pointer :: mesh          !< hexagonal mesh
+  type(sll_hex_mesh_2d), pointer :: mesh          !< hexagonal mesh
   sll_real64                 :: c             !< light speed
   sll_real64                 :: e_0           !< electric conductivity
   sll_int32                  :: polarization  !< polarization type (TE or TM)
@@ -63,7 +63,7 @@ contains
 subroutine initialize_maxwell_hex_mesh_fdtd(this, mesh, polarization )
 
    type(maxwell_hex_mesh_fdtd) :: this         !< maxwell solver object
-   type(hex_mesh_2d)           :: mesh         !< hexagonal mesh
+   type(sll_hex_mesh_2d)       :: mesh         !< hexagonal mesh
    sll_int32                   :: polarization !< TE or TM
 
    this%mesh = mesh

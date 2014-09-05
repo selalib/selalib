@@ -9,23 +9,25 @@
 !**************************************************************
 
 
-module hex_mesh
+module sll_hex_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 
 use sll_constants
 use sll_utilities
+use sll_meshes_base
 use sll_tri_mesh_xmf
 
   implicit none
 
-  type hex_mesh_2d
+  type,extends(sll_mesh_2d_base) ::  sll_hex_mesh_2d
      ! A hexagonal mesh (composed by equilateral triangles)
      ! is defined by three directional vectors (r1, r2, r3)
      ! the number of cells, the radius, and the coordinates of the center  
      sll_int32  :: num_cells     ! number of cells in any direction parting from origin
      sll_int32  :: num_pts_tot   ! number of total points
      sll_int32  :: num_triangles ! number of triangles
+     sll_int32  :: num_edges     ! number of edges
      sll_real64 :: radius        ! distance between origin and external vertex
      sll_real64 :: center_x1     ! x1 cartesian coordinate of the origin
      sll_real64 :: center_x2     ! x2 cartesian coordinate of the origin
@@ -37,27 +39,35 @@ use sll_tri_mesh_xmf
      sll_real64 :: r2_x2
      sll_real64 :: r3_x1
      sll_real64 :: r3_x2
+
      ! Matrix containing mesh points coordinates in cartesian coordinates :
      sll_real64, pointer, dimension(:,:) :: cartesian_coord ! (1:2,1:num_pts_tot)
-     ! Matrix containing mesh points coordinates in hexagonal coordinates (sll_int32s) :
+     ! Matrix containing mesh points coordinates in hexagonal coordinates (integers) :
      sll_int32, pointer, dimension(:,:)  :: hex_coord ! (1:2,1:num_pts_tot)
      ! Matrix containg global indices arranged from lower corner of hexagon 
      ! and following the r2, then r1 direction
      sll_int32, pointer, dimension(:) :: global_indices ! (1:num_pts_tot)
 
-     ! The following two tables are not always needed, to avoid useless allocation
-     ! and initialization we define a flag to know if they are required
-     sll_int32 :: EXTRA_TABLES
      ! matrix containing the cartesian coordinates of the centers of the triangles
      sll_real64, pointer, dimension(:,:) :: center_cartesian_coord ! (1:2,1:num_triangles)     
      ! matrix containing the index of the respective center 
      ! of the 2 triangles at the top of most points
      sll_int32, pointer, dimension(:,:) :: center_index! (1:2,1:num_pts_tot)
 
+     ! The following two tables are not always needed, to avoid useless allocation
+     ! and initialization we define a flag to know if they are required
+     sll_int32 :: EXTRA_TABLES
+     sll_real64, pointer, dimension(:,:) :: edge_center_cartesian_coord ! (1:2,1:num_edges)     
+     ! matrix containing the index of the respective center of the 2 triangles at the top of most points
+     sll_int32, pointer, dimension(:,:) :: edge_center_index! (1:3,1:num_pts_tot)
 
    contains
-     procedure, pass(mesh) :: x1_node 
-     procedure, pass(mesh) :: x2_node 
+     procedure, pass(mesh) :: eta1_node => eta1_node_hex
+     procedure, pass(mesh) :: eta2_node => eta2_node_hex
+     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_hex
+     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_hex_two_arg
+     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_hex
+     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_hex_two_arg
      procedure, pass(mesh) :: index_hex_to_global
      procedure, pass(mesh) :: hex_to_global
      procedure, pass(mesh) :: global_to_hex1
@@ -69,10 +79,16 @@ use sll_tri_mesh_xmf
      procedure, pass(mesh) :: global_to_local
      procedure, pass(mesh) :: local_to_global
      procedure, pass(mesh) :: local_hex_to_global
-  end type hex_mesh_2d
+     procedure, pass(mesh) :: display => display_hex_mesh_2d
+     procedure, pass(mesh) :: delete => delete_hex_mesh_2d
+     generic, public :: eta1_cell => eta1_cell_one_arg, &
+          eta1_cell_two_arg
+     generic, public :: eta2_cell => eta2_cell_one_arg, &
+          eta2_cell_two_arg
+  end type sll_hex_mesh_2d
 
   type hex_mesh_2d_ptr
-     type(hex_mesh_2d), pointer :: hm
+     type(sll_hex_mesh_2d), pointer :: hm
   end type hex_mesh_2d_ptr
 
   interface delete
@@ -82,6 +98,15 @@ use sll_tri_mesh_xmf
   interface sll_display
      module procedure display_hex_mesh_2d
   end interface sll_display
+
+  ! interface eta1_cell
+  !    module procedure eta1_cell_one_arg, eta1_cell_two_arg
+  ! end interface eta1_cell
+
+  ! interface eta2_cell
+  !    module procedure eta2_cell_one_arg, eta2_cell_two_arg
+  ! end interface eta2_cell
+
 
 contains
 
@@ -108,7 +133,7 @@ contains
        radius, &
        EXTRA_TABLES) result(mesh)
 
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
@@ -153,7 +178,7 @@ contains
        EXTRA_TABLES)
 
 
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_int32, intent(in)  :: num_cells
     sll_real64, optional, intent(in) :: radius
     sll_real64, optional, intent(in) :: center_x1
@@ -221,8 +246,8 @@ contains
     ! Allocation and initialization of coordinate matrices
     ! and conectivity matrix
     SLL_ALLOCATE(mesh%cartesian_coord(2, mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%hex_coord      (2, mesh%num_pts_tot), ierr)
-    SLL_ALLOCATE(mesh%global_indices    (mesh%num_pts_tot), ierr)
+    SLL_ALLOCATE(mesh%hex_coord(2, mesh%num_pts_tot), ierr)
+    SLL_ALLOCATE(mesh%global_indices(mesh%num_pts_tot), ierr)
     mesh%cartesian_coord(:,:)          = 0._f64
     mesh%hex_coord(:,:)                = 0
     mesh%global_indices(:)             = -1
@@ -353,16 +378,24 @@ contains
 
     end do
 
-    ! if needed we can compute the cartesian coordiantes and the indices 
+    mesh%num_triangles = 6 * num_cells * num_cells
+    SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
+    SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+    ! we  compute the cartesian coordinates and the indices 
     ! of the centers of the triangles of the mesh
+    call init_center_points_triangle(mesh)
+
+
+    ! if needed we can compute the cartesian coordinates and the indices 
+    ! of the edges' center of each triangle
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, EXTRA_TABLES, EXTRA_TABLES, 0 )
     if (mesh%EXTRA_TABLES.eq.1) then 
-       mesh%num_triangles = 6 * num_cells * num_cells
-       SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
-       SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
-       call init_center_points_triangle(mesh)
+       mesh%num_edges = 3 * num_cells * ( 3 * num_cells + 1 )
+       SLL_ALLOCATE(mesh%edge_center_cartesian_coord(2, mesh%num_edges), ierr)
+       SLL_ALLOCATE(mesh%edge_center_index(3, mesh%num_pts_tot), ierr)
+       call init_edge_center_triangle(mesh)
     else
-       mesh%num_triangles = -1
+       mesh%num_edges = -1
     end if
 
 
@@ -374,7 +407,7 @@ contains
 
 
   subroutine init_center_points_triangle(mesh)
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32          :: center_index, global
     sll_int32          :: k1, k2
     sll_real64         :: x1, x2, x3
@@ -383,12 +416,15 @@ contains
     sll_real64         :: jacob, k1c, k2c
     logical            :: inside
 
+    jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
 
     mesh%center_cartesian_coord(:,:)   = 0._f64
     mesh%center_index(:,:)             = -1
 
     center_index = 0
+
     r1x1 =  mesh%r1_x1*real(mesh%num_cells,f64)
+
     do global = 1, mesh%num_pts_tot
        ! almost each point is the base of a lozenge , thus two triangle
        ! from which we get two center points
@@ -412,7 +448,6 @@ contains
        
        inside = .true.
        
-       jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
        k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
        k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
 
@@ -443,7 +478,6 @@ contains
 
        inside = .true.
 
-       jacob = mesh%r1_x1 * mesh%r2_x2 - mesh%r2_x1 * mesh%r1_x2
 
        k1c = (mesh%r2_x2 * xx - mesh%r2_x1 * yy)/jacob
        k2c = (mesh%r1_x1 * yy - mesh%r1_x2 * xx)/jacob
@@ -465,8 +499,105 @@ contains
 
 
 
+  subroutine init_edge_center_triangle(mesh)
+    class(sll_hex_mesh_2d) :: mesh
+    sll_int32          :: edge_index
+    sll_int32          :: global, num_cells
+    sll_int32          :: k1, k2, k1c, k2c
+    sll_real64         :: x1, x2_l,x2_r, x3, y1, y2_l, y2_r, y3, xx, yy
+    logical            :: inside
+
+    num_cells = mesh%num_cells
+
+    mesh%edge_center_cartesian_coord(:,:)   = 0._f64
+    mesh%edge_center_index(:,:)             = -1
+    edge_index = 0
+
+    do global = 1, mesh%num_pts_tot
+       ! almost each point is the base of a lozenge , thus two triangle
+       ! from which we get two center points
+
+       k1 = mesh%hex_coord(1, global)
+       k2 = mesh%hex_coord(2, global)
+
+       x1   = real(k1,f64)*mesh%r1_x1 + real(k2,f64)*mesh%r2_x1
+       x2_l = real(k1,f64)*mesh%r1_x1 + real((k2+1),f64)*mesh%r2_x1
+       x2_r = real((k1+1),f64)*mesh%r1_x1 + real(k2,f64)*mesh%r2_x1
+       x3   = real((k1+1),f64)*mesh%r1_x1 + real((k2+1),f64)*mesh%r2_x1
+       y1   = real(k1,f64)*mesh%r1_x2 + real(k2,f64)*mesh%r2_x2
+       y2_l = real(k1,f64)*mesh%r1_x2 + real((k2+1),f64)*mesh%r2_x2
+       y2_r = real((k1+1),f64)*mesh%r1_x2 + real(k2,f64)*mesh%r2_x2
+       y3   = real((k1+1),f64)*mesh%r1_x2 + real((k2+1),f64)*mesh%r2_x2
+
+       !test to check if the left edge is inside
+
+       inside = .true.
+       
+       k1c = k1
+       k2c = k2 + 1
+
+       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+            (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
+
+       if ( inside ) then
+          ! center point of the left edge
+          xx = (x1+x2_l)*0.5_f64
+          yy = (y1+y2_l)*0.5_f64
+          edge_index = edge_index + 1
+          mesh%edge_center_cartesian_coord(1,edge_index) = xx
+          mesh%edge_center_cartesian_coord(2,edge_index) = yy
+          mesh%edge_center_index(1, global) = edge_index
+       endif
+
+
+       !test to check if the middle edge is inside
+       
+       inside = .true.
+
+       k1c = k1 + 1
+       k2c = k2 + 1
+
+       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+           (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
+
+       if ( inside ) then
+          ! center point of the middle edge
+          xx = (x1+x3)*0.5_f64
+          yy = (y1+y3)*0.5_f64
+          edge_index = edge_index + 1
+          mesh%edge_center_cartesian_coord(1,edge_index) = xx
+          mesh%edge_center_cartesian_coord(2,edge_index) = yy
+          mesh%edge_center_index(2, global) = edge_index
+       endif
+
+
+       !test to check if the right edge is inside
+
+       inside = .true.
+
+       k1c = k1 + 1
+       k2c = k2
+
+       if ( abs(k1c) > num_cells .or. abs(k2c) > num_cells .or. &
+            (k1c)*(k2c)<0 .and.( abs(k1c)+abs(k2c) > num_cells) ) inside=.false.
+
+       if ( inside ) then
+          ! center point of the right edge
+          xx = (x1+x2_r)*0.5_f64
+          yy = (y1+y2_r)*0.5_f64
+          edge_index = edge_index + 1
+          mesh%edge_center_cartesian_coord(1,edge_index) = xx
+          mesh%edge_center_cartesian_coord(2,edge_index) = yy
+          mesh%edge_center_index(3, global) = edge_index
+       endif
+       
+    enddo
+
+
+  end subroutine init_edge_center_triangle
+
   subroutine index_hex_to_global(mesh, k1, k2, index_tab)
-    class(hex_mesh_2d)     :: mesh
+    class(sll_hex_mesh_2d)     :: mesh
     sll_int32, intent(in)  :: k1, k2
     sll_int32, intent(out) :: index_tab
     sll_int32              :: k
@@ -501,27 +632,69 @@ contains
   end subroutine index_hex_to_global
 
 
-  function x1_node(mesh, k1, k2) result(val)
-    ! The coordinates (k1, k2) correspond to the (r1, r2) basis
+  function eta1_node_hex(mesh, i, j) result(res)
+    ! The coordinates (i, j) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
-    class(hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)  :: k1
-    sll_int32, intent(in)  :: k2
-    sll_real64 :: val
+    class(sll_hex_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in)  :: i
+    sll_int32, intent(in)  :: j
+    sll_real64 :: res
 
-    val = mesh%r1_x1*k1 + mesh%r2_x1*k2 + mesh%center_x1
-  end function x1_node
+    res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
+  end function eta1_node_hex
 
-  function x2_node(mesh, k1, k2) result(val)
+  function eta2_node_hex(mesh, i, j) result(res)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function the 2nd coordinate on the cartesian system
-    class(hex_mesh_2d)     :: mesh
-    sll_int32, intent(in)  :: k1
-    sll_int32, intent(in)  :: k2
-    sll_real64  :: val
+    class(sll_hex_mesh_2d), intent(in)     :: mesh
+    sll_int32, intent(in)  :: i
+    sll_int32, intent(in)  :: j
+    sll_real64  :: res
 
-    val = mesh%r1_x2*k1 + mesh%r2_x2*k2 + mesh%center_x1
-  end function x2_node
+    res = mesh%r1_x2*i + mesh%r2_x2*j + mesh%center_x2
+  end function eta2_node_hex
+
+
+  function eta1_cell_hex(mesh, cell_num) result(res)
+    ! The index num_ele corresponds to the index of triangle
+    ! This function returns the 1st coordinate on the cartesian system
+    ! of the center of the triangle at num_ele
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
+    sll_int32, intent(in)      :: cell_num
+    sll_real64 :: res
+
+    res = mesh%center_cartesian_coord(1, cell_num)
+  end function eta1_cell_hex
+
+  function eta2_cell_hex(mesh, cell_num) result(res)
+    ! The index num_ele corresponds to the index of triangle
+    ! This function returns the 2nd coordinate on the cartesian system
+    ! of the center of the triangle at num_ele
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
+    sll_int32, intent(in)      :: cell_num
+    sll_real64 :: res
+
+    res = mesh%center_cartesian_coord(2, cell_num)
+  end function eta2_cell_hex
+
+
+  function eta1_cell_hex_two_arg(mesh, i, j) result(res)
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
+    sll_int32, intent(in)      :: i, j
+    sll_real64 :: res
+
+    print *, "Error : eta1_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
+    STOP
+  end function eta1_cell_hex_two_arg
+
+  function eta2_cell_hex_two_arg(mesh, i, j) result(res)
+    class(sll_hex_mesh_2d),intent(in)     :: mesh
+    sll_int32, intent(in)      :: i, j
+    sll_real64 :: res
+
+    print *, "Error : eta2_cell for a hexagonal mesh only works with ONE parameter (num_cell)"
+    STOP
+  end function eta2_cell_hex_two_arg
 
 
   function cells_to_origin(k1, k2) result(val)
@@ -548,7 +721,7 @@ contains
     ! By default the index of the center of the mesh is 0
     ! Then following the r1 direction and a counter-clockwise motion
     ! we assing an index to every point of the mesh.
-    class(hex_mesh_2d)      :: mesh
+    class(sll_hex_mesh_2d)      :: mesh
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
     sll_int32               :: distance
@@ -573,7 +746,7 @@ contains
   function global_to_hex1(mesh, index) result(k1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (k1) on the (r1,r2) basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k1
 
@@ -583,7 +756,7 @@ contains
   function global_to_hex2(mesh, index) result(k2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (k2) on the (r1,r2) basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: index
     sll_int32 :: k2
 
@@ -593,7 +766,7 @@ contains
   function global_to_x1(mesh, index) result(x1)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the first coordinate (x1) on the cartesian basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x1
 
@@ -603,7 +776,7 @@ contains
   function global_to_x2(mesh, index) result(x2)
     ! Takes the global index of the point (see hex_to_global(...) for conventions)
     ! returns the second coordinate (x2) on the cartesian basis 
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32  :: index
     sll_real64 :: x2
 
@@ -614,7 +787,7 @@ contains
   function cart_to_hex1(mesh, x1, x2) result(k1)
     ! Takes the coordinates (x1,x2) on the cartesian basis and 
     ! returns the first coordinate (k1) on the (r1, r2) basis
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32  :: k1
@@ -627,7 +800,7 @@ contains
   function cart_to_hex2(mesh, x1, x2) result(k2)
     ! Takes the coordinates (x1,x2) on the cartesian basis and 
     ! returns the second coordinate (k2) on the (r1, r2) basis
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_real64 :: x1
     sll_real64 :: x2
     sll_int32  :: k2
@@ -642,7 +815,7 @@ contains
     ! we assign local indices, but this time the initial point is 
     ! the point which index is ref_index
     ! ie. local_index(i,i) = 1
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: ref_index
     sll_int32 :: global
     sll_int32 :: k1_ref,  k2_ref
@@ -671,7 +844,7 @@ contains
     ! local index local_index in the ref_index system
     ! (see gloval_index(...) and global_to_local(...) for conventions) 
     ! ie. local_to_global(1, i) = i
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: ref_index, local
     sll_int32 :: k1_ref, k2_ref
     sll_int32 :: k1_loc, k2_loc
@@ -697,7 +870,7 @@ contains
     ! local index local_index in the ref_index system
     ! (see gloval_index(...) and global_to_local(...) for conventions) 
     ! ie. local_to_global(1, i) = i
-    class(hex_mesh_2d) :: mesh
+    class(sll_hex_mesh_2d) :: mesh
     sll_int32 :: k1_ref, k2_ref
     sll_int32 :: k1_loc, k2_loc
     sll_int32 :: local
@@ -718,7 +891,7 @@ contains
 
 
   subroutine get_cell_vertices_index( x, y, mesh, s1, s2, s3 )
-    type(hex_mesh_2d), pointer            :: mesh
+    type(sll_hex_mesh_2d), pointer            :: mesh
     sll_real64, intent(in)                :: x, y
     sll_int32, intent(out)                :: s1, s2, s3
     sll_real64                            :: xi, radius, step
@@ -770,7 +943,7 @@ contains
 
 
   subroutine get_triangle_index(k1,k2,mesh,x,triangle_index)
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
     sll_int32, intent(in)      :: k1, k2
     sll_int32, intent(out)     :: triangle_index
@@ -788,14 +961,58 @@ contains
        triangle_index = mesh%center_index(2,global) !right triangle
     endif
 
-    if (triangle_index == -1 ) print*, "problem in get_triangle_index l701"
+    if (triangle_index == -1 ) print*, "problem in get_triangle_index at line",&
+         __LINE__
 
   end subroutine get_triangle_index
 
 
+
+  subroutine get_edge_index(k1,k2,mesh,x,edge_index1,edge_index2,edge_index3)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_real64, intent(in)     :: x !cartessian_abscisse_other_vertice
+    sll_int32, intent(in)      :: k1, k2
+    sll_int32, intent(out)     :: edge_index1,edge_index2,edge_index3
+    sll_int32                  :: global, global2
+
+    ! in short :
+    ! returns the three indices of the edge  of the triangle which contains
+    ! a point of abscisse x and which lowest vertex is of hexa. coordinate
+    ! k1, k2
+ 
+    ! almost every point is the lowest point of a lozenge , i.e. 3 edges
+    ! we get therefore 3 indices per points
+    ! but we want the three indices of the triangle which contains a point
+    ! of abscisse x 
+    ! we therefore test in which kind of triangle we are 
+    ! ( oriented left or right ) then we get directly the indices of the first 
+    ! two edges then we deduce from the kind of triangle which point is to the 
+    ! left ( respectively to the right ) and get the index of the third edge
+
+    global = hex_to_global(mesh,k1,k2)
+
+    if ( x < mesh%cartesian_coord(1,global) ) then
+       edge_index1 = mesh%edge_center_index(1,global)
+       edge_index2 = mesh%edge_center_index(2,global)
+       global2 = hex_to_global(mesh,k1,k2+1)
+       edge_index3 = mesh%edge_center_index(3,global2)
+    else
+       edge_index1 = mesh%edge_center_index(3,global)
+       edge_index2 = mesh%edge_center_index(2,global)
+       global2 = hex_to_global(mesh,k1+1,k2)
+       edge_index3 = mesh%edge_center_index(1,global2)
+    endif
+
+    if (edge_index1 == -1 ) print*, "problem in get_edge_index  l", __LINE__
+    if (edge_index2 == -1 ) print*, "problem in get_edge_index  l", __LINE__
+    if (edge_index3 == -1 ) print*, "problem in get_edge_index  l", __LINE__
+
+  end subroutine get_edge_index
+
+
   subroutine display_hex_mesh_2d(mesh)
     ! Displays mesh information on the terminal
-    type(hex_mesh_2d), pointer :: mesh
+    class(sll_hex_mesh_2d), intent(in) :: mesh
 
     write(*,"(/,(a))") '2D mesh : num_cells   num_pts        center_x1       center_x2 &
          &       radius'
@@ -809,7 +1026,7 @@ contains
 
   subroutine write_hex_mesh_2d(mesh, name)
     ! Writes the mesh information in a file named "name"
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     character(len=*) :: name
     sll_int32  :: i
     sll_int32  :: num_pts_tot
@@ -839,7 +1056,7 @@ contains
   subroutine write_field_hex_mesh(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:) :: field
     character(len=*) :: name
     sll_int32  :: i
@@ -864,7 +1081,7 @@ contains
   subroutine write_field_hex_mesh_xmf(mesh, field, name)
     ! Writes the points cartesian coordinates and
     ! field(vector) values in a file named "name"
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:) :: field
     character(len=*) :: name
     sll_int32  :: i
@@ -903,7 +1120,7 @@ contains
 
   subroutine write_hex_mesh_mtv(mesh, mtv_file)
 
-    type(hex_mesh_2d), pointer :: mesh
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64                 :: coor(2,mesh%num_pts_tot)
     sll_int32                  :: ntri(3,mesh%num_triangles)
     sll_real64                 :: x1
@@ -1057,15 +1274,8 @@ end subroutine write_hex_mesh_mtv
 
 
   subroutine delete_hex_mesh_2d( mesh )
-    type(hex_mesh_2d), pointer :: mesh
+    class(sll_hex_mesh_2d), intent(inout) :: mesh
     sll_int32 :: ierr
-
-    if(.not. associated(mesh))then
-       print *, 'delete_hex_mesh_2d'
-       print *, 'ERROR: passed argument is not associated'
-       print *, '       Crash imminent...'
-       STOP
-    end if
 
     SLL_DEALLOCATE(mesh%cartesian_coord, ierr)
     SLL_DEALLOCATE(mesh%hex_coord, ierr)
@@ -1073,11 +1283,13 @@ end subroutine write_hex_mesh_mtv
     if ( mesh%EXTRA_TABLES.eq.1) then
        SLL_DEALLOCATE(mesh%center_cartesian_coord, ierr)
        SLL_DEALLOCATE(mesh%center_index, ierr)
+       SLL_DEALLOCATE(mesh%edge_center_cartesian_coord, ierr)
+       SLL_DEALLOCATE(mesh%edge_center_index, ierr)
     end if
-    SLL_DEALLOCATE(mesh, ierr)
+
   end subroutine delete_hex_mesh_2d
 
 
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
-end module hex_mesh
+end module sll_hex_meshes
