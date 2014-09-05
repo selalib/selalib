@@ -13,8 +13,9 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
-  sll_int32    :: nloops, num_method = 10
-  sll_int32    :: ierr
+  sll_int32    :: num_method = 10
+  character(len = 5) ::name_test = "dioco"!"gauss"!
+  sll_int32    :: nloops,ierr, EXTRA_TABLES = 0
   ! initial distribution
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
@@ -58,8 +59,10 @@ program test_hex_hermite
   ! character(len = 4) :: number
   logical      :: inside
   type(sll_hex_mesh_2d), pointer :: mesh
-  character(len = 5) ::name_test = "dio  "
-  
+  character(len = 50) :: filename
+  character(len = 50) :: filename2
+  character(len = 4)  :: filenum
+
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
 
@@ -71,7 +74,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
+  do num_cells = 80,80,20 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
@@ -104,9 +107,9 @@ program test_hex_hermite
      !                  Mesh initialization   
      !*********************************************************
      
-     mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius ) 
+     mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
      print*,
-     print*,"num_pts : ", mesh%num_pts_tot
+     print*,"num_cell : ",num_cells,"           num_pts : ", mesh%num_pts_tot
      print*,
 
      ! Distribution initialization
@@ -133,7 +136,7 @@ program test_hex_hermite
                 ((x1(i)-gauss_x1)**2 + (x2(i)-gauss_x2)**2)/ gauss_sig**2 )
            f_tn(i) = f_init(i)
 
-        elseif ( name_test == "dio  " ) then 
+        elseif ( name_test == "dioco" ) then 
 
            dioco_r = sqrt( x1(i)**2 + x2(i)**2 )
            if ( x2(i) >= 0 ) then
@@ -142,10 +145,11 @@ program test_hex_hermite
               dioco_theta = 2._f64 * sll_pi-acos( x1(i) / dioco_r )
            endif
            if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
-              f_init(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
+              f_init(i) = 1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta )
            else
               f_init(i) = 0._f64  
            endif
+           f_tn(i) = f_init(i)
 
         endif
 
@@ -162,7 +166,7 @@ program test_hex_hermite
            if ( name_test == "gauss" ) then 
               center_values_tn(i) = gauss_amp*exp( -((x-gauss_x1)**2 + (y-gauss_x2)**2)/gauss_sig**2/2._f64 )
 
-           elseif ( name_test == "dio  " ) then 
+           elseif ( name_test == "dioco" ) then 
 
               dioco_r = sqrt( x**2 + y**2 )
               if ( y >= 0 ) then
@@ -181,13 +185,15 @@ program test_hex_hermite
      
      if ( num_method == 15 ) then
         do i = 1, n_edge
+
            x = mesh%edge_center_cartesian_coord(1,i)
            y = mesh%edge_center_cartesian_coord(2,i)
+
            if ( name_test == "gauss" ) then 
 
               edge_values_tn(i) = gauss_amp*exp( -((x-gauss_x1)**2 + (y-gauss_x2)**2)/gauss_sig**2/2._f64 )
 
-           elseif ( name_test == "dio  " ) then 
+           elseif ( name_test == "dioco" ) then 
 
               dioco_r = sqrt( x**2 + y**2 )
               if ( y >= 0 ) then
@@ -200,7 +206,9 @@ program test_hex_hermite
               else
                  edge_values_tn(i) = 0._f64  
               endif
+
            endif
+
         enddo
      endif
 
@@ -312,10 +320,14 @@ program test_hex_hermite
               end if
 
 
-              if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
+              ! if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
 
               norm2_sol_center = 0._f64
-              
+
+
+              ! computation of the following values :
+              ! norm L2 of the distribution function and its minimum
+              ! norm infinit & norme L2 of the error 
               if ( name_test == "gauss" ) then 
                  norm2_sol_center = norm2_sol_center + &
                       abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
@@ -324,9 +336,7 @@ program test_hex_hermite
                  if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
                       norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
                  if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
-
-              elseif ( name_test == "dio  " ) then 
-
+              elseif ( name_test == "dioco" ) then 
 
               endif
 
@@ -389,15 +399,23 @@ program test_hex_hermite
               end if
 
 
-              norm2_sol_edge = norm2_sol_edge + &
-                  abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+              ! computation of the following values :
+              ! norm L2 of the distribution function and its minimum
+              ! norm infinit & norme L2 of the error 
+              if ( name_test == "gauss" ) then 
+                 norm2_sol_edge = norm2_sol_edge + &
+                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
 
-              norm2_error_edge = norm2_error_edge + &
-                  abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i) )**2
-              if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i)) >  norm_infinite )&
-                  norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i))
-              if ( edge_values_tn1(i) < f_min ) f_min = edge_values_tn1(i)
-              
+                 norm2_error_edge = norm2_error_edge + &
+                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i) )**2
+                 if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i)) >  norm_infinite )&
+                      norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - edge_values_tn1(i))
+                 if ( edge_values_tn1(i) < f_min ) f_min = edge_values_tn1(i)
+
+              elseif ( name_test == "dioco" ) then 
+
+              endif
+
            enddo
 
         endif
@@ -460,8 +478,8 @@ program test_hex_hermite
            ! in order to compute the l2 norm of the error
            
            if (which_advec .eq. 0) then ! linear advection
-              x1(i) = mesh%cartesian_coord(1,i) - advec*dt*nloops
-              x2(i) = mesh%cartesian_coord(2,i) - advec*dt*nloops
+              x = mesh%cartesian_coord(1,i) - advec*dt*nloops
+              y = mesh%cartesian_coord(2,i) - advec*dt*nloops
            else                         ! Circular advection
               x = x1(i)*cos(2._f64*sll_pi*t) - x2(i)*sin(2._f64*sll_pi*t);
               y = x1(i)*sin(2._f64*sll_pi*t) + x2(i)*cos(2._f64*sll_pi*t);
@@ -471,23 +489,26 @@ program test_hex_hermite
            if ( name_test == "gauss" ) then 
 
               f_sol(i) = gauss_amp*exp(-((x-gauss_x1)**2+(y-gauss_x2)**2)/gauss_sig**2/2._f64) 
-           elseif  ( name_test == "dio  " ) then 
-              dioco_r= sqrt(x1(i)**2+x2(i)**2)
-              if (x2(i)>=0) then
-                 dioco_theta = acos(x1(i)/dioco_r)
+           elseif  ( name_test == "dioco" ) then 
+              dioco_r= sqrt(x**2+y**2)
+              if (y>=0) then
+                 dioco_theta = acos(x/dioco_r)
               else
-                 dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
+                 dioco_theta = 2._f64*sll_pi-acos(x/dioco_r)
               endif
-              if(dioco_r>=dioco_rminus.and.dioco_r<=dioco_rplus)then
-                 f_sol(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+              if( dioco_r>=dioco_rminus .and. dioco_r<=dioco_rplus )then
+                 f_sol(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
               else
                  f_sol(i) = 0._f64  
               endif
            endif
 
-
-
-
+           
+           
+           ! computation of the following values :
+           ! norm L2 of the distribution function and its minimum
+           ! norm infinit & norme L2 of the error 
+           
            norm2_sol_pt = norm2_sol_pt + abs(f_sol(i))**2
            norm2_error_pt = norm2_error_pt + abs(f_sol(i) - f_tn1(i))**2
 
@@ -517,6 +538,13 @@ program test_hex_hermite
         center_values_tn = center_values_tn1
 
         edge_values_tn  = edge_values_tn1
+
+        
+        call int2string(nloops,filenum)
+        filename2 = "ana_dist"//trim(filenum)
+        filename  = "num_dist"//trim(filenum)
+        call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+        call write_field_hex_mesh_xmf(mesh, f_sol, trim(filename2))
 
         f_tn = f_tn1
 
