@@ -70,7 +70,7 @@ use sll_meshes_base
   end type sll_logical_mesh_2d_ptr
 
   !> @brief 3D logical mesh
-  type sll_logical_mesh_3d
+  type, extends(sll_mesh_3d_base) :: sll_logical_mesh_3d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3 
@@ -83,6 +83,15 @@ use sll_meshes_base
      sll_real64 :: delta_eta1 !< cell spacing, direction 1
      sll_real64 :: delta_eta2 !< cell spacing, direction 2
      sll_real64 :: delta_eta3 !< cell spacing, direction 3
+   contains
+     procedure, pass(mesh) :: eta1_node => eta1_node_3d
+     procedure, pass(mesh) :: eta2_node => eta2_node_3d
+     procedure, pass(mesh) :: eta3_node => eta3_node_3d
+     procedure, pass(mesh) :: eta1_cell => eta1_cell_3d
+     procedure, pass(mesh) :: eta2_cell => eta2_cell_3d
+     procedure, pass(mesh) :: eta3_cell => eta3_cell_3d
+     procedure, pass(mesh) :: display => display_logical_mesh_3d
+     procedure, pass(mesh) :: delete => delete_logical_mesh_3d
   end type sll_logical_mesh_3d
 
   !> @brief 4D logical mesh
@@ -103,6 +112,15 @@ use sll_meshes_base
      sll_real64 :: delta_eta2 !< cell spacing, direction 2
      sll_real64 :: delta_eta3 !< cell spacing, direction 3
      sll_real64 :: delta_eta4 !< cell spacing, direction 4
+   contains
+     procedure, pass(mesh) :: eta1_node => eta1_node_4d
+     procedure, pass(mesh) :: eta2_node => eta2_node_4d
+     procedure, pass(mesh) :: eta3_node => eta3_node_4d
+     procedure, pass(mesh) :: eta1_cell => eta1_cell_4d
+     procedure, pass(mesh) :: eta2_cell => eta2_cell_4d
+     procedure, pass(mesh) :: eta3_cell => eta3_cell_4d
+     procedure, pass(mesh) :: display => display_logical_mesh_4d
+     procedure, pass(mesh) :: delete => delete_logical_mesh_4d
   end type sll_logical_mesh_4d
 
   ! this should be sll_delete library-wide...
@@ -519,6 +537,92 @@ end if
   end function new_logical_mesh_3d
 
 
+  function eta1_node_3d(mesh, i1, i2, i3) result(res)
+    class(sll_logical_mesh_3d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + real(i1-1,f64)*delta_eta1
+  end function eta1_node_3d
+
+  function eta2_node_3d(mesh, i1, i2, i3) result(res)
+    class(sll_logical_mesh_3d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + real(i2-1,f64)*delta_eta2
+  end function eta2_node_3d
+
+  function eta3_node_3d(mesh, i1, i2, i3) result(res)
+    class(sll_logical_mesh_3d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_real64            :: res
+    sll_real64            :: eta3_min
+    sll_real64            :: delta_eta3
+
+    eta3_min   = mesh%eta3_min
+    delta_eta3 = mesh%delta_eta3
+    res        = eta3_min + real(i3-1,f64)*delta_eta3
+  end function eta3_node_3d
+
+
+  function eta1_cell_3d(mesh, i1, i2, i3) result(res)
+    class(sll_logical_mesh_3d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + (real(i1-1,f64)+0.5_f64)*delta_eta1
+  end function eta1_cell_3d
+
+  function eta2_cell_3d(mesh, i1, i2, i3) result(res)
+    class(sll_logical_mesh_3d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + (real(i2-1,f64)+0.5_f64)*delta_eta2
+  end function eta2_cell_3d
+
+  function eta3_cell_3d(mesh, i1, i2, i3) result(res)
+    class(sll_logical_mesh_3d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_real64            :: res
+    sll_real64            :: eta3_min
+    sll_real64            :: delta_eta3
+
+    eta3_min   = mesh%eta3_min
+    delta_eta3 = mesh%delta_eta3
+    res        = eta3_min + (real(i3-1,f64)+0.5_f64)*delta_eta3
+  end function eta3_cell_3d
+
+
   !> @brief allocates the memory space for a new 4D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
   !> object.
@@ -608,7 +712,127 @@ end if
        print*,'because eta4_max <= eta4_min'
     end if
   end function new_logical_mesh_4d
-  
+
+
+  function eta1_node_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + real(i1-1,f64)*delta_eta1
+  end function eta1_node_4d
+
+  function eta2_node_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + real(i2-1,f64)*delta_eta2
+  end function eta2_node_4d
+
+  function eta3_node_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta3_min
+    sll_real64            :: delta_eta3
+
+    eta3_min   = mesh%eta3_min
+    delta_eta3 = mesh%delta_eta3
+    res        = eta3_min + real(i3-1,f64)*delta_eta3
+  end function eta3_node_4d
+
+  function eta4_node_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta4_min
+    sll_real64            :: delta_eta4
+
+    eta4_min   = mesh%eta4_min
+    delta_eta4 = mesh%delta_eta4
+    res        = eta4_min + real(i4-1,f64)*delta_eta4
+  end function eta4_node_4d
+
+  function eta1_cell_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + (real(i1-1,f64)+0.5_f64)*delta_eta1
+  end function eta1_cell_4d
+
+  function eta2_cell_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + (real(i2-1,f64)+0.5_f64)*delta_eta2
+  end function eta2_cell_4d
+
+  function eta3_cell_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta3_min
+    sll_real64            :: delta_eta3
+
+    eta3_min   = mesh%eta3_min
+    delta_eta3 = mesh%delta_eta3
+    res        = eta3_min + (real(i3-1,f64)+0.5_f64)*delta_eta3
+  end function eta3_cell_4d  
+
+  function eta4_cell_4d(mesh, i1, i2, i3, i4) result(res)
+    class(sll_logical_mesh_4d), intent(in) :: mesh
+    sll_int32, intent(in) :: i1
+    sll_int32, intent(in) :: i2
+    sll_int32, intent(in) :: i3
+    sll_int32, intent(in) :: i4
+    sll_real64            :: res
+    sll_real64            :: eta4_min
+    sll_real64            :: delta_eta4
+
+    eta4_min   = mesh%eta4_min
+    delta_eta4 = mesh%delta_eta4
+    res        = eta4_min + (real(i4-1,f64)+0.5_f64)*delta_eta4
+  end function eta4_cell_4d  
 
   !> @brief display contents of a 1D logical mesh. Recommended access through
   !> the generic interface sll_display( mesh ).
@@ -645,7 +869,7 @@ end if
   !> the generic interface sll_display( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_3d object.
   subroutine display_logical_mesh_3d(mesh)
-    type(sll_logical_mesh_3d), pointer :: mesh
+    class(sll_logical_mesh_3d), intent(in) :: mesh
 
     write(*,"(/,(a))") '3D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
@@ -667,7 +891,7 @@ end if
   !> the generic interface sll_display( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_4d object.
   subroutine display_logical_mesh_4d(mesh)
-    type(sll_logical_mesh_4d), pointer :: mesh
+    class(sll_logical_mesh_4d), intent(in) :: mesh
 
     write(*,"(/,(a))") '4D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
@@ -718,26 +942,26 @@ end if
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_3d object.
   subroutine delete_logical_mesh_3d( mesh )
-    type(sll_logical_mesh_3d), pointer :: mesh
-    sll_int32 :: ierr
-    if(.not. associated(mesh))then
-       print *, 'delete_logical_mesh_3d, ERROR: passed argument is not ', &
-            'associated. Crash imminent...'
-    end if
-    SLL_DEALLOCATE(mesh, ierr)
+    class(sll_logical_mesh_3d), intent(inout) :: mesh
+    ! sll_int32 :: ierr
+    ! if(.not. associated(mesh))then
+    !    print *, 'delete_logical_mesh_3d, ERROR: passed argument is not ', &
+    !         'associated. Crash imminent...'
+    ! end if
+    ! SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_logical_mesh_3d
 
   !> @brief deallocates memory for the 4D logical mesh. Recommended access 
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_4d object.
   subroutine delete_logical_mesh_4d( mesh )
-    type(sll_logical_mesh_4d), pointer :: mesh
-    sll_int32 :: ierr
-    if(.not. associated(mesh))then
-       print *, 'delete_logical_mesh_4d, ERROR: passed argument is not ', &
-            'associated. Crash imminent...'
-    end if
-    SLL_DEALLOCATE(mesh, ierr)
+    class(sll_logical_mesh_4d), intent(inout) :: mesh
+    ! sll_int32 :: ierr
+    ! if(.not. associated(mesh))then
+    !    print *, 'delete_logical_mesh_4d, ERROR: passed argument is not ', &
+    !         'associated. Crash imminent...'
+    ! end if
+    ! SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_logical_mesh_4d
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
