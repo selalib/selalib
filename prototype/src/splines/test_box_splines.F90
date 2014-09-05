@@ -130,7 +130,7 @@ do num_cells = 20,20,20
          dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
       endif
       if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
-         f_init(i) = (1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta))
+         f_init(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
       else
          f_init(i) = 0._f64  
       endif
@@ -296,15 +296,15 @@ do num_cells = 20,20,20
 !       end if
        
 
-      if (WRITE_TIME_DIST.eq.1) then 
-         call int2string(nloops,filenum)
-         filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
-         filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
-         ! print*,filename
-         ! print*,filename2
-         call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
-         call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
-      end if
+      ! if (WRITE_TIME_DIST.eq.1) then 
+      !    call int2string(nloops,filenum)
+      !    filename2 = "./time_files/analytical/ana_dist"//trim(filenum)!//".txt"
+      !    filename  = "./time_files/numerical/num_dist"//trim(filenum)!//".txt"
+      !    ! print*,filename
+      !    ! print*,filename2
+      !    call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+      !    call write_field_hex_mesh_xmf(mesh, f_fin, trim(filename2))
+      ! end if
 
 
    end do
