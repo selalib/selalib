@@ -55,8 +55,26 @@ export HDF5_ROOT=/usr/local
 In .tcshrc, this would be something like:
 setenv HDF5_ROOT /usr/local
 
-Our intent is to make the collection of SConstruct files and their auxiliary
-files as machine-independent as possible. The user would thus be responsible 
-for setting up his environment with the use of the conf.py file.
+To develop in Selalib please read :
+   - GitQuickstart.txt
+   - CMakeQuickstart.txt
 
-May 4, 2012: change this is obsolete in cmake.
+selalib compilation, installation
+------------------------------------------
+
+mkdir build 
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release                                    \
+      -DSLL_PACKAGE=1                                               \
+      -DCMAKE_INSTALL_PREFIX=<path where selalib will be installed> \
+      <the path of this directory>/prototype/src 
+make install
+
+selalib compilation, testing 
+------------------------------------------
+
+mkdir build
+cd build
+cmake <the path of this directory>
+make Experimental
+(the test result goes to http://cdash.inria.fr/CDash/index.php?project=Selalib)
