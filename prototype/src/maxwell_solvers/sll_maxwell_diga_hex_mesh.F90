@@ -6,7 +6,7 @@ module sll_maxwell_diga_hex_mesh
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-use hex_mesh
+use sll_hex_meshes
 use triangle_dg_matrices,     only: ElementRef, AssMatElem
 
 implicit none
@@ -65,7 +65,7 @@ contains
 subroutine init_gd_solver_2d(this, mesh, degree)
 
 type(maxwell_dg_hex_mesh), intent(inout) :: this
-type(hex_mesh_2d), pointer, intent(in)   :: mesh
+type(sll_hex_mesh_2d), pointer, intent(in)   :: mesh
 sll_int32, intent(in)                      :: degree
 sll_int32 :: idl, error, iel
 sll_real64 :: xs1, ys1, xs2, ys2, xs3, ys3
@@ -317,7 +317,7 @@ end subroutine init_gd_solver_2d
 subroutine gd_solver_2d_TE(this, mesh)
 
 type(maxwell_dg_hex_mesh),  intent(inout) :: this
-type(hex_mesh_2d), pointer, intent(in)    :: mesh
+type(sll_hex_mesh_2d), pointer, intent(in)    :: mesh
 
 sll_int32 :: idl, jdl, i, j, l, jdv, i1, i2
 sll_int32 :: iel, ifl, iev, ifv, ief

@@ -1,19 +1,27 @@
-ADD_LIBRARY( hex_pre_filters STATIC hex_pre_filters.F90)
-
-TARGET_LINK_LIBRARIES(hex_pre_filters hex_mesh)
-
 ADD_LIBRARY( sll_splines STATIC sll_cubic_splines.F90
                                 sll_quintic_splines.F90
-				box_splines.F90
                                 sll_odd_degree_splines.F90
                                 sll_arbitrary_degree_splines.F90
                                 cubic_nonuniform_splines.F90)
 
 TARGET_LINK_LIBRARIES(sll_splines sll_utilities 
-                                  hex_pre_filters
-                                  hex_mesh
                                   sll_boundary_condition_descriptors
                                   ${LAPACK_LIBRARIES})
+
+
+ADD_LIBRARY(hex_pre_filters STATIC hex_pre_filters.F90)
+
+TARGET_LINK_LIBRARIES(hex_pre_filters sll_hex_meshes)
+
+
+ADD_LIBRARY( sll_box_splines STATIC sll_box_splines.F90)
+
+TARGET_LINK_LIBRARIES(sll_box_splines sll_splines
+                                      sll_utilities 
+                                      hex_pre_filters
+                                      sll_hex_meshes
+                                      sll_boundary_condition_descriptors
+                                      ${LAPACK_LIBRARIES})
 
 
 ADD_EXECUTABLE(test_splines unit_test.F90  
@@ -37,4 +45,4 @@ ADD_EXECUTABLE(test_odd_degree_splines test_sll_odd_degree_splines.F90)
 TARGET_LINK_LIBRARIES(test_odd_degree_splines sll_splines)
 
 ADD_EXECUTABLE(test_box_splines test_box_splines.F90)
-TARGET_LINK_LIBRARIES(test_box_splines sll_splines)
+TARGET_LINK_LIBRARIES(test_box_splines sll_box_splines)

@@ -22,19 +22,26 @@
 module sll_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
+use sll_meshes_base
+
   implicit none
 
   !> @brief 1D logical mesh
-  type sll_logical_mesh_1d
+  type, extends(sll_mesh_1d_base) :: sll_logical_mesh_1d
      sll_int32  :: num_cells
      sll_real64 :: eta_min
      sll_real64 :: eta_max
      sll_real64 :: delta_eta
+   contains
+     procedure, pass(mesh) :: eta1_node => eta1_node_1d
+     procedure, pass(mesh) :: eta1_cell => eta1_cell_1d
+     procedure, pass(mesh) :: display   => display_logical_mesh_1d
+     procedure, pass(mesh) :: delete    => delete_logical_mesh_1d
   end type sll_logical_mesh_1d
 
 
   !> @brief 2D logical mesh
-  type sll_logical_mesh_2d
+  type, extends(sll_mesh_2d_base) :: sll_logical_mesh_2d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_real64 :: eta1_min   !< minimum value of eta, direction 1
@@ -43,6 +50,19 @@ module sll_logical_meshes
      sll_real64 :: eta2_max   !< maximum value of eta, direction 2
      sll_real64 :: delta_eta1 !< cell spacing, direction 1
      sll_real64 :: delta_eta2 !< cell spacing, direction 2
+   contains
+     procedure, pass(mesh) :: eta1_node => eta1_node_2d
+     procedure, pass(mesh) :: eta2_node => eta2_node_2d
+     procedure, pass(mesh) :: eta1_cell_one_arg => eta1_cell_2d_one_arg
+     procedure, pass(mesh) :: eta1_cell_two_arg => eta1_cell_2d_two_arg
+     procedure, pass(mesh) :: eta2_cell_one_arg => eta2_cell_2d_one_arg
+     procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_2d_two_arg
+     procedure, pass(mesh) :: display => display_logical_mesh_2d
+     procedure, pass(mesh) :: delete => delete_logical_mesh_2d
+     generic, public :: eta1_cell => eta1_cell_one_arg, &
+          eta1_cell_two_arg
+     generic, public :: eta2_cell => eta2_cell_one_arg, &
+          eta2_cell_two_arg
   end type sll_logical_mesh_2d
 
   type sll_logical_mesh_2d_ptr
@@ -218,9 +238,33 @@ end if
     do i=1,num_cells+1
       eta1_node(i) = eta_min+real(i-1,f64)*delta_eta
     enddo    
-    
-    
   end subroutine initialize_eta1_node_1d
+
+
+  function eta1_node_1d(mesh, i) result(res)
+    class(sll_logical_mesh_1d), intent(in) :: mesh
+    sll_int32, intent(in) :: i
+    sll_real64            :: res
+    sll_real64            :: eta_min
+    sll_real64            :: delta_eta
+
+    eta_min   = mesh%eta_min
+    delta_eta = mesh%delta_eta
+    res       = eta_min + real(i-1,f64)*delta_eta
+  end function eta1_node_1d
+
+  function eta1_cell_1d(mesh, i) result(res)
+    class(sll_logical_mesh_1d), intent(in) :: mesh
+    sll_int32, intent(in) :: i
+    sll_real64            :: res
+    sll_real64            :: eta_min
+    sll_real64            :: delta_eta
+
+    eta_min   = mesh%eta_min
+    delta_eta = mesh%delta_eta
+    res       = eta_min + (real(i-1,f64)+0.5_f64)*delta_eta 
+  end function eta1_cell_1d
+
 
   !> @brief allocates the memory space for a new 2D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
@@ -317,6 +361,88 @@ end if
        print*,'because eta2_max <= eta2_min'
     end if
   end subroutine initialize_logical_mesh_2d
+
+
+
+  function eta1_node_2d(mesh, i, j) result(res)
+    class(sll_logical_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + real(i-1,f64)*delta_eta1
+  end function eta1_node_2d
+
+  function eta2_node_2d(mesh, i, j) result(res)
+    class(sll_logical_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + real(j-1,f64)*delta_eta2
+  end function eta2_node_2d
+
+  function eta1_cell_2d_two_arg(mesh, i, j) result(res)
+    class(sll_logical_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + (real(i-1,f64)+0.5_f64)*delta_eta1 
+  end function eta1_cell_2d_two_arg
+    
+  function eta2_cell_2d_two_arg(mesh, i, j) result(res)
+    class(sll_logical_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in) :: i
+    sll_int32, intent(in) :: j
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + (real(j-1,f64)+0.5_f64)*delta_eta2
+  end function eta2_cell_2d_two_arg
+
+  function eta1_cell_2d_one_arg(mesh, cell_num) result(res)
+    class(sll_logical_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in) :: cell_num
+    sll_real64            :: res
+    sll_real64            :: eta1_min
+    sll_real64            :: delta_eta1
+    sll_int32             :: i
+
+    i = mod(cell_num, mesh%num_cells1)
+    eta1_min   = mesh%eta1_min
+    delta_eta1 = mesh%delta_eta1
+    res        = eta1_min + (real(i-1,f64)+0.5_f64)*delta_eta1 
+  end function eta1_cell_2d_one_arg
+
+  function eta2_cell_2d_one_arg(mesh, cell_num) result(res)
+    class(sll_logical_mesh_2d), intent(in) :: mesh
+    sll_int32, intent(in) :: cell_num
+    sll_real64            :: res
+    sll_real64            :: eta2_min
+    sll_real64            :: delta_eta2
+    sll_int32             :: j
+
+    j = cell_num/(mesh%num_cells1 + 1) + 1
+    eta2_min   = mesh%eta2_min
+    delta_eta2 = mesh%delta_eta2
+    res        = eta2_min + (real(j-1,f64)+0.5_f64)*delta_eta2
+  end function eta2_cell_2d_one_arg
 
   !> @brief allocates the memory space for a new 3D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the
@@ -488,7 +614,7 @@ end if
   !> the generic interface sll_display( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_1d object.
   subroutine display_logical_mesh_1d(mesh)
-    type(sll_logical_mesh_1d), pointer :: mesh
+    class(sll_logical_mesh_1d), intent(in) :: mesh
 
     write(*,"(/,(a))") '1D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells, &
@@ -502,7 +628,7 @@ end if
   !> the generic interface sll_display( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_2d object.
   subroutine display_logical_mesh_2d(mesh)
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), intent(in) :: mesh
 
     write(*,"(/,(a))") '2D mesh : num_cell eta_min      eta_max       delta_eta'
     write(*,"(10x,(i4,1x),3(g13.3,1x))") mesh%num_cells1, &
@@ -566,39 +692,26 @@ end if
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_1d object.
   subroutine delete_logical_mesh_1d( mesh )
-    type(sll_logical_mesh_1d), pointer :: mesh
-    sll_int32 :: ierr
-    if(.not. associated(mesh))then
-       print *, 'delete_logical_mesh_1d, ERROR: passed argument is not ', &
-            'associated. Crash imminent...'
-    end if
-    SLL_DEALLOCATE(mesh, ierr)
+    class(sll_logical_mesh_1d), intent(inout) :: mesh
+    ! sll_int32 :: ierr
+    ! if(.not. associated(mesh))then
+    !    print *, 'delete_logical_mesh_1d, ERROR: passed argument is not ', &
+    !         'associated. Crash imminent...'
+    ! end if
+    ! SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_logical_mesh_1d
-
-  !> @brief deallocates memory for the 4D logical mesh. Recommended access 
-  !> through the generic interface delete( mesh ).
-  !> @param mesh pointer to a sll_logical_mesh_4d object.
-  subroutine delete_logical_mesh_4d( mesh )
-    type(sll_logical_mesh_4d), pointer :: mesh
-    sll_int32 :: ierr
-    if(.not. associated(mesh))then
-       print *, 'delete_logical_mesh_4d, ERROR: passed argument is not ', &
-            'associated. Crash imminent...'
-    end if
-    SLL_DEALLOCATE(mesh, ierr)
-  end subroutine delete_logical_mesh_4d
 
   !> @brief deallocates memory for the 2D logical mesh. Recommended access 
   !> through the generic interface delete( mesh ).
   !> @param mesh pointer to a sll_logical_mesh_2d object.
   subroutine delete_logical_mesh_2d( mesh )
-    type(sll_logical_mesh_2d), pointer :: mesh
-    sll_int32 :: ierr
-    if(.not. associated(mesh))then
-       print *, 'delete_logical_mesh_2d, ERROR: passed argument is not ', &
-            'associated. Crash imminent...'
-    end if
-    SLL_DEALLOCATE(mesh, ierr)
+    class(sll_logical_mesh_2d), intent(inout) :: mesh
+    ! sll_int32 :: ierr
+    ! if(.not. associated(mesh))then
+    !    print *, 'delete_logical_mesh_2d, ERROR: passed argument is not ', &
+    !         'associated. Crash imminent...'
+    ! end if
+    ! SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_logical_mesh_2d
 
   !> @brief deallocates memory for the 3D logical mesh. Recommended access 
@@ -613,6 +726,19 @@ end if
     end if
     SLL_DEALLOCATE(mesh, ierr)
   end subroutine delete_logical_mesh_3d
+
+  !> @brief deallocates memory for the 4D logical mesh. Recommended access 
+  !> through the generic interface delete( mesh ).
+  !> @param mesh pointer to a sll_logical_mesh_4d object.
+  subroutine delete_logical_mesh_4d( mesh )
+    type(sll_logical_mesh_4d), pointer :: mesh
+    sll_int32 :: ierr
+    if(.not. associated(mesh))then
+       print *, 'delete_logical_mesh_4d, ERROR: passed argument is not ', &
+            'associated. Crash imminent...'
+    end if
+    SLL_DEALLOCATE(mesh, ierr)
+  end subroutine delete_logical_mesh_4d
   
 #undef TEST_PRESENCE_AND_ASSIGN_VAL
 
