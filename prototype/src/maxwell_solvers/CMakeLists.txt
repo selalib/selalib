@@ -65,12 +65,12 @@ ADD_EXECUTABLE(test_maxwell_diga_hex_mesh unit_test_diga_hex_mesh.F90
                                           triangle_dg_matrices.F90
                                           sll_maxwell_diga_hex_mesh.F90)
 
-TARGET_LINK_LIBRARIES(test_maxwell_diga_hex_mesh hex_mesh ${LAPACK_LIBRARIES})
+TARGET_LINK_LIBRARIES(test_maxwell_diga_hex_mesh sll_hex_meshes ${LAPACK_LIBRARIES})
 
 ADD_EXECUTABLE(test_maxwell_fdtd_hex_mesh unit_test_fdtd_hex_mesh.F90
                                           sll_maxwell_fdtd_hex_mesh.F90)
 
-TARGET_LINK_LIBRARIES(test_maxwell_fdtd_hex_mesh hex_mesh)
+TARGET_LINK_LIBRARIES(test_maxwell_fdtd_hex_mesh sll_hex_meshes)
 
 IF(BUILD_TESTING)
 

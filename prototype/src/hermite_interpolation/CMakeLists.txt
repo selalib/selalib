@@ -7,17 +7,10 @@ TARGET_LINK_LIBRARIES(sll_hermite_interpolation sll_utilities
 )
 
 ADD_LIBRARY ( hex_hermite STATIC
-                hex_interpolation_hermite.F90
-			     	)
+              sll_hex_interpolation_hermite.F90
+	      )
 
 TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation)
-
-ADD_LIBRARY ( hex_poisson STATIC
-                hex_poisson.F90
-			     	)
-TARGET_LINK_LIBRARIES( hex_poisson hex_mesh  sll_hermite_interpolation)
-
-#TARGET_LINK_LIBRARIES( hex_mesh )
 
 
 
@@ -35,7 +28,7 @@ ADD_EXECUTABLE(test_hex_hermite test_hex_hermite.F90)
 TARGET_LINK_LIBRARIES(test_hex_hermite 
   sll_hermite_interpolation 
   hex_hermite 
-  hex_mesh 
+  sll_hex_meshes 
   sll_constants)
 
 # third executable
@@ -50,12 +43,3 @@ TARGET_LINK_LIBRARIES(test_hctc sll_constants)
 ADD_EXECUTABLE(test_dimitrov test_dimitrov.F90)
 
 TARGET_LINK_LIBRARIES(test_dimitrov sll_constants)
-
-# fithth executable
-
-ADD_EXECUTABLE(test_hex_poisson test_hex_poisson.F90)
-
-TARGET_LINK_LIBRARIES(test_hex_poisson
-  hex_mesh 
-  hex_poisson
-  sll_constants)
