@@ -59,10 +59,6 @@ use sll_meshes_base
      procedure, pass(mesh) :: eta2_cell_two_arg => eta2_cell_2d_two_arg
      procedure, pass(mesh) :: display => display_logical_mesh_2d
      procedure, pass(mesh) :: delete => delete_logical_mesh_2d
-     generic, public :: eta1_cell => eta1_cell_one_arg, &
-          eta1_cell_two_arg
-     generic, public :: eta2_cell => eta2_cell_one_arg, &
-          eta2_cell_two_arg
   end type sll_logical_mesh_2d
 
   type sll_logical_mesh_2d_ptr
