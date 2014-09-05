@@ -377,11 +377,13 @@ contains
     mesh%num_triangles = 6 * num_cells * num_cells
     SLL_ALLOCATE(mesh%center_cartesian_coord(2, mesh%num_triangles), ierr)
     SLL_ALLOCATE(mesh%center_index(2, mesh%num_pts_tot), ierr)
+    ! we  compute the cartesian coordinates and the indices 
+    ! of the centers of the triangles of the mesh
     call init_center_points_triangle(mesh)
 
 
-    ! if needed we can compute the cartesian coordiantes and the indices 
-    ! of the centers of the triangles of the mesh
+    ! if needed we can compute the cartesian coordinates and the indices 
+    ! of the edges' center of each triangle
     TEST_PRESENCE_AND_ASSIGN_VAL( mesh, EXTRA_TABLES, EXTRA_TABLES, 0 )
     if (mesh%EXTRA_TABLES.eq.1) then 
        mesh%num_edges = 3 * num_cells * ( 3 * num_cells + 1 )
@@ -389,7 +391,6 @@ contains
        SLL_ALLOCATE(mesh%edge_center_index(3, mesh%num_pts_tot), ierr)
        call init_edge_center_triangle(mesh)
     else
-       mesh%num_triangles = -1
        mesh%num_edges = -1
     end if
 
