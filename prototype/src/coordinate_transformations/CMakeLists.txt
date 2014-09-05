@@ -46,7 +46,7 @@ ADD_LIBRARY(sll_coordinate_transformations STATIC
             sll_common_coordinate_transformations.F90)
 
 TARGET_LINK_LIBRARIES(sll_coordinate_transformations 
-                      sll_interpolators sll_file_io sll_logical_meshes)
+                      sll_interpolators sll_file_io sll_logical_meshes sll_meshes_base)
 
 IF(HDF5_ENABLED AND HDF5_IS_PARALLEL)
    SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
