@@ -5,13 +5,13 @@ program test_hex_poisson
 #include "sll_assert.h"
   
   use sll_constants
-  use sll_hex_meshes
+  use hex_mesh
   use hex_poisson
   use pivotbande
 
   implicit none
 
-  type(sll_hex_mesh_2d), pointer              :: mesh
+  type(hex_mesh_2d), pointer              :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
   sll_int32                               :: num_cells, n_points, i, k1, k2 
