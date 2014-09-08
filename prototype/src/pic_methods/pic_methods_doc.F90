@@ -10,7 +10,8 @@
 !> @namespace sll_pic_methods 
 !> @brief 
 !> Description of pic_methods library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  pic_methods, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

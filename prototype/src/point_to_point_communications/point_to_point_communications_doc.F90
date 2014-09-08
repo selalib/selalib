@@ -10,7 +10,8 @@
 !> @namespace sll_point_to_point_communications 
 !> @brief 
 !> Description of point_to_point_communications library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  point_to_point_communications, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

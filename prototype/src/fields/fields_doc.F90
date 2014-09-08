@@ -10,7 +10,8 @@
 !> @namespace sll_fields 
 !> @brief 
 !> Description of fields library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  fields, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

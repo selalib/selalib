@@ -14,6 +14,8 @@ def write_doc_file(library):
      _f.write("!> @namespace sll_%s \n"%(library))
      _f.write("!> @brief \n")
      _f.write("!> Description of %s library (72 characters)\n"%(library))
+     _f.write("!> @author Selalib team \n")
+     _f.write("!> You can add a contact, do not put your email to prevent spam.")
      _f.write("!> @details\n")
      _f.write("!> Long description of  %s, you can add some references or math equations.\n"%(library))
      _f.write("!>\n")
@@ -48,4 +50,4 @@ for dir in os.walk(root).next()[1]:
     if (dir != "CMakeModules" and dir != "package"):
         print root+dir
         mylib = dir.lower()
-        #write_doc_file(mylib)  do not comment in and run python script
+        write_doc_file(mylib)  

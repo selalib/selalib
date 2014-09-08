@@ -10,7 +10,8 @@
 !> @namespace sll_eulerian-finite-volume 
 !> @brief 
 !> Description of eulerian-finite-volume library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  eulerian-finite-volume, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
