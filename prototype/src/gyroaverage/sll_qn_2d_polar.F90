@@ -2105,7 +2105,8 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       do i=1,N(1)+1
         eta(1)=eta_min(1)+real(i-1,f64)*delta_eta(1)
         eta(1)=val*eta(1)/eta_max(1)
-        f(i,j)=(BESJN(mode(2),val)*BESYN(mode(2),eta(1))-BESYN(mode(2),val)*BESJN(mode(2),eta(1)))*cos(kmode*eta(2))
+        f(i,j)= 0._f64 !temporary, because DBESJ not recognized on helios
+        !(DBESJN(mode(2),val)*DBESYN(mode(2),eta(1))-DBESYN(mode(2),val)*DBESJN(mode(2),eta(1)))*cos(kmode*eta(2))
       enddo
     enddo   
     
@@ -2233,7 +2234,8 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
       return
     endif
     call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
-    val = BESJN(0,tmp*rho(1)/eta_max(1))
+    val = 0._f64 !temporary because DBESJ not recognized on helios 
+    !DBESJN(0,tmp*rho(1)/eta_max(1))
     !print *,i,j,mode_max,alpha,tmp      
   end subroutine solution_polar_circle
 
@@ -2263,13 +2265,13 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 !    delta_x=real(real(mu_max,f64)/real(N_approx,f64),f64)
 !    do i=1,N_approx/2-1
 !      mu = real(2._f64*real(i,f64)*delta_x,f64)
-!      sum1 = sum1 + BESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum1 = sum1 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
 !    enddo
 !    do i=1,N_approx/2
 !      mu = real((2._f64*real(i,f64)-1._f64)*delta_x,f64)
-!      sum2 = sum2 + BESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
+!      sum2 = sum2 + DBESJN(0,tmp*sqrt(2._f64*mu)/eta_max(1))**2*dexp(-mu)
 !    enddo
-!    val = 2._f64*sum1 + 4._f64*sum2 + BESJN(0,0._f64)**2 + BESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*dexp(-mu_max)
+!    val = 2._f64*sum1 + 4._f64*sum2 + DBESJN(0,0._f64)**2 + DBESJN(0,tmp*sqrt(2._f64*mu_max)/eta_max(1))**2*dexp(-mu_max)
 !    val = val*real(delta_x/3._f64,f64)
   end subroutine compute_gamma0
 
