@@ -10,7 +10,8 @@
 !> @namespace sll_parallel_array_initializers 
 !> @brief 
 !> Description of parallel_array_initializers library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  parallel_array_initializers, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

@@ -10,7 +10,8 @@
 !> @namespace sll_visu_pic 
 !> @brief 
 !> Description of visu_pic library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  visu_pic, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

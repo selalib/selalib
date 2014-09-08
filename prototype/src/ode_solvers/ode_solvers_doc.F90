@@ -10,7 +10,8 @@
 !> @namespace sll_ode_solvers 
 !> @brief 
 !> Description of ode_solvers library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  ode_solvers, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
