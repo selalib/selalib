@@ -202,13 +202,13 @@ contains
     !print*,' COUNTING NON ZERO ELEMENTS'
     mat%num_nz = mat_a%num_nz + 2*mat_a%num_rows       
     print*,'num_nz mat, num_nz mat_tot', mat_a%num_nz,mat%num_nz 
-    mat%num_rows = mat_a%num_rows  +  1
+    mat%num_rows = mat_a%num_rows  !+  1
     print*,'num_rows mat, num_rows mat_tot',mat_a%num_rows , mat%num_rows
-    mat%num_cols = mat_a%num_cols  +  1
+    mat%num_cols = mat_a%num_cols  !+  1
     print*,'num_cols mat, num_cols mat_tot',mat_a%num_cols , mat%num_cols 
 
     
-    SLL_ALLOCATE(mat%opi_ia(mat%num_rows + 1),ierr)
+    SLL_ALLOCATE(mat%opi_ia(mat%num_rows),ierr)
     SLL_ALLOCATE(mat%opi_ja(mat%num_nz),ierr)
     SLL_ALLOCATE(mat%opr_a(mat%num_nz),ierr)
     mat%opr_a(:) = 0.0_f64
@@ -249,11 +249,11 @@ contains
     integer :: s
     integer :: k
     
-    num_rows_out = num_rows_in+1
+    num_rows_out = num_rows_in!+1
     num_nz_out = num_nz_in+2*num_rows_in
     
-    if(size(ia_in)<num_rows_in+1) then
-      print *, '#problem of size of ia_in', size(ia_in),num_rows_in+1
+    if(size(ia_in)<num_rows_in) then
+      print *, '#problem of size of ia_in', size(ia_in),num_rows_in!+1
       stop
     endif
     if(size(ja_in)<num_nz_in) then
@@ -264,8 +264,8 @@ contains
       print *, '#problem of size of a_in', size(a_in),num_nz_in
       stop
     endif
-    if(size(ia_out)<num_rows_out+1) then
-      print *, '#problem of size of ia_out', size(ia_out),num_rows_out+1
+    if(size(ia_out)<num_rows_out) then
+      print *, '#problem of size of ia_out', size(ia_out),num_rows_out!+1
       stop
     endif
     if(size(ja_out)<num_nz_out) then
@@ -276,8 +276,8 @@ contains
       print *, '#problem of size of a_out', size(a_out),num_nz_out
       stop
     endif
-    if(ia_in(num_rows_in+1).ne.num_nz_in+1)then
-      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in+1),num_nz_in+1
+    if(ia_in(num_rows_in).ne.num_nz_in)then
+      print *,'#bad value of ia_in(num_rows_in+1)', ia_in(num_rows_in),num_nz_in!+1
       stop
     endif
     
@@ -358,8 +358,8 @@ contains
   subroutine sll_solve_csr_matrix(mat, apr_B, apr_U)
     implicit none
     type(sll_csr_matrix), intent(in) :: mat
-    sll_real64, dimension(:) :: apr_U
-    sll_real64, dimension(:) :: apr_B
+    sll_real64, dimension(:),intent(in) :: apr_B
+    sll_real64, dimension(:),intent(out) :: apr_U
     !local var
     !sll_int32  :: sys
     !sll_real64, dimension(umfpack_info) :: info

@@ -24,6 +24,7 @@ program working_precision_tester
 
   sll_int32   :: test_int1
   sll_int32   :: test_int2
+  sll_int32   :: istep
   sll_int32   :: i
   sll_int32   :: counter
   sll_int32   :: exponent
@@ -56,18 +57,46 @@ program working_precision_tester
   print *, 'Tester for the working precision module'
   print *, ' '
   print *, '*************************************'
+  print *,'#i32=',i32
+  print *,'#i64=',i64
+  print *,'#f32=',f32
+  print *,'#f64=',f64
   print *, 'Test the 32-bit int'
+  
+  ! new test not so slow
   ! test based on the change of sign that the integer suffers when there is
   ! an overflow
-  infinite:  do 
-     test_int1 = test_int1 + 1
-     if (test_int1 .le. 0) then
-        write (*, '(a, i12)') '  By measurement, the largest i32 is ', test_int2
-        exit infinite
-     else
-        test_int2 = test_int2 + 1
-     end if
-  end do infinite
+  test_int1 = 1
+  do istep=1,32
+    test_int2 = test_int2+test_int1
+    if(test_int2 .le. 0) then
+      print *,'#Problem 2**',istep,'-1 should be positive'      
+      stop
+    endif
+    test_int1 = 2*test_int1
+    if(test_int1 .le. 0)then
+       print *,'#2**',istep,'-1=',test_int2
+       write (*, '(a, i12)') '#  By measurement, the largest i32 is ', test_int2
+       exit
+    else    
+      print *,'#2**',istep,'-1=',test_int2,'2**',istep,'=',test_int1
+    endif   
+  enddo
+  
+  ! old test which may be too slow
+  ! test based on the change of sign that the integer suffers when there is
+  ! an overflow
+!  test_int1 = 0
+!  test_int2 = 0
+!  infinite:  do 
+!     test_int1 = test_int1 + 1
+!     if (test_int1 .le. 0) then
+!        write (*, '(a, i12)') '  By measurement, the largest i32 is ', test_int2
+!        exit infinite
+!     else
+!        test_int2 = test_int2 + 1
+!     end if
+!  end do infinite
   write (*, '("  In theory, the value of the largest i32 is ", i12)') i
   write (*, '("  KIND number for our i32 integer is", I2)') kind(i)
   write (*, '("  value of the largest (theoretical) i32 + 1 is ", i20)') i+1

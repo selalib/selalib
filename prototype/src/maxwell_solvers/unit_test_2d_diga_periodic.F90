@@ -59,7 +59,7 @@ type(dg_field), pointer :: exact
 sll_real64  :: time
 sll_int32   :: istep
 sll_real64  :: dt
-sll_real64  :: cfl = 0.5
+sll_real64  :: cfl = 0.1
 sll_real64  :: error
 !init functions
 sll_real64, external :: sol_bz, sol_ex, sol_ey, linear_x, linear_y
