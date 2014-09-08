@@ -152,10 +152,10 @@ contains
     !$omp parallel default(SHARED)
 #ifdef _OPENMP
     if (OMP_GET_THREAD_NUM() == 0) then
-
        sim%n_threads =  OMP_GET_NUM_THREADS()
     endif
 #endif
+    print*, 'sim%n_threads=',sim%n_threads
     !$omp end parallel
 
     SLL_ALLOCATE(sim%q_accumulator(1:sim%n_threads), ierr)
@@ -172,15 +172,11 @@ contains
        thread_id = OMP_GET_THREAD_NUM()
 #endif 
        sim%q_accumulator(thread_id+1)%q => new_charge_accumulator_2d( sim%m2d )
+       print*, 'thread_id=', thread_id
        !$omp end parallel
        sim%E_accumulator => new_field_accumulator_2d( sim%m2d )
        call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator(1)%q )
     endif
-    !$omp parallel
-#ifdef _OPENMP
-    print*, 'in the MAIN', OMP_GET_NUM_THREADS()
-#endif
-    !$omp end parallel
     
   end subroutine init_4d_pic_cartesian
 
@@ -252,7 +248,6 @@ contains
        accumE => sim%E_accumulator%e_acc
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
     endif
-    print*, 'apres convert charge'
 
     it = 0
     call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
@@ -283,7 +278,7 @@ contains
 
     if (sim%use_cubic_splines) then 
        !$omp parallel do default(SHARED) PRIVATE (pp_vx, pp_vy, Ex, Ey, ttmp)
-!!       !$&omp FIRSTPRIVATE(qoverm, dt, sim%use_cubic_splines)
+       !$&omp FIRSTPRIVATE(qoverm, dt, sim%use_cubic_splines)
        do i = 1, sim%ions_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
@@ -294,7 +289,7 @@ contains
        !$omp end parallel do
     else
        !$omp parallel do default(SHARED) PRIVATE (pp_vx, pp_vy, Ex, Ey, tmp3, tmp4)
-!!       !$&omp FIRSTPRIVATE(qoverm, dt, sim%use_cubic_splines)
+       !$&omp FIRSTPRIVATE(qoverm, dt, sim%use_cubic_splines)
        do i = 1, sim%ions_number
           pp_vx = p(i)%vx
           pp_vy = p(i)%vy
@@ -307,15 +302,14 @@ contains
 
     open(65,file='logE_vals.dat')
 !!$    call sll_set_time_mark(t2)    
-#ifdef _OPENMP
-    t_init = omp_get_wtime()
-#else
-    call cpu_time(t_init)
-#endif
+! #ifdef _OPENMP
+!     t_init = omp_get_wtime()
+! #else
+!     call cpu_time(t_init)
+! #endif
 
 !  ----  TIME LOOP  ----
     do it = 0, sim%num_iterations-1
-       print*, 'iter=', it
        call normL2_field_Ex ( valeur, ncx, ncy, &
                               sim%E1,  &
                               sim%m2d%delta_eta1, sim%m2d%delta_eta2 )
@@ -352,14 +346,14 @@ contains
        !
        ! *******************************************************************
 
-       !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum,p)
+       !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum)
        !$&omp FIRSTPRIVATE(qoverm,dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
 #endif
        q_accum => sim%q_accumulator(thread_id+1)%q
        p_guard => sim%part_group%p_guard(thread_id+1)%g_list
-       p => sim%part_group%p_list ! redundant but ... if openmp doesn't know...
+!       p => sim%part_group%p_list ! redundant but ... if openmp doesn't know... ! NO NEED, I think, andd thus no need to put p in private
        gi = 0
        !$omp do
        do i = 1, sim%ions_number,2
@@ -426,7 +420,7 @@ contains
        ! Process the particles in the guard list. In the periodic case, no
        ! destruction of particles is needed, so this is simple.
 
-       !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,ttmp,temp,p_guard,q_accum,p,thread_id,i)
+       !$omp parallel PRIVATE(x,y,ic_x,ic_y,off_x,off_y,tmp1,tmp2,tmp3,tmp4,ttmp,temp,p_guard,q_accum,p,thread_id,i)
        !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)
 #ifdef _OPENMP
        thread_id = OMP_GET_THREAD_NUM()
@@ -434,7 +428,9 @@ contains
        q_accum => sim%q_accumulator(thread_id+1)%q
        p_guard => sim%part_group%p_guard(thread_id+1)%g_list
        p => sim%part_group%p_list
-!!!!       !$omp do
+
+       print*, sim%part_group%num_postprocess_particles(thread_id+1), 'thread_id=',thread_id
+!!!       !$omp do
        do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
           GET_PARTICLE_POSITION(p_guard(i)%p,sim%m2d,x,y)
           x = x + dt * p_guard(i)%p%vx
@@ -444,18 +440,18 @@ contains
           if (sim%use_cubic_splines) then
              SLL_ACCUMULATE_PARTICLE_CHARGE_CS(sim%q_accumulator_CS,p_guard(i)%p,ttmp,temp)
           else
-             SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp1,tmp2)
+             SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp3,tmp4)
           endif
        end do
-!!!!       !$omp end do 
+!!!       !$omp end do 
        !$omp end parallel
 !       ! reset any counters
        gi = 0
 
-       call sll_set_time_mark(t8)
-       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
-       time = sll_time_elapsed_since(t8)
-       print*, "time for the accumulators sum", time
+!       call sll_set_time_mark(t8)
+!       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
+!       time = sll_time_elapsed_since(t8)
+!       print*, "time for the accumulators sum", time
 
        if (sim%use_cubic_splines) then
           call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS, sim%rho )
