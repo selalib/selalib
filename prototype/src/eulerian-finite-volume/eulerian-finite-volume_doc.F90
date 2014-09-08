@@ -9,9 +9,9 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_eulerian-finite-volume 
+!> @namespace{eulerian-finite-volume} 
 !> @brief 
-!> Description of eulerian-finite-volume library (72 characters)
+!> New numerical method to solve Vlasov using finite volumes.
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
