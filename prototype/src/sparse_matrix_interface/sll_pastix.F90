@@ -61,6 +61,9 @@ subroutine initialize_pastix(this,n,nnzeros)
    pastix_int_t, intent(in) :: nnzeros
    sll_int32                :: error
 
+   if( .not. associated(sll_world_collective)) then
+      call sll_boot_collective()
+   end if
    this%ncols = n
    prank = sll_get_collective_rank( sll_world_collective )
    psize = sll_get_collective_size( sll_world_collective )

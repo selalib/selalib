@@ -25,8 +25,6 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_fields.h
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
-    ${SLL_DIR}/pastix/sll_pastix.h
-    ${SLL_DIR}/linear_solvers/sll_linear_solvers.h
     ${SLL_DIR}/pic_accumulators/sll_accumulators.h
     ${SLL_DIR}/pic_particle_types/particle_representation.h
 )
@@ -84,22 +82,8 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/splines/sll_odd_degree_splines.F90
     ${SLL_DIR}/splines/sll_arbitrary_degree_splines.F90
     ${SLL_DIR}/splines/cubic_nonuniform_splines.F90
-    ${SLL_DIR}/deboor_splines/dvalue1d.f90
-    ${SLL_DIR}/deboor_splines/bvalue2d.f90
-    ${SLL_DIR}/deboor_splines/dvalue2d.f90
-    ${SLL_DIR}/deboor_splines/bsplvb.f90
-    ${SLL_DIR}/deboor_splines/bvalue.f90
-    ${SLL_DIR}/deboor_splines/spli1d_per.f90
-    ${SLL_DIR}/deboor_splines/spli1d_dir.f90
-    ${SLL_DIR}/deboor_splines/spli2d_per.f90
-    ${SLL_DIR}/deboor_splines/spli2d.f90
-    ${SLL_DIR}/deboor_splines/spli2d_custom.f90
-    ${SLL_DIR}/deboor_splines/spli2d_perper.f90
     ${SLL_DIR}/deboor_splines/banfac.f90  
-    ${SLL_DIR}/deboor_splines/interv.f90  
-    ${SLL_DIR}/deboor_splines/splint.f90
     ${SLL_DIR}/deboor_splines/banslv.f90  
-    ${SLL_DIR}/deboor_splines/bsplvd.f90
     ${SLL_DIR}/deboor_splines/knots.f90
     ${SLL_DIR}/deboor_splines/splopt.f90
     ${SLL_DIR}/deboor_splines/sll_module_deboor_splines_1d.F90
@@ -246,6 +230,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
        ${SLL_DIR}/file_io_parallel/sll_xdmf_parallel.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general.F90  #not build on IBM
        ${SLL_DIR}/simulation/simulation_2d_vlasov_poisson_cartesian.F90
+       ${SLL_DIR}/distribution_function_multipatch/sll_distribution_function_4d_multipatch.F90
        ${SLL_DIR}/simulation/simulation_4d_qns_general_multipatch.F90
        ${SLL_DIR}/simulation/simulation_4d_DK_hybrid.F90
        ${SLL_DIR}/simulation/simulation_4d_drift_kinetic_polar.F90

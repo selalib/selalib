@@ -30,7 +30,8 @@ module sll_hdf5_io_serial
 use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
                 h5fopen_f, H5F_ACC_RDONLY_F, H5F_ACC_TRUNC_F, &
                 h5dcreate_f, h5dwrite_f,h5dclose_f, h5open_f,&
-                h5screate_f, h5sclose_f, h5fclose_f, h5fcreate_f
+                h5screate_f, h5sclose_f, h5fclose_f, h5fcreate_f, &
+                H5F_ACC_RDWR_F, H5T_NATIVE_INTEGER
   
   implicit none
   
@@ -40,9 +41,27 @@ use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
   !>\param[in]  dsetname dataset name
   !>\param[out] error dataset error code
   interface sll_hdf5_write_array
-     module procedure sll_hdf5_write_array_1d
-     module procedure sll_hdf5_write_array_2d
-     module procedure sll_hdf5_write_array_3d
+     module procedure sll_hdf5_write_dble_array_1d
+     module procedure sll_hdf5_write_dble_array_2d
+     module procedure sll_hdf5_write_dble_array_3d
+     module procedure sll_hdf5_write_int_array_1d
+     module procedure sll_hdf5_write_int_array_2d
+     module procedure sll_hdf5_write_int_array_3d
+  end interface
+
+  interface sll_hdf5_write_array_1d
+     module procedure sll_hdf5_write_dble_array_1d
+     module procedure sll_hdf5_write_int_array_1d
+  end interface
+
+  interface sll_hdf5_write_array_2d
+     module procedure sll_hdf5_write_dble_array_2d
+     module procedure sll_hdf5_write_int_array_1d
+  end interface
+
+  interface sll_hdf5_write_array_3d
+     module procedure sll_hdf5_write_dble_array_3d
+     module procedure sll_hdf5_write_int_array_3d
   end interface
 
 contains
@@ -67,7 +86,7 @@ contains
     
     call H5open_f(error)
     SLL_ASSERT(error==0)
-    call H5Fopen_f(filename,H5F_ACC_RDONLY_F,file_id,error)
+    call H5Fopen_f(filename,H5F_ACC_RDWR_F,file_id,error)
     SLL_ASSERT(error==0)
   end subroutine sll_hdf5_file_open
 
@@ -80,8 +99,101 @@ contains
     SLL_ASSERT(error==0)
   end subroutine sll_hdf5_file_close
 
-  !> Write a 1d array in hdf5 file
-  subroutine sll_hdf5_write_array_1d(file_id,array,dsetname,error)
+  !> Write a 1d array of int32 in hdf5 file
+  subroutine sll_hdf5_write_int_array_1d(file_id,array,dsetname,error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    sll_int32                    :: rank, i
+    sll_int32, intent(in)        :: array(:)     !< data array
+    integer(hsize_t)             :: array_dims(1)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+    rank = 1      
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_INTEGER,                                 &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    SLL_ASSERT(error==0)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_INTEGER,array,array_dims,error)
+    SLL_ASSERT(error==0)
+    call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
+  end subroutine sll_hdf5_write_int_array_1d
+
+  !> Write a 2d array of int32 in hdf5 file
+  subroutine sll_hdf5_write_int_array_2d(file_id,array,dsetname,error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    sll_int32                    :: rank, i
+    sll_int32, intent(in)        :: array(:,:)   !< data array
+    integer(hsize_t)             :: array_dims(2)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+    rank = 2
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_INTEGER,                                 &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    SLL_ASSERT(error==0)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_INTEGER,array,array_dims,error)
+    SLL_ASSERT(error==0)
+    call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
+  end subroutine sll_hdf5_write_int_array_2d
+
+  !> Write a 3d array of int32 in hdf5 file
+  subroutine sll_hdf5_write_int_array_3d(file_id,array,dsetname,error)
+    integer(hid_t)  , intent(in) :: file_id      !< file unit number
+    character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
+    sll_int32, intent(out)       :: error        !< error code
+    sll_int32                    :: rank, i
+    sll_int32, intent(in)        :: array(:,:,:) !< data array
+    integer(hsize_t)             :: array_dims(3)
+    integer(hid_t)               :: dataset_id
+    integer(hid_t)               :: dataspace_id
+    rank = 3
+    do i = 1, rank
+      array_dims(i) = size(array,i)
+    end do
+    call H5Screate_simple_f(rank,array_dims,dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dcreate_f(file_id,                                            &
+                     dsetname,                                           &
+                     H5T_NATIVE_INTEGER,                                 &
+                     dataspace_id,                                       &
+                     dataset_id,                                         &
+                     error)
+    SLL_ASSERT(error==0)
+    call H5Dwrite_f(dataset_id,H5T_NATIVE_INTEGER,array,array_dims,error)
+    SLL_ASSERT(error==0)
+    call H5Sclose_f(dataspace_id,error)
+    SLL_ASSERT(error==0)
+    call H5Dclose_f(dataset_id,error)
+    SLL_ASSERT(error==0)
+  end subroutine sll_hdf5_write_int_array_3d
+
+  !> Write a 1d array of float64 in hdf5 file
+  subroutine sll_hdf5_write_dble_array_1d(file_id,array,dsetname,error)
     integer(hid_t)  , intent(in) :: file_id      !< file unit number
     character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
     sll_int32, intent(out)       :: error        !< error code
@@ -109,10 +221,10 @@ contains
     SLL_ASSERT(error==0)
     call H5Dclose_f(dataset_id,error)
     SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_write_array_1d
+  end subroutine sll_hdf5_write_dble_array_1d
 
-  !> Write a 2d array in hdf5 file
-  subroutine sll_hdf5_write_array_2d(file_id,array,dsetname,error)
+  !> Write a 2d array of float64 in hdf5 file
+  subroutine sll_hdf5_write_dble_array_2d(file_id,array,dsetname,error)
     integer(hid_t)  , intent(in) :: file_id      !< file unit number
     character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
     sll_int32, intent(out)       :: error        !< error code
@@ -140,10 +252,10 @@ contains
     SLL_ASSERT(error==0)
     call H5Dclose_f(dataset_id,error)
     SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_write_array_2d
+  end subroutine sll_hdf5_write_dble_array_2d
 
-  !> Write a 3d array in hdf5 file
-  subroutine sll_hdf5_write_array_3d(file_id,array,dsetname,error)
+  !> Write a 3d array of float64 in hdf5 file
+  subroutine sll_hdf5_write_dble_array_3d(file_id,array,dsetname,error)
     integer(hid_t)  , intent(in) :: file_id      !< file unit number
     character(len=*), intent(in) :: dsetname     !< hdf5 dataset name
     sll_int32, intent(out)       :: error        !< error code
@@ -171,7 +283,7 @@ contains
     SLL_ASSERT(error==0)
     call H5Dclose_f(dataset_id,error)
     SLL_ASSERT(error==0)
-  end subroutine sll_hdf5_write_array_3d
+  end subroutine sll_hdf5_write_dble_array_3d
 
 !Gysela functions that can be useful for future
 !  ! HDF5 saving for an integer
