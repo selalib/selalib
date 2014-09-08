@@ -195,7 +195,7 @@ contains
     type(sll_coordinate_transformation_2d_analytic), pointer :: &
          new_coordinate_transformation_2d_analytic
     character(len=*), intent(in)                  :: label
-    class(sll_mesh_2d_base), pointer :: mesh_2d
+    type(sll_logical_mesh_2d), pointer :: mesh_2d
     procedure(transformation_func_nopass)            :: x1_func
     procedure(transformation_func_nopass)            :: x2_func
     procedure(transformation_func_nopass)            :: j11_func
@@ -233,18 +233,29 @@ contains
 
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: &
          transf
-    character(len=*), intent(in)                  :: label
+    character(len=*), intent(in)                     :: label
     procedure(transformation_func_nopass)            :: x1_func
     procedure(transformation_func_nopass)            :: x2_func
     procedure(transformation_func_nopass)            :: j11_func
     procedure(transformation_func_nopass)            :: j12_func
     procedure(transformation_func_nopass)            :: j21_func
     procedure(transformation_func_nopass)            :: j22_func
-    class(sll_mesh_2d_base), pointer :: mesh_2d
+    type(sll_logical_mesh_2d), pointer                 :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
-    transf%label   = trim(label)
+    ! ! transf%label   = trim(label)
+    ! ! select type (mesh_2d)
+    ! ! type is (sll_logical_mesh_2d)
+    !    transf%mesh => mesh_2d
+    !    !call this%initialize_abstract(element)
+    ! ! type is (sll_logical_mesh_2d)
+    ! !    print *, "it's logical"
+    ! class default
+    !    print*,"ERROR: Unknown type of the 'mesh_2d' argument in 'initialize_coord_transf_2d_analytic'."
+    !    transf%mesh => mesh_2d
+    !    !stop
+    ! end select
     transf%mesh => mesh_2d
 
     ! Assign the transformation functions and parameters
@@ -819,7 +830,7 @@ contains
        jacobians_cell )
 
     ! INPUT VARIABLES
-    class(sll_logical_mesh_2d), pointer    :: mesh_2d
+    type(sll_logical_mesh_2d), pointer    :: mesh_2d
     character(len=*)       , intent(in) :: label
 
     class(sll_interpolator_2d_base), target  :: x1_interpolator
@@ -868,7 +879,7 @@ contains
     jacobians_cell )
 
     class(sll_coordinate_transformation_2d_discrete)    :: transf
-    class(sll_logical_mesh_2d), pointer :: mesh_2d
+    type(sll_logical_mesh_2d), pointer :: mesh_2d
     character(len=*), intent(in)     :: label
 
     class(sll_interpolator_2d_base), target  :: x1_interpolator
@@ -1310,7 +1321,7 @@ contains
     class(arb_deg_2d_interpolator), pointer :: interp2d_2
     class(arb_deg_2d_interpolator), pointer :: interp2d_jac
     class(sll_mesh_2d_base), pointer      :: mesh_base
-    class(sll_logical_mesh_2d), pointer   :: mesh_2d   
+    type(sll_logical_mesh_2d), pointer   :: mesh_2d   
 
     namelist /transf_label/  label
     namelist /degree/   spline_deg1, spline_deg2
