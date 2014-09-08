@@ -7,7 +7,9 @@ def write_doc_file(library):
      _f.write("! This file is read by doxygen software\n")
      _f.write("! Change it to match with your library\n")
      _f.write("! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks\n")
-     _f.write("! Type 'make doc' in build directory\n")
+     _f.write("! To see the documentation, remove the line containing your directory \n")
+     _f.write("! in file Doxyfile.in (line 691) if it is excluded. \n")
+     _f.write("! Type 'make doc' in build directory.\n")
      _f.write("! To check the results, open : \n")
      _f.write("! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html \n")
      _f.write("! The following lines will be read by doxygen to generate documentation:\n\n\n")
@@ -15,7 +17,7 @@ def write_doc_file(library):
      _f.write("!> @brief \n")
      _f.write("!> Description of %s library (72 characters)\n"%(library))
      _f.write("!> @author Selalib team \n")
-     _f.write("!> You can add a contact, do not put your email to prevent spam.")
+     _f.write("!> You can add a contact, do not put your email to prevent spam.\n")
      _f.write("!> @details\n")
      _f.write("!> Long description of  %s, you can add some references or math equations.\n"%(library))
      _f.write("!>\n")
@@ -50,4 +52,4 @@ for dir in os.walk(root).next()[1]:
     if (dir != "CMakeModules" and dir != "package"):
         print root+dir
         mylib = dir.lower()
-        write_doc_file(mylib)  
+        write_doc_file(mylib)
