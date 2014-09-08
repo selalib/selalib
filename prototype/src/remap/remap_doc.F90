@@ -10,7 +10,8 @@
 !> @namespace sll_remap 
 !> @brief 
 !> Description of remap library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  remap, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

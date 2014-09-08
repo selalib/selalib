@@ -10,7 +10,8 @@
 !> @namespace sll_boundary_condition_descriptors 
 !> @brief 
 !> Description of boundary_condition_descriptors library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  boundary_condition_descriptors, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

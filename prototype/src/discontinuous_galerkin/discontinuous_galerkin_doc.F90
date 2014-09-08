@@ -10,7 +10,8 @@
 !> @namespace sll_discontinuous_galerkin 
 !> @brief 
 !> Description of discontinuous_galerkin library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  discontinuous_galerkin, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>

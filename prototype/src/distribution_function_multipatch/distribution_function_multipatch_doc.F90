@@ -10,7 +10,8 @@
 !> @namespace sll_distribution_function_multipatch 
 !> @brief 
 !> Description of distribution_function_multipatch library (72 characters)
-!> @details
+!> @author Selalib team 
+!> You can add a contact, do not put your email to prevent spam.!> @details
 !> Long description of  distribution_function_multipatch, you can add some references or math equations.
 !>
 !> <b> Headers file available </b>
