@@ -96,6 +96,7 @@ INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
 
 ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
+ADD_SUBDIRECTORY(mudpack)
 
 IF(NOT SLL_BUILD_PACKAGE)
 
@@ -155,7 +156,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(parallel_array_initializers)
       
    ADD_SUBDIRECTORY(quasi_neutral_solvers)
-   ADD_SUBDIRECTORY(mudpack)
    ADD_SUBDIRECTORY(fishpack)
    ADD_SUBDIRECTORY(fields)
    ADD_SUBDIRECTORY(logical_meshes_multipatch)
