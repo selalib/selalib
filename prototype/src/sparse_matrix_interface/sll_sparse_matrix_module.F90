@@ -15,11 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @file sll_sparse_matrix_module.F90
-!> @namespace sll_sparse_matrix
-!> @brief sparse matrix
-
-
 module sll_sparse_matrix_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"

@@ -11,11 +11,26 @@
 
 !> @namespace sll_remap 
 !> @brief 
-!> Description of remap library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Remap provides capabilities for global data reconfigurations in a parallel 
+!> machine. 
 !> @details
-!> Long description of  remap, you can add some references or math equations.
+!> All that is needed is a specification of the initial and final
+!> configurations, the creation of a remap plan that uses these specifications
+!> as input and an application of the plan. For details about the interface,
+!> follow the link sll_remapper .
+!> @details Suppose that a given dataset is represented by a multi-dimensional
+!> array which is distributed on multiple processors. The specifics of this
+!> distribution (which portion of the global array is contained in which 
+!> processor) are contained in an object called a 'layout'. To reconfigure
+!> data, we need initial and final layouts, a remap 'plan' which uses the 
+!> given layouts for its initialization and finally an application of the 
+!> plan on the data described by the layouts. The data reconfiguration is an
+!> out-of-place operation, so the module client is responsible for the
+!> allocation of the appropriate arrays. Remap operates on multi-dimensional
+!> arrays of several of the basic Fortran types. 
+!>
+!> @author 
+!> Selalib team 
 !>
 !> <b> Headers file available </b>
 !>  - sll_remap.h
