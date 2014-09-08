@@ -12,7 +12,7 @@ program unit_test_2d
 
 #define NPTS1 33
 #define NPTS2 33 
-  class(sll_logical_mesh_2d), pointer :: mesh_logic
+  type(sll_logical_mesh_2d), pointer :: mesh_logic
   class(sll_mesh_2d_base), pointer :: mesh
   type(sll_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
@@ -105,7 +105,7 @@ program unit_test_2d
   ! wrapper.
   t_a_ptr => new_coordinate_transformation_2d_analytic( &
        "map_a", &
-       mesh, &
+       mesh_logic, &
        x1_polar_f, &
        x2_polar_f, &
        deriv_x1_polar_f_eta1, &
