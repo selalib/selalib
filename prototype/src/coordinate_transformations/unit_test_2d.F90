@@ -12,7 +12,8 @@ program unit_test_2d
 
 #define NPTS1 33
 #define NPTS2 33 
-  type(sll_logical_mesh_2d), pointer :: mesh
+  type(sll_logical_mesh_2d), pointer :: mesh_logic
+  class(sll_mesh_2d_base), pointer :: mesh
   type(sll_coordinate_transformation_2d_analytic) :: t_a    ! analytic transf
   type(sll_coordinate_transformation_2d_discrete) :: t_d    ! discrete transf
   type(sll_coordinate_transformation_2d_nurbs)    :: t_n    ! nurbs transf
@@ -83,13 +84,14 @@ program unit_test_2d
   print *, '**********************************************************'
 
 
-  mesh => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh_logic => new_logical_mesh_2d( NPTS1-1, NPTS2-1 )
+  mesh => mesh_logic
   ! Need to do something about these variables being always on the stack...
 
   print *, x1_polar_f(1.0_f64,1.0_f64,params)
   call t_a%initialize( &
        "map_a", &
-       mesh, &
+       mesh_logic, &
        x1_polar_f, &
        x2_polar_f, &
        deriv_x1_polar_f_eta1, &
@@ -103,7 +105,7 @@ program unit_test_2d
   ! wrapper.
   t_a_ptr => new_coordinate_transformation_2d_analytic( &
        "map_a", &
-       mesh, &
+       mesh_logic, &
        x1_polar_f, &
        x2_polar_f, &
        deriv_x1_polar_f_eta1, &
@@ -179,7 +181,7 @@ program unit_test_2d
   print *, 'Initialized interpolators...'
 
   call t_d%initialize( &
-       mesh, &
+       mesh_logic, &
        "transf_d", &
        x1_interp, &
        x2_interp, &
@@ -258,11 +260,11 @@ program unit_test_2d
 
      param1 = (/ 0.05_f64,0.05_f64,1.0_f64,1.0_f64 /)
      param2 = (/ 0.05_f64,0.05_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64,0.0_f64,1.0_f64,-1.0_f64,1.0_f64 /)
-     do i = 1,t_n%mesh%num_cells1+1
-        do j = 1,t_n%mesh%num_cells2+1
+     do i = 1,mesh_logic%num_cells1+1
+        do j = 1,mesh_logic%num_cells2+1
 
-           eta1 = t_n%mesh%eta1_min + (i-1) * t_n%mesh%delta_eta1 
-           eta2 = t_n%mesh%eta2_min + (j-1) * t_n%mesh%delta_eta2
+           eta1 = t_n%mesh%eta1_node(i,j)
+           eta2 = t_n%mesh%eta2_node(i,j)
            val_approx1 = t_n%x1(eta1,eta2)
            val_approx2 = t_n%x2(eta1,eta2)
            val_exacte1 = 2*sinprod_x1(eta1,eta2,param1)-1
