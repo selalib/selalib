@@ -136,7 +136,7 @@ module sll_meshes_base
   abstract interface
      subroutine display_mesh_3d(mesh)
        import sll_mesh_3d_base
-       class(sll_mesh_3d_base), intent(inout) :: mesh
+       class(sll_mesh_3d_base), intent(in) :: mesh
      end subroutine display_mesh_3d
   end interface
 
@@ -164,7 +164,7 @@ module sll_meshes_base
   abstract interface
      subroutine display_mesh_4d(mesh)
        import sll_mesh_4d_base
-       class(sll_mesh_4d_base), intent(inout) :: mesh
+       class(sll_mesh_4d_base), intent(in) :: mesh
      end subroutine display_mesh_4d
   end interface
 
