@@ -205,7 +205,6 @@ contains ! =============================================================
     ! Temporary variables just as vehicule to store quadrature points/weights 
     sll_real64, pointer, dimension(:,:) :: temp_pts_wgh
 
-
     ! Logical mesh : contains information as : eta1min, eta1max, delta1, ...
     solv%mesh => mesh
 
