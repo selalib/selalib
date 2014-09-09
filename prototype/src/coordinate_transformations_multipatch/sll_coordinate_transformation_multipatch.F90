@@ -16,8 +16,9 @@
 !**************************************************************
 
 !> @file sll_coordinate_transformation_multipatch.F90
-!> @namespace sll_coordinate_transformation_multipatch
 !> @brief  
+!> coordinate transformation with patches
+!> @details
 !> Non-cartesian geometries in Selalib are dealt with coordinate
 !> transformations applied on cartesian meshes. Whenever a single deformed
 !> domain is not sufficient to cover the desired region in a desired way, it
