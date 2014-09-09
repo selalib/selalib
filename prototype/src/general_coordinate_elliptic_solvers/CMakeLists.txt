@@ -4,13 +4,7 @@ ADD_LIBRARY( sll_general_coordinate_elliptic_solvers STATIC
      sll_general_coordinate_elliptic_solver.F90
      sll_knots.F90)
 
-ADD_LIBRARY( finite_elements_solver STATIC
-     connectivity_qn.f90
-     finite_elements_solver.F90
-     sll_knots.F90)
-
 TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
-		       sll_logical_meshes
                        sll_sparse_matrix 
                        sll_scalar_field_2d_alternative 
                        sll_interpolators
@@ -27,8 +21,12 @@ TARGET_LINK_LIBRARIES( sll_general_coordinate_elliptic_solvers
                        sll_working_precision
                        deboor_splines)
 
+ADD_LIBRARY( finite_elements_solver STATIC
+     connectivity_qn.f90
+     finite_elements_solver.F90
+     sll_knots.F90)
+
 TARGET_LINK_LIBRARIES( finite_elements_solver
-		       sll_logical_meshes
                        sll_sparse_matrix 
                        sll_scalar_field_2d_alternative 
                        sll_interpolators
@@ -45,12 +43,26 @@ TARGET_LINK_LIBRARIES( finite_elements_solver
                        sll_working_precision
                        deboor_splines)
    
-ADD_EXECUTABLE(test_general_coordinates_elliptic_solver unit_test.F90)
+ADD_EXECUTABLE(test_general_coordinates_elliptic_solver 
+               init_functions.F90 unit_test.F90)
 
-TARGET_LINK_LIBRARIES( test_general_coordinates_elliptic_solver
+TARGET_LINK_LIBRARIES(test_general_coordinates_elliptic_solver
                        sll_general_coordinate_elliptic_solvers)
 
 ADD_EXECUTABLE(test_finite_elements_solver unit_test_finite_elements.F90)
 
 TARGET_LINK_LIBRARIES( test_finite_elements_solver
                        finite_elements_solver)
+
+ADD_EXECUTABLE(test_gces_identity init_functions.F90
+               unit_test_identity.F90)
+
+TARGET_LINK_LIBRARIES(test_gces_identity sll_general_coordinate_elliptic_solvers)
+
+
+ADD_EXECUTABLE(test_gces_colella_periodic init_functions.F90
+               unit_test_colella_periodic.F90)
+
+TARGET_LINK_LIBRARIES(test_gces_colella_periodic 
+                      sll_general_coordinate_elliptic_solvers)
+

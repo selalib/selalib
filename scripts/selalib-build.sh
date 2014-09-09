@@ -27,7 +27,7 @@ elif [[ "$HOST" =~ "vpn-irma" ]]; then
 elif [[ "$HOST" =~ "doct" || "$HOST" =~ "reserve" ]]; then
    WORKDIR="/Users/irma"
    HOMEDIR="/Users/irma"
-elif [[ "$HOST" = irma-gpu3 ]]; then
+elif [[ "$HOST" = irma-gpu* ]]; then
    WORKDIR="/scratch/navaro"
    HOMEDIR=${HOME}
 elif [[ "$HOST" = *irma-* ]]; then
