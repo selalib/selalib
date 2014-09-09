@@ -480,7 +480,7 @@ contains
 
   subroutine hermite_interpolation(num, x, y, f_tn, center_value, edge_value, output_tn1, mesh, deriv, aire, num_method)
 
-    type(sll_hex_mesh_2d), pointer             :: mesh
+    type(sll_hex_mesh_2d), pointer         :: mesh
     sll_real64,dimension(:), intent(in)    :: f_tn
     sll_real64,dimension(:), intent(in)    :: edge_value
     sll_real64,dimension(:), intent(in)    :: center_value
@@ -623,7 +623,7 @@ contains
        ! Computing the basis for the cubic element of Hsieh-Clough-Tocher-reduced 
  
        call base_Hsieh_Clough_Tocher_reduced&
-            (base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,step)
+            (base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
 
     else if (num_method == 12 ) then 
 
@@ -636,7 +636,7 @@ contains
 
        ! Computing the basis for the quartic element of Ganev_Dimitrov
 
-       call base_ganev_dimitrov(base,l1,l2,l3,step)
+       call base_ganev_dimitrov(base,l1,l2,l3,mesh)
 
     endif
 
@@ -741,14 +741,18 @@ contains
 
 
   
-  subroutine get_sub_triangle_hex(x1,x3,y1,y2,y3,x,y,&
+  subroutine get_sub_triangle_hex(mesh,x1,x3,y1,y2,y3,x,y,&
        num_sub_triangle)
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,intent(in) :: x1, y1 ! cartesian coordinates of the lowest point
     sll_real64,intent(in) :: y2     ! ordinate of the middle point
     sll_real64,intent(in) :: x3, y3 ! cartesian coordinates of the highest point
     sll_real64,intent(in) :: x , y  ! cartesian coordinates of the point to be interpolated in a hexagonal mesh
     sll_int32,intent(out) :: num_sub_triangle
+    sll_real64            :: slope
 
+
+    slope =  abs(mesh%r1_x1/mesh%r1_x2)   ! sqrt(3._f64) -> default case
 
     ! what is the kind of the triangle T ?
 
@@ -757,13 +761,13 @@ contains
        !finding the sub triangle K_l in which the interpolated point is
 
        if ( y > y2 ) then! K1 or K2
-          if ( y >= ( x - x3 ) * sqrt(3._f64) + y3 ) then 
+          if ( y >= ( x - x3 ) * slope + y3 ) then 
              num_sub_triangle = 1
           else
              num_sub_triangle = 2
           endif
        else ! K2 or K3
-          if ( y >= - ( x - x1 ) * sqrt(3._f64) + y1 ) then 
+          if ( y >= - ( x - x1 ) * slope + y1 ) then 
              num_sub_triangle = 2
           else
              num_sub_triangle = 3
@@ -775,13 +779,13 @@ contains
        !finding the triangle K_l in which the interpolated point is
 
        if ( y > y2 ) then ! K1 or K2 
-          if ( y >= - ( x - x3 ) * sqrt(3._f64) + y3 ) then 
+          if ( y >= - ( x - x3 ) * slope + y3 ) then 
              num_sub_triangle = 1
           else
              num_sub_triangle = 2
           endif
        else  ! K2 or K3
-          if ( y >= ( x - x1 ) * sqrt(3._f64) + y1 ) then 
+          if ( y >= ( x - x1 ) * slope + y1 ) then 
              num_sub_triangle = 2
           else
              num_sub_triangle = 3
@@ -874,17 +878,20 @@ contains
 
 
 
-  subroutine base_Hsieh_Clough_Tocher_reduced(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,step)
+  subroutine base_Hsieh_Clough_Tocher_reduced(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
+    type(sll_hex_mesh_2d), pointer :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,intent(in)               :: x1,x3,y1,y2,y3
-    sll_real64,intent(in)               :: x,y,l1,l2,l3,step
+    sll_real64,intent(in)               :: x,y,l1,l2,l3
     sll_real64,dimension(:),allocatable :: xi 
-    sll_real64                          :: li, lj, lk
+    sll_real64                          :: li, lj, lk, step
     sll_int32                           :: num_sub_triangle
+
+    step = mesh%delta
 
     !finding the sub triangle K_l in which the interpolated point is
 
-    call get_sub_triangle_hex(x1,x3,y1,y2,y3,x,y,&
+    call get_sub_triangle_hex(mesh,x1,x3,y1,y2,y3,x,y,&
          num_sub_triangle)
 
     allocate(xi(1:9))
@@ -952,60 +959,62 @@ contains
   end subroutine product_with_sigma_hct_c
 
   
-  subroutine base_from_local_base_xi_htc_c(base,xi,num_sub_triangle,step)
-  sll_real64,dimension(:),intent(out) :: base
-  sll_real64,dimension(:),intent(in)  :: xi 
-  sll_real64,             intent(in)  :: step
-  sll_int32,              intent(in)  :: num_sub_triangle
-  sll_real64                          :: step_sq       
+  subroutine base_from_local_base_xi_htc_c(base,xi,num_sub_triangle,mesh)
+    type(sll_hex_mesh_2d), pointer      :: mesh
+    sll_real64,dimension(:),intent(out) :: base
+    sll_real64,dimension(:),intent(in)  :: xi 
+    sll_int32,              intent(in)  :: num_sub_triangle
+    sll_real64                          :: step_sq, step     
 
-  step_sq = step*sqrt(3._f64)*0.5_f64
-  
-  if ( num_sub_triangle == 1 ) then 
-     base(1) = xi(1) 
-     base(2) = xi(2) 
-     base(3) = xi(3) 
-     base(4) = xi(5)*step
-     base(5) = xi(4)*step
-     base(6) = xi(6)*step
-     base(7) = xi(7)*step
-     base(8) = xi(9)*step
-     base(9) = xi(8)*step
-     base(10) = xi(10)*step_sq
-     base(11) = xi(11)*step_sq
-     base(12) = xi(12)*step_sq
-  elseif ( num_sub_triangle == 2 ) then 
-     base(1) = xi(3) 
-     base(2) = xi(1) 
-     base(3) = xi(2) 
-     base(4) = xi(9)*step
-     base(5) = xi(8)*step
-     base(6) = xi(4)*step
-     base(7) = xi(5)*step
-     base(8) = xi(7)*step
-     base(9) = xi(6)*step
-     base(10) = xi(12)*step_sq
-     base(11) = xi(10)*step_sq
-     base(12) = xi(11)*step_sq
-  elseif ( num_sub_triangle == 3 ) then 
-     base(1) = xi(2) 
-     base(2) = xi(3) 
-     base(3) = xi(1) 
-     base(4) = xi(7)*step
-     base(5) = xi(6)*step
-     base(6) = xi(8)*step
-     base(7) = xi(9)*step
-     base(8) = xi(5)*step
-     base(9) = xi(4)*step
-     base(10) = xi(11)*step_sq
-     base(11) = xi(12)*step_sq
-     base(12) = xi(10)*step_sq
-  endif
+    step    = mesh%delta
+    step_sq = step*abs(mesh%r1_x1)
+
+    if ( num_sub_triangle == 1 ) then 
+       base(1) = xi(1) 
+       base(2) = xi(2) 
+       base(3) = xi(3) 
+       base(4) = xi(5)*step
+       base(5) = xi(4)*step
+       base(6) = xi(6)*step
+       base(7) = xi(7)*step
+       base(8) = xi(9)*step
+       base(9) = xi(8)*step
+       base(10) = xi(10)*step_sq
+       base(11) = xi(11)*step_sq
+       base(12) = xi(12)*step_sq
+    elseif ( num_sub_triangle == 2 ) then 
+       base(1) = xi(3) 
+       base(2) = xi(1) 
+       base(3) = xi(2) 
+       base(4) = xi(9)*step
+       base(5) = xi(8)*step
+       base(6) = xi(4)*step
+       base(7) = xi(5)*step
+       base(8) = xi(7)*step
+       base(9) = xi(6)*step
+       base(10) = xi(12)*step_sq
+       base(11) = xi(10)*step_sq
+       base(12) = xi(11)*step_sq
+    elseif ( num_sub_triangle == 3 ) then 
+       base(1) = xi(2) 
+       base(2) = xi(3) 
+       base(3) = xi(1) 
+       base(4) = xi(7)*step
+       base(5) = xi(6)*step
+       base(6) = xi(8)*step
+       base(7) = xi(9)*step
+       base(8) = xi(5)*step
+       base(9) = xi(4)*step
+       base(10) = xi(11)*step_sq
+       base(11) = xi(12)*step_sq
+       base(12) = xi(10)*step_sq
+    endif
 
   end subroutine base_from_local_base_xi_htc_c
 
-  
+
   subroutine base_Hsieh_Clough_Tocher_complete(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,step)
+    type(sll_hex_mesh_2d), pointer      :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,intent(in)               :: x1,x3,y1,y2,y3
     sll_real64,intent(in)               :: x,y,l1,l2,l3,step
@@ -1015,7 +1024,7 @@ contains
 
     !finding the sub triangle K_l in which the interpolated point is
 
-    call get_sub_triangle_hex(x1,x3,y1,y2,y3,x,y,&
+    call get_sub_triangle_hex(mesh,x1,x3,y1,y2,y3,x,y,&
          num_sub_triangle)
 
     allocate(xi(1:12))
@@ -1037,7 +1046,7 @@ contains
     endif
 
     call product_with_sigma_hct_c(li,lj,lk,xi)
-    call base_from_local_base_xi_htc_c(base,xi,num_sub_triangle,step)
+    call base_from_local_base_xi_htc_c(base,xi,num_sub_triangle,mesh)
 
     deallocate(xi)
 
@@ -1049,7 +1058,7 @@ contains
   !*******************************************************************************
 
   subroutine get_normal_der(deriv,i1,i2,mesh,freedom)
-    type(sll_hex_mesh_2d), pointer             :: mesh
+    type(sll_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(in) :: deriv 
     sll_real64, dimension(3) , intent(out) :: freedom
     sll_real64                             :: x1, x2
@@ -1061,16 +1070,23 @@ contains
     sll_int32                              :: h26, h2_4, h2_5,h25,h1_5,h1_4, h15
     sll_int32                              :: h1_1,h1_3,h2_1,h2_3, h1_2, h2_2
     sll_real64,dimension(2)                :: n1_l,n2_l,n3_l,n1_r,n2_r,n3_r
-    
-    ! à généraliser
+    sll_real64                             :: det, v1, v2, v3, v4   
 
-    n1_l = (/-1._f64/sqrt(3._f64) , -2._f64/sqrt(3._f64)/)
-    n2_l = (/-1._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
-    n3_l = (/+2._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
 
-    n1_r = (/-2._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
-    n2_r = (/+1._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
-    n3_r = (/+1._f64/sqrt(3._f64) , +2._f64/sqrt(3._f64)/)
+    det = mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1
+
+    v1 = (+mesh%r1_x2*mesh%r2_x2 + mesh%r1_x1*mesh%r2_x1)/det 
+    v2 = (-mesh%r1_x2*mesh%r1_x2 - mesh%r1_x1*mesh%r1_x1)/det 
+    v3 = (+mesh%r2_x2*mesh%r2_x2 + mesh%r2_x1*mesh%r2_x1)/det 
+    v4 = (-mesh%r2_x2*mesh%r1_x2 - mesh%r2_x1*mesh%r1_x1)/det
+
+    n1_l = (/v1    , v2   /)
+    n2_l = (/v1+v3 , v2+v4/)
+    n3_l = (/v3    , v4   /)
+
+    n1_r = -n3_l
+    n2_r = -n2_l
+    n3_r = -n1_l
 
     num_cells = mesh%num_cells   
 
@@ -1107,7 +1123,7 @@ contains
     ! let us determine the configuration : is the triangle oriented left or right ?   
 
     if ( x1 > x2 ) then ! oriented left
-       
+
        ! the first normal derivative is oriented normal to r1 and m1 is in [S2;S3]
 
        if ( test_in(h13,h26,num_cells) ) then
@@ -1116,7 +1132,7 @@ contains
           ni_2 = hex_to_global(mesh,h13,h26)
           fi_2 = deriv(1,ni_2) * n1_l(1) + deriv(2,ni_2) * n1_l(2)
        endif
-       
+
        if ( test_in(h12,h24,num_cells) ) then
           fi_1 = 0._f64 
        else
@@ -1164,7 +1180,7 @@ contains
        else
           ni_2 = hex_to_global(mesh,h13,h2_2)
           fi_2 = deriv(1,ni_2) * n2_l(1) + deriv(2,ni_2) * n2_l(2)
-       endif       
+       endif
 
        if ( test_in(h12,h2_1,num_cells) ) then
           fi_1 = 0._f64 
@@ -1193,7 +1209,7 @@ contains
           ni2 = hex_to_global(mesh,h1_1,h22)
           fi2 = deriv(1,ni2) * n2_l(1) + deriv(2,ni2)* n2_l(2)
        endif
-       
+
        if ( test_in(h1_2,h23,num_cells) ) then
           fi3 = 0._f64  
        else
@@ -1212,7 +1228,7 @@ contains
        else
           ni_2 = hex_to_global(mesh,h1_5,h2_2)
           fi_2 = deriv(1,ni_2) * n3_l(1) + deriv(2,ni_2) * n3_l(2)
-       endif       
+       endif
 
        if ( test_in(h1_3,h2_1,num_cells) ) then
           fi_1 = 0._f64 
@@ -1254,16 +1270,16 @@ contains
             150._f64*(fi+fi1)) / 256._f64 
 
     else  ! oriented right
-       
+
        ! the first normal derivative is oriented normal to r2 and m1 is in [S2;S3]
-       
+
        if ( test_in(h16,h23,num_cells) ) then
           fi_2 = 0._f64  
        else
           ni_2 = hex_to_global(mesh,h16,h23)
           fi_2 = deriv(1,ni_2) * n1_r(1) + deriv(2,ni_2) * n1_r(2)
        endif
-       
+
        if ( test_in(h14,h22,num_cells) ) then
           fi_1 = 0._f64 
        else
@@ -1292,7 +1308,7 @@ contains
           fi2 = deriv(1,ni2) * n1_r(1) + deriv(2,ni2) * n1_r(2)
        endif
 
-       
+
        if ( test_in(h1_4,h2_2,num_cells) ) then
           fi3 = 0._f64  
        else
@@ -1306,14 +1322,14 @@ contains
 
        ! the second normal derivative is oriented normal to r3 and m2 is in [S1;S3]
 
-       
+
        if ( test_in(h1_2,h23,num_cells) ) then
           fi_2 = 0._f64  
        else
           ni_2 = hex_to_global(mesh,h1_2,h23)
           fi_2 = deriv(1,ni_2) * n2_r(1) + deriv(2,ni_2) * n2_r(2)
        endif
-       
+
        if ( test_in(h1_1,h22,num_cells) ) then
           fi_1 = 0._f64 
        else
@@ -1342,7 +1358,7 @@ contains
           fi2 = deriv(1,ni2) * n2_r(1) + deriv(2,ni2) * n2_r(2)
        endif
 
-       
+
        if ( test_in(h13,h2_2,num_cells) ) then
           fi3 = 0._f64  
        else
@@ -1363,7 +1379,7 @@ contains
           ni_2 = hex_to_global(mesh,h1_2,h2_5)
           fi_2 = deriv(1,ni_2) * n3_r(1) + deriv(2,ni_2) * n3_r(2)
        endif
-       
+
        if ( test_in(h1_1,h2_3,num_cells) ) then
           fi_1 = 0._f64 
        else
@@ -1407,7 +1423,7 @@ contains
 
 
   end subroutine get_normal_der
-  
+
   function  test_in(h1,h2,num_cells) result(bool)  
     sll_int32  :: h1, h2,num_cells
     logical    :: bool
@@ -1471,14 +1487,16 @@ contains
 
   end subroutine product_with_sigma_ganev_dimitrov
 
-  
-  subroutine base_ganev_dimitrov(base,l1,l2,l3,step)
+
+  subroutine base_ganev_dimitrov(base,l1,l2,l3,mesh)
+    type(sll_hex_mesh_2d), pointer      :: mesh
     sll_real64,dimension(:),intent(out) :: base
-    sll_real64,intent(in)               :: l1,l2,l3,step
+    sll_real64,intent(in)               :: l1,l2,l3
     sll_real64,dimension(:),allocatable :: xi 
-    sll_real64                          :: step_sq  
-    
-    step_sq = step*sqrt(3._f64)*0.5_f64
+    sll_real64                          :: step, step_sq  
+
+    step    = mesh%delta
+    step_sq = step*abs(mesh%r1_x1)
 
     allocate(xi(1:15))
 

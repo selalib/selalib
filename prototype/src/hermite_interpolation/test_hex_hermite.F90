@@ -13,7 +13,7 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
-  sll_int32    :: num_method = 10
+  sll_int32    :: num_method = 9
   character(len = 5) ::name_test = "dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 0
   ! initial distribution
@@ -66,7 +66,7 @@ program test_hex_hermite
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
 
-  radius = 8._f64
+  radius = 12._f64
 
   call print_method(num_method)
 
@@ -138,17 +138,19 @@ program test_hex_hermite
 
         elseif ( name_test == "dioco" ) then 
 
-           dioco_r = sqrt( x1(i)**2 + x2(i)**2 )
-           if ( x2(i) >= 0 ) then
-              dioco_theta = acos( x1(i) / dioco_r )
-           else
-              dioco_theta = 2._f64 * sll_pi-acos( x1(i) / dioco_r )
-           endif
-           if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
-              f_init(i) = 1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta )
-           else
-              f_init(i) = 0._f64  
-           endif
+           ! dioco_r = sqrt( x1(i)**2 + x2(i)**2 )
+           ! if ( x2(i) >= 0 ) then
+           !    dioco_theta = acos( x1(i) / dioco_r )
+           ! else
+           !    dioco_theta = 2._f64 * sll_pi-acos( x1(i) / dioco_r )
+           ! endif
+           ! if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
+           !    f_init(i) = 1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta )
+           ! else
+           !    f_init(i) = 0._f64  
+           ! endif
+
+           f_init(i) = dio(x1(i),x2(i),dioco_eps)
            f_tn(i) = f_init(i)
 
         endif
@@ -168,17 +170,20 @@ program test_hex_hermite
 
            elseif ( name_test == "dioco" ) then 
 
-              dioco_r = sqrt( x**2 + y**2 )
-              if ( y >= 0 ) then
-                 dioco_theta = acos( x / dioco_r )
-              else
-                 dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
-              endif
-              if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
-                 center_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
-              else
-                 center_values_tn(i) = 0._f64  
-              endif
+              ! dioco_r = sqrt( x**2 + y**2 )
+              ! if ( y >= 0 ) then
+              !    dioco_theta = acos( x / dioco_r )
+              ! else
+              !    dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
+              ! endif
+              ! if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
+              !    center_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
+              ! else
+              !    center_values_tn(i) = 0._f64  
+              ! endif
+              
+              center_values_tn(i) = dio(x,y,dioco_eps)
+
            endif
         enddo
      endif
@@ -195,17 +200,20 @@ program test_hex_hermite
 
            elseif ( name_test == "dioco" ) then 
 
-              dioco_r = sqrt( x**2 + y**2 )
-              if ( y >= 0 ) then
-                 dioco_theta = acos( x / dioco_r )
-              else
-                 dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
-              endif
-              if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
-                 edge_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
-              else
-                 edge_values_tn(i) = 0._f64  
-              endif
+              ! dioco_r = sqrt( x**2 + y**2 )
+              ! if ( y >= 0 ) then
+              !    dioco_theta = acos( x / dioco_r )
+              ! else
+              !    dioco_theta = 2._f64 * sll_pi-acos( x / dioco_r )
+              ! endif
+              ! if(( dioco_r >= dioco_rminus ).and.( dioco_r <= dioco_rplus) ) then
+              !    edge_values_tn(i) = (1.0_f64 + dioco_eps*cos( dioco_kmode * dioco_theta ))
+              ! else
+              !    edge_values_tn(i) = 0._f64  
+              ! endif
+
+              
+              edge_values_tn(i)  = dio(x,y,dioco_eps)
 
            endif
 
@@ -490,17 +498,20 @@ program test_hex_hermite
 
               f_sol(i) = gauss_amp*exp(-((x-gauss_x1)**2+(y-gauss_x2)**2)/gauss_sig**2/2._f64) 
            elseif  ( name_test == "dioco" ) then 
-              dioco_r= sqrt(x**2+y**2)
-              if (y>=0) then
-                 dioco_theta = acos(x/dioco_r)
-              else
-                 dioco_theta = 2._f64*sll_pi-acos(x/dioco_r)
-              endif
-              if( dioco_r>=dioco_rminus .and. dioco_r<=dioco_rplus )then
-                 f_sol(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
-              else
-                 f_sol(i) = 0._f64  
-              endif
+              ! dioco_r= sqrt(x**2+y**2)
+              ! if (y>=0) then
+              !    dioco_theta = acos(x/dioco_r)
+              ! else
+              !    dioco_theta = 2._f64*sll_pi-acos(x/dioco_r)
+              ! endif
+              ! if( dioco_r>=dioco_rminus .and. dioco_r<=dioco_rplus )then
+              !    f_sol(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
+              ! else
+              !    f_sol(i) = 0._f64  
+              ! endif
+
+              f_sol(i) = dio(x,y,dioco_eps)
+
            endif
 
            
@@ -641,6 +652,22 @@ contains
     endif
 
   end subroutine print_method
+  
+  function dio(x,y,epsilon) result (rho)
+    sll_real64 :: x, y, epsilon
+    sll_real64 :: rho
+    sll_real64 :: r
+
+    r = sqrt( x**2 + y**2 )
+
+    if ( r <= 8._f64  .and. r >= 5._f64 ) then
+       rho = (1._f64 + epsilon * cos( 7._f64 * atan2(y,x)) )*&
+            exp( -4._f64*(r-6.5_f64)**2)
+    else
+       rho = 0._f64
+    endif
+
+  end function dio
 
 end program
 
