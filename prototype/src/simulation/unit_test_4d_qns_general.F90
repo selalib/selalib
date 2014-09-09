@@ -70,14 +70,14 @@ program qns_4d_general
   ! both...
 
 ! hardwired, this should be consistent with whatever is read from a file
-#define NPTS1 64
-#define NPTS2 64
-#define NPTS3 64
-#define NPTS4 64
-#define SPL_DEG_ETA1 3 
-#define SPL_DEG_ETA2 3
-#define SPL_DEG_VX 3 
-#define SPL_DEG_VY 3
+!!$#define NPTS1 64
+!!$#define NPTS2 64
+!!$#define NPTS3 64
+!!$#define NPTS4 64
+!!$#define SPL_DEG_ETA1 3 
+!!$#define SPL_DEG_ETA2 3
+!!$#define SPL_DEG_VX 3 
+!!$#define SPL_DEG_VY 3
 
   ! ---------------------------------------------------------------------
   ! logical mesh for space coordinates
@@ -103,14 +103,14 @@ program qns_4d_general
   ! mesh for the test case 
   ! sll_gaussian_beam_initializer_4d
 !!$  
-  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
-       eta1_min= 0.0_f64, eta1_max= 1.0_f64, &
-       eta2_min= 0.0_f64, eta2_max= 1.0_f64 )
+!!$  mx => new_logical_mesh_2d( NPTS1, NPTS2,  & 
+!!$       eta1_min= 0.0_f64, eta1_max= 1.0_f64, &
+!!$       eta2_min= 0.0_f64, eta2_max= 1.0_f64 )
   
-  ! logical mesh for velocity coordinates
-  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
-       eta1_min=-9.0_f64, eta1_max=9.0_f64, &
-       eta2_min=-9.0_f64, eta2_max=9.0_f64)
+!!$  ! logical mesh for velocity coordinates
+!!$  mv => new_logical_mesh_2d( NPTS3, NPTS4, &
+!!$       eta1_min=-9.0_f64, eta1_max=9.0_f64, &
+!!$       eta2_min=-9.0_f64, eta2_max=9.0_f64)
 
   ! ---------------------------------------------------------------------
   ! coordinate transformation associated with space coordinates
@@ -160,7 +160,7 @@ program qns_4d_general
   !transformation_x => new_nurbs_2d_transformation_from_file("domain_patch0.nml")
   !transformation_x%mesh => mx
   ! Get rid of this 'fix' whenever gfortran 4.6 is no longer supported.
-   mx => transformation_x%mesh
+   simulation%mesh2d_x => transformation_x%mesh
   !mx => transformation_x%get_logical_mesh()
   !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max
 !!$   print*, 'transformation ok'
@@ -205,8 +205,8 @@ program qns_4d_general
   ! ---------------------------------------------------------------------
   call initialize_4d_qns_general( &
        simulation, &
-       mx, &
-       mv, &
+!!$       mx, &
+!!$       !mv, &
        transformation_x, &
        sll_gaussian_beam_initializer_4d, &
        landau_params, &
@@ -228,18 +228,18 @@ program qns_4d_general
        func_zero, &   !der2 b2
        func_zero, &   ! c
        f_zero_params, &
-       SPL_DEG_ETA1, & 
-       SPL_DEG_ETA2, & 
-       SPL_DEG_VX, & 
-       SPL_DEG_VY, & 
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
-       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SPL_DEG_ETA1, & 
+!!$       SPL_DEG_ETA2, & 
+!!$       SPL_DEG_VX, & 
+!!$       SPL_DEG_VY, & 
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
+!!$       SLL_DIRICHLET,&!SLL_PERIODIC, &
        ES_GAUSS_LEGENDRE,&
        ES_GAUSS_LEGENDRE,&
        electric_field_ext_1,&
