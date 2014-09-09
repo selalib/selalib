@@ -23,6 +23,10 @@ module sll_meshes_base
      procedure(get_geometry_2d), deferred, pass(mesh) :: eta2_cell_two_arg
      procedure(display_mesh_2d), deferred, pass :: display
      procedure(delete_mesh_2d),  deferred, pass :: delete
+     generic, public :: eta1_cell => eta1_cell_one_arg, &
+          eta1_cell_two_arg
+     generic, public :: eta2_cell => eta2_cell_one_arg, &
+          eta2_cell_two_arg
   end type sll_mesh_2d_base
 
   !> @brief 3D logical mesh
@@ -118,13 +122,13 @@ module sll_meshes_base
 
   !Abstract functions for 3d
   abstract interface
-     function get_geometry_3d(mesh, k1, k2, k3) result(res)
+     function get_geometry_3d(mesh, i1, i2, i3) result(res)
        use sll_working_precision
        import sll_mesh_3d_base
        class(sll_mesh_3d_base), intent(in) :: mesh
-       sll_int32, intent(in)  :: k1
-       sll_int32, intent(in)  :: k2
-       sll_int32, intent(in)  :: k3
+       sll_int32, intent(in)  :: i1
+       sll_int32, intent(in)  :: i2
+       sll_int32, intent(in)  :: i3
        sll_real64 :: res
      end function get_geometry_3d
   end interface
