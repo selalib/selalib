@@ -196,16 +196,6 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED)
                   unit_test_poisson_polar_parallel_solver.F90 )
    TARGET_LINK_LIBRARIES(test_poisson_polar_parallel_solver sll_poisson_parallel)
 
-   MESSAGE(STATUS "PASTIX_ENABLED:${PASTIX_ENABLED}")
-   IF (PASTIX_ENABLED)
-      ADD_EXECUTABLE(test_poisson_1d_pastix 
-                     sll_poisson_1d_pastix.F90
-                     test_poisson_1d_pastix.F90 )
-
-      TARGET_LINK_LIBRARIES(test_poisson_1d_pastix sll_pastix)
-   ENDIF (PASTIX_ENABLED)
-
-
 ENDIF()
 
 

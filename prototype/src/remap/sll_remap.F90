@@ -15,24 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @file sll_remap.F90
-!> @namespace sll_remapper
-!> @brief  
-!> Remap provides capabilities for global data reconfigurations in a parallel 
-!> machine. All that is needed is a specification of the initial and final
-!> configurations, the creation of a remap plan that uses these specifications
-!> as input and an application of the plan. For details about the interface,
-!> follow the link sll_remapper .
-!> @details Suppose that a given dataset is represented by a multi-dimensional
-!> array which is distributed on multiple processors. The specifics of this
-!> distribution (which portion of the global array is contained in which 
-!> processor) are contained in an object called a 'layout'. To reconfigure
-!> data, we need initial and final layouts, a remap 'plan' which uses the 
-!> given layouts for its initialization and finally an application of the 
-!> plan on the data described by the layouts. The data reconfiguration is an
-!> out-of-place operation, so the module client is responsible for the
-!> allocation of the appropriate arrays. Remap operates on multi-dimensional
-!> arrays of several of the basic Fortran types. 
 
 
 module sll_remapper
