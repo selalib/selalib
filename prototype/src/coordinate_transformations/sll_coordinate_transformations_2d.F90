@@ -49,7 +49,7 @@ module sll_module_coordinate_transformations_2d
 !!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
      !character(len=64) :: label
      !logical           :: written! = .false.
-     !type(sll_logical_mesh_2d), pointer :: mesh => null()
+     ! type(sll_logical_mesh_2d), pointer :: mesh => null()
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
