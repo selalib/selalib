@@ -41,16 +41,18 @@ program test_finite_elements_solver
   class(sll_scalar_field_2d_base), pointer              :: rho
   type(sll_scalar_field_2d_discrete_alt), pointer       :: phi
   type(sll_time_mark) :: t_reference
+  sll_real64 :: t1i, t1e
   sll_real64 :: t3i, t3e
   real(8), external :: func_zero
   real(8), external :: func_one
   real(8), external :: func_epsi
+  real(8), external :: source_term_perper
   real(8), external :: source_term_perdir
   real(8), external :: source_term_chgt_dirdir
   sll_real64, dimension(:,:), pointer :: values
-  sll_real64 :: acc3
-  sll_real64 :: normH1_3
-  sll_real64 :: normL2_3
+  sll_real64 :: acc1, acc3
+  sll_real64 :: normH1_1, normH1_3
+  sll_real64 :: normL2_1, normL2_3
   sll_real64, dimension(:,:), allocatable    :: calculated
   sll_real64, dimension(:,:), allocatable    :: difference
   sll_real64, dimension(:,:), allocatable    :: reference
@@ -58,6 +60,10 @@ program test_finite_elements_solver
   sll_int32  :: i, j
   sll_real64 :: h1,h2,eta1,eta2,node_val,ref
   sll_int32 :: npts1,npts2
+  real(8), external :: sol_exacte_perper
+  real(8), external :: sol_exacte_perper_der1
+  real(8), external :: sol_exacte_perper_der2
+
   real(8), external :: sol_exacte_perdir  
   real(8), external :: sol_exacte_perdir_der1
   real(8), external :: sol_exacte_perdir_der2
@@ -73,9 +79,9 @@ program test_finite_elements_solver
   real(8), external :: jac22_adimension_chgt
   real(8), external :: sol_exacte_chgt_adim
   real(8), external :: source_term_chgt_adim
+  real(8) :: integrale_solution
+  real(8) :: integrale_solution_exacte
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
- ! epsi  =  0.000_f64
- ! epsi1 =  0.000_f64 ! penalization method
   sll_real64, dimension(1) :: whatever  ! dummy params array
 
   !--------------------------------------------------------------------
@@ -241,22 +247,16 @@ program test_finite_elements_solver
 
 !   call sll_set_time_mark(t_reference)
 
-!   call initialize_general_elliptic_solver( &
+
+!   call initialize_finite_elements_solver( &
 !        es, &
+!        mesh_2d, &
 !        SPLINE_DEG1, &
-!        SPLINE_DEG2, &
-!        NUM_CELLS1, &
-!        NUM_CELLS2, &
-!        ES_GAUSS_LEGENDRE, &
 !        ES_GAUSS_LEGENDRE, &
 !        SLL_PERIODIC, &
 !        SLL_PERIODIC, &
 !        SLL_PERIODIC, &
-!        SLL_PERIODIC, &
-!        ETA1MIN, &
-!        ETA1MAX, &
-!        ETA2MIN, &
-!        ETA2MAX)
+!        SLL_PERIODIC)
  
 !   t1i = sll_time_elapsed_since(t_reference)
  
@@ -265,7 +265,7 @@ program test_finite_elements_solver
 !   call sll_set_time_mark(t_reference)
 
 !   ! compute matrix the field
-!   call factorize_mat_es(&
+!   call assembly_mat_solv(&
 !        es, &
 !        a11_field_mat, &
 !        a12_field_mat,&
@@ -332,7 +332,7 @@ program test_finite_elements_solver
   
  
 !   ! delete things...
-!   call delete(es)
+!   call sll_delete(es)
 !   call rho%delete()
 !   call c_field%delete()
 !   call phi%delete()
@@ -643,6 +643,49 @@ function func_epsi( eta1, eta2, params ) result(res)
   res = 0.0_8
 end function func_epsi
 
+!----------------------------------------------------------
+!  Solution for a identity change of coordinates 
+!   and periodic-periodic conditions
+!   the matrix A is equal to identity 
+!   the scalar c is equal to zero 
+!-------------------------------------------------------------
+
+function source_term_perper( eta1, eta2) result(res)
+  use sll_constants
+  intrinsic :: cos
+
+  real(8), intent(in) :: eta1
+  real(8), intent(in) :: eta2
+  ! real(8), dimension(:), intent(in), optional :: params
+  real(8) :: res
+
+  res =  0.001*cos(2*sll_pi*eta1)
+  !!-2*(2.0*sll_pi)**2*cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)! 0.001*cos(2*sll_pi*eta1)!
+end function source_term_perper
+
+real(8) function sol_exacte_perper(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perper = -0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)!cos(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)!-0.001/((2*sll_pi)**2)*cos(2*sll_pi*eta1)
+end function sol_exacte_perper
+
+real(8) function sol_exacte_perper_der1(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perper_der1 = 0.001/(2*sll_pi)*sin(2*sll_pi*eta1) !-2.0*sll_pi*sin(2.0*sll_pi*eta1)*cos(2.0*sll_pi*eta2)
+end function sol_exacte_perper_der1
+real(8) function sol_exacte_perper_der2(eta1,eta2)
+  use sll_constants
+  real(8) :: eta1,eta2
+  
+  !real(8), dimension(:), intent(in), optional :: params
+  sol_exacte_perper_der2 = 0.0_f64!-2.0*sll_pi*cos(2.0*sll_pi*eta1)*sin(2.0*sll_pi*eta2)
+end function sol_exacte_perper_der2
+
 
 !----------------------------------------------------------
 !  Solution for a r theta change of coordinates 
@@ -686,8 +729,6 @@ real(8) function sol_exacte_rtheta(eta1,eta2,params) ! in the path
   
     
 end function sol_exacte_rtheta
-
-
 
 
 real(8) function source_term_perdir(eta1,eta2,params) ! in the path

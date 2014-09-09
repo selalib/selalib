@@ -285,6 +285,7 @@ contains ! =============================================================
        end do
     end do
 
+    print *, "Initiailized quadrature points"
     !  ---------------------------------------------- END QUADRATURE POINTS INIT
     ! --------------------------------------------------------------------------
 
@@ -362,6 +363,7 @@ contains ! =============================================================
          mesh%eta2_max, &
          solv%knots2_source )
 
+    print *, "Initiailized basis functions knots"
     ! ----------------------- END ALLOCATION AND INITIALIZATION OF SPLINES KNOTS
     ! --------------------------------------------------------------------------
 
@@ -383,7 +385,7 @@ contains ! =============================================================
     SLL_ALLOCATE(solv%values_basis_source_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_source_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_jacobian(solv%num_quad_pts), ierr)    
-    SLL_ALLOCATE(solv%tab_index_coeff(solv%num_quad_pts),ierr)
+    SLL_ALLOCATE(solv%tab_index_coeff(solv%num_cells),ierr)
     
     solv%values_basis_val_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
@@ -392,7 +394,7 @@ contains ! =============================================================
     solv%values_basis_source_der_val(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_basis_source_val_der(1:solv%num_splines_loc,1:solv%num_quad_pts) = 0.0_f64
     solv%values_jacobian(1:solv%num_quad_pts) = 0.0_f64
-    solv%tab_index_coeff(1:solv%num_quad_pts)  = -1
+    solv%tab_index_coeff(1:solv%num_cells)  = -1
    
     ! ------------------------------------------------ END ALLOCATION SPLINES TABLES
     ! ------------------------------------------------------------------------------
@@ -423,7 +425,11 @@ contains ! =============================================================
     solv%local_to_global_spline_indices_source_bis = 0
 
 
+    print *, "--- Initiailizing basis functions"
+
     call initialize_basis_functions(solv)
+
+    print *, "Initiailized basis functions"
 
     ! --------------------- END ALLOCATION AND INITIALIZATION OF BASIS FUNCTIONS
     ! --------------------------------------------------------------------------
@@ -646,11 +652,10 @@ contains ! =============================================================
 
              end do
           end do
-
-          solv%tab_index_coeff(global_index) = &
-               left_x_source + (left_y_source - 1) * &
-               (solv%spline_degree +solv%mesh%num_cells1 + 1)
        end do
+       solv%tab_index_coeff(num_ele) = &
+            left_x_source + (left_y_source - 1) * &
+            (solv%spline_degree +solv%mesh%num_cells1 + 1)
     end do
   end subroutine initialize_basis_functions
 
@@ -1302,7 +1307,7 @@ contains ! =============================================================
     cell_j = (cell_index-1)/solv%mesh%num_cells1 + 1
     cell_i = cell_index - (cell_j-1)*solv%mesh%num_cells1
 
-    left_xy = solv%tab_index_coeff((cell_index - 1) * solv%num_quad_pts_loc + 1)
+    left_xy = solv%tab_index_coeff(cell_index)
     left_y  = left_xy / (solv%spline_degree + solv%mesh%num_cells1 + 1) + 1
     left_x  = left_xy - &
          (left_y - 1) * (solv%spline_degree + solv%mesh%num_cells1 + 1)
