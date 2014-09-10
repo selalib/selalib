@@ -47,6 +47,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
     ${SLL_DIR}/constants/sll_constants.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid_conservative.F90
@@ -59,7 +60,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
-    ${SLL_DIR}/file_io/sll_file_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
     ${SLL_DIR}/file_io/sll_hdf5_io_serial.F90
@@ -185,6 +185,8 @@ IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+    ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
+    ${SLL_DIR}/multigrid/mgd2_periodic.F
   )
 ENDIF()
 
@@ -273,6 +275,9 @@ IF(SLL_BUILD_PACKAGE)
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+   COMMAND ${CMAKE_COMMAND} -E copy_directory 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/examples 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples

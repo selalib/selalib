@@ -15,16 +15,6 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @namespace sll_utilities
-!> @author Selalib team
-!> @brief 
-!> Library with some useful numerical utlities
-!>
-!> - Add  :
-!> \code
-!> #include "sll_utilities.h"
-!> \endcode
-
 module sll_utilities
 #include "sll_working_precision.h"
   implicit none
