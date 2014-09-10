@@ -18,7 +18,7 @@ program test_hex_poisson
   sll_int32                               :: ierr, l1,l2, index_tab, global
   sll_real64                              :: x, y, erreur = 0._f64
 
-  num_cells = 20
+  num_cells = 40
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
 
@@ -68,7 +68,7 @@ program test_hex_poisson
 
   ! Error between the computed value and the expected value 
   do i=1, n_points  
-     erreur = erreur + abs( sol(i) - phi_end(i))**2
+    if (abs(sol(i))>1e-9) erreur = erreur + abs( sol(i) - phi_end(i))**2
   enddo
 
   print*, "erreur", sqrt(erreur/real(num_cells,f64)**2)
