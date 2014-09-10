@@ -85,6 +85,7 @@ contains
     sll_int32, dimension(:), allocatable  :: rand_seed
     sll_int32   :: rand_seed_size
     sll_int32  :: thread_id
+    type(sll_particle_group_2d), pointer  :: pa_gr
 
     namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
                           PARTICLE_ARRAY_SIZE, &
@@ -138,14 +139,20 @@ contains
        rand_seed(j) = (-1)**j*(100 + 15*j)*(2*sim%my_rank + 1)
     enddo
 
-
+    pa_gr => sim%part_group
     call sll_initial_particles_4d( sim%thermal_speed_ions, & 
                                    ALPHA, KX, sim%m2d,     &
                                    sim%ions_number,        &
-                                   sim%part_group,         &
+                                   pa_gr, &!sim%part_group,         &
                                    rand_seed, sim%my_rank  ) 
     SLL_DEALLOCATE_ARRAY( rand_seed, ierr )
-
+    !$omp parallel
+    !$omp do
+    do j=1,sim%ions_number
+       sim%part_group%p_list(j) = pa_gr%p_list(j)
+    enddo
+    !$omp end do
+    !$omp end parallel
     call sll_sort_particles_2d( sim%sorter, sim%part_group )
 
     sim%n_threads =  1
@@ -175,7 +182,7 @@ contains
        print*, 'thread_id=', thread_id
        !$omp end parallel
        sim%E_accumulator => new_field_accumulator_2d( sim%m2d )
-       call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator(1)%q )
+       call sll_first_charge_accumulation_2d( sim%part_group, sim%q_accumulator)!(1)%q )
     endif
     
   end subroutine init_4d_pic_cartesian
@@ -246,6 +253,7 @@ contains
     else
        print*, 'First order splines are used'  
        accumE => sim%E_accumulator%e_acc
+       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
        call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho ) 
     endif
 
@@ -302,12 +310,12 @@ contains
 
     open(65,file='logE_vals.dat')
 !!$    call sll_set_time_mark(t2)    
-! #ifdef _OPENMP
-!     t_init = omp_get_wtime()
-! #else
-!     call cpu_time(t_init)
-! #endif
-
+#ifdef _OPENMP
+    t_init = omp_get_wtime()
+#else
+    call cpu_time(t_init)
+#endif
+    
 !  ----  TIME LOOP  ----
     do it = 0, sim%num_iterations-1
        call normL2_field_Ex ( valeur, ncx, ncy, &
@@ -324,7 +332,7 @@ contains
 
        if (mod(it+1,10)==0) then 
            if (sim%my_rank == 0) print*, 'iter=', it+1
-          call sll_sort_particles_2d( sim%sorter, sim%part_group )
+           call sll_sort_particles_2d( sim%sorter, sim%part_group )
        endif
 
        if (sim%use_cubic_splines) then 
@@ -404,7 +412,6 @@ contains
 
 !    print*, 'FINISHED FIRST CYCLE OF PARTICLE PUSH'
          
-       ! ---- END PUSH PARTICLES ----
 
 !!$       ttime = sll_time_elapsed_since(t3)
 !!$       diag_AccMem(it,:) = (/ (it+1)*dt, (32*sim%ions_number*2 + gi*2*8 + &
@@ -429,8 +436,7 @@ contains
        p_guard => sim%part_group%p_guard(thread_id+1)%g_list
        p => sim%part_group%p_list
 
-       print*, sim%part_group%num_postprocess_particles(thread_id+1), 'thread_id=',thread_id
-!!!       !$omp do
+!       print*, sim%part_group%num_postprocess_particles(thread_id+1), 'thread_id=',thread_id
        do i=1, sim%part_group%num_postprocess_particles(thread_id+1)
           GET_PARTICLE_POSITION(p_guard(i)%p,sim%m2d,x,y)
           x = x + dt * p_guard(i)%p%vx
@@ -443,10 +449,10 @@ contains
              SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p_guard(i)%p,tmp3,tmp4)
           endif
        end do
-!!!       !$omp end do 
        !$omp end parallel
 !       ! reset any counters
        gi = 0
+       ! ---- END PUSH PARTICLES ----
 
 !       call sll_set_time_mark(t8)
 !       call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
@@ -456,6 +462,7 @@ contains
        if (sim%use_cubic_splines) then
           call sll_convert_charge_to_rho_2d_per_per_CS( sim%q_accumulator_CS, sim%rho )
        else
+          call sum_accumulators( sim%q_accumulator, n_threads, ncx*ncy )
           call sll_convert_charge_to_rho_2d_per_per( sim%q_accumulator(1)%q, sim%rho )
        endif
        do j = 1, ncy+1
