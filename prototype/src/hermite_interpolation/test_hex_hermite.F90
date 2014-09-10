@@ -15,7 +15,7 @@ program test_hex_hermite
   sll_int32    :: i
   sll_int32    :: num_method = 9
   character(len = 5) ::name_test = "dioco"!"gauss"!
-  sll_int32    :: nloops,ierr, EXTRA_TABLES = 0
+  sll_int32    :: nloops,ierr, EXTRA_TABLES = 0 ! put 1 for num_method = 15
   ! initial distribution
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
@@ -74,7 +74,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 80,80,20 ! -> loop on the size of the mesh 
+  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
@@ -224,7 +224,7 @@ program test_hex_hermite
 
      ! Advection initialization
      which_advec = 1  ! 0 : linear advection ; 1 : circular advection
-     advec = 0.025_f64!5._f64
+     advec = 0.025_f64
      tmax  = 3._f64
      dt    = 0.1_f64*20._f64 / real(num_cells,f64)  
      t     = 0._f64
@@ -346,6 +346,8 @@ program test_hex_hermite
                  if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
               elseif ( name_test == "dioco" ) then 
 
+                 !todo
+
               endif
 
            enddo
@@ -421,6 +423,8 @@ program test_hex_hermite
                  if ( edge_values_tn1(i) < f_min ) f_min = edge_values_tn1(i)
 
               elseif ( name_test == "dioco" ) then 
+
+                 !todo
 
               endif
 
@@ -554,7 +558,7 @@ program test_hex_hermite
         call int2string(nloops,filenum)
         filename2 = "ana_dist"//trim(filenum)
         filename  = "num_dist"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh, f_tn, trim(filename))
+        call write_field_hex_mesh_xmf(mesh, f_tn1, trim(filename))
         call write_field_hex_mesh_xmf(mesh, f_sol, trim(filename2))
 
         f_tn = f_tn1

@@ -11,7 +11,7 @@ program test_hex_poisson
 
   implicit none
 
-  type(sll_hex_mesh_2d), pointer              :: mesh
+  type(sll_hex_mesh_2d), pointer          :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
   sll_int32                               :: num_cells, n_points, i, k1, k2 
