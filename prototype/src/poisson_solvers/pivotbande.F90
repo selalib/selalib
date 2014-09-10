@@ -65,7 +65,7 @@ contains
 
     do j=1,n
        do i=j,n
-          if (a(i,j) > 1.e-16) then
+          if (abs(a(i,j)) > 1e-16) then
              ll1 = i - j
              ll2 = i - j
           endif
