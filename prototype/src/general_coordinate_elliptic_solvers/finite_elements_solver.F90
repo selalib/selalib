@@ -245,13 +245,15 @@ contains ! =============================================================
        if (present(user_qpts_weights )) then
           temp_pts_wgh(:,:) = user_qpts_weights
        else
-          print *, "Error in initialize_finite_elements_solver : ", &
+          print *, "ERROR in initialize_finite_elements_solver() : ", &
                " Quadrature type indicates that they will be user defined ", &
                " but they were not sent in input of function."
+          STOP
        end if
     case DEFAULT
-       print *, "new_finite_elements_solver():", & 
-            " have not type of gauss points in the first direction"
+       print *, "ERROR in initialize_finite_elements_solver():", & 
+            "Quadrature type of points unknown "
+       STOP
     end select
     
     delta1 = mesh%delta_eta1
@@ -293,28 +295,7 @@ contains ! =============================================================
     ! --------------------------------------------------------------------------
     ! BEGIN ALLOCATION AND INITIALIZATION OF SPLINES KNOTS ---------------------
 
-    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
-         (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-       solv%num_splines_tot = solv%num_cells
-       knots1_size = 2 * spline_degree + 2
-       knots2_size = 2 * spline_degree + 2
-       vec_sz      = solv%num_cells
-       sll_perper  = 1 
-    else if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and.&
-         (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
-       solv%num_splines_tot = mesh%num_cells1 * &
-            (mesh%num_cells2 + spline_degree - 2)
-       knots1_size = 2*spline_degree + 2
-       knots2_size = 2*spline_degree + mesh%num_cells2+ 1
-       vec_sz      = mesh%num_cells1 * (mesh%num_cells2 + spline_degree)
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
-         (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
-       solv%num_splines_tot = (mesh%num_cells1 + spline_degree - 2) * &
-            mesh%num_cells2 
-       knots1_size = 2*spline_degree + mesh%num_cells1+1
-       knots2_size = 2*spline_degree + 2
-       vec_sz      = (mesh%num_cells1 + spline_degree) * mesh%num_cells2
-    else if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
+    if( (bc_left == SLL_DIRICHLET) .and. (bc_right == SLL_DIRICHLET) .and.&
          (bc_bottom == SLL_DIRICHLET) .and. (bc_top == SLL_DIRICHLET) ) then
        solv%num_splines_tot = (mesh%num_cells1 + spline_degree - 2) * &
             (mesh%num_cells2 + spline_degree - 2)
@@ -322,6 +303,10 @@ contains ! =============================================================
        knots2_size = 2*spline_degree + mesh%num_cells2 + 1
        vec_sz      = (mesh%num_cells1 + spline_degree) * &
             (mesh%num_cells2 + spline_degree)
+    else
+       print *, "ERROR in initialize_finite_elements_solver():", & 
+            "Boundary conditions not yet implemented"
+       STOP
     end if
 
     SLL_ALLOCATE(solv%knots1(knots1_size),ierr)
@@ -369,15 +354,15 @@ contains ! =============================================================
 
 
     ! ------------------------------------------------------------------------------
-    ! BEGIN Allocation of basis splines related tables -----------------------------
-    ! values_splines : table containning all values --------------------------------
-    ! of basis splines in each direction in each quadrature point ------------------
+    ! BEGIN Allocation of basis functions value tables -----------------------------
 
     ! Number of local splines :
     solv%num_splines_loc = (spline_degree+1)*(spline_degree+1)
    
-    ! The third dimension contains the combination of the product between
-    ! the derivatives of the basis functions
+    ! These tables contain the values of all the non-zero basis functions at 
+    ! all the quadrature points of the domain.
+    ! The val & der are here as we also need the derivatives on each direction
+    ! Dimensions = (num_splines_loc, num_quad_pts) = (non-zero-basis-funcions, total-quadrature-points)
     SLL_ALLOCATE(solv%values_basis_val_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_val_der(solv%num_splines_loc, solv%num_quad_pts), ierr)
     SLL_ALLOCATE(solv%values_basis_der_val(solv%num_splines_loc, solv%num_quad_pts), ierr)
@@ -454,6 +439,11 @@ contains ! =============================================================
     solv%stiff(:)   = 0.0_f64
     solv%intjac     = 0.0_f64
     
+
+    ! --------------------------------------------------------------------------
+    ! ---------------------------- BEGIN COMPUTING OF CONNECTIVITY BETWEEN KNOTS
+    ! ------------------------------------ AND SPARSE MATRIX CREATION AND SIZING
+    
     call initconnectivity( &
          mesh%num_cells1, &
          mesh%num_cells2, &
@@ -475,6 +465,10 @@ contains ! =============================================================
          solv%num_splines_loc, &
          solv%local_to_global_spline_indices, &
          solv%num_splines_loc)
+
+    ! ------------------------------ END COMPUTING OF CONNECTIVITY BETWEEN KNOTS
+    ! ------------------------------------ AND SPARSE MATRIX CREATION AND SIZING
+    ! --------------------------------------------------------------------------
     
     SLL_DEALLOCATE(temp_pts_wgh,ierr)
 
@@ -653,8 +647,9 @@ contains ! =============================================================
              end do
           end do
        end do
-       solv%tab_index_coeff(num_ele) = &
-            left_x_source + (left_y_source - 1) * &
+       
+       ! We save the index of the first non-zero spline for each cell : 
+       solv%tab_index_coeff(num_ele) = left_x_source + (left_y_source - 1) * &
             (solv%spline_degree +solv%mesh%num_cells1 + 1)
     end do
   end subroutine initialize_basis_functions
@@ -708,6 +703,7 @@ contains ! =============================================================
     bc_top    = solv%bc_top
 
     num_splines_loc = solv%num_splines_loc
+
     if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
        sll_perper = 0
@@ -851,7 +847,6 @@ contains ! =============================================================
     num_splines_loc = solv%num_splines_loc
     SLL_ALLOCATE(M_source_loc(num_splines_loc),ierr)
     
-
     SLL_ALLOCATE(source_at_quad(solv%num_quad_pts),ierr)
     source_at_quad(:) = 0.0_f64
     SLL_ALLOCATE(source_coeff_1d((solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1)),ierr) !num_pts_tot dans hex_mesh TODO @LM
@@ -860,9 +855,8 @@ contains ! =============================================================
     solv%source_vec(:) = 0.0_f64
     source_coeff_1d(:) = 0.0_f64
    
-  
     !call sll_set_time_mark(t0)
-    !ES Compute source at all quad points
+    
     int_source = 0.0_f64
     int_jac = 0.0_f64
     
