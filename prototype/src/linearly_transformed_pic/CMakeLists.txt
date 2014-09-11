@@ -5,7 +5,7 @@ ADD_LIBRARY(sll_lin_trans_pic_2d STATIC sll_lin_trans_pic_2d.F90
                                         )
 
 ADD_DEPENDENCIES(sll_lin_trans_pic_2d   sll_memory                                      
-                                        sll_assertion 
+                                        sll_assert 
                                         sll_working_precision
                                         )
 
