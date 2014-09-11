@@ -9,30 +9,18 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
-!> @namespace sll_precision 
+!> @namespace sll_sparse_matrix_manager 
 !> @brief 
-!> Description of precision library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!>  avoid to have a hard dependecy on any Linear library
+!> @author Ahmed Ratnani
 !> @details
-!> Long description of  precision, you can add some references or math equations.
+!> See http://www.ratnani.org/jorek_doc/spm.html
 !>
 !> <b> Headers file available </b>
-!>  - sll_precision.h
 !>
 !> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_precision
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_precision.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_precision </code>
 !>
 !> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
 !>

@@ -4,7 +4,7 @@ SET(SLL_MACROS
     ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
     ${SLL_DIR}/memory/sll_memory.h
-    ${SLL_DIR}/precision/sll_working_precision.h
+    ${SLL_DIR}/working_precision/sll_working_precision.h
     ${SLL_DIR}/assert/sll_assert.h
     ${SLL_DIR}/constants/sll_constants.h
     ${SLL_DIR}/utilities/sll_utilities.h
@@ -34,7 +34,7 @@ FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 SET(SLL_SOURCE_FILES
     ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
-    ${SLL_DIR}/precision/sll_working_precision.F90
+    ${SLL_DIR}/working_precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
     ${SLL_DIR}/advection/sll_advection_1d_periodic.F90
     ${SLL_DIR}/advection/sll_advection_1d_non_uniform_cubic_splines.F90
@@ -113,21 +113,21 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
-#    ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90
-    ${SLL_DIR}/sparse_matrix_interface/gauss_seidel.F90
-    ${SLL_DIR}/sparse_matrix_interface/getdia.F90
-    ${SLL_DIR}/sparse_matrix_interface/getl.F90
-    ${SLL_DIR}/sparse_matrix_interface/getu.F90
-    ${SLL_DIR}/sparse_matrix_interface/lsol.F90
-    ${SLL_DIR}/sparse_matrix_interface/remove_zeros.F90
-    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module.F90
-#    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module_basic.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_basic.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_def.F90
-#    ${SLL_DIR}/sparse_matrix_interface/spm_mkl.F90
-#    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
-#    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
+#    ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90
+    ${SLL_DIR}/sparse_matrix_manager/gauss_seidel.F90
+    ${SLL_DIR}/sparse_matrix_manager/getdia.F90
+    ${SLL_DIR}/sparse_matrix_manager/getl.F90
+    ${SLL_DIR}/sparse_matrix_manager/getu.F90
+    ${SLL_DIR}/sparse_matrix_manager/lsol.F90
+    ${SLL_DIR}/sparse_matrix_manager/remove_zeros.F90
+    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
+#    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module_basic.F90
+    ${SLL_DIR}/sparse_matrix_manager/spm_basic.F90
+    ${SLL_DIR}/sparse_matrix_manager/spm_def.F90
+#    ${SLL_DIR}/sparse_matrix_manager/spm_mkl.F90
+#    ${SLL_DIR}/sparse_matrix_manager/spm_murge.F90
+#    ${SLL_DIR}/sparse_matrix_manager/spm_template.F90
+    ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
@@ -144,7 +144,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
     ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
-    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_mp_module.F90
+    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
@@ -202,12 +202,12 @@ ENDIF(MUDPACK_ENABLED)
 
 IF(SUITESPARSE_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-        ${SLL_DIR}/sparse_matrix_interface/spm_umfpack.F90
-	${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_umfpack_module.F90
+        ${SLL_DIR}/sparse_matrix_manager/spm_umfpack.F90
+	${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_umfpack_module.F90
   )
 ELSE()
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-      ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90)
+      ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90)
 
 ENDIF(SUITESPARSE_ENABLED)
 
