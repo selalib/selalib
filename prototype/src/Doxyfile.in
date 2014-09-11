@@ -731,7 +731,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/petsc_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
-@CMAKE_CURRENT_SOURCE_DIR@/precision \
+@CMAKE_CURRENT_SOURCE_DIR@/working_precision \
 @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
 @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/reduction \
@@ -764,7 +764,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
 @CMAKE_CURRENT_SOURCE_DIR@/remap \
-@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_interface \
+@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
 @CMAKE_CURRENT_SOURCE_DIR@/utilities
 
 

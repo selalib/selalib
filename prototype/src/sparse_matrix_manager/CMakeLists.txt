@@ -44,7 +44,7 @@ ENDIF()
 
 TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision 
                                          sll_memory
-                                         sll_assertion)
+                                         sll_assert)
 
 IF(PASTIX_FOUND)
 

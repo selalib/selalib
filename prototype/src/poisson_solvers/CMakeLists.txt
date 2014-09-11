@@ -54,7 +54,7 @@ IF(FFTW_ENABLED AND FFTW_FOUND)
    SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} ${FFTW_LIBRARIES} )
 ENDIF()
 
-SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} sll_memory sll_assertion dfftpack )
+SET(POISSON_DEPS_LIBRARIES ${POISSON_DEPS_LIBRARIES} sll_memory sll_assert dfftpack )
 
 TARGET_LINK_LIBRARIES(sll_poisson_solvers ${POISSON_DEPS_LIBRARIES})
 
@@ -94,7 +94,7 @@ SET(POISSON_LIBS sll_fft
                  sll_file_io
                  sll_utilities
                  sll_timer
-		     sll_assertion
+		     sll_assert
                  dfftpack)
 
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
@@ -129,7 +129,7 @@ TARGET_LINK_LIBRARIES(test_poisson_2d_fem sll_memory ${LAPACK_LIBRARIES})
 IF(FISHPACK_ENABLED)
 
    ADD_EXECUTABLE(test_fishpack test_fishpack.F90 sll_fishpack.F90)
-   TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assertion fishpack)
+   TARGET_LINK_LIBRARIES( test_fishpack sll_memory sll_assert fishpack)
 
 ENDIF()
 
