@@ -13,24 +13,32 @@ IF(MUDPACK_ENABLED)
                                     mud24cr.f mud2cr.f 
                                     muh24cr.f muh2cr.f )
 
-   MACRO(MUDPACK_TEST MUDPACK_TEST_NAME MUDPACK_TEST_COMMAND)
-     ADD_EXECUTABLE( ${MUDPACK_TEST_COMMAND} "${MUDPACK_TEST_COMMAND}.f")
-     TARGET_LINK_LIBRARIES(${MUDPACK_TEST_COMMAND} mudpack)
-     ADD_TEST(NAME ${MUDPACK_TEST_NAME} 
-           COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${MUDPACK_TEST_COMMAND} )
-     SET(${MUDPACK_TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ENDMACRO(MUDPACK_TEST)
+   IF(BUILD_TESTING)
 
-   MUDPACK_TEST(test_mud2    tmud2)
-   MUDPACK_TEST(test_mud24   tmud24)
-   MUDPACK_TEST(test_mud2sp  tmud2sp)
-   MUDPACK_TEST(test_mud24sp tmud24sp)
-   MUDPACK_TEST(test_mud2cr  tmud2cr)
-   MUDPACK_TEST(test_mud24cr tmud24cr)
-   MUDPACK_TEST(test_muh2    tmuh2)
-   MUDPACK_TEST(test_muh24   tmuh24)
-   MUDPACK_TEST(test_muh24cr tmuh24cr)
-   MUDPACK_TEST(test_muh2cr  tmuh2cr)
+      MACRO(MUDPACK_TEST MUDPACK_TEST_NAME MUDPACK_TEST_COMMAND)
+        ADD_EXECUTABLE( ${MUDPACK_TEST_COMMAND} "${MUDPACK_TEST_COMMAND}.f")
+        TARGET_LINK_LIBRARIES(${MUDPACK_TEST_COMMAND} mudpack)
+        ADD_TEST(NAME ${MUDPACK_TEST_NAME} 
+              COMMAND ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${MUDPACK_TEST_COMMAND} )
+        SET(${MUDPACK_TEST_NAME} PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
+      ENDMACRO(MUDPACK_TEST)
+   
+      MUDPACK_TEST(test_mud2    tmud2)
+      MUDPACK_TEST(test_mud24   tmud24)
+      MUDPACK_TEST(test_mud2sp  tmud2sp)
+      MUDPACK_TEST(test_mud24sp tmud24sp)
+      MUDPACK_TEST(test_mud2cr  tmud2cr)
+      MUDPACK_TEST(test_mud24cr tmud24cr)
+      MUDPACK_TEST(test_muh2    tmuh2)
+      MUDPACK_TEST(test_muh24   tmuh24)
+      MUDPACK_TEST(test_muh24cr tmuh24cr)
+      MUDPACK_TEST(test_muh2cr  tmuh2cr)
+
+   ELSE(BUILD_TESTING)
+
+      INSTALL(TARGETS mudpack ARCHIVE DESTINATION lib)
+
+   ENDIF(BUILD_TESTING)
    
    #ADD_EXECUTABLE( tmud2sa     tmud2sa.f)
    #ADD_EXECUTABLE( tmud3       tmud3.f)

@@ -5,7 +5,11 @@ SET(USE_MKL OFF CACHE BOOL "Using Intel Math Kernel Library")
 
 
 IF(Fortran_COMPILER_NAME MATCHES "ifort")
-   SET(USE_MKL ON)
+   IF(DEFINED ENV{MKLROOT})
+      SET(USE_MKL ON)
+   ELSE()
+      MESSAGE(STATUS "Environment variable is not set, please load mkl vars")
+   ENDIF()
 ENDIF()
 
 IF(USE_MKL)
