@@ -29,10 +29,16 @@ module sll_accumulators
      sll_real64 :: q_nw
      sll_real64 :: q_ne
   end type charge_accumulator_cell_2d
+
   type sll_charge_accumulator_2d
      type(sll_logical_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d), dimension(:), pointer :: q_acc
   end type sll_charge_accumulator_2d
+
+  type sll_charge_accumulator_2d_ptr
+     type(sll_charge_accumulator_2d), pointer :: q
+  end type sll_charge_accumulator_2d_ptr
+
 
   type charge_accumulator_cell_2d_CS
      sll_real64 :: q_im1j
@@ -55,6 +61,7 @@ module sll_accumulators
      sll_real64 :: q_ip1jp2
      sll_real64 :: q_ip2jp2
   end type charge_accumulator_cell_2d_CS
+
   type sll_charge_accumulator_2d_CS
      type(sll_logical_mesh_2d), pointer :: mesh
      type(charge_accumulator_cell_2d_CS), dimension(:), pointer :: q_acc
@@ -108,6 +115,10 @@ module sll_accumulators
      module procedure delete_charge_accumulator_2d
   end interface sll_delete
 
+  interface operator(+)
+     module procedure q_acc_add
+  end interface operator(+)
+
 contains
   
   function new_charge_accumulator_2d( mesh_2d ) result(acc)
@@ -134,7 +145,16 @@ contains
 
   end function new_charge_accumulator_2d
   
+  function q_acc_add( q1, q2 ) result(res)
+    type(charge_accumulator_cell_2d) :: res
+    type(charge_accumulator_cell_2d), intent(in) :: q1
+    type(charge_accumulator_cell_2d), intent(in) :: q2
 
+    res%q_sw = q1%q_sw + q2%q_sw
+    res%q_se = q1%q_se + q2%q_se
+    res%q_nw = q1%q_nw + q2%q_nw
+    res%q_ne = q1%q_ne + q2%q_ne
+  end function q_acc_add
 
   subroutine reset_charge_accumulator_to_zero( acc )
     type(sll_charge_accumulator_2d), pointer :: acc
@@ -326,6 +346,19 @@ contains
        E_acc%e_acc(i)%Ex_ip2jp2 = 0.0_f64 ;  E_acc%e_acc(i)%Ey_ip2jp2 = 0.0_f64
     end do
   end subroutine reset_field_accumulator_CS_to_zero
+
+  subroutine sum_accumulators( tab, n_threads, n_cells )
+    sll_int32, intent(in)  :: n_threads, n_cells
+    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer, intent(inout) :: tab
+    sll_int32  :: i, j   
+    
+    do i = 1, n_cells  
+       do j = 2, n_threads
+          tab(1)%q%q_acc(i) = tab(1)%q%q_acc(i) + tab(j)%q%q_acc(i)
+       enddo
+    enddo
+    
+  end subroutine sum_accumulators
 
    ! The above are the only routines that should live here. Something like taking
    ! a list of particules and accumulating the charge, will change the charge but

@@ -18,7 +18,8 @@ Contents:
 
    Installation <install/index>
    Prototype <prototype/getting_started>
-   Building Tools <prototype/guide_tools>
+   Building Tool <prototype/cmake_guide>
+   Documentation Tool <prototype/doxygen_guide>
    QuickStart Guide <install/quickstart>
    Ubuntu dependencies <install/ubuntu>
    Fedora dependencies <install/fedora>

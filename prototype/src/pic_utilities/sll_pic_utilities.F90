@@ -22,24 +22,44 @@ module sll_pic_utilities
 #include "sll_accumulators.h" 
   use sll_particle_group_2d_module
 
+#ifdef _OPENMP
+   use omp_lib
+   logical :: openmp_st
+#endif
+!!    !$ openmp_st = OMP_IN_PARALLEL()
+!!    print*, 'USE of omp', openmp_st
+!!    !$omp end parallel
+
 contains
 
-  subroutine sll_first_charge_accumulation_2d( p_group, q_accum )
-    type(sll_particle_group_2d), pointer         :: p_group
-    type(sll_charge_accumulator_2d), pointer     :: q_accum
+  subroutine sll_first_charge_accumulation_2d( p_group, q_accumulator )
+    type(sll_particle_group_2d), pointer                       :: p_group
+    type(sll_charge_accumulator_2d_ptr), dimension(:), pointer :: q_accumulator
     type(sll_particle_2d), dimension(:), pointer :: p
+    type(sll_charge_accumulator_2d), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
     sll_real64 :: tmp1
     sll_real64 :: tmp2
-
-    SLL_ASSERT( associated(p_group) .and. associated(q_accum))
+    sll_int32  :: thread_id
+    
+    SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
+    thread_id = 0
+#ifdef _OPENMP
+    thread_id = OMP_GET_THREAD_NUM()
+#endif
+    !$omp parallel default(SHARED) PRIVATE(thread_id, tmp1, tmp2, q_accum)
+    q_accum  => q_accumulator(thread_id+1)%q
+    !$omp do
     do i=1,num_particles
        SLL_ACCUMULATE_PARTICLE_CHARGE(q_accum,p(i),tmp1,tmp2)
     end do
+    !$omp end do
+    !$omp end parallel
+
   end subroutine sll_first_charge_accumulation_2d
 
   subroutine sll_first_charge_accumulation_2d_CS( p_group, q_accum )
@@ -54,9 +74,12 @@ contains
     num_particles =  p_group%number_particles
     p             => p_group%p_list
 
+    !$omp parallel do PRIVATE (tmp,temp)
     do i=1,num_particles
        SLL_ACCUMULATE_PARTICLE_CHARGE_CS(q_accum,p(i),tmp,temp)
     end do
+    !$omp end parallel do
+    
   end subroutine sll_first_charge_accumulation_2d_CS
 
 
