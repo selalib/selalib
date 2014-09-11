@@ -47,8 +47,9 @@ program accumulate_tester
 
   all_charge => new_charge_accumulator_2d( m2d )
 
-  call sll_first_charge_accumulation_2d( part_group, all_charge )
-
+!  call sll_first_charge_accumulation_2d( part_group, all_charge )
+! I changed the type of all_charge in order to do multi-threading
+! 
   call sll_delete( part_group )
   call delete( m2d )
   call sll_delete( all_charge )
