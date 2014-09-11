@@ -1,4 +1,3 @@
-
 =====
 CMake
 =====
@@ -39,7 +38,7 @@ Add program
 ^^^^^^^^^^^
 
 A program is an executable. In SeLaLib the executable are in build/bin/.
-To add executable to the cmake tree add this lines in the current CMakeList ::
+To add executable to the cmake tree add this lines in the current CMakeList::
 
  add_executable(<EXECUTABLE_NAME> <FILE_NAME.F90>)
  target_link_libraries(test_fft <LIBRARY_NAME>)

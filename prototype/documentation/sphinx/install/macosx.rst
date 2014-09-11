@@ -5,9 +5,9 @@ Install xcode and command-line tools (OSX Mavericks) ::
 
 	$ xcode-select --install﻿
 
-==============================
+==================================
 Install dependencies with Homebrew
-==============================
+==================================
 
 .. note::
  Homebrew is the best way to install selalib dependencies on a mac.
@@ -28,9 +28,9 @@ Install Homebrew (`not compatible with macports <https://guide.macports.org/chun
 		-DHDF5_PARALLEL_ENABLED=ON
 	$ make
 
-==============================
+==================================
 Install dependencies with macports
-==============================
+==================================
 
 .. warning::
  Don't forget to set aliases for openmpi and python with 'port select'
