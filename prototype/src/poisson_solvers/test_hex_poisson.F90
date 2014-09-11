@@ -18,7 +18,7 @@ program test_hex_poisson
   sll_int32                               :: ierr, l1,l2, index_tab, global
   sll_real64                              :: x, y, erreur = 0._f64
 
-  num_cells = 40
+  num_cells = 10
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
 
@@ -44,8 +44,10 @@ program test_hex_poisson
 
      rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
 
-     sol(i) = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
-          ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
+     !sol(i) = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
+     !     ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
+     sol(i) = x**2*y**4 - 2._f64/3._f64*x**4*y**2 - 0.75_f64 - 1.5_f64*x**2*&
+          y**2 + x**6/9._f64 - 0.75_f64*(x**4 + y**4) + 1.5_f64*(x**2 + y**2)
   enddo
 
   call hex_matrix_poisson( matrix_poisson, mesh )
@@ -68,7 +70,8 @@ program test_hex_poisson
 
   ! Error between the computed value and the expected value 
   do i=1, n_points  
-    if (abs(sol(i))>1e-9) erreur = erreur + abs( sol(i) - phi_end(i))**2
+    !if (abs(sol(i))>1e-9) erreur = erreur + abs( sol(i) - phi_end(i))**2
+    erreur = erreur + abs( sol(i) - phi_end(i))**2
   enddo
 
   print*, "erreur", sqrt(erreur/real(num_cells,f64)**2)
