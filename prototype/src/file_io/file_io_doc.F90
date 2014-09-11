@@ -18,7 +18,7 @@
 !> - sll_gnuplot
 !> - sll_binary_io
 !> - sll_xml_io
-!> - sll_hdf5_io
+!> - sll_hdf5_io_serial
 !> - sll_plotmtv
 !>
 !> <b> How to use it </b>
