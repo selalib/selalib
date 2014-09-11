@@ -65,7 +65,6 @@ ADD_CUSTOM_TARGET( clear
    COMMENT "Delete all .a, .mod, .o and folders /modules, /bin" VERBATIM)
 
 INCLUDE(FortranConfig)
-INCLUDE(CTest)
 INCLUDE(LapackConfig)
 INCLUDE(FFTConfig)
 INCLUDE(HDF5Config)
@@ -95,6 +94,7 @@ ADD_SUBDIRECTORY(mudpack)
 
 IF(NOT SLL_BUILD_PACKAGE)
 
+   INCLUDE(CTest)
    ENABLE_TESTING()
    
    ADD_SUBDIRECTORY(memory)
