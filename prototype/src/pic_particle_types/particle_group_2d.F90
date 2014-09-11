@@ -24,18 +24,25 @@ module sll_particle_group_2d_module
 
 !  use sll_particle_representations
   use sll_logical_meshes
+#ifdef _OPENMP
+  use omp_lib
+#endif
+
   implicit none
 
   type :: sll_particle_group_2d
      sll_int32  :: number_particles! peut etre a faire en SLL_PRIV
      sll_int32  :: active_particles! tout ça doit passer en 32
      sll_int32  :: guard_list_size! tout ça doit passer en 32
+     ! an array indexed by the thread number, of the number of particles
+     ! to post-process after the main loop
+     sll_int32, dimension(:), pointer :: num_postprocess_particles
      sll_real64 :: qoverm 
      type(sll_logical_mesh_2d), pointer                 :: mesh
      type(sll_particle_2d), dimension(:), pointer       :: p_list
-     type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
+     type(sll_particle_2d_guard_ptr), dimension(:), pointer :: p_guard
   end type sll_particle_group_2d
-
+  
   interface sll_delete
      module procedure delete_particle_2d_group
   end interface sll_delete
@@ -56,6 +63,9 @@ contains
     sll_real64, intent(in) :: qoverm
     type(sll_logical_mesh_2d), pointer :: mesh
     sll_int32 :: ierr
+    sll_int32 :: n_thread
+    sll_int32 :: thread_id
+    sll_int32 :: nn
 
     if( num_particles > particle_array_size ) then
        print *, 'new_particle_2d_group(): ERROR,  num_particles should not ', &
@@ -70,8 +80,30 @@ contains
     res%qoverm           = qoverm
 
     SLL_ALLOCATE( res%p_list(particle_array_size), ierr )
-    SLL_ALLOCATE( res%p_guard(guard_list_size), ierr )
 
+    n_thread  = 1
+    thread_id = 0
+
+    !$omp parallel default(SHARED) PRIVATE(thread_id)
+#ifdef _OPENMP
+    thread_id = OMP_GET_THREAD_NUM()
+    if (thread_id ==0) then
+       n_thread  = OMP_GET_NUM_THREADS()
+    endif
+#endif
+    !$omp end parallel
+
+    nn = guard_list_size/n_thread
+    SLL_ALLOCATE( res%p_guard(1:n_thread), ierr)
+    SLL_ALLOCATE( res%num_postprocess_particles(1:n_thread), ierr)
+
+    !$omp parallel default(SHARED) PRIVATE(thread_id)
+#ifdef _OPENMP
+    thread_id = OMP_GET_THREAD_NUM()
+#endif
+    SLL_ALLOCATE( res%p_guard(thread_id+1)%g_list(1:nn),ierr)
+    !$omp end parallel
+    
     if (.not.associated(mesh) ) then
        print*, 'error: passed mesh not associated'
     endif
@@ -82,11 +114,19 @@ contains
   subroutine delete_particle_2d_group(p_group)
     type(sll_particle_group_2d), pointer :: p_group
     sll_int32 :: ierr
+    sll_int32 :: thread_id
 
     if(.not. associated(p_group) ) then
        print *, 'delete_particle_group_2d(): ERROR, passed group was not ', &
             'associated.'
     end if
+
+    thread_id = 0
+#ifdef _OPENMP
+    thread_id = OMP_GET_THREAD_NUM()
+#endif
+    SLL_DEALLOCATE(p_group%num_postprocess_particles, ierr  )
+    SLL_DEALLOCATE(p_group%p_guard(thread_id+1)%g_list, ierr)
     SLL_DEALLOCATE(p_group%p_list, ierr)
     SLL_DEALLOCATE(p_group%p_guard, ierr)
     SLL_DEALLOCATE(p_group, ierr)

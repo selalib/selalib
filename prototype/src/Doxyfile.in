@@ -700,6 +700,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/characteristics \
 @CMAKE_CURRENT_SOURCE_DIR@/collective \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
 @CMAKE_CURRENT_SOURCE_DIR@/discontinuous_galerkin \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
@@ -738,9 +739,34 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse \
 @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/timer \
-@CMAKE_CURRENT_SOURCE_DIR@/utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
-@CMAKE_CURRENT_SOURCE_DIR@/wsmp 
+@CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
+@CMAKE_CURRENT_SOURCE_DIR@/wsmp  \
+@CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
+@CMAKE_CURRENT_SOURCE_DIR@/constants \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/splines \
+@CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/fcisl \
+@CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/file_io_parallel \
+@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
+@CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
+@CMAKE_CURRENT_SOURCE_DIR@/logical_meshes \
+@CMAKE_CURRENT_SOURCE_DIR@/logical_meshes_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_methods \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_particle_initializers \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
+@CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
+@CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
+@CMAKE_CURRENT_SOURCE_DIR@/remap \
+@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_interface \
+@CMAKE_CURRENT_SOURCE_DIR@/utilities
+
 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
@@ -1526,18 +1552,6 @@ GENERATE_XML           = NO
 # put in front of it. If left blank `xml' will be used as the default path.
 
 XML_OUTPUT             = xml
-
-# The XML_SCHEMA tag can be used to specify an XML schema,
-# which can be used by a validating XML parser to check the
-# syntax of the XML files.
-
-XML_SCHEMA             =
-
-# The XML_DTD tag can be used to specify an XML DTD,
-# which can be used by a validating XML parser to check the
-# syntax of the XML files.
-
-XML_DTD                =
 
 # If the XML_PROGRAMLISTING tag is set to YES Doxygen will
 # dump the program listings (including syntax highlighting
