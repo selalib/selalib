@@ -42,9 +42,11 @@ available in this directory. Add also some examples.
 
 To see your documentation, remove the line containing your directory 
 in file::
+
  prototype/src/Doxyfile.in (line 691). 
 
 Type 'make doc' in build directory.
 To check the results, open:: 
+
  selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
 
