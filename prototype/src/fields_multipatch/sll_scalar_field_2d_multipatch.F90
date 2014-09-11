@@ -326,7 +326,9 @@ contains   ! *****************************************************************
     sll_int32 :: ierr
 
     call field%delete()
+#ifndef __INTEL_COMPILER
     SLL_DEALLOCATE(field, ierr)
+#endif
   end subroutine delete_field_sfmp2d_ptr
 
 
