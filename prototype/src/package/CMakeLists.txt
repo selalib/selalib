@@ -32,7 +32,6 @@ SET(SLL_MACROS
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 
 SET(SLL_SOURCE_FILES
-    ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
     ${SLL_DIR}/working_precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
