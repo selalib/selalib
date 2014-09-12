@@ -533,7 +533,7 @@ contains
 
     k11 = mesh%hex_coord(1,i1) 
     k12 = mesh%hex_coord(2,i1) 
-    
+
     call get_triangle_index(k11,k12,mesh,x,center_index)
 
     ! get the first 9 degrees of freedom
@@ -559,6 +559,7 @@ contains
     freedom(8) = deriv(6,i3) ! derivative from S3 to S1 (-h3)
     
     test = .false.
+
 
     if ( x2 <= x1 ) then ! first case : triangle oriented left
 
@@ -630,7 +631,7 @@ contains
        ! Computing the basis for the cubic element of Hsieh-Clough-Tocher-complete
  
        call base_Hsieh_Clough_Tocher_complete&
-            (base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,step)
+            (base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
 
     else if (num_method == 15 ) then 
 
@@ -750,7 +751,6 @@ contains
     sll_real64,intent(in) :: x , y  ! cartesian coordinates of the point to be interpolated in a hexagonal mesh
     sll_int32,intent(out) :: num_sub_triangle
     sll_real64            :: slope
-
 
     slope =  abs(mesh%r1_x1/mesh%r1_x2)   ! sqrt(3._f64) -> default case
 
@@ -967,7 +967,7 @@ contains
     sll_real64                          :: step_sq, step     
 
     step    = mesh%delta
-    step_sq = step*abs(mesh%r1_x1)
+    step_sq = abs(mesh%r1_x1)!step*abs(mesh%r1_x1)*real(mesh%num_cells,f64)/mesh%radius!sqrt(3._f64)*0.5_f64
 
     if ( num_sub_triangle == 1 ) then 
        base(1) = xi(1) 
@@ -1013,11 +1013,11 @@ contains
   end subroutine base_from_local_base_xi_htc_c
 
 
-  subroutine base_Hsieh_Clough_Tocher_complete(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,step)
+  subroutine base_Hsieh_Clough_Tocher_complete(base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
     type(sll_hex_mesh_2d), pointer      :: mesh
     sll_real64,dimension(:),intent(out) :: base
     sll_real64,intent(in)               :: x1,x3,y1,y2,y3
-    sll_real64,intent(in)               :: x,y,l1,l2,l3,step
+    sll_real64,intent(in)               :: x,y,l1,l2,l3
     sll_real64,dimension(:),allocatable :: xi 
     sll_real64                          :: li, lj, lk
     sll_int32                           :: num_sub_triangle
@@ -1054,7 +1054,7 @@ contains
 
 
   !*******************************************************************************
-  !                    comptuting the normal derivative 
+  !                    computing the normal derivative 
   !*******************************************************************************
 
   subroutine get_normal_der(deriv,i1,i2,mesh,freedom)
@@ -1072,21 +1072,29 @@ contains
     sll_real64,dimension(2)                :: n1_l,n2_l,n3_l,n1_r,n2_r,n3_r
     sll_real64                             :: det, v1, v2, v3, v4   
 
+!*real(mesh%num_cells,f64)/mesh%radius
+    !det = mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1
 
-    det = mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1
+    ! v1 = (+mesh%r1_x2*mesh%r2_x2 + mesh%r1_x1*mesh%r2_x1)/det 
+    ! v2 = (-mesh%r1_x2*mesh%r1_x2 - mesh%r1_x1*mesh%r1_x1)/det 
+    ! v3 = (+mesh%r2_x2*mesh%r2_x2 + mesh%r2_x1*mesh%r2_x1)/det 
+    ! v4 = (-mesh%r2_x2*mesh%r1_x2 - mesh%r2_x1*mesh%r1_x1)/det
 
-    v1 = (+mesh%r1_x2*mesh%r2_x2 + mesh%r1_x1*mesh%r2_x1)/det 
-    v2 = (-mesh%r1_x2*mesh%r1_x2 - mesh%r1_x1*mesh%r1_x1)/det 
-    v3 = (+mesh%r2_x2*mesh%r2_x2 + mesh%r2_x1*mesh%r2_x1)/det 
-    v4 = (-mesh%r2_x2*mesh%r1_x2 - mesh%r2_x1*mesh%r1_x1)/det
+    ! n1_l = (/v1    , v2   /)
+    ! n2_l = (/v1+v3 , v2+v4/)
+    ! n3_l = (/v3    , v4   /)
 
-    n1_l = (/v1    , v2   /)
-    n2_l = (/v1+v3 , v2+v4/)
-    n3_l = (/v3    , v4   /)
+    ! n1_r = -n3_l
+    ! n2_r = -n2_l
+    ! n3_r = -n1_l
 
-    n1_r = -n3_l
-    n2_r = -n2_l
-    n3_r = -n1_l
+    n1_l = (/-1._f64/sqrt(3._f64) , -2._f64/sqrt(3._f64)/)
+    n2_l = (/-1._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
+    n3_l = (/+2._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
+
+    n1_r = (/-2._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
+    n2_r = (/+1._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
+    n3_r = (/+1._f64/sqrt(3._f64) , +2._f64/sqrt(3._f64)/)
 
     num_cells = mesh%num_cells   
 
@@ -1496,7 +1504,7 @@ contains
     sll_real64                          :: step, step_sq  
 
     step    = mesh%delta
-    step_sq = step*abs(mesh%r1_x1)
+    step_sq = abs(mesh%r1_x1)!step*abs(mesh%r1_x1)*real(mesh%num_cells,f64)/mesh%radius!sqrt(3._f64)*0.5_f64
 
     allocate(xi(1:15))
 
