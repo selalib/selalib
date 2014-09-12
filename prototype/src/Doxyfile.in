@@ -722,9 +722,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/package \
 @CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
 @CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
-@CMAKE_CURRENT_SOURCE_DIR@/pastix \
 @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
-@CMAKE_CURRENT_SOURCE_DIR@/petsc_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
 @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
 @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
@@ -735,7 +733,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
 @CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
 @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
-@CMAKE_CURRENT_SOURCE_DIR@/constants \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/splines \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
