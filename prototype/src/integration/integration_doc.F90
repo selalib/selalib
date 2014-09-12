@@ -10,17 +10,14 @@
 
 
 !!         
-!> There is a low-level mathematical utility that applies the 
-!> Gauss-Legendre method to compute numeric integrals.
-!> This module aims at providing a single interface to the process of 
-!> integrating a function on a given interval.
 
 !> @namespace sll_integration 
 !> @brief 
-!> Interface to the process of integrating a function.
+!> Integrate a function.
 !> @author Selalib team 
 !! @details 
-!! Functions for numerical integration :
+!> This module aims at providing a single interface to the process of 
+!> integrating a function on a given interval.
 !!   - Gauss-Legendre points and weights
 !!   - Gauss-Lobatto points and weights
 !!

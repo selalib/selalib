@@ -161,19 +161,19 @@ ENDIF()
 IF(${FFT_LIB} MATCHES "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90
+      ${SLL_DIR}/fft/fftpack/sll_fft.F90
 
       )
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90
-      ${SLL_DIR}/fft/fftw3.F90 )
+      ${SLL_DIR}/fft/fftw3/sll_fft.F90
+      ${SLL_DIR}/fft/fftw3/fftw3.F90 )
 
 ELSE()
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
+      ${SLL_DIR}/fft/sllfft/sll_fft.F90)
 
 ENDIF()
 
