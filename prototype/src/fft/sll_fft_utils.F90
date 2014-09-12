@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Module with intern function for fft
 module sll_fft_utils
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -39,10 +40,11 @@ contains
   ! In the example above the bit 0 is set to 1, so the flag FFT_NORMALIZE is 
   ! enabled.
 
-  ! Return NO if the flag is disabled in the integer or YES if enabled.
-  ! This function should be renamed: fft_flag_is_present or fft_is_flag_present
+  !> Return NO if the flag is disabled in the integer or YES if enabled.
+  !> This function should be renamed: fft_flag_is_present or fft_is_flag_present
   function fft_is_present_flag(intege,bit) result(bool)
-    sll_int32, intent(in)                   :: bit, intege
+    sll_int32, intent(in)                   :: bit     
+    sll_int32, intent(in)                   :: intege
     logical                                 :: bool
     sll_int32                               :: m
    
