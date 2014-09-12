@@ -9,30 +9,39 @@
 ! The following lines will be read by doxygen to generate documentation:
 
 
+!!         
+!> There is a low-level mathematical utility that applies the 
+!> Gauss-Legendre method to compute numeric integrals.
+!> This module aims at providing a single interface to the process of 
+!> integrating a function on a given interval.
+
 !> @namespace sll_integration 
 !> @brief 
-!> Description of integration library (72 characters)
+!> Interface to the process of integrating a function.
 !> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
-!> @details
-!> Long description of  integration, you can add some references or math equations.
-!>
+!! @details 
+!! Functions for numerical integration :
+!!   - Gauss-Legendre points and weights
+!!   - Gauss-Lobatto points and weights
+!!
+!!
 !> <b> Headers file available </b>
 !>  - sll_integration.h
 !>
 !> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_integration
+!>  - gauss_legendre_integration
+!>  - gauss_lobatto_integration
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_integration.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_integration </code>
+!> - Link with   <code>-lsll_integration</code>
+!> - Add <code> use gauss_legendre_integration </code>
+!> - Add <code> use gauss_lobatto_integration </code>
 !>
 !> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
 !> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
+!> gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
+!>  x = gauss_lobatto_points( 10, -1._f64, 1._f64)
+!>  w = gauss_lobatto_weights(10)
 !> \endcode
 !>
