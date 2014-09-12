@@ -1,8 +1,7 @@
-SET(FFT_SRC sll_fft_utils.F90) 
 
 IF(${FFT_LIB} STREQUAL "FFTPACK")
 
-  SET(FFT_SRC ${FFT_SRC} fftpack/sll_fft.F90)
+  SET(FFT_SRC fftpack/sll_fft.F90)
   SET(DEPENDENCIES dfftpack)
   ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTPACK_MOD)
 
@@ -10,7 +9,7 @@ ELSEIF(${FFT_LIB} STREQUAL "FFTW")
 
   IF(FFTW_FOUND AND FFTW_ENABLED)
      INCLUDE_DIRECTORIES(${FFTW_INCLUDE_DIRS})
-     SET(FFT_SRC ${FFT_SRC} fftw3/fftw3.F90 fftw3/sll_fft.F90)
+     SET(FFT_SRC fftw3/fftw3.F90 fftw3/sll_fft.F90)
      SET(DEPENDENCIES ${FFTW_LIBRARIES})
      ADD_DEFINITIONS(-D_DEFAULTFFTLIB=FFTW_MOD)
   ENDIF()
@@ -22,7 +21,7 @@ ELSE()
 
 ENDIF()
 
-ADD_LIBRARY(sll_fft STATIC ${FFT_SRC})
+ADD_LIBRARY(sll_fft STATIC sll_fft_utils.F90 ${FFT_SRC})
 
 TARGET_LINK_LIBRARIES(sll_fft ${DEPENDENCIES} sll_utilities sll_memory sll_assert)
 
