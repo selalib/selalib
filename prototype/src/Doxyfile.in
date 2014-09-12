@@ -702,12 +702,12 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
 @CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
-@CMAKE_CURRENT_SOURCE_DIR@/fft \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fields \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/integration \
 @CMAKE_CURRENT_SOURCE_DIR@/interpolators \
 @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
