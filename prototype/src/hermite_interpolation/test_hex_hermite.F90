@@ -13,9 +13,9 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
-  sll_int32    :: num_method = 9
-  character(len = 5) ::name_test = "dioco"!"gauss"!
-  sll_int32    :: nloops,ierr, EXTRA_TABLES = 0 ! put 1 for num_method = 15
+  sll_int32    :: num_method = 15
+  character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
+  sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
   sll_real64   :: gauss_x2
   sll_real64   :: gauss_x1
@@ -74,7 +74,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
+  do num_cells = 20,340,40 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
@@ -108,9 +108,9 @@ program test_hex_hermite
      !*********************************************************
      
      mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
-     print*,
+     print*,""
      print*,"num_cell : ",num_cells,"           num_pts : ", mesh%num_pts_tot
-     print*,
+     print*,""
 
      ! Distribution initialization
 
@@ -279,11 +279,11 @@ program test_hex_hermite
 
            
            !*********************************************************
-           ! computation of the value at the center of the triangles
+           !computation of the value at the center of the triangles
            !*********************************************************
            
-           norm2_error_center = 0._f64
-           norm2_sol_center = 0._f64
+          norm2_error_center = 0._f64
+          norm2_sol_center = 0._f64
            
            do i=1, n_triangle  ! computation of the value at the center of the triangles
 
@@ -291,64 +291,64 @@ program test_hex_hermite
               !  computation of the root of the characteristics
               !*********************************************************
 
-              x = mesh%center_cartesian_coord(1,i)
-              y = mesh%center_cartesian_coord(2,i)
+              ! x = mesh%center_cartesian_coord(1,i)
+              ! y = mesh%center_cartesian_coord(2,i)
 
-              xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-              yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
-              ! call slb_compute_characteristic_leapfrog( &
-              !  x,y,E_x,E_v,xx,yy )
+              ! xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+              ! yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+              ! ! call slb_compute_characteristic_leapfrog( &
+              ! !  x,y,E_x,E_v,xx,yy )
 
-              !             INTERPOLATION
-              inside = .true.
+              ! !             INTERPOLATION
+              ! inside = .true.
 
-              h1 =  xx/sqrt(3.0_f64) + yy
-              h2 = -xx/sqrt(3.0_f64) + yy 
+              ! h1 =  xx/sqrt(3.0_f64) + yy
+              ! h2 = -xx/sqrt(3.0_f64) + yy 
 
-              ! needs to be generalised and be integrated in a function
-              if ( h1 >  radius .or. h2 >  radius ) inside = .false.
-              if ( h1 < -radius .or. h2 < -radius ) inside = .false.
-              if ( xx  < -radius*sqrt(3._f64)*0.5_f64 .or. xx &
-                   > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
+              ! ! needs to be generalised and be integrated in a function
+              ! if ( h1 >  radius .or. h2 >  radius ) inside = .false.
+              ! if ( h1 < -radius .or. h2 < -radius ) inside = .false.
+              ! if ( xx  < -radius*sqrt(3._f64)*0.5_f64 .or. xx &
+              !      > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
-              if ( inside ) then
-                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-                      edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
-                 num_method)
-              else 
-                 center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
-              endif
+              ! if ( inside ) then
+              !    call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+              !         edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
+              !    num_method)
+              ! else 
+              !    center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
+              ! endif
 
-              if (which_advec .eq. 0) then ! linear advection
-                 xx = x - advec*dt*nloops
-                 yy = y - advec*dt*nloops
-              else                         ! Circular advection
-                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
-                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
-              end if
-
-
-              ! if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
-
-              norm2_sol_center = 0._f64
+              ! if (which_advec .eq. 0) then ! linear advection
+              !    xx = x - advec*dt*nloops
+              !    yy = y - advec*dt*nloops
+              ! else                         ! Circular advection
+              !    xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
+              !    yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+              ! end if
 
 
-              ! computation of the following values :
-              ! norm L2 of the distribution function and its minimum
-              ! norm infinit & norme L2 of the error 
-              if ( name_test == "gauss" ) then 
-                 norm2_sol_center = norm2_sol_center + &
-                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
-                 norm2_error_center = norm2_error_center + &
-                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
-                 if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
-                      norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
-                 if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
-              elseif ( name_test == "dioco" ) then 
+              ! ! if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
 
-                 !todo
+              ! norm2_sol_center = 0._f64
 
-              endif
+
+              ! ! computation of the following values :
+              ! ! norm L2 of the distribution function and its minimum
+              ! ! norm infinit & norme L2 of the error 
+              ! if ( name_test == "gauss" ) then 
+              !    norm2_sol_center = norm2_sol_center + &
+              !         abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+              !    norm2_error_center = norm2_error_center + &
+              !         abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
+              !    if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
+              !         norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
+              !    if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
+              ! elseif ( name_test == "dioco" ) then 
+
+              !    !todo
+
+              ! endif
 
            enddo
 
@@ -533,14 +533,15 @@ program test_hex_hermite
         end do
         
         
-        if ( num_method == 10 ) then
-           norm2_error = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_error_pt + &
-                norm2_error_center*sqrt(3._f64)/6._f64 )*radius**2/&
-                real(num_cells,f64)**2) 
-           norm2_sol = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_sol_pt + &
-                norm2_sol_center*sqrt(3._f64)/6._f64 )*radius**2/&
-                real(num_cells,f64)**2) 
-        else if ( num_method == 15 ) then
+        ! if ( num_method == 10 ) then
+        !    norm2_error = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_error_pt + &
+        !         norm2_error_center*sqrt(3._f64)/6._f64 )*radius**2/&
+        !         real(num_cells,f64)**2) 
+        !    norm2_sol = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_sol_pt + &
+        !         norm2_sol_center*sqrt(3._f64)/6._f64 )*radius**2/&
+        !         real(num_cells,f64)**2) 
+        ! else
+           if ( num_method == 15 ) then
            norm2_error = sqrt( ( sqrt(3._f64)*0.5_f64*norm2_error_pt + norm2_error_edge*sqrt(3._f64)*0.125_f64 )*radius**2/real(num_cells,f64)**2)
            norm2_sol = sqrt( ( sqrt(3._f64)*0.5_f64*norm2_sol_pt + norm2_sol_edge*sqrt(3._f64)*0.125_f64 )*radius**2/real(num_cells,f64)**2)
         else
@@ -555,11 +556,11 @@ program test_hex_hermite
         edge_values_tn  = edge_values_tn1
 
         
-        call int2string(nloops,filenum)
-        filename2 = "ana_dist"//trim(filenum)
-        filename  = "num_dist"//trim(filenum)
-        call write_field_hex_mesh_xmf(mesh, f_tn1, trim(filename))
-        call write_field_hex_mesh_xmf(mesh, f_sol, trim(filename2))
+        ! call int2string(nloops,filenum)
+        ! filename2 = "ana_dist"//trim(filenum)
+        ! filename  = "num_dist"//trim(filenum)
+        ! call write_field_hex_mesh_xmf(mesh, f_tn1, trim(filename))
+        ! call write_field_hex_mesh_xmf(mesh, f_sol, trim(filename2))
 
         f_tn = f_tn1
 
@@ -595,11 +596,11 @@ program test_hex_hermite
                 tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
                 9._f64*real(num_cells,f64)**2 + 3._f64*real(num_cells,f64))/(t_end - t_init)/ 1e6_f64
 
-        elseif ( num_method == 10 ) then
+        ! elseif ( num_method == 10 ) then
 
-           write(33,*) num_cells, n_points+n_triangle,  dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
-                tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
-                6._f64*real(num_cells,f64)**2)/(t_end - t_init)/ 1e6_f64
+        !    write(33,*) num_cells, n_points+n_triangle,  dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
+        !         tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
+        !         6._f64*real(num_cells,f64)**2)/(t_end - t_init)/ 1e6_f64
 
         else
 
@@ -622,35 +623,35 @@ contains
     sll_int32, intent(in) :: num_method
 
     if (num_method == 9 ) then
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, " Zienkiewicz_9_degree_of_freedom "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 10 ) then
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*," Zienkiewicz_10_degree_of_freedom"
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 11 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "   Hsieh_Clough_Tocher_reduced   "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 12 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "   Hsieh_Clough_Tocher_complete   "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 15 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "  quartic element of Ganev_Dimitrov "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else
        print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 15"
     endif

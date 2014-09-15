@@ -14,11 +14,11 @@ program test_hex_poisson
   type(sll_hex_mesh_2d), pointer          :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
-  sll_int32                               :: num_cells, n_points, i, k1, k2 
+  sll_int32                               :: num_cells, n_points, i,j, k1, k2 
   sll_int32                               :: ierr, l1,l2, index_tab, global
   sll_real64                              :: x, y, erreur = 0._f64
 
-  num_cells = 10
+  num_cells = 1
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
 
@@ -27,10 +27,12 @@ program test_hex_poisson
   SLL_ALLOCATE(phi( n_points),ierr)              ! le x de Ax = b
   SLL_ALLOCATE(phi_end( n_points),ierr)       
   SLL_ALLOCATE(sol( n_points),ierr)              ! exact solution
-  !SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr) ! le A de Ax = b
-  SLL_ALLOCATE(matrix_poisson( n_points,n_points), ierr)
-  SLL_ALLOCATE(l( n_points,n_points), ierr)
-  SLL_ALLOCATE(u( n_points,n_points), ierr)
+  SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr) ! le A de Ax = b
+SLL_ALLOCATE(l( n_points,1 + 4*num_cells + 2 ) , ierr)
+SLL_ALLOCATE(u( n_points,1 + 4*num_cells + 2 ) , ierr)
+  ! SLL_ALLOCATE(matrix_poisson( n_points,n_points), ierr)
+  ! SLL_ALLOCATE(l( n_points,n_points), ierr)
+  ! SLL_ALLOCATE(u( n_points,n_points), ierr)
 
 
 
@@ -44,19 +46,42 @@ program test_hex_poisson
 
      rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
 
-     !sol(i) = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
-     !     ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
      sol(i) = x**2*y**4 - 2._f64/3._f64*x**4*y**2 - 0.75_f64 - 1.5_f64*x**2*&
           y**2 + x**6/9._f64 - 0.75_f64*(x**4 + y**4) + 1.5_f64*(x**2 + y**2)
+     !   = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
+     !     ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
+
   enddo
 
   call hex_matrix_poisson( matrix_poisson, mesh )
 
   call hex_second_terme_poisson( second_term, mesh, rho )
   
-  call searchband(matrix_poisson,n_points,l1,l2)
-  print*,l1,l2,n_points
+  !call searchband(matrix_poisson,n_points,l1,l2)
+  !print*,l1,l2,n_points
+  l1 = 2*num_cells + 1
+  l2 = l1
+
+  matrix_poisson(1,:) = (/0,0,0,3,0,0,1/)
+  matrix_poisson(2,:) = (/0,0,0,3,0,0,1/)
+  matrix_poisson(3,:) = (/0,0,0,3,0,0,1/)
+  matrix_poisson(4,:) = (/1,0,0,3,0,0,1/)
+  matrix_poisson(5,:) = (/1,0,0,3,0,0,0/)
+  matrix_poisson(6,:) = (/1,0,0,3,0,0,0/)
+  matrix_poisson(7,:) = (/1,0,0,3,0,0,0/)
+
+
   call factolub (matrix_poisson,l,u,n_points,l1,l2)
+
+  print*,u(1,:)
+  print*,u(2,:)
+  print*,u(3,:)
+  print*,u(4,:)
+  print*,u(5,:)
+  print*,u(6,:)
+  print*,u(7,:)
+
+
   call solvlub(l,u,phi,second_term,n_points,l1,l2)
 
   ! need to re-index phi : 
@@ -70,13 +95,24 @@ program test_hex_poisson
 
   ! Error between the computed value and the expected value 
   do i=1, n_points  
-    !if (abs(sol(i))>1e-9) erreur = erreur + abs( sol(i) - phi_end(i))**2
     erreur = erreur + abs( sol(i) - phi_end(i))**2
   enddo
 
   print*, "erreur", sqrt(erreur/real(num_cells,f64)**2)
 
-  open(unit = 12, file="matrix_hex_poisson.txt", action="write", status="replace")
+
+  open(unit = 11, file="matrix_hex_poisson.txt", action="write", status="replace")
+
+  do i=1, n_points
+     do j=1,1+l1+l2
+         write(11,*) i,j,matrix_poisson(i,j)
+     enddo
+     write(11,*)
+  enddo
+  
+  close(11)
+
+  open(unit = 12, file="test_hex_poisson.txt", action="write", status="replace")
 
   do i=1, n_points
         x = mesh%cartesian_coord(1,i)
