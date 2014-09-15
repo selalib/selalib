@@ -805,6 +805,13 @@ contains ! *******************************************************************
                es%sll_csr_mat_source,&
                rho_coeff_1d,es%rho_vec)
 
+          print *, "after mult"
+!          print *, size(solv%sll_csr_mat_source)
+          print *, size(coeff_rho, 1), size(coeff_rho, 2)
+          print *, size(rho_coeff_1d)
+          print *, size(es%rho_vec)
+          print *, ""
+
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
                .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
              
