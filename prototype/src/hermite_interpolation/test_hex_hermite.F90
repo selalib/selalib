@@ -108,9 +108,9 @@ program test_hex_hermite
      !*********************************************************
      
      mesh => new_hex_mesh_2d( num_cells, center_mesh_x1, center_mesh_x2, radius=radius, EXTRA_TABLES = EXTRA_TABLES ) 
-     print*,
+     print*,""
      print*,"num_cell : ",num_cells,"           num_pts : ", mesh%num_pts_tot
-     print*,
+     print*,""
 
      ! Distribution initialization
 
@@ -622,35 +622,35 @@ contains
     sll_int32, intent(in) :: num_method
 
     if (num_method == 9 ) then
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, " Zienkiewicz_9_degree_of_freedom "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 10 ) then
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*," Zienkiewicz_10_degree_of_freedom"
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 11 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "   Hsieh_Clough_Tocher_reduced   "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 12 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "   Hsieh_Clough_Tocher_complete   "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 15 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "  quartic element of Ganev_Dimitrov "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else
        print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 15"
     endif
