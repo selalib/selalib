@@ -17,28 +17,33 @@
 
 
 
+!> Module for remapping
 module sll_remapper
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_utilities.h"
   use sll_collective
-!  use sll_electric_field_2d_accumulator ! terrible dependency here...
+
   implicit none
   
-  ! The box types contain information on the index limits contained        
-  ! in a given processor.
+  !> The box types contain information on the index limits contained        
+  !> in a given processor.
   type SLL_PRIV :: box_2D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
   end type box_2D
 
+  !> The box types contain information on the index limits contained        
+  !> in a given processor.
   type SLL_PRIV :: box_3D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
      sll_int32 SLL_PRIV :: k_min, k_max
   end type box_3D
 
+  !> The box types contain information on the index limits contained        
+  !> in a given processor.
   type SLL_PRIV :: box_4D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
@@ -46,6 +51,8 @@ module sll_remapper
      sll_int32 SLL_PRIV :: l_min, l_max
   end type box_4D
 
+  !> The box types contain information on the index limits contained        
+  !> in a given processor.
   type SLL_PRIV :: box_5D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
@@ -54,6 +61,8 @@ module sll_remapper
      sll_int32 SLL_PRIV :: m_min, m_max
   end type box_5D
 
+  !> The box types contain information on the index limits contained        
+  !> in a given processor.
   type SLL_PRIV :: box_6D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
@@ -64,53 +73,73 @@ module sll_remapper
   end type box_6D
 
   
-  ! The sll_layout types contain information on a collective and an
-  ! array of boxes that describes the distribution of data among
-  ! different nodes. We are also adding some auxiliary fields, like the
-  ! global dimensions of a given dataset distributed as per the information
-  ! in the layout.
+  !> This type contain information on a collective and an
+  !> array of boxes that describes the distribution of data among
+  !> different nodes. We are also adding some auxiliary fields, like the
+  !> global dimensions of a given dataset distributed as per the information
+  !> in the layout.
   type layout_2D
      type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1
-     sll_int32 SLL_PRIV                           :: global_sz2
+     sll_int32 SLL_PRIV                           :: global_sz1 !< size
+     sll_int32 SLL_PRIV                           :: global_sz2 !< size
      type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_2D
 
+  !> This type contain information on a collective and an
+  !> array of boxes that describes the distribution of data among
+  !> different nodes. We are also adding some auxiliary fields, like the
+  !> global dimensions of a given dataset distributed as per the information
+  !> in the layout.
   type layout_3D
      type(sll_collective_t), pointer SLL_PRIV     :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1
-     sll_int32 SLL_PRIV                           :: global_sz2
-     sll_int32 SLL_PRIV                           :: global_sz3
+     sll_int32 SLL_PRIV                           :: global_sz1 !< size
+     sll_int32 SLL_PRIV                           :: global_sz2 !< size
+     sll_int32 SLL_PRIV                           :: global_sz3 !< size
      type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_3D
 
+  !> This type contain information on a collective and an
+  !> array of boxes that describes the distribution of data among
+  !> different nodes. We are also adding some auxiliary fields, like the
+  !> global dimensions of a given dataset distributed as per the information
+  !> in the layout.
   type layout_4D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1
-     sll_int32 SLL_PRIV                           :: global_sz2
-     sll_int32 SLL_PRIV                           :: global_sz3
-     sll_int32 SLL_PRIV                           :: global_sz4
+     sll_int32 SLL_PRIV                           :: global_sz1 !< size
+     sll_int32 SLL_PRIV                           :: global_sz2 !< size
+     sll_int32 SLL_PRIV                           :: global_sz3 !< size
+     sll_int32 SLL_PRIV                           :: global_sz4 !< size
      type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_4D
 
+  !> This type contain information on a collective and an
+  !> array of boxes that describes the distribution of data among
+  !> different nodes. We are also adding some auxiliary fields, like the
+  !> global dimensions of a given dataset distributed as per the information
+  !> in the layout.
   type layout_5D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1
-     sll_int32 SLL_PRIV                           :: global_sz2
-     sll_int32 SLL_PRIV                           :: global_sz3
-     sll_int32 SLL_PRIV                           :: global_sz4
-     sll_int32 SLL_PRIV                           :: global_sz5
+     sll_int32 SLL_PRIV                           :: global_sz1 !< size
+     sll_int32 SLL_PRIV                           :: global_sz2 !< size
+     sll_int32 SLL_PRIV                           :: global_sz3 !< size
+     sll_int32 SLL_PRIV                           :: global_sz4 !< size
+     sll_int32 SLL_PRIV                           :: global_sz5 !< size
      type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
   end type layout_5D
 
+  !> This type contain information on a collective and an
+  !> array of boxes that describes the distribution of data among
+  !> different nodes. We are also adding some auxiliary fields, like the
+  !> global dimensions of a given dataset distributed as per the information
+  !> in the layout.
   type layout_6D
      type(sll_collective_t), pointer  SLL_PRIV    :: collective
-     sll_int32 SLL_PRIV                           :: global_sz1
-     sll_int32 SLL_PRIV                           :: global_sz2
-     sll_int32 SLL_PRIV                           :: global_sz3
-     sll_int32 SLL_PRIV                           :: global_sz4
-     sll_int32 SLL_PRIV                           :: global_sz5
-     sll_int32 SLL_PRIV                           :: global_sz6
+     sll_int32 SLL_PRIV                           :: global_sz1 !< size
+     sll_int32 SLL_PRIV                           :: global_sz2 !< size
+     sll_int32 SLL_PRIV                           :: global_sz3 !< size
+     sll_int32 SLL_PRIV                           :: global_sz4 !< size
+     sll_int32 SLL_PRIV                           :: global_sz5 !< size
+     sll_int32 SLL_PRIV                           :: global_sz6 !< size
      type(box_6D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_6D
 
@@ -202,118 +231,143 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
   MAKE_REMAP_PLAN(remap_plan_6D_real64, layout_6D, box_6D, sll_real64)
   MAKE_REMAP_PLAN(remap_plan_6D_comp64, layout_6D, box_6D, sll_comp64)
 
- interface get_layout_i_min
+  !> Get corner index
+  interface get_layout_i_min
      module procedure get_layout_2D_i_min, get_layout_3D_i_min, &
           get_layout_4D_i_min, get_layout_5D_i_min, get_layout_6D_i_min
   end interface
 
+  !> Set layout index
   interface set_layout_i_min
      module procedure set_layout_2D_i_min, set_layout_3D_i_min, &
           set_layout_4D_i_min, set_layout_5D_i_min, set_layout_6D_i_min
   end interface
 
+  !> Get corner index
   interface get_layout_i_max
      module procedure get_layout_2D_i_max, get_layout_3D_i_max, &
           get_layout_4D_i_max, get_layout_5D_i_max, get_layout_6D_i_max
   end interface
 
+  !> Set layout index
   interface set_layout_i_max
      module procedure set_layout_2D_i_max, set_layout_3D_i_max, &
           set_layout_4D_i_max, set_layout_5D_i_max, set_layout_6D_i_max
   end interface
 
+  !> Get corner index
   interface get_layout_j_min
      module procedure get_layout_2D_j_min, get_layout_3D_j_min, &
           get_layout_4D_j_min, get_layout_5D_j_min, get_layout_6D_j_min
   end interface
 
+  !> Set layout index
   interface set_layout_j_min
      module procedure set_layout_2D_j_min, set_layout_3D_j_min, &
           set_layout_4D_j_min, set_layout_5D_j_min, set_layout_6D_j_min  
   end interface
 
+  !> Get corner index
   interface get_layout_j_max
      module procedure get_layout_2D_j_max, get_layout_3D_j_max, &
           get_layout_4D_j_max, get_layout_5D_j_max, get_layout_6D_j_max
   end interface
 
+  !> Set layout index
   interface set_layout_j_max
      module procedure set_layout_2D_j_max, set_layout_3D_j_max, &
           set_layout_4D_j_max, set_layout_5D_j_max, set_layout_6D_j_max
   end interface
 
- interface get_layout_k_min
+  !> Get corner index
+  interface get_layout_k_min
     module procedure get_layout_3D_k_min, get_layout_4D_k_min, &
          get_layout_5D_k_min, get_layout_6D_k_min
   end interface
 
+  !> Set layout index
   interface set_layout_k_min
      module procedure set_layout_3D_k_min, set_layout_4D_k_min, &
           set_layout_5D_k_min, set_layout_6D_k_min
   end interface
 
+  !> Get corner index
   interface get_layout_k_max
      module procedure get_layout_3D_k_max, get_layout_4D_k_max, &
           get_layout_5D_k_max, get_layout_6D_k_max
   end interface
 
+  !> Set layout index
   interface set_layout_k_max
      module procedure set_layout_3D_k_max, set_layout_4D_k_max, &
           set_layout_5D_k_max, set_layout_6D_k_max
   end interface
 
+  !> Get corner index
   interface get_layout_l_min
      module procedure get_layout_4D_l_min, get_layout_5D_l_min, &
           get_layout_6D_l_min
   end interface get_layout_l_min
 
+  !> Set layout index
   interface set_layout_l_min
      module procedure set_layout_4D_l_min, set_layout_5D_l_min, &
           set_layout_6D_l_min
   end interface set_layout_l_min
 
+  !> Get corner index
   interface get_layout_l_max
      module procedure get_layout_4D_l_max, get_layout_5D_l_max, &
           get_layout_6D_l_max 
   end interface get_layout_l_max
 
+  !> Set layout index
   interface set_layout_l_max
      module procedure set_layout_4D_l_max, set_layout_5D_l_max, &
           set_layout_6D_l_max
   end interface set_layout_l_max
 
+  !> Get corner index
   interface get_layout_m_min
      module procedure get_layout_5D_m_min, get_layout_6D_m_min
   end interface get_layout_m_min
 
+  !> Get corner index
   interface get_layout_m_max
      module procedure get_layout_5D_m_max, get_layout_6D_m_max
   end interface get_layout_m_max
 
+  !> Set layout index
   interface set_layout_m_min
      module procedure set_layout_5D_m_min, set_layout_6D_m_min
   end interface set_layout_m_min
 
+  !> Set layout index
   interface set_layout_m_max
      module procedure set_layout_5D_m_max, set_layout_6D_m_max
   end interface set_layout_m_max
 
+  !> Get corner index
   interface get_layout_n_min
      module procedure get_layout_6D_n_min
   end interface get_layout_n_min
 
+  !> Get corner index
   interface get_layout_n_max
      module procedure get_layout_6D_n_max
   end interface get_layout_n_max
 
+  !> Set layout index
   interface set_layout_n_min
      module procedure set_layout_6D_n_min
   end interface set_layout_n_min
 
+  !> Set layout index
   interface set_layout_n_max
      module procedure set_layout_6D_n_max
   end interface set_layout_n_max
 
+  !> Get box nodes number
   interface get_layout_num_nodes
      module procedure &
           get_layout_2D_num_nodes, &
@@ -323,6 +377,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           get_layout_6D_num_nodes
   end interface
 
+  !> Get box size
   interface get_layout_box
      module procedure &
           get_layout_2D_box, &
@@ -332,6 +387,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           get_layout_6D_box
   end interface
 
+  !> Get parallel info
   interface get_layout_collective
      module procedure &
           get_layout_2D_collective, &
@@ -341,6 +397,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           get_layout_6D_collective
   end interface get_layout_collective
 
+  !> Get nodes number
   interface sll_get_num_nodes
      module procedure &
           sll_get_num_nodes_2D, &
@@ -350,6 +407,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           sll_get_num_nodes_6D
    end interface
 
+   !> Get global size
    interface get_layout_global_size_i
       module procedure &
            get_layout_2d_global_size_1, &
@@ -359,6 +417,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
            get_layout_6d_global_size_1
    end interface get_layout_global_size_i
 
+   !> Get global size
    interface get_layout_global_size_j
       module procedure &
            get_layout_2d_global_size_2, &
@@ -368,6 +427,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
            get_layout_6d_global_size_2
    end interface get_layout_global_size_j
 
+   !> Get global size
    interface get_layout_global_size_k
       module procedure &
            get_layout_3d_global_size_3, &
@@ -376,6 +436,7 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
            get_layout_6d_global_size_3
    end interface get_layout_global_size_k
 
+   !> Get global size
    interface get_layout_global_size_l
       module procedure &
            get_layout_4d_global_size_4, &
@@ -383,28 +444,33 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
            get_layout_6d_global_size_4
    end interface get_layout_global_size_l
 
+   !> Get global size
    interface get_layout_global_size_m
       module procedure &
            get_layout_5d_global_size_5, &
            get_layout_6d_global_size_5
    end interface get_layout_global_size_m
 
+   !> Get global size
    interface get_layout_global_size_n
       module procedure get_layout_6d_global_size_6
    end interface get_layout_global_size_n
 
-  interface count_elements_in_box
+   !> Count elements
+   interface count_elements_in_box
      module procedure count_elements_in_box_2D, count_elements_in_box_3D, &
           count_elements_in_box_4D, count_elements_in_box_5D, &
           count_elements_in_box_6D
-  end interface count_elements_in_box
+   end interface count_elements_in_box
 
-  interface intersect_boxes
+   !> Intersection
+   interface intersect_boxes
      module procedure intersect_boxes_2D, intersect_boxes_3D, &
           intersect_boxes_4D, intersect_boxes_5D, intersect_boxes_6D
-  end interface intersect_boxes
+   end interface intersect_boxes
 
-  interface optimize_remap_plan
+   !> Optimization
+   interface optimize_remap_plan
      module procedure &
           optimize_remap_plan_2D_int32, &
           optimize_remap_plan_2D_real64, &
@@ -421,8 +487,9 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           optimize_remap_plan_6D_int32, &
           optimize_remap_plan_6D_real64, &
           optimize_remap_plan_6D_comp64
-  end interface optimize_remap_plan
+   end interface optimize_remap_plan
 
+  !> Plan to apply remap
   interface new_remap_plan
      module procedure &
           new_remap_plan_2d_int32, &
@@ -442,29 +509,35 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           new_remap_plan_6d_comp64
   end interface new_remap_plan
 
+  !> Execute plan
   interface apply_remap_2D
      module procedure apply_remap_2D_double, apply_remap_2d_complex !, &
 !          apply_remap_2d_efield
   end interface apply_remap_2D
 
+  !> Execute plan
   interface apply_remap_3D
      module procedure apply_remap_3D_int, apply_remap_3D_double, &
           apply_remap_3D_complex
   end interface
 
+  !> Execute plan
   interface apply_remap_4D
      module procedure apply_remap_4D_double
   end interface apply_remap_4D
 
+  !> Execute plan
   interface apply_remap_5D
      module procedure apply_remap_5D_double, apply_remap_5D_int
   end interface apply_remap_5D
 
 
+  !> Execute plan
   interface apply_remap_6D
      module procedure apply_remap_6D_double, apply_remap_6D_int
   end interface apply_remap_6D
 
+  !> Deallocate
   interface sll_delete
      module procedure delete_layout_2D, delete_layout_3D, delete_layout_4D, &
           delete_layout_5D, delete_layout_6D, &
@@ -485,11 +558,13 @@ MAKE_REMAP_POINTER_CONTAINER( remap_plan_4d_real64_ptr, remap_plan_4d_real64 )
           delete_remap_6D_comp64
   end interface sll_delete
 
+  !> Get local sizes
   interface compute_local_sizes
      module procedure compute_local_sizes_2d, compute_local_sizes_3d, &
           compute_local_sizes_4d, compute_local_sizes_5d, compute_local_sizes_6d
   end interface compute_local_sizes
 
+  !> Get global indices
   interface local_to_global
      module procedure local_to_global_2D,local_to_global_3D, &
           local_to_global_4D, local_to_global_5D, local_to_global_6D
