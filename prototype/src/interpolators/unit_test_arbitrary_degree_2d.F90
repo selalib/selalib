@@ -18,20 +18,22 @@ program unit_test
 #define TOLERANCE_DER  3.0e-5_f64
 
   type(arb_deg_2d_interpolator) :: ad2d
-  sll_real64, dimension(:,:), allocatable    :: x
-  sll_real64, dimension(:), allocatable      :: eta1_pos
-  sll_real64, dimension(:), allocatable      :: eta2_pos
-  sll_real64, dimension(:,:), allocatable    :: reference
-  sll_real64, dimension(:,:), allocatable    :: calculated
-  sll_real64, dimension(:,:), allocatable    :: difference
-  sll_real64, dimension(:),allocatable :: slope_left
-  sll_real64, dimension(:),allocatable :: slope_right
-  sll_real64, dimension(:),allocatable :: slope_top
-  sll_real64, dimension(:),allocatable :: slope_bottom
-  sll_real64, dimension(:),allocatable :: value_left
-  sll_real64, dimension(:),allocatable :: value_right
-  sll_real64, dimension(:),allocatable :: value_top
-  sll_real64, dimension(:),allocatable :: value_bottom
+
+  sll_real64, dimension(:,:), allocatable :: x
+  sll_real64, dimension(:,:), allocatable :: reference
+  sll_real64, dimension(:,:), allocatable :: calculated
+  sll_real64, dimension(:,:), allocatable :: difference
+
+  sll_real64, dimension(NPTS1) :: eta1_pos
+  sll_real64, dimension(NPTS2) :: eta2_pos
+  sll_real64, dimension(NPTS2) :: slope_left
+  sll_real64, dimension(NPTS2) :: slope_right
+  sll_real64, dimension(NPTS1) :: slope_top
+  sll_real64, dimension(NPTS1) :: slope_bottom
+  sll_real64, dimension(NPTS2) :: value_left
+  sll_real64, dimension(NPTS2) :: value_right
+  sll_real64, dimension(NPTS1) :: value_top
+  sll_real64, dimension(NPTS1) :: value_bottom
 !!$  sll_real64, dimension(:), allocatable      :: x1_eta1_min
 !!$  sll_real64, dimension(:), allocatable      :: x1_eta1_max
   sll_int32 :: ierr
@@ -57,19 +59,14 @@ program unit_test
   SLL_CLEAR_ALLOCATE(reference(1:NPTS1,1:NPTS2),ierr)
   SLL_CLEAR_ALLOCATE(calculated(1:NPTS1,1:NPTS2),ierr)
   SLL_CLEAR_ALLOCATE(difference(1:NPTS1,1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(eta1_pos(1:NPTS1),ierr)
-  SLL_CLEAR_ALLOCATE(eta2_pos(1:NPTS2),ierr)
 
-  SLL_CLEAR_ALLOCATE(slope_left(1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(slope_right(1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(slope_top(1:NPTS1),ierr)
-  SLL_CLEAR_ALLOCATE(slope_bottom(1:NPTS1),ierr)
-  SLL_CLEAR_ALLOCATE(value_left(1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(value_right(1:NPTS2),ierr)
-  SLL_CLEAR_ALLOCATE(value_top(1:NPTS1),ierr)
-  SLL_CLEAR_ALLOCATE(value_bottom(1:NPTS1),ierr)
-!  SLL_CLEAR_ALLOCATE(x1_eta1_min(1:NPTS2),ierr)
- ! SLL_CLEAR_ALLOCATE(x1_eta1_max(1:NPTS2),ierr)
+  do i=1,NPTS1
+     eta1_pos(i) = X1MIN + (i-1)*h1
+  end do
+  do j=1,NPTS2
+     eta2_pos(j) = X2MIN + (j-1)*h2
+  end do
+
   print *, '***********************************************************'
   print *, '              periodic-periodic case'
   print *, '***********************************************************'
@@ -78,8 +75,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = cos(2*sll_pi*eta1)!cos(2*sll_pi*eta2) *cos(2*sll_pi*eta1)
         reference(i+1,j+1) = cos(2*sll_pi*eta1)!cos(2*sll_pi*eta2)*cos(2*sll_pi*eta1)
      end do
@@ -178,8 +173,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2*sll_pi*eta2) *sin(2*sll_pi*eta1)
         reference(i+1,j+1) = sin(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
      end do
@@ -223,10 +216,6 @@ program unit_test
         ref        = sin(2*sll_pi*eta2)*sin(2*sll_pi*eta1)
         normL2_1 = normL2_1 + (node_val-ref)**2 *h1*h2
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
-        !print*, ref,node_val,node_val-ref
-        !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
-         !    'theoretical = ', ref,'difference=',ref-node_val
         acc1        = acc1 + abs(node_val-ref)
         
         deriv1_val = ad2d%interpolate_derivative_eta1(eta1,eta2)   
@@ -257,8 +246,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
         reference(i+1,j+1) = sin(2*sll_pi*eta1)
      end do
@@ -302,7 +289,6 @@ program unit_test
         ref                 = sin(2*sll_pi*eta1)*cos(2*sll_pi*eta2)
         normL2_2 = normL2_2 + (node_val-ref)**2 *h1*h2
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
          !    'theoretical = ', ref
         acc2        = acc2 + abs(node_val-ref)
@@ -332,8 +318,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
      end do
@@ -379,7 +363,6 @@ program unit_test
         !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         normL2_3 = normL2_3 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
          !    'theoretical = ', ref
@@ -408,10 +391,8 @@ program unit_test
   
   do j=1,NPTS2
      eta2             = X2MIN + (j-1)*h2
-     eta2_pos(j)      = eta2
      do i=1,NPTS1
         eta1             = X1MIN + (i-1)*h1
-        eta1_pos(i)      = eta1
         x(i,j)           = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
         reference(i,j)   = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
      end do
@@ -479,7 +460,6 @@ program unit_test
         !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         normL2_4 = normL2_4 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
         !     'theoretical = ', ref
@@ -512,8 +492,6 @@ program unit_test
      do i=1,NPTS1
         eta1            = X1MIN + (i-1)*h1
         eta2            = X2MIN + (j-1)*h2
-        eta1_pos(i)     = eta1
-        eta2_pos(j)     = eta2
         x(i,j)          = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
         reference(i,j)  = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
      end do
@@ -581,7 +559,6 @@ program unit_test
         !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         normL2_5 = normL2_5 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
         !     'theoretical = ', ref
@@ -613,8 +590,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
      end do
@@ -682,7 +657,6 @@ program unit_test
         !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         normL2_6 = normL2_6 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
         !     'theoretical = ', ref
@@ -715,8 +689,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
      end do
@@ -784,7 +756,6 @@ program unit_test
         !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         normL2_7 = normL2_7 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
         !     'theoretical = ', ref
@@ -817,8 +788,6 @@ program unit_test
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
         eta2               = X2MIN + real(j,f64)*h2
-        eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2*sll_pi*eta1)*sin(2*sll_pi*eta2)
      end do
@@ -886,7 +855,6 @@ program unit_test
         !print*, "hehe"
         ref                 = reference(i+1,j+1)
         calculated(i+1,j+1) = node_val
-        difference(i+1,j+1) = ref-node_val
         normL2_8 = normL2_8 + (node_val-ref)**2 *h1*h2
         !print *, '(eta1,eta2) = ', eta1, eta2, 'calculated = ', node_val, &
         !     'theoretical = ', ref
@@ -907,14 +875,6 @@ program unit_test
 
 
   
-  deallocate(slope_left)
-  deallocate(slope_right)
-  deallocate(slope_top)
-  deallocate(slope_bottom)
-  deallocate(value_left)
-  deallocate(value_right)
-  deallocate(value_top)
-  deallocate(value_bottom)
   call sll_delete(ad2d)
 
   print*, '--------------------------------------------'
