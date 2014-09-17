@@ -808,7 +808,9 @@ contains
           sim%m_x2%eta_min, &
           sim%m_x2%eta_max, &
           SLL_HERMITE, &
-          SLL_PERIODIC)
+          SLL_PERIODIC, &
+          const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
+          const_eta1_max_slope = 0._f64)
         A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
           sim%m_x1%num_cells+1, &
           sim%m_x1%eta_min, &

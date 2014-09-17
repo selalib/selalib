@@ -7,7 +7,7 @@ add_library( sll_pic_utilities STATIC
 
 add_dependencies( sll_pic_utilities
                   sll_pic_accumulators
-		  sll_assertion                  
+		  sll_assert                  
 		  sll_logical_meshes
                   sll_memory
 		  sll_working_precision )
@@ -18,7 +18,7 @@ add_dependencies( sll_pic_utilities
 #target_link_libraries( test_picutilities
 #                       sll_pic_utilities
 #		       sll_logical_meshes
-#                       sll_assertion
+#                       sll_assert
 #		       sll_memory
 #		       sll_working_precision )
 #
