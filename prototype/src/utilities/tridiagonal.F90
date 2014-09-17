@@ -22,7 +22,6 @@
 !
 ! DESCRIPTION:
 !> @file tridiagonal.F90
-!> @namespace sll_tridiagonal
 !> @author Module Author Name and Affiliation
 !> @brief Tridiagonal system solver.
 !> @details To solve systems of the form Ax=b, where A is a tridiagonal matrix, Selalib 

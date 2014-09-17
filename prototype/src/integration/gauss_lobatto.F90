@@ -1,3 +1,5 @@
+!> Low-level mathematical utility that applies the 
+!> Gauss-Lobatto method to compute numeric integrals.
 module gauss_lobatto_integration
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -5,6 +7,7 @@ module gauss_lobatto_integration
 implicit none
 
 abstract interface
+   !> 1d real function
    function function_1D(x)
       use sll_working_precision ! can't pass a header file because the
                                 ! preprocessor prevents double inclusion.
@@ -14,6 +17,7 @@ abstract interface
    end function function_1D
 end interface
 
+!> Integrate numerically with Gauss-Lobatto formula
 interface gauss_lobatto_integrate_1d
   module procedure gauss_lobatto_integral_1d 
 end interface
@@ -91,17 +95,17 @@ contains
 
   end function gauss_lobatto_integral_1D
 
-  !> @brief Returns a 2d array of size (2,n) containing gauss-lobatto 
+  !> Returns a 2d array of size (2,n) containing gauss-lobatto 
   !> points and weights in the interval [a,b].
   !> @param[in] n Number of gauss points.
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
-
+  !> @return array containing points (1,:) and weights (2,:)
   function gauss_lobatto_points_and_weights(n,a,b) result(wx)
+    sll_int32,  intent(in)     :: n 
     sll_real64, intent(in),optional    :: a
     sll_real64, intent(in),optional    :: b
-    sll_int32,  intent(in)     :: n 
-    sll_real64, dimension(2,n) :: wx
+    sll_real64, dimension(2,n) :: wx !< wx points and weights
     
     wx(1,1:n) = gauss_lobatto_points( n, a, b )
     wx(2,1:n) = gauss_lobatto_weights(n, a, b)

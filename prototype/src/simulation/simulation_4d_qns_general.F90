@@ -37,10 +37,10 @@ module sll_simulation_4d_qns_general_module
      sll_real64 :: dt
      sll_int32  :: num_iterations
      ! Mesh parameters
-     sll_int32  :: nc_x1
-     sll_int32  :: nc_x2
-     sll_int32  :: nc_x3
-     sll_int32  :: nc_x4
+     !sll_int32  :: nc_x1
+     !sll_int32  :: nc_x2
+     !sll_int32  :: nc_x3
+     !sll_int32  :: nc_x4
      ! for QNS spline_degre in each direction
      sll_int32  :: spline_degree_eta1
      sll_int32  :: spline_degree_eta2
@@ -176,8 +176,8 @@ contains
   ! Tentative function to initialize the simulation object 'manually'.
   subroutine initialize_4d_qns_general( &
    sim, &
-   mesh2d_x, &
-   mesh2d_v, &
+!!$   mesh2d_x, &
+!!$   !mesh2d_v, &
    transformation_x, &
    init_func, &
    params,&
@@ -199,18 +199,18 @@ contains
    der2_b2_f,&
    c_f,&
    c_f_params, &
-   spline_degre_eta1,&
-   spline_degre_eta2,&
-   spline_degre_vx,&
-   spline_degre_vy,&
-   bc_eta1_0,&
-   bc_eta1_1,&
-   bc_eta2_0,&
-   bc_eta2_1,&
-   bc_vx_0,&
-   bc_vx_1,&
-   bc_vy_0,&
-   bc_vy_1,&
+!!$   spline_degre_eta1,&
+!!$   spline_degre_eta2,&
+!!$   spline_degre_vx,&
+!!$   spline_degre_vy,&
+!!$   bc_eta1_0,&
+!!$   bc_eta1_1,&
+!!$   bc_eta2_0,&
+!!$   bc_eta2_1,&
+!!$   bc_vx_0,&
+!!$   bc_vx_1,&
+!!$   bc_vy_0,&
+!!$   bc_vy_1,&
    quadrature_type1,&
    quadrature_type2,&
    electric_field_ext_1,&
@@ -261,8 +261,8 @@ contains
     sll_int32  :: quadrature_type1,quadrature_type2
     sll_int32 :: ierr
     
-    sim%mesh2d_x  => mesh2d_x
-    sim%mesh2d_v  => mesh2d_v
+!!$    sim%mesh2d_x  => mesh2d_x
+!!$    !sim%mesh2d_v  => mesh2d_v
     sim%transfx   => transformation_x
     sim%init_func => init_func
     sim%params    => params
@@ -277,23 +277,23 @@ contains
     sim%der2_b1_f  => der2_b1_f
     sim%der2_b2_f  => der2_b2_f
     sim%c_f       => c_f
-    sim%spline_degree_eta1 = spline_degre_eta1
-    sim%spline_degree_eta2 = spline_degre_eta2
-    sim%spline_degree_vx = spline_degre_vx
-    sim%spline_degree_vy = spline_degre_vy
+!!$    sim%spline_degree_eta1 = spline_degre_eta1
+!!$    sim%spline_degree_eta2 = spline_degre_eta2
+!!$    sim%spline_degree_vx = spline_degre_vx
+!!$    sim%spline_degree_vy = spline_degre_vy
     sim%number_diags     = number_diags
     sim%quadrature_type1 = quadrature_type1
     sim%quadrature_type2 = quadrature_type2
     sim%count_save_diag  = 0
-    sim%bc_eta1_0   = bc_eta1_0
-    sim%bc_eta1_1   = bc_eta1_1
-    sim%bc_eta2_0   = bc_eta2_0
-    sim%bc_eta2_1   = bc_eta2_1
-
-    sim%bc_vx_0     = bc_vx_0
-    sim%bc_vx_1     = bc_vx_1
-    sim%bc_vy_0     = bc_vy_0
-    sim%bc_vy_1     = bc_vy_1
+!!$    sim%bc_eta1_0   = bc_eta1_0
+!!$    sim%bc_eta1_1   = bc_eta1_1
+!!$    sim%bc_eta2_0   = bc_eta2_0
+!!$    sim%bc_eta2_1   = bc_eta2_1
+!!$
+!!$    sim%bc_vx_0     = bc_vx_0
+!!$    sim%bc_vx_1     = bc_vx_1
+!!$    sim%bc_vy_0     = bc_vy_0
+!!$    sim%bc_vy_1     = bc_vy_1
 
     sim%elec_field_ext_1 => electric_field_ext_1
     sim%elec_field_ext_2 => electric_field_ext_2
@@ -372,10 +372,36 @@ contains
     sll_int32             :: num_cells_x2
     sll_int32             :: num_cells_x3
     sll_int32             :: num_cells_x4
+    sll_real64            :: eta1_min
+    sll_real64            :: eta1_max
+    sll_real64            :: eta2_min
+    sll_real64            :: eta2_max
+    sll_real64            :: vx_min
+    sll_real64            :: vx_max
+    sll_real64            :: vy_min
+    sll_real64            :: vy_max 
+    sll_int32             :: bc_eta1_0
+    sll_int32             :: bc_eta1_1
+    sll_int32             :: bc_eta2_0
+    sll_int32             :: bc_eta2_1
+    sll_int32             :: bc_vx_0
+    sll_int32             :: bc_vx_1
+    sll_int32             :: bc_vy_0
+    sll_int32             :: bc_vy_1
+    sll_real64            :: diag2D_step
+    sll_int32             :: deg_eta1
+    sll_int32             :: deg_eta2
+    sll_int32             :: deg_vx
+    sll_int32             :: deg_vy
     sll_int32, parameter  :: input_file = 99
 
     namelist /sim_params/ dt, number_iterations
     namelist /grid_dims/ num_cells_x1, num_cells_x2, num_cells_x3, num_cells_x4
+    namelist /mesh_grid/eta1_min,eta1_max,eta2_min,eta2_max,vx_min,vx_max,vy_min,vy_max 
+    namelist /space_boundary_conditions/ bc_eta1_0,bc_eta1_1,bc_eta2_0,bc_eta2_1
+    namelist /velocity_boundary_conditions/ bc_vx_0, bc_vx_1,bc_vy_0, bc_vy_1
+    namelist /diagnostics/ diag2D_step
+    namelist /spline_degree/ deg_eta1, deg_eta2, deg_vx,deg_vy
     ! Try to add here other parameters to initialize the mesh values like
     ! xmin, xmax and also for the distribution function initializer.
     open(unit = input_file, file=trim(filename),IOStat=IO_stat)
@@ -383,8 +409,13 @@ contains
        print *, 'init_vp4d_par_cart() failed to open file ', filename
        STOP
     end if
-    read(input_file, sim_params)
+    read(input_file,sim_params)
     read(input_file,grid_dims)
+    read(input_file,mesh_grid)
+    read(input_file,space_boundary_conditions)
+    read(input_file,velocity_boundary_conditions)
+    read(input_file, diagnostics)
+    read(input_file,spline_degree)
     close(input_file)
 
     sim%dt = dt
@@ -392,10 +423,41 @@ contains
     print*, 'number iterations', number_iterations
     ! In this particular simulation, since the system is periodic, the number
     ! of points is the same as the number of cells in all directions.
-    sim%nc_x1 = num_cells_x1
-    sim%nc_x2 = num_cells_x2
-    sim%nc_x3 = num_cells_x3
-    sim%nc_x4 = num_cells_x4
+!!$    sim%nc_x1 = num_cells_x1
+!!$    sim%nc_x2 = num_cells_x2
+!!$    sim%nc_x3 = num_cells_x3
+!!$    sim%nc_x4 = num_cells_x4
+
+    sim%mesh2d_x => new_logical_mesh_2d( num_cells_x1, num_cells_x2,  & 
+         eta1_min= eta1_min, eta1_max= eta1_max, &
+         eta2_min= eta2_min, eta2_max= eta2_max )
+
+    sim%mesh2d_v => new_logical_mesh_2d( num_cells_x3, num_cells_x4,  & 
+         eta1_min= vx_min, eta1_max= vx_max, &
+         eta2_min= vy_min, eta2_max= vy_max )
+        ! boundary conditions
+
+    sim%bc_eta1_0  = bc_eta1_0
+    sim%bc_eta1_1  = bc_eta1_1
+    sim%bc_eta2_0  = bc_eta2_0
+    sim%bc_eta2_1  = bc_eta2_1
+
+    sim%bc_vx_0  = bc_vx_0
+    sim%bc_vx_1  = bc_vx_1
+    sim%bc_vy_0  = bc_vy_0
+    sim%bc_vy_1  = bc_vy_1
+
+
+    ! diagnostics
+    !sim%diag2D_step = diag2D_step
+    ! spline_degre
+    sim%spline_degree_eta1 = deg_eta1
+    sim%spline_degree_eta2 = deg_eta2
+    sim%spline_degree_vx   = deg_vx
+    sim%spline_degree_vy   = deg_vy
+
+
+
   end subroutine init_4d_qns_gen
 
   ! Note that the following function has no local variables, which is silly...
@@ -2292,10 +2354,16 @@ contains
     character(len=80)   :: filename_HDF5
     character(20), save :: numfmt = "'_d',i5.5"
     
-    ix1_diag   = int(sim%nc_x1/2)
-    ix2_diag   = int(sim%nc_x2/3)
-    iv1_diag   = int(sim%nc_x3/4)
-    iv2_diag   = int(sim%nc_x4/3)
+!!$    ix1_diag   = int(sim%nc_x1/2)
+!!$    ix2_diag   = int(sim%nc_x2/3)
+!!$    iv1_diag   = int(sim%nc_x3/4)
+!!$    iv2_diag   = int(sim%nc_x4/3)
+
+     ix1_diag   = int(sim%mesh2d_x%num_cells1/2)
+     ix2_diag   = int(sim%mesh2d_x%num_cells2/3)
+     iv1_diag   = int(sim%mesh2d_v%num_cells1/4)
+     iv2_diag   = int(sim%mesh2d_v%num_cells2/3)
+
 
     diag_masse_result       = 0.0_f64
     diag_norm_L1_result     = 0.0_f64
@@ -2474,8 +2542,10 @@ contains
     
     Neta1_loc  = size(sim%f_x3x4,1)
     Neta2_loc  = size(sim%f_x3x4,2)
-    Neta1      = sim%nc_x1 + 1
-    Neta2      = sim%nc_x2 + 1
+!!$    Neta1      = sim%nc_x1 + 1
+!!$    Neta2      = sim%nc_x2 + 1
+    Neta1      = sim%mesh2d_x%num_cells1 + 1
+    Neta2      = sim%mesh2d_x%num_cells2 + 1
     Nv1        = size(sim%f_x3x4,3)
     Nv2        = size(sim%f_x3x4,4)
     delta_eta1 = sim%mesh2d_x%delta_eta1
@@ -2582,8 +2652,10 @@ contains
 
     Neta1_loc  = size(sim%f_x3x4,1)
     Neta2_loc  = size(sim%f_x3x4,2)
-    Neta1      = sim%nc_x1 + 1
-    Neta2      = sim%nc_x2 + 1
+!!$    Neta1      = sim%nc_x1 + 1
+!!$    Neta2      = sim%nc_x2 + 1
+    Neta1      = sim%mesh2d_x%num_cells1 + 1
+    Neta2      = sim%mesh2d_x%num_cells2 + 1
     Nv1        = size(sim%f_x3x4,3)
     Nv2        = size(sim%f_x3x4,4)
     delta_eta1 = sim%mesh2d_x%delta_eta1

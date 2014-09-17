@@ -4,7 +4,7 @@ SET(SLL_MACROS
     ${CMAKE_CURRENT_SOURCE_DIR}/selalib.h
     ${CMAKE_CURRENT_SOURCE_DIR}/selalib-mpi.h
     ${SLL_DIR}/memory/sll_memory.h
-    ${SLL_DIR}/precision/sll_working_precision.h
+    ${SLL_DIR}/working_precision/sll_working_precision.h
     ${SLL_DIR}/assert/sll_assert.h
     ${SLL_DIR}/constants/sll_constants.h
     ${SLL_DIR}/utilities/sll_utilities.h
@@ -25,8 +25,6 @@ SET(SLL_MACROS
     ${SLL_DIR}/fields/sll_fields.h
     ${SLL_DIR}/mapped_meshes/sll_mapped_meshes.h
     ${SLL_DIR}/coordinate_transformations/sll_coordinate_transformations.h
-    ${SLL_DIR}/pastix/sll_pastix.h
-    ${SLL_DIR}/linear_solvers/sll_linear_solvers.h
     ${SLL_DIR}/pic_accumulators/sll_accumulators.h
     ${SLL_DIR}/pic_particle_types/particle_representation.h
 )
@@ -34,9 +32,8 @@ SET(SLL_MACROS
 FILE(COPY ${SLL_MACROS} DESTINATION ${CMAKE_BINARY_DIR}/include)
 
 SET(SLL_SOURCE_FILES
-    ${SLL_DIR}/memory/sll_strings.F90
     ${SLL_DIR}/memory/sll_memory.F90
-    ${SLL_DIR}/precision/sll_working_precision.F90
+    ${SLL_DIR}/working_precision/sll_working_precision.F90
     ${SLL_DIR}/assert/sll_assert.F90
     ${SLL_DIR}/advection/sll_advection_1d_periodic.F90
     ${SLL_DIR}/advection/sll_advection_1d_non_uniform_cubic_splines.F90
@@ -49,6 +46,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/advection/sll_advection_2d_CSL.F90
     ${SLL_DIR}/advection/sll_advection_2d_base.F90
     ${SLL_DIR}/constants/sll_constants.F90
+    ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_explicit_euler_conservative.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid.F90
     ${SLL_DIR}/characteristics/sll_characteristics_1d_trapezoid_conservative.F90
@@ -61,7 +59,6 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/utilities/tridiagonal.F90
     ${SLL_DIR}/utilities/sll_toeplitz_penta_diagonal.F90
     ${SLL_DIR}/lagrange_interpolation/sll_lagrange_interpolation.F90
-    ${SLL_DIR}/file_io/sll_file_io.F90
     ${SLL_DIR}/file_io/sll_binary_io.F90
     ${SLL_DIR}/file_io/sll_gnuplot.F90
     ${SLL_DIR}/file_io/sll_hdf5_io_serial.F90
@@ -115,21 +112,21 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/integration/gauss_lobatto.F90
     ${SLL_DIR}/simulation/sll_polar_operators.F90
     ${SLL_DIR}/simulation/sll_advection_polar.F90
-#    ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90
-    ${SLL_DIR}/sparse_matrix_interface/gauss_seidel.F90
-    ${SLL_DIR}/sparse_matrix_interface/getdia.F90
-    ${SLL_DIR}/sparse_matrix_interface/getl.F90
-    ${SLL_DIR}/sparse_matrix_interface/getu.F90
-    ${SLL_DIR}/sparse_matrix_interface/lsol.F90
-    ${SLL_DIR}/sparse_matrix_interface/remove_zeros.F90
-    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module.F90
-#    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_module_basic.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_basic.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_def.F90
-#    ${SLL_DIR}/sparse_matrix_interface/spm_mkl.F90
-#    ${SLL_DIR}/sparse_matrix_interface/spm_murge.F90
-#    ${SLL_DIR}/sparse_matrix_interface/spm_template.F90
-    ${SLL_DIR}/sparse_matrix_interface/spm_tools.F90
+#    ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90
+    ${SLL_DIR}/sparse_matrix_manager/gauss_seidel.F90
+    ${SLL_DIR}/sparse_matrix_manager/getdia.F90
+    ${SLL_DIR}/sparse_matrix_manager/getl.F90
+    ${SLL_DIR}/sparse_matrix_manager/getu.F90
+    ${SLL_DIR}/sparse_matrix_manager/lsol.F90
+    ${SLL_DIR}/sparse_matrix_manager/remove_zeros.F90
+    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module.F90
+#    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_module_basic.F90
+    ${SLL_DIR}/sparse_matrix_manager/spm_basic.F90
+    ${SLL_DIR}/sparse_matrix_manager/spm_def.F90
+#    ${SLL_DIR}/sparse_matrix_manager/spm_mkl.F90
+#    ${SLL_DIR}/sparse_matrix_manager/spm_murge.F90
+#    ${SLL_DIR}/sparse_matrix_manager/spm_template.F90
+    ${SLL_DIR}/sparse_matrix_manager/spm_tools.F90
     ${SLL_DIR}/time_solvers/sll_time_splitting_coeff.F90
     ${SLL_DIR}/boundary_condition_descriptors/sll_boundary_condition_descriptors.F90
     ${SLL_DIR}/logical_meshes/sll_logical_meshes.F90
@@ -146,7 +143,7 @@ SET(SLL_SOURCE_FILES
     ${SLL_DIR}/logical_meshes_multipatch/sll_logical_meshes_multipatch.F90
     ${SLL_DIR}/coordinate_transformations_multipatch/sll_coordinate_transformation_multipatch.F90
     ${SLL_DIR}/fields_multipatch/sll_scalar_field_2d_multipatch.F90
-    ${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_mp_module.F90
+    ${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_mp_module.F90
     ${SLL_DIR}/general_coordinate_elliptic_solvers_multipatch/sll_general_coordinate_elliptic_solver_multipatch.F90
     ${SLL_DIR}/mesh_calculus/sll_mesh_calculus_module.F90
     ${SLL_DIR}/distribution_function/sll_fdistribu4d_DK.F90
@@ -164,19 +161,19 @@ ENDIF()
 IF(${FFT_LIB} MATCHES "FFTPACK")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftpack.F90
+      ${SLL_DIR}/fft/fftpack/sll_fft.F90
 
       )
 ELSEIF(${FFT_LIB} MATCHES "FFTW")
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_mod_through_fftw.F90
-      ${SLL_DIR}/fft/fftw3.F90 )
+      ${SLL_DIR}/fft/fftw3/sll_fft.F90
+      ${SLL_DIR}/fft/fftw3/fftw3.F90 )
 
 ELSE()
 
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
-      ${SLL_DIR}/fft/sll_fft_selalib_implementation.F90)
+      ${SLL_DIR}/fft/sllfft/sll_fft.F90)
 
 ENDIF()
 
@@ -187,6 +184,8 @@ IF((${FFT_LIB} MATCHES "FFTW") AND FFTW_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES} 
     ${SLL_DIR}/maxwell_solvers/sll_maxwell_2d_pstd.F90
     ${SLL_DIR}/poisson_solvers/sll_poisson_2d_periodic_fftw.F90
+    ${SLL_DIR}/multigrid/sll_multigrid_2d.F90
+    ${SLL_DIR}/multigrid/mgd2_periodic.F
   )
 ENDIF()
 
@@ -202,12 +201,12 @@ ENDIF(MUDPACK_ENABLED)
 
 IF(SUITESPARSE_ENABLED)
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-        ${SLL_DIR}/sparse_matrix_interface/spm_umfpack.F90
-	${SLL_DIR}/sparse_matrix_interface/sll_sparse_matrix_umfpack_module.F90
+        ${SLL_DIR}/sparse_matrix_manager/spm_umfpack.F90
+	${SLL_DIR}/sparse_matrix_manager/sll_sparse_matrix_umfpack_module.F90
   )
 ELSE()
   SET(SLL_SOURCE_FILES ${SLL_SOURCE_FILES}
-      ${SLL_DIR}/sparse_matrix_interface/basic_cg.F90)
+      ${SLL_DIR}/sparse_matrix_manager/basic_cg.F90)
 
 ENDIF(SUITESPARSE_ENABLED)
 
@@ -275,6 +274,9 @@ IF(SLL_BUILD_PACKAGE)
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/../fftpack 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/fftpack
+   COMMAND ${CMAKE_COMMAND} -E copy_directory 
+           ${CMAKE_CURRENT_SOURCE_DIR}/../mudpack 
+           ${CMAKE_BINARY_DIR}/${DIST_NAME}/mudpack
    COMMAND ${CMAKE_COMMAND} -E copy_directory 
            ${CMAKE_CURRENT_SOURCE_DIR}/examples 
            ${CMAKE_BINARY_DIR}/${DIST_NAME}/examples

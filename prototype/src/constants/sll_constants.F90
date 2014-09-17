@@ -15,16 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!> @brief
 !> Fortran module where set some physical and mathematical constants.
-!> @details
-!> This file should contain all mathematical and physical 
-!> constants to be used library-wide.
-!>
-!> <b> How to use it </b>
-!> @code 
-!> #include "sll_constants.h" 
-!> @endcode
 module sll_constants
 #include "sll_working_precision.h"
 
@@ -34,7 +25,7 @@ implicit none
 sll_real64, parameter :: sll_pi = 3.1415926535897932384626433_f64 
 
 !> @param sll_kx is the fundamental mode in the x-direction. 
-sll_real64            :: sll_kx = 2*sll_pi 
+sll_real64, parameter :: sll_kx = 2*sll_pi 
 
 !> @param speed of light in vacuum (def) m/s  
 sll_real64, parameter :: sll_c = 2.99792458D8  

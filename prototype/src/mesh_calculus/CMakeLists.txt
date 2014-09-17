@@ -7,7 +7,7 @@ ADD_LIBRARY(sll_mesh_calculus STATIC sll_mesh_calculus_module.F90 )
 TARGET_LINK_LIBRARIES(sll_mesh_calculus sll_coordinate_transformations
                                         sll_logical_meshes
                                         sll_integration
-                                        sll_assertion
+                                        sll_assert
                                         sll_working_precision)
 
 ADD_EXECUTABLE( test_mesh_calculus_2d unit_test_2d.F90 )
