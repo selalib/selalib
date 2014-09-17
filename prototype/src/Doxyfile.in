@@ -752,7 +752,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
-@CMAKE_CURRENT_SOURCE_DIR@/remap \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager \
 @CMAKE_CURRENT_SOURCE_DIR@/utilities
 
@@ -1669,7 +1668,8 @@ PREDEFINED             = sll_int32=integer(kind=4) \
                          "_sll_int32=sll_int32" \
                          "_sll_int64=sll_int64" \
                          "_sll_real32=sll_real32" \
-                         "_sll_real64=sll_real64"
+                         "_sll_real64=sll_real64" \
+                         "SLL_PRIV= "
 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then
