@@ -19,6 +19,7 @@ program pic_4d_cartesian
        'x',sim%m2d%num_cells2,'cells'
      print*, sim%ions_number/real(sim%m2d%num_cells1* &
           sim%m2d%num_cells2,f64), 'particles per cell'
+     print*, sim%num_iterations, 'total iterations'
   endif
 
   call sim%run()
