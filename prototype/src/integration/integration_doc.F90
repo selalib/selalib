@@ -1,0 +1,44 @@
+! This file is read by doxygen software
+! Change it to match with your library
+! http://www.stack.nl/~dimitri/doxygen/manual/docblocks.html#fortranblocks
+! To see the documentation, remove the line containing your directory 
+! in file Doxyfile.in (line 691) if it is excluded. 
+! Type 'make doc' in build directory.
+! To check the results, open : 
+! selalib/prototype/documentation/build/html/doxygen/html/namespaces.html 
+! The following lines will be read by doxygen to generate documentation:
+
+
+!!         
+
+!> @namespace sll_integration 
+!> @brief 
+!> Integrate a function.
+!> @author Selalib team 
+!! @details 
+!> This module aims at providing a single interface to the process of 
+!> integrating a function on a given interval.
+!!   - Gauss-Legendre points and weights
+!!   - Gauss-Lobatto points and weights
+!!
+!!
+!> <b> Headers file available </b>
+!>  - sll_integration.h
+!>
+!> <b> Modules available </b>
+!>  - gauss_legendre_integration
+!>  - gauss_lobatto_integration
+!>
+!> <b> How to use it </b>
+!> - Header file : \code #include 'sll_integration.h' \endcode
+!> - Link with   <code>-lsll_integration</code>
+!> - Add <code> use gauss_legendre_integration </code>
+!> - Add <code> use gauss_lobatto_integration </code>
+!>
+!> <b> Examples </b>
+!> \code
+!> gauss_legendre_points_and_weights(5,-1.0_f64,1.0_f64)
+!>  x = gauss_lobatto_points( 10, -1._f64, 1._f64)
+!>  w = gauss_lobatto_weights(10)
+!> \endcode
+!>

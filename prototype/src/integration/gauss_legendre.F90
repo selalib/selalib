@@ -1,20 +1,5 @@
-!------------------------------------------------------------------------------
-! Selalib
-!------------------------------------------------------------------------------
-!
-! MODULE: gauss_legendre_integration
-!
-! DESCRIPTION:
-!> @author Module Author Name and Affiliation
-!> @brief This is a low-level mathematical utility that applies the 
+!> Low-level mathematical utility that applies the 
 !> Gauss-Legendre method to compute numeric integrals.
-!> @details This module aims at providing a single interface to the process of 
-!> integrating a function on a given interval.
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
 module gauss_legendre_integration
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -34,6 +19,7 @@ module gauss_legendre_integration
   ! requires use of the spline module. 
 
   abstract interface
+     !> 1d real function
      function function_1D_legendre(x)
        use sll_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
@@ -53,6 +39,7 @@ module gauss_legendre_integration
 !     end function interpolated_function_1D
 !  end interface
 
+  !> Compute numerical integration with Gauss-Legendre formula
   interface gauss_legendre_integrate_1D
      module procedure gauss_legendre_integral_1D !,gauss_legendre_integral_interpolated_1D
   end interface
@@ -193,26 +180,26 @@ contains
   ! some advantages to have the interpolating function parametrized also, like
   ! in this case.
   !---------------------------------------------------------------------------  
-  !> @author 
-  !> Routine Author Name and Affiliation.
+  ! @author 
+  ! Routine Author Name and Affiliation.
   !
   ! DESCRIPTION:
-  !> @brief Integrates a function represented by a spline object.
-  !> @details The function f in this case is the spline interpolation function.
-  !> It looks like this interface could be simplified and we could eliminate 
-  !> the first parameter and pass only the spline object.
-  !> The only reason to leave the interpolation function as an argument is if
-  !> we find some compelling reason to parametrize the interpolation function as well.
+  ! @brief Integrates a function represented by a spline object.
+  ! @details The function f in this case is the spline interpolation function.
+  ! It looks like this interface could be simplified and we could eliminate 
+  ! the first parameter and pass only the spline object.
+  ! The only reason to leave the interpolation function as an argument is if
+  ! we find some compelling reason to parametrize the interpolation function as well.
   !
   ! REVISION HISTORY:
   ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
   !
-  !> @param f the spline interpolation function
-  !> @param spline a spline
-  !> @param[in] a left-bound of the definition interval of f  
-  !> @param[in] b right-bound of the definition interval of f 
-  !> @param[in] n the desired number of Gauss points
-  !> @return The value of the integral
+  ! @param f the spline interpolation function
+  ! @param spline a spline
+  ! @param[in] a left-bound of the definition interval of f  
+  ! @param[in] b right-bound of the definition interval of f 
+  ! @param[in] n the desired number of Gauss points
+  ! @return The value of the integral
   !---------------------------------------------------------------------------
 !!$  function gauss_legendre_integral_interpolated_1D( f, spline, a, b, n )
 !!$    intrinsic                        :: sqrt
@@ -247,13 +234,12 @@ contains
 
 
 
-  !> @brief Returns a 2d array of size (2,npoints) containing gauss-legendre 
+  !> Returns a 2d array of size (2,npoints) containing gauss-legendre 
   !> points and weights in the interval [a,b].
   !> @param[in] npoints Number of gauss points.
   !> @param[in] a OPTIONAL Minimum value of the interval.
   !> @param[in] b OPTIONAL Maximun value of the interval.
-
-
+  !> @return array containing points (1,:) and weights (2,:)
   !> gauss_points(degree) returns a real 2D array with the values of the
   !> locations of the gaussian points 'x_k' in the [-1,1] interval and
   !> their corresponding weights 'w_k'. Each column of the answer array
@@ -264,9 +250,9 @@ contains
     sll_int32, intent(in)              :: npoints
     sll_real64, intent(in), optional   :: a
     sll_real64, intent(in), optional   :: b
-    sll_real64, dimension(2,1:npoints)  :: xw
-    sll_real64, dimension(1:npoints)    :: xk
-    sll_real64, dimension(1:npoints)    :: wk
+    sll_real64, dimension(2,1:npoints) :: xw
+    sll_real64, dimension(1:npoints)   :: xk
+    sll_real64, dimension(1:npoints)   :: wk 
     sll_real64                         :: c1
     sll_real64                         :: c2
     sll_int32                          :: k

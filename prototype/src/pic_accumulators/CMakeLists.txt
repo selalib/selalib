@@ -16,7 +16,7 @@ ADD_LIBRARY( sll_pic_accumulators STATIC
 TARGET_LINK_LIBRARIES(sll_pic_accumulators
   sll_logical_meshes
   sll_memory
-  sll_assertion
+  sll_assert
   sll_working_precision )
 
 
@@ -28,7 +28,7 @@ TARGET_LINK_LIBRARIES(test_pic_accumulator
   sll_pic_accumulators
   sll_pic_particles
   sll_logical_meshes
-  sll_assertion )
+  sll_assert )
 #  sll_pic_particles
 #  sll_pic_initializers )
 

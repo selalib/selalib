@@ -33,7 +33,7 @@
 
 &sim_params
   dt                = 16
-  number_iterations = 580
+  number_iterations = 5 !80
   spline_degree     = 3
 /
 

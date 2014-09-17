@@ -112,23 +112,28 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
     ADD_MPI_TEST(sim4d_DK_field_aligned_polar test_4d_dk_field_aligned_polar ${PROCS} ${ARGS})
     SET_TESTS_PROPERTIES(sim4d_DK_field_aligned_polar PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 100)
     
-    SET(ARGS " ")
-    ADD_MPI_TEST(distribution_function_4d_multipatch 
-      test_distribution_function_4d_multipatch ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES( distribution_function_4d_multipatch PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+    IF(PYTHON3_FOUND)
 
-    SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.txt)
-    ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+       SET(PROCS 4)
 
-    SET(PROCS 4)
-    SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
-    ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch
-      ${PROCS} ${ARGS})
-    SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES 
-      PASS_REGULAR_EXPRESSION "PASSED")
+       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_input.txt)
+       ADD_MPI_TEST(vp4d_sim_qns_general test_4d_qns_general ${PROCS} ${ARGS})
+       SET_TESTS_PROPERTIES(vp4d_sim_qns_general PROPERTIES 
+         PASS_REGULAR_EXPRESSION "PASSED")
+   
+       SET(ARGS " ")
+       ADD_MPI_TEST(distribution_function_4d_multipatch 
+         test_distribution_function_4d_multipatch ${PROCS} ${ARGS})
+       SET_TESTS_PROPERTIES( distribution_function_4d_multipatch PROPERTIES 
+         PASS_REGULAR_EXPRESSION "PASSED")
+
+       SET(ARGS ${CMAKE_BINARY_DIR}/sim4d_qns_general_multipatch_input.txt)
+       ADD_MPI_TEST(vp4d_sim_qns_general_multipatch test_4d_qns_general_multipatch
+         ${PROCS} ${ARGS})
+       SET_TESTS_PROPERTIES(vp4d_sim_qns_general_multipatch PROPERTIES 
+         PASS_REGULAR_EXPRESSION "PASSED")
+
+    ENDIF(PYTHON3_FOUND)
 
 
     SET(PROCS 4)
@@ -167,12 +172,5 @@ IF(HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL)
   ADD_MPI_TEST( pic_simulation_4d  test_4d_vp_pic_cartesian ${PROCS} ${ARGS} )
   SET_TESTS_PROPERTIES( pic_simulation_4d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 200)
 
-
-
 ENDIF() # HDF5_PARALLEL_ENABLED AND HDF5_IS_PARALLEL
 
-IF(PASTIX_FOUND AND PTSCOTCH_FOUND AND MURGE_FOUND AND SCOTCH_FOUND)
-  SET(ARGS "1000 3") 
-  ADD_MPI_TEST(pastix test_pastix ${PROCS} ${ARGS})
-  SET(pastix PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ENDIF()
