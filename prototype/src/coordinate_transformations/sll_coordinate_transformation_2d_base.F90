@@ -26,7 +26,7 @@ module sll_coordinate_transformation_2d_base_module
      ! as error checking, test the association of this pointer within the
      ! functions that receive an argument of 
      ! class(sll_coordinate_transformation_2d_base)
-     type(sll_logical_mesh_2d), pointer :: mesh => null()
+!     type(sll_logical_mesh_2d), pointer :: mesh => null()
 !     type(sll_logical_mesh_2d), pointer :: mesh2d_minimal => null()
      !logical to remember when the mesh has already been written to file
      character(len=64) :: label
@@ -74,10 +74,10 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function get_logical_mesh_ct( transf ) result(res)
-       use sll_meshes_base
+       use sll_logical_meshes
        import sll_coordinate_transformation_2d_base
        class(sll_coordinate_transformation_2d_base), intent(in) :: transf
-       class(sll_mesh_2d_base), pointer :: res
+       type(sll_logical_mesh_2d), pointer :: res
      end function get_logical_mesh_ct
   end interface
   

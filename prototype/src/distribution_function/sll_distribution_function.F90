@@ -89,7 +89,7 @@ contains
     this%data_position = data_position
     this%pcharge = 1.0_f64
     this%pmass = 1.0_f64
-    mesh => transf%mesh
+    mesh => transf%get_logical_mesh()
 
     if (data_position == NODE_CENTERED_FIELD) then
        SLL_ALLOCATE(this%data(mesh%num_cells1+1,mesh%num_cells2+1), ierr)

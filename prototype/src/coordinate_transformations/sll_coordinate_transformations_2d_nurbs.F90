@@ -66,7 +66,7 @@ module sll_module_coordinate_transformations_2d_nurbs
      sll_real64, dimension(:),pointer :: knots1
      sll_real64, dimension(:),pointer :: knots2
 !     type(sll_logical_mesh_2d), pointer  :: mesh2d_minimal =>null()
-!     type(sll_logical_mesh_2d), pointer :: mesh
+     type(sll_logical_mesh_2d), pointer :: mesh
    contains
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_nurbs_2d
      procedure, pass(transf) :: x1_at_node => x1_node_nurbs
@@ -441,14 +441,14 @@ contains
   end subroutine read_from_file_2d_nurbs
 
   function get_logical_mesh_nurbs_2d( transf ) result(res)
-    class(sll_mesh_2d_base), pointer :: res
+    class(sll_logical_mesh_2d), pointer :: res
     class(sll_coordinate_transformation_2d_nurbs), intent(in) :: transf
     res => transf%mesh
   end function get_logical_mesh_nurbs_2d
 
   function x1_node_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_mesh_2d_base), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -788,7 +788,7 @@ contains
   subroutine write_to_file_2d_nurbs(transf,output_format)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, optional :: output_format 
-    class(sll_mesh_2d_base), pointer :: lm
+    type(sll_logical_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
@@ -801,63 +801,63 @@ contains
 
     lm => transf%get_logical_mesh()
 
-    ! npts_eta1  = lm%num_cells1 +1
-    ! npts_eta2  = lm%num_cells2 +1
+    npts_eta1  = lm%num_cells1 +1
+    npts_eta2  = lm%num_cells2 +1
 
 
-    ! if (.not. present(output_format)) then
-    !    local_format = SLL_IO_XDMF
-    ! else
-    !    local_format = output_format
-    ! end if
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_XDMF
+    else
+       local_format = output_format
+    end if
 
-    ! print*, 'label', transf%label
-    ! if ( .not. transf%written ) then
+    print*, 'label', transf%label
+    if ( .not. transf%written ) then
 
-    !    if (local_format == SLL_IO_XDMF) then
-    !       SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
-    !       SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
-    !       do i1=1, npts_eta1
-    !          do i2=1, npts_eta2
-    !             x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
-    !             x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
-    !             !print*, x1mesh(i1,i2),x2mesh(i1,i2)
-    !          end do
-    !       end do
+       if (local_format == SLL_IO_XDMF) then
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
+                x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
+                !print*, x1mesh(i1,i2),x2mesh(i1,i2)
+             end do
+          end do
 
-    !       call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
-    !            npts_eta1,npts_eta2,file_id,ierr)
-    !       call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
-    !       call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
-    !       call sll_xdmf_close(file_id,ierr)
+          call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
+               npts_eta1,npts_eta2,file_id,ierr)
+          call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
 
-    !    else if (local_format == SLL_IO_MTV) then
+       else if (local_format == SLL_IO_MTV) then
 
-    !       SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
-    !       SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
 
-    !       do i1=1, npts_eta1
-    !          do i2=1, npts_eta2
-    !             x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
-    !             x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
-    !          end do
-    !       end do
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = transf%x1_at_node(i1,i2)
+                x2mesh(i1,i2) = transf%x2_at_node(i1,i2)
+             end do
+          end do
        
-    !       call sll_plotmtv_write( npts_eta1,npts_eta2, &
-    !                               x1mesh, x2mesh, trim(transf%label),ierr)
+          call sll_plotmtv_write( npts_eta1,npts_eta2, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
 
-    !    else
-    !       print*, 'Not recognized format to write this mesh'
-    !       stop
-    !    end if
-    ! else
-    !    print*,' Warning, you have already written the mesh '
-    ! end if
+       else
+          print*, 'Not recognized format to write this mesh'
+          stop
+       end if
+    else
+       print*,' Warning, you have already written the mesh '
+    end if
 
-    ! transf%written = .true.
+    transf%written = .true.
 
-    ! SLL_DEALLOCATE(x1mesh,ierr)
-    ! SLL_DEALLOCATE(x2mesh,ierr)
+    SLL_DEALLOCATE(x1mesh,ierr)
+    SLL_DEALLOCATE(x2mesh,ierr)
   end subroutine
 
   ! The coordinate transformation is reserving to itself the right to 

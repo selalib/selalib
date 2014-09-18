@@ -420,7 +420,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        whatever ) 
-  
+
   a12_field_mat => new_scalar_field_2d_analytic_alt( &
        func_zero, &
        "a12", &
@@ -511,7 +511,6 @@ program test_finite_elements_solver
        SPLINE_DEG1, &
        SPLINE_DEG2 )
  
-  
   phi => new_scalar_field_2d_discrete_alt( &
        "phi3", &
        interp_2d, &
@@ -520,6 +519,7 @@ program test_finite_elements_solver
        SLL_DIRICHLET, &
        SLL_DIRICHLET, &
        SLL_DIRICHLET)
+
   call phi%set_field_data(values)
   call phi%update_interpolation_coefficients()
   

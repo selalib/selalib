@@ -96,7 +96,7 @@ contains
     sll_int32 :: i1, i2
     sll_real64 :: mass
 
-    mesh => this%transf%mesh
+    mesh => this%transf%get_logical_mesh()
     nc_eta1 = mesh%num_cells1 
     nc_eta2 = mesh%num_cells2
     mass    = this%pmass    
