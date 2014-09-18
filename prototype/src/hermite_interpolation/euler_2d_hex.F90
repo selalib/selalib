@@ -235,19 +235,7 @@ contains
     
     Num_cells = charac%Num_cells
     radius = charac%radius
-    dx = input1(2) - input1(1) 
-    dy = input2(2) - input2(1) 
 
-    SLL_ASSERT(size(A1,1)>=charac%Npts1)
-    SLL_ASSERT(size(A1,2)>=charac%Npts2)
-    SLL_ASSERT(size(A2,1)>=charac%Npts1)
-    SLL_ASSERT(size(A2,2)>=charac%Npts2)
-    SLL_ASSERT(size(input1)>=charac%Npts1)
-    SLL_ASSERT(size(input2)>=charac%Npts2)
-    SLL_ASSERT(size(output1,1)>=charac%Npts1)
-    SLL_ASSERT(size(output1,2)>=charac%Npts2)
-    SLL_ASSERT(size(output2,1)>=charac%Npts1)
-    SLL_ASSERT(size(output2,2)>=charac%Npts2)
     
     do j = - Num_cells,Num_cells
       do i = - Num_cells,Num_cells
@@ -267,13 +255,13 @@ contains
          ! then we use the appropriate procedure
 
 
-        if((output1(i,j)<=eta1_min).or.(output1(i,j)>=eta1_max))then
-          output1(i,j)=charac%process_outside_point1(output1(i,j),eta1_min,eta1_max)
-        endif  
 
-        if((output2(i,j)<=eta2_min).or.(output2(i,j)>=eta2_max))then
-          output2(i,j)=charac%process_outside_point2(output2(i,j),eta2_min,eta2_max)          
+
+        if(  output1(i,j) output2(i,j) )then
+          output1(i,j)=charac%process_outside_point6(output2(i,j),radius)   
+          output2(i,j)=charac%process_outside_point6(output2(i,j),radius)          
         endif
+
       enddo
     enddo   
       
