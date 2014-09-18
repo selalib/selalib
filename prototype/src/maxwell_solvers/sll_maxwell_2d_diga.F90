@@ -167,23 +167,20 @@ subroutine initialize_maxwell_2d_diga( this,         &
    sll_real64                  :: xa, xb, ya, yb
 
    this%tau        => tau
-   ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
-   ! longer supported.
-   !   this%mesh       => tau%get_logical_mesh()
-   this%mesh => tau%mesh
+   this%mesh       => tau%get_logical_mesh()
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
    this%bc_north   =  bc_north
    this%bc_west    =  bc_west
 
-   this%nc_eta1    = tau%mesh%num_cells1
-   this%nc_eta2    = tau%mesh%num_cells2
-   this%eta1_min   = tau%mesh%eta1_min
-   this%eta2_min   = tau%mesh%eta2_min
-   this%eta1_max   = tau%mesh%eta1_max
-   this%eta2_max   = tau%mesh%eta2_max
-   this%delta_eta1 = tau%mesh%delta_eta1
-   this%delta_eta2 = tau%mesh%delta_eta2
+   this%nc_eta1    = this%mesh%num_cells1
+   this%nc_eta2    = this%mesh%num_cells2
+   this%eta1_min   = this%mesh%eta1_min
+   this%eta2_min   = this%mesh%eta2_min
+   this%eta1_max   = this%mesh%eta1_max
+   this%eta2_max   = this%mesh%eta2_max
+   this%delta_eta1 = this%mesh%delta_eta1
+   this%delta_eta2 = this%mesh%delta_eta2
 
    this%xi           = 0.0_f64
    this%degree       = degree
@@ -204,10 +201,10 @@ subroutine initialize_maxwell_2d_diga( this,         &
    w    = gauss_lobatto_weights(degree+1,0.0_f64,1.0_f64)
    dlag = gauss_lobatto_derivative_matrix(degree+1,x)
 
-   dtau_ij_mat(1,1) = tau%mesh%delta_eta1
+   dtau_ij_mat(1,1) = this%mesh%delta_eta1
    dtau_ij_mat(1,2) = 0.0_f64
    dtau_ij_mat(2,1) = 0.0_f64
-   dtau_ij_mat(2,2) = tau%mesh%delta_eta2
+   dtau_ij_mat(2,2) = this%mesh%delta_eta2
 
    do j = 1, this%nc_eta2   !Loop over cells
    do i = 1, this%nc_eta1
@@ -547,19 +544,22 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_north
    sll_int32                   :: bc_west
    sll_int32                   :: k
-   
+   type(sll_logical_mesh_2d), pointer :: lm
+
+   lm => tau%get_logical_mesh()
+
    cell%i = i
    cell%j = j
-   cell%eta1_min = tau%mesh%eta1_min + (i-1)*tau%mesh%delta_eta1
-   cell%eta2_min = tau%mesh%eta2_min + (j-1)*tau%mesh%delta_eta2
+   cell%eta1_min = lm%eta1_min + (i-1)*lm%delta_eta1
+   cell%eta2_min = lm%eta2_min + (j-1)*lm%delta_eta2
    
-   cell%eta1_max = cell%eta1_min + tau%mesh%delta_eta1
-   cell%eta2_max = cell%eta2_min + tau%mesh%delta_eta2
+   cell%eta1_max = cell%eta1_min + lm%delta_eta1
+   cell%eta2_max = cell%eta2_min + lm%delta_eta2
 
-   dtau_ij_mat(1,1) = tau%mesh%delta_eta1
+   dtau_ij_mat(1,1) = lm%delta_eta1
    dtau_ij_mat(1,2) = 0.0_f64
    dtau_ij_mat(2,1) = 0.0_f64
-   dtau_ij_mat(2,2) = tau%mesh%delta_eta2
+   dtau_ij_mat(2,2) = lm%delta_eta2
 
    do side = 1, 4
       SLL_CLEAR_ALLOCATE(cell%edge(side)%vec_norm(1:d+1,1:2),error)
@@ -567,8 +567,8 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    if (j ==                   1) cell%edge(SOUTH)%bc_type = bc_south
-   if (i == tau%mesh%num_cells1) cell%edge(EAST)%bc_type  = bc_east
-   if (j == tau%mesh%num_cells2) cell%edge(NORTH)%bc_type = bc_north
+   if (i == lm%num_cells1) cell%edge(EAST)%bc_type  = bc_east
+   if (j == lm%num_cells2) cell%edge(NORTH)%bc_type = bc_north
    if (i ==                   1) cell%edge(WEST)%bc_type  = bc_west
    
    x = gauss_lobatto_points(d+1)
@@ -593,7 +593,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(SOUTH)%length = length
-   cell%edge(SOUTH)%vec_norm = vec_norm/tau%mesh%delta_eta1
+   cell%edge(SOUTH)%vec_norm = vec_norm/lm%delta_eta1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -614,7 +614,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(EAST)%length = length
-   cell%edge(EAST)%vec_norm = vec_norm/tau%mesh%delta_eta2
+   cell%edge(EAST)%vec_norm = vec_norm/lm%delta_eta2
    
    length = 0._f64
    a  = cell%eta1_min 
@@ -635,7 +635,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(NORTH)%length = length
-   cell%edge(NORTH)%vec_norm = vec_norm/tau%mesh%delta_eta1
+   cell%edge(NORTH)%vec_norm = vec_norm/lm%delta_eta1
    
    length = 0._f64
    a  = cell%eta2_min 
@@ -656,7 +656,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    end do
 
    cell%edge(WEST)%length = length
-   cell%edge(WEST)%vec_norm = vec_norm/tau%mesh%delta_eta2
+   cell%edge(WEST)%vec_norm = vec_norm/lm%delta_eta2
 
 end subroutine compute_normals
 
