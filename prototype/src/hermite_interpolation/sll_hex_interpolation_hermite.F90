@@ -614,7 +614,9 @@ contains
 
     else if (num_method == 10 ) then
 
-       freedom(10) = center_value(center_index)
+       !freedom(10) = center_value(center_index)
+
+       call reconstruction_center_values(mesh,f_tn,center_index,freedom(10))
 
        ! Computing the ten canonical basis functions 
        call base_zienkiewicz_10_degree_of_freedom(base,step,l1,l2,l3)
@@ -1072,29 +1074,24 @@ contains
     sll_real64,dimension(2)                :: n1_l,n2_l,n3_l,n1_r,n2_r,n3_r
     sll_real64                             :: det, v1, v2, v3, v4   
 
-!*real(mesh%num_cells,f64)/mesh%radius
-    !det = mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1
+    det = mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1
 
-    ! v1 = (+mesh%r1_x2*mesh%r2_x2 + mesh%r1_x1*mesh%r2_x1)/det 
-    ! v2 = (-mesh%r1_x2*mesh%r1_x2 - mesh%r1_x1*mesh%r1_x1)/det 
-    ! v3 = (+mesh%r2_x2*mesh%r2_x2 + mesh%r2_x1*mesh%r2_x1)/det 
-    ! v4 = (-mesh%r2_x2*mesh%r1_x2 - mesh%r2_x1*mesh%r1_x1)/det
+    v1 = (+mesh%r1_x2*mesh%r2_x2 + mesh%r1_x1*mesh%r2_x1)/det 
+    v2 = (-mesh%r1_x2*mesh%r1_x2 - mesh%r1_x1*mesh%r1_x1)/det 
+    v3 = (+mesh%r2_x2*mesh%r2_x2 + mesh%r2_x1*mesh%r2_x1)/det 
+    v4 = (-mesh%r2_x2*mesh%r1_x2 - mesh%r2_x1*mesh%r1_x1)/det
+    
+    n1_l = (/v1    , v2   /)
+    n2_l = (/-(v1+v3) , -(v2+v4)/)
+    n3_l = (/v3    , v4   /)
 
-    ! n1_l = (/v1    , v2   /)
-    ! n2_l = (/v1+v3 , v2+v4/)
-    ! n3_l = (/v3    , v4   /)
+    ! n1_l = (/-1._f64/sqrt(3._f64) , -2._f64/sqrt(3._f64)/)
+    ! n2_l = (/-1._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
+    ! n3_l = (/+2._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
 
-    ! n1_r = -n3_l
-    ! n2_r = -n2_l
-    ! n3_r = -n1_l
-
-    n1_l = (/-1._f64/sqrt(3._f64) , -2._f64/sqrt(3._f64)/)
-    n2_l = (/-1._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
-    n3_l = (/+2._f64/sqrt(3._f64) , +1._f64/sqrt(3._f64)/)
-
-    n1_r = (/-2._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
-    n2_r = (/+1._f64/sqrt(3._f64) , -1._f64/sqrt(3._f64)/)
-    n3_r = (/+1._f64/sqrt(3._f64) , +2._f64/sqrt(3._f64)/)
+    n1_r = -n3_l
+    n2_r = -n2_l
+    n3_r = -n1_l
 
     num_cells = mesh%num_cells   
 
@@ -1378,7 +1375,6 @@ contains
        freedom(2) = ( 3._f64*(fi_2+fi3) - 25._f64*(fi_1+fi2) + &
             150._f64*(fi+fi1)) / 256._f64 
 
-
        ! the third normal derivative is oriented normal to r2 and m3 is in [S1;S2]
 
        if ( test_in(h1_2,h2_5,num_cells) ) then
@@ -1530,5 +1526,137 @@ contains
 
   end subroutine base_ganev_dimitrov
 
+
+
+  subroutine reconstruction_center_values(mesh,f_tn,center_index,center_value)
+    type(sll_hex_mesh_2d), pointer       :: mesh
+    sll_real64, dimension(:), intent(in) :: f_tn 
+    sll_int32                 ,intent(in):: center_index
+    sll_real64               ,intent(out):: center_value
+    sll_int32                            :: i1,i2,i3,k11,k12
+    sll_int32                            :: ni_3,ni_2,ni_1,ni,ni1,ni2,ni3,ni4
+    sll_real64                           :: x,y, x1  
+    sll_real64                           :: l1,l2,l3,l4,l5,l6,l7,l8   
+    sll_real64                           :: fi_3,fi_2,fi_1,fi,fi1,fi2,fi3,fi4
+    
+    x = mesh%center_cartesian_coord(1,center_index)
+    y = mesh%center_cartesian_coord(2,center_index)
+
+    call get_cell_vertices_index( x, y, mesh, i1, i2, i3 )
+
+    x1 = mesh%cartesian_coord(1,i1) 
+
+    k11 = mesh%hex_coord(1,i1) 
+    k12 = mesh%hex_coord(2,i1) 
+
+    if ( test_in(k11-3,k12+4,mesh%num_cells) ) then
+       fi_3 = 0._f64  
+    else
+       ni_3 = hex_to_global(mesh,k11-3,k12+4)
+       fi_3 = f_tn(ni_3) 
+    endif
+
+    if ( test_in(k11-2,k12+3,mesh%num_cells) ) then
+       fi_2 = 0._f64  
+    else
+       ni_2 = hex_to_global(mesh,k11-2,k12+3)
+       fi_2 = f_tn(ni_2) 
+    endif
+
+    if ( test_in(k11-1,k12+2,mesh%num_cells) ) then
+       fi_1 = 0._f64 
+    else
+       ni_1 = hex_to_global(mesh,k11-1,k12+2)
+       fi_1 = f_tn(ni_1)
+    endif
+
+    if ( test_in(k11,k12+1,mesh%num_cells) ) then
+       fi = 0._f64  
+    else
+       ni = hex_to_global(mesh,k11,k12+1)
+       fi = f_tn(ni)
+    endif
+
+    if ( test_in(k11+1,k12,mesh%num_cells) ) then
+       fi1 = 0._f64  
+    else
+       ni1 = hex_to_global(mesh,k11+1,k12)
+       fi1 = f_tn(ni1)
+    endif
+
+    if ( test_in(k11+2,k12-1,mesh%num_cells) ) then
+       fi2 = 0._f64  
+    else
+       ni2 = hex_to_global(mesh,k11+2,k12-1)
+       fi2 = f_tn(ni2)
+    endif
+    
+    if ( test_in(k11+3,k12-2,mesh%num_cells) ) then
+       fi3 = 0._f64  
+    else
+       ni3 = hex_to_global(mesh,k11+3,k12-2)
+       fi3 = f_tn(ni3)
+    endif
+    if ( test_in(k11+4,k12-3,mesh%num_cells) ) then
+       fi4 = 0._f64  
+    else
+       ni4 = hex_to_global(mesh,k11+4,k12-3)
+       fi4 = f_tn(ni4)
+    endif
+
+    if ( x < x1) then    ! first case  : triangle oriented left
+       ! l1 =  1.09739369e-2
+       ! l2 = -9.60219478738e-2
+       ! l3 =  0.768175583
+       ! l4 =  0.3840877915
+       ! l5 = -7.68175583e-2
+       ! l6 =  9.60219478738e-3
+       
+       ! l1 = 0._f64
+       ! l2 = -384._f64/6000._f64
+       ! l3 =  1344._f64/2000._f64
+       ! l4 =  896._f64/2000._f64
+       ! l5 = -336._f64/6000._f64
+       ! l6 = 0._f64
+       
+       l1 = -1.9704302961946860E-003
+       l2 =  1.9878164458669901E-002
+       l3 = -0.10671435656759629 
+       l4 =  0.84482198949347154
+       l5 =  0.30720799617944411
+       l6 = -7.7983568260935790E-002
+       l7 =  1.6484331502311610E-002 
+       l8 = -1.7241265091703488E-003
+
+    else                 ! second case : triangle oriented right
+       ! l1 =  9.60219478738e-3
+       ! l2 = -7.68175583e-2
+       ! l3 =  0.3840877915
+       ! l4 =  0.768175583
+       ! l5 = -9.60219478738e-2
+       ! l6 =  1.09739369e-2 
+
+       ! l1 = 0._f64
+       ! l2 = -336._f64/6000._f64
+       ! l3 =  896._f64/2000._f64
+       ! l4 =  1344._f64/2000._f64
+       ! l5 = -384._f64/6000._f64
+       ! l6 = 0._f64
+
+       l1 = -1.7241265091703496E-003
+       l2 =  1.6484331502311624E-002
+       l3 = -7.7983568260935734E-002
+       l4 =  0.30720799617944405 
+       l5 =  0.84482198949347143
+       l6 = -0.10671435656759636 
+       l7 =  1.9878164458669884E-002
+       l8 = -1.9704302961946847E-003
+
+    endif
+
+    center_value = l1*fi_3 + l2*fi_2 + l3*fi_1 + l4*fi + l5*fi1 + l6*fi2&
+         + l7*fi3 + l8*fi4
+
+  end subroutine reconstruction_center_values
 
 end module sll_interpolation_hex_hermite
