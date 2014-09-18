@@ -30,6 +30,8 @@ program unit_test
   sll_int32 :: i,j
   sll_real64, dimension(4) :: sinprod_params 
 
+  print *, "in fields unit test"
+
   nc1 = 10
   nc2 = 10
   ml => new_logical_mesh_2d( nc1, nc2)
@@ -41,6 +43,8 @@ program unit_test
   pjac22 => sinprod_jac22
   sinprod_params(:) = (/0.1_f64, 0.1_f64,1.0_f64,1.0_f64/)
 
+  print *, "in fields unit test : coo transf"
+
   transf => new_coordinate_transformation_2d_analytic(&
        'sinprod',&
        ml,  &
@@ -51,7 +55,10 @@ program unit_test
        pjac21, &
        pjac22, &
        sinprod_params )
+
+  print *, "in fields unit test : coo transf done"
   m => transf
+  print *, "in fields unit test : coo transf assigned"
 
   call init_landau%initialize(m,NODE_CENTERED_FIELD,0.001_f64)
   pfinit => init_landau
@@ -62,6 +69,7 @@ program unit_test
   interp_eta1_ptr => interp_eta1
   interp_eta2_ptr => interp_eta2
  
+  print *, "in fields unit test : scalar field init"
   call initialize_scalar_field_2d( &
        field, &
        "px1_field", &
@@ -70,6 +78,7 @@ program unit_test
        interp_eta1_ptr, &
        interp_eta2_ptr, &
        pfinit )
+  print *, "in fields unit test : scalar field init done"
 
   print*, m%x1_at_node(5,3), m%x1(.3_f64, .4_f64)
 
