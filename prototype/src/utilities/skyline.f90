@@ -1,21 +1,24 @@
-! fortran structure for solving linear systems
-! the matrix can be symmetric or not.
-! It is stored in the skyline format
-! into three vectors "vdiag", "vlow", "vsup" for representing
-! respectively its diagonal, lower part and upper part.
-! The shape of the non-zero part of the matrix is symmetric.
-! The profile "prof" of the matrix is the number of nonzero terms 
-! above the diagonal for each column (or the number of nonzero terms
-! to the left of the diagonal for each line).
-! A fast access is provided to the matrix with the array "mkld" pointing
-! in "vsup" to the beginning of each column 
-! (or in "vlow" to the beginning of each line).
-! Subroutines are provided for accessing (i,j) terms of the matrix,
-! computing matrix vector product,
-! computing LU decomposition and solving linear system
+!> @brief
+!> fortran structure for solving linear systems
+!> @details
+!> the matrix can be symmetric or not.
+!> It is stored in the skyline format
+!> into three vectors "vdiag", "vlow", "vsup" for representing
+!> respectively its diagonal, lower part and upper part.
+!> The shape of the non-zero part of the matrix is symmetric.
+!> The profile "prof" of the matrix is the number of nonzero terms 
+!> above the diagonal for each column (or the number of nonzero terms
+!> to the left of the diagonal for each line).
+!> A fast access is provided to the matrix with the array "mkld" pointing
+!> in "vsup" to the beginning of each column 
+!> (or in "vlow" to the beginning of each line).
+!> Subroutines are provided for accessing (i,j) terms of the matrix,
+!> computing matrix vector product,
+!> computing LU decomposition and solving linear system
 module skyline
   implicit none
 
+  !> Matrix object in skyline format
   type skyline_matrix
      integer :: neq=0 ! size of the linear system
      logical :: sym=.false. ! true if symmetric system    
@@ -27,7 +30,7 @@ module skyline
 
 contains
 
-  ! create the matrix
+  !> create the matrix
   subroutine create(sky,n)
     implicit none
     integer :: n
@@ -43,7 +46,7 @@ contains
 
   end subroutine create
 
-  ! allocate the matrix from the profile
+  !> allocate the matrix from the profile
   subroutine init(sky)
     implicit none
     integer :: i
@@ -63,7 +66,7 @@ contains
     sky%vlow=0
   end subroutine init
 
-  ! add a value to  a term of the matrix
+  !> add a value to  a term of the matrix
   subroutine add(sky,val,i,j)
 
     implicit none
@@ -89,7 +92,7 @@ contains
 
   end subroutine add
 
-  ! get the (i,j) term of the matrix
+  !> get the (i,j) term of the matrix
   subroutine get(sky,val,i,j)
 
     implicit none
@@ -111,7 +114,7 @@ contains
 
   end subroutine get
 
-  ! scalar produc
+  !> scalar product
   function scal(x,y,n)
     implicit none
     integer :: n,i
@@ -123,7 +126,7 @@ contains
     end do
   end function scal
 
-  ! compute (in place) the LU decomposition
+  !> compute (in place) the LU decomposition
   subroutine computeLU(sky)
     implicit none
     type(skyline_matrix) :: sky
@@ -136,7 +139,7 @@ contains
          nsym,energ,ier,sky%memsize)  
   end subroutine computeLU
 
-  ! solve a linear system
+  !> solve a linear system
   subroutine solve(sky,rhs,solution)
     implicit none
     type(skyline_matrix) :: sky
@@ -149,7 +152,7 @@ contains
          nsym,energ,ier,sky%memsize)  
   end subroutine solve
 
-  ! compute matrix vector product (real)
+  !> compute matrix vector product (real)
   subroutine mul(sky,x,Ax)
     implicit none
     type(skyline_matrix) :: sky
@@ -164,8 +167,8 @@ contains
   end subroutine mul
 
   ! compute matrix vector product (complex)
-  subroutine cmul()
-  end subroutine cmul
+  !subroutine cmul()
+  !end subroutine cmul
 
 end module skyline
 
