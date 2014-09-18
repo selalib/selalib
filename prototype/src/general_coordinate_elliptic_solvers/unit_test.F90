@@ -3281,17 +3281,17 @@ program test_general_elliptic_solver
 !!$  
 !!$  
 !!$  
-  print*, "---------------------"
-  print*, " 11 test case with colella change of coordinates"
-  print*, " dirichlet-dirichlet boundary conditions"
-  print*, " with non analytic source term " 
-  print*, "---------------------"
+!   print*, "---------------------"
+!   print*, " 11 test case with colella change of coordinates"
+!   print*, " dirichlet-dirichlet boundary conditions"
+!   print*, " with non analytic source term " 
+!   print*, "---------------------"
   npts1 =  NUM_CELLS1 + 1
   npts2 =  NUM_CELLS2 + 1
   h1 = (ETA1MAX - ETA1MIN)/real(NPTS1-1,f64)
   h2 = (ETA2MAX - ETA2MIN)/real(NPTS2-1,f64)
-  print *, 'h1 = ', h1
-  print *, 'h2 = ', h2
+!   print *, 'h1 = ', h1
+!   print *, 'h2 = ', h2
   
   ! Table to represent the node values of phi
   SLL_ALLOCATE(values(NUM_CELLS1+1,NUM_CELLS2+1),ierr)
@@ -3429,7 +3429,7 @@ program test_general_elliptic_solver
 
 
   rho => new_scalar_field_2d_discrete_alt( &
-       "rho11", &
+       "rho11_solver_AB", &
        terme_source_interp, &
        T, &
        SLL_DIRICHLET, &
@@ -3443,6 +3443,7 @@ program test_general_elliptic_solver
   call rho%set_field_data(tab_rho)
   call rho%update_interpolation_coefficients()
 
+  call rho%write_to_file(0)
 !!$  
   call initialize_ad2d_interpolator( &
        interp_2d, &
@@ -3460,7 +3461,7 @@ program test_general_elliptic_solver
        SPLINE_DEG2 )
 !!$    
   phi => new_scalar_field_2d_discrete_alt( &
-       "phi11", &
+       "phi11_solver_AB", &
        interp_2d, &
        T, &
        SLL_DIRICHLET, &
@@ -3469,7 +3470,7 @@ program test_general_elliptic_solver
        SLL_DIRICHLET)
   call phi%set_field_data(values)
   call phi%update_interpolation_coefficients()
-  
+
   print *, 'initialized fields...'
   call sll_set_time_mark(t_reference)
   
@@ -3589,7 +3590,7 @@ program test_general_elliptic_solver
        ( sqrt(normH1_11)<= h1**(SPLINE_DEG1-1-1))) then     
      print *, 'PASSED'
   else
-     stop     'FAILED'
+     print *,     'FAILED'
   end if
 
 
