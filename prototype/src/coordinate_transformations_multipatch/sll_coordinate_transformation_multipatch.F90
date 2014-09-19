@@ -379,97 +379,87 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! the following line should be changed to get_ function, but for 
-    ! compatibility with the gfortran 4.6.3 compiler we allow direct access.
-    res => mp%transfs(patch+1)%t%mesh
+    res => mp%transfs(patch+1)%t%get_logical_mesh()
   end function get_logical_mesh_ctmp2d
 
   function get_num_cells_eta1_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_int32 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells1
-    res = mp%transfs(patch+1)%t%mesh%num_cells1
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%num_cells1
   end function get_num_cells_eta1_ctmp2d
 
   function get_num_cells_eta2_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_int32 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%num_cells2
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%num_cells2
   end function get_num_cells_eta2_ctmp2d
 
   function get_delta_eta1_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%delta_eta1
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%delta_eta1
   end function get_delta_eta1_ctmp2d
 
   function get_delta_eta2_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%delta_eta2
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%delta_eta2
   end function get_delta_eta2_ctmp2d
 
   function get_eta1_min_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%eta1_min
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%eta1_min
   end function get_eta1_min_ctmp2d
 
   function get_eta1_max_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%eta1_max
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%eta1_max
   end function get_eta1_max_ctmp2d
 
   function get_eta2_min_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%eta2_min
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%eta2_min
   end function get_eta2_min_ctmp2d
 
   function get_eta2_max_ctmp2d ( mp, patch ) result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     sll_real64 :: res
+    type(sll_logical_mesh_2d), pointer :: mesh
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    ! Get rid of this 'fix' whenever the version of gfortran 4.6 is no
-    ! longer supported by Selalib
-    ! res = mp%get_logical_mesh%num_cells2
-    res = mp%transfs(patch+1)%t%mesh%eta2_max
+    mesh => mp%get_logical_mesh(patch)
+    res = mesh%eta2_max
   end function get_eta2_max_ctmp2d
 
   function get_transformation_ctmp2d( mp, patch ) result(res)

@@ -500,11 +500,6 @@ contains
     end if
 
     if(present( transf_x1_x2 ) ) then
-       ! needed to change the following call from 
-       ! transf_x1_x2%get_logical_mesh() because the 4.6 version of gfortran
-       ! breaks at this point. Hence the double interface (access function and
-       ! direct access of the mesh). But this should be fixed once the decision
-       ! to not support that compiler version is made.
        if(.not. associated(transf_x1_x2%get_logical_mesh(),mesh2d_eta1_eta2) )&
           then 
 
