@@ -75,11 +75,11 @@ program unit_test
   print *, '***********************************************************'
   
   do j=0,NPTS2-1
+     eta2               = X2MIN + real(j,f64)*h2
+     eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2) *cos(2.0_f64*sll_pi*eta1)
         reference(i+1,j+1) = cos(2.0_f64*sll_pi*eta1)!cos(2.0_f64*sll_pi*eta2)*cos(2.0_f64*sll_pi*eta1)
      end do
@@ -175,11 +175,11 @@ program unit_test
   call sll_delete(ad2d)
 
   do j=0,NPTS2-1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta2) *sin(2.0_f64*sll_pi*eta1)
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta2)*sin(2.0_f64*sll_pi*eta1)
      end do
@@ -254,11 +254,11 @@ program unit_test
   !reinitialize data
   ! assumes eta mins are 0
   do j=0,NPTS2-1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*cos(2.0_f64*sll_pi*eta2)
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)
      end do
@@ -329,11 +329,11 @@ program unit_test
   !reinitialize data
 
   do j=0,NPTS2-1
+     eta2               = X2MIN + real(j,f64)*h2
+     eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
      end do
@@ -405,13 +405,13 @@ program unit_test
   call sll_delete(ad2d)
   
   !reinitialize data
-  
+
   do j=0,NPTS2-1
+     eta2               = X2MIN + real(j,f64)*h2
+     eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
@@ -425,6 +425,7 @@ program unit_test
      end do
   end do
   
+ 
   call ad2d%initialize( &
        NPTS1, &
        NPTS2, &
@@ -439,27 +440,25 @@ program unit_test
        SPL_DEG, &
        SPL_DEG )
 
-
   call ad2d%set_values_at_boundary(&
        value_left,&
        value_right,&
        value_bottom,&
        value_top)
 
-
   call ad2d%set_slopes_at_boundary(&
        slope_left,&
        slope_right,&
        slope_bottom,&
        slope_top)
-  
+ 
   call ad2d%compute_interpolants( &
        x,&
        eta1_pos,&
        NPTS1,&
        eta2_pos,&
        NPTS2)
-
+ 
   
   !node_val   = ad2d%interpolate_value(0.0_f64,0.0_f64)
   print *, 'Compare the values of the transformation at the nodes: '
@@ -509,11 +508,11 @@ program unit_test
   !reinitialize data
   
   do j=0,NPTS2-1
+     eta2               = X2MIN + real(j,f64)*h2
+     eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
@@ -609,11 +608,11 @@ program unit_test
   !reinitialize data
   
   do j=0,NPTS2-1
+     eta2               = X2MIN + real(j,f64)*h2
+     eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
@@ -710,11 +709,11 @@ program unit_test
   !reinitialize data
   
   do j=0,NPTS2-1
+        eta2               = X2MIN + real(j,f64)*h2
+        eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  
@@ -811,11 +810,11 @@ program unit_test
   !reinitialize data
   
   do j=0,NPTS2-1
+     eta2               = X2MIN + real(j,f64)*h2
+     eta2_pos(j+1)      = eta2
      do i=0,NPTS1-1
         eta1               = X1MIN + real(i,f64)*h1
-        eta2               = X2MIN + real(j,f64)*h2
         eta1_pos(i+1)      = eta1
-        eta2_pos(j+1)      = eta2
         x(i+1,j+1)         = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2) 
         reference(i+1,j+1) = sin(2.0_f64*sll_pi*eta1)*sin(2.0_f64*sll_pi*eta2)
         slope_left(j+1)    = cos(2.0_f64*sll_pi*X1MIN)*sin(2.0_f64*sll_pi*eta2) *2.0_f64*sll_pi  

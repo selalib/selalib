@@ -671,6 +671,17 @@ contains
 
     interpolator%t1(:) = 0.0_f64
     interpolator%t2(:) = 0.0_f64
+
+    interpolator%value_top(:)    = 0.0_f64
+    interpolator%value_bottom(:) = 0.0_f64
+    interpolator%value_left(:)   = 0.0_f64
+    interpolator%value_right(:)  = 0.0_f64
+    interpolator%slope_top(:)    = 0.0_f64
+    interpolator%slope_bottom(:) = 0.0_f64
+    interpolator%slope_left(:)   = 0.0_f64
+    interpolator%slope_right(:)  = 0.0_f64
+    interpolator%knots1(:) = 0.0_f64
+    interpolator%knots2(:) = 0.0_f64
   end subroutine !initialize_ad2d_interpolator
 
   !> @brief Initialization of the boundary for interpolator arbitrary degree splines 2d.
@@ -2919,7 +2930,6 @@ contains
        point_location_eta2(1:sz2) = eta2_coords(1:sz2)
 
     else ! size depends on BC combination, filled out at initialization.
-
        sz1 = interpolator%num_pts1
        sz2 = interpolator%num_pts2
 
@@ -3628,6 +3638,7 @@ contains
        point_location_eta2_deriv(2) = sz2
        data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
        data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)=interpolator%slope_top(1:sz1+sz_derivative_eta1)
+
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
