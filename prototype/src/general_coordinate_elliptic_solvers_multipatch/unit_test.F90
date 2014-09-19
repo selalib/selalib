@@ -191,12 +191,8 @@ program test_general_elliptic_solver_multipatch
 
 
   do ipatch= 0,num_patches-1
-     ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
-     ! is no longer supported by Selalib.
-     !     m        => rho_field_scal%get_logical_mesh(ipatch)
-     m => rho_field_scal%transf%transfs(ipatch+1)%t%mesh
-     !     transf   => rho_field_scal%get_transformation(ipatch)
-     transf => rho_field_scal%transf%transfs(ipatch+1)%t
+     m        => rho_field_scal%get_logical_mesh(ipatch)
+     transf   => rho_field_scal%get_transformation(ipatch)
      num_pts1 = m%num_cells1+1
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1
@@ -285,12 +281,8 @@ program test_general_elliptic_solver_multipatch
        phi_field_scal)
 
   do ipatch= 0,num_patches-1
-     ! Please get rid of these 'fixes' whenever it is decided that gfortran 4.6
-     ! is no longer supported by Selalib.
-     !     m        => rho_field_scal%get_logical_mesh(ipatch)
-     m => rho_field_scal%transf%transfs(ipatch+1)%t%mesh
-     !     transf   => rho_field_scal%get_transformation(ipatch)
-     transf => rho_field_scal%transf%transfs(ipatch+1)%t
+     m        => rho_field_scal%get_logical_mesh(ipatch)
+     transf   => rho_field_scal%get_transformation(ipatch)
      num_pts1 = m%num_cells1+1
      num_pts2 = m%num_cells2+1
      delta1   = m%delta_eta1
