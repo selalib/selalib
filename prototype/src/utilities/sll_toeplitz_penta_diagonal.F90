@@ -15,26 +15,14 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!**************************************************************
-!
-! Selalib 2012     
-! Module: sll_toep_penta_diagonal.F90
-!
-!> @brief 
-!> Selalib Toeplitz penta-diagonal system solver
-!
-!> Last modification: September 20, 2012
-!   
-!> @authors                    
-!> Aliou DIOUF (aliou.l.diouf@inria.fr)
-!                                  
-!**************************************************************
 
+!> Selalib Toeplitz penta-diagonal system solver
 module sll_toep_penta_diagonal
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 implicit none
 
+  !> Initialize the penta diagonal solver
   type toep_penta_diagonal_plan  
     sll_int32                         :: n
     sll_real64, dimension(:), pointer :: e1
@@ -73,7 +61,8 @@ contains
   end function new_toep_penta_diagonal
 
 
-  subroutine solve_toep_penta_diagonal(a, b, c, f, plan) ! The solution will be set in plan%solution
+  !> The solution will be set in plan%solution
+  subroutine solve_toep_penta_diagonal(a, b, c, f, plan) 
 
     sll_real64                              :: a, b, c
     sll_real64, dimension(:)                :: f

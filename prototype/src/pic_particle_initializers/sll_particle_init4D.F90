@@ -70,16 +70,16 @@ contains
     ymin = m2d%eta2_min
     ncx  = m2d%num_cells1
 
-    if(present(rank)) then
-       write(rank_name,'(i8)') rank
-    else
-       rank_name = '00000000'
-    end if
-    nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
-    open(90, file=nomfile)
-!    open(90,file='initialparticles.dat')
+!!$    if(present(rank)) then
+!!$       write(rank_name,'(i8)') rank
+!!$    else
+!!$       rank_name = '00000000'
+!!$    end if
+!!$    nomfile='initialparts_'//trim(adjustl(rank_name))//'.dat'
+!!$    open(90, file=nomfile)
+!!$
+!!$    write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
 
-    write(90,*) '#  POSITIONS in 2d    |||    VELOCITIES in 2d'
     j=1
     !Rejection sampling for the function x --> 1+alpha*cos(k*x)
     do while ( j <= num_particles )
@@ -94,14 +94,13 @@ contains
                (real(j,f64)-0.5_f64)/real(num_particles,f64)) )
           vx = nu * cos(suite_hamm(j,2)*2.0_f64*sll_pi)
           vy = nu * sin(suite_hamm(j,2)*2.0_f64*sll_pi)
-          write(90,*) x, y, vx, vy 
-!          call set_group_particle_values( p_group, j, x, y, vx, vy, weight)
+!!$          write(90,*) x, y, vx, vy 
           SET_PARTICLE_VALUES(p_group%p_list(j),x,y,vx,vy,weight,xmin,ymin,ncx,ic_x,ic_y,off_x,off_y,rdx,rdy,tmp1,tmp2)
           j = j + 1          
        endif
     end do
-!    print*, 'nb d essais', j-1
-    close(90)
+!!$    print*, 'nb d essais', j-1
+!!$    close(90)
 
   end subroutine sll_initial_particles_4d
 
