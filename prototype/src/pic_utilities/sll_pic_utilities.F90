@@ -24,6 +24,9 @@ module sll_pic_utilities
 
 #ifdef _OPENMP
    use omp_lib
+#endif
+implicit none
+#ifdef _OPENMP
    logical :: openmp_st
 #endif
 !!    !$ openmp_st = OMP_IN_PARALLEL()
@@ -70,6 +73,7 @@ contains
     sll_int64  :: i
     sll_int64  :: num_particles
     sll_real64 :: tmp(1:4,1:2), temp
+    sll_int32  :: thread_id
 
     SLL_ASSERT( associated(p_group) .and. associated(q_accumulator))
     num_particles =  p_group%number_particles

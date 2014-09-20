@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Some common numerical utilities
 module sll_utilities
 #include "sll_working_precision.h"
   implicit none
@@ -44,6 +45,7 @@ module sll_utilities
 
   integer, parameter :: byte_size = selected_int_kind(0)
 
+  !> Functions to display on screen matrix or vector
   interface sll_display
      module procedure display_matrix_2d_integer
      module procedure display_matrix_2d_real
@@ -53,6 +55,7 @@ module sll_utilities
 
   logical, private :: flag = .true.
 
+  !> Return factorial
   interface sll_factorial
      module procedure factorial_int32, factorial_int64
   end interface sll_factorial
