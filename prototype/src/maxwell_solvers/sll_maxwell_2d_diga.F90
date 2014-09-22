@@ -54,7 +54,7 @@ end type cell_type
 type, public :: maxwell_2d_diga
 
    sll_transformation, pointer              :: tau  !< transformation
-   type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
+   class(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
    sll_int32                                :: polarization !< TE or TM
    sll_int32                                :: degree !< degree of gauss integration
    type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
@@ -544,7 +544,7 @@ subroutine compute_normals(tau, bc_south, bc_east, bc_north, bc_west, &
    sll_int32                   :: bc_north
    sll_int32                   :: bc_west
    sll_int32                   :: k
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
 
    lm => tau%get_logical_mesh()
 
