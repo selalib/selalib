@@ -39,7 +39,7 @@ contains
     !sll_real64 :: factor2
     sll_int32  :: i
     sll_int32  :: j
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -106,7 +106,7 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -165,7 +165,7 @@ contains
     sll_int32  :: j
     sll_real64 :: x1_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
     sll_real64 :: x2_eta2  ! derivative of x1(eta1,eta2) with respect to eta2
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -225,7 +225,7 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -286,7 +286,7 @@ contains
     sll_int32  :: i
     sll_real64 :: x1_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
     sll_real64 :: x2_eta1  ! derivative of x1(eta1,eta2) with respect to eta1
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -352,7 +352,7 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -428,7 +428,7 @@ contains
     sll_real64 :: eta1_x1  ! derivative of eta1(x1,x2) with respect to x1
     sll_real64 :: eta1_x2  ! derivative of eta1(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
     
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -506,7 +506,7 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
@@ -583,7 +583,7 @@ contains
     sll_real64 :: eta2_x1  ! derivative of eta2(x1,x2) with respect to x1
     sll_real64 :: eta2_x2  ! derivative of eta2(x1,x2) with respect to x2
     sll_real64 :: edge_length
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     ! Verify arguments
     SLL_ASSERT(associated(T))
