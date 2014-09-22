@@ -81,7 +81,7 @@ contains
     sll_int32  :: i1, i2
     sll_real64 :: eta1, eta2
     sll_real64 :: delta1, delta2
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), pointer :: mesh
 
     this%transf => transf
     this%plot_counter = 0

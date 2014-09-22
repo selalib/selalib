@@ -497,7 +497,7 @@ contains
     sll_int32  :: error
     sll_int32  :: intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny
     sll_int32  :: iguess,maxcy,method,nwork,lwrkqd,itero
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), pointer :: mesh
 
     common/itmud2sp/intl,nxa,nxb,nyc,nyd,ixp,jyq,iex,jey,nx,ny, &
               iguess,maxcy,method,nwork,lwrkqd,itero
