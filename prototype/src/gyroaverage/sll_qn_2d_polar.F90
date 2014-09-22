@@ -44,6 +44,7 @@ module sll_qn_2d_polar
      sll_real64, dimension(:,:,:), pointer    :: pre_compute_coeff
      sll_int32, dimension(:,:,:), pointer     :: pre_compute_index
      sll_real64, dimension(:,:), pointer      :: pre_compute_coeff_spl
+     sll_int32 :: size_pre_compute
 
      sll_real64, dimension(:,:,:), pointer    :: mat_gyro
      sll_real64, dimension(:,:,:), pointer    :: mat_double_gyro 
@@ -285,7 +286,8 @@ contains
     endif
     
   end subroutine matrix_product_circ
-  
+
+
   
    subroutine precompute_double_gyroaverage_matrix_polar_splines(quasineutral,rho,N_rho)
     type(sll_plan_qn_polar)  :: quasineutral
@@ -334,6 +336,7 @@ contains
     enddo
     max_nb = max(max_nb,nb)
     
+    quasineutral%size_pre_compute = max_nb    
    ! print*,'#N_points pre_compute=',nb,quasineutral%Nc(1),nb/quasineutral%Nc(1)
 
     enddo ! p=1,N_rho
@@ -769,6 +772,92 @@ contains
 
 
 
+  subroutine precompute_qn_polar_splines(quasineutral,mu_points,mu_weights,N_mu)
+    type(sll_plan_qn_polar) :: quasineutral
+    sll_int32,intent(in) :: N_mu
+    sll_real64,dimension(1:N_mu),intent(in) :: mu_points
+    sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
+    sll_int32 :: Nr
+    sll_int32 :: Ntheta
+    sll_int32 :: ierr
+    sll_int32 :: m
+    sll_int32 :: j
+    sll_int32 :: p
+    sll_comp64,dimension(:,:),allocatable :: mat_stock1
+    sll_comp64,dimension(:,:),allocatable :: mat_stock2
+    sll_comp64,dimension(:,:,:),allocatable :: D_contrib
+    sll_real64,dimension(:),allocatable :: rho_points
+    sll_int32 :: i
+    
+    SLL_ALLOCATE(rho_points(N_mu),ierr)
+    
+    do i=1,N_mu
+      rho_points(i)=sqrt(2._f64*mu_points(i))
+    enddo
+    
+    call precompute_double_gyroaverage_matrix_polar_splines(quasineutral,rho_points,N_mu)
+    
+    !following arrays are computed
+    !sll_int32 :: max_nb = quasineutral%size_pre_compute
+    !sll_int32 :: pre_compute_N(1:N_rho,quasineutral%Nc(1)+1)
+    !sll_int32 :: pre_compute_index(1:N_rho,1:2,1:max_nb)
+    !sll_real64 :: pre_compute_coeff_spl(1:N_rho,1:max_nb)
+
+    print *,'#size_pre_compute=',quasineutral%size_pre_compute
+    
+    
+    
+    
+!    
+!    Nr = quasineutral%Nc(1)
+!    Ntheta = quasineutral%Nc(2)
+!    
+!    SLL_ALLOCATE(quasineutral%mat_qn_inverse(0:Ntheta-1,0:Nr,0:Nr),ierr)
+!    SLL_ALLOCATE(mat_stock1(0:Nr,0:Nr),ierr)
+!    SLL_ALLOCATE(mat_stock2(0:Nr,0:Nr),ierr)
+!    SLL_ALLOCATE(D_contrib(0:Ntheta-1,0:Nr,0:Nr+2),ierr)
+!
+!    D_contrib = (0._f64,0._f64)
+!    do j=0,Ntheta-1
+!      do p=1,N_mu
+!          D_contrib(j,:,:) = D_contrib(j,:,:) &
+!            + pointer_mat_contribution_circ(j,:,:)
+!      enddo
+!    enddo
+!
+!
+!
+!    
+!
+! ! Construction de la matrice à inverser
+!    quasineutral%mat_qn_inverse = (0._f64,0._f64)
+!    do m=0,Ntheta-1
+!      do p=1,N_mu
+!        mat_stock1 = (0._f64,0._f64)
+!        mat_stock2 = (0._f64,0._f64)
+!        call matrix_product_comp(D_contr(p,m,:,:),Nr+1,Nr+3,D_spl2D(m,:,:),Nr+3,Nr+1,mat_stock1)
+!        call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+!        quasineutral%mat_qn_inverse(m,:,:)=quasineutral%mat_qn_inverse(m,:,:) - mu_weights(p)*mat_stock2(:,:)*dexp(-mu_points(p))
+!      enddo
+!      do i=0,Nr
+!        !mat(m,i,i) = (1._f64,0._f64) + mat(m,i,i)
+!        quasineutral%mat_qn_inverse(m,i,i) = quasineutral%lambda(i+1)*(1._f64,0._f64) + quasineutral%mat_qn_inverse(m,i,i)
+!      enddo   
+!    enddo     
+!
+! ! Inversion des blocs
+!    do m=0,Ntheta-1
+!      call ZGETRF(Nr+1,Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,INFO)
+!      call ZGETRI(Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,WORK,(Nr+1)**2,INFO)
+!    enddo
+!
+!
+
+
+
+  end subroutine precompute_qn_polar_splines
+
+
 
    subroutine precompute_inverse_qn_matrix_polar_splines(quasineutral,mu_points,mu_weights,N_mu)
     type(sll_plan_qn_polar) :: quasineutral
@@ -877,15 +966,28 @@ contains
         mat_stock1 = (0._f64,0._f64)
         mat_stock2 = (0._f64,0._f64)
         call matrix_product_comp(D_contr(p,m,:,:),Nr+1,Nr+3,D_spl2D(m,:,:),Nr+3,Nr+1,mat_stock1)
-        call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+        !call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+        call matrix_product_comp(transpose(mat_stock1(:,:)),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+        !print *,p,abs(mat_stock2(1,1)),abs(mat_stock2(1,2)),abs(mat_stock2(1,3)), &
+        !  abs(mat_stock2(16,16)),abs(mat_stock2(16,15)),abs(mat_stock2(16,17))
+        do i=0,Nr
+          !mat_stock2(i,i) =  mat_stock2(i,i) - quasineutral%lambda(i+1)*(1._f64,0._f64)
+          mat_stock2(i,i) =  quasineutral%lambda(i+1)*(mat_stock2(i,i) - (1._f64,0._f64))
+        enddo
         quasineutral%mat_qn_inverse(m,:,:)=quasineutral%mat_qn_inverse(m,:,:) - mu_weights(p)*mat_stock2(:,:)*dexp(-mu_points(p))
       enddo
       do i=0,Nr
         !mat(m,i,i) = (1._f64,0._f64) + mat(m,i,i)
-        quasineutral%mat_qn_inverse(m,i,i) = quasineutral%lambda(i+1)*(1._f64,0._f64) + quasineutral%mat_qn_inverse(m,i,i)
+        !quasineutral%mat_qn_inverse(m,i,i) = quasineutral%lambda(i+1)*(1._f64,0._f64) + quasineutral%mat_qn_inverse(m,i,i)
       enddo   
     enddo     
-
+   do m = 0,Ntheta-1
+     do i= 0,Nr
+       do j= 0,Nr
+         print *, quasineutral%mat_qn_inverse(m,i,j)
+       enddo
+     enddo
+   enddo
  ! Inversion des blocs
     do m=0,Ntheta-1
       call ZGETRF(Nr+1,Nr+1,quasineutral%mat_qn_inverse(m,:,:),Nr+1,IPIV,INFO)
@@ -2106,7 +2208,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
         eta(1)=eta_min(1)+real(i-1,f64)*delta_eta(1)
         eta(1)=val*eta(1)/eta_max(1)
         f(i,j)= 0._f64 !temporary, because DBESJ not recognized on helios
-        !(DBESJN(mode(2),val)*DBESYN(mode(2),eta(1))-DBESYN(mode(2),val)*DBESJN(mode(2),eta(1)))*cos(kmode*eta(2))
+        f(i,j) = (DBESJN(mode(2),val)*DBESYN(mode(2),eta(1))-DBESYN(mode(2),val)*DBESJN(mode(2),eta(1)))*cos(kmode*eta(2))
       enddo
     enddo   
     
@@ -2235,7 +2337,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     endif
     call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
     val = 0._f64 !temporary because DBESJ not recognized on helios 
-    !DBESJN(0,tmp*rho(1)/eta_max(1))
+    val = DBESJN(0,tmp*rho(1)/eta_max(1))
     !print *,i,j,mode_max,alpha,tmp      
   end subroutine solution_polar_circle
 
