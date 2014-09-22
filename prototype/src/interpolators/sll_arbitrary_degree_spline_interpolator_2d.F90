@@ -19,23 +19,14 @@ module sll_arbitrary_degree_spline_interpolator_2d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h" 
-#ifdef STDF95
-use sll_boundary_condition_descriptors
-!use sll_constants
-#else
 use sll_module_interpolators_2d_base
-#endif
 use sll_utilities
 use sll_module_deboor_splines_2d
 
   implicit none
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
-#ifdef STDF95
-  type                                    :: arb_deg_2d_interpolator           
-#else
   type, extends(sll_interpolator_2d_base) :: arb_deg_2d_interpolator           
-#endif
      sll_int32  :: num_pts1
      sll_int32  :: num_pts2
      sll_real64 :: eta1_min
@@ -78,7 +69,6 @@ use sll_module_deboor_splines_2d
      logical    :: compute_value_right= .TRUE.
      logical    :: compute_value_top = .TRUE.
      logical    :: compute_value_bottom= .TRUE.
-#ifndef STDF95
    contains
     procedure, pass(interpolator) :: initialize=>initialize_ad2d_interpolator
     procedure, pass(interpolator) :: set_coefficients => set_coefficients_ad2d
@@ -98,7 +88,6 @@ use sll_module_deboor_splines_2d
     procedure, pass:: delete => delete_arbitrary_degree_2d_interpolator
     procedure, pass:: set_values_at_boundary => set_boundary_value2d
     procedure, pass:: set_slopes_at_boundary => set_slope2d
-#endif
   end type arb_deg_2d_interpolator
 
   type sll_arb_deg_2d_interpolator_ptr
@@ -119,11 +108,7 @@ contains
   !> @param interpolator the type arb_deg_2d_interpolator
   !
   subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(inout) :: interpolator
-#else
     class(arb_deg_2d_interpolator), intent(inout) :: interpolator
-#endif
     sll_int32 :: ierr
     SLL_DEALLOCATE(interpolator%knots1,ierr)
     SLL_DEALLOCATE(interpolator%knots2,ierr)
@@ -227,11 +212,7 @@ contains
   !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
   !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
   !> @return the type arb_deg_2d_interpolator
-#ifdef STDF95
-  subroutine arbitrary_degree_spline_interp2d_initialize( &
-#else
        subroutine initialize_ad2d_interpolator( &
-#endif
     interpolator, &
     num_pts1, &
     num_pts2, &
@@ -246,11 +227,7 @@ contains
     spline_degree1, &
     spline_degree2)
 
-#ifdef STDF95
-    type (arb_deg_2d_interpolator):: interpolator
-#else
     class(arb_deg_2d_interpolator):: interpolator
-#endif
     sll_int32, intent(in) :: num_pts1
     sll_int32, intent(in) :: num_pts2
     sll_real64, intent(in) :: eta1_min
@@ -350,15 +327,15 @@ contains
     interpolator%num_pts2 = num_pts2
    
 
-    SLL_ALLOCATE(interpolator%value_left  (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%value_right (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%value_bottom(num_pts1+2),ierr)
-    SLL_ALLOCATE(interpolator%value_top   (num_pts1+2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%value_left  (1:num_pts2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%value_right (1:num_pts2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%value_bottom(1:num_pts1+2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%value_top   (1:num_pts1+2),ierr)
 
-    SLL_ALLOCATE(interpolator%slope_left  (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%slope_right (num_pts2),ierr)
-    SLL_ALLOCATE(interpolator%slope_bottom(num_pts1+2),ierr)
-    SLL_ALLOCATE(interpolator%slope_top   (num_pts1+2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%slope_left  (1:num_pts2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%slope_right (1:num_pts2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%slope_bottom(1:num_pts1+2),ierr)
+    SLL_CLEAR_ALLOCATE(interpolator%slope_top   (1:num_pts1+2),ierr)
   
     ! tmp1 and tmp2 is the maximun (not absolue) for the size of coefficients
     select case (bc_selector)
@@ -383,9 +360,6 @@ contains
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + 2*spline_degree2
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
-       interpolator%value_left(:) = 0.0_f64
-       interpolator%value_right(:) = 0.0_f64
-       
     case (576) ! 3. periodic, dirichlet-bottom, dirichlet-top
 
         ! Allocate the knots in each direction 
@@ -397,23 +371,15 @@ contains
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2 + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
 
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_top(:) = 0.0_f64
-       
     case (585) ! 4. dirichlet in all sides
         ! Allocate the knots in each direction
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
        SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
 
-
        ! Allocate the coefficients spline
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
 
 
     case(650) !left: Neumann, right: Dirichlet, bottom: Neumann, Top: Dirichlet 
@@ -425,10 +391,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
 
     case(657) !left: Dirichlet, right: Neumann, bottom: Neumann, Top: Dirichlet 
        ! Allocate the knots in each direction
@@ -439,28 +401,16 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
 
     case(780)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Dirichlet
 
-       SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-       SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
+       SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
+       SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
 
        ! Allocate the coefficients spline
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
+       SLL_CLEAR_ALLOCATE( interpolator%coeff_splines(1:tmp1,1:tmp2),ierr)
 
     case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
 
@@ -471,14 +421,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(804)  !left: Hermite, right: Hermite, bottom: Hermite, Top: Dirichlet
        
@@ -489,14 +431,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(1098)  !left: Neumann, right: Dirichlet, bottom: Dirichlet, Top: Neumann
        
@@ -507,14 +441,7 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
+
     case(1105)  !left: Dirichlet, right: Neumann, bottom: Dirichlet, Top: Neumann
        
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
@@ -524,14 +451,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(1170)  !left: Neumann, right: Neumann, bottom: Neuman, Top: Neumann
        
@@ -542,32 +461,17 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(2124)  !left: Hermite, right: Dirichlet, bottom: Dirichlet, Top: Hermite
 
-       SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
-       SLL_ALLOCATE( interpolator%knots2(num_pts2+2*spline_degree2),ierr )
+       SLL_CLEAR_ALLOCATE( interpolator%knots1(1:num_pts1+2*spline_degree1),ierr )
+       SLL_CLEAR_ALLOCATE( interpolator%knots2(1:num_pts2+2*spline_degree2),ierr )
 
        ! Allocate the coefficients spline
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
-       SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
+       SLL_CLEAR_ALLOCATE( interpolator%coeff_splines(1:tmp1,1:tmp2),ierr)
+
     case(2145)  !left: Dirichlet, right: Hermite, bottom: Dirichlet, Top: Hermite  
 
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
@@ -577,14 +481,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(2148)  !left:Hermite , right: Hermite, bottom: Dirichlet, Top: Hermite  
 
@@ -595,14 +491,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(2316)  !left: Hermite, right: Dirichlet, bottom: Hermite, Top: Hermite
        
@@ -613,14 +501,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
 
     case(2338)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Hermite
        
@@ -631,14 +511,7 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
+
     case(2340) ! Hermite in all sides
 
        SLL_ALLOCATE( interpolator%knots1(num_pts1+2*spline_degree1),ierr )
@@ -648,14 +521,6 @@ contains
        tmp1 = num_pts1+ 4*spline_degree1!*num_pts1! + spline_degree1 !- 1
        tmp2 = num_pts2+ 4*spline_degree2!*num_pts2! + spline_degree2 !- 1
        SLL_ALLOCATE( interpolator%coeff_splines(tmp1,tmp2),ierr)
-       interpolator%value_top(:)    = 0.0_f64
-       interpolator%value_bottom(:) = 0.0_f64
-       interpolator%value_left(:)   = 0.0_f64
-       interpolator%value_right(:)  = 0.0_f64
-       interpolator%slope_top(:)    = 0.0_f64
-       interpolator%slope_bottom(:) = 0.0_f64
-       interpolator%slope_left(:)   = 0.0_f64
-       interpolator%slope_right(:)  = 0.0_f64
        
     case default
        print*,'initialize_ad2d_interpolator: BC combination not implemented.'
@@ -666,11 +531,9 @@ contains
     ! the minimun is to be of class C^0 everywhere on the knots
     ! i.e. each knot have multiplicity (spline_degree1+1) 
     ! so the maximun number of knots is num_pts1*(spline_degree1+1)
-    SLL_ALLOCATE( interpolator%t1(num_pts1*(spline_degree1+1)),ierr)
-    SLL_ALLOCATE( interpolator%t2(num_pts2*(spline_degree2+1)),ierr) 
+    SLL_CLEAR_ALLOCATE( interpolator%t1(1:num_pts1*(spline_degree1+1)),ierr)
+    SLL_CLEAR_ALLOCATE( interpolator%t2(1:num_pts2*(spline_degree2+1)),ierr) 
 
-    interpolator%t1(:) = 0.0_f64
-    interpolator%t2(:) = 0.0_f64
   end subroutine !initialize_ad2d_interpolator
 
   !> @brief Initialization of the boundary for interpolator arbitrary degree splines 2d.
@@ -1918,11 +1781,7 @@ contains
   !> @param[in],optional, knots2  the knots in the direction eta2
   !> @param[in],optional, size_knots2 the size of knots in the direction eta2
   !> @return the type arb_deg_2d_interpolator
-#ifdef STDF95
-  subroutine arbitrary_degree_spline_interp2_set_coefficients( &
-#else
   subroutine set_coefficients_ad2d( &
-#endif
    interpolator, &
    coeffs_1d, &
    coeffs_2d,&
@@ -1933,11 +1792,7 @@ contains
    knots2,&
    size_knots2)
 
-#ifdef STDF95
-   type (arb_deg_2d_interpolator), intent(inout)  :: interpolator
-#else
    class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
-#endif
    sll_real64, dimension(:)  , intent(in), optional :: coeffs_1d
    sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
    ! size coeffs 2D 
@@ -2836,11 +2691,7 @@ contains
   !> @param[in],optional, size_eta2_coords the size of eta2_coords
   !> @return the type arb_deg_2d_interpolator
 
-#ifdef STDF95
-  subroutine arbitrary_degree_spline_interp2d_compute_interpolants( &
-#else
   subroutine compute_interpolants_ad2d( &
-#endif
     interpolator, &
     data_array, &
     eta1_coords, &
@@ -2848,25 +2699,25 @@ contains
     eta2_coords, &
     size_eta2_coords )
 
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(inout)  :: interpolator
-#else
     class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
-#endif
+
     sll_real64, dimension(:,:), intent(in)         :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta1_coords
     sll_real64, dimension(:), intent(in),optional  :: eta2_coords
     sll_int32, intent(in),optional                 :: size_eta1_coords
     sll_int32, intent(in),optional                 :: size_eta2_coords
+
     sll_real64, dimension(:),pointer               :: point_location_eta1
     sll_real64, dimension(:),pointer               :: point_location_eta2
     sll_real64, dimension(:),pointer               :: point_location_eta1_tmp
     sll_real64, dimension(:),pointer               :: point_location_eta2_tmp
     sll_real64, dimension(:,:),pointer             :: data_array_tmp
-    sll_real64, dimension(:,:),pointer               :: data_array_deriv_eta1
-    sll_real64, dimension(:,:),pointer               :: data_array_deriv_eta2
-    sll_int32, dimension(:),pointer             :: point_location_eta1_deriv
-    sll_int32, dimension(:),pointer             :: point_location_eta2_deriv
+    sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta1
+    sll_real64, dimension(:,:),pointer             :: data_array_deriv_eta2
+
+    sll_int32, pointer :: point_location_eta1_deriv(:)
+    sll_int32, pointer :: point_location_eta2_deriv(:)
+
     sll_int32 :: sz_derivative_eta1,sz_derivative_eta2
     sll_real64 :: delta_eta1
     sll_real64 :: delta_eta2
@@ -2913,8 +2764,8 @@ contains
        sz1 = size_eta1_coords
        sz2 = size_eta2_coords
        
-       SLL_ALLOCATE(point_location_eta1(sz1),ierr)
-       SLL_ALLOCATE(point_location_eta2(sz2),ierr)
+       SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
+       SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
        point_location_eta1(1:sz1) = eta1_coords(1:sz1)
        point_location_eta2(1:sz2) = eta2_coords(1:sz2)
 
@@ -2927,10 +2778,9 @@ contains
             /(interpolator%num_pts1 -1)
        delta_eta2 = (interpolator%eta2_max - interpolator%eta2_min)&
             /(interpolator%num_pts2 -1)
-       SLL_ALLOCATE(point_location_eta1(sz1),ierr)
-       SLL_ALLOCATE(point_location_eta2(sz2),ierr)
+       SLL_ALLOCATE(point_location_eta1(1:sz1),ierr)
+       SLL_ALLOCATE(point_location_eta2(1:sz2),ierr)
       
-       
        do i = 1,sz1
           point_location_eta1(i) = interpolator%eta1_min + delta_eta1*(i-1)
        end do
@@ -2940,8 +2790,8 @@ contains
 
       
     end if
-    SLL_ALLOCATE(point_location_eta1_tmp(sz1-1),ierr)
-    SLL_ALLOCATE(point_location_eta2_tmp(sz2-1),ierr)
+    SLL_ALLOCATE(point_location_eta1_tmp(1:sz1-1),ierr)
+    SLL_ALLOCATE(point_location_eta2_tmp(1:sz2-1),ierr)
     point_location_eta1_tmp = point_location_eta1(1:sz1-1)
     point_location_eta2_tmp = point_location_eta2(1:sz2-1)
     
@@ -2964,6 +2814,8 @@ contains
     ! data_array and we compute also the knots t1 and t2 using to 
     ! construct the spline to have a good interpolation
     
+    SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
+    SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
 
     
     select case (interpolator%bc_selector)
@@ -2989,7 +2841,6 @@ contains
             data_array_tmp, interpolator%coeff_splines,&!(1:sz1,1:sz2),&
             interpolator%t1,&!(1:order1 + sz1 ), &!+ 1), &
             interpolator%t2)!(1:order2 + sz2 ))!+ 1) )
-        SLL_DEALLOCATE( data_array_tmp,ierr)
        
     case (9) ! 2. dirichlet-left, dirichlet-right, periodic
        interpolator%size_coeffs1 = sz1
@@ -3011,7 +2862,6 @@ contains
             interpolator%t2)!(1:sz2+order2) ) !+1
 
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
       ! print*, 'oulala'
        ! boundary condition non homogene  a revoir !!!!! 
        !print*,'zarrrr', interpolator%value_left(1:sz2)
@@ -3034,7 +2884,6 @@ contains
             interpolator%t1,&!(1:sz1+order1), & ! + 1
             interpolator%t2)!)(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        ! boundary condition non homogene
        interpolator%coeff_splines(1:sz1,1)   = data_array(1:sz1,1)
        interpolator%coeff_splines(1:sz1,sz2) = data_array(1:sz1,sz2)
@@ -3057,7 +2906,6 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        ! boundary condition non homogene
        interpolator%coeff_splines(1,1:sz2)   = data_array(1,1:sz2)
        interpolator%coeff_splines(sz1,1:sz2) = data_array(sz1,1:sz2)
@@ -3077,10 +2925,8 @@ contains
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
+       SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(1:2,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3107,11 +2953,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3132,8 +2975,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3160,11 +3001,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3184,20 +3022,21 @@ contains
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
+       SLL_ALLOCATE(data_array_tmp(1:sz1,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE(data_array_deriv_eta1(1:sz_derivative_eta1,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE(data_array_deriv_eta2(1:sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
-       data_array_deriv_eta1(1,1:sz2)     = interpolator%slope_left(1:sz2)
-       data_array_deriv_eta1(2,1:sz2)    = interpolator%slope_right(1:sz2)
+       data_array_deriv_eta1(1,1:sz2) = interpolator%slope_left(1:sz2)
+       data_array_deriv_eta1(2,1:sz2) = interpolator%slope_right(1:sz2)
        point_location_eta2_deriv(1) = 1
        point_location_eta2_deriv(2) = sz2
-       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)=interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
-       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= interpolator%slope_top(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(1,1:sz1+sz_derivative_eta1)= &
+          interpolator%slope_bottom(1:sz1+sz_derivative_eta1)
+       data_array_deriv_eta2(2,1:sz1+sz_derivative_eta1)= &
+          interpolator%slope_top(1:sz1+sz_derivative_eta1)
+
        call spli2d_custom_derder(&
             sz1,&
             sz_derivative_eta1,&
@@ -3215,17 +3054,14 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
+
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
  !      interpolator%coeff_splines(1:sz1,1)   = interpolator%value_bottom(1:sz1)
   !     interpolator%coeff_splines(1:sz1,sz2) = interpolator%value_top(1:sz1)
-
 
 
     case(801)  !left: Dirichlet, right: Hermite, bottom: Hermite, Top: Dirichlet
@@ -3244,8 +3080,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3272,11 +3106,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3297,8 +3128,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3325,11 +3154,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3350,8 +3176,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3378,11 +3202,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3403,8 +3224,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3431,11 +3250,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3457,8 +3273,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3485,11 +3299,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3509,8 +3320,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3537,11 +3346,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3562,8 +3368,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(2,sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3590,11 +3394,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3614,11 +3415,9 @@ contains
        !  data_array must have the same dimension than 
        !  size(  point_location_eta1 ) x  size(  point_location_eta2 )
        !  i.e  data_array must have the dimension sz1 x sz2
-       SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
-       SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
+       SLL_CLEAR_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
+       SLL_CLEAR_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3645,11 +3444,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3670,8 +3466,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3698,11 +3492,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3723,8 +3514,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3751,11 +3540,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3778,8 +3564,6 @@ contains
        SLL_ALLOCATE( data_array_tmp(1:sz1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta1(sz_derivative_eta1,1:sz2),ierr)
        SLL_ALLOCATE( data_array_deriv_eta2(sz_derivative_eta2,1:sz1+sz_derivative_eta1),ierr)
-       SLL_ALLOCATE(point_location_eta1_deriv(2),ierr)
-       SLL_ALLOCATE(point_location_eta2_deriv(2),ierr)
        data_array_tmp = data_array(1:sz1,1:sz2)
        point_location_eta1_deriv(1) = 1
        point_location_eta1_deriv(2) = sz1
@@ -3806,11 +3590,8 @@ contains
             interpolator%t1,&!(1:sz1+order1), &
             interpolator%t2)!(1:sz2+order2) )
 
-       SLL_DEALLOCATE( data_array_tmp,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta1,ierr)
        SLL_DEALLOCATE( data_array_deriv_eta2,ierr)
-       SLL_DEALLOCATE(point_location_eta1_deriv,ierr)
-       SLL_DEALLOCATE(point_location_eta2_deriv,ierr)
        ! boundary condition non homogene
        !interpolator%coeff_splines(1,1:sz2+sz_derivative_eta2)   = interpolator%value_left(1:sz2+sz_derivative_eta2)
        ! boundary condition non homogene
@@ -3824,6 +3605,8 @@ contains
     SLL_DEALLOCATE(point_location_eta1,ierr)
     SLL_DEALLOCATE(point_location_eta1_tmp,ierr)
     SLL_DEALLOCATE(point_location_eta2_tmp,ierr)
+    SLL_DEALLOCATE(data_array_tmp,ierr)
+
   end subroutine !compute_interpolants_ad2d
 
   function coefficients_are_set_ad2d( interpolator ) result(res)
@@ -3845,21 +3628,13 @@ contains
   !> @param[in] eta1 the point inthe first direction
   !> @param[in] eta2 the point inthe second direction 
   !> @return val the values on the points eta1 and eta2 
-#ifdef STDF95
-  function arbitrary_degree_spline_interp2d_interpolate_value( &
-#else
   function interpolate_value_ad2d( &
-#endif
     interpolator, &
     eta1, &
     eta2 ) result(val)
 
     use sll_timer
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(in)  :: interpolator
-#else
     class(arb_deg_2d_interpolator), intent(in)  :: interpolator
-#endif
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -4017,20 +3792,12 @@ contains
   !> @param[in] eta1 the point inthe first direction
   !> @param[in] eta2 the point inthe second direction 
   !> @return val the values on the points eta1 and eta2 of the first derivative in eta1
-#ifdef STDF95
-  function arbitrary_degree_spline_interp2d_interpolate_derivative1( &
-#else
   function interpolate_derivative1_ad2d( &
-#endif
     interpolator, &
     eta1, &
     eta2 ) result(val)
 
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(in)  :: interpolator
-#else
     class(arb_deg_2d_interpolator), intent(in)  :: interpolator
-#endif
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -4174,20 +3941,12 @@ contains
   !> @param[in] eta1 the point inthe first direction
   !> @param[in] eta2 the point inthe second direction 
   !> @return val the values on the points eta1 and eta2 of the first derivative in eta2
-#ifdef STDF95
-  function arbitrary_degree_spline_interp2d_interpolate_derivative2( &
-#else
   function interpolate_derivative2_ad2d( &
-#endif
     interpolator, &
     eta1, &
     eta2 ) result(val)
 
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(in)  :: interpolator
-#else
     class(arb_deg_2d_interpolator), intent(in)  :: interpolator
-#endif
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -4316,11 +4075,7 @@ contains
   end function interpolate_derivative2_ad2d !interpolate_derivative2_ad2d
 
   
-#ifdef STDF95
-  function arbitrary_degree_spline_interp2d_interpolate_array( &
-#else
   function interpolate_array_ad2d( &
-#endif
   this, &
   num_points1, &
   num_points2, &
@@ -4328,11 +4083,7 @@ contains
   eta1, &
   eta2 ) result(res)
     
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(in)  :: this
-#else
     class(arb_deg_2d_interpolator), intent(in)  :: this
-#endif
     sll_real64,  dimension(:,:), intent(in)         :: eta1
     sll_real64,  dimension(:,:), intent(in)         :: eta2
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -4352,11 +4103,7 @@ contains
     stop
   end function !interpolate_array_ad2d
   
-#ifdef STDF95
-  function arbitrary_degree_spline_interp2d_interpolate_2d_array_disp( &
-#else
   function interpolate_2d_array_disp_ad2d( &
-#endif
        this,        &
        num_points1, &
        num_points2, &
@@ -4364,11 +4111,7 @@ contains
        alpha1,      &
        alpha2) result(res)
       
-#ifdef STDF95
-    type (arb_deg_2d_interpolator), intent(in)    :: this
-#else
     class(arb_deg_2d_interpolator), intent(in)    :: this
-#endif
     sll_int32, intent(in)                          :: num_points1  
     sll_int32, intent(in)                          :: num_points2 
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -4393,19 +4136,11 @@ contains
     
    
   
-#ifdef STDF95
-  function arbitrary_degree_spline_interp2d_get_coefficients(interpolator)
-    type (arb_deg_2d_interpolator), intent(in):: interpolator
-    sll_real64, dimension(:,:), pointer:: arbitrary_degree_spline_interp2d_get_coefficients
-    arbitrary_degree_spline_interp2d_get_coefficients => interpolator%coeff_splines
-  end function arbitrary_degree_spline_interp2d_get_coefficients
-#else 
   function get_coefficients_ad2d(interpolator)
     class(arb_deg_2d_interpolator), intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
 
     get_coefficients_ad2d => interpolator%coeff_splines
   end function get_coefficients_ad2d
-#endif
   
 end module sll_arbitrary_degree_spline_interpolator_2d_module
