@@ -275,7 +275,7 @@ contains
 
   function get_logical_mesh_analytic( transf ) result(res)
     class(sll_coordinate_transformation_2d_analytic), intent(in) :: transf
-    type(sll_logical_mesh_2d), pointer :: res
+    class(sll_logical_mesh_2d), pointer :: res
     res => transf%mesh
   end function get_logical_mesh_analytic
 
@@ -588,7 +588,7 @@ contains
 
   function get_logical_mesh_discrete( transf ) result(res)
     class(sll_coordinate_transformation_2d_discrete), intent(in) :: transf
-    type(sll_logical_mesh_2d), pointer :: res
+    class(sll_logical_mesh_2d), pointer :: res
     res => transf%mesh
   end function get_logical_mesh_discrete
 

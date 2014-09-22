@@ -186,7 +186,7 @@ contains   ! *****************************************************************
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: eta1
     sll_real64            :: eta2
     sll_real64            :: value_at_index_analytic
@@ -238,7 +238,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
     sll_real64            :: eta2
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta1_value_at_index_analytic
     
     lm => field%get_logical_mesh()
@@ -263,7 +263,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
     sll_real64            :: eta2
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta2_value_at_index_analytic
 
     lm => field%get_logical_mesh()
@@ -413,7 +413,7 @@ contains   ! *****************************************************************
 
   function get_logical_mesh_2d_analytic_alt( field ) result(res)
     class(sll_scalar_field_2d_analytic_alt), intent(in) :: field
-    type(sll_logical_mesh_2d), pointer :: res
+    class(sll_logical_mesh_2d), pointer :: res
     res => field%T%get_logical_mesh()
   end function get_logical_mesh_2d_analytic_alt
 
@@ -437,7 +437,7 @@ contains   ! *****************************************************************
     sll_real64                              :: eta1
     sll_real64                              :: eta2
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    type(sll_logical_mesh_2d), pointer      :: mesh
+    class(sll_logical_mesh_2d), pointer      :: mesh
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: ierr
@@ -502,7 +502,7 @@ contains   ! *****************************************************************
     character(len=*), intent(in)                    :: field_name
     class(sll_interpolator_2d_base), target        :: interpolator_2d
     class(sll_coordinate_transformation_2d_base) :: transformation
-    type(sll_logical_mesh_2d), pointer:: mesh
+    class(sll_logical_mesh_2d), pointer:: mesh
     !sll_int32 :: SPLINE_DEG1
     !sll_int32 :: SPLINE_DEG2
     sll_int32, intent(in) :: bc_left
@@ -599,7 +599,7 @@ contains   ! *****************************************************************
   subroutine set_field_data_discrete_2d( field, values )
     class(sll_scalar_field_2d_discrete_alt), intent(inout) :: field
     sll_real64, dimension(:,:), intent(in) :: values
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
 
     m => field%get_logical_mesh()
     if( (size(values,1) < m%num_cells1 ) .or. &
@@ -669,8 +669,10 @@ contains   ! *****************************************************************
 
   function get_logical_mesh_2d_discrete_alt( field ) result(res)
     class(sll_scalar_field_2d_discrete_alt), intent(in) :: field
-    type(sll_logical_mesh_2d), pointer :: res
-    res => field%T%get_logical_mesh()
+    class(sll_logical_mesh_2d), pointer :: res
+    class(sll_coordinate_transformation_2d_base),pointer :: transf
+    transf => field%T
+    res => transf%get_logical_mesh()
   end function get_logical_mesh_2d_discrete_alt
 
   function get_jacobian_matrix_discrete_alt( field, eta1, eta2 ) result(res)
@@ -696,7 +698,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
     sll_real64            :: eta2
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: value_at_index_discrete
 
     lm => field%get_logical_mesh()
@@ -731,7 +733,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
     sll_real64            :: eta2
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta1_value_at_index_discrete
 
     lm => field%get_logical_mesh()
@@ -747,7 +749,7 @@ contains   ! *****************************************************************
     sll_int32, intent(in) :: j
     sll_real64            :: eta1
     sll_real64            :: eta2
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64            :: first_deriv_eta2_value_at_index_discrete
 
     lm => field%get_logical_mesh()
@@ -768,7 +770,7 @@ contains   ! *****************************************************************
     sll_real64                              :: eta1
     sll_real64                              :: eta2
     class(sll_coordinate_transformation_2d_base), pointer :: T
-    type(sll_logical_mesh_2d), pointer      :: mesh
+    class(sll_logical_mesh_2d), pointer      :: mesh
     sll_int32 :: i
     sll_int32 :: j
     sll_int32 :: ierr
@@ -776,7 +778,7 @@ contains   ! *****************************************************************
     ! use the logical mesh information to find out the extent of the
     ! domain and allocate the arrays for the plotter.
     T      => field%get_transformation()
-    mesh   => T%get_logical_mesh()
+    mesh   => field%get_logical_mesh()
     nptsx1 = mesh%num_cells1 + 1
     nptsx2 = mesh%num_cells2 + 1
     SLL_ALLOCATE(x1coords(nptsx1,nptsx2),ierr)

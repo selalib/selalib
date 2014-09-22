@@ -379,7 +379,7 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%t%get_logical_mesh()
+    res => mp%transfs(patch+1)%t%mesh
   end function get_logical_mesh_ctmp2d
 
   function get_num_cells_eta1_ctmp2d ( mp, patch ) result(res)
@@ -659,7 +659,7 @@ contains
   function get_spline_local_index_tmp2d(mp,patch,splines_local,cell_i,cell_j)&
        result(res)
     class(sll_coordinate_transformation_multipatch_2d), intent(inout) :: mp
-    type(sll_logical_mesh_2d), pointer                                :: lm
+    type(sll_logical_mesh_2d), pointer                               :: lm
     sll_int32 :: patch
     sll_int32 :: splines_local
     sll_int32 :: cell_i,cell_j
