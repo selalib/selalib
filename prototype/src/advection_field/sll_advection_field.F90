@@ -90,7 +90,7 @@ contains
     type(hamiltonian_advection_field_2d), intent(inout)   :: this
     type(scalar_field_1d), intent(in)                  :: phi_self
     type(scalar_field_1d), intent(in), optional        :: phi_external
-    type(sll_logical_mesh_2d), pointer                 :: mesh
+    class(sll_logical_mesh_2d), pointer                :: mesh
     sll_int32 :: nc_eta1
     sll_int32 :: nc_eta2
     sll_int32 :: i1, i2

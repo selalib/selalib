@@ -43,7 +43,7 @@ contains
     type (sll_distribution_function_2D)  :: dist_func_2D 
     !type (weno_recon_1d) :: recon_eta1, recon_eta2
     !type (weno_interp_1d) :: interp_eta1, interp_eta2
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), pointer :: mesh
     sll_int32  :: ierr
     sll_int32  :: i_weno
     sll_int32  :: nc_eta1
@@ -87,7 +87,7 @@ contains
    type(scalar_field_2d), intent(in) :: advfield
    sll_real64  :: deltat
    sll_real64  :: t
-   type(sll_logical_mesh_2d), pointer :: mesh
+   class(sll_logical_mesh_2d), pointer :: mesh
    ! local variables
    sll_int32 :: i1, i2
    sll_int32 :: nc_eta1, nc_eta2
