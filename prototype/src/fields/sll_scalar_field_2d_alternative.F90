@@ -562,20 +562,29 @@ contains   ! *****************************************************************
     !sll_int32 :: i
     sll_int32 :: ierr   
 
+    print *, "------- in initialize scalar field 2d alt"
     m2d => transformation%get_logical_mesh()
+    print *, "------- in initialize scalar field 2d alt : got mesh"
 
     field%T => transformation
+    print *, "------- in initialize scalar field 2d alt : got transf"
 
     field%interp_2d => interpolator_2d
+    print *, "------- in initialize scalar field 2d alt : got interp"
 
     field%name      = trim(field_name)
     field%bc_left   = bc_left
+    print *, "------- in initialize scalar field 2d alt : bc left"
     field%bc_right  = bc_right
+    print *, "------- in initialize scalar field 2d alt : bc right"
     field%bc_bottom = bc_bottom
+    print *, "------- in initialize scalar field 2d alt : bc bottom"
     field%bc_top    = bc_top
+    print *, "------- in initialize scalar field 2d alt : got other stuff"
 
     ! Allocate internal array to store locally a copy of the data.
-    SLL_ALLOCATE(field%values(m2d%num_cells1+1,m2d%num_cells2+1),ierr)    
+    SLL_ALLOCATE(field%values(m2d%num_cells1+1,m2d%num_cells2+1),ierr)   
+    print *, "------- in initialize scalar field 2d alt : alloc done" 
 
   end subroutine initialize_scalar_field_2d_discrete_alt
   
