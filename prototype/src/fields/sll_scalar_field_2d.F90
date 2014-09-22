@@ -80,7 +80,7 @@ contains   ! *****************************************************************
     class(scalar_field_2d_initializer_base), pointer, optional :: initializer
     character(len=*), intent(in)                        :: field_name
     sll_int32, intent(in)                               :: data_position
-    type(sll_logical_mesh_2d), pointer                  :: mesh
+    class(sll_logical_mesh_2d), pointer                  :: mesh
 
     sll_int32  :: ierr
     sll_int32  :: num_cells1
@@ -182,7 +182,7 @@ contains   ! *****************************************************************
     sll_int32, optional    :: output_format 
     character(len=*), optional    :: output_file_name 
     sll_int32              :: local_format 
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), pointer :: mesh
 
     sll_int32  :: i1
     sll_int32  :: i2

@@ -788,7 +788,7 @@ contains
   subroutine write_to_file_2d_nurbs(transf,output_format)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, optional :: output_format 
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_int32           :: local_format 
     sll_real64, dimension(:,:), pointer :: x1mesh
     sll_real64, dimension(:,:), pointer :: x2mesh
