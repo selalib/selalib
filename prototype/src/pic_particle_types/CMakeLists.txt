@@ -4,12 +4,12 @@ ADD_LIBRARY( sll_pic_particles STATIC
 
 TARGET_LINK_LIBRARIES(sll_pic_particles
   sll_memory
-  sll_assertion )
+  sll_assert )
 
 
 ADD_EXECUTABLE(test_pic_particles unit_test.F90  )
 
 TARGET_LINK_LIBRARIES(test_pic_particles 
   sll_pic_particles
-  sll_assertion )
+  sll_assert )
 
