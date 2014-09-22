@@ -162,10 +162,11 @@ contains   ! *****************************************************************
     ! hardwired for the moment. It would be desirable to make this an option.
     ! This could only be properly done when all the compilers we care about
     ! permit us to make arrays of a type which contains a polymorphic pointer.
+    print *, ""
     print *, 'proceeding to create the patches...'
     do i=0, num_patches-1
        ! create the patch-dedicated interpolator.
-       lm=>fmp%transf%get_logical_mesh(i)
+       lm=>fmp%get_logical_mesh(i)
        print *, 'extracted logical mesh from patch ', i
        !------------------------------------------------------------------
        !                      WARNING!!!!!!!!
@@ -245,11 +246,12 @@ contains   ! *****************************************************************
             bc_top, &
             3, &
             3 )   ! <--- HARDWIRED degree of splines, not OK
+
        print *, 'created interpolator for patch ', i
        fmp%fields(i+1)%f => new_scalar_field_2d_discrete_alt( &
             patch_name, &
             fmp%interps(i+1)%interp, &
-            fmp%transf%get_transformation(i), &
+            fmp%get_transformation(i), &
             bc_left, &
             bc_right, &
             bc_bottom, &
