@@ -63,7 +63,7 @@ function new_dg_field( degree, tau, init_function ) result (this)
    sll_int32                      :: nc_eta2
    type(dg_field), pointer        :: this
    sll_int32                      :: error
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
    SLL_ALLOCATE(this, error)
    this%tau    => tau
    this%degree =  degree
@@ -98,7 +98,7 @@ subroutine initialize_dg_field( this, init_function, time)
    sll_real64           :: eta1
    sll_real64           :: eta2
    sll_int32            :: i, j, ii, jj
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
    
    SLL_ASSERT(associated(this%array))
 
@@ -160,7 +160,7 @@ subroutine plot_dg_field_2d_with_gnuplot( this, field_name )
    sll_real64             :: offset(2)
    sll_int32              :: i, j, ii, jj
    character(len=4)       :: ctag
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
 
    call int2string(this%tag, ctag)
 
@@ -256,7 +256,7 @@ subroutine plot_dg_field_2d_with_gmsh(this, field_name)
    sll_real64, allocatable, dimension(:)   :: values
    sll_real64 :: offset(2), eta1, eta2
    character(len=32) :: my_fmt
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
 
    if (this%degree > 3) then
       write(*,*) 'ordre non prévu'
@@ -364,7 +364,7 @@ subroutine plot_dg_field_2d_with_plotmtv(this, field_name)
    sll_int32              :: i, j, ii, jj
    sll_real64             :: offset(2)
    sll_real64             :: eta1, eta2
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
 
    call sll_ascii_file_create(field_name//".mtv", file_id, error)
 
@@ -474,7 +474,7 @@ subroutine plot_dg_field_2d_with_xdmf(this, field_name, time)
    sll_real64        :: eta1, eta2
    sll_int32         :: clength
    sll_real64, optional :: time
-   type(sll_logical_mesh_2d), pointer :: lm
+   class(sll_logical_mesh_2d), pointer :: lm
 
    clength = len_trim(field_name)
 
