@@ -132,7 +132,7 @@ contains   ! *****************************************************************
     type(sll_coordinate_transformation_multipatch_2d), target :: transf
     logical, intent(in), optional                             :: owns_data
     character(len=256)                                        :: patch_name
-    type(sll_logical_mesh_2d), pointer                       :: lm
+    class(sll_logical_mesh_2d), pointer                       :: lm
     sll_int32, dimension(1:2)                                 :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
@@ -375,7 +375,7 @@ contains   ! *****************************************************************
   ! thus avoiding unnecessary memory copying.
   subroutine allocate_memory_sfmp2d( field )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: field
-    type(sll_logical_mesh_2d), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_int32 :: i
     sll_int32 :: ierr
     sll_int32 :: num_patches
@@ -420,7 +420,7 @@ contains   ! *****************************************************************
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                               :: patch
     sll_real64, dimension(:,:), intent(in)              :: values
-    type(sll_logical_mesh_2d), pointer                 :: lm
+    class(sll_logical_mesh_2d), pointer                 :: lm
     sll_int32                                           :: numpts1
     sll_int32                                           :: numpts2
 
@@ -472,7 +472,7 @@ contains   ! *****************************************************************
   ! CHANGES IN BETWEEN PATCHES!!!
   subroutine compute_compatible_derivatives_in_borders( fmp )
     class(sll_scalar_field_multipatch_2d), intent(inout) :: fmp
-    type(sll_logical_mesh_2d), pointer :: m
+    class(sll_logical_mesh_2d), pointer :: m
     sll_int32 :: num_patches
     sll_int32 :: ip
     sll_int32 :: i
@@ -737,7 +737,7 @@ contains   ! *****************************************************************
   end function get_patch_transformation_sfmp2d
 
   function get_patch_logical_mesh_sfmp2d( mp, patch ) result(res)
-    type(sll_logical_mesh_2d), pointer                 :: res
+    class(sll_logical_mesh_2d), pointer                 :: res
     class(sll_scalar_field_multipatch_2d), intent(in)   :: mp
     sll_int32, intent(in)                              :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )

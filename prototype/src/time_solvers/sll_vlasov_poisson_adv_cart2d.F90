@@ -52,7 +52,7 @@ contains
     sll_real64 :: displacement
     sll_int32 :: j
     sll_real64 :: vmin, vmax, delta_v
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), pointer :: mesh
 
     mesh => this%dist_func%transf%get_logical_mesh()
 
@@ -79,7 +79,7 @@ contains
     sll_int32 :: i
     sll_real64 :: xmin, xmax, delta_x
     sll_real64 :: vmin, vmax, delta_v
-    type(sll_logical_mesh_2d), pointer :: mesh
+    class(sll_logical_mesh_2d), pointer :: mesh
     
     time = this%current_time
 
