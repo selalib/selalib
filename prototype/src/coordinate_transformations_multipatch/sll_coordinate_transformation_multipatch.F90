@@ -467,7 +467,7 @@ contains
     class(sll_coordinate_transformation_multipatch_2d), intent(in) :: mp
     sll_int32, intent(in) :: patch
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%number_patches) )
-    res => mp%transfs(patch+1)%T
+    res => mp%transfs(patch+1)%t
   end function get_transformation_ctmp2d 
 
   function get_connectivity_ctmp2d( mp, patch, face ) result(res)

@@ -132,7 +132,7 @@ contains   ! *****************************************************************
     type(sll_coordinate_transformation_multipatch_2d), target :: transf
     logical, intent(in), optional                             :: owns_data
     character(len=256)                                        :: patch_name
-    type(sll_logical_mesh_2d), pointer                        :: lm
+    type(sll_logical_mesh_2d), pointer                       :: lm
     sll_int32, dimension(1:2)                                 :: connectivity
     character(len=128) :: format_string 
     sll_int32  :: i
@@ -248,10 +248,14 @@ contains   ! *****************************************************************
             3 )   ! <--- HARDWIRED degree of splines, not OK
 
        print *, 'created interpolator for patch ', i
-       fmp%fields(i+1)%f => new_scalar_field_2d_discrete_alt( &
+       print *, "num cells = ", lm%num_cells1, lm%num_cells2
+ 
+      fmp%fields(i+1)%f => new_scalar_field_2d_discrete_alt( &
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
+!            lm%num_cells1, &
+!            lm%num_cells2, &
             bc_left, &
             bc_right, &
             bc_bottom, &
@@ -280,7 +284,7 @@ contains   ! *****************************************************************
 #define NUM_DERIVS 1
 
     do i=1,num_patches
-       lm => fmp%transf%get_logical_mesh(i-1)
+       lm => fmp%get_logical_mesh(i-1)
        num_pts1 = lm%num_cells1 + 1
        num_pts2 = lm%num_cells2 + 1
        SLL_ALLOCATE(fmp%buffers0(i)%array(num_pts1,NUM_DERIVS),ierr)
@@ -389,7 +393,7 @@ contains   ! *****************************************************************
     num_patches = field%num_patches
 
     do i=0,num_patches-1
-       lm => field%transf%get_logical_mesh(i)
+       lm => field%get_logical_mesh(i)
        numpts1 = lm%num_cells1+1
        numpts2 = lm%num_cells2+1
        SLL_ALLOCATE(field%patch_data(i+1)%array(numpts1,numpts2),ierr)
@@ -400,6 +404,8 @@ contains   ! *****************************************************************
     do i=0,num_patches-1
        call field%fields(i+1)%f%set_field_data(field%patch_data(i+1)%array)
     end do
+
+    print *, "entering second loop"
 
     ! Link each patch with the newly allocated memory. There is a problem here:
     ! Each upon the call to 'set_field_data()', each field COPIES the data into
@@ -416,12 +422,12 @@ contains   ! *****************************************************************
     class(sll_scalar_field_multipatch_2d), intent(inout) :: mp
     sll_int32, intent(in)                               :: patch
     sll_real64, dimension(:,:), intent(in)              :: values
-    type(sll_logical_mesh_2d), pointer                  :: lm
+    type(sll_logical_mesh_2d), pointer                 :: lm
     sll_int32                                           :: numpts1
     sll_int32                                           :: numpts2
 
     SLL_ASSERT( (patch >= 0) .and. (patch < mp%num_patches) )
-    lm => mp%transf%get_logical_mesh(patch)
+    lm => mp%get_logical_mesh(patch)
     numpts1 = lm%num_cells1+1
     numpts2 = lm%num_cells2+1
 
@@ -490,7 +496,7 @@ contains   ! *****************************************************************
     num_patches = fmp%num_patches
 
     do ip=1,num_patches
-       m => fmp%transf%get_logical_mesh(ip-1)
+       m => fmp%get_logical_mesh(ip-1)
        num_pts1 = m%num_cells1 + 1
        num_pts2 = m%num_cells2 + 1
        rdelta1  = 1.0_f64/m%delta_eta1
