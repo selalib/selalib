@@ -24,8 +24,8 @@ program qns_4d_general
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_qns_general)     :: simulation
-  class(sll_logical_mesh_2d), pointer      :: mx
-  class(sll_logical_mesh_2d), pointer      :: mv
+  type(sll_logical_mesh_2d), pointer      :: mx
+  type(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   !class(sll_coordinate_transformation_2d_nurbs), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
@@ -159,7 +159,7 @@ program qns_4d_general
   transformation_x => new_nurbs_2d_transformation_from_file("circle_n63_rayon1_patch0.nml")
   !transformation_x => new_nurbs_2d_transformation_from_file("domain_patch0.nml")
   !transformation_x%mesh => mx
-  mx => transformation_x%get_logical_mesh()
+  !mx => transformation_x%get_logical_mesh()
   !print*, mx%num_cells1,mx%num_cells2,mx%eta1_min,mx%eta2_min,mx%eta1_max,mx%eta2_max
 !!$   print*, 'transformation ok'
   ! ---------------------------------------------------------------------
