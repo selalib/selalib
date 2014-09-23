@@ -331,7 +331,9 @@ contains
           x2_min, &
           x2_max, &
           SLL_HERMITE, &
-          SLL_PERIODIC)
+          SLL_PERIODIC, &
+          const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
+          const_eta1_max_slope = 0._f64)
       case ("SLL_HERMITE")
         f_interp2d => new_hermite_2d_interpolator( &
           Nc_x1+1, &

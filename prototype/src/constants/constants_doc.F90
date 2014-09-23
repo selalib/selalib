@@ -10,12 +10,12 @@
 
 
 !> @namespace sll_constants 
-!> @brief 
-!> Description of constants library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> @brief
+!> Some physical and mathematical constants.
 !> @details
-!> Long description of  constants, you can add some references or math equations.
+!> This file should contain all mathematical and physical 
+!> constants to be used library-wide.
+!> @author Selalib team 
 !>
 !> <b> Headers file available </b>
 !>  - sll_constants.h
@@ -26,13 +26,5 @@
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_constants.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_constants </code>
-!>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
+!> - Link with   <code>-lsll_constants</code>
 !>
