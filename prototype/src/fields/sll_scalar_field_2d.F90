@@ -103,7 +103,6 @@ contains   ! *****************************************************************
     num_cells2 = mesh%num_cells2
     num_pts1   = mesh%num_cells1+1
     num_pts2   = mesh%num_cells2+1
-    
 
     ! For an initializing function, argument check should not be assertions
     ! but more permanent if-tests. There is no reason to turn these off ever.
@@ -144,7 +143,6 @@ contains   ! *****************************************************************
        end if
     endif
     this%plot_counter = 0
-
   end subroutine initialize_scalar_field_2d
 
   ! The following pair of subroutines are tricky. We want them as general 
