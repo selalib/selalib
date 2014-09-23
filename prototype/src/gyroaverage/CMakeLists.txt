@@ -5,6 +5,7 @@
         sll_gyroaverage_2d_polar_pade_solver.F90
         sll_gyroaverage_2d_polar_splines_solver.F90
         sll_gyroaverage_2d_polar_hermite_solver.F90
+        sll_qn_2d_polar_precompute.F90
         sll_qn_2d_base.F90
         sll_qn_2d_polar.F90
         sll_qn_2d_polar_splines_solver.F90)
@@ -37,6 +38,12 @@
     test_qn_2d_polar_splines
     unit_test_qn_2d_polar_splines.F90)  
 
+  ADD_EXECUTABLE(
+    test_qn_2d_polar_precompute
+    unit_test_qn_2d_polar_precompute.F90)  
+
+
+
   TARGET_LINK_LIBRARIES(
     test_gyroaverage_2d_polar_hermite
     sll_gyroaverage)
@@ -52,3 +59,8 @@
   TARGET_LINK_LIBRARIES(
     test_qn_2d_polar_splines
     sll_gyroaverage)  
+
+  TARGET_LINK_LIBRARIES(
+    test_qn_2d_polar_precompute
+    sll_gyroaverage)  
+
