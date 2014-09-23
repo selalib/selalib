@@ -503,7 +503,7 @@ contains
 
   function x1_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_mesh_2d_base), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -515,14 +515,15 @@ contains
     sll_real64  :: eta2_min
     
     lm => transf%get_logical_mesh()
-    
+    SLL_ASSERT( i <= lm%num_cells1 )
+    SLL_ASSERT( j <= lm%num_cells2 )
     eta1 = lm%eta1_cell(i,j)
     eta2 = lm%eta2_cell(i,j)
     
-    SLL_ASSERT( eta1 <= 1.0_f64)
-    SLL_ASSERT( eta1 >= 0.0_f64)
-    SLL_ASSERT( eta2 <= 1.0_f64)
-    SLL_ASSERT( eta2 >= 0.0_f64)
+    SLL_ASSERT( eta1 <= 1.0_f64 )
+    SLL_ASSERT( eta1 >= 0.0_f64 )
+    SLL_ASSERT( eta2 <= 1.0_f64 )
+    SLL_ASSERT( eta2 >= 0.0_f64 )
 
     if (transf%is_rational == 0) then ! IN the case of SPLINE
        val = transf%x1_interp%interpolate_value(eta1,eta2)
@@ -535,7 +536,7 @@ contains
   
    function x2_cell_nurbs( transf, i, j ) result(val)
     class(sll_coordinate_transformation_2d_nurbs) :: transf
-    class(sll_mesh_2d_base), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64             :: val
     sll_int32, intent(in) :: i
     sll_int32, intent(in) :: j
@@ -543,7 +544,9 @@ contains
     sll_real64  :: eta2
 
     lm => transf%get_logical_mesh()
-    
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
+
     eta1 = lm%eta1_cell(i,j)
     eta2 = lm%eta2_cell(i,j)
     
@@ -630,7 +633,7 @@ contains
     class(sll_coordinate_transformation_2d_nurbs)   :: transf
     sll_int32, intent(in)   :: i
     sll_int32, intent(in)   :: j
-    class(sll_mesh_2d_base), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64              :: transf_2d_jacobian_node_nurbs
     sll_real64  :: eta1
     sll_real64  :: eta2
@@ -662,7 +665,7 @@ contains
     class(sll_coordinate_transformation_2d_nurbs) :: transf
     sll_int32, intent(in)              :: i
     sll_int32, intent(in)              :: j
-    class(sll_mesh_2d_base), pointer :: lm
+    class(sll_logical_mesh_2d), pointer :: lm
     sll_real64                         :: var
     sll_real64  :: eta1
     sll_real64  :: eta2
@@ -673,6 +676,9 @@ contains
     sll_real64, dimension(1:2,1:2) :: jacobian_matrix
 
     lm => transf%get_logical_mesh()
+
+    SLL_ASSERT( i <= lm%num_cells1)
+    SLL_ASSERT( j <= lm%num_cells2)
 
     eta1 = lm%eta1_cell(i,j)
     eta2 = lm%eta2_cell(i,j)
