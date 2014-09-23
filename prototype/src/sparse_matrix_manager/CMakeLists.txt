@@ -20,12 +20,14 @@ ADD_LIBRARY(spm STATIC ${SPM_FILES})
 
 IF(PASTIX_FOUND)
 
+  SET(CMAKE_Fortran_COMPILER ${MPI_Fortran_COMPILER})
   INCLUDE_DIRECTORIES(${PASTIX_INCLUDE_DIRS})
   ADD_LIBRARY(sll_sparse_matrix STATIC 
               sll_sparse.F90
               sll_pastix.F90
   	        sll_sparse_matrix_pastix_module.F90
 	        sll_sparse_matrix_mp_module.F90)
+
 
 ELSEIF(SUITESPARSE_FOUND)
 
@@ -44,7 +46,7 @@ ENDIF()
 
 TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_working_precision 
                                          sll_memory
-                                         sll_assertion)
+                                         sll_assert)
 
 IF(PASTIX_FOUND)
 
@@ -54,34 +56,24 @@ IF(PASTIX_FOUND)
                                            ${BLAS_LIBRARIES}
                                            sll_collective)
 
-    
 ELSEIF(SUITESPARSE_FOUND)
 
   ADD_LIBRARY(sll_umfpack_wrapper STATIC mod_umfpack.F90 umf4_f77wrapper.c)
 
-  TARGET_LINK_LIBRARIES( sll_sparse_matrix 
-    sll_umfpack_wrapper 
-    ${SUITESPARSE_LIBRARIES}
-    ${BLAS_LIBRARIES})
+  TARGET_LINK_LIBRARIES( sll_sparse_matrix sll_umfpack_wrapper 
+                                           ${SUITESPARSE_LIBRARIES}
+                                           ${BLAS_LIBRARIES})
 
 ENDIF()
 
-
-
-
 ADD_EXECUTABLE( test_sparse_matrix unit_test_sparse_matrix.F90)
-
-#to be changed o that it compiles also without mpi
 TARGET_LINK_LIBRARIES( test_sparse_matrix sll_sparse_matrix sll_collective)
-
 
 ADD_LIBRARY(sll_csr_one_constraint STATIC sll_csr_one_constraint_module.F90)
 TARGET_LINK_LIBRARIES(sll_csr_one_constraint sll_utilities sll_memory)
+
 ADD_EXECUTABLE(test_csr_one_constraint unit_test_csr_one_constraint.F90)
 TARGET_LINK_LIBRARIES(test_csr_one_constraint sll_csr_one_constraint)
 
-#=======
-#set(spm_mods basic_cg_mod.mod gauss_seidel_mod.mod spm_def.mod spm.mod)
-#install(TARGETS spm DESTINATION lib)
-#install(FILES ${spm_mods} DESTINATION include)
-
+ADD_EXECUTABLE(test_gmres dDriver.f dPackgmres.f)
+TARGET_LINK_LIBRARIES(test_gmres ${BLAS_LIBRARIES})
