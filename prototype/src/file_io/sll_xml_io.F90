@@ -286,14 +286,14 @@ contains
                                                   x2dsetname, &
                                                   gridtype) 
 
-     sll_int32, intent(in)        :: file_id
-     character(len=*), intent(in) :: x1filename
-     character(len=*), intent(in) :: x2filename
-     sll_int32, intent(in)        :: nnodes_x1
-     sll_int32, intent(in)        :: nnodes_x2
-     character(len=*), intent(in) :: x1dsetname
-     character(len=*), intent(in) :: x2dsetname
-     character(len=*), intent(in) :: gridtype
+     sll_int32, intent(in)        :: file_id     !< file unit number
+     character(len=*), intent(in) :: x1filename  !< file containing x1 data
+     character(len=*), intent(in) :: x2filename  !< file containing x2 data
+     sll_int32, intent(in)        :: nnodes_x1   !< x1 nodes number
+     sll_int32, intent(in)        :: nnodes_x2   !< x2 nodes number
+     character(len=*), intent(in) :: x1dsetname  !< h5 dataset name for x1
+     character(len=*), intent(in) :: x2dsetname  !< h5 dataset name for x2
+     character(len=*), intent(in) :: gridtype    !< uniform or collection
      
      write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
      write(file_id, &
@@ -381,7 +381,7 @@ contains
        sll_int32, intent(in)                  :: nnodes_x1  !< x nodes number
        sll_int32, intent(in)                  :: nnodes_x2  !< y nodes number
        sll_int32, intent(in)                  :: nnodes_x3  !< z nodes number
-       character(len=*), intent(in)           :: gridtype
+       character(len=*), intent(in)           :: gridtype   !< uniform or collection
        
        write(file_id,"(a)")"<Grid Name='mesh' GridType='"//gridtype//"'>"
        write(file_id,"(a,3i5,a)") &

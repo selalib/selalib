@@ -20,7 +20,7 @@ program test_poisson
   !  sll_tridiagonal
   !  sll_constants
   !  sll_memory
-  !  sll_assertion
+  !  sll_assert
   !  sll_utilities
   !  #sll_poisson_2d
   !  )

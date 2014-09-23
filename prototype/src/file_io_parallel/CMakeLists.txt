@@ -11,7 +11,7 @@ ADD_LIBRARY(sll_file_io_parallel STATIC ${IO_SRC})
 
 TARGET_LINK_LIBRARIES(sll_file_io_parallel sll_collective
                                            sll_file_io
-                                           sll_assertion 
+                                           sll_assert 
                                            sll_utilities
                                            ${HDF5_LIBRARIES} )
 
