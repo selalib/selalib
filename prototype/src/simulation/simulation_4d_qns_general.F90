@@ -57,8 +57,8 @@ module sll_simulation_4d_qns_general_module
      sll_int32  :: bc_vy_0
      sll_int32  :: bc_vy_1
      ! the logical meshes are split in two one for space, one for velocity
-     class(sll_logical_mesh_2d), pointer    :: mesh2d_x
-     class(sll_logical_mesh_2d), pointer    :: mesh2d_v
+     type(sll_logical_mesh_2d), pointer    :: mesh2d_x
+     type(sll_logical_mesh_2d), pointer    :: mesh2d_v
      ! This simulation only applies a coordinate transformation to the spatial
      ! coordinates.
      class(sll_coordinate_transformation_2d_base), pointer :: transfx
