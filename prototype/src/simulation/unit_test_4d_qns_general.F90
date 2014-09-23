@@ -24,8 +24,8 @@ program qns_4d_general
   character(len=256) :: filename
   character(len=256) :: filename_local
   type(sll_simulation_4d_qns_general)     :: simulation
-  type(sll_logical_mesh_2d), pointer      :: mx
-  type(sll_logical_mesh_2d), pointer      :: mv
+  class(sll_logical_mesh_2d), pointer      :: mx
+  class(sll_logical_mesh_2d), pointer      :: mv
   class(sll_coordinate_transformation_2d_base), pointer :: transformation_x
   !class(sll_coordinate_transformation_2d_nurbs), pointer :: transformation_x
   sll_real64, dimension(1:8) :: landau_params
