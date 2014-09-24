@@ -210,10 +210,10 @@ contains
     do i=1,num_cells_r+1
       do k=1,pre_compute_N(i)
         s=s+1
-        ii(1)=pre_compute_index(1,s)
-        ii(2)=modulo(pre_compute_index(2,s),num_cells_theta)
-        pointer_mat_contribution_circ(ii(2),i-1,ii(1))= &
-          pointer_mat_contribution_circ(ii(2),i-1,ii(1))+ &
+        ii(1)=pre_compute_index(1,s)+1
+        ii(2)=modulo(pre_compute_index(2,s),num_cells_theta)+1
+        pointer_mat_contribution_circ(ii(2),i,ii(1))= &
+          pointer_mat_contribution_circ(ii(2),i,ii(1))+ &
           pre_compute_coeff_spl(s) 
       enddo
     enddo         
@@ -286,7 +286,7 @@ contains
       do j=0,Nr+2
         fft_array(1:Ntheta)=pointer_mat_spl2D_circ(0:Ntheta-1,j,k)*(1._f64,0._f64)
 	    call zfftf(Ntheta,fft_array(1:Ntheta),buf_fft)
-	    D_spl2D(1:Ntheta,j,k) = fft_array(1:Ntheta)
+	    D_spl2D(1:Ntheta,j+1,k+1) = fft_array(1:Ntheta)
 	  enddo  
     enddo   
 
@@ -336,11 +336,11 @@ contains
 
     call zffti(Ntheta,buf_fft)
 
-    do k=0,Nr
-      do j=0,Nr+2
-        fft_array(1:Ntheta)=pointer_mat_contribution_circ(0:Ntheta-1,j,k)*(1._f64,0._f64)
+    do k=0,Nr+2
+      do j=0,Nr
+        fft_array(1:Ntheta)=pointer_mat_contribution_circ(1:Ntheta,j+1,k+1)*(1._f64,0._f64)
 	    call zfftf(Ntheta,fft_array(1:Ntheta),buf_fft)
-	    D_contr(1:Ntheta,j,k) = fft_array(1:Ntheta)
+	    D_contr(1:Ntheta,j+1,k+1) = fft_array(1:Ntheta)
 	  enddo  
     enddo   
 
@@ -382,12 +382,12 @@ contains
     Nr = num_cells_r
     Ntheta = num_cells_theta
     
-    SLL_ALLOCATE(mat_stock1(0:Nr,0:Nr), ierr)
-    SLL_ALLOCATE(mat_stock2(0:Nr,0:Nr), ierr)
+    SLL_ALLOCATE(mat_stock1(Nr+1,Nr+1), ierr)
+    SLL_ALLOCATE(mat_stock2(Nr+1,Nr+1), ierr)
     
      
     mat = (0._f64,0._f64)
-    do m=0,Ntheta-1
+    do m=1,Ntheta
       mat_stock1 = (0._f64,0._f64)
       mat_stock2 = (0._f64,0._f64)
       call matrix_product_comp( &
@@ -398,6 +398,15 @@ contains
         Nr+3, &
         Nr+1, &
         mat_stock1)
+!      call matrix_product_comp( &
+!        mat_stock1(:,:), &
+!        Nr+1, &
+!        Nr+1, &
+!        mat_stock1(:,:), &
+!        Nr+1, &
+!        Nr+1, &
+!        mat_stock2)
+!
       call matrix_product_comp( &
         transpose(mat_stock1(:,:)), &
         Nr+1, &
@@ -406,13 +415,227 @@ contains
         Nr+1, &
         Nr+1, &
         mat_stock2)
-      do i=0,Nr
+     ! if(m==1)then
+!        do i=1,Nr+1
+!          mat_stock2(i,i) =  mat_stock2(i,i) - (1._f64,0._f64)
+!        enddo
+      !endif  
+      mat(m,:,:) = -mat_stock2
+    enddo     
+
+  end subroutine compute_double_gyroaverage_matrix
+
+
+  subroutine compute_double_gyroaverage_matrix_blas( &
+    D_spl2D, &
+    D_contr, &
+    num_cells_r, &
+    num_cells_theta, &
+    mat)
+    sll_comp64, dimension(:,:,:), intent(in) :: D_spl2D
+    sll_comp64, dimension(:,:,:), intent(in) :: D_contr
+    sll_int32, intent(in) :: num_cells_r
+    sll_int32, intent(in) :: num_cells_theta
+    sll_comp64, dimension(:,:,:), intent(out) :: mat
+    sll_int32 :: Nr
+    sll_int32 :: Ntheta
+    sll_int32 :: m
+    sll_int32 :: i
+    sll_comp64, dimension(:,:), allocatable :: mat_stock1
+    sll_comp64, dimension(:,:), allocatable :: mat_stock2
+
+
+    sll_comp64, dimension(:,:), allocatable :: mat_A
+    sll_comp64, dimension(:,:), allocatable :: mat_B
+    sll_comp64, dimension(:,:), allocatable :: mat_C
+
+    sll_int32 :: ierr
+    
+    
+    Nr = num_cells_r
+    Ntheta = num_cells_theta
+    
+    SLL_ALLOCATE(mat_stock1(Nr+1,Nr+1), ierr)
+    SLL_ALLOCATE(mat_stock2(Nr+1,Nr+1), ierr)
+    SLL_ALLOCATE(mat_A(Nr+1,Nr+3), ierr)
+    SLL_ALLOCATE(mat_B(Nr+3,Nr+1), ierr)
+    SLL_ALLOCATE(mat_C(Nr+1,Nr+1), ierr)
+    
+     
+    mat = (0._f64,0._f64)
+    do m=1,Ntheta
+      mat_stock1 = (0._f64,0._f64)
+      mat_A(1:Nr+1,1:Nr+3) = D_contr(m,:,:)
+      mat_B(1:Nr+3,1:Nr+1) = D_spl2D(m,:,:)
+      !A MxK
+      !B KxN
+      !C MxN
+      !M = Nr+1, K = Nr+3, N = Nr+1
+      !ALPHA=1 BETA=0
+      !ZGEMM('N','N',M,N,K,ALPHA,A,M,B,K,BETA,C,M)       
+      CALL ZGEMM( &
+        'N', &
+        'N', &
+        Nr+1, &
+        Nr+1, &
+        Nr+3, &
+        1._f64, &
+        mat_A, &
+        Nr+1, &
+        mat_B, &
+        Nr+3, &
+        0._f64, &
+        mat_C, &
+        Nr+1)
+      
+!      call matrix_product_comp( &
+!        D_contr(m,:,:), &
+!        Nr+1, &
+!        Nr+3, &
+!        D_spl2D(m,:,:), &
+!        Nr+3, &
+!        Nr+1, &
+!        mat_stock1)
+      
+      mat_stock2 = (0._f64,0._f64)
+      mat_stock1(:,:) = mat_C(1:Nr+1,1:Nr+1)
+      CALL ZGEMM( &
+        'T', &
+        'N', &
+        Nr+1, &
+        Nr+1, &
+        Nr+1, &
+        1._f64, &
+        mat_C, &
+        Nr+1, &
+        mat_stock1(:,:), &
+        Nr+1, &
+        0._f64, &
+        mat_stock2, &
+        Nr+1)
+
+
+!      call matrix_product_comp( &
+!        transpose(mat_stock1(:,:)), &
+!        Nr+1, &
+!        Nr+1, &
+!        mat_stock1(:,:), &
+!        Nr+1, &
+!        Nr+1, &
+!        mat_stock2)
+      do i=1,Nr+1
         mat_stock2(i,i) =  mat_stock2(i,i) - (1._f64,0._f64)
       enddo
       mat(m,:,:) = -mat_stock2
     enddo     
 
-  end subroutine compute_double_gyroaverage_matrix
+  end subroutine compute_double_gyroaverage_matrix_blas
+
+  subroutine compute_double_gyroaverage_matrix_blas_real( &
+    D_spl2D, &
+    D_contr, &
+    num_cells_r, &
+    num_cells_theta, &
+    mat)
+    sll_real64, dimension(:,:,:), intent(in) :: D_spl2D
+    sll_real64, dimension(:,:,:), intent(in) :: D_contr
+    sll_int32, intent(in) :: num_cells_r
+    sll_int32, intent(in) :: num_cells_theta
+    sll_real64, dimension(:,:,:), intent(out) :: mat
+    sll_int32 :: Nr
+    sll_int32 :: Ntheta
+    sll_int32 :: m
+    sll_int32 :: i
+    sll_real64, dimension(:,:), allocatable :: mat_stock1
+    sll_real64, dimension(:,:), allocatable :: mat_stock2
+
+
+    sll_real64, dimension(:,:), allocatable :: mat_A
+    sll_real64, dimension(:,:), allocatable :: mat_B
+    sll_real64, dimension(:,:), allocatable :: mat_C
+
+    sll_int32 :: ierr
+    
+    
+    Nr = num_cells_r
+    Ntheta = num_cells_theta
+    
+    SLL_ALLOCATE(mat_stock1(Nr+1,Nr+1), ierr)
+    SLL_ALLOCATE(mat_stock2(Nr+1,Nr+1), ierr)
+    SLL_ALLOCATE(mat_A(Nr+1,Nr+3), ierr)
+    SLL_ALLOCATE(mat_B(Nr+3,Nr+1), ierr)
+    SLL_ALLOCATE(mat_C(Nr+1,Nr+1), ierr)
+    
+     
+    mat = (0._f64,0._f64)
+    do m=1,Ntheta
+      mat_stock1 = (0._f64,0._f64)
+      mat_A(1:Nr+1,1:Nr+3) = D_contr(m,:,:)
+      mat_B(1:Nr+3,1:Nr+1) = D_spl2D(m,:,:)
+      !A MxK
+      !B KxN
+      !C MxN
+      !M = Nr+1, K = Nr+3, N = Nr+1
+      !ALPHA=1 BETA=0
+      !ZGEMM('N','N',M,N,K,ALPHA,A,M,B,K,BETA,C,M)       
+      CALL DGEMM( &
+        'N', &
+        'N', &
+        Nr+1, &
+        Nr+1, &
+        Nr+3, &
+        1._f64, &
+        mat_A, &
+        Nr+1, &
+        mat_B, &
+        Nr+3, &
+        0._f64, &
+        mat_C, &
+        Nr+1)
+      
+!      call matrix_product_comp( &
+!        D_contr(m,:,:), &
+!        Nr+1, &
+!        Nr+3, &
+!        D_spl2D(m,:,:), &
+!        Nr+3, &
+!        Nr+1, &
+!        mat_stock1)
+      
+      mat_stock2 = (0._f64,0._f64)
+      mat_stock1(:,:) = mat_C(1:Nr+1,1:Nr+1)
+      CALL DGEMM( &
+        'T', &
+        'N', &
+        Nr+1, &
+        Nr+1, &
+        Nr+1, &
+        1._f64, &
+        mat_C, &
+        Nr+1, &
+        mat_stock1(:,:), &
+        Nr+1, &
+        0._f64, &
+        mat_stock2, &
+        Nr+1)
+
+
+!      call matrix_product_comp( &
+!        transpose(mat_stock1(:,:)), &
+!        Nr+1, &
+!        Nr+1, &
+!        mat_stock1(:,:), &
+!        Nr+1, &
+!        Nr+1, &
+!        mat_stock2)
+      do i=1,Nr+1
+        mat_stock2(i,i) =  mat_stock2(i,i) - (1._f64,0._f64)
+      enddo
+      mat(m,:,:) = -mat_stock2
+    enddo     
+
+  end subroutine compute_double_gyroaverage_matrix_blas_real
+
 
 
 
@@ -441,6 +664,9 @@ contains
     sll_comp64, dimension(:,:,:), allocatable :: D_spl2D 
     sll_comp64, dimension(:,:,:), allocatable :: D_contr
     sll_int32 :: ierr 
+    sll_real64, dimension(:,:,:), allocatable :: real_mat
+    sll_real64, dimension(:,:,:), allocatable :: real_D_spl2D 
+    sll_real64, dimension(:,:,:), allocatable :: real_D_contr
 
 
 
@@ -460,7 +686,7 @@ contains
       pre_compute_N, &
       size_pre_compute )
   
-    print *,'#size_pre_compute=',size_pre_compute
+    !print *,'#size_pre_compute=',size_pre_compute
   
     SLL_ALLOCATE(pre_compute_index(2,size_pre_compute),ierr)
     SLL_ALLOCATE(pre_compute_coeff_spl(size_pre_compute),ierr)
@@ -477,10 +703,10 @@ contains
       pre_compute_index, &
       pre_compute_coeff_spl)
 
-    print *,'#precompute_double_gyroaverage_coeff_polar_splines done'
+    !print *,'#precompute_double_gyroaverage_coeff_polar_splines done'
 
   
-    SLL_ALLOCATE(pointer_mat_contribution_circ(0:num_cells_theta-1, 0:num_cells_r, 0:num_cells_r+2),ierr)
+    SLL_ALLOCATE(pointer_mat_contribution_circ(num_cells_theta, num_cells_r+1, num_cells_r+3),ierr)
 
     call compute_contribution_matrix( &
       num_cells_r, &
@@ -491,21 +717,21 @@ contains
       size_pre_compute, &
       pointer_mat_contribution_circ)
 
-    print *,'#compute_contribution_matrix done'
+    !print *,'#compute_contribution_matrix done'
 
 
   
-    SLL_ALLOCATE(D_spl2D(0:num_cells_theta-1,0:num_cells_r+2,0:num_cells_r), ierr)
+    SLL_ALLOCATE(D_spl2D(num_cells_theta,num_cells_r+3,num_cells_r+1), ierr)
 
     call compute_D_spl2D( &
       num_cells_r, &
       num_cells_theta, &
       D_spl2D)
 
-    print *,'#compute_D_spl2D done'
+    !print *,'#compute_D_spl2D done'
 
 
-    SLL_ALLOCATE(D_contr(0:num_cells_theta-1,0:num_cells_r,0:num_cells_r+2), ierr)
+    SLL_ALLOCATE(D_contr(num_cells_theta,num_cells_r+1,num_cells_r+3), ierr)
 
     call compute_D_contr( &
       num_cells_r, &
@@ -513,7 +739,14 @@ contains
       pointer_mat_contribution_circ, &
       D_contr)
 
-    print *,'#compute_D_contr done'
+    !print *,'#compute_D_contr done'
+
+
+    !print *,'#complex values of D_spl2D',minval(aimag(D_spl2D)),maxval(aimag(D_spl2D))
+    !print *,'#complex values of D_contr',minval(aimag(D_contr)),maxval(aimag(D_contr))
+    !print *,'#real values of D_spl2D',minval(real(D_spl2D)),maxval(real(D_spl2D))
+    !print *,'#real values of D_contr',minval(real(D_contr)),maxval(real(D_contr))
+
 
 
     call compute_double_gyroaverage_matrix( &
@@ -523,7 +756,35 @@ contains
       num_cells_theta, &
       mat)
 
-    print *,'#compute_double_gyroaverage_matrix'
+!    call compute_double_gyroaverage_matrix_blas( &
+!      D_spl2D, &
+!      D_contr, &
+!      num_cells_r, &
+!      num_cells_theta, &
+!      mat)
+
+!    SLL_ALLOCATE(real_D_spl2D(num_cells_theta,num_cells_r+3,num_cells_r+1), ierr)
+!    SLL_ALLOCATE(real_D_contr(num_cells_theta,num_cells_r+1,num_cells_r+3), ierr)
+!    SLL_ALLOCATE(real_mat(num_cells_theta,num_cells_r+1,num_cells_r+1), ierr)
+!    
+!    real_D_spl2D = real(D_spl2D,f64)
+!    real_D_contr = real(D_contr,f64)
+!    
+!    real_mat = 0._f64
+!
+!
+!    
+!    call compute_double_gyroaverage_matrix_blas_real( &
+!      real_D_spl2D, &
+!      real_D_contr, &
+!      num_cells_r, &
+!      num_cells_theta, &
+!      real_mat)
+!    
+!    mat = real_mat*(1._f64,0._f64)
+   
+
+    !print *,'#compute_double_gyroaverage_matrix'
 
 
 
@@ -550,11 +811,11 @@ contains
     
     SLL_ALLOCATE(IPIV(num_cells_r+1),ierr)
     SLL_ALLOCATE(WORK((num_cells_r+1)**2),ierr) 
-    do i=0,num_cells_r
-      mat(0,i,i) = mat(0,i,i)+lambda(i)
+    do i=1,num_cells_r+1
+      mat(1,i,i) = mat(1,i,i)+lambda(i)
    enddo
 
-    do m=0,num_cells_theta-1
+    do m=1,num_cells_theta
       call ZGETRF( &
         num_cells_r+1, &
         num_cells_r+1, &
@@ -577,6 +838,70 @@ contains
     
   end subroutine compute_qns_inverse_polar_splines
 
+  subroutine solve_qns_polar_splines( &
+    mat, &
+    phi, &
+    num_cells_r, &
+    num_cells_theta)
+    sll_comp64, dimension(:,:,:), intent(in) :: mat
+    sll_real64, dimension(:,:), intent(inout) :: phi
+    sll_comp64,dimension(:,:),allocatable :: phi_comp
+    sll_comp64,dimension(:,:),allocatable :: phi_old
+    sll_real64,dimension(:),allocatable::buf_fft
+    sll_int32, intent(in) :: num_cells_r
+    sll_int32, intent(in) :: num_cells_theta
+    sll_int32 :: Nr
+    sll_int32 :: Ntheta
+    sll_int32 :: m
+    sll_int32 :: i
+    sll_int32 :: j
+    sll_int32 :: ierr
+    sll_comp64 :: result
+    
+   
+    Nr = num_cells_r
+    ntheta = num_cells_theta
+    
+    SLL_ALLOCATE(phi_comp(1:Nr+1,1:Ntheta),ierr)
+    SLL_ALLOCATE(phi_old(1:Nr+1,1:Ntheta),ierr)
+    SLL_ALLOCATE(buf_fft(1:4*Ntheta+15),ierr)
+ 
+ ! FFT(PHI)
+    phi_comp=phi*(1._f64,0._f64)
+    call zffti(Ntheta,buf_fft)
+    do i=1,Nr+1
+	  call zfftf(Ntheta,phi_comp(i,:),buf_fft)
+    enddo   
+
+ ! Produit matrice/vecteur 
+    phi_old=phi_comp
+    do m = 1,Ntheta
+      do i = 1,Nr+1
+        result = (0._f64,0._f64)
+        do j = 1,Nr+1
+          result = result + mat(m,i,j)*phi_old(j,m)
+        enddo
+        phi_comp(i,m) = result
+      enddo 
+    enddo
+    
+ ! FFT^-1
+    do i=1,Nr+1
+		call zfftb(Ntheta,phi_comp(i,:),buf_fft)
+	enddo
+	phi=real(phi_comp/real(Ntheta,f64))
+    
+ ! Sorties     
+ !   print *,"phi_min : ",minval(phi)
+ !   print *,"phi_max : ",maxval(phi)
+    
+ ! Deallocate    
+    SLL_DEALLOCATE_ARRAY(phi_comp,ierr)
+    SLL_DEALLOCATE_ARRAY(phi_old,ierr)
+    SLL_DEALLOCATE_ARRAY(buf_fft,ierr)
+        
+  end subroutine solve_qns_polar_splines
+  
   
   subroutine precompute_matrix( &
     Ti, &

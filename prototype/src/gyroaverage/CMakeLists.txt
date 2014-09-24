@@ -20,7 +20,9 @@
   sll_characteristics
   sll_interpolators
   sll_periodic_interp
-  sll_splines)
+  sll_splines
+  sll_file_io
+  sll_integration)
 
   ADD_EXECUTABLE(
     test_gyroaverage_2d_polar_hermite

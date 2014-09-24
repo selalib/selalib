@@ -159,14 +159,18 @@ implicit none
     eta_max, &
     Nc, &
     N_points, &
-    lambda)
-  
+    lambda)  
   call qn%precompute_qn( mu_points(0:N_mu-1), mu_weights(0:N_mu-1) , N_mu)
   call qn%solve_qn(phi_restr)
+
+
+
+
 
   
   phi_qn(1:Nc(1)+1,1:Nc(2)) = phi_restr(1:Nc(1)+1,1:Nc(2))
   phi_qn(1:Nc(1)+1,Nc(2)+1) = phi_restr(1:Nc(1)+1,1)
+  
   
   call test_solve_qn_polar_new(Nc,eta_min,eta_max, &
     mu_points(0:N_mu-1),mu_weights(0:N_mu-1),N_mu,mode,phi_init,phi_qn)
