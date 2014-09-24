@@ -95,7 +95,7 @@ SET(POISSON_LIBS sll_fft
                  sll_file_io
                  sll_utilities
                  sll_timer
-		     sll_assert
+		 sll_assert
                  dfftpack)
 
 ADD_EXECUTABLE(test_poisson_1d test_poisson_1d.F90 sll_poisson_1d_periodic.F90)
