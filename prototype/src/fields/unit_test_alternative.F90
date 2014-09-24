@@ -85,8 +85,6 @@ program unit_test_alternative
   h2 = (ETA2MAX-ETA2MIN)/real(nc2,f64)
   print *, 'h1 = ', h1
   print *, 'h2 = ', h2
-  
-
 
   ! First thing, initialize the logical mesh associated with this problem.        
   mesh_2d => new_logical_mesh_2d( NUM_CELLS1, NUM_CELLS2, &
@@ -397,7 +395,6 @@ program unit_test_alternative
      end do
   end do
   
-
   ! ----> initializatio of the interpolator for the field
   
   call initialize_ad2d_interpolator( &
@@ -414,7 +411,7 @@ program unit_test_alternative
        SLL_PERIODIC,&
        SPLINE_DEG1, &
        SPLINE_DEG2)
-  
+
   ! ----> initialization of the field
   
   doubly_periodic_discrete => new_scalar_field_2d_discrete_alt( &
@@ -429,7 +426,7 @@ program unit_test_alternative
        nc1+1,&
        point2,&
        nc2+1)
-  
+
   ! ------- > allocation values of field
   call doubly_periodic_discrete%set_field_data(tab_values)
   ! --------> Compute coefficients of the field
