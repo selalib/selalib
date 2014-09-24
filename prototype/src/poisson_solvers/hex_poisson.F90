@@ -192,7 +192,8 @@ contains
     sll_real64, dimension(:), intent(in)   :: rho
     sll_int32                              :: num_cells, i, index_tab, k1, k2
     sll_real64                             :: step
-    sll_int32                              :: global
+    sll_real64                             :: f1,f2,f3,f4,f5,f6
+    sll_int32                              :: global,n1,n2,n3,n4,n5,n6
 
     num_cells = mesh%num_cells
     step = mesh%delta**2 * 1.5_f64 
@@ -208,12 +209,22 @@ contains
        k2 = mesh%hex_coord(2, global)
 
        call index_hex_to_global(mesh, k1, k2, index_tab)
+       
+       f1 = value_if_inside_rho(k1+1,k2  ,mesh,rho)
+       f2 = value_if_inside_rho(k1+1,k2+1,mesh,rho)
+       f3 = value_if_inside_rho(k1  ,k2+1,mesh,rho)
+       f4 = value_if_inside_rho(k1-1,k2  ,mesh,rho)
+       f5 = value_if_inside_rho(k1-1,k2-1,mesh,rho)
+       f6 = value_if_inside_rho(k1  ,k2-1,mesh,rho)
 
-       second_terme(index_tab) = rho(global) * step
+       second_terme(index_tab) = ( 0.75_f64*rho(global) + & 
+            (f1+f2+f3+f4+f5+f6)/24._f64 ) * step ! ordre 4
+
+       !second_terme(index_tab) = rho(global) * step ! order 2
+
     enddo
 
-    
-
+ 
     !************************
     ! Boundaries
     !************************
@@ -307,7 +318,21 @@ contains
 
   end subroutine hex_second_terme_poisson
 
+  
+  function value_if_inside_rho(k1,k2,mesh,rho) result(f)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_real64, dimension(:)       :: rho
+    sll_int32  :: k1, k2, n
+    sll_real64 :: f 
 
+    if ( abs(k1) > mesh%num_cells .or. abs(k2) > mesh%num_cells .or. &
+         (k1)*(k2)< 0 .and. ( abs(k1) + abs(k2) > mesh%num_cells) ) then
+       f = 0._f64 ! null dirichlet boundary condition
+    else
+       n = hex_to_global(mesh,k1,k2)
+       f = rho(n)
+    endif
 
+  endfunction value_if_inside_rho
 
 end module hex_poisson

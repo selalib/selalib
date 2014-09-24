@@ -13,6 +13,17 @@ ADD_LIBRARY ( hex_hermite STATIC
 TARGET_LINK_LIBRARIES( hex_hermite sll_hermite_interpolation)
 
 
+# ADD_LIBRARY ( hex_poisson STATIC hex_poisson.F90)
+
+# TARGET_LINK_LIBRARIES( hex_poisson sll_hex_meshes sll_hermite_interpolation)
+
+# ADD_LIBRARY ( euler_2d_hex STATIC euler_2d_hex.F90)
+
+# TARGET_LINK_LIBRARIES( euler_2d_hex )
+# ADD_LIBRARY ( pivotbande STATIC pivotbande.F90)
+
+# TARGET_LINK_LIBRARIES( pivotbande )
+
 
 # first executable
 
@@ -37,9 +48,23 @@ ADD_EXECUTABLE(test_hctc test_hctc.F90)
 
 TARGET_LINK_LIBRARIES(test_hctc sll_constants)
 
-
 # fourth executable
 
 ADD_EXECUTABLE(test_dimitrov test_dimitrov.F90)
 
 TARGET_LINK_LIBRARIES(test_dimitrov sll_constants)
+
+# fifth executable
+
+ADD_EXECUTABLE( test_hex_center_guide 
+                test_hex_center_guide.F90 
+                euler_2d_hex.F90
+		../poisson_solvers/pivotbande.F90 )
+
+TARGET_LINK_LIBRARIES( test_hex_center_guide 
+                       sll_hermite_interpolation 
+		       hex_hermite 
+		       sll_hex_meshes 
+		       hex_poisson
+		       sll_constants )
+		    

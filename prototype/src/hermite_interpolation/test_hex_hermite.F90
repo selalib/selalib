@@ -6,6 +6,7 @@ program test_hex_hermite
 
   use sll_constants
   use sll_interpolation_hex_hermite
+  !use euler_2d_hex
 
   implicit none
 
@@ -13,7 +14,7 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
-  sll_int32    :: num_method = 15
+  sll_int32    :: num_method = 9
   character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
@@ -38,6 +39,7 @@ program test_hex_hermite
   sll_real64,dimension(:),allocatable :: f_tn1,center_values_tn1,edge_values_tn1
   ! exact distribution 
   sll_real64,dimension(:),allocatable :: f_sol
+  sll_real64,dimension(:),allocatable :: phi, uxn, uyn,dxux,dyux,dxuy,dyuy
   sll_real64   :: norm2_error, norm2_sol, norm_infinite
   sll_real64   :: norm2_error_center, norm2_error_edge, norm2_error_pt
   sll_real64   :: norm2_sol_center, norm2_sol_edge, norm2_sol_pt
@@ -74,7 +76,7 @@ program test_hex_hermite
 
   write(33,*) 
 
-  do num_cells = 20,340,40 ! -> loop on the size of the mesh 
+  do num_cells = 20,20,20 ! -> loop on the size of the mesh 
   
      
      !*********************************************************
@@ -93,6 +95,13 @@ program test_hex_hermite
      SLL_ALLOCATE(f_init( n_points),ierr)
      SLL_ALLOCATE(f_tn( n_points),ierr)
      SLL_ALLOCATE(f_tn1( n_points ),ierr)
+     SLL_ALLOCATE(phi( n_points ),ierr)
+     SLL_ALLOCATE(uxn( n_points ),ierr)
+     SLL_ALLOCATE(uyn( n_points ),ierr)
+     SLL_ALLOCATE(dxux( n_points ),ierr)
+     SLL_ALLOCATE(dyux( n_points ),ierr)
+     SLL_ALLOCATE(dxuy( n_points ),ierr)
+     SLL_ALLOCATE(dyuy( n_points ),ierr)
      SLL_ALLOCATE(center_values_tn ( n_triangle),ierr)
      SLL_ALLOCATE(center_values_tn1( n_triangle),ierr)
      SLL_ALLOCATE(edge_values_tn ( n_edge),ierr)
@@ -225,8 +234,8 @@ program test_hex_hermite
      ! Advection initialization
      which_advec = 1  ! 0 : linear advection ; 1 : circular advection
      advec = 0.025_f64
-     tmax  = 3._f64
-     dt    = 0.1_f64*20._f64 / real(num_cells,f64)  
+     tmax  = 0.3_f64!3._f64
+     dt    = 0.01_f64*20._f64 / real(num_cells,f64)  
      t     = 0._f64
      cfl   = radius * dt / ( radius / real(num_cells,f64)  )
 
@@ -291,64 +300,60 @@ program test_hex_hermite
               !  computation of the root of the characteristics
               !*********************************************************
 
-              ! x = mesh%center_cartesian_coord(1,i)
-              ! y = mesh%center_cartesian_coord(2,i)
+              x = mesh%center_cartesian_coord(1,i)
+              y = mesh%center_cartesian_coord(2,i)
 
-              ! xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-              ! yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
-              ! ! call slb_compute_characteristic_leapfrog( &
-              ! !  x,y,E_x,E_v,xx,yy )
+              xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+              yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
 
-              ! !             INTERPOLATION
-              ! inside = .true.
+              !             INTERPOLATION
+              inside = .true.
 
-              ! h1 =  xx/sqrt(3.0_f64) + yy
-              ! h2 = -xx/sqrt(3.0_f64) + yy 
+              h1 =  xx/sqrt(3.0_f64) + yy
+              h2 = -xx/sqrt(3.0_f64) + yy 
 
-              ! ! needs to be generalised and be integrated in a function
-              ! if ( h1 >  radius .or. h2 >  radius ) inside = .false.
-              ! if ( h1 < -radius .or. h2 < -radius ) inside = .false.
-              ! if ( xx  < -radius*sqrt(3._f64)*0.5_f64 .or. xx &
-              !      > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
+              ! needs to be generalised and be integrated in a function
+              if ( abs(h1) >  radius-1e-15 .or. abs(h2) >  radius-1e-15 ) inside = .false.
+              if ( abs(xx) > (radius-1e-15)*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
-              ! if ( inside ) then
-              !    call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
-              !         edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
-              !    num_method)
-              ! else 
-              !    center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
-              ! endif
+              if ( inside ) then
+                 call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
+                      edge_values_tn, center_values_tn1, mesh, deriv, aire,& 
+                 num_method)
+              else 
+                 center_values_tn1(i) = 0._f64 ! dirichlet boundary condition
+              endif
 
-              ! if (which_advec .eq. 0) then ! linear advection
-              !    xx = x - advec*dt*nloops
-              !    yy = y - advec*dt*nloops
-              ! else                         ! Circular advection
-              !    xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
-              !    yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
-              ! end if
+              if (which_advec .eq. 0) then ! linear advection
+                 xx = x - advec*dt*nloops
+                 yy = y - advec*dt*nloops
+              else                         ! Circular advection
+                 xx = x*cos(2._f64*sll_pi*t) - y*sin(2._f64*sll_pi*t);
+                 yy = x*sin(2._f64*sll_pi*t) + y*cos(2._f64*sll_pi*t);
+              end if
 
 
-              ! ! if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
+              ! if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
 
-              ! norm2_sol_center = 0._f64
+              norm2_sol_center = 0._f64
 
 
-              ! ! computation of the following values :
-              ! ! norm L2 of the distribution function and its minimum
-              ! ! norm infinit & norme L2 of the error 
-              ! if ( name_test == "gauss" ) then 
-              !    norm2_sol_center = norm2_sol_center + &
-              !         abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
-              !    norm2_error_center = norm2_error_center + &
-              !         abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
-              !    if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
-              !         norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
-              !    if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
-              ! elseif ( name_test == "dioco" ) then 
+              ! computation of the following values :
+              ! norm L2 of the distribution function and its minimum
+              ! norm infinit & norme L2 of the error 
+              if ( name_test == "gauss" ) then 
+                 norm2_sol_center = norm2_sol_center + &
+                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64))**2
+                 norm2_error_center = norm2_error_center + &
+                      abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i) )**2
+                 if ( abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i)) >  norm_infinite )&
+                      norm_infinite = abs( gauss_amp*exp(-((xx-gauss_x1)**2+(yy-gauss_x2)**2)/gauss_sig**2/2._f64) - center_values_tn1(i))
+                 if ( center_values_tn1(i) < f_min ) f_min = center_values_tn1(i)
+              elseif ( name_test == "dioco" ) then 
 
-              !    !todo
+                 !todo
 
-              ! endif
+              endif
 
            enddo
 
@@ -378,19 +383,15 @@ program test_hex_hermite
               xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
               yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
 
-              ! call slb_compute_characteristic_leapfrog( &
-              !  x,y,E_x,E_v,xx,yy )
-
               !             INTERPOLATION
               inside = .true.
 
               h1 =  xx/sqrt(3.0_f64) + yy
               h2 = -xx/sqrt(3.0_f64) + yy 
+              
+              if ( abs(h1) >  radius-1e-15 .or. abs(h2) >  radius-1e-15 ) inside = .false.
+              if ( abs(xx) > (radius-1e-15)*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
-              if ( h1 >  radius .or. h2 >  radius ) inside = .false.
-              if ( h1 < -radius .or. h2 < -radius ) inside = .false.
-              if ( xx  < -radius*sqrt(3._f64)*0.5_f64 .or. xx &
-                   > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
               if ( inside ) then
                  call hermite_interpolation(i, xx, yy, f_tn, center_values_tn,&
@@ -437,6 +438,8 @@ program test_hex_hermite
         !       computation of the value at the mesh points
         !*********************************************************
 
+        call compute_hex_fields(mesh,uxn,uyn,dxux,dyux,dxuy,dyuy,phi,1)
+
         norm2_error_pt = 0._f64
         norm2_sol_pt = 0._f64
 
@@ -445,16 +448,21 @@ program test_hex_hermite
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
 
-           xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-           yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+           !xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+           !yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+
+           ! xx = x - 2._f64*sll_pi*dt*y
+           ! yy = y + 2._f64*sll_pi*dt*x
 
         !*********************************************************
         !  computation of the root of the characteristics
         !*********************************************************
-
-        ! call slb_compute_characteristic_leapfrog( &
-        !   x1(i),x2(i),E_x,E_v,x1_char(i),x2_char(i) )
-
+           ! call compute_characteristic_leapfrog_2d_hex( &
+           !    x,y,uxn,uyn,dxux,dyux,dxuy,dyuy,i,xx,yy,2._f64*sll_pi*dt)
+           !- > for the leapfrog scheme to work, one needs to 
+           ! make a interpolation on f(tn-dt) instead of f(tn)
+            call compute_characteristic_euler_2d_hex( &
+                 x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
         !*********************************************************
         !                INTERPOLATION
         !*********************************************************
@@ -463,13 +471,11 @@ program test_hex_hermite
 
            inside = .true.
 
-           h1 =  x1_char(i)/sqrt(3.0_f64) + x2_char(i)
-           h2 = -x1_char(i)/sqrt(3.0_f64) + x2_char(i) 
-
-           if ( h1 >  radius .or. h2 >  radius ) inside = .false.
-           if ( h1 < -radius .or. h2 < -radius ) inside = .false.
-           if ( x1_char(i)  < -radius*sqrt(3._f64)*0.5_f64 .or. x1_char(i) &
-                > radius*sqrt(3._f64)*0.5_f64  ) inside = .false.
+           h1 =  xx/sqrt(3._f64) + yy
+           h2 = -xx/sqrt(3._f64) + yy 
+           
+           if ( abs(h1) >  radius-1e-14 .or. abs(h2) >  radius-1e-14 ) inside = .false.
+           if ( abs(xx) >  (radius-1e-14)*sqrt(3._f64)*0.5_f64  ) inside = .false.
 
            if ( inside ) then
 
@@ -533,17 +539,20 @@ program test_hex_hermite
         end do
         
         
-        ! if ( num_method == 10 ) then
-        !    norm2_error = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_error_pt + &
-        !         norm2_error_center*sqrt(3._f64)/6._f64 )*radius**2/&
-        !         real(num_cells,f64)**2) 
-        !    norm2_sol = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_sol_pt + &
-        !         norm2_sol_center*sqrt(3._f64)/6._f64 )*radius**2/&
-        !         real(num_cells,f64)**2) 
-        ! else
-           if ( num_method == 15 ) then
+        if ( num_method == 15 ) then
            norm2_error = sqrt( ( sqrt(3._f64)*0.5_f64*norm2_error_pt + norm2_error_edge*sqrt(3._f64)*0.125_f64 )*radius**2/real(num_cells,f64)**2)
            norm2_sol = sqrt( ( sqrt(3._f64)*0.5_f64*norm2_sol_pt + norm2_sol_edge*sqrt(3._f64)*0.125_f64 )*radius**2/real(num_cells,f64)**2)
+
+
+        else if ( num_method == 10 ) then
+           norm2_error = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_error_pt + &
+                norm2_error_center*sqrt(3._f64)/6._f64 )*radius**2/&
+                real(num_cells,f64)**2) 
+           norm2_sol = sqrt( ( sqrt(3._f64)* 0.5_f64 * norm2_sol_pt + &
+                norm2_sol_center*sqrt(3._f64)/6._f64 )*radius**2/&
+                real(num_cells,f64)**2) 
+
+
         else
            norm2_error = sqrt(sqrt(3._f64)*0.5_f64*norm2_error_pt*radius**2/ &
                 real(num_cells,f64)**2)
@@ -572,6 +581,13 @@ program test_hex_hermite
      SLL_DEALLOCATE_ARRAY(f_tn,ierr)
      SLL_DEALLOCATE_ARRAY(f_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(f_sol,ierr)
+     SLL_DEALLOCATE_ARRAY(phi,ierr)
+     SLL_DEALLOCATE_ARRAY(uxn,ierr)
+     SLL_DEALLOCATE_ARRAY(uyn,ierr)
+     SLL_DEALLOCATE_ARRAY(dxux,ierr)
+     SLL_DEALLOCATE_ARRAY(dyux,ierr)
+     SLL_DEALLOCATE_ARRAY(dxuy,ierr)
+     SLL_DEALLOCATE_ARRAY(dyuy,ierr)
      SLL_DEALLOCATE_ARRAY(center_values_tn,ierr)
      SLL_DEALLOCATE_ARRAY(center_values_tn1,ierr)
      SLL_DEALLOCATE_ARRAY(edge_values_tn,ierr)
@@ -596,11 +612,11 @@ program test_hex_hermite
                 tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
                 9._f64*real(num_cells,f64)**2 + 3._f64*real(num_cells,f64))/(t_end - t_init)/ 1e6_f64
 
-        ! elseif ( num_method == 10 ) then
+        elseif ( num_method == 10 ) then
 
-        !    write(33,*) num_cells, n_points+n_triangle,  dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
-        !         tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
-        !         6._f64*real(num_cells,f64)**2)/(t_end - t_init)/ 1e6_f64
+           write(33,*) num_cells, n_points+n_triangle,  dt, cfl,  norm2_error,  norm2_sol, norm_infinite, f_min, t_end - t_init,&
+                tmax/dt * (3._f64*real(num_cells+1,f64)*real(num_cells,f64) + &
+                6._f64*real(num_cells,f64)**2)/(t_end - t_init)/ 1e6_f64
 
         else
 
@@ -618,46 +634,6 @@ program test_hex_hermite
 contains
 
   
-  
-  subroutine  print_method(num_method)
-    sll_int32, intent(in) :: num_method
-
-    if (num_method == 9 ) then
-       print*, ""
-       print*, "*********************************"
-       print*, " Zienkiewicz_9_degree_of_freedom "
-       print*, "*********************************"
-       print*, ""
-    else if (num_method == 10 ) then
-       print*, ""
-       print*, "*********************************"
-       print*," Zienkiewicz_10_degree_of_freedom"
-       print*, "*********************************"
-       print*, ""
-    else if (num_method == 11 ) then 
-       print*, ""
-       print*, "*********************************"
-       print*, "   Hsieh_Clough_Tocher_reduced   "
-       print*, "*********************************"
-       print*, ""
-    else if (num_method == 12 ) then 
-       print*, ""
-       print*, "*********************************"
-       print*, "   Hsieh_Clough_Tocher_complete   "
-       print*, "*********************************"
-       print*, ""
-    else if (num_method == 15 ) then 
-       print*, ""
-       print*, "*********************************"
-       print*, "  quartic element of Ganev_Dimitrov "
-       print*, "*********************************"
-       print*, ""
-    else
-       print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 15"
-    endif
-
-  end subroutine print_method
-  
   function dio(x,y,epsilon) result (rho)
     sll_real64 :: x, y, epsilon
     sll_real64 :: rho
@@ -674,7 +650,92 @@ contains
 
   end function dio
 
-end program
+
+
+  subroutine compute_hex_fields(mesh,uxn,uyn,dxux,dyux,dxuy,dyuy,phi,type)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_real64,dimension(:)        :: uxn, uyn, phi,dxux,dyux,dxuy,dyuy
+    sll_int32,          intent(in) :: type
+    sll_int32  :: i,h1,h2
+    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+    sll_real64 :: uh1, uh2
+
+    
+    if (type==1) then
+
+       do i = 1,mesh%num_pts_tot
+
+          ! h1 = mesh%hex_coord(1,i)
+          ! h2 = mesh%hex_coord(2,i)
+
+          ! phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
+          ! phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
+          ! phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
+          ! phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
+
+          ! phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
+          ! phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
+          ! phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
+          ! phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
+
+          ! ! order 2
+
+          ! uh1 = ( phii1 - phii_1 ) / (2._f64)!*mesh%delta)
+          ! uh2 = ( phij1 - phij_1 ) / (2._f64)!*mesh%delta)
+
+          ! uxn = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
+          ! uyn = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
+
+          uxn(i) = + mesh%cartesian_coord(2,i)   ! +y
+          uyn(i) = - mesh%cartesian_coord(1,i)   ! -x
+
+          dxux(i) = + 0._f64 
+          dyux(i) = + 1._f64 
+          dxuy(i) = - 1._f64 
+          dyuy(i) = - 0._f64 
+
+       end do
+    endif
+
+
+  end subroutine compute_hex_fields
+
+
+  subroutine compute_characteristic_euler_2d_hex( x1,x2,uxn,uyn,i,y1,y2,dt)
+
+    sll_real64,dimension(:),intent(in):: uxn, uyn
+    sll_real64, intent(in)  :: dt
+    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
+    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
+    sll_int32, intent(in)   :: i
+    
+    y1 = x1 - dt*uxn(i)
+    y2 = x2 - dt*uyn(i)
+
+  end subroutine compute_characteristic_euler_2d_hex
+
+  subroutine compute_characteristic_leapfrog_2d_hex( x1,x2,uxn,uyn,dxux,dyux,dxuy,dyuy,i,y1,y2,dt)
+
+    sll_real64,dimension(:),intent(in):: uxn, uyn,dxux,dyux,dxuy,dyuy
+    sll_real64, intent(in)  :: dt
+    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
+    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
+    sll_int32, intent(in)   :: i
+    sll_real64              :: d1x, d1y, dij0, dij1 
+    	
+    
+    d1x = dt * uxn(i);
+    d1y = dt * uyn(i);
+
+    dij0 = d1x - dt *( d1x*dxUx(i) + d1y*dyUx(i) ); 
+    dij1 = d1y - dt *( d1y*dyUy(i) + d1x*dxUy(i) );
+
+    y1 = x1 - 2.0*dij0;
+    y2 = x2 - 2.0*dij1;
+
+  end subroutine compute_characteristic_leapfrog_2d_hex
+
+end program test_hex_hermite
 
 
 
