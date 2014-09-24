@@ -19,7 +19,7 @@ contains
     sll_int32,  intent(in)   :: num_cells
     sll_real64, intent(in)   :: eta_min
     sll_real64, intent(in)   :: eta_max
-    sll_real64, dimension(:) :: knots
+    sll_real64, dimension(:), pointer :: knots
     sll_int32                :: i
     sll_real64               :: delta
 
