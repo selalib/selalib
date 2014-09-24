@@ -424,7 +424,8 @@ contains ! =============================================================
   end function global_index_quad
 
   
-  subroutine initialize_quad_points_weights(solv, & 
+  subroutine initialize_quad_points_weights(&
+       solv, & 
        quadrature_type, &
        num_quad_loc_1d, &
        user_qpts_weights)
@@ -442,7 +443,7 @@ contains ! =============================================================
     sll_real64 :: eta2
     sll_real64 :: delta1
     sll_real64 :: delta2
-    sll_real64, dimension(2,solv%num_quad_pts) :: temp_pts_wgh
+    sll_real64, dimension(2,num_quad_loc_1d) :: temp_pts_wgh
 
     ! Temporary variables just as vehicule to store quadrature points/weights 
     temp_pts_wgh(:,:) = 0.0
@@ -466,6 +467,8 @@ contains ! =============================================================
              "Quadrature type of points unknown "
         STOP
      end select
+     
+     print *, "initialize_quad_points_weights : call of common init done"
 
     delta1 = solv%mesh%delta_eta1
     delta2 = solv%mesh%delta_eta2
