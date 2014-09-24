@@ -2,7 +2,7 @@
 
    ADD_LIBRARY(sll_qn_solvers STATIC sll_qn_solver_2d.F90)
 
-   TARGET_LINK_LIBRARIES(sll_qn_solvers sll_fft sll_utilities sll_timer sll_assert)
+   TARGET_LINK_LIBRARIES(sll_qn_solvers sll_fft sll_utilities sll_timer)
 
    ADD_EXECUTABLE( test_qn_solver_2d test_qn_solver_2d.F90)
 
