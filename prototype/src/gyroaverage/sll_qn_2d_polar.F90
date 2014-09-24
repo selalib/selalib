@@ -1082,7 +1082,40 @@ contains
   end subroutine solve_qn_polar_new
 
 
+  function compute_gamma0_quadrature( &
+    Nc, &
+    eta_min, &
+    eta_max, &
+    mu_points, &
+    mu_weights, &
+    N_mu, &
+    mode ) &
+    result(gamma0) 
+    sll_int32,intent(in)  :: Nc(2)
+    sll_real64,intent(in) :: eta_min(2)
+    sll_real64,intent(in) :: eta_max(2)
+    sll_int32,intent(in) :: N_mu
+    sll_int32,intent(in)  :: mode(2)
+    sll_real64,dimension(1:N_mu),intent(in) :: mu_points
+    sll_real64,dimension(1:N_mu),intent(in) :: mu_weights
+    sll_real64 :: gamma0
+    sll_real64 :: tmp1
+    sll_real64 :: rho2d(2)
+    sll_int32 :: p
+    
+    gamma0 = 0._f64
+    do p = 1, N_mu
+      rho2d(1) = sqrt(2._f64*mu_points(p))
+      rho2d(2) = sqrt(2._f64*mu_points(p))
+      call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
+      !gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(1._f64-tmp1**2)
+      gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
+    enddo
+    
+    gamma0 = 1._f64-gamma0
 
+    
+  end function compute_gamma0_quadrature 
 
  subroutine test_solve_qn_polar_new(Nc,eta_min,eta_max,mu_points,mu_weights,N_mu,mode,phi_init,phi_qn)
   sll_int32,intent(in)  :: Nc(2)
@@ -1116,10 +1149,13 @@ contains
     rho2d(2) = sqrt(2._f64*mu_points(p))
     call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
     gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*tmp1**2
+    !gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
   enddo
+  !gamma0 = 1._f64-gamma0
+  
+  print *,'#gamma0val=',gamma0
 
-
-  print *,'#QN solver'
+  print *,'#QN solver',N_min,N_max
   call compute_error(phi_qn,phi_init,1._f64/(1._f64-gamma0),error,N_min,N_max)
   print *,'#error subdomain=',error
   call compute_error(phi_qn,phi_init,1._f64/(1._f64-gamma0),error,(/1,1/),Nc)
@@ -2270,7 +2306,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     N_rho=floor(max(rho(1),rho(2))/delta_eta)+1
     N_min=1+N_rho
     N_max=N+1-N_rho
-    if((N_min>N+1).or.(N_max<1))then
+    if((N_min>N+1).or.(N_max<1).or.(N_min>N_max))then
       print *,'#Warning: rho is too big'
       print *,'#Bad computation of N_min and N_max'
       N_min=1
