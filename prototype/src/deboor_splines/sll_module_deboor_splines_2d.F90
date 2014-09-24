@@ -583,7 +583,7 @@ contains
     else
        print*, 'problem with construction of knots' 
     end if
-    
+
     lpr_work5_ptr => lpr_work5
     call spli2d_der ( &
          apr_taux,&
@@ -605,7 +605,6 @@ contains
      lpr_work3 = 0.0_8
      lpr_work32= 0.0_8
      
-
      call spli2d_der ( &
           apr_tauy,&
           lpr_work5_ptr,&

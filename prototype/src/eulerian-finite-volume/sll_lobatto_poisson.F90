@@ -37,13 +37,15 @@ subroutine initialize_lobatto_poisson(this, tau, order)
 
    type(lobatto_poisson_solver) :: this
    class(sll_coordinate_transformation_2d_base),pointer :: tau
+   class(sll_logical_mesh_2d), pointer :: mesh
    sll_int32, optional :: order
    sll_int32 :: nx0
    sll_int32 :: ny0
 
    this%tau => tau
-   nx0 = tau%mesh%num_cells1
-   ny0 = tau%mesh%num_cells2
+   mesh => tau%get_logical_mesh()
+   nx0 = mesh%num_cells1
+   ny0 = mesh%num_cells2
 
    call set_map_function(tau)
 
