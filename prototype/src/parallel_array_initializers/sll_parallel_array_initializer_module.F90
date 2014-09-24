@@ -499,34 +499,29 @@ contains
             'the size contained in the passed layout.'
     end if
 
-    if(present( transf_x1_x2 ) ) then
-       ! needed to change the following call from 
-       ! transf_x1_x2%get_logical_mesh() because the 4.6 version of gfortran
-       ! breaks at this point. Hence the double interface (access function and
-       ! direct access of the mesh). But this should be fixed once the decision
-       ! to not support that compiler version is made.
-       if(.not. associated(transf_x1_x2%mesh,mesh2d_eta1_eta2) )&
-          then 
+    ! if(present( transf_x1_x2 ) ) then
+    !    if(.not. associated(transf_x1_x2%get_logical_mesh(),mesh2d_eta1_eta2) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x1_x2 transformation ', &
-               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x1_x2 transformation ', &
+    !            'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
-    if(present( transf_x3_x4 ) ) then
-       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
-          then 
+    ! if(present( transf_x3_x4 ) ) then
+    !    if(.not. associated(transf_x3_x4%get_logical_mesh(),mesh2d_eta3_eta4) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x3_x4 transformation ', &
-               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x3_x4 transformation ', &
+    !            'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
     case_selector = 0
 
@@ -717,7 +712,7 @@ contains
 !    end if
 !
 !    if(present( transf_x1_x2 ) ) then
-!       if( .not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) ) then 
+!       if( .not. associated(transf_x1_x2%get_logical_mesh(), mesh2d_eta1_eta2) ) then 
 !          print *, 'sll_4d_parallel_array_initializer warning: ', &
 !               'the mesh associated to the transf_x1_x2 transformation ', &
 !               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
@@ -727,7 +722,7 @@ contains
 !    end if
 !
 !    if(present( transf_x3_x4 ) ) then
-!       if( .not. associated(transf_x3_x4%mesh, mesh2d_eta3_eta4) ) then 
+!       if( .not. associated(transf_x3_x4%get_logical_mesh(), mesh2d_eta3_eta4) ) then 
 !          print *, 'sll_4d_parallel_array_initializer warning: ', &
 !               'the mesh associated to the transf_x3_x4 transformation ', &
 !               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
@@ -935,29 +930,29 @@ contains
             'the size contained in the passed layout.'
     end if
 
-    if(present( transf_x1_x2 ) ) then
-       if(.not. associated(transf_x1_x2%mesh, mesh2d_eta1_eta2) )&
-          then 
+    ! if(present( transf_x1_x2 ) ) then
+    !    if(.not. associated(transf_x1_x2%get_logical_mesh(), mesh2d_eta1_eta2) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x1_x2 transformation ', &
-               'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x1_x2 transformation ', &
+    !            'is not the same as the mesh2d_eta1_eta2 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
-    if(present( transf_x3_x4 ) ) then
-       if(.not. associated(transf_x3_x4%mesh,mesh2d_eta3_eta4) )&
-          then 
+    ! if(present( transf_x3_x4 ) ) then
+    !    if(.not. associated(transf_x3_x4%get_logical_mesh(),mesh2d_eta3_eta4) )&
+    !       then 
 
-          print *, 'sll_4d_parallel_array_initializer warning: ', &
-               'the mesh associated to the transf_x3_x4 transformation ', &
-               'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
-               'Unless the parameters of these meshes are the same, ', &
-               'bad things will happen.'
-       end if
-    end if
+    !       print *, 'sll_4d_parallel_array_initializer warning: ', &
+    !            'the mesh associated to the transf_x3_x4 transformation ', &
+    !            'is not the same as the mesh2d_eta3_eta4 logical mesh. ', &
+    !            'Unless the parameters of these meshes are the same, ', &
+    !            'bad things will happen.'
+    !    end if
+    ! end if
 
 
     if(.not.present(subcells1  ) ) then

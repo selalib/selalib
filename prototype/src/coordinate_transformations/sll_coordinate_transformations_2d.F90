@@ -45,11 +45,7 @@ module sll_module_coordinate_transformations_2d
 !> Analytic transformation
   type, extends(sll_coordinate_transformation_2d_base):: &
        sll_coordinate_transformation_2d_analytic
-!!$     sll_real64, dimension(:,:), pointer :: x1_node   ! x1(i,j) 
-!!$     sll_real64, dimension(:,:), pointer :: x2_node   ! x2(i,j)
-     !character(len=64) :: label
-     !logical           :: written! = .false.
-     ! type(sll_logical_mesh_2d), pointer :: mesh => null()
+     type(sll_logical_mesh_2d),     pointer                 :: mesh => null()
      type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      procedure(transformation_func_nopass), pointer, nopass :: x1_func  ! user
      procedure(transformation_func_nopass), pointer, nopass :: x2_func  ! user
@@ -105,7 +101,7 @@ module sll_module_coordinate_transformations_2d
 !     type(jacobian_matrix_element), dimension(:,:), pointer :: j_matrix
      class(sll_interpolator_2d_base), pointer               :: x1_interp
      class(sll_interpolator_2d_base), pointer               :: x2_interp
-     !type(sll_logical_mesh_2d), pointer :: mesh => null()
+     type(sll_logical_mesh_2d), pointer :: mesh => null()
    contains
      procedure, pass(transf) :: initialize => &
           initialize_coord_transf_2d_discrete
@@ -244,18 +240,7 @@ contains
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
-    ! ! transf%label   = trim(label)
-    ! ! select type (mesh_2d)
-    ! ! type is (sll_logical_mesh_2d)
-    !    transf%mesh => mesh_2d
-    !    !call this%initialize_abstract(element)
-    ! ! type is (sll_logical_mesh_2d)
-    ! !    print *, "it's logical"
-    ! class default
-    !    print*,"ERROR: Unknown type of the 'mesh_2d' argument in 'initialize_coord_transf_2d_analytic'."
-    !    transf%mesh => mesh_2d
-    !    !stop
-    ! end select
+    transf%label   = trim(label)
     transf%mesh => mesh_2d
 
     ! Assign the transformation functions and parameters
@@ -276,90 +261,6 @@ contains
   end subroutine initialize_coord_transf_2d_analytic_abstract
 
 
-  ! function new_coordinate_transformation_2d_analytic_logic( &
-  !   label,          &
-  !   mesh_2d,        &
-  !   x1_func,        &
-  !   x2_func,        &
-  !   j11_func,       &
-  !   j12_func,       &
-  !   j21_func,       &
-  !   j22_func,       &
-  !   params )
-
-  !   type(sll_coordinate_transformation_2d_analytic), pointer :: &
-  !        new_coordinate_transformation_2d_analytic_logic
-  !   character(len=*), intent(in)                  :: label
-  !   type(sll_logical_mesh_2d), pointer :: mesh_2d
-  !   procedure(transformation_func_nopass)            :: x1_func
-  !   procedure(transformation_func_nopass)            :: x2_func
-  !   procedure(transformation_func_nopass)            :: j11_func
-  !   procedure(transformation_func_nopass)            :: j12_func
-  !   procedure(transformation_func_nopass)            :: j21_func
-  !   procedure(transformation_func_nopass)            :: j22_func
-  !   sll_real64, dimension(:), intent(in) :: params
-  !   sll_int32 :: ierr
-
-  !   SLL_ALLOCATE(new_coordinate_transformation_2d_analytic_logic, ierr)
-  !   call initialize_coord_transf_2d_analytic_logic( &
-  !        new_coordinate_transformation_2d_analytic_logic, &
-  !        label,          &
-  !        mesh_2d,        &
-  !        x1_func,        &
-  !        x2_func,        &
-  !        j11_func,       &
-  !        j12_func,       &
-  !        j21_func,       &
-  !        j22_func,       &
-  !        params )
-  ! end function new_coordinate_transformation_2d_analytic_logic
-
-  ! subroutine initialize_coord_transf_2d_analytic_logic( &
-  !   transf, &
-  !   label,          &
-  !   mesh_2d,        &
-  !   x1_func,        &
-  !   x2_func,        &
-  !   j11_func,       &
-  !   j12_func,       &
-  !   j21_func,       &
-  !   j22_func,       &
-  !   params )
-
-  !   class(sll_coordinate_transformation_2d_analytic), intent(inout) :: &
-  !        transf
-  !   character(len=*), intent(in)                  :: label
-  !   procedure(transformation_func_nopass)            :: x1_func
-  !   procedure(transformation_func_nopass)            :: x2_func
-  !   procedure(transformation_func_nopass)            :: j11_func
-  !   procedure(transformation_func_nopass)            :: j12_func
-  !   procedure(transformation_func_nopass)            :: j21_func
-  !   procedure(transformation_func_nopass)            :: j22_func
-  !   type(sll_logical_mesh_2d), pointer :: mesh_2d
-  !   sll_real64, dimension(:), intent(in), optional :: params
-  !   sll_int32  :: ierr
-
-  !   transf%label   = trim(label)
-  !   transf%mesh => mesh_2d
-
-  !   ! Assign the transformation functions and parameters
-  !   transf%x1_func => x1_func
-  !   transf%x2_func => x2_func
-  !   if( present(params) ) then
-  !      SLL_ALLOCATE(transf%params(size(params)),ierr)
-  !      transf%params(:) = params(:)
-  !   end if
-  !   ! Fill the jacobian matrix
-  !   SLL_ALLOCATE(transf%j_matrix(2,2), ierr)
-  !   transf%j_matrix(1,1)%f => j11_func
-  !   transf%j_matrix(1,2)%f => j12_func
-  !   transf%j_matrix(2,1)%f => j21_func
-  !   transf%j_matrix(2,2)%f => j22_func
-  !   transf%jacobian_func   => jacobian_2d_analytic
-    
-  ! end subroutine initialize_coord_transf_2d_analytic_logic
-
-
   subroutine delete_transformation_2d_analytic( transf )
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
     sll_int32 :: ierr
@@ -374,7 +275,7 @@ contains
 
   function get_logical_mesh_analytic( transf ) result(res)
     class(sll_coordinate_transformation_2d_analytic), intent(in) :: transf
-    class(sll_mesh_2d_base), pointer :: res
+    class(sll_logical_mesh_2d), pointer :: res
     res => transf%mesh
   end function get_logical_mesh_analytic
 
@@ -557,10 +458,10 @@ contains
     sll_real64 :: j21
     sll_real64 :: j22
 
-    ! num_pts_1 = transf%mesh%num_cells1 + 1
-    ! num_pts_2 = transf%mesh%num_cells2 + 1
-    ! SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
-    ! SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
+    num_pts_1 = transf%mesh%num_cells1 + 1
+    num_pts_2 = transf%mesh%num_cells2 + 1
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
 
     eta1 = transf%mesh%eta1_cell(i,j)
     eta2 = transf%mesh%eta2_cell(i,j)
@@ -591,80 +492,80 @@ contains
     sll_int32  :: nc_eta1
     sll_int32  :: nc_eta2
 
-    ! nc_eta1 = transf%mesh%num_cells1
-    ! nc_eta2 = transf%mesh%num_cells2
+    nc_eta1 = transf%mesh%num_cells1
+    nc_eta2 = transf%mesh%num_cells2
 
-    ! if (.not. present(output_format)) then
-    !    local_format = SLL_IO_GNUPLOT
-    ! else
-    !    local_format = output_format
-    ! end if
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_GNUPLOT
+    else
+       local_format = output_format
+    end if
 
-    ! if ( .not. transf%written ) then
-    !    if (local_format == SLL_IO_XDMF) then
-    !       SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
-    !       SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
-    !       eta1 = transf%mesh%eta1_min
-    !       do i1=1, nc_eta1+1
-    !          eta2 = transf%mesh%eta2_min
-    !          do i2=1, nc_eta2+1
-    !             x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
-    !             x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
-    !             eta2 = eta2 + transf%mesh%delta_eta2 
-    !          end do
-    !          eta1 = eta1 + transf%mesh%delta_eta1
-    !       end do
+    if ( .not. transf%written ) then
+       if (local_format == SLL_IO_XDMF) then
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+          eta1 = transf%mesh%eta1_min
+          do i1=1, nc_eta1+1
+             eta2 = transf%mesh%eta2_min
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+                eta2 = eta2 + transf%mesh%delta_eta2 
+             end do
+             eta1 = eta1 + transf%mesh%delta_eta1
+          end do
        
-    !       call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
-    !            nc_eta1+1,nc_eta2+1,file_id,ierr)
-    !       call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
-    !       call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
-    !       call sll_xdmf_close(file_id,ierr)
+          call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
+               nc_eta1+1,nc_eta2+1,file_id,ierr)
+          call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
 
-    !    else if (local_format == SLL_IO_GNUPLOT) then
+       else if (local_format == SLL_IO_GNUPLOT) then
 
-    !       SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
-    !       SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
 
-    !       do i1=1, nc_eta1+1
-    !          do i2=1, nc_eta2+1
-    !             x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
-    !             x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
-    !          end do
-    !       end do
+          do i1=1, nc_eta1+1
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+             end do
+          end do
        
-    !       call sll_gnuplot_2d( nc_eta1+1, nc_eta2+1, x1mesh, x2mesh,&
-    !                            trim(transf%label), ierr)  
+          call sll_gnuplot_2d( nc_eta1+1, nc_eta2+1, x1mesh, x2mesh,&
+                               trim(transf%label), ierr)  
 
-    !    else if (local_format == SLL_IO_MTV) then
+       else if (local_format == SLL_IO_MTV) then
 
-    !       SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
-    !       SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x1mesh(nc_eta1+1,nc_eta2+1), ierr)
+          SLL_ALLOCATE(x2mesh(nc_eta1+1,nc_eta2+1), ierr)
 
-    !       do i1=1, nc_eta1+1
-    !          do i2=1, nc_eta2+1
-    !             x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
-    !             x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
-    !          end do
-    !       end do
+          do i1=1, nc_eta1+1
+             do i2=1, nc_eta2+1
+                x1mesh(i1,i2) = x1_node_analytic(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_analytic(transf,i1,i2)
+             end do
+          end do
        
-    !       call sll_plotmtv_write( nc_eta1+1,nc_eta2+1, &
-    !                               x1mesh, x2mesh, trim(transf%label),ierr)
+          call sll_plotmtv_write( nc_eta1+1,nc_eta2+1, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
 
-    !    else
-    !       print*, 'Not recognized format to write this mesh'
-    !       stop
-    !    end if
-    ! else
-    !    print*,' Warning, you have already written the mesh '
-    ! end if
-    ! transf%written = .true.
-    ! if( associated(x1mesh) ) then
-    !    SLL_DEALLOCATE(x1mesh, ierr)
-    ! end if
-    ! if( associated(x2mesh) ) then
-    !    SLL_DEALLOCATE(x2mesh, ierr)
-    ! end if
+       else
+          print*, 'Not recognized format to write this mesh'
+          stop
+       end if
+    else
+       print*,' Warning, you have already written the mesh '
+    end if
+    transf%written = .true.
+    if( associated(x1mesh) ) then
+       SLL_DEALLOCATE(x1mesh, ierr)
+    end if
+    if( associated(x2mesh) ) then
+       SLL_DEALLOCATE(x2mesh, ierr)
+    end if
   end subroutine write_to_file_2d_analytic
   
   subroutine read_from_file_2d_analytic( transf, filename )
@@ -687,7 +588,7 @@ contains
 
   function get_logical_mesh_discrete( transf ) result(res)
     class(sll_coordinate_transformation_2d_discrete), intent(in) :: transf
-    class(sll_mesh_2d_base), pointer :: res
+    class(sll_logical_mesh_2d), pointer :: res
     res => transf%mesh
   end function get_logical_mesh_discrete
 
@@ -1132,10 +1033,11 @@ contains
     sll_int32, intent(in)   :: j
     sll_int32 :: num_pts_1
     sll_int32 :: num_pts_2
-    ! num_pts_1 = transf%mesh%num_cells1 + 1
-    ! num_pts_2 = transf%mesh%num_cells2 + 1
-    ! SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
-    ! SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
+
+    num_pts_1 = transf%mesh%num_cells1 + 1
+    num_pts_2 = transf%mesh%num_cells2 + 1
+    SLL_ASSERT( (i .ge. 1) .and. (i .le. num_pts_1) )
+    SLL_ASSERT( (j .ge. 1) .and. (j .le. num_pts_2) )
     transf_2d_jacobian_node_discrete = transf%jacobians_n(i,j)
   end function transf_2d_jacobian_node_discrete
 
@@ -1158,80 +1060,80 @@ contains
     sll_real64 :: delta_eta1
     sll_real64 :: delta_eta2
 
-    ! npts_eta1  = transf%mesh%num_cells1 +1
-    ! npts_eta2  = transf%mesh%num_cells2 +1
-    ! eta1_min   = transf%mesh%eta1_min
-    ! eta2_min   = transf%mesh%eta1_min
-    ! delta_eta1 = transf%mesh%delta_eta1
-    ! delta_eta2 = transf%mesh%delta_eta2
+    npts_eta1  = transf%mesh%num_cells1 +1
+    npts_eta2  = transf%mesh%num_cells2 +1
+    eta1_min   = transf%mesh%eta1_min
+    eta2_min   = transf%mesh%eta1_min
+    delta_eta1 = transf%mesh%delta_eta1
+    delta_eta2 = transf%mesh%delta_eta2
 
-    ! if (.not. present(output_format)) then
-    !    local_format = SLL_IO_GNUPLOT
-    ! else
-    !    local_format = output_format
-    ! end if
+    if (.not. present(output_format)) then
+       local_format = SLL_IO_GNUPLOT
+    else
+       local_format = output_format
+    end if
 
-    ! if ( .not. transf%written ) then
+    if ( .not. transf%written ) then
 
-    !    if (local_format == SLL_IO_XDMF) then
-    !       SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
-    !       SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
-    !       eta1 = eta1_min
-    !       do i1=1, npts_eta1
-    !          eta2 = eta2_min
-    !          do i2=1, npts_eta2
-    !             x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
-    !             x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
-    !             eta2 = eta2 + delta_eta2 
-    !          end do
-    !          eta1 = eta1 + delta_eta1
-    !       end do
+       if (local_format == SLL_IO_XDMF) then
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+          eta1 = eta1_min
+          do i1=1, npts_eta1
+             eta2 = eta2_min
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+                eta2 = eta2 + delta_eta2 
+             end do
+             eta1 = eta1 + delta_eta1
+          end do
        
-    !       call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
-    !            npts_eta1,npts_eta2,file_id,ierr)
-    !       call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
-    !       call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
-    !       call sll_xdmf_close(file_id,ierr)
+          call sll_xdmf_open(trim(transf%label)//".xmf",transf%label, &
+               npts_eta1,npts_eta2,file_id,ierr)
+          call sll_xdmf_write_array(transf%label,x1mesh,"x1",ierr)
+          call sll_xdmf_write_array(transf%label,x2mesh,"x2",ierr)
+          call sll_xdmf_close(file_id,ierr)
 
-    !    else if (local_format == SLL_IO_GNUPLOT) then
+       else if (local_format == SLL_IO_GNUPLOT) then
 
-    !       SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
-    !       SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
 
-    !       do i1=1, npts_eta1
-    !          do i2=1, npts_eta2
-    !             x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
-    !             x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
-    !          end do
-    !       end do
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+             end do
+          end do
        
-    !       call sll_gnuplot_2d( npts_eta1, npts_eta2, x1mesh, x2mesh,&
-    !                            trim(transf%label), ierr)  
+          call sll_gnuplot_2d( npts_eta1, npts_eta2, x1mesh, x2mesh,&
+                               trim(transf%label), ierr)  
 
-    !    else if (local_format == SLL_IO_MTV) then
+       else if (local_format == SLL_IO_MTV) then
 
-    !       SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
-    !       SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x1mesh(npts_eta1,npts_eta2), ierr)
+          SLL_ALLOCATE(x2mesh(npts_eta1,npts_eta2), ierr)
 
-    !       do i1=1, npts_eta1
-    !          do i2=1, npts_eta2
-    !             x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
-    !             x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
-    !          end do
-    !       end do
+          do i1=1, npts_eta1
+             do i2=1, npts_eta2
+                x1mesh(i1,i2) = x1_node_discrete(transf,i1,i2)
+                x2mesh(i1,i2) = x2_node_discrete(transf,i1,i2)
+             end do
+          end do
        
-    !       call sll_plotmtv_write( npts_eta1,npts_eta2, &
-    !                               x1mesh, x2mesh, trim(transf%label),ierr)
+          call sll_plotmtv_write( npts_eta1,npts_eta2, &
+                                  x1mesh, x2mesh, trim(transf%label),ierr)
 
-    !    else
-    !       print*, 'Not recognized format to write this mesh'
-    !       stop
-    !    end if
-    ! else
-    !    print*,' Warning, you have already written the mesh '
-    ! end if
+       else
+          print*, 'Not recognized format to write this mesh'
+          stop
+       end if
+    else
+       print*,' Warning, you have already written the mesh '
+    end if
 
-    ! transf%written = .true.
+    transf%written = .true.
   end subroutine
 
   subroutine delete_transformation_2d_discrete( transf )
@@ -1249,8 +1151,8 @@ contains
     
     !call delete( transf%x1_interp)
     !call delete( transf%x2_interp)
-    !call delete(transf%mesh)
-    nullify( transf%mesh)
+    call delete(transf%mesh)
+
     ! Fix: there is a dependency problem where these pointers are not recognized
     ! during the linking step. A similar nullification of an abstract class
     ! pointer is carried out in the fields_2d_alternative type without problems.

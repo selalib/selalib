@@ -90,13 +90,13 @@ contains
     type(hamiltonian_advection_field_2d), intent(inout)   :: this
     type(scalar_field_1d), intent(in)                  :: phi_self
     type(scalar_field_1d), intent(in), optional        :: phi_external
-    type(sll_logical_mesh_2d), pointer                 :: mesh
+    class(sll_logical_mesh_2d), pointer                :: mesh
     sll_int32 :: nc_eta1
     sll_int32 :: nc_eta2
     sll_int32 :: i1, i2
     sll_real64 :: mass
 
-    mesh => this%transf%mesh
+    mesh => this%transf%get_logical_mesh()
     nc_eta1 = mesh%num_cells1 
     nc_eta2 = mesh%num_cells2
     mass    = this%pmass    

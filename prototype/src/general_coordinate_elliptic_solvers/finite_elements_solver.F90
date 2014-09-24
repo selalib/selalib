@@ -9,10 +9,9 @@ module finite_elements_solver_module
   ! which was modified to be able to take any type
   ! of 2D domain (and not only bi-directional)
   ! doing so we lost a couple of properties :
-  !      - only one type of quadrature possible
-  !      - for bidirectional : same number of cells
+  !      - for bidirectional: same number of cells
   !                            in each direction
-  !      - probably only workign on dirichlet BC
+  !      - probably only working on dirichlet BC
   ! 
   ! Contact :  Aurore Back
   !            Laura S. Mendoza (mela@ipp.mpg.de)
@@ -226,9 +225,9 @@ contains ! =============================================================
     solv%quad_pts2(:)   = 0.0_f64
     solv%quad_weight(:) = 0.0_f64
    
+
     call initialize_quad_points_weights(solv, quadrature_type, num_quad_loc_1d, user_qpts_weights)
 
-    print *, "Initiailized quadrature points"
     !  ---------------------------------------------- END QUADRATURE POINTS INIT
     ! --------------------------------------------------------------------------
 
@@ -289,7 +288,6 @@ contains ! =============================================================
          mesh%eta2_max, &
          solv%knots2_source )
 
-    print *, "Initiailized basis functions knots"
     ! ----------------------- END ALLOCATION AND INITIALIZATION OF SPLINES KNOTS
     ! --------------------------------------------------------------------------
 
@@ -351,12 +349,7 @@ contains ! =============================================================
     solv%local_to_global_spline_indices_source_bis = 0
 
 
-    print *, "--- Initiailizing basis functions"
-
     call initialize_basis_functions(solv)
-
-    print *, "Initiailized basis functions"
-
     ! --------------------- END ALLOCATION AND INITIALIZATION OF BASIS FUNCTIONS
     ! --------------------------------------------------------------------------
 
@@ -410,15 +403,6 @@ contains ! =============================================================
          solv%num_splines_loc, &
          solv%local_to_global_spline_indices, &
          solv%num_splines_loc)
-
-    solv%sll_csr_mat_source => new_csr_matrix( &
-         size(solv%masse,1), &
-         (solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1),& !num_pts_tot dans hex_mesh
-         solv%num_cells, &
-         solv%local_to_global_spline_indices_source_bis, &
-         solv%num_splines_loc, &
-         solv%local_to_global_spline_indices_source, &
-         solv%num_splines_loc )
         
     ! ------------------------------ END COMPUTING OF CONNECTIVITY BETWEEN KNOTS
     ! --------------------------------------------------------------------------
@@ -446,8 +430,8 @@ contains ! =============================================================
        user_qpts_weights)
 
     type(finite_elements_solver), intent(inout) :: solv
+    sll_real64, dimension (:,:),  intent(in), optional :: user_qpts_weights
     sll_int32,  intent(in) :: quadrature_type
-    sll_real64, dimension (:,:), intent(in), optional :: user_qpts_weights
     sll_int32  :: i, j
     sll_int32  :: ierr
     sll_int32  :: nc1, nc2
@@ -458,33 +442,31 @@ contains ! =============================================================
     sll_real64 :: eta2
     sll_real64 :: delta1
     sll_real64 :: delta2
+    sll_real64, dimension(2,solv%num_quad_pts) :: temp_pts_wgh
 
     ! Temporary variables just as vehicule to store quadrature points/weights 
-    sll_real64, pointer, dimension(:,:) :: temp_pts_wgh
+    temp_pts_wgh(:,:) = 0.0
 
+     select case(quadrature_type)
+     case (ES_GAUSS_LEGENDRE)
+        temp_pts_wgh = gauss_legendre_points_and_weights(num_quad_loc_1d)
+     case (ES_GAUSS_LOBATTO)
+        temp_pts_wgh = gauss_lobatto_points_and_weights(num_quad_loc_1d)
+     case (ES_USER)
+        if (present(user_qpts_weights )) then
+           temp_pts_wgh = user_qpts_weights
+        else
+           print *, "ERROR in initialize_finite_elements_solver() : ", &
+                " Quadrature type indicates that they will be user defined ", &
+                " but they were not sent in input of function."
+           STOP
+        end if
+     case DEFAULT
+        print *, "ERROR in initialize_finite_elements_solver():", & 
+             "Quadrature type of points unknown "
+        STOP
+     end select
 
-    SLL_ALLOCATE(temp_pts_wgh(2,solv%num_quad_pts),ierr)
-
-    select case(quadrature_type)
-    case (ES_GAUSS_LEGENDRE)
-       temp_pts_wgh(:,:) = gauss_legendre_points_and_weights(num_quad_loc_1d)
-    case (ES_GAUSS_LOBATTO)
-       temp_pts_wgh(:,:) = gauss_lobatto_points_and_weights(num_quad_loc_1d)
-    case (ES_USER)
-       if (present(user_qpts_weights )) then
-          temp_pts_wgh(:,:) = user_qpts_weights
-       else
-          print *, "ERROR in initialize_finite_elements_solver() : ", &
-               " Quadrature type indicates that they will be user defined ", &
-               " but they were not sent in input of function."
-          STOP
-       end if
-    case DEFAULT
-       print *, "ERROR in initialize_finite_elements_solver():", & 
-            "Quadrature type of points unknown "
-       STOP
-    end select
-    
     delta1 = solv%mesh%delta_eta1
     delta2 = solv%mesh%delta_eta2
     ! Loop over cells/elements on both directions
@@ -516,7 +498,6 @@ contains ! =============================================================
        end do
     end do
 
-    SLL_DEALLOCATE(temp_pts_wgh,ierr)
 
   end subroutine initialize_quad_points_weights
 
@@ -764,14 +745,14 @@ contains ! =============================================================
 
     do cell_index=1,solv%num_cells
 
-       ! call change_basis_local_matrices(&
-       !      solv, &
-       !      cell_index,&
-       !      c_field, &
-       !      a11_field_mat, &
-       !      a12_field_mat, &
-       !      a21_field_mat, &
-       !      a22_field_mat)
+!        call change_basis_local_matrices(&
+!             solv, &
+!             cell_index,&
+!             c_field, &
+!             a11_field_mat, &
+!             a12_field_mat, &
+!             a21_field_mat, &
+!             a22_field_mat)
        
        call build_local_matrices( &
             solv, &
@@ -828,6 +809,14 @@ contains ! =============================================================
        call sll_factorize_csr_matrix(solv%sll_csr_mat)
     end if
     
+    solv%sll_csr_mat_source => new_csr_matrix( &
+         size(solv%masse,1), &
+         (solv%mesh%num_cells1+1)*(solv%mesh%num_cells2+1),& !num_pts_tot dans hex_mesh
+         solv%num_cells, &
+         solv%local_to_global_spline_indices_source_bis, &
+         solv%num_splines_loc, &
+         solv%local_to_global_spline_indices_source, &
+         solv%num_splines_loc )
 
     call compute_source_matrix(solv,Source_loc)
     
@@ -1016,8 +1005,9 @@ contains ! =============================================================
        ! loop over the splines supported in the cell that are different than
        ! zero at the point (qpt1,qpt2) (there are spline_degree+1 splines in
        ! each direction.
+
        do index1 = 1, solv%num_splines_loc
-             
+
           Masse_loc(index1) = &
                Masse_loc(index1) + &
                weight_jac * &
@@ -1026,17 +1016,17 @@ contains ! =============================================================
           Stiff_loc(index1) = & 
                Stiff_loc(index1) + &
                weight_jac * &
-               solv%values_basis_val_der(index1, global_index)* &
-               solv%values_basis_der_val(index1, global_index)
-          
+               (solv%values_basis_val_der(index1, global_index)+ &
+               solv%values_basis_der_val(index1, global_index))
+
           do index2 = 1, solv%num_splines_loc
              
              Source_loc(cell_index, index1, index2) = &
                   Source_loc(cell_index, index1, index2) + &
                   weight_jac * &
                   solv%values_basis_source_val_val(index1, global_index)* &
-                  solv%values_basis_source_val_val(index2, global_index)
-             
+                  solv%values_basis_val_val(index2, global_index)
+
              M_c_loc(index1, index2) = &
                   M_c_loc(index1, index2) + &
                   val_c * weight_jac * &
@@ -1048,42 +1038,43 @@ contains ! =============================================================
                   B11 * wqpt / val_jac * &
                   solv%values_basis_der_val(index1, global_index)* &
                   solv%values_basis_der_val(index2, global_index)
-                   
+      
              K_a22_loc(index1, index2) = &
                   K_a22_loc(index1, index2) + &
                   B22 * wqpt / val_jac *  &
                   solv%values_basis_val_der(index1, global_index)* &
                   solv%values_basis_val_der(index2, global_index)
-             
+
              K_a12_loc(index1, index2) = &
                   K_a12_loc(index1, index2) + &
                   B12 * wqpt / val_jac *  &
                   solv%values_basis_der_val(index1, global_index)* &
                   solv%values_basis_val_der(index2, global_index)
-             
+
              K_a21_loc(index1, index2) = &
                   K_a21_loc(index1, index2) +&
                   B21 * wqpt / val_jac *  &
                   solv%values_basis_val_der(index1, global_index)* &
                   solv%values_basis_der_val(index2, global_index)
-             
+
              M_b_vect_loc(index1, index2) =      &
                   M_b_vect_loc(index1, index2) + &
                   MC * wqpt *  &
                   solv%values_basis_val_val(index1, global_index)* &
                   solv%values_basis_val_val(index2, global_index)
-             
+
              S_b1_loc(index1, index2) =      &
                   S_b1_loc(index1, index2) + &
                   C1 * wqpt *  &
                   solv%values_basis_val_val(index1, global_index)* &
                   solv%values_basis_der_val(index2, global_index)
-             
+              
              S_b2_loc(index1, index2) = &
                   S_b2_loc(index1, index2) + &
                   C2 * wqpt *  &
                   solv%values_basis_val_val(index1, global_index)* &
                   solv%values_basis_val_der(index2, global_index)
+
           end do
        end do
     end do
@@ -1106,19 +1097,22 @@ contains ! =============================================================
     class(sll_scalar_field_2d_base), pointer :: a12_field_mat
     class(sll_scalar_field_2d_base), pointer :: a21_field_mat
     class(sll_scalar_field_2d_base), pointer :: a22_field_mat
-    class(sll_scalar_field_2d_base), pointer    :: c_field
-    ! sll_real64, dimension(:,:),   intent(out)   :: K_a11_loc
-    ! sll_real64, dimension(:,:),   intent(out)   :: K_a12_loc
-    ! sll_real64, dimension(:,:),   intent(out)   :: K_a21_loc
-    ! sll_real64, dimension(:,:),   intent(out)   :: K_a22_loc
+    class(sll_scalar_field_2d_base), pointer :: c_field
     ! Jacobian matrix
     sll_real64, dimension(2,2) :: jac_mat
-    ! Quadrature points coordinates and associated weights :
+    ! Quadrature points coordinates
     sll_real64 :: qpt1
     sll_real64 :: qpt2
     ! Loop variables
     sll_int32  :: global_index
     sll_int32  :: local_index
+    ! matrix initializers
+    sll_real64 :: val_c
+    sll_real64 :: val_a11
+    sll_real64 :: val_a12
+    sll_real64 :: val_a21
+    sll_real64 :: val_a22
+
 
     do local_index = 1, solv%num_quad_pts_loc
       
@@ -1128,14 +1122,21 @@ contains ! =============================================================
        qpt1  = solv%quad_pts1(global_index)
        qpt2  = solv%quad_pts2(global_index)
 
-       ! Getting the value of the jacobian matrix at this point
+       ! Getting the value of the jacobian matrix at quadrature point
        jac_mat(:,:) = c_field%get_jacobian_matrix(qpt1,qpt2)
+
+       ! Getting the values of the fields at quadrature point
+       val_c        = c_field%value_at_point(qpt1,qpt2)
+       val_a11      = a11_field_mat%value_at_point(qpt1,qpt2)
+       val_a12      = a12_field_mat%value_at_point(qpt1,qpt2)
+       val_a21      = a21_field_mat%value_at_point(qpt1,qpt2)
+       val_a22      = a22_field_mat%value_at_point(qpt1,qpt2)
 
        ! Changing the coordinate system --------------------------------
        ! Stiffness matrix : (J^(-1)) K^T (J^(-1))^T 
-       ! B11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
-       !      jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
-       !      jac_mat(1,2)*jac_mat(1,2)*val_a22
+       ! A11 = jac_mat(2,2)*jac_mat(2,2)*val_a11 - &
+!             jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
+!             jac_mat(1,2)*jac_mat(1,2)*val_a22
        
        ! B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
        !      jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
@@ -1160,22 +1161,22 @@ contains ! =============================================================
        phi)
     use sll_timer
     type(finite_elements_solver) :: solv
-    class(sll_scalar_field_2d_discrete_alt), intent(inout)  :: phi
-    class(sll_scalar_field_2d_base), intent(in),target  :: source
-    sll_int32 :: i
-    sll_int32 :: j
-    sll_int32 :: size1
-    sll_int32 :: size2
-    sll_int32 :: ierr
-    sll_int32 :: cell_index
-    sll_int32 :: num_splines_loc
+    class(sll_scalar_field_2d_discrete_alt), intent(inout) :: phi
+    class(sll_scalar_field_2d_base), intent(in), target    :: source
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: size1
+    sll_int32  :: size2
+    sll_int32  :: ierr
+    sll_int32  :: cell_index
+    sll_int32  :: num_splines_loc
     sll_real64 :: int_source,int_jac
+    class(sll_scalar_field_2d_base),pointer :: base_field_pointer
+    class(sll_interpolator_2d_base),pointer :: base_interpolator_pointer
     sll_real64, dimension(:), allocatable   :: M_source_loc
     sll_real64, dimension(:), allocatable   :: source_at_quad
-    class(sll_scalar_field_2d_base),pointer  :: base_field_pointer
-    class(sll_interpolator_2d_base),pointer  :: base_interpolator_pointer
-    sll_real64, dimension(:,:), pointer :: coeff_source
-    sll_real64, dimension(:),   pointer :: source_coeff_1d
+    sll_real64, dimension(:,:), pointer     :: coeff_source
+    sll_real64, dimension(:),   pointer     :: source_coeff_1d
     ! Quadrature points coordinates and associated weight
     sll_real64 :: qpt1
     sll_real64 :: qpt2
@@ -1186,11 +1187,9 @@ contains ! =============================================================
     ! Loop variables
     sll_int32  :: quad_index
 
+
     size1 = solv%mesh%num_cells1!size(coeff_source, 1)
     size2 = solv%mesh%num_cells2!size(coeff_source, 2)
-
-    print *, "num_cells1 = ", size1
-    print *, "num_cells2 = ", size2
 
     num_splines_loc = solv%num_splines_loc
     SLL_ALLOCATE(M_source_loc(num_splines_loc),ierr)
@@ -1218,28 +1217,20 @@ contains ! =============================================================
 
        select type( type_interpolator => base_interpolator_pointer)
        class is (arb_deg_2d_interpolator)
+
           coeff_source => type_interpolator%get_coefficients()
           ! TODO : this whole part should be re written, quick fix though:
           ! put the spline coefficients in a 1d array
           do j=1,size2+1
              do i=1,size1+1
-                source_coeff_1d(i + size2*(j-1)) = coeff_source(i,j)
+                source_coeff_1d(i + (size1+1)*(j-1)) = coeff_source(i,j)
              end do
           end do
-
-
+          
           call sll_mult_csr_matrix_vector(&
                solv%sll_csr_mat_source,&
                source_coeff_1d,&
                solv%source_vec)
-
-          print *, "after mult"
-!          print *, size(solv%sll_csr_mat_source)
-          print *, size(coeff_source, 1), size(coeff_source, 2)
-          print *, size(source_coeff_1d)
-          print *, size(solv%source_vec)
-          print *, ""
-          
 
           if( ((solv%bc_bottom==SLL_PERIODIC).and.(solv%bc_top==SLL_PERIODIC)) &
                .and.((solv%bc_left==SLL_PERIODIC).and.(solv%bc_right==SLL_PERIODIC)) )then
@@ -1281,7 +1272,7 @@ contains ! =============================================================
        end select
        
     class is (sll_scalar_field_2d_analytic_alt)
-       
+
        do quad_index=1,solv%num_quad_pts ! Loop over quadrature points
           qpt1   = solv%quad_pts1  (quad_index)
           qpt2   = solv%quad_pts2  (quad_index)
@@ -1628,16 +1619,18 @@ contains ! =============================================================
              solv%tmp_source_vec(elt) = solv%source_vec(elt1)
           end do
        end do
+
        
     else if ( (bc_left   == SLL_DIRICHLET).and.(bc_right==SLL_DIRICHLET) .and.&
          (bc_bottom == SLL_DIRICHLET).and.(bc_top==SLL_DIRICHLET) ) then 
-       
+
        do i = 1, solv%mesh%num_cells1 + solv%spline_degree - 2
           do j = 1, solv%mesh%num_cells2 + solv%spline_degree - 2
              
              elt  = i + (solv%mesh%num_cells1 + solv%spline_degree - 2) * (  j - 1)
              elt1 = i + 1 + ( solv%mesh%num_cells1 + solv%spline_degree ) * j 
              solv%tmp_source_vec( elt ) = solv%source_vec( elt1 )
+
           end do
        end do
        
@@ -1728,7 +1721,7 @@ contains ! =============================================================
     sll_real64:: elt_mat_global
     
     do cell_index = 1, solv%num_cells
-          
+
        do ideg2 = 0,solv%spline_degree
              
           do ideg1 = 0,solv%spline_degree

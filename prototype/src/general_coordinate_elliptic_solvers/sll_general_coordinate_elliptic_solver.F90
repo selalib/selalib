@@ -226,7 +226,6 @@ contains ! *******************************************************************
       
    end select
 
-   !print*, es%gauss_pts2(1,:), ES_GAUSS_LEGENDRE
    if( (bc_left == SLL_PERIODIC) .and. (bc_right == SLL_PERIODIC) .and. &
        (bc_bottom == SLL_PERIODIC) .and. (bc_top == SLL_PERIODIC) ) then
 
@@ -651,6 +650,8 @@ contains ! *******************************************************************
                S_b1_loc,  &
                S_b2_loc,&
                Source_loc)
+
+
           call local_to_global_matrices( &
                es, &
                cell_index, &
@@ -687,8 +688,6 @@ contains ! *******************************************************************
        call sll_factorize_csr_matrix(es%sll_csr_mat)      
     end if
 
-
-
     es%sll_csr_mat_source => new_csr_matrix( &
          size(es%masse,1), &
          (es%num_cells1+1)*(es%num_cells2+1),&
@@ -697,11 +696,6 @@ contains ! *******************************************************************
          es%total_num_splines_loc, &
          es%local_to_global_spline_indices_source, &
          es%total_num_splines_loc )
-
-!     print *, " local_to_global_spline_indices_source"
-!     do i = 1, es%num_cells1*es%num_cells2
-!        print *, es%local_to_global_spline_indices_source(:, i)
-!     end do
     
     call compute_Source_matrice(es,Source_loc)
     
@@ -761,6 +755,7 @@ contains ! *******************************************************************
     sll_real64, dimension(:,:), pointer :: coeff_rho
     sll_real64, dimension(:), pointer :: rho_coeff_1d
     
+
     total_num_splines_loc = es%total_num_splines_loc
     SLL_ALLOCATE(M_rho_loc(total_num_splines_loc),ierr)
     
@@ -789,6 +784,7 @@ contains ! *******************************************************************
     select type( type_field => base_field_pointer)
     class is (sll_scalar_field_2d_discrete_alt)
        base_interpolator_pointer => type_field%interp_2d
+
        select type( type_interpolator => base_interpolator_pointer)
        class is (arb_deg_2d_interpolator)
           coeff_rho => type_interpolator%get_coefficients()
@@ -796,21 +792,14 @@ contains ! *******************************************************************
           ! put the spline coefficients in a 1d array
           do j=1,es%num_cells2+1
              do i=1,es%num_cells1+1
-                
                 rho_coeff_1d(i+(es%num_cells1+1)*(j-1)) = coeff_rho(i,j)
              end do
           end do
 
+
           call sll_mult_csr_matrix_vector(&
                es%sll_csr_mat_source,&
                rho_coeff_1d,es%rho_vec)
-
-          print *, "after mult"
-!          print *, size(solv%sll_csr_mat_source)
-          print *, size(coeff_rho, 1), size(coeff_rho, 2)
-          print *, size(rho_coeff_1d)
-          print *, size(es%rho_vec)
-          print *, ""
 
           if( ((es%bc_bottom==SLL_PERIODIC).and.(es%bc_top==SLL_PERIODIC)) &
                .and.((es%bc_left==SLL_PERIODIC).and.(es%bc_right==SLL_PERIODIC)) )then
@@ -1178,9 +1167,6 @@ contains ! *******************************************************************
           
           obj%tab_index_coeff1(cell_i + obj%num_cells1*(i-1)) = left_x
 
-!            print*,'point quad glob', i + (j-1)*num_pts_g1 + &
-!                 (cell_index - 1)*num_pts_g1*num_pts_g2
-
           val_c        = c_field%value_at_point(gpt1,gpt2)
           val_a11      = a11_field_mat%value_at_point(gpt1,gpt2)
           val_a12      = a12_field_mat%value_at_point(gpt1,gpt2)
@@ -1194,7 +1180,7 @@ contains ! *******************************************************************
           val_b2       = b2_field_vect%value_at_point(gpt1,gpt2)
           val_b2_der1  = b2_field_vect%first_deriv_eta1_value_at_point(gpt1,gpt2)
           val_b2_der2  = b2_field_vect%first_deriv_eta2_value_at_point(gpt1,gpt2)
-   
+
           jac_mat(:,:) = c_field%get_jacobian_matrix(gpt1,gpt2)
           val_jac = jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1)!abs(jac_mat(1,1)*jac_mat(2,2) - jac_mat(1,2)*jac_mat(2,1))
 
@@ -1206,13 +1192,10 @@ contains ! *******************************************************************
                jac_mat(2,2)*jac_mat(1,2)*(val_a12+val_a21) + &
                jac_mat(1,2)*jac_mat(1,2)*val_a22
           
-
           B21 = jac_mat(1,1)*jac_mat(2,2)*val_a12 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
                jac_mat(2,1)*jac_mat(2,2)*val_a11 + &
-               jac_mat(1,2)*jac_mat(2,1)*val_a21
-          
-          
+               jac_mat(1,2)*jac_mat(2,1)*val_a21          
           
           B12 = jac_mat(1,1)*jac_mat(2,2)*val_a21 - &
                jac_mat(1,1)*jac_mat(1,2)*val_a22 - &
@@ -1233,15 +1216,15 @@ contains ! *******************************************************************
                - jac_mat(1,2) * val_b2 
           C2 =   jac_mat(1,1) * val_b2 &
                - jac_mat(2,1) * val_b1
-         
+
+
           ! loop over the splines supported in the cell that are different than
           ! zero at the point (gpt1,gpt2) (there are spline_degree+1 splines in
           ! each direction.
-          do ii = 0,obj%spline_degree1
-             do jj = 0,obj%spline_degree2
+          do jj = 0,obj%spline_degree2
+             do ii = 0,obj%spline_degree1
                 
                 index1  =  jj * ( obj%spline_degree1 + 1 ) + ii + 1
-                
                 
                 
                 Masse_loc(index1) = &
@@ -1254,10 +1237,9 @@ contains ! *******************************************************************
                      val_jac*wgpt1*wgpt2* &
                      (dbiatx1(ii+1,2)*dbiatx2(jj+1,1)+&
                      dbiatx1(ii+1,1)*dbiatx2(jj+1,2))
-                
-                
-                do iii = 0,obj%spline_degree1
-                   do jjj = 0,obj%spline_degree2
+
+                do jjj = 0,obj%spline_degree2
+                   do iii = 0,obj%spline_degree1
                       
                       index2 =  jjj*(obj%spline_degree1 + 1) + iii + 1
                 
@@ -1266,14 +1248,13 @@ contains ! *******************************************************************
                            val_jac*wgpt1*wgpt2* &
                            dbiatx1_rho(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2_rho(jj+1,1)*dbiatx2(jjj+1,1)
-                      
+
                       M_c_loc(index1, index2) = &
                            M_c_loc(index1, index2) + &
                            val_c*val_jac*wgpt1*wgpt2* &
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*  &
                            dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                      
-                      
+
                       K_a11_loc(index1, index2) = &
                            K_a11_loc(index1, index2) + &
                            B11*wgpt1*wgpt2/val_jac* &
@@ -1298,13 +1279,11 @@ contains ! *******************************************************************
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,2)*   &
                            dbiatx2(jj+1,2)*dbiatx2(jjj+1,1)
 
-
                       M_b_vect_loc(index1, index2) =      &
                            M_b_vect_loc(index1, index2) + &
                            MC*wgpt1*wgpt2 *  &
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
-                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)
-                      
+                           dbiatx2(jj+1,1)*dbiatx2(jjj+1,1)                      
                       
                       ! A revoir 
                       S_b1_loc(index1, index2) =      &
@@ -1319,6 +1298,7 @@ contains ! *******************************************************************
                            C2*wgpt1*wgpt2 *  &
                            dbiatx1(ii+1,1)*dbiatx1(iii+1,1)*   &
                            dbiatx2(jj+1,1)*dbiatx2(jjj+1,2)
+
                    end do
                 end do
              end do
@@ -1689,6 +1669,7 @@ if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
              elt  = i + es%total_num_splines_eta1 * (  j - 1)
              elt1 = i + 1 + ( es%total_num_splines_eta1 + 2 ) * j 
              es%tmp_rho_vec( elt ) = es%rho_vec( elt1 )
+
           end do
        end do
        
@@ -1746,12 +1727,12 @@ if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
     sll_int32 :: b, bprime
     sll_int32 :: li_A,li_Aprime
     sll_real64:: elt_mat_global
-    
+
     do cell_j=1,es%num_cells2
        do cell_i=1,es%num_cells1
           
           cell_index = cell_i+es%num_cells1*(cell_j-1)
-          
+
           do ideg2 = 0,es%spline_degree2
              
              do ideg1 = 0,es%spline_degree1
@@ -1769,7 +1750,7 @@ if ( (bc_bottom==SLL_PERIODIC).and.(bc_top== SLL_PERIODIC))then
                       elt_mat_global = Source_loc(cell_index,bprime,b)
 
                       if ( (li_A > 0) .and. (li_Aprime > 0)) then
-
+                         
                          call sll_add_to_csr_matrix( &
                            es%sll_csr_mat_source, &
                            elt_mat_global, &

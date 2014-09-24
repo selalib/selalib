@@ -46,7 +46,7 @@ module sll_module_scalar_field_2d_base
        use sll_logical_meshes
        import sll_scalar_field_2d_base
        class(sll_scalar_field_2d_base), intent(in) :: field
-       type(sll_logical_mesh_2d), pointer :: res
+       class(sll_logical_mesh_2d), pointer :: res
      end function function_get_mesh
   end interface
 
