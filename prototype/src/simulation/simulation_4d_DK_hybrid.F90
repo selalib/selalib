@@ -1028,7 +1028,7 @@ contains
 
     type(sll_simulation_4d_DK_hybrid), intent(inout) :: sim
 
-    type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    class(sll_logical_mesh_2d), pointer :: logical_mesh2d
     sll_int32 :: ierr
     sll_int32 :: loc3d_sz_x1, loc3d_sz_x2, loc3d_sz_x3
     sll_int32 :: nproc_x1
@@ -1104,7 +1104,7 @@ contains
     SLL_ALLOCATE(sim%E3d_x2_seqx1x2(loc3d_sz_x1,loc3d_sz_x2,loc3d_sz_x3),ierr)
     
     !---->
-    logical_mesh2d => sim%transf_xy%mesh
+    logical_mesh2d => sim%transf_xy%get_logical_mesh()
 
     !---> For iterpolations of Phi
     call sim%interp2d_Phi_eta1eta2%initialize( &
@@ -1296,7 +1296,7 @@ contains
     sll_real64, dimension(:,:), pointer :: B1
     sll_real64, dimension(:,:), pointer :: B2
     sll_real64, dimension(:,:), pointer :: C
-    type(sll_logical_mesh_2d), pointer :: logical_mesh2d
+    class(sll_logical_mesh_2d), pointer :: logical_mesh2d
 
     Neta1 = sim%Neta1
     Neta2 = sim%Neta2
@@ -1400,7 +1400,7 @@ contains
     call sim%QN_C%update_interpolation_coefficients( )
 
     !---> Initialization of the QNS type
-    logical_mesh2d => sim%transf_xy%mesh
+    logical_mesh2d => sim%transf_xy%get_logical_mesh()
 
     sim%QNS => new_general_elliptic_solver( &
       sim%spline_degree_eta1, & 
