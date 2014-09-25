@@ -74,8 +74,8 @@ module sll_coordinate_transformation_2d_base_module
   
   abstract interface
      function get_logical_mesh_ct( transf ) result(res)
-       use sll_logical_meshes
        import sll_coordinate_transformation_2d_base
+       import sll_logical_mesh_2d
        class(sll_coordinate_transformation_2d_base), intent(in) :: transf
        class(sll_logical_mesh_2d), pointer :: res
      end function get_logical_mesh_ct

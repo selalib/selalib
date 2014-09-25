@@ -49,16 +49,19 @@ use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
      module procedure sll_hdf5_write_int_array_3d
   end interface
 
+  !> Interface to write a 1d array in hdf5 file format
   interface sll_hdf5_write_array_1d
      module procedure sll_hdf5_write_dble_array_1d
      module procedure sll_hdf5_write_int_array_1d
   end interface
 
+  !> Interface to write a 2d array in hdf5 file format
   interface sll_hdf5_write_array_2d
      module procedure sll_hdf5_write_dble_array_2d
      module procedure sll_hdf5_write_int_array_1d
   end interface
 
+  !> Interface to write a 3d array in hdf5 file format
   interface sll_hdf5_write_array_3d
      module procedure sll_hdf5_write_dble_array_3d
      module procedure sll_hdf5_write_int_array_3d

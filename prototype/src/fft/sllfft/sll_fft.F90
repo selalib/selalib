@@ -15,6 +15,7 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Module with all functions for Fast Fourier Transform
 module sll_fft
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -24,6 +25,7 @@ module sll_fft
   use sll_fft_utils
   implicit none
   
+  !> Derived type for ftt plan
   type sll_fft_plan
      ! twiddle factors complex case
      sll_comp64, dimension(:), pointer :: t => null()         
@@ -39,6 +41,7 @@ module sll_fft
      sll_int32, dimension(:), pointer :: scramble_index => null()
   end type sll_fft_plan
   
+  !> Create a new fft plan
   interface fft_new_plan
      module procedure &
           fft_new_plan_c2c_1d, fft_new_plan_c2c_2d, &
@@ -47,6 +50,7 @@ module sll_fft
           fft_new_plan_r2c_2d, fft_new_plan_c2r_2d
   end interface fft_new_plan
 
+  !> Execute the fft plan forward or backward
   interface fft_apply_plan
      module procedure &
           fft_apply_plan_c2c_1d, fft_apply_plan_c2c_2d, &
@@ -55,6 +59,7 @@ module sll_fft
           fft_apply_plan_r2c_2d, fft_apply_plan_c2r_2d
   end interface fft_apply_plan
 
+  !> Bit reversing
   interface bit_reverse
      module procedure &
           bit_reverse_complex, bit_reverse_integer32, &
@@ -83,13 +88,14 @@ module sll_fft
   !  integer, parameter :: FFTW_MOD = 1000000000
   ! tranform in char* !!!
   
-
+  !> Get mode of fft
   interface fft_get_mode
      module procedure &
           fft_get_mode_complx_1d, fft_get_mode_complx_2d, &
           fft_get_mode_complx_3d, fft_get_mode_real_1d
   end interface fft_get_mode
 
+  !> Set mode of fft
   interface fft_set_mode
      module procedure &
           fft_set_mode_complx_1d, fft_set_mode_complx_2d, &

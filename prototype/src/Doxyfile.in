@@ -691,8 +691,6 @@ RECURSIVE              = YES
 EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/BSL \
 @CMAKE_CURRENT_SOURCE_DIR@/CSL \
-@CMAKE_CURRENT_SOURCE_DIR@/LinRood \
-@CMAKE_CURRENT_SOURCE_DIR@/WENO \
 @CMAKE_CURRENT_SOURCE_DIR@/advection \
 @CMAKE_CURRENT_SOURCE_DIR@/advection_field \
 @CMAKE_CURRENT_SOURCE_DIR@/assert \
@@ -702,55 +700,45 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
-@CMAKE_CURRENT_SOURCE_DIR@/discontinuous_galerkin \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
 @CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
-@CMAKE_CURRENT_SOURCE_DIR@/fft \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fields \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/integration \
 @CMAKE_CURRENT_SOURCE_DIR@/interpolators \
 @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
 @CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
 @CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/memory \
 @CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
 @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
 @CMAKE_CURRENT_SOURCE_DIR@/multigrid \
 @CMAKE_CURRENT_SOURCE_DIR@/non_linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/ode_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/opencl \
 @CMAKE_CURRENT_SOURCE_DIR@/package \
 @CMAKE_CURRENT_SOURCE_DIR@/parallel_array_initializers \
 @CMAKE_CURRENT_SOURCE_DIR@/parallel_utilities \
-@CMAKE_CURRENT_SOURCE_DIR@/pastix \
 @CMAKE_CURRENT_SOURCE_DIR@/periodic_interpolation \
-@CMAKE_CURRENT_SOURCE_DIR@/petsc_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/point_to_point_communications \
-@CMAKE_CURRENT_SOURCE_DIR@/precision \
 @CMAKE_CURRENT_SOURCE_DIR@/python_scripts \
 @CMAKE_CURRENT_SOURCE_DIR@/quasi_neutral_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/reduction \
 @CMAKE_CURRENT_SOURCE_DIR@/simulation \
-@CMAKE_CURRENT_SOURCE_DIR@/sparse \
 @CMAKE_CURRENT_SOURCE_DIR@/time_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/timer \
 @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
 @CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
-@CMAKE_CURRENT_SOURCE_DIR@/wsmp  \
 @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
-@CMAKE_CURRENT_SOURCE_DIR@/constants \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/splines \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
 @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
 @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/file_io \
 @CMAKE_CURRENT_SOURCE_DIR@/file_io_parallel \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
@@ -764,9 +752,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
-@CMAKE_CURRENT_SOURCE_DIR@/remap \
-@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_interface \
-@CMAKE_CURRENT_SOURCE_DIR@/utilities
+@CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager
 
 
 
@@ -1677,7 +1663,12 @@ PREDEFINED             = sll_int32=integer(kind=4) \
                          sll_int64=integer(kind=8) \
                          sll_real32=real(kind=4) \
                          sll_comp32=complex(kind=8) \
-                         sll_comp64=complex(kind=16)
+                         sll_comp64=complex(kind=16) \
+                         "_sll_int32=sll_int32" \
+                         "_sll_int64=sll_int64" \
+                         "_sll_real32=sll_real32" \
+                         "_sll_real64=sll_real64" \
+                         "SLL_PRIV= "
 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then
@@ -1686,7 +1677,7 @@ PREDEFINED             = sll_int32=integer(kind=4) \
 # Use the PREDEFINED tag if you want to use a different macro definition that
 # overrules the definition found in the source code.
 
-EXPAND_AS_DEFINED      =
+EXPAND_AS_DEFINED      = 
 
 # If the SKIP_FUNCTION_MACROS tag is set to YES (the default) then
 # doxygen's preprocessor will remove all references to function-like macros

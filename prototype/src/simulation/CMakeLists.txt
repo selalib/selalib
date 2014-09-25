@@ -38,7 +38,7 @@ TARGET_LINK_LIBRARIES( sll_simulation_1d
 #                       sll_utilities
 #                       sll_timer
 #                       sll_memory
-#                       sll_assertion 	
+#                       sll_assert 	
 #                       sll_working_precision)
 )
 
@@ -161,7 +161,7 @@ IF(HDF5_ENABLED AND HDF5_IS_PARALLEL AND HDF5_PARALLEL_ENABLED AND MPI_MODULE_EN
                          sll_utilities
                          sll_timer
                          sll_memory
-                         sll_assertion 	
+                         sll_assert 	
                          sll_working_precision
 )
 

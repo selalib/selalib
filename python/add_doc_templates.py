@@ -3,6 +3,10 @@ import os
 root = "../prototype/src/"
 
 def write_doc_file(library):
+  file_name = root+library+"/%s_doc.F90"%(library)
+  if (os.path.isfile(file_name)):
+     print file_name + " already exists "
+  else:
      _f = open(root+library+"/%s_doc.F90"%(library), "w")
      _f.write("! This file is read by doxygen software\n")
      _f.write("! Change it to match with your library\n")

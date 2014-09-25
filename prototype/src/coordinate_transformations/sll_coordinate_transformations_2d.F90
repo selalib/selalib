@@ -5,7 +5,7 @@ module sll_module_coordinate_transformations_2d
 #include "sll_file_io.h"
   use sll_cubic_splines
   use sll_xdmf
-  use sll_meshes_base
+  use sll_logical_meshes
   use sll_module_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
   use sll_module_deboor_splines_2d
@@ -54,10 +54,7 @@ module sll_module_coordinate_transformations_2d
      procedure(j_matrix_f_nopass), pointer, nopass :: jacobian_matrix_function
      sll_real64, dimension(:), pointer :: params => null() ! transf params
    contains
-!     procedure, pass(transf) :: initialize_coord_transf_2d_analytic_logic
-     procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic_abstract
-     ! generic, public :: initialize => initialize_coord_transf_2d_analytic_logic, &
-     !      initialize_coord_transf_2d_analytic
+     procedure, pass(transf) :: initialize => initialize_coord_transf_2d_analytic
      procedure, pass(transf) :: get_logical_mesh => get_logical_mesh_analytic
      ! Functions with integer arguments
      procedure, pass(transf) :: x1_at_node => x1_node_analytic
@@ -78,11 +75,6 @@ module sll_module_coordinate_transformations_2d
      procedure, pass(transf) :: delete => delete_transformation_2d_analytic
   end type sll_coordinate_transformation_2d_analytic
 
-  ! interface initialize
-  !    module procedure &
-  !         initialize_coord_transf_2d_analytic_abstract, &
-  !         initialize_coord_transf_2d_analytic_logic
-  ! end interface initialize
 
   ! -----------------------------------------------------------------------
   !
@@ -202,7 +194,7 @@ contains
     sll_int32 :: ierr
 
     SLL_ALLOCATE(new_coordinate_transformation_2d_analytic, ierr)
-    call initialize_coord_transf_2d_analytic_abstract( &
+    call initialize_coord_transf_2d_analytic( &
          new_coordinate_transformation_2d_analytic, &
          label,          &
          mesh_2d,        &
@@ -215,7 +207,7 @@ contains
          params )
   end function new_coordinate_transformation_2d_analytic
 
-  subroutine initialize_coord_transf_2d_analytic_abstract( &
+  subroutine initialize_coord_transf_2d_analytic( &
     transf, &
     label,          &
     mesh_2d,        &
@@ -236,7 +228,7 @@ contains
     procedure(transformation_func_nopass)            :: j12_func
     procedure(transformation_func_nopass)            :: j21_func
     procedure(transformation_func_nopass)            :: j22_func
-    type(sll_logical_mesh_2d), pointer                 :: mesh_2d
+    type(sll_logical_mesh_2d), pointer               :: mesh_2d
     sll_real64, dimension(:), intent(in), optional :: params
     sll_int32  :: ierr
 
@@ -258,8 +250,7 @@ contains
     transf%j_matrix(2,2)%f => j22_func
     transf%jacobian_func   => jacobian_2d_analytic
     
-  end subroutine initialize_coord_transf_2d_analytic_abstract
-
+  end subroutine initialize_coord_transf_2d_analytic
 
   subroutine delete_transformation_2d_analytic( transf )
     class(sll_coordinate_transformation_2d_analytic), intent(inout) :: transf
@@ -732,7 +723,7 @@ contains
 
     ! INPUT VARIABLES
     type(sll_logical_mesh_2d), pointer    :: mesh_2d
-    character(len=*)       , intent(in) :: label
+    character(len=*)         , intent(in) :: label
 
     class(sll_interpolator_2d_base), target  :: x1_interpolator
     class(sll_interpolator_2d_base), target  :: x2_interpolator
@@ -1151,8 +1142,7 @@ contains
     
     !call delete( transf%x1_interp)
     !call delete( transf%x2_interp)
-    call delete(transf%mesh)
-
+    call delete( transf%mesh)
     ! Fix: there is a dependency problem where these pointers are not recognized
     ! during the linking step. A similar nullification of an abstract class
     ! pointer is carried out in the fields_2d_alternative type without problems.
@@ -1222,9 +1212,8 @@ contains
     class(arb_deg_2d_interpolator), pointer :: interp2d_1
     class(arb_deg_2d_interpolator), pointer :: interp2d_2
     class(arb_deg_2d_interpolator), pointer :: interp2d_jac
-    class(sll_mesh_2d_base), pointer      :: mesh_base
-    type(sll_logical_mesh_2d), pointer   :: mesh_2d   
-
+    type(sll_logical_mesh_2d), pointer      :: mesh_2d
+   
     namelist /transf_label/  label
     namelist /degree/   spline_deg1, spline_deg2
     namelist /shape/    num_pts1, num_pts2 ! it is not the number of points but the number of coeff sdpline in each direction !!
@@ -1383,8 +1372,6 @@ contains
          eta1_max = eta1_max,&
          eta2_min = eta2_min,&
          eta2_max = eta2_max)
-
-    mesh_base => mesh_2d
 
     ! initialization of name 
    ! transf%label = trim(label)
