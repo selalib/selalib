@@ -11,8 +11,8 @@ use sll_hex_meshes
 use sll_box_splines
 implicit none
 
-type(sll_hex_mesh_2d), pointer  :: mesh
-type(sll_box_spline_2d),   pointer  :: spline
+type(sll_hex_mesh_2d),   pointer  :: mesh
+type(sll_box_spline_2d), pointer  :: spline
 sll_int32    :: num_cells
 sll_int32    :: i
 sll_int32    :: deg = 2
@@ -118,17 +118,21 @@ do num_cells = 20,20,20
       
       x1(i) = mesh%global_to_x1(i)
       x2(i) = mesh%global_to_x2(i)
+      
       !--------- GAUSSIAN PULSE : 
       !       f_init(i) = gauss_amp * &
       !            exp(-0.5_f64*((x1(i)-gauss_x1)**2 / gauss_sig**2 &
       !            + (x2(i)-gauss_x2)**2 / gauss_sig**2))
       !--------- DIOCOTRON : 
       dioco_r= sqrt(x1(i)**2+x2(i)**2)
-      if (x2(i)>=0) then
+      if (dioco_r.eq.0._f64) then
+         dioco_theta = 0._f64
+      elseif (x2(i)>=0) then
          dioco_theta = acos(x1(i)/dioco_r)
       else
          dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
       endif
+
       if((dioco_r>=dioco_rminus).and.(dioco_r<=dioco_rplus))then
          f_init(i) = 1.0_f64+dioco_eps*cos(dioco_kmode*dioco_theta)
       else
@@ -138,10 +142,9 @@ do num_cells = 20,20,20
       if (exponent(f_init(i)) .lt. -17) then
          f_init(i) = 0._f64
       end if
+
       f_tn(i) = f_init(i)
-
    end do
-
 
    ! Advection initialization
    ! if : which_advec = 0 => linear advection
@@ -151,7 +154,7 @@ do num_cells = 20,20,20
    tmax  = 3.0_f64
    dt    = 0.1_f64 * 20._f64/num_cells
    t     = 0._f64
-
+ 
    ! ! Computing characteristics
    ! if (which_advec .eq. 0) then
    !    ! linear advection
@@ -165,12 +168,11 @@ do num_cells = 20,20,20
       x2_char(2:) = x1(2:)*sin(2._f64*sll_pi*dt) + x2(2:)*cos(2._f64*sll_pi*dt)
    ! end if
 
-
+ 
    ! Time loop
    nloops = 0
 
    spline => new_box_spline_2d(mesh, SLL_DIRICHLET)
-
 
    ! do i=1, mesh%num_pts_tot
    !    x1_basis = change_basis_x1(spline, x1(i), x2(i))
@@ -231,7 +233,9 @@ do num_cells = 20,20,20
 
          !--------- DIOCOTRON : 
          dioco_r= sqrt(x1(i)**2+x2(i)**2)
-         if (x2(i)>=0) then
+         if (dioco_r.eq.0._f64) then
+            dioco_theta = 0._f64
+         elseif (x2(i)>=0) then
             dioco_theta = acos(x1(i)/dioco_r)
          else
             dioco_theta = 2._f64*sll_pi-acos(x1(i)/dioco_r)
