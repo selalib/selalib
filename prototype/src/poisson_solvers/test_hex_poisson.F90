@@ -13,13 +13,14 @@ program test_hex_poisson
 
   type(sll_hex_mesh_2d), pointer          :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
+  sll_real64, dimension(:),allocatable    :: uxn, uyn
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
   sll_int32                               :: num_cells, n_points, i,j, k1, k2 
   sll_int32                               :: ierr, l1,l2, index_tab, global
   sll_real64                              :: x, y, erreur = 0._f64
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 80
+  num_cells = 20
 
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
@@ -27,6 +28,8 @@ program test_hex_poisson
   SLL_ALLOCATE(second_term( n_points),ierr)      ! le b de Ax = b
   SLL_ALLOCATE(rho( n_points),ierr)              ! second terme de l'equation
   SLL_ALLOCATE(phi( n_points),ierr)              ! le x de Ax = b
+  SLL_ALLOCATE(uxn( n_points),ierr)              ! le x de Ax = b
+  SLL_ALLOCATE(uyn( n_points),ierr)              ! le x de Ax = b
   SLL_ALLOCATE(phi_end( n_points),ierr)       
   SLL_ALLOCATE(sol( n_points),ierr)              ! exact solution
   SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr) ! le A de Ax = b
@@ -92,6 +95,22 @@ program test_hex_poisson
   print*, "erreur", sqrt(erreur/real(num_cells,f64)**2)
 
 
+  ! testing computing the fields for the guiding center model in a hex. mesh
+  ! here : uxn = -dy(phi)  and uyn = +dx(phi)
+
+  call compute_hex_fields(mesh,uxn,uyn,phi_end,1)
+
+  erreur = 0._f64
+  do i=1, n_points  
+     x = mesh%cartesian_coord(1,i)
+     y = mesh%cartesian_coord(2,i)
+     erreur = erreur + abs(  2._f64*x*y**4 - 8._f64/3._f64*x**3*y**2 - 3._f64*x*&
+          y**2 + 2._f64*x**5/3._f64 - 3._f64*x**3 + 3._f64*x - uyn(i))**2
+     !print*,2._f64*x*y**4 - 8._f64/3._f64*x**3*y**2 - 3._f64*x*&
+     !     y**2 + 2._f64*x**5/3._f64 - 3._f64*x**3 + 3._f64*x , uyn(i)
+  enddo
+  print*, "erreur sur dx(phi)", sqrt(erreur/real(num_cells,f64)**2)
+
   ! open(unit = 11, file="matrix_hex_poisson.txt", action="write", status="replace")
 
   ! do i=1, n_points
@@ -115,6 +134,8 @@ program test_hex_poisson
 
   SLL_DEALLOCATE_ARRAY(second_term,ierr)
   SLL_DEALLOCATE_ARRAY(rho,ierr)
+  SLL_DEALLOCATE_ARRAY(uxn,ierr)
+  SLL_DEALLOCATE_ARRAY(uyn,ierr)
   SLL_DEALLOCATE_ARRAY(phi,ierr)
   SLL_DEALLOCATE_ARRAY(phi_end,ierr)
   SLL_DEALLOCATE_ARRAY(sol,ierr)

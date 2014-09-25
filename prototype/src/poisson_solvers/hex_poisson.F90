@@ -335,4 +335,86 @@ contains
 
   endfunction value_if_inside_rho
 
+
+subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_real64,dimension(:)        :: uxn, uyn, phi
+    sll_int32,          intent(in) :: type
+    sll_int32  :: i,h1,h2
+    sll_real64 :: phixi_2,phixi_1,phixi1,phixi2
+    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+    sll_real64 :: uh1, uh2
+
+    
+    if (type==1) then
+
+       do i = 1,mesh%num_pts_tot
+
+          h1 = mesh%hex_coord(1,i)
+          h2 = mesh%hex_coord(2,i)
+
+          phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
+          phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
+          phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
+          phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
+
+          phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
+          phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
+          phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
+          phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
+
+          phixi_2 = value_if_inside_phi(h1-2,h2+2,mesh,phi)
+          phixi_1 = value_if_inside_phi(h1-1,h2+1,mesh,phi)
+          phixi1  = value_if_inside_phi(h1+1,h2-1,mesh,phi)
+          phixi2  = value_if_inside_phi(h1+2,h2-2,mesh,phi)
+
+          ! order 2
+
+          uh1 = ( phii1 - phii_1 ) / (2._f64)
+          uh2 = ( phij1 - phij_1 ) / (2._f64)
+
+          uxn(i) = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
+          uyn(i) = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
+
+
+
+          !uyn(i) = ( phixi1 - phixi_1 ) / (2._f64*mesh%delta)
+
+          ! order 4
+          ! uxn = - ( phi(nr1i_2) + 8._f64 * ( - phi(nr1i_1) + phi(nr1i1) ) &
+          !      - phi(nr1i2) ) / (12._f64*mesh%delta)
+          ! uyn = + ( phi(nr2i_2) + 8._f64 * ( - phi(nr2i_1) + phi(nr2i1) ) &
+          !      - phi(nr2i2) ) / (12._f64*mesh%delta)
+
+	  ! _Uy[ix][iy]   = +(_phi[ix+1][iy]-_phi[ix-1][iy])/(2.0*dx);
+
+	  ! _dxUx[ix][iy] = -(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
+	  ! _dyUx[ix][iy] = -(_phi[ix][iy+1]  -2.*_phi[ix][iy]                  +_phi[ix][iy-1]  )/(dy*dy);	
+
+	  ! _dyUy[ix][iy] = +(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
+	  ! _dxUy[ix][iy] = +(_phi[ix+1][iy]  -2.0*_phi[ix][iy]                 +_phi[ix-1][iy]  )/(dx*dx);
+       end do
+    endif
+
+
+  end subroutine compute_hex_fields
+
+
+
+  function value_if_inside_phi(k1,k2,mesh,rho) result(f)
+    type(sll_hex_mesh_2d), pointer :: mesh
+    sll_real64, dimension(:)       :: rho
+    sll_int32  :: k1, k2, n
+    sll_real64 :: f 
+
+    if ( abs(k1) > mesh%num_cells .or. abs(k2) > mesh%num_cells .or. &
+         (k1)*(k2)< 0 .and. ( abs(k1) + abs(k2) > mesh%num_cells) ) then
+       f = 0._f64 ! null dirichlet boundary condition
+    else
+       n = hex_to_global(mesh,k1,k2)
+       f = rho(n)
+    endif
+
+  endfunction value_if_inside_phi
+
 end module hex_poisson

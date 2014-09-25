@@ -116,7 +116,7 @@ program test_hex_hermite
 
 
      tmax  = 100._f64
-     dt    = 0.01_f64!*20._f64 !/ real(num_cells,f64)  
+     dt    = 0.001_f64!*20._f64 !/ real(num_cells,f64)  
      t     = 0._f64
      !cfl   = radius * dt / ( radius / real(num_cells,f64)  )
 
@@ -189,8 +189,8 @@ program test_hex_hermite
            ! xx = x*cos(dt) - y*sin(dt);
            ! yy = x*sin(dt) + y*cos(dt);
 
-           xx = x - dt*y
-           yy = y + dt*x
+           ! xx = x - dt*y
+           ! yy = y + dt*x
 
            !print*,xx,x*cos(dt) - y*sin(dt),yy,x*sin(dt) + y*cos(dt)
 
@@ -198,8 +198,8 @@ program test_hex_hermite
            !       computation of the characteristics
            !*************************************************
 
-           ! call compute_characteristic_euler_2d_hex( &
-           !      x,y,uxn,uyn,i,xx,yy,dt )
+           call compute_characteristic_euler_2d_hex( &
+                x,y,uxn,uyn,i,xx,yy,dt )
            inside = .true.
            h1 =  xx/sqrt(3.0_f64) + yy
            h2 = -xx/sqrt(3.0_f64) + yy 
@@ -281,8 +281,8 @@ program test_hex_hermite
 
         !    center_values_tn = center_values_tn1
         !    edge_values_tn  = edge_values_tn1
-        if (count == 100) then
-           call int2string(nloops,filenum)
+        if (count == 200) then
+           call int2string(nloops/10,filenum)
            filename  = "center_guide_rho"//trim(filenum)
            call write_field_hex_mesh_xmf(mesh, rho_tn1, trim(filename))
            count = 0
@@ -383,71 +383,71 @@ contains
 
   end subroutine init_distr
   
-  subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64,dimension(:)        :: uxn, uyn, phi
-    sll_int32,          intent(in) :: type
-    sll_int32  :: i,h1,h2
-    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
-    sll_real64 :: uh1, uh2
-    sll_real64 :: v1, v2, v3, v4   
+  ! subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
+  !   type(sll_hex_mesh_2d), pointer :: mesh
+  !   sll_real64,dimension(:)        :: uxn, uyn, phi
+  !   sll_int32,          intent(in) :: type
+  !   sll_int32  :: i,h1,h2
+  !   sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
+  !   sll_real64 :: uh1, uh2
+  !   sll_real64 :: v1, v2, v3, v4   
 
 
-    ! v1 = mesh%r1_x1/mesh%delta
-    ! v2 = mesh%r1_x2/mesh%delta
-    ! v3 = mesh%r2_x1/mesh%delta
-    ! v4 = mesh%r2_x2/mesh%delta
+  !   ! v1 = mesh%r1_x1/mesh%delta
+  !   ! v2 = mesh%r1_x2/mesh%delta
+  !   ! v3 = mesh%r2_x1/mesh%delta
+  !   ! v4 = mesh%r2_x2/mesh%delta
 
     
-    if (type==1) then
+  !   if (type==1) then
 
-       do i = 1,mesh%num_pts_tot
+  !      do i = 1,mesh%num_pts_tot
 
-          ! h1 = mesh%hex_coord(1,i)
-          ! h2 = mesh%hex_coord(2,i)
+  !         h1 = mesh%hex_coord(1,i)
+  !         h2 = mesh%hex_coord(2,i)
 
-          ! phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
-          ! phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
-          ! phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
-          ! phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
+  !         phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
+  !         phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
+  !         phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
+  !         phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
 
-          ! phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
-          ! phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
-          ! phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
-          ! phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
+  !         phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
+  !         phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
+  !         phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
+  !         phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
 
-          ! order 2
+  !         ! order 2
 
-          !uh1 = ( phii1 - phii_1 ) / (2._f64)!*mesh%delta)
-          !uh2 = ( phij1 - phij_1 ) / (2._f64)!*mesh%delta)
+  !         uh1 = ( phii1 - phii_1 ) / (2._f64)!*mesh%delta)
+  !         uh2 = ( phij1 - phij_1 ) / (2._f64)!*mesh%delta)
 
-          ! uxn = -(v2*uh1 + v4*uh2)   ! -d(phi)/dy 
-          ! uyn = +(v1*uh1 + v3*uh2)   ! +d(phi)/dx
+  !         ! uxn = -(v2*uh1 + v4*uh2)   ! -d(phi)/dy 
+  !         ! uyn = +(v1*uh1 + v3*uh2)   ! +d(phi)/dx
 
-          ! uxn(i) = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
-          ! uyn(i) = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
+  !         uxn(i) = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
+  !         uyn(i) = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
 
-          uxn(i) = + mesh%cartesian_coord(2,i)   ! +y
-          uyn(i) = - mesh%cartesian_coord(1,i)   ! -x
+  !         ! uxn(i) = + mesh%cartesian_coord(2,i)   ! +y
+  !         ! uyn(i) = - mesh%cartesian_coord(1,i)   ! -x
 
-          ! order 4
-          ! uxn = - ( phi(nr1i_2) + 8._f64 * ( - phi(nr1i_1) + phi(nr1i1) ) &
-          !      - phi(nr1i2) ) / (12._f64*mesh%delta)
-          ! uyn = + ( phi(nr2i_2) + 8._f64 * ( - phi(nr2i_1) + phi(nr2i1) ) &
-          !      - phi(nr2i2) ) / (12._f64*mesh%delta)
+  !         ! order 4
+  !         ! uxn = - ( phi(nr1i_2) + 8._f64 * ( - phi(nr1i_1) + phi(nr1i1) ) &
+  !         !      - phi(nr1i2) ) / (12._f64*mesh%delta)
+  !         ! uyn = + ( phi(nr2i_2) + 8._f64 * ( - phi(nr2i_1) + phi(nr2i1) ) &
+  !         !      - phi(nr2i2) ) / (12._f64*mesh%delta)
 
-	  ! _Uy[ix][iy]   = +(_phi[ix+1][iy]-_phi[ix-1][iy])/(2.0*dx);
+  !         ! _Uy[ix][iy]   = +(_phi[ix+1][iy]-_phi[ix-1][iy])/(2.0*dx);
 
-	  ! _dxUx[ix][iy] = -(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
-	  ! _dyUx[ix][iy] = -(_phi[ix][iy+1]  -2.*_phi[ix][iy]                  +_phi[ix][iy-1]  )/(dy*dy);	
+  !         ! _dxUx[ix][iy] = -(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
+  !         ! _dyUx[ix][iy] = -(_phi[ix][iy+1]  -2.*_phi[ix][iy]                  +_phi[ix][iy-1]  )/(dy*dy);	
 
-	  ! _dyUy[ix][iy] = +(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
-	  ! _dxUy[ix][iy] = +(_phi[ix+1][iy]  -2.0*_phi[ix][iy]                 +_phi[ix-1][iy]  )/(dx*dx);
-       end do
-    endif
+  !         ! _dyUy[ix][iy] = +(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
+  !         ! _dxUy[ix][iy] = +(_phi[ix+1][iy]  -2.0*_phi[ix][iy]                 +_phi[ix-1][iy]  )/(dx*dx);
+  !      end do
+  !   endif
 
 
-  end subroutine compute_hex_fields
+  ! end subroutine compute_hex_fields
 
   ! subroutine compute_hex_fields_center(mesh,uxn_center,uyn_center,phi_center)
   !   type(sll_hex_mesh_2d), pointer :: mesh
@@ -523,20 +523,20 @@ contains
 
   ! end subroutine compute_hex_fields_edge
 
-  function value_if_inside_phi(k1,k2,mesh,rho) result(f)
-    type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64, dimension(:)       :: rho
-    sll_int32  :: k1, k2, n
-    sll_real64 :: f 
+  ! function value_if_inside_phi(k1,k2,mesh,rho) result(f)
+  !   type(sll_hex_mesh_2d), pointer :: mesh
+  !   sll_real64, dimension(:)       :: rho
+  !   sll_int32  :: k1, k2, n
+  !   sll_real64 :: f 
 
-    if ( abs(k1) > mesh%num_cells .or. abs(k2) > mesh%num_cells .or. &
-         (k1)*(k2)< 0 .and. ( abs(k1) + abs(k2) > mesh%num_cells) ) then
-       f = 0._f64 ! null dirichlet boundary condition
-    else
-       n = hex_to_global(mesh,k1,k2)
-       f = rho(n)
-    endif
+  !   if ( abs(k1) > mesh%num_cells .or. abs(k2) > mesh%num_cells .or. &
+  !        (k1)*(k2)< 0 .and. ( abs(k1) + abs(k2) > mesh%num_cells) ) then
+  !      f = 0._f64 ! null dirichlet boundary condition
+  !   else
+  !      n = hex_to_global(mesh,k1,k2)
+  !      f = rho(n)
+  !   endif
 
-  endfunction value_if_inside_phi
+  ! endfunction value_if_inside_phi
 
 end program
