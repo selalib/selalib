@@ -333,7 +333,7 @@ program test_hex_hermite
               end if
 
 
-              ! if (center_values_tn1(i)>1.) print*, i, center_values_tn(i), center_values_tn1(i)
+              ! if (center_values_tn1(i)>1.) print*,"" i, center_values_tn(i), center_values_tn1(i)
 
               norm2_sol_center = 0._f64
 

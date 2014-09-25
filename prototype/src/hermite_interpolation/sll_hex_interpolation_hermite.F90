@@ -534,6 +534,8 @@ contains
     k11 = mesh%hex_coord(1,i1) 
     k12 = mesh%hex_coord(2,i1) 
 
+    ! print*, x ,y 
+
     call get_triangle_index(k11,k12,mesh,x,center_index)
 
     ! get the first 9 degrees of freedom
@@ -1932,35 +1934,35 @@ contains
     sll_int32, intent(in) :: num_method
 
     if (num_method == 9 ) then
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, " Zienkiewicz_9_degree_of_freedom "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 10 ) then
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*," Zienkiewicz_10_degree_of_freedom"
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 11 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "   Hsieh_Clough_Tocher_reduced   "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 12 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "   Hsieh_Clough_Tocher_complete   "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else if (num_method == 15 ) then 
-       print*, 
+       print*, ""
        print*, "*********************************"
        print*, "  quartic element of Ganev_Dimitrov "
        print*, "*********************************"
-       print*, 
+       print*, ""
     else
        print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 15"
     endif
