@@ -254,8 +254,6 @@ contains   ! *****************************************************************
             patch_name, &
             fmp%interps(i+1)%interp, &
             fmp%get_transformation(i), &
-!            lm%num_cells1, &
-!            lm%num_cells2, &
             bc_left, &
             bc_right, &
             bc_bottom, &

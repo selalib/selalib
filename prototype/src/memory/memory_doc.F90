@@ -10,29 +10,53 @@
 
 
 !> @namespace sll_memory 
+!> @author Edwin Chacon-Golcher
 !> @brief 
-!> Description of memory library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Implements the error testing function and allocation related functionalities.
 !> @details
-!> Long description of  memory, you can add some references or math equations.
+!> Provides the header file that exposes the allocation,
+!> initialization and clearing macros, and other related functionalities.
+!> 
+!> The following directive will make available macros:
+!> @code
+!> #include "sll_memory.h" 
+!> @endcode
 !>
-!> <b> Headers file available </b>
-!>  - sll_memory.h
+!> - SLL_ALLOCATE
+!> - SLL_DEALLOCATE
+!> - SLL_INIT_ARRAY
+!> - SLL_CLEAR_ALLOCATE
 !>
-!> <b> Modules available </b>
-!>  List fortran module available
-!>  - sll_memory
+!> and will provide any additional functionality included in the 
+!> sll_memory.F90 module. This directive should be put in the 'use' section 
+!> of the subprogram that wants to use the allocator.
 !>
-!> <b> How to use it </b>
-!> - Header file : \code #include 'sll_memory.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
-!> - Add <code> use sll_memory </code>
+!> Examples: 
 !>
-!> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
+!> To allocate the simple array 'a' of 1000 elements:
+!>@code
+!> SLL_ALLOCATE(a(1000),err)
+!>@endcode
+!> To allocate the 2D array 'a' with non-default indexing:
+!>@code
+!> SLL_ALLOCATE(a(5:55,1:20),err),
+!>@endcode
+!> etc. The syntax comes directly from the native Fortran allocate function.
+!>
+!> The deallocation macro also requires the integer error variable:
+!>@code
+!> SLL_DEALLOCATE(a, err)
+!>@endcode
+!> To initialize an array:
+!>@code
+!> SLL_INIT_ARRAY(a,value)
+!>@endcode 
+!> To allocate and initialize an array to 0:
+!>@code
+!> SLL_CLEAR_ALLOCATE(a(1:1000,4:500), err)
+!>@endcode
+!> Any file that uses this include file will need to be compiled such that
+!> there is no upper limit to the length of a source code line. In gfortran,
+!> for instance, this behavior is obtained with the flag  
+!> -ffree-line-length-none
 !>

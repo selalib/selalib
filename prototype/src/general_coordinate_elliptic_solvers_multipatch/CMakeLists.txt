@@ -41,7 +41,7 @@
      sll_constants
      sll_utilities
      sll_timer
-     sll_assertion
+     sll_assert
      sll_memory
      sll_working_precision
      deboor_splines
@@ -94,7 +94,7 @@
 #     sll_constants
 #     sll_utilities
 #     sll_timer
-#     sll_assertion
+#     sll_assert
 #     sll_memory
 #     sll_working_precision
 #     deboor_splines
