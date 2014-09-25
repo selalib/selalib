@@ -614,9 +614,9 @@ contains
 
     else if (num_method == 10 ) then
 
-       !freedom(10) = center_value(center_index)
+       freedom(10) = center_value(center_index)
 
-       call reconstruction_center_values(mesh,f_tn,center_index,freedom(10))
+       !call reconstruction_center_values(mesh,f_tn,center_index,freedom(10))
 
        ! Computing the ten canonical basis functions 
        call base_zienkiewicz_10_degree_of_freedom(base,step,l1,l2,l3)
@@ -1533,10 +1533,13 @@ contains
     sll_real64, dimension(:), intent(in) :: f_tn 
     sll_int32                 ,intent(in):: center_index
     sll_real64               ,intent(out):: center_value
+    sll_real64                           :: center_value1, center_value2
+    sll_real64                           :: center_value3
     sll_int32                            :: i1,i2,i3,k11,k12
     sll_int32                            :: ni_3,ni_2,ni_1,ni,ni1,ni2,ni3,ni4
     sll_real64                           :: x,y, x1  
     sll_real64                           :: l1,l2,l3,l4,l5,l6,l7,l8   
+    sll_real64                           :: r1,r2,r3,r4,r5,r6,r7,r8   
     sll_real64                           :: fi_3,fi_2,fi_1,fi,fi1,fi2,fi3,fi4
     
     x = mesh%center_cartesian_coord(1,center_index)
@@ -1597,6 +1600,7 @@ contains
        ni3 = hex_to_global(mesh,k11+3,k12-2)
        fi3 = f_tn(ni3)
     endif
+
     if ( test_in(k11+4,k12-3,mesh%num_cells) ) then
        fi4 = 0._f64  
     else
@@ -1604,7 +1608,6 @@ contains
        fi4 = f_tn(ni4)
     endif
 
-    if ( x < x1) then    ! first case  : triangle oriented left
        ! l1 =  1.09739369e-2
        ! l2 = -9.60219478738e-2
        ! l3 =  0.768175583
@@ -1619,44 +1622,352 @@ contains
        ! l5 = -336._f64/6000._f64
        ! l6 = 0._f64
        
-       l1 = -1.9704302961946860E-003
-       l2 =  1.9878164458669901E-002
-       l3 = -0.10671435656759629 
-       l4 =  0.84482198949347154
-       l5 =  0.30720799617944411
-       l6 = -7.7983568260935790E-002
-       l7 =  1.6484331502311610E-002 
-       l8 = -1.7241265091703488E-003
+       ! l1 = -1.9704302961946860E-003
+       ! l2 =  1.9878164458669901E-002
+       ! l3 = -0.10671435656759629 
+       ! l4 =  0.84482198949347154
+       ! l5 =  0.30720799617944411
+       ! l6 = -7.7983568260935790E-002
+       ! l7 =  1.6484331502311610E-002 
+       ! l8 = -1.7241265091703488E-00! 3
 
+       r8 = -1.9704302961946860E-003
+       r7 =  1.9878164458669901E-002
+       r6 = -0.10671435656759629 
+       r5 =  0.84482198949347154
+       r4 =  0.30720799617944411
+       r3 = -7.7983568260935790E-002
+       r2 =  1.6484331502311610E-002 
+       r1 = -1.7241265091703488E-003
+
+       ! r1 = 0._f64
+       ! r2 =  9.60219478738e-3
+       ! r3 = -7.68175583e-2
+       ! r4 =  0.3840877915
+       ! r5 =  0.768175583
+       ! r6 = -9.60219478738e-2
+       ! r7 =  1.09739369e-2 
+       ! r8 = 0._f64
+
+       ! r1 = 0._f64
+       ! r2 = 0._f64
+       ! r3 = -336._f64/6000._f64
+       ! r4 =  896._f64/2000._f64
+       ! r5 =  1344._f64/2000._f64
+       ! r6 = -384._f64/6000._f64
+       ! r7 = 0._f64
+       ! r8 = 0._f64
+
+
+    if ( x < x1) then    ! first case  : triangle oriented left
+       !center_value1 = l1*fi_3 + l2*fi_2 + l3*fi_1 + l4*fi + l5*fi1 + l6*fi2&
+       !     + l7*fi3 + l8*fi4
+       center_value1 = r8*fi_3 + r7*fi_2 + r6*fi_1 + r5*fi + r4*fi1 + r3*fi2&
+            + r2*fi3 + r1*fi4
     else                 ! second case : triangle oriented right
-       ! l1 =  9.60219478738e-3
-       ! l2 = -7.68175583e-2
-       ! l3 =  0.3840877915
-       ! l4 =  0.768175583
-       ! l5 = -9.60219478738e-2
-       ! l6 =  1.09739369e-2 
-
-       ! l1 = 0._f64
-       ! l2 = -336._f64/6000._f64
-       ! l3 =  896._f64/2000._f64
-       ! l4 =  1344._f64/2000._f64
-       ! l5 = -384._f64/6000._f64
-       ! l6 = 0._f64
-
-       l1 = -1.7241265091703496E-003
-       l2 =  1.6484331502311624E-002
-       l3 = -7.7983568260935734E-002
-       l4 =  0.30720799617944405 
-       l5 =  0.84482198949347143
-       l6 = -0.10671435656759636 
-       l7 =  1.9878164458669884E-002
-       l8 = -1.9704302961946847E-003
-
+       center_value1 = r1*fi_3 + r2*fi_2 + r3*fi_1 + r4*fi + r5*fi1 + r6*fi2&
+            + r7*fi3 + r8*fi4
     endif
 
-    center_value = l1*fi_3 + l2*fi_2 + l3*fi_1 + l4*fi + l5*fi1 + l6*fi2&
-         + l7*fi3 + l8*fi4
+    if ( x < x1) then    ! first case  : triangle oriented left
+
+
+       if ( test_in(k11+4,k12+8,mesh%num_cells) ) then
+          fi_3 = 0._f64  
+       else
+          ni_3 = hex_to_global(mesh,k11+4,k12+8)
+          fi_3 = f_tn(ni_3) 
+       endif
+
+       if ( test_in(k11+3,k12+6,mesh%num_cells) ) then
+          fi_2 = 0._f64  
+       else
+          ni_2 = hex_to_global(mesh,k11+3,k12+6)
+          fi_2 = f_tn(ni_2) 
+       endif
+
+       if ( test_in(k11+2,k12+4,mesh%num_cells) ) then
+          fi_1 = 0._f64 
+       else
+          ni_1 = hex_to_global(mesh,k11+2,k12+4)
+          fi_1 = f_tn(ni_1)
+       endif
+
+       if ( test_in(k11+1,k12+2,mesh%num_cells) ) then
+          fi = 0._f64  
+       else
+          ni = hex_to_global(mesh,k11+1,k12+2)
+          fi = f_tn(ni)
+       endif
+
+       if ( test_in(k11,k12,mesh%num_cells) ) then
+          fi1 = 0._f64  
+       else
+          ni1 = hex_to_global(mesh,k11,k12)
+          fi1 = f_tn(ni1)
+       endif
+
+       if ( test_in(k11-1,k12-2,mesh%num_cells) ) then
+          fi2 = 0._f64  
+       else
+          ni2 = hex_to_global(mesh,k11-1,k12-2)
+          fi2 = f_tn(ni2)
+       endif
+
+       if ( test_in(k11-2,k12-4,mesh%num_cells) ) then
+          fi3 = 0._f64  
+       else
+          ni3 = hex_to_global(mesh,k11-2,k12-4)
+          fi3 = f_tn(ni3)
+       endif
+
+       if ( test_in(k11-3,k12-3,mesh%num_cells) ) then
+          fi4 = 0._f64  
+       else
+          ni4 = hex_to_global(mesh,k11-3,k12-3)
+          fi4 = f_tn(ni4)
+       endif
+
+
+       center_value2 = r1*fi_3 + r2*fi_2 + r3*fi_1 + r4*fi + r5*fi1 + r6*fi2&
+            + r7*fi3 + r8*fi4
+
+
+       if ( test_in(k11-7,k12-3,mesh%num_cells) ) then
+          fi_3 = 0._f64  
+       else
+          ni_3 = hex_to_global(mesh,k11-7,k12-3)
+          fi_3 = f_tn(ni_3) 
+       endif
+
+       if ( test_in(k11-5,k12-2,mesh%num_cells) ) then
+          fi_2 = 0._f64  
+       else
+          ni_2 = hex_to_global(mesh,k11-5,k12-2)
+          fi_2 = f_tn(ni_2) 
+       endif
+
+       if ( test_in(k11-3,k12-1,mesh%num_cells) ) then
+          fi_1 = 0._f64 
+       else
+          ni_1 = hex_to_global(mesh,k11-3,k12-1)
+          fi_1 = f_tn(ni_1)
+       endif
+
+       if ( test_in(k11-1,k12,mesh%num_cells) ) then
+          fi = 0._f64  
+       else
+          ni = hex_to_global(mesh,k11-1,k12)
+          fi = f_tn(ni)
+       endif
+
+       if ( test_in(k11+1,k12+1,mesh%num_cells) ) then
+          fi1 = 0._f64  
+       else
+          ni1 = hex_to_global(mesh,k11+1,k12+1)
+          fi1 = f_tn(ni1)
+       endif
+
+       if ( test_in(k11+3,k12+2,mesh%num_cells) ) then
+          fi2 = 0._f64  
+       else
+          ni2 = hex_to_global(mesh,k11+3,k12+2)
+          fi2 = f_tn(ni2)
+       endif
+
+       if ( test_in(k11+5,k12+3,mesh%num_cells) ) then
+          fi3 = 0._f64  
+       else
+          ni3 = hex_to_global(mesh,k11+5,k12+3)
+          fi3 = f_tn(ni3)
+       endif
+
+       if ( test_in(k11+7,k12+4,mesh%num_cells) ) then
+          fi4 = 0._f64  
+       else
+          ni4 = hex_to_global(mesh,k11+7,k12+4)
+          fi4 = f_tn(ni4)
+       endif
+
+       center_value3 = r1*fi_3 + r2*fi_2 + r3*fi_1 + r4*fi + r5*fi1 + r6*fi2&
+            + r7*fi3 + r8*fi4
+
+
+    else                 ! second case : triangle oriented right
+
+
+
+       if ( test_in(k11+4,k12+7,mesh%num_cells) ) then
+          fi_3 = 0._f64  
+       else
+          ni_3 = hex_to_global(mesh,k11+4,k12+7)
+          fi_3 = f_tn(ni_3) 
+       endif
+
+       if ( test_in(k11+3,k12+5,mesh%num_cells) ) then
+          fi_2 = 0._f64  
+       else
+          ni_2 = hex_to_global(mesh,k11+3,k12+5)
+          fi_2 = f_tn(ni_2) 
+       endif
+
+       if ( test_in(k11+2,k12+3,mesh%num_cells) ) then
+          fi_1 = 0._f64 
+       else
+          ni_1 = hex_to_global(mesh,k11+2,k12+3)
+          fi_1 = f_tn(ni_1)
+       endif
+
+       if ( test_in(k11+1,k12+1,mesh%num_cells) ) then
+          fi = 0._f64  
+       else
+          ni = hex_to_global(mesh,k11+1,k12+1)
+          fi = f_tn(ni)
+       endif
+
+       if ( test_in(k11,k12-1,mesh%num_cells) ) then
+          fi1 = 0._f64  
+       else
+          ni1 = hex_to_global(mesh,k11,k12-1)
+          fi1 = f_tn(ni1)
+       endif
+
+       if ( test_in(k11-1,k12-3,mesh%num_cells) ) then
+          fi2 = 0._f64  
+       else
+          ni2 = hex_to_global(mesh,k11-1,k12-3)
+          fi2 = f_tn(ni2)
+       endif
+
+       if ( test_in(k11-3,k12-5,mesh%num_cells) ) then
+          fi3 = 0._f64  
+       else
+          ni3 = hex_to_global(mesh,k11-3,k12-5)
+          fi3 = f_tn(ni3)
+       endif
+
+       if ( test_in(k11-4,k12-7,mesh%num_cells) ) then
+          fi4 = 0._f64  
+       else
+          ni4 = hex_to_global(mesh,k11-4,k12-7)
+          fi4 = f_tn(ni4)
+       endif
+
+
+       center_value2 = r8*fi_3 + r7*fi_2 + r6*fi_1 + r5*fi + r4*fi1 + r3*fi2&
+            + r2*fi3 + r1*fi4
+
+
+       if ( test_in(k11-6,k12-3,mesh%num_cells) ) then
+          fi_3 = 0._f64  
+       else
+          ni_3 = hex_to_global(mesh,k11-6,k12-3)
+          fi_3 = f_tn(ni_3) 
+       endif
+
+       if ( test_in(k11-4,k12-2,mesh%num_cells) ) then
+          fi_2 = 0._f64  
+       else
+          ni_2 = hex_to_global(mesh,k11-4,k12-2)
+          fi_2 = f_tn(ni_2) 
+       endif
+
+       if ( test_in(k11-2,k12-1,mesh%num_cells) ) then
+          fi_1 = 0._f64 
+       else
+          ni_1 = hex_to_global(mesh,k11-2,k12-1)
+          fi_1 = f_tn(ni_1)
+       endif
+
+       if ( test_in(k11,k12,mesh%num_cells) ) then
+          fi = 0._f64  
+       else
+          ni = hex_to_global(mesh,k11,k12)
+          fi = f_tn(ni)
+       endif
+
+       if ( test_in(k11+2,k12+1,mesh%num_cells) ) then
+          fi1 = 0._f64  
+       else
+          ni1 = hex_to_global(mesh,k11+2,k12+1)
+          fi1 = f_tn(ni1)
+       endif
+
+       if ( test_in(k11+4,k12+2,mesh%num_cells) ) then
+          fi2 = 0._f64  
+       else
+          ni2 = hex_to_global(mesh,k11+4,k12+2)
+          fi2 = f_tn(ni2)
+       endif
+
+       if ( test_in(k11+6,k12+3,mesh%num_cells) ) then
+          fi3 = 0._f64  
+       else
+          ni3 = hex_to_global(mesh,k11+6,k12+3)
+          fi3 = f_tn(ni3)
+       endif
+
+       if ( test_in(k11+8,k12+4,mesh%num_cells) ) then
+          fi4 = 0._f64  
+       else
+          ni4 = hex_to_global(mesh,k11+8,k12+4)
+          fi4 = f_tn(ni4)
+       endif
+
+       center_value3 = r8*fi_3 + r7*fi_2 + r6*fi_1 + r5*fi + r4*fi1 + r3*fi2&
+            + r2*fi3 + r1*fi4
+    endif
+
+    !center_value = ( center_value1 + center_value2 + center_value3)/3._f64
+    !center_value = center_value3
+
 
   end subroutine reconstruction_center_values
+
+
+
+  
+  
+  subroutine  print_method(num_method)
+    sll_int32, intent(in) :: num_method
+
+    if (num_method == 9 ) then
+       print*, 
+       print*, "*********************************"
+       print*, " Zienkiewicz_9_degree_of_freedom "
+       print*, "*********************************"
+       print*, 
+    else if (num_method == 10 ) then
+       print*, 
+       print*, "*********************************"
+       print*," Zienkiewicz_10_degree_of_freedom"
+       print*, "*********************************"
+       print*, 
+    else if (num_method == 11 ) then 
+       print*, 
+       print*, "*********************************"
+       print*, "   Hsieh_Clough_Tocher_reduced   "
+       print*, "*********************************"
+       print*, 
+    else if (num_method == 12 ) then 
+       print*, 
+       print*, "*********************************"
+       print*, "   Hsieh_Clough_Tocher_complete   "
+       print*, "*********************************"
+       print*, 
+    else if (num_method == 15 ) then 
+       print*, 
+       print*, "*********************************"
+       print*, "  quartic element of Ganev_Dimitrov "
+       print*, "*********************************"
+       print*, 
+    else
+       print*, "specify another number correspoonding to a existing implemented method 9, 10, 11, 12 or 15"
+    endif
+
+  end subroutine print_method
+
+
+
 
 end module sll_interpolation_hex_hermite
