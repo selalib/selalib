@@ -23,6 +23,7 @@
 !> <b> Modules available </b>
 !>  List fortran module available
 !>  - sll_logical_meshes
+!>  - sll_hex_meshes
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_logical_meshes.h' \endcode
