@@ -683,6 +683,12 @@ contains
   end subroutine index_hex_to_global
 
 
+  !> @brief Computes the first coordinate of a given point
+  !> @details Computes the first coordinate on the cartesian system 
+  !> of a point which has for hexagonal coordinates (i,j)
+  !> @param i integer denoting the first hexagonal coordinate of a point
+  !> @param j integer denoting the second hexagonal coordinate of a point
+  !> returns res real containing the coordinate "eta1"
   function eta1_node_hex(mesh, i, j) result(res)
     ! The coordinates (i, j) correspond to the (r1, r2) basis
     ! This function returns the 1st coordinate on the cartesian system
@@ -694,6 +700,12 @@ contains
     res = mesh%r1_x1*i + mesh%r2_x1*j + mesh%center_x1
   end function eta1_node_hex
 
+  !> @brief Computes the second coordinate of a given point
+  !> @details Computes the second coordinate on the cartesian system 
+  !> of a point which has for hexagonal coordinates (i,j)
+  !> @param i integer denoting the first hexagonal coordinate of a point
+  !> @param j integer denoting the second hexagonal coordinate of a point
+  !> returns res real containing the coordinate "eta2"
   function eta2_node_hex(mesh, i, j) result(res)
     ! The coordinates (k1, k2) correspond to the (r1, r2) basis
     ! This function the 2nd coordinate on the cartesian system
