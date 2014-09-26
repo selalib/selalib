@@ -30,11 +30,7 @@ ${CMAKE} \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DHDF5_PARALLEL_ENABLED=ON \
 	${WORKSPACE}/prototype/src 
-make NightlyUpdate
-make NightlyConfigure
-make NightlyBuild
-make NightlyTest
-make NightlySubmit
+make Experimental
 }; cd -
 
 rm -rf build
