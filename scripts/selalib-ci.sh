@@ -10,6 +10,38 @@ awk '/^Author/ {sub(/\\$/,""); getline t; print $0 t; next}; 1' | \
 sed -e 's/^Author: //g' | \
 sed -e 's/>Date:   \([0-9]*-[0-9]*-[0-9]*\)/>\t\1/g' | \
 sed -e 's/^\(.*\) \(\)\t\(.*\)/\3    \1    \2/g' > ChangeLog
+
+if [[ `hostname` == "irma-hpc" ]]; then
+  source /opt/intel/composerxe/bin/compilervars.sh intel64
+  source /opt/intel/mkl/bin/mklvars.sh intel64
+  source /opt/intel/impi/4.1.0.024/intel64/bin/mpivars.sh
+  export FC=ifort
+  export CC=icc
+  export I_MPI_F90=ifort
+  export I_MPI_CC=icc
+  export HDF5_ROOT=/opt/local
+  export FFTW_ROOT=/opt/local
+fi
+
+rm -rf build
+mkdir build
+cd build; {
+${CMAKE} \
+	-DCMAKE_BUILD_TYPE=Release \
+	-DHDF5_PARALLEL_ENABLED=ON \
+	${HOMEDIR}/selalib/prototype/src 
+make NightlyUpdate
+make NightlyConfigure
+make NightlyBuild
+make NightlyTest
+make NightlySubmit
+}; cd -
+
+rm -rf build
+
+exit 0
+
+
 mkdir build
 cd build; {
 cmake ../prototype/src
