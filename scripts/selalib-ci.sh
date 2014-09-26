@@ -12,7 +12,7 @@ sed -e 's/>Date:   \([0-9]*-[0-9]*-[0-9]*\)/>\t\1/g' | \
 sed -e 's/^\(.*\) \(\)\t\(.*\)/\3    \1    \2/g' > ChangeLog
 mkdir build
 cd build; {
-cmake ..
+cmake ../prototype/src
 make NightlyUpdate
 make NightlyConfigure
 make NightlyBuild
