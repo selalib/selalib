@@ -30,7 +30,8 @@ contains
 !> write files to visualize 2d fields with gnuplot
 subroutine plot_two_fields(fname, n1, n2, f1, f2, iplot, time )
 
-sll_int32, intent(in) :: n1, n2
+sll_int32, intent(in) :: n1  !< size of f1 and f2 first index
+sll_int32, intent(in) :: n2  !< size of f1 and f2 second index
 sll_real64, dimension(n1,n2), intent(in) :: f1 !< first field 2d
 sll_real64, dimension(n1,n2), intent(in) :: f2 !< second field 2d
 integer :: iplot !< plot counter

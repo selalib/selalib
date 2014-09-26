@@ -22,6 +22,7 @@ use sll_boundary_condition_descriptors
 
 implicit none
 
+!> Local type contains edge properties
 type :: edge_type
 
    sll_real64                            :: length 
@@ -75,6 +76,7 @@ type, public :: maxwell_2d_diga
 
 end type maxwell_2d_diga
 
+!> Create a Maxwell solver using DG method in 2D
 interface new_maxwell_2d_diga
    module procedure new_maxwell_2d_digal
 end interface new_maxwell_2d_diga
@@ -141,14 +143,14 @@ subroutine initialize_maxwell_2d_diga( this,         &
                                        flux_type)
 
    type(maxwell_2d_diga)       :: this !< solver data object
-   sll_transformation, pointer :: tau
-   sll_int32                   :: polarization
-   sll_int32                   :: degree
-   sll_int32, intent(in)       :: bc_east
-   sll_int32, intent(in)       :: bc_west
-   sll_int32, intent(in)       :: bc_north
-   sll_int32, intent(in)       :: bc_south
-   sll_int32, optional         :: flux_type
+   sll_transformation, pointer :: tau  !< transformation
+   sll_int32                   :: polarization !< TE or TM
+   sll_int32                   :: degree !< degree of DG method
+   sll_int32, intent(in)       :: bc_east !< Boundary condition
+   sll_int32, intent(in)       :: bc_west !< Boundary condition
+   sll_int32, intent(in)       :: bc_north !< Boundary condition
+   sll_int32, intent(in)       :: bc_south !< Boundary condition
+   sll_int32, optional         :: flux_type !< centered or not
 
    sll_int32                   :: nddl
    sll_int32                   :: ncells
@@ -298,9 +300,9 @@ subroutine solve_maxwell_2d_diga( this, fx, fy, fz, dx, dy, dz )
    type(dg_field)  :: fy   !< y electric field
    type(dg_field)  :: fz   !< z magnetic field
 
-   type(dg_field)  :: dx  
-   type(dg_field)  :: dy  
-   type(dg_field)  :: dz  
+   type(dg_field)  :: dx   !< x size step
+   type(dg_field)  :: dy   !< y size step
+   type(dg_field)  :: dz   !< z size step
 
    sll_int32  :: left, right, node, side, bc_type, flux_type
    sll_int32  :: i, j, k, l, ii, jj, kk
