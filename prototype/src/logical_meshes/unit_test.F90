@@ -23,10 +23,10 @@ program unit_test_logical_meshes
 
   m2d_xy => m1d_x * m1d_y
   call sll_display(m2d_xy)
-  call delete(m2d_xy)
+  call sll_delete(m2d_xy)
 
-  call delete(m1d_x)
-  call delete(m1d_y)
+  call sll_delete(m1d_x)
+  call sll_delete(m1d_y)
   
   m2d => new_logical_mesh_2d(100,100)
   m3d => new_logical_mesh_3d(100,100,100)
@@ -36,19 +36,19 @@ program unit_test_logical_meshes
   call sll_display(m3d)
   call sll_display(m4d)
 
-  call delete(m2d)
-  call delete(m3d)
-  call delete(m4d)
+  call sll_delete(m2d)
+  call sll_delete(m3d)
+  call sll_delete(m4d)
 
   mx => new_logical_mesh_2d(100,100, 0.0_f64, 12.56_f64, 0.0_f64, 12.56_f64)
   mv => new_logical_mesh_2d(64,64,-6.0_f64,6.0_f64,-6.0_f64,6.0_f64)
 
   mxv => mx * mv
   call sll_display(mxv)
-  call delete(mxv)
+  call sll_delete(mxv)
 
-  call delete(mx)
-  call delete(mv)
+  call sll_delete(mx)
+  call sll_delete(mv)
 
   print *, 'PASSED'
 

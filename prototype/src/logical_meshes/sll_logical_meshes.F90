@@ -92,6 +92,8 @@ module sll_logical_meshes
   end interface sll_delete
 
 
+  !> Tensor product 
+  interface operator(*)
      module procedure tensor_product_1d_1d
      module procedure tensor_product_2d_2d
   end interface operator(*)
