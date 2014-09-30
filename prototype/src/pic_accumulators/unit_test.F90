@@ -51,7 +51,7 @@ program accumulate_tester
 ! I changed the type of all_charge in order to do multi-threading
 ! 
   call sll_delete( part_group )
-  call delete( m2d )
+  call sll_delete( m2d )
   call sll_delete( all_charge )
 
   print*, "PASSED"
