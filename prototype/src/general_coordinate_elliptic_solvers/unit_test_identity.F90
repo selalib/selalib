@@ -376,7 +376,7 @@ program test_general_elliptic_solver
   call phi%write_to_file(0)
   
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()

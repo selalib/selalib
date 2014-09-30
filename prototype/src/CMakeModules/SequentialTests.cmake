@@ -16,8 +16,6 @@ ADD_TEST(NAME lagrange                  COMMAND test_lagrange)
 ADD_TEST(NAME toeplitz_penta_diagonal   COMMAND test_toeplitz_penta_diagonal)
 ADD_TEST(NAME cubic_splines             COMMAND test_splines) 
 ADD_TEST(NAME splines_arbitrary_degree  COMMAND test_arbitrary_degree_splines)
-ADD_TEST(NAME quintic_splines           COMMAND test_quintic_splines)
-ADD_TEST(NAME odd_degree_splines        COMMAND test_odd_degree_splines)
 ADD_TEST(NAME cubic_non_uniform_splines COMMAND test_non_unif_splines)
 ADD_TEST(NAME integration               COMMAND test_integration)
 ADD_TEST(NAME lagrange_interpolation    COMMAND test_lagrange_interpolation)
@@ -36,8 +34,6 @@ SET_TESTS_PROPERTIES(toeplitz_penta_diagonal PROPERTIES PASS_REGULAR_EXPRESSION 
 SET_TESTS_PROPERTIES(cubic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(splines_arbitrary_degree PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(deboor_spline PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(quintic_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-SET_TESTS_PROPERTIES(odd_degree_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(cubic_non_uniform_splines PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(integration PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 SET_TESTS_PROPERTIES(lagrange_interpolation PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
@@ -187,16 +183,6 @@ ENDIF(PYTHON3_FOUND)
       SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
    ENDIF()
 
-ADD_TEST(NAME quintic_1d COMMAND test_quintic_interpolators_1d)
-SET_TESTS_PROPERTIES(quintic_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME quintic_1d_nonuniform COMMAND test_quintic_interpolators_1d_nonuniform)
-SET_TESTS_PROPERTIES(quintic_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
-ADD_TEST(NAME odd_degree_1d COMMAND test_odd_degree_interpolators_1d)
-SET_TESTS_PROPERTIES(odd_degree_1d PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-ADD_TEST(NAME odd_degree_1d_nonuniform COMMAND test_odd_degree_interpolators_1d_nonuniform)
-SET_TESTS_PROPERTIES(odd_degree_1d_nonuniform PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
 ADD_TEST(NAME mapped_meshes COMMAND test_mapped_meshes_1d
@@ -207,9 +193,7 @@ ADD_TEST(NAME ode_solvers COMMAND test_implicit_ode_nonuniform)
 ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
                           bsl_1d_cubic_nonuniform_periodic
                           bsl_1d_cubic_uniform_compact
-                          bsl_1d_cubic_nonuniform_compact
-                          bsl_1d_quintic_uniform_compact
-                          bsl_1d_quintic_nonuniform_compact)
+                          bsl_1d_cubic_nonuniform_compact)
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)

@@ -376,7 +376,7 @@ program test_general_elliptic_solver
   call phi%write_to_file(0)
   
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -641,7 +641,7 @@ program test_general_elliptic_solver
 
 
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -908,7 +908,7 @@ program test_general_elliptic_solver
   
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -1161,7 +1161,7 @@ program test_general_elliptic_solver
        ' integrale de la solution exacte=',sum(reference(1:npts1-1,1:npts2-1))*h1*h2
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -1437,7 +1437,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -1716,7 +1716,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -1988,7 +1988,7 @@ program test_general_elliptic_solver
        'integrale de la solution excate=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -2264,7 +2264,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -2592,7 +2592,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -2921,7 +2921,7 @@ program test_general_elliptic_solver
   call phi%write_to_file(0)
   call rho%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -3243,7 +3243,7 @@ program test_general_elliptic_solver
 
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -3563,7 +3563,7 @@ program test_general_elliptic_solver
   
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
@@ -3878,7 +3878,7 @@ program test_general_elliptic_solver
        'integrale de la solution exacte=', integrale_solution_exacte
   call phi%write_to_file(0)
   ! delete things...
-  call delete(es)
+  call sll_delete(es)
   call rho%delete()
   call c_field%delete()
   call phi%delete()
