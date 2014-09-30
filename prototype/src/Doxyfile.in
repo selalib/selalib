@@ -713,7 +713,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
 @CMAKE_CURRENT_SOURCE_DIR@/mapped_meshes \
-@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers_parallel \
 @CMAKE_CURRENT_SOURCE_DIR@/mesh_calculus \
 @CMAKE_CURRENT_SOURCE_DIR@/mudpack \
 @CMAKE_CURRENT_SOURCE_DIR@/multigrid \
@@ -739,11 +738,9 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
 @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
 @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
-@CMAKE_CURRENT_SOURCE_DIR@/file_io_parallel \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
 @CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
-@CMAKE_CURRENT_SOURCE_DIR@/logical_meshes \
 @CMAKE_CURRENT_SOURCE_DIR@/logical_meshes_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_accumulators \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_methods \

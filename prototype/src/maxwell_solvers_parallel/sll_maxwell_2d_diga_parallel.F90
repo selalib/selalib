@@ -23,7 +23,7 @@ use sll_maxwell_2d_diga_parallel
 
 implicit none
 
-!> method in two dimensions with general coordinates
+!>DG method in two dimensions with general coordinates
 type, public :: maxwell_2d_diga_parallel
 
    sll_transformation, pointer              :: tau  !< transformation
@@ -52,6 +52,7 @@ type, public :: maxwell_2d_diga_parallel
 
 end type maxwell_2d_diga_parallel
 
+!> Allocate data to initialize solver
 interface new
    module procedure new_maxwell_2d_diga_parallel
 end interface new
@@ -116,14 +117,14 @@ subroutine initialize_maxwell_2d_diga_parallel(      &
                                        flux_type)
 
    type(maxwell_2d_diga)       :: this !< solver data object
-   sll_transformation, pointer :: tau
-   sll_int32                   :: polarization
-   sll_int32                   :: degree
-   sll_int32, intent(in)       :: bc_east
-   sll_int32, intent(in)       :: bc_west
-   sll_int32, intent(in)       :: bc_north
-   sll_int32, intent(in)       :: bc_south
-   sll_int32, optional         :: flux_type
+   sll_transformation, pointer :: tau  !< Coordinate transformation
+   sll_int32                   :: polarization !< TE or TM
+   sll_int32                   :: degree       !< polynomial degree
+   sll_int32, intent(in)       :: bc_east      !< boundary condition
+   sll_int32, intent(in)       :: bc_west      !< boundary condition
+   sll_int32, intent(in)       :: bc_north     !< boundary condition
+   sll_int32, intent(in)       :: bc_south     !< boundary condition
+   sll_int32, optional         :: flux_type    !< centered or not 
 
    sll_int32                   :: nddl
    sll_int32                   :: ncells
@@ -273,9 +274,9 @@ subroutine solve_maxwell_2d_diga_parallel( this, fx, fy, fz, dx, dy, dz )
    type(dg_field)  :: fy   !< y electric field
    type(dg_field)  :: fz   !< z magnetic field
 
-   type(dg_field)  :: dx  
-   type(dg_field)  :: dy  
-   type(dg_field)  :: dz  
+   type(dg_field)  :: dx   !< x step size
+   type(dg_field)  :: dy   !< y step size
+   type(dg_field)  :: dz   !< z step size
 
    sll_int32  :: left, right, node, side, bc_type, flux_type
    sll_int32  :: i, j, k, l, ii, jj, kk
