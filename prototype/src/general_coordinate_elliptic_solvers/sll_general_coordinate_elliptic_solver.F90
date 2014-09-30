@@ -82,9 +82,9 @@ module sll_general_coordinate_elliptic_solver_module
   ! For the integration mode.  
   sll_int32, parameter :: ES_GAUSS_LEGENDRE = 0, ES_GAUSS_LOBATTO = 1
   
-  interface delete
+  interface sll_delete
      module procedure delete_elliptic
-  end interface delete
+  end interface sll_delete
 
   interface initialize
      module procedure initialize_general_elliptic_solver
