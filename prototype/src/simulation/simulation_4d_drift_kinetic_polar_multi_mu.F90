@@ -2447,7 +2447,7 @@ subroutine gyroaverage_phi_dk( sim )
             do iloc2=1, loc3d_sz_x2
               do iloc1=1, loc3d_sz_x1
                 sim%phi3d_seqx1x2(iloc1,iloc2,:) = &
-                ((sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1))-1._f64)*sim%Ti_r(iloc1))
+                ((sim%rho3d_seqx1x2(iloc1,iloc2,:)/sim%n0_r(iloc1))-1._f64)*sim%Ti_r(iloc1)
               enddo
             enddo
       
@@ -2457,8 +2457,10 @@ subroutine gyroaverage_phi_dk( sim )
         end select
    
         do iloc3=1, loc3d_sz_x3
-          call solve_qns_polar_splines( sim%mat,&
-            sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2,iloc3) )
+          call solve_qns_polar_splines( sim%mat, &
+            sim%phi3d_seqx1x2(1:nc_x1+1,1:nc_x2,iloc3), &
+            nc_x1, &
+            nc_x2 )
           sim%phi3d_seqx1x2(1:nc_x1+1,nc_x2+1,iloc3) &
             =  sim%phi3d_seqx1x2(1:nc_x1+1,1,iloc3)
         enddo

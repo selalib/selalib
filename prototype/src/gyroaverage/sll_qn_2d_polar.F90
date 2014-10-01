@@ -2358,7 +2358,7 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
     endif
     call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),tmp)
     val = 0._f64 !temporary because DBESJ not recognized on helios 
-    val = DBESJN(0,tmp*rho(1)/eta_max(1))
+    !val = DBESJN(0,tmp*rho(1)/eta_max(1))
     !print *,i,j,mode_max,alpha,tmp      
   end subroutine solution_polar_circle
 
