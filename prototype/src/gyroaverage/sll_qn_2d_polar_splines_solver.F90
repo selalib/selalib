@@ -114,14 +114,13 @@ do i=1,N_mu
   rho_points(i)=sqrt(2._f64*mu_points(i))
 enddo
      
-call precompute_double_gyroaverage_matrix_polar_splines(qn%quasineutral,rho_points,N_mu)
-call precompute_inverse_qn_matrix_polar_splines(qn%quasineutral,mu_points,mu_weights,N_mu)  
+!call precompute_double_gyroaverage_matrix_polar_splines(qn%quasineutral,rho_points,N_mu)
+!call precompute_inverse_qn_matrix_polar_splines(qn%quasineutral,mu_points,mu_weights,N_mu)  
 
-    
 !    print *, '#Start time mark t0'
 !    call sll_set_time_mark(t0)
 !print *,"# STEP 1 : pre_compute_double_gyroaverage_matrix_polar_splines"
-!        call pre_compute_double_gyroaverage_matrix_polar_splines(qn%quasineutral,rho_points,N_mu)
+!        call precompute_double_gyroaverage_matrix_polar_splines(qn%quasineutral,rho_points,N_mu)!
 !        time1 = sll_time_elapsed_since(t0)
 !        print *, '#time elapsed for STEP 1 : ',time1
 !print *,"# STEP 2 : compute_double_gyroaverage_matrix_polar_splines"

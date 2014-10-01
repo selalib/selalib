@@ -376,6 +376,7 @@ contains
     sll_int32 :: i
     sll_comp64, dimension(:,:), allocatable :: mat_stock1
     sll_comp64, dimension(:,:), allocatable :: mat_stock2
+    sll_comp64, dimension(:,:), allocatable :: mat_stock3
     sll_int32 :: ierr
     
     
@@ -384,13 +385,14 @@ contains
     
     SLL_ALLOCATE(mat_stock1(Nr+1,Nr+1), ierr)
     SLL_ALLOCATE(mat_stock2(Nr+1,Nr+1), ierr)
+    SLL_ALLOCATE(mat_stock3(Nr+1,Nr+1), ierr)
     
      
     mat = (0._f64,0._f64)
     do m=1,Ntheta
       mat_stock1 = (0._f64,0._f64)
       mat_stock2 = (0._f64,0._f64)
-      call matrix_product_comp( &
+      call matrix_product_compf( &
         D_contr(m,:,:), &
         Nr+1, &
         Nr+3, &
@@ -398,7 +400,7 @@ contains
         Nr+3, &
         Nr+1, &
         mat_stock1)
-!      call matrix_product_comp( &
+ !     call matrix_product_comp( &
 !        mat_stock1(:,:), &
 !        Nr+1, &
 !        Nr+1, &
@@ -407,20 +409,37 @@ contains
 !        Nr+1, &
 !        mat_stock2)
 !
-      call matrix_product_comp( &
-        transpose(mat_stock1(:,:)), &
+     !print *,'mat_stock1 l1',m,mat_stock1(1,1),mat_stock1(1,2)
+     !print *,'mat_stock1 l1',m,mat_stock1(2,1),mat_stock1(2,2)
+
+      !mat_stock3 = transpose(mat_stock1)
+      mat_stock3 = mat_stock1
+      call matrix_product_compf( &
+        mat_stock3, &
         Nr+1, &
         Nr+1, &
-        mat_stock1(:,:), &
+        mat_stock1, &
         Nr+1, &
         Nr+1, &
         mat_stock2)
-     ! if(m==1)then
-!        do i=1,Nr+1
-!          mat_stock2(i,i) =  mat_stock2(i,i) - (1._f64,0._f64)
-!        enddo
-      !endif  
+     ! mat_stock2 = mat_stock1
+        
+!  if(m==1)then
+
+        do i=1,Nr+1
+          mat_stock2(i,i) =  mat_stock2(i,i) - (1._f64,0._f64)
+        enddo
+
+
+!      endif  
       mat(m,:,:) = -mat_stock2
+      !mat(m,:,:) = mat_stock2
+
+
+     !print *,'mat_stock2 l1',m,mat_stock2(1,1),mat_stock2(1,2)
+     !print *,'mat_stock2 l1',m,mat_stock2(2,1),mat_stock2(2,2)
+
+
     enddo     
 
   end subroutine compute_double_gyroaverage_matrix
@@ -749,12 +768,16 @@ contains
 
 
 
+   !print *,'#begin compute_double_gyroaverage_matrix'
+
     call compute_double_gyroaverage_matrix( &
       D_spl2D, &
       D_contr, &
       num_cells_r, &
       num_cells_theta, &
       mat)
+   !print *,'#end compute_double_gyroaverage_matrix'
+
 
 !    call compute_double_gyroaverage_matrix_blas( &
 !      D_spl2D, &
@@ -812,30 +835,33 @@ contains
     SLL_ALLOCATE(IPIV(num_cells_r+1),ierr)
     SLL_ALLOCATE(WORK((num_cells_r+1)**2),ierr) 
     do i=1,num_cells_r+1
-      mat(1,i,i) = mat(1,i,i)+lambda(i)
+      do m = 1,num_cells_theta
+        mat(m,i,i) = mat(m,i,i)+lambda(i)
+      enddo  
    enddo
 
-    do m=1,num_cells_theta
-      call ZGETRF( &
-        num_cells_r+1, &
-        num_cells_r+1, &
-        mat(m,:,:), &
-        num_cells_r+1, &
-        IPIV, &
-        INFO)
-      call ZGETRI( &
-        num_cells_r+1, &
-        mat(m,:,:), &
-        num_cells_r+1, &
-        IPIV, &
-        WORK, &
-        (num_cells_r+1)**2, &
-        INFO)
-    enddo
+	do m=1,num_cells_theta
+	  call ZGETRF( &
+		num_cells_r+1, &
+		num_cells_r+1, &
+		mat(m,:,:), &
+		num_cells_r+1, &
+		IPIV, &
+		INFO)
+	  call ZGETRI( &
+		num_cells_r+1, &
+		mat(m,:,:), &
+		num_cells_r+1, &
+		IPIV, &
+		WORK, &
+		(num_cells_r+1)**2, &
+		INFO)
+	enddo
 
-    
-    
-    
+	print *,'#here is INFO'
+	print *,INFO
+
+
   end subroutine compute_qns_inverse_polar_splines
 
   subroutine solve_qns_polar_splines( &
@@ -860,7 +886,7 @@ contains
     
    
     Nr = num_cells_r
-    ntheta = num_cells_theta
+    Ntheta = num_cells_theta
     
     SLL_ALLOCATE(phi_comp(1:Nr+1,1:Ntheta),ierr)
     SLL_ALLOCATE(phi_old(1:Nr+1,1:Ntheta),ierr)
