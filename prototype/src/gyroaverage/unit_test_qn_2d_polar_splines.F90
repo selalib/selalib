@@ -59,7 +59,7 @@ implicit none
   ! 2 : Lin-Lee
   ! 3 : Gauss-Laguerre
 
-  N_mu = 60
+  N_mu = 1
   mu_max = 0.01_f64
   N_points = 32
   
@@ -161,6 +161,9 @@ implicit none
     N_points, &
     lambda)  
   call qn%precompute_qn( mu_points(0:N_mu-1), mu_weights(0:N_mu-1) , N_mu)
+  
+  
+  stop
   call qn%solve_qn(phi_restr)
 
 
