@@ -28,6 +28,8 @@ module sll_qn_2d_polar
   use sll_constants
   use sll_boundary_condition_descriptors
   use sll_timer
+  use sll_gnuplot
+  use sll_gyroaverage_utilities
 
   implicit none
 
@@ -231,6 +233,33 @@ contains
     endif
     
   end subroutine matrix_product
+ 
+   subroutine matrix_product_compf(A,NxA,NyA,B,NxB,NyB,prod)
+    sll_int32,intent(in)::NxA,NyA,NxB,NyB
+    sll_comp64,dimension(:,:),intent(in)::A
+    sll_comp64,dimension(:,:),intent(in)::B
+    sll_comp64,dimension(:,:),intent(inout) :: prod
+    sll_int32 :: i,j,k
+    sll_comp64 :: result
+    
+    if (NyA/=NxB) then
+      print *,'#incompatible sizes in matrix_product'
+      stop
+    else
+      do i = 1,NxA
+        do j = 1,NyB
+          result = 0._f64
+          do k = 1,NyA
+            result = result + A(i,k)*B(k,j)
+          enddo
+          prod(i,j)=result 
+        enddo
+      enddo
+    endif
+    
+  end subroutine matrix_product_compf
+ 
+ 
   
   
     subroutine matrix_product_comp(A,NxA,NyA,B,NxB,NyB,prod)
@@ -602,6 +631,9 @@ contains
     f_double_gyro(1:Nc(1)+1,1:Nc(2)) = f_double_gyro_restr(1:Nc(1)+1,1:Nc(2))
     f_double_gyro(:,Nc(2)+1) = f_double_gyro_restr(:,1)
     
+    print *,'#factors are',tmp_gyro,tmp_double_gyro
+    print *,'#max f_init',maxval(f_init)
+    print *,'#max f_gyro',maxval(f_gyro),maxval(f_double_gyro)
 
     print *,'#test gyroaverage'
     call compute_error(f_gyro,f_init,tmp_gyro,error,N_min,N_max)
@@ -613,6 +645,32 @@ contains
     print *,'#error subdomain=',error
     call compute_error(f_double_gyro,f_init,tmp_double_gyro,error,(/1,1/),Nc)
     print *,'#error whole domain=',error
+
+  call sll_gnuplot_corect_2d( &
+    eta_min(1), &
+    eta_max(1), &
+    Nc(1)+1, &
+    0._f64, &
+    2._f64*sll_pi, &
+    Nc(2)+1, &
+    f_init, &
+    "f_init", &
+    1, &
+    ierr)
+
+
+  call sll_gnuplot_corect_2d( &
+    eta_min(1), &
+    eta_max(1), &
+    Nc(1)+1, &
+    0._f64, &
+    2._f64*sll_pi, &
+    Nc(2)+1, &
+    f_double_gyro, &
+    "f_double_gyro", &
+    1, &
+    ierr)
+
   
   end subroutine test_double_gyroaverage
   
@@ -967,6 +1025,7 @@ contains
         mat_stock2 = (0._f64,0._f64)
         call matrix_product_comp(D_contr(p,m,:,:),Nr+1,Nr+3,D_spl2D(m,:,:),Nr+3,Nr+1,mat_stock1)
         !call matrix_product_comp(mat_stock1(:,:),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
+
         call matrix_product_comp(transpose(mat_stock1(:,:)),Nr+1,Nr+1,mat_stock1(:,:),Nr+1,Nr+1,mat_stock2)
         !print *,p,abs(mat_stock2(1,1)),abs(mat_stock2(1,2)),abs(mat_stock2(1,3)), &
         !  abs(mat_stock2(16,16)),abs(mat_stock2(16,15)),abs(mat_stock2(16,17))
@@ -1110,9 +1169,10 @@ contains
       call solution_polar_circle(rho2d,mode,eta_min,eta_max,tmp1)
       !gamma0 = gamma0 + mu_weights(p)*dexp(-mu_points(p))*(1._f64-tmp1**2)
       gamma0 = gamma0 + mu_weights(p)*(1._f64-tmp1**2)
-    enddo
+      !gamma0 = gamma0 + mu_weights(p)*(tmp1**2)
+     enddo
     
-    gamma0 = 1._f64-gamma0
+    !gamma0 = 1._f64-gamma0
 
     
   end function compute_gamma0_quadrature 
@@ -2214,85 +2274,6 @@ subroutine splcoefnat1dold(p,dnat,lnat,N)
 
 
 
-  subroutine compute_shape_circle(points,N_points)
-    sll_int32,intent(in) :: N_points
-    sll_real64,dimension(:,:) ::points
-    sll_int32 :: i
-    sll_real64 :: x
-    do i=1,N_points
-      x = 2._f64*sll_pi*real(i,f64)/(real(N_points,f64))
-      points(1,i) = cos(x)
-      points(2,i) = sin(x)
-      points(3,i) = 1._f64/real(N_points,f64)
-    enddo
-   
-  end subroutine compute_shape_circle
-
-
-  subroutine compute_init_f_polar(f,mode,N,eta_min,eta_max)
-    sll_real64,dimension(:,:),intent(out)::f
-    sll_int32,intent(in)::N(2),mode(2)
-    sll_real64,intent(in)::eta_min(2),eta_max(2)
-    sll_int32::i,j
-    sll_real64::eta(2),delta_eta(2),kmode,val
-
-    call zero_bessel_dir_dir(mode,eta_min(1),eta_max(1),val)
-    delta_eta(1)=(eta_max(1)-eta_min(1))/real(N(1),f64)
-    delta_eta(2)=(eta_max(2)-eta_min(2))/real(N(2),f64)
-    
-    kmode=real(mode(2),f64)*(2._f64*sll_pi)/(eta_max(2)-eta_min(2))
-
-    do j=1,N(2)+1
-      eta(2)=eta_min(2)+real(j-1,f64)*delta_eta(2)
-      do i=1,N(1)+1
-        eta(1)=eta_min(1)+real(i-1,f64)*delta_eta(1)
-        eta(1)=val*eta(1)/eta_max(1)
-        f(i,j)= 0._f64 !temporary, because DBESJ not recognized on helios
-        f(i,j) = (DBESJN(mode(2),val)*DBESYN(mode(2),eta(1))-DBESYN(mode(2),val)*DBESJN(mode(2),eta(1)))*cos(kmode*eta(2))
-      enddo
-    enddo   
-    
-  end subroutine compute_init_f_polar
-  
-  
-   subroutine zero_bessel_dir_dir(mode,eta_min,eta_max,val)
-    sll_real64,intent(in)::eta_min,eta_max
-    sll_int32,intent(in)::mode(2)
-    sll_real64,intent(out)::val
-    sll_real64::alpha,tmp
-    sll_int32::mode_max(2),i,j
-    logical::is_file
-    val=0._f64
-    INQUIRE(FILE="zeros_bessel.txt", EXIST=is_file)
-    if((is_file).eqv.(.false.))then
-      print *,'#file zeros_bessel.txt does not exist'
-      return
-    endif  
-    open(27,file='zeros_bessel.txt',action="read")
-      read(27,*) mode_max(1),mode_max(2),alpha
-    close(27) 
-    if((mode(1)<1).or.(mode(1)>mode_max(1)))then
-      print *,'#bad value of mode(1) vs mode_max(1)',mode(1),mode_max(1)
-      return
-    endif
-    if((mode(2)<0).or.(mode(2)>mode_max(2)))then
-      print *,'#bad value of mode(2) vs mode_max(2)',mode(2),mode_max(2)
-      return
-    endif
-    if(abs(alpha-eta_min/eta_max)>1.e-12)then
-      print *,'#bad value of rmin/rmax w.r.t zeros_bessel.txt',eta_min/eta_max,alpha
-      return
-    endif
-    open(27,file='zeros_bessel.txt',action="read")
-      read(27,*) mode_max(1),mode_max(2),alpha
-      read(27,*) i,j,tmp
-      do while((i.ne.mode(1)).or.(j.ne.mode(2)))
-        read(27,*) i,j,tmp
-      enddo
-    close(27) 
-    val = tmp
-      
-  end subroutine zero_bessel_dir_dir
 
 
   subroutine compute_N_bounds_polar_circle(N_min,N_max,N,rho,eta_min,eta_max)
