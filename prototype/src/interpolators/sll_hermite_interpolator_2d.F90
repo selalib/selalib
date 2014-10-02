@@ -15,17 +15,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
-!Hermite interpolation in 2d
-!derivatives are given with finite stencil formulae of order p
-!which can be arbitrary in each direction
-!If p is odd, the reconstruction has discontinuous derivatives
-!If p is even, the reconstruction has continuous derivatives
-!p=6 should be quite similar to cubic splines
-!do not hesitate to take large odd p, like the favourite p=17
-!! WARNING
-! for the moment only in implementation for the case DIRICHLET x PERIODIC
-
-
+!>Hermite interpolation in 2d
+!!derivatives are given with finite stencil formulae of order p
+!!which can be arbitrary in each direction
+!!If p is odd, the reconstruction has discontinuous derivatives
+!!If p is even, the reconstruction has continuous derivatives
+!!p=6 should be quite similar to cubic splines
+!!do not hesitate to take large odd p, like the favourite p=17
+!!@todo
+!! for the moment only in implementation for the case DIRICHLET x PERIODIC
 module sll_hermite_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
@@ -35,19 +33,12 @@ module sll_hermite_interpolator_2d
   use sll_hermite_interpolation_2d_module
   implicit none
 
-! The hermite-based interpolator is only a wrapper around the capabilities
-! of the hermite interpolation. 
-! All interpolators share a common interface with
-! respect to their use, as described by the interpolator_2d_base class.
-! Where the diverse interpolators diverge is in the way to initialize them.
-! We basically copy the analog for cubic splines
-! We could generalize this procedure for all abstract types
-! that is, we define a basic type which is not abstract and could be used 
-! in fortran 90 standard
-! the abstract type is then only a wrapper valid only in Fortran 2003 standard 
-! this permits also to eliminated the #ifdef STD95 which prevents
-! from good lisibility of the code
-  
+!> The hermite-based interpolator is only a wrapper around the capabilities
+!! of the hermite interpolation. 
+!! All interpolators share a common interface with
+!! respect to their use, as described by the interpolator_2d_base class.
+!! Where the diverse interpolators diverge is in the way to initialize them.
+!! We basically copy the analog for cubic splines
   type, extends(sll_interpolator_2d_base) :: hermite_2d_interpolator
     type(sll_hermite_interpolation_2d), pointer :: hermite
     sll_int32 :: npts1

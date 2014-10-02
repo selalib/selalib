@@ -103,7 +103,7 @@ program unit_test
 !!$  call sll_gnuplot_1d(X1MIN, X1MAX, NPTS1, &
 !!$       ad1d%coeff_splines, 'coefficients_interp_arb_deg', 0, ierr)
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
   
   print *, '***********************************************************'
   print *, '              dirichlet case'
@@ -153,7 +153,7 @@ program unit_test
      normH1_1   = normH1_1  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
   
 
   print *, '***********************************************************'
@@ -205,7 +205,7 @@ program unit_test
      normH1_2   = normH1_2  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
 
 
   print *, '***********************************************************'
@@ -262,7 +262,7 @@ program unit_test
      normH1_3   = normH1_3  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
 
 
   print *, '***********************************************************'
@@ -318,7 +318,7 @@ program unit_test
      normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
 
   
   print *, '***********************************************************'
@@ -371,7 +371,7 @@ program unit_test
      normH1_4   = normH1_4  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
 
 
   print *, '***********************************************************'
@@ -429,7 +429,7 @@ program unit_test
      normH1_5   = normH1_5  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
 
 
   print *, '***********************************************************'
@@ -487,7 +487,7 @@ program unit_test
      normH1_6   = normH1_6  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
   
     print *, '***********************************************************'
   print *, '              Neumann-Hermite case '
@@ -544,7 +544,7 @@ program unit_test
      normH1_7   = normH1_7  + (deriv1_val-ref)**2*h1
   end do
   
-  call delete(ad1d)
+  call sll_delete(ad1d)
 
 
   print*, '--------------------------------------------'

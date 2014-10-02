@@ -1,4 +1,4 @@
-!**************************************************************
+
 !  Copyright INRIA
 !  Authors : 
 !     CALVI project team

@@ -28,11 +28,11 @@ module sll_module_interpolators_2d_base
   !
   !*************************************************************************
   
-  ! Base class/basic interface for 2D interpolators
   
   ! TO BE RESOLVED:
   ! Function names should be reviewed and improved. What is the best way to
   ! express that a derivative is in a particular direction? Why eta???
+  !> Base class/basic interface for 2D interpolators
   type, abstract :: sll_interpolator_2d_base
 
    contains
@@ -72,6 +72,7 @@ module sll_module_interpolators_2d_base
   end type sll_interpolator_2d_base
   
 
+  !> Signature for interpolating function
   abstract interface
      function interpolator_two_arg_msg( interpolator, eta1, eta2 ) result(val)
 
@@ -86,6 +87,7 @@ module sll_module_interpolators_2d_base
 
   end interface
 
+  !> Compute interpolated values of n*m points
   abstract interface
 
      subroutine interpolator_2d_array_msg( interpolator, data_array )
@@ -99,6 +101,7 @@ module sll_module_interpolators_2d_base
 
   end interface
 
+  !> Compute interpolated values of n*m points
   abstract interface
 
      function interpolate_2d_array(this,             &
@@ -122,6 +125,7 @@ module sll_module_interpolators_2d_base
 
   end interface
 
+  !> Signature for interpolating function
   abstract interface
 
      function interpolate_2d_array_disp(this,        &
@@ -145,6 +149,7 @@ module sll_module_interpolators_2d_base
 
   end interface
 
+  !> Set the splines coefficients
   abstract interface
      subroutine interpolator_2d_set_coeffs( &
           interpolator,&
@@ -173,6 +178,7 @@ module sll_module_interpolators_2d_base
      end subroutine interpolator_2d_set_coeffs
   end interface
 
+  !> Check interpolator is computed
   abstract interface
      function interpolator_2d_logical_query( interpolator ) result(res)
        import sll_interpolator_2d_base
@@ -181,6 +187,7 @@ module sll_module_interpolators_2d_base
      end function interpolator_2d_logical_query
   end interface
 
+  !> Compute splines coefficients
   abstract interface
      subroutine compute_coeffs_2d(interpolator, &
           data_array, &
@@ -199,6 +206,7 @@ module sll_module_interpolators_2d_base
      end subroutine compute_coeffs_2d
   end interface
   
+  !> Get splines coefficients
   abstract interface 
      function get_coeffs_2d(interpolator)
        use sll_working_precision
@@ -208,6 +216,7 @@ module sll_module_interpolators_2d_base
      end function get_coeffs_2d
   end interface
 
+  !> Deallocate the interpolator object
   abstract interface 
      subroutine delete_interpolator_2d(interpolator)
        import sll_interpolator_2d_base
