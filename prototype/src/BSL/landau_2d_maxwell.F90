@@ -3,13 +3,14 @@ program landau_4d
 #include "sll_assert.h"
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-#include "sll_maxwell_solvers.h"
 #include "sll_poisson_solvers.h"
+#include "sll_maxwell_solvers_macros.h"
 
 use sll_constants
 use sll_module_interpolators_1d_base
 use sll_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
+use sll_maxwell_2d_pstd
 
 implicit none
   
