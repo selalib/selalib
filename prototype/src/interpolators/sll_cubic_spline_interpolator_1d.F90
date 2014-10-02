@@ -25,18 +25,6 @@ use sll_module_interpolators_1d_base
 use sll_cubic_splines
   implicit none
 
-!> Object for 1d cubic spline interpolation on uniform mesh
-#ifdef STDF95
-
-type ::  cubic_spline_1d_interpolator
-   sll_real64, dimension(:), pointer :: interpolation_points !< points positions
-   sll_int32                         :: num_points           !< size
-   sll_int32                         :: bc_type            !< boundary condition
-   type(sll_cubic_spline_1D), pointer      :: spline       !< spline object
-end type cubic_spline_1d_interpolator
-
-#else
-
 type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
 
    sll_real64, dimension(:), pointer :: interpolation_points !< points position
@@ -68,8 +56,6 @@ type :: cubic_spline_1d_interpolator_ptr
    type(cubic_spline_1d_interpolator), pointer :: interp
 end type cubic_spline_1d_interpolator_ptr
 
-
-#endif
 
   interface delete
      module procedure delete_cs1d

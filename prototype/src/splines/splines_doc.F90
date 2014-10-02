@@ -6,7 +6,6 @@
 !> <b> Modules available </b>
 !>
 !> - sll_cubic_splines
-!> - sll_quintic_splines
 !> - cubic_non_uniform_splines
 !> - deboor_arbitrary_degree_splines
 !> - sll_arbitrary_degree_splines
