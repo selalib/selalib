@@ -138,8 +138,6 @@ sll_int32,  private :: itime, error
 sll_real64, private :: eta1_min, eta2_min, eta3_min, eta4_min
 sll_real64, private :: eta1_max, eta2_max, eta3_max, eta4_max
 
-character(len=4), private :: ctime
-
 contains
 
   !> Function to initialize the simulation object 'manually'.
@@ -534,9 +532,9 @@ contains
     call sll_delete( sim%sequential_x3x4 )
     call sll_delete( sim%seqx1x2_to_seqx3x4 )
     call sll_delete( sim%seqx3x4_to_seqx1x2 )
-    call delete( sim%interp_x1x2 )
-    call delete( sim%interp_x3 )
-    call delete( sim%interp_x4 )
+    call sll_delete( sim%interp_x1x2 )
+    call sll_delete( sim%interp_x3 )
+    call sll_delete( sim%interp_x4 )
   end subroutine delete_vp4d_par_polar
 
   subroutine compute_charge_density( sim )

@@ -11,7 +11,7 @@
 
 !> @namespace sll_interpolators 
 !> @brief 
-!> Description of interpolators library (72 characters)
+!> High-level classes to compute interpolation.
 !> @author Selalib team 
 !> You can add a contact, do not put your email to prevent spam.
 !> @details
@@ -26,7 +26,7 @@
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_interpolators.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
+!> - Link with   <code>-lsll_interpolators</code>
 !> - Add <code> use sll_interpolators </code>
 !>
 !> <b> Examples </b>

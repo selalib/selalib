@@ -15,6 +15,7 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
+!> Class interpolator and methods for arbitrary degree spline 1D interpolator
 module sll_arbitrary_degree_spline_interpolator_1d_module
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -26,6 +27,7 @@ module sll_arbitrary_degree_spline_interpolator_1d_module
   implicit none
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
+  !> Class for arbitrary degree spline 1d interpolator
   type, extends(sll_interpolator_1d_base) :: sll_arb_deg_1d_interpolator
      sll_int32  :: num_pts
      sll_real64 :: eta_min
@@ -69,9 +71,10 @@ module sll_arbitrary_degree_spline_interpolator_1d_module
     procedure, pass:: reconstruct_array
  end type sll_arb_deg_1d_interpolator
 
-  interface delete
+  !> Deallocate
+  interface sll_delete
      module procedure delete_arbitrary_degree_1d_interpolator
-  end interface delete
+  end interface sll_delete
 
 
 contains
@@ -138,14 +141,13 @@ contains
   !> @details To have the interpolator arbitrary degree splines 1d
   !>
   !> The parameters are
-  !> @params interpolator the type sll_arb_deg_1d_interpolator
   !> @param[in] num_pts the number of points
   !> @param[in] eta_min the minimun
   !> @param[in] eta_max the maximun
   !> @param[in] bc_left  the boundary condition at left
   !> @param[in] bc_right the boundary condition at right
   !> @param[in] spline_degree the degree of B-spline
-  !> @return the type arb_deg_1d_interpolator
+  !> @param[out] interpolator the type arb_deg_1d_interpolator
 
   subroutine initialize_ad1d_interpolator( &
        interpolator, &
@@ -290,8 +292,8 @@ contains
   !>  fot the arbitrary degree splines interpolator 1d
   !> The parameters are
   !> @param interpolator the type sll_arb_deg_1d_interpolator
-  !> @param[in],optional, coeffs the 1d arrays corresponding of the splines coefficients
-  !> @return the type arb_deg_1d_interpolator
+  !> @param[in] coeffs the 1d arrays corresponding of the splines coefficients
+  !> @param[out] interpolator the type arb_deg_1d_interpolator
 
   subroutine set_coefficients_ad1d( &
    interpolator, &
@@ -601,16 +603,13 @@ contains
    end select
  end subroutine set_coefficients_ad1d
 
- !> @brief Initialization of the boundary for interpolator arbitrary degree splines 1d.
- !> @details Initialization of the boundary
- !>  interpolator sll_arbitrary degree splines 1d
+ !> Initialization of the boundary for interpolator arbitrary degree splines 1d.
  !> The parameters are
- !> @params interpolator the type sll_arb_deg_1d_interpolator
- !> @param[in],optional,value_left a array contains the value in the left
- !> @param[in],optional,value_right a array contains the value in the right
- !> @param[in],optional,slope_left a array contains the value in the left for derivative
- !> @param[in],optional,slope_right, array contains the value in the right for derivative
- !> @return the type sll_arb_deg_1d_interpolator
+ !> @param[in] value_left  contains the value in the left
+ !> @param[in] value_right contains the value in the right
+ !> @param[in] slope_left  contains the value in the left for derivative
+ !> @param[in] slope_right contains the value in the right for derivative
+ !> @param[out] interpolator the type sll_arb_deg_1d_interpolator
  subroutine set_values_at_boundary1d(&
       interpolator,&
       value_left,&
@@ -659,18 +658,16 @@ contains
 
   !> @brief computing the coefficients spline with a given
   !>  data_array 1D cooresponding at the values of a function
-  !> @details computing the coefficients spline with a given
-  !>  data_array 1D coorespondind at the values of a function
+  !> @details 
   !>  on eta_coords of size size_eta_coords
   !>  if the eta_coords and eta_coords is not given
   !>  we consider that the values of the function is on the points in the mesh_1d
   !>
   !> The parameters are
-  !> @param interpolator the type sll_arb_deg_1d_interpolator
-  !> @param[in] data_array the 1d arrays corresponding at the values of a function
-  !> @param[in],optional, eta_coords the 1d arrays
-  !> @param[in],optional, size_eta_coords the size of eta_coords
-  !> @return the type sll_arb_deg_1d_interpolator
+  !> @param[in]  data_array the 1d arrays corresponding at the values of a function
+  !> @param[in]  eta_coords the 1d arrays
+  !> @param[in]  size_eta_coords the size of eta_coords
+  !> @param[out] interpolator the type sll_arb_deg_1d_interpolator
  subroutine compute_interpolants_ad1d( &
       interpolator,data_array, &
       eta_coords, &
@@ -1012,10 +1009,9 @@ contains
   !> the arbitrary degree splines interpolator 1d
   !> @details computing the values with the interpolator arbitrary degree splines 1d
   !>  on the points eta of arbitrary degree splines 1d
-  !>
   !> The parameters are
   !> @param interpolator the type sll_arb_deg_1d_interpolator
-  !> @param[in] eta the point
+  !> @param[in] eta1 the point
   !> @return val the values on the points eta
   function interpolate_value_ad1d( &
        interpolator, &
@@ -1161,7 +1157,7 @@ contains
   !>
   !> The parameters are
   !> @param interpolator the type arb_deg_1d_interpolator
-  !> @param[in] eta the point
+  !> @param[in] eta1 the point
   !> @return val the values on the point eta of the first derivative
 
   function interpolate_derivative_ad1d( &

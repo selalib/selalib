@@ -15,35 +15,28 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!> Class for the cubic spline interpolator in 2D
 module sll_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-#ifndef STDF95
   use sll_module_interpolators_2d_base
-#endif
   use sll_cubic_splines
   implicit none
   
-  ! The spline-based interpolator is only a wrapper around the capabilities
-  ! of the cubic splines. All interpolators share a common interface with
-  ! respect to their use, as described by the interpolator_2d_base class.
-  !
-  ! Where the diverse interpolators diverge is in the way to initialize them.
-#ifdef STDF95
-  type                                :: cubic_spline_2d_interpolator
-#else
+  !> The spline-based interpolator is only a wrapper around the capabilities
+  !> of the cubic splines. All interpolators share a common interface with
+  !> respect to their use, as described by the interpolator_2d_base class.
+  !>
+  !> Where the diverse interpolators diverge is in the way to initialize them.
   type, extends(sll_interpolator_2d_base) :: cubic_spline_2d_interpolator
-#endif
      sll_int32                           :: npts1
      sll_int32                           :: npts2
      type(sll_cubic_spline_2D), pointer  :: spline
      sll_int32                           :: bc_type1
      sll_int32                           :: bc_type2
      sll_real64, dimension(:,:), pointer :: interpolation_points 
-#ifdef STDF95
-#else
    contains
      procedure, pass(interpolator) :: initialize=>initialize_cs2d_interpolator
      procedure :: compute_interpolants => compute_interpolants_cs2d
@@ -57,17 +50,18 @@ module sll_cubic_spline_interpolator_2d
      procedure, pass :: coefficients_are_set => coefficients_are_set_cs2d
      procedure, pass :: delete => delete_cubic_spline_2d_interpolator
     ! procedure, pass :: compute_spline_coefficients => compute_spl_coeff_cs2d
-#endif
   end type cubic_spline_2d_interpolator
 
+  !> Pointer to this interpolator derived type
   type :: cubic_spline_2d_interpolator_ptr
      type(cubic_spline_2d_interpolator), pointer :: interp
   end type cubic_spline_2d_interpolator_ptr
 
   
-  interface delete
+!> Deallocate the interpolator object
+  interface sll_delete
      module procedure delete_cubic_spline_2d_interpolator
-  end interface delete
+  end interface sll_delete
 
 contains
 
@@ -145,11 +139,7 @@ contains
   ! b. There is no uniform interface for the initialization anyway.
   ! The underlying implementation with the splines module could be hidden but
   ! I can't see a compelling reason why.
-#ifdef STDF95
-  subroutine cubic_spline_2d_initialize( &
-#else
   subroutine initialize_cs2d_interpolator( &
-#endif
     interpolator, &
     npts1, &
     npts2, &
@@ -168,11 +158,7 @@ contains
     eta2_min_slopes, &
     eta2_max_slopes )
 
-#ifdef STDF95
-    type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-#else
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-#endif
     sll_int32, intent(in)                         :: npts1
     sll_int32, intent(in)                         :: npts2
     sll_real64, intent(in)                        :: eta1_min
@@ -213,22 +199,14 @@ contains
          x2_max_slopes=eta2_max_slopes )
   end subroutine
 
-#ifdef STDF95
-  subroutine cubic_spline_2d_compute_interpolants( &
-#else
   subroutine compute_interpolants_cs2d( &
-#endif
        interpolator, &
        data_array, &
        eta1_coords, &
        size_eta1_coords, &
        eta2_coords, &
        size_eta2_coords )
-#ifdef STDF95
-    type(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-#else
     class(cubic_spline_2d_interpolator), intent(inout) :: interpolator
-#endif
     sll_real64, dimension(:,:), intent(in) :: data_array
     sll_real64, dimension(:), intent(in),optional   :: eta1_coords
     sll_real64, dimension(:), intent(in),optional   :: eta2_coords
@@ -249,39 +227,24 @@ contains
     call compute_cubic_spline_2D( data_array, interpolator%spline )
   end subroutine
 
-#ifdef STDF95
-  function cubic_spline_2d_interpolate_value( interpolator, eta1, eta2 ) result(val)
-    type(cubic_spline_2d_interpolator), intent(in) :: interpolator
-#else
   function interpolate_value_cs2d( interpolator, eta1, eta2 ) result(val)
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
-#endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     val = interpolate_value_2D( eta1, eta2, interpolator%spline )
   end function
 
-#ifdef STDF95
-  function cubic_spline_2d_interpolate_derivative_eta1( interpolator, eta1, eta2 ) result(val)
-    type(cubic_spline_2d_interpolator), intent(in) :: interpolator
-#else
   function interpolate_deriv1_cs2d( interpolator, eta1, eta2 ) result(val)
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
-#endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
     val = interpolate_x1_derivative_2D(eta1,eta2,interpolator%spline)
   end function
 
-#ifdef STDF95
-  function cubic_spline_2d_interpolate_derivative_eta2( interpolator, eta1, eta2 ) result(val)
-    type(cubic_spline_2d_interpolator), intent(in) :: interpolator
-#else
   function interpolate_deriv2_cs2d( interpolator, eta1, eta2 ) result(val)
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
-#endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -290,18 +253,11 @@ contains
 
   end function
 
-#ifdef STDF95
-  function cubic_spline_2d_interpolate_array(this, num_points1, num_points2, data_in, &
-                                eta1, eta2) &
-       result(data_out)
-    type(cubic_spline_2d_interpolator),  intent(in)       :: this
-#else
   function spline_interpolate2d(this, num_points1, num_points2, data_in, &
                                 eta1, eta2) &
        result(data_out)
 
     class(cubic_spline_2d_interpolator),  intent(in) :: this
-#endif
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: eta1
@@ -314,28 +270,11 @@ contains
     call compute_cubic_spline_2D( data_in, this%spline )
     do j = 1, num_points2
     do i = 1, num_points1
-#ifdef STDF95
-        data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1(i,j),eta2(i,j))     
-#else
         data_out(i,j) = this%interpolate_value(eta1(i,j),eta2(i,j))
-#endif
     end do
     end do
 
   end function !spline_interpolate2d
-
-#ifdef STDF95
-
-  function cubic_spline_interpolate2d_disp(this,        &
-                                           num_points1, &
-                                           num_points2, &
-                                           data_in,     &
-                                           alpha1,      &
-                                           alpha2) result(data_out)
-
-    type(cubic_spline_2d_interpolator), intent(in) :: this
-
-#else
 
   function spline_interpolate2d_disp(this,        &
                                      num_points1, &
@@ -345,8 +284,6 @@ contains
                                      alpha2) result(data_out)
 
     class(cubic_spline_2d_interpolator),  intent(in) :: this
-
-#endif
 
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2
@@ -385,11 +322,7 @@ contains
                   modulo(eta1-eta1_min-alpha1(i,j),eta1_max-eta1_min)
              eta2 = eta2_min + &
                   modulo(eta2-eta2_min-alpha2(i,j),eta2_max-eta2_min)
-#ifdef STDF95
-          data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1,eta2)     
-#else
              data_out(i,j) = this%interpolate_value(eta1,eta2)
-#endif
           end do
        end do
 
@@ -404,11 +337,7 @@ contains
              eta2 = min(eta2,eta2_max)
              eta1 = max(eta1,eta1_min)
              eta2 = max(eta2,eta2_min)
-#ifdef STDF95
-             data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1,eta2)
-#else
              data_out(i,j) = this%interpolate_value(eta1,eta2)
-#endif
           end do
        end do
       
@@ -421,29 +350,12 @@ contains
              eta2 = eta2_min + (j-1)*delta_eta2 - alpha2(i,j)
              SLL_ASSERT(eta1_min <= eta1 .and. eta1 <= eta1_max)
              SLL_ASSERT(eta2_min <= eta2 .and. eta2 <= eta2_max)
-#ifdef STDF95
-             data_out(i,j) = cubic_spline_2d_interpolate_value(this,eta1,eta2)
-#else
              data_out(i,j) = this%interpolate_value(eta1,eta2)
-#endif
           end do
        end do
     end if
   end function 
 
-#ifdef STDF95
-  subroutine cubic_spline_2d_set_coefficients(&
-       interpolator,&
-       coeffs_1d,&
-       coeffs_2d,&
-       coeff2d_size1,&
-       coeff2d_size2,&
-       knots1,&
-       size_knots1,&
-       knots2,&
-       size_knots2)
-    type (cubic_spline_2d_interpolator),  intent(inout) :: interpolator
-#else
   subroutine set_coefficients_cs2d( &
        interpolator,&
        coeffs_1d,&
@@ -455,7 +367,6 @@ contains
        knots2,&
        size_knots2)
     class(cubic_spline_2d_interpolator),  intent(inout) :: interpolator
-#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs_1d
     sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
     ! size coeffs 2D 
@@ -516,15 +427,6 @@ contains
 !!$  end subroutine compute_spl_coeff_cs2d
   
 
-#ifdef STDF95
-  function cubic_spline_2d_get_coefficients(interpolator)
-    type (cubic_spline_2d_interpolator), intent(in)    :: interpolator
-    sll_real64, dimension(:,:), pointer            :: cubic_spline_2d_get_coefficients     
-    
-    print *, 'cubic_spline_2d_get_coefficients(): ERROR: This function has not been ', &
-         'implemented yet.' 
-  end function cubic_spline_2d_get_coefficients
-#else  
   function get_coefficients_cs2d(interpolator)
     class(cubic_spline_2d_interpolator), intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer            :: get_coefficients_cs2d     
@@ -535,7 +437,6 @@ contains
     print *,interpolator%npts1    
     stop      
   end function get_coefficients_cs2d
-#endif
 
   function coefficients_are_set_cs2d( interpolator ) result(res)
     class(cubic_spline_2d_interpolator), intent(in) :: interpolator
