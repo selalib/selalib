@@ -37,6 +37,7 @@ module sll_xdmf_serial_blocks
   
   implicit none
   
+  !> Create a new xmdf file to plot parallel array using hdf5 serial library
   interface sll_xdmf_open
      module procedure sll_xdmf_open_serial_blocks
   end interface
