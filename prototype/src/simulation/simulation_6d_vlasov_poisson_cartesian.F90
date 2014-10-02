@@ -922,12 +922,12 @@ contains
     call sll_delete( sim%ez_x3_to_split )
     call sll_delete( sim%seqx1x2x3_to_seqx4x5x6 )
     call sll_delete( sim%seqx4x5x6_to_seqx1x2x3 )
-    call delete( sim%interp_x1 )
-    call delete( sim%interp_x2 )
-    call delete( sim%interp_x3 )
-    call delete( sim%interp_x4 )
-    call delete( sim%interp_x5 )
-    call delete( sim%interp_x6 )
+    call sll_delete( sim%interp_x1 )
+    call sll_delete( sim%interp_x2 )
+    call sll_delete( sim%interp_x3 )
+    call sll_delete( sim%interp_x4 )
+    call sll_delete( sim%interp_x5 )
+    call sll_delete( sim%interp_x6 )
   end subroutine delete_vp6d_par_cart
 
   ! we put the reduction functions here for now, since we are only using

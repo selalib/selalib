@@ -417,10 +417,10 @@ program VP1d_deltaf
      !$omp end single
   end do
 
-  call delete(interp_spline_x)
-  call delete(interp_spline_v)
-  call delete(interp_per_x)
-  call delete(interp_per_v)
+  call sll_delete(interp_spline_x)
+  call sll_delete(interp_spline_v)
+  call sll_delete(interp_per_x)
+  call sll_delete(interp_per_v)
   !$omp end parallel
   close(th_diag)
   close(ex_diag)

@@ -1050,9 +1050,9 @@ contains
     call sll_delete( sim%efld_seqx2_to_split )
     call sll_delete( sim%seqx1x2_to_seqx3x4 )
     call sll_delete( sim%seqx3x4_to_seqx1x2 )
-    call delete( sim%interp_x1x2 )
-    call delete( sim%interp_x3 )
-    call delete( sim%interp_x4 )
+    call sll_delete( sim%interp_x1x2 )
+    call sll_delete( sim%interp_x3 )
+    call sll_delete( sim%interp_x4 )
     SLL_DEALLOCATE_ARRAY( sim%efield_x1, ierr )
     SLL_DEALLOCATE_ARRAY( sim%efield_x2, ierr )
     SLL_DEALLOCATE_ARRAY( sim%efield_split, ierr )
@@ -1222,19 +1222,19 @@ contains
        ex = -r_delta*(-1.5_f64*phi_x1(1,j) + &
                        2.0_f64*phi_x1(2,j) - &
                        0.5_f64*phi_x1(3,j) )
-       efield_x1(1,j) = cmplx(ex,f64)  
+       efield_x1(1,j) = cmplx(ex,kind=f64)  
        ! right:
        ex = -r_delta*(0.5_f64*phi_x1(num_pts_x1-2,j)-&
                       2.0_f64*phi_x1(num_pts_x1-1,j)+&
                       1.5_f64*phi_x1(num_pts_x1,j) )
-       efield_x1(num_pts_x1,j) = cmplx(ex,f64) 
+       efield_x1(num_pts_x1,j) = cmplx(ex,kind=f64) 
     end do
     
     ! Electric field in interior points
     do j=1,num_pts_x2
        do i=2, num_pts_x1-1
           ex = -r_delta*0.5_f64*(phi_x1(i+1,j) - phi_x1(i-1,j))
-          efield_x1(i,j) = cmplx(ex,f64)
+          efield_x1(i,j) = cmplx(ex,kind=f64)
        end do
     end do
   end subroutine compute_electric_field_eta1

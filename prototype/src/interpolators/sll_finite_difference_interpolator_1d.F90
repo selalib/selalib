@@ -1,3 +1,16 @@
+!> Finite differences implementation of 1d interpolator
+!! This is an experimental type meant to solve the following problem:
+!! We are used to fields coming with their own means of interpolation.
+!! The standard interpolator, represented by the base class, is general
+!! in that it can return interpolated values along a continuous coordinate.
+!! In other words, given discrete data on nodes, the general interpolator
+!! can give the illusion of having a continuous function defined on the 
+!! same domain as the discrete data.
+!!
+!! However, sometimes the interpolation services needed are very basic.
+!! If we are only interested in having the derivatives on the nodes of an
+!! array, this is a service provided by the basic interpolator, hence we
+!! can 
 module sll_finite_difference_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -6,19 +19,8 @@ module sll_finite_difference_interpolator_1d
 use sll_module_interpolators_1d_base
   implicit none
 
-  ! This is an experimental type meant to solve the following problem:
-  ! We are used to fields coming with their own means of interpolation.
-  ! The standard interpolator, represented by the base class, is general
-  ! in that it can return interpolated values along a continuous coordinate.
-  ! In other words, given discrete data on nodes, the general interpolator
-  ! can give the illusion of having a continuous function defined on the 
-  ! same domain as the discrete data.
-  !
-  ! However, sometimes the interpolation services needed are very basic.
-  ! If we are only interested in having the derivatives on the nodes of an
-  ! array, this is a service provided by the basic interpolator, hence we
-  ! can 
 
+  !> Finite differences implementation of 1d interpolator
   type, extends(sll_interpolator_1d_base) :: finite_difference_1d_interpolator
      sll_int32  :: num_points
      sll_real64 :: delta      ! cell size, distance between data points

@@ -1,19 +1,14 @@
+!> Interpolator class and methods of Lagrange 1D interpolator
 module sll_lagrange_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
 !#include "sll_interpolators_1d_base_macros.h"
-#ifndef STDF95
 use sll_module_interpolators_1d_base
-#endif
  use sll_lagrange_interpolation
 implicit none
 
-#ifdef STDF95
- type :: lagrange_1d_interpolator
-   type(sll_lagrange_interpolation_1D), pointer :: lagrange
-   sll_int32                                    :: bc_type
-#else
+ !> Interpolator class of Lagrange 1D interpolator
  type,extends(sll_interpolator_1d_base) :: lagrange_1d_interpolator
    type(sll_lagrange_interpolation_1D), pointer :: lagrange
    sll_int32                                    :: bc_type
@@ -31,22 +26,17 @@ implicit none
    procedure :: reconstruct_array => reconstruct_array_li1d
    procedure, pass :: set_coefficients => set_coefficients_li1d
    procedure, pass :: get_coefficients => get_coefficients_li1d
-#endif
  end type lagrange_1d_interpolator
 
- interface delete
+ !> Deallocate the class interpolator
+ interface sll_delete
    module procedure delete_li1d
  end interface
 
 contains  !**********************************************************
 
-#ifdef STDF95
-subroutine lagrange_interpolation_1d_initialize_interpolator(interpolator,num_points,xmin,xmax,bc_type,d)
-  type(lagrange_1d_interpolator), intent(inout) :: interpolator
-#else
 subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_type,d)
   class(lagrange_1d_interpolator), intent(inout) :: interpolator
-#endif
     sll_int32, intent(in)                        :: d,num_points,bc_type
     sll_real64, intent(in)                       :: xmin,xmax
 
@@ -58,13 +48,8 @@ subroutine initialize_li1d_interpolator(interpolator,num_points,xmin,xmax,bc_typ
            d)
 end subroutine
 
-#ifdef STDF95
-function lagrange_interpolation_1d_interpolate_array_disp(this, num_points, data, alpha) result(data_out)
-  type(lagrange_1d_interpolator), intent(in)     :: this
-#else
 function interpolate_array_disp_li1d(this, num_points, data, alpha) result(data_out)
   class(lagrange_1d_interpolator), intent(in)     :: this
-#endif
   sll_real64, intent(in) :: alpha
   sll_int32, intent(in)  :: num_points    ! size of output array
   sll_real64, dimension(:), intent(in) :: data  ! data to be interpolated points where output is desired
@@ -76,11 +61,7 @@ data_out=this%lagrange%data_out
 end function
 
 subroutine delete_li1d (obj)
-#ifdef STDF95
-  type(lagrange_1d_interpolator) :: obj
-#else
   class(lagrange_1d_interpolator) :: obj
-#endif
   call delete(obj%lagrange)
 end subroutine delete_li1d
 
@@ -90,11 +71,7 @@ subroutine interpolate_array_values_li1d( &
     num_pts, &
     vals_to_interpolate, &
     output_array )
-#ifdef STDF95
-    type(lagrange_1d_interpolator),  intent(in) :: interpolator
-#else
     class(lagrange_1d_interpolator),  intent(in) :: interpolator
-#endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -115,11 +92,7 @@ subroutine interpolate_array_derivatives_li1d( &
     num_pts, &
     vals_to_interpolate, &
     output_array )
-#ifdef STDF95
-    type(lagrange_1d_interpolator),  intent(in) :: interpolator
-#else
     class(lagrange_1d_interpolator),  intent(in) :: interpolator
-#endif
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -139,11 +112,7 @@ subroutine interpolate_pointer_derivatives_li1d( &
     num_pts, &
     vals_to_interpolate, &
     output )
-#ifdef STDF95
-    type(lagrange_1d_interpolator),  intent(in) :: interpolator
-#else
     class(lagrange_1d_interpolator),  intent(in) :: interpolator
-#endif
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
@@ -157,13 +126,8 @@ subroutine interpolate_pointer_derivatives_li1d( &
     stop
 end subroutine interpolate_pointer_derivatives_li1d
 
-#ifdef STDF95
-  function lagrange_interpolation_1d_interpolate_derivative_eta1(interpolator, eta1) result(val)
-    type(lagrange_1d_interpolator), intent(in)  :: interpolator
-#else
   function interpolate_derivative_eta1_li1d( interpolator, eta1 ) result(val)
     class(lagrange_1d_interpolator), intent(in) :: interpolator
-#endif
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_eta1_li1d: ', &
@@ -179,11 +143,7 @@ subroutine interpolate_pointer_values_li1d( &
     num_pts, &
     vals_to_interpolate, &
     output )
-#ifdef STDF95
-    type(lagrange_1d_interpolator),  intent(in) :: interpolator
-#else
     class(lagrange_1d_interpolator),  intent(in) :: interpolator
-#endif
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
@@ -197,13 +157,8 @@ subroutine interpolate_pointer_values_li1d( &
     stop
 end subroutine interpolate_pointer_values_li1d
 
-#ifdef STDF95
-  function lagrange_interpolation_1d_interpolate_value(interpolator, eta1 ) result(val)
-    type(lagrange_1d_interpolator), intent(in) :: interpolator
-#else
   function interpolate_value_li1d( interpolator, eta1 ) result(val)
     class(lagrange_1d_interpolator), intent(in) :: interpolator
-#endif
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_li1d: ', &
@@ -216,11 +171,7 @@ end subroutine interpolate_pointer_values_li1d
 
   function reconstruct_array_li1d(this, num_points, data) result(res)
     ! dummy procedure
-#ifdef STDF95
-    type(lagrange_1d_interpolator), intent(in)      :: this
-#else
     class(lagrange_1d_interpolator), intent(in)     :: this
-#endif
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
        sll_real64, dimension(num_points)    :: res
@@ -231,15 +182,9 @@ end subroutine interpolate_pointer_values_li1d
        res(:) = 0.0_f64
   end function reconstruct_array_li1d
 
-#ifdef STDF95
-  function lagrange_interpolation_1d_interpolate_array(this, num_points, data, coordinates) &
-       result(data_out)
-    type(lagrange_1d_interpolator),  intent(in)       :: this
-#else
   function interpolate_array_li1d(this, num_points, data, coordinates) &
        result(data_out)
     class(lagrange_1d_interpolator),  intent(in)       :: this
-#endif
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
@@ -257,18 +202,10 @@ end subroutine interpolate_pointer_values_li1d
     stop
   end function
 
-#ifdef STDF95
-  subroutine lagrange_interpolation_1d_compute_interpolants( interpolator, data_array,&
-       eta_coords, &
-       size_eta_coords)
-
-    type(lagrange_1d_interpolator), intent(inout)  :: interpolator
-#else
     subroutine compute_interpolants_li1d( interpolator, data_array,&
          eta_coords, &
          size_eta_coords)
       class(lagrange_1d_interpolator), intent(inout) :: interpolator
-#endif
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
@@ -286,11 +223,7 @@ end subroutine interpolate_pointer_values_li1d
   end subroutine
 
   subroutine set_coefficients_li1d( interpolator, coeffs )
-#ifdef STDF95
-    type(lagrange_1d_interpolator),  intent(inout)  :: interpolator
-#else
     class(lagrange_1d_interpolator),  intent(inout) :: interpolator
-#endif
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_li1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -303,11 +236,7 @@ end subroutine interpolate_pointer_values_li1d
 
 
   function get_coefficients_li1d(interpolator)
-#ifdef STDF95
-    type(lagrange_1d_interpolator),  intent(in) :: interpolator
-#else
     class(lagrange_1d_interpolator),  intent(in) :: interpolator
-#endif
     sll_real64, dimension(:), pointer            :: get_coefficients_li1d
 
     print *, 'get_coefficients_li1d(): ERROR: This function has not been ', &

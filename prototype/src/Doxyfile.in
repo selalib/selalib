@@ -708,7 +708,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/fields \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/interpolators \
 @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
