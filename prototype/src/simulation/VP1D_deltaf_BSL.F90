@@ -18,7 +18,6 @@ program VP1d_deltaf
   use sll_common_coordinate_transformations
   use sll_cubic_spline_interpolator_1d
   use sll_periodic_interpolator_1d
-  use sll_odd_degree_spline_interpolator_1d
   use sll_landau_2d_initializer
   use sll_tsi_2d_initializer
   use distribution_function
@@ -28,7 +27,7 @@ program VP1d_deltaf
 
   type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
   type(per_1d_interpolator), target      :: interp_per_x, interp_per_v
-  type(odd_degree_spline_1d_interpolator), target      :: interp_comp_v
+  type(cubic_spline_1d_interpolator), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
   !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base
@@ -238,8 +237,10 @@ program VP1d_deltaf
   !$omp& private(i,alpha,v,j,f1d,my_num,istartx,iendx, jstartv, jendv,  &
   !$omp& interp_x, interp_v, interp_spline_x, interp_spline_v, &
   !$omp& interp_per_x, interp_per_v)
+#ifdef __OPENMP
   my_num = omp_get_thread_num()
   num_threads =  omp_get_num_threads()
+#endif
   print*, 'running with openmp using ', num_threads, ' threads'
   ipiece_size_v = (Ncv + 1) / num_threads
   ipiece_size_x = (Ncx + 1) / num_threads
@@ -273,7 +274,8 @@ program VP1d_deltaf
   !call interp_per_v%initialize( Ncv + 1, vmin, vmax, TRIGO_REAL, 8)
 
 
-  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
+  !call interp_comp_v%initialize( Ncv + 1, vmin, vmax, 5)
+  call interp_comp_v%initialize( Ncv + 1, vmin, vmax, SLL_HERMITE)
   !interp_x => interp_spline_x
   !interp_v => interp_spline_v
 

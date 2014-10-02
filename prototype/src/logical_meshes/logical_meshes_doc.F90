@@ -11,28 +11,74 @@
 
 !> @namespace sll_logical_meshes 
 !> @brief 
-!> Description of logical_meshes library (72 characters)
-!> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
+!> Logical mesh basic types
+!> @author Edwin
 !> @details
-!> Long description of  logical_meshes, you can add some references or math equations.
-!>
-!> <b> Headers file available </b>
-!>  - sll_logical_meshes.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
 !>  - sll_logical_meshes
 !>
 !> <b> How to use it </b>
-!> - Header file : \code #include 'sll_logical_meshes.h' \endcode
-!> - Link with   <code>-lsll_%s</code>
+!> - Link with   <code>-lsll_logical_meshes</code>
 !> - Add <code> use sll_logical_meshes </code>
 !>
 !> <b> Examples </b>
 !> -Add some fortran lines to explain how ti use the library
 !> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
+!!program unit_test_logical_meshes
+!!  use sll_logical_meshes
+!!  implicit none
+!!
+!!
+!!  type(sll_logical_mesh_2d), pointer :: m2d
+!!  type(sll_logical_mesh_3d), pointer :: m3d
+!!  type(sll_logical_mesh_4d), pointer :: m4d
+!!
+!!  type(sll_logical_mesh_1d), pointer :: m1d_x
+!!  type(sll_logical_mesh_1d), pointer :: m1d_y
+!!  type(sll_logical_mesh_2d), pointer :: m2d_xy
+!!
+!!  type(sll_logical_mesh_2d), pointer :: mx
+!!  type(sll_logical_mesh_2d), pointer :: mv
+!!  type(sll_logical_mesh_4d), pointer :: mxv
+!!  
+!!  !default size is [0;1]
+!!  m1d_x => new_logical_mesh_1d(64)
+!!  m1d_y => new_logical_mesh_1d(32,eta_min=-1.0_f64,eta_max=+1.0_f64)
+!!
+!!  call sll_display(m1d_x)
+!!  call sll_display(m1d_y)
+!!
+!!  !You can use two 1d meshes to create one 2d mesh
+!!  m2d_xy => m1d_x * m1d_y
+!!  call sll_display(m2d_xy)
+!!  call sll_delete(m2d_xy)
+!!
+!!  call sll_delete(m1d_x)
+!!  call sll_delete(m1d_y)
+!!  
+!!  m2d => new_logical_mesh_2d(100,100)
+!!  m3d => new_logical_mesh_3d(100,100,100)
+!!  m4d => new_logical_mesh_4d(32,32,32,32, eta1_min=-1.0_f64, eta1_max = 2.0_f64)
+!!
+!!  call sll_display(m2d)
+!!  call sll_display(m3d)
+!!  call sll_display(m4d)
+!!
+!!  call sll_delete(m2d)
+!!  call sll_delete(m3d)
+!!  call sll_delete(m4d)
+!!
+!!  !You can use two 2d meshes to create one 4d mesh
+!!  mx => new_logical_mesh_2d(100,100, 0.0_f64, 12.56_f64, 0.0_f64, 12.56_f64)
+!!  mv => new_logical_mesh_2d(64,64,-6.0_f64,6.0_f64,-6.0_f64,6.0_f64)
+!!
+!!  mxv => mx * mv
+!!  call sll_display(mxv)
+!!  call sll_delete(mxv)
+!!
+!!  call sll_delete(mx)
+!!  call sll_delete(mv)
 !> \endcode
 !>

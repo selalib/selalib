@@ -12,7 +12,7 @@ module sll_pic_simulation_4d_cartesian_module
   use sll_simulation_base
   use sll_logical_meshes
   use sll_timer
-  use sll_particle_group_2d_module
+  use sll_particle_group_4d_module
   use sll_particle_initializers
   use sll_particle_sort_module
 !  use sll_accumulators
@@ -37,7 +37,7 @@ module sll_pic_simulation_4d_cartesian_module
      sll_int32  :: ions_number
      sll_int32  :: guard_size
      sll_int32  :: array_size
-     type(sll_particle_group_2d),  pointer :: part_group
+     type(sll_particle_group_4d),  pointer :: part_group
      type(sll_logical_mesh_2d),    pointer :: m2d
      type(sll_particle_sorter_2d), pointer :: sorter
      type(sll_charge_accumulator_2d_ptr), dimension(:), pointer  :: q_accumulator
@@ -85,8 +85,8 @@ contains
     sll_int32, parameter  :: input_file = 99
     sll_int32, dimension(:), allocatable  :: rand_seed
     sll_int32   :: rand_seed_size
-    sll_int32   :: thread_id
-    type(sll_particle_group_2d), pointer  :: pa_gr
+    sll_int32  :: thread_id
+    type(sll_particle_group_4d), pointer  :: pa_gr
 
     namelist /sim_params/ NUM_PARTICLES, GUARD_SIZE, &
                           PARTICLE_ARRAY_SIZE, &
@@ -116,7 +116,7 @@ contains
     sim%m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
                 XMIN, XMAX, YMIN, YMAX )
 
-    sim%part_group => new_particle_2d_group( &
+    sim%part_group => new_particle_4d_group( &
          NUM_PARTICLES, &
          PARTICLE_ARRAY_SIZE, &
          GUARD_SIZE, &
@@ -199,7 +199,7 @@ contains
     sll_int32  :: ierr, it, jj, counter
     sll_int32  :: i, j
     sll_real64 :: tmp1, tmp2, tmp3, tmp4, tmp5, tmp6
-    sll_real64 :: valeur
+    sll_real64 :: valeur, val2
     sll_real64 :: ttmp(1:4,1:2), ttmp1(1:4,1:2), ttmp2(1:4,1:2)
     sll_real64, dimension(:,:), pointer :: phi
     sll_int32  :: ncx, ncy, ic_x,ic_y
@@ -214,11 +214,13 @@ contains
     sll_real64 :: dt, ttime
     sll_real64 :: pp_vx,  pp_vy
     sll_real64 :: temp
-    type(sll_particle_2d), dimension(:), pointer :: p
+    type(sll_particle_4d), dimension(:), pointer :: p
     type(field_accumulator_cell), dimension(:), pointer :: accumE
     type(field_accumulator_CS), dimension(:), pointer :: accumE_CS
-    type(sll_particle_2d_guard), dimension(:), pointer :: p_guard
-    sll_real64, dimension(:,:), allocatable :: diag_energy! a memory buffer
+    type(sll_particle_4d_guard), dimension(:), pointer :: p_guard
+    sll_real64, dimension(:,:), allocatable  ::  diag_energy! a memory buffer
+    sll_real64, dimension(:),   allocatable  ::  diag_TOTmoment
+    sll_real64, dimension(:),   allocatable  ::  diag_TOTenergy
 !!$    sll_real64, dimension(:,:), allocatable :: diag_AccMem! a memory buffer
     type(sll_time_mark)  :: t2, t3, t8
     sll_real64, dimension(:), allocatable :: rho1d_send
@@ -229,6 +231,8 @@ contains
     sll_int32 :: n_threads
     type(sll_charge_accumulator_2d),    pointer :: q_accum
     type(sll_charge_accumulator_2d_CS), pointer :: q_accum_CS
+
+    sll_real64  :: some_val
 
     ncx = sim%m2d%num_cells1
     ncy = sim%m2d%num_cells2
@@ -244,7 +248,8 @@ contains
     SLL_ALLOCATE( sim%E2(1:ncx+1,1:ncy+1), ierr )
     SLL_ALLOCATE(phi(1:ncx+1, 1:ncy+1), ierr)
     SLL_ALLOCATE(diag_energy(1:save_nb, 1:2), ierr)
-
+    SLL_ALLOCATE(diag_TOTmoment(1:save_nb), ierr)
+    SLL_ALLOCATE(diag_TOTenergy(0:save_nb), ierr)
 !!$    SLL_ALLOCATE(diag_AccMem(0:sim%num_iterations-1, 1:2), ierr)
 
     p => sim%part_group%p_list
@@ -272,7 +277,7 @@ contains
             sim%m2d%eta2_max, ncy+1, &
             sim%rho, 'rho_init', it, ierr )
 
-    call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+    call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
 !!$    if (sim%my_rank == 0) then
 !!$       call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, &
@@ -315,8 +320,13 @@ contains
        enddo
        !$omp end parallel do   
     endif
+    diag_TOTenergy(0) = 0.0_f64
+    do i =1, sim%ions_number
+       diag_TOTenergy(0) = diag_TOTenergy(0) + &
+            p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy           
+    enddo
 
-    open(65,file='logE_vals.dat')
+!    open(65,file='logE_vals.dat')
 !!$    call sll_set_time_mark(t2)    
 #ifdef _OPENMP
     t_init = omp_get_wtime()
@@ -331,15 +341,28 @@ contains
                               sim%m2d%delta_eta1, sim%m2d%delta_eta2 )
        counter = 1 + modulo(it,save_nb)
        diag_energy(counter,:) = (/ it*sim%dt, valeur /)
-
-       if ( (mod(it+1,save_nb)==0) .and. (sim%my_rank == 0)) then
-          print*, 'iter=', it+1
-          do jj=1,save_nb
-             write(65,*) diag_energy(jj,:)
+       valeur = 0.0_f64
+       val2   = 0.0_f64
+       do i = 1,ncx
+          do j = 1,ncy
+             valeur  = valeur + sim%E1(i,j)*sim%rho(i,j)
+             val2 = val2 + sim%E1(i,j)**2 + sim%E2(i,j)**2
           enddo
-       endif
-       
+       enddo
+       diag_TOTmoment(counter) = valeur
+       diag_TOTenergy(counter) = 0.5_f64 *(sim%m2d%eta1_max - sim%m2d%eta1_min) * &
+            (sim%m2d%eta2_max - sim%m2d%eta2_min)/sim%ions_number * &
+            diag_TOTenergy(modulo(counter-1,save_nb)) + &
+            0.5_f64 * val2 *sim%m2d%delta_eta1*sim%m2d%delta_eta2
+                    
+!!$       if ( (mod(it+1,save_nb)==0) .and. (sim%my_rank == 0)) then
+!!$          do jj=1,save_nb
+!!$             write(65,*) diag_energy(jj,:), diag_TOTmoment(jj), diag_TOTenergy(jj)
+!!$          enddo
+!!$       endif
+
        if (mod(it+1,10)==0) then 
+!          print*, 'iter=', it+1
           call sll_sort_particles_2d( sim%sorter, sim%part_group )
        endif
 
@@ -365,7 +388,7 @@ contains
        !                   ---- PUSH PARTICLES ----
        !
        ! *******************************************************************
-
+       some_val = 0.0_f64
        !$omp parallel default(SHARED) PRIVATE(x,y,x1,y1,Ex,Ey,Ex1,Ey1,gi,tmp1,tmp2,tmp3,tmp4,tmp5,tmp6,temp,ttmp1,ttmp2,off_x,off_y,ic_x,ic_y,thread_id,p_guard,q_accum,q_accum_CS)
        !$&omp FIRSTPRIVATE(dt,ncx,xmin,ymin,rdx,rdy,sim%use_cubic_splines)! !qoverm
 #ifdef _OPENMP
@@ -379,7 +402,7 @@ contains
        p_guard => sim%part_group%p_guard(thread_id+1)%g_list
 !       p => sim%part_group%p_list ! redundant but ... if openmp doesn't know... ! NO NEED, I think, andd thus no need to put p in private
        gi = 0
-       !$omp do
+       !$omp do reduction(+:some_val)
        do i = 1, sim%ions_number,2
           if (sim%use_cubic_splines) then 
              SLL_INTERPOLATE_FIELD_CS(Ex,Ey,accumE_CS,p(i),ttmp1)
@@ -392,6 +415,9 @@ contains
           p(i)%vy = p(i)%vy + dt * Ey* qoverm
           p(i+1)%vx = p(i+1)%vx + dt * Ex1* qoverm
           p(i+1)%vy = p(i+1)%vy + dt * Ey1* qoverm
+
+          some_val = some_val + p(i)%vx*p(i)%vx + p(i)%vy*p(i)%vy &
+                        + p(i+1)%vx*p(i+1)%vx + p(i+1)%vy*p(i+1)%vy
 
           GET_PARTICLE_POSITION(p(i),sim%m2d,x,y)
           GET_PARTICLE_POSITION(p(i+1),sim%m2d,x1,y1)
@@ -426,6 +452,7 @@ contains
        !$omp end do
        sim%part_group%num_postprocess_particles(thread_id+1) = gi
        !$omp end parallel
+       diag_TOTenergy(modulo(counter,save_nb)) = some_val
 !    print*, 'FINISHED FIRST CYCLE OF PARTICLE PUSH'
          
 
@@ -506,7 +533,7 @@ contains
 !            call sll_gnuplot_corect_2d(xmin, sim%m2d%eta1_max, ncx+1, ymin, sim%m2d%eta2_max, ncy+1, &
 !            sim%rho, 'rhototal', it, ierr )
 !
-       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, sim%rho )
+       call sim%poisson%compute_E_from_rho( sim%E1, sim%E2, -sim%rho )
 
        if (sim%use_cubic_splines) then
           call reset_field_accumulator_CS_to_zero( sim%E_accumulator_CS )
@@ -523,9 +550,9 @@ contains
 #else
     call cpu_time(t_fin)
 #endif
-    print*, 'time is', t_fin-t_init, 'sec; and', int(sim%num_iterations,i64)*&
-         int(sim%ions_number,i64)/(t_fin-t_init),'average pushes/sec for Proc',sim%my_rank
-    close(65)
+!    close(65)
+!    print*, 'time is', t_fin-t_init, 'sec; and', int(sim%num_iterations,i64)*&
+!         int(sim%ions_number,i64)/(t_fin-t_init),'average pushes/sec for Proc',sim%my_rank
 
 !!$    time = sll_time_elapsed_since(t2)
 !!$    print*, int(sim%num_iterations,i64)*int(sim%ions_number,i64)/time, 'average pushes/sec for Proc', sim%my_rank
@@ -551,6 +578,9 @@ contains
     SLL_DEALLOCATE(phi, ierr)
     SLL_DEALLOCATE_ARRAY(rho1d_send, ierr)
     SLL_DEALLOCATE_ARRAY(rho1d_receive, ierr)
+    SLL_DEALLOCATE_ARRAY(diag_energy, ierr)
+    SLL_DEALLOCATE_ARRAY(diag_TOTenergy, ierr)
+    SLL_DEALLOCATE_ARRAY(diag_TOTmoment, ierr)
 !!$    SLL_DEALLOCATE_ARRAY(diag_AccMem, ierr)
   end subroutine run_4d_pic_cartesian
 

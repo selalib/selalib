@@ -17,11 +17,13 @@
 !**************************************************************
 
 
+!> Module for hexagonal meshes
 module hex_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
   implicit none
 
+  !> Hexagonal mesh basic type
   type hex_logical_mesh_2d
      sll_int32  :: num_cells  ! number of cells in any direction parting from origin
      sll_real64 :: radius     ! distance between origin and external vertex
@@ -37,15 +39,18 @@ module hex_logical_meshes
      sll_real64 :: r3_x2 = 1.0
   end type hex_logical_mesh_2d
 
+  !> Hexagonal mesh basic type pointer
   type hex_logical_mesh_2d_ptr
      type(hex_logical_mesh_2d), pointer :: hm
   end type hex_logical_mesh_2d_ptr
 
   ! this should be sll_delete library-wide...
+  !> Delete the mesh
   interface delete
      module procedure delete_hex_logical_mesh_2d
   end interface delete
 
+  !> Print parameters
   interface sll_display
      module procedure display_logical_mesh_2d
   end interface sll_display
