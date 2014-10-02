@@ -50,7 +50,7 @@ program accumulate_tester
   enddo
 
   call sll_delete( part_group )
-  call delete( m2d )
+  call sll_delete( m2d )
   call sll_delete( all_charge )
 
   print*, "PASSED"

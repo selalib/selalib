@@ -1242,7 +1242,7 @@ contains
     
     !call delete( transf%x1_interp)
     !call delete( transf%x2_interp)
-    call delete( transf%mesh)
+    call sll_delete( transf%mesh)
     ! Fix: there is a dependency problem where these pointers are not recognized
     ! during the linking step. A similar nullification of an abstract class
     ! pointer is carried out in the fields_2d_alternative type without problems.
