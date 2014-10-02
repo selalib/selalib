@@ -88,6 +88,10 @@ ENDIF(PASTIX_ENABLED)
 
 # include's .h files
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR}/include)
+IF(SLL_BUILD_PACKAGE)
+   SET(CMAKE_BUILD_TYPE Release
+       CACHE STRING "Choose the type of build, options are: Debug Release." FORCE)
+ENDIF(SLL_BUILD_PACKAGE)
 
 ADD_SUBDIRECTORY(package)
 ADD_SUBDIRECTORY(fftpack)
@@ -133,6 +137,7 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(advection)
    ADD_SUBDIRECTORY(fcisl)
    ADD_SUBDIRECTORY(gyroaverage)
+   ADD_SUBDIRECTORY(maxwell_solvers)
    
    IF(MPI_MODULE_ENABLED)
       
@@ -158,7 +163,6 @@ IF(NOT SLL_BUILD_PACKAGE)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers)
    ADD_SUBDIRECTORY(general_coordinate_elliptic_solvers_multipatch)
    ADD_SUBDIRECTORY(poisson_solvers)
-   ADD_SUBDIRECTORY(maxwell_solvers)
    ADD_SUBDIRECTORY(multigrid)
    ADD_SUBDIRECTORY(BSL)
    ADD_SUBDIRECTORY(CSL)
@@ -200,3 +204,11 @@ ENDIF()
 MESSAGE(STATUS "####")
 MESSAGE(STATUS "############################################################")
 
+ADD_CUSTOM_TARGET( clean_outputs
+    COMMAND find . -name *.mtv -delete
+    COMMAND find . -name *.gnu -delete
+    COMMAND find . -name *.dat -delete
+    COMMAND find . -name *.xmf -delete
+    COMMAND find . -name *.h5  -delete
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    COMMENT "Delete all .gnu, .dat, .mtv, .h5, .xmf " VERBATIM)

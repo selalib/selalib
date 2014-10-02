@@ -60,7 +60,7 @@ program initialize_tester
   close(83)
   
   call sll_delete( init_group )
-  call delete( m2d )
+  call sll_delete( m2d )
   print*, "PASSED"
 
 !contains
