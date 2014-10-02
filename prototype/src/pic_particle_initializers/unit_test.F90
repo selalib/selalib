@@ -4,7 +4,7 @@ program initialize_tester
 #include "sll_assert.h"
 
   use sll_constants, only: sll_pi
-  use sll_particle_group_2d_module
+  use sll_particle_group_4d_module
   use sll_particle_initializers
   use sll_logical_meshes
   use sll_representation_conversion_module
@@ -25,7 +25,7 @@ program initialize_tester
 
   
   implicit none
-  type(sll_particle_group_2d), pointer :: init_group
+  type(sll_particle_group_4d), pointer :: init_group
   type(sll_logical_mesh_2d),   pointer :: m2d
   sll_int32 :: j
   character(5) :: ncx_name, ncy_name
@@ -34,7 +34,7 @@ program initialize_tester
   m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
   
-  init_group => new_particle_2d_group( &
+  init_group => new_particle_4d_group( &
        NUM_PARTICLES, &
        PARTICLE_ARRAY_SIZE, &
        GUARD_SIZE, QoverM, m2d )
@@ -60,7 +60,7 @@ program initialize_tester
   close(83)
   
   call sll_delete( init_group )
-  call delete( m2d )
+  call sll_delete( m2d )
   print*, "PASSED"
 
 !contains

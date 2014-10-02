@@ -51,7 +51,7 @@ contains
     integer(hid_t),   intent(out) :: file_id    !< file unit number
     integer(hid_t)                :: plist_id   
     integer                       :: info
-    integer                       :: error
+    integer                       :: error      !< error code
 
     info     = MPI_INFO_NULL
 
@@ -78,7 +78,7 @@ contains
     integer,           intent(in)  :: comm        !< error code
     integer(hid_t)                 :: plist_id    
     integer                        :: info
-    integer                        :: error
+    integer                        :: error       !< error code
 
     info     = MPI_INFO_NULL
     

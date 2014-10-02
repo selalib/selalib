@@ -5,7 +5,7 @@ program utilities_tester
 
 !  use sll_accumulators
   use sll_constants, only: sll_pi
-!  use sll_particle_group_2d_module
+!  use sll_particle_group_4d_module
   use sll_particle_initializers
   use sll_logical_meshes
   use sll_charge_to_density_module
@@ -25,7 +25,7 @@ program utilities_tester
 
   
   implicit none
-  type(sll_particle_group_2d), pointer :: part_group
+  type(sll_particle_group_4d), pointer :: part_group
   type(sll_logical_mesh_2d),   pointer :: m2d
   type(charge_accumulator_cell), dimension(:), pointer :: all_charge
   sll_int32 :: j
@@ -35,7 +35,7 @@ program utilities_tester
   m2d =>  new_logical_mesh_2d( NC_X, NC_Y, &
        XMIN, XMAX, YMIN, YMAX )
   
-  part_group => new_particle_2d_group( &
+  part_group => new_particle_4d_group( &
        NUM_PARTICLES, &
        PARTICLE_ARRAY_SIZE, &
        GUARD_SIZE, m2d )

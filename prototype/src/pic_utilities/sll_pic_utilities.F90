@@ -20,7 +20,7 @@ module sll_pic_utilities
 #include "sll_memory.h"
 #include "sll_assert.h"
 #include "sll_accumulators.h" 
-  use sll_particle_group_2d_module
+  use sll_particle_group_4d_module
 
 #ifdef _OPENMP
    use omp_lib
@@ -36,9 +36,9 @@ implicit none
 contains
 
   subroutine sll_first_charge_accumulation_2d( p_group, q_accumulator )
-    type(sll_particle_group_2d), pointer                       :: p_group
+    type(sll_particle_group_4d), pointer                       :: p_group
     type(sll_charge_accumulator_2d_ptr), dimension(:), pointer :: q_accumulator
-    type(sll_particle_2d), dimension(:), pointer :: p
+    type(sll_particle_4d), dimension(:), pointer :: p
     type(sll_charge_accumulator_2d), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles
@@ -66,9 +66,9 @@ contains
   end subroutine sll_first_charge_accumulation_2d
 
   subroutine sll_first_charge_accumulation_2d_CS( p_group, q_accumulator )
-    type(sll_particle_group_2d), pointer         :: p_group
+    type(sll_particle_group_4d), pointer         :: p_group
     type(sll_charge_accumulator_2d_CS_ptr), dimension(:), pointer  :: q_accumulator
-    type(sll_particle_2d), dimension(:), pointer :: p
+    type(sll_particle_4d), dimension(:), pointer :: p
     type(sll_charge_accumulator_2d_CS), pointer :: q_accum
     sll_int64  :: i
     sll_int64  :: num_particles

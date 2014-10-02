@@ -11,12 +11,7 @@ Example :
 
 # src/CMakeList.txt ::
 
- ######################################################################
- #  III. SUBDIRECTORY                                                 #
- ######################################################################
- ...
  add_subdirectory(fft)
- ...
 
 Add module
 ^^^^^^^^^^
@@ -29,10 +24,10 @@ The <LIST_OF_DEPENDENCIES> is a collection of library that is required to link w
 
 Example :
 
-# src/fft/CMakeList.txt ::
+# src/fft/CMakeList.txt::
 
  add_library(sll_fft STATIC sll_fft.F90)
- target_link_libraries(sll_fft sll_working_precision sll_memory sll_assertion)
+ target_link_libraries(sll_fft sll_working_precision sll_memory sll_assert)
 
 Add program
 ^^^^^^^^^^^
@@ -41,44 +36,37 @@ A program is an executable. In SeLaLib the executable are in build/bin/.
 To add executable to the cmake tree add this lines in the current CMakeList::
 
  add_executable(<EXECUTABLE_NAME> <FILE_NAME.F90>)
- target_link_libraries(test_fft <LIBRARY_NAME>)
+ target_link_libraries(<EXECUTABLE_NAME> <LIBRARY_NAME>)
 
 Example :
 
-# src/fft/CMakeList.txt ::
+# src/fft/CMakeList.txt::
 
- ...
  add_executable(test_fft unit_test.F90)
  target_link_libraries(test_fft sll_fft) 
- ... 
-
 
 Add test
 ^^^^^^^^
 
 A test is an executable define by ``add_executable`` that is automaticaly run by ``make test``.
-Add the followng line to /src/CMakeList.txt in the *TEST* section ::
+Add the following lines to CMakeList.txt::
 
  add_test(NAME <TEST_NAME> COMMAND <EXECUTABLE_NAME>)
+ set_tests_properties( <TEST_NAME> PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20)
 
-where ``<TEST_NAME>`` is the name that appear when you run ``make test`` and ``<EXECUTABLE_NAME>`` is the name of the executable that you have define.
+where ``<TEST_NAME>`` is the name that appears when you run ``make
+test`` and ``<EXECUTABLE_NAME>`` is the name of the executable that
+you defined. The string "PASSED" could be changed and if needed,
+increase the timeout value (seconds).
 
 Example :
 
 # src/fft/CMakeList.txt ::
 
-  ...
   add_executable(test_fft unit_test.F90)
-  ...
-
-# src/CMakeList.txt ::
-
- ######################################################################
- #  IV. TEST                                                          #
- ######################################################################
-  ...
+  target_link_libraries(test_fft sll_fft) 
   add_test(NAME fft_unit_test COMMAND test_fft)
-  ...
+  set_tests_properties( fft_unit_test PROPERTIES PASS_REGULAR_EXPRESSION "PASSED" TIMEOUT 20)
 
 # output ::
 
@@ -89,10 +77,7 @@ Example :
        Start 1: fft_unit_test
   1/12 Test #1: fft_unit_test ..............................   Passed    0.13 sec
   ...
-  ...
 
-CTest
------
 Run ``make test`` in the buid directory is equivalent to run ``ctest``
 
 Running individual Tests
