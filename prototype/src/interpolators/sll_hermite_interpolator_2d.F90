@@ -24,7 +24,7 @@
 !!do not hesitate to take large odd p, like the favourite p=17
 !!@todo
 !! for the moment only in implementation for the case DIRICHLET x PERIODIC
-module sll_hermite_interpolator_2d
+module sll_module_hermite_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -39,12 +39,12 @@ module sll_hermite_interpolator_2d
 !! respect to their use, as described by the interpolator_2d_base class.
 !! Where the diverse interpolators diverge is in the way to initialize them.
 !! We basically copy the analog for cubic splines
-  type, extends(sll_interpolator_2d_base) :: hermite_2d_interpolator
+  type, extends(sll_interpolator_2d_base) :: sll_hermite_interpolator_2d
     type(sll_hermite_interpolation_2d), pointer :: hermite
     sll_int32 :: npts1
     sll_int32 :: npts2
   contains
-    procedure, pass(interpolator) :: initialize=>initialize_hermite_2d_interpolator
+    procedure, pass(interpolator) :: initialize=>initialize_hermite_interpolator_2d
     procedure :: compute_interpolants => wrap_compute_interpolants_hermite_2d
     procedure :: interpolate_value => wrap_interpolate_value_hermite_2d
     procedure :: interpolate_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
@@ -54,13 +54,13 @@ module sll_hermite_interpolator_2d
     procedure, pass :: set_coefficients => wrap_set_coefficients_hermite_2d
     procedure, pass :: get_coefficients => wrap_get_coefficients_hermite_2d
     procedure, pass :: coefficients_are_set => wrap_coefficients_are_set_hermite_2d
-    procedure, pass :: delete => delete_hermite_2d_interpolator
-  end type hermite_2d_interpolator
+    procedure, pass :: delete => delete_sll_hermite_interpolator_2d
+  end type sll_hermite_interpolator_2d
 
 
 contains
 
-  function new_hermite_2d_interpolator( &
+  function new_hermite_interpolator_2d( &
     npts1, &
     npts2, &
     eta1_min, &
@@ -83,7 +83,7 @@ contains
     eta2_max_slopes ) &   
     result(interpolator)
 
-    type(hermite_2d_interpolator), pointer :: interpolator
+    type(sll_hermite_interpolator_2d), pointer :: interpolator
     sll_int32, intent(in) :: npts1
     sll_int32, intent(in) :: npts2
     sll_real64, intent(in) :: eta1_min
@@ -134,9 +134,9 @@ contains
       eta2_max_slopes )    
 
      
-  end function  new_hermite_2d_interpolator
+  end function  new_hermite_interpolator_2d
   
-  subroutine initialize_hermite_2d_interpolator( &
+  subroutine initialize_hermite_interpolator_2d( &
     interpolator, &    
     npts1, &
     npts2, &
@@ -159,7 +159,7 @@ contains
     eta2_min_slopes, &
     eta2_max_slopes )    
 
-    class(hermite_2d_interpolator), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(inout) :: interpolator
     sll_int32, intent(in) :: npts1
     sll_int32, intent(in) :: npts2
     sll_real64, intent(in) :: eta1_min
@@ -203,7 +203,7 @@ contains
       eta2_min_slopes, &
       eta2_max_slopes )    
       
-  end subroutine initialize_hermite_2d_interpolator
+  end subroutine initialize_hermite_interpolator_2d
   
   
   subroutine wrap_compute_interpolants_hermite_2d( &
@@ -213,7 +213,7 @@ contains
     size_eta1_coords, &
     eta2_coords, &
     size_eta2_coords )
-    class(hermite_2d_interpolator), intent(inout) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(inout) :: interpolator
     sll_real64, dimension(:,:), intent(in) :: data_array
     sll_real64, dimension(:), intent(in),optional   :: eta1_coords
     sll_real64, dimension(:), intent(in),optional   :: eta2_coords
@@ -236,7 +236,7 @@ contains
   end subroutine wrap_compute_interpolants_hermite_2d
   
   function wrap_interpolate_value_hermite_2d( interpolator, eta1, eta2 ) result(val)
-    class(hermite_2d_interpolator), intent(in) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -245,7 +245,7 @@ contains
   end function wrap_interpolate_value_hermite_2d
   
   function wrap_interpolate_deriv1_hermite_2d( interpolator, eta1, eta2 ) result(val)
-    class(hermite_2d_interpolator), intent(in) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -257,7 +257,7 @@ contains
   end function wrap_interpolate_deriv1_hermite_2d
 
   function wrap_interpolate_deriv2_hermite_2d( interpolator, eta1, eta2 ) result(val)
-    class(hermite_2d_interpolator), intent(in) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     sll_real64, intent(in) :: eta2
@@ -276,7 +276,7 @@ contains
     eta1, &
     eta2) &
     result(data_out)
-    class(hermite_2d_interpolator),  intent(in) :: this
+    class(sll_hermite_interpolator_2d),  intent(in) :: this
     sll_int32,  intent(in)                           :: num_points1
     sll_int32,  intent(in)                           :: num_points2
     sll_real64, dimension(:,:), intent(in)           :: eta1
@@ -304,7 +304,7 @@ contains
     alpha1, &
     alpha2) &
     result(data_out)
-    class(hermite_2d_interpolator), intent(in) :: this
+    class(sll_hermite_interpolator_2d), intent(in) :: this
     sll_int32,  intent(in)                         :: num_points1
     sll_int32,  intent(in)                         :: num_points2
     sll_real64, dimension(:,:), intent(in)         :: alpha1
@@ -328,7 +328,7 @@ contains
     size_knots1, &
     knots2, &
     size_knots2)
-    class(hermite_2d_interpolator),  intent(inout) :: interpolator
+    class(sll_hermite_interpolator_2d),  intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in), optional :: coeffs_1d
     sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
     sll_int32, intent(in), optional :: coeff2d_size1
@@ -368,7 +368,7 @@ contains
   end subroutine wrap_set_coefficients_hermite_2d
 
   function wrap_get_coefficients_hermite_2d(interpolator) result(res)
-    class(hermite_2d_interpolator), intent(in)    :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer            :: res     
     
     print *, 'wrap_get_coefficients_hermite_2d: ERROR: This function has not been ', &
@@ -379,7 +379,7 @@ contains
   end function wrap_get_coefficients_hermite_2d
 
   function wrap_coefficients_are_set_hermite_2d( interpolator ) result(res)
-    class(hermite_2d_interpolator), intent(in) :: interpolator
+    class(sll_hermite_interpolator_2d), intent(in) :: interpolator
     logical :: res
     res = .false.
     print *, 'wrap_coefficients_are_set_hermite_2d(): '
@@ -388,12 +388,12 @@ contains
     !stop
   end function wrap_coefficients_are_set_hermite_2d
 
-  subroutine delete_hermite_2d_interpolator( interpolator )
-    class(hermite_2d_interpolator), intent(inout) :: interpolator    
-    print *,'#warning delete_hermite_2d_interpolator'
+  subroutine delete_sll_hermite_interpolator_2d( interpolator )
+    class(sll_hermite_interpolator_2d), intent(inout) :: interpolator    
+    print *,'#warning delete_sll_hermite_interpolator_2d'
     print *,'#not implemented for the moment'     
-  end subroutine delete_hermite_2d_interpolator  
+  end subroutine delete_sll_hermite_interpolator_2d  
 
 
 
-end module sll_hermite_interpolator_2d
+end module sll_module_hermite_interpolator_2d

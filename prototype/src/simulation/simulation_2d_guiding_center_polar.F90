@@ -24,7 +24,7 @@ module sll_simulation_2d_guiding_center_polar_module
 !  use sll_fft
   use sll_reduction_module
   use sll_simulation_base
-  use sll_hermite_interpolator_2d
+  use sll_module_hermite_interpolator_2d
   use sll_module_cubic_spline_interpolator_1d
   use sll_module_cubic_spline_interpolator_2d
   use sll_coordinate_transformation_2d_base_module
@@ -335,7 +335,7 @@ contains
           const_eta1_min_slope = 0._f64, & !to prevent problem on the boundary
           const_eta1_max_slope = 0._f64)
       case ("SLL_HERMITE")
-        f_interp2d => new_hermite_2d_interpolator( &
+        f_interp2d => new_hermite_interpolator_2d( &
           Nc_x1+1, &
           Nc_x2+1, &
           x1_min, &
