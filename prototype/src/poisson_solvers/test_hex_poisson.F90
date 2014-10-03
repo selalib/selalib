@@ -64,7 +64,7 @@ program test_hex_poisson
 
   call hex_matrix_poisson( matrix_poisson, mesh,1 )
 
-  call hex_second_terme_poisson( second_term, mesh, rho,1 )
+  call hex_second_terme_poisson( second_term, mesh, rho )
   
   !call searchband(matrix_poisson,n_points,l1,l2)
   l1 = 2*num_cells + 1
