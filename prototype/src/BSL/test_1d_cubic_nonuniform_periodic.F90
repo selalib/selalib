@@ -4,7 +4,7 @@ program bsl_1d_cubic_nonuniform_periodic
 #include "sll_assert.h"
 
 use sll_constants
-use sll_cubic_spline_interpolator_1d_nonuniform
+use sll_module_cubic_spline_interpolator_1d_nonuniform
 use sll_utilities, only: int2string
 
 use sll_module_interpolators_1d_base
@@ -26,8 +26,8 @@ sll_real64 :: advfield_x, advfield_v
 class(sll_interpolator_1d_base), pointer     :: interp_x
 class(sll_interpolator_1d_base), pointer     :: interp_v
 
-type(cubic_non_uniform_spline_1d_interpolator), target   :: spline_x
-type(cubic_non_uniform_spline_1d_interpolator), target   :: spline_v
+type(sll_cubic_spline_interpolator_1d_nonuniform), target   :: spline_x
+type(sll_cubic_spline_interpolator_1d_nonuniform), target   :: spline_v
 
 print*,'***********************'
 print*,'* 1D case             *'

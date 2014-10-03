@@ -36,7 +36,7 @@ program unit_test_alternative
   sll_int32 :: nc1, nc2!, iplot
   sll_real64 :: grad1_node_val,grad2_node_val,grad1ref,grad2ref
   sll_real64, dimension(:,:), pointer :: tab_values
-  type(arb_deg_2d_interpolator), target                 :: interp_2d
+  type(sll_arbitrary_degree_spline_interpolator_2d), target                 :: interp_2d
   sll_real64 :: node_val,ref
   ! procedure(polar_x1), pointer :: px1, px2, pjac11, pjac12, pjac21, pjac22
   ! type(init_landau_2d), target :: init_landau
@@ -45,7 +45,7 @@ program unit_test_alternative
   ! type(cubic_spline_1d_interpolator), target  :: interp_eta2
   ! class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   ! class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
-  !type(arb_deg_2d_interpolator), target    :: interp_2d_term_source
+  !type(sll_arbitrary_degree_spline_interpolator_2d), target    :: interp_2d_term_source
   !class(sll_scalar_field_2d_base), pointer              :: rho
   !sll_real64, dimension(:,:), allocatable    :: calculated
   !sll_real64, dimension(:,:), allocatable    :: difference

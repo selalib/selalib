@@ -20,10 +20,10 @@ program unit_test_advection_2d_CSL1D
 #include "sll_memory.h"
 use sll_module_advection_2d_tensor_product
 use sll_module_characteristics_2d_explicit_euler
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 use sll_module_advection_1d_BSL
 use sll_module_characteristics_1d_explicit_euler
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
 
 implicit none
   

@@ -37,8 +37,8 @@ module sll_module_poisson_2d_mudpack_curvilinear_solver_old
 use sll_constants
 use sll_module_poisson_2d_base
 use sll_mudpack_base
-use sll_cubic_spline_interpolator_1d
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_2d
 use sll_coordinate_transformation_2d_base_module
 use sll_module_coordinate_transformations_2d
 !use sll_poisson_2d_polar

@@ -10,7 +10,7 @@ module sll_mudpack_cartesian
 #include "sll_file_io.h"
 
 use sll_mudpack_base
-!use sll_cubic_spline_interpolator_1d
+!use sll_module_cubic_spline_interpolator_1d
 
 implicit none
 

@@ -7,7 +7,7 @@ module sll_mudpack_base
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 
 implicit none
 sll_int32, private :: i, j, k

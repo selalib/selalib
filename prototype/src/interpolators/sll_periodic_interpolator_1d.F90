@@ -8,7 +8,7 @@
 !! - it is probably better to convert this into a subroutine, since data_out
 !!   will be allocated on the stack (too big an array will crash the program),
 !!   and some copy operation might be involved when "catching" the results.
-module sll_periodic_interpolator_1d
+module sll_module_periodic_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -17,7 +17,7 @@ use periodic_interp_module
   implicit none
 
   !> Periodic interpolator
-  type, extends(sll_interpolator_1d_base) ::  per_1d_interpolator
+  type, extends(sll_interpolator_1d_base) ::  sll_periodic_interpolator_1d
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
@@ -41,7 +41,7 @@ use periodic_interp_module
      procedure, pass :: set_coefficients => set_coefficients_per1d
      procedure, pass :: get_coefficients => get_coefficients_per1d
 
-  end type per_1d_interpolator
+  end type sll_periodic_interpolator_1d
 
   !> Deallocate the interpolator object
   interface sll_delete
@@ -59,7 +59,7 @@ contains  ! ****************************************************************
     type, &
     order)  result(res)
 
-    type(per_1d_interpolator),  pointer :: res
+    type(sll_periodic_interpolator_1d),  pointer :: res
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -82,7 +82,7 @@ contains  ! ****************************************************************
 
   function per_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
-    class(per_1d_interpolator),  intent(in)       :: this
+    class(sll_periodic_interpolator_1d),  intent(in)       :: this
     !class(sll_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
@@ -104,7 +104,7 @@ contains  ! ****************************************************************
 
   function per_interpolate1d_disp(this, num_points, data, alpha) &
        result(data_out)
-    class(per_1d_interpolator),  intent(in)       :: this
+    class(sll_periodic_interpolator_1d),  intent(in)       :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64,  intent(in)   :: alpha
     sll_real64, dimension(:), intent(in)   :: data
@@ -127,7 +127,7 @@ contains  ! ****************************************************************
        eta_coords, &
        size_eta_coords)
 
-    class(per_1d_interpolator), intent(inout) :: interpolator
+    class(sll_periodic_interpolator_1d), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
@@ -154,7 +154,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(per_1d_interpolator),  intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -173,7 +173,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-    class(per_1d_interpolator),  intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
@@ -195,7 +195,7 @@ contains  ! ****************************************************************
     output_array )
 
 
-    class(per_1d_interpolator),  intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -215,7 +215,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-    class(per_1d_interpolator),  intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
@@ -231,7 +231,7 @@ contains  ! ****************************************************************
   end subroutine interpolate_pointer_derivatives_per1d
 
   function interpolate_value_per1d( interpolator, eta1 ) result(val)
-    class(per_1d_interpolator), intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_value_per1d: ', &
@@ -243,7 +243,7 @@ contains  ! ****************************************************************
   end function
 
   function interpolate_deriv1_per1d( interpolator, eta1 ) result(val)
-    class(per_1d_interpolator), intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_deriv1_per1d: ', &
@@ -255,7 +255,7 @@ contains  ! ****************************************************************
   end function interpolate_deriv1_per1d
 
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(per_1d_interpolator), intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
      print*, 'interpolate_derivative_f95: ', &
@@ -279,7 +279,7 @@ contains  ! ****************************************************************
     type, &
     order)
 
-    class(per_1d_interpolator),  intent(inout) :: interpolator
+    class(sll_periodic_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -302,7 +302,7 @@ contains  ! ****************************************************************
 
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
-    class(per_1d_interpolator), intent(in)     :: this
+    class(sll_periodic_interpolator_1d), intent(in)     :: this
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
        sll_real64, dimension(num_points)    :: res
@@ -314,12 +314,12 @@ contains  ! ****************************************************************
   end function reconstruct_array
 
   subroutine delete_per1d( obj )
-    class(per_1d_interpolator) :: obj
+    class(sll_periodic_interpolator_1d) :: obj
     call delete(obj%per_interp)
   end subroutine delete_per1d
 
   subroutine set_coefficients_per1d( interpolator, coeffs )
-    class(per_1d_interpolator), intent(inout) :: interpolator
+    class(sll_periodic_interpolator_1d), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_per1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -332,7 +332,7 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_per1d(interpolator)
-    class(per_1d_interpolator), intent(in) :: interpolator
+    class(sll_periodic_interpolator_1d), intent(in) :: interpolator
     sll_real64, dimension(:), pointer            :: get_coefficients_per1d
 
     print *, 'get_coefficients_per1d(): ERROR: This function has not been ', &
@@ -342,4 +342,4 @@ contains  ! ****************************************************************
     stop
   end function get_coefficients_per1d
 
-end module sll_periodic_interpolator_1d
+end module sll_module_periodic_interpolator_1d

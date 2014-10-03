@@ -30,7 +30,7 @@ module sll_distribution_function_4d_multipatch_module
   use sll_remapper
   use sll_collective
   use sll_module_interpolators_2d_base
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_utilities
   use sll_boundary_condition_descriptors
   use sll_gnuplot

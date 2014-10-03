@@ -1,8 +1,7 @@
-program unit_test
+program unit_test_2d
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-use sll_common_coordinate_transformations
 
 implicit none
 
@@ -139,4 +138,44 @@ subroutine test_interpolator_2d()
   print*, " error = ", maxval(abs(data_out-cos(xx1)*sin(xx2)))
 end subroutine test_interpolator_2d
 
-end program unit_test
+  function deriv_x1_polar_f_eta1( eta1, eta2, params )
+    sll_real64 :: deriv_x1_polar_f_eta1
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    r1 = params(1)
+    r2 = params(2)
+    deriv_x1_polar_f_eta1 = eta1
+    deriv_x1_polar_f_eta1 = (r2-r1)*cos(2.0_f64*sll_pi*eta2)
+  end function deriv_x1_polar_f_eta1
+
+  function deriv_x1_polar_f_eta2( eta1, eta2, params )
+    sll_real64 :: deriv_x1_polar_f_eta2
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: k
+    sll_real64 :: r1
+    sll_real64 :: r2
+    deriv_x1_polar_f_eta2  = eta1+eta2
+
+    r1 = params(1)
+    r2 = params(2)
+    k = 2.0_f64*sll_pi
+    deriv_x1_polar_f_eta2 = -(r1+(r2-r1)*eta1)*sin(k*eta2)*k
+  end function deriv_x1_polar_f_eta2
+
+  function x1_polar_f( eta1, eta2, params )
+    sll_real64 :: x1_polar_f
+    sll_real64, intent(in) :: eta1, eta2
+    sll_real64, dimension(:), intent(in) :: params
+    sll_real64 :: r1
+    sll_real64 :: r2
+
+    r1 = params(1)
+    r2 = params(2)
+    x1_polar_f = (r1 + (r2-r1)*eta1)*cos(2.0_f64*sll_pi*eta2)
+  end function x1_polar_f
+
+end program unit_test_2d

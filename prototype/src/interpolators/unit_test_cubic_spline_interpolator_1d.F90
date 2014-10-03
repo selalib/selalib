@@ -1,4 +1,4 @@
-program unit_test
+program cubic_spline_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -6,17 +6,15 @@ program unit_test
   use util_constants
 
   use sll_module_interpolators_1d_base
-  !use WENO_interp
-  use sll_cubic_spline_interpolator_1d
-  use sll_cubic_spline_interpolator_1d_nonuniform
- ! use sll_periodic_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d_nonuniform
+ ! use sll_module_periodic_interpolator_1d
   implicit none
 
   class(sll_interpolator_1d_base), pointer     :: interp
 
   type(cubic_spline_1d_interpolator), target   :: spline
-  !type(cubic_non_uniform_spline_1d_interpolator), target  :: cubic_nonunif_spline
-  !type(WENO_interp_1d), pointer               :: weno
+  !type(sll_cubic_spline_interpolator_1d_nonuniform), target  :: cubic_nonunif_spline
 
   sll_real64                            :: error
   sll_real64                            :: phase
@@ -81,4 +79,4 @@ program unit_test
   print *, 'Successful, exiting program.'
   print *, 'PASSED'
 
-end program unit_test
+end program cubic_spline_interpolator_1d

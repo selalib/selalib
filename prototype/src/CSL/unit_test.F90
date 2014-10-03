@@ -13,7 +13,7 @@ program unit_test
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_gaussian_2d_initializer
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   implicit none
   
   sll_int32 :: nc_eta1_coarse, nc_eta2_coarse

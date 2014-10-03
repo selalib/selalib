@@ -9,8 +9,8 @@ module sll_simulation_4d_qns_general_module
 !  use sll_collective
 !  use sll_remapper
 !  use sll_constants
-  use sll_cubic_spline_interpolator_1d
-!  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+!  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base
 !  use sll_logical_meshes
   use sll_parallel_array_initializer_module
@@ -19,7 +19,7 @@ module sll_simulation_4d_qns_general_module
   use sll_general_coordinate_elliptic_solver_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
-!  use sll_arbitrary_degree_spline_interpolator_1d_module
+!  use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_timer
   implicit none
 
@@ -124,15 +124,15 @@ module sll_simulation_4d_qns_general_module
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
      !type(cubic_spline_2d_interpolator) :: interp_x1x2
-     type(arb_deg_2d_interpolator) :: interp_x1x2
+     type(sll_arbitrary_degree_spline_interpolator_2d) :: interp_x1x2
 !!$     type(cubic_spline_1d_interpolator) :: interp_x1
 !!$     type(cubic_spline_1d_interpolator) :: interp_x2
      type(cubic_spline_1d_interpolator) :: interp_x3
-     !type(arb_deg_1d_interpolator) :: interp_x3
+     !type(sll_arbitrary_degree_spline_interpolator_1d) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! interpolation any arbitrary spline
-     type(arb_deg_2d_interpolator)     :: interp_rho
-     type(arb_deg_2d_interpolator)     :: interp_phi
+     type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_rho
+     type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_phi
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params

@@ -27,8 +27,8 @@ module sll_simulation_2d_analytic_field_cartesian_module
   use sll_module_characteristics_1d_trapezoid_conservative
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_coordinate_transformation_2d_base_module
 !  use sll_module_coordinate_transformations_2d
 !  use sll_common_coordinate_transformations

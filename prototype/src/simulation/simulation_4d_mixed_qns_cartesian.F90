@@ -14,9 +14,9 @@ module sll_simulation_4d_qns_mixed_module
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_poisson_2d_periodic_cartesian_par
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
   use sll_logical_meshes
   use sll_parallel_array_initializer_module
@@ -112,8 +112,8 @@ module sll_simulation_4d_qns_mixed_module
      type(cubic_spline_1d_interpolator) :: interp_x3
      type(cubic_spline_1d_interpolator) :: interp_x4
      ! interpolation any arbitrary spline
-      type(arb_deg_2d_interpolator)     :: interp_rho
-      type(arb_deg_2d_interpolator)     :: interp_phi
+      type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_rho
+      type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_phi
      ! Field accumulator
      sll_comp64, dimension(:,:), allocatable :: efield_x1
      sll_comp64, dimension(:,:), allocatable :: efield_x2
