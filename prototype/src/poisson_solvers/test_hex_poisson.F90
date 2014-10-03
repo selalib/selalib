@@ -18,9 +18,10 @@ program test_hex_poisson
   sll_int32                               :: num_cells, n_points, i,j, k1, k2 
   sll_int32                               :: ierr, l1,l2, index_tab, global
   sll_real64                              :: x, y, erreur = 0._f64
+  sll_real64                              :: erreur1, erreur2
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 20
+  num_cells = 40
 
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
@@ -47,18 +48,23 @@ program test_hex_poisson
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
 
-     rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
+     ! rho(i) = -(2._f64*(x**2+y**2)**2 + 6._f64*(1._f64-2._f64*x**2-2._f64*y**2))
 
-     sol(i) = x**2*y**4 - 2._f64/3._f64*x**4*y**2 - 0.75_f64 - 1.5_f64*x**2*&
-          y**2 + x**6/9._f64 - 0.75_f64*(x**4 + y**4) + 1.5_f64*(x**2 + y**2)
+     ! sol(i) = x**2*y**4 - 2._f64/3._f64*x**4*y**2 - 0.75_f64 - 1.5_f64*x**2*&
+     !      y**2 + x**6/9._f64 - 0.75_f64*(x**4 + y**4) + 1.5_f64*(x**2 + y**2)
      !   = (x**2-0.75_f64) * ( y**2 - (x/sqrt(3._f64)-1._f64)**2 )* &
      !     ( y**2 - (x/sqrt(3._f64)+1._f64)**2)
 
+     rho(i) = -(4._f64*(x**2+y**2)*36._f64**2-4._f64*36._f64)*exp( - (x**2 + y**2)*36._f64 )
+     sol(i) = +exp( - (x**2 + y**2)*36._f64 )
+
   enddo
 
-  call hex_matrix_poisson( matrix_poisson, mesh )
+  ! here rho = - laplacian(sol) , sol ~ phi
 
-  call hex_second_terme_poisson( second_term, mesh, rho )
+  call hex_matrix_poisson( matrix_poisson, mesh,1 )
+
+  call hex_second_terme_poisson( second_term, mesh, rho,1 )
   
   !call searchband(matrix_poisson,n_points,l1,l2)
   l1 = 2*num_cells + 1
@@ -100,16 +106,17 @@ program test_hex_poisson
 
   call compute_hex_fields(mesh,uxn,uyn,phi_end,1)
 
-  erreur = 0._f64
+  erreur1 = 0._f64
+  erreur2 = 0._f64
   do i=1, n_points  
      x = mesh%cartesian_coord(1,i)
      y = mesh%cartesian_coord(2,i)
-     erreur = erreur + abs(  2._f64*x*y**4 - 8._f64/3._f64*x**3*y**2 - 3._f64*x*&
-          y**2 + 2._f64*x**5/3._f64 - 3._f64*x**3 + 3._f64*x - uyn(i))**2
-     !print*,2._f64*x*y**4 - 8._f64/3._f64*x**3*y**2 - 3._f64*x*&
-     !     y**2 + 2._f64*x**5/3._f64 - 3._f64*x**3 + 3._f64*x , uyn(i)
+     erreur1 = erreur1 + abs(-(2._f64*x*36._f64)*exp( - (x**2 + y**2)*36._f64 ) - uyn(i) )**2
+     erreur2 = erreur2 + abs(-(2._f64*y*36._f64)*exp( - (x**2 + y**2)*36._f64 ) + uxn(i) )**2
   enddo
-  print*, "erreur sur dx(phi)", sqrt(erreur/real(num_cells,f64)**2)
+  print*, "erreur sur dx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
+  print*, "erreur sur dy(phi)", sqrt(erreur2/real(num_cells,f64)**2)
+
 
   ! open(unit = 11, file="matrix_hex_poisson.txt", action="write", status="replace")
 
@@ -122,15 +129,15 @@ program test_hex_poisson
   
   ! close(11)
 
-  ! open(unit = 12, file="test_hex_poisson.txt", action="write", status="replace")
+  open(unit = 12, file="test_hex_poisson.txt", action="write", status="replace")
 
-  ! do i=1, n_points
-  !       x = mesh%cartesian_coord(1,i)
-  !       y = mesh%cartesian_coord(2,i)
-  !       write(12,*)  x,y,sol(i), phi_end(i)
-  ! enddo
+  do i=1, n_points
+        x = mesh%cartesian_coord(1,i)
+        y = mesh%cartesian_coord(2,i)
+        write(12,*)  x,y,sol(i), phi_end(i)
+  enddo
 
-  ! close(12)
+  close(12)
 
   SLL_DEALLOCATE_ARRAY(second_term,ierr)
   SLL_DEALLOCATE_ARRAY(rho,ierr)

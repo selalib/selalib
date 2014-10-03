@@ -534,10 +534,6 @@ contains
     k11 = mesh%hex_coord(1,i1) 
     k12 = mesh%hex_coord(2,i1) 
 
-    ! print*, x ,y 
-
-    call get_triangle_index(k11,k12,mesh,x,center_index)
-
     ! get the first 9 degrees of freedom
 
     ! values at the vertices of the triangle
@@ -545,16 +541,7 @@ contains
     freedom(1) = f_tn(i1)
     freedom(2) = f_tn(i2)
     freedom(3) = f_tn(i3)
-
-    ! values at the middle of the edges
     
-    if (num_method == 15 ) then 
-       call get_edge_index(k11,k12,mesh,x,edge_index1,edge_index2,edge_index3)
-       freedom(12) = edge_value(edge_index1)
-       freedom(11) = edge_value(edge_index2)
-       freedom(10) = edge_value(edge_index3)
-    endif
-
     ! values of the derivatives
 
     freedom(5) = deriv(3,i1) ! derivative from S1 to S3 (+h3)
@@ -616,8 +603,9 @@ contains
 
     else if (num_method == 10 ) then
 
+       call get_triangle_index(k11,k12,mesh,x,center_index)
        freedom(10) = center_value(center_index)
-
+       !freedom(10) = (f_tn(i1)+f_tn(i2)+f_tn(i3))/3._f64
        !call reconstruction_center_values(mesh,f_tn,center_index,freedom(10))
 
        ! Computing the ten canonical basis functions 
@@ -638,6 +626,13 @@ contains
             (base,x1,x3,y1,y2,y3,x,y,l1,l2,l3,mesh)
 
     else if (num_method == 15 ) then 
+
+       ! values at the middle of the edges
+
+       call get_edge_index(k11,k12,mesh,x,edge_index1,edge_index2,edge_index3)
+       freedom(12) = edge_value(edge_index1)
+       freedom(11) = edge_value(edge_index2)
+       freedom(10) = edge_value(edge_index3)
 
        ! Computing the basis for the quartic element of Ganev_Dimitrov
 
@@ -1920,7 +1915,7 @@ contains
             + r2*fi3 + r1*fi4
     endif
 
-    !center_value = ( center_value1 + center_value2 + center_value3)/3._f64
+    center_value = ( center_value1 + center_value2 + center_value3)/3._f64
     !center_value = center_value3
 
 
