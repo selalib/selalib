@@ -10,12 +10,14 @@
 
 
 !> @namespace sll_interpolators 
-!> @brief 
-!> High-level classes to compute interpolation.
+!! This library provides implementations for the abstract interfaces
+!! Define spline interpolation of values in data define on original grid at
+!! points coordinates
 !> @author Selalib team 
-!> You can add a contact, do not put your email to prevent spam.
 !> @details
-!> Long description of  interpolators, you can add some references or math equations.
+!> Abstract classes name are:
+!!  - sll_interpolate_1d_base
+!!  - sll_interpolate_2d_base
 !>
 !> <b> Headers file available </b>
 !>  - sll_interpolators.h

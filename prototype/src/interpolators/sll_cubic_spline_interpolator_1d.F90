@@ -16,6 +16,16 @@
 !**************************************************************
 
 !> Interpolator 1d using cubic splines on regular mesh
+!! the following provides an implementation for the abstract interface
+!!  interpolate1d
+!! Define spline interpolation of values in data define on original grid at
+!! points coordinates
+!!Issues with the following function:
+!!- entities referenced through "this" are modified, violating the declared
+!!  intent.
+!!- it is probably better to convert this into a subroutine, since data_out
+!!  will be allocated on the stack (too big an array will crash the program),
+!!  and some copy operation might be involved when "catching" the results.
 module sll_cubic_spline_interpolator_1d
 
 #include "sll_working_precision.h"
@@ -68,16 +78,6 @@ end interface sll_delete
 contains  ! ****************************************************************
 
 
-  ! the following provides an implementation for the abstract interface
-  !interpolate1d
-  !> Define spline interpolation of values in data define on original grid at
-  !> points coordinates
-  ! Issues with the following function:
-  ! - entities referenced through "this" are modified, violating the declared
-  !   intent.
-  ! - it is probably better to convert this into a subroutine, since data_out
-  !   will be allocated on the stack (too big an array will crash the program),
-  !   and some copy operation might be involved when "catching" the results.
 
   function spline_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
