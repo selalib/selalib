@@ -8,7 +8,7 @@ module sll_general_coordinate_elliptic_solver_module
   use sll_boundary_condition_descriptors
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   !use sparsematrix_module
   use connectivity_module
   use sll_knots
@@ -794,7 +794,7 @@ if (sll_perper == 0) then
     class is (sll_scalar_field_2d_discrete_alt)
        base_interpolator_pointer => type_field%interp_2d
        select type( type_interpolator => base_interpolator_pointer)
-       class is (arb_deg_2d_interpolator)
+       class is (sll_arbitrary_degree_spline_interpolator_2d)
           coeff_rho => type_interpolator%get_coefficients()
                   
           ! put the spline coefficients in a 1d array

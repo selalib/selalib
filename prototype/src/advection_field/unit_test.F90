@@ -8,7 +8,7 @@ program unit_test
   use sll_logical_meshes
   use sll_module_coordinate_transformations_2d
   use sll_module_mapped_meshes_1d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_common_coordinate_transformations
   implicit none
  

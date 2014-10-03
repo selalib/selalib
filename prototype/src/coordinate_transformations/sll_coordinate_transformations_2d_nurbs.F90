@@ -5,7 +5,7 @@ module sll_module_coordinate_transformations_2d_nurbs
 #include "sll_file_io.h"
   use sll_xdmf
   use sll_logical_meshes
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_gnuplot
   use sll_module_interpolators_2d_base
   use sll_coordinate_transformation_2d_base_module
@@ -121,7 +121,7 @@ contains
   end function new_nurbs_2d_transformation_from_file
 
   subroutine read_from_file_2d_nurbs( transf, filename )
-    use sll_arbitrary_degree_spline_interpolator_2d_module
+    use sll_module_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_nurbs), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim

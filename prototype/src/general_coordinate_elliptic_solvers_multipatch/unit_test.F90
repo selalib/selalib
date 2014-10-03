@@ -10,7 +10,7 @@ program test_general_elliptic_solver_multipatch
   use sll_module_scalar_field_2d_alternative
   use sll_module_scalar_field_2d_multipatch
   use sll_constants
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
 
 #ifdef _UMFPACK

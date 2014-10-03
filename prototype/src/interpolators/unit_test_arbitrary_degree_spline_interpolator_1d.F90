@@ -2,7 +2,6 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-  use sll_arbitrary_degree_spline_interpolator_1d_module
   use sll_gnuplot
   implicit none
 
@@ -12,7 +11,7 @@ program unit_test
 #define X1MIN 0.0_f64
 #define X1MAX 1.0_f64
 
-  type(sll_arb_deg_1d_interpolator) :: ad1d
+  type(sll_arbitrary_degree_spline_interpolator_1d) :: ad1d
   sll_real64, dimension(:), allocatable    :: x,xprime
   sll_real64, dimension(:), allocatable    :: eta1_pos,eta1_prime
   sll_real64, dimension(:), allocatable    :: reference

@@ -14,8 +14,8 @@ module sll_simulation_4d_qns_general_multipatch_module
 !  use sll_collective
 !  use sll_remapper
 !  use sll_constants
-  use sll_cubic_spline_interpolator_1d
-!  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+!  use sll_module_cubic_spline_interpolator_2d
   use sll_simulation_base
 !  use sll_logical_meshes
   use sll_parallel_array_initializer_module
@@ -25,7 +25,7 @@ module sll_simulation_4d_qns_general_multipatch_module
   use sll_common_array_initializers_module
 !  use sll_module_scalar_field_2d_base
 !  use sll_module_scalar_field_2d_alternative
-!  use sll_arbitrary_degree_spline_interpolator_1d_module
+!  use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_timer
   implicit none
 

@@ -21,7 +21,7 @@ module sll_simulation_4d_DK_hybrid_module
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_base
   use sll_module_scalar_field_2d_alternative
-  use sll_arbitrary_degree_spline_interpolator_1d_module
+  use sll_module_arbitrary_degree_spline_interpolator_1d
   use sll_module_scalar_field_1d_base
   use sll_module_scalar_field_1d_alternative
   use sll_timer
@@ -146,9 +146,9 @@ module sll_simulation_4d_DK_hybrid_module
     type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
     type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
     !----> for interpolations
-    type(arb_deg_2d_interpolator) :: interp2d_f_eta1eta2
-    type(sll_arb_deg_1d_interpolator) :: interp1d_f_eta3
-    type(sll_arb_deg_1d_interpolator) :: interp1d_f_vpar
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_f_eta1eta2
+    type(sll_arbitrary_degree_spline_interpolator_1d) :: interp1d_f_eta3
+    type(sll_arbitrary_degree_spline_interpolator_1d) :: interp1d_f_vpar
 
     !--> 3D charge density and 3D electric potential
     !----> sequential in (x1,x2)
@@ -173,16 +173,16 @@ module sll_simulation_4d_DK_hybrid_module
     !--> For general QN solver
     type(general_coordinate_elliptic_solver), pointer :: QNS
     ! interpolation any arbitrary spline
-    type(arb_deg_2d_interpolator) :: interp2d_rho_eta1eta2
-    type(arb_deg_2d_interpolator) :: interp2d_Phi_eta1eta2
-    type(sll_arb_deg_1d_interpolator) :: interp1d_Phi_eta3
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A11
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A12
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A21
-    type(arb_deg_2d_interpolator) :: interp2d_QN_A22
-    type(arb_deg_2d_interpolator) :: interp2d_QN_B1
-    type(arb_deg_2d_interpolator) :: interp2d_QN_B2
-    type(arb_deg_2d_interpolator) :: interp2d_QN_C
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_rho_eta1eta2
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_Phi_eta1eta2
+    type(sll_arbitrary_degree_spline_interpolator_1d) :: interp1d_Phi_eta3
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A11
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A12
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A21
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_A22
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_B1
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_B2
+    type(sll_arbitrary_degree_spline_interpolator_2d) :: interp2d_QN_C
     class(sll_scalar_field_2d_base) , pointer :: rho2d
     type(sll_scalar_field_1d_discrete_alt), pointer :: phi1d! for derivative in eta3
     type(sll_scalar_field_2d_discrete_alt), pointer :: phi2d

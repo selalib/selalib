@@ -10,7 +10,7 @@ module sll_mudpack_curvilinear
 #include "sll_assert.h"
 
 use sll_mudpack_base
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 use sll_module_coordinate_transformations_2d
 implicit none
 

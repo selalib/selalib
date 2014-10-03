@@ -71,22 +71,22 @@ ENDIF(HDF5_ENABLED)
 
 ADD_EXECUTABLE(VP1D_deltaf_cart VP1D_deltaf_BSL.F90)
 TARGET_LINK_LIBRARIES(VP1D_deltaf_cart sll_mapped_meshes
-	                                    sll_interpolators
-	                                    sll_periodic_interp
-	                                    sll_fft
-	                                    sll_distribution_function
-	                                    sll_scalar_field
-                                          sll_constants
-	                                    sll_file_io
-  	                                    sll_utilities
-	                                    sll_timer
-	                                    sll_poisson_solvers
-	                                    dfftpack)
+	                                 sll_interpolators
+	                                 sll_periodic_interpolation
+	                                 sll_fft
+	                                 sll_distribution_function
+	                                 sll_scalar_field
+                                       sll_constants
+	                                 sll_file_io
+  	                                 sll_utilities
+	                                 sll_timer
+	                                 sll_poisson_solvers
+	                                 dfftpack)
 IF(HDF5_ENABLED)
    ADD_EXECUTABLE(VP1D_mm VP1D_mm.F90)
    TARGET_LINK_LIBRARIES(VP1D_mm sll_mapped_meshes
                                  sll_interpolators 
-                                 sll_periodic_interp 
+                                 sll_periodic_interpolation
                                  sll_fft 
                                  sll_distribution_function 
                                  sll_scalar_field 

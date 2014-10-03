@@ -7,7 +7,7 @@ program landau_4d
 
 use sll_constants
 use sll_module_interpolators_1d_base
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
 
 implicit none

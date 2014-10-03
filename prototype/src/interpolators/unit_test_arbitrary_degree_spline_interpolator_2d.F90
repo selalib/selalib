@@ -3,7 +3,7 @@ program unit_test
 #include "sll_working_precision.h"
 #include "sll_constants.h"
 #include "sll_interpolators.h"
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_gnuplot
   implicit none
 
@@ -17,7 +17,7 @@ program unit_test
 #define TOLERANCE_NODE 1.0E-7_f64
 #define TOLERANCE_DER  3.0e-5_f64
 
-  type(arb_deg_2d_interpolator) :: ad2d
+  type(sll_arbitrary_degree_spline_interpolator_2d) :: ad2d
 
   sll_real64, dimension(:,:), allocatable :: x
   sll_real64, dimension(:,:), allocatable :: reference

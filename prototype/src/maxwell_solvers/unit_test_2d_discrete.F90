@@ -13,7 +13,7 @@ program test_maxwell_2d_discrete
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
 use sll_dg_fields
 use sll_maxwell_solvers_base
 use sll_maxwell_2d_diga
