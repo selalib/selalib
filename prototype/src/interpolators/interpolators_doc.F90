@@ -10,21 +10,49 @@
 
 
 !> @namespace sll_interpolators 
-!! This library provides implementations for the abstract interfaces
-!! Define spline interpolation of values in data define on original grid at
-!! points coordinates
+!! @brief
+!! Classes for numerical interpolation.
 !> @author Selalib team 
-!> @details
-!> Abstract classes name are:
+!! @details
+!! Methods :
+!! - compute_interpolants
+!! - interpolate_value
+!! - interpolate_derivative_eta1
+!! - interpolate_array
+!! - interpolate_array_disp
+!! - reconstruct_array
+!! - interpolate_array_values
+!! - interpolate_pointer_values
+!! - interpolate_array_derivatives
+!! - interpolate_pointer_derivatives
+!! - set_coefficients
+!! - get_coefficients
+!!
+!> Classes available are:
 !!  - sll_interpolate_1d_base
 !!  - sll_interpolate_2d_base
+!!  - sll_cubic_spline_interpolator_1d
+!!  - sll_cubic_spline_interpolator_1d_nonuniform
+!!  - sll_cubic_spline_interpolator_2d
+!!  - sll_arbitrary_degree_spline_interpolator_1d
+!!  - sll_arbitrary_degree_spline_interpolator_2d
+!!  - sll_periodic_interpolator_1d
+!!  - sll_lagrange_interpolator_1d
 !>
 !> <b> Headers file available </b>
 !>  - sll_interpolators.h
 !>
 !> <b> Modules available </b>
 !>  List fortran module available
-!>  - sll_interpolators
+!!  - sll_module_interpolators_1d_base
+!!  - sll_module_interpolators_2d_base
+!!  - sll_module_cubic_spline_interpolator_1d
+!!  - sll_module_cubic_spline_interpolator_1d_nonuniform
+!!  - sll_module_cubic_spline_interpolator_2d
+!!  - sll_module_arbitrary_degree_spline_interpolator_1d
+!!  - sll_module_arbitrary_degree_spline_interpolator_2d
+!!  - sll_module_periodic_interpolator_1d
+!!  - sll_module_lagrange_interpolator_1d
 !>
 !> <b> How to use it </b>
 !> - Header file : \code #include 'sll_interpolators.h' \endcode
