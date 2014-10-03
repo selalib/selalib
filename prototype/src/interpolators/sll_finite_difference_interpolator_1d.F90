@@ -11,7 +11,7 @@
 !! If we are only interested in having the derivatives on the nodes of an
 !! array, this is a service provided by the basic interpolator, hence we
 !! can 
-module sll_finite_difference_interpolator_1d
+module sll_module_finite_difference_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -21,7 +21,7 @@ use sll_module_interpolators_1d_base
 
 
   !> Finite differences implementation of 1d interpolator
-  type, extends(sll_interpolator_1d_base) :: finite_difference_1d_interpolator
+  type, extends(sll_interpolator_1d_base) :: sll_finite_difference_interpolator_1d
      sll_int32  :: num_points
      sll_real64 :: delta      ! cell size, distance between data points
      sll_real64 :: r_delta    ! reciprocal of the cell size
@@ -43,7 +43,7 @@ use sll_module_interpolators_1d_base
      procedure, pass :: interpolate_array => null_fd_1d_interp_array
      procedure, pass :: reconstruct_array => null_fd_1d_reconstruct
      procedure, pass :: interpolate_array_disp => null_fd_1d_array_disp
-  end type finite_difference_1d_interpolator
+  end type sll_finite_difference_interpolator_1d
 
 contains
 
@@ -52,7 +52,7 @@ contains
     num_points, &
     delta )
 
-    class(finite_difference_1d_interpolator), intent(inout) :: interpolator
+    class(sll_finite_difference_interpolator_1d), intent(inout) :: interpolator
     sll_int32, intent(in) :: num_points
     sll_real64, intent(in) :: delta ! cell spacing
     interpolator%num_points = num_points
@@ -66,7 +66,7 @@ contains
     vals_to_interpolate, &
     output )
 
-    class(finite_difference_1d_interpolator), intent(in) :: interpolator
+    class(sll_finite_difference_interpolator_1d), intent(in) :: interpolator
     sll_int32, intent(in) :: num_pts
     ! the following input array must be a pointer so that this function
     ! is usable with splitting methods in higher dimensional data.
@@ -102,18 +102,18 @@ contains
   ! Define the functions that are not needed in this particular interpolator
   ! with the use of the null-function build macros.
 
-  DEFINE_NULL_INTERP_ONE_ARG_MSG(finite_difference_1d_interpolator, null_fd_1d_arg_msg)
+  DEFINE_NULL_INTERP_ONE_ARG_MSG(sll_finite_difference_interpolator_1d, null_fd_1d_arg_msg)
 
-  DEFINE_NULL_INTERP_1D_ARRAY(finite_difference_1d_interpolator, null_fd_1d_interp_array)
+  DEFINE_NULL_INTERP_1D_ARRAY(sll_finite_difference_interpolator_1d, null_fd_1d_interp_array)
 
-  DEFINE_NULL_INTERP_1D_ARRAY_MSG(finite_difference_1d_interpolator, null_fd_1d_array_msg)
+  DEFINE_NULL_INTERP_1D_ARRAY_MSG(sll_finite_difference_interpolator_1d, null_fd_1d_array_msg)
 
-  DEFINE_NULL_INTERP_1D_ARRAY_SUB(finite_difference_1d_interpolator, null_fd_1d_array_sub)
+  DEFINE_NULL_INTERP_1D_ARRAY_SUB(sll_finite_difference_interpolator_1d, null_fd_1d_array_sub)
 
-  DEFINE_NULL_INTERP_1D_POINTER_SUB(finite_difference_1d_interpolator, null_fd_1d_ptr_sub)
+  DEFINE_NULL_INTERP_1D_POINTER_SUB(sll_finite_difference_interpolator_1d, null_fd_1d_ptr_sub)
 
-  DEFINE_NULL_RECONSTRUCT_1D_ARRAY(finite_difference_1d_interpolator, null_fd_1d_reconstruct)
+  DEFINE_NULL_RECONSTRUCT_1D_ARRAY(sll_finite_difference_interpolator_1d, null_fd_1d_reconstruct)
 
-  DEFINE_NULL_INTERPOLATE_1D_DISP(finite_difference_1d_interpolator, null_fd_1d_array_disp)
+  DEFINE_NULL_INTERPOLATE_1D_DISP(sll_finite_difference_interpolator_1d, null_fd_1d_array_disp)
 
-end module sll_finite_difference_interpolator_1d
+end module sll_module_finite_difference_interpolator_1d
