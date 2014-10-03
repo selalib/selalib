@@ -9,15 +9,16 @@ module hex_poisson
 contains
 
 
-  subroutine hex_matrix_poisson( matrix_poisson, mesh)
+  subroutine hex_matrix_poisson( matrix_poisson, mesh,type)
     type(sll_hex_mesh_2d), pointer         :: mesh
     sll_real64, dimension(:,:), intent(out):: matrix_poisson
+    sll_int32,                   intent(in):: type
     sll_int32                              :: num_cells, global
     sll_int32                              :: index_tab, index_tabij
     sll_int32                              :: index_tabi_1j, index_tabij_1 
     sll_int32                              :: index_tabij1, index_tabi1j
     sll_int32                              :: index_tabi1j1, index_tabi_1j_1
-    sll_int32                              :: k1, k2
+    sll_int32                              :: k1, k2, n
 
     num_cells = mesh%num_cells
 
@@ -29,7 +30,15 @@ contains
     ! (i,j-1) ; (i,j) ; (i,j+1)  
     ! (i+1,j) ; (i,j+1)
 
-    do global = 1, mesh%num_pts_tot 
+    if (type == 1) then
+       n = mesh%num_pts_tot 
+    elseif (type == 2) then
+       n = mesh%num_triangles 
+    elseif (type == 3) then
+       n = mesh%num_edges
+    endif
+
+    do global = 1, n
 
        k1 = mesh%hex_coord(1, global)
        k2 = mesh%hex_coord(2, global)
@@ -187,13 +196,13 @@ contains
   
   
   subroutine hex_second_terme_poisson( second_terme, mesh, rho )
-    type(sll_hex_mesh_2d), pointer         :: mesh
-    sll_real64, dimension(:), intent(out)  :: second_terme
-    sll_real64, dimension(:), intent(in)   :: rho
-    sll_int32                              :: num_cells, i, index_tab, k1, k2
-    sll_real64                             :: step
-    sll_real64                             :: f1,f2,f3,f4,f5,f6
-    sll_int32                              :: global,n1,n2,n3,n4,n5,n6
+    type(sll_hex_mesh_2d), pointer        :: mesh
+    sll_real64, dimension(:), intent(out) :: second_terme
+    sll_real64, dimension(:), intent(in)  :: rho
+    sll_int32                             :: num_cells, i, index_tab, k1, k2
+    sll_real64                            :: step
+    sll_real64                            :: f1,f2,f3,f4,f5,f6
+    sll_int32                             :: global,n1,n2,n3,n4,n5,n6
 
     num_cells = mesh%num_cells
     step = mesh%delta**2 * 1.5_f64 
@@ -201,119 +210,118 @@ contains
     !************************
     ! general case
     !************************
-
-
-    do global = 1, mesh%num_pts_tot 
-
-       k1 = mesh%hex_coord(1, global)
-       k2 = mesh%hex_coord(2, global)
-
-       call index_hex_to_global(mesh, k1, k2, index_tab)
        
-       f1 = value_if_inside_rho(k1+1,k2  ,mesh,rho)
-       f2 = value_if_inside_rho(k1+1,k2+1,mesh,rho)
-       f3 = value_if_inside_rho(k1  ,k2+1,mesh,rho)
-       f4 = value_if_inside_rho(k1-1,k2  ,mesh,rho)
-       f5 = value_if_inside_rho(k1-1,k2-1,mesh,rho)
-       f6 = value_if_inside_rho(k1  ,k2-1,mesh,rho)
+       do global = 1, mesh%num_pts_tot 
 
-       second_terme(index_tab) = ( 0.75_f64*rho(global) + & 
-            (f1+f2+f3+f4+f5+f6)/24._f64 ) * step ! ordre 4
+          k1 = mesh%hex_coord(1, global)
+          k2 = mesh%hex_coord(2, global)
 
-       !second_terme(index_tab) = rho(global) * step ! order 2
+          call index_hex_to_global(mesh, k1, k2, index_tab)
 
-    enddo
+          f1 = value_if_inside_rho(k1+1,k2  ,mesh,rho)
+          f2 = value_if_inside_rho(k1+1,k2+1,mesh,rho)
+          f3 = value_if_inside_rho(k1  ,k2+1,mesh,rho)
+          f4 = value_if_inside_rho(k1-1,k2  ,mesh,rho)
+          f5 = value_if_inside_rho(k1-1,k2-1,mesh,rho)
+          f6 = value_if_inside_rho(k1  ,k2-1,mesh,rho)
 
- 
-    !************************
-    ! Boundaries
-    !************************
+          second_terme(index_tab) = ( 0.75_f64*rho(global) + & 
+               (f1+f2+f3+f4+f5+f6)/24._f64 ) * step ! ordre 4
 
-    ! corners of the hexagon
+          !second_terme(index_tab) = rho(global) * step ! order 2
 
-    call index_hex_to_global(mesh,num_cells , 0, index_tab)
-    second_terme(index_tab) = 0._f64
-    call index_hex_to_global(mesh,num_cells , num_cells, index_tab)
-    second_terme(index_tab) = 0._f64
-    call index_hex_to_global(mesh,0 , num_cells, index_tab)
-    second_terme(index_tab) = 0._f64
-    call index_hex_to_global(mesh,-num_cells , 0, index_tab)
-    second_terme(index_tab) = 0._f64
-    call index_hex_to_global(mesh,-num_cells , -num_cells, index_tab)
-    second_terme(index_tab) = 0._f64
-    call index_hex_to_global(mesh,0 , -num_cells, index_tab)
-    second_terme(index_tab) = 0._f64
+       enddo
 
 
-    ! edges of the hexagon  
+       !************************
+       ! Boundaries
+       !************************
 
-    do i = 1,num_cells-1   !( 0 and num_cells  are the corners )
+       ! corners of the hexagon
 
-       ! top right edge
-       call index_hex_to_global(mesh, num_cells, i, index_tab)
+       call index_hex_to_global(mesh,num_cells , 0, index_tab)
        second_terme(index_tab) = 0._f64
-       ! top left edge
-       call index_hex_to_global(mesh, num_cells - i, num_cells , index_tab)
+       call index_hex_to_global(mesh,num_cells , num_cells, index_tab)
        second_terme(index_tab) = 0._f64
-       ! left edge
-       call index_hex_to_global(mesh, - i, num_cells- i , index_tab)
+       call index_hex_to_global(mesh,0 , num_cells, index_tab)
        second_terme(index_tab) = 0._f64
-       ! bottom left edge
-       call index_hex_to_global(mesh, - num_cells, - i , index_tab)
+       call index_hex_to_global(mesh,-num_cells , 0, index_tab)
        second_terme(index_tab) = 0._f64
-       ! bottom right edge
-       call index_hex_to_global(mesh, - i, - num_cells , index_tab)
+       call index_hex_to_global(mesh,-num_cells , -num_cells, index_tab)
        second_terme(index_tab) = 0._f64
-       ! right edge
-       call index_hex_to_global(mesh, num_cells - i, - i , index_tab)
+       call index_hex_to_global(mesh,0 , -num_cells, index_tab)
        second_terme(index_tab) = 0._f64
 
-    enddo
 
-    !************************
-    ! Boundary conditions      -> 0 everywhere at the moment 
-    !************************
+       ! edges of the hexagon  
 
-    ! corners of the hexagon
+       do i = 1,num_cells-1   !( 0 and num_cells  are the corners )
 
-    call index_hex_to_global(mesh,num_cells-1 , 1, index_tab)
-    second_terme(index_tab) = second_terme(index_tab) + 0._f64
-    call index_hex_to_global(mesh,num_cells-1 , num_cells-1, index_tab)
-    second_terme(index_tab) = second_terme(index_tab) + 0._f64
-    call index_hex_to_global(mesh,1 , num_cells-1, index_tab)
-    second_terme(index_tab) = second_terme(index_tab) + 0._f64
-    call index_hex_to_global(mesh,-num_cells+1 , 1, index_tab)
-    second_terme(index_tab) = second_terme(index_tab) + 0._f64
-    call index_hex_to_global(mesh,-num_cells+1 , -num_cells+1, index_tab)
-    second_terme(index_tab) = second_terme(index_tab) + 0._f64
-    call index_hex_to_global(mesh,1 , -num_cells+1, index_tab)
-    second_terme(index_tab) = second_terme(index_tab) + 0._f64
+          ! top right edge
+          call index_hex_to_global(mesh, num_cells, i, index_tab)
+          second_terme(index_tab) = 0._f64
+          ! top left edge
+          call index_hex_to_global(mesh, num_cells - i, num_cells , index_tab)
+          second_terme(index_tab) = 0._f64
+          ! left edge
+          call index_hex_to_global(mesh, - i, num_cells- i , index_tab)
+          second_terme(index_tab) = 0._f64
+          ! bottom left edge
+          call index_hex_to_global(mesh, - num_cells, - i , index_tab)
+          second_terme(index_tab) = 0._f64
+          ! bottom right edge
+          call index_hex_to_global(mesh, - i, - num_cells , index_tab)
+          second_terme(index_tab) = 0._f64
+          ! right edge
+          call index_hex_to_global(mesh, num_cells - i, - i , index_tab)
+          second_terme(index_tab) = 0._f64
 
+       enddo
 
-    ! edges of the hexagon  
+       !************************
+       ! Boundary conditions      -> 0 everywhere at the moment 
+       !************************
 
-    do i = 2,num_cells-2   !( 1 and num_cells-1 are the corners )
+       ! corners of the hexagon
 
-       ! top right edge
-       call index_hex_to_global(mesh, num_cells-1, i, index_tab)
+       call index_hex_to_global(mesh,num_cells-1 , 1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       ! top left edge
-       call index_hex_to_global(mesh, num_cells-1 - i, num_cells-1 , index_tab)
+       call index_hex_to_global(mesh,num_cells-1 , num_cells-1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       ! left edge
-       call index_hex_to_global(mesh, - i, num_cells-1 - i , index_tab)
+       call index_hex_to_global(mesh,1 , num_cells-1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       ! bottom left edge
-       call index_hex_to_global(mesh, - num_cells+1, - i , index_tab)
+       call index_hex_to_global(mesh,-num_cells+1 , 1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       ! bottom right edge
-       call index_hex_to_global(mesh, - i, - num_cells+1 , index_tab)
+       call index_hex_to_global(mesh,-num_cells+1 , -num_cells+1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
-       ! right edge
-       call index_hex_to_global(mesh, num_cells-1 - i, - i , index_tab)
+       call index_hex_to_global(mesh,1 , -num_cells+1, index_tab)
        second_terme(index_tab) = second_terme(index_tab) + 0._f64
 
-    enddo
+
+       ! edges of the hexagon  
+
+       do i = 2,num_cells-2   !( 1 and num_cells-1 are the corners )
+
+          ! top right edge
+          call index_hex_to_global(mesh, num_cells-1, i, index_tab)
+          second_terme(index_tab) = second_terme(index_tab) + 0._f64
+          ! top left edge
+          call index_hex_to_global(mesh, num_cells-1 - i, num_cells-1 , index_tab)
+          second_terme(index_tab) = second_terme(index_tab) + 0._f64
+          ! left edge
+          call index_hex_to_global(mesh, - i, num_cells-1 - i , index_tab)
+          second_terme(index_tab) = second_terme(index_tab) + 0._f64
+          ! bottom left edge
+          call index_hex_to_global(mesh, - num_cells+1, - i , index_tab)
+          second_terme(index_tab) = second_terme(index_tab) + 0._f64
+          ! bottom right edge
+          call index_hex_to_global(mesh, - i, - num_cells+1 , index_tab)
+          second_terme(index_tab) = second_terme(index_tab) + 0._f64
+          ! right edge
+          call index_hex_to_global(mesh, num_cells-1 - i, - i , index_tab)
+          second_terme(index_tab) = second_terme(index_tab) + 0._f64
+
+       enddo
 
 
   end subroutine hex_second_terme_poisson
@@ -341,11 +349,20 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
     sll_real64,dimension(:)        :: uxn, uyn, phi
     sll_int32,          intent(in) :: type
     sll_int32  :: i,h1,h2
+    sll_real64 :: r11,r12,r21,r22,det
     sll_real64 :: phixi_2,phixi_1,phixi1,phixi2
+    sll_real64 :: phiyj_2,phiyj_1,phiyj1,phiyj2
+    sll_real64 :: phii_3,phij_3,phii,phij
     sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
     sll_real64 :: uh1, uh2
 
-    
+    det = (mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1)/mesh%delta
+
+    r11 = + mesh%r2_x2/det
+    r12 = - mesh%r2_x1/det
+    r21 = - mesh%r1_x2/det
+    r22 = + mesh%r1_x1/det
+
     if (type==1) then
 
        do i = 1,mesh%num_pts_tot
@@ -353,46 +370,66 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
           h1 = mesh%hex_coord(1,i)
           h2 = mesh%hex_coord(2,i)
 
+          phii_3 = value_if_inside_phi(h1-3,h2,mesh,phi)
           phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
           phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
+          phii   = value_if_inside_phi(h1  ,h2,mesh,phi)
           phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
           phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
 
+          phij_3 = value_if_inside_phi(h1,h2-3,mesh,phi)
           phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
           phij_1 = value_if_inside_phi(h1,h2-1,mesh,phi)
+          phij   = value_if_inside_phi(h1,h2  ,mesh,phi)
           phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
           phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
 
-          phixi_2 = value_if_inside_phi(h1-2,h2+2,mesh,phi)
-          phixi_1 = value_if_inside_phi(h1-1,h2+1,mesh,phi)
-          phixi1  = value_if_inside_phi(h1+1,h2-1,mesh,phi)
-          phixi2  = value_if_inside_phi(h1+2,h2-2,mesh,phi)
+          ! phixi_2 = value_if_inside_phi(h1-2,h2+2,mesh,phi)
+          ! phixi_1 = value_if_inside_phi(h1-1,h2+1,mesh,phi)
+          ! phixi1  = value_if_inside_phi(h1+1,h2-1,mesh,phi)
+          ! phixi2  = value_if_inside_phi(h1+2,h2-2,mesh,phi)
 
-          ! order 2
-
-          uh1 = ( phii1 - phii_1 ) / (2._f64)
-          uh2 = ( phij1 - phij_1 ) / (2._f64)
-
-          uxn(i) = -( mesh%r1_x2*uh1 + mesh%r2_x2*uh2)   ! -d(phi)/dy 
-          uyn(i) = +( mesh%r1_x1*uh1 + mesh%r2_x1*uh2)   ! +d(phi)/dx
+          ! phiyj_2 = value_if_inside_phi(h1-2,h2-2,mesh,phi)
+          ! phiyj_1 = value_if_inside_phi(h1-1,h2-1,mesh,phi)
+          ! phiyj1  = value_if_inside_phi(h1+1,h2+1,mesh,phi)
+          ! phiyj2  = value_if_inside_phi(h1+2,h2+2,mesh,phi)
 
 
+          ! uh1 =  (phii - phii_1)/ (mesh%delta)  ! order 1 - very bad
+          ! uh2 =  (phij - phij_1)/ (mesh%delta) 
 
-          !uyn(i) = ( phixi1 - phixi_1 ) / (2._f64*mesh%delta)
+          ! uh1 = ( phii1 - phii_1 ) / (2._f64*mesh%delta) ! order 2
+          ! uh2 = ( phij1 - phij_1 ) / (2._f64*mesh%delta) 
 
-          ! order 4
-          ! uxn = - ( phi(nr1i_2) + 8._f64 * ( - phi(nr1i_1) + phi(nr1i1) ) &
-          !      - phi(nr1i2) ) / (12._f64*mesh%delta)
-          ! uyn = + ( phi(nr2i_2) + 8._f64 * ( - phi(nr2i_1) + phi(nr2i1) ) &
-          !      - phi(nr2i2) ) / (12._f64*mesh%delta)
+          ! uh1 = ( phii1/3._f64  + phii/2._f64 - phii_1 + phii_2/6._f64 ) / (mesh%delta) ! order 3
+          ! uh2 = ( phij1/3._f64  + phij/2._f64 - phij_1 + phij_2/6._f64 ) / (mesh%delta) 
 
-	  ! _Uy[ix][iy]   = +(_phi[ix+1][iy]-_phi[ix-1][iy])/(2.0*dx);
+          uh1 = ( phii_2 + 8._f64 * ( phii1 - phii_1 ) - phii2 ) / (12._f64*mesh%delta) ! order 4
+          uh2 = ( phij_2 + 8._f64 * ( phij1 - phij_1 ) - phij2 ) / (12._f64*mesh%delta)
 
-	  ! _dxUx[ix][iy] = -(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
-	  ! _dyUx[ix][iy] = -(_phi[ix][iy+1]  -2.*_phi[ix][iy]                  +_phi[ix][iy-1]  )/(dy*dy);	
+          ! uh1 = ( -phii_3/30._f64 + 0.25_f64*phii_2 - phii_1 + phii/3._f64&
+          !      + phii1*0.5_f64  - phii2/20._f64 ) / (mesh%delta) ! order 5
+          ! uh2 = ( -phij_3/30._f64 + 0.25_f64*phij_2 - phij_1 + phij/3._f64&
+          !      + phij1*0.5_f64  - phij2/20._f64 ) / (mesh%delta)
 
-	  ! _dyUy[ix][iy] = +(_phi[ix+1][iy+1]-_phi[ix+1][iy-1]-_phi[ix-1][iy+1]+_phi[ix-1][iy-1])/(4*dx*dy);
-	  ! _dxUy[ix][iy] = +(_phi[ix+1][iy]  -2.0*_phi[ix][iy]                 +_phi[ix-1][iy]  )/(dx*dx);
+          ! order 4 approximation made with the values in the x and y directions
+          !-> not as good
+          ! uxn(i) = - ( phiyj_2 + 8._f64 * ( - phiyj_1 + phiyj1 ) &
+          !      - phiyj2 ) / (12._f64*mesh%delta)
+          ! uyn(i) = + ( phixi_2 + 8._f64 * ( - phixi_1 + phixi1 ) &
+          !      - phixi2 ) / (12._f64*sqrt(3._f64)*mesh%delta)
+
+          !approximation made with the values in the r1 and r2 directions
+
+          uxn(i) = - (uh1*r12+uh2*r22)
+          uyn(i) = + (uh1*r11+uh2*r21)
+
+	  ! dxuxn(i) = -( phii1j1 - phii1j_1 - phii_1j1 + phii_1j_1 )/(4._f64*meshdelta**2);
+	  ! dyuxn(i) = -( phiij1  - 2._f64*phiij + phiij_1  )/meshdelta**2;
+	  ! dyuyn(i) = -( phii1j1 - phii1j_1 - phii_1j1 + phii_1j_1 )/(4._f64*meshdelta**2);
+	  ! dxuyn(i) = -( phii1j  - 2._f64*phiij + phii_1j  )/meshdelta**2;		
+
+
        end do
     endif
 
@@ -401,9 +438,9 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
 
 
 
-  function value_if_inside_phi(k1,k2,mesh,rho) result(f)
+  function value_if_inside_phi(k1,k2,mesh,phi) result(f)
     type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64, dimension(:)       :: rho
+    sll_real64, dimension(:)       :: phi
     sll_int32  :: k1, k2, n
     sll_real64 :: f 
 
@@ -412,7 +449,7 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
        f = 0._f64 ! null dirichlet boundary condition
     else
        n = hex_to_global(mesh,k1,k2)
-       f = rho(n)
+       f = phi(n)
     endif
 
   endfunction value_if_inside_phi
