@@ -1,12 +1,3 @@
-# Get the RedHat/CentOS version
-if(EXISTS "/etc/redhat-release")
-   file(READ "/etc/redhat-release" _REDHAT_RELEASE_CONTENT)
-   string(REGEX REPLACE "[^0-9.]*([0-9.]+)[^0-9.]*\$" "\\1" ${RH_VERSION}
-           "${_REDHAT_RELEASE_CONTENT}"
-        )
-   set(LINUX_NAME ${RH_VERSION})
-endif()
-
 FIND_PROGRAM(LSB_RELEASE_COMMAND NAMES lsb_release)
 if(LSB_RELEASE_COMMAND)
    EXECUTE_PROCESS(
@@ -21,9 +12,32 @@ if(LSB_RELEASE_COMMAND)
    )
 
    set(LINUX_NAME "${LSB_ID}-${LSB_VER}")
-
+else()
+if(EXISTS "/etc/issue")
+      set(LINUX_NAME "")
+      file(READ "/etc/issue" LINUX_ISSUE)
+      # Fedora case
+      if(LINUX_ISSUE MATCHES "Fedora")
+        string(REGEX MATCH "release ([0-9]+)" FEDORA "${LINUX_ISSUE}")
+        set(LINUX_NAME "Fedora")
+	set(LINUX_VER "${CMAKE_MATCH_1}")
+      endif(LINUX_ISSUE MATCHES "Fedora")
+      # CentOS case
+      if(LINUX_ISSUE MATCHES "CentOS")
+        string(REGEX MATCH "release ([0-9]+\\.[0-9]+)" CENTOS "${LINUX_ISSUE}")
+        set(LINUX_NAME "CentOS")        
+	set(LINUX_VER "${CMAKE_MATCH_1}")
+      endif(LINUX_ISSUE MATCHES "CentOS")
+      # Redhat case
+      # Red Hat Enterprise Linux Server release 5 (Tikanga)
+      if(LINUX_ISSUE MATCHES "Red Hat")
+        string(REGEX MATCH "release ([0-9]+\\.*[0-9]*)" REDHAT "${LINUX_ISSUE}")
+        set(LINUX_NAME "RedHat")        
+	set(LINUX_VER "${CMAKE_MATCH_1}")
+      endif(LINUX_ISSUE MATCHES "Red Hat")
+   set(LINUX_NAME "${LINUX_NAME}-${LINUX_VER}")
 endif()
-
+endif()
 
 MESSAGE(STATUS "LINUX_NAME:${LINUX_NAME}")
 
