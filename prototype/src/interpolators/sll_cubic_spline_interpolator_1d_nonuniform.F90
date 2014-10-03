@@ -8,7 +8,7 @@
 !! - it is probably better to convert this into a subroutine, since data_out
 !!   will be allocated on the stack (too big an array will crash the program),
 !!   and some copy operation might be involved when "catching" the results.
-module cubic_non_uniform_spline_interpolator_1d
+module sll_cubic_spline_interpolator_1d_nonuniform
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -298,4 +298,4 @@ contains  ! ****************************************************************
   end function get_coefficients_cs1d
 
 
-end module cubic_non_uniform_spline_interpolator_1d
+end module sll_cubic_spline_interpolator_1d_nonuniform
