@@ -7,5 +7,5 @@
 !>  + sll_maxwell_2d_pstd
 !>  + sll_maxwell_3d_pstd
 !>
-!> @todo
-!> - sll_maxwell_3d_fdtd
+!> @todo Implement sll_maxwell_3d_fdtd
+!> @todo Add examples in documentation

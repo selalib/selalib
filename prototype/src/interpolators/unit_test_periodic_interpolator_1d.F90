@@ -3,12 +3,12 @@ program periodic_interpolation
 use sll_module_interpolators_1d_base
 use sll_constants
 use sll_module_periodic_interpolator_1d
-use sll_lagrange_interpolator_1d
+use sll_module_lagrange_interpolator_1d
 
 implicit none 
   
 type(sll_periodic_interpolator_1d), target :: interp_per
-type(lagrange_1d_interpolator),     target :: interp_lagrange
+type(sll_lagrange_interpolator_1d),     target :: interp_lagrange
 sll_int32, parameter                       :: N0 = 16
 sll_real64                                 :: u(16*N0+1)
 sll_real64                                 :: u_exact(16*N0+1)
