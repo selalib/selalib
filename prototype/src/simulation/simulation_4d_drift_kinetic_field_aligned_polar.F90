@@ -57,7 +57,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_constants
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
   use sll_fdistribu4D_DK
   use sll_logical_meshes
@@ -67,7 +67,7 @@ module sll_simulation_4d_drift_kinetic_field_aligned_polar_module
   use sll_module_advection_2d_BSL
   use sll_module_characteristics_2d_explicit_euler
   use sll_module_characteristics_2d_verlet
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_2d
   use sll_module_advection_1d_periodic
   use sll_module_poisson_2d_polar_solver
   use sll_qn_solver_3d_polar_parallel_x1_wrapper_module

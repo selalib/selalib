@@ -30,8 +30,8 @@ module sll_simulation_2d_guiding_center_curvilinear_module
   use sll_reduction_module
   use sll_simulation_base
  
-  use sll_cubic_spline_interpolator_1d
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
 !  use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations
@@ -1910,9 +1910,9 @@ subroutine sll_DSG( eta1_min,eta1_max, eta2_min,eta2_max,n_eta1,n_eta2, f )
     sll_real64, intent(in)   :: eta1_min,eta1_max
     sll_real64, intent(in)   :: eta2_min,eta2_max  
     sll_int32, intent(in)    :: n_eta1,n_eta2  
-    !type(arb_deg_2d_interpolator)   :: a11_interp
-    !type(arb_deg_2d_interpolator)   :: a22_interp
-    !type(arb_deg_2d_interpolator)   :: a12_interp
+    !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a11_interp
+    !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a22_interp
+    !type(sll_arbitrary_degree_spline_interpolator_2d)   :: a12_interp
     type(cubic_spline_2d_interpolator)   :: a11_interp
     type(cubic_spline_2d_interpolator)   :: a22_interp
     type(cubic_spline_2d_interpolator)   :: a12_interp

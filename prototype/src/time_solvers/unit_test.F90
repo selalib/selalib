@@ -4,7 +4,7 @@ program test_time_splitting
 #include "sll_assert.h"
 #include "sll_field_2d.h"
   use sll_const_coef_advection_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_module_interpolators_1d_base
   use sll_time_splitting
   use sll_hdf5_io_serial

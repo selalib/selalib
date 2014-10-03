@@ -26,7 +26,7 @@
 !!- it is probably better to convert this into a subroutine, since data_out
 !!  will be allocated on the stack (too big an array will crash the program),
 !!  and some copy operation might be involved when "catching" the results.
-module sll_cubic_spline_interpolator_1d
+module sll_module_cubic_spline_interpolator_1d
 
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -360,4 +360,4 @@ contains  ! ****************************************************************
     stop
   end function get_coefficients_cs1d
 
-end module sll_cubic_spline_interpolator_1d
+end module sll_module_cubic_spline_interpolator_1d

@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> Class for the cubic spline interpolator in 2D
-module sll_cubic_spline_interpolator_2d
+module sll_module_cubic_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
@@ -447,4 +447,4 @@ contains
     !stop
   end function coefficients_are_set_cs2d
 
-end module sll_cubic_spline_interpolator_2d
+end module sll_module_cubic_spline_interpolator_2d

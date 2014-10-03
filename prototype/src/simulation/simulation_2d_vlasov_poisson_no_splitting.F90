@@ -45,8 +45,8 @@ module sll_simulation_2d_vlasov_poisson_no_splitting
   use sll_module_characteristics_1d_explicit_euler
   use sll_module_characteristics_1d_trapezoid
   use sll_module_characteristics_1d_explicit_euler_conservative
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_poisson_1d_periodic  
   use sll_fft
   use sll_simulation_base

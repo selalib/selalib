@@ -8,7 +8,7 @@
 !! - it is probably better to convert this into a subroutine, since data_out
 !!   will be allocated on the stack (too big an array will crash the program),
 !!   and some copy operation might be involved when "catching" the results.
-module sll_cubic_spline_interpolator_1d_nonuniform
+module sll_module_cubic_spline_interpolator_1d_nonuniform
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -18,7 +18,7 @@ use sll_cubic_splines
   implicit none
 
   !> Class for interpolator 1d implemented with cubic splines on non uniform mesh
-  type, extends(sll_interpolator_1d_base) ::  cubic_non_uniform_spline_1d_interpolator
+  type, extends(sll_interpolator_1d_base) ::  sll_cubic_spline_interpolator_1d_nonuniform
      sll_real64, dimension(:), pointer     :: interpolation_points
      sll_int32                     :: num_points ! size
      sll_int32                     :: bc_type
@@ -40,7 +40,7 @@ use sll_cubic_splines
      !generic :: initialize => initialize_cs1d_interpolator
      procedure, pass :: set_coefficients => set_coefficients_cs1d
      procedure, pass :: get_coefficients => get_coefficients_cs1d
-  end type cubic_non_uniform_spline_1d_interpolator
+  end type sll_cubic_spline_interpolator_1d_nonuniform
 
   !> Deallocate the interpolator object
   interface sll_delete
@@ -53,7 +53,7 @@ contains  ! ****************************************************************
 
   function spline_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
@@ -67,7 +67,7 @@ contains  ! ****************************************************************
 
   function spline_interpolate1d_disp(this, num_points, data, alpha) &
        result(data_out)
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(in)       :: this
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64,  intent(in)   :: alpha
@@ -116,7 +116,7 @@ contains  ! ****************************************************************
     subroutine compute_interpolants_cs1d(interpolator, data_array,&
          eta_coords, &
          size_eta_coords)
-      class(cubic_non_uniform_spline_1d_interpolator),intent(inout)::interpolator
+      class(sll_cubic_spline_interpolator_1d_nonuniform),intent(inout)::interpolator
 
       sll_real64, dimension(:), intent(in)           :: data_array
       sll_real64, dimension(:), intent(in),optional  :: eta_coords
@@ -140,7 +140,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -153,7 +153,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
@@ -167,7 +167,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -180,7 +180,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(in) :: interpolator
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
@@ -189,21 +189,21 @@ contains  ! ****************************************************************
   end subroutine interpolate_pointer_derivatives_cs1d
 
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
-    class(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_value( eta1, interpolator%spline )
   end function
 
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
-    class(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
   end function
 
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(cubic_non_uniform_spline_1d_interpolator), intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
@@ -222,7 +222,7 @@ contains  ! ****************************************************************
     slope_left, &
     slope_right )
 
-    class(cubic_non_uniform_spline_1d_interpolator),  intent(inout) :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform),  intent(inout) :: interpolator
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -257,7 +257,7 @@ contains  ! ****************************************************************
 
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
-    class(cubic_non_uniform_spline_1d_interpolator), intent(in)     :: this
+    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in)     :: this
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
        sll_real64, dimension(num_points)    :: res
@@ -268,13 +268,13 @@ contains  ! ****************************************************************
   end function reconstruct_array
 
   subroutine delete_cs1d( obj )
-    class(cubic_non_uniform_spline_1d_interpolator) :: obj
+    class(sll_cubic_spline_interpolator_1d_nonuniform) :: obj
     call sll_delete(obj%spline)
   end subroutine delete_cs1d
 
 
   subroutine set_coefficients_cs1d( interpolator, coeffs )
-    class(cubic_non_uniform_spline_1d_interpolator), intent(inout)  :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(inout)  :: interpolator
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, 'set_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -287,7 +287,7 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_cs1d(interpolator)
-    class(cubic_non_uniform_spline_1d_interpolator), intent(in)  :: interpolator
+    class(sll_cubic_spline_interpolator_1d_nonuniform), intent(in)  :: interpolator
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d
 
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &
@@ -298,4 +298,4 @@ contains  ! ****************************************************************
   end function get_coefficients_cs1d
 
 
-end module sll_cubic_spline_interpolator_1d_nonuniform
+end module sll_module_cubic_spline_interpolator_1d_nonuniform

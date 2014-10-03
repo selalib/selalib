@@ -44,15 +44,15 @@ implicit none
     class(sll_scalar_field_2d_base), pointer                :: b1_field
     class(sll_scalar_field_2d_base), pointer                :: b2_field
     class(sll_scalar_field_2d_base), pointer                :: c_field
-    type(arb_deg_2d_interpolator)                           :: interp_rho
-    type(arb_deg_2d_interpolator)                           :: interp_phi
-    type(arb_deg_2d_interpolator)                           :: interp_a11
-    type(arb_deg_2d_interpolator)                           :: interp_a12
-    type(arb_deg_2d_interpolator)                           :: interp_a21
-    type(arb_deg_2d_interpolator)                           :: interp_a22
-    type(arb_deg_2d_interpolator)                           :: interp_b1
-    type(arb_deg_2d_interpolator)                           :: interp_b2
-    type(arb_deg_2d_interpolator)                           :: interp_c
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_rho
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_phi
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a11
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a12
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a21
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_a22
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b1
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_b2
+    type(sll_arbitrary_degree_spline_interpolator_2d)                           :: interp_c
   contains
     procedure, pass(poisson) :: initialize => &
       initialize_poisson_2d_elliptic_solver

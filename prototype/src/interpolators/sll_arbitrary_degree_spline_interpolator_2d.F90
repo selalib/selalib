@@ -16,7 +16,7 @@
 !**************************************************************
 
 !> Class of arbitrary degree version of 2d irnterpolator
-module sll_arbitrary_degree_spline_interpolator_2d_module
+module sll_module_arbitrary_degree_spline_interpolator_2d
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h" 
@@ -28,7 +28,7 @@ implicit none
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
-type, extends(sll_interpolator_2d_base) :: arb_deg_2d_interpolator           
+type, extends(sll_interpolator_2d_base) :: sll_arbitrary_degree_spline_interpolator_2d           
    sll_int32  :: num_pts1
    sll_int32  :: num_pts2
    sll_real64 :: eta1_min
@@ -90,13 +90,13 @@ contains
    procedure, pass:: delete => delete_arbitrary_degree_2d_interpolator
    procedure, pass:: set_values_at_boundary => set_boundary_value2d
    procedure, pass:: set_slopes_at_boundary => set_slope2d
-end type arb_deg_2d_interpolator
+end type sll_arbitrary_degree_spline_interpolator_2d
 
 
 !> Pointer to arbitrary degree version of 1d interpolator
-type sll_arb_deg_2d_interpolator_ptr
-   type(arb_deg_2d_interpolator), pointer :: interp
-end type sll_arb_deg_2d_interpolator_ptr
+type sll_arbitrary_degree_spline_interpolator_2d_ptr
+   type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp
+end type sll_arbitrary_degree_spline_interpolator_2d_ptr
 
 
 !> Deallocate the interpolator class
@@ -108,10 +108,10 @@ contains
 
 !> Delete interpolator arbitrary degree splines.
 !> The parameters are
-!> @param interpolator the type arb_deg_2d_interpolator
+!> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 !
 subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
-   class(arb_deg_2d_interpolator), intent(inout) :: interpolator
+   class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout) :: interpolator
     sll_int32 :: ierr
     SLL_DEALLOCATE(interpolator%knots1,ierr)
     SLL_DEALLOCATE(interpolator%knots2,ierr)
@@ -144,7 +144,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> @param[in] bc_top the boundary condition at right in the direction eta2
   !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
   !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
-  !> @return the type arb_deg_2d_interpolator
+  !> @return the type sll_arbitrary_degree_spline_interpolator_2d
 
   function new_arbitrary_degree_spline_interp2d( &
     num_pts1, &
@@ -160,7 +160,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     spline_degree1, &
     spline_degree2) result( res )
 
-    type(arb_deg_2d_interpolator), pointer :: res
+    type(sll_arbitrary_degree_spline_interpolator_2d), pointer :: res
     sll_int32, intent(in) :: num_pts1
     sll_int32, intent(in) :: num_pts2
     sll_real64, intent(in) :: eta1_min
@@ -211,7 +211,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> @param[in] bc_top the boundary condition at right in the direction eta2
   !> @param[in] spline_degree1 the degree of B-spline in the direction eta1
   !> @param[in] spline_degree2 the degre of B-spline in the direction eta2
-  !> @param[out] interpolator the type arb_deg_2d_interpolator
+  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
        subroutine initialize_ad2d_interpolator( &
     interpolator, &
     num_pts1, &
@@ -227,7 +227,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     spline_degree1, &
     spline_degree2)
 
-    class(arb_deg_2d_interpolator):: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d):: interpolator
     sll_int32, intent(in) :: num_pts1
     sll_int32, intent(in) :: num_pts2
     sll_real64, intent(in) :: eta1_min
@@ -542,7 +542,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> @param[in] slope_right a 1d arrays contains values in the right in the direction eta1 
   !> @param[in] slope_bottom a 1d arrays contains values in the left in the direction eta2 
   !> @param[in] slope_top a 1d arrays contains values in the right in the direction eta2
-  !> @param[out] interpolator the type arb_deg_2d_interpolator
+  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   subroutine set_slope2d(&
        interpolator,&
        slope_left,&
@@ -550,14 +550,14 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
        slope_bottom,&
        slope_top)
 
-    use sll_arbitrary_degree_spline_interpolator_1d_module
-    class(arb_deg_2d_interpolator)    :: interpolator
+    use sll_module_arbitrary_degree_spline_interpolator_1d
+    class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
     sll_real64, dimension(:),optional :: slope_left
     sll_real64, dimension(:),optional :: slope_right
     sll_real64, dimension(:),optional :: slope_bottom
     sll_real64, dimension(:),optional :: slope_top
-    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_bottom=> null()
-    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_top => null()
+    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_bottom=> null()
+    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_top => null()
     sll_int32 :: sz_slope_bottom,sz_slope_top
     sll_int64 :: bc_selector
     sll_int32 :: num_pts1
@@ -1453,7 +1453,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> @param[in] value_right a 1d arrays contains values in the right in the direction eta1 
   !> @param[in] value_bottom a 1d arrays contains values in the left in the direction eta2 
   !> @param[in]  value_top a 1d arrays contains values in the right in the direction eta2
-  !> @param[out] interpolator the type arb_deg_2d_interpolator
+  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 
   subroutine set_boundary_value2d(&
        interpolator,&
@@ -1462,16 +1462,16 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
        value_bottom,&
        value_top)
 
-    use sll_arbitrary_degree_spline_interpolator_1d_module
-    class(arb_deg_2d_interpolator)    :: interpolator
+    use sll_module_arbitrary_degree_spline_interpolator_1d
+    class(sll_arbitrary_degree_spline_interpolator_2d)    :: interpolator
     sll_real64, dimension(:),optional :: value_left
     sll_real64, dimension(:),optional :: value_right
     sll_real64, dimension(:),optional :: value_bottom
     sll_real64, dimension(:),optional :: value_top
-    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_left => null()
-    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_right => null()
-    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_bottom=> null()
-    class(sll_arb_deg_1d_interpolator),pointer :: interp1d_top => null()
+    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_left => null()
+    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_right => null()
+    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_bottom=> null()
+    class(sll_arbitrary_degree_spline_interpolator_1d),pointer :: interp1d_top => null()
     sll_int32 :: sz_value_left,sz_value_right,sz_value_bottom,sz_value_top
     sll_int64 :: bc_selector
     sll_int32 :: num_pts1
@@ -1764,7 +1764,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !>  a table in 1d corresponding of coefficients 2d
   !> 
   !> The parameters are
-  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   !> @param[in]  coeffs_1d the 1d arrays corresponding of the splines coefficients
   !> @param[in]  coeffs_2d the 2d arrays corresponding of the splines coefficients
   !> @param[in]  coeff2d_size1 the number of rows of coeffs_2d
@@ -1773,7 +1773,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> @param[in]  size_knots1 the size of knots in the direction eta1
   !> @param[in]  knots2  the knots in the direction eta2
   !> @param[in]  size_knots2 the size of knots in the direction eta2
-  !> @param[out] interpolator the type arb_deg_2d_interpolator
+  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   subroutine set_coefficients_ad2d( &
    interpolator, &
    coeffs_1d, &
@@ -1785,7 +1785,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
    knots2,&
    size_knots2)
 
-   class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
+   class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
    sll_real64, dimension(:)  , intent(in), optional :: coeffs_1d
    sll_real64, dimension(:,:), intent(in), optional :: coeffs_2d
    ! size coeffs 2D 
@@ -2676,13 +2676,13 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !>  we consider that the values of the function is on the points in the mesh_2d
   !> 
   !> The parameters are
-  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   !> @param[in] data_array the 2d arrays corresponding at the values of a function
   !> @param[in] eta1_coords the 1d arrays corresponding at the points eta1 
   !> @param[in] size_eta1_coords the size of eta1_coords
   !> @param[in] eta2_coords the 1d arrays corresponding at the points eta2
   !> @param[in] size_eta2_coords the size of eta2_coords
-  !> @param[out] interpolator the type arb_deg_2d_interpolator
+  !> @param[out] interpolator the type sll_arbitrary_degree_spline_interpolator_2d
 
   subroutine compute_interpolants_ad2d( &
     interpolator, &
@@ -2692,7 +2692,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     eta2_coords, &
     size_eta2_coords )
 
-    class(arb_deg_2d_interpolator), intent(inout)  :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(inout)  :: interpolator
 
     sll_real64, dimension(:,:), intent(in)         :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta1_coords
@@ -3603,7 +3603,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   end subroutine !compute_interpolants_ad2d
 
   function coefficients_are_set_ad2d( interpolator ) result(res)
-    class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
     logical :: res
     res = interpolator%coefficients_set
   end function coefficients_are_set_ad2d
@@ -3617,7 +3617,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !>  on the points eta1 and eta2 of arbitrary degree splines 2d
   !> 
   !> The parameters are
-  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   !> @param[in] eta1 the point inthe first direction
   !> @param[in] eta2 the point inthe second direction 
   !> @return val the values on the points eta1 and eta2 
@@ -3627,7 +3627,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     eta2 ) result(val)
 
     use sll_timer
-    class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -3781,7 +3781,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> on the points eta1 and eta2 of arbitrary degree splines 2d
   !> 
   !> The parameters are
-  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   !> @param[in] eta1 the point inthe first direction
   !> @param[in] eta2 the point inthe second direction 
   !> @return val the values on the points eta1 and eta2 of the first derivative in eta1
@@ -3790,7 +3790,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     eta1, &
     eta2 ) result(val)
 
-    class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -3930,7 +3930,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   !> on the points eta1 and eta2 of arbitrary degree splines 2d
   !> 
   !> The parameters are
-  !> @param interpolator the type arb_deg_2d_interpolator
+  !> @param interpolator the type sll_arbitrary_degree_spline_interpolator_2d
   !> @param[in] eta1 the point inthe first direction
   !> @param[in] eta2 the point inthe second direction 
   !> @return val the values on the points eta1 and eta2 of the first derivative in eta2
@@ -3939,7 +3939,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
     eta1, &
     eta2 ) result(val)
 
-    class(arb_deg_2d_interpolator), intent(in)  :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: interpolator
     sll_real64, intent(in)         :: eta1
     sll_real64, intent(in)         :: eta2
     sll_real64                     :: val
@@ -4076,7 +4076,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
   eta1, &
   eta2 ) result(res)
     
-    class(arb_deg_2d_interpolator), intent(in)  :: this
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)  :: this
     sll_real64,  dimension(:,:), intent(in)         :: eta1
     sll_real64,  dimension(:,:), intent(in)         :: eta2
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -4104,7 +4104,7 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
        alpha1,      &
        alpha2) result(res)
       
-    class(arb_deg_2d_interpolator), intent(in)    :: this
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: this
     sll_int32, intent(in)                          :: num_points1  
     sll_int32, intent(in)                          :: num_points2 
     sll_real64, dimension(:,:), intent(in)         :: data_in
@@ -4130,10 +4130,10 @@ subroutine delete_arbitrary_degree_2d_interpolator( interpolator )
    
   
   function get_coefficients_ad2d(interpolator)
-    class(arb_deg_2d_interpolator), intent(in)    :: interpolator
+    class(sll_arbitrary_degree_spline_interpolator_2d), intent(in)    :: interpolator
     sll_real64, dimension(:,:), pointer           :: get_coefficients_ad2d     
 
     get_coefficients_ad2d => interpolator%coeff_splines
   end function get_coefficients_ad2d
   
-end module sll_arbitrary_degree_spline_interpolator_2d_module
+end module sll_module_arbitrary_degree_spline_interpolator_2d

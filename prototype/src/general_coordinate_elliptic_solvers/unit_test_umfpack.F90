@@ -5,7 +5,7 @@ program test_general_elliptic_solver
   use sll_general_coordinate_elliptic_solver_module
   use sll_module_scalar_field_2d_alternative
   use sll_constants
-  use sll_arbitrary_degree_spline_interpolator_2d_module
+  use sll_module_arbitrary_degree_spline_interpolator_2d
   use sll_timer
 #include "sll_memory.h"
 #include "sll_working_precision.h"
@@ -24,8 +24,8 @@ program test_general_elliptic_solver
   type(sll_logical_mesh_2d), pointer                    :: mesh_2d
   class(sll_coordinate_transformation_2d_base), pointer :: T
   type(general_coordinate_elliptic_solver)              :: es
-  type(arb_deg_2d_interpolator), target                 :: interp_2d
-  type(arb_deg_2d_interpolator), target                 :: interp_2d_term_source
+  type(sll_arbitrary_degree_spline_interpolator_2d), target                 :: interp_2d
+  type(sll_arbitrary_degree_spline_interpolator_2d), target                 :: interp_2d_term_source
  ! class(sll_interpolator_2d_base), pointer              :: interp_2d_ptr
   class(sll_interpolator_2d_base), pointer              :: terme_source_interp
   class(sll_scalar_field_2d_base), pointer              :: a11_field_mat

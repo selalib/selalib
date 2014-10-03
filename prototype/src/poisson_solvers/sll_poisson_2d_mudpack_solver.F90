@@ -35,8 +35,8 @@ module sll_module_poisson_2d_mudpack_solver
 !use sll_boundary_condition_descriptors
 use sll_module_poisson_2d_base
 use sll_mudpack_base
-use sll_cubic_spline_interpolator_1d
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_2d
 
 !use sll_poisson_2d_polar
 implicit none

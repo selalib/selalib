@@ -7,10 +7,10 @@ module sll_simulation_4d_vlasov_poisson_cartesian
   use sll_collective
   use sll_remapper
   use sll_constants
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_test_4d_initializer
   use sll_poisson_2d_periodic_cartesian_par
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_simulation_base
   implicit none
 

@@ -19,9 +19,12 @@
 !**************************************************************
 
 use sll_module_interpolators_1d_base
-use sll_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d
+use sll_module_cubic_spline_interpolator_1d_nonuniform
+use sll_module_arbitrary_degree_spline_interpolator_1d
 use sll_module_interpolators_2d_base
-use sll_cubic_spline_interpolator_2d
+use sll_module_cubic_spline_interpolator_2d
+use sll_module_arbitrary_degree_spline_interpolator_2d
 
 #include "sll_splines.h"
 

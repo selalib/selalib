@@ -1275,7 +1275,7 @@ contains
   !   so this should be included.
  
   subroutine read_from_file_2d_discrete( transf, filename )
-    use sll_arbitrary_degree_spline_interpolator_2d_module
+    use sll_module_arbitrary_degree_spline_interpolator_2d
     class(sll_coordinate_transformation_2d_discrete), intent(inout) :: transf
     character(len=*), intent(in) :: filename
     intrinsic :: trim
@@ -1309,9 +1309,9 @@ contains
 !    sll_real64, dimension(:,:), allocatable :: nodes2
     sll_int32  :: number_cells1,number_cells2
     sll_int32 :: sz_knots1,sz_knots2
-    class(arb_deg_2d_interpolator), pointer :: interp2d_1
-    class(arb_deg_2d_interpolator), pointer :: interp2d_2
-    class(arb_deg_2d_interpolator), pointer :: interp2d_jac
+    class(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp2d_1
+    class(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp2d_2
+    class(sll_arbitrary_degree_spline_interpolator_2d), pointer :: interp2d_jac
     type(sll_logical_mesh_2d), pointer      :: mesh_2d
    
     namelist /transf_label/  label

@@ -20,8 +20,8 @@ module sll_simulation_2d_guiding_center_curvilinear_mudpack_module
   use sll_module_characteristics_2d_verlet
   use sll_reduction_module
   use sll_simulation_base
-  use sll_cubic_spline_interpolator_2d
-  use sll_cubic_spline_interpolator_1d
+  use sll_module_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_1d
   use sll_coordinate_transformation_2d_base_module
   use sll_module_coordinate_transformations_2d
   use sll_common_coordinate_transformations

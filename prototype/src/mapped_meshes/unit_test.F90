@@ -3,7 +3,7 @@ program unit_test
   use sll_constants
   use sll_module_mapped_meshes_2d
   use sll_common_coordinate_transformations
-  use sll_cubic_spline_interpolator_2d
+  use sll_module_cubic_spline_interpolator_2d
   implicit none
 
 #define NPTS1 33
