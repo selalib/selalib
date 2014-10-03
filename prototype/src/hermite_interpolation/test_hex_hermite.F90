@@ -14,7 +14,7 @@ program test_hex_hermite
 
   sll_int32    :: num_cells, n_points, n_triangle, n_edge
   sll_int32    :: i
-  sll_int32    :: num_method = 9
+  sll_int32    :: num_method = 10
   character(len = 5) ::name_test = "gauss"!"dioco"!"gauss"!
   sll_int32    :: nloops,ierr, EXTRA_TABLES = 1 ! put 1 for num_method = 15
   ! initial distribution
@@ -68,7 +68,7 @@ program test_hex_hermite
   center_mesh_x1 = 0._f64
   center_mesh_x2 = 0._f64
 
-  radius = 12._f64
+  radius = 8._f64
 
   call print_method(num_method)
 
@@ -448,8 +448,8 @@ program test_hex_hermite
            x = mesh%cartesian_coord(1,i)
            y = mesh%cartesian_coord(2,i)
 
-           !xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
-           !yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
+           xx = x*cos(2._f64*sll_pi*dt) - y*sin(2._f64*sll_pi*dt);
+           yy = x*sin(2._f64*sll_pi*dt) + y*cos(2._f64*sll_pi*dt);
 
            ! xx = x - 2._f64*sll_pi*dt*y
            ! yy = y + 2._f64*sll_pi*dt*x
@@ -461,8 +461,8 @@ program test_hex_hermite
            !    x,y,uxn,uyn,dxux,dyux,dxuy,dyuy,i,xx,yy,2._f64*sll_pi*dt)
            !- > for the leapfrog scheme to work, one needs to 
            ! make a interpolation on f(tn-dt) instead of f(tn)
-            call compute_characteristic_euler_2d_hex( &
-                 x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
+           ! call compute_characteristic_euler_2d_hex( &
+           !      x,y,uxn,uyn,i,xx,yy,2._f64*sll_pi*dt )
         !*********************************************************
         !                INTERPOLATION
         !*********************************************************
