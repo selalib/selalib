@@ -60,9 +60,10 @@
 !> - Add <code> use sll_interpolators </code>
 !>
 !> <b> Examples </b>
-!> -Add some fortran lines to explain how ti use the library
-!> \code
-!> call initialize(my_type, arg_1, arg_2)
-!> call solve(my_type, your_result)
-!> \endcode
+!> @todo Add some fortran lines to explain how to use the library
 !>
+!> @test cubic_spline_interpolator_1d 
+!> @test cubic_spline_interpolator_2d 
+!> @test arbitrary_degree_spline_interpolator_1d 
+!> @test arbitrary_degree_spline_interpolator_2d 
+!> @test periodic_interpolator_1d
