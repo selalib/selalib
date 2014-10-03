@@ -8,7 +8,7 @@ program unit_test
   use sll_module_interpolators_1d_base
   !use WENO_interp
   use sll_cubic_spline_interpolator_1d
-  use cubic_non_uniform_spline_interpolator_1d
+  use sll_cubic_spline_interpolator_1d_nonuniform
  ! use sll_periodic_interpolator_1d
   implicit none
 
