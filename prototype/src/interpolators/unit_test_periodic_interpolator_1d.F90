@@ -13,7 +13,7 @@ sll_int32, parameter                       :: N0 = 16
 sll_real64                                 :: u(16*N0+1)
 sll_real64                                 :: u_exact(16*N0+1)
 sll_real64                                 :: u_out(16*N0+1)
-class(sll_interpolator_1d_base), pointer     :: interp
+class(sll_interpolator_1d_base), pointer   :: interp
 sll_real64, parameter :: xmin = 0.0_f64, xmax=3.0_f64   
 sll_real64 :: alpha, error, old_error, L, xi,mode
 sll_int32 :: i, p, N
@@ -22,33 +22,30 @@ alpha = 0.05_f64
 mode = 3.0_f64
 L = xmax - xmin
 
-error = 0.0_f64
+error = 1.0_f64
 print*, 'Testing order of periodic interpolation'
-  ! loop on N 
 N = N0
 do p=1,4
    N= 2*N 
+   ! Interpolate non trivial smooth periodic function
+   do i=0, N
+     xi = xmin+real(i,f64)*L/real(N,f64)
+     u(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*xi))
+     u_exact(i+1) =  1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
+!    u(i+1) = cos(mode*twopi*i/N)
+!    u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
+   end do
+   print*, 'p=', p
+   call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
+   interp => interp_per
+   u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
+   old_error = error
+   error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
+   print *, "error =", error
+   print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64)
+end do
 
-    ! Interpolate non trivial smooth periodic function
-    do  i=0, N
-       xi = xmin+real(i,f64)*L/real(N,f64)
-       u(i+1) = 1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*xi))
-       u_exact(i+1) =  1.0_f64 / (2.0_f64 + sin(mode*2._f64*sll_pi/L*(xi-alpha)))
-!        u(i+1) = cos(mode*twopi*i/N)
-!        u_exact(i+1) = cos(mode*twopi*(i-alpha)/N)
-     end do
-     call interp_per%initialize( N+1, xmin, xmax, SPLINE, 12)
-     interp => interp_per
-     u_out(1:N+1)=interp%interpolate_array_disp(N+1, u(1:N+1), alpha)
-     old_error = error
-     error = maxval(abs(u_out(1:N+1)-u_exact(1:N+1)))
-     print*, 'N=',N, 'error=', error, 'numerical order=', log(old_error/error)/log(2.0_f64)
-  end do
-
-stop
-
-
-  error = 0.0_8
+  error = 1.0_8
   print*,""
   print*, 'Testing order of lagrange interpolation'
   ! loop on N 
