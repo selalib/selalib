@@ -1,7 +1,8 @@
-
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
-!> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
+!> @brief DG for Maxwell
+!> @details
+!> Solve Maxwell equations on cartesian domain with Discontinuous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
 module sll_maxwell_2d_diga
@@ -22,7 +23,7 @@ use sll_boundary_condition_descriptors
 
 implicit none
 
-!> Local type contains edge properties
+!> Local type with edge properties
 type :: edge_type
 
    sll_real64                            :: length 
@@ -31,7 +32,7 @@ type :: edge_type
 
 end type edge_type
 
-!> This derived type contains information about a mesh cell
+!> Information about a mesh cell
 type :: cell_type
 
    sll_int32                           :: i,j         !< indices 
@@ -46,8 +47,7 @@ type :: cell_type
 
 end type cell_type
 
-
-!> method in two dimensions with general coordinates
+!> DG method in 2D with general coordinates
 type, public :: maxwell_2d_diga
 
    sll_transformation, pointer              :: tau  !< transformation
@@ -168,7 +168,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
    ! Please undo this 'fix' whenever it is decided that gfortran 4.6 is no
    ! longer supported.
    !   this%mesh       => tau%get_logical_mesh()
-   this%mesh => tau%mesh
+   this%mesh       => tau%mesh
    this%bc_south   =  bc_south
    this%bc_east    =  bc_east
    this%bc_north   =  bc_north
