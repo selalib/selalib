@@ -15,12 +15,15 @@
 !  "http://www.cecill.info". 
 !**************************************************************
 
+!>@brief
 !>Hermite interpolation in 2d
+!!@details
 !!derivatives are given with finite stencil formulae of order p
 !!which can be arbitrary in each direction
-!!If p is odd, the reconstruction has discontinuous derivatives
-!!If p is even, the reconstruction has continuous derivatives
-!!p=6 should be quite similar to cubic splines
+!!- If p is odd, the reconstruction has discontinuous derivatives
+!!- If p is even, the reconstruction has continuous derivatives
+!!- p=6 should be quite similar to cubic splines
+!!
 !!do not hesitate to take large odd p, like the favourite p=17
 !!@todo
 !! for the moment only in implementation for the case DIRICHLET x PERIODIC

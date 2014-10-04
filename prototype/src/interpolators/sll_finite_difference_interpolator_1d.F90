@@ -1,4 +1,6 @@
-!> Finite differences implementation of 1d interpolator
+!> @brief
+!> Finite differences implementation of sll_interpolator_1d_base
+!> @details
 !! This is an experimental type meant to solve the following problem:
 !! We are used to fields coming with their own means of interpolation.
 !! The standard interpolator, represented by the base class, is general

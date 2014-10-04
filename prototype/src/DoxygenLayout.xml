@@ -12,8 +12,8 @@
     <tab type="classes" visible="yes" title="Fortran modules">
       <tab type="classlist" visible="yes" title="Fortran modules list" intro="Here are the fortran modules with brief descriptions:"/>
       <tab type="classindex" visible="$ALPHABETICAL_INDEX" title=""/> 
-      <tab type="hierarchy" visible="yes" title="Functions and subroutines in fortran modules" intro="This list is sorted roughly, but not completely, alphabetically:"/>
-      <tab type="classmembers" visible="yes" title="Functions and subroutines" intro="Here is a list of all documented functions and subroutines with links to the fortran module structure documentation"/>
+      <tab type="hierarchy" visible="yes" title="Fortran modules data" intro="This list is sorted roughly, but not completely, alphabetically:"/>
+      <tab type="classmembers" visible="yes" title="Functions and derived types" intro="Here is a list of all documented functions and subroutines with links to the fortran module structure documentation"/>
     </tab>
     <tab type="files" visible="yes" title="">
       <tab type="filelist" visible="yes" title="" intro=""/>
@@ -87,7 +87,7 @@
     <memberdecl>
       <nestednamespaces visible="yes" title=""/>
       <constantgroups visible="yes" title=""/>
-      <classes visible="yes" title=""/>
+      <classes visible="yes" title="Fortran 2003"/>
       <typedefs title=""/>
       <enums title=""/>
       <functions title=""/>
