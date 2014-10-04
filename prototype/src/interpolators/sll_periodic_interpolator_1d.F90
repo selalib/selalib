@@ -1,13 +1,9 @@
+!> @brief
 !> the following provides an implementation for the abstract interface
-!! interpolate1d
+!! sll_interpolator_1d_base
+!! @details
 !! Define periodic interpolation of values in data define on original grid at
 !! points coordinates
-!! Issues with the following function:
-!! - entities referenced through "this" are modified, violating the declared
-!!   intent.
-!! - it is probably better to convert this into a subroutine, since data_out
-!!   will be allocated on the stack (too big an array will crash the program),
-!!   and some copy operation might be involved when "catching" the results.
 module sll_module_periodic_interpolator_1d
 #include "sll_working_precision.h"
 #include "sll_memory.h"

@@ -15,17 +15,13 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-!> Interpolator 1d using cubic splines on regular mesh
+!> @brief 
+!! Interpolator 1d using cubic splines on regular mesh
+!! @details
 !! the following provides an implementation for the abstract interface
-!!  interpolate1d
-!! Define spline interpolation of values in data define on original grid at
-!! points coordinates
-!!Issues with the following function:
-!!- entities referenced through "this" are modified, violating the declared
-!!  intent.
-!!- it is probably better to convert this into a subroutine, since data_out
-!!  will be allocated on the stack (too big an array will crash the program),
-!!  and some copy operation might be involved when "catching" the results.
+!! sll_interpolator_1d and define spline interpolation of values in 
+!! data define on original grid at points coordinates
+!!
 module sll_module_cubic_spline_interpolator_1d
 
 #include "sll_working_precision.h"
@@ -37,7 +33,7 @@ use sll_cubic_splines
 
 implicit none
 
-!> Cubic spline interpolator implementation 1D
+!> Cubic spline interpolator 1d regular grid.
 type, extends(sll_interpolator_1d_base) :: sll_cubic_spline_interpolator_1d
 
    sll_real64, dimension(:), pointer  :: interpolation_points !< points position

@@ -1,13 +1,8 @@
-!> the following provides an implementation for the abstract interface
-!> interpolate1d
+!> @brief
+!> Implements sll_interpolator_1d_base with cubic splines on non uniform mesh
+!> @details
 !> Define spline interpolation of values in data define on original grid at
 !> points coordinates
-!! Issues with the following function:
-!! - entities referenced through "this" are modified, violating the declared
-!!   intent.
-!! - it is probably better to convert this into a subroutine, since data_out
-!!   will be allocated on the stack (too big an array will crash the program),
-!!   and some copy operation might be involved when "catching" the results.
 module sll_module_cubic_spline_interpolator_1d_nonuniform
 #include "sll_working_precision.h"
 #include "sll_memory.h"
@@ -17,7 +12,7 @@ use cubic_non_uniform_splines
 use sll_cubic_splines
   implicit none
 
-  !> Class for interpolator 1d implemented with cubic splines on non uniform mesh
+  !> sll_interpolator_1d implemented with cubic splines on non uniform mesh
   type, extends(sll_interpolator_1d_base) ::  sll_cubic_spline_interpolator_1d_nonuniform
      sll_real64, dimension(:), pointer     :: interpolation_points
      sll_int32                     :: num_points ! size
