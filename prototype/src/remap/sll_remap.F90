@@ -27,14 +27,14 @@ module sll_remapper
 
   implicit none
   
-  !> The box types contain information on the index limits contained        
+  !> @brief Index limits contained        
   !> in a given processor.
   type SLL_PRIV :: box_2D
      sll_int32 SLL_PRIV :: i_min, i_max
      sll_int32 SLL_PRIV :: j_min, j_max
   end type box_2D
 
-  !> The box types contain information on the index limits contained        
+  !> @brief Index limits contained        
   !> in a given processor.
   type SLL_PRIV :: box_3D
      sll_int32 SLL_PRIV :: i_min, i_max
@@ -42,7 +42,7 @@ module sll_remapper
      sll_int32 SLL_PRIV :: k_min, k_max
   end type box_3D
 
-  !> The box types contain information on the index limits contained        
+  !> @brief Index limits contained        
   !> in a given processor.
   type SLL_PRIV :: box_4D
      sll_int32 SLL_PRIV :: i_min, i_max
@@ -51,7 +51,7 @@ module sll_remapper
      sll_int32 SLL_PRIV :: l_min, l_max
   end type box_4D
 
-  !> The box types contain information on the index limits contained        
+  !> @brief Index limits contained        
   !> in a given processor.
   type SLL_PRIV :: box_5D
      sll_int32 SLL_PRIV :: i_min, i_max
@@ -61,7 +61,7 @@ module sll_remapper
      sll_int32 SLL_PRIV :: m_min, m_max
   end type box_5D
 
-  !> The box types contain information on the index limits contained        
+  !> @brief Index limits contained        
   !> in a given processor.
   type SLL_PRIV :: box_6D
      sll_int32 SLL_PRIV :: i_min, i_max
@@ -73,8 +73,9 @@ module sll_remapper
   end type box_6D
 
   
-  !> This type contain information on a collective and an
-  !> array of boxes that describes the distribution of data among
+  !> @brief Information on a collective and an
+  !> array of boxes 
+  !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
@@ -85,8 +86,9 @@ module sll_remapper
      type(box_2D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_2D
 
-  !> This type contain information on a collective and an
-  !> array of boxes that describes the distribution of data among
+  !> @brief Information on a collective and an
+  !> array of boxes 
+  !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
@@ -98,8 +100,9 @@ module sll_remapper
      type(box_3D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_3D
 
-  !> This type contain information on a collective and an
-  !> array of boxes that describes the distribution of data among
+  !> @brief Information on a collective and an
+  !> array of boxes 
+  !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
@@ -112,8 +115,9 @@ module sll_remapper
      type(box_4D), dimension(:), pointer SLL_PRIV :: boxes
   end type layout_4D
 
-  !> This type contain information on a collective and an
-  !> array of boxes that describes the distribution of data among
+  !> @brief Information on a collective and an
+  !> array of boxes 
+  !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
@@ -127,8 +131,9 @@ module sll_remapper
      type(box_5D), dimension(:), pointer SLL_PRIV:: boxes
   end type layout_5D
 
-  !> This type contain information on a collective and an
-  !> array of boxes that describes the distribution of data among
+  !> @brief Information on a collective and an
+  !> array of boxes 
+  !> @details that describes the distribution of data among
   !> different nodes. We are also adding some auxiliary fields, like the
   !> global dimensions of a given dataset distributed as per the information
   !> in the layout.
