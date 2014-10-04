@@ -534,42 +534,42 @@ contains
           poisson%cey_1d(1:nc_eta2+1)=0.5_f64*ce
         endif
 
-        poisson%cxx_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cxx_1d_interp => new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)          
         call poisson%cxx_1d_interp%compute_interpolants( poisson%cxx_1d )          
 
-        poisson%cyy_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cyy_1d_interp => new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
           SLL_PERIODIC)          
         call poisson%cyy_1d_interp%compute_interpolants( poisson%cyy_1d )          
 
-        poisson%cx_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cx_1d_interp => new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)          
         call poisson%cx_1d_interp%compute_interpolants( poisson%cx_1d )          
 
-        poisson%cy_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cy_1d_interp => new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &
           SLL_PERIODIC)          
         call poisson%cy_1d_interp%compute_interpolants( poisson%cy_1d )          
 
-        poisson%cex_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cex_1d_interp => new_cubic_spline_interpolator_1d( &
           nx, &
           eta1_min, &
           eta1_max, &
           SLL_PERIODIC)          
         call poisson%cex_1d_interp%compute_interpolants( poisson%cex_1d )          
 
-        poisson%cey_1d_interp => new_cubic_spline_1d_interpolator( &
+        poisson%cey_1d_interp => new_cubic_spline_interpolator_1d( &
           ny, &
           eta2_min, &
           eta2_max, &

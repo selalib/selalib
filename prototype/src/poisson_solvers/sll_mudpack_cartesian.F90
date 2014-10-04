@@ -84,7 +84,7 @@ ny = nc_eta2+1
 ! set minimum required work space
 llwork=(7*(nx+2)*(ny+2)+44*nx*ny)/3
 
-!cxx_interp => new_cubic_spline_1d_interpolator( &
+!cxx_interp => new_cubic_spline_interpolator_1d( &
 !          nx, &
 !          eta1_min, &
 !          eta1_max, &

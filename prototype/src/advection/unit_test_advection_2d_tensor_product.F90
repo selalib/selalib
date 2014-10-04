@@ -90,7 +90,7 @@ implicit none
 
 
 
-  interp_x1 => new_cubic_spline_1d_interpolator( &
+  interp_x1 => new_cubic_spline_interpolator_1d( &
     num_cells_x1+1, &
     x1_min, &
     x1_max, &
@@ -107,7 +107,7 @@ implicit none
     num_cells_x1+1, &
     eta_coords = x1_mesh)
 
-  interp_x2 => new_cubic_spline_1d_interpolator( &
+  interp_x2 => new_cubic_spline_interpolator_1d( &
     num_cells_x2+1, &
     x2_min, &
     x2_max, &

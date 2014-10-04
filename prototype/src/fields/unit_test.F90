@@ -23,8 +23,8 @@ program unit_test
        pjac21, pjac22
   type(init_landau_2d), target :: init_landau
   class(scalar_field_2d_initializer_base), pointer    :: pfinit
-  type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
   class(sll_interpolator_1d_base), pointer :: interp_eta1_ptr
   class(sll_interpolator_1d_base), pointer :: interp_eta2_ptr
   sll_int32 :: i,j

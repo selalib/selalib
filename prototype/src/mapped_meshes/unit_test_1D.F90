@@ -15,8 +15,8 @@ program unit_test_1d
   type(sll_mapped_mesh_1d_analytic)     :: map_a    ! analytic map
   type(sll_mapped_mesh_1d_discrete)     :: map_d    ! discrete map
   ! for the discrete case...
-  type(cubic_spline_1d_interpolator)    :: x1_interp
-  type(cubic_spline_1d_interpolator)    :: j_interp
+  type(sll_cubic_spline_interpolator_1d)    :: x1_interp
+  type(sll_cubic_spline_interpolator_1d)    :: j_interp
   sll_real64, dimension(:), allocatable :: x1
   sll_real64                            :: x1_eta1_min, x1_eta1_max
   sll_real64, dimension(:), allocatable :: jacs

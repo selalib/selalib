@@ -38,7 +38,7 @@ use sll_cubic_splines
 implicit none
 
 !> Cubic spline interpolator implementation 1D
-type, extends(sll_interpolator_1d_base) ::  cubic_spline_1d_interpolator
+type, extends(sll_interpolator_1d_base) :: sll_cubic_spline_interpolator_1d
 
    sll_real64, dimension(:), pointer  :: interpolation_points !< points position
    sll_int32                          :: num_points           !< size
@@ -61,13 +61,13 @@ contains
    procedure :: set_coefficients => set_coefficients_cs1d
    procedure :: get_coefficients => get_coefficients_cs1d
 
-end type cubic_spline_1d_interpolator
+end type sll_cubic_spline_interpolator_1d
 
 
 !> Pointer to cubic spline interpolator implementation 1D
-type :: cubic_spline_1d_interpolator_ptr
-   type(cubic_spline_1d_interpolator), pointer :: interp
-end type cubic_spline_1d_interpolator_ptr
+type :: sll_cubic_spline_interpolator_1d_ptr
+   type(sll_cubic_spline_interpolator_1d), pointer :: interp
+end type sll_cubic_spline_interpolator_1d_ptr
 
 
 !> Deallocate the interpolator object
@@ -81,7 +81,7 @@ contains  ! ****************************************************************
 
   function spline_interpolate1d(this, num_points, data, coordinates) &
        result(data_out)
-    class(cubic_spline_1d_interpolator),  intent(in)       :: this
+    class(sll_cubic_spline_interpolator_1d),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64, dimension(:), intent(in)   :: coordinates
@@ -95,7 +95,7 @@ contains  ! ****************************************************************
 
   function spline_interpolate1d_disp(this, num_points, data, alpha) &
        result(data_out)
-    class(cubic_spline_1d_interpolator),  intent(in)       :: this
+    class(sll_cubic_spline_interpolator_1d),  intent(in)       :: this
     !class(sll_cubic_spline_1D),  intent(in)      :: this
     sll_int32,  intent(in)                 :: num_points
     sll_real64,  intent(in)   :: alpha
@@ -151,7 +151,7 @@ contains  ! ****************************************************************
   subroutine compute_interpolants_cs1d( interpolator, data_array,&
        eta_coords, &
        size_eta_coords)
-    class(cubic_spline_1d_interpolator), intent(inout) :: interpolator
+    class(sll_cubic_spline_interpolator_1d), intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in)               :: data_array
     sll_real64, dimension(:), intent(in),optional  :: eta_coords
     sll_int32, intent(in),optional                 :: size_eta_coords
@@ -175,7 +175,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -188,7 +188,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)            :: num_pts
     sll_real64, dimension(:), pointer :: vals_to_interpolate
     sll_real64, dimension(:), pointer :: output
@@ -202,7 +202,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output_array )
-    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)                 :: num_pts
     sll_real64, dimension(:), intent(in)   :: vals_to_interpolate
     sll_real64, dimension(:), intent(out)  :: output_array
@@ -215,7 +215,7 @@ contains  ! ****************************************************************
     num_pts, &
     vals_to_interpolate, &
     output )
-    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
     sll_int32,  intent(in)              :: num_pts
     sll_real64, dimension(:), pointer   :: vals_to_interpolate
     sll_real64, dimension(:), pointer   :: output
@@ -224,27 +224,27 @@ contains  ! ****************************************************************
   end subroutine interpolate_pointer_derivatives_cs1d
 
   function interpolate_value_cs1d( interpolator, eta1 ) result(val)
-    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_value( eta1, interpolator%spline )
   end function
 
   function interpolate_deriv1_cs1d( interpolator, eta1 ) result(val)
-    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d), intent(in) :: interpolator
     sll_real64             :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_deriv1_cs1d
 
   function interpolate_derivative_f95( interpolator, eta1 ) result(val)
-    class(cubic_spline_1d_interpolator), intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d), intent(in) :: interpolator
     sll_real64 :: val
     sll_real64, intent(in) :: eta1
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_derivative_f95
 
-  function new_cubic_spline_1d_interpolator( &
+  function new_cubic_spline_interpolator_1d( &
     num_points, &
     xmin, &
     xmax, &
@@ -252,7 +252,7 @@ contains  ! ****************************************************************
     slope_left, &
     slope_right ) result(res)
 
-    type(cubic_spline_1d_interpolator),  pointer :: res
+    type(sll_cubic_spline_interpolator_1d),  pointer :: res
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -269,7 +269,7 @@ contains  ! ****************************************************************
          bc_type, &
          slope_left, &
          slope_right )
-  end function new_cubic_spline_1d_interpolator
+  end function new_cubic_spline_interpolator_1d
 
   ! Why is the name of this function changing depending on the standard?
   ! only one will be compiled anyway!!
@@ -284,7 +284,7 @@ contains  ! ****************************************************************
     slope_left, &
     slope_right )
 
-    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(inout) :: interpolator
     sll_int32,  intent(in)               :: num_points
     sll_real64, intent(in)               :: xmin
     sll_real64, intent(in)               :: xmax
@@ -320,7 +320,7 @@ contains  ! ****************************************************************
 
   function reconstruct_array(this, num_points, data) result(res)
     ! dummy procedure
-    class(cubic_spline_1d_interpolator), intent(in)     :: this
+    class(sll_cubic_spline_interpolator_1d), intent(in)     :: this
        sll_int32, intent(in)                :: num_points! size of output array
        sll_real64, dimension(:), intent(in) :: data   ! data to be interpolated
        sll_real64, dimension(num_points)    :: res
@@ -332,12 +332,12 @@ contains  ! ****************************************************************
   end function reconstruct_array
 
   subroutine delete_cs1d( obj )
-    class(cubic_spline_1d_interpolator) :: obj
+    class(sll_cubic_spline_interpolator_1d) :: obj
     call sll_delete(obj%spline)
   end subroutine delete_cs1d
 
   subroutine set_coefficients_cs1d( interpolator, coeffs )
-    class(cubic_spline_1d_interpolator),  intent(inout) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(inout) :: interpolator
     sll_real64, dimension(:), intent(in), optional :: coeffs
     print *, '#set_coefficients_cs1d(): ERROR: This function has not been ', &
          'implemented yet.'
@@ -350,7 +350,7 @@ contains  ! ****************************************************************
 
 
   function get_coefficients_cs1d(interpolator)
-    class(cubic_spline_1d_interpolator),  intent(in) :: interpolator
+    class(sll_cubic_spline_interpolator_1d),  intent(in) :: interpolator
     sll_real64, dimension(:), pointer            :: get_coefficients_cs1d
 
     print *, 'get_coefficients_cs1d(): ERROR: This function has not been ', &

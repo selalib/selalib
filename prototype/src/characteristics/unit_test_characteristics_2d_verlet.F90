@@ -57,13 +57,13 @@ implicit none
 
   
   !initialization for verlet
-  A1_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A1_interp_x1 => new_cubic_spline_interpolator_1d( &
     Npts1, &
     0._f64, &
     1._f64, &
     SLL_HERMITE)
 
-  A2_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A2_interp_x1 => new_cubic_spline_interpolator_1d( &
     Npts1, &
     0._f64, &
     1._f64, &

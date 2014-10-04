@@ -117,12 +117,12 @@ implicit none
 
 
   !we initialize the characteristics
-  A1_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A1_interp_x1 => new_cubic_spline_interpolator_1d( &
     Nc_x1+1, &
     x1_min, &
     x1_max, &
     SLL_HERMITE)
-  A2_interp_x1 => new_cubic_spline_1d_interpolator( &
+  A2_interp_x1 => new_cubic_spline_interpolator_1d( &
     Nc_x1+1, &
     x1_min, &
     x1_max, &

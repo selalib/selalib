@@ -20,7 +20,7 @@ program VP1d_BSL_time_split
   use sll_vp_cartesian_2d
   implicit none
 
-  type(cubic_spline_1d_interpolator), target  :: interp_spline_x, interp_spline_v
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_spline_x, interp_spline_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   !type(sll_mapped_mesh_2d_cartesian), target   :: mesh2d 
   !class(sll_mapped_mesh_2d_base), pointer :: mesh2d_base

@@ -124,8 +124,8 @@ module sll_simulation_4d_qns_general_multipatch_module
      type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators
-     type(cubic_spline_1d_interpolator) :: interp_x3
-     type(cubic_spline_1d_interpolator) :: interp_x4
+     type(sll_cubic_spline_interpolator_1d) :: interp_x3
+     type(sll_cubic_spline_interpolator_1d) :: interp_x4
      ! for distribution function initializer:
      procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func
      sll_real64, dimension(:), pointer :: params

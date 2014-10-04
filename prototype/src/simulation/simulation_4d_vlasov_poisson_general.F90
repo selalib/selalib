@@ -77,10 +77,10 @@ module sll_simulation_4d_vlasov_poisson_general
      type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2
      ! interpolators and their pointers
      type(cubic_spline_2d_interpolator) :: interp_x1x2
-!!$     type(cubic_spline_1d_interpolator) :: interp_x1
-!!$     type(cubic_spline_1d_interpolator) :: interp_x2
-     type(cubic_spline_1d_interpolator) :: interp_x3
-     type(cubic_spline_1d_interpolator) :: interp_x4
+!!$     type(sll_cubic_spline_interpolator_1d) :: interp_x1
+!!$     type(sll_cubic_spline_interpolator_1d) :: interp_x2
+     type(sll_cubic_spline_interpolator_1d) :: interp_x3
+     type(sll_cubic_spline_interpolator_1d) :: interp_x4
      ! Field accumulator
      sll_comp64, dimension(:,:), allocatable :: efield_x1
      sll_comp64, dimension(:,:), allocatable :: efield_x2
