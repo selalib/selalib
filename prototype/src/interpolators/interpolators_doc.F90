@@ -29,8 +29,8 @@
 !! - get_coefficients
 !!
 !> Classes available are:
-!!  - sll_interpolate_1d_base
-!!  - sll_interpolate_2d_base
+!!  - sll_interpolator_1d_base
+!!  - sll_interpolator_2d_base
 !!  - sll_cubic_spline_interpolator_1d
 !!  - sll_cubic_spline_interpolator_1d_nonuniform
 !!  - sll_cubic_spline_interpolator_2d
