@@ -80,12 +80,12 @@ module sll_simulation_6d_vlasov_poisson_cartesian
      type(remap_plan_6D_real64), pointer :: seqx1x2x3_to_seqx4x5x6
      type(remap_plan_6D_real64), pointer :: seqx4x5x6_to_seqx1x2x3
      ! interpolators and their pointers
-     type(cubic_spline_1d_interpolator) :: interp_x1
-     type(cubic_spline_1d_interpolator) :: interp_x2
-     type(cubic_spline_1d_interpolator) :: interp_x3
-     type(cubic_spline_1d_interpolator) :: interp_x4
-     type(cubic_spline_1d_interpolator) :: interp_x5
-     type(cubic_spline_1d_interpolator) :: interp_x6
+     type(sll_cubic_spline_interpolator_1d) :: interp_x1
+     type(sll_cubic_spline_interpolator_1d) :: interp_x2
+     type(sll_cubic_spline_interpolator_1d) :: interp_x3
+     type(sll_cubic_spline_interpolator_1d) :: interp_x4
+     type(sll_cubic_spline_interpolator_1d) :: interp_x5
+     type(sll_cubic_spline_interpolator_1d) :: interp_x6
    contains
      procedure, pass(sim) :: run => run_vp6d_cartesian
      procedure, pass(sim) :: init_from_file => init_vp6d_par_cart

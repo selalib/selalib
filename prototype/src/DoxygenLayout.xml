@@ -4,9 +4,9 @@
   <navindex>
     <tab type="mainpage" visible="yes" title=""/>
     <tab type="pages" visible="yes" title="" intro=""/>
-    <tab type="modules" visible="yes" title="" intro=""/>
+    <tab type="modules" visible="yes" title="Fortran classes" intro="Here is a list of all Fortran classes"/>
     <tab type="namespaces" visible="yes" title="Libraries">
-      <tab type="namespacelist" visible="yes" title="" intro=""/>
+      <tab type="namespacelist" visible="yes" title="Libraries list" intro=""/>
       <tab type="namespacemembers" visible="yes" title="" intro=""/>
     </tab>
     <tab type="classes" visible="yes" title="Fortran modules">
@@ -113,8 +113,8 @@
     <includedbygraph visible="$INCLUDED_BY_GRAPH"/>
     <sourcelink visible="yes"/>
     <memberdecl>
-      <classes visible="yes" title=""/>
-      <namespaces visible="yes" title=""/>
+      <classes visible="yes" title="Fortran module"/>
+      <namespaces visible="yes" title="Library"/>
       <constantgroups visible="yes" title=""/>
       <defines title=""/>
       <typedefs title=""/>
@@ -143,8 +143,8 @@
       <nestedgroups visible="yes" title=""/>
       <dirs visible="yes" title=""/>
       <files visible="yes" title=""/>
-      <namespaces visible="yes" title=""/>
-      <classes visible="yes" title=""/>
+      <namespaces visible="yes" title="Library"/>
+      <classes visible="yes" title="Fortran module"/>
       <defines title=""/>
       <typedefs title=""/>
       <enums title=""/>

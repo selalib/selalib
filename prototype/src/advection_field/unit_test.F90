@@ -26,8 +26,8 @@ program unit_test
   type(scalar_field_1d)                        :: phi_self
   character(len=32)                            :: name = 'adv_field'
 
-  type(cubic_spline_1d_interpolator), target   :: interp_eta1
-  type(cubic_spline_1d_interpolator), target   :: interp_eta2
+  type(sll_cubic_spline_interpolator_1d), target   :: interp_eta1
+  type(sll_cubic_spline_interpolator_1d), target   :: interp_eta2
   sll_real64, dimension(5)                     :: affine_map_params
   sll_real64, dimension(2)                     :: linear_map_params
   sll_int32                                    :: ix

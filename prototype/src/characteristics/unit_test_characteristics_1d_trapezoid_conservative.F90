@@ -46,7 +46,7 @@ implicit none
 
   
   !initialization for verlet
-  A_interp => new_cubic_spline_1d_interpolator( &
+  A_interp => new_cubic_spline_interpolator_1d( &
     Npts, &
     0._f64, &
     1._f64, &

@@ -751,23 +751,23 @@ contains
           sim%bc_interp2d_eta1, &
           sim%bc_interp2d_eta2)  
        print*,"#A1_1d interpolation SLL_CUBIC_SPLINES"   
-        sim%A1_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%A1_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
-        sim%A1_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%A1_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
           sim%bc_interp2d_eta2)
        print*,"#A2_1d interpolation SLL_CUBIC_SPLINES"     
-        sim%A2_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%A2_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1+1, &
           eta1_min, &
           eta1_max, &
           sim%bc_interp2d_eta1)
-        sim%A2_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%A2_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2+1, &
           eta2_min, &
           eta2_max, &
@@ -800,7 +800,7 @@ contains
 
     select case (f_interp1d_x1_case)
       case ("SLL_CUBIC_SPLINES")
-        sim%f_interp1d_x1 => new_cubic_spline_1d_interpolator( &
+        sim%f_interp1d_x1 => new_cubic_spline_interpolator_1d( &
           Nc_eta1_bis+1, &
           eta1_min_bis, &
           eta1_max_bis, &
@@ -815,7 +815,7 @@ contains
 
     select case (f_interp1d_x2_case)
       case ("SLL_CUBIC_SPLINES")
-        sim%f_interp1d_x2 => new_cubic_spline_1d_interpolator( &
+        sim%f_interp1d_x2 => new_cubic_spline_interpolator_1d( &
           Nc_eta2_bis+1, &
           eta2_min_bis, &
           eta2_max_bis, &

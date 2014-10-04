@@ -45,10 +45,10 @@ program vlasov_poisson_parallel
   class(sll_interpolator_1d_base), pointer   :: interp_eta3
   class(sll_interpolator_1d_base), pointer   :: interp_eta4
 
-  type(cubic_spline_1d_interpolator), target :: spl_eta1
-  type(cubic_spline_1d_interpolator), target :: spl_eta2
-  type(cubic_spline_1d_interpolator), target :: spl_eta3
-  type(cubic_spline_1d_interpolator), target :: spl_eta4
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta1
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta2
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta3
+  type(sll_cubic_spline_interpolator_1d), target :: spl_eta4
 
   sll_int32  :: istep, jstep
   sll_int32  :: prank, comm

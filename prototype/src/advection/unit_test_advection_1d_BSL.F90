@@ -63,7 +63,7 @@ implicit none
   err=0._f64
 
 
-  interp => new_cubic_spline_1d_interpolator( &
+  interp => new_cubic_spline_interpolator_1d( &
     num_cells+1, &
     x_min, &
     x_max, &
