@@ -1,4 +1,8 @@
-!> Low-level mathematical utility that applies the 
+!> @brief 
+!> Gauss-Lobatto integration
+!> @details
+!> Low-level mathematical utility 
+!> that applies the 
 !> Gauss-Lobatto method to compute numeric integrals.
 module gauss_lobatto_integration
 #include "sll_working_precision.h"
