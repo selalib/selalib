@@ -26,8 +26,8 @@ sll_real64, dimension(:,:), allocatable :: advfield_v
 class(sll_interpolator_1d_base), pointer     :: interp_x
 class(sll_interpolator_1d_base), pointer     :: interp_v
 
-type(cubic_spline_1d_interpolator), target   :: spline_x
-type(cubic_spline_1d_interpolator), target   :: spline_v
+type(sll_cubic_spline_interpolator_1d), target   :: spline_x
+type(sll_cubic_spline_interpolator_1d), target   :: spline_v
 
 print*,'*********************'
 print*,' 1D case             '

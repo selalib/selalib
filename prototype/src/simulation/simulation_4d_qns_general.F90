@@ -125,11 +125,11 @@ module sll_simulation_4d_qns_general_module
      ! interpolators and their pointers
      !type(cubic_spline_2d_interpolator) :: interp_x1x2
      type(sll_arbitrary_degree_spline_interpolator_2d) :: interp_x1x2
-!!$     type(cubic_spline_1d_interpolator) :: interp_x1
-!!$     type(cubic_spline_1d_interpolator) :: interp_x2
-     type(cubic_spline_1d_interpolator) :: interp_x3
+!!$     type(sll_cubic_spline_interpolator_1d) :: interp_x1
+!!$     type(sll_cubic_spline_interpolator_1d) :: interp_x2
+     type(sll_cubic_spline_interpolator_1d) :: interp_x3
      !type(sll_arbitrary_degree_spline_interpolator_1d) :: interp_x3
-     type(cubic_spline_1d_interpolator) :: interp_x4
+     type(sll_cubic_spline_interpolator_1d) :: interp_x4
      ! interpolation any arbitrary spline
      type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_rho
      type(sll_arbitrary_degree_spline_interpolator_2d)     :: interp_phi

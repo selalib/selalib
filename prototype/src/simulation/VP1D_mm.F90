@@ -25,10 +25,10 @@ program VP1d_deltaf
   use sll_hdf5_io_serial
   implicit none
 
-!  type(cubic_spline_1d_interpolator), target  ::  interp_spline_x
+!  type(sll_cubic_spline_interpolator_1d), target  ::  interp_spline_x
   type(sll_cubic_spline_1d), pointer :: interp_spline_v, interp_spline_vh, interp_spline_x
   type(sll_periodic_interpolator_1d), target      :: interp_per_x, interp_per_v
-  type(cubic_spline_1d_interpolator), target      :: interp_comp_v
+  type(sll_cubic_spline_interpolator_1d), target      :: interp_comp_v
   class(sll_interpolator_1d_base), pointer    :: interp_x, interp_v
   type(poisson_1d_periodic)  :: poisson_1d
   sll_real64, dimension(:,:), allocatable, target :: f

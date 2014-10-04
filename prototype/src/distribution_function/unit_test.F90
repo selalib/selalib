@@ -24,8 +24,8 @@ program unit_test
   character(32)  :: name = 'dist_func'
   character(len=4) :: cstep
   type(init_landau_2d), target :: init_landau
-  type(cubic_spline_1d_interpolator), target  :: interp_eta1
-  type(cubic_spline_1d_interpolator), target  :: interp_eta2
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta1
+  type(sll_cubic_spline_interpolator_1d), target  :: interp_eta2
 
   sll_int32 :: istep
 

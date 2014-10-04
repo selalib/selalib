@@ -92,7 +92,7 @@ type, public :: maxwell_pstd_3d
    sll_real64, dimension(:), pointer  :: d_dz         !< field y derivative
    sll_real64, dimension(:), pointer  :: kx           !< x wave number
    sll_real64, dimension(:), pointer  :: ky           !< y wave number
-   sll_real64, dimension(:), pointer  :: kz           !< y wave number
+   sll_real64, dimension(:), pointer  :: kz           !< z wave number
    fftw_plan                          :: fwx          !< forward fft plan along x
    fftw_plan                          :: fwy          !< forward fft plan along y
    fftw_plan                          :: fwz          !< forward fft plan along y

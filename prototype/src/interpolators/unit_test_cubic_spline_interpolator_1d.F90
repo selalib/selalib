@@ -13,7 +13,7 @@ program cubic_spline_interpolator_1d
 
   class(sll_interpolator_1d_base), pointer     :: interp
 
-  type(cubic_spline_1d_interpolator), target   :: spline
+  type(sll_cubic_spline_interpolator_1d), target   :: spline
   !type(sll_cubic_spline_interpolator_1d_nonuniform), target  :: cubic_nonunif_spline
 
   sll_real64                            :: error

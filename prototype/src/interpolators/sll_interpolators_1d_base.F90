@@ -15,7 +15,11 @@
 !  "http://www.cecill.info".
 !**************************************************************
 
-!> Abstract data type for 1D interpolation and reconstruction
+!>@file 
+!!Abstract data type for 1D interpolation and reconstruction
+!@defgroup class sll_interpolator_1d_base
+
+!>Abstract data type for 1D interpolation and reconstruction
 module sll_module_interpolators_1d_base
 
 #include "sll_working_precision.h"

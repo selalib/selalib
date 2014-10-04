@@ -6,8 +6,8 @@ program landau_parallel
 
   class(sll_interpolator_1d_base), pointer   :: interp_x
   class(sll_interpolator_1d_base), pointer   :: interp_v
-  type(cubic_spline_1d_interpolator), target :: spl_x
-  type(cubic_spline_1d_interpolator), target :: spl_v
+  type(sll_cubic_spline_interpolator_1d), target :: spl_x
+  type(sll_cubic_spline_interpolator_1d), target :: spl_v
   sll_real64, dimension(:,:),  pointer       :: f
   sll_real64, dimension(:,:),  pointer       :: ft
   type(layout_2D), pointer                   :: layout_x
