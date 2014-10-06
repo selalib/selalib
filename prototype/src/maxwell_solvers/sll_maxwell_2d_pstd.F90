@@ -88,25 +88,25 @@ public :: initialize, delete, solve, ampere, faraday
 
 !> Maxwell solver object
 type, public :: maxwell_2d_pstd
-   sll_int32                          :: nc_x         !< x cells number
-   sll_int32                          :: nc_y         !< y cells number
-   sll_real64, dimension(:), pointer  :: d_dx         !< field x derivative
-   sll_real64, dimension(:), pointer  :: d_dy         !< field y derivative
-   sll_real64, dimension(:), pointer  :: kx           !< x wave number
-   sll_real64, dimension(:), pointer  :: ky           !< y wave number
-   fftw_plan                          :: fwx          !< forward fft plan along x
-   fftw_plan                          :: fwy          !< forward fft plan along y
-   fftw_plan                          :: bwx          !< backward fft plan along x
-   fftw_plan                          :: bwy          !< backward fft plan along y
-   fftw_plan                          :: p_tmp_x      !< pointer for memory allocation
-   fftw_plan                          :: p_tmp_y      !< pointer for memory allocation
-   fftw_comp                , pointer :: tmp_x(:)     !< x fft transform
-   fftw_comp                , pointer :: tmp_y(:)     !< y fft transform
-   fftw_int                           :: sz_tmp_x     !< size for memory allocation
-   fftw_int                           :: sz_tmp_y     !< size for memory allocation
-   sll_int32                          :: polarization !< TE or TM
-   sll_real64                         :: e_0          !< electric conductivity
-   sll_real64                         :: mu_0         !< magnetic permeability
+   sll_int32           :: nc_x         !< x cells number
+   sll_int32           :: nc_y         !< y cells number
+   sll_real64, pointer :: d_dx(:)      !< field x derivative
+   sll_real64, pointer :: d_dy(:)      !< field y derivative
+   sll_real64, pointer :: kx(:)        !< x wave number
+   sll_real64, pointer :: ky(:)        !< y wave number
+   fftw_plan           :: fwx          !< forward fft plan along x
+   fftw_plan           :: fwy          !< forward fft plan along y
+   fftw_plan           :: bwx          !< backward fft plan along x
+   fftw_plan           :: bwy          !< backward fft plan along y
+   fftw_plan           :: p_tmp_x      !< pointer for memory allocation
+   fftw_plan           :: p_tmp_y      !< pointer for memory allocation
+   fftw_comp , pointer :: tmp_x(:)     !< x fft transform
+   fftw_comp , pointer :: tmp_y(:)     !< y fft transform
+   fftw_int            :: sz_tmp_x     !< size for memory allocation
+   fftw_int            :: sz_tmp_y     !< size for memory allocation
+   sll_int32           :: polarization !< TE or TM
+   sll_real6           :: e_0          !< electric conductivity
+   sll_real6           :: mu_0         !< magnetic permeability
 
 end type maxwell_2d_pstd
 
