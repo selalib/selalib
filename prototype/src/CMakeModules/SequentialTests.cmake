@@ -173,10 +173,6 @@ ENDIF(PYTHON3_FOUND)
    SET_TESTS_PROPERTIES(gyroaverage_polar_pade PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 
-   IF(FFTW_ENABLED AND FFTW_FOUND)
-      ADD_TEST(NAME maxwell_2d_pstd COMMAND test_maxwell_2d_pstd)
-      SET_TESTS_PROPERTIES(maxwell_2d_pstd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
-   ENDIF()
 
 ADD_TEST(NAME electric_field_accumulators COMMAND test_e_field_accumulator_2d)
 
@@ -191,8 +187,6 @@ ADD_TEST(NAME BSL COMMAND bsl_1d_cubic_uniform_periodic
                           bsl_1d_cubic_nonuniform_compact)
 SET_TESTS_PROPERTIES(BSL PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
-ADD_TEST(NAME maxwell_2d_fdtd COMMAND test_maxwell_2d_fdtd)
-SET_TESTS_PROPERTIES(maxwell_2d_fdtd PROPERTIES PASS_REGULAR_EXPRESSION "PASSED")
 
 IF(FORTRANCL_FOUND)
    ADD_TEST(NAME opencl COMMAND test_opencl)

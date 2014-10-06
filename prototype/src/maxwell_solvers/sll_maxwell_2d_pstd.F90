@@ -56,6 +56,7 @@ module sll_maxwell_2d_pstd
 #include "sll_maxwell_solvers_macros.h"
 
 use fftw3
+use sll_maxwell_solvers_base
 
 implicit none
 private
@@ -91,27 +92,22 @@ public :: initialize, delete, solve, ampere, faraday
 !> @details
 !> We solve Maxwell system with PSTD numerical method. The type contains
 !> information about FFT, mesh and physical properties.
-type, public :: maxwell_2d_pstd
+type, public, extends(sll_maxwell_solver) :: maxwell_2d_pstd
 
-   sll_int32           :: nc_x         !< x cells number
-   sll_int32           :: nc_y         !< y cells number
-   sll_real64, pointer :: d_dx(:)      !< field x derivative
-   sll_real64, pointer :: d_dy(:)      !< field y derivative
-   sll_real64, pointer :: kx(:)        !< x wave number
-   sll_real64, pointer :: ky(:)        !< y wave number
-   fftw_plan           :: fwx          !< forward fft plan along x
-   fftw_plan           :: fwy          !< forward fft plan along y
-   fftw_plan           :: bwx          !< backward fft plan along x
-   fftw_plan           :: bwy          !< backward fft plan along y
-   fftw_plan           :: p_tmp_x      !< pointer for fft memory allocation
-   fftw_plan           :: p_tmp_y      !< pointer for fft memory allocation
-   fftw_comp , pointer :: tmp_x(:)     !< x fft transform
-   fftw_comp , pointer :: tmp_y(:)     !< y fft transform
-   fftw_int            :: sz_tmp_x     !< size for memory allocation
-   fftw_int            :: sz_tmp_y     !< size for memory allocation
-   sll_int32           :: polarization !< TE or TM
-   sll_real64          :: e_0          !< electric conductivity
-   sll_real64          :: mu_0         !< magnetic permeability
+   sll_real64, pointer :: d_dx(:)  !< field x derivative
+   sll_real64, pointer :: d_dy(:)  !< field y derivative
+   sll_real64, pointer :: kx(:)    !< x wave number
+   sll_real64, pointer :: ky(:)    !< y wave number
+   fftw_plan           :: fwx      !< forward fft plan along x
+   fftw_plan           :: fwy      !< forward fft plan along y
+   fftw_plan           :: bwx      !< backward fft plan along x
+   fftw_plan           :: bwy      !< backward fft plan along y
+   fftw_plan           :: p_tmp_x  !< pointer for fft memory allocation
+   fftw_plan           :: p_tmp_y  !< pointer for fft memory allocation
+   fftw_comp , pointer :: tmp_x(:) !< x fft transform
+   fftw_comp , pointer :: tmp_y(:) !< y fft transform
+   fftw_int            :: sz_tmp_x !< size for memory allocation
+   fftw_int            :: sz_tmp_y !< size for memory allocation
 
 end type maxwell_2d_pstd
 
@@ -136,8 +132,8 @@ subroutine new_maxwell_2d_pstd(self,xmin,xmax,nc_x,ymin,ymax,nc_y,polarization)
    sll_real64         :: kx0
    sll_real64         :: ky0
 
-   self%nc_x = nc_x
-   self%nc_y = nc_y
+   self%nc_eta1 = nc_x
+   self%nc_eta2 = nc_y
    self%polarization = polarization
 
    self%e_0  = 1._f64
@@ -217,8 +213,8 @@ subroutine bc_periodic_2d_pstd(self, fx, fy, fz)
    sll_real64, intent(inout), dimension(:,:) :: fz   !< Bz or Ez
    sll_int32 :: nc_x, nc_y
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
+   nc_x = self%nc_eta1
+   nc_y = self%nc_eta2
 
    fx(:,nc_y+1) = fx(:,1) 
    fy(nc_x+1,:) = fy(1,:)
@@ -276,8 +272,8 @@ subroutine faraday_tm_2d_pstd(self, hx, hy, ez, dt)
    sll_real64, intent(in)                    :: dt      !< time step
    sll_real64                                :: dt_mu
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
+   nc_x = self%nc_eta1
+   nc_y = self%nc_eta2
 
    dt_mu = dt / self%mu_0 
 
@@ -305,8 +301,8 @@ subroutine faraday_te_2d_pstd(self, ex, ey, hz, dt)
    sll_real64, intent(in)                    :: dt     !< time step
    sll_real64                                :: dt_mu
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
+   nc_x = self%nc_eta1
+   nc_y = self%nc_eta2
 
    dt_mu = dt / self%mu_0 
 
@@ -338,8 +334,8 @@ subroutine ampere_tm_2d_pstd(self, hx, hy, ez, dt, jz)
    sll_real64                            :: dt_e
    sll_real64, dimension(:,:), optional  :: jz     !< current z
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
+   nc_x = self%nc_eta1
+   nc_y = self%nc_eta2
 
    dt_e = dt / self%e_0
 
@@ -374,8 +370,8 @@ subroutine ampere_te_2d_pstd(self, ex, ey, hz, dt, jx, jy)
    sll_int32                             :: nc_x
    sll_int32                             :: nc_y
 
-   nc_x = self%nc_x
-   nc_y = self%nc_y
+   nc_x = self%nc_eta1
+   nc_y = self%nc_eta2
 
    dt_e = dt / self%e_0
 

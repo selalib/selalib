@@ -41,6 +41,7 @@ module sll_maxwell_2d_fdtd
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_constants.h"
 
+use sll_maxwell_solvers_base
 implicit none
 !private
 
@@ -66,16 +67,13 @@ public :: initialize, solve
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
-type, public :: maxwell_2d_fdtd
-  sll_real64 :: c            !< light speed
-  sll_real64 :: e_0          !< electric conductivity
+type, public, extends(sll_maxwell_solver) :: maxwell_2d_fdtd
   sll_int32  :: i1           !< first indice of the block dimension 1
   sll_int32  :: j1           !< last indice of the block dimension 1
   sll_int32  :: i2           !< first indice of the block dimesnion 2
   sll_int32  :: j2           !< last indice of the block dimension 2
   sll_real64 :: dx           !< step size along dimension 1
   sll_real64 :: dy           !< step size along dimension 2
-  sll_int32  :: polarization !< polarization type (TE or TM)
 end type maxwell_2d_fdtd
 
 contains

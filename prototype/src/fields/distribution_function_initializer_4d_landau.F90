@@ -9,82 +9,87 @@ module sll_test_4d_initializer
   implicit none
 
 
-  ! This is a simplistic initializer aimed at a 4d cartesian distribution
-  ! function, periodic in x and y, and compact-ish in vx and vy.
+  !>@brief
+  !! This is a simplistic initializer 
+  !!@details
+  !! It aims at a 4d cartesian distribution
+  !! function, periodic in x and y, and compact-ish in vx and vy.
+  !!
+  !! Basically:
+  !!
+  !! \f$
+  !! f(x,y,vx,vy) = 1/(2\pi)*(1+\epsilon*cos(k_x x)*cos(k_y y))*e^{(-(vx^2 + vy^2)/2)}
+  !! \f$
+  !!
+  !! It is meant to be used in the intervals:
+  !! - \f$x  \in [ 0,2*pi/kx] \f$
+  !! - \f$y  \in [ 0,2*pi/ky] \f$
+  !! - \f$vx \in [-6,6] \f$
+  !! - \f$vy \in [-6,6] \f$
+  !<
   !
-  ! Basically:
-  !                 1                                      -(vx^2 + vy^2)
-  ! f(x,y,vx,vy) = ----(1+epsilon*cos(kx*x)*cos(ky*y))*exp(------------- )
-  !                 2*pi                                         2
-  !
-  ! It is meant to be used in the intervals:
-  ! x:  [ 0,2*pi/kx]
-  ! y:  [ 0,2*pi/ky]
-  ! vx: [-6,6]
-  ! vy: [-6,6]
-  !
-  ! Issue to resolve: to initialize the data we need the 'mesh'/'mapping'
-  ! information. How to deal with this in 4D? Do we pass multiple 2D
-  ! meshes? As something tentative, here we just write an ad hoc 4D
-  ! cartesian mesh.
+  !Issue to resolve: to initialize the data we need the 'mesh'/'mapping'
+  !information. How to deal with this in 4D? Do we pass multiple 2D
+  !meshes? As something tentative, here we just write an ad hoc 4D
+  !cartesian mesh.
 
   type, extends(scalar_field_4d_initializer_base) :: init_test_4d_par_landau
      type(layout_4D), pointer :: data_layout
 !     type(simple_cartesian_4d_mesh), pointer :: mesh_4d
-     sll_real64               :: x1_min
-     sll_real64               :: x1_max
-     sll_real64               :: x2_min
-     sll_real64               :: x2_max
-     sll_real64               :: x3_min
-     sll_real64               :: x3_max
-     sll_real64               :: x4_min
-     sll_real64               :: x4_max
-     sll_real64               :: nc_x1
-     sll_real64               :: nc_x2
-     sll_real64               :: nc_x3
-     sll_real64               :: nc_x4
-     sll_real64               :: delta1
-     sll_real64               :: delta2
-     sll_real64               :: delta3
-     sll_real64               :: delta4
-     sll_real64               :: epsilon
-     sll_real64               :: kx
-     sll_real64               :: ky
+     sll_real64               :: x1_min  !< x1 min
+     sll_real64               :: x1_max  !< x2 max
+     sll_real64               :: x2_min  !< x2 min
+     sll_real64               :: x2_max  !< x2 max
+     sll_real64               :: x3_min  !< x3 min
+     sll_real64               :: x3_max  !< x3 max
+     sll_real64               :: x4_min  !< x4 min
+     sll_real64               :: x4_max  !< x4 max
+     sll_real64               :: nc_x1   !< number of cells
+     sll_real64               :: nc_x2   !< number of cells
+     sll_real64               :: nc_x3   !< number of cells
+     sll_real64               :: nc_x4   !< number of cells
+     sll_real64               :: delta1  !< step size 
+     sll_real64               :: delta2  !< step size
+     sll_real64               :: delta3  !< step size
+     sll_real64               :: delta4  !< step size
+     sll_real64               :: epsilon !< Amplitude of perturbation
+     sll_real64               :: kx      !< wave number
+     sll_real64               :: ky      !< wave number
    contains
      procedure, pass(init_obj) :: initialize => load_test_4d_initializer_landau
      procedure, pass(init_obj) :: f_of_4args => compact_4d_field_landau
   end type init_test_4d_par_landau
   
-  ! This has to end up somewhere else, if it is to stay in the library
-  type simple_cartesian_4d_mesh
-     sll_int32  :: num_cells1
-     sll_int32  :: num_cells2
-     sll_int32  :: num_cells3
-     sll_int32  :: num_cells4
-     sll_real64 :: x1_min
-     sll_real64 :: x1_max
-     sll_real64 :: x2_min
-     sll_real64 :: x2_max
-     sll_real64 :: x3_min
-     sll_real64 :: x3_max
-     sll_real64 :: x4_min
-     sll_real64 :: x4_max
-     sll_real64 :: delta_x1
-     sll_real64 :: delta_x2
-     sll_real64 :: delta_x3
-     sll_real64 :: delta_x4
-  end type simple_cartesian_4d_mesh
-
-  type simple_cartesian_2d_mesh
-     sll_int32  :: num_cells1
-     sll_int32  :: num_cells2
-     sll_real64 :: x1_min
-     sll_real64 :: x1_max
-     sll_real64 :: x2_min
-     sll_real64 :: x2_max
-     sll_real64 :: delta_x1
-     sll_real64 :: delta_x2
-  end type simple_cartesian_2d_mesh
+!  !> This has to end up somewhere else, if it is to stay in the library
+!  type simple_cartesian_4d_mesh
+!     sll_int32  :: num_cells1
+!     sll_int32  :: num_cells2
+!     sll_int32  :: num_cells3
+!     sll_int32  :: num_cells4
+!     sll_real64 :: x1_min
+!     sll_real64 :: x1_max
+!     sll_real64 :: x2_min
+!     sll_real64 :: x2_max
+!     sll_real64 :: x3_min
+!     sll_real64 :: x3_max
+!     sll_real64 :: x4_min
+!     sll_real64 :: x4_max
+!     sll_real64 :: delta_x1
+!     sll_real64 :: delta_x2
+!     sll_real64 :: delta_x3
+!     sll_real64 :: delta_x4
+!  end type simple_cartesian_4d_mesh
+!
+!  type simple_cartesian_2d_mesh
+!     sll_int32  :: num_cells1
+!     sll_int32  :: num_cells2
+!     sll_real64 :: x1_min
+!     sll_real64 :: x1_max
+!     sll_real64 :: x2_min
+!     sll_real64 :: x2_max
+!     sll_real64 :: delta_x1
+!     sll_real64 :: delta_x2
+!  end type simple_cartesian_2d_mesh
 
 
 contains
