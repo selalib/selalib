@@ -43,7 +43,6 @@
 !>  - sll_interpolators.h
 !>
 !> <b> Modules available </b>
-!>  List fortran module available
 !!  - sll_module_interpolators_1d_base
 !!  - sll_module_interpolators_2d_base
 !!  - sll_module_cubic_spline_interpolator_1d
