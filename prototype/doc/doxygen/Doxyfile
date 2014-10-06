@@ -351,7 +351,7 @@ LOOKUP_CACHE_SIZE      = 0
 # Private class members and static file members will be hidden unless
 # the EXTRACT_PRIVATE respectively EXTRACT_STATIC tags are set to YES
 
-EXTRACT_ALL            = YES
+EXTRACT_ALL            = NO
 
 # If the EXTRACT_PRIVATE tag is set to YES all private members of a class
 # will be included in the documentation.
@@ -694,10 +694,8 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/advection \
 @CMAKE_CURRENT_SOURCE_DIR@/advection_field \
 @CMAKE_CURRENT_SOURCE_DIR@/assert \
-@CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
 @CMAKE_CURRENT_SOURCE_DIR@/characteristics \
 @CMAKE_CURRENT_SOURCE_DIR@/collective \
-@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformation_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
@@ -729,12 +727,18 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/visu_pic \
 @CMAKE_CURRENT_SOURCE_DIR@/eulerian-finite-volume \
 @CMAKE_CURRENT_SOURCE_DIR@/CAID_coordinate_transformations \
+@CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations \
 @CMAKE_CURRENT_SOURCE_DIR@/coordinate_transformations_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/splines \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
 @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/remap \
+@CMAKE_CURRENT_SOURCE_DIR@/fields \
+@CMAKE_CURRENT_SOURCE_DIR@/fft \
+@CMAKE_CURRENT_SOURCE_DIR@/interpolators \
 @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
+@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/gyroaverage \
 @CMAKE_CURRENT_SOURCE_DIR@/hermite_interpolation \
@@ -745,7 +749,11 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
+@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers_parallel \
 @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
+@CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
+@CMAKE_CURRENT_SOURCE_DIR@/logical_meshes \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager
 
 
@@ -1659,15 +1667,16 @@ PREDEFINED = sll_int32=integer(kind=4) \
              sll_real32=real(kind=4) \
              sll_comp32=complex(kind=8) \
              sll_comp64=complex(kind=16) \
-           "_sll_int32=sll_int32" \
-           "_sll_int64=sll_int64" \
-           "_sll_real32=sll_real32" \
-           "_sll_real64=sll_real64" \
-           "sll_transformation=class(sll_coordinate_transformation_2d_base)" \
-           "SLL_PRIV= " \
-           fftw_plan=integer(kind=8) \
-           fftw_comp=complex(kind=16) \
-           fftw_int=integer(kind=4)
+             "_sll_int32=sll_int32" \
+             "_sll_int64=sll_int64" \
+             "_sll_real32=sll_real32" \
+             "_sll_real64=sll_real64" \
+             "sll_transformation=class(sll_coordinate_transformation_2d_base)" \
+             "SLL_PRIV= " \
+             fftw_plan=integer(kind=8) \
+             fftw_comp=complex(kind=16) \
+             fftw_int=integer(kind=4) \
+             DOXYGEN_SHOULD_SKIP_THIS
 
 
 # If the MACRO_EXPANSION and EXPAND_ONLY_PREDEF tags are set to YES then

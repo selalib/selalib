@@ -22,16 +22,19 @@ module gauss_legendre_integration
   ! example, to specialize the integrator on the 'interpolated_function_1D'
   ! requires use of the spline module. 
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
   abstract interface
-     !> 1d real function
-     function function_1D_legendre(x)
+     !> Just a simple function \f$ f(x) \f$
+     !> @return y = f(x)
+     function function_1D_legendre(x) result(y)
        use sll_working_precision ! can't pass a header file because the
                                  ! preprocessor prevents double inclusion.
                                  ! This is very rare.
-       sll_real64             :: function_1D_legendre
-       sll_real64, intent(in) :: x
+       sll_real64 :: y  
+       sll_real64 :: x  !< x
      end function function_1D_legendre
   end interface
+#endif
 
 !  abstract interface
 !     function interpolated_function_1D(x,spline_obj)
