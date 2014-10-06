@@ -22,16 +22,9 @@
 ! MODULE: sll_memory
 !
 !> @author
-!> Module Author Name and Affiliation
-!
-! DESCRIPTION: 
+!> Edwin Chacon-Golcher INRIA
+!> @brief
 !> Implements the error testing function and other related functionalities.
-!
-! REVISION HISTORY:
-! DD Mmm YYYY - Initial Version
-! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-!------------------------------------------------------------------------------
-
 module sll_memory
   implicit none
   intrinsic :: merge
@@ -47,20 +40,13 @@ module sll_memory
 contains 
 
    !---------------------------------------------------------------------------  
-   !> @author 
-   !> Routine Author Name.
-   !
-   ! DESCRIPTION: 
+   !> @brief
    !> Test if there is an error and write it on the screen.
-   !! @brief
+   !> @details
    !! We assume that an error code is set to 0
    !! if there is no problem at the function output.
    !! Thus, we check the value of the error code and if it's different to 0,
    !! the routine writes an error message on the screen. 
-   !
-   ! REVISION HISTORY:
-   ! TODO_dd_mmm_yyyy - TODO_describe_appropriate_changes - TODO_name
-   !
    !> @param[in] err_code the error code to be tested
    !> @param[in] descriptor short description of the error
    !> @param[in] file_name file name in which the error occurred

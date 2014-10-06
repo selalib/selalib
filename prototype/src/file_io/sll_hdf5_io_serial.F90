@@ -35,7 +35,9 @@ use hdf5, only: hid_t, hsize_t, H5Screate_simple_f, h5t_native_double, &
   
   implicit none
   
+  !> @brief 
   !> Write a nD array of float in double precision in a HDF5 file 
+  !>
   !>\param[in]  file_id file unit number
   !>\param[in]  array array
   !>\param[in]  dsetname dataset name
