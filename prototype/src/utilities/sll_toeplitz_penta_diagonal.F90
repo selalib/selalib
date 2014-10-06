@@ -17,13 +17,13 @@
 
 
 !> Selalib Toeplitz penta-diagonal system solver
-module sll_toep_penta_diagonal
+module sll_penta_diagonal
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 implicit none
 
   !> Initialize the penta diagonal solver
-  type toep_penta_diagonal_plan  
+  type penta_diagonal_plan  
     sll_int32                         :: n
     sll_real64, dimension(:), pointer :: e1
     sll_real64, dimension(:), pointer :: e2
@@ -31,14 +31,15 @@ implicit none
     sll_real64, dimension(:), pointer :: z
     sll_real64, dimension(:), pointer :: w
     sll_real64, dimension(:), pointer :: solution
-  end type toep_penta_diagonal_plan
+  end type penta_diagonal_plan
 
 contains 
 
-  function new_toep_penta_diagonal(n) result(plan)
+  !> allocate the solveR
+  function new_penta_diagonal(n) result(plan)
 
     sll_int32                               :: n, ierr
-    type(toep_penta_diagonal_plan), pointer :: plan
+    type(penta_diagonal_plan), pointer :: plan
 
     if (n<3) then
       print*, 'Matrix size must be at least 3x3'
@@ -58,15 +59,15 @@ contains
     SLL_ALLOCATE(plan%w(n), ierr)
     SLL_ALLOCATE(plan%solution(n), ierr)
 
-  end function new_toep_penta_diagonal
+  end function new_penta_diagonal
 
 
   !> The solution will be set in plan%solution
-  subroutine solve_toep_penta_diagonal(a, b, c, f, plan) 
+  subroutine solve_penta_diagonal(a, b, c, f, plan) 
 
     sll_real64                              :: a, b, c
     sll_real64, dimension(:)                :: f
-    type(toep_penta_diagonal_plan), pointer :: plan
+    type(penta_diagonal_plan), pointer :: plan
     sll_real64                              :: s, t, p, l1, l2
     sll_real64                              :: d, d1, d2
     sll_int32                               :: n, i, sign_of_a=0
@@ -117,10 +118,10 @@ contains
       plan%solution(i) = plan%y(i) - (d1*plan%z(i)+d2*plan%w(i))/d   
     enddo
 
-  end subroutine solve_toep_penta_diagonal
+  end subroutine solve_penta_diagonal
 
 
-  function solve_subsystem(l1, l2, b, n) result (x)
+  private function solve_subsystem(l1, l2, b, n) result (x)
 
     sll_real64               :: l1, l2
     sll_real64, dimension(:) :: b
@@ -152,9 +153,10 @@ contains
   end function solve_subsystem
 
 
-  subroutine delete_toep_penta_diagonal(plan)
+  !> deallocat the solver
+  subroutine delete_penta_diagonal(plan)
 
-    type(toep_penta_diagonal_plan), pointer :: plan
+    type(penta_diagonal_plan), pointer :: plan
     sll_int32                               :: ierr
 
     ! Plan components deallocation 
@@ -168,7 +170,7 @@ contains
     ! Plan deallocation
     SLL_DEALLOCATE_ARRAY(plan, ierr)
  
-  end subroutine delete_toep_penta_diagonal
+  end subroutine delete_penta_diagonal
 
-end module sll_toep_penta_diagonal
+end module sll_penta_diagonal
 

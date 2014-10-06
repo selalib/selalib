@@ -478,14 +478,12 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
    !> @param b the second member of the equation
    !> @param n the problem size
    !> @param x the solution vector
-   !--------------------------------------------------------------------------- 
- 
    subroutine solve_cyclic_tridiag_double( cts, ipiv, b, n, x )
-     ! size of the allocations:
-     ! x:     n
-     ! cts:  7n
-     ! ipiv:  n
-     ! b:     n
+   ! size of the allocations:
+   ! x:     n
+   ! cts:  7n
+   ! ipiv:  n
+   ! b:     n
 
      sll_int32,  intent(in)                 :: n    ! matrix size
      sll_real64, dimension(1:7*n), target   :: cts  ! 7*n size allocation
@@ -549,6 +547,12 @@ subroutine setup_cyclic_tridiag( a, n, cts, ipiv )
      end do
    end subroutine solve_cyclic_tridiag_double
 
+   !> Complex version of  solve_cyclic_tridiag_double
+   !> @param cts a real array of size 7n where factorization information will be returned
+   !> @param[in] ipiv an ineteger array of length n on wich pivoting information will be returned
+   !> @param b the second member of the equation
+   !> @param n the problem size
+   !> @param x the solution vector
    subroutine solve_cyclic_tridiag_complex( cts, ipiv, b, n, x )
      ! size of the allocations:
      ! x:     n
