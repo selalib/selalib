@@ -15,6 +15,7 @@ module sll_maxwell_2d_diga
 #include "sll_utilities.h"
 #include "sll_assert.h"
 
+use sll_maxwell_solvers_base
 use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
@@ -48,21 +49,12 @@ type :: cell_type
 end type cell_type
 
 !> DG method in 2D with general coordinates
-type, public :: maxwell_2d_diga
+type, public, extends(sll_maxwell_solver) :: maxwell_2d_diga
 
    sll_transformation, pointer              :: tau  !< transformation
    type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
-   sll_int32                                :: polarization !< TE or TM
    sll_int32                                :: degree !< degree of gauss integration
    type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
-   sll_int32                                :: nc_eta1
-   sll_int32                                :: nc_eta2
-   sll_real64                               :: eta1_min
-   sll_real64                               :: eta1_max
-   sll_real64                               :: delta_eta1
-   sll_real64                               :: eta2_min
-   sll_real64                               :: eta2_max
-   sll_real64                               :: delta_eta2
    sll_real64, dimension(:,:), pointer      :: f
    sll_real64, dimension(:,:), pointer      :: w
    sll_real64, dimension(:,:), pointer      :: r
