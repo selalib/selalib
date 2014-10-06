@@ -86,8 +86,13 @@ end interface delete
 
 public :: initialize, delete, solve, ampere, faraday
 
+!> @brief 
 !> Maxwell solver object
+!> @details
+!> We solve Maxwell system with PSTD numerical method. The type contains
+!> information about FFT, mesh and physical properties.
 type, public :: maxwell_2d_pstd
+
    sll_int32           :: nc_x         !< x cells number
    sll_int32           :: nc_y         !< y cells number
    sll_real64, pointer :: d_dx(:)      !< field x derivative
@@ -98,15 +103,15 @@ type, public :: maxwell_2d_pstd
    fftw_plan           :: fwy          !< forward fft plan along y
    fftw_plan           :: bwx          !< backward fft plan along x
    fftw_plan           :: bwy          !< backward fft plan along y
-   fftw_plan           :: p_tmp_x      !< pointer for memory allocation
-   fftw_plan           :: p_tmp_y      !< pointer for memory allocation
+   fftw_plan           :: p_tmp_x      !< pointer for fft memory allocation
+   fftw_plan           :: p_tmp_y      !< pointer for fft memory allocation
    fftw_comp , pointer :: tmp_x(:)     !< x fft transform
    fftw_comp , pointer :: tmp_y(:)     !< y fft transform
    fftw_int            :: sz_tmp_x     !< size for memory allocation
    fftw_int            :: sz_tmp_y     !< size for memory allocation
    sll_int32           :: polarization !< TE or TM
-   sll_real6           :: e_0          !< electric conductivity
-   sll_real6           :: mu_0         !< magnetic permeability
+   sll_real64          :: e_0          !< electric conductivity
+   sll_real64          :: mu_0         !< magnetic permeability
 
 end type maxwell_2d_pstd
 
