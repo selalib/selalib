@@ -705,9 +705,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
-@CMAKE_CURRENT_SOURCE_DIR@/fields \
 @CMAKE_CURRENT_SOURCE_DIR@/fishpack \
-@CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/lagrange_interpolation \
 @CMAKE_CURRENT_SOURCE_DIR@/linear_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/linearly_transformed_pic \
@@ -764,7 +762,7 @@ EXCLUDE_SYMLINKS       = NO
 # against the file with absolute path, so to exclude all test directories
 # for example use the pattern */test/*
 
-EXCLUDE_PATTERNS       = *test*
+EXCLUDE_PATTERNS       = *test* *umfpack*
 
 # The EXCLUDE_SYMBOLS tag can be used to specify one or more symbol names
 # (namespaces, classes, functions, etc.) that should be excluded from the
@@ -811,7 +809,8 @@ IMAGE_PATH             =
 # code is scanned, but not when the output code is generated. If lines are added
 # or removed, the anchors will not be placed correctly.
 
-INPUT_FILTER           =
+#INPUT_FILTER           = "sed 's,COMPANY_NAMESPACE,sll,'"
+INPUT_FILTER           = 
 
 # The FILTER_PATTERNS tag can be used to specify filters on a per file pattern
 # basis.
