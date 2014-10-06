@@ -43,6 +43,7 @@ module sll_utilities
   ! are needed to represent 'var'. The implications of this assumption
   ! need to be checked further.
 
+  !> kind of integers
   integer, parameter :: byte_size = selected_int_kind(0)
 
   !> Functions to display on screen matrix or vector
@@ -62,6 +63,7 @@ module sll_utilities
 
 contains
 
+  !> Check if an integer is equal to \f[2^n\f]
   function is_power_of_two( n )
     intrinsic             :: not, iand
     sll_int64, intent(in) :: n
@@ -73,6 +75,7 @@ contains
     end if
   end function is_power_of_two
 
+  !> Check if an integer is even
   function is_even( n )
     intrinsic             :: modulo    
     sll_int32, intent(in) :: n
@@ -84,9 +87,9 @@ contains
     end if
   end function is_even
 
-  ! It would have been nice to declare the next functions as 'pure' functions,
-  ! but it is safer to be able to indicate when their arguments have fallen
-  ! out of range as this number is so limited anyway.
+  !> It would have been nice to declare the next functions as 'pure' functions,
+  !> but it is safer to be able to indicate when their arguments have fallen
+  !> out of range as this number is so limited anyway.
   function factorial_int32(n) result(fac)
     sll_int64 :: fac
     sll_int32, intent(in) :: n
@@ -108,6 +111,9 @@ contains
     fac = acc
   end function factorial_int32
 
+  !> It would have been nice to declare the next functions as 'pure' functions,
+  !> but it is safer to be able to indicate when their arguments have fallen
+  !> out of range as this number is so limited anyway.
   function factorial_int64(n) result(fac)
     sll_int64 :: fac
     sll_int64, intent(in) :: n
@@ -183,6 +189,7 @@ contains
    
   end subroutine sll_new_file_id
 
+  !> Display a vector to screen
   subroutine display_vector_real(array, real_format)
 
    sll_real64, dimension(:) :: array
@@ -201,6 +208,7 @@ contains
 
   end subroutine display_vector_real
 
+  !> Display a vector to screen
   subroutine display_vector_integer(array, integer_format)
 
    sll_int32, dimension(:) :: array
@@ -220,9 +228,7 @@ contains
   end subroutine display_vector_integer
 
 
-!> Outputs an error message:
-!>   - PRTFIL : unit number for print-out
-!>   - SEVRTY : 'W' - Warning 'F' - Fatal
+  !> Display matrix to screen
   subroutine display_matrix_2d_real(array, real_format)
 
    sll_real64, dimension(:,:) :: array
@@ -246,6 +252,7 @@ contains
 
   end subroutine display_matrix_2d_real
 
+  !> Display matrix to screen
   subroutine display_matrix_2d_integer(array, integer_format)
 
    sll_int32, dimension(:,:) :: array
@@ -355,19 +362,21 @@ subroutine time_history(file_id, desc, fformat, array)
     
 end subroutine time_history
 
+!------------------------------------------------------------------------
+!>  @brief
+!>  From the MPE library
+!>  @details
+!>  This file contains a routine for producing a decomposition of a 1-d 
+!>  array when given a number of processors.  It may be used in "direct" 
+!>  product decomposition.  The values returned assume a "global" domain 
+!>  in [1:n]
+!------------------------------------------------------------------------
 subroutine mpe_decomp1d(n,numprocs,myid,s,e)
 
    sll_int32 :: n, numprocs, myid, s, e
    sll_int32 :: nlocal
    sll_int32 :: deficit
 
-   !------------------------------------------------------------------------
-   !  From the MPE library
-   !  This file contains a routine for producing a decomposition of a 1-d 
-   !  array when given a number of processors.  It may be used in "direct" 
-   !  product decomposition.  The values returned assume a "global" domain 
-   !  in [1:n]
-   !------------------------------------------------------------------------
 
    nlocal  = n / numprocs
    s       = myid * nlocal + 1
