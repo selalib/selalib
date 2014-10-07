@@ -735,6 +735,33 @@ contains
 
   end subroutine compute_characteristic_leapfrog_2d_hex
 
+
+
+  subroutine compute_characteristic_adams2_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
+       dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)
+    sll_real64,dimension(:),intent(in):: uxn, uyn, uxn_1, uyn_1
+    sll_real64,dimension(:),intent(in):: dxuxn,dyuxn,dxuyn,dyuyn
+    sll_real64, intent(in)  :: dt
+    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
+    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
+    sll_int32, intent(in)   :: i
+    sll_real64              :: d1x, d1y, dij0, dij1, uxn1, uyn1 
+    
+    uxn1 = 2._f64*uxn(i) - uxn_1(i)
+    uyn1 = 2._f64*uyn(i) - uyn_1(i)
+
+    d1x = 0.5_f64*dt * ( uxn1 + uxn(i) )
+    d1y = 0.5_f64*dt * ( uyn1 + uyn(i) )
+
+    dij0 = d1x - 0.5_f64*dt * ( d1x*dxuxn(i) + d1y*dyuxn(i) ) 
+    dij1 = d1y - 0.5_f64*dt * ( d1x*dxuyn(i) + d1y*dyuyn(i) )
+
+    y1 = x1 - dij0
+    y2 = x2 - dij1
+
+  end subroutine compute_characteristic_adams2_2d_hex
+
+
 end program test_hex_hermite
 
 

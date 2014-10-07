@@ -13,15 +13,15 @@ program test_hex_poisson
 
   type(sll_hex_mesh_2d), pointer          :: mesh
   sll_real64, dimension(:),allocatable    :: second_term, rho, sol, phi, phi_end
-  sll_real64, dimension(:),allocatable    :: uxn, uyn
+  sll_real64, dimension(:),allocatable    :: uxn, uyn,dxuxn,dyuxn,dxuyn,dyuyn
   sll_real64, dimension(:,:) ,allocatable :: matrix_poisson, l, u
-  sll_int32                               :: num_cells, n_points, i,j, k1, k2 
+  sll_int32                               :: num_cells, n_points, i, k1, k2 
   sll_int32                               :: ierr, l1,l2, index_tab, global
   sll_real64                              :: x, y, erreur = 0._f64
-  sll_real64                              :: erreur1, erreur2
+  sll_real64                              :: erreur1, erreur2, erreur3
   sll_real64                              :: t_init,t_inter, t_end, residu
 
-  num_cells = 40
+  num_cells = 80
 
 
   n_points  = 1 + 3 * num_cells * (num_cells + 1) 
@@ -29,8 +29,12 @@ program test_hex_poisson
   SLL_ALLOCATE(second_term( n_points),ierr)      ! le b de Ax = b
   SLL_ALLOCATE(rho( n_points),ierr)              ! second terme de l'equation
   SLL_ALLOCATE(phi( n_points),ierr)              ! le x de Ax = b
-  SLL_ALLOCATE(uxn( n_points),ierr)              ! le x de Ax = b
-  SLL_ALLOCATE(uyn( n_points),ierr)              ! le x de Ax = b
+  SLL_ALLOCATE(uxn( n_points),ierr)             
+  SLL_ALLOCATE(uyn( n_points),ierr)             
+  SLL_ALLOCATE(dxuxn( n_points),ierr)             
+  SLL_ALLOCATE(dxuyn( n_points),ierr)          
+  SLL_ALLOCATE(dyuxn( n_points),ierr)             
+  SLL_ALLOCATE(dyuyn( n_points),ierr)              
   SLL_ALLOCATE(phi_end( n_points),ierr)       
   SLL_ALLOCATE(sol( n_points),ierr)              ! exact solution
   SLL_ALLOCATE(matrix_poisson( n_points,1 + 4*num_cells + 2 ) , ierr) ! le A de Ax = b
@@ -101,10 +105,10 @@ program test_hex_poisson
   print*, "erreur", sqrt(erreur/real(num_cells,f64)**2)
 
 
-  ! testing computing the fields for the guiding center model in a hex. mesh
+  ! testing computing the field for the guiding center model in a hex. mesh
   ! here : uxn = -dy(phi)  and uyn = +dx(phi)
 
-  call compute_hex_fields(mesh,uxn,uyn,phi_end,1)
+  call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi_end,1)
 
   erreur1 = 0._f64
   erreur2 = 0._f64
@@ -116,6 +120,29 @@ program test_hex_poisson
   enddo
   print*, "erreur sur dx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
   print*, "erreur sur dy(phi)", sqrt(erreur2/real(num_cells,f64)**2)
+
+
+  ! testing computing the derivatives of the field for the guiding center model in a hex. mesh
+  ! here : uxn = -dy(phi)  and uyn = +dx(phi)
+  ! therefore : DxUx = -DxyUx ; DyUx = -DyyUx ; DxUy = DxxUy ; DyUy = DxyUy 
+
+  erreur1 = 0._f64
+  erreur2 = 0._f64
+  erreur3 = 0._f64
+  do i=1, n_points  
+     x = mesh%cartesian_coord(1,i)
+     y = mesh%cartesian_coord(2,i)
+     erreur1 = erreur1 + abs(-(72._f64-(72._f64*x)**2)*&
+          exp( - (x**2 + y**2)*36._f64 ) - dxuyn(i) )**2 
+     erreur2 = erreur2 + abs(-(72._f64-(72._f64*y)**2)*&
+          exp( - (x**2 + y**2)*36._f64 ) + dyuxn(i) )**2
+     erreur3 = erreur3 + abs(+(2._f64*36._f64*2._f64*y*x*36._f64)*&
+          exp( - (x**2 + y**2)*36._f64 ) + dxuxn(i) )**2
+  enddo
+  print*, "erreur sur dxx(phi)", sqrt(erreur1/real(num_cells,f64)**2)
+  print*, "erreur sur dyy(phi)", sqrt(erreur2/real(num_cells,f64)**2)
+  print*, "erreur sur dxy(phi)", sqrt(erreur3/real(num_cells,f64)**2)
+
 
 
   ! open(unit = 11, file="matrix_hex_poisson.txt", action="write", status="replace")
@@ -143,6 +170,10 @@ program test_hex_poisson
   SLL_DEALLOCATE_ARRAY(rho,ierr)
   SLL_DEALLOCATE_ARRAY(uxn,ierr)
   SLL_DEALLOCATE_ARRAY(uyn,ierr)
+  SLL_DEALLOCATE_ARRAY(dxuxn,ierr)
+  SLL_DEALLOCATE_ARRAY(dxuyn,ierr)
+  SLL_DEALLOCATE_ARRAY(dyuxn,ierr)
+  SLL_DEALLOCATE_ARRAY(dyuyn,ierr)
   SLL_DEALLOCATE_ARRAY(phi,ierr)
   SLL_DEALLOCATE_ARRAY(phi_end,ierr)
   SLL_DEALLOCATE_ARRAY(sol,ierr)
