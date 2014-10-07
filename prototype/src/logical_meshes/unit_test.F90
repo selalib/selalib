@@ -1,4 +1,5 @@
 program unit_test_logical_meshes
+#include "sll_working_precision.h"
   use sll_logical_meshes
   implicit none
 

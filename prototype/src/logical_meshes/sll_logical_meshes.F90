@@ -19,10 +19,11 @@
 module sll_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  implicit none
+implicit none
+private
 
   !> 1D logical mesh
-  type sll_logical_mesh_1d
+  type, public :: sll_logical_mesh_1d
      sll_int32  :: num_cells
      sll_real64 :: eta_min
      sll_real64 :: eta_max
@@ -31,7 +32,7 @@ module sll_logical_meshes
 
 
   !> 2D logical mesh
-  type sll_logical_mesh_2d
+  type, public :: sll_logical_mesh_2d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_real64 :: eta1_min   !< minimum value of eta, direction 1
@@ -43,12 +44,12 @@ module sll_logical_meshes
   end type sll_logical_mesh_2d
 
   !> 2d logical mesh pointer
-  type sll_logical_mesh_2d_ptr
+  type, public :: sll_logical_mesh_2d_ptr
      type(sll_logical_mesh_2d), pointer :: lm
   end type sll_logical_mesh_2d_ptr
 
   !> 3D logical mesh
-  type sll_logical_mesh_3d
+  type, public :: sll_logical_mesh_3d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3 
@@ -64,7 +65,7 @@ module sll_logical_meshes
   end type sll_logical_mesh_3d
 
   !> 4D logical mesh
-  type sll_logical_mesh_4d
+  type, public :: sll_logical_mesh_4d
      sll_int32  :: num_cells1 !< number of cells in direction 1
      sll_int32  :: num_cells2 !< number of cells in direction 2
      sll_int32  :: num_cells3 !< number of cells in direction 3
@@ -83,7 +84,8 @@ module sll_logical_meshes
      sll_real64 :: delta_eta4 !< cell spacing, direction 4
   end type sll_logical_mesh_4d
 
-  !> Delete the mesh
+  !> @brief Deallocates memory for the logical mesh. 
+  !> @param mesh pointer to a sll_logical_mesh_*d object.
   interface sll_delete
      module procedure delete_logical_mesh_1d
      module procedure delete_logical_mesh_2d
@@ -105,6 +107,21 @@ module sll_logical_meshes
      module procedure display_logical_mesh_3d
      module procedure display_logical_mesh_4d
   end interface sll_display
+
+  !> Get node positions array
+  interface get_node_positions
+     module procedure get_node_positions_1d
+     module procedure get_node_positions_2d
+  end interface get_node_positions
+
+public sll_delete, sll_display
+public new_logical_mesh_1d
+public new_logical_mesh_2d
+public new_logical_mesh_3d
+public new_logical_mesh_4d
+public operator(*)
+public get_node_positions
+
 contains
 
 #define TEST_PRESENCE_AND_ASSIGN_VAL( obj, arg, slot, default_val ) \
@@ -205,8 +222,7 @@ end if
 
   end function tensor_product_2d_2d
 
-  !> Initialize node positions
-  subroutine initialize_eta1_node_1d( m, eta1_node )
+  subroutine get_node_positions_1d( m, eta1_node )
     type(sll_logical_mesh_1d), pointer :: m
     sll_real64, dimension(:), pointer :: eta1_node
     sll_int32  :: num_cells
@@ -222,9 +238,38 @@ end if
     do i=1,num_cells+1
       eta1_node(i) = eta_min+real(i-1,f64)*delta_eta
     enddo    
+  end subroutine get_node_positions_1d
+
+  subroutine get_node_positions_2d( m, eta1, eta2 )
+    type(sll_logical_mesh_2d),  pointer :: m
+    sll_real64, dimension(:,:), pointer :: eta1
+    sll_real64, dimension(:,:), pointer :: eta2
+    sll_int32  :: num_cells1
+    sll_int32  :: num_cells2
+    sll_real64 :: eta1_min
+    sll_real64 :: eta2_min
+    sll_real64 :: delta_eta1
+    sll_real64 :: delta_eta2
+    sll_int32  :: i
+    sll_int32  :: j
+    sll_int32  :: ierr
     
-    
-  end subroutine initialize_eta1_node_1d
+    num_cells1 = m%num_cells1
+    num_cells2 = m%num_cells2
+    eta1_min   = m%eta1_min
+    delta_eta1 = m%delta_eta1
+    eta2_min   = m%eta2_min
+    delta_eta2 = m%delta_eta2
+    SLL_ALLOCATE(eta1(num_cells1+1,num_cells2+1), ierr)
+    SLL_ALLOCATE(eta2(num_cells1+1,num_cells2+1), ierr)
+    do j=1,num_cells2+1
+      do i=1,num_cells1+1
+        eta1(i,j) = eta1_min+(i-1)*delta_eta1
+        eta2(i,j) = eta2_min+(j-1)*delta_eta2
+      enddo    
+    enddo    
+
+  end subroutine get_node_positions_2d
 
   !> @brief allocates the memory space for a new 2D logical mesh on the heap,
   !> initializes it with the given arguments and returns a pointer to the

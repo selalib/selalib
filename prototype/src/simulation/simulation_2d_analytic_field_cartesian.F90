@@ -322,7 +322,8 @@ contains
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
         stop 
     end select
-    sim%mesh_2d => tensor_product_1d_1d( mesh_x1, mesh_x2)
+    !Tensor product
+    sim%mesh_2d => mesh_x1 * mesh_x2
 
 
 
@@ -819,8 +820,8 @@ contains
     SLL_ALLOCATE(A2_init(Nc_x1+1,Nc_x2+1),ierr)
     SLL_ALLOCATE(f_visu_buf1d(Nc_x2+1),ierr)
 
-    call initialize_eta1_node_1d( mesh_x1, node_positions_x1 )
-    call initialize_eta1_node_1d( mesh_x2, node_positions_x2 )
+    call get_node_positions( mesh_x1, node_positions_x1 )
+    call get_node_positions( mesh_x2, node_positions_x2 )
 
     
     !initialisation of distribution function

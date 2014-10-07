@@ -28,8 +28,8 @@ type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 class(sll_coordinate_transformation_2d_base), pointer :: collela
 
-type(dg_field), pointer :: ex
-type(dg_field), pointer :: bz
+type(sll_dg_field_2d), pointer :: ex
+type(sll_dg_field_2d), pointer :: bz
 
 sll_real64, external :: gaussian, add
 

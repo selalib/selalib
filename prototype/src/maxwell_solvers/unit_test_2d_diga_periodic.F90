@@ -51,10 +51,10 @@ class(sll_coordinate_transformation_2d_base), pointer :: tau
 
 type(sll_maxwell_2d_diga)   :: maxwell_TE
 
-type(dg_field), pointer :: ex, ex0, dx, sx
-type(dg_field), pointer :: ey, ey0, dy, sy
-type(dg_field), pointer :: bz, bz0, dz, sz
-type(dg_field), pointer :: exact
+type(sll_dg_field_2d), pointer :: ex, ex0, dx, sx
+type(sll_dg_field_2d), pointer :: ey, ey0, dy, sy
+type(sll_dg_field_2d), pointer :: bz, bz0, dz, sz
+type(sll_dg_field_2d), pointer :: exact
 
 sll_real64  :: time
 sll_int32   :: istep
