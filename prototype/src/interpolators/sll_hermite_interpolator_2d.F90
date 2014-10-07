@@ -28,13 +28,15 @@
 !!@todo
 !! for the moment only in implementation for the case DIRICHLET x PERIODIC
 module sll_module_hermite_interpolator_2d
+
 #include "sll_working_precision.h"
 #include "sll_assert.h"
 #include "sll_memory.h"
 
-  use sll_module_interpolators_2d_base
-  use sll_hermite_interpolation_2d_module
-  implicit none
+use sll_module_interpolators_2d_base
+use sll_hermite_interpolation_2d_module
+implicit none
+private
 
 !> The hermite-based interpolator is only a wrapper around the capabilities
 !! of the hermite interpolation. 
@@ -42,7 +44,7 @@ module sll_module_hermite_interpolator_2d
 !! respect to their use, as described by the interpolator_2d_base class.
 !! Where the diverse interpolators diverge is in the way to initialize them.
 !! We basically copy the analog for cubic splines
-  type, extends(sll_interpolator_2d_base) :: sll_hermite_interpolator_2d
+  type, extends(sll_interpolator_2d_base), public :: sll_hermite_interpolator_2d
     type(sll_hermite_interpolation_2d), pointer :: hermite
     sll_int32 :: npts1
     sll_int32 :: npts2
@@ -60,6 +62,7 @@ module sll_module_hermite_interpolator_2d
     procedure, pass :: delete => delete_sll_hermite_interpolator_2d
   end type sll_hermite_interpolator_2d
 
+  public new_hermite_interpolator_2d
 
 contains
 

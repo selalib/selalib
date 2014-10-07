@@ -178,26 +178,26 @@ program test_maxwell_2d_diga_wave
    
         time = 0.0_f64
    
-        ex  => new_dg_field(degree,tau)
-        ey  => new_dg_field(degree,tau)
-        bz  => new_dg_field(degree,tau,gaussian)
+        ex  => sll_new(degree,tau)
+        ey  => sll_new(degree,tau)
+        bz  => sll_new(degree,tau,gaussian)
    
-        ex0 => new_dg_field(degree,tau)
-        ey0 => new_dg_field(degree,tau)
-        bz0 => new_dg_field(degree,tau)
+        ex0 => sll_new(degree,tau)
+        ey0 => sll_new(degree,tau)
+        bz0 => sll_new(degree,tau)
    
-        dx  => new_dg_field(degree,tau)
-        dy  => new_dg_field(degree,tau)
-        dz  => new_dg_field(degree,tau)
+        dx  => sll_new(degree,tau)
+        dy  => sll_new(degree,tau)
+        dz  => sll_new(degree,tau)
    
-        sx  => new_dg_field(degree,tau)
-        sy  => new_dg_field(degree,tau)
-        sz  => new_dg_field(degree,tau)
+        sx  => sll_new(degree,tau)
+        sy  => sll_new(degree,tau)
+        sz  => sll_new(degree,tau)
    
         dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
         nstep = ceiling(15.0/dt)
    
-        call initialize(maxwell_TE,        &
+        call sll_create(maxwell_TE,        &
             tau,               &
             degree,            &
             TE_POLARIZATION,   &
@@ -213,20 +213,20 @@ program test_maxwell_2d_diga_wave
    
             call rksetup()
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
    
             call accumulate(1._f64/6._f64)
             call rkstage(0.5_f64)
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(0.5_f64)
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/3._f64)
             call rkstage(1.0_f64)
    
-            call solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
+            call sll_solve(maxwell_TE, ex, ey, bz, dx, dy, dz)
             call accumulate(1._f64/6._f64)
    
             call rkstep()

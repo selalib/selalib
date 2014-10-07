@@ -25,6 +25,7 @@ use sll_utilities
 use sll_module_deboor_splines_2d
 
 implicit none
+private
 
 ! in what follows, the direction '1' is in the contiguous memory direction.
 !> Arbitrary degree version of 2d irnterpolator
@@ -103,6 +104,13 @@ end type sll_arbitrary_degree_spline_interpolator_2d_ptr
 interface sll_delete
    module procedure delete_arbitrary_degree_2d_interpolator
 end interface sll_delete
+
+public sll_arbitrary_degree_spline_interpolator_2d           
+public sll_arbitrary_degree_spline_interpolator_2d_ptr
+public sll_delete
+public new_arbitrary_degree_spline_interp2d
+public set_slope2d
+public initialize_ad2d_interpolator
 
 contains
 

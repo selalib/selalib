@@ -21,9 +21,7 @@
 
 !>Abstract data type for 1D interpolation and reconstruction
 module sll_module_interpolators_1d_base
-
 #include "sll_working_precision.h"
-
   use sll_boundary_condition_descriptors
   implicit none
 
@@ -31,6 +29,7 @@ module sll_module_interpolators_1d_base
   type, abstract :: sll_interpolator_1d_base
 
 contains
+
    procedure(interpolator_1d_array_msg), deferred, pass(interpolator) :: &
           compute_interpolants
    procedure(interpolator_one_arg_sub), deferred, pass(interpolator) :: &

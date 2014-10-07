@@ -62,30 +62,29 @@ implicit none
 private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface initialize
+interface sll_create
  module procedure new_maxwell_2d_pstd
-end interface initialize
+end interface sll_create
 
 !> Solve maxwell solver 2d cartesian periodic with PSTD scheme
-interface solve
+interface sll_solve
  module procedure solve_maxwell_2d_pstd
-end interface solve
+end interface sll_solve
 
-interface ampere
+interface sll_solve_ampere
  module procedure ampere_2d_pstd
-end interface ampere
+end interface sll_solve_ampere
 
-interface faraday
+interface sll_solve_faraday
  module procedure faraday_2d_pstd
-end interface faraday
-
+end interface sll_solve_faraday
 
 !> Delete maxwell solver 2d cartesian periodic with PSTD scheme
-interface delete
+interface sll_delete
  module procedure free_maxwell_2d_pstd
-end interface delete
+end interface sll_delete
 
-public :: initialize, delete, solve, ampere, faraday
+public :: sll_create, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> @brief 
 !> Maxwell solver object

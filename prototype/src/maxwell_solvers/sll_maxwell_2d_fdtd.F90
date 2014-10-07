@@ -43,27 +43,27 @@ module sll_maxwell_2d_fdtd
 
 use sll_maxwell_solvers_base
 implicit none
-!private
+private
 
 !> Initialize maxwell solver 2d with FDTD scheme
-interface initialize
+interface sll_create
  module procedure initialize_maxwell_2d_fdtd
  module procedure initialize_maxwell_2d_fdtd_alt
-end interface
+end interface sll_create
 !> Solve maxwell solver 2d with FDTD scheme
-interface solve
+interface sll_solve
  module procedure solve_maxwell_2d_fdtd
-end interface
+end interface sll_solve
 !> Solve Ampere-Maxwell equation
-interface ampere
+interface sll_solve_ampere
  module procedure ampere_2d_fdtd
-end interface
+end interface sll_solve_ampere
 !> Solve Faraday equation
-interface faraday
+interface sll_solve_faraday
  module procedure ampere_2d_fdtd
-end interface
+end interface sll_solve_faraday
 
-public :: initialize, solve
+public :: sll_create, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> @brief Object with data to solve Maxwell equation 
 !> Maxwell in TE mode: (Ex,Ey,Bz)
@@ -142,11 +142,11 @@ subroutine solve_maxwell_2d_fdtd(this, fx, fy, fz, dt)
    sll_real64, intent(in)     :: dt   !< time step
 
    call faraday_2d_fdtd(this, fx, fy, fz, 0.5*dt)   
-   call cl_periodiques_2d_fdtd(this, fx, fy, fz, dt)
+   call bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
    call ampere_2d_fdtd(this, fx, fy, fz, dt) 
-   call cl_periodiques_2d_fdtd(this, fx, fy, fz, dt)
+   call bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
    call faraday_2d_fdtd(this, fx, fy, fz, 0.5*dt)   
-   call cl_periodiques_2d_fdtd(this, fx, fy, fz, dt)
+   call bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
 
 end subroutine solve_maxwell_2d_fdtd
 
@@ -307,7 +307,7 @@ end subroutine ampere_2d_fdtd
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Set boundary conditions 
-subroutine cl_periodiques_2d_fdtd(this, fx, fy, fz, dt)
+subroutine bc_periodic_2d_fdtd(this, fx, fy, fz, dt)
 
 type(maxwell_2d_fdtd) :: this !< maxwell solver object
 sll_int32 :: i1, j1, i2, j2
@@ -358,12 +358,12 @@ if ( this%polarization == TM_POLARIZATION) then
    end do
 end if
 
-end subroutine cl_periodiques_2d_fdtd
+end subroutine bc_periodic_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Set periodic bounday conditions
-subroutine cl_condparfait_2d_fdtd(this, fx, fy, fz, side)
+subroutine bc_metallic_2d_fdtd(this, fx, fy, fz, side)
 
 type(maxwell_2d_fdtd) :: this !< maxwell object
 sll_int32, intent(in) :: side !< which domain edge
@@ -407,12 +407,12 @@ if (this%polarization == TM_POLARIZATION) then
    end select
 end if
 
-end subroutine cl_condparfait_2d_fdtd
+end subroutine bc_metallic_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !> Bundary conditions
-subroutine silver_muller_2d_fdtd( this, ex, ey, bz, ccall, dt )
+subroutine bc_silver_muller_2d_fdtd( this, ex, ey, bz, ccall, dt )
 
 type(maxwell_2d_fdtd) :: this !< maxwell object
 sll_int32, intent(in) :: ccall !< domain edge (N,S,E,W)
@@ -519,7 +519,7 @@ case (WEST)
 
 end select
 
-end subroutine silver_muller_2d_fdtd
+end subroutine bc_silver_muller_2d_fdtd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

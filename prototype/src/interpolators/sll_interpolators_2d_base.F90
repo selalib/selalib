@@ -19,8 +19,8 @@
 !>
 module sll_module_interpolators_2d_base
 #include "sll_working_precision.h" 
-  use sll_boundary_condition_descriptors
-  implicit none
+use sll_boundary_condition_descriptors
+implicit none
   
   !*************************************************************************
   !

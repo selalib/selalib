@@ -21,7 +21,8 @@
 module hex_logical_meshes
 #include "sll_working_precision.h"
 #include "sll_memory.h"
-  implicit none
+implicit none
+private
 
   !> Hexagonal mesh basic type
   type hex_logical_mesh_2d
@@ -51,9 +52,9 @@ module hex_logical_meshes
   end interface delete
 
   !> Print parameters
-  interface sll_display
-     module procedure display_logical_mesh_2d
-  end interface sll_display
+  !interface sll_display
+  !   module procedure display_logical_mesh_2d
+  !end interface sll_display
 
 contains
 
@@ -64,6 +65,8 @@ contains
     obj%slot = default_val; \
 end if
 
+  !> Create and initialize a hex mesh data structure
+  !> @return m the pointer to the logical mesh
   function new_hex_logical_mesh_2d( &
     num_cells, &
     centerx1, &
@@ -88,6 +91,7 @@ end if
   end function new_hex_logical_mesh_2d
 
 
+  !> Create and initialize a hex mesh data structure
   subroutine initialize_hex_logical_mesh_2d( &
     m, & 
     num_cells, &
@@ -136,6 +140,7 @@ end if
   end subroutine initialize_hex_logical_mesh_2d
 
 
+  !> Get x1 coordinate
   subroutine x1_node(mesh, k1, k2) result(val)
     type(hex_logical_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: k1
@@ -144,6 +149,7 @@ end if
     val = m%r1_x1*k1 + m%r2_x1*k2 + m%center_x1
   end subroutine x1_node
 
+  !> Get x2 coordinate
   subroutine x2_node(mesh, k1, k2) result(val)
     type(hex_logical_mesh_2d), pointer :: m
     sll_int32, intent(in)  :: k1
@@ -155,9 +161,9 @@ end if
 
 
 
+  !> Takes the coordinates (k1,k2) on the (r1,r2) basis 
+  !> and returns global index of that mesh point.
   subroutine global_index(mesh, k1, k2) result(val)
-    ! Takes the coordinates (k1,k2) on the (r1,r2) basis and 
-    ! returns global index of that mesh point.
     type(hex_logical_mesh_2d), pointer :: m
     sll_int32, intent(in)   :: k1
     sll_int32, intent(in)   :: k2
@@ -203,6 +209,7 @@ end if
   end subroutine global_index
 
 
+  !> Get hex mesh number
   subroutine get_hex_num(index)
       sll_int32 :: index
       sll_int32, intent(out) :: hex_num = 0
@@ -222,6 +229,7 @@ end if
   end subroutine get_hex_num
 
 
+  !> Unknown function
   subroutine from_global_index_k1(mesh, index) 
       type(hex_logical_mesh_2d), pointer :: mesh
       sll_int32 :: index
@@ -262,6 +270,7 @@ end if
 
 
 
+  !> Unknown function
   subroutine from_global_index_k2(mesh, index) 
 
       type(hex_logical_mesh_2d), pointer :: mesh
@@ -304,6 +313,7 @@ end if
 
 
 
+  !> Unknown function
   subroutine local_index(mesh,i,j)
       type(hex_logical_mesh_2d), pointer :: mesh
       sll_int32 :: i, j
@@ -320,9 +330,7 @@ end if
 
   end subroutine local_index
 
-
-
-
+  !> Deallocate the structure
   subroutine delete_hex_logical_mesh_2d( mesh )
     type(hex_logical_mesh_2d), pointer :: mesh
     sll_int32 :: ierr

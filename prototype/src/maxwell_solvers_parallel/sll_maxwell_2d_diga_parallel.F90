@@ -22,6 +22,7 @@ use sll_boundary_condition_descriptors
 use sll_maxwell_2d_diga_parallel
 
 implicit none
+private
 
 !>DG method in two dimensions with general coordinates
 type, public :: maxwell_2d_diga_parallel
@@ -53,20 +54,20 @@ type, public :: maxwell_2d_diga_parallel
 end type maxwell_2d_diga_parallel
 
 !> Allocate data to initialize solver
-interface new
+interface sll_new
    module procedure new_maxwell_2d_diga_parallel
-end interface new
+end interface sll_new
 
 !> Create a Maxwell solver object using Discontinuous Galerkine 
-interface initialize
+interface sll_create
    module procedure initialize_maxwell_2d_diga_parallel
-end interface initialize
+end interface sll_create
 
 
 !> Solve Maxwell system
-interface solve
+interface sll_solve
    module procedure solve_maxwell_2d_diga_parallel
-end interface solve
+end interface sll_solve
 
 contains
 

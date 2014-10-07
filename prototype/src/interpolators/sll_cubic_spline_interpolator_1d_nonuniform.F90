@@ -10,7 +10,8 @@ module sll_module_cubic_spline_interpolator_1d_nonuniform
 use sll_module_interpolators_1d_base
 use cubic_non_uniform_splines
 use sll_cubic_splines
-  implicit none
+implicit none
+private
 
   !> sll_interpolator_1d implemented with cubic splines on non uniform mesh
   type, extends(sll_interpolator_1d_base) ::  sll_cubic_spline_interpolator_1d_nonuniform
@@ -41,6 +42,9 @@ use sll_cubic_splines
   interface sll_delete
      module procedure delete_cs1d
   end interface sll_delete
+
+public sll_cubic_spline_interpolator_1d_nonuniform
+public sll_delete
 
 contains  ! ****************************************************************
 

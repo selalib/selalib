@@ -167,6 +167,7 @@ end if
   end subroutine initialize_logical_mesh_1d
 
 
+  !> Create a 2d mesh from two 1d meshes
   function tensor_product_1d_1d( m_a, m_b) result(m_c)
     type(sll_logical_mesh_1d), intent(in),  pointer :: m_a
     type(sll_logical_mesh_1d), intent(in),  pointer :: m_b
@@ -182,6 +183,7 @@ end if
 
   end function tensor_product_1d_1d
 
+  !> Create a 4d mesh from two 2d meshes
   function tensor_product_2d_2d( m_a, m_b) result(m_c)
     type(sll_logical_mesh_2d), intent(in),  pointer :: m_a
     type(sll_logical_mesh_2d), intent(in),  pointer :: m_b
@@ -203,6 +205,7 @@ end if
 
   end function tensor_product_2d_2d
 
+  !> Initialize node positions
   subroutine initialize_eta1_node_1d( m, eta1_node )
     type(sll_logical_mesh_1d), pointer :: m
     sll_real64, dimension(:), pointer :: eta1_node

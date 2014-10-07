@@ -27,7 +27,7 @@ use sll_penta_diagonal
   sll_real64, dimension(:), allocatable   :: f
   sll_real64, dimension(:), allocatable   :: x, x_exact
   sll_real64                              :: error, norm
-  type(penta_diagonal_plan), pointer :: plan
+  type(sll_penta_diagonal_solver), pointer :: plan
 
   print*,' '
   print*, 'Testing Toeplitz penta-diagonal solver...'
@@ -66,8 +66,8 @@ use sll_penta_diagonal
                                   b*x_exact(i+1) + c*x_exact(i+2)      
       enddo
 
-      plan => new_penta_diagonal(n)
-      call  solve_penta_diagonal(a, b, c, f, plan)
+      plan => sll_create(n)
+      call  sll_solve(a, b, c, f, plan)
       x = plan%solution
 
       error = 0.d0
@@ -88,7 +88,7 @@ use sll_penta_diagonal
       SLL_DEALLOCATE_ARRAY(f, ierr)
       SLL_DEALLOCATE_ARRAY(x, ierr)
       SLL_DEALLOCATE_ARRAY(x_exact, ierr)
-      call delete_penta_diagonal(plan);
+      call sll_delete(plan);
 
     enddo
   enddo

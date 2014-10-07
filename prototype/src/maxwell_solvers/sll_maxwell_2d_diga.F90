@@ -23,6 +23,7 @@ use sll_dg_fields
 use sll_boundary_condition_descriptors
 
 implicit none
+private
 
 !> Local type with edge properties
 type :: edge_type
@@ -50,43 +51,45 @@ end type cell_type
 
 !> DG method in 2D with general coordinates
 type, public, extends(sll_maxwell_solver) :: maxwell_2d_diga
-
-   sll_transformation, pointer              :: tau  !< transformation
-   type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
-   sll_int32                                :: degree !< degree of gauss integration
-   type(cell_type), dimension(:,:), pointer :: cell !< mesh cells
-   sll_real64, dimension(:,:), pointer      :: f
-   sll_real64, dimension(:,:), pointer      :: w
-   sll_real64, dimension(:,:), pointer      :: r
-   sll_int32                                :: bc_south
-   sll_int32                                :: bc_east
-   sll_int32                                :: bc_north
-   sll_int32                                :: bc_west
-   sll_int32                                :: flux_type
-   type(dg_field), pointer                  :: po
-   sll_real64                               :: xi 
+   sll_transformation, pointer                  :: tau    !< transformation
+   type(sll_logical_mesh_2d), pointer           :: mesh   !< Logical mesh
+   sll_int32                                    :: degree !< degree of gauss integration
+   type(cell_type), dimension(:,:), pointer     :: cell   !< mesh cells
+   sll_real64, dimension(:,:), pointer, private :: f      !< cell flux
+   sll_real64, dimension(:,:), pointer, private :: w      !< edge flux
+   sll_real64, dimension(:,:), pointer, private :: r      !< source flux
+   sll_int32, private                           :: bc_south
+   sll_int32, private                           :: bc_east
+   sll_int32, private                           :: bc_north
+   sll_int32, private                           :: bc_west
+   sll_int32, private                           :: flux_type
+   type(dg_field), pointer                      :: po     !< Potential
+   sll_real64, private                          :: xi 
 
 end type maxwell_2d_diga
 
 !> Create a Maxwell solver using DG method in 2D
-interface new_maxwell_2d_diga
+interface sll_new
    module procedure new_maxwell_2d_digal
-end interface new_maxwell_2d_diga
+end interface sll_new
 
 !> Create a Maxwell solver object using Discontinuous Galerkine 
-interface initialize
+interface sll_create
    module procedure initialize_maxwell_2d_diga
-end interface initialize
-
+end interface sll_create
 
 !> Solve Maxwell system
-interface solve
+interface sll_solve
    module procedure solve_maxwell_2d_diga
-end interface solve
+end interface sll_solve
 
 sll_int32, private  :: error
+!> Flux parameter
 sll_int32, parameter, public :: SLL_CENTERED       = 20
+!> Flux parameter
 sll_int32, parameter, public :: SLL_UNCENTERED     = 21
+
+public sll_new, sll_create, sll_solve
 
 contains
 
@@ -278,7 +281,7 @@ subroutine initialize_maxwell_2d_diga( this,         &
    SLL_CLEAR_ALLOCATE(this%r((degree+1)*(degree+1),4),error)
    SLL_CLEAR_ALLOCATE(this%f((degree+1)*(degree+1),4),error)
 
-   this%po => new_dg_field( degree, tau) 
+   this%po => sll_new( degree, tau) 
 
 end subroutine initialize_maxwell_2d_diga
 

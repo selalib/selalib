@@ -700,6 +700,7 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/deboor_splines \
 @CMAKE_CURRENT_SOURCE_DIR@/distribution_function \
 @CMAKE_CURRENT_SOURCE_DIR@/electric_field_accumulators \
+@CMAKE_CURRENT_SOURCE_DIR@/fft/sllfft \
 @CMAKE_CURRENT_SOURCE_DIR@/fft/fftpack \
 @CMAKE_CURRENT_SOURCE_DIR@/fft/fftw3 \
 @CMAKE_CURRENT_SOURCE_DIR@/fftpack \
@@ -735,8 +736,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
 @CMAKE_CURRENT_SOURCE_DIR@/remap \
 @CMAKE_CURRENT_SOURCE_DIR@/fields \
-@CMAKE_CURRENT_SOURCE_DIR@/fft \
-@CMAKE_CURRENT_SOURCE_DIR@/interpolators \
 @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
@@ -749,11 +748,8 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_particle_types \
 @CMAKE_CURRENT_SOURCE_DIR@/pic_utilities \
 @CMAKE_CURRENT_SOURCE_DIR@/poisson_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers \
-@CMAKE_CURRENT_SOURCE_DIR@/maxwell_solvers_parallel \
 @CMAKE_CURRENT_SOURCE_DIR@/random_deviate_generators \
 @CMAKE_CURRENT_SOURCE_DIR@/boundary_condition_descriptors \
-@CMAKE_CURRENT_SOURCE_DIR@/logical_meshes \
 @CMAKE_CURRENT_SOURCE_DIR@/sparse_matrix_manager
 
 

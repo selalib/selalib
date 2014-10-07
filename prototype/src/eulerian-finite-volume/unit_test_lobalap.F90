@@ -67,9 +67,9 @@ program test_lobalap
 
   call tau%write_to_file()
 
-  dg_rho => new_dg_field( degree, tau, f_four ) 
-  dg_ex => new_dg_field( degree, tau ) 
-  dg_ey => new_dg_field( degree, tau ) 
+  dg_rho => sll_new( degree, tau, f_four ) 
+  dg_ex  => sll_new( degree, tau ) 
+  dg_ey  => sll_new( degree, tau ) 
 
   call dg_rho%write_to_file('rho')
 

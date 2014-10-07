@@ -25,10 +25,12 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
 
 
   implicit none
+  private
 
   ! in what follows, the direction '1' is in the contiguous memory direction.
   !> Class for arbitrary degree spline 1d interpolator
-  type, extends(sll_interpolator_1d_base) :: sll_arbitrary_degree_spline_interpolator_1d
+  type, public, extends(sll_interpolator_1d_base) :: &
+     sll_arbitrary_degree_spline_interpolator_1d
      sll_int32  :: num_pts
      sll_real64 :: eta_min
      sll_real64 :: eta_max
@@ -76,6 +78,10 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
      module procedure delete_arbitrary_degree_1d_interpolator
   end interface sll_delete
 
+public sll_delete 
+public new_arbitrary_degree_1d_interpolator
+public set_values_at_boundary1d
+public initialize_ad1d_interpolator
 
 contains
 

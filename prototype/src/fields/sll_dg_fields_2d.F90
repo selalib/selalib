@@ -36,9 +36,9 @@ contains
 
 end type dg_field
 
-interface new
+interface sll_new
   module procedure new_dg_field
-end interface new
+end interface sll_new
 
 interface operator(+)
   module procedure dg_field_add
@@ -48,7 +48,7 @@ interface operator(-)
   module procedure dg_field_sub
 end interface operator(-)
 
-public :: new_dg_field, operator(+), operator(-)
+public :: sll_new, operator(+), operator(-)
 
 sll_int32, private :: error
 

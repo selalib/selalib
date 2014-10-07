@@ -4,6 +4,8 @@ use sll_module_interpolators_1d_base
 use sll_constants
 use sll_module_periodic_interpolator_1d
 use sll_module_lagrange_interpolator_1d
+use sll_lagrange_interpolation
+use periodic_interp_module
 
 implicit none 
   

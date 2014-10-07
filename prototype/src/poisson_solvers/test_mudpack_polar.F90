@@ -4,6 +4,7 @@ program test_mudpack_polar
 #include "sll_assert.h"
 #include "sll_constants.h"
 
+use sll_boundary_condition_descriptors
 use sll_mudpack_polar
 
 implicit none
