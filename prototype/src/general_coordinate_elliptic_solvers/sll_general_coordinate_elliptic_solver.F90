@@ -16,8 +16,7 @@ module sll_general_coordinate_elliptic_solver_module
   use gauss_lobatto_integration
   use sll_timer 
   use sll_sparse_matrix_module
-
-
+  use sll_module_deboor_splines_1d
 
   implicit none
 

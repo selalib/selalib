@@ -7,9 +7,10 @@ module sll_module_lagrange_interpolator_1d
 use sll_module_interpolators_1d_base
  use sll_lagrange_interpolation
 implicit none
+private
 
  !> Interpolator class of Lagrange 1D interpolator
- type,extends(sll_interpolator_1d_base) :: sll_lagrange_interpolator_1d
+ type,extends(sll_interpolator_1d_base), public :: sll_lagrange_interpolator_1d
    type(sll_lagrange_interpolation_1D), pointer :: lagrange
    sll_int32                                    :: bc_type
    contains

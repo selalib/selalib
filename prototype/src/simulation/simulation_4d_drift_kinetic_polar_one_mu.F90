@@ -65,6 +65,7 @@ module sll_simulation_4d_drift_kinetic_polar_one_mu_module
   use sll_module_gyroaverage_2d_polar_hermite_solver
   use sll_module_gyroaverage_2d_polar_splines_solver
   use sll_module_gyroaverage_2d_polar_pade_solver
+  use sll_hermite_interpolation_2d_module
 
 
   implicit none

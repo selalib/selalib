@@ -6,6 +6,7 @@ program test_mudpack_cartesian
 #include "sll_memory.h"
 
 use sll_mudpack_cartesian
+use sll_boundary_condition_descriptors
 
 implicit none
 

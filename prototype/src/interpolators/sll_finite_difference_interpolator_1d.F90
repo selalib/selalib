@@ -19,7 +19,8 @@ module sll_module_finite_difference_interpolator_1d
 #include "sll_assert.h"
 #include "sll_interpolators_1d_base_macros.h"
 use sll_module_interpolators_1d_base
-  implicit none
+implicit none
+private
 
 
   !> Finite differences implementation of 1d interpolator
