@@ -34,8 +34,8 @@ implicit none
   class(sll_interpolator_2d_base), pointer    :: interp_xy
   class(sll_interpolator_2d_base), pointer    :: interp_vxvy
 
-  type(cubic_spline_2d_interpolator), target  :: spline_xy
-  type(cubic_spline_2d_interpolator), target  :: spline_vxvy
+  type(sll_cubic_spline_interpolator_2d), target  :: spline_xy
+  type(sll_cubic_spline_interpolator_2d), target  :: spline_vxvy
 
   print*,'*******************************'
   print*,' 4D case                       '

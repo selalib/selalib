@@ -88,7 +88,7 @@ type, extends(sll_simulation_base_class) :: sll_simulation_4d_vp_polar
  type(remap_plan_4D_real64), pointer :: seqx1x2_to_seqx3x4 !< transpose x to v
  type(remap_plan_4D_real64), pointer :: seqx3x4_to_seqx1x2 !< transpose v to x 
  
- type(cubic_spline_2d_interpolator) :: interp_x1x2 !< interpolator 2d in xy
+ type(sll_cubic_spline_interpolator_2d) :: interp_x1x2 !< interpolator 2d in xy
  type(sll_cubic_spline_interpolator_1d) :: interp_x3   !< interpolator 1d in vx
  type(sll_cubic_spline_interpolator_1d) :: interp_x4   !< interpolator 1d in vx
  procedure(sll_scalar_initializer_4d), nopass, pointer :: init_func !< for distribution function initializer:

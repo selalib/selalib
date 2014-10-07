@@ -44,18 +44,31 @@ type, extends(sll_interpolator_1d_base), public :: sll_cubic_spline_interpolator
 
 contains
 
+    !> PLEASE ADD DOCUMENTATION
    procedure, pass(interpolator) :: initialize => initialize_cs1d_interpolator
+    !> PLEASE ADD DOCUMENTATION
    procedure :: compute_interpolants => compute_interpolants_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_value => interpolate_value_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_derivative_eta1 => interpolate_deriv1_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_values => interpolate_values_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_pointer_values => interpolate_pointer_values_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_derivatives => interpolate_derivatives_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_pointer_derivatives => interpolate_pointer_derivatives_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array => spline_interpolate1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: interpolate_array_disp => spline_interpolate1d_disp
+    !> PLEASE ADD DOCUMENTATION
    procedure :: reconstruct_array => reconstruct_array ! this is suspicious...
+    !> PLEASE ADD DOCUMENTATION
    procedure :: set_coefficients => set_coefficients_cs1d
+    !> PLEASE ADD DOCUMENTATION
    procedure :: get_coefficients => get_coefficients_cs1d
 
 end type sll_cubic_spline_interpolator_1d
@@ -243,6 +256,7 @@ contains  ! ****************************************************************
     val = interpolate_derivative(eta1,interpolator%spline)
   end function interpolate_derivative_f95
 
+    !> PLEASE ADD DOCUMENTATION
   function new_cubic_spline_interpolator_1d( &
     num_points, &
     xmin, &

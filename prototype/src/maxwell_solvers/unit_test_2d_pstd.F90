@@ -8,7 +8,7 @@ program test_maxwell_2d_pstd
 #include "sll_maxwell_solvers.h"
 use sll_constants
 
-use sll_maxwell_2d_pstd
+use sll_module_maxwell_2d_pstd
 
 implicit none
 
@@ -19,8 +19,8 @@ sll_real64 :: delta_eta1, delta_eta2
 sll_int32  :: nc_eta1, nc_eta2
 sll_int32  :: error
 
-type(maxwell_2d_pstd)              :: maxwell_TE
-type(maxwell_2d_pstd)              :: maxwell_TM
+type(sll_maxwell_2d_pstd)              :: maxwell_TE
+type(sll_maxwell_2d_pstd)              :: maxwell_TM
 sll_int32                          :: i, j
 sll_real64                         :: omega
 sll_real64                         :: time

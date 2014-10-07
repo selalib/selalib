@@ -63,7 +63,7 @@ program vlasov_maxwell_parallel
   sll_real64, dimension(nc_eta1+1,nc_eta2+1) :: jy = 0.
 
   class(sll_interpolator_2d_base), pointer   :: interp_v
-  type(cubic_spline_2d_interpolator), target :: spl_v
+  type(sll_cubic_spline_interpolator_2d), target :: spl_v
 
   sll_int32  :: offset(4)
   sll_real64 :: offset_eta3, offset_eta4

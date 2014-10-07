@@ -38,27 +38,43 @@ use sll_hermite_interpolation_2d_module
 implicit none
 private
 
+!> @brief
 !> The hermite-based interpolator is only a wrapper around the capabilities
 !! of the hermite interpolation. 
+!> @details
 !! All interpolators share a common interface with
 !! respect to their use, as described by the interpolator_2d_base class.
 !! Where the diverse interpolators diverge is in the way to initialize them.
 !! We basically copy the analog for cubic splines
   type, extends(sll_interpolator_2d_base), public :: sll_hermite_interpolator_2d
+    !> PLEASE ADD DOCUMENTATION
     type(sll_hermite_interpolation_2d), pointer :: hermite
+    !> PLEASE ADD DOCUMENTATION
     sll_int32 :: npts1
+    !> PLEASE ADD DOCUMENTATION
     sll_int32 :: npts2
   contains
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass(interpolator) :: initialize=>initialize_hermite_interpolator_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: compute_interpolants => wrap_compute_interpolants_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_value => wrap_interpolate_value_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_derivative_eta1 => wrap_interpolate_deriv1_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_derivative_eta2 => wrap_interpolate_deriv2_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: interpolate_array => wrap_interpolate_array_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: interpolate_array_disp => wrap_interpolate2d_disp_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: set_coefficients => wrap_set_coefficients_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: get_coefficients => wrap_get_coefficients_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: coefficients_are_set => wrap_coefficients_are_set_hermite_2d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: delete => delete_sll_hermite_interpolator_2d
   end type sll_hermite_interpolator_2d
 
@@ -66,6 +82,7 @@ private
 
 contains
 
+    !> PLEASE ADD DOCUMENTATION
   function new_hermite_interpolator_2d( &
     npts1, &
     npts2, &

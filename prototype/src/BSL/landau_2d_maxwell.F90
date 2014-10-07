@@ -10,7 +10,7 @@ use sll_constants
 use sll_module_interpolators_1d_base
 use sll_module_cubic_spline_interpolator_1d
 use sll_utilities, only: int2string
-use sll_maxwell_2d_pstd
+use sll_module_maxwell_2d_pstd
 
 implicit none
   
@@ -43,7 +43,7 @@ sll_real64, dimension(:,:), allocatable :: rho
 
 !Poisson solver
 type(poisson_2d_periodic) :: poisson
-type(maxwell_2d_pstd)     :: maxwell
+type(sll_maxwell_2d_pstd) :: maxwell
 
 class(sll_interpolator_1d_base), pointer    :: interp_1
 class(sll_interpolator_1d_base), pointer    :: interp_2

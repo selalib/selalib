@@ -54,7 +54,7 @@ self%d_dz = self%d_dz / nc_z
 !>\f$
 !>
 !>where \f$(u,v,w) = (x,y,z),(y,z,x),(z,x,y)\f$
-module sll_maxwell_3d_pstd
+module sll_module_maxwell_3d_pstd
 #include "sll_working_precision.h"
 #include "sll_memory.h"
 #include "sll_assert.h"
@@ -66,21 +66,29 @@ implicit none
 private
 
 !> Initialize maxwell solver 2d cartesian periodic with PSTD scheme
-interface new
+interface sll_new
  module procedure new_maxwell_3d_pstd
-end interface new
+end interface sll_new
 
 !> Solve maxwell solver 2d cartesian periodic with PSTD scheme
-interface solve
+interface sll_solve
  module procedure solve_maxwell_3d
-end interface solve
+end interface sll_solve
+
+interface sll_solve_ampere
+ module procedure ampere
+end interface sll_solve_ampere
+
+interface sll_solve_faraday
+ module procedure faraday
+end interface sll_solve_faraday
 
 !> Delete maxwell solver 2d cartesian periodic with PSTD scheme
-interface free
+interface sll_delete
  module procedure free_maxwell_3d_pstd
-end interface free
+end interface sll_delete
 
-public :: new, free, solve, ampere, faraday
+public :: sll_new, sll_delete, sll_solve, sll_solve_ampere, sll_solve_faraday
 
 !> Maxwell solver object
 type, public :: maxwell_pstd_3d
@@ -376,4 +384,4 @@ call fftw_destroy_plan(self%bwz)
 
 end subroutine free_maxwell_3d_pstd
 
-end module sll_maxwell_3d_pstd
+end module sll_module_maxwell_3d_pstd

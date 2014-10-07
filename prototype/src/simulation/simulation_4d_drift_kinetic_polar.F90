@@ -549,7 +549,7 @@ contains
 
     select case (interp_x1x2)
       case ("SLL_CUBIC_SPLINES")
-        f_interp2d => new_cubic_spline_2d_interpolator( &
+        f_interp2d => new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
@@ -570,7 +570,7 @@ contains
           sim%m_x1%eta_min, &
           sim%m_x1%eta_max, &
           SLL_HERMITE)
-        A1_interp2d => new_cubic_spline_2d_interpolator( &
+        A1_interp2d => new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
@@ -579,7 +579,7 @@ contains
           sim%m_x2%eta_max, &
           SLL_HERMITE, &
           SLL_PERIODIC)
-        A2_interp2d => new_cubic_spline_2d_interpolator( &
+        A2_interp2d => new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
@@ -598,7 +598,7 @@ contains
 
     select case (phi_interp_x1x2)
       case ("SLL_CUBIC_SPLINES")
-         sim%phi_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+         sim%phi_interp_x1x2 => new_cubic_spline_interpolator_2d( &
           sim%m_x1%num_cells+1, &
           sim%m_x2%num_cells+1, &
           sim%m_x1%eta_min, &
