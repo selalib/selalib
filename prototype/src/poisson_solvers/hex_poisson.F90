@@ -202,7 +202,7 @@ contains
     sll_int32                             :: num_cells, i, index_tab, k1, k2
     sll_real64                            :: step
     sll_real64                            :: f1,f2,f3,f4,f5,f6
-    sll_int32                             :: global,n1,n2,n3,n4,n5,n6
+    sll_int32                             :: global
 
     num_cells = mesh%num_cells
     step = mesh%delta**2 * 1.5_f64 
@@ -344,17 +344,17 @@ contains
   endfunction value_if_inside_rho
 
 
-subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
+subroutine compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type)
     type(sll_hex_mesh_2d), pointer :: mesh
-    sll_real64,dimension(:)        :: uxn, uyn, phi
+    sll_real64,dimension(:)        :: uxn, uyn, phi,dxuxn,dyuxn,dxuyn,dyuyn
     sll_int32,          intent(in) :: type
     sll_int32  :: i,h1,h2
     sll_real64 :: r11,r12,r21,r22,det
-    sll_real64 :: phixi_2,phixi_1,phixi1,phixi2
-    sll_real64 :: phiyj_2,phiyj_1,phiyj1,phiyj2
-    sll_real64 :: phii_3,phij_3,phii,phij
-    sll_real64 :: phii_2, phii_1, phii1, phii2, phij_2, phij_1, phij1, phij2
-    sll_real64 :: uh1, uh2
+    sll_real64 :: phi2j1,phi1j2,phi_2j1,phi_2j_1,phi_1j_2,phi1j_2,phi2j_1,phi_1j2
+    sll_real64 :: phi_2j_2,phi2j_2,phi2j2,phi_2j2
+    sll_real64 :: phi_3j,phij_3,phij,phi1j1,phi_1j_1,phi1j_1,phi_1j1
+    sll_real64 :: phi_2j, phi_1j, phi1j, phi2j, phij_2, phij_1, phij1, phij2
+    sll_real64 :: uh1, uh2, uh1h1, uh2h2, uh1h2
 
     det = (mesh%r1_x1*mesh%r2_x2 - mesh%r1_x2*mesh%r2_x1)/mesh%delta
 
@@ -370,12 +370,31 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
           h1 = mesh%hex_coord(1,i)
           h2 = mesh%hex_coord(2,i)
 
-          phii_3 = value_if_inside_phi(h1-3,h2,mesh,phi)
-          phii_2 = value_if_inside_phi(h1-2,h2,mesh,phi)
-          phii_1 = value_if_inside_phi(h1-1,h2,mesh,phi)
-          phii   = value_if_inside_phi(h1  ,h2,mesh,phi)
-          phii1  = value_if_inside_phi(h1+1,h2,mesh,phi)
-          phii2  = value_if_inside_phi(h1+2,h2,mesh,phi)
+          phi_1j_1 = value_if_inside_phi(h1-1,h2-1,mesh,phi)
+          phi1j1   = value_if_inside_phi(h1+1,h2+1,mesh,phi)
+          phi1j_1  = value_if_inside_phi(h1+1,h2-1,mesh,phi)
+          phi_1j1  = value_if_inside_phi(h1-1,h2+1,mesh,phi)
+
+          phi_2j_2 = value_if_inside_phi(h1-2,h2-2,mesh,phi)
+          phi2j2   = value_if_inside_phi(h1+2,h2+2,mesh,phi)
+          phi2j_2  = value_if_inside_phi(h1+2,h2-2,mesh,phi)
+          phi_2j2  = value_if_inside_phi(h1-2,h2+2,mesh,phi)
+
+          phi_1j_2 = value_if_inside_phi(h1-1,h2-2,mesh,phi)
+          phi1j2   = value_if_inside_phi(h1+1,h2+2,mesh,phi)
+          phi1j_2  = value_if_inside_phi(h1+1,h2-2,mesh,phi)
+          phi_1j2  = value_if_inside_phi(h1-1,h2+2,mesh,phi)
+
+          phi_2j_1 = value_if_inside_phi(h1-2,h2-1,mesh,phi)
+          phi2j1   = value_if_inside_phi(h1+2,h2+1,mesh,phi)
+          phi2j_1  = value_if_inside_phi(h1+2,h2-1,mesh,phi)
+          phi_2j1  = value_if_inside_phi(h1-2,h2+1,mesh,phi)
+
+          phi_3j = value_if_inside_phi(h1-3,h2,mesh,phi)
+          phi_2j = value_if_inside_phi(h1-2,h2,mesh,phi)
+          phi_1j = value_if_inside_phi(h1-1,h2,mesh,phi)
+          phi1j  = value_if_inside_phi(h1+1,h2,mesh,phi)
+          phi2j  = value_if_inside_phi(h1+2,h2,mesh,phi)
 
           phij_3 = value_if_inside_phi(h1,h2-3,mesh,phi)
           phij_2 = value_if_inside_phi(h1,h2-2,mesh,phi)
@@ -383,16 +402,6 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
           phij   = value_if_inside_phi(h1,h2  ,mesh,phi)
           phij1  = value_if_inside_phi(h1,h2+1,mesh,phi)
           phij2  = value_if_inside_phi(h1,h2+2,mesh,phi)
-
-          ! phixi_2 = value_if_inside_phi(h1-2,h2+2,mesh,phi)
-          ! phixi_1 = value_if_inside_phi(h1-1,h2+1,mesh,phi)
-          ! phixi1  = value_if_inside_phi(h1+1,h2-1,mesh,phi)
-          ! phixi2  = value_if_inside_phi(h1+2,h2-2,mesh,phi)
-
-          ! phiyj_2 = value_if_inside_phi(h1-2,h2-2,mesh,phi)
-          ! phiyj_1 = value_if_inside_phi(h1-1,h2-1,mesh,phi)
-          ! phiyj1  = value_if_inside_phi(h1+1,h2+1,mesh,phi)
-          ! phiyj2  = value_if_inside_phi(h1+2,h2+2,mesh,phi)
 
 
           ! uh1 =  (phii - phii_1)/ (mesh%delta)  ! order 1 - very bad
@@ -404,7 +413,7 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
           ! uh1 = ( phii1/3._f64  + phii/2._f64 - phii_1 + phii_2/6._f64 ) / (mesh%delta) ! order 3
           ! uh2 = ( phij1/3._f64  + phij/2._f64 - phij_1 + phij_2/6._f64 ) / (mesh%delta) 
 
-          uh1 = ( phii_2 + 8._f64 * ( phii1 - phii_1 ) - phii2 ) / (12._f64*mesh%delta) ! order 4
+          uh1 = ( phi_2j + 8._f64 * ( phi1j - phi_1j ) - phi2j ) / (12._f64*mesh%delta) ! order 4
           uh2 = ( phij_2 + 8._f64 * ( phij1 - phij_1 ) - phij2 ) / (12._f64*mesh%delta)
 
           ! uh1 = ( -phii_3/30._f64 + 0.25_f64*phii_2 - phii_1 + phii/3._f64&
@@ -424,10 +433,37 @@ subroutine compute_hex_fields(mesh,uxn,uyn,phi,type)
           uxn(i) = - (uh1*r12+uh2*r22)
           uyn(i) = + (uh1*r11+uh2*r21)
 
-	  ! dxuxn(i) = -( phii1j1 - phii1j_1 - phii_1j1 + phii_1j_1 )/(4._f64*meshdelta**2);
-	  ! dyuxn(i) = -( phiij1  - 2._f64*phiij + phiij_1  )/meshdelta**2;
-	  ! dyuyn(i) = -( phii1j1 - phii1j_1 - phii_1j1 + phii_1j_1 )/(4._f64*meshdelta**2);
-	  ! dxuyn(i) = -( phii1j  - 2._f64*phiij + phii_1j  )/meshdelta**2;		
+
+          ! order 2 approximation of the second derivatives
+          
+          ! uh1h1 = ( phi1j  - 2._f64*phij + phi_1j )/mesh%delta**2
+          ! uh2h2 = ( phij1  - 2._f64*phij + phij_1 )/mesh%delta**2
+          ! uh1h2 = ( phi1j1 - phi1j_1 - phi_1j1 + phi_1j_1 )/(4._f64*mesh%delta**2)
+
+          ! directe approximation of the second order 
+          ! dyuxn(i) = -(phi1j1 - 2._f64*phij + phi_1j_1)/(mesh%delta**2) ! -dyy phi
+          ! dxuyn(i) = +(phi1j_1- 2._f64*phij + phi_1j1 )/(3._f64*mesh%delta**2) !  dxx phi
+
+          !  order 4 approximation of the second derivatives
+          
+          uh1h1 = ( - phi_2j + 16._f64*(phi_1j+phi1j) - 30._f64*phij - phi2j)/(12._f64*mesh%delta**2)
+          uh2h2 = ( - phij_2 + 16._f64*(phij_1+phij1) - 30._f64*phij - phij2)/(12._f64*mesh%delta**2)
+          uh1h2 = ( 64._f64*(phi1j1 - phi1j_1 - phi_1j1 + phi_1j_1 ) +&
+               8._f64*(-phi2j1-phi1j2-phi_2j_1-phi_1j_2 + phi_1j2 + phi_2j1 + phi1j_2 + phi2j_1)+&
+               phi2j2 - phi2j_2 - phi_2j2 + phi_2j_2)/(144._f64*mesh%delta**2)
+
+          dxuxn(i) = - (uh1h1*r11*r12+uh1h2*(r11*r22+r12*r21)+uh2h2*r21*r22)  ! -dxy
+          !dyuxn(i) = - (uh1h1*r12*r12+2._f64*uh1h2*r12*r22+uh2h2*r22*r22)  ! -dyy phi
+          dyuyn(i) = + (uh1h1*r11*r12+uh1h2*(r11*r22+r12*r21)+uh2h2*r21*r22) ! dyx
+          dxuyn(i) = + (uh1h1*r11*r11+2._f64*uh1h2*r11*r21+uh2h2*r21*r21)  !dxx phi
+
+          ! directe approximation of the fourth order ->more or less the same results
+          dyuxn(i) = -( -phi_2j_2 + 16._f64*(phi_1j_1+phi1j1) - 30._f64*phij - phi2j2 )/&
+               (12._f64*mesh%delta**2) ! -dyy phi
+          !dxuyn(i) = +( -phi_2j2   + 16._f64*(phi1j_1+phi_1j1) - 30._f64*phij - phi2j_2)/&
+          !     (3._f64*12._f64*mesh%delta**2) ! +dxx phi
+
+          ! -> by combining the two approach we get the best results
 
 
        end do

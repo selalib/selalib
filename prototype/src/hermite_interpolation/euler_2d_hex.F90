@@ -304,4 +304,182 @@ module  euler_2d_hex
   end subroutine compute_characteristic_leapfrog_2d_hex
 
 
+  subroutine compute_characteristic_adams2_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
+       dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)
+    sll_real64,dimension(:),intent(in):: uxn, uyn, uxn_1, uyn_1
+    sll_real64,dimension(:),intent(in):: dxuxn,dyuxn,dxuyn,dyuyn
+    sll_real64, intent(in)  :: dt
+    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
+    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
+    sll_int32, intent(in)   :: i
+    sll_real64              :: d1x, d1y, dij0, dij1, uxn1, uyn1 
+    
+    uxn1 = 2._f64*uxn(i) - uxn_1(i)
+    uyn1 = 2._f64*uyn(i) - uyn_1(i)
+
+    d1x = 0.5_f64*dt * ( uxn1 + uxn(i) )
+    d1y = 0.5_f64*dt * ( uyn1 + uyn(i) )
+
+    dij0 = d1x - 0.5_f64*dt * ( d1x*dxuxn(i) + d1y*dyuxn(i) ) 
+    dij1 = d1y - 0.5_f64*dt * ( d1x*dxuyn(i) + d1y*dyuyn(i) )
+
+    y1 = x1 - dij0
+    y2 = x2 - dij1
+
+  end subroutine compute_characteristic_adams2_2d_hex
+
+  subroutine compute_characteristic_adams3_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
+       uxn_2,uyn_2,dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)
+    sll_real64,dimension(:),intent(in):: uxn, uyn, uxn_1, uyn_1,uxn_2,uyn_2
+    sll_real64,dimension(:),intent(in):: dxuxn,dyuxn,dxuyn,dyuyn
+    sll_real64, intent(in)  :: dt
+    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
+    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
+    sll_int32, intent(in)   :: i
+    sll_real64              :: d1x, d1y, dij0, dij1, uxn1, uyn1, erreur 
+    sll_real64              :: a, b, c, d, det, gx, gy, xn, yn, xn_1,yn_1
+    sll_real64              :: uxn_loc, uyn_loc, uxn_1_loc, uyn_1_loc
+    sll_real64              :: dxuxn_loc,dyuxn_loc,dxuyn_loc,dyuyn_loc
+    sll_real64              :: dxuxn_1_loc,dyuxn_1_loc,dxuyn_1_loc,dyuyn_1_loc
+    
+    
+    uxn1 = 3._f64*uxn(i) - 3._f64*uxn_1(i) + uxn_2(i)
+    uyn1 = 3._f64*uyn(i) - 3._f64*uyn_1(i) + uyn_2(i)
+
+    ! Uxn1 = 2*my_Ux[ix][iy] -  _Uxp[ix][iy]
+    ! Uyn1 = 2*my_Uy[ix][iy] -  _Uyp[ix][iy]
+
+    ! Uxn1 = 0.5*X[ix]*tan(tn+dt)
+    ! Uyn1 = 0.5*Y[iy]*tan(tn+dt)
+
+    ! Uxn1 = 4.0*my_Ux[ix][iy] - 6.0*_Uxp[ix][iy] + 4.0*_Uxpp[ix][iy] - _Uxppp[ix][iy];
+    ! Uyn1 = 4.0*my_Uy[ix][iy] - 6.0*_Uyp[ix][iy] + 4.0*_Uypp[ix][iy] - _Uyppp[ix][iy];
+
+    d1x = dt * (5*uxn1 + 8*uxn_1(i) - uxn_2(i))/12._f64
+    d1y = dt * (5*uyn1 + 8*uyn_1(i) - uyn_2(i))/12._f64
+    
+    erreur = 1._f64
+
+    do while(erreur > 1.E-12) 
+
+       xn = x1 - d1x 
+       yn = x2 - d1y 
+
+       ! interpolation de uxn(xn), uyn(yn), dxUxn,dyUxn,dxUyn,dyUyn
+       ! à faire ici
+
+       xn_1 = x1 - 2._f64*dt*(uxn1+2*uxn_loc) + 4._f64*d1x;
+       yn_1 = x2 - 2._f64*dt*(uyn1+2*uyn_loc) + 4._f64*d1y;
+
+       ! interpolation de uxn_1(xn_1), uyn_1(yn_1), dxUxn_1,dyUxn_1,dxUyn_1,dyUyn_1
+       ! à faire ici
+
+       a   = 1._f64 + dt*(2._f64*dxuxn_loc - dxuxn_1_loc)/3._f64;
+       b   =          dt*(2._f64*dyuxn_loc - dyuxn_1_loc)/3._f64;
+       c   =          dt*(2._f64*dxuyn_loc - dxuyn_1_loc)/3._f64;
+       d   = 1._f64 + dt*(2._f64*dyuyn_loc - dyuyn_1_loc)/3._f64;
+
+       det = a*d - b*c 
+
+       a = a/det
+       b = b/det
+       c = c/det
+       d = d/det
+
+       gx = d1x - dt*( 8._f64*uxn_loc - uxn_1_loc + 5._f64*uxn1)/12._f64
+       gy = d1y - dt*( 8._f64*uyn_loc - uyn_1_loc + 5._f64*uyn1)/12._f64
+
+       dij0 = d1x - ( +d*gx - b*gy )
+       dij1 = d1y - ( -c*gx + a*gy )
+
+       erreur = abs(gx) + abs(gy)
+       d1x = dij0
+       d1y = dij1
+
+    enddo
+
+    y1 = x1 - d1x
+    y2 = x2 - d1y
+
+  end subroutine compute_characteristic_adams3_2d_hex
+
+  subroutine compute_characteristic_adams4_2d_hex( x1,x2,uxn,uyn,uxn_1,uyn_1,&
+       uxn_2,uyn_2,uxn_3,uyn_3,dxuxn,dyuxn,dxuyn,dyuyn,i,y1,y2,dt)
+    sll_real64,dimension(:),intent(in):: uxn, uyn, uxn_1, uyn_1,uxn_2,uyn_2
+    sll_real64,dimension(:),intent(in):: uxn_3,uyn_3
+    sll_real64,dimension(:),intent(in):: dxuxn,dyuxn,dxuyn,dyuyn
+    sll_real64, intent(in)  :: dt
+    sll_real64, intent(in)  :: x1, x2 ! point of the characteristic at tn+1 
+    sll_real64, intent(out) :: y1, y2 ! point of the characteristic at tn
+    sll_int32, intent(in)   :: i
+    sll_real64              :: d1x, d1y, dij0, dij1, uxn1, uyn1, erreur 
+    sll_real64              :: a, b, c, d, det, gx, gy, xn, yn, xn_1,yn_1
+    sll_real64              :: xn_2,yn_2
+    sll_real64              :: uxn_loc, uyn_loc, uxn_1_loc, uyn_1_loc, uxn_2_loc, uyn_2_loc
+    sll_real64              :: dxuxn_loc,dyuxn_loc,dxuyn_loc,dyuyn_loc
+    sll_real64              :: dxuxn_1_loc,dyuxn_1_loc,dxuyn_1_loc,dyuyn_1_loc
+    sll_real64              :: dxuxn_2_loc,dyuxn_2_loc,dxuyn_2_loc,dyuyn_2_loc
+
+
+    uxn1 = 4._f64*uxn(i) - 6._f64*uxn_1(i) + 4._f64*uxn_2(i) - uxn_3(i)
+    uyn1 = 4._f64*uyn(i) - 6._f64*uyn_1(i) + 4._f64*uxn_2(i) - uxn_3(i)
+
+    d1x = dt * (9._f64*uxn1 + 19._f64*uxn(i) - 5._f64*uxn_1(i) + uxn_2(i))/24._f64
+    d1y = dt * (9._f64*uyn1 + 19._f64*uyn(i) - 5._f64*uyn_1(i) + uyn_2(i))/24._f64
+
+    erreur = 1._f64
+
+
+    do while(erreur > 1.e-12) 
+
+       xn = x1 - d1x 
+       yn = y2 - d1y 
+       ! interpolation de uxn(xn), uyn(yn), dxUxn,dyUxn,dxUyn,dyUyn
+       ! à faire ici
+
+       xn_1 = x1 + 4._f64*d1x - 2._f64*dt*(2._f64*uxn_loc+uxn1) 
+       yn_1 = y2 + 4._f64*d1y - 2._f64*dt*(2._f64*uyn_loc+uyn1) 
+       ! interpolation de uxn_1(xn_1), uyn_1(yn_1), dxUxn_1,dyUxn_1,dxUyn_1,dyUyn_1
+
+       ! xn_2 = x1 + 9.*d1x - 3.*dt*(3.*uxn + uxn1)
+       ! yn_2 = y2 + 9.*d1y - 3.*dt*(3.*uyn + uyn1)
+
+       xn_2 = x1 + 27._f64*d1x - dt*(18._f64*uxn_loc + 12._f64*uxn1)
+       yn_2 = x2 + 27._f64*d1y - dt*(18._f64*uyn_loc + 12._f64*uyn1)
+
+       ! interpolation de uxn_2(xn_2), uyn_2(yn_2), dxUxn_2,dyUxn_2,dxUyn_2,dyUyn_2
+
+       a   = 1._f64 + dt*(19._f64*dxUxn_loc + 20._f64*dxUxn_1_loc &
+            - 9._f64*dxUxn_2_loc)/24._f64
+       b   =          dt*(19._f64*dyUxn_loc + 20._f64*dyUxn_1_loc &
+            - 9._f64*dyUxn_2_loc)/24._f64
+       c   =          dt*(19._f64*dxUyn_loc + 20._f64*dxUyn_1_loc &
+            - 9._f64*dxUyn_2_loc)/24._f64
+       d   = 1._f64 + dt*(19._f64*dyUyn_loc + 20._f64*dyUyn_1_loc &
+            - 9._f64*dyUyn_2_loc)/24._f64
+
+       det = a*d - b*c
+
+       a = a/det
+       b = b/det
+       c = c/det
+       d = d/det
+
+       gx = d1x - dt*(9.*uxn1 + 19.*uxn_loc - 5.*uxn_1_loc  + uxn_2_loc )/24._f64
+       gy = d1y - dt*(9.*uyn1 + 19.*uyn_loc - 5.*uyn_1_loc  + uyn_2_loc )/24._f64
+
+       dij0 = d1x - ( +d*gx - b*gy ) 
+       dij1 = d1y - ( -c*gx + a*gy )
+
+       erreur = abs(gx) + abs(gy)
+       d1x = dij0
+       d1y = dij1
+
+    enddo
+
+    y1 = x1 - d1x
+    y2 = x2 - d1y
+
+  end subroutine compute_characteristic_adams4_2d_hex
+
 end module euler_2d_hex
