@@ -735,7 +735,6 @@ EXCLUDE                =  \
 @CMAKE_CURRENT_SOURCE_DIR@/fcisl \
 @CMAKE_CURRENT_SOURCE_DIR@/field_accumulators \
 @CMAKE_CURRENT_SOURCE_DIR@/remap \
-@CMAKE_CURRENT_SOURCE_DIR@/fields \
 @CMAKE_CURRENT_SOURCE_DIR@/fields_multipatch \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers \
 @CMAKE_CURRENT_SOURCE_DIR@/general_coordinate_elliptic_solvers_multipatch \
