@@ -18,9 +18,9 @@ program test_lobalap_discrete
   sll_int32, parameter :: degree = 3
   real(8), external :: f_cos, f_four
 
-  type(sll_cubic_spline_interpolator_2d)      :: x1_interp
-  type(sll_cubic_spline_interpolator_2d)      :: x2_interp
-  type(sll_cubic_spline_interpolator_2d)      :: j_interp
+  type(sll_cubic_spline_interpolator_2d)  :: x1_interp
+  type(sll_cubic_spline_interpolator_2d)  :: x2_interp
+  type(sll_cubic_spline_interpolator_2d)  :: j_interp
   sll_real64, dimension(:,:), allocatable :: x1_tab
   sll_real64, dimension(:,:), allocatable :: x2_tab
   sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -128,14 +128,14 @@ program test_lobalap_discrete
   call tau%write_to_file()
 
   dg_rho => sll_new( degree, tau, f_four ) 
-  dg_ex => sll_new( degree, tau ) 
-  dg_ey => sll_new( degree, tau ) 
+  dg_ex  => sll_new( degree, tau ) 
+  dg_ey  => sll_new( degree, tau ) 
 
   call dg_rho%write_to_file('rho')
 
-  call initialize(solver, tau, degree )
-  call solve(solver, dg_rho, dg_ex, dg_ey)
-  call delete(solver)
+  call sll_create(solver, tau, degree )
+  call sll_solve(solver, dg_rho, dg_ex, dg_ey)
+  call sll_delete(solver)
 
   call dg_ex%write_to_file('ex')
   call dg_ey%write_to_file('ey')
