@@ -102,7 +102,7 @@ implicit none
   f = f_init
   
   !we initialize the interpolator
-  interp => new_cubic_spline_2d_interpolator( &
+  interp => new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -127,7 +127,7 @@ implicit none
     x1_min, &
     x1_max, &
     SLL_HERMITE)
-  A1_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A1_interp_x1x2 => new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &
@@ -136,7 +136,7 @@ implicit none
     x2_max, &
     SLL_HERMITE, &
     SLL_HERMITE)
-  A2_interp_x1x2 => new_cubic_spline_2d_interpolator( &
+  A2_interp_x1x2 => new_cubic_spline_interpolator_2d( &
     Nc_x1+1, &
     Nc_x2+1, &
     x1_min, &

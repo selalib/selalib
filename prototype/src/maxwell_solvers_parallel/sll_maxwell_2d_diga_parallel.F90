@@ -1,10 +1,12 @@
 
 #define sll_transformation class(sll_coordinate_transformation_2d_base)
 
+#ifndef DOXYGEN_SHOULD_SKIP_THIS
+
 !> Solve Maxwell equations on cartesian domain with Disconituous Galerkine method:
 !> * Gauss Lobatto for integration formula
 !> * Periodic boundary conditions.
-module sll_maxwell_2d_diga_parallel
+module sll_module_maxwell_2d_diga_parallel
 
 #include "sll_maxwell_solvers_macros.h"
 #include "sll_working_precision.h"
@@ -25,7 +27,7 @@ implicit none
 private
 
 !>DG method in two dimensions with general coordinates
-type, public :: maxwell_2d_diga_parallel
+type, public :: sll_maxwell_2d_diga_parallel
 
    sll_transformation, pointer              :: tau  !< transformation
    type(sll_logical_mesh_2d), pointer       :: mesh !< Logical mesh
@@ -51,7 +53,7 @@ type, public :: maxwell_2d_diga_parallel
    type(dg_field), pointer                  :: po
    sll_real64                               :: xi 
 
-end type maxwell_2d_diga_parallel
+end type sll_maxwell_2d_diga_parallel
 
 !> Allocate data to initialize solver
 interface sll_new
@@ -117,7 +119,7 @@ subroutine initialize_maxwell_2d_diga_parallel(      &
                                        bc_west,      &
                                        flux_type)
 
-   type(maxwell_2d_diga)       :: this !< solver data object
+   type(sll_maxwell_2d_diga)       :: this !< solver data object
    sll_transformation, pointer :: tau  !< Coordinate transformation
    sll_int32                   :: polarization !< TE or TM
    sll_int32                   :: degree       !< polynomial degree
@@ -269,7 +271,7 @@ end subroutine initialize_maxwell_2d_diga_parallel
 !> Solve the maxwell equation
 subroutine solve_maxwell_2d_diga_parallel( this, fx, fy, fz, dx, dy, dz )
 
-   type( maxwell_2d_diga )  :: this !< Maxwell solver object
+   type(sll_maxwell_2d_diga)  :: this !< Maxwell solver object
 
    type(dg_field)  :: fx   !< x electric field
    type(dg_field)  :: fy   !< y electric field
@@ -460,4 +462,7 @@ subroutine solve_maxwell_2d_diga_parallel( this, fx, fy, fz, dx, dy, dz )
    
 end subroutine solve_maxwell_2d_diga_parallel
 
-end module sll_maxwell_2d_diga_parallel
+
+end module sll_module_maxwell_2d_diga_parallel
+
+#endif // DOXYGEN_SHOULD_SKIP_THIS

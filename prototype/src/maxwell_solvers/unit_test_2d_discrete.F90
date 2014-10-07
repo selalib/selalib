@@ -16,7 +16,7 @@ use sll_common_coordinate_transformations
 use sll_module_cubic_spline_interpolator_2d
 use sll_dg_fields
 use sll_maxwell_solvers_base
-use sll_maxwell_2d_diga
+use sll_module_maxwell_2d_diga
 
 implicit none
   
@@ -27,9 +27,9 @@ type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau_d ! discrete transf
 class(sll_coordinate_transformation_2d_base), pointer :: tau_a ! analytic transf
 ! for the discrete case...
-type(cubic_spline_2d_interpolator)      :: x1_interp
-type(cubic_spline_2d_interpolator)      :: x2_interp
-type(cubic_spline_2d_interpolator)      :: j_interp
+type(sll_cubic_spline_interpolator_2d)      :: x1_interp
+type(sll_cubic_spline_interpolator_2d)      :: x2_interp
+type(sll_cubic_spline_interpolator_2d)      :: j_interp
 sll_real64, dimension(:,:), allocatable :: x1_tab
 sll_real64, dimension(:,:), allocatable :: x2_tab
 sll_real64, dimension(:), allocatable   :: x1_eta1_min, x1_eta1_max
@@ -39,8 +39,8 @@ sll_int32  :: i, j
 sll_real64 :: eta1, eta2, h1, h2
 sll_real64, dimension(2) :: params   ! for the polar transformation
 
-type(maxwell_2d_diga), pointer  :: maxwell_d
-type(maxwell_2d_diga), pointer  :: maxwell_a
+type(sll_maxwell_2d_diga), pointer  :: maxwell_d
+type(sll_maxwell_2d_diga), pointer  :: maxwell_a
 sll_int32, parameter            :: degree = 2
 type(dg_field), pointer         :: ex_a, dx_a
 type(dg_field), pointer         :: ey_a, dy_a

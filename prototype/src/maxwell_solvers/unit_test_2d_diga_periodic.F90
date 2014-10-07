@@ -28,7 +28,7 @@ use sll_logical_meshes
 use sll_module_coordinate_transformations_2d
 use sll_common_coordinate_transformations
 use sll_dg_fields
-use sll_maxwell_2d_diga
+use sll_module_maxwell_2d_diga
 use sll_maxwell_solvers_base
 
 implicit none
@@ -49,7 +49,7 @@ sll_real64 :: delta_eta1, delta_eta2
 type(sll_logical_mesh_2d), pointer :: mesh
 class(sll_coordinate_transformation_2d_base), pointer :: tau
 
-type(maxwell_2d_diga)   :: maxwell_TE
+type(sll_maxwell_2d_diga)   :: maxwell_TE
 
 type(dg_field), pointer :: ex, ex0, dx, sx
 type(dg_field), pointer :: ey, ey0, dy, sy

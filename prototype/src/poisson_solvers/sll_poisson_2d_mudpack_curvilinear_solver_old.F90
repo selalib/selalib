@@ -333,7 +333,7 @@ contains
     SLL_ALLOCATE(poisson%ce_2d(nc_eta1+1,nc_eta2+1),ierr)      
         
     
-       poisson%a12_interp => new_cubic_spline_2d_interpolator( &
+       poisson%a12_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -342,7 +342,7 @@ contains
           eta2_max, &
           bc_interp2d_eta1, &
           bc_interp2d_eta2)        
-       poisson%a21_interp => new_cubic_spline_2d_interpolator( &
+       poisson%a21_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -358,7 +358,7 @@ contains
         call poisson%a12_interp%compute_interpolants( a12_array ) 
         call poisson%a21_interp%compute_interpolants( a21_array ) 
           
-        poisson%cxx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cxx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -367,7 +367,7 @@ contains
           eta2_max, &
           bc_interp2d_eta1, &
           bc_interp2d_eta2)                
-        poisson%cyy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cyy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -382,7 +382,7 @@ contains
         call poisson%cyy_2d_interp%compute_interpolants( poisson%cyy_2d )       
         
         
-        poisson%cx_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cx_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -395,7 +395,7 @@ contains
           poisson%cxx_2d_interp,poisson%a21_interp,poisson%cx_2d)          
         call poisson%cx_2d_interp%compute_interpolants( poisson%cx_2d )          
 
-        poisson%cy_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%cy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -408,7 +408,7 @@ contains
           poisson%cyy_2d_interp,poisson%a12_interp,poisson%cy_2d)  
         call poisson%cy_2d_interp%compute_interpolants( poisson%cy_2d )          
 
-        poisson%ce_2d_interp => new_cubic_spline_2d_interpolator( &
+        poisson%ce_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &
@@ -440,7 +440,7 @@ contains
         
       case (SLL_NON_SEPARABLE_WITH_CROSS_TERMS)   
           SLL_ALLOCATE(poisson%cxy_2d(nc_eta1+1,nc_eta2+1),ierr)
-          poisson%cxy_2d_interp => new_cubic_spline_2d_interpolator( &
+          poisson%cxy_2d_interp => new_cubic_spline_interpolator_2d( &
           nx, &
           ny, &
           eta1_min, &

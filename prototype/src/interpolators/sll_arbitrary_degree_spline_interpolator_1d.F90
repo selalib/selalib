@@ -31,45 +31,78 @@ module sll_module_arbitrary_degree_spline_interpolator_1d
   !> Class for arbitrary degree spline 1d interpolator
   type, public, extends(sll_interpolator_1d_base) :: &
      sll_arbitrary_degree_spline_interpolator_1d
+    !> PLEASE ADD DOCUMENTATION
      sll_int32  :: num_pts
+    !> PLEASE ADD DOCUMENTATION
      sll_real64 :: eta_min
+    !> PLEASE ADD DOCUMENTATION
      sll_real64 :: eta_max
+    !> PLEASE ADD DOCUMENTATION
      sll_int32  :: bc_left
+    !> PLEASE ADD DOCUMENTATION
      sll_int32  :: bc_right
+    !> PLEASE ADD DOCUMENTATION
      sll_int32  :: spline_degree
+    !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:), pointer :: knots
      ! some knot-like arrays needed by the spli1d_per routine
+    !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:), pointer :: t
+    !> PLEASE ADD DOCUMENTATION
      sll_int32  :: size_t
+    !> PLEASE ADD DOCUMENTATION
      sll_int64  :: bc_selector ! this is set in initialization
+    !> PLEASE ADD DOCUMENTATION
      sll_real64, dimension(:), pointer :: coeff_splines
+    !> PLEASE ADD DOCUMENTATION
      sll_int32  :: size_coeffs
+    !> PLEASE ADD DOCUMENTATION
      sll_real64 :: slope_left
+    !> PLEASE ADD DOCUMENTATION
      sll_real64 :: slope_right
+    !> PLEASE ADD DOCUMENTATION
      sll_real64 :: value_left
+    !> PLEASE ADD DOCUMENTATION
      sll_real64 :: value_right
+    !> PLEASE ADD DOCUMENTATION
      logical    :: compute_slope_left = .TRUE.
+    !> PLEASE ADD DOCUMENTATION
      logical    :: compute_slope_right= .TRUE.
+    !> PLEASE ADD DOCUMENTATION
      logical    :: compute_value_left = .TRUE.
+    !> PLEASE ADD DOCUMENTATION
      logical    :: compute_value_right= .TRUE.
 
    contains
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass(interpolator) :: initialize=>initialize_ad1d_interpolator
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass :: set_coefficients => set_coefficients_ad1d
 ! better: pre-compute-interpolation-information or something...
+    !> PLEASE ADD DOCUMENTATION
     procedure :: compute_interpolants => compute_interpolants_ad1d
    ! procedure,  pass(interpolator) :: compute_spline_coefficients => &
     !     compute_spline_coefficients_ad2d
     !procedure, pass:: compute_spline_coefficients =>compute_spline_coefficients_ad2d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_value => interpolate_value_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_array_values => interpolate_values_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_pointer_values => interpolate_pointer_values_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_derivative_eta1 => interpolate_derivative_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_array_derivatives => interpolate_derivatives_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure :: interpolate_pointer_derivatives =>interpolate_pointer_derivatives_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass:: interpolate_array => interpolate_array_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass:: interpolate_array_disp => interpolate_1d_array_disp_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass:: get_coefficients => get_coefficients_ad1d
+    !> PLEASE ADD DOCUMENTATION
     procedure, pass:: reconstruct_array
  end type sll_arbitrary_degree_spline_interpolator_1d
 

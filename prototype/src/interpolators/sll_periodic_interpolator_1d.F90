@@ -18,24 +18,35 @@ private
     ! Be careful here. For consistency with the other interpolators
     ! num_points is the number of nodes (including both boundaries)
     ! and not the number of cells as used in the periodic interpolator module.
-     sll_int32                            :: num_points ! size
-     sll_real64                           :: cell_size
-     sll_real64                           :: domain_size   ! length of interval
-     type(periodic_interp_work), pointer  :: per_interp
+     sll_int32                            :: num_points !< size
+     sll_real64                           :: cell_size  !< cell size
+     sll_real64                           :: domain_size!< length of interval
+     type(periodic_interp_work), pointer  :: per_interp !< ???
    contains
+     !>PLEASE ADD DOCUMENTATION
      procedure, pass(interpolator) :: initialize => initialize_per1d_interpolator
+     !>PLEASE ADD DOCUMENTATION
      procedure :: compute_interpolants => compute_interpolants_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure :: interpolate_value => interpolate_value_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure :: interpolate_derivative_eta1 => interpolate_deriv1_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure :: interpolate_array_values => interpolate_values_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure :: interpolate_pointer_values => interpolate_pointer_values_per1d
-     procedure :: interpolate_array_derivatives => interpolate_derivatives_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure :: interpolate_pointer_derivatives => &
           interpolate_pointer_derivatives_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array => per_interpolate1d
+     !>PLEASE ADD DOCUMENTATION
      procedure, pass:: interpolate_array_disp => per_interpolate1d_disp
+     !>PLEASE ADD DOCUMENTATION
      procedure, pass:: reconstruct_array
+     !>PLEASE ADD DOCUMENTATION
      procedure, pass :: set_coefficients => set_coefficients_per1d
+     !>PLEASE ADD DOCUMENTATION
      procedure, pass :: get_coefficients => get_coefficients_per1d
 
   end type sll_periodic_interpolator_1d
