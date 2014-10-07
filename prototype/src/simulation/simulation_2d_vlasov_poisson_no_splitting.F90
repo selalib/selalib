@@ -401,10 +401,10 @@ contains
       case ("SLL_LANDAU_MESH")
         x1_max = real(nbox_x1,f64) * 2._f64 * sll_pi / kmode
         mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)
-        call initialize_eta1_node_1d( mesh_x1, sim%x1_array )
+        call get_node_positions( mesh_x1, sim%x1_array )
       case ("SLL_LOGICAL_MESH")
         mesh_x1 => new_logical_mesh_1d(num_cells_x1,eta_min=x1_min, eta_max=x1_max)  
-        call initialize_eta1_node_1d( mesh_x1, sim%x1_array )
+        call get_node_positions( mesh_x1, sim%x1_array )
       case default
         print*,'#mesh_case_x1', mesh_case_x1, ' not implemented'
         print*,'#in init_vp2d_par_cart'
@@ -413,7 +413,7 @@ contains
     select case (mesh_case_x2)
       case ("SLL_LOGICAL_MESH")
         mesh_x2 => new_logical_mesh_1d(num_cells_x2,eta_min=x2_min, eta_max=x2_max)
-        call initialize_eta1_node_1d( mesh_x2, sim%x2_array )
+        call get_node_positions( mesh_x2, sim%x2_array )
       case default
         print*,'#mesh_case_x2', mesh_case_x2, ' not implemented'
         print*,'#in init_vp2d_par_cart'
