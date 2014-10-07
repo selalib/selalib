@@ -14,8 +14,14 @@ program test_hex_hermite
 
   type(sll_hex_mesh_2d), pointer          :: mesh, mesh2
   sll_real64, dimension(:,:), allocatable :: deriv
+  sll_real64, dimension(:),allocatable    :: dxuxn,dyuxn,dxuyn,dyuyn
+  sll_real64, dimension(:),allocatable    :: dxuxn_center,dyuxn_center,dxuyn_center,dyuyn_center
+  sll_real64, dimension(:),allocatable    :: dxuxn_edge,dyuxn_edge,dxuyn_edge,dyuyn_edge
   sll_real64, dimension(:),allocatable    :: second_term, phi,uxn,uyn,phi_interm
   sll_real64, dimension(:),allocatable    :: second_term2, phi2,uxn2,uyn2,phi2_interm,rho2
+  sll_real64, dimension(:),allocatable    :: dxuxn2,dyuxn2,dxuyn2,dyuyn2
+  sll_real64, dimension(:),allocatable    :: dxuxn_center2,dyuxn_center2,dxuyn_center2,dyuyn_center2
+  sll_real64, dimension(:),allocatable    :: dxuxn_edge2,dyuxn_edge2,dxuyn_edge2,dyuyn_edge2
   sll_real64, dimension(:),allocatable    :: second_term_center, phi_center
   sll_real64, dimension(:),allocatable    :: second_term_edge, phi_edge
   sll_real64, dimension(:),allocatable    :: uxn_center,uyn_center
@@ -87,12 +93,27 @@ program test_hex_hermite
      SLL_ALLOCATE(rho_center_tn1( n_triangle),ierr)
      SLL_ALLOCATE(rho_edge_tn ( n_edge),ierr)
      SLL_ALLOCATE(rho_edge_tn1( n_edge),ierr)
+
      SLL_ALLOCATE(uxn( n_points),ierr)
      SLL_ALLOCATE(uyn( n_points ),ierr)
      SLL_ALLOCATE(uxn_center( n_triangle),ierr)
      SLL_ALLOCATE(uyn_center( n_triangle),ierr)
      SLL_ALLOCATE(uxn_edge( n_edge),ierr)
      SLL_ALLOCATE(uyn_edge( n_edge),ierr)
+
+     SLL_ALLOCATE(dxuxn( n_points),ierr)
+     SLL_ALLOCATE(dxuyn( n_points ),ierr)
+     SLL_ALLOCATE(dxuxn_center( n_triangle),ierr)
+     SLL_ALLOCATE(dxuyn_center( n_triangle),ierr)
+     SLL_ALLOCATE(dxuxn_edge( n_edge),ierr)
+     SLL_ALLOCATE(dxuyn_edge( n_edge),ierr)
+     SLL_ALLOCATE(dyuxn( n_points),ierr)
+     SLL_ALLOCATE(dyuyn( n_points ),ierr)
+     SLL_ALLOCATE(dyuxn_center( n_triangle),ierr)
+     SLL_ALLOCATE(dyuyn_center( n_triangle),ierr)
+     SLL_ALLOCATE(dyuxn_edge( n_edge),ierr)
+     SLL_ALLOCATE(dyuyn_edge( n_edge),ierr)
+
      SLL_ALLOCATE(second_term( n_points),ierr)    
      SLL_ALLOCATE(phi( n_points),ierr)           
      SLL_ALLOCATE(phi_interm( n_points),ierr)    
@@ -119,6 +140,18 @@ program test_hex_hermite
         SLL_ALLOCATE(phi2_interm( n_points2),ierr)  
         SLL_ALLOCATE(uxn2( n_points2),ierr)
         SLL_ALLOCATE(uyn2( n_points2 ),ierr)
+        SLL_ALLOCATE(dxuxn2( n_points),ierr)
+        SLL_ALLOCATE(dxuyn2( n_points ),ierr)
+        SLL_ALLOCATE(dxuxn_center2( n_triangle),ierr)
+        SLL_ALLOCATE(dxuyn_center2( n_triangle),ierr)
+        SLL_ALLOCATE(dxuxn_edge2( n_edge),ierr)
+        SLL_ALLOCATE(dxuyn_edge2( n_edge),ierr)
+        SLL_ALLOCATE(dyuxn2( n_points),ierr)
+        SLL_ALLOCATE(dyuyn2( n_points ),ierr)
+        SLL_ALLOCATE(dyuxn_center2( n_triangle),ierr)
+        SLL_ALLOCATE(dyuyn_center2( n_triangle),ierr)
+        SLL_ALLOCATE(dyuxn_edge2( n_edge),ierr)
+        SLL_ALLOCATE(dyuyn_edge2( n_edge),ierr)
      endif
 
 
@@ -157,7 +190,7 @@ program test_hex_hermite
            call index_hex_to_global(mesh, k1, k2, index_tab)
            phi(i) = phi_interm(index_tab)
         enddo
-        call compute_hex_fields(mesh,uxn,uyn,phi,type=1)
+        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
      endif
      
      if ( num_method == 10 ) then
@@ -184,7 +217,7 @@ program test_hex_hermite
            call index_hex_to_global(mesh, k1, k2, index_tab)
            phi2(i) = phi2_interm(index_tab)
         enddo
-        call compute_hex_fields(mesh2,uxn2,uyn2,phi2,type=1)
+        call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
         call deassemble(uxn,uxn_edge,uxn2,mesh,mesh2)
         call deassemble(uyn,uyn_edge,uyn2,mesh,mesh2)
      endif
@@ -319,7 +352,7 @@ program test_hex_hermite
            phi(i) = phi_interm(index_tab)
         enddo
 
-        call compute_hex_fields(mesh,uxn,uyn,phi,type=1)
+        call compute_hex_fields(mesh,uxn,uyn,dxuxn,dyuxn,dxuyn,dyuyn,phi,type=1)
 
         if ( num_method == 10 ) then
            do i = 1,mesh%num_triangles
@@ -342,7 +375,7 @@ program test_hex_hermite
               call index_hex_to_global(mesh, k1, k2, index_tab)
               phi2(i) = phi2_interm(index_tab)
            enddo
-           call compute_hex_fields(mesh2,uxn2,uyn2,phi2,type=1)
+           call compute_hex_fields(mesh2,uxn2,uyn2,dxuxn2,dyuxn2,dxuyn2,dyuyn2,phi2,type=1)
 
            call deassemble(uxn,uxn_edge,uxn2,mesh,mesh2)
            call deassemble(uyn,uyn_edge,uyn2,mesh,mesh2)
