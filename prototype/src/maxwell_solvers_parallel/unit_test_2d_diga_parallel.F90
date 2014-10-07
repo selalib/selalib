@@ -36,10 +36,10 @@ class(sll_coordinate_transformation_2d_base), pointer :: tau
 
 type(maxwell_2d_diga)   :: maxwell_TE
 
-type(dg_field), pointer :: ex, ex0, dx, sx
-type(dg_field), pointer :: ey, ey0, dy, sy
-type(dg_field), pointer :: bz, bz0, dz, sz
-type(dg_field), pointer :: exact
+type(sll_dg_field_2d), pointer :: ex, ex0, dx, sx
+type(sll_dg_field_2d), pointer :: ey, ey0, dy, sy
+type(sll_dg_field_2d), pointer :: bz, bz0, dz, sz
+type(sll_dg_field_2d), pointer :: exact
 
 sll_real64  :: time
 sll_int32   :: istep
@@ -86,23 +86,23 @@ call tau%write_to_file(SLL_IO_MTV)
 
 time = 0.0_f64
 
-ex  => new_dg_field(degree,tau,sol_ex) 
-ey  => new_dg_field(degree,tau,sol_ey) 
-bz  => new_dg_field(degree,tau,sol_bz) 
+ex  => sll_new(degree,tau,sol_ex) 
+ey  => sll_new(degree,tau,sol_ey) 
+bz  => sll_new(degree,tau,sol_bz) 
 
-ex0 => new_dg_field(degree,tau) 
-ey0 => new_dg_field(degree,tau) 
-bz0 => new_dg_field(degree,tau) 
+ex0 => sll_new(degree,tau) 
+ey0 => sll_new(degree,tau) 
+bz0 => sll_new(degree,tau) 
 
-dx  => new_dg_field(degree,tau) 
-dy  => new_dg_field(degree,tau) 
-dz  => new_dg_field(degree,tau) 
+dx  => sll_new(degree,tau) 
+dy  => sll_new(degree,tau) 
+dz  => sll_new(degree,tau) 
 
-sx  => new_dg_field(degree,tau) 
-sy  => new_dg_field(degree,tau) 
-sz  => new_dg_field(degree,tau) 
+sx  => sll_new(degree,tau) 
+sy  => sll_new(degree,tau) 
+sz  => sll_new(degree,tau) 
 
-exact => new_dg_field( degree, tau)
+exact => sll_new( degree, tau)
 
 dt = cfl/sqrt(1./(delta_eta1/(degree+1))**2+1./(delta_eta2/(degree+1))**2)
 nstep = 100

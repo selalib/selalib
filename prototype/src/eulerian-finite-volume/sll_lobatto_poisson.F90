@@ -2,8 +2,9 @@ module sll_lobatto_poisson
 
 #include "sll_working_precision.h"
 
-   use sll_module_coordinate_transformations_2d
-   use sll_common_coordinate_transformations
+   !use sll_coordinate_transformation_2d_base_module
+   !use sll_module_coordinate_transformations_2d
+   !use sll_common_coordinate_transformations
    use map_function_module, only: set_map_function
    use lobalap
    use sll_dg_fields
@@ -17,19 +18,19 @@ module sll_lobatto_poisson
       sll_int32  :: order
    end type lobatto_poisson_solver
    
-   interface initialize
+   interface sll_create
    module procedure initialize_lobatto_poisson
-   end interface initialize
+   end interface sll_create
    
-   interface solve
+   interface sll_solve
       module procedure solve_lobatto_poisson
-   end interface solve
+   end interface sll_solve
    
-   interface delete
+   interface sll_delete
    module procedure delete_lobatto_poisson
-   end interface delete
+   end interface sll_delete
 
-public :: initialize, solve, delete
+public :: sll_create, sll_solve, sll_delete
 
 contains
 
@@ -60,9 +61,9 @@ end subroutine initialize_lobatto_poisson
 subroutine solve_lobatto_poisson(this, rhs, ex, ey)
 
   type(lobatto_poisson_solver) :: this
-  type(dg_field)               :: rhs
-  type(dg_field)               :: ex
-  type(dg_field)               :: ey
+  type(sll_dg_field_2d)               :: rhs
+  type(sll_dg_field_2d)               :: ex
+  type(sll_dg_field_2d)               :: ey
 
   call assemb_rhs(rhs%array)
   call compute_phi()
